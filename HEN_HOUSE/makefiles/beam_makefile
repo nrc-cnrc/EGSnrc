@@ -1,0 +1,167 @@
+
+###############################################################################
+#
+#  EGSnrc standard makefile for BEAMnrc codes
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the 
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+# 
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  more details.
+#  
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:      Iwan Kawrakow, 2004
+#  
+#  Revisions:   Blake Walters
+#               Ernesto Mainegra-Hing
+#
+###############################################################################
+
+# Include the main EGSnrc config file.
+#
+#include $(EGS_CONFIG)
+#
+# Include the main BEAMnrc config file. SPEC_DIR gets defined in $(EGS_CONFIG)
+#
+#include $(SPEC_DIR)beamnrc.spec
+
+# Include the file that defines the CMs  used for the accelerator.
+# This file is created by beam_build.
+#
+include $(EGS_HOME)BEAM_$(accelerator)$(DSEP)modules.make
+
+# Include the sources file. This file is normally empty, but if someone 
+# wants to overwrite the standard set of sources used to build a BEAMnrc 
+# user code, the desired set of sources must be put in that file.
+#
+include $(EGS_HOME)BEAM_$(accelerator)$(DSEP)sources.make
+
+# The spec module file. The variable accelerator is defined in the 
+# BEAMnrc user code Makefile and is equal to the name of the spec module 
+# file that specifies the accelerator.
+#
+spec_module = $(SPEC_HOME)$(accelerator).module
+
+# The name of the BEAMnrc user code.
+#
+BEAM_CODE = BEAM_$(accelerator)
+
+# The name of the BEAMnrc source library
+#
+BEAM_LIB = $(LIB_PRE)$(BEAM_CODE)$(LIB_SUF)
+
+# We will be building 3 different targets, depending on whether the user 
+# said 'make', 'make noopt' or 'make debug'.
+# The variable WHAT below gets set to '' (empty), 'noopt' or 'debug', 
+# respectively. The executable name is constructed from the user code 
+# name with $(WHAT) appended to it.
+#
+WHAT =
+OPTLEVEL_F = $(FOPT)
+OPTLEVEL_C = $(COPT)
+
+# The name of the executable. USER_BINDIR and EXE are defined in the 
+# EGSnrc config file. 
+#
+EXE_FILE = $(USER_BINDIR)$(BEAM_CODE)$(WHAT)$(EXE)
+
+# The name of the shared library.
+#
+LIB_FILE = $(USER_BINDIR)$(BEAM_LIB)
+
+# The name of the Fortran file. my_machine is defined in the EGS config file.
+#
+FORTRAN_FILE = $(BEAM_CODE)_$(my_machine)
+LIB_FORTRAN_FILE = lib$(FORTRAN_FILE)
+
+EXE_DIR = $(EGS_HOME)bin$(DSEP)$(my_machine)
+
+# The executable dependencies and the rule for building it.
+#
+$(EXE_FILE): $(FORTRAN_FILE).$(FEXT) $(EXE_DIR)
+	@echo $(empty)
+	@echo $(empty)
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(FLIBS)'"
+	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS) 
+
+#$(LIB_FILE): $(LIB_FORTRAN_FILE).$(FEXT)
+#	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) 
+
+# Make sure the executable directory exists.
+#
+$(EXE_DIR): $(EGS_HOME)bin
+	@$(CHECK_DIR) $(MKDIR)
+
+$(EGS_HOME)bin:
+	@$(CHECK_DIR) $(MKDIR)
+
+# Fortran file dependencies and build rule.
+#
+$(FORTRAN_FILE).$(FEXT): $(SOURCES) sources.make
+	@echo "Mortran compilation for $@"
+	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
+	       -o8 $(FORTRAN_FILE).mortlst
+
+library: $(LIB_FILE)
+
+$(LIB_FILE): $(LIB_FORTRAN_FILE).$(FOBJE)
+	$(F77_LINK) $(SHLIB_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FOBJE) $(BEAM_EXTRA_OBJECTS) $(FLIBS) $(SHLIB_LIBS)
+
+$(LIB_FORTRAN_FILE).$(FOBJE): $(LIB_FORTRAN_FILE).$(FEXT)
+	$(F77) -c $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(LIB_FORTRAN_FILE).$(FEXT)
+
+$(LIB_FORTRAN_FILE).$(FEXT): $(LIB_SOURCES) sources.make
+	@echo "Mortran compilation for $@"
+	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(LIB_SOURCES) -o7 $@ \
+	       -o8 $(LIB_FORTRAN_FILE).mortlst
+
+# The following rule is there just for convinience so that you can say 
+# make fortran
+# to perform the mortran step only (corresponds to m user_code)
+#
+fortran: $(FORTRAN_FILE).$(FEXT)
+
+# The dependencies and build rules for the BEAMnrc macros and mortran files.
+#
+$(BEAM_CODE)_macros.mortran: $(spec_module) $(CM_MACRO_FILES)
+	@echo "Building accelerator from spec module $(accelerator)"
+	@$(BEAM_BUILD) $(accelerator)
+
+$(BEAM_CODE)_cm.mortran: $(spec_module) $(CM_MORTRAN_FILES)
+	@echo "Building accelerator from spec module $(accelerator)"
+	@$(BEAM_BUILD) $(accelerator)
+
+#******************************************************************************
+
+opt:
+	@$(MAKE) $(EXE_FILE)
+
+noopt:
+	@$(MAKE) WHAT=_noopt OPTLEVEL_F= OPTLEVEL_C=
+
+debug:
+	@$(MAKE) WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)"
+
+clean: 
+	@echo "$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst"
+	@$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst
+	@$(MAKE) -s WHAT=_debug execlean
+	@$(MAKE) -s WHAT=_noopt execlean
+	@$(MAKE) -s WHAT= execlean
+
+execlean:
+	@echo "$(REMOVE) $(EXE_FILE)"
+	$(REMOVE) $(EXE_FILE)
+
+.PHONY: opt noopt debug clean execlean

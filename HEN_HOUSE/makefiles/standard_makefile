@@ -1,0 +1,182 @@
+
+###############################################################################
+#
+#  EGSnrc default makefile
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the 
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+# 
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  more details.
+#  
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:      Iwan Kawrakow, 2003
+#  
+#  Revisions:   Blake Walters
+#  		Jeffrey Siebers
+#               Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  The main portion of a Makefile for the EGSnrc system. This file is included 
+#  from all user code makefiles.
+#  
+#  VCU modifications: add in EGS_EXTRA_FLAGS so we can pass extra flags past 
+#  the mortran and select things from #ifdefs.
+#
+###############################################################################
+
+# We want to be able to build 3 different targets:
+#    executable with optimization turned on (default)
+#    executable without optimization
+#    executable with debug symbols included
+# The following is for distinguishing between the 3
+#   $(WHAT) gets appended to the user code name. It is empty for a default 
+#           build (optimization turned on), is = _noopt for no optimization
+#           and _debug for debug symbols included.
+#   $(OPTLEVEL_F) is the optimization or debug flags passed to the 
+#                 fortran compiler. Depending on the target (opt, noopt or 
+#                 debug), it gets replaced with the appropriate compiler 
+#                 flags.
+#   $(OPTLEVEL_C) is not used right now 
+# FOPT and COPT are defined in the config file EGS_CONFIG
+#
+WHAT =
+OPTLEVEL_F = $(FOPT)
+OPTLEVEL_C = $(COPT)
+
+depend =
+the_message = "$(USER_CODE) on HEN_HOUSE area is more recent than local version"
+check_message = $(empty)
+
+EXE_DIR = $(EGS_HOME)bin$(DSEP)$(my_machine)
+
+ok_message = "______Operation succeeded______"
+failed_message = "______Operation failed______"
+
+# The following is the rule for building the executable
+#   The first line says that the executable is dependent on the 
+#   fortran file. Because of this dependence, make will rebuild the 
+#   executable whenever the prerequisite (the fortran file) is more 
+#   recent than the executable using the rule on the second line 
+#   (note the leading tab!!! without it it will not work)
+# F77 and FLFLAGS are defined in the configuration file.
+# OPTLEVEL_F is set depending on whether we build optimized, noopt or 
+# debug executable.
+# $@ is an automatic make variable and gets replaced with the name 
+# of the target that initiated the invocation of this rule 
+# ( $(EXECUTABLE) in this case, which expands to something like 
+#  $HOME/egsnrc/bin/Linux/cavrznrc)
+# So, the actual command passed by make to the sehll will look 
+# something like
+#   g77 -O3 -o /usr/people/iwan/egsnrc/bin/Linux/dosrznrc dosrznrc_Linux.F
+#
+$(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR)
+	@echo $(empty)
+	@echo $(empty)
+	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS)'"
+	@$(F77) $(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS) 2>&1
+	
+# The following 2 rules are to make sure that the user executable directory 
+# exists.
+#
+
+$(EXE_DIR): $(EGS_HOME)bin
+	@$(CHECK_DIR) $(MKDIR)
+
+$(EGS_HOME)bin:
+	@$(CHECK_DIR) $(MKDIR)
+
+# In order to determine whether the executable needs to be re-built, 
+# make will examine its pre-requisits ($(FORTRAN_FILE).$(FEXT) in this case).
+# The following says that $(FORTRAN_FILE).$(FEXT) is dependent on the 
+# files listed in $(SOURCES). If the fortran file does not exist, or 
+# any of its pre-requisits listed in $(SOURCES) is more recent, 
+# it will get re-made using the rule on the second line. 
+# MORTRAN_EXE is the name of the mortran compiler defined in EGS_CONFIG
+# MORTRAN_DATA is the name of the mortran hex data file defined in EGS_CONFIG
+# The -d option tells the mortran compiler to use the next argument as the 
+# name of the hex data file
+# The -f option tells the mortran compiler to use all subsequent arguments 
+# until another -x option as names of files that need to be concatenated 
+# in the given order to make the mortjob.
+# The -o7 option tells the mortran compiler to write the resulting fortran 
+# output to the file name given by the next argument (7 us the unit mortran 
+# uses for that => -o7)
+# The -o8 option tells the mortran compiler to write the resulting listing 
+# output to the file name given by the next argument.
+#
+$(FORTRAN_FILE).$(FEXT): $(SOURCES) $(EGS_MAKEFILE) Makefile $(USER_CODE).make
+	@echo "Mortran compilation for $@"
+	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
+	   -o8 $(FORTRAN_FILE).mortlst
+
+# The following rule is there just for convinience so that you can say 
+# make fortran
+# to perform the mortran step only (corresponds to m user_code)
+#
+fortran: $(SOURCES)
+	@echo "Mortran compilation of $(USER_CODE)"
+	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) \
+	  -o7 $(FORTRAN_FILE).$(FEXT) -o8 $(FORTRAN_FILE).mortlst
+
+# The following rule tells make that $(USER_CODE).mortran is dependent on 
+# a file with the same name on the $HEN_HOUSE/$USER_CODE/ area.
+# (DSEP is defined in EGS_CONFIG and is / for Unix and \ for Windows)
+# GET_FILE is a system dependent shell script defined in EGS_CONFIG that
+#  - copies the mortran file from the main area to the user area, 
+#    if the mortran file is not on the user area
+#  - prints a warning if the mortran file is on the user area but the 
+#    main area file is more recent
+# 
+$(USER_CODE).mortran: $(depend)
+	@echo $(check_message)
+
+check:
+	@$(CHECK_USER_CODE)
+
+# Build a optimized user code
+opt:
+	@$(MAKE) -s $(EXECUTABLE) 
+#@($(MAKE) -s $(EXECUTABLE) && echo $(ok_message) ) || echo $(failed_message)
+
+# Build a user code without optimization
+noopt:
+	@$(MAKE) -s WHAT=_noopt OPTLEVEL_F= OPTLEVEL_C=
+#	@($(MAKE) -s WHAT=_noopt OPTLEVEL_F= OPTLEVEL_C= && echo $(ok_message)) || echo $(failed_message)
+
+# Build a user code for debugging
+debug:
+	@$(MAKE) -s WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)"
+#@($(MAKE) -s WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)" && echo $(ok_message)) || echo $(failed_message)
+
+# Clean-up the user code directory.
+clean:
+	@echo "$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst"
+	@$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst
+	@$(MAKE) -s WHAT=_debug execlean
+	@$(MAKE) -s WHAT=_noopt execlean
+	@$(MAKE) -s WHAT= execlean
+	@echo $(ok_message)
+
+# Remove the executable.
+execlean:
+	@echo $(REMOVE) $(EXECUTABLE)
+	$(REMOVE) $(EXECUTABLE) 
+
+# A 'phony' target always gets remade. As opt, noopt, debug, clean and 
+# execlean have no list of prerequisits so that make can determine whether 
+# they need to be remade, we declare them as phony. 
+#
+.PHONY: opt noopt debug clean execlean

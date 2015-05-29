@@ -1,0 +1,83 @@
+
+###############################################################################
+#
+#  EGSnrc default C++ makefile
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the 
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+# 
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  more details.
+#  
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:      Iwan Kawrakow, 2005
+#  
+#  Revisions:   Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  Skeleton makefile for building C++ user codes based on EGS_SimpleInterface.
+#  Include this file in your Makefile. It is assumed that there is a single 
+#  .cpp file needed to build your C++ user code, so you must add additional 
+#  rules and dependencies if needed.
+#
+###############################################################################
+
+include $(EGS_CONFIG)
+include $(SPEC_DIR)egspp1.spec
+
+all: $(target) $(lib_target)
+
+$(target): $(user_objects) $(egs_objects)
+	$(CXX) $(opt) $(EOUT)$@ $^ $(lib_link1) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
+
+$(lib_target): $(user_lib_objects) $(egs_lib_objects)
+	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
+
+egs_simple_application_$(my_machine).$(obje): $(dep_simple_application)
+	$(object_rule)
+
+egs_advanced_application_$(my_machine).$(obje): $(dep_advanced_application)
+	$(object_rule)
+
+egs_simple_application_lib_$(my_machine).$(obje): $(dep_simple_application)
+	$(object_lib_rule)
+
+egs_advanced_application_lib_$(my_machine).$(obje): $(dep_advanced_application)
+	$(object_lib_rule)
+
+$(USER_CODE)_$(my_machine).$(obje): $(dep_user_code)
+
+$(USER_CODE)_lib_$(my_machine).$(obje): $(dep_user_code)
+	$(object_lib_rule)
+
+egs_interface2_$(my_machine).$(obje): $(dep_egs_interface)
+	$(object_rule)
+
+egsnrc_$(my_machine).$(obje): egsnrc_$(my_machine).F array_sizes.h
+	$(F77) $(FC_FLAGS) $(FDEFS) -c $(FOUT)$@ $<
+
+egsnrc_$(my_machine).F: $(CPP_SOURCES)
+	@echo "Mortran compiling EGSnrc sources ..."
+	@$(MORTRAN_EXE) -s -i -d $(MORTRAN_DATA) -f $(CPP_SOURCES) -o7 $@ \
+           -o8 $(@:.F=.mortlst)
+
+$(user_objects):
+	$(object_rule)
+
+clean:
+	$(REMOVE) mortjob.mortran egsnrc_$(my_machine).F egsnrc_$(my_machine).mortlst
+	$(REMOVE) $(target) $(user_objects) $(egs_objects)
+
+.PHONY: clean library

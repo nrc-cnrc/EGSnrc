@@ -1,0 +1,76 @@
+
+###############################################################################
+#
+#  EGSnrc default C makefile
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the 
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+# 
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  more details.
+#  
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:      Iwan Kawrakow, 2003
+#  
+#  Revisions:   Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  This is a default Makefile for a EGSnrc user code written in C. It gets 
+#  included from the Makefile in the user code directory, which must define 
+#  C_OBJECTS to be the list of object files that must be linked together to 
+#  make the executable. In addition, the variable FC_FLAGS must be defined.
+#  FC_FLAGS will be normally $(FCFLAGS), but some Fortran compilers require 
+#  special options in order to not link a default MAIN function. (e.g. the 
+#  PGI compiler needs -Mnomain). 
+#  
+#  This Makefile will most likely only work with GNU make.
+#
+###############################################################################
+
+FEXT = F
+interface = egs_interface1
+
+$(EXECUTABLE): $(FORTRAN_FILE).o $(C_OBJECTS)
+	@echo "Linking ..."
+	@$(F77) $(FC_FLAGS) $(FOUT)$@ $(FORTRAN_FILE).o $(C_OBJECTS)
+
+$(FORTRAN_FILE).o: $(FORTRAN_FILE).$(FEXT)
+	@echo "Compiling EGSnrc Fortran routines using flags '$(FC_FLAGS)' ..."
+	@$(F77) $(FC_FLAGS) -c $(FOUT)$@ $(FORTRAN_FILE).$(FEXT)
+
+$(FORTRAN_FILE).$(FEXT): $(C_SOURCES)
+	@echo "Mortran compiling EGSnrc sources ..."
+	@$(MORTRAN_EXE) -s -d $(MORTRAN_DATA) -f $(C_SOURCES) -o7 $@ \
+	  -o8 $(FORTRAN_FILE).mortlst
+
+$(interface)_$(my_machine).o: $(C_INTERFACE)$(interface).c \
+	$(C_INTERFACE)$(interface).h array_sizes.h
+	@echo "Compiling egs_interface2.c ..."
+	@$(CC) $(C_FLAGS) -c $(C_INCLUDES) $(COUT)$@ $(C_INTERFACE)$(interface).c
+
+# The default rule for all other C files
+%_$(my_machine).o: %.c array_sizes.h
+	@echo "Compiling $< ..."
+	@$(CC) $(C_FLAGS) -c $(C_INCLUDES) $(COUT)$@ $<
+
+# Get missing files:
+%.c: $(MAIN_UCODE_DIR)%.c
+	@$(GET_FILE)
+
+%.h: $(MAIN_UCODE_DIR)%.h
+	@$(GET_FILE)
+
+%.macros: $(MAIN_UCODE_DIR)%.macros
+	@$(GET_FILE)
