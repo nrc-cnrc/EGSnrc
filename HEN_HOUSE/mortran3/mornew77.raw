@@ -1,0 +1,272 @@
+CCCCCCCCC.1....v....2....v....3....v....4....v....5....v....6....v....7...
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$_(,.=-+/*)abcdefghijklmnopqrstuvwxyz?
+.v....8....v....9....v....0....v....1....v....2C USER F77 11JUN85
+[;:'#@"!]{}<>|&~ \`%^?????C|r[]bdep<>@#??????
+ 
+     (D1) (LOCATIONS REGAINED BY RECOVERY)
+     (D2) (LOCATIONS REMAINING)
+     (D3) (PERCENT RULE CAPACITY REMAINING)
+;
+     (E1) (NULL TEMPLATE IN RULE DEFINITION)
+     (E2) (ATTEMPT TO DELETE NON-EXISTENT RULE. IGNORED)
+     (E3) (BAD COLUMN 1 DIRECTIVE. DEFAULT ASSUMED)
+     (E4) (1000 RULES EVALUATED WITH NO OUTPUT)
+     (E7) (NO LABEL FOR THIS RIGHT BRACKET)
+     (E8) (NO LEFT BRACKET FOR THIS RIGHT BRACKET)
+     (E9) (FIRST SYMBOL IN TEMPLATE MUST BE PRINTABLE)
+     (EA) (DIVISION BY ZERO IN C-EXPRESSION)
+     (EB) (INVALID OPERATOR IN C-EXPR)
+     (EC) (INCORRECT RULE FORMAT. IGNORED.)
+     (ED) (UNCLOSED STRING PREDICATE)
+     (EE) (NULL FOLLOWS FORTRAN LABEL)
+     (EF) (UNDEFINED SPECIFIER)
+     (EG) (UNCLOSED LOOP OR BLOCK)
+     (EH) (INCORRECT SPECIFICATION)
+     (EJ) (INVALID SPECIFICATION)
+     (EK) (MISSING RIGHT BRACE ON SPECIFIER)
+     (EL) (TEMPLATES MAY NOT BEGIN WITH PARAMETER MARKER)
+     (EM) (ILLEGAL SYMBOL, COLUMN 1 DIRECTIVE)
+     (EN) (INVALID C-EXPRESSION)
+     (EP) (INCORRECT NESTING OF EVALUATOR IF-ELSE)
+;
+     (F1) (STRING OR STATEMENT TOO LONG)
+     (F2) (ERROR IN COUNT FIELD OF QUANTIFIER)
+     (F3) (MORTRAN WORK SPACE EXCEEDED)
+     (F4) (NOSUCH ARG. IN TEMPLATE OF RULE.)
+     (F5) (ERROR IN EVALUATOR IF-THEN-ELSE)
+     (F6) (NUMBER OF RULES EXCEEDS CAPACITY)
+     (F7) (ILLEGAL USE OF BREAK SYMBOL)
+     (F8) (TOO MANY FORTRAN STATEMENT LABELS GENERATED)
+     (F9) (ILLEGAL SYMBOL IN RULE DEFINITION)
+     (FA) (MORE THAN 100 WARNINGS ISSUED)
+     (FH) (UNKNOWN PRIMITIVE )
+     (FI) (EVALUATOR IF-ELSE NESTING TOO DEEP)
+     (FJ) (MORE THAN 50 INDIRECT SPECIFIER REFERENCES)
+     (FK) (MORE THAN 50 QUALIFIERS+QUANTIFIERS IN ONE SPECIFIER)
+     (FL) (MORE THAN 50 FORTRAN LABELS ON STACK)
+     (FM) (NESTING LEVEL GREATER THAN 50)
+     (FN) (MORE THAN 100 OPERANDS+OPERATORS IN C-EXPR)
+     (FY) (MORE THAN 50 LEVELS OF EVALUATOR NESTING)
+     (FU) (MORE THAN 50 INPUT UNITS PENDING)
+;
+     (G1) (END OF MORTRAN INPUT)            (G5) (UNCLOSED STRING)
+     (G2) (LABEL NOT USED)            (G6) (NO MORTRAN ERRORS DETECTED)
+     (G3) (UNCLOSED BLOCKS)                 (G7) (MORTRAN ERROR(S))
+     (G4) (UNCLOSED COMMENT)
+ 
+ 
+ 
+ 
+ 
+  (!HOLLERITH;) 4(1@SH=;)            (!NOHOLLERITH;)4(0@SH=;)
+  (!STRINGS;)   4(1@SS=;)            (!NOSTRINGS;)  4(0@SS=;)
+  (!LOCAL;)     4(@SYC@SZ=;)         (!ENDLOCAL;)   4(@K;0@SZ=)
+  (!LIST;)      4(1@SL=;)            (!NOLIST;)     4(0@SL=;)
+  (!DEFINE;)    4(1@SD=;)            (!NODEFINE;)   4(0@SD=;)
+  (!COMMENTS;)  4(1@SP=;)            (!NOCOMMENTS;) 4(0@SP=;)
+  (!ANNOTATE;)  4(1@SA=;)            (!NOANNOTATE;) 4(0@SA=;)
+  (!RECOVER;)   4(@K;)               (!MODE#;)      4(#1@SX1=;)
+  (!DEFAULT#;)  4(#1@SV=;)           (!TRACE#;)    4(#1@ST=;)   ;
+  (!SEQUENCE#;) 4({B(#1)}@SU=;)      (!LABELS#;)    4({B(#1)}@SG=;)
+  (!INDENTC#;)  4(#1@SD1=;)
+  (!INDENTF#;)   4(#1@SI=;)
+  (!INDENTM#;) 4(#1@SR1=;)        ;
+  (!BLACK;)4(1@SX=;);  (!GREEN;)4(0@SX=;) ;
+ 
+(DAMMIT)4((@JL@@0@JK@@0@JL@@0@JK)4(@@O))DAMMIT; !STRINGS;
+ 
+(SPECIFY @0 AS @0;)4(@JL#1@JK3@JL{3#2}@JK ;);
+(MRF[#])3({B(100+#1)});
+     SPECIFY |        AS   MRF[1];
+     SPECIFY (#...#)  AS   MRF[2]#1#2;
+     SPECIFY [#]      AS   MRF[3]#1MRF[4]11;
+     SPECIFY (#)[#]   AS   MRF[3]#2MRF[4]{B(#1)}{B(#1)};
+     SPECIFY (#,#)[#] AS   MRF[3]#3MRF[4]{B(#1)}{B(#2)};
+ ({COMPUTE @0})          1(@JVC(#1)@JW)                           ;
+ ({REDUCE @0})           1(@JVE#1@JW)                             ;
+ ({LENGTH @0})           1(@JVA#1@JW)                             ;
+ ({WAIT @0})             1(@JVD#1@JW)                             ;
+ ({INCR @0})             1(A@JTU#1+)                            ;
+ ({DECR @0})             1(A@JTU#1-)                            ;
+ ({SETR @0=#})           1(@JVB(#2)@JWA@JTU#1=)                  ;
+ ({COPY @0})             1(A@JTU#1C)                        ;
+ ({COPY@0BASE@0})        1(@JVB(#2)@JW@JTU#1C)                    ;
+ ({NULL @0})             1('@JU#1'='')                            ;
+ ({EXIST @0})            1('@JU#1'~'')                            ;
+ ({P@0})                 1(@JU#1)                                 ;
+ ({QUOTE @0})            1('#1')                                  ;
+ ([IF]@2[@2])            1(@JTP0000@JVC(#1)@JW@JH#2@JG)           ;
+ ([IF]@2[@2][ELSE][@2])  1(@JTP0000@JVC(#1)@JW@JH#2@JG@JH#3@JG)   ;
+ ({EMIT@0})              1(@SE3C#1@SF3C)
+ ({MCUR+})               1(@@SN2C2 )
+ ({MCUR-})               1(@@SN2C0 )
+ ({MCURX})               1(@@SN2C1 )
+ ({EOL})                 1(@@SI2C )
+ 
+     ({ARB})      2(@JT0)          ({ARB;})      2(@JT1)
+     ({(ARB)})    2(@JT4)          ({(ARB;)})    2(@JT5)
+     ({[ARB]})    2(@JT2)          ({[ARB;]})    2(@JT3)
+     ({([ARB])})  2(@JT6)          ({([ARB;])})  2(@JT7)
+     ({[(ARB)]})  2(@JT6)          ({[(ARB;)]})  2(@JT7)
+!DEFAULT 4; (DFN{@0}AS{@0})4(@JL{2#1}@JK @JL{1{2#2}}@JK)  ;
+(DDN{@0}AS{@0}) (!DEFAULT1;@JL{2#1}@JK @JL{1{2#2}}@JK!DEFAULT4;) ;
+DDN{"@0"} AS {@JVF#1@JW}
+ (REPLACE{@0}WITH{@0}) (@JL{2#1}@JK  @JL{1{2#2}}@JK)  ;
+ DFN {APPEND{{ARB}}TO{{ARB}}} AS {@JL#2@JKC@JL#1@JK}            ;
+ DFN {APPEND'{ARB}'TO'{ARB}'} AS {@JL#2@JKC@JL#1@JK}            ;
+ DFN{REMOVE{ARB}'{ARB}'} AS  {@JL{2#2}@JK[IF]'#1'='SPECIFIER'[E@JL@JK]
+                                [ELSE][[IF]'#1'='RULE'[D@JL@JK]
+                       [ELSE][{EMIT**ILLEGAL REMOVE}] ]
+                      };
+!BLACK;
+ REMOVE SPECIFIER'MRF[#]' REMOVE RULE'DAMMIT' ;
+     SPECIFY DIGIT    AS   (0...9);
+     SPECIFY LETTER   AS   (A...Z);
+     SPECIFY letter   AS   (a...z);
+     SPECIFY ALPHA    AS   (0...Z);
+     SPECIFY 0SYS     AS   ['~='|'<='|'=>'|'>='|'<'|'>'|'='];
+;
+(&)5(.AND.); (|)5(.OR.); (~)5(.NOT.);
+(=)5(.EQ.); (>)5(.GT.); (<)5(.LT.)
+(~=)5(.NE.); (~>)5(.LE.); (~<)5(.GE.) (~<=)5(.GT.); (~=>)5(.LT.);
+ (=<)5(.LE.); (>=)5(.GE.); (<=)5(.LE.); (=>)5(.GE.);
+(~=<)5(.GT.); (~>=)5(.LT.); (~~=)5(.EQ.)
+;
+ (~(~(#)))    5((#1))
+ (~((#)))     5(~(#1))
+ (~(@7{0SYS}@7)) 5(#1~#2#3)
+ (~(#&#))     5(~(#1)|~(#2))
+ (~(#|#))     5((~(#1))&(~(#2)))
+;
+(.NOT.(.NOT.(#)))4((#1))
+(.NOT.((#)))4(.NOT.(#1))
+(.NOT.(#.EQ.#))4(#1.NE.#2)
+(.NOT.(#.NE.#))4(#1.EQ.#2)
+(.NOT.(#.LE.#))4(#1.GT.#2)
+(.NOT.(#.LT.#))4(#1.GE.#2)
+(.NOT.(#.GE.#))4(#1.LT.#2)
+(.NOT.(#.GT.#))4(#1.LE.#2)
+(.NOT.(#.AND.#))4(.NOT.(#1).OR..NOT.(#2))
+(.NOT.(#.OR.#))4((.NOT.(#1)).AND.(.NOT.(#2)))
+REMOVE RULE'(#)#(#)' ;
+;
+  DFN{(#,#=#)}AS{{EMIT(}#1,#2=#3)}
+;
+  SPECIFY  1SYS   AS ['WHILE'|'UNTIL'|'LOOP'|'DO'|'FOR '|'do'];
+  SPECIFY  2SYS   AS ['IF'|'UNLESS'|'if'|'unless'];
+  SPECIFY  3SYS   AS [2SYS|1SYS];
+  SPECIFY  4SYS   AS [(1,5)[DIGIT]];
+  SPECIFY  5SYS   AS [(0,5)[DIGIT]];
+  SPECIFY  6SYS   AS [(1,32)[LETTER]];
+  SPECIFY  7SYS   AS ['EXIT'|'NEXT'];
+  SPECIFY  8SYS   AS ['WHILE'|'UNTIL'];
+  SPECIFY  9SYS   AS [':'|';'|']'];
+  SPECIFY  1IK1   AS ['IF'|'if'|];
+;
+DFN{:#:} AS {@Q0REPLACE{:#1:}WITH{@LC00}@LC00@LU0}
+DFN{;{4SYS}{9SYS}}     AS{{EMIT;#1CONTINUE};#2}
+!GREEN;
+ DFN {[}  AS  {;{MCUR+}@MSY}
+ DFN {;{5SYS}{3SYS}#[}  AS
+     {;{MCUR+} [IF]'#2'=2SYS
+            [ @MSZ {EMIT#1IF}
+              [IF]'#2'=1IK1[{5(#3)}][ELSE][({5~(#3)})]
+              THEN;
+             ]
+       [ELSE][ [IF]'#2'=1SYS
+               [@MSX
+                [IF]{NULL 1}[@Q0]
+                      [ELSE][#1@LS0{EMIT#1CONTINUE};]
+                {7#2(#3)}
+                ]
+             ]}
+;
+!BLACK;      !DEFAULT 7;
+  DFN{(BY # TO #)#;}
+    AS {@LC01{EMIT#3=#3+(#1);@LC03IF}((#1)*(#3-(#2)).GT.0)GO TO @LC02;}
+  DFN{(TO #)#;}
+    AS {{EMIT@LC01#2=#2+1;@LC03IF}(#2-(#1).GT.0)GO TO @LC02;}
+  DFN{(TO #BY #)#;}  AS {(BY #2 TO #1)#3;}
+!GREEN;
+  DFN{FOR(#=# #)}    AS {{EMIT#1=#2;GO TO @LC03};{7(#3)#1;}}
+  DFN{LOOP()}        AS {{EMIT@LC01CONTINUE};}
+  DFN{WHILE(#)}      AS {{EMIT@LC01IF}({5~(#1)})GO TO @LC02;}
+  DFN{UNTIL(#)}      AS {{EMIT@LC01IF}{5(#1)}GO TO @LC02;}
+  DFN{DO(#=#,#)}     AS {{EMITDO @LC01} #1=#2,#3;@MRW;}
+  DFN{do(#=#,#)}     AS {{EMITdo } #1=#2,#3;@MRR;}
+!BLACK;
+ 
+ DFN{V@@} AS {{EMIT @LC02GO TO} SYSNAME,(@LC01SYSLIST@LC09);
+              "END {REDUCE SYSNAME} LOCAL PROCEDURE";
+              {EMIT @LC03CONTINUE};
+               REMOVE RULE'SYSLIST@LC09'; REMOVE RULE'SYSNAME'
+                @LU0
+             }
+ DFN{R@@} AS {{EMIT;end do};@LU0}
+ DFN{Z@@} AS {{EMIT;END IF};}
+ DFN{T@@} AS {{EMIT;END IF};}
+ DFN{U@@} AS {{EMIT;END IF};}
+ DFN{W@@} AS {{EMIT;@LC01CONTINUE;@LC02CONTINUE};@LU0}
+ DFN{X@@} AS {{EMIT;GO TO @LC01;@LC02CONTINUE};@LU0}
+ DFN{Y@@} AS {;}
+ DFN{0@@} AS {{EMITILLEGAL SYNTAX};}
+    !DEFAULT4;
+ DFN{;:#:}           AS      {;{REDUCE :#1:}}
+ DFN{LEAVE#;}        AS      {[IF] {NULL 1} [GO TO @LC02;]
+                                      [ELSE][GO TO {COMPUTE :#1:+2};]};
+DFN {EXECUTE #;} AS
+ {{REDUCE :#1:}@LS0 @Q0    "CALL TO LOCAL PROCEDURE #1"
+  {REDUCE APPEND{,@LC00}TO{SYSLIST@LC19}}
+  {EMIT ASSIGN@LC00 TO #1;GO TO{COMPUTE :#1:+1};@LC00CONTINUE}
+  ;@LU0@LU0
+ };
+DFN {;{6SYS} PROCEDURE[} AS
+      {@MSV;{MCUR+} {REDUCE :#1:}@LS0   "BEGIN LOCAL PROCEDURE #1"
+             {REDUCE REPLACE {SYSNAME} WITH {#1} }
+       {EMIT @LC05 CONTINUE;GO TO @LC03;@LC01CONTINUE}
+     ;} ;
+!GREEN;
+DFN{;IF(#)#;}     AS{{EMIT;IF}({5(#1)})#2;}
+!BLACK;
+DFN{OUTPUT#;(#)}  AS{@Q0WRITE(6,@LC00)#1;@LC00FORMAT@LU0(#2);}
+DFN{INPUT #;(#)}  AS{@Q0READ(5,@LC00)#1;@LC00FORMAT@LU0(#2);}
+DFN{<W>#;(#)}     AS{@Q0WRITE(6,@LC00)#1;@LC00FORMAT@LU0(#2)}
+DFN{<R>#;(#)}     AS{@Q0READ(5,@LC00)#1;@LC00FORMAT@LU0(#2)}
+DFN{[#=#,#;}      AS{@MSW ;{MCUR+} @Q0 DO @LC01 #1 = #2,#3;}
+ DFN {;/#,#/=#;} AS {[IF]{EXIST 1}[;#1=#3; ;/#2,/=#3];}
+ DFN {;EXIT#;} AS {;{EMIT GO TO}[IF]{NULL 1}[@LC02;]
+                                   [ELSE][{COMPUTE #1+2};]}
+ DFN {;NEXT#;}   AS {;{EMIT GO TO}[IF]{NULL 1}[@LC01;]
+                                    [ELSE][{COMPUTE #1+1};]}
+ DFN {)EXIT#;} AS {){EMIT GO TO}[IF]{NULL 1}[@LC02;]
+                                   [ELSE][{COMPUTE #1+2};]}
+ DFN {)NEXT#;}   AS {){EMIT GO TO}[IF]{NULL 1}[@LC01;]
+                                    [ELSE][{COMPUTE #1+1};]}
+!GREEN;
+      DFN{]}           AS{;{MCUR-} {7@MU@@};}
+      DFN{]ELSE[}      AS{;{MCURX} @MRU{EMITELSE};}
+      DFN{]ELSEIF#[}   AS{;{MCURX} @MRT{EMITELSE IF }{5(#1)} THEN;}
+      DFN {]{8SYS}#;}
+      AS {{EMITIF(}[IF]'#1'='WHILE'[.NOT.]{5(#2)})EXIT;]}  ;
+      DFN {]REPEAT}    AS{]} ;
+!BLACK;
+SPECIFY <*> AS ['*'|''];
+DFN {%'{ARB}'={<*>}'{ARB}'}
+  AS {[IF] {EXIST 2} [APPEND'{P3}'TO'{P1}']
+            [ELSE] [REPLACE{{P1}}WITH{{P3}}]} ;
+ 
+ DFN {''} AS {{EMIT'}} ;
+REPLACE{!NEWCONDITIONAL;}WITH{1@SJ2=};
+SPECIFY GENSWITCH AS ['GENERATE'|'NOGENERATE'|'ENDGENERATE'];
+SPECIFY GENAME    AS ['<'(1,12)[(1)[LETTER|letter|DIGIT|'_']]'>'];
+REPLACE {SET{GENAME}={GENSWITCH};}  WITH
+        {!DEFAULT 0;REPLACE{#1}WITH{#2}!DEFAULT 4;REPLACE{#1}WITH{#2};}
+ 
+DFN{GENERATE}AS{@CG};DFN{NOGENERATE}AS{@CN};DFN{ENDGENERATE}AS{@CE};
+ !DEFAULT 0;
+DFN{GENERATE}AS{@CG};DFN{NOGENERATE}AS{@CN};DFN{ENDGENERATE}AS{@CE};
+!DEFAULT 4;  !BLACK;
+REMOVE RULE'DFN{@0}AS{@0}' !RECOVER; !NOLIST; !NODEFINE; !TRACE0;
+%B80
+%C72
+%%1Copyright Stanford  Mortran3.1   (FORTRAN 77 11JUN85)

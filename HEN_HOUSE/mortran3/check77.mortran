@@ -1,0 +1,76 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc mortran3 test program                                               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:      Iwan Kawrakow, 2003                                           "
+"                                                                             "
+"  Revisions:   Frederic Tessier                                              "
+"                                                                             "
+"#############################################################################"
+
+!COMMENTS;
+!INDENT C5;
+!INDENT M4;
+!INDENT F2;
+ 
+"********************************************"
+"     PROGRAM:  CHECK77 MORTRAN              "
+"********************************************"
+ 
+"THIS IS A SIMPLE EXAMPLE OF A MORTRAN3 PROGRAM"
+"IT IS WRITTEN TO TEST THAT CORRECT FORTRAN77 CODE IS CREATED"
+ 
+"FOUR GOODIES ARE IMPLEMENTED:"
+ 
+"   1) MORTRAN3 COMMENTS ARE MAINTAINED IN THE FORTRAN OUTPUT"
+"   2) COMMENTS START IN COLUMN 5 OF THE FORTRAN LISTING"
+"   3) THE MORTRAN NESTING LEVEL IS INDENTED 4"
+"   3) THE FORTRAN NESTING LEVEL IS INDENTED 2"
+ 
+ 
+"DECLARATION COMES NEXT"
+ 
+CHARACTER*4 ODD, EVEN;
+DATA ODD/' ODD'/,EVEN/'EVEN'/;
+ 
+"EXECUTABLE STATEMENTS COME NEXT"
+ 
+OUTPUT ; (' THE FIRST TEN INTEGERS AND THEIR SQUARES:',/);
+ 
+"THE ABOVE OUTPUT STATEMENT SHOULD BEGIN IN COLUMN 7 OF THE FORTRAN"
+"THE COMMENTS SHOULD BE IN COLUMN 5 (EXCEPT FOR THE C IN COLUMN 1)"
+ 
+"THE FOLLOWING DO-LOOP SHOULD START IN COLUMN 9 OF THE FORTRAN"
+ 
+DO I=1,10 [
+ISQ=I**2;
+J=MOD(I,2);
+ 
+IF(J.EQ.1) [OUTPUT I,ODD,ISQ; (' I=',I3,' (',A4,' INTEGER)',I4);]
+ELSE [OUTPUT I,EVEN,ISQ; (' I=',I3,' (',A4,' INTEGER)',I4);]
+ 
+"THE ABOVE IF-ELSE SHOULD BE NESTED IN COLUMN 11 OF THE FORTRAN"
+]
+ 
+STOP;
+END;
+%%
