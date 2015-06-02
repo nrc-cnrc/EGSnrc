@@ -21,10 +21,11 @@
 #
 ###############################################################################
 #
-#  Author:      Tony Popescu and Julio Lobo, 2010
+#  Authors:         Tony Popescu, 2010
+#                   Julio Lobo, 2010
 
-#  Revisions:   Frederic Tessier
-#               Ernesto Mainegra-Hing
+#  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #

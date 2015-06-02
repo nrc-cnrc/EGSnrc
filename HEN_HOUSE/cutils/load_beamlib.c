@@ -21,11 +21,11 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2004
+#  Author:          Iwan Kawrakow, 2004
 #  
-#  Revisions:   Blake Walters
-#               Ernesto Mainegra-Hing
-#               Frederic Tessier
+#  Contributors:    Blake Walters
+#                   Ernesto Mainegra-Hing
+#                   Frederic Tessier
 #
 ###############################################################################
 #
@@ -34,6 +34,7 @@
 #
 ###############################################################################
 */
+
 
 #include "egs_config1.h"
 

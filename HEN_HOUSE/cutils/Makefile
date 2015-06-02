@@ -21,11 +21,12 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2004
+#  Author:          Iwan Kawrakow, 2004
 #  
-#  Revisions:   Frederic Tessier   
+#  Contributors:    Frederic Tessier   
 #
 ###############################################################################
+
 
 include $(EGS_CONFIG)
 
