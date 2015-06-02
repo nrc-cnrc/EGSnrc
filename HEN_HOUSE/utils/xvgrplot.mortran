@@ -1,0 +1,601 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc xvgr plotting subroutines                                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Andrew Booth, 1995                                        "
+"                                                                             "
+"  Contributors:    Charlie Ma                                                "
+"                   Aaron Merovitz                                            "
+"                   Dave Rogers                                               "
+"                   Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developped at the      "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin.                         "
+"                                                                             "
+"  Joanne Treurniet of NRC made significant contributions to the code system, "
+"  in particular the GUIs and EGS_Windows. Mark Holmes, Brian Geiser and Paul "
+"  Reckwerdt of Wiscosin played important roles in the overall OMEGA project  "
+"  within which the BEAM code system was developed.                           "
+"                                                                             "
+"  Historical Notes:                                                          "
+"                                                                             "
+"  SID 1.1 Was Andrew Booth`s original                                        "
+"                                                                             "
+"  SID 1.5 Modifications by Charlie Ma (1995) and Andrew Booth (1996) to add  "
+"          linear and logarithmic option                                      "
+"                                                                             "
+"  SID 1.6 Now maintained on $OMEGA_HOME/progs/xvgrplot                       "
+"          In egs distribution it is in $HEN_HOUSE/xvgrplot                   "
+"                                                                             "
+"#############################################################################"
+
+
+!INDENT F2;
+%I4
+%Q1
+"************************************************************************"
+
+SUBROUTINE XVGRPLOT (X, Y, ERRY, NPTS, CURVENUM, SERIESTITLE,
+                        XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
+                        UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+"Copyright NRC 1998
+"************************************************************************"
+"                                                                        "
+"  This subroutine is used to create an xvgr plot file that will plot    "
+"  Y as a function of X and include all of the pertinent information for "
+"  the graph.  Each time the subroutine is called it writes one series   "
+"  worth of data points to the unit specified.  For graphs that use      "
+"  several series, multiple subroutine calls are required.               "
+"                                                                        "
+"  Written  by:  Andrew Booth, August 1995                               "
+"  Modified by:  C-M Ma, Sept. 1995                                      "
+"  Modified by:  Andrew Booth, July 1996                                 "
+"                - introduced AXISTYPE argument to handle lin and log    "
+"                  axis combinations.                                    "
+"   Jan 98 A Merovitz/DR added xview xmin value so y axis label displayed"
+"   Feb 98 A Merovitz/DR if non-negative, makes zeros fudge*smalest      "
+"   Jun 99 BW/DWOR in Y>0 and ERRY crosses/touches 0, adjusted>0.0       "
+"   Jul 99 DWOR made grace/xmgr compatible and added timestamp           "
+"                                                                        "
+"  The arguments of the subroutine are described in detail below:        "
+"                                                                        "
+"     1) X - array of x values to be plotted.  Top of bin if histogram.  "
+"     2) Y - corresponding array of y values to be plotted.              "
+"     3) ERRY - array containing uncertainties in Y for the plot.        "
+"            If the first entry of this array is 0, it is                "
+"            assumed that the graph is of type XY.  If it is             "
+"            not 0, the graph is of type XY-DY.                          "
+"     4) NPTS - the number (integer) of points to be plotted. This       "
+"            should be the number of data points that exist in the       "
+"            X, Y, and ERRY arrays.                                      "
+"     5) CURVENUM - the number (integer) of the curve that is to be      "
+"            plotted. The first curve number should be 0.  If this       "
+"            number is not 0, then it is assumed that the plot file      "
+"            already exists and the subroutine call is to add an         "
+"            additional series to the existing graph.                    "
+"     6) SERIESTITLE - string (max of 60 characters) giving the          "
+"            series title (legend) for the data in the X and Y arrays.   "
+"     7) XTITLE - string (max of 60 characters) giving the x axis        "
+"            title.                                                      "
+"     8) YTITLE - string (max of 60 characters) giving the y axis        "
+"            title.                                                      "
+"     9) GRAPHTITLE - string (max of 60 characters) giving the           "
+"            graph title.                                                "
+"    10) SUBTITLE - string (max of 60 characters) giving the subtitle    "
+"            for the graph.                                              "
+"    11) UNITNUM - number (integer) specifying where the data is to      "
+"            be written.                                                 "
+"            this unit must be opened by the calling routine             "
+"    12) TYPE - 0 if data is to be written as normal point plot.         "
+"               1 if data is to be written as a histogram plot.          "
+"    13) HISTXMIN - used for histogram plots only.  This is a real       "
+"                   number with the value of lower xbin for the plot.    "
+"    14) AXISTYPE - 0 if linear-linear plot                              "
+"                   1 if log-linear plot (y = log; x = lin)              "
+"                   2 if linear-log plot (y = lin; x = log)              "
+"                   3 if log-log plot                                    "
+"                                                                        "
+"                                                                        "
+"************************************************************************"
+  REPLACE{$SMALLFACTOR} WITH {1.E-5}
+  REPLACE{$LARGEFACTOR} WITH {1.E5}
+
+  IMPLICIT NONE;
+
+  $INTEGER MAX, IDEBUG;
+  PARAMETER (MAX = 400);  "---MAX used in defining the maximum number of---"
+                          "---points that can be plotted in one series. ---"
+  $INTEGER NPTS,NPTS1,CURVENUM, COUNT,UNITNUM,TYPE,AXISTYPE;
+  $REAL X(NPTS),Y(NPTS),ERRY(NPTS),YMIN,HISTXMIN,ERRYOLD,SMALLESTX,
+    SMALLESTY,FUDGE;
+  $INTEGER TITLELENGTH,SUBLENGTH,XAXISLENGTH,YAXISLENGTH,SERIESLENGTH;
+  $INTEGER LOGX, LOGY, LOGDY,ZEROYCOUNT;
+
+  "CHARACTER*80 SUBTITLE;"
+  "CHARACTER*60 GRAPHTITLE,XTITLE,YTITLE,SERIESTITLE;"
+  " IK changed the above to avoid complains from the compiler about"
+  " inconsistent argument lists"
+  CHARACTER*(*) SUBTITLE;
+  CHARACTER*(*) GRAPHTITLE,XTITLE,YTITLE,SERIESTITLE;
+  CHARACTER*10 INDEX;
+  CHARACTER*3  INDEXNUM;
+
+  $LOGICAL TESTFILE, ALLPOS;
+  $REAL    one;
+  parameter (one = 1);
+
+  FUDGE = 1.e-10;              "If a number in the gaph is zero, it is replaced"
+                             "by the (smallest number in the gaph)*(FUDGE)"
+  IDEBUG = 0;  "set to 1 to get debug stmts active"
+  IF (IDEBUG = 1) [
+        write(6,'(//'' Entering xvgrplot Rev 1.1 ''/)');
+        write(6,'('' Curve'',I3,'' to go to unit'',I3)')CURVENUM,UNITNUM;
+        write(6,'(''SERIESTITLE: '',a60)') SERIESTITLE;
+        write(6,'(''XTITLE:      '',a60)') XTITLE;
+        write(6,'(''YTITLE       '',a60)') YTITLE;
+        write(6,'(''GRAPHTILE:   '',a60)') graphtitle;
+        write(6,'(''SUBTITLE:    '',a80)') subtitle;
+  ]
+  IF ( NPTS .gt. MAX) [ "Asked for too many points"
+        OUTPUT NPTS, MAX;(//' **************************'/
+        ' Number of points asked for =', I5,
+        ' is greater than max allowed of', I4/
+        ' Setting NPTS to MAX, you could adjust MAX in xvgrplot.mortran'/
+        ' **************************'//);
+        NPTS1 = MAX;
+  ] ELSE [NPTS1 = NPTS;]
+
+  "---Check to make sure that speicified unit is open for---"
+  "---writing to.---"
+  INQUIRE(UNIT = UNITNUM, OPENED = TESTFILE);
+
+  IF (~TESTFILE) [ "---File has not been opened - print message.---"
+    WRITE(6,:125:) UNITNUM;
+    :125: FORMAT (//'  ---------Error in Subroutine XVGRPLOT---------'
+                 ,/'   Unit specified (',I2,') is not open.'
+                 ,/'   Unit must be opened before using subroutine.'
+                 ,/'   Data not written to file.'
+                 ,/'  ----------------------------------------------'//);
+    RETURN;
+  ] "---End of error message for unopened file---"
+
+  "---Set defaults if arguments are left blank.---"
+  IF (GRAPHTITLE = ' ') [
+    GRAPHTITLE = 'Untitled Graph - No title specified in subroutine';
+  ]
+  IF (XTITLE = ' ') [ XTITLE = 'X-axis not titled in subroutine';  ]
+
+  IF (YTITLE = ' ') [ YTITLE = 'Y-axis not titled in subroutine'; ]
+
+  IF (SERIESTITLE = ' ') [
+    SERIESTITLE = 'series # ';
+    INDEX = '0123456789';
+    INDEXNUM = INDEX(CURVENUM+1:CURVENUM+1);
+    SERIESTITLE(9:9) = INDEXNUM;
+  ]
+
+  "---Find lengths of stings for formatting purposes---"
+  "---Initialize variable lengths---"
+
+  TITLELENGTH = 61;    SUBLENGTH = 61;       XAXISLENGTH = 61;
+  YAXISLENGTH = 61;    SERIESLENGTH = 61;
+
+  "---Find title string length---"
+  LOOP [
+    TITLELENGTH = TITLELENGTH - 1;
+  ] UNTIL (GRAPHTITLE(TITLELENGTH:TITLELENGTH) ~= ' ');
+
+  "---Find subtitle string length---"
+  LOOP [
+    SUBLENGTH = SUBLENGTH - 1;
+  ] UNTIL (SUBTITLE(SUBLENGTH:SUBLENGTH) ~= ' ');
+
+  "---Find x-axis string length---"
+  LOOP [
+    XAXISLENGTH = XAXISLENGTH - 1;
+  ] UNTIL (XTITLE(XAXISLENGTH:XAXISLENGTH) ~= ' ');
+
+  "---Find y-axis string length---"
+  LOOP [
+    YAXISLENGTH = YAXISLENGTH - 1;
+  ] UNTIL (YTITLE(YAXISLENGTH:YAXISLENGTH) ~= ' ');
+
+  "---Find series title length---"
+  LOOP [
+    SERIESLENGTH = SERIESLENGTH - 1;
+  ] UNTIL (SERIESTITLE(SERIESLENGTH:SERIESLENGTH) ~= ' ');
+  IF( IDEBUG = 1) [
+    OUTPUT SERIESLENGTH,YAXISLENGTH,XAXISLENGTH,SUBLENGTH,TITLELENGTH;
+    (' SERIESLENGTH,YAXISLENGTH,XAXISLENGTH,SUBLENGTH,TITLELENGTH'/
+     5I10)
+  ]
+
+  "---Small bit of error checking here done for the purpose of warning the---"
+  "---user if there is a problem when using a 'log' type graph.           ---"
+  "---Possible problems are:                                              ---"
+  "---    1.)  value on log scale < or = 0.                               ---"
+  "---    2.)  value of error bar for xydy plot extends into the region   ---"
+  "---                    where y < or = 0.                               ---"
+  "---                                                                    ---"
+  "---To keep track of these problems the flags LOGX, LOGY, and LOGDY will---"
+  "---be set if there is the respective error.                            ---"
+  "---(ie.  if LOGX set (=1) then there exist an X value that is <= 0 AND ---"
+  "--- the xaxis is set to be a log scale.)                               ---"
+  "--------------------------------------------------------------------------"
+
+  "---Initialize LOGX, LOGY, and LOGDY to be not set (0)---"
+  LOGX = 0;          LOGY = 0;          LOGDY = 0;
+
+  "---Initialize ZEROYCOUNT to 0---"
+  ZEROYCOUNT=0;
+
+  "In all cases where no negatives are concerned, fix points that are"
+  "equal to 0.0"
+  "Aaron Merovitz, Jan 1998"
+  ALLPOS=.TRUE.;
+  IF ( X(1)=0.0 ) [SMALLESTX = 0.1;] ELSE [SMALLESTX=X(1);]
+  IF ( Y(1)=0.0 ) [SMALLESTY = 0.1;] ELSE [SMALLESTY=Y(1);]
+  DO COUNT = 1, NPTS1 [
+       IF ((X(COUNT) < SMALLESTX) & (X(COUNT)~=0.)) [SMALLESTX=X(COUNT);]
+       IF ((Y(COUNT) < SMALLESTY) & (Y(COUNT)~=0.)) [SMALLESTY=Y(COUNT);]
+       IF ((X(COUNT) < 0.)|(Y(COUNT) < 0.)) [ALLPOS=.FALSE.;]
+  ]
+  IF (ALLPOS) [
+     DO COUNT = 1, NPTS1 [
+          IF (X(COUNT)=0.) [X(COUNT)=SMALLESTX*FUDGE;]
+          IF (Y(COUNT)=0.) [Y(COUNT)=SMALLESTY*FUDGE;]
+     ]
+  ]
+  "---Loop through data points (if any log scales set) to see if there are---"
+  "---any  <= 0 problems that might not have been fixed---"
+
+  IF (AXISTYPE > 0) [  "---At least one axis is of log type---"
+    DO COUNT = 1, NPTS1 [
+      IF (X(COUNT) <= 0.) [ LOGX = 1; ]
+      IF (Y(COUNT) <= 0.) [ LOGY = 1; ]
+      IF ((Y(COUNT)-ERRY(COUNT)) <= 0.) [ LOGDY = 1; ]
+    ]
+  ]
+  ELSE[ "--fix error bars that just hit Y axis in case user wants"
+        "to switch to linlog plot while in xmgr--"
+    DO COUNT = 1, NPTS1 [
+       IF(Y(COUNT)-ERRY(COUNT) < Y(COUNT)-0.9999*Y(COUNT) & Y(COUNT)>0.)[
+           ZEROYCOUNT=ZEROYCOUNT+1;
+           IF(ZEROYCOUNT=1)[
+             WRITE(6,:105:);
+ :105: FORMAT (/' ------------WARNING from Subroutine XVGRPLOT-----------'
+              ,/'  Some errors give 0 value and so are adjusted so       '
+              ,/'  that you can switch to a log Y scale while in xmgr.   '
+              ,/' -------------------------------------------------------'/);
+           ]
+           ERRYOLD=ERRY(COUNT);
+           ERRY(COUNT) = 0.9999*Y(COUNT);
+           "WRITE(6,:106:) COUNT,ERRYOLD,ERRY(COUNT);"
+ ":106: FORMAT (/'  Error adjusted on point #',I2,' from',1PE11.4, ' to'"
+               "       /'        ',1PE11.4,'.');"
+       ]
+    ]
+  ]
+
+  "---Use this info later when writing to file---"
+
+  "---Now begin writing information to unit---"
+  IF (CURVENUM = 0) [ "---Case where plot file must start from scratch---"
+    "---Insert xvgr graph header in file.---"
+
+    "---Start with type of graph.  (lin-lin, log-lin, lin-log, or log-log)---"
+    IF (AXISTYPE = 0) [ "---Graph is of type lin-lin---"
+      WRITE(UNITNUM,:90:) 'xy';
+    ] ELSEIF (AXISTYPE = 1) [ "---Graph is of type log-lin---"
+      WRITE(UNITNUM,:90:) 'logy';
+      WRITE(UNITNUM,:1080:);
+    ] ELSEIF (AXISTYPE = 2) [ "---Graph is of type lin-log---"
+      WRITE(UNITNUM,:90:) 'logx';
+      WRITE(UNITNUM,:1080:);
+    ] ELSEIF (AXISTYPE = 3) [ "---Graph is of type log-log---"
+      WRITE(UNITNUM,:90:) 'logxy';
+      WRITE(UNITNUM,:1080:);
+      WRITE(UNITNUM,:1090:);
+    ] ELSE [ "--anything else specified is in error--"
+      WRITE(6,:91:) AXISTYPE;
+      :91: FORMAT (//'  ------------Error in Subroutine XVGRPLOT-----------'
+                 ,/'   AXISTYPE specified (',I2,') is not a valid option.'
+                 ,/'  ----------------------------------------------'//);
+      RETURN;
+    ]
+
+    :90: FORMAT ('@g0 type ',A,' ');
+    :1080: FORMAT ('@    xaxis  ticklabel format exponential');
+    :1090: FORMAT ('@    yaxis  ticklabel format exponential');
+
+    "---Titles and things---"
+    WRITE(UNITNUM,:100:) GRAPHTITLE(1:TITLELENGTH)
+                        ,SUBTITLE(1:SUBLENGTH)
+                        ,XTITLE(1:XAXISLENGTH)
+                        ,YTITLE(1:YAXISLENGTH);
+    :100: FORMAT ('@    title "',A,'"'/
+                 ,'@    subtitle "',A,'"'/
+                 ,'@    legend on'/
+                 ,'@    legend box linestyle 0'/
+                 ,'@    legend x1 0.6'/
+                 ,'@    legend y1 0.75'/
+                 ,'@    view xmin 0.250000'/
+                 ,'@    xaxis  label "',A,'"'/
+                 ,'@    timestamp on'/
+                 ,'@    yaxis  label "',A,'"');
+  ]  "---End CURVENUM = 0---"
+
+"--XVGR has the characteristic that if the same input command is issued more---"
+"--than once, the last one to be read is the one that is executed.  For this---"
+"--situation, this is perfect.  Say the first series written to a file is of---"
+"--a log scale, and the second is also of log scale, but has a data point   ---"
+"--on the log scale that is < or = 0, then we can write the '@g0 type xy'   ---"
+"--to the file AFTER the previous '@g0 type logxy' and the xy type will     ---"
+"--prevail.  This will prevent errors when executing XVGR.  Of course the   ---"
+"--alteration will also be written to the display.                          ---"
+
+
+  IF (AXISTYPE = 1 & LOGY = 1) [  "--LOGY error--"
+    WRITE(UNITNUM,:90:) 'xy';
+    WRITE(6,:95:);
+    :95: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                ,/'  Log scale requested for Y axis when one or more   '
+                ,/'  Y data points are 0 or negative.                  '
+               ,//'  Y axis scale changed to linear.                   '
+                ,/' ---------------------------------------------------'/);
+  ]
+
+  IF (AXISTYPE = 2 & LOGX = 1) [  "--LOGX error--"
+    WRITE(UNITNUM,:90:) 'xy';
+    WRITE(6,:96:);
+    :96: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                ,/'  Log scale requested for X axis when one or more   '
+                ,/'  X data points are 0 or negative.                  '
+               ,//'  X axis scale changed to linear.                   '
+                ,/' ---------------------------------------------------'/);
+  ]
+
+  IF (AXISTYPE = 3 & (LOGX = 1 | LOGY = 1)) [  "--LOGX or LOGY error--"
+    IF (LOGX = 1 & LOGY = 1) [
+      WRITE(UNITNUM,:90:) 'xy';
+      WRITE(6,:97:);
+      :97: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                  ,/'  Log scale requested for X axis and Y axis when    '
+                  ,/'  one or more X and Y data points are 0 or negative.'
+                 ,//'  X and Y axes scales changed to linear.            '
+                  ,/' ---------------------------------------------------'/);
+    ]
+    ELSEIF (LOGX = 1) [ WRITE(UNITNUM,:90:) 'logy'; WRITE(6,:96:); ]
+    ELSE              [ WRITE(UNITNUM,:90:) 'logx'; WRITE(6,:95:); ]
+  ]
+
+  "---now make a fix for those error bars that 'dip' beneath the x-axis on---"
+  "---log plots.                                                          ---"
+
+  IF (LOGDY = 1 & LOGY ~= 1 & (AXISTYPE = 3 | AXISTYPE = 1)) [
+    "--if LOGDY problem and log scale not been already reset to linear--"
+    "--do fudge to correct the problem--"
+
+    WRITE(6,:101:);
+    :101: FORMAT (/' ------------WARNING from Subroutine XVGRPLOT-----------'
+              ,/'  Log scale requested for Y axis, and Y value less      '
+              ,/'  error gives 0 or negative value.                      '
+             ,//'  Error adjusted to aviod negavite values on log scale. '
+              ,/' -------------------------------------------------------'/);
+
+    DO COUNT = 1,NPTS1[
+      IF(Y(COUNT)-ERRY(COUNT) < Y(COUNT)-0.9999*Y(COUNT)) [
+        ERRYOLD = ERRY(COUNT);
+        ERRY(COUNT) = 0.9999*Y(COUNT);
+        WRITE(6,:103:) COUNT,ERRYOLD,ERRY(COUNT);
+        :103: FORMAT (/'  Error adjusted on point #',I2,' from',1PE11.4, ' to'
+                      /'        ',1PE11.4,'.');
+      ]
+    ]
+
+    WRITE(6,:104:);
+    :104: FORMAT (/' -------------------------------------------------------'/);
+
+  ]
+
+  "---Include data about series for legend purposes.---"
+  "first line needed to make it work with grace"
+  IF (CURVENUM < 10 ) [
+    WRITE(UNITNUM,'(''@    s'',I1,'' on'')') CURVENUM;
+  ]
+  ELSE [
+    WRITE(UNITNUM,'(''@    s'',I2,'' on'')') CURVENUM;
+  ]
+  WRITE(UNITNUM,:150:)  CURVENUM,SERIESTITLE(1:SERIESLENGTH);
+  :150: FORMAT ('@    legend string ',I2,' "',A,'"');
+
+
+  "---Do normal plot.  ie. NOT histogram plot.---"
+  IF (TYPE = 0) [ "---Normal point plot.---"
+
+    "---Check all ERRYs.  If even one is nonzero, then series is type xydy---"
+    DO COUNT = 1, NPTS1 [
+      IF (ERRY(COUNT) ~= 0) [ "---Data set is not of type XY---"
+        GOTO :X-Y-DY1:;
+      ]
+    ]
+
+    "---Data set is of type XY---"
+    WRITE(UNITNUM,:200:);
+    :200: FORMAT ('@TYPE xy');
+    IF (CURVENUM < 10) [
+       WRITE(UNITNUM,:151:) CURVENUM;
+       IF (CURVENUM = 9) [WRITE(UNITNUM,:197:) CURVENUM, CURVENUM+1;]
+       ELSE [WRITE(UNITNUM,:198:) CURVENUM, CURVENUM+1;]
+    ]
+    ELSE [
+       WRITE(UNITNUM,:152:) CURVENUM;
+       WRITE(UNITNUM,:199:) CURVENUM, CURVENUM+1;
+    ]
+    :151: FORMAT ('@    s',I1,' errorbar length 0.000000');
+    :152: FORMAT ('@    s',I2,' errorbar length 0.000000');
+    :197: FORMAT ('@    s',I1,' symbol color ',I2);
+    :198: FORMAT ('@    s',I1,' symbol color ',I1);
+    :199: FORMAT ('@    s',I2,' symbol color ',I2);
+
+    "---Then write the data to the file.---"
+    DO COUNT = 1, NPTS1 [ WRITE(UNITNUM,:250:) X(COUNT),Y(COUNT); ]
+    :250: FORMAT (1PE15.4,1PE15.4);
+    GOTO  :END-X-Y-DY1:;
+
+    "---Data set is of type XY-DY---"
+    :X-Y-DY1:;
+    WRITE(UNITNUM,:300:);
+    :300: FORMAT ('@TYPE xydy');
+    IF (CURVENUM < 10) [
+    WRITE(UNITNUM,:151:) CURVENUM;
+       IF (CURVENUM = 9) [WRITE(UNITNUM,:197:) CURVENUM, CURVENUM+1;]
+       ELSE [WRITE(UNITNUM,:198:) CURVENUM, CURVENUM+1;]
+    ]
+    ELSE [
+       WRITE(UNITNUM,:152:) CURVENUM;
+       WRITE(UNITNUM,:199:) CURVENUM, CURVENUM+1;
+    ]
+
+    "---Then write the data to the file.---"
+    DO COUNT = 1, NPTS1 [WRITE(UNITNUM,:350:) X(COUNT),Y(COUNT),ERRY(COUNT);]
+    :350: FORMAT (1PE15.4,1PE15.4,1PE15.4);
+    :END-X-Y-DY1:;
+
+  ]  "--end of point plot block--"
+  ELSE [ "---Histogram plot---"
+
+    "---Must find minimum y value in the y array to    ---"
+    "---use as scale factor for establishing y-min on  ---"
+    "---histogram plot.  We don't use 0 here as with 0 ---"
+    "---plot can not be made into log plot in xvgr.    ---"
+
+    YMIN = ABS($LARGEFACTOR * Y(1));
+
+    DO COUNT = 1, NPTS1 [
+       IF (ABS(Y(COUNT)) < YMIN) [ YMIN = ABS(Y(COUNT)); ]
+    ]  "---End loop to find smalled Y---"
+
+   "---Now smallest value of Y has been found.  Want to make sure that the---"
+   "---first point used is even smaller than this and that it is of the same---"
+   "---sign as the first Y data point in the plot.---"
+
+    "---Now set YMIN to even smaller value for plot and set sign.---"
+    YMIN = SIGN(one,Y(1)) * $SMALLFACTOR * YMIN ;
+
+    "---Set this value in y-array as element after the---"
+    "---element in index npts.---"
+    Y(NPTS1+1) = YMIN;
+
+    IF ((AXISTYPE = 2 | AXISTYPE = 3) & HISTXMIN = 0) [
+      IF (X(1) = (X(2)-X(1))) [ HISTXMIN = X(1)-0.5*(X(2)-X(1)); ]
+      ELSE                    [ HISTXMIN = X(1)-(X(2)-X(1)); ]
+
+      WRITE(6,:306:) HISTXMIN;
+      :306: FORMAT (/' ---------WARNING from Subroutine XVGRPLOT--------'
+              ,/'  Minimum bin for X specified as 0 with log scale  '
+              ,/'  on X axis.  Minimum X bin set to ',1PE10.3,'.'
+              ,/' -------------------------------------------------'/);
+    ]
+
+    DO COUNT = 1, NPTS1 [
+      IF (ERRY(COUNT) ~= 0.) [ "---Data set is not of type XY---"
+        GOTO :X-Y-DY:;
+      ]
+    ]
+
+"---Data set is of type XY---"
+    IF (CURVENUM < 10) [
+    WRITE(UNITNUM,:151:) CURVENUM;
+       IF (CURVENUM = 9) [WRITE(UNITNUM,:197:) CURVENUM, CURVENUM+1;]
+       ELSE [WRITE(UNITNUM,:198:) CURVENUM, CURVENUM+1;]
+    ]
+    ELSE [
+       WRITE(UNITNUM,:152:) CURVENUM;
+       WRITE(UNITNUM,:199:) CURVENUM, CURVENUM+1;
+    ]
+    WRITE(UNITNUM,:200:);
+
+    "---Plot the first histogram points.---"
+    WRITE(UNITNUM,:250:) HISTXMIN,YMIN;
+    WRITE(UNITNUM,:250:) HISTXMIN,Y(1);
+
+    "--Then write the data to the file.---"
+    DO COUNT = 1, NPTS1 [
+      WRITE(UNITNUM,:250:) X(COUNT),Y(COUNT);
+      WRITE(UNITNUM,:250:) X(COUNT),Y(COUNT+1);
+    ]
+    GOTO :END-X-Y-DY:;
+
+"---Data set is of type XY-DY---"
+    :X-Y-DY:;
+    "---Put error of 0 on last *made-up* point in error array.---"
+    ERRY(NPTS1+1) = 0.0;
+
+    IF (CURVENUM < 10) [
+    WRITE(UNITNUM,:151:) CURVENUM;
+       IF (CURVENUM = 9) [WRITE(UNITNUM,:197:) CURVENUM, CURVENUM+1;]
+       ELSE [WRITE(UNITNUM,:198:) CURVENUM, CURVENUM+1;]
+    ]
+    ELSE [
+       WRITE(UNITNUM,:152:) CURVENUM;
+       WRITE(UNITNUM,:199:) CURVENUM, CURVENUM+1;
+    ]
+    WRITE(UNITNUM,:300:);
+
+    "---Plot the first histogram points.---"
+    IF (HISTXMIN = 0.0) [ "Aaron Meroivtz, Feb. 1998"
+       HISTXMIN = SMALLESTX*FUDGE;
+    ]
+    WRITE(UNITNUM,:350:) HISTXMIN, YMIN, 0.;
+    WRITE(UNITNUM,:350:) HISTXMIN, Y(1), 0.;
+    WRITE(UNITNUM,:350:) (X(1)+HISTXMIN)/2., Y(1), ERRY(1);
+
+    "---Then write the data to the file.---"
+    DO COUNT = 1, NPTS1 [
+      WRITE (UNITNUM,:350:) X(COUNT),Y(COUNT),0.;
+      WRITE (UNITNUM,:350:) X(COUNT),Y(COUNT+1),0.;
+      IF(COUNT < NPTS1)[
+       WRITE (UNITNUM,:350:) (X(COUNT)+X(COUNT+1))/2.,Y(COUNT+1),ERRY(COUNT+1);
+      ]
+    ]
+    :END-X-Y-DY:;
+  ] "---End HIST=0 loop---"
+
+  "---Insert end of series indicator to file.---"
+  WRITE(UNITNUM,'(''&'')');
+
+  RETURN;
+  END; "---End of subroutine.---"
+;
+

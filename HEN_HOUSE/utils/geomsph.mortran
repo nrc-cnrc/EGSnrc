@@ -1,0 +1,609 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc spherical geometry input subroutine                                 "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Joanne Treurniet, 1999                                    "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+
+
+%I4
+%C80
+%Q1
+;"******************************************************************************
+"
+"                              *******************
+"                              *                 *
+"                              * geomsph.mortran *
+"                              *                 *
+"                              *******************
+"
+"
+"   THIS SUBROUTINE IS USED TO DO ALL THE WORK ASSOCIATED WITH HAVING
+"   A SPHERICAL GEOMETRY INPUT.
+"
+"       VERSION 1.1       J. Treurniet               05/99
+"
+"
+"===============================================================================
+"
+"   CONES NOW SUPPORTED. SINCE 90 DEGREES CONE IS NEEDED BY THE CONE GEOMETRY
+"   CHECKING MACRO, IF THE USER DOES NOT INCLUDE THE 90 DEGREES CONE, THE NEXT
+"   ANGLE GREATER THAN 90 IS AUTOMATICALLY FORCED TO BE 90.
+"
+"   ANGLES AND RADII CAN BE ENTERED INDIVIDUALLY OR IN GROUPS.
+"
+"
+"       VERSION 2.0      E. Mainegra-Hing           10/10/2003
+"
+"*******************************************************************************
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS4 simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+;
+"*******************************************************************************
+"                       SPHERICAL GEOMETRY INPUT
+"                       **************************
+"*******************************************************************************
+"
+" GEOMSPH DELIMETERS:   :start geometrical inputs:
+"                       :stop geometrical inputs:
+"
+"
+"  NUMBER OF CONES        (M)   number of cones (individual or by group)
+"                               If omitted or ZERO, pure spherical geometry
+"                               assumed.
+"
+"  ANGLES                 (M)   ANGLES defining the geometry (reals)
+"                               No needed in pure spherical geometries.
+"
+"                               For group input there must be as many entries
+"                               as for the NUMBER OF CONES, i.e. :
+"                               NCON1,NCON2,...,NCONn
+"                               DANG1,DANG2,...,DANGn
+"
+"                               For individual input, ncones must be equal
+"                               to the number of entries, i.e.:
+"                               ncones
+"                               DANG1, DANG2,...,DANGncones
+"
+"  NUMBER OF SPHERES      (M)   number of spheres (individual or by group)
+"
+"                               For individual inputs, number of spheres
+"                               can be omitted
+"
+"
+"  RADII                  (M)   radii of spheres defining the geometry (reals)
+"
+"                               For group input there must be as many entries
+"                               as for the NUMBER OF SPHERES, i.e. :
+"                               NSPH1,NSPH2,...,NSPHn
+"                               DRAD1,DRAD2,...,DRADn
+"
+"  CAVITY ZONES           (M)   geometrical zone numbers in the cavity (reals)
+"
+"-------------------------------------------------------------------------------
+"  MATERIAL INPUT
+"  **************
+"
+"  MEDIA              (M)   material name which must match that in the
+"                           pegs4 data set EXACTLY, including case.
+"                           24 characters max per medium, ended by , or ;
+"
+"  MEDNUM                 (M)   the material number (integers)
+"                               (MEDNUM=0 => vacuum)
+"  START REGION           (M)   initial geometrical zone(irl) (integers) for
+"                               this medium [NREGLO]
+"  STOP REGION            (M)   final geometrical zone(irl) (integers) for
+"                               this medium.[NREGHI]
+"                               ( >NREGLO to input more than one zone)
+"                               DEFAULTS:   MEDNUM=0 FOR REGION=1 (i.e. VACUUM)
+"                                           MEDNUM=1 FOR REGION=2,NREG
+"
+"                         These inputs should be thought of as triplets of
+"                         MEDNUM,START and STOP REGIONs     which are used
+"                         to specify the medium numbers for all regions where
+"                         the medium is not the default (medium 1).
+"
+"***************************************************************************"
+"
+;
+SUBROUTINE GEOMSPH;
+                                "ERROR_FLAG is now in common block"
+
+"DECLARATION OF COMIN BLOCKS
+"***************************
+;COMIN/GEOM,IODAT2,MEDIA,MISC,SCORE,SOURCE,USER,RANDOM,UPHIOT,GetInput/;
+
+"***************************************************************************"
+"*                   Variables used to declare inputs                      *"
+"***************************************************************************"
+
+INTEGER "NMED, "MEDNUM, NREGLO, NREGHI;               "material input"
+
+"***************************************************************************"
+"*                Variables used to point to the inputs                    *"
+"***************************************************************************"
+"Spherical geometry input"
+INTEGER NUM_CONES,
+        NUM_SPHERES,
+        NUM_ANGLES,  "missing in original geomsph.mortran"
+        NUM_RADII,
+        NUM_RSPH,
+        NUM_CAVREG;
+
+"Material Input"
+INTEGER NUM_MEDIA,
+        NUM_MEDNUM,
+        NUM_NREGLO,
+        NUM_NREGHI;
+"---------------------------------------------------------------------------"
+INTEGER ERR;  "$inputfile.errors file"
+INTEGER LNBLNK;
+INTEGER I,J,K,PLN,COUNT;
+INTEGER IX, IZ, REGNUM;
+REAL    ADDING;
+
+"---------------------------------------------------------------------------"
+$INTEGER NCONE, NCONES(0:$MAXCANGLE), IC;
+$INTEGER NRADIUS(0:$MAXRADII);
+$REAL    ANGRAD;
+logical  NoNinety;
+                                    "LOCAL VARIABLE DECLARATION"
+                                                  "EMH,01/11/19"
+"---------------------------------------------------------------------------"
+" This must stay I and not be changed to IVAL.  Doing that means that
+" the previous NVALUE(IVAL) will be used so multiple inputs aren't read.
+I=0;  "initialize index number of the value_sought"
+ERR=15;  "output errors to unit # 15"
+
+ERROR_FLAG=0;   "Initialization of bad input flag"
+
+"                      SPHERICAL GEOMETRY INPUT"
+"                      **************************"
+
+DELIMETER = 'GEOMETRICAL INPUTS';
+
+IVAL=IVAL+1;
+NUM_CONES = IVAL;
+VALUES_SOUGHT(IVAL)='NUMBER OF CONES';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+"VALUE_MAX(IVAL)=$MAXCDOSE;"
+VALUE_MAX(IVAL)=1000000000;
+DEFAULT(IVAL)=1;
+$GET_INPUT(IVAL);
+                           "it's more natural to enter the number of cones"
+                           "and get the subtended regions afterwards.     "
+                           "                              EMH, 01/11/19   "
+
+ALPHA(0) = 0.0;
+NCONE = 0;"get total number of cones"
+DO I = 1, NVALUE(NUM_CONES)[
+   NCONES(I) = VALUE(NUM_CONES,I);
+   NCONE     = NCONE + NCONES(I);
+   IF( NCONE > $MAXCANGLE) [
+    OUTPUT NCONE, $MAXCANGLE;
+    (///' Number of cones,',I10,' is greater than $MAXCANGLE=',I10/
+        '  You must change the definition of $MAXCANGLE in the user code'/
+        '      and recompile'///);
+    STOP;
+   ]
+]
+OUTPUT NCONE;(/'NUMBER OF ANGLES TO BE INPUT NCONE = ',I5);
+NC = NCONE + 1;"number of conical sections = total number of cones + 1"
+
+
+
+
+IF(NC = 1)["PURE SPHERICAL GEOMETRY"
+    ALPHA(1)=180.0; "NONE CONES"
+    NPLAN1=1;NPLAN2=2;
+]
+ELSEIF(NC = 2)["HEMISPHERICAL GEOMETRY"
+    ALPHA(1)=90.0; "ONE CONE ONLY AT 90 DEGREES"
+    NPLAN1=1;NPLAN2=2;
+]
+ELSEIF(NC > 2)["USER DEFINES NC-2 CONES"
+    IVAL = IVAL + 1;
+    NUM_ANGLE = IVAL;
+    VALUES_SOUGHT(IVAL)='ANGLES';
+    TYPE(IVAL)=1;
+    VALUE_MIN(IVAL)=0.0;
+    VALUE_MAX(IVAL)=180.0;
+    $GET_INPUT(NUM_ANGLE);
+    IF ( NVALUE(NUM_ANGLE).EQ.NVALUE(NUM_CONES) )
+    [                                   "group input: NCON1,NCON2,...,NCONn"
+      NCONES(0) = 0; K = 0;                          "DANG1,DANG2,...,DANGn"
+      DO I = 1, NVALUE(NUM_CONES)[
+         K = K + NCONES(I-1);
+         DO J = 1,NCONES(I)[
+            ALPHA(K+J) = ALPHA(K+J-1) + VALUE(NUM_ANGLE,I);
+            "OUTPUT K+J, ALPHA(K+J);     "
+            "(' CONE OPENING ANGLE # ',I3,': ',F8.4);   "
+         ]
+      ]
+    ]
+    ELSEIF ( NVALUE(NUM_ANGLE).EQ.NCONE)
+    [                               "individual input: NCONE"
+      DO I=1,NCONE [                "                  ANG1,ANG2,...,ANGncone"
+         ALPHA(I)=VALUE(NUM_ANGLE,I);
+         "OUTPUT I, ALPHA(I);     "
+         "(' CONE OPENING ANGLE # ',I3,': ',F8.4);   "
+      ]
+    ]
+    ELSE [ "input error for cones"
+      OUTPUT;
+      (/' ***** ERROR IN GEOMETRICAL INPUT FOR CONES *****'/
+        ' MISMATCH BETWEEN NUMBER OF CONES AND NUMBER OF ANGULAR ENTRIES'/
+        ' CHECK THIS AND TRY AGAIN !!!'//
+        ' PROGRAM STOPPED.');
+      STOP;
+    ]
+
+    NoNinety = .true.;"assume initially 90 degree not included"
+    IC=0; "LOOP INDEX"
+    LOOP[ "CHECK IF USER PUT IN 90 DEGREE CONE"
+        IC=IC+1;
+        IF(ALPHA(IC) = 90.0)["user included 90 degree, great!!!"
+            NPLAN1=IC;NPLAN2=NPLAN1+1;
+            NoNinety = .false.;
+            OUTPUT;
+            (/' *** WARNING ***. 90 DEGREE CONE INPUT',
+              ' BY USER. JUST MAKING THE POINT.'/);
+            EXIT;
+        ]
+    ]UNTIL (IC = NCONE);
+
+    IF ( NoNinety )[
+       IF ( NC > $MAXCANGLE )["remeber NC = NCONE + 1"
+            OUTPUT;
+            (/' ***** ERROR IN GEOMETRICAL INPUT FOR CONES *****'/
+              ' ABOUT TO ADD 90 DEGREES, BUT DIMENSIONS EXCEEDED'/
+              ' MAXIMUM NUMBER OF ANGLES.'//
+              ' PROGRAM STOPPED.');
+              STOP;
+       ]
+       IC=NCONE; "LOOP INDEX"
+       LOOP[ "PUT IN THE 90 DEGREE CONE"
+           IF(ALPHA(IC) > 90.0)["SHIFT UPWARDS
+              ALPHA(IC+1)=ALPHA(IC);
+           ]
+           ELSE[ "PUT IN THE 90 DEGREE CONE RIGHT HERE"
+              ALPHA(IC+1)=90.0;
+              NPLAN1=IC+1;NPLAN2=NPLAN1+1;
+              NCONE = NCONE + 1; NC = NCONE + 1;
+              OUTPUT NPLAN1;(' FORCING ANGLE #',I3,' TO BE 90 DEGREES');
+              EXIT;
+           ]
+           IC=IC-1;
+       ]UNTIL (IC = 0);
+
+       IF(IC = 0)[ "FELL THROUGH THE LOOP => ALL INPUT CONES > 90"
+          ALPHA(1)=90.0;
+          NPLAN1=1;NPLAN2=2;
+          OUTPUT NPLAN1;(' FORCING ANGLE #',I3,' TO BE 90 DEGREES');
+       ];
+    ];
+] "END OF ANGLE INPUT FOR NC>2"
+$SKIP-LINE;
+
+DO IC=1,NCONE[
+ IF ( ALPHA(IC) > 180.0 )[
+    OUTPUT;
+    (/' ***** ERROR IN GEOMETRICAL INPUT FOR CONES *****'/
+      ' POLAR ANGLES CAN NOT BE GREATER THAN 180 DEGREES'//
+      ' PROGRAM STOPPED.');
+    STOP;
+ ]
+]
+
+"0 and 180 degrees are the boundaries(i.e. 0th and NCth), "
+"if those values are entered by input let's use them."
+"ALPHA(0) =   0.0; set above"
+IF ( ALPHA(1) = 0.0 )["shift down angle array since 0 degree is 0th element"
+   DO IC=1,NCONE-1[ ALPHA(IC) = ALPHA(IC+1); ]
+   NC = NCONE; NCONE = NCONE - 1;
+]
+IF ( ALPHA(NCONE) = 180.0 )["user did the work, let's use it !!!"
+   NC = NCONE; NCONE = NCONE - 1;
+]
+"should put here a check whether NC > $MAXCANGLE!!!!!!!!!!!"
+ALPHA(NC)= 180.0;"just in case it didn't fall in the IF"
+
+
+IF(NC = 1)["PURE SPHERICAL GEOMETRY"
+  OUTPUT;(' ==> This is a pure spherical geometry !');
+  DO IC=0,NC["O and 180 degree included"
+       ANGRAD=(PI/180.)*ALPHA(IC);
+       COSALP(IC)=COS(ANGRAD);
+       SINALP(IC)=SIN(ANGRAD);
+       TANALP(IC)=TAN(ANGRAD);
+       TANAL2(IC)=TANALP(IC)**2;
+  ]
+]
+ELSEIF(NC > 1)[
+    OUTPUT;(' CONE OPENING ANGLES:');
+    OUTPUT (ALPHA(IC),IC=1,NC);(8F10.4);
+    NPLAN2=NPLAN1+1;
+    DO IC=0,NC["O and 180 degree included"
+       ANGRAD=(PI/180.)*ALPHA(IC);
+       COSALP(IC)=COS(ANGRAD);
+       SINALP(IC)=SIN(ANGRAD);
+       TANALP(IC)=TAN(ANGRAD);
+       TANAL2(IC)=TANALP(IC)**2;
+    ]
+    $SKIP-LINE;
+]
+OUTPUT NC;(/'NUMBER OF CONICAL REGIONS NC = ',I5);
+OUTPUT NPLAN1;(/'REGION WHERE 90 deg IS UPPER CONE :',I5);
+
+
+IVAL=IVAL+1;
+NUM_RADII = IVAL;
+VALUES_SOUGHT(IVAL)='NUMBER OF SPHERES';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=1000000000;
+"VALUE_MAX(IVAL)=$MAXRADII;"
+DEFAULT(IVAL)=$MAXRADII;
+$GET_INPUT(NUM_RADII);
+
+NR = 0;"get total number of spheres"
+DO I = 1, NVALUE(NUM_RADII)[
+   NRADIUS(I) = VALUE(NUM_RADII,I);
+   NR         = NR + NRADIUS(I);
+   IF( NR > $MAXRADII) [
+     OUTPUT NR, $MAXRADII;
+     (///' Number of spheres,',I10,' is greater than $MAXRADII=',I10/
+         '  You must change the definition of $MAXRADII in the user code'/
+         '      and recompile'///);
+     STOP;
+   ]
+]
+OUTPUT NR;(I6,' spheres in the problem ...');
+
+IVAL = IVAL + 1;
+NUM_RSPH = IVAL;
+VALUES_SOUGHT(IVAL)='RADII';
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=0.0000001;
+VALUE_MAX(IVAL)=999999.9;
+DEFAULT(IVAL)=1.0;
+$GET_INPUT(NUM_RSPH);
+IF (NR = 0) [
+ NR = NVALUE(NUM_RSPH);
+ OUTPUT NR;(I6,' spheres in the problem ...');
+]
+
+
+RSPH(0) = 0.0;
+
+IF ( NVALUE(NUM_RADII).EQ.NVALUE(NUM_RSPH) )
+[                                   "group input: NRAD1,NCON2,...,NCONn"
+      NRADIUS(0) = 0; K = 0;                     "DRAD1,DRAD2,...,DRADn"
+      DO I = 1, NVALUE(NUM_RADII)[
+         K = K + NRADIUS(I-1);
+         DO J = 1,NRADIUS(I)[
+            RSPH(K+J) = RSPH(K+J-1) + VALUE(NUM_RSPH,I);
+            RSPH2(K+J)= RSPH(K+J)**2;
+         ]
+      ]
+]
+ELSEIF ( NVALUE(NUM_RSPH).EQ.NR)
+[                               "individual input: NR"
+      DO I=1,NR [                "              RAD1,RAD2,...,RADnr"
+         RSPH(I) = VALUE(NUM_RSPH,I);
+         RSPH2(I)= RSPH(I)**2;
+      ]
+]
+ELSE [ "input error for spheres"
+      OUTPUT;
+      (/' ***** ERROR IN GEOMETRICAL INPUT FOR SPHERES *****'/
+        ' MISMATCH BETWEEN NUMBER OF SPHERES AND NUMBER OF RADIAL ENTRIES'/
+        ' CHECK THIS AND TRY AGAIN !!!'//
+        ' PROGRAM STOPPED.');
+      STOP;
+]
+
+$SKIP-LINE;
+I = MIN(100,NR);
+DO IX=1,I [
+    "RSPH(IX)=VALUE(NUM_RSPH,IX);"
+    "RSPH2(IX)=RSPH(IX)**2;"
+    IF(RSPH(IX)=0.0)[
+        OUTPUT;(' IMPROPER INPUT. RADIUS OF 0.0 NOT ALLOWED'/);
+    ]
+    OUTPUT IX,RSPH(IX);(' RING RADIUS #',I6,':',T60,F12.6,' cms');
+]
+
+NREG=NR*NC+1;
+
+"define cavity zones"
+
+IVAL = IVAL + 1;
+NUM_CAVREG = IVAL;
+VALUES_SOUGHT(IVAL)='CAVITY ZONES';
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=999999;
+DEFAULT(IVAL)=1;
+$GET_INPUT(IVAL);
+numcavreg = NVALUE(IVAL);
+OUTPUT numcavreg;(' number of cavity regions: ', I4 );
+
+DO IX=1,numcavreg [ cavreg(IX) = VALUE(IVAL,IX); ]
+
+"CHECK THAT THE NUMBER OF CAVITY ZONES DOES NOT EXCEED ITS BOUNDS"
+IF(numcavreg.LE.0)["no cavity defined, just dose in all the regions desired"
+    DO I=1,NREG[cavreg(I)=0;]
+    OUTPUT; (' **** no cavity regions defined ****');
+]
+ELSEIF(numcavreg.GE.NREG)[
+    "IF IT DOES, REVERT TO THE STANDARD CHAMBER CONFIGURATION"
+    numcavreg=1;cavreg(1)=3;DO I=2,NREG[cavreg(I)=0;]
+    OUTPUT;
+    (' TOO MANY CAVITY ZONES, REVERTING TO STANDARD CHAMBER');
+]
+ELSEIF(numcavreg.EQ.(NREG-1))[
+    "WHOLE GEOMETRY IS A CAVITY ZONE, SCORE EVERYWHERE"
+    OUTPUT; (' WHOLE GEOMETRY IS A CAVITY ZONE, SCORING EVERYWHERE');
+    numcavreg=NREG-1;DO I=2,NREG[cavreg(I-1)=I;]
+]
+ELSE[ "check cavity regions are within the right limits"
+    I=0;
+    LOOP[
+        I=I+1;
+        IF((cavreg(I).LE.1).OR.(cavreg(I).GT.NREG))["wrong cavity region number"
+            OUTPUT cavreg(i);
+            (' wrong cavity region number: ', I5 /
+             ' INAPPROPRIATE CAVITY ZONES, REVERTING TO STANDARD CHAMBER');
+            "CHECK FOR INAPPROPRIATE INPUT"
+            "REVERT TO THE STANDARD CHAMBER IF THIS HAPPENS"
+            numcavreg=1;cavreg(1)=3;DO I=2,NREG[cavreg(I)=0;]
+            EXIT; "THEN EXIT THE LOOP"
+        ]
+        ELSE[
+           OUTPUT i,cavreg(i);
+           ('    ===> cavity region # ', I5, ' is region # ', I5);
+        ]
+
+    ]WHILE(I.LT.numcavreg);
+] "CAVITY ZONES ARE DEFINED"
+
+
+"                               MATERIAL INPUT
+"                               **************
+IVAL = IVAL + 1;
+NUM_MEDIA = IVAL;
+VALUES_SOUGHT(IVAL)='MEDIA';
+TYPE(IVAL)=2;
+$GET_INPUT(IVAL); "get the number of media"
+NMED=NVALUE(IVAL);
+DO I=1,NMED [
+   SLENGHT=LNBLNK(CHAR_VALUE(NUM_MEDIA,I));
+   READ (CHAR_VALUE(NUM_MEDIA,I),FMT='(24A1)') (MEDIA(J,I),J=1,SLENGHT);
+   IF (SLENGHT<24) [DO J=SLENGHT+1, 24 [MEDIA(J,I)=' ';]]
+   OUTPUT I,(MEDIA(J,I),J=1,24);(' MEDIUM #',I1,':',T55,24A1);
+]
+
+IF((NMED.LT.1).OR.(NMED.GT.$MXMED)) [
+    NMED=1;
+    OUTPUT;
+    (' ***** NO MEDIUM OR TOO MANY MEDIA. RESET TO ONE MEDIUM INPUT. *****'/);
+]
+
+$SKIP-LINE;
+
+IVAL = IVAL + 1;
+NUM_MEDNUM = IVAL;
+VALUES_SOUGHT(IVAL)='MEDNUM';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=NMED;
+DEFAULT(IVAL)=1;
+$GET_INPUT(NUM_MEDNUM);
+
+IVAL = IVAL + 1;
+NUM_NREGLO = IVAL;
+VALUES_SOUGHT(IVAL)='START REGION';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=NREG;
+DEFAULT(IVAL)=1;
+$GET_INPUT(NUM_NREGLO);
+
+IVAL = IVAL + 1;
+NUM_NREGHI = IVAL;
+VALUES_SOUGHT(IVAL)='STOP REGION';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=NREG;
+DEFAULT(IVAL)=1;
+$GET_INPUT(NUM_NREGHI);
+
+
+OUTPUT;(/' *** INPUT CARD M3 ***');
+MED(1)=0;
+DO I=2,NREG [MED(I)=1;]  "defaults"
+OUTPUT NREG;(/' # OF GEOMETRICAL ZONES = ',T60,I12);
+WRITE (*,*) 'REGION(  1) = MATERIAL( 0) (VACUUM)';
+
+IF ((NVALUE(NUM_NREGLO)~=NVALUE(NUM_MEDNUM))|
+    (NVALUE(NUM_NREGHI)~=NVALUE(NUM_MEDNUM))) [
+   WRITE(ERR,*)'**************ERROR**************';
+   WRITE(ERR,*)'MEDNUM HAS      ',NVALUE(NUM_MEDNUM),' VALUES';
+   WRITE(ERR,*)'START REGION HAS',NVALUE(NUM_NREGLO),' VALUES';
+   WRITE(ERR,*)'STOP REGION HAS ',NVALUE(NUM_NREGHI),' VALUES';
+   WRITE(ERR,*)'>>>> THEY MUST ALL HAVE THE SAME NUMBER OF VALUES';
+   ERROR_FLAG=1;
+   RETURN;
+]
+"In the following, we allow for vacuum input"
+IF (VALUE(NUM_MEDNUM,1) >= 0) [
+   DO I=1, NVALUE(NUM_MEDNUM) [
+      MEDNUM=VALUE(NUM_MEDNUM,I);
+      NREGLO=VALUE(NUM_NREGLO,I);
+      NREGHI=VALUE(NUM_NREGHI,I);
+      IF (NREGHI<=NREGLO) [
+         MED(NREGLO)=MEDNUM;
+         OUTPUT NREGLO,MEDNUM;(' REGION(',I3,') = MATERIAL(',I2,')');
+      ]
+      ELSE [
+         DO K=NREGLO,NREGHI [MED(K)=MEDNUM;]
+         OUTPUT NREGLO,NREGHI,MEDNUM;
+         (' REGION(',I3,') TO REGION(',I3,') = MATERIAL(',I2,')');
+      ]
+   ] "end do I"
+] "end IF ~=0"
+
+
+"For error checking, get all geomsph inputs"
+"$GET_INPUTS(NUM_CONES,NUM_NREGHI);"
+
+$SKIP-LINE;
+
+END;

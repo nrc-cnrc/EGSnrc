@@ -1,0 +1,48 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc timing macros                                                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2003                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$DECLARE_TIMING_VARIABLES;} WITH {;
+  real  CPUT0,CPUT1,CPUT2,TDUM;
+  real egs_tot_time, egs_etime;}
+;
+REPLACE {$INITIALIZE_ELAPSED_CPU_TIME;} WITH {;}
+;
+REPLACE {$SET_ELAPSED_CPUTIME(#);} WITH { {P1}=egs_etime(); }
+;
+REPLACE {$INITIALIZE_ELAPSED_TOTAL_TIME;} WITH
+  { tdum = egs_tot_time(1); }
+;
+REPLACE {$SET_ELAPSED_TOTAL_TIME(#);} WITH
+  { {P1} = egs_tot_time(0); }
+;
+REPLACE {$CONVERSION_TO_SECONDS} WITH {1.0}
+;
+REPLACE {$TIME_RESOLUTION} WITH {0.01}
+;

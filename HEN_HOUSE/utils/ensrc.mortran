@@ -1,0 +1,358 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc input source spectrum subroutine                                    "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2000                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This subroutine is used to do all the work associated with having an input "
+"  source spectrum for the NRC user codes.                                    "
+"                                                                             "
+"  This implementation of ENSRC uses the alias sampling technique to sample   "
+"  the source energy from a histogrammed input energy spectrum (and thus      "
+"  needs nrcaux.mortran). To avoid confusions with multiple definitions of    "
+"  the spectrum common block, this common block should not be used any longer "
+"  and all data needed stored in the static arrays ensrcd, srcpdf, srcpdf_at  "
+"  and srcbin_at. For now, to assure compatibility with current versions of   "
+"  NRC user codes, ensrcd and srcpdf are left in the common/source/.          "
+"                                                                             "
+"  Input is based on the input routine adapted by Aaron Merowitz from the     "
+"  original ENSRC implementation that uses get_input.                         "
+"                                                                             "
+"                                                                             "
+"  ENTRY POINTS                                                               "
+"  ------------                                                               "
+"                                                                             "
+"   NSRC                    call from anywhere in your user code (but before  "
+"                           the first SHOWER call) to get                     "
+"                           input data as defined below                       "
+"                                                                             "
+"   NSRC1:                  initialization routine. To be called after        "
+"                           ENSRC and before the first SHOWER call            "
+"                                                                             "
+"   NSRCO:                  produces a summary of the input data.             "
+"                                                                             "
+"   NSRCH(ENIN):            called from main for each history to sample the   "
+"                           spectrum (MONOEN=1) or return the source energy   "
+"                           if mono-energetic beam                            "
+"                           COMMON/SOURCE/ (EINSRC) (MONOEN=2).               "
+"                                                                             "
+"   NSRC_EMAX(EK_MAX):      Puts maximum spectrum energy (source energy       "
+"                           for mono-energetic beams) into EK_MAX             "
+"                                                                             "
+"   INPUTS                                                                    "
+"   ------                                                                    "
+"                                                                             "
+"   NENSRC                  number of energy bins used to define the          "
+"                           distribution                                      "
+"                                                                             "
+"   SRCPDF(I=1,NENSRC)      the source probability distribution not           "
+"                           necessarily normalized                            "
+"                           probability of particle in this bin or /MeV       "
+"                                                                             "
+"   ENSRCD(I=0,NENSRC)      ensrcd(i-1) is the bottom energy in bin i,        "
+"                           ensrcd(i) the top energy                          "
+"                           Note the definition as $REAL ensrcd(0:$NENSRC)    "
+"                                                                             "
+"   ENMIN                   equal ensrcd(0), still there for compatibility    "
+"                                                                             "
+"   IWATCH                  diagnostic printout if IWATCH is not 0            "
+"                                                                             "
+"   MONOEN                  passed in COMIN USER  = 0 if monoenergetic        "
+"                                            = 2 if ISOURC=21                 "
+"   EIN                     passed in IODAT2-K.E. of monoenergetic source     "
+"                                                                             "
+;                                                                             "
+"   OTHER ARRAYS                                                              "
+"   ------------                                                              "
+"                                                                             "
+"   srcpdf_at, srcbin_at    arrays necessary for the alias sampling           "
+"                           technique, they are initialized via a call to     "
+"                           prepare_alias_sampling and used in                "
+"                           the function alias_sample to do the actual        "
+"                           sampling                                          "
+"                                                                             "
+"                                                                             "
+"   NOTES                                                                     "
+"   -----                                                                     "
+"                                                                             "
+"   This routine DOES NOT need the COMIN SPECTR                               "
+"                                                                             "
+"   If ENFLAG=1 (variable in COMMON/SOURCE/) then the energy has been         "
+"   previously set and stored in EINSRC (variable in COMMON/SOURCE/)          "
+"                                                                             "
+"#############################################################################"
+
+
+%I4
+%C80
+%Q1
+%E      "start of ensrc.mortran"
+
+
+SUBROUTINE ENSRC;
+
+$IMPLICIT-NONE;
+
+;"LINE SKIP"
+
+"***************************************************************************"
+"*               Variables passed to the subroutine GET_INPUTS             *"
+"***************************************************************************"
+COMIN/GetInput/;
+
+"These variables point to the index of their values_sought"
+INTEGER NUM_EITYPE,
+        NUM_KIEN,
+        NUM_SPFIL,
+        NUM_SPIOUSP;
+
+"COMMIN BLOCK DEFINITIONS
+"************************
+;COMIN/PRINTC,IODAT2,SCORE,SPECTR,USER,RANDOM,SOURCE/;
+"                           ^
+" We want to make the energy spectrum sampling self contained ->
+" no need to put required data in a common block that is defined in the
+" main user code. The only dependence on the user code should be $NENSRC which
+" is used to define array dimensions.
+
+$INTEGER "nensrc,"
+         srcbin_at($NENSRC),
+         mode;
+$REAL    "ensrcd(0:$NENSRC),"
+         "srcpdf($NENSRC),"
+         srcpdf_at($NENSRC),
+         enmin,enmax,sume1,sume,
+         Ek_max,Emono;
+$LOGICAL is_mono;
+character*80 filnam,spec_title;
+integer*4 lnblnk1; "use our own in-house lnblnk routine because some"
+                   "compilers do not have lnblnk"
+
+save enmin,enmax,"nensrc," srcbin_at,"ensrcd,srcpdf," srcpdf_at,Emono,
+     is_mono,mode,filnam,spec_title;
+
+$INTEGER ib;
+$REAL    enin,alias_sample;
+
+"******************************************************************************
+"            NOT REQUIRED IF ISOURC=21 (FULL PHASE SPACE OF READ)
+"
+" ENSRC DELIMETERS:  :start source inputs:
+"                    :stop source inputs:
+"
+"
+"  INCIDENT ENERGY
+"        = monoenergetic  (0)  if monoenergetic beam
+"        = spectrum       (1)  if energy spectrum to be used
+"
+"           ---------------------------------------
+"
+"  If INCIDENT ENERGY= Monoenergetic:
+"
+"     INCIDENT KINETIC ENERGY(MEV)   (I)
+"                                   kinetic energy of the incident beam in MeV
+"                                   (defaults to 1.25)
+"
+"           ---------------------------------------
+"
+"  If INCIDENT ENERGY= Spectrum:
+"
+"                   SPEC FILENAME   (C)  filename (with ext)
+"                                   contains spectrum information
+"
+"                                   FILE FORMAT:
+"                                   TITLE      spectrum title  (80 char)
+"                                   NENSRC, ENMIN, MODE
+"                                   NENSRC     # energy bins in spec.  histogram
+"                                   ENMIN      lower energy of first bin
+"                                   MODE       =0, assumes cts/bin
+"                                              =1  assumes cts/MeV
+"                                   ENSRCD(I),SRCPDF(I)  I=1,NENSRC
+"                                   top of energy bin and probability of
+"                                   initial particle being in this bin.
+"                                   probability does not need to be normalized
+"
+"                   SPEC IOUTSP
+"                        = none     (0)  no spectrum data in output summary
+"                        = include  (1)  include spectrum data in output summary
+;
+"
+"*******************************************************************************
+;"------------------------------------------------------------------------------
+DELIMETER='SOURCE INPUTS';
+
+IF(ENFLAG.EQ.1)["FULL PHASE-SPACE INFORMATION READ PREVIOUSLY"
+    MONOEN = 2;
+    RETURN;
+]
+OUTPUT;(' *** INPUT CARD TC1 ***');
+IVAL = IVAL +1;
+NUM_EITYPE = IVAL;
+VALUES_SOUGHT(IVAL)='INCIDENT ENERGY';
+TYPE(IVAL)=3;
+NVALUE(IVAL)=1;
+ALLOWED_INPUTS(IVAL,0)='MONOENERGETIC';
+ALLOWED_INPUTS(IVAL,1)='SPECTRUM';
+$GET_INPUT(NUM_EITYPE);
+MONOEN=VALUE(NUM_EITYPE,1);
+
+IF(MONOEN = 0)[
+    OUTPUT ;(' MONOENERGETIC BEAM:');
+    IVAL = IVAL +1;
+    NUM_KIEN = IVAL;
+    VALUES_SOUGHT(IVAL)='INCIDENT KINETIC ENERGY(MEV)';
+    TYPE(IVAL)=1;
+    NVALUE(IVAL)=1;
+    VALUE_MIN(IVAL)=0.001;    "databases for EGSnrc stop at 1 keV"
+    VALUE_MAX(IVAL)=200000;   "not sure what real upper limit is"
+    DEFAULT(IVAL)=1.25;
+    $GET_INPUT(NUM_KIEN);
+    EIN=VALUE(NUM_KIEN,1);
+    OUTPUT EIN;(/' KINETIC ENERGY OF THE INCIDENT BEAM: ',T60,F10.4);
+    is_mono = .true.; Emono = EIN;
+]
+ELSE[
+    OUTPUT;(' ENERGY SPECTRUM:');
+
+    is_mono = .false.;
+
+    IVAL = IVAL +1;
+    NUM_SPFIL = IVAL;
+    VALUES_SOUGHT(IVAL)='SPEC FILENAME';
+    TYPE(IVAL)=2;
+    $GET_INPUT(NUM_SPFIL);
+    READ (CHAR_VALUE(NUM_SPFIL,1),FMT='(A)') filnam;
+
+    OUTPUT filnam;(/'   READ INPUT ENERGY SPECTRUM FROM: ',A);
+    OPEN(9,file=filnam,STATUS='OLD');
+    READ(9,'(A)') spec_title;
+    READ(9,*) nensrc,ensrcd(0),mode;
+    enmin = ensrcd(0);
+    IF(NENSRC > $NENSRC) [
+       OUTPUT NENSRC,$NENSRC;
+       (//' ********** Asked for too many energy bins******'/
+       ' NENSRC =',I4, ' reduced to max allowed =',I4/1x,30('*')//);
+       NENSRC = $NENSRC;
+    ]
+    READ(9,*)(ENSRCD(IB),SRCPDF(IB),IB=1,NENSRC);
+    CLOSE(UNIT=9);
+    OUTPUT NENSRC; ('    HAVE READ',I5,' INPUT ENERGY BINS FROM FILE');
+    IF(MODE=0)[OUTPUT;('      Counts/bin assumed');]
+    ELSEIF(MODE = 1) [
+        OUTPUT;('      Counts/MeV assumed');
+        DO IB=1,NENSRC[SRCPDF(IB) = SRCPDF(IB)*(ENSRCD(IB)-ENSRCD(IB-1));]
+    ] "end mode = 1 block"
+    ELSE [OUTPUT MODE;(///'*****MODE not 0 or 1 in spectrum file? **'
+         /80('*') //);]
+
+    EIN=ENSRCD(NENSRC);"SET TO MAX ENERGY FOR SOME CHECKS"
+    OUTPUT ENMIN,EIN;('    ENERGY RANGES FROM',F10.3,' MeV TO',F12.3,' MeV');
+    enmax = ein;
+
+    IVAL = IVAL +1;
+    NUM_SPIOUSP = IVAL;
+    VALUES_SOUGHT(IVAL)='SPEC IOUTSP';
+    TYPE(IVAL)=3;
+    DEFAULT(IVAL)=0;
+    ALLOWED_INPUTS(IVAL,0)='NONE';
+    ALLOWED_INPUTS(IVAL,1)='INCLUDE';
+    $GET_INPUT(NUM_SPIOUSP);
+    IOUTSP=VALUE(NUM_SPIOUSP,1);
+]
+OUTPUT;(' ');
+RETURN;   "NORMAL RETURN"
+
+ENTRY ENSRC1;
+"==========="
+
+IF( is_mono ) return;
+
+" Rewritten by IK: to guarantee that the input spectrum is exactly sampled,"
+"                  The alias sampling technique is employed
+"                  needs prepare_alias_sampling which is in nrcaux.mortran
+
+" Check that enmin < ensrcd(1) "
+IF( enmin >= ensrcd(1) ) [
+    write(6,*) ' Bad spectrum: minimum energy is > top of first bin! ';
+    stop;
+]
+
+call prepare_alias_sampling(nensrc,srcpdf,srcpdf_at,srcbin_at);
+
+RETURN;
+
+ENTRY ENSRCO;
+"==========="
+
+IF( is_mono ) [
+  write(iout,'(18x,a,f9.3,a)') 'Mono-energy: ',Emono,' MeV';
+  return;
+]
+IF(enflag = 1) [ "this is a phase space input, print nothing here" return;]
+   WRITE(IOUT,105) FILNAM(:lnblnk1(FILNAM)),SPEC_TITLE(:lnblnk1(SPEC_TITLE));
+105 FORMAT(18x,' Spectrum file and title:'/18x,A/18x,A);
+sume1 = 0; sume = 0;
+DO ib=1,nensrc[
+  sume = sume + srcpdf(ib);
+  sume1 = sume1 + srcpdf(ib)*(ensrcd(ib)+ensrcd(ib-1))/2;
+]
+WRITE(IOUT,'(20x,a,f10.4)') ' Average spectrum energy is ',sume1/sume;
+IF(IOUTSP.EQ.1)[
+   IF(MODE=0)[WRITE(IOUT,'(20x,'' Counts/bin assumed'')');]
+   ELSE   [WRITE(IOUT,'(20x,'' Counts/MeV assumed'')');]
+   WRITE(IOUT,110)NENSRC,enmin;
+   DO IB=1,NENSRC[
+     WRITE(IOUT,120)IB,ensrcd(ib),srcpdf(ib),srcpdf_at(ib),srcbin_at(ib);
+   ]
+]
+RETURN;
+
+
+ENTRY ENSRCH(ENIN);
+"================"
+
+IF( is_mono ) [ enin = Emono; return; ]
+
+enin = alias_sample(nensrc,ensrcd,srcpdf_at,srcbin_at);
+RETURN;
+
+ENTRY ENSRC_EMAX(Ek_max);
+
+IF( is_mono ) [ Ek_max = Emono; ]
+ELSE [ Ek_max = ensrcd(nensrc); ]
+return;
+
+
+100   FORMAT(' ',I1);
+102   FORMAT(' ',G14.7);
+110   FORMAT(' ',T20,'Energy dist''n, # of incident energy bins:',T60,I3/
+             T20,' Lower energy of first bin:',T60,F7.3,' (MeV)'/
+             ' ',T20,'bin    kinetic energy     probability  at prob   at bin');
+120   FORMAT(' ',T20,I3,T28,F7.3,T45,1PE10.3,T60,0PF7.4,T70,i4);
+
+END; "end subroutine ensrc"
+
+

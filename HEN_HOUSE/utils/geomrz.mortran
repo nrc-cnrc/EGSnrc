@@ -1,0 +1,692 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc cylindrical geometry input subroutine                               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Aaron Merovitz, 1998                                      "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+
+
+%I4
+%C80
+%Q1
+
+;"******************************************************************************
+"
+"                              ******************
+"                              *                *
+"                              * geomrz.mortran *
+"                              *                *
+"                              ******************
+"
+"
+"   This subroutine is used to do all the I/O associated with having
+"   a cylindrical geometry input.
+"
+"       VERSION 1       A. Merovitz         03/98 for DWOR
+"
+"*******************************************************************************
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS4 simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+;
+"*******************************************************************************
+"                       CYLINDRICAL GEOMETRY INPUT
+"                       **************************
+"*******************************************************************************
+"
+" GEOMRZ DELIMETERS:    :start geometrical inputs:
+"                       :stop geometrical inputs:
+"
+"  METHOD OF INPUT
+"        = Groups         (0)   input groups of slabs of equal thickness
+"        = Individual     (1)   detailed input of the geometry and media.
+"                               [ITERSE]
+"
+"-------------------------------------------------------------------------------
+"
+" Information defining depth boundaries along z axis (all dimensions cm)
+"
+" Only if  METHOD OF INPUT=  Groups
+"
+"  Z OF FRONT FACE        (R)   start of first slab (real)
+"  NSLAB                  (M)   # planar slabs in a group (integers)
+"  SLAB THICKNESS         (M)   thickness of each slab in the group (reals)
+"
+"
+" Only if  METHOD OF INPUT=  Individual
+"
+"  Z OF FRONT FACE        (R)   start of first slab (real)
+"  DEPTH BOUNDARIES       (M)   geometrical z-plane coordinates (reals)
+"
+"-------------------------------------------------------------------------------
+"
+"  Information defining radial boundaries
+"
+"  RADII                  (M)   radii of cylinders defining the geometry (reals)
+"
+"-------------------------------------------------------------------------------
+"  MATERIAL INPUT
+"  **************
+"
+"  MEDIA              (M)   material name which must match that in the
+"                           pegs4 data set EXACTLY, including case.
+"                           24 characters max per medium, ended by , or ;
+"
+"  Define which media in which regions, numbering in order given above.
+"
+"  DESCRIPTION BY= Regions            use the individual geometric region
+"                                     numbers
+"                = Planes             use the IX, IZ values
+"                = Regions + Density  same as Regions but specify medium
+"                                     density as well
+"                = Planes + Density   same as Planes but specify medium
+"                                     density as well
+"                               [DESCRIBE]
+"
+" If DESCRIPTION BY= Regions
+"
+"  MEDNUM                 (M)   the material number (integers)
+"                               (MEDNUM=0 => vacuum)
+"  RHOR (only if DESCRIPTION= Regions + Density)
+"                         (M)   material density if different from the default
+"                               (real) (if 0 then assumed to be default)
+"  START REGION           (M)   initial geometrical zone(irl) (integers) for
+"                               this medium [NREGLO]
+"  STOP REGION            (M)   final geometrical zone(irl) (integers) for
+"                               this medium.[NREGHI]
+"                               ( >NREGLO to input more than one zone)
+"                               DEFAULTS:   MEDNUM=0 FOR REGION=1 (i.e. VACUUM)
+"                                           MEDNUM=1 FOR REGION=2,NREG
+"
+"                         These inputs should be thought of as triplets
+"                         (quadruplets if RHOR is also specified) of
+"                         MEDNUM, (RHOR,) START and STOP REGIONs which are used
+"                         to specify the medium numbers for all regions where
+"                         the medium is not the default (medium 1).
+"
+" If DESCRIPTION BY=  Planes
+"
+"  MEDNUM                 (M)   the material number (integers)
+"                               (MEDNUM=0 => vacuum)
+"  RHOR (only if DESCRIPTION= Planes + Density)
+"                         (M)   material density if different from the default
+"                               (real) (if 0 then assumed to be default)
+"  START ZSLAB            (M)   initial zslab(iz) (integers)
+"  STOP ZSLAB             (M)   final zslab(iz) (integers)
+"  START RING             (M)   initial radial ring (ix) (integers)
+"  STOP RING              (M)   final radial ring (ix) (integers)
+"                               DEFAULTS:   MEDNUM=0 FOR REGION=1 (i.e. VACUUM)
+"                                           MEDNUM=1 FOR REGION=2,NREG
+"                         These inputs shpuld be thought of as quintuples
+"                         (sextuples if RHOR is specified) of numbers
+"                         which specify the medium numbers and density by
+"                         planar - radial regions
+"
+"  One must use one type of input or the other so you must decide
+"  which is more convenient for any given case.
+"
+"***************************************************************************"
+"
+;
+SUBROUTINE GEOMRZ;
+
+;Copyright NRC;
+
+$IMPLICIT-NONE;
+
+                                "ERROR_FLAG is now in common block"
+
+"DECLERATION OF COMIN BLOCKS
+"***************************
+;COMIN/GEOM,IODAT2,MEDIA,MISC,SCORE,SOURCE,USER,RANDOM,GetInput/;
+
+"***************************************************************************"
+"*                   Variables used to declare inputs                      *"
+"***************************************************************************"
+
+$INTEGER "NMED, "MEDNUM, NREGLO, NREGHI;               "material input"
+$INTEGER NZHI, NZLO, NRHI, NRLO;                     "material input"
+$INTEGER ITERSE,NSLAB($NVALUE), DESCRIBE;            "cylindrical geom. input"
+$REAL DELTAZ($NVALUE),RHORI;                         "cylindrical geom. input"
+
+"***************************************************************************"
+"*                Variables used to point to the inputs                    *"
+"***************************************************************************"
+"Cylindrical geometry input"
+$INTEGER NUM_ITERSE,
+        NUM_FTFACE,
+        NUM_NSLAB,
+        NUM_DELTAZ,
+        NUM_ZPLANES,
+        NUM_RCYL;
+
+"Material Input"
+$INTEGER NUM_MEDIA,
+        NUM_RHOR,
+        NUM_DESCRIB,
+        NUM_MEDNUM,
+        NUM_NREGLO,
+        NUM_NREGHI,
+        NUM_NPLANLO,
+        NUM_NPLANHI,
+        NUM_NRADLO,
+        NUM_NRADHI;
+"---------------------------------------------------------------------------"
+$INTEGER ERR;  "$inputfile.errors file"
+$INTEGER IOUT;  "unit number for .egslst file"
+$INTEGER lnblnk1; "our in-house lnblnk function"
+$INTEGER I,J,K,PLN,COUNT;
+$INTEGER IX, IZ, REGNUM, SLENGHT;
+$REAL ADDING;
+
+save describe; "IK: Must be static because used in entry geomrz_isumry"
+
+"---------------------------------------------------------------------------"
+I=0;  "initialize index number of the value_sought"
+ERR=15;  "output errors to unit # 15"
+
+ERROR_FLAG=0;   "Initialization of bad input flag"
+
+"                      CYLINDRICAL GEOMETRY INPUT"
+"                      **************************"
+
+DELIMETER = 'GEOMETRICAL INPUTS';
+
+NUM_ITERSE = IVAL;
+VALUES_SOUGHT(IVAL)='METHOD OF INPUT';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+ALLOWED_INPUTS(IVAL,0)='GROUPS';
+ALLOWED_INPUTS(IVAL,1)='INDIVIDUAL';
+$GET_INPUT(IVAL);  "get the value for ITERSE"
+ITERSE=VALUE(IVAL,1);
+
+IVAL = IVAL + 1;
+NUM_FTFACE = IVAL;
+VALUES_SOUGHT(IVAL)='Z OF FRONT FACE';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=-999999;
+VALUE_MAX(IVAL)=999999;
+DEFAULT(IVAL)=0.0;
+$GET_INPUT(IVAL);
+ZPLANE(1)=VALUE(IVAL,1);
+
+IF (ITERSE=0) [
+   IVAL = IVAL + 1;
+   NUM_NSLAB = IVAL;
+   VALUES_SOUGHT(IVAL)='NSLAB';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=999999;
+   DEFAULT(IVAL)=1;
+   $GET_INPUT(IVAL);
+
+   IVAL = IVAL + 1;
+   NUM_DELTAZ = IVAL;
+   VALUES_SOUGHT(IVAL)='SLAB THICKNESS';
+   TYPE(IVAL)=1;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=999999;
+   DEFAULT(IVAL)=1.0;
+   $GET_INPUT(IVAL);
+
+   "Calculate the number of, and assign the Z planes"
+   DO K=1,NVALUE(NUM_NSLAB) [NSLAB(K)=VALUE(NUM_NSLAB,K);]
+   DO K=1,NVALUE(NUM_DELTAZ)[DELTAZ(K)=VALUE(NUM_DELTAZ,K);]
+   COUNT=1;
+   DO PLN=1, NVALUE(NUM_NSLAB) [
+      IF (PLN=1) [ADDING=0;]
+      ELSE [ADDING=ADDING+DELTAZ(PLN-1)*NSLAB(PLN-1);]
+      DO K=1, NSLAB(PLN) [
+         COUNT=COUNT+1;
+         ZPLANE(COUNT)=ZPLANE(1)+ADDING+DELTAZ(PLN)*K;
+      ]
+   ]
+   NZ=COUNT-1;
+   IF( NZ-1 > $MAXZREG) [
+        OUTPUT NZ-1, $MAXZREG;
+        (///' Number of depth regions,',I3,' is greater than $MAXZREG=',I3/
+        '  You must change the definition of $MAXZREG in the user code'/
+        '      and recompile'///);
+        STOP
+   ]
+   "Note radii are picked up below"
+]
+
+IF (ITERSE=1) [
+   IVAL = IVAL + 1;
+   NUM_ZPLANES = IVAL;
+   VALUES_SOUGHT(IVAL)='DEPTH BOUNDARIES';
+   TYPE(IVAL)=1;
+   VALUE_MIN(IVAL)=-999999;
+   VALUE_MAX(IVAL)=999999;
+   DEFAULT(IVAL)=1.0;
+   $GET_INPUT(IVAL);  "get the depth boundaries"
+   NZ=NVALUE(IVAL);  "get the number of ZPLANES input"
+   IF( NZ-1 > $MAXZREG) [
+        OUTPUT NZ-1, $MAXZREG;
+        (///' Number of depth regions,',I3,' is greater than $MAXZREG=',I3/
+        '  You must change the definition of $MAXZREG in the user code'/
+        '      and recompile'///);
+        STOP
+   ]
+]
+
+IVAL = IVAL + 1;
+NUM_RCYL = IVAL;
+VALUES_SOUGHT(IVAL)='RADII';
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=0.0000001;
+VALUE_MAX(IVAL)=999999.9;
+DEFAULT(IVAL)=1000.0;
+$GET_INPUT(NUM_RCYL);
+NR=NVALUE(NUM_RCYL);      "get the number of radial cylinders input"
+IF( NR > $MAXRADII ) [
+     OUTPUT NR, $MAXRADII;
+     (///' Number of radial regions,',I3,' is greater than $MAXRADII',I3,/
+     '  You must change the definition of $MAXRADII in the user code'/
+     '      and recompile'///);
+     STOP
+]
+NREG=NR*NZ+1;  "define the number of regions"
+IF( NREG > $MXREG ) [
+     OUTPUT NREG, $MXREG;
+     (///' Total number of regions,',I6,' is greater than $MXREG=',I6,/
+     '  You must change the definition of $MXREG in the user code'/
+     '      and recompile'///);
+     STOP
+]
+
+"                               MATERIAL INPUT
+"                               **************
+IVAL = IVAL + 1;
+NUM_MEDIA = IVAL;
+VALUES_SOUGHT(IVAL)='MEDIA';
+TYPE(IVAL)=2;
+$GET_INPUT(IVAL); "get the number of media"
+NMED=NVALUE(IVAL);
+
+IVAL = IVAL + 1;
+NUM_DESCRIB = IVAL;
+VALUES_SOUGHT(IVAL)='DESCRIPTION BY';
+TYPE(IVAL)=3;
+NVALUE(IVAL)=1;
+ALLOWED_INPUTS(IVAL,0)='REGIONS';
+ALLOWED_INPUTS(IVAL,1)='PLANES';
+ALLOWED_INPUTS(IVAL,2)='REGIONS + DENSITY';
+ALLOWED_INPUTS(IVAL,3)='PLANES + DENSITY';
+$GET_INPUT(NUM_DESCRIB);
+DESCRIBE=VALUE(NUM_DESCRIB,1);
+
+IVAL = IVAL + 1;
+NUM_MEDNUM = IVAL;
+VALUES_SOUGHT(IVAL)='MEDNUM';
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=NMED;
+DEFAULT(IVAL)=1;
+
+IF(DESCRIBE=2 | DESCRIBE=3)[
+  IVAL = IVAL + 1;
+  NUM_RHOR = IVAL;
+  VALUES_SOUGHT(IVAL)='RHOR';
+  TYPE(IVAL)=1;
+  VALUE_MIN(IVAL)=0.0;
+  VALUE_MAX(IVAL)=999999.0;
+  DEFAULT(IVAL)=0.0;
+]
+
+IF (DESCRIBE=0 | DESCRIBE=2) [
+   IVAL = IVAL + 1;
+   NUM_NREGLO = IVAL;
+   VALUES_SOUGHT(IVAL)='START REGION';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=NREG;
+   DEFAULT(IVAL)=1;
+
+   IVAL = IVAL + 1;
+   NUM_NREGHI = IVAL;
+   VALUES_SOUGHT(IVAL)='STOP REGION';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=NREG;
+   DEFAULT(IVAL)=1;
+
+   "For error checking, get all geomrz inputs"
+   $GET_INPUTS(NUM_ITERSE,NUM_NREGHI);
+]
+
+IF (DESCRIBE=1 | DESCRIBE=3) [
+   IVAL = IVAL + 1;
+   NUM_NPLANLO = IVAL;
+   VALUES_SOUGHT(IVAL)='START ZSLAB';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=1;
+   VALUE_MAX(IVAL)=NZ;
+   DEFAULT(IVAL)=1;
+
+   IVAL = IVAL + 1;
+   NUM_NPLANHI = IVAL;
+   VALUES_SOUGHT(IVAL)='STOP ZSLAB';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=1;
+   VALUE_MAX(IVAL)=NZ;
+   DEFAULT(IVAL)=1;
+
+   IVAL = IVAL + 1;
+   NUM_NRADLO = IVAL;
+   VALUES_SOUGHT(IVAL)='START RING';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=1;
+   VALUE_MAX(IVAL)=NR;
+   DEFAULT(IVAL)=1;
+
+   IVAL = IVAL + 1;
+   NUM_NRADHI = IVAL;
+   VALUES_SOUGHT(IVAL)='STOP RING';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=1;
+   VALUE_MAX(IVAL)=NR;
+   DEFAULT(IVAL)=1;
+
+   "For error checking, get all geomrz inputs"
+   $GET_INPUTS(NUM_ITERSE,NUM_NRADHI);
+]
+
+
+"                     ECHO  CYLINDRICAL GEOMETRY INPUT
+"*************          **************************
+"* CARD CGM1 *
+"*************
+OUTPUT;(' *** INPUT CARD CGM1 ***');
+ITERSE=VALUE(NUM_ITERSE,1);
+OUTPUT ITERSE;(' TERSE(0), RAPID(1) OR DETAILED(2) INPUT:',T60,I12/);
+
+"****************************"
+"* CARD CGM2A (IF ITERSE=0) *"
+"****************************"
+IF (ITERSE=0) [ "terse planar input"
+   OUTPUT;(' *** CARD CGM2A *** (Input groups of slabs) ');
+   OUTPUT NZ;(' Number of planar slabs: ',T60,I12);
+   NPLANE=NZ+1;
+   OUTPUT;(' Geometrical Z-plane coordinates:');
+   OUTPUT (ZPLANE(I),I=1,NZ+1);(6F10.4);
+   $SKIP-LINE;
+]
+
+"****************************"
+"* CARD CGM2B (IF ITERSE=1) *"
+"****************************"
+IF (ITERSE=1) [ "Verbose input"
+   OUTPUT;(' *** INPUT CARD CGM2B *** (DETAILED INPUT)');
+   DO I=1, NZ [ZPLANE(I+1)=VALUE(NUM_ZPLANES,I);]
+   OUTPUT NZ;(' NUMBER OF PLANAR SLABS: ',T60,I12);
+   NPLANE=NZ+1;
+   OUTPUT;(' GEOMETRICAL Z-PLANE COORDINATES:');
+   OUTPUT (ZPLANE(I),I=1,NPLANE);(6F10.4);
+   $SKIP-LINE;
+]
+
+"*************"
+"* CARD CGM3 *"
+"*************"
+OUTPUT;(' *** INPUT CARD CG3 ***');
+OUTPUT NR;(' Number of concentric rings: ', T60, I12);
+RCYL(0)=0.0;
+DO I=1, NR [
+   RCYL(I)=VALUE(NUM_RCYL,I);
+   CYRAD2(I)=VALUE(NUM_RCYL,I)**2;
+]
+DO I=1, NR [OUTPUT I,RCYL(I);(' Ring radius #',I2,':',T60,F10.4,' cm');]
+
+
+"                            ECHO MATERIAL INPUT"
+"***********                 *******************"
+"* CARD M1 *"
+"***********"
+OUTPUT;(/' *** INPUT CARD M1 ***');
+OUTPUT $MXMED, NMED;(' Number of media(<=',I3,'):',T60,I12/);
+IF (NMED > $MXMED ) [
+   OUTPUT; (' ************************ERROR************************');
+   OUTPUT; (' Number of media exceeds $MXMED - increase value and recompile');
+   OUTPUT; (' ************************ERROR************************'//);
+   WRITE(ERR,'('' Asked for'',I3,'' media and $MXMED is'',I3//)') NMED, $MXMED;
+   ERROR_FLAG = 1;
+]
+
+"***********"
+"* CARD M2 *"
+"***********"
+OUTPUT;(' *** INPUT CARD M2 ***');
+DO I=1,NMED [
+   SLENGHT=lnblnk1(CHAR_VALUE(NUM_MEDIA,I));
+   READ (CHAR_VALUE(NUM_MEDIA,I),FMT='(24A1)') (MEDIA(J,I),J=1,SLENGHT);
+   IF (SLENGHT<24) [DO J=SLENGHT+1, 24 [MEDIA(J,I)=' ';]]
+   OUTPUT I,(MEDIA(J,I),J=1,24);(' MEDIUM #',I1,':',T55,24A1);
+]
+"***********"
+"* CARD M3 *"
+"***********"
+OUTPUT;(/' *** INPUT CARD M3 ***');
+MED(1)=0;
+DO I=2,NREG [MED(I)=1;]  "defaults"
+OUTPUT NREG;(/' # of geometrical zones = ',T60,I12);
+WRITE (*,*) 'REGION(  1) = MATERIAL( 0) (VACUUM)';
+
+IF (DESCRIBE=0 | DESCRIBE=2) [
+   IF ((NVALUE(NUM_NREGLO)~=NVALUE(NUM_MEDNUM))|
+       (NVALUE(NUM_NREGHI)~=NVALUE(NUM_MEDNUM))) [
+      WRITE(ERR,*)'**************ERROR**************';
+      WRITE(ERR,*)'MEDNUM HAS      ',NVALUE(NUM_MEDNUM),' VALUES';
+      WRITE(ERR,*)'START REGION HAS',NVALUE(NUM_NREGLO),' VALUES';
+      WRITE(ERR,*)'STOP REGION HAS ',NVALUE(NUM_NREGHI),' VALUES';
+      WRITE(ERR,*)'>>>> THEY MUST ALL HAVE THE SAME NUMBER OF VALUES';
+      ERROR_FLAG=1;
+   ]
+   "The DEC compiled executable fails here bacause it tries to access"
+   "NVALUE(NUM_RHOR) even if describe is not 2, but then NUM_RHOR is not set"
+   "=>segmentation fault"
+   "IF(DESCRIBE=2 & NVALUE(NUM_RHOR)~=NVALUE(NUM_MEDNUM))["
+   IF( DESCRIBE = 2 ) [
+      IF( NVALUE(NUM_RHOR)~=NVALUE(NUM_MEDNUM)) [
+      WRITE(ERR,*)'**************ERROR**************';
+      WRITE(ERR,*)'MEDNUM HAS      ',NVALUE(NUM_MEDNUM),' VALUES';
+      WRITE(ERR,*)'RHOR HAS        ',NVALUE(NUM_RHOR),' VALUES';
+      WRITE(ERR,*)'>>>> THEY MUST BOTH HAVE THE SAME NUMBER OF VALUES';
+      ERROR_FLAG=1;
+      ]
+   ]
+   "In the following, we allow for vacuum input"
+   IF (VALUE(NUM_MEDNUM,1) >= 0) [
+      DO I=1, NVALUE(NUM_MEDNUM) [
+         RHORI=0.0;
+         MEDNUM=VALUE(NUM_MEDNUM,I);
+         IF(DESCRIBE=2) RHORI=VALUE(NUM_RHOR,I);
+         NREGLO=VALUE(NUM_NREGLO,I);
+         NREGHI=VALUE(NUM_NREGHI,I);
+         IF (NREGHI<=NREGLO) [
+           IF( NREGLO > 0 & NREGLO <= $MXREG ) [
+              MED(NREGLO)=MEDNUM;
+              IF(RHORI>0.0) RHOR(NREGLO)=RHORI;
+              IF(DESCRIBE=2)[
+                IF(RHORI>0.0)[
+                  OUTPUT NREGLO,MEDNUM,RHORI;
+                  (' REGION(',I3,') = MATERIAL(',I2,'), RHOR =',F8.5);
+                ]
+                ELSE[
+                  OUTPUT NREGLO,MEDNUM;
+                  (' REGION(',I3,') = MATERIAL(',I2,'), RHOR = DEFAULT');
+                ]
+              ]
+              ELSE[
+                OUTPUT NREGLO,MEDNUM;
+                (' REGION(',I3,') = MATERIAL(',I2,')');
+              ]
+           ]
+         ]
+         ELSE [
+            DO K=NREGLO,NREGHI [
+               IF( K > 0 & K <= $MXREG ) [
+                 MED(K)=MEDNUM;
+                 IF(RHORI>0.0) RHOR(K)=RHORI;
+               ]
+            ]
+            IF(DESCRIBE=2)[
+               IF(RHORI>0.0)[
+                  OUTPUT NREGLO,NREGHI,MEDNUM,RHORI;
+      (' REGION(',I3,') TO REGION(',I3,') = MATERIAL(',I2,'), RHOR =',F8.5);
+               ]
+               ELSE[
+                  OUTPUT NREGLO,NREGHI,MEDNUM;
+      (' REGION(',I3,') TO REGION(',I3,') = MATERIAL(',I2,'), RHOR = DEFAULT');
+               ]
+            ]
+            ELSE[
+               OUTPUT NREGLO,NREGHI,MEDNUM;
+               (' REGION(',I3,') TO REGION(',I3,') = MATERIAL(',I2,')');
+            ]
+         ]
+      ] "end do I"
+   ] "end IF ~=0"
+] "end if describe=0,2"
+
+IF (DESCRIBE=1 | DESCRIBE=3) [
+   IF ((NVALUE(NUM_NPLANLO)~=NVALUE(NUM_MEDNUM))|
+       (NVALUE(NUM_NPLANLO)~=NVALUE(NUM_MEDNUM))|
+       (NVALUE(NUM_NRADLO)~=NVALUE(NUM_MEDNUM))|
+       (NVALUE(NUM_NRADHI)~=NVALUE(NUM_MEDNUM))) [
+      WRITE(ERR,*)'**************ERROR**************';
+      WRITE(ERR,*)'MEDNUM has      ',NVALUE(NUM_MEDNUM),' values';
+      WRITE(ERR,*)'START PLANE has ',NVALUE(NUM_NPLANLO),' values';
+      WRITE(ERR,*)'STOP PLANE has  ',NVALUE(NUM_NPLANHI),' values';
+      WRITE(ERR,*)'START RING has  ',NVALUE(NUM_NRADLO),' values';
+      WRITE(ERR,*)'STOP RING has   ',NVALUE(NUM_NRADHI),' values';
+      WRITE(ERR,*)'>>>> They must all have the same number of values';
+      ERROR_FLAG=1;
+   ]
+   IF(DESCRIBE=3 & NVALUE(NUM_RHOR)~=NVALUE(NUM_MEDNUM))[
+      WRITE(ERR,*)'**************ERROR**************';
+      WRITE(ERR,*)'MEDNUM HAS      ',NVALUE(NUM_MEDNUM),' VALUES';
+      WRITE(ERR,*)'RHOR HAS        ',NVALUE(NUM_RHOR),' VALUES';
+      WRITE(ERR,*)'>>>> THEY MUST BOTH HAVE THE SAME NUMBER OF VALUES';
+      ERROR_FLAG=1;
+   ]
+   IF (VALUE(NUM_MEDNUM,1) >= 0) [
+      DO I=1, NVALUE(NUM_MEDNUM) [
+         RHORI=0.0;
+         MEDNUM=VALUE(NUM_MEDNUM,I);
+         IF(DESCRIBE=3) RHORI=VALUE(NUM_RHOR,I);
+         NZLO=VALUE(NUM_NPLANLO,I);
+         NZHI=VALUE(NUM_NPLANHI,I);
+         NRLO=VALUE(NUM_NRADLO,I);
+         NRHI=VALUE(NUM_NRADHI,I);
+         IF (NZLO>NZHI) [NZHI=NZLO;]
+         IF (NRLO>NRHI) [NRHI=NRLO;]
+         DO IZ= NZLO, NZHI [
+            DO IX= NRLO, NRHI [
+               REGNUM=IZ+NZ*(IX-1)+1;
+               IF( regnum > 0 & regnum <= $MXREG ) [
+                 MED(REGNUM)=MEDNUM;
+                 IF(RHORI>0.0) RHOR(REGNUM)=RHORI;
+                 IF(DESCRIBE=3)[
+                    IF(RHORI>0.0)[
+                       OUTPUT IZ,IX,MEDNUM,RHORI;
+          (' ZPLANE(',I3,'),RADIUS(',I3,') = MATERIAL(',I2,') RHOR =',F8.5);
+                    ]
+                    ELSE[
+                       OUTPUT IZ,IX,MEDNUM;
+          (' ZPLANE(',I3,'),RADIUS(',I3,') = MATERIAL(',I2,') RHOR = DEFAULT');
+                    ]
+                 ]
+                 ELSE[
+                    OUTPUT IZ,IX,MEDNUM;
+                  (' ZPLANE(',I3,'),RADIUS(',I3,') = MATERIAL(',I2,')');
+                 ]
+              ]
+           ]
+        ]
+      ] "end do I"
+   ] "end IF ~=0"
+] "end if describe=1,3"
+
+$SKIP-LINE;
+
+RETURN; "end of input portion of subroutine"
+
+ENTRY GEOMRZ_ISUMRY(IOUT); "output regions where density is not default to"
+                     "the .egslst file"
+IF(DESCRIBE=2|DESCRIBE=3)[
+
+   WRITE(IOUT,100);
+   RHORI=0.0;
+   DO I=2,NREG[ "loop through the geometrical regions"
+      IF(RHORI>0.0 & (RHOR(I)~=RHORI | MED(I)~=MED(I-1)))[
+        NREGHI=I-1;
+        WRITE(IOUT,200)NREGLO,NREGHI,MED(NREGLO),RHORI;
+        RHORI=0.0;
+      ]
+      IF(RHOR(I)>0.0 & RHOR(I)~=RHO(MED(I)) & RHORI=0.0)[
+        NREGLO=I;
+        RHORI=RHOR(I);
+      ]
+      IF(I=NREG & RHORI>0.0)["needed if ir=NREG has non-default density"
+        NREGHI=I;
+        WRITE(IOUT,200)NREGLO,NREGHI,MED(NREGLO),RHORI;
+      ]
+   ]
+]
+
+100 FORMAT(/' ',T25,'NON-DEFAULT DENSITIES'//
+           ' ',T10,'    Region #         Medium             Rhor  '/
+           ' ',T10,'from        to          #             (g/cm**3)'/);
+200 FORMAT(' ',T10,I3,2I11,F20.5);
+
+RETURN;
+
+END;

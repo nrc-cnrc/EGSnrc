@@ -1,0 +1,943 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc source calculations in spherical geometry                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Joanne Treurniet, 1999                                    "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Derived from srcrz.mortran                                                 "
+"                                                                             "
+"  This subroutine is dedicated exclusively to calculations related to the    "
+"  source configuration. It is accessed from four locations:                  "
+"                                                                             "
+"  1) from the INPUT SUBROUTINE. Control is transferred to this routine to    "
+"     read in source specific information. Control is transferred back to the "
+"     INPUT SUBROUTINE following these inputs                                 "
+"                                                                             "
+"  2) from the 'ONE TIME ONLY CONSTANTS' section of the main routine to scale "
+"     the geometry of the incident beam and calculate the fluence             "
+"                                                                             "
+"  3) from the histories loop of the main routine. A call is made prior to    "
+"     each history to set the point of entry into the target, the initial     "
+"     direction cosines, the initial energy and the statistical weight of the "
+"     incident particle.                                                      "
+"                                                                             "
+"  4) from the input summary routine to print source info                     "
+"                                                                             "
+"  Fluence is defined at the point on axis at the front face of the geometry. "
+"                                                                             "
+"  VERSION 1.1  J.Treurniet  4/99    STARTING WITH                            "
+"                                    SRCRZ.MORPH.MORTRAN, BY E.F.,            "
+"                                    D.W.O.R., A.F.B., B.A.F.,                "
+"                                    G.X.D., C.M.Ma, J.S. AND A.M.            "
+"                                    and using srcsph.mortran                 "
+"                                    sources 0, 1, 10, 11                     "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%I4
+%C80
+%Q1
+;
+"INPUT/OUTPUT CONTROL MACROS
+"***************************
+;
+"THIS MACRO IS REQUIRED FOR PRESTA"
+;
+"The following is the $CALL-HOWNEAR macro for PRESTA-II
+"This routine is intended to be used to calculate the minimum perpendiclar     "
+"to the nearest bounding surface. This version is specially designed for the   "
+"NRCC spherical geometry package. A different version is needed for other      "
+"geometry packages.                                                            "
+
+REPLACE {$CALL-HOWNEAR(#);} WITH
+{
+    call hownear({P1},x(np),y(np),z(np),ir(np));
+}
+
+subroutine hownear(tperp,xx,yy,zz,irl);
+
+$IMPLICIT-NONE;
+
+COMIN/GEOM/;
+
+$REAL
+    tperp, "nearest distance to any boundary (output)
+    RHOL, RHOL2, RL,
+    xx,     "x-position of the particle (input)
+    yy,     "y-position of the particle (input)
+    zz;     "z-position of the particle (input)
+;
+$INTEGER
+    IX, IC, IRL;
+;
+
+    $GET-IX-IC(IRL);
+    RHOL2=XX**2+YY**2;
+    RL=SQRT(RHOL2+ZZ**2);
+    tperp=RSPH(IX)-RL;
+    IF(IX.NE.1)[
+        tperp=MIN(tperp,RL-RSPH(IX-1));
+        ]
+    IF(NC.NE.1)[
+        RHOL=SQRT(RHOL2);
+        IF(IC.NE.NC)[
+            tperp=MIN(tperp,ABS(COSALP(IC)*(RHOL-TANALP(IC)*ZZ)));
+            ]
+        IF(IC.NE.1)[
+            tperp=MIN(tperp,ABS(COSALP(IC-1)*(RHOL-TANALP(IC-1)*ZZ)));
+            ]
+        ]
+
+return;
+end;
+
+;
+
+"***************************************************************************
+SUBROUTINE SRCSPH;             "toc:
+"***************************************************************************
+!LABELS 1000;
+"THIS ENTRY IS USED TO SET VALUES WHICH WILL BE REQUIRED LATER
+$IMPLICIT-NONE;
+
+INTEGER LATCH;
+$INTEGER ERR15;
+CHARACTER*5 LINE1;
+
+$INTEGER i, k, IB, ICOUNT, IERROR, IBNSOK, IRDIST, IRIN, NRCFLG;
+$INTEGER IC, ICTST;
+
+$REAL    TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,FNORM;
+
+$REAL    XIN,YIN,ZIN,UIN,VIN,WIN;
+$REAL    YINP,ZINP;
+$REAL    WEIGHT, RSHADW, RLAST, GRIDSZ;
+$INTEGER ICORRL;
+$REAL    SCARG1,SCARG2,SCARG3,SCARG4;
+
+$REAL    RNNO1,RNNO2;
+$REAL    RHO2,RRHO;
+
+$REAL    D, AK, TNTST2, SPLIT;
+
+
+"***************************************************************************"
+"*            Variables passed to the subroutine GET_INPUTS                *"
+"***************************************************************************"
+COMIN/GetInput/;
+
+INTEGER NUM_IPART,
+        NUM_SOURCE,
+        NUM_SOPTS,
+        NUM_MODEIN,
+        NUM_RDFIL,
+        NUM_NRDIST,
+        NUM_RDISTF,
+        NUM_RPDF,
+        NUM_RDIOUTSP,
+        NUM_FILSPC;
+
+"***************************************************************************"
+"*                   Variables used to declare inputs                      *"
+"***************************************************************************"
+INTEGER MODEIN;
+CHARACTER*80 SPCFIL;
+
+"COMMIN BLOCK DECLARATIONS
+"*************************
+;COMIN/GEOM,IODAT2,PRINTC,MEDIA,MISC,SCORE,SOURCE,UPHIOT,USER,RANDOM/;
+
+" At least the following variables must be declared static "
+save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,FNORM,IBNSOK,MODEIN;
+
+
+"                        INPUT SOURCE PARAMETERS    ""toc:
+"                        =======================    ""toc:
+
+"*******************************************************************************
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS4 simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+
+"*******************************************************************************
+"                             SOURCE INPUT
+"                            **************
+"*******************************************************************************
+" SOURCE DELIMETERS:    :start source inputs:
+"                       :stop source inputs:
+"
+"FOR ALL SOURCES
+"                                      Charge of the incident beam
+"  INCIDENT PARTICLE= electron   (-1)  electrons
+"                     photon     (0)   photons
+"                     positron   (1)   positrons
+"
+"  SOURCE NUMBER                 (I)   number of the source
+"                                      [ISOURC]
+"
+;
+"------------------------------------------------------------------------------
+"
+" SOURCE 0:    FOR PARALLEL BEAM FROM ANY ANGLE
+"              RBEAM,UINC,VINC,WINC
+"               RBEAM   RADIUS OF THE BEAM AT THE FRONT OF THE TARGET IN CM
+"                               DEFAULTS TO MAX RADIUS
+"               UINC    INCIDENT X-AXIS DIRECTION COSINE
+"               VINC    INCIDENT Y-AXIS DIRECTION COSINE
+"               WINC    INCIDENT Z-AXIS DIRECTION COSINE
+"                       NOTE: (UINC,VINC,WINC) GET AUTOMATICALLY NORMALIZED
+"                             DEFAULTS TO (0.0,0.0,1.0)
+;
+"------------------------------------------------------------------------------
+"
+" SOURCE 1:   FOR POINT SOURCE INCIDENT FROM ANY ANGLE
+"             DISTR,RBEAM,UINC,VINC,WINC
+"               DISTR   DISTANCE OF THE SOURCE FROM THE MIDDLE OF THE TARGET
+"                       IN CM (DEFAULTS TO 100.)
+"               RBEAM   RADIUS OF THE BEAM AT THE FRONT OF THE TARGET IN CM
+"                               DEFAULTS TO MAX RADIUS
+"               UINC    INCIDENT X-AXIS DIRECTION COSINE
+"               VINC    INCIDENT Y-AXIS DIRECTION COSINE
+"               WINC    INCIDENT Z-AXIS DIRECTION COSINE
+"                       NOTE: (UINC,VINC,WINC) GET AUTOMATICALLY NORMALIZED
+"                             DEFAULTS TO (0.0,0.0,1.0)
+;
+"------------------------------------------------------------------------------
+"
+" SOURCE 10:  FOR PARALLEL BEAM FROM ANY ANGLE WITH RADIAL DISTRIBUTION
+"             UINC,VINC,WINC
+"               UINC    INCIDENT X-AXIS DIRECTION COSINE
+"               VINC    INCIDENT Y-AXIS DIRECTION COSINE
+"               WINC    INCIDENT Z-AXIS DIRECTION COSINE
+"                       NOTE: (UINC,VINC,WINC) GET AUTOMATICALLY NORMALIZED
+"                             DEFAULTS TO (0.0,0.0,1.0)
+;
+"------------------------------------------------------------------------------
+"
+" SOURCE 11:  FOR POINT SOURCE INCIDENT FROM ANY ANGLE WITH RADIAL DISTRIBUTION
+"             DISTR,RBEAM,UINC,VINC,WINC
+"               DISTR   DISTANCE OF THE SOURCE FROM THE MIDDLE OF THE TARGET
+"                       IN CM (DEFAULTS TO 100.)
+"               UINC    INCIDENT X-AXIS DIRECTION COSINE
+"               VINC    INCIDENT Y-AXIS DIRECTION COSINE
+"               WINC    INCIDENT Z-AXIS DIRECTION COSINE
+"                       NOTE: (UINC,VINC,WINC) GET AUTOMATICALLY NORMALIZED
+"                             DEFAULTS TO (0.0,0.0,1.0)
+;
+"------------------------------------------------------------------------------
+"
+" SOURCE 10 OR 11:
+"       SPECIFY MODE:
+"               MODE = local (0)     IF RADIAL DISTRIBUTION IS TO BE INPUT
+"                                    LOCALLY WHETHER THROUGH THE KEYBOARD
+"                                    (INTERACTIVE USE) OR THROUGH THE
+"                                    .INP FILE (DEFAULT)
+"                    = external (1)  IF THE DISTRIBUTION IS TO BE INPUT
+"                                    VIA AN EXTERNAL FILE
+;
+"       IF MODE=local SPECIFY:
+"
+"           RDISTF(I)= TOP OF RADIAL BIN I FOR I=1,NBIN
+"           RPDF(I)= PROBABILITY OF INITIAL PARTICLE BEING IN BIN I FOR
+"                    I=1,NBIN.
+"
+"                      PROBABILITIES DO NOT NEED TO BE NORMALIZED
+"                      BUT SHOULD BE IN UNITS CM**-2
+"
+"       IF MODE=external SPECIFY:
+"
+"           RDIST FILNAME = FILENAME(WITH EXT) CONTAINING THE ABOVE INFORMATION
+"
+"
+"       SPECIFY:
+"           DISTRIBUTION DATA = NONE => NO DISTRIBUTION DATA IN OUTPUT SUMMARY
+"                             = OUTPUT SUMMARY => INCLUDE DISTRIBUTION
+"                               DATA IN OUTPUT SUMMARY
+;
+"--------------------------------------------------------------------------"
+"|                           Required inputs                              |"
+"--------------------------------------------------------------------------"
+
+ERR15 = 15;
+DELIMETER='SOURCE INPUTS';
+
+IVAL = IVAL + 1;   "IVAL is passed in IODAT2"
+NUM_IPART = IVAL;
+VALUES_SOUGHT(IVAL)='INCIDENT PARTICLE';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,3)='ELECTRON';
+ALLOWED_INPUTS(IVAL,0)='PHOTON';
+ALLOWED_INPUTS(IVAL,1)='POSITRON';
+ALLOWED_INPUTS(IVAL,2)='ALL';
+
+IVAL = IVAL + 1;
+NUM_SOURCE = IVAL;
+VALUES_SOUGHT(IVAL)='SOURCE NUMBER';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=21;
+DEFAULT(IVAL)=0;
+$GET_INPUT(NUM_SOURCE);
+ISOURC=VALUE(NUM_SOURCE,1);
+
+"************************************************************
+" IF ISOURC>4, QUIT.  WE'RE LEAVING THE CODE IN, BUT SOURCES
+" 10 AND 11 SEEM TO GO INTO AN INFINITE LOOP AFTER HATCHING
+" (On entering srchst) -- JT
+" ***********************************************************
+
+IF (ISOURC>4) [
+   WRITE(ERR15,*);
+   WRITE(ERR15,*)'***********************ERROR*************************';
+   WRITE(ERR15,*)'THE SOURCES WITH RADIAL DISTRIBUTIONS ARE NOT';
+   WRITE(ERR15,*)'AVAILABLE.  IN JUNE 1999, THEY WERE FOUND TO HANG';
+   WRITE(ERR15,*)'AFTER THE CALL TO HATCH.  THIS HAS NOT AS YET';
+   WRITE(ERR15,*)'BEEN FIXED SINCE WE HAVE NOT NEEDED THESE SOURCES.';
+   WRITE(ERR15,*);
+   ERROR_FLAG=1; RETURN;
+];
+
+
+IVAL = IVAL + 1;
+NUM_SOPTS = IVAL;
+VALUES_SOUGHT(IVAL)='SOURCE OPTIONS';
+NVALUE(IVAL)=5;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=-999999;
+VALUE_MAX(IVAL)=999999;
+DEFAULT(IVAL)=1;
+
+NMIN=NUM_IPART;
+NMAX=NUM_SOPTS;
+$GET_INPUTS(NMIN,NMAX);
+
+IQIN=VALUE(NUM_IPART,1);
+"this is done because VALUE(I,IVAL) cannot have negative array indices"
+IF (IQIN=3) [IQIN=-1;]
+TEMP1=VALUE(NUM_SOPTS,1);
+TEMP2=VALUE(NUM_SOPTS,2);
+TEMP3=VALUE(NUM_SOPTS,3);
+TEMP4=VALUE(NUM_SOPTS,4);
+TEMP5=VALUE(NUM_SOPTS,5);
+
+OUTPUT IQIN,ISOURC,TEMP1,TEMP2,TEMP3,TEMP4;(T10,'SRCSPH READ:', 2I5,4F12.5);
+
+IF((ISOURC.EQ.10).OR.(ISOURC.EQ.11))[ "INCLUDE RADIAL DISTRIBUTION"
+     IVAL = IVAL + 1;
+    NUM_MODEIN = IVAL;
+    VALUES_SOUGHT(IVAL)='MODE';
+    NVALUE(IVAL)=1;
+    TYPE(IVAL)=3;
+    DEFAULT(IVAL)=1;
+    ALLOWED_INPUTS(IVAL,0)='LOCAL';
+    ALLOWED_INPUTS(IVAL,1)='EXTERNAL';
+    $GET_INPUT(NUM_MODEIN);
+    MODEIN=VALUE(NUM_MODEIN,1);
+
+    IF(MODEIN.EQ.0)[
+
+        IVAL = IVAL + 1;
+        NUM_RDISTF = IVAL;
+        VALUES_SOUGHT(IVAL)='RDISTF';
+        TYPE(IVAL)=1;
+        VALUE_MIN(IVAL)=-999999;
+        VALUE_MAX(IVAL)=999999;
+        $GET_INPUT(NUM_RDISTF);
+
+        IVAL = IVAL + 1;
+        NUM_RPDF = IVAL;
+        VALUES_SOUGHT(IVAL)='RPDF';
+        TYPE(IVAL)=1;
+        VALUE_MIN(IVAL)=0;
+        VALUE_MAX(IVAL)=999999;
+        $GET_INPUT(NUM_RPDF);
+
+        IF(NVALUE(NUM_RDISTF).NE.NVALUE(NUM_RPDF))[
+          WRITE(ERR15,*);
+          WRITE(ERR15,*)'**********************ERROR**********************';
+          WRITE(ERR15,*)'RDISTF HAS',NVALUE(NUM_RDISTF),' VALUES';
+          WRITE(ERR15,*)'RPDF HAS  ',NVALUE(NUM_RPDF),' VALUES';
+          WRITE(ERR15,*)'>>> THEY MUST HAVE THE SAME NUMBER OF VALUES <<<';
+          WRITE(ERR15,*);
+          ERROR_FLAG=1; RETURN;
+        ] ELSE [
+          NRDIST=NVALUE(NUM_RDISTF);
+        ]
+    ]
+    ELSE[ "INPUT FROM SEPARATE SOURCE FILE"
+        IVAL = IVAL + 1;
+        NUM_RDFIL = IVAL;
+        VALUES_SOUGHT(IVAL)='RDIST FILENAME';
+        NVALUE(IVAL)=1;
+        TYPE(IVAL)=2;
+        $GET_INPUT(NUM_RDFIL);
+        READ (CHAR_VALUE(NUM_RDFIL,1),FMT='(A)') SPCFIL;
+    ]
+    NUM_RDIOUTSP = IVAL;
+    VALUES_SOUGHT(IVAL)='DISTRIBUTION DATA';
+    NVALUE(IVAL)=1;
+    TYPE(IVAL)=3;
+    DEFAULT(IVAL)=0;
+    ALLOWED_INPUTS(IVAL,0)='NONE';
+    ALLOWED_INPUTS(IVAL,1)='OUTPUT SUMMARY';
+    $GET_INPUT(NUM_RDIOUTSP);
+    IOUTSP=VALUE(NUM_RDIOUTSP,1);
+
+    IF(IOUTSP.NE.1) IOUTSP=0;
+]
+
+IF((IQIN.LT.-1).OR.(IQIN.GT.1)) IQIN=0;
+
+SVTMP1=TEMP1;SVTMP2=TEMP2;SVTMP3=TEMP3;SVTMP4=TEMP4;
+
+
+RETURN;
+
+
+ENTRY SRCINI(SCARG1,SCARG2,SCARG3,SCARG4,ICORRL);
+" The arguments to this call aren't used here.  They were probably used
+" for a source type not yet defined for sph, so I'll leave it in -- JT
+
+IF((ISOURC.NE.0).AND.(ISOURC.NE.1).AND.(ISOURC.NE.4).AND.
+   (ISOURC.NE.10).AND.(ISOURC.NE.11))[
+    "DEFAULT SOURCE TYPE- PARALLEL BEAM FROM THE FRONT"
+    ISOURC=0;TEMP1=0.0;TEMP2=0.0;TEMP3=0.0;TEMP4=1.0;
+    ]
+
+IF(ISOURC.EQ.0)[
+    "PARALLEL BEAM AT ANY ANGLE"
+    RBEAM=TEMP1;
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.RSPH(NR)))RBEAM=RSPH(NR);
+    FNORM=TEMP2**2+TEMP3**2+TEMP4**2;
+    IF(FNORM.EQ.0.0)[
+        UINC=0.0;VINC=0.0;WINC=1.0;
+        ]
+    ELSE[
+        "TO SIMPLIFY, THE BEAM IS ROTATED SO THAT THERE IS NO         "
+        "U-COMPONENT. THIS IS ALLOWED BY THE SYMMETRY OF THE GEOMETRY."
+        FNORM=SQRT(FNORM);
+        WINC=TEMP4/FNORM;
+        VINC=SQRT((1.0-WINC)*(1.0+WINC));
+        UINC=0.0;
+        ]
+    OUTPUT IQIN,RBEAM,UINC,VINC,WINC;
+    (' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' PARALLEL BEAM AT ANY ANGLE'/
+    ' RADIUS OF THE BEAM ON THE TARGET:',T60,F10.4,' cm'/
+    ' X-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Y-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Z-AXIS DIRECTION COSINE:',T60,F10.4/);
+    ]
+
+ELSEIF(ISOURC.EQ.1)[
+    "POINT SOURCE AT ANY ANGLE"
+    DISTR=ABS(TEMP1);
+    IF(DISTR.LE.RSPH(NR))DISTR=100.;          "DEFAULT"
+    IF(DISTR.LE.RSPH(NR))DISTR=100.+RSPH(NR); "DEFAULT FOR BIG TARGET"
+    RBEAM=TEMP2;
+    "RSHADW=MAXIMUM BEAM RADIUS ALLOWED BY SHADOWING"
+    RSHADW=(RSPH(NR)/DISTR)*SQRT((DISTR+RSPH(NR))*(DISTR-RSPH(NR)));
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.RSHADW))RBEAM=RSHADW;
+    FNORM=TEMP3**2+TEMP4**2+TEMP5**2;
+    IF(FNORM.EQ.0.0)[
+        UINC=0.0;VINC=0.0;WINC=1.0;
+        ]
+    ELSE[
+        "TO SIMPLIFY, THE BEAM IS ROTATED SO THAT THERE IS NO         "
+        "U-COMPONENT. THIS IS ALLOWED BY THE SYMMETRY OF THE GEOMETRY."
+        FNORM=SQRT(FNORM);
+        WINC=TEMP5/FNORM;
+        VINC=SQRT((1.0-WINC)*(1.0+WINC));
+        UINC=0.0;
+        ]
+    OUTPUT IQIN,DISTR,RBEAM,UINC,VINC,WINC;
+    (' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' POINT SOURCE BEAM AT ANY ANGLE'/
+    ' SOURCE DISTANCE TO THE MIDDLE OF THE TARGET:',T60,F10.4,' cm'/
+    ' RADIUS OF THE BEAM ON THE TARGET:',T60,F10.4,' cm'/
+    ' X-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Y-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Z-AXIS DIRECTION COSINE:',T60,F10.4/);
+    ]
+
+ELSEIF(ISOURC.EQ.4)["point spread function calculation"
+
+    "DO NOTHING, I.E.:"
+    "XIN = YIN = ZIN = 0.0"
+    "UIN = VIN = 0.0; WIN = 1.0"
+     OUTPUT;
+     ('PARTICLE LOCATED AT ORIGIN',
+      ' MOVING PARALLEL TO Z-AXIS',/
+      'USED FOR POINT SPREAD FUNCTION CALCULATIONS')
+]
+
+ELSEIF(ISOURC.EQ.10)[
+    "PARALLEL BEAM AT ANY ANGLE WITH RADIAL DISTRIBUTION"
+    FNORM=TEMP1**2+TEMP2**2+TEMP3**2;
+    IF(FNORM.EQ.0.0)[
+        UINC=0.0;VINC=0.0;WINC=1.0;
+        ]
+    ELSE[
+        "TO SIMPLIFY, THE BEAM IS ROTATED SO THAT THERE IS NO         "
+        "U-COMPONENT. THIS IS ALLOWED BY THE SYMMETRY OF THE GEOMETRY."
+        FNORM=SQRT(FNORM);
+        WINC=TEMP3/FNORM;
+        VINC=SQRT((1.0-WINC)*(1.0+WINC));
+        UINC=0.0;
+        ]
+    OUTPUT IQIN,UINC,VINC,WINC;
+    (' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' PARALLEL BEAM AT ANY ANGLE WITH RADIAL DISTRIBUTION'/
+    ' X-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Y-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Z-AXIS DIRECTION COSINE:',T60,F10.4/);
+    ]
+
+ELSEIF(ISOURC.EQ.11)[
+    "POINT SOURCE AT ANY ANGLE WITH RADIAL DISTRIBUTION"
+    DISTR=ABS(TEMP1);
+    IF(DISTR.LE.RSPH(NR))DISTR=100.;          "DEFAULT"
+    IF(DISTR.LE.RSPH(NR))DISTR=100.+RSPH(NR); "DEFAULT FOR BIG TARGET"
+    FNORM=TEMP2**2+TEMP3**2+TEMP4**2;
+    IF(FNORM.EQ.0.0)[
+        UINC=0.0;VINC=0.0;WINC=1.0;
+        ]
+    ELSE[
+        "TO SIMPLIFY, THE BEAM IS ROTATED SO THAT THERE IS NO         "
+        "U-COMPONENT. THIS IS ALLOWED BY THE SYMMETRY OF THE GEOMETRY."
+        FNORM=SQRT(FNORM);
+        WINC=TEMP4/FNORM;
+        VINC=SQRT((1.0-WINC)*(1.0+WINC));
+        UINC=0.0;
+        ]
+    OUTPUT IQIN,DISTR,UINC,VINC,WINC;
+    (' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' POINT SOURCE AT ANY ANGLE WITH RADIAL DISTRIBUTION'/
+    ' SOURCE DISTANCE TO THE MIDDLE OF THE TARGET:',T60,F10.4,' cm'/
+    ' X-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Y-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Z-AXIS DIRECTION COSINE:',T60,F10.4/);
+    ]
+
+OUTPUT IOUTSP;
+(' PRINT DISTRIBUTION DATA IN OUTPUT SUMMARY, YES(1) OR NO(0): ',I2);
+
+IF((ISOURC.EQ.10).OR.(ISOURC.EQ.11))[ "INCLUDE RADIAL DISTRIBUTION"
+
+    IF(MODEIN.NE.1) MODEIN=0; "DEFAULT"
+
+    IF(MODEIN.EQ.0)[ "HAS READ RADIAL DIST LOCALLY (FROM .INP)
+        OUTPUT NRDIST;(' NUMBER OF RADIAL BINS: ',I4);
+        IF((NRDIST.LT.1).OR.(NRDIST.GT.100))[
+            OUTPUT;
+            (' *** NUMBER RADIAL BINS OUT OF RANGE (<1 OR >100),',
+            ' RESET TO 100 ***');
+            NRDIST=100;
+            ]
+        OUTPUT NRDIST;('   INPUT',I4,' SETS OF RDISTF,RPDF IN 2F20.0 FORMAT');
+        OUTPUT;('   RDISTF INCREASING IN SIZE, RPDF NON-NEGATIVE');
+        DO I=1,NRDIST [
+           RDISTF(I)=VALUE(NUM_RDISTF,I);
+           RPDF(I)=VALUE(NUM_RPDF,I);
+           ]
+        ]
+    ELSE[ "READ INPUT FROM A SEPARATE SOURCE FILE"
+        OUTPUT SPCFIL;(' FILE WITH DISTRIBUTION DATA READ AS:',A80);
+        OPEN(UNIT=9,STATUS='OLD',file=SPCFIL);
+        READ(9,*)NRDIST;
+        IF((NRDIST.LT.1).OR.(NRDIST.GT.100))[
+            OUTPUT;
+            (' *** NUMBER RADIAL BINS OUT OF RANGE (<1 OR >100),',
+            ' RESET TO 100 ***');
+            NRDIST=100;
+            ]
+        READ(9,*)(RDISTF(IB),RPDF(IB),IB=1,NRDIST);
+        CLOSE(UNIT=9);
+        OUTPUT NRDIST;('    HAVE READ',I5,' INPUT RADIAL BINS FROM FILE');
+        ]
+
+    "DO A CHECK ON THE RADIAL DISTRIBUTION"
+    ICOUNT=0;
+    RLAST=0;
+    IERROR=0;
+    :R-DIST-INPUT:LOOP[
+        ICOUNT=ICOUNT+1;
+        IF(ICOUNT.GT.NRDIST)[EXIT:R-DIST-INPUT:;]
+        IF(RDISTF(ICOUNT).LE.RLAST)[
+            IERROR=1;
+            OUTPUT;
+            (' *** RDISTF<=LAST ONE. NOT ALLOWED,',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT.');
+            ]
+        ELSEIF(RDISTF(ICOUNT).GT.RSPH(NR))[
+            IERROR=1;
+            OUTPUT RSPH(NR);
+            (' *** RDISTF>',G14.7,', GEOMETRY SIZE.',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT');
+            ]
+        ELSEIF(RPDF(ICOUNT).LT.0.0)[
+            IERROR=1;
+            OUTPUT;(' PDF < 0 NOT ALLOWED,',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT');
+            ]
+        IF(IERROR.EQ.1)[
+            ICOUNT=ICOUNT-1;
+            IF(ICOUNT.EQ.0)[
+                OUTPUT;(' *** NO RADIAL DISTRIBUTION DEFINED,',
+                ' STOPPING EXECUTION ***');
+                STOP;
+                ]
+            OUTPUT ICOUNT;
+            (' RADIAL DITRIBUTION INPUT APPEARS TO BE INCOMPLETE,',
+            ' NRDIST RESET TO ',I12);
+            NRDIST=ICOUNT;
+            EXIT:R-DIST-INPUT:;
+            ]
+        RLAST=RDISTF(ICOUNT);
+        ]
+
+    OUTPUT RDISTF(NRDIST);
+    ('    RADIAL DISTRIBUTION RANGES FROM 0 TO',F12.3,' cm');
+
+    ]
+
+RETURN;  "NORMAL RETURN"
+
+:EOF:;  "BAD INPUT"
+ERROR_FLAG=1;RETURN;
+
+"ALL DATA HAS NOW BEEN FED INTO THE ROUTINE"
+
+"************************************************************************
+
+ENTRY SRCOTO(WEIGHT);
+"==================="
+
+"CALCULATION OF ONE TIME ONLY CONSTANTS THAT MAY VARY WITH SOURCE TYPE"
+
+IF(ISOURC.EQ.0)[
+    "PARALLEL BEAM AT ANY ANGLE"
+    IDSTON=0; "NO RADIAL DISTRIBUTION"
+    ISRCTY=0; "PARALLEL BEAM"
+    RBEAM=RBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    RBEAM2=RBEAM**2;
+    ABEAM=PI*RBEAM2; "BEAM'S AREA ON THE FRONT OF THE TARGET"
+    WEIGHT=1.0; "INCIDENT WEIGHT"
+    AINFLU=FLOAT(NCASET)/ABEAM; "INCIDENT FLUENCE"
+    ]
+
+ELSEIF(ISOURC.EQ.1)[
+    "POINT SOURCE AT ANY ANGLE"
+    IDSTON=0; "NO RADIAL DISTRIBUTION"
+    ISRCTY=1; "POINT SOURCE"
+    RBEAM=RBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    RBEAM2=RBEAM**2;
+    ABEAM=PI*RBEAM2; "BEAM'S AREA ON THE FRONT OF THE TARGET"
+    DISTR2=DISTR**2;
+    "INCIDENT FLUENCE TIMES SOLID ANGLE"
+    "  THE SOLID ANGLE FACTOR IS CANCELLED BY THE WEIGHTING ROUTINE"
+    "  SEE BIELAJEW,ROGERS AND NAHUM, PHYS MED BIOL 1985 FOR DETAILS"
+    AINFLU=FLOAT(NCASET)/DISTR2;
+    ]
+
+ELSEIF(ISOURC.EQ.4)["point spread function calculation"
+    WEIGHT = 1.0;"incident weight"
+    AINFLU=FLOAT(NCASET); "INCIDENT FLUENCE"
+                          "i.e., we give dose/incident particle"
+]
+
+ELSEIF((ISOURC.EQ.10).OR.(ISOURC.EQ.11))[ "RADIAL DISTRIBUTION"
+
+    IDSTON=1; "RADIAL DISTRIBUTION FLAG ON"
+
+    "CALCULATE THE CPDF FROM THE PDF AND NORMALIZE IT"
+    "NOTE THAT THE RADIAL WEIGHTING IS INCLUDED AT THIS STAGE"
+    RCDF(1)=0.5*RDISTF(1)**2*RPDF(1);
+    DO IB=2,NRDIST[
+        RCDF(IB)=RCDF(IB-1)+0.5*(RDISTF(IB)**2-RDISTF(IB-1)**2)*RPDF(IB);
+        ]
+    FNORM=1./RCDF(NRDIST);
+    IBNSOK=0;
+    GRIDSZ=1./FLOAT($MXRDIST);
+    DO IB=1,NRDIST[
+        RCDF(IB)=FNORM*RCDF(IB);
+        IF(IB.EQ.1)[IF(RCDF(1).LT.GRIDSZ )IBNSOK=1;]
+        ELSEIF((RCDF(IB)-RCDF(IB-1)).LT.GRIDSZ)[IBNSOK=1.0;]
+        ]"END OF LOOP ON IB"
+    IF(IBNSOK.NE.0)[OUTPUT;(//'0*******WARNING******'/
+    T20,'SOME OF NORMALIZED BIN PROBABILITIES SO SMALL BINS MAY BE MISSED'/);]
+    "CALCULATE RCDFIN - AN ARRAY WHICH ALLOWS THE RAPID SAMPLING FOR THE"
+    "RADIAL BY PRECOMPUTING THE RESULTS FOR A FINE GRID"
+    DO K=1,$MXRDIST[
+        AK=FLOAT(K)*GRIDSZ;
+        DO I=1,NRDIST[
+            IRDIST=I;IF(AK.LE.RCDF(I))[GOTO :FOUND-R-BIN:;]
+            ]
+        "WE SHOULD NEVER FALL THROUGH TO HERE"
+        OUTPUT;(' *** FELL THROUGH RADIAL SAMPLING ROUTINE *** ');
+        :FOUND-R-BIN:
+        IF(IRDIST.NE.1)[RCDFIN(K,1)=RDISTF(IRDIST-1)**2;]
+        ELSE[RCDFIN(K,1)=0.0;]
+        RCDFIN(K,2)=RDISTF(IRDIST)**2-RCDFIN(K,1);
+        ]"END LOOP OVER K"
+    "OUTPUT IF IWATCH IS ACTIVE"
+    IF(IWATCH.NE.0)[
+        OUTPUT;(' RDISTF,   RPDF,   RCDF:'//);
+        OUTPUT (RDISTF(IB),RPDF(IB),RCDF(IB),IB=1,NRDIST);(3E17.7);
+        OUTPUT;(//);
+        ]
+
+    IF(ISOURC.EQ.10)[ "PARALLEL BEAM"
+        ISRCTY=0; "PARALLEL BEAM"
+        WEIGHT=1.0; "INCIDENT WEIGHT"
+        ABEAM=PI*RDISTF(NRDIST)**2; "BEAM'S AREA ON THE FRONT OF THE TARGET"
+        AINFLU=FLOAT(NCASET)/ABEAM;
+        ]
+    ELSE[ "POINT SOURCE"
+        ISRCTY=1; "POINT SOURCE"
+        DISTR2=DISTR**2;
+        "INCIDENT FLUENCE TIMES SOLID ANGLE"
+        "  THE SOLID ANGLE FACTOR IS CANCELLED BY THE WEIGHTING ROUTINE"
+        "  SEE BIELAJEW,ROGERS AND NAHUM, PHYS MED BIOL 1985 FOR DETAILS"
+        AINFLU=FLOAT(NCASET)/DISTR2;
+        "RSHADW=MAXIMUM BEAM RADIUS ALLOWED BY SHADOWING"
+        RSHADW=(RSPH(NR)/DISTR)*SQRT((DISTR+RSPH(NR))*(DISTR-RSPH(NR)));
+        RBEAM=RSHADW; "NEEDED TO REJECT LATER IF R SELECTED IS TOO BIG"
+        RBEAM=RBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+        ABEAM=PI*RBEAM2; "BEAM'S AREA ON THE FRONT OF THE TARGET"
+        ]
+    ]
+
+RETURN;
+
+"************************************************************************
+
+ENTRY SRCOUT;
+"==========="
+
+"                          DESCRIBE SOURCE"
+"                          ==============="
+
+WRITE(IOUT,500);
+IF(ISOURC.EQ.0)     [WRITE(IOUT,510) RBEAM,UINC,VINC,WINC,AINFLU;      ]
+ELSEIF(ISOURC.EQ.1) [WRITE(IOUT,520) DISTR,RBEAM,UINC,VINC,WINC,AINFLU;]
+ELSEIF(ISOURC.EQ.4) [WRITE(IOUT,524) ;]
+ELSEIF(ISOURC.EQ.10)[WRITE(IOUT,530) UINC,VINC,WINC,AINFLU;            ]
+ELSEIF(ISOURC.EQ.11)[WRITE(IOUT,540) DISTR,UINC,VINC,WINC,AINFLU;      ]
+IF(IDSTON.EQ.1)[ "RADIAL DISTRIBUTION"
+    WRITE(IOUT,550);
+    IF(IOUTSP.EQ.1)[
+        WRITE(IOUT,560)NRDIST;
+        DO IB=1,NRDIST[WRITE(IOUT,570)IB,RDISTF(IB),RPDF(IB),RCDF(IB);]
+        ]
+    IF(IBNSOK.NE.0.0) WRITE(IOUT,580);
+    ]
+
+RETURN;
+
+
+"************************************************************************
+
+
+"                    SAMPLE SOURCE EACH HISTORY     "
+"                    ==========================     "
+
+ENTRY SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+"======================================================="
+
+"CALCULATE THE HISTORY DEPENDENT CONSTANTS THAT MAY CHANGE DEPENDING ON"
+"THE SOURCE TYPE"
+
+IF(ISOURC.EQ.4) ["not need to sample position and direction"
+   xin    = 0.0;yin = 0.0;zin = 0.0;"particle at origin"
+   uin    = 0.0;vin = 0.0;win = 1.0;"moving along z-axis"
+   irin   = 2; "initial region always inner most sphere"
+   weight = 1.0;"incident weight"
+   return;
+]
+
+IF(IDSTON.EQ.0)[ "NO RADIAL DISTRIBUTION"
+    LOOP[
+        $RANDOMSET XIN; XIN =(2.0*XIN -1.0)*RBEAM; "CHOOSE X"
+        $RANDOMSET YINP;YINP=(2.0*YINP-1.0)*RBEAM; "CHOOSE Y (UNROTATED)"
+        RHO2=XIN**2+YINP**2;
+        ] UNTIL RHO2.LE.RBEAM2;
+    ]
+ELSE[ "RADIAL DISTRIBUTION"
+    LOOP[
+        "SAMPLE THE INCIDENT RADIAL DISTRIBUTION"
+        $RANDOMSET RNNO1;$RANDOMSET RNNO2;
+        "IN NEXT STATEMENT MIN AVOIDS K=$MXRDIST+1, ALMOST NEVER IMPLEMENTED"
+        K=MIN(FLOAT($MXRDIST)*RNNO1+1.,FLOAT($MXRDIST));
+        RRHO=SQRT(RCDFIN(K,1)+RNNO2*RCDFIN(K,2));
+        ] UNTIL RRHO.LE.RBEAM;
+
+    $RANDOMSET XIN;XIN=(2.0*XIN-1.0)*RRHO; "CHOOSE X"
+    RHO2=RRHO**2;
+    YINP=RHO2-XIN**2;
+    IF(YINP.LE.0.0)[YINP=0.0;]ELSE[YINP=SQRT(YINP);] "FIND Y (UNROTATED)"
+    ]
+
+ZINP=RSPH2(NR)-RHO2;
+IF(ZINP.LE.0.0)[ZINP=0.0;]ELSE[ZINP=-SQRT(ZINP);] "FIND Z (UNROTATED)"
+ZINP=ZINP*0.999995; "ALLOW A LITTLE PENETRATION"
+
+"ROTATION YINP, ZINP ABOUT X-AXIS TO ACCOUNT FOR THE BEAM INCIDENCE"
+ZIN=ZINP*WINC-YINP*VINC;
+YIN=YINP*WINC+ZINP*VINC;
+
+"FIND THE STARTING REGION'S CONE NUMBER"
+"NOTE THAT ON THE SUREFACE, IRIN=NREG+IC(CONE NUMBER)-NC"
+IF(NC.EQ.1)["ONLY ONE CONE"
+    IRIN=NREG;
+]
+ELSEIF(ZIN.GT.0.0)[ "HITS THE FORWARD HEMISPHERE"
+    IF(NC.EQ.2)[ "UNIQUE SOLUTION IN THIS CASE"
+        IRIN=NREG-1;
+    ]
+    ELSE[ "MUST SEARCH FOR ENTRANCE REGION"
+        TNTST2=RHO2/ZIN**2;
+        IC=1; "IF SEARCH FAILS, THE PARTICLE STARTS IN THE FIRST CONE"
+        DO ICTST=1,NPLAN1[
+            IF(TNTST2.GE.TANAL2(ICTST))[IC=IC+1;EXIT;]
+            ]
+        IC=MIN(NPLAN1,IC); "TO KEEP PARTICLE IN THE FORWARD HEMISPHERE"
+        IRIN=NREG+IC-NC;
+    ]
+]
+ELSEIF(ZIN.LT.0.0)[ "HITS THE BACKWARD HEMISPHERE"
+    IF(NC.EQ.2)[ "UNIQUE SOLUTION IN THIS CASE"
+        IRIN=NREG;
+    ]
+    ELSE[ "MUST SEARCH FOR ENTRANCE REGION"
+        TNTST2=RHO2/ZIN**2;
+        IC=NC; "IF SEARCH FAILS, THE PARTICLE STARTS IN THE LAST CONE"
+        DO ICTST=NPLAN2,NC[
+            IF(TNTST2.GE.TANAL2(ICTST-1))[IC=IC-1;EXIT;]
+        ]
+        IC=MAX(NPLAN2,IC); "TO KEEP PARTICLE IN THE BACKWARD HEMISPHERE"
+        IRIN=NREG+IC-NC;
+    ]
+]
+ELSE[ "ZIN=0.0, RIGHT ON THE EQUATOR - IMPROBABLE CASE"
+    IF    (WINC.GT.0.0)[ "GOING FORWARD"  IRIN=NREG+NPLAN1-NC;]
+    ELSEIF(WINC.LT.0.0)[ "GOING BACKWARD" IRIN=NREG+NPLAN2-NC;]
+    ELSE               [ "PARALLEL TO EQUATORIAL PLANE"
+        "SHARE EQUALLY BETWEEN FRONT AND BACK HEMISPHERES"
+        $RANDOMSET SPLIT;
+        IF(SPLIT.LT.0.5)[IRIN=NREG+NPLAN1-NC;]ELSE[IRIN=NREG+NPLAN2-NC;]
+        ]
+    ]
+;
+
+"FIND INITIAL DIRECTION COSINES"
+IF(ISRCTY.EQ.0)[ "PARALLEL BEAM"
+    UIN=UINC;VIN=VINC;WIN=WINC;
+    ]
+ELSE[ "POINT SOURCE"
+    "FOR D AND WEIGHT USE UNROTATED FORMS - THEY ARE INVARIANT"
+    D=SQRT((DISTR+ZINP)**2+RHO2);
+    WEIGHT=ABEAM*(DISTR+RSPH2(NR)/ZINP)/(D**3);
+    UIN=XIN/D;VIN=(DISTR*VINC+YIN)/D;WIN=(DISTR*WINC+ZIN)/D;
+    OMEGIS(IS)=OMEGIS(IS)+WEIGHT;
+    ]
+
+RETURN;
+
+"FORMATS"
+%I0
+%F
+100   FORMAT(' ',2(I2,' '),4(G14.7,' '))
+200   FORMAT(' ',I1)
+300   FORMAT(' ',I3)
+400   FORMAT(' ',2(G14.7,' '))
+410   FORMAT(27A1)
+500   FORMAT(' ',95('*')//T30,'SOURCE PARAMETERS'//' ',95('*')/)
+510   FORMAT(T20,'PARALLEL BEAM FROM ANY ANGLE, RADIUS =',F8.3,' cm'/
+     1  T30,' X-AXIS DIRECTION COSINE=',F10.4/
+     2  T30,' Y-AXIS DIRECTION COSINE=',F10.4/
+     3  T30,' Z-AXIS DIRECTION COSINE=',F10.4/
+     4  T30,' INCIDENT FLUENCE=', 1PE13.3,'/cm**2')
+520   FORMAT(T20,'POINT SOURCE FROM ANY ANGLE',
+     1  F8.1,' cm AWAY, RADIUS =',F8.3,' cm'/
+     2  T30,' X-AXIS DIRECTION COSINE=',F10.4/
+     3  T30,' Y-AXIS DIRECTION COSINE=',F10.4/
+     4  T30,' Z-AXIS DIRECTION COSINE=',F10.4/
+     5       T20,'INCIDENT FLUENCE * SOLID ANGLE=',1PE13.3,'/cm**2')
+524   FORMAT(T20,'PARTICLE LOCATED AT ORIGIN',
+     1           ' MOVING PARALLEL TO Z-AXIS',/
+     2           'USED FOR POINT SPREAD FUNCTION CALCULATIONS')
+530   FORMAT(T20,'PARALLEL BEAM FROM ANY ANGLE'/
+     1  T30,' X-AXIS DIRECTION COSINE=',F10.4/
+     2  T30,' Y-AXIS DIRECTION COSINE=',F10.4/
+     3  T30,' Z-AXIS DIRECTION COSINE=',F10.4/
+     4  T30,' INCIDENT FLUENCE=', 1PE13.3,'/cm**2')
+540   FORMAT(T20,'POINT SOURCE FROM ANY ANGLE',
+     1  F8.1,' cm AWAY'/
+     2  T30,' X-AXIS DIRECTION COSINE=',F10.4/
+     3  T30,' Y-AXIS DIRECTION COSINE=',F10.4/
+     4  T30,' Z-AXIS DIRECTION COSINE=',F10.4/
+     5       T20,'INCIDENT FLUENCE * SOLID ANGLE=',1PE13.3,'/cm**2')
+550   FORMAT(' ',T20,'RADIAL DISTRIBUTION'/)
+560   FORMAT(' ',T20,'RADIAL DISTBN, # OF INCIDENT RADIAL BINS:',T60,I5/
+     1' ',T20,'BIN    KINETIC RADIAL     PROBABILITY  CUMULATIVE PROB')
+570   FORMAT(' ',T20,I3,T28,F7.3,T45,1PE10.3,T60,0PF7.4)
+580   FORMAT(' *******WARNING******'/T20,'SOME OF NORMALIZED BIN',
+     1' PROBABILITIES SO SMALL BINS MAY BE MISSED'/)
+%I4
+%M
+
+END;   "END OF SUBROUTINE SRCSPH"
+"LAST LINE IN SRCSPH.MOR - ONCE ONLY"
+

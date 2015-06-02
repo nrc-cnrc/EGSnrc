@@ -1,0 +1,609 @@
+%E
+%C80
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc auxiliary routines for NRC user codes                               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2000                                       "
+"                   Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  These are auxiliary routines used in many NRC user codes.                  "
+"                                                                             "
+"  If you include them via your configuration file, your user code will need  "
+"  to define $MXDATA and $STAT. For example, if you are not using the         "
+"  statistical analysis package:                                              "
+"                                                                             "
+"  REPLACE {$MXDATA} WITH {1}; REPLACE{$STAT} WITH {1};                       "
+"                                                                             "
+"#############################################################################"
+
+
+"*****************************************************************************"
+"                                                                             "
+"                        WATCH                                                "
+"                                                                             "
+SUBROUTINE WATCH(IARG,IWATCH);
+
+"============================================================================="
+"                                                                             "
+"     A general purpose auxiliary routine for use with the EGSnrc system
+"
+"     It prints out information about the particle transport                  "
+"                                                                             "
+"       For IWATCH = 1 it prints information about each discrete interaction  "
+"       For IWATCH = 2 or 3 it prints information about each step as well     "
+"       For IWATCH = 4 it prints graphing data for use with EGS_Windows       "
+"        see http://www.irs.inms.nrc.ca/inms/irs/EGS_Windows/distribution.html"
+"                                                                             "
+"                                                                             "
+"    Routine is used via two mandatory and 1 optional call from the user's    "
+"          code                                                               "
+"                                                                             "
+"   1)The routine must be initialized by a call with IARG=-99 before the first"
+"          call to SHOWER. It should be after all inputs are in place.        "
+"   2)The routine must be called near the beginning of the AUSGAB subroutine  "
+"          IF (IWATCH > 0 ) CALL WATCH(IARG,IWATCH);                          "
+"   3)The routine may be called at the end of each history with IARG = - 1 so "
+"          a message will get printed stated history is complete              "
+"                                                                             "
+"    Since WATCH cannot output values related to the initial values in a      "
+"    shower call, it is useful to also put something like the following       "
+"    immediately prior to the CALL SHOWER stmt                                "
+"           IF((IWATCH ~= 0) & (IWATCH ~= 4))[                                "
+"              OUTPUT 1,EIN,IQI,IRI,XI,YI,ZI,UI,VI,WI,LATCHI,WTI;              "
+"               (/' INITIAL SHOWER VALUES',T36,':',                           "
+"               I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);                         "
+"           ]                                                                 "
+"    Note EIN is the kinetic energy of the incident particle                  "
+"                                                                             "
+"                                                                             "
+"   The routine uses up to 132 columns for output.                            "
+"                                                                             "
+"     JAN 1984  GENERALIZED VERSION WITH INITIALIZATION                       "
+"                              DAVE ROGERS NRCC                               "
+"     JUN 1987  PUT IN IWATCH = 4 OPTION     AFB                              "
+"     JUL 1988  COMPATIBLE WITH X-RAY FLUORESCENCE  DWOR                      "
+"     SEP 1990  ADDED ENERGY OUTPUT TO IWATCH = 4 OPTION     AFB              "
+"     OCT 1990  UNIX compatible carriage control   DWOR                       "
+"     JAN 2000  Rewritten to output relaxation particles and also             "
+"               so some of the output makes more sense BW                     "
+"                                                                             "
+"*****************************************************************************"
+;Copyright NRC;
+"define a local macro"
+REPLACE {$CNTOUT(#);(#);} WITH {
+   ICOUNT=ICOUNT+1;
+   OUTPUT {P1},KE,IQ({P1}),IR({P1}),X({P1}),Y({P1}),Z({P1}),U({P1}),V({P1}),
+   W({P1}),LATCH({P1}),WT({P1});  ({P2},I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
+}
+
+$IMPLICIT-NONE;
+$INTEGER iarg,iwatch,IP,ICOUNT,JHSTRY,J,N;
+$REAL KE;
+$INTEGER graph_unit;
+integer  egs_open_file;
+$INTEGER ku,kr,ka;
+
+;COMIN/BOUNDS, STACK,EPCONT,EGS-VARIANCE-REDUCTION,USEFUL,EGS-IO/;
+
+DATA ICOUNT/0/,JHSTRY/1/ graph_unit/-1/;
+save     ICOUNT,JHSTRY,graph_unit;
+
+ku = 13; kr = 0; ka = 1;
+IF(IARG = -99) [ "Initialize flags so we will get calls thru AUSGAB"
+  DO J=1,29[IAUSFL(J)=1;];
+  /IAUSFL(22),IAUSFL(23),IAUSFL(24)/=0;
+]
+
+IF(IARG = -1) ["main is assumed to call AUSGAB with IARG=-1 at end of history"
+  IF(IWATCH = 4) [
+    IF( graph_unit < 0 ) [
+        graph_unit = egs_open_file(ku,kr,ka,'.egsgph');
+    ]
+    WRITE(graph_unit,:GRAPHICS_FORMAT:) 0,0,0,0.0,0.0,0.0,0.0,JHSTRY;
+    JHSTRY=JHSTRY+1;
+  ]
+  ELSE[
+    OUTPUT JHSTRY;(' END OF HISTORY',I8,3X,40('*')/);
+    JHSTRY=JHSTRY+1;ICOUNT=ICOUNT+2;RETURN;
+  ]
+]
+
+IF( (IWATCH ~= 4) & ((ICOUNT >= 50) | (ICOUNT = 0) | (IARG = -99)) )[
+   "PRINT HEADER"
+   ICOUNT=1;
+   OUTPUT;(//T39,' NP',3X,'ENERGY  Q REGION    X',7X,
+   'Y',7X,'Z',6X,'U',6X,'V',6X,'W',6X,'LATCH',2X,'WEIGHT'/);
+]
+
+IF((IWATCH = 4) & (IARG >= 0) & (IARG ~= 5)) [ "GRAPHICS OUTPUT"
+   IF( graph_unit < 0 ) graph_unit = egs_open_file(ku,kr,ka,'.egsgph');
+   WRITE(graph_unit,:GRAPHICS_FORMAT:) NP,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),E(NP);
+   :GRAPHICS_FORMAT:FORMAT(2I4,1X,I6,4G15.8,I12);
+]
+
+IF(IARG = 5  |  IARG < 0) RETURN;
+IF(IWATCH = 4) RETURN; "NONE OF THE REST NEEDED FOR GRAPHICS OUTPUT"
+
+KE=E(NP);IF(IQ(NP).NE.0)[KE=E(NP)-0.511;]
+
+IF(IARG = 0 & IWATCH = 2)[
+  $CNTOUT(NP);(T11,'STEP ABOUT TO OCCUR', T36,':');
+]
+ELSEIF(IARG = 0)[RETURN;]
+IF(    IARG = 1)[
+   $CNTOUT(NP);(' Discard  AE,AP<E<ECUT',T36,':');]
+ELSEIF(IARG = 2)[
+   $CNTOUT(NP);(' Discard  E<AE,AP',T36,':');]
+ELSEIF(IARG = 3)[
+   $CNTOUT(NP);(' Discard -user request',T36,':');]
+ELSEIF(IARG = 4)[OUTPUT EDEP,IR(NP);
+  (T10,'Local energy deposition',T36,':',F12.5,' MeV in region ',I6);]
+
+ELSEIF(IARG = 6)[
+   $CNTOUT(NP);(' bremsstrahlung  about to occur',T36,':');]
+ELSEIF(IARG = 7)[
+    IF(nbr_split =1) ["no splitting or SBS is on in BEAMnrc"
+       DO IP=NPold,NP[
+         IF(IQ(IP)=-1)[
+           KE = E(IP) - RM;
+           $CNTOUT(IP);(T10,'Resulting electron',T36,':');
+         ]
+         ELSE[
+           KE = E(IP);
+           $CNTOUT(IP);(T10,'Resulting photon',T36,':');
+         ]
+       ]
+    ]
+    ELSE ["splitting case--e- is always at NPold"
+      KE = E(NPold) - RM;
+      $CNTOUT(NPold);(T10,'Resulting electron',T36,':');
+      DO IP=NPold+1,NP[
+        KE= E(IP);
+        IF(IP = NPold+1)["print info for first one only"
+           $CNTOUT(IP);(T10,'Split photons',T36,':');
+        ]
+        ELSE[ $CNTOUT(IP);(T36,':'); ]
+      ]
+    ]" end of splitting block"
+]
+
+ELSEIF(IARG = 8)[$CNTOUT(NP);(' Moller   about to occur',T36,':');]
+ELSEIF(IARG = 9)[
+  "surely this logic not needed?"
+  IF(NP=NPold)[
+     $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSE[
+     DO IP=NPold,NP[
+        KE = E(IP) - ABS(IQ(NP))*RM;
+        IF(IP=NPold)[$CNTOUT(IP);(T11,'Resulting electrons',T36,':');]
+        ELSE[$CNTOUT(IP);(T36,':');]
+     ]
+  ]
+]
+
+ELSEIF(IARG = 10)[
+   $CNTOUT(NP);(' Bhabba   about to occur',T36,':');
+]
+ELSEIF(IARG = 11)[
+  IF(NP=NPold)[
+     $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSE[
+     DO IP=NPold,NP[
+        KE = E(IP) - ABS(IQ(IP))*RM;
+        IF(IP=NPold)[ $CNTOUT(IP);(T11,'Resulting e- or e+',T36,':'); ]
+        ELSE[$CNTOUT(IP);(T36,':');]
+     ]
+  ]
+]
+
+ELSEIF(IARG = 12)[
+   $CNTOUT(NP);(' Positron about to decay in flight',T36,':');
+]
+ELSEIF(IARG = 13)[
+  IF(NP=NPold)[
+     $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSE[
+     DO IP=NPold,NP[
+        KE = E(IP) - ABS(IQ(IP))*RM;
+        IF(IP=NPold)[$CNTOUT(IP);(T11,'Resulting photons',T36,':');]
+        ELSE[$CNTOUT(IP);(T36,':');]
+     ]
+  ]
+]
+
+ELSEIF(IARG = 28)[
+   $CNTOUT(NP);(' Positron will annihilate at rest',T36,':');
+]
+ELSEIF(IARG = 14)[
+  IF(NP=NPold)[
+       $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSE[
+     DO IP=NPold,NP[
+        KE = E(IP) - ABS(IQ(IP))*RM;
+        IF(IP=NPold)[$CNTOUT(IP);(' Positron annihilates at rest',T36,':');]
+        ELSE[$CNTOUT(IP);(T36,':');]
+     ]
+  ]
+]
+
+ELSEIF(IARG = 15)[
+    $CNTOUT(NP);(' Pair production about to occur',T36,':');
+]
+ELSEIF(IARG = 16)["after pair production"
+  IF(NP=NPold & i_survived_rr = 0)[
+       $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSEIF(NP=NPold & i_survived_rr > 0)["we have cleared the stack"
+      OUTPUT i_survived_rr,prob_rr;
+       (T10,'Russian Roulette eliminated ',I2,
+                    ' particle(s) with probability ',F8.5)
+      $CNTOUT(NP);(T10,'Now on top of stack',T36,':');
+  ]
+  ELSE[
+     DO IP=NPold,NP[
+        KE = E(IP) - ABS(IQ(IP))*RM;
+        IF(IP=NPold)[$CNTOUT(IP);(T11,'Resulting pair',T36,':');]
+        ELSE[$CNTOUT(IP);(T36,':');]
+     ]
+     IF(i_survived_rr > 0)[
+        OUTPUT i_survived_rr,prob_rr;
+       (T10,'Russian Roulette eliminated ',I2,'
+             particle(s) with probability ',F8.5);
+       $CNTOUT(NP);(T10,'Now on top of stack',T36,':');
+     ]
+  ]
+]
+
+ELSEIF(IARG = 17)[$CNTOUT(NP);(' Compton  about to occur',T36,':');]
+ELSEIF(IARG = 18)["after call to COMPT"
+  IF(NP = NPold & i_survived_rr = 0)[
+      $CNTOUT(NP);(T11,'Interaction rejected',T36,':');
+  ]
+  ELSEIF(NP > NPold)["have not cleared the stack with rus rou"
+     DO IP=NPold,NPold+1[
+        KE = E(IP) - ABS(IQ(IP))*RM;
+        IF(IQ(IP).NE.0)[$CNTOUT(IP);(T11,'compton electron created',T36,':');]
+        ELSE[$CNTOUT(IP);(T11,'compton scattered photon',T36,':');]
+     ]
+  ]
+  IF(i_survived_rr > 0)["whether the stack has been cleared or not"
+       OUTPUT i_survived_rr,prob_rr;
+       (T10,'Russian Roulette eliminated ',I2,
+                    ' particle(s) with probability ',F8.5)
+      $CNTOUT(NP);(T10,'Now on top of stack',T36,':');
+  ]
+]
+
+ELSEIF(IARG = 19)[
+    $CNTOUT(NP);(' Photoelectric about to occur',T36,':');
+]
+ELSEIF(IARG = 20)[
+    IF(NPold=NP & IQ(NP)=0 & i_survived_rr = 0)[
+      $CNTOUT(NP);(T11,'Photon energy below N-shell',/,
+                   T11,'Photon discarded',T36,':');
+    ]
+    ELSEIF(IQ(NPold) = -1 & i_survived_rr = 0)[
+      KE= E(NPold)-RM;
+      $CNTOUT(NPold);(T10,'Resulting photoelectron',T36,':');
+    ]
+    ELSEIF(i_survived_rr > 0)["done some russian roulette"
+       IF(NP=NPold-1 | IQ(NPold) ~= -1)[
+          IF(i_survived_rr > 1)["eliminated more than the photoelectron"
+              OUTPUT i_survived_rr-1,prob_rr;
+              (T10,'Russian Roulette eliminated ',I4,
+                    ' particle(s) with probability ',F8.5,' plus');
+          ]
+          OUTPUT prob_rr;
+                 (T10,'Russian Roulette eliminated resulting photoelectron',
+                      ' with probability ',F8.5);
+       ]
+       ELSE["NPold could hold the photoelectron"
+           KE = E(NPold) - RM;
+           $CNTOUT(NPold);(T10,'Resulting photoelectron?',T36,':');
+           OUTPUT i_survived_rr,prob_rr;
+           (T10,'Russian Roulette eliminated ',I4,
+                    ' particle(s) with probability ',F8.5);
+       ]
+       $CNTOUT(NP);(T10,'Now on top of stack',T36,':');
+    ]
+]
+
+ELSEIF(IARG = 24)[$CNTOUT(NP);(' Rayleigh scattering occured',T36,':');]
+
+ELSEIF(IARG = 25)[$CNTOUT(NP);(T10,'Fluorescent X-ray created',T36,':');]
+
+ELSEIF(IARG = 26)[$CNTOUT(NP);(T10,'Coster-Kronig e- created',T36,':');]
+
+ELSEIF(IARG = 27)[$CNTOUT(NP);(T10,'Auger electron created',T36,':');]
+
+IF(IARG = 0  &  IWATCH = 2)[OUTPUT  USTEP,TUSTEP,VSTEP,TVSTEP,EDEP;
+(T5,'USTEP,TUSTEP,VSTEP,TVSTEP,EDEP',T36,':    ',5(1PE13.4));ICOUNT=ICOUNT+1;]
+
+IF(NP = 1  |  IARG = 0) RETURN;
+IF( IARG <= 3)[
+       N=NP-1;
+       KE = E(N) - ABS(IQ(N))*RM;
+       $CNTOUT(N);(T10,'Now on top of stack',T36,':');
+]
+RETURN;END;
+%I4
+%C80
+%Q1
+%E
+"*******************************************************************************
+"
+"
+"                       *****************
+"                       *               *
+"                       * SIGMA.MORTRAN *
+"                       *               *
+"                       *****************
+"
+"
+"       SIGMA IS A STATISTICAL ANALYSIS ROUTINE DESIGNED TO BE USED BY EGS
+"       USER PROGRAMS TO GIVE THE TOTALS OR AVERAGES AND THEIR UNCERTAINTIES
+"       OF THE DATA CALCULATED BY THE MONTE CARLO CODE.
+"       THE UNCERTAINTIES ARE RETURNED AS PERCENTS.
+"
+"       VARIABLES
+"       =========
+"
+"       DATA(NDATA,ISTAT)       THE TWO DIMENSIONAL ARRAY OF DATA TO BE
+"                               ANALYZED. ISTAT IS THE NUMBER OF STATISTICAL
+"                               BATCHES AND NDATA IS THE NUMBER OF ERRORS TO
+"                               BE CALCULATED. AFTER THE END OF THE CALCULATION,
+"                               DATA(N,1) CONTAINS THE TOTAL OR AVERAGE AND
+"                               DATA(N,2) CONTAINS THE ERROR. NDATA SHOULD
+"                               BE < OR = $MAXDATA AND ISTAT SHOULD BE < OR =
+"                               $STAT WHCH MUST BE DEFINED IN THE MAIN ROUTINE.
+"                               Note $STAT must be 2 or greater, even if istat=1
+"
+"       MODE    =  0 =>         ANALYSIS ON MEAN VALUES WHERE ZERO DATA IS
+"                               IGNORED. (eg. STOPPING POWER RATIO)
+"               =  1 =>         ANALYSIS ON MEAN VALUES WHERE ZERO DATA IS NOT
+"                               IGNORED. (e.g. DOSE)
+"               =  2 =>         ANALYSIS ON TOTAL VALUES (eg. TOTAL EDEP)
+"
+"       IERR    =  0 =>         NORMAL COMPLETION.
+"               =  1 =>         WARNING: MODE OUT OF RANGE, DEFAULTED TO 0
+"               = 10 =>         ERROR: ONLY ONE BATCH INPUT, QUICK CALCULATION
+"                                      DONE. ERROR=99.9%
+"               = 11 =>         ERROR: NO NON-ZERO DATA FOUND IN A GIVEN SET,
+"                                       ERROR=99.9%
+"               = -1 =>         FATAL ERROR: NDATA OR ISTAT OUT OF RANGE, NO
+"                                            CALCULATION DONE.
+"
+"
+"               VERSION  1      A.F.B.  83/7/22
+"               Version  2      IK      Jan 6 6000 implemented implicit none
+"
+"*******************************************************************************
+%E
+SUBROUTINE SIGMA(NDATA,ISTAT,MODE,IERR);
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+$INTEGER NDATA,ISTAT,MODE,IERR;
+
+REPLACE {;COMIN/ERROR/;} WITH {
+ ;COMMON/ERROR/DATA($MXDATA,$STAT);
+ $REAL data;
+}
+;COMIN/ERROR,EGS-IO/;
+
+$INTEGER n,non0,i;
+$REAL    stat,sdenom;
+real*8   emax,avg,error,datum,argmnt;
+                                 "It is a good idea to use double precision"
+                                 "in cases with very low stat. uncertainties"
+
+DATA EMAX/99.9/;
+
+IERR=0; "ASSUME NORMAL COMPLETION"
+
+"TEST INPUTS AND SET ERROR CODES AND RETURN IF NEEDED."
+
+IF((MODE < 0) | (MODE > 2)) [MODE=2;IERR=1;]
+
+IF((NDATA.LE.0).OR.(NDATA.GT.$MXDATA).OR.(ISTAT.LE.0).OR.(ISTAT.GT.$STAT)) [
+  IERR=-1;RETURN;"FATAL INPUT ERROR, RETURN IMMEDIATELY"
+]
+IF(ISTAT = 1)[
+    IERR=10;"ONLY ONE STATISTICAL BATCH, QUICK CALCULATION"
+    DO N=1,NDATA[DATA(N,2)=EMAX;]
+    RETURN;
+]
+
+"MOST ANOMALIES HAVE BEEN HANDLED. NOW DO THE ANALYSIS"
+
+IF(MODE.NE.0)[STAT=FLOAT(ISTAT);SDENOM=STAT*(STAT-1.);]
+DO N=1,NDATA[
+   NON0=0;             "NON-ZERO COUNTER"
+   AVG=0.0;ERROR=0.0;
+   DO I=1,ISTAT[
+      DATUM=DATA(N,I);
+      IF(DATUM.NE.0.0)[NON0=NON0+1;AVG=AVG+DATUM;ERROR=ERROR+DATUM**2;]
+   ]
+   IF(NON0 = 0)[IERR=11;ERROR=EMAX;GOTO :TRANSFER:;"NO NON-ZERO DATA "]
+
+   ELSEIF((NON0 = 1) & (MODE = 0))[ERROR=EMAX;GOTO:TRANSFER:;"ONLY ONE DATUM"]
+
+   ELSE[
+      IF(MODE = 0)[STAT=FLOAT(NON0);SDENOM=STAT*(STAT-1.);]
+   ]
+
+   AVG=AVG/STAT;ARGMNT=ERROR-STAT*AVG**2;
+   "FLAG -VE SQUARE ROOTS THAT CAN ONLY OCCUR DUE TO ROUND-OFF ERRORS"
+   IF(ARGMNT.LT.0.0)[
+      OUTPUT ARGMNT,ERROR,STAT,AVG,SDENOM;
+      (' ***** - SQ RT IN SIGMA. ARGMNT,ERROR,STAT,AVG,SDENOM='/' ',5E12.4);
+      ARGMNT=0.0;
+   ]
+   ERROR=SQRT(ARGMNT/SDENOM);
+
+   IF(AVG = 0.)[ERROR=EMAX;]ELSE[ERROR=100.*ERROR/ABS(AVG);]
+
+   IF(MODE =  2)AVG=AVG*STAT;
+
+   :TRANSFER:;
+   DATA(N,1)=AVG;DATA(N,2)=MIN(EMAX,ERROR);
+] "END OF NDATA LOOP"
+RETURN;
+END; "END OF SIGMA"
+;
+
+"*****************************************************************************
+" The following are routines that implement
+" the alias sampling technique for sampling from a histogram
+" distribution coded for use with EGSnrc
+"
+" subroutine prepare_alias_sampling
+" function   alias_sample
+"
+" I. Kawrakow, January 2000
+"
+"*****************************************************************************
+
+subroutine prepare_alias_sampling(nsbin,fs_array,ws_array,ibin_array);
+"====================================================================
+"
+" inputs:  nsbin:    number of bins in the histogram
+"          fs_array: bin probabilities
+"
+" Note that we don't need the bin limits at this point, they
+" are needed for the actual sampling (in alias_sample)
+"
+" outputs: ws_array, ibin_array: alias table ready for sampling
+"
+"====================================================================
+
+;Copyright NRC;
+implicit none;
+
+$INTEGER  nsbin,ibin_array(nsbin);
+$REAL     fs_array(nsbin),ws_array(nsbin);
+
+$INTEGER  i,j_l,j_h;
+$REAL     sum,aux;
+
+sum = 0;
+DO i=1,nsbin [
+  IF( fs_array(i) < 1e-30 ) fs_array(i) = 1e-30;
+  ws_array(i) = -fs_array(i); ibin_array(i) = 1;
+  sum = sum + fs_array(i);
+]
+sum = sum/nsbin;
+
+DO i=1,nsbin-1 [
+
+    DO j_h = 1,nsbin [
+        IF( ws_array(j_h) < 0 ) [
+            IF( abs(ws_array(j_h)) > sum ) GOTO :AT_EXIT1:;
+        ]
+    ]
+    j_h = nsbin;
+    :AT_EXIT1:
+
+    DO j_l = 1,nsbin [
+        IF( ws_array(j_l) < 0 ) [
+            IF( abs(ws_array(j_l)) < sum ) GOTO :AT_EXIT2:;
+        ]
+    ]
+    j_l = nsbin;
+    :AT_EXIT2:
+
+    aux = sum - abs(ws_array(j_l));
+    ws_array(j_h) = ws_array(j_h) + aux;
+    ws_array(j_l) = -ws_array(j_l)/sum;
+    ibin_array(j_l) = j_h;
+    IF( i = nsbin-1 ) ws_array(j_h) = 1;
+
+]
+
+return;
+end;
+
+
+$REAL function alias_sample(nsbin,xs_array,ws_array,ibin_array);
+"===============================================================
+"
+" samples from an alias table which must have been prepared
+" using prepare_alias_table
+"
+"===============================================================
+
+;Copyright NRC;
+implicit none;
+
+$INTEGER nsbin,ibin_array(nsbin);
+$REAL    xs_array(0:nsbin),ws_array(nsbin);
+
+;COMIN/RANDOM/;
+
+$REAL    v1,v2,aj;
+$INTEGER j;
+
+$RANDOMSET v1; $RANDOMSET v2;
+aj = 1 + v1*nsbin; j = aj;
+IF( j > nsbin ) j = nsbin; " this happens only if $RANDOMSET produces
+                           " numbers in (0,1]
+aj = aj - j;
+IF( aj > ws_array(j) ) [ j = ibin_array(j); ]
+alias_sample = (1-v2)*xs_array(j-1) + v2*xs_array(j);
+return;
+end;
+;
+%E
+;
+"==========================end of nrcaux.mortran======================"
+
+
+

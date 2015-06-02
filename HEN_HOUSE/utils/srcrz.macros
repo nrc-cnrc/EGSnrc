@@ -1,0 +1,183 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros required by srcrz.mortran                                    "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Dave Rogers, 2001                                         "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  These are macros used by srcrz.mortran which need to be defined before     "
+"  the user code because values are input to it.                              "
+"                                                                             "
+"  This code was stripped out of the user codes and out of srcrz.mortran,     "
+"  since having it defined twice could lead to errors.                        "                                                                             "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%I4
+%C80
+;
+REPLACE {;COMIN/SOURCE/;} WITH {
+"       ================="
+
+"IK: - Put 8 bit variables first to avoid misalignment complains from some"
+"      compilers                                                          "
+"    - Put 32 bit integers last so that there are no padding warnings     "
+"      when usinmg double precision                                       "
+"To people putting additional variables in common blocks at random        "
+"locations: on modern CPU's it is most efficient when variables in commons"
+"are aligned at 64 bit boundaries. Thus, when this is not the case, some  "
+"compilers will put in dummy padding bytes between variables to assure 64 "
+"bit alignment and issue a warning. So, please, use the following rules:  "
+" - put known 64 bit variables first                                      "
+" - put real variables before integer variables. This is needed because   "
+"   when one switches to double precision, real variables become 64 bit   "
+" - put short integers last                                               "
+
+; COMMON/SOURCE/
+SPCNAM,SCOMEG,SCOMEG2,NHSTRY,N_LEFT,other_num_1,other_num_2,NNREAD,
+NSHIST, NSLEFT,NCASE_PHSP,NPHSPN,NPHSPN_MIN,NPHSPN_MAX,P_PER_PHSP_CHUNK,
+NPHOTPHSP,RCDFIN,RDISTF,RPDF,RCDF,AINFLU,RBEAM,RBEAM2,
+UINC,VINC,WINC,XBEAM,YBEAM,ZBEAM,DISTRH,DSTRH2,DISTZ,DISTZ2,
+DISTB,DISTB2,RCYL1,RCYL2,PROBFC,PROBSD,PROBBK,
+AFACE,ASIDE,ZCOFST,ZSOFST,SVTMP1,SVTMP2,SVTMP3,SVTMP4,
+RMINBM,RMINSQ,EINSRC,EKSRCM,ZSMAX,ZSMIN,NINCSRC,
+XINOLD,YINOLD,ZINOLD,UINOLD,VINOLD,WINOLD,WEIGHTOLD,
+ENFLAG,IMODE,NRDIST,NSRCRG,ISRPT,ISRPAR,NPASS,DOSE_STAT,
+NRCYCL,IPARALLEL,PARNUM,CYCLNUM,OUTCNT,IRINOLD,NRCFLGOLD,
+N_RUN_CHUNK_OLD,IPHATIN,i_iaea_in,i_unit_in;
+
+CHARACTER*80 SPCNAM;
+REAL*8 SCOMEG,SCOMEG2;
+$LONG_INT NHSTRY,N_LEFT,other_num_1,other_num_2,NNREAD,NSHIST,
+          NSLEFT,NCASE_PHSP,NPHSPN,NPHSPN_MIN,NPHSPN_MAX,P_PER_PHSP_CHUNK,
+          NPHOTPHSP
+$REAL    RCDFIN($MXRDIST,2),RDISTF(100),RPDF(100),RCDF(100),AINFLU,RBEAM,RBEAM2,
+         UINC,VINC,WINC,XBEAM,YBEAM,ZBEAM,DISTRH,DSTRH2,DISTZ,DISTZ2,
+         DISTB,DISTB2,RCYL1,RCYL2,PROBFC,PROBSD,PROBBK,
+         AFACE,ASIDE,ZCOFST,ZSOFST,
+         SVTMP1,SVTMP2,SVTMP3,SVTMP4,
+         RMINBM,RMINSQ,EINSRC,EKSRCM,ZSMAX,ZSMIN,NINCSRC,
+         XINOLD,YINOLD,ZINOLD,UINOLD,VINOLD,WINOLD,WEIGHTOLD;
+$INTEGER ENFLAG,IMODE,
+         NRDIST,NSRCRG,ISRPT,ISRPAR,NPASS,DOSE_STAT,
+         NRCYCL,IPARALLEL,PARNUM,CYCLNUM,OUTCNT,IRINOLD,NRCFLGOLD,
+         N_RUN_CHUNK_OLD,IPHATIN,
+         i_iaea_in,i_unit_in;
+CHARACTER*1 FILSPC(80);
+EQUIVALENCE (SPCNAM,FILSPC);
+}
+
+"COMMON USED FOR PASSING INFORMATION SPECIFIC TO SOURCES
+"RCDFIN   INVERSE OF THE RADIAL CUMULATIVE PROBABILITY FUNCTION (ISOURC=20)
+"RDISTF   RADIAL MESH POINTS FOR THE RADIAL PROBABILITY FUNCTION (ISOURC=20)
+"RPDF     RADIAL PROBABILITY FUNCTION (ISOURC=20)
+"RCDF     RADIAL CUMULATIVE PROBABILITY FUNCTION (ISOURC=20)
+"AINFLU   INCIDENT FLUENCE
+"RBEAM    RADIUS OF THE BEAM AT THE FRONT OF THE TARGET or OUTER RADIUS
+"                           of SOURCE for ISOURC = 3
+"RBEAM2   RBEAM**2
+"UINC     INCIDENT X-AXIS DIRECTION COSINE (ISOURC=0)
+"VINC     INCIDENT Y-AXIS DIRECTION COSINE (ISOURC=0)
+"WINC     INCIDENT Z-AXIS DIRECTION COSINE (ISOURC=0)
+"XBEAM    HALF-HEIGHT OF THE BEAM AT THE CENTER OF THE TARGET
+"ZBEAM    HALF-WIDTH OF THE BEAM AT THE CENTER OF THE TARGET
+"DISTRH   DISTANCE OF THE SOURCE FROM THE MIDDLE OF THE TARGET
+"DSTRH2   = DISTRH**2
+"DISTZ    DISTANCE OF THE POINT SOURCE FROM THE FRONT OF THE TARGET
+"DISTZ2   = DISTZ**2
+"DISTB    DISTANCE OF THE POINT SOURCE FROM THE BACK OF THE TARGET
+"DISTB2   = DISTB**2
+"RCYL1    RADIUS OF THE TARGET
+"RCYL2    = RCYL1**2
+"PROBFC   PROBABILITY THAT INCIDENT BEAM STRIKES THE FLAT FACE (ISOURC=12)
+"PROBBK   PROBABILITY THAT INCIDENT BEAM STRIKES THE FLAT FACE (ISOURC=12)
+"PROBSD   PROBABILITY THAT INCIDENT BEAM STRIKES THE CURVED SIDE (ISOURC=12)
+"AFACE    FACIAL AREA OF THE TARGET
+"ASIDE    RECTANGULAR AREA OF THE TARGET SEEN BY THE BEAM
+"ZCOFST   Z-AXIS OFFSET OF THE CENTER OF THE TARGET
+"ZSOFST   Z-AXIS OFFSET OF THE SOURCE
+"NRDIST   # RADIAL BINS IN DISTRIBUTION HISTOGRAM (ISOURC=20)
+"RMINBM   MINIMUM BEAM RADIUS FOR ISOURC=14 or INNER RADIUS of
+"                                                SOURCE,ISOURCE = 3
+"RMINSQ   RMINBM**2
+"EINSRC   SOURCE ENERGY INPUT FROM FULL PHASE-SPACE SOURCE FILE (ISOURC=21,22)
+"NSHIST   NUMBER OF PARTICLES IN SOURCE FILE (ISOURC=21,22)
+"NSLEFT   NUMBER OF PARTICLES REMAINING IN SOURCE FILE (ISOURC=21,22)
+"ENFLAG   FLAG THAT SOURCE ENERGY IS READ HERE (ISOURC=21,22)
+"EKSRCM   MAXIMUM ENERGY OF SOURCE (ISOURC=21,22)
+"SPCNAM   FILE NAME OF SOURCE DATA FILE (ISOURC=21,22)
+"ZSMAX    MAXIMUM of SOURCE Z extent for ISOURC = 3
+"ZSMIN    MINIMUM of SOURCE Z extent for ISOURC = 3
+"IMODE    =0 FOR DEFAULT BEAM FILE FORMAT WITH 7 VARIABLES PER RECORD"
+"         =2 FOR PH-SP FILES CREATED BY BEAM WITH 8 VARIABLES/RECORD, +ZLAST"
+"NCASE_PHSP  TOTAL NUMBER OF PARTICLES STORED IN THE PH-SP FILE"
+"NPHOTPHSP no. of photons in phase space source"
+"NPHSPN   Stores particle no. to be read from phase space source (ISOURC=21,22)"
+"NHSTRY   Stores no. of primary histories read from phsp source (ISOURC=21,22)"
+"NPASS    NO. of times a particle has crossed the phase space plane (21,22)"
+"NNREAD   Total number of particles read from phase space source (ISOURC=21,22)"
+"DOSE_STAT For ISOURC=21,22, set to 1 if we cannot read no. primary histories"
+"NINCSRC  number of particles incident from primary source (ISOURC=21,22)"
+"SCOMEG(2) ACCUMULATES PARTICLE WEIGHTS (WEIGHT^2) FROM THE SOURCE,
+"          EVENTUALLY GIVES SOLID ANGLE (UNCERTAINTY ON SOLID ANGLE) OF
+"          THE TARGET
+"NRCYCL   no of times to recycle each source particle (ISOURC=21,22)"
+"IPARALLEL no. of parallel jobs into which a simulation is split(ISOURC=21,22)"
+"PARNUM   set to a different integer value in the range 1<=PARNUM<=IPARALLEL
+"         for the IPARALLEL parallel jobs (ISOURC=21,22)
+"CYCLNUM  keeps track of how many times a particle has been recycled
+"         (ISOURC=21,22)
+"OUTCNT   keeps track of how many times a phsp source has been restarted
+"         (ISOURC=21,22)
+"XINOLD   holds XIN for recycled particles (ISOURC=21,22)
+"YINOLD   holds YIN for recycled particles (ISOURC=21,22)
+"ZINOLD   holds ZIN for recycled particles (ISOURC=21,22)
+"UINOLD   holds UIN for recycled particles (ISOURC=21,22)
+"VINOLD   holds VIN for recycled particles (ISOURC=21,22)
+"WINOLD   holds WIN for recycled particles (ISOURC=21,22)
+"WEIGHTOLD   holds WEIGHT for recycled particles (ISOURC=21,22)
+"IRINOLD  holds IRIN for recycled particles (ISOURC=21,22)
+"NRCFLGOLD   holds NRCFLG for recycled particles (ISOURC=21,22)
+"N_LEFT   no. of histories left in a parallel run excluding current run
+"         used for parallel runs with ISOURC=21,22 only
+"N_RUN_CHUNK_OLD  no. of previous chunk of parallel run.  Used for
+"         parallel runs with ISOURC=21,22 only
+"NPHSPN_MIN  min. value for NPHSPN in chunk of phsp source.  Used for
+"         parallel runs with ISOURC=21,22 only
+"NPHSPN_MAX  max. value for NPHSPN in chunk of phsp source.  Used for
+"         parallel runs with ISOURC=21,22 only
+"P_PER_PHSP_CHUNK no. of particles in phsp source per chunk of parallel run
+"         For parallel runs with ISOURC=21,22 only
+"IPHATIN  set to 1 if this is a fat photon (from DBS)--ISOURC=23 only
+"i_iaea_in set to 1 if phase space source is in IAEA format (ISOURC=21,22 only)
+"i_unit_in Unit no. for phsp source (IAEA format only)
+
+"Last line in srcrz.macros "
+
+

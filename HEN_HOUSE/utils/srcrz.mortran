@@ -1,0 +1,3250 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc source calculations in cylindrical geometry                         "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         E.F., 1984                                                "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Alex Bielajew                                             "
+"                   George Ding                                               "
+"                   Charlie Ma                                                "
+"                   J.S.                                                      "
+"                   Aaron Merovitz                                            "
+"                   Guoming Xiong                                             "
+"                   Iwan Kawrakow                                             "
+"                   Blake Walters                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This subroutine is dedicated exclusively to calculations related to the    "
+"  source configuration. It is accessed from four locations:                  "
+"                                                                             "
+"  1) from the INPUT SUBROUTINE. Control is transferred to this routine to    "
+"     read in source specific information. Control is transferred back to the "
+"     INPUT SUBROUTINE following these inputs                                 "
+"                                                                             "
+"  2) from the 'ONE TIME ONLY CONSTANTS' section of the main routine to scale "
+"     the geometry of the incident beam and calculate the fluence             "
+"                                                                             "
+"  3) from the histories loop of the main routine. A call is made prior to    "
+"     each history to set the point of entry into the target, the initial     "
+"     direction cosines, the initial energy and the statistical weight of the "
+"     incident particle.                                                      "
+"                                                                             "
+"  4) from the input summary routine to print source info                     "
+"                                                                             "
+"  Fluence is defined at the point on axis at the front face of the geometry. "
+"                                                                             "
+"  VERSION 01      E.F.      7/84    ADAPTED FROM CAVITY                      "
+"  VERSION 02      D.W.O.R.  4/85    EGS4, ISOURC=4, FRONT FACE FLUENCE       "
+"                  D.W.O.R.  9/85    CHANGED ISOURC=4 TO MAKE LAST R=1000     "
+"  VERSION 03      A.F.B.    5/86    PUT IN ISOURC=20, RADIAL DIST'N          "
+"  VERSION 04      A.F.B.   10/86    PUT IN ANGLED INCIDENCE PARALLEL BEAM    "
+"  VERSION 05      D.W.O.R.  1/87    ALLOWED NMED>1 FOR ISOURC=2,4            "
+"  VERSION 06      A.F.B.    4/87    GENERALIZED SAMPLING FOR ISOURC=20       "
+"  VERSION 07      D.W.O.R. 12/87    SCORE SOLID ANGLE FOR POINT SOURCES      "
+"  VERSION 08      A.F.B.    1/88    RESTRUCTURED AND FIXED ISOURC=12         "
+"  VERSION 09      A.F.B.    1/88    ISOURC=13 CODED                          "
+"  VERSION 10      A.F.B.    1/88    ZCOFST, ZSOFST PUT IN COMMON             "
+"  VERSION 11      A.F.B.    3/88    FIXED DOMEGA SAMPLING ERROR              "
+"  VERSION 12    D.W.O.R.    7/88    FIXED ISOURC=3 TO SET IRIN               "
+"  VERSION 13      A.F.B.    3/89    FIXED ISOURC=3 THAT WRONGLY              "
+"                                    CENTERED THE REGION AT ZERO              "
+"  VERSION 14    D.W.O.R     2/90    added ISOURC=14                          "
+"                            3/90    minor change to specify fluence          "
+"                                    is that at front face on axis            "
+"  VERSION 15      B.A.F.   12/90    added ISOURC=21                          "
+"  VERSION 16    D.W.O.R.    9/91    extended ISOURC=3 to be an               "
+"                                    arbitrary ring region                    "
+"  VERSION 17      G.X.D.    4/93    modify isource = 21 read from            "
+"                                    beam full phase space                    "
+"  VERSION 18     C.M. Ma   11/94    modified isource = 21, implemented       "
+"                                    new file format for phase space          "
+"  VERSION 19     C.M. Ma   11/94    added charge options for isource = 21    "
+"                                    iq can be either -1,0,1 or 2(=all)       "
+"  VERSION 20     C.M. Ma   05/95    modified isourc=21 to input max          "
+"                                    energy from phase space, not user        "
+"  VERSION 21     J.S.      04/98    upgraded srcrz_from_cavrz                "
+"                                                                             "
+"  VERSION 22     A.M       04/98    New input routine(GET_INPUTS)            "
+"  VERSION 23     I.K.      01/00    implicit none                            "
+"  VERSION 24     B.W.      02/01    added sourc 22 starting from NPL         "
+"                                    work by David Shipley.                   "
+"  VERSION 25     I.K.      04/01    Added source 15 and 16, modified         "
+"                                         source 22 to work from any angle    "                                                                           "
+"                                                                             "
+"  modifield at Carleton by Guoming Xiong to remove bug in radial dose        "
+"  distributions in source 20                                                 "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%I4
+%C80
+;
+"      DEFINE SOME LOCAL MACROS
+;
+"MACRO $CHOOSE-POINT-IN-CIRCLE
+"      =======================
+"RANDOMLY SELECTS A POINT WITHIN A CIRCLE IN THE NRCC RZ GEOMETRY
+"    INPUTS  RBEAM  RADIUS WITHIN WHICH TO CHOOSE THE POINT
+"            RBEAM2 RBEAM**2
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            R2     XIN**2+YIN**2
+"            IXIN   RADIUS NUMBER IN WHICH THE SELECTED POINT RESIDES
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$CHOOSE-POINT-IN-CIRCLE;} WITH {;
+  LOOP[
+    $RANDOMSET XIN;XIN=(2.0*XIN-1.0)*RBEAM;
+    $RANDOMSET YIN;YIN=(2.0*YIN-1.0)*RBEAM;
+    R2=XIN**2+YIN**2;
+  ] UNTIL R2.LE.RBEAM2;
+  DO IX=1,NR[IXIN=IX;IF(R2.LE.CYRAD2(IX))EXIT;]
+;
+}
+;
+"MACRO $SELECT-POINT-IN-RECTANGLE
+"      ==========================
+"RANDOMLY SELECTS A POINT WITHIN A RECTANGLE IN THE NRCC RZ GEOMETRY
+"    INPUTS  XBEAM  HALF WIDTH OF THE RECTANGLE ALONG THE X-AXIS
+"            YBEAM  HALF WIDTH OF THE RECTANGLE ALONG THE Y-AXIS
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            R2     XIN**2+YIN**2
+"            IXIN   RADIUS NUMBER IN WHICH THE SELECTED POINT RESIDES
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$SELECT-POINT-IN-RECTANGLE;} WITH {;
+    $RANDOMSET XIN;XIN=(2.0*XIN-1.0)*XBEAM;
+    $RANDOMSET YIN;YIN=(2.0*YIN-1.0)*YBEAM;
+    R2=XIN**2+YIN**2;
+  DO IX=1,NR[IXIN=IX;IF(R2.LE.CYRAD2(IX))EXIT;]
+;
+}
+;
+"MACRO $ENTRY-FRONT-FACE
+"      =================
+"SPECIFIES ALL THE INPUT PHASE SPACE FOR A POINT SOURCE IRRADIATING A
+"FRONT FACE IN THE NRCC RZ GEOMETRY
+"    INPUTS  RBEAM  RADIUS WITHIN WHICH TO CHOOSE THE POINT
+"            RBEAM2 RBEAM**2
+"            RMINBM IS MINIMUM BEAM RADIUS FOR ISOURC=14
+"            DISTRH PERPENCICULAR DISTANCE OF THE POINT SOURCE OFF THE
+"                   SYMMETRY (Z) AXIS OF THE GEOMETRY
+"            DISTZ  PERPENCICULAR DISTANCE OF THE POINT SOURCE FROM THE
+"                   FIRST PLANE (ZPLANE(1) IN THE GEOMETRY)
+"            DISTZ2 DISTZ**2
+"            AFACE  AREA TO WHICH THE BEAM IS COLLIMATED ON THE FACE
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            ZIN    Z-COORDINATE SELECTED
+"            UIN    DIRECTION COSINE WITH RESPECT TO THE X-AXIS
+"            VIN    DIRECTION COSINE WITH RESPECT TO THE Y-AXIS
+"            WIN    DIRECTION COSINE WITH RESPECT TO THE Z-AXIS
+"            IRIN   REGION NUMBER OF THE ENTRANCE ELEMENT IN THE GEOMETRY
+"            WEIGHT WEIGHT OF THE PARTICLE
+"            NRCFLG = 10 => ENTRY IS FROM A FRONT FACE
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$ENTRY-FRONT-FACE;} WITH {;
+  $CHOOSE-POINT-IN-CIRCLE;
+  IRIN=2+(IXIN-1)*NZ;
+  ZIN=ZPLANE(1);
+  IF(ISOURC.EQ.14 .AND. R2.LE.RMINSQ)[
+   WEIGHT=0.0;"I.E. GET HOWFAR TO TERMINATE HISTORY"]
+  ELSE[
+   IF(DISTRH.EQ.0.0)[D=SQRT(R2+DISTZ**2);]
+   ELSE[D=SQRT(R2+DISTRH*(DISTRH-2.0*YIN)+DISTZ**2);]
+   UIN=XIN/D;VIN=(YIN-DISTRH)/D;WIN=DISTZ/D;
+   NRCFLG=10;
+   WEIGHT=AFACE*DISTZ/(D**3)/PROBFC;
+   SCOMEG=SCOMEG+WEIGHT;
+   SCOMEG2=SCOMEG2+WEIGHT*WEIGHT;]
+}
+;
+"MACRO $INCIDENT-FROM-FRONT
+"      ====================
+"SPECIFIES ALL THE INPUT PHASE SPACE FOR A POINT SOURCE IRRADIATING A
+"FRONT FACE IN THE NRCC RZ GEOMETRY
+"	DEVELOPED FOR USE OF ISOURCE 17
+"    INPUTS  XBEAM  HALF WIDTH WITHIN WHICH TO CHOOSE THE POINT
+"            YBEAM  HALF WIDTH WITHIN WHICH TO CHOOSE THE POINT
+"            R2     XIN**2 + YIN**2
+"            DISTRH PERPENCICULAR DISTANCE OF THE POINT SOURCE OFF THE
+"                   SYMMETRY (Z) AXIS OF THE GEOMETRY
+"            DISTZ  PERPENCICULAR DISTANCE OF THE POINT SOURCE FROM THE
+"                   FIRST PLANE (ZPLANE(1) IN THE GEOMETRY)
+"            DISTZ2 DISTZ**2
+"            AFACE  AREA TO WHICH THE BEAM IS COLLIMATED ON THE FACE
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            ZIN    Z-COORDINATE SELECTED
+"            UIN    DIRECTION COSINE WITH RESPECT TO THE X-AXIS
+"            VIN    DIRECTION COSINE WITH RESPECT TO THE Y-AXIS
+"            WIN    DIRECTION COSINE WITH RESPECT TO THE Z-AXIS
+"            IRIN   REGION NUMBER OF THE ENTRANCE ELEMENT IN THE GEOMETRY
+"            WEIGHT WEIGHT OF THE PARTICLE
+"            NRCFLG = 10 => ENTRY IS FROM A FRONT FACE
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$INCIDENT-FROM-FRONT;} WITH {;
+  $SELECT-POINT-IN-RECTANGLE;
+  IRIN=2+(IXIN-1)*NZ;
+  ZIN=ZPLANE(1);
+   IF(DISTRH.EQ.0.0)[D=SQRT(R2+DISTZ**2);]
+   ELSE[D=SQRT(R2+DISTRH*(DISTRH-2.0*YIN)+DISTZ**2);]
+   UIN=XIN/D;VIN=(YIN-DISTRH)/D;WIN=DISTZ/D;
+   NRCFLG=10;
+   WEIGHT=AFACE*DISTZ/(D**3)/PROBFC;
+   SCOMEG=SCOMEG+WEIGHT;
+   SCOMEG2=SCOMEG2+WEIGHT*WEIGHT;
+}
+;
+"MACRO $ENTRY-BACK-FACE
+"      ================
+"SPECIFIES ALL THE INPUT PHASE SPACE FOR A POINT SOURCE IRRADIATING A
+"BACK FACE IN THE NRCC RZ GEOMETRY
+"    INPUTS  RBEAM  RADIUS WITHIN WHICH TO CHOOSE THE POINT
+"            RBEAM2 RBEAM**2
+"            DISTRH PERPENCICULAR DISTANCE OF THE POINT SOURCE OFF THE
+"                   SYMMETRY (Z) AXIS OF THE GEOMETRY
+"            DISTB  PERPENCICULAR DISTANCE OF THE POINT SOURCE FROM THE
+"                   LAST PLANE (ZPLANE(NPLANE) IN THE GEOMETRY)
+"            DISTB2 DISTB**2
+"            AFACE  AREA TO WHICH THE BEAM IS COLLIMATED ON THE FACE
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            ZIN    Z-COORDINATE SELECTED
+"            UIN    DIRECTION COSINE WITH RESPECT TO THE X-AXIS
+"            VIN    DIRECTION COSINE WITH RESPECT TO THE Y-AXIS
+"            WIN    DIRECTION COSINE WITH RESPECT TO THE Z-AXIS
+"            IRIN   REGION NUMBER OF THE ENTRANCE ELEMENT IN THE GEOMETRY
+"            WEIGHT WEIGHT OF THE PARTICLE
+"            NRCFLG = 30 => ENTRY IS FROM THE BACK FACE
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$ENTRY-BACK-FACE;} WITH {;
+  $CHOOSE-POINT-IN-CIRCLE;
+  IRIN=1+IXIN*NZ;
+  ZIN=ZPLANE(NPLANE);
+  IF(DISTRH.EQ.0.0)[D=SQRT(R2+DISTB2);]
+  ELSE[D=SQRT(R2+DISTRH*(DISTRH-2.0*YIN)+DISTB2);]
+  UIN=XIN/D;VIN=(YIN-DISTRH)/D;WIN=-DISTB/D;
+  NRCFLG=30;
+  WEIGHT=AFACE*DISTB/(D**3)/PROBBK;
+  SCOMEG=SCOMEG+WEIGHT;
+  SCOMEG2=SCOMEG2+WEIGHT*WEIGHT;
+}
+;
+"MACRO $CHOOSE-POINT-IN-RECTANGLE
+"      ==========================
+"RANDOMLY SELECTS A POINT WITHIN A RECTANGLE IN THE NRCC RZ GEOMETRY
+"    INPUTS  XBEAM  HALF-WIDTH WITHIN WHICH TO CHOOSE THE POINT
+"            ZBEAM  HALF-DEPTH WITHIN WHICH TO CHOOSE THE POINT
+"            ZCOFST Z OFFSET OF THE CENTER OF THE GEOMETRY
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            ZIN    Z-COORDINATE SELECTED
+"            IRIN   REGION NUMBER IN WHICH THE SELECTED POINT RESIDES
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$CHOOSE-POINT-IN-RECTANGLE;} WITH {;
+  $RANDOMSET XIN;XIN=(2.0*XIN-1.0)*XBEAM;
+  $RANDOMSET ZIN;ZIN=(2.0*ZIN-1.0)*ZBEAM+ZCOFST;
+  YIN=SQRT((RCYL1-XIN)*(RCYL1+XIN));
+  DO IZ=2,NPLANE[IZ1=IZ;IF(ZIN.LE.ZPLANE(IZ))EXIT;]
+  IRIN=(NR-1)*NZ+IZ1;
+;
+}
+;
+"MACRO $ENTRY-SIDE
+"      ===========
+"SPECIFIES ALL THE INPUT PHASE SPACE FOR A POINT SOURCE IRRADIATING THE
+"SIDE IN THE NRCC RZ GEOMETRY
+"    INPUTS  XBEAM  HALF-WIDTH WITHIN WHICH TO CHOOSE THE POINT
+"            ZBEAM  HALF-DEPTH WITHIN WHICH TO CHOOSE THE POINT
+"            DISTRH Y OFFSET OF POINT SOURCE
+"            ZCOFST Z OFFSET OF THE CENTER OF THE GEOMETRY
+"            ZSOFST Z OFFSET OF THE SOURCE
+"    OUTPUTS XIN    X-COORDINATE SELECTED
+"            YIN    Y-COORDINATE SELECTED
+"            ZIN    Z-COORDINATE SELECTED
+"            UIN    DIRECTION COSINE WITH RESPECT TO THE X-AXIS
+"            VIN    DIRECTION COSINE WITH RESPECT TO THE Y-AXIS
+"            WIN    DIRECTION COSINE WITH RESPECT TO THE Z-AXIS
+"            IRIN   REGION NUMBER OF THE ENTRANCE ELEMENT IN THE GEOMETRY
+"            WEIGHT WEIGHT OF THE PARTICLE
+"            NRCFLG = 20 => ENTRY IS FROM A FRONT FACE
+"*** THIS MACRO IS DESIGNED TO WORK WITH THE STANDARD NRCC RZ GEOMETRY ***
+"*** ROUTINE ONLY                                                      ***
+;
+REPLACE {$ENTRY-SIDE;} WITH {;
+  $CHOOSE-POINT-IN-RECTANGLE;
+  D=SQRT(RCYL2+DSTRH2-2.0*DISTRH*YIN+(ZIN-ZSOFST)**2);
+  UIN=XIN/D;VIN=(YIN-DISTRH)/D;WIN=(ZIN-ZSOFST)/D;
+  WEIGHT=ASIDE*(DISTRH-RCYL2/YIN)/(D**3)/PROBSD;
+  SCOMEG=SCOMEG+WEIGHT;
+  SCOMEG2=SCOMEG2+WEIGHT*WEIGHT;
+  NRCFLG=20;
+}
+;
+"***************************************************************************
+SUBROUTINE SRCRZ;             "toc:
+"***************************************************************************
+"This entry is used to set values which will be required later
+
+$IMPLICIT-NONE;
+
+$INTEGER LATCHM,NHSTRYM;   "dummy variables used when reading in phsp record"
+$REAL ZLASTM,EINM,WEIGHTM,XINM,YINM,UINM,VINM;
+
+CHARACTER*5 LINE1;
+
+$INTEGER K,IB;
+$REAL    TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM;
+
+"There seems to be confusion of file names used for phase space and"
+"radial distribution, I declare here FILNAM (which was partially used"
+"but not declared as a character) to be the file name for rad. distr."
+
+character*80 filnam;
+
+"entry srcini declarations"
+$INTEGER ICORRL;
+$LONG_INT TEMPDIV;
+$REAL    SCARG1,SCARG2,SCARG3,SCARG4;
+
+$INTEGER ICOUNT,IERROR;
+$REAL    RLAST;
+
+"entry srcoto declarations"
+$REAL    WEIGHT;
+
+$INTEGER IBNSOK,I,IRDIST;
+$REAL    COTANG,FACTOR,GRIDSZ,AK;
+
+"entry srchst declarations"
+$INTEGER IRIN,NRCFLG;
+$REAL    XIN,YIN,ZIN,UIN,VIN,WIN;
+
+$INTEGER IX,IXIN,IZ,IZ1,LATCHI;  "LATCHI is not used!"
+$REAL    R2,D,PHI,WHICH,RNNO1,RNNO2,ZLAST;
+
+$INTEGER IZIN;
+$REAL    YTEMP,VTEMP,ZINC;
+
+" Variables for source 22: phase space file from an arbitrary direction"
+$REAL    dist_phsp, theta_phsp, cost_phsp, sint_phsp, chamber_c,
+         xoffset, yoffset;
+logical  check;
+$INTEGER count_phsp;
+real*8   tf,xtmp,ytmp,phbb,pha,phb,phd,radp;
+           "The above are used in source 22 to check whether the particle"
+           "gets in. As the phsp-plane may be far away from the geometry "
+           "it is a good idea to use double precision variables          "
+
+$INTEGER N_RUN_CHUNK; "stores current chunk of parallel run"
+
+character*80 the_beam_code, the_pegs_file, the_input_file;
+$INTEGER     lnblnk1;
+
+$LONG_INT tmp_mod;
+
+"***************************************************************************"
+"*            Variables passed to the subroutine GET_INPUTS                *"
+"***************************************************************************"
+COMIN/GetInput/;
+
+INTEGER NUM_IPART,
+        NUM_SOURCE,
+        NUM_SOPTS,
+        NUM_MODEIN,
+        NUM_RDFIL,
+        NUM_NRDIST,
+        NUM_RDISTF,
+        NUM_RPDF,
+        NUM_RDIOUTSP,
+        NUM_FILSPC,
+        NUM_BEAM_CODE,
+        NUM_PEGS_FILE,
+        NUM_IFILE, NUM_WW23, error_flag_save;
+
+"***************************************************************************"
+"*                   Variables used to declare inputs                      *"
+"***************************************************************************"
+$INTEGER MODEIN;
+
+"COMMIN BLOCK DECLERATIONS
+"*************************
+;COMIN/GEOM,IODAT2,PRINTC,MEDIA,MISC,SCORE,SOURCE,UPHIOT,USER,RANDOM,RWPHSP,
+       EGS-IO/;
+
+$LONG_INT last_nhstry;
+
+$REAL min_weight_23, max_weight_23, xin_tmp, yin_tmp, zin_tmp,Z_SOURCE,MUIDX;
+$INTEGER secret_option_23,ilen,ismode,IMUPHSP,IZSCORE;
+
+" At least the following variables must be declared static "
+save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM,IBNSOK,MODEIN,
+     dist_phsp, theta_phsp, cost_phsp, sint_phsp, chamber_c,count_phsp,
+     xoffset, yoffset, the_beam_code, the_pegs_file, the_input_file,
+     last_nhstry,min_weight_23, max_weight_23, secret_option_23;
+
+
+"                        INPUT SOURCE PARAMETERS    ""toc:
+"                        =======================    ""toc:
+
+"*******************************************************************************
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS4 simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+;
+"*******************************************************************************
+"                            SOURCE INPUT (Rev 1.14)
+"                            **********************
+"*******************************************************************************
+" SOURCE DELIMETERS:    :start source inputs:
+"                       :stop source inputs:
+"
+"FOR ALL SOURCES
+"                                      Charge of the incident beam
+"  INCIDENT PARTICLE= electron   (-1)  electrons
+"                     photon     (0)   photons
+"                     positron   (1)   positrons
+"
+"  (for SOURCE 21,22,23)  all    (2)  include all of the particles
+"                                     in the phase space file
+"                                     [IQIN]
+"                    charged     (3)  include e+ and e-
+"
+"  SOURCE NUMBER                 (I)   number of the source
+"                                      [ISOURC]
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  0 <<<<<<<<
+"
+"     PARALLEL BEAM INCIDENT FROM THE FRONT (+VE Z-AXIS) ""toc:
+"
+"
+"  SOURCE OPTIONS            (M4)  RBEAM, UINC, VINC, WINC
+"
+"               RBEAM          radius of parallel beam in cm
+"                              (defaults to max radius of geometry)
+"               UINC           incident x-axis direction cosine
+"               VINC           incident y-axis direction cosine
+"               WINC           incident z-axis direction cosine
+"                              NOTE: (UINC,VINC,WINC)
+"                              get automatically normalized
+"                              defaults to (0.0,0.0,1.0)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  1 <<<<<<<<
+"
+"     POINT SOURCE ON AXIS INCIDENT FROM THE FRONT    ""toc:
+"
+"  SOURCE OPTIONS                (M4)  DISTZ, RBEAM, 0, 0
+"
+"               DISTZ          distance of the point source from the
+"                              front of the target in cm (DEFAULT 100.)
+"               RBEAM          radius of the beam at the front of the
+"                              target in cm (defaults to MAX radius)
+"
+"------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  2 <<<<<<<<
+"
+"        BROAD PARALLEL BEAM INCIDENT FROM FRONT (+VE Z-AXIS) ""toc:
+"               WITH UNIT AREA BEAM AND LARGE SCORING AREA
+"
+"  SOURCE OPTIONS          (M4)  0, 0, 0, 0
+"
+;
+"------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  3 <<<<<<<<
+"
+"     UNIFORM ISOTROPICALLY RADIATING DISK OF FINITE SIZE   ""toc:
+"            (MUST BE ALLOWED FOR IN THE GEOMETRICAL DEFINITIONS)
+"
+"  SOURCE OPTIONS                (M4)  RMINBM, RBEAM, ZSMIN, ZSMAX
+"
+"               RMINBM,RBEAM           inner and outer radii of source region
+"                                      must be inside geometry
+"               ZSMIN,ZSMAX            min and max z values for source
+"
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  4 <<<<<<<<
+"
+"     FOR CENTRAL AXIS FLUENCE VS BEAM RADIUS      ""toc:
+"
+"  SOURCE OPTIONS            (M4)  RCAXIS, 0, 0, 0
+"
+"               RCAXIS       radius of central axis scoring zone (cm)
+"
+"        NOTE: this source option treats the cylindrical radii input
+"              above as beam radii. the largest radius must be infinite
+"              and the phantom must be homogeneous (at least in each layer)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  10 <<<<<<<<
+"
+"     PARALLEL BEAM INCIDENT FROM THE SIDE (+VE Y-AXIS)    ""toc:
+"
+"  SOURCE OPTIONS           (M4)  XBEAM, ZBEAM, 0, 0
+"
+"               XBEAM             half-width of the rectangular beam in cm
+"                                 (defaults to max radius)
+"               ZBEAM             half-height of the rectangular beam in cm
+"                                 (defaults to max)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  11 <<<<<<<<
+"
+"     POINT SOURCE INCIDENT FROM THE SIDE     ""toc:
+"
+"
+"  SOURCE OPTIONS                (M4)  DISTRH, XBEAM, ZBEAM, 0
+"
+"               DISTRH                 distance of the source from the middle
+"                                      of the target in cm (defaults to 100.)
+"               XBEAM                  half-width of the beam at the center of
+"                                      the target in cm (defaults to max radius)
+"               ZBEAM                  half-height of the beam at the center of
+"                                      the target in cm (defaults to max)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  12 <<<<<<<<
+"
+"   POINT SOURCE OFF AXIS         ""toc:
+"
+"  SOURCE OPTIONS                (M4)  DISTRH, DISTZ, 0, 0
+"
+"               DISTRH                 distance of the point source off the
+"                                      Z-axis.
+"               DISTZ                  perpendicular distance of the
+"                                      point source away from the front face.
+"                                      a negative value is permitted.
+"
+"                                      DISTZ > 0
+"                                      point located in front of front face
+"
+"                                      0 > DISTZ > -(ZPLANE(NPLANE)-ZPLANE(1))
+"                                      point located between front and rear face
+"
+"                                      DISTZ < -(ZPLANE(NPLANE)-ZPLANE(1))
+"                                      point located rear of rear plane
+"
+;
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  13 <<<<<<<<
+"
+"        PARALLEL BEAM FROM ANY ANGLE     ""toc:
+"
+"  SOURCE OPTIONS                (M4)  UINC, VINC, WINC, 0
+"
+"               UINC                   incident x-axis direction cosine
+"               VINC                   incident y-axis direction cosine
+"               WINC                   incident z-axis direction cosine
+"
+"                 NOTE: (UINC,VINC,WINC) get automatically normalized
+"                       default is (0.0,0.0,1.0)
+"
+"
+"-------------------------------------------------------------------------------
+"                     >>>>>>>> SOURCE  14 <<<<<<<<
+"
+"   POINT SOURCE ON AXIS INCIDENT FROM THE FRONT WITH ALL   ""toc:
+"    EVENTS INSIDE RMINBM NOT FOLLOWED (A FUDGE FOR COLLIMATOR STUDIES)
+"
+"  SOURCE OPTIONS                (M4)  DISTZ, RBEAM, RMINBM, IGNORED
+"
+"               DISTZ                  distance of the point source from the
+"                                      front of the target in cm
+"                                      (defaults to 100.)
+"               RBEAM                  radius of the beam at the front of the
+"                                      target in cm (defaults to max radius)
+"               RMINBM                 below this radius, all histories are
+"                                      terminated by the source routines by
+"                                      giving them zero weight.
+"                                      The howfar routines must check for this.
+"
+"-------------------------------------------------------------------------------
+"
+"
+"
+"                     >>>>>>>> SOURCE  15 <<<<<<<<
+"
+"  POINT SOURCE OFF AXIS. The same as source 12 but uses an alternative
+"  implementation for sampling points on the surface of the RZ-geomtry. The
+"  motivation for implementing this source was to check that source 12 is OK
+"  and to check the effect of varying weights from the source on the
+"  statistical uncertainty (contrary to source 12, source 16 produces
+"  essentially  constant weights if the geometry-to-source distance is large
+"  compared to the geometry dimension, a typical situation for ion chamber
+"  simulations)
+"
+"  SOURCE OPTIONS                (M4)  DIST, ANGLE, IGNORED, IGNORED
+"
+"             DIST                     distance of the centre of the geometry
+"                                      to the source in cm.
+"             ANGLE                    angle of rotation around the x-axis.
+"                                      (because of the cylindrical symetry,
+"                                      rotations around the x-axis and y-axis
+"                                      are indistinguishable). 0 degrees
+"                                      corresponds to a source above the front
+"                                      face (i.e. the same as source 1), 90
+"                                      degrees to a source from the side
+"                                      (i.e. the same as source 11).
+"                                      The source MUST be outside the geometry,
+"                                      otherwise the initialization routine
+"                                      will abort execution.
+"
+"           Note that if you are not actually rotating about the center of the
+"           geometry, you must calculate the angle and distance as if you
+"           were.
+"
+;
+"-------------------------------------------------------------------------------
+"
+"
+"
+"                     >>>>>>>> SOURCE  16 <<<<<<<<
+"
+"           EXTENDED (CIRCULAR OR RECTANGULAR)  SOURCE OFF AXIS.
+"
+"  SOURCE OPTIONS                (M4)  DIST, ANGLE, TMP1, TMP2
+"
+"            DIST                      distance of geometry centre to source
+"                                      centre in cm.
+"
+"            ANGLE                     angle of rotation around the x-axis
+"                                      (see comments/explanations to source 15)
+"
+"            TMP1, if TMP2 <= 0        radius of the source (i.e., the emitting
+"        or  TMP2, if TMP1 <= 0        position is picked uniformly within the
+"                                      circle).
+"
+"            TMP1 and TMP2, if both    half-sizes of the radiating rectangle
+"            >= 0                      in x- and y-directions before rotation,
+"                                      i.e., initially x and y are picked
+"                                      within the rectangle and z is set to
+"                                      -DIST + geometry centre. Then a rotation
+"                                      around the x-axis is performed.
+"       In all cases the source plane is perpendicular to the line joining
+"       it to the center of the geometry.   Note that this introduces a
+"       slight error if the center of your geometry is not the true point
+"       of rotation.
+"
+"       Note: if TEMP1 <= 0 and TEMP2 <= 0, source 16 becomes a point-source
+"             off-axis, i.e. the same as source 12 and 15.
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  17 <<<<<<<<
+"
+"     POINT SOURCE ON AXIS INCIDENT FROM THE FRONT    ""toc:
+"
+"  SOURCE OPTIONS                (M4)  DISTZ, XBEAM, YBEAM, 0
+"
+"               DISTZ          distance of the point source from the
+"                              front of the target in cm (DEFAULT 100.)
+"               XBEAM          half-width of the beam along x at the center
+"                              of the target in cm (defaults to MAX radius)
+"               YBEAM          half-width of the beam along y at the center
+"                              of the target in cm (defaults to MAX radius)
+"
+"------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  20 <<<<<<<<
+"
+"   RADIAL DISTRIBUTION INPUT      ""toc:
+"
+"  MODEIN= Local                 (0)   if radial distribution is to be input
+"                                      locally through the .egs4inp file
+"        = External              (1)   if the distribution is to be input
+"                                      via an external file
+"
+"                        -----------------------------
+" ONLY IF MODEIN= Local
+"
+"  NRDIST                        (I)   # radial bins in distribution histogram
+"  RDISTF                        (M)   top of radial bin.
+"                                      should be values for 1 to NRDIST.
+"  RPDF                          (M)   Probability of initial particle being
+"                                      in this bin.
+"                                      Probability doesn't need to be normalized
+"                                      but it should be in units cm**-2
+"                                      Should be values for 1 to NRDIST.
+"  RDIST IOUTSP= None            (0)   No distribution data in output summary
+"              = Include         (1)   include distribution data output summary
+"
+"                        -----------------------------
+"  ONLY IF MODEIN= External
+"
+"  RDIST FILENAME                (C)   filename(with ext) contains
+"                                      distribution information
+"
+"  RDIST IOUTSP= None            (0)   No distribution data in output summary
+"              = Include         (1)   include distribution data output summary
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  21 <<<<<<<<
+"
+"    FULL BEAM PHASE-SPACE BEAM DATA, INCIDENT ON FRONT FACE    ""toc:
+"
+"  SOURCE OPTIONS                (M4)  IMODE, NRCYCL, IPARALLEL, PARNUM
+"
+"               IMODE              0=> 7 variables/record: X,Y,U,V,E,WT,LATCH
+"                                  2=> 8 variables/record: the above + ZLAST
+"              NRCYCL     Number of times to recycle each particle in a phase
+"                         space source.  Each particle in the phase space
+"                         file is used a total of NRCYCL+1 times before
+"                         going on to the next particle.
+"                         If NCASE > no. of particles in the phase space file,
+"                         then use of NRCYCL is essential for accurate
+"                         statistics.
+"                         If NRCYCL is set > 0, then the user-input value is
+"                         used.
+"                         If NRCYCL is set <=0 then NRCYCL is automatically
+"                         calculated to use the entire phase space file with no
+"                         restarts, unless INCIDENT PARTICLE= positron.
+"                         The calculated NRCYCL does not take into
+"                         account particles that are rejected because they
+"                         miss the geometry.  If the automatically-calculated
+"                         value of still results in restarts, then use the
+"                         following guideline for accurate statistics:
+"                         1. If there is only one restart and only a small
+"                            fraction of the source is re-used on the second
+"                            pass, the effect on statistics is unlikely to
+"                            be significant.
+"                         2. If there is one restart and a significant portion
+"                            of the source is re-used on the second pass, set
+"                            NRCYCL=2*NRCYCL_prev+1, where NRCYCL_prev is the
+"                            previous automatically-calculated value
+"                         3. If the source is restarted more than once, try
+"                            setting NRCYCL=(no. of restarts+1)*NRCYCL_prev+1
+"            IPARALLEL   set >1 if you are distributing the job among
+"                        IPARALLEL machines.  IPARALLEL is used with PARNUM
+"                        (see below) to partition a phase space source into
+"                        IPARALLEL equal parts.
+"            PARNUM      For each of the IPARALLEL parallel jobs, PARNUM
+"                        should have a different integer value in the range
+"                        1<=PARNUM<=IPARALLEL.  The partition of the phase
+"                        space source that is used for a particular job is
+"                        then given by:
+"                           (PARNUM-1)*(NCASE_PHSP/IPARALLEL)<NPHSPN<=
+"                                            (PARNUM)*(NCASE_PHSP/IPARALLEL)
+"                        where NCASE_PHSP is the total number of particles in
+"                        the phsp source and NPHSPN is the particle no. chosen.
+"
+"  FILSPC                        (C)   filename (with ext) contains
+"                                      phase space information
+"                                      (maximum of 80 characters)
+"                                      (assigned to unit 42)
+"
+;
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  22 <<<<<<<<
+"
+"    FULL BEAM PHASE-SPACE BEAM DATA FROM ANY ANGLE, INSIDE OR OUTSIDE   ""toc:
+"
+"    PARTICLES ARE READ IN FROM A BEAM PHASE SPACE and placed on a plane
+"    described by the SOURCE OPTIONS inputs (see below). Then it is checked
+"    whether they are already inside the geometry. If yes, the region index
+"    is determined and the shower intiated. If not, it is checked whether
+"    the particle trajectory will intersect the geometry (assuming that the
+"    geometry is surrounded by vacuum). If not, the particle is rejected and
+"    the next one taken from the phase-space file. If yes, the particle
+"    is placed on the entry point and the shower is initiated.
+"
+"  SOURCE OPTIONS                (M9)  IMODE, DIST, ANGLE, ZOFFSET, NRCYCL,
+"                                      IPARALLEL, PARNUM, XOFFSET, YOFFSET
+"
+"               IMODE              0=> 7 variables/record: X,Y,U,V,E,WT,LATCH
+"                                  2=> 8 variables/record: the above + ZLAST
+"               DIST               Perpendicular distance of the phase-space
+"                                  plane to the point of rotation in cm.
+"               ANGLE              Angle of rotation in degrees. The rotation
+"                                  is performed around an axis that is parallel
+"                                  to the x-axis and passes through the point
+"                                  (x,y,z)=(0,0,ZOFFSET).
+"               ZOFFSET            Point of rotation. If |ZOFFSET| > 1e4,
+"                                  the centre of the geometry is taken as
+"                                  the point of rotation (but note that
+"                                  the maximum value allowed by the input
+"                                  routine is 1e6, so that |ZOFFSET| must
+"                                  be between 1e4 and 1e6 to use the centre
+"                                  of the geometry automatically).
+"
+"    Examples:
+"       - to place a phase-space on the upper z-face of the geometry,
+"         use DIST=0, ANGLE=0, ZOFFSET=zplane(1)
+"         This is the same as source 21
+"       - to place a phase space on the lower z-face of the geometry,
+"         use DIST=0, ANGLE=180, ZOFFSET=zplane(n)
+"       - to have a phase file incident from, say, 60 degrees with
+"         a distance to the centre of the geometry of 30 cm, use
+"         DIST=30, ANGLE=60, ZOFFSET=9999.
+"
+"              NRCYCL     Number of times to recycle each particle in a phase
+"                         space source.  Each particle in the phase space
+"                         file is used a total of NRCYCL+1 times before
+"                         going on to the next particle.
+"                         If NCASE > no. of particles in the phase space file,
+"                         then use of NRCYCL is essential for accurate
+"                         statistics.
+"                         If NRCYCL is set > 0, then the user-input value is
+"                         used.
+"                         If NRCYCL is set <=0 then NRCYCL is automatically
+"                         calculated to use the entire phase space file with no
+"                         restarts, unless INCIDENT PARTICLE= positron.
+"                         The calculated NRCYCL does not take into
+"                         account particles that are rejected because they
+"                         miss the geometry.  If the automatically-calculated
+"                         value of still results in restarts, then use the
+"                         following guideline for accurate statistics:
+"                         1. If there is only one restart and only a small
+"                            fraction of the source is re-used on the second
+"                            pass, the effect on statistics is unlikely to
+"                            be significant.
+"                         2. If there is one restart and a significant portion
+"                            of the source is re-used on the second pass, set
+"                            NRCYCL=2*NRCYCL_prev+1, where NRCYCL_prev is the
+"                            previous automatically-calculated value
+"                         3. If the source is restarted more than once, try
+"                            setting NRCYCL=(no. of restarts+1)*NRCYCL_prev+1
+"            IPARALLEL   set >1 if you are distributing the job among
+"                        IPARALLEL machines.  IPARALLEL is used with PARNUM
+"                        (see below) to partition a phase space source into
+"                        IPARALLEL equal parts.
+"            PARNUM      For each of the IPARALLEL parallel jobs, PARNUM
+"                        should have a different integer value in the range
+"                        1<=PARNUM<=IPARALLEL.  The partition of the phase
+"                        space source that is used for a particular job is
+"                        then given by:
+"                           (PARNUM-1)*(NCASE_PHSP/IPARALLEL)<NPHSPN<=
+"                                            (PARNUM)*(NCASE_PHSP/IPARALLEL)
+"                        where NCASE_PHSP is the total number of particles in
+"                        the phsp source and NPHSPN is the particle no. chosen.
+"    XOFFSET,YOFFSET     X and Y offset of phase space plane (cm).
+"                        Offset will be applied before rotating the source.
+"
+"  FILSPC                        (C)   filename (with ext) contains
+"                                      phase space information
+"                                      (maximum of 80 characters)
+"                                      (assigned to unit 42)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  23 <<<<<<<<
+"
+"    BEAM TREATMENT HEAD SIMULATION AS SOURCE INCIDENT FROM AND ANGLE,  ""toc:
+"    INSIDE OR OUTSIDE PHANTOM                                          ""toc:
+"
+"    PARTICLES ARE READ DIRECTLY FROM A BEAM SIMULATION COMPILED AS A
+"    SHARED LIBRARY.  Particles are read at the scoring plane in
+"    the BEAM simulation (although no phase space file is scored) and are
+"    tranlated/rotated by the inputs DIST, ANGLE, XOFFSET, YOFFSET, ZOFFSET,
+"    described below.  Then it is checked
+"    whether they are already inside the geometry. If yes, the region index
+"    is determined and the shower intiated. If not, it is checked whether
+"    the particle trajectory will intersect the geometry (assuming that the
+"    geometry is surrounded by vacuum). If not, the particle is rejected and
+"    the next one taken from the BEAM simulation (more histories are run in
+"    the BEAM simulation if required).  If yes, the particle
+"    is placed on the entry point and the shower is initiated.
+"
+"  BEAM CODE                     (C)  The name of the accelerator code being
+"                                     used as a source including the BEAM_
+"                                     prefix (ie BEAM_accelname).  This code
+"                                     must have been compiled as a shared
+"                                     library (see the BEAM manual for more
+"                                     details) and exist as
+"                                     libBEAM_accelname.so (for Linux/Unix) or
+"                                     libBEAM_accelname.dll (for Windows) in
+"                                     directory $EGS_HOME/bin/config.
+"
+"  INPUT FILE                    (C)  The name of a working input file
+"                                     (no .egsinp extension) for
+"                                     the BEAM code BEAM_accelname.  This
+"                                     input file must specify output of a
+"                                     phase space file at one scoring plane.
+"                                     Particles that would have been scored
+"                                     in the phase space file are extracted
+"                                     and used as the incident particles in
+"                                     the DOSXYZ simulation instead.  The
+"                                     input file must exist in the directory
+"                                     $EGS_HOME/BEAM_accelname.
+"
+"  PEGS FILE                     (C)  The name of the pegs4 data set (no
+"                                     .pegs4dat extension) used
+"                                     by BEAM_accelname with the input file
+"                                     specified by INPUT FILE.  The pegs4
+"                                     data set must exist in either
+"                                     $HEN_HOUSE/pegs4/data or in
+"                                     $EGS_HOME/pegs4/data.
+"
+"  WEIGHT WINDOW                 (M2)  MIN_WEIGHT_23, MAX_WEIGHT_23
+"
+"               MIN_WEIGHT_23         Min. weight of particles to use from
+"                                     the BEAM simulation (defaults to -1E30)
+"               MAX_WEIGHT_23         Max. weight of particles to use from
+"                                     the BEAM simulation (defaults to 1E30)
+"
+"  SOURCE OPTIONS                (M5)  DIST, ANGLE, ZOFFSET, XOFFSET, YOFFSET
+"
+"               DIST               Perpendicular distance of the phase-space
+"                                  plane to the point of rotation in cm.
+"               ANGLE              Angle of rotation in degrees. The rotation
+"                                  is performed around an axis that is parallel
+"                                  to the x-axis and passes through the point
+"                                  (x,y,z)=(0,0,ZOFFSET).
+"               ZOFFSET            Point of rotation. If |ZOFFSET| > 1e4,
+"                                  the centre of the geometry is taken as
+"                                  the point of rotation (but note that
+"                                  the maximum value allowed by the input
+"                                  routine is 1e6, so that |ZOFFSET| must
+"                                  be between 1e4 and 1e6 to use the centre
+"                                  of the geometry automatically).
+"               XOFFSET,YOFFSET    X and Y offset of scoring plane in BEAM
+"                                  simulation (cm).  Offsets are applied before
+"                                  rotating the source.
+"
+"    Examples:
+"       - to have BEAM simulation incident on the upper z-face of the geometry,
+"         use DIST=0, ANGLE=0, ZOFFSET=zplane(1)
+"         This is the same as source 21
+"       - to have BEAM simulation incident on the lower z-face of the geometry,
+"         use DIST=0, ANGLE=180, ZOFFSET=zplane(n)
+"       - to have BEAM simulation incident from, say, 60 degrees with
+"         a distance to the centre of the geometry of 30 cm, use
+"         DIST=30, ANGLE=60, ZOFFSET=9999.
+"
+"*******************************************************************************
+;
+ENFLAG = 0;
+OUTPUT;(/' *** Source inputs read by srcrz (Rev 1.28) ***'/);
+OUTPUT;(
+' charge of the incident beam (-1,0,1 [& 2 with source 21]),'/
+' source configuration'/
+'      (0) parallel beam incident from the front:(0),radius(cm)'/
+'                      incident direction cosines (U,V,W)'/
+'   or (1) point source on axis incident from the front(1)'/
+'                      source to front face distance,radius(cm)'/
+'   or (2) broad parallel beam incident from the front(2)'/
+'                      no configuration input necessary,unit area beam'/
+'   or (3) uniform isotropically radiating disk(3)'/
+'                      min,max radius, min,max Z'/
+'   or (4) axial fluence for various beam radii'/
+'                      radius of central axis region');
+"split here otherwise too many continuation lines"
+OUTPUT;
+(
+'   or (10) parallel beam incident from the side(10)'/
+'                      half-width,half-height of beam at center(cm)'/
+'   or (11) point source incident from the side(11)'/
+'                      source to center distance(cm)'/
+'                      half-width,half-height of beam at center(cm)'/
+'   or (12) point source incident from off axis(12)'/
+'                       perpendicular distance off central axis(cm)'/
+'                       perpendicular distance from front face(cm)'/
+'   or (13) broad parallel beam incident from any angle:(13)'/
+'                      incident direction cosines (U,V,W)'/
+'   or (14) point source on axis from front but restricted:(14),'/
+'                      source to front face dist, outer,inner radius(cm)'/
+'   or (20) parallel beam incident from the front with radial distribution'/
+'   or (21) full phase-space on front: each particle read from unit 42'/
+'                      file MODE (0. = default, 2. with ZLAST as well),'/
+'                      NRCYCL, IPARALLEL, PARNUM'/
+'   or (22) full phase-space from any angle: each particle read from unit 42'/
+'                      file MODE (0. = default, 2. with ZLAST as well),'/
+'                      distance from centre of source plane to point of'/
+'                      rotation, angle of rotation about Z axis, Z offset'/
+'                      of point of rotation, NRCYCL, IPARALLEL, PARNUM,'/
+'                      X offset of source, Y offset of source.'/
+'   or (23) BEAM treatment head simulation from any angle: name of BEAM'/
+'                      simulation (eg BEAM_accelname), name of BEAM input'/
+'                      file (no .egsinp extension), name of BEAM pegs data'/
+'                      (no .pegs4dat extension), min. and max. weights of'/
+'                      particles to use (defaults to -1e30 - 1e30),'/
+'                      distance from centre of BEAM scoring plane to point of'/
+'                      rotation, angle of rotation about Z axis, Z offset'/
+'                      of point of rotation, X offset of source, Y offset'/
+'                      of source.'//);
+
+"--------------------------------------------------------------------------"
+"|                           Required inputs                              |"
+"--------------------------------------------------------------------------"
+"New input routine, by Aaron Merovitz, 04/98"
+DELIMETER='SOURCE INPUTS';
+
+IVAL = IVAL + 1;   "IVAL is passed in IODAT2"
+NUM_IPART = IVAL;
+VALUES_SOUGHT(IVAL)='INCIDENT PARTICLE';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,4)='ELECTRON';
+ALLOWED_INPUTS(IVAL,0)='PHOTON';
+ALLOWED_INPUTS(IVAL,1)='POSITRON';
+ALLOWED_INPUTS(IVAL,2)='ALL';
+ALLOWED_INPUTS(IVAL,3)='CHARGED';
+$GET_INPUT(NUM_IPART);
+
+IVAL = IVAL + 1;
+NUM_SOURCE = IVAL;
+VALUES_SOUGHT(IVAL)='SOURCE NUMBER';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=23;
+DEFAULT(IVAL)=0;
+$GET_INPUT(NUM_SOURCE);
+ISOURC=VALUE(NUM_SOURCE,1);
+
+IF (ISOURC~=20) [
+   IVAL = IVAL + 1;
+   NUM_SOPTS = IVAL;
+   VALUES_SOUGHT(IVAL)='SOURCE OPTIONS';
+   IF(ISOURC=22)[
+      NVALUE(IVAL)=9;
+   ]
+   ELSE IF( ISOURC=23 ) [
+       NVALUE(IVAL)=5;
+   ]
+   ELSE[
+      NVALUE(IVAL)=4;
+   ]
+   TYPE(IVAL)=1;
+   VALUE_MIN(IVAL)=-999999;
+   VALUE_MAX(IVAL)=999999;
+   DEFAULT(IVAL)=1;
+   $GET_INPUT(NUM_SOPTS);
+   TEMP1=VALUE(NUM_SOPTS,1);
+   TEMP2=VALUE(NUM_SOPTS,2);
+   TEMP3=VALUE(NUM_SOPTS,3);
+   TEMP4=VALUE(NUM_SOPTS,4);
+   IF(ISOURC=22)[
+      TEMP5=VALUE(NUM_SOPTS,5);
+      TEMP6=VALUE(NUM_SOPTS,6);
+      TEMP7=VALUE(NUM_SOPTS,7);
+      TEMP8=VALUE(NUM_SOPTS,8);
+      TEMP9=VALUE(NUM_SOPTS,9);
+   ]
+   IF( ISOURC=23 ) TEMP5=VALUE(NUM_SOPTS,5);
+]
+
+
+"NMIN=NUM_IPART;
+"NMAX=NUM_SOPTS;
+"$GET_INPUTS(NMIN,NMAX);
+
+IQIN=VALUE(NUM_IPART,1);
+"this is done because VALUE(I,IVAL) cannot have negative array indices"
+IF (IQIN=4) [IQIN=-1;]
+WRITE(*,*)' IQIN ',IQIN;
+"TEMP1=VALUE(NUM_SOPTS,1);
+"TEMP2=VALUE(NUM_SOPTS,2);
+"TEMP3=VALUE(NUM_SOPTS,3);
+"TEMP4=VALUE(NUM_SOPTS,4);
+
+"--------------------------------------------------------------------------"
+"|                           optional inputs                              |"
+"--------------------------------------------------------------------------"
+
+IF (ISOURC=20) [
+   IVAL = IVAL + 1;
+   NUM_MODEIN = IVAL;
+   VALUES_SOUGHT(IVAL)='MODEIN';
+   NVALUE(IVAL)=1;
+   TYPE(IVAL)=3;
+   DEFAULT(IVAL)=1;
+   ALLOWED_INPUTS(IVAL,0)='LOCAL';
+   ALLOWED_INPUTS(IVAL,1)='EXTERNAL';
+   $GET_INPUT(NUM_MODEIN);
+   MODEIN=VALUE(NUM_MODEIN,1);
+
+   IF (MODEIN=1) [
+      IVAL = IVAL + 1;
+      NUM_RDFIL = IVAL;
+      VALUES_SOUGHT(IVAL)='RDIST FILENAME';
+      NVALUE(IVAL)=1;
+      TYPE(IVAL)=2;
+      $GET_INPUT(NUM_RDFIL);
+   ]
+   ELSE[
+     IVAL = IVAL + 1;
+     NUM_NRDIST = IVAL;
+     VALUES_SOUGHT(IVAL)='NRDIST';
+     NVALUE(IVAL)=1;
+     TYPE(IVAL)=0;
+     VALUE_MIN(IVAL)=1;
+     VALUE_MAX(IVAL)=100;
+     DEFAULT(IVAL)=1;
+     $GET_INPUT(NUM_NRDIST);
+     NRDIST=VALUE(NUM_NRDIST,1);
+
+     IVAL = IVAL + 1;
+     NUM_RDISTF = IVAL;
+     VALUES_SOUGHT(IVAL)='RDISTF';
+     NVALUE(IVAL)=NRDIST;
+     TYPE(IVAL)=1;
+     VALUE_MIN(IVAL)=0;
+     VALUE_MAX(IVAL)=999999;
+     DEFAULT(IVAL)=1.0;
+
+     IVAL = IVAL + 1;
+     NUM_RPDF = IVAL;
+     VALUES_SOUGHT(IVAL)='RPDF';
+     NVALUE(IVAL)=NRDIST;
+     TYPE(IVAL)=1;
+     VALUE_MIN(IVAL)=0;
+     VALUE_MAX(IVAL)=999999;
+     DEFAULT(IVAL)=1.0;
+
+     NMIN=NUM_NRDIST;
+     NMAX=NUM_RPDF;
+     $GET_INPUTS(NMIN,NMAX);
+   ]
+
+   IVAL = IVAL + 1;
+   NUM_RDIOUTSP = IVAL;
+   VALUES_SOUGHT(IVAL)='RDIST IOUTSP';
+   NVALUE(IVAL)=1;
+   TYPE(IVAL)=3;
+   DEFAULT(IVAL)=0;
+   ALLOWED_INPUTS(IVAL,0)='NONE';
+   ALLOWED_INPUTS(IVAL,1)='INCLUDE';
+   $GET_INPUT(NUM_RDIOUTSP);
+] "end if isource = 20"
+IF ((ISOURC.EQ.21).OR.(ISOURC.EQ.22)) [
+   IVAL = IVAL + 1;
+   NUM_FILSPC = IVAL;
+   VALUES_SOUGHT(IVAL)='FILSPC';
+   TYPE(IVAL)=2;
+   $GET_INPUT(NUM_FILSPC);
+]
+IF( ISOURC = 23 ) [
+
+   IVAL = IVAL + 1;
+   NUM_BEAM_CODE = IVAL;
+   VALUES_SOUGHT(IVAL)='BEAM CODE';
+   TYPE(IVAL)=2;
+
+   IVAL = IVAL + 1;
+   NUM_PEGS_FILE = IVAL;
+   VALUES_SOUGHT(IVAL)='PEGS FILE';
+   TYPE(IVAL)=2;
+
+   IVAL = IVAL + 1;
+   NUM_IFILE = IVAL;
+   VALUES_SOUGHT(IVAL)='INPUT FILE';
+   TYPE(IVAL)=2;
+
+   $GET_INPUTS(NUM_BEAM_CODE,NUM_IFILE);
+
+   IVAL = IVAL + 1;
+   VALUES_SOUGHT(IVAL)='SECRET';
+   nvalue(ival)        = 1;
+   type(ival)          = 3;
+   allowed_inputs(ival,0) = 'no';
+   allowed_inputs(ival,1) = 'yes';
+
+   IVAL = IVAL + 1;
+   NUM_WW23 = IVAL;
+   VALUES_SOUGHT(IVAL)='WEIGHT WINDOW';
+   NVALUE(IVAL)=2;
+   TYPE(IVAL)=1;
+   VALUE_MIN(IVAL)=-1e30;
+   VALUE_MAX(IVAL)= 1e30;
+
+   error_flag_save = error_flag;
+   $GET_INPUTS(NUM_WW23-1,NUM_WW23);
+   error_flag = error_flag_save;
+
+   IF( error_flags(NUM_BEAM_CODE) = 0 ) [
+       READ (CHAR_VALUE(NUM_BEAM_CODE,1),FMT='(A)') the_beam_code;
+   ] ELSE [ error_flag = 1; ]
+   IF( error_flags(NUM_PEGS_FILE) = 0 ) [
+       READ (CHAR_VALUE(NUM_PEGS_FILE,1),FMT='(A)') the_pegs_file;
+   ] ELSE [ error_flag = 1; ]
+   IF( error_flags(NUM_IFILE) = 0 ) [
+       READ (CHAR_VALUE(NUM_IFILE,1),FMT='(A)') the_input_file;
+   ] ELSE [ error_flag = 1; ]
+   min_weight_23 = -1e30; max_weight_23 = 1e30;
+   secret_option_23 = 0;
+   IF( error_flags(NUM_WW23) = 0 ) [
+       min_weight_23 = value(num_ww23,1); max_weight_23 = value(num_ww23,2);
+   ]
+   IF( error_flags(NUM_WW23-1) = 0 ) [
+       secret_option_23 = value(NUM_WW23-1,1);
+   ]
+]
+
+
+IF (ISOURC=20) [
+   IF (MODEIN=1) [ READ (CHAR_VALUE(NUM_RDFIL,1),FMT='(A)') FILNAM; ]
+   ELSE[
+     NRDIST=VALUE(NUM_NRDIST,1);
+     DO K=1,NRDIST [
+       RDISTF(K)=VALUE(NUM_RDISTF,K);
+       RPDF(K)=VALUE(NUM_RPDF,K);
+     ]
+   ]
+   IOUTSP=VALUE(NUM_RDIOUTSP,1);
+]
+
+IF ((ISOURC = 21) | (ISOURC = 22)) [
+   READ (CHAR_VALUE(NUM_FILSPC,1),FMT='(80A1)') FILSPC;
+]
+
+OUTPUT IQIN,ISOURC,TEMP1,TEMP2,TEMP3,TEMP4;(T10,'SRCRZ read:', 2I5,4F12.5);
+IF(ISOURC=22) OUTPUT TEMP5,TEMP6,TEMP7,TEMP8,TEMP9;(T10,'           ',5F12.5);
+
+"Check IQIN is OK and set 0 if not acceptable value"
+IF((IQIN < -1) | (IQIN > 1 & (ISOURC < 21 | ISOURC > 23))
+    | (IQIN > 3 & (ISOURC < 21 | ISOURC > 23))) IQIN = 0;
+
+"these three lines to effect source correlation"
+"SVTMP1=TEMP1;SVTMP2=TEMP2;SVTMP2=TEMP2;SVTMP2=TEMP2;"
+"after jans"
+SVTMP1=TEMP1;SVTMP2=TEMP2;SVTMP3=TEMP3;SVTMP4=TEMP4;
+
+RETURN;
+
+ENTRY SRCINI(SCARG1,SCARG2,SCARG3,SCARG4,ICORRL);
+
+NHSTRY=0; "initialize no. of primary histories"
+          "will have to change this if we start storing this in .egsdat"
+          "files"
+last_nhstry = 0;
+
+IF(ISOURC = 0)[ "FRONTAL PARALLEL BEAM"
+    RBEAM=TEMP1;
+    FNORM=TEMP2**2+TEMP3**2+TEMP4**2;
+    IF(FNORM.EQ.0.0)[ UINC=0.0;VINC=0.0;WINC=1.0; ]
+    ELSE[
+        FNORM=SQRT(FNORM);
+        UINC=TEMP2/FNORM;VINC=TEMP3/FNORM;WINC=TEMP4/FNORM;
+    ]
+    TEMP5=RCYL(NR);
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.TEMP5))RBEAM=TEMP5;
+    OUTPUT IQIN,RBEAM,UINC,VINC,WINC;
+    (/' Electric charge of the source:',T60,I12/
+    ' Parallel beam incident from the front(+ve Z-axis)'/
+    ' Radius of beam at the front face of the target:',T60,F10.4,' cm'/
+    ' X-axis direction cosine:',T60,F10.4/
+    ' Y-axis direction cosine:',T60,F10.4/
+    ' Z-axis direction cosine:',T60,F10.4/);
+]
+
+ELSEIF(ISOURC.EQ.1)[ "FRONTAL POINT SOURCE"
+    DISTZ=TEMP1;RBEAM=TEMP2;TEMP3=RCYL(NR);
+    IF(DISTZ.LE.0.0)DISTZ=100.;
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.TEMP3))RBEAM=TEMP3;
+    OUTPUT IQIN,DISTZ,RBEAM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' POINT SOURCE ON AXIS INCIDENT FROM THE FRONT(+VE Z-AXIS)'/
+    ' SOURCE DISTANCE TO THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' RADIUS OF THE BEAM ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/);
+]
+
+ELSEIF(ISOURC.EQ.2)[ "BROAD FRONTAL PARALLEL BEAM"
+    RBEAM=0.0;
+    NR=1;NREG=NPLANE;
+    RCYL(1)=1000.0;CYRAD2(1)=1.0E6;
+    OUTPUT IQIN,RBEAM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' BROAD PARALLEL BEAM INCIDENT FROM THE FRONT (+VE Z-AXIS)'/
+    ' RADIUS OF THE BEAM ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/);
+    IF(NMED.NE.1)[
+        "EACH SLAB IN THE PHANTOM MUST BE HOMOGENEOUS"
+        OUTPUT;(/' **** ALL REGIONS IN A SLAB MUST BE SAME MATERIAL******'/);
+    ]
+]
+ELSEIF(ISOURC = 3)[ "ISOTROPICALLY RADIATING DISK"
+    RBEAM=TEMP2;
+    IF(RBEAM > RCYL(NR))[
+       OUTPUT RBEAM, RCYL(NR);
+       (//' ***  Source radius too big at',F10.3,' Reduced to',F10.3,' cm');
+       RBEAM = RCYL(NR);
+]
+    RBEAM2 = RBEAM**2;
+    RMINBM = TEMP1; IF(RMINBM > RBEAM)[RMINBM=RBEAM;]
+    RMINSQ = RMINBM**2;
+    ZSMIN=TEMP3;ZSMAX=TEMP4;
+    IF(ZSMIN < ZPLANE(1))[ ZSMIN= ZPLANE(1);]
+    IF(ZSMAX > ZPLANE(NPLANE))[ ZSMAX = ZPLANE(NPLANE);]
+    OUTPUT IQIN,RMINBM,RBEAM,ZSMIN,ZSMAX;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' UNIFORM ISOTROPICALLY RADIATING RING: INNER,OUTER Radius',2F10.3 /
+    '           FRONT,Back DEPTH:',T50,2F10.3 /);
+]
+ELSEIF(ISOURC = 4)[ "POINT SOURCE WITH VARIOUS BEAM RADII"
+    RBEAM=TEMP1;
+    IF(RCYL(NR).LT.650.)[
+        "MUST HAVE A BROAD PHANTOM changed limit to 650 cm April 1990 DR"
+        IF(NR.LT.$MAXRADII)[NR=NR+1;NREG=NZ*NR+1;]
+        ELSE[OUTPUT;(/' ***WARNING***  LAST RADIAL BIN INCREASED TO 1000cm'/);]
+        RCYL(NR)=1000.0;CYRAD2(NR)=1.0E6;
+]
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.RCYL(NR))) RBEAM=RCYL(NR);
+    OUTPUT IQIN,RBEAM;(/' ELECTRIC CHARGE OF BEAM:',T60,I12/
+    ' CENTRAL AXIS FLUENCE VS BEAM RADIUS'/
+    ' RADII INPUT ABOVE WILL BE CONSIDERED AS BEAM RADII'/
+    ' RADIUS OF CENTRAL AXIS ZONE: ',T60,F10.4,' cm'/);
+    IF(NMED.NE.1)[
+        "EACH SLAB IN THE PHANTOM MUST BE HOMOGENEOUS"
+        OUTPUT;(/' **** ALL REGIONS IN A SLAB MUST BE SAME MATERIAL******'/);
+    ]
+]
+ELSEIF(ISOURC = 10)[ "SIDE PARALLEL BEAM"
+    XBEAM=TEMP1;ZBEAM=TEMP2;
+    TEMP3=RCYL(NR);
+    IF((XBEAM.LE.0.0).OR.(XBEAM.GT.TEMP3))XBEAM=TEMP3;
+    TEMP3=0.5*(ZPLANE(NPLANE)-ZPLANE(1));
+    IF((ZBEAM.LE.0.0).OR.(ZBEAM.GT.TEMP3))ZBEAM=TEMP3;
+    OUTPUT IQIN,XBEAM,ZBEAM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' PARALLEL BEAM INCIDENT FROM THE SIDE'/
+    ' HALF-WIDTH(X-AXIS) OF THE BEAM AT THE TARGET MIDPOINT',T60,F10.4,' cm'/
+    ' HALF-HEIGHT(Z-AXIS/) OF THE BEAM AT THE TARGET MIDPOINT',
+        T60,F10.4,' cm'/);
+]
+ELSEIF(ISOURC = 11)[ "Side point source centered at target middle"
+    DISTRH = TEMP1;
+    IF(DISTRH < 0.0) DISTRH=-DISTRH;
+    IF(DISTRH = 0.0) DISTRH=100.0;
+    XBEAM = TEMP2;   ZBEAM = TEMP3;
+    TEMP4 = RCYL(NR);
+    IF(DISTRH <= TEMP4)[
+        OUTPUT;(' SOURCE FROM WITHIN TARGET, INPUT IGNORED');
+        ERROR_FLAG=1;
+    ]
+    "TEMP4 is the maximum 1/2 width of the beam by simple geometry"
+    TEMP4=TEMP4*SQRT((DISTRH+TEMP4)*(DISTRH-TEMP4))/DISTRH; "SHADOWING"
+    IF((XBEAM <= 0.0) | (XBEAM > TEMP4)) XBEAM=TEMP4;
+    TEMP4=0.5*(ZPLANE(NPLANE)-ZPLANE(1));
+    IF((ZBEAM <= 0.0) | (ZBEAM > TEMP4)) ZBEAM=TEMP4;
+    IF(ICORRL = 0)[
+       OUTPUT IQIN,DISTRH,XBEAM,ZBEAM;
+       (/' Electric charge of the source:',T60,I12/
+       ' Point source on axis incident from the side(Y-axis)'/
+       ' Source distance to target midpoint:',T60,F10.4,' cm'/
+       ' Half-width(X-axis) of the beam at the target midpoint',T60,F10.4,' cm'/
+       ' Half-height(Z-axis/) of the beam at the target midpoint',
+           T60,F10.4,' cm'/);
+   ]
+]
+ELSEIF(ISOURC = 12)[ "point source off axis"
+    DISTRH=TEMP1;       "DISTRH is distance of source from center of geomety"
+    IF(DISTRH < 0.0)DISTRH=-DISTRH;
+    DISTZ=TEMP2;        "DISTZ is distance of source from front of geometry"
+                        "DISTZ > 0     point located in front of front face
+                        "0 > DISTZ > -(ZPLANE(NPLANE)-ZPLANE(1))
+                        "              point located between front, rear faces
+                        "DISTZ < -(ZPLANE(NPLANE)-ZPLANE(1))
+                        "              point located rear of rear plane
+    RBEAM=RCYL(NR);
+    IF(DISTRH > RBEAM)["the source is further away than the outer radius"
+        "XBEAM    half-height of the beam at the center of the target"
+        "         following is simple geometry-its really 1/2 width if you"
+        "         think of Z as the height direction"
+        XBEAM=RBEAM*SQRT((DISTRH-RBEAM)*(DISTRH+RBEAM))/DISTRH;
+        "ZBEAM is half-width (height) of the beam at the center of the target"
+        ZBEAM=0.5*(ZPLANE(NPLANE)-ZPLANE(1));
+    ]
+    ELSE[ "source either inside geometry (error caught below)"
+          "or it just hits the top or bottom of the geometry, not the side"
+        XBEAM=0.0; ZBEAM=0.0;
+    ]
+    IF((DISTRH <= RBEAM) & DISTZ >= ZPLANE(1)-ZPLANE(NPLANE) & DISTZ<=0.0) [
+        "first condition => inside cylinder outer boundary"
+        "2nd condition => it is above lower plane"
+        "3rd condition => it is below front face"
+        OUTPUT;(' Source from within target, input ignored');
+        ERROR_FLAG=1;
+    ]
+    OUTPUT IQIN,DISTRH,DISTZ,RBEAM,XBEAM,ZBEAM;
+    (/' Electric charge of the source:',T60,I12/
+    ' Point source off axis'/
+    ' Distance of source off the central axis',T60,F10.4,' cm'/
+    ' Perpendicular distance of source from front plane',T60,F10.4,' cm'/
+    ' Radius of the beam on the front face of the target:',T60,F10.4,' cm'/
+    ' Half-width(X-axis) of the beam between the tangent points',
+        T60,F10.4,' cm'/
+    ' Half-height(z-axis) of the beam between the tangent points',
+        T60,F10.4,' cm'/);
+]
+
+ELSEIF(ISOURC = 13)[ "Frontal parallel beam at any angle wrt the target"
+    FNORM=TEMP1**2+TEMP2**2+TEMP3**2;
+    IF(FNORM = 0.0)[ UINC=0.0;VINC=0.0;WINC=1.0; ]
+    ELSE[
+        "AT THIS POINT THE INCIDENT BEAM IS ROTATED SO THAT THE"
+        "DIRECTION IS IN THE Y-Z PLANE AND POINTED IN THE      "
+        "NEGATIVE Y DIRECTION. THE NEGATIVE DIRECTION IS CHOSEN"
+        "BECAUSE THE ENTRANCE POINT IS CHOSEN TO BE ON THE     "
+        "POSITIVE Y-SIDE OF THE CYLINDER. (SEE MACRO $CHOOSE-  "
+        "POINT-IN-RECTANGLE.) THIS ROTATION IS PERMITTED       "
+        "OF THE AZIMUTHAL SYMMETRY OF THE TARGET.THE REST OF   "
+        "CODING IS LEFT GENERAL WHERE POSSIBLE TO ALLOW THE    "
+        "SYMMETRY TO BE RELAXED.                               "
+        FNORM=SQRT(FNORM);
+        WINC=TEMP3/FNORM;
+        VINC=-SQRT((1.0-WINC)*(1.0+WINC));
+        UINC=0.0;
+    ]
+    RBEAM=RCYL(NR);
+    IF(ABS(WINC).NE.1.0)[
+        XBEAM=RBEAM;
+        ZBEAM=0.5*(ZPLANE(NPLANE)-ZPLANE(1));
+    ]
+    ELSE[ XBEAM=0.0;ZBEAM=0.0; ]
+    OUTPUT IQIN,UINC,VINC,WINC,RBEAM,XBEAM,ZBEAM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' PARALLEL BEAM AT ANY ANGLE WITH RESPECT TO THE TARGET'/
+    ' X-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Y-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' Z-AXIS DIRECTION COSINE:',T60,F10.4/
+    ' RADIUS OF THE BEAM ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' HALF-WIDTH(X-AXIS) OF THE BEAM BETWEEN THE TANGENT POINTS',
+        T60,F10.4,' cm'/
+    ' HALF-HEIGHT(Z-AXIS) OF THE BEAM BETWEEN THE TANGENT POINTS',
+        T60,F10.4,' cm'/);
+]
+ELSEIF(ISOURC = 14)[
+    "FRONTAL POINT SOURCE with all particles below some radius skipped"
+    DISTZ=TEMP1;RBEAM=TEMP2;RMINBM=TEMP3;
+    IF(DISTZ.LE.0.0)DISTZ=100.;
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.RCYL(NR)))RBEAM=RCYL(NR);
+    IF(RMINBM=0.0)[OUTPUT;(/' ***WHY USE ISOURC=14 WITH RMINB=0.0?***');]
+    OUTPUT IQIN,DISTZ,RBEAM,RMINBM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' POINT SOURCE ON AXIS INCIDENT FROM THE FRONT(+VE Z-AXIS)'/
+    ' SOURCE DISTANCE TO THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' RADIUS OF THE BEAM ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' INNER RADIUS OF BEAM ON FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/);
+]
+ELSEIF(ISOURC = 15) [
+    "Point source from an arbitrary distance and direction."
+    "This uses an alternative coding to source 12 to avoid "
+    "strongly varying weights in some cases "
+    call src15_ini(temp1,temp2,temp3,temp4,ERROR_FLAG);
+]
+ELSEIF(ISOURC = 16) [
+    "A disk or a rectangle irradiating the geometry "
+    "from an arbitrary distance or angle            "
+    call src16_ini(temp1,temp2,temp3,temp4,ERROR_FLAG);
+]
+
+ELSEIF(ISOURC = 17)[ "FRONTAL POINT SOURCE"
+    DISTZ=TEMP1;XBEAM=TEMP2;YBEAM=TEMP3;TEMP4=RCYL(NR);
+    IF(DISTZ.LE.0.0)DISTZ=100.;
+    IF((RBEAM.LE.0.0).OR.(RBEAM.GT.TEMP4))RBEAM=TEMP4;
+    OUTPUT IQIN,DISTZ,XBEAM,YBEAM;
+    (/' ELECTRIC CHARGE OF THE SOURCE:',T60,I12/
+    ' POINT SOURCE ON AXIS INCIDENT FROM THE FRONT(+VE Z-AXIS)'/
+    ' SOURCE DISTANCE TO THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' X-AXIS HALF-WIDTH ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/
+    ' Y-AXIS HALF-WIDTH ON THE FRONT FACE OF THE TARGET:',T60,F10.4,' cm'/);
+]
+
+ELSEIF(ISOURC = 20)["Radial distribution"
+    OUTPUT;(' Local input(0) or external file(1): ',$);
+    "IF(MODEIN.NE.1) MODEIN=0;"  "DEFAULT"
+    OUTPUT;(/' RADIAL DISTRIBUTION:');
+    IF(MODEIN.EQ.0)[
+        "INPUT FROM KEYBOARD OR .INP FILE"
+        OUTPUT;(' Number of radial bins: ',$);
+        IF((NRDIST.LT.1).OR.(NRDIST.GT.100))[
+            OUTPUT;
+            (/' *** NUMBER RADIAL BINS OUT OF RANGE (<1 OR >100),',
+            ' RESET TO 100 ***');
+            NRDIST=100;
+        ]
+        OUTPUT NRDIST;(' INPUT',I4,' SETS OF RDISTF,RPDF IN 2F20.0 FORMAT');
+        OUTPUT;('   RDISTF INCREASING IN SIZE, RPDF NON-NEGATIVE');
+        DO IB=1,NRDIST[
+        "What is this?  DR"
+            ]
+    ]
+    ELSE[
+        "EXTERNAL FILE INPUT"
+        OUTPUT;
+        (' Input name of file with spectrum (up to 80 char with .ext): '/);
+        "READ(5,600,END=:EOF_SRCRZ:)FILNAM;"
+        OUTPUT FILNAM;(/' Read input radial distribution from: '/80A1);
+        OPEN(UNIT=9,file=filnam,STATUS='OLD');
+        READ(9,*)NRDIST;
+        IF((NRDIST.LT.1).OR.(NRDIST.GT.100))[
+            OUTPUT;
+            (' *** Number radial bins out of range (<1 OR >100),',
+            ' RESET TO 100 ***');
+            NRDIST=100;
+        ]
+        DO IB=1,NRDIST [READ(9,*)RDISTF(IB),RPDF(IB);]
+        CLOSE(UNIT=9);
+        OUTPUT NRDIST;('    HAVE READ',I5,' INPUT RADIAL BINS FROM FILE');
+    ]
+
+    "DO A CHECK ON THE RADIAL DISTRIBUTION"
+    ICOUNT=0;
+    RLAST=0;
+    IERROR=0;
+    :R-DIST-INPUT:LOOP[
+        ICOUNT=ICOUNT+1;
+        IF(ICOUNT.GT.NRDIST)[EXIT:R-DIST-INPUT:;]
+        IF(RDISTF(ICOUNT).LE.RLAST)[
+            IERROR=1;
+            OUTPUT;
+            (' *** RDISTF>=LAST ONE. NOT ALLOWED,',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT.');
+        ]
+        ELSEIF(RDISTF(ICOUNT).GT.RCYL(NR))[
+            IERROR=1;
+            OUTPUT RCYL(NR);
+            (' *** RDISTF>',G14.7,', GEOMETRY SIZE.',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT');
+        ]
+        ELSEIF(RPDF(ICOUNT).LT.0.0)[
+            IERROR=1;
+            OUTPUT;(' PDF < 0 NOT ALLOWED,',
+            ' TERMINATING RADIAL DISTRIBUTION INPUT');
+        ]
+        IF(IERROR.EQ.1)[
+            ICOUNT=ICOUNT-1;
+            IF(ICOUNT.EQ.0)[
+                OUTPUT;(' *** NO RADIAL DISTRIBUTION DEFINED,',
+                ' STOPPING EXECUTION ***');
+                STOP;
+            ]
+            OUTPUT ICOUNT;
+            (' RADIAL DITRIBUTION INPUT APPEARS TO BE INCOMPLETE,',
+            ' NRDIST RESET TO ',I12);
+            NRDIST=ICOUNT;
+            EXIT:R-DIST-INPUT:;
+        ]
+        RLAST=RDISTF(ICOUNT);
+    ]
+
+    OUTPUT RDISTF(NRDIST);
+    ('    RADIAL DISTRIBUTION RANGES FROM 0 TO',F12.3,' cm');
+
+    OUTPUT;(' PRINT DISTRIBUTION DATA IN OUTPUT SUMMARY, YES(1) OF NO(0): ',$);
+    IF(IOUTSP.NE.1) IOUTSP=0;
+    WRITE(6,'('' '')')
+]
+
+ELSEIF( ISOURC = 23 ) [ "A full treatment head simulation source using BEAM"
+    dist_phsp = temp1; theta_phsp = temp2;
+    cost_phsp = cos(theta_phsp*0.017453292222);
+    sint_phsp = sin(theta_phsp*0.017453292222);
+    chamber_c = temp3; xoffset = temp4; yoffset = temp5;
+    ENFLAG=1;
+    iqinc = iqin;
+    OUTPUT iqinc,min_weight_23,max_weight_23,
+           $cstring(the_beam_code),$cstring(the_pegs_file),
+           $cstring(the_input_file),
+           dist_phsp,theta_phsp,chamber_c,xoffset,yoffset;
+    (/' Full treatment head simulation from an angle'/,
+      '    Particle charge                               : ',i3,/
+      '    Weight window                                 : ',2g15.6,/
+      '    BEAMnrc user code                             : ',a,/
+      '    PEGS data file                                : ',a,/
+      '    Input file                                    : ',a,/
+      '    Rotation point to phsp-plane midpoint distance: ',f10.4,/
+      '    Incident angle (degrees)                      : ',f10.4,/
+      '    Rotation point (will be set to chamber center'/,
+      '      if greater than 1e4 or less than -1e4):     : ',g14.4,
+      ' cm.'/
+      '    X offset of phsp plane (before rotation)      : ',f10.4,' cm'/
+      '    Y offset of phsp plane (before rotation)      : ',f10.4,' cm');
+     write(6,'(//a)') 'About to call init_beamsource';
+     call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+                         hen_house,egs_home,the_beam_code,
+                         the_pegs_file,the_input_file);
+     call maxenergy_beamsource(EKSRCM);
+     EIN=EKSRCM;
+     OUTPUT EKSRCM;
+     ('    Max. kinetic energy of simulation             : ',f10.4,' MeV'/);
+]
+
+ELSEIF((ISOURC = 21) | (ISOURC = 22))["full phase space for each particle"
+    IQINC=IQIN;"IQINC is used in SRCHST"
+    IF(ISOURC = 22) [
+        dist_phsp=TEMP2; theta_phsp = temp3;
+        cost_phsp = cos(theta_phsp*0.017453292222); "convert to radians"
+        sint_phsp = sin(theta_phsp*0.017453292222);
+        chamber_c = temp4;
+        count_phsp = 0;
+        xoffset = TEMP8;
+        yoffset = TEMP9;
+    ]
+    IMODE=TEMP1;"MODE OF THE PH-SP FILE"
+    IF(ISOURC=21)[
+       NRCYCL=TEMP2;
+       IPARALLEL=TEMP3;
+       PARNUM=TEMP4;
+    ]
+    ELSEIF(ISOURC=22)[
+       NRCYCL=TEMP5;
+       IPARALLEL=TEMP6;
+       PARNUM=TEMP7;
+    ]
+    IF(IMODE.NE.2)IMODE=0;"DEFAULT TO MODE0"
+    OUTPUT IMODE;
+    (/' MODE',I2,' Phase-space file to be read from unit 42...'/
+      ' Input name of file with phase space data (1 - 80 CHARS,',
+      'with .EXT): ');
+    OUTPUT FILSPC;(/' Reading phase space information from: '/10x,80A1);
+    i_iaea_in=0; "assume not IAEA format"
+    ilen=lnblnk1(SPCNAM);
+    IF(SPCNAM(ilen-8:ilen)='.IAEAphsp')[
+         i_iaea_in=1;
+         SPCNAM=SPCNAM(:ilen-9);
+    ]
+
+    IF(i_iaea_in=1)[
+        i_unit_in=42;
+        $IAEA_OPEN_PHSP_FOR_READ(i_unit_in,SPCNAM);
+        $IAEA_READ_PHSP_HEADER(i_unit_in,NCASE_PHSP,NPHOTPHSP,TEMP2,NINCSRC,
+                               Z_SOURCE,ismode,IMUPHSP,IZSCORE);
+        OUTPUT NCASE_PHSP,NPHOTPHSP,TEMP2,NINCSRC;
+           (T10,' IAEA format Phase space source with:'/
+            T5,'                    Total number of particles =',I13/
+            T5,'                            Number of photons =',I13/
+            T5,'              Maximum particle kinetic energy =',F13.3,' MeV'/
+            T5,' # of particles incident from original source =',F13.1/);
+        IF(IZSCORE=0)[
+         OUTPUT Z_SOURCE;
+          (T5,'                        Z where source scored =',F13.3,' cm'/);
+        ]
+        $IAEA_CHECK_PHSP_SIZE_BYTE_ORDER(i_unit_in);
+    ]
+    ELSE[
+
+    $OPEN_PHSP_FOR_READ(IMODE,42,SPCNAM,LINE1,NCASE_PHSP,
+                        NPHOTPHSP,TEMP2,TEMP3,NINCSRC);
+
+       "NCASE_PHSP: the total # of particles in the ph-sp file"
+       "the 3rd variable is the number of photons"
+       "the 4th variable is the maximum kinetic energy of all particles"
+       "the 5th variable is the minimum kinetic energy of electrons"
+       "the 6th variable is the # of incident partices from original source"
+
+     OUTPUT NCASE_PHSP,NPHOTPHSP,TEMP2,TEMP3,NINCSRC;
+     (' Total number of particles in file      :',I10/
+      ' Total number of photons                :',I10/
+      ' (the rest are electrons and positrons)'//
+      ' Maximum kinetic energy of the particles:',F10.3,' MeV'/
+      ' Minimum kinetic energy of the electrons:',F10.3,' MeV'/
+      ' # particles incident when phase space created :',F15.0/);
+      EKSRCM=TEMP2;EIN=TEMP2;"EIN WILL BE USED BY PRESTA LATER"
+
+     IF (NCASE_PHSP < 0 | NPHOTPHSP < 0 | TEMP2 <= 0 | TEMP3 <0 |
+         NINCSRC <=0.0) ["This means something wrong "
+            OUTPUT;( 3(1x,79('*')/)/' Something is wrong in the above'
+            /'Likely the file is the wrong format (need to swap bytes)'/
+            3(1x,79('*')/));
+            STOP;
+     ]
+
+     "read record 2 of phsp source, if NHSTRYM gets incremented, then we"
+     "can read NHSTRY from this source."
+     NHSTRYM=0;
+     $READ_PHSP_RECORD(IMODE,42,2:
+           NHSTRYM,ZLASTM,LATCHM,EINM,WEIGHTM,XINM,YINM,UINM,VINM);
+     IF(NHSTRYM~=1)[
+       DOSE_STAT=1;
+       OUTPUT;(//' ***WARNING***'/
+       ' Cannot read no. of primary (non-phsp) histories from ph-sp source.'/
+       ' Dose and fluence will be analyzed assuming each particle read from'/
+       ' the ph-sp file is an independent history.  May result in an'/
+       ' underestimate of uncertainties.'//);
+     ]
+
+     ]"end of standard BEAMnrc phsp format"
+
+     IF( isourc = 22 ) [
+         OUTPUT dist_phsp,theta_phsp,chamber_c,xoffset,yoffset;
+         (/' Phase space file from an angle'/,
+           '    Rotation point to phsp-plane midpoint distance: ',f10.4,/
+           '    Incident angle (degrees)                      : ',f10.4,/
+           '    Rotation point (will be set to chamber center'/,
+           '      if greater than 1e4 or less than -1e4):     : ',g14.4,
+           ' cm.'/
+           '    X offset of phsp plane (before rotation)      : ',f10.4,' cm'/
+           '    Y offset of phsp plane (before rotation)      : ',f10.4,' cm'/);
+     ]
+
+    IF(IPARALLEL>1 & n_parallel>0)[
+       OUTPUT IPARALLEL, n_parallel;
+       (/' You have set IPARALLEL in the input file to ',I4,/
+         ' But you are also running a C compiled code with n_parallel=',I4,/
+         ' IPARALLEL will be reset to 1, and control of the parallel run '/
+         ' will be from the code.'/);
+       IPARALLEL=1;
+    ]
+
+    IF(IPARALLEL<=0) IPARALLEL=1;
+    IF(PARNUM<0) PARNUM=0;
+    IF(IPARALLEL>1)[
+       IF(PARNUM>=1 & PARNUM<=IPARALLEL)[
+         OUTPUT IPARALLEL,INT((PARNUM-1)*NCASE_PHSP/IPARALLEL)+1,
+                INT(PARNUM*NCASE_PHSP/IPARALLEL);
+                  (/' This is one of ',I4,' parallel jobs.'/
+                    ' It will use from particle ',I12,' to particle ',I12,/
+                    ' from the phase space source in the simulation.'/);
+       ]
+       ELSE[
+         OUTPUT IPARALLEL;
+     (/' IPARALLEL input indicates that this is one of ',I4,' parallel jobs.'/
+       ' But PARNUM is out of range (<1 or >IPARALLEL).  Therefore, phsp '/
+       ' source will not be partitioned.'/);
+         PARNUM=0;
+         IPARALLEL=1;
+       ]
+    ]
+    IF(NRCYCL<=0)[
+     IF(IQIN=1)["cannot estimate NRCYCL"
+       OUTPUT;(/' NRCYCL cannot be calculated automatically because'/
+                ' INCIDENT PARTICLE= positrons '/);
+       NRCYCL=0;
+     ]
+     ELSE[
+       OUTPUT;(/' NRCYCL will be calculated automatically'/);
+       IF(IQIN=-1 | IQIN=3)[
+         TEMPDIV=NCASE_PHSP-NPHOTPHSP;
+       ]
+       ELSEIF(IQIN=0)[
+         TEMPDIV=NPHOTPHSP;
+       ]
+       ELSEIF(IQIN=2)[
+         TEMPDIV=NCASE_PHSP;
+       ]
+       IF(NINT(dble(IPARALLEL*NCASE)/dble(TEMPDIV))<=1)[
+         "IPARALLEL*NCASE slightly > TEMPDIV or < TEMPDIV"
+         NRCYCL=0;
+       ]
+       ELSEIF(MOD(IPARALLEL*NCASE,TEMPDIV)=0)[
+         "IPARALLEL*NCASE is an exact multiple of TEMPDIV"
+         NRCYCL=(IPARALLEL*NCASE)/TEMPDIV-1;
+       ]
+       ELSE[
+         NRCYCL=(IPARALLEL*NCASE)/TEMPDIV;
+       ]
+     ]
+    ]
+    OUTPUT NRCYCL;
+  (/' Particles will be recycled ',I4,' times before moving on to next one.'/);
+
+    CYCLNUM=0; "counts number of times a particle has been recycled"
+    ENFLAG=1; "flag to tell ensrc that no questions needed re energy"
+    N_RUN_CHUNK_OLD=0; "initialize for parallel runs"
+]
+ELSE[ "defaults to parallel beam from the front"
+    ISOURC=0;RBEAM=RCYL(NR);
+    OUTPUT IQIN,RBEAM;
+    (/
+    ' Electric charge of the source:',T60,I12/
+    ' Parallel beam incident from the front(+ve Z-axis)'/
+    ' Radius of beam at the front face of the target:',T60,F10.4,' cm'/);
+]
+
+RETURN;  "normal return"
+
+:EOF_SRCRZ:;  "bad input"
+ERROR_FLAG=1;RETURN;
+
+"all data has now been fed into the routine"
+
+"************************************************************************
+
+ENTRY SRCOTO(WEIGHT);    "toc:
+"==================="
+
+"Calculation of one time only constants that may vary with source type"
+
+IFPB=1;"default flag to not being frontal parallel beam"
+
+IF((ISOURC.EQ.0).OR.(ISOURC.EQ.2).OR.(ISOURC.EQ.4))[
+    "frontal parallel beam source"
+    IFPB=0;"set flag- passed in common source"
+    IF((ISOURC.EQ.0).AND.(WINC.NE.1.)) IFPB=1; "not for angled incidence"
+    RBEAM=RBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    RBEAM2=RBEAM**2;
+    WEIGHT=1.0; "incident weight"
+    "incident fluence"
+    AFACE=PI*RBEAM2;
+    IF(ISOURC = 0)[AINFLU=dble(NCASET)/AFACE;]
+    ELSE[AINFLU=dble(NCASET);]
+]
+
+ELSEIF(ISOURC = 1)[ "frontal point source"
+    RBEAM=RBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    RBEAM2=RBEAM**2;
+    DISTZ2=DISTZ**2;
+    DISTRH=0.0; "on-axis"
+    ZCOFST=0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+    ZSOFST=ZPLANE(1)-DISTZ;
+    AFACE=PI*RBEAM**2;
+    PROBFC=1.0;
+    "incident fluence times solid angle"
+    "  the solid angle factor is cancelled by the weighting routine"
+    "  see bielajew,rogers and nahum, phys med biol 1985 for details"
+    AINFLU=dble(NCASET)/DISTZ2;
+]
+
+ELSEIF(ISOURC = 3)[ "isotropically radiating disk"
+    WEIGHT=1.0;
+    AINFLU=dble(NCASET);
+"   Following are used to sample Z easily
+    ZSOFST=0.5*(ZSMAX - ZSMIN)+ ZSMIN;
+    ZBEAM=0.5*(ZSMAX - ZSMIN);
+]
+
+ELSEIF(ISOURC = 10)[ "SIDE PARALLEL BEAM"
+    XBEAM=XBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    ZBEAM=ZBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    ZCOFST=0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+    RCYL1=RCYL(NR);
+    RCYL2=RCYL1**2;
+    ASIDE=4.0*XBEAM*ZBEAM;
+    WEIGHT=1.; "INCIDENT WEIGHT"
+    AINFLU=dble(NCASET)/ASIDE; "INCIDENT FLUENCE"
+]
+
+ELSEIF(ISOURC = 11)[ "SIDE POINT SOURCE CENTERED AT TARGET MIDDLE"
+    XBEAM=XBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    ZBEAM=ZBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    ZCOFST=0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+    ZSOFST=ZCOFST; "BEAM CENTERED ON TARGET MID-POINT"
+    RCYL1=RCYL(NR);
+    RCYL2=RCYL1**2;
+    DSTRH2=DISTRH**2;
+    ASIDE=4.0*XBEAM*ZBEAM;
+    PROBSD=1.0;
+    "INCIDENT FLUENCE AT THE CENTER OF THE GEOMETRY TIMES SOLID ANGLE"
+    AINFLU = dble(NCASET)/DSTRH2;
+]
+
+ELSEIF(ISOURC = 12)[ "point source off axis"
+    RBEAM = RBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    XBEAM = XBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    ZBEAM = ZBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    ZCOFST = 0.5*(ZPLANE(NPLANE)+ZPLANE(1));"Z-axis offset of center of geom"
+    ZSOFST = ZPLANE(1)-DISTZ;  "Z-axis offset of the source"
+    RBEAM2 = RBEAM**2;
+    RCYL1 = RCYL(NR);
+    RCYL2 = RCYL1**2;
+    DSTRH2 = DISTRH**2;
+    DISTZ2 = DISTZ**2;
+    DISTB = DISTZ-(ZPLANE(NPLANE)-ZPLANE(1));
+   "DISTB is distance of point source from back of geomery"
+    DISTB2 = DISTB**2;
+    AFACE = PI*RBEAM2;
+    ASIDE = 4.0*XBEAM*ZBEAM;
+    "Incident fluence referred to midpoint"
+    AINFLU = NCASET/(DSTRH2+(ZCOFST-ZSOFST)**2);
+    IF(DISTRH <= RCYL(NR))[ "either front or back face exclusively"
+        PROBSD = 0;
+        IF(DISTZ >= 0.0)["front face only" PROBFC = 1.0;PROBBK = 0.0; ]
+        ELSEIF(DISTZ <= (ZPLANE(1)-ZPLANE(NPLANE)))["back face only"
+            PROBFC = 0.0;PROBBK = 1.0;
+            ]
+        ]
+    ELSEIF((DISTZ >= (ZPLANE(1)-ZPLANE(NPLANE)) & (DISTZ <= 0.0)))[
+        "hits side exclusively"
+        PROBFC = 0.0;PROBBK = 0.0;PROBSD = 1.0;
+    ]
+    ELSE[ "intermediate case - can hit two surfaces"
+        COTANG = ZSOFST/DISTRH;
+        IF(COTANG < 0.0)["incident from front and side"
+            FACTOR = AFACE*ABS(COTANG)/ASIDE;
+            PROBSD = 1.0/(1.0+FACTOR);
+            PROBFC = FACTOR/(1.0+FACTOR);
+            PROBBK = 0.0;
+        ]
+        ELSE["incident from back and side"
+            FACTOR = AFACE*COTANG/ASIDE;
+            PROBSD = 1.0/(1.0+FACTOR);
+            PROBBK = FACTOR/(1.0+FACTOR);
+            PROBFC = 0.0;
+        ]
+    ]"end two surface case"
+]
+
+ELSEIF(ISOURC = 15) [ call src15_oto(iout); ]
+ELSEIF(ISOURC = 16) [ call src16_oto(iout); ]
+
+ELSEIF(ISOURC = 17)[ "frontal point source"
+    XBEAM=XBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    YBEAM=YBEAM*$ONE-EPS; "scale down to insure a strike on the target"
+    DISTZ2=DISTZ**2;
+    DISTRH=0.0; "on-axis"
+    ZCOFST=0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+    ZSOFST=ZPLANE(1)-DISTZ;
+    AFACE=4.0*XBEAM*YBEAM;
+    PROBFC=1.0;
+    "incident fluence times solid angle"
+    "  the solid angle factor is cancelled by the weighting routine"
+    "  see bielajew,rogers and nahum, phys med biol 1985 for details"
+    AINFLU=FLOAT(NCASET)/DISTZ2;
+]
+
+ELSEIF(ISOURC = 13)[ "BROAD PARALLEL BEAM AT ANY ANGLE wrt THE TARGET"
+    RBEAM=RBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    XBEAM=XBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    ZBEAM=ZBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    RBEAM2=RBEAM**2;
+    RCYL1=RCYL(NR);
+    RCYL2=RCYL1**2;
+    ZCOFST=0.5*(ZPLANE(1)+ZPLANE(NPLANE));
+    AFACE=PI*RBEAM2;
+    ASIDE=4.0*XBEAM*ZBEAM;
+    WEIGHT=1.0; "INCIDENT WEIGHT"
+    AINFLU=NCASET/(ABS(WINC)*AFACE+SQRT(UINC**2+VINC**2)*ASIDE);
+    IF(WINC.EQ.1.0)[
+        "FRONT FACE EXCLUSIVELY"
+        PROBFC=1.0;PROBSD=0.0;PROBBK=0.0;
+    ]
+    ELSEIF(WINC.EQ.0.0)[
+        "HITS SIDE EXCLUSIVELY"
+        PROBFC=0.0;PROBSD=1.0;PROBBK=0.0;
+    ]
+    ELSEIF(WINC.EQ.-1.0)[
+        "BACK FACE EXCLUSIVELY"
+        PROBFC=0.0;PROBSD=0.0;PROBBK=1.0;
+    ]
+    ELSE[
+        "INTERMEDIATE CASE - CAN HIT TWO SURFACES"
+        IF(WINC.LT.0.0)["INCIDENT FROM BACK AND SIDE"
+            FACTOR=AFACE*ABS(WINC)/(ASIDE*SQRT(UINC**2+VINC**2));
+            PROBFC=0.0;
+            PROBSD=1.0/(1.0+FACTOR);
+            PROBBK=FACTOR/(1.0+FACTOR);
+        ]
+        ELSE["INCIDENT FROM FRONT AND SIDE"
+            FACTOR=AFACE*WINC/(ASIDE*SQRT(UINC**2+VINC**2));
+            PROBFC=FACTOR/(1.0+FACTOR);
+            PROBSD=1.0/(1.0+FACTOR);
+            PROBBK=0.0;
+        ]
+    ]
+]
+ELSEIF(ISOURC = 14)[ "FRONTAL POINT SOURCE restricted radius"
+    RBEAM=RBEAM*$ONE-EPS; "SCALE DOWN TO INSURE A STRIKE ON THE TARGET"
+    RBEAM2=RBEAM**2;
+    RMINSQ=RMINBM**2;
+    DISTZ2=DISTZ**2;
+    DISTRH=0.0; "ON-AXIS"
+    ZCOFST=0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+    ZSOFST=ZPLANE(1)-DISTZ;
+    AFACE=PI*RBEAM**2;
+    PROBFC=1.0;
+    "INCIDENT FLUENCE TIMES SOLID ANGLE"
+    "  THE SOLID ANGLE FACTOR IS CANCELLED BY THE WEIGHTING ROUTINE"
+    "  SEE BIELAJEW,ROGERS AND NAHUM, PHYS MED BIOL 1985 FOR DETAILS"
+    AINFLU=dble(NCASET)/DISTZ2;
+]
+ELSEIF(ISOURC = 20)[
+    "CALCULATE THE CPDF FROM THE PDF AND NORMALIZE IT"
+    "NOTE THAT THE RADIAL WEIGHTING IS INCLUDED AT THIS STAGE"
+    RCDF(1)=0.5*RDISTF(1)**2*RPDF(1);
+    DO IB=2,NRDIST[
+        RCDF(IB)=RCDF(IB-1)+0.5*(RDISTF(IB)**2-RDISTF(IB-1)**2)*RPDF(IB);
+    ]
+    FNORM=1./RCDF(NRDIST);
+    IBNSOK=0;
+    GRIDSZ=1./dble($MXRDIST);
+    DO IB=1,NRDIST[
+        RCDF(IB)=FNORM*RCDF(IB);
+        IF(IB.EQ.1)[IF(RCDF(1).LT.GRIDSZ )IBNSOK=1;]
+        ELSEIF((RCDF(IB)-RCDF(IB-1)).LT.GRIDSZ)[IBNSOK=1.0;]
+    ]"END OF LOOP ON IB"
+    IF(IBNSOK.NE.0)[OUTPUT;(///' *******WARNING******'/
+    T15,'SOME OF NORMALIZED BIN PROBABILITIES SO SMALL BINS MAY BE MISSED'/);]
+    "CALCULATE RCDFIN - AN ARRAY WHICH ALLOWS THE RAPID SAMPLING FOR THE"
+    "RADIAL BY PRECOMPUTING THE RESULTS FOR A FINE GRID"
+    DO K=1,$MXRDIST[
+        AK=dble(K)*GRIDSZ;
+        DO I=1,NRDIST[ IRDIST=I;IF(AK.LE.RCDF(I))[GOTO :FOUND-R-BIN:;] ]
+        "WE SHOULD NEVER FALL THROUGH TO HERE"
+        OUTPUT;(' *** FELL THROUGH RADIAL SAMPLING ROUTINE *** ');
+        :FOUND-R-BIN:
+        IF(IRDIST.NE.1)[RCDFIN(K,1)=RDISTF(IRDIST-1)**2;]
+        ELSE[RCDFIN(K,1)=0.0;]
+        RCDFIN(K,2)=RDISTF(IRDIST)**2-RCDFIN(K,1);
+    ]"END LOOP OVER K"
+    "OUTPUT IF IWATCH IS ACTIVE"
+    IF(IWATCH.NE.0)[
+        OUTPUT;(/' RDISTF,   RPDF,   RCDF:'//);
+        OUTPUT (RDISTF(IB),RPDF(IB),RCDF(IB),IB=1,NRDIST);(3E17.7);
+        OUTPUT;(//);
+    ]
+    WEIGHT=1.0; "INCIDENT WEIGHT"
+    "calculate incident fluence"
+    AINFLU=dble(NCASET)/(PI*RDISTF(NRDIST)**2);
+]
+
+ELSEIF( ISOURC = 23 ) [
+    AINFLU=dble(NCASET); WEIGHT=1.0;
+    IF( chamber_c > 1e4 | chamber_c < -1e4 ) [
+        chamber_c = 0.5*(zplane(1) + zplane(nplane));
+    ]
+]
+
+ELSEIF((ISOURC = 21) | (ISOURC = 22))["full phase space"
+     AINFLU=dble(NCASET); "number of incident particles"
+     WEIGHT=1.0; "INCIDENT WEIGHT"
+     IF( chamber_c > 1e4 | chamber_c < -1e4 ) [
+         chamber_c = 0.5*(zplane(1) + zplane(nplane));
+     ]
+     "Note that the weight for each particle is picked up from the phase"
+     "space file on the SRCHST call for these 2 sources"
+
+     "Now, calculate the initial value of NPHSPN, the no.-1 of the first"
+     "particle to use"
+     IF(IPARALLEL>1 & PARNUM > 0)["one of IPARALLEL runs"
+        IF(IHSTRY<NCASE_PHSP/IPARALLEL)[
+           NPHSPN=INT((PARNUM-1)*NCASE_PHSP/IPARALLEL)+IHSTRY;
+        ]
+        ELSE[
+           tmp_mod = NCASE_PHSP;
+           NPHSPN=tmp_mod*(PARNUM-1)/IPARALLEL+
+                   MOD(IHSTRY,tmp_mod/IPARALLEL);
+        ]
+     ]
+     ELSE["not a parallel run"
+         IF(IHSTRY<NCASE_PHSP)[NPHSPN = IHSTRY; ]
+         ELSE[ tmp_mod = NCASE_PHSP; NPHSPN=MOD(IHSTRY,tmp_mod); ]
+     ]
+     IF(i_iaea_in=1)[
+        $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN+1);
+     ]
+]
+
+
+RETURN;
+
+"************************************************************************
+
+ENTRY SRCOUT;    "toc:
+"==========="
+
+"                          DESCRIBE SOURCE"
+"                          ==============="
+
+WRITE(IOUT,500);
+IF(ISOURC = 0)[WRITE(IOUT,510) RBEAM,UINC,VINC,WINC,AINFLU;]
+ELSEIF(ISOURC = 1)[WRITE(IOUT,520) DISTZ,RBEAM,AINFLU;]
+ELSEIF(ISOURC = 2)[WRITE(IOUT,560);]
+ELSEIF(ISOURC = 3)[WRITE(IOUT,570)RMINBM,RBEAM,ZSMIN,ZSMAX;]
+ELSEIF(ISOURC = 4) [WRITE(IOUT,590) RBEAM;]
+ELSEIF(ISOURC = 10)[WRITE(IOUT,530)XBEAM,ZBEAM;
+    IF(((XBEAM/$ONE-EPS).LT.RCYL(NR)).OR.
+        ((ZBEAM/$ONE-EPS).LT.(0.5*(ZPLANE(NPLANE)-ZPLANE(1)))))
+        WRITE(IOUT,550);
+]
+ELSEIF(ISOURC = 11)[WRITE(IOUT,540)DISTRH,XBEAM,ZBEAM;
+    IF((XBEAM/$ONE-EPS.LT.(RCYL(NR)*SQRT(DISTRH**2-RCYL(NR)**2)/DISTRH)).OR.
+        (ZBEAM/$ONE-EPS.LT.(0.5*(ZPLANE(NPLANE)-ZPLANE(1)))))
+        WRITE(IOUT,550);
+]
+ELSEIF(ISOURC = 12)[WRITE(IOUT,580)DISTRH,DISTZ;]
+ELSEIF(ISOURC = 15)[ call src15_describe(iout); ]
+ELSEIF(ISOURC = 16)[ call src16_describe(iout); ]
+ELSEIF(ISOURC = 17)[WRITE(IOUT,535) DISTZ,XBEAM,YBEAM,AINFLU;]
+ELSEIF(ISOURC = 13)[WRITE(IOUT,585) UINC,VINC,WINC,AINFLU;]
+ELSEIF(ISOURC = 14)[WRITE(IOUT,525) DISTZ,RMINBM,RBEAM,AINFLU;]
+ELSEIF(ISOURC = 20)[
+    WRITE(IOUT,595);
+    IF(IOUTSP.EQ.1)[
+        WRITE(IOUT,610)NRDIST;
+        DO IB=1,NRDIST[WRITE(IOUT,620)IB,RDISTF(IB),RPDF(IB),RCDF(IB);]
+    ]
+    IF(IBNSOK.NE.0.0) WRITE(IOUT,630);
+]
+ELSEIF(ISOURC = 21)[WRITE(IOUT,640) FILSPC,ZPLANE(1),AINFLU;]
+ELSEIF(ISOURC = 22)[
+    WRITE(IOUT,677) FILSPC,dist_phsp,theta_phsp,chamber_c,
+                    xoffset,yoffset,AINFLU;
+]
+ELSEIF(ISOURC=23)[
+    WRITE(IOUT,679) iqinc,min_weight_23,max_weight_23,
+           $cstring(the_beam_code),$cstring(the_pegs_file),
+           $cstring(the_input_file),
+           dist_phsp,theta_phsp,chamber_c,xoffset,yoffset,EKSRCM;
+]
+
+IF (ISOURC = 21 | ISOURC = 22) [
+   WRITE(IOUT,:abcd:) NCASE_PHSP,NPHOTPHSP,TEMP2,TEMP3,NINCSRC;
+     :abcd: FORMAT(T15, ' Total number of particles in file      :',I10/
+      T15, ' Total number of photons                :',I10/
+      T15, ' (the rest are electrons and positrons)'//
+      T15, ' Maximum kinetic energy of the particles:',F10.3,' MeV'/
+      T15, ' Minimum kinetic energy of the electrons:',F10.3,' MeV'/
+      T15, ' # particles incident when phase space created :',F12.0/);
+   IF(DOSE_STAT=1)[" cannot read no. of primary histories from this phsp"
+                   " source"
+      WRITE(IOUT,'(//'' ***WARNING***''/
+       '' Cannot read no. of primary (non-phsp) histories from ph-sp source.''/
+       '' Dose and fluence will be analyzed assuming each particle read from''/
+       '' the ph-sp file is an independent history.  May result in an''/
+       '' underestimate of uncertainties.''//)');
+   ]
+   IF(IPARALLEL>1)[
+       IF(PARNUM>=1 & PARNUM<=IPARALLEL)[
+         WRITE(IOUT,'(/'' This is one of '',I4,'' parallel jobs.''/
+                    '' It will use from particle '',I12,'' to particle '',I12,/
+                    '' from the phase space source in the simulation.''/)')
+              IPARALLEL,INT((PARNUM-1)*NCASE_PHSP/IPARALLEL)+1,
+                INT(PARNUM*NCASE_PHSP/IPARALLEL);
+       ]
+   ]
+   IF(NRCYCL>0)[
+       WRITE(IOUT,'(/'' Particles will be recycled '',
+                   I4,'' times before moving on to next one.''/)') NRCYCL;
+   ]
+]
+
+RETURN;
+
+"************************************************************************
+
+
+"                    SAMPLE SOURCE EACH HISTORY     "
+"                    ==========================     "
+
+ENTRY SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);    "toc:
+"======================================================="
+
+IF(n_parallel>0 & (ISOURC=21 | ISOURC=22))[
+"set up chunk of phase space file to sample"
+    "if this is the first chunk in this run, calculate no. of particles in a"
+    "phsp chunk"
+    IF(N_RUN_CHUNK_OLD=0) P_PER_PHSP_CHUNK=NCASE_PHSP/(n_parallel*$N_CHUNKS);
+    N_RUN_CHUNK=(NCASE-N_LEFT)*n_parallel*$N_CHUNKS/NCASE;
+    other_num_1=N_RUN_CHUNK*NCASE;
+    other_num_2=(NCASE-N_LEFT)*n_parallel*$N_CHUNKS;
+    IF(other_num_1<other_num_2)[
+          "NCASE/(n_parallel*$N_CHUNKS) is not an integer"
+          "and so no of histories in each chunk, has been rounded down"
+           N_RUN_CHUNK=N_RUN_CHUNK+1;
+    ]
+    IF(N_RUN_CHUNK ~= N_RUN_CHUNK_OLD)["have moved on to a new run chunk"
+       N_RUN_CHUNK_OLD=N_RUN_CHUNK;
+       NPHSPN_MIN=(N_RUN_CHUNK-1)*P_PER_PHSP_CHUNK+1;
+       IF(N_LEFT=0)["this is the last run just use up the rest of the"
+                     "phsp source"
+           NPHSPN_MAX=NCASE_PHSP;
+       ]
+       ELSE["calculate the max value of INPHSP"
+           NPHSPN_MAX=NPHSPN_MIN+P_PER_PHSP_CHUNK-1;
+       ]
+       NPHSPN=NPHSPN_MIN-1; "srchst later adds 1 to NPHSPN"
+       IF(i_iaea_in=1)[
+         $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN+1);
+       ]
+       CYCLNUM=0; "reset NRCYCL counter"
+        write(6,'(/a/,a,i12,a,i12/,a//)')
+  '      This simulation uses a phase space source.',
+  '      This run will use from particle',NPHSPN_MIN,' to particle ',
+         NPHSPN_MAX,
+  '      in the source file.';
+    ]
+]
+
+"Calculate the history dependent constants that may change depending on"
+"the source type"
+IF((ISOURC = 0) | (ISOURC = 2) |(ISOURC = 4))["frontal parallel beam source"
+    IF(RBEAM = 0.0)[ "pencil source"
+        /XIN,YIN/=0.0;
+        IRIN=2;
+    ]
+    ELSE[ "choose a point randomly in a circle"
+        $CHOOSE-POINT-IN-CIRCLE;
+        IRIN=2+(IXIN-1)*NZ;
+    ]
+    ZIN=ZPLANE(1); "INCIDENT Z POSITION"
+    IF(IFPB = 0)[UIN=0.0;VIN=0.0;WIN=1.0;]ELSE[UIN=UINC;VIN=VINC;WIN=WINC;]
+    NRCFLG=10; "geometrical flag"
+    WEIGHT=1.0; "this version needs to set the weight in case correlation"
+                "changed it"
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 1 | ISOURC = 14)["frontal point source on axis"
+    $ENTRY-FRONT-FACE;
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 3)[ "isotropically radiating disk"
+    "choose z-coordinate for the generation of a particle within region NSRCRG"
+    $RANDOMSET ZIN;
+    ZIN=ZSOFST+(2.0*ZIN-1.0)*ZBEAM;
+    DO IZ=1,NPLANE-1[IF(ZIN <= ZPLANE(IZ+1) & ZIN >= ZPLANE(IZ)) EXIT;]
+    "choose a point randomly in a circle that has the radius of the source"
+
+     "choose a point randomly in a ring" "this is not the fastest way"
+   LOOP[
+        $RANDOMSET XIN;XIN=(2.0*XIN-1.0)*RBEAM;
+        $RANDOMSET YIN;YIN=(2.0*YIN-1.0)*RBEAM;
+        R2=XIN**2+YIN**2;
+   ] UNTIL (R2 <= RBEAM2 & R2 >= RMINSQ);
+
+     DO IX=1,NR[IF(R2 <= CYRAD2(IX))EXIT;]
+
+     IRIN = IZ + NZ*(IX-1)+1;
+
+    "now determine initial direction cosines"
+    $RANDOMSET COSTHE;   COSTHE=2.*COSTHE-1;
+    SINTHE=SQRT(1.0-COSTHE**2);
+    $RANDOMSET PHI;PHI=TWOPI*PHI;
+    UIN=SINTHE*COS(PHI);VIN=SINTHE*SIN(PHI);WIN=COSTHE;
+    NRCFLG=50;  "geometrical flag meaning particle generated within region"
+    WEIGHT=1.0;
+    NHSTRY=NHSTRY+1;
+]
+ELSEIF(ISOURC = 10)[ "side parallel beam"
+    "choose a point randomly in the rectangle"
+    $CHOOSE-POINT-IN-RECTANGLE;
+    UIN=0.0;VIN=-1.0;WIN=0.0; "incident angles"
+    NRCFLG=20; "geometrical flag"
+    WEIGHT=1.0; "this version needs to set the weight in case correlation"
+                "changed it"
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 11)[ "SIDE POINT SOURCE CENTERED AT TARGET MIDDLE"
+    "SIDE POINT SOURCE CENTERED AT TARGET MIDDLE"
+    $ENTRY-SIDE;
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 12)[ "POINT SOURCE OFF AXIS"
+    "POINT SOURCE OFF AXIS"
+    "DECIDE WHICH SURFACE THE INCIDENT PARTICLE WILL HIT"
+    IF(PROBFC.EQ.1.0)[$ENTRY-FRONT-FACE;]
+    ELSEIF(PROBBK.EQ.1.0)[$ENTRY-BACK-FACE;]
+    ELSEIF(PROBSD.EQ.1.0)[$ENTRY-SIDE;]
+    ELSE[
+        "MAY HIT EITHER FACE OR SIDE"
+        $RANDOMSET WHICH;
+        IF(WHICH.LE.PROBSD)[$ENTRY-SIDE;]
+        ELSEIF(WHICH.LE.(PROBSD+PROBFC))[$ENTRY-FRONT-FACE;]
+        ELSE[$ENTRY-BACK-FACE;]
+    ]
+    NHSTRY=NHSTRY+1;
+]
+
+ELSE IF(ISOURC = 15) [
+    call src15_hst(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+    NHSTRY=NHSTRY+1;
+]
+
+ELSE IF(ISOURC = 16) [
+    call src16_hst(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 17)["frontal point source on axis with square field"
+    $INCIDENT-FROM-FRONT;
+    NHSTRY=NHSTRY+1;
+]
+
+ELSEIF(ISOURC = 13)[ "BROAD PARALLEL BEAM AT ANY ANGLE wrt THE TARGET"
+    "BROAD PARALLEL BEAM AT ANY ANGLE WITH RESPECT TO THE TARGET"
+    UIN=UINC;VIN=VINC;WIN=WINC;
+    "DECIDE WHICH SURFACE THE INCIDENT PARTICLE WILL HIT"
+    IF(PROBFC.EQ.1.0)[
+        $CHOOSE-POINT-IN-CIRCLE;
+        IRIN=2+(IXIN-1)*NZ;
+        ZIN=ZPLANE(1); "INCIDENT Z POSITION"
+        NRCFLG=10; "GEOMETRICAL FLAG"
+    ]
+    ELSEIF(PROBBK.EQ.1.0)[
+        $CHOOSE-POINT-IN-CIRCLE;
+        IRIN=1+IXIN*NZ;
+        ZIN=ZPLANE(NPLANE); "INCIDENT Z POSITION"
+        NRCFLG=30; "GEOMETRICAL FLAG"
+    ]
+    ELSEIF(PROBSD.EQ.1.0)[
+        $CHOOSE-POINT-IN-RECTANGLE;
+        NRCFLG=20; "GEOMETRICAL FLAG"
+    ]
+    ELSE[
+        "MAY HIT EITHER FACE OR SIDE"
+        $RANDOMSET WHICH;
+        IF(WHICH.LE.PROBSD)[
+            $CHOOSE-POINT-IN-RECTANGLE;
+            NRCFLG=20; "GEOMETRICAL FLAG"
+        ]
+        ELSEIF(WHICH.LE.(PROBSD+PROBFC))[
+            $CHOOSE-POINT-IN-CIRCLE;
+            IRIN=2+(IXIN-1)*NZ;
+            ZIN=ZPLANE(1); "INCIDENT Z POSITION"
+            NRCFLG=10; "GEOMETRICAL FLAG"
+        ]
+        ELSE[
+            $CHOOSE-POINT-IN-CIRCLE;
+            IRIN=1+IXIN*NZ;
+            ZIN=ZPLANE(NPLANE); "INCIDENT Z POSITION"
+            NRCFLG=30; "GEOMETRICAL FLAG"
+        ]
+    ]
+    WEIGHT=1.0; "THIS VERSION NEEDS TO SET THE WEIGHT IN CASE CORRELATION"
+                "CHANGED IT"
+    NHSTRY=NHSTRY+1;
+]
+"ISOURC=14 DONE WITH ISOURC=1"
+ELSEIF(ISOURC = 20)["RADIAL DISTRIBUTION, FRONT PARALLEL BEAM"
+    "THIS ENTRY DOES THE ACTUAL SAMPLING OF THE INCIDENT RADIAL DISTRIBUTION"
+    "THIS WILL RETURN A HISTOGRAM OF VALUES"
+    $RANDOMSET RNNO1;$RANDOMSET RNNO2;
+    "IN NEXT STATEMENT MIN AVOIDS K=$MXRDIST+1, ALMOST NEVER IMPLEMENTED"
+    K=MIN(dble($MXRDIST)*RNNO1+1.,dble($MXRDIST));
+    "THIS VERSION ONLY FOR CYLINDRICAL SYMMETRY"
+    XIN=SQRT(RCDFIN(K,1)+RNNO2*RCDFIN(K,2));
+    YIN=0.0;
+    ZIN=ZPLANE(1); "INCIDENT POSITION"
+    "NOW DO A SEQUENTIAL SEARCH FOR THE ENTRANCE REGION"
+    DO IX=1,NR[IXIN=IX;IF(XIN.LE.RCYL(IX)) EXIT;]
+    IRIN=2+(IXIN-1)*NZ;
+    WIN=1.0;UIN=0.0;VIN=0.0; "INCIDENT ANGLES"
+    NRCFLG=10; "GEOMETRICAL FLAG"
+    WEIGHT=1.0; "THIS VERSION NEEDS TO SET THE WEIGHT IN CASE CORRELATION"
+                "CHANGED IT"
+    NHSTRY=NHSTRY+1;
+]
+ELSEIF(ISOURC = 21)["Full phase space for each particle"
+
+ IF(NRCYCL>0 & CYCLNUM>0 & CYCLNUM<=NRCYCL)["recycle this particle"
+    CYCLNUM=CYCLNUM+1;
+    XIN=XINOLD;
+    YIN=YINOLD;
+    ZIN=ZINOLD;
+    UIN=UINOLD;
+    VIN=VINOLD;
+    WIN=WINOLD;
+    IRIN=IRINOLD;
+    NRCFLG=NRCFLGOLD;
+    WEIGHT=WEIGHTOLD;
+    "the rest of the parameters are global and unchanged"
+    NNREAD=NNREAD+1;
+ ]
+ ELSE["get a new particle from the file"
+    :READ-PARTICLE:;
+
+    NPHSPN=NPHSPN+1;
+
+    IF(IPARALLEL>1 & PARNUM>0 & NPHSPN > INT(PARNUM*NCASE_PHSP/IPARALLEL))[
+       NPHSPN=INT((PARNUM-1)*NCASE_PHSP/IPARALLEL)+1;
+       OUTCNT=OUTCNT+1;
+       OUTPUT;
+         (' ***WARNING*** Used all particles from partition in source file.'/
+          '               Restarting from first particle in partition.');
+       WRITE(IOUT,
+        '('' ***WARNING*** Used all particles from partition in source file.''/
+          ''               Restarting from first particle in partition.'')');
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC/IPARALLEL;
+           $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+    ELSEIF(n_parallel>0 & NPHSPN>NPHSPN_MAX)[
+       "have reached the end of the phsp chunk in this parallel run"
+       NPHSPN=NPHSPN_MIN;
+       OUTCNT=OUTCNT+1;
+       OUTPUT ;
+     (///' ***WARNING*** USED ALL PARTICLES FROM CHUNK IN SOURCE FILE!'/
+       '               RESTARTING FROM FIRST PARTICLE IN THIS CHUNK.'//
+       /1x,79('*')// );
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC/(n_parallel*$N_CHUNKS);
+          $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+    ELSEIF(NPHSPN>NCASE_PHSP)[
+       NPHSPN=1;
+       OUTCNT=OUTCNT+1;
+       OUTPUT;
+         (' ***WARNING*** Used all particles from source file.'/
+          '               Restarting from first particle.');
+       WRITE(IOUT,
+        '('' ***WARNING*** Used all particles from source file.''/
+          ''               Restarting from first particle.'')');
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC;
+          $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+
+    IF(OUTCNT>1000)["too many restart warnings"
+       OUTPUT;(' ***ERROR*** >1000 restart warnings.');
+       WRITE(IOUT,
+        '('' ***ERROR*** >1000 restart warnings.'')');
+       STOP;
+    ]
+
+    IF(i_iaea_in=1)[
+       $IAEA_READ_PHSP_RECORD(i_unit_in,NPASS,NHSTRY,LATCHI,IQIN,EIN,WEIGHT,
+                              XIN,YIN,ZIN,UIN,VIN,WIN,ZLAST,MUIDX);
+    ]
+    ELSE[
+
+    $READ_PHSP(IMODE,42,NPHSPN+1:NHSTRY,NPASS,IQIN,WIN,ZLAST,
+               LATCHI,EIN,WEIGHT,XIN,YIN,UIN,VIN);
+    ]
+
+    NNREAD=NNREAD+1;
+
+    IF(DOSE_STAT=1 | NHSTRY=0) NHSTRY=NHSTRY+1;
+    "NHSTRY may also remain zero if this is a partition of a phase space"
+    "file and it does not begin with a new primary history"
+
+    "We only use the forward particles."
+    IF( NPASS=1 ) GOTO :READ-PARTICLE:; "...signals not 1st time crossing"
+
+    "check charge of this particle, IQIN, is what the user asked for, IQINC"
+    "IQINC = 0 => photons only"
+    "IQINC = -1 =>electrons only"
+    "IQINC = +1 => positrons only"
+    "IQINC = 2  => all particles"
+    "IQINC = 3 => charged particles"
+
+    IF(IQIN =-1 & IQINC~=-1 & IQINC~=2 & IQINC ~=3)[ GOTO :READ-PARTICLE:;]
+    IF(IQIN = 1 & IQINC~= 1 & IQINC~=2 & IQINC ~=3)[ GOTO :READ-PARTICLE:;]
+    IF(IQIN = 0 & IQINC~= 0 & IQINC~=2)[ GOTO :READ-PARTICLE:;]
+    "If it gets here, it is acceptable"
+
+    "Now do a sequential search for the entrance region"
+     R2 = XIN**2 +YIN**2;
+    "Check if particle is outside geometry"
+    IF(R2 > CYRAD2(NR))[ GOTO :READ-PARTICLE:;]
+    DO IX=1,NR[
+       IXIN=IX;
+       IF( R2 <=  CYRAD2(IX) ) EXIT;  "CYRAD2(IX) is RCYL(IX)**2 set in GEOMRZ"
+    ]
+    IRIN=2+(IXIN-1)*NZ;
+    ZIN=ZPLANE(1);
+    NRCFLG = 10; "GEOMETRICAL FLAG, SOURCE INCIDENT ON FRONT FACE"
+    IF(NRCYCL>0)["store non-global parameters for recycling"
+       CYCLNUM=1;
+       XINOLD=XIN;
+       YINOLD=YIN;
+       ZINOLD=ZIN;
+       UINOLD=UIN;
+       VINOLD=VIN;
+       WINOLD=WIN;
+       IRINOLD=IRIN;
+       NRCFLGOLD=NRCFLG;
+       WEIGHTOLD=WEIGHT;
+    ]
+ ]
+]
+
+ELSEIF( ISOURC = 23 ) [ "full BEAM simulation"
+
+    LOOP [;
+        :retry_sample_beamsource:;
+        call sample_beamsource(ein,xin,yin,zin,uin,vin,win,weight,iqin,latchi,
+                               nhstry,iphatin);
+        IF( iqinc < 2 & iqin ~= iqinc ) goto :retry_sample_beamsource:;
+        IF( iqinc = 3 & iqin = 0 ) goto :retry_sample_beamsource:;
+        IF( weight < min_weight_23 | weight > max_weight_23 ) [
+            "write(6,*) 'Not in weight window: ',weight,iqin,ein,xin,yin;"
+            goto :retry_sample_beamsource:;
+        ]
+
+        IF( secret_option_23 = 1 ) [
+            IF( xin > 0 ) [ xin = -xin; uin = -uin; ]
+        ]
+
+        xin_tmp = xin; yin_tmp = yin; zin_tmp = zin;
+
+        "apply the offset"
+        xin=xin+xoffset; yin=yin+yoffset;
+
+        "Rotate the position"
+        zin = -dist_phsp*cost_phsp + yin*sint_phsp + chamber_c;
+        yin = dist_phsp*sint_phsp + yin*cost_phsp;
+
+        "Rotate the direction"
+        vtemp = vin;
+        vin = -win*sint_phsp + vin*cost_phsp;
+        win =  win*cost_phsp + vtemp*sint_phsp;
+
+        "write(6,*) 'Got ',iqin,ein,xin,yin,zin,uin,vin,win,weight;
+        "Check if particle is within the geometry or will enter it"
+        radp = xin*xin + yin*yin;
+        IF( radp > CYRAD2(nr) | zin < zplane(1) | zin > zplane(nz+1) ) [
+            " outside of geometry. check whether that particle will get in "
+            check = .true.;
+            IF( zin < zplane(1) & win > 0 ) [ tf = (zplane(1)-zin)/win; ]
+            ELSE IF( zin > zplane(nz+1) & win < 0 ) [
+                          tf = (zplane(nz+1) - zin)/win;
+            ]
+            ELSE [ check = .false.; ]
+            IF( check ) [
+                xtmp = xin + uin*tf; ytmp = yin + vin*tf;
+                radp = xtmp*xtmp + ytmp*ytmp;
+                IF( radp <= CYRAD2(nr) ) [
+                    xin = xtmp; yin = ytmp;
+                    IF( zin < zplane(1) ) [ zin = zplane(1); iz = 1; ]
+                    ELSE                  [ zin = zplane(nz+1); iz = nz; ]
+                    DO ix=1,nr [ IF( radp <= CYRAD2(ix) ) EXIT; ]
+                    EXIT;
+                ]
+                radp = xin*xin + yin*yin;
+            ]
+            IF( radp < CYRAD2(nr) ) NEXT;
+            phbb = uin*uin + vin*vin;
+            IF( phbb < 1e-15 ) NEXT;
+            pha = (xin*uin + yin*vin)/phbb;
+            IF( pha > 0 ) NEXT;
+            phb = (radp - CYRAD2(nr))/phbb;
+            phd = pha*pha - phb;
+            IF( phd < 0 ) NEXT;
+            tf = -pha-sqrt(phd);
+            IF( tf < 0 ) NEXT;
+            zin = zin + tf*win;
+            IF( zin < zplane(1) | zin > zplane(nz+1) ) NEXT;
+            ix = nr; xin = xin + uin*tf; yin = yin + vin*tf;
+            DO iz=2,nplane [ IF( zin <= zplane(iz) ) EXIT; ]
+            iz = iz-1;
+            EXIT;
+        ]
+        ELSE [
+            " already inside, find the region index "
+            DO iz=2,nplane [ IF( zin <= zplane(iz) ) EXIT; ]
+            iz = iz-1;
+            DO ix=1,nr [ IF( radp <= CYRAD2(ix) ) EXIT; ]
+            EXIT;
+        ]
+    ]
+    irin = 1 + (ix-1)*nz + iz;
+    "write(6,*) 'Got ',iqin,ein,xin,yin,zin,uin,vin,win,weight,ix,iz;
+    ihstry = ihstry + nhstry - last_nhstry;
+    last_nhstry = nhstry;
+]
+
+ELSEIF(ISOURC = 22)["full phase space for each particle: from side"
+
+ IF(NRCYCL>0 & CYCLNUM>0 & CYCLNUM<=NRCYCL)["recycle this particle"
+    CYCLNUM=CYCLNUM+1;
+    XIN=XINOLD;
+    YIN=YINOLD;
+    ZIN=ZINOLD;
+    UIN=UINOLD;
+    VIN=VINOLD;
+    WIN=WINOLD;
+    IRIN=IRINOLD;
+    NRCFLG=NRCFLGOLD;
+    WEIGHT=WEIGHTOLD;
+    "the rest of the parameters are global and unchanged"
+    NNREAD=NNREAD+1;
+ ]
+ ELSE["get a new particle from the file"
+    :READ-PARTICLE-SRC22:;
+
+    NPHSPN=NPHSPN+1;
+
+    IF(IPARALLEL>1 & PARNUM>0 & NPHSPN > INT(PARNUM*NCASE_PHSP/IPARALLEL))[
+       NPHSPN=INT((PARNUM-1)*NCASE_PHSP/IPARALLEL)+1;
+       OUTCNT=OUTCNT+1;
+       OUTPUT;
+         (' ***WARNING*** Used all particles from partition in source file.'/
+          '               Restarting from first particle in partition.');
+       WRITE(IOUT,
+        '('' ***WARNING*** Used all particles from partition in source file.''/
+          ''               Restarting from first particle in partition.'')');
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC/IPARALLEL;
+           $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+    ELSEIF(n_parallel>0 & NPHSPN>NPHSPN_MAX)[
+       "have reached the end of the phsp chunk in this parallel run"
+       NPHSPN=NPHSPN_MIN;
+       OUTCNT=OUTCNT+1;
+       OUTPUT ;
+     (///' ***WARNING*** USED ALL PARTICLES FROM CHUNK IN SOURCE FILE!'/
+       '               RESTARTING FROM FIRST PARTICLE IN THIS CHUNK.'//
+       /1x,79('*')// );
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC/(n_parallel*$N_CHUNKS);
+          $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+    ELSEIF(NPHSPN>NCASE_PHSP)[
+       NPHSPN=1;
+       OUTCNT=OUTCNT+1;
+       OUTPUT;
+         (' ***WARNING*** Used all particles from source file.'/
+          '               Restarting from first particle.');
+       WRITE(IOUT,
+        '('' ***WARNING*** Used all particles from source file.''/
+          ''               Restarting from first particle.'')');
+       IF(i_iaea_in=1)[NHSTRY=OUTCNT*NINCSRC;
+          $IAEA_SET_PHSP_RECORD(i_unit_in,NPHSPN);
+       ]
+    ]
+
+    IF(OUTCNT>1000)["too many restart warnings"
+       OUTPUT;(' ***ERROR*** >1000 restart warnings.');
+       WRITE(IOUT,
+        '('' ***ERROR*** >1000 restart warnings.'')');
+       STOP;
+    ]
+
+    IF(i_iaea_in=1)[
+       $IAEA_READ_PHSP_RECORD(i_unit_in,NPASS,NHSTRY,LATCHI,IQIN,EIN,WEIGHT,
+                              XIN,YIN,ZIN,UIN,VIN,WIN,ZLAST,MUIDX);
+    ]
+    ELSE[
+
+    $READ_PHSP(IMODE,42,NPHSPN+1:NHSTRY,NPASS,IQIN,WIN,ZLAST,
+               LATCHI,EIN,WEIGHT,XIN,YIN,UIN,VIN);
+    ]
+
+    NNREAD=NNREAD+1; "counts total number of reads"
+
+    IF(DOSE_STAT=1 | NHSTRY=0) NHSTRY=NHSTRY+1;
+
+    "We only use the forward particles."
+    IF( NPASS=1 ) GOTO :READ-PARTICLE-SRC22:;"...signals not 1st time crossing"
+
+    IF(IQIN=-1 & IQINC~=-1 & IQINC~=2 & IQINC ~=3)[GOTO :READ-PARTICLE-SRC22:;]
+    IF(IQIN= 1 & IQINC~= 1 & IQINC~=2 & IQINC ~=3)[GOTO :READ-PARTICLE-SRC22:;]
+    IF(IQIN= 0 & IQINC~= 0 & IQINC~=2)[GOTO :READ-PARTICLE-SRC22:;]
+
+    "IF(IQIN=-1 & IQINC~=-1 & IQINC~=2)[ GOTO :READ-PARTICLE-SRC22:;]"
+    "ELSEIF(IQIN=1 & IQINC~=1 & IQINC~=2)[ GOTO :READ-PARTICLE-SRC22:;]"
+    "ELSEIF(IQINC~=0 & IQINC~=2)[GOTO :READ-PARTICLE-SRC22:;]"
+
+    "apply the offset"
+    xin=xin+xoffset;
+    yin=yin+yoffset;
+
+    "Rotate the position"
+    zin = -dist_phsp*cost_phsp + yin*sint_phsp + chamber_c;
+    yin = dist_phsp*sint_phsp + yin*cost_phsp;
+
+    "Rotate the direction"
+    vtemp = vin;
+    vin = -win*sint_phsp + vin*cost_phsp;
+    win =  win*cost_phsp + vtemp*sint_phsp;
+
+    "Check if particle is within the geometry or will enter it"
+    radp = xin*xin + yin*yin;
+    IF( radp > CYRAD2(nr) | zin < zplane(1) | zin > zplane(nz+1) ) [
+        " outside of geometry. check whether that particle will get in "
+        check = .true.;
+        IF( zin < zplane(1) & win > 0 ) [ tf = (zplane(1)-zin)/win; ]
+        ELSE IF( zin > zplane(nz+1) & win < 0 ) [
+                      tf = (zplane(nz+1) - zin)/win;
+        ]
+        ELSE [ check = .false.; ]
+        IF( check ) [
+            xtmp = xin + uin*tf; ytmp = yin + vin*tf;
+            radp = xtmp*xtmp + ytmp*ytmp;
+            IF( radp <= CYRAD2(nr) ) [
+                xin = xtmp; yin = ytmp;
+                IF( zin < zplane(1) ) [ zin = zplane(1); iz = 1; ]
+                ELSE                  [ zin = zplane(nz+1); iz = nz; ]
+                DO ix=1,nr [ IF( radp <= CYRAD2(ix) ) EXIT; ]
+                goto :FOUND-ENTRY-22:;
+            ]
+            radp = xin*xin + yin*yin;
+        ]
+        IF( radp < CYRAD2(nr) ) goto :READ-PARTICLE-SRC22:;
+        phbb = uin*uin + vin*vin;
+        IF( phbb < 1e-15 ) goto :READ-PARTICLE-SRC22:;
+        pha = (xin*uin + yin*vin)/phbb;
+        IF( pha > 0 ) goto :READ-PARTICLE-SRC22:;
+        phb = (radp - CYRAD2(nr))/phbb;
+        phd = pha*pha - phb;
+        IF( phd < 0 ) goto :READ-PARTICLE-SRC22:;
+        tf = -pha-sqrt(phd);
+        IF( tf < 0 ) goto :READ-PARTICLE-SRC22:;
+        zin = zin + tf*win;
+        IF( zin < zplane(1) | zin > zplane(nz+1) ) goto :READ-PARTICLE-SRC22:;
+        ix = nr; xin = xin + uin*tf; yin = yin + vin*tf;
+        DO iz=2,nplane [ IF( zin <= zplane(iz) ) EXIT; ]
+        iz = iz-1;
+        goto :FOUND-ENTRY-22:;
+    ]
+    " already inside, find the region index "
+    DO iz=2,nplane [ IF( zin <= zplane(iz) ) EXIT; ]
+    iz = iz-1;
+    DO ix=1,nr [ IF( radp <= CYRAD2(ix) ) EXIT; ]
+
+  :FOUND-ENTRY-22:
+
+    count_phsp = count_phsp + 1;
+    irin = 1 + (ix-1)*nz + iz;
+    NRCFLG = 20; "GEOMETRICAL FLAG, SOURCE INCIDENT FROM SIDE(?)"
+    IF(NRCYCL>0)["store non-global parameters for recycling"
+       CYCLNUM=1;
+       XINOLD=XIN;
+       YINOLD=YIN;
+       ZINOLD=ZIN;
+       UINOLD=UIN;
+       VINOLD=VIN;
+       WINOLD=WIN;
+       IRINOLD=IRIN;
+       NRCFLGOLD=NRCFLG;
+       WEIGHTOLD=WEIGHT;
+    ]
+ ]
+]
+
+RETURN;
+
+ENTRY SRCEND;
+
+IF( ISOURC = 23 ) [
+    call finish_beamsource;
+]
+
+return;
+
+"FORMATS"
+%I0
+%F
+100   FORMAT(' ',2(I2,' '),4(G14.7,' '))
+200   FORMAT(' ',I1)
+300   FORMAT(' ',I3)
+400   FORMAT(' ',2(G14.7,' '))
+500   FORMAT(/' ',79('*')//T30,'SOURCE PARAMETERS'//' ',79('*')/)
+510   FORMAT(T20,'Parallel beam on front face, radius=',
+     1  F8.3,'cm'/
+     2  T30,' X-axis direction cosine=',F10.4/
+     3  T30,' Y-axis direction cosine=',F10.4/
+     4  T30,' Z-axis direction cosine=',F10.4/
+     5  T30,' Incident fluence=', 1PE13.3,'/cm**2')
+520   FORMAT(T5,'Point source on cyl axis',F8.1,
+     1       ' cm away, collimated to R =',F8.3,' cm',/
+     2       T5,'Incident fluence(at front face on axis) * ',
+     3       'Solid angle=',1PE14.3)
+525   FORMAT(T5,'Point source on cyl axis',F8.1,
+     1       ' cm away'/T10,'Collimated to radii =',F8.3,' cm to ',
+     2       F8.3,' cm',/
+     3       T5,'Incident fluence(at front face on axis) * ',
+     4       'SOLID ANGLE=',1PE14.3)
+530   FORMAT(T20,'PARALLEL BEAM INCIDENT ON CYLINDRICAL WALL',
+     1       /T21,'RADIAL DIMENSION=',F8.3,' cm, HALF-LENGTH='
+     2       ,F8.3,' cm')
+535   FORMAT(T5,'Point source on cyl axis',F8.1,
+     1       ' cm away'/T10,'Collimated to x =',F8.3,' cm, y = ',
+     2       F8.3,' cm',/
+     3       T5,'Incident fluence(at front face on axis) * ',
+     4       'SOLID ANGLE=',1PE14.3)
+540   FORMAT(T20,'POINT SOURCE INCIDENT FROM SIDE',F8.1,' cm',
+     1       ' FROM MID-POINT'/T25,'RADIAL DIMENSION=',F8.3,' cm'
+     2       ,' HALF-LENGTH=',F8.3,' cm')
+550   FORMAT(/T30,'NOTE BEAM DOES NOT COVER THE DETECTOR'/
+     1       T30,37('*') )
+560   FORMAT(' ',T20,'BROAD PARALLEL BEAM ON CYLINDRICAL AXIS')
+570   FORMAT(T10,'ISOTROPICALLY RADIATING, UNIFORM SOURCE LOCATED'/
+     1      '      between radii',2F10.3,' and DEPTHS', 2F10.3)
+580   FORMAT(' ',T20,'POINT SOURCE OFF AXIS, RADIAL COORDINATE ',
+     1       F8.3,' cm'/
+     2' ',T20,'PERPENDICULAR DISTANCE OF SOURCE FROM FRONT FACE '
+     3,F8.3,' cm')
+585   FORMAT(T20,'BROAD PARALLEL BEAM FROM ANY ANGLE'/
+     1  T30,' X-AXIS DIRECTION COSINE=',F10.4/
+     2  T30,' Y-AXIS DIRECTION COSINE=',F10.4/
+     3  T30,' Z-AXIS DIRECTION COSINE=',F10.4/
+     4  T30,' INCIDENT FLUENCE=', 1PE13.3,'/cm**2')
+590   FORMAT(' ',T23,'CENTRAL AXIS FLUENCE VS BEAM RADIUS'/
+     1  T25,'CENTRAL AXIS RADIUS=',F9.4,' cm'//12X,
+     2'  TREAT RADIAL BINS AS BEAM RADIUS, NOT SCORING REGION RADIUS'/)
+595   FORMAT(' ',T20,'RADIAL DISTRIBUTION, FRONTAL PARELLEL BEAM'/)
+605   FORMAT(80A1)
+600   FORMAT(27A1)
+610   FORMAT(' ',T20,'RADIAL DISTBN, # OF INCIDENT RADIAL BINS:',T60,I5/
+     1' ',T20,'BIN    KINETIC RADIAL     PROBABILITY  CUMULATIVE PROB')
+620   FORMAT(' ',T20,I3,T28,F7.3,T45,1PE10.3,T60,0PF7.4)
+630   FORMAT(/' *******WARNING******'/T20,'SOME OF NORMALIZED BIN',
+     1' PROBABILITIES SO SMALL BINS MAY BE MISSED'/)
+640   FORMAT(T20,'Full phase space input for each incident particle. '/
+     1T5,' Source data file: ',80A1/
+     2T25,' Source incident on front face, Z =',F14.4,' cm.'/
+     3T25,' # of particles read from ph-sp file =', 1PE13.3,'.')
+642   FORMAT(T20,'Full phase space input for each incident particle. '/
+     1T5,' Source data file: ',80A1/
+     2T25,' Source incident on plane, Y =',F14.4,' cm.'/
+     3T25,' Centre of source plane at Z =',F14.4,' cm.'/
+     4T25,' # of particles read from ph-sp file =', 1PE13.3,'.')
+650   FORMAT(I1,1X,I7,1X,F5.0,1X,2(F4.0,1X),F1.0,1X,2(F10.8,1X),E10.4)
+660   FORMAT(40A1/22A1/80A1/I10,3X,3F6.0/)
+670   FORMAT(40A1/22A1/80A1/I10,3X,3F6.0//)
+677   FORMAT(T20,'Full phase space input for each incident particle. '/
+     &T5,' Source data file: ',80A1/
+     &T25,' Source incident on plane ',F14.4,
+     & ' cm from the point of rotation'/
+     &T25,' Angle with respect to z-axis ',F14.4,' degrees.'/
+     &T25,' z-position of point of rotation ',f14.4,/
+     &T25,' X offset of phsp (before rotation)',F14.4,' cm'/
+     &T25,' Y offset of phsp (before rotation)',F14.4,' cm'/
+     &T25,' # of particles read from ph-sp file =', 1PE13.3,'.')
+679   FORMAT(T20,' Full treatment head simulation from an angle'/,
+     &T10,'    Particle charge                               : ',i3,/
+     &T10,'    Weight window                                 : ',
+     &2g15.6,/
+     &T10,'    BEAMnrc user code                             : ',a,/
+     &T10,'    PEGS data file                                : ',a,/
+     &T10,'    Input file                                    : ',a,/
+     &T10,'    Rotation point to phsp-plane midpoint distance: ',f10.4,/
+     &T10,'    Incident angle (degrees)                      : ',f10.4,/
+     &T10,'    Rotation point (will be set to chamber center'/,
+     &T10,'      if greater than 1e4 or less than -1e4):     : ',g14.4,
+     &' cm'/
+     &T10,'    X offset of phsp plane (before rotation)      : ',f10.4,
+     &' cm'/
+     &T10,'    Y offset of phsp plane (before rotation)      : ',f10.4,
+     &' cm'/
+     &T10,'    Max. kinetic energy of simulation             : ',f10.4,
+     &' MeV')
+%I4
+%M
+END;   "END OF SUBROUTINE SRCRZ"
+
+subroutine src15;
+
+implicit none;
+
+;COMIN/GEOM,IODAT2,RANDOM,SOURCE/;
+
+$REAL       temp1,temp2,temp3,temp4; "from input file"
+$REAL       XIN,YIN,ZIN,UIN,VIN,WIN,WEIGHT;
+$INTEGER    NRCFLG,IRIN,iout,error_flag;
+
+real*8      theta,cost,sint,d,d2,yo,zo,dz,R,R2,area,w0,pi,zc,ro2;
+real*8      fak,x1,y1,x2,y2,x3,y3,xmin,xmax,delx,ymin,ymax,dely;
+real*8      count,sumw,sumw2;
+logical     just_fb,just_side,enter_fb,enter_side;
+real*8      eta1,eta2,xx,yy,zz,dist2,dist,uli,vli,wli,
+            xli,yli,zli,rad2,ts,tf,ur2,ux,ux2,rr2,del,error;
+integer*4   ix,iz;
+
+save        cost,sint,d,d2,yo,zo,dz,R,R2,xmin,delx,ymin,dely,
+            zc,area,w0,count,sumw,sumw2,just_fb,just_side,pi,ro2;
+
+entry src15_ini(temp1,temp2,temp3,temp4,error_flag);
+"=================================================="
+
+pi = 4*datan(1d0);
+theta = temp2; IF( theta > 180 ) [ theta = 360 - theta; ]
+theta = theta*pi/180;
+cost = cos(theta); sint = sin(theta);
+d = temp1; d2 = d*d;
+yo = d*sint; zo = -d*cost;
+"write(35,*) ' Source position: ',yo,zo;"
+R = RCYL(NR); R2 = R*R;
+dz = 0.5*(ZPLANE(NPLANE)-ZPLANE(1)); zc = 0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+IF( yo > -R & yo < R & zo > -dz & zo < dz ) [ "inside geometry"
+    error_flag = 1;
+]
+just_fb = .false.; just_side = .false.;
+IF( yo => -R & yo <= R ) [ just_fb = .true.; ]
+IF( zo >= -dz & zo <= dz ) [ just_side = .true.; ]
+
+IF( just_fb ) [
+  IF( zo < -dz ) [
+    fak = 1./(1-(-R*sint + dz*cost)/d);
+    x1 = R*fak; y1 = (-R*cost-dz*sint)*fak;
+    fak = 1./(1-(R*sint + dz*cost)/d);
+    x2 = R*fak; y2 = (R*cost-dz*sint)*fak;
+  ]
+  ELSE [
+    fak = 1./(1-(-R*sint - dz*cost)/d);
+    x1 = R*fak; y1 = (-R*cost+dz*sint)*fak;
+    fak = 1./(1-(R*sint - dz*cost)/d);
+    x2 = R*fak; y2 = (R*cost+dz*sint)*fak;
+  ]
+  ymin = MIN(y1,y2); ymax = MAX(y1,y2);
+  xmax = MAX(x1,x2); xmin = -xmax;
+]
+ELSE IF( just_side ) [
+  fak = 1./(1-(R*sint + dz*cost)/d);
+  x1 = R*fak; y1 = (R*cost-dz*sint)*fak;
+  fak = 1./(1-(R*sint - dz*cost)/d);
+  x2 = R*fak; y2 = (R*cost+dz*sint)*fak;
+  ymin = MIN(y1,y2); ymax = MAX(y1,y2);
+  xmax = MAX(x1,x2); xmin = -xmax;
+]
+ELSE [
+  IF( zo < -dz ) [
+    fak = 1./(1-(-R*sint + dz*cost)/d);
+    x1 = R*fak; y1 = (-R*cost-dz*sint)*fak;
+  ]
+  ELSE [
+    fak = 1./(1-(-R*sint - dz*cost)/d);
+    x1 = R*fak; y1 = (-R*cost+dz*sint)*fak;
+  ]
+  fak = 1./(1-(R*sint + dz*cost)/d);
+  x2 = R*fak; y2 = (R*cost-dz*sint)*fak;
+  fak = 1./(1-(R*sint - dz*cost)/d);
+  x3 = R*fak; y3 = (R*cost+dz*sint)*fak;
+  xmax = max(x1,x2,x3); xmin = -xmax;
+  ymin = min(y1,y2,y3); ymax = max(y1,y2,y3);
+]
+delx = xmax - xmin; dely = ymax - ymin; area = delx*dely;
+w0 = area/d2; ro2 = yo*yo;
+OUTPUT IQIN,d,temp2,xmin,xmax,ymin,ymax;
+(/' Electric charge of the source:',T60,I12/
+  ' Point source off axis'/
+  ' Distance of source from centre of chamber: ',T60,f10.4,/
+  ' Angle to z-axis (degrees): ',T60,f10.4,/,
+  ' Rectangle in the plane perpendicular to the source-chamber'/
+  ' axis seen from the source: ',/,T40,4f10.4/);
+
+return;
+
+entry src15_oto(iout);
+ainflu = NCASET/d2;
+return;
+
+entry src15_describe(iout);
+write(iout,580) d,theta,yo,zo;
+580 format(' ',t20,'POINT SOURCE OFF AXIS',/,' ',t20,
+     'distance to chamber centre: ',f8.3,' cm',/,' ',t20,
+     'angle: ',f8.3,' degrees ',/,' ',t20,
+     'source position: y = ',f8.3,' z = ',f8.3);
+return;
+
+entry src15_hst(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+
+count = count + 1;
+$RANDOMSET eta1; $RANDOMSET eta2;
+xx = xmin + delx*eta1; yy = ymin + dely*eta2;
+"write(35,*) ' xx = ',xx,' yy = ',yy;"
+dist2 = d2 + xx*xx + yy*yy; dist = sqrt(dist2);
+w0 = d/dist;
+zz = yy*sint; yy = yy*cost;
+uli = xx/dist; vli = (yy-yo)/dist; wli = (zz-zo)/dist;
+"write(35,*) ' direction ',uli,vli,wli;"
+tf = 1e15; ts = 1e15; enter_fb = .false.; enter_side = .false.;
+IF( ~just_side ) [
+  IF( zo < -dz ) [ tf = (-dz-zo)/wli; ] ELSE [ tf = (dz - zo)/wli; ]
+  xli = uli*tf; yli = vli*tf + yo;
+  IF( xli*xli + yli*yli < R2 ) [ enter_fb = .true.; ]
+  ELSE [ tf = 1e15; ]
+]
+IF( ~just_fb ) [
+  ur2 = uli*uli + vli*vli; ux = -yo*vli/ur2; ux2 = ux*ux; rr2 = ro2/ur2;
+  del = ux2 - rr2 + R2/ur2;
+  IF( del >= 0 ) [
+    ts = ux - sqrt(del);
+    IF( ts > 0 ) [
+      zli = zo + wli*ts;
+      IF( zli >= -dz & zli <= dz ) [ enter_side = .true.; ]
+    ]
+    IF( ~enter_side ) [ ts = 1e15; ]
+  ]
+]
+"write(35,*) ' distances: ',tf,ts;"
+IF( ~enter_fb & ~enter_side ) [
+    weight = 0;
+    xin = 0; yin = 0; zin = zplane(1);
+    uin = 0; vin = 0; win = 1; irin = 2;
+    return;
+]
+uin = uli; vin = vli; win = wli; weight = w0*area/dist2;
+sumw = sumw + weight; sumw2 = sumw2 + weight*weight;
+IF( tf < ts ) [
+  xin = xli; yin = yli;
+  IF( zo < -dz ) [ zin = zplane(1); iz = 1; ]
+  ELSE [ zin = zplane(nplane); iz = nplane-1; ]
+  rad2 = xli*xli+yli*yli;
+  DO ix=1,nr [ IF( rad2 <= CYRAD2(IX) ) EXIT; ]
+]
+ELSE [
+  zin = zli + zc;
+  xin = ts*uli; yin = yo + vli*ts; ix = nr;
+  DO iz=1,nz [ IF( zin >= zplane(iz) & zin < zplane(iz+1) ) EXIT; ]
+]
+irin = 1 + (ix-1)*nz + iz;
+"write(35,*) ' entering at ',xin,yin,zin,irin;"
+
+return;
+
+entry src15_out(iout);
+
+sumw = sumw/count; sumw2 = sumw2/count;
+error = (sumw2 - sumw*sumw)/(count-1);
+IF( error > 0 ) [ error = sqrt(error); ]
+write(iout,600) sumw,sumw2;
+600 format(//'  Source 15: solid angle for detector: ',g14.5,' +/- ',g14.5,//);
+return;
+
+end;
+
+"======================================================================"
+ subroutine src16;
+"======================================================================"
+
+implicit none;
+
+;COMIN/GEOM,IODAT2,RANDOM,SOURCE/;
+
+$REAL       temp1,temp2,temp3,temp4; "from input file"
+$REAL       XIN,YIN,ZIN,UIN,VIN,WIN,WEIGHT;
+$INTEGER    NRCFLG,IRIN,iout,error_flag;
+
+real*8      pi,theta,cost,sint,d0,d02,R,R2,dz,dr,zc,u,aux,u2,
+            xo,yo,zo,a_side,a_fb,atot,wfb,dist,dist2,rs,
+            delxs,delys,rs2,rad2,eta,sumw,sumw2,count,zz;
+logical     point_source,do_fb,do_side,do_both,is_circle;
+integer*4   ix,iz;
+
+save        pi,cost,sint,d0,d02,R,R2,dz,dr,zc,theta,
+            xo,yo,zo,a_side,a_fb,atot,wfb,rs,delxs,delys,rs2,
+            sumw,sumw2,count,point_source,do_fb,do_side,is_circle;
+
+entry src16_ini(temp1,temp2,temp3,temp4,error_flag);
+"=================================================="
+
+pi = 4*datan(1d0); count = 0;
+theta = temp2; theta = theta*pi/180;
+cost = cos(theta); sint = sin(theta);
+d0 = temp1; d02 = d0*d0;
+R = RCYL(NR); R2 = R*R;
+dz = 0.5*(ZPLANE(NPLANE)-ZPLANE(1)); zc = 0.5*(ZPLANE(NPLANE)+ZPLANE(1));
+IF( temp3 <= 0 & temp4 <= 0 ) [
+    "We assume a point source (i.e. the same as source 12 and 15)"
+    point_source = .true.; zo = -d0*cost; yo = d0*sint; xo = 0;
+    do_fb = .false.; do_side = .false.; do_both = .false.;
+    a_side = 0; a_fb = 0;
+    IF( abs(yo) > R ) [
+        u = R/yo; aux = sqrt(1-u*u); dr = R*aux; do_side = .true.;
+        a_side = 4*dz*R*yo*(aux-u*atan(aux/u));
+    ]
+    IF( abs(zo) > dz ) [
+        a_fb = pi*R2*(abs(zo)-dz); do_fb = .true.;
+    ]
+    atot = a_fb + a_side;  wfb = a_fb/atot;
+    IF( do_side & do_fb ) [ do_both = .true.; ]
+]
+ELSE [
+    point_source = .false.; is_circle = .false.;
+    IF( temp4 <= 0 | temp3 <= 0 ) [
+        "We assume that the source is a circle with radius temp3"
+        IF( temp4 <= 0 ) [ rs = temp3; ] ELSE [ rs = temp4; ]
+        rs = temp3; rs2 = rs*rs; delxs = rs; delys = rs;
+        is_circle = .true.;
+    ]
+    ELSE [
+        "We assume that the source is a rectangle with half-widths"
+        "temp3 and temp4 (x and y in the plane perpendicular to the
+        "source center to chamber center axis)"
+        delxs = temp3; delys = temp4; rs2 = 1.1*(delxs*delxs+delys*delys);
+    ]
+]
+
+OUTPUT IQIN; (/' Electric charge of the source:',T60,I12);
+IF( point_source ) [
+    OUTPUT d0,temp2,wfb,1-wfb;
+    (' Point source off axis (source 16 implementation)'/
+     ' Distance of source from centre of chamber: ',T60,f10.4,/
+     ' Angle to z-axis (degrees): ',T60,f10.4,/,
+     ' Estimated probability to strike front/back face: ',T60,f12.6,/
+     ' Estimated probability to strike side face: ',T60,f12.6);
+]
+ELSE [
+    IF( is_circle ) [
+        OUTPUT d0,temp2,rs;
+        (' Disk irradiating the chamber (source 16 implementation)'/
+         ' Distance of source centre to chamber centre: ',T60,f10.4,/
+         ' Angle to z-axis (degrees): ',T60,f10.4,/,
+         ' Radius of the source: ',T60,f10.4);
+    ]
+    ELSE [
+        OUTPUT d0,temp2,delxs,delys;
+        (' Rectangle irradiating the chamber (source 16 implementation)'/
+         ' Distance of source centre to chamber centre: ',T60,f10.4,/
+         ' Angle to z-axis (degrees): ',T60,f10.4,/,
+         ' Rectangle half-sizes: ',T60,2f10.4);
+    ]
+]
+return;
+
+entry src16_oto(iout);
+"===================="
+ainflu = NCASET/d02;
+return;
+
+entry src16_describe(iout);
+"========================="
+
+IF( point_source ) [
+    write(iout,'(t20,a)') 'POINT SOURCE OFF AXIS (source 16)';
+]
+ELSE [
+    IF( is_circle ) [
+        write(iout,'(t20,a)') 'Radiating circle off axis (source 16)';
+        write(iout,'(t20,a,f10.4)') 'Source radius: ',rs;
+    ]
+    ELSE [
+        write(iout,'(t20,a)') 'Radiating rectangle off axis (source 16)';
+        write(iout,'(t20,a,2f10.4)') 'Source half-sizes: ',delxs,delys;
+    ]
+]
+write(iout,'(t20,a,f10.4)')
+  'Distance between source and chamber centres: ',d0;
+write(iout,'(t20,a,f10.4,a)')
+  'Angle to z-axis (degrees): ',theta*180/pi,' degrees';
+return;
+
+entry src16_hst(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+"=========================================================="
+
+count = count + 1;
+IF( ~point_source ) [
+    LOOP [
+        $RANDOMSET xo; xo = delxs*(2*xo-1);
+        $RANDOMSET yo; yo = delys*(2*yo-1);
+    ] UNTIL ( xo*xo + yo*yo < rs2 );
+    zo = yo*sint - d0*cost; yo = d0*sint + yo*cost;
+    yo = sqrt(yo*yo+xo*xo);
+    do_fb = .false.; do_side = .false.; do_both = .false.;
+    a_side = 0; a_fb = 0;
+    IF( abs(yo) > R ) [
+        u = R/yo; do_side = .true.;
+        IF( u < 0.1 ) [
+            u2 = u*u; aux = 1 - u2/2 - u2*u2/8;
+            a_side = 4*dz*R*yo*(aux-pi*u/2+u2+u2*u2/6);
+        ]
+        ELSE [
+            aux = sqrt(1-u*u);
+            a_side = 4*dz*R*yo*(aux-u*atan(aux/u));
+        ]
+        dr = R*aux;
+    ]
+    IF( abs(zo) > dz ) [
+        a_fb = pi*R2*(abs(zo)-dz); do_fb = .true.;
+    ]
+    atot = a_fb + a_side;
+    IF( do_side & do_fb ) [ wfb = a_fb/atot; do_both = .true.; ]
+]
+IF( do_both ) [
+    $RANDOMSET eta;
+    IF( eta < wfb ) [ do_fb = .true.; do_side = .false.; ]
+    ELSE            [ do_fb = .false.; do_side = .true.; ]
+]
+IF( do_fb ) [
+    LOOP [
+        $RANDOMSET xin; xin = R*(2*xin-1);
+        $RANDOMSET yin; yin = R*(2*yin-1);
+        rad2 = xin*xin + yin*yin;
+    ] UNTIL (rad2 <= R2 );
+    DO ix=1,nr [ IF( rad2 <= CYRAD2(ix) ) EXIT; ]
+    IF ( zo < -dz ) [ zin = -dz; iz = 1; ]
+    ELSE            [ zin =  dz; iz = nz; ]
+]
+ELSE [
+    $RANDOMSET zin; zin = dz*(2*zin-1);
+    LOOP [
+        $RANDOMSET xin;  $RANDOMSET eta;
+        xin = dr*(2*xin-1);
+        yin = sqrt(R2 - xin*xin);
+    ] UNTIL ( eta < (yo-R2/yin)/(yo-R) );
+    ix = nr;
+    zz = zin + zc;
+    DO iz=1,nz [ IF( zz >= zplane(iz) & zz < zplane(iz+1) ) EXIT; ]
+]
+uin = xin; vin = yin - yo; win = zin - zo;
+dist2 = uin*uin + vin*vin + win*win;
+dist = sqrt(dist2); uin = uin/dist; vin = vin/dist; win = win/dist;
+weight = atot/dist2/dist;
+sumw = sumw + weight; sumw2 = sumw2 + weight*weight;
+irin = 1 + (ix-1)*nz + iz; zin = zin + zc;
+return;
+
+end;
+
+$HAVE_LOAD_DSO(#);
+
+#ifndef HAVE_LOAD_DSO;
+
+subroutine init_beamsource(i_parallel,i_log,conf_name,
+                         hen_house,egs_home,the_beam_code,
+                         the_pegs_file,the_input_file);
+$INTEGER i_parallel;
+character*(*) conf_name;
+character*(*) hen_house,egs_home,the_beam_code,the_pegs_file,the_input_file;
+write(6,*) 'You need a working C compiler to use source 23!';
+$CALL_EXIT(1);
+end;
+
+subroutine sample_beamsource(ein,xin,yin,zin,uin,vin,win,weight,iqin,latchi,
+                             nhstry,iphatin);
+return; end;
+
+subroutine finish_beamsource;
+return; end;
+
+#endif;
+
+"Last line in srcrz.mortran "
+

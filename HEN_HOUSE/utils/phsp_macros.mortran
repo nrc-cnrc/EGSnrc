@@ -1,0 +1,1314 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros to read and write phase space files                          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          OMEGA collaboration                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developped at the      "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin.                         "
+"                                                                             "
+"  Joanne Treurniet of NRC made significant contributions to the code system, "
+"  in particular the GUIs and EGS_Windows. Mark Holmes, Brian Geiser and Paul "
+"  Reckwerdt of Wiscosin played important roles in the overall OMEGA project  "
+"  within which the BEAM code system was developed.                           "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Macros required to read from and write to phase space files. These macros  "
+"  replace the old calls to the subroutine rw_ph_sp.mortran and any           "
+"  manipulations of phase space files that were hard-coded. Currently, these  "
+"  macros are used by BEAM, DOSXYZ, BEAMDP, and readphsp. The beam            "
+"  configuration script looks for this file in the following directories, in  "
+"  this order                                                                 "
+"                                                                             "
+"  $HOME/egs4/BEAM_accelerator                                                "
+"  $HOME/egs4/beam                                                            "
+"  $OMEGA_HOME/beam                                                           "
+"                                                                             "
+"  All other configuration or compile scripts only use the version of this    "
+"  file in $OMEGA_HOME/beam. These macros can be used with any code provided  "
+"  that this file is concatenated before any codes that use the macros.       "
+"  Detailed description of what each macro does is provided at the top of     "
+"  the macro.                                                                 "
+"                                                                             "
+"#############################################################################"
+
+
+;
+REPLACE {;COMIN/RWPHSP/;} WITH {
+"RWPHSP must be included in the common block of main in any code that uses"
+"any of these phase space macros and also in the common block of"
+"any subroutine that uses any phase space macros.  Note that the macro"
+"$MAX_SC_PLANES(=the max. number of scoring planes) must have been defined"
+"somewhere in the code before the first use of COMIN/RWPHSP.  In the case of"
+"DOSXYZ, BEAMDP and readphsp, $MAX_SC_PLANES is a dummy value, set to 1,"
+"at the beginning of main.  Note that, since, IHSTRY_PHSP is a $LONG_INT"
+"variable, you must have the macro REPLACE {$LONG_INT} WITH {INTEGER*8} at"
+"the top of any code that uses these macros.  If your compiler has trouble"
+"with INTEGER*8, use INTEGER*4 in the $LONG_INT macro."
+
+;COMMON/RWPHSP/
+   STRING_TEMP_ZLAST_OUT,
+                 "holds output phsp data for up to 1000 particles, with ZLAST"
+   STRING_TEMP_OUT, "holds output phsp data for up to 1000 particles, no ZLAST"
+   IHSTRY_PHSP, "history number (from primary non-phase space source) of"
+                "particle being scored"
+   iaea_dummy_long, "used to store INTEGER*8 values temporarily"
+   NHSTRY_DOS, "passed to NHSTRY in beam when this actually comes from"
+               "dosxyznrc source 20"
+   ESHORT,    "single precision E read from/written to phsp"
+   WEIGHTTMP, "modified version of WT to be written to phsp"
+   WT_PHSP_SHORT, "single precision wt read from phsp"
+   X_PHSP_SHORT, "single precision x read from phsp"
+   Y_PHSP_SHORT, "single precision y read from phsp"
+   Z_PHSP_SHORT, "single precision Z--for iaea format only"
+   U_PHSP_SHORT, "single precision u read from phsp"
+   V_PHSP_SHORT, "single precision v read from phsp"
+   W_PHSP_SHORT, "single precision w--for iaea format only"
+   ZLAST_PHSP_SHORT, "single precision zlast read from phsp"
+   MUIDX_PHSP_SHORT, "MU_INDEX--iaea phsp files only"
+   EKMAX_PHSP_SHORT, "max ke of particles in phsp file"
+   EKMINE_PHSP_SHORT, "min ke of electrons in phsp file"
+   NINC_PHSP_SHORT, "no. of particles from original primary source"
+   dosxyz2beam_index, "stores MU index passed to beam from dosxyz"
+   iaea_extra_floats, "array of extra floats in IAEA phsp file"
+   NUM_PHSP_TOT, "tot no of particles in phsp file"
+   PHOT_PHSP_TOT,"no. of photons in phsp file"
+   iaea_result,  "<0 if an error finding an available array index for IAEA"
+                 "phsp file"
+   iaea_n_stat,  ">=1 if a new primary history is scoring, 0 otherwise"
+   iaea_q_typ,    "array to convert from charge to IAEA type"
+   iaea_typ_q,   "array to convert from IAEA type to charge"
+   iaea_q_index, "array index"
+   I_PHSP,    "loop counter"
+   IERR_PHSP, "=0 if open/read okay ~=0 if not okay"
+   LATCHTMP,  "modified version of LATCH to be written to phsp"
+   WRITE_PHSP_COUNTER, "counter up to 1000 used for group write"
+   WRITE_PHSP_SOFAR, "how many particles written so far to file"
+   PHSP_RESTART, "set to 1 if this is a restart"
+   PHSP_RECL, "the record length"
+   PHSP_RECL_OLD, "saves record length"
+   iaea_extra_ints, "array in which LATCH will be stored for iaea format"
+   iaea_extra_int_types,iaea_extra_float_types, "returns the types of"
+                    "extra int and float variables in an IAEA phsp file"
+   iaea_i_zlast,"index of iaea_extra_floats in which Zlast is stored for IAEA"
+           "phsp files read IN"
+   iaea_i_latch,"index of iaea_extra_int in which LATCH is stored for IAEA"
+           "phsp files read IN"
+   iaea_i_muidx,"index of iaea_extra_floats in which MU_INDEX is stored for"
+           "IAEA phsp files read IN"
+   iaea_n_extra_ints, "no. of extra ints stored in IAEA phsp file read IN"
+   iaea_n_extra_floats, "no. of extra floats stored in IAEA phsp file read IN"
+   i_iaea_open_for_write, "set to 1 if the macro IAEA_OPEN_FOR_WRITE"
+                          "was used"
+   iaea_i_zlast_out,"index of iaea_extra_floats in which Zlast is stored for"
+               " IAEA phsp written OUT by BEAMnrc or DOSXYZnrc"
+   iaea_i_latch_out,"index of iaea_extra_int in which LATCH is stored for IAEA"
+           "phsp written OUT by BEAMnrc or DOSXYZnrc"
+   iaea_i_muidx_out,"index of iaea_extra_floats in which MU_INDEX is stored"
+           " for IAEA phsp written OUT by BEAMnrc or DOSXYZnrc"
+   dosxyz2beam_izscore, "set to 1 if Z scored for each particle (IAEA only)"
+   MODE_RW;   "mode of phsp file (0 with ZLAST, 2 without), writing only"
+
+CHARACTER*32000 STRING_TEMP_ZLAST_OUT($MAX_SC_PLANES);
+CHARACTER*28000 STRING_TEMP_OUT($MAX_SC_PLANES);
+$LONG_INT IHSTRY_PHSP($MAX_SC_PLANES),iaea_dummy_long,NHSTRY_DOS;
+REAL*4 ESHORT,WEIGHTTMP,WT_PHSP_SHORT,X_PHSP_SHORT,Y_PHSP_SHORT,
+       Z_PHSP_SHORT,U_PHSP_SHORT, V_PHSP_SHORT,W_PHSP_SHORT,ZLAST_PHSP_SHORT,
+       MUIDX_PHSP_SHORT,
+       EKMAX_PHSP_SHORT,EKMINE_PHSP_SHORT,NINC_PHSP_SHORT,dosxyz2beam_index,
+       iaea_extra_floats(10);
+INTEGER NUM_PHSP_TOT,PHOT_PHSP_TOT,
+        iaea_result,iaea_n_stat,iaea_q_typ(3),iaea_typ_q(3),iaea_q_index,I_PHSP,
+        IERR_PHSP,LATCHTMP,
+        WRITE_PHSP_COUNTER($MAX_SC_PLANES),WRITE_PHSP_SOFAR($MAX_SC_PLANES),
+        PHSP_RESTART,PHSP_RECL,PHSP_RECL_OLD,iaea_extra_ints(10),
+        iaea_extra_int_types(10),iaea_extra_float_types(10),iaea_i_zlast,
+        iaea_i_latch,iaea_i_muidx,iaea_n_extra_ints,iaea_n_extra_floats,
+        i_iaea_open_for_write,iaea_i_zlast_out,iaea_i_latch_out,
+        iaea_i_muidx_out,dosxyz2beam_izscore;
+CHARACTER*5 MODE_RW;
+
+"variables below are not part of the common block but are used locally"
+"by the $WRITE_PHSP, $WRITE_PHSP_RECORD and $PHSP_BUFFER_FLUSH macros"
+
+INTEGER LATCH_TEMP_OUT,NUM_PHSP_TOFLUSH,TEMP_PHSP_COUNTER,REM_PHSP;
+REAL*4 REAL_TEMP_OUT(7);
+CHARACTER*32 REC_TEMP_OUT;
+
+}
+;
+
+REPLACE {$INITIALIZE_PHSP_VARIABLES;} WITH{;
+"Must be placed after the variable declarations in any subroutine"
+"where $WRITE_PHSP and/or $WRITE_PHSP_RECORD is used.  Note, though, that"
+"it does not necessarily have to be put at the top of main, unless one or"
+"both of these macros are used in main."
+"It equivalences the character string REC_TEMP_OUT with the phase space data"
+"for 1 particle. REC_TEMP_OUT is then used to fill the character array"
+"STRING_TEMP_(ZLAST_)OUT, which holds the phase space data in blocks of 1000"
+"particles before writing."
+
+EQUIVALENCE(REC_TEMP_OUT(1:4),LATCH_TEMP_OUT);
+EQUIVALENCE(REC_TEMP_OUT(5:8),REAL_TEMP_OUT(1));
+EQUIVALENCE(REC_TEMP_OUT(9:12),REAL_TEMP_OUT(2));
+EQUIVALENCE(REC_TEMP_OUT(13:16),REAL_TEMP_OUT(3));
+EQUIVALENCE(REC_TEMP_OUT(17:20),REAL_TEMP_OUT(4));
+EQUIVALENCE(REC_TEMP_OUT(21:24),REAL_TEMP_OUT(5));
+EQUIVALENCE(REC_TEMP_OUT(25:28),REAL_TEMP_OUT(6));
+EQUIVALENCE(REC_TEMP_OUT(29:32),REAL_TEMP_OUT(7));
+}
+;
+
+REPLACE {$INIT_PHSP_COUNTERS;} WITH {;
+"This macro initializes counters and flags that are used by the"
+"$WRITE_PHSP/$WRITE_PHSP_RECORD and $PHSP_BUFFER_FLUSH macros.  It is only"
+"used once and should be placed after the variable declarations in main."
+
+DO I_PHSP=1,$MAX_SC_PLANES[
+  WRITE_PHSP_COUNTER(I_PHSP)=0;
+  WRITE_PHSP_SOFAR(I_PHSP)=0;
+  IHSTRY_PHSP(I_PHSP)=0;
+]
+PHSP_RESTART=0;
+PHSP_RECL_OLD=0;
+
+iaea_q_typ(1)=2;iaea_q_typ(2)=1;iaea_q_typ(3)=3;
+iaea_typ_q(1)=0;iaea_typ_q(2)=-1;iaea_typ_q(3)=1;
+
+iaea_n_extra_ints=0;iaea_n_extra_floats=0;
+
+iaea_i_zlast=-99;iaea_i_latch=-99;iaea_i_muidx=-99;
+
+i_iaea_open_for_write=0;
+
+iaea_i_zlast_out=-99;iaea_i_latch_out=-99;iaea_i_muidx_out=-99;
+
+}
+;
+
+
+REPLACE {$GET_E_NPASS_IQ(#,#,#,#);} WITH {;
+"Macro gets NPASS, IQ from the LATCH value read in and then restores LATCH"
+"by clearing the bits that store this information.  It also puts the"
+"single precision energy, ESHORT, read in into double precision form."
+"This macro is called by $READ_PHSP."
+
+"Input parameters:"
+"{P1}=NPASS"
+"{P2}=IQ"
+"{P3}=LATCH"
+"{P4}=E"
+
+{P4}=ESHORT;
+
+IF($BTEST({P3},31)) [ {P1} = 1; {P3} = $IBCLR({P3},31); ]
+ELSE [ {P1} = 0; ]
+
+IF($BTEST({P3},30)) [
+    {P2} = -1;
+    {P3} = $IBCLR({P3},30); {P3} = $IBCLR({P3},29);
+]
+ELSE [
+       IF($BTEST({P3},29)) [
+          {P2} = 1; {P3} = $IBCLR({P3},29);
+       ]
+       ELSE [ {P2} = 0; ]
+]
+}
+;
+
+REPLACE {$GET_W_WT(#,#,#,#,#,#);} WITH {;
+"This macro calculates W, based on U and V and the sign of WT as read in from"
+"the phase space file.  Once the sign of WT is determined, WT is set equal"
+"to its absolute value, since there cannot be a negative particle weight."
+"This macro is called by $READ_PHSP."
+
+"Input parameters:"
+"{P1}=W"
+"{P2}=WT"
+"{P3}=X"
+"{P4}=Y"
+"{P5}=U"
+"{P6}=V"
+
+{P1} = min( 1., {P5}**2 + {P6}**2);
+{P1} = sqrt(1. - {P1});
+{P1} = SIGN({P1},{P2});  "This transfers sign of WT to W"
+
+{P2}=ABS({P2}); "WT is always positive"
+
+}
+;
+
+REPLACE {$PARSE_PHSP_RECORD(#,#,#,#);} WITH {;
+"macro used by READ_PHSP_RECORD to put single precision x, y, u, v"
+"read from phase space file into (potentially) double precision"
+"x, y, u, v passed to READ_PHSP_RECORD macro"
+
+"Input parameters:"
+"{P1}=X"
+"{P2}=Y"
+"{P3}=U"
+"{P4}=V"
+
+{P1}=X_PHSP_SHORT;
+{P2}=Y_PHSP_SHORT;
+{P3}=U_PHSP_SHORT;
+{P4}=V_PHSP_SHORT;
+}
+;
+
+REPLACE {$READ_PHSP_RECORD(#,#,#:#,#,#,#,#,#);} WITH {;
+"Note that a colon is required  ^  between the third and fourth"
+"input parameters."
+"This macro actually reads the phase space data for a single particle."
+"It is called by $READ_PHSP, but can also be used as a stand-alone macro."
+"If the energy, E, is < 0.0, then this is the first particle scored"
+"from a new primary (ie non-phsp source) history, and NHSTRY is incremented"
+"and E is set to ABS(E)."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number"
+"{P3}=record number"
+"{P4}=NHSTRY"
+"{P5}=ZLAST"
+"{P6}=LATCH"
+"{P7}=E"
+"{P8}=WT"
+"{P9}=X,Y,U,V"
+
+IF({P1}~=0)["must read in ZLAST"
+  READ({P2},REC={P3},IOSTAT=IERR_PHSP) {P6},ESHORT,X_PHSP_SHORT,Y_PHSP_SHORT,
+U_PHSP_SHORT,V_PHSP_SHORT,WT_PHSP_SHORT,ZLAST_PHSP_SHORT;
+]
+ELSE["no ZLAST"
+  READ({P2},REC={P3},IOSTAT=IERR_PHSP) {P6},ESHORT,X_PHSP_SHORT,Y_PHSP_SHORT,
+U_PHSP_SHORT,V_PHSP_SHORT,WT_PHSP_SHORT;
+]
+
+IF({P3}=76695869)[
+   write(*,*)' x,y,u,v,wt,eshort,latch',
+ X_PHSP_SHORT,Y_PHSP_SHORT,U_PHSP_SHORT,V_PHSP_SHORT,
+WT_PHSP_SHORT,ESHORT,{P6};
+]
+
+"first particle from new primary history"
+IF(ESHORT<0.0)[
+  {P4}={P4}+1;
+  ESHORT=ABS(ESHORT);
+]
+
+{P7}=ESHORT;
+{P8}=WT_PHSP_SHORT;
+$PARSE_PHSP_RECORD({P9});
+
+IF({P1}~=0) {P5}=ZLAST_PHSP_SHORT;
+
+}
+;
+
+REPLACE {$READ_PHSP_RECORD_ENEGATIVE(#,#,#:#,#,#,#,#);} WITH {;
+"Note that a colon is required            ^  between the third and fourth"
+"input parameters."
+"This macro is the similar to $READ_PHSP_RECORD above, but it preserves"
+"the -E marker in the phase space file and does not advance NHSTRY"
+"It is only used in readphsp before byte swapping"
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number"
+"{P3}=record number"
+"{P4}=ZLAST"
+"{P5}=LATCH"
+"{P6}=E"
+"{P7}=WT"
+"{P8}=X,Y,U,V"
+
+IF({P1}~=0)["must read in ZLAST"
+  READ({P2},REC={P3},IOSTAT=IERR_PHSP) {P5},{P6},{P8},{P7},{P4};
+]
+ELSE["no ZLAST"
+  READ({P2},REC={P3},IOSTAT=IERR_PHSP) {P5},{P6},{P8},{P7};
+]
+
+}
+;
+
+REPLACE {$READ_PHSP(#:#,#,#,#,#,#,#,#);} WITH {;
+"Note colon          ^  required between the first and second"
+"input parameters (third and fourth input variables)"
+
+"This macro reads the phase space data for a single particle.  It finds"
+"the value of IQ and NPASS from the LATCH variable read in and then"
+"restores the LATCH variable.  It calculates W from U, V and the sign"
+"of WT and then restores WT to its absolute value.  And it puts the"
+"single-precision energy, ESHORT, read in into double-precision format."
+"If ESHORT is < 0, it sets E=ABS(ESHORT) and increments NHSTRY, taking"
+"this as the first particle scored from a new primary history."
+
+"Input parameters:"
+"{P1}=IZLAST,unit number for phase space file,record number reading from"
+"{P2}=NHSTRY"
+"{P3}=NPASS"
+"{P4}=IQ"
+"{P5}=W"
+"{P6}=ZLAST"
+"{P7}=LATCH"
+"{P8}=E"
+"{P9}=WT,X,Y,U,V"
+
+$READ_PHSP_RECORD({P1}:{P2},{P6},{P7},{P8},{P9});
+
+IF(IERR_PHSP=0)[
+  $GET_E_NPASS_IQ({P3},{P4},{P7},{P8});
+  $GET_W_WT({P5},{P9});
+]
+
+}
+;
+
+REPLACE {$GET_LATCHTMP_ESHORT_WEIGHTTMP(#,#,#,#,#,#);} WITH {;
+"This macro converts LATCH into LATCHTMP, which stores NPASS and IQ"
+"for a particle and is the form of LATCH written to the phase space file."
+"It puts double precision energy, E, into single precision format, ESHORT,"
+"for writing to the phase space file.  This macro is called from $READ_PHSP"
+
+"Input parameters:"
+"{P1}=NPASS"
+"{P2}=IQ"
+"{P3}=W"
+"{P4}=LATCH"
+"{P5}=E"
+"{P6}=WT"
+
+LATCHTMP={P4};
+
+IF({P1} = 0) [ LATCHTMP = $IBCLR(LATCHTMP,31); ]
+ELSE [ LATCHTMP = $IBSET(LATCHTMP,31); ]
+
+IF({P2} = -1) [ LATCHTMP = $IBSET(LATCHTMP,30);]
+ELSEIF({P2} = 0) [
+     LATCHTMP = $IBCLR(LATCHTMP,30);
+     LATCHTMP = $IBCLR(LATCHTMP,29);
+]
+ELSE [
+     LATCHTMP = $IBCLR(LATCHTMP,30);
+     LATCHTMP = $IBSET(LATCHTMP,29);
+]
+
+ESHORT={P5};
+
+WEIGHTTMP=SIGN({P6},{P3});"transfer sign of W to WEIGHTTMP"
+
+}
+;
+
+REPLACE {$SET_NEGATIVE_E(#,#,#,#);} WITH {;
+"Macro to set E to -E if this is the first particle scored from a new"
+"primary (non-phsp source) history.  This macro is called from"
+"$WRITE_PHSP_RECORD."
+
+"Input parameters"
+"{P1}=phase space scoring plane no."
+"{P2}=IHSTRY"
+"{P3}=E"
+"{P4}=WT,X,Y,U,V"
+
+IF({P2}~=IHSTRY_PHSP({P1}))[
+  {P3}=-{P3};
+  IHSTRY_PHSP({P1})={P2};
+]
+
+}
+;
+
+REPLACE {$PARSE_TEMP_FOR_WRITE(#,#,#,#,#,#,#,#,#);} WITH {;
+"Macro to store the output phase space data for one particle in the"
+"variables LATCH_TEMP_OUT and REAL_TEMP_OUT.  These variables are"
+"equivalenced to the string variable REC_TEMP_OUT, which stores the"
+"phase space for one particle in string form and which, in turn, is"
+"used to transfer the data to the string variable STRING_TEMP(_ZLAST)_OUT"
+"which stores output phase space data for up to 1000 particles at a time."
+"This macro is called from $WRITE_PHSP_RECORD."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=ZLAST"
+"{P3}=LATCH"
+"{P4}=E"
+"{P5}=WT"
+"{P6}=X"
+"{P7}=Y"
+"{P8}=U"
+"{P9}=V"
+
+LATCH_TEMP_OUT={P3};
+REAL_TEMP_OUT(1)={P4};
+REAL_TEMP_OUT(2)={P6};
+REAL_TEMP_OUT(3)={P7};
+REAL_TEMP_OUT(4)={P8};
+REAL_TEMP_OUT(5)={P9};
+REAL_TEMP_OUT(6)={P5};
+IF({P1}~=0) REAL_TEMP_OUT(7)={P2};
+
+}
+;
+
+REPLACE {$WRITE_PHSP_RECORD(#,#,#,#,#:#,#,#,#);} WITH {;
+"Note that a colon is required       ^  between the fifth and sixth"
+"input parameters"
+
+"This macro is used to output phase space data 1000 particles at a time."
+"For every particle, the phase space data to be output is stored in"
+"the string variable STRING_TEMP(_ZLAST)_OUT.  If it is the 1000th particle"
+"STRING_TEMP(_ZLAST)_OUT is written to the phase space file.  The phase"
+"space header info is considered to occupy the space of 1 particle in the"
+"first block of 1000 particles, however, it will be overwritten with nulls."
+"This is fine since the header info should be recalculated and rewritten at"
+"the top of the file after all data has been written out anyway."
+"Also note that restarting with this writing scheme requires that any"
+"blocks of N (N<1000) particles at the end of a phase space file from"
+"the previous run must immediately be read into the first N spaces of"
+"STRING_TEMP(_ZLAST)_OUT before continuing on with outputting the data"
+"for new particles.  Finally, after all phase space data has been output,"
+"there will probably be info for M (M<1000) particles still in"
+"STRING_TEMP(_ZLAST)_OUT that has not been written to the phase space file"
+"because the write counter did not reach 1000.  These are output using"
+"the $PHSP_BUFFER_FLUSH macro described below."
+
+"Group writing reduces network traffic and saves a lot of time when the"
+"one of the main CPU-intensive activities is the writing of phase space data."
+"Group reading has also been considered, but preliminary studies have shown"
+"that it does not reduce CPU time significantly."
+
+"Using the macro $SET_NEGATIVE_E, $WRITE_PHSP_RECORD also takes care of setting"
+"E to -E if this is the first particle scored from a new primary"
+"(non-phsp source) history."
+
+"This macro is called by $WRITE_PHSP, but can also be used as a stand-"
+"alone macro.  However, use of $WRITE_PHSP_RECORD, will always require"
+"use of $PHSP_BUFFER_FLUSH (see below)."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number for phase space file"
+"{P3}=name of phase space file"
+"{P4}=record number writing to"
+"{P5}=scoring plane number"
+"{P6}=IHSTRY"
+"{P7}=ZLAST"
+"{P8}=LATCH"
+"{P9}=E,WT,X,Y,U,V"
+
+IF({P4}>2 & WRITE_PHSP_COUNTER({P5})=0 & WRITE_PHSP_SOFAR({P5})=0)[
+   "we have a restart or its the start of a new batch"
+   IF(({P4}-1)-1000*(({P4}-1)/1000)~=0)[
+   "make what was the buffer flush part of the first record of the restart"
+    CLOSE({P2});
+    IF({P1}~=0)["have ZLAST"
+      PHSP_RECL=$RECL-FACTOR*8;
+      OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+           FORM='UNFORMATTED',STATUS='UNKNOWN');
+      DO I_PHSP=1,({P4}-1)-1000*(({P4}-1)/1000)[
+         READ({P2},REC=1000*INT(dble({P4}-1)/1000)+I_PHSP)
+               STRING_TEMP_ZLAST_OUT({P5})(32*(I_PHSP-1)+1:32*I_PHSP);
+      ]
+      CLOSE({P2});
+      PHSP_RECL=$RECL-FACTOR*8000;
+      OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+           FORM='UNFORMATTED',STATUS='UNKNOWN');
+    ]
+    ELSE["no ZLAST"
+      PHSP_RECL=$RECL-FACTOR*7;
+      OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+           FORM='UNFORMATTED',STATUS='UNKNOWN');
+      DO I_PHSP=1,({P4}-1)-1000*(({P4}-1)/1000)[
+         READ({P2},REC=1000*INT(dble({P4}-1)/1000)+I_PHSP)
+               STRING_TEMP_OUT({P5})(28*(I_PHSP-1)+1:28*I_PHSP);
+      ]
+      CLOSE({P2});
+      PHSP_RECL=$RECL-FACTOR*7000;
+      OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+           FORM='UNFORMATTED',STATUS='UNKNOWN');
+    ]
+   ]
+   WRITE_PHSP_SOFAR({P5})=1000*INT(dble({P4}-1)/1000);
+   IF(WRITE_PHSP_SOFAR({P5})>0)[
+       PHSP_RESTART=1;
+       WRITE_PHSP_COUNTER({P5})=({P4}-1)-1000*(({P4}-1)/1000);
+   ]
+   ELSE[
+       WRITE_PHSP_COUNTER({P5})=({P4}-2)-1000*(({P4}-2)/1000);
+   ]
+]
+
+$SET_NEGATIVE_E({P5},{P6},{P9});
+
+$PARSE_TEMP_FOR_WRITE({P1},{P7},{P8},{P9});
+
+IF({P4}<=1000 & PHSP_RESTART=0)["do not use first 7/8 elements"
+   IF({P1}~=0)["have ZLAST"
+     STRING_TEMP_ZLAST_OUT({P5})(32*WRITE_PHSP_COUNTER({P5})+33:
+       32*WRITE_PHSP_COUNTER({P5})+64)=REC_TEMP_OUT(1:32);
+   ]
+   ELSE["no ZLAST"
+     STRING_TEMP_OUT({P5})(28*WRITE_PHSP_COUNTER({P5})+29:
+       28*WRITE_PHSP_COUNTER({P5})+56)=REC_TEMP_OUT(1:28);
+   ]
+]
+ELSE[
+   IF({P1}~=0)[
+     STRING_TEMP_ZLAST_OUT({P5})(32*WRITE_PHSP_COUNTER({P5})+1:
+       32*WRITE_PHSP_COUNTER({P5})+32)=REC_TEMP_OUT(1:32);
+   ]
+   ELSE["no ZLAST"
+     STRING_TEMP_OUT({P5})(28*WRITE_PHSP_COUNTER({P5})+1:
+       28*WRITE_PHSP_COUNTER({P5})+28)=REC_TEMP_OUT(1:28);
+   ]
+]
+
+WRITE_PHSP_COUNTER({P5})=WRITE_PHSP_COUNTER({P5})+1;
+
+IF({P4}=1000|WRITE_PHSP_COUNTER({P5})=1000)[
+   IF({P1}~=0 & PHSP_RECL=$RECL-FACTOR*8)[
+     CLOSE({P2});
+     PHSP_RECL_OLD=PHSP_RECL;
+     PHSP_RECL=$RECL-FACTOR*8000;
+     OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+          FORM='UNFORMATTED',STATUS='UNKNOWN');
+   ]
+   ELSEIF({P1}=0 & PHSP_RECL=$RECL-FACTOR*7)[
+     PHSP_RECL_OLD=PHSP_RECL;
+     CLOSE({P2});
+     PHSP_RECL=$RECL-FACTOR*7000;
+     OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+          FORM='UNFORMATTED',STATUS='UNKNOWN');
+   ]
+   IF({P1}~=0)[
+     WRITE({P2},REC=INT(dble({P4})/1000)) STRING_TEMP_ZLAST_OUT({P5});
+   ]
+   ELSE["no ZLAST"
+     WRITE({P2},REC=INT(dble({P4})/1000)) STRING_TEMP_OUT({P5});
+   ]
+   IF(PHSP_RECL_OLD~=0)[
+     "have to do this in case the output file=input file"
+     PHSP_RECL=PHSP_RECL_OLD;
+     CLOSE({P2});
+     OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+          FORM='UNFORMATTED',STATUS='UNKNOWN');
+   ]
+   WRITE_PHSP_COUNTER({P5})=0;
+   WRITE_PHSP_SOFAR({P5})=WRITE_PHSP_SOFAR({P5})+1000;
+]
+
+}
+;
+
+REPLACE {$PHSP_BUFFER_FLUSH(#,#,#,#,#);} WITH {;
+"This macro outputs the data for the M (M<1000) remaining particles still"
+"stored in STRING_TEMP(_ZLAST)_OUT after all calls to $WRITE_PHSP_RECORD."
+"The macro does not flush all of the data at once, but in blocks that"
+"divide exactly into the number of particles already in the phase space"
+"file.  For each block that is flushed, the phase space file is re-opened"
+"with a record length (RECL) equal to the size of the block.  Since RECL"
+"divides exactly into the number of particles already in the file, the"
+"block to be flushed can be appended onto the data that already exists in"
+"the file with no overwrites and/or blank space."
+"The other alternative was to flush STRING_TEMP(_ZLAST)_OUT one particle at"
+"a time, which is more time-consuming."
+"$PHSP_BUFFER_FLUSH must exist in a code that uses $WRITE_PHSP or"
+"$WRITE_PHSP_RECORD.  It should be placed on its own outside the loop in which"
+"phase space data is output.  In the case of BEAM, it is placed at the end"
+"of each batch, so that, if the simulation crashes, phase space information"
+"from the last batch is not lost."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number for phase space file"
+"{P3}=file name"
+"{P4}=particle number +1"
+"{P5}=scoring plane number"
+TEMP_PHSP_COUNTER=0;
+NUM_PHSP_TOFLUSH=WRITE_PHSP_COUNTER({P5});
+IF(NUM_PHSP_TOFLUSH>0)[
+  IF(WRITE_PHSP_SOFAR({P5})=0)[
+      WRITE_PHSP_COUNTER({P5})=WRITE_PHSP_COUNTER({P5})+1;
+      NUM_PHSP_TOFLUSH=NUM_PHSP_TOFLUSH+1; "account for header"
+  ]
+  LOOP[
+    TEMP_PHSP_COUNTER=NUM_PHSP_TOFLUSH+1;
+    LOOP[
+      TEMP_PHSP_COUNTER=TEMP_PHSP_COUNTER-1;
+      REM_PHSP=MOD(WRITE_PHSP_SOFAR({P5}),TEMP_PHSP_COUNTER);
+    ]UNTIL(REM_PHSP=0);
+    CLOSE({P2});
+    IF({P1}~=0)["write ZLAST"
+      PHSP_RECL=$RECL-FACTOR*8*TEMP_PHSP_COUNTER;
+      OPEN(UNIT={P2},FILE={P3},RECL=PHSP_RECL,
+           ACCESS='DIRECT',FORM='UNFORMATTED',STATUS='UNKNOWN');
+      WRITE({P2},REC=WRITE_PHSP_SOFAR({P5})/TEMP_PHSP_COUNTER+1)
+             STRING_TEMP_ZLAST_OUT({P5})
+    (32*(WRITE_PHSP_COUNTER({P5})-NUM_PHSP_TOFLUSH)+1:
+     32*(WRITE_PHSP_COUNTER({P5})-NUM_PHSP_TOFLUSH+TEMP_PHSP_COUNTER));
+    ]
+    ELSE["no ZLAST"
+      PHSP_RECL=$RECL-FACTOR*7*TEMP_PHSP_COUNTER;
+      OPEN(UNIT={P2},FILE={P3},RECL=PHSP_RECL,
+           ACCESS='DIRECT',FORM='UNFORMATTED',STATUS='UNKNOWN');
+      WRITE({P2},REC=WRITE_PHSP_SOFAR({P5})/TEMP_PHSP_COUNTER+1)
+             STRING_TEMP_OUT({P5})
+    (28*(WRITE_PHSP_COUNTER({P5})-NUM_PHSP_TOFLUSH)+1:
+     28*(WRITE_PHSP_COUNTER({P5})-NUM_PHSP_TOFLUSH+TEMP_PHSP_COUNTER));
+    ]
+    WRITE_PHSP_SOFAR({P5})=WRITE_PHSP_SOFAR({P5})+TEMP_PHSP_COUNTER;
+    NUM_PHSP_TOFLUSH=NUM_PHSP_TOFLUSH-TEMP_PHSP_COUNTER;
+ ] UNTIL(NUM_PHSP_TOFLUSH=0);
+ WRITE_PHSP_COUNTER({P5})=0;
+ WRITE_PHSP_SOFAR({P5})=0;
+]
+;
+}
+;
+
+REPLACE {$WRITE_PHSP(#:#,#,#,#,#,#,#:#);} WITH {;
+"Note that colons     ^             ^  are required between the first and"
+"second input parameters (5th and 6th input variables) and the"
+"8th and 9th input parameters (13th and 14th input variables)"
+
+"This outputs phase space data in blocks of 1000 particles at a time."
+"In preparation for output, LATCH is modified to hold NPASS and IQ,"
+"energy (E) is placed into a single precision variable, ESHORT, and"
+"weight (WT) is given the sign of W.  If this is the first particle"
+"scored from a new primary (non-phase space source) history, then"
+"ESHORT is set to -ESHORT and IHSTRY_PHSP is set to IHSTRY."
+
+"Input parameters:"
+"{P1}=IZLAST,unit number for phase space file,name of phase space file,"
+"     record number writing to, scoring plane number"
+"{P2}=IHSTRY"
+"{P3}=NPASS"
+"{P4}=IQ"
+"{P5}=W"
+"{P6}=ZLAST"
+"{P7}=LATCH"
+"{P8}=E,WT"
+"{P9}=X,Y,U,V"
+
+$GET_LATCHTMP_ESHORT_WEIGHTTMP({P3},{P4},{P5},{P7},{P8});
+
+$WRITE_PHSP_RECORD({P1}:{P2},{P6},LATCHTMP,ESHORT,WEIGHTTMP,{P9});
+
+}
+;
+
+REPLACE {$READ_PHSP_HEADER(#,#,#,#,#,#,#);} WITH {;
+"This macro reads the info from the header of a phase space file."
+"It is called from $OPEN_PHSP_FILE_FOR_WRITE, but can also be used"
+"as a stand-alone macro."
+
+"Input parameters:"
+"{P1}=unit number"
+"{P2}=MODE0 or MODE2"
+"{P3}=total number of particles"
+"{P4}=no. of photons"
+"{P5}=max k.e. of particles"
+"{P6}=min. k.e. of electrons"
+"{P7}=no. of particles incident from original source"
+
+READ({P1},REC=1,IOSTAT=IERR_PHSP){P2},NUM_PHSP_TOT,PHOT_PHSP_TOT,
+EKMAX_PHSP_SHORT,EKMINE_PHSP_SHORT,NINC_PHSP_SHORT;
+{P3}=NUM_PHSP_TOT;
+{P4}=PHOT_PHSP_TOT;
+{P5}=EKMAX_PHSP_SHORT;
+{P6}=EKMINE_PHSP_SHORT;
+{P7}=NINC_PHSP_SHORT;
+
+IF(IERR_PHSP~=0)[
+   OUTPUT;(//' ***ERROR READING HEADER OF PHASE SPACE FILE*** '//);
+   STOP;
+]
+}
+;
+
+REPLACE {$OPEN_PHSP_FOR_READ(#,#,#,#,#);} WITH {;
+"Macro to open a phase space file in preparation for reading it."
+"The macro opens the file in one of 3 modes, as a file that is known"
+"to have ZLAST (IZLAST>0), as a file that is known not to have ZLAST"
+"(IZLAST=0), or with no prior knowledge of whether the file has"
+"ZLAST or not (IZLAST<0)."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number"
+"{P3}=file name"
+"{P4}=MODE0 or MODE2"
+"{P5}=total number of particles, no. of photons, max k.e. of particles,"
+"      min. k.e. of electrons, no. of particles incident from original source"
+
+IF({P1}>0)["with ZLAST"
+   PHSP_RECL=$RECL-FACTOR*8;
+   OPEN(UNIT={P2},FILE={P3},FORM='UNFORMATTED',ACCESS='DIRECT',
+        RECL=PHSP_RECL,STATUS='OLD',IOSTAT=IERR_PHSP);
+   IF(IERR_PHSP~=0)[
+        "error above on file opening when assumed it was MODE2"
+         OUTPUT;(/' ***error opening file as MODE2 ****'
+        /' *** THE FILE FORMAT MAY BE WRONG (I.E., NOT A MODE2 FILE) ***'/
+        /' *** WE NOW TRY TO OPEN IT AS A MODE3 FILE ***'//);
+         OPEN(UNIT={P2},STATUS='OLD',FILE={P3},
+              FORM='UNFORMATTED', IOSTAT=IERR_PHSP);
+        "if on error, cannot find file/directory, then stop"
+        IF(IERR_PHSP~=0)[
+          ;OUTPUT;(//' *** PHASE SPACE FILE CANNOT BE FOUND. ***');
+          STOP;
+        ]
+        $READ_PHSP_HEADER({P2},{P4},{P5});
+        IF({P4} ~= 'MODE3')[
+          OUTPUT;(//' That file does not start with MODE3,',
+          ' as all old compressed files (with ZLAST) must'/
+          '  Check it out and try again!'///);
+          IERR_PHSP=1;
+          STOP;
+        ]
+        ELSE[
+          OUTPUT;(//' This is a MODE3 file! '/
+          ' Please convert it into a MODE2 file using [readphsp] ',
+          ' and try again!'///);
+           IERR_PHSP=1;
+           STOP;
+        ]
+   ]
+   $READ_PHSP_HEADER({P2},{P4},{P5});
+   IF({P4} ~= 'MODE2')[
+       OUTPUT;(//' That file does not start with MODE2,',
+          ' as standard compressed files with ZLAST must'/
+          '  Check it out and try again!'///);
+        IERR_PHSP=1;
+        STOP;
+   ]
+]
+ELSEIF({P1}=0)["without ZLAST"
+   PHSP_RECL=$RECL-FACTOR*7;
+   OPEN(UNIT={P2},FILE={P3},FORM='UNFORMATTED',ACCESS='DIRECT',
+        RECL=PHSP_RECL,STATUS='OLD',IOSTAT=IERR_PHSP);
+    "$RECL-FACTOR = 4 for SUN SPARC and =1 for SILICON GRAPHICS "
+    "this factor is machine-dependent and stored in machine.mortran"
+    "check file is MODE0 -ie standard compressed"
+   IF(IERR_PHSP~=0)[
+    "come here if error opening file assumed MODE0"
+      OUTPUT;(/' ***ERROR opening file as MODE0****'
+      /' *** THE FILE FORMAT MAY BE WRONG (I.E., NOT A MODE0 FILE) ***'/
+      /' *** WE NOW TRY TO OPEN IT AS A MODE1 FILE ***'//);
+      OPEN(UNIT={P2},STATUS='OLD',FILE={P3},
+       FORM='UNFORMATTED', IOSTAT=IERR_PHSP);
+      "if on error, cannot find file/directory, then stop"
+      IF(IERR_PHSP~=0)[
+        ;OUTPUT;(//' *** PHASE SPACE FILE CANNOT BE FOUND. ***');
+          STOP;
+      ]
+      $READ_PHSP_HEADER({P2},{P4},{P5});
+      IF({P4} ~= 'MODE1')[
+        OUTPUT;(//' That file does not start with MODE1,',
+        ' as all old compressed files must'/
+        '  Check it out and try again!'///);
+        IERR_PHSP=1;
+        STOP;
+      ]
+      ELSE[
+        OUTPUT;(//' This is a MODE1 file! '/
+       ' Please convert it into a MODE0 file using [readphsp] ',
+       'and try again!'///);
+         IERR_PHSP=1;
+         STOP;
+      ]
+   ]
+   $READ_PHSP_HEADER({P2},{P4},{P5});
+   IF({P4} ~= 'MODE0')[
+          OUTPUT;
+            (/' Does not start with MODE0 as files without ZLAST must'/
+          '  Try again!'//);
+          IERR_PHSP=1;
+          STOP;
+   ]
+]
+ELSEIF({P1}<0)["open with no assumptions about whether ZLAST is there or not"
+   OUTPUT;(/' First, try to open it as a MODE0 file');
+   PHSP_RECL=$RECL-FACTOR*7;
+   OPEN(UNIT={P2},FILE={P3},FORM='UNFORMATTED',ACCESS='DIRECT',
+        RECL=PHSP_RECL,STATUS='OLD',IOSTAT=IERR_PHSP);
+   IF(IERR_PHSP~=0)[
+     OUTPUT;(/' Now try to open it as a MODE2 file');
+     {P1}=1;
+     PHSP_RECL=$RECL-FACTOR*8;
+     OPEN(UNIT={P2},FILE={P3},FORM='UNFORMATTED',ACCESS='DIRECT',
+        RECL=PHSP_RECL,STATUS='OLD',IOSTAT=IERR_PHSP);
+     IF(IERR_PHSP~=0)[
+        ;OUTPUT;(//' *** PHASE SPACE FILE CANNOT BE FOUND. ***');
+     ]
+     ELSE[
+        $READ_PHSP_HEADER({P2},{P4},{P5});
+        IF({P4}~='MODE2')[
+            OUTPUT;(//' That file does not start with MODE2,',
+          ' as standard compressed files with ZLAST must'/
+          '  Check it out and try again!'///);
+          CLOSE({P2});
+          STOP;
+        ]
+     ]
+   ]
+   ELSE[
+     $READ_PHSP_HEADER({P2},{P4},{P5});
+     {P1}=0;
+     IF({P4}~='MODE0')[
+       OUTPUT;(/' The file does not start with MODE0 as it supposed to');
+       CLOSE({P2});
+       OUTPUT;(/' Now try to open it as a MODE2 file');
+       {P1}=1;
+       PHSP_RECL=$RECL-FACTOR*8;
+       OPEN(UNIT={P2},FILE={P3},FORM='UNFORMATTED',ACCESS='DIRECT',
+           RECL=PHSP_RECL,STATUS='OLD',IOSTAT=IERR_PHSP);
+       IF(IERR_PHSP~=0)[
+         ;OUTPUT;(//' *** PHASE SPACE FILE CANNOT BE OPENED. ***');
+       ]
+       ELSE[
+          $READ_PHSP_HEADER({P2},{P4},{P5});
+          IF({P4}~='MODE2')[
+              OUTPUT;(//' That file does not start with MODE2,',
+            ' as standard compressed files with ZLAST must'/
+            '  Check it out and try again!'///);
+            CLOSE({P2});
+            STOP;
+          ]
+       ]
+     ]
+   ]
+]
+}
+;
+
+REPLACE {$PARSE_PHSP_HEADER_FOR_WRITE(#,#,#,#,#);} WITH {;
+"Puts max ke of particles, min ke of electrons, and no. of particles"
+"incident from original source--all of which may be double precision"
+"into real*4 variables"
+"{P1}=tot. no. of particles"
+"{P2}=no. of photons"
+"{P3}=max ke of particles"
+"{P4}=min ke of electrons"
+"{P5}=no. of particles incident from primary source"
+IF({P1}>2147483647)[
+  write(*,*)' Warning while writing phase space file:';
+  write(*,*)' No. of particles > 2^31-1.';
+  write(*,*)' Total no. of particles (and photons) written';
+  write(*,*)' to header may be nonsense.';
+]
+NUM_PHSP_TOT={P1};
+PHOT_PHSP_TOT={P2};
+EKMAX_PHSP_SHORT={P3};
+EKMINE_PHSP_SHORT={P4};
+NINC_PHSP_SHORT={P5};
+}
+
+REPLACE {$WRITE_PHSP_HEADER(#,#,#,#,#);} WITH {;
+"Macro to write the header information into a phase space file."
+"Files must be closed and re-opened with record length (RECL) for"
+"a single particle in order to prevent over-writing any particle data."
+"Once the header info is written, the file is closed again and re-opened"
+"with the RECL for 1000 particles."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number"
+"{P3}=file name"
+"{P4}=MODE0 or MODE2"
+"{P5}=total number of particles, no. of photons, max k.e. of particles,"
+"      min. k.e. of electrons, no. of particles incident from original source"
+
+CLOSE({P2});
+IF({P1}~=0)["have ZLAST"
+  PHSP_RECL=$RECL-FACTOR*8;
+]
+ELSE["no ZLAST"
+  PHSP_RECL=$RECL-FACTOR*7;
+]
+OPEN(UNIT={P2},FILE={P3},RECL=PHSP_RECL,ACCESS='DIRECT',
+       FORM='UNFORMATTED',STATUS='UNKNOWN');
+$PARSE_PHSP_HEADER_FOR_WRITE({P5});
+WRITE({P2},REC=1){P4},NUM_PHSP_TOT,PHOT_PHSP_TOT,EKMAX_PHSP_SHORT,
+EKMINE_PHSP_SHORT,NINC_PHSP_SHORT;
+CLOSE({P2});
+IF({P1}~=0)["have ZLAST"
+  PHSP_RECL=$RECL-FACTOR*8000;
+]
+ELSE["no ZLAST"
+  PHSP_RECL=$RECL-FACTOR*7000;
+]
+OPEN(UNIT={P2},FILE={P3},RECL=PHSP_RECL,ACCESS='DIRECT',
+       FORM='UNFORMATTED',STATUS='UNKNOWN');
+}
+;
+
+
+REPLACE {$OPEN_PHSP_FOR_WRITE(#,#,#,#);} WITH {;
+"This macro opens a phase space file for writing.  The file is opened with"
+"a record length that will hold phase space data for 1000 particles in 1"
+"record.  This is to to enable writing phase space data for 1000 particles"
+"at a time (see the $WRITE_PHSP_RECORD macro above).  The macro also uses"
+"$WRITE_PHSP_HEADER to output a dummy header to the file."
+
+"Input parameters:"
+"{P1}=IZLAST"
+"{P2}=unit number"
+"{P3}=file name"
+"{P4}=MODE_RW"
+IF({P1}~=0)["with ZLAST"
+   {P4}='MODE2';
+   PHSP_RECL=$RECL-FACTOR*8000;
+]
+ELSE["no ZLAST"
+   {P4}='MODE0';
+   PHSP_RECL=$RECL-FACTOR*7000;
+]
+OPEN(UNIT={P2},FILE={P3},ACCESS='DIRECT',RECL=PHSP_RECL,
+        FORM='UNFORMATTED',STATUS='UNKNOWN');
+$WRITE_PHSP_HEADER({P1},{P2},{P3},{P4},0,0,0,0,0);
+}
+;
+
+REPLACE {$CLOSE_PHSP(#);} WITH {;
+"Macro to close a phase space file."
+
+"Input parameter:"
+"{P1}=the unit number of the phase space file"
+
+CLOSE(UNIT={P1});
+}
+;
+/*****************************************************************************
+ *
+ *  Empty replacement macros for reading/writing IAEA format phase space
+ *  files in case the IAEA C++ utility codes for handling phase space data
+ *  are unavailable.  Otherwise, these empty macros are superseded by those
+ *  in $HEN_HOUSE/utils/iaea_phsp_macros.mortran by including
+ *  $HEN_HOUSE/utils/iaea_phsp_macros.mortran AFTER
+ *  $HEN_HOUSE/utils/phsp_macros.mortran when building the code that is
+ *  to be Mortran compiled.
+ *
+ ****************************************************************************/
+
+REPLACE {$IAEA_OPEN_PHSP_FOR_WRITE(#,#,#,#,#,#,#);} WITH {;
+
+OUTPUT; (//' Sorry, this code has not been compiled with the IAEA phase'/
+           ' space handling macros.'//);
+}
+;
+
+REPLACE {$IAEA_OPEN_PHSP_FOR_READ(#,#);} WITH {;
+
+OUTPUT; (//' Sorry, this code has not been compiled with the IAEA phase'/
+           ' space handling macros.'//);
+}
+;
+REPLACE {$IAEA_WRITE_PHSP_RECORD(#,#,#,#,#,#,#,#);} WITH {;}
+
+REPLACE {$IAEA_READ_PHSP_HEADER(#,#,#,#,#,#,#,#,#);} WITH {;}
+
+REPLACE {$IAEA_SET_PHSP_RECORD(#,#);} WITH {;}
+
+REPLACE {$IAEA_READ_PHSP_RECORD(#,#,#,#,#,#,#);} WITH {;}
+
+REPLACE {$IAEA_DESTROY_PHSP_FILE(#);} WITH {;}
+
+REPLACE {$IAEA_SET_ORIGINAL_PARTICLES_IN_PHSP(#,#);} WITH {;}
+
+REPLACE {$IAEA_UPDATE_PHSP_HEADER(#);} WITH {;}
+
+REPLACE {$IAEA_CHECK_PHSP_SIZE_BYTE_ORDER(#);} WITH {;}
+
+
+/*****************************************************************************
+ *
+ *  Macros that combine phsp read/write macros and code around them
+ *  into simpler macros for use in BEAM.
+ *  The idea is that one could replace such macros with something else.
+ *
+ ****************************************************************************/
+
+REPLACE {$BEAM_OPEN_PHSP_FOR_WRITE;} WITH {;
+    IF(IOUTFLU(I)-43 > 9) [WRITE(AUNIT,'(I2)') IOUTFLU(I)-43;]
+    ELSE                  [WRITE(AUNIT,'(I1)') IOUTFLU(I)-43;]
+                          "AUNIT is a character variable"
+    "construct phase space file name."
+    "part of this--the part that determines the directory and"
+    "file prefix--is done in beam"
+    IF(IO_OPT=4)[
+       phsp_fn=$cstring(phsp_fn_base)// '.' //AUNIT//char(0);
+       Z_SCORE_SHORT=Z_min_CM(IPLANE_to_CM(I)+1);
+       $IAEA_OPEN_PHSP_FOR_WRITE(IOUTFLU(I),$cstring(phsp_fn),
+            IZLAST,0,Z_SCORE_SHORT,I_MU_PHSP,0);
+    ]
+    ELSE[
+       phsp_fn=$cstring(phsp_fn_base)// '.egsphsp'//AUNIT;
+       $OPEN_PHSP_FOR_WRITE(IZLAST,IOUTFLU(I),$cstring(phsp_fn),MODE_RW);
+    ]
+};
+
+REPLACE {$BEAM_OPEN_PHSP_FOR_READ;} WITH {;
+    OUTPUT;
+    (/' Restarting after previous run, will read old data & phase-space',
+      ' files');
+    DO I=1,NSC_PLANES [
+        OUTPUT IOUTFLU(I);(//' Checking ph-sp file on logical unit ',I4);
+        :OPEN_MODE0:;
+        IF(IOUTFLU(I)-43 > 9) [WRITE(AUNIT,'(I2)') IOUTFLU(I)-43;]
+        ELSE               [WRITE(AUNIT,'(I1)') IOUTFLU(I)-43;]
+        IF(IO_OPT=4)[
+          phsp_fn=$cstring(phsp_fn_base)// '.' //AUNIT//char(0);
+          Z_SCORE_SHORT=Z_min_CM(IPLANE_to_CM(I)+1);
+          $IAEA_OPEN_PHSP_FOR_WRITE(IOUTFLU(I),$cstring(phsp_fn),
+            IZLAST,1,Z_SCORE_SHORT,I_MU_PHSP,0);
+        ]
+        ELSE[
+          phsp_fn=$cstring(phsp_fn_base)// '.egsphsp'//AUNIT;
+
+          $OPEN_PHSP_FOR_READ(IZLAST,IOUTFLU(I),$cstring(phsp_fn),
+           MODE_RW,NPPHSPSP,NPHOTPHSP(I),EKMAXPHSP(I),EKMINPHSPE(I),NINCPHSP);
+
+           NPPHSP(I)=NPPHSPSP;
+        ]
+     ]
+};
+
+REPLACE {$BEAM_WRITE_PHSP;} WITH {;
+    IF(IOUTFLU(ISCORE)-43 > 9) [WRITE(AUNIT,'(I2)') IOUTFLU(ISCORE)-43;]
+    ELSE                       [WRITE(AUNIT,'(I1)') IOUTFLU(ISCORE)-43;]
+
+    "output directory and file prefix are defined in beam.mortran"
+
+    IF(IO_OPT=4)[
+      $IAEA_WRITE_PHSP_RECORD(IOUTFLU(ISCORE),NPASS(NP,ISCORE),
+                ISCORE,NHSTRY,LATCH(NP),IQ(NP),E(NP),WT(NP),
+                X(NP),Y(NP),Z(NP),U(NP),V(NP),W(NP),ZLAST(NP),
+                BEAM_MU_INDEX);
+    ]
+
+    ELSE[
+
+    IF( i_parallel > 0 ) ["add an _w"
+         phsp_fn=$cstring(phsp_fn)// '_w';
+         call egs_itostring(phsp_fn,i_parallel,.false.);
+    ]
+    phsp_fn=$cstring(phsp_fn)// '.egsphsp'//AUNIT;
+    $WRITE_PHSP(IZLAST,IOUTFLU(ISCORE),$cstring(phsp_fn),NPPHSP(ISCORE)+1,
+                ISCORE:NHSTRY,NPASS(NP,ISCORE),IQ(NP),W(NP),ZLAST(NP),
+                LATCH(NP),E(NP),WT(NP):X(NP),Y(NP),U(NP),V(NP));
+    ]
+    IF(IZLAST = 2)[
+         WRITE(IOUTGPH,:GRAPHICS_FORMAT2:) 0,0,0,0.0,0.0,0.0,0.0,JHSTRY;
+         JHSTRY=JHSTRY+1;
+         WRITE(IOUTGPH,:GRAPHICS_FORMAT2:) NP,IQ(NP),0,
+         XLAST(NP),YLAST(NP),ZLAST(NP),0;
+         :GRAPHICS_FORMAT2:FORMAT(3I4,4G15.8,I12);
+    ]
+   "Check only needed when actually writting to a phsp file"
+   IF(NPPHSP(ISCORE)=phsp_upper_limit)[
+        $egs_fatal('(//a,i19,4(a/))',
+            ' *** WHILE WRITING PHASE SPACE FILE:',
+            NPPHSP(ISCORE), ' particles in file.',
+            ' Due to the fact that the counter for the number',
+            ' of particles in the file cannot be larger than this,',
+            ' no more particles will be written to the phsp file.'
+        );
+    ]
+};
+
+REPLACE {$BEAM_PHSP_BUFFER_FLUSH;} WITH {;
+     IF(IO_OPT=4)["update no. of primary histories in header"
+       DO I1=1,NSC_PLANES[
+          NINCPHSP=NINCSRC*(IHSTRY+(NRCYCL+1)*(NPASS_ph_sp+NFAT_ph_sp))/NNPHSP;
+          $IAEA_SET_ORIGINAL_PARTICLES_IN_PHSP(IOUTFLU(I1),NINCPHSP);
+          $IAEA_UPDATE_PHSP_HEADER(IOUTFLU(I1));
+       ]
+     ]
+     ELSE["standard BEAMnrc format"
+     IF(MODE_RW='MODE0' | MODE_RW='MODE2')[
+        NINCPHSP=NINCSRC*(IHSTRY+(NRCYCL+1)*(NPASS_ph_sp+NFAT_ph_sp))/NNPHSP;
+        DO I1=1,NSC_PLANES[
+           NPPHSPSP=NPPHSP(I1);
+           IF(IOUTFLU(I1)-43 > 9) [WRITE(AUNIT,'(I2)') IOUTFLU(I1)-43;]
+           ELSE               [WRITE(AUNIT,'(I1)') IOUTFLU(I1)-43;]
+
+           "output directory and file prefix defined in beam.mortran"
+
+           phsp_fn=$cstring(phsp_fn_base)// '.egsphsp'//AUNIT;
+           $PHSP_BUFFER_FLUSH(IZLAST,IOUTFLU(I1),$cstring(phsp_fn),NPPHSPSP,I1);
+           IF(NPPHSPSP=NPHOTPHSP(I1))[
+                  "no electrons"
+              $WRITE_PHSP_HEADER(IZLAST,IOUTFLU(I1),$cstring(phsp_fn),
+                              MODE_RW,NPPHSPSP,NPHOTPHSP(I1),
+                              EKMAXPHSP(I1), 0.0, NINCPHSP);
+           ]
+           ELSE[
+              $WRITE_PHSP_HEADER(IZLAST,IOUTFLU(I1),$cstring(phsp_fn),
+                              MODE_RW,NPPHSPSP,NPHOTPHSP(I1),
+                              EKMAXPHSP(I1), EKMINPHSPE(I1), NINCPHSP);
+           ]
+        ]
+        "we store the total particle number in the 1st record of the ph-sp file"
+     ]
+     ]"end of standard BEAMnrc format"
+};
+
+REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
+    DO I=1,NSC_PLANES[
+       OUTPUT I,NPPHSP(I);
+       (//' PH-SP FILE',I4,': '/
+          '               TOTAL NO. OF PARTICLES =',I12);
+       IF(IO_OPT=0 | IO_OPT=3)["check to see that the user has not"
+                               "added phase space files before restarting"
+           IF(IO_OPT=4)[
+              $IAEA_READ_PHSP_HEADER(IOUTFLU(I),NPPHSP(I),NPHOTPHSP(I),
+               EKMAXPHSP(I),NINCPHSP,Z_SCORE,IZLAST1,I_MU_PHSP,IZSCORE);
+               EKMINPHSPE(I)=99999.; "info unavailable"
+              IF(IZLAST=0 & IZLAST1=1)[
+               OUTPUT;
+    (//' Error: Phase space file was scored with ZLAST in previous run '/
+       ' but you have restarted this run with IZLAST=0.  Restart with'/
+       ' IZLAST=1.'//);
+               STOP;
+              ]
+              ELSEIF(IZLAST=1 & IZLAST1=0)[
+              OUTPUT;
+    (//' Error: Phase space file was scored  without ZLAST in previous run '/
+       ' but you have restarted this run with IZLAST=1.  Restart with'/
+       ' IZLAST=0.'//);
+               STOP;
+              ]
+           ]
+           ELSE[
+              $READ_PHSP_HEADER(IOUTFLU(I),MODE_RW,NPPHSPSP,
+                        NPHOTPHSP(I),EKMAXPHSP(I),EKMINPHSPE(I),NINCPHSP);
+              NPPHSP(I)=NPPHSPSP;
+           ]
+           IF(NINCPHSP>
+            NINCSRC*(NCASEO+(NRCYCL+1)*(NPASS_ph_spO+NFAT_ph_spO))/NNPHSP)[
+                                        "files have been added"
+             OUTPUT I;(//' ***ERROR:'/
+' Phase space file',I4,' has been added to (using beamdp?) before restarting.'/
+' The code currently does not support this.  Please add phase space'/
+' files only after all runs, including restarts, are complete.'//);
+             "STOP;"
+           ]
+       ]
+       IF(NPPHSP(I) > 0)[
+           CALL DATETIME(1);
+           OUTPUT TIMEN;(/' READ PH-SP FILE AT ',$TIMEN_FORMAT);
+           "Read last particles to check whether it is right"
+           IF(IO_OPT=4)[
+              "just check that file size=checksum"
+              $IAEA_CHECK_PHSP_SIZE_BYTE_ORDER(IOUTFLU(I));
+           ]
+           ELSE[
+              $READ_PHSP_RECORD(IZLAST,IOUTFLU(I),NPPHSP(I)+1:
+              NHSTRYM,ZLAST(1),LATCHM,EINM,WTM,XINM,YINM,UINM,VINM);
+           "binary read"
+           OUTPUT NPPHSP(I),LATCHM,EINM,XINM,YINM,UINM,VINM,WTM;(//
+           ' (LATCHM,EINM,XINM,YINM,UINM,VINM,WTM) FOR PARTICLE No.',
+           I12,' IN THIS FILE:'/' ',I12,6F12.5);
+           "CALL TIME(TIMEN);"
+           "OUTPUT TIMEN;"
+           "(/' FINISHED READING PH-SP FILE AT ',$TIMEN_FORMAT);"
+           ]
+           OUTPUT; (/' FINISHED READING PH-SP FILE AT ',$);
+           call egs_time(6); OUTPUT; (' ');
+       ]
+    ]"end of loop over planes"
+};
+
+REPLACE {$DOSXYZ_OPEN_PHSP_FOR_WRITE;} WITH {;
+    "Added by T. popescu and J.Lobo to write phsps in dosxyz."
+    "only done for IAEAphsps."
+    "Some mods by BW."
+    IF(IRESTART=0) [
+     $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,$cstring(phsp_out_fn),
+            0,0,z_score_tmp,i_muidx_out,1);
+    ]
+    ELSEIF(IRESTART=1) [
+     $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,$cstring(phsp_out_fn),
+            0,1,z_score_tmp,i_muidx_out,1);
+    ]
+};
+
+REPLACE {$DOSXYZ_WRITE_PHSP;} WITH {;
+    "Added by T. popescu and J.Lobo to write phsps in dosxyz."
+    "only done for IAEAphsps"
+    $IAEA_WRITE_PHSP_RECORD(i_unit_out,0,
+                1,nhist,latch(np),iq(np),e(np),
+                wt(np), x(np),y(np),z(np),u(np),v(np),w(np),zlast_tmp,
+                frMU_indx); "added MU index (JL 2013)"
+                "zlast not used in dosxyz so this is a dummy variable"
+
+};
+
+REPLACE {$DOSXYZ_SET_OUT_PHSP_HEADER;} WITH {;
+    "Added by T. popescu and J.Lobo to write phsps in dosxyz."
+    "only done for IAEAphsps"
+    IF(isource = 0 |  isource = 1 | isource = 3 | isource = 7)[
+        ainflu=dble(IHSTRY+ncaseold-nsmiss-nmissm);
+    ]
+    ELSEIF(isource = 2 | isource = 8 )[
+        ainflu=dble(IHSTRY+ncaseold+nsmiss+
+         (NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct))/float(nshist)*NINCSRC;
+    ]
+    ELSEIF(isource=4)[
+        ainflu=dble(IHSTRY+ncaseold-nsmiss);
+    ]
+    ELSEIF(isource=6)[
+        ainflu=dble(IHSTRY+ncaseold);
+    ]
+    ELSEIF(isource=9|isource=10|isource=21)[
+        ainflu=dble(nhist);
+    ]
+    ELSEIF(isource=20)[
+        ainflu = dble((NRCYCL+1)*(nnread))/dble(nshist)*NINCSRC;
+    ]
+    $IAEA_SET_ORIGINAL_PARTICLES_IN_PHSP(i_unit_out,ainflu);
+    $IAEA_UPDATE_PHSP_HEADER(i_unit_out);
+
+};
+
+" The following are null macros that will be overwritten by the library "
+" version of BEAM "
+REPLACE {$DECLARE-PARTICLE-CONTAINER;} WITH {;};
+
+"End of phsp_macros.mortran (Rev 1.7)"

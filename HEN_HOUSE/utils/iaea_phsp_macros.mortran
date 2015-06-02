@@ -1,0 +1,423 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for IAEA phase space data format                             "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Blake Walters, 2007                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Macros for reading and writing phase space data in the official IAEA       "
+"  format.  See the online documentation at https://www-nds.iaea.org/phsp/    "
+"  for more about this format. These macros make use of the C++ IAEA phase    "
+"  space handling routines in directory $HEN_HOUSE/iaea_phsp/, which are      "
+"  provided for public use by the IAEA.                                       "
+"                                                                             "
+"  In order to use the routines, Fortran compilation must include the flags:  "
+"                                                                             "
+"  $HEN_HOUSE/iaea_phsp/iaea_header.cpp                                       "
+"  $HEN_HOUSE/iaea_phsp/iaea_phsp.cpp                                         "
+"  $HEN_HOUSE/iaea_phsp/iaea_record.cpp                                       "
+"  $HEN_HOUSE/iaea_phsp/utilities.cpp                                         "
+"  -lm -lstdc++                                                               "
+"                                                                             "
+"  In BEAMnrc, this is done by going into $HEN_HOUSE/specs/beamnrc.spec and   "
+"  setting `BEAM_OBJECTS =` the above flags.                                  "
+"                                                                             "
+"  These macros also make use of variables in COMIN/RWPHSP defined in         "
+"                                                                             "
+"  $HEN_HOUSE/utils/phsp_macros.mortran                                       "
+"                                                                             "
+"  hence they must be included in the mortjob.mortran file AFTER              "
+"                                                                             "
+"  $HEN_HOUSE/utils/phsp_macros.mortran                                       "
+"                                                                             "
+"  These macros are defined as null in phsp_macros.mortran in case the IAEA   "
+"  C++ routines are unavailable and cannot be included in the code.           "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$IAEA_OPEN_PHSP_FOR_WRITE(#,#,#,#,#,#,#);} WITH {;
+"Input parameters:"
+"{P1}=unit number"
+"{P2}=file name"
+"{P3}=IZLAST"
+"{P4}=IRESTART=0 for first run, 1 for restart"
+"{P5}=Z position of the scoring plane"
+"{P6}=IMUPHSP"
+"{P7}=IZSCORE, set to 1 to score Z for each particle"
+"note that if IRESTART=1, then nothing is done with {P3} and {P5}"
+
+call iaea_new_source({P1},{P2},{P4}+2,iaea_result);
+IF(iaea_result<0)[
+    WRITE(i_log,*)' Error opening IAEA phase space file for write.';
+    $CALL_EXIT(1);
+]
+i_iaea_open_for_write=1;
+IF({P4}=0)[
+  IF({P7}~=1) call iaea_set_constant_variable({P1},2,{P5});
+  IF({P3}~=0)[
+     IF({P6}~=0)[
+        call iaea_set_extra_numbers({P1},2,1);
+        "use generic user type for MU_INDEX"
+        call iaea_set_type_extrafloat_variable({P1},1,0);
+        iaea_i_muidx_out=2;
+     ]
+     ELSE [
+        call iaea_set_extra_numbers({P1},1,1);
+     ]
+     call iaea_set_type_extrafloat_variable({P1},0,3);
+     iaea_i_zlast_out=1;
+  ]
+  ELSEIF({P6}~=0)[
+     call iaea_set_extra_numbers({P1},1,1);
+     call iaea_set_type_extrafloat_variable({P1},0,0);
+     iaea_i_muidx_out=1;
+  ]
+  ELSE[
+     call iaea_set_extra_numbers({P1},0,1); "always store LATCH"
+  ]
+  call iaea_set_type_extralong_variable({P1},0,2);
+  iaea_i_latch_out=1;
+]
+}
+;
+
+REPLACE {$IAEA_OPEN_PHSP_FOR_READ(#,#);} WITH {;
+"Input parameters:"
+"{P1}=unit number"
+"{P2}=file name"
+
+call iaea_new_source({P1},{P2},1,iaea_result);
+IF(iaea_result<0)[
+       WRITE(i_log,*)' Error opening IAEA phase space source.';
+]
+
+}
+;
+
+REPLACE {$IAEA_PARSE_FOR_WRITE(#,#,#,#,#,#,#,#,#);} WITH {;
+"input parameters"
+"{P1}=WT"
+"{P2}=X"
+"{P3}=Y"
+"{P4}=Z"
+"{P5}=U"
+"{P6}=V"
+"{P7}=W"
+"{P8}=ZLAST"
+"{P9}=BEAM_MU_INDEX"
+
+WT_PHSP_SHORT={P1};
+X_PHSP_SHORT={P2};
+Y_PHSP_SHORT={P3};
+Z_PHSP_SHORT={P4};
+U_PHSP_SHORT={P5};
+V_PHSP_SHORT={P6};
+W_PHSP_SHORT={P7};
+ZLAST_PHSP_SHORT={P8};
+MUIDX_PHSP_SHORT={P9};
+}
+
+
+REPLACE {$IAEA_WRITE_PHSP_RECORD(#,#,#,#,#,#,#,#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+"{P2}=NPASS"
+"{P3}=scoring plane no."
+"{P4}=NHSTRY (primary history no.)"
+"{P5}=LATCH"
+"{P6}=IQ"
+"{P7}=E"
+"{P8}=WT,X,Y,Z,U,V,W,ZLAST,BEAM_MU_INDEX"
+
+IF({P2}=0)["do not output if NPASS=1"
+    ESHORT={P7}; "put energy into single precision"
+    "calculate increment in primary history no. between this particle"
+    "and last particle scored"
+    iaea_n_stat={P4}-IHSTRY_PHSP({P3});
+    IHSTRY_PHSP({P3})={P4}; "reset ihstry"
+    "JWU: IAEA phsp uses kinetic energy!"
+    IF( ({P6}=1) | ({P6}=-1) )[
+          ESHORT = ESHORT - 0.5110034;
+    ]
+    $IAEA_PARSE_FOR_WRITE({P8});
+    IF(i_iaea_open_for_write=1)[
+      iaea_extra_ints(iaea_i_latch_out)={P5};"store LATCH"
+  IF(iaea_i_zlast_out>0) iaea_extra_floats(iaea_i_zlast_out)=ZLAST_PHSP_SHORT;
+  IF(iaea_i_muidx_out>0) iaea_extra_floats(iaea_i_muidx_out)=MUIDX_PHSP_SHORT;
+    ]
+    ELSE[
+      "use same array indices as input IAEA phsp file"
+      "we only get here if the IAEA_OPEN_PHSP_FOR_WRITE macro"
+      "has not been used"
+      iaea_extra_ints(iaea_i_latch)={P5};"store LATCH"
+      IF(iaea_i_zlast>0) iaea_extra_floats(iaea_i_zlast)=ZLAST_PHSP_SHORT;
+      IF(iaea_i_muidx>0) iaea_extra_floats(iaea_i_muidx)=MUIDX_PHSP_SHORT;
+    ]
+    call iaea_write_particle({P1},iaea_n_stat,iaea_q_typ({P6}+2),ESHORT,
+        WT_PHSP_SHORT,X_PHSP_SHORT,Y_PHSP_SHORT,Z_PHSP_SHORT,U_PHSP_SHORT,
+        V_PHSP_SHORT,W_PHSP_SHORT,iaea_extra_floats,iaea_extra_ints);
+]
+}
+;
+
+REPLACE {$IAEA_READ_PHSP_HEADER(#,#,#,#,#,#,#,#,#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+"{P2}=total no. of particles"
+"{P3}=total no. of photons"
+"{P4}=max, K.E. of all particles"
+"{P5}=no of incident primary histories"
+"{P6}=Z of scoring plane"
+"{P7}=IZLAST"
+"{P8}=IMUPHSP"
+"{P9}=IZSCORE"
+
+call iaea_get_max_particles({P1},-1,iaea_dummy_long);
+{P2}=iaea_dummy_long;
+call iaea_get_max_particles({P1},1,iaea_dummy_long);
+{P3}=iaea_dummy_long;
+call iaea_get_total_original_particles({P1},iaea_dummy_long);
+{P5}=iaea_dummy_long;
+call iaea_get_maximum_energy({P1},EKMAX_PHSP_SHORT);
+{P4}=EKMAX_PHSP_SHORT;
+call iaea_get_constant_variable({P1},2,Z_PHSP_SHORT,iaea_result);
+IF(iaea_result=-3)[
+ write(i_log,*)
+    ' Z positions of each particle will be read from phase space data.';
+  {P6}=999.;
+  {P9}=1; "tell host code that Z is scored"
+]
+ELSEIF(iaea_result<0)[
+  write(i_log,*)' Error reading Z position where IAEA phsp was scored.';
+  {P9}=0;
+]
+ELSE[
+  {P6}=Z_PHSP_SHORT;
+  {P9}=0;
+]
+call iaea_get_extra_numbers({P1},iaea_n_extra_floats,iaea_n_extra_ints);
+IF(iaea_n_extra_floats = -1 | iaea_n_extra_ints = -1)[
+  write(i_log,*)' Error reading number of extra variables stored in IAEA phsp';
+]
+call iaea_get_type_extra_variables({P1},iaea_result,iaea_extra_int_types,
+   iaea_extra_float_types);
+IF(iaea_result=-1)[
+  write(i_log,*)' Error getting types of extra variables stored in IAEA phsp';
+]
+DO I_PHSP=1,iaea_n_extra_ints [
+  IF(iaea_extra_int_types(I_PHSP)=2)[
+    iaea_i_latch=I_PHSP;
+    EXIT;
+  ]
+]
+IF(iaea_i_latch=-99)[
+    write(i_log,*)' Warning: IAEA format phsp file does not store LATCH';
+]
+DO I_PHSP=1,iaea_n_extra_floats [
+  IF(iaea_extra_float_types(I_PHSP)=3)[
+    iaea_i_zlast=I_PHSP;
+    EXIT;
+  ]
+]
+IF(iaea_i_zlast=-99)[
+    {P7}=0; "no zlast"
+]
+ELSE[
+    {P7}=1;
+]
+"test to see if this file contains MU_INDEX"
+"we assume this is the first float after zlast, if zlast is scored,"
+"and has generic user type = 0"
+iaea_i_muidx=MAX(1,iaea_i_zlast+1);
+IF(iaea_n_extra_floats=0 | iaea_extra_float_types(iaea_i_muidx)~=0) [
+  iaea_i_muidx=-99;"reset this to no scoring"
+  {P8}=0;
+]
+ELSE[
+  {P8}=1;
+]
+;
+}
+;
+
+REPLACE {$IAEA_SET_PHSP_RECORD(#,#);} WITH {;
+"input parameters"
+"{P1}=unit no."
+"{P2}=record no. (particle no.) to go to"
+
+iaea_dummy_long={P2};
+call iaea_set_record({P1},iaea_dummy_long,iaea_result);
+IF(iaea_result<0)[
+    WRITE(i_log,*)' Error going to record ',{P2},' in IAEA phsp file.';
+    $CALL_EXIT(1);
+]
+}
+;
+
+REPLACE {$IAEA_PARSE_FOR_READ(#,#,#,#,#,#,#,#,#);} WITH {;
+"input parameters"
+"{P1}=WT"
+"{P2}=X"
+"{P3}=Y"
+"{P4}=Z"
+"{P5}=U"
+"{P6}=V"
+"{P7}=W"
+"{P8}=ZLAST"
+"{P9}=MU_INDEX"
+
+{P1}=WT_PHSP_SHORT;
+{P2}=X_PHSP_SHORT;
+{P3}=Y_PHSP_SHORT;
+{P4}=Z_PHSP_SHORT;
+{P5}=U_PHSP_SHORT;
+{P6}=V_PHSP_SHORT;
+{P7}=W_PHSP_SHORT;
+{P8}=ZLAST_PHSP_SHORT;
+{P9}=MUIDX_PHSP_SHORT;
+}
+
+REPLACE {$IAEA_READ_PHSP_RECORD(#,#,#,#,#,#,#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+"{P2}=NPASS"
+"{P3}=NHSTRY (no. of primary histories represented by particle read)"
+"{P4}=LATCH"
+"{P5}=IQ"
+"{P6}=E"
+"{P7}=WT,X,Y,Z,U,V,W,ZLAST,MU_INDEX"
+
+{P2}=0; "no multiple passers stored in IAEA format"
+
+call iaea_get_particle({P1},iaea_n_stat,iaea_q_index,ESHORT,WT_PHSP_SHORT,
+        X_PHSP_SHORT,Y_PHSP_SHORT,Z_PHSP_SHORT,U_PHSP_SHORT,
+        V_PHSP_SHORT,W_PHSP_SHORT,iaea_extra_floats,iaea_extra_ints);
+IF(iaea_n_stat=-1)[
+  WRITE(i_log,*)' Error getting particle data from IAEA phsp file.';
+  $CALL_EXIT(1);
+]
+ELSEIF(iaea_n_stat=-2)[
+  WRITE(i_log,*)' WARNING: Reached end of IAEA phsp file.  File restarted.';
+]
+ELSEIF(iaea_n_stat>=0)[
+  {P3}={P3}+iaea_n_stat;
+  IF(iaea_i_latch=-99)[
+    {P4}=0; "latch not stored here"
+  ]
+  ELSE [
+    {P4}=iaea_extra_ints(iaea_i_latch);
+  ]
+  {P5}=iaea_typ_q(iaea_q_index);
+  "JWU: IAEA phsp uses kinetic energy!"
+  IF( ({P5}=1) | ({P5}=-1) )[
+      ESHORT = ESHORT + 0.5110034;
+  ]
+  {P6}=ESHORT;
+  IF(iaea_i_zlast=-99)[
+    ZLAST_PHSP_SHORT=0; "no zlast stored"
+  ]
+  ELSE [
+    ZLAST_PHSP_SHORT= iaea_extra_floats(iaea_i_zlast);
+  ]
+  IF(iaea_i_muidx=-99)[
+    MUIDX_PHSP_SHORT=0; "no mu_index stored"
+  ]
+  ELSE [
+    MUIDX_PHSP_SHORT= iaea_extra_floats(iaea_i_muidx);
+  ]
+  $IAEA_PARSE_FOR_READ({P7});
+]
+}
+;
+REPLACE {$IAEA_DESTROY_PHSP_FILE(#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+
+call iaea_destroy_source({P1},iaea_result);
+
+IF(iaea_result<0)[
+  WRITE(i_log,*)' Error closing IAEA phase space ID ',{P1};
+]
+}
+;
+REPLACE {$IAEA_SET_ORIGINAL_PARTICLES_IN_PHSP(#,#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+"{P2}=no. of incident primary histories"
+
+iaea_dummy_long={P2};
+call iaea_set_total_original_particles({P1},iaea_dummy_long);
+}
+;
+
+REPLACE {$IAEA_UPDATE_PHSP_HEADER(#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+
+call iaea_update_header({P1},iaea_result);
+
+IF(iaea_result<0)[
+  WRITE(i_log,*)' Error writing IAEA phase space header for ID ',{P1};
+  $CALL_EXIT(1);
+]
+}
+;
+
+REPLACE {$IAEA_CHECK_PHSP_SIZE_BYTE_ORDER(#);} WITH {;
+"input parameters"
+"{P1}=unit number"
+
+call iaea_check_file_size_byte_order({P1},iaea_result);
+
+IF(iaea_result=-3)[
+  WRITE(i_log,*)' ERROR: Size of phase space file does not match';
+  WRITE(i_log,*)' the value of checksum in the header.  Something may be';
+  WRITE(i_log,*)' wrong.  Check your file.';
+  $CALL_EXIT(1);
+]
+ELSEIF(iaea_result=-4)[
+  WRITE(i_log,*)' ERROR: Byte order in the phase space file does not';
+  WRITE(i_log,*)' match the machine you are running on.';
+  $CALL_EXIT(1);
+]
+ELSEIF(iaea_result=-5)[
+  WRITE(i_log,*)' ERROR: Size of file does not match the value of checksum';
+  WRITE(i_log,*)' in the header AND there is a byte order mismatch between';
+  WRITE(i_log,*)' the file and the machine you are running on.';
+  $CALL_EXIT(1);
+]
+ELSEIF(iaea_result=-1)[
+  WRITE(i_log,*)' ERROR: Cannot open phase space header.';
+  $CALL_EXIT(1);
+]
+ELSEIF(iaea_result=-2)[
+  WRITE(i_log,*)' ERROR: Something is wrong with the phase space file.';
+  $CALL_EXIT(1);
+]
+}
+;

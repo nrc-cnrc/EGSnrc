@@ -1,0 +1,92 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros required by srcsph.mortran                                   "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Ernesto Mainegra-Hing, 2002                               "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Derived from srcrz.macros.                                                 "
+"                                                                             "
+"  These are macros used by srcsph.mortran which need to be defined before    "
+"  the user code because values are input to it.                              "
+"                                                                             "
+"  This code was stripped out of the user codes and out of srcsph.mortran,    "
+"  since having it defined twice could lead to errors.                        "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%I4
+%C80
+;
+REPLACE {;COMIN/SOURCE/;} WITH {
+"       ================="
+;
+COMMON/SOURCE/
+RCDFIN($MXRDIST,2),RDISTF(100),RPDF(100),RCDF(100),
+AINFLU,RBEAM,RBEAM2,ABEAM,UINC,VINC,WINC,DISTR,DISTR2,
+SVTMP1,SVTMP2,SVTMP3,SVTMP4,
+ISRCTY, NRDIST, IDSTON;
+
+DIMENSION SRCEQ(23),SRCPAR(23),SRCPT(23),ISRCEQ(2),ISRCPR(2),ISRCPT(2);
+
+$INTEGER ENFLAG,IMODE,NPHSPN,NCASE_PHSP,
+         NRDIST,NSRCRG,ISRPT,ISRPAR,NSHIST,NSLEFT,NPASS,NNREAD,
+         ISRCTY, IDSTON;
+
+$REAL    RCDFIN,RDISTF,RPDF,RCDF,AINFLU,RBEAM,RBEAM2,ABEAM,
+         UINC,VINC,WINC,DISTR,DISTR2,
+         SVTMP1,SVTMP2,SVTMP3,SVTMP4;
+
+$REAL    SRCEQ,SRCPAR,SRCPT;
+$INTEGER ISRCEQ,ISRCPR,ISRCPT;
+EQUIVALENCE (SRCEQ(1), AINFLU),(ISRCEQ(1),NRDIST);
+"Adapted type declarations from cavrznrc, EMH January 2002"
+}
+"COMMON USED FOR PASSING INFORMATION SPECIFIC TO SOURCES
+"RCDFIN   INVERSE OF THE RADIAL CUMULATIVE PROBABILITY FUNCTION (ISOURC=20)
+"RDISTF   RADIAL MESH POINTS FOR THE RADIAL PROBABILITY FUNCTION (ISOURC=20)
+"RPDF     RADIAL PROBABILITY FUNCTION (ISOURC=20)
+"RCDF     RADIAL CUMULATIVE PROBABILITY FUNCTION (ISOURC=20)
+"AINFLU   INCIDENT FLUENCE
+"RBEAM    RADIUS OF THE BEAM AT THE FRONT OF THE TARGET
+"RBEAM2   = RBEAM**2
+"ABEAM    AREA OF THE BEAM ON THE SURFACE
+"UINC     INCIDENT X-AXIS DIRECTION COSINE (ISOURC=0)
+"VINC     INCIDENT Y-AXIS DIRECTION COSINE (ISOURC=0)
+"WINC     INCIDENT Z-AXIS DIRECTION COSINE (ISOURC=0)
+"XBEAM    HALF-HEIGHT OF THE BEAM AT THE CENTER OF THE TARGET
+"ZBEAM    HALF-WIDTH OF THE BEAM AT THE CENTER OF THE TARGET
+"DISTR   DISTANCE OF THE SOURCE FROM THE MIDDLE OF THE TARGET
+"DISTR2   = DISTR**2
+"ISRCTY   = 0 => PARALLEL SOURCE (ISOURC=0,10)
+"         = 1 => POINT    SOURCE (ISOURC=1,11)
+"NRDIST   # RADIAL BINS IN DISTRIBUTION HISTOGRAM (ISOURC=10,11)
+"IDSTON   = 0 RADIAL DISTRIBUTION OFF, = 1 ON (ISOURC=10,11)
+"Last line in srcsph.macros "
+
+

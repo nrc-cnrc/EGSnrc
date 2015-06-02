@@ -1,0 +1,157 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc photon cross section scaling                                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Ernesto Mainegra-Hing, 2001                               "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Scale (increase or decrease) total photon cross section by DXSECT, in      "
+"  percents. Option introduced to asses the influence of uncertainties in     "
+"  photon cross section on the estimated quantities.                          "
+"                                                                             "
+"  First line of input file is      0 for no change                           "
+"                                 > 0 for constant change                     "
+"                                 < 0 for logarithmic change                  "
+                                                                              "
+"  DXSECT is the increase (if > 0) or decrease (if < 0) of the total photon   "
+"  cross section in percent. For now it should be placed in the first line of "
+"  the input file.                                                            "
+"                                                                             "
+"  $DECLARE-VARIABLE-TO-CHANGE-PHOTON-CROSS-SECTION must be placed in         "
+"  variable declaration block of routine where $CHANGE-PHOTON-CROSS-SECTION   "
+"  is used.                                                                   "
+"                                                                             "
+"  $CHANGE-PHOTON-CROSS-SECTION must be placed after call to HATCH            "
+"                                                                             "
+                                                                              "
+"  Ernesto Mainegra-Hing, 2002:                                               "
+"                                                                             "
+"  More flexibility introduced to allow for different cross section scaling   "
+"  factors in different media.                                                "
+"                                                                             "
+"  Set ICHGXSECT greater than 0 if you desire to change for any medium the    "
+"  photon cross section.                                                      "
+"                                                                             "
+"  Now DXSECT is read for each medium. Please make sure there are as many     "
+"  dxsect values as media in the input. Enter one per line.                   "
+"                                                                             "
+"  NOTE: make sure $MXMED is defined in your code!                            "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  WARNING: This work has not been fully checked and isn't finished           "
+"                                                                             "
+"#############################################################################"
+
+
+"Compiler directives"
+"==================="
+%Q1         "Automatically close comments at end of line
+            "but this DOES NOT apply withing macro definitions!!
+%C80        "Allow 80 columns of source/line (default is 72)
+%L          "Turn on listing
+
+
+REPLACE {$DECLARE-VARIABLE-TO-CHANGE-PHOTON-CROSS-SECTION;} WITH {
+  ;
+  $INTEGER ICHGXSECT;
+  $REAL GLEmax, GLEmin, GLEcur, DXSECT, Cnorm;
+};
+
+
+"constant cross section change"
+REPLACE {$CHANGE-PHOTON-CROSS-SECTION;} WITH {
+  ;
+  REWIND(5);
+  READ(5,'(I10)') ICHGXSECT;
+  IF( ICHGXSECT > 0 ) [
+    OUTPUT;
+    (//' *******************************************'/
+       ' **************  B E W A R E  **************'/
+       ' *** TOTAL PHOTON CROSS SECTION MODIFIED ***'/
+       ' *******************************************'/ );
+    WRITE(1,:xsec:);
+    :xsec: FORMAT(//' *******************************************'/
+       ' **************  B E W A R E  **************'/
+       ' *** TOTAL PHOTON CROSS SECTION MODIFIED ***'/
+       ' *******************************************'/ );
+
+    DO I=1,NMED [
+      READ(5,'(F12.1)') DXSECT;
+      IF ( DXSECT > 0.0 )[
+        OUTPUT (MEDIA(J,I),J=1,24);
+        (' Increase total photon cross section for medium ',24A1,' by ',$ );
+        OUTPUT ABS(DXSECT);(F5.1,' %');
+      ]
+      ELSE IF ( DXSECT < 0.0 )[
+        OUTPUT (MEDIA(J,I),J=1,24);
+        (' Decrease total photon cross section for medium ',24A1,' by ',$ );
+        OUTPUT ABS(DXSECT);(F5.1,' %');
+      ]
+      DO J=1,$MXGE [
+           GMFP0(J,I) = GMFP0(J,I)/( 1 + DXSECT/100.0);
+           GMFP1(J,I) = GMFP1(J,I)/( 1 + DXSECT/100.0);
+      ]
+    ]
+  ]
+};
+
+"log function"
+REPLACE {$CCCCCHANGE-PHOTON-CROSS-SECTION;} WITH {
+  ;
+  REWIND(5);
+  READ(5,'(F12.1)') ICHGXSECT;
+  IF( ICHGXSECT > 0 )
+  [
+
+   OUTPUT;
+    (//' *******************************************'/
+       ' **************  B E W A R E  **************'/
+       ' *** TOTAL PHOTON CROSS SECTION MODIFIED ***'/
+       ' *******************************************'/ );
+   OUTPUT;(' using factor = 1 + frac ln(E/Emax)/ln(Emin/Emax) '/
+                           ' Emin =  0.001 MeV'/
+                           ' Emax =  1.336 MeV');
+
+   GLEmin = ALOG(0.001);
+   GLEmax = ALOG(1.336);
+   DO I=1,NMED [
+     READ(5,'(F12.1)') DXSECT;
+     IF (DXSECT > 0.0 )
+         OUTPUT DXSECT,(MEDIA(J,I),J=1,24);
+         (' frac = ',F5.1,'% for medium ',24A1);
+     DO J=1,$MXGE [
+        GLEcur = ( J - GE0(I) )/GE1(I);
+
+        Cnorm  = 1 + DXSECT/100.* ( GLEcur - GLEmax )/ ( GLEmin - GLEmax );
+
+        GMFP0(J,I) = GMFP0(J,I)/Cnorm;
+        GMFP1(J,I) = GMFP1(J,I)/Cnorm;
+     ]
+   ]
+  ]
+
+}
+;

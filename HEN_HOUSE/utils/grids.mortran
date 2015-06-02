@@ -1,0 +1,663 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc generalized grid output of values                                   "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Aaron Merovitz, 1998                                      "
+"                   Dave Rogers, 1998                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+
+
+SUBROUTINE ZONEGRID(NRADIAL, NDEPTH, NRMIN, NZMIN, NZ, RESULTS, UNCRT,
+                    NCOMP, RADIAL_BINS, DEPTH_BINS, LABELS, EXPLANATIONS);
+"
+"      DESCRIPTION : Routine provides a generalized grid output of
+"          OF      : values.  The grid will be rotated if radnum>3
+"         THE      : and deepnum<=3. Also, if 10% of all the uncertainties
+"      SUBROUTINE  : are less than 0.3% (this is the value of the
+"                    parameter 'CUTOFF') an extra significant figure will
+"                    appear in the grid output.
+"
+"                      Ensure that the macro $MAXRZ has been declared.
+"                  \   One must add the macro '$MAXCMPTS'(usually=$MAXIT)
+"   FOR INSTALLING  \  to the program in which this subroutine is called.
+"       THIS         > Be careful that all arrays passed to the subroutine
+"    SUBROUTINE     /  (especially 'RESULTS()' and 'UNCRT()') have exactly
+"                  /   the same dimensions as used here.
+"
+"      Description of the arguments:
+"      NRADIAL     : number of radial results to display
+"      NDEPTH      : number of depth results to display
+"      NRMIN       : index of min radius of results zone
+"      NZMIN       : index of min Z plane of results zone
+"      NZ          : total number of slabs in the geometry
+"      RESULTS     : array of results
+"      UNCRT       : corresponding array of uncertainties(max at 99.9%)
+"      NCOMP       : number of components of the results
+"      RADIAL_BINS : array of outer boundaries of each radial bin(1st
+"                                                              radius=0)
+"      DEPTH_BINS  : array of depth boundaries (1st plane not always 0)
+"      LABELS      : array of length ncomp, the label for each component
+"      EXPLANATIONS: explanations for the labels
+"
+"***************************************************************************
+;IMPLICIT NONE;
+
+"This MACRO outputs a grid of values."
+"There is room for three sets of values(blocks or boxes) in"
+"80 columns(standard window size), so the grids each"
+"contain sets of three values, e.g. radii(if non-rotated)."
+REPLACE {$MKGRID;} WITH {
+;
+"Set up the formatting indicator FMT"
+IF (RADNUM-HSET>1) [FMT=3;]
+ELSE [IF (MOD(RADNUM,3) = 1) [FMT=1;]
+      IF (MOD(RADNUM,3) = 2) [FMT=2;]]
+"Horizontal axis indicators"
+WRITE (IOUT, 91) (RADIAL_BINS(IX), IX=HSET,HSET+FMT);
+PGTHROW=PGTHROW+1;
+DO IZ=1, DEEPNUM [
+   "This is for IRL, IZ and IX"
+   IF (ROT) [REGNUM= (IZ+NRMIN-1)*NZ + HSET+NZMIN;]
+   ELSE [REGNUM= (HSET+NRMIN-1)*NZ + IZ+NZMIN;]
+   IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(IZ);
+               IF (SFIG) [IF (ROT)[
+                            WRITE (IOUT, 15) REGNUM,HSET+NZMIN-1,IZ+NRMIN;]
+                          ELSE [WRITE (IOUT, 15) REGNUM,IZ+NZMIN-1,HSET+NRMIN;]
+               ]
+               ELSE [IF (ROT) [WRITE (IOUT, 18) REGNUM,HSET+NZMIN-1,IZ+NRMIN;]
+                     ELSE [WRITE (IOUT, 18) REGNUM,IZ+NZMIN-1,HSET+NRMIN;]
+               ]
+   ]
+   IF (FMT=2) [
+     WRITE (IOUT, 11) DEPTH_BINS(IZ);
+        IF (SFIG)[
+          IF (ROT) [WRITE(IOUT,14) REGNUM,HSET+NZMIN-1,IZ+NRMIN,
+                                   REGNUM+1,HSET+NZMIN,IZ+NRMIN; ]
+          ELSE [WRITE(IOUT,14) REGNUM,IZ+NZMIN-1,HSET+NRMIN,
+                               REGNUM+NZ,IZ+NZMIN-1,HSET+NRMIN+1;]
+        ]
+        ELSE [
+          IF (ROT) [WRITE(IOUT,17) REGNUM,HSET+NZMIN-1,IZ+NRMIN,
+                                   REGNUM+1,HSET+NZMIN, IZ+NRMIN;]
+          ELSE [WRITE(IOUT,17) REGNUM,IZ+NZMIN-1,HSET+NRMIN,
+                               REGNUM+NZ,IZ+NZMIN-1,HSET+NRMIN+1;]
+        ]
+   ]
+   IF (FMT=3) [
+     WRITE (IOUT, 12) DEPTH_BINS(IZ);
+       IF (SFIG) [
+         IF (ROT) [
+           WRITE (IOUT,13)REGNUM,HSET+NZMIN-1,IZ+NRMIN,
+                          REGNUM+1,HSET+NZMIN,IZ+NRMIN,
+                          REGNUM+2,HSET+NZMIN+1,IZ+NRMIN;
+         ]
+         ELSE [
+           WRITE (IOUT, 13) REGNUM,IZ+NZMIN-1,HSET+NRMIN,
+                            REGNUM+NZ,IZ+NZMIN-1,HSET+NRMIN+1,
+                            REGNUM+NZ*2,IZ+NZMIN-1,HSET+NRMIN+2;
+         ]
+       ]"end SFIG true block"
+       ELSE ["not SFIG"
+         IF (ROT) [
+           WRITE (IOUT,16)REGNUM,HSET+NZMIN-1,IZ+NRMIN,
+                          REGNUM+1,HSET+NZMIN,IZ+NRMIN,
+                          REGNUM+2,HSET+NZMIN+1,IZ+NRMIN;
+         ]
+         ELSE [
+           WRITE (IOUT, 16)REGNUM,IZ+NZMIN-1,HSET+NRMIN,
+                           REGNUM+NZ,IZ+NZMIN-1,HSET+NRMIN+1,
+                           REGNUM+NZ*2,IZ+NZMIN-1,HSET+NRMIN+2;
+
+         ]
+       ]
+   ]"end FMT=3 block"
+   PGTHROW=PGTHROW+2;
+   "Main part of the grid"
+   DO ICOMP=1, NCOMP [
+     IF (SFIG) [
+        IF (FMT=3) [
+           WRITE(IOUT, 3) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP),LABELS(ICOMP),
+                          RESULTS(IZ,HSET+1,ICOMP),UNCRT(IZ,HSET+1,ICOMP),
+                          LABELS(ICOMP),RESULTS(IZ,HSET+2,ICOMP),
+                          UNCRT(IZ,HSET+2,ICOMP);
+        ]
+        IF (FMT=2) [
+           WRITE(IOUT, 2) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP),LABELS(ICOMP),
+                          RESULTS(IZ,HSET+1,ICOMP),UNCRT(IZ,HSET+1,ICOMP);
+        ]
+        IF (FMT=1) [
+           WRITE(IOUT, 1) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP);
+        ]
+     ] "end IF (SFIG)"
+     ELSE [
+        IF (FMT=3) [
+           WRITE(IOUT, 6) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP),LABELS(ICOMP),
+                          RESULTS(IZ,HSET+1,ICOMP),UNCRT(IZ,HSET+1,ICOMP),
+                          LABELS(ICOMP),RESULTS(IZ,HSET+2,ICOMP),
+                          UNCRT(IZ,HSET+2,ICOMP);
+        ]
+        IF (FMT=2) [
+           WRITE(IOUT, 5) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP),LABELS(ICOMP),
+                          RESULTS(IZ,HSET+1,ICOMP),UNCRT(IZ,HSET+1,ICOMP);
+        ]
+        IF (FMT=1) [
+           WRITE(IOUT, 4) LABELS(ICOMP),RESULTS(IZ,HSET,ICOMP),
+                          UNCRT(IZ,HSET,ICOMP);
+        ]
+     ] "end ELSE (SFIG)"
+   PGTHROW=PGTHROW+1;
+   ] "end DO ICOMP"
+   "This piece of code surveys PGTHROW, and throws the page when"
+   "PGTHROW is near 65 lines."
+   IF (MOD(PGTHROW,65)>(61-NCOMP)) [
+      "This is for the last vertical bin"
+      IF (IZ~=DEEPNUM) [ "only for grid cut by PGTHROW"
+          IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(IZ+1);]
+          IF (FMT=2) [WRITE (IOUT, 11) DEPTH_BINS(IZ+1);]
+          IF (FMT=3) [WRITE (IOUT, 12) DEPTH_BINS(IZ+1);]
+      "Start a new page"
+      WRITE (IOUT, *) '\f'; "page break"
+      PGTHROW=10;
+      WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+      IF (ROT) [WRITE(IOUT, 93) TITLE;]
+      ELSE [WRITE(IOUT, 94) TITLE;]
+      WRITE (IOUT, 91) (RADIAL_BINS(IX), IX=HSET,HSET+FMT);]
+      "The following statement delays the page throw until the "
+      "last line of the grid can be printed"
+      ELSE [ DLYPT = HSET;]
+   ] "end IF mod(pgthrow)"
+] "end DO IZ"
+"This is for the last vertical bin"
+IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(DEEPNUM+1);]
+IF (FMT=2) [WRITE (IOUT, 11) DEPTH_BINS(DEEPNUM+1);]
+IF (FMT=3) [WRITE (IOUT, 12) DEPTH_BINS(DEEPNUM+1);]
+
+"For the delayed page throw"
+IF ((DLYPT=HSET)&(RADNUM-HSET>2)) [
+    "Start a new page"
+    WRITE (IOUT, *) '\f'; "page break"
+    PGTHROW=10;
+    WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+    IF (ROT) [WRITE(IOUT, 93) TITLE;]
+    ELSE [WRITE(IOUT, 94) TITLE;]
+]
+PGTHROW=PGTHROW+1;
+}
+
+;COMIN/IODAT1/; "COMMON BLOCK is for TITLE, TIMEN and DATEN"
+$INTEGER RADNUM, DEEPNUM, NRADIAL, NDEPTH, NCOMP, REGNUM, FMT, TMP1;
+$LOGICAL SFIG; "controls significant figures on UNCRT()"
+               "true => use 1 significant figure"
+               "false => use 2 significant figures"
+$LOGICAL ROT;  "for rotation of the grid"
+PARAMETER CUTOFF=0.3; "changes SFIG if 10% of uncertainties are less"
+                      "than 0.2%"
+$REAL RESULTS($MAXZREG,$MAXRADII,$MAXCMPTS),
+     UNCRT($MAXZREG,$MAXRADII,$MAXCMPTS),
+     RADIAL_BINS($MAXRZ),DEPTH_BINS($MAXRZ),
+     TMP2,TMP3;
+CHARACTER*60 EXPLANATIONS($MAXCMPTS);
+CHARACTER*4 LABELS($MAXCMPTS);
+$INTEGER IOUT, ICOMP, IX, IZ, HSET, PGTHROW, DLYPT, COUNT,NZMIN,NRMIN,NZ;
+ROT=.FALSE.; "For a rotated grid (.FALSE. = off)"
+SFIG=.TRUE.;   "Default sig. fig. option off"
+IF(NCOMP>4)[PGTHROW=20;]
+ELSE[PGTHROW=17;]
+"For printing: throw page at 66 lines(16 1st for title)"
+IOUT=1; "Designates output to file fort.1, the *.egs4lst file"
+"Change variable names so any changes are not passed back to MAIN prog"
+RADNUM=NRADIAL;DEEPNUM=NDEPTH;
+COUNT = 0;
+DO IX=1, RADNUM [   "Check for needed precision of uncertainties"
+   DO IZ=1, DEEPNUM [
+      DO ICOMP=1,NCOMP [
+         IF (UNCRT(IZ, IX, ICOMP) < CUTOFF) [COUNT = COUNT + 1;]
+      ]
+   ]
+]
+"IF better precision in UNCRT() is needed, change the grid format."
+IF (COUNT/(RADNUM*DEEPNUM*NCOMP) > 0.1) [SFIG=.FALSE.;]
+"Check for rotation of the grid"
+IF ((DEEPNUM<=3)&(RADNUM>3))[
+   ROT=.TRUE.;
+   DO IX=1, RADNUM [
+      IF(IX <= DEEPNUM+1) [
+          TMP3=RADIAL_BINS(IX);
+          RADIAL_BINS(IX)=DEPTH_BINS(IX);
+          DEPTH_BINS(IX)=TMP3;
+      ]
+      ELSE[
+          DEPTH_BINS(IX)=RADIAL_BINS(IX);
+      ]
+      IF(IX <= DEEPNUM)[
+         DO IZ=IX+1,DEEPNUM[
+           DO ICOMP=1,NCOMP[
+             TMP2=RESULTS(IZ,IX,ICOMP);
+             RESULTS(IZ,IX,ICOMP)=RESULTS(IX,IZ,ICOMP);
+             RESULTS(IX,IZ,ICOMP)=TMP2;
+             TMP2=UNCRT(IZ,IX,ICOMP);
+             UNCRT(IZ,IX,ICOMP)=UNCRT(IX,IZ,ICOMP);
+             UNCRT(IX,IZ,ICOMP)=TMP2;
+           ]
+         ]
+      ]
+      ELSE[
+         DO IZ=1,DEEPNUM[
+           DO ICOMP=1,NCOMP[
+             RESULTS(IX,IZ,ICOMP)=RESULTS(IZ,IX,ICOMP);
+             UNCRT(IX,IZ,ICOMP)=UNCRT(IZ,IX,ICOMP);
+           ]
+         ]
+      ]
+   ] "end DO IX"
+   DEPTH_BINS(RADNUM+1)=RADIAL_BINS(RADNUM+1);
+   TMP1=RADNUM;RADNUM=DEEPNUM;DEEPNUM=TMP1;
+] "end check for rotation"
+WRITE (IOUT, *) '\f'; "Page break"
+WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+IF (ROT) [WRITE(IOUT, 93) TITLE;]
+ELSE [WRITE(IOUT, 94) TITLE;]
+DO ICOMP=1, NCOMP [WRITE(IOUT, 95) LABELS(ICOMP), EXPLANATIONS(ICOMP);]
+"Make the grids"
+DO HSET=1,RADNUM,3 [$MKGRID;] "Feed in horiz. sets of three"
+"FORMATS"
+1        FORMAT (T11, '|',
+                 A4, 1PE10.3, '+-', 0PF4.1, '%',  '|');
+2        FORMAT (T11, '|',
+                 1 (A4, 1PE10.3, '+-', 0PF4.1, '%',  ' |'),
+                 A4, 1PE10.3, '+-', 0PF4.1, '%',  '|');
+3        FORMAT (T11, '|',
+                 2 (A4, 1PE10.3, '+-', 0PF4.1, '%',  ' |'),
+                 A4, 1PE10.3, '+-', 0PF4.1, '%',  '|');
+4        FORMAT (T11, '|',
+                 A4, 1PE10.3, '+-', 0PF5.2, '%',  '|');
+5        FORMAT (T11, '|',
+                 1 (A4, 1PE10.3, '+-', 0PF5.2, '%',  ' |'),
+                 A4, 1PE10.3, '+-', 0PF5.2, '%',  '|');
+6        FORMAT (T10, '|',
+                 2 (A4, 1PE10.3, '+-', 0PF5.2, '%',  '|'),
+                 A4, 1PE10.3, '+-', 0PF5.2, '%',  '|');
+10       FORMAT (1X, F9.4, T11, 1 (23 ('-')));
+11       FORMAT (1X, F9.4, T11, 2 (23 ('-')));
+12       FORMAT (1X, F9.4, T11, 3 (23 ('-')));
+13       FORMAT (T11, '|',
+                 2 ('IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |'),
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,'|');
+14       FORMAT (T11, '|',
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |',
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,'|');
+15       FORMAT (T11, '|',
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,'|');
+16       FORMAT (T10, '|',
+                 2 ('IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |'),
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |');
+17       FORMAT (T11, '|',
+                 1 ('IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,'  |'),
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |');
+18       FORMAT (T11, '|',
+                 'IRL',I3,1X,'IZ ',I3,1X,'IX ',I3,1X,' |');
+91       FORMAT (/ T7,F9.4,T30,F9.4,T53,F9.4,T70,F9.4);
+93       FORMAT (' ',79A1 //
+                 T19, 27H ZONAL OUTPUT GRID: ROTATED /
+                 T20, '**************************');
+94       FORMAT (' ',79A1 //
+                 T19, 31H ZONAL OUTPUT GRID: NON-ROTATED /
+                 T20, '******************************');
+95       FORMAT (T14, A4, T19, A60);
+400      FORMAT (T54,a1,$);
+
+RETURN;
+END;
+
+"***************************************************************************
+"
+"       VERSION 1          MATERIALGRID.MORTRAN           VERSION 1
+"             \             ==================                 /
+"              \                                              /
+"               By Aaron Merovitz and D.W.O. Rogers, Feb 1998
+"
+SUBROUTINE MATERIALGRID(NRADIAL, NDEPTH, MASSVOL, MORV, ECUTS, PCUTS,
+                        RCYL, ZPLANE, MED, MEDIA, CDSTBL, CTRTBL, CABSRB);
+"
+"      DESCRIPTION : routine provides a material grid output.
+"          OF      : the grid will be rotated if nradial>3
+"         THE      : and ndepth<=3.  the grid contains the IRL, the type
+"      SUBROUTINE  : of the region and material aswell as it's mass.
+"
+"                  \   one must add the macro '$maxcmpts'(usually=$maxit)
+"   FOR INSTALLING  \  to the program in which this subroutine is called.
+"       THIS         > be careful that all arrays passed to the subroutine
+"    SUBROUTINE     /  (especially 'MASSVOL()' and 'MEDIA()') have
+"                  /   exactly the same dimensions.
+
+"      DESCRIPTION OF THE ARGUMENTS:
+"      NRADIAL     : number of radial results to display
+"      NDEPTH      : number of depth results to display
+"      MASSVOL     : array of the masses, or volumes for each region
+"      MORV        : 1 for mass, 2 for volume.
+"      ECUTS, PCUTS: the 'ECUT' and 'PCUT' arrays.
+"      RCYL        : array of outer boundaries of each radial bin(1st
+"                                                              radius=0)
+"      ZPLANE      : array of depth boundaries (1st plane not always=0)
+"      MED         : array of the medium numbers for each IRL.
+"      MEDIA       : 2-d array of the masse for each medium number.
+"      CDSTBL      : array that contains a 'D' for each dose scoring
+"                    region(for each IRL). default is 0.
+"      CTRTBL      : contains a 'T' for each tracking region. default 0
+"      CABSRB      : contains an 'A' for each tatally absorbing region.
+"                    0 default means these values are not calculated.
+"***************************************************************************
+;IMPLICIT NONE;
+
+"This MACRO outputs a grid of values."
+"There is room for three sets of values(blocks or boxes) in"
+"80 columns(standard window size), so the grids each"
+"contain sets of three values, e.g. radii(if non-rotated)."
+REPLACE {$MKGRID;} WITH {
+;
+"Set up the formatting indicator FMT"
+IF (RADNUM-HSET>1) [FMT=3;]
+ELSE [IF (MOD(RADNUM,3) = 1) [FMT=1;]
+      IF (MOD(RADNUM,3) = 2) [FMT=2;]
+]
+"Horizontal axis indicators"
+WRITE (IOUT, 91) (RADIAL_BINS(IX), IX=HSET,HSET+FMT);
+PGTHROW=PGTHROW+1;
+DO IZ=1, DEEPNUM [
+   "This is for IRL, IZ and IX"
+   IF (ROT) [REGNUM=2+(IZ-1)*FMT+(HSET-1)*RADNUM;]
+   ELSE [REGNUM=( IZ+1+((HSET-1)*DEEPNUM) );]
+   "Setting up medium name in each region"
+   IF (ROT) [
+      MNUM1=MED(REGNUM);MNUM2=MED(REGNUM+1);MNUM3=MED(REGNUM+2);
+   ]
+   ELSE [
+      MNUM1=MED(REGNUM);MNUM2=MED(REGNUM+DEEPNUM);MNUM3=MED(REGNUM+DEEPNUM*2);
+   ]
+   IF (MNUM1=0) [MED_NAME1(1)='V';MED_NAME1(2)='A';MED_NAME1(3)='C';
+                 MED_NAME1(4)='U';MED_NAME1(5)='U';MED_NAME1(6)='M';
+                 DO J=7, 11 [MED_NAME1(J)=' ';]
+   ]
+   ELSE [DO COUNT=1, 11 [MED_NAME1(COUNT) = MEDIA(COUNT, MNUM1);]]
+   IF (MNUM2=0) [MED_NAME2(1)='V';MED_NAME2(2)='A';MED_NAME2(3)='C';
+                 MED_NAME2(4)='U';MED_NAME2(5)='U';MED_NAME2(6)='M';
+                 DO J=7, 11 [MED_NAME2(J)=' ';]
+   ]
+   ELSE [DO COUNT=1, 11 [MED_NAME2(COUNT) = MEDIA(COUNT,MNUM2);]]
+   IF (MNUM3=0) [MED_NAME3(1)='V';MED_NAME3(2)='A';MED_NAME3(3)='C';
+                 MED_NAME3(4)='U';MED_NAME3(5)='U';MED_NAME3(6)='M';
+                 DO J=7, 11 [MED_NAME3(J)=' ';]
+   ]
+   ELSE [DO COUNT=1, 11 [MED_NAME3(COUNT) = MEDIA(COUNT,MNUM3);]]
+   IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(IZ);
+               IF (ROT) [WRITE (IOUT, 15) REGNUM,HSET,IZ;]
+               ELSE [WRITE (IOUT, 15) REGNUM,IZ,HSET;]
+               WRITE (IOUT, 4) CDSTBL(REGNUM),CTRTBL(REGNUM),
+                     CABSRB(REGNUM), (MED_NAME1(J),J=1,11);
+   ]
+   IF (FMT=2) [WRITE (IOUT, 11) DEPTH_BINS(IZ);
+               IF (ROT) [WRITE(IOUT,14) REGNUM,HSET,IZ,
+                                        REGNUM+1,HSET+1,IZ;
+                         WRITE(IOUT, 5) CDSTBL(REGNUM),CTRTBL(REGNUM),
+                                   CABSRB(REGNUM), (MED_NAME1(J),J=1,11),
+                                   CDSTBL(REGNUM+1),CTRTBL(REGNUM+1),
+                                   CABSRB(REGNUM+1), (MED_NAME2(J),J=1,11);
+               ]
+               ELSE [WRITE(IOUT,14) REGNUM,IZ,HSET,
+                                    REGNUM+DEEPNUM,IZ,HSET+1;
+                     WRITE(IOUT, 5) CDSTBL(REGNUM),CTRTBL(REGNUM),
+                              CABSRB(REGNUM), (MED_NAME1(J),J=1,11),
+                              CDSTBL(REGNUM+DEEPNUM),CTRTBL(REGNUM+DEEPNUM),
+                              CABSRB(REGNUM+DEEPNUM),(MED_NAME2(J),J=1,11);
+               ]
+   ]
+   IF (FMT=3) [WRITE (IOUT, 12) DEPTH_BINS(IZ);
+               IF (ROT) [WRITE (IOUT, 13)
+                         REGNUM,HSET,IZ,REGNUM+1,
+                         HSET+1,IZ,REGNUM+2,HSET+2,IZ;
+                         WRITE (IOUT, 6) CDSTBL(REGNUM),CTRTBL(REGNUM),
+                               CABSRB(REGNUM), (MED_NAME1(J),J=1,11),
+                               CDSTBL(REGNUM+1),CTRTBL(REGNUM+1),
+                               CABSRB(REGNUM+1), (MED_NAME2(J),J=1,11),
+                               CDSTBL(REGNUM+2),CTRTBL(REGNUM+2),
+                               CABSRB(REGNUM+2), (MED_NAME3(J),J=1,11);
+               ]
+               ELSE [WRITE (IOUT, 13)
+                     REGNUM,IZ,HSET,REGNUM+DEEPNUM,
+                     IZ,HSET+1,REGNUM+DEEPNUM*2,IZ,HSET+2;
+                     WRITE (IOUT, 6) CDSTBL(REGNUM),CTRTBL(REGNUM),
+                           CABSRB(REGNUM), (MED_NAME1(J),J=1,11),
+                           CDSTBL(REGNUM+DEEPNUM),CTRTBL(REGNUM+DEEPNUM),
+                           CABSRB(REGNUM+DEEPNUM), (MED_NAME2(J),J=1,11),
+                           CDSTBL(REGNUM+DEEPNUM*2),CTRTBL(REGNUM+DEEPNUM*2),
+                           CABSRB(REGNUM+DEEPNUM*2), (MED_NAME3(J),J=1,11);
+               ]
+   ]
+   PGTHROW=PGTHROW+3;
+   "Main part of the grid"
+   DO ICOMP=1, NCOMP [
+      IF (FMT=3) [
+         WRITE(IOUT, 3) LABELS(ICOMP),VALUES(IZ,HSET,ICOMP),
+                        LABELS(ICOMP),VALUES(IZ,HSET+1,ICOMP),
+                        LABELS(ICOMP),VALUES(IZ,HSET+2,ICOMP);
+      ]
+      IF (FMT=2) [
+         WRITE(IOUT, 2) LABELS(ICOMP),VALUES(IZ,HSET,ICOMP),
+                        LABELS(ICOMP),VALUES(IZ,HSET+1,ICOMP);
+      ]
+      IF (FMT=1) [WRITE(IOUT, 1) LABELS(ICOMP),VALUES(IZ,HSET,ICOMP);]
+      PGTHROW=PGTHROW+1;
+   ] "end DO ICOMP"
+   "This piece of code surveys PGTHROW, and throws the page when"
+   "PGTHROW is near 65 lines."
+   IF (MOD(PGTHROW,65)>(60-NCOMP)) [
+      "This is for the last vertical bin"
+      IF (IZ~=DEEPNUM) [ "only for grid cut by PGTHROW"
+          IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(IZ+1);]
+          IF (FMT=2) [WRITE (IOUT, 11) DEPTH_BINS(IZ+1);]
+          IF (FMT=3) [WRITE (IOUT, 12) DEPTH_BINS(IZ+1);]
+      "Start a new page"
+      WRITE (IOUT, *) '\f'; "page break"
+      PGTHROW=15;
+      WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+      IF (ROT) [WRITE(IOUT, 93) TITLE;]
+      ELSE [WRITE(IOUT, 94) TITLE;]
+      WRITE (IOUT, 91) (RADIAL_BINS(IX), IX=HSET,HSET+FMT);
+   ]
+   "The following statement delays the page throw until the "
+   "last line of the grid can be printed"
+   ELSE [ DLYPT = HSET;]]
+] "end DO IZ"
+"This is for the last vertical bin"
+IF (FMT=1) [WRITE (IOUT, 10) DEPTH_BINS(DEEPNUM+1);]
+IF (FMT=2) [WRITE (IOUT, 11) DEPTH_BINS(DEEPNUM+1);]
+IF (FMT=3) [WRITE (IOUT, 12) DEPTH_BINS(DEEPNUM+1);]
+"For the delayed page throw"
+IF ((DLYPT=HSET)&(RADNUM-HSET>2)) [
+"Start a new page"
+    WRITE (IOUT, *) '\f'; "page break"
+    PGTHROW=17;
+    WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+    IF (ROT) [WRITE(IOUT, 93) TITLE;]
+    ELSE [WRITE(IOUT, 94) TITLE;]
+]
+PGTHROW=PGTHROW+1;
+}
+
+;COMIN/IODAT1/; "COMMON BLOCK is for TITLE, TIMEN and DATEN"
+$INTEGER RADNUM, DEEPNUM, NRADIAL, NDEPTH, NCOMP, REGNUM, FMT, TMP1;
+$LOGICAL ESTEPSON, ECUTON, PCUTON, ROT;
+$REAL VALUES($MAXZREG,$MAXRADII,$MAXCMPTS),
+     RCYL($MAXRADII),ZPLANE($MAXZREG),
+     RADIAL_BINS($MAXRZ),DEPTH_BINS($MAXRZ),
+     MASSVOL($MAXZREG,$MAXRADII),
+     ECUTS($MXREG), PCUTS($MXREG),
+     TMP2($MAXZREG,$MAXRADII,$MAXCMPTS),TMP3($MAXRZ),CHINDEX($MAXRZ);
+CHARACTER*60 EXPLANATIONS($MAXCMPTS);
+CHARACTER*4 LABELS($MAXCMPTS);
+CHARACTER*4 MED_NAME1(11),MED_NAME2(11),MED_NAME3(11);
+CHARACTER*4 MEDIA(24, $MXMED);
+CHARACTER*4 CDSTBL($MXREG), CTRTBL($MXREG),CABSRB($MXREG);
+$SHORT_INT MED($MXREG);
+$INTEGER MNUM1, MNUM2, MNUM3, MORV;
+$INTEGER IOUT, ICOMP, IZ, IX, IRL, HSET, PGTHROW, DLYPT, J, COUNT;
+ROT=.FALSE.; "For a rotated grid (.FALSE. = off)"
+ESTEPSON=.FALSE.;ECUTON=.FALSE.;PCUTON=.FALSE.; "default these options off"
+
+NCOMP=1; "start the grid with one component(minimum)"
+PGTHROW=14+NCOMP; "For printing: throw page at 66 lines(15 1st for title)"
+
+IOUT=1; "Designates output to file fort.1, the *.egs4lst file"
+"Set up the bin number indicators"
+DEEPNUM=NDEPTH;RADNUM=NRADIAL;
+"Set up the bin indicators"
+IF (RCYL(1)=0.) [DO IX=1,RADNUM+1 [RADIAL_BINS(IX)=RCYL(IX);]]
+ELSE [DO IX=1,RADNUM+1 [RADIAL_BINS(IX+1)=RCYL(IX);]]
+DO IZ=1,DEEPNUM+1 [DEPTH_BINS(IZ)=ZPLANE(IZ);]
+"Load the array of VALUES to be output"
+IF (MORV=1) [
+   LABELS(NCOMP)='MASS';
+   EXPLANATIONS(NCOMP)='MASS OF EACH REGION IN GRAMS';
+]
+IF (MORV=2) [
+   LABELS(NCOMP)='VOL ';
+   EXPLANATIONS(NCOMP)='VOLUME OF EACH REGION IN cm^3';
+]
+DO IX=1, RADNUM [
+   DO IZ=1, DEEPNUM [
+      VALUES(IZ, IX, NCOMP)=MASSVOL(IZ, IX);
+      IRL=IZ+DEEPNUM*(IX-1)+1;
+      IF (CDSTBL(1)='0') [CDSTBL(IRL)=' ';]
+      IF (CTRTBL(1)='0') [CTRTBL(IRL)=' ';]
+      IF (CABSRB(1)='0') [CABSRB(IRL)=' ';]
+      IF (ECUTS(IRL)~=ECUTS(2)) [ECUTON=.TRUE.;]
+      IF (PCUTS(IRL)~=PCUTS(2)) [PCUTON=.TRUE.;]
+   ]
+]
+IF (ECUTON) [
+   NCOMP=NCOMP+1;
+   LABELS(NCOMP)='ECUT';
+   EXPLANATIONS(NCOMP)='ECUT (PRINTED BECAUSE DIFFERENT FROM GLOBAL)';
+   DO IX=1, RADNUM [
+      DO IZ=1, DEEPNUM [
+         IRL=IZ+DEEPNUM*(IX-1)+1;
+         VALUES(IZ, IX, NCOMP)=ECUTS(IRL);
+      ]
+   ]
+]
+IF (PCUTON) [
+   NCOMP=NCOMP+1;
+   LABELS(NCOMP)='PCUT';
+   EXPLANATIONS(NCOMP)='PCUT (PRINTED BECAUSE DIFFERENT FROM GLOBAL)';
+   DO IX=1, RADNUM [
+      DO IZ=1, DEEPNUM [
+         IRL=IZ+DEEPNUM*(IX-1)+1;
+         VALUES(IZ, IX, NCOMP)=PCUTS(IRL);
+      ]
+   ]
+]
+PGTHROW=14+NCOMP; "For printing: throw page at 66 lines(for title)"
+"Check for rotation of the grid"
+IF ((DEEPNUM<=3)&(RADNUM>3))[
+   ROT=.TRUE.;
+   CHINDEX(RADNUM+1)=RADIAL_BINS(RADNUM+1);
+   DO IX=1, RADNUM [
+      TMP3(IX)=DEPTH_BINS(IX);
+      CHINDEX(IX)=RADIAL_BINS(IX);
+      DEPTH_BINS(IX)=CHINDEX(IX);
+      RADIAL_BINS(IX)=TMP3(IX);
+      DO IZ=1, DEEPNUM [
+          DO ICOMP=1, NCOMP [
+              TMP2(IZ, IX, ICOMP)=VALUES(IZ, IX, ICOMP);
+          ] "end do ICOMP"
+      ] " end DO IZ"
+   ] "end DO IX"
+   DO IX=1, RADNUM [
+      DO IZ=1, DEEPNUM [
+         DO ICOMP=1, NCOMP [
+             VALUES(IX, IZ, ICOMP)=TMP2(IZ, IX, ICOMP);
+         ]
+      ]
+   ]
+   DEPTH_BINS(RADNUM+1)=CHINDEX(RADNUM+1);
+   TMP1=RADNUM;RADNUM=DEEPNUM;DEEPNUM=TMP1;
+] "end check for rotation"
+WRITE (IOUT, *) '\f'; "Page break"
+WRITE(IOUT, 400) ' '; call egs_fdate(iout); write(iout,'(//)');
+IF (ROT) [WRITE(IOUT, 93) TITLE;]
+ELSE [WRITE(IOUT, 94) TITLE;]
+WRITE(IOUT, 95) (LABELS(ICOMP), EXPLANATIONS(ICOMP), ICOMP=1, NCOMP);
+"Make the grids"
+DO HSET=1,RADNUM,3 [$MKGRID;] "Feed in horiz. sets of three"
+"FORMATS"
+1        FORMAT (T11, '|', 2X, A4, 2X, 1PE10.3, 2X, ' |');
+2        FORMAT (T11, '|', 2 (2X, A4, 2X, 1PE10.3, 2X, ' |'));
+3        FORMAT (T11, '|', 3 (2X, A4, 2X, 1PE10.3, 2X, ' |'));
+4        FORMAT (T11, '|', 1X, '/', 3 (A1, '/'), 11A1, '  |');
+5        FORMAT (T11, '|', 2 (1X, '/', 3 (A1, '/'), 11A1, '  |'));
+6        FORMAT (T11, '|', 3 (1X, '/', 3 (A1, '/'), 11A1, '  |'));
+10       FORMAT (1X, F9.4, T11, 23 ('-'));
+11       FORMAT (1X, F9.4, T11, 45 ('-'));
+12       FORMAT (1X, F9.4, T11, 67 ('-'));
+13       FORMAT (T11, '|',
+                 3 ('IRL', I3, 1X, 'IZ ', I3, 1X, 'IX ', I3, 1X, '|'));
+14       FORMAT (T11, '|',
+                 2 ('IRL', I3, 1X, 'IZ ', I3, 1X, 'IX ', I3, 1X, '|'));
+15       FORMAT (T11, '|',
+                    'IRL', I3, 1X, 'IZ ', I3, 1X, 'IX ', I3, 1X, '|');
+91       FORMAT (/ T7, F9.4, T30, F9.4, T53, F9.4, T70, F9.4);
+93       FORMAT (' ',79A1 //
+                 T19, 29H ZONAL MATERIAL GRID: ROTATED /
+                 T21, '**************************'/,
+                /T4 , '/X/Y/Z/MED :  X = " " IS DEFAULT: OPTION NOT USED'/,
+                 T18, '  = "D" IF DOSE SCORING REGION'/,
+                 T18, 'X = "C" IF CAVITY REGION'/,
+                 T18, 'X = "S" IF SPR SCORING REGION'/,
+                 T18, 'Y = "T" IF TRACKING REGION'/,
+                 T18, 'Z = "A" IF TOTALLY ABSORBING REGION'/,
+                 T16, 'MED = MEDIUM NAME, 11 CHARACTER ABREVIATION');
+94       FORMAT (' ',79A1 //
+                 T19, 33H ZONAL MATERIAL GRID: NON-ROTATED /
+                 T21, '******************************'/
+                /T4 , '/X/Y/Z/MED :  X = " " IS DEFAULT: OPTION NOT USED'/,
+                 T18, '  = "D" IF DOSE SCORING REGION'/,
+                 T18, '  = "C" IF CAVITY REGION'/,
+                 T18, '  = "S" IF SPR SCORING REGION'/,
+                 T18, 'Y = "T" IF TRACKING REGION'/,
+                 T18, 'Z = "A" IF TOTALLY ABSORBING REGION'/,
+                 T16, 'MED = MEDIUM NAME, 11 CHARACTER ABREVIATION');
+95       FORMAT (T10, A4, ' = ', A60);
+400      FORMAT (/T54,a1,$);
+
+RETURN;
+END;
+"    end of grids.mortran (Rev 1.2 last edited  2002-05-06 10:09:54-04)"
