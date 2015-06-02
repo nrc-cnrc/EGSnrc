@@ -1,0 +1,174 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for ranmar random number generator                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2000                                       "
+"                   Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Implementation for EGSnrc of the RANMAR random number generator (RNG),     "
+"  proposed by Marsaglia and Zaman.                                           "
+"                                                                             "
+"  Note that this implementation uses integers to store the state of the RNG  "
+"  and to generate the next number in the sequence. Only at the end are the   "
+"  random numbers are converted to reals by a multiplication with 2**(-24)    "
+"  (there are only 24 significant bits). I found the integer implementation   "
+"  to be about 30% faster then using reals on Pentium III machines, and       "
+"  nearly 70% faster on older SGI workstations.                               "
+"                                                                             "
+"  To use this set of macros, you need to initialize the RNG by a call to     "
+"  init_ranmar (in ranmar.mortran) or read-in a valid RNG state using the     "
+"  macro $RETRIEVE RNG STATE FROM UNIT #;                                     "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$NRANMAR} WITH {128}
+REPLACE {;COMIN/RANDOM/;} WITH
+{;
+   common/randomm/ rng_array($NRANMAR), urndm(97), crndm, cdrndm, cmrndm,
+                   i4opt, ixx, jxx, fool_optimizer, twom24, rng_seed;
+   integer*4       urndm, crndm, cdrndm, cmrndm, i4opt,
+                   ixx, jxx, fool_optimizer,rng_seed,rng_array;
+   real*4          twom24;
+}
+"in the above, rng_seed is typed and part of common because it is"
+" initialized in BLOCK DATA for the ranlux rng.                  "
+" It is not actually used by ranmar."
+
+" The following is the $RANDOMSET macro for EGSnrc."
+" Found that using integers it is faster by about 30% on a PIII CPU"
+" (which is the NRC computer environment                           "
+
+" Found that when the RNG is not inlined, code runs faster "
+" Presumambly because the executable shrinks by a significant amount "
+" Iwan Kawrakow, May 2003 "
+
+REPLACE {$RANDOMSET#;} WITH {;
+  IF( rng_seed > $NRANMAR ) call ranmar_get;
+  {P1} = rng_array(rng_seed)*twom24; rng_seed = rng_seed + 1;
+};
+
+"REPLACE {$RANDOMSET#;} WITH
+"{
+"    i4opt = urndm(ixx) - urndm(jxx);
+"    IF(i4opt < 0) i4opt = i4opt + 16777216;
+"    urndm(ixx) = i4opt;
+"    ixx = ixx - 1; jxx = jxx - 1;
+"    IF(ixx = 0)        [ ixx = 97; ]
+"    ELSE IF( jxx = 0 ) [ jxx = 97; ]
+"    crndm = crndm - cdrndm;
+"    IF(crndm < 0) crndm = crndm + cmrndm;
+"    i4opt = i4opt - crndm;
+"    IF(i4opt < 0) i4opt = i4opt + 16777216;
+"    {P1} = twom24*i4opt;
+"}
+;
+
+REPLACE {$RNG-INITIALIZATION;} WITH { ;call init_ranmar; }
+
+REPLACE {$RNG-DEFAULT-INITIALIZATION;} WITH {;
+    ixx=0; jxx=0; call init_ranmar;
+};
+
+REPLACE {$INITIALIZE RNG USING # AND #; } WITH {;
+  ixx = {P1}; jxx = {P2};
+  call init_ranmar;
+};
+
+"**************************************************************************"
+" The macros below are not essential for the operation of the RNG,         "
+" they are defined for convinience in our NRC user codes                   "
+"**************************************************************************"
+
+REPLACE {$STORE RNG STATE ON UNIT #;} WITH
+{
+    rewind({P1});
+    write({P1},*) urndm,crndm,cdrndm, cmrndm, ixx, jxx, rng_seed,
+                  rng_array;
+}
+
+REPLACE {$PUT RNG STATE ON UNIT #;} WITH
+{
+    write({P1},*) urndm,crndm,cdrndm, cmrndm, ixx, jxx, rng_seed,
+                  rng_array;
+}
+
+REPLACE {$RETRIEVE RNG STATE FROM UNIT #;} WITH {;
+    read({P1},*) urndm,crndm,cdrndm, cmrndm, ixx, jxx, rng_seed,
+                 rng_array;
+    twom24 = 1./16777216.;  "just in case it is not initialized in rmarin"
+};
+
+REPLACE {$SHOW-RNG-STATE(#);} WITH {;
+   write({P1},'(a,2i4,$)') ' ixx jxx = ',ixx,jxx;
+};
+
+REPLACE {$PRINT-RNG-STATE(#,#);} WITH {;
+   write({P1},{P2}) ixx,jxx;
+};
+
+REPLACE {$RNG-INPUTS(#,#,#,#);} WITH {;
+   ival = ival + 1;
+   VALUES_SOUGHT(IVAL)={P1};
+   nvalue(ival) = 2;
+   type(ival)   = 0;
+   value_min(ival) = 1;
+   value_max(ival) = 30081;
+   default(ival)   = 9373;
+   delimeter = {P2};
+   nmin = ival; nmax = ival;
+   call get_input;
+   IF( error_flags(ival) = 0 ) [
+       {P3} = value(ival,1);
+       {P4} = value(ival,2);
+   ]
+   ELSE [ {P3} = 0; {P4} = 0; ]
+};
+
+REPLACE {$RNG-STRING-1} WITH {' 1st initial random number seed: '}
+REPLACE {$RNG-STRING-2} WITH {' 2nd initial random number seed: '}
+
+"            end of ranmar.macros         "

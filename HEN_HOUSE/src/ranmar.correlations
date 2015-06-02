@@ -1,0 +1,114 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for ranmar correlated sampling                               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2000                                       "
+"                   Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The following macros can be used for correlated sampling, together with    "
+"  the RANMAR random number generator (rng).                                  "
+"                                                                             "
+"  $MXRNGDIM      gives the maximum number of different rng states that       "
+"                 can be simultaneously held in the memory.                   "
+"                                                                             "
+"  $STORE-RNG(#)  is used to store the current rng state into dimension {P1}  "
+"                                                                             "
+"  $RESET-RNG(#)  is used to re-set the rng state from a previous state       "
+"                                                                             "
+"  In order to use these macros, include this file before your user code via  "
+"  the configuration file.                                                    "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MXRNGDIM} WITH {5};  "to store up to five rng states"
+
+APPEND {;
+
+  common/random_extra/ extra_urndm(97,$MXRNGDIM), extra_crndm($MXRNGDIM),
+                       extra_cdrndm($MXRNGDIM), extra_cmrndm($MXRNGDIM),
+                       extra_ixx($MXRNGDIM), extra_jxx($MXRNGDIM),
+                       extra_rng_seed($MXRNGDIM),
+                       extra_rng_array($NRANMAR,$MXRNGDIM);
+  integer*4            extra_urndm,extra_crndm,extra_cdrndm,extra_cmrndm,
+                       extra_ixx,extra_jxx,extra_rng_seed,extra_rng_array;
+
+} TO { ;COMIN/RANDOM/; }
+
+REPLACE {$STORE-RNG(#);} WITH {;
+
+  IF( {P1} < 1 | {P1} > $MXRNGDIM ) [
+      OUTPUT {P1};
+      (//' ******* Attempt to store rng state into an illegal dimension: ',
+      i4//);
+      stop;
+  ]
+  DO i4opt = 1, 97 [ extra_urndm(i4opt,{P1}) = urndm(i4opt); ]
+  extra_crndm({P1})  = crndm;
+  extra_cdrndm({P1}) = cdrndm;
+  extra_cmrndm({P1}) = cmrndm;
+  extra_ixx({P1}) = ixx; extra_jxx({P1}) = jxx;
+  extra_rng_seed({P1}) = rng_seed;
+  DO i4opt = 1,$NRANMAR [ extra_rng_array(i4opt,{P1}) = rng_array(i4opt); ]
+};
+
+REPLACE {$RESET-RNG(#);} WITH {;
+
+  IF( {P1} < 1 | {P1} > $MXRNGDIM ) [
+      OUTPUT {P1};
+      (//' ******* Attempt to reset rng state from an illegal dimension: ',
+      i4//);
+      stop;
+  ]
+  DO i4opt = 1, 97 [ urndm(i4opt) = extra_urndm(i4opt,{P1}); ]
+  crndm  = extra_crndm({P1});
+  cdrndm = extra_cdrndm({P1});
+  cmrndm = extra_cmrndm({P1});
+  ixx = extra_ixx({P1}); jxx = extra_jxx({P1});
+  rng_seed = extra_rng_seed({P1});
+  DO i4opt = 1,$NRANMAR [ rng_array(i4opt) = extra_rng_array(i4opt,{P1}); ]
+};
+"       end of ranmar.correlations   "

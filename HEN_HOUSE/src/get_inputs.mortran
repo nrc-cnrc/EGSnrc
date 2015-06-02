@@ -1,0 +1,1811 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc parameter input functions                                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Aaron Merovitz, 1998                                      "
+"                   Dave Rogers, 1998                                         "
+"                   Iwan Kawrakow, 1998                                       "
+"                                                                             "
+"  Contributors:    Ernesto Mainegra-Hing                                     "
+"                   Blake Walters                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Iwan Kawrakow, 1998, version 2.0, major rework:                            "
+"                                                                             "
+"  - Input values taken only if between specified delimiters (prior this      "
+"    change, the first VALUES_SOUGHT found was taken, even if it was not      "
+"    between the specified delimiters).                                       "
+"                                                                             "
+"  - Changed argument list to a common block GetInput defined in egs4.macros  "
+"    to avoid memory use explosion.                                           "
+"                                                                             "
+"  - Eliminated initial loop checking for presence of values sought as it is  "
+"    not necessary.                                                           "
+"                                                                             "
+"  - Introduced macros for handling strings (skipping blanks and comments,    "
+"    changing to upper case, etc.)                                            "
+"                                                                             "
+"  - Eliminated string input bug: strings were always converted to upper case "
+"                                                                             "
+"  - Changed definition of strings to character*$MACRO where $MACRO has a     "
+"    certain value that can be be defined in the user code if longer strings  "
+"    are required.                                                            "
+"                                                                             "
+"                                                                             "
+"  Iwan Kawrakow, 1999, version 2.1, major rework:                            "
+"                                                                             "
+"  - Missing or misspelled end delimiter together with a missing value sought  "
+"    caused the routine to terminate. It now prints an error message and      "
+"    continues to look for additional input.                                  "
+"                                                                             "
+"  - Introduced an array ERROR_FLAGS where the input status of each of the    "
+"    attempted inputs is stored.                                              "
+"                                                                             "
+"#############################################################################"
+
+
+SUBROUTINE GET_INPUT;
+"                                                                           "
+"                                                                           "
+" FUNCTION: Extracts the requested values_sought from input file and        "
+"           returns it to the caller.                                       "
+"                                                                           "
+" USAGE   :      Inputs must have the general form:                         "
+"              ***************************************                      "
+"              * Value_sought=  Value(s)             *                      "
+"              ***************************************                      "
+"         e.g.:        MEDNUM= 0, 1, 2                                      "
+"                      MEDIA= AIR700ICRU                                    "
+"                      RAYLEIGH SCATTERING= on                              "
+"                                                                           "
+"***************************************************************************"
+"           >>>>>>>>>>>     BASIC RULES AND FEATURES    <<<<<<<<<<<         "
+"***************************************************************************"
+"
+"   Inputs are all in the format: name of value_sought= value
+"   where the name of value_sought must match that expected by the
+"   program and the = sign must have no blanks between it and value_sought.
+"
+"   The value_sought must be the first thing on a line but blanks are
+"     allowed before it.
+"
+"   Various inputs are only sought between certain delimeter strings
+"     which are defined below (eg :start I/O control: :stop I/O control:)
+"     If not specified, the whole file is searched for a requested value_sought.
+"     Delimeter strings are enclosed by colons.
+"     Note that within delimeter strings, order of inputs does not matter.
+"
+"   If a requested quantity is not found, this is noted in $input.errors
+"     and this file is printed at the end of the log file.
+"
+"   A semi-colon implies the end of input for this quantity but is
+"     not mandatory.  However, this means they cannot be used in titles.
+"   A # sign indicated everything else on the line is a comment (and
+"     cannot be used in titles.
+"   Case is not important in the names of the quantites.
+"
+"   Commas separate multiple values for a given quantity and a comma
+"     at the end of a line implies there is more input on the next line.
+"   Values can extend over as many lines as needed. Use commas to imply
+"     there are more values on the next line.
+"
+"   Blank lines and blanks in general are ignored.
+"
+"   The maximum record length is 256 characters.
+"
+"
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS4 simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+"                                                                           "
+"                                                                           "
+" FEATURES: If the amount of values needed for a particular values_sought   "
+"           is known and passed throught NVALUE(I), the subroutine will     "
+"           check that the number of inputs correspond.  Otherwise,         "
+"           NVALUE(I) will return the # of inputs found.                    "
+"                                                                           "
+"           For any integer or real (TYPE=0 or 1), get_inputs will check    "
+"           that the numerical value input is between VALUE_MIN and         "
+"           VALUE_MAX.  If not, it sets this value to the DEFAULT.          "
+"                                                                           "
+"           Writing in the input file can be upper case or lower case.      "
+"           However, all FORTRAN >MUST< be programmed in upper case.        "
+"              Changed the above: Can now be upper or lower case            "
+"                                 IK, Dec. 1998                             "
+"                                                                           "
+"           For clarity, inputs can be terminated with a semicolon(;).      "
+"           This is by no means necessary.                                  "
+"                                                                           "
+"***************************************************************************"
+"          >>>>>>>>>>> IMPLEMENTING INTO NEW USER CODES <<<<<<<<<<<         "
+"***************************************************************************"
+"                                                                           "
+"                   **** DECLARE YOUR INPUTS ****                           "
+"                                                                           "
+"    REALS AND INTEGERS (TYPE 0 AND 1)                                      "
+"                                                                           "
+"  I=I+1;                              <--index counter                     "
+"  NUM_DRMIN=I;                        <--named pointer to the index num.   "
+"  VALUES_SOUGHT(I)='DOSE RBOUND MIN'; <--name of variable                  "
+"  NVALUE(I)=1;                        <--# of inputs(left out if not known)"
+"  TYPE(I)=0;                          <--Type (0-3)                        "
+"  VALUE_MIN(I)=0;                     <--Minimum value                     "
+"  VALUE_MAX(I)=$MAXRADII-1;           <--Maximum value                     "
+"  DEFAULT(I)=0;                       <--Default value                     "
+"                                                                           "
+"    CHARACTER INPUTS (TYPE 2)                                              "
+"                                                                           "
+"  I=I+1;
+"  NUM_TITLE=I;
+"  VALUES_SOUGHT(I)='TITLE';
+"  TYPE(I)=2;
+"  NVALUE(I)=1;                        <--left out if not known
+"
+"    ALLOWED INPTUS (TYPE 3)
+"
+"  I=I+1;
+"  NUM_IWATCH=I;
+"  VALUES_SOUGHT(I)='IWATCH';
+"  NVALUE(I)=1;                        <--left out if not known
+"  TYPE(I)=3;
+"  ALLOWED_INPUTS(I,0)='OFF';
+"  ALLOWED_INPUTS(I,1)='INTERACTIONS';
+"  ALLOWED_INPUTS(I,2)='STEPS';
+"  ALLOWED_INPUTS(I,3)='DEPOSITED';
+"  ALLOWED_INPUTS(I,4)='GRAPH';
+"                                                                           "
+"                      **** STATE THE DELIMETER ****                        "
+"                                                                           "
+"            DELIMETER='TRANSPORT CONTROL'                                  "
+"     OR     DELIMETER='NONE';                                              "
+"                                                                           "
+"  **** CALL THE SUBROUTINE WITH THE APPROPRIATE INDEX NUMBER OF THE ****   "
+"                **** VALUES_SOUGHT(use NMIN and NMAX) ****                 "
+"                                                                           "
+"   The inputs are returned through CHAR_VALUE for character inputs         "
+"   or VALUE for integers, reals and allowed inputs                         "
+"                                                                           "
+"---------------------------------------------------------------------------"
+
+
+;IMPLICIT NONE;
+
+COMIN/GetInput,EGS-IO/;
+
+"***************************************************************************"
+"*                   Variables used by the subroutine                      *"
+"***************************************************************************"
+CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
+CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
+CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
+CHARACTER*$STRING80  TEXTPIECE; "Used to read a piece of TEXT                  "
+CHARACTER*$STRING40  DELIM_START;"Start of the delimeter                       "
+CHARACTER*$STRING40  DELIM_END;  "End of the delimeter                         "
+CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
+CHARACTER*$STRING32  VNAME1;     "The name of the variable being extracted.    "
+$INTEGER       CURSOR;          "Used to read one of the TEXT letters          "
+$INTEGER       IINDEX;          "Integer index for clipping string excess.     "
+$INTEGER       iVNAME;          "Length of variable name string.               "
+$INTEGER       IVAL;            "Value number of the value_sought              "
+$INTEGER       UNITNUM;         "Unit number of the input file                 "
+$INTEGER       ERR;             "Unit number of the error file                 "
+$INTEGER       I,J,K,CHECK;     "Counters and checkers                         "
+$INTEGER       LINE;            "Counts the eumber of lines                    "
+$INTEGER       INT_VALUE;       "For printing integers                         "
+$INTEGER       INT_VALUE_MIN;   "For printing integers                         "
+$INTEGER       INT_VALUE_MAX;   "For printing integers                         "
+$LOGICAL       ALLOWED;         "For evaluating an allowed_input               "
+$LOGICAL       START_FOUND;     "Start of delimeter switch                     "
+$INTEGER       ifound,length,lll,Kconvert;
+$INTEGER       lnblnk1;"in house lnblnk function becuase not all compilers     "
+                       "support this"
+logical IDEBUG;
+character*1 blank;
+$INTEGER    error_level;
+$INTEGER    the_level;
+data blank/' '/;
+data        error_level/1/;
+save        error_level;
+"---------------------------------------------------------------------------"
+
+"Macro changing text string to upper case"
+"REPLACE {$CONVERT-STRING-TO-UPPER-CASE(#);} WITH"
+REPLACE {$CONVERT # TO UPPER CASE;} WITH
+{;
+   DO Kconvert=1, lnblnk1({P1}) [
+         CURSOR=ICHAR({P1}(Kconvert:Kconvert));
+         IF ((CURSOR.GE.97).AND.(CURSOR.LE.122)) [
+            CURSOR=CURSOR-32;
+            {P1}(Kconvert:Kconvert)=CHAR(CURSOR);
+         ]
+   ]
+}
+;
+
+"Macro to skip leading blanks "
+REPLACE {$SKIP LEADING BLANKS IN #;} WITH
+{;
+  length = len({P1});
+  WHILE ( index({P1},blank) = 1 ) [
+    IF( length >= 2 ) [ {P1}={P1}(2:); ] ELSE [ EXIT; ]
+    length = length - 1;
+  ]
+}
+
+"Macro that removes everything after comments "
+REPLACE {$REMOVE EVERYTHING AFTER # IN #;} WITH
+{
+  ifound = INDEX({P2},{P1});
+  IF( ifound > 1 ) [ {P2} = {P2}(1:ifound-1); ]
+  ELSE [ IF( ifound = 1 ) [ {P2} = blank; ] ]
+}
+
+REPLACE {$STRING-OUTPUT(#);} WITH
+{;
+  length = lnblnk1({P1});
+  IF( length > 0 ) [
+    DO lll=1,length [ write(i_log,'(a1,$)') {P1}(lll:lll); ]
+    write(i_log,*); "For a new line"
+  ]
+}
+
+IDEBUG = .false.;   "set to .true. for debug outputs"
+ERROR_FLAG = 0;
+IF(IDEBUG) [OUTPUT NMIN,NMAX, $NMAX;(' Entering get_inputs seeking values',
+   I5,' to', I5, '  with a max allowed of',I5);
+]
+IF (NMAX < NMIN | NMAX > $NMAX)[
+  OUTPUT NMAX, NMIN, $NMAX;
+  (//' Error entering get_inputs: Asked for values from',I5,' to',I5,
+  '    with a max of',I5//' This implies a bug in the calling routine'/
+  ' Fix it up and try again.  Stopping now.');
+  STOP;
+]
+ERR=i_errors;    "inputfile.errors"
+UNITNUM=i_input; "inputfile.egs4inp"
+DELIM_START=':START '//DELIMETER(:lnblnk1(DELIMETER))//':';
+DELIM_END=':STOP '//DELIMETER(:lnblnk1(DELIMETER))//':';
+$CONVERT DELIM_START TO UPPER CASE; "This allows use of lower case letters"
+$CONVERT DELIM_END TO UPPER CASE; "This allows use of lower case letters"
+
+IF(IDEBUG) [OUTPUT DELIM_START,DELIM_END;(' start and stop delimeters are:'/
+   A/A/);
+]
+"===================check that each value_sought is there===================="
+
+DO I = NMIN, NMAX  [ "for each value_sought"
+   REWIND (UNITNUM);   "Rewind the input file"
+   LINE=0;             "reset line counter"
+   CHECK=0;            "reset error checker"
+   ERROR_FLAGS(I)=0;
+   " Set to default for the case the input is not found "
+   IF(TYPE(I) = 0 | TYPE(I) = 1) [ VALUE(I,1) = DEFAULT(I); ]
+   IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+   VNAME=VALUES_SOUGHT(I);
+   iVNAME=lnblnk1(VNAME);
+   IF( ivname < 1 )
+   [
+     IF( error_level > 0 ) [
+       write(ERR,*) ' ======================= Warning ===================== ';
+       write(ERR,*) '    Empty VALUES_SOUGHT passt to Get_Inputs()!         ';
+       write(ERR,*) ' ===================================================== ';
+     ]
+     ERROR_FLAG=1;
+     ERROR_FLAGS(I)=1;
+     goto :END-NMIN-NMAX-LOOP:;
+   ]
+
+   $CONVERT vname TO UPPER CASE; "This allows use of lower case letters"
+   iindex = 0;
+   IF (DELIMETER = 'NONE') [ start_found = .true.; ]
+   ELSE                    [ start_found = .false.; ]
+   WHILE ( iindex = 0 )  "Until the value sought is found"
+   [
+:GI25:
+       CONTINUE;
+       LINE=LINE+1;
+       IF( start_found ) [
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+       ]
+       ELSE [
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+       ]
+       "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
+       $SKIP LEADING BLANKS IN text;
+       $REMOVE EVERYTHING AFTER '#' IN text;
+       $REMOVE EVERYTHING AFTER ';' IN text;
+       length = lnblnk1(TEXT);
+       TEXT=TEXT(:length);
+       origtext = text(:length);
+       $CONVERT text TO UPPER CASE;
+       IF( ~start_found ) [
+         IF (INDEX(TEXT,DELIM_START) ~= 0 ) [ start_found = .true.; ]
+         goto :GI25:;
+       ]
+
+       iindex=INDEX(TEXT,VNAME(:iVNAME));
+
+       " Check for end delimeter "
+       IF( DELIMETER~='NONE' )
+       [
+         IF (INDEX(TEXT,DELIM_END)~=0)
+         [
+             IF( error_level > 0 ) [
+             WRITE (ERR,*) '***************ERROR***************';
+             WRITE (ERR,*) '>>',VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                           '<<',' NOT FOUND';
+             WRITE (ERR,*) 'END OF DELIMETER: ',DELIMETER(:lnblnk1(DELIMETER));
+             ]
+             ERROR_FLAG=1;
+             ERROR_FLAGS(I)=1;
+             GOTO :END-NMIN-NMAX-LOOP:;
+         ]
+       ]
+   ] "end while loop. If we pass this loop, we have the values_sought string "
+     "in text"
+
+   CHECK=0; "reset error checker"
+   IF( idebug ) [
+       write(i_log,*) ' ******* Found: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+
+   " Set string pointer to position after vname string and/or "
+   " leadinf equals                                           "
+   IINDEX=IINDEX+iVNAME;
+   TEXT=TEXT(IINDEX:); origtext=origtext(iindex:);
+   IF( idebug ) [
+       write(i_log,*) ' After removing vname: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+   IINDEX=INDEX(TEXT,'=');
+   IF (IINDEX.NE.0) [
+      TEXT=TEXT(IINDEX+1:); origtext=origtext(iindex+1:);
+   ]
+   ELSE [
+       IINDEX=INDEX(TEXT,':');
+       IF (IINDEX.NE.0) [
+          TEXT=TEXT(IINDEX+1:); origtext=origtext(iindex+1:);
+       ]
+   ]
+   IF( idebug ) [
+       write(i_log,*) ' After removing leading equals: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+
+   "===============read the value(i)======================="
+   IF ( (lnblnk1(TEXT)=0) | (lnblnk1(TEXT)=1) )
+   [
+        IF (vname(:ivname)='TITLE')
+        [
+           READ (UNITNUM,FMT='(A80)') TEXTPIECE;
+           IF (lnblnk1(TEXTPIECE)~=0) [
+              TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
+              $SKIP LEADING BLANKS IN text;
+              $SKIP LEADING BLANKS IN origtext;
+              GOTO :TITLE-THERE:;
+           ]
+        ]
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '*************ERROR*************';
+        WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'VALUE NOT THERE!!';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        RETURN;
+   ]
+:TITLE-THERE:
+   CONTINUE;
+
+   " Always check for default. The following sets the value to "
+   " default(i) for a numeric input (type=1 or 2) and to 0 for "
+   " an 'allowed input' => use only if one input is expected!  "
+   iindex = index(text,'DEFAULT');
+   IF( iindex ~= 0 )
+   [                  "User requested a default value"
+       IF( type(i) ~= 2 )
+       [
+           IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
+           ELSE               [ VALUE(I,1)=0;          ]
+           goto :END-NMIN-NMAX-LOOP:;
+       ]
+   ]
+
+   IF ((TYPE(I) = 0)|(TYPE(I) = 1))
+   [                                 "Read the number"
+       IVAL=1;  "nvalue counter"
+       IF( idebug )[write(i_log,*) ' *** Reading an integer or a real value! ';]
+       LOOP
+       [
+           IF( idebug ) [write(i_log,*) ' In LOOP, ival = ',ival;]
+           IF (lnblnk1(TEXT)=0) [
+                 IF( error_level > 0 ) [
+                 WRITE(ERR,*) '*************ERROR*************';
+                 WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                 WRITE (ERR,*) 'VALUE NOT THERE!!';
+                 ]
+                 ERROR_FLAG=1;
+                 ERROR_FLAGS(I)=1;
+                 RETURN;
+           ]
+           READ(TEXT,END=:GI1010:,ERR=:GI1007:,FMT=*) VALUE(I,IVAL);
+           IF( idebug ) [write(i_log,*) ' Read value: ',ival,VALUE(I,IVAL);]
+"==========================================================================="
+"=================================Defaults=================================="
+
+           IF ((VALUE(I,IVAL)>VALUE_MAX(I))|(VALUE(I,IVAL)<VALUE_MIN(I)))
+           [
+               IF (TYPE(I)=0)
+               [
+                    INT_VALUE=DEFAULT(I);
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,*) '************WARNING************';
+                    WRITE(ERR,:FMTA:) INT_VALUE,
+                                 VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I)));
+                    ]
+                    :FMTA: FORMAT ( 'Default= ',I9,' used for: ', A );
+                    INT_VALUE=VALUE(I,IVAL);
+                    INT_VALUE_MIN=VALUE_MIN(I);
+                    INT_VALUE_MAX=VALUE_MAX(I);
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,:FMTB:)
+                        VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                        INT_VALUE, INT_VALUE_MIN,INT_VALUE_MAX;
+                    ]
+                    :FMTB: FORMAT (A,'=', I9,' should be between ',
+                                   I9,' and ', I9);
+               ]
+               IF (TYPE(I)=1)
+               [
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,*) '************WARNING************';
+                    WRITE(ERR,:FMTC:) DEFAULT(I),
+                                 VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I)));
+                    :FMTC: FORMAT ( 'Default= ',F12.6,' used for: ', A );
+                    WRITE(ERR,:FMTD:)
+                        VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                        VALUE(I,IVAL), VALUE_MIN(I),VALUE_MAX(I);
+                    :FMTD: FORMAT (A,'=', F12.6,' should be between ',
+                                   G14.6,' and ', G14.6);
+                    ]
+               ]
+               VALUE(I,IVAL)=DEFAULT(I);
+           ] "end IF default"
+
+           IF ( IVAL = NVALUE(I) ) EXIT; "Required inputs found"
+"==========================================================================="
+"=======================Move to next value, else exit======================="
+
+           IF ((INDEX(TEXT,',')~=0)|(lnblnk1(TEXT)=0))
+           [
+               IF ( idebug ) [
+                   write(i_log,*) ' A comma or a blank text found -> ';
+                   write(i_log,*) ' searching for further input';
+               ]
+               TEXT=TEXT(INDEX(TEXT,',')+1:);
+               WHILE (lnblnk1(TEXT)=0)
+               [
+                   IF ( idebug ) [
+                     write(i_log,*) ' Empty text -> reading next line! ';
+                   ]
+                   LINE=LINE+1;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   $SKIP LEADING BLANKS IN text;
+                   $REMOVE EVERYTHING AFTER '#' IN text;
+                   $REMOVE EVERYTHING AFTER ';' IN text;
+                   length = lnblnk1(TEXT);
+                   TEXT=TEXT(:length);
+                   origtext = text(:length);
+                   $CONVERT text TO UPPER CASE;
+
+                   "Check whether this line containes one of the strings sought"
+                   DO K = 1 , NMAX
+                   [
+                       vname1 = VALUES_SOUGHT(K);
+                       length = lnblnk1(vname1);
+                       IF( length > 0 )
+                       [
+                           $SKIP LEADING BLANKS IN vname1;
+                           $CONVERT vname1 TO UPPER CASE;
+                           IF (INDEX(TEXT,vname1(:length))~=0)
+                           [
+                             IF( error_level > 0 ) [
+                             WRITE(ERR,*) '************ERROR************';
+                             WRITE(ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                             WRITE(ERR,*) KEEPTEXT(:lnblnk1(KEEPTEXT)),
+                                      '<--COMMA INDICATES ANOTHER INPUT';
+                             WRITE(ERR,*) 'SEARCHED NEXT LINE: ',
+                                             TEXT(:lnblnk1(TEXT));
+                             WRITE(ERR,*) 'BUT NO OTHER INPUT WAS DETECTED';
+                             ]
+                             ERROR_FLAG=1;
+                             ERROR_FLAGS(I)=1;
+                           ]
+                       ]
+                   ]
+                   IF( idebug ) [
+                     write(i_log,*) ' Next line: ';
+                     write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+                     write(i_log,'(a,$)') ' origtext: ';
+                                          $STRING-OUTPUT(origtext);
+                   ]
+               ]
+           ] "end if ~=0"
+           ELSE [EXIT;]
+           IVAL=IVAL+1;
+       ] "end loop"
+       IF ((NVALUE(I)~=0)&(NVALUE(I)~=IVAL)) [
+           IF( error_level > 0 ) [
+           WRITE (ERR,*) '**************ERROR**************';
+           WRITE (ERR,*) 'VALUE SOUGHT: ', VALUES_SOUGHT(I);
+           WRITE (ERR,*) 'ASKED FOR', NVALUE(I),' NUMERICAL INPUT(S)';
+           WRITE (ERR,*) 'HOWEVER,', IVAL, ' WERE DETECTED';
+           ]
+           ERROR_FLAG=1;
+           ERROR_FLAGS(I)=1;
+       ]
+       ELSE [NVALUE(I)=IVAL;]
+:GI1010:
+       CONTINUE;
+   ] "end IF TYPE"
+
+"============================read the char_value(i)========================="
+
+   IF ((TYPE(I) = 2) | (TYPE(I) = 3))
+   [                                   "Read the string"
+       IVAL=1;     "nvalue counter"
+       IF( idebug ) [write(i_log,*) ' Trying to read a string! ';]
+       LOOP
+       [
+           IF( idebug ) [write(i_log,*) ' In LOOP, ival = ',ival;]
+           IF (lnblnk1(TEXT)=0) [
+              IF( error_level > 0 ) [
+              WRITE(ERR,*) '*************ERROR*************';
+              WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+              WRITE (ERR,*) 'VALUE NOT THERE!!';
+              ]
+              ERROR_FLAG=1;
+              ERROR_FLAGS(I)=1;
+              RETURN;
+           ]
+           IF (vname(:ivname)='TITLE') [
+              TEXTPIECE=origtext;
+              GOTO :READ-IT:
+           ]
+           iindex = INDEX(origtext,',');
+           IF ( iindex ~= 0 ) [ TEXTPIECE=origtext(:iindex-1); ]
+           ELSE               [ TEXTPIECE=origtext;            ]
+                      "The above is to avoid conversion to upper case"
+                      "for e.g. media names                          "
+           :READ-IT:
+           CONTINUE;
+           READ(TEXTPIECE,ERR=:GI1008:,FMT='(A80)') CHAR_VALUE(I,IVAL);
+           $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
+           IF( idebug ) [
+             write(i_log,*) ' Read the following char string: ';
+             $STRING-OUTPUT(CHAR_VALUE(I,IVAL));
+           ]
+"===============================Allowed inputs=============================="
+           IF (TYPE(I) = 3)
+           [
+              $CONVERT CHAR_VALUE(I,IVAL) TO UPPER CASE;
+              ALLOWED=.FALSE.;
+              DO K=0, $MXALINP [
+                 vname1 = ALLOWED_INPUTS(I,K);
+                 $SKIP LEADING BLANKS IN ALLOWED_INPUTS(I,K);
+                 $CONVERT ALLOWED_INPUTS(I,K) TO UPPER CASE;
+                 IF (ALLOWED_INPUTS(I,K)=CHAR_VALUE(I,IVAL)) [
+                    ALLOWED=.TRUE.;
+                    VALUE(I,IVAL)=K;
+                    IF( idebug ) [
+                      write(i_log,*) ' Found a allowed_value match ',k;
+                    ]
+                 ]
+              ]
+              IF (.NOT.ALLOWED) [
+                 WRITE(ERR,*) '*************ERROR*************';
+                 IF (IVAL~=1) [
+                    WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                    WRITE (ERR,*) 'SHOULD HAVE ONE INPUT ONLY';
+                 WRITE (ERR,*) 'APPARENT STATE: COMMA INDICATING SECOND VALUE';
+                 ]
+                 ELSE [
+                    WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                    WRITE(ERR,*) 'INPUT-->',
+                               CHAR_VALUE(I,IVAL)(:lnblnk1(CHAR_VALUE(I,IVAL))),
+                               '<--NOT ALLOWED';
+                    WRITE(ERR,*) 'OPTIONS ARE:';
+                    WRITE(ERR,:FMT:)
+                    (ALLOWED_INPUTS(I,K)(:lnblnk1(ALLOWED_INPUTS(I,K))),
+                     K=0,$MXALINP);
+                 ]
+                 :FMT: FORMAT(A40);
+                 ERROR_FLAG=1;
+                 ERROR_FLAGS(I)=1;
+              ]
+           ]
+"=======================Move to next value, else exit======================="
+
+           IF (vname(:ivname)='TITLE') [ EXIT; ]
+           DO K=1,LEN(KEEPTEXT) [KEEPTEXT(K:K)=' ';]  "erase previous KEEPTEXT"
+           KEEPTEXT(:lnblnk1(TEXT))=TEXT;
+           iindex = INDEX(TEXT,',');
+           IF ( iindex ~= 0 | lnblnk1(TEXT)=0 )
+           [
+               TEXT=TEXT(INDEX(TEXT,',')+1:);
+               origtext=origtext(iindex+1:);
+               WHILE (lnblnk1(TEXT)=0)
+               [
+                   LINE=LINE+1;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   $SKIP LEADING BLANKS IN text;
+                   $REMOVE EVERYTHING AFTER '#' IN text;
+                   $REMOVE EVERYTHING AFTER ';' IN text;
+                   length = lnblnk1(TEXT);
+                   TEXT=TEXT(:length);
+                   origtext = text(:length);
+                   $CONVERT text TO UPPER CASE;
+
+                   "Check whether this line containes one of the strings sought"
+                   DO K = 1 , NMAX
+                   [
+                       vname1 = VALUES_SOUGHT(K);
+                       length = lnblnk1(vname1);
+                       IF( length > 0 )
+                       [
+                           $SKIP LEADING BLANKS IN vname1;
+                           $CONVERT vname1 TO UPPER CASE;
+                           IF (INDEX(TEXT,vname1(:length))~=0)
+                           [
+                             WRITE(ERR,*) '************ERROR************';
+                             WRITE(ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                             WRITE(ERR,*) KEEPTEXT(:lnblnk1(KEEPTEXT)),
+                                      '<--COMMA INDICATES ANOTHER INPUT';
+                             WRITE(ERR,*) 'SEARCHED NEXT LINE: ',
+                                             TEXT(:lnblnk1(TEXT));
+                             WRITE(ERR,*) 'BUT NO OTHER INPUT WAS DETECTED';
+                             ERROR_FLAG=1;
+                             ERROR_FLAGS(I)=1;
+                           ]
+                       ]
+                   ]
+               ]
+           ] "end if ~=0"
+           ELSE [EXIT;]
+           IVAL=IVAL+1;
+        ] "end loop"
+        IF ((NVALUE(I)~=0)&(NVALUE(I)~=IVAL)) [
+           IF( error_level > 0 ) [
+           WRITE (ERR,*) '*******************ERROR*******************';
+           WRITE (ERR,*) 'VALUE SOUGHT: ', VALUES_SOUGHT(I);
+           WRITE (ERR,*) 'ASKED FOR', NVALUE(I),' INPUT(S)';
+           WRITE (ERR,*) 'HOWEVER,', IVAL, ' WERE DETECTED';
+           ]
+           ERROR_FLAG=1;
+           ERROR_FLAGS(I)=1;
+        ]
+        ELSE [NVALUE(I)=IVAL;]
+   ]
+"==========================================================================="
+"==========================================================================="
+   goto :END-NMIN-NMAX-LOOP:;
+
+:GI1003:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '******************ERROR***********************';
+        WRITE (ERR,*) 'END OF FILE REACHED BUT VALUE SOUGHT NOT FOUND';
+        WRITE (ERR,*) 'PROBABLY A MISSING/MISSPELLED END DELIMETER';
+        WRITE (ERR,*) 'VALUE SOUGHT: >>',
+          VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),'<<';
+        WRITE (ERR,*) 'END DELIMETER: >>',
+          DELIM_END(:lnblnk1(DELIM_END)),'<<';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        goto :END-NMIN-NMAX-LOOP:;
+
+:GI1004:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '******************ERROR***********************';
+        WRITE (ERR,*) 'END OF FILE REACHED BUT VALUE SOUGHT NOT FOUND';
+        WRITE (ERR,*) 'PROBABLY A MISSING/MISSPELLED START DELIMETER';
+        WRITE (ERR,*) 'VALUE SOUGHT: >>',
+          VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),'<<';
+        WRITE (ERR,*) 'START DELIMETER: >>',
+          DELIM_START(:lnblnk1(DELIM_START)),'<<';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        goto :END-NMIN-NMAX-LOOP:;
+
+:GI1007:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '***************ERROR***************';
+        IF (IVAL>1) [J=IVAL;] ELSE [J=1;]
+        WRITE (ERR,*) 'ERROR READING VALUE SOUGHT: ', VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'LINE #',LINE;
+        WRITE (ERR,*) 'COULD NOT READ THE VALUE!!';
+        WRITE (ERR,*) 'SHOULD BE AN INTEGER OR A REAL...';
+        WRITE (ERR,*) 'IS THERE AN EXTRA COMMA AT THE END OF YOUR INPUT?';
+        ]
+        ERROR_FLAG=1; "turn on the error flag"
+        ERROR_FLAGS(I)=1; "turn on the error flag"
+        GOTO :END-NMIN-NMAX-LOOP:;
+:GI1008:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '***************ERROR***************';
+        WRITE (ERR,*) 'ERROR READING VALUE SOUGHT: ', VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'LINE #',LINE;
+        WRITE (ERR,*) 'COULD NOT READ THE STRING !!';
+        ]
+        ERROR_FLAG=1; "turn on the error flag"
+        ERROR_FLAGS(I)=1; "turn on the error flag"
+
+:END-NMIN-NMAX-LOOP:
+    CONTINUE;
+] "end do NMAX loop"
+RETURN;
+
+"**************if any errors**************"
+:GI1001:
+      WRITE (ERR,*) '***************ERROR***************';
+      WRITE (ERR,*) 'ERROR READING TEXT ', TEXT,' ON LINE ',LINE;
+      goto :GI1009:;
+"the following is no longer used so comment it out"
+":GI1002:
+"      WRITE (ERR,*) '***************ERROR***************';
+"      IF (CHECK=100) [
+"         WRITE (ERR,*) 'DELIMETER: ',DELIMETER(:lnblnk1(DELIMETER));
+"         WRITE (ERR,*) 'WAS NOT FOUND';
+"      ]
+"      ELSE [
+"         WRITE (ERR,*) '>>',VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+"                       '<<',' NOT FOUND';
+"      ]
+"      WRITE (ERR,*) 'END OF FILE REACHED';
+:GI1009:
+      CONTINUE;  "exit if there is an error"
+      ERROR_FLAG=1; "turn on the error flag"
+      ERROR_FLAGS(I)=1; "turn on the error flag"
+      RETURN;
+
+entry get_input_set_error_level(the_level);
+error_level = the_level;
+return;
+END;
+
+
+
+%E   "get_inputs.mortran"
+"*****************************************************************************
+"
+subroutine get_transport_parameter(ounit);
+"
+" is provided for use with the EGSnrc system. It reads all physics
+" related parameters from the input file using the get_input routine.
+" For a description for the format/conventions used in get_input,
+" see the description at the beginning of this file.
+" In order to use this routine, include transportp.macros BEFORE
+" get_inputs.mortran via the configuration file.
+" If the routine is called with ounit > 0, the transport parameter
+" settings will be printid on unit ounit.
+"
+" Version 0.1           Iwan Kawrakow, January 1999
+"
+"******************************************************************************
+"*******************************************************************************
+"
+"                         MC TRANSPORT PARAMETER
+"                         **********************
+"
+"  All input associated with selection of various transport parameter
+"  is not crucial for the execution as there are default values set.
+"  Therefore, if some of the input options in this section are
+"  missing/misspelled, this will be ignored and defualt parameter assumed
+"  As the transport parameter input routine uses get_inputs, a lot
+"  of error/warning messages may be produced on UNIT 15, though.
+"  If you don't have the intention of changing default settings,
+"  simply ignore the error messages.
+"
+"  The delimeters are
+"
+"               :start mc transport parameter:
+"               :stop mc transport parameter:
+"
+"  You can change this by including the statement
+"
+"  REPLACE {$THE_DELIMETER} WITH {'WHATEVER-YOU-LIKE-THE-DELIMETER-TO-BE'}
+"
+"  in your input file.
+"
+"  Currently, the following options are available (case does not matter and
+"             the internal variables are shown in [ ] brackets):
+"
+"       Global ECUT=     Global (in all regions) electron transport cut
+"                        off energy (in MeV). If this imput is missing,
+"                        AE(medium) will be used.
+"                        [ ECUT ]
+"       Global PCUT=     Global (in all regions) photon transport cut
+"                        off energy (in MeV). If this imput is missing,
+"                        AP(medium) will be used.
+"                        [ PCUT ]
+"       Global SMAX=     Global (in all regions) maximum step-size
+"                        restriction for electron transport (in cm).
+"                        If missing, no geometrical step-size restrictions
+"                        will be employed. Note that if you use the default
+"                        EGSnrc electron-step algorithm, no SMAX-restriction
+"                        is necessary. Option is useful for transport in low
+"                        density materials (air) when PRESTA behaviour is
+"                        turned on (see below)
+"                        [ SMAXIR ]
+"       ESTEPE=          Maximum fractional energy loss per step.
+"                        Note that this is a global option only, no
+"                        region-by-region setting is possible. If missing,
+"                        the defualt is 0.25 (25%).
+"                        [ ESTEPE ]
+"       XImax=           Maximum first elastic scattering moment per step.
+"                        Default is 0.5, NEVER use value greater than 1 as
+"                        this is beyond the range of MS data available.
+"                        [ XIMAX ]
+"       Boundary crossing algorithm=
+"                        There are two selections possible: EXACT, means
+"                        the algorithm will cross boundaries in a single
+"                        scattering (SS) mode, the distance from a boundary
+"                        at which the transition to SS mode is made is
+"                        determined by 'Skin depth for BCA' (see below).
+"                        The second option is PRESTA-I, if selected boundaries
+"                        will be crossed a la PRESTA, i.e. with lateral
+"                        correlations turned off and MS forced at boundaries.
+"                        Default is EXACT.
+"                        [ bca_algorithm, exact_bca ]
+"       Skin depth for BCA=
+"                        Determines the distance from a boundary (in elastic
+"                        MFP) at which the algorithm will go into single
+"                        scattering mode (if EXACT boundary crossing) or
+"                        swith off lateral correlations (if PRESTA-I boundary
+"                        crossing). Default value is 3 for EXACT or
+"                        exp(BLCMIN)/BLCMIN for PRESTA-I (see the PRESTA paper
+"                        for a definition of BLCMIN). Note that if you choose
+"                        EXACT boundary crossing and set Skin depth for BCA
+"                        to a very large number (e.g. 1e10), the entire
+"                        calculation will be in SS mode. If you choose
+"                        PRESTA-I boundary crossing and make Skin depth for BCA
+"                        large, you will get default EGS4 behavious (no PRESTA)
+"                        [ skindepth_for_bca ]
+"       Electron-step algorithm=
+"                        PRESTA-II (the default), the name is
+"                        used for historical reasons
+"                        or PRESTA-I
+"                        Determines the algorithm used to take into account
+"                        lateral and longitudinal correlations in a
+"                        condensed history step.
+"                        [ transport_algorithm ]
+"       Spin effects=    Off, On, default is On
+"                        Turns off/on spin effects for electron elastic
+"                        scattering. Spin On is ABSOLUTELY necessary for
+"                        good backscattering calculations. Will make a
+"                        difference even in `well conditioned' situations
+"                        (e.g. depth dose curves for RTP energy range
+"                        electrons).
+"                        [ spin_effects ]
+"       Brems angular sampling= Simple, KM, default is KM
+"                        If Simple, use only the leading term of the Koch-Motz
+"                        distribution to determine the emission angle of
+"                        bremsstrahlung photons. If On, complete
+"                        modified Koch-Motz 2BS is used (modifications
+"                        concern proper handling of kinematics at low energies,
+"                        makes 2BS almost the same as 2BN at low energies).
+"                        [ IBRDST ]
+"       Brems cross sections= BH, NIST, NRC default is BH
+"                        If BH is selected, the Bethe-Heitler bremsstrahlung
+"                        cross sections (Coulomb corrected above 50 MeV)
+"                        will be used. If NIST is selected, the NIST brems
+"                        cross section data base (which is the basis for
+"                        the ICRU radiative stopping powers) will be employed.
+"                        Differences are negligible for E > ,say, 10 MeV,
+"                        but significant in the keV energy range. If NRC is
+"                        selected, the NRC brems cross-section data base will
+"                        be used, which is a version of the NIST data base
+"                        with corrected electron-electron brems contributions
+"                        (corrections to the NIST data is typically only
+"                        significant for low values of the atomic number Z
+"                        and for k/T < 0.005).
+"       Triplet production= On or Off (default).  Turns on/off simulation
+"                        of triplet production.  If On, then Borsellino's
+"                        first Born approximation is used to sample triplet
+"                        events based on the triplet cross-section data.
+"                        [ itriplet ]
+"       Bound Compton scattering=  On (default), Off, Simple or norej
+"                        If Off, Compton scattering will be treated with
+"                        Klein-Nishina, with On Compton scattering is
+"                        treated in the Impulse approximation.
+"                        With Simple, the impulse approximation incoherent
+"                        scattering function will be used (i.e., no Doppler
+"                        broadenning). With norej the actual total bound
+"                        Compton cross section is used and there are no
+"                        rejections at run time.
+"                        Make sure to turn on for low energy applications,
+"                        not necessary above, say, 1 MeV.
+"                        [ IBCMP ]
+"       Radiative Compton corrections= On or Off (default). If on, then
+"                        include radiative corrections for Compton scattering.
+"                        Equations are based on original Brown & Feynman
+"                        equations (Phys. Rev. 85, p 231--1952).  Requires
+"                        a change to the user codes Makefile to include
+"                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
+"                        SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+"                        [ radc_flag ]
+"       Electron Impact Ionization= Off (default), On, casnati, kolbenstvedt,
+"                        gryzinski, penelope.  If set to On or ik, then use
+"                        Kawrakow's theory to derive EII cross-sections.
+"                        If set to casnati, then
+"                        use the cross-sections of Casnati (contained in the
+"                        file ($HEN_HOUSE/data/eii_casnati.data).  Similar for
+"                        kolbenstvedt, gryzinski and penelope. This is only of
+"                        interest in kV X-ray calculations.
+"                        Case-sensitive except for Off, On or ik options.
+"                        [ eii_flag ]
+"       Pair angular sampling= Off, Simple, KM.
+"                        If off, pairs are set in motion at an angle m/E
+"                        relative to the photon direction (m is electron rest
+"                        energy, E the photon energy). Simple turns on
+"                        the leading term of the angular distribution
+"                        (this is sufficient for most applications),
+"                        KM (comes from Koch and Motz) turns on using 2BS
+"                        from the article by Koch and Motz.  Uniform
+"                        Default is Simple, make sure you always use
+"                        Simple or KM
+"                        [ IPRDST ]
+"       Pair cross sections= BH (default) or NRC.  If set to BH, then use
+"                        Bethe-Heitler pair production cross-sections.  If set
+"                        to NRC, then use NRC pair production cross-sections
+"                        (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
+"                        of interest at low energies, where the NRC cross-
+"                        sections take into account the assymmetry in the
+"                        positron-electron energy distribution.
+"                        [ pair_nrc ]
+"       Photon cross sections= Photon cross-section data.  Current options are
+"                        si (Storm-Israel--the default), epdl (Evaluated Photon
+"                        Data Library), xcom and pegs4.  Allows the use of
+"                        photon cross-sections other than from the PEGS4 file
+"                        unless the pegs4 option is specified.
+"                        Note that the user can supply their own cross-section
+"                        data as well. The requirement is that the files
+"                        photon_xsections_photo.data,
+"                        photon_xsections_pair.data,
+"                        photon_xsections_triplet.data, and
+"                        photon_xsections_rayleigh.data exist in the
+"                        $HEN_HOUSE/data directory, where photon_xsections
+"                        is the name specified.
+"                        Hence this entry is case-sensitive.
+"                        [ photon_xsections ]
+"       Photon cross-sections output= Off (default) or On.  If On, then
+"                        a file $EGS_HOME/user_code/inputfile.xsections is
+"                        output containing photon cross-section data used.
+"                        [ xsec_out ]
+"       Compton cross sections= Bound Compton cross-section data.  User-
+"                        supplied bound Compton cross-sections in the file
+"                        $HEN_HOUSE/data/comp_xsections_compton.data, where
+"                        comp_xsections is the name supplied for this input.
+"                        This is only used if Bound Compton scattering= Simple
+"                        and is not available on a region-by-region basis
+"                        (see below).  The default file (ie in the absence
+"                        of any user-supplied data) is compton_sigma.data.
+"                        [ comp_xsections ]
+"       Rayleigh scattering= Off, On, custom
+"                        If On, turned on coherent (Rayleigh) scattering.
+"                        Default is Off. Should be turned on for low energy
+"                        applications. Not set to On by default for historical
+"                        reasons since a PEGS4 data set is not required anymore.
+"                        If custom, user must provide media names and form
+"                        factor files for each desired medium. For the rest
+"                        of the media, default atomic FF are used.
+"                        [ IRAYLR ]
+"       ff media names = A list of media names (must match media found in
+"                        PEGS4 data file) for which the user is going to
+"                        provide custom Rayleigh form factor data.
+"                        [ iray_ff_media($MXMED) ]
+"       ff file names = A list of names of files containing the Rayleigh
+"                       form factor data for the media specified by
+"                       the ff media names = input above.  Full directory
+"                       paths must be given for all files, and for each medium
+"                       specified, iray_ff_media(i), there must be a
+"                       corresponding file name, iray_ff_file(i).  For
+"                       example files, see the directory
+"                       $HEN_HOUSE/data/molecular_form_factors.
+"                       [ iray_ff_file($MXMED) ]
+"Ali:photonuc, 2 blocks of comments"
+"       Photonuclear attenuation= Off (default) or On
+"                        If On, models the photonuclear effect. Current
+"                        implementation is crude. Available on a
+"                        region-by-region basis (see below)
+"                        [ IPHOTONUCR ]
+"       Photonuclear cross sections= Total photonuclear cross sections. User-
+"                        supplied total photonuclear cross-sections in
+"                        $HEN_HOUSE/data/photonuc_xsections_photonuc.data,
+"                        where photonuc_xsections is the name supplied for
+"                        this input (case sensitive). In the absence of
+"                        any user-supplied data, or if photonuc_xsections
+"                        is set to 'default', the default file is
+"                        iaea_photonuc.data.
+"                        [ photonuc_xsections ]
+"       Photoelectron angular sampling= Off or On
+"                        If Off, photo-electrons get the direction of the
+"                        `mother' photon, with On, Sauter's furmula is
+"                        used (which is, striktly speaking, valid only for
+"                        K-shell photo-absorption).
+"                        If the user has a better approach, replace the macro
+"                            $SELECT-PHOTOELECTRON-DIRECTION;
+"                        The only application that
+"                        I encountered until now where this option made a
+"                        small difference was a big ion chamber (cavity size
+"                        comparable with electron range) with high-Z walls
+"                        in a low energy photon beam.
+"                        Default is On
+"                        [ IPHTER ]
+"       Atomic relaxations= Off, On
+"                        Default is On. The effect of using On is twofold:
+"                        - In photo-electric absorption events, the element
+"                          (if material is mixture) and the shell the photon
+"                          is interacting with are sampled from the appropriate
+"                          cross seections
+"                        - Shell vacancies created in photo-absorption events
+"                          are relaxed via emission of fluorescent X-Rays,
+"                          Auger and Koster-Cronig electrons.
+"                         Make sure to turn this option on for low energy
+"                         applications.
+"                         [ IEDGFL ]
+"
+"       Atomic relaxations, Rayleigh scattering,
+"       Photoelectron angular sampling and Bound Compton scattering
+"       and photonuclear effect(Ali:photonuc)
+"       can also be turned On/Off on a region-by-region
+"       basis. To do so, put e.g.
+"
+"       Atomic relaxations= On in Regions   or
+"       Atomic relaxations= Off in regions
+"
+"                         in your input file. Then use
+"
+"       Bound Compton start region=
+"       Bound Compton stop region=
+"                or
+"       Rayleigh start region=
+"       Rayleigh stop region=
+"                or
+"       Relaxations start region=
+"       Relaxations stop region=
+"                or
+"       PE sampling start region=
+"       PE sampling stop region=
+"                or                  Ali:photonuc
+"       Photonuclear start region=
+"       Photonuclear stop region=
+"
+"                         each followed by a lost of of one or more
+"                         start and stop regions separated by commas.
+"                         Example:
+"        Atomic relaxations= On in Regions
+"        Relaxations start region=  1, 40
+"        Relaxations stop region=  10, 99
+"                         will first turn off relaxations everywhere and
+"                         then turn on in regions 1-10 and 40-99.
+"                         Note that input is checked against min. and max.
+"                         region number and ignored if
+"                         start region < 1 or stop_region > $MXREG or
+"                         start region > stop region.
+"
+"                         ECUT, PCUT and SMAX can also be set on a
+"                         region-by-region basis. To do so, iclude
+"                         in your input file
+"
+"         Set XXXX=              f_value1, f_value2, ...
+"         Set XXXX start region= i_value1, i_value2, ...
+"         Set XXXX stop region=  j_value1, j_value2, ...
+"
+"                         where XXXX is ECUT, PCUT or SMAX ,
+"                         f_value1, f_value2,... are the desired values for XXXX
+"                         and i_value_i and j_value_i are the start and
+"                         stop regions.
+"
+"*******************************************************************************
+
+implicit none;  "Hard coded to catch possible user replacements of the "
+                "following common blocks"
+
+character*80 line;
+character*512 toUpper;
+
+$INTEGER ounit;
+$declare_max_medium;
+
+$COMIN-GET-TRANSPORTP;
+
+$INTEGER  ival,num_ecut,num_pcut,num_smax,num_incoh,num_radc,num_coh,num_relax,
+          num_pe_ang,num_brems_ang,num_brems_cs,num_pair_cs,
+          num_ffmed,num_ffiles,
+          num_pair_ang,num_eii,num_eii_L,num_estepe,num_ximax,num_triplet,
+          num_pxsec,num_pxsec_out, num_cxsec,
+          num_photonuc, num_photonuc_xsec,"Ali:photonuc, 1 line"
+          num_spin,num_bca,num_alg,num_skin,itmp,iitmp,i,j,k,istart,iend,
+          egs_open_file,lnblnk1;
+
+$LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
+          incoh_inregions,coh_inregions,relax_inregions,
+          pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
+
+character*15 output_strings(14);"Ali:photonuc, increased by 1"
+save         output_strings,line;
+save         ecut_inregions,pcut_inregions,smax_inregions,
+             incoh_inregions,coh_inregions,relax_inregions,
+             pe_inregions,aux_inregions,photonuc_inregions,
+             num_photonuc;"Ali:photonuc"
+
+
+DO k=1,80 [ line(k:k) = '='; ]
+delimeter = $THE_DELIMETER;
+ival = 0;
+
+;
+/ecut_inregions,pcut_inregions,smax_inregions,
+ incoh_inregions,coh_inregions,relax_inregions,
+ pe_inregions,aux_inregions,
+ "Ali:photonuc, 1 line"
+ photonuc_inregions/ = .false.;
+
+"open a .errors file exclusively for output from this subroutine"
+i_errors=15;
+i_errors=egs_open_file(i_errors,0,1,'.errors');
+
+write(i_errors,*)
+' If you are not trying to reset transport parameters, ';
+write(i_errors,*)
+' ignore all the output until the message ';
+write(i_errors,*)
+' ******************** end input transport parameter *********************** ';
+write(i_errors,*);
+
+" ECUT "
+ival                = ival + 1;
+num_ecut            = ival;                     "Set the variable pointer"
+values_sought(ival) = $GLOBAL_ELECTRON_CUTOFF;  "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0;                        "Define the allowed range"
+value_max(ival)     = 1e15;
+default(ival)       = $GLOBAL-ECUT;
+
+" PCUT "
+ival                = ival + 1;
+num_pcut            = ival;                     "Set the variable pointer"
+values_sought(ival) = $GLOBAL_PHOTON_CUTOFF;    "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0;                        "Define the allowed range"
+value_max(ival)     = 1e15;
+default(ival)       = $GLOBAL-PCUT;
+
+" SMAX "
+ival                = ival + 1;
+num_smax            = ival;                     "Set the variable pointer"
+values_sought(ival) = $GLOBAL_SMAX;             "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0;                        "Define the allowed range"
+value_max(ival)     = 1e15;
+default(ival)       = $MAX-SMAX;
+
+" Incoherent (Compton) scattering "
+ival                = ival + 1;
+num_incoh           = ival;                     "Set the variable pointer"
+values_sought(ival) = $INCOHERENT_SCATTERING;   "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+allowed_inputs(ival,2) = $ON_IN_REGIONS;
+allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+allowed_inputs(ival,4) = 'Simple';
+allowed_inputs(ival,5) = 'norej';
+
+" Radiative corrections for Compton scattering "
+ival                = ival + 1;
+num_radc            = ival;
+values_sought(ival) = $RADC_COMPTON;
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+
+" Coherent (Rayleigh) scattering "
+ival                = ival + 1;
+num_coh             = ival;                     "Set the variable pointer"
+values_sought(ival) = $COHERENT_SCATTERING;     "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+allowed_inputs(ival,2) = $ON_IN_REGIONS;
+allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+allowed_inputs(ival,4) = 'custom';
+
+" Atomic Relaxations "
+ival                = ival + 1;
+num_relax           = ival;                     "Set the variable pointer"
+values_sought(ival) = $ATOMIC_RELAXATIONS;      "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+allowed_inputs(ival,2) = $ON_IN_REGIONS;
+allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+
+" Photoelectron angular sampling "
+ival                = ival + 1;
+num_pe_ang          = ival;                     "Set the variable pointer"
+values_sought(ival) = $PE_ANGULAR_SAMPLING;     "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+allowed_inputs(ival,2) = $ON_IN_REGIONS;
+allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+
+" Bremsstrahlung angular sampling "
+ival                = ival + 1;
+num_brems_ang       = ival;                     "Set the variable pointer"
+values_sought(ival) = $BREMS_ANGULAR_SAMPLING;  "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Simple';
+allowed_inputs(ival,1) = 'KM';   "means Koch-Motz, Simple turns on just the"
+                                 "leading term of the distribution which is"
+                                 "probably sufficiently accurate for most"
+                                 "applications"
+
+" Bremsstrahlung cross sections "
+ival                = ival + 1;
+num_brems_cs        = ival;                     "Set the variable pointer"
+values_sought(ival) = $BREMS_CROSS_SECTIONS;    "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'BH';
+allowed_inputs(ival,1) = 'NIST';                "Only global on/off available"
+allowed_inputs(ival,2) = 'NRC';                 "Only global on/off available"
+
+
+" Pair angular sampling "
+ival                = ival + 1;
+num_pair_ang        = ival;                     "Set the variable pointer"
+values_sought(ival) = $PAIR_ANGULAR_SAMPLING;   "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'Simple';             "Only global on/off available"
+allowed_inputs(ival,2) = 'KM';   "means Koch-Motz, Simple turns on just the"
+                                 "leading term of the distribution which is"
+                                 "probably sufficiently accurate for most"
+                                 "applications"
+allowed_inputs(ival,3) = 'Uniform';
+allowed_inputs(ival,4) = 'Blend';
+
+" Pair cross sections "
+ival                = ival + 1;
+num_pair_cs         = ival;
+values_sought(ival) = $PAIR_CROSS_SECTIONS;
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'BH';
+allowed_inputs(ival,1) = 'NRC';
+
+" Triplet production "
+ival                = ival + 1;
+num_triplet         = ival;
+values_sought(ival) = $TRIPLET_PRODUCTION;
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+
+" Spin effects          "
+ival                = ival + 1;
+num_spin            = ival;                     "Set the variable pointer"
+values_sought(ival) = $SPIN_EFFECTS;            "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';                 "Only global on/off available"
+
+" Electron impact ionization "
+ival                = ival + 1;
+num_eii             = ival;
+values_sought(ival) = $ELECTRON_IMPACT_IONI;
+nvalue(ival)        = 1;
+type(ival)          = 2;
+"type(ival)          = 3;"
+"allowed_inputs(ival,0) = 'Off';"
+"allowed_inputs(ival,1) = 'On';"
+"allowed_inputs(ival,2) = 'casnati';"
+"allowed_inputs(ival,3) = 'kolbenstvedt';"
+"allowed_inputs(ival,4) = 'gryzinski';"
+
+" L-shell EII xsection scaling"
+ival                = ival + 1;
+num_eii_L= ival;                                "Set the variable pointer"
+values_sought(ival) = $SCALE_L_EII_XSECTIONS;   "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0.0;                      "Define the allowed range"
+value_max(ival)     = 1.0e+9;
+default(ival)       = 1.0;
+
+" ESTEPE "
+ival                = ival + 1;
+num_estepe          = ival;                     "Set the variable pointer"
+values_sought(ival) = $MAXIMUM_ESTEPE;          "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 1e-5;                     "Define the allowed range"
+value_max(ival)     = 1;
+default(ival)       = $MAX-ELOSS;
+
+" XIMAX "
+ival                = ival + 1;
+num_ximax           = ival;                     "Set the variable pointer"
+values_sought(ival) = $MAXIMUM_XIMAX;           "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0;                        "Define the allowed range"
+value_max(ival)     = 1;
+default(ival)       = $EXACT-BCA-XIMAX;
+
+" BCA "
+ival                = ival + 1;
+num_bca             = ival;                     "Set the variable pointer"
+values_sought(ival) = $BOUNDARY_ALGORITHM;      "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'Exact';
+allowed_inputs(ival,1) = 'PRESTA-I';
+
+" Skindepth "
+ival                = ival + 1;
+num_skin            = ival;                     "Set the variable pointer"
+values_sought(ival) = $SKIN_FOR_BCA;            "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = -1;                       "Define the allowed range"
+value_max(ival)     = 1e15;
+default(ival)       = $SKIN-DEPTH-FOR-BCA;
+
+" Electron-step algorithm "
+ival                = ival + 1;
+num_alg             = ival;                     "Set the variable pointer"
+values_sought(ival) = $ELECTRON_STEP_ALG;       "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 3;                        "An `allowed' input"
+allowed_inputs(ival,0) = 'PRESTA-II'; "Better EGSnrc ???"
+allowed_inputs(ival,1) = 'PRESTA-I';
+
+" Photon cross sections "
+ival                = ival + 1;
+num_pxsec           = ival;
+values_sought(ival) = $PHOTON_XSECTIONS;
+nvalue(ival)        = 1;
+type(ival)          = 2;
+
+" Photon cross sections output "
+ival                = ival + 1;
+num_pxsec_out       = ival;
+values_sought(ival) = $PHOTON_XSECTIONS_OUT;
+nvalue(ival)        = 1;
+type(ival)          = 3;
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+
+" Compton cross sections "
+ival                = ival + 1;
+num_cxsec           = ival;
+values_sought(ival) = $COMPTON_XSECTIONS;
+nvalue(ival)        = 1;
+type(ival)          = 2;
+
+"Ali:photonuc, 2 blocks"
+" Photonuclear "
+ival                = ival + 1;
+num_photonuc        = ival;           "set the variable pointer"
+values_sought(ival) = $PHOTO_NUCLEAR; "the code word"
+nvalue(ival)        = 1;              "1 input"
+type(ival)          = 3;              "an `allowed' input"
+allowed_inputs(ival,0) = 'Off';
+allowed_inputs(ival,1) = 'On';
+allowed_inputs(ival,2) = $ON_IN_REGIONS;
+allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+
+" Photonuclear cross sections "
+ival                = ival + 1;
+num_photonuc_xsec   = ival;
+values_sought(ival) = $PHOTONUC_XSECTIONS;
+nvalue(ival)        = 1;
+type(ival)          = 2;
+
+"Ali:photonuc, 1 line"
+Nmin = num_ecut; Nmax = num_photonuc_xsec;
+"Nmin = num_ecut; Nmax = num_cxsec;"
+
+CALL GET_INPUT;
+
+IF( error_flags(num_ecut) = 0 ) [
+    DO j=1,$MXREG [ ecut(j) = value(num_ecut,1); ]
+]
+IF( error_flags(num_pcut) = 0 ) [
+    DO j=1,$MXREG [ pcut(j) = value(num_pcut,1); ]
+]
+IF( error_flags(num_smax) = 0 ) [
+    DO j=1,$MXREG [ smaxir(j) = value(num_smax,1); ]
+]
+IF( error_flags(num_brems_ang) = 0 ) [
+    ibrdst = value(num_brems_ang,1);
+]
+IF( error_flags(num_brems_cs) = 0 ) [
+    ibr_nist = value(num_brems_cs,1);
+]
+IF( error_flags(num_radc) = 0 ) [
+    radc_flag = value(num_radc,1);
+]
+IF( error_flags(num_pair_ang) = 0 ) [
+    iprdst = value(num_pair_ang,1);
+]
+IF( error_flags(num_pair_cs) = 0 ) [
+    pair_nrc = value(num_pair_cs,1);
+]
+IF( error_flags(num_triplet) = 0 ) [
+    itriplet = value(num_triplet,1);
+]
+IF( error_flags(num_eii_L) = 0 ) [ eii_L_factor = value(num_eii_L,1); ]
+IF( error_flags(num_estepe) = 0 ) [ estepe = value(num_estepe,1); ]
+IF( error_flags(num_ximax) = 0 ) [ ximax = value(num_ximax,1); ]
+IF( error_flags(num_bca) = 0 ) [
+    bca_algorithm = value(num_bca,1);
+    IF( bca_algorithm = 0 ) [ exact_bca = .true.; ]
+]
+IF( error_flags(num_alg) = 0 ) [ transport_algorithm = value(num_alg,1); ]
+IF( error_flags(num_skin) = 0 ) [ skindepth_for_bca = value(num_skin,1); ]
+IF( error_flags(num_spin) = 0 ) [
+   itmp = value(num_spin,1);
+   IF( itmp = 1 ) [ spin_effects = .true.; ]
+   ELSE           [ spin_effects = .false.; ]
+]
+/******************************************************
+   Mantaining compatibility with previous versions
+   allowing ON(IK) and OFF besides custom EII data
+   compilation files of the form eii_prefix.data.
+ ******************************************************/
+IF( error_flags(num_eii) = 0 ) [
+   eii_xfile = char_value(num_eii,1);eii_flag=1;
+   IF (toUpper($cstring(eii_xfile)).eq.'ON' |
+       toUpper($cstring(eii_xfile)).eq.'IK' )[
+       eii_xfile = 'ik';
+    $egs_info(*,'==> Using default EII data compilation ',
+              $cstring(eii_xfile));
+   ]
+   ELSEIF (toUpper(eii_xfile(:lnblnk1(eii_xfile))).eq.'OFF')[
+       eii_xfile='Off';eii_flag=0;
+   ]
+   ELSE["Using non-default EII data compilation"
+    $egs_warning(*,'==> Using non-default EII data compilation ',
+                 $cstring(eii_xfile));
+   ]
+]
+/**********************************************************/
+IF( error_flags(num_pxsec) = 0 ) [
+    photon_xsections = char_value(num_pxsec,1);
+]
+IF( error_flags(num_pxsec_out) = 0 ) [
+    xsec_out = value(num_pxsec_out,1);
+]
+IF( error_flags(num_cxsec) = 0 ) [
+    comp_xsections = char_value(num_cxsec,1);
+]
+"Ali:photonuc, 3 lines"
+IF( error_flags(num_photonuc_xsec) = 0 ) [
+    photonuc_xsections = char_value(num_photonuc_xsec,1);
+]
+/***************************************************************/
+/* Get media for which to read custom ff and the ff file names */
+/***************************************************************/
+IF( error_flags(num_coh) = 0 ) [
+  IF(value(num_coh,1) = 4)[
+   write(*,'(/a/)') ' ===> custom ff requested!';
+   ival                = ival + 1;
+   num_ffmed           = ival;
+   values_sought(ival) = 'ff media names';
+   type(ival)          = 2;  "i.e.  character input"
+   nvalue(ival)        = 0;
+   ival                = ival + 1;
+   num_ffiles          = ival;
+   values_sought(ival) = 'ff file names';
+   type(ival)          = 2;  "i.e.  character input"
+   nvalue(ival)        = 0;
+   Nmin = num_ffmed; Nmax = num_ffiles;
+   CALL GET_INPUT;
+   IF( error_flags(num_ffmed) > 0 ) [
+    $egs_fatal('(a/,a,I3)','Error reading custom ff! Terminating ...',
+               ' error_flag = ', error_flags(num_ffmed));
+   ]
+   IF( error_flags(num_ffiles) > 0 ) [
+    $egs_fatal('(a/,a,I3)','Error reading ff file names! Terminating ...',
+               ' error_flag = ', error_flags(num_ffiles));
+   ]
+   IF (nvalue(num_ffmed)>$MXMED)[
+      $egs_fatal('(a,a,i3,a)',
+              '***** Number of media with custom ff larger ',
+              'than maximum number of media $MXMED = ',$MXMED,
+              ' increase $MXMED and try again!!!');
+   ]
+   DO i=1,nvalue(num_ffmed) [
+    iray_ff_media(i) = char_value(num_ffmed,i);
+    iray_ff_file(i)  = char_value(num_ffiles,i);
+   ]
+   value(num_coh,1) = 1; "reset to 1 since custom info in iray_ff_files"
+  ]
+  write(*,'(/)');
+]
+/***************************************************************/
+
+
+$TURN-ON/OFF-IN-REGIONS(num_incoh,
+                    'Bound Compton start region',
+                    'Bound Compton stop region',
+                    ibcmp); incoh_inregions = aux_inregions;
+$TURN-ON/OFF-IN-REGIONS(num_coh,
+                    'Rayleigh start region',
+                    'Rayleigh stop region',
+                    iraylr); coh_inregions = aux_inregions;
+$TURN-ON/OFF-IN-REGIONS(num_relax,
+                    'Relaxations start region',
+                    'Relaxations stop region',
+                    iedgfl); relax_inregions = aux_inregions;
+$TURN-ON/OFF-IN-REGIONS(num_pe_ang,
+                    'PE sampling start region',
+                    'PE sampling stop region',
+                    iphter); pe_inregions = aux_inregions;
+"Ali:photonuc, 1 block"
+$TURN-ON/OFF-IN-REGIONS(num_photonuc,
+                    'Photonuclear start region',
+                    'Photonuclear stop region',
+                    iphotonucr); photonuc_inregions = aux_inregions;
+$SET ecut IN REGIONS(num_ecut,0.,1e15,0.,'Set ECUT','Set ECUT start region',
+                                         'Set ECUT stop region');
+ecut_inregions = aux_inregions;
+
+$SET pcut IN REGIONS(num_pcut,0.,1e15,0.,'Set PCUT','Set PCUT start region',
+                                         'Set PCUT stop region');
+pcut_inregions = aux_inregions;
+
+$SET smaxir IN REGIONS(num_smax,0.,1e15,0.,'Set SMAX','Set SMAX start region',
+                                         'Set SMAX stop region');
+smax_inregions = aux_inregions;
+
+write(i_errors,*);
+write(i_errors,*)
+' ******************** end input transport parameter *********************** ';
+write(i_errors,*);
+
+" we put the information stored in allowed_inputs into "
+" output_strings just in case the user over-rides it "
+" before printing out the settings "
+
+output_strings(1) = allowed_inputs(num_pair_ang,iprdst);
+itmp = value(num_incoh,1);
+output_strings(2) = allowed_inputs(num_incoh,itmp);
+output_strings(12) = allowed_inputs(num_radc,radc_flag);
+itmp = value(num_coh,1);
+output_strings(3) = allowed_inputs(num_coh,itmp);
+itmp = value(num_relax,1);
+output_strings(4) = allowed_inputs(num_relax,itmp);
+itmp = value(num_pe_ang,1);
+output_strings(5) = allowed_inputs(num_pe_ang,itmp);
+output_strings(6) = allowed_inputs(num_brems_ang,ibrdst);
+output_strings(7) = allowed_inputs(num_bca,bca_algorithm);
+output_strings(8) = allowed_inputs(num_alg,transport_algorithm);
+output_strings(9) = allowed_inputs(num_brems_cs,ibr_nist);
+output_strings(10) = allowed_inputs(num_pair_cs,pair_nrc);
+output_strings(11) = allowed_inputs(num_triplet,itriplet);
+"output_strings(13) = allowed_inputs(num_eii,eii_flag);"
+"Ali:photonuc, 2 lines"
+itmp = value(num_photonuc,1);
+output_strings(14) = allowed_inputs(num_photonuc,itmp);
+
+entry show_transport_parameter(ounit);
+
+IF ( ounit <= 0 ) return;
+
+write(ounit,*);
+write(ounit,'(a)') line;
+write(ounit,*);
+write(ounit,'(a,/)')
+'                   Electron/Photon transport parameter';
+write(ounit,'(a,/)') line;
+
+/* initialized in egs_set_defaults */
+write(ounit,'(a,38x,a)') ' Photon cross sections', $cstring(photon_xsections);
+write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
+
+write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
+IF( pcut_inregions ) [ write(ounit,'(32x,a)') 'Set in regions'; ]
+ELSE [
+    IF( pcut(1) > 1e-4 ) [ write(ounit,'(32x,g14.4)') pcut(1); ]
+    ELSE [ write(ounit,'(32x,a)') 'AP(medium)'; ]
+]
+write(ounit,'(a,39x,a3)')  ' Pair angular sampling',output_strings(1);
+write(ounit,'(a,41x,a3)')  ' Pair cross sections',output_strings(10);
+write(ounit,'(a,42x,a3)')  ' Triplet production',output_strings(11);
+write(ounit,'(a,36x,a14)') ' Bound Compton scattering',output_strings(2);
+$RADC_WARNING;
+write(ounit,'(a,31x,a14)') ' Radiative Compton corrections',output_strings(12);
+write(ounit,'(a,41x,a14)') ' Rayleigh scattering',output_strings(3);
+write(ounit,'(a,42x,a14)') ' Atomic relaxations',output_strings(4);
+write(ounit,'(a,30x,a14)') ' Photoelectron angular sampling',output_strings(5);
+"Ali:photonuc, 3 lines. EMH added IF statement"
+IF ( value(num_photonuc,1) > 0 )[
+ write(ounit,'(a,36x,a14)') ' Photonuclear attenuation',output_strings(14);
+ write(ounit,'(a,33x,a)') ' Photonuclear cross sections',
+ $cstring(photonuc_xsections);
+]
+
+write(ounit,*);
+
+write(ounit,'(a,$)') ' Electron transport cutoff(MeV)';
+IF( ecut_inregions ) [ write(ounit,'(30x,a)') 'Set in regions'; ]
+ELSE [
+    IF( ecut(1) > 1e-4 ) [ write(ounit,'(30x,f7.4)') ecut(1); ]
+    ELSE [ write(ounit,'(30x,a)') 'AE(medium)'; ]
+]
+write(ounit,'(a,30x,a4)') ' Bremsstrahlung cross sections',output_strings(9);
+write(ounit,'(a,29x,a3)') ' Bremsstrahlung angular sampling',output_strings(6);
+IF( spin_effects ) [ write(ounit,'(a,48x,a)') ' Spin effects','On'; ]
+ELSE [ write(ounit,'(a,48x,a)') ' Spin effects','Off'; ]
+"write(ounit,'(a,34x,a)') ' Electron Impact Ionization',output_strings(13);"
+write(ounit,'(a,34x,a)') ' Electron Impact Ionization',$cstring(eii_xfile);
+IF (eii_L_factor ~= 1.0) [
+   write(ounit,'(a,25x,f6.4)')
+   ' L-shell EII xsections scaling factor',eii_L_factor;
+]
+write(ounit,'(a,$)') ' Maxium electron step in cm (SMAX)';
+IF( smax_inregions ) [ write(ounit,'(27x,a)') 'Set in regions'; ]
+ELSE [
+    IF( smaxir(1) > 1e-4 ) [ write(ounit,'(27x,g14.4)') smaxir(1); ]
+    ELSE [ write(ounit,'(27x,a)') 'Restriction is off'; ]
+]
+write(ounit,'(a,16x,f6.4)')
+ ' Maximum fractional energy loss/step (ESTEPE)',estepe;
+write(ounit,'(a,21x,f6.4)')
+ ' Maximum 1st elastic moment/step (XIMAX)',ximax;
+write(ounit,'(a,33x,a10)')
+ ' Boundary crossing algorithm',output_strings(7);
+write(ounit,'(a,22x,g9.4)')
+ ' Skin-depth for boundary crossing (MFP)',skindepth_for_bca;
+write(ounit,'(a,37x,a10)')
+ ' Electron-step algorithm',output_strings(8);
+
+write(ounit,*);
+write(ounit,'(a)') line;
+write(ounit,*);
+
+return;
+end;
+;
+/************************************************************************
+ *
+ * The following subroutine can be used to modify the elastic
+ * scattering power in one or more media.
+ * To do so, the user includes one or more lines in
+ * the transport parameter section of the input file
+ *
+ *     scale elastic scattering in SOME_MEDIUM= 1.05
+ *
+ * where SOME_MEDIUM is the name of a medium.
+ *
+ * The effect of this will be that both, xcc and blcc will
+ * get multiplied with the provided factor, leaving the
+ * screening angle unchanged but increasing the number of collisions
+ * per unit length.
+ *
+ ************************************************************************/
+
+subroutine set_elastic_parameter;
+
+implicit none;
+$INTEGER ounit;
+$declare_max_medium;
+;COMIN/GetInput,ELECIN,MEDIA,EGS-IO/;
+$INTEGER imed,ival,lnblnk1,nchanged;
+character*24 medname;
+
+ounit = i_log;
+delimeter = $THE_DELIMETER;
+call get_input_set_error_level(0);
+ival = 0;
+DO imed=1,nmed [
+    call egs_get_medium_name(imed,medname);
+    ival                = ival + 1;
+    values_sought(ival) = 'scale elastic scattering in '//
+                           medname(:lnblnk1(medname));
+    nvalue(ival)        = 1;
+    type(ival)          = 1;
+    value_min(ival)     = 1e-3;
+    value_max(ival)     = 1e3;
+    default(ival)       = 1;
+]
+Nmin = 1; Nmax = nmed;
+CALL GET_INPUT;
+nchanged = 0;
+DO imed=1,nmed [
+    IF( error_flags(imed) = 0 ) nchanged = nchanged + 1;
+]
+IF( nchanged > 0 ) [
+    write(ounit,'(//a)')
+'================ Elastic scattering scaled as follows ==================';
+    DO imed=1,nmed [
+        IF( error_flags(imed) = 0 ) [
+            call egs_get_medium_name(imed,medname);
+            xcc(imed)  = xcc(imed)*value(imed,1);
+            blcc(imed) = blcc(imed)*value(imed,1);
+            write(ounit,'(a,t30,f10.6)') medname(:lnblnk1(medname)),
+              value(imed,1);
+        ]
+    ]
+    write(ounit,'(a//)')
+'========================================================================';
+]
+return; end;
+;
+
+"==========================end of get_inputs.mortran=================="

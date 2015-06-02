@@ -1,0 +1,544 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc radiative corrections for Compton scattering                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2005                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Macros and subroutines to include radiative corrections for Compton        "
+"  scattering. The equations used are based on the original Brown & Feynman   "
+"  paper in Phys. Rev. 85, 231 (1952), with all equations verified by         "
+"  comparisons with K.J. Mork, Phys.Rev A4, 917 (1971) as well as K.J. Mork   "
+"  and H. Olsen, Phys.Rev 140, 1661 (1965).                                   "
+"                                                                             "
+"  To include radiative corrections for Compton scattering:                   "
+"                                                                             "
+"  - add this file to the list of files needed to build EGSnrc just before    "
+"    $(EGS_SOURCEDIR)egsnrc.mortran                                           "
+"                                                                             "
+"  - turn the feature on by setting radc_flag in COMIN/RAD_COMPTON/ to 1 or   "
+"    by including Radiative Compton corrections= On in the transport          "
+"    parameter section of your input file.                                    "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$RADC_NE} WITH {128}      "Number of initialized energies"
+REPLACE {$0-RADC_NE} WITH {0:128}
+REPLACE {$RADC_NU} WITH {32}       "Number of angular bins"
+REPLACE {$0-RADC_NU} WITH {0:32}
+REPLACE {$RADC_NBOX} WITH {13917}  "Number of cells (boxes) for all energies"
+REPLACE {$RADC_NX} WITH {8929}     "Number of cell boundaries for all energies"
+;
+/*****************************************************************************
+  Common block with pre-calculated data read from rad_compton1.data
+ ****************************************************************************/
+REPLACE {;COMIN/RAD_COMPTON/;} WITH {;
+    common/rad_compton/ radc_sigs($0-RADC_NE),radc_sigd($0-RADC_NE),
+                        radc_frej($0-RADC_NE,$0-RADC_NU),
+                        radc_x($RADC_NX),
+                        radc_fdat($RADC_NBOX),
+                        radc_Smax($RADC_NBOX),
+                        radc_emin, radc_emax,radc_dw, radc_dle, radc_dlei,
+                        radc_le1,
+                        radc_bins($RADC_NBOX),
+                        radc_ixmin1($RADC_NBOX),radc_ixmax1($RADC_NBOX),
+                        radc_ixmin2($RADC_NBOX),radc_ixmax2($RADC_NBOX),
+                        radc_ixmin3($RADC_NBOX),radc_ixmax3($RADC_NBOX),
+                        radc_ixmin4($RADC_NBOX),radc_ixmax4($RADC_NBOX),
+                        radc_startx($0-RADC_NE),radc_startb($0-RADC_NE);
+    $REAL      radc_sigs, "single Compton total cross section in units of KN"
+               radc_sigd, "double Compton total cross section in units of KN"
+               radc_frej, "rejection function for single Compton scattering"
+               radc_fdat, "probabilities for double Compton scattering"
+               radc_Smax, "maximums for double Compton scattering"
+               radc_emin, "minimum initialized enrgy"
+               radc_emax, "maximum initialized enrgy"
+               radc_lemin,"ln(radc_emin)"
+               radc_dw,   "soft photon threshold"
+               radc_dle,  "energy grid bin width"
+               radc_dlei, "inverse energy grid bin width"
+               radc_x,    "box boundaries"
+               radc_le1;  ""
+    $SHORT_INT radc_bins, "alias-table bins for double Compton scattering"
+               radc_ixmin1,radc_ixmax1,
+               radc_ixmin2,radc_ixmax2,
+               radc_ixmin3,radc_ixmax3,
+               radc_ixmin4,radc_ixmax4,"indexes of box boundaries"
+               radc_startx,radc_startb;
+};
+
+/*****************************************************************************
+  The following macro is in HATCH and initializes the radiative Compton data
+ ****************************************************************************/
+REPLACE {$RADC_HATCH;} WITH { call radc_init; };
+
+/*****************************************************************************
+  Extra variables and data for the COMPT subroutine
+ ****************************************************************************/
+APPEND {
+    ;COMIN/RAD_COMPTON/;
+    $REAL     acheck,acheck1,sig_sc,sig_dc,beta_rad,alpha_rad,ux,au;
+    $INTEGER  icheck,iu;
+} TO {$DEFINE-LOCAL-VARIABLES-COMPT;};
+
+/*****************************************************************************
+  Macro to decide if single or double Compton event occures.
+ ****************************************************************************/
+REPLACE {$RADC_CHECK;} WITH {;
+    IF( radc_flag = 1 & ko > radc_emin & ko < radc_emax ) [
+        acheck = radc_dlei*gle + radc_le1;
+        icheck = acheck; acheck = acheck - icheck; acheck1 = 1 - acheck;
+        sig_sc = radc_sigs(icheck)*acheck1 + radc_sigs(icheck+1)*acheck;
+        sig_dc = radc_sigd(icheck)*acheck1 + radc_sigd(icheck+1)*acheck;
+        $RANDOMSET rnno15;
+        /*
+        IF( rnno15 > sig_sc + sig_dc ) return;
+          "i.e. reject the interaction to take into account the cross "
+          "section reduction compared to Klein-Nishina"
+        */
+        $RANDOMSET rnno16;
+        IF( rnno16 < acheck ) icheck = icheck+1;
+        IF( rnno15*(sig_sc + sig_dc) < sig_dc ) [
+            call sample_double_compton(ko,icheck); return;
+        ]
+        "If here, we are doing single Compton with radiative corrections"
+        "Calculate a few useful constants."
+        beta_rad = ko*(1+ko);
+        alpha_rad = 1/log(1 + 2*beta_rad);
+    ]
+};
+
+/*****************************************************************************
+  Rejection loop macro when sampling single Compton events
+ ****************************************************************************/
+REPLACE {$RADC_REJECTION;} WITH {;
+    IF( radc_flag = 1 & ko > radc_emin & ko < radc_emax ) [
+        ux = log(1 + beta_rad*temp)*alpha_rad;
+        au = ux*$RADC_NU; iu = au; au = au - iu;
+        rejf3 = radc_frej(icheck,iu)*(1-au) + radc_frej(icheck,iu+1)*au;
+        $RANDOMSET rnno15;
+        IF( rnno15 > rejf3 ) goto :RESAMPLE:;
+    ]
+};
+
+REPLACE {$RADC_WARNING;} WITH {;}
+
+;
+
+"****************************************************************************"
+subroutine radc_init;
+"****************************************************************************"
+"  Initializes radiative corrections for Compton scattering from the         "
+"  pre-calculated data found in rad_compton1.data
+"
+"  I. Kawrakow, Sep 2005.
+"============================================================================"
+implicit none;
+$declare_max_medium;
+$COMIN-RADC-INIT;
+character     radc_file*256;
+integer*4     lnblnk1,egs_get_unit;
+$INTEGER      radc_unit, want_radc_unit;
+$INTEGER      nskip,i,j,ne,nu,ny1,ny2,nw,jh,jl;
+$INTEGER      medium,lgle,icheck;
+real*8        aux1,gmfp,gmfp_old,gbr1,gbr1_old,gbr2,gbr2_old,gle,frad,
+              acheck,acheck1,sum,aux;
+$INTEGER      nx,nbox,ixtot,ibtot;
+
+/************ Check if radiative corrections are turned on *******************/
+IF( radc_flag = 0 ) [
+    $egs_info(*,'Radiative Compton corrections not requested');
+    return;
+]
+
+/************ Inform the user that radiative corrections are being used ******/
+$egs_info(*,' ');
+$egs_info(*,'Radiative Compton corrections requested:');
+$egs_info('(a,$)','    Reading radiative Compton data ...');
+
+/************ Construct the name of the data file ****************************/
+$set_string(radc_file,' ');
+radc_file = $cstring(hen_house) // 'data' // $file_sep // 'rad_compton1.data';
+
+/************ and then open it. **********************************************/
+want_radc_unit = 81;
+radc_unit = egs_get_unit(want_radc_unit);
+IF( radc_unit < 1 ) [
+    $egs_fatal(*,'radc_init: failed to get a free fortran unit');
+]
+open(radc_unit,file=radc_file,status='old',err=:radc-open-error:);
+
+/************ Read the data **************************************************/
+"read(radc_unit,*,err=:radc-read-error:) nskip;
+"DO i=1,nskip [ read(radc_unit,*); ]
+read(radc_unit,*,err=:radc-read-error:) radc_emin,radc_emax,radc_dw,ne,nu;
+IF( ne ~= $RADC_NE | nu ~= $RADC_NU ) [
+    $egs_fatal(*,'radc_init: inconsistent data');
+]
+radc_dle = log(radc_emax/radc_emin)/ne; radc_dlei = 1/radc_dle;
+read(radc_unit,*,err=:radc-read-error:) (radc_sigs(i),i=0,ne);
+DO i=0,ne [
+    read(radc_unit,*,err=:radc-read-error:) (radc_frej(i,j),j=0,nu);
+]
+read(radc_unit,*);
+read(radc_unit,*,err=:radc-read-error:) (radc_sigd(i),i=0,ne);
+ixtot=1; ibtot=1;
+DO i=0,ne [
+    read(radc_unit,*) nx,nbox;
+    IF( ixtot-1+nx > $RADC_NX ) [
+        $egs_fatal(*,'Incosistent number of box boundaries');
+    ]
+    IF( ibtot-1+nbox > $RADC_NBOX ) [
+        $egs_fatal(*,'Incosistent number of boxes');
+    ]
+    radc_startx(i) = ixtot; radc_startb(i) = ibtot;
+    read(radc_unit,*,err=:radc-read-error:) (radc_x(j),j=ixtot,ixtot-1+nx);
+    DO j=ibtot,ibtot-1+nbox [
+        read(radc_unit,*,err=:radc-read-error:) radc_Smax(j),radc_fdat(j),
+              radc_bins(j),
+              radc_ixmin1(j),radc_ixmax1(j),
+              radc_ixmin2(j),radc_ixmax2(j),
+              radc_ixmin3(j),radc_ixmax3(j),
+              radc_ixmin4(j),radc_ixmax4(j);
+    ]
+    ixtot = ixtot + nx; ibtot = ibtot + nbox;
+]
+close(radc_unit);
+$egs_info(*,' OK');
+
+radc_le1 = -log(radc_emin*0.5110034)*radc_dlei;
+
+"Change the cross section and branching ratios"
+$egs_info('(a,$)','    Modifying cross sections and branching ratios ...');
+DO medium=1,nmed [
+    "write(17,*) '************* Doing medium ',medium;
+    DO i=1,mge(medium) [
+        gle = (i - ge0(medium))/ge1(medium); lgle = i;
+        $EVALUATE gmfp USING gmfp(gle);
+        $EVALUATE gbr1 USING gbr1(gle);
+        $EVALUATE gbr2 USING gbr2(gle);
+        IF( exp(gle) > radc_emin*0.5110034 ) [
+            acheck = radc_dlei*gle + radc_le1;
+            icheck = acheck; acheck = acheck - icheck; acheck1 = 1 - acheck;
+            frad = (radc_sigs(icheck)+radc_sigd(icheck))*acheck1 +
+                   (radc_sigs(icheck+1)+radc_sigd(icheck+1))*acheck;
+        ] ELSE [ frad = 1; ]
+        "write(17,*) i,gle,exp(gle),gmfp,gbr1,gbr2,frad;
+        aux = 1/(1 + (gbr2-gbr1)*(frad-1));
+        aux1 = (gbr2-gbr1)*frad;
+        gmfp = gmfp*aux;
+        gbr1 = gbr1*aux;
+        gbr2 = gbr1 + aux1*aux;
+        "write(17,*) 'New: ',gmfp,gbr1,gbr2;
+        IF( i > 1 ) [
+            "write(17,*) 'Old gmfp: ',gmfp1(i-1,medium),gmfp0(i-1,medium);
+            gmfp1(i-1,medium) = (gmfp - gmfp_old)*ge1(medium);
+            gmfp0(i-1,medium) = gmfp - gmfp1(i-1,medium)*gle;
+            "write(17,*) 'New gmfp: ',gmfp1(i-1,medium),gmfp0(i-1,medium);
+            "write(17,*) 'Old gbr1: ',gbr11(i-1,medium),gbr10(i-1,medium);
+            gbr11(i-1,medium) = (gbr1 - gbr1_old)*ge1(medium);
+            gbr10(i-1,medium) = gbr1 - gbr11(i-1,medium)*gle;
+            "write(17,*) 'New gbr1: ',gbr11(i-1,medium),gbr10(i-1,medium);
+            "write(17,*) 'Old gbr2: ',gbr21(i-1,medium),gbr20(i-1,medium);
+            gbr21(i-1,medium) = (gbr2 - gbr2_old)*ge1(medium);
+            gbr20(i-1,medium) = gbr2 - gbr21(i-1,medium)*gle;
+            "write(17,*) 'New gbr2: ',gbr21(i-1,medium),gbr20(i-1,medium);
+        ]
+        gmfp_old = gmfp; gbr1_old = gbr1; gbr2_old = gbr2;
+    ]
+    gmfp1(mge(medium),medium) = gmfp1(mge(medium)-1,medium);
+    gmfp0(mge(medium),medium) = gmfp0(mge(medium)-1,medium);
+    gbr11(mge(medium),medium) = gbr11(mge(medium)-1,medium);
+    gbr10(mge(medium),medium) = gbr10(mge(medium)-1,medium);
+    gbr21(mge(medium),medium) = gbr21(mge(medium)-1,medium);
+    gbr20(mge(medium),medium) = gbr20(mge(medium)-1,medium);
+]
+$egs_info(*,'OK');
+
+return;
+
+:radc-open-error:;
+$egs_fatal(*,'Failed to open rad_compton.data');
+
+:radc-read-error:;
+$egs_fatal(*,'Error while reading radiative Compton data');
+
+end;
+
+"****************************************************************************"
+subroutine sample_double_compton(wo,ie);
+"****************************************************************************"
+"
+" Samples a double Compton scattering event and puts the resulting particles
+" (2 photons and 1 electron) on the stack.
+" wo is the incident photon energy in units of the electron rest energy
+" ie is the energy index that was needed and determined in COMPT in order
+"    to decide if single or double Compton scattering is to be simulated.
+"
+" I Kawrakow, September 2005.
+"============================================================================"
+implicit none;
+$REAL    wo;
+$INTEGER ie;
+$declare_max_medium;
+$COMIN-RADC-SAMPLE;
+$REAL    rnno,y1,y2,yw,s_max,asamp,alpha1,
+         yb1,yb2,yb3,yb4,dy1,dy2,dy3,dy4,wo_save,Vol;
+$REAL    cost1,cost2,w1,w2,cost12,cphi,acphi,a1,b1,z1,z2;
+$REAL    facct,aux,ax,bx,w1_max,w1t,ww1tot,zz,facw1,
+         k1,k2,k3,k1i,k2i,k3i,k1p,k2p,k3p,k1pi,k2pi,k3pi,
+         a,b,c,Ac,Bc,rho,s,xx,Xc,
+         px1,py1,pz1,px2,py2,pz2,pxe,pye,pze,pp,Ep,
+         sindel,cosdel,sinpsi,sphi,sint1,sint2;
+$DEFINE-VARIABLES-FOR-SELECT-AZIMUTHAL-ANGLE;
+$INTEGER ibin,nbox,ix;
+"****************************************************************************"
+
+$CHECK-STACK(np+2,'sample_double_compton');
+
+/*******************
+  Pick the cell (box) within the final particles phase-spece from which to
+  sample energies and directions.
+  radc_startb(ie) is the first cell belonging to this energy.
+  Number of cells for this energy is nbox = radc_startb(ie+1)-radc_startb(ie)
+  The data is in form of an alias table, i.e. we pick a cell randomly
+  and then based on another random number stay in the cell or go to the
+  cell that has filled up the probability for the alias table.
+*******************/
+$RANDOMSET rnno;
+nbox = radc_startb(ie+1) - radc_startb(ie);
+ibin = radc_startb(ie) + rnno*nbox;
+$RANDOMSET rnno;
+IF( rnno > radc_fdat(ibin) ) ibin = radc_startb(ie) + radc_bins(ibin);
+
+/******************
+  Set the cell boundaries and the maximum value of the cross section
+  within this cell
+******************/
+s_max = radc_Smax(ibin);
+ix = radc_startx(ie);
+yb1 = radc_x(ix+radc_ixmin1(ibin)); dy1 = radc_x(ix+radc_ixmax1(ibin)) - yb1;
+yb2 = radc_x(ix+radc_ixmin2(ibin)); dy2 = radc_x(ix+radc_ixmax2(ibin)) - yb2;
+yb3 = radc_x(ix+radc_ixmin3(ibin)); dy3 = radc_x(ix+radc_ixmax3(ibin)) - yb3;
+yb4 = radc_x(ix+radc_ixmin4(ibin)); dy4 = radc_x(ix+radc_ixmax4(ibin)) - yb4;
+Vol = dy1*dy2*dy3*dy4;
+
+:DC-BEGIN:;
+
+/*******************
+  We use the energy from the energy grid on which the data was created
+  to sample the 4 random numbers needed to obtain the final energies and
+  directions. Once we have these, we will use the actual energy wo to
+  determine energies and directions.
+*******************/
+wo_save = wo;
+wo = radc_emin*exp(radc_dle*ie);
+asamp = 0.25*wo*(1+wo);
+alpha1 = log(0.5*(1+sqrt(1+4*asamp)));
+
+:DC-LOOP:LOOP [
+
+    /*************************
+      y1 selects the cosine of the polar angle of the lower energy photon
+      y2 selects the cosine of the polar angle of the higher energy photon
+      yw selects the energy of the lower energy photon
+      yphi selects the azimuthal angle between the 2 photon directions
+      all other kinematic variables follow from energy-momentum conservation
+      We pick y1,y2,yw and yphi within the selected cell.
+    *************************/
+    $RANDOMSET rnno; y1 = yb1 + dy1*rnno; facct = 2*y1; y1 = y1*y1;
+    $RANDOMSET rnno; y2 = yb2 + dy2*rnno;
+    $RANDOMSET rnno; yw = yb3 + dy3*rnno;
+    $RANDOMSET rnno; yphi = yb4 + dy4*rnno;
+
+    /**********************
+      Set cost1, cost2 and the corresponding transformation factor facct
+     **********************/
+    IF( y2 > 0 ) [
+        z2 = 2*exp(y2*alpha1)-1;
+        cost2 = 1 - (z2*z2-1)/(2*asamp);
+        z1 = z2/(1+y1*(z2-1));
+        cost1 = 1 - 2*(z1*z1-1)/(z2*z2-1);
+    ] ELSE [
+        z2 = 1; z1 = 1; cost2 = 1; cost1 = 2*y1-1;
+    ]
+    facct = facct*alpha1/asamp*z1*z1*z1;
+
+    /*********************
+      Set the azimuthal angle and the corresponding transformation factor
+      and calculate the cosine of the angle between the 2 photons cost12
+    **********************/
+    acphi = sqrt((1-cost1*cost1)*(1-cost2*cost2));
+    a1 = 1 + wo*(1+wo)*(1-cost1)*(1-cost2);
+    b1 = wo*acphi;
+    IF( abs(yphi-0.5) > 1e-4 ) [
+        aux = tan(3.14159265358979323846*yphi); aux = aux*aux;
+        cphi = (a1-b1-(a1+b1)*aux)/(a1-b1+(a1+b1)*aux);
+    ] ELSE [ cphi = -1; ]
+    facct = facct*(a1 + b1*cphi)/sqrt(a1*a1-b1*b1);
+    cost12 = cost1*cost2+acphi*cphi;
+
+    /******************
+      The maximum possible energy w1m for the lower energy photon
+    *******************/
+    ax = 2 + wo*(1-cost1) + wo*(1-cost2);
+    bx = wo*(1-cost12)/(ax*ax);
+    IF( bx > 1e-3 ) [ w1_max = wo*(1-sqrt(1-4*bx))/(2*bx*ax); ]
+    ELSE [ w1_max = wo/ax*(1 + bx*(1 + bx*(2 + 5*bx))); ]
+    w1t = wo/(1 + wo*(1-cost1));
+
+    IF( w1_max <= radc_dw ) goto :DC-LOOP:;
+
+    /******************
+      Set the energy w1 of the lower energy photon and the
+      corresponding transformation factor
+    *******************/
+    ww1tot = log(w1_max*(w1t-radc_dw)/(radc_dw*(w1t-w1_max)));
+    zz = exp(yw*ww1tot);
+    w1 = zz*w1t*radc_dw/(w1t+(zz-1)*radc_dw);
+    facw1 = w1*(w1t-w1)*ww1tot/w1t;
+
+    /******************
+      Calculate the energy of the second photon
+    ******************/
+    w2 = (wo - w1*(1+wo*(1-cost1)))/(1+wo*(1-cost2)-w1*(1-cost12));
+    IF( w1 > w2 ) goto :DC-LOOP:;
+
+    /******************
+      Now calculate the cross section
+     *****************/
+    k1 = w1; k2 = w2; k3 = -wo;
+    k1p = -w1*(1 + wo*(1-cost1) - w2*(1-cost12));
+    k2p = -w2*(1 + wo*(1-cost2) - w1*(1-cost12));
+    k3p = wo*(1 - w1*(1-cost1) - w2*(1-cost2));
+    k1i = 1/k1; k2i = 1/k2; k3i = 1/k3;
+    k1pi = 1/k1p; k2pi = 1/k2p; k3pi = 1/k3p;
+    a = k1i + k2i + k3i; b = k1pi + k2pi + k3pi;
+    c = k1i*k1pi + k2i*k2pi + k3i*k3pi;
+    xx = k1 + k2 + k3;
+    zz = k1*k1p + k2*k2p + k3*k3p;
+    Ac = k1*k2*k3; Bc = k1p*k2p*k3p;
+    rho = k1*k1pi+k1p*k1i+k2*k2pi+k2p*k2i+k3*k3pi+k3p*k3i;
+    Xc = 2*(a*b-c)*((a+b)*(xx+2)-(a*b-c)-8)-2*xx*(a*a+b*b)-
+          8*c+4*xx/(Ac*Bc)*((Ac+Bc)*(xx+1)-(a*Ac+b*Bc)*(2+zz*(1-xx)/xx)+
+          xx*xx*(1-zz)+2*zz)-2*rho*(a*b+c*(1-xx));
+    s = Xc*Vol*w1*w2*facct*facw1/(wo*(1+wo*(1-cost2)-w1*(1-cost12)));
+    $RANDOMSET rnno;
+] WHILE ( rnno*s_max > s );
+
+
+/*****************
+  OK, now the y1, y2, yw and yphi have been accepted.
+  Calculate the energies and directions of the final particles
+  from the actual incident photon energy wo.
+ ****************/
+wo = wo_save;
+asamp = 0.25*wo*(1+wo);
+alpha1 = log(0.5*(1+sqrt(1+4*asamp)));
+
+z2 = 2*exp(y2*alpha1)-1;
+cost2 = 1 - (z2*z2-1)/(2*asamp);
+
+z1 = z2/(1+y1*(z2-1));
+cost1 = 1 - 2*(z1*z1-1)/(z2*z2-1);
+
+acphi = sqrt((1-cost1*cost1)*(1-cost2*cost2));
+a1 = 1 + wo*(1+wo)*(1-cost1)*(1-cost2);
+b1 = wo*acphi;
+IF( abs(yphi-0.5) > 1e-4 ) [
+    aux = tan(3.14159265358979323846*yphi); aux = aux*aux;
+    cphi = (a1-b1-(a1+b1)*aux)/(a1-b1+(a1+b1)*aux);
+] ELSE [ cphi = -1; ]
+cost12 = cost1*cost2+acphi*cphi;
+
+ax = 2 + wo*(1-cost1) + wo*(1-cost2);
+bx = wo*(1-cost12)/(ax*ax);
+IF( bx > 1e-3 ) [ w1_max = wo*(1-sqrt(1-4*bx))/(2*bx*ax); ]
+ELSE [ w1_max = wo/ax*(1 + bx*(1 + bx*(2 + 5*bx))); ]
+w1t = wo/(1 + wo*(1-cost1));
+
+IF( w1_max > radc_dw ) [
+    ww1tot = log(w1_max*(w1t-radc_dw)/(radc_dw*(w1t-w1_max)));
+    zz = exp(yw*ww1tot);
+    w1 = zz*w1t*radc_dw/(w1t+(zz-1)*radc_dw);
+    w2 = (wo - w1*(1+wo*(1-cost1)))/(1+wo*(1-cost2)-w1*(1-cost12));
+    IF( w1 < w2 ) [
+        sphi = sqrt(1 - cphi*cphi);
+        sint1 = sqrt(1-cost1*cost1); sint2 = sqrt(1-cost2*cost2);
+    ] ELSE [ goto :DC-BEGIN:; ]
+]
+ELSE [ goto :DC-BEGIN:; ]
+
+/************************************
+  Now set the final momenta in the frame where the
+  incident photon moves along the positive z-axis.
+ ************************************/
+px1 = w1*sint1*cphi; py1 = w1*sint1*sphi; pz1 = w1*cost1;
+px2 = w2*sint2;      py2 = 0;             pz2 = w2*cost2;
+"Pick now another azimuthal angle and rotate the above"
+$SELECT-AZIMUTHAL-ANGLE(cphi,sphi);
+aux = px1*sphi; px1 = px1*cphi - py1*sphi; py1 = aux + py1*cphi;
+py2 = sphi*px2; px2 = cphi*px2;
+"Get the electron momentum from momentum conservation"
+pxe = -px1 - px2;
+pye = -py1 - py2;
+pze = wo - pz1 - pz2;
+Ep = wo - w1 - w2 + 1; pp = 1/sqrt(pxe*pxe + pye*pye + pze*pze);
+
+/******************************
+  Set up particles on the stack and rotate back to the lab frame
+ ******************************/
+NPold = np;
+$TRANSFER PROPERTIES TO (np+1) FROM (np);
+$TRANSFER PROPERTIES TO (np+2) FROM (np);
+
+a = u(np); b = v(np); c = w(np); sinpsi = a*a + b*b;
+IF( sinpsi > 1e-20 ) [
+    sinpsi = sqrt(sinpsi); sindel = b/sinpsi; cosdel = a/sinpsi;
+    u(np) = (c*cosdel*px2 - sindel*py2 + a*pz2)/w2;
+    v(np) = (c*sindel*px2 + cosdel*py2 + b*pz2)/w2;
+    w(np) = (c*pz2 - sinpsi*px2)/w2; iq(np) = 0; E(np) = w2*prm;
+    np = np+1;
+    u(np) = (c*cosdel*px1 - sindel*py1 + a*pz1)/w1;
+    v(np) = (c*sindel*px1 + cosdel*py1 + b*pz1)/w1;
+    w(np) = (c*pz1 - sinpsi*px1)/w1; iq(np) = 0; E(np) = w1*prm;
+    np = np+1;
+    u(np) = (c*cosdel*pxe - sindel*pye + a*pze)*pp;
+    v(np) = (c*sindel*pxe + cosdel*pye + b*pze)*pp;
+    w(np) = (c*pze - sinpsi*pxe)*pp; iq(np) = -1; E(np) = Ep*prm;
+]
+ELSE [
+    u(np) = px2/w2; v(np) = py2/w2; w(np) = c*pz2/w2;
+    iq(np) = 0; E(np) = w2*prm; np = np+1;
+    u(np) = px1/w1; v(np) = py1/w1; w(np) = c*pz1/w1;
+    iq(np) = 0; E(np) = w1*prm; np = np+1;
+    u(np) = pxe*pp; v(np) = pye*pp; w(np) = c*pze*pp;
+    iq(np) = -1; E(np) = Ep*prm;
+]
+
+return; end;
+
+

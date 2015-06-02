@@ -1,0 +1,369 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc electron impact ionization subroutines                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2004                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This implementation uses electron impact ionization (EII) cross sections   "
+"  derived from a generalized oscillator strength (GOS) approach using        "
+"  photo-ionization cross sections from EPDL97 for the optical oscillator     "
+"  strength (OSS). It is called 'simple' because:                             "
+"                                                                             "
+"  - it only takes into account ionization of the K, LI, LII and LIII shells "
+"    with binding energies above 1 keV.                                       "
+"                                                                             "
+"  - it uses simplified versions of the differential cross sections (but it   "
+"    ensured that the total energy loss is correctly reproduced).             "
+"                                                                             "
+"  Electron impact ionization is turned on by setting eii_flag in             "
+"  COMIN/EII-DATA/ to 1.                                                      "
+"                                                                             "
+"#############################################################################"
+
+
+"**************************************************************************"
+"Init EII. This subroutine is called from HATCH after all media are known, "
+"threshold energies and interpolation data have been initialized.          "
+"**************************************************************************"
+subroutine eii_init;
+"**************************************************************************"
+implicit none;
+$COMIN-EII-INIT;
+$INTEGER imed,iele,ish,nsh,iZ,j,i,itmp,nskip,nbin,ii,nsh_tot,iii,k;
+$INTEGER jj,jjj;
+integer*4 lnblnk1;
+$INTEGER tmp_array($MXELEMENT);
+$INTEGER want_eii_unit,eii_unit;
+integer  egs_get_unit;
+$REAL    e_eii_min,emax,fmax,aux_array($N_EII_BINS);
+$REAL    sigo,loge,tau,beta2,p2,uwm,Wmax;
+$REAL    ss_0, ss_1, sh_0, sh_1, aux, av_e, con_med, dedx_old, sigm_old;
+$REAL    dedx,e,sig,sigm,wbrem,sum_a,sum_z,sum_pz,sum_wa,Ec,Ecc;
+$REAL    sum_sh,sum_occn,U,sum_sigma,sum_dedx;
+$INTEGER lloge;
+$LOGICAL check_it;
+character eii_file*128;
+$INTEGER occn_numbers(4);
+$REAL    cons;
+parameter (cons = 0.153536); " 2*Pi*Re^2*rm/u "
+data     occn_numbers/2,2,2,4/;
+
+DO j=1,$MXELEMENT [ eii_nshells(j) = 0; ]
+DO j=1,$MXMED [ eii_nsh(j) = 0; ]
+IF( eii_flag = 0 ) [ return; ]
+
+/*
+   Get relaxation data if necessary so that the binding energies
+   are available
+ */
+itmp = iedgfl(1);
+iedgfl(1) = 1;
+call edgset(1,1);
+iedgfl(1) = itmp;
+
+/*
+  find mnimum of all threshold energies
+ */
+e_eii_min = 1e30;
+DO imed = 1,nmed [
+    IF( ae(imed)-rm < e_eii_min ) e_eii_min = ae(imed) - rm;
+    IF( ap(imed) < e_eii_min ) e_eii_min = ap(imed);
+]
+
+/*
+  determine elements that need to load EII data
+ */
+DO imed = 1,nmed [
+    DO iele = 1,nne(imed) [
+        iZ = int(zelem(imed,iele)+0.5);
+        IF( eii_nshells(iZ) = 0 ) [
+            nsh = 0;
+            DO ish=1,4 [
+                IF( binding_energies(ish,iZ) > e_eii_min ) nsh = nsh+1;
+            ]
+            eii_nshells(iZ) = nsh;
+        ]
+    ]
+]
+
+/* total number of shells that need to be loaded */
+nsh = 0;
+DO iZ=1,$MXELEMENT [
+    nsh = nsh + eii_nshells(iZ);
+]
+IF( nsh = 0 ) [
+    write(6,*) '*** EII requested but no shells with binding energies ';
+    write(6,*) '    above the specified threshold found';
+    write(6,*) '    => turning off EII';
+    eii_flag = 0;
+]
+IF( nsh > $MAX_EII_SHELLS ) [
+    write(6,*) '*** Number of shells with binding energies greater than ';
+    write(6,*) '    the specified thresholds is ',nsh;
+    write(6,*) '    This is more than the allocated arrays can hold';
+    write(6,*) '    Increase the macro $MAX_EII_SHELLS and retry';
+    $CALL_EXIT(1);
+]
+nsh_tot = nsh;
+tmp_array(1) = 0;
+DO j=2,$MXELEMENT [ tmp_array(j) = tmp_array(j-1) + eii_nshells(j-1); ]
+
+/* set EII active shells per medium and for each element */
+DO imed=1,nmed [
+    nsh = 0;
+    DO iele=1,nne(imed) [
+        iZ = int(zelem(imed,iele)+0.5);
+        eii_no(imed,iele) = eii_nshells(iZ);
+        nsh = nsh + eii_nshells(iZ);
+        IF( eii_nshells(iZ) > 0 ) [ eii_first(imed,iele) = tmp_array(iZ) + 1; ]
+        ELSE [ eii_first(imed,iele) = 0; ]
+    ]
+    eii_nsh(imed) = nsh;
+]
+
+/* read EII data */
+$set_string(eii_file,' ');
+eii_file = $cstring(hen_house) // 'data' // $file_sep // 'eii_ik.data';
+want_eii_unit = 62;
+eii_unit = egs_get_unit(want_eii_unit);
+IF( eii_unit < 1 ) [
+    $egs_fatal(*,'eii_init: failed to get a free Fortran I/O unit');
+]
+open(eii_unit,file=eii_file,err=:no-eii-file:);
+read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:) nskip;
+DO j=1,nskip [
+    read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:);
+]
+read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:) emax,nbin;
+IF( nbin ~= $N_EII_BINS ) [
+    $egs_fatal(*,'Inconsistent EII data file');
+]
+ii = 0;
+DO j=1,$MXELEMENT [
+    read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:) iZ,nsh;
+    IF( nsh < eii_nshells(iZ) ) [
+        write(6,*) 'EII data file has data for ',nsh,' shells for element ';
+        write(6,*) iZ,', but according';
+        write(6,*) 'to binding energies and thresholds ',eii_nshells(iZ);
+        write(6,*) 'shells are required. This is a fatal error.';
+        $CALL_EXIT(1);
+    ]
+    DO ish=1,nsh [
+        read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:) fmax;
+        read(eii_unit,*,err=:eii-reading-error:,end=:eii-reading-error:)
+           aux_array;
+        IF( ish <= eii_nshells(iZ) ) [
+            ii = ii+1; eii_z(ii) = iZ; eii_sh(ii) = ish;
+            eii_a(ii) = nbin;
+            eii_a(ii) = eii_a(ii)/log(emax/binding_energies(iZ,ish));
+            eii_b(ii) = 1 - eii_a(ii)*log(binding_energies(iZ,ish));
+            DO k=1,nbin [
+                IF( k > 1 ) [ sigo = fmax*aux_array(k-1); ]
+                ELSE [ sigo = 0; ]
+                loge = (k - eii_b(ii))/eii_a(ii); iii = nbin*(ii-1)+k;
+                eii_xsection_a(iii) = (fmax*aux_array(k)-sigo)*eii_a(ii);
+                eii_xsection_b(iii) = sigo - eii_xsection_a(iii)*loge;
+            ]
+        ]
+    ]
+    IF( ii = nsh_tot ) [ EXIT; ]
+]
+close(eii_unit);
+
+/*
+   Adjust restricted stopping power and discrete inelastic cross sections
+
+   Discrete interaction cross sections for all shells that come from PEGS4
+   are calculated using the Moller cross section
+     => we must subtract the Moller cross section for the shells that will
+        have EII and then add the EII cross sections for these shells
+   The restricted stopping power that comes from PEGS4 is calculated assuming
+   that all shells will be producing secondaries according to Moller
+     => we must add the energy lost in Moller events in EII shells to the
+        restricted stopping power and then subtract the average energy lost
+        in EII events.
+ */
+DO imed = 1,nmed [
+    Ec = ae(imed) - rm; Ecc = min(Ec,ap(medium));
+    /sum_z,sum_pz,sum_a,sum_wa/=0;
+    DO iele=1,nne(imed) [
+        sum_z = sum_z + pz(imed,iele)*zelem(imed,iele);
+        sum_pz = sum_pz + pz(imed,iele);
+        sum_wa = sum_wa + rhoz(imed,iele);
+        sum_a = sum_a + pz(imed,iele)*wa(imed,iele);
+    ]
+    con_med = rho(imed)/1.6605655/sum_a;
+    "con_med = rho(imed)*sum_z/1.6605655/sum_a;"
+    eii_cons(imed) = con_med;
+    IF( eii_nsh(imed) > 0 ) [
+        DO j=1,meke(imed) [
+            loge = (j - eke0(imed))/eke1(imed); e = Exp(loge);
+            tau = e/rm; beta2 = tau*(tau+2)/(tau+1)**2;
+            p2 = 2*rm*tau*(tau+2);
+            lloge = j;
+            $EVALUATE dedx USING ededx(loge);
+            IF( e > 2*Ec ) [
+                $EVALUATE sig USING esig(loge);
+                $EVALUATE wbrem USING ebr1(loge);
+                sigm = sig*(1-wbrem);
+            ] ELSE [ sigm = 0; ]
+            /sum_occn,sum_sigma,sum_dedx/=0;
+            DO iele=1,nne(imed) [
+                iZ = int(zelem(imed,iele)+0.5);
+                sum_sh = 0;
+                DO ish = 1,eii_no(imed,iele) [
+                    "jj is the shell index in the list of EII shells "
+                    jj = eii_first(imed,iele) + ish - 1;
+                    "jjj is shell type (1 = K, 2 = LI, 3 = LII, etc.)
+                    jjj = eii_sh(jj); U = binding_energies(jjj,iZ);
+                    "Moved here after bug found by Dan Fuela"
+                    Wmax = (e+U)/2; uwm = U/Wmax;
+                    IF( U < e & U > Ecc ) [
+                        " At this energy interactions with this shell will "
+                        " be done using the EII differential x-section "
+                        sum_sh = sum_sh + occn_numbers(jjj);
+                        ss_0 = 2*(log(p2/U)-uwm**3*log(p2/Wmax)-
+                          (beta2+0.833333)*(1-uwm**3))/3/U;
+                        sh_0 = (1-uwm+uwm/(tau+1)**2*(
+                          tau*tau*(Wmax-U)/(2*Wmax-U)-
+                          (tau+0.5)*log((2*Wmax-U)/U)))/U;
+                        ss_1 = log(p2/U)-uwm**2*log(p2/Wmax)-
+                          (beta2+1)*(1-uwm**2);
+                        sh_1 = log((2*Wmax-U)/U)+(tau/(tau+1))**2*(Wmax-U)/
+                                  (Wmax-U/2);
+                        av_E = (ss_1 + sh_1)/(ss_0 + sh_0);
+                          "av_E is the average energy lost in a collision"
+                          "with this shell"
+                        i = eii_a(jjj)*loge + eii_b(jjj);
+                        i = (jj-1)*$N_EII_BINS + i;
+                        sig = eii_xsection_a(i)*loge + eii_xsection_b(i);
+                        sig = sig*pz(imed,iele)*con_med;
+                        sum_sigma = sum_sigma + sig;
+                        sum_dedx = sum_dedx + sig*av_E;
+                    ]
+                ]
+                sum_occn = sum_occn + sum_sh*pz(imed,iele);
+            ]
+            sigm = sigm + sum_sigma;
+            dedx = dedx - sum_dedx;
+            aux = Ec/e;
+            IF( e > 2*Ec ) [
+                sigm = sigm - cons*rho(imed)/(beta2*Ec)*(1-2*aux+
+                  (tau/(tau+1))**2*aux*(1-2*aux)/2+
+                  (2*tau+1)/(tau+1)**2*aux*log(2*aux))/sum_a;
+                dedx = dedx + cons*rho(imed)/beta2*(-log(2*aux) +
+                  (tau/(tau+1))**2*(1-2*aux)*(1+2*aux)/8 -
+                  (2*tau+1)/(tau+1)**2*(1-2*aux)/2)/sum_a;
+            ]
+            IF( j > 1 ) [
+                ededx1(j-1,imed) = (dedx - dedx_old)*eke1(imed);
+                ededx0(j-1,imed) = dedx - ededx1(j-1,imed)*loge;
+                esig1(j-1,imed) = (sigm - sigm_old)*eke1(imed);
+                esig0(j-1,imed) = sigm - esig1(j-1,imed)*loge;
+            ]
+            dedx_old = dedx; sigm_old = sigm;
+        ]
+        ededx1(meke(imed),imed) = ededx1(meke(imed)-1,imed);
+        ededx0(meke(imed),imed) = ededx0(meke(imed)-1,imed);
+        esig1(meke(imed),imed) = esig1(meke(imed)-1,imed);
+        esig0(meke(imed),imed) = esig0(meke(imed)-1,imed);
+    ]
+]
+return;
+
+:eii-reading-error:
+$egs_fatal(*,'I/O error while reading EII data');
+
+:no-eii-file:
+write(6,'(//a,a)') 'Failed to open EII data file ',$cstring(eii_file);
+$egs_fatal(*,'Quiting early');
+
+return; end;
+
+"*****************************************************************************"
+
+subroutine eii_sample(ish,iZ,Uj);
+implicit none;
+$INTEGER ish,iZ;
+$REAL    Uj;
+;COMIN/STACK,EII-DATA,RANDOM,USEFUL,UPHIOT,THRESH,EPCONT/;
+
+$REAL T,tau,tau1,tau12,tau2,p2,beta2,c1,c2,Wmax,xmax,fm_s,fm_h,prob_s,prob;
+$REAL r1,r2,r3,wx,wxx,aux,frej;
+real*8 peie,pese1,pese2,dcosth,h1;
+$INTEGER iarg;
+
+/* calculate some useful constants */
+peie = e(np);
+T = peie - rm; tau = T/rm; tau1 = tau+1;
+tau12 = tau1*tau1; tau2 = tau*tau; p2 = tau2 + 2*tau;
+beta2 = p2/tau12; c1 = tau2/tau12; c2 = (2*tau+1)/tau12;
+Wmax = 0.5*(T+Uj); xmax = Uj/Wmax;
+fm_s = log(rmt2*p2/Uj) - beta2 - 0.5;
+prob_s = 2*fm_s*(1+xmax+xmax*xmax);
+fm_h = 1 + c1 - c2;
+IF( fm_h < 1 ) fm_h = 1;
+prob = fm_h + prob_s;
+
+LOOP [
+    $RANDOMSET r1; $RANDOMSET r2; $RANDOMSET r3;
+    IF( r1*prob < fm_h ) [ "Use the hard collision cross section "
+        wx = 1/(r2*xmax+1-r2); wxx = wx*xmax; aux = wxx/(2-wxx);
+        frej = (1 + c1*aux*aux - c2*aux)/fm_h;
+    ] ELSE [               "Use the soft collision cross section "
+        wx = 1/sqrt((r2*xmax)**2+(1-r2)**2);
+        frej = 1 - log(wx)/fm_s;
+    ]
+] UNTIL ( r2 < frej );
+
+wx = wx*Uj;
+
+/* set-up new particles */
+h1 = (peie + prm)/T; pese1 = peie - prm;
+e(np) = pese1;
+dcosth = h1*(pese1-prm)/(pese1+prm);
+sinthe = dsqrt(1-dcosth); costhe = dsqrt(dcosth);
+call uphi(2,1);
+
+pese2 = wx - Uj + prm;
+IF( pese2 > ae(medium) ) [
+    $CHECK-STACK(np+1,'eii_sample');
+    np = np+1; e(np) = pese2;
+    dcosth = h1*(pese2-prm)/(pese2+prm);
+    sinthe = -dsqrt(1-dcosth); costhe = dsqrt(dcosth);
+    iq(np) = -1; call uphi(3,2);
+    edep = 0;
+] ELSE [ edep = wx - Uj; ]
+
+call relax(Uj,ish,iZ);
+
+IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]
+
+return; end;
+
+program junk;
+end;
+

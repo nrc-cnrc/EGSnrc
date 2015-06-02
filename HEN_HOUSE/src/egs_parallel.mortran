@@ -1,0 +1,382 @@
+%I4
+%C80
+%Q1
+!INDENT F2;
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc parallel processing functions                                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2003                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+" The following set of functions only gets included if we found a working     "
+" C compiler that can compile egs_c_utils.c                                   "
+"                                                                             "
+"#############################################################################"
+
+
+#ifdef HAVE_C_COMPILER;
+
+"*****************************************************************************
+$INTEGER function egs_create_lockfile(flag);
+"*****************************************************************************
+" Create a lock file in the user code directory to store parallel processing
+" information. To be called from job #1.
+"*****************************************************************************
+$INTEGER flag;
+;COMIN/EGS-IO/;
+character*512 fname;
+$INTEGER i,lnblnk1,l,istat;
+
+$set_string(fname,' ');
+fname = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+        $cstring(output_file) // '.lock';
+l = lnblnk1(fname)+1;
+fname(l:l) = char(0); " String must be null terminated "
+call egs_create_control_file(fname,istat);
+IF( istat ~= 0 & flag = 1 ) [
+    $egs_fatal(*,'Failed to create a lock file named ',$cstring(fname));
+]
+egs_create_lockfile = istat;
+return; end;
+
+"*****************************************************************************
+$INTEGER function egs_open_lockfile(flag);
+"*****************************************************************************
+" Open a lock file in the user code directory to read/write parallel
+" processing info. To be called from all jobs except 1.
+"*****************************************************************************
+$INTEGER flag;
+;COMIN/EGS-IO/;
+character*512 fname;
+$INTEGER i,lnblnk1,l,istat;
+$set_string(fname,' ');
+fname = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+        $cstring(output_file) // '.lock';
+l = lnblnk1(fname)+1;
+fname(l:l) = char(0); " String must be null terminated "
+call egs_open_control_file(fname,istat);
+IF( istat ~= 0 & flag = 1 ) [
+    $egs_fatal(*,'Failed to open the lock file named ',$cstring(fname));
+]
+egs_open_lockfile = istat;
+return; end;
+
+"*****************************************************************************
+subroutine egs_remove_lockfile(istat);
+"*****************************************************************************
+$INTEGER istat;
+;COMIN/EGS-IO/;
+character*512 fname;
+$INTEGER i,lnblnk1,l;
+$set_string(fname,' ');
+fname = $cstring(egs_home) // $cstring(user_code) // $file_sep //
+        $cstring(output_file) // '.lock';
+l = lnblnk1(fname)+1;
+fname(l:l) = char(0); " String must be null terminated "
+call egs_remove_file(fname,istat);
+return; end;
+
+"*****************************************************************************
+subroutine egs_pjob_control(ncase,n_run,n_left,n_tot,sum,sum2,res,dres);
+"*****************************************************************************
+"
+" This subroutine controls a parallel run. It only works if the EGS_HOME
+" directory is the same for all machines participating in the parallel
+" processing (e.g. EGS_HOME is on a NFS for *nix or on a network share on
+" Windows).
+" n_case: number of histories to be run (all jobs, not just the current
+"         job)  (input)
+" n_run:  number of histories the user code should run (output). If n_run = 0,
+"         then finish simulation, clean up, call egs_finish and
+"         egs_pjob_finish (in that order) and exit.
+" n_left  no. of histories left to run after current job has been submitted
+" n_tot:  should be set to number of histories from previous runs (if any)
+"         for first call from job number 1. For all other jobs and for all
+"         other calls from job 1, it is set by egs_pjob_control to the the
+"         number of histories run so far (including previous runs and other
+"         parallel jobs).
+"         Note: n_case, n_run and n_tot are $LONG_INT
+" sum,    input. for first call and job 1, score and score squared for quantity
+" sum2:   of interest, should be zero for first call from jobs other than 1.
+"         score for quantity of interest since last call to this subroutine
+"         for all other calls.
+" res:    combined result for the quantity of interest from previous runs
+"         and other parallel jobs, output
+" dres:   relative uncertainty of res in %
+"
+" The shower loop of a user code that wants to use the new parallel processing
+" implementation should look something like this:
+"
+" /sum,sum2/=0; (or result from a previous run, if i_parallel=1)
+" /last_sum,last_sum2/=0;
+" :start_simulation:
+" x=sum-last_sum; x2=sum2-last_sum2; last_sum=sum; last_sum2=sum2;
+" call egs_pjob_control(ncase,n_run,n_tot,x,x2,res,dres);
+" IF( n_run = 0 ) goto :end_simulation:
+" write(6,*) ' running ',n_run,' histories,' n_tot so far: ',n_tot;
+" write(6,*) ' result so far: ',res,' +/- ',dres,' %';
+" DO icase=1,n_run [
+"    get source particle, call shower. sum and sum2 are updated
+" ]
+" goto :start_simulation:;
+" :end_simulation:
+" analyze and output results for this job.
+" call egs_finish;
+"   (after egs_finish all output files are closed and moved to the user code
+"    directory from the temporary working directory).
+" call egs_pjob_finish(combine_results,'.egsdat');
+" output combined results.
+" end;
+"
+" In the above, combine_results is a user supplied subroutine that
+" combines parallel runs and takes a file name as an argument.
+" egs_pjob_finish  decreases the number of running job, n_job, in the
+" job control file by one. If n_job > 0, it simply returns.
+" If n_job = 0 (i.e. this job is the last job), it checks for
+" data files output_file_wj.egsdat, j=1,99. For each file found, it calls
+" combine_results with that file name.
+"
+
+implicit none;
+$LONG_INT ncase,n_run,n_tot;
+$REAL    sum,sum2,res,dres;
+;COMIN/EGS-IO,my_times/;
+
+$LONG_INT n_last,n_left,nn_tot;
+integer   t_dum(8);
+$INTEGER  i,lnblnk1,n_write,n_read,istat,n_job;
+$INTEGER  egs_create_lockfile, egs_open_lockfile;
+$REAL     tmp,tmp2;
+$LOGICAL first_time;
+character control_string*256;
+data first_time/.true./;
+save first_time,n_last;
+
+IF( n_parallel <= 0 ) [
+    n_run = ncase; return;
+]
+
+IF( first_time ) n_last = 0;
+
+$set_string(control_string,' ');
+n_run = ncase/n_parallel/$N_CHUNKS;
+n_left = ncase;
+
+REPLACE {$control_format} WITH {
+  '(2i15,i4,2(1pe16.8),1pe13.5,0pf7.2,2x,8i5)'};
+
+IF( first_time ) [
+   IF( n_run > n_left ) n_run = n_left;
+   n_left = ncase - n_run;
+
+   IF( i_parallel = first_parallel ) [ "I'm first job => "
+                                       "create the job control file"
+       istat = egs_create_lockfile(1); "The 1 tells egs_create_lockfile to "
+                                       "print an error message and exit if"
+                                       "it fails."
+       IF( n_tot > 1 ) [ "=> a continuation from a previous run "
+          res = sum/n_tot; dres = sum2/n_tot - res*res;
+          IF( res > 0 & dres > 0 ) [ dres = sqrt(dres/(n_tot-1))/res*100; ]
+          ELSE [ dres = 99.9 ]
+       ] ELSE [ res = 0; dres = 99.9; ]
+
+       /*
+       write(control_string,$control_format)
+         n_left,n_tot,i_parallel,sum,sum2,res,dres,(t_first(i),i=1,8);
+       */
+       write(control_string,$control_format)
+         n_left,n_tot,1,sum,sum2,res,dres,(t_first(i),i=1,8);
+       n_write = lnblnk1(control_string) + 1;
+       call egs_write_control_file(control_string,n_write,istat);
+       IF( istat ~= n_write ) [
+           $egs_fatal(*,'job 1: failed to write to lock file ',n_write,istat);
+       ]
+       call egs_unlock_control_file(istat);
+       IF( istat ~= 0 ) [
+           $egs_fatal(*,'job 1: failed to unlock the file ',istat);
+       ]
+       first_time = .false.;
+       n_max_parallel = 1; n_last = n_run;
+       return;
+   ]
+   istat = egs_open_lockfile(1);
+]
+
+" Here for all calls except first call from job 1. "
+
+" Lock and rewind the job control file "
+call egs_rewind_control_file(istat);
+IF( istat ~= 0 ) [
+    $egs_fatal(*,'job ',i_parallel,': failed to rewind or lock the control ',
+      'file', istat);
+]
+
+" Read the job control string string "
+n_read = len(control_string);
+call egs_read_control_file(control_string,n_read,istat);
+
+" Read from the job control string string "
+read(control_string,*,err=:error_lockfile_read:) n_left,nn_tot,n_job,tmp,tmp2,
+     res,dres,(t_dum(i),i=1,8);
+
+" Update the number of histories finished so far "
+nn_tot = nn_tot + n_last;
+
+" Update the score for the quantity of interest "
+tmp = tmp + sum; tmp2 = tmp2 + sum2;
+
+" First call => increase number of running jobs "
+IF( first_time ) [
+    first_time = .false.; n_job = n_job + 1;
+    nn_tot = nn_tot + n_tot;
+]
+n_tot = nn_tot;
+
+" If n_tot > 1, do stat. analysis and put result is res, dres "
+IF( n_tot > 1 ) [
+    res = tmp/n_tot; dres = tmp2/n_tot - res*res;
+    IF( res > 0 & dres > 0 ) [ dres = sqrt(dres/(n_tot-1))/res*100; ]
+    ELSE [ dres = 99.9 ]
+] ELSE [ res = 0; dres = 99.9; ]
+
+" Take another chunk of histories to run "
+IF( n_run > n_left ) [
+    n_run = n_left; n_left = 0;
+] ELSE [ n_left = n_left - n_run; ]
+
+n_last = n_run;
+
+" Write new job control info into job control string "
+$set_string(control_string,' ');
+write(control_string,$control_format)
+  n_left,n_tot,n_job,tmp,tmp2,res,dres,(t_dum(i),i=1,8);
+
+" Rewind again the job control file "
+call egs_rewind_control_file(istat);
+IF( istat ~= 0 ) [
+    $egs_fatal(*,'job ',i_parallel,': failed to rewind or lock the control ',
+      'file', istat);
+
+]
+
+" Write the new job control string "
+n_write = lnblnk1(control_string) + 1;
+call egs_write_control_file(control_string,n_write,istat);
+IF( istat ~= n_write ) [
+    $egs_fatal(*,'job ',i_parallel,': failed to write to lock file ',
+       n_write,istat);
+]
+
+" Finally unlock the job control file so that other jobs can access it. "
+call egs_unlock_control_file(istat);
+IF( istat ~= 0 ) [
+    $egs_fatal(*,'job ',i_parallel,': failed to unlock the file ',istat);
+]
+IF( n_job > n_max_parallel ) n_max_parallel = n_job;
+return;
+
+:error_lockfile_read:
+$egs_fatal('(a,/a)','Failed to read from job control file: got ',
+     $cstring(control_string));
+return; end;
+
+"******************************************************************************
+subroutine egs_pjob_finish(n_job);
+"******************************************************************************
+implicit none;
+$INTEGER n_job;
+
+;COMIN/EGS-IO,my_times/;
+
+$INTEGER  istat,i,lnblnk1,n_read,n_write;
+$LONG_INT n_left,n_tot;
+integer   t_start(8),t_end(8);
+$REAL     tmp,tmp2,res,dres,t_run;
+real      egs_time_diff;
+character control_string*256;
+
+" Lock and rewind the job control file "
+call egs_rewind_control_file(istat);
+IF( istat ~= 0 ) [
+    $egs_fatal(*,'job ',i_parallel,': failed to rewind or lock the control ',
+      'file', istat);
+]
+
+" Read the job control string string "
+n_read = len(control_string);
+call egs_read_control_file(control_string,n_read,istat);
+
+" Read from the job control string string "
+read(control_string,*,end=:error2_lockfile_read:,err=:error2_lockfile_read:)
+  n_left,n_tot,n_job,tmp,tmp2,res,dres,(t_start(i),i=1,8);
+
+n_job = n_job - 1;
+IF( n_job > 0 ) [  " Other jobs still running "
+    $set_string(control_string,' ');
+    write(control_string,$control_format)
+      n_left,n_tot,n_job,tmp,tmp2,res,dres,(t_start(i),i=1,8);
+    call egs_rewind_control_file(istat);
+    IF( istat ~= 0 ) [
+        $egs_fatal(*,'job ',i_parallel,': failed to rewind or lock the ',
+          'control file, error was:', istat);
+    ]
+    n_write = lnblnk1(control_string) + 1;
+    call egs_write_control_file(control_string,n_write,istat);
+    IF( istat ~= n_write ) [
+        $egs_fatal(*,'job ',i_parallel,': failed to write to lock file ',
+           n_write,istat);
+    ]
+    call egs_unlock_control_file(istat);
+    call egs_close_control_file(istat);
+    return;
+]
+
+" If here, I'm the last job => remove job control file
+/* call egs_unlock_control_file(istat); */
+call egs_close_control_file(istat);
+call egs_remove_lockfile(istat);
+i_parallel = 0; call egs_open_units(.false.);
+call egs_date_and_time(t_end);
+t_run = egs_time_diff(t_start,t_end);
+$egs_info('(/a/,a,t55,i3/,a,t55,i3/,a,f9.1,a,f9.4,a/,a//)',
+'**************** finished parallel execution ******************',
+' number of parallel jobs requested: ',n_parallel,
+' max. number of jobs executing simultaneously: ',n_max_parallel,
+' elapsed time since first job started: ',t_run,' s (',t_run/3600,' h)',
+'***************************************************************');
+return;
+
+:error2_lockfile_read:;
+$egs_fatal('(a,/a)',
+  'In egs_pjob_finish: failed to read from control string ',
+  $cstring(control_string));
+
+return; end;
+
+
+#endif;
+;

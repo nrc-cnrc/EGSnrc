@@ -1,0 +1,1943 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc media input functions                                               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Blake Walters, 2013                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+SUBROUTINE GET_INPUT_PLUS(UNITNUM,DELIM_START,DELIM_END);
+"                                                                           "
+" A version of GET_INPUT that allows the user to specify a UNITNUM          "
+" other than the .egsinp file and different start and end delimiters.       "
+" Note that delimiters are interpreted literally.                           "
+" If NONE is supplied as DELIM_END, then EOF is taken as the stop           "
+" delimiter.                                                                "
+"                                                                           "
+"---------------------------------------------------------------------------"
+;IMPLICIT NONE;
+
+;Copyright NRC;
+COMIN/GetInput,EGS-IO/;
+
+"***************************************************************************"
+"*                   Variables used by the subroutine                      *"
+"***************************************************************************"
+CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
+CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
+CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
+CHARACTER*$STRING80  TEXTPIECE; "Used to read a piece of TEXT                  "
+CHARACTER*$STRING40  DELIM_START;"Start of the delimeter                       "
+CHARACTER*$STRING40  DELIM_END;  "End of the delimeter                         "
+CHARACTER*$STRING40  ENDSTRING;  "string at which to terminate search          "
+CHARACTER*$STRING32  VNAME;      "The name of the variable being extracted.    "
+CHARACTER*$STRING32  VNAME1;     "The name of the variable being extracted.    "
+$INTEGER       CURSOR;          "Used to read one of the TEXT letters          "
+$INTEGER       IINDEX;          "Integer index for clipping string excess.     "
+$INTEGER       iVNAME;          "Length of variable name string.               "
+$INTEGER       IVAL;            "Value number of the value_sought              "
+$INTEGER       UNITNUM;         "Unit number of the input file                 "
+$INTEGER       ERR;             "Unit number of the error file                 "
+$INTEGER       I,J,K,CHECK;     "Counters and checkers                         "
+$INTEGER       LINE;            "Counts the eumber of lines                    "
+$INTEGER       INT_VALUE;       "For printing integers                         "
+$INTEGER       INT_VALUE_MIN;   "For printing integers                         "
+$INTEGER       INT_VALUE_MAX;   "For printing integers                         "
+$LOGICAL       ALLOWED;         "For evaluating an allowed_input               "
+$LOGICAL       START_FOUND;     "Start of delimeter switch                     "
+$INTEGER       ifound,length,lll,Kconvert;
+$INTEGER       lnblnk1;"in house lnblnk function becuase not all compilers     "
+                       "support this"
+logical IDEBUG,end_string;
+character*1 blank;
+$INTEGER    error_level;
+$INTEGER    the_level;
+data blank/' '/;
+data        error_level/1/;
+save        error_level;
+"---------------------------------------------------------------------------"
+
+"Macro changing text string to upper case"
+"REPLACE {$CONVERT-STRING-TO-UPPER-CASE(#);} WITH"
+REPLACE {$CONVERT # TO UPPER CASE;} WITH
+{;
+   DO Kconvert=1, lnblnk1({P1}) [
+         CURSOR=ICHAR({P1}(Kconvert:Kconvert));
+         IF ((CURSOR.GE.97).AND.(CURSOR.LE.122)) [
+            CURSOR=CURSOR-32;
+            {P1}(Kconvert:Kconvert)=CHAR(CURSOR);
+         ]
+   ]
+}
+;
+
+"Macro to skip leading blanks "
+REPLACE {$SKIP LEADING BLANKS IN #;} WITH
+{;
+  length = len({P1});
+  WHILE ( index({P1},blank) = 1 ) [
+    IF( length >= 2 ) [ {P1}={P1}(2:); ] ELSE [ EXIT; ]
+    length = length - 1;
+  ]
+}
+
+"Macro that removes everything after comments "
+REPLACE {$REMOVE EVERYTHING AFTER # IN #;} WITH
+{
+  ifound = INDEX({P2},{P1});
+  IF( ifound > 1 ) [ {P2} = {P2}(1:ifound-1); ]
+  ELSE [ IF( ifound = 1 ) [ {P2} = blank; ] ]
+}
+
+REPLACE {$STRING-OUTPUT(#);} WITH
+{;
+  length = lnblnk1({P1});
+  IF( length > 0 ) [
+    DO lll=1,length [ write(i_log,'(a1,$)') {P1}(lll:lll); ]
+    write(i_log,*); "For a new line"
+  ]
+}
+
+IDEBUG = .false.;   "set to .true. for debug outputs"
+ERROR_FLAG = 0;
+IF(IDEBUG) [OUTPUT NMIN,NMAX, $NMAX;(' Entering get_inputs seeking values',
+   I5,' to', I5, '  with a max allowed of',I5);
+]
+IF (NMAX < NMIN | NMAX > $NMAX)[
+  OUTPUT NMAX, NMIN, $NMAX;
+  (//' Error entering get_inputs: Asked for values from',I5,' to',I5,
+  '    with a max of',I5//' This implies a bug in the calling routine'/
+  ' Fix it up and try again.  Stopping now.');
+  STOP;
+]
+ERR=i_errors;    "inputfile.errors"
+DELIM_START=DELIM_START(:lnblnk1(DELIM_START));
+DELIM_END=DELIM_END(:lnblnk1(DELIM_END));
+$SKIP LEADING BLANKS IN DELIM_START;
+$SKIP LEADING BLANKS IN DELIM_END;
+$CONVERT DELIM_START TO UPPER CASE; "This allows use of lower case letters"
+$CONVERT DELIM_END TO UPPER CASE; "This allows use of lower case letters"
+$SKIP LEADING BLANKS IN ENDSTRING;
+IF(ENDSTRING=blank)[
+   end_string=.false.;
+]
+ELSE[
+   $CONVERT ENDSTRING TO UPPER CASE;
+   end_string=.false.;
+]
+
+IF(IDEBUG) [OUTPUT DELIM_START,DELIM_END;(' start and stop delimeters are:'/
+   A/A/);
+]
+"===================check that each value_sought is there===================="
+
+DO I = NMIN, NMAX  [ "for each value_sought"
+   REWIND (UNITNUM);
+   LINE=0;             "reset line counter"
+   CHECK=0;            "reset error checker"
+   ERROR_FLAGS(I)=0;
+   " Set to default for the case the input is not found "
+   IF(TYPE(I) = 0 | TYPE(I) = 1) [ VALUE(I,1) = DEFAULT(I); ]
+   IF(TYPE(I) = 3) [ VALUE(I,1) = 0; ]
+   VNAME=VALUES_SOUGHT(I);
+   iVNAME=lnblnk1(VNAME);
+   IF( ivname < 1 )
+   [
+     IF( error_level > 0 ) [
+       write(ERR,*) ' ======================= Warning ===================== ';
+       write(ERR,*) '    Empty VALUES_SOUGHT passt to Get_Inputs()!         ';
+       write(ERR,*) ' ===================================================== ';
+     ]
+     ERROR_FLAG=1;
+     ERROR_FLAGS(I)=1;
+     goto :END-NMIN-NMAX-LOOP:;
+   ]
+
+   $CONVERT vname TO UPPER CASE; "This allows use of lower case letters"
+   iindex = 0;
+   IF (DELIM_START = 'NONE') [ start_found = .true.; ]
+   ELSE                    [ start_found = .false.; ]
+   WHILE ( iindex = 0 )  "Until the value sought is found"
+   [
+:GI25:
+       CONTINUE;
+       LINE=LINE+1;
+       IF( start_found ) [
+         READ(UNITNUM,END=:GI1003:,ERR=:GI1001:,FMT='(A256)') TEXT;
+       ]
+       ELSE [
+         READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;
+       ]
+       "READ(UNITNUM,END=:GI1004:,ERR=:GI1001:,FMT='(A256)') TEXT;"
+       $SKIP LEADING BLANKS IN text;
+       $REMOVE EVERYTHING AFTER '#' IN text;
+       $REMOVE EVERYTHING AFTER ';' IN text;
+       length = lnblnk1(TEXT);
+       TEXT=TEXT(:length);
+       origtext = text(:length);
+       $CONVERT text TO UPPER CASE;
+       IF( ~start_found ) [
+         IF (INDEX(TEXT,DELIM_START) ~= 0 ) [ start_found = .true.; ]
+         goto :GI25:;
+       ]
+
+       iindex=INDEX(TEXT,VNAME(:iVNAME));
+
+       " Check for end delimeter "
+       IF( DELIM_END~='NONE' )
+       [
+         IF (INDEX(TEXT,DELIM_END)~=0)
+         [
+             IF( error_level > 0 ) [
+             WRITE (ERR,*) '***************ERROR***************';
+             WRITE (ERR,*) '>>',VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                           '<<',' NOT FOUND';
+             WRITE (ERR,*) 'END OF DELIMETER: ',DELIM_END;
+             ]
+             ERROR_FLAG=1;
+             ERROR_FLAGS(I)=1;
+             GOTO :END-NMIN-NMAX-LOOP:;
+         ]
+       ]
+   ] "end while loop. If we pass this loop, we have the values_sought string "
+     "in text"
+
+   CHECK=0; "reset error checker"
+   IF( idebug ) [
+       write(i_log,*) ' ******* Found: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+
+   " Set string pointer to position after vname string and/or "
+   " leadinf equals                                           "
+   IINDEX=IINDEX+iVNAME;
+   TEXT=TEXT(IINDEX:); origtext=origtext(iindex:);
+   IF( idebug ) [
+       write(i_log,*) ' After removing vname: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+   IINDEX=INDEX(TEXT,'=');
+   IF (IINDEX.NE.0) [
+      TEXT=TEXT(IINDEX+1:); origtext=origtext(iindex+1:);
+   ]
+   ELSE [
+       IINDEX=INDEX(TEXT,':');
+       IF (IINDEX.NE.0) [
+          TEXT=TEXT(IINDEX+1:); origtext=origtext(iindex+1:);
+       ]
+   ]
+   IF( idebug ) [
+       write(i_log,*) ' After removing leading equals: ';
+       write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+       write(i_log,'(a,$)') ' origtext: '; $STRING-OUTPUT(origtext);
+   ]
+
+   "===============read the value(i)======================="
+   IF ( (lnblnk1(TEXT)=0) | (lnblnk1(TEXT)=1) )
+   [
+        IF (vname(:ivname)='TITLE')
+        [
+           READ (UNITNUM,FMT='(A80)') TEXTPIECE;
+           IF (lnblnk1(TEXTPIECE)~=0) [
+              TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
+              $SKIP LEADING BLANKS IN text;
+              $SKIP LEADING BLANKS IN origtext;
+              GOTO :TITLE-THERE:;
+           ]
+        ]
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '*************ERROR*************';
+        WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'VALUE NOT THERE!!';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        RETURN;
+   ]
+:TITLE-THERE:
+   CONTINUE;
+
+   " Always check for default. The following sets the value to "
+   " default(i) for a numeric input (type=1 or 2) and to 0 for "
+   " an 'allowed input' => use only if one input is expected!  "
+   iindex = index(text,'DEFAULT');
+   IF( iindex ~= 0 )
+   [                  "User requested a default value"
+       IF( type(i) ~= 2 )
+       [
+           IF( type(i) ~= 3 ) [ VALUE(I,1)=DEFAULT(I); ]
+           ELSE               [ VALUE(I,1)=0;          ]
+           goto :END-NMIN-NMAX-LOOP:;
+       ]
+   ]
+
+   IF ((TYPE(I) = 0)|(TYPE(I) = 1))
+   [                                 "Read the number"
+       IVAL=1;  "nvalue counter"
+       IF( idebug )[write(i_log,*) ' *** Reading an integer or a real value! ';]
+       LOOP
+       [
+           IF( idebug ) [write(i_log,*) ' In LOOP, ival = ',ival;]
+           IF (lnblnk1(TEXT)=0) [
+                 IF( error_level > 0 ) [
+                 WRITE(ERR,*) '*************ERROR*************';
+                 WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                 WRITE (ERR,*) 'VALUE NOT THERE!!';
+                 ]
+                 ERROR_FLAG=1;
+                 ERROR_FLAGS(I)=1;
+                 RETURN;
+           ]
+           READ(TEXT,END=:GI1010:,ERR=:GI1007:,FMT=*) VALUE(I,IVAL);
+           IF( idebug ) [write(i_log,*) ' Read value: ',ival,VALUE(I,IVAL);]
+"==========================================================================="
+"=================================Defaults=================================="
+
+           IF ((VALUE(I,IVAL)>VALUE_MAX(I))|(VALUE(I,IVAL)<VALUE_MIN(I)))
+           [
+               IF (TYPE(I)=0)
+               [
+                    INT_VALUE=DEFAULT(I);
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,*) '************WARNING************';
+                    WRITE(ERR,:FMTA:) INT_VALUE,
+                                 VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I)));
+                    ]
+                    :FMTA: FORMAT ( 'Default= ',I9,' used for: ', A );
+                    INT_VALUE=VALUE(I,IVAL);
+                    INT_VALUE_MIN=VALUE_MIN(I);
+                    INT_VALUE_MAX=VALUE_MAX(I);
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,:FMTB:)
+                        VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                        INT_VALUE, INT_VALUE_MIN,INT_VALUE_MAX;
+                    ]
+                    :FMTB: FORMAT (A,'=', I9,' should be between ',
+                                   I9,' and ', I9);
+               ]
+               IF (TYPE(I)=1)
+               [
+                    IF( error_level > 0 ) [
+                    WRITE(ERR,*) '************WARNING************';
+                    WRITE(ERR,:FMTC:) DEFAULT(I),
+                                 VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I)));
+                    :FMTC: FORMAT ( 'Default= ',F12.6,' used for: ', A );
+                    WRITE(ERR,:FMTD:)
+                        VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),
+                        VALUE(I,IVAL), VALUE_MIN(I),VALUE_MAX(I);
+                    :FMTD: FORMAT (A,'=', F12.6,' should be between ',
+                                   G14.6,' and ', G14.6);
+                    ]
+               ]
+               VALUE(I,IVAL)=DEFAULT(I);
+           ] "end IF default"
+
+           IF ( IVAL = NVALUE(I) ) EXIT; "Required inputs found"
+"==========================================================================="
+"=======================Move to next value, else exit======================="
+
+           IF ((INDEX(TEXT,',')~=0)|(lnblnk1(TEXT)=0))
+           [
+               IF ( idebug ) [
+                   write(i_log,*) ' A comma or a blank text found -> ';
+                   write(i_log,*) ' searching for further input';
+               ]
+               TEXT=TEXT(INDEX(TEXT,',')+1:);
+               WHILE (lnblnk1(TEXT)=0)
+               [
+                   IF ( idebug ) [
+                     write(i_log,*) ' Empty text -> reading next line! ';
+                   ]
+                   LINE=LINE+1;
+                   READ (UNITNUM,END=:GI1010:,ERR=:GI1007:,FMT='(A256)') TEXT;
+                   $SKIP LEADING BLANKS IN text;
+                   $REMOVE EVERYTHING AFTER '#' IN text;
+                   $REMOVE EVERYTHING AFTER ';' IN text;
+                   length = lnblnk1(TEXT);
+                   TEXT=TEXT(:length);
+                   origtext = text(:length);
+                   $CONVERT text TO UPPER CASE;
+
+                   "Check whether this line containes one of the strings sought"
+                   DO K = 1 , NMAX
+                   [
+                       vname1 = VALUES_SOUGHT(K);
+                       length = lnblnk1(vname1);
+                       IF( length > 0 )
+                       [
+                           $SKIP LEADING BLANKS IN vname1;
+                           $CONVERT vname1 TO UPPER CASE;
+                           IF (INDEX(TEXT,vname1(:length))~=0)
+                           [
+                             IF( error_level > 0 ) [
+                             WRITE(ERR,*) '************ERROR************';
+                             WRITE(ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                             WRITE(ERR,*) KEEPTEXT(:lnblnk1(KEEPTEXT)),
+                                      '<--COMMA INDICATES ANOTHER INPUT';
+                             WRITE(ERR,*) 'SEARCHED NEXT LINE: ',
+                                             TEXT(:lnblnk1(TEXT));
+                             WRITE(ERR,*) 'BUT NO OTHER INPUT WAS DETECTED';
+                             ]
+                             ERROR_FLAG=1;
+                             ERROR_FLAGS(I)=1;
+                           ]
+                       ]
+                   ]
+                   IF( idebug ) [
+                     write(i_log,*) ' Next line: ';
+                     write(i_log,'(a,$)') ' text:     '; $STRING-OUTPUT(text);
+                     write(i_log,'(a,$)') ' origtext: ';
+                                          $STRING-OUTPUT(origtext);
+                   ]
+               ]
+           ] "end if ~=0"
+           ELSE [EXIT;]
+           IVAL=IVAL+1;
+       ] "end loop"
+       IF ((NVALUE(I)~=0)&(NVALUE(I)~=IVAL)) [
+           IF( error_level > 0 ) [
+           WRITE (ERR,*) '**************ERROR**************';
+           WRITE (ERR,*) 'VALUE SOUGHT: ', VALUES_SOUGHT(I);
+           WRITE (ERR,*) 'ASKED FOR', NVALUE(I),' NUMERICAL INPUT(S)';
+           WRITE (ERR,*) 'HOWEVER,', IVAL, ' WERE DETECTED';
+           ]
+           ERROR_FLAG=1;
+           ERROR_FLAGS(I)=1;
+       ]
+       ELSE [NVALUE(I)=IVAL;]
+:GI1010:
+       CONTINUE;
+   ] "end IF TYPE"
+
+"============================read the char_value(i)========================="
+
+   IF ((TYPE(I) = 2) | (TYPE(I) = 3))
+   [                                   "Read the string"
+       IVAL=1;     "nvalue counter"
+       IF( idebug ) [write(i_log,*) ' Trying to read a string! ';]
+       LOOP
+       [
+           IF( idebug ) [write(i_log,*) ' In LOOP, ival = ',ival;]
+           IF (lnblnk1(TEXT)=0) [
+              IF( error_level > 0 ) [
+              WRITE(ERR,*) '*************ERROR*************';
+              WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+              WRITE (ERR,*) 'VALUE NOT THERE!!';
+              ]
+              ERROR_FLAG=1;
+              ERROR_FLAGS(I)=1;
+              RETURN;
+           ]
+           IF (vname(:ivname)='TITLE') [
+              TEXTPIECE=origtext;
+              GOTO :READ-IT:
+           ]
+           iindex = INDEX(origtext,',');
+           IF ( iindex ~= 0 ) [ TEXTPIECE=origtext(:iindex-1); ]
+           ELSE               [ TEXTPIECE=origtext;            ]
+                      "The above is to avoid conversion to upper case"
+                      "for e.g. media names                          "
+           :READ-IT:
+           CONTINUE;
+           READ(TEXTPIECE,ERR=:GI1008:,FMT='(A80)') CHAR_VALUE(I,IVAL);
+           $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
+           IF( idebug ) [
+             write(i_log,*) ' Read the following char string: ';
+             $STRING-OUTPUT(CHAR_VALUE(I,IVAL));
+           ]
+"===============================Allowed inputs=============================="
+           IF (TYPE(I) = 3)
+           [
+              $CONVERT CHAR_VALUE(I,IVAL) TO UPPER CASE;
+              ALLOWED=.FALSE.;
+              DO K=0, $MXALINP [
+                 vname1 = ALLOWED_INPUTS(I,K);
+                 $SKIP LEADING BLANKS IN ALLOWED_INPUTS(I,K);
+                 $CONVERT ALLOWED_INPUTS(I,K) TO UPPER CASE;
+                 IF (ALLOWED_INPUTS(I,K)=CHAR_VALUE(I,IVAL)) [
+                    ALLOWED=.TRUE.;
+                    VALUE(I,IVAL)=K;
+                    IF( idebug ) [
+                      write(i_log,*) ' Found a allowed_value match ',k;
+                    ]
+                 ]
+              ]
+              IF (.NOT.ALLOWED) [
+                 WRITE(ERR,*) '*************ERROR*************';
+                 IF (IVAL~=1) [
+                    WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                    WRITE (ERR,*) 'SHOULD HAVE ONE INPUT ONLY';
+                 WRITE (ERR,*) 'APPARENT STATE: COMMA INDICATING SECOND VALUE';
+                 ]
+                 ELSE [
+                    WRITE (ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                    WRITE(ERR,*) 'INPUT-->',
+                               CHAR_VALUE(I,IVAL)(:lnblnk1(CHAR_VALUE(I,IVAL))),
+                               '<--NOT ALLOWED';
+                    WRITE(ERR,*) 'OPTIONS ARE:';
+                    WRITE(ERR,:FMT:)
+                    (ALLOWED_INPUTS(I,K)(:lnblnk1(ALLOWED_INPUTS(I,K))),
+                     K=0,$MXALINP);
+                 ]
+                 :FMT: FORMAT(A40);
+                 ERROR_FLAG=1;
+                 ERROR_FLAGS(I)=1;
+              ]
+           ]
+"=======================Move to next value, else exit======================="
+
+           IF (vname(:ivname)='TITLE') [ EXIT; ]
+           DO K=1,LEN(KEEPTEXT) [KEEPTEXT(K:K)=' ';]  "erase previous KEEPTEXT"
+           KEEPTEXT(:lnblnk1(TEXT))=TEXT;
+           iindex = INDEX(TEXT,',');
+           IF ( iindex ~= 0 | lnblnk1(TEXT)=0 )
+           [
+               TEXT=TEXT(INDEX(TEXT,',')+1:);
+               origtext=origtext(iindex+1:);
+               WHILE (lnblnk1(TEXT)=0)
+               [
+                   LINE=LINE+1;
+                   READ (UNITNUM,ERR=:GI1008:,FMT='(A256)') TEXT;
+                   $SKIP LEADING BLANKS IN text;
+                   $REMOVE EVERYTHING AFTER '#' IN text;
+                   $REMOVE EVERYTHING AFTER ';' IN text;
+                   length = lnblnk1(TEXT);
+                   TEXT=TEXT(:length);
+                   origtext = text(:length);
+                   $CONVERT text TO UPPER CASE;
+
+                   "Check whether this line containes one of the strings sought"
+                   DO K = 1 , NMAX
+                   [
+                       vname1 = VALUES_SOUGHT(K);
+                       length = lnblnk1(vname1);
+                       IF( length > 0 )
+                       [
+                           $SKIP LEADING BLANKS IN vname1;
+                           $CONVERT vname1 TO UPPER CASE;
+                           IF (INDEX(TEXT,vname1(:length))~=0)
+                           [
+                             WRITE(ERR,*) '************ERROR************';
+                             WRITE(ERR,*) 'VALUE SOUGHT: ',VALUES_SOUGHT(I);
+                             WRITE(ERR,*) KEEPTEXT(:lnblnk1(KEEPTEXT)),
+                                      '<--COMMA INDICATES ANOTHER INPUT';
+                             WRITE(ERR,*) 'SEARCHED NEXT LINE: ',
+                                             TEXT(:lnblnk1(TEXT));
+                             WRITE(ERR,*) 'BUT NO OTHER INPUT WAS DETECTED';
+                             ERROR_FLAG=1;
+                             ERROR_FLAGS(I)=1;
+                           ]
+                       ]
+                   ]
+               ]
+           ] "end if ~=0"
+           ELSE [EXIT;]
+           IVAL=IVAL+1;
+        ] "end loop"
+        IF ((NVALUE(I)~=0)&(NVALUE(I)~=IVAL)) [
+           IF( error_level > 0 ) [
+           WRITE (ERR,*) '*******************ERROR*******************';
+           WRITE (ERR,*) 'VALUE SOUGHT: ', VALUES_SOUGHT(I);
+           WRITE (ERR,*) 'ASKED FOR', NVALUE(I),' INPUT(S)';
+           WRITE (ERR,*) 'HOWEVER,', IVAL, ' WERE DETECTED';
+           ]
+           ERROR_FLAG=1;
+           ERROR_FLAGS(I)=1;
+        ]
+        ELSE [NVALUE(I)=IVAL;]
+   ]
+"==========================================================================="
+"==========================================================================="
+   goto :END-NMIN-NMAX-LOOP:;
+
+:GI1003:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '******************ERROR***********************';
+        WRITE (ERR,*) 'END OF FILE REACHED BUT VALUE SOUGHT NOT FOUND';
+        WRITE (ERR,*) 'PROBABLY A MISSING/MISSPELLED END DELIMETER';
+        WRITE (ERR,*) 'VALUE SOUGHT: >>',
+          VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),'<<';
+        WRITE (ERR,*) 'END DELIMETER: >>',
+          DELIM_END(:lnblnk1(DELIM_END)),'<<';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        goto :END-NMIN-NMAX-LOOP:;
+
+:GI1004:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '******************ERROR***********************';
+        WRITE (ERR,*) 'END OF FILE REACHED BUT VALUE SOUGHT NOT FOUND';
+        WRITE (ERR,*) 'PROBABLY A MISSING/MISSPELLED START DELIMETER';
+        WRITE (ERR,*) 'VALUE SOUGHT: >>',
+          VALUES_SOUGHT(I)(:lnblnk1(VALUES_SOUGHT(I))),'<<';
+        WRITE (ERR,*) 'START DELIMETER: >>',
+          DELIM_START(:lnblnk1(DELIM_START)),'<<';
+        ]
+        ERROR_FLAG=1;
+        ERROR_FLAGS(I)=1;
+        goto :END-NMIN-NMAX-LOOP:;
+
+:GI1007:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '***************ERROR***************';
+        IF (IVAL>1) [J=IVAL;] ELSE [J=1;]
+        WRITE (ERR,*) 'ERROR READING VALUE SOUGHT: ', VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'LINE #',LINE;
+        WRITE (ERR,*) 'COULD NOT READ THE VALUE!!';
+        WRITE (ERR,*) 'SHOULD BE AN INTEGER OR A REAL...';
+        WRITE (ERR,*) 'IS THERE AN EXTRA COMMA AT THE END OF YOUR INPUT?';
+        ]
+        ERROR_FLAG=1; "turn on the error flag"
+        ERROR_FLAGS(I)=1; "turn on the error flag"
+        GOTO :END-NMIN-NMAX-LOOP:;
+:GI1008:
+        IF( error_level > 0 ) [
+        WRITE (ERR,*) '***************ERROR***************';
+        WRITE (ERR,*) 'ERROR READING VALUE SOUGHT: ', VALUES_SOUGHT(I);
+        WRITE (ERR,*) 'LINE #',LINE;
+        WRITE (ERR,*) 'COULD NOT READ THE STRING !!';
+        ]
+        ERROR_FLAG=1; "turn on the error flag"
+        ERROR_FLAGS(I)=1; "turn on the error flag"
+
+:END-NMIN-NMAX-LOOP:
+    CONTINUE;
+] "end do NMAX loop"
+RETURN;
+
+"**************if any errors**************"
+:GI1001:
+      WRITE (ERR,*) '***************ERROR***************';
+      WRITE (ERR,*) 'ERROR READING TEXT ', TEXT,' ON LINE ',LINE;
+      goto :GI1009:;
+:GI1009:
+      CONTINUE;  "exit if there is an error"
+      ERROR_FLAG=1; "turn on the error flag"
+      ERROR_FLAGS(I)=1; "turn on the error flag"
+      RETURN;
+
+entry get_input_plus_set_error_level(the_level);
+error_level = the_level;
+return;
+END;
+
+"*****************************************************************************
+"
+subroutine get_media_inputs(ounit);
+"subroutine to take the media names in the input file and get the material
+"data, either from a user-specified material data file, from material data
+"specified explicitly in the input file, or from a user-specified density
+"correction file.  This subroutine is called in HATCH.  It assumes that
+"the subroutine get_transport_parameter has already been called and that
+"the media names in the simulation have already been read in.
+
+implicit none;
+
+REPLACE{$MAXPOINTS}WITH{300};
+
+$INTEGER ounit;
+$declare_max_medium;
+
+$COMIN-GET-TRANSPORTP;
+COMIN/MEDINP,ELECIN,THRESH,ELEMTB/;
+
+$INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
+          ival_rho,ival_elements,ival_rhoz,ival_iunrst,ival_iaprim,ival_gasp,
+          ival_pz,ival_sterncid,
+          ival_densityfile,medfile_error,ival_outfile,
+          egs_open_file,lnblnk1,i_medfile,egs_get_unit,i_mederr,mindex,eindex,
+          i_density,i01,length,i_outfile;
+$REAL ecut_min, pcut_min;
+
+$LOGICAL  medfile_specified,densityfile_specified,elements_specified,
+          outfile_specified($MXMED);
+$LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
+          gasp_specified,rho_specified,start_delim_found,end_delim_found,
+          spec_by_pz,spec_by_rhoz,df_if_elem_mismatch($MXMED),
+          df_if_rho_mismatch($MXMED);
+$LOGICAL  ex;
+
+"maybe we do not need to keep ZTBL REAL4, since it is only used here"
+$REAL4 ZTBL;
+
+"variables for output of cross-section data to file for plotting"
+"some names end with O to avoid conflict with global variables"
+"in common blocks above"
+$REAL EKE,ELKE,TMXSO,DEDXE,DEDXP,EFRACT,SIGE,SIGP,BREME,BREMP,ETAB(16),
+      EIE,PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),PLOTEEN($MAXPOINTS),
+      PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS);
+$INTEGER IPLOTE,IFLAG1,IFLAG2,MEDIUM,LELKE;
+CHARACTER*60 GRAPHTITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,
+              SUBTITLE,SERIES;
+DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
+
+
+character*24 medium_name,med_tmp,sterncid_tmp;
+character*256 density_file,material_file,tmp_string,
+              spoutput_file($MXMED);
+character*80 text_string, text_save, title;
+character*40 delim_start,delim_end;
+character*1 blank;
+character*512 toUpper;
+
+"temporary variables for storing values before committing them"
+"to the media library"
+$INTEGER nne_tmp,iaprim_tmp,epstfl_tmp,iunrst_tmp;
+$REAL rho_tmp,rhoz_tmp($MXEL),z_tmp($MXEL),pz_tmp($MXEL),ae_tmp,ap_tmp,
+      ue_tmp,up_tmp,gasp_tmp;
+$TYPE asym_tmp($MXEL);
+
+"for stuff read from the density correction file"
+$INTEGER nepst_df,nne_df;
+$REAL iev_df,rho_df,z_df($MXEL),rhoz_df($MXEL),rhoz_tot;
+$TYPE asym_df($MXEL);
+
+data blank/' '/;
+
+save medfile_specified,material_file,df_if_elem_mismatch,df_if_rho_mismatch,
+     spoutput_file,outfile_specified;
+
+REPLACE {$WRITE_MEDERR(#)} WITH {
+;
+IF(n_parallel=0 | i_parallel=first_parallel)[
+write(i_mederr,*){P1};
+]
+;
+}
+;
+
+call get_input_set_error_level(0);
+call get_input_plus_set_error_level(0);
+
+"open a file for output from this routine"
+IF(n_parallel=0 | i_parallel=first_parallel)[
+  i_mederr=17;
+  i_mederr=egs_open_file(i_mederr,0,1,'.mederr');
+]
+
+"find min. ecut and pcut"
+ecut_min=999.;
+pcut_min=999.;
+DO i=1,$MXREG[
+  IF(ecut(i)<ecut_min)ecut_min=ecut(i);
+  IF(pcut(i)<pcut_min)pcut_min=pcut(i);
+]
+
+delimeter = 'MEDIA DEFINITION';
+ival = 0;
+
+/*
+"list of medium names"
+ival                = ival + 1;
+ival_media           = ival;
+values_sought(ival) = 'media names';
+type(ival)          = 2;  "i.e.  character input"
+nvalue(ival)        = 0;
+Nmin = ival_media; Nmax = ival_media;
+
+CALL GET_INPUT;
+IF( error_flags(ival_media) > 0 ) [
+    $egs_fatal('(a/,a,I3)',
+'Error reading media names.  You must supply them if using pegsless mode.',
+               ' error_flag = ', error_flags(ival_media));
+]
+IF (nvalue(ival_media)>$MXMED)[
+      $egs_fatal('(a,a,i3,a)',
+              '***** Number of media greater than maximum ',
+              'allowed. $MXMED = ',$MXMED,
+              ' increase $MXMED and try again!!!');
+]
+"now load media names into variables"
+DO i=1,nvalue(ival_media) [
+  media_names(i)=char_value(ival_med,i);
+  DO j=1,24[
+    inpmed(j,i) = char_value(ival_med,i)(j:j);
+  ]
+]
+*/
+
+"full name of media data file"
+ival                = ival + 1;
+ival_medfile         = ival;
+values_sought(ival) = 'material data file';    "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 2;
+Nmin = ival_medfile; Nmax = ival_medfile;
+CALL GET_INPUT;
+IF(error_flags(ival_medfile)=0)[
+   material_file=char_value(ival_medfile,1);
+   medfile_specified=.true.;
+   "try opening it"
+   i_medfile=17;
+   i_medfile=egs_get_unit(i_medfile);
+   IF(i_medfile < 1)[
+     $egs_fatal('(a)','Error: Failed to get available fortran unit for',
+     ' medium data file.');
+   ]
+   open(i_medfile,file=material_file,status='old',err=:no_media_file:);
+   medfile_specified=.true.;
+]
+ELSE[
+  $WRITE_MEDERR(' Warning: material data file not supplied.');
+  $WRITE_MEDERR(' Thus, you must define media explicitly in input file');
+  $WRITE_MEDERR(' or via density correction file.');
+  medfile_specified=.false.;
+]
+
+"get AE, UE, AP, UP, if specified"
+ival                = ival + 1;
+ival_ae = ival;
+values_sought(ival) = 'ae';
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;
+value_min(ival)     = 0;
+value_max(ival)     = 999.;
+default(ival)       = ecut_min;
+
+ival                = ival + 1;
+ival_ap = ival;
+values_sought(ival) = 'ap';
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;
+value_min(ival)     = 0;
+value_max(ival)     = 999.;
+default(ival)       = pcut_min;
+
+ival                = ival + 1;
+ival_ue = ival;
+values_sought(ival) = 'ue';
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;
+value_min(ival)     = 0;
+value_max(ival)     = 999.;
+default(ival)       = 50.511;
+
+ival                = ival + 1;
+ival_up = ival;
+values_sought(ival) = 'up';
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;
+value_min(ival)     = 0;
+value_max(ival)     = 999.;
+default(ival)       = 50.0;
+
+Nmin=ival_ae;Nmax=ival_up;
+CALL GET_INPUT;
+IF(error_flags(ival_ae)=0)[
+   ae_tmp=value(ival_ae,1);
+]
+ELSE[
+   $WRITE_MEDERR(' Warning: AE for media not supplied.  Will use min. ECUT.');
+   ae_tmp=ecut_min;
+]
+IF(error_flags(ival_ap)=0)[
+   ap_tmp=value(ival_ap,1);
+]
+ELSE[
+   $WRITE_MEDERR(' Warning: AP for media not supplied.  Will use min. PCUT.');
+   ap_tmp=pcut_min;
+]
+IF(error_flags(ival_ue)=0)[
+   ue_tmp=value(ival_ue,1);
+]
+ELSE[
+   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 50.511 MeV');
+   ue_tmp=50.511;
+]
+IF(error_flags(ival_up)=0)[
+   up_tmp=value(ival_up,1);
+]
+ELSE[
+   $WRITE_MEDERR(' Warning: UP for media not supplied.  Will use 50.0 MeV');
+   up_tmp=50.;
+]
+
+"now check for individual media inputs in file"
+"if not there, get data from material data file"
+
+DO i=1,NMED[
+
+   "convert medium name to string for ease of"
+   "implementation"
+   DO j=1,24[medium_name(j:j)=media(j,i);]
+
+   "set up defaults"
+   elements_specified=.false.;
+   rho_specified=.false.;
+   densityfile_specified=.false.;
+   stern_specified=.false.;
+   iunrst_specified=.false.;
+   iaprim_specified=.false.;
+   gasp_specified=.false.;
+   spec_by_rhoz=.false.;
+   spec_by_pz=.false.;
+   df_if_elem_mismatch(i)=.false.;
+   df_if_rho_mismatch(i)=.false.;
+
+   sterncid_tmp=medium_name;
+   gasp_tmp=0.0;
+   iunrst_tmp=0;
+   iaprim_tmp=0;
+   epstfl_tmp=0;
+   density_file=' ';
+
+   $WRITE_MEDERR(' ');
+
+   $WRITE_MEDERR(' For medium: ',medium_name);
+
+   delimeter=$cstring(medium_name);
+
+   ival=0;
+
+   "see if composition is specified explicitly"
+   ival=ival+1;
+   ival_elements=ival;
+   values_sought(ival) = 'elements';
+   type(ival)          = 2;  "i.e.  character input"
+   nvalue(ival)        = 0;
+   nmin=ival_elements;nmax=ival_elements;
+   CALL GET_INPUT;
+   IF(error_flags(ival_elements)=0)[
+   "now get fraction of each element"
+    ival=ival+1;
+    ival_pz=ival;
+    nne_tmp=nvalue(ival_elements);
+    values_sought(ival)='number of atoms';
+    type(ival)=0;
+    nvalue(ival)=nne_tmp;
+    nmin=ival_pz;nmax=ival_pz;
+    CALL GET_INPUT;
+    IF(nne_tmp>1 & error_flags(ival_pz)=0)[
+        "got em.  Use em.  But not if this is an element"
+        DO j=1,nne_tmp[
+          asym_tmp(j)=char_value(ival_elements,j);
+          pz_tmp(j)=value(ival_pz,j);
+        ]
+        elements_specified=.true.;
+        spec_by_pz=.true.;
+    ]
+    ELSE[
+        "check to see if fractional wts specified"
+        ival=ival+1;
+        ival_rhoz=ival;
+        values_sought(ival)='mass fractions';
+        type(ival)=1;
+        nvalue(ival)=nne_tmp;
+        nmin=ival_rhoz;nmax=ival_rhoz;
+        IF(nne_tmp=1)[
+          "set max, min and default values"
+          value_min(ival)=0.0;
+          value_max(ival)=1.e15;
+          default(ival)=1.;
+        ]
+        CALL GET_INPUT;
+        IF(error_flags(ival_rhoz)=0)[
+           "got em.  Use em."
+          DO j=1,nne_tmp[
+            asym_tmp(j)=char_value(ival_elements,j);
+            rhoz_tmp(j)=value(ival_rhoz,j);
+          ]
+          elements_specified=.true.;
+          spec_by_rhoz=.true.;
+        ]
+     ]
+     IF(nne_tmp=1 & ~elements_specified)[
+      "an element: set pz to 1 and use default atomic weight"
+        asym_tmp(1)=char_value(ival_elements,1);
+        pz_tmp(1)=1;
+        elements_specified=.true.;
+        spec_by_pz=.true.;
+     ]
+     IF(elements_specified)[
+       $WRITE_MEDERR(' Composition specified in .egsinp file.');
+     ]
+   ]
+
+   "see what else is there"
+   ival=ival+1;
+   ival_rho=ival;
+   values_sought(ival) = 'rho';
+   type(ival)=1;
+   nvalue(ival)=1;
+   value_min(ival)=0.;
+   value_max(ival)=1e15;
+   default(ival)=1.0;
+   nmin=ival_rho;nmax=ival_rho;
+   CALL GET_INPUT;
+   IF(error_flags(ival_rho)=0)[
+      rho_tmp=value(ival_rho,1);
+      rho_specified=.true.;
+      $WRITE_MEDERR(' Rho specified in .egsinp file.');
+   ]
+
+   "now see what else is specified in the .egsinp file"
+   ival=ival+1;
+   ival_sterncid=ival;
+   values_sought(ival)='sterncid';
+   type(ival)=2;
+   nvalue(ival)=1;
+   nmin=ival_sterncid;nmax=ival_sterncid;
+   CALL GET_INPUT;
+   IF(error_flags(ival_sterncid)=0)[
+      sterncid_tmp=char_value(ival_sterncid,1);
+      stern_specified=.true.;
+      $WRITE_MEDERR(' STERNCID specified in .egsinp file.');
+   ]
+
+   ival=ival+1;
+   ival_iunrst=ival;
+   values_sought(ival)='stopping powers';
+   type(ival)=3;
+   nvalue(ival)=1;
+   allowed_inputs(ival,0)='restricted total';
+   allowed_inputs(ival,1)='unrestricted collision';
+   allowed_inputs(ival,2)='unrestricted collision and radiative';
+   allowed_inputs(ival,3)='unrestricted collision and restricted radiative';
+   allowed_inputs(ival,4)='restricted collision and unrestricted radiative';
+   allowed_inputs(ival,5)='unrestricted radiative';
+   nmin=ival_iunrst;nmax=ival_iunrst;
+   CALL GET_INPUT;
+   IF(error_flags(ival_iunrst)=0)[
+      iunrst_tmp=value(ival_iunrst,1);
+      iunrst_specified=.true.;
+      $WRITE_MEDERR(' IUNRST specified in .egsinp file.');
+   ]
+
+   ival=ival+1;
+   ival_iaprim=ival;
+   values_sought(ival)='bremsstrahlung correction';
+   type(ival)=3;
+   nvalue(ival)=1;
+   allowed_inputs(ival,0)='KM';
+   allowed_inputs(ival,1)='NRC';
+   allowed_inputs(ival,2)='none';
+   nmin=ival_iaprim;nmax=ival_iaprim;
+   CALL GET_INPUT;
+   IF(error_flags(ival_iaprim)=0)[
+      iaprim_tmp=value(ival_iaprim,1);
+      iaprim_specified=.true.;
+      $WRITE_MEDERR(' IAPRIM specified in .egsinp file.');
+   ]
+
+   ival=ival+1;
+   ival_gasp=ival;
+   values_sought(ival)='gas pressure';
+   type(ival)=1;
+   nvalue(ival)=1;
+   value_min(ival)=0.;
+   value_max(ival)=1e15;
+   default(ival)=0.0;
+   nmin=ival_gasp;nmax=ival_gasp;
+   CALL GET_INPUT;
+   IF(error_flags(ival_gasp)=0)[
+      gasp_tmp=value(ival_gasp,1);
+      gasp_specified=.true.;
+      $WRITE_MEDERR(' GASP specified in .egsinp file.');
+   ]
+
+   ival=ival+1;
+   ival_densityfile=ival;
+   values_sought(ival)='density correction file';
+   type(ival)          = 2;
+   nvalue(ival)=1;
+   nmin=ival_densityfile;nmax=ival_densityfile;
+   CALL GET_INPUT;
+   IF(error_flags(ival_densityfile)=0)[
+       density_file=char_value(ival_densityfile,1);
+       densityfile_specified=.true.;
+       "may get changed to false later if it cannot be opened"
+       $WRITE_MEDERR(' Density correction file specified in .egsinp file.');
+   ]
+
+   "check if the user has specified an output file for plotting"
+   "e- data."
+   ival = ival+1;
+   ival_outfile = ival;
+   values_sought(ival) = 'e- stopping power output file';
+   type(ival) = 2;
+   nvalue(ival) =1;
+   nmin=ival_outfile;nmax=ival_outfile;
+   CALL GET_INPUT;
+   IF(error_flags(ival_outfile)=0)[
+       spoutput_file(i)=char_value(ival_outfile,1);
+       outfile_specified(i)=.true.;
+       $WRITE_MEDERR(' e- stopping powers will be output to ',
+         spoutput_file(i));
+   ]
+   ELSE [
+       outfile_specified(i)=.false.;
+   ]
+
+   "done reading the .egsinp file for this medium"
+   "see if we need anything from the material data file"
+   IF(medfile_specified & (~elements_specified | ~rho_specified |
+      ~iunrst_specified | ~iaprim_specified | ~gasp_specified |
+      ~stern_specified | ~densityfile_specified))[
+   "we assume at this point that the media file has been opened"
+   "let us find the delimeters for this medium"
+      rewind(i_medfile);
+      start_delim_found=.false.;
+      end_delim_found=.false.;
+      WHILE(~start_delim_found | ~end_delim_found)[
+        read(i_medfile,'(a)',end=:stop_medfile_read:)text_string;
+        text_save=text_string;
+        text_string=toUpper($cstring(text_string));
+        mindex=index(text_string,'MEDIUM');
+        eindex=index(text_string,'=');
+        IF(mindex>0 & eindex>mindex)[
+         "remove everything up to ="
+         text_string=text_string(eindex+1:);
+         text_string=$cstring(text_string);
+         $SKIP LEADING BLANKS IN text_string;
+         IF(text_string=medium_name)[
+            delim_start=text_save;
+            start_delim_found=.true.;
+         ]
+         ELSEIF(start_delim_found)[
+            delim_end=text_save;
+            end_delim_found=.true.;
+         ]
+
+        ]
+      ]
+      :stop_medfile_read:
+      IF(~start_delim_found)[
+        $WRITE_MEDERR(' Warning: Data for ',medium_name,' not found');
+        $WRITE_MEDERR(' in material data file.');
+      ]
+      ELSE[
+       IF(~end_delim_found)[
+        "eof is end delimiter"
+        delim_end='NONE';
+       ]
+
+       ival=0;
+      "now go through and get what is required"
+       IF(~elements_specified)[
+         ival=ival+1;
+         ival_elements=ival;
+         values_sought(ival) = 'elements';
+         type(ival)          = 2;  "i.e.  character input"
+         nvalue(ival)        = 0;
+         nmin=ival_elements;nmax=ival_elements;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_elements)=0)[
+           "now get fraction of each element"
+           ival=ival+1;
+           ival_pz=ival;
+           nne_tmp=nvalue(ival_elements);
+           values_sought(ival)='number of atoms';
+           type(ival)=0;
+           nvalue(ival)=nne_tmp;
+           nmin=ival_pz;nmax=ival_pz;
+           CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+           IF(nne_tmp>1 & error_flags(ival_pz)=0)[
+              "got em.  Use em.  If its not an element"
+              DO j=1,nne_tmp[
+                asym_tmp(j)=char_value(ival_elements,j);
+                pz_tmp(j)=value(ival_pz,j);
+              ]
+              elements_specified=.true.;
+              spec_by_pz=.true.;
+          ]
+          ELSE[
+              "check to see if fractional wts specified"
+              ival=ival+1;
+              ival_rhoz=ival;
+              values_sought(ival)='mass fractions';
+              type(ival)=1;
+              nvalue(ival)=nne_tmp;
+              nmin=ival_rhoz;nmax=ival_rhoz;
+              IF(nne_tmp=1)[
+                "set max, min and default values"
+                value_min(ival)=0.0;
+                value_max(ival)=1.e15;
+                default(ival)=1.;
+              ]
+              CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+              IF(error_flags(ival_rhoz)=0)[
+                "got em.  Use em."
+                DO j=1,nne_tmp[
+                  asym_tmp(j)=char_value(ival_elements,j);
+                  rhoz_tmp(j)=value(ival_rhoz,j);
+                ]
+                elements_specified=.true.;
+                spec_by_rhoz=.true.;
+              ]
+           ]
+           IF(nne_tmp=1 & ~elements_specified)[
+             asym_tmp(1)=char_value(ival_elements,1);
+             pz_tmp(1)=1;
+             elements_specified=.true.;
+             spec_by_pz=.true.;
+           ]
+           IF(elements_specified)[
+             $WRITE_MEDERR(' Composition specified in material data file');
+           ]
+         ]
+        ]
+
+        IF(~rho_specified)[
+         ival=ival+1;
+         ival_rho=ival;
+         values_sought(ival) = 'rho';
+         type(ival)=1;
+         nvalue(ival)=1;
+         value_min(ival)=0.;
+         value_max(ival)=1e15;
+         default(ival)=1.0;
+         nmin=ival_rho;nmax=ival_rho;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_rho)=0)[
+           rho_tmp=value(ival_rho,1);
+           rho_specified=.true.;
+           $WRITE_MEDERR(' Rho specified in material data file');
+         ]
+        ]
+
+        IF(~stern_specified)[
+         ival=ival+1;
+         ival_sterncid=ival;
+         values_sought(ival)='sterncid';
+         type(ival)=2;
+         nvalue(ival)=1;
+         nmin=ival_sterncid;nmax=ival_sterncid;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_sterncid)=0)[
+            sterncid_tmp=char_value(ival_sterncid,1);
+            stern_specified=.true.;
+            $WRITE_MEDERR(' STERNCID specified in material data file');
+         ]
+        ]
+
+        IF(~iunrst_specified)[
+         ival=ival+1;
+         ival_iunrst=ival;
+         values_sought(ival)='stopping powers';
+         type(ival)=3;
+         nvalue(ival)=1;
+         allowed_inputs(ival,0)='restricted total';
+         allowed_inputs(ival,1)='unrestricted collision';
+         allowed_inputs(ival,2)='unrestricted collision and radiative';
+         allowed_inputs(ival,3)=
+             'unrestricted collision and restricted radiative';
+         allowed_inputs(ival,4)=
+             'restricted collision and unrestricted radiative';
+         allowed_inputs(ival,5)='unrestricted radiative';
+         nmin=ival_iunrst;nmax=ival_iunrst;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_iunrst)=0)[
+            iunrst_tmp=value(ival_iunrst,1);
+            iunrst_specified=.true.;
+            $WRITE_MEDERR(' IUNRST specified in material data file');
+         ]
+        ]
+
+        IF(~iaprim_specified)[
+         ival=ival+1;
+         ival_iaprim=ival;
+         values_sought(ival)='bremsstrahlung correction';
+         type(ival)=3;
+         nvalue(ival)=1;
+         allowed_inputs(ival,0)='KM';
+         allowed_inputs(ival,1)='NRC';
+         allowed_inputs(ival,2)='none';
+         nmin=ival_iaprim;nmax=ival_iaprim;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_iaprim)=0)[
+            iaprim_tmp=value(ival_iaprim,1);
+            iaprim_specified=.true.;
+            $WRITE_MEDERR(' IAPRIM specified in material data file');
+         ]
+        ]
+
+        IF(~gasp_specified)[
+         ival=ival+1;
+         ival_gasp=ival;
+         values_sought(ival)='gas pressure';
+         type(ival)=1;
+         nvalue(ival)=1;
+         value_min(ival)=0.;
+         value_max(ival)=1.e15;
+         default(ival)=0.;
+         nmin=ival_gasp;nmax=ival_gasp;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_gasp)=0)[
+            gasp_tmp=value(ival_gasp,1);
+            gasp_specified=.true.;
+            $WRITE_MEDERR(' GASP specified in material data file');
+         ]
+        ]
+
+        IF(~densityfile_specified)[
+         ival=ival+1;
+         ival_densityfile=ival;
+         values_sought(ival)='density correction file';
+         type(ival)          = 2;
+         nvalue(ival)=1;
+         nmin=ival_densityfile;nmax=ival_densityfile;
+         CALL GET_INPUT_PLUS(i_medfile,delim_start,delim_end);
+         IF(error_flags(ival_densityfile)=0)[
+            density_file=char_value(ival_densityfile,1);
+            densityfile_specified=.true.;
+            "may get changed to false later if it cannot be opened"
+            $WRITE_MEDERR(
+            ' Density correction file specified in material data file.');
+         ]
+        ]
+      ]
+
+   ]
+
+   "now, try to open the density correction file, if specified"
+   IF(densityfile_specified)[
+     "if a file separator is specified in the name, assume the full path + name"
+     "of the file is specified"
+    IF(index(density_file,$file_sep)>0) [
+       tmp_string=$cstring(density_file);
+       inquire(file=tmp_string,exist=ex);
+       IF(~ex)[
+              $WRITE_MEDERR(' Error: Density correction file ',tmp_string);
+              $WRITE_MEDERR(' cannot be found.');
+              $WRITE_MEDERR(' Will not use density corrections.');
+              densityfile_specified=.false.;
+       ]
+    ]
+    ELSE[
+       density_file=$cstring(density_file)//'.density';
+       IF (elements_specified)[
+         "know which directory to look in based on no. of elements"
+         IF(nne_tmp=1)[
+            tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'elements' //
+                   $file_sep // density_file;
+            inquire(file=tmp_string,exist=ex);
+            IF(~ex)[
+              $WRITE_MEDERR(' Error: Density correction file ',density_file);
+              $WRITE_MEDERR(
+      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/elements');
+              $WRITE_MEDERR('   Will not use density corrections.');
+              densityfile_specified=.false.;
+            ]
+         ]
+         ELSE[
+            tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'compounds' //
+                   $file_sep // density_file;
+            inquire(file=tmp_string,exist=ex);
+            IF(~ex)[
+              $WRITE_MEDERR(' Error: Density correction file ',density_file);
+              $WRITE_MEDERR(
+      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/compounds');
+              $WRITE_MEDERR('   Will not use density corrections.');
+              densityfile_specified=.false.;
+            ]
+         ]
+       ]
+       ELSE["we have to look in both directories"
+       "first, look in elements"
+         tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'elements' //
+                   $file_sep // density_file;
+         inquire(file=tmp_string,exist=ex);
+         IF(~ex)[
+             tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'compounds' //
+                   $file_sep // density_file;
+             inquire(file=tmp_string,exist=ex);
+         ]
+         IF(~ex)[
+             $WRITE_MEDERR(' Error: Density correction file ',density_file);
+             $WRITE_MEDERR(
+      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/elements or ');
+             $WRITE_MEDERR(
+                      ' $HEN_HOUSE/pegs4/density_corrections/compounds.',
+                      '   Will not use density corrections.');
+             densityfile_specified=.false.;
+         ]
+       ]
+     ]
+
+       IF(densityfile_specified)[
+             "now try to open it"
+         i_density=19;
+         i_density=egs_get_unit(i_density);
+         IF(i_density < 1)[
+         $egs_fatal('(a)','Error: Failed to get available fortran unit for',
+             ' density correction file.');
+         ]
+         open(i_density,file=tmp_string,status='old',err=:no_density_file:);
+         density_file=tmp_string;
+         densityfile_specified=.true.;
+         epstfl_tmp=1;
+
+         "the density file is open at this point so just read the data"
+
+         read(i_density,'(a)')title;
+         read(i_density,*)nepst_df,iev_df,rho_df,nne_df;
+         read(i_density,*)(z_df(j),rhoz_df(j),j=1,nne_df);
+
+         "get atomic symbols and pz based on df header"
+         DO j=1,nne_df[
+           i01=z_df(j);
+           asym_df(j)=ASYMT(i01);
+         ]
+
+         "check to see if data read from density file matches"
+         "composition and rho already input"
+         IF(elements_specified)[
+           IF(nne_tmp~=nne_df)[
+             df_if_elem_mismatch(i)=.true.;
+           ]
+           ELSE[
+             rhoz_tot=0.;
+             DO j=1,nne_tmp["normalize rhoz as it is in dcf"
+                 IF(spec_by_pz)[
+                   i01=ZTBL(asym_tmp(j));
+                   rhoz_tmp(j)=pz_tmp(j)*WATBL(i01);
+                 ]
+                 rhoz_tot=rhoz_tot+rhoz_tmp(j);
+             ]
+             DO j=1,nne_df[
+               DO k=1,nne_tmp[ "at this point nne_df=nne_tmp"
+                 IF(asym_df(j)=asym_tmp(k))[
+                   IF(rhoz_df(j)>(1+0.01)*rhoz_tmp(k)/rhoz_tot |
+                      rhoz_df(j)<(1-0.01)*rhoz_tmp(k)/rhoz_tot)[
+                       df_if_elem_mismatch(i)=.true.;
+                   ]
+                   exit;
+                 ]
+               ]
+               IF(k>nne_tmp) df_if_elem_mismatch(i)=.true.;
+                           "never found the element"
+               IF(df_if_elem_mismatch(i)) exit;
+             ]
+           ]
+           IF(df_if_elem_mismatch(i))[
+         $WRITE_MEDERR(' Warning: composition specified in density correction',
+              ' file is not the same as that');
+            $WRITE_MEDERR(' specified in input or material data file.');
+            $WRITE_MEDERR(
+         ' Will use the composition specified in the density correction file.');
+            nne_tmp=nne_df;
+            DO j=1,nne_tmp[
+               z_tmp(j)=z_df(j);
+               rhoz_tmp(j)=rhoz_df(j);
+               asym_tmp(j)=asym_df(j);
+            ]
+            spec_by_rhoz=.true.;
+           ]
+         ]
+         ELSE[
+            $WRITE_MEDERR(' Composition specified in density correction file');
+            nne_tmp=nne_df;
+            DO j=1,nne_tmp[
+               z_tmp(j)=z_df(j);
+               rhoz_tmp(j)=rhoz_df(j);
+               asym_tmp(j)=asym_df(j);
+            ]
+            spec_by_rhoz=.true.;
+            elements_specified=.true.;
+         ]
+
+         IF(rho_specified)[
+          "check to see if rho read from density correction file matches"
+          "that already input"
+          IF(rho_df>(1+0.01)*rho_tmp | rho_df<(1-0.01)*rho_tmp)[
+             $WRITE_MEDERR(' Warning: rho specified in density correction',
+              ' file is not the same as that');
+            $WRITE_MEDERR(' specified in input or material data file.');
+            $WRITE_MEDERR(
+           ' Will use rho as specified in the density correction file.');
+            rho_tmp=rho_df;
+            df_if_rho_mismatch(i)=.true.;
+          ]
+         ]
+         ELSE[
+           rho_tmp=rho_df;
+           rho_specified=.true.;
+           $WRITE_MEDERR(' Rho specified in density correction file');
+         ]
+         "close the density file"
+         close(i_density);
+       ]
+    ]
+
+
+   "okay, now commit this to the media library"
+   IF(elements_specified & rho_specified)[
+
+       ae(i)=ae_tmp;
+       ue(i)=ue_tmp;
+       ap(i)=ap_tmp;
+       up(i)=up_tmp;
+
+       DO j=1,24[
+         inpstrn(j,i) = sterncid_tmp(j:j);
+       ]
+
+       nne(i)=nne_tmp;
+       rho(i)=rho_tmp;
+
+       DO j=1,nne_tmp[
+         inpasym(i,j)=asym_tmp(j);
+         "assume we are getting z from asym"
+         "redundant in the case where medium defined using"
+         "density correction file"
+         "ZTBL is a function defined in pegs4_routines.mortran"
+         zelem(i,j)=ZTBL(asym_tmp(j));
+         i01=zelem(i,j);
+         "WATBL defined in pegs4_macros.mortran"
+         wa(i,j)=WATBL(i01);
+         wa4(i,j)=WATBL(i01);
+         "also do $REAL4 math so we can check against cross-sections"
+         "calculated by pegs4.mortran"
+         IF(spec_by_rhoz)[
+            rhoz(i,j)=rhoz_tmp(j);
+            rhoz4(i,j)=rhoz_tmp(j);
+            pz(i,j)=rhoz(i,j)/wa(i,j);
+            pz4(i,j)=rhoz4(i,j)/wa4(i,j);
+
+         ]
+         ELSEIF(spec_by_pz)[
+            pz(i,j)=pz_tmp(j);
+            pz4(i,j)=pz_tmp(j);
+            rhoz(i,j)=pz(i,j)*wa(i,j);
+            rhoz4(i,j)=pz4(i,j)*wa4(i,j);
+         ]
+       ]
+
+       iunrst(i)=iunrst_tmp;
+       iaprim(i)=iaprim_tmp;
+       epstfl(i)=epstfl_tmp;
+       inpgasp(i)=gasp_tmp;
+       inpdensity_file(i)=density_file;
+
+    ]
+    ELSE[
+      $WRITE_MEDERR(' Error: Medium ',medium_name,' not correctly defined.');
+    ]
+]
+
+IF(medfile_specified) close(i_medfile);
+
+IF(n_parallel=0 | i_parallel=first_parallel) close(i_mederr);
+
+
+entry show_media_parameters(ounit);
+
+IF ( ounit <= 0 ) return;
+
+IF(is_pegsless)[
+
+"show common data"
+
+write(ounit,*);
+write(ounit,*)' Medium data: ';
+write(ounit,*);
+write(ounit,'(a,1p,e14.5,a,e14.5,a)')' AE = ',ae(1),' MeV,  UE = ',ue(1),' MeV';
+write(ounit,'(a,1p,e14.5,a,e14.5,a)')' AP = ',ap(1),' MeV,  UP = ',up(1),' MeV';
+write(ounit,*);
+IF(medfile_specified)[
+  write(ounit,*)' Material data file: ',material_file;
+]
+ELSE[
+  write(ounit,*)' No material data file supplied.  Material data obtained from';
+  write(ounit,*)' .egsinp file or density correction file.';
+]
+write(ounit,*);
+
+"now list data for individual media that were successfully read in"
+
+DO i=1,nmed[
+
+  write(ounit,'(a,24a1)')'   Medium: ',(media(j,i),j=1,24);
+  write(ounit,'(a,24a1)')' Sterncid: ',(inpstrn(j,i),j=1,24);
+  write(ounit,'(a,1p,e14.5,a)')'     rho: ',rho(i),' g/cm^3';
+  write(ounit,'(a,24a4)')' Elements: ',(inpasym(i,j),j=1,nne(i));
+  write(ounit,'(a,1p,12e14.5)')'    rhoz: ',(rhoz(i,j),j=1,nne(i));
+  write(ounit,'(a,1p,12e14.5)')'      pz: ',(pz(i,j),j=1,nne(i));
+  write(ounit,'(a,i5)')'  iunrst: ',iunrst(i);
+  write(ounit,'(a,i5)')'  iaprim: ',iaprim(i);
+  write(ounit,'(a,1p,e14.5,a)')'    gasp: ',inpgasp(i),' atm.';
+  IF(epstfl(i)=1)[
+    write(ounit,*)' density correction file: ',
+        $cstring(inpdensity_file(i));
+    IF(df_if_elem_mismatch(i))[
+     write(ounit,*)' ****Warning: composition specified in density correction',
+              ' file is not the same as that';
+     write(ounit,*)' specified in input or material data file.';
+      write(ounit,*)
+         ' Will use the composition specified in the density correction file.';
+    ]
+    IF(df_if_rho_mismatch(i))[
+     write(ounit,*)' ****Warning: rho specified in density correction',
+              ' file is not the same as that';
+     write(ounit,*)' specified in input or material data file.';
+      write(ounit,*)
+         ' Will use rho as specified in the density correction file.';
+    ]
+  ]
+  write(ounit,*);
+
+ "output stopping powers to file for plotting if requested"
+  IF(outfile_specified(i) & (n_parallel=0 | i_parallel=first_parallel)) [
+    inquire(file=spoutput_file(i),exist=ex);
+    IF(ex) [
+      $egs_warning('(a)','Warning: stopping power output file ',
+            spoutput_file(i),'already exists.  Will overwrite.');
+    ]
+    i_outfile=20;
+    i_outfile=egs_get_unit(i_outfile);
+    IF(i_outfile < 1)[
+      $egs_warning('(a)','Warning: Failed to get available fortran unit for',
+          ' stopping power output file.');
+    ]
+    open(i_outfile,file=spoutput_file(i),status='unknown',err=:no_output_file:);
+    goto :got_outfile:;
+    :no_output_file:
+    $egs_warning('(a)','Warning: Failed to open stopping power output file ',
+                spoutput_file(i));
+    goto :end_outfile:;
+    :got_outfile:
+    IFLAG1=0;IFLAG2=0;IPLOTE=0;MEDIUM=i;
+    XAXIS = 'kinetic energy / MeV';
+    YAXISE = 'dE/drhoX MeV/g/cm\\S2\\N';
+    YAXISEmfp = 'mean free path / cm';
+    YAXISPmfp = 'mean free path / cm';
+    write(GRAPHTITLE,'(24a1)')(media(j,i),j=1,24);
+    SUBTITLE = 'Electron data';
+    DO j=1,8[
+     DO k=1,16[
+       EKE=ETAB(k)*10.**(j-4);
+       IF(EKE <= AE(1)-0.511) [
+           IF(IFLAG1 = 0) [ IFLAG1=1; EKE=AE(1)-0.511; ] ELSE [ EKE=0.0; ]
+       ]
+
+       IF(EKE > UE(1)-0.511) [
+           IF(IFLAG2 = 0) [ IFLAG2=1; EKE=UE(1)-0.511; ] ELSE [ EKE=1.E30; ]
+       ]
+       EIE=EKE+0.511;       TMXSO=0.0;        DEDXE=0.0;
+       DEDXP=0.0;           EFRACT=0.0;
+       IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
+           ELKE=LOG(EKE);
+           $SET INTERVAL ELKE,EKE;
+           $EVALUATE DEDXE USING EDEDX(ELKE);"RESTRICTED STOPPING POWERS"
+
+"enable below to plot other quantities"
+
+/*
+           $EVALUATE TMXSO USING TMXS(ELKE);"STEP SIZE"
+           $EVALUATE DEDXP USING PDEDX(ELKE);
+           EFRACT= TMXSO*DEDXE/EKE;
+
+           $EVALUATE SIGE USING ESIG(ELKE);  "--PROBABILITY /CM"
+
+           IF(SIGE = 0.0) [ SIGE=1.E-10; ]
+
+           $EVALUATE SIGP USING PSIG(ELKE);
+
+           IF(SIGP = 0.0) [ SIGP=1.E-10; ]
+           $EVALUATE BREME USING EBR1(ELKE);  "--BREM FRACTION OF EVENTS"
+           $EVALUATE BREMP USING PBR1(ELKE);
+ */
+           IPLOTE=IPLOTE+1;   "keep track of how many entries"
+           PLOTEEN(IPLOTE)=EKE;
+           PLOTE(IPLOTE)=DEDXE/RHO(MEDIUM);
+"enable below to plot other quantities
+ /*
+           PLOTEM(IPLOTE)=1./SIGE;
+           PLOTEMP(IPLOTE)=1./(SIGE*BREME);  "--mfp to bremsstrahlung only"
+           IF(BREME < 1.) [
+                PLOTEMS(IPLOTE)=1./(SIGE*(1.-BREME));  "--mfp to secondaries"
+           ]
+           ELSE [PLOTEMS(IPLOTE)= 1e6; "it goes forever if BREME=1."]
+ */
+       ]
+     ]
+    ]
+    IF(IPLOTE>0)[
+       "currently only plots stopping powers"
+       IF(iunrst(i)=0) [
+          SERIES='restricted total stopping power';
+       ]
+       ELSEIF(iunrst(i)=1) [
+          SERIES='unrestricted collision stopping power';
+       ]
+       ELSEIF(iunrst(i)=2) [
+          SERIES='unrestricted collision + radiative stopping power';
+       ]
+       ELSEIF(iunrst(i)=3) [
+       SERIES='unrestricted collision + restricted radiative stopping power';
+       ]
+       ELSEIF(iunrst(i)=4) [
+         SERIES='restricted collision + unrestricted radiative stopping power';
+       ]
+       ELSEIF(iunrst(i)=5) [
+         SERIES='unrestricted radiative stopping power';
+       ]
+       CALL MEDXVGRPLOT(PLOTEEN,PLOTE,IPLOTE,0,SERIES,
+               XAXIS,YAXISE,GRAPHTITLE,SUBTITLE,i_outfile,2);
+    ]
+    close(i_outfile);
+    :end_outfile:
+  ]
+]
+]
+
+return;
+:no_media_file:
+$egs_fatal('(a)','Error: Cannot open material data file',material_file);
+return;
+:no_density_file:
+$egs_fatal('(a)','Error: Cannot open density correction file',tmp_string);
+return;
+end;
+;
+
+"==========================end of get_inputs.mortran=================="
+
+SUBROUTINE MEDXVGRPLOT (X, Y, NPTS, CURVENUM, SERIESTITLE,
+                        XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
+                        UNITNUM, AXISTYPE);
+"a version of XVGRPLOT specifically for plotting stopping powers and"
+"associated data.  Note that this is required because xvgrplot.mortran"
+"is not included at compile time for all user codes."
+IMPLICIT NONE;
+
+COMIN/EGS-IO/;
+
+$INTEGER MAX;
+PARAMETER (MAX = 400);  "---MAX used in defining the maximum number of---"
+                          "---points that can be plotted in one series. ---"
+$INTEGER NPTS,NPTS1,CURVENUM, COUNT,UNITNUM,TYPE,AXISTYPE;
+$REAL X(NPTS),Y(NPTS),ERRY(NPTS),YMIN,SMALLESTX,
+  SMALLESTY,FUDGE;
+$INTEGER TITLELENGTH,SUBLENGTH,XAXISLENGTH,YAXISLENGTH,SERIESLENGTH;
+$INTEGER LOGX, LOGY;
+CHARACTER*(*) SUBTITLE;
+CHARACTER*(*) GRAPHTITLE,XTITLE,YTITLE,SERIESTITLE;
+$LOGICAL TESTFILE, ALLPOS;
+
+FUDGE = 1.e-10;
+
+IF ( NPTS .gt. MAX) [ "Asked for too many points"
+        OUTPUT NPTS, MAX;(//' **************************'/
+        ' Number of points asked for =', I5,
+        ' is greater than max allowed of', I4/
+        ' Setting NPTS to MAX, you could adjust MAX in xvgrplot.mortran'/
+        ' **************************'//);
+        NPTS1 = MAX;
+] ELSE [NPTS1 = NPTS;]
+
+INQUIRE(UNIT = UNITNUM, OPENED = TESTFILE);
+
+IF (~TESTFILE) [ "---File has not been opened - print message.---"
+    WRITE(6,:125:) UNITNUM;
+    :125: FORMAT (//'  ---------Error in Subroutine XVGRPLOT---------'
+                 ,/'   Unit specified (',I2,') is not open.'
+                 ,/'   Unit must be opened before using subroutine.'
+                 ,/'   Data not written to file.'
+                 ,/'  ----------------------------------------------'//);
+    RETURN;
+] "---End of error message for unopened file---"
+
+
+TITLELENGTH = 61;    SUBLENGTH = 61;       XAXISLENGTH = 61;
+YAXISLENGTH = 61;    SERIESLENGTH = 61;
+
+  "---Find title string length---"
+LOOP [
+   TITLELENGTH = TITLELENGTH - 1;
+] UNTIL (GRAPHTITLE(TITLELENGTH:TITLELENGTH) ~= ' ');
+
+  "---Find subtitle string length---"
+LOOP [
+    SUBLENGTH = SUBLENGTH - 1;
+] UNTIL (SUBTITLE(SUBLENGTH:SUBLENGTH) ~= ' ');
+
+  "---Find x-axis string length---"
+LOOP [
+    XAXISLENGTH = XAXISLENGTH - 1;
+] UNTIL (XTITLE(XAXISLENGTH:XAXISLENGTH) ~= ' ');
+
+  "---Find y-axis string length---"
+LOOP [
+    YAXISLENGTH = YAXISLENGTH - 1;
+] UNTIL (YTITLE(YAXISLENGTH:YAXISLENGTH) ~= ' ');
+
+  "---Find series title length---"
+LOOP [
+    SERIESLENGTH = SERIESLENGTH - 1;
+] UNTIL (SERIESTITLE(SERIESLENGTH:SERIESLENGTH) ~= ' ');
+
+  "---Initialize LOGX, LOGY, to be not set (0)---"
+LOGX = 0;          LOGY = 0;
+
+ALLPOS=.TRUE.;
+IF ( X(1)=0.0 ) [SMALLESTX = 0.1;] ELSE [SMALLESTX=X(1);]
+IF ( Y(1)=0.0 ) [SMALLESTY = 0.1;] ELSE [SMALLESTY=Y(1);]
+DO COUNT = 1, NPTS1 [
+       IF ((X(COUNT) < SMALLESTX) & (X(COUNT)~=0.)) [SMALLESTX=X(COUNT);]
+       IF ((Y(COUNT) < SMALLESTY) & (Y(COUNT)~=0.)) [SMALLESTY=Y(COUNT);]
+       IF ((X(COUNT) < 0.)|(Y(COUNT) < 0.)) [ALLPOS=.FALSE.;]
+]
+IF (ALLPOS) [
+     DO COUNT = 1, NPTS1 [
+          IF (X(COUNT)=0.) [X(COUNT)=SMALLESTX*FUDGE;]
+          IF (Y(COUNT)=0.) [Y(COUNT)=SMALLESTY*FUDGE;]
+     ]
+]
+
+
+IF (AXISTYPE > 0) [  "---At least one axis is of log type---"
+    DO COUNT = 1, NPTS1 [
+      IF (X(COUNT) <= 0.) [ LOGX = 1; ]
+      IF (Y(COUNT) <= 0.) [ LOGY = 1; ]
+    ]
+]
+  "---Now begin writing information to unit---"
+IF (CURVENUM = 0) [ "---Case where plot file must start from scratch---"
+    "---Insert xvgr graph header in file.---"
+
+    "---Start with type of graph.  (lin-lin, log-lin, lin-log, or log-log)---"
+    IF (AXISTYPE = 0) [ "---Graph is of type lin-lin---"
+      WRITE(UNITNUM,:90:) 'xy';
+    ] ELSEIF (AXISTYPE = 1) [ "---Graph is of type log-lin---"
+      WRITE(UNITNUM,:90:) 'logy';
+      WRITE(UNITNUM,:1080:);
+    ] ELSEIF (AXISTYPE = 2) [ "---Graph is of type lin-log---"
+      WRITE(UNITNUM,:90:) 'logx';
+      WRITE(UNITNUM,:1080:);
+    ] ELSEIF (AXISTYPE = 3) [ "---Graph is of type log-log---"
+      WRITE(UNITNUM,:90:) 'logxy';
+      WRITE(UNITNUM,:1080:);
+      WRITE(UNITNUM,:1090:);
+    ] ELSE [ "--anything else specified is in error--"
+      WRITE(6,:91:) AXISTYPE;
+      :91: FORMAT (//'  ------------Error in Subroutine XVGRPLOT-----------'
+                 ,/'   AXISTYPE specified (',I2,') is not a valid option.'
+                 ,/'  ----------------------------------------------'//);
+      RETURN;
+    ]
+    :90: FORMAT ('@g0 type ',A,' ');
+    :1080: FORMAT ('@    xaxis  ticklabel format exponential');
+    :1090: FORMAT ('@    yaxis  ticklabel format exponential');
+
+    "---Titles and things---"
+    WRITE(UNITNUM,:100:) GRAPHTITLE(1:TITLELENGTH)
+                        ,SUBTITLE(1:SUBLENGTH)
+                        ,XTITLE(1:XAXISLENGTH)
+                        ,YTITLE(1:YAXISLENGTH);
+    :100: FORMAT ('@    title "',A,'"'/
+                 ,'@    subtitle "',A,'"'/
+                 ,'@    legend on'/
+                 ,'@    legend box linestyle 0'/
+                 ,'@    legend x1 0.6'/
+                 ,'@    legend y1 0.75'/
+                 ,'@    view xmin 0.250000'/
+                 ,'@    xaxis  label "',A,'"'/
+                 ,'@    timestamp on'/
+                 ,'@    yaxis  label "',A,'"');
+]  "---End CURVENUM = 0---"
+
+IF (AXISTYPE = 1 & LOGY = 1) [  "--LOGY error--"
+    WRITE(UNITNUM,:90:) 'xy';
+    WRITE(6,:95:);
+    :95: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                ,/'  Log scale requested for Y axis when one or more   '
+                ,/'  Y data points are 0 or negative.                  '
+               ,//'  Y axis scale changed to linear.                   '
+                ,/' ---------------------------------------------------'/);
+]
+
+IF (AXISTYPE = 2 & LOGX = 1) [  "--LOGX error--"
+    WRITE(UNITNUM,:90:) 'xy';
+    WRITE(6,:96:);
+    :96: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                ,/'  Log scale requested for X axis when one or more   '
+                ,/'  X data points are 0 or negative.                  '
+               ,//'  X axis scale changed to linear.                   '
+                ,/' ---------------------------------------------------'/);
+]
+
+IF (AXISTYPE = 3 & (LOGX = 1 | LOGY = 1)) [  "--LOGX or LOGY error--"
+    IF (LOGX = 1 & LOGY = 1) [
+      WRITE(UNITNUM,:90:) 'xy';
+      WRITE(6,:97:);
+      :97: FORMAT (/' ----------WARNING from Subroutine XVGRPLOT---------'
+                  ,/'  Log scale requested for X axis and Y axis when    '
+                  ,/'  one or more X and Y data points are 0 or negative.'
+                 ,//'  X and Y axes scales changed to linear.            '
+                  ,/' ---------------------------------------------------'/);
+    ]
+    ELSEIF (LOGX = 1) [ WRITE(UNITNUM,:90:) 'logy'; WRITE(6,:96:); ]
+    ELSE              [ WRITE(UNITNUM,:90:) 'logx'; WRITE(6,:95:); ]
+]
+
+IF (CURVENUM < 10 ) [
+    WRITE(UNITNUM,'(''@    s'',I1,'' on'')') CURVENUM;
+]
+ELSE [
+    WRITE(UNITNUM,'(''@    s'',I2,'' on'')') CURVENUM;
+]
+WRITE(UNITNUM,:150:)  CURVENUM,SERIESTITLE(1:SERIESLENGTH);
+:150: FORMAT ('@    legend string ',I2,' "',A,'"');
+
+
+"---Data set is of type XY---"
+WRITE(UNITNUM,:200:);
+:200: FORMAT ('@TYPE xy');
+IF (CURVENUM < 10) [
+       WRITE(UNITNUM,:151:) CURVENUM;
+       IF (CURVENUM = 9) [WRITE(UNITNUM,:197:) CURVENUM, CURVENUM+1;]
+       ELSE [WRITE(UNITNUM,:198:) CURVENUM, CURVENUM+1;]
+]
+ELSE [
+       WRITE(UNITNUM,:152:) CURVENUM;
+       WRITE(UNITNUM,:199:) CURVENUM, CURVENUM+1;
+]
+    :151: FORMAT ('@    s',I1,' errorbar length 0.000000');
+    :152: FORMAT ('@    s',I2,' errorbar length 0.000000');
+    :197: FORMAT ('@    s',I1,' symbol color ',I2);
+    :198: FORMAT ('@    s',I1,' symbol color ',I1);
+    :199: FORMAT ('@    s',I2,' symbol color ',I2);
+
+"---Then write the data to the file.---"
+DO COUNT = 1, NPTS1 [ WRITE(UNITNUM,:250:) X(COUNT),Y(COUNT); ]
+    :250: FORMAT (1PE15.4,1PE15.4);
+
+"---Insert end of series indicator to file.---"
+WRITE(UNITNUM,'(''&'')');
+
+RETURN;
+END;
+;
+"---End of subroutine.---"
+

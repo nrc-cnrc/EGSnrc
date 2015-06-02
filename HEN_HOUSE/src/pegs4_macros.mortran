@@ -1,0 +1,525 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc pegs4 macros                                                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Blake Walters, 2013                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The content of this file was adapted from the original pegs4 source code   "
+"  to enable on-the-fly pegs data generation in EGSnrc. Please see the pegs4  "
+"  sources for more information on the authorship of the original code.       "
+"                                                                             "
+"#############################################################################"
+
+
+"Compiler directives"
+"==================="
+%Q1         "Automatically close comments at end of line
+            "but this DOES NOT apply withing macro definitions!!
+%C80        "Allow 80 columns of source/line (default is 72)
+%L          "Turn on listing
+
+"MACROS TO SPLIT LONG STRING INTO A1 STRINGS"
+REPLACE {$S'{SYMBOL}#'} WITH
+   {'#1'[IF]{EXIST 2}[,$S'{P2}']};
+
+"pegs4 uses single precision.  real*8 causes problems"
+REPLACE {$REAL4} WITH {real*4};
+
+PARAMETER $MXSTC=73;"NUMBER OF MEDIA WITH STERNHEIMER COEFFICIENTS"
+PARAMETER $RERR=1.E-5;      "RERR-VALUE NEEDED BY DCADRE"
+PARAMETER $AERR=1.E-16;     "AERR-VALUE NEEDED BY DCADRE"
+PARAMETER $FUDGEMS=1.0;  "FULL MS OFF ATOMIC ELECTRONS"
+
+REPLACE {;COMIN/LBREMZ/;} WITH {
+  ;COMMON/LBREMZ/CONST,DELC,EBREMZ,DELTAM,XLNZ;
+   $REAL4 CONST,DELC,EBREMZ,DELTAM,XLNZ;
+}
+
+REPLACE {;COMIN/PMCONS/;} WITH
+   {;COMMON/PMCONS/PIP,C,RME,HBAR,ECGS,EMKS,AN;
+     $REAL4 PIP,C,RME,HBAR,ECGS,EMKS,AN;
+   };
+
+REPLACE {;COMIN/DERCON/;} WITH
+   {;COMMON/DERCON/RADDEG,FSC,ERGMEV,R0,RMP,RMPT2,RMPSQ,A22P9,A6680;
+     $REAL4 RADDEG,FSC,ERGMEV,R0,RMP,RMPT2,RMPSQ,A22P9,A6680;
+   };
+
+REPLACE {;COMIN/THRESHP/;} WITH
+   {;COMMON/THRESHP/APP,AEP,UPP,UEP,THBREMP,THMOLLP,TEP,IUNRSTP;
+     $REAL4 APP,AEP,UPP,UEP,THBREMP,THMOLLP,TEP;
+     $INTEGER IUNRSTP;
+   };
+
+REPLACE {;COMIN/BREMPRP/;} WITH
+   {;COMMON/BREMPRP/DLP1(6),DLP2(6),DLP3(6),DLP4(6),DLP5(6),DLP6(6),
+    DELCMP,ALPHIP(2),BPARP(2),DELPOSP(2);
+    $REAL4 dlP1,dlP2,dlP3,dlP4,dlP5,dlP6,delcmP,alphiP,bparP,delposP;
+   };
+
+REPLACE {;COMIN/EPSTAR/;} WITH
+   {;
+     COMMON/EPSTAR/EPSTEN(150),EPSTD(150),WEPST(20),
+     EPSTTL,NEPST,IEPST,EPSTFLP,
+     NELEPS,ZEPST(20),IAPRFL,IAPRIMP;
+     $INTEGER    ZEPST,NELEPS,IAPRFL,NEPST,IEPST,EPSTFLP,IAPRIMP;
+     CHARACTER   EPSTTL*80;
+     $REAL4       EPSTEN,EPSTD,WEPST;
+   };
+
+    "THIS COMMON IS USED FOR OPTION WHICH READS IN DENSITY EFFECT "
+    "CORRECTION IN SPINIT AND CALCULATES USING IT IN SPIONB       "
+    "THE FLAG EPSTFL IS READ UNDER NAMELIST INPUT, AND DEFAULTS   "
+    "   TO ZERO IN THE BLOCK DATA. SET TO UNITY TO USE THE OPTION "
+    "PEGS USES THE I-VALUE IN THE DENSITY INPUT FILE              "
+    "VARIOUS CHECKS ARE DONE TO ENSURE THE DENSITY CORRECTION     "
+    "   CORRESPONDS TO THE MATERIAL DEFINITION IN PEGS            "
+    "THE ENERGY TABLE READ IN IS ASSUMED TO BE KINETIC ENERGY IN  "
+    "   MEV BUT IS CONVERTED TO TOTAL ENERGY BY THE CODE.         "
+    "THE ENERGY OPTION MUST BE USED IN PEGS PRIOR TO THE MIXT,COMP"
+    "   OR ELEM OPTIONS TO ALLOW ALL THE CHECKS TO WORK PROPERLY. "
+    "NELEPS IS THE NUMBER OF ELEMENTS IN THE MATERIAL             "
+    "ZEPST(I) (INTEGER), WEPST(I) ARE THE Z VALUE AND FRACTION    "
+    "   BY WEIGHT OF THE I-TH ELEMENT IN THE DATA FILE.           "
+    "IAPRIM is a flag to tell which correction to the bremsstrahlung        "
+    "       cross section to use:      0 =>  old Koch and Motz    "
+    " =1(defaulat) read in new data file; =2, use no corrections. "
+    "IAPRFL is a flag to say if APRIM file has been initialized   "
+
+REPLACE {;COMIN/MOLVAR/;} WITH
+   {;COMMON/MOLVAR/WM,ZC,ZT,ZB,ZF,ZS,ZE,ZX,ZA,ZG,ZP,ZV,ZU,
+    RLCP,EDEN,RHOP,XCCP,BLCCP,TEFF0P,XR0P;
+     $REAL4 WM,ZC,ZT,ZB,ZF,ZS,ZE,ZX,ZA,ZG,ZP,ZV,ZU,RLCP,EDEN,RHOP,
+       XCCP,BLCCP,TEFF0P,XR0P;
+   };
+
+REPLACE {;COMIN/MIMSD/;} WITH
+   {;COMMON/MIMSD/BMIN;
+     $REAL4 BMIN;
+   };
+
+REPLACE {;COMIN/RADLEN/;} WITH
+   {;COMMON/ADLEN/ALRAD(4),ALRADP(4),A1440,A183;
+     $REAL4 ALRAD,ALRADP,A1440,A183;
+   };
+
+"------------------------------------------------------------------"
+"*** LSPION--COMMON FOR COMMUNICATION BETWEEN SPINIT AND SPIONB    "
+"------------------------------------------------------------------"
+REPLACE {;COMIN/LSPION/;} WITH
+   {;COMMON/LSPION/CBAR,X0,X1,SK,TOLN10,AFACT,SPC1,SPC2,IEV;
+     $REAL4 CBAR,X0,X1,SK,TOLN10,AFACT,SPC1,SPC2,IEV;
+   };
+
+REPLACE {;COMIN/SPCOMM/;} WITH
+   {;COMMON/SPCOMM/MEDTBL(24,$MXSTC),
+           NUMSTMED,STDATA(6,$MXSTC);
+       $TYPE MEDTBL;
+       $INTEGER NUMSTMED;
+       $REAL4    STDATA;
+   }
+
+REPLACE {;COMIN/PWLFIN/;} WITH
+   {;COMMON/PWLFIN/EPE,ZTHRE(8),ZEPE(8),NIPE,NALE;
+     $REAL4 EPE,ZTHRE,ZEPE;
+     $INTEGER NIPE,NALE;
+   };
+
+REPLACE {;COMIN/RSLTS/;} WITH
+   {;COMMON/RSLTS/NEL,AXE,BXE,AFE($MXEKE,8),BFE($MXEKE,8);
+     $REAL4 AXE,BXE,AFE,BFE;
+     $INTEGER NEL;
+   };
+
+REPLACE {;COMIN/ELEMTB/;} WITH
+   {;COMMON/ELEMTB/NET,ITBL(100),WATBL(100),RHOTBL(100),ASYMT(100);
+     $INTEGER NET;
+     $REAL4 ITBL,WATBL,RHOTBL;
+     $TYPE ASYMT;
+   }
+
+REPLACE {;COMIN/MIXDAT/;} WITH
+   {;COMMON/MIXDAT/NEP,LMED,PZP($MXEL),ZELEMP($MXEL),WAP($MXEL),RHOZP($MXEL),
+     GASPP,EZ,TPZ,IDSTRN(24);
+     $INTEGER NEP,LMED;
+     $REAL4 PZP,ZELEMP,WAP,RHOZP,GASPP,EZ,TPZ;
+     $TYPE IDSTRN;
+   }
+
+REPLACE {;COMIN/DBRPR/;} WITH
+   {;COMMON/DBRPR/ALFP1(2),ALFP2(2),AL2;
+     $REAL4 ALFP1,ALFP2,al2;
+   };
+
+"This block contains some media parameters required for"
+"cross-section calculations but not covered in any of the"
+"egsnrc common blocks.  It also contains $REAL4 versions"
+"of some egsnrc media parameters to allow direct comparison"
+"with cross-sections calculated by pegs4.mortran"
+REPLACE {;COMIN/MEDINP/;} WITH
+   {;COMMON/MEDINP/inpdensity_file($MXMED),inpasym($MXMED,$MXEL),
+     inpstrn(24,$MXMED),pz4($MXMED,$MXEL),
+     rhoz4($MXMED,$MXEL),wa4($MXMED,$MXEL),inpgasp($MXMED);
+     character*256 inpdensity_file;
+     $TYPE inpasym,inpstrn;
+     $REAL4 pz4,rhoz4,wa4,inpgasp;
+   };
+
+REPLACE {$DECLARE-PEGS4-COMMON-BLOCKS;} WITH {
+;COMIN/LBREMZ,PMCONS,DERCON,EPSTAR,MOLVAR,LSPION,PWLFIN,
+RSLTS,SPCOMM,MIXDAT,RADLEN,MIMSD,THRESHP,BREMPRP,ELEMTB,MEDINP/;
+$REAL4 XSIFP,WADUM,PZDUM,RHOZDUM,RLCDUM,ALKE,ALKEI;
+$INTEGER I01;
+EXTERNAL ALKE,ALKEI,EFUNS;
+$TYPE MEDTB1(24,20),MEDTB2(24,20),MEDTB3(24,20),MEDTB4(24,13);
+EQUIVALENCE (MEDTBL(1,1),MEDTB1(1,1));
+EQUIVALENCE (MEDTBL(1,21),MEDTB2(1,1));
+EQUIVALENCE (MEDTBL(1,41),MEDTB3(1,1));
+EQUIVALENCE (MEDTBL(1,61),MEDTB4(1,1));
+}
+
+REPLACE {$GET-PEGSLESS-XSECTIONS;} WITH
+{;
+
+call get_media_inputs(-1);
+
+DO IM=1,NMED[
+
+  "store values in variables used to calculate cross-sections"
+  AEP=AE(IM);
+  UEP=UE(IM);
+  APP=AP(IM);
+  UPP=UP(IM);
+  NEP=NNE(IM);
+  IUNRSTP=IUNRST(IM);
+  IAPRIMP=IAPRIM(IM);
+  EPSTFLP=EPSTFL(IM);
+  GASPP=INPGASP(IM); "recall gasp not an egsnrc variable"
+  RHOP=RHO(IM);
+  DO J=1,NEP[
+    ZELEMP(J)=ZELEM(IM,J);
+    "use the $REAL4 variables from MEDINP for these ones, for now"
+    "since these have been calculated using $REAL4 math"
+    PZP(J)=PZ4(IM,J);
+    RHOZP(J)=RHOZ4(IM,J);
+    WAP(J)=WA4(IM,J);
+ ]
+ DO IB=1,LMDN[
+   IDSTRN(IB)=INPSTRN(IB,IM);
+ ]
+ TEP=AEP-RMP; THMOLLP=AEP+TEP ; "equation in pegs4.mortran"
+
+ CALL MIX; "calculates MS parameters"
+
+ CALL SPINIT(inpdensity_file(IM)); "density corrections, may open density file"
+
+ CALL DIFFER;
+"do not know why we call above subroutine since"
+"bremsstrahlung cross-sections get reset in fix_brems"
+
+ "now call the piecewise linear fit subroutine to generate the remainder of"
+ "the electron cross-sections"
+ CALL PWLF1(NEL,NALE,AEP,UEP,THMOLLP,EPE,ZTHRE,ZEPE,NIPE,ALKE,
+ALKEI,AXE,BXE,$MXEKE,8,AFE,BFE,EFUNS);
+
+ "cross-sections are now calculated"
+ "store generated data in egsnrc variables"
+
+ "recompute the following two, note the different form of the equation for"
+ "THMOLL compared to pegs4.mortran"
+ TE(IM)=AE(IM)-RM; THMOLL(IM)=TE(IM)*2. + RM ;
+
+ "cross-section parameters"
+ RLC(IM)=RLCP;"RLCP gets calculated in MIX"
+
+ XCC(IM)=XCCP;
+ BLCC(IM)=BLCCP;
+ XR0(IM)=XR0P;
+ TEFF0(IM)=TEFF0P;
+
+ "all of the below gets reset in fix_brems"
+ DELCM(IM)=DELCMP;
+ DO I=1,2[
+  ALPHI(I,IM)=ALPHIP(I);
+  BPAR(I,IM)=BPARP(I);
+  DELPOS(I,IM)=DELPOSP(I);
+ ]
+ DO I=1,6[
+  DL1(I,IM)=DLP1(I);
+  DL2(I,IM)=DLP2(I);
+  DL3(I,IM)=DLP3(I);
+  DL4(I,IM)=DLP4(I);
+  DL5(I,IM)=DLP5(I);
+  DL6(I,IM)=DLP6(I);
+ ]
+
+
+ "the following egsnrc quantities are all zeroed in the pegs4 generated data"
+ "so they shall be zeroed here"
+ MSGE(IM)=0;MSEKE(IM)=0;MLEKE(IM)=0;MCMFP(IM)=0;MRANGE(IM)=0;
+
+ "now, the non-zero quantities"
+ MGE(IM)=$MXGE; "we do not use PWLF1 for photon quantities"
+               "this setting is also done in init_user_photon"
+ MEKE(IM)=NEL; "no. of electron energies as determed from PWLF1"
+
+ "now, set secondary egsnrc variables"
+
+ NSGE=MSGE(IM);NGE=MGE(IM);NSEKE=MSEKE(IM);NEKE=MEKE(IM);
+ NLEKE=MLEKE(IM);NCMFP=MCMFP(IM);NRANGE=MRANGE(IM);
+
+ "store results of pwlf in egsnrc variables"
+ EKE0(IM)=BXE;
+ EKE1(IM)=AXE;
+
+ "BFE and AFE were acquired with the call to"
+ "PWLF1 above but we need to fill in the arrays"
+ DO I=1,NEKE[
+    ESIG0(I,IM)=BFE(I,1);
+    ESIG1(I,IM)=AFE(I,1);
+    PSIG0(I,IM)=BFE(I,2);
+    PSIG1(I,IM)=AFE(I,2);
+    EDEDX0(I,IM)=BFE(I,3);
+    EDEDX1(I,IM)=AFE(I,3);
+    PDEDX0(I,IM)=BFE(I,4);
+    PDEDX1(I,IM)=AFE(I,4);
+    EBR10(I,IM)=BFE(I,5);
+    EBR11(I,IM)=AFE(I,5);
+    PBR10(I,IM)=BFE(I,6);
+    PBR11(I,IM)=AFE(I,6);
+    PBR20(I,IM)=BFE(I,7);
+    PBR21(I,IM)=AFE(I,7);
+    TMXS0(I,IM)=BFE(I,8);
+    TMXS1(I,IM)=AFE(I,8);
+ ]
+
+"below is for debugging to ensure that"
+"pegsless and pegs versions would give identical"
+"results if pegsless cross sections were to be"
+"read from a file a la pegs"
+
+/*
+write(56,'(1X,1P,5E14.5)')RLCP,AEP,APP,UEP,UPP;
+write(56,'(1X,14I5)')
+$LGN(MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE(IM));
+write(56,'(1X,1P,5E14.5)')($LGN(DLP(I)/1,2,3,4,5,6/),I=1,6);
+write(56,'(1X,1P,5E14.5)')DELCMP,(ALPHIP(I),BPARP(I),
+   DELPOSP(I),I=1,2);
+write(56,'(1X,1P,5E14.5)')XR0P,TEFF0P,BLCCP,XCCP;
+write(56,'(1X,1P,5E14.5)')BXE,AXE;
+write(56,'(1X,1P,5E14.5)')((BFE(I,J),AFE(I,J),J=1,8),I=1,NEKE);
+rewind(56);
+READ(56,:FLT:) $LGN(RLC,AE,AP,UE,UP(IM));
+READ(56,:INT:)
+$LGN(MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE(IM));
+READ(56,:FLT:)($LGN(DL(I,IM)/1,2,3,4,5,6/),I=1,6);
+READ(56,:FLT:)DELCM(IM),($LGN(ALPHI,BPAR,
+   DELPOS(I,IM)),I=1,2);
+READ(56,:FLT:)$LGN(XR0,TEFF0,BLCC,XCC(IM));
+READ(56,:FLT:)$LGN(EKE(IM)/0,1/);
+READ(56,:FLT:)
+($LGN(ESIG,PSIG,EDEDX,PDEDX,EBR1,PBR1,PBR2,
+   TMXS(I,IM)/0,1/),I=1,NEKE);
+rewind(56);
+*/
+
+]
+
+"put rescaling here in case we want to plot stopping powers via"
+"show_media_parameters below"
+"   WE NOW HAVE DATA FOR ALL MEDIA REQUESTED.  NOW DO DISTANCE UNIT"
+"   CHANGE.  DATA FROM PEGS IS IN UNITS OF RADIATION LENGTHS."
+"   EGS IS RUN IN UNITS OF 'DUNIT' CENTIMETERS, IF DUNIT.GT.0 "
+"   OR IN UNITS OF RLC(-DUNIT) CENTIMETERS IF DUNIT.LT.0."
+"   THAT IS, A NEGATIVE DUNIT MEANS UNIT IS TO BE THE RADIATION"
+"   LENGTH OF THE MEDIUM WHOSE INDEX IS -DUNIT"
+DUNITR=DUNIT; "SAVE REQUESTED"
+IF(DUNIT.LT.0.0)[ID=MAX0(1,MIN0($MXMED,int(-DUNIT)));
+   DUNIT=RLC(ID);]
+IF(DUNIT.NE.1.0) [
+$egs_info('(a,1PE14.5,E14.5,a)',' DUNIT REQUESTED&USED ARE: ',
+         DUNITR,DUNIT,'(CM.)' );
+]
+DO IM=1,NMED [
+DFACT=RLC(IM)/DUNIT; "CONVERTS RL TO DUNITS"
+DFACTI=1.0/DFACT;    "CONVERT RL**-1 TO DUNITS**-1"
+
+FOR I=1 TO MEKE(IM) [
+$SCALE $LGN(ESIG,PSIG,EDEDX,PDEDX(I,IM)/0,1/) BY DFACTI;
+$SCALE $LGN(TMXS(I,IM)/0,1/) BY DFACT;]
+$SCALE TEFF0(IM) BY DFACT;
+$SCALE BLCC(IM) BY DFACTI;
+$SCALE XCC(IM) BY SQRT(DFACTI);
+RLDU(IM)=RLC(IM)/DUNIT;
+FOR I=1 TO MGE(IM) [$SCALE $LGN(GMFP(I,IM)/0,1/) BY DFACT; ]
+] "END IM DO"
+
+"   SCALE VACDST.  UNDO PREVIOUS SCALE, THEN DO NEW."
+VACDST=VACDST*DUNITO/DUNIT;
+DUNITO=DUNIT; "SAVE OLD DUNIT"
+
+call show_media_parameters(i_log);
+
+;
+}
+
+REPLACE {$INIT-PEGS4-VARIABLES;} WITH {
+;
+"***PHYSICAL AND MATHEMATICAL CONSTANTS                                "
+"     C        SPEED OF LIGHT(CM/SEC)                                  "
+"     RME      ELECTRON REST MASS(GRAMS)                               "
+"     HBAR     PLANCK'S CONSTANT/(2*PI)  (ERG SEC)                     "
+"     ECGS     ELECTRON CHARGE (ESU)                                   "
+"     EMKS     ELECTRON CHARGE (COULOMB)                               "
+"     AN       AVOGADRO'S NUMBER                                       "
+PIP=3.1415926536;
+C=2.997925E+10;
+RME=9.1091E-28;
+HBAR=1.05450E-27;
+ECGS=4.80298E-10;
+EMKS=1.60210E-19;
+AN=6.02252E+23;
+"***DERIVED CONSTANTS                                                  "
+"     RADDEG   ONE RADIAN IN DEGREES                                   "
+"     FSC      FINE STRUCTURE CONSTANT                                 "
+"     ERGMEV   ONE MILLION ELECTRON VOLTS EXPRESSED IN ERGS            "
+"     R0       CLASSICAL ELECTRON RADIUS                               "
+"     RM       ELECTRON REST ENERGY IN MEV                             "
+RADDEG=180./PIP;
+FSC = ECGS**2/(HBAR*C);
+"     1.E+7 IS THE NUMBER OF ERGS PER JOULE                            "
+ERGMEV = (1.E+6)*(EMKS*1.E+7);
+R0 = (ECGS**2)/(RME*C**2);
+RMP = RME*C**2/ERGMEV;
+RMPT2 = RMP*2.0;
+RMPSQ = RMP*RMP;
+A22P9 = RADDEG*SQRT(4.*PIP*AN)*ECGS**2/ERGMEV;
+A6680 = 4.0*PIP*AN*(HBAR/(RME*C))**2*(0.885**2/(1.167*1.13));
+
+"DATA FOR COMMON BLOCK LSPION"
+DATA AFACT/0.0/,SK/0.0/,X0/0.0/,X1/0.0/,CBAR/0.0/,IEV/0.0/;
+
+"DATA for COMMON BLOCK SPCOMM"
+DATA LMED/24/,NUMSTMED/$MXSTC/;
+
+"DATA for COMMON BLOCK PWLFIN"
+DATA EPE/.01/,ZTHRE,ZEPE/16*0.0/,NIPE/20/,NALE/$MXEKE/;
+
+"DATA for COMMON BLOCK MIMSD"
+DATA BMIN/4.5/;
+
+"DATA for COMMON BLOCK RADLEN"
+DATA ALRAD/5.31,4.79,4.74,4.71/,ALRADP/6.144,5.621,5.805,5.924/,
+A1440/1194.0/,A183/184.15/;
+
+DATA MEDTB1/
+$S'H2-GAS',18*' ',$S'H2-LIQUID',15*' ',$S'HE-GAS',18*' ',$S'LI',22*' ',
+$S'BE',22*' ',$S'C-2.265 G/CM**3',9*' ',$S'C-1.70 G/CM**3',10*' ',
+$S'N2-GAS',18*' ',$S'O2-GAS',18*' ',$S'NE-GAS',18*' ',$S'NA',22*' ',
+$S'MG',22*' ',$S'AL',22*' ',$S'SI',22*' ',$S'AR-GAS',18*' ',
+$S'K',23*' ',$S'CA',22*' ',$S'TI',22*' ',$S'V',23*' ',$S'MN',22*' '
+/;
+
+DATA MEDTB2/
+$S'FE',22*' ',$S'CO',22*' ',$S'NI',22*' ',$S'CU',22*' ',$S'ZN',22*' ',
+$S'GE',22*' ',$S'SE',22*' ',$S'KR-GAS',18*' ',$S'RB',22*' ',
+$S'MO',22*' ',$S'AG',22*' ',$S'CD',22*' ',$S'IN',22*' ',$S'SN',22*' ',
+$S'XE-GAS',18*' ',$S'CS',22*' ',$S'GD',22*' ',$S'TA',22*' ',
+$S'W',23*' ',$S'PT',22*' '
+/;
+
+DATA MEDTB3/
+$S'AU',22*' ',$S'HG',22*' ',$S'PB',22*' ',$S'RN-GAS',18*' ',
+$S'U',23*' ',
+$S'AIR-GAS',17*' ',$S'CO2-GAS',17*' ',$S'POLYETHYLENE',12*' ',
+$S'POLYPROPYLENE',11*' ',$S'XYLENE',18*' ',$S'TOLUENE',17*' ',
+$S'NYLON',19*' ',$S'VINYLTOLUENE',12*' ',$S'A150-PLASTIC',12*' ',
+$S'STILBENE',16*' ',$S'POLYSTYRENE',13*' ',$S'ANTHRACENE',14*' ',
+$S'LEXAN',19*' ',$S'LUCITE',18*' ',$S'H2O',21*' '
+/;
+
+DATA MEDTB4/
+$S'MYLAR',19*' ',
+$S'KAPTON',18*' ',$S'LIF',21*' ',$S'POLYVINYL-CL',12*' ',
+$S'PYREX-GLASS',13*' ',$S'SIO2',20*' ',$S'CAF2',20*' ',
+$S'PHOTOEMULSION',11*' ',$S'AGCL',20*' ',$S'NAI',21*' ',
+$S'LII',21*' ',$S'AGBR',20*' ',$S'CSI',21*' '
+/;
+
+DATA NET/100/;
+
+DATA ITBL/19.2,41.8,40.,63.7,76.0,78.0,82.0,95.0,115.,137.,
+ 149.,156.,166.,173.,173.,180.,174.,188.,190.,191.,216.,233.,245.,
+ 257.,272.,286.,297.,311.,322.,330.,334.,350.,347.,348.,357.,352.,
+ 363.,366.,379.,393.,417.,424.,428.,441.,449.,470.,470.,469.,488.,
+ 488.,487.,485.,491.,482.,488.,491.,501.,523.,535.,546.,560.,574.,
+ 580.,591.,614.,628.,650.,658.,674.,684.,694.,705.,718.,727.,736.,
+ 746.,757.,790.,790.,800.,810.,823.,823.,830.,825.,794.,827.,826.,
+ 841.,847.,878.,890.,902.,921.,934.,939.,952.,966.,980.,994./;
+
+DATA WATBL/1.00797,4.0026,6.939,9.0122,10.811,12.01115,14.0067,
+ 15.9994,18.9984,20.183,22.9898,24.312,26.9815,28.088,30.9738,
+ 32.064,35.453,39.948,39.102,40.08,44.956,47.90,50.942,51.998,
+ 54.9380,55.847,58.9332,58.71,63.54,65.37,69.72,72.59,74.9216,
+ 78.96,79.808,83.80,85.47,87.62,88.905,91.22,92.906,95.94,99.0,
+ 101.07,102.905,106.4,107.87,112.4,114.82,118.69,121.75,127.60,
+ 126.9044,131.30,132.905,137.34,138.91,
+ 140.12,140.907,144.24,147.,150.35,151.98,157.25,158.924,162.50,
+ 164.930,167.26,168.934,173.04,174.97,178.49,180.948,183.85,
+ 186.2,190.2,192.2,195.08,196.987,200.59,204.37,207.19,208.980,
+ 210.,210.,222.,223.,226.,227.,232.036,231.,238.03,237.,242.,
+ 243.,247.,247.,248.,254.,253./;
+
+ DATA RHOTBL/0.0808,0.19,0.534,1.85,2.5,2.26,1.14,1.568,1.5,1.0,
+ 0.9712,1.74,2.702,2.4,1.82,2.07,2.2,1.65,0.86,1.55,3.02,4.54,
+ 5.87,7.14,7.3,7.86,8.71,8.90,8.9333,7.140,5.91,5.36,5.73,4.80,
+ 4.2,3.4,1.53,2.6,4.47,6.4,8.57,9.01,11.50,12.20,12.50,12.,10.5,
+ 8.65,7.30,7.31,6.684,6.24,4.93,2.7,1.873,3.5,6.15,6.90,6.769,
+ 7.007, 1.  ,7.54,5.17,7.87,8.25,8.56,8.80,9.06,9.32,6.96,9.85,
+ 11.40,16.60,19.30,20.53,22.48,22.42,21.45,19.30,14.19,11.85,
+ 11.34,9.78,9.30, 1.  ,4., 1.  ,5.,  1. ,11.0,15.37,18.90,
+ 20.5,19.737,11.7,7.,1.   , 1.  , 1.  ,  1. /;
+
+DATA ASYMT/'H','HE','LI','BE','B','C','N','O','F','NE',
+ 'NA','MG','AL','SI','P','S','CL','AR','K','CA','SC','TI',
+ 'V','CR','MN','FE','CO','NI','CU','ZN','GA','GE','AS','SE','BR',
+ 'KR','RB','SR','Y','ZR','NB','MO','TC','RU','RH','PD','AG','CD',
+ 'IN','SN','SB','TE','I','XE','CS','BA','LA','CE','PR','ND',
+ 'PM','SM','EU','GD','TB','DY','HO','ER','TM','YB','LU','HF','TA',
+ 'W','RE','OS','IR','PT','AU','HG','TL','PB','BI','PO','AT','RN',
+ 'FR','RA','AC','TH','PA','U','NP','PU','AM','CM','BK','CF','ES',
+ 'FM'/;
+
+"for COMMON BLOCK EPSTAR"
+DATA EPSTFLP/0/,IEPST/1/,IAPRIMP/1/,IAPRFL/0/;
+
+}
+
+;

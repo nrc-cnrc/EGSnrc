@@ -1,0 +1,152 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc macros for ranlux random number generator                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2000                                       "
+"                   Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Macros for the subtract-and-borrow random number generator proposed by     "
+"  Marsaglia and Zaman, implemented by F. James with the name RCARRY in 1991, "
+"  and later improved by Martin Luescher in 1993 to produce 'Luxury           "
+"  Pseudorandom Numbers'. Fortran 77 coded by F. James, 1993.                 "
+"                                                                             "
+"  References:                                                                "
+"                                                                             "
+"  M. Luscher, Computer Physics Communications  79, 100 (1994)                "
+"  F. James, Computer Physics Communications 79, 111 (1994)                   "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {;COMIN/RANDOM/;} WITH
+{;
+  common/randomm/ rng_array(24), seeds(25), rng_seed;
+  $REAL           rng_array;    "containes 24 random numbers              "
+  integer*4       rng_seed,     "current pointer for rng_array            "
+                  seeds;        "for storing the rng state                "
+}
+
+REPLACE {$RANDOMSET#;} WITH
+{;
+  IF ( rng_seed > 24 ) [
+      call ranlux(rng_array); rng_seed = 1;
+  ]
+  {P1} = rng_array(rng_seed);
+  rng_seed = rng_seed + 1;
+;
+}
+" i.e. take the rng_seed'th random number from rng_array, "
+" if all 24 numbers used, generate a new set of 24        "
+;
+
+REPLACE {$DEFAULT-LL} WITH {1}
+
+REPLACE {$RNG-INITIALIZATION;} WITH {;
+  call init_ranlux($DEFAULT-LL,0);
+  call ranlux(rng_array); rng_seed = 1;
+}
+
+REPLACE {$RNG-DEFAULT-INITIALIZATION;} WITH {;
+  call init_ranlux($DEFAULT-LL,0);
+  call ranlux(rng_array); rng_seed = 1;
+}
+
+REPLACE {$INITIALIZE RNG USING # AND #; } WITH
+{
+    call init_ranlux({P1},{P2});
+    call ranlux(rng_array); rng_seed = 1;
+}
+;
+
+REPLACE {$STORE RNG STATE ON UNIT #;} WITH
+{
+    call get_ranlux_state(seeds);
+    rewind({P1});
+    write({P1},*) seeds,rng_array,rng_seed;
+}
+;
+
+REPLACE {$PUT RNG STATE ON UNIT #;} WITH
+{
+    call get_ranlux_state(seeds);
+    write({P1},*) seeds,rng_array,rng_seed;
+}
+;
+
+
+REPLACE {$RETRIEVE RNG STATE FROM UNIT #;} WITH
+{
+    read({P1},*) seeds,rng_array,rng_seed;
+    call set_ranlux_state(seeds);
+}
+;
+
+REPLACE {$SHOW-RNG-STATE(#);} WITH { call show_ranlux_seeds({P1}); };
+
+REPLACE {$PRINT-RNG-STATE(#,#);} WITH { call print_ranlux_seeds({P1},{P2}); };
+
+REPLACE {$RNG-INPUTS(#,#,#,#);} WITH {;
+   ival = ival + 1;
+   VALUES_SOUGHT(IVAL)={P1};
+   nvalue(ival) = 2;
+   type(ival)   = 0;
+   value_min(ival) = 0;
+   value_max(ival) = 1073741824;
+   default(ival)   = 0;
+   delimeter = {P2};
+   nmin = ival; nmax = ival;
+   call get_input;
+   IF( error_flags(ival) = 0 ) [
+       {P3} = value(ival,1);
+       {P4} = value(ival,2);
+   ]
+   ELSE [ {P3} = $DEFAULT-LL; {P4} = 0; ]
+};
+
+REPLACE {$RNG-STRING-1} WITH {' RANLUX luxury level: '}
+REPLACE {$RNG-STRING-2} WITH {' RANLUX initial seed: '}
+
+"         end of ranlux.macros                  "

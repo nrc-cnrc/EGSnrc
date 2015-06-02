@@ -1,0 +1,401 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc electromagnetic field transport macros                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Alex Bielajew, 1987                                       "
+"                                                                             "
+"  Contributors:    Amir Keyvanloo                                            "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A set of macros for executing electron transport in the presence of        "
+"  electric and magnetic fields. Requires that the COMMON MULTS be defined    "
+"  in ELECTR. Assume that it is present (PRESTA requires it).                 "
+"                                                                             "
+"  These macros have been tested provisionally with EGSnrc by Amir Keyvanloo  "
+"  and others of the Cross Cancer Institute (CCI) in Edmonton. The elegant    "
+"  one-line patch, described below, resolves an error introduced in the       "
+"  transition from EGS4 to EGSnrc.                                            "
+"                                                                             "
+"#############################################################################"
+
+
+" The next line is exactly 80 columns wide. Wider is not recognized by Mortran"
+"234567890123456789012345678901234567890123456789012345678901234567890123456789"
+
+%C80
+
+"*****************************************************************************"
+"                                                                             "
+"THESE MACROS ARE USED BY ELECTR FOR CALCULATIONS WITH AN EXTERNAL em FIELD.  "
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS REPLACES THE COMMON DECLARATIONS FOR ELECTR. MULTS HAS BEEN ADDED.      "
+"                                                                             "
+/*
+
+ We do not use Moliere for MS => no need to add MULTS and PATHCM to
+ $COMIN-ELECTR                   IK, July 2004.
+
+REPLACE {$COMIN-ELECTR;} WITH {;
+COMIN/DEBUG,BOUNDS,ELECIN,EPCONT,MEDIA,MISC,MULTS,PATHCM,STACK,THRESH,
+UPHIIN,UPHIOT,USEFUL,USER,RANDOM/;
+}
+*/
+
+/*
+   We use implicit none in EGSnrc => we need to declare all variables
+   used in the emf macros        IK, July 2004.
+ */
+
+APPEND {;
+    $REAL   x0,y0,z0,tustp0,fbtemp,
+            Ex0,Ey0,Ez0,
+            Bx0,By0,Bz0,
+            ekin0,beta20,beta0,gamma0,fnorm,fnormb,
+            u0,v0,w0,edotu,
+            dperpx,dperpy,dperpz,dperp2,
+            bperpx,bperpy,bperpz,bperp2,
+            eperpx,eperpy,eperpz,eperp2,eperp,
+            xf,yf,zf,test,x1,y1,z1,
+            efx0,efy0,efz0,efxf,efyf,efzf,
+            bfx0,bfy0,bfz0,
+            pot1,pot2,potdif,
+            ufx,ufy,ufz,
+            bdotub,bsqrd,
+            ufxpar,ufypar,ufzpar,
+            ufxprp,ufyprp,ufzprp;
+} TO {$DEFINE-LOCAL-VARIABLES-ELECTR;};
+
+
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF DEFLECTION BY THE EM-FIELD.   "
+"                                                                             "
+REPLACE {$EMULMT} WITH {0.02}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF ENERGY LOSS IN THE EM-FIELD.  "
+"                                                                             "
+REPLACE {$EMELMT} WITH {0.02}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF CHANGE OF THE EM-FIELD OVER   "
+"THE TRANSPORT STEP.                                                          "
+"                                                                             "
+REPLACE {$EMFLMT} WITH {0.02}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO IS THE UPPER LIMIT ON THE AVERAGE AMOUNT OF CHANGE OF THE         "
+"DIRECTION VECTOR DUE TO MULTIPLE SCATTERING.                                 "
+"                                                                             "
+REPLACE {$EMMLMT} WITH {0.20}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO SETS LIMITS ON THE ELECTRON STEP-SIZE FOR EM-FIELD ELECTRON       "
+"TRANSPORT. THE VARIOUS CONSTRAINTS ARE PUT IN MACRO FORM SO THAT THEY MAY    "
+"BE EXCLUDED BY THE USER. THEIR EVEALUATION MAY BE QUITE TIME CONSUMING.      "
+"IF THE FIELDS ARE WEAK ENOUGH THEY SHOULDN'T AFFECT THE TRANSPORT.           "
+"                                                                             "
+REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;
+TUSTP0=TUSTEP;
+X0=X(NP);Y0=Y(NP);Z0=Z(NP);
+$GET-EM-FIELD(E,B,X0,Y0,Z0);
+EKIN0=EIE-RM;
+BETA20=MAX(1.E-8,EKIN0*(EIE+RM)/EIE**2);
+BETA0=SQRT(BETA20);
+GAMMA0=1./SQRT((1.+BETA0)*(1.-BETA0));
+FNORM=LELEC/(BETA20*GAMMA0);
+EX0=FNORM*EX0;EY0=FNORM*EY0;EZ0=FNORM*EZ0;
+FNORMB=BETA0*FNORM;
+BX0=FNORMB*BX0;BY0=FNORMB*BY0;BZ0=FNORMB*BZ0;
+U0=U(NP);V0=V(NP);W0=W(NP);
+EDOTU=EX0*U0+EY0*V0+EZ0*W0;
+DPERPX=EX0-U0*EDOTU;
+DPERPY=EY0-V0*EDOTU;
+DPERPZ=EZ0-W0*EDOTU;
+DPERP2=DPERPX*DPERPX+DPERPY*DPERPY+DPERPZ*DPERPZ;
+BPERPX=V0*BZ0-W0*BY0;
+BPERPY=W0*BX0-U0*BZ0;
+BPERPZ=U0*BY0-V0*BX0;
+BPERP2=BPERPX*BPERPX+BPERPY*BPERPY+BPERPZ*BPERPZ;
+EPERPX=DPERPX+BPERPX;
+EPERPY=DPERPY+BPERPY;
+EPERPZ=DPERPZ+BPERPZ;
+EPERP2=EPERPX*EPERPX+EPERPY*EPERPY+EPERPZ*EPERPZ;
+$SET-TUSTEP-DIRECTION-VECTOR-CHANGE-EM-FIELD;
+$SET-TUSTEP-ENERGY-CHANGE-EM-FIELD;
+$SET-TUSTEP-CHANGE-OF-EM-FIELD;
+$SET-TUSTEP-DIRECTION-VECTOR-CHANGE-BY-MULTIPLE-SCATTERING;
+}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THESE MACROS PERFORM THE ACTUAL STEP-SIZE SHORTENING TO SATISFY THE          "
+"VALIDITY CRITERIA OF TRANSPORT IN EXTERNAL EM FIELDS                         "
+"                                                                             "
+REPLACE {$SET-TUSTEP-DIRECTION-VECTOR-CHANGE-EM-FIELD;} WITH {;
+IF(EPERP2.NE.0.0)[EPERP=SQRT(EPERP2);TUSTEP=MIN(TUSTEP,$EMULMT/EPERP);]
+}
+;
+"                                                                             "
+REPLACE {$SET-TUSTEP-ENERGY-CHANGE-EM-FIELD;} WITH {;
+IF(EDOTU.NE.0.0) TUSTEP=MIN(TUSTEP,ABS($EMELMT*(1.+1./GAMMA0)/EDOTU));
+}
+;
+"                                                                             "
+REPLACE {$SET-TUSTEP-CHANGE-OF-EM-FIELD;} WITH {;
+IF(TUSTEP.NE.0.0)[
+    XF=X0+U0*TUSTEP;YF=Y0+V0*TUSTEP;ZF=Z0+W0*TUSTEP;
+    $GET-EM-FIELD(EF,BF,XF,YF,ZF);
+    TEST=EX0**2+EY0**2+EZ0**2;
+    IF(TEST.NE.0.0)[
+        TEST=((EFXF-EX0)**2+(EFYF-EY0)**2+(EFZF-EZ0)**2)/TEST;
+            IF((TEST.NE.0.0).AND.(TEST.LT.1.0))
+                TUSTEP=MIN(TUSTEP,$EMFLMT*TUSTEP/SQRT(TEST));
+        ]
+    ]
+}
+;
+"                                                                             "
+
+/*
+   Replace with null for now,    IK, July 2004.
+
+REPLACE {$SET-TUSTEP-DIRECTION-VECTOR-CHANGE-BY-MULTIPLE-SCATTERING;} WITH {;
+IF(MEDIUM.NE.0)[
+    AMSPLC=BLCC(MEDIUM)/BETA20;
+    OMEGA0=AMSPLC*TUSTEP*RHOF;
+    IF(OMEGA0.LE.2.718282)[B=1;]
+    ELSE[
+        BLC=ALOG(OMEGA0);
+        IF(BLC.LT.1.306853)[B=-10.27666+BLC*(17.82596-6.468813*BLC);]
+        ELSE[IB=B0BGB+BLC*B1BGB;
+            IF(IB.GT.NBGB)[OUTPUT IB;(' NBGB[IB=',I5);]
+            B=BGB0(IB)+BLC*(BGB1(IB)+BLC*BGB2(IB));
+            ]
+        ]
+    GMSPLC=RHOF*(XCC(MEDIUM)/(EIE*BETA20))**2;
+    XCC2BT=GMSPLC*B;
+    IF(XCC2BT.NE.0.0) TUSTEP=AMIN1(TUSTEP,$EMMLMT/XCC2BT);
+    ]
+}
+*/
+REPLACE {$SET-TUSTEP-DIRECTION-VECTOR-CHANGE-BY-MULTIPLE-SCATTERING;} WITH {;}
+
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO RESETS THE STRAIGHT LINE DISTANCE TO BE TRANSPORTED BEFORE        "
+"THE CALL TO HOWFAR AND IT ACCOUNTS FOR THE STRAIGHT LINE LENGTHENING OR      "
+"TRUNCATION THAT MAY OCCUR IN AN EM FIELD. FOR NOW IT DOES NOT DO ANYTHING    "
+"ADDITIONAL BECAUSE IT IS A SECOND ORDER EFFECT WHICH HAS NOT YET BEEN        "
+"DISCOVERED.                                                                  "
+REPLACE {$SET-USTEP-EM-FIELD;} WITH {;}
+"IF(MEDIUM.EQ.0)[USTEP=TUSTEP;]"
+"ELSEIF(TUSTP0.NE.TUSTEP) [$SET-USTEP;]"
+"}"
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO SETS THE NEW DIRECTION COSINES IN THE PRESENCE OF THE EM FIELD"
+REPLACE {$SET-ANGLES-EM-FIELD;} WITH {;
+IF(TVSTEP.NE.0.0)[
+    IF(BPERP2.NE.0.0)[
+
+        U0=U(NP);V0=V(NP);W0=W(NP); "Keyvanloo patch (CCI)"
+
+        UFX=U0+TVSTEP*BPERPX;
+        UFY=V0+TVSTEP*BPERPY;
+        UFZ=W0+TVSTEP*BPERPZ;
+        BDOTUB=BX0*UFX+BY0*UFY+BZ0*UFZ;
+        BSQRD=BX0*BX0+BY0*BY0+BZ0*BZ0;
+        BDOTUB=BDOTUB/BSQRD;
+        UFXPAR=BX0*BDOTUB;
+        UFYPAR=BY0*BDOTUB;
+        UFZPAR=BZ0*BDOTUB;
+        UFXPRP=UFX-UFXPAR;
+        UFYPRP=UFY-UFYPAR;
+        UFZPRP=UFZ-UFZPAR;
+        FNORM=UFXPRP**2+UFYPRP**2+UFZPRP**2;
+        FNORM=FNORM/(1.0-(BX0*U0+BY0*V0+BZ0*W0)**2/BSQRD);
+        FNORM=SQRT(FNORM);
+        U(NP)=UFXPAR+UFXPRP/FNORM;
+        V(NP)=UFYPAR+UFYPRP/FNORM;
+        W(NP)=UFZPAR+UFZPRP/FNORM;
+        ]
+    IF(DPERP2.NE.0.0)[
+        TEST=0.5*DPERP2*TVSTEP**2;
+        FNORM=1.+TEST*(1.-0.5*TEST);
+        U(NP)=(U(NP)+TVSTEP*DPERPX)/FNORM;
+        V(NP)=(V(NP)+TVSTEP*DPERPY)/FNORM;
+        W(NP)=(W(NP)+TVSTEP*DPERPZ)/FNORM;
+        ]
+    ]
+}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO ADJUSTS THE PATHLENGTH FOR BENDING IN THE EM FIELD.               "
+"THIS CORRECTION HAS NOT YET BEEN DISCOVERED. IT IS HIGHER ORDER              "
+"IN THE PERTURBATION AND MIXES WITH THE MULTIPLE SCATTERING.                  "
+REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO IS USED TO SET THE ANGLES AND PATHLENGTH CORRECTION IN VACUUM     "
+REPLACE {$VACUUM-TRANSPORT-EM-FIELD;} WITH {;
+IF(MEDIUM.EQ.0)[
+$SET-TVSTEP-EM-FIELD;
+DE=0.0;
+$ADD-WORK-EM-FIELD;
+PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;]
+}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO ADJUSTS DE TO INCORPORATE THE POTENTIAL CHANGE IN THE E FIELD     "
+REPLACE {$ADD-WORK-EM-FIELD;} WITH {;
+$GET-POTENTIAL(POT1,X0,Y0,Z0);
+X1=X0+USTEP*U(NP);Y1=Y0+USTEP*V(NP);Z1=Z0+USTEP*W(NP);
+$GET-POTENTIAL(POT2,X1,Y1,Z1);
+POTDIF=POT2-POT1;
+DE=DE+POTDIF;
+}
+;
+"                                                                             "
+"*****************************************************************************"
+"                                                                             "
+"THIS IS AN EXAMPLE FIELD CONFIGURATION. THE ELECTRIC FIELD IS A CONSTANT IN  "
+"THE Y-DIRECTION AND THE MAGNETIC FIELD IS ZERO.                              "
+"THE USER MUST SPECIFY THE ELECTRIC AND MAGNETIC FIELD AT P3=X,P4=Y,P5=Z      "
+"IN THE UNITS 1/(cm).                                                         "
+"THIS IS DONE BY MULTIPLYING THE ELECTRIC FIELD IN volts/cm BY THE UNIT CHARGE"
+"e(positive) AND DIVIDING BY THE REST MASS OF THE ELECTRON IN electron-volts, "
+"AND BY MULTIPLYING THE MAGNETIC FIELD IN volts-sec BY THE UNIT CHARGE        "
+"e(positive) AND THE SPEED OF LIGHT IN cm/sec AND DIVIDING BY THE REST MASS   "
+"OF THE ELECTRON IN electron-volts.                                           "
+"FOR EXAMPLE, FOR A CONSTANT E-FIELD, P1X0=0.0;P1Y0=1.0;P1Z0=0.0;             "
+"                                     P2X0=0.0;P2Y0=0.0;P2Z0=0.0;             "
+"             FOR A CONSTANT B-FIELD, P1X0=0.0;P1Y0=0.0;P1Z0=0.0;             "
+"                                     P2X0=0.0;P2Y0=0.0;P2Z0=1.0;             "
+"             FOR A POINT SOURCE      P1X0=P3/(SQRT(P3**2+P4**2+P5**2))**3;   "
+"                                     P1Y0=P4/(SQRT(P3**2+P4**2+P5**2))**3;   "
+"                                     P1Z0=P5/(SQRT(P3**2+P4**2+P5**2))**3;   "
+"                                     P2X0=0.0;P2Y0=0.0;P2Z0=1.0;             "
+
+"*****************************************************************************"
+"                                                                             "
+"THE FOLLOWING EXAMPLE IS FOR A CONDUCTING CYLINDER WITH RADIUS 0.5 CM        "
+REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
+
+FBTEMP={P4}**2+{P5}**2;     "for Electric Field"
+
+IF(FBTEMP.LE.0.25)[
+    {P1}X0=0.0;{P1}Y0=0.0;{P1}Z0=0.0;
+    ]
+ELSE[FBTEMP=12.43/FBTEMP;
+    {P1}X0=0.0;{P1}Y0={P4}*FBTEMP;{P1}Z0={P5}*FBTEMP;
+    ]
+{P2}X0=0.0;{P2}Y0=0.0;{P2}Z0=0.0;
+}
+;
+"                                                                             "
+
+"*****************************************************************************"
+"                                                                             "
+"THIS MACRO RETURNS THE POTENTIAL FOR THE ELECTRIC FIELD                      "
+"THE USER MUST RETURN THE POTENTIAL P1 IN MeV AT X=P2,Y=P3,Z=P4.              "
+"FOR EXAMPLE, FOR A CONSTANT E-FIELD, P1=-P3*IQ(NP)*RM;                       "
+"             FOR A CONSTANT B-FIELD, P1=0.0;                                 "
+"             FOR A POINT SOURCE P1=-IQ(NP)*RM/SQRT(P2**2+P3**2+P4**2);       "
+"THE FOLLOWING EXAMPLE IS FOR A CONDUCTING CYLINDER WITH RADIUS 0.5 CM        "
+REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;
+FBTEMP={P3}**2+{P4}**2;
+IF(FBTEMP.LE.0.25)[
+    {P1}=0.0;
+    ]
+ELSE[
+    {P1}=-IQ(NP)*RM*6.215*ALOG(4.*({P3}**2+{P4}**2));
+    ]
+}
+;
+"************************************************************************"
+"This example is for a constant B-field of 3 Tesla parallel to the z-axis"
+"************************************************************************"
+
+REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
+{P1}X0=0.0;{P1}Y0=0.0;{P1}Z0=0.0;
+{P2}X0=0.0;{P2}Y0=0.0;{P2}Z0=3.0*3.0/0.511;
+}
+;
+
+"No energy change in a B-field"
+REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;{P1}=0.0;};
+;
+
+"3.0*3.0/0.511 explanation                                           "
+"nT = 3.0 (this example) = Magnetic field strength in Tesla V.s/m**2 "
+"3.0 = Speed of light, in m/s *10**8                                 "
+"0.511 = rest mass energy of the electron in units eV*10**6          "
+"                                                                    "
+" (nT)[V.s/m**2](3*10**8[m/s])*(e)/0.511*10**6[e.V]                  "
+" =                                                                  "
+" (nT)*3*100/0.511[1/m]                                              "
+" =                                                                  "
+" (nT)*3.0/0.511[1/cm]                                               "
+
+"**************************************************************************"
+"End of example is for a constant B-field of 3 Tesla parallel to the z-axis"
+"**************************************************************************"
+
+"                                                                             "
+"*****************************************************************************"
+"*****************************************************************************"
+"*****************************************************************************"
+"****************************                   ******************************"
+"****************************      END OF       ******************************"
+"****************************    EMF_MACROS     ******************************"
+"****************************                   ******************************"
+"*****************************************************************************"
+"*****************************************************************************"
+"*****************************************************************************"
+
+;
+
+"END OF MACRO DEFINITIONS

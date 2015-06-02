@@ -1,0 +1,150 @@
+%E
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc ranmar random number generator                                      "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Iwan Kawrakow, 2000                                       "
+"                   Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The following is the initialization routine for the RANMAR random number   "
+"  generator (RNG) proposed by Marsaglia and Zaman and designed to be used    "
+"  with the EGSnrc system.                                                    "
+"                                                                             "
+"  Note that this implementation uses integers to store the state of the RNG  "
+"  and to generate the next number in the sequence. Only at the end are the   "
+"  random numbers are converted to reals by a multiplication with 2**(-24)    "
+"  (there are only 24 significant bits). I found the integer implementation   "
+"  to be about 30% faster then using reals on Pentium III machines, and       "
+"  nearly 70% faster on older SGI workstations.                               "
+"                                                                             "
+"  The use of RANMAR requires the file ranmar.macros (which defines the       "
+"  actual random number generation as a macro).                               "
+"                                                                             "
+"#############################################################################"
+
+
+subroutine init_ranmar;
+
+implicit none;
+
+;COMIN/RANDOM/;
+
+integer*4 s,t;
+integer*4 i,j,k,l,m,ii,jj;
+
+IF( ixx <= 0 | ixx > 31328 ) ixx = 1802; "Sets Marsaglia default"
+IF( jxx <= 0 | jxx > 30081 ) jxx = 9373; "sets Marsaglia default"
+
+i = mod(ixx/177,177) + 2;
+j = mod(ixx,    177) + 2;
+k = mod(jxx/169,178) + 1;
+l = mod(jxx,    169)    ;
+
+DO ii = 1,97 [
+
+    s = 0; t = 8388608;  "t is 2**23 i.e. half of the maximum allowed"
+                         "(note that only 24 bits are used)          "
+
+    DO jj = 1,24 [
+
+                         "The if( fool_optimizer ...) statements below are"
+                         "to prevent re-arangement of statements for high "
+                         "level optimizations and thus different sequences"
+                         "on different architectures                      "
+
+        m = mod(mod(i*j,179)*k,179);
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        i = j;
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        j = k;
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        k = m;
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        l = mod(53*l+1,169);
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        IF(mod(l*m,64) >= 32) s = s + t;
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+        t = t/2;
+        IF( fool_optimizer = 999 ) [ write(6,*) i,j,k,m,s,t; ]
+    ]
+    urndm(ii) = s;
+]
+
+crndm  =   362436;
+cdrndm =  7654321;
+cmrndm = 16777213;
+
+twom24 = 1./16777216.;
+
+ixx = 97;
+jxx = 33;
+
+rng_seed = $NRANMAR + 1;
+
+return;
+end; "End of init_ranmar for EGSnrc"
+
+subroutine ranmar_get;
+implicit none;
+;COMIN/RANDOM/;
+$INTEGER i,iopt;
+IF( rng_seed = 999999 ) call init_ranmar;
+DO i=1,$NRANMAR [
+    iopt = urndm(ixx) - urndm(jxx);
+    IF(iopt < 0) iopt = iopt + 16777216;
+    urndm(ixx) = iopt;
+    ixx = ixx - 1; jxx = jxx - 1;
+    IF(ixx = 0)        [ ixx = 97; ]
+    ELSE IF( jxx = 0 ) [ jxx = 97; ]
+    crndm = crndm - cdrndm;
+    IF(crndm < 0) crndm = crndm + cmrndm;
+    iopt = iopt - crndm;
+    IF(iopt < 0) iopt = iopt + 16777216;
+    rng_array(i) = iopt;
+]
+rng_seed = 1; return; end;
+
+;"       end of ranmar.mortran    "
+

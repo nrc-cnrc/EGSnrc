@@ -1,0 +1,182 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc transport parameter macros                                          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2003                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  These macros are used in conjunction with the get_inputs.mortran routines  "
+"  to read in EGSnrc transport physics parameters. Specifically with          "
+"  subroutine get_transport_parameter.                                        "
+"                                                                             "
+"  The following are definitions of code words (values sought) for the        "
+"  various transport parameters that can be set. I hope they are              "
+"  self-explanatory. If you don't like them:                                  "
+"                                                                             "
+"  - include this file via the configuration file BEFORE your user code.      "
+"                                                                             "
+"  - Replace the macros in your user code with code words that you prefer.    "                                                                       "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$GLOBAL_ELECTRON_CUTOFF} WITH {'Global ECUT'}
+REPLACE {$GLOBAL_PHOTON_CUTOFF}   WITH {'Global PCUT'}
+REPLACE {$GLOBAL_SMAX}            WITH {'Global SMAX'}
+REPLACE {$INCOHERENT_SCATTERING}  WITH {'Bound Compton scattering'}
+REPLACE {$RADC_COMPTON}           WITH {'Radiative Compton corrections'}
+REPLACE {$COHERENT_SCATTERING}    WITH {'Rayleigh scattering'}
+REPLACE {$ATOMIC_RELAXATIONS}     WITH {'Atomic relaxations'}
+REPLACE {$PE_ANGULAR_SAMPLING}    WITH {'Photoelectron angular sampling'}
+REPLACE {$BREMS_ANGULAR_SAMPLING} WITH {'Brems angular sampling'}
+REPLACE {$BREMS_CROSS_SECTIONS}   WITH {'Brems cross sections'}
+REPLACE {$PAIR_ANGULAR_SAMPLING}  WITH {'Pair angular sampling'}
+REPLACE {$PAIR_CROSS_SECTIONS}    WITH {'Pair cross sections'}
+REPLACE {$TRIPLET_PRODUCTION}     WITH {'Triplet production'}
+REPLACE {$ELECTRON_IMPACT_IONI}   WITH {'Electron Impact Ionization'}
+REPLACE {$SPIN_EFFECTS}           WITH {'Spin effects'}
+REPLACE {$MAXIMUM_ESTEPE}         WITH {'ESTEPE'}
+REPLACE {$MAXIMUM_XIMAX}          WITH {'XImax'}
+REPLACE {$SKIN_FOR_BCA}           WITH {'Skin depth for BCA'}
+REPLACE {$BOUNDARY_ALGORITHM}     WITH {'Boundary crossing algorithm'}
+REPLACE {$ELECTRON_STEP_ALG}      WITH {'Electron-step algorithm'}
+REPLACE {$ON_IN_REGIONS}          WITH {'On in Regions'}
+REPLACE {$OFF_IN_REGIONS}         WITH {'Off in Regions'}
+REPLACE {$IN_REGIONS}             WITH {'Regions'}
+REPLACE {$THE_DELIMETER}          WITH {'MC TRANSPORT PARAMETER'}
+REPLACE {$PHOTON_XSECTIONS}       WITH {'Photon cross sections'}
+REPLACE {$COMPTON_XSECTIONS}      WITH {'Compton cross sections'}
+REPLACE {$PHOTON_XSECTIONS_OUT}   WITH {'Photon cross-sections output'}
+REPLACE {$SCALE_L_EII_XSECTIONS}  WITH {'scale L EII cross-sections'}
+"Ali:photonuc, 2 lines"
+"Cannot use $PHOTONUC; it clashes with other variables"
+REPLACE {$PHOTO_NUCLEAR}          WITH {'Photonuclear attenuation'}
+REPLACE {$PHOTONUC_XSECTIONS}     WITH {'Photonuclear cross sections'}
+;
+
+REPLACE {$TURN-ON/OFF-IN-REGIONS(#,#,#,#);} WITH
+{;
+aux_inregions = .false.;
+IF( error_flags({P1}) = 0 ) [
+    write(i_log,*) {P2};
+    itmp = value({P1},1);
+    IF( itmp = 2 | itmp = 3 ) [
+        ival                = ival + 1;
+        values_sought(ival) = {P2};
+        nvalue(ival)        = 0;
+        type(ival)          = 0;
+        value_min(ival)     = 1;
+        value_max(ival)     = $MXREG;
+        default(ival)       = 1;
+        ival                = ival + 1;
+        values_sought(ival) = {P3};
+        nvalue(ival)        = 0;
+        type(ival)          = 0;
+        value_min(ival)     = 1;
+        value_max(ival)     = $MXREG;
+        default(ival)       = 1;
+        Nmin = ival-1; Nmax = ival;
+        CALL GET_INPUT;
+        IF( error_flags(ival-1) = 0 & error_flags(ival) = 0 ) [
+            IF( nvalue(ival) = nvalue(ival-1) ) [
+                iitmp = itmp-2;
+                DO j=1,$MXREG [ {P4}(j) = iitmp; ]
+                 "i.e. set everywhere to 0 (if turn on) or 1 (if turn off)"
+                iitmp = 1 - iitmp;
+                 "and then re-set in the specified regions"
+                DO k=1,nvalue(ival) [
+                    istart = value(ival-1,k);
+                    iend = value(ival,k);
+"Ali:photonuc, 2 lines to crudely print start/stop regions"
+                    write(i_log,*) {P2},istart;
+                    write(i_log,*) {P3},iend;
+                    IF( istart <= iend ) [
+                        DO j=istart,iend [ {P4}(j) = iitmp; ]
+                        aux_inregions = .true.;
+                    ]
+                ]
+            ]
+            ELSE [ value({P1},1) = {P4}(1); ]
+        ]
+        ELSE [ value({P1},1) = {P4}(1); ]
+    ]
+    ELSE [
+        IF( itmp > 3 ) itmp = itmp-2;
+        write(i_log,*) ' Setting all to ',itmp;
+        DO j=1,$MXREG [ {P4}(j) = itmp; ]
+    ]
+]
+ELSE [
+  value({P1},1) = {P4}(1);
+]
+
+};
+
+REPLACE{$SET # IN REGIONS(#,#,#,#,#,#,#);} WITH
+{;
+
+aux_inregions = .false.;
+ival                = ival + 1;
+{P2}                = ival;
+values_sought(ival) = {P6};
+nvalue(ival)        = 0;
+type(ival)          = 1;
+value_min(ival)     = {P3};
+value_max(ival)     = {P4};
+default(ival)       = {P5};
+
+ival                = ival + 1;
+values_sought(ival) = {P7};
+nvalue(ival)        = 0;
+type(ival)          = 0;
+value_min(ival)     = 1;
+value_max(ival)     = $MXREG;
+default(ival)       = 1;
+
+ival                = ival + 1;
+values_sought(ival) = {P8};
+nvalue(ival)        = 0;
+type(ival)          = 0;
+value_min(ival)     = 1;
+value_max(ival)     = $MXREG;
+default(ival)       = 1;
+
+Nmin = {P2}; Nmax = {P2}+2; error_flag = 0;
+CALL GET_INPUT;
+
+IF( error_flag = 0 ) [
+    IF( nvalue({P2}) = nvalue(ival) & nvalue(ival-1) = nvalue(ival) ) [
+        DO k=1,nvalue(ival) [
+            istart = value(ival-1,k);
+            iend = value(ival,k);
+            IF( istart <= iend ) [
+                DO j=istart,iend [ {P1}(j) = value({P2},k); ]
+                aux_inregions = .true.;
+            ]
+        ]
+    ]
+]
+};
