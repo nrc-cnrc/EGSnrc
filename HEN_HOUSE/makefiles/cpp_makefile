@@ -21,9 +21,9 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2005
+#  Author:          Iwan Kawrakow, 2005
 #  
-#  Revisions:   Ernesto Mainegra-Hing
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -33,6 +33,7 @@
 #  rules and dependencies if needed.
 #
 ###############################################################################
+
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec

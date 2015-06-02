@@ -21,9 +21,9 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2003
+#  Author:          Iwan Kawrakow, 2003
 #  
-#  Revisions:   Ernesto Mainegra-Hing
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -38,6 +38,7 @@
 #  This Makefile will most likely only work with GNU make.
 #
 ###############################################################################
+
 
 FEXT = F
 interface = egs_interface1

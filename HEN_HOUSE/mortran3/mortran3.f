@@ -8,59 +8,58 @@ C
 C  This file is part of EGSnrc.
 C
 C  EGSnrc is free software: you can redistribute it and/or modify it under
-C  the terms of the GNU Affero General Public License as published by the 
+C  the terms of the GNU Affero General Public License as published by the
 C  Free Software Foundation, either version 3 of the License, or (at your
 C  option) any later version.
-C 
+C
 C  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-C  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-C  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+C  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+C  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 C  more details.
-C  
+C
 C  You should have received a copy of the GNU Affero General Public License
 C  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 C
 C##############################################################################
 C
-C  Author:      Stanford Linear Accelerator Center
-C  
-C  Revisions:   Stanford Linear Accelerator Center
-C               Ray Cowan
-C               Dave Rogers
-C               Alex Bielajew
-C               Iwan Kawrakow                  
+C  Author:          Stanford Linear Accelerator Center
+C
+C  Contributors:    Ray Cowan
+C                   Dave Rogers
+C                   Alex Bielajew
+C                   Iwan Kawrakow
 C
 C##############################################################################
 C
-C  Mortran3 is originally copyrighted by SLAC and is distributed by NRC under 
+C  Mortran3 is originally copyrighted by SLAC and is distributed by NRC under
 C  the terms of the AGPL 3.0 licence, in agreement with SLAC. Mortran has a
-C  long history  dating back to the 1970s, and certainly involving many 
-C  contributors. The ones named above are only thos who could be identified 
-C  from comments left in the file.
+C  long history  dating back to the 1970s, and certainly involving many
+C  contributors. Those named above are only the ones who could be identified
+C  from this file's revision history
 C
-C  
+C
 C  Iwan Kawrakow, 2003:
 C
-C  Changes for EGSnrc Version 4. Make use of command line arguments to open 
-C  input/output files. After these changes Mortran 3 can be run without first 
-C  making symbolik links to the necessary files, e.g., mortran3.exe -d 
+C  Changes for EGSnrc Version 4. Make use of command line arguments to open
+C  input/output files. After these changes Mortran 3 can be run without first
+C  making symbolik links to the necessary files, e.g., mortran3.exe -d
 C
 C
 C  Dave Rogers, 1996:
 C
 C  Added a few explicit file=fort.n statements to make HP port
 C
-C  On Sept 21, 1996 the 128K buffer version of mortran3.f (SID 1.8) was 
-C  replaced with the 300K buffer version which had previously been maintained 
-C  as big_mortran3.f. Given the fact that memories are so much bigger now, we 
+C  On Sept 21, 1996 the 128K buffer version of mortran3.f (SID 1.8) was
+C  replaced with the 300K buffer version which had previously been maintained
+C  as big_mortran3.f. Given the fact that memories are so much bigger now, we
 C  are just going to maintain the bigger version, now called mortran3.f
 C
-C  At NRC, to recover the old 128K version: sccs get -r1.8 mortran3.f to see 
+C  At NRC, to recover the old 128K version: sccs get -r1.8 mortran3.f to see
 C  the minor changes to big_mortran3.f made prior to renaming it as mortran3.f,
 C  see the residual big_mortran3.f file.
 C
-C  Note that this version uses the DNTIME routine consistently since this is 
-C  what the compilers either handle, or the extra routines for the RS6000 and 
+C  Note that this version uses the DNTIME routine consistently since this is
+C  what the compilers either handle, or the extra routines for the RS6000 and
 C  Linux system work with.
 C
 C
@@ -76,7 +75,7 @@ C           the following constants:
 C
 C  Name    Old value   New value  Comment
 C  ----    ---------   ---------  -------
-C  MXU     300000      600000     Max size of buffer O.       
+C  MXU     300000      600000     Max size of buffer O.
 C  MNXBF   225739      450741     Minimum (low end) of X-buffer.
 C  ?????   225738      450740     Apparently MNXBF-1, found in code.
 C  HOME    112369      525371     Location halfway between X-buffer start
@@ -93,7 +92,7 @@ C  of the PJT buffer, which precedes MBF in O, so MXPJT=2654.  HOME is given
 C  by HOME = MNXBF + (MXU - MNXBF)/2.  Apparently MBF is assigned 3/4 of the
 C  space remaining in O at the time of its definition, and XBF is assigned the
 C  remaining 1/4 of O, and HOME is a pointer halfway through XBF.  In general,
-C  buffers have names like PBF, MBF, XBF, etc., and the low (min) and high 
+C  buffers have names like PBF, MBF, XBF, etc., and the low (min) and high
 C  (max) ends of each buffer are denoted by names like MNMBF and MXMBF.
 C
 C  WARNING:  none of this is absolutely certain at this time.
@@ -2228,7 +2227,7 @@ C
       integer nn6,nn7,jj,nfirst,ii,m1
       character tmp_string*8, tmp1_string*6, f_buffer(8192)
       equivalence (ch,tmp_string)
-      data nn6,nn7,nfl/0,0,0/, 
+      data nn6,nn7,nfl/0,0,0/,
      &     skip_input/.false./, is_format/.false./, is_quote/.false./
       data nformat/0/
       save nn6,nn7,hc,ch,nformat,nfl
@@ -2242,7 +2241,7 @@ C
          if( i.ne.1 ) then
          do m=1,nr-1
            if( .not.skip_input ) then
-             ! the following does not work because of possibly 
+             ! the following does not work because of possibly
              ! having 2 or more / in a format statement
              !
              !if( ch(m).eq.'/'.and.ch(m+1).eq.'/' ) then
@@ -2268,7 +2267,7 @@ C
                !write(44,*) 'found end of C style comment '
                skip_input = .false.
                ch(m+1) = ' '
-             endif   
+             endif
              ch(m) = ' '
            end if
          end do
@@ -2298,7 +2297,7 @@ C
       !do jj=nr,1,-1
       !  if( ch(jj).eq.' ' ) then
       !     nrr=nrr-1
-      !  else 
+      !  else
       !     goto 20
       !  end if
       !end do
@@ -2312,7 +2311,7 @@ C
 
       ! Check for C-preprocessor statements
       ! If the first 6 chars on the line are blank and if the first non-blank
-      ! char from coloumn 7 is a #, assume it is a C-preprocessor directive 
+      ! char from coloumn 7 is a #, assume it is a C-preprocessor directive
       ! and make the # to be the first char on the line.
       nfirst=1
       do jj=1,nrr
@@ -2339,12 +2338,12 @@ C
       if( is_format ) then
           jj = 7
           if( .not.is_quote ) then
-              do jj=7,nrr 
+              do jj=7,nrr
                   if( ch(jj).ne.' ' ) goto 66
               end do
           end if
 66        continue
-          do ii=jj,Nrr 
+          do ii=jj,Nrr
               nfl = nfl + 1
               if( nfl.gt.8192 ) then
                   write(8,*)
@@ -2413,7 +2412,7 @@ C
           if( tmp1_string.eq.'FORMAT' ) then
               is_format = .true.
               nfl = Nrr
-              do ii=1,Nrr 
+              do ii=1,Nrr
                   f_buffer(ii) = ch(ii)
               end do
           endif
@@ -2431,7 +2430,7 @@ C
               if( .not.is_quote ) then
                   if( ch(jj).eq.'(' ) then
                       nformat = nformat + 1
-                  else if( ch(jj).eq.')' ) then 
+                  else if( ch(jj).eq.')' ) then
                       nformat = nformat - 1
                   endif
               endif
@@ -2446,7 +2445,7 @@ C
 
       if( is_format ) return
       endif
-          
+
       write(i,1) (ch(m),m=1,Nrr)
 1     FORMAT(132A1)
 
@@ -2504,11 +2503,11 @@ C     O(14)=O(4)   THIS IS NO LONGER USED IN FORTRAN 77 VERSIONS
       IF (COUNT.EQ.'C') GOTO 5230
          READ (IUNI,1) KOUNT,(O(K),K=1,KOUNT)
 C
-C     The following line 
+C     The following line
 C        CALLRW(23,O(57),325+2,325+79)
 C     has been changed to conform with our (NRCC) current version.
-C     The effect seems to be that the 
-C     %%1Copyright .... 
+C     The effect seems to be that the
+C     %%1Copyright ....
 C     line at the end of MORNEW77.RAW gets properly handled.
 C     Previous to this date, the old version was in our standard
 C     distribution.
@@ -2633,7 +2632,7 @@ C     BLANK BAT BLB TRM LPR RPR LSB RSB LCB RCB
       ignore_missing = .false.
       if(narg.eq.0) then
 
-        ! no arguments -> assume program is called from a script 
+        ! no arguments -> assume program is called from a script
         ! making all necessary links and hope for the best
 
         OPEN(UNIT=1,file='fort.1',STATUS='OLD',err=11)
@@ -2670,14 +2669,14 @@ c        write(6,'(/a,$)') '  Mortran compiling ... '
 
       call getarg(1,arg)
       if( arg(1:).eq.'-help' ) then
-        write(6,'(/a/,a/,a/,a/,a/)') 
+        write(6,'(/a/,a/,a/,a/,a/)')
      & 'Mortran version 3.2 by Ray F. Cowan with modifications by ',
      & 'Dave Rogers, Alex Bielajew and Iwan Kawrakow',
      & 'Report problems to',
      & '      Iwan Kawrakow    iwan@irs.phy.nrc.ca',
      & '  or  Dave Rogers      dave@irs.phy.nrc.ca'
         write(6,'(/a/)') 'Usage: mortran3.exe [ options ]'
-        write(6,'(a)') 
+        write(6,'(a)')
      & ' If no options are given, mortran3 will attempt to use the ',
      & ' following units (fort.*) files:',
      & '   1:  Read raw or hex mortran data ',
@@ -2795,7 +2794,7 @@ c        write(6,'(/a,$)') '  Mortran compiling ... '
           end if
           open(11,file=arg(1:lnblnk1(arg)),status='old',err=101)
           next = .true.
-          do while (next) 
+          do while (next)
             read(11,'(a)',end=102,err=102) next_file
             if( lnblnk1(next_file).gt.0 ) then
               inquire(file=next_file,exist=is_there)
@@ -2904,11 +2903,11 @@ c        write(6,'(/a,$)') '  Mortran compiling ... '
       open(99,file=the_file,status='old',err=100)
       next_line = .true.
       lineno = 0
-      do while (next_line) 
+      do while (next_line)
         read(99,'(a)',err=101,end=101) line
         lineno = lineno + 1
         if( lnblnk1(line).gt.80 ) then
-          write(6,'(a,i5,a,a,a)') 
+          write(6,'(a,i5,a,a,a)')
      &      '*** Warning: line ',lineno,' in file ',
      &     the_file(1:lnblnk1(the_file)),' is longer than 80 chars!'
         end if
@@ -2935,7 +2934,7 @@ c        write(6,'(/a,$)') '  Mortran compiling ... '
       end
 
       integer*4 function lnblnk1(c)
-      character c*(*) 
+      character c*(*)
       integer*4 j
       do j=len(c),1,-1
         if( c(j:j).ne.' ' ) then

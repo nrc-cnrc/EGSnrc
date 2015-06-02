@@ -21,11 +21,11 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2003
+#  Author:          Iwan Kawrakow, 2003
 #  
-#  Revisions:   Blake Walters
-#  		Jeffrey Siebers
-#               Ernesto Mainegra-Hing
+#  Contributors:    Blake Walters
+#                   Jeffrey Siebers
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -36,6 +36,7 @@
 #  the mortran and select things from #ifdefs.
 #
 ###############################################################################
+
 
 # We want to be able to build 3 different targets:
 #    executable with optimization turned on (default)

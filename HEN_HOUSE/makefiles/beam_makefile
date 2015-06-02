@@ -21,12 +21,13 @@
 #
 ###############################################################################
 #
-#  Author:      Iwan Kawrakow, 2004
+#  Author:          Iwan Kawrakow, 2004
 #  
-#  Revisions:   Blake Walters
-#               Ernesto Mainegra-Hing
+#  Contributors:    Blake Walters
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
+
 
 # Include the main EGSnrc config file.
 #
