@@ -1,0 +1,73 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc subroutines for the C++ interface                                   "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2005                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+/*!  Get the random number pointers */
+subroutine egs_get_rng_pointers(np,ip);
+implicit none;
+$INTEGER ip,np;
+COMIN/RANDOM/;
+np = $NRANDOM; ip = rng_seed;
+return; end;
+
+/*!  Get the random number array */
+subroutine egs_get_rng_array(array);
+implicit none;
+$REAL array(*);
+COMIN/RANDOM/;
+$INTEGER i;
+DO i=1,$NRANDOM [ array(i) = rng_array(i); ]
+return; end;
+
+/*! Set the RNG state */
+subroutine egs_set_rng_state(ip,array);
+implicit none;
+$INTEGER ip,i;
+$REAL    array(*);
+COMIN/RANDOM/;
+DO i=1,$NRANDOM [ rng_array(i) = array(i); ]
+rng_seed = ip;
+return; end;
+
+/*! Get the number of steps */
+subroutine egs_get_steps(ch_steps,all_steps);
+implicit none;
+real*8   ch_steps,all_steps;
+COMIN/CH-Steps/;
+ch_steps = count_pII_steps; all_steps = count_all_steps;
+return; end;
+
+/*! Set the number of steps */
+subroutine egs_set_steps(ch_steps,all_steps);
+implicit none;
+real*8   ch_steps,all_steps;
+COMIN/CH-Steps/;
+count_pII_steps = ch_steps; count_all_steps = all_steps;
+return; end;
+;

@@ -1,0 +1,372 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc common block reorganization for C interface v1                      "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2003                                       "
+"                                                                             "
+"  Contributors:    Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This is a set of macros that slightly re-organizes EGSnrc common blocks,   "
+"  so that only a relatively small set of common blocks needs to be exported  "
+"  as C structures. It is only needed when generating the EGSnrc fortran code "
+"  used with the C inteface and should get included after egsnrc.macros.      "
+"                                                                             "
+"  In the original ecut, pcut are arrays of dimension $MXREG, where $MXREG is "
+"  a macro that defines the maximum number of regions the geometry can have.  "
+"  For the C/C++ interface we wish to completely decouple EGSnrc routines     "
+"  from the geometry so that the C/C++ user code programmer can dynamically   "
+"  allocate resources depending on the actual number of regions. We therefore "
+"  use ecut, pcut, ecut_new, pcut_new to interact with the user with respect  "
+"  to particle transport cut-off energies. ecut, ecut_new, pcut, pcut_new are "
+"  initialized to zero by default. If the user does not wish to use transport "
+"  thresholds different than the particle production thresholds ae and ap,    "
+"  they don't need to do anything with ecut, ecut_new, pcut, pcut_new. If the "
+"  user wants to use higher thresholds, possibly different from one region to "
+"  another, then the user code must do the following:                         "
+"                                                                             "
+"  - In the function start_new_particle() called before the transport of      "
+"    a new particle starts, the user should set pcut and ecut to the desired  "
+"    values based on the region number of the top particle on the stack.      "
+"                                                                             "
+"  - In howfar(), the user should set ecut_new, pcut_new to the desired       "
+"    values in the new region after the step (provided the particle is        "
+"    entering a new region, i.e., irnew is different from ir(np), see the     "
+"    geometry interface specs)                                                "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {;COMIN/BOUNDS/;} WITH {
+
+ ;common/bounds/ ecut, pcut, ecut_new, pcut_new, vacdst;
+  $REAL          ecut, pcut, ecut_new, pcut_new, vacdst;
+
+};
+
+" Remove iprdst, ibrdst and ibr_nist, they will go into a "
+" a cross section options common that will get exported   "
+REPLACE {;COMIN/BREMPR/;} WITH {
+ ;common/brempr/
+     $LGN(DL(8,$MXMED)/1,2,3,4,5,6/),
+     $LGN(ALPHI,BPAR,DELPOS(2,$MXMED)),
+     $LGN(WA,PZ,ZELEM,RHOZ($MXMED,$MXEL)),
+     PWR2I($MXPWR2I),
+     $LGN(DELCM,ZBRANG,LZBRANG,NNE($MXMED)),
+     ASYM($MXMED,$MXEL,2);
+  $TYPE     ASYM;
+  $REAL     $LGN(DL/1,2,3,4,5,6/),ALPHI,BPAR,DELPOS,WA,PZ,ZELEM,
+            RHOZ,PWR2I,DELCM,ZBRANG,LZBRANG;
+  $INTEGER  NNE;
+
+};
+
+" Remove ibcmp, which will go into the cross section options common "
+" that will get exported                                            "
+REPLACE {;COMIN/COMPTON-DATA/;} WITH {
+
+  ;common/compton_data/ iz_array($MXTOTSH),be_array($MXTOTSH),
+                        Jo_array($MXTOTSH),erfJo_array($MXTOTSH),
+                        ne_array($MXTOTSH),shn_array($MXTOTSH),
+                        shell_array($MXMDSH,$MXMED),
+                        eno_array($MXMDSH,$MXMED),
+                        eno_atbin_array($MXMDSH,$MXMED),n_shell($MXMED);
+  $INTEGER              iz_array,ne_array,shn_array,
+                        shell_array,eno_atbin_array,n_shell;
+  $REAL                 be_array,Jo_array,erfJo_array,eno_array;
+
+};
+
+
+" Remove iedgfl and iphter, to go into the cross section options common "
+REPLACE {;COMIN/EDGE/;} WITH
+{;
+   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+               interaction_prob($MXSHELL,$MXELEMENT),
+               relaxation_prob($MXTRANS,$MXELEMENT),
+               edge_energies($MXEDGE,$MXELEMENT),
+               edge_number($MXELEMENT),
+               edge_a($MXEDGE,$MXELEMENT),
+               edge_b($MXEDGE,$MXELEMENT),
+               edge_c($MXEDGE,$MXELEMENT),
+               edge_d($MXEDGE,$MXELEMENT);
+   $REAL       binding_energies, interaction_prob, relaxation_prob,
+               edge_energies, edge_a,edge_b,edge_c,edge_d;
+   $INTEGER    edge_number;
+};
+
+" Remove spin_effects, which determines a cross section being used     "
+" and is therefore logically better to be in the cross section options "
+" common. smaxir used to be an array that provides a max. geometrical  "
+" step size restriction on a region-by-region basis. But we wish to    "
+" decouple EGSnrc for the geometry (see comments about ecut, pcut      "
+" above). smaxir, smax_new are set by default to 1e10, i.e. no step    "
+" size restriction. If the user wishes to control smax, possibly on a  "
+" region by region bases, then                                         "
+"   - set smaxir to the desired value in start_new_particle()          "
+"   - set smax_new to the desired value in howfar(), if the particle   "
+"     will enter a new region after the step.                          "
+REPLACE {;COMIN/ET-Control/;} WITH {
+  ;common/ET_control/
+              smaxir,smax_new,estepe,ximax,skindepth_for_bca,
+              transport_algorithm,bca_algorithm,exact_bca;
+    $REAL     smaxir,smax_new,estepe,ximax,skindepth_for_bca;
+    $INTEGER  transport_algorithm,bca_algorithm;
+    $LOGICAL  exact_bca;
+};
+
+" From MEDIA, the only variables that the C user should have access to "
+" rho and nmed (the functions egs_add_medium and egs_set_medium are    "
+" provided for accessing media names)                                  "
+" => split COMIN/MEDIA/ into 2 commons and export only the second      "
+REPLACE {;COMIN/MEDIA/;} WITH {
+  ;COMMON/MEDIA_p/ $LGN(RLC,RLDU,MSGE,MGE,MSEKE,
+                   MEKE,MLEKE,MCMFP,MRANGE,IRAYLM($MXMED)),
+                   MEDIA(24,$MXMED);
+   $TYPE    MEDIA;
+   $REAL    RLC,RLDU;
+   $INTEGER MSGE,MGE,MSEKE,MEKE,MLEKE,MCMFP,MRANGE,IRAYLM;
+   common/media/   rho($MXMED),photon_xsections,eii_xfile,comp_xsections,
+                   nmed;
+   $REAL           rho;
+   $INTEGER        nmed;
+   character*16    photon_xsections;
+   character*16    eii_xfile;
+   character*16    comp_xsections;
+};
+
+" IRAYLR gets removed and goes into the x-section options.             "
+" rhor and med are also removed so that EGSnrc can be decouple from the"
+" geometry (see comment about ecut, pcut and also smax above)          "
+" EGSnrc obtains medium information in the following manner:           "
+"  - in start_new_particle() the user must set medium and rhor (in     "
+"    common/useful/) to the medium index and mass density scaling for  "
+"    region of the top particle on the stack. rhor is the ratio of the "
+"    mass density in that region to the default mass density of the    "
+"    medium occupying the region and is normally 1, but can be used    "
+"    to overwrite the default mass density. Note that this is different"
+"    from the original EGSnrc implementation where rhor(irl) was the   "
+"    actual mass density, not the ratio of actual to default.          "
+"  - in howfar(), the user must set medium_new and rhof_new to the     "
+"    values in the new region, if the particle will enter a new region "
+"    after the step.                                                   "
+
+REPLACE {;COMIN/EII-DATA/;} WITH {;
+    common/eii_data/
+        eii_xsection_a($MAX_EII_BINS), "EII x-section interpolation coeff."
+        eii_xsection_b($MAX_EII_BINS), "EII x-section interpolation coeff."
+        eii_cons($MXMED),
+        eii_a($MAX_EII_SHELLS),        "energy grid coeff. for each shell "
+        eii_b($MAX_EII_SHELLS),        "energy grid coeff. for each shell "
+        eii_z($MAX_EII_SHELLS),        "Z of each shell                   "
+        eii_sh($MAX_EII_SHELLS),       "shell type (1=K, 2=LI, eyc.)      "
+        eii_nshells($MXELEMENT),       "No. of EII shells for each element"
+        eii_nsh($MXMED),               "No. of EII shells for each medium "
+        eii_first($MXMED,$MXEL),       "First EII shell in the list of shells"
+        eii_no($MXMED,$MXEL);          "N. of EII shells                  "
+    $REAL           eii_xsection_a,eii_xsection_b,eii_a,eii_b,eii_cons;
+    $INTEGER        eii_z,eii_sh,eii_nshells;
+    $INTEGER        eii_first,eii_no;
+    $INTEGER        eii_elements,eii_nsh;
+};
+
+REPLACE {;COMIN/MISC/;} WITH {
+  ;common/misc/ DUNIT,KMPI,KMPO;
+   $REAL        DUNIT;
+   $INTEGER     KMPI,KMPO;
+};
+
+REPLACE {;COMIN/USEFUL/;} WITH {
+ ;common/useful/ pzero, prm, prmt2, rm, rhor, rhor_new, medium, medium_new,
+                 medold;
+  real*8         pzero, prm, prmt2;
+  $REAL          rm, rhor, rhor_new;
+  $INTEGER       medium, medium_new, medold;
+};
+
+" And now the cross section options common                             "
+" Some of the flags were originally arrays for turning on/off options  "
+" on a region-by-rgion basis (ibcmp, iraylr, iedgfl, iphter).          "
+" If you wish to change the options from their default, use this common"
+" For the options that need data to be loaded (iraylr, ibcmp, iedgfl,  "
+" ibr_nist, spin_effects), make sure that they are set before calling  "
+" hatch. If you want to vary these options by region, then             "
+"   - set the appropriate ausgab flag to be called before the          "
+"     interaction                                                      "
+"   - in ausgab, set the flag to the desired value.                    "
+REPLACE {;COMIN/X-OPTIONS/;} WITH {
+ ;common/xsection_options/ ibrdst, iprdst, ibr_nist, spin_effects,
+                           ibcmp,iraylr,iedgfl,iphter,pair_nrc,itriplet,
+                           radc_flag,eii_flag;
+  $INTEGER                 ibrdst, iprdst, ibr_nist,eii_flag,
+                           ibcmp,iraylr,iedgfl,iphter,pair_nrc,
+                           radc_flag,itriplet;
+  $LOGICAL                 spin_effects;
+};
+
+" Again, to remove geometry dependence make e_max_rr and i_do_rr sclars"
+REPLACE {;COMIN/EGS-VARIANCE-REDUCTION/;} WITH {;
+ common/egs_vr/  e_max_rr, e_max_rr_new, prob_RR, nbr_split, i_play_RR,
+                 i_survived_RR, n_RR_warning, i_do_rr;
+  $REAL          e_max_rr,e_max_rr_new,prob_RR;
+  $INTEGER       nbr_split,i_play_RR,i_survived_RR,n_RR_warning, i_do_rr;
+};
+
+" We now have to replace all occurences of arrays of dimension $MXREG "
+" to scalars                                                          "
+REPLACE {pcut(#)} WITH {pcut};
+REPLACE {PCUT(#)} WITH {pcut};
+REPLACE {ecut(#)} WITH {ecut};
+REPLACE {ECUT(#)} WITH {ecut};
+REPLACE {med(#)} WITH {med};
+REPLACE {MED(#)} WITH {med};
+REPLACE {rhor(#)} WITH {rhor};
+REPLACE {RHOR(#)} WITH {rhor};
+REPLACE {ibcmp(#)} WITH {ibcmp};
+REPLACE {IBCMP(#)} WITH {ibcmp};
+REPLACE {iraylr(#)} WITH {iraylr};
+REPLACE {IRAYLR(#)} WITH {iraylr};
+REPLACE {iedgfl(#)} WITH {iedgfl};
+REPLACE {IEDGFL(#)} WITH {iedgfl};
+REPLACE {iphter(#)} WITH {iphter};
+REPLACE {IPHTER(#)} WITH {iphter};
+REPLACE {smaxir(#)} WITH {smaxir};
+REPLACE {SMAXIR(#)} WITH {smaxir};
+REPLACE {e_max_rr(#)} WITH {e_max_rr};
+REPLACE {i_do_rr(#)} WITH {i_do_rr};
+
+" Set default values "
+REPLACE {$set-region-by-region-defaults;} WITH {;
+  ecut = 0; pcut = 0; smaxir = $MAX-SMAX;
+  ecut_new = 0; pcut_new = 0; smax_new = $MAX-SMAX;
+  rhor = 1; rhor_new = 1;
+  ibcmp = $IBCMP-DEFAULT; iraylr = 0;
+  iedgfl = $IEDGFL-DEFAULT; iphter = $IPHTER-DEFAULT;
+  i_do_rr = 0; e_max_rr = 0; e_max_rr_new = 0;
+};
+
+" Should bound compton data be loaded ? "
+REPLACE {$need_bound_compton_data(#);} WITH { {P1} = ibcmp.gt.0; };
+
+" Should relaxation data be loaded ? "
+REPLACE {$need_relaxation_data(#);} WITH {
+  {P1} = (iedgfl.gt.0.and.iedgfl.le.100);
+};
+
+" Are Rayleigh data required ? "
+REPLACE {$need_rayleigh_data;} WITH {;
+  DO j=1,nmed [ iraylm(j) = iraylr; ]
+};
+
+" rhor, ecut, pcut initializtion in hatch "
+REPLACE {$adjust_rhor_ecut_pcut;} WITH {;
+    DO md=1,nmed [
+        ecut = max(ecut,ae(md));
+        pcut = max(pcut,ap(md));
+    ]
+};
+
+" hownear and range discard: before calling hownear, we set e_range in "
+" common/epcont/ to the residual range of the electron and idisc to 0  "
+" In hownear the user calculates the minimum perpendicular distance to "
+" a boundary. If the user wishes to range-discard the electron, he/she "
+" should set idisc (also in /epcont/) to 50 + 49*iq(np).               "
+
+REPLACE {$CALL-HOWNEAR(#);} WITH {
+  e_range = range; idisc = 0; call egs_hownear({P1});
+};
+
+REPLACE {$CALL-HOWFAR-IN-ELECTR;} WITH {;
+  IF(callhowfar | wt(np) <= 0) [ call egs_howfar; ]
+};
+
+REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;
+  IF( ustep > dnear(np) | wt(np) <= 0 ) [ call egs_howfar; ]
+};
+
+REPLACE {$AUSCALL(#);} WITH {
+   iarg={P1};
+   IF (IAUSFL(IARG+1).NE.0) [call egs_ausgab(iarg);]
+};
+
+
+
+" Range discard is up to the user
+REPLACE {$RANGE-DISCARD;} WITH {;
+  IF( idisc > 0 ) goto :USER-ELECTRON-DISCARD:;
+};
+
+" Minimum ecut for default min. step-size for PRESTA-I BCA "
+REPLACE {$set_ecutmn;} WITH {
+  ecutmn = 1e30;
+  DO i=1,nmed [
+      ecutmn = Min(ecutmn,ae(i));
+  ]
+  ecutmn = Max(ecutmn,ecut);
+};
+
+REPLACE {$start_new_particle;} WITH {
+    call egs_start_particle;
+    IF( idisc > 0 ) [ np=np-1; return; ]
+};
+
+REPLACE {$electron_region_change;} WITH {
+  ir(np) = irnew; irl = irnew; rhor = rhor_new;
+  medium = medium_new; ecut = ecut_new; smaxir = smax_new;
+};
+
+REPLACE {$photon_region_change;} WITH {
+  ir(np) = irnew; irl = irnew; rhor = rhor_new;
+  medium = medium_new; pcut = pcut_new;
+};
+
+REPLACE {$SET-RHOF;} WITH { rhof = rhor; };
+
+REPLACE {$default_nmed} WITH {0};
+
+REPLACE {narg = iargc();} WITH {call egs_iargc(narg);};
+REPLACE {call getarg(#,#);} WITH {call egs_getarg({P1},{P2});};
+
+" The following set of macros takes care of the various cross section "
+" options being available when needed                                 "
+
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-SET-DEFAULTS;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-BREMS;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-COMPT;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-ELECTR;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-HATCH;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-COMPT;};
+APPEND {;COMIN/THRESH,X-OPTIONS/;} TO {$COMIN-MSCATI;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PAIR;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTO;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTON;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-EII-INIT;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-TRIPLET;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-GET-TRANSPORTP;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-MOLLER;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-RADC-INIT;};
+APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-NIST-BREMS;};
+
+" make a couple of renames "
+REPLACE {subroutine egs_init;} WITH {subroutine egs_init_f;};
+REPLACE {SUBROUTINE HATCH;} WITH {subroutine egs_hatch;};
