@@ -1,4 +1,4 @@
-
+%E
 "#############################################################################"
 "                                                                             "
 "  EGSnrc input source spectrum subroutine                                    "
@@ -109,7 +109,6 @@
 %I4
 %C80
 %Q1
-%E      "start of ensrc.mortran"
 
 
 SUBROUTINE ENSRC;

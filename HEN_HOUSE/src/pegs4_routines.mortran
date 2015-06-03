@@ -1,8 +1,7 @@
 %E
-
 "#############################################################################"
 "                                                                             "
-"  EGSnrc pegs4 routines                                                        "                                                    
+"  EGSnrc pegs4 routines                                                        "
 "  Copyright (C) 2015 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
@@ -140,7 +139,7 @@ END; "END OF SUBROUTINE EFUNS"
 $REAL4 FUNCTION BREMTM(E0);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -156,7 +155,7 @@ END; "END OF FUNCTION BREMTM"
 $REAL4 FUNCTION BREMRM(E,K1,K2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -174,7 +173,7 @@ END; "END OF FUNCTION BREMRM"
 $REAL4 FUNCTION BREMRZ(Z,E,K1,K2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 Z,E,K1,K2;
 EXTERNAL BREMFZ;
@@ -224,7 +223,7 @@ END;  "END OF FUNCTION BREMDZ"
 $REAL4 FUNCTION BREMFZ(K);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 K,BRMSFZ;
 BREMFZ=BRMSFZ(K)/K;
@@ -237,7 +236,7 @@ END;  "END OF FUNCTION BREMFZ"
 $REAL4 FUNCTION BRMSFZ(K);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -264,7 +263,7 @@ END; "END OF FUNCTION BRMSFZ"
 $REAL4 FUNCTION AMOLTM(E0);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -284,7 +283,7 @@ END; "END OF FUNCTION AMOLTM"
 $REAL4 FUNCTION AMOLRM(EN0,EN1,EN2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -316,7 +315,7 @@ END; "END OF FUNCTION AMOLRM"
 $REAL4 FUNCTION BHABTM(E0);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 "***TOTAL CROSS SECTION FOR BHABHA SCATTERING WITH INCIDENT POSITRON"
 "   ENERGY(TOTAL) OF E0."
 ;
@@ -334,7 +333,7 @@ END; "END OF FUNCTION BHABTM"
 $REAL4 FUNCTION BHABRM(EN0,EN1,EN2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 "***BHABHA CROSS SECTION FOR INCIDENT POSITRON OF TOTAL ENERGY EN0 TO"
 "   PRODUCE SECONDARY ELECTRON IN THE TOTAL ENERGY RANGE EN1 TO EN2."
 ;
@@ -368,7 +367,7 @@ END; "END OF FUNCTION BHABRM"
 $REAL4 FUNCTION ANIHTM(E0);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 "***TOTAL CROSS SECTION FOR TWO-PHOTON POSITRON-ELECTRON ANNIHILATION"
 "   WITH INCIDENT POSITRON ENERGY(TOTAL) OF E0."
 ;
@@ -430,11 +429,11 @@ COMIN/THRESHP/;
 IF (IUNRSTP.EQ.0) ["RESTRICTED TOTAL STOPPING POWER I.E. NORMAL"
                   SPTOTE=SPIONE(E0,EE)+BRMSTM(E0,EG);]
 ELSEIF(IUNRSTP.EQ.1)[SPTOTE=SPIONE(E0,E0);]"UNRESTRICTED COLLISION"
-ELSEIF(IUNRSTP.EQ.2)["UNRESTRICTED COLLISION AND RADIATIVE        " 
+ELSEIF(IUNRSTP.EQ.2)["UNRESTRICTED COLLISION AND RADIATIVE        "
                     SPTOTE=SPIONE(E0,E0)+BRMSTM(E0,E0);]
-ELSEIF(IUNRSTP.EQ.3)["UNRESTRICTED COLLISION +RESTRICTED RADIATIVE" 
+ELSEIF(IUNRSTP.EQ.3)["UNRESTRICTED COLLISION +RESTRICTED RADIATIVE"
                     SPTOTE=SPIONE(E0,E0)+BRMSTM(E0,EG);]
-ELSEIF(IUNRSTP.EQ.4)["RESTRICTED COLLISION +UNRESTRICTED RADIATIVE" 
+ELSEIF(IUNRSTP.EQ.4)["RESTRICTED COLLISION +UNRESTRICTED RADIATIVE"
                     SPTOTE=SPIONE(E0,EE)+BRMSTM(E0,E0);]
 ELSEIF(IUNRSTP.EQ.5)[SPTOTE=BRMSTM(E0,E0);]"UNRESTRICTED RADIATIVE"
 ELSEIF(IUNRSTP.EQ.6)[SPTOTE=BRMSTM(E0,EG);]"RESTRICTED RADIATIVE  "
@@ -447,7 +446,7 @@ END;  "END OF FUNCTION SPTOTE"
 $REAL4 FUNCTION SPIONE(E0,EE);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 E0,EE,SPIONB;
 SPIONE=SPIONB(E0,EE,.FALSE.);
@@ -459,7 +458,7 @@ END;  "END OF FUNCTION SPIONE"
 $REAL4 FUNCTION SPIONB(E0,EE,POSITR);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 "***STOPPING POWER FOR AN ELECTRON.  THIS FUNCTION ALSO HAS OTHER    "
 "   ENTRY POINTS. . .                                                "
 "   SPIONP(E0,EE) - STOPPING POWER FOR A POSITRON                    "
@@ -551,7 +550,7 @@ IF(IEPST < NEPST) [
 ELSE [DELTA = EPSTD(NEPST);]
 
 ]"END OF EPSTFL NON-ZERO BLOCK"
-    
+
 "     NOW PUT IT ALL TOGETHER                                          "
 SPIONB=(SPC1/BETA2)*(LOG(T + 2.) - SPC2 + FTERM - DELTA);
 RETURN;
@@ -574,7 +573,7 @@ END;  "END OF FUNCTION SPIONP"
 $REAL4 FUNCTION BRMSTM(E0,EG);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -612,7 +611,7 @@ END; "END OF FUNCTION BRMSRM"
 $REAL4 FUNCTION BRMSRZ(Z,E,K1,K2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 Z,E,K1,K2;
 EXTERNAL BRMSFZ;
@@ -640,7 +639,7 @@ END; "END OF FUNCTION BRMSRZ"
 $REAL4 FUNCTION BRMSDZ(Z,EA,K);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 ;
 ;Copyright NRC;
 implicit none;
@@ -668,7 +667,7 @@ $REAL4 FUNCTION APRIM(Z,E);
 "******************************************************************"
 
 "     EMPIRICAL CORRECTION FACTOR TO BREMS CROSS SECTION               "
- 
+
 " This version can be switched to use different values:                "
 "   IAPRIM = 0  equivalent to old PEGS4 (default)                      "
 "            1  reads in values from unit 22                           "
@@ -731,15 +730,15 @@ ELSEIF (IAPRIMP.EQ.1) [
         OUTPUT;('0IAPRIM=1, i.e. uses NRC(based on NIST/ICRU)',
        ' corrections to bremsstrahlung cross section'/);
         */
-        aprim_file = $cstring(hen_house) // 'pegs4' // $file_sep // 
-                     'aprime.data'; 
+        aprim_file = $cstring(hen_house) // 'pegs4' // $file_sep //
+                     'aprime.data';
         aprim_unit=22;" want unit 22"
         aprim_unit=egs_get_unit(aprim_unit);
         IF( aprim_unit < 1 ) [
              $egs_fatal(*,'APRIM: failed to get a free fortran unit');
         ]
         open(aprim_unit,file=aprim_file,status='old',err=:no_aprim_file:);
-        
+
         READ(aprim_unit,*) NAPRZ, NAPRE;
         IF (NAPRZ.GT.$NAPRZ) [
             OUTPUT; (//,' TOO MANY ELEMENTS FOR APRIME INTERPOLATION:',
@@ -759,7 +758,7 @@ ELSEIF (IAPRIMP.EQ.1) [
         AINTP(Z,ZPRIM,NAPRZ,APRIMD(IE,1),$NAPRE,.TRUE.,.FALSE.);
         ]           " NOW DO ENERGY INTERPOLATION     "
     APRIM=AINTP(EM,EPRIM,NAPRE,APRIMZ,1,.FALSE.,.FALSE.);
-    ]                                                                 
+    ]
 ELSEIF (IAPRIMP.EQ.2) [
         IF(IAPRFL = 0)[IAPRFL=1;
         /*
@@ -768,7 +767,7 @@ ELSEIF (IAPRIMP.EQ.2) [
         */
         ]
         APRIM=1.0]
-ELSE [ OUTPUT IAPRIMP; (//,' ILLEGAL VALUE FOR IAPRIM: ',I4); 
+ELSE [ OUTPUT IAPRIMP; (//,' ILLEGAL VALUE FOR IAPRIM: ',I4);
        $CALL_EXIT(24); ]
 RETURN;
 :no_aprim_file:
@@ -826,7 +825,7 @@ END; "END OF FUNCTION AINTP"
 $REAL4 FUNCTION TMXS(E);"MAXIMUM STEP SIZE VALID FOR MULTIPLE SCATTERING"
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 E,TMXB;
 $REAL4 SAFETY,TABSMX;
@@ -844,7 +843,7 @@ END;  "END OF FUNCTION TMXS"
 $REAL4 FUNCTION TMXB(E);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 $REAL4 E;
 "THIS FUNCTION FINDS THE TRANSPORT DISTANCE WHICH AT THIS ENERGY"
@@ -904,7 +903,7 @@ SUBROUTINE PWLF1(NI,NIMX,XL,XU,XR,EP,ZTHR,ZEP,NIP,XFUN,XFI,
                  AX,BX,NALM,NFUN,AF,BF,VFUNS);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 "***PWLF1 IS A ROUTINE WHICH WILL FIT UP TO 10(CURRENTLY) FUNCTIONS  "
 "   SIMULTANEOUSLY ON AN INTERVAL (XL,XU) OF THE INDEPENDENT VARIABLE"
 "   X OF THE FUNCTIONS. THE FIT IS A PIECEWISE LINEAR FUNCTION OF    "
@@ -1004,7 +1003,7 @@ LOGICAL FUNCTION QFIT(NJ,XL,XH,XR,EP,ZTHR,ZEP,REM,NJP,XFUN,XFI,
  AX,BX,NALM,NFUN,AF,BF,VFUNS,IPRN);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 COMIN/EGS-IO/;
 "EXTERNAL XFUN,XFI,VFUNS;"
@@ -1146,7 +1145,7 @@ END; "END OF LOGICAL FUNCTION QFIT
 $REAL4 FUNCTION QD(F,A,B,MSG);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
- 
+
 implicit none;
 COMIN/EGS-IO/;
 $REAL4    A,B,F;
@@ -1676,7 +1675,7 @@ SUBROUTINE SPINIT(density_file);
 ;
 ;Copyright NRC;
 implicit none;
- 
+
 COMIN/PMCONS,SPCOMM,DERCON,MOLVAR,BREMPRP,ELEMTB,LSPION,EPSTAR,THRESHP,
 EGS-IO,MIXDAT,MISC/;
 
@@ -1695,15 +1694,15 @@ IF(EPSTFLP < 0 | EPSTFLP > 1) [
 "ABOVE IS NRCC MOD DEC 1988"
 
 IF(EPSTFLP=0)["DEFAULT TO STANDARD PEGS4 METHODS"
- 
+
 "MATERIAL MUST BE FOUND IN THE SSB TABLE OR THE S-P"
-"      GENERAL FORMULA WILL BE USED.  
- 
+"      GENERAL FORMULA WILL BE USED.
+
 "CHECK TO SEE IF MATERIAL IS A 'STERNHEIMER-SELTZER-BERGER' (SSB)"
 "MATERIAL, FOR WHICH THE DENSITY EFFECT PARAMETERS ARE ALREADY"
 "SPECIFIED.  IF IT IS NOT, THEN CALCULATE THEM USING THE GENERAL"
 "FORMULA BY STERNHEIMER-PEIERLS (S-P)."
- 
+
 "STERNHEIMER-SELTZER-BERGER (SSB) LOOKUP TABLE SECTION:"
 :TRY: DO IM=1,NUMSTMED [DO J=1,LMED
 [IF (IDSTRN(J).NE.MEDTBL(J,IM)) NEXT :TRY:;]
@@ -1713,7 +1712,7 @@ X1=STDATA(4,IM); IEV=STDATA(5,IM); CBAR=STDATA(6,IM);
 IMEV=IEV*1.0E-6; "EV TO MEV"
 VPLASM=SQRT(EDEN*R0*C**2/PIP);
 GO TO :SSB-PARAMETERS-DEFINED:;]
- 
+
 "STERNHEIMER-PEIERLS (S-P) GENERAL FORMULA SECTION:"
 IM=0;
 "DETERMINE THE MEAN EXCITATION ENERGY, IMEV (IN MEV)"
@@ -1728,7 +1727,7 @@ OUTPUT ; (' STOPPED IN SUBROUTINE SPINIT BECAUSE THIS',/,
 $CALL_EXIT(21);]
 IEV=ITBL(IZ);     "EV"
 ]
- 
+
 ELSE ["COMPOUND/MIXTURE---USE BRAGG ADDITIVITY RULE"
 ALIADG=0.0;
 DO IE=1,NEP [
@@ -1747,7 +1746,7 @@ ALIADG=ALIADG + PZP(IE)*ZELEMP(IE)*LOG(IEV);
 ALIADG=ALIADG/ZC;
 IEV=EXP(ALIADG);    "EV"
 ]
- 
+
 IMEV=IEV*1.0E-6;  "EV TO MEV"
 "COMPUTE VARIOUS STERNHEIMER CONSTANTS"
 IF (GASPP.EQ.0.0) [EDENL=EDEN;]
@@ -1759,12 +1758,12 @@ VPLASM = SQRT(EDENL*R0*C**2/PIP);
 "PROF KAMAE, TOKYO UNIVERSITY, VIA HIDEO HIRAYAMA"
 
 CBAR=1. + 2.*LOG(IMEV/(HBAR*2*PIP*VPLASM/ERGMEV));
- 
+
 IF (NEP.EQ.1.AND.INT(ZELEMP(1)).EQ.2.AND.GASPP.NE.0.0)[
           "SPECIAL HE(GAS) CASE"
 X0=2.191; X1=3.0; SK=3.297;
 ]
- 
+
 ELSEIF (NEP.EQ.2.AND.INT(ZELEMP(1)).EQ.1
         .AND.INT(ZELEMP(2)).EQ.1) [
 IF (GASPP.EQ.0.0) ["SPECIAL H2(LIQUID) CASE"
@@ -1774,7 +1773,7 @@ ELSE ["SPECIAL H2(GAS) CASE"
 X0=1.837; X1=3.0; SK=4.754;
 ]
 ]
- 
+
 ELSE ["REGULAR CASES"
 SK=3.0;
 IF (GASPP.EQ.0.0) ["SOLIDS AND LIQUIDS"
@@ -1800,9 +1799,9 @@ ELSEIF (CBAR.LT.13.804) [X0=2.0; X1=5.0;]
 ELSE [X0=0.326*CBAR - 2.5; X1=5.0;]
 ]
 ]  "END OF STERNHEIMER-PEIERLS (S-P) GENERAL FORMULA SECTION"
- 
+
 :SSB-PARAMETERS-DEFINED:
- 
+
 "GAS PRESSURE CORRECTION COMES NEXT"
 IF (GASPP.NE.0.0) [
 ALGASP=LOG(GASPP);
@@ -1810,7 +1809,7 @@ CBAR=CBAR - ALGASP;
 X0=X0 - ALGASP/TOLN10;
 X1=X1 - ALGASP/TOLN10;
 ]
- 
+
 IF (IM.EQ.0) [AFACT=(CBAR - TOLN10*X0)/(X1 - X0)**SK;]
 ]"END OF EPSTFL=0 BLOCK"
 
@@ -1860,7 +1859,7 @@ IF(NELEPS.NE.NEP) ICHECK=1;
 
 "NOW CHECK THAT THE DENSITIES ARE THE SAME WITHIN TOLERANCE"
 IF( (ICHECK.EQ.0)  .AND.
-  ( (EPSTRH.LT.((1.0-TLRNCE)*RHOP)) .OR. 
+  ( (EPSTRH.LT.((1.0-TLRNCE)*RHOP)) .OR.
     (EPSTRH.GT.((1.0+TLRNCE)*RHOP))
   ) ) ICHECK=1; "DENSITY IS OUT OF RANGE"
 "WE MUST FIRST NORMALIZE THE PEGS FRACTIONS BY WEIGHT TO ENSURE THEY"
@@ -1901,7 +1900,7 @@ $CALL_EXIT(23); " ERRORS DETECTED";
 
 SPC1=2.*PIP*R0**2*RMP*EDEN*RLCP;
 SPC2=LOG((IMEV/RMP)**2/2.0);
-/* 
+/*
 OUTPUT;(//' PARAMETERS COMPUTED IN SPINIT.'//1X,64('-'));
 IF(IM.EQ.0) [OUTPUT ;
 (' STERNHEIMER-PEIERLS GENERAL FORMULA USED FOR THE DENSITY EFFECT,');]
@@ -1919,7 +1918,7 @@ IF(EPSTFLP = 0) [
 ]
 */
 "$DUMP SPC1,SPC2;"
- 
+
 RETURN;
 :no_density_file:
 $egs_fatal(*,' Failed to open density file ',density_file);
@@ -1935,7 +1934,7 @@ SUBROUTINE MIX;
 Copyright NRC;
 
 implicit none;
- 
+
 " IK: Variable declarations for implicit none"
 $INTEGER I,IZZ;
 $REAL4    AL183,ZAB,V2000;
@@ -1946,7 +1945,7 @@ $REAL4 FCOULCP,XSIFP;
 COMIN/MIMSD,MIXDAT,MOLVAR,PMCONS,DERCON,RADLEN,BREMPRP/;
 $REAL4 XSI(20),ZZX(20),FZC(20),FCOUL(20),ZZ(20);
 " MOLVAR - - MOLECULAR VARIABLES NEEDED BY DIFFER, AND MOLIER      "
- 
+
 " THE FOLLOWING ASSUMES THAT THE MATERIAL BEING DEALT WITH         "
 " IS EITHER A COMPOUND, OR A HOMOGENEOUS MIXTURE.                  "
 "          MOLECULAR VARIABLES                                     "
@@ -2007,7 +2006,7 @@ $REAL4 XSI(20),ZZX(20),FZC(20),FCOUL(20),ZZ(20);
 "    SUM( Z(I)*(Z(I)+XSI(I))*(LOG(A183*Z(I)**(-1./3.)-FCOUL(Z(I))) "
 "        =(AN*RHO/WM)*4.*FSC*R0**2*(ZAB-ZF)                        "
 " INPUT MOLECULAR VARIABLES AND COMPUTE Z-RELATED PARAMETERS       "
-/* 
+/*
 OUTPUT ; (/' IN SUBROUTINE MIX: '/);
 IF (GASPP.EQ.0.0) [OUTPUT NEP,RHOP;
 (' NUMBER OF ELEMENTS = ',I3,',  DENSITY=',1P,G15.6,' (G/CM**3)');]
@@ -2044,7 +2043,7 @@ ZZ(I) = PZP(I)*ZELEMP(I)*(ZELEMP(I)+$FUDGEMS);
 ZS = ZS + ZZ(I);
 ZE = ZE + ZZ(I)*((-2./3.)*LOG(ZELEMP(I)));
 ZX = ZX + ZZ(I)*LOG(1.+3.34*FZC(I));
-] 
+]
 "END OF I LOOP"
 EZ = ZC/TPZ;
 ZA = AL183*ZT;
@@ -2063,7 +2062,7 @@ OUTPUT WM,ZC,ZT,ZA,ZB,ZAB,ZF,ZG,ZP,ZV,ZU,ZS,ZE,ZX,RLCP,
  (I5,1P,5E14.6));
 */
 "$DUMP EDEN;"
- 
+
 "NOW COMPUTE MATERIAL-DEPENDENT CONSTANTS FOR MULTIPLE SCATTERING"
 "LET B BE MOLIERE'S UPPER CASE B, AND LET BLC BE MOLIERE'S LOWER CASE B"
 "THEN USING SCOTT'S NOTATION, A MEASURE OF THE NUMBER OF SCATTERS IS"
@@ -2085,7 +2084,7 @@ OUTPUT WM,ZC,ZT,ZA,ZB,ZAB,ZF,ZG,ZP,ZV,ZU,ZS,ZE,ZX,RLCP,
 " WHERE NOW XRV=XC*SQRT(BLC)."
 "THIS IS DONE BECAUSE BLC IS MORE SIMPLY RELATED TO THE TRANSPORT"
 "DISTANCE THAN IS B."
- 
+
 "WITH THIS BACKGROUND WE NOW PROCEED TO COMPUTE"
 "XR0, TEFF0, BLCC, AND XCC, WHICH ARE PARAMETERS NEEDED IN EGS"
 "THESE PARAMETERS ARE USED AS FOLLOWS:(IN OUR NOTATION)"
@@ -2098,39 +2097,39 @@ OUTPUT WM,ZC,ZT,ZA,ZB,ZAB,ZF,ZG,ZP,ZV,ZU,ZS,ZE,ZX,RLCP,
 "VALID.  WE CURRENTLY GIVE BMIN A VALUE OF 4.5."
 "OMEGA0=BLCC*T/BETA**2  IS THE USEAGE OF BLCC"
 "XRV= XCC*SQRT( T*BLC )/(E*BETA**2) IS THE USAGE OF XCC"
- 
+
 "WE NOW PROCEED TO SOLVE FOR THE ABOVE QUANTITIES."
 "COMPARING THE TWO EXPRESSIONS FOR OMEGA0, WE CONCLUDE THAT:"
- 
+
 BLCCP= A6680*RHOP*ZS*EXP(ZE/ZS)*RLCP/(WM*EXP(ZX/ZS)) ;
 "NOW USING THE EXPRESSION FOR OMEGA0 AT B=BMIN,WE HAVE"
 " OMEGA0=EXP(BLCMIN)"
 "       =EXP(BMIN)/BMIN"
 "       =BLCC*T0/BETA**2"
 "       =BLCC*TEFF0    ,     THEREFORE"
- 
+
 TEFF0P = ( EXP(BMIN)/BMIN )/BLCCP;
- 
+
 "COMPARING THE TWO EXPRESSION FOR XRV WE CONCLUDE THAT"
 "XC= XCC * SQRT(T) /(E*BETA**2)"
 "COMPARING THIS WITH OUR PREVIOUS EXPRESSION FOR XC, WE OBTAIN"
- 
+
 XCCP= (A22P9/RADDEG) * SQRT( ZS*RHOP*RLCP/WM );
- 
+
 "NOW COMPARING THE TWO EXPRESSIONS FOR XRM WE OBTAIN"
 "XRM=XC*SQRT(B)       USING DEFINITION OF XRM"
 "   =(XCC(i_med)*SQRT(T)/(E*BETA**2)) *SQRT(B)  AFTER SUBSTITUTING FOR XC"
 "   =XR0*SQRT((T*B)/(T0*BMIN))/(E*BETA)  USING EXPRESSION DEFINING XR0"
 "   =XR0*SQRT((T*B)/(TEFF0*BETA**2*BMIN))/(E*BETA)  EXPANDING T0"
 " THUS AFTER SOME CANCELLATION AND SOLVING FOR XR0 WE OBTAIN"
- 
+
 XR0P = XCCP*SQRT(TEFF0P*BMIN);
- 
+
 "THIS COMPLETE THE MS CALCULATIONS"
 /*
 OUTPUT BLCCP,XCCP,TEFF0P,XR0P;
 ('0BLCC,XCC,TEFF0,XR0=',1P,4E14.5);
-*/ 
+*/
 RETURN;
 END; "END OF SUBROUTINE MIX"
 
@@ -2146,7 +2145,7 @@ Copyright NRC;
 " IK: Variable declarations for implicit none"
 $REAL4 AL183,F10,F20,A1DEN,A2DEN,B1DEN,B2DEN,C1DEN,C2DEN;
 INTEGER I;
- 
+
 COMIN/MOLVAR,BREMPRP,DBRPR,DERCON,RADLEN/;
 "**********************************************************************"
 "***THE DIFFERENTIAL CROSS-SECTIONS OF BREMSSTRAHLUNG AND PAIR       "
@@ -2158,7 +2157,7 @@ COMIN/MOLVAR,BREMPRP,DBRPR,DERCON,RADLEN/;
 "   TO THE LIMIT AP.                                                 "
 "   THE DIFFERENTAL CROSS SECTIONS USED FOR BREMS AND PAIR ARE--     "
 "   (THEY ARE CROSS SECTION PER RADIATION LENGTH)                    "
- 
+
 "***BELOW 50MEV (BETHE-HEITLER)--                                      "
 "         BREMS--                                                      "
 "     PHI1=(LOG(2)*(4/3+1/(9*LOG(A183)*(1+ZP)))* (1/LOG(2)*(1-EPS)/EPS)"
@@ -2209,9 +2208,9 @@ ALFP1(2)= 2./3. - 1./(36.*AL183*(1.+ZU));
 ALFP2(1)= (1./12.)*(4./3. + 1./(9.*AL183*(1+ZP)));
 ALFP2(2)= (1./12.)*(4./3. + 1./(9.*AL183*(1+ZU)));
 "*****BRANCHING RATIO FOR PAIR PRODUCTION SAMPLING                     "
-BPARP(1)= ALFP1(1)/(ALFP1(1)+ALFP2(1));              
+BPARP(1)= ALFP1(1)/(ALFP1(1)+ALFP2(1));
 BPARP(2)= ALFP1(2)/(ALFP1(2)+ALFP2(2));
- 
+
 "*****WE MUST ALWAYS HAVE A,B,C(DELTA) POSITIVE. SHOWER ASSURES THIS BY"
 "     REQUIRING DEL.LT.DELPOS(),AND HENCE THAT DELTA.LT.DELCM *DELPOS()"
 "     THE CROSS-OVER POINT IS IN THE DELTA.GT.1 REGION,AND THE CROSSING"
