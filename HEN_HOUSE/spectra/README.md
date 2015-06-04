@@ -13,7 +13,7 @@ The spectra in this directory are based on spectra measured or calculated at
 NRC, plus several from the literature. These files are readable by
 ensrc.mortran, version 5 or later. The spectra are normalized to 1 count in the
 spectrum. The "in-air" IR-192 spectra are on transverse axis at 100 cm from the source
-(distances independent past a few centimetres). For a complete description and further references, see
+(distance independent past a few centimetres). For a complete description and further references, see
 
 A. Kosunen and D.W.O. Rogers, *Beam quality specification for photon beam
 dosimetry*, [**Med. Phys. 20,** 1181-1188 (1993)](http://dx.doi.org/10.1118/1.598763).
