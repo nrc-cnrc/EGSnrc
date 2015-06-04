@@ -5,7 +5,7 @@ All files in this directory are part of EGSnrc.
 Some data files require strict formatting to work properly within EGSnrc, hence
 it is not possible to insert a licence notice inside the files. These data files
 are nevertheless distributed under the same terms as EGSnrc, and as a reminder a
-copy of the LICENCE.md file is included in this directory.
+copy of the LICENCE is included in this directory.
 
 ### Description
 
@@ -19,7 +19,7 @@ A. Kosunen and D.W.O. Rogers, *Beam quality specification for photon beam
 dosimetry*, [**Med. Phys. 20,** 1181-1188 (1993)](http://dx.doi.org/10.1118/1.598763).
 
 J. Borg and D. W. O. Rogers, *Spectra and Air-Kerma Strength for Encapsulated
-192-Ir Sources*, **Med. Phys. 26,** 2441-2444 (1999).
+192-Ir Sources*, [**Med. Phys. 26,** 2441-2444 (1999).](http://dx.doi.org/10.1118/1.598763)
 
 The following spectra are available.
 
@@ -42,7 +42,7 @@ The following spectra are available.
 |  al10mev.spectrum                  | 10 MeV Al Schiff thin target
 |  al20mev.spectrum                  | 20 MeV Al Schiff-thin target
 |  al30mev.spectrum                  | 30 MeV Al thin target
-|  co60.spectrum                     | 60-Co  spectrum source capsule and collimators Rogers et al 87
+|  co60.spectrum                     | 60-Co  spectrum source capsule and collimators Rogers et al 1987
 |  cs137.spectrum                    | 137-Cs spectrum  (from NIST paper?)
 |  mohan10.spectrum                  | Mohan et al 10 MV spectrum: counts/bin or counts/MeV
 |  mohan15.spectrum                  | Mohan et al 15 MV spectrum: counts/bin or counts/MeV
