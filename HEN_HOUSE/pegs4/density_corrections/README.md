@@ -1,4 +1,4 @@
-## EGSnrc pegs4 density_correction files
+## EGSnrc pegs4 density correction files
 
 All files in this directory are part of EGSnrc.
 

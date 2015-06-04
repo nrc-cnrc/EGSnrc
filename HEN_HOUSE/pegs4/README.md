@@ -12,7 +12,7 @@ copy of the LICENCE is included in this directory.
 The file `pgs4pepr_xcom-full.dat` was obtained from Jan Seuntjens,
 Wamied Abdel-Rahman and Fadi Hobeila from McGill University, in 2003.
 The major impact of the change is for low-energy photon cross sections.
-Note that `pegs4/pgs4pepr_xcom_mcgill.dat` is an earlier version of the file
+Note that `pgs4pepr_xcom_mcgill.dat` is an earlier version of the file
 only updating the photo-electric cross sections.
 
 To create pegs4 data using this data set, then one must run pegs4
