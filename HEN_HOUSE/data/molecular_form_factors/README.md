@@ -1,12 +1,12 @@
 ## EGSnrc measured molecular form factors
 
-Measured molecular form factors for coherent scattering taken
+Measured molecular form factors for coherent scattering are taken from
 <http://www.ornl.gov/~5pe/p006.html>, with permission fjrom Dr. D. E. Peplow.
 When using any of these data files please refer to the following paper:
 
 D. E. Peplow and K. Verghese, *Measured Molecular Coherent Scattering Form
-Factors of Animal Tissues, Plastics and Human Breast Tissue* **Physics in
-Medicine & Biology 43,** No. 9, 2431-2452 (1998)
+Factors of Animal Tissues, Plastics and Human Breast Tissue* [**Phys. Med. Biol. 43,** No. 9, 2431-2452 (1998)]
+(http://dx.doi.org/10.1088/0031-9155/43/9/001)
 
 
 ### Description
