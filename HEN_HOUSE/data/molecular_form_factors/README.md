@@ -5,17 +5,18 @@ Measured molecular form factors for coherent scattering are taken from
 When using any of these data files please refer to the following paper:
 
 D. E. Peplow and K. Verghese, *Measured Molecular Coherent Scattering Form
-Factors of Animal Tissues, Plastics and Human Breast Tissue* [**Phys. Med. Biol. 43,** No. 9, 2431-2452 (1998)]
+Factors of Animal Tissues, Plastics and Human Breast Tissue* 
+[**Phys. Med. Biol. 43,** 9, 2431-2452 (1998)]
 (http://dx.doi.org/10.1088/0031-9155/43/9/001)
 
 
 ### Description
 
 A reduced data set for 15 materials given with *x* in units of "per Angstrom",
-interpolated at the same *x* values that Hubbell and Øverbø used in their set of
+interpolated at the same *x* values that Hubbell and Ã˜verbÃ¸ used in their set of
 relativistic atomic coherent form factors. Range of *x* is from 0 to 10^10 per
 nm with 100 data points. Values in this table above *x* = 10 per nm are atomic
-form factors from Hubbell & Øverbø.
+form factors from Hubbell & Ã˜verbÃ¸.
 
 Although names are self-explanatory, here is a list of the materials included in
 this compilation:
