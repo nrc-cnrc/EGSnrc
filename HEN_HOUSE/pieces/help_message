@@ -1,0 +1,35 @@
+where [args] is one or more of the following arguments:
+
+
+ -h or --help                 Print this message and exit
+
+ -i or --input ifile          Specifies that the input file is ifile.egsinp
+
+ -o or --output ofile         Output data will be writtent to ofile.egslog,
+                              ofile.egslst, etc., instead of ifile.egslog,
+                              ifile.egslst, etc.
+
+ -p or --pegs-file file_name  Use the pegs4 data file file_name.pegs4dat.
+                              The system will look for it in the HEN_HOUSE
+                              and and the users pegs4 data areas
+
+ -H or --hen-house dir        Change the HEN_HOUSE to be dir instead of the
+                              directory specified in the machine.macros file.
+
+ -e or --egs-home dir         Change EGS_HOME to be dir instead of the
+                              directory specified by the EGS_HOME
+                              environment variable
+
+ -b or --batch                Specify a batch run. The difference between
+                              a batch run and an interactive run is that in
+                              batch mode unit 6 is connected to a file,
+                              whereas in intarctive mode unit 6 output goes
+                              to the standard output. The file name in batch
+                              run is determined as follows:
+                              * it is set to ofile.egslog, if ofile was
+                                specified with the -o option
+                              * it is set to ifile.egslog, if there was no
+                                -o option used but an input file was
+                                specified with -i
+                              * it is set to test.egslog, if neither -i nor
+                                -o was used.

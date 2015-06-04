@@ -1,0 +1,522 @@
+<!--
+###############################################################################
+#
+#  EGSnrc installation tests decription for windows
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2003
+#
+#  Contributors:    Iwan kawrakow
+#
+###############################################################################
+#
+#  Description of a series of tests to be performed before installing EGSnrc.
+#
+###############################################################################
+-->
+
+
+<FTEST>
+<title> ===&gt;   Checking for availability of system dependent functions </title>
+<test>                                           <!-- Task 1 -->
+ <program name="HasObject.f">
+      program HasObject
+      end
+ </program>
+ <language>fortran</language>
+ <opt>-c</opt>
+ <description>Can the compiler produce object files? </description>
+</test>
+<test>                                           <!-- Task 2 -->
+ <program name="DoesExe.f">
+      program DoesExe
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <description>Can the compiler produce executables? </description>
+</test>
+<test>                                           <!-- Task 3 -->
+ <program name="ExitFun.f">
+      program ExitFun
+      character*10 arg
+      call getarg(1,arg)
+      read(arg,*) istat
+      write(6,'(a)') ' EXITFUN'
+      call EXITFUN(istat)
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>EXITFUN</key>
+  <body>exit</body>
+  <body>exit_</body>
+ </map>
+ <arg>1 5 25</arg>
+ <answer>exitFun</answer>
+ <description>Does "exit" or "exit_" work properly? </description>
+</test>
+<test>                                           <!-- Task 4 -->
+ <program name="StopFun.f">
+      program StopFun
+      write(6,'(a)') ' stop'
+      stop KEY2
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>KEY2</key>
+  <body>1</body>
+  <body>5</body>
+  <body>25</body>
+ </map>
+ <arg>1</arg>
+ <arg>5</arg>
+ <arg>25</arg>
+ <answer>stopFun</answer>
+ <mode>all</mode>
+ <depend>exitFun</depend>
+ <description>Does "stop" function work properly? </description>
+</test>
+<test>
+ <program name="EGSExitFun.f">
+      program EGSExitFun
+      character*10 arg
+      integer n_arg
+      n_arg = iargc()
+      if (n_arg.gt.0) then
+        call getarg(1,arg)
+        read(arg,*) istat
+      else
+        istat = 0
+      endif
+      write(6,'(a)') ' EXITFUN'
+      write(6,'(a)') char(13)
+      call EXITFUN(istat)
+      end
+ </program>
+ <language>fortran</language>
+ <map>
+  <key>EXITFUN</key>
+  <body>egs_exit</body>
+ </map>
+ <arg>1 5 25</arg>
+ <opt> </opt>
+ <depend>exitFun</depend>
+ <depend>stopFun</depend>
+ <answer>egsExitFun</answer>
+ <obj>egs_exit.obj</obj>
+ <critical>yes</critical>
+ <description>Does "egs_exit" function work properly? </description>
+</test>
+<test>                                           <!-- Task 7 -->
+ <program name="SystemFun.f">
+      program SystemFun
+      integer*4 i, istat, system
+      character*30 command
+      do i=1,len(command)
+        command(i:i) = ' '
+      end do
+      command = 'OUTSTRING'
+      command(11:11) = char(0)
+      istat = system(command)
+      if( istat.ne.0 ) then
+        write(6,'(a)') ' 1'
+      else
+        write(6,'(a)') ' 0'
+      endif
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>OUTSTRING</key>
+  <body>echo hallo</body>
+  <body>blah__blah</body>
+ </map>
+ <arg>0</arg>
+ <arg>1</arg>
+ <mode>all</mode>
+ <check>output</check>
+ <description>Does the "system" function return an exit status ? </description>
+</test>
+<test>                                           <!-- Task 8 -->
+ <program name="SystemSub.f">
+      program SystemSub
+      integer*4 i, istat
+      character*30 command
+      do i=1,len(command)
+        command(i:i) = ' '
+      end do
+      command = 'echo hallo'
+      command(11:11) = char(0)
+      istat = 222222
+      call system(command,istat)
+      if( istat.eq.0 ) then
+        write(6,'(a)') ' 0'
+      else
+        write(6,'(a)') ' 1'
+      endif
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <arg>0</arg>
+ <check>output</check>
+ <depend>SystemFun</depend>
+ <description>Does the "system" subroutine return an exit status ? </description>
+</test>
+<test>                                           <!-- Task 9 -->
+ <program name="FlushFun.f">
+      program FlushFun
+      write(6,'(a,$)') ''
+      call FLUSHFUN(6)
+      write(6,'(a)') ' FLUSHFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>FLUSHFUN</key>
+  <body>flush</body>
+  <body>flush_</body>
+ </map>
+ <arg>0</arg>
+ <answer>flushFun</answer>
+ <description>Is "flush" or "flush_" available? </description>
+</test>
+<test>                                           <!-- Task 10 -->
+ <program name="DateAndTime.f">
+      program DateAndTime
+      character    dat*8, tim*10, zon*5
+      integer      values(8)
+      call date_and_time(dat,tim,zon,values)
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <description>Is the "date_and_time" subroutine available ? </description>
+</test>
+<test>                                           <!-- Task 11 -->
+ <program name="FDateFun.f">
+      program FDateFun
+      character    daten*24
+      call DATEFUN(daten)
+      write(6,'(a)') ' DATEFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>DATEFUN</key>
+  <body>fdate</body>
+  <body>fdate_</body>
+ </map>
+ <arg>0</arg>
+ <answer>fdateFun</answer>
+ <description>Is "fdate" or "fdate_" subroutine available? </description>
+</test>
+<test>                                           <!-- Task 12 -->
+ <program name="SecndsFun.f">
+      program SecndsFun
+      real t0,t1,SECNDSFUN
+      t1 = SECNDSFUN(t0)
+      write(6,'(a)') ' SECNDSFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>SECNDSFUN</key>
+  <body>secnds</body>
+  <body>secnds_</body>
+ </map>
+ <arg>0</arg>
+ <answer>secsFun</answer>
+ <description>Is "secnds" or "secnds_" function available? </description>
+</test>
+<test>                                           <!-- Task 13 -->
+ <program name="DateFun.f">
+      program DateFun
+      character dat*11
+      call DATEFUN(dat)
+      write(6,'(a)') ' DATEFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>DATEFUN</key>
+  <body>date</body>
+  <body>date_</body>
+ </map>
+ <arg>0</arg>
+ <answer>dateFun</answer>
+ <description>Is "date" or "date_" subroutine available? </description>
+</test>
+<test>                                           <!-- Task 14 -->
+ <program name="TimeFun.f">
+      program TimeFun
+      character tim*8
+      call TIMEFUN(tim)
+      write(6,'(a)') ' TIMEFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>TIMEFUN</key>
+  <body>time</body>
+  <body>time_</body>
+ </map>
+ <arg>0</arg>
+ <answer>timeFun</answer>
+ <description>Is "time" or "time_" subroutine available? </description>
+</test>
+<test>                                           <!-- Task 15 -->
+ <program name="ETimeFun.f">
+      program ETimeFun
+      real tarray(2),ETIMEFUN,res
+      res = ETIMEFUN(tarray)
+      write(6,'(a)') ' ETIMEFUN'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>ETIMEFUN</key>
+  <body>etime</body>
+  <body>etime_</body>
+ </map>
+ <answer>etimeFun</answer>
+ <arg>0</arg>
+ <description>Is "etime" or "etime_" function available? </description>
+</test>
+<test>                                           <!-- Task 16 -->
+ <program name="LnblnkFun.f">
+      program LnblnkFun
+      integer res,lnblnk
+      res = lnblnk('junk string')
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <description>Is function "lnblnk" available? </description>
+</test>
+<test>                                           <!-- Task 17 -->
+ <program name="HostName.f">
+      program HostName
+      integer res,HOSTNAMEFUN,lnblnk1
+      character*40 hname
+      res = HOSTNAMEFUN(hname)
+      if( res.eq.0 ) then
+        write(6,'(a)') ' HOSTNAMEFUN'
+      else
+        write(6,'(a)') ' not available'
+      endif
+      end
+      integer function lnblnk1(c)
+      implicit none
+      character c*(*)
+      integer j
+      do j=len(c),1,-1
+        if( c(j:j).ne.' ' ) then
+          lnblnk1 = j
+          return
+        end if
+      end do
+      lnblnk1=0
+      return
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>HOSTNAMEFUN</key>
+  <body>hostnm</body>
+  <body>hostnm_</body>
+ </map>
+ <arg>hostnm</arg>
+ <arg>hostnm_</arg>
+ <answer>hostFun</answer>
+ <check>output</check>
+ <description>Does "hostnm" or "hostnm_" work properly? </description>
+</test>
+<test>                                           <!-- Task 18 -->
+ <program name="LstatFun.f">
+      program LstatFun
+      integer array(ARRAYSIZE),res
+      res = lstat('./',array)
+      if( res.ne.0 ) then
+        write(6,'(a)') ' 1'
+      else if( .not.btest(array(DIRELE),14) ) then
+        write(6,'(a)') ' 2'
+      else
+        write(6,'(a)') ' DIRELE:ARRAYSIZE'
+      endif
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>DIRELE</key>
+  <body>3</body>
+  <body>5</body>
+  <key>ARRAYSIZE</key>
+  <body>13</body>
+  <body>25</body>
+ </map>
+ <arg>3:13</arg>
+ <arg>5:25</arg>
+ <answer>lstatFun</answer>
+ <check>output</check>
+ <description>Is "lstat" available and does it work properly? </description>
+</test>
+<test>                                           <!-- Task 19 -->
+ <program name="InquireFun.f">
+      program InquireFun
+      logical ex
+      inquire(file='C:',exist=ex)
+      if ( .not.ex ) then
+         write(6,'(a)') ' 1'
+      else
+        write(6,'(a)') ' 0'
+      endif
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <arg>0</arg>
+ <check>output</check>
+ <description>Does "inquire" work properly? </description>
+</test>
+<test>                                           <!-- Task 20 -->
+ <program name="RecordLength.f">
+      program RecordLength
+      real*4 t
+      integer rl, file_size
+      character*256 n
+      ires = 0
+      open(3,file='name',access='direct',form='unformatted',
+     *     recl=RECLEN)
+      t = 1.5
+      write(3,rec=1,err=100) t
+      close(3)
+      n = 'name'
+      n(6:6) = char(0)
+      rl = file_size(n)
+      if (rl.eq.4) then
+         write(6,'(a)') ' RECLEN'
+      else
+         write(6,'(a)') ' nada'
+      endif
+100   continue
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <map>
+  <key>RECLEN</key>
+  <body>4</body>
+  <body>1</body>
+  <key>name</key>
+  <body>junk4</body>
+  <body>junk1</body>
+ </map>
+ <arg>4</arg>
+ <arg>1</arg>
+ <check>output</check>
+ <obj>file_size.obj</obj>
+ <answer>recLen</answer>
+ <description>Is record length known? </description>
+</test>
+<test>                                           <!-- Task 21 -->
+ <program name="LongInteger.f">
+      program LongInteger
+      integer*8 i
+      i = 1
+      write(6,'(a)') ' integer*8'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <arg>0</arg>
+ <answer>LongInteger</answer>
+ <description>Is "integer*8" available? </description>
+</test>
+<test>                                           <!-- Task 22 -->
+ <program name="ShortInteger.f">
+      program ShortInteger
+      integer*2 i
+      i = 1
+      write(6,'(a)') ' integer*2'
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <arg>0</arg>
+ <answer>ShortInteger</answer>
+ <description>Is "integer*2" available? </description>
+</test>
+<test>                                           <!-- Task 23 -->
+ <program name="Endianess.f">
+      program Endianess
+      integer*4 itest
+      character c(4)
+      equivalence (itest,c)
+      itest = 305419896
+      if( ichar(c(1)).eq.18.and.ichar(c(2)).eq.52.and.
+     *    ichar(c(3)).eq.86.and.ichar(c(4)).eq.120 ) then
+        write(6,'(a)') ' big endian'  !4321
+      else if( ichar(c(1)).eq.120.and.ichar(c(2)).eq.86.and.
+     *         ichar(c(3)).eq.52.and.ichar(c(4)).eq.18 ) then
+        write(6,'(a)') ' little endian'  !1234
+      else
+        write(6,'(a)') 'pdp endian'  ! 3412
+      end if
+      end
+ </program>
+ <language>fortran</language>
+ <opt> </opt>
+ <arg>0</arg>
+ <answer>Endianess</answer>
+ <description>Can endianess of machine be determined?</description>
+</test>
+<test>                                           <!-- Task 25 -->
+ <program name="NameMangling.f">
+      program NameMangling
+      call FNAME()
+      call FNAME_FNAME()
+      end
+ </program>
+ <language>fortran</language>
+ <map>
+  <key>FNAME</key>
+  <body>junk</body>
+ </map>
+ <opt></opt>
+ <obj>NameDecoration.obj</obj>
+ <arg>0</arg>
+ <answer>Decoration</answer>
+ <description>Is the name mangling schema known ?</description>
+</test>
+</FTEST>
