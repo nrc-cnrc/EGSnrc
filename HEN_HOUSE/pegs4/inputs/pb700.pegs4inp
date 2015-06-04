@@ -1,0 +1,10 @@
+ELEM
+ &INP IRAYL=1 &END
+PB 
+PB
+ENER                                                                            
+ &INP AE=0.700,UE=50.511,AP=0.010,UP=50.   &END
+PWLF                                                                            
+ &INP  &END                                                                     
+DECK                                                                            
+ &INP  &END                                                                     

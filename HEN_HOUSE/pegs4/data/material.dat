@@ -1,0 +1,591 @@
+medium=AG521ICRU
+rho= 10.5
+elements= AG 
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= silver 
+
+medium=AIR521ICRU
+rho=1.2048E-03
+elements=C,N,O,AR
+mass fractions=1.24000E-04,7.55200E-01,2.31800E-01,1.28300E-02
+bremsstrahlung correction=NRC
+gas pressure = 1.0
+density correction file= air_dry_nearsealevel
+
+medium=AL521ICRU
+rho=2.7020
+elements=AL
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= aluminum
+
+medium=AU521ICRU
+rho=1.9320E+01
+elements=AU
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= gold
+#density different than in file
+
+medium=BE521ICRU
+rho=1.85
+elements=BE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= beryllium
+
+medium=CERROBEND521
+rho=9.76
+elements=BI,PB,SN,CD
+mass fractions=5.00000E-01,2.67000E-01,1.33000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=CU521ICRU
+rho=8.9333
+elements=CU
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= copper
+#density different than in file
+
+medium=FE521ICRU
+rho=7.86
+elements=FE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= iron
+#density different than in file
+
+medium=GE521ICRU
+rho=5.36
+elements=GE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= germanium
+
+medium=C87ICRU521
+rho=2.265
+elements=C
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= carbon_graphite_2.265g_cm3
+
+medium=170C521ICRU
+rho=1.7
+elements=C
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= carbon_graphite_1.700g_cm3
+
+medium=H2O521ICRU
+rho=1.0
+elements=H,O
+number of atoms=2,1
+bremsstrahlung correction=NRC
+density correction file= water_liquid
+
+medium=HE521ICRU
+rho=1.6632E-04
+elements=HE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= helium
+
+medium=ICRPBONE521ICRU
+rho=1.85
+elements=H,C,N,O,MG,P,S,CA,ZN
+mass fractions=4.72340E-02,1.44330E-01,4.19900E-02,4.46096E-01,2.20000E-03,1.04970E-01,3.15000E-03,2.09930E-01,1.00000E-04
+bremsstrahlung correction=NRC
+density correction file= bone_cortical_icrp
+
+medium=ICRUTISSUE521ICRU
+rho=1.0
+elements=H,C,N,O
+mass fractions=1.01172E-01,1.11000E-01,2.60000E-02,7.61828E-01
+bremsstrahlung correction=NRC
+density correction file= tissue_soft_icrufour-component
+
+medium=KAPTON521ICRU
+rho=1.42
+elements=H,C,N,O
+mass fractions=2.63620E-02,6.91134E-01,7.32700E-02,2.09235E-01
+bremsstrahlung correction=NRC
+density correction file= _kapton_polyimidefilm
+
+medium=LUNG521ICRU
+rho=2.6000E-01
+elements=H,C,N,O,NA,P,S,CL,K
+mass fractions=1.03000E-01,1.05000E-01,3.10000E-02,7.49000E-01,2.00000E-03,2.00000E-03,3.00000E-03,3.00000E-03,2.00000E-03
+bremsstrahlung correction=NRC
+density correction file= lung_inflated_icru_1986
+
+medium=MG521ICRU
+rho=1.74
+elements=MG
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= magnesium
+
+medium=MICA521
+rho=2.9
+elements=K,O,AL,SI,H
+mass fractions=7.82040E+01,3.83986E+02,1.61889E+02,1.68528E+02,4.03188E+00
+bremsstrahlung correction=NRC
+
+medium=MILDSTEEL521
+rho=7.90
+elements=FE,C,MN,SI
+mass fractions=9.90500E-01,1.50000E-03,5.00000E-03,3.00000E-03
+bremsstrahlung correction=NRC
+
+medium=MYLAR521ICRU
+rho=1.38
+elements=C,H,O
+mass fractions=1.20112E+02,8.06376E+00,6.39976E+01
+bremsstrahlung correction=NRC
+
+medium=NAI521ICRU
+rho=3.667
+elements=NA,I
+mass fractions=1.53373E-01,8.46627E-01
+bremsstrahlung correction=NRC
+density correction file= sodiumiodide
+
+medium=NI521ICRU
+rho=8.902
+elements=NI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= nickel
+
+medium=NYLON6AND66521ICRU
+rho=1.14
+elements=H,C,N,O
+mass fractions=9.79760E-02,6.36856E-01,1.23779E-01,1.41389E-01
+bremsstrahlung correction=NRC
+density correction file= nylon_type6andtype6_6
+
+medium=PB521ICRU
+rho=1.1340E+01
+elements=PB
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= lead
+
+medium=PBSBICU521
+rho=1.1000E+01
+elements=PB,SB
+mass fractions=9.60000E-01,4.00000E-02
+bremsstrahlung correction=NRC
+
+medium=PMMA521ICRU
+rho=1.19
+elements=C,H,O
+number of atoms=5,8,2
+bremsstrahlung correction=NRC
+density correction file=polymethylmethacrylate__lucite___perspex___plexiglas_
+
+medium=POLYETH521ICRU
+rho=9.3000E-01
+elements=C,H
+number of atoms=2,4
+bremsstrahlung correction=NRC
+density correction file=polyethylene
+
+medium=POLYSTY521ICRU
+rho=1.06
+elements=C,H
+mass fractions=7.74180E-02,9.22582E-01
+bremsstrahlung correction=NRC
+density correction file=polystyrene
+
+medium=SI521ICRU
+rho=2.33
+elements=SI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=silicon
+
+medium=STEEL521ICRU
+rho=8.06
+elements=C,SI,CR,MN,FE,NI
+mass fractions=1.00000E-03,7.00000E-03,1.80000E-01,1.00000E-02,7.12000E-01,9.00000E-02
+bremsstrahlung correction=NRC
+density correction file=steel_stainless_type302
+
+medium=TA521ICRU
+rho=16.6
+elements=TA
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=tantalum
+
+medium=TI521ICRU
+rho=4.54
+elements=TI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=titanium
+
+medium=W521ICRU
+rho=1.9300E+01
+elements=W
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=tungsten
+
+medium=WNICU521
+rho=1.7500E+01
+elements=W,NI,CU
+mass fractions=9.30000E-01,5.25000E-01,1.75000E-01
+bremsstrahlung correction=NRC
+
+medium=WRE521
+rho=1.9456E+01
+elements=W,RE
+mass fractions=9.00000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=YELBRASS521ICRU
+rho=8.47
+elements=CU,ZN
+mass fractions=6.60000E-01,3.40000E-01
+bremsstrahlung correction=NRC
+density correction file=copperalloy_yellowbrass
+
+medium=ZN521ICRU
+rho=7.133
+elements=ZN
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=zinc
+
+medium=PYREX521ICRU
+rho=2.23
+elements=B,O,NA,AL,SI,K
+mass fractions=4.00610E+00,5.39564E+01,2.81910E+00,1.16440E+00,3.77220E+01,3.32100E-01
+bremsstrahlung correction=NRC
+density correction file=glass_borosilicate__pyrex__corning7740
+
+medium=LIF521ICRU
+rho=2.635
+elements=LI,F
+number of atoms=1,1
+bremsstrahlung correction=NRC
+density correction file=lithiumfluoride
+
+medium=RMISW521
+rho=1.03
+elements=H,C,N,O,CA,CL
+mass fractions=8.09000E-02,6.72200E-01,2.40000E-02,1.98400E-01,2.32000E-02,1.30000E-03
+
+medium=AG700ICRU
+rho= 10.5
+elements= AG 
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= silver 
+
+medium=AIR700ICRU
+rho=1.2048E-03
+elements=C,N,O,AR
+mass fractions=1.24000E-04,7.55200E-01,2.31800E-01,1.28300E-02
+bremsstrahlung correction=NRC
+gas pressure = 1.0
+density correction file= air_dry_nearsealevel
+
+medium=ALUMINA700ICRU
+rho=3.97
+elements=AL,O
+number of atoms=2,3
+bremsstrahlung correction=NRC
+density correction file= aluminumoxide
+#mass fractions in dc file different than in pegsdat file
+
+medium=AL700ICRU
+rho=2.7020
+elements=AL
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= aluminum
+
+medium=AU700ICRU
+rho=1.9320E+01
+elements=AU
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= gold
+#density different than in file
+
+medium=BE700ICRU
+rho=1.85
+elements=BE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= beryllium
+
+medium=CERROBEND700
+rho=9.76
+elements=BI,PB,SN,CD
+mass fractions=5.00000E-01,2.67000E-01,1.33000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=CU700ICRU
+rho=8.9333
+elements=CU
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= copper
+#density different than in file
+
+medium=FE700ICRU
+rho=7.86
+elements=FE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= iron
+#density different than in file
+
+medium=GE700ICRU
+rho=5.36
+elements=GE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= germanium
+
+medium=170C700ICRU
+rho=1.7
+elements=C
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= carbon_graphite_1.700g_cm3
+
+medium=226C700ICRU
+rho=2.26
+elements=C
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= carbon_graphite_2.265g_cm3
+sterncid=C226700ICRU
+
+medium=H2O700ICRU
+rho=1.0
+elements=H,O
+number of atoms=2,1
+bremsstrahlung correction=NRC
+density correction file= water_liquid
+
+medium=HE700ICRU
+rho=1.6632E-04
+elements=HE
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= helium
+
+medium=ICRPBONE700ICRU
+rho=1.85
+elements=H,C,N,O,MG,P,S,CA,ZN
+mass fractions=4.72340E-02,1.44330E-01,4.19900E-02,4.46096E-01,2.20000E-03,1.04970E-01,3.15000E-03,2.09930E-01,1.00000E-04
+bremsstrahlung correction=NRC
+density correction file= bone_cortical_icrp
+
+medium=ICRUTISSUE700ICRU
+rho=1.0
+elements=H,C,N,O
+mass fractions=1.01172E-01,1.11000E-01,2.60000E-02,7.61828E-01
+bremsstrahlung correction=NRC
+density correction file= tissue_soft_icrufour-component
+
+medium=KAPTON700ICRU
+rho=1.42
+elements=H,C,N,O
+mass fractions=2.63620E-02,6.91134E-01,7.32700E-02,2.09235E-01
+bremsstrahlung correction=NRC
+density correction file= _kapton_polyimidefilm
+
+medium=LUNG700ICRU
+rho=2.6000E-01
+elements=H,C,N,O,NA,P,S,CL,K
+mass fractions=1.03000E-01,1.05000E-01,3.10000E-02,7.49000E-01,2.00000E-03,2.00000E-03,3.00000E-03,3.00000E-03,2.00000E-03
+bremsstrahlung correction=NRC
+density correction file= lung_inflated_icru_1986
+
+medium=MG700ICRU
+rho=1.74
+elements=MG
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= magnesium
+
+medium=MICA700
+rho=2.9
+elements=K,O,AL,SI,H
+mass fractions=7.82040E+01,3.83986E+02,1.61889E+02,1.68528E+02,4.03188E+00
+bremsstrahlung correction=NRC
+
+medium=MILDSTEEL700
+rho=7.90
+elements=FE,C,MN,SI
+mass fractions=9.90500E-01,1.50000E-03,5.00000E-03,3.00000E-03
+bremsstrahlung correction=NRC
+
+medium=MYLAR700ICRU
+rho=1.38
+elements=C,H,O
+mass fractions=1.20112E+02,8.06376E+00,6.39976E+01
+bremsstrahlung correction=NRC
+
+medium=NAI700ICRU
+rho=3.667
+elements=NA,I
+mass fractions=1.53373E-01,8.46627E-01
+bremsstrahlung correction=NRC
+density correction file= sodiumiodide
+
+medium=NI700ICRU
+rho=8.902
+elements=NI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= nickel
+
+medium=NYLON6AND66700ICRU
+rho=1.14
+elements=H,C,N,O
+mass fractions=9.79760E-02,6.36856E-01,1.23779E-01,1.41389E-01
+bremsstrahlung correction=NRC
+density correction file= nylon_type6andtype6_6
+
+medium=PB700ICRU
+rho=1.1340E+01
+elements=PB
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file= lead
+
+medium=PBSBICU700
+rho=1.1000E+01
+elements=PB,SB
+mass fractions=9.60000E-01,4.00000E-02
+bremsstrahlung correction=NRC
+
+medium=PMMA700ICRU
+rho=1.19
+elements=C,H,O
+number of atoms=5,8,2
+bremsstrahlung correction=NRC
+density correction file=polymethylmethacrylate__lucite___perspex___plexiglas_
+
+medium=POLYETH700ICRU
+rho=9.3000E-01
+elements=C,H
+number of atoms=2,4
+bremsstrahlung correction=NRC
+density correction file=polyethylene
+
+medium=POLYSTY700ICRU
+rho=1.06
+elements=C,H
+mass fractions=7.74180E-02,9.22582E-01
+bremsstrahlung correction=NRC
+density correction file=polystyrene
+
+medium=SI700ICRU
+rho=2.33
+elements=SI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=silicon
+
+medium=SIO2700ICRU
+rho=2.32
+elements=SI,O
+number of atoms=1,2
+bremsstrahlung correction=NRC
+density correction file=silicondioxide
+
+medium=STEEL700ICRU
+rho=8.06
+elements=C,SI,CR,MN,FE,NI
+mass fractions=1.00000E-03,7.00000E-03,1.80000E-01,1.00000E-02,7.12000E-01,9.00000E-02
+bremsstrahlung correction=NRC
+density correction file=steel_stainless_type302
+
+medium=STEEL_8p5_700
+rho=8.5
+elements=C,SI,CR,MN,FE,NI
+mass fractions=1.00000E-03,7.00000E-03,1.80000E-01,1.00000E-02,7.12000E-01,9.00000E-02
+bremsstrahlung correction=NRC
+
+medium=TA700ICRU
+rho=16.6
+elements=TA
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=tantalum
+
+medium=TI700ICRU
+rho=4.54
+elements=TI
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=titanium
+
+medium=W700ICRU
+rho=1.9300E+01
+elements=W
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=tungsten
+
+medium=WNICU700
+rho=1.7500E+01
+elements=W,NI,CU
+mass fractions=9.30000E-01,5.25000E-01,1.75000E-01
+bremsstrahlung correction=NRC
+
+medium=WRE700
+rho=1.9456E+01
+elements=W,RE
+mass fractions=9.00000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=YELBRASS700ICRU
+rho=8.47
+elements=CU,ZN
+mass fractions=6.60000E-01,3.40000E-01
+bremsstrahlung correction=NRC
+density correction file=copperalloy_yellowbrass
+
+medium=ZN700ICRU
+rho=7.133
+elements=ZN
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=zinc
+
+medium=W16p9_700
+rho=1.6900E+01
+elements=W
+number of atoms=1
+bremsstrahlung correction=NRC
+
+medium=WRE_19p4_700
+rho=1.9400E+01
+elements=W,RE
+mass fractions=9.00000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=WRE_18P0_700
+rho=1.8000E+01
+elements=W,RE
+mass fractions=9.00000E-01,1.00000E-01
+bremsstrahlung correction=NRC
+
+medium=SN700ICRU
+rho=7.31
+elements=SN
+number of atoms=1
+bremsstrahlung correction=NRC
+density correction file=tin

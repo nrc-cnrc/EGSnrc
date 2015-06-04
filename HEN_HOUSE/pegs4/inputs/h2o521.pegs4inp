@@ -1,0 +1,10 @@
+COMP
+ &INP NE=2,RHO=0.930,PZ=1,1 &END
+H2
+H  H
+ENER                                                                            
+ &INP AE=0.521,UE=30.511,AP=0.01,UP=30.   &END
+PWLF                                                                            
+ &INP  &END                                                                     
+DECK                                                                            
+ &INP  &END                                                                     

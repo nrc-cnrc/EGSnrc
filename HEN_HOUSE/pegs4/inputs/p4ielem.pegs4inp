@@ -1,0 +1,12 @@
+ELEM
+ &INP  &END
+PB                            PB
+PB
+ENER
+ &INP AE=1.5,UE=100000,AP=.1,UP=100000 &END
+TEST
+ &INP  &END
+PWLF
+ &INP  &END
+DECK
+ &INP  &END

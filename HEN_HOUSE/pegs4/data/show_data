@@ -1,0 +1,68 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to list media from a pegs4 data file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  Utility to list all media in a file and then also their compositions.
+#
+#  Ernesto Mainegra-Hing, 2011: Using egrep -A1 to get line with energies.
+#
+###############################################################################
+
+
+ if [ -f $EGS_HOME/pegs4/data/$1.pegs4dat ]; then
+   the_pegs4=$EGS_HOME/pegs4/data/$1.pegs4dat
+ elif [ -f $EGS_HOME/pegs4/data/$1 ]; then
+   the_pegs4=$EGS_HOME/pegs4/data/$1
+ elif [ -f $HEN_HOUSE/pegs4/data/$1.pegs4dat ]; then
+   the_pegs4=$HEN_HOUSE/pegs4/data/$1.pegs4dat
+ elif [ -f $HEN_HOUSE/pegs4/data/$1 ]; then
+   the_pegs4=$HEN_HOUSE/pegs4/data/$1
+ elif [ -f $1.pegs4dat ]; then
+   the_pegs4=$1.pegs4dat
+ elif [ -f $1 ]; then
+   the_pegs4=$1
+ elif [ -f $HOME/$1.pegs4dat ]; then
+   the_pegs4=$HOME/$1.pegs4dat
+ elif [ -f $HOME/$1 ]; then
+   the_pegs4=$HOME/$1
+ else
+   echo "No pegs4 data file $1.pegs4dat found"
+   echo "    in ${HEN_HOUSE}pegs4/data"
+   echo "nor in ${EGS_HOME}pegs4/data"
+   echo "nor in ${PWD}"
+   echo "nor in ${HOME}"
+   echo "make sure the file exists !!!"
+   exit 1
+ fi
+
+echo "";echo "show_data will list materials in ${the_pegs4}";echo ""
+grep MEDIUM ${the_pegs4} |more
+echo "";echo ""
+egrep -A1 "MED|ASYM|RHO" ${the_pegs4} |more
+
+exit 0
