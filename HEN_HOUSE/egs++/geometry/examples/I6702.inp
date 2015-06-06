@@ -1,0 +1,179 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ sample brachytherapy seed geometry
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example geometry input file for the egs++ geometry package.
+#
+#  This input file defines an egs++ geometry for a I-6702 brachytherapy seed.
+#  The seed is modeled as a CD geometry. The base geometry for the CD geometry
+#  is a set of 4 parallel planes defining 3 regions.
+#
+#  Spheres are inscribed into regions 0 and 2 of the CD geometry to form the
+#  rounded ends of the seed.
+#
+#  The middle region of the CD geometry is filled with an envelope geometry.
+#
+#  The envelope geometry is made of a set of 2 cylinders as the base and 3
+#  inscribed spheres thus forming the seed wall and the radiocative
+#  material in the middle.
+#
+##############################################################################
+
+
+:start geometry definition:
+
+    ##################################### the set of planes needed for the
+    #                                     CD geometry
+    :start geometry:
+        library = egs_planes
+        name = planes
+        type = EGS_Zplanes
+        positions = -0.225 -0.175 0.175 0.225
+    :stop geometry:
+
+    ##################################### the top sphere
+    #                                     (which will turn into a hemisphere
+    #                                      after being put into region 0 of
+    #                                      the set of planes geometry above
+    :start geometry:
+        library = egs_spheres
+        name = seed_top
+        midpoint = 0 0 -0.175
+        radii = 0.05
+        :start media input:
+            media = titanium
+        :stop media input:
+    :stop geometry:
+
+    ##################################### the set of cylinders
+    :start geometry:
+        library = egs_cylinders
+        name = cladding
+        midpoint = 0 0 0
+        type = EGS_ZCylinders
+        radii = 0.044 0.05
+        :start media input:
+            media = air titanium
+            set medium = 0 1 0
+            set medium = 1 2 1
+        :stop media input:
+    :stop geometry:
+
+    ##################################### the first radioactive sphere
+    #
+    :start geometry:
+        library = egs_spheres
+        name = first_sphere
+        midpoint = 0 0 -0.11
+        radii = 0.03
+        :start media input:
+            media = resin
+        :stop media input:
+    :stop geometry:
+
+    ##################################### the second radioactive sphere
+    #
+    :start geometry:
+        library = egs_spheres
+        name = second_sphere
+        midpoint = 0 0 0
+        radii = 0.03
+        :start media input:
+            media = resin
+        :stop media input:
+    :stop geometry:
+
+    ##################################### the third radioactive sphere
+    #
+    :start geometry:
+        library = egs_spheres
+        name = third_sphere
+        midpoint = 0 0 0.11
+        radii = 0.03
+        :start media input:
+            media = resin
+        :stop media input:
+    :stop geometry:
+
+
+    ##################################### the envelope geometry for the
+    #                                     middle region
+    :start geometry:
+        library = egs_genvelope
+        name = seed_center
+        base geometry = cladding
+        inscribed geometries = first_sphere second_sphere third_sphere
+    :stop geometry:
+
+    ##################################### the bottom sphere
+    #                                     (which will turn into a hemisphere
+    #                                      after being put into region 2 of
+    #                                      the set of planes geometry above
+    :start geometry:
+        library = egs_spheres
+        name = seed_bottom
+        midpoint = 0 0 0.175
+        radii = 0.05
+        :start media input:
+            media = titanium
+        :stop media input:
+    :stop geometry:
+
+
+    ########################################## And now the actual geometry
+    #                 which is a CD geometry made of the set of planes as
+    #                 the base geometry and spheres and the cylinder
+    #                 envelope as inscribed geometries for the 3 regions.
+    #
+    :start geometry:
+        library = egs_cdgeometry
+        name = seed
+        base geometry = planes
+        set geometry = 0 seed_top
+        set geometry = 1 seed_center
+        set geometry = 2 seed_bottom
+    :stop geometry:
+
+    simulation geometry = seed
+
+:stop geometry definition:
+
+###################### The following view control input helps the viewer
+#                      to find the seed geometry.
+#                      It will fail without it as the geometry is too small
+#                      for the position grid used in the initial search for
+#                      the optimum viewing position.
+#
+:start view control:
+  xmin = -0.5
+  xmax =  0.5
+  ymin = -0.5
+  ymax =  0.5
+  zmin = -0.5
+  zmax =  0.5
+:stop view control:

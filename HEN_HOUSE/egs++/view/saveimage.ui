@@ -1,0 +1,245 @@
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><!--
+###############################################################################
+#
+#  EGSnrc egs++ geometry viewer save image user interface
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:    Frederic Tessier
+#
+###############################################################################
+-->
+<class>SaveImage</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>SaveImage</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>321</width>
+            <height>201</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Save image</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout9</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox11</cstring>
+                    </property>
+                    <property name="title">
+                        <string>Image size</string>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QSpinBox">
+                            <property name="name">
+                                <cstring>xsizeSB</cstring>
+                            </property>
+                            <property name="maxValue">
+                                <number>4096</number>
+                            </property>
+                            <property name="value">
+                                <number>512</number>
+                            </property>
+                        </widget>
+                        <widget class="QSpinBox">
+                            <property name="name">
+                                <cstring>ysizeSB</cstring>
+                            </property>
+                            <property name="maxValue">
+                                <number>4096</number>
+                            </property>
+                            <property name="value">
+                                <number>512</number>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox12</cstring>
+                    </property>
+                    <property name="title">
+                        <string>Format</string>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QComboBox">
+                            <property name="name">
+                                <cstring>formatCB</cstring>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QGroupBox">
+            <property name="name">
+                <cstring>groupBox13</cstring>
+            </property>
+            <property name="title">
+                <string>File name</string>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLineEdit">
+                    <property name="name">
+                        <cstring>fileName</cstring>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>pushButton9</cstring>
+                    </property>
+                    <property name="text">
+                        <string>...</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout8</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>pushButton11</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Cancel</string>
+                    </property>
+                    <property name="accel">
+                        <string>Alt+C</string>
+                    </property>
+                </widget>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer6</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>111</width>
+                            <height>21</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>okButton</cstring>
+                    </property>
+                    <property name="enabled">
+                        <bool>false</bool>
+                    </property>
+                    <property name="text">
+                        <string>&amp;OK</string>
+                    </property>
+                    <property name="accel">
+                        <string>Alt+O</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<connections>
+    <connection>
+        <sender>pushButton11</sender>
+        <signal>clicked()</signal>
+        <receiver>SaveImage</receiver>
+        <slot>reject()</slot>
+    </connection>
+    <connection>
+        <sender>okButton</sender>
+        <signal>clicked()</signal>
+        <receiver>SaveImage</receiver>
+        <slot>accept()</slot>
+    </connection>
+    <connection>
+        <sender>pushButton9</sender>
+        <signal>clicked()</signal>
+        <receiver>SaveImage</receiver>
+        <slot>selectFileName()</slot>
+    </connection>
+    <connection>
+        <sender>fileName</sender>
+        <signal>lostFocus()</signal>
+        <receiver>SaveImage</receiver>
+        <slot>enableOkButton()</slot>
+    </connection>
+    <connection>
+        <sender>fileName</sender>
+        <signal>textChanged(const QString&amp;)</signal>
+        <receiver>SaveImage</receiver>
+        <slot>fnameTextChanged(const QString&amp;)</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">saveimage.ui.h</include>
+</includes>
+<signals>
+    <signal>saveFileSelected(const QString &amp;fname, const QString &amp;format)</signal>
+</signals>
+<slots>
+    <slot>saveImage()</slot>
+    <slot>selectFileName()</slot>
+    <slot>enableOkButton()</slot>
+    <slot>fnameTextChanged( const QString &amp; )</slot>
+</slots>
+<functions>
+    <function access="protected">init()</function>
+    <function>getImageSize(int *, int *)</function>
+    <function returnType="QString">getImageFormat()</function>
+    <function returnType="QString">getImageFileName()</function>
+</functions>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

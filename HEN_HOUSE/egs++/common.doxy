@@ -1,0 +1,148 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ common input block documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2009
+#
+#  Contributors:
+#
+###############################################################################
+*/
+
+
+/*! \page common Common input blocks for the EGSnrc C++ user codes
+
+<ul>
+<li> \ref common_intro </li>
+<li> \ref common_geom_source_rco </li>
+<li> \ref common_mc </li>
+</ul>
+
+\section common_intro Introduction
+All C++ user codes distributed with EGSnrc use the same syntax
+for inputing information regarding geometry, source, run control
+and MC transport parameters. Only the input blocks for scoring
+and variance reduction techniques vary in these codes.
+
+\section common_geom_source_rco Geometry, particle source and run control
+
+Geometry and particle source are specified in an input file as
+explained in the \link Geometry geometry module \endlink and the
+\link Sources particle sources module\endlink.
+Run control is specified in a section of the input file delimited by
+\verbatim
+:start run control:
+:stop run control:
+\endverbatim
+
+A \link EGS_RunControl simple \endlink run control object (RCO) is
+used to control a single run. A simple RCO understands the following
+inputs
+\verbatim
+ncase                       = number of histories to run
+nbatch                      = number of batches to use (default is 10)
+statistical accuracy sought = required uncertainty in %
+max cpu hours allowed       = max. CPU time allowed
+calculation                 = first or restart or combine or analyze
+\endverbatim
+The only required input is the number of histories. The \b nbatch input
+determines how many times the simulation will report its progress
+(and not, as one might expect, the number of statistical batches as
+a history-by-history statistical analysis is used). With the
+<b><code> statistical accuracy sought </code></b> input one can
+make the calculation terminate when the specified uncertainty is reached
+for the cavity dose. Note, however, that after <b>\c ncase</b> histories
+the simulation does not continue \em until this uncertainty is obtained.
+With the <b><code>max cpu hours allowed</code></b> input one can limit the
+simulation time
+to some maximum time in hours. With the <b>\c calculation</b> input
+one determines the type of simulation:
+ - <b> \c first</b> means a fresh simulation (the default)
+ - with <b> \c restart</b> one can restart a previously performed simulation
+ - with <b>\c combine</b> one can combine the results of parallel runs. This is needed
+   when one or more of the parallel jobs has not finished so that the
+   results are not automatically combined or when one uses a simple RCO
+   for parallel runs (see below).
+ - the <b>\c analyze</b> option is used to read the simulation data from the
+   <b>\c .egsdat</b> file and output the results to the standard output.
+
+A \link EGS_JCFControl "job-control-file" (JCF) \endlink RCO is used by default
+for parallel runs. A JCF RCO understands in addition to the above
+the optional input
+\verbatim
+nchunk = number of simulation chunks (default is 10)
+\endverbatim
+In parallel runs the simulation is split into <b><code> nchunk*n_parallel</code></b>
+portions and each parallel job simulates one portion at a time until
+no histories are left. Note that a functioning file locking functionality
+is needed on the system in order to use a JCF-RCO. As some users have
+reported problems with file locking, one can force the use of a simple
+RCO by specifying <b><code>-s</code></b> on the command line. In this case,
+all parallel jobs will execute the same number of histories as specified
+in the input file.
+
+\section  common_mc Monte Carlo transport parameter control
+
+Monte Carlo transport parameters are common to all EGSnrc user codes.
+The input block to enter/modify transport parameters is shown below:
+
+\verbatim
+#  Modify here parameters that should be different from their defaults.
+:start MC transport parameter:
+ Global ECUT =                 0.521  #Global electron transport cutoff
+ Global PCUT =                 0.001  #Global photon transport cutoff
+ Global SMAX =                  1e10  #Global maximum step-size restriction for e- transport
+ ESTEPE =                       0.25  # Default is 0.25
+ XIMAX =                         0.5  # Default is 0.5, max. value is 1.
+ Boundary crossing algorithm = exact  #exact (default), PRESTA-I
+ Skin depth for BCA =              3  # Default value is 3 for exact boundary crossing
+ Electron-step algorithm = PRESTA-II  #PRESTA-II (default),PRESTA-I
+ Spin effects =                   On  #On (default),Off
+ Brems angular sampling =         KM  #Simple,KM (default)
+ Brems cross sections =           BH  #BH (default),NIST
+ Pair angular sampling =      Simple  #Off, Simple (default),KM
+ Triplet production =            Off  #On or Off (default)
+ Electron Impact Ionization =    Off  #On, Off (default), casnati, kolbenstvedt, gryzinski
+ Bound Compton scattering =    norej  #On, Off, norej (default)
+ Radiative Compton corrections = Off  #On,  Off (default)
+ Rayleigh scattering =            Off #On ,Off (default), custom
+ Photoelectron angular sampling = On  #On (default),Off
+ Atomic relaxations =             On  #On (default),Off
+ Photon cross sections =        xcom  #si, epdl, xcom (default) or user-supplied
+ Photon cross-sections output =  Off  #Off (default) or On
+ Compton cross sections = comp_xsections # user-supplied
+:stop MC transport parameter:
+\endverbatim
+
+Default values used in EGSnrc are set to provide an accurate simulation
+of the electron-photon transport, except for the exclusion of coherent
+(Rayleigh) scattering in low-energy photon problems. The reason for this is
+that until very recently users needed to especifically request the
+inclusion of Rayleigh cross sections in the PEGS4 data sets. Currently,
+Rayleigh cross sections are generated on the fly (see Rayleigh in PIRS-701).
+Default values may often only add time to your calculation. One can speed
+things up by turning them off. The user is referred to
+<a href=http://www.irs.inms.nrc.ca/EGSnrc/pirs702/node19.html>section 2.6</a>
+of the PIRS-702 user-code manual for a detailed description
+of these parameters.
+
+*/

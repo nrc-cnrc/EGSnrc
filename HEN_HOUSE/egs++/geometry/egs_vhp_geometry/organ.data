@@ -1,0 +1,175 @@
+114
+  0   12   Air
+  1    4   Skin
+  2    7   Sternum cortical
+  3    7   Cervical Spine cortical
+  4    7   Thorarcic Spine cortical
+  5    7   Lumbar Spine/Sacrum cortical
+  6    7   Ribs cortical
+  7    7   Pelvis cortical
+  8    3   Heart wall
+  9    2   Skeletal muscle
+ 10    3   Anterior nasal passage
+ 12    3   Liver
+ 14    3   Kidneys
+ 15    3   Pharynx
+ 16    3   Esophagus
+ 17    3   Posterior nasal passage
+ 18    3   Small intestine contents
+ 19    3   Larynx
+ 20    3   Mouth cavity
+ 22    1   Adipose (Fat)
+ 24   12   Gas (bowel)
+ 26    3   Lens of eye
+ 27    3   Thymus
+ 31    3   Spleen
+ 32    3   Bladder content (Urine)
+ 33    3   Feces
+ 34    3   Testes
+ 35    3   Prostate
+ 36    7   Cranium cortical
+ 37    3   Penis
+ 38    3   Gallbladder content
+ 39    3   Ovaries
+ 40    2   Bladder wall
+ 41    7   Upper left arm bone cortical
+ 42    7   Lower left arm bone cortical
+ 43    7   Upper right arm bone cortical
+ 44    7   Lower right arm bone cortical
+ 45    7   Upper left leg bone cortical
+ 46    7   Lower left leg bone cortical
+ 47    7   Upper right leg bone  cortical
+ 48    7   Lower right leg bone cortical
+ 55    3   Spinal chord
+ 56    3   Soft tissue
+ 59    3   Connective tissue (periarticular)
+ 60    3   Thyroid
+ 61    3   Gallbladder wall
+ 62    3   Stomach wall
+ 63    3   Small Intestine wall
+ 71    7   Jaw cortical bone
+ 72    3   Parotid salivary gland
+ 73    3   Colon content
+ 75    3   Uterus
+ 76    9   Hard Palate
+ 77    3   Brain
+ 79    3   Pancreas
+ 87    3   Sublingual salivary glands
+ 89    3   Colon wall
+ 90    5   Lungs
+ 91    3   Connective tissue (tendons)
+ 92    3   Submandibual salivary glands
+ 95    3   Adrenals
+ 97    3   Connective tissue (fascia)
+100    3   Breasts
+106    3   Optic nerve
+118    3   Lymphatic nodes
+119    3   Eyes
+122    6   Sternum Spongiosa
+123    5   Trachea
+124    3   Stomach content
+125    7   Teeth
+126    6   Lumbar Spine/Sacrum Spongiosa
+127    6   Ribs Spongiosa
+128    6   Pelvis Spongiosa
+129    6   Cranium Spongiosa
+130    6   Upper left arm bone  Spongiosa
+131    6   Lower left arm bone  Spongiosa
+132    6   Upper right arm bone  Spongiosa
+133    6   Lower right arm bone  Spongiosa
+134    6   Upper left leg bone   Spongiosa
+135    6   Lower left leg bone  Spongiosa
+136    6   Upper right leg bone   Spongiosa
+137    6   Lower right leg bone  Spongiosa
+138    6   Mandible Spongiosa
+139    7   Left clavicle cortical
+140    6   Left clavicle Spongiosa
+141    7   Right clavicle cortical
+142    6   Right clavicle Spongiosa
+143    7   Left scapula cortical
+144    6   Left scapula Spongiosa
+145    7   Right scapula cortical
+146    6   Right scapula Spongiosa
+147    7   Cervical Spine Spongiosa
+148    6   Thorarcic Spine Spongiosa
+150    8   Upper left arm bone YBM
+151    8   Lower left arm bone YBM
+152    8   Upper right arm bone YBM
+153    8   Lower right arm bone YBM
+154    8   Upper left leg bone YBM
+155    8   Lower left leg bone YBM
+156    8   Upper right leg bone YBM
+157    8   Lower right leg bone YBM
+166    9   Spine Cartilage
+167    9   Rib cage/stern/scap/clav Cartilage
+168    9   Pelvis Cartilage
+169    9   Skull Cartilage
+170    9   Upper left arm bone Cartilage
+171    9   Lower left arm bone Cartilage
+172    9   Upper right arm bone Cartilage
+173    9   Lower right arm bone Cartilage
+174    9   Upper left leg bone Cartilage
+175    9   Lower left leg bone Cartilage
+176    9   Upper right leg bone Cartilage
+177    9   Lower right leg bone Cartilage
+178    9   Jaw bone Cartilage
+13
+Water
+ADIPOSE TISSUE
+MUSCLE TISSUE
+SOFT TISSUE
+SKIN TISSUE
+LUNG TISSUE
+SPONGIOSA
+CORTICAL BONE
+YELLOW BONE MARROW
+CARTILAGE
+BONE MARROW
+TRABECULAR BONE
+Air
+
+###############################################################################
+#
+#  EGSnrc egs++ voxelized human phantom geometry organ data
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2008
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  This file defines organ media and names for the FAX06 and MAX06 voxelized
+#  human phantoms described in the following papers:
+#
+#  1. R Kramer, H.J. Khoury, J. W. Vieira and V. J. M. Lima,
+#     Phys. Med. Biol. 51, 3331-3346 (2006)
+#
+#  2. R. Kramer, H.J. Khoury, J.W. Vieira and I. Kawrakow,
+#     Phys.Med.Biol. 51, 6265-6289 (2006)
+#
+#  3. R. Kramer, H.J. Khoury, J.W. Vieira and I. Kawrakow,
+#     Phys.Med.Biol. 52, 6697-6716 (2007)
+#
+#  The actgual organ data of the phantom is not distributed with EGSnrc but may
+#  be obtained by contacting R. Kramer.
+#
+###############################################################################
+

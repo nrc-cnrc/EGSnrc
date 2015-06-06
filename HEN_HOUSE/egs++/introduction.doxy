@@ -1,0 +1,343 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ introductory documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+*/
+
+
+/*! \file introduction.doxy
+ *  \brief An egspp documentation file
+ *  \IK
+ */
+
+/*! \page introduction Introduction
+
+Every Monte Carlo simulation of a particle transport problem requires
+the following ingredients
+-# A particle source
+-# A geometry in which the particles are being transported
+-# Cross sections, interaction and transport methods of the particles
+   being simulated
+-# Means for scoring (accumulating) the results for the quantities of interest
+
+Some general purpose codes such as MCNP provide a monolithic code that takes
+care of all 4 aspects. This approach has the obvious advantage that
+the user only needs to learn the syntax of the input and data files controlling
+the program flow and can then immediately use the package without
+additional programming. However, if some aspect of the simulation can not
+be realized with the methods provided, it is typically very hard
+to extend the package with the necessary additions due to its size
+and complexity.
+The EGS series of electron/photon simulation packages, on the other side,
+only provide item 3 from the above list. It is the responsibility of
+the user to program the particle source, geometry and scoring for the
+task at hand. The advantage of this approach is that, due to the lightweight
+of EGS, one can very quickly put together EGS "user codes" for the
+simulation of a variety of problems. However, if the geometry and/or the
+particle source are complex, the creation of a corresponding user code
+may turn into a lengthy and tedious exercise. This drawback is somewhat
+alleviated by the fact that the EGSnrc package provides a series of
+user codes for a variety of tasks. Nevertheless, the availability of
+flexible and general geometry and particle source packages would greatly
+reduce the amount of work needed to perform simulations that can not
+be done with the standard set of user codes.
+
+The EGSnrc C++ class library \c egspp provides
+- A general purpose \ref Geometry "geometry package" that can be used to model
+a wide range of geometrical structures
+- A set of \ref Sources "particle sources" that can be used to simulate
+  all sources available with the RZ series of user codes and DOSXYZnrc.
+- A set of basic \link EGS_ScoringArray scoring classes \endlink
+- Base application classes for developing \link EGS_SimpleApplication
+  simple \endlink and \link EGS_AdvancedApplication advanced \endlink
+  applications. By deriving from these class it
+  is much easier to create a new C++ user code for EGSnrc
+- Miscellaneous other utility classes such as a \link EGS_RandomGenerator
+  random number generator\endlink, \link EGS_AliasTable alias table\endlink,
+  \link EGS_Input class \endlink for parsing an input file, an
+  \link EGS_Interpolator interpolator class\endlink, etc.
+
+Flexibility and extendibility were
+important factors in the design of the EGSnrc C++ class library.
+It should therefore be a relatively
+easy task to implement additional geometry and particle source classes,
+should the provided set be not able to model a certain simulation problem.
+
+For instructions on the installation of \c egspp see
+\ref installation "here".
+
+For more details on the design of \c egspp see \ref design "here".
+
+For a detailed description of the geometry package see the
+\ref Geometry "geometry module".
+
+For a detailed description of particle sources see the
+\ref Sources "sources module".
+
+For a description of the main \c egspp library see
+the \ref egspp_main "egspp module".
+
+For a description of the steps needed to program a simple
+EGSnrc C++ application see the
+<a href="tutor2pp_8cpp-example.html"> tutor2pp example.</a>
+
+For a description of the steps needed to program an advanced
+EGSnrc C++ application see the
+<a href="tutor7pp_8cpp-example.html"> tutor7pp example.</a>
+
+Discussion of the implementation of additional geometries
+can be found
+<a href="EGS__Box-example.html">here</a>,
+<a href="geometry_2example1_2geometry__example1_8cpp-example.html">
+here</a> and
+<a href="geometry_2example2_2geometry__example2_8cpp-example.html">
+here</a>.
+
+The implementation of a particle source class is discussed
+<a href="sources_2egs__point__source_2egs__point__source_8cpp-example.html">
+here</a>.
+
+*/
+
+/*! \page installation Installation
+
+The EGSnrc C++ class library is distributed with the rest of the
+EGSnrc system at the main EGSnrc
+<a href="http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/installation.html">
+distribution site</a>. Although in principle \c egspp can be used
+standalone (\em i.e. without the rest of the EGSnrc system),
+it is distributed and set up under the assumptiom that it is part
+of a complete EGSnrc distribution and that the main
+EGSnrc installation has been completed (\em i.e. the
+environment variables \c HEN_HOUSE, \c EGS_HOME and \c EGS_CONFIG
+are set, the search path includes the EGSnrc directories used
+to store executables and there is a config file pointed to by
+\c \$EGS_CONFIG, see PIRS-877 for more details).
+
+Before the main C++ class library \c egspp, the various
+geometry, source and shape DSOs, or any user code written
+in C++ can be compiled, a configuration for the C++ compiler used
+must be created. This is very similar to the configuration of the
+main system which results in the creation of a config file
+stored in \c \$HEN_HOUSE/specs and pointed to by
+\c \$EGS_CONFIG, which specifies the names
+of the Fortran and C compiler, compilation options, etc.
+Unlike the main config file, the C++ compiler configuration file is not created
+automatically during installation. This is due to the
+fact that we have access to only a very limited set of systems
+that have a Fortran and a C++ compiler installed and therefore
+could not test the system installation and configuration on a wide
+range of systems that resulted in the automatic configuration
+process for the main config file. Example C++ configuration files
+are included in the \c specs subdirectory of the distribution for
+- A 32 bit Linux system with the GNU Fortran and C++ compiler
+  (\c egspp_gcc_example.conf)
+- A 64 bit Linux system with the GNU Fortran and C++ compiler
+  (\c egspp_gcc64_example.conf).
+  The only difference to the 32 bit configuration is that the \c -fPIC
+  compilation option is required when building shared libraries.
+- A Linux system with the Intel Fortran and C++ compiler
+  (\c egspp_intel1_example.conf).
+- A Linux system with the PGI Fortran and C++ compiler
+  (\c egspp_pgf77_example.conf).
+  Note that if you use an older version of the PGI compiler and a newer
+  Linux system, the header files may be incompatible. In this case,
+  you will need to add \c -DMISSING to the compilation options for the
+  C++ compiler
+- A Solaris-x86 system with the GNU Fortran and C++ compiler
+  (<code>egspp_solaris-g++_example.conf</code>)
+- A Mac OSX system with the GNU Fortran and C++ compiler
+  (<code>egspp_osx_example.conf</code>)
+- A Windows NT, 2000 or XP system with the GNU Fortran and C++ compiler
+  (\c egspp_win2k_example.conf). Note that in order to use
+  this configuration, you will have to adjust the name of the directory
+  and the GNU compiler version to the directory of your GNU compiler
+  installation and its version number.
+- A Windows NT, 2000 or XP system with the GNU Fortran and the
+  Microsoft Visual C++ compiler (\c egspp_win2k-cl_example.conf).
+  Note, however, that this configuration only works if
+  the \c egspp libraries and the C++ EGSnrc application are
+  compiled with double precision floating point arithmetic
+  (there are random crashes when using single precision, which appear
+  to be due to incompatible math libraries). To use double precision,
+  you can either change the variable \c DEF1 in your \c egspp config file
+  to be
+  \verbatim
+  DEF1 = -DWIN32 -DMSVC -DFDOUBLE
+  \endverbatim
+  and define a variable
+  \verbatim
+  FDEFS = -DFDOUBLE
+  \endverbatim
+  in your main EGSnrc config file.
+  Alternatively, you can set this variables on the command line
+  when building the libraries and C++ applications using
+  \verbatim
+  make FDEFS="-DFDOUBLE" DEF1="-DWIN32 -DMSVC -DFDOUBLE"
+  \endverbatim
+
+If your system is one of these, you can simply copy
+the corresponding file to \c egspp_\$my_machine.conf,
+where \c \$my_machine is the name of the main configuration.
+Otherwise, a configuration has to be created by starting from
+one of the examples and adjusting the various options according
+to your compiler/system documentation. One of the variables that
+must be defined is the libraries needed when linking together
+Fortran and C++ code (\c fortran_libs). On a Linux/Unix system
+you can obtain these libraries using the script
+\c \$HEN_HOUSE/scripts/get_f77_libs1 by running it with
+the names of the Fortran and C++ compiler as arguments, \em e.g.
+\verbatim
+$HEN_HOUSE/scripts/get_f77_libs1 g77 g++
+\endverbatim
+and then copying the output to the \c fortran_libs variable in
+your configuration file.
+
+Once there is a C++ configuration file and the rest of the
+EGSnrc system is properly installed, simply go to the
+\c \$HEN_HOUSE/egs++ directory and type
+\verbatim
+make
+\endverbatim
+This will build the main \c egspp library and the various geometry
+and source DSOs distributed with the system.
+
+To compile the geometry viewer, a recent Qt library installation is
+required (version 3.2 or newer). If you have the Qt library installed,
+go to the \c \$HEN_HOUSE/egs++/view directory and execute \c make.
+Note that the Qt library and the \c egspp libraries must be compiled
+with the same C++ compiler. This is due to potentially different function
+name mangling schemes used by different compilers.
+This fact implies
+that Windows users must use the Microsoft Visual C++ compiler because
+the Qt library that we distribute with the system is compiled with it
+(unless, of course, the user licenses the Qt library for Windows from Trolltech
+and builds it with the compiler of their choice).
+We distribute the \c egspp libraries and the geometry viewer compiled
+with the Microsoft Visual compiler with the system in the
+\c V4_winstuff.egszip file. The libraries and viewer
+are installed in \c \$HEN_HOUSE/egs++/dso/win2k-cl
+and this path is added to the search path automatically by the
+installer. The consequence of this is that Windows users can not pick
+\c win2k-cl as the name of their main EGSnrc configuration.
+
+*/
+
+/*! \page design Design of the EGSnrc C++ class library
+
+The EGSnrc C++ class library is organized as a main library file
+(\c libegspp.so for Linux/Unix, \c egspp.dll for Windows,
+and \c libegspp.dylib for Mac OSX) and
+a series of small dynamic shared objects (DSO, also known as DLL in
+the Windows world), one
+for each geometry and source type. EGSnrc user codes written in C++
+link against the main library. Geometry and source DSOs are loaded
+dynamically as needed at run time using
+the EGS_Library class. In order this to work,
+each geometry DSO must provide a
+C-style function \c %createGeometry(), which, given a definition
+of a geometry stored in an EGS_Input object, creates
+an instance of the geometry class. In a similar way
+each particle source DSO must provide a C-style function
+\c %createSource() that can create instances of the
+particle source class provided by the DSO.
+The geometry and source of a simulation are specified in an input file.
+The input file is read in by an instance of the EGS_Input class
+and results in a tree-like structure of key-value pairs
+(for elementary properties)
+or keys and an arbitrary number of subkey-value pairs
+(for compound properties).
+The geometry information is stored in a compound property named
+<code>geometry definition</code>,
+the source information in a property named <code>source definition</code>.
+This input tree is then
+passed to a geometry factory, which, based on the values stored in
+certain sub-keys, loads the corresponding geometry DSO dynamically into memory
+and passes the necessary information to the geometry creation function of
+the library. In a similar way the information related to particle source
+is given to a source factory. The syntax of the input file is therefore
+an important part of the process of specifying a simulation geometry and/or
+particle source and is described more detail in the
+\link EGS_Input EGS_Input class documentation \endlink
+
+There are several motivations behind this design:
+- Most of the time only a small subset of the provided geometry and source
+  types are needed for a given simulation. It would therefore be wasteful
+  to have all geometry and source classes loaded in memory as it would
+  be the case with a single monolithic library. In addition, the larger
+  the number of geometries and sources becomes, the more memory
+  will be needed at run time
+- The user can easily extend the geometry and/or particle source packages
+  by adding a geometry or source derived from the base geometry or base
+  source classes. Such additional classes become immediately available
+  for use in any EGSnrc user code written in C++ when compiled into
+  DSOs, without the need to recreate the main library and or the user code.
+- Geometries and sources can be dynamically loaded by other applications,
+  not just EGSnrc C++ user codes. For instance, there is a geometry tester
+  provided with the distribution, which uses the just described
+  mechanism to dynamically construct a geometry object from the definition
+  in an input file and can then perform a number of tests (this is
+  very usefull when developing new geometries). The geometry viewer
+  provided with the distribution also dynamically constructs the
+  geometry to be visualized from the information stored in an inpout file.
+- It is planed to develop graphical user interfaces (GUI) for the
+  definition of geometries, sources, simulation parameters, etc.,
+  for future versions of \c egspp. Such GUIs can easily store the information
+  input by the user into instances of the EGS_Input class and then
+  use the mechanism of dynamically creating geometry, sources, and possibly
+  other classes needed by the simulation to construct the necessary
+  objects and run the simulation.
+
+*/
+//<a href=classEGS__Input.html#_details> EGS_Input class documentation</a>.
+//\page egspp_main Main \c egspp library
+/*! \defgroup egspp_main Main library
+  \brief All concrete geometry and particle source classes and
+  EGSnrc C++ applications link against the main library.
+
+  The main \c egspp library contains the
+  \link EGS_BaseGeometry base geometry class\endlink, the
+  \link EGS_BaseSource base source class\endlink, the
+  \link EGS_BaseShape base shape class\endlink, the
+  \link EGS_Application base application class \endlink for
+  developing EGSnrc C++ applications, as well as many utility
+  classes such as a \link EGS_RandomGenerator random number generator\endlink,
+  an \link EGS_AliasTable alias table\endlink,
+  an \link EGS_Interpolator interpolator\endlink,
+  \link EGS_ScoringArray scoring classes\endlink,
+  and many others that may be useful for developing MC transport simulation
+  applications. Concrete \ref Geometry "geometries" and
+  \ref Sources "particle sources" are not part of the main library,
+  they are loaded
+  dynamically at run time as needed using the EGS_Library class
+  from object factories (see \em e.g. EGS_ObjectFactory) based on
+  the information stored in an EGS_Input object.
+
+  For more details, see the documentation of the individual classes
+  in the library.
+
+*/

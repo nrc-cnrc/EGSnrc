@@ -1,0 +1,1231 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ geometry documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+*/
+
+
+/*! \file geometry.doxy
+ *  \brief Documents the geometry module.
+ *  \IK
+ */
+
+/*! \defgroup Geometry Geometry module
+  \brief This module contains classes that model various geometry types. If
+  you are looking for description of how to define a certain geometry
+  in your input file, click on the corresponding class and see the detailed
+  description.
+
+  \anchor geometry_anchor
+
+\ref geometry_general<br>
+\ref geometry_design<br>
+\ref geometry_common<br>
+\ref geometry_media<br>
+\ref geometry_implementing<br>
+\ref geometry_view<br>
+\ref geometry_examples<br>
+
+\section geometry_general General discussion
+
+There are many different ways to model a geometrical structure.
+One frequently used approach is to use simple solids such as boxes, spheres,
+cylinders, etc., and various boolean operations (unions, logical or, etc.) to
+put together more complicated objects (this approach is typically
+known as constructive solid geometry, CGS). Another way is to describe
+geometrical objects using the surfaces by which they are surrounded.
+In many cases first and second order surfaces or a limited set of
+relatively simple solids are sufficient
+to describe a wide range of even complex objects and therefore, at least
+in principle, these two approaches reduce the task of programming
+a general purpose geometry package to the programming of a relatively
+small number of geometrical methods. However, in practical simulations
+the region number of a particle must be known at all times and
+determining the index of a new region being entered may not be a trivial
+task. Many of the available geometry packages solve this problem
+by initiating a global search for the new region index, which makes
+the simulation extremely slow in situations with complex geometries and
+a large number of regions. For instance, it is well known that a MCNP
+simulation in a simple voxel-type geometry constructed from the MCNP
+geometry package is of the order of 1000 times slower compared to a
+special-purpose voxel geometry. An efficient way of crossing interfaces between
+different regions has therefore been given a high priority in the
+design and implementation of the EGSnrc geometry package.
+
+The EGSnrc geometry package considers geometrical structures at the
+highest possible level of abstraction: any object that is able to provide
+a certain set of geometry related methods is considered to be a
+"geometry". No distinction is made between surfaces or solids, or
+between simple geometrical structures and highly complex ones.
+An object is considered to be a geometry if it can provide answers
+to the following questions:
+-# Given a region index \f$i\f$, a
+   position \f$\vec{x}\f$, a direction \f$\vec{u}\f$ and an intended
+   transport distance \f$t\f$, will the particle trajectory intersect
+   a boundary? If yes, what is the new region index and what is the
+   distance to the boundary?
+   The method providing the answer to this questions will be referred to as
+   the \c howfar() method of a geometry and is specified by the
+   \link EGS_BaseGeometry::howfar() howfar() \endlink pure virtual function
+   of the EGS_BaseGeometry class.
+-# Given a region index \f$i\f$ and a position \f$\vec{x}\f$,
+   what is the nearest distance to a boundary in any direction ?
+   The method providing the answer to this questions will be referred to as
+   the \c hownear() method of a geometry and is specified by the
+   \link EGS_BaseGeometry::hownear() hownear() \endlink pure virtual function
+   of the EGS_BaseGeometry class.
+-# Is position \f$\vec{x}\f$ inside or outside the geometry.
+   The method providing the answer to this questions will be referred to as
+   the \c isInside() method of a geometry and is specified by the
+   \link EGS_BaseGeometry::isInside() isInside() \endlink pure virtual function
+   of the EGS_BaseGeometry class.
+-# In addition to the above, what
+   is the region index corresponding to \f$\vec{x}\f$ if it is inside ?
+   The method providing the answer to this questions will be referred to as
+   the \c isWhere() method of a geometry and is specified by the
+   \link EGS_BaseGeometry::isWhere() isWhere() \endlink pure virtual function
+   of the EGS_BaseGeometry class.
+-# What is the medium in region \f$i\f$?
+   The method providing the answer to this questions will be referred to as
+   the \c medium() method of a geometry specified by the
+   \link EGS_BaseGeometry::medium() medium() \endlink virtual function
+   of the EGS_BaseGeometry class.
+-# How many regions are there in this geometry?
+   The method providing the answer to this questions will be referred to as
+   the \c regions() method of a geometry specified by the
+   \link EGS_BaseGeometry::regions() regions() \endlink virtual function
+   of the EGS_BaseGeometry class.
+
+As a convention, all geometries numerate their regions
+between 0 and the number of regions minus one whereas a negative
+region index is considered to be outside of the geometry
+(\em i.e., if a particle would exit the geometry after crossing
+a boundary, the new region index returned is -1, or if the region index \f$i\f$
+is negative in questions 1 and 2, the geometry object can assume that it
+is known that the position \f$\vec{x}\f$ is outside of the geometry).
+Questions 1 and 2 are specified by the EGSnrc geometry interface specification
+except that now geometry objects must be able to determine the answer
+to these questions also for the situation of the position being outside
+(\em i.e. region \f$i\f$ is negative). This extension, together with
+3, 4 and 6 is necessary so that one can construct more complicated
+geometries from simpler geometries as will be seen below. Questions
+5 and 7 are necessary to completely decouple the geometry information
+from EGSnrc (when EGSnrc is compiled for use with the new C++ interface,
+all arrays present in the original version holding information on a
+region-by-region bases such as
+the medium index, the particle transport cutoff energies, etc., are
+turned into scalar quantities).
+
+To describe the various geometry objects provided by the egspp
+library, we will group them in two broad classes:
+-# Elementary or primitive geometries. These geometries are called
+   elementary not because it is easy to implement the required methods
+   but because these methods are implemented directly, without the
+   use of geometry methods of other objects.
+-# Composite geometries. The geometry methods of such geometries are
+   implemented using the geometry methods of the objects from which such
+   geometries are built using a certain type of logic to obtain
+   \c howfar(), \c hownear(), etc., from the corresponding methods
+   of the constituents. Composite geometries can be constructed from
+   elementary geometries and/or other composite geometries.
+
+\section geometry_design Design of the egspp geometry package
+
+Given the above discussion, all geometry objects in the egspp package
+are derived from the EGS_BaseGeometry class, which is part of the
+main egspp library. Concrete geometry classes are compiled into separate
+shared libraries (a.k.a. dynamic shared objects, DSO, or
+dynamically linkable library, DLL)
+that can be loaded dynamically at run time as needed.
+Each of these geometry libraries provides a
+\verbatim
+EGS_BaseGeometry *createGeometry(EGS_Input *inp)
+\endverbatim
+C-style function, the address of which is resolved when a geometry
+library is loaded and is used to create a geometry object from the
+input information stored in an EGS_Input object and pointed to by \a inp.
+The information stored in the input object is typically
+extracted from an input file that specifies the various aspects
+of a particle simulation. It is of course possible to create an
+EGS_Input object specifying one or more geometries
+by other means (\em e.g. within a GUI) and then
+use the geometry creation functions EGS_BaseGeometry::createGeometry() or
+EGS_BaseGeometry::createSingleGeometry() to obtain a pointer to the
+geometry object.
+
+The motivation behind this design is twofold:
+- Most of the time simulations are performed within a geometry that only
+  requires a single class or a limited set of classes to be modeled.
+  It would therefore be wasteful to link against a library containing
+  all geometry classes available in egspp.
+- Extendibility: it is easy to create a new geometry class by deriving
+  from EGS_BaseGeometry, implementing the necessary methods and the
+  \c createGeometry function and compiling the class into a shared
+  library that can immediately be used with the rest of the system.
+
+\section geometry_common Common geometry input syntax
+
+The definition of a geometry must be within a composite property
+\c geometry within another composite property
+<code>geometry definition</code> of the input object. This implies that
+if the geometry is defined in an input file, the file must contain a section
+\verbatim
+:start geometry definition:
+    :start geometry:
+       definition of a geometry
+    :stop geometry:
+:stop geometry definition:
+\endverbatim
+(see the \link EGS_Input EGS_Input documentation \endlink for
+details of the input file syntax. Note also that in what follows
+the input file syntax will be used to describe an EGS_Input property).
+If more than one geometry is to be constructed, there can be several
+\c geometry properties (\em i.e. several <code>:start geometry: :stop geometry:
+</code> sections). Each geometry definition must have a \c name property
+with a unique name value because names are used to refer to other geometries
+in \em e.g. the construction of composite geometries. Each geometry definition
+must also contain a \c library property, which be used to dynamically load
+the library that provides the geometry class being defined by the input.
+Library names
+must be given without their platform specific prefixes and suffixes
+(\em e.g. \c egs_planes stands for \c libegs_planes.so on Linux
+and \c egs_planes.dll on Windows). Some geometry libraries provide
+implementations for more than one geometry class. Fot such libraries
+a \c type property is required in the geometry definition to specify
+the type of the object being constructed. For instance,
+\verbatim
+:start geometry:
+    library = egs_planes
+    type    = EGS_Xplanes
+    name    = planes1
+    other input
+:stop geometry:
+\endverbatim
+is needed in the input file to specify that a geometry
+of type \c EGS_Xplanes with name \c planes1 should
+be constructed from the DSO \c egs_planes
+(\c other \c input stands for additional key-value pairs
+used by the \c EGS_Xplanes constructor).
+
+\subsection geometry_media Media definition
+
+All geometries can be filled with media by including a
+<code>media input</code>
+property within the the geometry definition.
+Because geometries can be used as building blocks for other geometries,
+which could fill the regions with media, it is not considered a
+mistake if a geometry does not define its media.  However,
+the user must be careful to eventually define media for all real regions
+of the simulation geometry to avoid program crashes.
+Many geometries can be filled with media with the following keys within
+the <code>media input</code> property:
+\verbatim
+:start media input:
+    media = list of media names as in the PEGS file
+    set medium = 2 or 3 integers
+    set medium = 2 or 3 integers
+    ...
+    set medium = 2 or 3 integers
+:stop media input:
+\endverbatim
+The \c media key defines the media names from the PEGS file that
+will be used for the simulation. When this key is encountered,
+all regions of a geometry are filled with the first medium in the
+list of media. There can be an arbitrary number of \c set \c medium
+keys (including zero, in which case the geometry will be homogeneous
+and filled with the first medium in the list of media).
+If 2 integers \f$i_1, i\f$ are found as input to a \c set \c medium key,
+then region \f$i_1\f$ is set to contain the medium with index \f$i\f$ in
+the list of media. If 3 integers \f$i_1, i_2, i\f$ are found, then
+all regions between \f$i_1\f$ and \f$i_2\f$ (inclusive)
+are set to the medium with index \f$i\f$ in the list of media.
+It is important to note that the medium index is the index in the
+list of media for the current geometry, not a global medium index. The
+geometry factory object, which is responsible for the construction of the
+various geometries, maintains a global list of media names defined in
+all geometries and automatically translates local media indices to
+global media indices. If, for instance, the first geometry defines the
+media names <code>H2O521ICRU, AL521ICRU, PB521ICRU</code> and the second
+geometry
+the media <code>PB521ICRU, H2O521ICRU, W521ICRU</code>, the global list
+of media after the definition of the second geometry will be
+<code>H2O521ICRU, AL521ICRU, PB521ICRU, W521ICRU</code>. In the definition
+of the first geometry one would refer to \c H2O521ICRU as medium 0,
+\c AL521ICRU as medium 1 and to \c PB521ICRU as medium 2 and they
+will get translated into global medium indices 0, 1 and 2. In the definition
+of the second geometry one would refer to \c PB521ICRU as medium 0,
+to \c H2O521ICRU as medium 1 and to \c W521ICRU as medium 2
+and they will get translated into global media 2, 0 and 4. It is important
+to note that region and medium indices use C-style numbering, \em i.e.
+they run between 0 and \f$n-1\f$ and not between 1 and \f$n\f$.
+
+The definition of media according to the above input syntax is
+performed in the \link EGS_BaseGeometry::setMedia(EGS_Input *)
+setMedia() \endlink function of the base geometry class.
+Some geometry classes re-implement this function to either
+prevent media definition (\em e.g. EGS_UnionGeometry, where
+the media definition should be done in each geometry of the union,
+not the union itself) or to implement a more convenient media
+definition scheme (\em e.g. EGS_NDGeometry or EGS_ConeStack).
+
+\section geometry_implementing Implementing new geometry classes
+
+The implementation of a new geometry class may become necessary
+for various reasons, \em e.g.
+-# The geometrical structure of interest can not be constructed using the
+   classes supplied with the egspp distribution.
+   <a href="EGS__Box-example.html">This page</a> provides a detailed
+   description of the implementation of the EGS_Box class that can
+   serve as a guide for developing a new geometry class.
+-# The user wants to avoid repeating the definition of the same geometry
+   in many input files specifying simulations that involve the same,
+   potentially complex geometry.
+   <a href="geometry_2example1_2geometry__example1_8cpp-example.html">
+   This page</a> shows how to implement a geometry DSO using
+   existing geometry classes for the sake of reducing or eliminating
+   input required to define a geometry. An alternative implementation
+   is found
+   <a href="geometry_2example2_2geometry__example2_8cpp-example.html">
+   here.</a>
+-# The user may want to re-implement some method of an existing
+   geometry class such as \em e.g. \link EGS_BaseGeometry::setMedia(EGS_Input*)
+   setMedia() \endlink to make the definition of media easier
+
+The geometry testing \link EGS_GeometryTester utility \endlink
+provided with the distribution is very helpful in the process of
+developing new geometries and has helped to find numerous bugs
+in the initial implementations of the various geometry classes
+provided with \c egspp.
+
+\section geometry_view The geometry viewer
+
+The geometry package comes with a viewer that can be used
+to look at a geometry defined in an input file in 3D.
+The viewer permits the user to zoom in and out, change
+the viewing position, change the colors of the various materials,
+make materials (semi-)transparent so that it is possible to see
+inside the geometry, etc. To view the geometry defined in the
+file \c some_file, execute the following command
+\verbatim
+egs_view some_file
+\endverbatim
+If the name of the file is omitted (or the viewer is started by clicking
+on its icon), the user is prompted to select a geometry definition file
+from a file selection dialog.
+After reading the geometry information, the geometry viewer
+attempts to automatically determine an optimum
+viewing position and zoom factor. This is done by first searching
+for a point that is inside the geometry and then sending out rays in
+all directions to check for the size of the geometry being viewed.
+The search for a point inside the geometry is done by default within
+a box of 100x100x100 about the origin using a step size of 1. If your
+geometry is outside of this box or if it is too small to be resolved
+by the search grid, the viewer will fail to find a point inside the
+geometry and will display an error message. If this problem
+occurs, one has to include the following section in the geometry definition
+file outside of the geometry definition section:
+\verbatim
+:start view control:
+    xmin = some input
+    xmax = some input
+    ymin = some input
+    ymax = some input
+    zmin = some input
+    zmax = some input
+:stop view control:
+\endverbatim
+to help the viewer find a point inside the geometry. Here,
+<code> xmin, xmax, ...</code> define the box in which it is searched
+for an inside point.
+
+The rendering of the 3D scene is done using the same geometry methods
+that are used in a particle simulation
+(\link EGS_BaseGeometry::howfar() howfar()\endlink,
+\link EGS_BaseGeometry::isWhere() isWhere()\endlink, etc.)
+by sending rays from the viewing position to the projection screen and
+calculating their intersections with the geometry. Although this approach is
+much slower than rendering a scene built from GL primitives and therefore
+requires a fairly fast CPU, it has the advantage of a thorough check
+of the geometry definition. If the scene rendered by the viewer looks
+OK and corresponds to what the user expects, the user can be fairly
+confident that the geometry definition has no mistakes.
+
+\image html view_controls.png "Geometry viewer controls"
+Most of the controls of the viewer should be intuitive except
+for the definition of clipping planes. By using one or more clipping planes one
+can remove portions of the geometry (everything between the plane
+and the viewing position is ignored), which may be helpful for viewing
+the inside regions of a geometry, viewing only portions of a geometry using
+a larger zoom factor, etc.  To define a clipping plane,
+click on the \c More... button. This will show an additional dialog
+containing a table.
+\image html clipping.png "Defining clipping planes"
+The four columns of the table define the x-, y- and
+z-components of the clipping plane normal and the clipping plane position
+\f$d\f$ (so that all points on the plane satisfy the equation
+ \f$a_x x + a_y y + a_z z = d\f$). Up to 10 clipping planes can be defined
+simultaneously. To also activate a clipping plane, you must select the
+left-most column containing the clipping plane number by clicking on it
+and then clicking on the \c Apply button below the table. To activate
+several clipping planes at once, hold down the shift key while selecting
+a plane row from the table.
+
+The 3D image just shown in the viewing window can be saved
+in a file in any format supported by the Qt library
+(typically jpeg, png, bmp, and various others) by clicking on
+the \c Save \c image button.
+
+\section geometry_examples Example geometries
+
+In the directory \c \$HEN_HOUSE/egs++/geometry/examples there are
+several example input files specifying geometries for the
+\c egspp geometry package. They are provided with the hope
+that they will help the user to understand the concepts and
+learn the syntax of the geometry package. Here is a brief
+description of the examples and screen shots for some of them:
+- The file \c hemisphere.geom defines a hemisphere using an
+  \link EGS_NDGeometry N-dimensional \endlink
+  geometry made of a \link EGS_cSpheres set of spheres\endlink
+  and a \link EGS_PlanesT set of planes\endlink.
+- The file \c pyramid.geom defines a \link EGS_PyramidT pyramid
+  \endlink with an irregular base
+  that is truncated at the two ends with a \link EGS_PlanesT set of planes
+  \endlink within an \link EGS_NDGeometry N-dimensional geometry\endlink.
+- The file \c rz.geom defines a RZ-geometry using an \link
+  EGS_NDGeometry N-dimensional geometry\endlink made of a
+  \link EGS_CylindersT set of cylinders\endlink and a
+  \link EGS_PlanesT set of planes\endlink. The geometry
+  defined is the same as in the \c cavrznrc_template.egsinp
+  file for the CAVRZnrc user code (a simple pancake ionization
+  chamber with graphite walls and air cavity).
+- The file \c rz1.geom defines the same geometry as \c rz.geom but
+  now using an \link EGS_EnvelopeGeometry envelope geometry\endlink
+  to inscribe a smaller cylinder into a larger
+  one, where both cylinders are made using EGS_ConeStack objects.
+- The file \c cones.geom demonstrates the use of the EGS_ConeSet class.
+  The user is encouraged to change the \c flag setting to see how this
+  changes the geometry.
+  \image html cones.png "The cone geometry defined in cones.geom"
+- The file \c rz_phi.geom shows the use of \link EGS_IPlanes I-planes
+  \endlink to divide a cylinder
+  into azimuthal segments
+  \image html iplanes.png "rz_phi.geom: using I-planes to divide a cylinder into segments"
+- The file \c xyz.geom defines an \link EGS_XYZGeometry XYZ-geometry
+  \endlink filled with water and two
+  inhomogeneities made of air and aluminum.
+- \c mushroom.geom defines a mushroom-like geometrical structure
+  using a \link EGS_CDGeometry CD-geometry \endlink with a
+  \link EGS_PlanesT set of planes\endlink as a base and
+  \link EGS_cSpheres spheres\endlink and \link EGS_CylindersT cylinders
+  \endlink inscribed into the two regions defined by the planes.
+- The file \c I6702.inp defines a \f$^{125}\f$I model 6702 brachytherapy seed
+  using a \link EGS_CDGeometry CD-geometry\endlink,
+  \link EGS_cSpheres sets of spheres\endlink for the rounded ends and
+  an \link EGS_EnvelopeGeometry envelope \endlink containing the
+  radioactive seeds for the middle portion
+  \image html I6702.png "Model 6702 brachytherapy seed defined in I6702.inp"
+  \image html I6702a.png "Model 6702 brachytherapy seed defined in I6702.inp"
+  The two different views were generated using the transparency and
+  clipping planes features of the geometry viewer.
+- The file \c rounded_ionchamber.geom defines an ionization chamber geometry
+  that has rounded ends using a \link EGS_CDGeometry CD-geometry\endlink
+  \image html chamber.png "An ionization chamber with rounded ends defined in rounded_ionchamber.geom"
+- The file \c chambers_in_box.geom takes the ion chamber described
+  in \c rounded_ionchamber.geom and inscribes it, together with two
+  transformed replicas, into a box of water using an envelope geometry
+  (see the title page).
+- The files \c seeds_in_xyz.geom and \c seeds_in_xyz1.geom
+  define an XYZ-geometry containing 12 replicas of the brachytherapy seed
+  specified in \c I6702.inp. The difference between the two is that
+  in the one case the XYZ-geometry is used as the envelope in an envelope
+  geometry whereas in the other case the XYZ-geometry is used as the base
+  geometry of a CD-geometry. The user will quickly notice that the
+  CD-geometry approach is substantially more efficient when
+  trying to view these geometries with the geometry viewer.
+- The file \c car.geom shows how to put together a car
+  from simpler structures (EGS_ConeStack objects are used for the
+  axis and wheels, \link EGS_Box boxes\endlink for the car body)
+  using a \link EGS_UnionGeometry union\endlink.
+  \image html car.png "A car geometry defined in car.png"
+- The file \c photon_linac.geom shows how one can quickly put together
+  a geometry model of the treatment head of a medical linear
+  accelerator. The geometry defined in this file is identical to
+  the 16 MV photon example that comes with the BEAMnrc distribution
+  (except that the monitor chamber is not included).
+  \image html linac1.png "A Linac geometry defined in photon_linac.geom"
+  \image html linac2.png "A different view of the geometry defined in photon_linac.geom
+
+Note that all figures shown in this section were generated
+with the \c egspp \ref geometry_view "geometry viewer".
+A more detailed description of the example geometries
+can be found \ref example_geometries "here".
+
+*/
+
+/*! \defgroup ElementaryG Elementary Geometries
+    \brief "Elementary" or "primitive" geometries are geometry classes that
+    implement their methods directly (\em i.e. without the help of other
+    geometries).
+
+    \ingroup Geometry
+
+    Elementary geometries included in the Geometry module are
+    for instance
+    \link EGS_PlanesT sets of parallel planes, \endlink
+    \link EGS_CylindersT sets of concentric cylinders, \endlink
+    \link EGS_cSpheres sets of concentric spheres, \endlink
+    \link EGS_PrismT prisms, \endlink
+    \link EGS_ConeStack a cone stack, \endlink etc.
+    Missing elementary geometries that might be useful and implemented
+    in future versions as the need arises are ellipsoids and
+    other missing second order surfaces, and a torus.
+
+*/
+
+/*! \defgroup CompositeG Composite Geometries
+    \brief Composite geometries are classes that implement their geometry
+    methods using the geometry methods of their constituent geometries
+    based on a certain type of logic.
+
+    \ingroup Geometry
+
+    Composite geometries can be build from \link ElementaryG
+    elementary geometries \endlink or from other composite geometries.
+    Examples of composite geometries include
+    \link EGS_NDGeometry N-dimensional geometries, \endlink
+    \link EGS_EnvelopeGeometry envelope geometries, \endlink
+    \link EGS_UnionGeometry geometry unions, \endlink etc.
+
+*/
+
+/*! \page example_geometries Example geometries
+
+This page describes the example geometry files included
+in the distribution and found in
+<code>\$HEN_HOUSE/egs++/geometry/examples</code>.
+
+
+\ref hemisphere_geom<br>
+\ref pyramid_geom<br>
+\ref rz_geom<br>
+\ref rz1_geom<br>
+\ref cones_geom<br>
+\ref rz_phi_geom<br>
+\ref xyz_geom<br>
+\ref mushroom_geom<br>
+\ref I6702_inp<br>
+\ref rounded_ionchamber_geom<br>
+\ref chambers_in_box_geom<br>
+\ref seeds_in_xyz_geom<br>
+\ref seeds_in_xyz1_geom<br>
+\ref car_geom<br>
+\ref linac_geom<br>
+
+\section hemisphere_geom A hemisphere
+
+file: <code>hemisphere.geom</code><br><br>
+\dontinclude hemisphere.geom
+This example geometry file describes a hemisphere from
+a \link EGS_cSpheres set of spheres\endlink
+and a \link EGS_PlanesT set of planes\endlink using an
+\link EGS_NDGeometry N-dimensional geometry\endlink.
+We start by defining the set of spheres to contain
+a single sphere with a radius of 1 with midpoint at the origin:
+\skipline :start geometry:
+\until stop geometry
+We then define a set of planes consisting of a single plane
+with a normal at 45 degrees with the 3 axis passing through the
+origin and defining a single region (the region to which the plane
+normal points to):
+\skipline :start geometry:
+\until stop geometry
+Now we can put the two geometry objects together using an
+N-dimensional geometry to form the hemisphere
+\skipline :start geometry:
+\until dimensions
+and fill the hemisphere with water.
+\until stop geometry
+
+Here is a view of this geometry
+\image html hemisphere.png
+and this is the complete geometry definition:
+\include hemisphere.geom
+
+\section pyramid_geom A phyramid
+
+file: <code>pyramid.geom</code><br><br>
+\dontinclude pyramid.geom
+This example defines a \link EGS_PyramidT pyramid
+\endlink with an irregular base
+that is truncated at the two ends with a \link EGS_PlanesT set of planes
+\endlink within an \link EGS_NDGeometry N-dimensional geometry\endlink.
+We start by defining the set of planes
+\skipline :start geometry:
+\until stop geometry
+We then construct a pyramid with its base in the z-plane at z=0:
+\skipline :start geometry:
+\until points
+\until 2,-2.05
+\skipline tip
+\until stop geometry
+Because this is a z-pyramid, the input to the \c points key is interpreted
+as a list of 2D positions in the z=0 xy-plane. Note also the line continuation
+using the \\ character.
+Now we can put the two geometry objects together using an
+N-dimensional geometry to form the truncated pyramid and fill
+the resulting single region with aluminum:
+\skipline :start geometry:
+\until stop geometry
+
+Here is a view of this geometry
+\image html pyramid.png
+and this is the complete geometry definition:
+\include pyramid.geom
+
+\section rz_geom An RZ-geometry
+
+file: <code>rz.geom</code><br><br>
+\dontinclude rz.geom
+
+This example geometry file defines an RZ-geometry using an \link
+EGS_NDGeometry N-dimensional geometry\endlink made of a
+\link EGS_CylindersT set of cylinders\endlink and a
+\link EGS_PlanesT set of planes\endlink. The geometry
+defined is the same as in the \c cavrznrc_template.egsinp
+file for the CAVRZnrc user code (a simple pancake ionization
+chamber with graphite walls and air cavity).
+
+We start by defining the 2 dimensions of the geometry: first s set
+of 4 parallel z-planes that define 3 regions
+\skipline :start geometry:
+\until stop geometry
+and then a set of 2 concentric z-cylinders that defines 2
+regions
+\skipline :start geometry:
+\until stop geometry
+The N-dimensional geometry formed from these two geometries will
+have 3x2=6 regions with the 3 regions that are within the inner
+cylinder having indeces 0,1 and 2 and the other 3 regions
+between the inner and outer cylinders having indeces 3,4,5
+(see the EGS_NDGeometry documentation for details on
+regions and region indexing). We therefore use the following
+\skipline :start geometry:
+\until stop geometry
+to form the N-dimensional geometry and fill the cavity with air.
+
+For the view of this geometry
+\image html rz1.png
+the walls were made siemi-transparent in the \ref geometry_view
+"geometry viewer".<br>
+Here is the complete geometry definition:
+\include rz.geom
+
+\section rz1_geom Alternative RZ-geometry definitions
+
+file: <code>rz1.geom</code><br><br>
+\dontinclude rz1.geom
+
+This example geometry file defines the same geometry as in
+the \ref rz_geom "previous example" but using an
+\link EGS_EnvelopeGeometry envelope geometry\endlink
+to inscribe a smaller cylinder into a larger
+one, where both cylinders are made using EGS_ConeStack objects:
+\skipline The outer
+\until The simulation
+\until stop geometry
+
+Yet another possibility to define this geometry would be to
+define the inner and outer cylinders using \link
+EGS_NDGeometry N-dimensional geometries\endlink
+instead of EGS_ConeStack objects and then still
+use an envelope to inscribe the inner cylinder into the
+outer cylinder, \em e.g.
+\verbatim
+########################## Define the inner cylinder
+:start geometry:
+    library = egs_planes
+    type    = EGS_Zplanes
+    name    = planes1
+    positions = 0.3 0.5
+:stop geometry:
+:start geometry:
+    library = egs_cylinders
+    type    = EGS_ZCylinders
+    name    = cyl1
+    radii   = 1
+:stop geometry:
+:start geometry:
+    library = egs_ndgeometry
+    name    = inner_cylinder
+    dimensions = planes1 cyl1
+    :start media input:
+        media = AIR521ICRU
+    :stop media input:
+:stop geometry:
+########################## Define the outer cylinder
+:start geometry:
+    library = egs_planes
+    type    = EGS_Zplanes
+    name    = planes2
+    positions = 0 0.8
+:stop geometry:
+:start geometry:
+    library = egs_cylinders
+    type    = EGS_ZCylinders
+    name    = cyl2
+    radii   = 1.3
+:stop geometry:
+:start geometry:
+    library = egs_ndgeometry
+    name    = outer_cylinder
+    dimensions = planes2 cyl2
+    :start media input:
+        media = 170C521ICRU
+    :stop media input:
+:stop geometry:
+############################ The chamber geometry
+:start geometry:
+    library   = egs_genvelope
+    name      = rz1a
+    base geometry = outer_cylinder
+    inscribed geometries = inner_cylinder
+:stop geometry:
+\endverbatim
+This definition requires more typing but it turns out
+that it provides the fastest simulation with EGSnrc. This is due to
+the fact that it has the fewest boundaries around which charged
+particles go into single scattering mode and also the range-rejection
+(or Russian Roulette) of particles that can not reach the cavity
+is more efficient. The user is encouraged to study the
+implementation details of the \link EGS_BaseGeometry::hownear()
+hownear()\endlink methods of the various geometries involved
+to understand why the last definition results in the best simulation
+speed.
+
+\section cones_geom A geometry using a set of cones
+
+file: <code>cones.geom</code><br>
+\dontinclude cones.geom
+
+This example geometry file demonstrates the use of an
+EGS_ConeSet object. Because a set of cones is unlimited
+and therefore not very well suited for viewing, we use
+an N-dimensional geometry with a sphere forming the second
+dimension to limit the extent of the geometry.
+We start by defining a set of 6 cones with the same apex
+and opening angles between 10 and 60 degrees
+\skipline :start geometry:
+\until stop geometry
+For the sake of brevity we skip the definition of the sphere
+(see previous examples) and only show the definition of the
+N-dimensional geometry
+\skip :start geometry:
+\skip :stop geometry:
+\skipline :start geometry:
+\until :stop geometry:
+We repeatedly use the <code>set medium</code> key to fill
+each region of the cones below the apex with a different medium.
+
+The geometry as defined above looks like this:
+\image html cones1.png
+If we would set the \c flag value to 0 in the definition of the
+cones, the geometry would look like this
+\image html cones2.png
+and for \c flag=2 like this
+\image html cones3.png
+(the red medium was made semi-transparent to be able to see the cones).
+
+Here is the complete geometry file:
+\include cones.geom
+
+\section rz_phi_geom A cylinder divided into segments
+
+file: <code>rz_phi.geom</code><br>
+\dontinclude rz_phi.geom
+
+This example geometry file shows the use of \link EGS_IPlanes I-planes
+\endlink to divide a cylinder into azimuthal segments.
+We define a set of concentric z-cylinders consisting of a single cylinder,
+\skipline :start geometry:
+\until stop geometry
+a set of 2 parallel z-planes defining a single region,
+\skipline :start geometry:
+\until stop geometry
+and a set of 6 I-planes defining 12 regions.
+\skipline :start geometry:
+\until stop geometry
+We then use a N-dimensional geometry made of the cone, the planes and
+the I-planes to form a geometry with 1x1x12=12 regions and fill
+each region  with a different medium to see the effect of the I-planes:
+\skipline :start geometry:
+\until stop geometry
+
+Here is how the geometry looks like
+\image html rz_phi_a.png
+and here is the complete definition
+\include rz_phi.geom
+
+\section xyz_geom A XYZ-geometry
+
+file: <code>xyz.geom</code><br>
+\dontinclude xyz.geom
+
+This example shows a \link EGS_XYZGeometry XYZ-geometry \endlink
+filled with water and two
+inhomogeneities made of air and aluminum.
+The XYZ-geometry class is in the same library as
+N-dimensional geometries and therefore we have to specify
+that we are constructing a XYZ-geometry instead of a
+N-dimensional geometry (the default):
+\skipline :start geometry:
+\until name      = xyz
+We then define the x-planes,
+\until x-planes
+the y-planes,
+\until y-planes
+and the z-planes
+\until 17 20
+We then define the media for this geometry
+\until media =
+This fills the entire geometry with the first medium (medium 0).
+We then use <code>set medium</code> keys to define the
+inhomogeneities:
+\until set medium
+\skipline set medium
+This fills all regions with x-indeces 4 or 5, y-indeces 4 or 5 and
+z-indeces between 4 and 10 with medium 1 (AL700ICRU) and then
+all regions with x-indeces 5 or 6, y-indeces 5 or 6 and
+z-indeces between 4 and 10 with medium 2 (AIR700ICRU)
+(\em i.e. some of the regions originally set to aluminum
+get refilled with air by the second <code>set medium</code> key).
+
+Here is a view of this geometry
+\image html xyz_a.png
+Despite the fact that the water has been made semi-transparent, one
+does not see the inhomogeneities. This is due to the fact that
+there are many boundaries (corresponding to reflection/transmission
+surfaces) crossed by the rays used to render the image before they
+reach the inhomogeneities. At each such boundary the ray becomes weaker
+due to reflection and absorption and is essentially completely
+absorbed by the time it reaches the inhomogeneities. Unless, of course,
+one makes the water completely transparent, in which case one
+sees the aluminum- and air-filled regions only:
+\image html xyz_b.png
+
+Here is the complete geometry definition
+\include xyz.geom
+
+\section mushroom_geom A mushroom geometry
+
+file: <code>mushroom.geom</code>
+\dontinclude mushroom.geom
+
+This example geometry file defines a mushroom-like geometrical structure
+using a \link EGS_CDGeometry CD-geometry \endlink with a
+\link EGS_PlanesT set of planes\endlink as a base and
+\link EGS_cSpheres spheres\endlink and \link EGS_CylindersT cylinders
+\endlink inscribed into the two regions defined by the planes.
+We first define a set of parallel z-planes,
+\skipline :start geometry:
+\until stop geometry
+a sphere filled with \c medium1,
+\skipline :start geometry:
+\until stop geometry
+and a z-cylinder filled with \c medium2
+\skipline :start geometry:
+\until stop geometry
+We then use CD-geometry formed by the two regions of the planes
+as a base and the sphere inscribed into region 1 and the cylinder
+into region 0:
+\skipline :start geometry:
+\until stop geometry
+
+The resulting geometry looks like this
+\image html mushroom.png
+and the complete definition is here:
+\include mushroom.geom
+
+\section I6702_inp A brachytherapy seed
+
+file: <code>I6702.inp</code>
+\dontinclude I6702.inp
+
+This example geometry file defines a \f$^{125}\f$I model 6702 brachytherapy
+seed using a \link EGS_CDGeometry CD-geometry \endlink.
+The base geometry of the CD-geometry is a set of planes
+that defines 3 regions:
+\skipline :start geometry:
+\until stop geometry
+The top region (between the planes at -0.225 and -0.175) will
+be limited by inscribing a sphere filled with titanium:
+\skipline :start geometry:
+\until stop geometry
+Because the sphere only applies between the planes of region 0
+of the set of planes, it becomes a hemisphere that is the top
+rounded end of the seed. The geometry that we will inscribe
+into the middle region of the set of planes (between the planes at
+-0.175 and 0.175) will have the 3 radiactive resin spheres and
+the titanium walls. To form this geometry, we start by constructing a
+set of 2 cylinders filling the inner region with air and the outer
+region with titanium:
+\skipline :start geometry:
+\until stop geometry
+We then make the 3 radiactive spheres
+\until stop geometry
+\until stop geometry
+\until stop geometry
+and then inscribe the 3 spheres into the set of cylinders named
+\c cladding using an envelope geometry:
+\skipline :start geometry:
+\until stop geometry
+The bottom region of the set of planes (between 0.175 and 0.225)
+will be filled with another titanium sphere in a way similar to the
+top region:
+\skipline :start geometry:
+\until stop geometry
+We now have all geometries to be inscribed into the set of
+planes as a CD-geometry:
+\skipline :start geometry:
+\until stop geometry
+
+This is a view of the resulting brachytherapy seed with
+the titanium and air media made semi-transparent:
+\image html i6702.png
+and here is an alternative view with 2 clipping planes
+with normals along the z- and x-axis passing through the origin
+used to remove 3/4 of the geometry for better viewing the inside:
+\image html i6702a.png
+
+This is the complete geometry definition file, which has
+been created by Ernesto Mainegra (Note the
+<code>view control</code> input at the end. Without
+this input the viewer is not able to automatically find the
+geometry because it is too small):
+\include I6702.inp
+
+\section rounded_ionchamber_geom An ion chamber with rounded ends
+
+file: <code>rounded_ionchamber.geom</code><br>
+\dontinclude rounded_ionchamber.geom
+
+The file \c rounded_ionchamber.geom defines an ionization chamber geometry
+that has rounded ends using a \link EGS_CDGeometry CD-geometry\endlink.
+We use a set of 4 planes that defines 3 regions for the base of the
+CD-geometry:
+\skipline :start geometry:
+\until stop geometry
+In the bottom part (between the planes at -2 and -1) we will
+be inscribing a N-dimensional geometry that is made from a
+set of spheres and a set of cylinders. Here are the spheres:
+\skipline :start geometry:
+\until stop geometry
+and here the cylinders:
+\skipline :start geometry:
+\until stop geometry
+When combined into a N-dimensional geometry they will form a
+geometry with 2x3=6 regions. Regions 0 is within the innermost
+cylinder and the inner sphere, region 1 within the innermost
+cylinder and the spherical shell between the outer and inner spheres.
+These two regions are filled with aluminum to describe the central
+electrode of the chamber in the bottom part. Region 2 is between
+the second and first cylinders but within the inner sphere. This
+region belongs to the air cavity. All other regions are part of
+the chamber wall. The definition of the N-dimensional geometry
+describing the top part of the chamber therefore looks like this:
+\skipline :start geometry:
+\until stop geometry
+(note that I was confused about top and bottom when making this
+ geometry file and therefore the geometry names suggest that
+ the top part is the bottom and vice versa).
+In the top part of the chamber there is no central electrode.
+It is therefore sufficient to inscribe the following set of spheres into
+the bottom region of the planes (the region between the planes
+at 1 and 2):
+\skipline :start geometry:
+\until stop geometry
+The middle portion of the chamber is simply made from a set of
+3 cylinders for the central electrode, the air cavity and the
+wall:
+\skipline :start geometry:
+\until stop geometry
+The final geometry is then formed as a CD-geometry
+with the first set of planes as a base and the
+N-dimensional geometry put into region 0, the set of
+cylinders into region 1 and the set of spheres into region 2:
+\skipline :start geometry:
+\until stop geometry
+
+Here are different views of the chamber
+\image html rounded1.png
+\image html rounded2.png
+and here is the complete definition file
+\include rounded_ionchamber.geom
+
+\section chambers_in_box_geom Ion chambers in a box
+
+file: <code>chambers_in_box.geom</code><br>
+\dontinclude chambers_in_box.geom
+
+This example file puts 3 transformed copies of the same chamber geometry
+as in the \ref rounded_ionchamber_geom "previous example"
+into a \link EGS_Box box\endlink of water using the functionality
+provided by \link EGS_EnvelopeGeometry envelope geometries\endlink
+and \link EGS_TransformedGeometry transformed geometries\endlink.
+After defining the complete chamber geometry (named \c chamber and
+its definition not shown here for the sake of brevity),
+we define a 10x10x10 box filled with water
+\skip The box filled with water
+\skipline :start geometry:
+\until stop geometry
+and then use a transformed geometry to create 2 replicas of
+the original chamber
+\skipline :start geometry:
+\until stop geometry
+\skipline :start geometry:
+\until stop geometry
+With the help of an envelope geometry we then inscribe
+the original chamber and the 2 transformed copies into the
+water box:
+\skipline :start geometry:
+\until stop geometry
+
+A view of this geometry with semi-transparencies is
+shown here
+\image html c_in_box.png
+An alternative view can be seen on the main page.
+The complete definition is here
+\include chambers_in_box.geom
+
+\section seeds_in_xyz_geom Brachytherapy seeds in a XYZ geometry
+
+file: <code>seeds_in_xyz.geom</code><br>
+\dontinclude seeds_in_xyz.geom
+
+This file demonstrates that one can inscribe a complex geometry
+into another complex geometry using an
+\link EGS_EnvelopeGeometry envelope geometry\endlink.
+We use the brachytherapy seed geometry discussed in
+\ref I6702_inp "this example" as the complex geometry
+to be inscribed. For the sake of brevity
+the definition is not shown here. We then construct another
+complex geometry. In this example we use a homogeneous XYZ-geometry,
+but the XYZ-geometry could also have been heterogeneous:
+\skip now define a XYZ-geometry to serve as the
+\skipline :start geometry:
+\until :stop geometry:
+We then create 12 copies of the seed geometry named \c seed
+(only the first 2 definitions are shown) using a
+\link EGS_TransformedGeometry transformed geometry\endlink:
+\skipline :start geometry:
+\until :stop geometry:
+\skipline :start geometry:
+\until :stop geometry:
+and then inscribe these 12 copies into the XYZ geometry:
+\skip now define the final geometry
+\skipline :start geometry:
+\until :stop geometry:
+
+A view of the geometry where the water has been made transparent
+and a strong zoom factor has been applied so that only a few
+of the seeds are seen (the seeds are very small compared to the
+overal geometry size) is shown here:
+\image html seeds_in_xyz.png
+
+The complete definition is here:
+\include seeds_in_xyz.geom
+
+\section seeds_in_xyz1_geom Better implementation of seeds in a XYZ geometry
+
+file: <code>seeds_in_xyz1.geom</code><br>
+\dontinclude seeds_in_xyz1.geom
+
+When trying to view the geometry of the
+\ref seeds_in_xyz_geom "previous example" one quickly notices
+that the rendering of the image is quite slow. This is due to the
+fact that by using an envelope geometry all 12 seeds must be checked
+for intersections when tracing the light rays through the geometry
+and because the seed geometry is quite complex this process
+is slow. A better way of defining this geometry is to use
+a \link EGS_CDGeometry CD-geometry\endlink with the XYZ-geometry
+as its base geometry and to then inscribe each seed into the
+XYZ region corresponding to its position. In this way
+a given seed will only be checked for intersections if
+the light ray (or a particle trajectory) enters the
+XYZ region in which the seed is placed.
+To realize this idea we create the seed (not shown) and the
+XYZ geometry (not shown). We then create a
+\link EGS_Space space geometry\endlink that fills the
+entire space and use envelope geometries to inscribe the
+transformed seed copies into the space geometry (only the first
+2 are shown):
+\skip a space geometry to use as an envelope
+\skipline :start geometry:
+\until :stop geometry:
+\skipline :start geometry:
+\until :stop geometry:
+\skipline :start geometry:
+\until :stop geometry:
+We then inscribe the seeds surounded by the space geometry
+into the corresponding regions of the XYZ-geometry forming
+a CD-geometry:
+\skipline now define the final geometry
+\until :stop geometry:
+It is necessary to first put the seeds into an infinite envelope
+because otherwise the XYZ-regions in which the seeds are inscribed
+will vecome void outside of the seeds. This results from
+the logic used to implement the geometry methods of a
+CD geometry (see the EGS_CDGeometry class documentation).
+
+The much better speed is noticable when rendering the
+image in the viewer. No image is shown as it is the same as
+in the \ref seeds_in_xyz_geom "previous example".
+
+The complete definition is here:
+\include seeds_in_xyz1.geom
+
+\section car_geom A car geometry
+
+file: <code>car.geom</code><br>
+\dontinclude car.geom
+
+This example geometry file models a car that looks like this:
+\image html car1.png
+We start by creating the front wheels of the car using a
+\link EGS_ConeStack cone stack\endlink with the wheel axis
+along the x-axis:
+\skipline :start geometry:
+\until stop geometry
+The first and last layers are the wheels and the second layer
+the wheel axis. We crfeate the rear wheels as a transformed copy of
+the front wheels:
+\skipline :start geometry:
+\until stop geometry
+We will model the car body as two boxes:
+\until stop geometry
+\until stop geometry
+The lights are modeled as cone stacks and not shown here for the
+sake of brevity. The complete car is the \link EGS_UnionGeometry union\endlink
+of the front and rear wheels, the car body and the lights:
+\skip combine everything into a union
+\skipline start geometry
+\until stop geometry
+We then put the whole car into a vacuum box using an
+envelope geometry.
+
+The complete geometry definition file is here
+\include car.geom
+
+\section linac_geom A linear accelerator geometry
+
+file: <code>photon_linac.geom</code><br>
+\dontinclude photon_linac.geom
+
+This example demonstrate how the egspp geometry package
+can be used to model a complex geometry such as the treatment head
+of a medical linear accelerator (linac). The linac geometry,
+which is the same as the geometry defined in the
+<code>EX16MVp.egsinp</code> example input file distributed
+with BEAMnrc, is
+modeled as a \link EGS_CDGeometry CD-Geometry\endlink. The base
+geometry of the CD-Geometry is a \link EGS_ConeStack cone stack\endlink.
+The cone stack can be used to define most of the linac geometry.
+After specifying that we are using a cone stack from the
+\c egs_cones geometry DSO, the axis and the name of the cone stack
+\skipline :start geometry:
+\until name    = linac
+we start adding the various layers that make up the linac geometry:
+the bremsstrahlung target,
+\skipline start layer
+\until stop layer
+the air between the target and the primary collimator,
+\skipline start layer
+\until stop layer
+the primary collimator,
+\skipline start layer
+\until stop layer
+etc., until we reach the layer for the mirror. At this point
+we simply define it as an air cylinder but will later inscribe
+two planes into this region to create the mirror when defining
+the CD-geometry
+\skip placeholder for the mirror
+\skipline start layer
+\until stop layer
+In a similar fashion we define placeholder layers for the x- and
+y-jaws. After finishing the cone stack definition, we
+define the mirror planes:
+\skip the mirror planes
+\skipline start geometry
+\until stop geometry
+We use a set of 4 parallel planes that defines 3 regions. We
+make the left and right regions very large but after inscribing
+this geometry into the placeholder region of the cone stack within
+a CD-geometry, the air left and right of the mirror will be restricted
+to the radius of the placeholder region. Note that the mirror
+is made much ticker for better visibility, the actual thickness
+is defined in the commented out \c positions key.
+
+The jaws can be modeled as a \link
+EGS_PlaneCollection plane collection\endlink. We use 4 planes
+to define the 3 regions (left jaw, air, right jaw). As with the
+mirror, we make the left and right regions very large but they
+will be restricted to the proper size by the radius of the
+placeholder cone stack layer when inscribed into it. Here is
+the definition of the x-jaws:
+\skipline start geometry
+\until stop geometry
+The definition of the y-jaws is very similar and not shown.
+
+The final linac geometry is a CD-Geometry with the cone stack as
+a base and the mirror, x-jaws and y-jaws geometries inscribed into
+the appropriate regions:
+\skip the final accelerator
+\skipline start geometry
+\until stop geometry
+The \f$i\f$'th region in the \f$j\f$'th layer of a cone stack
+has a region index \f$i + j n_{\rm max}\f$, where
+\f$n_{\rm max}\f$ is the maximum number of regions
+from all layers in the cone stack. In our example the
+maximum number of regions in any layer is 3 (see \em e.g. layer 4
+of the complete definition below). The mirror is inscribed into the
+9'th cone stack layer, which consists of a single region
+and therefore the region index to inscribe the mirror is 27.
+In the same way the x-jaws are inscribed into the 11'th layer and
+the j-jaws into the 13'th and therefore the corresponding region indeces
+are 33 and 39.
+
+This is a view of this linac geometry after the air has been made
+completely transparent.
+\image html linac_s1.png
+One can of course zoom-in and use clipping planes to better view
+just portions of the geometry as shown in this close-up of the
+flattening filter
+\image html linac_s2.png
+
+The complete definitions is here:
+\include photon_linac.geom
+
+*/

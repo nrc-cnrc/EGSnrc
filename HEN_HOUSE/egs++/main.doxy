@@ -1,0 +1,74 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+*/
+
+
+/*! \file main.doxy
+ *  \brief An egspp documentation file
+ *  \IK
+ */
+
+/*! \mainpage notitle
+
+  <center>
+  <h1>The EGSnrc C++ class library</h1>
+  <h2>Report PIRS-898</h2>
+  <h3>Iwan Kawrakow, Ernesto Mainegra-Hing, Frederic Tessier and Blake Walters</h3>
+  </center>
+  <br>
+
+  \image html cover1a.png
+
+  <br>
+  \ref introduction<br>
+  \ref installation<br>
+  \ref design<br>
+  \ref egspp_main<br>
+  \ref Geometry "The geometry module"<br>
+  \ref Sources "Particle sources"<br>
+  <a href="tutor2pp_8cpp-example.html">Developing a simple EGSnrc C++
+  application</a><br>
+  <a href="tutor7pp_8cpp-example.html">Developing an advanced EGSnrc C++
+  application</a><br>
+  \ref geometry_implementing "Extending the geometry package"<br>
+  <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
+  Implementing a new source</a><br><br>
+  <b>EGSnrc C++ user codes</b>
+    - \ref cavity
+    - \ref egs_chamber
+    - \ref egs_fac
+    - \ref egs_cbct
+
+  <br><br><b>Note</b> If you use the EGSnrc C++ class library (or any code that uses it),
+  please cite this report as <em>I. Kawrakow, E. Mainegra-Hing, F. Tessier and B.R.B. Walters,
+  The EGSnrc C++ class library, NRC Report PIRS-898 (rev A), Ottawa, Canada, 2009. The \c egs_chamber
+  documentation was prepared based on J. Wulff's user-manual (unpublished) and the section about
+  positioning-induced dose uncertainties and the corresponding input example were
+  graciously contributed by H. Bouchard</em>.
+*/

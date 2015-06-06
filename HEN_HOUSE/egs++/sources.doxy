@@ -1,0 +1,171 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ particle source documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+*/
+
+
+/*! \file sources.doxy
+ *  \brief Documents the particle sources module
+ *  \IK
+ */
+
+/*! \defgroup Sources Particle sources
+  \brief This module contains classes that model
+  particle sources. If you are looking for description of how to define a
+  certain particle source in your input file, click on the corresponding
+  class and see the detailed description.
+
+\section sources_general General discussion
+
+A particle source is an object that is able to deliver the
+charge \f$q\f$, energies \f$E\f$, positions \f$\vec{x}\f$, directions \f$\vec{u}\f$ and
+statistical weights \f$w\f$ of
+particles distributed according to a certain probability distribution,
+given a random number generator. Based on this abstraction, particle
+sources in the EGSnrc class library are classes derived from
+\link EGS_BaseSource an abstract
+base source class \endlink, which specifies the interface to a particle source
+object. The main method in this interface is the
+\verbatim
+getNextParticle()
+\endverbatim
+function, which takes a random number generator object as input and
+returns the parameters of a single particle.
+
+Apart from a phase-space file particle source, all other sources provided
+in the RZ series of EGSnrc user codes, in DOSXYZnrc and in BEAMnrc,
+are sources which consist of two independent objects: the first object
+determines the particle energy, the other object the particle position,
+direction and statistical weight. Because of this, there is a
+partial specification of the base source class, called
+EGS_BaseSimpleSource, that consists
+of a spectrum object and a virtual function that
+determines \f$\vec{x}, \vec{u}\f$
+and \f$w\f$. Several particle sources are derived from EGS_BaseSimpleSource
+so that they can use any spectrum together with their method for picking
+positions, directions and energies. In addition to the particle
+source class handling phase-space files and the sources derived from
+EGS_BaseSimpleSource, which can be considered as "elementary"
+or "primitive" sources in analogy to the elementary geometries
+(\em i.e. they implement the \c getNextParticle method directly,
+there are two "composite" sources, where the \c getNextParticle method
+is implemented using the \c getNextParticle methods of their
+constituents. It is worth noting that, unlike the sources used
+in the RZ series of EGSnrc user codes, DOSXYZnrc and BEAMnrc, all
+particle sources in the EGSnrc C++ class library are completely
+decoupled from the geometry. During the simulation
+particles are taken from the source and it is checked if the particle
+position is already
+inside the simulation geometry using its
+\link EGS_BaseGeometry::isWhere() isWhere() \endlink method.
+If the position is inside, or if the particle trajectory intersects
+the geometry (determined using the
+\link EGS_BaseGeometry::howfar() howfar() \endlink geometry method
+called with an outside region index), the particle is put on the
+EGSnrc particle stack with the just determined region index and
+its transport through the geometry is simulated. This approach
+permits any source to be used with any geometry in any user code
+using the EGSnrc C++ class library.
+
+\section sources_design Design of the egspp particle sources package
+
+All particle sources in the egspp package
+are derived from the EGS_BaseSource class, which is part of the
+main egspp library. Classes modeling concrete particle sources
+are compiled into separate
+shared libraries (a.k.a. dynamic shared objects, DSO, or
+dynamically linkable library, DLL)
+that can be loaded dynamically at run time as needed.
+Each of these sources libraries provides a
+\verbatim
+EGS_BaseSource *createSource(EGS_Input *inp)
+\endverbatim
+C-style function, the address of which is resolved when a source
+library is loaded and is used to create a source object from the
+input information stored in an EGS_Input object and pointed to by \a inp.
+The information stored in the input object is typically
+extracted from an input file that specifies the various aspects
+of a particle simulation. It is of course possible to create an
+EGS_Input object specifying one or more particle sources
+by other means (\em e.g. within a GUI) and then
+use the source creation functions EGS_BaseGeometry::createSource()
+to obtain a pointer to the particle source object.
+
+The motivation behind this design is twofold:
+- Most of the time simulations are performed with a particle source that only
+  requires a single class or a limited set of classes to be modeled.
+  It would therefore be wasteful to link against a library containing
+  all particle source classes available in egspp.
+- Extendibility: it is easy to create a new source class by deriving
+  from EGS_BaseSource (or EGS_BaseSimpleSource), implementing the
+  necessary methods and the
+  \c createSource function and compiling the class into a shared
+  library that can immediately be used with the rest of the system.
+
+\section sources_common Common sources input syntax
+
+Because the design of the particle sources package is very similar
+to the design of the \ref geometry_anchor "geometry package",
+the input syntax of an input object specifying particle sources
+follows the same principles as the geometry package explained in
+section \ref geometry_common a particle source is specified with
+a \c source composite property within a <code>source definition</code>
+property. Each source definition must define a name for the source
+using a \c name key and the library in which the source is found
+using a \c library key. For instance,
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_point_source
+        name = some_name
+        other input
+    :stop source:
+    simulation source = some_name
+:stop source definition:
+\endverbatim
+placed in the input file controlling the simulation will
+result in the creation of a point source named \c some_source
+from the library \c egs_point_source.
+
+\section sources_create Creating a new particle source
+
+The list of particle sources provided with \c egspp is by no means
+exhaustive. We will be adding additional sources as the need arrives.
+In the meantime, if your simulation problem requires a source not
+available with the current version of \c egspp, you will need to
+create your own particle source DSO.
+This is not very hard as demonstrated by
+<a href="sources_2egs__point__source_2egs__point__source_8cpp-example.html">
+this example</a>.
+
+\todo Add a general simulation source, \em i.e. a source that takes
+      particles from some other source, simulates their transport
+      through a geometry and collects the particles exiting/entering
+      some region in space, and returns these when asked for a particle.
+
+*/

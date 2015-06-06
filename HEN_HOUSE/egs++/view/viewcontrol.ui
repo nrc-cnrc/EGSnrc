@@ -1,0 +1,1051 @@
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><!--
+###############################################################################
+#
+#  EGSnrc egs++ geometry viewer view control user interface
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#                   Frederic Tessier
+#
+###############################################################################
+-->
+<class>GeometryViewControl</class>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>GeometryViewControl</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>570</width>
+            <height>445</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>View Controls</string>
+    </property>
+    <hbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout5</cstring>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox18</cstring>
+                    </property>
+                    <property name="title">
+                        <string>Light</string>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QCheckBox">
+                            <property name="name">
+                                <cstring>moveLight</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Move Light with viewer</string>
+                            </property>
+                            <property name="checked">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                        <widget class="QGroupBox">
+                            <property name="name">
+                                <cstring>lightPosGroup</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                            <property name="title">
+                                <string>Light position</string>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>lightX</cstring>
+                                    </property>
+                                </widget>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>lightY</cstring>
+                                    </property>
+                                </widget>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>lightZ</cstring>
+                                    </property>
+                                </widget>
+                                <spacer>
+                                    <property name="name">
+                                        <cstring>spacer6</cstring>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property name="sizeType">
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property name="sizeHint">
+                                        <size>
+                                            <width>16</width>
+                                            <height>20</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>applyLight</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Apply</string>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                        <widget class="QGroupBox">
+                            <property name="name">
+                                <cstring>groupBox17</cstring>
+                            </property>
+                            <property name="title">
+                                <string>Ambient light</string>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QSlider">
+                                    <property name="name">
+                                        <cstring>ambientLight</cstring>
+                                    </property>
+                                    <property name="maxValue">
+                                        <number>100</number>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property name="tickmarks">
+                                        <enum>Below</enum>
+                                    </property>
+                                    <property name="tickInterval">
+                                        <number>10</number>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                    </vbox>
+                </widget>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox20</cstring>
+                    </property>
+                    <property name="title">
+                        <string>Material colors</string>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout9</cstring>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QComboBox">
+                                    <property name="name">
+                                        <cstring>materialCB</cstring>
+                                    </property>
+                                    <property name="minimumSize">
+                                        <size>
+                                            <width>120</width>
+                                            <height>0</height>
+                                        </size>
+                                    </property>
+                                </widget>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>pickColor</cstring>
+                                    </property>
+                                    <property name="sizePolicy">
+                                        <sizepolicy>
+                                            <hsizetype>0</hsizetype>
+                                            <vsizetype>0</vsizetype>
+                                            <horstretch>0</horstretch>
+                                            <verstretch>0</verstretch>
+                                        </sizepolicy>
+                                    </property>
+                                    <property name="text">
+                                        <string>Color...</string>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                        <widget class="QGroupBox">
+                            <property name="name">
+                                <cstring>groupBox19</cstring>
+                            </property>
+                            <property name="title">
+                                <string>Transparency</string>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QSlider">
+                                    <property name="name">
+                                        <cstring>transperancy</cstring>
+                                    </property>
+                                    <property name="maxValue">
+                                        <number>255</number>
+                                    </property>
+                                    <property name="value">
+                                        <number>255</number>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property name="tickmarks">
+                                        <enum>Below</enum>
+                                    </property>
+                                    <property name="tickInterval">
+                                        <number>25</number>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                    </vbox>
+                </widget>
+            </vbox>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout139</cstring>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox15</cstring>
+                    </property>
+                    <property name="title">
+                        <string>View</string>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout138</cstring>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout19</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QLayoutWidget">
+                                            <property name="name">
+                                                <cstring>layout17</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property name="name">
+                                                    <cstring>unnamed</cstring>
+                                                </property>
+                                                <widget class="QLayoutWidget">
+                                                    <property name="name">
+                                                        <cstring>layout16</cstring>
+                                                    </property>
+                                                    <hbox>
+                                                        <property name="name">
+                                                            <cstring>unnamed</cstring>
+                                                        </property>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>xButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>x</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>yButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>y</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>zButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>z</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                    </hbox>
+                                                </widget>
+                                                <widget class="QLayoutWidget">
+                                                    <property name="name">
+                                                        <cstring>layout15</cstring>
+                                                    </property>
+                                                    <hbox>
+                                                        <property name="name">
+                                                            <cstring>unnamed</cstring>
+                                                        </property>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>mxButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>- x</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>myButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>- y</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                        <widget class="QPushButton">
+                                                            <property name="name">
+                                                                <cstring>mzButton</cstring>
+                                                            </property>
+                                                            <property name="sizePolicy">
+                                                                <sizepolicy>
+                                                                    <hsizetype>4</hsizetype>
+                                                                    <vsizetype>0</vsizetype>
+                                                                    <horstretch>0</horstretch>
+                                                                    <verstretch>0</verstretch>
+                                                                </sizepolicy>
+                                                            </property>
+                                                            <property name="text">
+                                                                <string>- z</string>
+                                                            </property>
+                                                            <property name="accel">
+                                                                <string></string>
+                                                            </property>
+                                                        </widget>
+                                                    </hbox>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                        <widget class="QLayoutWidget">
+                                            <property name="name">
+                                                <cstring>layout18</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property name="name">
+                                                    <cstring>unnamed</cstring>
+                                                </property>
+                                                <widget class="QPushButton">
+                                                    <property name="name">
+                                                        <cstring>homeButton</cstring>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>Home</string>
+                                                    </property>
+                                                </widget>
+                                                <widget class="QPushButton">
+                                                    <property name="name">
+                                                        <cstring>setHomeButton</cstring>
+                                                    </property>
+                                                    <property name="text">
+                                                        <string>Set Home</string>
+                                                    </property>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget class="QGroupBox">
+                                    <property name="name">
+                                        <cstring>groupBox9</cstring>
+                                    </property>
+                                    <property name="title">
+                                        <string>Look at</string>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QLineEdit">
+                                            <property name="name">
+                                                <cstring>lookX</cstring>
+                                            </property>
+                                        </widget>
+                                        <widget class="QLineEdit">
+                                            <property name="name">
+                                                <cstring>lookY</cstring>
+                                            </property>
+                                        </widget>
+                                        <widget class="QLineEdit">
+                                            <property name="name">
+                                                <cstring>lookZ</cstring>
+                                            </property>
+                                        </widget>
+                                        <spacer>
+                                            <property name="name">
+                                                <cstring>spacer4</cstring>
+                                            </property>
+                                            <property name="orientation">
+                                                <enum>Horizontal</enum>
+                                            </property>
+                                            <property name="sizeType">
+                                                <enum>Expanding</enum>
+                                            </property>
+                                            <property name="sizeHint">
+                                                <size>
+                                                    <width>16</width>
+                                                    <height>21</height>
+                                                </size>
+                                            </property>
+                                        </spacer>
+                                        <widget class="QPushButton">
+                                            <property name="name">
+                                                <cstring>applyLook</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Apply</string>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget class="QGroupBox">
+                                    <property name="name">
+                                        <cstring>groupBox10</cstring>
+                                    </property>
+                                    <property name="title">
+                                        <string>Particle Tracks</string>
+                                    </property>
+                                    <grid>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QCheckBox" row="1" column="0">
+                                            <property name="name">
+                                                <cstring>showPhotonsCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Photons</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QCheckBox" row="2" column="0">
+                                            <property name="name">
+                                                <cstring>showPositronsCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Positrons</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QCheckBox" row="0" column="0">
+                                            <property name="name">
+                                                <cstring>showTracksCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Show tracks</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>false</bool>
+                                            </property>
+                                        </widget>
+                                        <spacer row="0" column="1">
+                                            <property name="name">
+                                                <cstring>spacer5</cstring>
+                                            </property>
+                                            <property name="orientation">
+                                                <enum>Horizontal</enum>
+                                            </property>
+                                            <property name="sizeType">
+                                                <enum>Expanding</enum>
+                                            </property>
+                                            <property name="sizeHint">
+                                                <size>
+                                                    <width>20</width>
+                                                    <height>21</height>
+                                                </size>
+                                            </property>
+                                        </spacer>
+                                        <widget class="QCheckBox" row="2" column="2">
+                                            <property name="name">
+                                                <cstring>showOthersCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Other</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QCheckBox" row="1" column="2">
+                                            <property name="name">
+                                                <cstring>showElectronsCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Electrons</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QPushButton" row="0" column="2">
+                                            <property name="name">
+                                                <cstring>loadTracks</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Load tracks</string>
+                                            </property>
+                                        </widget>
+                                    </grid>
+                                </widget>
+                                <widget class="QLayoutWidget">
+                                    <property name="name">
+                                        <cstring>layout13</cstring>
+                                    </property>
+                                    <vbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QCheckBox">
+                                            <property name="name">
+                                                <cstring>showAxesCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Show axes</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QCheckBox">
+                                            <property name="name">
+                                                <cstring>showAxesLabelsCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Show axes labels</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                        <widget class="QCheckBox">
+                                            <property name="name">
+                                                <cstring>showRegionsCheckbox</cstring>
+                                            </property>
+                                            <property name="text">
+                                                <string>Show regions</string>
+                                            </property>
+                                            <property name="checked">
+                                                <bool>true</bool>
+                                            </property>
+                                        </widget>
+                                    </vbox>
+                                </widget>
+                                <widget class="QPushButton">
+                                    <property name="name">
+                                        <cstring>moreButton</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Clipping planes...</string>
+                                    </property>
+                                    <property name="toggleButton">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                    </hbox>
+                </widget>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer4_2</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Vertical</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout137</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QPushButton">
+                            <property name="name">
+                                <cstring>reloadButton</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Reload</string>
+                            </property>
+                        </widget>
+                        <widget class="QPushButton">
+                            <property name="name">
+                                <cstring>pushButton5</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Save image</string>
+                            </property>
+                        </widget>
+                        <widget class="QPushButton">
+                            <property name="name">
+                                <cstring>pushButton6</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Close</string>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+            </vbox>
+        </widget>
+    </hbox>
+</widget>
+<connections>
+    <connection>
+        <sender>materialCB</sender>
+        <signal>activated(int)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>updateColorLabel(int)</slot>
+    </connection>
+    <connection>
+        <sender>transperancy</sender>
+        <signal>sliderPressed()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>startTransformation()</slot>
+    </connection>
+    <connection>
+        <sender>transperancy</sender>
+        <signal>sliderReleased()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>endTransformation()</slot>
+    </connection>
+    <connection>
+        <sender>transperancy</sender>
+        <signal>sliderMoved(int)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>changeTransperancy(int)</slot>
+    </connection>
+    <connection>
+        <sender>ambientLight</sender>
+        <signal>sliderPressed()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>startTransformation()</slot>
+    </connection>
+    <connection>
+        <sender>ambientLight</sender>
+        <signal>sliderReleased()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>endTransformation()</slot>
+    </connection>
+    <connection>
+        <sender>ambientLight</sender>
+        <signal>sliderMoved(int)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>changeAmbientLight(int)</slot>
+    </connection>
+    <connection>
+        <sender>moveLight</sender>
+        <signal>stateChanged(int)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>moveLightChanged(int)</slot>
+    </connection>
+    <connection>
+        <sender>applyLook</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>setLookAt()</slot>
+    </connection>
+    <connection>
+        <sender>loadTracks</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>loadTracksDialog()</slot>
+    </connection>
+    <connection>
+        <sender>pickColor</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>changeColor()</slot>
+    </connection>
+    <connection>
+        <sender>applyLight</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>setLightPosition()</slot>
+    </connection>
+    <connection>
+        <sender>pushButton6</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>quitApplication()</slot>
+    </connection>
+    <connection>
+        <sender>pushButton5</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>saveImage()</slot>
+    </connection>
+    <connection>
+        <sender>moreButton</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>showHideOptions()</slot>
+    </connection>
+    <connection>
+        <sender>homeButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>cameraHome()</slot>
+    </connection>
+    <connection>
+        <sender>setHomeButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>cameraHomeDefine()</slot>
+    </connection>
+    <connection>
+        <sender>xButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_x()</slot>
+    </connection>
+    <connection>
+        <sender>yButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_y()</slot>
+    </connection>
+    <connection>
+        <sender>zButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_z()</slot>
+    </connection>
+    <connection>
+        <sender>mxButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_mx()</slot>
+    </connection>
+    <connection>
+        <sender>myButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_my()</slot>
+    </connection>
+    <connection>
+        <sender>mzButton</sender>
+        <signal>released()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>camera_mz()</slot>
+    </connection>
+    <connection>
+        <sender>showAxesCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>checkboxAxes(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showAxesLabelsCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>checkboxAxesLabels(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showRegionsCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>checkboxShowRegions(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showTracksCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>checkboxShowTracks(bool)</slot>
+    </connection>
+    <connection>
+        <sender>reloadButton</sender>
+        <signal>clicked()</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>reloadInput()</slot>
+    </connection>
+    <connection>
+        <sender>showPhotonsCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>showPhotonsCheckbox_toggled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showElectronsCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>showElectronsCheckbox_toggled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showPositronsCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>showPositronsCheckbox_toggled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>showOthersCheckbox</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GeometryViewControl</receiver>
+        <slot>showOthersCheckbox_toggled(bool)</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in declaration">egs_vector.h</include>
+    <include location="local" impldecl="in implementation">egs_visualizer.h</include>
+    <include location="local" impldecl="in implementation">image_window.h</include>
+    <include location="local" impldecl="in implementation">viewcontrol.ui.h</include>
+    <include location="local" impldecl="in declaration">egs_user_color.h</include>
+    <include location="global" impldecl="in declaration">vector</include>
+</includes>
+<forwards>
+    <forward>class EGS_BaseGeometry;</forward>
+    <forward>class EGS_GeometryVisualizer;</forward>
+    <forward>class ImageWindow;</forward>
+    <forward>class QLabel;</forward>
+    <forward>class QImage;</forward>
+    <forward>class SaveImage;</forward>
+    <forward>class ClippingPlanesWidget;</forward>
+</forwards>
+<variables>
+    <variable>QString filename;</variable>
+    <variable>QString filename_tracks;</variable>
+    <variable>ClippingPlanesWidget *cplanes;</variable>
+    <variable>SaveImage *save_image;</variable>
+    <variable>bool regionsDisplayed;</variable>
+    <variable>bool in_transformation;</variable>
+    <variable>EGS_Float render_time;</variable>
+    <variable>int ny_last;</variable>
+    <variable>int nx_last;</variable>
+    <variable>bool rendering;</variable>
+    <variable>EGS_Vector *image;</variable>
+    <variable>QLabel *gview_image;</variable>
+    <variable>ImageWindow *gview;</variable>
+    <variable>int nmed;</variable>
+    <variable>QRgb *m_colors;</variable>
+    <variable>int dfine_home;</variable>
+    <variable>int dfine;</variable>
+    <variable>EGS_Float a_light;</variable>
+    <variable>EGS_Float s_phi;</variable>
+    <variable>EGS_Float c_phi;</variable>
+    <variable>EGS_Float phi;</variable>
+    <variable>EGS_Float s_theta;</variable>
+    <variable>EGS_Float c_theta;</variable>
+    <variable>EGS_Float theta;</variable>
+    <variable>EGS_Float projection_scale;</variable>
+    <variable>EGS_Float projection_y;</variable>
+    <variable>EGS_Float projection_x;</variable>
+    <variable>EGS_Float distance;</variable>
+    <variable>EGS_Float size;</variable>
+    <variable>EGS_Vector axeslabels[4];</variable>
+    <variable>EGS_Vector axes[4];</variable>
+    <variable>EGS_Vector axesmax;</variable>
+    <variable>EGS_Vector center;</variable>
+    <variable>EGS_Vector camera_home_v2;</variable>
+    <variable>EGS_Vector camera_home_v1;</variable>
+    <variable>EGS_Vector camera_home;</variable>
+    <variable>EGS_Vector camera_v2;</variable>
+    <variable>EGS_Vector camera_v1;</variable>
+    <variable>EGS_Vector camera;</variable>
+    <variable>EGS_Vector screen_v2;</variable>
+    <variable>EGS_Vector screen_v1;</variable>
+    <variable>EGS_Vector screen_xo;</variable>
+    <variable>EGS_Vector p_light;</variable>
+    <variable>EGS_Vector look_at_home;</variable>
+    <variable>EGS_Vector look_at;</variable>
+    <variable>EGS_GeometryVisualizer *vis;</variable>
+    <variable>EGS_BaseGeometry *g;</variable>
+    <variable>bool showAxes;</variable>
+    <variable>bool showAxesLabels;</variable>
+    <variable>bool showRegions;</variable>
+    <variable>bool showTracks;</variable>
+    <variable>bool showPhotonTracks;</variable>
+    <variable>bool showElectronTracks;</variable>
+    <variable>bool showPositronTracks;</variable>
+    <variable>bool showOtherTracks;</variable>
+</variables>
+<slots>
+    <slot>reloadInput()</slot>
+    <slot>checkboxAxes( bool toggle )</slot>
+    <slot>checkboxAxesLabels( bool toggle )</slot>
+    <slot>checkboxShowRegions( bool toggle )</slot>
+    <slot>checkboxShowTracks( bool toggle )</slot>
+    <slot>regionPick( int x, int y )</slot>
+    <slot>cameraHome()</slot>
+    <slot>cameraOnAxis( char axis )</slot>
+    <slot>camera_x()</slot>
+    <slot>camera_y()</slot>
+    <slot>camera_z()</slot>
+    <slot>camera_mx()</slot>
+    <slot>camera_my()</slot>
+    <slot>camera_mz()</slot>
+    <slot>cameraHomeDefine()</slot>
+    <slot>cameraTranslate( int dx, int dy )</slot>
+    <slot>cameraRotate( int dx, int dy )</slot>
+    <slot>cameraRoll( int dx )</slot>
+    <slot>cameraZoom( int dy )</slot>
+    <slot>thetaRotation( int Theta )</slot>
+    <slot>phiRotation( int Phi )</slot>
+    <slot>startTransformation()</slot>
+    <slot>endTransformation()</slot>
+    <slot>changeDfine( int newdfine )</slot>
+    <slot>changeAmbientLight( int alight )</slot>
+    <slot>changeTransperancy( int t )</slot>
+    <slot>moveLightChanged( int toggle )</slot>
+    <slot>setLightPosition()</slot>
+    <slot>setLookAt()</slot>
+    <slot>loadTracksDialog()</slot>
+    <slot>setProjectionSize()</slot>
+    <slot>viewAllMaterials()</slot>
+    <slot access="protected">init()</slot>
+    <slot>reportViewSettings( int x, int y )</slot>
+    <slot>quitApplication()</slot>
+    <slot>updateColorLabel( int med )</slot>
+    <slot>changeColor()</slot>
+    <slot>doRepaint( bool resizing )</slot>
+    <slot>renderImage()</slot>
+    <slot>drawAxes( int nx, int ny )</slot>
+    <slot>saveImage()</slot>
+    <slot>showHideOptions()</slot>
+    <slot>setClippingPlanes()</slot>
+    <slot>renderAndDebugImage()</slot>
+    <slot>showPhotonsCheckbox_toggled( bool toggle )</slot>
+    <slot>showElectronsCheckbox_toggled( bool toggle )</slot>
+    <slot>showPositronsCheckbox_toggled( bool toggle )</slot>
+    <slot>showOthersCheckbox_toggled( bool toggle )</slot>
+</slots>
+<functions>
+    <function>setFilename( QString str )</function>
+    <function>setTracksFilename( QString str )</function>
+    <function>setCameraPosition()</function>
+    <function>setProjectionLineEdit()</function>
+    <function>setLightLineEdit()</function>
+    <function>setLookAtLineEdit()</function>
+    <function>updateLookAtLineEdit()</function>
+    <function>setMaterialColor( int j )</function>
+    <function returnType="int">setGeometry( EGS_BaseGeometry * geom, const std::vector&lt;EGS_UserColor&gt; &amp; ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading )</function>
+</functions>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>
