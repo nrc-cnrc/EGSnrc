@@ -1,0 +1,485 @@
+
+###############################################################################
+#
+#  EGSnrc cavrznrc application input file template
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+
+
+ TITLE=  cavrznrc_template: 1.25 MeV on graphite pancake chamber
+                        #File to explain input to CAVRZnrc
+                        #all options for a given quantity are shown, separated
+                        #by commas and ending with a ;
+
+ #NB====>               #MUST NOT not put tabs after any character inputs,
+                        #including  delimeters.
+                        #equal signs must have no space on the left and
+                        #at least one space on the right.
+
+ ###################
+ :start I/O control:    #This is a start delimeter, see matching stop below
+
+ IWATCH= off           #off,interactions,steps,deposited,graph;
+                       #debug output with increasing detail,
+                       #graph outputs .gph file for EGS_Windows
+                       #if not "off" use very few histories
+
+ STORE INITIAL RANDOM NUMBERS= no  #no,last,all deposited,all;
+                                   #last: store initial random numbers for last
+                                   #      history in .egsrns
+                                   #all deposited: store initial random numbers
+                                   #      for each history that deposits energy
+                                   #      in the cavity
+                                   #all: store initial random numbers for each
+                                   #     history
+ IRESTART= first        #first,restart,make,analyze,for graphics,parallel;
+                        #first: first run
+                        #restart: restart of old run (requires .egsdat file)
+                        #make: just create an input file and exit
+                        #analyze: read in data from .egsdat file and
+                        #         do statistical analysis and output results
+                        #         to .egslst
+                        #for graphics: read starting random numbers from
+                        #         .egsrns--eg for output to graphics package
+                        #parallel: read .egsdat files from parallel jobs
+                        #          (named inputfile_w*), do statistical
+                        #          analysis and output to .egslst
+
+ STORE DATA ARRAYS= yes #yes,no;
+                        #yes: output .egsdat file for restarts, parallel
+                        #     post-processing, etc
+ OUTPUT OPTIONS= short  #short,cavity details;
+                        #short: output cavity summary + dose grid
+                        #cavity details: above plus details for every zone
+                        #                in cavity
+
+ :stop I/O control:
+ ##################
+
+ ##########################
+ :start Monte Carlo inputs:
+
+ NUMBER OF HISTORIES= 10000   #splits into $STAT statistical batches
+                              #must be >=$STAT**2 if IWATCH= Off
+                              #can have less than this if IWATCH set to
+                              #another option
+
+ INITIAL RANDOM NO. SEEDS= 1,  3 #With ranmar: these must be between 1 and
+                                 #             30081 (default to 9373)
+                                 #With ranlux: 1st is luxury level 0->4 allowed
+				 #             but should not be 0
+                                 #             2nd is seed 1 -> 1073741824
+
+ MAX CPU HOURS ALLOWED=    90.000	#Will shut down cleanly prior to
+					#exceeding this limit, as long as one
+					#batch has completed.
+
+ IFULL= Aatt and Ascat    #dose and stoppers,Aatt and Ascat,Ap,Afl and <s>g/w;
+                          #dose and stoppers: output total dose plus that due
+                          #                   to stoppers and discards
+                          #Aatt and Ascat: above plus Aatt, Ascat
+                          #Ap: above plus Ap
+                          #Afl and <s>g/w: above plus Afl and stopping power
+                          #                ratio gas/water
+
+  STATISTICAL ACCURACY SOUGHT=  0.0000   #If 0, goes until number of histories
+                                        # or CPU limit exceeded.  If not zero
+                                        # goes until this uncertainty (in %)
+                                        # is achieved in the peak dose region
+
+  PHOTON REGENERATION= no      #no,yes,no electrons from wall;
+                               #no: normal calculation
+                               #yes: regenerate parent photon after interaction
+                               #     (used for FANO calculations)
+                               #no electrons from wall: photons not regenerated
+                               #      secondary electrons from cavity wall are
+                               #      eliminated
+
+ :stop Monte Carlo inputs:
+ #########################
+
+ ##########################
+ :start geometrical inputs:
+
+ METHOD OF INPUT= individual   #groups,individual,cavity information:
+                               #group: input groups of slabs of equal thickness
+                               #individual: input Z of bottom of every slab
+                               #cavity information: generate simple geometry
+                               #   from cavity info input in section below.
+                               #   If you use this, there are no more inputs
+                               #   in this section
+
+ Z OF FRONT FACE=  0.          #Beginning of first slab
+
+ #NSLAB= 10, 10                #Define a group of 10 slabs with thickness 1 cm
+ #SLAB THICKNESS=   1.0, 2.0   #followed by 50 slabs with thickness 2 cm
+
+#Example with METHOD OF INPUT= individual:
+ DEPTH BOUNDARIES= 0.3,0.5,0.8
+
+ RADII=      1., 1.3          #Radii of cylinders
+
+ ######## Material Input
+
+ MEDIA=     170C521ICRU, AIR521ICRU  #the media in the problem
+                                #These must match exactly, including case, one
+                                #of the media names in the pegs4 data set being
+                                #used in the problem.
+                                #The maximum length of name is 24 characters
+                                #They are automatically left justified on input.
+
+                                #Next we specify which media are in
+                                #which geometric regions
+                                #note that by default all regions contain
+                                #medium 1 and which medium to input as 1 should
+                                #be selected with this in mind.
+
+ DESCRIPTION BY= regions        #planes,regions;
+                                #planes: use slab and cylinder no.'s to
+                                #        define what medium goes where
+                                #regions: use region numbers to define this
+                                          (region numbers start at 2 and
+                                          number from top to bottom of
+                                          geometry and innermost radius to
+                                          outermost radius)
+ #MEDNUM=       1, 2             #This puts water everywhere and then
+ #START ZSLAB=  1, 11            #inserts a small column of air on the central
+ #STOP ZSLAB=   20,11            #axis with radius 1cm and going from Z=10cm
+ #START RING=   1, 1             #to Z=12cm
+ #STOP RING=    2, 1
+
+ #Example with DESCRIPTION BY= regions to do the same as above
+  MEDNUM= 2
+  START REGION= 3
+  STOP REGION= 3
+
+ :stop geometrical inputs:
+ #########################
+
+ #####################
+ :start cavity inputs:
+
+ NUMBER OF CAVITY REGIONS= 1          #this defines the small cylinder of
+ REGION NUMBERS OF THE CAVITY= 3      #air in the geometry to be the cavity
+
+ #If METHOD OF INPUTS= cavity information:
+ #  WALL THICKNESS= 0.5       #thickness of chamber wall in cm (defaults to
+                              #0.273)
+ #  CAVITY RADIUS= 1.0        #outer radius of the cavity in cm
+ #  CAVITY LENGTH= 2.0        #in cm (defaults to 0.2)
+ #  ELECTRODE RADIUS= 0.01    #in cm (defaults to 0)
+ #  WALL MATERIAL= H2O521ICRU
+ #  ELECTRODE MATERIAL= AL521ICRU #only if ELECTRODE RADIUS > 0
+
+ :stop cavity inputs:
+ #####################
+ :start source inputs:
+
+  INCIDENT PARTICLE= photon       #electron,photon,positron,all,charged;
+                                  #all & charged: only for phase space sources
+  SOURCE NUMBER= 1                #0,1,2,3,4,10,11,12,13,14,20,21
+                                  #1: point source incident from the front
+				  #for details, see srcrz.mortran
+  SOURCE OPTIONS=  100., 1.3, 0, 0 #for source 1: SSD of beam, radius of
+                                  #    beam on front surface
+  INCIDENT ENERGY= monoenergetic  #monoenergetic, spectrum;
+  INCIDENT KINETIC ENERGY(MEV)= 1.25 #only use for "monoenergetic"
+
+ #If INCIDENT ENERGY= spectrum:
+ # SPEC FILENAME= full name of file containing energy spectrum
+ # SPEC IOUTSP= include          #none,include;
+                                 #none: no spectrum data in .egslst file
+                                 #include: output spectrum data to .egslst file
+
+ #Example with SOURCE NUMBER= 21 (phase space source):
+ # INCIDENT PARTICLE= all
+ # SOURCE NUMBER= 21
+ # SOURCE OPTIONS=  0.,  0.,  0.,  0.   #only active input is 1st one
+                    			#mode =0 => 7 variables/record
+					#mode = 1 => 8 variables/record
+ # FILSPC= /usr/people/dave/egs4/BEAM_slabs2/new.50MV.8cm.5.egs4phsp1
+
+ :stop source inputs:
+ #########################
+
+ #########################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.521  #Electron cutoff for transport
+ Global PCUT=                    0.001  #Photon cutoff for transport
+ Global SMAX=                    1e10   #Maximum step size in cm (not needed
+      					#unless old PRESTA algorithm used)
+                        #ECUT, PCUT and SMAX can also be set on a
+                        #region-by-region basis.
+                        #
+                        #Set XXXX=              f_value1, f_value2, ...
+                        #Set XXXX start region= i_value1, i_value2, ...
+                        #Set XXXX stop region=  j_value1, j_value2, ...
+                        #
+                        #where XXXX is ECUT, PCUT or SMAX ,
+                        #f_value1, f_value2,... are the desired values for XXXX
+                        #and i_value_i and j_value_i are the start and
+                        #stop regions.
+
+ ESTEPE=                         0.25   #Max fractional continuous energy loss
+                                        #per step. Use 0.25 unless using
+                                        #PRESTA-I
+
+ XIMAX=                          0.5    #Max first elastic scattering moment
+                                        #per step.  Using default.
+
+Boundary crossing algorithm= EXACT # exact,PRESTA-I;
+                                   # exact: cross boundaries in single scattering
+                                   #        mode (distance at which to go into
+                                   #        single scattering mode determined by
+                                   #        "Skin depth for BCA"
+                                   # PRESTA-I: cross boundaries with lateral
+                                   #           correlations off and force multiple
+                                   #           scattering mode
+
+Skin depth for BCA= 3   # Determines the distance from a boundary (in elastic
+                        # MFP) at which the algorithm will go into single
+                        # scattering mode (if EXACT boundary crossing) or
+                        # switch off lateral correlations (if PRESTA-I boundary
+                        # crossing). Default value is 3 for EXACT or
+                        # exp(BLCMIN)/BLCMIN for PRESTA-I (see the PRESTA paper
+                        # for a definition of BLCMIN).
+
+Electron-step algorithm= PRESTA-II # PRESTA-II,PRESTA-I;
+                                   # Determines the algorithm used to take
+                                   # into account lateral and longitudinal
+                                   # correlations in a condensed history
+                                   # step
+
+Spin effects= on                   # Off (default),On;
+                                   # Turns off/on spin effects for electron
+                                   # elastic scattering. Spin On is
+                                   # ABSOLUTELY necessary for good
+                                   # backscattering calculations. Will
+                                   # make a difference even in `well
+                                   # conditioned' situations (e.g.  depth
+                                   # dose curves).
+
+Brems angular sampling= KM         # Simple,KM (default);
+                                   # Simple: leading term of Koch-Motz
+                                   #        dist'n used to determine angle
+                                   #        of bremsstrahlung photons
+                                   # KM:  Koch-Motz distribution used to
+                                   #     determine angle
+
+Triplet production= Off            # On or Off (default).
+                                   # Turns on/off simulation of triplet production.
+                                   # On: Borsellino's first Born approximation is
+                                   # used to sample triplet events based on the
+                                   # triplet cross-section data.
+
+Brems cross sections= BH           # BH (default),NIST;
+                                   # BH: Bethe-Heitler cross-sections used
+                                   # NIST: NIST cross-sections used
+
+Bound Compton scattering= Off      # Off (default),On, simple or norej;
+                                   # Off: Klein-Nishina used for Compton
+                                   #     scattering
+                                   # On: Impulse approximation used for
+                                   #    Compton scattering
+                                   # simple: impulse approximation incoherent
+                                   #        scattering function used (i.e., no
+                                   #        Doppler broadenning).
+                                   # norej: the actual total bound Compton cross
+                                   #        section is used and there are no
+                                   #        rejections at run time.
+Radiative Compton corrections= Off # On or Off (default).
+                                   # On: include radiative corrections for Compton
+                                   # scattering.
+
+Electron Impact Ionization= Off    # Off (default), On, ik, casnati, kolbenstvedt,
+                                   # gryzinski, penelope.
+                                   # On or ik: use Kawrakow's theory to derive
+                                   #           EII cross-sections.
+                                   # casnati: use the cross-sections of Casnati from
+                                   #          $HEN_HOUSE/data/eii_casnati.data.
+                                   # Similarly for kolbenstvedt, gryzinski and
+                                   # penelope. Case-sensitive except for Off, On or
+                                   # ik options.
+
+Pair angular sampling= Simple      # Off, Simple (default),KM);
+                                   # Simple: use leading term of K-M
+                                   #        dist'n
+                                   # KM: use complete Koch and Motz dist'n
+                                   # Off: angle of pairs is m/E--like old EGS4
+
+Photoelectron angular sampling= On # Off (default),On;
+                                   # Off: Photoelectrons get direction of
+                                   #     photon that creates them
+                                   # On: Sauter's formula is used
+
+Pair cross sections= BH            # BH (default) or NRC.
+                                   # BH: use Bethe-Heitler pair production
+                                   # cross-sections.
+                                   # NRC: use NRC pair production cross-sections
+                                   # (in file $HEN_HOUSE/data/pair_nrc1.data).
+
+Photon cross sections= si          # si (Storm-Israel--the default),
+                                   # epdl (Evaluated Photon Data Library),
+                                   # xcom (NIST Photon Cross Sections Database)
+                                   # pegs4 (PEGS4 file photon data)
+                                   # User can supply their own cross-section
+                                   # data as well.
+                                   # Hence this entry is case-sensitive.
+
+Photon cross-sections output= Off # Off (default) or On.
+                                  #On: file $EGS_HOME/user_code/inputfile.xsections
+                                  # is created with the photon cross-section
+                                  # data used.
+
+Compton cross sections= compton_sigma.data # Bound Compton cross-section data.
+                                           # User-supplied bound Compton
+                                           # cross-sections in the file
+                                           # comp_xsections_compton.data in
+                                           # directory $HEN_HOUSE/data/, where
+                                           # comp_xsections is the name supplied
+                                           # for this input. Uses compton_sigma.data
+                                           # by default.
+
+Rayleigh scattering= Off            # Off (default),On, custom;
+                                   # Off: no coherent scattering
+                                   # On: simulates coherent scattering
+                                   # custom: user must provide media names
+                                   #         for wich form factor (FF) files
+                                   #         will be provided. For the rest
+                                   #         of the media, default atomic FF
+                                   #         used.
+#
+# IF 'custom' Rayleigh option then:
+#
+#ff media names = A list of media names (must match media found in
+#                 PEGS4 data file) for which the user is going to
+#                 provide custom Rayleigh form factor data.
+#ff file names = A list of names of files containing the Rayleigh
+#                form factor data for the media specified by
+#                the ff media names = input above.  Full directory
+#                paths must be given for all files, and for each medium
+#                specified, iray_ff_media(i), there must be a
+#                corresponding file name, iray_ff_file(i).  For
+#                example files, see the directory
+#                $HEN_HOUSE/data/molecular_form_factors.
+
+#The following allow for adjustment of ECUT, PCUT and SMAX in
+#individual regions. The following are not needed but prevent
+#extra warnings
+
+ Set ECUT= 0.0                          #this is off for this example
+ Set ECUT start region= 1               #region 1 is outside the geometry
+ Set ECUT stop region= 1
+
+ Set PCUT= 0.0                          #this is off for this example
+ Set PCUT start region= 1               #region 1 is outside the geometry
+ Set PCUT stop region= 1
+
+ Set SMAX= 0.0                          #this is off for this example
+ Set SMAX start region= 1               #region 1 is outside the geometry
+ Set SMAX stop region= 1
+
+
+# Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling and
+# Bound compton scattering can be turned on/off on a region by region basis.
+# Instead of simply "On" or "Off" for these cases put:
+#    Atomic relaxations= On (or Off) in Regions
+#    Relaxations start region= 1, 40   #turns relaxations on in regions 1-10 and
+#    Relaxations stop region=  10, 99  #40-99
+#
+#    Rayleigh scattering= On (or Off) in Regions
+#    Rayleigh start region= 1, 40
+#    Rayleigh stop region= 10, 99
+#
+#    Photoelectron angular sampling= On (or Off) in Regions
+#    PE sampling start region= 1, 40
+#    PE sampling stop region= 10, 99
+#
+#    Bound Compton scattering= On (or Off) in Regions
+#    Bound Compton start region= 1, 40
+#    Bound Compton stop region= 10, 99
+
+ :Stop MC Transport Parameter:
+ ########################
+ :Start Variance Reduction:
+
+ ELECTRON RANGE REJECTION= on   #Off,On;
+                                #On: if charged particle energy is below ESAVEIN
+                                #    and it cannot get out of current region
+                                #    with energy > ECUT, the particle is
+                                #    terminated
+				#also terminates all electrons which cannot
+				#reach the cavity under conservative
+				#assumptions.
+ ESAVEIN= 2.0                   #total energy below which range rejection is
+                                #considered
+
+ RUSSIAN ROULETTE DEPTH=  0.0000 #play Russian Roulette with photons once they
+                                 #cross this Z plane
+ RUSSIAN ROULETTE FRACTION=  0.0000  #probability of photon survival--if this
+                                     #and #RUSSIAN ROULETTE DEPTH both 0, then
+                                     #photon Russian Roulette is not played
+
+                                #exponential pathlength biasing can be
+                                #used. See Rogers&Bielajew 1990 review for
+                                #discussion.  C<0 => pathlength shortening
+                                #              >0 => pathlength stretching
+                                #               along z axis both cases
+ EXPONENTIAL TRANSFORM C=  0.0000
+
+ PHOTON FORCING= On             #Off (default),On;
+                                #On: force photons to interact according to
+                                #    START FORCING and STOP FORCING AFTER inputs
+ START FORCING= 1 		#Start forcing at this interaction number
+ STOP FORCING AFTER= 1		#Number of photon interactions after which
+                                #to stop forcing photon interactions
+
+ PHOTON SPLITTING= 1            #no. of times to split a photon
+                                #if < 2-->normal transport
+                                #overrides PHOTON FORCING if >= 2
+                                #can only be >= 2 if IFULL= dose and stoppers
+                                # or if  IFULL= Aatt and Ascat
+
+                     #CAVRZnrc allows for having the photon cross
+                     #section scaled to enhance interactions.
+                     #    If this input is missing or set to <= 1, it
+                     #    has no effect on the simulation. But if
+                     #    the enhancement factor is set to > 1, the
+                     #    effect is dramatic: all other user input
+                     #    concerning photon forcing, splitting, exp.
+                     #    transform, etc., is ignored. In addition,
+                     #    the calculation result corresponds  ALWAYS
+                     #    to 'Aatt and Ascat', no matter what the
+                     #    user requested (but only Awall is calculated,
+                     #    not the individual Ascat and Aatt).
+                     #    The algorithm employed is implemented via
+                     #    $RAYLEIGH-CORRECTION and appropriate calls to
+                     #    AUSGAB. For more detail see the manual and the
+                     #    header of cavrznrc.mortran
+ CS ENHANCEMENT FACTOR= 1.0     #Photon cross section scaling factors
+
+ :Stop Variance Reduction:
+ #########################
