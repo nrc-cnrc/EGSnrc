@@ -1,0 +1,194 @@
+
+###############################################################################
+#
+#  EGSnrc dosrznrc application input file example
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Blake Walters
+#
+###############################################################################
+
+
+ TITLE=  depth_dose_example central axis depth-dose curve in H2O due to broad Co beam
+
+ ###################
+ :start I/O control:    #This is a start delimeter, see matching stop below
+
+ DOSE ZBOUND MIN= 1    #Min plane number defining dose region
+ DOSE ZBOUND MAX= 51   #Max plane number defining dose region
+ DOSE RBOUND MIN= 0    #Min cylindrical boundary defining dose region
+                       #(0 is R=0)
+ DOSE RBOUND MAX= 1    #Max cylindrical boundary defining dose region
+
+ IWATCH= off
+
+ STORE INITIAL RANDOM NUMBERS= no
+ IRESTART= first        #First time for this run
+
+ OUTPUT OPTIONS= short    #Just output dose grid
+ STORE DATA ARRAYS= yes #Allow possibility for restart by storing data arrays
+                        #at the end of each batch
+ ELECTRON TRANSPORT= normal    #Discrete interactions
+
+ :stop I/O control:
+ ##################
+
+ ##########################
+ :start Monte Carlo inputs:
+
+ NUMBER OF HISTORIES= 10000
+
+ INITIAL RANDOM NO. SEEDS= 1,  3 #Using ranmar these are both seeds
+                                 #Using ranlux, first number is luxury level
+                                 #and second is seed
+
+ MAX CPU HOURS ALLOWED=    90.000	#Will shut down cleanly prior to
+					#exceeding this limit, as long as one
+					#batch has completed.
+
+ IFULL= dose and stoppers        #Score total dose and dose due to
+                                 #stoppers and discards
+
+ STATISTICAL ACCURACY SOUGHT=  0.0000 	#If 0, goes until number of histories
+					# or CPU limit exceeded.
+ SCORE KERMA= no
+
+ :stop Monte Carlo inputs:
+ #########################
+
+ ##########################
+ :start geometrical inputs:
+
+ METHOD OF INPUT= groups    #Input a group of slabs of equal thickness
+ Z OF FRONT FACE=  0.       #Beginning of first slab
+ NSLAB= 50                  #No. of slabs
+ SLAB THICKNESS=   2.0      #Define 50 slabs 2 cm thick
+ RADII=      1.             #Radius of cylinder--gets reset to 1000 cm
+                            #with broad beam source
+
+ ######## Material Input
+
+ MEDIA=     H2O521ICRU          #The material we wish to use
+ DESCRIPTION BY= planes         #Use region number to specify medium
+ MEDNUM=       1                #Put water in region defined by
+ START ZSLAB= 1                 #1st plane to
+ STOP ZSLAB=  50                #Last plane
+ START RING= 1                  #entire radial region to
+ STOP RING= 1                   #Outer radius
+
+ :stop geometrical inputs:
+ #########################
+
+ #####################
+ :start source inputs:
+
+  INCIDENT PARTICLE= photon
+  SOURCE NUMBER= 2                      #Broad beam incident from front
+  SOURCE OPTIONS=  0, 0, 0, 0,          #No inputs here for this source--
+                                        #broad beam source uses equivalence
+                                        #between depth-dose in small radius
+                                        #on central axis due to broad beam
+                                        #and depth-dose in large radius due
+                                        #to pencil beam--thus broad beam is
+                                        #in fact a pencil beam (r=0 cm)
+                                        #incident on a phantom of radius
+                                        #1000cm (overrides user-input radius)
+                                        #oh yeah, the broad beam is always
+                                        #has X,Y,Z direction cosines
+                                        #(0,0,1)
+  INCIDENT ENERGY= monoenergetic
+  INCIDENT KINETIC ENERGY(MEV)= 1.25
+
+ :stop source inputs:
+ #########################
+
+ #########################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.521  #Electron cutoff for transport
+ Global PCUT=                    0.001  #Photon cutoff for transport
+ Global SMAX=                    1e10   #Maximum step size in cm (not needed
+      					#unless old PRESTA algorithm used)
+ ESTEPE=                         0.25   #Max fractional continuous energy loss
+                                        #per step. Use 0.25 unless using
+                                        #PRESTA-I
+ XIMAX=                          0.5    #Max first elastic scattering moment
+                                        #per step.  Using default.
+ Boundary crossing algorithm=    exact  #Cross boundaries in single scattering
+                                        #mode
+ Skin depth for BCA=             3      #Distance from a boundary (in elastic
+                                        #MFP) at which the algorithm will go
+                                        #into single scattering mode (using
+                                        #default here)
+ Electron-step algorithm= PRESTA-II     #Use new physics
+ Spin effects=                   On     #Include spin effects for electron
+                                        #elastic scattering
+ Brems angular sampling=         KM     #Modified KM used to determine
+                                        #emission angle of bremsstrahlung
+                                        #photons
+ Brems cross sections=           BH     #Use Bethe-Heitler cross-sections
+ Bound Compton scattering=       Off    #Use Klein Nishina for Compton
+ Pair angular sampling=          Simple #Use leading term to determine
+                                        #angle of pairs
+ Photoelectron angular sampling= Off    #Photoelectrons get direction of
+                                        #photon that creates them
+ Rayleigh scattering=            Off    #No coherent scattering
+ Atomic relaxations=             On     #Simulate emission of fluorescent
+                                        #X-rays, Auger and Coster-Kronig
+                                        #electrons
+
+ :Stop MC Transport Parameter:
+ ########################
+
+ :Start Variance Reduction:
+
+ BREM SPLITTING= Off            #No bremsstrahlung splitting
+ NUMBER OF BREMS PER EVENT= 1   #Only used with bremsstrahlung splitting
+ CHARGED PARTICLE RUSSIAN ROULETTE= Off
+ ELECTRON RANGE REJECTION= off  #No range rejection
+ ESAVEIN= 0.0                   #Only used with range rejection
+ RUSSIAN ROULETTE DEPTH=  0.0000 #No photon Russian Roulette
+ RUSSIAN ROULETTE FRACTION=  0.0000  #No photon Russian Roulette
+ EXPONENTIAL TRANSFORM C=  0.0000 #No pathlength biasing
+ PHOTON FORCING= On             #Force photons to interact in geometry
+ START FORCING= 1		#Start forcing at first interaction
+ STOP FORCING AFTER= 1		#Only force one interaction/history
+ CS ENHANCEMENT FACTOR= 1.0     #Photon cross sections scaling factor
+ CS ENHANCEMENT START REGION= 1   #Region outside geometry--> no cross-
+                                  #section scaling
+ CS ENHANCEMENT STOP REGION=  1   #Region outside geometry--> no cross-
+                                  #section scaling
+
+ :Stop Variance Reduction:
+
+ #########################
+ :start plot control:
+
+ PLOTTING= on                   #Will output plots
+ LINE PRINTER OUTPUT= Off       #No plotting in .egslst file
+ EXTERNAL PLOTTER OUTPUT= On    #Create .plotdat file
+ EXTERNAL PLOT TYPE= Histogram  #Type of .plotdat file
+ PLOT RADIAL REGION IX= 1       #Plot central axis depth-dose curve
+ PLOT PLANAR REGION IZ= 0       #No dose vs radius plots
+
+ :stop plot control:
+ ########################

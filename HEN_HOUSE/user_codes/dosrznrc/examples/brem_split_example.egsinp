@@ -1,0 +1,187 @@
+
+###############################################################################
+#
+#  EGSnrc dosrznrc application input file example
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+
+
+ TITLE=  brem_split_example.egsinp to illustrate bremsstrahlung splitting and Russian Roulette
+
+ ###################
+ :start I/O control:    #This is a start delimeter, see matching stop below
+
+ DOSE ZBOUND MIN= 1     #Min plane number defining dose region
+ DOSE ZBOUND MAX= 2     #Max plane number defining dose region
+ DOSE RBOUND MIN= 0     #Min cylindrical boundary defining dose region
+ DOSE RBOUND MAX= 1     #Max cylindrical boundary defining dose region
+
+ IWATCH= interactions   #Look at interactions to see results of atomic
+			#relaxations.
+
+ STORE INITIAL RANDOM NUMBERS= no
+ IRESTART= first        #First time for this run
+
+ OUTPUT OPTIONS= material summary    #Output material summary in addition to
+                                     #dose output
+ STORE DATA ARRAYS= yes #Allow possibility for restart by storing data arrays
+                        #at the end of each batch
+ ELECTRON TRANSPORT= normal    #Discrete interactions
+
+ :stop I/O control:
+ ##################
+
+ ##########################
+ :start Monte Carlo inputs:
+
+ NUMBER OF HISTORIES= 1          #Can have < 100 histories with IWATCH on
+
+ INITIAL RANDOM NO. SEEDS= 1,  3 #Using ranmar these are both seeds
+                                 #Using ranlux, first number is luxury level
+                                 #and second is seed
+
+ MAX CPU HOURS ALLOWED=    90.000	#Will shut down cleanly prior to
+					#exceeding this limit, as long as one
+					#batch has completed.
+
+ IFULL= dose and stoppers        #Score total dose and dose due to stoppers
+                                 #and discards
+
+ STATISTICAL ACCURACY SOUGHT=  0.0000 	#If 0, goes until number of histories
+					# or CPU limit exceeded.
+ SCORE KERMA= no
+
+ :stop Monte Carlo inputs:
+ #########################
+
+ ##########################
+ :start geometrical inputs:
+
+ METHOD OF INPUT= individual    #Input individual depth boundaries
+ Z OF FRONT FACE=  0.           #Beginning of first slab
+ DEPTH BOUNDARIES=    1.2       #Define a single slab 1cm thick
+ RADII=      1.2                #Define a single cylinder of radius 10cm
+
+ ######## Material Input
+
+ MEDIA=     PB521ICRU           #The material we wish to use
+ DESCRIPTION BY= regions        #Use region number to specify medium
+ MEDNUM=       1                #The lead
+ START REGION= 2                #Region numbers begin at 2 (1 is outside)
+ STOP REGION=  2                #Only one region in this geometry
+
+ :stop geometrical inputs:
+ #########################
+
+ #####################
+ :start source inputs:
+
+  INCIDENT PARTICLE= electron
+  SOURCE NUMBER= 0                      #Parallel beam from the front
+  SOURCE OPTIONS=  0.05, 0., 0., 1.,    #Beam radius, and X,Y,Z incident
+					#direction cosines (ie beam is
+                                        #coming straight down)
+  INCIDENT ENERGY= monoenergetic
+  INCIDENT KINETIC ENERGY(MEV)= 10.
+
+ :stop source inputs:
+ #########################
+
+ #########################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.521  #Electron cutoff for transport
+ Global PCUT=                    0.001  #Photon cutoff for transport
+ Global SMAX=                    1e10   #Maximum step size in cm (not needed
+      					#unless old PRESTA algorithm used)
+ ESTEPE=                         0.25   #Max fractional continuous energy loss
+                                        #per step. Use 0.25 unless using
+                                        #PRESTA-I
+ XIMAX=                          0.5    #Max first elastic scattering moment
+                                        #per step.  Using default.
+ Boundary crossing algorithm=    exact  #Cross boundaries in single scattering
+                                        #mode
+ Skin depth for BCA=             3      #Distance from a boundary (in elastic
+                                        #MFP) at which the algorithm will go
+                                        #into single scattering mode (using
+                                        #default here)
+ Electron-step algorithm= PRESTA-II     #Use new physics
+ Spin effects=                   Off    #No spin effects for electron elastic
+                                        #scattering
+ Brems angular sampling=         KM     #Modified KM used to determine
+                                        #emission angle of bremsstrahlung
+                                        #photons
+ Brems cross sections=           BH     #Use Bethe-Heitler cross-sections
+ Bound Compton scattering=       Off    #Use Klein Nishina for Compton
+ Pair angular sampling=          Simple #Use leading term to determine
+                                        #angle of pairs
+ Photoelectron angular sampling= Off    #Photoelectrons get direction of
+                                        #photon that creates them
+ Rayleigh scattering=            Off    #No coherent scattering
+ Atomic relaxations=             Off    #No simulation of fluorescent
+                                        #X-rays, Auger and Coster-Kronig
+                                        #electrons
+
+ :Stop MC Transport Parameter:
+ ########################
+
+ :Start Variance Reduction:
+
+ BREM SPLITTING= On             #Do bremsstrahlung splitting
+ NUMBER OF BREMS PER EVENT= 10  #Split each bremsstrahlung photon
+                                #into 20
+ CHARGED PARTICLE RUSSIAN ROULETTE= On  #Perform Russian Roulette
+                                        #on secondary charged particles
+ ELECTRON RANGE REJECTION= off  #No range rejection
+ ESAVEIN= 0.0                   #Only used with range rejection
+ RUSSIAN ROULETTE DEPTH=  0.0000 #No photon Russian Roulette
+ RUSSIAN ROULETTE FRACTION=  0.0000  #No photon Russian Roulette
+ EXPONENTIAL TRANSFORM C=  0.0000 #No pathlength biasing
+ PHOTON FORCING= Off             #No photon interaction forcing
+ START FORCING= 1		#Only used if PHOTON FORCING= On
+ STOP FORCING AFTER= 1		#Only used if PHOTON FORCING= On
+ CS ENHANCEMENT FACTOR= 1.0     #Photon cross sections scaling factor
+ CS ENHANCEMENT START REGION= 1   #Outside geom. --> no scaling
+ CS ENHANCEMENT STOP REGION=  1   #Outside geom. --> no scaling
+
+ :Stop Variance Reduction:
+
+ #########################
+ :start plot control:
+
+ PLOTTING= off                  #Will not output plots
+ LINE PRINTER OUTPUT= Off       #Only used if PLOTTING= On--for plotting in
+                                #.egslst file
+ EXTERNAL PLOTTER OUTPUT= Off   #Only used if PLOTTING= On--to output
+                                #.plotdat file
+ EXTERNAL PLOT TYPE= Histogram  #Only used if PLOTTING= On--output histogram
+                                #plots to .plotdat
+ PLOT RADIAL REGION IX= 0       #Only used if PLOTTING= On--radial regions
+                                #to plot dose vs depth in
+ PLOT PLANAR REGION IZ=  1, 2   #Only used if PLOTTING= On--planes in which
+                                #to plot dose vs radius
+
+ :stop plot control:
+ ########################
