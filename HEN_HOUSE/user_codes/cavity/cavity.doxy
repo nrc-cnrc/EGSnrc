@@ -1,0 +1,669 @@
+/*
+###############################################################################
+#
+#  EGSnrc egs++ cavity application documentation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+*/
+
+
+/*! \page cavity cavity, a fully featured EGSnrc C++ user code for ion chamber simulations
+
+<ul>
+<li> \ref cavity_intro </li>
+<li> \ref common_geom_source_rco </li>
+<li> \ref cavity_options </li>
+  <ul>
+  <li> \ref cavity_fac </li>
+  <li> \ref cavity_hvl </li>
+  <li> \ref cavity_fluence </li>
+   </ul>
+<li> \ref cavity_vr </li>
+<li> \ref common_mc </li>
+<li> \ref cavity_usage </li>
+<li> \ref cavity_example </li>
+</ul>
+
+\section cavity_intro Introduction
+
+The C++ user code \c cavity is an advanced EGSnrc application that
+calculates the dose to the cavity of an ionization chamber and/or
+the \f$A_{\rm wall}\f$ correction factor. It
+implements most of the functionality of the original CAVRZnrc mortran
+user code
+(see the <a href="http://www.irs.inms.nrc.ca/EGSnrc/pirs702/node79.html">CAVRZnrc</a>
+documentation in the user-codes manual
+<a href="http://www.irs.inms.nrc.ca/EGSnrc/pirs702/pirs702.html">PIRS-702</a>).
+Features available in CAVRZnrc but not provided
+by \c cavity are
+  - Calculation of stopping power ratios, which are more efficiently
+    calculated using the SPRRZnrc code
+  - Calculation of the \f$A_{\rm pn}\f$ correction factor. This correction
+    factor can be obtained as the ratio of the doses to the cavity
+    from a point source and from a parallel beam, which can be calculated
+    by performing two separate calculations. Experience with CAVRZnrc
+    shows that the gain in efficency when calculating \f$A_{\rm pn}\f$
+    within a single CAVRZnrc run is negligible compared to two separate
+    runs. Considering that the calculation of \f$A_{\rm pn}\f$ introduces
+    a great deal of complications in the logic of the code, it was deemed
+    better to not implement this option into \c cavity.
+
+Unlike CAVRZnrc, \c cavity is not restricted to cylindrically symmetric
+geometries. Practically \b any chamber can be modeled with this user code
+by using the extensive capabilities of the general purpose
+\ref Geometry "geometry package".
+In addition to the above mentioned functionality, \c cavity has been
+extended to allow the calculation of free air chamber (FAC) correction
+factors and half value layers (HVL). These calculation types are
+explained in detail in sections \ref cavity_fac and \ref cavity_hvl.
+Variance reduction techniques, which are available in CAVRZnrc but are not
+particularly useful for cavity dose calculations are also not implemented
+(see \ref cavity_vr for more details).
+
+\section cavity_geom_source_rco Geometry, particle source and run control
+
+Geometry and particle source are specified in an input file as
+explained in the \link Geometry geometry module \endlink and the
+\link Sources particle sources module\endlink.
+Run control is specified in a section of the input file delimited by
+\verbatim
+:start run control:
+:stop run control:
+\endverbatim
+
+A \link EGS_RunControl simple \endlink run control object (RCO) is
+used to control a single run. A simple RCO understands the following
+inputs
+\verbatim
+ncase                       = number of histories to run
+nbatch                      = number of batches to use (default is 10)
+statistical accuracy sought = required uncertainty in %
+max cpu hours allowed       = max. CPU time allowed
+calculation                 = first or restart or combine or analyze
+\endverbatim
+The only required input is the number of histories. The \b nbatch input
+determines how many times the simulation will report its progress
+(and not, as one might expect, the number of statistical batches as
+\c egs_fac uses history-by-history statistical analysis). With the
+<b><code> statistical accuracy sought </code></b> input one can
+make the calculation terminate when the specified uncertainty is reached
+for the cavity dose. Note, however, that after <b>\c ncase</b> histories
+the simulation does not continue \em until this uncertainty is obtained.
+With the <b><code>max cpu hours allowed</code></b> input one can limit the
+simulation time
+to some maximum time in hours. With the <b>\c calculation</b> input
+one determines the type of simulation:
+ - <b> \c first</b> means a fresh simulation (the default)
+ - with <b> \c restart</b> one can restart a previously performed simulation
+ - with <b>\c combine</b> one can combine the results of parallel runs. This is needed
+   when one or more of the parallel jobs has not finished so that the
+   results are not automatically combined or when one uses a simple RCO
+   for parallel runs (see below).
+ - the <b>\c analyze</b> option is used to read the simulation data from the
+   <b>\c .egsdat</b> file and output the results to the standard output.
+
+A \link EGS_JCFControl "job-control-file" (JCF) \endlink RCO is used by default
+for parallel runs. A JCF RCO understands in addition to the above
+the optional input
+\verbatim
+nchunk = number of simulation chunks (default is 10)
+\endverbatim
+In parallel runs the simulation is split into <b><code> nchunk*n_parallel</code></b>
+portions and each parallel job simulates one portion at a time until
+no histories are left. Note that a functioning file locking functionality
+is needed on the system in order to use a JCF-RCO. As some users have
+reported problems with file locking, one can force the use of a simple
+RCO by specifying <b><code>-s</code></b> on the command line. In this case,
+all parallel jobs will execute the same number of histories as specified
+in the input file.
+
+\section cavity_options Scoring options
+
+This input block offers many possible options to the user.
+An example of such an input is shown below:
+
+\verbatim
+:start scoring options:
+    calculation type = Dose or Awall or Fano or FAC or HVL(default: Dose)
+    :start calculation geometry:
+        geometry name  = name_1
+        cavity regions = list_of_cavity_region_indices
+        charge regions = list_of_region_indices_for_charge_scoring
+        cavity mass    = total cavity mass in gram
+    :stop calculation geometry:
+    :start calculation geometry:
+        geometry name  = name_2
+        ...
+    :stop calculation geometry:
+    ...
+    :start calculation geometry:
+        geometry name  = name_n
+        ...
+    :stop calculation geometry:
+
+    correlated geometries = name_i name_j
+    ...
+    correlated geometries = name_k name_l
+
+    :start fluence scoring:
+        minimum energy = Emin
+        maximum energy = Emax
+        number of bins = N
+        scale          = linear, logarithmic
+    :stop fluence scoring:
+:stop scoring options:
+\endverbatim
+
+The <b><code>calculation type</code></b> input is optional and, if missing,
+the calculation type will be set to \c Dose, \em i.e. the dose to
+the cavity will be computed. If the calculation type is set to \c Awall,
+in addition to the dose also the \f$A_{\rm wall}\f$ correction factor
+will be calculated. If the calculation type is set to \c Fano,
+scattered photons will be thrown away and the photon attenuation will
+be removed by un-weighting so that, apart from potential differences
+in scattering properties in the cavity and chamber wall, there will be
+a uniform source of electrons throughout the geometry. This option
+is useful for testing the accuracy of the EGSnrc condensed history
+implementation. Calculation types \c FAC and \c HVL require the inclusion
+of yet another input block inside the <b><code>scoring options</code></b>
+input block. These calculation types are explained in detail in
+sections \ref cavity_fac and \ref cavity_hvl.
+
+The dose to the cavity (and \f$A_{\rm wall}\f$) can be calculated
+for several geometries at once. This option is not available in
+the CAVRZnrc user code but has been implemented here primarily
+for the sake of computing the dose to the cavity of an ionization
+chamber placed at different locations within a water phantom or free
+in air and subjected to a beam from a \link
+EGS_BeamSource BEAMnrc simulation source\endlink. The consequence of
+this added functionality is that one \em must specify at least
+one calculation geometry. The advantage is that a correlated scoring
+of cavity dose ratios can be requested by linking any combination of
+two calculation geometries. In cases of small differences between
+these geometries, the dose ratios will be strongly correlated,
+resulting in a significant reduction of the variance.
+Correlated scoring is requested by assigning two geometry names to
+the <b><code>correlated geometries</code></b> key.
+
+The meaning of the various keys defining a simulation geometry should
+be self explanatory. The reason one must specify the cavity mass is that
+due to the generality of the geometry package it is not possible to
+automatically compute the cavity volume and therefore the user must supply
+this information for proper normalization. Geometrical regions spanning the
+collecting volume (cavity) are provided by input using the
+<b><code>cavity regions</code></b> key. If no valid region is entered or
+this input is
+ignored, no dose to the cavity is calculated. Optionally, one can
+request to score the net charge in specific geometrical regions using
+the <b><code>charge regions</code></b> key.
+An  \link EGS_AffineTransform affine transformation \endlink can be
+also requested inside this input block. This option could be handy
+when the coordinates of a particle generated using
+a \link EGS_BeamSource BEAMnrc simulation source\endlink does not match
+the coordinates of the geometry defined in \c cavity. For instance, if a
+BEAMnrc simulation transports particles down to a scoring plane located
+perpendicular to the z-axis at z = 50, and the calculation geometry starts
+at z = 0, one can use the following input block to reposition the particles:
+
+\verbatim
+    :start calculation geometry:
+        geometry name  = name_of_defined_geometry
+        ...
+        :start transformation:
+           translation = 0 0 -50
+        :stop transformation:
+    :stop calculation geometry:
+\endverbatim
+
+\section cavity_fac FAC correction factors
+
+\c cavity offers the option for calculating
+the most relevant FAC correction factors as recently defined in
+[<em>Mainegra-Hing, Reynaert and Kawrakow, Med. Phys. 35 (8), 2008, 3650-3660</em>].
+Corrections for attenuation \f$A_{att}\f$, scatter \f$A_{scat}\f$,
+electron loss \f$A_{eloss}\f$, aperture leakage \f$A_{ap}\f$ and
+beam geometry \f$A_{g}\f$ are directly calculated in \c cavity.
+A complete and more efficient calculation of FAC correction factors can
+be done with another C++ user-code, \ref egs_fac "egs_fac", which includes
+the calculation of a CPE correction \f$A_{CPE}\f$ and a correction
+for the inconsistency between measured and MC calculated attenuation
+correction factors \f$A_{x}\f$.
+This latter code is the one recommended
+now for the calculation of FAC correction factors.
+
+A typical scoring input block for a type <b>\c FAC</b> calculation is shown in the
+following input file snippet
+
+\verbatim
+:start scoring options:
+
+    calculation type = FAC
+
+    :start calculation geometry:
+        geometry name = fac_2
+        cavity regions = 3184
+        aperture regions = 490,1470,2450
+        cavity mass = 0.009462477073 # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+    :stop calculation geometry:
+
+    :start kerma scoring:
+      scoring circle = 0 0 0.45 0.5
+      scoring plane normal = 0 0 1
+      muen file = E*muen file name
+    :stop kerma scoring:
+
+:stop scoring options:
+\endverbatim
+
+The input block <b><code>kerma scoring</code></b> is required to define
+an air-kerma scoring plane. The FAC point of measurement (POM) is defined to
+be centered around the scoring plane's center. Air-kerma is scored on a
+circular surface on this plane by using
+the product \f$E\times\left(\frac{\mu_{en}}{\rho}\right)_{air}\f$
+provided in an ASCII file as a function of energy \f$E\f$ using a logarithmic scale.
+Values of \f$\left(\frac{\mu_{en}}{\rho}\right)_{air}\f$ can be calculated
+using the EGSnrc user-code \c g.mortran which now offers the possibility
+to run a calculation for a whole range of energies using either a linear or
+logarithmic scale.
+\note The cavity  mass in the case of a FAC is the mass contained in
+the cylindrical volume defined by the diaphragm opening and the collecting
+plates length.
+
+\section cavity_hvl HVL calculations
+
+The ability to include several geometries in one calculation lends
+itself for HVL calculations (see for instance
+[<em>Mainegra-Hing and Kawrakow, Medical Physics, 33 (8), 2006, 2683-2690</em>]).
+The air-kerma \f$ K_{air}\f$ of an X-ray
+beam passing through absorbers of different thickness
+(different geometries: geom_1, geom_2 ... geom_ncg)
+is estimated at an user-defined scoring plane, defined in the
+<b><code>HVL scoring</code></b> input block, for a circular scoring field
+of radius \f$R\f$.
+By combining these geometries with a geometry geom_0 without absorber
+(using the <b><code>correlated geometries</code></b> input key) one can get the
+correlated air-kerma ratios which can be used to determine the HVL.
+If the key <b><code>absorber thicknesses</code></b> is included in the
+<b><code>HVL scoring</code></b> input block, then \c cavity performs a
+least-squares linear fit to the air-kerma ratios to extract the HVL.
+While a linear fit is a good approximation for medium and high
+energy X-ray beams, it is not adequate at low energies. So the
+user should beware of this when calculating HVL with \c cavity.
+An input example of the <b><code>scoring options</code></b> input block
+is shown below.
+
+\verbatim
+:start scoring options:
+    calculation type = HVL
+    :start calculation geometry:
+        geometry name  = geom_0
+        cavity regions = not_needed_or_set_to_zero
+        charge regions = not_needed_or_set_to_zero
+        cavity mass    = not_needed_or_set_to_zero
+    :stop calculation geometry:
+    :start calculation geometry:
+        geometry name  = geom_1
+        ...
+    :stop calculation geometry:
+    ...
+    :start calculation geometry:
+        geometry name  = geom_ncg
+        ...
+    :stop calculation geometry:
+
+    correlated geometries = geom_1 geom_0
+    correlated geometries = geom_2 geom_0
+    ...
+    correlated geometries = geom_ncg geom_0
+
+    :start HVL scoring:
+        scoring circle = x y z R
+        scoring plane normal = u v w
+        muen file = E*muen file name
+        absorber thicknesses = t_1 t_2 ... t_ncg
+        scatter = yes or no
+    :stop HVL scoring:
+
+    :start fluence scoring:
+        minimum energy = Emin
+        maximum energy = Emax
+        number of bins = N
+        scale          = linear, logarithmic
+    :stop fluence scoring:
+:stop scoring options:
+\endverbatim
+
+There is a hidden option in the <b><code>HVL scoring</code></b> input block
+which allows one to switch on/off the contribution from scattered
+photons to the air-kerma. This option can be made use of by using the
+<b><code>scatter</code></b> input key as shown in the example above.
+This can be useful when one wants to assess to what extend an experimental
+setup fulfill the <em>"good geometry"</em> conditions recommended for
+HVL measurements.
+
+\section cavity_fluence Fluence scoring
+
+If one is interested in estimating the charged particle (\f$\displaystyle e^-/e^+\f$)
+CSDA fluence spectrum inside the cavity, the input block
+<b><code>fluence scoring</code></b> can be used in conjunction with
+a calculation of type \c Dose.
+
+\verbatim
+:start scoring options:
+    ...
+    :start fluence scoring:
+        minimum energy = Emin
+        maximum energy = Emax
+        number of bins = N
+        scale          = linear, logarithmic
+    :stop fluence scoring:
+:stop scoring options:
+\endverbatim
+
+Since scoring the path of charged
+particles would be very  time consuming, no direct computation of
+the fluence is done. Instead, \f$\displaystyle N(T)\f$,the number of charged
+particles per unit mass in the cavity with energy above T, is scored
+differential in energy accounting for their slowing-down from
+\f$\displaystyle T_{initial}\f$ to \f$\displaystyle T_{initial} - EDEP\f$.
+In the CSDA approximation, where charged particles
+lose their energy continuously, and assuming charged particle equilibrium
+and negligible bremsstrahlung, one can use the relationship
+\f[
+\frac{d\phi}{dT}=\frac{N(T)}{\left(\frac{L}{\rho}\right)_{col}}
+\f]
+to compute the fluence if one knows the value
+of the restricted collision mass-stopping power
+\f${\displaystyle \left(\frac{L}{\rho}\right)_{col}}\f$.
+
+Combined with a calculation of type \c HVL or \c FAC,
+the <b><code>fluence scoring</code></b> input block can be used
+to request the photon fluence spectrum
+across a circular surface of radius \f$R\f$ centered around the point of
+measurement (POM) defined at the center of an user-supplied scoring plane
+(see sections \ref cavity_fac and \ref cavity_hvl).
+
+\section cavity_vr Variance reduction techniques
+
+For the calculation of dose in the collecting volume of an ionization
+chamber, \c cavity implements two variance reduction techniques (VRT):
+<em>photon splitting</em> and <em>Russian Roulette</em>.
+<em>Range rejection</em>, which is an
+approximate efficiency enhancing technique, is also provided. The following
+VRTs, available
+in CAVRZnrc but not offered by \c cavity are
+ - <em>Exponential transform</em>. This VRT is not provided because it is not
+   useful for calculating the dose to the cavity of an ionization chamber
+ - <em>Photon forcing</em>. While this technique is quite useful for
+   calculating the dose to the cavity of an ionization chamber, the
+   photon splitting technique has been found to result in a better efficency
+
+Input related to VRT is placed in the <b><code>variance reduction</code></b>
+input block as shown below.
+
+\verbatim
+:start variance reduction:
+:stop variance reduction:
+\endverbatim
+
+The <em>photon splitting</em> technique, introduced in
+[<em>Kawrakow and Fippel, Phys.Med.Biol. 45 (2000) 2163</em>] for
+external photon beam dose calculations and also found to be very useful
+for ion chamber related simulations, is turned on by including
+\verbatim
+photon splitting = N_split
+\endverbatim
+in the VRT section of the input file. A rule of thumb for good efficiency
+is \f$N_{\rm split} = N_0/(1 - \exp(-\Lambda))\f$, where
+\f$\Lambda\f$ is the approximate number of photon mean-free-paths within
+the geometry of interest and \f$N_0 \ge 5\f$. For long production runs
+one may want to investigate the efficiency as a function of
+\f$N_{\rm split}\f$ by using relatively short runs with varying
+splitting numbers before initiating the actual simulation.
+
+<em>Russian Roulette</em> of electrons that can not reach the cavity is
+specified using
+
+\verbatim
+:start range rejection:
+    rejection              = N_r
+    Esave                  = E_save
+    cavity geometry        = name of a previously defined geometry
+    rejection range medium = index of the medium to calculate electron ranges
+:stop range rejection:
+\endverbatim
+
+within the VRT section. In the above \f$1/N_r\f$ is the probability
+for survival in a <em>Russian Roulette</em> game played with electrons that
+can not reach the cavity (and therefore, \f$N_r\f$ must be greater than
+unity) and \f$E_{\rm save}\f$ is the total energy below which electrons that
+are in the cavity and can not escape the current region are immediately
+discarded and their energy deposited locally. This is mainly
+useful for the simulation of free-air chambers subjected to kilovoltage
+X-rays. The <b><code>cavity geometry</code></b> specifies the name of a previously
+defined geometry, which encompasses the chamber cavity. If this input is
+missing, or if it specifies a geometry that does not exist,
+<em>Russian Roulette</em> is still used but on a region by region basis only.
+The <b><code>rejection range medium</code></b> specifies the index of the
+medium used to initialize electron and positron ranges that are used to
+decide if the particle can reach the cavity. This should be the medium
+with the smallest stopping power found outside of the cavity geometry.
+As with the <b><code>cavity geometry</code></b> input, if this input
+is missing or specifies a non-existent medium, <em>Russian Roulette</em>
+on a region by region basis only  will be used. Note that once an electron
+has survived a <em>Russian Roulette</em> game,
+the game is not repeated to avoid the creation of extremely high weight
+particles. The overall logic of <em>Russian Roulette</em> is as follows
+ - If the electron can not escape the current region, then
+   - If it is outside of the cavity, play Russian Roulette
+   - If it is inside the cavity and its energy is less than
+     \f$E_{\rm save}\f$, discard it immediately
+ - Else if the electron is outside of the cavity geometry, calculate
+   the perpendicular distance \f$t_\perp\f$ to the cavity geometry and
+   the electron range \f$R\f$ in the
+   <b><code>rejection range medium</code></b>.
+   If \f$R \le t_\perp\f$, play Russian Roulette.
+
+<em>Range rejection</em> is turned on with the same inputs as needed
+for <em>Russian Roulette</em> by using \f$N_r=1\f$. In this case
+\f$E_{\rm save}\f$ is the energy above which no <em>range rejection</em> is
+applied. Note that, unlike <em>Russian Roulette</em>, <em>range rejection</em>
+is an approximation as it ignores the possibility of bremsstrahlung or
+other radiation produced by the slowing down electron reaching the cavity.
+One must therefore use a sufficiently low \f$E_{\rm save}\f$ to assure
+the accuracy of the simulation. In cases where bremsstrahlung
+is not negligible (\em e.g. an ion chamber in a water phantom subjected
+to a 18 MV beam), <em>range rejection</em> with a sufficiently small
+\f$E_{\rm save}\f$ is less efficient than <em>Russian Roulette</em>.
+In situations where bremsstrahlung is not important (\em e.g.
+ion chamber subjected to a Co-60 beam), <em>Russian Roulette</em> with a
+suitably chosen \f$N_r\f$ is almost as efficient as <em>range rejection</em>.
+It is therefore recommended to always use <em>Russian Roulette</em> instead
+of <em>range rejection</em>.
+
+For the efficient estimation of the air-kerma in calculations of
+type <b><code>HVL</code></b> or <b><code>FAC</code></b> a
+<em>forced detection</em> VRT is used which scores the
+contribution from photons aimed at the scoring field even before
+crossing it. As already mentioned above, correlated ratios
+of dose and/or air-kerma values can be scored providing a very efficient
+way of computing correction factors and determining the HVL. As reported
+in [<em>Mainegra-Hing and Kawrakow, Medical Physics, 33 (8), 2006, 2683-2690</em>],
+a 13 times efficiency increase was observed for a 200 kVp X-ray beam when
+combining this technique with the <em>correlated scoring</em> technique
+provided by \c cavity.
+
+\section cavity_usage Usage
+
+As any other EGSnrc user code, \c cavity can be started from the command line
+using
+\verbatim
+cavity -i input_file -p pegs_file [-o output_file] [-b] [-s] [-P N -j i]
+\endverbatim
+where the arguments in square brackets are optional. With the <b>\c -o</b> option
+one can change the name of the output files (by default <b>\c input_file.xxx</b>
+is used, where <b>\c xxx</b> is <b>\c .egslog</b> for the log file, <b>\c .egsdat</b> for the
+data file, etc.). With <b>\c -b</b> one specifies a "batch" run, \em i.e. the
+output is redirected to <b>\c output_file.egslog</b>. With <b>\c -s</b>
+one can force
+\c cavity to use a simple RCO instead of a JCF-RCO in parallel runs
+specified with <b><code>-P N -j i</code></b>, where <b>\c N</b>
+is the number of parallel
+jobs and <b>\c i</b> the job index. Not that one Unix-type systems it
+is easier to use the <b>\c exb</b> command to submit parallel jobs
+\verbatim
+exb cavity input_file pegs_file [p=N] [batch=pbs]
+\endverbatim
+where the <b>\c batch</b> option specifies the queuing system to be used.
+The EGSnrc GUI can of course be also used, see
+see PIRS-877 for more details on running EGSnrc user codes.
+
+\section cavity_example A simple example input file.
+
+\verbatim
+###############################################################################
+#
+#  $Id: cavity.doxy,v 1.12 2009/06/05 19:15:15 mainegra Exp $
+#
+#  A simple example input file for the cavity C++ application.
+#
+###############################################################################
+
+:start geometry definition:
+
+################################### define the simulation geometry:
+#                                   a simple pancake
+#                                   chamber with graphite walls
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        name = c_planes
+        positions = 0 0.3 0.5 0.8
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        name = c_cyls
+        radii = 1  1.3
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = chamber
+        dimensions = c_planes c_cyls
+        :start media input:
+            media = 170C521ICRU AIR521ICRU
+            set medium =  1 1
+        :stop media input:
+    :stop geometry:
+
+############################################ define the cavity geometry
+#                                           (to be used for Russian Roulette)
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        name = cav_planes
+        positions = 0.3 0.5
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        name = cav_cyls
+        radii = 1
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cavity
+        dimensions = cav_planes cav_cyls
+    :stop geometry:
+
+    simulation geometry = chamber
+
+:stop geometry definition:
+
+:start source definition:
+########################################### define the source:
+#                                           a Co-60 parallel beam
+
+    :start source:
+        library = egs_parallel_beam
+        name    = the_source
+        charge  = 0
+        :start shape:
+            library = egs_circle
+            radius = 1.3
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1.25  # we approximate the Co-60 spectrum by monoenergetic
+                           # 1.25 MeV photons
+        :stop spectrum:
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+##################################### Run control
+:start run control:
+
+    ncase = 100000
+
+:stop run control:
+
+##################################### Scoring options
+:start scoring options:
+
+    calculation type = dose
+
+    :start calculation geometry:
+        geometry name = chamber
+        cavity regions = 1
+        cavity mass = 0.0007569981658089966
+    :stop calculation geometry:
+
+:stop scoring options:
+
+####################################### variance reduction
+:start variance reduction:
+    photon splitting = 50
+    :start range rejection:
+        rejection = 100
+        Esave     = 1
+        cavity geometry = cavity
+        rejection range medium = 170C521ICRU
+    :stop range rejection:
+:stop variance reduction:
+
+###################################### Transport parameters
+:start MC transport parameter:
+      # You can include here any of the transport parameter options
+      # understood by EGSnrc
+:stop MC transport parameter:
+\endverbatim
+
+*/

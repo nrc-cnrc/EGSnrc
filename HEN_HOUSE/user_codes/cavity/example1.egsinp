@@ -1,0 +1,141 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ cavity application simple example input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+
+
+:start geometry definition:
+
+################################### define the simulation geometry:
+#                                   a simple pancake
+#                                   chamber with graphite walls
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        name = c_planes
+        positions = 0 0.3 0.5 0.8
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        name = c_cyls
+        radii = 1  1.3
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = chamber
+        dimensions = c_planes c_cyls
+        :start media input:
+            media = 170C521ICRU AIR521ICRU
+            set medium =  1 1
+        :stop media input:
+    :stop geometry:
+
+############################################ define the cavity geometry
+#                                           (to be used for Russian Roulette)
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        name = cav_planes
+        positions = 0.3 0.5
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        name = cav_cyls
+        radii = 1
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cavity
+        dimensions = cav_planes cav_cyls
+    :stop geometry:
+
+    simulation geometry = chamber
+
+:stop geometry definition:
+
+:start source definition:
+########################################### define the source:
+#                                           a Co-60 parallel beam
+
+    :start source:
+        library = egs_parallel_beam
+        name    = the_source
+        charge  = 0
+        :start shape:
+            library = egs_circle
+            radius = 1.3
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1.25  # we approximate the Co-60 spectrum by monoenergetic
+                           # 1.25 MeV photons
+        :stop spectrum:
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+##################################### Run control
+:start run control:
+
+    ncase = 100000
+
+:stop run control:
+
+##################################### Scoring options
+:start scoring options:
+
+    calculation type = dose
+
+    :start calculation geometry:
+        geometry name = chamber
+        cavity regions = 1
+        cavity mass = 0.0007569981658089966
+    :stop calculation geometry:
+
+:stop scoring options:
+
+####################################### variance reduction
+:start variance reduction:
+    photon splitting = 50
+    :start range rejection:
+        rejection = 100
+        Esave     = 1
+        cavity geometry = cavity
+        rejection range medium = 170C521ICRU
+    :stop range rejection:
+:stop variance reduction:
+
+###################################### Transport parameters
+:start MC transport parameter:
+      # You can include here any of the transport parameter options
+      # understood by EGSnrc
+:stop MC transport parameter:
+

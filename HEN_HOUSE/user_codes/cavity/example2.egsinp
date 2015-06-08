@@ -1,0 +1,523 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ cavity application BEAM source example input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2005
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for cavity
+#
+#  This input file has been used to calculate the dose to the cavity of a
+#  parallel-plate chamber placed at different locations in a solid water
+#  phantom and subjected to a beam from a complete BEAMnrc treatment head
+#  simulation. Results of experiments in this geometry were reported in
+#  Wamied Abdel-Rahman et al, Med.Phys. 32 (2005) 286.
+#
+#  You can only use this input file directly if a BEAMnrc accelerator
+#  named 'BEAM_example' is available and all media are available in a PEGS
+#  file.
+#
+###############################################################################
+
+
+
+################################# Define the simulation geometries.
+#
+:start geometry definition:
+
+    ########################################### The chamber
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        name = c_planes
+        positions = 0 0.0025 0.005 0.205 0.21 0.385 0.62
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        name = c_cyls
+        radii = 0.068 1.21 3.65 4.85
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = chamber
+        dimensions = c_planes c_cyls
+        :start media input:
+            media = SW521ICRU DELRIN521ICRU MYLAR521ICRU AL521ICRU,
+                    AIR521ICRU C521ICRU AU521ICRU
+            set medium =  0 2
+            set medium =  6 2
+            set medium = 12 2
+            set medium =  1 3
+            set medium =  7 3
+            set medium = 13 3
+            set medium =  2 4
+            set medium =  8 4
+            set medium = 14 4
+            set medium =  3 5
+            set medium =  9 5
+            set medium = 15 5
+            set medium = 18 22 1
+            set medium =  4 5 6
+        :stop media input:
+    :stop geometry:
+
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 0. cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -0.0001  30
+        name = water_0cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_0cm
+        base geometry = water_0cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 0.2 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -0.2  29.8
+        name = water_0.2cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_0.2cm
+        base geometry = water_0.2cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 0.4 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -0.4  29.6
+        name = water_0.4cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_0.4cm
+        base geometry = water_0.4cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 0.6 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -0.6  29.4
+        name = water_0.6cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_0.6cm
+        base geometry = water_0.6cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 0.8 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -0.8  29.2
+        name = water_0.8cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_0.8cm
+        base geometry = water_0.8cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 1.0 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -1.0  29.0
+        name = water_1.0cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_1.0cm
+        base geometry = water_1.0cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 1.5 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -1.5  28.8
+        name = water_1.5cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_1.5cm
+        base geometry = water_1.5cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 2.0 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -2.0  28.0
+        name = water_2.0cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_2.0cm
+        base geometry = water_2.0cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 2.5 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -2.5  27.5
+        name = water_2.5cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_2.5cm
+        base geometry = water_2.5cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 3.0 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -3.0  27.0
+        name = water_3.0cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_3.0cm
+        base geometry = water_3.0cm
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    #  solid water phantom and chamber placed with its front face
+    #  at 4.0 cm depth
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -4.0  26.0
+        name = water_4.0cm
+        :start media input:
+            media = SW521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name = p_chamber_4.0cm
+        base geometry = water_4.0cm
+        inscribed geometries = chamber
+    :stop geometry:
+
+    #
+    #  The cavity
+    #
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_ZCylinders
+        radii = 3.65
+        name = cav_cyl
+    :stop geometry:
+    :start geometry:
+        library = egs_planes
+        type = EGS_Zplanes
+        positions = 0.005 0.205
+        name = cav_planes
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cavity
+        dimensions = cav_planes cav_cyl
+    :stop geometry:
+
+    simulation geometry = p_chamber_3.0cm
+
+:stop geometry definition:
+
+########################################### The source:
+#                                           a full BEAMnrc treatment head
+#                                           simulation
+:start source definition:
+
+    :start source:
+        library = egs_beam_source
+        name    = the_source
+        beam code = BEAM_example
+        pegs file = all521
+        input file = CL23_15MeV
+        particle type = all
+        weight window = 0 0.01    # This discards fat particles.
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+############################################ Run control
+#
+:start run control:
+
+    ncase = 7680000
+
+:stop run control:
+
+############################################# Scoring
+:start scoring options:
+
+    calculation type = dose
+
+    ################################## chamber at 0 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_0cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        #
+        # Note: the transformation specified below is applied to particle
+        # positions before checking if the particle enters the geometry.
+        # In the case of a BEAMnrc simulation source, the particle positions
+        # are the positions when the particles cross the scoring plane
+        # i.e. at (x,y,100) in this case. The top of this geometry is at
+        # z=0 => we must translate the particle positions by -100.
+        #
+        :start transformation:
+            translation = 0 0 -100.0001
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 0.2 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_0.2cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        #
+        # see comments above. Here top of geometry is -0.2 => need
+        # -100.2 translation.
+        #
+        :start transformation:
+            translation = 0 0 -100.2
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 0.4 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_0.4cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -100.4
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 0.6 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_0.6cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -100.6
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 0.8 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_0.8cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        charge regions = 3 4 9 10
+        :start transformation:
+            translation = 0 0 -100.8
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 1.0 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_1.0cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -101.0
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 1.5 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_1.5cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -101.5
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 2.0 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_1.5cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -102.0
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 2.5 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_2.5cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -102.5
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 3.0 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_3.0cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -103
+        :stop transformation:
+    :stop calculation geometry:
+    ################################## chamber at 4.0 cm depth
+    :start calculation geometry:
+        geometry name = p_chamber_4.0cm
+        cavity regions = 3 9  # 1 must be added for the envelope
+        cavity mass = 0.001108321014560952
+        :start transformation:
+            translation = 0 0 -104
+        :stop transformation:
+    :stop calculation geometry:
+
+    #
+    # In this case we are more interested in the ratio of the cavity dose
+    # at a given depth to the dose at Dmax (which is around 3 cm in this case).
+    # With the following input we obtain these ratios and their uncertainties
+    # calculated taking into account the correlations between the doses,
+    # in addition to the absolute dose values.
+    #
+    correlated geometries = p_chamber_0cm   p_chamber_3.0cm
+    correlated geometries = p_chamber_0.2cm p_chamber_3.0cm
+    correlated geometries = p_chamber_0.4cm p_chamber_3.0cm
+    correlated geometries = p_chamber_0.6cm p_chamber_3.0cm
+    correlated geometries = p_chamber_0.8cm p_chamber_3.0cm
+    correlated geometries = p_chamber_1.0cm p_chamber_3.0cm
+    correlated geometries = p_chamber_1.5cm p_chamber_3.0cm
+    correlated geometries = p_chamber_2.0cm p_chamber_3.0cm
+    correlated geometries = p_chamber_2.5cm p_chamber_3.0cm
+    correlated geometries = p_chamber_4.0cm p_chamber_3.0cm
+
+:stop scoring options:
+
+############################################# Variance reduction
+:start variance reduction:
+    photon splitting = 40
+    :start range rejection:
+        rejection = 80
+        Esave     = 1
+        cavity geometry = cavity
+        rejection range medium = SW521ICRU
+    :stop range rejection:
+:stop variance reduction:
+
+:start MC transport parameter:
+    #  Define here parameters that should be different from their defaults.
+:stop MC transport parameter:
+
