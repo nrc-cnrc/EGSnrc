@@ -21,7 +21,7 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Authors:         Alex Bielajew, 1990                                       "
+"  Authors:         Alex Bielajew, 1988                                       "
 "                                                                             "
 "  Contributors:    Joanne Treurniet                                          "
 "                   Ernesto Mainegra-Hing                                     "
@@ -30,6 +30,9 @@
 "                   Frederic Tessier                                          "
 "                                                                             "
 "#############################################################################"
+"                                                                             "
+"  This code was originally adapted from CAVRZ V0.09 by Alex Bielajew         "
+"  in 1998.                                                                   "
 "                                                                             "
 "  Parts of the EGS code that originate from SLAC are distributed by NRC      "
 "  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
@@ -6345,10 +6348,3 @@ return;
 :EOF_RS3:;
 write(6,*) 'failed to read file';
 close(my_unit); return; end;
-
-;Copyright NRC;
-
-
-
-
-
