@@ -1,0 +1,259 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc dosxzynrc application source macros                                 "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 1986                                         "
+"                                                                             "
+"  Contributors:    Alex Bielajew                                             "
+"                   Bruce Faddegon                                            "
+"                   George Ding                                               "
+"                   Charlie Ma                                                "
+"                   Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin.                         "
+"                                                                             "
+"  Joanne Treurniet of NRC made significant contributions to the code system, "
+"  in particular the GUIs and EGS_Windows. Mark Holmes, Brian Geiser and Paul "
+"  Reckwerdt of Wisconsin played important roles in the overall OMEGA project "
+"  within which the BEAM code system was developed.                           "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This macro set goes with srcxyz.mortran. This should go ahead of the user  "
+"  code in the compilation heirarchy.                                         "
+"                                                                             "
+"#############################################################################"
+
+
+%C80         "80 column mortran input"
+!INDENT M 4; "Indent 4 spaces for each nesting level in mortran listing file"
+!INDENT F 4; "Indent 4 spaces for each nesting level in fortran output file"
+%Q1          "Automatically close quotes at end of the line"
+;
+"*******************************************************************************
+"
+"                           ***********************
+"                           *                     *
+"                           *    srcxyz.macros    *
+"                           *                     *
+"                           ***********************
+"
+"    This macros set goes with srcxyz.mortran.
+"    This should go ahead of the user code in the compilation heirarchy
+"    to avoid having to duplicate the definition of the SOURCE common block
+"
+"    Version  1.1  BAF   11/91  Phase space coding, srcrz structure isource=0,2)
+"    Version  1.2  BLIF  11/91  Any direction parallel beam (isource=1)
+"    Version  1.3  CMa   10/94  changes for MODE0 file format (isource=2)
+"    Version  1.4  CMa   10/94  changes for using the same random # generator
+"    Version  1.5  CMa   02/95  added beam characterization models
+"    Version  1.6  DWOR  08/95  included ensrc macros
+"
+"******************************************************************************
+
+REPLACE {;COMIN/SOURCE/;} WITH {
+    "Common used for passing information specific to sources                   "
+    ;
+    common/source/
+    esrc, "Sum of kinetic + Q energy carried by source particles (enflag=1) "
+    nhist,    "no. of primary (non-phsp) histories              "
+    nnread,  "Number of particles read from the ph-sp file     (isource=2,3,8) "
+    nshist,  "Number of particles in source file               (isource=2,3,8) "
+    nphist,  "Number of photons in source file                 (isource=2,3,8) "
+    nnphsp,  "Number of particles already read from source file(isource=2,3,8) "
+    einsrc,  "Source total energy input by full phase-space source(isource=2,8)"
+    xsrcold,  "stores X coordinate in phase space coordinates   (isource=2,8)"
+    ysrcold,  "stores Y coordinate in phase space coordinates   (isource=2,8)"
+    zsrcold,  "stores Z coordinate for IAEA phsp   (isource=20)   (JL and TP)"
+    usrcold,  "stores U cosine in phase space coordinates       (isource=2,8)"
+    vsrcold,  "stores V cosine in phase space coordinates       (isource=2,8)"
+    wsrcold,  "stores W for source 20				(isource=20) "
+    weightold,"stores weight for source 20			(isource=20) "
+    mu_phspold, "stores mu_phsp for source 20                   (isource=20) "
+    frMU_indx, "random MU index that detemines current setting  (isource=20,21)"
+    zinc,    "z-position of beam                                 (isource=0,6) "
+    xinl,    "Lower x-boundary of beam                           (isource=0,6) "
+    xinu,    "Upper x-boundary of beam                           (isource=0,6) "
+    yinl,    "Lower y-boundary of beam                           (isource=0,6) "
+    yinu,    "Upper y-boundary of beam                           (isource=0,6) "
+    zinl,    "Lower z-boundary of source                           (isource=6) "
+    zinu,    "Upper z-boundary of source                           (isource=6) "
+    thetax,  "Source angle angle relative to x-axis (degrees)      (isource=0) "
+    thetay,  "Source angle angle relative to y-axis (degrees)      (isource=0) "
+    thetaz,  "Source angle angle relative to z-axis (degrees)      (isource=0) "
+    uinc,    "Source incident x-axis direction cosine              (isource=0) "
+    vinc,    "Source incident y-axis direction cosine              (isource=0) "
+    winc,    "Source incident z-axis direction cosine              (isource=0) "
+    beamarea,"Source incident z-axis direction cosine          (isource=0,1,7) "
+    xcol,    "x-collimator width in the source plane             (isource=1,7) "
+    ycol,    "y-collimator width in the source plane             (isource=1,7) "
+    xiso,    "x-coordinate of the isocenter        (isource=1,2,7,8,20,21) "
+    yiso,    "y-coordinate of the isocenter        (isource=1,2,7,8,20,21) "
+    ziso,    "z-coordinate of the isocenter        (isource=1,2,7,8,20,21) "
+    phicol,  "(collimator|source plane) rotation angle(isource=1,2,7,8,20,21) "
+    theta($MXANG), "Polar angle of source center       (isource=1,2,7,8,20,21) "
+    phi($MXANG), "Azimuthal angle of source center     (isource=1,2,7,8,20,21) "
+    pang($MXANG), "Prob of particle being incident at theta-phi  (isource=7,8) "
+    angfixed($MXANG), "fixed theta or phi for group i           (isource=7,8) "
+    angmin($MXANG), "Min. varying theta or phi for group i       (isource=7,8) "
+    angmax($MXANG), "Max. varying theta or phi for group i       (isource=7,8) "
+    pgang($MXANG),  "Prob. of particle being in group i         (isource=7,8) "
+    xtemp($MXANG),    "x-coordinate of the isocenter          (isource=20,21) "
+    ytemp($MXANG),    "y-coordinate of the isocenter          (isource=20,21) "
+    ztemp($MXANG),    "z-coordinate of the isocenter          (isource=20,21) "
+    phicoltemp($MXANG),"(collimator|source plane) rotation angle(isource=20,21)"
+    thetatemp($MXANG), "Polar angle of source center           (isource=20,21)"
+    phitemp($MXANG), "Azimuthal angle of source center         (isource=20,21) "
+    muIndex($MXANG), "indices for settings defined in input file(isource=20,21)"
+    r_11($MXANG),"Rotation matrix, row 1 column 1            (isource=1,2,7,8) "
+    r_12($MXANG),"Rotation matrix, row 1 column 2            (isource=1,2,7,8) "
+    r_13($MXANG),"Rotation matrix, row 1 column 3            (isource=1,2,7,8) "
+    r_21($MXANG),"Rotation matrix, row 2 column 1            (isource=1,2,7,8) "
+    r_22($MXANG),"Rotation matrix, row 2 column 2            (isource=1,2,7,8) "
+    r_23($MXANG),"Rotation matrix, row 2 column 3            (isource=1,2,7,8) "
+    r_31($MXANG),"Rotation matrix, row 3 column 1            (isource=1,2,7,8) "
+    r_32($MXANG),"Rotation matrix, row 3 column 2            (isource=1,2,7,8) "
+    r_33($MXANG),"Rotation matrix, row 3 column 3            (isource=1,2,7,8) "
+    dsource,"Distance from isocenter to source plane(isource=1,2,8,20)"
+    dsourcetemp($MXANG),"temp dsource for source 20/21 (isource=20,21)"
+    ein,     "kinetic energy input for monoen beams or max. KE for ph space"
+    eksrcm,  "Maximum energy of source                           (isource=2,8) "
+    esrc_sp, "kinetic energy of source particle  (enflag=1)                    "
+    SSD,     "Source to surface dist for point source particles ( isource=3)"
+    einsrcold,"stores einsrc for source 20		        (isource=20) "
+    NINCSRC,  "No. of particles incident from original source   (isource=2,8)  "
+    r_dbs,    "DBS splitting radius used to generate phsp source (isource=2,8)"
+    ssd_dbs,  "SSD at which above DBS radius defined            (isource=2,8)"
+    z_dbs,    "Z at which phsp source generated                 (isource=2,8)"
+    iqinold,  "stores charge for source 20                      (isource=20) "
+    latchold, "stores latch for source 20                       (isource=20) "
+    enflag,  "Flag= 1,2,3 when source energy is different for each particle    "
+     dflag,  "0 for 1 dsurround, 1 for 4 dsurrounds (enflag > 1)               "
+    ismode,  "flag 0 or 2 stating what mode phase space input file is          "
+    isource, "Source type (0=>pb +ve z-axis, 1=>pb any dir'n, 2=>phase space)  "
+    iqin,    "Particle type (-1 => electrons, 0 => photons, 1 => positrons)    "
+    iqphsp,  "Particle type (-1 => electrons, 0 => photons, 1 => positrons)    "
+             "2 => particles of any charge (for isource = 2 only)              "
+    iqinc,   "Particle type (-1 => electrons, 0 => photons, 1 => positrons)    "
+             "2 => particles of any charge (for isource = 9 only)	       "
+    SHLflag, "1 => send particle shared lib, 0 => no shared lib (isource=20)   "
+    MLCflag, "1 => send particles through MLC, 0 => no MLC   (isource=20,21)   "
+    ixinl,   "Index of lower x-boundary of beam                  (isource=0,6) "
+    ixinu,   "Index of upper x-boundary of beam                  (isource=0,6) "
+    jyinl,   "Index of lower y-boundary of beam                  (isource=0,6) "
+    jyinu,   "Index of upper y-boundary of beam                  (isource=0,6) "
+    kzinl,   "Index of lower z-boundary of source                  (isource=6) "
+    kzinu,   "Index of upper z-boundary of source                  (isource=6) "
+    klowx,   "constant factor in irin for lower x-plane search(isource=1,2,7,8)"
+    khix,    "constant factor in irin for upper x-plane search(isource=1,2,7,8)"
+    klowy,   "constant factor in irin for lower y-plane search(isource=1,2,7,8)"
+    khiy,    "constant factor in irin for upper y-plane search(isource=1,2,7,8)"
+    klowz,   "constant factor in irin for lower z-plane search(isource=1,2,7,8)"
+    khiz,    "constant factor in irin for upper z-plane search(isource=1,2,7,8)"
+    survival_ratio, "num that survive MLC/num read from phsp	   (isource=20)"
+    nsmiss,  "Number of particles that missed geometry        (isource=1,2,7,8)"
+    nsblocked, "No. of particles blocked by library modules     (isource=20,21)"
+    nsrjct,  "No. particles rejected due to charge/latch/npass (isource=2,8)   "
+    nsoutside, "No. particles rejected because outside BEAM_SIZE (isource=2,8) "
+    nmissm,  "Number of particles not transported properly   (isource=1,2,7,8) "
+    IPRIMARY, "score primary only when=1"
+    OLDSRC,   "flag for old phase space file                    (isource=2,8)  "
+    npassi,   "=1 if a particle read from a phsp source is a multiple passer   "
+              "                                                 (isource=2,8)  "
+    nang,     "No. of incident theta-phi or groups of theta-phi (isource=7,8)  "
+    ivary($MXANG), "0 to vary phi, 1 to vary theta in group i   (isource=7,8)  "
+    ngang($MXANG), "No. of theta-phi pairs in group i           (isource=7,8)"
+    nset,     "No. of incident settings: phi,theta,phicol    (isource=20,21)"
+    more_in_cont,    "acts as boolean to tell dosxyz when a particle container"
+    "is empty and a new particle must be read from the phsp	(isource=20,21)"
+    numang,   "Always no. of incident theta-phi                 (isource=7,8)  "
+    dose_stat,"set to 1 if nhist not marked in source           (isource=2,8)"
+    ndbsrjct, "no. of photons rejected because their trajectory takes them  "
+              "outside r_dbs                                    (isource=2,8)"
+    i_dbs,    "set to 1 to reject fat photons created by DBS    (isource=2,8)"
+    iphatsrc, "returned from BEAM sim if this is a phat phot.   (isource=9)"
+    e_split,  "no. of times to split e+/e- (isource=2,8,9)"
+    i_iaea_in, "set to 1 if phase space source is in IAEA format (isource=2,8)"
+    i_mu_phsp, "set to 1 if IAEA phsp source stores MU_INDEX (isource=20)"
+    izscore,   "set to 1 if Z scored for each particle (IAEA format only)"
+    i_unit_in, "stores unit no. for phsp source (IAEA format only)"
+    k_field,   "stores incident angle index for isource=8 or 10"
+    nhist_last, "short integer for storing no. of primary histories"
+    the_beam_code, "name of BEAM treatment head sim.            (isource=9)"
+    the_input_file, "input file for BEAM treatmen head sim.     (isource=9,20)"
+    the_vcu_input_file,		       "input file for VCU sim.(isource=21)"
+    the_pegs_file,  "pegs data for BEAM treatmen head sim.     (isource=9)"
+    the_phsp_file,  "name of phase space file (above MLC)	  (isource=20)"
+    the_shared_lib, "name of the shared library			  (isource=21)"
+    the_vcu_code;    "name of vcu code (particleDmlc)	      (isource=21)"
+
+    "Explicit declarations for compatibility with implicit none"
+    real*8    esrc,muIndex;
+    $LONG_INT nhist, nnread,nshist,nphist,nnphsp;
+    $REAL einsrc, xsrcold, ysrcold,usrcold,vsrcold,wsrcold,weightold,
+    frMU_indx,zsrcold,mu_phspold;
+    real*4    zinc, xinl, xinu, yinl, yinu, zinl, zinu, thetax, thetay, thetaz,
+    uinc, vinc, winc, beamarea, xcol,ycol,xiso, yiso, ziso, phicol,
+    theta, phi, xtemp, ytemp, ztemp, phicoltemp,thetatemp, phitemp,
+    pang,angfixed,angmin,angmax,pgang,r_11, r_12, r_13, r_21,
+    r_22, r_23, r_31, r_32, r_33,dsource,dsourcetemp,
+    ein, eksrcm, esrc_sp, SSD, NINCSRC,
+    r_dbs, ssd_dbs,z_dbs,survival_ratio,einsrcold;
+    $INTEGER isource, iqin, iqphsp, iqinc,latchold,iqinold,MLCflag,SHLflag,
+    ixinl, ixinu, jyinl, jyinu, kzinl, kzinu,
+    klowx, khix, klowy, khiy, klowz, khiz,
+    nsmiss, nsblocked, nsrjct,nsoutside, nmissm,enflag,
+    dflag, ismode, IPRIMARY, OLDSRC,npassi,nang,ivary,ngang,numang,dose_stat,
+    ndbsrjct,i_dbs,iphatsrc,e_split,i_iaea_in,i_mu_phsp,izscore,i_unit_in,
+    num_field,more_in_cont,nset,k_field;
+    $SHORT_INT nhist_last;
+    character*80 the_beam_code, the_vcu_code, the_input_file,the_pegs_file,
+		 the_shared_lib,the_vcu_input_file,the_phsp_file;
+}
+;
+"    macros related to energy spectra input"
+
+REPLACE {$INVDIM} WITH {1000}   "number of elements in inverse CPD"
+REPLACE {$NENSRC} WITH {200}    "number of bins in source energy spectra"
+
+REPLACE {;COMIN/ENERGYSRC/;} WITH {
+
+;COMMON/ENERGYSRC/NENSRC,IMODE,ENSRCD,SRCPDF,SRCCDF,ENMIN,CDFINV,DELTAK;
+   REAL ENSRCD($NENSRC),SRCPDF($NENSRC),SRCCDF($NENSRC),ENMIN,
+   CDFINV($INVDIM,2),DELTAK;
+   INTEGER IMODE,NENSRC;
+}
+
+"dummy macro for write variables in phsp_macros.mortran"
+REPLACE {$MAX_SC_PLANES} WITH {1};
+
+"end of srcxyz.macros (Rev 1.12)"

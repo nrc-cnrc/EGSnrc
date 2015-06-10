@@ -1,0 +1,159 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc dosxzynrc application user macros                                   "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 1995                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Charlie Ma                                                "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin.                         "
+"                                                                             "
+"  Joanne Treurniet of NRC made significant contributions to the code system, "
+"  in particular the GUIs and EGS_Windows. Mark Holmes, Brian Geiser and Paul "
+"  Reckwerdt of Wisconsin played important roles in the overall OMEGA project "
+"  within which the BEAM code system was developed.                           "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  These macros are for use with dosxyznrc.mortran                            "
+"                                                                             "
+"#############################################################################"
+
+
+%C80        "use 80 columns"
+%Q1         "Automatically close quotes at end of the line"
+"*******************************************************************"
+"                                                                   "
+"                 dosxyz_user_macros.mortran                        "
+"                                                                   "
+"    These macros are for use with dosxyz.mortran                   "
+"                                                                   "
+"    The script will check for this file on the users area          "
+"    $HOME/egs4/dosxyz and if not there, will use the version on    "
+"    $OMEGA_HOME/dosxyz                                             "
+"                                                                   "
+"    The user can thus freely adapt the code to their situation.    "
+"                                                                   "
+"*******************************************************************"
+"                                                                   "
+"*******************************************************************"
+"   These define dimensions of phantom etc in dosxyz
+"*******************************************************************"
+"
+REPLACE {$STAT}    WITH {10}  "Number of batches to use in calcn of statistics"
+                              "It works with $STAT = 1 but gives no stats"
+REPLACE {$MXMED}   WITH {7}   "Maximum number of media
+REPLACE {$MXSTACK} WITH {10000}  "Maximum particle stack size
+REPLACE {$IMAX}    WITH {128} "Maximum number of x cells
+REPLACE {$JMAX}    WITH {128} "Maximum number of y cells
+REPLACE {$KMAX}    WITH {128} "Maximum number of z cells
+REPLACE {$MAXDOSE} WITH {{COMPUTE $IMAX*$JMAX*$KMAX+1}}
+         "Number of dose regions, can be set to < $IMAX*$JMAX*$KMAX if "
+         "necessary to reduce memory requirement, +1 for outside region"
+REPLACE {$MXREG}   WITH {{COMPUTE $IMAX*$JMAX*$KMAX+2}}
+"Number of geometrical regions (+2 for vacuum and the surrounding region)"
+
+"Following macro set to 1 to zero doses with error>50% in the .3ddose file
+"Note that dose errors do not get zeroed
+"Set to any other number to not zero these doses
+REPLACE {$DOSEZERO} WITH {1};
+
+"this is the maximum number of user-selected theta-phi combinations"
+"in isource=7,8"
+REPLACE {$MXANG} WITH {60000};
+
+"default directory in which to output phase space files"
+REPLACE {$DIRECTORY-FOR-PHSP} WITH {$cstring(egs_home)//$cstring(user_code)};
+
+"*******************************************************************"
+"   These macros define the null macros related to BEAM MODELS      "
+"*******************************************************************"
+"                                                                   "
+"V>The following are the defaults for beam characterization models;
+REPLACE {;COMIN/BMODEL/;} WITH {;}
+REPLACE {;COMIN/SSMDIS/;} WITH {;}
+;REPLACE {$BEAMMODEL-ENFLAG4-INPUT} WITH { OUTPUT ;
+   (/ ' Beam characterization model not implemented, use source 1 - 3!'//);
+}
+;REPLACE {$BEAMMODEL-INPUT-MESSAGE} WITH {;}
+;REPLACE {$BEAMMODEL-SOURCE4-INPUT} WITH { OUTPUT;
+   (/ ' Beam characterization model not implemented, use source 1 - 3!'//);
+}
+;
+REPLACE {;$BEAMMODEL_DATA_OUTPUT} WITH {;}
+REPLACE {;$BEAMMODEL-SOURCE4-OUTPUT} WITH {;}
+REPLACE {$BEAMMODEL-SOURCE4-SUMMARY} WITH {;}
+REPLACE {$BEAMMODEL-SOURCE4-ENERGY} WITH {;}
+REPLACE {$BEAMMODEL_SOURCE4_SAMPLING} WITH {;}
+;
+"*******************************************************************"
+"     macros related to LATCH bit testing for phase space sources
+"*******************************************************************"
+;
+"Macro to set bit {P2} in {P1}  to 0
+REPLACE {$IBCLR(#,#);} WITH {IBCLR({P1},{P2});}
+
+"Macro to set bit {P2} in {P1}  to 1
+REPLACE {$IBSET(#,#);} WITH {IBSET({P1},{P2});}
+
+"Macro to set test bit {P2} in {P1}
+REPLACE {$BTEST(#,#)} WITH {BTEST({P1},{P2})}
+
+"*******************************************************************"
+"     macros to turn off correlated sampling"
+"*******************************************************************"
+"  These macros are the null set for those needed for correlated sampling"
+"  V1.0 mark holmes 08/16/95                  "
+
+REPLACE {$Corr_Vars} WITH {;};
+REPLACE {$Corr_Reseed} WITH {;};
+REPLACE {$Corr_Dump} WITH {;};
+
+REPLACE {Copyright OMEGA 1995} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+
+REPLACE {Copyright OMEGA 1997} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+REPLACE {Copyright NRC 1999} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+;
+"*******************************************************************"
+"end of dosxyz_user_macros.mortran (Rev 1.4)"
