@@ -1,0 +1,4733 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc sprrznrc application                                                "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Chris Mangin, 1988                                        "
+"                                                                             "
+"  Contributors:    Alex Bielajew                                             "
+"                   Dave Rogers                                               "
+"                   Blake Walters                                             "
+"                   Aaron Merovitz                                            "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally adapted from CAVRZ (EGS4) by Chris Mangin         "
+"  in 1988.                                                                   "
+"                                                                             "
+"  Parts of the EGS code that originate from SLAC are distributed by NRC      "
+"  under the terms of the AGPL 3.0 licence, in agreement with SLAC.           "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  A large number of people have been involved with the development of EGS    "
+"  over the years. Many details are in the manual. The authors want to point  "
+"  out the central role of Ralph Nelson of SLAC in the development of EGS     "
+"  over decades. We all owe Ralph a huge debt of gratitude.  Similarly, the   "
+"  role of Alex Bielajew while he was at NRC was critical in many aspects of  "
+"  code development. Hideo Hirayama was involved with the development of EGS4 "
+"  while at SLAC and with Yosh Namito and Syuichi Ban at KEK has continued    "
+"  developments on EGS4. As well many others and users from around the world  "
+"  have assisted in developing and making available the code, in particular   "
+"  Robert D. Stewart.                                                         "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Simulates the passage of an electron or photon beam in a finite, right     "
+"  cylindrical geometry.                                                      "
+"                                                                             "
+"  Changes since Revision 1.49 in RCS:                                        "
+"                                                                             "
+"  - replaced all date/time stuff with calls to the new egsnrc date and time  "
+"    routines.                                                                "
+"                                                                             "
+"  - fixed occurences of local variables assumed to be static                 "
+"                                                                             "
+"  - cleaned up use of Fortran I/O units which are now explicitly opened and  "
+"    closed if needed except for unit 1 (the .egslst file) and unit 15 (the   "
+"    .errors file), which are defined to be automatically opened in egs_init  "
+"    in the .io file.                                                         "
+"                                                                             "
+"#############################################################################"
+
+
+%I4
+!INDENT F3;
+%L TURN ON LISTING IN CASE IT WAS OFF FOR EGS
+%C80
+%Q1
+
+REPLACE {$VERSION} WITH {
+,'(Rev 1.49 last edit 2003-03-12 11:58:44-05)',}
+"******************************************************************************
+"
+"
+"                               ********************
+"                               *                  *
+"                               * sprrznrc.mortran *
+"                               *                  *
+"                               ********************
+"
+"
+"       INTRODUCTION:
+"       THIS CODE SIMULATES THE PASSAGE OF AN ELECTRON OR PHOTON BEAM IN A
+"       FINITE, RIGHT CYLINDRICAL GEOMETRY.
+"
+"  **************************
+"
+"       VERSION 0.01    CHRIS MANGIN    88/05/09/1
+"                                       ADAPTED FROM CAVRZ(EGS4)V0.09
+"       VERSION 0.02    ALEX BIELAJEW   89/03/14/1
+"               FIXED BUG WHERE FORCING DID NOT WORK PROPERLY WITH RAYLEIGH.
+"       Version 2.01    Dave Rogers     90/01/20
+"                                       major rewrite and testing
+"                .02                    corrected $DEDX-REEVALUATION
+"       Version 3.01    D.R.            90/3/29 reworked logic of track ends
+"                                       Properly gets e- created below AE
+"                                       and improves caln efficiency. This
+"                                       made signif change to PRESTA results
+"               3.02    D.R.            90/4/6  print out dose, other IO
+"       Version 4.00    D.R.            Unix version, remove prnter
+"       Version 5.00    D.R.   91/10/5  removed ECUTIN and PCUTIN since they
+"                                       must be AE and AP. Also no range
+"                                       rejection. New version since input
+"                                       file changed but no physics change
+"       Version 6       A Merovitz/DR
+"                              98/03/08 general grids + xvgrplot
+"       Version 7       A.Merovitz/DR
+"                              98/04/15 complete rework of input files
+"                                       The code morph_sprrz.mortran converts
+"                                       old input files to new.
+"
+"       sprrznrc Version 1 99/03/12
+"                       I Kawrakow      Addapted for EGSnrc
+"
+"                Version 2 99/08/09   - Introduced ifano, so that calculations
+"                       I Kawrakow      with photon regeneration can be done
+"                                       which give the SPR for the electron
+"                                       fluence resulting from the unattenuated
+"                                       and unscattered photon beam.
+"                                       To turn this option on, use
+"                                       PHOTON REGENERATION= YES
+"                                       in the MC inputs section
+"
+"                                     - Implemented also a more accurate
+"                                       handling of steps crossing DELTA.
+"                                      (i.e. the step is sub-divided into
+"                                       a portion which reduces the kin. energy
+"                                       from E to DELTA and a portion below
+"                                       DELTA. The former scores
+"                              (E-DELTA) * SPR( (E+DELTA)/2 ),
+"                                              the later
+"                               DELTA * SPR(DELTA)
+"                                       to the stopping power ratio.
+;
+"*******************************************************************************
+"*******************************************************************************
+"*******************************************************************************
+"   Instructons for use of input routines
+"
+"   Input is via the routine get_inputs which has extensive documentation
+"   at the top of its source code.
+"
+"   Inputs are all in the format: name of value_sought= value
+"   where the name of value_sought must match that expected by the
+"   program. The = sign must have no blanks on its immediate left and
+"   at least one on its immediate right..
+"
+"   The value_sought must be the first thing on a line but blanks are
+"     allowed before it.
+"
+"   Various inputs are only sought between certain delimeter strings
+"     which are defined below (eg :start I/O control: :stop I/O control:)
+"     If not specified, the whole file is searched for a requested value_sought.
+"     Delimeter strings are enclosed by colons.
+"     Note that within delimeter strings, order of inputs does not matter.
+"
+"   If a requested quantity is not found, this is noted in $input.errors
+"     and this file is printed at the end of the log file.
+"
+"   A semi-colon implies the end of input for this quantity but is
+"     not mandatory.  However, this means they cannot be used in titles.
+"   A # sign indicated everything else on the line is a comment (and
+"     cannot be used in titles.
+"   Case is not important in the names of the quantites.
+"
+"   Commas separate multiple values for a given quantity and a comma
+"     at the end of a line implies there is more input on the next line.
+"   Values can extend over as many lines as needed. Use commas to imply
+"     there are more values on the next line.
+"
+"   Blank lines and blanks in general are ignored.
+"   tabs are NOT allowed when character input is being sought,
+"   including tabs used to put # to the right after a character input. Use
+"   blanks instead.
+"
+"   The maximum record length is 256 characters.
+"
+"   There is a routine morph_sprrz which takes an old format input file
+"     and translates it.
+"
+"   There should be a file sprrz_template.egsinp which can be used
+"     and which defines most options.
+"
+"   One drawback of this system is that there is a disconnect between
+"     the internal variable name used and the value_sought strings.
+"     In the input description variables listed in [ ] braces are
+"     the internal variable names associated with this input.
+"
+"*******************************************************************************
+"* (1)  *  Integers between parentheses show the value of the internal         *
+"*      *  variable corresponding to this input. These are for reference only. *
+"*      *                                                                      *
+"* (M)  *  The 'M' indicates that the variable at hand has multiple            *
+"*      *  input capability.  One may assign an arbitrary number of            *
+"*      *  values to that input.                                               *
+"*      *  E.g.:  NSLAB= 2, 10, 2, 16...                                       *
+"*      *                                                                      *
+"* (M2) *  The 'M' with an integer beside it means that the variable           *
+"*      *  has that number of inputs.                                          *
+"*      *  E.g.:  RANDOM NUMBER SEEDS= 97, 33                                  *
+"*      *                                                                      *
+"* (I)  *  Regular (one number) integer input value.                           *
+"*      *  E.g.:  SOURCE NUMBER= 0                                             *
+"*      *                                                                      *
+"* (R)  *  Regular (one number) real input value.                              *
+"*      *  E.g.:  Z OF FRONT FACE= -1000.0                                     *
+"*      *                                                                      *
+"* (C)  *  Regular (one string) character input value(no ; or #).              *
+"*      *  E.g.:  TITLE= NRCC EGS simulation                                  *
+"*      *                                                                      *
+"*******************************************************************************
+"*******************************************************************************
+"                                TITLE
+"                                *****
+"*******************************************************************************
+"
+"
+"       TITLE          (C)  TITLE OF THE INPUT FILE (FORMAT= '80A1')
+;
+"*******************************************************************************
+"
+" I/O DELIMETERS:    :start I/O control:
+"                    :stop I/O control:
+"
+"*******************************************************************************
+"                       INPUT/OUTPUT CONTROL INPUT
+"                       **************************
+"*******************************************************************************
+"
+"
+"  IWATCH= off         (0)  for normal output
+"        = interactions(1)  output on every discrete interaction
+"        = steps       (2)  output on every electron/photon step as well
+"        = deposited   (3)  prints out only when energy is deposited
+"        = graph       (4)  prints out file for graphics
+"
+"  STORE INITIAL RANDOM NUMBERS
+"        = no          (0)  do not store the initial random numbers
+"        = last        (1)  store the initial random number for the last history
+"        = all         (2)  store all the initial random numbers
+"
+"  IRESTART
+"        = first       (0)  first run for this data set
+"        = restart     (1)  restart of a previous ruN
+"        = analyze     (3)  just read in the raw data and do the statistical
+"                           analysis
+"        = start-RNS   (4)  read starting random numbers from a file (E.G. for
+"                           output to a graphics package)
+"  STORE DATA ARRAYS
+"        = yes         (0)  store data arrays for re-use
+"        = no          (1)  don't store them
+"
+"  SPR OUTPUT
+"       = regions          (0)  specify stopping power ratio output by regions
+"                               (no .plotdat file will be generated)
+"       = slabs/cylinders  (1)  specify stopping power ratio output by slabs and
+"                               cylinders (.plotdat file will be generated)
+"
+"*******************************************************************************
+"
+"  IF SPR OUTPUT= regions
+"
+"  SPR START REGION    (M)  REGION NUMBERS IN WHICH TO START SCORING STOPPING
+"                           POWER RATIOS
+"
+"  SPR STOP REGION     (M)  REGION NUMBERS IN WHICH TO STOP SCORING STOPPING
+"                           POWER RATIOS
+"
+"*******************************************************************************
+"
+"  IF SPR OUTPUT= slabs/cylinders
+"
+"  SPR IN CYLINDER IX  (M)  CYLINDER NUMBERS FOR WHICH TO OUTPUT
+"                           STOPPING POWER RATIOS (= 0 FOR NO OUTPUT)
+"
+"  SPR IN SLAB IZ      (M)  PLANAR SLAB NUMBERS FOR WHICH TO OUTPUT
+"                           STOPPING POWER RATIOS (= 0 FOR NO OUTPUT)
+"
+"******************************************************************************
+"
+"       Note that range rejection, if on, will be turned off in those
+"       regions in which stopping power ratios are to be output
+"
+"      Also note that, in the grid output to the .egslst file, regions in
+"      which stopping power ratios are NOT to be output will have stopping power
+"      ratios of zero
+;
+"*******************************************************************************
+"
+" MONTE CARLO DELIMETERS:    :start Monte Carlo inputs:
+"                            :stop Monte Carlo inputs:
+"
+"*******************************************************************************
+"                       MONTE CARLO CONTROL INPUT
+"                       *************************
+"*******************************************************************************
+"
+"
+"  NUMBER OF HISTORIES         (I)  # HISTORIES TO RUN
+"                                   (MIN:100, DEFAULTS TO 20 000)
+"
+"  INITIAL RANDOM NO. SEEDS=  INTGER1, INTEGER2
+"                  User-code can use RANLUX or RANMAR, depending on selection
+"                  Default is RANLUX
+"            RANLUX
+"                  INTEGER1 is the luxury level, use 1 to 4, 4 taking longest
+"                           default is 1 (set by $DEFAULT-LL in ranlux.macros)
+"                  INTEGER2 selects the independent sequence to use, it
+"                           can be from 1 to 1073741824 (2**30)
+"            RANMAR
+"                  INTEGER1 is a seed between 1 and 31328 (0 =>default 1802)
+"                  INTEGER2 is a seed between 1 and 30081 (0 =>default 9937)
+"                     Selection of unique INTEGER2 values guarantees independent
+"                     sequences.
+"            Note:
+"                After the seeds are first input and used for initialization,
+"                the variables IXXIN and JXXIN are just pointers used by the RNG
+"
+"  MAX CPU HOURS ALLOWED       (I)  MAX CPU TIME ALLOWED IN HOURS, DEFAULT=999hr
+"
+"  PHOTON REGENERATION         (C)  yes   => no scattered photons and
+"                                            primaries are regenerated
+"                                   no (default) => full calculation
+"
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+" GEOMRZ DELIMETERS:    :start geometrical inputs:
+"                       :stop geometrical inputs:
+"
+"*******************************************************************************
+"                       CYLINDRICAL GEOMETRY INPUT
+"                       **************************
+"*******************************************************************************
+"
+"CARD CGM1
+"
+"  METHOD OF INPUT
+"        = Groups         (0)   INPUT GROUPS OF SLABS OF EQUAL THICKNESS
+"        = Individual     (1)   VERBOSE INPUT OF THE GEOMETRY AND MEDIA.
+"
+"*******************************************************************************
+"
+"CARD CGM2A (ONLY IF ITERSE= Groups)
+"
+"  Z OF FRONT FACE        (R)   START OF FIRST SLAB (REAL)
+"  NSLAB                  (M)   # PLANAR SLABS IN A GROUP (INTEGERS)
+"  SLAB THICKNESS         (M)   THICKNESS OF EACH SLAB IN THE GROUP (REALS)
+"
+"*******************************************************************************
+"
+"CARD CGM2B (ONLY IF ITERSE= Verbose)
+"
+"  Z OF FRONT FACE        (R)   START OF FIRST SLAB (REAL)
+"  DEPTH BOUDARIES        (M)   GEOMETRICAL Z-PLANE COORDINATES (REALS)
+"
+"*******************************************************************************
+"
+"CARD CGM3
+"
+"  RADII                  (M)   RADII OF CYLINDERS DEFINING THE GEOMETRY (REALS)
+"
+"*******************************************************************************
+"                                MATERIAL INPUT
+"                                **************
+"*******************************************************************************
+"
+"CARD M1
+"
+"  MEDIA                  (M)   TYPE OF MATERIAL (FMT='24A1')
+"                               BY CONVENTION THE PRIMARY WALL
+"                               MATERIAL IS FIRST, THE CAVITY MATERIAL
+"                               IS SECOND AND THE REST FOLLOWS
+"
+"*******************************************************************************
+"
+"CARD M2
+"
+"  DESCRIPTION BY= Regions(0)   USING THE IRL REGION NUMBER
+"                = Planes (1)   USING THE IX, IZ PLANES
+"
+"*******************************************************************************
+"
+"CARD M3-A  (CHOICE OF CARD M3-A AND CARD M3-B)
+"
+"  MEDNUM                 (M)   THE MATERIAL NUMBER (INEGERS)
+"                               (MEDNUM=0 TO SKIP)
+"  START REGION           (M)   INITIAL GEOMETRICAL ZONE(IRL) (INTEGERS)
+"  STOP REGION            (M)   FINAL GEOMETRICAL ZONE(IRL) (INTEGERS)
+"                               ( >NREGLO TO INPUT MORE THAN ONE ZONE)
+"                               DEFAULTS:   MEDNUM=0 FOR REGION=1 (i.e. VACUUM)
+"                                           MEDNUM=1 FOR REGION=2,NREG
+"
+"*******************************************************************************
+"
+"CARD M3-B  (CHOICE OF CARD M3-A AND CARD M3-B)
+"
+"  MEDNUM                 (M)   THE MATERIAL NUMBER (INEGERS)
+"                               (MEDNUM=0 TO SKIP)
+"  START ZSLAB            (M)   INITIAL ZSLAB (IZ) (INTEGERS)
+"  STOP ZSLAB             (M)   FINAL ZSLAB (IZ) (INTEGERS)
+"  START RING             (M)   INITIAL radial ring (IX) (INTEGERS)
+"  STOP RING              (M)   FINAL radial ring (IX) (INTEGERS)
+"                               ( >NREGLO TO INPUT MORE THAN ONE ZONE)
+"                               DEFAULTS:   MEDNUM=0 FOR REGION=1 (i.e. VACUUM)
+"                                           MEDNUM=1 FOR REGION=2,NREG
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+" SOURCE DELIMETERS:    :start source inputs:
+"                       :stop source inputs:
+"
+"*******************************************************************************
+"                             SOURCE INPUT
+"                            **************
+"*******************************************************************************
+;
+" SOURCE DELIMETERS:    :start source inputs:
+"                       :stop source inputs:
+"
+"FOR ALL SOURCES
+"                                      Charge of the incident beam
+"  INCIDENT PARTICLE= electron   (-1)  electrons
+"                     photon     (0)   photons
+"                     positron   (1)   positrons
+"
+"  (for SOURCE 21,22,23)  all    (2)  include all of the particles
+"                                     in the phase space file
+"                                     [IQIN]
+"                    charged     (3)  include e+ and e-
+"
+"  SOURCE NUMBER                 (I)   number of the source
+"                                      [ISOURC]
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  0 <<<<<<<<
+"
+"     PARALLEL BEAM INCIDENT FROM THE FRONT (+VE Z-AXIS) ""toc:
+"
+"
+"  SOURCE OPTIONS            (M4)  RBEAM, UINC, VINC, WINC
+"
+"               RBEAM          radius of parallel beam in cm
+"                              (defaults to max radius of geometry)
+"               UINC           incident x-axis direction cosine
+"               VINC           incident y-axis direction cosine
+"               WINC           incident z-axis direction cosine
+"                              NOTE: (UINC,VINC,WINC)
+"                              get automatically normalized
+"                              defaults to (0.0,0.0,1.0)
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  1 <<<<<<<<
+"
+"     POINT SOURCE ON AXIS INCIDENT FROM THE FRONT    ""toc:
+"
+"  SOURCE OPTIONS                (M4)  DISTZ, RBEAM, 0, 0
+"
+"               DISTZ          distance of the point source from the
+"                              front of the target in cm (DEFAULT 100.)
+"               RBEAM          radius of the beam at the front of the
+"                              target in cm (defaults to MAX radius)
+"
+"------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  2 <<<<<<<<
+"
+"        BROAD PARALLEL BEAM INCIDENT FROM FRONT (+VE Z-AXIS) ""toc:
+"               WITH UNIT AREA BEAM AND LARGE SCORING AREA
+"
+"  SOURCE OPTIONS          (M4)  0, 0, 0, 0
+"
+"------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  3 <<<<<<<<
+"
+"     UNIFORM ISOTROPICALLY RADIATING DISK OF FINITE SIZE   ""toc:
+"            (MUST BE ALLOWED FOR IN THE GEOMETRICAL DEFINITIONS)
+"
+"  SOURCE OPTIONS                (M4)  RMINBM, RBEAM, ZSMIN, ZSMAX
+"
+"               RMINBM,RBEAM           inner and outer radii of source region
+"                                      must be inside geometry
+"               ZSMIN,ZSMAX            min and max z values for source
+"
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  4 <<<<<<<<
+"
+"     FOR CENTRAL AXIS FLUENCE VS BEAM RADIUS      ""toc:
+"
+"  SOURCE OPTIONS            (M4)  RCAXIS, 0, 0, 0
+"
+"               RCAXIS       radius of central axis scoring zone (cm)
+"
+"        NOTE: this source option treats the cylindrical radii input
+"              above as beam radii. the largest radius must be infinite
+"              and the phantom must be homogeneous (at least in each layer)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  10 <<<<<<<<
+"
+"     PARALLEL BEAM INCIDENT FROM THE SIDE (+VE Y-AXIS)    ""toc:
+"
+"  SOURCE OPTIONS           (M4)  XBEAM, ZBEAM, 0, 0
+"
+"               XBEAM             half-width of the rectangular beam in cm
+"                                 (defaults to max radius)
+"               ZBEAM             half-height of the rectangular beam in cm
+"                                 (defaults to max)
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  11 <<<<<<<<
+"
+"     POINT SOURCE INCIDENT FROM THE SIDE     ""toc:
+"
+"
+"  SOURCE OPTIONS                (M4)  DISTRH, XBEAM, ZBEAM, 0
+"
+"               DISTRH                 distance of the source from the middle
+"                                      of the target in cm (defaults to 100.)
+"               XBEAM                  half-width of the beam at the center of
+"                                      the target in cm (defaults to max radius)
+"               ZBEAM                  half-height of the beam at the center of
+"                                      the target in cm (defaults to max)
+"
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  12 <<<<<<<<
+"
+"   POINT SOURCE OFF AXIS         ""toc:
+"
+"  SOURCE OPTIONS                (M4)  DISTRH, DISTZ, 0, 0
+"
+"               DISTRH                 distance of the point source off the
+"                                      Z-axis.
+"               DISTZ                  perpendicular distance of the
+"                                      point source away from the front face.
+"                                      a negative value is permitted.
+"
+"                                      DISTZ > 0
+"                                      point located in front of front face
+"
+"                                      0 > DISTZ > -(ZPLANE(NPLANE)-ZPLANE(1))
+"                                      point located between front and rear face
+"
+"                                      DISTZ < -(ZPLANE(NPLANE)-ZPLANE(1))
+"                                      point located rear of rear plane
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  13 <<<<<<<<
+"
+"        PARALLEL BEAM FROM ANY ANGLE     ""toc:
+"
+"  SOURCE OPTIONS                (M4)  UINC, VINC, WINC, 0
+"
+"               UINC                   incident x-axis direction cosine
+"               VINC                   incident y-axis direction cosine
+"               WINC                   incident z-axis direction cosine
+"
+"                 NOTE: (UINC,VINC,WINC) get automatically normalized
+"                       default is (0.0,0.0,1.0)
+"
+"
+"------------------------------------------------------------------------------
+"                     >>>>>>>> SOURCE  14 <<<<<<<<
+"
+"   POINT SOURCE ON AXIS INCIDENT FROM THE FRONT WITH ALL   ""toc:
+"    EVENTS INSIDE RMINBM NOT FOLLOWED (A FUDGE FOR COLLIMATOR STUDIES)
+"
+"  SOURCE OPTIONS                (M4)  DISTZ, RBEAM, RMINBM, IGNORED
+"
+"               DISTZ                  distance of the point source from the
+"                                      front of the target in cm
+"                                      (defaults to 100.)
+"               RBEAM                  radius of the beam at the front of the
+"                                      target in cm (defaults to max radius)
+"               RMINBM                 below this radius, all histories are
+"                                      terminated by the source routines by
+"                                      giving them zero weight.
+"                                      The howfar routines must check for this.
+"
+"-------------------------------------------------------------------------------
+;
+"
+"
+"
+"                     >>>>>>>> SOURCE  15 <<<<<<<<
+"
+"  POINT SOURCE OFF AXIS. The same as source 12 but uses an alternative
+"  implementation for sampling points on the surface of the RZ-geomtry. The
+"  motivation for implementing this source was to check that source 12 is OK
+"  and to check the effect of varying weights from the source on the
+"  statistical uncertainty (contrary to source 12, source 16 produces
+"  essentially  constant weights if the geometry-to-source distance is large
+"  compared to the geometry dimension, a typical situation for ion chamber
+"  simulations)
+"
+"  SOURCE OPTIONS                (M4)  DIST, ANGLE, IGNORED, IGNORED
+"
+"             DIST                     distance of the centre of the geometry
+"                                      to the source in cm.
+"             ANGLE                    angle of rotation around the x-axis.
+"                                      (because of the cylindrical symetry,
+"                                      rotations around the x-axis and y-axis
+"                                      are indistinguishable). 0 degrees
+"                                      corresponds to a source above the front
+"                                      face (i.e. the same as source 1), 90
+"                                      degrees to a source from the side
+"                                      (i.e. the same as source 11).
+"                                      The source MUST be outside the geometry,
+"                                      otherwise the initialization routine
+"                                      will abort execution.
+"
+"           Note that if you are not actually rotating about the center of the
+"           geometry, you must calculate the angle and distance as if you
+"           were.
+"
+"-------------------------------------------------------------------------------
+;
+"
+"
+"
+"                     >>>>>>>> SOURCE  16 <<<<<<<<
+"
+"           EXTENDED (CIRCULAR OR RECTANGULAR)  SOURCE OFF AXIS.
+"
+"  SOURCE OPTIONS                (M4)  DIST, ANGLE, TMP1, TMP2
+"
+"            DIST                      distance of geometry centre to source
+"                                      centre in cm.
+"
+"            ANGLE                     angle of rotation around the x-axis
+"                                      (see comments/explanations to source 15)
+"
+"            TMP1, if TMP2 <= 0        radius of the source (i.e., the emitting
+"        or  TMP2, if TMP1 <= 0        position is picked uniformly within the
+"                                      circle).
+"
+"            TMP1 and TMP2, if both    half-sizes of the radiating rectangle
+"            >= 0                      in x- and y-directions before rotation,
+"                                      i.e., initially x and y are picked
+"                                      within the rectangle and z is set to
+"                                      -DIST + geometry centre. Then a rotation
+"                                      around the x-axis is performed.
+"       In all cases the source plane is perpendicular to the line joining
+"       it to the center of the geometry.   Note that this introduces a
+"       slight error if the center of your geometry is not the true point
+"       of rotation.
+"
+"       Note: if TEMP1 <= 0 and TEMP2 <= 0, source 16 becomes a point-source
+"             off-axis, i.e. the same as source 12 and 15.
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  20 <<<<<<<<
+"
+"   RADIAL DISTRIBUTION INPUT      ""toc:
+"
+"  MODEIN= Local                 (0)   if radial distribution is to be input
+"                                      locally through the .egs4inp file
+"        = External              (1)   if the distribution is to be input
+"                                      via an external file
+"
+"                        -----------------------------
+" ONLY IF MODEIN= Local
+"
+"  NRDIST                        (I)   # radial bins in distribution histogram
+"  RDISTF                        (M)   top of radial bin.
+"                                      should be values for 1 to NRDIST.
+"  RPDF                          (M)   Probability of initial particle being
+"                                      in this bin.
+"                                      Probability doesn't need to be normalized
+"                                      but it should be in units cm**-2
+"                                      Should be values for 1 to NRDIST.
+"  RDIST IOUTSP= None            (0)   No distribution data in output summary
+"              = Include         (1)   include distribution data output summary
+"
+"                        -----------------------------
+"  ONLY IF MODEIN= External
+"
+"  RDIST FILENAME                (C)   filename(with ext) contains
+"                                      distribution information
+"
+"  RDIST IOUTSP= None            (0)   No distribution data in output summary
+"              = Include         (1)   include distribution data output summary
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  21 <<<<<<<<
+"
+"    FULL BEAM PHASE-SPACE BEAM DATA, INCIDENT ON FRONT FACE    ""toc:
+"
+"  SOURCE OPTIONS                (M4)  IMODE, 0, 0, 0
+"
+"               IMODE              0=> 7 variables/record: X,Y,U,V,E,WT,LATCH
+"                                  2=> 8 variables/record: the above + ZLAST
+"
+"  FILSPC                        (C)   filename (with ext) contains
+"                                      phase space information
+"                                      (maximum of 80 characters)
+"                                      (assigned to unit 42)
+"
+"-------------------------------------------------------------------------------
+;
+"
+"                     >>>>>>>> SOURCE  22 <<<<<<<<
+"
+"    FULL BEAM PHASE-SPACE BEAM DATA FROM ANY ANGLE, INSIDE OR OUTSIDE   ""toc:
+"
+"    PARTICLES ARE READ IN FROM A BEAM PHASE SPACE and placed on a plane
+"    described by the SOURCE OPTIONS inputs (see below). Then it is checked
+"    whether they are already inside the geometry. If yes, the region index
+"    is determined and the shower intiated. If not, it is checked whether
+"    the particle trajectory will intersect the geometry (assuming that the
+"    geometry is surrounded by vacuum). If not, the particle is rejected and
+"    the next one taken from the phase-space file. If yes, the particle
+"    is placed on the entry point and the shower is initiated.
+"
+"  SOURCE OPTIONS                (M4)  IMODE, DIST, ANGLE, ZOFFSET
+"
+"               IMODE              0=> 7 variables/record: X,Y,U,V,E,WT,LATCH
+"                                  2=> 8 variables/record: the above + ZLAST
+"               DIST               Perpendicular distance of the phase-space
+"                                  plane to the point of rotation in cm.
+"               ANGLE              Angle of rotation in degrees. The rotation
+"                                  is performed around an axis that is parallel
+"                                  to the x-axis and passes through the point
+"                                  (x,y,z)=(0,0,ZOFFSET).
+"               ZOFFSET            Point of rotation. If |ZOFFSET| > 1e4,
+"                                  the centre of the geometry is taken as
+"                                  the point of rotation (but note that
+"                                  the maximum value allowed by the input
+"                                  routine is 1e6, so that |ZOFFSET| must
+"                                  be between 1e4 and 1e6 to use the centre
+"                                  of the geometry automatically).
+"
+"    Examples:
+"       - to place a phase-space on the upper z-face of the geometry,
+"         use DIST=0, ANGLE=0, ZOFFSET=zplane(1)
+"         This is the same as source 21
+"       - to place a phase space on the lower z-face of the geometry,
+"         use DIST=0, ANGLE=180, ZOFFSET=zplane(n)
+"       - to have a phase file incident from, say, 60 degrees with
+"         a distance to the centre of the geometry of 30 cm, use
+"         DIST=30, ANGLE=60, ZOFFSET=9999.
+"   etc.
+"
+"  FILSPC                        (C)   filename (with ext) contains
+"                                      phase space information
+"                                      (maximum of 80 characters)
+"                                      (assigned to unit 42)
+"-------------------------------------------------------------------------------
+"
+"                     >>>>>>>> SOURCE  23 <<<<<<<<
+"
+"    BEAM TREATMENT HEAD SIMULATION AS SOURCE INCIDENT FROM AND ANGLE,  ""toc:
+"    INSIDE OR OUTSIDE PHANTOM                                          ""toc:
+"
+"    PARTICLES ARE READ DIRECTLY FROM A BEAM SIMULATION COMPILED AS A
+"    SHARED LIBRARY.  Particles are read at the scoring plane in
+"    the BEAM simulation (although no phase space file is scored) and are
+"    tranlated/rotated by the inputs DIST, ANGLE, XOFFSET, YOFFSET, ZOFFSET,
+"    described below.  Then it is checked
+"    whether they are already inside the geometry. If yes, the region index
+"    is determined and the shower intiated. If not, it is checked whether
+"    the particle trajectory will intersect the geometry (assuming that the
+"    geometry is surrounded by vacuum). If not, the particle is rejected and
+"    the next one taken from the BEAM simulation (more histories are run in
+"    the BEAM simulation if required).  If yes, the particle
+"    is placed on the entry point and the shower is initiated.
+"
+"  BEAM CODE                     (C)  The name of the accelerator code being
+"                                     used as a source including the BEAM_
+"                                     prefix (ie BEAM_accelname).  This code
+"                                     must have been compiled as a shared
+"                                     library (see the BEAM manual for more
+"                                     details) and exist as
+"                                     libBEAM_accelname.so (for Linux/Unix) or
+"                                     libBEAM_accelname.dll (for Windows) in
+"                                     directory $EGS_HOME/bin/config.
+"
+"  INPUT FILE                    (C)  The name of a working input file
+"                                     (no .egsinp extension) for
+"                                     the BEAM code BEAM_accelname.  This
+"                                     input file must specify output of a
+"                                     phase space file at one scoring plane.
+"                                     Particles that would have been scored
+"                                     in the phase space file are extracted
+"                                     and used as the incident particles in
+"                                     the DOSXYZ simulation instead.  The
+"                                     input file must exist in the directory
+"                                     $EGS_HOME/BEAM_accelname.
+"
+"  PEGS FILE                     (C)  The name of the pegs4 data set (no
+"                                     .pegs4dat extension) used
+"                                     by BEAM_accelname with the input file
+"                                     specified by INPUT FILE.  The pegs4
+"                                     data set must exist in either
+"                                     $HEN_HOUSE/pegs4/data or in
+"                                     $EGS_HOME/pegs4/data.
+"
+"  WEIGHT WINDOW                 (M2)  MIN_WEIGHT_23, MAX_WEIGHT_23
+"
+"               MIN_WEIGHT_23         Min. weight of particles to use from
+"                                     the BEAM simulation (defaults to -1E30)
+"               MAX_WEIGHT_23         Max. weight of particles to use from
+"                                     the BEAM simulation (defaults to 1E30)
+"
+"  SOURCE OPTIONS                (M5)  DIST, ANGLE, ZOFFSET, XOFFSET, YOFFSET
+"
+"               DIST               Perpendicular distance of the phase-space
+"                                  plane to the point of rotation in cm.
+"               ANGLE              Angle of rotation in degrees. The rotation
+"                                  is performed around an axis that is parallel
+"                                  to the x-axis and passes through the point
+"                                  (x,y,z)=(0,0,ZOFFSET).
+"               ZOFFSET            Point of rotation. If |ZOFFSET| > 1e4,
+"                                  the centre of the geometry is taken as
+"                                  the point of rotation (but note that
+"                                  the maximum value allowed by the input
+"                                  routine is 1e6, so that |ZOFFSET| must
+"                                  be between 1e4 and 1e6 to use the centre
+"                                  of the geometry automatically).
+"               XOFFSET,YOFFSET    X and Y offset of scoring plane in BEAM
+"                                  simulation (cm).  Offsets are applied before
+"                                  rotating the source.
+"
+"    Examples:
+"       - to have BEAM simulation incident on the upper z-face of the geometry,
+"         use DIST=0, ANGLE=0, ZOFFSET=zplane(1)
+"         This is the same as source 21
+"       - to have BEAM simulation incident on the lower z-face of the geometry,
+"         use DIST=0, ANGLE=180, ZOFFSET=zplane(n)
+"       - to have BEAM simulation incident from, say, 60 degrees with
+"         a distance to the centre of the geometry of 30 cm, use
+"         DIST=30, ANGLE=60, ZOFFSET=9999.
+"
+"*******************************************************************************
+;
+"
+"            NOT REQUIRED IF ISOURC=21,22,23 (FULL PHASE SPACE OF READ)
+"
+"
+" ENSRC DELIMETERS:  :start source inputs:
+"                    :stop source inputs:
+"
+"
+"  INCIDENT ENERGY
+"        = monoenergetic  (0)  IF MONOENERGETIC BEAM
+"        = spectrum       (1)  IF ENERGY SPECTRUM TO BE USED
+"
+"           ---------------------------------------
+"
+"       ONLY IF INCIDENT ENERGY= Monoenergetic:
+"
+"                   INCIDENT KINETIC ENERGY(MEV)   (I)
+"                                   KINETIC ENERGY OF THE INCIDENT BEAM IN MeV
+"                                   (DEFAULTS TO 1.25)
+"
+"           ---------------------------------------
+"
+"       ONLY IF INCIDENT ENERGY= Spectrum:
+"
+"                   SPEC FILENAME   (C)  FILENAME (WITH EXT)
+"                                   CONTAINS SPECTRUM INFORMATION
+"
+"                                   FILE FORMAT:
+"                                   TITLE      SPECTRUM TITLE  (80 char)
+"                                   NENSRC, ENMIN, MODE
+"                                   NENSRC     # ENERGY BINS IN SPEC. HISTOGRAM
+"                                   ENMIN      LOWER ENERGY OF FIRST BIN
+"                                   MODE       =0, assumes cts/bin
+"                                              =1  assumes cts/MeV
+"                                   ENSRCD(I),SRCPDF(I)  I=1,NENSRC
+"                                   TOP OF ENERGY BIN AND PROBABILITY OF
+"                                   INITIAL PARTICLE BEING IN THIS BIN.
+"                                   PROBABILITY DOES NOT NEED TO BE NORMALIZED
+"
+"                   SPEC IOUTSP
+"                        = none     (0)  NO SPECTRUM DATA IN OUTPUT SUMMARY
+"                        = include  (1)  INCLUDE SPECTRUM DATA IN OUTPUT SUMMARY
+;
+"*******************************************************************************
+;
+"
+"                         MC TRANSPORT PARAMETER
+"                         **********************
+"
+"  All input associated with selection of various transport parameter
+"  is not crucial for the execution as there are default values set.
+"  Therefore, if some of the input options in this section are
+"  missing/misspelled, this will be ignored and defualt parameter assumed
+"  As the transport parameter input routine uses get_inputs, a lot
+"  of error/warning messages may be produced on UNIT 15, though.
+"  If you don't have the intention of changing default settings,
+"  simply ignore the error messages.
+"
+"  The delimeters are
+"
+"               :start mc transport parameter:
+"               :stop mc transport parameter:
+"
+"  You can change this by including the statement
+"
+"  REPLACE {$THE_DELIMETER} WITH {'WHATEVER-YOU-LIKE-THE-DELIMETER-TO-BE'}
+"
+"  in your input file.
+"
+"  Currently, the following options are available (except for a few entries,
+"  case does not matter):
+"
+"       Global ECUT=     Set a global (in all regions) electron transport
+"                        cut off energy (in MeV). If this imput is missing,
+"                        AE(medium) will be used.
+"                        [ ECUT ]
+"       Global PCUT=     Set a global (in all regions) photon transport
+"                        cut off energy (in MeV). If this imput is missing,
+"                        AP(medium) will be used.
+"                        [ PCUT ]
+"       Global SMAX=     Set a global (in all regions) maximum step-size
+"                        restriction for electron transport (in cm).
+"                        If missing, no geometrical step-size restrictions will
+"                        be employed. Note that if you use the default
+"                        EGSnrc electron-step algorithm, no SMAX-restriction
+"                        is necessary. Option is useful for transport in low
+"                        density materials (air) when PRESTA behaviour is
+"                        turned on (see below)
+"                        [ SMAXIR ]
+"       ESTEPE=          Set the maximum fractional energy loss per step.
+"                        Note that this is a global option only, no
+"                        region-by-region setting is possible. If missing,
+"                        the defualt is 0.25 (25%)
+"                        [ ESTEPE ]
+"       XImax=           Maximum first elastic scattering moment per step.
+"                        Default is 0.5, NEVER use value greater than 1 as
+"                        this is beyond the range of MS data available.
+"                        [ XIMAX ]
+"       Boundary crossing algorithm=
+"                        There are two selections possible: EXACT, means
+"                        the algorithm will cross boundaries in a single
+"                        scattering (SS) mode, the distance from a boundary
+"                        at which the transition to SS mode is made is
+"                        determined by 'Skin depth for BCA' (see below).
+"                        The second option is PRESTA-I, if selected boundaries
+"                        will be crossed a la PRESTA, i.e. with lateral
+"                        correlations turned off and MS forced at boundaries.
+"                        Default is EXACT.
+"                        [ bca_algorithm, exact_bca ]
+"       Skin depth for BCA=
+"                        Determines the distance from a boundary (in elastic
+"                        MFP) at which the algorithm will go into single
+"                        scattering mode (if EXACT boundary crossing) or
+"                        swith off lateral correlations (if PRESTA-I boundary
+"                        crossing). Default value is 3 for EXACT or
+"                        exp(BLCMIN)/BLCMIN for PRESTA-I (see the PRESTA paper
+"                        for a definition of BLCMIN). Note that if you choose
+"                        EXACT boundary crossing and set Skin depth for BCA
+"                        to a very large number (e.g. 1e10), the entire
+"                        calculation will be in SS mode. If you choose
+"                        PRESTA-I boundary crossing and make Skin depth for BCA
+"                        large, you will get default EGS4 behavious (no PRESTA)
+"                        [ skindepth_for_bca ]
+"       Electron-step algorithm=
+"                        PRESTA-II (the default), the name is
+"                        used for historical reasons
+"                        or PRESTA-I
+"                        Determines the algorithm used to take into account
+"                        lateral and longitudinal correlations in a
+"                        condensed history step.
+"                        [ transport_algorithm ]
+"       Spin effects=    Off, On, default is On
+"                        Turns off/on spin effects for electron elastic
+"                        scattering. Spin On is ABSOLUTELY necessary for
+"                        good backscattering calculations. Will make a
+"                        even in `well conditioned' situations (e.g. depth
+"                        dose curves for RTP energy range electrons).
+"                        [ spin_effects ]
+"       Brems angular sampling= Simple, KM, default is KM
+"                        If Simple, use only the leading term of the Koch-Motz
+"                        distribution to determine the emission angle of
+"                        bremsstrahlung photons. If On, complete
+"                        modified Koch-Motz 2BS is used (modifications
+"                        concern proper handling of kinematics at low energies,
+"                        makes 2BS almost the same as 2BN at low energies).
+"                        [ IBRDST ]
+"       Brems cross sections= BH, NIST, default is BH
+"                        If BH is selected, the Bethe-Heitler bremsstrahlung
+"                        cross sections (Coulomb corrected above 50 MeV)
+"                        will be used. If NIST is selected, the NIST brems
+"                        cross section data base (which is the basis for
+"                        the ICRU radiative stopping powers) will be employed.
+"                        Differences are negligible for E > ,say, 10 MeV,
+"                        but signifficant in the keV energy range.
+"       Electron Impact Ionization= Off (default), On, casnati, kolbenstvedt,
+"                        gryzinski or penelope.  If set to On or ik, then
+"                        use Kawrakow's theory to derive EII cross-sections.
+"                        If set to casnati, then use the cross-sections of
+"                        Casnati (from file ($HEN_HOUSE/data/eii_casnati.data).
+"                        Similar for kolbenstvedt, gryzinski and penelope.
+"                        This is only of interest in kV X-ray calculations.
+"                        Note that the user can supply their own EII
+"                        cross-section data as well. The requirement is that
+"                        the file eii_suffix.data exists in the $HEN_HOUSE/data
+"                        directory, where suffix is the name specified.
+"                        Entry case-sensitive except for Off, On or ik.
+"                        [ eii_flag ]
+"       Bound Compton scattering=  On, Off, Simple or norej
+"                        If Off, Compton scattering will be treated with
+"                        Klein-Nishina, with On Compton scattering is
+"                        treated in the Impuls approximation. Default is On.
+"                        With Simple, the impulse approximation incoherent
+"                        scattering function will be used (i.e., no Doppler
+"                        broadenning). With norej the actual total bound
+"                        Compton cross section is used and there are no
+"                        rejections at run time.
+"                        Make sure to turn on for low energy applications,
+"                        not necessary above, say, 1 MeV.
+"                        [ IBCMP ]
+"       Pair angular sampling= Off, Simple or KM
+"                        If off, pairs are set in motion at an angle m/E
+"                        relative to the photon direction (m is electron rest
+"                        energy, E the photon energy). Simple turns on
+"                        the leading term of the angular distribution
+"                        (this is sufficient for most applications),
+"                        KM (comes from Koch and Motz) turns on using 2BS
+"                        from the article by Koch and Motz.
+"                        Default is Simple, make sure you always use Simple or
+"                        KM
+"                        [ IPRDST ]
+"       Pair cross sections= BH (default) or NRC.  If set to BH, then use
+"                        Bethe-Heitler pair production cross-sections.  If set
+"                        to NRC, then use NRC pair production cross-sections
+"                        (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
+"                        of interest at low energies, where the NRC cross-
+"                        sections take into account the assymmetry in the
+"                        positron-electron energy distribution.
+"                        [ pair_nrc ]
+"       Photon cross sections= Photon cross-section data.  Current options are
+"                        si (Storm-Israel--the default), epdl (Evaluated Photon
+"                        Data Library), xcom and pegs4.  Allows the use of
+"                        photon cross-sections other than from the PEGS4 file
+"                        unless the pegs4 option is specified.
+"                        Note that the user can supply their own cross-section
+"                        data as well. The requirement is that the files
+"                        photon_xsections_photo.data,
+"                        photon_xsections_pair.data,
+"                        photon_xsections_triplet.data, and
+"                        photon_xsections_rayleigh.data exist in the
+"                        $HEN_HOUSE/data directory, where photon_xsections
+"                        is the name specified.
+"                        Hence this entry is case-sensitive.
+"                        [ photon_xsections ]
+"       Photon cross-sections output= Off (default) or On.  If On, then
+"                        a file $EGS_HOME/user_code/inputfile.xsections is
+"                        output containing photon cross-section data used.
+"                        [ xsec_out ]
+"       Compton cross sections= Bound Compton cross-section data.  User-
+"                        supplied bound Compton cross-sections in the file
+"                        $HEN_HOUSE/data/comp_xsections_compton.data, where
+"                        comp_xsections is the name supplied for this input.
+"                        This is only used if Bound Compton scattering= Simple
+"                        and is not available on a region-by-region basis
+"                        (see below).  The default file (ie in the absence
+"                        of any user-supplied data) is compton_sigma.data.
+"                        [ comp_xsections ]
+"       Photoelectron angular sampling= Off or On
+"                        If Off, photo-electrons get the direction of the
+"                        `mother' photon, with On, Sauter's furmula is
+"                        used (which is, striktly speaking, valid only for
+"                        K-shell photo-absorption).
+"                        If the user has a better approach, replace the macro
+"                            $SELECT-PHOTOELECTRON-DIRECTION;
+"                        The only application that
+"                        I encountered until now where this option made a
+"                        small difference was a big ion chamber (cavity size
+"                        comparable with electron range) with high-Z walls
+"                        in a low energy photon beam.
+"                        Default is On
+"                        [ IPHTER ]
+"       Rayleigh scattering= Off, On, custom
+"                        If On, turn on coherent (Rayleigh) scattering,
+"                        even if no Rayleigh data in PEGS4 file.
+"                        Default is Off. Should be turned on for low energy
+"                        applications. If custom, user must provide media names
+"                        and form factor files for each medium.
+"                        [ IRAYLR ]
+"       ff media names = A list of media names (must match media found in
+"                        PEGS4 data file) for which the user is going to
+"                        provide custom Rayleigh form factor data.
+"                        [ iray_ff_media($MXMED) ]
+"       ff file names = A list of names of files containing the Rayleigh
+"                       form factor data for the media specified by
+"                       the ff media names = input above.  Full directory
+"                       paths must be given for all files, and for each medium
+"                       specified, iray_ff_media(i), there must be a
+"                       corresponding file name, iray_ff_file(i).  For
+"                       example files, see the directory
+"                       $HEN_HOUSE/data/molecular_form_factors.
+"                       [ iray_ff_file($MXMED) ]
+"       Atomic relaxations= Off, On
+"                        Default is On. The effect of using On is twofold:
+"                        - In photo-electric absorption events, the element
+"                          (if material is mixture) and the shell the photon
+"                          is interacting with are sampled from the appropriate
+"                          cross seections
+"                        - Shell vacancies created in photo-absorption events
+"                          are relaxed via emission of fluorescent X-Rays,
+"                          Auger and Koster-Cronig electrons.
+"                         Make sure to turn this option on for low energy
+"                         applications.
+"                         [ IEDGFL ]
+;
+"       Atomic relaxations, Rayleigh scattering,
+"       Photoelectron angular sampling and Bound Compton scattering
+"                         can also be turned On/Off on a region-by-region
+"                         basis. To do so, put e.g.
+"
+"       Atomic relaxations= On in Regions   or
+"       Atomic relaxations= Off in regions
+"
+"                         in your input file. Then use
+"
+"       Bound Compton start region=
+"       Bound Compton stop region=
+"                or
+"       Rayleigh start region=
+"       Rayleigh stop region=
+"                or
+"       Relaxations start region=
+"       Relaxations stop region=
+"                or
+"       PE sampling start region=
+"       PE sampling stop region=
+"
+"                         each followed by a lost of of one or more
+"                         start and stop regions separated by commas.
+"                         Example:
+"        Atomic relaxations= On in Regions
+"        Relaxations start region=  1, 40
+"        Relaxations stop region=  10, 99
+"                         will first turn off relaxations everywhere and
+"                         then turn off in regions 1-10 and 40-99.
+"                         Note that input is checked against min. and max.
+"                         region number and ignored if
+"                         start region < 1 or stop_region > $MXREG or
+"                         start region > stop region.
+"
+"                         ECUT, PCUT and SMAX can also be set on a
+"                         region-by-region basis. To do so, iclude
+"                         in your input file
+"
+"         Set XXXX=              f_value1, f_value2, ...
+"         Set XXXX start region= i_value1, i_value2, ...
+"         Set XXXX stop region=  j_value1, j_value2, ...
+"
+"                         where XXXX is ECUT, PCUT or SMAX ,
+"                         f_value1, f_value2,... are the desired values for XXXX
+"                         and i_value_i and j_value_i are the start and
+"                         stop regions.
+"
+"*******************************************************************************
+;
+"
+"                    VARIANCE REDUCTION
+"                    ******************
+"
+"  Delimeter:       :start variance reduction:
+"                   :stop variance reduction:
+"
+"  RUSSIAN ROULETTE DEPTH      (R)
+"                           FOR RUSSIAN ROULETTE -
+"                           AS ANY PHOTON CROSSES THE Z='RUSSIAN ROULETTE DEPTH'
+"                           PLANE,  RUSSIAN ROULETTE IS PLAYED.
+"
+"  RUSSIAN ROULETTE FRACTION   (R)
+"                           EACH TIME RUSSIAN ROULETTE IS PLAYED, RRF IS THE
+"                           PROBABILITY OF SURVIVAL.
+"                           WEIGHT INCREASES BY 1/RRF,  IF IT SURVIVES
+"
+"                    ****** IF BOTH ZERO, NO RUSSIAN ROULETTE IS PLAYED ******
+"
+"  EXPONENTIAL TRANSFORM C     (R)
+"                           PARAMETER FOR PATHLENGTH BIASING <0 FOR SHORTENING
+"                           IF 0.0, NO BIASING DONE
+;
+"
+"  PHOTON FORCING
+"        = Off         (0)    NORMAL PHOTON TRANSPORT (NO FORCING)
+"        = On          (1)    FORCE PHOTON INTERACTIONS EXPLICITLY
+"                             MUST SET START AND STOP FORCING IN THIS CASE
+"
+"  START FORCING       (I)    NUMBER OF PHOTON INTERACTION/HISTORY AT WHICH
+"                             TO START FORCING PHOTON INTERACTIONS
+"
+"  STOP FORCING AFTER  (I)    NUMBER OF PHOTON INTERACTION/HISTORY AFTER WHICH
+"                             TO STOP FORCING PHOTON INTERACTIONS
+"
+"                             STOP FORCING AFTER > OR = START FORCING
+"
+"  ELECTRON RANGE REJECTION
+"         = off        (0)  No electron range rejection
+"         = on         (1)  Do electron range rejection. All charged
+"                           particles without enough range to get out
+"                           of their current region have their
+"                           history terminated.  This uses EGSnrc internal
+"                           range rejection and takes no time to test.
+"                           The parameter ESAVEIN also plays a role (see below)
+"                           [IREJCT]
+"
+"  ESAVEIN             (R)  If ELECTRON RANGE REJECTION is on, discard an
+"                           electron  when E< ESAVEIN and RANGE < distance
+"                           to the nearest boundary.
+"                           This ignores bremsstrahlung losses below ESAVEIN.
+"                           This parameter must be input even if not used.
+"                           ESAVEIN is a total energy.
+"
+;
+"******************************************************************************"
+"*******************************************************************************
+"
+"                          END OF INPUTS
+"                          *************
+"
+"*******************************************************************************
+"*******************************************************************************
+;
+"
+"                       USER DEFINED MACROS
+"                       *******************
+"
+;
+"*******************************************************************************
+;
+" Why do we need to put things into 1000 different places !!!!! "
+" That sort of thing should be replaced in the machine dependent macro "
+" file and NOT IN EVERY SINGLE USER CODE !!!!!!!!!!!!!!!!!!!!!!!!!!!!! "
+" Whoever put the replacement below: use your brain before doing things "
+" LONG_INT is already defined in egsnrc.macros. "
+"REPLACE {$LONG_INT} WITH {INTEGER*8}""used for variables that store no. of"
+"                                    ""histories to allow > 2.15x10^9 histories"
+"                                    ""to be run.  If your compiler gives you"
+"                                    ""problems with this, change to INTEGER*4"
+
+REPLACE {$ONE-EPS} WITH {0.9999} "USED TO KEEP THE BEAM INSIDE THE TARGET"
+REPLACE {$NSWTCH} WITH {8}       "# OF NRC SWITCHES FOR CONTROLLING SCATTERING"
+REPLACE {$MXMED} WITH {3}        "MAX # OF MEDIA"
+REPLACE {$NBATCH} WITH {10}      "# OUTPUT BATCHES"
+REPLACE {$NCASEMIN} WITH {10}    "min. no. of histories"
+REPLACE {$GOODSTATS} WITH {20}   "if fewer than this number of particles "
+                                 "deposit energy in a voxel, then a bad stats"
+                                 "warning is output to the .egslst file"
+REPLACE {$MXSTACK} WITH {40}     "MAXIMUM STACK"
+REPLACE {$MAXZREG} WITH {100}     "MAX # OF EDPN SCORING PLANAR ZONES"
+REPLACE {$MAXRADII} WITH {10}     "MAX # OF EDPN SCORING RADIAL ZONES"
+REPLACE {$MAXRADI+1} WITH {{COMPUTE $MAXRADII + 1}}
+                                 "MAX # OF EDPN SCORING RADIAL ZONES + 1"
+REPLACE {$MAXRZ} WITH {100}       "MAX(MAXRADII,MAXZREG)"
+REPLACE {$MXRDIST} WITH {1000}   "# OF POINTS IN RADIAL DISTRIBUTION FIT"
+REPLACE {$MAXIT} WITH {4}        "MAX # OF PARAMETERS TO BE SCORED"
+"   IT=1 EDPN TO LOCAL MATERIAL EXCLUDING BREM CREATED BELOW PCUT, ATOMIC  "
+"        RELAXATION AND ELECTRONS CREATED BELOW ECUT (COMPTON OR PE)       "
+"        BUT INCLUDES ELECTRONS SLOWING ACROSS ECUT                        "
+"   IT=2 EDPN TO SECOND MATERIAL WITH TRANSPORT IN FIRST MATERIAL          "
+"   IT=3 EDPN TO LOCAL MATERIAL  WITHOUT ANY STOPPERS                      "
+"   IT=4 LIKE IT=3 TO 2ND MATERIAL WITH TRANSPORT IN FIRST MATERIAL        "
+REPLACE {$MAXZPLANE} WITH {{COMPUTE $MAXZREG+1}}
+"                                MAX # OF PLANAR BOUNDARIES"
+REPLACE {$MAXCMPTS} WITH {$MAXIT}"MAX COMPONENTS FOR GRID OUTPUTS"
+REPLACE {$MAXDOS} WITH {3}      "NUMBER OF DOSE RELATED COMPONENTS "
+REPLACE {$NSPR} WITH {2}        "STOPPING POWER RATIO INDEX       "
+"                                (1) STANDARD SPR --EDPN IT=1/2 "
+"                                (2) SPR SANS STOPPERS  EDPN IT=3/4 "
+REPLACE {$MXREG} WITH {{COMPUTE $MAXRADII*$MAXZREG+1}}
+                                "# REGIONS=$MAXRADII*$MAXZREG+1(VAC)"
+REPLACE {$MXDATA} WITH {{COMPUTE ($MXREG-1)}}
+"                                MAXIMUM DATA POINTS FOR ANALYSIS"
+REPLACE {$MAX_SC_PLANES} WITH {1}; "required to use phsp macros"
+;
+"PRINTER CONTROLS"
+REPLACE {;COMIN/PRINTC/;} WITH {
+;COMMON/PRINTC/ICHPIN,ILPIN,IOUT,IPAGE;
+$INTEGER ICHPIN,ILPIN,IOUT,IPAGE;
+}
+"       =================
+"ICHPIN  NUMBER OF CHARACTERS PER INCH
+"ILPIN   NUMBER OF LINES PER INCH
+"IOUT    OUTPUT UNIT (IOUT=1, FORTRAN UNIT 1)
+"IPAGE   =1 => PAGE THROW
+;
+
+;
+"THIS IS NECESSARY SO THAT THE CORRELATIONS CAN BE PROPERLY HANDLED."
+"IT IS REALLY A KLUDGE AND SHOULD BE GENERALIZED IN THE FUTURE"
+APPEND {;COMIN/GEOM/;} TO {$COMIN-PHOTON;}
+
+"--------------------------------------------------------------"
+"                                                              "
+"           TSTEP RECURSION IN ELECTR                          "
+"           =========================                          "
+"                                                              "
+"--------------------------------------------------------------"
+"THIS MACRO CAN BE USED TO CONTROL TSTEP RECURSION IN ELECTR   "
+REPLACE {$USER_CONTROLS_TSTEP_RECURSION;} WITH
+{
+IF(IRNEW.NE.IROLD) NEXT :TSTEP:;
+}
+
+;
+"This MACRO changes integers of three digits"
+"or less into a character string."
+"In each case, 48 must be added to the digit we are"
+"converting into ASCII since '0' is ASCII # 48."
+"Aaron Merovitz, Jan 1998"
+
+REPLACE {$CONVERT_INT(#)_TO_CHAR(#);} WITH
+{
+;
+"{P1} is the integer value < 1000"
+"{P2} is the character string returned"
+      IF (({P1} = MOD({P1},1000)))[
+            CHECK=1;
+            IF ({P1} = MOD({P1},10)) [
+                {P2}=CHAR({P1}+48);
+                CHECK=0;
+            ]
+            IF ((CHECK.NE.0).AND.({P1} = MOD({P1},100))) [
+                a(1)=CHAR(({P1}/10)+48);
+                int=(MOD({P1},10)+48);
+                a(2)=CHAR(int);
+                {P2}=a(1)//a(2);
+                CHECK=0;
+            ]
+            IF (CHECK.NE.0) [
+                a(1)=CHAR(({P1}/100)+48);
+                int=(MOD({P1},100)/10+48);
+                a(2)=CHAR(int);
+                int=MOD({P1},10)+48;
+                a(3)=CHAR(int);
+                {P2}=a(1)//a(2)//a(3);
+            ]
+      ]
+      ELSE [{P2}='3max';]
+}
+
+;
+"MACRO USED FOR FORCING INTERACTIONS IN THE GEOMETRY"
+"USED BY EGS FOR VARIANCE REDUCTION"
+REPLACE {$SELECT-PHOTON-MFP;} WITH {;
+NFTIME=NFTIME+1;
+$RANDOMSET RNNO35;
+IF((IFORCE.EQ.0).OR.(NFTIME.GT.NFMAX).OR.(NFTIME.LT.NFMIN))[
+    IF(RNNO35 = 0.0)[RNNO35=1.E-30;]
+    DPMFP=-LOG(RNNO35);
+    ]
+ELSE[
+    IF((IFPB.EQ.0).AND.(NFTIME.EQ.1).AND.(MONOEN.EQ.0).AND.
+       (IQINC.EQ.0))
+        GOTO :FASTSTEP:;
+    "IFPB IN COMIN USER-VARIANCE-REDUCTION"
+    DUMU=USTEP;
+    DUMX=X(NP);DUMY=Y(NP);DUMZ=Z(NP);
+    IRODUM=IROLD;IRNDUM=IRNEW;IRDUM=IR(NP);MEDDUM=MEDIUM;
+    IDUM=IDISC;
+    PATHL=0.0;MEDTMP=0;
+    LOOP[
+        USTEP=VACDST;
+        IROLD=IR(NP);
+        MEDIUM=MED(IROLD);
+        IF(MEDIUM=0)[
+            DELTAP=0.;
+        ]
+        ELSE[
+            IF(MEDTMP.NE.MEDIUM)[
+              MEDTMP=MEDIUM;
+              $SET INTERVAL GLE,GE;
+              $EVALUATE DELTAP USING GMFP(GLE);
+            ]
+            IF(IRAYLR(IROLD) = 1)[
+              $EVALUATE COHFAC USING COHE(GLE);
+            ]
+            ELSE[
+              COHFAC=1.0;
+            ]
+        ]
+        CALL HOWFAR;
+        "only add to pathl if not a vacuum"
+        IF(DELTAP~=0) PATHL=PATHL+USTEP/(DELTAP*COHFAC);
+        IF(IRNEW = 1) EXIT;
+        IR(NP)=IRNEW;
+        X(NP)=X(NP)+USTEP*U(NP);
+        Y(NP)=Y(NP)+USTEP*V(NP);
+        Z(NP)=Z(NP)+USTEP*W(NP);
+        ]
+    USTEP=DUMU;
+    X(NP)=DUMX;Y(NP)=DUMY;Z(NP)=DUMZ;
+    IROLD=IRODUM;IRNEW=IRNDUM;IR(NP)=IRDUM;MEDIUM=MEDDUM;
+    IDISC=IDUM;
+    IF(PATHL.LE.1.0E-3)[GWAIT=PATHL*(1.-0.5*PATHL);]
+    ELSE[GWAIT=1.-EXP(-PATHL);]
+    GWTOLD=WT(NP);
+    WT(NP)=GWTOLD*GWAIT;
+    :FASTSTEP:;EPSLON=RNNO35*GWAIT;
+    IF(EPSLON.LE.1.0E-3)[
+        IF(NFTIME = 1)EXPMFP=EPSLON*(1.+EPSLON);
+        DPMFP=EPSLON*(1.+0.5*EPSLON);
+        ]
+    ELSE[
+        ARG=1./(1.-EPSLON);
+        DPMFP=LOG(ARG);
+        IF(NFTIME = 1)EXPMFP=EPSLON*ARG;
+        ]
+    ]
+}
+;
+"THIS MACRO SETS THE PARAMETERS FOR FORCING THE INITIAL INCIDENT PHOTON TO
+"INTERACT IN THE GEOMETRY FOR THE FRONTAL PARALLEL BEAM CASE. IT IS MUCH
+"FASTER THAN THE GENERALIZED CODING IN THE $SELECT-MEAN-FREE-PATHS MACRO
+
+REPLACE {$SELECT-MEAN-FREE-PATHS-FOR-FRONTAL-PARALLEL-BEAM;} WITH {
+;
+IF((IFPB.EQ.0).AND.(IQINC.EQ.0).AND.(IFORCE.EQ.1))[
+    GLE=LOG(EIN);
+    DO IX=1,NR[
+        PATHL=0.0;
+        DO IZ=1,NZ[
+            $GET-IRL(IZ,IX);MEDIUM=MED(IRL);
+            IF(MEDIUM=0)["vacuum"
+                DELTAP=0.;
+            ]
+            ELSE[
+                $SET INTERVAL GLE,GE;
+                $EVALUATE DELTAP USING GMFP(GLE);
+                IF(IRAYLR(IRL) = 1)[
+                   $EVALUATE COHFAC USING COHE(GLE);
+                ]
+                ELSE[
+                   COHFAC=1.0;
+                ]
+            ]
+            IF(DELTAP~=0)[ "only add to pathl if not a vaccum"
+               DELTAP=(ZPLANE(IZ+1)-ZPLANE(IZ))/(COHFAC*DELTAP);
+               PATHL=PATHL+DELTAP;
+            ]
+            IF(PATHL.LE.1.0E-3)[GWATE(IX)=PATHL*(1.-0.5*PATHL);]
+            ELSE[GWATE(IX)=1.-EXP(-PATHL);]
+            ]
+        ]
+    ]
+}
+
+;
+"MACRO THAT GETS PLANE AND RADIUS NUMBERS FROM THE REGION NUMBER
+REPLACE {$GET-IX-IZ(#);} WITH {;IX=({P1}-2)/NZ+1; IZ={P1}-1-NZ*(IX-1);}
+
+;
+"MACRO THAT GETS THE GEOMETRY NUMBER FROM THE PLANAR AND RADIAL ZONES
+REPLACE {$GET-IRL(#,#);} WITH {;IRL={P1}+NZ*({P2}-1)+1;}
+
+REPLACE{$USER-RANGE-DISCARD;} WITH {;}  "null since range rejection"
+"                                        messes up scoring -although"
+"                                        there could be a work around"
+;
+REPLACE {$ANALYZE(#,#:#)} WITH {;
+
+"Macro to analyze uncertainty:"
+"{P1}{P2}=scoring array (eg SCEDPN(IZ,IX,IT))"
+"{P3}=quantity to normalize by (eg incident no. of particles)"
+
+"Calculates the uncertainty on {P1}{P2}/{P3}.  The "
+"uncertainty is stored in {P1}2{P2} and is expressed as a percentage of"
+"{P1}{P2}/{P3} (max 99.9%).  Note that you must define the REAL variable"
+"SCORE_TEMP in any subroutine where this macro is used.  This macro"
+"is only used in the analysis of no. of steps."
+
+SCORE_TEMP={P1}{P2}/{P3};
+{P1}2{P2}={P1}2{P2}/{P3};
+{P1}2{P2}=({P1}2{P2}-SCORE_TEMP*SCORE_TEMP)/({P3}-1);
+IF({P1}2{P2}>=0.) {P1}2{P2}= SQRT({P1}2{P2});
+IF(SCORE_TEMP~=0.)[
+    {P1}2{P2}={P1}2{P2}/SCORE_TEMP*100;
+    IF( {P1}2{P2} > 99.9 ) [ {P1}2{P2} = 99.9; ]
+]
+ELSE[
+    {P1}2{P2}=99.9;
+]
+;
+}
+
+"                       COMMON BLOCK DEFINITIONS
+"                       ************************
+
+;
+REPLACE {;COMIN/CHARS/;} WITH
+"       ================
+{;
+
+$TYPE BLANK,ASTER,ACHAR,BCHAR,CCHAR,DCHAR,ICHAR,MCHAR,RCHAR,SCHAR,
+      TCHAR,UCHAR,VCHAR;
+COMMON/CHARS/
+BLANK,ASTER,ACHAR,BCHAR,CCHAR,DCHAR,ICHAR,MCHAR,RCHAR,SCHAR,TCHAR,UCHAR,VCHAR;
+}
+"
+"CHARACTERS BLANK,A,B,C,D,I,M,R,S,T,V IN I*4(F4) OR CHARACTER(F77) FORM"
+
+"       ================                                    "
+"
+"COMMON FOR THE ERROR ROUTINE"
+"THE DATA ARRAY IS A GENERAL PURPOSE ARRAY TO TRANSPORT DATA BETWEEN"
+"THE MAIN PROGRAM AND THE STATISTICS SUBROUTINE. ASSINGMENTS TO"
+"THE ARRAY ARE MADE IN THE $ANALYZE MACROS"
+
+;
+REPLACE {;COMIN/GEOM/;} WITH
+"       ===============          "
+{;COMMON/GEOM/
+ZPLANE($MAXZPLANE),RCYL(0:$MAXRADII),CYRAD2($MAXRADI+1),
+NZ,NR,NREG,NPLANE;
+$REAL ZPLANE,RCYL,CYRAD2;
+$INTEGER NZ,NR,NREG,NPLANE;
+}
+"
+"GEOMETRICAL INFORMATION"
+"ZPLANE(IZ)    CONTAINS THE REAL VALUED COORDINATE OF THE IZ'TH PLANE
+"RCYL(IX)      CONTAINS THE REAL VALUED COORDINATE OF THE IX'TH CYL.
+"CYRAD2(IX)    =RCYL(IX)**2
+"NZ/NR         NUMBER OF PLANAR SLABS/CYLINDRICAL REGIONS DEFINING THE TARGET
+"NREG          =NZ*NR+1 (+1 FOR THE SURROUNDING VACUUM), NPLANE=NZ+1
+"NPLANE        NUMBER OF PLANES DEFINING THE GEOMETRY
+
+;
+"FOUR COMMONS FOR INPUT AND OUTPUT"
+REPLACE {;COMIN/IODAT1/;} WITH
+"       =================
+{;
+"LOGICAL*1 TITLE(80);      ??????????????????"
+character*1 title(80);
+COMMON/IODAT1/TITLE;
+}
+"
+"TITLE       : 80 CHARACTER MAX, INPUT BY USER FOR DESCRIPTIVE PURPOSES
+"DATEN,TIMEN : MACHINE VARIABLES FOR TIME AND DATE
+
+;
+REPLACE {;COMIN/IODAT2/;} WITH
+"       ================
+{;
+COMMON/IODAT2/
+NCASE,NCASEO,NCASET,
+AMASS($MAXZREG,$MAXRADII),TMCPUO,TIMMAX,STATLM,EIN,
+IDAT,IRESTART,IQIN,IVAL,ISPRREG,ISPR($MXREG);
+$LONG_INT NCASE,NCASEO,NCASET;
+$REAL AMASS,TMCPUO,TIMMAX,STATLM,EIN;
+$INTEGER IDAT,IRESTART,IQIN,IVAL,ISPR,
+ISPRREG;
+}
+"AMASS(IZ,IX)  MASS OF ZONE WITH COORDINATES (IZ,IX)
+"TMCPUO        CPU TIME USED IN PREVIOUS SESSIONS
+"TIMMAX        MAXIMUM ALLOWED CPU HOURS FOR A GIVEN CALCULATION
+"EIN           KINETIC ENERGY OF THE EXTERNAL BEAM
+"IDAT          = 0 STORE DATA ARRAYS FOR RE-USE
+"              = 1 DON'T STORE THEM
+"NCASE         NUMBER OF HISTORIES REMAINING TO BE DONE
+"NCASEO        NUMBER OF HISTORIES DONE IN PREVIOUS SESSIONS
+"NCASET        NUMBER OF HISTORIES ALREADY DONE
+"IRESTART      = 0 => INITIAL RUN
+"              = 1 => RESTARTED RUN
+"              = 3 => DATA ANALYSIS ONLY
+"              = 4 => READ STARTING RANDOM NUMBERS FROM A FILE
+"IQIN          CHARGE OF THE EXTERNAL BEAM
+"ISPR          = 0 TO OUTPUT SPR's BY REGION
+"              = 1 TO OUTPUT SPR's BY CYLINDER AND/OR SLAB
+"ISPRREG(J)    = 1 IF THE USER IS OUTPUTTING SPR IN REGION J OR CYLINDER J OR
+"                SLAB J-NR
+;
+
+REPLACE {;COMIN/USER/;} WITH {;COMIN/USER-VARIANCE-REDUCTION/;}
+
+REPLACE {;COMIN/USER-VARIANCE-REDUCTION/;} WITH {
+"         ============================="
+;COMMON/USERVR/
+CEXPTR,GWAIT,PATHL,DUMU,DUMX,DUMY,DUMZ,
+DELTAP,GWTOLD,EPSLON,ARG,EXPMFP,ESAVEIN,
+IRODUM,IRNDUM,IRDUM,MEDDUM,IDUM,
+IFORCE,NFMIN,NFMAX,NFTIME,ISOURC,IFPB,IQINC,MONOEN,
+MEDTMP,IREJCT;
+$REAL CEXPTR,GWAIT,DUMU,DUMX,DUMY,DUMZ,PATHL,DELTAP,GWTOLD,EPSLON,ARG,
+      EXPMFP,ESAVEIN;
+$INTEGER NFMIN,NFMAX,NFTIME,ISOURC,IFPB,IQINC,MONOEN,IFORCE,IRODUM,
+      IRNDUM,IRDUM,MEDDUM,IDUM,MEDTMP,IREJCT;
+}
+"COMIN/USER-VARIANCE-REDUCTION"
+"       CEXPTR       C VARIABLE FOR EXPONENTIAL PATHLENGTH TRANSFORMATION"
+"       GWAIT        WEIGHT ADJUSTMENT IN FORCING INTERACTIONS MACRO     "
+"       IFORCE       ONLY FORCE PHOTON INTERACTIONS IF THIS IS NON-ZERO  "
+"       NFMIN,NFMAX,NFTIME  FOR FORCE PHOTON INTERACTIONS MACRO          "
+"       IFPB         FLAGS IF ISOURC = 0,2 OR 4                          "
+"       IQINC        INCIDENT CHARGE                                     "
+"       MONOEN = 0 IF MONOENERGETIC BEAM, = ELSE IF SOURCE DIST'N INPUT  "
+
+;
+REPLACE {;COMIN/RUSROU/;} WITH
+"       =================
+{;
+COMMON/RUSROU/RRZ,RRCUT,RUSROU;
+$REAL RRZ,RRCUT;
+LOGICAL RUSROU;
+}
+"
+"COMMON USED FOR RUSSIAN ROULETTE
+"RRZ      COORDINATE OF PLANE AT WHICH RUSSIAN ROULETTE IS PLAYED
+"RRCUT    SURVIVAL PROBABILITY AFTER CROSSING THE PLANE
+"RUSROU   = .FALSE. => RUSSIAN ROULETTE WILL NOT BE PLAYED
+"         = .TRUE.  => RUSSIAN ROULETTE WILL BE PLAYED
+
+;
+REPLACE {;COMIN/SCORE/;} WITH
+"       ================
+{;
+COMMON/SCORE/
+SCSTP,SCSTP2,SCEDPN,SCEDPN2,SCDOSE,SCDOSE2,SCDOSE_COV,
+SCSPR_COV, DELTA, DELTLG,DELTAT,PIISTP,
+SCSTP_LAST,SCDOSE_LAST,SCNUM,IHSTRY,
+SCSTP_TMP,SCEDPN_TMP,SCDOSE_TMP3,
+ifano,MXNP,ISTORE,IWATCH,IOUTSP, ICROSS,ITRACKE,BSTAT,BDSTAT;
+REAL*8 SCSTP,SCSTP2,SCEDPN($MAXZPLANE,$MAXRADII,$MAXIT),
+       SCEDPN2($MAXZPLANE,$MAXRADII,$MAXIT),
+       SCDOSE($MAXZPLANE,$MAXRADII,$MAXDOS),
+       SCDOSE2($MAXZPLANE,$MAXRADII,$MAXDOS),
+       SCDOSE_COV($MAXZPLANE,$MAXRADII,$MAXDOS-1),
+       SCSPR_COV($MAXZPLANE,$MAXRADII,$NSPR),
+       DELTA, DELTAT,DELTLG,PIISTP;
+$LONG_INT SCSTP_LAST,SCDOSE_LAST($MAXZPLANE,$MAXRADII),
+          SCNUM($MAXZPLANE,$MAXRADII);
+$REAL SCSTP_TMP,SCEDPN_TMP($MAXZPLANE,$MAXRADII,$MAXIT),
+      SCDOSE_TMP3($MAXZPLANE,$MAXRADII);
+$INTEGER IFANO,MXNP,ISTORE,IWATCH,IOUTSP,ICROSS,ITRACKE,
+         BSTAT($MAXZPLANE,$NSPR),BDSTAT($MAXZPLANE);
+$LONG_INT ihstry;
+}
+"
+"COMMON USED FOR SCORING IN AUSGAB
+"SCSTP               = no. of charged particle steps
+"SCSTP2              = no. of charged particle steps squared.  Eventually holds
+"                      uncertainty in SCSTP.
+"SCEDPN(IZ,IX,IT)   = scores energy deposited in voxel IZ,IX for:
+"                     IT=1 -- local material excluding bremsstrahlung created
+"                             below PCUT, atomic relaxations, e- created below
+"                             ECUT but including e- slowing across ECUT
+"                     IT=2 -- second material, same details as IT=1
+"                     IT=3 -- local material with no stoppers
+"                     IT=4 -- second material with no stoppers
+"                     After analysis, SCEDPN(IZ,IX,1) is used to store the
+"                     stopping power ratio in voxel IZ,IX without stoppers and
+"                     SCEDPN(IZ,IX,3) stores the stopping power ratio in voxel
+"                     IZ,IX including stoppers
+"SCEDPN2(IZ,IX,IT)  = scores energy deposited squared in voxel IZ, IX with
+"                     IT same as SCEDPN.  Eventually holds uncertainty in
+"                     SCEDPN.  At the end, SCEDPN2(IZ,IX,1) holds
+"                     uncertainty on stopping power ratio in voxel IZ,IX
+"                     without stoppers and SCEDPN2(IZ,IX,3) holds
+"                     uncertainty in  stopping power ratio in voxel IZ,IX
+"                     including stoppers
+"SCDOSE(IZ,IX,IT)   = scores energy deposited (for output as dose) in voxel
+"                     IZ,IX for:
+"                      IT=1 -- fraction of total dose due to stoppers
+"                              that exclude bremsstrahlung created
+"                              below PCUT, atomic relaxations and e-
+"                              created below ECUT but include e- slowing
+"                              across ECUT
+"                      IT=2 -- fraction of total dose due to
+"                              bremsstrahlung created below PCUT,
+"                              atomic relaxations and e- created below
+"                              ECUT
+"                      IT=3 -- total dose
+"SCDOSE2(IZ,IX,IT) = scores energy deposited squared in voxel (IZ,IX).
+"                    Eventually stores uncertainty on SCDOSE.  IT same as
+"                    SCDOSE.
+"SCDOSE_COV(IZ,IX,IT) = scores covariance between total dose and:
+"                      IT=1 -- dose due to stoppers excluding bremsstrahlung
+"                              created below PCUT, atomic relaxations and
+"                              e- created below ECUT but including e- slowing
+"                              down across ECUT
+"                      IT=2 -- dose due to bremsstrahlung created below PCUT,
+"                              atomic relaxations and e- created below ECUT
+"SCSPR_COV(IZ,IX,IT) = scores covariance between:
+"                   IT=1 -- SCEDPN(IZ,IX,1) and SCEDPN(IZ,IX,2)
+"                   IT=2 -- SCEDPN(IZ,IX,3) and SCEDPN(IZ,IX,4)
+"SCSTP_LAST = last primary history to score charged particle step
+"SCDOSE_LAST(IZ,IX) = last primary history to score dose/energy in voxel IZ,IX
+"SCNUM(IZ,IX)       = total. number of particles depositing energy in IZ,IX
+"SCSTP_TMP  = temp. variable for SCSTP
+"SCEDPN_TMP(IZ,IX,IT) = temp. variable for SCEDPN.  IT same as for SCEDPN.
+"SCDOSE_TMP3(IZ,IX,IT) = temp. variable for SCDOSE(IZ,IX,3)
+"DELTA         k.e. of AE values
+"DELTLG        LOG of DELTA
+"DELTAT        DELTA + PRM
+"MXNP    MAXIMUM LEVEL TO WHICH THE STACK OF DAUGHTER PARTICLES FROM AN
+"        INCIDENT PARTICLE RISES (STACK MAY INCLUDE INCIDENT PARTICLE)
+"ISTORE  = 0 DO NOT STORE THE INITIAL RANDOM NUMBERS (THE DEFAULT)
+"        = 1 STORE THE INITIAL RANDOM NUMBER FOR THE LAST HISTORY
+"        = 2 STORE ALL THE INITIAL RANDOM NUMBERS
+"IWATCH  = 0 FOR NORMAL OUTPUT (THE DEFAULT)
+"        = 1 OUTPUT ON EVERY DISCRETE INTERACTION
+"        = 2 OUTPUT ON EVERY ELECTRON/PHOTON STEP AS WELL
+"        = 3 PRINTS OUT ONLY WHEN ENERGY IS DEPOSITED
+"        = 4 PRINTS OUT FILE FOR GRAPHICS
+"IHSTRY  COUNTER FOR TOTAL NUMBER OF HISTORIES SUCCESSFULLY SIMULATED
+"IOUTSP  = 0 NO SPECTRUM DATA IN OUTPUT SUMMARY
+"        = 1 INCLUDE SPECTRUM DATA IN OUTPUT SUMMARY
+"ICROSS  number of steps treated as trackends but really crossing AE
+"        during steps.  No simple patch unless learn to stop
+"        steps at AE
+"ITRACKE number of steps treated as track ends.  Both set in AUSGAB.
+"BSTAT(IZ,IT) = flag for bad statistics in all stopping powers in plane IZ.
+"               IT same as for SCSPR_COV.
+"BDSTAT(IZ)   = flag for bad statistics in fractional dose due to stoppers
+"               (excluding photons created below PCUT, atomic relaxations and
+"               e- created below ECUT) or in fractional dose due to photons
+"               created below PCUT, atomic relaxations and e- created below
+"               ECUT in plane IZ.
+;
+REPLACE {$NENSRC} WITH {300}     "MAX # OF POINTS IN ENERGY DISTRIBUTION"
+REPLACE {$INVDIM} WITH {1000}    "DIMENSION CONTROLS GRID SIZE FOR INVERSE"
+
+;
+REPLACE {;COMIN/SPECTR/;} WITH
+"       ================="
+{;
+COMMON/SPECTR/
+CDFINV($INVDIM,2),ENSRCD(0:$NENSRC),SRCPDF($NENSRC),SRCCDF($NENSRC),
+NENSRC;
+$REAL CDFINV,ENSRCD,SRCPDF,SRCCDF;
+$INTEGER NENSRC;
+}
+"CDFINV   INVERSE OF THE CUMULATIVE ENERGY PROBABILITY DISTRIBUTION FUNCTION
+"ENSRCD   ENERGY MESH POINTS FOR THE ENERGY PROBABILITY FUNCTION
+"SRCPDF   ENERGY PROBABILITY DISTRIBUTION FUNCTION
+"SRCCDF   CUMULATIVE ENERGY PROBABILITY DISTRIBUTION FUNCTION
+"NENSRC   # OF ENERGY BINS USED TO DEFINE THE DISTRIBUTION
+
+;
+
+" We want the output of the subroutines egs_init and egs_finished "
+" to be echoed to the list file => we replace the default $egs_info macro "
+REPLACE {$egs_info(#,#);} WITH {
+    write(6,{P1}) {P2}; write(1,{P1}) {P2};
+};
+
+"END OF MACRO DEFINITIONS
+
+
+"                       DATA DECLARATIONS
+"                       *****************
+"
+$IMPLICIT-NONE;
+"
+"Note: the following declerations are used in $PRESTA-INPUTS"
+"***************************************************************************"
+"*             Variables passed to the subroutine GET_INPUTS               *"
+"***************************************************************************"
+REPLACE {$NMAX} WITH {100}  "max number of inputs"
+REPLACE {$NVALUE} WITH {100}  "max number of values per input"
+
+COMIN/GetInput/;
+INTEGER MAKE_IT_AN_INT;
+"***************************************************************************"
+CHARACTER*80 TEXT;
+
+$DECLARE_TIMING_VARIABLES;
+
+$INTEGER NETADJ;
+$REAL TIMCPU,TIMEB,ETIMETOT,RATIO;
+
+REAL*4
+    GWATE($MAXRADII); "PHOTON INTERACTION FORCING WEIGHTING FACTORS FOR
+                      "NORMALLY INCIDENT PARALLEL BEAMS
+COMIN/
+    BOUNDS,CHARS,ELECIN,EPCONT,GEOM,IODAT1,IODAT2,CH-Steps,
+    PRINTC,MEDIA,MISC,PHOTIN,RUSROU,SCORE,SOURCE,SPECTR,
+    STACK,THRESH,UPHIOT,USEFUL,USER,RANDOM,EGS-VARIANCE-REDUCTION,RWPHSP/;
+$LONG_INT ITEMP,JCASE;
+$INTEGER I,J,NBATCH,IZ,IX,MEDNUM,LGLE,IBATCH,IBTCH,NOSCAT,INOCAV,
+         NOSCT2,INOMED,IRL,IT,ICASE,IRIN,NRCFLG,
+         NDATA,I1,I2,I3,IERR;
+$REAL EI,EKMAX,DEPTH,VOLUME,RLOW2,WEIGHT,COHFAC,ECUTMN,factor,
+      EK0,BATCHT,XIN,YIN,ZIN,UIN,VIN,WIN,FHPG,FMASS,FHPH,TEMP1,TEMP2;
+
+REAL*8 TSC,TSC2; "used to store data in .egsdat file for restart"
+
+REAL SCORE_TEMP,SCORE_NORM_NUM; "used for uncertainty analysis"
+
+" I/O stuff "
+$INTEGER egs_open_file, egs_open_datfile, rng_unit, data_unit;
+
+"character*256 junk_string;
+"$INTEGER lnblnk1;
+"                       START OF EXECUTABLE CODE
+"                       ************************
+
+;
+
+call egs_init;
+
+"INITIALIZE THE CHARACTER ARRAY"
+BLANK=' ';ASTER='*';ACHAR='A';BCHAR='B';CCHAR='C';DCHAR='D';ICHAR='I';
+MCHAR='M';RCHAR='R';SCHAR='S';TCHAR='T';UCHAR='U';VCHAR='V';
+
+$SET_ELAPSED_CPUTIME(CPUT0); "obtain the initial starting time"
+
+OUTPUT $MAXZPLANE,$MAXRADII;
+(//' SPRRZnrc(EGSnrc) '$VERSION /
+   ' on '$MACHINE' with',I3, ' depth regions &', I3,
+   ' radial regions'//);
+
+"******************************************************************************
+"
+"                       *** SECTION 1 ***
+"
+"------------------------------------------------------------------------------
+"
+"read inputs and calculate one-time only constants
+"
+"------------------------------------------------------------------------------
+
+IOUT=1; "OUTPUT FORTRAN UNIT NUMBER"
+
+CALL INPUTS;
+IF (ERROR_FLAG=1) [GOTO :END:;]
+
+"OPEN A FILE FOR STORING OR READING RANDOM NUMBERS"
+" IK: use explicit file names instead of fort.* "
+IF( istore > 0 ) [ "We want to store the rng state in a file"
+    rng_unit = egs_open_file(2,0,1,'.egsrns');
+]
+ELSE IF( irestart = 4 ) [ "We well read RN's from a file"
+    rng_unit = egs_open_datfile(2,0,1,'.egsrns');
+]
+"IF(ISTORE = 2)[ " "ALL INITIAL RN'S STORED"
+"    OPEN(UNIT=2,STATUS='UNKNOWN');
+"]
+"ELSEIF(IRESTART = 4)[ " "RN'S READ FROM A FILE"
+"    OPEN(UNIT=2,STATUS='OLD');
+"]
+
+MXNP=0; "RESET THE MAXIMUM STACK INDICATOR"
+IHSTRY=NCASEO; "RESET THE NUMBER OF HISTORIES COUNTER"
+
+"SET UP THE BROAD PARALLEL BEAM DEFAULTS"
+IF (ISOURC = 2)[
+    NR=1;RCYL(1)=1000.;NREG=NZ+1;CYRAD2(1)=RCYL(1)**2;
+]
+
+IF(NCASE/$NBATCH=0)[NCASE=$NBATCH;]
+JCASE=NCASE/$NBATCH; NCASE=JCASE*$NBATCH;"NUMBER OF HISTORIES PER BATCH
+
+"SET UP AUSGAB CALLS"
+DO J=1,5[IAUSFL(J)=1;]   DO J=6,25[IAUSFL(J)=0;] "NORMAL EXECUTION"
+"now set up to call AUSGAB under various circumstances so the flags"
+"can be set                                                         "
+           " IAUSFL(8)=1; "       "after brem created"
+           " IAUSFL(10)=1; "      "after a Moller interaction occurs"
+           " IAUSFL(12)=1; "      "after a Bhabha"
+           " IAUSFL(14)=1; "      "after ANNIH"
+           " IAUSFL(15)=1; "      "after annihilation at rest"
+            IAUSFL(17)=1;      "after a pair event"
+            IAUSFL(19)=1;      "after a Compton scatter"
+            IAUSFL(21)=1;      "after a p.e. event"
+
+IF(ifano = 1) [
+    "AUSGAB will be responsible for making sure that the beam is not"
+    "attenuated and getting rid of the scattered photons."
+    iausfl(16) = 1; "Before pair"
+    iausfl(17) = 1; "After pair"
+    iausfl(18) = 1; "Before Compton"
+    iausfl(19) = 1; "After Compton"
+    iausfl(20) = 1; "Before photoelectric"
+    iausfl(21) = 1; "After photoelectric"
+    iausfl(24) = 1; "Before Rayleigh"
+    iausfl(25) = 1; "After Rayleigh"
+
+    "AUSGAB will be responsible for throwing away any photons resulting"
+    "from a primary electron. ie. True equilibtrium requires that all"
+    "energy deposition be local to the primary interaction site."
+    iausfl(8)  = 1; "After bremsstrahlung"
+    iausfl(14) = 1; "A positron has annihilated in-flight"
+    iausfl(15) = 1; "A positron has annihilated at rest"
+]
+
+"HATCH CALL PREPARATION AND EXECUTION"
+"------------------------------------"
+
+DUNIT=1; "SET LENGTH UNITS TO cm"
+
+OUTPUT; (/' CALL TO HATCH AT  ',$); call egs_time(6); write(6,*);
+CALL HATCH; "INPUT THE PEGS GENERATED DATA"
+OUTPUT; (/' HATCH COMPLETED AT ',$); call egs_time(6); write(6,*);
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+" CALL TIME(TIMEN); " "GET THE TIME OF DAY"
+" OUTPUT TIMEN;(/' CALL TO HATCH AT  ',$TIMEN_FORMAT);
+"
+" CALL HATCH;" "INPUT THE PEGS GENERATED DATA"
+"
+" CALL TIME(TIMEN);OUTPUT TIMEN;(/' HATCH COMPLETED AT ',$TIMEN_FORMAT);
+
+IF(MONOEN.EQ.0.AND.ISOURC.NE.21.AND.ISOURC.NE.22.AND.ISOURC.NE.23) [
+                  "MONOENERGETIC INPUT BEAM"
+    IF(IQIN = 0)[EI=EIN;]ELSE[EI=EIN+RM;]
+    EKMAX=EIN; "MAXIMUM KINETIC ENERGY"
+    ]
+ELSEIF(MONOEN = 1)[ "ENERGY SPECTRUM"
+    CALL ENSRC1; "NORMALIZE THE ENERGY DISTRIBUTION"
+    EKMAX=ENSRCD(NENSRC); "MAXIMUM KINETIC ENERGY IN THE SPECTRUM"
+    ]
+ELSEIF(ISOURC.EQ.21.OR.ISOURC.EQ.22.OR.ISOURC.EQ.23)[ "phase space source"
+                                                      "or full sim."
+    EKMAX=EKSRCM;
+]
+
+"check that the data file had data over the energy range required"
+DO I=1,NMED[
+    IF((EKMAX.GT.UP(I)).OR.(EKMAX.GT.UE(I)-RM))[
+        OUTPUT I,EKMAX,UP(I),UE(I);
+        (//1X,50('*')//
+        ' FOR MEDIUM',I3,' INCIDENT ENERGY=',F10.1,' MeV'/
+        ' IS GREATER THAN COVERED BY DATA FILE WHERE UP,UE=',2F10.1,' MeV'/
+        '     EXECUTION WILL TERMINATE AFTER COMPLETION OF INPUT FILE'//
+        1X,50('*')//);
+        GOTO :END-OF-RUN:;
+        ]
+        "check AE is same for all materials"
+        IF(ABS(AE(I) - AE(1)) > 0.0001)[
+           OUTPUT I; (//' ******AE(',I3,') ~= AE(1)*****'///);
+           call egs_finish;
+           STOP;
+        ]
+] "END OF LOOP OVER MEDIA"
+DELTA = AE(1) - PRM+1.D-7; DELTAT = AE(1)+1.D-7;
+DELTLG = LOG(DELTA);"all passed in SCORE"
+"The 1E-7 is needed to avoid roundoff problems since AE is single prec"
+
+"CALCULATE THE MASS OF EACH ZONE (AREAL MASS FOR ISOURC=2 OR 4)
+DO IZ=1,NZ[
+    DEPTH=ZPLANE(IZ+1)-ZPLANE(IZ);
+    DO IX=1,NR[
+        $GET-IRL(IZ,IX);
+        MEDNUM=MED(IRL);
+        IF(MEDNUM.NE.0)[
+            IF((ISOURC.EQ.2).OR.(ISOURC.EQ.4))[VOLUME=DEPTH;]
+            ELSE[
+                IF(IX = 1)[RLOW2=0.0;]
+                ELSE[RLOW2=CYRAD2(IX-1);]
+                VOLUME=PI*DEPTH*(CYRAD2(IX)-RLOW2);
+                ]
+            AMASS(IZ,IX)=RHOR(IRL)*VOLUME;
+            ]
+        ELSE[AMASS(IZ,IX)=0.0;]
+        ]"END OF IX LOOP"
+    ]"END OF IZ LOOP"
+
+"CALCULATE ONE-TIME-ONLY CONSTANTS FOR SOURCE"
+CALL SRCOTO(WEIGHT);
+IF((IFPB.EQ.0).AND.(IFORCE.NE.0).AND.(IQIN.EQ.0).AND.(MONOEN.EQ.0))[
+    $SELECT-MEAN-FREE-PATHS-FOR-FRONTAL-PARALLEL-BEAM;
+    ]
+
+"IMPLIMENT PRESTA"
+ECUTMN=AE(1) "recall we checked above that all AE are the same";
+EK0=EIN;
+"$PRESTA-INPUTS; INPUT THE PRESTA VARIABLES"
+
+CALL ISUMRY; "PRINT THE SUMMARY OF INPUTS"
+
+
+
+"******************************************************************************
+"
+"                       *** SECTION 2 ***
+"
+"------------------------------------------------------------------------------
+"
+"LOOP THROUGH THE NUMBER OF HISTORIES. CALCULATE CONSTANTS THAT MAY CHANGE FOR
+"EACH HISTORY AND DO THE SIMULATION
+"
+"------------------------------------------------------------------------------
+
+"WRITE THE HEADER"
+
+write(iout,100) ' '; call egs_fdate(iout); write(iout,*);
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+" CALL DATE(DATEN);CALL TIME(TIMEN);WRITE(IOUT,100) TITLE,TIMEN,DATEN;
+
+WRITE(IOUT,200);WRITE(6,200); "PRINT HEADER FOR EXECUTION MESSAGES"
+
+"PRINT EXECUTION MODE"
+IF(IRESTART = 0)[WRITE(6,201);WRITE(IOUT,201);]
+ELSEIF(IRESTART = 1)[
+    WRITE(6,202) NCASE,NCASEO;
+    write(6,'(21x,a,$)') 'New RNG state: ';
+    $SHOW-RNG-STATE(6); write(6,*);
+    WRITE(IOUT,202) NCASE,NCASEO;
+    write(iout,'(21x,a,$)') 'New RNG state: ';
+    $SHOW-RNG-STATE(iout); write(iout,*);
+]
+
+ELSEIF(IRESTART = 3)[WRITE(6,204);WRITE(IOUT,204);GO TO :STATS-ANAL:;]
+ELSEIF(IRESTART = 4)[WRITE(6,205);WRITE(IOUT,205);]
+
+"INITIALIZE IWATCH ROUTINE"
+IF(IWATCH.NE.0) CALL WATCH(-99,IWATCH);
+
+"SET CLOCK AT THE BEGINNING OF SIMULATIONS"
+$SET_ELAPSED_CPUTIME(CPUT1);
+$INITIALIZE_ELAPSED_TOTAL_TIME;
+ETIMETOT=0;
+TIMEB=0;
+NETADJ=0;
+
+" IK: Open a file for data storage, if requested "
+"     The egs_open_file function opens a file named output_file.egsdat "
+"     in the temporary working directory. The unit 4 (first argument) is"
+"     tried first, but if it is already in use, it picks the first Fortran I/O"
+"     unit available. The other two integer arguments tell egs_open_file to "
+"     open the .egsdat file for formated sequential I/O (the zero) and to "
+"     exit with an error message if something goes wrong (the 1)."
+"     If the third argument is zero instead, egs_open_file will return with
+"     a negative error code and it is up to the user to deal with the error."
+"
+IF( idat = 0 ) data_unit = egs_open_file(4,0,1,'.egsdat');
+
+"OUTPUT BATCHES. EXECUTION STOPS IF THERE IS NOT ENOUGH TIME TO DO ANOTHER
+"BATCH.
+DO IBATCH=1,$NBATCH[
+
+    IBTCH=IBATCH;
+    IF(IBATCH = 1)[
+        OUTPUT;
+        (/' BATCH #',2X,'TIME-ELAPSED',2X,'TOTAL CPUTIME',2X,'RATIO',2X,
+        'TIME OF DAY'//
+        ' ',4X,'1',10X,'0.0',12X,'0.0',6X,'0.00',3X,' ',$); call egs_time(6);
+        write(6,*);
+        " **** IK: using wrapper routines for date and time functions."
+        " Was:
+        "CALL TIME(TIMEN);OUTPUT TIMEN;
+        "(/' BATCH #',2X,'TIME-ELAPSED',2X,'TOTAL CPUTIME',2X,'RATIO',2X,
+        "'TIME OF DAY'//
+        "' ',4X,'1',10X,'0.0',12X,'0.0',6X,'0.00',4X,$TIMEN_FORMAT);
+
+        "IK: it is annoing that for batch runs we don't see the progress"
+        "    info in the log file until the job is finished. This is because"
+        "    Fortran uses buffered I/O. The following flushes unit 6 so that"
+        "    we can see the progress of the calculation. "
+        $FLUSH_UNIT(6);
+    ]
+    ELSE[
+        $SET_ELAPSED_TOTAL_TIME(TIMEB);
+        ETIMETOT=ETIMETOT+TIMEB;
+        $SET_ELAPSED_CPUTIME(CPUT2);
+        TIMCPU=(CPUT2-CPUT1)*$CONVERSION_TO_SECONDS+$TIME_RESOLUTION;
+        OUTPUT IBATCH,ETIMETOT,TIMCPU,ETIMETOT/TIMCPU;
+        (' ',3X,I2,5X,F8.1,7X,F8.1,2X,F8.2,3X,' ',$); call egs_time(6);
+        write(6,*);
+        " **** IK: using wrapper routines for date and time functions."
+        " CALL TIME(TIMEN);
+        " OUTPUT IBATCH,ETIMETOT,TIMCPU,ETIMETOT/TIMCPU,TIMEN;
+        " (' ',3X,I2,5X,F8.1,7X,F8.1,2X,F8.2,4X,$TIMEN_FORMAT);
+        "Check there is time left for another batch"
+
+
+        "IK: it is annoing that for batch runs we don't see the progress"
+        "    info in the log file until the job is finished. This is because"
+        "    Fortran uses buffered I/O. The following flushes unit 6 so that"
+        "    we can see the progress of the calculation. "
+        $FLUSH_UNIT(6);
+
+        BATCHT=TIMCPU/dble(IBATCH-1);"TIME PER BATCH SO FAR"
+        IF(TIMCPU+1.1*BATCHT.GT.TIMMAX*3600.)[
+            "Not enough time for another batch"
+            "Print message and exit simulation loop"
+            WRITE(IOUT,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
+            WRITE(6,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
+            "Adjust the incident fluence"
+            AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET);
+            GO TO :END-SIM:;
+            ]
+        ]
+
+        DO ICASE=1,JCASE[
+
+            IF(ISOURC~=23) IHSTRY=IHSTRY+1; "INCREMENT HISTORY COUNTER"
+               "incremented in srcrz for source 23"
+
+            :CORRELATION-RESTART:; "RESTART HERE FOR A CORRELATED HISTORY"
+
+            NFTIME=0; "RESET THE PHOTON FORCED INTERACTION COUNTER"
+
+            "RETRIEVE STARTING RANDOM NUMBERS IF READING FROM A FILE"
+            IF(IRESTART = 4)[ $RETRIEVE RNG STATE FROM UNIT 2; ]
+
+            "STORE INITIAL RANDOM #S FOR EACH HISTORY IF REQUESTED"
+            "DELETE THE FILE THAT CONTAINED THE PREVIOUS INITIAL RANDOM NUMBERS"
+            IF(ISTORE = 1)[
+                $STORE RNG STATE ON UNIT 2;
+            ]
+            ELSEIF(ISTORE = 2)[
+                "STORE THE INITIAL RANDOM NUMBER SEED"
+                $PUT RNG STATE ON UNIT 2;
+            ]
+
+            "CALCULATE THE SOURCE DEPENDANT VALUES WHICH CHANGE FOR EACH
+            "HISTORY THESE INCLUDE :
+                "ENTRY POINT INTO TARGET,
+                "INITIAL DIRECTION COSINES,
+                "STATISTICAL WEIGHT,
+                "ENTRY FLAG(NRCFLG)
+            CALL SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT,NRCFLG);
+
+            "CALCULATE THE INITIAL ENERGY IF A DISTRIBUTION IS TO BE USED"
+            IF(MONOEN ~= 0 & ISOURC ~= 21 & ISOURC ~= 22 & ISOURC~=23)[
+                "IF EQUAL TO 0, IT IS MONOENERGETIC"
+                "If ISOURC =21,22 full phase space used"
+                CALL ENSRCH(EIN);   "RETURNS K.E. FROM DISTRIBUTION"
+                IF(IQIN = 0)[EI=EIN;]ELSE[EI=EIN+RM;]  "TOTAL ENERGY"
+                " THERE WAS A CHECK THAT THE DATA FILE HAD DATA OVER THE ENERGY
+                "RANGE REQUIRED, THE LOCATION OF IT WILL EVENTUALLY BE IN
+                "ESRCIN.MOR
+            ]
+            ELSEIF(ISOURC = 21| ISOURC = 22|ISOURC=23)[EI=EIN;]
+            "IF ISOURC=21,22,23 TOTAL ENERGY IS RETURNED FROM ROUTINE SRCRZ."
+
+
+            "SET PHOTON WEIGHTS IF GAMMA INTERACTIONS ARE TO BE FORCED IN THE
+            "TARGET IN THE FRONTAL PARALLEL BEAM CASE IF MONOENERGETIC
+            IF((MONOEN.EQ.0).AND.(IQIN.EQ.0).AND.(IFORCE.EQ.1).AND.(IFPB.EQ.0))[
+                IX=(IRIN-2)/NZ+1;
+                GWAIT=GWATE(IX);
+                WEIGHT=GWAIT;
+                ]
+
+            "FOR AN INPUT ENERGY SPECTRUM, DETAILED FORCING MACRO IS USED"
+
+            LATCHI=0;
+
+            IF((IWATCH.NE.0).AND.(IWATCH.NE.4))[
+                OUTPUT 1,EIN,IQIN,IRIN,XIN,YIN,ZIN,UIN,VIN,WIN,LATCHI,WEIGHT;
+                (' INITIAL SHOWER VALUES',T36,':',
+                I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
+                ]
+
+            "ALL INITIAL SHOWER VARIABLES ARE SET, CALL THE SHOWER ROUTINE"
+
+            CALL SHOWER(IQIN,EI,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT);
+
+
+            "SIGNAL THE END OF A HISTORY IF WATCH MODE IS SET"
+            IF(IWATCH.GT.0) CALL WATCH(-1,IWATCH);
+
+        ] "END OF THE ICASE LOOP"
+
+"SUCCESFUL COMPLETION OF A BATCH. DELETE THE RAW DATA FROM THE LAST BATCH"
+        IF(IDAT = 0)["STORE ONLY IF REQUESTED - DEFAULT"
+        "AND RECORD THE NEW BATCH"
+
+          "IF (IBATCH ~= 1 | IRESTART = 1) [
+          "  CLOSE(UNIT=4); " "DELETE THE OLD DATA FILE"
+          "]
+          "OPEN(UNIT=4,file='fort.4',STATUS='UNKNOWN');"
+          rewind(data_unit);
+
+          TSC=SCSTP+SCSTP_TMP;
+          TSC2=SCSTP2+SCSTP_TMP*SCSTP_TMP;
+          WRITE(data_unit,*) TSC,TSC2;
+          DO IZ=1,NZ[
+            DO IX=1,NR[
+               DO IT=1,$MAXIT[
+                  TSC=SCEDPN(IZ,IX,IT)+SCEDPN_TMP(IZ,IX,IT);
+                  TSC2=SCEDPN2(IZ,IX,IT)+SCEDPN_TMP(IZ,IX,IT)*
+                                                 SCEDPN_TMP(IZ,IX,IT);
+                  WRITE(data_unit,*)TSC,TSC2;
+               ]
+               TSC=SCDOSE(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1)-
+                                      SCEDPN_TMP(IZ,IX,3);
+               TSC2=SCDOSE2(IZ,IX,1)+(SCEDPN_TMP(IZ,IX,1)-
+                                      SCEDPN_TMP(IZ,IX,3))**2;
+               WRITE(data_unit,*)TSC,TSC2;
+               TSC=SCDOSE(IZ,IX,2)+SCDOSE_TMP3(IZ,IX)-
+                                      SCEDPN_TMP(IZ,IX,1);
+               TSC2=SCDOSE2(IZ,IX,2)+(SCDOSE_TMP3(IZ,IX)-
+                                      SCEDPN_TMP(IZ,IX,1))**2;
+               WRITE(data_unit,*)TSC,TSC2;
+               TSC=SCDOSE(IZ,IX,3)+SCDOSE_TMP3(IZ,IX);
+               TSC2=SCDOSE2(IZ,IX,3)+SCDOSE_TMP3(IZ,IX)*
+                                        SCDOSE_TMP3(IZ,IX);
+               WRITE(data_unit,*)TSC,TSC2;
+               TSC=SCDOSE_COV(IZ,IX,1)+(SCEDPN_TMP(IZ,IX,1)-
+                          SCEDPN_TMP(IZ,IX,3))*SCDOSE_TMP3(IZ,IX);
+               TSC2=SCDOSE_COV(IZ,IX,2)+(SCDOSE_TMP3(IZ,IX)-
+                          SCEDPN_TMP(IZ,IX,1))*SCDOSE_TMP3(IZ,IX);
+               WRITE(data_unit,*)TSC,TSC2;
+               TSC=SCSPR_COV(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1)*
+                                              SCEDPN_TMP(IZ,IX,2);
+               TSC2=SCSPR_COV(IZ,IX,2)+SCEDPN_TMP(IZ,IX,3)*
+                                            SCEDPN_TMP(IZ,IX,4);
+               WRITE(data_unit,*)TSC,TSC2;
+            ]
+          ]
+        ]"END OF PART OF CONDITIONAL DATA STORAGE"
+
+$SET_ELAPSED_CPUTIME(CPUT2);
+TIMCPU=$CONVERSION_TO_SECONDS*(CPUT2-CPUT1)+TMCPUO;
+        IF(IDAT = 0)[
+          $PUT RNG STATE ON UNIT data_unit;
+          WRITE(data_unit,*) IHSTRY,TIMCPU,NNREAD,PIISTP+count_pII_steps;
+          WRITE(data_unit,*) ICROSS,ITRACKE;
+          "CLOSE(UNIT=4,DISP='KEEP');"
+        ]
+] " END  OF IBATCH LOOP  I.E.  END OF SIMULATIONS"
+
+:END-SIM:;
+
+"add unscored portions of _TMP arrays"
+SCSTP=SCSTP+SCSTP_TMP;
+SCSTP2=SCSTP2+SCSTP_TMP*SCSTP_TMP;
+DO IX=1,NR[
+   DO IZ=1,NZ[
+      DO IT=1,$MAXIT[
+         SCEDPN(IZ,IX,IT)=SCEDPN(IZ,IX,IT)+SCEDPN_TMP(IZ,IX,IT);
+         SCEDPN2(IZ,IX,IT)=SCEDPN2(IZ,IX,IT)+SCEDPN_TMP(IZ,IX,IT)*
+                                             SCEDPN_TMP(IZ,IX,IT);
+      ]
+      SCDOSE(IZ,IX,1)=SCDOSE(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1)-
+                                      SCEDPN_TMP(IZ,IX,3);
+      SCDOSE2(IZ,IX,1)=SCDOSE2(IZ,IX,1)+(SCEDPN_TMP(IZ,IX,1)-
+                                      SCEDPN_TMP(IZ,IX,3))**2;
+      SCDOSE_COV(IZ,IX,1)=SCDOSE_COV(IZ,IX,1)+(SCEDPN_TMP(IZ,IX,1)-
+                          SCEDPN_TMP(IZ,IX,3))*SCDOSE_TMP3(IZ,IX);
+      SCDOSE(IZ,IX,2)=SCDOSE(IZ,IX,2)+SCDOSE_TMP3(IZ,IX)-
+                                      SCEDPN_TMP(IZ,IX,1);
+      SCDOSE2(IZ,IX,2)=SCDOSE2(IZ,IX,2)+(SCDOSE_TMP3(IZ,IX)-
+                                      SCEDPN_TMP(IZ,IX,1))**2;
+      SCDOSE_COV(IZ,IX,2)=SCDOSE_COV(IZ,IX,2)+(SCDOSE_TMP3(IZ,IX)-
+                          SCEDPN_TMP(IZ,IX,1))*SCDOSE_TMP3(IZ,IX);
+      SCDOSE(IZ,IX,3)=SCDOSE(IZ,IX,3)+SCDOSE_TMP3(IZ,IX);
+      SCDOSE2(IZ,IX,3)=SCDOSE2(IZ,IX,3)+SCDOSE_TMP3(IZ,IX)*
+                                        SCDOSE_TMP3(IZ,IX);
+      SCSPR_COV(IZ,IX,1)=SCSPR_COV(IZ,IX,1)+
+                            SCEDPN_TMP(IZ,IX,1)*SCEDPN_TMP(IZ,IX,2);
+      SCSPR_COV(IZ,IX,2)=SCSPR_COV(IZ,IX,2)+SCEDPN_TMP(IZ,IX,3)*
+                                            SCEDPN_TMP(IZ,IX,4);
+      IF(SCDOSE_TMP3(IZ,IX)>0.)SCNUM(IZ,IX)=SCNUM(IZ,IX)+1;
+   ]
+]
+
+write(6,'(/a)') '********* final random number state:';
+$SHOW-RNG-STATE(6); write(6,'(a)') '  *********';
+write(iout,'(/a,$)') '********* FINAL RANDOM NUMBER STATE:';
+$SHOW-RNG-STATE(iout); write(iout,'(a)') '  *********';
+
+$SET_ELAPSED_TOTAL_TIME(TIMEB);
+ETIMETOT=ETIMETOT+TIMEB;
+$SET_ELAPSED_CPUTIME(CPUT2);
+TIMCPU=(CPUT2-CPUT1)*$CONVERSION_TO_SECONDS+TMCPUO;
+IF(TMCPUO = 0)[RATIO=ETIMETOT/TIMCPU;]ELSE[RATIO=0.;] "ONLY FOR SINGLE RUN"
+IF(TIMCPU.NE.0.0) [FHPH=3600./TIMCPU*dble(IHSTRY);"HISTORIES PER HOUR"]
+WRITE(IOUT,261)ETIMETOT,TIMCPU,TIMCPU/3600., RATIO,FHPH;
+WRITE(6,261)ETIMETOT,TIMCPU,TIMCPU/3600.,RATIO,FHPH;
+
+
+
+"******************************************************************************
+"
+;"                       *** SECTION 3 ***
+"
+"------------------------------------------------------------------------------
+
+"STATISTICAL AND OTHER DATA HANDLING AND CALL THE OUTPUT SUMMARY ROUTINE"
+
+"------------------------------------------------------------------------------
+
+:STATS-ANAL:;
+
+IF(ISOURC=21|ISOURC=22)[
+"normalize to number of incident particles from primary source
+   AINFLU=dble(NNREAD+NRCYCL*(NNREAD-IHSTRY))/dble(NCASE_PHSP)*NINCSRC;
+"we estimate the total number of particles from the primary source (original"
+"non-phase space source) by taking the ratio of the total number of"
+"particles read from the phase source in this simulation to the total number"
+"of particles in the phase space source and multiply this by the number of"
+"particles from the primary source that were used to obtain this phase space"
+"source."
+   SCORE_NORM_NUM=AINFLU;
+]
+ELSEIF(ISOURC=23)[
+   SCORE_NORM_NUM=dble(IHSTRY);
+   AINFLU=SCORE_NORM_NUM;
+]
+ELSE[
+   SCORE_NORM_NUM=dble(IHSTRY);
+]
+
+$ANALYZE(SCSTP, :SCORE_NORM_NUM);
+
+IF(ISOURC=4)[ "for ISOURC=4 must add up rings to give circles "
+  DO IX = 2, NR [
+     DO IZ = 1, NZ [
+       DO IT=1,$MAXIT[
+         SCEDPN(IZ,IX,IT)=SCEDPN(IZ,IX,IT)+SCEDPN(IZ,IX-1,IT);
+         SCEDPN2(IZ,IX,IT)=SCEDPN2(IZ,IX,IT)+SCEDPN2(IZ,IX-1,IT);
+       ]
+       DO IT=1,$MAXDOS[
+         SCDOSE(IZ,IX,IT)=SCDOSE(IZ,IX,IT)+SCDOSE(IZ,IX-1,IT);
+         SCDOSE2(IZ,IX,IT)=SCDOSE(IZ,IX,IT)+SCDOSE2(IZ,IX-1,IT);
+         IF(IT<$MAXDOS)[
+             SCDOSE_COV(IZ,IX,IT)=SCDOSE_COV(IZ,IX,IT)+SCDOSE_COV(IZ,IX-1,IT);
+         ]
+       ]
+       DO IT=1,$NSPR[
+         SCSPR_COV(IZ,IX,IT)=SCSPR_COV(IZ,IX,IT)+SCSPR_COV(IZ,IX-1,IT);
+       ]
+    ]
+  ]
+]
+
+"now, do uncertainty analysis, normalization and calculate stopping"
+"power ratios"
+DO IX=1,NR[
+     DO IZ=1,NZ[
+          $GET-IRL(IZ,IX); MEDNUM = MED(IRL);
+
+          IF(SCNUM(IZ,IX)<$GOODSTATS)[
+          "mark this as bad statistics"
+               BSTAT(IZ,1)=-1;
+               BSTAT(IZ,2)=-1;
+          ]
+
+          IF (SCEDPN(IZ,IX,2) = 0.)[
+               SCEDPN(IZ,IX,1)=0.;
+               SCEDPN2(IZ,IX,1)=99.9;
+               BSTAT(IZ,1)=-1; "FLAG FOR BAD STATISTICS"
+          ]
+          ELSE[" CALCULATE STOPPING POWER RATIO FOR REGULAR EDPN"
+               $ANALYZE(SCEDPN,(IZ,IX,1):SCORE_NORM_NUM);
+               $ANALYZE(SCEDPN,(IZ,IX,2):SCORE_NORM_NUM);
+               IF(SCEDPN2(IZ,IX,1)=99.9 | SCEDPN2(IZ,IX,2)=99.9)[
+                  BSTAT(IZ,1)=-1;
+                  SCSPR_COV(IZ,IX,1)=0.;
+               ]
+               ELSE[
+                  SCSPR_COV(IZ,IX,1)=SCSPR_COV(IZ,IX,1)/SCORE_NORM_NUM-
+                               SCEDPN(IZ,IX,1)*SCEDPN(IZ,IX,2)/
+                               (SCORE_NORM_NUM**2);
+                  SCSPR_COV(IZ,IX,1)=SCSPR_COV(IZ,IX,1)/(SCEDPN(IZ,IX,1)*
+                                  SCEDPN(IZ,IX,2)/(SCORE_NORM_NUM**2)*
+                                  (SCORE_NORM_NUM-1));
+               ]
+               SCEDPN2(IZ,IX,1)=(SCEDPN2(IZ,IX,1)/100.)**2+
+                                (SCEDPN2(IZ,IX,2)/100.)**2-
+                                2*SCSPR_COV(IZ,IX,1);
+               IF(SCEDPN2(IZ,IX,1)>0.) [
+                 SCEDPN2(IZ,IX,1)=SQRT(SCEDPN2(IZ,IX,1))*100;
+               ]
+               IF(SCEDPN2(IZ,IX,1)>99.9) SCEDPN2(IZ,IX,1)=99.9;
+               SCEDPN(IZ,IX,1)=
+                (SCEDPN(IZ,IX,1)/RHOR(IRL))/(SCEDPN(IZ,IX,2)/RHO(2));
+          ]
+          IF (SCEDPN(IZ,IX,4) = 0.)[
+               SCEDPN(IZ,IX,3)=0.;
+               SCEDPN2(IZ,IX,3)=99.9;
+               BSTAT(IZ,2)=-1; "FLAG FOR BAD STATISTICS"
+          ]
+          ELSE[" CALCULATE STOPPING POWER RATIO FOR REGULAR EDPN"
+               $ANALYZE(SCEDPN,(IZ,IX,3):SCORE_NORM_NUM);
+               $ANALYZE(SCEDPN,(IZ,IX,4):SCORE_NORM_NUM);
+               IF(SCEDPN2(IZ,IX,3)=99.9 | SCEDPN2(IZ,IX,4)=99.9)[
+                  BSTAT(IZ,2)=-1;
+                  SCSPR_COV(IZ,IX,2)=0.;
+               ]
+               ELSE[
+                  SCSPR_COV(IZ,IX,2)=SCSPR_COV(IZ,IX,2)/SCORE_NORM_NUM-
+                               SCEDPN(IZ,IX,3)*SCEDPN(IZ,IX,4)/
+                               (SCORE_NORM_NUM**2);
+                  SCSPR_COV(IZ,IX,2)=SCSPR_COV(IZ,IX,2)/(SCEDPN(IZ,IX,3)*
+                                  SCEDPN(IZ,IX,4)/(SCORE_NORM_NUM**2)*
+                                  (SCORE_NORM_NUM-1));
+               ]
+               SCEDPN2(IZ,IX,3)=(SCEDPN2(IZ,IX,3)/100.)**2+
+                                (SCEDPN2(IZ,IX,4)/100.)**2-
+                                2*SCSPR_COV(IZ,IX,2);
+               IF(SCEDPN2(IZ,IX,3)>0.) [
+                   SCEDPN2(IZ,IX,3)=SQRT(SCEDPN2(IZ,IX,3))*100;
+               ]
+               IF(SCEDPN2(IZ,IX,3)>99.9) SCEDPN2(IZ,IX,3)=99.9;
+               SCEDPN(IZ,IX,3)=
+                (SCEDPN(IZ,IX,3)/RHOR(IRL))/(SCEDPN(IZ,IX,4)/RHO(2));
+          ]
+          "analyze uncertainty on doses and normalize doses"
+          $ANALYZE(SCDOSE,(IZ,IX,1):SCORE_NORM_NUM);
+          $ANALYZE(SCDOSE,(IZ,IX,2):SCORE_NORM_NUM);
+          $ANALYZE(SCDOSE,(IZ,IX,3):SCORE_NORM_NUM);
+
+          IF(SCDOSE2(IZ,IX,1)=99.9 | SCDOSE2(IZ,IX,3)=99.9)[
+               SCDOSE_COV(IZ,IX,1)=0.0;
+               IF(BSTAT(IZ,1)~=-1)BDSTAT(IZ)=-1; "only set if BSTAT(IZ,1)"
+                                                 "is not already set"
+          ]
+          ELSE[
+              SCDOSE_COV(IZ,IX,1)=SCDOSE_COV(IZ,IX,1)/SCORE_NORM_NUM-
+                              SCDOSE(IZ,IX,1)*SCDOSE(IZ,IX,3)/
+                              (SCORE_NORM_NUM**2);
+              SCDOSE_COV(IZ,IX,1)=SCDOSE_COV(IZ,IX,1)/(SCDOSE(IZ,IX,1)*
+                              SCDOSE(IZ,IX,3)/(SCORE_NORM_NUM**2)*
+                              (SCORE_NORM_NUM-1));
+          ]
+          SCDOSE2(IZ,IX,1)=(SCDOSE2(IZ,IX,1)/100.)**2+
+                           (SCDOSE2(IZ,IX,3)/100.)**2-
+                           2*SCDOSE_COV(IZ,IX,1);
+          IF(SCDOSE2(IZ,IX,1)>0.) [
+              SCDOSE2(IZ,IX,1)=SQRT(SCDOSE2(IZ,IX,1))*100;
+          ]
+          IF(SCDOSE2(IZ,IX,1)>99.9) SCDOSE2(IZ,IX,1)=99.9;
+          IF(SCDOSE(IZ,IX,3)~=0.)[
+             SCDOSE(IZ,IX,1)=SCDOSE(IZ,IX,1)/SCDOSE(IZ,IX,3);
+          ]
+
+          IF(SCDOSE2(IZ,IX,2)=99.9 | SCDOSE2(IZ,IX,3)=99.9)[
+             SCDOSE_COV(IZ,IX,2)=0.0;
+             IF(BSTAT(IZ,1)~=-1)BDSTAT(IZ)=-1;
+          ]
+          ELSE[
+             SCDOSE_COV(IZ,IX,2)=SCDOSE_COV(IZ,IX,2)/SCORE_NORM_NUM-
+                              SCDOSE(IZ,IX,2)*SCDOSE(IZ,IX,3)/
+                              (SCORE_NORM_NUM**2);
+             SCDOSE_COV(IZ,IX,2)=SCDOSE_COV(IZ,IX,2)/(SCDOSE(IZ,IX,2)*
+                              SCDOSE(IZ,IX,3)/(SCORE_NORM_NUM**2)*
+                              (SCORE_NORM_NUM-1));
+          ]
+          SCDOSE2(IZ,IX,2)=(SCDOSE2(IZ,IX,2)/100.)**2+
+                           (SCDOSE2(IZ,IX,3)/100.)**2-
+                           2*SCDOSE_COV(IZ,IX,2);
+          IF(SCDOSE2(IZ,IX,2)>0.) [
+              SCDOSE2(IZ,IX,2)=SQRT(SCDOSE2(IZ,IX,2))*100;
+          ]
+          IF(SCDOSE2(IZ,IX,2)>99.9) SCDOSE2(IZ,IX,2)=99.9;
+          IF(SCDOSE(IZ,IX,3)~=0.)[
+             SCDOSE(IZ,IX,2)=SCDOSE(IZ,IX,2)/SCDOSE(IZ,IX,3);
+          ]
+
+          "now, normalize total dose"
+          IF(SCDOSE(IZ,IX,3)~=0.)[
+              FMASS=AMASS(IZ,IX);
+              IF(FMASS = 0.0)FMASS=1.0; "AVOIDS /0 FOR VACUUM"
+              SCDOSE(IZ,IX,3)=SCDOSE(IZ,IX,3)*1.602e-10/(FMASS*AINFLU);
+          ]"end non-zero block"
+
+    ]"END OF IZ LOOP"
+]"END OF IX LOOP"
+
+CALL OSUMRY;
+IF(ITRACKE ~= 0) [WRITE(IOUT,:TEMP:) dble(ICROSS)/dble(ITRACKE);]
+:TEMP: FORMAT(///' Fraction of tracks treated as trackends which were',
+/T20,' really steps crossing DELTA =', F10.3/' Usually close to 0.5 because',
+' each crosser turns into a stopper'/);
+:END-OF-RUN:;
+
+
+;"******************************************************************************
+"
+"                       *** SECTION 4 ***
+"
+"------------------------------------------------------------------------------
+"
+"THE CONCLUSION"
+"
+"------------------------------------------------------------------------------
+
+:END:;
+OUTPUT; (/' End of run',9X,' ',$); call egs_fdate(6); write(6,'(///)');
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+" CALL DATE(DATEN);CALL TIME(TIMEN);
+" OUTPUT DATEN,TIMEN;(/' End of run',10X,$DATEN_FORMAT,1X,$TIMEN_FORMAT//);
+IF (ERROR_FLAG=1) [
+   OUTPUT ;(//' **********  ERRORS AND WARNING MESSAGES  ********** '//);
+]
+REWIND (15);
+9998 CONTINUE;
+     READ (15, END=9999, FMT='(A80)') TEXT;
+     WRITE (*,'(A79)') TEXT;
+     GOTO 9998;
+9999 CONTINUE;
+write(15,400) ' '; call egs_fdate(15); write(15,'(/"1")');
+write(iout,400) ' '; call egs_fdate(iout); write(iout,'(/"1")');
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+" WRITE(15 , 400) DATEN,TIMEN;
+" WRITE(IOUT,400) DATEN,TIMEN;
+
+call egs_finish;
+
+call SRCEND;
+
+$CALL_EXIT(0);
+
+"FORTRAN FORMAT STATEMENTS. FORMAT STATEMENT N## IS FIRST USED IN SECTION N."
+%I0
+
+100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+             /'     ON '$MACHINE' ',T54,a,$);
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+"100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+"             /'     ON '$MACHINE' ',T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT);
+200  FORMAT(' ',79('*')/
+            ' ',T20,'EXECUTION INFORMATION AND WARNING MESSAGES'/
+            ' ',79('*')/
+            /' SPRRZnrc(EGSnrc) '$VERSION/'     on '$MACHINE' ');
+201  FORMAT(/' ********* NEW INPUT FILE *********'/);
+202  FORMAT(/' ********* RESTARTED INPUT FILE ********* '/
+             ' ',10X,I12,' NEW + ',I12,' OLD HISTORIES'/
+             ' ',20X,'NEW RN SEEDS=',2(1X,I12)/);
+204  FORMAT(/' ********* DATA ANALYSIS ONLY *********'/);
+205  FORMAT(/' ********* RANDOM NUMBERS READ FROM FILE *********'/);
+210  FORMAT(/' ********* NOT ENOUGH TIME TO FINISH WITHIN',
+       ' LIMIT OF',F8.2,' HOURS',I5,' BATCHES USED********'/
+       ' ',I12,' HISTORIES RUN, ',I12,' HISTORIES ANALYZED'//);
+220  FORMAT(I12,1X,2I1);
+250  FORMAT(/' ********* Final random number pointers:',2(1X,I12),' *********');
+261  FORMAT(/' Finished simulations:'/'   Elapsed, CPU times',
+      ',ratio= ',2F8.1,' (',F8.3,' hr)',3X,F8.2/
+       T30,' Histories per hour=',F15.1);
+400 FORMAT(/' END OF RUN',10X,a,$);
+" **** IK: using wrapper routines for date and time functions."
+" Was: 400  FORMAT(/' END OF RUN',10X,$DATEN_FORMAT,1X,$TIMEN_FORMAT/('1'));
+
+END; "end of main routine-sprrznrc"
+
+%E     "sprrznrc.mortran - start of subroutine AUSGAB"
+"******************************************************************************
+"
+"
+"                               **********
+"                               *        *
+"                               * AUSGAB *
+"                               *        *
+"                               **********
+"
+"
+"       An AUSGAB routine to be used with sprrznrc.mortran
+"
+"      Energy deposition is scored in SCEDPN(IZ,IX,IT) and doses are
+"      scored in SCDOSE(IZ,IX,IT).
+"
+"      For SCEDPN:
+"
+"   IT=1 EDPN to local material excluding brem created below PCUT, atomic
+"        relaxation and electrons created below ECUT (compton, pe or pair)
+"        but includes electrons slowing across ECUT
+"   IT=2 EDPN to second material with transport in first material
+"   IT=3 EDPN to local material  without any stoppers
+"   IT=4 like IT=3 to 2nd material with transport in first material
+"   IT=5 EDPN for everything in local material
+"
+"      For SCDOSE:
+"
+"   IT=1 Fraction of total dose due to stoppers including
+"                      electrons/positrons slowing down across delta.
+"   IT=2 Fraction of total dose due to e- created below delta and photons
+"                      created below AP
+"   IT=3 Total dose
+"
+"        SPR IS FOR current MEDIUM  TO MEDIUM 2.
+"
+"      SPR(1) = EDPN(IT=1)/RHOR(IRL)  /  EDPN(IT=2)/RHO(2)
+"      SPR(2) = EDPN(IT=3)/RHOR(IRL)  /  EDPN(IT=4)/RHO(2) i.e. no stoppers
+"
+"      Note: SPR(1) is actually placed in SCEDPN(IZ,IX,1) and SPR(2) is
+"            placed in SCEDPN(IZ,IX,2) at the end of the run.
+"
+"      RHOs are needed since we use linear not mass stopping powers.
+"
+"       VERSION 01      adapted from CAVITY(EGS3) AUSGAB      10/87  AFB
+"       VERSION 02      major revision  Jan 1990, DWOR
+"                       removed unused code March 1990 DR
+"       VERSION 03      another revision with DELTA etc introduced
+"                       Mar 30, 1990  DR
+"
+"   Variables:
+"      DELTA      set in main, ke of AE,  comin SCORE
+"      DELTLG     log of DELTA
+"      DELTAT     AE = DELTA + RM
+"      ERATIO(I)  ratio of medium 2 to medium I stopping power at DELTA
+"                 set once for use with track ends  - must save for F77
+"                 ERATIO(2) = 1 once initialized, and used to test if set
+"      PRATIO(I)  same for positrons
+;"******************************************************************************
+SUBROUTINE AUSGAB(IARG);
+
+$IMPLICIT-NONE;
+
+$INTEGER IRL,IARG,IX,IZ,IQL,LATCHL,MEDL,LELKE,I,IP,IFLAG,IT;
+$REAL WTL,DEDXME,DEDXMP,DEDXMI,DEDXMJ,XSI,FTMP,EKEtmp,ELKEtmp;
+
+REAL*8 DEDXM1,DEDXM2,SRATIO,ERATIO($MXMED),PRATIO($MXMED);
+
+;COMIN/ ELECIN, EPCONT, GEOM, MEDIA, MISC, PHOTIN, RUSROU, PRINTC, SCORE,
+        SOURCE, STACK, THRESH, UPHIOT, USEFUL, USER, RANDOM,
+        EGS-VARIANCE-REDUCTION/;
+
+DATA ERATIO/ $MXMED*0.0D0 /;  "cannot put in comin"
+                              "ERATIO=0 is used as flag=>not initialized"
+
+save ERATIO, PRATIO;  " these must be static "
+
+sratio = 0;  " just in case "
+
+MXNP=MAX(MXNP,NP);"keep track of how deep stack is"
+                  "currently don't print this - we should"
+
+"check if particle is leaving the transport geometry"
+IRL=IR(NP);  "local region number"
+IF(IRL = 1) ["outside the chamber IDISC will have been set in HOWFAR"
+   IF(IWATCH > 0) CALL WATCH(IARG,IWATCH);
+   RETURN;
+]
+
+"obtain frequently used local variables"
+$GET-IX-IZ(IRL);   "local plane and radius numbers"
+IQL=IQ(NP);        "local charge variable"
+WTL=WT(NP);        "local weight variable"
+LATCHL=LATCH(NP);  "LATCHL=0 except = 99 for e created below delta"
+MEDL = MED(IRL);   "Current medium for this region - comin MISC"
+
+
+
+IF(ERATIO(2) = 0.0)["ratio of stopping powers at E=DELTA are "
+"                   not initialized yet - do it now"
+    EKEtmp=EKE; ELKEtmp=ELKE;
+    MEDIUM=2;    "set to second medium"
+    EKE=DELTA;
+    ELKE = DELTLG;  "DELTLG is calculated in inputs and passed in SCORE"
+    $SET INTERVAL ELKE, EKE;  "prepare to interpolate in  data tables"
+    $EVALUATE DEDXME USING EDEDX(ELKE); "sp for electrons in med2"
+    $EVALUATE DEDXMP USING PDEDX(ELKE); "sp for positrons in med2"
+    write(6,*) ' Initializing track end terms ERATIO and PRATIO: ';
+    DO I = 1,NMED[
+        IF(I=2) [ /ERATIO(2),PRATIO(2)/ = 1.0; "from definition"]
+        ELSE [
+                MEDIUM = I; "set to current medium"
+                EKE=DELTA; ELKE = DELTLG;
+                $SET INTERVAL ELKE, EKE;  "prepare to interpolate tables"
+                $EVALUATE DEDXMI USING EDEDX(ELKE);
+                $EVALUATE DEDXMJ USING PDEDX(ELKE);
+                ERATIO(I)=DEDXME/DEDXMI;
+                PRATIO(I)=DEDXMP/DEDXMJ;
+                write(6,*) ' Medium ',i,' e-: ',ERATIO(I),' e+: ',PRATIO(I);
+        ]"end of else"
+   ]"end loop on media"
+   EKE=EKEtmp; ELKE=ELKEtmp;
+]"end of initialization block"
+
+IF(IARG = 0)["about to transport a particle"
+    IF(IQL ~= 0)["count charged particle steps taken"
+        IF(NHSTRY=SCSTP_LAST)[
+          SCSTP_TMP=SCSTP_TMP+1;
+        ]
+        ELSE[
+          SCSTP=SCSTP+SCSTP_TMP;
+          SCSTP2=SCSTP2+SCSTP_TMP*SCSTP_TMP;
+          SCSTP_TMP=1;
+          SCSTP_LAST=NHSTRY;
+        ]
+    ]
+    ELSE["photon step - play russian roulette?"
+        IF(RUSROU.AND.(W(NP).GT.0.0))["yes, play if crosses rrz "
+            IF((Z(NP).LE.RRZ).AND.(Z(NP)+USTEP*W(NP).GE.RRZ))["crosses"
+                $RANDOMSET XSI;
+                IF(XSI < RRCUT)[ "particle survives" WT(NP)=WTL/RRCUT; ]
+                ELSE["discard particle on next call to HOWFAR" WT(NP)=0.0; ]
+            ] "end test if crosses russian roulette plane"
+        ] "end test for playing russian roulette"
+    ] "end test for photon step"
+] "end test for iarg = 0"
+
+"    Set flags for electrons created below DELTA"
+
+IF (ifano = 1) [ "option to regenerate photons after interaction"
+                 "and throw away scattered particles"
+    IF (iarg = 15 | iarg = 17 | iarg = 19 | iarg = 23) [
+        "A pair/Compton/photoelectric/pair event is about to take place"
+        np = np + 1; "Boost the stack"
+        IF(np + 1 > $MXSTACK) [ "check there is space on STACK"
+            OUTPUT; ( ' Fano calculation unable to boost stack.'/
+                ' Stopping.'/ 1x,80('*')/);
+            stop;
+        ]
+        "Create an identical photon"
+        $TRANSFER PROPERTIES TO (np) FROM (np - 1);
+        e(np)  =  e(np - 1);
+        u(np)  =  u(np - 1);
+        v(np)  =  v(np - 1);
+        w(np)  =  w(np - 1);
+        iq(np) = iq(np - 1);
+        return;
+    ]
+
+    "Throw away any scattered photons from the primary interaction site."
+    " NPold points to the particle before the last discrete interaction."
+    " This change was necessary  for the implementation of atomic"
+    " relaxations. So, check all particles"
+    " between NPold and NP and discard photons "
+    IF (  iarg = 18               " Compton has occured"
+        | iarg = 20               " After photo-absorption "
+        | iarg = 24               " After Rayleigh "
+        | iarg = 7                " After brems "
+        | iarg = 13               " After annihilation "
+        | iarg = 14)              " After annihilation at rest "
+    [
+        DO ip=NPold,NP [
+            IF( iq(ip) = 0 ) [ wt(ip) = 0; e(ip) = 0; ]
+        ]
+        "Note in the case of Bound Compton event not happening, there"
+        "are two identical photons on the stack because of the boosting"
+        "done just above. In this case NP=NPOLD but we want to delete the"
+        "photon at NP, even though it is not scattered!"
+    ] "end of block for when scattered photon created"
+] " end of ifano = 1 block"
+
+"in the following we make use of the knowledge that internal Russian"
+"Roulette is NOT being used"
+IF(IARG = 18 | IARG = 20)["after compton or pe event"
+                          "flag e- created below DELTA"
+     DO ip=NPold, NP [
+         IF (iq(ip) = -1 & E(NP) < DELTAT )[LATCH(ip)= 99;]
+     ]
+]"end of iarg = 18 or 20 block"
+
+ELSEIF(IARG = 16) [" after a pair event, lower energy particle is NP"
+     IF( E(NP) < DELTAT ) [LATCH(NP)= 99;]
+     "at most one particle can be below DELTAT, except for DELTA > 500 keV"
+]
+"end of flag setting"
+
+IF(IWATCH > 0) CALL WATCH(IARG,IWATCH); "signal watch routine if active"
+
+
+"Score the energy as required for the different modes"
+"****************************************************"
+
+IFLAG=0; "left zero unless discards a brem below AP, fluorescent discard"
+"         or compton, PE or pair  created e- below ECUT -LATCH=99"
+
+IF((EDEP ~= 0.0) & (WTL > 0.0) & (IARG < 5))[ "energy deposited"
+
+    "score energy deposited"
+    FTMP=WTL*EDEP;
+
+   "Note, EKE is not set after a compton event"
+   "if the scattered electron is about to be thrown out"
+   "so do not use internal EKE at this point, calculate it here"
+   "We can also get to this point when an electron has fallen below"
+   "AE, and in fact, due to numerical round-off it might get"
+   "below PRM. We don't need EKE for these track ends but except for"
+   "a test - really we just don't need the log"
+    IF(IQL ~= 0) [
+        EKE = E(NP) - PRM;
+        IF(EKE<=0.0)[ EKE = 1.E-5; ELKE=1E30; "big so we notice if use it!" ]
+        ELSE [ELKE = LOG(EKE);]
+    ]
+
+
+    "store k.e. for start of step FOR UNIFORM USE BELOW"
+    EKEtmp=EKE; ELKEtmp=ELKE;
+
+    IF(IARG=0) ["step to occur so this is not a track end"
+                "and is not a photon since edep ~=0      "
+                "so adjust k.e. to mid-step              "
+        EKE = EKEtmp - 0.5*EDEP;  ELKE = LOG(EKE);
+   ]
+   ELSEIF(IQL ~= 0 & i_do_rr(IRL)=0)[
+      "this must be a charged particle track end because IARG ~=0"
+      "it can also be  an IARG=4 deposit of energy below binding"
+      "if relaxation is on - and in this case, the energy is that of"
+      "the electron we are following - withou relaxation it must"
+      "have always been the photon on the top of stack?"
+           IF(EKE >= DELTA & (IARG ~= 4))[ "not  possible - this proves it"
+               "note that DELTA is a kinetic energy "
+               "IARG=4 is discard of energy below binding"
+               OUTPUT EKE;(' AUSGAB: EKE=',F15.9,' is impossible***'/);
+               "recall ECUT = AE = DELTAT, and we have not allowed"
+               "range rejection. The only other discard is out of"
+               "geometry and that has no edep so doesn't get to here"
+               OUTPUT IARG, IQL, DELTA,E(NP),AE(1),PRM,RM,EDEP;
+              ('    IARG, IQL, DELTA, E(NP), AE(1), PRM, RM, EDEP:'/
+                    2I5, 6F11.7);
+               STOP;
+           ]
+   ]"end of charged particle track end block";
+   "Why do we have the above anymore? We know we never get these messages"
+   "to catch logic problems as with the relaxation!"
+
+   IF(IQL ~= 0 & IARG ~=4)[ "e- or e+, either taking step or being discarded"
+                 "but we must explicitly exclude IARG=4 discards"
+                 "which might happen with an electron on the top of stack"
+        IF(LATCH(NP) = 99) ["this must be a discarded electron which "
+                            "was created below delta"
+                IFLAG = 1;"we do not include these in spr"
+
+               IF(IWATCH > 0 & IWATCH ~=4 )[OUTPUT IARG,IRL,EKEtmp;
+                  (' AUSGAB: discard e- or e+ created below ECUT: IARG,IRL,'
+                   ,'EKEtmp:',2I5,F15.8);
+               ]
+               LATCH(NP) = 0; "just in case"
+        ]"end of block for discarded e- or e+ created below delta"
+
+        ELSEIF(EKEtmp - EDEP > DELTA)[ "a straight transport step "
+                                       "the energy is always > DELTA"
+            MEDIUM=2;    "set to second medium to get "
+            $SET INTERVAL ELKE,EKE; "prepare to interpolate in  data tables"
+            IF(IQL = -1) [$EVALUATE DEDXM2 USING EDEDX(ELKE);]
+                    ELSE [$EVALUATE DEDXM2 USING PDEDX(ELKE);]
+            MEDIUM = MEDL; "set back to current medium"
+            $SET INTERVAL ELKE,EKE; "prepare to interpolate in  data tables"
+            IF(IQL = -1) [$EVALUATE DEDXM1 USING EDEDX(ELKE);]
+                    ELSE [$EVALUATE DEDXM1 USING PDEDX(ELKE);]
+            SRATIO=DEDXM2/DEDXM1; "ratio of energy depositions"
+        ]"end of straight transport step"
+
+        ELSE[ "These are not electrons created below DELTA"
+              "and they are not electrons with energy always above DELTA"
+              "this is mostly for track ends, i.e. particles with "
+              "IARG = 1,2,3,4"
+              "but also has e- or e+ crossing AE in their IARG=0 step"
+
+              "this is an approximation but can we do better? Yes, we can"
+              "i.e.  we could be on a straight transport which crosses AE"
+              "and has EKE < DELTA.  We treat as if at AE"
+
+            IF( iarg ~= 0 ) [ "stoppers  IARG = 1,2,3,4"
+               IF(IQL=-1) [SRATIO = ERATIO(MEDL);]
+               ELSE       [SRATIO = PRATIO(MEDL);]
+               "SRATIO is just ratio at DELTA"
+            ]
+            ELSE [ "This is a step crossing delta, we set therefore"
+                   "sratio to ( (e-delta)*Sratio((e+delta)/2)+     "
+                   "            (edep-e+delta)*Sratio(delta))/edep "
+                   "i.e. we take energy above delta and use ratio at"
+                   "mid-point of that part of step and energy below"
+                   "DELTA as being the ration at DELTA"
+               EKE = 0.5*(EKEtmp+DELTA); ELKE=LOG(EKE); "mid-point above delta"
+               MEDIUM=2;    "set to second medium"
+               $SET INTERVAL ELKE,EKE; "prepare to interpolate in  data tables"
+               IF(IQL = -1) [$EVALUATE DEDXM2 USING EDEDX(ELKE);]
+                       ELSE [$EVALUATE DEDXM2 USING PDEDX(ELKE);]
+               MEDIUM = MEDL; "set to current medium"
+               $SET INTERVAL ELKE,EKE; "prepare to interpolate in  data tables"
+               IF(IQL = -1) [
+                   $EVALUATE DEDXM1 USING EDEDX(ELKE);
+                   SRATIO=DEDXM2/DEDXM1*(EKEtmp-DELTA)+
+                          ERATIO(MEDL)*(EDEP-EKEtmp+DELTA);
+               ]
+               ELSE [
+                   $EVALUATE DEDXM1 USING PDEDX(ELKE);
+                   SRATIO=DEDXM2/DEDXM1*(EKEtmp-DELTA)+
+                          PRATIO(MEDL)*(EDEP-EKEtmp+DELTA);
+               ]
+               SRATIO=SRATIO/EDEP;
+               ICROSS=ICROSS+1;  "count the crossers"
+            ] "end of crossers block"
+
+            "check how often things are crossing rather than track ends"
+            "results passed back in SCORE"
+            ITRACKE = ITRACKE + 1;
+        ]"end of track-end block -excludes if created with energy below delta"
+    ]"end of e- and e+ block"
+
+    ELSEIF(IQL = 0 | IARG = 4)["this is a photon created below PCUT(BREM)"
+                              " or is a fluorescent discard"
+        IFLAG = 1; "we do not include this at present in the spr"
+    ]
+
+    IF(IARG=0)[
+       "recover original energy of particle"
+       EKE=EKEtmp; ELKE = ELKEtmp;
+    ]
+
+    IF(NHSTRY=SCDOSE_LAST(IZ,IX))[
+        SCDOSE_TMP3(IZ,IX)=SCDOSE_TMP3(IZ,IX)+FTMP;
+        IF(IFLAG=0)["do not include bremsstrahlung photons created below PCUT"
+                    "or discarded fluorescent energy for IT=1 and 2"
+             SCEDPN_TMP(IZ,IX,1)=SCEDPN_TMP(IZ,IX,1)+FTMP;
+             SCEDPN_TMP(IZ,IX,2)=SCEDPN_TMP(IZ,IX,2)+FTMP*SRATIO;
+        ]
+        IF(IARG=0)[ "SCORE SANS ANY TRACK ENDS -recall we are in the EDEP block"
+             SCEDPN_TMP(IZ,IX,3)=SCEDPN_TMP(IZ,IX,3)+FTMP;
+             SCEDPN_TMP(IZ,IX,4)=SCEDPN_TMP(IZ,IX,4)+FTMP*SRATIO;
+        ]
+    ]
+    ELSE[
+        "add to IT=1,2,3,4 regardless of whether there is a contribution or"
+        "not"
+        SCEDPN(IZ,IX,1)=SCEDPN(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1);
+        SCEDPN2(IZ,IX,1)=SCEDPN2(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1)*
+                                               SCEDPN_TMP(IZ,IX,1);
+        SCEDPN(IZ,IX,2)=SCEDPN(IZ,IX,2)+SCEDPN_TMP(IZ,IX,2);
+        SCEDPN2(IZ,IX,2)=SCEDPN2(IZ,IX,2)+SCEDPN_TMP(IZ,IX,2)*
+                                               SCEDPN_TMP(IZ,IX,2);
+        SCSPR_COV(IZ,IX,1)=SCSPR_COV(IZ,IX,1)+SCEDPN_TMP(IZ,IX,2)*
+                                             SCEDPN_TMP(IZ,IX,1);
+        SCEDPN(IZ,IX,3)=SCEDPN(IZ,IX,3)+SCEDPN_TMP(IZ,IX,3);
+        SCEDPN2(IZ,IX,3)=SCEDPN2(IZ,IX,3)+SCEDPN_TMP(IZ,IX,3)*
+                                               SCEDPN_TMP(IZ,IX,3);
+        SCEDPN(IZ,IX,4)=SCEDPN(IZ,IX,4)+SCEDPN_TMP(IZ,IX,4);
+        SCEDPN2(IZ,IX,4)=SCEDPN2(IZ,IX,4)+SCEDPN_TMP(IZ,IX,4)*
+                                               SCEDPN_TMP(IZ,IX,4);
+        SCSPR_COV(IZ,IX,2)=SCSPR_COV(IZ,IX,2)+SCEDPN_TMP(IZ,IX,4)*
+                                             SCEDPN_TMP(IZ,IX,3);
+        "now add contributions to doses"
+        SCDOSE(IZ,IX,1)=SCDOSE(IZ,IX,1)+SCEDPN_TMP(IZ,IX,1)-
+                                        SCEDPN_TMP(IZ,IX,3);
+        SCDOSE2(IZ,IX,1)=SCDOSE2(IZ,IX,1)+(SCEDPN_TMP(IZ,IX,1)-
+                                        SCEDPN_TMP(IZ,IX,3))**2;
+        SCDOSE_COV(IZ,IX,1)=SCDOSE_COV(IZ,IX,1)+SCDOSE_TMP3(IZ,IX)*
+                               (SCEDPN_TMP(IZ,IX,1)-SCEDPN_TMP(IZ,IX,3));
+        SCDOSE(IZ,IX,2)=SCDOSE(IZ,IX,2)+SCDOSE_TMP3(IZ,IX)-
+                                        SCEDPN_TMP(IZ,IX,1);
+        SCDOSE2(IZ,IX,2)=SCDOSE2(IZ,IX,2)+(SCDOSE_TMP3(IZ,IX)-
+                                        SCEDPN_TMP(IZ,IX,1))**2;
+        SCDOSE_COV(IZ,IX,2)=SCDOSE_COV(IZ,IX,2)+SCDOSE_TMP3(IZ,IX)*
+                               (SCDOSE_TMP3(IZ,IX)-SCEDPN_TMP(IZ,IX,1));
+        SCDOSE(IZ,IX,3)=SCDOSE(IZ,IX,3)+SCDOSE_TMP3(IZ,IX);
+        SCDOSE2(IZ,IX,3)=SCDOSE2(IZ,IX,3)+SCDOSE_TMP3(IZ,IX)*
+                                           SCDOSE_TMP3(IZ,IX);
+        IF(IFLAG=0)[
+           SCEDPN_TMP(IZ,IX,1)=FTMP;
+           SCEDPN_TMP(IZ,IX,2)=FTMP*SRATIO;
+        ]
+        ELSE[
+           SCEDPN_TMP(IZ,IX,1)=0.;
+           SCEDPN_TMP(IZ,IX,2)=0.;
+        ]
+        IF(IARG=0)[
+           SCEDPN_TMP(IZ,IX,3)=FTMP;
+           SCEDPN_TMP(IZ,IX,4)=FTMP*SRATIO;
+        ]
+        ELSE[
+           SCEDPN_TMP(IZ,IX,3)=0.;
+           SCEDPN_TMP(IZ,IX,4)=0.;
+        ]
+        SCDOSE_TMP3(IZ,IX)=FTMP;
+        SCDOSE_LAST(IZ,IX)=NHSTRY;
+        SCNUM(IZ,IX)=SCNUM(IZ,IX)+1;
+    ]
+
+    IF((IWATCH > 1) & (IWATCH ~= 4))[
+       OUTPUT FTMP/RHOR(IRL),IRL,IARG;
+       (5x,' ***EDEP scored = ',E14.7,' MeV. IRL= ',I3,' IARG= ',I3);
+       OUTPUT FTMP*SRATIO/RHO(2),IRL,IARG;
+       (5x,' ***EDEP*SRATIO/RHO(2) scored = ',
+       E14.7,' MeV. IRL= ',I3,' IARG= ',I3);
+    ]
+] "end of energy deposited block"
+
+RETURN;
+END;  "end of subroutine ausgab"
+
+%E     "sprrznrc.mortran - start of subroutine GRID"
+"*****************************************************************************
+"
+"
+"                       ****************
+"                       *              *
+"                       * grid.mortran *
+"                       *              *
+"                       ****************
+"
+"
+"       A routine to determine whether or not a grid type output will
+"       fit on a single page with a variety of different choices for
+"       the number of characters/inch and lines/inch
+"
+"       VARIABLES
+"       =========
+"
+"       GRIDWD  THE WIDTH OF THE ENTIRE OUTPUT GRID IN CHARACTERS
+"       GRIDHT  THE HEIGHT OF THE ENTIRE OUTPUT IN LINES
+"       MXLP11  THE MAXIMUM NUMBER OF LINES ALLOWED ON THE FIRST PAGE
+"       MXLP12  THE MAXIMUM NUMBER OF LINES ON SUCESSIVE PAGES
+"                ABOVE TWO ARE LINES PER PAGE FOR 6 OR 8 LPI ?  D.R.
+"
+"       VARIABLES SET WITHIN ROUTINE AND RETURNED
+"       =========================================
+"
+"       ICHPIN  CHARACTERS/INCH
+"       ILPIN   LINES/INCH
+"       FITS    TRUE IF WILL FIT ON A SINGLE PAGE ELSE FALSE
+"               IF FALSE, ICHPIN=16 AND ILPIN=6 ARE SET
+"
+"       VERSION 01      6/84  E.F.
+"               02      9/85  D.R. HANDLE CASE GRIDWD>132
+"
+"****************************************************************************
+
+SUBROUTINE OLD_GRID(GRIDWD,GRIDHT,MXLP11,MXLP12,ICHPIN,ILPIN,FITS);
+
+$IMPLICIT-NONE;
+
+$INTEGER MXLP11,MXLP12;
+
+LOGICAL FITS;
+INTEGER GRIDWD,GRIDHT,ICHPIN,ILPIN;
+
+FITS=.TRUE.; "ASSUME IT FITS"
+
+IF(GRIDWD.LE.96)[        ICHPIN=12;    "12 VERTICAL LINES PER INCH"]
+ELSEIF(GRIDWD.LE.105)[   ICHPIN=13;    "13 VERTICAL LINES PER INCH"]
+ELSEIF(GRIDWD.LE.132)[   ICHPIN=16;    "16 VERTICAL LINES PER INCH"]
+ELSE[                    FITS=.FALSE.; "DOES NOT FIT, TOO WIDE"]
+
+IF(GRIDHT.LE.MXLP11)[    ILPIN=6;      "6 HORIZONTAL LINES PER INCH"]
+ELSEIF(GRIDHT.LT.MXLP12)[ILPIN=8;      "8 HORIZONTAL LINES PER INCH"]
+ELSE[                    FITS=.FALSE.; "DOES NOT FIT, TOO LONG"]
+
+RETURN;
+END; "end of subroutine grid"
+
+%E     "sprrznrc.mortran - start of subroutine HOWFAR"
+;"******************************************************************************
+"
+"                               **********
+"                               *        *
+"                               * HOWFAR *
+"                               *        *
+"                               **********
+"
+"       A GENERAL PURPOSE CYLINDRICAL GEOMETRY ROUTINE FOR USE WITH THE EGS
+"       CODE SYSTEM ADAPTED FOR USE WITH sprrznrc.mortran
+"
+"       FOR PARTICLE NP ON THE STACK IN REGION IR(NP), THIS ROUTINE
+"       DETERMINES IF THE PARTICLE CAN GO A DISTANCE USTEP WITHOUT CHANGING
+"       ZONES. IF USTEP CAUSES A ZONE CROSSING, IT IS REDUCED TO PLACE IT ON
+"       THE BOUNDRY AND IRNEW IS SET TO THE ZONE NUMBER ON THE FAR SIDE OF
+"       THE BOUNDARY. IF IR(NP) IS 1 THEN THE PARTICLE HAS ESCAPED THE REGION
+"       OF INTEREST AND THE HISTORY IS TERMINATED.(IDISC IS SET TO 1.)
+"
+"
+"
+"
+"       SOME VARIABLES
+"       ==============
+;"
+"OUTEND =       .TRUE.  =>      PARTICLE MAY TRANSMIT OR BACKSCATTER OUT ENDS
+"       =       .FALSE. =>      PARTICLE STAYS WITHIN THE END BOUNDARIES
+"OUTSID =       .TRUE.  =>      PARTICLE MAY TRANSMIT OUT THE SIDES
+"       =       .FALSE. =>      PARTICLE STAYS WITHIN THE SIDE BOUNDARY
+"IRL    =       STARTING REGION NUMBER THE PARTICLE IS IN
+"IZ     =       STARTING PLANAR ZONE NUMBER THE PARTICLE IS IN.
+"               THE PARTICLE IS BETWEEN ZPLANE(IZ) AND ZPLANE(IZ+1).
+"IX     =       STARTING CYLINDRICAL ZONE NUMBER THE PARTICLE IS IN.
+"               THE PARTICLE IS BETWEEN RCYL(IX-1) AND RCYL(IX).
+"
+"       COMMON/GEOM/
+"               ZPLANE(IZ)      Z VALUES OF PLANES
+"                               1<=IZ<=NZ+1
+"               RCYL(IRR)       RADII OF CYLINDERS
+"                               1<=IRR<=NR
+"               CYRAD2(IRR)     =RCYL(IRR)**2
+"               NZ              # PLANAR GEOMETRICAL ZONES (NPLANE-1)
+"                               ZONE(I) IS BETWEEN ZPLANE(I) AND ZPLANE(I+1)
+"               NR              # CYLINDRICAL GEOMETRICAL ZONES
+"                               ZONE(I) IS BETWEEN RCYL(I-1) AND RCYL(I)
+"               NREG            TOTAL # GEOMETRICAL ZONES =NR*NZ +1
+"                                       +1 FOR VACUUM ENVELOPE
+%E     "sprrznrc.mortran - start of geometry"
+"       DEFINITIONS OF REGION NUMBER, PLANAR ZONE, CYLINDRICAL ZONE
+"       ===========================================================
+"               Z AXIS RUNS ACROSS PAGE SHOWN AS .......
+"
+"
+"                                       1
+"
+"
+"       --------------------------------------------------------- RCYL(NR)
+"       |(NR-1) |(NR-1) |(NR-1) |    . . . .    | NR*NZ | NR*NZ |    IX=NR
+"       | *NZ+2 | *NZ+3 | *NZ+4 |               |       |   +1  |
+"       --------------------------------------------------------- RCYL(NR-1)
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       --------------------------------------------------------- RCYL(2)
+"       |  NZ+2 |  NZ+3 |  NZ+4 |    . . . .    |  2NZ  | 2NZ+1 |    IX=2
+"       --------------------------------------------------------- RCYL(1)
+"..1....|...2...|...3...|...4...|...............|...NZ..|..NZ+1.|....IX=1..1..
+;"       ---------------------------------------------------------
+"       |       |       |       |    . . . .    |       |       |
+"       ---------------------------------------------------------
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       |   .   |   .   |   .   |               |   .   |   .   |
+"       ---------------------------------------------------------
+"       |       |       |       |    . . . .    |       |       |
+"       |       |       |       |               |       |       |
+"       ---------------------------------------------------------
+"         IZ=1    IZ=2    IZ=3                   IZ=NZ-1  IZ=NZ
+"
+"                                       1
+"
+"
+"
+"       VERSION 1       ADAPTED FROM CAVITY(EGS3) HOWFAR      10/87  AFB
+"                       THE SUBROUTINE CALLS TO PLANES AND
+"                       CYLINDER HAVE BEEN REPLACED BY MACROS
+"                       TO SPEED THINGS UP
+"
+"
+"******************************************************************************
+"
+%E     "sprrznrc.mortran - start of geometry macros"
+"THE MACRO REPLACING THE CALL TO CYLNDR
+"*****************************************************************************
+"
+"                               ***********
+"                               *         *
+"                               * $CYLNDR *
+"                               *         *
+"                               ***********
+"
+"MACRO TO BE CALLED BY SUBROUTINE HOWFAR IN THE EGS CODE SYSTEM
+"A FULLY DOCUMENTED SUBROUTINE VERSION IS CONTAINED IN NRCCAUX.MOR, PART
+"OF THE STANDARD NRCC DISTRIBUTION
+"
+"FOR A PARTICLE TRAVELLING INSIDE TWO CONCENTRIC, INFINITE, RIGHT CYLINDERS,
+"THIS SUBROUTINE DETERMINES THE MINIMUM DISTANCE IT MUST GO TO HIT A CYLINDER.
+"THE CYLINDERS ARE ASSUMED TO BE ALIGNED AND CENTERED ALONG THE Z-AXIS.
+"
+"       SOME VARIABLES
+"       ==============
+"
+"{P1} = ICYL  = THE NUMBER OF THE OUTER CYLINDER
+"{P2} = IHITC = 1 => PARTICLE HITS THE OUTER SURFACE
+"             = 0 => PARTICLE MISSES THE SURFACES
+"             =-1 => PARTICLE HITS THE INNER SURFACE
+"{P3} = TCYL  = DISTANCE TO SURFACE IF IT HITS
+"CYRAD2(ICYL) = RADIUS**2 OF THE OUTER CYLINDER
+"
+"THIS CODE IS OPTIMIZED FOR SPEED, NOT SIZE.
+"
+"FOR PARTICLES NEAR THE SURFACE, A FIRST ORDER APPROXIMATION IS MADE
+"FOR EXPRESSIONS LIKE X-SQRT(X**2+EPSILON), WHICH SOMETIMES SETS TCYL=0.
+"
+"MACRO VERSION 1             A.F.BIELAJEW NRCC             87/10
+"
+"
+"******************************************************************************
+"
+REPLACE {$CYLNDR(#,#,#);} WITH {
+;
+U1=U(NP);V1=V(NP);A=U1*U1+V1*V1;
+IF(A = 0.0)[{P2}=0;{P3}=1.0E30;]
+ELSE[
+    X1=X(NP);Y1=Y(NP);B=X1*U1+Y1*V1;B2=B*B;
+    C=X1*X1+Y1*Y1;
+    COUT=C-CYRAD2({P1});
+    IF(COUT.GT.0.0)[
+        IF(IWATCH.GT.0)[OUTPUT COUT;(' COUT=',E11.3);]
+        COUT=0.0;
+        ]
+    IF(B.GT.0.0)[{P2}=1;
+        IF(COUT/B2.GT.-1.0E-3)[{P3}=-0.5*COUT/B;]
+        ELSE[{P3}=-COUT/(SQRT(B2-A*COUT)+B);]
+        ]
+    ELSEIF(B.LT.0.0)[{P2}=1;
+        IF(COUT/B2.GT.-1.0E-3)[{P3}=-2.*B/A*(1.-0.25*A*COUT/B2);]
+        ELSE[{P3}=(SQRT(B2-A*COUT)-B)/A;]
+        IF({P1}.NE.1)[
+            CIN=C-CYRAD2({P1}-1);
+            IF(CIN.LT.0.0)[
+                IF(IWATCH.GT.0)[OUTPUT CIN;(' CIN=',E11.3);]
+                CIN=0.0;
+                ]
+            RAD=B2-A*CIN;
+            IF(RAD.GE.0.0)[
+                {P2}=-1;
+                IF(CIN/B2.LT.1.0E-3)[{P3}=-0.5*CIN/B;]
+                ELSE[{P3}=CIN/(SQRT(RAD)-B);]
+                ]
+            ]
+        ]
+    ELSE[
+        {P2}=1;
+        {P3}=SQRT(-COUT/A);
+        ]
+    ]
+;
+}
+
+"THE MACRO REPLACING THE CALL TO PLANES
+"******************************************************************************
+"
+"                               ***********
+"                               *         *
+"                               * $PLANES *
+"                               *         *
+"                               ***********
+"
+"PROGRAM TO BE CALLED BY HOWFAR IN THE EGS CODE SYSTEM
+"A FULLY DOCUMENTED SUBROUTINE VERSION IS CONTAINED IN NRCCAUX.MOR, PART
+"OF THE STANDARD NRCC DISTRIBUTION
+"
+"FOR A PARTICLE TRAVELLING INSIDE TWO PARALLEL, INFINITE PLANES WITH NORMALS
+"ALIGNED ALONG THE Z-AXIS, THIS ROUTINE CALCULATES THE STRAIGHT LINES DISTANCE
+"IT MUST GO TO HIT ONE OF THE PLANES
+"
+"       SOME VARIABLES
+"       ==============
+"
+"{P1}           =       THE NUMBER OF THE INNER PLANE (LESSER Z-COORDINATE)
+"                       IT MUST BE .GE. 1
+"{P2}           =       THE NUMBER OF THE OUTER PLANE (GREATER Z-COORDINATE)
+"                       IT MUST BE .GE. 2
+"{P3} = IHITP   =       1  => PARTICLE HITS THE OUTER PLANE
+"               =       0  => PARTICLE MISSES BOTH PLANES
+"               =       -1 => PARTICLE HITS THE INNER PLANE
+"{P4} = TPLANE  =       DISTANCE TO THE PLANE THAT IT HITS
+"ZPLANE(IPLANE) =       Z-COORDINATE OF THE OUTER PLANE
+"
+"MACRO VERSION 1             A.F.BIELAJEW NRCC             87/10
+"
+"
+"******************************************************************************
+"
+REPLACE {$PLANES(#,#,#,#);} WITH {
+;
+WL=W(NP);
+IF (WL.GT.0.0) [{P3}=1;{P4}=(ZPLANE({P2})-Z(NP))/WL;]
+ELSEIF (WL.LT.0.0) [{P3}=-1;{P4}=(ZPLANE({P1})-Z(NP))/WL;]
+ELSE[{P3}=0;{P4}=1.0E30;]
+;
+}
+
+"******************************************************************************
+"
+"The following is the $CALL-HOWNEAR macro for PRESTA-II - copied from CAVRZII
+"by BLIF - 97/03/27 (JETTE, Nov.27, 1998)
+REPLACE {$CALL-HOWNEAR(#);} WITH
+{
+    call hownear({P1},x(np),y(np),z(np),ir(np));
+}
+
+SUBROUTINE HOWNEAR(tperp,x,y,z,ir);
+
+$IMPLICIT-NONE;
+
+COMIN/GEOM/;
+"Subroutine arguments
+$REAL
+    tperp, "nearest distance to any boundary (output)
+    x,     "x-position of the particle (input)
+    y,     "y-position of the particle (input)
+    z      "z-position of the particle (input)
+;
+$INTEGER
+    ir     "region number of the particle
+;
+
+"Local variables
+
+$REAL
+    r      "cylindrical radius
+;
+$INTEGER
+    ix,    "current cylindrical radius number
+    iz     "current planar slab number
+;
+r = sqrt(x**2 + y**2);
+ix = (ir -2)/nz + 1;
+iz = ir - 1 - nz*(ix - 1);
+tperp = min(z - zplane(iz),zplane(iz + 1) - z,rcyl(ix) - r);
+IF(ix ~= 1)
+[
+    tperp = min(tperp,r-rcyl(ix - 1));
+]
+
+return;
+end;
+
+SUBROUTINE HOWFAR;
+
+$IMPLICIT-NONE;
+
+;
+"MACRO USED LOCALLY TO CHANGE REGIONS, ADJUST USTEP, AND EXIT"
+REPLACE {$SET NEW REGION(#,#);} WITH
+{
+;
+IF({P1}.LE.USTEP)[USTEP={P1};IRNEW={P2};]RETURN;}
+
+;COMIN/EPCONT,STACK,GEOM,SCORE,MISC/;
+
+LOGICAL OUTEND,OUTSID;
+
+$INTEGER IRL,IX,IZ,IHITP,IHITC,IZNEW,IXNEW;
+$REAL ZL,RL,ZLEFT,ZRIGHT,ROUT,DNTMP,RIN,WL,TPLANE,U1,V1,A,TCYL,X1,Y1,B,B2,
+      C,COUT,CIN,RAD;
+
+"DISCARD ZERO WEIGHT PARTICLES"
+IF(WT(NP) = 0.0)[IDISC=1;RETURN;]
+
+OUTEND=.FALSE.;OUTSID=.FALSE.;"INITIALLY ASSUME PARTICLE STAYS IN THE TARGET"
+IRL=IR(NP); "LOCAL REGION NUMBER"
+
+"DISCARD IF PARTICLE WANTS TO LEAVE THE GEOMETRY"
+IF(IRL = 1)[
+   IF(IWATCH > 0 & IWATCH ~=4) [ OUTPUT;(' LEAVING GEOMETRY,IDISC=1');]
+   IDISC=1;RETURN;
+]
+
+$GET-IX-IZ(IRL); "GET PLANAR AND CYLINDRICAL ZONES NUMBERS"
+
+"CALCULATE DNEAR"
+IF((IQ(NP).NE.0))[
+    ZL=Z(NP);RL=SQRT(X(NP)**2+Y(NP)**2);
+    ZLEFT=ZL-ZPLANE(IZ); ZRIGHT=ZPLANE(IZ+1)-ZL;
+    ROUT=RCYL(IX)-RL; DNTMP=MIN(ZLEFT,ZRIGHT,ROUT);
+    IF(IX.NE.1)[RIN=RL-RCYL(IX-1);DNTMP=MIN(DNTMP,RIN);]
+    DNEAR(NP)=DNTMP;
+    ]
+
+$PLANES(IZ,IZ+1,IHITP,TPLANE);"GET DISTANCE TO PLANE"
+        "IHITP  =  1 => HITS GREATER Z PLANE"
+        "       =  0 => MISSES BOTH PLANES"
+        "       = -1 => HITS LESSER Z PLANE"
+
+$CYLNDR(IX,IHITC,TCYL);"GET DISTANCE TO CYLINDER"
+"       IHITC   =  1 => HITS OUTER CYLINDER"
+"               =  0 => MISSES BOTH CYLINDERS"
+"               = -1 => HITS INNER CYLINDER"
+
+IZNEW=IZ+IHITP;                                  "GET NEW PLANAR REGION"
+IF((IZNEW.LT.1).OR.(IZNEW.GT.NZ)) OUTEND=.TRUE.; "FLAG IF LEAVES BY THE ENDS"
+
+IXNEW=IX+IHITC;                "GET NEW CYLINDRICAL REGION"
+IF(IXNEW.GT.NR) OUTSID=.TRUE.; "FLAG IF LEAVES BY THE SIDES"
+
+"DO MOST PROBABLE CASE FIRST WHERE A PLANE AND A CYLINDER CAN BE HIT"
+IF((IHITP.NE.0).AND.(IHITC.NE.0))[
+    IF(TPLANE.LT.TCYL)["HITS PLANE FIRST"
+        IF(OUTEND)[$SET NEW REGION(TPLANE,1);]
+        ELSE[$SET NEW REGION(TPLANE,IRL+IHITP);]
+        ]
+    ELSEIF(TCYL.LT.TPLANE)["HITS CYLINDER FIRST"
+        IF(OUTSID)[$SET NEW REGION(TCYL,1);]
+        ELSE[$SET NEW REGION(TCYL,IRL+NZ*IHITC);]
+        ]
+    ELSE["ODD CASE TCYL=TPLANE:HITS PLANE AND CYLINDER TOGETHER"
+        IF(OUTEND.OR.OUTSID)[$SET NEW REGION(TCYL,1);]
+        ELSE[$SET NEW REGION(TCYL,IRL+IHITP+NZ*IHITC);]
+        ]
+    ]
+
+"DO ODD CASE-PARTICLE CAN HIT PLANE BUT NOT CYLINDER"
+ELSEIF(IHITP.NE.0)[
+    IF(OUTEND)[$SET NEW REGION(TPLANE,1);]
+    ELSE[$SET NEW REGION(TPLANE,IRL+IHITP);]
+    ]
+
+"DO ODD CASE-PARTICLE CAN HIT CYLINDER BUT NOT PLANE"
+ELSE[
+    IF(OUTSID)[$SET NEW REGION(TCYL,1);]
+    ELSE[$SET NEW REGION(TCYL,IRL+NZ*IHITC);]
+    ]
+
+"AT THIS STAGE ALL GEOMETRICAL POSSIBILITIES HAVE BEEN CHECKED AND CONTROL"
+"HAS ALREADY BEEN TRANSFERRED TO EGS"
+
+END; "END OF SUBROUTINE HOWFAR"
+
+"****************************************************************************
+%E     "sprrznrc.mortran - start of subroutine INPUTS "
+"******************************************************************************
+"
+"
+"                               ******************
+"                               *                *
+"                               * INPUTS.MORTRAN *
+"                               *                *
+"                               ******************
+"
+"
+"       AN INPUT FILE USED WITH SPRRZnrc. THE INPUTS ARE DEFINED AS THEY ARE
+"       INPUT. CONSIDERABLE DEFAULTING AND ERROR CHECKING IS DONE.
+"
+"
+"       INPUT FILE ******.egsinp
+"       =========================
+"
+"       VERSION 1       AFB    10/87            ADAPTED FROM CAVITY(EGS3)
+"       VERSION 2       AM     03/98            USES SUBROUTINE GET_INPUT
+"
+"******************************************************************************
+"
+SUBROUTINE INPUTS;
+
+$IMPLICIT-NONE;
+
+"DECLERATION OF COMIN BLOCKS
+"***************************
+;COMIN/
+CHARS,ELECIN,GEOM,IODAT1,IODAT2,MEDIA,MISC,
+RUSROU,SCORE,SOURCE,SPECTR,USEFUL,USER,RANDOM,GetInput,EDGE,COMPTON-DATA,
+EGS-VARIANCE-REDUCTION/;
+
+$INTEGER ixxin,jxxin,n_ibcmp_warnings,IT,IX,IZ,ICOUNT;
+
+"***************************************************************************"
+"*                         User defined MACROS                             *"
+"***************************************************************************"
+
+REPLACE {$SKIP-LINE;} WITH {;OUTPUT;(' ');}  "Line skip"
+;
+
+"***************************************************************************"
+"*                   Variables used to declare inputs                      *"
+"***************************************************************************"
+INTEGER INEXT;
+
+INTEGER MODEIN;                       "source input"
+REAL TEMP1,TEMP2,TEMP3,TEMP4;                       "source input"
+
+REAL SMAX;                  "transport control"
+
+REAL ADDING;
+INTEGER I, J, K, PLN, COUNT, SLENGHT,ii,IRL,ILOW,IHIGH,ICYL,ISLAB;
+
+INTEGER n_incoh_warnings,                           "keeps track of number"
+        n_iedgfl_warnings;                          "of times a warning is"
+                                                    "output"
+
+"***************************************************************************"
+"*                Variables used to point to the inputs                    *"
+"***************************************************************************"
+INTEGER NUM_TITLE,
+
+"I/O Contol"
+        NUM_IWATCH,
+        NUM_STRAND,
+        NUM_IRESTART,
+        NUM_STORE,
+        NUM_SPRREG,
+        NUM_SPR1,
+        NUM_SPR2,
+
+"M-C Input"
+        NUM_HIST,
+        NUM_SEEDS,
+        NUM_MXTIME,
+        num_ifano,
+
+"Tranport Control"
+        NUM_SMAX,
+        NUM_RAYLEIGH,
+        NUM_HOWFAR,
+        NUM_RUSROU,
+        NUM_RUSFRAC,
+        NUM_XTRANSF,
+        NUM_FORCE,
+        NUM_STRTFRC,
+        NUM_STPFRC,
+
+"Variance reduction"
+        NUM_IREJCT,
+        NUM_ESAVEIN;
+
+$INTEGER data_unit, egs_open_datfile;
+
+"---------------------------------------------------------------------------"
+IVAL=0;  "number of the value_sought"
+
+ERROR_FLAG=0;   "Initialization of bad input flag"
+
+DO J=1, $NMAX [NVALUE(J)=0;]  "Initialization of Nvalue Array"
+
+OUTPUT $MAXRADII,$MAXZPLANE;
+(//' SPRRZnrc(EGSnrc) '$VERSION /' On '$MACHINE' .',
+4x,'Max no of radial/ depth zones=',2I4);
+
+"*********************************************************"
+"* set up the values_sought(i) and echo inputs to screen *"
+"*********************************************************"
+"*********"
+"* TITLE *"
+"*********"
+IVAL=IVAL+1;
+NUM_TITLE=IVAL;
+VALUES_SOUGHT(IVAL)='TITLE';
+TYPE(IVAL)=2;
+NVALUE(IVAL)=1;
+
+DELIMETER='NONE';
+$GET_INPUT(NUM_TITLE);
+
+$SKIP-LINE;$SKIP-LINE;
+OUTPUT;(' *** INPUT CARD I01 ***');
+READ (CHAR_VALUE(NUM_TITLE,1),FMT='(80A1)') (TITLE(I),I=1,80);
+WRITE (*,:FMT:) (TITLE(I),I=1,79);
+:FMT: FORMAT ('TITLE: ',79A1);
+$SKIP-LINE;
+
+"************************"
+"* INPUT/OUTPUT CONTROL *"
+"************************"
+IVAL=IVAL+1;
+NUM_IWATCH=IVAL;
+VALUES_SOUGHT(IVAL)='IWATCH';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,0)='OFF';
+ALLOWED_INPUTS(IVAL,1)='INTERACTIONS';
+ALLOWED_INPUTS(IVAL,2)='STEPS';
+ALLOWED_INPUTS(IVAL,3)='DEPOSITED';
+ALLOWED_INPUTS(IVAL,4)='GRAPH';
+
+IVAL=IVAL+1;
+NUM_STRAND=IVAL;
+VALUES_SOUGHT(IVAL)='STORE INITIAL RANDOM NUMBERS';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,0)='NO';
+ALLOWED_INPUTS(IVAL,1)='LAST';
+ALLOWED_INPUTS(IVAL,2)='ALL';
+
+
+IVAL=IVAL+1;
+NUM_IRESTART=IVAL;
+VALUES_SOUGHT(IVAL)='IRESTART';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,0)='FIRST';
+ALLOWED_INPUTS(IVAL,1)='RESTART';
+ALLOWED_INPUTS(IVAL,3)='ANALYZE';
+ALLOWED_INPUTS(IVAL,4)='START-RNS';
+
+IVAL=IVAL+1;
+NUM_STORE=IVAL;
+VALUES_SOUGHT(IVAL)='STORE DATA ARRAYS';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=1;
+ALLOWED_INPUTS(IVAL,0)='YES';
+ALLOWED_INPUTS(IVAL,1)='NO';
+
+DELIMETER='I/O CONTROL';
+$GET_INPUTS(NUM_IWATCH,NUM_STORE);
+
+OUTPUT;(' *** INPUT CARD IO2 ***');
+IWATCH=VALUE(NUM_IWATCH,1);
+ISTORE=VALUE(NUM_STRAND,1);
+IRESTART=VALUE(NUM_IRESTART,1);
+IDAT=VALUE(NUM_STORE,1);
+OUTPUT IWATCH,ISTORE,IRESTART,IDAT;
+    (/' DO NOT TRACK(0) OR TRACK(>0) EVERY INTERACTION:',T60,I12/
+    ' DO NOT STORE(0) OR STORE(1,2,3) INITIAL RANDOM #:',T60,I12/
+    ' FIRST RUN(0),RESTARTED(1),ANALYZE(3),START RNS(4):',
+    T60,I12/ ' STORE RAW DATA(0) OR NOT(1):',T60,I12);
+IF(IDAT.EQ.1)[INEXT=0;]ELSE[INEXT=1;]
+IF(IRESTART = 4) [
+    IDAT=1;   "DO NOT STORE OUTPUT IN THIS CASE TO AVOID BIASING"
+    ISTORE=0; "DO NOT STORE THE STARTING RANDOM NUMBERS EITHER"
+]
+
+IVAL = IVAL + 1;
+NUM_SPRREG = IVAL;
+VALUES_SOUGHT(IVAL)='SPR OUTPUT';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+ALLOWED_INPUTS(IVAL,0)='REGIONS';
+ALLOWED_INPUTS(IVAL,1)='SLABS/CYLINDERS';
+
+$GET_INPUT(NUM_SPRREG);
+ISPRREG=VALUE(NUM_SPRREG,1);
+
+IF(ISPRREG=0)["output stopping-power ratio by regions"
+   IVAL=IVAL+1;
+   NUM_SPR1=IVAL;
+   VALUES_SOUGHT(IVAL)='SPR START REGION';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=2;
+   VALUE_MAX(IVAL)=$MXREG;
+   DEFAULT(IVAL)=1;
+
+   IVAL=IVAL+1;
+   NUM_SPR2=IVAL;
+   VALUES_SOUGHT(IVAL)='SPR STOP REGION';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=2;
+   VALUE_MAX(IVAL)=$MXREG;
+   DEFAULT(IVAL)=1;
+]
+ELSEIF(ISPRREG=1)["output stopping-power ratio by cylinders slabs"
+   IVAL=IVAL+1;
+   NUM_SPR1=IVAL;
+   VALUES_SOUGHT(IVAL)='SPR IN CYLINDER IX';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=$MAXRADII;
+   DEFAULT(IVAL)=0;
+
+   IVAL=IVAL+1;
+   NUM_SPR2=IVAL;
+   VALUES_SOUGHT(IVAL)='SPR IN SLAB IZ';
+   TYPE(IVAL)=0;
+   VALUE_MIN(IVAL)=0;
+   VALUE_MAX(IVAL)=$MAXZREG;
+   DEFAULT(IVAL)=0;
+]
+
+$GET_INPUTS(NUM_SPR1,NUM_SPR2);
+
+"now hold onto these until we input the geometry
+
+"                       MONTE CARLO CONTROL INPUT
+"                       *************************
+IVAL=IVAL+1;
+NUM_HIST=IVAL;
+VALUES_SOUGHT(IVAL)='NUMBER OF HISTORIES';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=1;
+VALUE_MAX(IVAL)=999999999;
+DEFAULT(IVAL)=20000;
+
+IVAL=IVAL+1;
+NUM_MXTIME=IVAL;
+VALUES_SOUGHT(IVAL)='MAX CPU HOURS ALLOWED';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=1000;
+DEFAULT(IVAL)=999.0;
+
+IVAL=IVAL+1;
+NUM_IFANO=IVAL;
+VALUES_SOUGHT(IVAL)='PHOTON REGENERATION';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+ALLOWED_INPUTS(IVAL,0)='NO';
+ALLOWED_INPUTS(IVAL,1)='YES';
+
+DELIMETER='MONTE CARLO INPUTS';
+$GET_INPUTS(NUM_HIST,NUM_IFANO);
+
+$RNG-INPUTS('INITIAL RANDOM NO. SEEDS','MONTE CARLO INPUTS',ixxin,jxxin);
+$INITIALIZE RNG USING ixxin AND jxxin;
+
+
+"************"
+"* CARD MC1 *"
+"************"
+OUTPUT;(/,' *** INPUT CARD MC1 ***');
+NCASE=VALUE(NUM_HIST,1);
+TIMMAX=VALUE(NUM_MXTIME,1);
+ifano = VALUE(num_ifano,1);
+
+IF(IWATCH=0 & NCASE<$NCASEMIN)[NCASE=$NCASEMIN;]
+
+OUTPUT NCASE,ixxin,jxxin,TIMMAX;
+    (/' # OF HISTORIES:',T60,I12/
+     $RNG-STRING-1,T60,I12/,$RNG-STRING-2,T60,I12/,
+    ' MAXIMUM CPU TIME ALLOWED:',T60,F10.2,' HRS'/);
+
+IF( ifano = 1 ) [
+  OUTPUT; (/' ********* Calculation WITH photon regeneration ******** '/);
+]
+ELSE [
+  OUTPUT; (/' ********* Calculation WITHOUT photon regeneration ******* '/);
+]
+
+IF (ERROR_FLAG=1) [GOTO :FINISHED:;]
+
+"                CYLINDRICAL GEOMETRY AND MATERIAL INPUT
+"                ***************************************
+"EXECUTED FROM SUBROUTINE GEOMRZ(ERROR_FLAG)"
+CALL GEOMRZ;
+IF(NMED=1)[
+   OUTPUT;(' ');
+   OUTPUT;(' *****************WARNING*****************');
+   OUTPUT;(' ****SPRRZnrc requires at least two media*****');
+   OUTPUT;(' ');
+   WRITE(15,*) ' ';
+   WRITE(15,*) ' *****************WARNING*****************';
+   WRITE(15,*) ' ****SPRRZnrc requires at least two media*****';
+   WRITE(15,*) ' ';
+   ERROR_FLAG=1;
+]
+IF(NMED>$MXMED)[
+   OUTPUT $MXMED;(//' *****************ERROR******************'/
+                    ' No. of media > max. no. of media allowed (',I4,')'/
+                    ' Increase $MXMED in srcrznrc.mortran, recompile'/
+                    ' and try again.'//);
+   ERROR_FLAG=1;
+]
+IF (ERROR_FLAG=1) [
+   WRITE(15,*) '***********ERROR in SUBROUTINE GEOMRZ************';
+   GOTO :FINISHED:;
+]
+
+"now go ahead and figure out what regions we are going to output/plot"
+" stopping-power ratio in"
+DO J=1,NREG[ISPR(J)=0;]"default to not output/plot stopping-power ratio "
+
+IF(ISPRREG=0)[
+  DO J=1,NVALUE(NUM_SPR1)[
+    ILOW=VALUE(NUM_SPR1,J);
+    IHIGH=VALUE(NUM_SPR2,J);
+    IF(ILOW>NREG)[
+       ILOW=NREG;
+       OUTPUT NREG,NREG;
+     (/' ***WARNING: lower region for outputting stopping power ratios > max.'/
+       '             region in geometry (= ',I4,').  Will be reset to ',I4/);
+    ]
+    IF(IHIGH>NREG)[
+       IHIGH=NREG;
+       OUTPUT NREG,NREG;
+     (/' ***WARNING: upper region for outputting stopping power ratios > max.'/
+       '             region in geometry (= ',I4,').  Will be reset to ',I4/);
+    ]
+    IF(ILOW>IHIGH)[
+       OUTPUT IHIGH,ILOW,ILOW;
+(/' ***WARNING: upper region for outputting stopping power ratios (',I4,') <'/
+ '             corresponding lower region (',I4,').  Will reset upper region'/
+  '             to ',I4/);
+       IHIGH=ILOW;
+    ]
+    IF(ILOW=IHIGH) [
+       ISPR(ILOW)=1;
+    ]
+    ELSE[
+       DO IRL=ILOW,IHIGH[ISPR(IRL)=1;]
+    ]
+  ]
+]
+ELSEIF(ISPRREG=1)[
+  IF(VALUE(NUM_SPR1,1)>0)[
+     DO J=1,NVALUE(NUM_SPR1)[
+       ICYL=VALUE(NUM_SPR1,J);
+       IF(ICYL>NR)[
+          OUTPUT ICYL,NR,NR;
+(/' ***WARNING: cylinder no. for outputting stopping-power ratios (',I4,') >'/
+  '             max. cylinder no. of geometry (',I4,').  Will reset output'/
+  '             cylinder no. to ',I4/);
+          ICYL=NR;
+       ]
+       ISPR(ICYL)=1;
+     ]
+  ]
+  IF(VALUE(NUM_SPR2,1)>0)[
+     DO J=1,NVALUE(NUM_SPR2)[
+       ISLAB=VALUE(NUM_SPR2,J);
+       IF(ISLAB>NZ)[
+          OUTPUT ISLAB,NZ,NZ;
+(/' ***WARNING: slab no. for outputting stopping-power ratios (',I4,') >'/
+  '             max. slab no. of geometry (',I4,').  Will reset output'/
+  '             slab no. to ',I4/);
+          ISLAB=NZ;
+       ]
+       ISPR(NR+ISLAB)=1;
+     ]
+  ]
+]
+
+"                       SOURCE CONFIGURATION INPUT
+"                       **************************
+"************"
+"* CARD SC1 *"
+"************"
+"EXECUTED FROM SUBROUTINE SRCRZ(ERROR_FLAG)"
+CALL SRCRZ;  "Get source data"
+CALL SRCINI (SVTMP1,SVTMP2,SVTMP3,SVTMP4,0);
+IF (ERROR_FLAG=1) [
+   WRITE(15,*) '***********ERROR IN SUBROUTINE SRCRZ************';
+   GOTO :FINISHED:;
+]
+
+
+
+"                       TRANSPORT CONTROL INPUT
+"************           ***********************
+"* CARD TC1 *"
+"************"
+"EXECUTED FROM SUBROUTINE ENSRC(ERROR_FLAG)"
+IF (ISOURC=21|ISOURC=22|ISOURC=23) [MONOEN=0;]
+   "no need to input monoen for source 21,22,23"
+ELSE [CALL ENSRC;] "Get data re-source energies"
+IF (ERROR_FLAG=1) [
+   WRITE(15,*) '***********ERROR IN SUBROUTINE ENSRC************';
+   GOTO :FINISHED:;
+]
+
+call get_transport_parameter(6);
+
+
+
+"************"
+"* CARD TC2 *"
+"************"
+"OUTPUT;(' *** INPUT CARD TC2 ***');
+
+IVAL=IVAL+1;
+NUM_RUSROU=IVAL;
+VALUES_SOUGHT(IVAL)='RUSSIAN ROULETTE DEPTH';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=-1.e30;
+VALUE_MAX(IVAL)=1.e30;
+DEFAULT(IVAL)=0.0;
+
+IVAL=IVAL+1;
+NUM_RUSFRAC=IVAL;
+VALUES_SOUGHT(IVAL)='RUSSIAN ROULETTE FRACTION';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=-1.e30;
+VALUE_MAX(IVAL)=1.e30;
+DEFAULT(IVAL)=0.0;
+
+IVAL=IVAL+1;
+NUM_XTRANSF=IVAL;
+VALUES_SOUGHT(IVAL)='EXPONENTIAL TRANSFORM C';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=-1.e30;
+VALUE_MAX(IVAL)=1.e30;
+DEFAULT(IVAL)=0.0;
+
+DELIMETER='VARIANCE REDUCTION';
+$GET_INPUTS(NUM_RUSROU,NUM_XTRANSF);
+
+"*************"
+"* CARD TC2C *"
+"*************"
+OUTPUT;(' *** INPUT CARD TC2C ***');
+RRZ=VALUE(NUM_RUSROU,1);
+RRCUT=VALUE(NUM_RUSFRAC,1);
+CEXPTR=VALUE(NUM_XTRANSF,1);
+RUSROU=.FALSE.;IF(RRZ+RRCUT.NE.0.0)RUSROU=.TRUE.;
+IF(RUSROU)[
+    OUTPUT RRZ,RRCUT;
+    (/' Russian roulette will be played'/
+    ' Russian roulette plane:',T30,E14.7/
+    ' Survival probability:',T30,E14.7/)
+]
+ELSE [OUTPUT;(' Russian roulette will not be played'/);]
+IF (CEXPTR = 0) [OUTPUT;(' No pathlength biasing to be done'/);]
+ELSE [OUTPUT CEXPTR;(' CEXPTR paramater:',T30,E14.7/);]
+
+IVAL=IVAL+1;
+NUM_FORCE=IVAL;
+VALUES_SOUGHT(IVAL)='PHOTON FORCING';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+DEFAULT(IVAL)=0;
+ALLOWED_INPUTS(IVAL,0)='OFF';
+ALLOWED_INPUTS(IVAL,1)='ON';
+
+IVAL=IVAL+1;
+NUM_STRTFRC=IVAL;
+VALUES_SOUGHT(IVAL)='START FORCING';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=$MXREG;
+DEFAULT(IVAL)=1;
+
+IVAL=IVAL+1;
+NUM_STPFRC=IVAL;
+VALUES_SOUGHT(IVAL)='STOP FORCING AFTER';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=0;
+VALUE_MIN(IVAL)=0;
+VALUE_MAX(IVAL)=$MXREG;
+DEFAULT(IVAL)=NMED;
+
+IVAL=IVAL+1;
+NUM_IREJCT=IVAL;
+VALUES_SOUGHT(IVAL)='ELECTRON RANGE REJECTION';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=3;
+ALLOWED_INPUTS(IVAL,0)='OFF';
+ALLOWED_INPUTS(IVAL,1)='ON';
+
+IVAL=IVAL+1;
+NUM_ESAVEIN=IVAL;
+VALUES_SOUGHT(IVAL)='ESAVEIN';
+NVALUE(IVAL)=1;
+TYPE(IVAL)=1;
+VALUE_MIN(IVAL)=0.;
+VALUE_MAX(IVAL)=EIN+0.511;  "EIN is max k.e. of particles set in srcrz for"
+                         "ISOURC 21,22 and ine ensrc for the others"
+DEFAULT(IVAL) =EIN+0.511;  "This means that if a too high number is input,"
+                            "it is reduced to the max needed."
+
+DELIMETER='VARIANCE REDUCTION';
+$GET_INPUTS(NUM_FORCE,NUM_ESAVEIN);
+
+"************"
+"* CARD TC3 *"
+"************"
+OUTPUT;(' *** INPUT CARD TC3 ***');
+IFORCE=VALUE(NUM_FORCE,1);
+NFMIN=VALUE(NUM_STRTFRC,1);
+NFMAX=VALUE(NUM_STPFRC,1);
+IF(IFORCE = 0) [
+    NFMIN=0;NFMAX=0;
+    OUTPUT;(/' NO INTERACTION FORCING IS IN EFFECT'/);
+]
+ELSE [
+    IF (NFMAX.LT.NFMIN) NFMAX=NFMIN;
+    OUTPUT NFMIN,NFMAX;
+    (/' FORCED PHOTON INTERACTIONS IN EFFECT FROM',I3,' TO',I3,
+    ' # INTERACTIONS'/);
+]
+IQINC=IQIN; "NEEDED TO TURN OFF FASTSTEP FOR INCIDENT ELECTRONS"
+            "WHEN FORCING INTERACTIONS"
+
+IREJCT=VALUE(NUM_IREJCT,1);  "note IREJCT and ESAVE are defined in USERRR"
+ESAVEIN=VALUE(NUM_ESAVEIN,1);
+IF(IREJCT = 1 )[ "set parameters for regions in which we are not going"
+                 "to output stopping power ratios"
+   OUTPUT ESAVEIN;(/' RANGE REJECTION IS ON WITH ESAVE = ',F10.4,' MeV'/
+                    '  EXCEPT IN REGIONS WHERE STOPPING POWER RATIOS ARE TO '/
+                    '  BE OUTPUT.'/);
+   IF(ISPRREG=0)[
+     "turn range rejection on in regions with no SPR output"
+     DO IRL=1,NREG[
+       IF(ISPR(IRL)=0)[
+         i_do_rr(IRL)=1;
+         e_max_rr(IRL)=ESAVEIN;
+       ]
+     ]
+     OUTPUT;(/' STOPPING POWER RATIOS WILL BE OUTPUT IN REGIONS:');
+     I=2;
+     LOOP[
+      IF(ISPR(I)=1)[
+        ILOW=I;
+        IHIGH=I;
+        J=I+1;
+        LOOP[
+          IF(ISPR(J)=0)EXIT;
+          IHIGH=J;
+          J=J+1;
+        ]UNTIL(J>NREG);
+        I=J;
+        IF(ILOW=IHIGH)[OUTPUT ILOW;(I25);]
+        ELSE[OUTPUT ILOW,IHIGH; (I21,' TO ',I3);]
+      ]
+      I=I+1;
+     ]UNTIL(I>NREG);
+   ]
+   ELSEIF(ISPRREG=1)[
+     "turn range rejection on in slabs/cylinders with no SPR output"
+     DO IX=1,NR[
+       IF(ISPR(IX)=0)[
+         DO IZ=1,NZ[
+           IF(ISPR(NR+IZ)=0)[
+              $GET-IRL(IZ,IX);
+              i_do_rr(IRL)=1;
+              e_max_rr(IRL) = ESAVEIN;
+           ]
+         ]
+       ]
+     ]
+     ICOUNT=0;
+     DO IX=1,NR[
+       IF(ISPR(IX)=1)[
+         IF(ICOUNT=0) OUTPUT;
+                     (' OUTPUT AND PLOT STOPPING POWER RATIOS IN CYLINDERS:');
+         OUTPUT IX;(I25);
+         ICOUNT=ICOUNT+1;
+       ]
+     ]
+     ICOUNT=0;
+     DO IZ=1,NZ[
+       IF(ISPR(NR+IZ)=1)[
+         IF(ICOUNT=0) OUTPUT;
+                     (' OUTPUT AND PLOT STOPPING POWER RATIOS IN SLABS:');
+         OUTPUT IZ;(I25);
+         ICOUNT=ICOUNT+1;
+       ]
+     ]
+   ]
+]
+ELSE[
+   OUTPUT; (/' RANGE REJECTION IS OFF'/);
+   OUTPUT; (/' STOPPING POWER RATIOS WILL BE OUTPUT FOR ALL REGIONS'/);
+   IF(ISPRREG=1)[
+     ICOUNT=0;
+     DO IX=1,NR[
+       IF(ISPR(IX)=1)[
+         IF(ICOUNT=0) OUTPUT;(' PLOT STOPPING POWER RATIOS IN CYLINDERS:');
+         OUTPUT IX;(I25);
+         ICOUNT=ICOUNT+1;
+       ]
+     ]
+     ICOUNT=0;
+     DO IZ=1,NZ[
+       IF(ISPR(NR+IZ)=1)[
+         IF(ICOUNT=0) OUTPUT;(' PLOT STOPPING POWER RATIOS IN SLABS:');
+         OUTPUT IZ;(I25);
+         ICOUNT=ICOUNT+1;
+       ]
+     ]
+   ]
+]
+
+$SKIP-LINE;
+
+IF (ERROR_FLAG=1) [GOTO :FINISHED:;]
+
+"
+"                        SCORING ARRAY INITIALISATION
+"                        ****************************
+"
+
+
+/ICROSS,ITRACKE/=0;   "passed in SCORE"
+NCASEO=0;NCASET=0;TMCPUO=0; "SET PREVIOUS RUN COUNTERS"
+
+SCSTP_TMP=0;
+IF(IRESTART = 0)[ "FRESH START, SET EVERYTHING TO ZERO"
+    NNREAD=0; SCSTP=0.; SCSTP2=0.; SCSTP_LAST=0; PIISTP=0.;
+    DO IX=1,NR[
+      DO IZ=1,NZ[
+        DO IT=1,$MAXIT[
+         SCEDPN(IZ,IX,IT)=0.; SCEDPN2(IZ,IX,IT)=0.;
+         SCEDPN_TMP(IZ,IX,IT)=0.;
+        ]
+        SCDOSE_TMP3(IZ,IX)=0.;
+        DO IT=1,$MAXDOS[
+         SCDOSE(IZ,IX,IT)=0.; SCDOSE2(IZ,IX,IT)=0.;
+         IF(IT<$MAXDOS)SCDOSE_COV(IZ,IX,IT)=0.;
+        ]
+        DO IT=1,$NSPR[
+         SCSPR_COV(IZ,IX,IT)=0.;
+        ]
+        SCDOSE_LAST(IZ,IX)=0; SCNUM(IZ,IX)=0;
+      ]
+    ]
+]
+ELSEIF(IRESTART.NE.4)[
+
+    "RESTART OR STATS ANALYSIS ONLY, READ OLD DATA FROM UNIT 4"
+    "OPEN UNIT 4 AS AN OLD FILE"
+
+    OUTPUT;(//' ABOUT TO START READING STORED RAW DATA FILE: *.egsdat'/);
+    "OPEN(UNIT=4,file='fort.4',STATUS='OLD');"
+    data_unit = egs_open_datfile(4,0,1,'.egsdat');
+    READ(data_unit,*,END=:EOFA:) SCSTP,SCSTP2;
+    DO IZ=1,NZ[
+        DO IX=1,NR[
+            DO IT=1,$MAXIT[
+                READ(data_unit,*,END=:EOFA:)SCEDPN(IZ,IX,IT),SCEDPN2(IZ,IX,IT);
+            ]
+            DO IT=1,$MAXDOS[
+                READ(data_unit,*,END=:EOFA:)SCDOSE(IZ,IX,IT),SCDOSE2(IZ,IX,IT);
+            ]
+            READ(data_unit,*,END=:EOFA:)SCDOSE_COV(IZ,IX,1),SCDOSE_COV(IZ,IX,2);
+            READ(data_unit,*,END=:EOFA:)SCSPR_COV(IZ,IX,1),SCSPR_COV(IZ,IX,2);
+        ]
+    ]
+    $RETRIEVE RNG STATE FROM UNIT data_unit;
+    READ(data_unit,*,END=:EOFA:) NCASEO,TMCPUO,NNREAD,PIISTP;
+    READ(data_unit,*,END=:EOFB:)ICROSS,ITRACKE;
+    GO TO :A:;
+    :EOFB: OUTPUT;(/'  ERROR READING IN THE STORED DATA FILE - EOF HIT'/);
+
+    :A: OUTPUT;(' FINISHED READING DATA FILE IN');
+
+    CLOSE(UNIT=data_unit);
+]
+
+IF(IRESTART = 3)[NCASE=0;]
+
+NCASET=NCASE+NCASEO;
+
+:FINISHED: CONTINUE;
+"************************"
+"* Check for any errors *"
+"************************"
+IF(ERROR_FLAG = 0) [
+   OUTPUT;(/' ********* SUCCESSFUL INPUT ACCOMPLISHED *********');
+   WRITE (15,*) ' ';
+   WRITE (15,*) ' ';
+   WRITE (15,*) ' *************************************************';
+   WRITE (15,*) ' ********* SUCCESSFUL INPUT ACCOMPLISHED *********';
+   WRITE (15,*) ' *************************************************';
+   WRITE (15,*) ' ';
+   WRITE (15,*) ' ';
+   DO J=1,5[$SKIP-LINE;]
+
+   RETURN; "NORMAL RETURN"
+]
+IF (ERROR_FLAG=1) [
+   WRITE(15,*) ' ';
+   WRITE(15,*) ' ';
+   WRITE(15,*) '*********************************************';
+   WRITE(15,*) '********INPUTS  UNSUCCESSFUL  ***************';
+   WRITE(15,*) '*********************************************';
+   WRITE(15,*) ' ';
+   WRITE(15,*) ' ';
+   OUTPUT;(/' SPRRZnrc input file is not correct! - look for error message');
+   RETURN; "ERROR RETURN"
+]
+
+"BAD DATA FILE, STOP AND PRINT MESSAGE
+:EOFA:;OUTPUT;(/' END OF FILE FOUND BEFORE .egsdat FILE IN');
+ERROR_FLAG=1;
+RETURN; "END OF DAT FILE RETURN"
+
+END; "END OF SUBROUTINE INPUTS
+
+
+%E     "sprrznrc.mortran - start of subroutine ISUMRY"
+"***************************************************************************
+"
+SUBROUTINE ISUMRY;
+"
+"           AFB       10/88     MACHINE-INDEPENDENT VARIABLE FORMAT CODED
+"                     01/90     copied into sprrz from DOSRZ.  DWOR
+"
+"*************************************************************************
+;
+$IMPLICIT-NONE;
+
+COMIN/
+BOUNDS,EDGE,ELECIN,GEOM,IODAT1,IODAT2,
+MEDIA,MISC,RUSROU,SCORE,SOURCE,SPECTR,THRESH,USEFUL,USER,RANDOM,
+EGS-VARIANCE-REDUCTION/;
+
+"For the grid output defaults"
+CHARACTER*4 CDSTBL($MXREG),CTRTBL($MXREG),CABSRB($MXREG);
+
+$INTEGER IOUT,ISUMX,JJ,I,J,IHIGH,ILOW,ICOUNT;
+$REAL SMAX,EK0,ESTEPR;
+
+
+IOUT=1;    "OUTPUT ON FORTRAN UNIT 1"
+
+"WRITE THE HEADER"
+write(iout,110) title; call egs_fdate(iout);
+write(iout,'(" *"/1X,79("*"))');
+110  FORMAT(' ',80A1,/1X,79('*')/ ' *',T80, '*'/
+  ' *',T80, '*'/
+  ' *',T34,'************',T80,'*'/
+  ' *',T34,'*          *',T80,'*'/
+  ' *',T34,'* SPRRZnrc *',T80,'*'/
+  ' *',T34,'*          *',T80,'*'/
+  ' *',T34,'************',T80,'*'/
+  ' *',T80, '*'/
+  ' * Cylindrical-geometry EGSnrc user-code for scoring stopping power ratios',
+     T80,'*'/
+  ' *',T80, '*'/
+  ' *   SPRRZnrc was developed by the National Research Council of Canada',
+                                                                      T80,'*'/
+  ' *',T80, '*'/
+  ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
+  ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
+                                                                       T80,'*'/
+  ' *            This is version '$VERSION' ',T80,'*'/
+  ' *             running on '$MACHINE' ',T80,'*'/
+  ' * For latest version: ',
+  'http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
+  ' *',T80, '*'/
+  ' *',  T54,' ',$);
+
+" **** IK: using wrapper routines for date and time functions."
+" Was: CALL DATE(DATEN);CALL TIME(TIMEN);WRITE(IOUT,110) TITLE,TIMEN,DATEN;
+"110  FORMAT(' ',80A1,/1X,79('*')/ ' *',T80, '*'/
+" ' *',T80, '*'/
+" ' *',T34,'************',T80,'*'/
+" ' *',T34,'*          *',T80,'*'/
+" ' *',T34,'* SPRRZnrc *',T80,'*'/
+" ' *',T34,'*          *',T80,'*'/
+" ' *',T34,'************',T80,'*'/
+" ' *',T80, '*'/
+" ' * Cylindrical-geometry EGSnrc user-code for scoring stopping power ratios',
+"    T80,'*'/
+" ' *',T80, '*'/
+" ' *   SPRRZnrc was developed by the National Research Council of Canada',
+"                                                                     T80,'*'/
+" ' *',T80, '*'/
+" ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
+" ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
+"                                                                      T80,'*'/
+" ' *            This is version '$VERSION' ',T80,'*'/
+" ' *             running on '$MACHINE' ',T80,'*'/
+" ' * For latest version: ',
+" 'http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
+" ' *',T80, '*'/
+" ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
+
+"Print info about transport parameter settings"
+call show_transport_parameter(iout);
+
+"MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS"
+WRITE(IOUT,200) NCASE,NCASET,IQIN;
+
+"I/O CONTROLS--cylinders/slabs to output stopping-power ratio"
+IF(ISPRREG=0)[
+  IF(IREJCT=0)[
+    WRITE(IOUT,315);
+  ]
+  ELSE[
+    WRITE(IOUT,311);
+    I=2;
+    LOOP[
+      IF(ISPR(I)=1)[
+        ILOW=I;
+        IHIGH=I;
+        J=I+1;
+        LOOP[
+          IF(ISPR(J)=0)[EXIT;]
+          IHIGH=J;
+          J=J+1;
+        ]UNTIL(J>NREG);
+        I=J;
+        IF(ILOW=IHIGH)[WRITE(IOUT,312)ILOW;]
+        ELSE[WRITE(IOUT,313)ILOW,IHIGH;]
+      ]
+      I=I+1;
+    ]UNTIL(I>NREG);
+  ]
+]
+ELSEIF(ISPRREG=1)[
+  IF(IREJCT=0)[
+    WRITE(IOUT,315);
+  ]
+  ICOUNT=0;
+  DO I=1,NR[
+    IF(ISPR(I)=1)[
+      IF(ICOUNT=0)[
+        IF(IREJCT=0)[WRITE(IOUT,257);]
+        ELSE[WRITE(IOUT,316);]
+      ]
+      WRITE(IOUT,258)I;
+      ICOUNT=ICOUNT+1;
+    ]
+  ]
+  ICOUNT=0;
+  DO I=1,NZ[
+    IF(ISPR(NR+I)=1)[
+      IF(ICOUNT=0)[
+        IF(IREJCT=0)[WRITE(IOUT,259);]
+        ELSE[WRITE(IOUT,317);]
+      ]
+      WRITE(IOUT,258)I;
+      ICOUNT=ICOUNT+1;
+    ]
+  ]
+]
+
+IF(MONOEN = 0)[WRITE(IOUT,201) EIN;]ELSE[CALL ENSRCO;]
+WRITE(IOUT,220) SMAX,PCUT(2);    "will not work if pcut is adjusted by regions"
+IF(IFORCE.NE.0)[WRITE(IOUT,230)NFMIN,NFMAX;]ELSE[WRITE(IOUT,231);]
+IF(IREJCT = 0)[ WRITE(IOUT,243); ]      "there is no range rejection"
+ELSEIF(IREJCT = 1)[ WRITE(IOUT,242)ESAVEIN;]
+DO I=1,NREG[
+  IF(IRAYLR(I)=1)[
+    WRITE(IOUT,244);
+    EXIT;
+  ]
+]
+WRITE(IOUT,260) TIMMAX,STATLM;
+write(iout,'(21x,a,$)') 'Initial RNG state:           ';
+$SHOW-RNG-STATE(iout); write(iout,*);
+
+IF(RUSROU) WRITE(IOUT,265)RRZ,RRCUT;
+IF(CEXPTR.NE.0) WRITE(IOUT,266)CEXPTR;
+
+IF (ifano = 0 )[ WRITE(IOUT,261); "no regeneration"]
+ELSEIF (ifano = 1 ) [WRITE(IOUT,262); "with regeneration"]
+ELSE [OUTPUT ifano; (' ifano=',I4, ' not 0 or 1 as it must be '); STOP;]
+
+"patch for atomic relaxations"
+ISUMX=0;
+DO JJ=1,NREG[ISUMX=ISUMX+IEDGFL(JJ);"non-zero if relaxation anywhere"]
+IF(ISUMX = 0)[WRITE(IOUT,307);]ELSE[WRITE(IOUT,306);]
+
+EK0=EIN;
+"$PRESTA-INPUT-SUMMARY; OUTPUT THE PRESTA INPUT VARIABLES"
+
+"MATERIAL INPUT SUMMARY"
+"====================="
+
+WRITE(IOUT,300) NMED;
+DO I=1,NMED[
+    WRITE(IOUT,310) I,(MEDIA(J,I),J=1,6),RHO(I),AE(I),AP(I),UE(I),UP(I);
+    ]
+
+CALL GEOMRZ_ISUMRY(IOUT);
+
+CALL SRCOUT;
+
+"PRINT A GRID OF THE ZONE DEPENDENT VARIABLES"
+"============================================"
+"Set defaults for non-used variables"
+CDSTBL(1)='0';CTRTBL(1)='0';CABSRB(1)='0';
+"Make the material grid"
+CALL MATERIALGRID(NR, NZ, AMASS, 1, ECUT, PCUT,
+                  RCYL, ZPLANE, MED, MEDIA, CDSTBL, CTRTBL, CABSRB);
+WRITE (IOUT, *) '\f'; "Page break"
+
+RETURN;
+%I0
+"FORMATS"
+100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+             /'     on '$MACHINE' ',T54,' ',$);
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+"100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+"             /'     on '$MACHINE' ',T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT);
+200  FORMAT(/' ',79('*')/
+             /' ',T20,'MONTE CARLO, TRANSPORT, AND SCATTER CONTROLS'/
+             /' ',79('*')/
+             /' ',T20,'Max # of histories to run',T57,I8/
+             ' ',T20,'Max # of histories to analyze',T57,I8/
+             ' ',T20,'incident charge',T63,I2);
+201  FORMAT(' ',T20,'incident kinetic energy',T57,F9.3,' (MeV)');
+220  FORMAT(/' ',T20,'Maximum global electron step size',
+                     T60,1PE10.3,' (cm)'/
+             ' ',T20,'Global electron transport cut-off = AE for each material'/
+             ' ',T20,'Global photon transport cut-off',
+                     T56,0PF9.3,' (MeV)');
+230  FORMAT(' ',T20,'Min/max photon step forced',T60,I6,'/',I6);
+231  FORMAT(' ',T20,'Photon force interaction switch',T60,'OFF');
+242  FORMAT(' ',T20,'Range rejection ON with ESAVE =',T60,F7.3/
+            ' ',T20,' in regions where stopping power ratios are not'/
+            ' ',T20,' being output');
+243  FORMAT(' ',T20,'Range rejection OFF');
+244  FORMAT(' ',T20,'Rayleigh scattering included');
+257  FORMAT(' ',T20,'spr plotted in cylinders:');
+258  FORMAT(' ',T20,I12);
+259  FORMAT(' ',T20,'spr plotted in slabs:');
+260  FORMAT(' ',T20,'Maximum cputime allowed',T59,F5.2,' (hrs)'/
+            ' ',T20,'Stats in peak region objective',T59,F6.2,' %');
+261  FORMAT(' ',T20,'Normal transport without photon regeneration');
+262  FORMAT(' ',T20,'Photon transport has photon regeneration ON and no ',
+            'scattered photons');
+265  FORMAT(' ',T20,'RUS ROU FOR PHOTONS CROSSING Z = ',T60,F10.3,' cm'/
+                T25,'WITH PROBABILITY OF SURVIVAL:',T60,F7.4);
+266  FORMAT(' ',T20,'PATHLENGTH EXPONENTIAL TRANSFORMATION'/
+                T25,'VARIABLE FOR FORWARD GOING PHOTNS: ',T60,F10.3);
+270  FORMAT(' ',T20,'# ZONES MULT SCATTERING SWITCHED OFF',T60,'NONE');
+271  FORMAT(' ',T20,'# ZONES MULT SCATTERING SWITCHED OFF',T60,'ALL');
+272  FORMAT(' ',T20,'# ZONES MULT SCATTERING SWITCHED OFF',T60,I2);
+273  FORMAT(' ',T20,'# ZONES MOLL SCATTERING SWITCHED OFF',T60,'NONE');
+274  FORMAT(' ',T20,'# ZONES MOLL SCATTERING SWITCHED OFF',T60,'ALL');
+275  FORMAT(' ',T20,'# ZONES MOLL SCATTERING SWITCHED OFF',T60,I2);
+276  FORMAT(' ',T20,'# ZONES BREM SCATTERING SWITCHED OFF',T60,'NONE');
+277  FORMAT(' ',T20,'# ZONES BREM SCATTERING SWITCHED OFF',T60,'ALL');
+278  FORMAT(' ',T20,'# ZONES BREM SCATTERING SWITCHED OFF',T60,I2);
+279  FORMAT(' ',T20,'# ZONES BHAB SCATTERING SWITCHED OFF',T60,'NONE');
+280  FORMAT(' ',T20,'# ZONES BHAB SCATTERING SWITCHED OFF',T60,'ALL');
+281  FORMAT(' ',T20,'# ZONES BHAB SCATTERING SWITCHED OFF',T60,I2);
+300  FORMAT(' ',79('*')/
+             /' ',T20,'MATERIAL SUMMARY   ',I1,' MATERIALS USED'/
+             /' ',79('*')/
+             /' # MATERIAL  DENSITY(g/cm**3)',6X,'AE(MeV)',4X,'AP(MeV)',
+                 9X,'UE(MeV)',4X,'UP(MeV)'/
+             ' - --------  ----------------',6X,'-------',4X,'-------',
+                 9X,'-------',4X,'-------');
+306  FORMAT(T20,'Atomic relaxations are modelled ');
+307  FORMAT(T20,' Atomic relaxations are ignored');
+310  FORMAT(' ',I1,3X,6A1,4X,1PE10.3,2(7X,0PF9.3,2X,F9.3));
+311  FORMAT(' ',T20,'spr scored in regions:');
+312  FORMAT(' ',T20,I12);
+313  FORMAT(' ',T20,I10,' TO ',I4);
+315  FORMAT(' ',T20,'spr scored in all regions');
+316  FORMAT(' ',T20,'spr scored and plotted in cylinders:');
+317  FORMAT(' ',T20,'spr scored and plotted in slabs:');
+
+
+END; "last line of subroutine ISUMRY"
+
+%E     "sprrznrc.mortran - start of subroutine OSUMRY"
+"*************************************************************************
+"
+SUBROUTINE OSUMRY;
+"
+"           AFB       10/88     machine-independent variable format coded
+"          DWOR       01/90     version for sprrz based on dosrz version
+"
+"************************************************************************
+;
+$IMPLICIT-NONE;
+"for the grid output"
+INTEGER NCOMP;
+$REAL RESULTS($MAXZREG, $MAXRADII, $MAXCMPTS),
+     UNCRTY($MAXZREG, $MAXRADII, $MAXCMPTS),
+     RADIAL_BINS($MAXRADII),DEPTH_BINS($MAXZPLANE);
+CHARACTER*60 EXPLANATIONS($MAXCMPTS);
+CHARACTER*4 LABELS($MAXCMPTS);
+
+$LONG_INT IMS;
+$INTEGER IX,IZ,IXD,IZD,IT,I,IRL;
+$REAL HISTXMIN,DMAX;
+
+"VARIABLES USED FOR PLOTTING"
+$REAL XCOORD(300), YCOORD(300), UNCERT(300);
+INTEGER NPTS, TYPE, AXISTYPE, UNITNUM, CURVENUM, int, CHECK;
+INTEGER IPLTUNX, SPRRZ_COUNT, BIN_CUT, ICOUNT;
+CHARACTER*60 SERIESTITLE, XTITLE, YTITLE, SUBTITLE;
+CHARACTER*4 CH_IZ, CH_IX;
+CHARACTER*1 a(3);
+$INTEGER egs_open_file;
+
+;COMIN/CHARS,GEOM,IODAT1,IODAT2,PRINTC,SCORE,SOURCE,USER,
+       EGS-VARIANCE-REDUCTION,CH-Steps/;
+
+BIN_CUT = 1.e-30;    "lowest bin"
+IPLTUNX = 23;   "UNIT number used for optput file *.plotdat"
+SPRRZ_COUNT = 0;    "keeps count of curvenumber in stopping power calculations"
+
+write(iout,100) title; call egs_fdate(iout); write(iout,*);
+" **** IK: using wrapper routines for date and time functions."
+" Was: WRITE(IOUT,100)TITLE,DATEN,TIMEN;" "HEADER"
+
+IF(ISOURC=21|ISOURC=22)[
+  WRITE(IOUT,200) SCSTP,SCSTP2,
+        SCSTP/(dble(NNREAD+NRCYCL*(NNREAD-IHSTRY))/dble(NCASE_PHSP)*NINCSRC),
+                  SCSTP2,(count_pII_steps+PIISTP)/SCSTP,SCSTP2;
+]
+ELSE[
+  WRITE(IOUT,200) SCSTP,SCSTP2,SCSTP/dble(IHSTRY),
+                  SCSTP2,(count_pII_steps+PIISTP)/SCSTP,SCSTP2;
+]
+
+"Plot of zones results to file [-.plotdat]"
+
+
+"Plotting routine for XVGRPLOT"
+"Implemented by Aaron Merovitz, Feb. 1998"
+"For complete summary of the following variables see"
+"XVGRPLOT.MORTRAN"
+
+IF(ISPRREG=1)["create the .plotdat file"
+
+  SPRRZ_COUNT=0; ICOUNT=0;
+  DMAX=0.0;
+  DO IZ = 1,NZ[ IF( SCDOSE(IZ,1,3)>Dmax ) Dmax = SCDOSE(IZ,1,3); ]
+  IF(Dmax = 0.0) [Dmax = 1.;]
+
+  DO IX=1,NR[
+   IF(ISPR(IX)=1)[
+    "IF(ICOUNT=0) OPEN(UNIT=IPLTUNX, file='fort.23', STATUS='UNKNOWN');"
+    IF(ICOUNT=0) IPLTUNX=egs_open_file(23,0,1,'_dd.plotdat');
+    UNITNUM=IPLTUNX; "Output file"
+    NPTS=NZ;                 "number of points per graph"
+    XTITLE='depth/cm';
+    YTITLE='stopping power ratio';
+    " ----------------------- >
+    " SUBTITLE='stopping power ratio vs depth at ' // TIMEN // ' on ' // DATEN;
+    SUBTITLE='stopping power ratio vs depth';
+    HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"
+    AXISTYPE=0;             "0 for no logs"
+    DO IZ=1, NZ [
+      XCOORD(IZ) = ZPLANE(IZ+1);
+      YCOORD(IZ) = SCEDPN(IZ,IX,1);
+      UNCERT(IZ) = SCEDPN(IZ,IX,1)*SCEDPN2(IZ,IX,1)/100.;
+    ]
+   "Convert radial zone number(IX) to a character string"
+    $CONVERT_INT(IX)_TO_CHAR(CH_IX);
+    CURVENUM=SPRRZ_COUNT;             "curve # of the graph"
+    SERIESTITLE='cylinder='//CH_IX;
+    TYPE=1;                 "histogram=1, XY-plot=0"
+    HISTXMIN=ZPLANE(1);     "value of lower X-bin (histograms only)"
+   "plot XY-graph"
+    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                  NPTS, CURVENUM, SERIESTITLE,
+                  XTITLE, YTITLE, TITLE, SUBTITLE,
+                  UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+    SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
+    ICOUNT=ICOUNT+1;
+
+    IF(ISOURC=3|ISOURC=21|ISOURC=22|ISOURC=23)[
+           YTITLE='dose per incident particle/Gy'; ]
+    ELSE[ YTITLE='dose per incident fluence/Gy cm\\S2\\N'; ]
+    HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"
+    AXISTYPE=0;             "0 for no logs"
+    DO IZ=1, NZ [
+       XCOORD(IZ) = ZPLANE(IZ+1);
+       YCOORD(IZ) = SCDOSE(IZ,IX,3)/Dmax;
+       UNCERT(IZ) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
+    ]
+    "Convert radial zone number(IX) to a character string"
+    $CONVERT_INT(IX)_TO_CHAR(CH_IX);
+    CURVENUM=SPRRZ_COUNT;             "curve # of the graph"
+    SERIESTITLE='cylinder='//CH_IX;
+    TYPE=1;                 "histogram=1, XY-plot=0"
+    HISTXMIN=ZPLANE(1);     "value of lower X-bin (histograms only)"
+   "plot XY-graph"
+    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                   NPTS, CURVENUM, SERIESTITLE,
+                   XTITLE, YTITLE, TITLE, SUBTITLE,
+                   UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+    SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
+    ICOUNT=ICOUNT+1;
+   ]
+  ]
+  IF( ICOUNT > 0 ) close(IPLTUNX);
+  SPRRZ_COUNT=0; ICOUNT=0;
+  DO IZ=1,NZ[
+   IF(ISPR(NR+IZ)=1)[
+    "IF(ICOUNT=0) OPEN(UNIT=IPLTUNX, file='fort.23', STATUS='UNKNOWN');"
+    IF(ICOUNT=0) IPLTUNX=egs_open_file(23,0,1,'_rad.plotdat');
+    UNITNUM=IPLTUNX;
+    NPTS=NR;                 "number of points per graph"
+    XTITLE='radius/cm';
+    YTITLE='stopping power ratio';
+    " --------------------- >
+    " SUBTITLE='stopping power ratio vs radius at ' // TIMEN // ' on ' // DATEN;
+    SUBTITLE='stopping power ratio vs radius';
+    HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"
+    AXISTYPE=0;             "0 for no logs"
+    DO IX=1, NR [
+      XCOORD(IX) = RCYL(IX);
+      YCOORD(IX) = SCEDPN(IZ,IX,1);
+      UNCERT(IX) = SCEDPN(IZ,IX,1)*SCEDPN2(IZ,IX,1)/100.;
+    ]
+   "Convert slab number(IZ) to a character string"
+    $CONVERT_INT(IZ)_TO_CHAR(CH_IZ);
+    CURVENUM=SPRRZ_COUNT;             "curve # of the graph"
+    SERIESTITLE='slab='//CH_IZ;
+    TYPE=1;                 "histogram=1, XY-plot=0"
+    HISTXMIN=0;     "value of lower X-bin (histograms only)"
+   "plot XY-graph"
+    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                  NPTS, CURVENUM, SERIESTITLE,
+                  XTITLE, YTITLE, TITLE, SUBTITLE,
+                  UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+    SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
+    ICOUNT=ICOUNT+1;
+
+    IF(ISOURC=3|ISOURC=21|ISOURC=22|ISOURC=23)[
+         YTITLE='dose per incident particle/Gy'; ]
+    ELSE[ YTITLE='dose per incident fluence/Gy cm\\S2\\N'; ]
+     " --------------------- >
+     " SUBTITLE='dose vs radius at ' // TIMEN // ' on ' // DATEN;
+    HISTXMIN=BIN_CUT;       "value of lower X-bin (histograms only)"
+    AXISTYPE=0;             "0 for no logs"
+    DO IX=1, NR [
+       XCOORD(IX) = RCYL(IX);
+       YCOORD(IZ) = SCDOSE(IZ,IX,3)/Dmax;
+       UNCERT(IZ) = SCDOSE(IZ,IX,3)*SCDOSE2(IZ,IX,3)/(Dmax*100.);
+    ]
+    "Convert slab number(IZ) to a character string"
+    $CONVERT_INT(IZ)_TO_CHAR(CH_IZ);
+    CURVENUM=SPRRZ_COUNT;             "curve # of the graph"
+    SERIESTITLE='slab='//CH_IZ;
+    TYPE=1;                 "histogram=1, XY-plot=0"
+    HISTXMIN=0;     "value of lower X-bin (histograms only)"
+    "plot XY-graph"
+    CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
+                   NPTS, CURVENUM, SERIESTITLE,
+                   XTITLE, YTITLE, TITLE, SUBTITLE,
+                   UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+    SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
+    ICOUNT=ICOUNT+1;
+   ]
+  ]
+  IF( ICOUNT > 0 ) close(IPLTUNX);
+]
+
+
+"OUTPUT A GRID OF THE ZONE DEPENDANT VARIABLES"
+"============================================="
+"subroutine ZONEGRID: A. Merovitz, Feb. 98"
+"1) Determine the number of components"
+"NOTE: IFULL option not yet available"
+"IF (IFULL=1) [NCOMP=6;] ELSE [NCOMP=2;]
+NCOMP=2;
+
+"2) Set up the arrays--zero SPR and make SPRUN=99.9 percent where"
+"   range rejection is on"
+DO IXD=1, NR [
+   DO IZD=1, NZ [
+      $GET-IRL(IZD,IXD);
+      IF(i_do_rr(IRL)=1)[
+            SCEDPN(IZD,IXD,1)=0.;
+            SCEDPN2(IZD,IXD,1)=99.9;
+            SCEDPN(IZD,IXD,3)=0.;
+            SCEDPN2(IZD,IXD,3)=99.9;
+      ]
+      RESULTS(IZD,IXD,1)=SCEDPN(IZD,IXD,1);
+      UNCRTY(IZD,IXD,1)=SCEDPN2(IZD,IXD,1);
+      RESULTS(IZD,IXD,2)=SCEDPN(IZD,IXD,3);
+      UNCRTY(IZD,IXD,2)=SCEDPN2(IZD,IXD,3);
+   ]
+]
+"3) Set up the bin indicators"
+DO IX=1,NR+1 [RADIAL_BINS(IX)=RCYL(IX-1);]
+DO IZ=1,NZ+1 [DEPTH_BINS(IZ)=ZPLANE(IZ);]
+
+"4) Set up the labels and the explanations"
+EXPLANATIONS(1)='spr local medium/medium 2 (with TE)';LABELS(1)='spr:';
+EXPLANATIONS(2)='spr sans TRACK ENDS';LABELS(2)='ste:';
+
+"5) Make the grid"
+IF(IREJCT=1)[
+   WRITE(IOUT,'(//'' ***Range rejection is ON:''/
+                '' stopping power ratios in those regions where the user''/
+                '' did not request output are zeroed below''/)');
+]
+CALL ZONEGRID(NR, NZ, 0, 1, NZ, RESULTS, UNCRTY, NCOMP, RADIAL_BINS,
+              DEPTH_BINS, LABELS, EXPLANATIONS);
+WRITE (IOUT, *) '\f'; "Page break"
+"============================================="
+            "end of grid output"
+
+"write the header"
+write(iout,100) title; call egs_fdate(iout); write(iout,*);
+" **** IK: using wrapper routines for date and time functions."
+" Was: WRITE(IOUT,100) TITLE,DATEN,TIMEN;
+WRITE(IOUT,320);
+WRITE(IOUT,305);
+DO IX=1,NR[
+  DO IZ=1,NZ[
+        WRITE(IOUT,310) IZ,IX,ZPLANE(IZ),ZPLANE(IZ+1),
+                    SCEDPN(IZ,IX,1),(SCEDPN(IZ,IX,1)*SCEDPN2(IZ,IX,1)/100.),
+                    SCDOSE(IZ,IX,3), SCDOSE2(IZ,IX,3) ;
+        IF (BSTAT(IZ,1) = -1) [WRITE(IOUT,315);]
+  ]
+]
+IF( (NR*NZ) > 23)["CALL PRNTER(ICHPIN,ILPIN,IOUT,IPAGE);"
+                "WRITE THE HEADER"
+                write(iout,100) title; call egs_fdate(iout); write(iout,*);
+                 " **** IK: using wrapper routines for date and time functions."
+                 " Was: WRITE(IOUT,100) TITLE,DATEN,TIMEN;
+            ]
+            ELSE [WRITE(IOUT,'(/)');]
+WRITE(IOUT,325);
+WRITE(IOUT,305);
+DO IX=1,NR[
+  DO IZ=1,NZ[
+      WRITE(IOUT,310) IZ,IX,ZPLANE(IZ),ZPLANE(IZ+1),
+                    SCEDPN(IZ,IX,3),(SCEDPN(IZ,IX,3)*SCEDPN2(IZ,IX,3)/100.);
+      IF (BSTAT(IZ,2) = -1) [WRITE(IOUT,315);]
+      ]
+  ]
+
+"CALL PRNTER(ICHPIN,ILPIN,IOUT,IPAGE);"
+"WRITE THE HEADER"
+write(iout,100) title; call egs_fdate(iout); write(iout,*);
+" **** IK: using wrapper routines for date and time functions."
+" Was: WRITE(IOUT,100) TITLE,DATEN,TIMEN;
+WRITE(IOUT,350);
+DO IX=1,NR[
+  DO IZ=1,NZ[
+      WRITE(IOUT,360) IZ,IX,ZPLANE(IZ),ZPLANE(IZ+1),
+                (100.* SCDOSE(IZ,IX,I),SCDOSE2(IZ,IX,I)*SCDOSE(IZ,IX,I),I=1,2);
+                "100 TO GET PERCENT, AND ERROR WAS PERCENT SO NEEDED TO"
+                "DIVIDE BY 100 AND HENCE CANCELED"
+      IF (BSTAT(IZ,1) = -1 | BDSTAT(IZ)= -1) [WRITE(IOUT,315);]
+      ]
+  ]
+
+
+IF(ILPIN.NE.6)[write(iout,'(a)') '\f'; "CALL PRNTER(13,6,IOUT,1);"]
+
+RETURN;
+%I0
+"FORMATS"
+100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+             /'     on '$MACHINE' ',T54,' ',$);
+" **** IK: using wrapper routines for date and time functions."
+" Was:
+"100  FORMAT('1',80A1//' SPRRZnrc(EGSnrc) '$VERSION' ',
+"             /'     on '$MACHINE' ',T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT);
+200  FORMAT(/' ',T26,'Total # charged particle steps',T58,
+             1PE10.3,' +/-',0PF6.3,'%'/
+             ' ',T13,'# of charged particle steps/initial history',T58,
+             1PE10.3,' +/-',0PF6.3,'%'/
+             ' ','# of presta-II steps/total # of charged particle steps',
+                 T61,F7.3,' +/-',0PF6.3,'%');
+305  FORMAT(/' Region',T19,'depth (cm)',T35,
+            ' spr (medium / med2)',T58,'dose/inc flu. Gy.cm**2'/);
+310  FORMAT(' NZ,NR=',I3,',',I3,F8.3,' -',F8.3,T33, F10.5,' (+/-',F8.5,')',
+            T60,1PE10.3,'(+/-',0PF4.1,'%)');
+315  FORMAT(14X,' **** WARNING **** BAD STATISTICS!');
+320  FORMAT(/' ',14X,'***** spr with track ends *****');
+325  FORMAT(/' ',14X,'***** spr without track ends *****');
+350  FORMAT(/' ',T10,'**** percentage of dose in local medium from stoppers',
+            '  ****' //
+   ' Included fraction of stoppers includes those stoppers that come from'/
+   '                   electrons/positrons slowing down across delta.'/
+   ' Excluded fraction of stoppers are those electrons created below delta'/
+   '                   and photons created below AP'/
+   /'   Region',9X,'depth (cm)',11X, ' included         excluded'/);
+360  FORMAT(' NZ,NR=',I3,',',I3,F8.2,' -',F8.2,2X,2(F7.3,' (+/- ',F6.3,' )'));
+%I4
+END; "end of subroutine osumry"
+;
+"end of sprrznrc.mortran (Rev 1.49)"
+;
+
