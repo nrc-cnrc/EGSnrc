@@ -1,0 +1,403 @@
+
+###############################################################################
+#
+#  EGSnrc edknrc application input file template
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  Example input file for EDKnrc: 1 MeV photon interacting at origin. PEGS4
+#  data set used is 521icru.pegs4dat supplied with EGSnrc.
+#
+#  BEWARE: the high cut-off energies in 521icru.pegs4dat are NOT suited for
+#  low energy calculations, where 1 keV cut-off is required. Users need to
+#  create a PEGS4 data sets with lower cut-off energies in that case.
+#
+###############################################################################
+
+
+TITLE= Energy deposition kernel for 1 MeV photons
+
+
+##########################
+:start I/O control:
+
+IRESTART= first         # first    (0) First run for this data set
+                        # restart  (1) Restart a previous run
+                        # analyze  (3) Just read in the raw data and do the statistical analysis
+                        # parallel (5) Combine results from previous parallel runs
+
+STORE DATA ARRAYS= yes  # yes: (0) Store data arrays for re-use
+                        # no : (1) don't store them
+
+PRINT OUT EDK FILE= yes # produce energy deposition file
+                        # in old kernels' format ?
+                        # yes: (0) EDK stored in old format files
+                        # no : (1) don't produce EDK files in old format
+:stop I/O control:
+##########################
+
+##########################
+:start Monte Carlo inputs:
+
+NUMBER OF HISTORIES= 100000 #
+
+INITIAL RANDOM NO. SEEDS= 1, 66
+
+IFULL= ENERGY DEPOSITION KERNEL # cavity calculation        (0) calculate dose in cavity regions
+                                # energy deposition kernels (1)
+                                # dose calculation          (2)
+                                # dose and edk              (3)
+
+
+DOPPLER BROADENING= On # On or Off
+                       # On:  Default EGSnrc implementation
+                       # Off: Neglects Doppler broadening
+
+:stop Monte Carlo inputs:
+#########################
+
+##########################
+:start geometrical inputs:
+
+ NUMBER OF CONES= 48  # number of cones (individual or by group)
+                      # If omitted or ZERO, pure spherical geometry
+                      # assumed.
+
+ ANGLES= 3.75         # ANGLES defining the geometry (reals)
+                      # No needed in pure spherical geometries.
+                      #
+                      # For group input there must be as many entries
+                      # as for the NUMBER OF CONES, i.e. :
+                      # NCON1,NCON2,...,NCONn
+                      # DANG1,DANG2,...,DANGn
+                      #
+                      # For individual input, ncones must be equal
+                      # to the number of entries, i.e.:
+                      # ncones
+                      # DANG1, DANG2,...,DANGncones
+
+#  NUMBER OF SPHERES = 24  # number of spheres (individual or by group)
+                           # For individual inputs as below, number of spheres can be omitted
+
+ RADII= 0.05,0.1,0.15,0.2,0.3,0.4,0.5,0.6,0.8,1.0,  # radii of spheres defining the geometry (reals)
+        1.5,2.0,3.0,4.0,5.0,6.0,8.0,10.0,15.0,20.0, #
+	30.0,40.0,50.0,60.0                         # For group input there must be as many entries
+                                                    # as for the NUMBER OF SPHERES, i.e. :
+                                                    # NSPH1,NSPH2,...,NSPHn
+                                                    # DRAD1,DRAD2,...,DRADn
+
+MEDIA= H2O521ICRU;              #Media in the problem:
+                                #These must match exactly, including case, one
+                                #of the media names in the pegs4 data set being
+                                #used in the problem.
+                                #The maximum length of name is 24 characters
+                                #They are automatically left justified on input.
+
+MEDNUM= 1                       # define what medium goes where
+                                # use region numbers to define this
+                                # (region numbers start at 2 and increase
+                                # number from smallest angle to largest angle
+                                # of the conical intervals and innermost radius to
+                                # outermost radius)
+
+                                #Next we specify which media are in
+                                #which geometric regions
+                                #note that by default all regions contain
+                                #medium 1 and which medium to input as 1 should
+                                #be selected with this in mind.
+
+START REGION= 2                 #This puts water everywhere
+STOP REGION=  1153
+
+:stop geometrical inputs:
+#########################
+
+##########################
+:start source inputs:
+
+INCIDENT PARTICLE= photon          # electron,photon,positron
+
+
+INCIDENT ENERGY= monoenergetic     # monoenergetic, spectrum;
+INCIDENT KINETIC ENERGY(MEV)= 1.0 # only use for "monoenergetic"
+
+ #If INCIDENT ENERGY= spectrum:
+ # SPEC FILENAME= full name of file containing energy spectrum
+ # SPEC IOUTSP= include            # none,include;
+                                   # none: no spectrum data in .egslst file
+                                   # include: output spectrum data to .egslst file
+
+SOURCE NUMBER= 0 # 0,1,2
+                 # 0: point source AT origin,   emission along Z-axis
+                 # 1: point source AT origin,   isotropically radiating in 4Pi
+                 # 2: point source NEAR origin, emission along Z-axis
+
+# ZIN= 0.000001  # only for source number 2
+                 # source offset on Z-axis
+                 # Option used to emulate old way of calculating EDK
+
+
+:stop source inputs:
+#########################
+
+##########################
+:start MC transport parameter:
+
+Global ECUT= 0.521   # Electron cutoff for transport
+Global PCUT= 0.010   # Photon   cutoff for transport
+Global SMAX= 0.0     # Maximum step size in cm (not needed
+                     # unless old PRESTA algorithm used)
+
+ESTEPE= 0.1          # Max fractional continuous energy loss
+                     # per step. Use 0.25 unless using
+                     # PRESTA-I
+
+XImax= 0.0           # Max first elastic scattering moment
+                     # per step. Using default.
+
+Skin depth for BCA= 3 # Distance from a boundary (in elastic
+                      # MFP) at which the algorithm will go
+                      # into single scattering mode (using
+                      # default here)
+
+Boundary crossing algorithm= EXACT # exact,PRESTA-I;
+                                   # exact: cross boundaries in single scattering
+                                   #        mode (distance at which to go into
+                                   #        single scattering mode determined by
+                                   #        "Skin depth for BCA"
+                                   # PRESTA-I: cross boundaries with lateral
+                                   #           correlations off and force multiple
+                                   #           scattering mode
+
+Electron-step algorithm= PRESTA-II # PRESTA-II,PRESTA-I;
+                                   # Determines the algorithm used to take
+                                   # into account lateral and longitudinal
+                                   # correlations in a condensed history
+                                   # step
+
+Spin effects= on                   # Off (default),On;
+                                   # Turns off/on spin effects for electron
+                                   # elastic scattering. Spin On is
+                                   # ABSOLUTELY necessary for good
+                                   # backscattering calculations. Will
+                                   # make a difference even in `well
+                                   # conditioned' situations (e.g.  depth
+                                   # dose curves).
+
+Brems angular sampling= KM         # Simple,KM (default);
+                                   # Simple: leading term of Koch-Motz
+                                   #        dist'n used to determine angle
+                                   #        of bremsstrahlung photons
+                                   # KM:  Koch-Motz distribution used to
+                                   #     determine angle
+
+Triplet production= Off            # On or Off (default).
+                                   # Turns on/off simulation of triplet production.
+                                   # On: Borsellino's first Born approximation is
+                                   # used to sample triplet events based on the
+                                   # triplet cross-section data.
+
+Brems cross sections= BH           # BH (default),NIST;
+                                   # BH: Bethe-Heitler cross-sections used
+                                   # NIST: NIST cross-sections used
+
+Bound Compton scattering= On       # Off (default),On, simple or norej;
+                                   # Off: Klein-Nishina used for Compton
+                                   #     scattering
+                                   # On: Impulse approximation used for
+                                   #    Compton scattering
+                                   # simple: impulse approximation incoherent
+                                   #        scattering function used (i.e., no
+                                   #        Doppler broadenning).
+                                   # norej: the actual total bound Compton cross
+                                   #        section is used and there are no
+                                   #        rejections at run time.
+Radiative Compton corrections= Off # On or Off (default).
+                                   # On: include radiative corrections for Compton
+                                   # scattering.
+
+Electron Impact Ionization= Off    # Off (default), On, ik, casnati, kolbenstvedt,
+                                   # gryzinski, penelope.
+                                   # On or ik: use Kawrakow's theory to derive
+                                   #           EII cross-sections.
+                                   # casnati: use the cross-sections of Casnati from
+                                   #          $HEN_HOUSE/data/eii_casnati.data.
+                                   # Similarly for kolbenstvedt, gryzinski and
+                                   # penelope. Case-sensitive except for Off, On or
+                                   # ik options.
+
+Pair angular sampling= Simple      # Off, Simple (default),KM);
+                                   # Simple: use leading term of K-M
+                                   #        dist'n
+                                   # KM: use complete Koch and Motz dist'n
+                                   # Off: angle of pairs is m/E--like old EGS4
+
+Photoelectron angular sampling= On # Off (default),On;
+                                   # Off: Photoelectrons get direction of
+                                   #     photon that creates them
+                                   # On: Sauter's formula is used
+
+Pair cross sections= BH            # BH (default) or NRC.
+                                   # BH: use Bethe-Heitler pair production
+                                   # cross-sections.
+                                   # NRC: use NRC pair production cross-sections
+                                   # (in file $HEN_HOUSE/data/pair_nrc1.data).
+
+Photon cross sections= si          # si (Storm-Israel--the default),
+                                   # epdl (Evaluated Photon Data Library),
+                                   # xcom (NIST Photon Cross Sections Database)
+                                   # pegs4 (PEGS4 file photon data)
+                                   # User can supply their own cross-section
+                                   # data as well.
+                                   # Hence this entry is case-sensitive.
+
+Photon cross-sections output= Off # Off (default) or On.
+                                  #On: file $EGS_HOME/user_code/inputfile.xsections
+                                  # is created with the photon cross-section
+                                  # data used.
+
+Compton cross sections= compton_sigma.data # Bound Compton cross-section data.
+                                           # User-supplied bound Compton
+                                           # cross-sections in the file
+                                           # comp_xsections_compton.data in
+                                           # directory $HEN_HOUSE/data/, where
+                                           # comp_xsections is the name supplied
+                                           # for this input. Uses compton_sigma.data
+                                           # by default.
+
+Rayleigh scattering= On            # Off (default),On, custom;
+                                   # Off: no coherent scattering
+                                   # On: simulates coherent scattering
+                                   # custom: user must provide media names
+                                   #         for wich form factor (FF) files
+                                   #         will be provided. For the rest
+                                   #         of the media, default atomic FF
+                                   #         used.
+#
+# IF 'custom' Rayleigh option then:
+#
+#ff media names = A list of media names (must match media found in
+#                 PEGS4 data file) for which the user is going to
+#                 provide custom Rayleigh form factor data.
+#ff file names = A list of names of files containing the Rayleigh
+#                form factor data for the media specified by
+#                the ff media names = input above.  Full directory
+#                paths must be given for all files, and for each medium
+#                specified, iray_ff_media(i), there must be a
+#                corresponding file name, iray_ff_file(i).  For
+#                example files, see the directory
+#                $HEN_HOUSE/data/molecular_form_factors.
+
+Atomic relaxations= On             # Off (default),On;
+                                   # On: use correct cross section
+                                   #  for p.e. events and shell vacancies
+                                   #  for Compton & p.e. events are relaxed
+                                   #  via emission of fluorescent X-Rays,
+                                   #  Auger and Koster-Cronig electrons
+                                   #  electrons
+
+# Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling and
+# Bound compton scattering can be turned on/off on a region by region basis.
+# Instead of simply "On" or "Off" for these cases put:
+#    Atomic relaxations= On (or Off) in Regions
+#    Relaxations start region= 1, 40   #turns relaxations on in regions 1-10 and
+#    Relaxations stop region=  10, 99  #40-99
+#
+#    Rayleigh scattering= On (or Off) in Regions
+#    Rayleigh start region= 1, 40
+#    Rayleigh stop region= 10, 99
+#
+#    Photoelectron angular sampling= On (or Off) in Regions
+#    PE sampling start region= 1, 40
+#    PE sampling stop region= 10, 99
+#
+#    Bound Compton scattering= On (or Off) in Regions
+#    Bound Compton start region= 1, 40
+#    Bound Compton stop region= 10, 99
+
+#ECUT, PCUT and SMAX can also be set on a region-by-region basis.
+#
+#Set XXXX=              f_value1, f_value2, ...
+#Set XXXX start region= i_value1, i_value2, ...
+#Set XXXX stop region=  j_value1, j_value2, ...
+#
+#where XXXX is ECUT, PCUT or SMAX ,
+#f_value1, f_value2,... are the desired values for XXXX
+#and i_value_i and j_value_i are the start and
+#stop regions.
+Set PCUT= 0
+Set PCUT start region= 1
+Set PCUT stop region= 1
+Set ECUT=             0
+Set ECUT start region=  1
+Set ECUT stop region= 1
+Set SMAX= 0
+Set SMAX start region= 1
+Set SMAX stop region= 1
+
+:stop MC transport parameter:
+#########################
+
+##########################
+:start variance reduction:
+
+ ELECTRON RANGE REJECTION= on #Off,On;
+                              #On: if charged particle energy is below ESAVEIN
+                              #    and it cannot get out of current region
+                              #    with energy > ECUT, the particle is
+                              #    terminated
+ ESAVEIN= 1.0                 #Energy below which range rejection is
+                              #considered
+
+ EXPONENTIAL TRANSFORM C= 0.0000 # parameter for pathlength biasing
+                                 # <0 for path length shortening
+                                 #    (useful for surface problems)
+                                 # >0 for path length increase
+                                 #    (useful for shielding problems)
+                                 # if 0.0, no biasing done
+
+ PHOTON FORCING= On           #Off (default),On;
+                              #On: force photons to interact in geometry
+ START FORCING= 1	      #Start forcing at this interaction number
+ STOP FORCING AFTER= 2	      #Number of photon interactions after which
+                              #to stop forcing photon interactions
+
+:stop variance reduction:
+#########################
+
+ #########################
+ :start plot control:
+
+ PLOTTING= histogram            #Off: do not create plot files
+                                #histogram:  create histogram plots
+                                #point:      create xy plots
+ PLOT RADIAL REGION IX= 1,2     #Indices of spheres for which to plot depth-
+                                #dose data (0 for no depth-dose plots)
+ PLOT CONICAL REGION IC= 1,5    #Indices of cones for which to plot dose vs
+                                #radius data (0 for no dose vs radius plots)
+
+ :stop plot control:
+ ########################
+
