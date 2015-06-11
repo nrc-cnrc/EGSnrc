@@ -1,0 +1,70 @@
+
+###############################################################################
+#
+#  EGSnrc g application input file template
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2004
+#
+#  Contributors:    Iwan Kawrakow
+#
+###############################################################################
+
+
+ ##############################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.521
+ Global PCUT=                    0.01
+ Global SMAX=                    1e10
+ Spin effects=                   Off
+ Bound Compton scattering=       Off
+ Rayleigh scattering=            Off
+ Atomic relaxations=             Off
+ Photoelectron angular sampling= Off
+ Brems angular sampling=         simple
+ Brems cross sections= BH
+ Pair angular sampling=          Off
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact
+ Electron-step algorithm=        default
+ Spin effects=                   Off
+
+ :Stop MC Transport Parameter:
+ #############################
+
+ media=  AIR521ICRU
+ INITIAL RANDOM NO. SEEDS= 97, 33
+ Number of HISTORIES=       400000
+
+ :Start Source Input:
+ --------------------
+
+ INCIDENT SPECTRUM=       SPECTRUM
+ Incident Charge=         0
+ SPECTRUM FILE=           $HEN_HOUSE/spectra/co60.spectrum
+ SOURCE TYPE=             0
+ Incident Angle=          0
+
+ :Stop Source Input:
+ -------------------
+
