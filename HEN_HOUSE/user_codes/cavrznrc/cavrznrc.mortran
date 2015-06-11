@@ -1,7 +1,7 @@
 %E
 "#############################################################################"
 "                                                                             "
-"  EGSnrc cavrznrc application                                                    "
+"  EGSnrc cavrznrc application                                                "
 "  Copyright (C) 2015 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
@@ -21,11 +21,11 @@
 "                                                                             "
 "#############################################################################"
 "                                                                             "
-"  Authors:         Alex Bielajew, 1987
+"  Authors:         Alex Bielajew, 1987                                       "
 "                                                                             "
 "  Contributors:    Dave Rogers                                               "
 "                   Jan Seuntjens                                             "
-"                   Aaron Merovitz
+"                   Aaron Merovitz                                            "
 "                   Iwan Kawrakow                                             "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Leslie Buckley                                            "
