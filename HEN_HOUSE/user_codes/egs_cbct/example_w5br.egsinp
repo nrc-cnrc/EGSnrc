@@ -45,7 +45,8 @@
 #
 #  - Replace $EGS_HOME string below with the actual value!!!
 #
-#  - If the detector resolution is changed, one must recalculate the blank scan
+#  - If the detector resolution is changed, one must recalculate the blank
+#    scan
 #
 #  Before creating a scan, one needs to run a simulation with an empty phantom
 #  to create the blank scan. This is a one time calculation for a specific
