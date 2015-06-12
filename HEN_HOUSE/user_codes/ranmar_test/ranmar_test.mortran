@@ -1,7 +1,7 @@
 %E
 "#############################################################################"
 "                                                                             "
-"  EGSnrc ranmar_test application                                                  "
+"  EGSnrc ranmar_test application                                             "
 "  Copyright (C) 2015 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
@@ -23,13 +23,13 @@
 "                                                                             "
 "  Author:          Dave Rogers, 2000                                         "
 "                                                                             "
-"  Contributors:    Iwan Kawrakow
+"  Contributors:    Iwan Kawrakow                                             "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
 "  This code was originally adapted from random_test.mortran (EGS4) by Dave   "
 "  Rogers in 2000. The random_test.mortran code was originally written by     "
-"  Dave Rogers in 1998.
+"  Dave Rogers in 1998.                                                       "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
