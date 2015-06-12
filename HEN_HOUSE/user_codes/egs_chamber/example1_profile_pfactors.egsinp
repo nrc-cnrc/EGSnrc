@@ -1,0 +1,530 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_chamber application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2009
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for egs_chamber.
+#
+# This input file defines an egs_chamber simulation to compute the
+# perturbation factors Pwall and Pcell as a function of the off-axis distance
+# at 1.5 cm depth in a water phantom irradiated by a BEAMnrc simulation
+# source. A simple cylindrical model of the NE-2571 chamber is used.
+#
+###############################################################################
+
+
+:start geometry definition:
+
+    #############################################
+    # The chamber
+    # simple model of a NE2571 Farmer type chamber
+    # modelled as a cone-stack.
+    # Overal chamber dimensions: 2.476 cm long,
+    #                            0.358 cm radius
+    #############################################
+    :start geometry:
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = -1.238 0 1.5  1 0 0
+        name    = CHAMBER_0
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .34
+            top radii    = .32 .358
+            bottom radii = .32 .358
+            media        = AIR521ICRU 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = 2.06
+            top radii    = .05 .32 .358
+            bottom radii = .05 .32 .358
+            media        = AL521ICRU AIR521ICRU 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = 170C521ICRU
+        :stop layer:
+    :stop geometry:
+
+    #############################################
+    # The chamber without a central electrode
+    #############################################
+    :start geometry:
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = -1.238 0 1.5   1 0 0
+        name    = CHAMBER_noel_0
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .34
+            top radii    = .32 .358
+            bottom radii = .32 .358
+            media        = AIR521ICRU 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = 2.06
+            top radii    = .05 .32 .358
+            bottom radii = .05 .32 .358
+            media        = AIR521ICRU AIR521ICRU 170C521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = 170C521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ##########################################################
+    # The chamber without a central electrode and without wall
+    ##########################################################
+    :start geometry:
+        library = egs_cones
+        type    = EGS_ConeStack
+        axis    = -1.238 0 1.5  1 0 0
+        name    = CHAMBER_nowall_0
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .34
+            top radii    = .32 .358
+            bottom radii = .32 .358
+            media        = AIR521ICRU H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = 2.06
+            top radii    = .05 .32 .358
+            bottom radii = .05 .32 .358
+            media        = AIR521ICRU AIR521ICRU H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness    = .038
+            top radii    = .358
+            bottom radii = .358
+            media        = H2O521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ##############################################
+    # the water phantom
+    ##############################################
+    :start geometry:
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        name = phantom
+        x-planes = -25 25
+        y-planes = -25 25
+        z-planes = -5 50                                # the phantom is larger to allow usage of envelope
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+
+    #############################################
+    # cavity surrounding geometry
+    # which is used for Russian Roulette
+    #############################################
+    :start geometry:
+        library = egs_planes
+        type = EGS_Xplanes
+        name = cav_planes
+        positions = -1.201 1.201
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_XCylinders
+        name = cav_cyls0
+	midpoint = 0 0 1.5
+        radii = .321
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cav0
+        dimensions = cav_planes cav_cyls0
+    :stop geometry:
+
+    ######################################################################
+    # XCSE GEOMETRY - A 4.476 cm length, 1.358 cm radius cylinder of water
+    #                 When the chamber geometries are inscribed in this
+    #                 cylinder below, there will be 1 cm shell of XCSE
+    #                 around the chamber.
+    ######################################################################
+    :start geometry:
+        library = egs_planes
+        type = EGS_Xplanes
+        name = cse_planes
+        positions = -2.238 2.238
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_XCylinders
+        name = cse_cyls0
+	 midpoint = 0 0 1.5
+        radii = 1.358
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cse_0
+        dimensions = cse_planes cse_cyls0
+	:start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    #############################################
+    # put the chambers into the CSE-geometry
+    #############################################
+    :start geometry:
+    	library = egs_genvelope
+	name = CHAMBER_0_
+	base geometry = cse_0
+	inscribed geometries = CHAMBER_0
+    :stop geometry:
+
+    :start geometry:
+    	library = egs_genvelope
+	name = CHAMBER_noel_0_
+	base geometry = cse_0
+	inscribed geometries = CHAMBER_noel_0
+    :stop geometry:
+
+    :start geometry:
+    	library = egs_genvelope
+	name = CHAMBER_nowall_0_
+	base geometry = cse_0
+	inscribed geometries = CHAMBER_nowall_0
+    :stop geometry:
+
+    ######################################################
+    # Make copies of above at different positions
+    # We use an input loop to avoid repeating the same
+    # input over and over again. Input loops are a new
+    # feature in the egspp class library available since
+    # ~ Sommer 2007
+    ######################################################
+
+    :start geometry:            # these planes will be used below to
+                                # cut the phantom so it starts at z=0
+        library   = egs_planes
+        type      = EGS_Zplanes
+        name      = base_planes
+        positions = 0 49.999
+    :stop geometry:
+
+    ############################################################
+    #
+    # The following defines an 'input loop'. Everthing that is
+    # between :start input loop: and :stop input loop: will be
+    # repeated loop count times, replacing occurences of $(var1)
+    # with the current value of the loop variable (see below).
+    #
+    ############################################################
+    :start input loop:
+
+        loop count = 25               # i.e., repeat 25 times
+
+        # The following defines a loop variable of type 1 (an integer)
+        # with name var1 that will start at 0 and increase its value by 1
+        # in each loop iteration.
+        #
+        loop variable = 1 var1 0 1
+
+	 #
+	 # translate the chambers
+	 #
+        # The full chamber geometry
+        :start geometry:
+            library = egs_gtransformed
+            my geometry = CHAMBER_0_
+            name = CHAMBER_$(var1)cm
+              # i.e., the name of the geometries created in the loop will be
+              # CHAMBER_0cm, CHAMBER_1cm, CHAMBER_2cm, ...
+            :start transformation:
+                translation = 0 $(var1) 0
+                  # i.e., translations by 0 cm, 1 cm, 2 cm, etc.
+            :stop transformation:
+        :stop geometry:
+        # The chamber without a central electrode
+        :start geometry:
+            library = egs_gtransformed
+            my geometry = CHAMBER_noel_0_
+            name = CHAMBER_noel_$(var1)cm
+            :start transformation:
+                translation = 0 $(var1) 0
+            :stop transformation:
+        :stop geometry:
+        # The chamber without wall and central electrode
+        :start geometry:
+            library = egs_gtransformed
+            my geometry = CHAMBER_nowall_0_
+            name = CHAMBER_nowall_$(var1)cm
+            :start transformation:
+                translation = 0 $(var1) 0
+            :stop transformation:
+        :stop geometry:
+        # The cavity geometry used for RR
+        :start geometry:
+            library = egs_gtransformed
+            my geometry = cav0
+            name = cav_$(var1)cm
+            :start transformation:
+                translation = 0 $(var1) 0
+            :stop transformation:
+        :stop geometry:
+        #
+        # put into phantom
+        #
+        :start geometry:
+            library = egs_genvelope
+            name = CHAMBER_$(var1)cm_
+            base geometry = phantom
+            inscribed geometries = CHAMBER_$(var1)cm
+        :stop geometry:
+        :start geometry:
+            library  = egs_cdgeometry
+            name     = CHAMBER_IP_$(var1)cm
+            base geometry = base_planes
+            set geometry  = 0 CHAMBER_$(var1)cm_
+        :stop geometry:
+        :start geometry:
+            library = egs_genvelope
+            name = CHAMBER_noel_$(var1)cm_
+            base geometry = phantom
+            inscribed geometries = CHAMBER_noel_$(var1)cm
+        :stop geometry:
+        :start geometry:
+            library  = egs_cdgeometry
+            name     = CHAMBER_noel_IP_$(var1)cm
+            base geometry = base_planes
+            set geometry  = 0 CHAMBER_noel_$(var1)cm_
+        :stop geometry:
+        :start geometry:
+            library = egs_genvelope
+            name = CHAMBER_nowall_$(var1)cm_
+            base geometry = phantom
+            inscribed geometries = CHAMBER_nowall_$(var1)cm
+        :stop geometry:
+        :start geometry:
+            library  = egs_cdgeometry
+            name     = CHAMBER_nowall_IP_$(var1)cm
+            base geometry = base_planes
+            set geometry  = 0 CHAMBER_nowall_$(var1)cm_
+        :stop geometry:
+
+    :stop input loop:
+
+
+##############################################
+# the geometry that encloses all other geometries
+# whenever a particle enters its 'cavity' the phase-space is stored
+# temporarily
+# dimensions slightly enlarged
+##############################################
+
+
+    :start geometry:
+    	library = egs_ndgeometry
+	type = EGS_XYZGeometry
+	name = tmpPhsp_object0
+	x-planes = -1.3 1.3
+	y-planes = -0.4 21.4
+	z-planes = 1.1 1.9
+	:start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+    	library = egs_ndgeometry
+	type = EGS_XYZGeometry
+	name = tmpPhsp_object1
+	x-planes = -2.3 2.3
+	y-planes = -1.4 22.4
+	z-planes = 0.1 2.9
+	:start media input:
+            media = H2O521ICRU
+      :stop media input:
+    :stop geometry:
+
+    :start geometry:
+    	library = egs_genvelope
+	name = tmpPhsp_object
+	base geometry = tmpPhsp_object1
+	inscribed geometries = tmpPhsp_object0
+    :stop geometry:
+
+    :start geometry:
+    	library = egs_genvelope
+	name = PhspObject_
+	base geometry = phantom
+	inscribed geometries = tmpPhsp_object
+    :stop geometry:
+
+    :start geometry:
+       	library  = egs_cdgeometry
+	name     = PhspObject
+        base geometry = base_planes
+	set geometry  = 0 PhspObject_
+    :stop geometry:
+
+    simulation geometry = CHAMBER_IP_0cm
+
+:stop geometry definition:
+
+:start source definition:
+########################################### define the source:
+#
+        :start source:
+                library = egs_beam_source
+                name    = the_beam_source
+                beam code = BEAM_Elekta_nrc2
+                pegs file = my700
+                input file = elekta_6MV_40x40
+                particle type = all
+                weight window = 0 0.01    # This discards fat particles.
+        :stop source:
+
+    simulation source = the_beam_source
+
+:stop source definition:
+
+
+##################################### Scoring options
+:start scoring options:
+
+    calculation type = dose
+
+    :start calculation geometry:
+        geometry name = PhspObject
+        cavity regions = 2
+        cavity mass = 1
+	cavity geometry = tmpPhsp_object0
+	enhance regions = -1
+	enhancement = 128
+	:start transformation:
+            translation = 0 0 -100
+        :stop transformation:
+    :stop calculation geometry:
+# ----
+   :start input loop:
+    	loop count = 25
+	loop variable = 1 var1 0 1
+
+	:start calculation geometry:
+        	geometry name = CHAMBER_IP_$(var1)cm
+	        cavity regions = 5 9
+	        cavity mass = 0.000910699084	# no elec: reg 8 0.00093012
+		cavity geometry = cav_$(var1)cm
+		enhance regions = -1
+		enhancement = 128
+	        subgeometries = CHAMBER_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm CHAMBER_nowall_IP_$(var1)cm
+	        subgeom regions = 2 6 5 8 9 10 11
+        :stop calculation geometry:
+
+    	:start calculation geometry:
+        	geometry name = CHAMBER_noel_IP_$(var1)cm
+        	cavity regions = 5 8 9
+        	cavity mass = 0.00093012
+		cavity geometry = cav_$(var1)cm
+		enhance regions = -1
+		enhancement = 128
+    	:stop calculation geometry:
+
+    	:start calculation geometry:
+        	geometry name = CHAMBER_nowall_IP_$(var1)cm
+        	cavity regions = 5 8 9
+        	cavity mass = 0.00093012
+		cavity geometry = cav_$(var1)cm
+		enhance regions = -1
+		enhancement = 128
+    	:stop calculation geometry:
+   :stop input loop:
+
+
+   :start input loop:
+    	loop count = 25
+	loop variable = 1 var1 0 1
+	correlated geometries = CHAMBER_IP_$(var1)cm CHAMBER_IP_0cm
+   :stop input loop:
+   :start input loop:
+    	loop count = 25
+	loop variable = 1 var1 0 1
+	correlated geometries = CHAMBER_noel_IP_$(var1)cm CHAMBER_IP_$(var1)cm
+   :stop input loop:
+   :start input loop:
+    	loop count = 25
+	loop variable = 1 var1 0 1
+	correlated geometries = CHAMBER_nowall_IP_$(var1)cm CHAMBER_noel_IP_$(var1)cm
+   :stop input loop:
+
+:stop scoring options:
+
+####################################### variance reduction
+:start variance reduction:
+    TmpPhsp = 1			#must be devider of cse's
+    #Photon splitting = 16
+    :start range rejection:
+        rejection = 256		#this must not be larger than largest enhancement and
+        Esave     = .521
+        cavity geometry = tmpPhsp_object0
+        rejection range medium = H2O521ICRU
+    :stop range rejection:
+    cs enhancement = 1
+:stop variance reduction:
+
+###################################### Transport parameters
+:start MC transport parameter:
+      # You can include here any of the transport parameter options
+      # understood by EGSnrc
+	#Global ECUT = 100
+	#Atomic relaxations = Off
+	#Rayleigh Scattering = Off
+	#Bound Compton Scattering = Off
+:stop MC transport parameter:
+
+##################################### Run control
+:start run control:
+  ncase = 2400000000
+  calculation = first
+:stop run control:
