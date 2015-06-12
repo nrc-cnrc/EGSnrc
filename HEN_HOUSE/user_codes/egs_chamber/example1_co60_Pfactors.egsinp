@@ -1,0 +1,590 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_chamber application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2009
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for egs_chamber.
+#
+#  This file defines an egs_chamber simulation of a farmer type chamber at
+#  5 cm depth in a 30x30x30 cm^3 water phantom irradiated by a Co-60 beam from
+#  a BEAMnrc simulation source. The XCSE technique is used combined with
+#  correlated sampling for calculation in chamber geometries that do not have
+#  a stem, a central electrode, a wall, etc., to compute the various
+#  correction factors known as Pstell, Pcell, Pwall, and Prepl.
+#
+###############################################################################
+
+
+################################# Define the simulation geometries.
+#
+:start geometry definition:
+
+    ##################################################
+    #   The farmer chamber modeled using a cone stack
+    ##################################################
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = AL521ICRU AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.3
+            top radii = 0.050 0.175 0.35 0.4000
+            bottom radii = 0.050 0.175 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 1.005
+            top radii = 0.050 0.175 0.35 0.4000
+            bottom radii = 0.050 0.175 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.84
+            top radii = 0.050 0.35 0.4000
+            bottom radii = 0.050 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 1.655
+            top radii = 0.0750 0.3500 0.4000
+            bottom radii = 0.0750 0.3500 0.4000
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ########################################### The chamber without stem
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber_nostem
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = AL521ICRU AIR521ICRU C173521ICRU
+        :stop layer:
+    :stop geometry:
+
+
+    ########################################### The chamber without stem
+    #                                           and central electrode (cel)
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber_nostem_nocel
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = AIR521ICRU AIR521ICRU C173521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ########################################### The chamber without stem,
+    #                                           cel, and wall.
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber_nostem_nocel_nowall
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU H2O521ICRU
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = AIR521ICRU AIR521ICRU H2O521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ########################################### A small water volume for
+    #                                           dose to water
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = small_water_volume
+        x-planes = -1  1
+        y-planes = -0.3125 0.3125
+        z-planes = -0.05 0.05
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    ########################################### Another volume around
+    #                                           small_water_volume for XCSE
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = medium_water_volume
+        x-planes = -1.3 1.3
+        y-planes = -0.6425 0.6425
+        z-planes = -1.05 1.05
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    ########################################### small inscribed into medium
+    :start geometry:
+        library = egs_genvelope
+        name    = cse_dose_to_water
+        base geometry = medium_water_volume
+        inscribed geometries = small_water_volume
+    :stop geometry:
+
+
+    ########################################### A water volume around the
+    #                                           chamber for phase space scoring
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = outer_phsp_object_planes
+        positions = -5.02 1.55
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type    = EGS_XCylinders
+        name    = outer_phsp_object_cylinders
+        radii   = 0.65
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name    = outer_phsp_object
+        dimensions = outer_phsp_object_planes outer_phsp_object_cylinders
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = inner_phsp_object_planes
+        positions = -5.01 1.25
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type    = EGS_XCylinders
+        name    = inner_phsp_object_cylinders
+        radii   = 0.401
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name    = inner_phsp_object
+        dimensions = inner_phsp_object_planes inner_phsp_object_cylinders
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name    = phsp_object
+        base geometry = outer_phsp_object
+        inscribed geometries = inner_phsp_object
+    :stop geometry:
+
+    ########################################### A water volume around the
+    #                                           chamber for XCSE
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = cse_planes
+        positions = -1.56 1.56
+    :stop geometry:
+    :start geometry:
+        library = egs_cylinders
+        type    = EGS_XCylinders
+        name    = cse_cylinders
+        radii   = 0.66
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name    = cse_volume
+        dimensions = cse_planes cse_cylinders
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    #
+    #  30x30x30 water phantom with top surface at z=-5 cm
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        x-planes = -15 15
+        y-planes = -15 15
+        z-planes = -5  25
+        name = phantom
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+
+    ########################################### The XCSE volume inscribed in
+    #                                           the water phantom
+    :start geometry:
+        library = egs_genvelope
+        name    = cse_phantom
+        base geometry = phantom
+        inscribed geometries = cse_volume
+    :stop geometry:
+
+    #
+    # The water phantom with the phsp object inscribed
+    #
+    :start geometry:
+        library = egs_genvelope
+        name    = phsp_scoring
+        base geometry = phantom
+        inscribed geometries = phsp_object
+    :stop geometry:
+
+
+    #
+    # Water phantom with real chamber
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = chamber_in_water
+        base geometry = cse_phantom
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    # Same but for phsp scoring
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = chamber_in_water
+        base geometry = cse_phantom
+        inscribed geometries = chamber
+    :stop geometry:
+    #
+    # Water phantom with chamber without stem
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = nostem
+        base geometry = cse_phantom
+        inscribed geometries = chamber_nostem
+    :stop geometry:
+    #
+    # Water phantom with chamber without stem,cel
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = nostem_nocel
+        base geometry = cse_phantom
+        inscribed geometries = chamber_nostem_nocel
+    :stop geometry:
+    #
+    # Water phantom with chamber without stem,cel,wall
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = nostem_nocel_nowall
+        base geometry = cse_phantom
+        inscribed geometries = chamber_nostem_nocel_nowall
+    :stop geometry:
+    #
+    # Water phantom with small volume for dose to water scoring
+    #
+    :start geometry:
+        library = egs_genvelope
+        name = dose_to_water
+        base geometry = phantom
+        inscribed geometries = cse_dose_to_water
+    :stop geometry:
+
+    #
+    #  The cavity for range rejection/Russian Roulette
+    #
+    :start geometry:
+        library = egs_cylinders
+        type = EGS_XCylinders
+        radii = 0.32
+        name = cav_cyl
+    :stop geometry:
+    :start geometry:
+        library = egs_planes
+        type = EGS_Xplanes
+        positions = -1.25 1.21
+        name = cav_planes
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name = cavity
+        dimensions = cav_planes cav_cyl
+    :stop geometry:
+
+    #simulation geometry = chamber
+    simulation geometry = chamber_in_water
+    #simulation geometry = nostem_nocel
+
+:stop geometry definition:
+
+########################################### The source:
+#                                           a full BEAMnrc treatment head
+#                                           simulation
+:start source definition:
+
+    :start source:
+        library = egs_beam_source
+        name    = the_source
+        beam code = BEAM_co60
+        pegs file = gmora
+        input file = 10x10_20000dsb_espl_augrr_delta1.5
+        particle type = all
+        weight window = 0 1e-4 # This discards fat particles.
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+############################################ Run control
+#
+:start run control:
+
+    ncase = 2200000000
+
+:stop run control:
+
+############################################# Scoring
+:start scoring options:
+
+    silent = 0
+
+    #
+    # The simulation starts in the first calculation geometry
+    # If phase space scoring is set, which it is in our case,
+    # (see the variance reduction section below),
+    # then all particles entering the region specified as cavity are
+    # stored and then they are further transported in the additional
+    # calculation geometries specified
+    #
+    :start calculation geometry:
+        geometry name = phsp_scoring
+        cavity regions = 2
+        cavity mass = 1
+        cavity geometry = inner_phsp_object
+        enhance regions = -1 # i.e. enhance everywhere except in region 0
+        enhancement = 512
+        #
+        # Note: the transformation specified below is applied to particle
+        # positions before checking if the particle enters the geometry.
+        # In the case of a BEAMnrc simulation source, the particle positions
+        # are the positions when the particles cross the scoring plane
+        # i.e. at (x,y,100) in this case. The top of this geometry is at
+        # z=-5 => we must translate the particle positions by -105.
+        #
+        :start transformation:
+            translation = 0 0 -105.0001
+        :stop transformation:
+    :stop calculation geometry:
+
+# -------------------------------------- the actual calculation geometries
+
+    :start calculation geometry:
+        geometry name = chamber_in_water
+        cavity regions = 6 10 15 # 1 must be added for the envelope
+                                 # and 1 for the extra CSE volume
+        cavity mass = 0.0008361
+        cavity geometry = cavity
+
+        # A more economical way of writing the following would have been
+        # to use 'enhance regions = -1', which would set the XCSE factor
+        # everywhere except in region 0. Explicitely listing regions
+        # with corresponding XCSE factors is useful when one wants to use
+        # different XCSE factors in the different regions.
+        enhance regions = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 \
+                          21
+        enhancement = 512 512 512 512 512 512 512 512 512 512 512 512 512 \
+                      512 512 512 512 512 512 512 512
+
+        # The following tells egs_chamber to score a second phase space
+        # when a particle enters any of the regions listed in 'subgeom regions'
+        # and to then transport in each of the geometries listed in
+        # 'subgeometries'
+        subgeometries = chamber_in_water nostem \
+                        nostem_nocel \
+                        nostem_nocel_nowall \
+                        dose_to_water
+        subgeom regions = 2 7 11 16 21 25 28 30 31 32
+    :stop calculation geometry:
+
+    # No stem
+    :start calculation geometry:
+        geometry name = nostem
+        cavity regions = 5 8 12
+        cavity mass = 0.0008361
+        cavity geometry = cavity
+        enhance regions = -1 # i.e. enhance all regions except region 0
+        enhancement = 512
+    :stop calculation geometry:
+    # No stem,cel
+    :start calculation geometry:
+        geometry name = nostem_nocel
+        cavity regions = 5 8 11 12
+        cavity mass = 0.0008555
+        cavity geometry = cavity
+        enhance regions = -1
+        enhancement = 512
+    :stop calculation geometry:
+    # No stem,cel,wall
+    :start calculation geometry:
+        geometry name = nostem_nocel_nowall
+        cavity regions = 5 8 11 12
+        cavity mass = 0.0008555
+        cavity geometry = cavity
+        enhance regions = -1
+        enhancement = 512
+    :stop calculation geometry:
+    # Small water volume
+    :start calculation geometry:
+        geometry name = dose_to_water
+        cavity regions = 2
+        cavity mass = 0.125
+        cavity geometry = small_water_volume
+        enhance regions = -1
+        enhancement = 256
+    :stop calculation geometry:
+
+    #
+    # ****************** Correction factors
+    #
+
+    # Pstem = D(nostem)/D(chamber_in_water)
+    correlated geometries = nostem chamber_in_water
+
+    # Pcell = D(nostem_nocel)/D(nostem)
+    correlated geometries = nostem_nocel nostem
+
+    # Pwall = D(nostem_nocel_nowall)/D(nostem_nocel)
+    correlated geometries = nostem_nocel_nowall nostem_nocel
+
+    # Prepl = D(dose_to_water)/D(nostem_nocel_nowall)
+    correlated geometries = dose_to_water nostem_nocel_nowall
+
+    # Ptot*Lratio = D(dose_to_water)/D(chamber_in_water)
+    correlated geometries = dose_to_water chamber_in_water
+
+:stop scoring options:
+
+############################################# Variance reduction
+:start variance reduction:
+    cs enhancement = 1
+    TmpPhsp = 1   # i.e., score phase space and use it once in each specified
+                  # geometry
+    :start range rejection:
+        rejection = 512
+        Esave     = 0.521 # i.e. no range rejection but Russian Roulette
+        cavity geometry = phsp_object # since each geometry can have its own
+                                      # cavity geometry this is just a dummy
+        rejection range medium = H2O521ICRU
+    :stop range rejection:
+:stop variance reduction:
+
+:start MC transport parameter:
+    #  Define here parameters that should be different from their defaults.
+:stop MC transport parameter:
+

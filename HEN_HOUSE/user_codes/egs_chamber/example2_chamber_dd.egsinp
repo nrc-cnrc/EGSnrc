@@ -1,0 +1,850 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_chamber application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2008
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for egs_chamber.
+#
+#  This file defines an egs_chamber simulation of a farmer type chamber
+#  positioned at different depths in and above a 30x30x30 cm water phantom. A
+#  BEAMnrc simulation source is used as a particles source. The scoring plane
+#  of the BEAMnrc simulation is just below the photon jaws at z=50 cm from the
+#  target, i.e., the air between the jaws and the water surface at z=100 cm is
+#  included in the egs_chamber simulation. The XCSE technique is used combined
+#  with phase-space scoring for particles entering a rectangular 'tube' that
+#  encloses all chamber locations.
+#
+#  Instead of using a transformed geometry to position the chamber at
+#  different depths, the chamber location is held fixed at 0 cm depth and the
+#  phantom and air geometry is moved up and down. This is accompanied with a
+#  corresponding transformation of particle positions between transport in
+#  each geometry. The advantage of using this approach is that the
+#  transformation is applied once per particle track per geometry, whereas a
+#  transformed geometry approach requires the transformation to be applied for
+#  each geometry related computation (i.e., at least once per particle step).
+#
+###############################################################################
+
+
+################################# Define the simulation geometries.
+#
+:start geometry definition:
+
+    ###################################################################
+    #   The farmer chamber modeled using a cone stack
+    #   along the X-axis with chamber midpoint positioned
+    #   at (0,0,0). Note that there will be two versions of the
+    #   chamber geometry. One version will be the bare chamber,
+    #   the other will have an extra water shell around it for using
+    #   XCSE. Adding the XCSE regions directly to the chamber geometry
+    #   instead of having it as part of the phantom makes things
+    #   slightly easier.
+    #
+    ##################################################################
+    #   Chamber including water XCSE shell.
+    #   The cone stack has 9 layers with a maximum
+    #   of 5 regions per layer => it will count as having 45 regions
+    #   cavity regions = 10, 15, 21
+    #   XCSE will be on in regions 0,  5,6,  10,11,12,  15,16,17
+    #                              20,21,22,23,  25,26,27,28,29
+    ##################################################################
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber_in_water_xcse
+        axis = 2.2417 0 0 -1 0 0
+        #
+        # region 0: a water region for XCSE
+        #
+        :start layer:
+            thickness    = 1.0
+            top radii    = 1.35
+            bottom radii = 1.35
+            media = H2O521ICRU
+        :stop layer:
+        #
+        # regions 5,6: the chamber tip + a XCSE region
+        #
+        :start layer:
+            thickness    = 0.0417
+            top radii    = 0.     1.35
+            bottom radii = 0.0858 1.35
+            media = C173521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 10, 11, 12: chamber body + a XCSE region
+        #
+        :start layer:
+            thickness    = 0.1283
+            top radii    = 0. 0.0858 1.35
+            bottom radii = 0.3125 0.35 1.35
+            media = AIR521ICRU C173521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 15, 16, 17: chamber body + a XCSE region
+        #
+        :start layer:
+            thickness    = 0.2217
+            bottom radii = 0.3125 0.35 1.35
+            media        = AIR521ICRU C173521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 20, 21, 22, 23
+        #
+        :start layer:
+            thickness    = 2.05
+            top radii    = 0.050 0.3125 0.35 1.35
+            bottom radii = 0.050 0.3125 0.35 1.35
+            media = AL521ICRU AIR521ICRU C173521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 25, 26, 27, 28, 29
+        # Note: this and the following layer belong to the same
+        #       portion of the chamber stem. However, we split
+        #       it into 2 parts. We will use XCSE in this layer
+        #       and not use XCSE in all subsequent layers.
+        #
+        :start layer:
+            thickness    = 1.0
+            top radii    = 0.050 0.175 0.35 0.4000 1.35
+            bottom radii = 0.050 0.175 0.35 0.4000 1.35
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 30, 31, 32, 33, 34
+        #
+        :start layer:
+            thickness    = 0.305
+            top radii    = 0.050 0.175 0.35 0.4000 1.35
+            bottom radii = 0.050 0.175 0.35 0.4000 1.35
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 35, 36, 37, 38
+        #
+        :start layer:
+            thickness = 0.84
+            top radii    = 0.050 0.35 0.4000 1.35
+            bottom radii = 0.050 0.35 0.4000 1.35
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU H2O521ICRU
+        :stop layer:
+        #
+        # regions 40, 41, 42, 43
+        #
+        :start layer:
+            thickness    = 1.655
+            top radii    = 0.0750 0.3500 0.4000 1.35
+            bottom radii = 0.0750 0.3500 0.4000 1.35
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU H2O521ICRU
+        :stop layer:
+    :stop geometry:
+
+    #################################################################
+    #   The bare chamber without a XCSE shell around it.
+    #   The cone stack has 8 layers with a maximum
+    #   of 4 regions per layer => it will count as having 32 regions
+    #   cavity regions = 4,8,13
+    ##################################################################
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = chamber
+        axis = 1.2417 0 0 -1 0 0
+        # region 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = C173521ICRU
+        :stop layer:
+        # regions 4, 5
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        # regions 8, 9
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = AIR521ICRU C173521ICRU
+        :stop layer:
+        # regions 12, 13, 14
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = AL521ICRU AIR521ICRU C173521ICRU
+        :stop layer:
+        # regions 16, 17, 18, 19
+        :start layer:
+            thickness = 1.0
+            top radii = 0.050 0.175 0.35 0.4000
+            bottom radii = 0.050 0.175 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+        :stop layer:
+        # regions 20, 21, 22, 23
+        :start layer:
+            thickness = 0.305
+            top radii = 0.050 0.175 0.35 0.4000
+            bottom radii = 0.050 0.175 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU C173521ICRU DURAL521ICRU
+        :stop layer:
+        # regions 24, 25, 26
+        :start layer:
+            thickness = 0.84
+            top radii = 0.050 0.35 0.4000
+            bottom radii = 0.050 0.35 0.4000
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+        :stop layer:
+        # regions 28, 29, 30
+        :start layer:
+            thickness = 1.655
+            top radii = 0.0750 0.3500 0.4000
+            bottom radii = 0.0750 0.3500 0.4000
+            media = AL521ICRU PTCFE521ICRU DURAL521ICRU
+        :stop layer:
+    :stop geometry:
+
+
+    ##########################################################
+    #  The cavity needed for range rejection/Russian Roulette
+    ##########################################################
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = cavity
+        axis = 1.201 0 0 -1 0 0
+        :start layer:
+            thickness = 2.402
+            top radii = 0.313
+            bottom radii = 0.313
+            media = AIR521ICRU
+        :stop layer:
+    :stop geometry:
+
+    ##########################################################
+    #  The chamber surrounded by a huge air region
+    #########################################################
+    :start geometry:
+        library = egs_space
+        name = air_around_chamber
+        :start media input:
+            media = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name    = chamber_in_air
+        base geometry = air_around_chamber
+        inscribed geometries = chamber
+    :stop geometry:
+
+    ##########################################################
+    #  The chamber surrounded by a XCSE water region + a huge
+    #  water region
+    #########################################################
+    :start geometry:
+        library = egs_space
+        name = water_around_chamber
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        library = egs_genvelope
+        name    = chamber_in_water
+        base geometry = water_around_chamber
+        inscribed geometries = chamber_in_water_xcse
+    :stop geometry:
+
+    #############################################################
+    # A rectilinear "tube" of air, infinite along the beam axis,
+    # in which the chamber will be moving up and down.
+    #############################################################
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = air_chamber_tube
+        x-planes = -5.001  1.2427
+        y-planes = -0.351  0.351
+        z-planes = -999 999
+        :start media input:
+            media = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    ##############################################################
+    # A 30x30 cm^2 rectilinear region of air, infinite along the
+    # beam axis.
+    ##############################################################
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = air_slab
+        x-planes = -30  30
+        y-planes = -30  30
+        z-planes = -1000  1000
+        :start media input:
+            media = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    ###############################################################
+    # The air "tube" inscribed into the above air region. This
+    # will become the air region above the water phantom when it is
+    # put in place in the final geometry using a CD geometry.
+    ################################################################
+    :start geometry:
+        library = egs_genvelope
+        name    = air
+        base geometry = air_slab
+        inscribed geometries = air_chamber_tube
+    :stop geometry:
+
+    ################################################################
+    # A rectilinear "tube" of water, infinite along the beam axis,
+    # in which the chamber will be moving up and down.
+    ################################################################
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = water_chamber_tube
+        x-planes = -5.001  1.2427
+        y-planes = -0.351  0.351
+        z-planes = -998 998
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    ###################################################################
+    # Another rectilinear "tube" of water, infinite along the beam axis,
+    # which will be used for cross section enhancement.
+    ###################################################################
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = water_xcse_tube
+        x-planes = -5.002  2.2427
+        y-planes = -1.351  1.351
+        z-planes = -999 999
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    ##############################################################
+    # A 30x30 cm^2 rectilinear region of water, infinite along the
+    # beam axis.
+    ##############################################################
+    :start geometry:
+        library = egs_ndgeometry
+        type    = EGS_XYZGeometry
+        name    = water_slab
+        x-planes = -30  30
+        y-planes = -30  30
+        z-planes = -1000 1000
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    ################################################################
+    # The chamber motion "tube" inscribed into the water XCSE "tube"
+    ################################################################
+    :start geometry:
+        library = egs_genvelope
+        name    = water_xcse
+        base geometry = water_xcse_tube
+        inscribed geometries = water_chamber_tube
+    :stop geometry:
+    ###############################################################
+    # The water chamber movement and XCSE "tubes" inscribed into
+    # the above water region. This will become the water phantom when
+    # it is put in place in the final geometry using a CD geometry.
+    ################################################################
+    :start geometry:
+        library = egs_genvelope
+        name    = water
+        base geometry = water_slab
+        inscribed geometries = water_xcse
+    :stop geometry:
+
+    ##################################################################
+    # 3 z-planes to be used in the CD geometry below
+    ##################################################################
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Zplanes
+        name    = base_z_planes
+        positions = -50 0.0 30
+    :stop geometry:
+    ##################################################################
+    # The actual simulation geometry without the chamber. It consists
+    # from a 30x30 cm^2 air region between z=-50 and z=0 and a
+    # 30x30 cm^2 water region between z=0 and z=30.
+    # This is the geometry where the
+    # transport of particles coming from the particle source will
+    # begin. We will use XCSE in the entire air region and in the
+    # water_xcse sub-geometry defined above. We will also mark the
+    # regions defined as water_chamber_tube and air_chamber_tube
+    # as "cavity". The result of this will be that when a particle
+    # enters these region, its phase will be stored and the particle
+    # transport terminated. The phase space will then be used to
+    # initiate transport in geometries containing the chamber at
+    # different locations.
+    ##################################################################
+    :start geometry:
+        library = egs_cdgeometry
+        name    = phsp_scoring_geometry
+        base geometry = base_z_planes
+        set geometry  = 0 air
+        set geometry  = 1 water
+    :stop geometry:
+
+    ###################################################################
+    # Constructs geometries for 5 chamber positions in air
+    ###################################################################
+    # Note: we use input loop for this to avoid typing the same stuff
+    #       over and over again. Input loops are a new feature in the
+    #       egspp library available since Summer 2007. When an input
+    #       loop is encountered, the content between :start input loop:
+    #       and :stop input loop: is repeated the number of times
+    #       specified in 'loop count = '. In each iteration the loop
+    #       variables take a new value as defined by their definitions
+    #       (see below).
+    ####################################################################
+    :start input loop:
+
+        loop count = 5
+
+        # Define a floating point loop variable (type=1) named var1
+        # that takes values -45.0 + i*(-1) in the i'th loop.
+        # All occureneces of $(var1) will be replaced by this.
+        loop variable = 1 var1 -45.0 -1
+
+        # Similar as above but $(var2) = 5.0 + i*(-1)
+        loop variable = 1 var2   5.0 -1
+
+        # Similar as above but $(var4) = 5.5 + i*(-1)
+        loop variable = 1 var4   5.5 -1
+
+        # Similar as above but $(var3) = 35.0 + i*(-1)
+        loop variable = 1 var3  35.0 -1
+
+        ##############################################################
+        # The z-planes to define the air region and the water phantom
+        # Note: we add a 0.5 cm thick region of water where we will
+        # be using XCSE. This will hopefully improve the statistics
+        # of backscattered dose.
+        ##############################################################
+        :start geometry:
+            library = egs_planes
+            type    = EGS_Zplanes
+            name    = zplanes_-$(var2)cm
+            positions = $(var1) $(var2) $(var4) $(var3)
+              # i.e., in the avove the planes will be
+              #  -45.0 5.0 5.5 35.0   in the first loop execution,
+              #  -46.0 4.0 4.5 34.0   in the second loop execution, etc.
+        :stop geometry:
+
+        ###############################################################
+        # The air + water phantom
+        ##############################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = phantom_-$(var2)cm
+             # i.e., we will get geometries named phantom_-5cm, phantom_-4cm, etc.
+            base geometry = zplanes_-$(var2)cm
+            set geometry = 0 air_slab
+            set geometry = 1 water_slab
+            set geometry = 2 water_slab
+        :stop geometry:
+
+        ################################################################
+        # The chamber inscribed into the air above the water phantom
+        ################################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = dose_-$(var2)cm
+             # i.e., we will get geometries named dose_-4cm, dose_-3cm, etc.
+            base geometry = phantom_-$(var2)cm
+            set geometry  = 0 chamber_in_air
+        :stop geometry:
+
+    :stop input loop:
+
+    ###################################################################
+    # Constructs geometries for 15 chamber positions in water
+    # Same approach as above using an input loop
+    ###################################################################
+    :start input loop:
+
+        loop count = 15
+        loop variable = 1 var1 -50.4 -0.2
+        loop variable = 1 var2  -0.4 -0.2
+        loop variable = 1 var3  29.6 -0.2
+        loop variable = 1 var4   0.4  0.2
+
+        ##############################################################
+        # The z-planes to define the air region and the water phantom
+        ##############################################################
+        :start geometry:
+            library = egs_planes
+            type    = EGS_Zplanes
+            name    = zplanes_$(var4)cm
+            positions = $(var1) $(var2) $(var3)
+        :stop geometry:
+
+        ###############################################################
+        # The air + water phantom
+        ##############################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = phantom_$(var4)cm
+            base geometry = zplanes_$(var4)cm
+            set geometry = 0 air_slab
+            set geometry = 1 water_slab
+        :stop geometry:
+
+        ################################################################
+        # The chamber inscribed into the water phantom
+        ################################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = dose_$(var4)cm
+            new indexing style = 1
+            base geometry = phantom_$(var4)cm
+            set geometry  = 1 chamber_in_water
+        :stop geometry:
+
+    :stop input loop:
+
+    ###################################################################
+    # Constructs geometries for 3 chamber positions where the chamber
+    # is partially in the air and partially in the water
+    ###################################################################
+    :start input loop:
+
+        loop count = 3
+        loop variable = 1 var1 -49.8 -0.2
+        loop variable = 1 var2   0.2 -0.2
+        loop variable = 1 var3  30.2 -0.2
+        loop variable = 1 var4  -0.2  0.2
+
+        ##############################################################
+        # The z-planes to define the air region and the water phantom
+        ##############################################################
+        :start geometry:
+            library = egs_planes
+            type    = EGS_Zplanes
+            name    = zplanes_$(var4)cm
+            positions = $(var1) $(var2) $(var3)
+        :stop geometry:
+
+        ###############################################################
+        # The air + water phantom
+        ##############################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = phantom_$(var4)cm
+            base geometry = zplanes_$(var4)cm
+            set geometry = 0 air_slab
+            set geometry = 1 water_slab
+        :stop geometry:
+
+        ################################################################
+        # The chamber inscribed into the water phantom
+        ################################################################
+        :start geometry:
+            library = egs_cdgeometry
+            name    = dose_$(var4)cm
+            base geometry = phantom_$(var4)cm
+            set geometry  = 0 chamber_in_air
+            set geometry  = 1 chamber_in_water
+        :stop geometry:
+
+    :stop input loop:
+
+
+
+    #simulation geometry = phsp_scoring_geometry
+    #simulation geometry = dose_-1cm
+    #simulation geometry = dose_1cm
+    simulation geometry = dose_0cm
+    #simulation geometry = phantom_1cm
+
+:stop geometry definition:
+
+########################################### The source:
+#                                           a full BEAMnrc treatment head
+#                                           simulation
+:start source definition:
+
+    #:start source:
+    #    library = egs_beam_source
+    #    name    = the_source
+    #    beam code = BEAM_EX16MVp
+    #    pegs file = 700icru
+    #    input file = test
+    #    particle type = all
+    #    weight window = 0 0.1 # This discards fat particles.
+    #:stop source:
+    :start source:
+        library = egs_parallel_beam
+        name    = the_source
+        charge  = 0
+        :start shape:
+            library = egs_rectangle
+            rectangle = -5 -5  5  5
+            :start transformation:
+                translation = 0 0 50
+            :stop transformation:
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 2
+        :stop spectrum:
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+############################################ Run control
+#
+:start run control:
+
+    ncase = 5000000
+
+:stop run control:
+
+############################################# Scoring
+:start scoring options:
+
+    silent = 0
+
+    #
+    # The simulation starts in the first calculation geometry
+    # If phase space scoring is set, which it is in our case,
+    # (see the variance reduction section below),
+    # then all particles entering the region specified as cavity are
+    # stored and then they are further transported in the additional
+    # calculation geometries specified
+    #
+    :start calculation geometry:
+        geometry name = phsp_scoring_geometry
+        cavity regions = 1 5
+        cavity mass = 1
+        cavity geometry = air_chamber_tube
+        enhance regions = 0 1 4 5
+        enhancement =     128 128 128 128
+        #
+        # Note: the transformation specified below is applied to particle
+        # positions before checking if the particle enters the geometry.
+        # In the case of a BEAMnrc simulation source, the particle positions
+        # are the positions when the particles cross the scoring plane
+        # i.e. at (x,y,50) in this case. The top of this geometry is at
+        # z=-50 => we must translate the particle positions by -100.
+        #
+        :start transformation:
+            translation = 0 0 -100.001
+        :stop transformation:
+
+    :stop calculation geometry:
+
+# -------------------------------------- the actual calculation geometries
+#
+
+    #
+    # Note: this is not a 'real' input loop because we only do it once.
+    # The purpose of using it is to define the cse loop variable, which will be
+    # used as the XCSE factor. This way, we only need to change it once here,
+    # instead of going to all 'enhancement = ...' inputs when we want to
+    # investigate the optimum XCSE factor.
+    #
+    :start input loop:
+
+    loop count = 1
+    loop variable = 0 cse 128  0
+
+    #
+    # The 5 chamber locations where the calculation geometries are named
+    # dose_-5cm, dose_-4cm, ..., and the chamber is completely in the air above
+    # the water phantom.
+    #
+    :start input loop:
+
+        loop count = 5
+        loop variable = 1 var1 -5  1
+        loop variable = 1 var2  5 -1
+
+        :start calculation geometry:
+
+            geometry name = dose_$(var1)cm
+
+            # Cavity regions in chamber are 4, 8, 13. chamber is inscribed
+            # via an envelope in chamber_in_air, so there cavity regions are
+            # 5, 9, 14. chamber_in_air is then put into region 0 of dose_$(var1)cm
+            # using a CD geometry => cavity regions are still 5, 9, 14
+            cavity regions = 5 9 14
+            cavity mass = 0.0008361
+            cavity geometry = cavity
+
+            # We want to use XCSE in most chamber regions (don't need XCSE in the portions
+            # of the stem that are too far away from the cavity) + in the air of
+            # dose_(var1)cm + in the 0.5 cm thick layer of water.
+            enhance regions = 0    1 5 6 9 10 13 14 15 17 18 19 20   33
+            enhancement     = $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) \
+                              $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse)
+
+            # We need to add a translation applied to the particle position before its
+            # transport starts in this geometry from the phase space scored in
+            # phsp_scoring_geometry. This is so because in phsp_scoring_geometry the
+            # water surface is at z=0, wheras in dose_$(var1)cm the water surface is
+            # at -($var1)
+            :start transformation:
+                translation = 0 0 $(var2)
+            :stop transformation:
+
+        :stop calculation geometry:
+
+    :stop input loop:
+
+    #
+    # The 3 chamber locations where the calculation geometries are named
+    # dose_-0.2cm, dose_0cm and dose_0.2cm and where the chamber is partially in
+    # the water phantom and partially in the air
+    #
+    :start input loop:
+
+        loop count = 3
+        loop variable = 1 var1  -0.2  0.2
+        loop variable = 1 var2   0.2 -0.2
+
+        :start calculation geometry:
+
+            geometry name = dose_$(var1)cm
+
+            # Cavity regions in chamber_in_water_xcse are 10,15,21.
+            # chamber_in_water_xcse is inscribed
+            # via an envelope in chamber_in_water, so there cavity regions are
+            # 11, 16, 22. chamber_in_water is then put into region 1 of dose_$(var1)cm
+            # using a CD geometry with the new indexing style => cavity regions become
+            # 12, 17, 22
+            cavity regions = 5 9 14  57 62 68
+            cavity mass = 0.0008361
+            cavity geometry = cavity
+
+            # We want to use XCSE in most chamber regions (don't need XCSE in the portions
+            # of the stem that are too far away from the cavity) + in the air of
+            # dose_(var1)cm + in the 0.5 cm thick layer of water.
+            enhance regions = 0  \                              # outside air
+                              1 5 6 9 10 13 14 15 17 18 19 20 \ # chamber portion in air
+                              47  52 53   57 58 59   62 63 64  67 68 69 70  72 73 74 75 76
+            enhancement     = $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) \
+                              $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) \
+                              $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) \
+                              $(cse) $(cse) $(cse) $(cse)
+
+            # We need to add a translation applied to the particle position before its
+            # transport starts in this geometry from the phase space scored in
+            # phsp_scoring_geometry. This is so because in phsp_scoring_geometry the
+            # water surface is at z=0, wheras in dose_$(var1)cm the water surface is
+            # at -($var1)
+            :start transformation:
+                translation = 0 0 $(var2)
+            :stop transformation:
+
+        :stop calculation geometry:
+
+    :stop input loop:
+
+    #
+    # The 15 chamber locations where the calculation geometries are named
+    # dose_0.4cm, dose_0.6cm, ..., and the chamber is completely in
+    # the water phantom.
+    #
+    :start input loop:
+
+        loop count = 15
+        loop variable = 1 var1   0.4  0.2
+        loop variable = 1 var2  -0.4 -0.2
+
+        :start calculation geometry:
+
+            geometry name = dose_$(var1)cm
+
+            # Cavity regions in chamber_in_water_xcse are 10,15,21.
+            # chamber_in_water_xcse is inscribed
+            # via an envelope in chamber_in_water, so there cavity regions are
+            # 11, 16, 22. chamber_in_water is then put into region 1 of dose_$(var1)cm
+            # using a CD geometry with the new indexing style => cavity regions become
+            # 12, 17, 22
+            cavity regions = 12 17 23
+            cavity mass = 0.0008361
+            cavity geometry = cavity
+
+            # We want to use XCSE in most chamber regions (don't need XCSE in the portions
+            # of the stem that are too far away from the cavity) + in the air of
+            # dose_(var1)cm + in the 0.5 cm thick layer of water.
+            enhance regions = 0  2  7 8   12 13 14   17 18 19 22 23 24 25  27 28 29 30 31
+            enhancement     = $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) \
+                              $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse) $(cse)
+
+            # We need to add a translation applied to the particle position before its
+            # transport starts in this geometry from the phase space scored in
+            # phsp_scoring_geometry. This is so because in phsp_scoring_geometry the
+            # water surface is at z=0, wheras in dose_$(var1)cm the water surface is
+            # at -($var1)
+            :start transformation:
+                translation = 0 0 $(var2)
+            :stop transformation:
+
+        :stop calculation geometry:
+
+    :stop input loop:
+
+    :stop input loop:
+
+:stop scoring options:
+
+############################################# Variance reduction
+:start variance reduction:
+    cs enhancement = 1
+    TmpPhsp = 1   # i.e., score phase space and use it once in each specified
+                  # geometry
+    :start range rejection:
+        rejection = 512
+        Esave     = 0.521 # i.e. no range rejection but Russian Roulette
+        cavity geometry = cavity # since each geometry can have its own
+                                      # cavity geometry this is just a dummy
+        rejection range medium = H2O521ICRU
+    :stop range rejection:
+:stop variance reduction:
+
+:start MC transport parameter:
+    #  Define here parameters that should be different from their defaults.
+:stop MC transport parameter:
+

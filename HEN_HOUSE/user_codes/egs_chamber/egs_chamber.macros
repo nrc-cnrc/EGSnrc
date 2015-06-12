@@ -1,0 +1,102 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc egs++ egs_chamber application mortran macros                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Joerg Wulff, 2007                                         "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MXGE} WITH {2000};
+
+/*
+   We want to use the photon splitting technique introduced by
+   Kawrakow & Fippel [PMB 45 (2000) 2163] implemented via
+   the $SELECT-PHOTON-MFP macro.
+ */
+REPLACE {$SELECT-PHOTON-MFP;} WITH {;
+    call select_photon_mfp(dpmfp);
+    IF( dpmfp < 0 ) return;
+};
+
+/*
+   Range rejection/Russian roulette
+ */
+REPLACE {$RANGE-DISCARD;} WITH {;
+    IF( i_do_rr > 0 ) [
+        call range_discard(tperp,range);
+        IF( idisc > 0 ) goto :USER-ELECTRON-DISCARD: ;
+        IF( idisc < 0 ) [ np = np-1; return; ]
+    ]
+};
+
+subroutine do_rayleigh;
+implicit none;
+$declare_max_medium;
+;
+;COMIN/PHOTIN,USEFUL,EPCONT,STACK,RANDOM,UPHIOT,THRESH/;
+$INTEGER lgle;
+gle = log(E(NP)); LGLE=GE1(MEDIUM)*GLE+GE0(MEDIUM);
+call egs_rayleigh_sampling(medium,e(np),gle,lgle,costhe,sinthe);
+return; end;
+;
+
+/*
+  cross section enhancement is done via the RAYLEIGH-CORRECTION
+*/
+REPLACE {$RAYLEIGH-CORRECTION;} WITH {;
+	;IF(IRAYLR(IRL).EQ.1) [
+         $EVALUATE COHFAC USING COHE(GLE);
+         GMFP=GMFP*COHFAC
+     	];
+	call do_cs_enhancement(gmfp);
+};
+
+
+/*
+   catch a region change in case of negative ustep
+*/
+REPLACE {$CALL-HOWFAR-IN-ELECTR; } WITH{;
+    IF(callhowfar | wt(np) <= 0) [
+        call egs_howfar;
+        IF( idisc = 0 & ustep <= 0 ) [
+            IF( ustep < -1e-4 ) [
+                ierust = ierust+1;
+                IF( ierust > 1000 )[
+                    $CALL_EXIT(1);
+                ]
+            ]
+            ustep = 0;
+            /*
+            edep = 0;
+            $AUSCALL($TRANAUSB);
+            ir(np) = irnew;
+            */
+            $electron_region_change;
+            $AUSCALL($TRANAUSA);
+        ]
+    ]
+};
+
