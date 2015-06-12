@@ -1,0 +1,855 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_fac application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2011
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for egs_fac.
+#
+#  NOTE: Substitute every instance of $HEN_HOUSE for its actual value in this
+#  file! It is essential to use 'Bound Compton Scattering = norej'. See the MC
+#  transport parameter input section for more info. See comments accompanying
+#  the various inputs for more details.
+#
+#  The simulation geometry is a detailed model of the NRC medium energy
+#  free-air chamber including the vacuum tube used to measure the attenuation
+#  correction. The extra simulation geometry needed to compute Ab, the
+#  correction for backscatter, is also included. A file containing muen/rho*E
+#  values for air (muen_air.data) for the air-kerma calculation is also
+#  provided. These values were obtained using the EGSnrc 'g' application using
+#  a log-log interpolation grid up to 250 keV.
+#
+#  The simulation is set to compute all correction factors as described in
+#  Mainegra-Hing, Reynaert and Kawrakow, Med. Phys. 35, 3650–3660 (2008). The
+#  pegs4 data file example_data_1keV_300keV.pegs4dat contains the required
+#  media and is also provided. It has been created using the XCOM photon
+#  cross section compilation. Copy this file to the $EGS_HOME/pegs4/data
+#  directory before running this example.
+
+#  The incident beam is a full BEAMnrc simulation source that models the NRC
+#  MXR-320 x-ray tube. The spec_module file (mxr-320.module) and the BEAM input
+#  file (mxr-320-250kVp_tube.egsinp) are provided with this input file. The
+#  first file should be copied to the directory $EGS_HOME/beamnrc/spec_modules/
+#  and the second to the BEAM directory created using beam_build.exe, i.e.,
+#  $EGS_HOME/BEAM_mxr-320/. A 250 keV parallel beam is also defined for a
+#  $quick run without having to create the BEAM simulation.
+#
+###############################################################################
+
+
+:start geometry definition:
+
+    #
+    # The base structure of the simulation geometry will be made using a cone stack.
+    # The FAC will then be inscribed into one of the regions of the cone stack.
+    #
+    # We start by defining the lead box surrounding the FAC. The definition
+    # that follows will only define the side walls of the lead box and the inside
+    # air, the resulting geometry being infinite in z-direction (the direction of the
+    # beam). We will get the top/bottom lead box plates, including the aperture opening,
+    # when this geometry is inscribed into the cone stack mentioned above.
+    #
+
+    #
+    # Lead box x-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = lead_box_xplanes
+        positions = -28.7 28.7
+    :stop geometry:
+    #
+    # Lead box y-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Yplanes
+        name    = lead_box_yplanes
+        positions = -23.7 23.7
+    :stop geometry:
+    #
+    # The lead box, infinite along z
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        name    = lead_box_xy
+        dimensions = lead_box_xplanes lead_box_yplanes
+        :start media input:
+            media = PBICRU512
+        :stop media input:
+    :stop geometry:
+
+    #
+    # We now make an air box, also infinite along z, filled with air.
+    # When we inscribe this air box into the lead box defined above,
+    # we will get the lead side walls of the FAC.
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = air_xplanes
+        positions = -27.5 27.5
+    :stop geometry:
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Yplanes
+        name    = air_yplanes
+        positions = -22.5 22.5
+    :stop geometry:
+    :start geometry:
+        library = egs_ndgeometry
+        name    = inside_air
+        dimensions = air_xplanes air_yplanes
+        :start media input:
+            media = AIRICRU512
+        :stop media input:
+    :stop geometry:
+    #
+    # The air filled lead box, infinite along z.
+    #
+    :start geometry:
+        library = egs_genvelope
+        name    = main_lead_box
+        base geometry = lead_box_xy
+        inscribed geometries = inside_air
+    :stop geometry:
+
+    #
+    # The aluminum guard bars of the FAC are defined in a way similar to the above.
+    # We first define a box filled with aluminum, then a box filled with air, and then
+    # inscribe the air box into the aluminum box. We wll add the air spaces
+    # between the guard bars and the top/bottom openings for the beam later on.
+    # Note that the box is again infinite in z-direction.
+    #
+    # Aluminum box x-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = guard_outer_xplanes
+        positions = -17.5 17.5
+    :stop geometry:
+    #
+    # Aluminum box y-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Yplanes
+        name    = guard_outer_yplanes
+        positions = -14.0 14.0
+    :stop geometry:
+    #
+    # Aluminum box
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        name    = guard_outer_xy
+        dimensions = guard_outer_xplanes guard_outer_yplanes
+        :start media input:
+            media = ALICRU512
+        :stop media input:
+    :stop geometry:
+    #
+    # Air box x-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Xplanes
+        name    = guard_inner_xplanes
+        positions = -16.5475 16.5475
+    :stop geometry:
+    #
+    # Air box y-planes
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Yplanes
+        name    = guard_inner_yplanes
+        positions = -13.0 13.0
+    :stop geometry:
+    #
+    # Air box
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        name    = guard_inner_xy
+        dimensions = guard_inner_xplanes guard_inner_yplanes
+        :start media input:
+            media = AIRICRU512
+        :stop media input:
+    :stop geometry:
+    #
+    # The air filled aluminum box
+    #
+    :start geometry:
+        library = egs_genvelope
+        name    = guard_xy
+        base geometry = guard_outer_xy
+        inscribed geometries = guard_inner_xy
+    :stop geometry:
+
+    #
+    # The following will be used to define the air gaps in the aluminum guard bars
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Yplanes
+        name    = guard_y_divisions
+        positions = -13.5,
+                -12.0475       -11.911,
+                -10.95847826   -10.82195652,
+                -9.869456522   -9.732934783,
+                -8.780435      -8.643913,
+                -7.691413043   -7.5548913043,
+                -6.60239130434 -6.465869565,
+                -5.513369565   -5.376847826,
+                -4.424347826   -4.287826087,
+                -3.335326087   -3.198804348,
+                -2.246304348   -2.109782609,
+                -1.157282609   -1.02076087,
+                -0.06826086957  0.06826086957,
+                 1.02076087     1.157282609,
+                 2.109782609    2.246304348,
+                 3.198804348    3.335326087,
+                 4.287826087    4.424347826,
+                 5.376847826    5.513369565,
+                 6.465869565    6.60239130434,
+                 7.5548913043   7.691413043,
+                 8.643913       8.780435,
+                 9.732934783    9.869456522,
+                 10.82195652    10.95847826,
+                 11.911         12.0475,
+                 13.5
+        :start media input:
+            media = ALICRU512 AIRICRU512
+            :start input loop:
+                loop count = 23
+                loop variable = 0 region 1 2
+                set medium = $(region) 1
+            :stop input loop:
+            #
+            # The above input loop will expand into a
+            # a series of 23 inputs of the form
+            #     set medium = 1 1
+            #     set medium = 3 1
+            #     sed medium = 5 1
+            #     ...
+            # which will set every second region of the guard_y_divisions geometry
+            # to medium 1 (i.e., to air).
+        :stop media input:
+    :stop geometry:
+    #
+    # We now use a so called "smart" envelope geometry to inscribe the
+    # above planes into region 0 of the air filled aluminum box (i.e., into
+    # the aluminum walls. That way the previously solid aluminum walls will get
+    # air gaps as defined by the guard_y_divisions geometry. We use a logic type 1,
+    # which means that the geometry being inscribed does not fit completely inside
+    # the specified region and forces the smart envelope geometry to do boundary
+    # checks against the region 0 boundaries (in contrast, a logic type 0 inscription
+    # means that the geometry being inscribed fits completely in the specified region
+    # so that when a particle is in a region of the inscribed geometry one does not need
+    # to check for intersections with the envelope region.
+    #
+    :start geometry:
+        library = egs_smart_envelope
+        name    = guard_xy_divided
+        base geometry = guard_xy
+        inscribe geometry = guard_y_divisions 0 1
+    :stop geometry:
+
+    #
+    # We now need the square top/bottom beam openings of the
+    # guards. We also need to air the air gaps to the top/bottom parts of the guards.
+    # We define the openings as 2D geometries made out of x- and y-planes
+    # (again infinite along z) filled with air. These are inscribed into the
+    # infinite aluminum box guard_outer_xy defined above. We then use again a smart
+    # envelope to get the air gaps by inscribing the guard_y_divisions geometry.
+    # Because the definition is equivalent for the top and bottom
+    # guard parts (apart from the different opening size), we use an input loop to save some typing.
+    #
+    :start input loop:
+        loop count = 2
+        loop variable = 2 planes 1 2
+        loop variable = 2 name   top bottom
+        :start geometry:
+            library = egs_planes
+            type    = EGS_Xplanes
+            name    = $(name)_opening_xplanes
+            positions = -$(planes) $(planes)
+        :stop geometry:
+        :start geometry:
+            library = egs_planes
+            type    = EGS_Yplanes
+            name    = $(name)_opening_yplanes
+            positions = -$(planes) $(planes)
+        :stop geometry:
+        :start geometry:
+            library = egs_ndgeometry
+            name    = $(name)_guard_opening
+            dimensions = $(name)_opening_xplanes $(name)_opening_yplanes
+            :start media input:
+                media = AIRICRU512
+            :stop media input:
+        :stop geometry:
+        :start geometry:
+            library = egs_genvelope
+            name    = guard_$(name)
+            base geometry = guard_outer_xy
+            inscribe in regions = $(name)_guard_opening 0
+        :stop geometry:
+        :start geometry:
+            library = egs_smart_envelope
+            name    = guard_$(name)_divided
+            base geometry = guard_$(name)
+            inscribe geometry  = guard_y_divisions 0 1
+        :stop geometry:
+    :stop input loop:
+    #
+    # The above, when expanded by the EGSnrc input reader will give us
+    # geometries named guard_top_divided and guard_bottom_divided.
+    #
+
+    #
+    # To define the actual collecting volume (CV), we use a CD geometry
+    # to inscribe the top/bottom/side guard bars into a set of z-planes.
+    #
+    # First the z-planes.
+    #
+    :start geometry:
+        library = egs_planes
+        type    = EGS_Zplanes
+        name    = CV_zplanes
+        positions = 13.35             14.3025                     37.35     47.35    70.3975    71.35
+          #                 ^                        ^                   ^        ^          ^
+          #            top guard bars         air not part of CV        CV       air      bottom
+    :stop geometry:
+
+    :start geometry:
+        library = egs_cdgeometry
+        name    = guard_plus_CV
+        base geometry = CV_zplanes
+        new indexing style = 1
+        set geometry = 0 guard_top_divided
+        set geometry = 1 guard_xy_divided
+        set geometry = 2 guard_xy_divided
+        set geometry = 3 guard_xy_divided
+        set geometry = 4 guard_bottom_divided
+    :stop geometry:
+
+    #
+    # We now put the above CV plus guard bars geometry into the air filled lead
+    # box using a smart envelope. Note inscription logic 0, which is now applicable
+    # because the geometry being inscribed fits completely into region 1 of the
+    # air filled lead box.
+    # Note that the resulting main_fac geometry is still infinite along the z-axis.
+    # It will belimited and will get its top/bottom walls + aperture when it gets
+    # inscribed into the cone stack geometry below.
+    #
+    :start geometry:
+        library = egs_smart_envelope
+        name    = main_fac
+        base geometry = main_lead_box
+        inscribe geometry = guard_plus_CV 1 0
+    :stop geometry:
+
+    #
+    # The following input loop defines 3 cone stack geometries named
+    # fac_no_tube, fac_air_tube and fac_vacuum_tube for the 3 cases
+    # we want to simulate at once. These cone stacks form the "skeleton"
+    # of the final simulation geometries where the lead box containing
+    # the CV and guard bars will be inscribed.
+    #
+    :start input loop:
+
+        loop count = 3    # i.e., execute the loop 2 times.
+                          # a loop variable of type 2 is simply a list of possible values
+        loop variable = 2 gname base_no_tube base_air_tube base_vacuum_tube
+        loop variable = 2 med_be        AIRICRU512 BEICRU512     BEICRU512
+        loop variable = 2 med_tube_wall AIRICRU512 SS3161ICRU512 SS3161ICRU512
+        loop variable = 2 med_tube      AIRICRU512 AIRICRU512    THINAIRICRU512
+        loop variable = 2 bname fac_no_tube fac_air_tube fac_vacuum_tube
+
+        :start geometry:
+            library = egs_cones
+            type    = EGS_ConeStack
+            name    = $(gname)
+            axis    = 0 0 -51.2 0 0 1
+            #
+            # Regions 0-2
+            #   This is used to define the Be window of the vacuum or air filled tube
+            #   when present. When the input loop gets expanded, $(med_be) will be
+            #   replaced by AIRICRU512, BEICRU512 and BEICRU512
+            #
+            :start layer:
+                thickness    = 0.05
+                top radii    = 3.2  40.0
+                bottom radii = 3.2  40.0
+                media        = $(med_be) AIRICRU512
+            :stop layer:
+            #
+            # Regions 3-5
+            #   This is used to define the vacuum/air-filled tube when present.
+            #   We will get for the media
+            #        AIRICRU512 AIRICRU512 AIRICRU512
+            #        AIRICRU512 SS3161ICRU512 AIRICRU512
+            #        THINAIRICRU512 SS3161ICRU512 AIRICRU512
+            #   in the 3 loop cases. We use THINAIRICRU512 (instead of simply vacuum), because
+            #   there is a bug still somewhere that causes a crash when vacuum is used.
+            #   THINAIRICRU512 is a medium with 1e-6 times lower density than air.
+            #
+            :start layer:
+                thickness    = 41.9
+                top radii    = 3.0  3.2 40.0
+                bottom radii = 3.0  3.2 40.0
+                media        = $(med_tube) $(med_tube_wall) AIRICRU512
+            :stop layer:
+            #
+            # Regions 6-8
+            #    Be exit window when present
+            :start layer:
+                thickness    = 0.05
+                top radii    = 3.0  40.0
+                bottom radii = 3.0  40.0
+                media        = $(med_be) AIRICRU512
+            :stop layer:
+            #
+            # Regions 9-11
+            #    Air between tube and FAC aperture
+            :start layer:
+                thickness    = 9.2
+                top radii    = 40.0
+                bottom radii = 40.0
+                media        = AIRICRU512
+            :stop layer:
+            #
+            # Regions 12-14
+            #   Part of the NRC FAC aperture.
+            :start layer:
+                thickness    = 0.15
+                top radii    = 0.65 2  40.0
+                bottom radii = 0.5  2  40.0
+                media        = AIRICRU512 HEVIMETICRU512 AIRICRU512
+            :stop layer:
+            #
+            # Regions 15-17
+            #   Part of the NRC FAC aperture.
+            :start layer:
+                thickness    = 0.3
+                bottom radii = 0.5 2 40.0
+                media        = AIRICRU512 HEVIMETICRU512 AIRICRU512
+            :stop layer:
+            #
+            # Regions 18-20
+            #   Part of the NRC FAC aperture.
+            :start layer:
+                thickness    = 0.8
+                bottom radii = 0.57 2 40.0
+                media        = AIRICRU512 HEVIMETICRU512 AIRICRU512
+            :stop layer:
+            #
+            # Regions 21-23
+            #   The inner region will remain air for the FAC opening, the outer region
+            #   will turn into the top lead box wall when the lead box is inscribed.
+            :start layer:
+                thickness    = 2.1
+                top radii    = 1.25 40
+                bottom radii = 1.25 40
+                media        = AIRICRU512 AIRICRU512
+            :stop layer:
+            #
+            # Regions 24-26
+            #   Here is where the FAC will go.
+            :start layer:
+                thickness    = 78
+                top radii    = 40
+                bottom radii = 40
+                media        = AIRICRU512
+            :stop layer:
+            #
+            # Regions 27-29
+            #     The inner region will remain air for the bottom FAC opening, the outer region
+            #     will turn into the bottom lead box wall when the lead box is inscribed.
+            :start layer:
+                thickness    = 2.1
+                top radii    = 2.25 40
+                bottom radii = 2.25 40
+                media        = AIRICRU512 AIRICRU512
+            :stop layer:
+        :stop geometry:
+
+        #
+        # These are the final simulation geometries.
+        #
+        :start geometry:
+            library = egs_smart_envelope
+            name    = $(bname)
+            base geometry = $(gname)
+            inscribe geometry = lead_box_xy  22 1
+            inscribe geometry = main_fac     24 1
+            inscribe geometry = lead_box_xy  28 1
+        :stop geometry:
+
+    :stop input loop:
+
+    #
+    #  The FAC geometry made out of AIR to obtain air-kerma free-in-air.
+    #
+    :start geometry:
+        library = egs_cones
+        type    = EGS_ConeStack
+        name    = fac_of_air
+        axis    = 0 0 -51.2 0 0 1
+        # regions 0-2
+        :start layer:
+            thickness    = 0.05
+            top radii    = 3.2  40.0
+            bottom radii = 3.2  40.0
+            media        = AIRICRU512 AIRICRU512
+        :stop layer:
+        :start layer:
+            thickness    = 41.9
+            top radii    = 3.0  3.2 40.0
+            bottom radii = 3.0  3.2 40.0
+            media        = AIRICRU512 AIRICRU512 AIRICRU512
+        :stop layer:
+        #
+        # Regions 6-8
+        #    Be exit window when present
+        :start layer:
+            thickness    = 0.05
+            top radii    = 3.0  40.0
+            bottom radii = 3.0  40.0
+            media        = AIRICRU512 AIRICRU512
+        :stop layer:
+        #
+        # Regions 9-11
+        #    Air between tube and FAC aperture
+        :start layer:
+            thickness    = 9.2
+            top radii    = 40.0
+            bottom radii = 40.0
+            media        = AIRICRU512
+        :stop layer:
+        #
+        # Regions 12-14
+        #   Part of the NRC FAC aperture.
+        :start layer:
+            thickness    = 0.15
+            top radii    = 0.65 2  40.0
+            bottom radii = 0.5  2  40.0
+            media        = AIRICRU512 AIRICRU512 AIRICRU512
+        :stop layer:
+        #
+        # Regions 15-17
+        #   Part of the NRC FAC aperture. POM located right below this layer.
+        :start layer:
+            thickness    = 0.3
+            bottom radii = 0.5 2 40.0
+            media        = AIRICRU512 AIRICRU512 AIRICRU512
+        :stop layer:
+        #
+        # Regions 18-20
+        #   Part of the NRC FAC aperture. POM located right above this layer.
+        :start layer:
+            thickness    = 0.8
+            bottom radii = 0.57 2 40.0
+            media        = AIRICRU512 AIRICRU512 AIRICRU512
+        :stop layer:
+        #
+        # Region 21
+        #   Left here to define the region in front of the cavity
+        #
+        :start layer:
+            thickness    = 10
+            top radii    = 40
+            bottom radii = 40
+            media        = AIRICRU512
+        :stop layer:
+        #
+        # Region 24
+        #   Cavity region
+        :start layer:
+            thickness    = 30
+            top radii    = 40
+            bottom radii = 40
+            media        = AIRICRU512
+        :stop layer:
+        #
+        # Region 27
+        #   Left here to define the region behind the cavity
+        :start layer:
+            thickness    = 10
+            top radii    = 40
+            bottom radii = 40
+            media        = AIRICRU512
+        :stop layer:
+    :stop geometry:
+
+    ###################################
+    #  The cavity for range rejection
+    #  We make it slightly larger (0.01 cm) to avoid fat
+    #  particles entering the CV due to numerical round off issues.
+    #
+    :start geometry:
+        library = egs_ndgeometry
+        type = EGS_XYZGeometry
+        name    = cavity
+        x-planes =  -16.55   16.55
+        y-planes =  -13.01   13.01
+        z-planes =   37.349  47.351
+    :stop geometry:
+
+    simulation geometry = fac_of_air #fac_no_tube
+
+:stop geometry definition:
+
+
+:start source definition:
+
+   #####################################################################
+   # A 250 kV x-ray beam #
+   #######################
+   #
+   #  The BEAMnrc simulation source
+   #  The specific input we uses DBS with a splitting radius of 13 cm
+   #  to avoid having a rare interaction in air of a fat particle
+   #  destroying the statistics. We use the "cutout" option of the
+   #  BEAM simulation source to limit the beam to a 1.6 x 1.6 cm square
+   #  (larger beams give the same results as nothing gets through
+   #  the lead walls). We also don't simulate contaminant electrons
+   #  from the x-ray tube and have a weight window to throw away fat
+   #  particles outside of the DBS splitting field.
+   #####################################################################
+    :start source:
+        library = egs_beam_source
+        name    = the_beam_source
+        beam code = BEAM_mxr-320
+        pegs file = example_data_1keV_300keV
+        input file = mxr-320-250kVp_tube
+        particle type = photons
+        cutout = -1.6 1.6 -1.6 1.6
+        weight window = 0 0.01
+    :stop source:
+
+   ##################################
+   # A 250 keV parallel beam
+   # To experiment with a simpler
+   # source.
+   ####
+   :start source:
+       library = egs_parallel_beam
+       name = a_parallel_beam
+       :start shape:
+          library = egs_rectangle
+          rectangle = -12.8 -12.8 12.8 12.8
+       :stop shape:
+       :start spectrum:
+         type = monoenergetic
+          energy = 0.250
+       :stop spectrum:
+       direction = 0 0 1
+       charge = 0
+   :stop source:
+
+    simulation source = the_beam_source
+   #simulation source = a_parallel_beam
+
+:stop source definition:
+
+:start run control:
+
+    ncase = 1600 # increase this for proper stats!
+                 # If you have access to a cluster
+                 # try running over 10^9 histories
+
+:stop run control:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 1802 4000
+:stop rng definition:
+
+:start scoring options:
+
+    #
+    #  The definition of calculation geometries is very similar to the
+    #  cavity code, but there are inputs added that define the aperture
+    #  regions (needed to get the Aap correction), the front/back
+    #  CV regions (needed for the electron loss calculation) and the
+    #  point of measurement (POM), needed for KERMA scoring.
+    #  In our simulation source the geometry is defined so that the
+    #  z-position of the particles leaving at the bottom of the geometry is
+    #  48.35 cm, which coincides with the top of the egs_fac simulation
+    #  geometry. To make these two self consistent, we apply a translation
+    #  of -99.55 cm along z before transporting source particles.
+    #
+    #
+    #  The FAC without the air/vacuum filled tube used to measre Aatt.
+    #
+    :start calculation geometry:
+        geometry name = fac_no_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073 # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5  # first input is z-position, second is radius.
+    :stop calculation geometry:
+
+    #
+    #  The FAC with the tube filled with air.
+    #
+    :start calculation geometry:
+        geometry name = fac_air_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073 # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    #
+    #  The FAC with the tube filled with vacuum.
+    #
+    :start calculation geometry:
+        geometry name = fac_vacuum_tube
+        cavity regions = 132
+        aperture regions = 13 16 19 30
+        front and back regions = 83 181
+        cavity mass = 0.009462477073 # cylinder defined by diaphragm and plates
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+    :stop calculation geometry:
+
+    #
+    #  The FAC geometry made out of AIR to obtain air-kerma free-in-air.
+    #  The cavity mass MUST be included and be the same as the value used
+    #  in the other geometry for the ratio of air-kermas to be correct.
+    #
+    :start calculation geometry:
+        geometry name = fac_of_air
+        cavity regions = 27
+        #aperture regions = 14,17,20 NOT NEEDED
+        front and back regions = 21 27
+        cavity mass = 0.009462477073 # same cavity mass as in the other geometries
+        :start transformation:
+            translation = 0 0 -99.55
+        :stop transformation:
+        POM = 0.45 0.5
+        include scatter = yes
+    :stop calculation geometry:
+
+    #
+    # The following will output the ratio of the CV dose for the
+    # 2 geometries, including an uncertainty estimate that correctly
+    # takes into account the correlation. This will be the measured Aatt correction
+    #
+    correlated geometries = fac_air_tube fac_vacuum_tube
+
+    #
+    # To compute the Ax correction factor defined by Mainegra-Hing and Kawrakow,
+    # one must tell egs_fac the 3 geometries involved (i.e., the actual KERMA
+    # measurement geometry, the geometry with a vacuum tube filled with air and
+    # the geometry with a vacuum tube filled with vacuum.
+    #
+    Ax calculation = fac_no_tube fac_air_tube fac_vacuum_tube
+
+    #
+    # The following will output the ratio of the air-kerma at the POM
+    # (E6  ratio in the output from egs_fac) for the geometry without a tube
+    # and the geometry without the FAC, including an uncertainty estimate that correctly
+    # takes into account the correlation. This will be the Ab correction.
+    #
+    correlated geometries = fac_no_tube fac_of_air
+
+    #
+    # One must also provide a tabulation for mu_en/rho of air.
+    # The format of this file is
+    #   number N of data points
+    #   N lines with energy and mu_en/rho
+    # Note that although the energies are given, at this point egs_fac
+    # assumes that the grid points are uniform in log(E) and actually
+    # ignores them (except for the first and last energy, which define the
+    # energy interval).
+    #
+    muen file = $HEN_HOUSE/user_codes/egs_fac/muen_air.data
+
+:stop scoring options:
+
+:start variance reduction:
+    #
+    # Split each photon 1000 times.
+    # The optimum splitting number will depend on how much time
+    # is spent in the source and in the egs_fac simulation. In this
+    # example the source is a BEAMnrc simulation source, which is quite
+    # slow for x-ray tube simulations, and therefore a large splitting number
+    # is appropriate. If you use a different source, the optimum splitting
+    # number will vary.
+    #
+    photon splitting = 1000
+    :start range rejection:
+         #
+         # rejection = 1000 means that all electrons that can not
+         # reach the CV will be subjected to Russian Roulette with
+         # survival probability of 1/1000
+         #
+         rejection = 1000
+         Esave     = 1
+         #
+         # if you don't define a cavity geometry, range rejection/Russian Roulette
+         # will be on a region-by-region basis only
+         #
+         cavity geometry = cavity
+         #
+         # The medium to use for range calculation. This must be the medium with
+         # the lowest stopping power in the simulation geometry
+         #
+         rejection range medium = AIRICRU512
+     :stop range rejection:
+:stop variance reduction:
+
+:start MC transport parameter:
+
+  Rayleigh scattering   = On
+  #
+  # Note: using 'Bound Compton Scattering = norej' is essential!!!
+  # The Bound Compton Scattering = On' option will not work because
+  # the scoring does not take into account the possibility of rejection
+  # of Compton interactions when computing the attenuation. This is explained
+  # in the Mainegra-Reynaert-Kawrakow Med.Phys. paper.
+  #
+  Bound Compton Scattering = norej
+  Photon cross sections = xcom  # (could also be epdl or si)
+
+:stop MC transport parameter:
