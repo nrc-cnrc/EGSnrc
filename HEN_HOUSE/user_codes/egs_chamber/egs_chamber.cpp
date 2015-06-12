@@ -55,6 +55,7 @@
 #  b) temporary phase-space scoring and correlated sampling.
 #
 ###############################################################################
+*/
 
 
 #include <cstdlib>
