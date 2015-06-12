@@ -1,0 +1,305 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ egs_cbct application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2013
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  CBCT image of a water cube with 5 bone rods: projection at 0 degrees.
+#
+#  Projections at other angles can be obtained by modifying input block
+#  :cbct setup: below. One can define the projection angle and angular
+#  :interval. Negative values of the latter indicate rotation is done
+#  :counter-clockwise around the indicated axis.
+#
+#  BEWARE:
+#
+#  - The path for the different files must be absolute.
+#
+#  - e*muen file used below provided with egs_fac user-code
+#
+#  - media information in PEGS4 data file 521icru.pegs4dat distributed
+#    with EGSnrc.
+#
+#  - Replace $EGS_HOME string below with the actual value!!!
+#
+#  - If the detector resolution is changed, one must recalculate the blank scan
+#
+#  Before creating a scan, one needs to run a simulation with an empty phantom
+#  to create the blank scan. This is a one time calculation for a specific
+#  CBCT setup (source/scoring-plane combination). This calculation is
+#  typically very fast as there is no interactions and just a simple scoring
+#  of the primaries is in effect.
+#
+#  One can visualize the scan files using tools (such as imageJ) by importing
+#  the scan as a raw image. To make use of the scan files in your own code
+#  look inside egs_cbct.cpp to find out the output format.
+#
+###############################################################################
+
+
+:start geometry definition:
+
+    ##################################### 60 X 60 X 60 real phantom
+    #
+    # Switch between z-axis and x-axis rods below
+    # to see different views of the phantom.
+    #
+    :start geometry:
+       library = egs_ndgeometry
+       type = EGS_XYZGeometry
+       x-slabs = -15 0.5  60
+       y-slabs = -15 0.5  60
+       z-slabs = -15 0.5  60
+       name    = phantom
+        :start media input:
+            media = H2O521ICRU, ICRPBONE521ICRU, AIR521ICRU
+	    # rods along Z axis
+            #set medium = 28 31 28 31 9 50 1
+            #set medium = 48 51 28 31 9 50 1
+            #set medium =  8 11 28 31 9 50 1
+            #set medium = 28 31 48 51 9 50 1
+            #set medium = 28 31  8 11 9 50 1
+	    # rods along X axis
+            set medium = 9 50 28 31 28 31 1
+            set medium = 9 50 28 31 48 51 1
+            set medium = 9 50 28 31  8 11 1
+            set medium = 9 50 48 51 28 31 1
+            set medium = 9 50  8 11 28 31 1
+        :stop media input:
+    :stop geometry:
+
+    ##################################### blank phantom
+    :start geometry:
+       library = egs_ndgeometry
+       type = EGS_XYZGeometry
+       x-slabs = -15 30 1
+       y-slabs = -15 30 1
+       z-slabs = -15 30 1
+       name    = blank_phantom
+       :start media input:
+            media = VACUUM, AIR521ICRU
+       :stop media input:
+    :stop geometry:
+
+    simulation geometry = phantom       # use this one for real scans
+    #simulation geometry = blank_phantom # use this one first to create blank scan
+
+:stop geometry definition:
+
+:start source definition:
+
+
+   ##################################
+   # A collimated source
+   ####
+   :start source:
+    library = egs_collimated_source
+    name = the_zero_collimated_source
+    distance = 80
+    :start source shape:
+      type = point
+      position = 0, 0, -100
+    :stop source shape:
+    :start target shape:
+       library = egs_rectangle
+       rectangle = -25.8 -25.8 25.8 25.8
+    :stop target shape:
+    :start spectrum:
+      type = monoenergetic
+      energy = 0.06
+    :stop spectrum:
+     charge = 0
+   :stop source:
+   ################################################
+   # Transformations are not implemented in most sources,
+   # hence one must use a transformed source.
+   ################################################
+   :start source:
+    library = egs_transformed_source
+    name = the_collimated_source
+    source name = the_zero_collimated_source
+    :start transformation:
+       rotation = 0 1.570796326794896619 0
+    :stop transformation:
+   :stop source:
+
+    simulation source = the_collimated_source
+
+:stop source definition:
+
+###########################################
+# To run all projections, I use a script
+# that automatically substitutes the angle
+# and submit the calculation to the queue.
+# I could also provide the script.
+# Didn't want to overwhelm with too many files!
+###########################################
+:start cbct setup:
+        orbit = 360.0
+        step  = -45
+        z-rotation = 0
+:stop cbct setup:
+
+:start scoring options:
+
+        calculation type = planar # fixed for now as only scoring at a plane
+
+        :start calculation geometry:
+           #geometry name = blank_phantom # use this one first to create blank scan
+            geometry name = phantom
+        :stop calculation geometry:
+
+        :start planar scoring:
+           minimum Kscat fraction = 0.5
+           surrounding medium = VACUUM #AIR521ICRU
+           screen resolution = 64 64
+           voxel size = 1.25
+           :start transformation:
+              translation = 55 0 0
+              rotation = 0 1.570796326794896619 0
+           :stop transformation:
+            # Uses file provided in the distribution
+            muen file = $EGS_HOME/egs_fac/muen_air.data
+        :stop planar scoring:
+
+:stop scoring options:
+
+:start output options:
+    display type = scattered # total, attenuated, scattered
+    store signal map  = no # yes, no (default)
+    store data arrays = yes # yes (default), no
+    #verbose = yes # no (default), yes
+    :start scan output:
+        ###############################################
+        # Use the 2 lines below to produce a blank scan
+        ###############################################
+        #scan file = $EGS_HOME/egs_cbct/blank_coll_64.scan
+	#scan type = blank
+        ###############################################
+        # Use the 3 lines below to produce real scans
+        ###############################################
+        scan file = $EGS_HOME/egs_cbct/scan_w5br_coll_64.scan
+        blank scan = $EGS_HOME/egs_cbct/blank_coll_64.scan
+	scan type = all
+        ###############################################
+    :stop scan output:
+:stop output options:
+
+######
+# Not needed for blank scan calculations. For real scans one should
+# avoid using VRTs since these techniques are aimed at enhancing scatter
+# but could cause undersampling of the primary contribution for instance.
+######
+:start variance reduction:
+   #scoring type = track_length      # scores photons CROSSING scoring plane
+   scoring type =  forced_detection  # scores photons AIMED at scoring plane (forced detection)
+   #mfp transform = 4.0
+   #delta transport medium = ICRPBONE521ICRU
+
+   ####################################
+   # FS # Could be used for measured scan
+   ####################################
+   # Simplest splitting scheme. Gives some gain
+   # even when computing a "measured" scan.
+   # Combined with smoothing gives already
+   # 1000 times increase in efficiency for a chest case.
+   # Use of the other more sophisticated splitting
+   # schemes gives a factor of 2 over FS
+   ####################################
+   #FS splitting = 70 120 # Np Ns
+
+   ################################
+   # RDIS # Uncomment lines below!#
+   ################################
+   #RDIS splitting = 120 120 # Np Ns
+   #################################################
+   # Splitter used in conjunction with RDIS. Required.
+   # Defines importance regions in a phantom. Number
+   # of importance regions cannot be larger than the
+   # number of phantom regions and MUST be a factor
+   # of the number of phantom regions.
+   #################################################
+   #:start RDIS splitter setup:
+      splitter geometry = 20 20 20
+      minimum splitting = 40
+      maximum splitting = 1000
+   #:stop RDIS splitter setup:
+
+   ###########################################
+   # PDIS # Uncomment lines below !          #
+   ###########################################
+   #PDIS splitting = 0.8 30 # f_split Ns
+   #:start attenuation plane:
+      :start transformation:
+           translation = 21.21320343559642573 0 0
+           rotation = 0 1.570796326794896619 0
+       :stop transformation:
+       attenuation medium = H2O521ICRU
+   #:stop attenuation plane:
+   #################################################
+   # Corrector used in conjunction with PDIS. Optional
+   # Corrects for the fact that the estimated contribution
+   # to signal is made before the interaction.
+   #################################################
+   #:start PDIS corrector setup:
+      corrector geometry = 10 10 10
+      minimum correction = 0.5
+   #:stop PDIS corrector setup:
+
+:stop variance reduction:
+
+:start rng definition:
+    type = ranmar
+    initial seeds = 1802 1000
+:stop rng definition:
+
+:start run control:
+
+    ncase =  12800000 #2621440
+    calculation = first
+
+:stop run control:
+
+
+########
+# For fast computation one can use KN for Compton scattering. However,
+# in realistic phantoms this may cause a 3% discrepancy.
+########
+:start MC transport parameter:
+
+  Global ECUT = 1
+
+  Photon cross sections = xcom  # epdl (or xcom)
+
+  Bound Compton scattering = off
+
+  Rayleigh scattering=  on
+
+:stop MC transport parameter:
+
+##############################
+
+

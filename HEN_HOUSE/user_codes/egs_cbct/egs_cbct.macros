@@ -1,0 +1,217 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc egs++ egs_cbct application mortran macros                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Ernesto Mainegra-Hing, 2007                               "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MXGE} WITH {2000};
+
+"macro below overrides that in egsnrc.macros.  It is identical with"
+"the exception of the return statement if IARG<0"
+REPLACE {$AUSCALL(#);} WITH {
+    IARG={P1};
+    IF (IAUSFL(IARG+1).NE.0) [ call egs_ausgab(iarg); ]
+    IF(IARG<0) RETURN;
+};
+
+/*
+   We want to have an additional array of floating numbers with the size
+   of the particle stack, which will have the attenuation unweighting
+   factors.
+ */
+#ifdef DEBUG_WEIGHTS;
+REPLACE {;COMIN/STACK-EXTRA/;} WITH {
+  common/extra_stack/ ddet($MXSTACK),iphat($MXSTACK),irdet($MXSTACK),
+                      inter($MXSTACK),ddetI,iphatI,irdetI,interI;
+  $REAL               ddet, ddetI;
+  integer*4           iphat,idetr,inter,iphatI,idetrI,interI;
+};
+REPLACE {$TRANSFERPROPERTIESTO#FROM#;} WITH {
+    X{P1}=X{P2};Y{P1}=Y{P2};Z{P1}=Z{P2};IR{P1}=IR{P2};
+    WT{P1}=WT{P2};DNEAR{P1}=DNEAR{P2};LATCH{P1}=LATCH{P2};
+    ddet{P1}=ddet{P2};irdet{P1}=irdet{P2};
+    iphat{P1}=iphat{P2};inter{P1}=inter{P2};
+};
+#else;
+"This COMIN block MUST match the C structure EGS_ExtraStack"
+"defined in file egs_mortran.h"
+REPLACE {;COMIN/STACK-EXTRA/;} WITH {
+  common/extra_stack/ katt($MXSTACK),
+                      ddet($MXSTACK),
+                      iphat($MXSTACK),
+                      irdet($MXSTACK),
+                      kattI, ddetI,
+                      iphatI, irdetI;
+  $REAL               katt, kattI,ddet,ddetI;
+  integer*4           iphat,iphatI,irdet,irdetI;
+};
+REPLACE {$TRANSFERPROPERTIESTO#FROM#;} WITH {
+    X{P1}=X{P2};Y{P1}=Y{P2};Z{P1}=Z{P2};IR{P1}=IR{P2};
+    WT{P1}=WT{P2};DNEAR{P1}=DNEAR{P2};LATCH{P1}=LATCH{P2};
+    katt{P1}=katt{P2};ddet{P1}=ddet{P2};
+    irdet{P1}=irdet{P2};iphat{P1}=iphat{P2};
+};
+#endif;
+APPEND {;COMIN/STACK-EXTRA/;} TO {;COMIN/STACK/;};
+
+/*
+#ifdef USTEP_DEBUG;
+REPLACE {$MXSTEP} WITH {10000};
+APPEND {;
+    common/geometry_debug/ icase,
+                           x_debug($MXSTEP),y_debug($MXSTEP),z_debug($MXSTEP),
+                           u_debug($MXSTEP),v_debug($MXSTEP),w_debug($MXSTEP),
+                           ustep_debug($MXSTEP),dnear_debug($MXSTEP),
+                           ir_debug($MXSTEP),irnew_debug($MXSTEP),
+                           np_debug($MXSTEP),nstep_debug;
+    real    x_debug,y_debug,z_debug,u_debug,v_debug,w_debug,
+            ustep_debug,dnear_debug;
+    integer ir_debug,irnew_debug,np_debug,nstep_debug,id;
+    integer*8 icase;
+} TO {$COMIN-ELECTR;};
+
+REPLACE {$CHECK-NEGATIVE-USTEP;} WITH {
+    nstep_debug = nstep_debug+1;
+    IF( nstep_debug <= $MXSTEP ) [
+        x_debug(nstep_debug) = x(np);
+        y_debug(nstep_debug) = y(np);
+        z_debug(nstep_debug) = z(np);
+        u_debug(nstep_debug) = u(np);
+        v_debug(nstep_debug) = v(np);
+        w_debug(nstep_debug) = w(np);
+        ustep_debug(nstep_debug) = ustep;
+        dnear_debug(nstep_debug) = dnear(np);
+        ir_debug(nstep_debug) = ir(np);
+        irnew_debug(nstep_debug) = irnew;
+        np_debug(nstep_debug) = np;
+    ]
+    IF(ustep < 0) [
+        IF(ustep < -1e-4) [
+            write(6,*) 'Negative ustep ',ustep,' in history ',icase;
+            write(6,*) 'Number of steps recorded: ',nstep_debug;
+            DO id=1,nstep_debug [
+                write(6,'(i4,8f10.6,2i4)') np_debug(id),
+                  x_debug(id),y_debug(id),z_debug(id),
+                  u_debug(id),v_debug(id),w_debug(id),ustep_debug(id),
+                  dnear_debug(id),ir_debug(id),irnew_debug(id);
+            ]
+            $FLUSH_UNIT(6);
+            $CALL_EXIT(1);
+        ]
+        ustep = 0;
+    ]
+};
+#endif;
+*/
+
+
+/*
+   We want to use the photon splitting technique introduced by
+   Kawrakow & Fippel [PMB 45 (2000) 2163] implemented via
+   the $SELECT-PHOTON-MFP macro.
+ */
+REPLACE {$SELECT-PHOTON-MFP;} WITH {;
+    call select_photon_mfp(dpmfp);
+    IF( dpmfp < 0 ) return;
+};
+
+/*
+   Range rejection/Russian roulette
+ */
+REPLACE {$RANGE-DISCARD;} WITH {;
+    IF( i_do_rr > 0 ) [
+        call range_discard(tperp,range);
+        IF( idisc > 0 ) goto :USER-ELECTRON-DISCARD: ;
+        IF( idisc < 0 ) [ np = np-1; return; ]
+    ]
+};
+
+subroutine calculate_photon_mfp(gmfp,cohfac);
+implicit none;
+$REAL gmfp,cohfac;
+$declare_max_medium;
+;
+COMIN/PHOTIN,USEFUL,EPCONT,X-OPTIONS/;
+$INTEGER lgle;
+$REAL    GMFPR0;
+
+$SET INTERVAL GLE,GE;
+$EVALUATE GMFPR0 USING GMFP(GLE);
+$SET-RHOF;
+GMFP=GMFPR0/RHOF;
+$RAYLEIGH-CORRECTION;
+return; end;
+;
+
+subroutine calculate_photon_branching(gbr1,gbr2);
+implicit none;
+$REAL gbr1,gbr2;
+$declare_max_medium;
+;COMIN/PHOTIN,USEFUL,EPCONT/;
+$INTEGER lgle;
+
+$SET INTERVAL GLE,GE;
+$EVALUATE GBR1 USING GBR1(GLE);
+$EVALUATE GBR2 USING GBR2(GLE);
+return; end;
+;
+
+subroutine do_old_rayleigh;
+implicit none;
+$declare_max_medium;
+;
+;COMIN/PHOTIN,USEFUL,EPCONT,STACK,RANDOM,UPHIOT,THRESH/;
+$REAL xxx,x2,q2,CSQTHE,REJF,RNNORJ;
+$INTEGER lxxx;
+
+:RAYLEIGH-SAMPLING-LOOP1: LOOP [
+    $RANDOMSET XXX;
+    $SET INTERVAL XXX,RCO; $EVALUATE X2 USING RSCT(XXX);
+    Q2=X2*RMSQ/(20.60744*20.60744);
+    COSTHE=1.-Q2/(2.*E(NP)*E(NP));
+    IF (ABS(COSTHE).GT.1) GO TO :RAYLEIGH-SAMPLING-LOOP1:;
+    CSQTHE=COSTHE*COSTHE; REJF=(1.0+CSQTHE)/2.0;
+    $RANDOMSET RNNORJ;
+] UNTIL (RNNORJ <= REJF);
+SINTHE=SQRT(1.0-CSQTHE); CALL UPHI(2,1);
+return; end;
+;
+
+subroutine do_rayleigh;
+implicit none;
+$declare_max_medium;
+;
+;COMIN/PHOTIN,USEFUL,EPCONT,STACK,RANDOM,UPHIOT,THRESH/;
+$INTEGER lgle;
+NPold = NP;
+"gle = log(E(NP));"
+LGLE=GE1(MEDIUM)*GLE+GE0(MEDIUM);
+call egs_rayleigh_sampling(medium,e(np),gle,lgle,costhe,sinthe);
+CALL UPHI(2,1);
+return; end;
+;
+"BEWARE: THIS SPACE IS MANDATORY!!!"
