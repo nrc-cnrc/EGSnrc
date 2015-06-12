@@ -1,0 +1,173 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc ranlux_test application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally adapted from random_test.mortran (EGS4) by Dave   "
+"  Rogers in 2000. The random_test.mortran code was originally written by     "
+"  Dave Rogers in 1998.
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A test routine for the EGSnrc ranlux random number generator. The random   "
+"  number generator is machine independent, and this code tests that the sum  "
+"  of the first 10, 10^4, 10^5 and 10^6 calls is correct.                     "
+"                                                                             "
+"#############################################################################"
+
+
+%L TURN ON LISTING IN CASE IT WAS OFF FOR EGS
+!INDENT M2;
+!INDENT F2;
+%C80
+%Q1
+"****************************************************************************
+"
+"                         ranlux_test.mortran
+"
+"                                                on $HEN_HOUSE/ranlux_test
+"
+"   Author: Dave Rogers  Feb 2000 based on random_test.mortran
+"
+"
+"
+"Note, this is a test routine for the EGSnrc rng.  The RNG is a machine
+"independent RNG and thus this code tests that the sum of the
+"first 10, 10,000,  100,000 and 1,000,000 calls is correct
+"
+"To use this test:
+"create a standard egs usercode subdirectory called ranlux_test
+"
+"copy ranlux_test.mortran and ranlux_test.configuration to that area
+"
+"Compile the code as mf ranlux_test a opt?
+"
+"Execute as ex ranlux_test ' ' 700icru
+"                        any data set will do, since it is not used
+
+"This code produces identical results for NRC's various machines"
+"     Have tested SGI R4400, Linux g77"
+
+
+
+REPLACE {$REAL} WITH {;REAL}
+REPLACE {$INTEGER} WITH {;INTEGER}
+
+
+;IMPLICIT NONE;
+;COMIN/RANDOM/;
+$REAL RNG(1000000), tarray(2), tarray2(2);
+REAL*8 SUM;
+$REAL tnow;
+$DECLARE_TIMING_VARIABLES;
+INTEGER DELTAN,ISEED,Luxury_level,NLOOP, ILOOP, ounit;
+
+ISEED = 1;
+
+Luxury_level = 1;
+
+OUTPUT ISEED,Luxury_level;
+(//'                ranlux_test ($Revision: 1.1 $)'//
+' ISEED =',I16,'  Luxury_level=',I2/);
+
+$INITIALIZE RNG USING Luxury_level AND ISEED;
+
+OUTPUT ISEED;(' After rng-initialization ISEED=', I17);
+OUTPUT;(/' Will now generate 1,000,000 ranom numbers and check'/
+         '   that the right sum is produced on this machine at'/
+         '   this optimization level'/);
+NLOOP = 1000000;
+$INITIALIZE_ELAPSED_TOTAL_TIME;
+$INITIALIZE_ELAPSED_CPU_TIME;
+
+DO ILOOP = 1,NLOOP [ $RANDOMSET RNG(ILOOP);]
+
+$SET_ELAPSED_CPUTIME(cput2);
+$SET_ELAPSED_TOTAL_TIME(tnow);
+OUTPUT tnow;(/' Ellapsed wall clock time:',F12.3,' seconds'/);
+OUTPUT cput2; (/' net cputime after loop ', F12.5//);
+
+
+SUM = 0.0;
+OUTPUT; (' For luxury level 1');
+DO ILOOP = 1,NLOOP[
+   SUM = SUM + RNG(ILOOP);
+   IF(ILOOP = 10) [
+     OUTPUT SUM;
+     (' Sum of first 10 is  ',F23.8,T53,' should be 6.04121202');
+   ]
+   IF(ILOOP = 10000) [
+      OUTPUT SUM;
+      (' Sum of first 10,000 is ',F20.8,T50, ' should be 5037.36653233 ');
+   ]
+   IF(ILOOP = 100000) [
+      OUTPUT SUM;
+      (' Sum of first 100,000 is ',F19.8,T49, ' should be 50167.93485560 ');
+   ]
+   IF(ILOOP = 1000000) [
+      OUTPUT SUM;
+      (' Sum of first 1,000,000 is',F18.8,T48,' should be 500181.82346285 ');
+   ]
+]
+
+SUM = 0.0;
+Luxury_level = 4;
+OUTPUT; (///' For luxury level 4');
+
+$INITIALIZE RNG USING Luxury_level AND ISEED;
+$SET_ELAPSED_CPUTIME(cput1);
+OUTPUT cput1;(' cputime at start of loop, ', F12.5);
+
+DO ILOOP = 1,NLOOP [ $RANDOMSET RNG(ILOOP);]
+
+$SET_ELAPSED_CPUTIME(cput2);
+$SET_ELAPSED_TOTAL_TIME(tnow);
+OUTPUT tnow;(/' Ellapsed wall clock time:',F12.3,' seconds'/);
+OUTPUT cput2-cput1; (/' net cputime after loop ', F12.5//);
+DO ILOOP = 1,NLOOP[
+   SUM = SUM + RNG(ILOOP);
+   IF(ILOOP = 10) [
+     OUTPUT SUM;
+     (' Sum of first 10 is  ',F23.8,T53,' should be 6.04121202');
+   ]
+   IF(ILOOP = 10000) [
+      OUTPUT SUM;
+      (' Sum of first 10,000 is ',F20.8,T50, ' should be 5035.82869888');
+   ]
+   IF(ILOOP = 100000) [
+      OUTPUT SUM;
+      (' Sum of first 100,000 is ',F19.8,T49, ' should be 50122.38526364 ');
+   ]
+   IF(ILOOP = 1000000) [
+      OUTPUT SUM;
+      (' Sum of first 1,000,000 is',F18.8,T48,' should be 500049.78976676 ');
+   ]
+]
+
+OUTPUT;(///' End ranlux_test');
+$CALL_EXIT(0);
+END;
