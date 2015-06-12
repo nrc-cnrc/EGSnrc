@@ -1,0 +1,152 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc ranmar_test application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 2000                                         "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally adapted from random_test.mortran (EGS4) by Dave   "
+"  Rogers in 2000. The random_test.mortran code was originally written by     "
+"  Dave Rogers in 1998.
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A test routine for the EGSnrc ranlux random number generator. The random   "
+"  number generator is machine independent, and this code tests that the sum  "
+"  of the first 10, 10^4, 10^5 and 10^6 calls is correct.                     "
+"                                                                             "
+"#############################################################################"
+
+
+%L TURN ON LISTING IN CASE IT WAS OFF FOR EGS
+"   ranmar_test.mortran (SID 1.1 last edited 00/04/19)"
+!INDENT M2;
+!INDENT F2;
+%C80
+%Q1
+"****************************************************************************
+"
+"                         ranmar_test.mortran
+"
+"                                                on $HEN_HOUSE/ranmar_test
+"
+"   Author: Dave Rogers  Feb 1998, updated Feb 2000
+"
+"
+"
+"Note, this is a test routine for the EGS rng ranmar.  The RNG is a machine
+"independent RNG and thus this code tests that the sum of the
+"first 10, 10,000,  100,000 and 1,000,000 calls is correct
+"
+"To use this test:
+"create a standard egs usercode subdirectory called ranmar_test
+"
+"copy ranmar_test.mortran and ranmar_test.configuration to this area
+"
+"Compile the code as mf ranmar_test a opt?
+"Execute as ex ranmar_test ' ' 700icru
+"                        any data set will do, not used
+
+"This code produces identical results for NRC's
+"SunOS sparcs (opt0,2), SGI's(opt 0,2,3), Linux opt 0,
+"DEC ALPHA/OSF (opt 0 or 4)
+
+"Note that optimizers are known to mess things up on occasion
+"Specifically the default RANDOMSET shown below fails on
+"SGI opt level 3 unless an extra IF(fool_optimizer... stmt is added
+"which forces the optimizer not to optimize
+"However, if the fool_optimizer stmt is removed in this code, it works
+"OK in this simple case!!  i.e. this is not the `final word''
+
+"If you are running on a non SGI system, you should remove
+"the extra IF(fool_optimizer  statement from the definition of
+"RANDOMSET since this is an extra test for no reason
+
+"So far we have also found that the initialization routine
+"also fails on the Linux g77.05.020 compiler, opt2
+"and this can be fixed by ading various IF(fool_optimizer...
+"statements in subroutine rmarin
+
+IMPLICIT NONE;
+$DECLARE_TIMING_VARIABLES;
+$REAL tnow;
+INTEGER NLOOP,ILOOP;
+;COMIN/RANDOM/;
+$REAL RNG(1000000), tarray(2), tarray2(2);
+REAL*8 SUM;
+INTEGER DELTAN;
+
+OUTPUT; (//'          ranmar_test ($Revision: 1.2 $)'//);
+ixx = 0;
+jxx=0;
+"ixx = 2; jxx = 3;"
+"Note IXX and JXX are always changed by the init routine"
+$RNG-INITIALIZATION;
+OUTPUT IXX,JXX;(' After rng-initialization IXX,JXX=', 2I17);
+OUTPUT;(/' Will now generate 1,000,000 ranom numbers and check'/
+         '   that the right sum is produced on this machine at'/
+         '   this optimization level'/);
+NLOOP = 1000000;
+$INITIALIZE_ELAPSED_TOTAL_TIME;
+$INITIALIZE_ELAPSED_CPU_TIME;
+
+DO ILOOP = 1,NLOOP [ $RANDOMSET RNG(ILOOP);]
+
+$SET_ELAPSED_CPUTIME(cput2);
+$SET_ELAPSED_TOTAL_TIME(tnow);
+OUTPUT tnow;(/' Ellapsed wall clock time:',F12.3,' seconds'/);
+OUTPUT cput2;
+(/' net cputime after loop ', F12.5//);
+
+
+SUM = 0.0;
+DO ILOOP = 1,NLOOP[
+   SUM = SUM + RNG(ILOOP);
+   IF(ILOOP = 10) [
+     OUTPUT SUM;
+     (' Sum of first 10 is  ',F20.8,T50,' should be 5.88279718');
+   ]
+   IF(ILOOP = 10000) [
+      OUTPUT SUM;
+      (' Sum of first 10,000 is ',F20.8,T50, ' should be 5034.47920114 ');
+   ]
+   IF(ILOOP = 100000) [
+      OUTPUT SUM;
+      (' Sum of first 100,000 is ',F20.8,T50, ' should be 50053.28831381 ');
+   ]
+   IF(ILOOP = 1000000) [
+      OUTPUT SUM;
+      (' Sum of first 1,000,000 is',F20.8,T50,' should be 500163.88955361 ');
+   ]
+]
+
+OUTPUT;(///' End ranmar_test');
+$CALL_EXIT(0);
+END;
+
+
+"end of ranmar_test.mortran"
+
+
