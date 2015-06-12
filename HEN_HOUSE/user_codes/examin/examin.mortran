@@ -1,0 +1,829 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc examin application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 1981                                         "
+"                                                                             "
+"  Contributors:    Francois Dumais                                           "
+"                   X. Li                                                     "
+"                   Andrew Booth                                              "
+"                   Alex Bielajew                                             "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Prints the cross section data from PEGS.                                   "
+"                                                                             "
+"  Note that examin no longer prints the photon cross sections in the PEGS4   "
+"  file, but what EGSnrc actually uses (si, epdl, xcom or PEGS4). The default "
+"  dataset used by examin is xcom. If you are using something else in your    "
+"  user code, you must change the following line in the code:                 "
+"  REPLACE {$XDATA-DEFAULT} WITH {'xcom'}                                     "
+"                                                                             "
+"  usage: examin -p pegs_data_file -o output_file                             "
+"         (if no -o option used, test.examin will be created)                 "
+"                                                                             "
+"  bug:   doesn't put e+ or electron cross sections                           "
+"  todo:  option to use energies as tabulated for the plot                    "
+"                                                                             "
+"  Dave Rogers, 2010: Changed defaults to (and also print this info in the    "
+"  'lst' file):                                                               "
+"                                                                             "
+"  REPLACE {$XSEC-DEFAULT} WITH {1}         i.e., create .xsection file       "
+"  REPLACE {$XDATA-DEFAULT} WITH {'xcom'}   from 'si'                         "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%L TURN ON LISTING
+!INDENT M 4;   "INDENT MORTRAN LISTING"
+!INDENT F 2;   "INDENT FORTRAN OUTPUT"
+%I4
+%C80
+"This line is 80 characters long, use it to set up the screen width
+"23456789|123456789|123456789|123456789|123456789|123456789|123456789|123456789|
+"********************************************************************"
+"                                                                    "
+"                     examin.mortran    $HEN_HOUSE/examin            "
+"                     ==============                                 "
+"                                                                    "
+"      An EGSnrc user-code to print the cross section data from PEGS "
+"                                                                    "
+"      Note: examin no longer displays the photon cross section data "
+"            in the PEGS4 data file but displays the data actually   "
+"            used by EGSnrc.  The default dataset used by examin     "
+"            is xcom.  If you are using something else in your user  "
+"            code, you must change the following line in the code    "
+"            REPLACE {$XDATA-DEFAULT} WITH {'xcom'}                  "
+"                                                                    "
+"      Update: examin displays now photon cross sections from any of "
+"              the available compilations (si, epdl, xcom) or from   "
+"              the PEGS4 data file. Default is set to xcom.          "
+"                                Ernesto Mainegra-Hing Oct 4th 2011  "
+"                                                                    "
+"      UNIT 1  OUTPUT LISTING FILE IF ASK FOR DISK OUTPUT            "
+"      UNIT 2  OUTPUT FILE FOR PLOTTING                              "
+"      UNIT 5  USER INPUT                                            "
+"      UNIT 6  INTERACTIVE PROMPTS AND OUTPUT                        "
+"      UNIT 12 MUST BE ASSIGNED TO THE INPUT FILE FOR HATCH TO READ  "
+"                                                                    "
+"       Written by Dave Rogers, NRCC OTTAWA  1981                    "
+"                                                                    "
+"      V02     DEC 31 1981     D.R.                                  "
+"      V03     JAN 1982 D.R. ADDED GAMMA DATA                        "
+"      V04     JAN 1983 D.R. ADDED INDIVIDUAL ENERGY OPTION          "
+"      V05     AUG 1984  SWITCH TO MORTRAN 3                         "
+"      V06     OCT 1984  OUTPUT COHERENT SCATTERING FACTOR           "
+"      V07     FEB 1985   CHANGED OUTPUT FORMAT FOR COHERENT         "
+"      V08     JUN 1985   MODIFIED THE PROGRAM TO WRITE INTO         "
+"                         A FILE.  BY FRANCOIS DUMAIS AS PART        "
+"                         OF HIS N.R.C.C. SUMMER STUDENT WORK.       "
+"      V09     FEB 1986  FIXED DOUBLE STARTING VALUES  D.R.          "
+"      V10     Nov 1988  output plotter file                         "
+"      V11     DEC 1989  PRINT IUNRST,EPSTFL AND IAPRIM   D.R.       "
+"      V12     APR 1990  ALLOW ELECTRONS OR PHOTONS ONLY             "
+"      V14     May 1992  use plot_xvgr     D.R.                      "
+"      V15     July 1992 add mfp to discretes  X Li and DR           "
+"              Apr 1993  removed bug in label: gamma mfp was/is  cm  "
+"      V16     Aug 1996 - replaced old PLOT_XVGR routine with       "
+"                          call to subroutine XVGRPLOT (much less    "
+"                          complicated, cleaner routine).  - A.Booth "
+"                          and DWOR                                  "
+"              Nov 1996  minor mods to avoid compiler warnings on    "
+"                        Linux
+"      V17     Sep 1999  corrected mfp to bremsstrahlung and deltas  "
+"                        based on Alex's comments                    "
+"                                                                    "
+"  Some Variables                                                    "
+"  IOPT      =0 => e- and photons, 1 only e-;  2 only photons        "
+"  IFILE     0  terminal out                                         "
+"            1  disk file only                                       "
+"            2  terminal & plot                                      "
+"            3  disk & plot                                          "
+"                                                                    "
+"********************************************************************"
+ REPLACE {$MXMED} WITH {1}
+ REPLACE {$MXREG} WITH {1}
+ REPLACE {$MXSTACK} WITH {2}
+ REPLACE {$MXDATA} WITH {2}
+ REPLACE {$STAT} WITH {2}
+ REPLACE {;COMIN/GEOM/;} WITH {;}
+ REPLACE{$MAXCURVE}WITH{10};
+ REPLACE{$MAXPOINTS}WITH{300};
+ "next macro is used to interactively call xmgr to display the"
+ "data.   If you don't have it, use the null definition"
+ "If using xmgrace instead of xmgr, make the obvious change here"
+ REPLACE {$Call_xvgr #;} WITH {;};   "this is the null version"
+ REPLACE {$Call_xvgr #;} WITH {
+   SCRIPT(3)='xmgrace '//{P1}//' 2> /dev/null';
+   OPEN(4,FILE='xmgr_script',FORM='FORMATTED',STATUS='UNKNOWN');
+   OUTPUT SCRIPT(3);(A80);
+   WRITE (4,*)SCRIPT(1)(1:60);
+   WRITE (4,*)SCRIPT(2)(1:60);
+   WRITE (4,*)SCRIPT(3);
+   CLOSE(4);
+   "CALL SYSTEM('chmod +x xmgr_script');"
+   "CALL SYSTEM('xmgr_script &');"
+   istat = egs_system('chmod +x xmgr_script');
+   istat = egs_system('./xmgr_script &');
+ }
+
+ REPLACE {$list_pegs4_media;} WITH {;};   "this is the null version"
+ REPLACE {$list_pegs4_media;} WITH {
+   istat = egs_system('cat '//$cstring(pegs_file)//' | grep MED');
+ }
+
+ REPLACE {$XSEC-DEFAULT} WITH {1}   "ie create .xsection file
+                                    "default is 0"
+ REPLACE {$XDATA-DEFAULT} WITH {'xcom'}   " default is si"
+
+ program  examin;
+
+ $REAL GE,GMFP,RAYCOR,GBR1,GBR2,COMPT;
+ $REAL PHOTOE,TOTICM,TOTGCM;
+ $REAL EIE,EFRACT,TMXS,DEDXE;
+ $REAL SIGE,SIGP,BREME,BREMP;
+ $REAL DY($MAXPOINTS);
+ $REAL HISTXMIN;
+
+ character*512 toUpper;
+ CHARACTER*60 TITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,OUTFILE,YAXISEmfp,
+              SUBTITLE,SERIES,CURVE_LABELS($MAXCURVE);
+ CHARACTER*256 FILENAME;
+ CHARACTER*256 the_title;
+ CHARACTER*24 material;
+ CHARACTER*2  CURVE_SPECS($MAXCURVE);
+ CHARACTER*100 SCRIPT(3);   "for running interactively"
+ CHARACTER*50 examin_pxsections;
+ CHARACTER*50 compton_xsections;
+
+ INTEGER NPOINTS($MAXCURVE),EPOPT,PLTOPT,NCURVE;
+ INTEGER IOPT,INDIV,IFILE,IPLOTE,IPLOTG,NUNIT;
+ INTEGER IDO;
+ INTEGER IFLAG1,IFLAG2,I1,I2,ICURVE;
+ INTEGER IFIRSTE;
+ INTEGER FILELENGTH;
+ integer egs_system,istat, p_comp;
+
+ $DECLARE_TIMING_VARIABLES;
+
+ COMIN/EPCONT,MEDIA,THRESH,BOUNDS,MISC,ELECIN,PHOTIN,
+       RANDOM,STACK,USEFUL,USER,COMPTON-DATA,EDGE,ET-Control,EGS-IO/;
+
+ $REAL ETAB(16),PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),
+      PLOTEEN($MAXPOINTS), PLOTG($MAXPOINTS),PLOTGEN($MAXPOINTS),
+      PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS), PHOTE_COMP($MAXPOINTS),
+      COMP_COMP($MAXPOINTS),PAIR_COMP($MAXPOINTS), COHER_COMP($MAXPOINTS);
+
+ DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
+
+ call egs_init;
+
+
+ $egs_info(*,'Media available in this data file are: ');
+ $list_pegs4_media;
+
+ YAXISPcom = 'fractional component of photon cross section';
+ YAXISPmfp = 'mean free path / cm';
+ YAXISEmfp = 'mean free path / cm';
+ YAXISE = 'dE/drhoX MeV/g/cm\\S2\\N';
+
+ XAXIS = 'kinetic energy / MeV';
+
+ HISTXMIN = 0.0;
+
+ INTERACTIVE = 1;   "if set 1, will call system to plot using xvgr"
+                    "interactively"
+ IF(INTERACTIVE = 1)["prepare script"
+  SCRIPT(1)='#!/bin/csh';
+  SCRIPT(2)='#This is xmgr_script used with examin';
+  "script(3) is used to define which file to print out"
+ ]
+
+ ibcmp(1) =0; "turn off bound compton in region 2."
+ iedgfl(1) = 0; "relaxations off"
+ spin_effects = .false.;
+
+ DO I=1,$MAXPOINTS[DY(I) = 0.0;]"no errors on cross sections"
+
+
+ OUTPUT;(' Material identifier: ',$);
+ INPUT (MEDIA(J,1),J=1,24);(24A1);
+ DO J=1,24[material(J:J)=MEDIA(J,1);]
+
+ FILENAME(1:20)=material(1:20);
+ OUTPUT FILENAME(1:20);(///' Title after  ', A20, $);
+ INPUT FILENAME(21:256); (A256);
+ the_title=FILENAME(21:256);
+
+ OUTPUT;(' Electrons and photons(0), only electrons(1) or photons(2): ',$);
+ INPUT IOPT;(I3);
+
+ IF(IOPT=0 | IOPT = 2)[
+   write(*,'(a)')  ' Select photon cross section data base! ';
+   write(*,'(a,a)')' ENTER defaults to: ',$cstring(photon_xsections);
+   write(*,'(a$)') ' Photon xsections [si, xcom, epdl, pegs4, user-defined]:';
+   read(*,'(a)') examin_pxsections;
+   IF ($cstring(examin_pxsections).ne.char(32)) [
+      photon_xsections = $cstring(examin_pxsections);
+   ]
+
+   OUTPUT;(' Include Rayleigh(coherent)scattering(1) or not(0): ',$);
+   INPUT IRAYLR(1);(I10);
+
+   write(*,'(3a$)') ' Compton xsections (default, xcom, user-defined) [',
+                   $cstring(comp_xsections),']:';
+   read(*,'(a)') compton_xsections;
+   IF ($cstring(compton_xsections).ne.char(32)) [
+      comp_xsections = $cstring(compton_xsections);
+   ]
+   IF ( $cstring(comp_xsections) ~= 'default')[
+      ibcmp(1)=3;
+   ]
+   ELSE[
+      OUTPUT;(' Include bound Compton(1) or not(0): ',$);
+      INPUT IBCMP(1);(I10);
+      IF(IBCMP(1)=1)[IBCMP(1)=3;]
+   ]
+   OUTPUT;(' Include radiative Compton corrections(1) or not(0): ',$);
+   INPUT RADC_FLAG;(I10);
+   OUTPUT;(' Print out absolute(0) or relative(1) components: ',$);
+   INPUT p_comp;(I10);
+ ]
+ ELSE [ IRAYLR(1) = 0;  "USED IN HATCH"
+        IBCMP(1) = 0;
+        RADC_FLAG = 0;
+
+ ]
+
+
+ OUTPUT;(' Tables(0) or individual energies(1): ',$);
+ INPUT INDIV;(I10);
+
+ OUTPUT;
+ (' Output  terminal(0),  disk file(1), terminal&plot(2), disk&plot(3): ',$);
+ INPUT IFILE;(I10);IF(IFILE<0 | IFILE>4) [IFILE=0;]
+
+"Zero counter of elements in plot"
+ IPLOTE=0;        IPLOTG=0;
+ "CALL DATE(DATEN);      CALL TIME(TIMEN);"
+
+"---Assign output unit---"
+ IF(IFILE = 0  | IFILE = 2) [ NUNIT=6; ] ELSE [ NUNIT=1; ]
+
+ OUTPUT;(/' Call HATCH'); CALL HATCH; OUTPUT;(' Call to HATCH completed'/);
+
+ NMED=1;    MED(1)=1;    MEDIUM=MED(1);    DUNIT=1.0;    IRL=1;
+
+"------------------------------------------------------------"
+"-               START BY PRINTING GAMMA DATA               -"   "toc:
+"------------------------------------------------------------"
+
+ IF(IOPT ~= 1) [     "---DO GAMMA DATA---"
+
+   IF(AP(1).LT.UP(1))  [     "---ONLY PRINT IF GAMMA DATA EXISTS---"
+
+     :GAMMA:
+
+     " ********** IK: using wrapper for date and time routines."
+     " Was:"
+     "WRITE(NUNIT,:LABL1:) (MEDIA(J,1),J=1,10),FILENAME(21:50),TIMEN,DATEN;"
+     ":LABL1:FORMAT('\f   Summary photon data: MEDIUM = ',10A1,"
+     "   ' File= ',A30/T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT/' ',79('='));"
+     WRITE(NUNIT,:LABL1:) (MEDIA(J,1),J=1,10),$cstring(the_title);
+     :LABL1:FORMAT('Summary of photon data: MEDIUM = ',10A1,
+         ' Title= ',A/T60,$);
+     call egs_fdate(nunit);
+     write(nunit,:LAB1a:);
+     :LAB1a:format(/' ',79('='));
+     WRITE(NUNIT,:LABL2:) AE(1)-0.511,UE(1)-0.511,AP(1),UP(1);
+     :LABL2:FORMAT(/' Electron kinetic energy range:',T35,2F12.3,' MeV'/
+              ' Photon energy range:          ',T35,2F12.3,' MeV');
+     WRITE(NUNIT,:LABL3:) RLC(MEDIUM),RHO(MEDIUM);
+     :LABL3:FORMAT(/' Radiation length = ',T35,F13.6,' cm'/
+              ' Density = ',T35,F13.6,' g/cm**3');
+
+     WRITE(NUNIT,:LABL4b:) $cstring(photon_xsections);
+     :LABL4b: FORMAT( ' Photon data set: ', A,$);
+     IF (p_comp = 0)[write(nunit,'(a)') ' (absolute components)';]
+     ELSE           [write(nunit,'(a)') ' (relative components)';]
+     "Output name of Compton xsection file"
+     IF ( $cstring(comp_xsections) ~= 'default')[
+        write(NUNIT,'(2a)') ' Incoherent scatter data: ',
+        $cstring(comp_xsections) ;
+     ]
+     ELSE["Default EGSnrc approach: KN +/- binding corrections"
+       write(NUNIT,'(a$)')
+       ' Using default EGSnrc incoherent scatter approach: ';
+       IF(IBCMP(1)>1)[
+        write(NUNIT,*) 'Klein-Nishina with binding effects included';
+       ]
+       ELSE [write(NUNIT,*) 'Klein-Nishina without binding corrections';]
+     ]
+     IF ($XSEC-DEFAULT = 1 ) [
+       WRITE(NUNIT,:LABL4c:);
+       :LABL4c: FORMAT( ' Will print .xsections file');
+     ]
+     ELSE [
+       WRITE(NUNIT,:LABL4d:);
+       :LABL4d: FORMAT(' Will not print .xsections file');
+     ]
+
+     IF(IRAYLR(1) = 0)[
+        WRITE(NUNIT,:LABL4:);
+        :LABL4: FORMAT(//4x,'Photon En',9x,'GMFP',8x,'Photoelec',
+                    7x,'Compton',10x,'Pair',17x,'Total');
+        IF (p_comp = 1)[
+         WRITE(NUNIT,:LABL5:);
+         :LABL5:FORMAT(21x,'(cm)',54x,'cm**2/g',8x,'cm**-1');
+        ]
+        ELSE[
+         WRITE(NUNIT,:LABL5a:);
+         :LABL5a:FORMAT(21x,'(cm)',4(9x,'cm**2/g'),4x,'cm**2/g',8x,'cm**-1');
+        ]
+     ]
+     ELSE [
+        WRITE(NUNIT,:LABL4a:);
+        :LABL4a:FORMAT(//4x,'Photon En',9x,'GMFP ',8x,'Rayleigh'
+        ,7x,'Photoelec',7x,'Compton',9x,'Pair',17x,'Total');
+        IF (p_comp = 1)[
+         WRITE(NUNIT,:LABL6:);
+        :LABL6:FORMAT(21x,'(cm)',67x,'cm**2/g',8x,'cm**-1');
+        ]
+        ELSE[
+         WRITE(NUNIT,:LABL5a:);
+         :LABL6a:FORMAT(21x,'(cm)',4(9x,'cm**2/g'),4x,'cm**2/g',8x,'cm**-1');
+        ]
+     ]
+
+     IFLAG1=0;          IFLAG2=0;
+
+     DO I1=1,8[
+       DO I2=1,16[
+         :LABEL1:
+         IF(INDIV = 1)[
+           OUTPUT;(' Photon energy (MeV, 0=>go to electrons): ',$);
+           READ(5,'(F12.0)',ERR=:LABEL1:) GE;
+
+           IF (GE  > UP(1) | GE  < AP(1))[
+             OUTPUT AP(1),UP(1);(T20,'   must be in range',2(1Pe10.3));
+           ]
+           IF(GE <= 0.0)[ GO TO :ELECTRON: "---NOW DO ELECTRONS---" ]
+         ]
+         ELSE [ GE=ETAB(I2)*10.**(I1-4); ]
+
+         IF(GE <= AP(1)) [
+           IF(IFLAG1 = 0) [ IFLAG1=1;GE=AP(1); ] ELSE [ GE=0.0; ]
+         ]
+
+         IF(GE >= UP(1)) [
+           IF(IFLAG2 = 0)[ IFLAG2=1; GE = UP(1); ]
+           ELSE [ GE=1.E30; ]
+         ]
+
+         IF(GE >= AP(1)-0.00001 & GE <= UP(1)+0.001) [
+           GLE=LOG(GE);
+           $SET INTERVAL GLE,GE;
+           IF(IRAYLR(1) = 1) [ "--PICK UP RAYLEIGH CORRECTION FACTOR IF THERE"
+             GMFP=1.0;
+             $RAYLEIGH-CORRECTION;
+             RAYCOR=GMFP;
+           ]
+
+           $EVALUATE GMFP USING GMFP(GLE); "--GAMMA MEAN FREE PATH IN CM"
+           $RAYLEIGH-CORRECTION;
+           $EVALUATE GBR1 USING GBR1(GLE); "--FRACTION WHICH IS PAIR PRODUCTION"
+           $EVALUATE GBR2 USING GBR2(GLE); "--FRACTION OF PAIR PLUS COMPTON"
+
+           COMPT = MAX(GBR2-GBR1, 0.0);   "MAX to ensure no -ve round-off"
+           PHOTOE= MAX(1.-GBR2, 0.0);
+           TOTICM=1./GMFP;   "--TOTAL CROSSECTION IN CM**-1"
+           TOTGCM=TOTICM/RHO(1);   "--TOTAL CROSSSECTION IN cm**2/g"
+
+           IF(I2 = 1) [ WRITE(NUNIT,:LABL8:); ]
+           :LABL8:FORMAT('   ');
+
+           IF(IRAYLR(1) = 0) [
+             IF (p_comp = 0)[
+                WRITE(NUNIT,:LABL9:) GE,GMFP,PHOTOE*TOTGCM,COMPT*TOTGCM
+                ,GBR1*TOTGCM,TOTGCM,TOTICM;
+                :LABL9:FORMAT(7(1PE15.6));
+             ]
+             ELSE[
+                WRITE(NUNIT,:LABL9a:) GE,GMFP,PHOTOE,COMPT
+                ,GBR1,TOTGCM,TOTICM;
+                :LABL9a:FORMAT(7(1PE15.6));
+             ]
+           ]
+           ELSE [
+             IF (p_comp = 0)[
+               WRITE(NUNIT,:LABL10:) GE,GMFP,(1.-RAYCOR)*TOTGCM
+               ,PHOTOE*RAYCOR*TOTGCM,COMPT*RAYCOR*TOTGCM,GBR1*RAYCOR*TOTGCM
+               ,TOTGCM,TOTICM;
+               :LABL10:FORMAT(8(1PE15.6));
+             ]
+             ELSE[
+               WRITE(NUNIT,:LABL10a:) GE,GMFP,(1.-RAYCOR)
+               ,PHOTOE*RAYCOR,COMPT*RAYCOR,GBR1*RAYCOR
+               ,TOTGCM,TOTICM;
+               :LABL10a:FORMAT(8(1PE15.6));
+             ]
+           ]
+
+           IF(IFILE >= 2)[  "store data for plotting later"
+             IPLOTG=IPLOTG+1;
+             IF(IRAYLR(1)=0) [ RAYCOR = 1.00; ]
+             PLOTGEN(IPLOTG)=GE;
+             PLOTG(IPLOTG)=GMFP;
+             PHOTE_COMP(IPLOTG) = PHOTOE*RAYCOR;
+             COMP_COMP(IPLOTG)  = COMPT*RAYCOR;
+             PAIR_COMP(IPLOTG)  = GBR1*RAYCOR;
+             COHER_COMP(IPLOTG) = 1.0 - RAYCOR;
+           ]
+         ] "---end of block for GE inside data bounds---"
+       ] "---end of loop on I2---"
+     ] "---end of loop on I1 energy"
+   ] "---end of block if gamma data exists---"
+ ]"---End of gamma block (IOPT ~= 1)---"
+
+"------------------------------------------------------------"
+"-                    NOW ELECTRON DATA                     -"   "toc:
+"------------------------------------------------------------"
+
+ :ELECTRON:
+
+ IF(IOPT ~= 2)[     "---DO ELECTRON DATA---"
+
+
+
+     " ********** IK: using wrapper for date and time routines.
+     " Was:
+     "WRITE(NUNIT,:LABL12:) (MEDIA(J,1),J=1,10),FILENAME(21:50),TIMEN,DATEN;
+     ":LABL12:FORMAT(////'\f Summary electron data: MEDIUM=',10A1, ' FILE:',A30/
+     "    T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT/' ',79('='));
+     WRITE(NUNIT,:LABL12:) (MEDIA(J,1),J=1,10),$cstring(the_title);
+     :LABL12:FORMAT(////'Summary electron data: MEDIUM=',10A1, ' Title:',A30/
+          T60,$);
+     call egs_fdate(nunit);
+     write(nunit,:lab2a:);
+     :lab2a:format(/' ',79('='));
+     WRITE(NUNIT,:LABL13:) AE(1)-0.511,UE(1)-0.511,AP(1),UP(1);
+     :LABL13:FORMAT(/' Electron kinetic energy range:',T35,2F12.3,' MeV'/
+               ' Photon energy range:'          ,T35,2F12.3,' MeV');
+     WRITE(NUNIT,:LABL14:) RLC(MEDIUM),RHO(MEDIUM),200.*TEFF0(1);
+     :LABL14:FORMAT(/' Radiation length = ',T35,F13.6,' cm'/
+               ' DENSITY = '         ,T35,F13.6,' g/cm**3'/
+               ' 200.*TEFFO = '      ,T35,F13.6,' cm');
+
+     IF(IAPRIM(1) = 0) [ WRITE(NUNIT,:LABL15:);
+       :LABL15:FORMAT(/' Koch and Motz radiative stopping'  );
+     ]
+     ELSEIF(IAPRIM(1) = 1) [ WRITE(NUNIT,:LABL151:);
+        :LABL151:FORMAT(/' ICRU radiative stopping');
+     ]
+     ELSE [ WRITE(NUNIT,:LABL1511:);
+        :LABL1511:FORMAT(/' No corrections in radiative cross sections ');
+     ]
+
+     IF(EPSTFL(1) = 0) [ WRITE(NUNIT,:LABL152:);
+       :LABL152:FORMAT(' Standard PEGS4 density effect for collision stopping');
+     ]
+     ELSE [ WRITE(NUNIT,:LABL153:); ]
+     :LABL153:FORMAT(' ICRU or other density effect  (EPSTFL not zero)'  );
+
+     IF(IUNRST(1) = 0) [ WRITE(NUNIT,:LABL154:);
+        :LABL154:FORMAT(' Standard PEGS4 data set (restricted collision +',
+        ' radiative (IUNRST=0))'  );
+     ]
+     ELSEIF(IUNRST(1) = 1) [ WRITE(NUNIT,:LABL155:);
+        :LABL155:FORMAT(' Unrestricted collision stopping power (IUNRST=1)');
+     ]
+     ELSEIF(IUNRST(1) = 2) [ WRITE(NUNIT,:LABL156:);
+        :LABL156:FORMAT(' Unrestricted collison + radiative stopping power',
+          ' (IUNRST=2)'  );
+     ]
+     ELSEIF(IUNRST(1) = 3) [ WRITE(NUNIT,:LABL157:);
+        :LABL157:FORMAT(' Unrestricted collision + restricted radiative',
+           ' stopping power (IUNRST=3)'  );
+     ]
+     ELSEIF(IUNRST(1) = 4) [ WRITE(NUNIT,:LABL158:);
+        :LABL158:FORMAT(' Restricted collision + unrestricted radiative',
+           ' stopping power (IUNRST=4)'  );
+     ]
+     ELSEIF(IUNRST(1) = 5) [ WRITE(NUNIT,:LABL159:);
+        :LABL159:FORMAT(' Unrestricted radiative stopping power (IUNRST=5)'  );
+     ]
+
+     IF(ESTEPE > 0.0) [ WRITE(NUNIT,:LABL16:) ESTEPE; ]
+
+     WRITE(NUNIT,:LABL17:);
+     :LABL17:FORMAT(///' Kin En',T13,'e(-),     e(+) dE/drhoX'
+          ,T38,'e(-),   e(+) Mean free path (brem fraction)',
+          /T5,'MeV',T17,'MeV/(g/cm**2)',T56,'cm');
+     IFLAG1=0;
+     IFLAG2=0;
+
+     DO I1=1,8[
+       DO I2=1,16[
+         :label2:
+         IF(INDIV = 1) [
+           OUTPUT;(' Electron kinetic energy( MeV): ',$);
+           READ(5,'(F12.0)',ERR=:label2:,END= :ELECTRON:) EKE;
+
+           IF (EKE > UE(1)-0.511003 | EKE < AE(1)-0.511003) [
+             OUTPUT AE(1)-0.511,UE(1)-0.511;
+             (T20,'   must be in range',2(1Pe10.3));
+           ]
+           IF (EKE = 0.0) [STOP; ]
+         ]
+         ELSE [ EKE=ETAB(I2)*10.**(I1-4); ]
+
+         IF(EKE <= AE(1)-0.511) [
+           IF(IFLAG1 = 0) [ IFLAG1=1; EKE=AE(1)-0.511; ] ELSE [ EKE=0.0; ]
+         ]
+
+         IF(EKE > UE(1)-0.511) [
+           IF(IFLAG2 = 0) [ IFLAG2=1; EKE=UE(1)-0.511; ] ELSE [ EKE=1.E30; ]
+         ]
+
+         EIE=EKE+0.511;       TMXS=0.0;        DEDXE=0.0;
+         DEDXP=0.0;           EFRACT=0.0;
+
+         IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
+           ELKE=LOG(EKE);
+           $SET INTERVAL ELKE,EKE;
+           $EVALUATE TMXS USING TMXS(ELKE);"STEP SIZE"
+           $EVALUATE DEDXE USING EDEDX(ELKE);"RESTRICTED STOPPING POWERS"
+           $EVALUATE DEDXP USING PDEDX(ELKE);
+           EFRACT= TMXS*DEDXE/EKE;
+
+           $EVALUATE SIGE USING ESIG(ELKE);  "--PROBABILITY /CM"
+
+           IF(SIGE = 0.0) [ SIGE=1.E-10; ]
+
+           $EVALUATE SIGP USING PSIG(ELKE);
+
+           IF(SIGP = 0.0) [ SIGP=1.E-10; ]
+           $EVALUATE BREME USING EBR1(ELKE);  "--BREM FRACTION OF EVENTS"
+           $EVALUATE BREMP USING PBR1(ELKE);
+
+           IF(I2 = 1) [ WRITE(NUNIT,:LABL19:); ]
+
+           WRITE(NUNIT,:LABL20:) EKE,DEDXE/RHO(MEDIUM), DEDXP/RHO(MEDIUM),
+                                 1./SIGE,BREME,1./SIGP,BREMP;
+            :LABL20:FORMAT(F9.3,T11,0PF9.4,T24,0PF9.4,T37,
+            1PE9.3,1x,'(',0PF7.5,')',T59,1PE9.3,1x,'(',0PF7.5,')');
+
+           IF(IFILE >= 2) [  "for plotting electron data later"
+             IPLOTE=IPLOTE+1;   "keep track of how many entries"
+             PLOTEEN(IPLOTE)=EKE;
+             PLOTE(IPLOTE)=DEDXE/RHO(MEDIUM);
+             PLOTEM(IPLOTE)=1./SIGE;
+             PLOTEMP(IPLOTE)=1./(SIGE*BREME);  "--mfp to brem only"
+             IF(BREME < 1.) [
+                PLOTEMS(IPLOTE)=1./(SIGE*(1.-BREME));  "--mfp to secondaries"
+             ]
+             ELSE [PLOTEMS(IPLOTE)= 1e6; "it goes forever if BREME=1."]
+
+
+           ]
+         ]
+       ]  "---End of I2 DO loop---"
+     ]   "---End of I1 DO loop---"
+ ]  "---End of electron block IOPT~=2---"
+
+ IF(IFILE = 1) [ CLOSE(NUNIT); ]
+
+"------------------------------------------------------------"
+
+                 "---CREATE A PLOTTER FILE---"                  "toc:
+
+"------------------------------------------------------------"
+ IF(IFILE >= 2)[
+   TITLE=$cstring(FILENAME);
+
+   :PLOTAGAIN:
+
+   IF (IOPT=2) [  "photons only"
+     LOOP [
+       OUTPUT; (/' Plot for photons (0) or exit (2):',$);
+       INPUT PLTOPT; (I4);
+     ] UNTIL (PLTOPT=0 | PLTOPT=2);
+   ]
+   ELSEIF (IOPT=1) [ "electrons only"
+     LOOP [
+       OUTPUT; (/' Plot for electrons (1) or exit (2):',$);
+       INPUT PLTOPT; (I4);
+     ] UNTIL (PLTOPT=1 | PLTOPT=2);
+   ]
+   ELSE [  "IOPT = 0 for electron & photon case"
+     LOOP [
+       OUTPUT; (/' Plot for photons (0), electrons (1) or exit(2):',$);
+       INPUT PLTOPT; (I4);
+     ] UNTIL (PLTOPT=0 | PLTOPT=1 | PLTOPT=2);
+   ]
+
+   IF(PLTOPT=0) [   "---PLOT FOR PHOTONS---"                 "toc:
+       IF(IPLOTG>0) [
+
+         LOOP [
+           OUTPUT;(/' Plot the relative components(0) or mfp(1):',$);
+           INPUT IDO;(I10);
+         ] UNTIL (IDO=0 | IDO=1);
+
+         IF(IDO = 0)[   "---relative components---"
+
+           "---add the .xvgr extension to the filename---"
+           OUTFILE ='ph_comp_'//material;
+           FILELENGTH = 0;
+           LOOP [ FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           SUBTITLE='Photons: Relative Components';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+
+           SERIES='photoelectric component';      ICURVE = 1;
+           CALL XVGRPLOT(PLOTGEN,PHOTE_COMP,DY,IPLOTG,(ICURVE-1),SERIES,
+               XAXIS,YAXISPcom,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+             "7,0,0.0,2) means unit 7, point plot,histmin, log-lin scale"
+
+           SERIES='Compton component';            ICURVE = 2;
+           CALL XVGRPLOT(PLOTGEN,COMP_COMP,DY,IPLOTG,(ICURVE-1),SERIES,
+               XAXIS,YAXISPcom,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+
+           SERIES='pair component';               ICURVE = 3;
+           CALL XVGRPLOT(PLOTGEN,PAIR_COMP,DY,IPLOTG,(ICURVE-1),SERIES,
+               XAXIS,YAXISPcom,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+
+           IF(IRAYLR(1) = 1) [  "Rayleigh component if there"
+              SERIES='Rayleigh/coherent component'; ICURVE = 4;
+              CALL XVGRPLOT(PLOTGEN,COHER_COMP,DY,IPLOTG,(ICURVE-1),SERIES,
+                  XAXIS,YAXISPcom,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+           ]
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+
+         ]"end IDO=0 block to plot components"
+
+         ELSE [ "IDO=1 block to plot mfp for photons"
+
+           OUTFILE ='ph_mfp_'//material;
+           NCURVE = 1;
+           "---add the .xvgr extension to the filename---"
+           FILELENGTH = 0;
+           LOOP [
+             FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+           SERIES = ' photon mean free path';
+           SUBTITLE='Photons:  Mean Free Path';
+           CALL XVGRPLOT(PLOTGEN,PLOTG,DY,IPLOTG,0,SERIES,
+               XAXIS,YAXISPmfp,TITLE,SUBTITLE,7,0,HISTXMIN,0);
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+         ] "end IDO = 1 block for mfp"
+
+       ]"end iplotg > 0"
+   ]"end pltopt=0"
+
+   ELSEIF(PLTOPT=1) [      "plot for electrons now"         "toc:
+                       "======================"
+
+       NCURVE = 1; "same for all electron cases"
+       LOOP [
+         OUTPUT;
+         (/' Plot st.power(0), mfp to discrete int(1), brem(2), sec.el(3):',$);
+         INPUT EPOPT; (I4);
+       ] UNTIL (EPOPT>=0 & EPOPT<=3);
+
+       IF(EPOPT = 0) [   "---do stopping power---"
+         OUTPUT;('   doing stopping powers');
+         IF(IPLOTE>0) [
+           OUTFILE ='e_sp_'//material;
+           SERIES='restricted stopping power';
+           SUBTITLE='Electrons:  Stopping Powers';
+
+           "---add the .xvgr extension to the filename---"
+           FILELENGTH = 0;
+           LOOP [ FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+           CALL XVGRPLOT(PLOTEEN,PLOTE,DY,IPLOTE,0,SERIES,
+               XAXIS,YAXISE,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+           "last 2 makes it log-lin plot"
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+         ]"end iplote>0"
+       ]"end epopt=0"
+
+       ELSEIF(EPOPT = 1) ["mean-free-path to electron discrete interactions"
+         IF(IPLOTE>0) [
+           OUTFILE ='e_mfpd_'//material;
+           SERIES='mfp to discrete interaction';
+           SUBTITLE='Electrons:  MFP to discrete interactions';
+
+           "---add the .xvgr extension to the filename---"
+           FILELENGTH = 0;
+           LOOP [ FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+           CALL XVGRPLOT(PLOTEEN,PLOTEM,DY,IPLOTE,0,SERIES,
+               XAXIS,YAXISEmfp,TITLE,SUBTITLE,7,0,HISTXMIN,0);
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+         ]"end iplote>0"
+       ]"end epopt=1"
+
+
+       ELSEIF(EPOPT = 2) ["mfp to bremsstrahlung"
+         IF(IPLOTE>0) [
+           OUTFILE ='e_mfpp_'//material;
+           SERIES='mfp to brem interaction';
+           SUBTITLE='Electrons:  MFP to brem interactions';
+
+           "---add the .xvgr extension to the filename---"
+           FILELENGTH = 0;
+           LOOP [ FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+           CALL XVGRPLOT(PLOTEEN,PLOTEMP,DY,IPLOTE,0,SERIES,
+               XAXIS,YAXISPmfp,TITLE,SUBTITLE,7,0,HISTXMIN,0);
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+         ]"end iplote>0"
+       ]"end epopt=2"
+
+       ELSEIF(EPOPT = 3) ["mfp to secondary electrons"
+         IF(IPLOTE>0) [
+           OUTFILE ='e_mfps_'//material;
+           SERIES='mfp to delta interaction';
+           SUBTITLE='Electrons:  MFP to secondary electron interactions';
+
+           "---add the .xvgr extension to the filename---"
+           FILELENGTH = 0;
+           LOOP [ FILELENGTH = FILELENGTH + 1;
+           ] UNTIL (OUTFILE(FILELENGTH:FILELENGTH) = ' ');
+           OUTFILE(FILELENGTH:FILELENGTH+5)='.xvgr';
+
+           OPEN(UNIT=7,FILE=OUTFILE,STATUS='UNKNOWN');
+           CALL XVGRPLOT(PLOTEEN,PLOTEMS,DY,IPLOTE,0,SERIES,
+               XAXIS,YAXISPmfp,TITLE,SUBTITLE,7,0,HISTXMIN,2);
+           "2 makes it a log-lin plot since all variation near 0"
+           CLOSE(7);
+           $Call_xvgr OUTFILE;
+         ]"end iplote>0"
+       ]"end epopt=3"
+
+   ]"end pltopt=1, plotting for electrons"
+
+   IF(PLTOPT ~= 2) [ GO TO :PLOTAGAIN:; ]
+
+ ]"end create plot file"
+
+
+"---FORMAT statements---"                               "toc:
+
+call egs_finish;
+
+STOP;
+:LABL11:FORMAT(///' WHAT FRACTION SHOULD TMXS BE(<=0.0 => exit): ');
+:LABL16:FORMAT(/' FIXTMX HAS ALTERED THE STEP ','SIZES USING ESTEPE=',F8.3);
+:LABL19:FORMAT('   ');
+
+END;
+
+SUBROUTINE AUSGAB(IARG);RETURN;END;
+SUBROUTINE HOWFAR;RETURN;END;  "DUMMIES TO FOOL LINKER";
+
