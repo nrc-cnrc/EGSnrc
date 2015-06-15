@@ -1,0 +1,59 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc short main program                                          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2004                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The original long main program in BEAM was refactored so that one can more "
+"  easily create a shared library from BEAM that can be loaded as a source    "
+"  from another user code. This file must be concatenated just before         "
+"  the beamnrc.mortran file.                                                  "
+"                                                                             "
+"#############################################################################"
+
+
+program beam_main;
+
+implicit none;
+
+$INTEGER ircode;
+
+call egs_init;
+call beam_init(ircode);
+  " beam_init returns trhe following error codes: "
+  " ircode < 0 => fatal error (e.g. wrong input format, etc.)"
+  " ircode > 0 => skip shower loop (becuase e.g. the user just wants "
+  "                                 to combine results or do stat. anal."
+  " ircode = 0 => normal execution "
+
+  write(6,*) '*********** Returned from beam_init: ircode = ',ircode;
+IF( ircode < 0 ) [ $CALL_EXIT(1); ]
+IF( ircode = 0 ) call beam_shower_loop;
+IF( ircode = 2 ) [ call beam_finish(1); ]
+ELSE             [ call beam_finish(0); ]
+$CALL_EXIT(0);
+end;
+

@@ -1,0 +1,309 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc user macros                                                 "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Daryoush Sheikh-Bagheri                                   "
+"                   Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin.                         "
+"                                                                             "
+"  Joanne Treurniet of NRC made significant contributions to the code system, "
+"  in particular the GUIs and EGS_Windows. Mark Holmes, Brian Geiser and Paul "
+"  Reckwerdt of Wisconsin played important roles in the overall OMEGA project "
+"  within which the BEAM code system was developed.                           "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A set of MORTRAN replacement macros for BEAMnrc that are available for     "
+"  modification.                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%C80
+!INDENT F4;
+!INDENT M4;
+;
+REPLACE {$USER_MACROS_VERSION}
+WITH {',(USER_MACROS Rev 1.5)'}
+" **********************
+" Array size definition:
+" **********************
+REPLACE {$MAX_CMs} WITH {24}       "maximum number of CMs allowed"
+REPLACE {$MAX_CMsP1} WITH {{COMPUTE $MAX_CMs+1}}  "MAX_CMs+1"
+REPLACE {$NCASEMIN} WITH {100}     "min no. of cases in 1 run
+REPLACE {$NBATCH} WITH {10}        "no. of batches run is divided up into
+REPLACE {$COVMIN} WITH {10}        "min. no. of particles crossing a scoring"
+                                   "zone for which covariance will be"
+                                   "included in uncertainty estimate (for"
+                                   "average energy/angle only)"
+REPLACE {$MXMED} WITH {12}         "max # of media
+REPLACE {$MXREG} WITH {3000}        "maximum number of regions (absolute)
+REPLACE {$MXSTACK} WITH {10000}    "maximum stack (much less if no brem split)
+REPLACE {$MAXBRSPLIT} WITH {2000}  "maximum number of bremsstrahlung splits
+                                   "note that $MXSTACK must be adjusted too
+REPLACE {$MAX_DOSE_ZONE} WITH {1500} "maximum number of dose-scoring zones
+REPLACE {$MAXIT} WITH {12}         "maximum number of dose components to score
+REPLACE {$MAX_SC_PLANES} WITH {3}  "maximum number of fluence scoring planes
+REPLACE {$MAX_SC_ZONES} WITH {5}   "no. of radial scoring zones on each fluence
+"                                   scoring plane, minimum 2
+REPLACE {$MAX_SC_PARAMETERS} WITH {8} "number of parameters scored
+ "Index 1 through 4 in scoring array - 1st crossing of scoring plane
+ "Index 4 through 8 - particle or ancestors crossed scoring plane at least once
+ "Index 1 & 5-number, 2 & 6-fluence, 3 & 7-energy, 4 & 8-angle wrt z-axis"
+REPLACE {$MAXPTS_SRC9} WITH {10}   "no of discrete points for source 9"
+REPLACE {$MXRDIST} WITH {1000}"no of POINTS IN RADIAL DISTRIBUTION FIT--src 15"
+
+"$MXSTACK=2000 and $MAXBRSPLIT=250 are settings which allow selective
+"bremsstrahlung spltting
+
+;
+" *****************************
+" Parameter replacement macros:
+" *****************************
+REPLACE {$BDY_TOL} WITH {1.E-5}    "boundary tolerance for HOWFAR_$CMNAME
+                                   "to account for round-off error
+REPLACE {$MIN_GAP} WITH {0.01}     "minimum air gap allowed between CM's
+REPLACE {$ONE-EPS} WITH {0.9999}   "used to keep the source inside target
+;
+;
+"                               LATCH MACROS ""toc:
+"                               ***********
+"
+REPLACE {$LATCH_NUMBER_OF_BITS} WITH {5}
+"$LATCH_NUMBER_OF_BITS is the number of bits used to record the region number,
+"when a secondary is created, using LATCH. If $LATCH_NUMBER_OF_BITS is set to
+"5, for example, bits 1 - 23 will be used for region bit set, bit 0 is used
+"to record whether the particle is a descendant of a brem photon while bits
+"24 - 28 (5 bits) will be used to record the region number. Bits 29 -31 are
+"reserved for rw-ph-sp. However, during a run bit 30 will be used for
+"contamination calculations.
+"
+" ***************************************
+" macros related to bit setting for LATCH
+" ***************************************
+"
+"   note BTEST etc are standard F77 extensions because of US military
+"   contract requirements
+
+"Macro to set bit {P2} in {P1}  to 1
+REPLACE {$IBSET(#,#);} WITH {IBSET({P1},{P2});}
+
+"Macro to set test bit {P2} in {P1}
+"      Note this may require a LOGICAL declaration wherever used"
+REPLACE {$BTEST(#,#)} WITH {BTEST({P1}, {P2}) }
+
+"Macro to set bit {P2} in {P1}  to 0   "
+REPLACE {$IBCLR(#,#);} WITH {IBCLR({P1},{P2});}
+"note that above macros are defined in nrcc4mac.mortran, but may not
+"     be in earlier versions and so are included here.
+;
+"******************************
+"V>BEAM CHARACTERIZATION MODELS
+"******************************
+"V>The following are the defaults for beam characterization models;
+
+REPLACE {;COMIN/BMODEL/;} WITH {;}
+;
+REPLACE {$BEAMMODEL_SOURCE_INPUT} WITH {
+    OUTPUT;(///' SORRY, BEAM CHARACTERIZATION MODELS NOT IMPLEMENTED'//
+               ' PLEASE START AGAIN WITH OTHER SOURCES'///);
+    STOP; }
+;
+REPLACE {$LOCAL-VARIABLES-SOURCE31} WITH {;}
+REPLACE {$BEAMMODEL_SOURCE_OUTPUT} WITH {;}
+REPLACE {$BEAMMODEL_INITIAL_ENERGY} WITH {;}
+REPLACE {$BEAMMODEL_SOURCE_SAMPLING} WITH {
+  OUTPUT; (///' BEAM CHARACTERIZATION MODELS NOT IMPLEMENTED'///);}
+REPLACE {$BEAMMODEL_INPUT_OPTION} WITH {
+ ;IF(IO_OPT > 1 & IO_OPT<4)[
+    OUTPUT;(///' BEAM CHARACTERIZATION MODELS NOT IMPLEMENTED'//
+               ' PLEASE USE OPTION 0 OR 1 FOR IO_OPT INSTEAD'///);
+    STOP;];
+}
+REPLACE {$BEAMMODEL_READ_FILE} WITH {;}
+REPLACE {$BEAMMODEL_OSUMRY} WITH {;}
+REPLACE {$BEAMMODEL_DATA_ANALYSIS} WITH {;}
+REPLACE {$BEAMMODEL_DATA_OUTPUT} WITH {;}
+REPLACE {$BEAMMODEL_SRCOUT} WITH {;}
+REPLACE {$BEAMMODEL_PASSING_VARIABLES} WITH {;}
+;
+
+;
+
+"****************************************
+"   Phase-space output macros
+"****************************************
+"
+"   note:Use one of these macros if you
+"        want your phase space file
+"        stored in different location
+"        (change requires recompilation)
+"
+" The following is the default which is the standard way of
+" doing it, the phase space file is stored on local user code
+" directory
+REPLACE {$DIRECTORY-FOR-PHSP} WITH {$cstring(egs_home)//$cstring(user_code)};
+"
+" The following is to enable storing file at some other location.
+" for example, at location '/data/data005/somedir'
+"REPLACE {$DIRECTORY-FOR-PHSP} WITH {'/data/data005/somedir'};"
+
+"******************************************************************************
+;
+"                        CUSTOM USER MACROS FOR BEAM
+"                        ***************************
+"
+"  User replacement macros can be changed here or else in a separate file
+"  (to be concatenated with the code by modifying the sources.make file
+"   in your accelerator directory) to perform user-specified functions.
+;
+"user macro executed in AUSGAB.  Executed before anything else in AUSGAB."
+REPLACE {$USER-AUSGAB;} WITH {;}
+
+"macro for inputting/initializing custom variables"
+REPLACE {$USER-INIT;} WITH {;}
+
+"tasks to be performed at the end of the run (eg data analysis, output)"
+REPLACE {$USER-FINISH;} WITH {;}
+
+"extra data to be written to .egsdat file for restarts, recombination"
+"after parallel.  {P1} is the unit number of the file."
+REPLACE {$USER-WRITE-DAT(#);} WITH {;}
+
+"extra data to be from .egsdat file for restarts, recombination"
+"after parallel.  {P1} is the unit number of the file."
+REPLACE {$USER-READ-DAT(#);} WITH {;}
+
+"allow definition of custom user variables to add to USER common blocks"
+REPLACE {;COMIN/USER-CUSTOM-VARIABLES/;} WITH {;}
+
+"replaced with variables if DYNVMLC is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of leaf openings"
+"during simulation"
+REPLACE {;COMIN/USER-DYNVMLC/;} WITH {;}
+
+REPLACE {$SET_DYN_COMP} WITH {;}
+
+"replaced with variables if DYNJAWS is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of jaw settings"
+"during simulation--intended to allow simulation of dynamic wedge"
+REPLACE {;COMIN/USER-DYNJAWS/;} WITH {;}
+
+REPLACE {$SET_DYNJAWS_COMP} WITH {;}
+
+"replaced with variables if SYNCJAWS is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of jaw settings"
+"during simulation"
+REPLACE {;COMIN/USER-SYNCJAWS/;} WITH {;}
+
+REPLACE {$SET_SYNCJAWS_COMP} WITH {;}
+
+"replaced with variables if SYNCMLCE is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of mlce settings"
+"during simulation"
+REPLACE {;COMIN/USER-SYNCMLCE/;} WITH {;}
+
+REPLACE {$SET_SYNCMLCE_COMP} WITH {;}
+
+"replaced with variables if SYNCVMLC is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of leaf settings"
+"during simulation"
+REPLACE {;COMIN/USER-SYNCVMLC/;} WITH {;}
+
+REPLACE {$SET_SYNCVMLC_COMP} WITH {;}
+
+"replaced with variables if SYNCHDMLC is included in the accelerator"
+"allows dynamic and step-and-shoot adjustment of SYNCDHMLC settings"
+"during simulation--intended to allow simulation of dynamic HDMLC"
+REPLACE {;COMIN/USER-SYNCHDMLC/;} WITH {;}
+
+REPLACE {$SET_SYNCHDMLC_COMP} WITH {;}
+
+"macro in subroutine combine_results which will allow user to recombine"
+"their own data after a parallel run"
+REPLACE {$USER-COMBINE-RESULTS;} WITH {;}
+REPLACE {$USER-ADD-DATA(#);} WITH {;}
+REPLACE {$USER-RESET-DATA;} WITH {;}
+
+"macro at the top of subroutine kill_the_photons to allow user to modify"
+"how this is done."
+REPLACE {$USER-KILL-PHOTONS;} WITH {;}
+
+"macro for user to do things just before a call to shower"
+REPLACE {$USER-BEFORE-SHOWER;} WITH {;}
+
+"macro for user to do things just after a call to shower"
+REPLACE {$USER-AFTER-SHOWER;} WITH {;}
+
+;
+"****************************************
+"   Copyright Macro
+"****************************************
+
+REPLACE {Copyright 1995} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+REPLACE {Copyright NRC 1995} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+"above two for compatibility with old version"
+;
+REPLACE {Copyright 1998} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+REPLACE {Copyright NRC 1998} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+REPLACE {Copyright NRC 1999} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+" end of beamnrc_user_macros.mortran"
+;

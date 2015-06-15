@@ -1,0 +1,72 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc macros for component modules                                "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          George Ding, 1992                                         "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Mortran macros for the component modules of BEAM. A header for definitions "
+"  of $CM_LIST and $CM_TYPE which are added right after this by the scrips to "
+"  the .mortjob.mortran file.                                                 "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%Q1
+%C80
+!INDENT F4;
+!INDENT M4;
+;
+" **************************
+" List of component modules:
+" **************************
+"
+"  The list of identifiers of components to be included in the accelerator model
+"  is defined in the $CM_LIST replacement macro.  This must be modified prior
+"  to the MORTRAN compile step in order to generate an executable program with a
+"  different sequence and set of component modules.  The component modules must
+"  be listed in order of increasing Z.
+"
+"  The type of each component module is indicated in the $CM_TYPE macro.
+"
+"  This is the end of beam_cm_macros.hdr but the beam script will insert
+"  a couple of macros here with the required lists.
+"
+" The following is an example for a 2 CM case using CM SLABS and CHAMBER,
+"  identifiers FOILS and ION_CH
+"
+"  REPLACE{$CM_LIST} WITH {CMLIST(
+"         ION_CH,
+"         FOILS
+"     )}
+"  REPLACE{$CM_TYPE} WITH {CMTYPE(
+"         CHAMBER,
+"         SLABS
+"     )}
+"=======end of example, following this is the real thing============"
+"
