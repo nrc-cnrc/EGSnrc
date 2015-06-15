@@ -332,10 +332,8 @@
 "          IPARALLEL   set >1 if you are distributing the job among IPARALLEL
 "                      machines.  This will generate
 "                      a binary .pardose file for each job which will contain
-"                      the doses in all voxels WITHOUT UNCERTAINTIES.  The
-"                      stand-alone code, combinedose, will average the .pardose
-"                      files and calculate the uncertainty and output the
-"                      result in .3ddose format.  IPARALLEL defaults to 0.
+"                      the doses in all voxels WITHOUT UNCERTAINTIES.  IPARALLEL
+"                      defaults to 0.
 "            PARNUM    Only needs to be set if IPARALLEL>1 and you are using
 "                      a single phase space source.  The partition of the phase
 "                      space source that will be used for this one of the
@@ -2076,7 +2074,7 @@ ELSE [IDAT = 0; OUTPUT;(/' Store intermediate files for each batch');]
 
 IF(IPARALLEL>1)[
    OUTPUT;
-(/' Will output binary .pardose files for later analysis with combinedose.'/
+(/' Will output binary .pardose files.'/
  '   With this set, the egslst files do not contain dose listings either.');
 ]
 
