@@ -1,0 +1,94 @@
+
+###############################################################################
+#
+#  EGSnrc tutor7 application sample input file
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for tutor7, for a depth-dose curve calculation of a
+#  10 MeV electron beam incident on a tantalum plate (divided into 30 depth
+#  regions).
+#
+###############################################################################
+
+
+ ##############################
+ :Start MC Transport Parameter:
+
+ Global ECUT=                    0.700
+ Global PCUT=                    0.010
+ Global SMAX=                    1e10
+ Bound Compton scattering=       On   # Can be Off, On in Regions,
+                                      # Off in regions
+ Rayleigh scattering=            On   # Can be Off, On in Regions,
+                                      # Off in regions
+ Atomic relaxations=             On   # Can be Off, On in Regions,
+                                      # Off in regions
+ Photoelectron angular sampling= On   # Can be Off, On in Regions,
+                                      # Off in regions
+ Brems angular sampling=         On   # Can be Off
+ Pair angular sampling=          On   # Can be Off or KM
+ ESTEPE=                         0.25
+ XIMAX=                          0.5
+ Skin depth for BCA=             3
+ Boundary crossing algorithm=    exact    # Can be PRESTA
+ Electron-step algorithm=        default  # Can be PRESTA
+ Spin effects=                   On       # Can be off
+
+ :Stop MC Transport Parameter:
+ #############################
+
+ ##########################
+ :Start Geometrical Inputs:
+
+ Method of input=     groups
+ Z of front face=     0
+ number of slabs=     30
+ slab thickness=      0.01
+
+ media=  TA
+
+ :Stop Geometrical Inputs:
+ #########################
+
+ ##########################
+ :Start Variance Reduction:
+
+ Range Rejection= On
+ Esave=           1
+
+ :Stop Variance Reduction:
+ #########################
+
+ :Start Source Input:
+ --------------------
+
+ Incident Charge=         -1
+ Incident Kinetic Energy= 10
+ Incident Angle=          0
+ Number of Histories=     1000
+
+ :Stop Source Input:
+ -------------------
