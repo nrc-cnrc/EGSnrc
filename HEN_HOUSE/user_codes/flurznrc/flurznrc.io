@@ -30,7 +30,7 @@
 #
 #  This file determines which files are to be connected to which Fortran I/O
 #  unit. Lines starting with # are ignored. The first column is the Fortran
-#  I/O unit number, the second a file extension This .io file is for the NRC
+#  I/O unit number, the second a file extension. This .io file is for the NRC
 #  user code flurznrc.
 #
 ###############################################################################
