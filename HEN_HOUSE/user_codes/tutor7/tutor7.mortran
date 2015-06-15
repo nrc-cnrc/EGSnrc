@@ -1,0 +1,762 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc tutor7 application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2000                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  An EGSnrc user to calculate the reflected, deposited and transmitted       "
+"  energy for electron and photon beams incident on a slab geometry. This     "
+"  code is essentially the same as tutor6 but uses the NRC auxiliary routines "
+"  get_inputs and get_transport_parameter for parameter input. It also has a  "
+"  slightly more sophisticated output and provides the possibility for pulse  "
+"  height distribution scoring.                                               "
+"                                                                             "
+"  Iwan Kawrakow, 2003: Adapted to new EGSnrc MP system by adding call        "
+"  egs_init at the beginning and call egs_finish at the end.                  "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%E
+!INDENT M 4;    "indent each mortran nesting level by 4"
+!INDENT F 2;    "indent each fortran nesting level by 2"
+
+"---------------------------------------------------------------------"
+"STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
+"---------------------------------------------------------------------"
+REPLACE {$MXMED} WITH {5}   "up to 10 media in the problem(default 10)"
+REPLACE {$MXREG} WITH {102} "up to 102 geometric regions (default 2000)"
+REPLACE {$MXSTACK} WITH {50}"less than 50 particles on stack at once"
+
+
+"Define a common to pass information to the geometry routines      "
+REPLACE {;COMIN/GEOM/;} WITH {;
+  common/geom/ zbound($MXREG),nzb;
+  $REAL        zbound;  "array with z-plane co-ordinates"
+  $INTEGER     nzb;     "number of actual co-ordinates being used"
+};
+
+"Replace the $CALL-HOWNEAR macro for a 1D geometry"
+REPLACE {$CALL-HOWNEAR(#);} WITH {
+  ;call hownear({P1},z(np),ir(np));
+}
+
+"Define a common for scoring"
+REPLACE {$MXEBIN} WITH {200}
+REPLACE {;COMIN/SCORE/;} WITH {;
+  common/score/ sc_array($MXREG),sc_array2($MXREG),
+                sc_tmp($MXREG),sc_last($MXREG),
+                sc_pulse_height($MXEBIN,$MXREG), "for pulse height dstn"
+                icase,ipulse,de_pulse;
+                "It is always a good idea to score in double precision!"
+  real*8        sc_array, "for scoring energy deposited in all regions"
+                sc_array2,"for scoring energy squared on a history-by-"
+                          "history basis"
+                sc_pulse_height, "for pulse height dstn"
+                sc_tmp,de_pulse;
+  $INTEGER      sc_last,icase,ipulse;
+};
+
+"Define a common for holding the source information"
+REPLACE {;COMIN/SOURCE/;} WITH {;
+  common/source/ ein,uin,vin,win,xin,yin,zin,wtin,iqin,irin,ncase;
+  $INTEGER       iqin,irin,ncase;
+  $REAL          ein,uin,vin,win,wtin,xin,yin,zin;
+};
+
+"We use COMIN/USER/ to pass information for range rejection"
+REPLACE {;COMIN/USER/;} WITH {;
+  common/user_rr/ esave,irejct;
+  $REAL           esave; "Don't use range rejection for electrons with E>esave"
+  $INTEGER        irejct;"turn range rejection on (1) or off (0)"
+};
+
+"A range rejection macro"
+REPLACE {$USER-RANGE-DISCARD;} WITH {;
+  IF( irejct = 1 & e(np) > esave ) [
+      "As tperp and range already known, check for a simple"
+      "range rejection in the present region               "
+      IF(tperp >= range) [
+          idisc = 50 + 49*iq(np); "1 for electrons, 99 for positrons"
+          go to :USER-ELECTRON-DISCARD: ;
+      ]
+  ]
+};
+
+
+"---------------------------------------------------------------------"
+" Step 1a: begin of executable code and variable declarations         "
+"---------------------------------------------------------------------"
+
+program tutor7;
+
+$IMPLICIT-NONE;         "$IMPLICIT-NONE is by default implicit none"
+                        "It is STRONGLY suggested to use implicit none"
+                        "as this catches many coding errors and potential"
+                        "over-ride of EGSnrc internal variables. "
+                        "But if you don't want to bother with declaring all"
+                        "variables being used, simply ever-ride "
+                        "$IMPLICIT-NONE with {;}"
+
+;COMIN/THRESH,          "for threshold energies"
+       USEFUL,          "to get electron rest energy"
+       GEOM,            "number of regions"
+       SOURCE,          "source parameter input in routine inputs"
+       SCORE            "the results of the shower simulation, to be used"
+                        "in step 8"
+      /;
+
+$INTEGER nbatch,        "$INTEGER and $REAL are defined in egsnrc.macros"
+         nperbatch,     "they can be used (if employed consistently throughout"
+         ibatch,        "the user code) e.g. to switch to double precision"
+         i,j;
+
+real*8   aux,aux2,total,anorm,sum,sum2;
+
+"---------------------------------------------------------------------"
+" Steps 2 (pre-hatch initializations),                                "
+"       4 (initializations for howfar and hownear)                    "
+"       5 (initializations for ausgab)                                "
+"       6 (determination of incident particle parameters)             "
+" are done in subroutine inputs                                       "
+"---------------------------------------------------------------------"
+
+call egs_init;
+call inputs;
+$RNG-INITIALIZATION;
+
+"---------------------------------------------------------------------"
+"deferred STEP 3   HATCH-CALL                                         "
+"---------------------------------------------------------------------"
+
+;OUTPUT;('\f  Start tutor7'//' CALL HATCH to get cross-section data'/);
+CALL HATCH;
+;OUTPUT AE(1)-0.511, AP(1);
+(/' knock-on electrons can be created and any electron followed down to'
+/T40,F8.3,' MeV kinetic energy'/
+'   brem photons can be created and any photon followed down to      ',
+/T40,F8.3,' MeV ');
+"Compton events can create electrons and photons below these cutoffs"
+
+"print a summary of transport parameters, geometry and source in the  "
+"listing file                                                         "
+
+call isumry(1);
+
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+
+"initiate the shower ncase times"
+;OUTPUT;(//' Starting shower simulation ...'/);
+nbatch = 10; nperbatch = ncase/nbatch;
+IF(nperbatch = 0) nperbatch = 1;
+      "Note that nbatch and nperbatch are not used for statistical analysis"
+      "They are merely for printing information about the progress of the"
+      "simulation"
+
+DO icase=1,ncase [ "Note the use of icase as the shower counter"
+                   "icase is in common/score/ and is used for"
+                   "shower-by-shower scoring"
+
+  call shower(iqin,ein,xin,yin,zin,uin,vin,win,irin,wtin);
+  ibatch = icase/nperbatch;
+  IF( ibatch*nperbatch = icase ) [
+    write(6,'(a,i2,a,i2)') '+ Finished batch ',ibatch,' out of ',nbatch;
+  ]
+]
+
+;OUTPUT;(//' Finished shower simulation '//);
+
+"-----------------------------------------------------------------"
+"STEP 8   OUTPUT-OF-RESULTS                                       "
+"-----------------------------------------------------------------"
+
+/sum,sum2,total/ = 0;
+IF( iqin = 0 ) [ anorm = 1/ein; ] ELSE [ anorm = 1/(ein-rm); ]
+DO i=1,nzb+1 [
+    "first put non-scored energy portions into sc_array and sc_array2"
+    aux = sc_tmp(i); aux2 = aux*aux;
+    sc_array(i) = sc_array(i) + aux;
+    sc_array2(i) = sc_array2(i) + aux2;
+    aux = sc_array(i)/ncase;
+    aux2 = sc_array2(i)/ncase;
+    aux2 = (aux2 - aux*aux)/(ncase-1);
+    IF( aux2 > 0 ) aux2 = sqrt(aux2);
+    aux = aux*anorm; aux2 = aux2*anorm;
+    sc_array(i) = aux;
+    sc_array2(i) = aux2;
+    IF( i > 1 & i <= nzb ) [
+      sum = sum + aux; sum2 = sum2 + aux2*aux2;
+    ]
+    total = total + aux;
+]
+sum2 = sqrt(sum2);
+write(6,'(a,f10.6,a,f10.6)')
+   '   Reflected energy fraction: ',sc_array(1),' +/- ',sc_array2(1);
+write(6,'(a,f10.6,a,f10.6)')
+   '   Deposited energy fraction: ',sum,' +/- ',sum2;
+write(6,'(a,f10.6,a,f10.6)')
+   ' Transmitted energy fraction: ',sc_array(nzb+1),' +/- ',sc_array2(nzb+1);
+write(6,'(a)') '-------------------------------------------------------------';
+write(6,'(a,f10.6///)') '                       total: ',total;
+
+"print detailed result in the list file"
+write(1,'(a,f10.6,a,f10.6)')
+   '   Reflected energy fraction: ',sc_array(1),' +/- ',sc_array2(1);
+write(1,'(a,f10.6,a,f10.6//)')
+   ' Transmitted energy fraction: ',sc_array(nzb+1),' +/- ',sc_array2(nzb+1);
+write(1,'(a,4x,a,4x,a)') '   depth ',' deposited energy fraction ',' error ';
+write(1,'(51a1)') ('-',i=1,51);
+DO i=2,nzb [
+  write(1,'(f9.4,8x,f11.6,12x,f11.6)')
+     0.5*(zbound(i-1)+zbound(i)),sc_array(i),sc_array2(i);
+]
+
+IF( ipulse = 1 ) [ "Output pulse height distributions "
+    write(1,'(//a)')
+      '               Pulse Height Distributions                ';
+    write(1,'(a//)')
+      '=========================================================';
+
+    DO i=1,nzb+1 [
+        write(1,'(a,i3)') ' ********* Region ',i;
+        "Score also the remaining pulses"
+        aux = sc_tmp(i);
+        j = 1 + aux/de_pulse;
+        IF( j > 0 & j <= $MXEBIN ) [
+            sc_pulse_height(j,i) = sc_pulse_height(j,i) + 1;
+        ]
+        DO j=2,$MXEBIN [
+            aux = sc_pulse_height(j,i)/ncase;
+            aux2 = sqrt(aux*(1-aux)/(ncase-1));
+            aux = aux/de_pulse; aux2 = aux2/de_pulse;
+            write(1,'(f9.4,2g15.6)') (float(j)-0.5)*de_pulse,aux,aux2;
+        ]
+        write(1,*);
+    ]
+]
+
+call egs_finish;
+end;
+
+"**********************************************************************"
+"                                                                      "
+  subroutine inputs;
+"                                                                      "
+"**********************************************************************"
+
+"The following are two simple and useful macros for calling the"
+"get_input routine                                             "
+
+REPLACE {$GET_INPUT(#);} WITH  "Used to get only one input"
+{
+"{P1}=Array index of the value_sought"
+NMIN = {P1}; NMAX = {P1}; CALL GET_INPUT;
+}
+;
+REPLACE {$GET_INPUTS(#,#);} WITH  "Used to get many inputs"
+{
+NMIN = {P1}; NMAX = {P2}; CALL GET_INPUT;
+}
+;
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+"The following are EGSnrc internal (privat) common blocks"
+"They are included in order to get access to various switches, "
+"material array, cut-off energies, etc."
+
+;COMIN/GetInput,     "for interaction with the get_input routine"
+       MEDIA,        "to get access to nmed and media"
+       MISC,         "to get access to the array med"
+       UPHIOT,       "to get PI (for the incident angle conversion)"
+       USEFUL,       "to get electron rest energy RM"
+       "                                             "
+       " The following are user-defined common blocks"
+       "                                             "
+       GEOM,
+       SCORE,
+       SOURCE,
+       USER
+      /;
+
+character*60 medium_name;
+
+$INTEGER i,j,ispin;
+$INTEGER ival;
+$INTEGER iterse,num_iterse;
+$INTEGER num_zfront;
+$INTEGER num_nslab,num_deltaz;
+$INTEGER num_set,num_start,num_stop;
+$INTEGER num_charge,num_energy,num_angle,num_ncase;
+integer*4 lnblnk1;
+
+call get_transport_parameter(6); "read transport parameter settings and"
+                                 "print a summary on unit 6"
+ival = 0;
+
+"Note that the media input is done in the geometry section of the input"
+"(a complete geometry definition involves the knowledge of the medium  "
+" in each geometrical region).                                         "
+"This means that step 2 (pre-hatch initializations) and step 4         "
+"(initializations for howfar and hownear) are combined.                "
+"Step 3 (hatch call) is deferred to be executed in the main routine    "
+
+" Geometry information "
+" ==================== "
+
+ival                   = ival + 1;
+num_iterse             = ival;
+values_sought(ival)    = 'METHOD OF INPUT';  "The code word"
+nvalue(ival)           = 1;                  "we are looking for 1 input"
+type(ival)             = 3;                  "an `allowed' input"
+allowed_inputs(ival,0) = 'GROUPS';           "first allowed input"
+allowed_inputs(ival,1) = 'INDIVIDUAL';       "second allowed input"
+delimeter              = 'GEOMETRICAL INPUTS'; "the delimeter"
+$GET_INPUT(num_iterse);
+IF( error_flags(num_iterse) > 0 ) stop;
+iterse = value(num_iterse,1);
+
+IF( iterse = 0 ) [  "User wants to input groups of planes "
+
+    ival                   = ival + 1;
+    num_zfront             = ival;
+    values_sought(ival)    = 'Z OF FRONT FACE';  "The code word"
+    type(ival)             = 0;                  "integer or real input"
+    nvalue(ival)           = 1;                  "1 input"
+    value_min(ival)        = -9999999;           "min. value allowed"
+    value_max(ival)        =  9999999;           "max. value allowed"
+    default(ival)          = 0;                  "the default"
+
+    ival                   = ival + 1;
+    num_nslab              = ival;
+    values_sought(ival)    = 'NUMBER OF SLABS';  "The code word"
+    type(ival)             = 0;                  "integer or real input"
+    nvalue(ival)           = 0;                  "unknown number of inputs"
+    value_min(ival)        = 1;                  "min. value allowed"
+    value_max(ival)        = $MXREG;             "max. value allowed"
+    default(ival)          = 1;                  "the default"
+
+    ival                   = ival + 1;
+    num_deltaz             = ival;
+    values_sought(ival)    = 'SLAB THICKNESS';
+    type(ival)             = 0;
+    nvalue(ival)           = 0;
+    value_min(ival)        = 1e-8;
+    value_max(ival)        = 1e8;
+    default(ival)          = 1;
+
+    $GET_INPUTS(num_zfront,num_deltaz);
+    IF( error_flag > 0 ) stop;
+    IF( nvalue(num_nslab) ~= nvalue(num_deltaz) ) stop;
+
+    "Input seems to be OK"
+    zbound(1) = value(num_zfront,1);
+    nzb = 1;
+    DO i=1,nvalue(num_nslab) [
+        DO j=1,int(value(num_nslab,i)) [
+            nzb = nzb + 1;
+            IF( nzb > $MXREG ) [
+                write(6,*) ' You are asking for too many planes! ';
+                write(6,*) ' maximum allowed is ',$MXREG;
+                stop;
+            ]
+            zbound(nzb) = zbound(nzb-1) + value(num_deltaz,i);
+        ]
+    ]
+]
+ELSE [  " User wants to input individual planes "
+
+    ival                   = ival + 1;
+    values_sought(ival)    = 'DEPTH BOUNDARIES';
+    type(ival)             = 0;
+    nvalue(ival)           = 0;
+    value_min(ival)        = -1e10;
+    value_max(ival)        = 1e10;
+    default(ival)          = 0;
+    $GET_INPUT(ival);
+    IF( error_flag > 0 ) stop;
+    IF( nvalue(ival) < 2 ) stop;
+    nzb = nvalue(ival);
+    DO i=1,nzb [ zbound(i) = value(ival,i); ]
+
+]
+
+" Media input "
+"============="
+
+ival                   = ival + 1;
+values_sought(ival)    = 'MEDIA';
+type(ival)             = 2;  "i.e.  character input"
+nvalue(ival)           = 0;
+$GET_INPUT(IVAL);
+IF( error_flag > 0 ) stop;
+nmed = nvalue(ival);
+DO i=1,nmed [
+  DO j=1,24 [ media(j,i) = ' '; ]
+  read(char_value(ival,i),'(24a1)')
+     (media(j,i),j=1,lnblnk1(char_value(ival,i)));
+]
+
+"Set medium 1 everywhere"
+DO i=1,nzb [ med(i) = 1; ];
+" and the vacuum in region 1 and nzb+1 "
+/med(1),med(nzb+1)/ = 0;
+
+" Look now for changes from the user "
+ival                   = ival + 1;
+num_set                = ival;
+values_sought(ival)    = 'SET MEDIUM';
+type(ival)             = 0;
+nvalue(ival)           = 0;
+value_min(ival)        = 0;
+value_max(ival)        = nmed;
+default(ival)          = 1;
+
+ival                   = ival + 1;
+num_start              = ival;
+values_sought(ival)    = 'START REGION';
+type(ival)             = 0;
+nvalue(ival)           = 0;
+value_min(ival)        = 1;
+value_max(ival)        = nzb+1;
+default(ival)          = 1;
+
+ival                   = ival + 1;
+num_stop               = ival;
+values_sought(ival)    = 'STOP REGION';
+type(ival)             = 0;
+nvalue(ival)           = 0;
+value_min(ival)        = 1;
+value_max(ival)        = nzb+1;
+default(ival)          = nzb;
+
+$GET_INPUTS(num_set,num_stop);
+IF( error_flag = 0 & nvalue(num_set) = nvalue(num_start)
+                   & nvalue(num_set) = nvalue(num_stop) ) [
+    DO i=1,nvalue(num_set) [
+        DO j=int(value(num_start,i)),int(value(num_stop,i)) [
+            med(j) = value(num_set,i);
+        ]
+    ]
+]
+
+dunit = 1;  "i.e. we work in cm"
+
+"---------------------------------------------------------------------"
+"STEP 5  INITIALIZATION-FOR-AUSGAB                                    "
+"---------------------------------------------------------------------"
+
+"Set all scoring arrays to zero. This could be avoided if"
+"the compiler being used has a `initialize to zero' option"
+"It is a good coding habit to not rely on variables being"
+"automatically zeroed"
+
+DO i=1,$MXREG [
+    /sc_array(i),sc_array2(i),sc_tmp(i)/ = 0;
+    sc_last(i) = 1;
+    DO j=1,$MXEBIN [ sc_pulse_height(j,i) = 0; ]
+]
+
+"Check whether user asks for pulse height dstn. scoring"
+ival                   = ival + 1;
+values_sought(ival)    = 'PULSE HEIGHT DISTRIBUTION';
+type(ival)             = 3;
+nvalue(ival)           = 1;
+allowed_inputs(ival,0) = 'NO';
+allowed_inputs(ival,1) = 'YES';
+delimeter = 'SCORING OPTIONS';
+$GET_INPUT(IVAL);
+IF( error_flag = 0 ) [ ipulse = value(ival,1); ]
+ELSE                 [ ipulse = 0; ]
+
+"Define range rejection parameter. Although not directly related "
+"to ausgab, range rejection is an `user' variance reduction technique "
+"and so, this is the most appropriate place to initialize it"
+
+ival                   = ival + 1;
+values_sought(ival)    = 'RANGE REJECTION';
+type(ival)             = 3;
+nvalue(ival)           = 1;
+allowed_inputs(ival,0) = 'OFF';
+allowed_inputs(ival,1) = 'ON';
+delimeter = 'VARIANCE REDUCTION';
+$GET_INPUT(IVAL);
+irejct = value(ival,1);
+IF( irejct = 1 ) [
+    ival                   = ival + 1;
+    values_sought(ival)    = 'ESAVE';
+    type(ival)             = 0;
+    nvalue(ival)           = 1;
+    value_min(ival)        = 0;
+    value_max(ival)        = 1e10;
+    default(ival)          = 0;
+    $GET_INPUT(IVAL);
+    esave = value(ival,1);
+]
+
+"---------------------------------------------------------------------"
+"STEP 6   DETERMINATION-OF-INICIDENT-PARTICLE-PARAMETERS              "
+"---------------------------------------------------------------------"
+
+" Source inputs "
+" ============= "
+
+ival                   = ival + 1;
+num_charge             = ival;
+values_sought(ival)    = 'INCIDENT CHARGE';
+type(ival)             = 0;
+nvalue(ival)           = 1;
+value_min(ival)        = -1;
+value_max(ival)        = 1;
+default(ival)          = -1;
+
+ival                   = ival + 1;
+num_energy             = ival;
+values_sought(ival)    = 'INCIDENT KINETIC ENERGY';
+type(ival)             = 0;
+nvalue(ival)           = 1;
+value_min(ival)        = 0;
+value_max(ival)        = 1e10;
+default(ival)          = 1;
+
+ival                   = ival + 1;
+num_angle              = ival;
+values_sought(ival)    = 'INCIDENT ANGLE';
+type(ival)             = 0;
+nvalue(ival)           = 1;
+value_min(ival)        = 0;
+value_max(ival)        = 90;
+default(ival)          = 0;
+
+ival                   = ival + 1;
+num_ncase              = ival;
+values_sought(ival)    = 'NUMBER OF HISTORIES';
+type(ival)             = 0;
+nvalue(ival)           = 1;
+value_min(ival)        = 2;
+value_max(ival)        = 2**30;
+default(ival)          = 10000;
+
+delimeter = 'SOURCE INPUT';
+$GET_INPUTS(num_charge,num_ncase);
+IF( error_flag > 1 ) stop;
+iqin = value(num_charge,1);
+ein  = value(num_energy,1);
+IF( iqin ~= 0 ) ein = ein + rm;
+ncase = value(num_ncase,1);
+win = value(num_angle,1);
+win = win/180*PI; win = cos(win);
+uin = sqrt(max(0.0,(1-win)*(1+win))); vin = 0;
+irin = 2;    "starts in region 2, could be 1"
+wtin = 1;    "statistical weight is 1"
+/xin,yin/=0; zin = zbound(1);
+
+IF( ipulse = 1 ) [
+    de_pulse = 1.05*value(num_energy,1)/$MXEBIN;
+]
+
+return;
+end;
+
+subroutine howfar;
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+COMIN/STACK, "contains positions,directions,region numbers and stack pointer"
+      EPCONT,"irnew, ustep and idisc"
+      GEOM   "user geometry information"
+     /;
+
+$REAL tval,wl;
+$INTEGER irl;
+
+irl = ir(np);     "region number and direction into local variables"
+wl = w(np);
+
+IF( irl > nzb ) [  "past the geometry ?"
+    IF( irl > nzb + 1 ) [ write(6,*) ' irl > nzb+1 !? ',irl; ]
+    IF( wl > 0 ) [  " yes, terminate the history"
+        idisc = 1;
+    ]
+    ELSE [ "No. This should not happen for exact boundary crossing but "
+           "possible to happen with boundary crossing a la PRESTA"
+           "(particle reflected at the boundary)"
+        ustep = 0; irnew = nzb;
+    ]
+    return;
+]
+IF( irl > 1 ) [ "in the geometry, do transport checks"
+    IF( wl > 0 ) [ "going forward"
+        tval = (zbound(irl) - z(np))/wl;
+        IF(tval > ustep) [ "can take the requested step"
+            irnew = irl;
+        ]
+        ELSE [ "requested step longer than distance to boundary => adjust"
+            ustep = tval;
+            irnew = irl + 1;
+        ]
+    ]
+    ELSE IF( wl < 0 ) [ "going backward"
+        tval = (zbound(irl-1)-z(np))/wl;
+        IF(tval > ustep) [ "can take the requested step"
+            irnew = irl;
+        ]
+        ELSE [ "requested step longer than distance to boundary => adjust"
+            ustep = tval;
+            irnew = irl - 1;
+        ]
+    ]
+    ELSE [ "going parallel to the boundary"
+        irnew = irl;
+    ]
+    return;
+]
+
+"at this point it is clear that the particle is in front of the geometry"
+IF(w(np) < 0) [ "This is a backscattered particle, discard it"
+    idisc = 1;
+]
+ELSE [ "this is either a particle reflected on the boundary (possible "
+       "for PRESTA) or a particle with an incorrectly initialized entry region"
+    ustep = 0;
+    irnew = 2;
+]
+
+return;
+end;
+
+subroutine hownear(tperp,z,irl);
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+$REAL    tperp,z;
+$INTEGER irl;
+
+COMIN/GEOM/; "to get geometry information"
+
+IF( irl > 1 & irl <= nzb ) [ "particle is in the geometry"
+    tperp = min(z - zbound(irl-1), zbound(irl) - z);
+]
+ELSE [ tperp = 0; ]
+
+return;
+end;
+
+subroutine ausgab(iarg);
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+$INTEGER iarg,irl,jp;
+real*8   aux;
+
+;COMIN/SCORE,   "to get the scoring arrays and iscore"
+       EPCONT,  "to get EDEP"
+       STACK    "to get the region number"
+      /;
+
+IF( iarg < 5 ) [ "energy is being deposited"
+    irl = ir(np);
+    IF( icase = sc_last(irl) ) [ "still the same shower that deposited energy"
+                                 "last time in this region"
+        sc_tmp(irl) = sc_tmp(irl) + edep;
+        " write(6,*) ' scoring (1) ',iarg,edep,e(np),iq(np); "
+    ]
+    ELSE [ "we have the next shower depositing energy into region irl"
+           " => put sc_tmp into  the scoring arrays and set sc_last"
+        aux = sc_tmp(irl);
+        sc_array(irl) = sc_array(irl) + aux;
+        sc_array2(irl) = sc_array2(irl) + aux*aux;
+        sc_tmp(irl) = edep; sc_last(irl) = icase;
+        IF( ipulse = 1 ) [
+          jp = 1 + aux/de_pulse;
+          IF( jp > 0 & jp <= $MXEBIN ) [
+            sc_pulse_height(jp,irl) = sc_pulse_height(jp,irl) + 1;
+          ]
+        ]
+    ]
+]
+
+return;
+end;
+
+ subroutine isumry(ounit);
+"======================================================================"
+
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+$INTEGER ounit,i,j,m;
+
+;COMIN/GEOM,MEDIA,MISC,SOURCE,USEFUL/;
+
+write(ounit,'(a)')
+ '                       tutor7(nrc)                             ';
+write(ounit,'(a//)')
+ '================================================================';
+
+call show_transport_parameter(ounit);
+
+write(ounit,'(a)')
+ '                        Geometry                                ';
+write(ounit,'(a//)')
+ '================================================================';
+
+write(ounit,'(25x,a/)') 'Vacuum';
+DO i=2,nzb [
+  m = med(i);
+  write(ounit,'(f9.4,51a1//,25x,24a1/)') zbound(i-1),
+    ('-',j=1,51),(media(j,m),j=1,24);
+]
+write(ounit,'(f9.4,51a1//,25x,a/)') zbound(nzb),('-',j=1,51),'Vacuum';
+
+write(ounit,'(/a)')
+ '                        Source                                  ';
+write(ounit,'(a//)')
+ '================================================================';
+
+write(ounit,'(a,$)')
+  ' Incident charge              : ';
+IF( iqin = -1 )     [ write(ounit,'(a)') 'Electron'; ]
+ELSE IF( iqin = 0 ) [ write(ounit,'(a)') 'Photon'; ]
+ELSE                [ write(ounit,'(a)') 'Positron'; ]
+write(ounit,'(a,$)')
+  ' Incident kinetic energy (MeV): ';
+IF( iqin = 0 ) [ write(ounit,'(f7.4)') ein; ]
+ELSE           [ write(ounit,'(f7.4)') ein-rm; ]
+write(ounit,'(a,f7.4)')
+  ' Incident direction cosine    : ',win;
+write(ounit,'(a,i8//)')
+  ' Number of showers            : ',ncase;
+
+return;
+end;

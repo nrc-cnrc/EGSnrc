@@ -1,0 +1,26 @@
+TA
+0.0                   ,ECUT
+0.0                   ,PCUT
+0                     ,IRAYLR
+0                     ,IEDGFL
+0                     ,IPHTER
+0                     ,IBCMP
+1                     ,IPRDST
+1                     ,IBRDST
+0                     ,ibr_nist
+1                     ,ISPIN
+0                     ,ESTEPE
+0                     ,XIMAX
+0                     ,transport_algorithm
+0                     ,bca_algorithm
+0                     ,skindepth_for_bca
+1,1                   ,luxury_level,iseed
+1.0                   ,ZBOUND
+1                     ,IREJCT
+1.0                   ,ESAVE
+1                     ,nbr_split
+0                     ,i_play_RR Russian Roulette
+-1                    ,IQIN
+5.0                   ,EIN
+0.                    ,ANGLE
+50000                 ,NCASE

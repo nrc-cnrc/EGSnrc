@@ -1,0 +1,57 @@
+
+"#############################################################################"
+"                                                                             "
+"  EGSnrc egs++ tutor7pp application mortran macros                           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow , 2009                                      "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+/*
+   Range rejection/Russian roulette
+ */
+REPLACE {$RANGE-DISCARD;} WITH {;
+    IF( i_do_rr > 1 & latch(np) = 0 & tperp > range ) [
+        $RANDOMSET rnno24;
+        IF( rnno24*i_do_rr < 1 ) [
+            wt(np) = wt(np)*i_do_rr; latch(np) = 1;
+        ]
+        ELSE [ np = np-1; return; ]
+    ]
+};
+
+"============================================================================="
+"  scale elastic scattering strength by a given factor                        "
+"============================================================================="
+subroutine egs_scale_bc(imed,factor);
+implicit none;
+$INTEGER imed;
+$REAL    factor;
+$declare_max_medium;
+;COMIN/ELECIN,MEDIA/;
+IF( imed > 0 & imed <= nmed ) [ blcc(imed) = blcc(imed)*factor; ]
+return; end;
+
+;
+

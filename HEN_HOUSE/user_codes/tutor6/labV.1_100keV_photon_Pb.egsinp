@@ -1,0 +1,26 @@
+PB
+0.521                 ,ECUT
+0.01                  ,PCUT
+0                     ,IRAYLR
+1                     ,IEDGFL  1=> relaxation on, 0=> relaxation off
+0                     ,IPHTER
+1                     ,IBCMP   1=> bound compton 0 => not
+1                     ,IPRDST
+1                     ,IBRDST
+1                     ,ibr_nist
+1                     ,ISPIN
+0                     ,ESTEPE
+0                     ,XIMAX
+0                     ,transport_algorithm
+0                     ,bca_algorithm
+3                     ,skindepth_for_bca
+1,1                   ,luxury_level,iseed
+0.05                  ,ZBOUND         thickness of Pb plate
+1                     ,IREJCT    1=>do range rejection 0=> don't
+5.0                   ,ESAVE
+1                     ,nbr_split
+0                     ,i_play_RR Russian Roulette
+0                     ,IQIN
+0.100                 ,EIN
+0.                    ,ANGLE
+1000                  ,NCASE

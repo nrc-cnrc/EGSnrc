@@ -1,0 +1,656 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc tutor6 application                                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Roger, 2000                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  An EGSnrc user code to calculate the reflected, deposited and transmitted  "
+"  energy for electron and photon beams incident on a slab geometry. The code "
+"  allows the user to change transport parameter via interactive prompts. All "
+"  standard swiches are made accessible to the user.                          "
+"                                                                             "
+"  Iwan Kawrakow, 2003: Adapted to new EGSnrc MP system by adding call        "
+"  egs_init at the beginning and call egs_finish at the end.                  "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%E
+!INDENT M 4;    "indent each mortran nesting level by 4"
+!INDENT F 2;    "indent each fortran nesting level by 2"
+
+"---------------------------------------------------------------------"
+"STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
+"---------------------------------------------------------------------"
+REPLACE {$MXMED} WITH {5}   "up to 10 media in the problem(default 10)"
+REPLACE {$MXREG} WITH {102} "up to 102 geometric regions (default 2000)"
+REPLACE {$MXSTACK} WITH {50}"less than 50 particles on stack at once"
+
+"Define a common to pass information to the geometry routines      "
+REPLACE {;COMIN/GEOM/;} WITH {;
+  common/geom/ zbound($MXREG),nzb;
+  $REAL        zbound;  "array with z-plane co-ordinates"
+  $INTEGER     nzb;     "number of actual co-ordinates being used"
+};
+
+"Replace the $CALL-HOWNEAR macro for a 1D geometry"
+REPLACE {$CALL-HOWNEAR(#);} WITH {
+  ;call hownear({P1},z(np),ir(np));
+}
+
+"Define a common for scoring"
+REPLACE {;COMIN/SCORE/;} WITH {;
+  common/score/ sc_array($MXREG),sc_array2($MXREG),
+                sc_tmp($MXREG),sc_last($MXREG),icase;
+                "It is always a good idea to score in double precision!"
+  real*8        sc_array, "for scoring energy deposited in all regions"
+                sc_array2,"for scoring energy squared on a history-by-"
+                          "history basis"
+                sc_tmp;
+  $INTEGER      sc_last,icase;
+};
+
+"Define a common for holding the source information"
+REPLACE {;COMIN/SOURCE/;} WITH {;
+  common/source/ ein,uin,vin,win,xin,yin,zin,wtin,iqin,irin,ncase;
+  $INTEGER       iqin,irin,ncase;
+  $REAL          ein,uin,vin,win,wtin,xin,yin,zin;
+};
+
+"---------------------------------------------------------------------"
+" Step 1a: begin of executable code and variable declarations         "
+"---------------------------------------------------------------------"
+
+program tutor6nrc;
+
+$IMPLICIT-NONE;         "$IMPLICIT-NONE is by default implicit none"
+                        "It is STRONGLY suggested to use implicit none"
+                        "as this catches many coding errors and potential"
+                        "over-ride of EGSnrc internal variables. "
+                        "But if you don't want to bother with declaring all"
+                        "variables being used, simply ever-ride "
+                        "$IMPLICIT-NONE with {;}"
+
+;COMIN/THRESH,          "for threshold energies"
+       USEFUL,          "to get electron rest energy"
+       GEOM,            "number of regions"
+       RANDOM,          "not needed unless change to RANMAR"
+       SOURCE,          "source parameter input in routine inputs"
+       SCORE            "the results of the shower simulation, to be used"
+                        "in step 8"
+      /;
+$INTEGER i_do_rr($MXREG);
+$REAL e_max_rr($MXREG);
+
+$INTEGER nbatch,        "$INTEGER and $REAL are defined in egsnrc.macros"
+         nperbatch,     "they can be used (if employed consistently throughout"
+         ibatch,        "the user code) e.g. to switch to double precision"
+         i;
+
+real*8   aux,aux2,total,anorm;
+
+"---------------------------------------------------------------------"
+" Steps 2 (pre-hatch initializations),                                "
+"       4 (initializations for howfar and hownear)                    "
+"       5 (initializations for ausgab)                                "
+"       6 (determination of incident particle parameters)             "
+" are done is subroutine inputs                                       "
+"---------------------------------------------------------------------"
+" Initialize the EGSnrc system "
+call egs_init;
+
+" Read the input file "
+call inputs;
+
+"---------------------------------------------------------------------"
+"deferred STEP 3   HATCH-CALL                                         "
+"---------------------------------------------------------------------"
+
+;OUTPUT;('\f  Start tutor6'//' CALL HATCH to get cross-section data'/);
+CALL HATCH;
+;OUTPUT AE(1)-0.511, AP(1);
+(/' knock-on electrons can be created and any electron followed down to'
+   /T40,F8.3,' MeV kinetic energy'/
+' brem photons can be created and any photon followed down to      ',
+/T40,F8.3,' MeV ');
+"Compton events can create electrons and photons below these cutoffs"
+
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+
+"initiate the shower ncase times"
+;OUTPUT;(' Starting shower simulation ...');
+nbatch = 10; nperbatch = ncase/nbatch;
+IF(nperbatch = 0) nperbatch = 1;
+      "Note that nbatch and nperbatch are not used for statistical analysis"
+      "They are merely for printing information about the progress of the"
+      "simulation"
+
+DO icase=1,ncase [ "Note the use of icase as the shower counter"
+                   "icase is in common/score/ and is used for"
+                   "shower-by-shower scoring"
+
+  call shower(iqin,ein,xin,yin,zin,uin,vin,win,irin,wtin);
+  ibatch = icase/nperbatch;
+  IF ( mod(icase,nperbatch) = 0 ) ["print every batch end"
+    OUTPUT float(100*icase)/float(ncase);
+    (' Finished ',F7.1,'% of cases');
+  ]
+]
+;OUTPUT ncase;(/' Finished shower simulation with', I10,' cases. '/);
+
+"-----------------------------------------------------------------"
+"STEP 8   OUTPUT-OF-RESULTS                                       "
+"-----------------------------------------------------------------"
+
+total = 0;
+anorm = 1/(ein+float(iqin)*rm); "for e+ add 2*rm to k.e."
+
+DO i=1,nzb+1 [
+    "first put non-scored energy portions into sc_array and sc_array2"
+    aux = sc_tmp(i); aux2 = aux*aux;
+    sc_array(i) = sc_array(i) + aux;
+    sc_array2(i) = sc_array2(i) + aux2;
+    aux = sc_array(i)/ncase;
+    aux2 = sc_array2(i)/ncase;
+    aux2 = (aux2 - aux*aux)/(ncase-1);
+    IF( aux2 > 0 ) aux2 = sqrt(aux2);
+    aux = aux*anorm; aux2 = aux2*anorm;
+    sc_array(i) = aux;
+    sc_array2(i) = aux2;
+    "OUTPUT i,aux,aux2;"
+    "  (' region ',i3,' deposited fraction ',f10.6,' +/- ',f10.6);"
+    total = total + aux;
+]
+OUTPUT sc_array(1),sc_array2(1);
+   ('   Reflected energy fraction: ',f10.6,' +/- ',f10.6);
+OUTPUT sc_array(2),sc_array2(2);
+   ('   Deposited energy fraction: ',f10.6,' +/- ',f10.6);
+OUTPUT sc_array(3),sc_array2(3);
+   (' Transmitted energy fraction: ',f10.6,' +/- ',f10.6);
+OUTPUT; ('-------------------------------------------------------------');
+OUTPUT total; ('                       total: ',f10.6///);
+
+
+"-----------------------------------------------------------------"
+"STEP 9   finish run                                              "
+"-----------------------------------------------------------------"
+call egs_finish;
+
+end;    "end of main routine in tutor6.mortran"
+
+%E
+"*********************************************************************"
+"                                                                     "
+subroutine inputs;
+"                                                                     "
+" This routine handles the input of all necessary parameter and passes"
+" control to the EGSnrc system by setting various flags               "
+"                                                                     "
+" It handles the following standard ``steps'' in an EGSnrc user code  "
+"                                                                     "
+" Steps 2 (pre-hatch initializations),                                "
+"       4 (initializations for howfar and hownear)                    "
+"       5 (initializations for ausgab)                                "
+"       6 (determination of incident particle parameters)             "
+" are done is subroutine inputs                                       "
+"                                                                     "
+" Copyright National Research Council of Canada 2000                  "
+"*********************************************************************"
+;Copyright NRC;
+$IMPLICIT-NONE;
+
+"The following are EGSnrc internal (private) common blocks"
+"They are included in order to get access to various switches, "
+"material array, cut-off energies, etc."
+
+;COMIN/BOUNDS,       "to get access to ecut and pcut"
+       BREMPR,       "to get access to ibrdst, iprdst and ibr_nist"
+       COMPTON-DATA, "to get access to the array ibcmp"
+       EDGE,         "to get access to the arrays iedgfl and iphter"
+EGS-VARIANCE-REDUCTION, "to get access to i_do"
+       ET-Control,   "to get access to estepe,ximax,"
+                     "                 skindepth_for_bca,transport_algorithm,"
+                     "                 bca_algorithm,exact_bca,spin_effects"
+       MEDIA,        "to get access to nmed and media"
+       MISC,         "to get access to the arrays med and iraylr"
+       RANDOM,       "to give access to random number seeds"
+       UPHIOT,       "to get PI"
+       USEFUL,       "to get electron rest energy RM"
+       "                                             "
+       " The following are user-defined common blocks"
+       "                                             "
+       GEOM,
+       SCORE,
+       SOURCE,
+       USER
+      /;
+character*60 medium_name;
+$INTEGER i,j,ispin,irejct,luxury_level,iseed;
+$REAL esave;
+"---------------------------------------------------------------------"
+"STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
+"---------------------------------------------------------------------"
+
+nmed = 1;   "in this version of the tutor6 code, use just one medium"
+dunit = 1;  "i.e. we work in cm"
+
+DO i=1,nmed [
+  OUTPUT i; (/' Input name of medium ',I3,':',$);
+  INPUT medium_name; (A);
+  DO j=1,24 [ media(j,1) = medium_name(j:j); ]
+]
+"Set medium 1 everywhere"
+DO i=1,$MXREG [ med(i) = 1; ]
+
+OUTPUT; (/' Input minimum electron transport energy (total, MeV): ',$);
+INPUT ecut(1); (F10.0);
+OUTPUT; (/' Input minimum photon transport energy (MeV): ',$);
+INPUT pcut(1); (F10.0);
+"Now set ecut and pcut to the values input by the user"
+DO i=2,$MXREG [ ecut(i) = ecut(1); pcut(i) = pcut(1); ]
+
+"Rayleigh switch, must be input in step 2 so that HATCH can check whether"
+"Rayleight data is available"
+LOOP [
+  OUTPUT; (/' Rayleigh scattering on (1) or off (0)? ',$);
+  INPUT iraylr(1); (I5);
+] UNTIL ( iraylr(1) = 1 | iraylr(1) = 0 );
+"Now set iraylr for all regions to the value input by the user"
+DO i=2,$MXREG [ iraylr(i) = iraylr(1); ]
+
+"Relaxations switch, must be done before HATCH so that the necessary"
+"additional data can be read in in HATCH if the user requsted relaxations"
+LOOP [
+  OUTPUT; (/' Atomic relaxations on (1) or off (0)? ',$);
+  INPUT iedgfl(1); (I5);
+] UNTIL ( iedgfl(1) = 1 | iedgfl(1) = 0 );
+"Now set iedgfl for all regions to the value input by the user"
+DO i=2,$MXREG [ iedgfl(i) = iedgfl(1); ]
+
+"Photo-electron angular distribution switch. It does not need to be "
+"before HATCH, we do it here because this is the most logical place"
+LOOP [
+  OUTPUT; (/' Photo-electron angular distribution on (1) or off (0)? ',$);
+  INPUT iphter(1); (I5);
+] UNTIL ( iphter(1) = 1 | iphter(1) = 0 );
+"Now set iphter for all regions to the value input by the user"
+DO i=2,$MXREG [ iphter(i) = iphter(1); ]
+
+"Bound Compton scattering switch"
+"Must be done before HATCH in order to get the data for bound Compton"
+LOOP [
+  OUTPUT; (/' Binding effects for Compton scattering on (1) or off (0)? ',$);
+  INPUT ibcmp(1); (I5);
+] UNTIL ( ibcmp(1) = 1 | ibcmp(1) = 0 );
+"Now set ibcmp for all regions to the value input by the user"
+DO i=2,$MXREG [ ibcmp(i) = ibcmp(1); ]
+
+"Pair production angular distribution switch"
+"Must be done before HATCH in order to get the material composition needed"
+"for some initializations"
+OUTPUT; (/' Pair angular distribution: the following choices are available: '/
+         '   0: fixed pair angle (EGS4 default) '/
+         '   1: leading term of the distribution '/
+         '   2: Koch and Motz ');
+OUTPUT; (' your choice: ',$);
+INPUT iprdst; (I5);
+IF( iprdst < 0 | iprdst > 2 ) [
+    OUTPUT; (' wrong input, iprdst set to 1');
+    iprdst = 1;
+]
+
+"Bremsstrahlung angular distribution switch"
+"Must be done before HATCH in order to get the material composition needed"
+"for some initializations"
+OUTPUT; (/' Bremsstrahlung angular distribution,'/
+         '    0: leading term of Koch and Motz distn'/
+         '    1: Koch and Motz 2BS(modified): '/
+         ' your choice: ',$);
+INPUT ibrdst; (I5);
+IF( ibrdst < 0 | ibrdst > 1 ) [
+    OUTPUT; (' wrong input, ibrdst set to 1');
+    ibrdst = 1;
+]
+
+"Bremsstrahlung photon differential cross secton switch"
+"Must be selected before call to HATCH if non-zero value being used"
+OUTPUT;(/' Bremsstrahlung differential photon cross section to sample,'/
+         '   0: use Bethe-Heitler distribution as in EGS4'/
+         '   1: use NIST/ICRU 37 distributions'/
+         ' your choice: ',$)
+INPUT ibr_nist;(I5);
+IF( ibr_nist <0 | ibr_nist > 1) [
+    OUTPUT; (' wrong input, ibr_nist set to 0');
+    ibr_nist = 1;
+]
+
+"Spin effects for electron/positron elastic scattering"
+"Must be done before hatch in order to get the data for the spin "
+"rejection loop"
+LOOP [
+  OUTPUT; (/' Spin effects on (1) or off (0)? ',$);
+  INPUT ispin; (I5);
+] UNTIL ( ispin = 1 | ispin = 0 );
+IF( ispin = 0 )      [ spin_effects = .false.; ]
+ELSE [ spin_effects = .true.; ]
+
+"estepe: maximum fractional energy loss per step"
+"Must be done before HATCH so that step-lengths are properly initialized"
+OUTPUT; (/' Input maximum fractional energy loss per step (estepe): ',$);
+INPUT estepe; (F10.0);
+IF( estepe <= 0 | estepe >= 1 ) [
+    estepe = $MAX-ELOSS;  "$MAX-ELOSS is defined in egsnrc.macros at 0.25"
+    OUTPUT estepe; (' using default value: ',f10.3);
+]
+
+"ximax: maximum first elastic scattering moment per step"
+"used to determine step-length together with estepe"
+"maximum possible value restricted by the maximum value for which MS data"
+"is available"
+"Must be done before HATCH so that step-lengths are properly initialized"
+OUTPUT; (/' Input maximum 1st elastic scattering moment per step: ',$);
+INPUT ximax; (F10.0);
+IF( ximax <= 0 | ximax >= 1 ) [
+    ximax = $EXACT-BCA-XIMAX;  "$EXACT-BCA-XIMAX set to 0.5 in egsnrc.macros"
+    OUTPUT ximax; (' using default, ximax = ',f10.3);
+]
+
+"Transport algorithm"
+OUTPUT; (/' Electron-step algorithm: EGSnrc default (0) or PRESTA (1)? ',$);
+INPUT transport_algorithm; (I5);
+IF( transport_algorithm < 0 | transport_algorithm > 1 ) [
+    transport_algorithm = 0;
+    OUTPUT; (' using EGSnrc default');
+]
+
+"Boundary crossing algorithm"
+OUTPUT; (/' Boundary crossing algorithm: exact (0) or PRESTA (1)? ',$);
+INPUT bca_algorithm; (I5);
+IF( bca_algorithm < 0 | bca_algorithm > 1 ) [
+    bca_algorithm = 0;
+    OUTPUT; (' using exact boundary crossing ');
+]
+
+"skin-depth for BCA"
+OUTPUT; (/' Skin-depth for BCA: ');
+IF( bca_algorithm = 0 ) [
+    OUTPUT; ('   this is the distance from a boundary ' /
+          '   (measured in elastic mean-free-paths) at which the '/
+          '   simulation switches to single scattering mode '/
+          '   Best choice for efficiency is 3. If you set this '/
+          '   parameter to a very large number (e.g. 1e10), you '/
+          '   can force single scattering simulation in the entire '/
+          '   geometry (this is very slow) '/
+          ' your choice: ',$);
+    INPUT skindepth_for_bca; (F10.0);
+    IF( skindepth_for_bca <= 0 ) skindepth_for_bca = 3;
+]
+ELSE [
+    OUTPUT; ('   this is the distance from a boundary '/
+          '   (measured in elastic mean-free-paths) at which '/
+          '   lateral deflections will be turned off. If you select '/
+          '   a very large number (e.g. 1e10), standard EGS4 '/
+          '   behaviour (no PRESTA) will result. If you input '/
+          '   a number < 1, this parameter will be determined in the'/
+          '   way it was with PRESTA (i.e. depending on ECUT)'/
+          ' your choice: ',$);
+    INPUT skindepth_for_bca; (F10.0);
+]
+LOOP [
+  OUTPUT;
+  (/' Input random number luxury level (0-4) & seed (>0) (0 defaults OK): ',$);
+  INPUT luxury_level,iseed; (2I5);
+] UNTIL ((luxury_level <= 4 & luxury_level >= 0) & (iseed >= 0));
+$INITIALIZE RNG USING luxury_level AND iseed;
+
+" At this point we could perform step 3 (call to HATCH), "
+" we will defer the HATCH call to be performed in the main routine"
+"---------------------------------------------------------------------"
+"STEP 4  INITIALIZATION-FOR-HOWFAR and HOWNEAR                        "
+"---------------------------------------------------------------------"
+
+"In this simplified version of the code we will allow for a single    "
+"slab of material only. (we need 2 planes to define 1 region)         "
+nzb = 2;
+
+"and set region 1 and 3 to vacuum"
+med(1) = 0; med(3) = 0;
+
+zbound(1) = 0;
+OUTPUT; (/' Input slab thickness (cm): ',$);
+INPUT zbound(2); (F10.0);
+
+"---------------------------------------------------------------------"
+"STEP 5  INITIALIZATION-FOR-AUSGAB                                    "
+"---------------------------------------------------------------------"
+
+"Set all scoring arrays to zero. This could be avoided if"
+"the compiler being used has a `initialize to zero' option"
+"It is a good coding habit to not rely on variables being"
+"automatically zeroed"
+
+DO i=1,$MXREG [ /sc_array(i),sc_array2(i),sc_tmp(i),sc_last(i)/ = 0; ]
+
+"Define range rejection parameter. Although not directly related "
+"to ausgab, range rejection is an `user' variance reduction technique "
+"and so, this is the most appropriate place to initialize it"
+
+"---------------------------------------------------------------------"
+"STEP 5b  INITIALIZATION-FOR-Variance-Reduction                       "
+"---------------------------------------------------------------------"
+
+OUTPUT; (/' Use (1) or do not use (0) electron range rejection? ',$);
+INPUT irejct; (I5);
+IF( irejct = 1 ) [
+    DO i=1,$MXREG [i_do_rr(i) = 1;] "initialize for all regions"
+    OUTPUT; (/' Input the maximum energy to apply range rejection: ',$);
+    INPUT esave; (F10.0);
+    DO i=1,$MXREG [e_max_rr(i) = esave;] "initialize for all regions"
+]
+
+OUTPUT; (/' How many brem photons to create per event (0=>just 1): ',$);
+INPUT nbr_split;(I10);
+IF (nbr_split <= 0) [
+   OUTPUT; (' Negative or zero value of nbr_split made 1=> no splitting');
+   nbr_split = 1;
+]
+
+OUTPUT;
+(/' Russian Roulette all secondary charged particles(yes=1,no=0)?  ',$);
+INPUT i_play_RR;(I3);
+IF(i_play_RR ~= 0)[
+   i_play_RR = 1;
+   prob_RR = 1./float(nbr_split);  "We are assuming the purpose is to"
+                                   "keep a natural number of charged"
+                                   "particles, even when using splitting"
+]
+"---------------------------------------------------------------------"
+"STEP 6   DETERMINATION-OF-INICIDENT-PARTICLE-PARAMETERS              "
+"---------------------------------------------------------------------"
+LOOP [
+  OUTPUT; (/' Input incident charge(-1, 0, +1): ',$);
+  INPUT iqin; (I5);
+] UNTIL ( iqin >= -1 & iqin <= 1 );
+
+OUTPUT; (/' Input incident kinetic energy (MeV): ',$);
+INPUT ein; (F10.0);
+IF( iqin ~= 0 ) ein = ein + RM; "add rest energy for electrons and positrons"
+
+LOOP [
+  OUTPUT; (/' Input incident angle (degrees): ',$);
+  INPUT win; (F10.0);
+] UNTIL ( win >= 0 & win <= 90 );
+"Convert to direction cosine and calculate other 2 direction cosines"
+win = win/180*PI; win = cos(win);
+uin = sqrt(max(0.0,(1-win)*(1+win))); vin = 0;
+irin = 2;    "starts in region 2, could be 1"
+wtin = 1;    "statistical weight is 1"
+
+OUTPUT; (/' Input number of showers to be simulated: ',$);
+INPUT ncase; (I12);
+
+return;
+end;       "end of subroutine inputs for tutor6.mortran"
+
+%E
+"*********************************************************************"
+
+subroutine howfar;
+
+"   This geometry is the same as in the other tutorial codes but coded"
+"   as a special case of an arbitrary number of slabs                 "
+"*********************************************************************"
+;Copyright NRC;
+$IMPLICIT-NONE;
+COMIN/STACK, "contains positions,directions,region numbers and stack pointer"
+      EPCONT,"irnew, ustep and idisc"
+      GEOM   "user geometry information"
+     /;
+$REAL tval,wl;
+$INTEGER irl;
+irl = ir(np);     "region number and direction into local variables"
+wl = w(np);
+
+IF( irl > nzb ) [  "past the geometry ?"
+    IF( irl > nzb + 1 ) ["This should not happen";
+        OUTPUT irl; (' irl > nzb+1 !? ',f10.3);
+    ]
+    IF( wl > 0 ) [  " yes, terminate the history" idisc = 1; ]
+    ELSE [ "No. This should not happen for exact boundary crossing but "
+           "possible to happen with boundary crossing a la PRESTA"
+           "(particle reflected at the boundary)"
+        ustep = 0; irnew = nzb;
+    ]
+    return;
+]
+ELSEIF( irl > 1 ) [ "in the geometry, do transport checks"
+    IF( wl > 0 ) [ "going forward"
+        tval = (zbound(irl) - z(np))/wl;
+        IF(tval > ustep) [ "can take the requested step" irnew = irl; ]
+        ELSE [ "requested step longer than distance to boundary => adjust"
+            ustep = tval;
+            irnew = irl + 1;
+        ]
+    ]
+    ELSE IF( wl < 0 ) [ "going backward"
+        tval = (zbound(irl-1)-z(np))/wl;
+        IF(tval > ustep) [ "can take the requested step" irnew = irl; ]
+        ELSE [ "requested step longer than distance to boundary => adjust"
+            ustep = tval;
+            irnew = irl - 1;
+        ]
+    ]
+    ELSE [ "going parallel to the boundary"
+        irnew = irl;
+    ]
+    return;
+]
+"at this point it is clear that the particle is in front of the geometry"
+
+IF(w(np) < 0) [ "This is a backscattered particle, discard it" idisc = 1; ]
+
+ELSE [ "this is either a particle reflected on the boundary (possible "
+       "for PRESTA) or a particle with an incorrectly initialized entry region"
+    ustep = 0;
+    irnew = 2;
+]
+return;
+end;             "end of subroutine howfar for tutor6.mortran"
+
+%E
+"*********************************************************************"
+"                                                                     "
+subroutine hownear(tperp,z,irl);
+"                                                                     "
+" For tutor6.mortran                                                  "
+"                                                                     "
+" Copyright National Research Council of Canada 2000                  "
+"*********************************************************************"
+;Copyright NRC;
+$IMPLICIT-NONE;
+$REAL    tperp,z;
+$INTEGER irl;
+COMIN/GEOM/; "to get geometry information"
+
+IF( irl > 1 & irl <= nzb ) [ "particle is in the geometry"
+    tperp = min(z - zbound(irl-1), zbound(irl) - z);
+]
+ELSE [ tperp = 0; ]
+
+return;
+end;   "end of subroutine hownear for tutor6.mortran"
+
+%E
+"*********************************************************************"
+"                                                                     "
+subroutine ausgab(iarg);
+"                                                                     "
+" For tutor6.mortran.  Provides an example of doing statistics        "
+" without batches using technique suggested by Francesc Salvat.       "
+"                                                                     "
+" Copyright National Research Council of Canada 2000                  "
+"*********************************************************************"
+;Copyright NRC;
+$IMPLICIT-NONE;
+$INTEGER iarg,irl;
+real*8   aux;
+
+;COMIN/SCORE,   "to get the scoring arrays and iscore"
+       EPCONT,  "to get EDEP"
+       STACK    "to get the region number"
+      /;
+
+IF(NP >= $MXSTACK)["STACK is as deep as allowed"
+  OUTPUT NP,$MXSTACK;(//' In AUSGAB, NP=',I5,' >= Maximum value allowed=',
+  I3/'  Adjust $MXSTACK =',I5,', recompile and try again '/1X,80('*')/);
+  STOP;
+]
+"Note the above is not foolproof"
+
+IF( iarg < 5 ) [ "energy is being deposited"
+    irl = ir(np);
+    IF( icase = sc_last(irl) ) [ "still the same shower that deposited energy"
+                                 "last time in this region"
+        sc_tmp(irl) = sc_tmp(irl) + edep*wt(np);
+        "OUTPUT iarg,edep,e(np),iq(np); "
+        "(' scoring (1) ',f10.3,f10.3,f10.3,f10.3); "
+    ]
+    ELSE [ "we have the next shower depositing energy into region irl"
+           " => put sc_tmp into  the scoring arrays and set sc_last"
+        aux = sc_tmp(irl);
+        sc_array(irl) = sc_array(irl) + aux;
+        sc_array2(irl) = sc_array2(irl) + aux*aux;
+        sc_tmp(irl) = edep*wt(np); sc_last(irl) = icase;
+    ]
+]
+return;
+end;         "end of subroutine ausgab for tutor6.mortran"
+
+" end of tutor6.mortran"

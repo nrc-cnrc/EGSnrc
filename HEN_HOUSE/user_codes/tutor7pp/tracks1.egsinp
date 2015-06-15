@@ -1,0 +1,111 @@
+
+###############################################################################
+#
+#  EGSnrc egs++ tutor7pp application sample input with particle tracks
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2009
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  An example input file for tutor7pp that illustrates the generation of
+#  particle tracks
+#
+###############################################################################
+
+
+######################################## Define the geometry:
+#                                        a 1mm plate of tantalum
+#
+:start geometry definition:
+    :start geometry:
+        library = egs_box
+        box size = 0.2 0.2 0.2
+        name = slab
+        :start media input:
+            media = TA
+        :stop media input:
+    :stop geometry:
+    simulation geometry = slab
+:stop geometry definition:
+
+######################################## Define the source:
+#                                        a 20 MeV pencil beam of electrons
+#
+:start source definition:
+    :start source:
+        library = egs_parallel_beam
+        name = the_source
+        :start shape:
+            type = point
+            position = 0 0 -0.1
+        :stop shape:
+        direction = 0 0 1
+        charge = -1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20.0
+        :stop spectrum:
+    :stop source:
+
+    simulation source = the_source
+
+:stop source definition:
+
+######################################### Transport parameters
+#                                         you can add any other option
+#                                         supported by EGSnrc
+#
+:start MC transport parameter:
+
+    #Global ECUT = 1.5
+    #Global PCUT = 0.1
+
+:stop MC transport parameter:
+
+
+######################################## Run control
+:start run control:
+    ncase = 2000
+:stop run control:
+
+######################################### Scoring options.
+#        The entire section that follows can be missing. If missing, just
+#        energy deposition fractions will be calculated. If present,
+#        the user can specify in which regions to score a pulse height
+#        distribution.
+#
+:start scoring options:
+:stop scoring options:
+
+:start ausgab object definition:
+
+    :start ausgab object:
+
+        library = egs_track_scoring
+        score photons   = yes
+        score electrons = yes
+        score positrons = yes
+
+    :stop ausgab object:
+
+:stop ausgab object definition:
