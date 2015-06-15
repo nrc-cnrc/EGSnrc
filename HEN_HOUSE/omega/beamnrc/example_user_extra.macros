@@ -1,0 +1,72 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc example of user defined macros                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2005                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This file demonstrates the use of user defined macros and subroutines that "
+"  can be added to the default set of sources to implement additional         "
+"  capabilities without modifying the main BEAMnrc sources. It reproduces     "
+"  the results reported in E Tonkopi et al, Med. Phys. 32, 2918 (2005).       "
+"                                                                             "
+"  Add this file to the list of sources just after                            "
+"                                                                             "
+"  $(BEAM_CODE)_macros.mortran                                                "
+"                                                                             "
+"  and the corresponding file with mortran code just before                   "
+"                                                                             "
+"  $(EGS_SOURCEDIR)egsnrc.mortran                                             "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$USER-INIT;} WITH { call elena_init; };
+
+REPLACE {$USER-READ-DAT(#);} WITH { call elena_set_data({P1}); };
+
+REPLACE {$USER-AFTER-SHOWER;} WITH { call elena_finish_history; };
+
+REPLACE {$USER-WRITE-DAT(#);} WITH { call elena_store({P1}); };
+
+REPLACE {$USER-FINISH;} WITH {
+    call elena_print(6,SCORE_NORM_NUM);
+    call elena_print(1,SCORE_NORM_NUM);
+};
+
+REPLACE {$USER-AUSGAB;} WITH {;
+    IF( iarg = 5 & iq(np) = 0 & icm ~= icmnew ) [
+        IF (W(NP) >  0.) [ISCORE = ICM_to_SCORE(ICM);]
+        ELSEIF (ICM =  1)  [ISCORE = 0; "going back out of first CM"]
+        ELSE [ISCORE = ICM_to_SCORE(ICM-1);"going back-score with previous CM"]
+        IF( iscore ~= 0 ) [
+            call elena_score(e(np),x(np),y(np),w(np),wt(np),IHSTRY);
+        ]
+    ]
+};
+
+REPLACE {$USER-RESET-DATA;} WITH { call elena_reset_data; };
+
+REPLACE {$USER-ADD-DATA(#);} WITH { call elena_add_data({P1}); };

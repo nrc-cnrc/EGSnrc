@@ -1,0 +1,271 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc shared library subroutines                                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2004                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Functions, subroutines and macros to turn BEAM into a shared library.      "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$DECLARE-PARTICLE-CONTAINER;} WITH {;
+    common/beam_particle_container/
+      $LGN(bpc_nhist,bpc_E,bpc_X,bpc_Y,bpc_Z,bpc_U,bpc_V,bpc_W,
+           bpc_WT,bpc_IQ,bpc_LATCH,bpc_iphat,bpc_mu_index($MXSTACK)),
+           bpc_np, bpc_ip;
+      $REAL bpc_E,bpc_X,bpc_Y,bpc_Z,bpc_U,bpc_V,bpc_W,bpc_WT,bpc_mu_index;
+      $INTEGER bpc_LATCH, bpc_IQ, bpc_np, bpc_ip,bpc_iphat;
+      $LONG_INT bpc_nhist;
+};
+
+REPLACE {$BEAM_WRITE_PHSP;} WITH {;
+    bpc_np = bpc_np + 1;
+    IF( bpc_np > $MXSTACK ) [
+        write(i_log,*) '$MXSTACK exceeded when trying to store a particle into';
+        write(i_log,*) 'the particle container. Increase $MXSTACK and retry.';
+        $CALL_EXIT(1);
+    ]
+    bpc_mu_index(bpc_np) = BEAM_MU_INDEX;
+    bpc_E(bpc_np) = E(np); bpc_IQ(bpc_np) = IQ(np);
+    bpc_WT(bpc_np) = WT(np); bpc_LATCH(bpc_np) = LATCH(np);
+    bpc_X(bpc_np) = X(np); bpc_Y(bpc_np) = Y(np); bpc_Z(bpc_np) = Z(np);
+    bpc_U(bpc_np) = U(np); bpc_V(bpc_np) = V(np); bpc_W(bpc_np) = W(np);
+    bpc_nhist(bpc_np) = NHSTRY; bpc_iphat(bpc_np)=IPHAT(NP);
+};
+
+REPLACE {$BEAM_OPEN_PHSP_FOR_READ;} WITH {;};
+
+REPLACE {$BEAM_OPEN_PHSP_FOR_WRITE;} WITH {;};
+
+REPLACE {$BEAM_PHSP_BUFFER_FLUSH;} WITH {;};
+
+REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;};
+
+REPLACE {$AVAILABLE_UNIT(#,#);} WITH {;
+{P1}=egs_get_unit({P1});
+IF ({P1}<1) [
+    $egs_fatal(*,'failed to get a free Fortran I/O unit for file ',
+                 $cstring({P2}));
+]
+}
+
+
+REPLACE {;COMIN/my_times/;} WITH {;
+      common/my_times/ t_elapsed, t_cpu, t_first;
+      $REAL            t_elapsed, t_cpu;
+      integer          t_first(8);
+      real             egs_tot_time,egs_etime;
+};
+
+subroutine beamlib_init(i_par,i_logunit,hhouse, ehome, beam_code, pfile, ifile);
+implicit none;
+$INTEGER i_par, i_logunit;
+character*(*) hhouse, ehome, beam_code, pfile, ifile;
+
+;COMIN/EGS-IO,my_times/;
+$DECLARE-PARTICLE-CONTAINER;
+
+$REAL dum;
+$INTEGER i, lnblnk1, ircode;
+
+i_log = i_logunit;
+write(i_log,*) 'In beamlib_init!';
+write(i_log,*) 'i_par = ',i_par;
+write(i_log,'(a,a)') 'hen_house = ',$cstring(hhouse);
+write(i_log,'(a,a)') 'egs_home  = ',$cstring(ehome);
+write(i_log,'(a,a)') 'beam_code = ',$cstring(beam_code);
+write(i_log,'(a,a)') 'inputfile = ',$cstring(ifile);
+write(i_log,'(a,a)') 'pegs file = ',$cstring(pfile);
+
+t_elapsed = 0; t_cpu = egs_etime(); dum = egs_tot_time(1);
+call egs_date_and_time(t_first);
+call egs_set_defaults;
+
+$set_string(hen_house,' '); hen_house = $cstring(hhouse);
+$set_string(egs_home,' '); egs_home = $cstring(ehome);
+$set_string(user_code,' '); user_code = $cstring(beam_code);
+$set_string(pegs_file,' '); pegs_file = $cstring(pfile);
+$set_string(input_file,' '); input_file = $cstring(ifile);
+$set_string(output_file,' '); output_file = $cstring(ifile);
+is_batch = .true.; i_parallel = i_par; n_parallel = i_par;
+IF($cstring(pegs_file)='pegsless')is_pegsless=.true.;
+
+call egs_init1;
+
+call beam_init(ircode);
+IF( ircode < 0 ) [ $CALL_EXIT(1); ]
+
+bpc_np = 0; bpc_ip = 0;
+
+return; end;
+
+subroutine beamlib_sample(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat);
+implicit none;
+$REAL    e,x,y,z,u,v,w,wt;
+$INTEGER iq,latch,iphat;
+$LONG_INT nhist;
+$DECLARE-PARTICLE-CONTAINER;
+$INTEGER icase;
+;COMIN/EGS-IO/;
+data icase/0/;
+save icase;
+
+bpc_ip = bpc_ip + 1;
+IF( bpc_ip > bpc_np ) [
+    bpc_ip = 1; bpc_np = 0;
+    LOOP [
+        icase = icase + 1;
+        call beam_shower(icase);
+    ] WHILE (bpc_np = 0);
+    "write .egsdat file if requested"
+    " but not for every history! --IK"
+    "call beam_write_dat;"
+]
+e = bpc_e(bpc_ip); wt = bpc_wt(bpc_ip);
+iq = bpc_iq(bpc_ip); latch = bpc_latch(bpc_ip);
+x = bpc_x(bpc_ip); y = bpc_y(bpc_ip); z = bpc_z(bpc_ip);
+u = bpc_u(bpc_ip); v = bpc_v(bpc_ip); w = bpc_w(bpc_ip);
+nhist = bpc_nhist(bpc_ip);
+iphat = bpc_iphat(bpc_ip);
+
+return; end;
+
+subroutine beamlib_motionsample(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat,MUindex);
+implicit none;
+$REAL    e,x,y,z,u,v,w,wt,MUindex;
+$INTEGER iq,latch,iphat;
+$LONG_INT nhist;
+$DECLARE-PARTICLE-CONTAINER;
+$INTEGER icase;
+data icase/0/;
+save icase;
+
+bpc_ip = bpc_ip + 1;
+IF( bpc_ip > bpc_np ) [
+    bpc_ip = 1; bpc_np = 0;
+    LOOP [
+        icase = icase + 1;
+        call beam_shower(icase);
+    ] WHILE (bpc_np = 0);
+    "write .egsdat file if requested"
+    " but not for every history! --IK"
+    "call beam_write_dat;"
+]
+e = bpc_e(bpc_ip); wt = bpc_wt(bpc_ip);
+iq = bpc_iq(bpc_ip); latch = bpc_latch(bpc_ip);
+x = bpc_x(bpc_ip); y = bpc_y(bpc_ip); z = bpc_z(bpc_ip);
+u = bpc_u(bpc_ip); v = bpc_v(bpc_ip); w = bpc_w(bpc_ip);
+nhist = bpc_nhist(bpc_ip);
+iphat = bpc_iphat(bpc_ip);
+MUindex = bpc_mu_index(bpc_ip);
+
+return; end;
+
+subroutine beamlib_phspmotionsample(edos,xdos,ydos,zdos,udos,vdos,wdos,wtdos,
+	   iqdos,latchdos,nhistdos,iphatdos,more_in_cont,MUindex);
+implicit none;
+$REAL    edos,xdos,ydos,zdos,udos,vdos,wdos,wtdos,MUindex;
+$INTEGER iqdos,latchdos,iphatdos,more_in_cont;
+$LONG_INT nhistdos;
+$DECLARE-PARTICLE-CONTAINER;
+$INTEGER icase;
+;COMIN/STACK,RWPHSP/;
+data icase/0/;
+save icase;
+
+"more_in_cont is used so that the main program calling this function "
+"knows if there are more particles in the container"
+IF(more_in_cont=0)["no more paticles in the container"
+    "set all input particle values - these are used in beam_shower"
+    "the stack is used to store the variables and needed anyway in "
+    "WHERE_AM_I$CMNAME which woul dhave been called in SRCHST"
+    NP = 1;
+    E(NP) = edos;
+    X(NP) = xdos;
+    Y(NP) = ydos;
+    Z(NP) = zdos;  " added by jwei, NOV. 12, 1992
+    IQ(NP)=iqdos;
+    U(NP)=udos;
+    V(NP)=vdos;
+    W(NP)=wdos;
+    WT(NP)=wtdos;
+    LATCH(NP)=latchdos;
+    NHSTRY_DOS=nhistdos;
+
+    dosxyz2beam_index = MUindex - 1.1;
+
+    "now call shower"
+    bpc_ip = 1; bpc_np = 0;
+    icase = icase + 1;
+    call beam_shower(icase);
+]
+ELSE [bpc_ip = bpc_ip + 1;]
+
+IF(bpc_np=0) ["particles died"
+	 wtdos=0;
+	 more_in_cont=0;
+]
+ELSE     ["get next particle from the container"
+    edos = bpc_e(bpc_ip); wtdos = bpc_wt(bpc_ip);
+    iqdos = bpc_iq(bpc_ip); latchdos = bpc_latch(bpc_ip);
+    xdos = bpc_x(bpc_ip); ydos = bpc_y(bpc_ip); zdos = bpc_z(bpc_ip);
+    udos = bpc_u(bpc_ip); vdos = bpc_v(bpc_ip); wdos = bpc_w(bpc_ip);
+    nhistdos = bpc_nhist(bpc_ip);
+    iphatdos = bpc_iphat(bpc_ip);
+    MUindex = bpc_mu_index(bpc_ip);
+    IF(bpc_ip=bpc_np) [more_in_cont=0;]
+    ELSE [more_in_cont=1;]
+]
+
+return; end;
+
+subroutine beamlib_finish;
+implicit none;
+"write .egsdat file if requested"
+call beam_write_dat;
+call beam_finish(1);
+"call with 1 to signify end of beam lib run"
+return; end;
+
+"below is a dummy xvgrplot subroutine for use with BEAM shared
+"libraries
+
+subroutine xvgrplot(X, Y, ERRY, NPTS, CURVENUM, SERIESTITLE,
+                        XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
+                        UNITNUM, TYPE, HISTXMIN, AXISTYPE);
+implicit none;
+;COMIN/EGS-IO/;
+
+$REAL X($MAX_DOSE_ZONE),Y($MAX_DOSE_ZONE),ERRY($MAX_DOSE_ZONE),HISTXMIN;
+$INTEGER NPTS,CURVENUM,UNITNUM,TYPE,AXISTYPE;
+CHARACTER*(*) SERIESTITLE, XTITLE, YTITLE, GRAPHTITLE,SUBTITLE;
+
+OUTPUT;(/' Plot of doses to .egsplot file not available with a BEAM'/
+        ' shared library source.  Sorry.'/);
+
+return; end;

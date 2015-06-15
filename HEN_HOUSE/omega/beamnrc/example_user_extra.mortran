@@ -1,0 +1,321 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc example of user defined macros                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Iwan Kawrakow, 2005                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This file demonstrates the use of user defined macros and subroutines that "
+"  can be added to the default set of sources to implement additional         "
+"  capabilities without modifying the main BEAMnrc sources. It reproduces     "
+"  the results reported in E Tonkopi et al, Med. Phys. 32, 2918 (2005).       "
+"                                                                             "
+"  Add this file to the list of sources just before                           "
+"                                                                             "
+"  $(EGS_SOURCEDIR)egsnrc.mortran                                             "
+"                                                                             "
+"  and the corresponding file with macros  just after                         "
+"                                                                             "
+"  $(BEAM_CODE)_macros.mortran                                                "
+"                                                                             "
+"#############################################################################"
+
+
+subroutine elena_init;
+implicit none;
+
+$REAL  x,y,w,wl,wt,ncase;
+real*8 E;
+$LONG_INT ihist;
+$INTEGER iout;
+
+/* Interpolations */
+REPLACE {$ELENA_BINS} WITH {200}
+REPLACE {$ELENA_MAX_SETS} WITH {6}
+$REAL  elena_fa_array($ELENA_MAX_SETS,$ELENA_BINS),
+       elena_fb_array($ELENA_MAX_SETS,$ELENA_BINS);
+$REAL  elena_a($ELENA_MAX_SETS), elena_b($ELENA_MAX_SETS),
+       elena_emin($ELENA_MAX_SETS), elena_emax($ELENA_MAX_SETS),
+       elena_fmin($ELENA_MAX_SETS), elena_fmax($ELENA_MAX_SETS);
+$INTEGER elena_nbins;
+
+/* Scoring */
+REPLACE {$ELENA_S_BINS} WITH {20}
+real*8 elena_fs($ELENA_MAX_SETS,$ELENA_S_BINS),
+       elena_fs2($ELENA_MAX_SETS,$ELENA_S_BINS),
+       elena_fsc($ELENA_MAX_SETS,$ELENA_S_BINS);
+$REAL  elena_ftmp($ELENA_MAX_SETS,$ELENA_S_BINS);
+$LONG_INT elena_flast($ELENA_MAX_SETS,$ELENA_S_BINS);
+$REAL  elena_dx, elena_dxi, elena_xmax, elena_ymax;
+$REAL  elena_ymax_s($ELENA_MAX_SETS);
+
+$REAL  elena_tmp1($ELENA_BINS), elena_tmp2($ELENA_BINS),
+       elena_tmp3($ELENA_BINS),
+       aa($ELENA_BINS),bb($ELENA_BINS),cc($ELENA_BINS),dd($ELENA_BINS);
+$REAL  tmp_array($ELENA_MAX_SETS),tmp2_array($ELENA_MAX_SETS),
+       tmp0_array($ELENA_MAX_SETS),tmp02_array($ELENA_MAX_SETS);
+$REAL  dle,elke,f,f_old,spline,xx,r,rad;
+$INTEGER istat,iunit,lnblnk1,idat,nbin,ibin,j;
+$LOGICAL did_score;
+real*8 f0;
+$INTEGER nset,kset;
+
+save elena_fa_array,elena_fb_array,elena_a,elena_b,elena_nbins,
+     elena_emin,elena_emax,elena_fmin,elena_fmax,elena_ymax_s;
+save elena_fs,elena_fs2,elena_ftmp,elena_flast,elena_dx,elena_dxi,
+     elena_xmax,elena_ymax,elena_fsc,did_score,nset;
+
+iunit=51; elena_nbins = 200;
+/*
+open(iunit,file='/home/iwan/etonkopi/new_side.dat',
+        status='old',err=:no_elena_data:);
+*/
+open(iunit,file='/home/iwan/etonkopi/new_side_mph.dat',
+        status='old',err=:no_elena_data:);
+
+read(iunit,*,err=:elena_bad_data:) nset;
+IF( nset > $ELENA_MAX_SETS ) [
+    write(6,*) ' ********* Too many sets ********* '; $CALL_EXIT(1);
+]
+elena_ymax = 0;
+DO idat=1,nset [
+    read(iunit,*,err=:elena_bad_data:) nbin, elena_ymax_s(idat);
+    IF( elena_ymax_s(idat) > elena_ymax ) elena_ymax = elena_ymax_s(idat);
+    DO ibin=1,nbin [
+        read(iunit,*,err=:elena_bad_data:) elena_tmp1(ibin),elena_tmp2(ibin);
+    ]
+    dle = log(elena_tmp1(nbin)/elena_tmp1(1))/elena_nbins;
+    elena_b(idat) = 1 - log(elena_tmp1(1))/dle;
+    elena_a(idat) = 1./dle;
+    elena_emin(idat) = elena_tmp1(1); elena_emax(idat) = elena_tmp1(nbin);
+    elena_fmin(idat) = elena_tmp2(1)/elena_tmp1(1);
+    elena_fmax(idat) = elena_tmp2(nbin)/elena_tmp1(nbin);
+    "write(6,*) '************ set ',idat,' nbin = ',nbin;
+    DO ibin=1,nbin [
+        "write(6,*) elena_tmp1(ibin),elena_tmp2(ibin);
+        elena_tmp2(ibin) = log(elena_tmp2(ibin)/elena_tmp1(ibin));
+        elena_tmp1(ibin) = log(elena_tmp1(ibin));
+    ]
+    call set_spline(elena_tmp1,elena_tmp2,aa,bb,cc,dd,nbin);
+    f = elena_fmin(idat); elke = log(elena_emin(idat));
+    "write(6,*) ' table: ';
+    DO ibin=1,elena_nbins-1 [
+        f_old = f;
+        elke = elke + dle;
+        f = spline(elke,elena_tmp1,aa,bb,cc,dd,nbin);
+        f = exp(f);
+        "write(6,*) exp(elke),f;
+        elena_fa_array(idat,ibin) = (f-f_old)*elena_a(idat);
+        elena_fb_array(idat,ibin) = f - elena_fa_array(idat,ibin)*elke;
+    ]
+    elena_fa_array(idat,elena_nbins) = elena_fa_array(idat,elena_nbins-1);
+    elena_fb_array(idat,elena_nbins) = elena_fb_array(idat,elena_nbins-1);
+    DO ibin=1,$ELENA_S_BINS [
+        elena_fs(idat,ibin)=0; elena_fs2(idat,ibin)=0;
+        elena_ftmp(idat,ibin)=0; elena_flast(idat,ibin)=0;
+        elena_fsc(idat,ibin)=0;
+    ]
+]
+elena_xmax = 20;
+elena_dx = elena_xmax/$ELENA_S_BINS; elena_dxi = 1/elena_dx;
+did_score = .false.;
+close(iunit);
+return;
+
+:no_elena_data:
+write(6,*) 'Failed to open chamber response function data file';
+$CALL_EXIT(1);
+
+:elena_bad_data:
+write(6,*) 'Error while reading chamber response function data file';
+$CALL_EXIT(1);
+
+entry elena_score(E,x,y,w,wt,ihist);
+
+IF( abs(y) < elena_ymax ) [
+    xx = abs(x);
+    IF( xx < elena_xmax ) [
+        wl = abs(w); IF( wl < 0.1 ) wl = 0.1;
+        wl = wt*E/wl;
+        ibin = 1 + xx*elena_dxi;
+        elke = log(E);
+        DO idat=1,nset [
+            IF( abs(y) < elena_ymax_s(idat) ) [
+                IF( E <= elena_emin(idat) ) [ r = elena_fmin(idat); j = 0; ]
+                ELSE IF( E < elena_emax(idat) ) [
+                    j = elena_a(idat)*elke + elena_b(idat);
+                    r = elena_fa_array(idat,j)*elke + elena_fb_array(idat,j);
+                ]
+                ELSE [ r = elena_fmax(idat); j = 1000; ]
+                "write(81,*) 'scoring: ',idat,E,r*E;
+                elena_ftmp(idat,ibin) = elena_ftmp(idat,ibin) + r*wl;
+                did_score = .true.;
+            ]
+        ]
+    ]
+]
+
+return;
+
+entry elena_finish_history;
+
+IF( ~did_score ) return;
+did_score = .false.;
+DO idat=1,nset [
+    f0 = elena_ftmp(idat,1);
+    DO ibin = 1,$ELENA_S_BINS [
+        f = elena_ftmp(idat,ibin);
+        elena_fs(idat,ibin) = elena_fs(idat,ibin) + f;
+        elena_fs2(idat,ibin) = elena_fs2(idat,ibin) + f*f;
+        elena_fsc(idat,ibin) = elena_fsc(idat,ibin) + f*f0;
+        elena_ftmp(idat,ibin) = 0;
+    ]
+]
+return;
+
+entry elena_print(iout,ncase);
+
+write(iout,*);
+write(iout,*) ' In air profiles with 2 different caps ';
+write(iout,*) ' ===================================== ';
+write(iout,*);
+/* r = 0.25/(elena_ymax*elena_dx); */
+r = 1./(3.141592654*elena_dx*elena_dx);
+DO ibin=1,$ELENA_S_BINS [
+    DO idat=1,nset [
+        elena_fs(idat,ibin) = elena_fs(idat,ibin) + elena_ftmp(idat,ibin);
+        elena_fs2(idat,ibin) = elena_fs2(idat,ibin) + elena_ftmp(idat,ibin)**2;
+        elena_fsc(idat,ibin) = elena_fsc(idat,ibin) +
+          elena_ftmp(idat,ibin)*elena_ftmp(idat,1);
+    ]
+]
+DO ibin=1,$ELENA_S_BINS [
+    DO idat=1,nset [
+        elena_ftmp(idat,ibin) = 0; elena_flast(idat,ibin) = 0;
+        tmp_array(idat) = elena_fs(idat,ibin)/ncase;
+        tmp2_array(idat) = elena_fs2(idat,ibin)/ncase;
+        tmp2_array(idat) = (tmp2_array(idat)-tmp_array(idat)**2)/(ncase-1);
+        IF( ibin = 1 ) [
+            tmp0_array(idat) = tmp_array(idat);
+            tmp02_array(idat) = tmp2_array(idat)/tmp_array(idat)**2;
+        ] ELSE [
+            tmp2_array(idat) = tmp2_array(idat)/tmp_array(idat)**2 +
+              tmp02_array(idat) - 2*(elena_fsc(idat,ibin)/ncase/
+                      tmp_array(idat)/tmp0_array(idat)-1)/(ncase-1);
+        ]
+        IF( tmp2_array(idat) > 0 ) tmp2_array(idat) = sqrt(tmp2_array(idat));
+    ]
+    IF( ibin = 1 ) [
+        DO idat=1,nset [
+            write(iout,'(a,i2,a,g15.7,a,g15.7)')
+              '# Profile at zero for idat=',idat,': ',
+              tmp_array(idat)*r,' +/- ',tmp2_array(idat)*r;
+        ]
+        write(iout,'(a)') '#';
+        write(iout,'(f7.3,20f8.4)') 0.,(1.0,0.0,kset=1,nset);
+    ]
+    ELSE [
+        write(iout,'(f7.3,20f8.4)') elena_dx*(ibin-0.5),
+      (tmp_array(idat)/tmp0_array(idat),tmp2_array(idat),idat=1,nset);
+      /*
+      (tmp_array(idat)/tmp0_array(idat)/(2*ibin-1),tmp2_array(idat),idat=1,2);
+      */
+    ]
+]
+write(iout,*);
+
+return;
+
+entry elena_store(iout);
+
+DO idat=1,nset [ tmp0_array(idat) = elena_ftmp(idat,1); ]
+DO ibin=1,$ELENA_S_BINS [
+    DO idat=1,nset [
+        elena_fs(idat,ibin) = elena_fs(idat,ibin) + elena_ftmp(idat,ibin);
+        elena_fs2(idat,ibin) = elena_fs2(idat,ibin) + elena_ftmp(idat,ibin)**2;
+        elena_fsc(idat,ibin) = elena_fsc(idat,ibin) +
+          elena_ftmp(idat,ibin)*tmp0_array(idat);
+        elena_ftmp(idat,ibin) = 0; elena_flast(idat,ibin) = 0;
+    ]
+]
+DO idat=1,nset [
+    write(iout,*) (elena_fs(idat,ibin),ibin=1,$ELENA_S_BINS);
+    write(iout,*) (elena_fs2(idat,ibin),ibin=1,$ELENA_S_BINS);
+    write(iout,*) (elena_fsc(idat,ibin),ibin=1,$ELENA_S_BINS);
+]
+return;
+
+entry elena_set_data(iout);
+DO idat=1,nset [
+    read(iout,*,err=:elena_bad_datfile:)
+        (elena_fs(idat,ibin),ibin=1,$ELENA_S_BINS);
+    read(iout,*,err=:elena_bad_datfile:)
+        (elena_fs2(idat,ibin),ibin=1,$ELENA_S_BINS);
+    read(iout,*,err=:elena_bad_datfile:)
+        (elena_fsc(idat,ibin),ibin=1,$ELENA_S_BINS);
+    DO ibin=1,$ELENA_S_BINS [
+        elena_ftmp(idat,ibin) = 0; elena_flast(idat,ibin) = 0;
+    ]
+]
+elena_xmax = 20; elena_ymax = 1;
+elena_dx = elena_xmax/$ELENA_S_BINS; elena_dxi = 1/elena_dx;
+return;
+
+:elena_bad_datfile:
+write(6,*) 'Error while reading elena data from data file';
+$CALL_EXIT(1);
+
+entry elena_add_data(iout);
+DO idat=1,nset [
+    read(iout,*,err=:elena_bad_datfile1:)
+        (elena_tmp1(ibin),ibin=1,$ELENA_S_BINS);
+    read(iout,*,err=:elena_bad_datfile1:)
+        (elena_tmp2(ibin),ibin=1,$ELENA_S_BINS);
+    read(iout,*,err=:elena_bad_datfile1:)
+        (elena_tmp3(ibin),ibin=1,$ELENA_S_BINS);
+    DO ibin=1,$ELENA_S_BINS [
+        elena_fs(idat,ibin) = elena_fs(idat,ibin) + elena_tmp1(ibin);
+        elena_fs2(idat,ibin) = elena_fs2(idat,ibin) + elena_tmp2(ibin);
+        elena_fsc(idat,ibin) = elena_fsc(idat,ibin) + elena_tmp3(ibin);
+    ]
+]
+return;
+
+:elena_bad_datfile1:
+write(6,*) 'Error while reading elena data from data file';
+$CALL_EXIT(1);
+
+entry elena_reset_data;
+DO idat=1,nset [
+    DO ibin=1,$ELENA_S_BINS [
+        elena_ftmp(idat,ibin) = 0; elena_flast(idat,ibin) = 0;
+        elena_fs(idat,ibin) = 0; elena_fs2(idat,ibin) = 0;
+        elena_fsc(idat,ibin) = 0;
+    ]
+]
+return;
+
+end;
+
