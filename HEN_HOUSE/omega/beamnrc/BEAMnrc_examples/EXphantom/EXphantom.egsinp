@@ -1,0 +1,60 @@
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam      #!GUI1.0
+AIR700ICRU
+0, 0, 0, 1, 0, 0, 0,  IWATCH,ISTORE,IRESTART,etc
+70000.0, 0, 0, 0.99, 0, 0, 0, 0,  NCASE, etc 
+9, 21, 1, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0.0,  Phase space source incident on CM 1 
+$HOME/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1
+0.0, 0.0, 0.521, 0.010, 0, 2, 3.0, 0, ESTEPE, ECUT, PCUT, etc. 
+0, 0, 0, 0, 0,  IFORCE,NFMIN,etc 
+1, 1,           Scoring plane at the back of the phantom 
+5, 0,           5 circular scoring zones 
+0.1, 1.0, 2.0, 5.0, 10., Radii of scoring zones
+1,        Calculate contaminant dose and other dose components
+1, 0,     Contaminant particles are photons, identified on entering the phantom
+0,        LNEXC, no exclusive bit filter
+5,        LNINC, 5 inclusive bit filters
+16,
+17,
+18,
+19,
+20,  
+0.0,    Z_min_CM(1)
+**************start of phantom**************************
+20.0
+10cm depth-dose phantom, central axis dose volumes 0.5cm thick, r=1cm  
+0.0, ZMIN
+0, 20, 0, N_TOP, N_CHM, N_BOT
+2.0, 20.0, 20.0, RADII FOR CENTRAL PART
+0.5, 20, ZTHICK, FLAG FOR ALL LAYERS IN CENTRAL PART
+0.521, 0.01, 1, 0, 
+H2O700ICRU
+0.521, 0.01, 0, 0,   chamber wall
+H2O700ICRU
+0.521, 0.01, 0, 0,   gap
+H2O700ICRU
+0.521, 0.01, 0, 0,   container
+H2O700ICRU
+0, MRNGE
+*********************end of all CMs*****************************
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 0.521
+ Global PCUT= 0.01
+ Global SMAX= 5
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= Off
+ 
+ :Stop MC Transport Parameter:
+ #########################

@@ -1,0 +1,39 @@
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam     
+AIR700ICRU              
+           0  0   0  1  0  2  0,                 IWATCH,ISTORE,IRESTART,etc
+          70000.        1802        9373   0.99 0      0 0 NCASE, etc
+  0 21    1.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc
+   0.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc
+/usr/people/bwalters/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1                     
+   0.000   0.000E+00  0.521   0.010  0  2   3.000 0, ESTEPIN,SMAX,ECUTIN,etc
+     0,     0,     0,     0,     0,              IFORCE,NFMIN,etc
+   1   1
+     5    0,                                     NSC_ZONES,MZONE_TYPE
+      0.10000     1.00000     2.00000     5.00000    10.00000
+     1,                                          ITDOSE_ON
+     1    0
+    0
+    5
+   16 
+   17 
+   18 
+   19 
+   20 
+         0.00000,                                Front of first CM with air
+ **************start of CM CHAMBER   PHANTOM   *************
+  20.00000,                                      Outer boundary
+10cm depth-dose phantom, central axis dose volumes 0.5cm thi
+        0.00000
+    0   20    0
+        2.00000       20.00000       20.00000
+        0.50000   20
+        0.52100        0.01000    1    0
+H2O700ICRU              
+        0.52100        0.01000    0    0
+H2O700ICRU              
+        0.52100        0.01000    0    0
+H2O700ICRU              
+        0.52100        0.01000    0    0
+H2O700ICRU              
+    0
+ *************end of all CMs****************

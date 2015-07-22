@@ -1,0 +1,219 @@
+EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field                #!GUI1.0
+AIR521ICRU
+0, 0, 0, 0, 0, 2, 0,  IWATCH ETC.
+50000.0, 97, 33, 500.0, 0, 0, 0, 0,  NCASE ETC.
+-1, 0, 0.1, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, IQIN, ISOURCE + OPTIONS
+0, MONOENERGETIC
+12.00000
+0, 0, 0.7, 0.01, 0, 1, 2.0,  0 , ECUT,PCUT,IREJCT,ESAVE
+0, 0, 0, 0, 0,  PHOTON FORCING
+1, 8,  SCORING INPUT
+5, 1
+0.707, 1.0, 1.225, 5.0, 7.071, 
+1,  DOSE COMPONENTS
+4, 0
+1
+12, 14, 15, 16, 17, 18, 19, 20, 
+8
+12, 
+14, 
+15, 
+16, 
+17, 
+18, 
+19, 
+20, 
+0.0, Z TO FRONT FACE
+*********** start of CM SLABS with identifier XITWIN  ***********
+5.0, RMAX
+0.1cm of vacuum, Ni exit window from accelerator vacuum.
+3, NSLABS
+0.0, ZMIN
+0.1, 0.0, 0.0, 0, 0, 0.0
+VACUUM
+0.006, 0.0, 0.0, 1, 1, 0.0
+NI521ICRU
+0.274, 0.0, 0.0, 0, 0, 0.0
+AIR521ICRU
+*********** start of CM CONS3R with identifier COLLIMAT  ***********
+10.0, RMAX
+primary collimator: cone of air shielded by W-Ni-Cu
+1.5, ZMIN
+12.0, ZTHICK
+14, NUM_NODE
+1.5, 0.5, 
+2.5, 0.5, 
+2.5, 1.0, 
+5.0, 1.0, 
+5.0, 1.25, 
+7.5, 1.25, 
+7.5, 1.75, 
+10.0, 1.75, 
+10.0, 2.0, 
+11.5, 2.0, 
+11.5, 2.01, 
+13.0, 2.01, 
+13.0, 2.5, 
+13.5, 2.5, 
+0.0, 0.0, 0, 0, 0, 
+AIR521ICRU
+0.0, 0.0, 2, 2, 0, 
+WNICU521
+*********** start of CM CONESTAK with identifier SCATFOIL  ***********
+10.0, RMAX
+Pb and Cu scattering foil shielded by mild steel
+15.1619, 2.45, ZMIN, RBN
+3, NUMBER OF LAYERS
+0.0152, 0.725, 0.725, 
+0.0127, 1.5, 1.5, 
+0.0102, 2.44, 2.44, 
+0.0, 0.0, 4, 4, OUTER WALL
+MILDSTEEL521
+0.0, 0.0, 5, 5, 
+PB521ICRU
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+0.0, 0.0, 5, 5, 
+PB521ICRU
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+0.0, 0.0, 6, 6, 
+CU521ICRU
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+*********** start of CM CHAMBER with identifier IONCHAM  ***********
+10.0, RMAX
+Ag plated mica ion chamber with Al frame
+15.6, ZMIN
+0, 15, 0, N_TOP, N_CHM, N_BOT
+5.0, 6.0, 10.0, RADII FOR CENTRAL PART
+0.05, 0, ZTHICK, FLAG FOR LAYER 1 IN CENTRAL PART
+0.0, 0.0, 8, 8, 
+AL521ICRU
+0.2, 0, ZTHICK, FLAG FOR LAYER 2 IN CENTRAL PART
+0.0, 0.0, 7, 7, 
+AIR521ICRU
+0.00025, 0, ZTHICK, FLAG FOR LAYER 3 IN CENTRAL PART
+0.0, 0.0, 9, 9, 
+AG521ICRU
+0.0254, 0, ZTHICK, FLAG FOR LAYER 4 IN CENTRAL PART
+0.0, 0.0, 10, 10, 
+MICA521
+0.00025, 0, ZTHICK, FLAG FOR LAYER 5 IN CENTRAL PART
+0.0, 0.0, 9, 9, 
+AG521ICRU
+0.2, 0, ZTHICK, FLAG FOR LAYER 6 IN CENTRAL PART
+0.0, 0.0, 7, 7, 
+AIR521ICRU
+0.0254, 0, ZTHICK, FLAG FOR LAYER 7 IN CENTRAL PART
+0.0, 0.0, 8, 8, 
+AL521ICRU
+0.2, 0, ZTHICK, FLAG FOR LAYER 8 IN CENTRAL PART
+0.0, 0.0, 7, 7, 
+AIR521ICRU
+0.00025, 0, ZTHICK, FLAG FOR LAYER 9 IN CENTRAL PART
+0.0, 0.0, 9, 9, 
+AG521ICRU
+0.0254, 0, ZTHICK, FLAG FOR LAYER 10 IN CENTRAL PART
+0.0, 0.0, 10, 10, 
+MICA521
+0.00025, 0, ZTHICK, FLAG FOR LAYER 11 IN CENTRAL PART
+0.0, 0.0, 9, 9, 
+AG521ICRU
+0.2, 0, ZTHICK, FLAG FOR LAYER 12 IN CENTRAL PART
+0.0, 0.0, 7, 7, 
+AIR521ICRU
+0.0254, 0, ZTHICK, FLAG FOR LAYER 13 IN CENTRAL PART
+0.0, 0.0, 8, 8, 
+AL521ICRU
+0.2, 0, ZTHICK, FLAG FOR LAYER 14 IN CENTRAL PART
+0.0, 0.0, 7, 7, 
+AIR521ICRU
+0.05, 0, ZTHICK, FLAG FOR LAYER 15 IN CENTRAL PART
+0.0, 0.0, 8, 8, 
+AL521ICRU
+0.7, 0.01, 11, 11,   chamber wall
+AL521ICRU
+0.7, 0.01, 0, 0,   gap
+AIR521ICRU
+0.7, 0.01, 11, 11,   container
+AL521ICRU
+1, MRNGE
+*********** start of CM CONESTAK with identifier RING  ***********
+12.0, RMAX
+complex region behind ion chamber rep. as cylindrical hole i
+18.0, 0.0, ZMIN, RBN
+1, NUMBER OF LAYERS
+0.8, 3.5, 3.5, 
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+0.0, 0.0, 12, 12, 
+MILDSTEEL521
+*********** start of CM MIRROR with identifier MIRROR  ***********
+12.0, RMAX
+mica and Al mirror at 45 degrees to z-axis
+19.6, 7.0, ZMIN, ZTHICK
+3.5, -3.5, XFMIN, XBMIN
+2, # LAYERS
+0.00508,  thickness of layer 1
+0.00508,  thickness of layer 2
+0.0, 0.0, 13, 13, 
+MICA521
+0.0, 0.0, 13, 13, 
+AL521ICRU
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+0.0, 0.0, 0, 0, 
+AIR521ICRU
+*********** start of CM JAWS with identifier MAINJAWS  ***********
+10.0, RMAX
+JAWS set for 10x10 cm field at 100 cm SSD
+2, # PAIRED BARS OR JAWS
+Y
+27.5, 37.5, 1.925, 2.625, -1.925, -2.625, 
+X
+39.5, 49.5, 3.16, 3.96, -3.16, -3.96, 
+0.0, 0.0, 0, 0, 
+0.0, 0.0, 14, 14, 
+PB521ICRU
+0.0, 0.0, 15, 15, 
+PB521ICRU
+*********** start of CM APPLICAT with identifier APPLICAT ***********
+17.0, RMAX
+applicator with 2 steel and 3 Al scrapers
+100.0, ZBACK
+5, 0, #SCRAPERS, SQUARE
+61.55, 0.15, 7.0, 2.8, 16, 16
+68.6, 0.65, 5.2, 6.75, 17, 17
+83.2, 0.5, 6.05, 4.0, 18, 18
+93.9, 1.3, 4.75, 2.8, 19, 19
+96.05, 0.25, 5.1, 4.0, 20, 20
+0.0, 0.0, 0, 0, 
+AL521ICRU
+AL521ICRU
+FE521ICRU
+FE521ICRU
+AL521ICRU
+*********************end of all CMs*****************************
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 0.7
+ Global PCUT= 0.01
+ Global SMAX= 1e10
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= On
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= On
+ 
+ :Stop MC Transport Parameter:
+ #########################

@@ -1,0 +1,472 @@
+================================================================================
+EGSnrc version 4 for i686-pc-linux-gnu                 Mon Sep 13 10:33:54 2004
+================================================================================
+configuration...............................................gcc33
+user code...................................................BEAM_EXphantom
+pegs file...................................................700icru on HEN_HOUSE
+using host..................................................irs40
+input file..................................................ex
+output file(s)..............................................ex
+================================================================================
+
+
+ BEAMnrc  Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-linux-gnu using gcc 3.3 WITH EGSnrc.           10:33:54 Sep 13 2004
+
+
+ The following internal parameters are set:
+ Max number of CMs: 20                 Max number of media  12
+ Max number of regions: 250            Max stack:****
+ Max bremsstrahlung split:2000         Max number dose zones:  50
+ Max number of scoring planes:  3      Max number of scoring zones:   5
+ Max number dose components: 12        Minimum air gap:      0.0100 cm
+   All of above can be adjusted in beamnrc_user_macros.mortran
+
+
+ TITLE: EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam     
+
+ 
+ Reading in EGSnrc transport parameters:
+ -------------------------------------- 
+ Bound Compton start region
+  Setting all to  0
+ Rayleigh start region
+  Setting all to  0
+ Relaxations start region
+  Setting all to  0
+ PE sampling start region
+  Setting all to  0
+
+
+ Finished reading EGSnrc transport parameters.
+
+
+ MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR700ICRU              
+
+
+ IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3), 
+ IDAT(0-1), LATCH_OPTION (1-3), IZLAST(0-2) :            0           0         0         1         0           0           0
+
+ Do not track(0) or track(>0) every interaction or track Nth
+ history only(-N):                                                    0
+ Store random # for a batch(0),a history(1) or read random #(-1):     0
+ First run(0),restarted(1),make(2),analyze(3):                        0
+ Output to PH-SP(0),not(1),BEAM-MODEL(2),PH-SP&MODEL(3):              1
+ Store data(0) or not(1):                                             0
+ LATCH OPTION,do not inherit(1),inherit+record origin(2,3):           2
+ Do not score ZLAST(0), score ZLAST(1), output file for graphics(2):  0
+ 
+ #HISTORIES, RN SEED #1, RN SEED #2, TIMMAX,  IBRSPL(0,1,2,29),
+         NBRSPL, IRRLTT(0,1,2), ICM_SPLIT
+ : 
+         70000.            0            0      0.9900     0     0     0     0
+ First RN seed outside allowed range and default value set
+ Second RN seed outside allowed range and default value set
+
+ # of histories:                                                  70000
+ 1st initial random number seed(>0,<31329):                        1802
+ 2nd initial random number seed(>0,<30081):                        9373
+ maximum cpu time allowed:                                       0.99 hrs
+ bremsstrahlung angular sampling is always switched on
+ bremsstrahlung splitting off(0),uniform(1),directional(2),
+ selective(29):                                                       0
+ each brem split into:                                                0
+ Russian roulette off(0),on(1),on+annihilation split(2):              0
+
+ 
+ CHARGE OF THE INCIDENT BEAM(-1,0,1),
+ SOURCE CONFIGURATION
+      (0) Parallel beam incident from the front:(0),radius(cm),
+                    incident direction cosines (U,V,W)
+
+  or  (1) Point source on axis incident from the front,
+              DISTZ,distance of source to VERY front of first CM.
+              RBEAM,beam radius or side of square (<0)(cm),
+              GAMMA,1/2 angle(degrees) of source if RBEAM=0.0
+
+  or  (3) Uniform isotropically radiating source incident within CMs
+          Source is a vertical ring centred on the Z-axis if input #4
+          is >= 0 or a horizontal cylinder centred || to X-axis if
+          input #4 is < 0:
+                    (3),inner radius of vertical ring or Z of centre
+                    of horizontal cylinder (cm), outer radius of
+                    vertical ring (if >= 0) or radius of horizontal
+                    cylinder (if < 0) (cm), minimum Z or minimum X
+                    (cm), maximum Z or maximum X (cm)
+
+  or  (5) NRC swept beam, cone 1/2 angle (in degrees)
+                    radius of beam spot (in cm)
+
+  or  (6) Parallel rectangular beam incident along Z-axis:(6),
+                    centred at (Xo,Yo), half-widths: Xh, Yh (cm)
+                    (0, 6, Xo, Yo, Xh, Yh)
+
+  or  (7) Scanning beam, scanning field size to 100 cm 
+                    ratio of the frequencies in Y/X directions
+                    spot size at the initial point. 
+
+  or  (8) Scanning point source for MM50--uniform field coverage:
+                    (8), SSD (defaults to 100 cm), radius of
+                    field at SSD (defaults to RMAX_CM(1)), radius
+                    of beam spot at Z=0 (defaults to 0).
+                    Note that this option assumes the point
+                    source is at Z=0
+
+  or  (9) Scanning point source for MM50--discrete field coverage:
+                    (9), SSD (defaults to 100 cm), # of 
+                    discrete points at SSD.
+                    Note that this option assumes the point
+                    source is at Z=0
+
+  or (10) Parallel circular beam incident on an x-ray target:
+                    (10), radius(cm), direction cosines (U,V)
+                    default to (-1,0), (W is set to 0)
+
+  or (13) Parallel rectangular beam incident on an x-ray target:
+                    (13), half-width(cm), half-height (cm)
+                    direction cosines (U,V,W), default to (-1,0,0)
+
+  or (15) NRC swept beam with radial divergence and intensity distribution:
+                    (15),cone 1/2 angle (in degrees), Z of apex of cone (cm),
+                    radius at which beam divergence angle is defined (cm),
+                    beam divergence angle (degrees)
+
+  or (19) Parallel beam with 2-D gaussian X-Y distribution:
+                    (19),sigma of gaussian distribution (if > 0) or
+                    -FWHM of gaussian distribution (if < 0) in cm,
+                    incident direction cosines (U,V,W)
+
+  or (21) Full phase-space of each particle read from unit 42
+                    component module # 
+                      (particles incident on the front of this CM),
+                    no. of times to recycle each particle
+                      (calculated automatically if set to 0),
+                    no. of parallel jobs (if using pprocess script),
+                    job no. (if using pprocess),
+                    ISRC_DBS (1 if source generated using DBS),
+                    RSRC_DBS,SSDSRC_DBS (splitting radius, SSD used
+                       to generate this source--only if ISRC_DBS=1),
+                    ZSRC_DBS (Z where the source was generated--
+                       only if ISRC_DBS=1)
+                    (0, 21, INIT_ICM, 0,0,0,0,0,0,0)
+
+  or (31) Beam characterization model, component module #
+                    (particles incident on the front of this CM)
+                    (0, 31, CMSOU,0.,0.,0.)
+
+ IQIN,ISOURC, up to 8 reals:    9  21    1.0000    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000    0.0000
+                    ISOURC = 21
+ FULL PHASE-SPACE TO BE READ FROM UNIT 42...
+ INPUT NAME OF FILE WITH PHASE SPACE DATA(1 TO 80 CHARS,WITH .EXT)
+ : 
+ READ PHASE SPACE INFORMATION FROM: 
+/usr/people/bwalters/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1                     
+          Phase space source with:
+                        Total number of particles =         8233
+                                Number of photons =         5953
+                  Maximum particle kinetic energy =       11.930 MeV
+                  Minimum electron kinetic energy =        0.192 MeV
+     # of particles incident from original source =      50000.0
+
+
+ Particles will start at the front boundary of CM  1
+
+
+ Particles will be recycled    8 times before moving on to next one.
+
+
+(ESTEPIN,SMAX--DUMMY INPUTS),ECUTIN,PCUTIN,(IDORAY--DUMMY INPUT)
+IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
+   :   0.000  0.0000E+00    0.5210    0.0100    0    2    3.0000    0
+ Global esave cutoff value for range rejection:                3.0000 MeV
+ RANGE REJECTION below ESAVE with RANGE and DNEAR
+
+ Photon forcing: next five numbers on one line
+ Force photon interactions in the target?(0)=>no,(1)=>yes, 
+ min/max photon interaction #/history to do forcing for,
+ min/max CM # in which to do forcing  
+ :    0   0   0   0   0
+
+ No photon interaction forcing in effect
+
+
+ Information about scoring planes
+
+ No phase space files since IO_OPT=  1
+ Number of scoring planes(NSC_PLANES) & list of CMs (score at back of each)
+ :     1    1
+ Number of planes for fluence scoring or phase space output:    1
+ Fluence will be scored at the back of component module(s):     1,
+
+ Inputs for scoring plane     1
+
+ Number of scoring zones( 5) & zone type (0-annular;1-square):     5    0
+ Radii of scoring zones, in increasing order(10/line):    0.10000   1.00000   2.00000   5.00000  10.00000
+ 
+ Total dose only(0) or total dose & dose components(1):    1
+
+ CM # at which contaminant particles are identified on entry at front,
+ and type of contaminant particle (0=photons,1=charged particles)
+ :    1    0
+
+
+ Dose from contaminant photons will be calculated
+ in CM #    1
+
+
+
+ # of dose components which exclude particles from specified regions:     0
+
+ # of dose components including particles from specified regions:     5
+
+ INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   1
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
+   16 
+
+ INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   2
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
+   17 
+
+ INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   3
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
+   18 
+
+ INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   4
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
+   19 
+
+ INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   5
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
+   20 
+
+ Z dist from ref plane(Z=0) to CM front (include any air gap):     0.00000
+
+ Finished general beamnrc input, now input re component modules
+
+ ===============================================================================
+  Input blank line to signify start of component module
+
+ ===============================================================================
+ Outer boundary of CM  1:   20.00000
+
+ PHANTOM  (CHAMBER Rev 1.8)
+
+ This component is an ion chamber or for scoring dose components
+       Outer boundary is a cylinder of radius   20.0000 cm
+
+ TITLE:  10cm depth-dose phantom, central axis dose volumes 0.5cm thi
+ This is first component module -- starts at      0.0000 cm from ref plane(z=0)
+
+ Distance from front of PHANTOM(not air gap) to ref plane(z=0):    0.00000
+
+ This module consists of 3 partS:
+   1 --- top part, 
+   2 --- main part: the chamber/phantom central part, 
+   3 --- bottom part.
+
+ Input the number of layers for each part: 
+ N-TOP (>=0), N-CHAM (>0 to input chamber layers individually or <0 to
+ input -N-CHAM groups of layers), N-BOT (>=0) (N-TOP + total number of
+ chamber layers + N-BOT <=  199) on one line
+ :         0       20        0
+
+          INPUTS FOR THE Central CHAMBER PART
+
+ INPUT THE INNER RADIUS OF THE CHAMBER WALL (R_INNER),
+ THE OUTER RADIUS OF THE CHAMBER WALL (R_WALL), AND THE OUTER RADIUS,
+ OF THE GAP BETWEEN THE CHAMBER WALL AND CONTAINER WALL (R_OUTER),
+ ALL ON ONE LINE.
+ :       2.00000     20.00000     20.00000
+
+ Note that R_OUTER also defines the inner radius of the container.
+ The outer radius of the container is defined by RMAX_CM.
+
+ INPUT THICKNESS FOR EACH LAYER WITHIN THE CHAMBER
+ FOR LAYERS OF EQUAL THICKNESS (ZTHICK) AND MEDIUM, 
+ INPUT ZTHICK,N-CHAM (in one line)
+ OTHERWISE, INPUT ZTHICK FOR EACH LAYER STARTING FROM 1ST LAYER
+ :         0.50000   20
+
+ ALL THE    20 LAYERS HAVE EQUAL THICKNESS OF        0.50000 cm.
+
+ If a dose zone is input, it is the first of  20 in sequence
+ ECUT,PCUT,INITIAL DOSE ZONE(0=>do not score dose), IREGION_TO_BIT
+ FOR THE LAYERS:     0.5210    0.0100    1              0
+ For all layers : MEDIUM (left justify):  H2O700ICRU              
+
+ FOR THE CHAMBER WALL:
+
+ ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
+ :     0.5210    0.0100    0              0
+ For this region:  MEDIUM (left justify):  H2O700ICRU              
+
+ FOR THE GAP BETWEEN THE CHAMBER WALL AND THE
+CONTAINER WALL:
+
+ ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
+ :     0.5210    0.0100    0              0
+ For this region:  MEDIUM (left justify):  H2O700ICRU              
+
+ FOR THE CONTAINER WALL:
+
+ ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
+ :     0.5210    0.0100    0              0
+ For this region:  MEDIUM (left justify):  H2O700ICRU              
+
+ MRNGE: ENTER 1 to estimate thickness of PHANTOM for ECUTRR
+ calculations in automated range rejection; otherwise, do
+ not calculate ECUTRR    0
+ 
+  Input blank line to signify end of component module
+
+ Back in main of beamnrc.mortran after inputs from CMs
+
+
+ There are  2 different media:
+           Medium(  1) is: AIR700ICRU              
+           Medium(  2) is: H2O700ICRU              
+
+ CALL TO HATCH AT  10:33:54
+ RAYLEIGH DATA AVAILABLE FOR MEDIUM  2 BUT OPTION NOT REQUESTED.
+
+  old PRESTA calculates default min. step-size for BCA: 
+      minimum ECUT found:   0.699999988
+      default BLCMIN is:   5.78166866
+      this corresponds to   324.299896 elastic MFPs 
+  Reading screened Rutherford MS data ...............  done 
+
+
+Reading spin data base from /usr/people/bwalters/HEN_HOUSE/data/spinms.data
+EGSnrc spin data, version 2.0   
+Data generated on a machine with 1234 endianess
+The endianess of this CPU is 1234
+Ranges:      1.00   100.00  0.30054  1.00000
+
+  medium    1 .....................  done
+  medium    2 .....................  done
+
+  Medium  1 sige =   0.358165503  0.353042096
+  Medium  2 sige =   0.43643561  0.429978073
+
+  Initializing tmxs for estepe =   0.25 and ximax =   0.5
+
+ Output from subroutine EDGSET:
+ ==============================
+ Atomic relaxations not requested! 
+
+ Bound Compton scattering not requested! 
+
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR     2 MEDIA.
+
+ HATCH COMPLETED AT 10:33:55
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon transport cutoff(MeV)                                AP(medium)
+ Pair angular sampling                                       SIM
+ Bound Compton scattering                                    OFF           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          OFF           
+ Photoelectron angular sampling                              OFF           
+
+ Electron transport cutoff(MeV)                              AE(medium)
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             SIM
+ Spin effects                                                On
+ Electron Impact Ionization                                    0
+ Maxium electron step in cm (SMAX)                                5.000    
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 PRESTA-I  
+ Skin-depth for boundary crossing (MFP)                      324.3    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+
+ There are  1 scoring planes -see below
+
+ LOCAL REGION  22 IN CHAMBER HAS ZERO VOLUME!
+
+
+ LOCAL REGION  23 IN CHAMBER HAS ZERO VOLUME!
+
+ *******************************************************************************
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+ *******************************************************************************
+
+********* NEW INPUT FILE *********
+
+ *********** Returned from beam_init: ircode =  0
+ *********** jcase =  7000
+
+ BATCH #  TIME-ELAPSED  TOTAL CPUTIME  RATIO  TIME OF DAY  RNG pointers
+
+     1          0.0            0.0      0.00    10:33:55   ixx jxx =   97  33 
+     # of histories run:      7000      # of particles in ph-sp file:         0
+
+     2          0.1            0.1      1.19    10:33:55   ixx jxx =   67   3 
+     # of histories run:     14000      # of particles in ph-sp file:         0
+
+     3          0.3            0.2      1.19    10:33:55   ixx jxx =   59  92 
+     # of histories run:     21000      # of particles in ph-sp file:         0
+
+     4          0.4            0.4      1.18    10:33:55   ixx jxx =   97  33 
+     # of histories run:     28000      # of particles in ph-sp file:         0
+
+     5          0.5            0.5      1.18    10:33:55   ixx jxx =   81  17 
+     # of histories run:     35000      # of particles in ph-sp file:         0
+
+     6          0.7            0.6      1.18    10:33:55   ixx jxx =   74  10 
+     # of histories run:     42000      # of particles in ph-sp file:         0
+
+     7          0.8            0.7      1.18    10:33:55   ixx jxx =   91  27 
+     # of histories run:     49000      # of particles in ph-sp file:         0
+
+     8          0.9            0.8      1.17    10:33:56   ixx jxx =   53  86 
+     # of histories run:     56000      # of particles in ph-sp file:         0
+
+     9          1.1            0.9      1.18    10:33:56   ixx jxx =   92  28 
+     # of histories run:     63000      # of particles in ph-sp file:         0
+
+    10          1.2            1.0      1.18    10:33:56   ixx jxx =   51  84 
+     # of histories run:     70000      # of particles in ph-sp file:         0
+
+
+ *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   38  71
+
+ FOR THIS RUN:
+ ------------ 
+ ELAPSED& CPU TIMEs, RATIO =       1.3       1.1s (=   0.00HR)   1.19
+ CPUTIME per history =   0.00002 sec. Number of histories per hour =  223404272.
+   On i686-pc-1-gnu using gcc 3.3     
+
+
+ MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+ MAX PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+
+
+ END OF RUN          Sep 13 2004 10:33:56
+
+
+
+
+================================================================================
+Finished simulation
+
+  Elapsed time:                    1.9 s (  0.001 h)
+  CPU time:                        1.5 s (  0.000 h)
+  Ratio:                          1.301
+
+
+End of run                                             Mon Sep 13 10:33:56 2004
+================================================================================
