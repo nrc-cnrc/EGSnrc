@@ -23,3 +23,4 @@ output files associated with running the job in batch mode. To try any example:
  EX10MeVe             | a generic 10 MeV electron beam accelerator
  EXphantom            | calculating dose components on the central axis using the CM CHAMBER
 
+These examples were authored by Blake Walters in 2004.
