@@ -1,0 +1,511 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc program to build a BEAMnrc accelerator                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 2004                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This program takes as argument the name of a spec_module file (with no     "
+"  '.module' extension). It then reads the file                               "
+"                                                                             "
+"  $EGS_HOME/beamnrc/spec_modules/spec_module.module                          "
+"                                                                             "
+"  to obtain the CM types and identifiers (user given names) of the modules   "
+"  that make up the accelerator and creates the following files:              "
+"                                                                             "
+"  1. $EGS_HOME/beamnrc/BEAM_spec_module/BEAM_spec_module_cm.mortran          "
+"  2. $EGS_HOME/beamnrc/BEAM_spec_module/BEAM_spec_module_macros.mortran      "
+"  3. $EGS_HOME/beamnrc/BEAM_spec_module/modules.make                         "
+"  4. $EGS_HOME/beamnrc/BEAM_spec_module/sources.make                         "
+"  5. $EGS_HOME/beamnrc/BEAM_spec_module/Makefile                             "
+"                                                                             "
+"  Files 4 and 5 are only created if they don't exist, i.e., the named        "
+"  accelerator is being created for the first time (file  4 is actually an    "
+"  empty file but it must be there because the Makefile looks for it). Files  "
+"  1, 2, and 3 are always created. While creating files 1 and 2, all          "
+"  occurrences of $CM in $CM_cm.mortran and $CM_macros.mortran are replaced   "
+"  by the identifying name of the $CM in question.                            "
+"                                                                             "
+"  This little tool is used to                                                "
+"                                                                             "
+"  a) create a new BEAMnrc user code from a spec_module file                  "
+"                                                                             "
+"  b) re-create the macros and mortran files if there have been any           "
+"     changes in the CM source files or in the spec_module file. This         "
+"     is done from within the Makefile using the dependencies rules.          "
+"                                                                             "
+"  Initial version: Blake Walters, Jan 18 - Jan 23 2004.                      "
+"                                                                             "
+"  Iwan Kawrakow, 2004:                                                       "
+"                                                                             "
+"  - create the modules.make file                                             "
+"  - create the sources.make file                                             "
+"  - create the Makefile                                                      "
+"  - use directory names that come from machine.macros                        "
+"    (HEN_HOUSE) and from the environment (EGS_HOME).                         "
+"  - return a proper exit status (0 on success,                               "
+"    1 on failure) so that make does not get confused                         "
+"    when using this tool.                                                    "
+"                                                                             "
+"  Iwan Kawrakow, 2005:                                                       "
+"                                                                             "
+"  read the list of files from beamnrc.spec and write it to sources.make so   "
+"  that it is easier to make changes.                                         "
+"                                                                             "
+"#############################################################################"
+
+
+"useful macros"
+REPLACE {$SKIP LEADING BLANKS IN #;} WITH
+{;
+  length = lnblnk1({P1});
+  WHILE ( index({P1},blank) = 1 ) [
+    IF( length >= 2 ) [ {P1}={P1}(2:); ] ELSE [ EXIT; ]
+    length = length - 1;
+  ]
+}
+
+REPLACE {$cstring(#)} WITH {{P1}(:lnblnk1({P1}))};
+
+program beam_build;
+
+character*120 spec_module;
+
+call getarg(1,spec_module);
+
+IF(lnblnk1(spec_module)=0)[ "no spec_module specified"
+  write(6,'(/a)')'**** Error: ';
+  write(6,'(a)')'You have to provide the name of a spec_module (no extension)';
+  write(6,'(a)')'on the command line.';
+  write(6,'(/a)')'**** Quitting now.';
+  $CALL_EXIT(1);
+]
+
+call build_accel($cstring(spec_module));
+
+end;
+
+subroutine build_accel(spec_module);
+
+"Subroutine which actually does the work.  Note that this subroutine
+"assumes a very specific format for the spec_module.module file.
+
+character*120 spec_module,omega_home,cm_home,spec_home,accel_home,
+              accel_name,file_name,egs_home,beam_home,spec_file;
+character*10 cmtype($MAX_CMs),cmid($MAX_CMs);
+character*30 the_file;
+ "$MAX_CMs is defined in beamnrc_user_macros.mortran"
+character*20 vname; "the variable name in the spec_module.module file"
+character*256 text; "used to store each line of the input file"
+character*1 blank;
+$INTEGER iindex,length,num_cms,num_ids,i,istat,egs_system,line,j;
+$INTEGER lnblnk1;
+logical fileexist,egs_isdir,first_time;
+character file_sep;
+"egs_isdir and egs_system are in $HEN_HOUSE/"
+
+data blank/' '/;
+
+file_sep = char(92);
+
+"this stuff will have to be passed in somehow"
+call getenv('EGS_HOME',egs_home);
+IF( lnblnk1(egs_home) < 1 ) [
+    write(6,*) '*** Error: Environment variable EGS_HOME is not set';
+    write(6,*) '           quitting now';
+    $CALL_EXIT(1);
+]
+omega_home=$HEN_HOUSE // 'omega';
+spec_file=$HEN_HOUSE // 'specs' // $file_sep // 'beamnrc.spec';
+beam_home=$cstring(omega_home) // $file_sep // 'beamnrc';
+cm_home=$cstring(beam_home) // $file_sep // 'CMs' // $file_sep;
+spec_home=$cstring(egs_home) // 'beamnrc' // $file_sep // 'spec_modules'
+    // $file_sep;
+accel_home=$cstring(egs_home) // 'BEAM_' // $cstring(spec_module)
+    // $file_sep;
+accel_name=$cstring(accel_home)//'BEAM_'//$cstring(spec_module);
+
+file_name=$cstring(spec_home)//$cstring(spec_module)//'.module';
+open(8,file=$cstring(file_name),status='old',err=:file_open_error:);
+
+write(6,*)' Now reading CMs and identifiers from ',$cstring(file_name);
+read(8,end=:spec_text_end:,err=:text_err:,fmt='(A)') text;
+text=$cstring(text);
+vname='CM names';
+iindex=index(text,$cstring(vname));
+iindex=iindex+lnblnk1(vname)+1;
+text=text(iindex:); "strip off CM names text "
+iindex=index(text,':');
+text=text(iindex+1:); "strip off colon"
+
+"now, loop through text and strip out all of the CM types"
+"assume types are already in upper case and no more than 8 characters long"
+num_cms=0;
+LOOP[
+  IF(lnblnk1(text)=0) EXIT; "read all the text"
+  $SKIP LEADING BLANKS IN text;
+  num_cms=num_cms+1;
+  cmtype(num_cms)=text(:index(text,blank)-1); "assume blanks between names"
+  text=text(index(text,blank):);
+]
+
+read(8,end=:spec_text_end:,err=:text_err:,fmt='(A)') text;
+text=$cstring(text);
+vname='Identifiers';
+iindex=index(text,$cstring(vname));
+iindex=iindex+lnblnk1(vname)+1;
+text=text(iindex:); "strip off CM names text "
+iindex=index(text,':');
+text=text(iindex+1:); "strip off colon"
+
+"now, loop through text and strip out all of the CM ids"
+"assume ids are no more than 8 characters long"
+num_ids=0;
+LOOP[
+  IF(lnblnk1(text)=0) EXIT; "read all the text"
+  $SKIP LEADING BLANKS IN text;
+  num_ids=num_ids+1;
+  cmid(num_ids)=text(:index(text,blank)-1); "assume blanks between names"
+  text=text(index(text,blank):);
+]
+
+"finished reading CM types and identifiers and putting them into variables"
+
+IF(num_ids ~= num_cms)[
+   write(6,'(/a)')'**** Error: ';
+   write(6,*)'Number of CM types and identifiers do not match';
+   write(6,*)'in ',$cstring(spec_home)//$cstring(spec_module)//'.module';
+   write(6,*)'Check the file and try again.';
+   write(6,'(/a)')'**** Quitting now.';
+   GOTO :abrupt_end:;
+]
+
+write(6,'(/a)')'Will use the following CM types and identifiers:';
+write(6,'(a,$)')' CM Names: ';
+do i=1,num_cms[
+   write(6,'(a,'' '',$)') $cstring(cmtype(i));
+]
+write(6,'(/a,$)')' Identifiers: ';
+do i=1,num_cms[
+   write(6,'(a,'' '',$)') $cstring(cmid(i));
+]
+
+"now go to $OMEGA_HOME/beamnrc/CMs and get the _macros.mortran and"
+"_cm.mortran files and recopy them into"
+"$HOME/egsnrc/beamnrc/BEAM_spec_module/BEAM_spec_module_cm.mortran"
+"and $HOME/egsnrc/beamnrc/BEAM_spec_module/BEAM_spec_module_macros.mortran"
+"replacing $CM with the appropriate cmid as we do so"
+
+"but first make sure the accelerator directory is there and, if not, create it"
+IF(~egs_isdir($cstring(accel_home)))[
+  write(6,'(/a)')'Directory ',$cstring(accel_home);
+  write(6,'(a)')'does not exist.  Creating it.';
+  istat=egs_system('mkdir '//$cstring(accel_home));
+  IF (istat~=0)[
+     write(6,'(/a)')'**** Error creating directory ',$cstring(accel_home);
+     write(6,'(a)')'**** Quitting now.';
+     $CALL_EXIT(1);
+  ]
+]
+
+write(6,'(//a)')'(Re)creating/checking files:';
+write(6,'(2x,a)')$cstring(accel_name)//'_cm.mortran and';
+write(6,'(2x,a)')$cstring(accel_name)//'_macros.mortran';
+write(6,'(2x,a)')$cstring(accel_home)//'Makefile';
+write(6,'(2x,a)')$cstring(accel_home)//'modules.make';
+write(6,'(2x,a)')$cstring(accel_home)//'sources.make';
+write(6,'(2x,a)')$cstring(accel_name)//'.io';
+
+"See if the files are already there"
+inquire(file=$cstring(accel_name)//'_cm.mortran',exist=fileexist);
+IF (fileexist)[
+  write(6,'(/a)')$cstring(accel_name)//'_cm.mortran already exists.';
+  write(6,'(a)')' Will overwrite.';
+]
+inquire(file=$cstring(accel_name)//'_macros.mortran',exist=fileexist);
+IF (fileexist)[
+  write(6,'(a)')$cstring(accel_name)//'_macros.mortran already exists.';
+  write(6,'(a)')' Will overwrite.';
+]
+inquire(file=$cstring(accel_home)//'modules.make',exist=fileexist);
+IF (fileexist)[
+  write(6,'(a)')$cstring(accel_home)//'modules.make already exists.';
+  write(6,'(a)')' Will overwrite.';
+]
+
+"open the output files"
+file_name=$cstring(accel_name)//'_cm.mortran';
+open(9,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+file_name=$cstring(accel_name)//'_macros.mortran';
+open(10,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+file_name=$cstring(accel_home)//'modules.make';
+open(14,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+
+file_name=$cstring(accel_home)//'sources.make';
+inquire(file=$cstring(file_name),exist=fileexist);
+IF (fileexist)[
+    write(6,'(/a)') 'File sources.make already exists. Leaving it untouched';
+]
+ELSE [
+    write(6,'(/a)') 'Creating sources.make ';
+    open(15,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+    write(15,'(a)') '# Generated by beam_build ';
+    write(15,'(a)') '#';
+    write(15,'(a)')
+     '# You may change the list of sources used to build this accelerator';
+    write(15,'(a)') '# by adjusting the list of source files below';
+    write(15,'(a)') '#';
+    open(27,file=spec_file,status='old',err=:no_beam_specs:);
+    iindex = 1;
+    LOOP [
+        read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+        i = index(text,'SOURCES =');
+        IF( i = 1 ) [
+            LOOP [
+                l = lnblnk1(text);
+                write(15,'(a)') text(:l);
+                IF( text(l:l) ~= char(92) ) goto :sources_ok:;
+                read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+            ]
+        ]
+    ]
+    :sources_ok:;
+    rewind(27);
+    write(15,*); iindex = 2;
+    LOOP [
+        read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+        i = index(text,'LIB_SOURCES =');
+        IF( i = 1 ) [
+            LOOP [
+                l = lnblnk1(text);
+                write(15,'(a)') text(:l);
+                IF( text(l:l) ~= char(92) ) goto :lib_sources_ok:;
+                read(27,'(a256)',err=:spec_error:,end=:spec_error:) text;
+            ]
+        ]
+    ]
+    :lib_sources_ok:;
+    close(15); close(27);
+]
+
+
+file_name=$cstring(accel_home)//'Makefile';
+inquire(file=$cstring(file_name),exist=fileexist);
+IF (fileexist)[
+    write(6,'(a)') 'A Makefile already exists. Leaving it untouched';
+]
+ELSE [
+    write(6,'(a)') 'Creating Makefile';
+    open(15,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+    write(15,'(a)') '# Automatically created by beam_build.exe';
+    write(15,'(a)') '#';
+    write(15,'(a)') 'include $(EGS_CONFIG)';
+    write(15,'(a)') 'include $(SPEC_DIR)beamnrc.spec';
+    write(15,'(/a,a)') 'accelerator = ',$cstring(spec_module);
+    write(15,'(/a)') 'include $(BEAM_MAKEFILE)';
+    close(15);
+]
+file_name=$cstring(accel_name)//'.io';
+inquire(file=$cstring(file_name),exist=fileexist);
+IF (fileexist)[
+    write(6,'(a)') 'A .io file already exists. Leaving it untouched';
+]
+ELSE [
+    write(6,'(a)') 'Creating .io file';
+    open(15,file=$cstring(file_name),status='unknown',err=:file_open_error:);
+    file_name=$cstring(beam_home) // $file_sep // 'default_beam.io';
+    open(16,file=$cstring(file_name),status='old',err=:file_open_error:);
+    LOOP [
+        read(16,end=:io_end:,err=:text_err:,fmt='(A)') text;
+        write(15,'(a)') $cstring(text);
+    ]
+    :io_end:
+    close(16); close(15);
+]
+
+" Write a header for the .make file "
+write(14,'(a,a)')
+'#  modules.make file for BEAM_',$cstring(spec_module);
+write(14,'(a)') '#';
+write(14,'(a)')
+'# Automatically generated by beam_build.exe';
+write(14,'(a)')
+'# Do not edit this file, all changes will be lost!';
+write(14,'(a)') '#';
+/*
+write(14,*);
+write(14,'(a,a)') 'ucode = ',$cstring(spec_module);
+write(14,*);
+write(14,'(a,a,a)') 'spec_module = $(SPEC_HOME)$(ucode).module';
+*/
+write(14,*);
+
+" Write the macros files "
+write(14,'(a,a)') 'CM_MACRO_FILES = ',file_sep;
+DO i=1,num_cms [
+    write(14,'(a,a,$)')
+      '      $(CM_HOME)',$cstring(cmtype(i))//'_macros.mortran';
+    IF( i < num_cms ) write(14,'(a)') file_sep;
+]
+write(14,*); write(14,*);
+" Write the mortran files "
+write(14,'(a,a)') 'CM_MORTRAN_FILES = ',file_sep;
+DO i=1,num_cms [
+    write(14,'(a,a,$)')
+      '      $(CM_HOME)',$cstring(cmtype(i))//'_cm.mortran';
+    IF( i < num_cms ) write(14,'(a)') file_sep;
+]
+write(14,*);
+
+
+"Put stuff from $OMEGA_HOME/beamnrc/beamnrc_cm_macros.hdr into"
+"BEAM_spec_module_macros.mortran"
+file_name=$cstring(beam_home)//$file_sep//'beamnrc_cm_macros.hdr';
+open(11,file=$cstring(file_name),status='old',err=:file_open_error:);
+LOOP[
+  read(11,end=:hdr_text_end:,err=:text_err:,fmt='(A)') text;
+  write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+]
+:hdr_text_end:
+
+"Now, output the $CM_LIST and $CM_TYPE replacement macros into"
+"BEAM_spec_module_macros.mortran"
+
+text='REPLACE{$CM_LIST} WITH {CMLIST(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   text='      '//$cstring(cmid(i));
+   IF(i<num_cms) text=$cstring(text)//',';
+   write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+]
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+text='REPLACE{$CM_TYPE} WITH {CMTYPE(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   text='      '//$cstring(cmtype(i));
+   IF(i<num_cms) text=$cstring(text)//',';
+   write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+]
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+"now open the $CM_cm.mortran and $CM_macros.mortran files in cm_home"
+"read them line-by-line and output lines (with $CM replaced by $ID)"
+"in the appropriate files"
+DO i=1,num_cms[
+   DO j=1,2["once for each output file"
+
+     IF(j=1)[
+        the_file=$cstring(cmtype(i))//'_cm.mortran';
+     ]
+     ELSE[
+        the_file=$cstring(cmtype(i))//'_macros.mortran';
+     ]
+     file_name=$cstring(cm_home)//$cstring(the_file);
+     open(11,file=$cstring(file_name),status='old',err=:file_open_error:);
+
+     line=0;
+     LOOP[
+        read(11,end=:text_end:,err=:text_err:,fmt='(A)') text;
+        line=line+1;
+        LOOP["replace occurrence of $CM"
+           iindex=index(text,'$'//$cstring(cmtype(i)));
+           IF(iindex=0) EXIT; "no mor occurrences of string"
+           text=text(:iindex-1)//$cstring(cmid(i))//
+               text(iindex+lnblnk1(cmtype(i))+1:);
+        ]
+        IF(lnblnk1(text)>80)[
+         write(6,'(/a)')'**** Warning: ';
+         write(6,*)'In file ',$cstring(file_name);
+         write(6,*)'Line ',line,' is >80 characters long after replacing $CM';
+         write(6,'(a)')'with $CMID.  This may cause problems during compile.';
+        ]
+        "now output the text into the appropriate file"
+        write(8+j,err=:text_write_err:,fmt='(A)') $cstring(text);
+     ]
+     :text_end:
+     close(11);
+   ]
+]
+
+"output the last line into BEAM_spec_module_cm.mortran"
+text='%N "Turn off MORTRAN listing';
+write(9,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+"now close the units we were just writing to"
+close(9);
+close(10);
+
+$CALL_EXIT(0);
+
+:no_beam_specs:;
+write(6,'(/a)') '**** Error: beamnrc.spec does not exist';
+GOTO :abrupt_end:;
+
+:spec_error:;
+write(6,'(/a)') '**** Error:';
+IF( iindex = 1 ) [
+    write(6,*) ' Failed to find SOURCES definition in beamnrc.spec';
+]
+ELSE [
+    write(6,*) ' Failed to find LIB_SOURCES definition in beamnrc.spec';
+]
+GOTO :abrupt_end:;
+
+:spec_text_end:
+write(6,'(/a)')'**** Error: ';
+write(6,*)'Something is wrong with the format';
+write(6,*)'of ',$cstring(spec_home)//$cstring(spec_module)//'.module';
+write(6,'(/a)')'**** Quitting now.';
+GOTO :abrupt_end:;
+
+:text_err:
+write(6,'(/a)')'**** Error: ';
+write(6,*)'Error reading text ',text;
+write(6,*)'in ',$cstring(file_name);
+write(6,'(/a)')'**** Quitting now.';
+GOTO :abrupt_end:;
+
+:file_open_error:
+write(6,'(/a)')'**** Error: ';
+write(6,*)'Could not open ',$cstring(file_name);
+write(6,'(/a)')'**** Quitting now.';
+GOTO :abrupt_end:;
+
+:text_write_err:
+write(6,'(/a)')'**** Error: ';
+write(6,*)'Error writing text ',$cstring(text);
+write(6,*)'in file ',$cstring(file_name);
+write(6,'(/a)')'**** Quitting now.';
+GOTO :abrupt_end:;
+
+:abrupt_end:
+$CALL_EXIT(1);
+
+return; end;
+;
