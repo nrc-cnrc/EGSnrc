@@ -1,0 +1,455 @@
+
+
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam    
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            10:33:55 Sep 13 2004
+ ******************************************************************************
+ **                                                                          **
+ **                                  BEAMnrc                                 **
+ **                                                                          **
+ **      Code developed at National Research Council of Canada as part of    **
+ **           OMEGA collaboration with the University of Wisconsin.          **
+ **                                                                          **
+ ** This is version V1 of BEAMnrc (Rev 1.78 last edited 2004-01-12 11:44:06-0**
+ **                                                                          **
+ ******************************************************************************
+
+
+ Max # of histories: to run       70000          To analyze            70000
+                   Reading in a phase space source with:
+                                total # of particles        8233
+                                        # of photons        5953
+                     Maximum particle kinetic energy      11.930 MeV
+                     Minimum electron kinetic energy       0.192 MeV
+                     # of particles incident from   
+                                     original source         50000.0
+                      Source entering at top of CM #           1
+                     # of times to recycle particles           8
+
+                   Bremsstrahlung splitting                OFF
+                   Photon force interaction switch         OFF
+                   SCORING PLANES:     #           CM #
+                   ---------------------           ----
+                                       1             1
+                   No phase space files will be output
+                   Range rejection switch                  ON 
+                   Range rejection in  23 regions
+                             Fixed ECUT used
+ Range rejection based on medium of region particle is traversing
+ Maximum electron ranges for restricted stopping powers:
+   kinetic            Range for media 1 through 2
+   energy                        (g/cm**2)
+   (MeV)    AIR700IC  H2O700IC
+   0.200       6.072     0.006
+   0.400      84.941     0.091
+   0.600     178.342     0.190
+   1.000     383.457     0.411
+   1.500     651.119     0.703
+   2.000     921.052     1.002
+   4.000    1984.479     2.215
+   6.000    3015.168     3.431
+  10.000    5004.620     5.850
+  11.930    5939.432     7.012
+                   Discard all electrons below K.E.:         3.000 MeV
+                        if too far from closest boundary
+                   Maximum cputime allowed                      0.99 (hrs)
+                   Initial random number seeds           1802          9373
+            LATCH_OPTION = 2: Latch values inherited, origin of
+                              secondary particles recorded.
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon transport cutoff(MeV)                                AP(medium)
+ Pair angular sampling                                       SIM
+ Bound Compton scattering                                    OFF           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          OFF           
+ Photoelectron angular sampling                              OFF           
+
+ Electron transport cutoff(MeV)                              AE(medium)
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             SIM
+ Spin effects                                                On
+ Electron Impact Ionization                                    0
+ Maxium electron step in cm (SMAX)                                5.000    
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 PRESTA-I  
+ Skin-depth for boundary crossing (MFP)                      324.3    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+                   Material summary   2 Materials used
+ *******************************************************************************
+  # Material           density(g/cm**3)   AE(MeV)   AP(MeV)     UE(MeV)  UP(MeV)
+ -- -----------------  ----------------   -------   -------     -------  -------
+  1 AIR700ICRU            1.205E-03        0.700     0.010      55.511    55.000
+  2 H2O700ICRU            1.000E+00        0.700     0.010      55.511    55.000
+ *******************************************************************************
+                             SOURCE PARAMETERS
+
+                   FULL PHASE SPACE INPUT FOR EACH INCIDENT PARTICLE. 
+     SOURCE DATA FILE: /usr/people/bwalters/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1                     
+                 SOURCE INCIDENT ON FRONT FACE, Z =         0.00 cm
+                    SOURCE INCIDENT ON MODULE ICM =            1
+                 Total # of particles in the file =         8233
+                         # of photons in the file =         5953
+                      Maximum energy of particles =       11.930 MeV
+                      Minimum energy of electrons =        0.192 MeV
+     # of particles incident from original source =      50000.0
+        # of times each particle will be recycled =            8
+
+
+ REGION and RANGE REJECTION SUMMARY:
+ **********************************
+
+ Total number of regions, including region 1 which surrounds the geometry:  24
+
+  Region    CM          Dose   IR_    Medium    ECUTRR  res_rnge  ESAVE   type
+ abs local  # IDENTIF   ZONE   TO_  (No.&Name)   (MeV)    (cm)    (MeV)
+                       (0=no)  BIT
+   1   1    0 exterior   0      0    0 Vacuum
+   2   1    1 PHANTOM    1     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   3   2    1 PHANTOM    2     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   4   3    1 PHANTOM    3     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   5   4    1 PHANTOM    4     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   6   5    1 PHANTOM    5     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   7   6    1 PHANTOM    6     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   8   7    1 PHANTOM    7     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+   9   8    1 PHANTOM    8     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  10   9    1 PHANTOM    9     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  11  10    1 PHANTOM   10     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  12  11    1 PHANTOM   11     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  13  12    1 PHANTOM   12     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  14  13    1 PHANTOM   13     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  15  14    1 PHANTOM   14     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  16  15    1 PHANTOM   15     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  17  16    1 PHANTOM   16     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  18  17    1 PHANTOM   17     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  19  18    1 PHANTOM   18     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  20  19    1 PHANTOM   19     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  21  20    1 PHANTOM   20     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  22  21    1 PHANTOM    0     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  23  22    1 PHANTOM    0     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+  24  23    1 PHANTOM    0     23    2 H2O700ICR  0.700   0.000   3.000  DNEAR
+
+ Component Module summary:
+ *************************
+
+  There is 1 Component Module:
+
+     COMPONENT MODULE  FIRST     BOUNDARY    DISTANCE FROM    AIR    SCORING
+                      REGION  (1=cyl,2=sq)  REFERENCE PLANE   GAP     PLANE
+  #  TYPE  IDENTIFIER         FLAG    (cm)          (cm)      (cm)   (0=none)
+
+  1 CHAMBER  PHANTOM     2     1    20.000         0.000     0.000     1
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  1 is an ion chamber or phantom (CHAMBER Rev 1.8)
+ -------------------------------------------------------------------------------
+
+    Title: 10cm depth-dose phantom, central axis dose volumes 0.5cm thi
+
+ PHANTOM region & geometry parameters:
+ -------------------------------------
+ Distance of front of CM from reference plane =         0.00000 cm
+ Radius of outer boundary of CM =        20.00000 cm
+
+    PHANTOM CENTRAL PART parameters:
+    --------------------------------
+ local layer loc.   Z    Zthick  rad.  electr photon range-reject  dose  medium
+ reg              front                cutoff cutoff level   max   zone
+                   (cm)    (cm)  (cm)   (MeV)  (MeV) (MeV)  (MeV)
+  1    1  layer   0.000  0.5000  2.000  0.700  0.010  0.700  3.000  1  H2O700ICR
+  2    2  layer   0.500  0.5000  2.000  0.700  0.010  0.700  3.000  2  H2O700ICR
+  3    3  layer   1.000  0.5000  2.000  0.700  0.010  0.700  3.000  3  H2O700ICR
+  4    4  layer   1.500  0.5000  2.000  0.700  0.010  0.700  3.000  4  H2O700ICR
+  5    5  layer   2.000  0.5000  2.000  0.700  0.010  0.700  3.000  5  H2O700ICR
+  6    6  layer   2.500  0.5000  2.000  0.700  0.010  0.700  3.000  6  H2O700ICR
+  7    7  layer   3.000  0.5000  2.000  0.700  0.010  0.700  3.000  7  H2O700ICR
+  8    8  layer   3.500  0.5000  2.000  0.700  0.010  0.700  3.000  8  H2O700ICR
+  9    9  layer   4.000  0.5000  2.000  0.700  0.010  0.700  3.000  9  H2O700ICR
+ 10   10  layer   4.500  0.5000  2.000  0.700  0.010  0.700  3.000 10  H2O700ICR
+ 11   11  layer   5.000  0.5000  2.000  0.700  0.010  0.700  3.000 11  H2O700ICR
+ 12   12  layer   5.500  0.5000  2.000  0.700  0.010  0.700  3.000 12  H2O700ICR
+ 13   13  layer   6.000  0.5000  2.000  0.700  0.010  0.700  3.000 13  H2O700ICR
+ 14   14  layer   6.500  0.5000  2.000  0.700  0.010  0.700  3.000 14  H2O700ICR
+ 15   15  layer   7.000  0.5000  2.000  0.700  0.010  0.700  3.000 15  H2O700ICR
+ 16   16  layer   7.500  0.5000  2.000  0.700  0.010  0.700  3.000 16  H2O700ICR
+ 17   17  layer   8.000  0.5000  2.000  0.700  0.010  0.700  3.000 17  H2O700ICR
+ 18   18  layer   8.500  0.5000  2.000  0.700  0.010  0.700  3.000 18  H2O700ICR
+ 19   19  layer   9.000  0.5000  2.000  0.700  0.010  0.700  3.000 19  H2O700ICR
+ 20   20  layer   9.500  0.5000  2.000  0.700  0.010  0.700  3.000 20  H2O700ICR
+
+    PHANTOM WALL parameters:
+    --------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 21  NA entire   0.000 10.000  2.000 20.000 0.700 0.010  0.700 3.000  0 H2O700IC
+          wall
+
+    PHANTOM side air gap parameters:
+    ---------------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 22  NA entire   0.000 10.000 20.000 20.000 0.700 0.010  0.700 3.000  0 H2O700IC
+           gap
+
+    PHANTOM container wall parameters:
+    -----------------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 23  NA entire   0.000 10.000 20.000 20.000 0.700 0.010  0.700 3.000  0 H2O700IC
+          wall
+
+ LOCAL REGION  22 IN CHAMBER HAS ZERO VOLUME!
+
+ LOCAL REGION  23 IN CHAMBER HAS ZERO VOLUME!
+
+
+
+
+
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam    
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            10:33:55 Sep 13 2004
+ *******************************************************************************
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+ *******************************************************************************
+
+********* NEW INPUT FILE *********
+
+
+ *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   38  71
+
+ FOR THIS RUN:
+ ------------ 
+ ELAPSED& CPU TIMEs, RATIO =       1.3       1.1s (=   0.00HR)   1.19
+ CPUTIME per history =   0.00002 sec. Number of histories per hour =  223404272.
+   On i686-pc-1-gnu using gcc 3.3     
+
+                   TOTAL # CHARGED PARTICLE STEPS        3.532E+05 +/- 2.8%
+         # CHARGED PARTICLE STEPS/INITIAL HISTORY        8.308E-01 +/- 2.8%
+ # PRESTA-II STEPS/TOTAL # CHARGED PARTICLE STEPS            0.698 +/- 2.8%
+
+        NO. OF BREMSSTRAHLUNG EVENTS IN THIS RUN:                 12674
+
+                    Maximum depth of stack=   5
+
+    PHASE SPACE SOURCE: Summary of particles used (not including recycling)
+ Used total of      7778 particles, ignored     0 multiple passers
+ and rejected     0 photons falling outside the DBS radius at SSD
+
+ Equivalent to      6602 primary histories
+
+ There were      2140 electrons with average energy      9.4175 MeV
+
+ There were      5635 photons with average energy        1.5671 MeV
+
+ There were         3 positrons with average energy      2.4823 MeV
+
+ Maximum particle energy was      11.930 MeV
+
+
+                    FLUENCE RESULTS
+                    ***************
+
+  CM SCORE POSITION   TOTAL                    ZONE RADII
+     PLANE  (cm)    PARTICLES*                   (cm)
+   1    1   10.00       38447    0.1000    1.0000    2.0000    5.0000   10.0000
+
+
+ *Includes all particles of all weights
+
+  Lines with zero results are not printed
+
+ SPECTRAL-AVERAGED QUANTITIES FOR FIRST TIME CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  1:
+ ELECTRONS
+    2  1.647E-05+-37.8%  6.193E-06+-38.1%      1.310+-56.3%*    27.222+-56.2%*
+    3  4.234E-05+-24.8%  6.390E-06+-26.4%      2.311+-17.9%     33.067+-14.7%
+    4  1.811E-04+-12.9%  3.654E-06+-13.8%      2.266+-11.3%     30.309+- 6.3%
+    5  2.870E-04+- 9.6%  1.569E-06+-10.1%      2.148+- 7.6%     30.436+- 4.9%
+    6  2.352E-04+-11.0%  3.830E-07+-13.2%      1.724+- 9.0%     35.626+- 5.2%
+   --------------------
+  Tot  7.621E-04+- 6.0%
+ PHOTONS
+    1  2.117E-05+-89.6%  7.196E-04+-84.9%      3.944+-99.9%*     6.068+-99.9%*
+    2  1.160E-03+- 9.0%  4.212E-04+- 8.6%      1.585+-11.5%     14.486+- 8.0%
+    3  3.333E-03+- 5.2%  4.144E-04+- 5.0%      1.625+- 7.7%     16.021+- 4.6%
+    4  1.915E-02+- 2.4%  3.406E-04+- 2.4%      1.671+- 3.7%     16.485+- 1.8%
+    5  3.427E-02+- 2.0%  1.804E-04+- 1.9%      1.724+- 2.6%     20.288+- 1.2%
+    6  3.169E-02+- 2.1%  4.755E-05+- 2.1%      1.367+- 3.0%     30.327+- 0.9%
+   --------------------
+  Tot  8.963E-02+- 1.2%
+ POSITRONS
+    3  7.057E-06+-57.7%  8.256E-07+-57.8%      2.721+-89.4%*    24.498+-82.2%*
+    4  9.409E-06+-50.0%  1.694E-07+-50.7%      2.566+-80.8%*    27.113+-75.6%*
+    5  2.117E-05+-33.3%  9.667E-08+-33.4%      3.197+-52.8%*    17.983+-51.2%*
+    6  9.409E-06+-50.0%  1.292E-08+-50.8%      3.163+-72.7%*    33.863+-74.4%*
+   --------------------
+  Tot  4.705E-05+-22.4%
+
+ *Covariance not included in uncertainty because no. of particles
+  crossing scoring zone <    10
+
+ SPECTRAL-AVERAGED QUANTITIES FOR MULTIPLE CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  1:
+ ELECTRONS
+ PHOTONS
+ POSITRONS
+
+
+ MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+ MAX PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+
+
+                              DOSE RESULTS
+                              ************
+
+           TOTAL # CHARGED PARTICLE STEPS in DOSE REG.   1.259E+05 +/- 5.5%
+ # CHARGED PARTICLE STEPS in DOSE REG./INITIAL HISTORY   2.962E-01 +/- 5.5%
+
+              TOTAL DOSE PER INCIDENT PARTICLE
+
+    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    ZONE      (g)           (Gy)                 (J)
+    ---- -----------  ------------------  ------------------
+      1    6.283E+00   1.017E-13+/- 7.0%   6.390E-16+/- 7.0%
+      2    6.283E+00   1.097E-13+/- 6.8%   6.892E-16+/- 6.8%
+      3    6.283E+00   1.168E-13+/- 6.6%   7.340E-16+/- 6.6%
+      4    6.283E+00   1.250E-13+/- 6.2%   7.851E-16+/- 6.2%
+      5    6.283E+00   1.287E-13+/- 5.9%   8.085E-16+/- 5.9%
+      6    6.283E+00   1.282E-13+/- 5.6%   8.052E-16+/- 5.6%
+      7    6.283E+00   1.195E-13+/- 5.5%   7.509E-16+/- 5.5%
+      8    6.283E+00   9.673E-14+/- 5.5%   6.078E-16+/- 5.5%
+      9    6.283E+00   6.372E-14+/- 6.0%   4.004E-16+/- 6.0%
+     10    6.283E+00   3.272E-14+/- 6.7%   2.056E-16+/- 6.7%
+     11    6.283E+00   9.899E-15+/- 9.0%   6.220E-17+/- 9.0%
+     12    6.283E+00   3.192E-15+/-12.9%   2.006E-17+/-12.9%
+     13    6.283E+00   2.766E-15+/-14.8%   1.738E-17+/-14.8%
+     14    6.283E+00   2.489E-15+/-13.5%   1.564E-17+/-13.5%
+     15    6.283E+00   2.306E-15+/-16.3%   1.449E-17+/-16.3%
+     16    6.283E+00   2.378E-15+/-15.8%   1.494E-17+/-15.8%
+     17    6.283E+00   2.271E-15+/-16.7%   1.427E-17+/-16.7%
+     18    6.283E+00   2.582E-15+/-16.8%   1.623E-17+/-16.8%
+     19    6.283E+00   2.968E-15+/-16.1%   1.865E-17+/-16.1%
+     20    6.283E+00   2.931E-15+/-15.4%   1.842E-17+/-15.4%
+
+         CONTAMINANT DOSE/INCIDENT PARTICLE FOR CM  1
+
+    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    ZONE      (g)           (Gy)                 (J)
+    ---- -----------  ------------------  ------------------
+      1    6.283E+00   1.480E-15+/-14.8%   9.302E-18+/-14.8%
+      2    6.283E+00   2.783E-15+/-17.3%   1.749E-17+/-17.3%
+      3    6.283E+00   2.549E-15+/-14.8%   1.602E-17+/-14.8%
+      4    6.283E+00   3.017E-15+/-12.8%   1.895E-17+/-12.8%
+      5    6.283E+00   2.975E-15+/-15.8%   1.869E-17+/-15.8%
+      6    6.283E+00   2.812E-15+/-16.3%   1.767E-17+/-16.3%
+      7    6.283E+00   2.900E-15+/-15.4%   1.822E-17+/-15.4%
+      8    6.283E+00   2.805E-15+/-15.2%   1.762E-17+/-15.2%
+      9    6.283E+00   2.857E-15+/-17.9%   1.795E-17+/-17.9%
+     10    6.283E+00   2.431E-15+/-16.5%   1.527E-17+/-16.5%
+     11    6.283E+00   2.208E-15+/-15.6%   1.387E-17+/-15.6%
+     12    6.283E+00   2.169E-15+/-15.9%   1.363E-17+/-15.9%
+     13    6.283E+00   2.185E-15+/-17.3%   1.373E-17+/-17.3%
+     14    6.283E+00   1.916E-15+/-16.1%   1.204E-17+/-16.1%
+     15    6.283E+00   1.927E-15+/-18.8%   1.211E-17+/-18.8%
+     16    6.283E+00   2.066E-15+/-17.4%   1.298E-17+/-17.4%
+     17    6.283E+00   1.986E-15+/-18.4%   1.248E-17+/-18.4%
+     18    6.283E+00   2.159E-15+/-19.2%   1.356E-17+/-19.2%
+     19    6.283E+00   2.516E-15+/-18.0%   1.581E-17+/-18.0%
+     20    6.283E+00   2.451E-15+/-17.4%   1.540E-17+/-17.4%
+
+
+                      DOSE RESULTS WITH BIT FILTERS
+                              ************
+
+    BIT FILTER SUMMARY
+    ******************
+
+ COMPONENT  FILTER                      BIT
+    #        TYPE                        #s
+
+    1       INCLUDE   16 
+    2       INCLUDE   17 
+    3       INCLUDE   18 
+    4       INCLUDE   19 
+    5       INCLUDE   20 
+
+ DOSE      DOSE              DOSE                DOSE                DOSE     
+ ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3  
+
+   1  1.017E-13+/- 7.0%  0.000E+00+/-99.9%  1.023E-14+/-23.1%  1.418E-15+/-67.5%
+   2  1.097E-13+/- 6.8%  0.000E+00+/-99.9%  1.068E-14+/-21.7%  1.093E-15+/-71.3%
+   3  1.168E-13+/- 6.6%  0.000E+00+/-99.9%  1.187E-14+/-21.9%  8.899E-16+/-73.1%
+   4  1.250E-13+/- 6.2%  2.416E-19+/-99.9%  1.228E-14+/-22.4%  7.273E-16+/-67.0%
+   5  1.287E-13+/- 5.9%  0.000E+00+/-99.9%  9.792E-15+/-21.5%  1.028E-15+/-50.4%
+   6  1.282E-13+/- 5.6%  0.000E+00+/-99.9%  6.580E-15+/-22.1%  9.580E-16+/-42.0%
+   7  1.195E-13+/- 5.5%  1.741E-17+/-99.9%  4.336E-15+/-27.8%  4.835E-16+/-48.3%
+   8  9.673E-14+/- 5.5%  0.000E+00+/-99.9%  1.885E-15+/-31.8%  1.717E-16+/-46.3%
+   9  6.372E-14+/- 6.0%  1.290E-19+/-99.9%  8.173E-16+/-37.6%  2.032E-16+/-51.2%
+  10  3.272E-14+/- 6.7%  0.000E+00+/-99.9%  3.914E-16+/-38.5%  1.582E-16+/-53.3%
+  11  9.899E-15+/- 9.0%  0.000E+00+/-99.9%  1.386E-16+/-62.0%  7.113E-17+/-59.6%
+  12  3.192E-15+/-12.9%  0.000E+00+/-99.9%  1.324E-16+/-58.1%  8.963E-18+/-47.8%
+  13  2.766E-15+/-14.8%  0.000E+00+/-99.9%  1.979E-16+/-56.8%  5.883E-17+/-44.6%
+  14  2.489E-15+/-13.5%  4.093E-18+/-99.9%  1.286E-16+/-52.5%  7.102E-17+/-68.5%
+  15  2.306E-15+/-16.3%  0.000E+00+/-99.9%  9.660E-17+/-61.6%  8.179E-17+/-70.0%
+  16  2.378E-15+/-15.8%  0.000E+00+/-99.9%  3.148E-17+/-58.8%  6.232E-17+/-58.1%
+  17  2.271E-15+/-16.7%  0.000E+00+/-99.9%  3.093E-17+/-55.4%  2.501E-17+/-50.2%
+  18  2.582E-15+/-16.8%  3.817E-18+/-99.9%  1.770E-16+/-52.4%  3.564E-17+/-42.0%
+  19  2.968E-15+/-16.1%  0.000E+00+/-99.9%  2.211E-16+/-64.3%  2.847E-17+/-43.7%
+  20  2.931E-15+/-15.4%  0.000E+00+/-99.9%  2.241E-16+/-65.6%  3.395E-17+/-63.8%
+
+
+ DOSE      DOSE              DOSE                DOSE     
+ ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5  
+
+   1  1.017E-13+/- 7.0%  2.103E-15+/-50.4%  2.652E-17+/-44.8%
+   2  1.097E-13+/- 6.8%  1.829E-15+/-46.7%  6.073E-17+/-60.7%
+   3  1.168E-13+/- 6.6%  1.117E-15+/-44.4%  1.835E-16+/-77.7%
+   4  1.250E-13+/- 6.2%  1.123E-15+/-27.3%  5.491E-17+/-33.6%
+   5  1.287E-13+/- 5.9%  1.146E-15+/-30.9%  3.607E-17+/-42.6%
+   6  1.282E-13+/- 5.6%  8.432E-16+/-34.9%  7.862E-17+/-46.9%
+   7  1.195E-13+/- 5.5%  8.260E-16+/-36.1%  6.185E-17+/-42.2%
+   8  9.673E-14+/- 5.5%  7.600E-16+/-64.5%  1.068E-16+/-30.9%
+   9  6.372E-14+/- 6.0%  5.064E-16+/-41.4%  9.310E-17+/-43.0%
+  10  3.272E-14+/- 6.7%  4.414E-16+/-33.3%  7.615E-17+/-34.6%
+  11  9.899E-15+/- 9.0%  1.495E-16+/-48.8%  2.255E-17+/-40.9%
+  12  3.192E-15+/-12.9%  2.867E-16+/-38.4%  1.176E-16+/-39.7%
+  13  2.766E-15+/-14.8%  2.894E-16+/-29.0%  1.880E-16+/-38.8%
+  14  2.489E-15+/-13.5%  5.247E-16+/-31.8%  1.420E-16+/-45.1%
+  15  2.306E-15+/-16.3%  2.079E-16+/-39.6%  6.516E-17+/-54.2%
+  16  2.378E-15+/-15.8%  1.937E-16+/-44.8%  7.764E-17+/-56.7%
+  17  2.271E-15+/-16.7%  8.269E-17+/-40.9%  6.782E-17+/-48.7%
+  18  2.582E-15+/-16.8%  1.210E-16+/-43.6%  9.201E-17+/-53.9%
+  19  2.968E-15+/-16.1%  2.157E-16+/-41.0%  1.593E-16+/-51.2%
+  20  2.931E-15+/-15.4%  3.981E-16+/-50.0%  2.580E-16+/-67.7%
+
+
+
+
+ END OF RUN          Sep 13 2004 10:33:56
+
+

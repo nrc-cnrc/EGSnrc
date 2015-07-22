@@ -1,0 +1,21 @@
+EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space           
+AIR700ICRU              
+           0  0   0  0  0  2  0,                 IWATCH,ISTORE,IRESTART,etc
+           1000.        1802        9373   0.99 0      0 0 NCASE, etc
+ -1  0    0.00000       0.00000       0.00000       0.00000    , IQIN,ISOURCE etc
+   0,                                            MONOEN
+       20.00000,                                 BEAM ENERGY-monoenergetic
+   0.000   0.000E+00  1.000   0.010  0  1   0.000 0, ESTEPIN,SMAX,ECUTIN,etc
+     0,     0,     0,     0,     0,              IFORCE,NFMIN,etc
+   1   0
+     0    0,                                     NSC_ZONES,MZONE_TYPE
+     0,                                          ITDOSE_ON
+         0.00000,                                Front of first CM with air
+ **************start of CM SLABS     slabs1    *************
+  10.00000,                                      Outer boundary
+air slab  100 cm thick                                      
+    1
+        0.00100
+      100.00000        0.00000        0.00000    1    1        0.00000
+AIR700ICRU              
+ *************end of all CMs****************

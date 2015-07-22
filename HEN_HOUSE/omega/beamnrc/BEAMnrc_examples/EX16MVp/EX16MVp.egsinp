@@ -1,0 +1,211 @@
+EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field    #!GUI1.0
+AIR700ICRU
+0, 0, 0, 0, 1, 3, 1,  IWATCH ETC.
+15000, 31, 77, 900.0, 1, 20, 0, 0,  NCASE ETC.
+-1, 0, 0.001, 0.0, 0.0, 1.0, 0, 0, 0, 0,  IQIN, ISOURCE + OPTIONS
+0, MONOENERGETIC
+16.00000
+0, 0, 0.7, 0.01, 0, 1, 3.0,  0 , ECUT,PCUT,IREJCT,ESAVE
+1, 1, 1, 7, 7,  PHOTON FORCING
+1, 7,  SCORING INPUT
+5, 1
+1,2,3,4,5.0
+1,  DOSE COMPONENTS
+4, 1
+5
+2, 3, 4, 5, 6, 7, 8, 9, 10, 
+3, 4, 5, 6, 7, 8, 9, 10, 
+2, 4, 5, 6, 7, 8, 9, 10, 
+2, 3, 5, 6, 7, 8, 9, 10, 
+2, 3, 4, 6, 7, 8, 9, 10, 
+2
+1, 2, 
+1, 3, 
+0.0, Z TO FRONT FACE
+*********** start of CM SLABS with identifier TARGET  ***********
+2.5, RMAX
+Tungsten Target
+1, NSLABS
+0.0, ZMIN
+0.5, 0.7, 0.01, 1, 1, 1.0
+W700ICRU
+*********** start of CM CONS3R with identifier PRIMCOLL  ***********
+6.0, RMAX
+Primary Collimator
+0.9, ZMIN
+5.0, ZTHICK
+2, NUM_NODE
+0.9, 0.5, 
+5.9, 3.0, 
+0.7, 0.01, 23, 0, 0, 
+AIR700ICRU
+0.7, 0.01, 2, 2, 0, 
+FE700ICRU
+*********** start of CM FLATFILT with identifier FLATTENF  ***********
+6.0, RMAX
+Flattening Filter
+8.0, ZMIN
+4, NUMBER OF LAYERS
+1, 0.3, # CONES, ZTHICK OF LAYER 1
+0, 
+0.5, 
+1, 0.7, # CONES, ZTHICK OF LAYER 2
+0.5, 
+0.8, 
+2, 1.0, # CONES, ZTHICK OF LAYER 3
+0.0, 0.8, 
+0.4, 1.7, 
+2, 1.2, # CONES, ZTHICK OF LAYER 4
+0.4, 1.7, 
+1.2, 3.0, 
+0.7, 0.01, 3, 3, 
+FE700ICRU
+0.7, 0.01, 23, 0, 
+AIR700ICRU
+0.7, 0.01, 3, 3, 
+FE700ICRU
+0.7, 0.01, 23, 0, 
+AIR700ICRU
+0.7, 0.01, 4, 4, 
+W700ICRU
+0.7, 0.01, 3, 3, 
+FE700ICRU
+0.7, 0.01, 23, 0, 
+AIR700ICRU
+0.7, 0.01, 4, 4, 
+W700ICRU
+0.7, 0.01, 3, 3, 
+FE700ICRU
+0.7, 0.01, 23, 0, 
+AIR700ICRU
+*********** start of CM CHAMBER with identifier CHAMBER  ***********
+10.0, RMAX
+Monitor chamber, 6 layers of AIR-interspaced aluminized MYLAR
+13.0, ZMIN
+0, 19, 0, N_TOP, N_CHM, N_BOT
+9.9, 9.95, 10.0, RADII FOR CENTRAL PART
+0.004, 0, ZTHICK, FLAG FOR LAYER 1 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 2 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.25, 0, ZTHICK, FLAG FOR LAYER 3 IN CENTRAL PART
+0.0, 0.0, 7, 5, 
+AIR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 4 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.004, 0, ZTHICK, FLAG FOR LAYER 5 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 6 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.25, 0, ZTHICK, FLAG FOR LAYER 7 IN CENTRAL PART
+0.0, 0.0, 7, 5, 
+AIR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 8 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.004, 0, ZTHICK, FLAG FOR LAYER 9 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+0.1, 0, ZTHICK, FLAG FOR LAYER 10 IN CENTRAL PART
+0.0, 0.0, 7, 5, 
+AIR700ICRU
+0.004, 0, ZTHICK, FLAG FOR LAYER 11 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 12 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.25, 0, ZTHICK, FLAG FOR LAYER 13 IN CENTRAL PART
+0.0, 0.0, 7, 5, 
+AIR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 14 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.004, 0, ZTHICK, FLAG FOR LAYER 15 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 16 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.25, 0, ZTHICK, FLAG FOR LAYER 17 IN CENTRAL PART
+0.0, 0.0, 7, 5, 
+AIR700ICRU
+2e-05, 0, ZTHICK, FLAG FOR LAYER 18 IN CENTRAL PART
+0.0, 0.0, 6, 5, 
+AL700ICRU
+0.004, 0, ZTHICK, FLAG FOR LAYER 19 IN CENTRAL PART
+0.0, 0.0, 5, 5, 
+MYLAR700ICRU
+0.7, 0.01, 0, 6,   chamber wall
+AIR700ICRU
+0.7, 0.01, 0, 6,   gap
+AIR700ICRU
+0.7, 0.01, 0, 6,   container
+AIR700ICRU
+1, MRNGE
+*********** start of CM MIRROR with identifier MIRROR  ***********
+10.0, RMAX
+Aluminized lucite mirror
+21.0, 2.0, ZMIN, ZTHICK
+3.0, -3.0, XFMIN, XBMIN
+2, # LAYERS
+0.0001,  thickness of layer 1
+0.0065,  thickness of layer 2
+0.0, 0.0, 8, 8, 
+AL700ICRU
+0.0, 0.0, 9, 8, 
+PMMA700ICRU
+0.0, 0.0, 23, 0, 
+AIR700ICRU
+0.0, 0.0, 23, 0, 
+AIR700ICRU
+*********** start of CM JAWS with identifier SECJAWS  ***********
+10.0, RMAX
+Secondary collimators set to produce a 10x10 field at 100 cm SSD
+2, # PAIRED BARS OR JAWS
+X
+29.0, 38.0, 1.45, 1.9, -1.45, -1.9, 
+Y
+38.5, 47.3, 1.925, 2.365, -1.925, -2.365, 
+0.0, 0.0, 23, 0, 
+0.0, 0.0, 10, 10, 
+W700ICRU
+0.0, 0.0, 11, 11, 
+W700ICRU
+*********** start of CM SLABS with identifier AIRSLAB ***********
+30.0, RMAX
+PMMA light field reticle + AIR to the patient
+2, NSLABS
+51.0, ZMIN
+0.03, 0.0, 0.0, 12, 12, 0.0
+PMMA700ICRU
+48.97, 0.7, 0.01, 23, 0, 0.0
+AIR700ICRU
+*********************end of all CMs*****************************
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 0.7
+ Global PCUT= 0.01
+ Global SMAX= 5
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= Off
+ 
+ :Stop MC Transport Parameter:
+ #########################

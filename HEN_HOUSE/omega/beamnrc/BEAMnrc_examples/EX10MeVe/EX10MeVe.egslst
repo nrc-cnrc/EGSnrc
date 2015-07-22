@@ -1,0 +1,798 @@
+*********************************************
+ NOTE: MIRRORs RANGE REJECTION ALGORITHM ASSUMES THE MIRROR
+ INTERSECTS THE ENTIRE BEAM!!!   CHECK IT
+ ***********************************************************
+
+
+
+
+EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field              
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            09:54:01 Sep 13 2004
+ ******************************************************************************
+ **                                                                          **
+ **                                  BEAMnrc                                 **
+ **                                                                          **
+ **      Code developed at National Research Council of Canada as part of    **
+ **           OMEGA collaboration with the University of Wisconsin.          **
+ **                                                                          **
+ ** This is version V1 of BEAMnrc (Rev 1.78 last edited 2004-01-12 11:44:06-0**
+ **                                                                          **
+ ******************************************************************************
+
+
+ Max # of histories: to run       50000          To analyze            50000
+                   Incident charge                            -1
+                   Incident kinetic energy                12.000 MeV
+
+                   Bremsstrahlung splitting                OFF
+                   Photon force interaction switch         OFF
+                   SCORING PLANES:     #           CM #
+                   ---------------------           ----
+                                       1             8
+                   Phase space files will be output at EVERY scoring plane
+                   Range rejection switch                  ON 
+                   Range rejection in  56 regions
+                   Automatic ECUTRR used starting from          0.700 MeV
+ Range rejection based on medium of region particle is traversing
+ Maximum electron ranges for restricted stopping powers:
+   kinetic            Range for media 1 through 7
+   energy                        (g/cm**2)
+   (MeV)    AIR521IC  NI521ICR  WNICU521  MILDSTEE  PB521ICR  CU521ICR  AL521ICR
+   0.010       0.026     0.000     0.000     0.000     0.000     0.000     0.000
+   0.015       0.275     0.000     0.000     0.000     0.000     0.000     0.000
+   0.020       0.598     0.000     0.000     0.000     0.000     0.000     0.000
+   0.040       2.600     0.000     0.000     0.001     0.001     0.000     0.001
+   0.060       5.617     0.001     0.001     0.001     0.001     0.001     0.003
+   0.100      14.202     0.003     0.002     0.003     0.003     0.003     0.007
+   0.150      28.787     0.005     0.003     0.006     0.006     0.005     0.015
+   0.200      46.701     0.008     0.005     0.010     0.010     0.009     0.024
+   0.400     139.455     0.025     0.015     0.028     0.028     0.026     0.072
+   0.600     250.603     0.044     0.027     0.051     0.050     0.046     0.129
+   1.000     494.334     0.088     0.053     0.100     0.097     0.092     0.255
+   1.500     811.390     0.145     0.087     0.164     0.158     0.151     0.420
+   2.000    1129.992     0.203     0.121     0.229     0.219     0.211     0.586
+   4.000    2376.766     0.433     0.256     0.488     0.457     0.451     1.249
+   6.000    3576.507     0.660     0.388     0.742     0.687     0.688     1.904
+  10.000    5877.651     1.104     0.646     1.242     1.133     1.151     3.199
+  12.000    6993.253     1.324     0.773     1.490     1.351     1.379     3.842
+                   Discard all electrons below K.E.:         2.000 MeV
+                        if too far from closest boundary
+                   Maximum cputime allowed                    500.00 (hrs)
+                   Initial random number seeds             97            33
+            LATCH_OPTION = 2: Latch values inherited, origin of
+                              secondary particles recorded.
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon transport cutoff(MeV)                                AP(medium)
+ Pair angular sampling                                       SIM
+ Bound Compton scattering                                    ON            
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          ON            
+ Photoelectron angular sampling                              OFF           
+
+ Electron transport cutoff(MeV)                              AE(medium)
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             SIM
+ Spin effects                                                On
+ Electron Impact Ionization                                    0
+ Maxium electron step in cm (SMAX)                               0.1000E+11
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 PRESTA-I  
+ Skin-depth for boundary crossing (MFP)                      43.18    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+                   Material summary   * Materials used
+ *******************************************************************************
+  # Material           density(g/cm**3)   AE(MeV)   AP(MeV)     UE(MeV)  UP(MeV)
+ -- -----------------  ----------------   -------   -------     -------  -------
+  1 AIR521ICRU            1.205E-03        0.521     0.010      55.511    55.000
+  2 NI521ICRU             8.902E+00        0.521     0.010      55.511    55.000
+  3 WNICU521              1.750E+01        0.521     0.010      55.511    55.000
+  4 MILDSTEEL521          7.900E+00        0.521     0.010      55.511    55.000
+  5 PB521ICRU             1.134E+01        0.521     0.010      55.511    55.000
+  6 CU521ICRU             8.933E+00        0.521     0.010      55.511    55.000
+  7 AL521ICRU             2.702E+00        0.521     0.010      55.511    55.000
+  8 AG521ICRU             1.050E+01        0.521     0.010      55.511    55.000
+  9 MICA521               2.900E+00        0.521     0.010      55.511    55.000
+ 10 FE521ICRU             7.860E+00        0.521     0.010      55.511    55.000
+ *******************************************************************************
+                             SOURCE PARAMETERS
+
+                   INITIAL PARTICLES are Electrons
+                   PARALLEL BEAM ON FRONT FACE at Z=   0.0000 cm
+                   Beam radius=   0.1000 cm
+                 X,Y,Z DIRECTION COSINES = (   0.00000   0.00000   1.00000)
+
+                   KINETIC ENERGY OF SOURCE =    12.000 MeV
+
+ REGION and RANGE REJECTION SUMMARY:
+ **********************************
+
+ Total number of regions, including region 1 which surrounds the geometry:  57
+
+  Region    CM          Dose   IR_    Medium    ECUTRR  res_rnge  ESAVE   type
+ abs local  # IDENTIF   ZONE   TO_  (No.&Name)   (MeV)    (cm)    (MeV)
+                       (0=no)  BIT
+   1   1    0 exterior   0      0    0 Vacuum
+   2   1    1 XITWIN     0     23    0 Vacuum     1.536   0.000   2.000  DNEAR
+   3   2    1 XITWIN     1      1    2 NI521ICRU  1.536   0.091   2.000  DNEAR
+   4   3    1 XITWIN     0     23    1 AIR521ICR  1.536 510.212   2.000  DNEAR
+   5   1    2 COLLIMAT   0     23    1 AIR521ICR  1.516 497.306   2.000  DNEAR
+   6   2    2 COLLIMAT   2      2    3 WNICU521   1.516   0.053   2.000  DNEAR
+   7   3    2 COLLIMAT   0     23    1 AIR521ICR  1.516 497.306   2.000  DNEAR
+   8   1    3 SCATFOIL   5      5    5 PB521ICRU  1.513   0.097   2.000  DNEAR
+   9   2    3 SCATFOIL   0     23    1 AIR521ICR  1.513 495.635   2.000  DNEAR
+  10   3    3 SCATFOIL   4      4    4 MILDSTEEL  1.513   0.100   2.000  DNEAR
+  11   4    3 SCATFOIL   5      5    5 PB521ICRU  1.513   0.097   2.000  DNEAR
+  12   5    3 SCATFOIL   0     23    1 AIR521ICR  1.513 495.635   2.000  DNEAR
+  13   6    3 SCATFOIL   4      4    4 MILDSTEEL  1.513   0.100   2.000  DNEAR
+  14   7    3 SCATFOIL   6      6    6 CU521ICRU  1.513   0.092   2.000  DNEAR
+  15   8    3 SCATFOIL   0     23    1 AIR521ICR  1.513 495.635   2.000  DNEAR
+  16   9    3 SCATFOIL   4      4    4 MILDSTEEL  1.513   0.100   2.000  DNEAR
+  17  10    3 SCATFOIL   0     23    1 AIR521ICR  1.513 495.635   2.000  DNEAR
+  18   1    4 IONCHAM    8      8    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  19   2    4 IONCHAM    7      7    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  20   3    4 IONCHAM    9      9    8 AG521ICRU  0.871   0.021   2.000  DNEAR
+  21   4    4 IONCHAM   10     10    9 MICA521    0.871   0.054   2.000  DNEAR
+  22   5    4 IONCHAM    9      9    8 AG521ICRU  0.871   0.021   2.000  DNEAR
+  23   6    4 IONCHAM    7      7    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  24   7    4 IONCHAM    8      8    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  25   8    4 IONCHAM    7      7    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  26   9    4 IONCHAM    9      9    8 AG521ICRU  0.871   0.021   2.000  DNEAR
+  27  10    4 IONCHAM   10     10    9 MICA521    0.871   0.054   2.000  DNEAR
+  28  11    4 IONCHAM    9      9    8 AG521ICRU  0.871   0.021   2.000  DNEAR
+  29  12    4 IONCHAM    7      7    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  30  13    4 IONCHAM    8      8    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  31  14    4 IONCHAM    7      7    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  32  15    4 IONCHAM    8      8    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  33  16    4 IONCHAM   11     11    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  34  17    4 IONCHAM    0     23    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  35  18    4 IONCHAM   11     11    7 AL521ICRU  0.871   0.061   2.000  DNEAR
+  36  19    4 IONCHAM    0     23    1 AIR521ICR  0.871 118.822   2.000  DNEAR
+  37   1    5 RING       0     23    1 AIR521ICR  0.868 117.199   2.000  DNEAR
+  38   2    5 RING      12     12    4 MILDSTEEL  0.868   0.024   2.000  DNEAR
+  39   3    5 RING       0     23    0 Vacuum     0.868   0.000   2.000  DNEAR
+  40   4    5 RING       0     23    1 AIR521ICR  0.868 117.199   2.000  DNEAR
+  41   1    6 MIRROR    13     13    9 MICA521    0.821   0.043   2.000  DNEAR
+  42   2    6 MIRROR    13     13    7 AL521ICRU  0.821   0.049   2.000  DNEAR
+  43   3    6 MIRROR     0     23    1 AIR521ICR  0.821  94.408   2.000  DNEAR
+  44   4    6 MIRROR     0     23    1 AIR521ICR  0.821  94.408   2.000  DNEAR
+  45   5    6 MIRROR     0     23    1 AIR521ICR  0.821  94.408   2.000  DNEAR
+  46   1    7 MAINJAWS   0     23    1 AIR521ICR  0.783  77.100   2.000  DNEAR
+  47   2    7 MAINJAWS  14     14    5 PB521ICRU  0.783   0.016   2.000  DNEAR
+  48   3    7 MAINJAWS  14     14    5 PB521ICRU  0.783   0.016   2.000  DNEAR
+  49   4    7 MAINJAWS   0     23    1 AIR521ICR  0.783  77.100   2.000  DNEAR
+  50   5    7 MAINJAWS  15     15    5 PB521ICRU  0.783   0.016   2.000  DNEAR
+  51   6    7 MAINJAWS  15     15    5 PB521ICRU  0.783   0.016   2.000  DNEAR
+  52   1    8 APPLICAT  16     16    7 AL521ICRU  0.700   0.022   2.000  DNEAR
+  53   2    8 APPLICAT  17     17    7 AL521ICRU  0.700   0.022   2.000  DNEAR
+  54   3    8 APPLICAT  18     18   10 FE521ICRU  0.700   0.009   2.000  DNEAR
+  55   4    8 APPLICAT  19     19   10 FE521ICRU  0.700   0.009   2.000  DNEAR
+  56   5    8 APPLICAT  20     20    7 AL521ICRU  0.700   0.022   2.000  DNEAR
+  57   6    8 APPLICAT   0     23    1 AIR521ICR  0.700  42.515   2.000  DNEAR
+
+ Component Module summary:
+ *************************
+
+  There are  8 Component Modules.
+
+     COMPONENT MODULE  FIRST     BOUNDARY    DISTANCE FROM    AIR    SCORING
+                      REGION  (1=cyl,2=sq)  REFERENCE PLANE   GAP     PLANE
+  #  TYPE  IDENTIFIER         FLAG    (cm)          (cm)      (cm)   (0=none)
+
+  1 SLABS    XITWIN      2     2     5.000         0.000     0.000     0
+  2 CONS3R   COLLIMAT    5     1    10.000         0.380     1.120     0
+  3 CONESTAK SCATFOIL    8     1    10.000        13.500     1.662     0
+  4 CHAMBER  IONCHAM    18     1    10.000        15.200     0.400     0
+  5 CONESTAK RING       37     1    12.000        16.803     1.197     0
+  6 MIRROR   MIRROR     41     2    12.000        18.800     0.800     0
+  7 JAWS     MAINJAWS   46     2    10.000        26.600     0.000     0
+  8 APPLICAT APPLICAT   52     2    17.000        49.500     0.000     1
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  1 is one or more planar slabs  (SLABS Rev 1.6)
+ -------------------------------------------------------------------------------
+
+    Title: 0.1cm of vacuum, Ni exit window from accelerator vacuum.    
+
+ XITWIN geometry parameters:
+ -----------------------------
+ Distance of front of CM from reference plane =         0.00000 cm
+ Half-width of outer boundary of CM =         5.00000 cm
+
+ slab #    Z front    thickness
+            face               
+            (cm)        (cm)   
+    1       0.000      0.100
+    2       0.100      0.006
+    3       0.106      0.274
+
+ XITWIN region parameters:
+ ---------------------------
+ local  slab #  location  electron  photon  range-rejection  dose  bit  medium
+ region                    cutoff   cutoff   level     max   zone  set
+                            (MeV)    (MeV)   (MeV)    (MeV)
+   1      1        slab     0.700    0.010   1.536    2.000    0   23  Vacuum
+   2      2        slab     0.700    0.010   1.536    2.000    1    1  NI521ICRU
+   3      3        slab     0.700    0.010   1.536    2.000    0   23  AIR521ICR
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  2 - stacked truncated cones (3 regions CONS3R Rev 1.10)
+ -------------------------------------------------------------------------------
+
+    Title: primary collimator: cone of air shielded by W-Ni-Cu         
+
+ COLLIMAT geometry parameters:
+ --------------------------
+ Distance from front of CM from reference plane =         0.38000 cm
+ Radius of outer boundary of CM =        10.00000 cm
+ There is an airgap which starts at Z= 0.38000 cm and is  1.12000 cm thick.
+
+ node      Z(cm)     r(cm)
+   1      1.500     0.500
+   2      2.500     0.500
+   3      2.500     1.000
+   4      5.000     1.000
+   5      5.000     1.250
+   6      7.500     1.250
+   7      7.500     1.750
+   8     10.000     1.750
+   9     10.000     2.000
+  10     11.500     2.000
+  11     11.500     2.010
+  12     13.000     2.010
+  13     13.000     2.500
+  14     13.500     2.500
+
+ COLLIMAT region parameters:
+ -------------------------
+ local  location  electron  photon  range-rejection   dose  bit  medium
+ region            cutoff   cutoff   level     max    zone  set
+                    (MeV)    (MeV)   (MeV)    (MeV)
+   1     inside     0.700    0.010   1.516    2.000     0   23   AIR521ICR
+   2    outside     0.700    0.010   1.516    2.000     2    2   WNICU521 
+   3     airgap     0.700    0.010   1.516    2.000     0   23   AIR521ICR
+         at top
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  3 is stacked set of truncated cones (CONESTAK:Rev 1.8)
+ -------------------------------------------------------------------------------
+
+ Title: Pb and Cu scattering foil shielded by mild steel            
+
+ SCATFOIL geometry parameters:
+ -----------------------------
+ Distance of front of CM from reference plane =        13.50000 cm
+ Radius of outer boundary of CM =        10.00000 cm
+ Inner radius of outer wall =  2.45000 cm
+
+ layer    Z front   thickness   top radius   bottom radius
+   #       face
+           (cm)       (cm)         (cm)         (cm)
+ airgap   13.500       1.662      10.000       10.000
+   1      15.162       0.015       0.725        0.725
+   2      15.177       0.013       1.500        1.500
+   3      15.190       0.010       2.440        2.440
+
+ SCATFOIL region parameters:
+ ---------------------------
+ local  layer  location  electron  photon  range-rejection   dose  bit  medium
+ region                   cutoff   cutoff   level     max    zone  set
+                           (MeV)    (MeV)   (MeV)    (MeV)
+   1      1     inside     0.700    0.010   1.513    2.000     5    5  PB521ICRU
+   2      1    outside     0.700    0.010   1.513    2.000     0   23  AIR521ICR
+   3      1       wall     0.700    0.010   1.513    2.000     4    4  MILDSTEEL
+   4      2     inside     0.700    0.010   1.513    2.000     5    5  PB521ICRU
+   5      2    outside     0.700    0.010   1.513    2.000     0   23  AIR521ICR
+   6      2       wall     0.700    0.010   1.513    2.000     4    4  MILDSTEEL
+   7      3     inside     0.700    0.010   1.513    2.000     6    6  CU521ICRU
+   8      3    outside     0.700    0.010   1.513    2.000     0   23  AIR521ICR
+   9      3       wall     0.700    0.010   1.513    2.000     4    4  MILDSTEEL
+  10     NA     airgap     0.700    0.010   1.513    2.000     0   23  AIR521ICR
+                at top
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  4 is an ion chamber or phantom (CHAMBER Rev 1.8)
+ -------------------------------------------------------------------------------
+
+    Title: Ag plated mica ion chamber with Al frame                    
+
+ IONCHAM region & geometry parameters:
+ -------------------------------------
+ Distance of front of CM from reference plane =        15.20000 cm
+ Radius of outer boundary of CM =        10.00000 cm
+
+    Air gap parameters:
+    -------------------
+ local layer loc.   Z    Zthick   rad. electr photon range-reject  dose  medium
+ reg              front                cutoff cutoff level   max   zone
+                   (cm)   (cm)    (cm)  (MeV)  (MeV) (MeV)  (MeV)
+ 19   NA  airgap  15.200  0.400 10.000  0.700  0.010  0.871  2.000  0  AIR521ICR
+          at top
+
+    IONCHAM CENTRAL PART parameters:
+    --------------------------------
+ local layer loc.   Z    Zthick  rad.  electr photon range-reject  dose  medium
+ reg              front                cutoff cutoff level   max   zone
+                   (cm)    (cm)  (cm)   (MeV)  (MeV) (MeV)  (MeV)
+  1    1  layer  15.600  0.0500  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
+  2    2  layer  15.650  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
+  3    3  layer  15.850  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
+  4    4  layer  15.850  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521  
+  5    5  layer  15.876  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
+  6    6  layer  15.876  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
+  7    7  layer  16.076  0.0254  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
+  8    8  layer  16.101  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
+  9    9  layer  16.301  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
+ 10   10  layer  16.302  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521  
+ 11   11  layer  16.327  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
+ 12   12  layer  16.327  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
+ 13   13  layer  16.527  0.0254  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
+ 14   14  layer  16.553  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
+ 15   15  layer  16.753  0.0500  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
+
+    IONCHAM WALL parameters:
+    --------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 16  NA entire  15.600  1.203  5.000  6.000 0.700 0.010  0.871 2.000 11 AL521ICR
+          wall
+
+    IONCHAM side air gap parameters:
+    ---------------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 17  NA entire  15.600  1.203  6.000 10.000 0.700 0.010  0.871 2.000  0 AIR521IC
+           gap
+
+    IONCHAM container wall parameters:
+    -----------------------------------
+ local layer loc.  Z    Zthick     rad.     electr photon range-reject dose med
+ reg             front         inner  outer cutoff cutoff level  max   zone
+                 (cm)    (cm)      (cm)      (MeV)  (MeV) (MeV) (MeV)
+ 18  NA entire  15.600  1.203 10.000 10.000 0.700 0.010  0.871 2.000 11 AL521ICR
+          wall
+
+ LOCAL REGION  18 IN CHAMBER HAS ZERO VOLUME!
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  5 is stacked set of truncated cones (CONESTAK:Rev 1.8)
+ -------------------------------------------------------------------------------
+
+ Title: complex region behind ion chamber rep. as cylindrical hole i
+
+ RING geometry parameters:
+ -----------------------------
+ Distance of front of CM from reference plane =        16.80260 cm
+ Radius of outer boundary of CM =        12.00000 cm
+ There is no outer wall.
+
+ layer    Z front   thickness   top radius   bottom radius
+   #       face
+           (cm)       (cm)         (cm)         (cm)
+ airgap   16.803       1.197      12.000       12.000
+   1      18.000       0.800       3.500        3.500
+
+ RING region parameters:
+ ---------------------------
+ local  layer  location  electron  photon  range-rejection   dose  bit  medium
+ region                   cutoff   cutoff   level     max    zone  set
+                           (MeV)    (MeV)   (MeV)    (MeV)
+   1      1     inside     0.700    0.010   0.868    2.000     0   23  AIR521ICR
+   2      1    outside     0.700    0.010   0.868    2.000    12   12  MILDSTEEL
+   3      1     nowall        NA       NA      NA       NA    NA   NA  Vacuum
+   4     NA     airgap     0.700    0.010   0.868    2.000     0   23  AIR521ICR
+                at top
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  6 is a flat inclined mirror MIRROR (Rev 1.5) 
+ -------------------------------------------------------------------------------
+
+ Title: mica and Al mirror at 45 degrees to z-axis                  
+
+ MIRROR geometry parameters:
+ -----------------------------
+ Z of front face of CM =        18.80000 cm
+ Half-width of outer boundary of CM =        12.00000 cm
+ Z at which mirror starts =        19.60000 cm
+ Z span of mirror =         7.00000 cm
+
+ layer #      thickness         XFMIN     XBMIN     XFMAX     XBMAX
+                (cm)                            (cm)
+  airgap       0.800               NA        NA        NA        NA
+  at top
+  1(front)     0.005            3.500    -3.500     3.507    -3.493
+  2            0.005            3.507    -3.493     3.514    -3.486
+
+ Angle of mirror face wrt z-axis =        45.00000 degrees
+
+ MIRROR region parameters:
+ ---------------------------
+ local layer  location   electron   photon  range-rejection   dose  bit  medium
+ region                   cutoff    cutoff   level     max    zone  set
+                          (MeV)      (MeV)   (MeV)    (MeV)
+   1      1     layer      0.700    0.010    0.821    2.000   13   13  MICA521  
+   2      2     layer      0.700    0.010    0.821    2.000   13   13  AL521ICRU
+   3     NA    region      0.700    0.010    0.821    2.000    0   23  AIR521ICR
+               behind
+   4     NA    region      0.700    0.010    0.821    2.000    0   23  AIR521ICR
+             in front
+   5     NA    airgap      0.700    0.010    0.821    2.000    0   23  AIR521ICR
+               at top
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  7 is JAWS (Rev 1.8)
+ -------------------------------------------------------------------------------
+
+    Title: JAWS set for 10x10 cm field at 100 cm SSD                   
+
+ MAINJAWS geometry parameters:
+ -----------------------------
+ Distance of front of CM from reference plane =        26.60000 cm
+ Half-width of outer boundary of CM =        10.00000 cm
+
+ jaw #    Z front    thickness    x or y               coordinates
+           face                   jaws        FP       BP       FN      BN
+           (cm)        (cm)                                (cm)
+ airgap   26.600      0.900        NA         NA       NA       NA      NA
+   1      27.500     10.000         y       1.925    2.625   -1.925   -2.625
+ airgap   37.500      2.000        NA         NA       NA       NA      NA
+   2      39.500     10.000         x       3.160    3.960   -3.160   -3.960
+
+ MAINJAWS region parameters:
+ ---------------------------
+ local jaw #   location  electron  photon  range-rejection   dose  bit  medium
+ region                   cutoff   cutoff   level     max    zone  set
+                           (MeV)    (MeV)   (MeV)    (MeV)
+   1      1     airgap     0.700    0.010   0.783    2.000     0   23  AIR521ICR
+               above &
+                centre
+   2      1    +ve jaw     0.700    0.010   0.783    2.000    14   14  PB521ICRU
+   3      1    -ve jaw     0.700    0.010   0.783    2.000    14   14  PB521ICRU
+                      
+   4      2     airgap     0.700    0.010   0.783    2.000     0   23  AIR521ICR
+               above &
+                centre
+   5      2    +ve jaw     0.700    0.010   0.783    2.000    15   15  PB521ICRU
+   6      2    -ve jaw     0.700    0.010   0.783    2.000    15   15  PB521ICRU
+                      
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  8 is a set of square scrapers (APPLICAT: Rev 1.6) 
+ -------------------------------------------------------------------------------
+
+    Title: applicator with 2 steel and 3 Al scrapers                   
+
+ APPLICAT geometry parameters:
+ --------------------------
+ Z of front face of CM =        49.50000 cm
+ Half-width of outer boundary of CM =        17.00000 cm
+ Z of back face of CM =       100.00000 cm
+
+    scraper   Z of     bar/gap  x half-width  y half-width  x bar   y bar
+    number  front face  thick     opening       opening     width   width
+             (cm)       (cm)       (cm)         (cm)        (cm)     (cm) 
+    airgap    49.5000    12.0500         NA         NA         NA         NA
+         1    61.5500     0.1500     7.0000     7.0000     2.8000     2.8000
+    airgap    61.7000     6.9000         NA         NA         NA         NA
+         2    68.6000     0.6500     5.2000     5.2000     6.7500     6.7500
+    airgap    69.2500    13.9500         NA         NA         NA         NA
+         3    83.2000     0.5000     6.0500     6.0500     4.0000     4.0000
+    airgap    83.7000    10.2000         NA         NA         NA         NA
+         4    93.9000     1.3000     4.7500     4.7500     2.8000     2.8000
+    airgap    95.2000     0.8500         NA         NA         NA         NA
+         5    96.0500     0.2500     5.1000     5.1000     4.0000     4.0000
+    airgap    96.3000     3.7000         NA         NA         NA         NA
+
+ Note gap between the last scraper and the back of the CM.
+
+ This gap was not set to the default value of airgapmin but
+ was set to a user-defined value > airgapmin.
+
+ APPLICAT region parameters:
+ ------------------------
+ local scraper  location  electron   photon  range-rejection   dose  bit  medium
+ region   #                cutoff    cutoff   level     max    zone  set
+                           (MeV)    (MeV)    (MeV)    (MeV)
+   1     1       scraper   0.700    0.010    0.700    2.000   16   16  AL521ICRU
+   2     2       scraper   0.700    0.010    0.700    2.000   17   17  AL521ICRU
+   3     3       scraper   0.700    0.010    0.700    2.000   18   18  FE521ICRU
+   4     4       scraper   0.700    0.010    0.700    2.000   19   19  FE521ICRU
+   5     5       scraper   0.700    0.010    0.700    2.000   20   20  AL521ICRU
+   6    NA   surrounding   0.700    0.010    0.700    2.000    0   23  AIR521ICR
+                     air
+
+
+
+
+
+EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field              
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            09:54:01 Sep 13 2004
+ *******************************************************************************
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+ *******************************************************************************
+
+********* NEW INPUT FILE *********
+
+
+ *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   63  96
+
+ FOR THIS RUN:
+ ------------ 
+ ELAPSED& CPU TIMEs, RATIO =      32.1      27.4s (=   0.01HR)   1.17
+ CPUTIME per history =   0.00055 sec. Number of histories per hour =    6581353.
+   On i686-pc-1-gnu using gcc 3.3     
+
+                   TOTAL # CHARGED PARTICLE STEPS        8.145E+06 +/- 0.1%
+         # CHARGED PARTICLE STEPS/INITIAL HISTORY        1.629E+02 +/- 0.1%
+ # PRESTA-II STEPS/TOTAL # CHARGED PARTICLE STEPS            0.604 +/- 0.1%
+
+        NO. OF BREMSSTRAHLUNG EVENTS IN THIS RUN:                278767
+
+                    Maximum depth of stack=   8
+
+                    PHASE SPACE FILE OUTPUT
+                    ***********************
+
+ FILE  SCORE    TOTAL     TOTAL    MAX. KE OF       MIN. KE OF     # INCIDENT
+  #    PLANE  PARTICLES* PHOTONS*   PARTICLES        ELECTRONS   PARTICLES FROM
+                                      (MeV)            (MeV)    ORIGINAL SOURCE
+
+   1      1       8085     5854      11.5679           0.2070       50000.000
+
+
+
+                    FLUENCE RESULTS
+                    ***************
+
+  CM SCORE POSITION   TOTAL                    ZONE HALF-WIDTHS
+     PLANE  (cm)    PARTICLES*                      (cm)
+   8    1  100.00        8085    0.7070    1.0000    1.2250    5.0000    7.0710
+
+
+ *Includes all particles of all weights
+
+  Lines with zero results are not printed
+
+ SPECTRAL-AVERAGED QUANTITIES FOR FIRST TIME CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  8:
+ ELECTRONS
+    1  6.800E-04+-17.1%  3.481E-04+-17.2%      9.190+- 4.3%      5.884+-27.7%
+    2  7.800E-04+-16.0%  4.014E-04+-16.1%      9.826+- 2.1%      6.308+-26.7%
+    3  9.200E-04+-14.7%  4.619E-04+-14.7%      9.922+- 2.6%      3.764+-17.6%
+    4  3.310E-02+- 2.4%  3.582E-04+- 2.4%      9.526+- 0.5%      5.880+- 3.2%
+    5  1.860E-03+-10.5%  2.024E-05+-10.6%      7.558+- 4.4%     17.072+- 8.0%
+    6  7.200E-03+- 5.3%  9.382E-06+- 5.7%      5.297+- 2.7%     29.012+- 2.8%
+   --------------------
+  Tot  4.454E-02+- 2.1%
+ PHOTONS
+    1  8.800E-04+-15.1%  4.730E-04+-15.4%      1.415+-22.8%      6.891+-35.4%
+    2  1.160E-03+-13.1%  6.046E-04+-13.3%      1.191+-19.2%      4.944+-34.6%
+    3  9.000E-04+-14.9%  4.779E-04+-15.1%      1.625+-20.8%      8.670+-26.3%
+    4  4.134E-02+- 2.2%  4.662E-04+- 2.3%      1.422+- 3.0%      9.056+- 3.5%
+    5  2.206E-02+- 3.1%  2.419E-04+- 3.2%      1.770+- 3.4%     14.264+- 3.3%
+    6  5.074E-02+- 2.2%  6.566E-05+- 2.3%      1.481+- 2.5%     24.061+- 1.6%
+   --------------------
+  Tot  1.171E-01+- 1.4%
+ POSITRONS
+    4  2.000E-05+-99.9%  2.152E-07+-99.9%      4.080+-99.9%*     8.581+-99.9%*
+    5  4.000E-05+-70.7%  5.508E-07+-72.6%      2.797+-99.9%*    36.180+-99.9%*
+    6  2.000E-05+-99.9%  2.196E-08+-99.9%      3.605+-99.9%*    17.717+-99.9%*
+   --------------------
+  Tot  8.000E-05+-50.0%
+
+ *Covariance not included in uncertainty because no. of particles
+  crossing scoring zone <    10
+
+ SPECTRAL-AVERAGED QUANTITIES FOR MULTIPLE CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  8:
+ ELECTRONS
+ PHOTONS
+ POSITRONS
+
+
+ MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+ MAX PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+
+
+                              DOSE RESULTS
+                              ************
+
+          ***NOTE***
+         Automated range rejection is being used.
+         This implies doses will be inaccurate because
+         of changes in ECUTRR going from on CM to the next.
+
+           TOTAL # CHARGED PARTICLE STEPS in DOSE REG.   7.228E+06 +/- 0.1%
+ # CHARGED PARTICLE STEPS in DOSE REG./INITIAL HISTORY   1.446E+02 +/- 0.1%
+
+              TOTAL DOSE PER INCIDENT PARTICLE
+
+    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    ZONE      (g)           (Gy)                 (J)
+    ---- -----------  ------------------  ------------------
+      1    5.341E+00   2.249E-12+/- 0.4%   1.201E-14+/- 0.4%
+      2    6.435E+04   1.796E-15+/- 1.6%   1.156E-13+/- 1.6%
+      3    0.000E+00   0.000E+00+/-99.9%   0.000E+00+/-99.9%
+      4    8.888E+01   2.814E-14+/- 4.4%   2.501E-15+/- 4.4%
+      5    1.303E+00   2.475E-11+/- 0.5%   3.224E-14+/- 0.5%
+      6    1.704E+00   1.202E-11+/- 0.4%   2.048E-14+/- 0.4%
+      7    9.463E-02   4.222E-12+/- 1.7%   3.995E-16+/- 1.7%
+      8    3.200E+01   3.360E-12+/- 0.2%   1.075E-13+/- 0.2%
+      9    8.242E-01   2.819E-12+/- 0.8%   2.323E-15+/- 0.8%
+     10    1.157E+01   3.447E-12+/- 0.3%   3.988E-14+/- 0.3%
+     11    1.123E+02   3.685E-14+/- 5.7%   4.138E-15+/- 5.7%
+     12    2.616E+03   3.358E-14+/- 1.5%   8.785E-14+/- 1.5%
+     13    6.761E+00   1.225E-12+/- 0.5%   8.286E-15+/- 0.5%
+     14    3.504E+04   2.239E-14+/- 0.4%   7.847E-13+/- 0.4%
+     15    2.921E+04   8.721E-15+/- 1.0%   2.548E-13+/- 1.0%
+     16    7.626E+01   4.710E-15+/- 8.4%   3.592E-16+/- 8.4%
+     17    8.133E+02   2.514E-14+/- 2.3%   2.045E-14+/- 2.3%
+     18    1.012E+03   2.588E-14+/- 2.9%   2.620E-14+/- 2.9%
+     19    1.408E+03   3.639E-14+/- 2.3%   5.122E-14+/- 2.3%
+     20    1.535E+02   3.565E-15+/- 9.8%   5.471E-16+/- 9.8%
+
+         CONTAMINANT DOSE/INCIDENT PARTICLE FOR CM  4
+
+    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    ZONE      (g)           (Gy)                 (J)
+    ---- -----------  ------------------  ------------------
+      1    5.341E+00   0.000E+00+/-99.9%   0.000E+00+/-99.9%
+      2    6.435E+04   1.872E-18+/- 9.2%   1.205E-16+/- 9.2%
+      3    0.000E+00   0.000E+00+/-99.9%   0.000E+00+/-99.9%
+      4    8.888E+01   1.096E-16+/-23.1%   9.740E-18+/-23.1%
+      5    1.303E+00   7.981E-15+/-19.8%   1.040E-17+/-19.8%
+      6    1.704E+00   2.268E-15+/-20.2%   3.865E-18+/-20.2%
+      7    9.463E-02   1.858E-14+/-57.4%   1.758E-18+/-57.4%
+      8    3.200E+01   7.082E-15+/- 8.6%   2.266E-16+/- 8.6%
+      9    8.242E-01   2.926E-14+/-12.0%   2.412E-17+/-12.0%
+     10    1.157E+01   7.664E-15+/-10.8%   8.868E-17+/-10.8%
+     11    1.123E+02   4.498E-16+/-27.8%   5.050E-17+/-27.8%
+     12    2.616E+03   3.735E-16+/- 8.3%   9.771E-16+/- 8.3%
+     13    6.761E+00   2.971E-15+/-18.7%   2.009E-17+/-18.7%
+     14    3.504E+04   6.612E-16+/- 2.4%   2.317E-14+/- 2.4%
+     15    2.921E+04   3.401E-16+/- 3.7%   9.936E-15+/- 3.7%
+     16    7.626E+01   1.946E-16+/-42.0%   1.484E-17+/-42.0%
+     17    8.133E+02   1.201E-16+/-23.8%   9.768E-17+/-23.8%
+     18    1.012E+03   3.823E-16+/-12.7%   3.870E-16+/-12.7%
+     19    1.408E+03   1.167E-15+/- 8.2%   1.643E-15+/- 8.2%
+     20    1.535E+02   4.835E-16+/-24.3%   7.421E-17+/-24.3%
+
+
+                      DOSE RESULTS WITH BIT FILTERS
+                              ************
+
+    BIT FILTER SUMMARY
+    ******************
+
+ COMPONENT  FILTER                      BIT
+    #        TYPE                        #s
+
+    1       EXCLUDE   12   14   15   16   17   18   19   20 
+    2       INCLUDE   12 
+    3       INCLUDE   14 
+    4       INCLUDE   15 
+    5       INCLUDE   16 
+    6       INCLUDE   17 
+    7       INCLUDE   18 
+    8       INCLUDE   19 
+    9       INCLUDE   20 
+
+ DOSE      DOSE              DOSE                DOSE                DOSE     
+ ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3  
+
+   1  2.249E-12+/- 0.4%  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   2  1.796E-15+/- 1.6%  1.687E-15+/- 1.7%  6.133E-17+/- 3.7%  9.055E-17+/- 3.6%
+   3  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   4  2.814E-14+/- 4.4%  1.633E-14+/- 6.0%  6.513E-15+/- 8.4%  5.691E-15+/- 9.0%
+   5  2.475E-11+/- 0.5%  2.471E-11+/- 0.5%  6.869E-15+/-69.3%  3.684E-14+/-22.3%
+   6  1.202E-11+/- 0.4%  1.194E-11+/- 0.4%  1.211E-14+/-34.1%  6.689E-14+/-14.5%
+   7  4.222E-12+/- 1.7%  4.164E-12+/- 1.7%  1.607E-14+/-21.7%  4.207E-14+/-30.2%
+   8  3.360E-12+/- 0.2%  3.309E-12+/- 0.2%  1.808E-14+/- 7.9%  3.262E-14+/- 5.9%
+   9  2.819E-12+/- 0.8%  2.780E-12+/- 0.8%  1.372E-14+/-18.1%  2.457E-14+/-10.4%
+  10  3.447E-12+/- 0.3%  3.400E-12+/- 0.3%  1.445E-14+/-10.8%  3.314E-14+/- 7.3%
+  11  3.685E-14+/- 5.7%  2.802E-14+/- 6.8%  7.476E-15+/-10.7%  2.013E-15+/-17.7%
+  12  3.358E-14+/- 1.5%  1.721E-18+/-50.0%  3.357E-14+/- 1.5%  1.007E-14+/- 2.3%
+  13  1.225E-12+/- 0.5%  1.116E-12+/- 0.4%  2.213E-14+/- 6.1%  9.260E-14+/- 3.0%
+  14  2.239E-14+/- 0.4%  2.475E-20+/-99.9%  2.551E-16+/- 4.5%  2.239E-14+/- 0.4%
+  15  8.721E-15+/- 1.0%  3.000E-20+/-99.9%  1.947E-17+/-16.9%  1.255E-15+/- 2.5%
+  16  4.710E-15+/- 8.4%  0.000E+00+/-99.9%  1.618E-16+/-58.0%  1.617E-15+/-14.7%
+  17  2.514E-14+/- 2.3%  0.000E+00+/-99.9%  7.274E-17+/-40.1%  3.150E-15+/- 7.1%
+  18  2.588E-14+/- 2.9%  0.000E+00+/-99.9%  2.200E-17+/-78.9%  2.201E-15+/-10.0%
+  19  3.639E-14+/- 2.3%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  2.096E-15+/- 9.4%
+  20  3.565E-15+/- 9.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  5.060E-16+/-23.6%
+
+
+ DOSE      DOSE              DOSE                DOSE                DOSE     
+ ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5         COMPONENT: 6  
+
+   1  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   2  1.796E-15+/- 1.6%  7.524E-18+/-14.0%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   3  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   4  2.814E-14+/- 4.4%  3.487E-16+/-34.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   5  2.475E-11+/- 0.5%  4.104E-15+/-44.5%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   6  1.202E-11+/- 0.4%  2.427E-15+/-35.7%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   7  4.222E-12+/- 1.7%  1.613E-15+/-22.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   8  3.360E-12+/- 0.2%  2.011E-15+/-21.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   9  2.819E-12+/- 0.8%  1.987E-15+/-28.7%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  10  3.447E-12+/- 0.3%  2.078E-15+/-27.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  11  3.685E-14+/- 5.7%  8.453E-18+/-65.3%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  12  3.358E-14+/- 1.5%  4.280E-16+/-10.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  13  1.225E-12+/- 0.5%  2.121E-15+/-17.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  14  2.239E-14+/- 0.4%  3.931E-16+/- 2.9%  0.000E+00+/-99.9%  9.385E-20+/-56.9%
+  15  8.721E-15+/- 1.0%  8.721E-15+/- 1.0%  2.573E-19+/-41.7%  8.739E-19+/-48.1%
+  16  4.710E-15+/- 8.4%  1.793E-15+/-14.1%  4.694E-15+/- 8.4%  2.066E-16+/-39.2%
+  17  2.514E-14+/- 2.3%  1.979E-15+/- 8.6%  1.191E-15+/-10.7%  2.514E-14+/- 2.3%
+  18  2.588E-14+/- 2.9%  1.427E-15+/-12.5%  1.748E-16+/-31.7%  1.119E-14+/- 4.2%
+  19  3.639E-14+/- 2.3%  1.119E-15+/-12.9%  1.967E-17+/-72.0%  2.281E-15+/- 8.0%
+  20  3.565E-15+/- 9.8%  3.154E-16+/-42.4%  2.456E-17+/-99.9%  7.582E-16+/-20.1%
+
+
+ DOSE      DOSE              DOSE                DOSE                DOSE     
+ ZONE      TOTAL          COMPONENT: 7         COMPONENT: 8         COMPONENT: 9  
+
+   1  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   2  1.796E-15+/- 1.6%  0.000E+00+/-99.9%  9.127E-21+/-99.9%  0.000E+00+/-99.9%
+   3  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   4  2.814E-14+/- 4.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   5  2.475E-11+/- 0.5%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   6  1.202E-11+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   7  4.222E-12+/- 1.7%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   8  3.360E-12+/- 0.2%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+   9  2.819E-12+/- 0.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  10  3.447E-12+/- 0.3%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  11  3.685E-14+/- 5.7%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  12  3.358E-14+/- 1.5%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  13  1.225E-12+/- 0.5%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
+  14  2.239E-14+/- 0.4%  1.316E-19+/-59.3%  6.693E-19+/-60.5%  0.000E+00+/-99.9%
+  15  8.721E-15+/- 1.0%  6.502E-19+/-63.9%  7.650E-19+/-38.9%  0.000E+00+/-99.9%
+  16  4.710E-15+/- 8.4%  2.688E-17+/-79.5%  6.512E-18+/-72.6%  0.000E+00+/-99.9%
+  17  2.514E-14+/- 2.3%  2.208E-16+/-23.0%  3.398E-17+/-37.8%  2.089E-19+/-99.9%
+  18  2.588E-14+/- 2.9%  2.588E-14+/- 2.9%  2.153E-16+/-20.2%  1.077E-18+/-61.5%
+  19  3.639E-14+/- 2.3%  9.216E-16+/-10.3%  3.639E-14+/- 2.3%  1.852E-17+/-35.8%
+  20  3.565E-15+/- 9.8%  1.016E-15+/-16.9%  1.609E-15+/-15.2%  3.565E-15+/- 9.8%
+
+
+
+
+ END OF RUN          Sep 13 2004 09:54:33
+
+

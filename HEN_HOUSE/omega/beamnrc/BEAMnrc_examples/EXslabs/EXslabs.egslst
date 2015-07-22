@@ -1,0 +1,255 @@
+
+
+EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space          
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            10:10:41 Sep 13 2004
+ ******************************************************************************
+ **                                                                          **
+ **                                  BEAMnrc                                 **
+ **                                                                          **
+ **      Code developed at National Research Council of Canada as part of    **
+ **           OMEGA collaboration with the University of Wisconsin.          **
+ **                                                                          **
+ ** This is version V1 of BEAMnrc (Rev 1.78 last edited 2004-01-12 11:44:06-0**
+ **                                                                          **
+ ******************************************************************************
+
+
+ Max # of histories: to run        1000          To analyze             1000
+                   Incident charge                            -1
+                   Incident kinetic energy                20.000 MeV
+
+                   Bremsstrahlung splitting                OFF
+                   Photon force interaction switch         OFF
+                   SCORING PLANES:     #           CM #
+                   ---------------------           ----
+                                       1             1
+                   Phase space files will be output at EVERY scoring plane
+         ESAVE NEVER ABOVE ECUT=> NO RANGE REJECTION
+                   Range rejection switch                  ON 
+                   Automatic ECUTRR used starting from          1.000 MeV
+ Range rejection based on medium of region particle is traversing
+ Maximum electron ranges for restricted stopping powers:
+   kinetic            Range for media 1 through 1
+   energy                        (g/cm**2)
+   (MeV)    AIR700IC
+   0.200       6.072
+   0.400      84.941
+   0.600     178.342
+   1.000     383.457
+   1.500     651.119
+   2.000     921.052
+   4.000    1984.479
+   6.000    3015.168
+  10.000    5004.620
+  15.000    7402.169
+  20.000    9733.568
+                   Maximum cputime allowed                      0.99 (hrs)
+                   Initial random number seeds           1802          9373
+            LATCH_OPTION = 2: Latch values inherited, origin of
+                              secondary particles recorded.
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon transport cutoff(MeV)                                AP(medium)
+ Pair angular sampling                                       SIM
+ Bound Compton scattering                                    OFF           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          OFF           
+ Photoelectron angular sampling                              OFF           
+
+ Electron transport cutoff(MeV)                              AE(medium)
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             SIM
+ Spin effects                                                On
+ Electron Impact Ionization                                    0
+ Maxium electron step in cm (SMAX)                                5.000    
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 PRESTA-I  
+ Skin-depth for boundary crossing (MFP)                      910.8    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+                   Material summary   1 Materials used
+ *******************************************************************************
+  # Material           density(g/cm**3)   AE(MeV)   AP(MeV)     UE(MeV)  UP(MeV)
+ -- -----------------  ----------------   -------   -------     -------  -------
+  1 AIR700ICRU            1.205E-03        0.700     0.010      55.511    55.000
+ *******************************************************************************
+                             SOURCE PARAMETERS
+
+                   INITIAL PARTICLES are Electrons
+                   PARALLEL BEAM ON FRONT FACE at Z=   0.0000 cm
+                   Beam radius=   0.0000 cm
+                 X,Y,Z DIRECTION COSINES = (   0.00000   0.00000   1.00000)
+
+                   KINETIC ENERGY OF SOURCE =    20.000 MeV
+
+ REGION and RANGE REJECTION SUMMARY:
+ **********************************
+
+ Total number of regions, including region 1 which surrounds the geometry:   2
+
+  Region    CM          Dose   IR_    Medium    ECUTRR  res_rnge  ESAVE   type
+ abs local  # IDENTIF   ZONE   TO_  (No.&Name)   (MeV)    (cm)    (MeV)
+                       (0=no)  BIT
+   1   1    0 exterior   0      0    0 Vacuum
+   2   1    1 slabs1     1      1    1 AIR700ICR  1.000 125.235   0.000  DNEAR
+
+ Component Module summary:
+ *************************
+
+  There is 1 Component Module:
+
+     COMPONENT MODULE  FIRST     BOUNDARY    DISTANCE FROM    AIR    SCORING
+                      REGION  (1=cyl,2=sq)  REFERENCE PLANE   GAP     PLANE
+  #  TYPE  IDENTIFIER         FLAG    (cm)          (cm)      (cm)   (0=none)
+
+  1 SLABS    slabs1      2     2    10.000         0.000     0.000     1
+
+
+
+ -------------------------------------------------------------------------------
+  Component module  1 is one or more planar slabs  (SLABS Rev 1.6)
+ -------------------------------------------------------------------------------
+
+    Title: air slab  100 cm thick                                      
+
+ slabs1 geometry parameters:
+ -----------------------------
+ Distance of front of CM from reference plane =         0.00000 cm
+ Half-width of outer boundary of CM =        10.00000 cm
+
+ slab #    Z front    thickness
+            face               
+            (cm)        (cm)   
+    1       0.000    100.000
+
+ slabs1 region parameters:
+ ---------------------------
+ local  slab #  location  electron  photon  range-rejection  dose  bit  medium
+ region                    cutoff   cutoff   level     max   zone  set
+                            (MeV)    (MeV)   (MeV)    (MeV)
+   1      1        slab     1.000    0.010   1.000    0.000    1    1  AIR700ICR
+
+
+
+
+
+EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space          
+
+ NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
+ ON i686-pc-1-gnu using gcc 3.3                            10:10:41 Sep 13 2004
+ *******************************************************************************
+                   EXECUTION INFORMATION AND WARNING MESSAGES
+ *******************************************************************************
+
+********* NEW INPUT FILE *********
+
+
+ *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   55  88
+
+ FOR THIS RUN:
+ ------------ 
+ ELAPSED& CPU TIMEs, RATIO =       0.1       0.1s (=   0.00HR)   1.69
+ CPUTIME per history =   0.00006 sec. Number of histories per hour =   60000012.
+   On i686-pc-1-gnu using gcc 3.3     
+
+                   TOTAL # CHARGED PARTICLE STEPS        2.122E+04 +/- 0.3%
+         # CHARGED PARTICLE STEPS/INITIAL HISTORY        2.122E+01 +/- 0.3%
+ # PRESTA-II STEPS/TOTAL # CHARGED PARTICLE STEPS            0.859 +/- 0.3%
+
+        NO. OF BREMSSTRAHLUNG EVENTS IN THIS RUN:                    31
+
+                    Maximum depth of stack=   3
+
+                    PHASE SPACE FILE OUTPUT
+                    ***********************
+
+ FILE  SCORE    TOTAL     TOTAL    MAX. KE OF       MIN. KE OF     # INCIDENT
+  #    PLANE  PARTICLES* PHOTONS*   PARTICLES        ELECTRONS   PARTICLES FROM
+                                      (MeV)            (MeV)    ORIGINAL SOURCE
+
+   1      1       1030       31      19.7832           0.5906        1000.000
+
+
+
+                    FLUENCE RESULTS
+                    ***************
+
+  CM SCORE POSITION   TOTAL                    ZONE RADII
+     PLANE  (cm)    PARTICLES*                   (cm)
+   1    1  100.00        1030    4.4721    6.3246    7.7460    8.9443   10.0000
+
+
+ *Includes all particles of all weights
+
+  Lines with zero results are not printed
+
+ SPECTRAL-AVERAGED QUANTITIES FOR FIRST TIME CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  1:
+ ELECTRONS
+    1  9.400E-01+- 0.8%  1.498E-02+- 0.8%     19.697+- 0.1%      2.084+- 3.1%
+    2  3.900E-02+-15.7%  6.235E-04+-15.7%     19.165+- 2.0%      4.715+- 9.0%
+    3  1.100E-02+-30.0%  1.761E-04+-30.0%     19.023+- 2.8%      5.749+-12.3%
+    4  5.000E-03+-44.6%  8.019E-05+-44.6%     18.633+-63.4%*     7.008+-63.4%*
+    5  2.000E-03+-70.7%  3.211E-05+-70.7%     19.366+-99.9%*     7.574+-99.9%*
+    6  2.000E-03+-70.7%  2.507E-05+-70.8%     11.475+-99.9%*    19.141+-99.9%*
+   --------------------
+  Tot  9.990E-01+- 1.1%
+ PHOTONS
+    1  2.500E-02+-19.8%  3.981E-04+-19.8%      1.288+-39.2%      1.847+- 9.4%
+    2  4.000E-03+-49.9%  6.383E-05+-49.9%      3.191+-99.9%*     4.020+-71.3%*
+    3  1.000E-03+-99.9%  1.599E-05+-99.9%      6.205+-99.9%*     5.429+-99.9%*
+    4  1.000E-03+-99.9%  1.599E-05+-99.9%      0.601+-99.9%*     5.449+-99.9%*
+   --------------------
+  Tot  3.100E-02+-17.8%
+ POSITRONS
+
+ *Covariance not included in uncertainty because no. of particles
+  crossing scoring zone <    10
+
+ SPECTRAL-AVERAGED QUANTITIES FOR MULTIPLE CROSSINGS OF THE SCORING PLANE
+                   NORMALIZED per INCIDENT PARTICLE
+ ZONE        NUMBER           FLUENCE           ENERGY       ANGLE WRT Z-AXIS
+                             (/cm**2)           (MeV)           (degrees)
+ ---- ----------------- ----------------- ----------------- -----------------
+                         SCORING PLANE 1, CM  1:
+ ELECTRONS
+ PHOTONS
+ POSITRONS
+
+
+ MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+ MAX PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000
+
+
+                              DOSE RESULTS
+                              ************
+
+           TOTAL # CHARGED PARTICLE STEPS in DOSE REG.   2.122E+04 +/- 0.3%
+ # CHARGED PARTICLE STEPS in DOSE REG./INITIAL HISTORY   2.122E+01 +/- 0.3%
+
+              TOTAL DOSE PER INCIDENT PARTICLE
+
+    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    ZONE      (g)           (Gy)                 (J)
+    ---- -----------  ------------------  ------------------
+      1    4.819E+01   7.633E-13+/- 0.9%   3.679E-14+/- 0.9%
+
+
+
+ END OF RUN          Sep 13 2004 10:10:41
+
+

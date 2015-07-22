@@ -1,0 +1,22 @@
+@g0 type xy 
+@    title "Dose Simulation Using BEAMnrc"
+@    subtitle "EXslabs: pencil beam of 20  MeV electrons thru 100 cm air ph"
+@    legend on
+@    legend box linestyle 0
+@    legend x1 0.6
+@    legend y1 0.75
+@    view xmin 0.250000
+@    xaxis  label "DOSE ZONE NUMBER"
+@    timestamp on
+@    yaxis  label "ABSORBED DOSE PER INCIDENT PARTICLE (Gy)"
+@    s0 on
+@    legend string  0 "total"
+@    s0 errorbar length 0.000000
+@    s0 symbol color 1
+@TYPE xydy
+     1.0000E-10     7.6332E-18     0.0000E+00
+     1.0000E-10     7.6332E-13     0.0000E+00
+     5.0000E-01     7.6332E-13     7.1430E-15
+     1.0000E+00     7.6332E-13     0.0000E+00
+     1.0000E+00     7.6332E-18     0.0000E+00
+&

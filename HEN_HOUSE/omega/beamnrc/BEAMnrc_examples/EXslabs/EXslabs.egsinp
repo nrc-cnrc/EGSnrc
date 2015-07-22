@@ -1,0 +1,43 @@
+EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space            #!GUI1.0
+AIR700ICRU
+0, 0, 0, 0, 0, 2, 0,  IWATCH ETC.
+1000.0, 0, 0, 0.99, 0, 0, 0, 0,  NCASE ETC.
+-1, 0, 0.0, 0.0, 0.0, 0.0,0.0,0.0,0.0,0.0,  IQIN, ISOURCE + OPTIONS
+0, MONOENERGETIC
+20.00000
+0, 0, 1.0, 0.01, 0, 1, 0.0,  0 , ECUT,PCUT,IREJCT,ESAVE
+0, 0, 0, 0, 0,  PHOTON FORCING
+1, 0,  SCORING INPUT
+0,0
+0,  DOSE COMPONENTS
+0.0, Z TO FRONT FACE
+*********** start of CM SLABS with identifier slabs1 ***********
+10.0, RMAX
+air slab  100 cm thick
+1, NSLABS
+0.001, ZMIN
+100.0, 0.0, 0.0, 1, 1, 0
+AIR700ICRU
+*********************end of all CMs*****************************
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 1.0
+ Global PCUT= 0.01
+ Global SMAX= 5
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= Off
+ 
+ :Stop MC Transport Parameter:
+ #########################

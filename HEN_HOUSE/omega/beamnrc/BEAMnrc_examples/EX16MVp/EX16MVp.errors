@@ -1,0 +1,37 @@
+  If you are not trying to reset transport parameters, 
+  ignore all the output until the message 
+  ******************** end input transport parameter *********************** 
+
+ ***************ERROR***************
+ >>Electron Impact Ionization<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set ECUT<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set ECUT start region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set ECUT stop region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set PCUT<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set PCUT start region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set PCUT stop region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set SMAX<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set SMAX start region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+ ***************ERROR***************
+ >>Set SMAX stop region<< NOT FOUND
+ END OF DELIMETER: MC TRANSPORT PARAMETER
+
+  ******************** end input transport parameter *********************** 
+
