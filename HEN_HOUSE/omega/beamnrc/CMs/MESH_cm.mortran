@@ -1,0 +1,1469 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: fine wire mesh                            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 1994                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ***********
+"                             *         *
+"                             *  MESH   *
+"                             *         *
+"                             ***********
+"
+"
+"   Development Version, Spring 1994
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  Simulate fine wire mesh (ignoring
+"                                                    multiple collisions)
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+;
+%E   " MESH_cm.mortran - start of geometry description
+"I>
+"I> Geometry of $MESH (MESH):
+"I> ******************        -XOUTER  -XINNER    XINNER   XOUTER
+"I>                              |     |             |     |
+"I>
+"I>                              ___________________________      YOUTER
+"I>                              |                         |
+"I>                              |                         |
+"I>                              |      _____________      |    YINNER
+"I>                              |     |             |     |
+"I>                              |     |             |     |
+"I>                          IR=3|IR=2 |   IR=1      |IR=2 |
+"I>          beam                |     |             |     |
+"I>      from top                |     |             |     |
+"I>                              |     |_____________|     |   -YINNER
+"I>                              |                         |
+"I>                              |                         |
+"I>                              |_________________________|   -YOUTER
+"I>
+"I>   IR is the region number within the CM.  There are 3 local regions.
+"I>        plus possibly an upstream air gap.
+"I>
+"I>  If a particle is outside the entire mesh, it is assumed to be in a
+"I>  semi-infinte slab.  Region is 4.
+"I>
+"I>  The air gap, if it exists, is region 5.
+"I>
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$MESH
+"                      ISUMRY_$MESH
+"                      HOWFAR_$MESH
+"                      WHERE_AM_I_$MESH
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                              CODE MODIFICATIONS
+"                              ******************
+"
+"        PROGRAMMER  DATE  IDENTIFIER  COMMENTS
+"
+"*******************************************************************************
+"
+"
+"                             RESTRICTIONS ON USE
+"                             *******************
+"
+"         This code is in the development stage now.  Results should not be
+"         taken seriously.
+"
+"
+"*******************************************************************************
+"
+"                                 KNOWN BUGS
+"                                 **********
+"
+"
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5
+"                               *****************
+"
+;
+"I>
+"I>  CARDS CM_$MESH  (MESH: Rev 1.4)
+"I>  **************
+"I>
+"I>  -1  dummy line (filled with ****)  read in main
+"I>
+"I>   0  RMAX_CM       outer boundary for CM - 1/2 side of square(read in main)
+"I>
+"I>   1  TITLE_$MESH (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$MESH (F10.0):  Z position of front of MESH (excluding airgap).
+"I>
+"I>   3  X_AIR_WIDTH_$MESH, Y_AIR_WIDTH_$MESH, WIRE_WIDTH_$MESH,
+"I>      WIRE_THICK_$MESH (4F15.0):
+"I>
+"I>          X_AIR_WIDTH_$MESH: X width of each air region in mesh (cm)
+"I>          Y_AIR_WIDTH_$MESH: Y width of each air region in mesh (cm)
+"I>                              Y_AIR_WIDTH_$MESH defaults to
+"I>                              X_AIR_WIDTH_$MESH if it is set to 0.
+"I>          WIRE_WIDTH_$MESH:  Width of wire in the mesh (cm)
+"I>          WIRE_THICK_$MESH:  Thickness of wire in the mesh (cm)
+"I>
+"I>        Note restrictions: X_AIR_WIDTH_$MESH,Y_AIR_WIDTH_$MESH,
+"I>                           WIRE_WIDTH_$MESH must all be >= 0.0001 cm
+"I>
+"I>   4  XTOTAL_$MESH, YTOTAL_$MESH (2F15.0):
+"I>
+"I>          XTOTAL_$MESH: Half-width of outer X dimension of mesh (cm)
+"I>          YTOTAL_$MESH: Half-width of outer Y dimension of mesh (cm)
+"I>
+"I>        Note: XTOTAL_$MESH,YTOTAL_$MESH default to RMAX_CM if set to 0
+"I>              Also, if they fall within mesh cells (individual air regions +
+"I>                1/2 of the wire surrounding them) they are pushed out
+"I>                to include those cells.
+"I>
+"I>   5  ECUT,PCUT,DOSE_ZONE,IR_TO_BIT for air inside and
+"I>                                     surrounding mesh (2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>     IREGION_TO_BIT:   Bit number associated with these regions
+"I>
+"I>   6  ECUT,PCUT,DOSE_ZONE,IR_TO_BIT in local region 2 (wire region)
+"I>                                     (2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>     IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>   7  MED_IN (24A1):   medium of local region 2 (wire), used to set
+"I>                       MED_INDEX
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I> The following input example describes a lead mesh placed at Z=100 cm
+"I> in a beam.  The mesh is 0.0299 cm thick, has square air regions
+"I> with dimensions 0.2159x0.2159cm, and the lead wire separating the air
+"I> regions is 0.0381cm wide.  Although the RMAX_CM is 10cm, the outer
+"I> boundary of the mesh itself, as input, is a 6x6cm square.  MESH
+"I> automatically adjusts this boundary to 6.2421x6.2421cm to accommodate
+"I> exactly 49 mesh cells (air regions + half of the wire width
+"I> surrounding them) in the X and Y directions plus the extra half-thickness
+"I> of wire surrounding the entire mesh and not belonging to any cell.
+"I>
+"I> ECUT and PCUT in all regions are set to 0.521MeV and 0.01MeV
+"I> respectively.  Air regions (cell air + air surrounding mesh) will
+"I> have dose scored in zone 1 and is associated with bit # 1.  The
+"I> lead wire has dose scored in zone 2 and is associated with bit # 2.
+"I>
+"I> Note that MESH cannot be the first CM in a simulation, and the
+"I> example given here must be preceeded by at least an airgap modelled
+"I> by another type of CM.
+"I>
+"I> 10.00000,                       Outer boundary
+"I> lead mesh: 0.0381cm with 0.2159cm air
+"I> 100.0
+"I> 0.2159,  0.0,  0.0381, 0.0299,  depth ensures equal mass as circle
+"I> 6.0,  6.0,                      outer boundary fills entire beam
+"I> 0.521,  0.01,  1,  1,              air is bit 1
+"I> 0.521,  0.01,  2,  2,              wire is bit 2
+"I> PB700ICRU
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+%E   " MESH_cm.mortran - start subroutine INPUT_$MESH"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_MESH
+"                           **********************
+"
+"  A CM input subroutine for a wire MESH.
+"
+"  It fills all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$MESH;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MESH,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,STACK,EGS-IO/;
+"                  STACK only needed for temporary test of HOWNEAR"
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_MESH
+"T>*********************************
+"T>
+$REAL   ZMIN_$MESH,                 "T>minimum Z for this CM
+        X_AIR_WIDTH_$MESH,          "T>x width of air regions
+        Y_AIR_WIDTH_$MESH,          "T>y width of air regions
+        XX,YY;                        "T>temporary variables
+
+INTEGER I,J,                        "T>DO loop indices
+        IRA,                        "T>Absolute region number
+        MED_FLAG,                   "T>flag for media-sort macro $MED_INPUT
+        MED_INDEX,                  "T>medium index,set(post)sort $MED_INPUT
+        NDO;
+
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$MESH = ICM;                   "CM index for this component module
+                                   "Note ICM_$MESH not needed here since
+                                   "ICM is set, but it is not set when
+                                   "other routines called.
+IRSTART_$MESH = IR_start_CM(ICM_$MESH); "Index of first region in this CM,
+                                   "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$MESH) = 0;          "Geometry-checking flag, 0 if no errors
+"
+"establish CM boundary as a square
+RMAX_CM_FLAG(ICM_$MESH) = 2;       "put a square boundary about CM
+"                                   Will initialize RMAX_IR_FLAG below when know
+"                                   number of regions
+"
+OUTPUT;(/' $MESH (MESH: Rev 1.4)'/);
+OUTPUT RMAX_CM(ICM); (' This component is a wire mesh '/
+  '      Outer boundary is a square with |x| & |y| <',F10.2,' cm'/);
+
+IF(ICM_$MESH = 1)[ OUTPUT Z_min_CM(ICM_$MESH);
+   (' This is first component -- starts at ',F11.4,' cm from reference plane');]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$MESH);(' Previous CM ends at:',F12.5,' cm');]
+
+OUTPUT;(/' TITLE: ',$);
+;MINPUT ($MESH) TITLE_$MESH;(60A1);
+               "MINPUT is a replacement macro with EOF and
+               "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$MESH;(' ',60A1);
+"
+"
+" get distance from reference plane, z=0"
+"
+OUTPUT;
+ (/' Z of front of mesh (excluding air gap): ',$);
+;MINPUT ($MESH) ZMIN_$MESH;(F15.0);
+OUTPUT ZMIN_$MESH;(F10.5);
+IF(ZMIN_$MESH < Z_min_CM(ICM_$MESH))["have overlapped two CMs"
+     OUTPUT ICM_$MESH;
+       (//' ***ERROR IN CM ',I4,' ($MESH):'/
+          ' Overlaps with previous CM.'//);
+     IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+
+OUTPUT; (/' 4 numbers on one line: X and Y width of each air region(cm),'/
+         '                        Wire width and thickness (cm)'/' : ',$);
+MINPUT ($MESH) X_AIR_WIDTH_$MESH, Y_AIR_WIDTH_$MESH,
+               WIRE_WIDTH_$MESH,  WIRE_THICK_$MESH;(4F15.0);
+OUTPUT  X_AIR_WIDTH_$MESH, Y_AIR_WIDTH_$MESH,
+         WIRE_WIDTH_$MESH,  WIRE_THICK_$MESH;(4F11.4);
+IF(X_AIR_WIDTH_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' (MESH):'/
+' X width of air regions < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(X_AIR_WIDTH_$MESH < 0.0001)[
+   OUTPUT ICM_$MESH,X_AIR_WIDTH_$MESH;
+ (//' ***WARNING IN CM ',I4,' ($MESH):'/
+' X width of air regions cannot be < 0.0001 cm'/
+' X width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   WRITE(IOUTLIST,100)ICM_$MESH,X_AIR_WIDTH_$MESH;
+   100 FORMAT(//' ***WARNING IN CM ',I4,' ($MESH):'/
+' X width of air regions cannot be < 0.0001 cm'/
+' X width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   X_AIR_WIDTH_$MESH = 0.0001;
+]
+IF(X_AIR_WIDTH_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' ($MESH):'/
+' Y width of air regions < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(Y_AIR_WIDTH_$MESH = 0.0)[
+     Y_AIR_WIDTH_$MESH = X_AIR_WIDTH_$MESH;
+]
+ELSEIF(Y_AIR_WIDTH_$MESH < 0.0001)[
+   OUTPUT ICM_$MESH,Y_AIR_WIDTH_$MESH;
+ (//' ***WARNING IN CM ',I4,' ($MESH):'/
+' Y width of air regions cannot be < 0.0001 cm'/
+' Y width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   WRITE(IOUTLIST,101)ICM_$MESH,Y_AIR_WIDTH_$MESH;
+  101 FORMAT(//' ***WARNING IN CM ',I4,' ($MESH):'/
+' Y width of air regions cannot be < 0.0001 cm'/
+' Y width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   Y_AIR_WIDTH_$MESH = 0.0001;
+]
+IF(WIRE_WIDTH_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' ($MESH):'/
+' Wire width < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(WIRE_WIDTH_$MESH < 0.0001)[
+   OUTPUT ICM_$MESH,WIRE_WIDTH_$MESH;
+(//' ***WARNING IN CM ',I4,' ($MESH):'/
+' Wire width cannot be < 0.0001 cm'/
+' Wire width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   WRITE(IOUTLIST,102)ICM_$MESH,WIRE_WIDTH_$MESH;
+102 FORMAT(//' ***WARNING IN CM ',I4,' ($MESH):'/
+' Wire width cannot be < 0.0001 cm'/
+' Wire width has been reset to 0.0001 cm from ',F8.5,' cm'//);
+   WIRE_WIDTH_$MESH = 0.0001;
+]
+IF(WIRE_WIDTH_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' ($MESH):'/
+' Wire thickness < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(WIRE_THICK_$MESH = 0.0) [WIRE_THICK_$MESH = WIRE_WIDTH_$MESH;]
+
+"Set local variables for handling geometry"
+ZBACK_$MESH  = ZMIN_$MESH + WIRE_THICK_$MESH;
+ZFRONT_$MESH = ZMIN_$MESH;
+XINNER_$MESH = X_AIR_WIDTH_$MESH/2.;
+YINNER_$MESH = Y_AIR_WIDTH_$MESH/2.;
+XOUTER_$MESH = XINNER_$MESH + WIRE_WIDTH_$MESH;
+YOUTER_$MESH = YINNER_$MESH + WIRE_WIDTH_$MESH;
+X_CELL_$MESH = 2.* XINNER_$MESH + WIRE_WIDTH_$MESH;"1/2 wire each side"
+Y_CELL_$MESH = 2.* YINNER_$MESH + WIRE_WIDTH_$MESH;
+X_CELLBY2_$MESH = X_CELL_$MESH/2.;
+Y_CELLBY2_$MESH = Y_CELL_$MESH/2.;
+
+OUTPUT;(/' X and Y outer limits of the mesh (half widths in cm)'/
+         ' : ',$);
+MINPUT ($MESH) XTOTAL_$MESH, YTOTAL_$MESH;(2F15.0);
+OUTPUT XTOTAL_$MESH, YTOTAL_$MESH;(2F11.4);
+IF(XTOTAL_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' ($MESH):'/
+' Half width of X outer limit  < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(XTOTAL_$MESH = 0.0 ) [XTOTAL_$MESH = RMAX_CM(ICM);"default all"]
+IF(YTOTAL_$MESH < 0.0)[
+   OUTPUT ICM_$MESH ; (//' ***ERROR IN CM ',I4,' ($MESH):'/
+' Half width of Y outer limit  < 0'//);
+   IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+ELSEIF(YTOTAL_$MESH = 0.0 ) [YTOTAL_$MESH = RMAX_CM(ICM);"default all"]
+
+IRA = IRSTART_$MESH; "absolute region number of interior air region"
+"get cutoff energies, and dose scoring zone and IR_to_BIT for AIR"
+"
+OUTPUT; (/' For AIR regions'/' ECUT, PCUT(MeV),',
+      ' DOSE ZONE(0=>DONT SCORE), IR_TO_BIT'/' :',$);
+;MINPUT ($MESH) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+        IREGION_TO_BIT(IRA); (2F15.0,2I5);
+NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+   (2F11.5,I9,I20);
+    MED(IRA) = AIR_INDEX;
+IRA = IRA + 2; "region outside individual wire cells"
+    ECUT(IRA) = ECUT(IRA-2);
+    PCUT(IRA) = PCUT(IRA-2);
+    DOSE_ZONE(IRA) = DOSE_ZONE(IRA-2);
+    IREGION_TO_BIT(IRA) = IREGION_TO_BIT(IRA-2);
+    MED(IRA) = AIR_INDEX;
+IRA = IRA + 1; "region outside entire mesh"
+    ECUT(IRA) = ECUT(IRA-1);
+    PCUT(IRA) = PCUT(IRA-1);
+    DOSE_ZONE(IRA) = DOSE_ZONE(IRA-1);
+    IREGION_TO_BIT(IRA) = IREGION_TO_BIT(IRA-1);
+    MED(IRA) = AIR_INDEX;
+
+
+"get cutoff energies, and dose scoring zone and IR_to_BIT for WIRE material"
+IRA = IRSTART_$MESH +1;   "absolute region for local region 2"
+OUTPUT; (/' For WIRE regions'/' ECUT, PCUT(MeV),',
+      ' DOSE ZONE(0=>DONT SCORE), IR_TO_BIT'/' :',$);
+;MINPUT ($MESH) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+        IREGION_TO_BIT(IRA); (2F15.0,2I5);
+NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+   (2F11.5,I9,I20);
+OUTPUT;(/' Material for wire mesh: ',$);
+$MED_INPUT($MESH);   "inputs medium and sets MED_INDEX  and increases NMED"
+MED(IRA) = MED_INDEX;
+"
+"  parameter definition
+"  ====================
+"
+"establish start of next CM
+Z_min_CM(ICM_$MESH+1) = ZBACK_$MESH;
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+Z_gap_THICK(ICM_$MESH) = ZMIN_$MESH-Z_min_CM(ICM_$MESH);
+
+OUTPUT ZMIN_$MESH,Z_min_CM(ICM_$MESH),
+Z_gap_THICK(ICM_$MESH); (/' ZMIN_$MESH,FRONT,THICK:', 3 F12.4);
+
+IF (Z_gap_THICK(ICM_$MESH) < $MIN_GAP) ["$MIN_GAP is defined in  main"
+   Z_gap_THICK(ICM_$MESH) = 0.;
+   ZFRONT_$MESH=Z_min_CM(ICM_$MESH);
+   N_GAP_$MESH = 0; "no air gap for this CM
+]
+ELSE [
+   N_GAP_$MESH = 1; "this CM has an air gap
+   IRA = IRSTART_$MESH+4; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+   ECUT(IRA) = ECUTIN;
+   "don't score energy or set bits in the air - may ask about it some day"
+   IREGION_TO_BIT(IRA) = 0;
+   DOSE_ZONE(IRA) = 0;
+]
+"  set up region numbers
+"  =====================
+"
+"  This CM has 4+N_GAP_$MESH regions, air inside mesh, mesh wire, air oustide
+"  mesh and air gap at the front, if present.
+"
+IREND_$MESH = IRSTART_$MESH+3+N_GAP_$MESH;  "Index of last region
+NREG = NREG+4+N_GAP_$MESH;  "Total of regions in full geometry up
+                                    "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$MESH+1) = IREND_$MESH+1;
+]
+ELSE [
+      OUTPUT ICM_$MESH,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' ($MESH):'/
+         I4,' regions requested, only', I4,' available'/
+         '    Change $MXREG in beam_user_macros.mortran'//);
+      IERR_GEOM(ICM_$MESH)=IERR_GEOM(ICM_$MESH)+1;
+]
+"
+"  establish CM boundary for each region.  RMAX_CM_FLAG set near top here
+"  =====================                   It is a square.
+DO IRA=IRSTART_$MESH,NREG ["loop over absolute region numbers in CM + air gap
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+]
+
+"calculate some parameters about mesh"
+
+OUTPUT X_CELL_$MESH,X_CELLBY2_$MESH, WIRE_WIDTH_$MESH;
+(/' X_CELL_$MESH,X_CELLBY2_$MESH, WIRE_WIDTH_$MESH'/' :',3F12.4);
+
+
+"round total size to complete number of cells if the outer boundary"
+"falls within the air of a cell"
+$MESH_FIND_CELL(XTOTAL_$MESH,YTOTAL_$MESH);
+   "IX_$MESH,IY_$MESH are the cells the outer boundaries are in"
+"now adjust outer boundaries to be outside of last cell including complete wire"
+IF(X_CELLBY2_$MESH + IX_$MESH *X_CELL_$MESH + WIRE_WIDTH_$MESH/2. -
+                                           XTOTAL_$MESH > 1.E-4 )[
+   IF(XTOTAL_$MESH < X_CELLBY2_$MESH + (IX_$MESH-1)*X_CELL_$MESH +
+      WIRE_WIDTH_$MESH/2.)[
+      OUTPUT XTOTAL_$MESH,X_CELLBY2_$MESH +
+           (IX_$MESH-1)*X_CELL_$MESH
+           +WIRE_WIDTH_$MESH/2., 2*(IX_$MESH-1)+1;
+      (/' Input mesh X width was',F11.4,' cm.'/'  Adjusted to',
+      F11.4,' cm to give',I6,' complete cells +outer wire');
+       XTOTAL_$MESH = X_CELLBY2_$MESH + (IX_$MESH-1)*X_CELL_$MESH +
+                                           WIRE_WIDTH_$MESH/2.;
+   ]
+   ELSEIF(XTOTAL_$MESH > X_CELLBY2_$MESH+(IX_$MESH-1)*X_CELL_$MESH +
+      WIRE_WIDTH_$MESH/2.)[
+        OUTPUT XTOTAL_$MESH,X_CELLBY2_$MESH + IX_$MESH *X_CELL_$MESH
+           +WIRE_WIDTH_$MESH/2., 2*IX_$MESH+1;
+      (/' Input mesh X width was',F11.4,' cm.'/'  Adjusted to',
+      F11.4,' cm to give',I6,' complete cells +outer wire');
+      XTOTAL_$MESH = X_CELLBY2_$MESH + IX_$MESH *X_CELL_$MESH +
+                                           WIRE_WIDTH_$MESH/2.;
+   ]
+]
+IF(Y_CELLBY2_$MESH + IY_$MESH *Y_CELL_$MESH + WIRE_WIDTH_$MESH/2.-
+               YTOTAL_$MESH > 1.E-4 )[
+   IF(YTOTAL_$MESH < Y_CELLBY2_$MESH + (IY_$MESH-1)*Y_CELL_$MESH +
+      WIRE_WIDTH_$MESH/2.)[
+     OUTPUT YTOTAL_$MESH,Y_CELLBY2_$MESH +(IY_$MESH-1)*Y_CELL_$MESH
+           +WIRE_WIDTH_$MESH/2., 2*(IY_$MESH-1)+1;
+      (/' Input mesh Y width was',F11.4,' cm.'/'  Adjusted to',
+      F11.4,' cm to give',I6,' complete cells +outer wire');
+       YTOTAL_$MESH = Y_CELLBY2_$MESH + (IY_$MESH-1)*Y_CELL_$MESH +
+                                           WIRE_WIDTH_$MESH/2.;
+   ]
+   ELSEIF(YTOTAL_$MESH > Y_CELLBY2_$MESH+(IY_$MESH-1)*Y_CELL_$MESH +
+      WIRE_WIDTH_$MESH/2.)[
+        OUTPUT YTOTAL_$MESH,Y_CELLBY2_$MESH + IY_$MESH *Y_CELL_$MESH
+           +WIRE_WIDTH_$MESH/2., 2*IY_$MESH+1;
+      (/' Input mesh Y width was',F11.4,' cm.'/'  Adjusted to',
+      F11.4,' cm to give',I6,' complete cells +outer wire');
+      YTOTAL_$MESH = Y_CELLBY2_$MESH + IY_$MESH *Y_CELL_$MESH +
+                                           WIRE_WIDTH_$MESH/2.;
+   ]
+]
+"
+"   return from INPUT_MESH
+"   =======================
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$MESH:
+;OUTPUT ICM;
+  (//' *** ERROR *** unexpected end of file on input for $MESH CM',I3);
+STOP;
+
+:ERROR_$MESH:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for $MESH CM',I3);
+STOP;
+END;  "End of INPUT_MESH"
+%E   " MESH_cm.mortran - start subroutine ISUMRY_$MESH"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_MESH
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$MESH;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$MESH,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_MESH
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,   "T>colour of CM for EGS_Windows
+   IDD,       "T>index of dose scoring zone
+   IRA,       "T>absolute region number
+   J;         "T>DO loop index
+
+REAL
+   NUM_X_CELLS_$MESH,  "T> # of X half-cells contained in RMAX_CM
+   NUM_Y_CELLS_$MESH,  "T> # of Y half-cells contained in RMAX_CM
+   X_OUTER_$MESH,      "T> gap between XTOTAL and RMAX_CM
+   Y_OUTER_$MESH,      "T> gap between YTOTAL and RMAX_CM
+   VOLAIR_$MESH,       "T> volume of air in cells + surrounding
+   VOLWIRE_$MESH;      "T> volume of wire
+"
+"   Mass of dose zone
+"   =================
+"Need to calculate mass of dose zone here,after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$MESH.
+"
+
+IF (RMAX_CM(ICM_$MESH) < XTOTAL_$MESH) [
+   NUM_X_CELLS_$MESH = FLOAT(INT(RMAX_CM(ICM_$MESH)/
+                       X_CELLBY2_$MESH));
+   IF(MOD(NUM_X_CELLS_$MESH,2.)=0)[ "even number of half cells"
+      IF(RMAX_CM(ICM_$MESH)< (NUM_X_CELLS_$MESH+1)*X_CELLBY2_$MESH -
+         WIRE_WIDTH_$MESH/2.) [
+           NUM_X_CELLS_$MESH = NUM_X_CELLS_$MESH + (RMAX_CM(ICM_$MESH)-
+                  NUM_X_CELLS_$MESH*X_CELLBY2_$MESH)/XINNER_$MESH;
+      ]
+      ELSE [
+           NUM_X_CELLS_$MESH = NUM_X_CELLS_$MESH + 1.;
+      ]
+   ]
+   ELSE [ "odd number of half cells'
+      IF(RMAX_CM(ICM_$MESH) > (NUM_X_CELLS_$MESH)*X_CELLBY2_$MESH +
+         WIRE_WIDTH_$MESH/2.) [
+           NUM_X_CELLS_$MESH = NUM_X_CELLS_$MESH + (RMAX_CM(ICM_$MESH)-
+             NUM_X_CELLS_$MESH*X_CELLBY2_$MESH - WIRE_WIDTH_$MESH/2.)/
+             XINNER_$MESH;
+      ]
+   ]
+   X_OUTER_$MESH=0.;
+]
+ELSE [
+   NUM_X_CELLS_$MESH = FLOAT(INT(XTOTAL_$MESH/X_CELLBY2_$MESH));
+   X_OUTER_$MESH=RMAX_CM(ICM_$MESH)-XTOTAL_$MESH;
+]
+IF (RMAX_CM(ICM_$MESH) < YTOTAL_$MESH) [
+    NUM_Y_CELLS_$MESH = FLOAT(INT(RMAX_CM(ICM_$MESH)/
+                        Y_CELLBY2_$MESH));
+    IF(MOD(NUM_Y_CELLS_$MESH,2.)=0)[ "even number of half cells"
+       IF(RMAX_CM(ICM_$MESH)< (NUM_Y_CELLS_$MESH+1)*Y_CELLBY2_$MESH -
+         WIRE_WIDTH_$MESH/2.) [
+          NUM_Y_CELLS_$MESH = NUM_Y_CELLS_$MESH + (RMAX_CM(ICM_$MESH)-
+                  NUM_Y_CELLS_$MESH*Y_CELLBY2_$MESH)/YINNER_$MESH;
+       ]
+       ELSE [
+          NUM_Y_CELLS_$MESH = NUM_Y_CELLS_$MESH + 1;
+       ]
+    ]
+    ELSE [ "odd number of half cells'
+       IF(RMAX_CM(ICM_$MESH) > (NUM_Y_CELLS_$MESH)*Y_CELLBY2_$MESH +
+          WIRE_WIDTH_$MESH/2.) [
+            NUM_Y_CELLS_$MESH = NUM_Y_CELLS_$MESH +(RMAX_CM(ICM_$MESH)-
+              NUM_Y_CELLS_$MESH*Y_CELLBY2_$MESH - WIRE_WIDTH_$MESH/2.)/
+              YINNER_$MESH;
+       ]
+    ]
+    Y_OUTER_$MESH=0.;
+]
+ELSE [
+   NUM_Y_CELLS_$MESH = FLOAT(INT(YTOTAL_$MESH/Y_CELLBY2_$MESH));
+   Y_OUTER_$MESH=RMAX_CM(ICM_$MESH)-YTOTAL_$MESH;
+]
+VOLAIR_$MESH = ((4*NUM_X_CELLS_$MESH*XINNER_$MESH*
+                NUM_Y_CELLS_$MESH*YINNER_$MESH)+
+               (4*Y_OUTER_$MESH*RMAX_CM(ICM_$MESH) +
+                4*X_OUTER_$MESH*RMAX_CM(ICM_$MESH) -
+                4*Y_OUTER_$MESH*X_OUTER_$MESH))*(ZBACK_$MESH-
+                ZFRONT_$MESH);
+VOLWIRE_$MESH = (ZBACK_$MESH-ZFRONT_$MESH)*4*RMAX_CM(ICM_$MESH)**2 -
+                 VOLAIR_$MESH;
+
+IRA = IRSTART_$MESH; "absolute region number for air in cells + surrounding"
+IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      IDD=DOSE_ZONE(IRA);
+      AMASS(IDD)=AMASS(IDD) + RHOR(IRA)*VOLAIR_$MESH;
+]
+IRA = IRSTART_$MESH +1; "absolute region number for wires"
+IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      IDD=DOSE_ZONE(IRA);
+      AMASS(IDD)=AMASS(IDD) + RHOR(IRA)*VOLWIRE_$MESH;
+]
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$MESH,TITLE_$MESH;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$MESH),RMAX_CM(ICM_$MESH),
+                    ZFRONT_$MESH;
+IF(N_GAP_$MESH = 1)[
+    WRITE(IOUTLIST,121);
+]
+WRITE(IOUTLIST,122) WIRE_THICK_$MESH,XTOTAL_$MESH,YTOTAL_$MESH,
+              INT((2.*XTOTAL_$MESH - WIRE_WIDTH_$MESH)/ X_CELL_$MESH),
+              INT((2.*YTOTAL_$MESH - WIRE_WIDTH_$MESH)/ Y_CELL_$MESH),
+                XINNER_$MESH,YINNER_$MESH, WIRE_WIDTH_$MESH,
+                ((XINNER_$MESH+WIRE_WIDTH_$MESH/2.)*
+                (YINNER_$MESH+WIRE_WIDTH_$MESH/2.) -
+                 XINNER_$MESH*YINNER_$MESH) *100./
+                 ((XINNER_$MESH+WIRE_WIDTH_$MESH/2.)*
+                (YINNER_$MESH+WIRE_WIDTH_$MESH/2.));
+
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$MESH-1;
+
+DO IR_$MESH=1,4 + N_GAP_$MESH [
+   IRA = IRA+1;
+   IF(IR_$MESH=1)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'cell air',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'cell air',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$MESH=2)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'wire',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'wire',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$MESH=4)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'surrounding',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'surrounding',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+      WRITE(IOUTLIST,141)'air';
+   ]
+   ELSEIF(IR_$MESH>4)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$MESH,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+    WRITE(IOUTLIST,141)'at top';
+    ]
+]"end loop on IR_$MESH"
+
+
+110 FORMAT(/1x,79('-')/ '  Component module',I3,
+' is a wire mesh  (MESH Rev 1.4)' /1x,79('-') //' Title: ',68A1);
+120 FORMAT(/T2,'$MESH geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           T55,F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',T55,F15.5,' cm',
+           /T2,'Z of front of mesh = ',T55,F15.5,' cm');
+121 FORMAT(T2,'Note the airgap at the top of the CM');
+122 FORMAT(T2,'Thickness of mesh = ',T55,F15.5,' cm',
+           /T2,'Half-width of outer boundary of mesh in X direction = ',
+           T55,F15.5,' cm',
+           /T2,'Half-width of outer boundary of mesh in Y direction = ',
+           T55,F15.5,' cm',
+           /T2,'# of complete cells in the X direction = ',T55,I15,
+           /T2,'# of complete cells in the Y direction = ',T55,I15,
+          //T2,'X half-width of air region in each cell = ',T55,F15.5,' cm',
+           /T2,'Y half-width of air region in each cell = ',T55,F15.5,' cm',
+           /T2,'Width of wire = ',T55,F15.5,' cm',
+           /T2,'Coverage factor (% of cell area taken up by wire) = ',
+           T55,F15.2,' %');
+
+130 FORMAT(/T2,'$MESH region parameters:',
+           /T2,'-----------------------',
+           /T2,'local     location       electron  photon',
+           '  range-rejection  dose  bit  medium'
+           /T2,'region                    cutoff   cutoff',
+           '   level     max   zone  set'
+           /T2,'                           (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+
+140 FORMAT(T2,I3,4X,A11,F13.3,F9.3,F8.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T9,A11);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH.EQ.4) ["Graphics file requested"
+   ICOLOUR = MOD(ICM_$MESH,4)+1; "select ICOLOUR = 1, 2, or 3, colour of CM"
+   WRITE(IOUTGEOM,200) ICOLOUR,'DISK',0.,0.,
+                       ZFRONT_$MESH,RMAX_CM(ICM_$MESH);
+   WRITE(IOUTGEOM,200) ICOLOUR,'DISK',0.,0.,
+                       ZBACK_$MESH,RMAX_CM(ICM_$MESH);
+] "End of graphics output"
+200 FORMAT(' ',I1,A4,10(F7.2,','));
+"
+;RETURN;END;"end of ISUMRY_MESH"
+%E   " MESH_cm.mortran - start subroutine HOWFAR_$MESH"
+"*******************************************************************************
+"************************** Component Module MESH *****************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_MESH
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module MESH, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+" If particle is found to be about to leave the CM, it is translated back to
+" its original cell.
+"
+"
+"*******************************************************************************
+
+;SUBROUTINE HOWFAR_$MESH;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ CMs,CM_$MESH,EPCONT,SCORE,STACK,EGS-IO/;
+"score for IWATCH"
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_MESH
+"T>**********************************
+"T>
+INTEGER
+   IRL,
+   one;               "T>absolute region number, required by HOWNEAR macro
+$REAL
+   DISTX,DISTY,DISTZ, "T>distances to various boundaries
+   DMIN_$MESH,        "T>minimum distance to boundaries checked thus far
+   XF,YF;             "T>positions at end of step - used as temp variables
+
+parameter (one = 1);
+
+IRL = IR(NP);   "local region number (absolute)
+
+" Set DNEAR
+" *********
+" This replacement macros sets DMIN_$MESH as well as defining IR_$MESH
+;
+$MESH_CM_HOWNEAR(DMIN_$MESH);
+DNEAR(NP) = DMIN_$MESH;
+
+;
+" Boundary-crossing check
+" ***********************
+" Determine if current region number is within component module MESH,
+" and if so evaluate DIST, distance to region boundary along current
+" trajectory.  USTEP must not exceed DIST.
+"
+/DISTX,DISTY,DISTZ/ = 1.E10;
+
+IF (IR_$MESH = 1) ["in interior air region of cell"
+"================================================="
+
+   "get distances in X,Y,Z directions"
+    IF(W(NP) > 0.0)     [DISTZ = (ZBACK_$MESH - Z(NP))/W(NP);]
+    ELSEIF(W(NP) < 0.0) [DISTZ = (Z(NP) - ZFRONT_$MESH)/(-W(NP));]
+
+    IF(U(NP) > 0.0)     [DISTX = (XINNER_$MESH - X(NP))/U(NP) + 1.E-5;]
+    ELSEIF(U(NP) < 0.0) [DISTX = (XINNER_$MESH + X(NP))/(-U(NP)) + 1.E-5;]
+                        "+ in above line since really want -XINNER_$MESH"
+    IF(V(NP) > 0.0)     [DISTY = (YINNER_$MESH - Y(NP))/V(NP) + 1.E-5;]
+    ELSEIF(V(NP) < 0.0) [DISTY = (YINNER_$MESH + Y(NP))/(-V(NP)) + 1.E-5;]
+
+    IF(DISTX <= USTEP)[ USTEP = DISTX; IRNEW = IR(NP)+1;"going to wire"]
+    IF(DISTY <= USTEP)[ USTEP = DISTY; IRNEW = IR(NP)+1;"going to wire"]
+    IF(DISTZ <= USTEP)[ USTEP = DISTZ;
+       IF(W(NP) < 0.0)["out the front, posibly to air gap"
+         IF(N_GAP_$MESH = 1)["in air gap"  IRNEW = IREND_$MESH;]
+         ELSE ["leaving CM out front"
+            IF(USTEP<=0.)[USTEP=1.E-16;] "ensure call to ausgab"
+           "translate back to correct cell if necessary"
+            IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+            ]
+            IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+            ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+            CALL WHERE_AM_I(ICM_$MESH,-1); "get IRNEW, ICMNEW"
+         ]
+       ]"end of backward going exit"
+       ELSEIF(W(NP) > 0.0) [ "going out back of CM"
+            IF(USTEP<=0.)[USTEP=1.E-16;] "ensure call to ausgab"
+            IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+            ]
+            IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+            ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+            CALL WHERE_AM_I(ICM_$MESH,+1); "get IRNEW, ICMNEW"
+       ] "end of forward going exit"
+    ]"end of block going out in Z direction"
+]"end of block for particle in interior air region of cell"
+
+ELSEIF (IR_$MESH = 2) ["inside wire"
+"=================================="
+
+   "get distances in X,Y,Z directions"
+    IF(W(NP) > 0.0)     [DISTZ = (ZBACK_$MESH - Z(NP))/W(NP);]
+    ELSEIF(W(NP) < 0.0) [DISTZ = (Z(NP) - ZFRONT_$MESH)/(-W(NP));]
+
+    "Determine distance to X boundaries"
+    IF(U(NP) > 0.0)     ["moving to the right"
+       IF(X(NP) > -XINNER_$MESH)["can only hit righthand outer x boundary"
+          DISTX = (XOUTER_$MESH - X(NP))/U(NP);
+       ]
+       ELSE["X(NP) <= - XINNER_$MESH"
+          "can hit interior left boundary or exterior right boundary"
+          "look at interior possibility first"
+          DISTX = (-XINNER_$MESH - X(NP))/U(NP);
+          YF = Y(NP) + DISTX*V(NP);"calc Y position when hits XINNER"
+          IF (ABS(YF) > YINNER_$MESH)["it hits the inner bound outside"
+             "so only consider far outer bound (far inner cannot be hit)"
+             DISTX = (-X(NP) + XOUTER_$MESH)/U(NP);
+          ]
+       ]"end of <= - XINNER_$MESH block"
+    ]"end of U(NP) > 0.0 block"
+
+    ELSEIF(U(NP) < 0.0) ["moving to the left"
+      IF(X(NP) < XINNER_$MESH)["can only hit outer left boundary since"
+         "inner left boundary is shielded"
+         DISTX = (X(NP) + XOUTER_$MESH)/(-U(NP));
+      ]
+      ELSE ["can hit inner right boundary or outer right boundary"
+         "check interior possibility first"
+         DISTX = (X(NP) - XINNER_$MESH)/(-U(NP));
+         YF = Y(NP) + DISTX*V(NP);
+         IF (ABS(YF) > YINNER_$MESH)["it hits the inner bound outside"
+             "so only consider far outer bound (far inner cannot be hit)"
+             DISTX = (X(NP) + XOUTER_$MESH)/(-U(NP));
+         ]
+      ]"end of else block"
+    ]"end of U(NP) < 0.0 block"
+
+    "Determine distance to Y boundaries"
+    IF(V(NP) > 0.0)     ["moving up"
+       IF(Y(NP) > -YINNER_$MESH)["can only hit upper outer Y boundary"
+          DISTY = (YOUTER_$MESH - Y(NP))/V(NP);
+       ]
+       ELSE["Y(NP) <= - YINNER_$MESH"
+          "can hit interior lower boundary or exterior upper boundary"
+          "look at interior possibility first"
+          DISTY = (-YINNER_$MESH - Y(NP))/V(NP);
+          XF = X(NP) + DISTY*U(NP);
+          IF (ABS(XF) > XINNER_$MESH)["it hits the bottom bound outside"
+             "so only consider far outer bound (far inner cannot be hit)"
+             DISTY = (-Y(NP) + YOUTER_$MESH)/V(NP);
+          ]
+       ]"end of <= - YINNER_$MESH block"
+    ]"end of V(NP) > 0.0 block"
+
+    ELSEIF(V(NP) < 0.0) ["moving down"
+      IF(Y(NP) < YINNER_$MESH)["can only hit outer lower boundary since"
+         "inner lower boundary is shielded"
+         DISTY = (Y(NP) + YOUTER_$MESH)/(-V(NP));
+      ]
+      ELSE ["Y(NP) >=YINNER_$MESH"
+         "can hit inner lower boundary or outer lower boundary"
+         "check interior possibility first"
+         DISTY = (Y(NP) - YINNER_$MESH)/(-V(NP));
+         XF = X(NP) + DISTY*U(NP);
+         IF (ABS(XF) > XINNER_$MESH)["it hits the inner bound outside"
+             "so only consider far outer bound (far inner cannot be hit)"
+             DISTY = (Y(NP) + YOUTER_$MESH)/(-V(NP));
+         ]
+      ]"end of else block"
+    ]"end of V(NP) < 0.0 block"
+
+    IF(DISTX <= USTEP)[ USTEP = DISTX;
+      XF = X(NP) + DISTX*U(NP);
+      IF(ABS(XF) - XINNER_$MESH < 1.E-4)[
+           IRNEW = IR(NP)-1;"going to interior air"
+      ]
+      ELSE [IRNEW = IR(NP)+1; "going to air outside cell"]
+    ]
+    IF(DISTY <= USTEP)[ USTEP = DISTY;
+      YF = Y(NP) + DISTY*V(NP);
+      IF(ABS(YF) - YINNER_$MESH < 1.E-4)[
+        IRNEW = IR(NP)-1;"going to interior air"
+      ]
+      ELSE [IRNEW = IR(NP)+1; "going to air outside cell"]
+    ]
+    IF(DISTZ <= USTEP)[ USTEP = DISTZ;
+       IF(W(NP) < 0.0)["out the front, possibly to air gap"
+         IF(N_GAP_$MESH = 1)["into air gap"  IRNEW = IREND_$MESH;]
+         ELSE ["no air gap, leaving CM out front"
+            IF(USTEP<=0.)[USTEP=1.E-16;]
+           "translate back to correct cell if necessary"
+            IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+            ]
+            IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+            ]
+            CALL WHERE_AM_I(ICM_$MESH,-1); "get IRNEW, ICMNEW"
+         ]
+       ]"end of backward going exit"
+       ELSEIF(W(NP) > 0.0) [ "going out back of CM"
+            IF(USTEP<=0.)[USTEP=1.E-16;]
+            "translate back to correct cell if necessary"
+            IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+            ]
+            IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+            ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+            CALL WHERE_AM_I(ICM_$MESH,+1); "get IRNEW, ICMNEW"
+       ] "end of forward going exit"
+    ]"end of block going out in Z direction"
+]"end of block for particle inside the wire"
+
+ELSEIF (IR_$MESH = 3 | IR_$MESH = 4) [
+"====================================="
+
+   "in air region outside of this cell or outside entire mesh"
+   "in both cases, treat as in a slab - ie cannot get back into the cell"
+   IF (W(NP)>0.0) ["particle going forward"
+      "calculate distance to back boundary"
+      DISTZ = (ZBACK_$MESH - Z(NP))/W(NP);
+      IF(DISTZ <= USTEP ) ["particle will exit from back of mesh CM"
+         USTEP = DISTZ;
+         IF(USTEP<=0.)[USTEP=1.E-16;]
+         "translate back to correct cell if necessary"
+         IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+         ]
+         ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+         ]
+         IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+         ]
+         ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+         ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+         CALL WHERE_AM_I(ICM_$MESH,+1); "get IRNEW, ICMNEW"
+      ]
+   ]" end of forward going block"
+   ELSEIF (W(NP) < 0.0 ) ["particle going backwards"
+      "calculate distance to front boundary - possibly with air gap"
+      DISTZ = (Z(NP) - ZFRONT_$MESH)/(-W(NP));
+      IF(DISTZ <= USTEP) ["particle will enter upstream CM or air gap"
+         USTEP = DISTZ;
+         IF(N_GAP_$MESH = 1)["there is an air gap and entering it"
+            IRNEW = IRSTART_$MESH + 4;
+         ]
+         ELSE [ "no air gap, leaving front of CM"
+            IF(USTEP<=0.)[USTEP=1.E-16;]
+            "translate back to correct cell if necessary"
+            IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+            ]
+            IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+            ]
+            ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+            ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+            CALL WHERE_AM_I(ICM_$MESH,-1); "get IRNEW, ICMNEW"
+         ]
+      ]"end of DISTZ <= USTEP block entering upstream region"
+   ]" end of backward going block"
+
+   "if W(NP)=0.0, never hit boundary, need not reset USTEP"
+]"air regions outside cell"
+
+
+ELSEIF (IR_$MESH = 5 & N_GAP_$MESH=1) ["particle in air gap"
+"=========================================================="
+
+   IF (W(NP)>0.0) ["particle going forward"
+      "calculate distance to back boundary"
+      DISTZ = (ZFRONT_$MESH - Z(NP))/W(NP);
+      IF(DISTZ <= USTEP ) ["particle will enter layer with mesh"
+         USTEP = DISTZ;
+         "get coordinates at end of step, on boundary"
+         XF = X(NP) + USTEP*U(NP);
+         YF = Y(NP) + USTEP*V(NP);
+         IF(ABS(XF) < XINNER_$MESH & ABS(YF) < YINNER_$MESH)[
+           IRNEW = IRSTART_$MESH; "inner air region"
+         ]
+         ELSEIF(ABS(XF) < XOUTER_$MESH & ABS(YF) < YOUTER_$MESH)[
+            IRNEW = IRSTART_$MESH+1; "it is in the wire"
+         ]
+         ELSEIF(ABS(XF) >  XTOTAL_$MESH | ABS(YF) > YTOTAL_$MESH)[
+            IRNEW = IRSTART_$MESH + 3;"its outside outer boundary"
+            OUTPUT;(' ****HOWFAR_$MESH -- after crossing an air gap'/
+                    '  particle is outside cell - if this happens often'/
+                    '  things will be wrong -- either recode HOWFAR_$MESH'/
+                    '  or get rid of air gap (use a SLAB of air)');
+         ]
+         ELSE [
+            IRNEW = IRSTART_$MESH+2;"its outside this cell"
+            OUTPUT;(' ****HOWFAR_$MESH -- after crossing an air gap'/
+                    '  particle is outside cell - if this happens often'/
+                    '  things will be wrong -- either recode HOWFAR_$MESH'/
+                    '  or get rid of air gap (use a SLAB of air)');
+         ]
+     ]"end of block for going to new region"
+   ]" end of forward going block"
+   ELSEIF (W(NP) < 0.0 ) ["particle going backwards"
+      "calculate distance to front boundary"
+      DISTZ = (Z(NP) - Z_min_CM(ICM_$MESH))/(-W(NP));
+      IF(DISTZ <= USTEP) ["particle will enter upstream CM"
+         USTEP = DISTZ;
+         IF(USTEP<=0.)[USTEP=1.E-16;]
+         "translate back to correct cell if necessary"
+         IF(ITRANSLATE_X_$MESH = 1)[
+               X(NP) = X(NP) + IX_$MESH*X_CELL_$MESH;
+         ]
+         ELSEIF(ITRANSLATE_X_$MESH = 2)[
+               X(NP) = X(NP) + SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*
+                         X_CELL_$MESH;
+         ]
+         IF(ITRANSLATE_Y_$MESH = 1)[
+               Y(NP) = Y(NP) + IY_$MESH*Y_CELL_$MESH;
+         ]
+         ELSEIF(ITRANSLATE_Y_$MESH = 2)[
+               Y(NP) = Y(NP) + SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*
+                         Y_CELL_$MESH;
+         ]
+               "note, above might translate particle out of entire CM"
+               "but ignore possiblility for now - next CM should discard it"
+         CALL WHERE_AM_I(ICM_$MESH,-1); "get IRNEW, ICMNEW"
+      ]
+   ]" end of backward going block"
+   "if W(NP)=0.0, never hit boundary, need not reset USTEP"
+]"end of air-gap region"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$MESH+1,IR_$MESH, IR(NP), ICM_$MESH,
+          IR_start_CM(ICM_$MESH);
+      (//' ************'//' HOWFAR_$MESH error'/
+         '    Region, local, absolute =',I5,'(=',I4,'), ',I5/
+         '    CM number=',I5,' start region =',I5/ ' *********'//);
+   STOP;
+] "end of IF statement"
+
+RETURN;
+END; "End of subroutine HOWFAR_$MESH"
+%E   " MESH_cm.mortran - start subroutine WHERE_AM_I_$MESH"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_MESH
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked planar MESH.
+"
+" WHERE_AM_I_$MESH determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$MESH subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$MESH from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$MESH(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$MESH,EPCONT,SCORE,STACK,CMs,EGS-IO/;
+"CMs for debug only"
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_MESH
+"T>**************************************
+"T>
+INTEGER IDIR,one;  "T>direction of particle, +1=forward, -1=backward
+$REAL XF,YF;    "T>final values of x and y as take step into $MESH
+parameter (one = 1);
+
+XF = X(NP) + USTEP*U(NP);
+YF = Y(NP) + USTEP*V(NP);
+
+ITRANSLATE_X_$MESH = 0;
+ITRANSLATE_Y_$MESH = 0;
+IF(ABS(XF) < XTOTAL_$MESH & ABS(YF) < YTOTAL_$MESH )[
+  $MESH_FIND_CELL(XF,YF);
+  IF(ABS(XF) <= XTOTAL_$MESH - WIRE_WIDTH_$MESH/2.)[
+     "translate to unit cell and translate X(NP) too"
+     "       this is dangerous - must check we don't do it twice"
+      ITRANSLATE_X_$MESH = 1;
+      X(NP) = X(NP) - IX_$MESH*X_CELL_$MESH;
+      XF = XF - IX_$MESH*X_CELL_$MESH;
+  ]
+  ELSE[
+     "translate to outer half of wire surrounding unit cell"
+      IF (IX_$MESH~=0)[
+        ITRANSLATE_X_$MESH = 2;
+     X(NP) = X(NP) -SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*X_CELL_$MESH;
+     XF = XF - SIGN(one,IX_$MESH)*(ABS(IX_$MESH)-1)*X_CELL_$MESH;
+      ]
+  ]
+  IF(ABS(YF) <= YTOTAL_$MESH - WIRE_WIDTH_$MESH/2.)[
+      ITRANSLATE_Y_$MESH = 1;
+      Y(NP) = Y(NP) - IY_$MESH*Y_CELL_$MESH;
+      YF = YF- IY_$MESH*Y_CELL_$MESH;
+  ]
+  ELSE[
+      IF (IY_$MESH~=0)[
+        ITRANSLATE_Y_$MESH = 2;
+   Y(NP) = Y(NP) -SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*Y_CELL_$MESH;
+        YF = YF - SIGN(one,IY_$MESH)*(ABS(IY_$MESH)-1)*Y_CELL_$MESH;
+      ]
+  ]
+  "the above doesn't work when called by srchst since after that one uses"
+   "XIN,YIN for call to shower, not X(NP) and Y(NP)"
+   "how to fix? -- in short term, if not first CM, there is no problem"
+   IF(ICM_$MESH = 1)[
+      OUTPUT;
+   (' *****translation to central cell does not work if mesh is first CM*****');
+   ]
+]
+IF (N_GAP_$MESH=0 | IDIR = -1) ["no air gap at front of this CM"
+                                "or entering back of CM"
+   IF(ABS(XF) <= XINNER_$MESH & ABS(YF) <= YINNER_$MESH)[
+      IRNEW = IRSTART_$MESH; "inner air region"
+   ]
+   ELSEIF(ABS(XF) < XOUTER_$MESH & ABS(YF) < YOUTER_$MESH)[
+      IRNEW = IRSTART_$MESH+1; "it is in the wire"
+   ]
+   ELSEIF(ABS(XF) >=  XTOTAL_$MESH | ABS(YF) >= YTOTAL_$MESH)[
+      IRNEW = IRSTART_$MESH + 3;"its outside the outer boundary completely"
+      "and has not been translated"
+   ]
+   ELSE [
+      IRNEW = IRSTART_$MESH+2;"its outside this cell"
+      "translation was to make this impossible"
+      OUTPUT X(NP),Y(NP),XF,YF;
+      (' ****WHERE_AM_I_$MESH-- can not get here'/
+       '            X,Y,XF,YF:',4(1PE11.3));
+   ]
+]
+ELSE ["this CM has an air gap at the front"
+      IRNEW = IREND_$MESH;
+]
+
+RETURN;
+END; "End of subroutine WHERE_AM_I_MESH"
+
+%E   " MESH_cm.mortran - start subroutine HOWNEAR_$MESH"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_MESH
+"                          ***********************
+"
+" Calculate min. distance to nearest region boundary
+" Replaces old HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$MESH(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$MESH,STACK,CMs,EGS-IO/;
+
+$REAL DIST; "T> the min. distance to the nearest region boundary
+
+IR_$MESH = IR(NP)-IRSTART_$MESH+1;
+IF (IR_$MESH = 1)[ "its in the central air region"
+      DIST = MIN(XINNER_$MESH-ABS(X(NP)), YINNER_$MESH-ABS(Y(NP)));
+      DIST = MIN(DIST,ZBACK_$MESH - Z(NP), Z(NP) - ZFRONT_$MESH );
+]
+ELSEIF(IR_$MESH = 2)["its in the wire"
+      IF (ABS(Y(NP)) < YINNER_$MESH*0.99999)["it is in left or right side"
+        DIST = MIN(ABS(X(NP))-XINNER_$MESH,XOUTER_$MESH - ABS(X(NP)),
+                   YOUTER_$MESH - ABS(Y(NP)));
+      ]
+      ELSEIF(ABS(X(NP)) < XINNER_$MESH*0.99999)["its in top or bottom side"
+        DIST = MIN(ABS(Y(NP))-YINNER_$MESH,YOUTER_$MESH - ABS(Y(NP)),
+                   XOUTER_$MESH - ABS(X(NP)));
+      ]
+      ELSE ["its in one of the four corners"
+        DIST = MIN(XOUTER_$MESH - ABS(X(NP)), YOUTER_$MESH - ABS(Y(NP)),
+               SQRT((ABS(X(NP))-XINNER_$MESH)**2
+                   +(ABS(Y(NP))-YINNER_$MESH)**2));
+              "term in sqrt gives distance to nearest corner"
+      ]
+      DIST = MIN(DIST,ZBACK_$MESH - Z(NP), Z(NP) - ZFRONT_$MESH );
+]
+ELSEIF (IR_$MESH = 3|IR_$MESH = 4)["its in the outer air region"
+      "ignore possibility of going (back) into mesh "
+      "ie treat as slab"
+      DIST = MIN(ZBACK_$MESH - Z(NP), Z(NP) - ZFRONT_$MESH );
+]
+ELSEIF (IR_$MESH = 5)["in air gap at front"
+      DIST = MIN(ZFRONT_$MESH - Z(NP), Z(NP) - Z_min_CM(ICM_$MESH ));
+]
+ELSE [OUTPUT IR_$MESH;
+     (' $MESH_CM_HOWNEAR: ERROR***** IR_$MESH=',I5,'  You should QUIT');
+]
+
+IF(DIST < -0.00001) [OUTPUT DIST,X(NP),Y(NP),Z(NP),IR_$MESH;
+   (' *******HOWNEAR_$MESH*********DNEAR =',F14.9,
+    '  is less than zero(-0.00001)'/
+    T10,' X,Y,Z,IR_$MESH:',3F14.8,I3);
+   OUTPUT YINNER_$MESH*0.99999,ABS(Y(NP))-YINNER_$MESH*0.99999,
+          XINNER_$MESH*0.99999,ABS(X(NP))-XINNER_$MESH*0.99999;
+     (' YINNER_$MESH*0.99999,diff,XINNER_$MESH*0.99999,diff:',4F14.8);
+   STOP;
+]
+
+RETURN;
+END; "End of subroutine HOWNEAR_$MESH(Rev 1.4)"
+
+"*******************************************************************************
+
+REPLACE {$USER-CONTROLS-NEGATIVE-USTEP;} WITH {
+"         ============================"
+  ;IF (USTEP<-1.E-4) [
+"reset USTEP to 0 for fast step to set region number and medium only"
+     IERUST=IERUST+1;
+     IF (IERUST<1000) [
+        ICM = IR_to_CM(IR(NP));
+        XF = X(NP) +USTEP*U(NP);
+        YF = Y(NP) +USTEP*V(NP);
+        ZF = Z(NP) +USTEP*W(NP);
+        OUTPUT IERUST,USTEP,IR(NP),IRNEW,IROLD,
+           IRL-IR_start_CM(ICM)+1,ICM,
+           X(NP),Y(NP),Z(NP),XF,YF,ZF,E(NP),IQ(NP);
+           (4X,' *** WARNING',I4,' *** NEGATIVE USTEP=',E10.3,/10X,
+            'IR,IRNEW,IROLD=',3I5,', Local IR=',I3,', ICM=',I3,
+            /10X,'X,Y,Z,=',3(1PE13.5)/'    Final X,Y,Z,=',3(1PE13.5)/
+            10X,'E(NP),IQ(NP)=',1PE13.5,I5);
+        ]
+     ELSE IF (IERUST=1000) [
+        OUTPUT;(///' *** ERROR ***  More than 1000 USTEP errors'///);
+        WRITE (1,'(///'' *** ERROR ***  More than 1000 USTEP
+errors''///)');
+        STOP;
+        ]
+     ]
+  USTEP=0.0;
+}
+"End of MESH_cm.mortran (Rev 1.4)"

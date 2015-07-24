@@ -1,0 +1,125 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: mirror plane                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the MIRR component module written by     "
+"  George Ding, starting in 1992, and subsequently edited by Charlie Ma.      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     MIRROR miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$MIRROR} WITH {10}
+"
+"-------------------------------------------------------------------------------
+"     MIRROR component module common
+"-------------------------------------------------------------------------------
+"V>COMMON/CM_$MIRROR/
+"V>================
+"V>ICM_$MIRROR        = index of CM, set as ICM in INPUT_$tag and never re-set
+"V>IRSTART_$MIRROR    = first region number for this CM
+"V>IREND_$MIRROR      = last region number for this CM
+"V>N_$MIRROR          = number of slabs of the mirror
+"V>TITLE_$MIRROR      = title of CM
+"V>ZFRONT_$MIRROR     = Front of CM (air)
+"V>ZBACK_$MIRROR      = Back of CM (air)
+"V>A_$MIRROR          = a in X = a*Z + b
+"V>BMAX_$MIRROR       = b in X = a*Z + b
+"V>BMIN_$MIRROR       = b in X = a*Z + b
+"v>DTHICK_$MIRROR($MAX_N_$MIRROR)  thickness of mirror layers in this CM
+"V>IR_$MIRROR         = local region number
+;
+REPLACE {;COMIN/CM_$MIRROR/;} WITH {
+   ;COMMON/CM_$MIRROR/ ICM_$MIRROR,
+      IRSTART_$MIRROR,IREND_$MIRROR,   N_$MIRROR,N_GAP_$MIRROR,
+      IR_$MIRROR,
+      ZFRONT_$MIRROR,  ZMIN_$MIRROR,
+      ZBACK_$MIRROR,  A_$MIRROR,       BMIN_$MIRROR,
+      BMAX_$MIRROR,   BMINT_$MIRROR,   BMAXT_$MIRROR,
+      XFMIN_$MIRROR,  XFMAX_$MIRROR,   XBMIN_$MIRROR,
+      XBMAX_$MIRROR,  XFMINT_$MIRROR,  XFMAXT_$MIRROR,
+      XBMINT_$MIRROR, XBMAXT_$MIRROR,  DTHICK_$MIRROR,
+      ZTHICK_$MIRROR,
+      TITLE_$MIRROR;
+   INTEGER ICM_$MIRROR,IRSTART_$MIRROR,IREND_$MIRROR,
+           N_$MIRROR,N_GAP_$MIRROR,IR_$MIRROR;
+   $REAL
+      ZFRONT_$MIRROR,   ZMIN_$MIRROR,  ZBACK_$MIRROR,
+      A_$MIRROR,        BMIN_$MIRROR($MAX_N_$MIRROR),
+      BMAX_$MIRROR($MAX_N_$MIRROR), BMINT_$MIRROR($MAX_N_$MIRROR),
+      BMAXT_$MIRROR($MAX_N_$MIRROR), XFMIN_$MIRROR($MAX_N_$MIRROR),
+      XFMAX_$MIRROR($MAX_N_$MIRROR), XBMIN_$MIRROR($MAX_N_$MIRROR),
+      XBMAX_$MIRROR($MAX_N_$MIRROR), XFMINT_$MIRROR($MAX_N_$MIRROR),
+      XFMAXT_$MIRROR($MAX_N_$MIRROR), XBMINT_$MIRROR($MAX_N_$MIRROR),
+      XBMAXT_$MIRROR($MAX_N_$MIRROR),DTHICK_$MIRROR($MAX_N_$MIRROR),
+      ZTHICK_$MIRROR;
+   CHARACTER*1 TITLE_$MIRROR(60);
+} "end of replacement defining common for this CM"
+;
+"-------------------------------------------------------------------------------
+"     MIRROR HOWNEAR replacement macro
+"  Now just calls HOWNEAR_$MIRROR subroutine
+"-------------------------------------------------------------------------------
+"V>$MIRROR_CM_HOWNEAR(#)
+"V>===================
+"V>
+;
+REPLACE {$MIRROR_CM_HOWNEAR(#);} WITH  {
+CALL HOWNEAR_$MIRROR({P1});
+}
+"end of MIRROR_macros.mortran (Rev 1.2)"

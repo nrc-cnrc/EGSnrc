@@ -1,0 +1,1697 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: stack of truncated pyramids               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Geoff Zhang                                               "
+"                   Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the PYRMD component module written by    "
+"  George Ding, starting in 1992, and subsequently edited by Charlie Ma.      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             **************             ""toc:
+"                             *            *             ""toc:
+"                             *  PYRAMIDS  *             ""toc:
+"                             *            *             ""toc:
+"                             **************             ""toc:
+"
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  A series of stacked, truncated pyramids for
+"   modeling square, rectangular collimator, or any other use because of the
+"   generic geometry which can be specified.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  A series of stacked,
+"   truncated pyramids.
+"
+%E  "PYRAMIDS_cm   start of geometry description"
+"I>
+"I> Geometry of PYRAMIDS:                          ""toc:
+"I> ******************
+"I>
+"I>                                  ||
+"I>                                \ || /   beam
+"I>                                 \||/
+"I>                                  \/
+"I>
+"I>              ---------------------------------------------------
+"I>                                 IR =1
+"I>            - - - - ----------- - - - - - -  ---------- - - - - - -
+"I>             IR=2   |         /    IR=2     /         |   IR=2
+"I>  ISCM=1            |  IR=3  /             /  IR=3    |
+"I>            - - - - ---------  - - - - - - ------------ - - - - - -
+"I>                                 IR=4
+"I>           - - - --------------  - - - - - - ------------- - - - - -
+"I>                 |            |              |           |
+"I>  ISCM=2   IR=5  |    IR=6    |    IR=5      |  IR=6     |  IR=5
+"I>           - - - ------------- - - - - - - - ------------- - - - - -
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are N_PYRAMIDS local
+"I>   regions. The first region is in between bars.  An air gap is
+"I>   always present at the front.
+"I>
+"I>
+"I>            --------------------------------------------------------
+"I>            |          Region               | Description          |
+"I>            |-------------------------------|----------------------|
+"I>            |  absolute       | local       |                      |
+"I>            |-----------------|-------------|                      |
+"I>            |IRSTART_PYRAMIDS | IR_PYRAMIDS |   see graph          |
+"I>            |  +IR_PYRAMIDS-1 |             |                      |
+"I>            --------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$PYRAMIDS
+"                      ISUMRY_$PYRAMIDS
+"                      HOWFAR_$PYRAMIDS
+"                      WHERE_AM_I_$PYRAMIDS
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+"*******************************************************************************
+"
+"                   Description of user input for PYRAMIDS           ""toc:
+"                   **************************************
+"I>
+"I>  CARDS CM_PYRAMIDS(Rev 1.5)
+"I>  *****************
+"I>
+"I>  -1  dummy line filled with ***  read in main
+"I>
+"I>   0  RMAX_CM(ICM_$PYRAMIDS):  Perpendicular distance from Z-axis
+"I>                               to boundary surrounding component
+"I>                               This component module has a square
+"I>                               boundary.
+"I>
+"I>   1  TITLE_$PYRAMIDS (60A1):  Title of CM.
+"I>
+"I>   2  ISCM_MAX_$PYRAMIDS, IFILL_$PYRAMIDS (2I5):
+"I>
+"I>        ISCM_MAX_$PYRAMIDS: Number of layers in CM.
+"I>           IFILL_$PYRAMIDS: Set to 0 (default) if all central
+"I>                            and outer regions contain air, or 1
+"I>                            if central and outer regions contain
+"I>                            user-specified media.
+"I>
+"I>   Repeat 3 for I=1,ISCM_MAX_$PYRAMIDS
+"I>
+"I>   3  ZMIN_$PYRAMIDS(I), ZMAX_$PYRAMIDS(I), XFP_$PYRAMIDS(I),
+"I>      XBP_$PYRAMIDS(I), XFN_$PYRAMIDS(I), XBN_$PYRAMIDS(I),
+"I>      YFP_$PYRAMIDS(I), YBP_$PYRAMIDS(I), YFN_$PYRAMIDS(I),
+"I>      YBN_$PYRAMIDS(I),XMAX_$PYRAMIDS(I), YMAX_$PYRAMIDS(I) (12F15.0):
+"I>
+"I>        ZMIN_$PYRAMIDS(I): Distance from front of layer I to reference plane.
+"I>        ZMAX_$PYRAMIDS(I): Distance from back of layer I to reference plane.
+"I>
+"I>        XFP_$PYRAMIDS(I):  positive x dimension of central region at front
+"I>        XBP_$PYRAMIDS(I):  positive x dimension of central region at back
+"I>        XFN_$PYRAMIDS(I):  negative x dimension of central region at front
+"I>        XBN_$PYRAMIDS(I):  negative x dimension of central region at back
+"I>
+"I>        YFP_$PYRAMIDS(I):  positive y dimension of central region at front
+"I>        YBP_$PYRAMIDS(I):  positive y dimension of central region at back
+"I>        YFN_$PYRAMIDS(I):  negative y dimension of central region at front
+"I>        YBN_$PYRAMIDS(I):  negative y dimension of central region at back
+"I>
+"I>        XMAX_$PYRAMIDS(I): outer x edge of layer (absolute value)
+"I>        YMAX_$PYRAMIDS(I): outer y edge of layer (absolute value)
+"I>
+"I>        Note restriction to leave airgap between layers:
+"I>             ZMIN_$PYRAMIDS(I+1)-ZMAX_$PYRAMIDS(I) >= AIRGAPMIN
+"I>
+"I>   4   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for AIR
+"I>                                        between layers, and,
+"I>                                        if IFILL_$PYRAMIDS=0,
+"I>                                        in all central and outer regions.
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:   Dose scoring zone of air.
+"I>     IREGION_TO_BIT:   mapping of region to bit for LATCH
+"I>
+"I>   Repeat 7-8 (IFILL_$PYRAMIDS=0) or 5-8 (IFILL_$PYRAMIDS=1)
+"I>   for I=1,ISCM_MAX_$PYRAMIDS
+"I>
+"I>   5 and 6 are required only if IFILL_$PYRAMIDS=1
+"I>
+"I>   5  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons
+"I>                       in central region and outer region, layer I
+"I>          DOSE_ZONE:   Dose scoring zone for central region and outer region
+"I>     IREGION_TO_BIT:   mapping of central region and outer region to bit
+"I>                       for LATCH
+"I>
+"I>   6  MED_IN (24A1):   Medium of central region and outer region in layer I,
+"I>                       used to set MED_INDEX.
+"I>
+"I>   7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons
+"I>                       in surrounding region, layer I
+"I>          DOSE_ZONE:   Dose scoring zone of surrounding region.
+"I>     IREGION_TO_BIT:   mapping of surrounding region to bit for LATCH
+"I>
+"I>   8  MED_IN (24A1):   Medium of surrounding region in layer I,
+"I>                       used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>  The following input file describes two pyramidal openings,
+"I>  both 0.3cm thick, and both filled with air (ie IFILL_$PYRAMIDS=0).
+"I>  The first opening begins at Z=0.0 cm and is cut out of Pb.  Its positive
+"I>  X face begins at XFP=0.8cm and angles back to XBP=1.2cm.  The negative X
+"I>  face is a mirror image, beginning at XFN=-0.8cm and going to XBN=-1.2cm.
+"I>  The outer x edge is at XMAX=5.0cm. The Y faces of the first opening are
+"I>  perpendicular to the beam, with YFP=YBP=0.8cm and YFN=YBN=-0.8cm. The
+"I>  outer y edge is at YMAX=4.6cm.
+"I>  The second opening begins at Z=0.31 and is cut out of aluminum.  Its
+"I>  positive and negative X faces describe a parallelepiped, with XFP=1.2cm,
+"I>  XBP=0.8cm, XFN=-0.8cm, XBN=-1.2cm.
+"I>  The positive Y face angles from YFP=2.0cm to
+"I>  YBP=0.5cm and the negative Y face is a mirror image of this, going from
+"I>  XFN=-2.0cm to XBN=-0.5cm. The outer x edge and y edge are at XMAX=5.1cm,
+"I>  YMAX=5.2cm respectively. Note that an air gap >= AIRGAPMIN (=0.01cm) must
+"I>  be left between pyramids and the top of the CM and the first pyramid.
+"I>  In this particular input file, there is no gap at the top of the
+"I>  CM, so Z_min_CM will be automatically reset to -0.01cm to
+"I>  provide the required gap.
+"I>
+"I>  Dose in the air gaps and openings will be scored in dose zone 1.
+"I>  Dose in the Pb will be scored in zone 2, and dose in the Al will be
+"I>  scored in zone 3.  ECUT and PCUT in all regions are set to 0.521MeV and
+"I>  0.01 MeV respectively.
+"I>
+"I>  10.0000,
+"I>  PYR
+"I>  2,0
+"I>  0.0, 0.3, 0.8, 1.2, -0.8, -1.2, 0.8, 0.8, -0.8, -0.8, 5.0, 4.6
+"I>  0.31, 0.61, 1.2, 0.8, -0.8, -1.2, 2.0, 0.5, -2.0, -0.5, 5.1, 5.2
+"I>  0.521, 0.01, 1, 0
+"I>  0.521, 0.01, 2, 0
+"I>  PB521ICRU
+"I>  0.521, 0.01, 3, 0
+"I>  AL521ICRU
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules not allowed
+"
+"   2)  Overlapping bars not allowed
+"
+"   3)  Air gap at front of CM required
+"
+"   4)  Inner boundary of all bars must be within CM boundary, RMAX_CM
+"
+"*******************************************************************************
+
+%E    "Start of subroutine HOWFAR_$PYRAMIDS (Rev 1.5)"
+"*******************************************************************************
+"************************** Component Module PYRAMIDS **************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_PYRAMIDS
+"                          ***********************
+"
+" HOWFAR routine for set of paired bars.
+"
+" Determine if current region number is within component module PYRAMIDS, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are 4xISCM local regions see above graph:
+"
+"      local                    absolute                   description
+"   ------------  ------------------------------------   ---------------
+"       IRL       IR_start_CM(ICM_PYRAMIDS)+IRL-1               IRL
+"
+"   Geometrical co-ordinates, as set in INPUT_PYRAMIDS are:
+"
+"   ZFRONT_PYRAMIDS     front of CM (upstream surface, air region)
+"   ZBACK_PYRAMIDS      back of CM (downstream surface, air region)
+"   ZMIN_PYRAMIDS(IRL)  front of bars ISCM,
+"   ZMAX_PYRAMIDS(IRL)  back of bars ISCM
+"
+"*******************************************************************************
+;SUBROUTINE HOWFAR_$PYRAMIDS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$PYRAMIDS,EPCONT,STACK,USER,EGS-IO,SCORE/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_PYRAMIDS
+"T>**********************************
+"T>
+INTEGER
+   Iwarning,        "T>number of warning times
+   IRL,             "T>local region number(absolute), required by HOWNEAR macro
+   IHIT,            "T>index 1 hit; 0 not hit
+   IRNEW_$PYRAMIDS; "T>tentative new region number within CM (absolute)
+$REAL
+   DIST,           "T>dist to region boundary along current particle trajectory
+   DIST1,          "T>dist to region boundary along current particle trajectory
+   DIST2,          "T>dist to region boundary along current particle trajectory
+   TDIST,          "T>dist to region boundary along current particle trajectory
+   XPLN_$PYRAMIDS, "T>X coordinate at a plane surface along particle trajectory
+   YPLN_$PYRAMIDS, "T>Y coordinate at a plane surface along particle trajectory
+   DIST_PLANE;     "T>saves dist to bottom Z plane--for electron splitting
+
+DATA Iwarning/0/;
+SAVE Iwarning;
+
+IRL = IR(NP); "local region number (absolute)
+
+" Following replacement macros sets DNEAR as well as defining IR_$PYRAMIDS,
+;$PYRAMIDS_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module PYRAMIDS, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+IF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-2)["particle in front air region"
+   IF(W(NP) > 0.0 )[
+      DIST = (ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+      IF(DIST < 0) [DIST = 0.0;]
+      IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 1;
+      XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+      YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+      IF(((XPLN_$PYRAMIDS > XFP_$PYRAMIDS(ISCM_$PYRAMIDS)) |
+         (XPLN_$PYRAMIDS < XFN_$PYRAMIDS(ISCM_$PYRAMIDS))  |
+         (YPLN_$PYRAMIDS > YFP_$PYRAMIDS(ISCM_$PYRAMIDS))  |
+         (YPLN_$PYRAMIDS < YFN_$PYRAMIDS(ISCM_$PYRAMIDS))) &
+         (XPLN_$PYRAMIDS < XMAX_$PYRAMIDS(ISCM_$PYRAMIDS)) &
+         (XPLN_$PYRAMIDS > -XMAX_$PYRAMIDS(ISCM_$PYRAMIDS)) &
+         (YPLN_$PYRAMIDS < YMAX_$PYRAMIDS(ISCM_$PYRAMIDS))  &
+         (YPLN_$PYRAMIDS > -YMAX_$PYRAMIDS(ISCM_$PYRAMIDS)))[
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 2;
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary"
+         USTEP = DIST;
+         IRNEW = IRNEW_$PYRAMIDS; "new region number"
+      ]
+   ]    " end of w > 0"
+   ELSEIF(W(NP) < 0.0 )[
+      IF(ISCM_$PYRAMIDS > 1)[
+         DIST = (ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1)-Z(NP))/W(NP);
+         IF(DIST < 0) [DIST = 0.0;]
+         IRNEW_$PYRAMIDS=IRSTART_$PYRAMIDS +3*(ISCM_$PYRAMIDS-2) +1;
+         XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+         YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+         IF(((XPLN_$PYRAMIDS > XBP_$PYRAMIDS(ISCM_$PYRAMIDS-1)) |
+            (XPLN_$PYRAMIDS < XBN_$PYRAMIDS(ISCM_$PYRAMIDS-1))  |
+            (YPLN_$PYRAMIDS > YBP_$PYRAMIDS(ISCM_$PYRAMIDS-1))  |
+            (YPLN_$PYRAMIDS < YBN_$PYRAMIDS(ISCM_$PYRAMIDS-1))) &
+            (XPLN_$PYRAMIDS < XMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1)) &
+            (XPLN_$PYRAMIDS > -XMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1)) &
+            (YPLN_$PYRAMIDS < YMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1))  &
+            (YPLN_$PYRAMIDS > -YMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1)))[
+            IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-2) + 2;
+         ]
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary"
+            USTEP = DIST;
+            IRNEW = IRNEW_$PYRAMIDS; "new region number"
+         ]
+      ]
+      ELSE[
+         DIST = (ZFRONT_$PYRAMIDS - Z(NP))/W(NP);
+         IF(DIST <= 0)[ DIST = 1.E-16;] "make sure ausgab called when entering"
+                                        "upstream CM"
+         IF(DIST <= USTEP ) ["particle leave cm from front"
+            USTEP = DIST;
+            CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
+         ]
+      ]
+   ] " end of w < 0"
+] "end of front air region"
+ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-1)["particle in second air region"
+   ;$PYRAMIDS_CHECK_IN;
+   IF(X(NP) < MAX(XFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+      XBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+      X(NP) > MIN(XFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+      XBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+      Y(NP) < MAX(YFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+      YBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+      Y(NP) > MIN(YFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+      YBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)))[       "particle in center air"
+      IF(W(NP) > 0.0 )[
+         DIST = (ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+         DIST_PLANE=DIST;
+         IF(DIST < 0) [DIST = 0.0;]
+         IF(DIST=0.0 & ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[DIST=1.E-16;]
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*ISCM_$PYRAMIDS;
+         IF(ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[IRNEW_$PYRAMIDS = 1;]
+         XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+         YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+         IF(XPLN_$PYRAMIDS > XBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            YPLN_$PYRAMIDS > YBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            XPLN_$PYRAMIDS < XBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            YPLN_$PYRAMIDS < YBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1) )[
+            IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 2;
+            ;$PYRAMIDS_IN_HIT(
+                   XBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   XBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   YBPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   YBNT_$PYRAMIDS(ISCM_$PYRAMIDS,1));
+         ]
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through back"
+               CALL WHERE_AM_I(ICM_$PYRAMIDS,1);
+            ]
+            ELSE ["still in CM
+               IRNEW = IRNEW_$PYRAMIDS; "new region number"
+            ]
+            IF(DIST>=DIST_PLANE & IBRSPL=2 & ICM_DBS=ICM_$PYRAMIDS &
+               ISCM_$PYRAMIDS=ZPLANE_DBS & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+               IAUSFL(6)=1; "to call ausgab after step"
+               ESPLIT_DBS=1; "to do electron splitting"
+            ]
+         ]
+      ] " end of w > 0"
+      ELSEIF(W(NP) < 0.0 )[       "particle going backward"
+         DIST = (ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+         IF(DIST < 0) [DIST = 0.0;]
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1);
+         XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+         YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+         IF(XPLN_$PYRAMIDS > XFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            YPLN_$PYRAMIDS > YFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            XPLN_$PYRAMIDS < XFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1) |
+            YPLN_$PYRAMIDS < YFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1) )[
+            IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 2;
+            ;$PYRAMIDS_IN_HIT(
+                   XFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   XFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   YFPT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                   YFNT_$PYRAMIDS(ISCM_$PYRAMIDS,1));
+         ]
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
+               CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
+            ]
+            ELSE ["still in CM
+               IRNEW = IRNEW_$PYRAMIDS; "new region number"
+            ]
+         ]
+      ] " end of w < 0"
+      ELSE[ " w =0"
+         ;$PYRAMIDS_IN_HIT_HR;
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IRNEW = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 2;
+         ]
+      ]
+   ] " end of center air region"
+   ELSE [" particle in outer air region"
+      IF(W(NP) > 0.0 )[      "particle going forward"
+         DIST = (ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+         DIST_PLANE=DIST;
+         IF(DIST < 0) [DIST = 0.0;]
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*ISCM_$PYRAMIDS;
+         IF(DIST=0. & ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[DIST=1.E-16;]
+         IF(ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[IRNEW_$PYRAMIDS = 1;]
+         XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+         YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+         IF(((Y(NP) > YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & V(NP) < 0.0)|
+            (Y(NP) < -YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & V(NP) > 0.0)) &
+            ABS(X(NP)+U(NP)*ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+            ABS(Y(NP)))/V(NP))) < XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) &
+            ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-ABS(Y(NP)))/V(NP))
+            < DIST )[
+            IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS +
+                                   3*(ISCM_$PYRAMIDS-1) + 2;
+            DIST=ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+                      ABS(Y(NP)))/V(NP));
+         ]
+         IF(((X(NP) > XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & U(NP) < 0.0)|
+           (X(NP) < -XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & U(NP) > 0.0)) &
+           ABS(Y(NP)+V(NP)*ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+           ABS(X(NP)))/U(NP))) < YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) &
+           ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-ABS(X(NP)))/U(NP))
+           < DIST )[
+                 IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS +
+                                   3*(ISCM_$PYRAMIDS-1) + 2;
+           DIST=MIN(DIST,ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+           ABS(X(NP)))/U(NP)));
+         ]
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through back"
+               CALL WHERE_AM_I(ICM_$PYRAMIDS,1);
+            ]
+            ELSE ["still in CM
+               IRNEW = IRNEW_$PYRAMIDS; "new region number"
+            ]
+            IF(DIST>=DIST_PLANE & IBRSPL=2 & ICM_DBS=ICM_$PYRAMIDS &
+               ISCM_$PYRAMIDS=ZPLANE_DBS & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+               IAUSFL(6)=1; "to call ausgab after step"
+               ESPLIT_DBS=1; "to do electron splitting"
+            ]
+         ]
+      ] " end of w > 0"
+      ELSEIF(W(NP) < 0.0)[           "particle going backward"
+         DIST = (ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+         IF(DIST < 0) [DIST = 0.0;]
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1);
+         XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+         YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+         IF(((Y(NP) > YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & V(NP) < 0.0)|
+            (Y(NP) < -YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & V(NP) > 0.0)) &
+            ABS(X(NP)+U(NP)*ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+            ABS(Y(NP)))/V(NP))) < XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) &
+            ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-ABS(Y(NP)))/V(NP))
+            < DIST )[
+            IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS +
+                                   3*(ISCM_$PYRAMIDS-1) + 2;
+            DIST=ABS((YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+                 ABS(Y(NP)))/V(NP));
+         ]
+         IF(((X(NP) > XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & U(NP) < 0.0)|
+           (X(NP) < -XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) & U(NP) > 0.0)) &
+           ABS(Y(NP)+V(NP)*ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+           ABS(X(NP)))/U(NP))) < YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1) &
+           ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-ABS(X(NP)))/U(NP))
+           < DIST )[
+                 IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS +
+                                   3*(ISCM_$PYRAMIDS-1) + 2;
+           DIST=MIN(DIST,ABS((XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-
+           ABS(X(NP)))/U(NP)));
+         ]
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
+               CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
+            ]
+            ELSE ["still in CM
+               IRNEW = IRNEW_$PYRAMIDS; "new region number"
+            ]
+         ]
+      ] " end of w < 0"
+      ELSE [    "w=0.0"
+         ;$PYRAMIDS_IN_HIT_HOUTAIR(
+                XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1),
+                X(NP),Y(NP),IHIT);
+         IF(DIST <= USTEP ) ["particle to be moved to region boundary
+            USTEP = DIST;
+            IRNEW = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 2;
+         ]
+      ]     "end of w=0"
+   ] " end of outer air region"
+]    "end of second air region"
+ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS) ["particle in bar region"
+   ;$PYRAMIDS_CHECK_OUT;
+   IF(W(NP) > 0.0 )[
+      DIST = (ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS)-Z(NP))/W(NP);
+      DIST_PLANE=DIST;
+      IF(DIST < 0) [DIST = 0.0;]
+      IF(DIST=0. & ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[DIST=1.E-16;]
+      XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+      YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+      IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*ISCM_$PYRAMIDS;
+      IF(ISCM_$PYRAMIDS = ISCM_MAX_$PYRAMIDS)[IRNEW_$PYRAMIDS = 1;]
+      ;$PYRAMIDS_OUT(
+                XBPT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                XBNT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YBPT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YBNT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                IHIT,TDIST,
+                XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2));
+      IF(IHIT=1)[
+         DIST = TDIST;
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 1;
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$PYRAMIDS=1) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$PYRAMIDS,1);
+         ]
+         ELSE ["still in CM
+            IRNEW = IRNEW_$PYRAMIDS; "new region number"
+         ]
+         IF(DIST>=DIST_PLANE & IBRSPL=2 & ICM_DBS=ICM_$PYRAMIDS &
+               ISCM_$PYRAMIDS=ZPLANE_DBS & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+               IAUSFL(6)=1; "to call ausgab after step"
+               ESPLIT_DBS=1; "to do electron splitting"
+         ]
+      ]
+   ] " end of w > 0"
+   ELSEIF(W(NP) < 0.0 )[
+      DIST = (ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS) - Z(NP))/W(NP);
+      IF(DIST < 0) [DIST = 0.0;]
+      IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1);
+      XPLN_$PYRAMIDS = X(NP) + U(NP) * DIST;
+      YPLN_$PYRAMIDS = Y(NP) + V(NP) * DIST;
+      ;$PYRAMIDS_OUT(
+                XFPT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                XFNT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YFPT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YFNT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                IHIT,TDIST,
+                XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2),
+                YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2));
+      IF(IHIT = 1)[
+         IRNEW_$PYRAMIDS = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 1;
+         DIST = TDIST;
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
+            CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
+         ]
+         ELSE ["still in CM
+            IRNEW = IRNEW_$PYRAMIDS; "new region number"
+         ]
+      ]
+   ] " end of w < 0"
+   ELSE[ " w =0"
+      ;$PYRAMIDS_OUT_HIT_HR;
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRSTART_$PYRAMIDS + 3*(ISCM_$PYRAMIDS-1) + 1;
+      ]
+   ] " end of w = 0"
+] " end of bar region"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE [
+   OUTPUT IR(NP)-IRSTART_$PYRAMIDS+1,IR(NP),ICM_$PYRAMIDS,
+   IR_start_CM(ICM_$PYRAMIDS);(//' ************'//' HOWFAR_$PYRAMIDS error'/
+   '    Region, local, absolute =',2I5/
+   '    CM number=',I5,' start region =',I5/ ' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN;
+END; "End of subroutine HOWFAR_PYRAMIDS"
+%E    "Start of subroutine WHERE_AM_I_$PYRAMIDS (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_PYRAMIDS
+"                          ***************************
+"
+" WHERE_AM_I routine for set of PYRAMIDS.
+"
+" WHERE_AM_I_$PYRAMIDS determines the new region number when a
+" particle traverses  a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$PYRAMIDS subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$PYRAMIDS from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$PYRAMIDS(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$PYRAMIDS,EPCONT,STACK/; "/STACK/ is needed for this geometries.
+
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_PYRAMIDS
+"T>**************************************
+"T>
+;
+INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
+$REAL XBDY_$PYRAMIDS,YBDY_$PYRAMIDS;
+XBDY_$PYRAMIDS = X(NP) + U(NP)*USTEP;
+YBDY_$PYRAMIDS = Y(NP) + V(NP)*USTEP;
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   IRNEW = IRSTART_$PYRAMIDS;
+]
+ELSE ["particle entering this CM through back face (downstream)
+   IRNEW = IRSTART_$PYRAMIDS + 3*ISCM_MAX_$PYRAMIDS - 2;
+   IF(ABS(XBDY_$PYRAMIDS) < XMAX_$PYRAMIDS(ISCM_MAX_$PYRAMIDS) &
+      ABS(YBDY_$PYRAMIDS) < YMAX_$PYRAMIDS(ISCM_MAX_$PYRAMIDS) &
+      (XBDY_$PYRAMIDS > XBP_$PYRAMIDS(ISCM_MAX_$PYRAMIDS) |
+       XBDY_$PYRAMIDS < XBN_$PYRAMIDS(ISCM_MAX_$PYRAMIDS) |
+       YBDY_$PYRAMIDS > YBP_$PYRAMIDS(ISCM_MAX_$PYRAMIDS) |
+       YBDY_$PYRAMIDS < YBN_$PYRAMIDS(ISCM_MAX_$PYRAMIDS)))[
+      IRNEW = IRSTART_$PYRAMIDS + 3*ISCM_MAX_$PYRAMIDS-1;
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_PYRAMIDS"
+%E    "Start of subroutine INPUT_$PYRAMIDS (Rev 1.5)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_PYRAMIDS
+"                           **********************
+"
+"  A CM input subroutine for a pyramid of one or more layers.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section
+"  'Description of user input for PYRAMIDS' in  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$PYRAMIDS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$PYRAMIDS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_PYRAMIDS
+"T>*********************************
+"T>
+INTEGER I,J,            "T>DO loop indeces
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,      "T>medium index, set after medium sort by $MED_INPUT
+        OLDFLAG_$PYRAMIDS; "T>flags for possible old input file without IFILL
+$REAL AIRGAPMIN_$PYRAMIDS,  "T>minimum air gap in front of CM
+      BDYTOL;           "T>body tolerance
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$PYRAMIDS = ICM;      "CM index for this component module
+"Get index of first region in this CM,
+IRSTART_$PYRAMIDS = IR_start_CM(ICM_$PYRAMIDS);
+                     "IR_start_CM  set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$PYRAMIDS) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$PYRAMIDS = 0.01;   "Minimum 0.01 cm air gap at front of CM
+"
+OUTPUT;
+ (/' Next component is stacked pyramids ($PYRAMIDS -- PYRAMIDS SID: 2.18)'/
+  ' TITLE: ',$);
+MINPUT ($PYRAMIDS) TITLE_$PYRAMIDS;(60A1);
+            ";MINPUT is a replacement macro with EOF and
+            "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$PYRAMIDS;(' ',60A1);
+
+IF(ICM_$PYRAMIDS = 1)[
+   OUTPUT;(' This is the first component and starts at the reference plane');
+]
+ELSE [OUTPUT Z_min_CM(ICM_$PYRAMIDS);(' Previous CM ends at:',F12.5,' cm');]
+
+"
+"   get geometry information
+"   =============================
+"
+"get the number of levels of pyramids
+"
+OLDFLAG_$PYRAMIDS=0;
+ISCM_MAX_$PYRAMIDS = $MAX_N_$PYRAMIDS; "Maximum number of pyramid levels
+OUTPUT ISCM_MAX_$PYRAMIDS;
+(' Number of pyramid layers (minimum 1, maximum',I3,') and, on the same line,
+'/ ' the fill index: 0 (default) if all central and outer regions '/
+ '                 contain air'/
+ '                 1 if central and outer regions contain '/
+ '                 user specified materials '/': ',$);
+:READON_$PYRAMIDS:
+IF(OLDFLAG_$PYRAMIDS=1)["trying to read this for the second time"
+                        "may be an old input file without IFILL"
+   BACKSPACE(i_input);
+   MINPUT ($PYRAMIDS) ISCM_MAX_$PYRAMIDS; (I5);
+   IFILL_$PYRAMIDS=0;
+]
+ELSE[
+   OLDFLAG_$PYRAMIDS=1;
+   READ (i_input, '(2I5)',END=:EOF_$PYRAMIDS:,ERR=:READON_$PYRAMIDS:)
+              ISCM_MAX_$PYRAMIDS,IFILL_$PYRAMIDS;
+   IF(IFILL_$PYRAMIDS ~= 1)[
+      IFILL_$PYRAMIDS=0;
+   ]
+]
+OUTPUT ISCM_MAX_$PYRAMIDS, IFILL_$PYRAMIDS; (2I5);
+IF(ISCM_MAX_$PYRAMIDS>$MAX_N_$PYRAMIDS)[
+   OUTPUT ICM_$PYRAMIDS, $MAX_N_$PYRAMIDS;
+     (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+        '# of layers > max. allowed.'/
+        '# of layers reduced to ',I4,' for now.'//);
+     ISCM_MAX_$PYRAMIDS=$MAX_N_$PYRAMIDS;
+     IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+]
+ELSEIF(ISCM_MAX_$PYRAMIDS<1)[
+    ISCM_MAX_$PYRAMIDS=1;
+    OUTPUT ICM_$PYRAMIDS;
+     (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+        '# of layers < 1'/
+        '# of layers reset to 1 for now.'//);
+    IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+]
+N_$PYRAMIDS = 3*ISCM_MAX_$PYRAMIDS;
+
+"loop over pyramid layers
+DO I = 1,ISCM_MAX_$PYRAMIDS ["loop to get each pyramid location"
+   OUTPUT I;  (/' Pyramid no: ',I3,':'/
+   ' ZMIN,  ZMAX,  XFP,  XBP,  XFN,  XBN,  YFP,  YBP,  YFN,',
+   '  YBN,  XMAX,  YMAX(cm)');
+   IF(I=1)[
+    OUTPUT AIRGAPMIN_$PYRAMIDS;
+       (' Leave at least min. airgap (',F8.5,' cm) before 1st pyramid'/
+       ' : ',$);
+   ]
+   ELSE[
+    OUTPUT AIRGAPMIN_$PYRAMIDS;
+       (' Leave at least min. airgap (',F8.5,' cm) between pyramids'/
+       ' : ',$);
+   ]
+   MINPUT ($PYRAMIDS)
+      ZMIN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I), XFP_$PYRAMIDS(I),XBP_$PYRAMIDS(I),
+      XFN_$PYRAMIDS(I),XBN_$PYRAMIDS(I),   YFP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),
+      YFN_$PYRAMIDS(I),YBN_$PYRAMIDS(I), XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I);
+      (12F15.0);
+   ;OUTPUT ZMIN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+      XFP_$PYRAMIDS(I),XBP_$PYRAMIDS(I), XFN_$PYRAMIDS(I),XBN_$PYRAMIDS(I),
+      YFP_$PYRAMIDS(I),YBP_$PYRAMIDS(I), YFN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),
+      XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I);
+      (12F6.2);
+   IF(I=1)[
+      IF(ICM_$PYRAMIDS=1 &
+          Z_min_CM(ICM_$PYRAMIDS)>ZMIN_$PYRAMIDS(1)-AIRGAPMIN_$PYRAMIDS)[
+        OUTPUT ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS,
+                ZMIN_$PYRAMIDS(1)-AIRGAPMIN_$PYRAMIDS,Z_min_CM(1);
+           (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st layer.'/
+              ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         WRITE(IOUTLIST,100)ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS,
+              ZMIN_$PYRAMIDS(1)-AIRGAPMIN_$PYRAMIDS,Z_min_CM(1);
+         100 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st layer.'/
+              ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+          Z_min_CM(1)=ZMIN_$PYRAMIDS(1)-AIRGAPMIN_$PYRAMIDS;
+      ]
+      ELSEIF(Z_min_CM(ICM_$PYRAMIDS)>ZMIN_$PYRAMIDS(1))[
+         OUTPUT ICM_$PYRAMIDS;
+           (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+              'Overlaps with previous CM'//);
+         IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+      ]
+      ELSEIF(Z_min_CM(ICM_$PYRAMIDS)>ZMIN_$PYRAMIDS(1)-AIRGAPMIN_$PYRAMIDS)[
+           OUTPUT ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS,
+           Z_min_CM(ICM_$PYRAMIDS)+AIRGAPMIN_$PYRAMIDS,ZMIN_$PYRAMIDS(1);
+           (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st layer.'/
+              ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+           WRITE(IOUTLIST,101)ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS,
+              Z_min_CM(ICM_$PYRAMIDS)+AIRGAPMIN_$PYRAMIDS,
+              ZMIN_$PYRAMIDS(1);
+           101 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st layer.'/
+              ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         ZMIN_$PYRAMIDS(1)=Z_min_CM(ICM_$PYRAMIDS)+AIRGAPMIN_$PYRAMIDS;
+      ]
+   ]
+   ELSE[
+     IF(ZMAX_$PYRAMIDS(I-1)>ZMIN_$PYRAMIDS(I))[
+       OUTPUT ICM_$PYRAMIDS, I-1, I;
+         (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+            'Layer ',I4,' overlaps with layer ',I4//);
+       IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+     ]
+     ELSEIF(ZMAX_$PYRAMIDS(I-1)>ZMIN_$PYRAMIDS(I)-AIRGAPMIN_$PYRAMIDS)[
+       OUTPUT ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS, I-1, I, I,
+              ZMAX_$PYRAMIDS(I-1)+AIRGAPMIN_$PYRAMIDS,ZMIN_$PYRAMIDS(I);
+           (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between layer ',I4,
+              ' and layer ',I4/
+              ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+       WRITE(IOUTLIST,102)ICM_$PYRAMIDS, AIRGAPMIN_$PYRAMIDS,
+                          I-1, I, I,ZMAX_$PYRAMIDS(I-1)
+                          +AIRGAPMIN_$PYRAMIDS,ZMIN_$PYRAMIDS(I);
+       102 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+              ' Less than min. airgap (',F8.5,' cm) between layer ',I4,
+              ' and layer ',I4/
+              ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+       ZMIN_$PYRAMIDS(I)=ZMAX_$PYRAMIDS(I-1)+AIRGAPMIN_$PYRAMIDS;
+     ]
+   ]
+   IF(ZMIN_$PYRAMIDS(I) >= ZMAX_$PYRAMIDS(I))[
+     OUTPUT ICM_$PYRAMIDS, I, I;
+       (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+          'ZMIN(',I4,') >= ZMAX(',I4,')'//);
+   ]
+   IF(XFP_$PYRAMIDS(I)<=XFN_$PYRAMIDS(I))[
+      OUTPUT ICM_$PYRAMIDS, I, I;
+        (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+           'XFP(',I4,') <= XFN(',I4,')'//);
+      IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+   ]
+   IF(XBP_$PYRAMIDS(I)<=XBN_$PYRAMIDS(I))[
+      OUTPUT ICM_$PYRAMIDS, I, I;
+        (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+           'XBP(',I4,') <= XBN(',I4,')'//);
+      IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+   ]
+   IF(YFP_$PYRAMIDS(I)<=YFN_$PYRAMIDS(I))[
+      OUTPUT ICM_$PYRAMIDS, I, I;
+        (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+           'YFP(',I4,') <= YFN(',I4,')'//);
+      IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+   ]
+   IF(YBP_$PYRAMIDS(I)<=YBN_$PYRAMIDS(I))[
+      OUTPUT ICM_$PYRAMIDS, I, I;
+        (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+           'YBP(',I4,') <= YBN(',I4,')'//);
+      IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+   ]
+   IF(ABS(XFP_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'XFP(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''XFP('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(XFN_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'XFN(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''XFN('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(XBP_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'XBP(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''XBP('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(XBN_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'XBN(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''XBN('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(YFP_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'YFP(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''YFP('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(YFN_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'YFN(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''YFN('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(YBP_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'YBP(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''YBP('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(ABS(YBN_$PYRAMIDS(I))>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I;
+        (//'***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           'YBN(',I4,') is outside RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (PYRAMIDS):''/
+           ''YBN('',I4,'') is outside RMAX_CM''//)')
+           ICM_$PYRAMIDS, I;
+   ]
+   IF(XMAX_$PYRAMIDS(I)<=0.)[
+      OUTPUT ICM_$PYRAMIDS, I, RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is set to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,103)ICM_$PYRAMIDS, I,
+                         RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+     103 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is set to ',F8.5,' cm from ',F8.5,' cm'//);
+      XMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+   IF(YMAX_$PYRAMIDS(I)<=0.)[
+      OUTPUT ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),YMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is set to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,104)ICM_$PYRAMIDS, I,
+           RMAX_CM(ICM_$PYRAMIDS),YMAX_$PYRAMIDS(I);
+      104 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is set to ',F8.5,' cm from ',F8.5,' cm'//);
+      YMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+   IF(XMAX_$PYRAMIDS(I)<=MAX(ABS(XFP_$PYRAMIDS(I)),ABS(XBP_$PYRAMIDS(I)),
+      ABS(XFN_$PYRAMIDS(I)),ABS(XBN_$PYRAMIDS(I))))[
+      OUTPUT ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is less than x opening, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,105)ICM_$PYRAMIDS, I,
+                RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+      105 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is less than x opening, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+       XMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+   IF(YMAX_$PYRAMIDS(I)<=MAX(ABS(YFP_$PYRAMIDS(I)),ABS(YBP_$PYRAMIDS(I)),
+      ABS(YFN_$PYRAMIDS(I)),ABS(YBN_$PYRAMIDS(I))))[
+      OUTPUT ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),YMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is less than y opening, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,106)ICM_$PYRAMIDS, I,
+                RMAX_CM(ICM_$PYRAMIDS),YMAX_$PYRAMIDS(I);
+      106 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is less than y opening, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      YMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+   IF(XMAX_$PYRAMIDS(I)>RMAX_CM(ICM_$PYRAMIDS))[
+      OUTPUT ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is outside RMAX_CM, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,107)ICM_$PYRAMIDS, I,
+                RMAX_CM(ICM_$PYRAMIDS),XMAX_$PYRAMIDS(I);
+      107 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' XMAX(',I4,') is outside RMAX_CM, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      XMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+   IF(YMAX_$PYRAMIDS(I)>RMAX_CM(ICM_$PYRAMIDS))[
+      YMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+      OUTPUT ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),
+           YMAX_$PYRAMIDS(I);
+        (//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is outside RMAX_CM, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,108)ICM_$PYRAMIDS, I,RMAX_CM(ICM_$PYRAMIDS),
+           YMAX_$PYRAMIDS(I);
+      108 FORMAT(//' ***WARNING IN CM ',I4,' (PYRAMIDS):'/
+           ' YMAX(',I4,') is outside RMAX_CM, set to ',F8.5,' cm'/
+           ' from ',F8.5,' cm'//);
+      YMAX_$PYRAMIDS(I)=RMAX_CM(ICM_$PYRAMIDS);
+   ]
+] "end of loop over pyramid levels"
+
+"set absolute region number to first region in CM for next set of inputs"
+IRA = IRSTART_$PYRAMIDS; "absolute region number
+IF(IFILL_$PYRAMIDS=0)["all openings are filled with air"
+   OUTPUT ;
+(/' For air between layers, and in central and outer regions',
+             /' ECUT, PCUT, DOSE ZONE OF AIR, REGION TO BIT'/' :',$);
+]
+ELSE["only input for airgaps"
+   OUTPUT ; (/' For air gaps between layers',
+             /' ECUT, PCUT, DOSE ZONE OF AIR, REGION TO BIT'/' :',$);
+]
+   MINPUT ($PYRAMIDS) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+          (2F15.0,2I5);
+   OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA); (2F15.5,2I5);
+   IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+   IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+   MED(IRA) = AIR_INDEX; " medium of air
+
+"get material for each pyramid and determine material number for these regions
+DO IR_$PYRAMIDS = 3, N_$PYRAMIDS, 3[
+   IRA = IRSTART_$PYRAMIDS  + IR_$PYRAMIDS - 1;
+   "define parameters for air gaps"
+   MED(IRA-2) = AIR_INDEX;
+   ECUT(IRA-2) = ECUT(IRSTART_$PYRAMIDS);
+   PCUT(IRA-2) = PCUT(IRSTART_$PYRAMIDS);
+   DOSE_ZONE(IRA -2) = DOSE_ZONE(IRSTART_$PYRAMIDS);
+   IREGION_TO_BIT(IRA -2) = IREGION_TO_BIT(IRSTART_$PYRAMIDS);
+   OUTPUT IR_$PYRAMIDS/3; (/' For layer no: ',I3);
+   IF(IFILL_$PYRAMIDS=1)["user defines material in each opening"
+      OUTPUT; (/' For material in central region and outer region: '/
+             ' ECUT, PCUT, DOSE ZONE, IREGION_TO_BIT '/' :',$);
+      MINPUT ($PYRAMIDS) ECUT(IRA-1),PCUT(IRA-1),DOSE_ZONE(IRA-1),
+              IREGION_TO_BIT(IRA-1); (2F15.0,2I5);
+      OUTPUT ECUT(IRA-1),PCUT(IRA-1),DOSE_ZONE(IRA-1),IREGION_TO_BIT(IRA-1);
+             (2F15.5,2I5);
+      IF (ECUT(IRA-1).LT.ECUTIN) ECUT(IRA-1)=ECUTIN;
+      IF (PCUT(IRA-1).LT.PCUTIN) PCUT(IRA-1)=PCUTIN;
+      OUTPUT;(' medium of central region and outer region: ',$);
+      $MED_INPUT($PYRAMIDS);
+      MED(IRA-1) = MED_INDEX;
+   ]
+   ELSE["openings assumed to be air"
+      ECUT(IRA-1) = ECUT(IRSTART_$PYRAMIDS);
+      PCUT(IRA-1) = PCUT(IRSTART_$PYRAMIDS);
+      DOSE_ZONE(IRA -1) = DOSE_ZONE(IRSTART_$PYRAMIDS);
+      IREGION_TO_BIT(IRA -1) = IREGION_TO_BIT(IRSTART_$PYRAMIDS);
+      MED(IRA-1) = AIR_INDEX;
+   ]
+   OUTPUT; (' For material in surrounding region: '/
+            ' ECUT, PCUT, DOSE ZONE, IREGION_TO_BIT '/' :',$);
+   MINPUT ($PYRAMIDS) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+          IREGION_TO_BIT(IRA); (2F15.0,2I5);
+   OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+          (2F15.5,2I5);
+   IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+   IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+   "get material for each pyramid outer region
+   " and determine material number for these regions
+   OUTPUT;(' medium in surrounding region: ',$);
+   $MED_INPUT($PYRAMIDS); " inputs character array MED_IN from unit 5, loops
+   "through array MEDIA(24,I) to check if medium was previously input.
+   "If so, sets MED_INDEX to index of previous medium.  If not,
+   "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the pyramid
+
+] "end of loop over IR_$PYRAMIDS"
+;
+"  set up region numbers
+"  =====================
+"
+"  This CM has 3xISCM_MAX_$PYRAMIDS regions,
+"
+IREND_$PYRAMIDS = IRSTART_$PYRAMIDS + N_$PYRAMIDS-1;  "Index of last region
+NREG = NREG+N_$PYRAMIDS;           "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$PYRAMIDS+1) = IREND_$PYRAMIDS+1;
+]
+ELSE [
+   OUTPUT ICM_$PYRAMIDS,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (PYRAMIDS):'/
+       I4,' regions requested, only',I4,' available');
+      IERR_GEOM(ICM_$PYRAMIDS)=IERR_GEOM(ICM_$PYRAMIDS)+1;
+]
+"
+"  parameter definition
+"  ====================
+"
+"geometrical coordinates
+"
+"
+DO I = 1, ISCM_MAX_$PYRAMIDS[
+   "calculate slopes of 4 faces in each layer"
+   AXP_$PYRAMIDS(I) = (XBP_$PYRAMIDS(I)-XFP_$PYRAMIDS(I))/
+                             (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I));
+   AXN_$PYRAMIDS(I) = (XBN_$PYRAMIDS(I)-XFN_$PYRAMIDS(I))/
+                             (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I));
+   AYP_$PYRAMIDS(I) = (YBP_$PYRAMIDS(I)-YFP_$PYRAMIDS(I))/
+                             (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I));
+   AYN_$PYRAMIDS(I) = (YBN_$PYRAMIDS(I)-YFN_$PYRAMIDS(I))/
+                             (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I));
+   BXP_$PYRAMIDS(I) =  XFP_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I)*AXP_$PYRAMIDS(I);
+   BXN_$PYRAMIDS(I) =  XFN_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I)*AXN_$PYRAMIDS(I);
+   BYP_$PYRAMIDS(I) =  YFP_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I)*AYP_$PYRAMIDS(I);
+   BYN_$PYRAMIDS(I) =  YFN_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I)*AYN_$PYRAMIDS(I);
+   COSXP_$PYRAMIDS(I)= (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))/
+                 SQRT( (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))**2
+                      +( XBP_$PYRAMIDS(I) - XFP_$PYRAMIDS(I) )**2 );
+   COSYP_$PYRAMIDS(I)= (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))/
+                 SQRT( (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))**2
+                      + (YBP_$PYRAMIDS(I) - YFP_$PYRAMIDS(I))**2 );
+   COSXN_$PYRAMIDS(I)= (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))/
+                 SQRT( (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))**2
+                      +( XBN_$PYRAMIDS(I) - XFN_$PYRAMIDS(I) )**2 );
+   COSYN_$PYRAMIDS(I)= (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))/
+                 SQRT( (ZMAX_$PYRAMIDS(I) - ZMIN_$PYRAMIDS(I))**2
+                      + (YBN_$PYRAMIDS(I) - YFN_$PYRAMIDS(I))**2 );
+]
+
+BDYTOL = $BDY_TOL;
+DO I = 1,ISCM_MAX_$PYRAMIDS ["loop through pyramid levels"
+   XFPT_$PYRAMIDS(I,1) = XFP_$PYRAMIDS(I) + BDYTOL;
+   XFPT_$PYRAMIDS(I,2) = XFP_$PYRAMIDS(I) - BDYTOL;
+   XFNT_$PYRAMIDS(I,1) = XFN_$PYRAMIDS(I) - BDYTOL;
+   XFNT_$PYRAMIDS(I,2) = XFN_$PYRAMIDS(I) + BDYTOL;
+   XBPT_$PYRAMIDS(I,1) = XBP_$PYRAMIDS(I) + BDYTOL;
+   XBPT_$PYRAMIDS(I,2) = XBP_$PYRAMIDS(I) - BDYTOL;
+   XBNT_$PYRAMIDS(I,1) = XBN_$PYRAMIDS(I) - BDYTOL;
+   XBNT_$PYRAMIDS(I,2) = XBN_$PYRAMIDS(I) + BDYTOL;
+   YFPT_$PYRAMIDS(I,1) = YFP_$PYRAMIDS(I) + BDYTOL;
+   YFPT_$PYRAMIDS(I,2) = YFP_$PYRAMIDS(I) - BDYTOL;
+   YFNT_$PYRAMIDS(I,1) = YFN_$PYRAMIDS(I) - BDYTOL;
+   YFNT_$PYRAMIDS(I,2) = YFN_$PYRAMIDS(I) + BDYTOL;
+   YBPT_$PYRAMIDS(I,1) = YBP_$PYRAMIDS(I) + BDYTOL;
+   YBPT_$PYRAMIDS(I,2) = YBP_$PYRAMIDS(I) - BDYTOL;
+   YBNT_$PYRAMIDS(I,1) = YBN_$PYRAMIDS(I) - BDYTOL;
+   YBNT_$PYRAMIDS(I,2) = YBN_$PYRAMIDS(I) + BDYTOL;
+   BXPT_$PYRAMIDS(I,1) = BXP_$PYRAMIDS(I) + BDYTOL;
+   BXPT_$PYRAMIDS(I,2) = BXP_$PYRAMIDS(I) - BDYTOL;
+   BXNT_$PYRAMIDS(I,1) = BXN_$PYRAMIDS(I) - BDYTOL;
+   BXNT_$PYRAMIDS(I,2) = BXN_$PYRAMIDS(I) + BDYTOL;
+   BYPT_$PYRAMIDS(I,1) = BYP_$PYRAMIDS(I) + BDYTOL;
+   BYPT_$PYRAMIDS(I,2) = BYP_$PYRAMIDS(I) - BDYTOL;
+   BYNT_$PYRAMIDS(I,1) = BYN_$PYRAMIDS(I) - BDYTOL;
+   BYNT_$PYRAMIDS(I,2) = BYN_$PYRAMIDS(I) + BDYTOL;
+   XMAXT_$PYRAMIDS(I,1) = XMAX_$PYRAMIDS(I) - BDYTOL;
+   XMAXT_$PYRAMIDS(I,2) = XMAX_$PYRAMIDS(I) + BDYTOL;
+   YMAXT_$PYRAMIDS(I,1) = YMAX_$PYRAMIDS(I) - BDYTOL;
+   YMAXT_$PYRAMIDS(I,2) = YMAX_$PYRAMIDS(I) + BDYTOL;
+] "end of loop over I"
+"
+"establish start of next CM
+Z_min_CM(ICM_$PYRAMIDS+1) = ZMAX_$PYRAMIDS(ISCM_MAX_$PYRAMIDS);
+"
+"
+ZFRONT_$PYRAMIDS = Z_min_CM(ICM_$PYRAMIDS);
+ZBACK_$PYRAMIDS = Z_min_CM(ICM_$PYRAMIDS+1);
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$PYRAMIDS) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$PYRAMIDS-1; "absolute region number
+DO IR_$PYRAMIDS=1,N_$PYRAMIDS ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones and latch
+   "
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones"
+   IF(NDOSE_ZONE > $MAX_DOSE_ZONE)[
+      OUTPUT NDOSE_ZONE;
+       (' Too many dose zone !', 'NDOSE_ZONE =',I5,
+        ' > $MAX_DOSE_ZONE');
+      STOP;
+   ]
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT);
+
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+] "end of loop over IR_$PYRAMIDS
+E_min_out(ICM_$PYRAMIDS)=ECUT(IRA); "Minimum energy on exit from CM
+
+RETURN;
+"   error messages
+"   ==============
+"
+:EOF_$PYRAMIDS:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for '
+            ,'Pyramid CM',I3);
+STOP;
+
+:ERROR_$PYRAMIDS:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for pyramid CM',I3);
+STOP;
+END;  "End of INPUT_PYRAMIDS"
+%E    "Start of subroutine ISUMRY_$PYRAMIDS (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_PYRAMIDS
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$PYRAMIDS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$PYRAMIDS,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_PYRAMIDS
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,   "T>colour of CM for EGS_Windows
+   IDD,       "T>index of dose scoring zone
+   IRA,       "T>absolute region number
+   I,J;       "T>DO loop index
+
+$REAL
+   XYMAX,             "T>X or Y boundary
+   VOLAIR_$PYRAMIDS,  "T>air volume
+   VOL_$PYRAMIDS($MAX_N_$PYRAMIDS); "T>volume of bar
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$PYRAMIDS.
+"This section now calculates the mass of the different regions in
+"pyramids correctly--Blake Walters 18/07/94
+
+IRA = IRSTART_$PYRAMIDS-1; "absolute region number"
+VOLAIR_$PYRAMIDS=(ZBACK_$PYRAMIDS-ZFRONT_$PYRAMIDS)*
+                  4*RMAX_CM2(ICM_$PYRAMIDS);
+DO I = 1,ISCM_MAX_$PYRAMIDS [
+   IRA=IRA+3;
+   VOL_$PYRAMIDS(I)= (ZMAX_$PYRAMIDS(I)-ZMIN_$PYRAMIDS(I))*
+                     (4*XMAX_$PYRAMIDS(I)*YMAX_$PYRAMIDS(I)-
+                     ABS(XFP_$PYRAMIDS(I)*(2.*
+                     YFP_$PYRAMIDS(I)+YBP_$PYRAMIDS(I)-
+                     YBN_$PYRAMIDS(I)-2.*YFN_$PYRAMIDS(I))+
+                     XBP_$PYRAMIDS(I)*(2.*YBP_$PYRAMIDS(I)+
+                     YFP_$PYRAMIDS(I)-YFN_$PYRAMIDS(I)-
+                     2.*YBN_$PYRAMIDS(I))+XFN_$PYRAMIDS(I)*
+                     (2.*YFN_$PYRAMIDS(I)+YBN_$PYRAMIDS(I)-
+                     YBP_$PYRAMIDS(I)-2.*YFP_$PYRAMIDS(I))+
+                     XBN_$PYRAMIDS(I)*(2.*YBN_$PYRAMIDS(I)+
+                     YFN_$PYRAMIDS(I)-YFP_$PYRAMIDS(I)-
+                     2.*YBP_$PYRAMIDS(I)))/6.);
+   IF(IFILL_$PYRAMIDS=1)["we have user defined material in openings"
+                         "and cannot group openings and material beyond"
+                         "layer edges with the air in the airgaps"
+      VOLAIR_$PYRAMIDS=VOLAIR_$PYRAMIDS-
+                         ((ZMAX_$PYRAMIDS(I)-ZMIN_$PYRAMIDS(I))*
+                           4*RMAX_CM(ICM_$PYRAMIDS)**2);
+   ]
+   ELSE["openings, beyond layer edges and air gaps are all one region"
+      VOLAIR_$PYRAMIDS=VOLAIR_$PYRAMIDS-VOL_$PYRAMIDS(I);
+   ]
+   IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      IDD=DOSE_ZONE(IRA);
+     AMASS(IDD)=AMASS(IDD)+RHOR(IRA)*VOL_$PYRAMIDS(I);
+   ]
+   IF(IFILL_$PYRAMIDS=1 & DOSE_ZONE(IRA-1)~=0)[
+      IDD=DOSE_ZONE(IRA-1);
+      AMASS(IDD)=AMASS(IDD)+RHOR(IRA-1)*
+                 ((ZMAX_$PYRAMIDS(I)-ZMIN_$PYRAMIDS(I))*
+                 4*RMAX_CM(ICM_$PYRAMIDS)**2-VOL_$PYRAMIDS(I));
+   ]
+]"end of loop over IR_$PYRAMIDS"
+IRA = IRSTART_$PYRAMIDS; "absolute region number"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+   IDD=DOSE_ZONE(IRA);
+   AMASS(IDD)=AMASS(IDD)+RHOR(IRA)*VOLAIR_$PYRAMIDS;
+]
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$PYRAMIDS,TITLE_$PYRAMIDS;
+110 FORMAT(///1X,79('-')/'  Component module',I3,
+    ' is one or more truncated pyramids (PYRAMIDS Rev 1.5)' /
+    1X,79('-')//T5,'Title: ',68A1);
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$PYRAMIDS),RMAX_CM(ICM_$PYRAMIDS);
+WRITE(IOUTLIST,122);
+DO I=1,ISCM_MAX_$PYRAMIDS [
+   IF(I=1)[
+      WRITE(IOUTLIST,124)'air',Z_min_CM(ICM_$PYRAMIDS),
+                         ZMIN_$PYRAMIDS(1)-Z_min_CM(ICM_$PYRAMIDS),
+                         'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';
+   ]
+   ELSE[
+      WRITE(IOUTLIST,124)'air',ZMAX_$PYRAMIDS(I-1),
+                         ZMIN_$PYRAMIDS(I)-ZMAX_$PYRAMIDS(I-1),
+                         'NA','NA','NA','NA','NA','NA','NA','NA','NA','NA';
+   ]
+   WRITE(IOUTLIST,123)I,ZMIN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I)-
+                      ZMIN_$PYRAMIDS(I),
+                      XFP_$PYRAMIDS(I),XBP_$PYRAMIDS(I),
+                      XFN_$PYRAMIDS(I),XBN_$PYRAMIDS(I),
+                      YFP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),
+                      YFN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),
+                      XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I);
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$PYRAMIDS-1;
+DO I = 1, ISCM_MAX_$PYRAMIDS [
+   IRA = IRSTART_$PYRAMIDS + 3*(I-1);
+   IF(MED(IRA)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+1,I,'airgap',
+        ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+        DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+       (MEDIA(J,MED(IRA)),J=1,9);
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+1,I,'airgap',
+        ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+        DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+   ]
+   WRITE(IOUTLIST,141)'above';
+   IF(MED(IRA+1)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+2,I,'opening',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),
+        (MEDIA(J,MED(IRA+1)),J=1,9);
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+2,I,'opening',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),
+        'V','a','c','u','u','m';
+   ]
+   IF(MED(IRA+2)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+3,I,'layer',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),
+        (MEDIA(J,MED(IRA+2)),J=1,9);
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+3,I,'layer',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),
+        'V','a','c','u','u','m';
+   ]
+   WRITE(IOUTLIST,141)' ';
+]
+120 FORMAT(/T2,'$PYRAMIDS geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm');
+122 FORMAT(/T2,
+'pyr.#  Z   thick.                       coordinates',
+/T2,
+'     front        XFP   XBP   XFN   XBN   YFP   YBP   YFN   YBN   XMAX  YMAX',
+/T2,
+'     (cm)  (cm)  (cm)  (cm)  (cm)  (cm)  (cm)  (cm)   (cm)  (cm)  (cm)  (cm)');
+123 FORMAT(T2,I3,12F6.2);
+124 FORMAT(T2,A3,2F6.2,10A6);
+130 FORMAT(/T2,'$PYRAMIDS region parameters:',
+           /T2,'---------------------------',
+           /T2,'local pyramid  location  electron  photon',
+           '  range-rejection  dose  bit  medium'
+           /T2,'region                    cutoff   cutoff',
+           '   level    max    zone  set'
+           /T2,'                          (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,I7,5X,A7,F9.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+141 FORMAT(T17,A7);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;$SELECT-COLOUR; "Macro for selecting ICOLOUR = 1, 2, or 3, colour of CM"
+   DO I =1,ISCM_MAX_$PYRAMIDS["Loop over local region number"
+      XYMAX = RMAX_CM(ICM_$PYRAMIDS);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'QUAD',XFN_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                        XBN_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XBN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XFN_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'QUAD',XFP_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                        XBP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XBN_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XFN_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'QUAD',XFP_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                        XBP_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XBP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XFP_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'QUAD',XFN_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                        XBN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XBP_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                        XFP_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',-XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFN_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFN_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFP_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFN_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFP_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFP_$PYRAMIDS(I),YFP_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+     ICOLOUR,'QUAD',-XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFN_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                      XFP_$PYRAMIDS(I),YFN_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',-XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBN_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBN_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBP_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBP_$PYRAMIDS(I),YBP_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+     ICOLOUR,'QUAD',-XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBN_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                      XBP_$PYRAMIDS(I),YBN_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',-XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                     -XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                     XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                     XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    XMAX_$PYRAMIDS(I),YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+      WRITE(IOUTGEOM,200)
+      ICOLOUR,'QUAD',XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I),
+                     XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMAX_$PYRAMIDS(I),
+                    -XMAX_$PYRAMIDS(I),-YMAX_$PYRAMIDS(I),ZMIN_$PYRAMIDS(I);
+   ]
+] "End of graphics output"
+
+200 FORMAT(' ',I1,A4,12(F7.2,','));
+
+"   end of ISUMRY_PYRAMIDS
+"   ===================
+"
+RETURN;
+END; "End of subroutine ISUMRY_$PYRAMIDS"
+
+%E    "Start of subroutine HOWNEAR_$PYRAMIDS (Rev 1.5)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_PYRAMIDS
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary
+" Called from HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$PYRAMIDS(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$PYRAMIDS,STACK/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      DIST1,DIST2; "T> temp. distance variables
+
+IR_$PYRAMIDS = IR(NP)-IRSTART_$PYRAMIDS+1;
+ISCM_$PYRAMIDS = (IR_$PYRAMIDS-1)/3 + 1;
+IF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS) [ "particle  bars"
+   DIST1 = 1E10;
+   DIST2 = 1E10;
+   IF(X(NP) >= AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+               BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2))
+      [ DIST1 = COSXP_$PYRAMIDS(ISCM_$PYRAMIDS)
+        *(X(NP)-AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+        Z(NP)-BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2));
+   ]
+   ELSEIF(X(NP) <= AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+               BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2))
+      [ DIST1 = COSXN_$PYRAMIDS(ISCM_$PYRAMIDS)
+          *(AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)+BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-X(NP));
+   ]
+   IF(Y(NP) >=
+     AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2))
+      [ DIST2 = COSYP_$PYRAMIDS(ISCM_$PYRAMIDS)
+          *(Y(NP)-AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)-BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2));
+   ]
+   ELSEIF(Y(NP) <= AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2))
+      [ DIST2 = COSYN_$PYRAMIDS(ISCM_$PYRAMIDS)
+          *(AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-Y(NP));
+   ]
+   IF(DIST1=1E10 & DIST2=1E10)["one of these has to have been set"
+                               "or else we are in the wrong region"
+       DIST=0.;
+   ]
+   ELSE[
+       DIST  = MIN(DIST1,DIST2,
+                  ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS)-Z(NP),
+                  Z(NP)-ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS),
+                  XMAX_$PYRAMIDS(ISCM_$PYRAMIDS)-ABS(X(NP)),
+                  YMAX_$PYRAMIDS(ISCM_$PYRAMIDS)-ABS(Y(NP)));
+   ]
+]
+ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-1) ["in opening or surrounding"
+   DIST1 = 1E10;
+   DIST2 = 1E10;
+   IF(ABS(X(NP)) >= XMAX_$PYRAMIDS(ISCM_$PYRAMIDS) &
+      ABS(Y(NP)) <= YMAX_$PYRAMIDS(ISCM_$PYRAMIDS))[
+      DIST1=ABS(X(NP))-XMAX_$PYRAMIDS(ISCM_$PYRAMIDS);
+   ]
+   ELSEIF(ABS(Y(NP)) >= YMAX_$PYRAMIDS(ISCM_$PYRAMIDS) &
+      ABS(X(NP)) <= XMAX_$PYRAMIDS(ISCM_$PYRAMIDS))[
+      DIST1=ABS(Y(NP))-YMAX_$PYRAMIDS(ISCM_$PYRAMIDS);
+   ]
+   ELSEIF(ABS(Y(NP)) >= YMAX_$PYRAMIDS(ISCM_$PYRAMIDS) &
+          ABS(X(NP)) >= XMAX_$PYRAMIDS(ISCM_$PYRAMIDS))[
+      DIST1=SQRT((ABS(X(NP))-XMAX_$PYRAMIDS(ISCM_$PYRAMIDS))**2 +
+                 (ABS(Y(NP))-YMAX_$PYRAMIDS(ISCM_$PYRAMIDS))**2);
+   ]
+   ELSE["inside the opening"
+      DIST1=MIN(COSXP_$PYRAMIDS(ISCM_$PYRAMIDS)
+        *(AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+        Z(NP)+BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-X(NP)),
+                COSXN_$PYRAMIDS(ISCM_$PYRAMIDS)
+         *(X(NP)-AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+         Z(NP)-BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)));
+      DIST2=MIN(COSYP_$PYRAMIDS(ISCM_$PYRAMIDS)
+        *(AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+        Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-Y(NP)),
+                COSYN_$PYRAMIDS(ISCM_$PYRAMIDS)
+         *(Y(NP)-AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+         Z(NP)-BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)));
+   ]
+   DIST  = MIN(DIST1,DIST2,ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS)-Z(NP),
+                  Z(NP)-ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS));
+]
+ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-2)[
+   IF(ISCM_$PYRAMIDS=1)[
+      DIST=MIN(Z(NP)-ZFRONT_$PYRAMIDS,
+               ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS)-Z(NP));
+   ]
+   ELSE[
+      DIST=MIN(Z(NP)-ZMAX_$PYRAMIDS(ISCM_$PYRAMIDS-1),
+               ZMIN_$PYRAMIDS(ISCM_$PYRAMIDS)-Z(NP));
+   ]
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$PYRAMIDS(Rev 1.5)"
+
+"*******************************************************************************
+"End of PYRAMIDS_cm.mortran (Rev 1.5)
+
+
+
+

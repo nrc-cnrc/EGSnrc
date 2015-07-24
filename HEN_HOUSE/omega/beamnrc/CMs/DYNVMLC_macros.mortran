@@ -1,0 +1,1014 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: dynamic Varian type MLC            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 2005                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Emily Heath                                               "
+"                   Jan Seuntjens                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally derived from the VARMLC component module written  "
+"  by Ajay Kapur and Charlie Ma in 2000.                                      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+%C80
+%Q1
+" ***********************************************************************"
+
+"                          DYNVMLC_macros.mortran                        "
+
+"************************************************************************"
+"         -------------------------------------------------------        "
+"         McGill University Modifications                                "
+"         Emily Heath & Jan Seuntjens (2003)                             "
+"         *******************************************************        "
+"         Modifications were made to VARMLC to allow for                 "
+"         - Varian 120 millenium leaf types                              "
+"         - leaf-toleaf geometry specifications                          "
+"         - sampling of step and shoot and dynamic leaf sequences        "
+"         Files needed:                                                  "
+"         1. dynvmlc_cm.mortran                                          "
+"         2. dynvmlc_cm.macros                                           "
+"         For step-and-shoot and dynamic simulations also:               "
+"         3. beamnrc_mlc.mortran                                         "
+"         4. beamnrc_mlc.configuration                                   "
+"         5. dyncomp_macros.mortran                                      "
+"         6. stepandshoot_macros.mortran                                 "
+" Note: Files related to step-and-shoot are not included in the current  "
+"       BEAM distribution (BEAMnrc06).  However, they will be added in   "
+"       the near future.                                                 "
+"         When presenting calculations with this CM please acknowledge   "
+"         and reference:                                                 "
+"         Heath E, Seuntjens J                                           "
+"         Phys. Med. Biol. 48 No 24 (21 December 2003) 4045-4063         "
+"         -------------------------------------------------------        "
+
+
+
+"--------------------------------------------------------------------"
+"     DYNVMLC miscellaneous replacement macros                    "
+"--------------------------------------------------------------------"
+"                                                                    "
+REPLACE {$MAX_N_$DYNVMLC} WITH {{REDUCE $MAXIMUM_N_$DYNVMLC}};
+"       ==========="
+
+REPLACE {$MAXIMUM_N_$DYNVMLC} WITH {3};
+"       ==================="
+
+" THE MAX # OF the leaves TO BE ALLOWED IN THIS MODULE"
+REPLACE {$MAXLEAF} WITH {160}
+
+" The max no. of different fields--dynamic and step-and-shoot only"
+REPLACE {$MAXFIELD_$DYNVMLC} WITH {100}
+
+"used for arrays that store data for each leaf for each field"
+REPLACE {$MAXFIELDLEAF} WITH {{COMPUTE $MAXLEAF*$MAXFIELD_$DYNVMLC}}
+;
+"---------------------------------------------------------------------"
+"     DYNVMLC component module common                              "
+"---------------------------------------------------------------------"
+
+"V>COMMON/CM_$DYNVMLC/
+"V>================
+"V>ICM_$DYNVMLC        = index of CM, set as ICM in INPUT_$DYNVMLC,not reset
+"V>IRSTART_$DYNVMLC    = first region number for this CM
+"V>IREND_$DYNVMLC      = last region number for this CM
+"V>N_$DYNVMLC          = number of regions in CM
+"V>TITLE_$DYNVMLC      = title of CM
+"V>ZMAX_$DYNVMLC       = back of DYNVMLC
+"V>ZTHICK_$DYNVMLC     = Thickness of leaves
+"V>ZFRONT_$DYNVMLC     = Upstream Z boundary of this CM
+"V>NGROUP_$DYNVMLC     = the number of groups of leaves where the leaves
+"V>                         in each group have the same width
+"V>NUM_LEAF_$DYNVMLC(I)= the number of leaves in group I
+"V>LEAFWIDTH_$DYNVMLC(I)= the width of each leaf in group I at ZMIN_$DYNVMLC
+"V>                          excluding the tongue
+"V>ORIENT_$DYNVMLC     = the index to indicate the leave direction
+"V>                      0: default, leaf orientation in y
+"V>                      1:                           in x
+"V>START_$DYNVMLC      = the start position wrt the CAX of the lowermost
+"V>                         leaf ie leaf 1 tongue as projected to ZMIN_$DYNVMLC
+"V>HOLEPOS_$DYNVMLC(I) = distance from leaf tip to start of driving screw hole
+"V>                      for each leaf in group I
+"V>LEAFGAP_$DYNVMLC    = the width of the interleaf air gap at ZMIN_$DYNVMLC
+"V>ZREG_$DYNVMLC(TOT_LEAF_$DYNVMLC,8) = the z boundaries of the 7 sub-regions
+"V>                                     in z direction
+"V>YREG_$DYNVMLC(TOT_LEAF_$DYNVMLC,7)
+"V>                   = the boundaries along the perpendicular direction
+"V>                     to the leaf orientation of sub-regions
+"V>SUBINDEX_$DYNVMLC   = an index number to represent which region the
+"V>          belongs in based on sub-dividing each leaf into regions.
+"V>SURPARA1_$DYNVMLC($MAXLEAF,6)  the parameters to describe the leaf side
+"V>                               surface i.e. tangent along that side.
+"V>IR_$DYNVMLC          local region number
+"V>LEAFTYPE_$DYNVMLC(I) Leaf type of leaf I: 1=FULL leaf
+"V>                                          2=TARGET leaf
+"V>                                          3=ISOCENTER leaf
+"V>LEAFWIDTH_$DYNVMLC(LEAFTYPE) = width of leaf of type LEAFTYPE excl. tongue
+"V>WTONGUE_$DYNVMLC(LEAFTYPE) = width of tongue for LEAFTYPE leaves
+"V>WGROOVE_$DYNVMLC(LEAFTYPE) = width of groove for LEAFTYPE leaves
+"V>WTIP_$DYNVMLC(LEAFTYPE) = width of leaf tip for LEAFTYPE leaves
+"V>WRAILTOP_$DYNVMLC(LEAFTYPE) = width of upper support rail for LEAFTYPE
+"V>WRAILBOT_$DYNVMLC(LEAFTYPE) = width of lower support rail for LEAFTYPE
+"V>ZTIP_$DYNVMLC(LEAFTYPE) = Z where leaf tip starts/ends for LEAFTYPE
+"V>ZLEAF_$DYNVMLC(LEAFTYPE) = Z where leaf starts/ends for LEAFTYPE
+"V>ZTONGUE_$DYNVMLC(LEAFTYPE) = Z where tongue starts/ends for LEAFTYPE
+"V>ZGROOVE_$DYNVMLC(LEAFTYPE) = Z where groove starts/ends for LEAFTYPE
+"V>ZHOLETOP_$DYNVMLC(LEAFTYPE) = Z of top of driving screw hole for LEAFTYPE
+"V>ZHOLEBOT_$DYNVMLC(LEAFTYPE) = Z of bottom of driving screw hole
+"V>HOLEPOS_FULL/TAR/ISO_$DYNVMLC = Distance of hole from leaf tip for leaf
+"V>                                type specified.  Later stored in
+"V>                                HOLEPOS_$DYNVMLC(I) for each leaf.
+"V>ZRAILTOP_$DYNVMLC(LEAFTYPE) = Z of upper support rail for LEAFTYPE
+"V>ZRAILBOT_$DYNVMLC(LEAFTYPE) = Z of lower support rail for LEAFTYPE
+;
+REPLACE{;COMIN/CM_$DYNVMLC/;} WITH {
+;COMMON/CM_$DYNVMLC/
+      ZMAX_$DYNVMLC,
+      ZFRONT_$DYNVMLC,
+      START_$DYNVMLC,
+      HOLEPOS_$DYNVMLC,
+      LEAFGAP_$DYNVMLC,
+      SURPARA1_$DYNVMLC,
+      ZREG_$DYNVMLC,
+      YREG_$DYNVMLC,
+      LEAFWIDTH_$DYNVMLC,WTONGUE_$DYNVMLC,WGROOVE_$DYNVMLC,
+      WTIP_$DYNVMLC,WRAILTOP_$DYNVMLC,WRAILBOT_$DYNVMLC,
+      ZTIP_$DYNVMLC,ZLEAF_$DYNVMLC,
+      ZTONGUE_$DYNVMLC,ZGROOVE_$DYNVMLC,ZHOLETOP_$DYNVMLC,
+      ZHOLEBOT_$DYNVMLC,
+      HOLEPOS_FULL_$DYNVMLC,HOLEPOS_TAR_$DYNVMLC,HOLEPOS_ISO_$DYNVMLC,
+      ZRAILTOP_$DYNVMLC,ZRAILBOT_$DYNVMLC,
+      ICM_$DYNVMLC,IRSTART_$DYNVMLC,IREND_$DYNVMLC,N_$DYNVMLC,N_GAP_$DYNVMLC,
+      IR_$DYNVMLC,NUM_LEAF_$DYNVMLC, ORIENT_$DYNVMLC,
+      SUBINDEX_$DYNVMLC,NGROUP_$DYNVMLC,
+      LEAFTYPE_$DYNVMLC,
+      TITLE_$DYNVMLC;
+   DOUBLE PRECISION
+      ZMAX_$DYNVMLC,
+      ZFRONT_$DYNVMLC,
+      START_$DYNVMLC,
+      HOLEPOS_$DYNVMLC($MAXLEAF),
+      LEAFGAP_$DYNVMLC,
+      SURPARA1_$DYNVMLC($MAXLEAF,7),
+      ZREG_$DYNVMLC($MAXLEAF,10),
+      YREG_$DYNVMLC($MAXLEAF,7);
+  $REAL
+      LEAFWIDTH_$DYNVMLC(3),WTONGUE_$DYNVMLC(3),WGROOVE_$DYNVMLC(3),
+      WTIP_$DYNVMLC(3),WRAILTOP_$DYNVMLC(3),WRAILBOT_$DYNVMLC(3),
+      ZTIP_$DYNVMLC(3),ZLEAF_$DYNVMLC(3),
+      ZTONGUE_$DYNVMLC(3),ZGROOVE_$DYNVMLC(3),ZHOLETOP_$DYNVMLC(3),
+      ZHOLEBOT_$DYNVMLC(3),
+      HOLEPOS_FULL_$DYNVMLC,HOLEPOS_TAR_$DYNVMLC,HOLEPOS_ISO_$DYNVMLC,
+      ZRAILTOP_$DYNVMLC(3),ZRAILBOT_$DYNVMLC(3);
+  INTEGER
+      ICM_$DYNVMLC,IRSTART_$DYNVMLC,IREND_$DYNVMLC,N_$DYNVMLC,N_GAP_$DYNVMLC,
+      IR_$DYNVMLC,NUM_LEAF_$DYNVMLC($MAXLEAF), ORIENT_$DYNVMLC,
+      SUBINDEX_$DYNVMLC($MAXLEAF,5,6,9),NGROUP_$DYNVMLC,
+      LEAFTYPE_$DYNVMLC($MAXLEAF);
+  CHARACTER*1 TITLE_$DYNVMLC(60);
+
+}
+ "end of replacement defining common for this CM"
+
+"V>COMMON/USERDYNVMLC/
+"V>
+"V> the following variables are required in the the main beam code
+"V> to set leaf positions during the simulation when dynamic and step-and-shoot
+"V> (MODE_$DYNVMLC=1,2) options are used.  This common block is part of
+"V> the larger USER common block.  It is defined as {;} in
+"V> beamnrc_user_macros.mortran, but is superceded by this definition if
+"V> DYNVMLC is present in the accelerator.
+"V>
+"V>LEAFA_$DYNVMLC($MAXLEAF) = coordinates of A (+ve) side leaves at
+"V>                     ZMIN_$DYNVMLC if ENDTYPE_$DYNVMLC = 1 or at
+"V>                     rounded leaf tip @ ZMIN_$DYNVMLC+(ZTHICK_$DYNVMLC)/2
+"V>LEAFB_$DYNVMLC($MAXLEAF) = coordinates of B (-ve) side leaves at
+"V>                     ZMIN_$DYNVMLC if ENDTYPE_$DYNVMLC = 1 or at
+"V>                     rounded leaf tip @ ZMIN_$DYNVMLC+(ZTHICK_$DYNVMLC)/2.
+"V>SURPARA2_B_$DYNVMLC($MAXLEAF)the parameters to describe the leaf end
+"V>                               surface i.e. tangent along that end.
+"V>SURPARA2_A_$DYNVMLC($MAXLEAF)the parameters to describe the leaf end
+"V>                               surface i.e. tangent along that end.
+"V>ZFOCUS_$DYNVMLC(2) = the two focus point coordinates: 1. for leave side
+"V>                                                  2. for leave end.
+"V>ZMIN_$DYNVMLC       = Front of DYNVMLC
+"V>ZTHICK_$DYNVMLC     = Thickness of leaves
+"V>MIN_PLANE_$DYNVMLC  min. plane perp. to leaf direction.  For particles
+"V>                    in leaves with position < MIN_PLANE_$DYNVMLC,
+"V>                    air gaps and driving screw holes will be ignored when
+"V>                    doing range rejection (IGNOREGAPS_$DYNVMLC=1)
+"V>MAX_PLANE_$DYNVMLC  max. plane perp. to leaf direction.  For particles
+"V>                    in leaves with position > MAX_PLANE_$DYNVMLC,
+"V>                    air gaps and driving screw holes will be ignored when
+"V>                    doing range rejection (IGNOREGAPS_$DYNVMLC=1)
+"V>LEAFRADIUS_$DYNVMLC = the radius of the leaf end if ENDTYPE_$DYNVMLC = 0
+"V>LEAFNEG_$DYNVMLC($MAXFIELDLEAF) = negative opening coordinates for all leaves
+"V>                                  for all fields.
+"V>                                  LEAFNEG_$DYNVMLC(J+(I-1)*TOT_LEAF_$DYNVMLC)
+"V>                                  defines coordinate for leaf J in field I
+"V>LEAFPOS_$DYNVMLC($MAXFIELDLEAF) = positive opening coordinates for all leaves
+"V>                                  for all fields.
+"V>INDEX_$DYNVMLC($MAXFIELD_$DYNVMLC)=index for field I.  If INDEX_$DYNVMLC(I)>=
+"V>                            RNDM1_$DYNVMLC then field I is used.
+"V>INDEX1_$DYNVMLC,INDEX2_$DYNVMLC = temporary variables to store
+"V>                                  INDEX_$DYNVMLC(I) values so that
+"V>                                  leaf positions can be interpolated during
+"V>                                  dynamic simulations
+"V>POS1_$DYNVMLC,POS2_$DYNVMLC,NEG1_$DYNVMLC,NEG2_$DYNVMLC = temporary
+"V>                               variables to store LEAFNEG_$DYNVMLC and
+"V>                               LEAFPOS_$DYNVMLC to allow leaf positions
+"V>                               to be interpolated during dynamic field
+"V>                               simulations
+"V>RNDM1_$DYNVMLC = random no. (0,1) selected before each history and compared
+"V>                 to INDEX_$DYNVMLC(I) to determin what field to use
+"V>NFIELDS_$DYNVMLC = no. of fields
+"V>MODE_$DYNVMLC = 0 for static field
+"V>                1 for dynamic field
+"V>                2 for step-and-shoot
+"V>I_$DYNVMLC,J_$DYNVMLC = looping indices
+"V>TOT_LEAF_$DYNVMLC = total no. of leaves in MLC
+"V>IGNOREGAPS_$DYNVMLC Set to 1 to ignore air gaps and driving screw holes
+"I>                    when doing range rejection
+"V>                    for particles in the leaves and beyond the most open
+"V>                    leaf.  0 (default) otherwise.
+"V>ENDTYPE_$DYNVMLC    = the leaf end geomery ( 0 = rounded, 1 = focused )
+"V>MININD_$DYNVMLC,MAXIND_$DYNVMLC = indices used to determine
+"V>                                  MIN_PLANE_$DYNVMLC and MAX_PLANE_$DYNVMLC
+
+REPLACE {;COMIN/USER-DYNVMLC/;} WITH {;
+COMMON/USERDYNVMLC/LEAFA_$DYNVMLC($MAXLEAF),
+LEAFB_$DYNVMLC($MAXLEAF),SURPARA2_B_$DYNVMLC($MAXLEAF),
+SURPARA2_A_$DYNVMLC($MAXLEAF),ZMIN_$DYNVMLC,
+ZFOCUS_$DYNVMLC(2),ZTHICK_$DYNVMLC,
+MIN_PLANE_$DYNVMLC,MAX_PLANE_$DYNVMLC,LEAFRADIUS_$DYNVMLC,
+LEAFNEG_$DYNVMLC($MAXFIELDLEAF),
+LEAFPOS_$DYNVMLC($MAXFIELDLEAF),INDEX_$DYNVMLC($MAXFIELD_$DYNVMLC),
+INDEX1_$DYNVMLC,INDEX2_$DYNVMLC,POS1_$DYNVMLC,POS2_$DYNVMLC,
+NEG1_$DYNVMLC,NEG2_$DYNVMLC,RNDM1_$DYNVMLC,
+NFIELDS_$DYNVMLC,MODE_$DYNVMLC,
+J_$DYNVMLC,I_$DYNVMLC,TOT_LEAF_$DYNVMLC,ENDTYPE_$DYNVMLC,IGNOREGAPS_$DYNVMLC,
+MININD_$DYNVMLC,MAXIND_$DYNVMLC;
+DOUBLE PRECISION LEAFA_$DYNVMLC,LEAFB_$DYNVMLC,
+       SURPARA2_B_$DYNVMLC,SURPARA2_A_$DYNVMLC,ZMIN_$DYNVMLC,
+       ZFOCUS_$DYNVMLC,ZTHICK_$DYNVMLC,MIN_PLANE_$DYNVMLC,MAX_PLANE_$DYNVMLC,
+       LEAFRADIUS_$DYNVMLC;
+$REAL LEAFNEG_$DYNVMLC,LEAFPOS_$DYNVMLC,INDEX_$DYNVMLC,
+      INDEX1_$DYNVMLC,INDEX2_$DYNVMLC,POS1_$DYNVMLC,
+      POS2_$DYNVMLC,NEG1_$DYNVMLC,NEG2_$DYNVMLC,RNDM1_$DYNVMLC;
+$INTEGER NFIELDS_$DYNVMLC,MODE_$DYNVMLC,
+      J_$DYNVMLC,I_$DYNVMLC,TOT_LEAF_$DYNVMLC,ENDTYPE_$DYNVMLC,
+      IGNOREGAPS_$DYNVMLC,MININD_$DYNVMLC,MAXIND_$DYNVMLC;
+$INTEGER BIMIN_$DYNVMLC, BIMAX_$DYNVMLC, BIMID_$DYNVMLC;
+}
+
+"Macro called upon each history to determine the field no. and set the"
+"opening coordinates"
+REPLACE {$SET_DYN_COMP} WITH {;
+IF(MODE_$DYNVMLC=1 | MODE_$DYNVMLC=2)[
+  $RANDOMSET RNDM1_$DYNVMLC;
+
+    IF (RNDM1_$DYNVMLC < INDEX_$DYNVMLC(NFIELDS_$DYNVMLC))  [
+
+        "Binary search"
+        IF (RNDM1_$DYNVMLC < INDEX_$DYNVMLC(1)) [
+            BIMAX_$DYNVMLC = 1;
+        ]
+        ELSE [
+            BIMIN_$DYNVMLC = 1;
+            BIMAX_$DYNVMLC = NFIELDS_$DYNVMLC;
+            WHILE (BIMIN_$DYNVMLC < BIMAX_$DYNVMLC-1) [
+                BIMID_$DYNVMLC = BIMIN_$DYNVMLC +
+                   (BIMAX_$DYNVMLC-BIMIN_$DYNVMLC)/2;
+                IF (INDEX_$DYNVMLC(BIMID_$DYNVMLC) >= RNDM1_$DYNVMLC) [
+                    BIMAX_$DYNVMLC = BIMID_$DYNVMLC; ]
+                ELSE [ BIMIN_$DYNVMLC = BIMID_$DYNVMLC; ];
+            ]
+        ]
+        I_$DYNVMLC = BIMAX_$DYNVMLC;
+
+         INDEX2_$DYNVMLC = INDEX_$DYNVMLC(I_$DYNVMLC);
+         IF(MODE_$DYNVMLC=1 & I_$DYNVMLC>1)
+                 INDEX1_$DYNVMLC = INDEX_$DYNVMLC(I_$DYNVMLC-1);
+         DO J_$DYNVMLC=1,TOT_LEAF_$DYNVMLC[
+           NEG2_$DYNVMLC = LEAFNEG_$DYNVMLC(J_$DYNVMLC+(I_$DYNVMLC-1)*
+                                              TOT_LEAF_$DYNVMLC);
+           POS2_$DYNVMLC = LEAFPOS_$DYNVMLC(J_$DYNVMLC+(I_$DYNVMLC-1)*
+                                              TOT_LEAF_$DYNVMLC);
+           IF(MODE_$DYNVMLC=1 & I_$DYNVMLC>1)[
+             NEG1_$DYNVMLC = LEAFNEG_$DYNVMLC(J_$DYNVMLC+(I_$DYNVMLC-2)*
+                                              TOT_LEAF_$DYNVMLC);
+             POS1_$DYNVMLC = LEAFPOS_$DYNVMLC(J_$DYNVMLC+(I_$DYNVMLC-2)*
+                                              TOT_LEAF_$DYNVMLC);
+             LEAFB_$DYNVMLC(J_$DYNVMLC)=NEG1_$DYNVMLC+
+                     (NEG2_$DYNVMLC-NEG1_$DYNVMLC)*
+                     ((RNDM1_$DYNVMLC-INDEX1_$DYNVMLC)/
+                      (INDEX2_$DYNVMLC-INDEX1_$DYNVMLC));
+             LEAFA_$DYNVMLC(J_$DYNVMLC)=POS1_$DYNVMLC+
+                        (POS2_$DYNVMLC-POS1_$DYNVMLC)*
+                        ((RNDM1_$DYNVMLC-INDEX1_$DYNVMLC)/
+                       (INDEX2_$DYNVMLC-INDEX1_$DYNVMLC));
+           ]
+           ELSE[
+             LEAFB_$DYNVMLC(J_$DYNVMLC)=NEG2_$DYNVMLC;
+             LEAFA_$DYNVMLC(J_$DYNVMLC)=POS2_$DYNVMLC;
+           ]
+           IF(ENDTYPE_$DYNVMLC=1)[
+             SURPARA2_B_$DYNVMLC(J_$DYNVMLC)=LEAFB_$DYNVMLC(J_$DYNVMLC)/
+                                          (ZMIN_$DYNVMLC-ZFOCUS_$DYNVMLC(2) );
+             SURPARA2_A_$DYNVMLC(J_$DYNVMLC)=LEAFA_$DYNVMLC(J_$DYNVMLC)/
+                                          (ZMIN_$DYNVMLC-ZFOCUS_$DYNVMLC(2) );
+           ]
+           IF(IGNOREGAPS_$DYNVMLC=1 & IREJCT_GLOBAL>0)[
+             IF(J_$DYNVMLC=1)[
+               MININD_$DYNVMLC=J_$DYNVMLC;
+               MAXIND_$DYNVMLC=J_$DYNVMLC;
+             ]
+             ELSE[
+               IF(LEAFB_$DYNVMLC(J_$DYNVMLC)<LEAFB_$DYNVMLC(J_$DYNVMLC-1))
+                     MININD_$DYNVMLC=J_$DYNVMLC;
+               IF(LEAFA_$DYNVMLC(J_$DYNVMLC)>LEAFA_$DYNVMLC(J_$DYNVMLC-1))
+                     MAXIND_$DYNVMLC=J_$DYNVMLC;
+             ]
+           ]
+         ]
+         IF(IGNOREGAPS_$DYNVMLC=1 & IREJCT_GLOBAL>0)[
+           IF(ENDTYPE_$DYNVMLC=1)[
+              MIN_PLANE_$DYNVMLC=MIN(LEAFB_$DYNVMLC(MININD_$DYNVMLC),
+                        SURPARA2_B_$DYNVMLC(MININD_$DYNVMLC)*
+                       (ZMIN_$DYNVMLC+ZTHICK_$DYNVMLC-ZFOCUS_$DYNVMLC(2)));
+              MAX_PLANE_$DYNVMLC=MAX(LEAFB_$DYNVMLC(MAXIND_$DYNVMLC),
+                         SURPARA2_B_$DYNVMLC(MAXIND_$DYNVMLC)*
+                         (ZMIN_$DYNVMLC+ZTHICK_$DYNVMLC-ZFOCUS_$DYNVMLC(2)));
+           ]
+           ELSE[
+              MIN_PLANE_$DYNVMLC=LEAFB_$DYNVMLC(MININD_$DYNVMLC)-
+                         LEAFRADIUS_$DYNVMLC+
+                         SQRT(LEAFRADIUS_$DYNVMLC**2-(ZTHICK_$DYNVMLC/2.)**2);
+              MAX_PLANE_$DYNVMLC=LEAFA_$DYNVMLC(MAXIND_$DYNVMLC)+
+                         LEAFRADIUS_$DYNVMLC-
+                         SQRT(LEAFRADIUS_$DYNVMLC**2-(ZTHICK_$DYNVMLC/2.)**2);
+           ]
+         ]
+    ]
+]
+
+}
+
+
+;
+" $DYNVMLC_FIND(REGION, DISTANCE)"
+"======================================="
+" this macro is used to determine the regon #"
+"{p1}: the return region value, local region"
+"{p2}: the step dist which is used to calc. the particle final position"
+REPLACE {$DYNVMLC_FIND(#,#);} WITH {;
+    XYFL(1)=XYL(1)+{P2}*UVL(1);
+    XYFL(2)=XYL(2)+{P2}*UVL(2);
+    ZFL=Z(NP)+{P2}*W(NP);
+IF((W(NP)>0. & ZFL>=ZMAX_$DYNVMLC) | (W(NP)<0. & ZFL<=ZFRONT_$DYNVMLC)) [
+    OUTOFCMFLAG=1;];
+"put in = signs to get this to exit stepping loop in HOWFAR"
+IF(N_GAP_$DYNVMLC=1 & ZFL<=ZMIN_$DYNVMLC & ZFL>=ZFRONT_$DYNVMLC) [ {P1}=4; ]
+ELSE ["inside leaf bank"
+  LEAFIS=0;
+  DO I = 1,TOT_LEAF_$DYNVMLC [ "Determine which leaf we are in"
+    TEMP1=SURPARA1_$DYNVMLC(I,1)*(ZFL-ZFOCUS_$DYNVMLC(1));
+    TEMP2=SURPARA1_$DYNVMLC(I,7)*(ZFL-ZFOCUS_$DYNVMLC(1));
+   IF(XYFL(1)>=TEMP1 & TEMP2>=XYFL(1)) [
+     LEAFIS=I; EXIT; ];
+   ];
+  IF(LEAFIS=0) [{P1}=1;OUTOFMLCFLAG=1;] "assume going into air, set"
+                                        "{P1}=2 for going into solid block"
+  ELSE [
+    IF(ZFL<ZREG_$DYNVMLC(LEAFIS,1))[
+       NZ=1;
+    ]
+    ELSEIF(ZFL>ZREG_$DYNVMLC(LEAFIS,10))[
+       NZ=9;
+    ]
+    ELSE[
+     DO I = 1,9 [ "Determine Z region"
+      IF(ZFL>=ZREG_$DYNVMLC(LEAFIS,I) & ZREG_$DYNVMLC(LEAFIS,I+1)>=ZFL) [
+         NZ=I; EXIT; ];
+     ];
+    ]
+    IF(NZ~=9 & W(NP)>0)[
+     DO I=NZ+1,10[
+       IF(I=10 | ZREG_$DYNVMLC(LEAFIS,I)>ZFL) EXIT;
+       NZ=I;
+     ]
+    ]
+    TEMP1=SURPARA1_$DYNVMLC(LEAFIS,1)*(ZFL-ZFOCUS_$DYNVMLC(1));
+    TEMP2=SURPARA1_$DYNVMLC(LEAFIS,7)*(ZFL-ZFOCUS_$DYNVMLC(1));
+    IF(XYFL(1)<TEMP1)[
+       NY=1;
+    ]
+    ELSEIF(XYFL(1)>TEMP2)[
+       NY=6;
+    ]
+    ELSE[
+       DO I =1,6 [ "Determine Y region"
+         TEMP1=SURPARA1_$DYNVMLC(LEAFIS,I)*(ZFL-ZFOCUS_$DYNVMLC(1));
+         TEMP2=SURPARA1_$DYNVMLC(LEAFIS,I+1)*(ZFL-ZFOCUS_$DYNVMLC(1));
+         IF(XYFL(1)>=TEMP1 & TEMP2>=XYFL(1)) [NY=I; EXIT;];
+         ];
+    ]
+    IF(NY~=6 & XYFL(1)=SURPARA1_$DYNVMLC(LEAFIS,NY+1)*
+      (ZFL-ZFOCUS_$DYNVMLC(1)) & UVL(1)>0) [NY=NY+1;];
+    IF(LEAFTYPE_$DYNVMLC(LEAFIS)=2) [ "Target leaf"
+       IF((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9) & (LEAFIS~=TOT_LEAF_$DYNVMLC)) [
+        "In groove check if on next leaf"
+         IF(XYFL(1)>SURPARA1_$DYNVMLC(LEAFIS+1,1)*
+           (ZFL-ZFOCUS_$DYNVMLC(1))) [LEAFIS=LEAFIS+1;
+           TEMP1=SURPARA1_$DYNVMLC(LEAFIS,1)*(ZFL-ZFOCUS_$DYNVMLC(1));
+           TEMP2=SURPARA1_$DYNVMLC(LEAFIS,7)*(ZFL-ZFOCUS_$DYNVMLC(1));
+           IF(XYFL(1)<TEMP1)[
+             NY=1;
+           ]
+           ELSEIF(XYFL(1)>TEMP2)[
+             NY=6;
+           ]
+           ELSE[
+             DO I=1,6 ["check y region"
+              TEMP1=SURPARA1_$DYNVMLC(LEAFIS,I)*(ZFL-ZFOCUS_$DYNVMLC(1));
+              TEMP2=SURPARA1_$DYNVMLC(LEAFIS,I+1)*(ZFL-ZFOCUS_$DYNVMLC(1));
+              IF(XYFL(1)>=TEMP1 & TEMP2>=XYFL(1)) [NY=I; EXIT;];
+             ]
+           ]
+           IF(NY~=6 & XYFL(1)=SURPARA1_$DYNVMLC(LEAFIS,NY+1)*
+              (ZFL-ZFOCUS_$DYNVMLC(1)) & UVL(1)>0) [NY=NY+1;];
+           IF(ZFL<ZREG_$DYNVMLC(LEAFIS,1))[
+             NZ=1;
+           ]
+           ELSEIF(ZFL>ZREG_$DYNVMLC(LEAFIS,10))[
+             NZ=9;
+           ]
+           ELSE[
+             DO I=1,9 [ "recheck Z region"
+              IF((ZFL>=ZREG_$DYNVMLC(LEAFIS,I)) &
+                (ZREG_$DYNVMLC(LEAFIS,I+1)>=ZFL)) [NZ=I; EXIT;];
+             ];
+           ]
+           IF(NZ~=9 & W(NP)>0)[
+             DO I=NZ+1,10[
+               IF(I=10 | ZREG_$DYNVMLC(LEAFIS,I)>ZFL) EXIT;
+               NZ=I;
+             ]
+           ]
+
+       ];
+     ];
+     ]
+    ELSE [ "Full leaf or isocenter leaf"
+      IF(NY=6 & NZ<=4 & (LEAFIS~=TOT_LEAF_$DYNVMLC)) ["in groove"
+          IF(XYFL(1)>SURPARA1_$DYNVMLC(LEAFIS+1,1)*
+             (ZFL-ZFOCUS_$DYNVMLC(1))) [LEAFIS=LEAFIS+1; NY=1;
+            IF(ZFL<ZREG_$DYNVMLC(LEAFIS,1))[
+              NZ=1;
+            ]
+            ELSEIF(ZFL>ZREG_$DYNVMLC(LEAFIS,10))[
+              NZ=9;
+            ]
+            ELSE[
+             DO I=1,9 ["recheck Z region"
+              IF((ZFL>=ZREG_$DYNVMLC(LEAFIS,I)) &
+                (ZREG_$DYNVMLC(LEAFIS,I+1)>=ZFL)) [NZ=I; EXIT];
+              ];
+            ]
+          IF(LEAFTYPE_$DYNVMLC(LEAFIS)=2) [
+                "target leaf"
+              IF(NZ>=6) [LEAFIS=LEAFIS-1; NY=6; "****************"
+                IF(ZFL<ZREG_$DYNVMLC(LEAFIS,1))[
+                  NZ=1;
+                ]
+                ELSEIF(ZFL>ZREG_$DYNVMLC(LEAFIS,10))[
+                  NZ=9;
+                ]
+                ELSE[
+                  DO I=1,9 [ "recheck Z"
+                    IF((ZFL>=ZREG_$DYNVMLC(LEAFIS,I)) &
+                    (ZREG_$DYNVMLC(LEAFIS,I+1)>=ZFL)) [NZ=I; EXIT;];
+                    ];
+                ]
+              ];
+             ]
+          ELSE ["full leaf"
+                 IF(NZ>=4) [LEAFIS=LEAFIS-1; NY=6; "****************"
+                  IF(ZFL<ZREG_$DYNVMLC(LEAFIS,1))[
+                    NZ=1;
+                  ]
+                  ELSEIF(ZFL>ZREG_$DYNVMLC(LEAFIS,10))[
+                    NZ=9;
+                  ]
+                  ELSE[
+                    DO I=1,9 [ "recheck Z"
+                      IF(ZFL>=ZREG_$DYNVMLC(LEAFIS,I) &
+                       ZREG_$DYNVMLC(LEAFIS,I+1)>=ZFL) [NZ=I; EXIT;];
+                    ];
+                  ]
+                 ];
+             ]
+       ];
+     ];
+    ];
+"Now determine X region index"
+  IF(ENDTYPE_$DYNVMLC=1)[
+         TEMP1=SURPARA2_B_$DYNVMLC(LEAFIS)*(ZFL-ZFOCUS_$DYNVMLC(2));
+         TEMP2=SURPARA2_A_$DYNVMLC(LEAFIS)*(ZFL-ZFOCUS_$DYNVMLC(2));
+         HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+         TEMP3=LEAFB_$DYNVMLC(LEAFIS)-HOLE;
+         TEMP4=LEAFA_$DYNVMLC(LEAFIS)+HOLE;
+         IF((XYFL(2)>TEMP1 & TEMP2>XYFL(2)) | (TEMP1=XYFL(2) &
+             UVL(2)>0.0) | (TEMP2=XYFL(2) & UVL(2)<0.0)) [NX=1;]
+         ELSEIF((TEMP1>XYFL(2) & XYFL(2)>TEMP3) |
+                (XYFL(2)=TEMP1 & UVL(2)<=0.0) | (XYFL(2)=TEMP3 &
+                 UVL(2)>0.0)) [NX=3;]
+         ELSEIF((TEMP3>XYFL(2)) | (XYFL(2)=TEMP3 & UVL(2)<=0.0)) [NX=2;]
+         ELSEIF((XYFL(2)>TEMP2 & TEMP4>XYFL(2)) |
+                (XYFL(2)=TEMP2 & UVL(2)>0.0) |
+                (XYFL(2)=TEMP4 & UVL(2)<=0.0)) [NX=4;]
+         ELSEIF((XYFL(2)>TEMP4) | (XYFL(2)=TEMP4 & UVL(2)>0.0)) [NX=5;]
+      ]
+  ELSE [ "rounded leaf tip"
+    XoN=LEAFB_$DYNVMLC(LEAFIS)-LEAFRADIUS_$DYNVMLC;
+    XoP=LEAFA_$DYNVMLC(LEAFIS)+LEAFRADIUS_$DYNVMLC;
+    Zo=ZMIN_$DYNVMLC + (ZTHICK_$DYNVMLC)/2;
+    TEMP1=SQRT((XYFL(2)-XoN)**2+(Zo-ZFL)**2)-LEAFRADIUS_$DYNVMLC;
+    TEMP2=SQRT((XYFL(2)-XoP)**2+(Zo-ZFL)**2)-LEAFRADIUS_$DYNVMLC;
+    HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+    TEMP3=LEAFB_$DYNVMLC(LEAFIS)-HOLE;
+    TEMP4=LEAFA_$DYNVMLC(LEAFIS)+HOLE;
+    IF(XYFL(2)>=XoN & XoP>=XYFL(2) & ((TEMP1>0 & TEMP2>0) |
+       (TEMP1=0 & (UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo))>0) |
+       (TEMP2=0 & (UVL(2)*(XYFL(2)-XoP)+W(NP)*(ZFL-Zo))>0))) [NX=1;]
+    ELSEIF((TEMP1<0 & XYFL(2)>TEMP3) | (XYFL(2)=TEMP3 & UVL(2)>0) |
+           (TEMP1=0 & (UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo))<=0)) [
+             NX=3;]
+    ELSEIF((TEMP3>XYFL(2)) | (XYFL(2)=TEMP3 & UVL(2)<=0)) [NX=2;]
+    ELSEIF((TEMP2=0 & (UVL(2)*(XYFL(2)-XoP)+W(NP)*(ZFL-Zo))<=0) |
+           (TEMP2<0 & TEMP4>XYFL(2)) | (XYFL(2)=TEMP4 & UVL(2)<0)) [NX=4;]
+    ELSEIF((XYFL(2)>TEMP4) | (XYFL(2)=TEMP4 & UVL(2)>=0)) [
+         NX=5;]
+ ];
+ {P1}=SUBINDEX_$DYNVMLC(LEAFIS,NX,NY,NZ);
+ ]; ]
+;}
+;
+
+" $DYNVMLC_MINDISTANCE;            "
+"===============================   "
+" The following macro will give the nearest distance the particle"
+" can travel along its given direction before it strikes the boundary"
+" in the x, y or z direction."
+"{P1}: The change value for ir region #"
+
+REPLACE {$DYNVMLC_MINDISTANCE(#);} WITH {; "boundaries in Z direction"
+  IF(LEAFTYPE_$DYNVMLC(LEAFIS)=2) ["Target leaf"
+    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
+    ELSEIF(NY=1 & NZ=5) [ZLHS=5; ZRHS=6;]
+    ELSEIF(NY=1 & NZ>=6) [ZLHS=6; ZRHS=10;]
+    ELSEIF(NZ=4) [ZLHS=4; ZRHS=5;]
+    ELSEIF((NY=2|NY=3) & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=3|NY=4|NY=5) & NZ=1) [ZLHS=1; ZRHS=2;]
+    ELSEIF((NY=3|NY=4|NY=5) & NZ=2) [ZLHS=2; ZRHS=3;]
+    ELSEIF(NY>=3 & NZ=3) [ZLHS=3; ZRHS=4;]
+    ELSEIF((NY=2|NY=3) & (NZ=5|NZ=6|NZ=7)) [ZLHS=5; ZRHS=8;]
+    ELSEIF(NY=4 & (NZ=5|NZ=6|NZ=7|NZ=8)) [ZLHS=5; ZRHS=9;]
+    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF((NY=5|NY=6) & (NZ=5|NZ=6)) [ZLHS=5; ZRHS=7;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=2) [ZLHS=1; ZRHS=3;]
+    ]
+  ELSEIF(LEAFTYPE_$DYNVMLC(LEAFIS)=1) ["Full leaf"
+    IF((NY=1|NY=2) & NZ=1) [ZLHS=1; ZRHS=2;] "bug fixed here"
+    ELSEIF(NY=1 & (NZ=2|NZ=3)) [ZLHS=2; ZRHS=4;]
+    ELSEIF(NY=1 & NZ>=4) [ZLHS=4; ZRHS=10;]
+    ELSEIF(NY=2 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
+    ELSEIF(NY>=2 & NZ=6) [ZLHS=6; ZRHS=7;]
+    ELSEIF(NY=2 & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=3|NY=4|NY=5) & (NZ=1|NZ=2)) [ZLHS=1; ZRHS=3;]
+    ELSEIF((NY=3|NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
+    ELSEIF(NY=3 & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=7) [ZLHS=7; ZRHS=8;]
+    ELSEIF(NY=4 & NZ=8) [ZLHS=8; ZRHS=9;]
+    ELSEIF(NY=4 & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
+    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
+    ]
+  ELSE ["Isocenter leaf"
+    IF((NY=1|NY=2) & NZ<=3) [ZLHS=1; ZRHS=4;]
+    ELSEIF((NY=1|NY=2) & (NZ=4|NZ=5)) [ZLHS=4; ZRHS=6;]
+    ELSEIF(NZ=6) [ZLHS=6; ZRHS=7;]
+    ELSEIF(NY<=4 & NZ=7) [ZLHS=7; ZRHS=8;]
+    ELSEIF(NY=1 & NZ>=8) [ZLHS=8; ZRHS=10;]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [ZLHS=8; ZRHS=9;]
+    ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [ZLHS=9; ZRHS=10;]
+    ELSEIF(NY=3 & NZ=1) [ZLHS=1; ZRHS=2;]
+    ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [ZLHS=2; ZRHS=6;]
+    ELSEIF((NY=4|NY=5) & NZ<=2) [ZLHS=1; ZRHS=3;]
+    ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [ZLHS=3; ZRHS=6;]
+    ELSEIF((NY=5|NY=6) & NZ>=7) [ZLHS=7; ZRHS=10;]
+    ELSEIF(NY=6 & NZ<=4) [ZLHS=1; ZRHS=5;]
+    ELSEIF(NY=6 & NZ=5) [ZLHS=5; ZRHS=6;]
+   ];
+  IF(W(NP)~=0) [
+     ZP = (ZREG_$DYNVMLC(LEAFIS,ZRHS)-ZFL)/W(NP);
+     ZN = (ZREG_$DYNVMLC(LEAFIS,ZLHS)-ZFL)/W(NP);
+     IF( (ZP>=0.0) & (ZN>=0.0) ) [ ZDIST =MIN(ZP, ZN); ]
+     ELSE [ ZDIST = MAX(ZP, ZN); ]
+   ]
+  ELSE [ ZDIST = 1.0E20; ];
+  IF(LEAFTYPE_$DYNVMLC(LEAFIS)=2) ["Target leaf"
+     IF(NZ=1 & NY<=5) [LHS=1; J=LEAFIS;
+       RHS=6; I=LEAFIS;
+       ]
+     ELSEIF(NZ=1 & NY=6) [LHS=6; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=3; I=LEAFIS+1;]
+       ]
+     ELSEIF(NZ=2 & NY<=2) [LHS=1; J=LEAFIS;
+        RHS=3; I=LEAFIS;
+       ]
+     ELSEIF(NZ=2 & NY>=3) [LHS=3; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=3; I=LEAFIS+1;]
+       ]
+     ELSEIF(NZ=3|NZ=4|NZ=5) [LHS=1; J=LEAFIS;
+        RHS=7; I=LEAFIS;
+       ]
+     ELSEIF(NY=1 & (NZ=6|NZ=7)) [
+        IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=7; J=LEAFIS-1;]
+        RHS=2; I=LEAFIS;
+       ]
+     ELSEIF(NY>=2 & NZ=6) [LHS=2; J=LEAFIS;
+       RHS=7; I=LEAFIS;
+       ]
+     ELSEIF(NZ=7 & (NY=2|NY=3|NY=4)) [LHS=2; J=LEAFIS;
+       RHS=5; I=LEAFIS;
+       ]
+     ELSEIF((NZ=7|NZ=8) & NY>=5) [LHS=5; J=LEAFIS;
+      IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+      ELSE [RHS=1; I=LEAFIS+1;]
+      ]
+     ELSEIF(NZ=8 & NY<=3) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+       ELSE [LHS=7; J=LEAFIS-1;]
+       RHS=4; I=LEAFIS;
+      ]
+     ELSEIF(NZ=8 & NY=4) [LHS=4; J=LEAFIS;
+       RHS=5; I=LEAFIS;
+      ]
+     ELSEIF(NZ=9) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+       ELSE [LHS=7; J=LEAFIS-1;]
+       IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+       ELSE [RHS=1; I=LEAFIS+1;]
+     ]
+    ]
+  ELSEIF(LEAFTYPE_$DYNVMLC(LEAFIS)=1) ["full leaf"
+     IF(NZ=1) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=6; J=LEAFIS-1;]
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;]
+       ]
+     ELSEIF(NZ=2 & NY<=2) [LHS=1; J=LEAFIS;
+        RHS=3; I=LEAFIS;
+       ]
+     ELSEIF(NZ=2 & NY>=3) [LHS=3; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;]
+       ]
+     ELSEIF(NZ=3 & NY<=5) [LHS=1; J=LEAFIS;
+        RHS=6; I=LEAFIS;
+       ]
+     ELSEIF((NZ=3|NZ=4) & NY=6) [LHS=6; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;]
+       ]
+     ELSEIF((NZ=4|NZ=5|NZ=6|NZ=7) & NY=1) [
+        IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=7; J=LEAFIS-1;]
+        RHS=2; I=LEAFIS;
+       ]
+     ELSEIF(NZ=4 & (NY=2|NY=3|NY=4|NY=5)) [LHS=2; J=LEAFIS;
+        RHS=6; I=LEAFIS;
+       ]
+     ELSEIF((NZ=5|NZ=6|NZ=7) & NY>=2) [LHS=2; J=LEAFIS;
+        RHS=7; I=LEAFIS;
+       ]
+     ELSEIF(NZ=8 & NY<=4) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=7; J=LEAFIS-1;]
+        RHS=5; I=LEAFIS;
+       ]
+     ELSEIF(NZ=8 & NY>=5) [LHS=5; J=LEAFIS;
+        RHS=7; I=LEAFIS;
+       ]
+     ELSEIF(NZ=9 & NY<=3) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+       ELSE [LHS=7; J=LEAFIS-1;]
+       RHS=4; I=LEAFIS;
+       ]
+     ELSEIF(NZ=9 & NY>=4) [LHS=4; J=LEAFIS;
+       RHS=7; I=LEAFIS;
+       ]
+     ]
+  ELSE ["Isocenter leaf"
+     IF(NZ=1) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=7; J=LEAFIS-1;]
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;]
+       ]
+     ELSEIF((NZ=2|NZ=3) & (NY=1|NY=2)) [
+        IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=7; J=LEAFIS-1;]
+        RHS=3; I=LEAFIS;
+       ]
+     ELSEIF(NZ=2 & NY=3) [LHS=3; J=LEAFIS;
+        RHS=4; I=LEAFIS;
+       ]
+     ELSEIF(NZ=2 & NY>=4) [LHS=4; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;]
+       ]
+     ELSEIF(NZ=3 & (NY=3|NY=4|NY=5)) [LHS=3; J=LEAFIS;
+        RHS=6; I=LEAFIS; "***********"
+       ]
+     ELSEIF((NZ=3|NZ=4) & NY=6) [LHS=6; J=LEAFIS;
+        IF(LEAFIS=TOT_LEAF_$DYNVMLC) [RHS=7; I=LEAFIS;]
+        ELSE [RHS=1; I=LEAFIS+1;] "*********"
+       ]
+     ELSEIF(NZ=4 & NY<=5) [LHS=1; J=LEAFIS;
+        RHS=6; I=LEAFIS; "**********"
+       ]
+     ELSEIF(NZ=5|NZ=6|NZ=7) [LHS=1; J=LEAFIS;
+        RHS=7; I=LEAFIS; "*******"
+       ]
+     ELSEIF(NZ=8 & NY<=4) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+        ELSE [LHS=5; J=LEAFIS-1;]
+        RHS=5; I=LEAFIS;
+       ]
+     ELSEIF(NZ=8 & NY>=5) [LHS=5; J=LEAFIS;
+        RHS=7; I=LEAFIS; "********"
+       ]
+     ELSEIF(NZ=9 & NY=1) [IF(LEAFIS=1) [LHS=1; J=LEAFIS;]
+       ELSE [LHS=5; J=LEAFIS-1;]
+       RHS=2; I=LEAFIS;
+       ]
+     ELSEIF(NZ=9 & NY>=2) [LHS=2; J=LEAFIS;
+       RHS=7; I=LEAFIS; "********"
+       ]
+     ];
+  IF((UVL(1)-SURPARA1_$DYNVMLC(I,RHS)*W(NP))~ = 0 ) [
+     YP = (SURPARA1_$DYNVMLC(I,RHS)*(ZFL-ZFOCUS_$DYNVMLC(1))-XYFL(1));
+     YP = YP/(UVL(1) - SURPARA1_$DYNVMLC(I,RHS)*W(NP));
+    ]
+  ELSE [ YP = 1.0E20; ];
+  IF((UVL(1) - SURPARA1_$DYNVMLC(J,LHS)*W(NP))~ = 0 ) [
+     YN = (SURPARA1_$DYNVMLC(J,LHS)*(ZFL-ZFOCUS_$DYNVMLC(1))-XYFL(1));
+     YN = YN/(UVL(1) - SURPARA1_$DYNVMLC(J,LHS)*W(NP));
+     ]
+  ELSE [ YN = 1.0E20; ];
+  IF((YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
+  ELSE [ YDIST = MAX(YP,YN);];
+ IF(ENDTYPE_$DYNVMLC = 1) ["focused leaf end"
+      HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+      TEMP3=LEAFB_$DYNVMLC(LEAFIS)-HOLE;
+      TEMP4=LEAFA_$DYNVMLC(LEAFIS)+HOLE;
+      IF(NX=1) [
+        IF((UVL(2)-SURPARA2_B_$DYNVMLC(LEAFIS)*W(NP))~=0) [
+          XN=SURPARA2_B_$DYNVMLC(LEAFIS)*(ZFL-ZFOCUS_$DYNVMLC(2))-XYFL(2);
+          XN=XN/(UVL(2)-SURPARA2_B_$DYNVMLC(LEAFIS)*W(NP));
+        ]
+        ELSE [XN=1.0E20;];
+        IF((UVL(2)-SURPARA2_A_$DYNVMLC(LEAFIS)*W(NP))~=0) [
+          XP=SURPARA2_A_$DYNVMLC(LEAFIS)*(ZFL-ZFOCUS_$DYNVMLC(2))-XYFL(2);
+          XP=XP/(UVL(2)-SURPARA2_A_$DYNVMLC(LEAFIS)*W(NP));
+         ]
+        ELSE [XP=1.0E20;];
+      ]
+      ELSEIF(NX=2) [
+        IF(UVL(2)~=0) [XN=(-RMAX_CM(ICM_$DYNVMLC)-XYFL(2))/UVL(2);
+          XP=(TEMP3-XYFL(2))/UVL(2);
+         ]
+        ELSE [XN=1.0E20; XP=1.0E20;];
+       ]
+      ELSEIF(NX=3) [
+        IF(UVL(2)~=0) [XN=(TEMP3-XYFL(2))/UVL(2);]
+        ELSE [XN=1.0E20;];
+        IF((UVL(2)-SURPARA2_B_$DYNVMLC(LEAFIS)*W(NP))~=0) [
+          XP=SURPARA2_B_$DYNVMLC(LEAFIS)*
+             (ZFL-ZFOCUS_$DYNVMLC(2))-XYFL(2);
+          XP=XP/(UVL(2)-SURPARA2_B_$DYNVMLC(LEAFIS)*W(NP));
+         ]
+        ELSE [XP=1.0E20;];
+       ]
+      ELSEIF(NX=4) [
+        IF((UVL(2)-SURPARA2_A_$DYNVMLC(LEAFIS)*W(NP))~=0) [
+          XN=SURPARA2_A_$DYNVMLC(LEAFIS)*
+             (ZFL-ZFOCUS_$DYNVMLC(2))-XYFL(2);
+          XN=XN/(UVL(2)-SURPARA2_A_$DYNVMLC(LEAFIS)*W(NP));
+         ]
+        ELSE [XN=1.0E20;];
+        IF(UVL(2)~=0) [XP=(TEMP4-XYFL(2))/UVL(2);]
+        ELSE [XP=1.0E20;];
+       ]
+      ELSEIF(NX=5) [
+        IF(UVL(2)~=0) [XN=(TEMP4-XYFL(2))/UVL(2);
+          XP=(RMAX_CM(ICM_$DYNVMLC)-XYFL(2))/UVL(2);]
+        ELSE [XN=1.0E20; XP=1.0E20;];
+       ]
+   ] "end of focused leaf end"
+ ELSE [ "rounded leaf end"
+    TEMP1 = UVL(2)**2+W(NP)**2; "A in eqn"
+    TEMP2 = UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo); "B in eqn"
+    TEMP3 = UVL(2)*(XYFL(2)-XoP)+W(NP)*(ZFL-Zo); "B in eqn"
+    TEMP4 = (XYFL(2)-XoN)**2 + (ZFL-Zo)**2; "part of C"
+    TEMP5 = (XYFL(2)-XoP)**2 + (ZFL-Zo)**2; "part of C"
+    IF((XYFL(2)>=XoN) & (SQRT((XYFL(2)-XoN)**2+(ZFL-Zo)**2)-
+       LEAFRADIUS_$DYNVMLC=0.0) & (UVL(2)*(XYFL(2)-XoN)+W(NP)*(ZFL-Zo)=0.0)) [
+         XN=0.0;  XP=1.0E20; "on edge of negative leaf"
+       ]
+    ELSEIF((XYFL(2)<=XoP) & (SQRT((XYFL(2)-XoP)**2+(ZFL-Zo)**2)-
+            LEAFRADIUS_$DYNVMLC=0.0) & (UVL(2)*(XYFL(2)-XoP)+
+            W(NP)*(ZFL-Zo)=0.0)) [XP=0;  XN=1.0E20; "on edge of positive leaf"
+      ]
+    ELSEIF(NX = 1) [ "in centre air"
+       "check to see whether it hits negative leaf"
+       IF(TEMP2>=0.0 | TEMP1=0.0) [XN=1.0E20;] "no component in z/x direction"
+       ELSE [TEMP4=TEMP4-LEAFRADIUS_$DYNVMLC**2; "C"
+         IF(TEMP4 < 0.0) [TEMP4=0.0;]; "should never happen"
+         TEMP1=TEMP2**2-TEMP1*TEMP4; "B^2 - AC"
+         IF(TEMP1 < 0.0) [XN=1.0E20;]
+         ELSE [
+           IF(TEMP4/TEMP2**2 < 1.0E-3) [
+             XN=-0.5*TEMP4/TEMP2;
+            ]
+           ELSE [
+             IF(SQRT(TEMP1)-TEMP2~=0.0) [
+               XN=TEMP4/(SQRT(TEMP1)-TEMP2);
+              ]
+             ELSE[XN=1.0E20;];
+           ];
+          ];
+        ]; "now check positive leaf"
+       IF(TEMP3>=0.0 | TEMP1=0.0) [XP=1.0E20;]
+       ELSE [TEMP5=TEMP5-LEAFRADIUS_$DYNVMLC**2; "C"
+         IF(TEMP5 < 0.0)[TEMP5=0.0;] "should never happen"
+         TEMP1=TEMP3**2-TEMP1*TEMP5; "B^2 - AC"
+         IF(TEMP1 < 0.0)[XP=1.0E20;]
+         ELSE[
+           IF(TEMP5/TEMP3**2 < 1.0E-3)[
+             XP=-0.5*TEMP5/TEMP3;
+            ]
+           ELSE[
+             IF(SQRT(TEMP1)-TEMP3~=0.0)[
+               XP=TEMP5/(SQRT(TEMP1)-TEMP3);
+             ]
+             ELSE[XP=1.0E20;];
+            ];
+          ];
+        ];
+      ]
+    ELSEIF(NX = 3) [ "in negative portion of leaf"
+       HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+       XN = ((LEAFB_$DYNVMLC(LEAFIS)-HOLE)-XYFL(2))/UVL(2);
+       IF(XYFL(2)<=XoN & UVL(2)<0.0) [XP = 1.0E20;]
+       ELSE [TEMP4=TEMP4-LEAFRADIUS_$DYNVMLC**2; "C"
+         IF(TEMP4>0.0 & XYFL(2)>=XoN) [TEMP4=0.0;]; "should never happen"
+         IF((TEMP2**2-TEMP1*TEMP4)<0.0) [XP=1.0E20;]
+         ELSEIF(TEMP4<=0.0) ["follows rules for being within cylinder"
+           IF(TEMP2 > 0.0) [
+             IF(TEMP4/TEMP2**2 > -1.0E-3) [XP=-0.5*TEMP4/TEMP2;]
+             ELSE [XP=-TEMP4/(SQRT(TEMP2**2-TEMP1*TEMP4)+TEMP2);];
+           ]
+           ELSEIF(TEMP2 < 0.0) [
+             IF(TEMP4/TEMP2**2 > -1.0E-3) [
+               XP=-2*TEMP2/TEMP1*(1.-0.25*TEMP1*TEMP4/TEMP2**2);
+              ]
+             ELSE [XP=(SQRT(TEMP2**2-TEMP1*TEMP4)-TEMP2)/TEMP1;];
+           ]
+           ELSEIF(TEMP1~=0.0) [XP=SQRT(-TEMP4/TEMP1);]
+           ELSE [XP=1.0E20;];
+           IF(XYFL(2)+UVL(2)*XP<XoN)[XP=1.0E20;];
+         ]
+         ELSE [ "we are in the leaf but beyond the cylinder"
+           IF(TEMP2>=0.0) [XP=1.0E20;]
+           ELSE [XP=(SQRT(TEMP2**2-TEMP1*TEMP4)-TEMP2)/TEMP1;];
+           IF(XYFL(2)+UVL(2)*XP<XoN) [XP=1.0E20;];
+          ];
+      ];
+    ]
+    ELSEIF(NX=2) [XN=(-RMAX_CM(ICM_$DYNVMLC)-XYFL(2))/UVL(2);
+      HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+      XP=(LEAFA_$DYNVMLC(LEAFIS)-HOLE-XYFL(2))/UVL(2);
+     ]
+    ELSEIF(NX=4) ["in positive portion of leaf"
+       HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+       XP = (LEAFA_$DYNVMLC(LEAFIS)+HOLE-XYFL(2))/UVL(2);
+       IF(XYFL(2)>=XoP & UVL(2) > 0.0) [XN = 1.0E20;]
+       ELSE [TEMP5=TEMP5-LEAFRADIUS_$DYNVMLC**2; "C"
+         IF(TEMP5>0.0 & XYFL(2)<=XoP) [TEMP5=0.0;]; "should never happen"
+         IF(TEMP3**2-TEMP1*TEMP5 < 0.0) [XN=1.0E20;]
+         ELSEIF(TEMP5<=0.0) ["follows rules for being within cylinder"
+           IF(TEMP3 > 0.0) [
+             IF(TEMP5/TEMP3**2 > -1.0E-3) [XN=-0.5*TEMP5/TEMP3;]
+             ELSE [XN=-TEMP5/(SQRT(TEMP3**2-TEMP1*TEMP5)+TEMP3);]
+            ]
+           ELSEIF(TEMP3 < 0.0) [
+             IF(TEMP5/TEMP3**2 > -1.0E-3) [
+                XN=-2*TEMP3/TEMP1*(1.-0.25*TEMP1*TEMP5/TEMP3**2);
+              ]
+             ELSE [XN=(SQRT(TEMP3**2-TEMP1*TEMP5)-TEMP3)/TEMP1;];
+            ]
+           ELSEIF(TEMP1~=0.0) [XN=SQRT(-TEMP5/TEMP1);]
+           ELSE [XN=1.0E20;];
+           IF(XYFL(2)+UVL(2)*XN>XoP) [XN=1.0E20;]
+          ]
+         ELSE[ "we are in the leaf but beyond the cylinder"
+           IF(TEMP3 >= 0.0) [XN=1.0E20;]
+           ELSE [XN=(SQRT(TEMP3**2-TEMP1*TEMP5)-TEMP3)/TEMP1;];
+           IF(XYFL(2)+UVL(2)*XN>XoP) [XN=1.0E20;];
+          ];
+        ];
+     ]
+   ELSEIF(NX=5) ["in positive portion of leaf"
+     HOLE=HOLEPOS_$DYNVMLC(LEAFIS);
+     XN=(LEAFB_$DYNVMLC(LEAFIS)+HOLE-XYFL(2))/UVL(2);
+     XP=(RMAX_CM(ICM_$DYNVMLC)-XYFL(2))/UVL(2);
+   ]
+ ];
+IF( (XP>=0.0) & (XN>=0.0) ) [ XDIST =MIN(XP, XN); ]
+ELSE [ XDIST = MAX(XP,XN); ];
+IF( ZDIST>=0.0) [TEMP=ZDIST;
+    IF( YDIST>=0.0 ) [TEMP=MIN(TEMP,YDIST);];
+    IF( XDIST>=0.0 ) [TEMP=MIN(TEMP,XDIST);];
+  ]
+ELSEIF ( (YDIST>=0.0) & (XDIST>=0.0) ) [TEMP=MIN(XDIST,YDIST);]
+ELSE [TEMP=MAX(XDIST,YDIST);];
+IF(TEMP<0) [OUTPUT NX,NY,NZ,LEAFIS; "should not happen"
+     ('neg dist nx = ',I3,' NY= ',I3,' NZ= ',I3,' LEAF= ',I3);
+   ];
+{P1}=TEMP;
+;} " End of $DYNVMLC_MINDISTANCE macro"
+;
+" NEXT COMES HOWNEAR MACRO"
+"========================="
+
+REPLACE {$DYNVMLC_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$DYNVMLC({P1});
+}
+;
+"End of DYNVMLC_macros.mortran (Rev 1.3)"

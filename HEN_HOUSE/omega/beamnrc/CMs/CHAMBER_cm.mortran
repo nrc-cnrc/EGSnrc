@@ -1,0 +1,3549 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: parallel plate monitor chamber            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Charlie Ma                                                "
+"                   Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the IONCHAM component module written by  "
+"  Jiansu Wei, starting in 1992.                                              "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+%Q1
+%C80
+!INDENT F4;
+!INDENT M4;
+;
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                             *************       ""toc:
+"                             *           *       ""toc:
+"                             *  CHAMBER  *       ""toc:
+"                             *           *       ""toc:
+"                             *************       ""toc:
+"
+"
+"   History of modifications given by sccs.
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"
+"   Component module for BEAM.  Parallel plate monitor chamber in the      "
+"   container with top and bottom layers of arbitrary thickness and        "
+"   material.                                                              "
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  a cylindrical
+"   planar geometry for monitoring chamber.
+"
+"I>
+"I> Geometry of $CHAMBER (CHAMBER):             ""toc:
+"I> *****************************
+"I>                        top part,    # of layers: n_top_$chamber
+"I>                --------|-----------------------------|--------
+"I>                -------------|-----------------|---------------
+"I>                -----------------------------------------------
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |wall|--------------------|    |     |
+"I>                 |     |    |         .          |    |  # of layers:
+"I>     container   |     |    |         .          |    |   n_chm_$chamber
+"I>       wall      |     |    |         .          |    |     |
+"I>                 | gap |    |         .          |    |     |
+"I>                 |     |    |chamber central part|    |     |
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |    |--------------------|    |     |
+"I>                 |     |    |____________________|    |     |
+"I>                --------|----------------------------|-----------
+"I>                ----------|------------------------|-------------
+"I>                ------|--------------------------------|---------
+"I>                        bottom part, # of layers: n_bot_$chamber
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are three parts
+"I>   shown above. There are N_$CHAMBER (>1) local regions.
+"I>
+"I>
+"I>            ----------------------------------------------------
+"I>            | top part:  n_top_$chamber layers.                |
+"I>            |            # region: n_top_$chamber x 2          |
+"I>            ----------------------------------------------------
+"I>            | cham part: n_chm_$chamber layers.                |
+"I>            |            # region: n_chm_$chamber + 3          |
+"I>            ----------------------------------------------------
+"I>            | bottom part: n_bot_$chamber layers               |
+"I>            |            # region: n_bot_$chamber x 2          |
+"I>            |--------------------------------------------------|
+"I>            | total # regions: N_$chamberber = n_chm_$chamber+3|
+"I>            |                  +2n_top_$chamber                |
+"I>            |                  +2n_bot_$chamber                |
+"I>            ----------------------------------------------------
+;
+"I>            -------------------------------------------------
+"I>            | abs region # setting:                         |
+"I>            |     first: main cham part begins              |
+"I>            |            with irstart_$chamber,             |
+"I>            |            ends with irstart_$chamber+        |
+"I>            |            n_chm_$chamber-1                   |
+"I>            |            +3(side wall+gap+ container wall)  |
+"I>            |     second: top layers begins                 |
+"I>            |            with the end of cham part+1        |
+"I>            |            ends with the end of cham part     |
+"I>            |            + 2n_top_$chamber-1                |
+"I>            |     third: bottom layers with                 |
+"I>            |            the end of top part +1             |
+"I>            |            ends with the end of top part      |
+"I>            |            + 2n_bot_$chamber-1                |
+"I>            |     air gap: irend_$chamber=irstart_$chamber+ |
+"I>            |            n_cham_$chamber +3                 |
+"I>            |            +2n_top_$chamber                   |
+"I>            |            +2n_bot_$chamber                   |
+"I>            -------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$CHAMBER
+"                      ISUMRY_$CHAMBER
+"                      HOWFAR_$CHAMBER
+"                      WHERE_AM_I_$CHAMBER
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/BUGS       ""toc:
+"                             ************************
+"
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                             COMMON BLOCK VARIABLES
+"                             **********************
+"
+"  Refer to the replacement macros in BEAM.MORTRAN and BEAM_COMMON.MORTRAN
+"  which define the common block variables.
+"
+"*******************************************************************************
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+;
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5             ""toc:
+"                               *****************             ""toc:
+"
+"I>
+"I>  CARDS CM_$CHAMBER
+"I>  ****************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$CHAMBER):( F10.0):   Maximum radius of component module
+"I>
+"I>   1  TITLE_$CHAMBER (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$CHAMBER (F15.0): Distance from front surface of 1st cylinder to
+"I>                             reference plane (Z=0). Excludes any air gap.
+"I>
+"I>   3  N_TOP_$CHAMBER, N_CHM_$CHAMBER, N_BOT_$CHAMBER (3I5)
+"I>
+"I>        N_TOP_$CHAMBER:   Number of layers in top part (>= 0).
+"I>        N_CHM_$CHAMBER:   Number of layers in chamber itself (> 0 to input
+"I>                          chamber layers individually or if ALL layers have
+"I>                          the same thickness and medium; < 0 to
+"I>                          input -N_CHM_$CHAMBER groups of layers where
+"I>                          layers in each group have the same thickness and
+"I>                          ALL layers have the same MED).
+"I>        N_BOT_$CHAMBER:   Number of layers in bottom part (>= 0).
+;
+"I>   ==========================================================================
+"I>   4  Inputs for the top part (If N_TOP_$CHAMBER >0):
+"I>   ==========================================================================
+"I>
+"I>    If all layers in this part are identical, then in line (a) include
+"I>    NFLAG=N_TOP_$CHAMBER, otherwise repeat (a) to (e) for each of the
+"I>    layers.
+"I>
+"I>     a) ZTHICK, RCYS_$CHAMBER , NFLAG (2F15.0,I5)
+"I>           ZTHICK (F15.0):        Thickness of each layer in top part
+"I>           RCYS_$CHAMBER (F15.0): Radius of inner cylinders in each layer
+"I>           N_TOP_$CHAMBER (I5):   Number of layers in top part
+"I>
+"I>     b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for inner cylinders
+"I>                                           (2F15.0,2I5,1-line):
+"I>         ECUT, PCUT: Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:  Dose scoring region for this region, 0=>no dose scored.
+"I>         IREGION_TO_BIT :  Bit # in LATCH designated to this region
+"I>
+"I>     c) MED_IN (24A1):  Medium of inner cylinder (used for MED_INDEX)
+"I>
+"I>     d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
+"I>                                           (2F15.0,2I5,1-line):
+"I>
+"I>     e) MED_IN (24A1):  Medium for outer annuli (used for MED_INDEX)
+"I>
+;
+"I>   =========================================================================
+"I>   5  Inputs for the chamber/phantom part:
+"I>   =========================================================================
+"I>
+"I>    The chamber/phantom part has a central part of potentially many layers
+"I>    which may have different media and dimensions.  Outside this there
+"I>    are 3 cylindrical shells, called the chamber wall, gap, and container
+"I>    wall.  Each is a single material running the entire Z-span of the
+"I>    central part.
+"I>
+"I>   5.1) RCYS_$CHAMBER(1,1), RCYS_$CHAMBER(1,2), RCYS_$CHAMBER(1,3) (3F15.0)
+"I>          RCYS_$CHAMBER (1,1): Inner r of chamber wall=outer r central region
+"I>          RCYS_$CHAMBER (1,2): Outer r of chamber wall=inner r of gap
+"I>          RCYS_$CHAMBER (1,3): Inner r of container wall=outer r of gap
+"I>
+"I>
+"I>   5.2) If N_CHM_$CHAMBER>0: If all layers in this part are identical, then
+"I>           in line (a) include NFLAG=N_CHM_$CHAMBER and input (b) once for
+"I>           all layers, otherwise repeat (a) to (c) for each of the layers.
+"I>        If N_CHM_$CHAMBER<0: Repeat (a) once for each of the
+"I>           -N_CHM_$CHAMBER groups of layers of equal thickness. In this case,
+"I>           NFLAG is the number of layers in the group.   Then input (b) once
+"I>           for all layers.
+"I>
+"I>     a) ZTHICK, NFLAG  (F15.0,I5)
+"I>           ZTHICK:    Thickness of each layer in chamber part
+"I>                      (N_CHM_$CHAMBER>0) or of each layer in this particular
+"I>                      group of layers (N_CHM_$CHAMBER<0)
+"I>           NFLAG:     Number of layers in chamber IF all same
+"I>                      (N_CHM_$CHAMBER>0) or number of layers in the group
+"I>                      (N_CHM_$CHAMBER<0)
+"I>
+"I>     b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for chamber layers
+"I>                                                (2F15.0,2I5,one line):
+"I>           ECUT, PCUT: Cutoff energies for electrons and photons.
+"I>           DOSE_ZONE:  if all layers are of equal thickness or there are
+"I>                       groups of layers of equal thickness (ie
+"I>                       NFLAG=N_CHM_$CHAMBER or N_CHM_$CHAMBER<0) then, if
+"I>                       DOSE_ZONE>0 the dose is scored in regions
+"I>                       DOSE_ZONE, DOSE_ZONE+1,.., DOSE_ZONE+N_CHM_$CHAMBER-1
+"I>                       ie, a sequence of dose scoring zones are set up
+"I>                       automatically for all layers.
+"I>                       For single region at a time
+"I>                       Dose scoring region for this region,0=>no dose scored.
+"I>           IREGION_TO_BIT :  Bit # in LATCH designated to this region
+"I>
+"I>     c) MED_IN (24A1):  Medium of chamber layers (used to set MED_INDEX)
+"I>
+"I>
+"I>     5.3) Inputs for the chamber wall:
+"I>     ---------------------------------
+"I>
+"I>     a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+"I>           ECUT, PCUT: Cutoff energies for electrons and photons.
+"I>           DOSE_ZONE:  Dose scoring region for this region,0=>no dose scored.
+"I>           IREGION_TO_BIT:  Bit # in LATCH designated to this region
+"I>
+"I>     b) MED_IN (24A1):  Medium of chamber wall (used to set MED_INDEX)
+"I>
+"I>     5.4) Inputs for the gap between chamber wall and container wall:
+"I>     ----------------------------------------------------------------
+"I>
+"I>     a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+"I>
+"I>     b) MED_IN (24A1):  Medium of gap (used to set MED_INDEX)
+"I>
+"I>
+"I>     5.5) Inputs for the container wall:
+"I>     -------------------------------------------
+"I>
+"I>     a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+"I>
+"I>     b) MED_IN (24A1):  Medium of container wall (used to set MED_INDEX)
+;
+"I>   =====================================================================
+"I>   6  Inputs for the bottom part (If N_BOT_$CHAMBER >0):
+"I>   =====================================================================
+"I>
+"I>    5.6) If all layers in this part are identical, then in line (a) include
+"I>         NFLAG=N_BOT_$CHAMBER, otherwise repeat (a) to (e) for each of the
+"I>         layers.
+"I>
+"I>     a) ZTHICK, RCYS_$CHAMBER , NFLAG (2F15.0,I5)
+"I>          ZTHICK:           Thickness of each layer in bottom part
+"I>          RCYS_$CHAMBER:    Radius of inner cylinders in bottom part
+"I           NFLAG:            Number of layers in bottom part IF all same
+"I>
+"I>     b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for inner cylinders
+"I>                                             (2F15.0,2I5,1-line):
+"I>          ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:   Dose scoring flag, 0=>do not score dose.
+"I>          IREGION_TO_BIT :  Bit # in LATCH designated to this region
+"I>
+"I>     c) MED_IN (24A1):  Medium of inner cylinders (used for MED_INDEX)
+"I>
+"I>     d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli
+"I>                                            (2F15.0,2I5,1-line):
+"I>     e) MED_IN (24A1):  Medium of outer annuli (used for MED_INDEX)
+"I>
+"I>   ====================================================================
+"I>   7  Inputs for range rejection options:
+"I>   ====================================================================
+"I>
+"I>       MRNGE (I5)         0 or 1
+"I>
+"I>          MRNGE     : = 1 to estimate thickness of the CHAMBER for
+"I>                        ECUTRR calculations in automated range rejection
+"I>                        (IREJCT_GLOBAL=1) (crude approx for 5 layers)
+"I>                      = 0 no ECUTRR calculation--range rejection will
+"I>                        still be done on a region-by-region basis
+"I>
+"I>            Note that MRNGE only has an effect if automated range
+"I>            rejection is on (IREJCT_GLOBAL=1).
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following set of cards defines a chamber with 2 top layers, 3 chamber
+"I>  layers, and 2 bottom layers.
+"I>  The chamber wall is AL & the chamber container is CU. The detecting
+"I>  material is air.
+"I>  The air cavities are assigned as dose region 1 and the rest as region 2.
+"I>
+"I>  10.5; radius of CM
+"I>  Chamber with 2 top layers, 3 chamber layers, 2 bottom layers
+"I>  10.0; distance from front surface of the CM to the reference plane (z=0)
+"I>  2,3,2;                   2 top layers, 3 chamber layers, 2 bottom layers
+"I>  0.1,5.0,0;          first layer in the top part, 0.1cm thick, IR=5cm
+"I>  0.521,0.010,2,2;  dose region # = 2
+"I>  CU             ;  medium
+"I>  0.521,0.010,2,2;
+"I>  CU
+"I>  0.2,5.0,0;          second layer is 0.2 cm thick, radius = 5.0 cm
+"I>  0.521,0.010,2,2;  for inner cylinder (dose region # = 2)
+"I>  AL
+"I>  0.521,0.010,2,2;  for outer annulus
+"I>  AL
+"I>  5.0,5.2,10.0;     IR & OR of chamber wall, IR of container
+"I>  0.2;              thickness of the first layer (air) in chamber part
+"I>  0.521,0.010,1,2;  dose region # = 1
+"I>  AIR
+"I>  0.1;              thickness of the second layer (AL) in chamber part
+"I>  0.521,0.010,2,2;  dose region # = 2
+"I>  AL
+"I>  0.2;              thickness of the third layer (air) in chamber part
+"I>  0.521,0.010,1,2;  dose region # = 1
+"I>  AIR
+"I>  0.521,0.010,2,2;  chamber wall (dose region # = 2)
+"I>  AL
+"I>  0.521,0.010,2,2;  air gap betweem chamber wall and container wall
+"I>  AIR
+"I>  0.521,0.010,2,2;  chamber container
+"I>  CU
+"I>  0.1,5.0,2;        2 layers in bot. part have = thickness, IR
+"I>  0.521,0.010,2,2;  for inner cylinders
+"I>  AL
+"I>  0.521,0.010,2,2;  for outer annuli
+"I>  AL
+"I>  0;                do not calculate ECUTRR
+"I>
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+
+%E     "start of subroutine HOWFAR_$CHAMBER (Rev 1.8)"
+"******************************************************************************
+"************************** Component Module CHAMBER***************************
+"******************************************************************************
+"
+"                          Subroutine HOWFAR_$CHAMBER
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within CHAMBER, and if so evaluate
+" DIST, the distance to the region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_$CHAMBER local regions + an air gap (if present):
+"
+"     local               absolute                       description
+"----------  -------------------------------------   -----------------------
+"IR_$CHAMBER  IR_start_CM(ICM_$CHAMBER)+IR_$CHAMBER-1 excluding front air gap
+"----------  -------------------------------------   -----------------------
+"   Geometrical co-ordinates, as set in INPUT_$CHAMBER are:
+"
+"   ZFRONT_$CHAMBER     front of CM (upstream surface, air region)
+"   ZMIN_$CHAMBER       front of first cylinder
+"   ZMAX_$CHAMBER       back of last cylinder
+"   RMAX_$CHAMBER       radius of last cylinder (largest)
+"
+"******************************************************************************
+
+;SUBROUTINE HOWFAR_$CHAMBER;
+
+Copyright NRC 1999
+
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH
+{; IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]  }
+
+
+"V>$GEO_SHIFT_2_(#,#)
+"V>=============
+"V>{p1} the value to compare with {P2}
+"V> if {p1}+1.0e-5 < {P2} shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_2_(#,#)} WITH
+{; IF({P1}+1.0E-5< {P2}) [{P1}={P1}+1.0E-5;]  }
+
+;IMPLICIT NONE;
+
+;COMIN/
+   CMs,CM_$CHAMBER,EPCONT,STACK,EGS-IO/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$CHAMBER
+"T>**********************************
+"T>
+
+INTEGER
+   IRL,            "T>local region number (absolute), required by HOWNEAR macro
+   I, IIR, JDEBUG,
+   LAYER,
+   IU_D;           "T>to indicate the relations between ustep and dist
+
+$REAL
+   DIST,          "T>furthest dist to z boundary along current trajectory
+   RF2_$CHAMBER,  "T>temporary variable
+   DMIN_$CHAMBER, "T>minimum distance to boundaries checked thus far
+   R0SQ,          "T>temporary init position of the particle in x-y plane
+   CRITERIOR_IR,ZNP,
+   STEP_UNIT, CUT_COE, CUTCOE_$CHAMBER, SHIFT_COUNT_$CHAMBER;
+;
+
+" Determine local region number
+" *****************************
+ZNP=Z(NP);
+IRL = IR(NP); "local region number (absolute)
+JDEBUG=JDEBUG+1;
+IR_$CHAMBER = IRL - IRSTART_$CHAMBER + 1;   "local region number( relative )
+
+" Set DNEAR
+" *********
+" This replacement macros sets DMIN_$CHAMBER as well as defining IR_$CHAMBER
+;
+$CHAMBER_CM_HOWNEAR(DMIN_$CHAMBER);
+DNEAR(NP) = DMIN_$CHAMBER;
+;
+
+" CALC. THE LAYER # "
+IF( IR_$CHAMBER<=N_CHM_$CHAMBER ) [ LAYER=IR_$CHAMBER; ]
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER+3 ) [ LAYER=1; ]
+ELSE[
+   LAYER=N_CHM_$CHAMBER+
+         (IR_$CHAMBER-N_CHM_$CHAMBER-3+1)/2;
+]
+" this will be used only for the top and bottom parts "
+
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module,if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+R0SQ=X(NP)**2+Y(NP)**2;
+CUT_COE=0.0;
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM oe regions in z direction
+"      2.                        the regions in r directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap if existed.
+"=====================================
+
+IF(N_GAP_$CHAMBER=1 & IRL=IREND_$CHAMBER )["check the air gap first"
+   IF(W(NP)>0.0)["particle going forward"
+      DIST = (ZMIN_$CHAMBER - Z(NP))/W(NP); "distance to front of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0)[ " particle was out of the air gap"
+          USTEP=0.0;
+          IF(N_TOP_$CHAMBER=0)[" no top layer above the chamber"
+              IF(R0SQ<RCYS2_$CHAMBER(1,1))[IRNEW =IRSTART_$CHAMBER;]
+              ELSEIF(R0SQ<RCYS2_$CHAMBER(1,2))
+                 [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+              ELSEIF( R0SQ<RCYS2_$CHAMBER(1,3) )
+                 [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+1;]
+              ELSE[ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+2;]
+           ]
+           ELSE[        " has top layer above the chamber"
+               IF( R0SQ<RCYS2_$CHAMBER(N_CHM_$CHAMBER+1,1) )
+                  [ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+3;]
+               ELSE[IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+4;]
+           ]
+           RETURN;
+       ] "end of the double check if a particle is out of the AIR GAP"
+
+      "  do the howfar job for the air gap  "
+      "====================================="
+       ELSE[
+           IF( IU_D=0 )[RETURN; ] " no cut, ustep admmited"
+           ELSE[ " iu_d=1, cut the ustep to dist "
+               ;$GEO_SHIFT_1_(STEP_UNIT);
+               USTEP=STEP_UNIT;
+               RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                        +(Y(NP)+USTEP*V(NP))**2;
+               IF(N_TOP_$CHAMBER=0)[  " no top layer above the chamber"
+                  IF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,1) )
+                    [IRNEW =IRSTART_$CHAMBER;]
+                  ELSEIF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,2) )
+                    [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+                  ELSEIF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,3) )
+                    [IRNEW =IRSTART_$CHAMBER+1+N_CHM_$CHAMBER;]
+                  ELSE[ IRNEW =IRSTART_$CHAMBER+2+N_CHM_$CHAMBER;]
+               ]
+               ELSE[ " has top layer above the chamber"
+                  IF( RF2_$CHAMBER<RCYS2_$CHAMBER(N_CHM_$CHAMBER+1,1) )
+                    [ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+3;]
+                  ELSE[IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+4;]
+               ]
+               RETURN;
+           ]  " end of the cut case"
+       ]"  end of the howfar for this case"
+   ]   " end of the w>0 case
+
+   ELSEIF(W(NP)<0.0)[ " particle going backward"
+      DIST = (ZFRONT_$CHAMBER - Z(NP))/W(NP); "distance to front of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0)[
+          USTEP=1.E-16; "make sure ausgab is called when leaving CM"
+          CALL WHERE_AM_I(ICM_$CHAMBER,-1);
+          RETURN;
+      ] " end of the double check if a particle is out of the CM"
+      ELSE[ " do the howfar job"
+          IF( IU_D=0 ) [ RETURN; ]   " no cut, ustep admmited"
+          ELSE[  " iu_d=1, cut the ustep to dist "
+              ;$GEO_SHIFT_1_(STEP_UNIT);
+              USTEP=STEP_UNIT;
+              CALL WHERE_AM_I(ICM_$CHAMBER,-1);
+              RETURN;
+          ]  " end of the howfar job for this case "
+
+      ]    " end of the howfar job for this case"
+   ]  " end of the w<0 case "
+   ELSE[ RETURN;]  " for the w=0.0 case "
+]    " end of the air gap case "
+
+" now do the central part of the ion chamber "
+"==========================================="
+
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER)  [" inside the inner chamber layers"
+   IF(W(NP) > 0.0) [  "particle going forward"
+      DIST = (Z_$CHAMBER(IR_$CHAMBER+1) - Z(NP))/W(NP);
+      "distance to back of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <=0.0)[
+          USTEP=0.0;
+          IF(IR_$CHAMBER=N_CHM_$CHAMBER & N_BOT_$CHAMBER=0 )[
+             " last layer of the cham"
+             USTEP=1.E-16;
+             CALL WHERE_AM_I(ICM_$CHAMBER,1);
+          ]" and last layer of CM  "
+          ELSEIF( IR_$CHAMBER=N_CHM_$CHAMBER )[
+             " last layer of chamb, not for CM   "
+             " particle will go into the first layer of the bottom part  "
+             IF(R0SQ< RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER+1,1))[
+                 " the first layer of the bottom part"
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER;
+             ]
+             ELSE[
+                IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER+1;
+             ]
+          ]
+          ELSE[  IRNEW = IR(NP)+1;]
+          RETURN;
+      ]
+      " end of the double check if a particle is out of the CM in z direct "
+
+      " now check the r direction "
+      "==========================="
+
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,1);
+      " all the inner layers have the same radius"
+      IF(CRITERIOR_IR>0.0)[" out of the r1 "
+          USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+          IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;" go into the side wall "
+          RETURN;
+      ]   " end of the   r direction error block "
+
+      "  now do the howfar job  "
+      "========================="
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF(RF2_$CHAMBER > RCYS2_$CHAMBER(1,1))
+        [CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,1) ); ]
+      IF((CUT_COE>0.0&CUT_COE<STEP_UNIT)|(CUT_COE=STEP_UNIT&IU_D=0))[
+          " hits the side wall of the chamber "
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;
+          RETURN;
+      ]
+      ELSEIF(IU_D=1)[ " hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          IF(IR_$CHAMBER=N_CHM_$CHAMBER & N_BOT_$CHAMBER=0 )[
+              " last layer of the cham"
+              CALL WHERE_AM_I(ICM_$CHAMBER,1); ]" and last layer of CM  "
+          ELSEIF( IR_$CHAMBER=N_CHM_$CHAMBER )[
+              "last layer of chamb, not for CM"
+              " particle will go into the first layer of the bottom part  "
+              RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                        +(Y(NP)+USTEP*V(NP))**2;
+              IF(RF2_$CHAMBER<RCYS2_$CHAMBER(N_CHM_$CHAMBER+
+                         N_TOP_$CHAMBER+1,1))
+              [IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER;]
+              ELSE[IRNEW=IRSTART_$CHAMBER+
+                   N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER+1;]
+          ]
+          ELSE[IRNEW = IR(NP)+1;]
+          RETURN;
+       ]    " end of the case with  ustep cutoff in z direction "
+       ELSE [ RETURN; " no cut off at all "  ]
+   ] " end of the w>0 case "
+
+   ELSEIF(W(NP)< 0.0)["particle going backward"
+      DIST = (Z_$CHAMBER(IR_$CHAMBER) - Z(NP))/W(NP);
+      "distance to back layer, the 0th index is ok "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0)[" particle was out of this layer in z direction"
+          USTEP=0.0;
+          IF(IR_$CHAMBER=1 & N_TOP_$CHAMBER=0 )[ " top of CM, no top part "
+              IF(N_GAP_$CHAMBER = 1)[ IRNEW =IREND_$CHAMBER;]
+              " has air gap"
+              ELSE [ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$CHAMBER,-1); ]
+                                              " no air gap "
+          ]
+          ELSEIF(IR_$CHAMBER=1)[
+             " top of the chamb, not the top of the CM"
+             " particle will go into the top part from below"
+             IF(R0SQ<RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER,1))[
+                 " the last layer of the top part "
+                 IRNEW=IRSTART_$CHAMBER+
+                      N_CHM_$CHAMBER+3+2*(N_TOP_$CHAMBER-1);
+             ]
+             ELSE[IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                   2*(N_TOP_$CHAMBER-1)+1;
+             ]
+          ]
+          ELSE[  IRNEW = IR(NP)-1;]" layer # decreases by one in the chamb"
+          RETURN;
+      ]
+      " end of the double check if a particle is out of the main cham in z"
+
+      " now check the r direction "
+      "==========================="
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,1);
+      IF(CRITERIOR_IR>0.0)[" out of the region in r direction  "
+          USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+          IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;" go into the side wall "
+          RETURN;
+      ]   " end of the   r direction error block "
+
+      "  now do the howfar job  "
+      "========================="
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF( RF2_$CHAMBER > RCYS2_$CHAMBER(1,1) )
+        [CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,1) ); ]
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) )[
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;
+          RETURN;
+      ]
+      ELSEIF(IU_D=1)[" hits the TOP of this layer"
+        ;$GEO_SHIFT_1_(STEP_UNIT);
+         USTEP=STEP_UNIT;
+         IF(IR_$CHAMBER=1 & N_TOP_$CHAMBER=0 & N_GAP_$CHAMBER=0 )
+           [ CALL WHERE_AM_I(ICM_$CHAMBER,-1); ]  " and first layer of CM  "
+         ELSEIF(IR_$CHAMBER=1 & N_TOP_$CHAMBER=0)
+           [ IRNEW=IREND_$CHAMBER;]
+         ELSEIF( IR_$CHAMBER=1 )[ " first layer of chamb, not for CM "
+            RF2_$CHAMBER= (X(NP)+USTEP*U(NP))*(X(NP)+USTEP*U(NP))
+                +(Y(NP)+USTEP*V(NP))*(Y(NP)+USTEP*V(NP));
+            IF(RF2_$CHAMBER<RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER,1))
+            [IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*(N_TOP_$CHAMBER-1);]
+            ELSE[IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                2*(N_TOP_$CHAMBER-1)+1;
+            ]
+         ]
+         ELSE[IRNEW = IR(NP)-1;]
+         RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+   ]   " end of the w<0.0 case"
+
+   ELSE[ " W=0 CASE "
+       CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,1) );
+       IF( CUT_COE>0.0 & CUT_COE<=USTEP ) [
+           ;$GEO_SHIFT_1_(CUT_COE);
+           USTEP=CUT_COE;
+           IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;
+       ]
+       RETURN;
+   ]   " end of the w=0 case "
+]     " end of the central chamber layer part "
+      "=============================="
+
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER+3) [
+   " in the side wall or side gap or container wall"
+   IIR=IR_$CHAMBER-N_CHM_$CHAMBER;
+   " iir = 1, wall; 2, side gap; 3 container wall "
+   IF(W(NP) > 0.0)["particle going forward"
+      DIST = (Z_$CHAMBER(N_CHM_$CHAMBER+1) - Z(NP))/W(NP);
+        "distance to back of cham"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <=0.0)[      " out of this layer in z direction "
+          USTEP=0.0;
+          IF( N_BOT_$CHAMBER=0 )[   " no bottom part "
+              USTEP=1.E-16;
+              CALL WHERE_AM_I(ICM_$CHAMBER,1);
+          ]
+          ELSE[                    " has bottom part "
+              IF(R0SQ< RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER+1,1))[
+                  " the first layer of the bottom "
+                  IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER;
+              ]
+              ELSE[ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                          2*N_TOP_$CHAMBER+1;
+              ]
+          ]
+          RETURN;
+      ]
+      " end of the double check if a particle is out of the wall in z direct
+
+      " now check the r direction "
+      "==========================="
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,IIR);
+      IF(CRITERIOR_IR<0.0)[" out of the region in r dir towards to center"
+          USTEP=MIN(USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER));
+          IF(IIR=1)[
+              " figure out the layer # the particle will go into."
+              DO I=1, N_CHM_$CHAMBER[
+                 IF( Z(NP)<Z_$CHAMBER(I+1) ) [ EXIT; ]
+              ]
+              I=MIN(I, N_CHM_$CHAMBER);  " to avoid i > n_chm_$chamber "
+              IRNEW=IRSTART_$CHAMBER+I-1;
+          ]
+          ELSE[ IRNEW = IRL-1; ]
+          RETURN;
+      ]      " end of the  out to in check "
+      IF( IIR~=3)[" when iir =3, no need to check the outer "
+          CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,IIR+1);
+          IF(CRITERIOR_IR>0.0)[  " out side the outer radius "
+              USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+              IRNEW=IRL+1;
+              RETURN;
+          ]       " end of the warnning message block.
+      ]        " end of the outer radius check
+      " end of the r direction error block "
+
+      " do the howfar job for this case "
+      "================================="
+      " first do the inner r "
+      CUT_COE=CUTCOE_$CHAMBER(R0SQ, RCYS2_$CHAMBER(1,IIR));
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) )[  " hits the inner wall"
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)[ " figure out the layer # the particle will go into."
+             DO I=1, N_CHM_$CHAMBER[
+                IF( Z(NP)+USTEP*W(NP)<Z_$CHAMBER(I+1) ) [ EXIT; ]
+             ]
+             I=MIN(I, N_CHM_$CHAMBER);  " to avoid i > n_chm_$chamber "
+             IRNEW = IRSTART_$CHAMBER+I-1;
+          ]
+          ELSE[ IRNEW=IRL-1;]
+          RETURN;
+      ]
+      IF(CUT_COE<=0.0 & IIR~=3)[   " IT IS NECESSARY TO DO OUTER CSAE"
+          CUT_COE=CUTCOE_$CHAMBER(R0SQ, RCYS2_$CHAMBER(1,IIR+1));
+          IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+             |( CUT_COE=STEP_UNIT & IU_D=0 ) ) [  " hits the outer wall"
+             ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+             USTEP=CUT_COE;
+             IRNEW=IR(NP)+1;
+             RETURN;
+          ]
+      ]     " not hits the side wall at all"
+
+     " now check to see whether hitting the bottom  "
+
+      IF(IU_D=1)[         " hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          " last layer of the CM, no bottom part"
+          IF(N_BOT_$CHAMBER=0 )[ CALL WHERE_AM_I(ICM_$CHAMBER,1); ]
+          ELSE[" particle will go into the first layer of the bottom part"
+              RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                        +(Y(NP)+USTEP*V(NP))**2;
+              " the first layer of the bottom part "
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(N_CHM_$CHAMBER+
+                           N_TOP_$CHAMBER+1,1) )
+              [ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER; ]
+              ELSE[ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                  2*N_TOP_$CHAMBER+1;
+              ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+
+   ]   " end of the w> 0.0 case "
+
+   " now do the w<0.0 case "
+   "======================="
+   ELSEIF(W(NP) < 0.0)["particle going backward"
+      DIST = (Z_$CHAMBER("0"1) - Z(NP))/W(NP); "distance to back layer "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0)[ " out of the region in z direction "
+          USTEP=0.0;
+          IF(N_TOP_$CHAMBER=0 )[
+              IF(N_GAP_$CHAMBER = 1)[ IRNEW =IREND_$CHAMBER;]
+              ELSE [ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$CHAMBER,-1); ]
+          ]
+          ELSE[         " the last layer of the top part"
+             IF(R0SQ<RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER,1) )
+             [IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*(N_TOP_$CHAMBER-1);]
+             ELSE[ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                      2*(N_TOP_$CHAMBER-1)+1;]
+          ]
+          RETURN;
+      ] "end of the double check if a particle is out of the region"
+            " in z direction"
+
+      " now check the r direction to see if the region # is right or not"
+      "================================================================"
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,IIR);
+      IF(CRITERIOR_IR<0.0)[" out of the region in r dir TOWARDS center  "
+          USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+          IF(IIR=1)[ "figure out the layer # the particle will go into."
+             DO I=1, N_CHM_$CHAMBER[IF(Z(NP)<Z_$CHAMBER(I+1))[EXIT;]]
+             I=MIN(I, N_CHM_$CHAMBER);  " to avoid i > n_chm_$chamber "
+             IRNEW=IRSTART_$CHAMBER +I-1;
+          ]
+          ELSE[ IRNEW=IRL-1;  ]
+          RETURN;
+      ]  " end of the check for the inner radius case "
+      IF( IIR~=3) [ " when iir =3, no need to check the outer "
+          CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(1,IIR+1);
+          IF(CRITERIOR_IR>0.0)[  " out side the outer radius "
+              USTEP=MIN(USTEP,SHIFT_COUNT_$CHAMBER(IR_$CHAMBER));
+              IRNEW=IRL+1;
+              RETURN;
+          ]       " end of the warning message block.
+      ]        " end of the outer radius check
+      " end of the   r direction error block "
+
+      " do the howfar job for this case "
+      "=====================================
+      CUT_COE=CUTCOE_$CHAMBER(R0SQ, RCYS2_$CHAMBER(1,IIR));
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) )[  " hits the inner wall"
+         ; $GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)[ "figure out the layer # the particle will go into."
+             DO I=1, N_CHM_$CHAMBER[
+                 IF( Z(NP)+USTEP*W(NP)<Z_$CHAMBER(I+1) ) [ EXIT; ]
+             ]
+             I=MIN(I, N_CHM_$CHAMBER);  " to avoid i > n_chm_$chamber "
+             IRNEW=IRSTART_$CHAMBER+I-1;
+          ]
+          ELSE[ IRNEW=IRL-1; ]
+          RETURN;
+      ]
+      IF(CUT_COE<=0.0 & IIR~=3)[   " IT IS NECESSARY TO DO OUTER CSAE"
+          CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,IIR+1));
+          IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+             |( CUT_COE=STEP_UNIT & IU_D=0 ) )[   " hits the outer wall"
+             ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+             USTEP=CUT_COE;
+             IRNEW=IRL+1;
+             RETURN;
+          ]
+      ]     " not hits the side wall at all"
+
+      " now check to see whether hitting the bottom  "
+      "=============================================="
+      IF(IU_D=1)[         " hits the TOP of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          IF(N_TOP_$CHAMBER=0 )[ " the first layer of the CM, no top part "
+             IF(N_GAP_$CHAMBER=0)[ CALL WHERE_AM_I(ICM_$CHAMBER,-1); ]
+              " no air gap "
+             ELSE[ IRNEW=IREND_$CHAMBER; ]
+          ]
+          ELSE[ " particle will go into the last layer of the top part  "
+            RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                        +(Y(NP)+USTEP*V(NP))**2;
+            IF(RF2_$CHAMBER<RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER,1))
+              [IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                      2*(N_TOP_$CHAMBER-1); ]
+            ELSE[IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+
+                      2*(N_TOP_$CHAMBER-1)+1; ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+   ]        " end of the w<0.0 case "
+
+   ELSE[ "  w=0 case "
+      CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,IIR));"inner wall first"
+      IF(  CUT_COE>0.0 & CUT_COE <= USTEP )[  " hits the inner wall"
+          ;$GEO_SHIFT_1_(CUT_COE);
+          USTEP=CUT_COE;
+          IF(IIR=1)[
+             DO I=1, N_CHM_$CHAMBER
+             " figure out the layer # the particle will go into."
+               [ IF( Z(NP)+USTEP*W(NP)<Z_$CHAMBER(I+1) ) [ EXIT; ] ]
+             I=MIN(I, N_CHM_$CHAMBER);  " to avoid i > n_chm_$chamber "
+             IRNEW=IRSTART_$CHAMBER+I-1;
+          ]
+          ELSE[ IRNEW=IRL-1; ]
+      ]
+      IF(CUT_COE<=0.0 & IIR~=3)[ " IT IS NECESSARY TO DO OUTER CSAE"
+          CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(1,IIR+1));
+          IF(  CUT_COE>0.0 & CUT_COE <= USTEP )[   " hits the outer wall"
+             ;$GEO_SHIFT_1_(CUT_COE);
+             USTEP=CUT_COE;
+             IRNEW=IRL+1;
+          ]
+      ]
+      RETURN;     " not hits the side wall at all"
+   ]   " end of the w=0 case "
+]      " end of the side of the ionchamber part"
+
+" now do the top part of this CM "
+"================================"
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER )[ " top layers "
+   IIR=IR_$CHAMBER-(N_CHM_$CHAMBER+3);
+   IIR=MOD(IIR, 2);" iir=1, inside region, =0, outside region "
+   IF(W(NP) > 0.0)   ["particle going forward"
+      DIST = (Z_$CHAMBER(LAYER+1) - Z(NP))/W(NP); "distance to back of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <=0.0)[
+          USTEP=0.0;
+          IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER )["the end of the top layer"
+              IF( R0SQ<RCYS2_$CHAMBER(1,1) ) [  IRNEW =IRSTART_$CHAMBER;]
+              ELSEIF( R0SQ<RCYS2_$CHAMBER(1,2) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+              ELSEIF( R0SQ<RCYS2_$CHAMBER(1,3) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+1;]
+              ELSE[ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+2;]
+          ]
+          ELSE[
+              IF( R0SQ< RCYS2_$CHAMBER(LAYER+1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-N_CHM_$CHAMBER);
+              ]
+              ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                      +2*(LAYER-N_CHM_$CHAMBER)+1;
+              ]
+          ]
+          RETURN;
+      ]
+      " end of the double check if a particle is out of the CM in z direction
+
+      " now check the r direction "
+      "============================"
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(LAYER, 1);
+      IF(CRITERIOR_IR>0.0 & IIR=1)[  " out OF the  r "
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL+1;
+         RETURN;
+      ]
+      ELSEIF(CRITERIOR_IR<0.0 & IIR=0)[  " inside the outer radius "
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL-1;
+         RETURN;
+      ]      " end of the warnning message block."
+
+
+      " do the howfar job for this case "
+      "=====================================
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF( ( RF2_$CHAMBER > RCYS2_$CHAMBER(LAYER,1) & IIR=1 ) | IIR=0 )
+        [CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(LAYER,1)); ]
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) )[" hits the inner wall"
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)[IRNEW=IRL+1; " from in to out "]
+          ELSE[ IRNEW=IRL-1; ]
+          RETURN;
+      ]
+
+      " now check to see whether hitting the bottom  "
+      ELSEIF(IU_D=1) [" hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                   +(Y(NP)+USTEP*V(NP))**2;
+          IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER)[ " last layer of the top"
+              " particle will go into the first layer of the chamber  "
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(1,1) )
+                [ IRNEW=IRSTART_$CHAMBER;]
+              ELSEIF ( RF2_$CHAMBER< RCYS2_$CHAMBER(1,2) )
+                [ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+              ELSEIF ( RF2_$CHAMBER< RCYS2_$CHAMBER(1,3) )
+                [ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+1;]
+              ELSE[ IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+2; ]
+          ]     " end of the last layer of the top case "
+          ELSE[
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(LAYER+1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-N_CHM_$CHAMBER);
+              ]
+              ELSE [
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                      +2*(LAYER-N_CHM_$CHAMBER)+1;
+              ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+   ]                   " end of the w> 0 case "
+
+   " now do the w<0 case "
+   "====================="
+
+   ELSEIF(W(NP) < 0.0)[     "particle going backward"
+      "  the top layer in the top part "
+      IF(LAYER=N_CHM_$CHAMBER+1)[ DIST=( ZMIN_$CHAMBER-Z(NP) )/W(NP); ]
+      ELSE [ DIST = (Z_$CHAMBER(LAYER) - Z(NP))/W(NP); ]
+      "distance to back layer "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0) [
+          USTEP=0.0;
+          IF(LAYER=N_CHM_$CHAMBER +1) [  " the first layer of the CM "
+              IF(N_GAP_$CHAMBER = 1)[ IRNEW =IREND_$CHAMBER;]
+              " has air gap "
+              ELSE [ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$CHAMBER,-1); ]
+                                            " no air gap "
+          ]
+          ELSE [
+             IF(R0SQ<RCYS2_$CHAMBER(LAYER-1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-2-N_CHM_$CHAMBER);
+             ]
+             ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-2-N_CHM_$CHAMBER)+1;
+             ]
+          ]
+          RETURN;
+      ]
+      "  end of the double check if a particle is out of the top layer in z"
+
+      " now check the r direction "
+      "============================"
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(LAYER, 1);
+      IF(CRITERIOR_IR>0.0 & IIR=1) [ "supposed to be in outside region"
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL+1;
+         RETURN;
+      ]
+      ELSEIF(CRITERIOR_IR<0.0 & IIR=0)["supposed to be in inside region"
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL-1;
+         RETURN;
+      ]      " end of the warnning message block."
+
+      " do the howfar job for this case "
+      "=====================================
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF( ( RF2_$CHAMBER > RCYS2_$CHAMBER(LAYER,1) & IIR=1 ) | IIR=0 )
+        [CUT_COE=CUTCOE_$CHAMBER(R0SQ, RCYS2_$CHAMBER(LAYER,1)); ]
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) ) [" hits the side  wall"
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)  [  IRNEW=IRL+1; " from in to out "]
+          ELSE[ IRNEW=IRL-1; ]
+          RETURN;
+      ]
+
+      " now check to see whether hitting the top  "
+      "==========================================="
+      ELSEIF(IU_D=1) [" hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                   +(Y(NP)+USTEP*V(NP))**2;
+          IF(LAYER=N_CHM_$CHAMBER+1) [ " the first layer of the top"
+              " particle will go into the air gap or out of the CM  "
+              IF( N_GAP_$CHAMBER=1 ) [ IRNEW=IREND_$CHAMBER;]
+              ELSE[ CALL WHERE_AM_I(ICM_$CHAMBER, -1); ]
+          ]     " end of the last layer of the top case "
+          ELSE[         " still inside the top part "
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(LAYER-1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-N_CHM_$CHAMBER-2);
+              ]
+              ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                      +2*(LAYER-N_CHM_$CHAMBER-2)+1;
+              ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+  ]   " end of the w< 0.0 case "
+
+  " now do  the w=0.0 case "
+  "========================"
+   ELSE [
+      CUT_COE=CUTCOE_$CHAMBER(R0SQ, RCYS2_$CHAMBER(LAYER,1));
+      IF(  CUT_COE>0.0 & CUT_COE <= USTEP )  [ " hits the  wall"
+          ;$GEO_SHIFT_1_(CUT_COE);
+          USTEP=CUT_COE;
+          IF(IIR=1)[ IRNEW=IRL+1;]
+          ELSE[ IRNEW=IRL-1; ]
+      ]
+      RETURN;
+   ]    " end of the w=0.0 case "
+]      " end of the top part "
+
+" now do the bottom part "
+"========================"
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER+2*N_BOT_$CHAMBER )[
+   IIR=IR_$CHAMBER-(N_CHM_$CHAMBER+3);
+   IIR=MOD(IIR, 2);      " iir=1, inside , iir=2, out side region "
+   IF(W(NP) > 0.0)[        "particle going forward"
+      DIST = (Z_$CHAMBER(LAYER+1) - Z(NP))/W(NP); "distance to back of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <=0.0) [
+          USTEP=0.0;
+          IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER)
+             [  USTEP=1.E-16; CALL WHERE_AM_I(ICM_$CHAMBER, 1); ]
+          " the end layer of the  bottom part and the CM"
+          ELSE[
+              IF( R0SQ< RCYS2_$CHAMBER(LAYER+1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                        +2*(LAYER-N_CHM_$CHAMBER);
+              ]
+              ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                        +2*(LAYER-N_CHM_$CHAMBER)+1;
+              ]
+          ]
+          RETURN;
+      ]
+      " end of the double check if a particle is out of region in z direction"
+
+      " now check the r direction "
+      "============================="
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(LAYER, 1);
+      IF(CRITERIOR_IR>0.0 & IIR=1)["supposed to be in the outer region"
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL+1;
+         RETURN;
+      ]
+      ELSEIF(CRITERIOR_IR<0.0 & IIR=0)["supposed to be in inside region"
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL-1;
+         RETURN;
+      ]      " end of the warnning message block."
+
+      " do the howfar job for this case "
+      "=====================================
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF( ( RF2_$CHAMBER > RCYS2_$CHAMBER(LAYER,1) & IIR=1 ) | IIR=0 )
+        [ CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(LAYER,1)); ]
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) )[" hits the side wall"
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)[  IRNEW=IRL+1; " from in to out "]
+          ELSE[ IRNEW=IRL-1; ]
+          RETURN;
+      ]    " end of the hitting the side wall case "
+
+      " now check to see whether hitting the bottom  "
+      "=============================================="
+      ELSEIF(IU_D=1) [        " hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                   +(Y(NP)+USTEP*V(NP))**2;
+          IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER )
+             [  CALL WHERE_AM_I(ICM_$CHAMBER, 1) ; ]
+          "last layer of the CM"
+          ELSE [
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(LAYER+1,1) ) [
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-N_CHM_$CHAMBER);
+              ]
+              ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                      +2*(LAYER-N_CHM_$CHAMBER)+1;
+              ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+   ]   " end of the w>0.0 case "
+       "========================"
+
+   ELSEIF(W(NP) < 0.0)[       "particle going backward"
+      IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1)
+        [ DIST=( Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z(NP) )/W(NP); ]
+      "  the top layer in the bottom part "
+      ELSE [ DIST = (Z_$CHAMBER(LAYER-1+1) - Z(NP))/W(NP); ]
+            "distance to back layer "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.0)[
+          USTEP=0.0;
+          IF( LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1 ) [
+              " the first layer of the bottom "
+              IF( R0SQ<RCYS2_$CHAMBER(1,1) )
+                [  IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER-1;]
+              " the last layer of the cham"
+              ELSEIF( R0SQ<RCYS2_$CHAMBER(1,2) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+              " the side wall region"
+              ELSEIF( R0SQ<RCYS2_$CHAMBER(1,3) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+1;]
+              " the side gap region "
+              ELSE[ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+2;]
+              " outtest container region "
+          ]
+          ELSE[
+             IF(R0SQ<RCYS2_$CHAMBER(LAYER-1,1) )[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-2-N_CHM_$CHAMBER);
+             ]
+             ELSE [
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-2-N_CHM_$CHAMBER)+1;
+             ]
+          ]
+          RETURN;
+      ] "end of the double check if a particle is out of the region in z"
+
+      " now check the r direction "
+      "============================"
+      CRITERIOR_IR=R0SQ-RCYS2_$CHAMBER(LAYER, 1);
+      IF(CRITERIOR_IR>0.0 & IIR=1)  [" supposed to be outside  "
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL+1;
+         RETURN;
+      ]
+      ELSEIF(CRITERIOR_IR<0.0 & IIR=0) [ " supposed to be inside "
+         USTEP=MIN( USTEP, SHIFT_COUNT_$CHAMBER(IR_$CHAMBER) );
+         IRNEW=IRL-1;
+         RETURN;
+      ]      " end of the warnning message block."
+
+      " do the howfar job for this case "
+      "=====================================
+      RF2_$CHAMBER=(X(NP)+STEP_UNIT*U(NP))**2
+                        +(Y(NP)+STEP_UNIT*V(NP))**2;
+      IF( ( RF2_$CHAMBER > RCYS2_$CHAMBER(LAYER,1) & IIR=1 ) | IIR=0 )
+        [CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(LAYER,1)); ]
+      IF( ( CUT_COE>0.0 & CUT_COE < STEP_UNIT )
+         |( CUT_COE=STEP_UNIT & IU_D=0 ) ) [ " hits the inner wall"
+          ;$GEO_SHIFT_2_(CUT_COE, STEP_UNIT);
+          USTEP=CUT_COE;
+          IF(IIR=1)[  IRNEW=IRL+1; " from in to out "]
+          ELSE[ IRNEW=IRL-1; ]
+          RETURN;
+      ]
+
+      " now check to see whether hitting the top  "
+      ELSEIF(IU_D=1) [ " hits the bottom of this layer"
+          ;$GEO_SHIFT_1_(STEP_UNIT);
+          USTEP=STEP_UNIT;
+          RF2_$CHAMBER= (X(NP)+USTEP*U(NP))**2
+                   +(Y(NP)+USTEP*V(NP))**2;
+          IF(LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1)[
+              " the first layer of the bottom"
+              " particle will go into the chamber   "
+              IF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,1) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER-1;]
+              "the last layer of the cham"
+              ELSEIF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,2) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER;]
+               " the side wall region"
+              ELSEIF( RF2_$CHAMBER<RCYS2_$CHAMBER(1,3) )
+                [IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+1;]
+              " the side gap region "
+              ELSE[ IRNEW =IRSTART_$CHAMBER+N_CHM_$CHAMBER+2;]
+              "outtest container region "
+          ]     " end of the last layer of the bottom case "
+          ELSE[  " still inside the bottom part "
+              IF( RF2_$CHAMBER< RCYS2_$CHAMBER(LAYER-1,1))[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                       +2*(LAYER-N_CHM_$CHAMBER-2);
+              ]
+              ELSE[
+                 IRNEW=IRSTART_$CHAMBER+N_CHM_$CHAMBER+3
+                      +2*(LAYER-N_CHM_$CHAMBER-2)+1;
+              ]
+          ]
+          RETURN;
+      ]    " end of the case with  ustep cutoff in z direction "
+      ELSE [ RETURN; ]       " no cut off at all "
+   ]   " end of the w< 0.0 case "
+
+   ELSE[ " now do  the w=0.0 case "
+         "========================"
+      CUT_COE=CUTCOE_$CHAMBER( R0SQ, RCYS2_$CHAMBER(LAYER,1));
+      IF(  CUT_COE>0.0 & CUT_COE <= USTEP )  [" hits the  wall"
+         ; $GEO_SHIFT_1_(CUT_COE);
+          USTEP=CUT_COE;
+          IF(IIR=1)
+            [ IRNEW=IRL+1;]
+          ELSE[ IRNEW=IRL-1; ]
+      ]
+      RETURN;
+   ]    " end of the w=0.0 case "
+
+]   " end of the bottom part "
+       "======================="
+
+
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$CHAMBER+1,IR(NP),ICM_$CHAMBER,
+          IR_start_CM(ICM_$CHAMBER);
+      (//' ************'//' HOWFAR-CHAMBER error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+;
+"   end of HOWFAR_$CHAMBER
+"   ===================
+"
+END; "End of subroutine HOWFAR_$CHAMBER"
+
+%E "Start of miscellaneous functions and subroutines (Rev 1.8)"
+
+;$REAL FUNCTION SHIFT_COUNT_$CHAMBER(IDUMP);
+"This function is used in finding the correct region. If a particle is
+"in a wrong region we change the region # and shift the particle by 1.0E-5.
+"If we still cannot find the correct region after 20 shifts we terminate the
+"particle. If 10000 particles have been discarded we quit! However, one
+"can carry on running this simulation using the BEAM re-start feature if he
+"considers the effect of discarding these particles would be negligible
+"for a large number of histories run.
+
+;IMPLICIT NONE;
+
+;COMIN/STACK, EPCONT,CM_$CHAMBER,SCORE,EGS-IO/;
+
+$LONG_INT IHSTRYOLD;
+INTEGER IDUMP, COUNT1, COUNT;
+$REAL XYZNEW,XYZOLD,xyzoldsave;
+save xyzold,count1,count;
+DATA count1,count/0,0/;
+XYZNEW=X(NP)+Y(NP)+Z(NP);
+IF( XYZNEW.NE.XYZOLD.OR.IHSTRY.NE.IHSTRYOLD)[ COUNT1=0;]
+     " This fudge is used just to get around a numerical accuracy "
+     " problem.  It is OK unless you receive the error message in "
+     " the next if statement a lot of times.  "
+     " IHSTRY check added to protect against incrementing COUNT1"
+     " when phase space source is incident right on boundary of"
+     " chamber and particles are recycled"
+ELSE[
+    COUNT1=COUNT1+1;
+    IF( COUNT1=20 ) [
+        OUTPUT IDUMP,X(NP),Y(NP),X(NP)**2+Y(NP)**2,Z(NP),U(NP),
+        V(NP),W(NP),E(NP),IQ(NP);
+        (/' WARNING FROM CHAMBER REGION ', I5,': TAKEN USTEP = 1.0E-5 ',
+         ' FOR 20 TIMES, STILL CANNOT FIND ITS REGION'/
+         ' THE PARTICLE HAS BEEN DISCARDED.'/
+         ' OUTPUT: x,y,r**2,z,u,v,w,E,IQ '/
+        8F11.6,I3);
+        IDISC=1;COUNT1=0;
+        SHIFT_COUNT_$CHAMBER=0.0;
+        COUNT=COUNT+1;
+        IF( COUNT >10000 )[
+          OUTPUT;(//' ChAMBER: 10000 PARTICLES HAVE BEEN DISCARDED DUE TO'/
+                     ' WRONG REGION #/BOUNDARY CROSSING ERROR. STOP!!!'//);
+          STOP;
+        ]
+    ]
+]
+XYZOLD=XYZNEW;
+IHSTRYOLD=IHSTRY;
+
+SHIFT_COUNT_$CHAMBER=1.0E-5;
+
+RETURN;
+END;
+
+"******************************************************************
+
+SUBROUTINE WARN_MES_$CHAMBER(IDUMP, DUMP1, DUMP2);
+IMPLICIT NONE;
+COMIN/EGS-IO/;
+INTEGER IDUMP, COUNT;
+$REAL DUMP1, DUMP2;
+
+    OUTPUT IDUMP, DUMP1, DUMP2; (/' WARNING MESSAGE: ' , I5, 2F15.8);
+    COUNT=COUNT+1;
+RETURN;
+END;
+
+"******************************************************************
+;
+
+$REAL FUNCTION CUTCOE_$CHAMBER( DUMP1, DUMP2 );
+IMPLICIT NONE;
+
+$REAL  DUMP1, DUMP2;
+;COMIN/STACK, CM_$CHAMBER/;
+
+$REAL A, B, B2, C, TEMP, CUT_COE1, CUT_COE2,one;
+parameter (one=1);
+
+A=U(NP)**2+V(NP)**2;
+B=X(NP)*U(NP)+Y(NP)*V(NP);
+B2=B**2;
+C=DUMP1-DUMP2;
+IF(A=0.0)[
+     IF(B~=0.0)[CUTCOE_$CHAMBER=-0.5*C/B;]
+     ELSE[ CUTCOE_$CHAMBER=-1.0E5; ]
+]
+ELSE[
+    TEMP=B2-A*C;
+    IF(TEMP>=0.0)[
+       TEMP=-(B+SIGN(one,B)*SQRT(TEMP) );
+       CUT_COE1=TEMP/A;
+       CUT_COE2=C/TEMP;
+       IF( CUT_COE1>0.0 & CUT_COE2>0.0)
+       [CUTCOE_$CHAMBER=MIN(CUT_COE1,CUT_COE2); ]
+       ELSE[ CUTCOE_$CHAMBER=MAX(CUT_COE1,CUT_COE2); ]
+    ]
+    ELSE [ CUTCOE_$CHAMBER=-1.0E5; ]
+]
+
+RETURN;
+END; "End of miscellaneous subroutines and functions"
+
+%E    "Start of subroutine WHERE_AM_I_$CHAMBER (Rev 1.8)"
+"******************************************************************************
+
+"******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$CHAMBER
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$CHAMBER determines the new region # when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$CHAMBER subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$CHAMBER from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$CHAMBER(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CMs,CM_$CHAMBER,EPCONT,STACK/;
+
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$CHAMBER
+"T>**************************************
+"T>
+
+INTEGER IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XBDY_$CHAMBER,YBDY_$CHAMBER,RBDY2_$CHAMBER;
+XBDY_$CHAMBER = X(NP) + U(NP)*USTEP;
+YBDY_$CHAMBER = Y(NP) + V(NP)*USTEP;
+RBDY2_$CHAMBER = XBDY_$CHAMBER*XBDY_$CHAMBER + YBDY_$CHAMBER*YBDY_$CHAMBER;
+IF((IRSTART_$CHAMBER = 2) & (IDIR =1))    " this is first CM and from front
+  [ RBDY2_$CHAMBER = X(NP)*X(NP) + Y(NP)*Y(NP); ]
+
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   IF(N_GAP_$CHAMBER = 0) [        "no air gap this CM"
+      IF(N_TOP_$CHAMBER=0)    [" no top layers above the ionchamber.
+         IF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1,1))
+           [ IRNEW = IRSTART_$CHAMBER;   ]     " center
+         ELSEIF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1, 2))
+           [   IRNEW = IRSTART_$CHAMBER + N_CHM_$CHAMBER;]  " side wall
+         ELSEIF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1, 3))
+           [IRNEW = IRSTART_$CHAMBER + N_CHM_$CHAMBER+1; ]     " side gap
+         ELSE[ IRNEW = IRSTART_$CHAMBER +N_CHM_$CHAMBER+2 ; ] " container wall
+      ]
+      ELSE["   has top layer."
+         IF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(N_CHM_$CHAMBER+1,1))
+           [ IRNEW = IRSTART_$CHAMBER + N_CHM_$CHAMBER +3; ]
+         ELSE[ IRNEW = IRSTART_$CHAMBER + N_CHM_$CHAMBER +3 +1; ]
+      ]
+   ]
+   ELSE [  IRNEW = IREND_$CHAMBER; ]"this CM has an air gap at the front"
+]  " end of idir=1 case
+ELSE ["particle entering this CM through back face (downstream)
+   IF( N_BOT_$CHAMBER=0 )[ " no bottom layers below the chamber
+      IF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1,1))
+        [ IRNEW = IRSTART_$CHAMBER-1+N_CHM_$CHAMBER;   ]     " center
+      ELSEIF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1, 2))
+        [ IRNEW = IRSTART_$CHAMBER+N_CHM_$CHAMBER ;]  " side wall
+      ELSEIF(RBDY2_$CHAMBER < RCYS2_$CHAMBER(1, 3))
+        [IRNEW = IRSTART_$CHAMBER +N_CHM_$CHAMBER+ 1; ]     " side gap
+      ELSE[ IRNEW = IRSTART_$CHAMBER+N_CHM_$CHAMBER + 2; ] " container wall
+   ]
+   ELSE["   has bottom layer.
+      IF(RBDY2_$CHAMBER
+       < RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER,1))
+        [ IRNEW = IREND_$CHAMBER-N_GAP_$CHAMBER-1; ]
+      ELSE[ IRNEW =IREND_$CHAMBER-N_GAP_$CHAMBER; ]
+   ]
+]
+
+RETURN;
+
+END; "End of subroutine WHERE_AM_I_$CHAMBER"
+
+%E   "Start of subroutine INPUT_$CHAMBER (Rev 1.8)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_$CHAMBER
+"                           **********************
+"
+"  A CM input subroutine for a cylindrical planar geometry.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$CHAMBER;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$CHAMBER,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_$CHAMBER
+"T>*********************************
+"T>
+
+$REAL   ZTHICK_$CHAMBER, "T>total thickness of CM
+        ZTHICK,          "T>temp. variable used to store layer thicknesses
+        THICK1, THICK2, THICK3, "T>temp. storage of total thicknesses
+        Zminthick,       "T>used to calc. min thickness for range rejection
+        RCYSTEMP($MAX_N_$CHAMBER), "T>used for inputting top part
+        ZTEMP($MAX_N_$CHAMBER),    "T>used for inputting top part
+        ECUTTEMP($MXREG),          "T>used for inputting top part
+        PCUTTEMP($MXREG);          "T>used for inputting top part
+
+INTEGER I,IM,J,JM, II, III,        "T>DO loop indeces
+        MRNGE,          "T> local variable = 1 to enable ECUTRR calculation
+                        "T> otherwise ECUTRR is not calculated
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,      "T>medium index, set after medium sort by $MED_INPUT
+        N_CHAM,         "T>used to keep track of number of layers in chamber
+        DOSE_ZONETEMP($MXREG),  "T>used for inputting top part
+        IREGION_TO_BITTEMP($MXREG), "T>used for inputting top part
+        MEDTEMP($MXREG),          "T>used for inputting top part
+        IRM;                      "T>used for inputting top part
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$CHAMBER = ICM;     "CM index for this component module
+IRSTART_$CHAMBER = IR_start_CM(ICM_$CHAMBER);
+              "Index of first region in this CM,
+              "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$CHAMBER) = 0; "Geometry-checking flag, 0 if no error detected
+
+DO I=1,NDOSE_ZONE[ZPLOTCHM(I)=-1000.;"set default values"]
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' $CHAMBER  (CHAMBER Rev 1.8)');
+OUTPUT RMAX_CM(ICM);
+     (/' This component is an ion chamber or for scoring dose components'/
+       '       Outer boundary is a cylinder of radius',F10.4,' cm'
+       //' TITLE: ',$);
+;MINPUT ($CHAMBER) TITLE_$CHAMBER;(60A1);
+OUTPUT TITLE_$CHAMBER;(' ',60A1);
+
+IF (ICM_$CHAMBER = 1)[OUTPUT Z_min_CM(1);
+   (' This is first component module -- starts at',F12.4,
+                                          ' cm from ref plane(z=0)');
+]
+ELSE [OUTPUT Z_min_CM(ICM_$CHAMBER);
+   (' This CM, including air gap, starts at end of previous CM at', F10.5,
+    ' cm');
+]
+"
+" get distance from reference plane, z=0"
+"   =============================
+OUTPUT;
+(/' Distance from front of $CHAMBER(not air gap) to ref plane(z=0):',$);
+;MINPUT ($CHAMBER) ZMIN_$CHAMBER;(F15.0);
+OUTPUT ZMIN_$CHAMBER;(F11.5);
+
+IF(ZMIN_$CHAMBER < Z_min_CM(ICM_$CHAMBER))[
+   IF(ICM_$CHAMBER=1)[
+      OUTPUT ICM_$CHAMBER, ZMIN_$CHAMBER,Z_min_CM(ICM_$CHAMBER);
+       (//' ***WARNING IN CM ',I4,' (CHAMBER):'/
+          ' Z_min_CM(1) > distance to top of chamber'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm '//);
+          WRITE(IOUTLIST,100)
+        ICM_$CHAMBER, ZMIN_$CHAMBER,Z_min_CM(ICM_$CHAMBER);
+     100 FORMAT(//' ***WARNING IN CM ',I4,' (CHAMBER):'/
+          ' Z_min_CM(1) > distance to top of chamber'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm '//);
+       Z_min_CM(ICM_$CHAMBER)=ZMIN_$CHAMBER;
+   ]
+   ELSE[
+     OUTPUT ICM_$CHAMBER;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'Overlaps with previous CM'//);
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+   ]
+]
+OUTPUT; (/' This module consists of 3 partS:',
+         /'   1 --- top part, ',
+         /'   2 --- main part: the chamber/phantom central part, ',
+         /'   3 --- bottom part.');
+OUTPUT $MAX_N_$CHAMBER-1;
+(/' Input the number of layers for each part: '/
+' N-TOP (>=0), N-CHAM (>0 to input chamber layers individually or <0 to'/
+' input -N-CHAM groups of layers), N-BOT (>=0) (N-TOP + total number of'/
+' chamber layers + N-BOT <= ',I4,') on one line'/
+' : ',$);
+;MINPUT ($CHAMBER) N_TOP_$CHAMBER, N_CHM_$CHAMBER, N_BOT_$CHAMBER;(3I5);
+OUTPUT N_TOP_$CHAMBER, N_CHM_$CHAMBER,  N_BOT_$CHAMBER;(3I9);
+IF(N_CHM_$CHAMBER=0)[
+   OUTPUT ICM_$CHAMBER;
+     (//'***ERROR IN CM ',I4,' (CHAMBER)'/
+        'N-CHAM = 0'/
+        'N-CHAM reset to 1 for now.'//);
+   N_CHM_$CHAMBER=1;
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+IF(N_TOP_$CHAMBER < 0)[
+   OUTPUT ICM_$CHAMBER; (//'***ERROR IN CM ',I4,' (CHAMBER)'/
+        'N-TOP < 0'/ 'N-TOP reset to 0 for now.'//);
+   N_TOP_$CHAMBER=0;
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+IF(N_BOT_$CHAMBER < 0)[
+   OUTPUT ICM_$CHAMBER;
+     (//'***ERROR IN CM ',I4,' (CHAMBER)'/
+        'N-BOT < 0'/ 'N-BOT reset to 0 for now.'//);
+   N_BOT_$CHAMBER=0;
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+IF(N_CHM_$CHAMBER>0 &
+   N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER > $MAX_N_$CHAMBER-1)[
+   N_BOT_$CHAMBER=0;
+   N_TOP_$CHAMBER=0;
+   N_CHM_$CHAMBER=$MAX_N_$CHAMBER-1;
+   OUTPUT ICM_$CHAMBER, $MAX_N_$CHAMBER-1;
+    (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+       'N-CHAM + N-TOP + N-BOT > max. # of layers allowed.'/
+       'N-TOP set to 0, N-BOT set to 0, N-CHAM set to ',I4,' for now.'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+
+IF(N_CHM_$CHAMBER>0)[
+   N_$CHAMBER = N_CHM_$CHAMBER+3+ 2*N_TOP_$CHAMBER+2*N_BOT_$CHAMBER;
+]
+"Number of regions in this CM (<50, excluding front air gap)"
+"
+"                  INPUT for TOP REGION
+"                  ====================
+"
+IF(N_TOP_$CHAMBER~=0)[
+  OUTPUT N_TOP_$CHAMBER;
+  (/' Input thickness (ZTHICK) & inner radius (RCYL) for each of',
+   ' the',I3,' layers'/' for the top part.'
+  /' Note that the inner radius, RCYL divides each layer into 2',
+  ' regions,'/
+  ' an inner disc-shaped region and an outer annular region.',
+  /' The outer boundary of the annular region is RMAX_CM.');
+  OUTPUT;(/
+  ' For layers of equal thickness, inner radius and medium, '/
+  ' Input ZTHICK,RCYL & N-TOP, in one line)'/
+  ' Otherwise, input ZTHICK & RCYL for each layer starting from 1ST',
+  ' layer'/ ' : ',$);
+  IM=1;"starting # for the top part"
+  ;MINPUT ($CHAMBER) ZTHICK, RCYSTEMP(IM),JM;(2F15.0,I5);
+  OUTPUT ZTHICK, RCYSTEMP(IM),JM;(2F15.5,I5);
+  IF(ZTHICK<0.0)[
+     OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Thickness of layer 1 in top part < 0.0.'//);
+     IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+  ]
+  IF(RCYSTEMP(IM)<0.0)[
+     OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'RCYS of layer 1, top part < 0.0'//);
+     IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+  ]
+  ELSEIF(RCYSTEMP(IM) > RMAX_CM(ICM_$CHAMBER))[
+     OUTPUT ICM_$CHAMBER;
+      (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+         'RCYS of layer 1, top part > RMAX_CM'//);
+     WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,
+       '' (CHAMBER):''/ ''RCYS of layer 1, top part > RMAX_CM''//)')
+        ICM_$CHAMBER;
+  ]
+  ZTEMP(IM)=ZMIN_$CHAMBER+ZTHICK;
+
+  IF(JM = N_TOP_$CHAMBER)["for equal thickness, radius and medium"
+     IRM=1;
+     OUTPUT N_TOP_$CHAMBER;
+     (/' All the',I5,' layers have the same thickness, inner radius'/);
+     "1st (inner) region in the top part"
+     OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose)',
+        ',IREGION_TO_BIT for inner regions'/' :',$);
+     ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM);
+     (2F15.0,2I5);
+     IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+     IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+     ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IM),
+        IREGION_TO_BITTEMP(IM); (2F10.4, I5,I15);
+     OUTPUT;(/' For inner regions:',$);
+     ;$MED_INPUT($CHAMBER); " inputs character array MED_IN from unit 5,
+                            " loops
+     "through array MEDIA(24,I) to check if medium was previously input.
+     "If so, sets MED_INDEX to index of previous medium.  If not,
+     "increments NMED and sets MED_INDEX to NMED.
+     MEDTEMP(IRM) = MED_INDEX; " medium of the slab
+     IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (/'***ERROR IN CM ',I4,' (CHAMBER):'/
+       'DOSE_ZONE # of inner cylinders in top part > $MAX_DOSE_ZONE.'/
+       'DOSE_ZONE set to ',I4,' for now.'/
+       'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     IRM = IRM+1;"for outer region of this layer"
+     ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',
+     ' for outer regions'/' :',$);
+     ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM); (2F15.0,2I5);
+     IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+     IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+     ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM);(2F10.4, I5,I15);
+     OUTPUT;(/' For outer regions:',$);
+     ;$MED_INPUT($CHAMBER);
+     MEDTEMP(IRM) = MED_INDEX;
+     IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (/'***ERROR IN CM ',I4,' (CHAMBER):'/
+       'DOSE_ZONE # of annuli in top part > $MAX_DOSE_ZONE.'/
+       'DOSE_ZONE set to ',I4,' for now.'/
+       'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     DO IM=2,N_TOP_$CHAMBER[
+        ZTEMP(IM)=ZTEMP(IM-1)+ZTHICK;
+        RCYSTEMP(IM)=RCYSTEMP(1);
+        IRM = IRM+1;"for inner region of this layer"
+        ECUTTEMP(IRM)=ECUTTEMP(1);
+        PCUTTEMP(IRM)=PCUTTEMP(1);
+        DOSE_ZONETEMP(IRM)=DOSE_ZONETEMP(1);
+        IREGION_TO_BITTEMP(IRM)=IREGION_TO_BIT(1);
+        MEDTEMP(IRM) = MED(1);
+        IRM = IRM+1;"for outer region of this layer"
+        ECUTTEMP(IRM)=ECUTTEMP(2);
+        PCUTTEMP(IRM)=PCUTTEMP(2);
+        DOSE_ZONETEMP(IRM)=DOSE_ZONETEMP(2);
+        IREGION_TO_BITTEMP(IRM)=IREGION_TO_BIT(2);
+        MEDTEMP(IRM) = MED(2);
+     ]
+  ]"end of equal thickness, radius and media inputs"
+
+  ELSE["for different thicknesses, radii or media"
+     IF(N_TOP_$CHAMBER>1)[
+        OUTPUT N_TOP_$CHAMBER;
+        (/' The',I5,' layers have different inner radii, thickness,',
+         /' and/or media');
+     ]
+     OUTPUT 1;(/' For layer',I4,' in top part:');
+     OUTPUT ZTHICK,RCYSTEMP(IM);
+     (/' ZTHICK & RCYL =',2F15.5);
+     IRM=1;
+     OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose)',
+     ',IREGION_TO_BIT for inner region'/' :',$);
+     ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM); (2F15.0,2I5);
+     IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+     IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+     ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM); (2F10.4, I5,I15);
+     OUTPUT;(/' For inner region:',$);
+     ;$MED_INPUT($CHAMBER);
+     "inputs character array MED_IN from unit 5, loops
+     "through array MEDIA(24,I) to check if medium was previously input.
+     "If so, sets MED_INDEX to index of previous medium.  If not,
+     "increments NMED and sets MED_INDEX to NMED.
+     MEDTEMP(IRM) = MED_INDEX; " medium of the planar slab
+     IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+ 'DOSE_ZONE # of inner cylinder in 1st layer, top part > $MAX_DOSE_ZONE.'/
+ 'DOSE_ZONE # set to ',I4,' for now.'/
+    'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     IRM = IRM+1;"for outer region of this layer"
+     ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',
+     ' for outer region'/' :',$);
+     ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM); (2F15.0,2I5);
+     IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+     IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+     ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IRM),
+        IREGION_TO_BITTEMP(IRM); (2F10.4, I5,I15);
+     OUTPUT;(' For outer region:',$);
+     ;$MED_INPUT($CHAMBER);
+     MEDTEMP(IRM) = MED_INDEX;
+     IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+  'DOSE_ZONE # of outer annulus in 1st layer, top part > $MAX_DOSE_ZONE.'/
+     'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     DO IM=2, N_TOP_$CHAMBER[
+        OUTPUT IM;
+        (/' FOR LAYER',I4,' IN TOP PART:');
+        OUTPUT;
+        (/' ZTHICK & RCYL:',$);
+        ;MINPUT ($CHAMBER) ZTHICK, RCYSTEMP(IM);(2F15.0);
+        OUTPUT ZTHICK, RCYSTEMP(IM);(2F15.5);
+        IF( RCYSTEMP(IM)<0.0 )[
+          OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER;
+           (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+              'Radius of inner cylinder in layer ',I4,' of top part < 0.0'//);
+          IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        ELSEIF(RCYSTEMP(IM) > RMAX_CM(ICM_$CHAMBER))[
+          OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER;
+           (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+          'Radius of inner cylinder in layer ',I4,' of top part > RMAX_CM'//);
+         WRITE(IOUTLIST,'(//''***WARNING IN CM '',
+         I4,'' (CHAMBER):''/
+         ''Radius of inner cylinder in layer '',
+         I4,'' of top part > RMAX_CM''//)')
+         ICM_$CHAMBER, IM-N_CHM_$CHAMBER;
+        ]
+        IF(ZTHICK<0.0)[
+           OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER;
+          (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+             'Thickness of layer ',I4,' in top part < 0.0'//);
+           IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        ZTEMP(IM)=ZTEMP(IM-1)+ZTHICK;
+        OUTPUT ZTHICK, RCYSTEMP(IM);(2F15.5);
+        IRM = IRM+1;"inner region of this layer"
+        OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose)',
+                ',IREGION_TO_BIT for inner region'/' :',$);
+        ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+                           IREGION_TO_BITTEMP(IRM); (2F15.0,2I5);
+        IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+        IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+        ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IRM),
+                              IREGION_TO_BITTEMP(IRM); (2F10.4, I5,I15);
+        OUTPUT;(/' For inner region:',$);
+        ;$MED_INPUT($CHAMBER);
+        MEDTEMP(IRM) = MED_INDEX; " medium of the planar slab
+        IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+           ;OUTPUT ICM_$CHAMBER, IM,$MAX_DOSE_ZONE;
+             (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+             'DOSE_ZONE # of inner cylinder in layer ',I4,
+             ' of top part > $MAX_DOSE_ZONE.'/
+             'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beamnrc_user_macros.mortran'//);
+            DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+            IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        IRM = IRM+1;"for outer region of this layer"
+        ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',
+                 ' for outer region'/' :',$);
+        ;MINPUT ($CHAMBER) ECUTTEMP(IRM),PCUTTEMP(IRM),DOSE_ZONETEMP(IRM),
+                          IREGION_TO_BITTEMP(IRM); (2F15.0,2I5);
+        IF(ECUTTEMP(IRM) < ECUTIN)[ECUTTEMP(IRM)=ECUTIN;]
+        IF(PCUTTEMP(IRM) < PCUTIN)[PCUTTEMP(IRM)=PCUTIN;]
+        ;OUTPUT ECUTTEMP(IRM),PCUTTEMP(IRM), DOSE_ZONETEMP(IRM),
+                IREGION_TO_BITTEMP(IRM); (2F10.4, I5,I15);
+        OUTPUT;(' For outer region:',$);
+        ;$MED_INPUT($CHAMBER);
+        MEDTEMP(IRM) = MED_INDEX;
+        IF( DOSE_ZONETEMP(IRM) > $MAX_DOSE_ZONE )[
+           ;OUTPUT ICM_$CHAMBER, IM,$MAX_DOSE_ZONE;
+             (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+             'DOSE_ZONE # of outer annulus in layer ',I4,
+             ' of top part > $MAX_DOSE_ZONE.'/
+             'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+            DOSE_ZONETEMP(IRM)=$MAX_DOSE_ZONE;
+            IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+     ]"end of the do loop"
+  ]"end of non-equal thickness, etc"
+  THICK2=ZTEMP(N_TOP_$CHAMBER)-ZMIN_$CHAMBER;
+  "the overall thickness for the top part"
+]
+ELSE[THICK2=0.0;]
+
+"
+"                    INPUTS FOR THE Central CHAMBER PART
+"                    ===================================
+"
+OUTPUT; (/'          INPUTS FOR THE Central CHAMBER PART');
+
+OUTPUT; (/' INPUT THE INNER RADIUS OF THE CHAMBER WALL (R_INNER),'
+  /' THE OUTER RADIUS OF THE CHAMBER WALL (R_WALL), AND THE OUTER RADIUS,'
+  /' OF THE GAP BETWEEN THE CHAMBER WALL AND CONTAINER WALL (R_OUTER),'
+  /' ALL ON ONE LINE.'/' : ',$);
+;MINPUT ($CHAMBER) RCYS_$CHAMBER(1, 1), RCYS_$CHAMBER(1, 2),
+    RCYS_$CHAMBER(1, 3);(3F15.0);
+OUTPUT RCYS_$CHAMBER(1, 1), RCYS_$CHAMBER(1, 2),
+   RCYS_$CHAMBER(1, 3); (3F13.5);
+OUTPUT;
+(/' Note that R_OUTER also defines the inner radius of the container.'
+/' The outer radius of the container is defined by RMAX_CM.');
+IF(RCYS_$CHAMBER(1,1)<0.0)[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Inner radius of chamber wall < 0.0'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+ELSEIF(RCYS_$CHAMBER(1,1)>RMAX_CM(ICM_$CHAMBER))[
+   OUTPUT ICM_$CHAMBER;
+     (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+       'Inner radius of chamber wall > RMAX_CM'//);
+   WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CHAMBER):''/
+         ''Inner radius of chamber wall > RMAX_CM''//)')
+         ICM_$CHAMBER;
+]
+IF(RCYS_$CHAMBER(1,2)<0.0)[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Outer radius of chamber wall < 0.0'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+ELSEIF(RCYS_$CHAMBER(1,2)>RMAX_CM(ICM_$CHAMBER))[
+   OUTPUT ICM_$CHAMBER;
+     (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+       'Outer radius of chamber wall > RMAX_CM'//);
+   WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CHAMBER):''/
+         ''Outer radius of chamber wall > RMAX_CM''//)')
+         ICM_$CHAMBER;
+]
+IF(RCYS_$CHAMBER(1,3)<0.0)[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Inner radius of container wall < 0.0'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+ELSEIF(RCYS_$CHAMBER(1,3)>RMAX_CM(ICM_$CHAMBER))[
+   OUTPUT ICM_$CHAMBER;
+     (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+       'Inner radius of container wall > RMAX_CM'//);
+   WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CHAMBER):''/
+         ''Inner radius of container wall > RMAX_CM''//)')
+         ICM_$CHAMBER;
+]
+IF(RCYS_$CHAMBER(1,2)<RCYS_$CHAMBER(1,1))[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Outer radius of chamber wall < inner radius of chamber wall'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+IF(RCYS_$CHAMBER(1,3)<RCYS_$CHAMBER(1,1))[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Inner radius of container wall < inner radius of chamber wall'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+IF(RCYS_$CHAMBER(1,3)<RCYS_$CHAMBER(1,2))[
+   OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Inner radius of container wall < outer radius of chamber wall'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+
+RCYS2_$CHAMBER(1,1)=RCYS_$CHAMBER(1,1)**2;
+RCYS2_$CHAMBER(1,2)=RCYS_$CHAMBER(1,2)**2;
+RCYS2_$CHAMBER(1,3)=RCYS_$CHAMBER(1,3)**2;
+
+Z_$CHAMBER(1)=ZMIN_$CHAMBER+THICK2;  " THE TOP Z COORD OF THE CHAMBER "
+
+IF(N_CHM_$CHAMBER<0)["inputting for a group of layers"
+  OUTPUT -N_CHM_$CHAMBER;
+  (/' THIS CHAMBER HAS ',I4,' GROUPS OF LAYERS WITH EQUAL THICKNESS (ZTHICK).'/
+    ' FOR EACH GROUP, INPUT ZTHICK,I (on one line), WHERE I IS THE NUMBER OF'/
+    ' LAYERS IN THE GROUP'/' : ',$);
+  N_CHAM=0;
+  DO II=1,-N_CHM_$CHAMBER[
+    OUTPUT II; (/' FOR LAYER GROUP ',I4,' :');
+    ;MINPUT ($CHAMBER) ZTHICK,I;(F15.0,I5);
+    OUTPUT ZTHICK,I;(F15.5,I5);
+    IF(ZTHICK<0.0)[
+      OUTPUT ICM_$CHAMBER;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'Layers in chamber part have thickness < 0.0'//);
+      IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    IF(I<=0)[
+      OUTPUT ICM_$CHAMBER;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'Cannot have a group with <= 0 layers'//);
+      IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    N_CHAM=N_CHAM+I;
+    IF(N_CHAM+N_TOP_$CHAMBER+N_BOT_$CHAMBER > $MAX_N_$CHAMBER-1)[
+       OUTPUT ICM_$CHAMBER;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+       'N-CHAM + N-TOP + N-BOT > max. # of layers allowed.'/);
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    OUTPUT N_CHAM-I+1,N_CHAM,ZTHICK;
+     (/' LAYERS ',I4,' - ',I4,' HAVE EQUAL THICKNESS OF',F15.5,' cm.'/);
+    Z_$CHAMBER(N_CHAM-I+2)=Z_$CHAMBER(N_CHAM-I+1)+ZTHICK;
+    DO IM=N_CHAM-I+2,N_CHAM[
+      Z_$CHAMBER(IM+1)=Z_$CHAMBER(IM)+ZTHICK;
+    ]
+  ]"end of do loop to input thicknesses"
+  IM=1;
+  IRA = IRSTART_$CHAMBER;"for the chamber part, one region per layer"
+  N_CHM_$CHAMBER=N_CHAM;
+  N_$CHAMBER = N_CHM_$CHAMBER+3+ 2*N_TOP_$CHAMBER+2*N_BOT_$CHAMBER;
+  OUTPUT N_CHM_$CHAMBER;
+   ;(' If a dose zone is input, it is the first of',I4,' in sequence');
+   OUTPUT;(' ECUT,PCUT,INITIAL DOSE ZONE(0=>do not score dose),',
+    ' IREGION_TO_BIT'/
+    ' FOR ALL LAYERS: ',$);
+   ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+   (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA);(2F10.4,I5,I15);
+   OUTPUT;(' For all layers :',$);
+   ;$MED_INPUT($CHAMBER);
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+   IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+      ;OUTPUT ICM_$CHAMBER,$MAX_DOSE_ZONE;
+        (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+     'DOSE_ZONE # of layer 1 of chamber part > $MAX_DOSE_ZONE.'/
+     'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+      DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+      IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+   ]
+   ELSEIF(DOSE_ZONE(IRA).NE.0)[
+      IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+      ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+      ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+   ]
+   DO IM=2, N_CHM_$CHAMBER[
+      IRA = IRA+1;
+      ECUT(IRA)=ECUT(IRSTART_$CHAMBER);
+      PCUT(IRA)=PCUT(IRSTART_$CHAMBER);
+      DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+      IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+         ;OUTPUT ICM_$CHAMBER,IM,$MAX_DOSE_ZONE;
+           (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'DOSE_ZONE # of layer ',I4,' of chamber part > $MAX_DOSE_ZONE.'/
+          'DOSE_ZONE # set to ',I4,' for now.'/
+   'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+                DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+          IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+      ]
+      ELSEIF(DOSE_ZONE(IRA).NE.0)[
+         IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+         ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+         ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+      ]
+      IREGION_TO_BIT(IRA)=IREGION_TO_BIT(IRSTART_$CHAMBER);
+      MED(IRA) = MED(IRSTART_$CHAMBER);
+   ]
+]
+ELSE[
+  OUTPUT; (/' INPUT THICKNESS FOR EACH LAYER WITHIN THE CHAMBER'/
+  ' FOR LAYERS OF EQUAL THICKNESS (ZTHICK) AND MEDIUM, '/
+  ' INPUT ZTHICK,N-CHAM (in one line)'
+  /' OTHERWISE, INPUT ZTHICK FOR EACH LAYER STARTING FROM 1ST LAYER'/' : ',$);
+  ;MINPUT ($CHAMBER) ZTHICK,I;(F15.0,I5);
+  OUTPUT ZTHICK,I;(F15.5,I5);
+  IF(I = N_CHM_$CHAMBER)[
+    IF(ZTHICK<0.0)[
+       OUTPUT ICM_$CHAMBER;
+        (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+           'Layers in chamber part have thickness < 0.0'//);
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    OUTPUT I,ZTHICK;
+     (/' ALL THE ',I5,' LAYERS HAVE EQUAL THICKNESS OF',F15.5,' cm.'/);
+    IRA = IRSTART_$CHAMBER;"for the chamber part, one region per layer"
+    IM=1;
+    OUTPUT I;
+     ;(' If a dose zone is input, it is the first of',I4,' in sequence');
+    OUTPUT;(' ECUT,PCUT,INITIAL DOSE ZONE(0=>do not score dose),',
+     ' IREGION_TO_BIT'/
+     ' FOR THE LAYERS: ',$);
+    ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+    (2F15.0,2I5);
+    IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+    IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+    ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+       IREGION_TO_BIT(IRA);(2F10.4,I5,I15);
+    OUTPUT;(' For all layers :',$);
+    ;$MED_INPUT($CHAMBER);
+    MED(IRA) = MED_INDEX; " medium of the planar slab
+    IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER,$MAX_DOSE_ZONE;
+         (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+      'DOSE_ZONE # of layer 1 of chamber part > $MAX_DOSE_ZONE.'/
+      'DOSE_ZONE # set to ',I4,' for now.'/
+      'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    ELSEIF(DOSE_ZONE(IRA).NE.0)[
+       IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+       ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+       ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+    ]
+    Z_$CHAMBER(2)=Z_$CHAMBER(1)+ZTHICK;
+    DO IM=2, N_CHM_$CHAMBER[
+       Z_$CHAMBER(IM+1)=Z_$CHAMBER(IM)+ZTHICK;
+       IRA = IRA+1;
+       ECUT(IRA)=ECUT(IRSTART_$CHAMBER);
+       PCUT(IRA)=PCUT(IRSTART_$CHAMBER);
+       DOSE_ZONE(IRA)=DOSE_ZONE(IRSTART_$CHAMBER) + (IM-1);
+       IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+          ;OUTPUT ICM_$CHAMBER,IM,$MAX_DOSE_ZONE;
+            (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+           'DOSE_ZONE # of layer ',I4,' of chamber part > $MAX_DOSE_ZONE.'/
+           'DOSE_ZONE # set to ',I4,' for now.'/
+    'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+           DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+           IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+       ]
+       ELSEIF(DOSE_ZONE(IRA).NE.0)[
+          IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+          ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+          ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+       ]
+       IREGION_TO_BIT(IRA)=IREGION_TO_BIT(IRSTART_$CHAMBER);
+       MED(IRA) = MED(IRSTART_$CHAMBER);
+    ]
+  ]
+  ELSE[
+    IF(N_CHM_$CHAMBER>1)[
+       OUTPUT N_CHM_$CHAMBER;
+       (/' THE',I4,' LAYERS HAVE DIFFERENT ZTHICK AND/OR MEDIA.');
+    ]
+    OUTPUT 1;
+    (/' FOR LAYER',I4,' IN THE CHAMBER:');
+    OUTPUT ZTHICK; (/' ZTHICK =',F15.5 );
+    IF(ZTHICK<0.0)[
+       OUTPUT ICM_$CHAMBER;
+         (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+            'Thickness of layer 1 in chamber part < 0.0'//);
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    IRA = IRSTART_$CHAMBER;"for the chamber part, one region per layer"
+    IM=1;
+    OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT'/' :',$);
+    ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+    (2F15.0,2I5);
+    IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+    IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+    ;OUTPUT ECUT(IRA),PCUT(IRA),
+          DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);(2F10.4,I5,I15);
+    OUTPUT;(' For this layer :');
+    ;$MED_INPUT($CHAMBER);
+    MED(IRA) = MED_INDEX;
+    IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER,$MAX_DOSE_ZONE;
+         (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'DOSE_ZONE # of layer 1 of chamber part > $MAX_DOSE_ZONE.'/
+          'DOSE_ZONE # set to ',I4,' for now.'/
+    'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+        DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+        IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+    ]
+    ELSEIF(DOSE_ZONE(IRA).NE.0)[
+       IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+       ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+       ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+    ]
+    Z_$CHAMBER(2)=Z_$CHAMBER(1)+ZTHICK;
+    DO IM=2, N_CHM_$CHAMBER[
+       OUTPUT IM;
+       (/' FOR LAYER',I4,' IN THE CHAMBER:');
+       OUTPUT; (/' ZTHICK: ',$ );
+       ;MINPUT ($CHAMBER) ZTHICK;(F15.0);
+       OUTPUT ZTHICK;(F15.5);
+       IF(ZTHICK<0.0)[
+          OUTPUT ICM_$CHAMBER, IM;
+           (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+            'Thickness of layer ',I4,' in chamber part < 0.0'//);
+          IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+       ]
+       Z_$CHAMBER(IM+1)=Z_$CHAMBER(IM)+ZTHICK;
+       IRA = IRA+1;
+       OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT'/
+               ':',$);
+       ;MINPUT ($CHAMBER)
+        ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+       (2F15.0,2I5);
+       IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+       IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+       ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA), IREGION_TO_BIT(IRA);
+          (2F10.4,I5,I15);
+       OUTPUT;(' For this layer :',$);
+       ;$MED_INPUT($CHAMBER);
+       MED(IRA) = MED_INDEX; " medium of the planar slab
+       IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+         ;OUTPUT ICM_$CHAMBER,IM,$MAX_DOSE_ZONE;
+         (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'DOSE_ZONE # of layer ',I4,' of chamber part > $MAX_DOSE_ZONE.'/
+          'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+          DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+          IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+       ]
+       ELSEIF(DOSE_ZONE(IRA).NE.0)[
+          IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+          ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+          ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+       ]
+    ]"end of do loop"
+  ] "end of else"
+]"end of else"
+
+DO I=1, N_CHM_$CHAMBER[
+     RCYS_$CHAMBER(I,1)=RCYS_$CHAMBER(1,1);
+     RCYS_$CHAMBER(I,2)=RCYS_$CHAMBER(1,2);
+     RCYS_$CHAMBER(I,3)=RCYS_$CHAMBER(1,3);
+     RCYS2_$CHAMBER(I,1)=RCYS2_$CHAMBER(1,1);
+     RCYS2_$CHAMBER(I,2)=RCYS2_$CHAMBER(1,2);
+     RCYS2_$CHAMBER(I,3)=RCYS2_$CHAMBER(1,3);
+]
+
+
+
+THICK1=Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(1);
+"the overall thickness for the monitor chamber part"
+
+DO IR_$CHAMBER = 1+N_CHM_$CHAMBER, N_CHM_$CHAMBER +3[
+   "Parameters for chamber wall, gap and container wall regions"
+   IRA = IRA+1;
+   IF(IR_$CHAMBER.EQ.1+N_CHM_$CHAMBER)[
+      OUTPUT;(/' FOR THE CHAMBER WALL:');
+   ]
+   ELSEIF(IR_$CHAMBER.EQ.2+N_CHM_$CHAMBER)[
+      OUTPUT;(/' FOR THE GAP BETWEEN THE CHAMBER WALL AND THE'/
+               'CONTAINER WALL:');
+   ]
+   ELSE[
+      OUTPUT;(/' FOR THE CONTAINER WALL:');
+   ]
+   OUTPUT;(/' ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT'/
+            ' : ',$);
+   ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+   IREGION_TO_BIT(IRA); (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+     IREGION_TO_BIT(IRA); (2F10.4,I5,I15);
+   OUTPUT;(' For this region: ',$);
+   ;$MED_INPUT($CHAMBER);
+   MED(IRA) = MED_INDEX;
+   IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+     ;OUTPUT ICM_$CHAMBER,$MAX_DOSE_ZONE;
+        (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+ 'DOSE_ZONE # chamber wall, gap, and/or container wall > $MAX_DOSE_ZONE.'/
+      'DOSE_ZONE # set to ',I4,' for now.'/
+  'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+     DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+     IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+   ]
+   ELSEIF(DOSE_ZONE(IRA).NE.0)[
+      IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+      ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+      ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+   ]
+]"end of chamber wall, gap and container wall inputs"
+
+IRM=0;
+DO I=1,N_TOP_$CHAMBER[ "put here because we need to know N_CHM_$CHAMBER"
+  IM=N_CHM_$CHAMBER+I;"starting # for the top part"
+  RCYS_$CHAMBER(IM, 1)=RCYSTEMP(I);
+  RCYS2_$CHAMBER(IM,1)=RCYS_$CHAMBER(IM,1)**2;
+  Z_$CHAMBER(IM+1)=ZTEMP(I);
+  IRA = IRA+1;
+  IRM=IRM+1;
+  IR_$CHAMBER = IR_$CHAMBER+1;
+  ECUT(IRA)=ECUTTEMP(IRM);
+  PCUT(IRA)=PCUTTEMP(IRM);
+  DOSE_ZONE(IRA)=DOSE_ZONETEMP(IRM);
+  IREGION_TO_BIT(IRA)=IREGION_TO_BITTEMP(IRM);
+  MED(IRA)=MEDTEMP(IRM);
+  IF(DOSE_ZONE(IRA).NE.0)[
+        IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+        ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+        ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+  ]
+  IRA = IRA+1;"for outer region of this layer"
+  IR_$CHAMBER =IR_$CHAMBER +1;
+  IRM=IRM+1;
+  ECUT(IRA)=ECUTTEMP(IRM);
+  PCUT(IRA)=PCUTTEMP(IRM);
+  DOSE_ZONE(IRA)=DOSE_ZONETEMP(IRM);
+  IREGION_TO_BIT(IRA)=IREGION_TO_BITTEMP(IRM);
+  MED(IRA)=MEDTEMP(IRM);
+  IF(DOSE_ZONE(IRA).NE.0)[
+        IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+        ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+        ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+  ]
+]
+
+THICK3=0.;
+
+IF(N_BOT_$CHAMBER~=0)[
+   OUTPUT N_BOT_$CHAMBER;
+   (/' INPUTS FOR THE BOTTOM PART (ALTOGETHER ',I4,' LAYERS):');
+   OUTPUT;(/' SIMILAR TO THE TOP PART, EACH LAYER OF THE BOTTOM PART'/
+   ' IS DIVIDED INTO AN INNER DISC-SHAPED REGION AND AN OUTER ANNULAR'/
+   ' REGION BY THE INNER RADIUS, RCYL.'/
+   ' FOR LAYERS OF EQUAL THICKNESS, INNER RADIUS & MEDIA,'/
+   ' INPUT ZTHICK,RCYL & N-BOT (2F15.0,I5, in one line)'/
+   ' OTHERWISE, INPUT ZTHICK & RCYL FOR EACH LAYER STARTING FROM 1ST',
+   ' LAYER'/
+   ' (2F15.0)',$);
+   IM=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1;"starting # for the bottom part"
+   ;MINPUT ($CHAMBER) ZTHICK, RCYS_$CHAMBER(IM, 1),JM;(2F15.0,I5);
+   OUTPUT ZTHICK, RCYS_$CHAMBER(IM, 1),JM;(2F15.5,I5);
+   IF(ZTHICK<0.0)[
+     OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'Thickness of layer 1 in bottom part < 0.0.'//);
+     IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+   ]
+   IF(RCYS_$CHAMBER(IM, 1)<0.0)[
+     OUTPUT ICM_$CHAMBER;
+      (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+         'RCYS of layer 1, bottom part < 0.0'//);
+     IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+   ]
+   ELSEIF(RCYS_$CHAMBER(IM,1) > RMAX_CM(ICM_$CHAMBER))[
+     OUTPUT ICM_$CHAMBER;
+      (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+         'RCYS of layer 1, bottom part > RMAX_CM'//);
+     WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,
+       '' (CHAMBER):''/
+       ''RCYS of layer 1, bottom part > RMAX_CM''//)')
+        ICM_$CHAMBER;
+   ]
+   RCYS2_$CHAMBER(IM,1)=RCYS_$CHAMBER(IM,1)**2;
+   Z_$CHAMBER(IM+1)=Z_$CHAMBER(N_CHM_$CHAMBER+1)+ZTHICK;
+
+  IF(JM.EQ.N_BOT_$CHAMBER)["for equal thickness and radius"
+     IRA = IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER;
+     IR_$CHAMBER = N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER+1;
+     OUTPUT N_BOT_$CHAMBER;
+     (/' ALL THE',I5,' LAYERS HAVE THE SAME THICKNESS & RADIUS'/);
+     OUTPUT ZTHICK, RCYS_$CHAMBER(IM,1);
+     (/' FOR ALL LAYERS, ZTHICK, RCYL = ',2F15.5);
+     OUTPUT;(/
+      ' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',/
+      ' for inner regions'/
+       ' : ',$);
+     ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (2F15.0,2I5);
+      IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+      IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+      OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+      OUTPUT;(' For inner region :',$);
+      ;$MED_INPUT($CHAMBER);
+      MED(IRA) = MED_INDEX;
+      IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+        ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+        (/'***ERROR IN CM ',I4,' (CHAMBER):'/
+        'DOSE_ZONE # of inner cylinders in bottom part > $MAX_DOSE_ZONE.'/
+        'DOSE_ZONE set to ',I4,' for now.'/
+        'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+        DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+        IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+      ]
+      ELSEIF(DOSE_ZONE(IRA).NE.0)[
+         IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+         ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+         ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+      ]
+      IRA=IRA+1;
+      IR_$CHAMBER=IR_$CHAMBER+1;
+      ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',
+      ' for outer regions'/' :',$);
+      ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (2F15.0,2I5);
+      IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+      IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+      ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+      OUTPUT;(' For outer region :',$);
+      ;$MED_INPUT($CHAMBER);
+      MED(IRA) = MED_INDEX;
+      IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+        ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (/'***ERROR IN CM ',I4,' (CHAMBER):'/
+       'DOSE_ZONE # of annuli in bottom part > $MAX_DOSE_ZONE.'/
+       'DOSE_ZONE set to ',I4,' for now.'/
+       'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+        DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+        IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+      ]
+      ELSEIF(DOSE_ZONE(IRA).NE.0)[
+         IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+         ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+         ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+      ]
+      DO IM=N_CHM_$CHAMBER+N_TOP_$CHAMBER+2,
+          N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER[
+        Z_$CHAMBER(IM+1)=Z_$CHAMBER(IM)+ZTHICK;
+        RCYS2_$CHAMBER(IM,1)=
+        RCYS2_$CHAMBER(N_CHM_$CHAMBER+N_TOP_$CHAMBER+1,1);
+        IRA = IRA+1;"for inner region"
+        ECUT(IRA)=ECUT(IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER);
+        PCUT(IRA)=PCUT(IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER);
+        DOSE_ZONE(IRA)=
+             DOSE_ZONE(IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER);
+        IF(DOSE_ZONE(IRA).NE.0)[
+           IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+           ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+           ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+        ]
+        MED(IRA)=MED(IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER);
+        IRA = IRA+1;"for outer region"
+        ECUT(IRA)=ECUT(IRSTART_$CHAMBER+N_CHM_$CHAMBER+4+2*N_TOP_$CHAMBER);
+        PCUT(IRA)=PCUT(IRSTART_$CHAMBER+N_CHM_$CHAMBER+4+2*N_TOP_$CHAMBER);
+        DOSE_ZONE(IRA)=
+           DOSE_ZONE(IRSTART_$CHAMBER+N_CHM_$CHAMBER+4+2*N_TOP_$CHAMBER);
+        IF(DOSE_ZONE(IRA).NE.0)[
+           IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+           ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+           ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+        ]
+        MED(IRA)=MED(IRSTART_$CHAMBER+N_CHM_$CHAMBER+4+2*N_TOP_$CHAMBER);
+      ]
+      THICK3=ZTHICK*FLOAT(N_BOT_$CHAMBER);
+  ]"end of equal thickness and radius input"
+  ELSE["for different thicknesses, radii or media"
+     IRA = IRSTART_$CHAMBER+N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER;
+     IR_$CHAMBER = N_CHM_$CHAMBER+3+2*N_TOP_$CHAMBER+1;
+     IF(N_BOT_$CHAMBER>1)[ OUTPUT N_BOT_$CHAMBER;
+         (/' THE',I4, ' LAYERS IN THE BOTTOM PART HAVE DIFFERENT'/
+            ' INNER RADII, THICKNESS, AND/OR MEDIA.');
+     ]
+     OUTPUT 1;(/' FOR LAYER',I4,' IN BOTTOM PART:');
+     OUTPUT ZTHICK,RCYS_$CHAMBER(IM, 1);
+     (/' ZTHICK, RCYL =',2F15.5);
+     THICK3=ZTHICK;
+     OUTPUT;(/' ECUT,PCUT,DOSE ZONE(0=>do not score dose),'/
+            ' IREGION_TO_BIT for inner region'/
+            ' : ',$);
+     ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (2F15.0,2I5);
+     IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+     IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+     ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+     OUTPUT;(' For inner region :',$);
+     ;$MED_INPUT($CHAMBER);
+     MED(IRA) = MED_INDEX;
+     IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+  'DOSE_ZONE # of inner cylinder in 1st layer, bottom part > $MAX_DOSE_ZONE.'/
+    'DOSE_ZONE # set to ',I4,' for now.'/
+    'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     ELSEIF(DOSE_ZONE(IRA).NE.0)[
+         IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+         ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+         ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+     ]
+     IRA = IRA+1;"for outer region of this layer"
+     IR_$CHAMBER =IR_$CHAMBER +1;
+     ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT',
+     ' for outer region'/' :',$);
+     ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (2F15.0,2I5);
+     IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+     IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+     ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+       IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+     OUTPUT;(' For outer region :',$);
+     ;$MED_INPUT($CHAMBER);
+     MED(IRA) = MED_INDEX;
+     IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, $MAX_DOSE_ZONE;
+       (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+  'DOSE_ZONE # of outer annulus in 1st layer, bottom part > $MAX_DOSE_ZONE.'/
+        'DOSE_ZONE # set to ',I4,' for now.'/
+     'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+       DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+       IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+     ]
+     ELSEIF(DOSE_ZONE(IRA).NE.0)[
+         IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+         ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+         ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+     ]
+     DO IM=N_CHM_$CHAMBER+N_TOP_$CHAMBER+2,
+            N_CHM_$CHAMBER+N_TOP_$CHAMBER+ N_BOT_$CHAMBER[
+        OUTPUT IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER;
+        (/' FOR LAYER',I4,' OF THE BOTTOM PART:');
+        OUTPUT;
+        (/' INPUT ZTHICK & RADIUS:',$);
+        ;MINPUT ($CHAMBER) ZTHICK, RCYS_$CHAMBER(IM, 1);(2F15.0);
+        OUTPUT ZTHICK, RCYS_$CHAMBER(IM, 1);(2F12.5);
+        IF(ZTHICK<0.0)[
+           OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER;
+          (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+             'Thickness of layer ',I4,' in bottom part < 0.0'//);
+           IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        Z_$CHAMBER(IM+1)=Z_$CHAMBER(IM)+ZTHICK;THICK3=THICK3+ZTHICK;
+        IF( RCYS_$CHAMBER(IM,1)<0.0 )[
+          OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER;
+           (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+            'Radius of inner cylinder in layer ',I4,' of bottom part < 0.0'//);
+          IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        ELSEIF(RCYS_$CHAMBER(IM,1) > RMAX_CM(ICM_$CHAMBER))[
+          OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER;
+          (//'***WARNING IN CM ',I4,' (CHAMBER):'/
+         'Radius of inner cylinder in layer ',I4,' of bottom part > RMAX_CM'//);
+          WRITE(IOUTLIST,'(//''***WARNING IN CM '',
+          I4,'' (CHAMBER):''/
+          ''Radius of inner cylinder in layer '',
+          I4,'' of bottom part > RMAX_CM''//)')
+          ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER;
+        ]
+        RCYS2_$CHAMBER(IM,1)=RCYS_$CHAMBER(IM,1)**2;
+        "note: each layer has 2 regions in this part"
+        IRA = IRA+1;"for inner region of this layer"
+        IR_$CHAMBER =IR_$CHAMBER +1;
+        ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),',
+        'IREGION_TO_BIT for inner region'/' :',$);
+        ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA); (2F15.0,2I5);
+        IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+        IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+        ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+          IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+        OUTPUT;(' For inner region :',$);
+        ;$MED_INPUT($CHAMBER);
+        MED(IRA) = MED_INDEX;
+        IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER,$MAX_DOSE_ZONE;
+         (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'DOSE_ZONE # of inner cylinder in layer ',I4,
+          ' of bottom part > $MAX_DOSE_ZONE.'/
+          'DOSE_ZONE # set to ',I4,' for now.'/
+  'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+            DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+            IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        ELSEIF(DOSE_ZONE(IRA).NE.0)[
+           IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+           ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+           ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+        ]
+        IRA = IRA+1;"for outer region of this layer"
+        IR_$CHAMBER =IR_$CHAMBER +1;
+        ;OUTPUT;(' ECUT,PCUT,DOSE ZONE(0=>do not score dose),',
+        'IREGION_TO_BIT for outer region'/' :',$);
+        ;MINPUT ($CHAMBER) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA); (2F15.0,2I5);
+        IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+        IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+        ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+            IREGION_TO_BIT(IRA);  (2F10.4,I5,I15);
+        OUTPUT;(' For outer region :',$);
+        ;$MED_INPUT($CHAMBER);
+        MED(IRA) = MED_INDEX;
+        IF( DOSE_ZONE(IRA) > $MAX_DOSE_ZONE )[
+       ;OUTPUT ICM_$CHAMBER, IM-N_CHM_$CHAMBER-N_TOP_$CHAMBER,$MAX_DOSE_ZONE;
+          (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+          'DOSE_ZONE # of outer annulus in layer ',I4,
+          ' of bottom part > $MAX_DOSE_ZONE.'/
+          'DOSE_ZONE # set to ',I4,' for now.'/
+   'Probably need to change $MAX_DOSE_ZONE in beam_user_macros.mortran'//);
+           DOSE_ZONE(IRA)=$MAX_DOSE_ZONE;
+           IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+        ]
+        ELSEIF(DOSE_ZONE(IRA).NE.0)[
+           IPLOTFLAG=1;"set flag: CHAMBER is used for dose scoring"
+           ZPLOTCHM(DOSE_ZONE(IRA))=Z_$CHAMBER(IM);
+           ZPLOTCHM(DOSE_ZONE(IRA)+1)=Z_$CHAMBER(IM+1);
+        ]
+     ]"end of do loop"
+  ]"end of non-equal thickness, etc."
+]"end of bottom part"
+
+
+ZTHICK_$CHAMBER=THICK1+THICK2+THICK3;"total thickness of the component module"
+ZMAX_$CHAMBER=ZMIN_$CHAMBER+ZTHICK_$CHAMBER;
+"
+"  parameter definition
+"  ====================
+"
+"establish the front surface of this CM, if it is the first module,
+"Z_min_CM(1) will be given by the user in BEAM general inputs.
+
+ZFRONT_$CHAMBER = Z_min_CM(ICM_$CHAMBER);
+"
+"establish start of next CM
+"
+Z_min_CM(ICM_$CHAMBER+1) = ZMAX_$CHAMBER;
+
+"
+"
+"  set up the air gap, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$chamber=1) then the gap thickness
+"Z_gap_THICK(ICM_$chamber) = ZMIN_$CHAMBER - Z_min_CM(1),
+"which is used as a flag whether there is an air gap.
+
+Z_gap_THICK(ICM_$CHAMBER) = ZMIN_$CHAMBER - Z_min_CM(ICM_$CHAMBER);
+
+IF (Z_gap_THICK(ICM_$CHAMBER) = 0.0)[
+   Z_gap_THICK(ICM_$CHAMBER) = 0.;
+   N_GAP_$CHAMBER = 0; "no air gap is needed for this CM
+]
+ELSE[
+   N_GAP_$CHAMBER = 1; "this CM has an air gap"
+   OUTPUT Z_min_CM(ICM_$CHAMBER),ZMIN_$CHAMBER;
+   (/' THERE WILL BE AN AIR GAP SET UP BETWEEN Z=',F8.4,' AND Z=',F8.4/);
+   IRA = IRSTART_$CHAMBER+N_$CHAMBER; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+   ECUT(IRA)=ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_$CHAMBER+N_GAP_$chamber regions
+"
+;
+IREND_$CHAMBER = (IRSTART_$CHAMBER -1) +N_$CHAMBER+N_GAP_$CHAMBER;
+       "Index of last region"
+NREG = NREG+N_$CHAMBER+N_GAP_$CHAMBER;
+       "Total number of regions in full geometry up"
+       "to and including this CM"
+IF (NREG <= $MXREG)[
+   IR_start_CM(ICM_$CHAMBER+1) = IREND_$CHAMBER+1;
+   "It has not exceeded maximum region number. "
+   "Index of first region in next CM:"
+]
+ELSE[
+   OUTPUT ICM_$CHAMBER,NREG,$MXREG;
+   (//'***ERROR IN CM ',I4,' (CHAMBER):'/
+      I4,' regions requested, only ',I4,' available'//);
+   IERR_GEOM(ICM_$CHAMBER)=IERR_GEOM(ICM_$CHAMBER)+1;
+]
+
+"  Establish CM boundary
+"  =====================
+RMAX_CM_FLAG(ICM_$CHAMBER) = 1; "put a boundary about CM"
+"
+"  Establish dose-scoring zones and bit setting for each region
+"  ============================================================
+"
+IRA = IRSTART_$CHAMBER-1; "absolute region number"
+DO IR_$CHAMBER=1,N_$CHAMBER["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones"
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE);"Number of dose zones"
+   IF(NDOSE_ZONE>$MAX_DOSE_ZONE)[
+      OUTPUT;(///' IN CHAMBER, NDOSE_ZONE OUT OF RANGE!!!'///);
+      STOP;
+   ]
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum"
+   "charged particle range rejection parameters"
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are"
+                            "considered for range rejection"
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region"
+   E_min_out(ICM_$CHAMBER)=ECUT(IRA); "Minimum energy on exit from CM"
+] "end of loop over IR_$CHAMBER"
+
+"Set up minimum thicknesses for range rejection purposes. In this case "
+"we check the last 5 slabs. If we ever need more than 5 slabs, we should"
+"extend this or do something fancy like group similar materials."
+"Only do this for the central ion chamber part "
+
+I=1; J=1;        " J is index for Z_min_thick , I for layer index "
+LOOP[
+   Z_min_thick(ICM,J)=0.0;     " init. "
+   IRA = I + IRSTART_$CHAMBER-1;   "absolute region"
+   IF( MED(IRA)~=1) [" AIR WILL BE COUNTED AFTERWARDS "
+       MED_min_thick(ICM, J)=MED(IRA);
+       Z_min_thick(ICM,J) = Z_$CHAMBER(I+1)-Z_$CHAMBER(I);
+       " first assignment "
+   ]
+   DO IR_$CHAMBER=I+1, N_CHM_$CHAMBER [
+      "loop through all the layers, if same med added together"
+       IRA = IR_$CHAMBER + IRSTART_$CHAMBER-1;   "absolute region"
+       IF( MED(IRA)=MED_min_thick(ICM, J) )[
+           Z_min_thick(ICM,J) =Z_min_thick(ICM,J)+
+           (Z_$CHAMBER(IR_$CHAMBER+1)-Z_$CHAMBER(IR_$CHAMBER-1+1));
+       ]
+   ]     " end of the do loop "
+   " now figure out where the next index I(layer) begins with "
+   DO IR_$CHAMBER=I+1, N_CHM_$CHAMBER[
+       IRA = IR_$CHAMBER + IRSTART_$CHAMBER-1;   "absolute region"
+       III=0;
+       DO II=J, 1, -1[
+         IF(MED(IRA)~=MED_min_thick(ICM, II) & MED(IRA)~=1)[ III=III+1; ]
+       ]
+       IF( III=J )  " the next med is different from all the before "
+         [ I=IR_$CHAMBER; J=J+1; EXIT; ]   " keep the i as the next index "
+                                         " J increases by one  "
+   ]
+]WHILE( I<=N_CHM_$CHAMBER & J<=5 & IR_$CHAMBER<=N_CHM_$CHAMBER );
+
+IF(J < 5  )[  "some not used"
+    DO I=1, N_TOP_$CHAMBER+N_BOT_$CHAMBER[
+       IRA = N_CHM_$CHAMBER+3+2*(I-1)+1+IRSTART_$CHAMBER-1;
+       "absolute region"
+       IF( RCYS_$CHAMBER(N_CHM_$CHAMBER+I, 1) >= RMAX_CM(ICM_$CHAMBER)
+          & MED(IRA)~=1 )[
+           IF(J<5)[ J=J+1; ]
+           ELSE[ EXIT; ]
+           MED_min_thick(ICM, J)=MED(IRA);
+           IF(I=1 & N_TOP_$CHAMBER~=0 )[
+              Z_min_thick(ICM,J) = (  Z_$CHAMBER(I+N_CHM_$CHAMBER+1)
+                                       -ZMIN_$CHAMBER);
+           ]
+           ELSEIF(I=N_TOP_$CHAMBER+1)[
+              Z_min_thick(ICM,J) = (  Z_$CHAMBER(I+N_CHM_$CHAMBER+1)
+                                       -Z_$CHAMBER(N_CHM_$CHAMBER+1) );
+           ]
+           ELSE[
+              Z_min_thick(ICM,J) = ( Z_$CHAMBER(I+N_CHM_$CHAMBER+1)
+                                      -Z_$CHAMBER(I-1+N_CHM_$CHAMBER+1) );
+           ]
+       ]
+    ]     " end of the do loop "
+]
+
+IF(J < 5)[  "some not used"
+    Zminthick=0.0;
+    DO I=1, J [  Zminthick=Zminthick+Z_min_thick(ICM, I); ]
+    J=J+1;
+    Z_min_thick(ICM, J)=ZTHICK_$CHAMBER+Z_gap_thick(ICM_$CHAMBER)-Zminthick;
+    MED_min_thick(ICM,J) = AIR_INDEX; "AIR_INDEX is 0 or 1"
+    DO I = J+1,5[
+        Z_min_thick(ICM,I) = 0.0;
+        MED_min_thick(ICM,I) = 0;
+    ]"end of do loop on I"
+]"end J < 5 case"
+
+OUTPUT; (/' MRNGE: ENTER 1 to estimate thickness of $CHAMBER for ECUTRR'/
+          ' calculations in automated range rejection; otherwise, do'/
+          ' not calculate ECUTRR',$);
+;MINPUT ($CHAMBER) MRNGE; (I5);
+OUTPUT MRNGE;(I5);
+OUTPUT; (' ');
+IF(MRNGE~=1)[
+    DO I=1, 5[Z_min_thick(ICM,I)=0.0; MED_min_thick(ICM,I)=0; ]
+]
+ELSE[
+   OUTPUT; (/'          Z_min_thick ,     MED_min_thick  ');
+   DO I=1, 5[
+       IF( Z_min_thick(ICM,I)~=0.0 )[
+          OUTPUT Z_min_thick(ICM,I), MED_min_thick(ICM,I);
+          (10X, F8.4, 10X, I5);
+       ]
+   ]
+]
+
+"  return from INPUT_$CHAMBER
+"  =======================
+"
+RETURN;
+
+"  error messages
+"  ==============
+"
+:EOF_$CHAMBER:
+;OUTPUT ICM;
+(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$CHAMBER:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+
+"  end of INPUT_$CHAMBER
+"  ==================
+"
+END;  "End of INPUT_$CHAMBER"
+
+%E    "Start of subroutine ISUMRY_$CHAMBER (Rev 1.8)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_$CHAMBER
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$CHAMBER;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/
+   BOUNDS,CMs,CM_$CHAMBER,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER,EGS-IO/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$CHAMBER
+"T>**********************************
+"T>
+
+INTEGER
+   ICOLOUR, "T>colour of CM for EGS_Windows
+   IRA,     "T>absolute region number
+   LAYER,
+   I,J;     "T>DO loop index
+
+$REAL  PIL,VOL_$CHAMBER($MAX_N_$CHAMBER);  "T>cylinder volume
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$chamber.
+PIL=4.0*ATAN(1.0);
+
+I=0;
+LOOP[
+   I = I+1;
+   IF( I<=N_CHM_$CHAMBER ) [ LAYER=I; ]
+   ELSEIF(I<=N_CHM_$CHAMBER+3 ) [ LAYER=1; ]
+   ELSE
+     [LAYER=N_CHM_$CHAMBER+(I-N_CHM_$CHAMBER-3+1)/2;]
+     " this will be used only for the top and bottom parts "
+   IF(I<=N_CHM_$CHAMBER)
+   [
+      VOL_$CHAMBER(I)=PIL*RCYS2_$CHAMBER(1,1)*(Z_$CHAMBER(I+1)-
+          Z_$CHAMBER(I));
+   ]
+   ELSEIF( I=N_CHM_$CHAMBER+1 )
+   [
+       VOL_$CHAMBER(I)=PIL*(RCYS2_$CHAMBER(1,2)-RCYS2_$CHAMBER(1,1))
+                   *(Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(1));
+   ]
+   ELSEIF( I=N_CHM_$CHAMBER+2 )
+   [
+       VOL_$CHAMBER(I)=PIL*(RCYS2_$CHAMBER(1,3)-RCYS2_$CHAMBER(1,2))
+                   *(Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(1));
+   ]
+   ELSEIF( I=N_CHM_$CHAMBER+3 )
+   [
+       VOL_$CHAMBER(I)=PIL*( RMAX_CM(ICM_$CHAMBER)*RMAX_CM(ICM_$CHAMBER)
+                   -RCYS2_$CHAMBER(1,3))
+                   *(Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(1));
+   ]
+   ELSE
+   [
+       IF( (LAYER.EQ.N_CHM_$CHAMBER+1) .AND. (N_TOP_$CHAMBER.NE.0))
+       [VOL_$CHAMBER(I)=PIL*RCYS2_$CHAMBER(LAYER,1)*(Z_$CHAMBER(LAYER+1)
+             -ZMIN_$CHAMBER);]
+       ELSEIF( LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1 )
+       [
+           VOL_$CHAMBER(I)=PIL*RCYS2_$CHAMBER(LAYER,1)
+                        *(Z_$CHAMBER(LAYER+1)-Z_$CHAMBER(N_CHM_$CHAMBER+1));
+       ]
+       ELSE
+       [VOL_$CHAMBER(I)=PIL*RCYS2_$CHAMBER(LAYER,1)*(Z_$CHAMBER(LAYER+1)
+                         -Z_$CHAMBER(LAYER-1+1));
+       ]
+       I=I+1;
+       IF( (LAYER.EQ.N_CHM_$CHAMBER+1) .AND. (N_TOP_$CHAMBER.NE.0))
+       [
+            VOL_$CHAMBER(I)=PIL*( RMAX_CM(ICM_$CHAMBER)*RMAX_CM(ICM_$CHAMBER)
+                              -RCYS2_$CHAMBER(LAYER,1) )
+                           *(Z_$CHAMBER(LAYER+1)-ZMIN_$CHAMBER);
+       ]
+       ELSEIF( LAYER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1 )
+       [
+            VOL_$CHAMBER(I)=PIL*( RMAX_CM(ICM_$CHAMBER)*RMAX_CM(ICM_$CHAMBER)
+                              -RCYS2_$CHAMBER(LAYER,1) )
+                       *(Z_$CHAMBER(LAYER+1)-Z_$CHAMBER(N_CHM_$CHAMBER+1));
+       ]
+       ELSE
+       [
+            VOL_$CHAMBER(I)=PIL*( RMAX_CM(ICM_$CHAMBER)*RMAX_CM(ICM_$CHAMBER)
+                              -RCYS2_$CHAMBER(LAYER,1) )
+                       *(Z_$CHAMBER(LAYER+1)-Z_$CHAMBER(LAYER-1+1));
+       ]
+   ]
+]UNTIL (I>=N_$CHAMBER);
+
+DO I = 1,N_$CHAMBER
+[ IF( VOL_$CHAMBER(I) <=0.0 ) [
+OUTPUT I;(/' LOCAL REGION',I4,' IN CHAMBER HAS ZERO VOLUME!'/);
+"VOL_$CHAMBER(I)=1.0;" ] ]
+
+IRA = IRSTART_$CHAMBER-1; "absolute region number
+DO IR_$CHAMBER=1,N_$CHAMBER+N_GAP_$CHAMBER ["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$CHAMBER(IR_$CHAMBER)*RHOR(IRA);
+   ]
+] "end of loop over IR_$CHAMBER"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$CHAMBER,TITLE_$CHAMBER;
+WRITE(IOUTLIST,111) Z_min_CM(ICM_$CHAMBER),RMAX_CM(ICM_$CHAMBER);
+
+"AIR GAP, IF PRESENT "
+IF(N_GAP_$CHAMBER~=0)[
+   IRA=IRSTART_$CHAMBER+N_$CHAMBER;
+   WRITE(IOUTLIST,1501);
+   WRITE(IOUTLIST,1504)N_$CHAMBER+1,
+                       'NA',Z_min_CM(ICM_$CHAMBER),ZMIN_$CHAMBER-
+                       Z_min_CM(ICM_$CHAMBER),RMAX_CM(ICM_$CHAMBER),
+                       ECUT(IRA),PCUT(IRA),
+                       ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+                       (MEDIA(J,MED(IRA)),J=1,9);
+   WRITE(IOUTLIST,1505);
+]
+" ION CHAMBER TOP PART "
+IRA = IRSTART_$CHAMBER-1+3+N_CHM_$CHAMBER;
+IF( N_TOP_$CHAMBER~=0) [ WRITE(IOUTLIST,1204); ]
+DO IR_$CHAMBER=N_CHM_$CHAMBER+1,N_CHM_$CHAMBER+N_TOP_$CHAMBER [
+   IRA = IRA+1;
+   I=(IR_$CHAMBER-N_CHM_$CHAMBER-1)*2+N_CHM_$CHAMBER+3+1;
+   IF( IR_$CHAMBER=N_CHM_$CHAMBER+1 ) [
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1304) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         ZMIN_$CHAMBER,Z_$CHAMBER(IR_$CHAMBER+1)-ZMIN_$CHAMBER,
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1304)I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         ZMIN_$CHAMBER,Z_$CHAMBER(IR_$CHAMBER+1)-ZMIN_$CHAMBER,
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSE[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1304)I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1304) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+
+   IRA = IRA+1;
+   I=I+1;
+   IF( IR_$CHAMBER=N_CHM_$CHAMBER+1 ) [
+     IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1305) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         ZMIN_$CHAMBER,Z_$CHAMBER(IR_$CHAMBER+1)-
+         ZMIN_$CHAMBER,
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+     ]
+     ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1305) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         ZMIN_$CHAMBER,Z_$CHAMBER(IR_$CHAMBER+1)-
+         ZMIN_$CHAMBER,
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+   ELSE[
+     IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1305) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+     ]
+     ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1305) I,IR_$CHAMBER-N_CHM_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+]
+
+WRITE(IOUTLIST,120);
+IRA = IRSTART_$CHAMBER-1;"for chamber part"
+DO IR_$CHAMBER=1,N_CHM_$CHAMBER [
+   IRA = IRA+1;
+   IF (MED(IRA)=0) ["Medium is vacuum"
+      /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+      WRITE(IOUTLIST,130) IR_$CHAMBER,IR_$CHAMBER,'layer',
+      Z_$CHAMBER(IR_$CHAMBER),
+      Z_$CHAMBER(IR_$CHAMBER+1)-Z_$CHAMBER(IR_$CHAMBER),
+      RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+      ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+   ]
+   ELSE
+   ["Medium is not vacuum"
+      WRITE(IOUTLIST,130) IR_$CHAMBER,IR_$CHAMBER,'layer',
+      Z_$CHAMBER(IR_$CHAMBER),
+      Z_$CHAMBER(IR_$CHAMBER+1)-Z_$CHAMBER(IR_$CHAMBER),
+      RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+      ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+      (MEDIA(J,MED(IRA)),J=1,9);
+   ]
+]
+
+" ion chamber side wall part "
+IRA=IRA+1;
+WRITE(IOUTLIST,1201);
+IF (MED(IRA)=0) ["Medium is vacuum"
+    /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+    WRITE(IOUTLIST,1301) IR_$CHAMBER,'NA','entire',
+         Z_$CHAMBER(0+1),
+         Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,1), RCYS_$CHAMBER(1,2),ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+]
+ELSE ["Medium is not vacuum"
+     WRITE(IOUTLIST,1301) IR_$CHAMBER,'NA','entire',
+         Z_$CHAMBER(0+1),
+         Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,1), RCYS_$CHAMBER(1,2),ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,8);
+]
+WRITE(IOUTLIST,1310)'wall';
+" ion chamber side air gap part "
+IRA=IRA+1;
+WRITE(IOUTLIST,1202);
+IF (MED(IRA)=0) ["Medium is vacuum"
+    /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+    WRITE(IOUTLIST,1302) IR_$CHAMBER+1,'NA','entire',
+         Z_$CHAMBER(0+1),
+         Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,2), RCYS_$CHAMBER(1,3), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+]
+ELSE ["Medium is not vacuum"
+     WRITE(IOUTLIST,1302) IR_$CHAMBER+1,'NA','entire',
+         Z_$CHAMBER(0+1),
+         Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,2), RCYS_$CHAMBER(1,3), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,8);
+]
+WRITE(IOUTLIST,1311)'gap';
+" ion chamber's container wall part "
+IRA=IRA+1;
+WRITE(IOUTLIST,1203);
+IF (MED(IRA)=0) ["Medium is vacuum"
+    /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+    WRITE(IOUTLIST,1303) IR_$CHAMBER+2,'NA','entire',
+     Z_$CHAMBER(0+1),
+     Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,3), RMAX_CM(ICM_$CHAMBER),
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+]
+ELSE ["Medium is not vacuum"
+     WRITE(IOUTLIST,1303) IR_$CHAMBER+2,'NA','entire',
+     Z_$CHAMBER(0+1),
+     Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z_$CHAMBER(0+1),
+         RCYS_$CHAMBER(1,3), RMAX_CM(ICM_$CHAMBER),
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,8);
+]
+WRITE(IOUTLIST,1312)'wall';
+
+" ION CHAMBER BOTTOM PART "
+IRA = IRSTART_$CHAMBER-1+3+N_CHM_$CHAMBER+2*N_TOP_$CHAMBER;
+IF( N_BOT_$CHAMBER~=0 ) [ WRITE(IOUTLIST,1206); ]
+DO IR_$CHAMBER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1,
+                 N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER[
+   IRA = IRA+1;
+   I=(IR_$CHAMBER-N_CHM_$CHAMBER-1)*2+N_CHM_$CHAMBER+3+1;
+   IF( IR_$CHAMBER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1 )[
+     IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1306)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+     ]
+     ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1306)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+   ELSE[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1306)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1306)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+
+   IRA = IRA+1;
+   I=I+1;
+   IF( IR_$CHAMBER=N_CHM_$CHAMBER+N_TOP_$CHAMBER+1 ) [
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1307)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,1307)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(N_CHM_$CHAMBER+1),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSE[
+     IF (MED(IRA)=0)["Medium is vacuum"
+         /ECUT(IRA),PCUT(IRA)/ = 0.0;  "avoids output overflows but not used"
+         WRITE(IOUTLIST,1307)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),'V','a','c','u','u','m';
+     ]
+     ELSE["Medium is not vacuum"
+         WRITE(IOUTLIST,1307)
+         I,IR_$CHAMBER-N_CHM_$CHAMBER-N_TOP_$CHAMBER,
+         Z_$CHAMBER(IR_$CHAMBER),Z_$CHAMBER(IR_$CHAMBER+1)-
+         Z_$CHAMBER(IR_$CHAMBER),
+         RCYS_$CHAMBER(IR_$CHAMBER,1), ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+]
+
+DO I=1,N_$CHAMBER[IF(VOL_$CHAMBER(I)<=0.0 )[WRITE(IOUTLIST,141)I;]]
+
+110 FORMAT(///1x,79('-')/
+            '  Component module',I3,' is an ion chamber or phantom ',
+            '(CHAMBER Rev 1.8)'/ 1x,79('-')//T5,'Title: ',68A1);
+111 FORMAT(/T2,'$CHAMBER region & geometry parameters:',
+           /T2,'-------------------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',F15.5,' cm');
+
+120 FORMAT(/T5,'$CHAMBER CENTRAL PART parameters:',
+           /T5,'--------------------------------',
+           /T1,' local layer loc.   Z    Zthick  rad.  electr photon',
+           ' range-reject  dose  medium',
+           /T1,' reg              front                cutoff cutoff',
+           ' level   max   zone'
+           /T1,'                   (cm)    (cm)  (cm)   (MeV)  (MeV)',
+           ' (MeV)  (MeV)');
+130 FORMAT(T1,I3,I5,A7,F8.3,F8.4,F7.3,4F7.3,I3,2X,9A1);
+131 FORMAT(T9,A8);
+1201 FORMAT(/T5,'$CHAMBER WALL parameters:',
+           /T5,'--------------------------',
+        /T1,' local layer loc.  Z    Zthick     rad.     electr photon',
+        ' range-reject dose med',
+        /T1,' reg             front         inner  outer cutoff cutoff',
+        ' level  max   zone'
+        /T1,'                 (cm)    (cm)      (cm)      (MeV)  (MeV)',
+        ' (MeV) (MeV)');
+1301 FORMAT(T1,I3,A4,A7,F8.3,F7.3,2F7.3,2F6.3,F7.3,F6.3,I3,1X,8A1);
+1310 FORMAT(T8,A7);
+1202 FORMAT(/T5,'$CHAMBER side air gap parameters:',
+           /T5,'---------------------------------',
+        /T1,' local layer loc.  Z    Zthick     rad.     electr photon',
+        ' range-reject dose med',
+        /T1,' reg             front         inner  outer cutoff cutoff',
+        ' level  max   zone'
+        /T1,'                 (cm)    (cm)      (cm)      (MeV)  (MeV)',
+        ' (MeV) (MeV)');
+1302 FORMAT(T1,I3,A4,A7,F8.3,F7.3,2F7.3,2F6.3,F7.3,F6.3,I3,1X,8A1);
+1311 FORMAT(T8,A7);
+1203 FORMAT(/T5,'$CHAMBER container wall parameters:',
+           /T5,'-----------------------------------',
+        /T1,' local layer loc.  Z    Zthick     rad.     electr photon',
+        ' range-reject dose med',
+        /T1,' reg             front         inner  outer cutoff cutoff',
+        ' level  max   zone'
+        /T1,'                 (cm)    (cm)      (cm)      (MeV)  (MeV)',
+        ' (MeV) (MeV)');
+1303 FORMAT(T1,I3,A4,A7,F8.3,F7.3,2F7.3,2F6.3,F7.3,F6.3,I3,1X,8A1);
+1312 FORMAT(T8,A7);
+1204 FORMAT(/T5,'$CHAMBER TOP PART parameters:',
+           /T5,'-----------------------------',
+           /T1,' local layer loc.   Z    Zthick  inner electr photon',
+           ' range-reject  dose  medium',
+           /T1,' reg              front           rad. cutoff cutoff',
+           ' level   max   zone'
+           /T1,'                   (cm)   (cm)    (cm)  (MeV)  (MeV)',
+           ' (MeV)  (MeV)');
+1304 FORMAT(T1,I3,I5,'  inner',F8.3,F8.4,5F7.3,I3,2X,9A1);
+1305 FORMAT(T1,I3,I5,'  outer',F8.3,F8.4,5F7.3,I3,2X,9A1);
+1206 FORMAT(/T5,'$CHAMBER BOTTOM PART parameters:',
+           /T5,'--------------------------------',
+           /T1,' local layer loc.   Z    Zthick  inner electr photon',
+           ' range-reject  dose  medium',
+           /T1,' reg              front           rad. cutoff cutoff',
+           ' level   max   zone'
+           /T1,'                   (cm)   (cm)    (cm)  (MeV)  (MeV)',
+           ' (MeV)  (MeV)');
+1306 FORMAT(T1,I3,I5,'  inner',F8.3,F8.4,5F7.3,I3,2X,9A1);
+1307 FORMAT(T1,I3,I5,'  outer',F8.3,F8.4,5F7.3,I3,2X,9A1);
+1501 FORMAT(/T5,'Air gap parameters:',
+           /T5,'-------------------',
+           /T1,' local layer loc.   Z    Zthick   rad. electr photon',
+           ' range-reject  dose  medium',
+           /T1,' reg              front                cutoff cutoff',
+           ' level   max   zone'
+           /T1,'                   (cm)   (cm)    (cm)  (MeV)  (MeV)',
+           ' (MeV)  (MeV)');
+1504 FORMAT(T1,I3,A5,'  airgap',F8.3,F7.3,5F7.3,I3,2X,9A1);
+1505 FORMAT(T8,'   at top');
+
+
+141 FORMAT(/' LOCAL REGION',I4,' IN CHAMBER HAS ZERO VOLUME!');
+
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+
+IF(IWATCH = 4 | IZLAST = 2)
+[  "Creat a graphics file "
+   ;$SELECT-COLOUR;
+    DO I=1, N_CHM_$CHAMBER+N_TOP_$CHAMBER+N_BOT_$CHAMBER
+    [
+       WRITE(IOUTGEOM,201)ICOLOUR,'CYLZ',Z_$CHAMBER(I-1+1),
+                      RCYS_$CHAMBER(I,1),
+                Z_$CHAMBER(I+1),RCYS_$CHAMBER(I,1),0.0,0.0;
+    ]
+]"End of graphics output"
+
+201   FORMAT(' ',I1,A4,10(F7.2,','));
+
+
+"   end of ISUMRY_$CHAMBER
+"   ===================
+"
+RETURN;
+END; "End of subroutine ISUMRY_$CHAMBER"
+%E "Start of subroutine HOWNEAR_$CHAMBER (Rev 1.8)
+"*******************************************************************************
+"
+SUBROUTINE HOWNEAR_$CHAMBER(DIST);
+"
+" Returns min. distance to nearest region boundary
+" Used to be a function, but changed to a subroutine for convenience
+"  and consistency.
+"*******************************************************************************
+$IMPLICIT-NONE;
+
+;COMIN/CM_$CHAMBER,STACK/;
+
+INTEGER LAYER;
+$REAL RF_$CHAMBER, RF2_$CHAMBER, DIST;
+
+IR_$CHAMBER=IR(NP)-IRSTART_$CHAMBER+1;"local region # "
+
+" CALC. THE LAYER # "
+IF( IR_$CHAMBER<=N_CHM_$CHAMBER ) [ LAYER=IR_$CHAMBER; ]
+ELSEIF(IR_$CHAMBER<=N_CHM_$CHAMBER+3 ) [ LAYER=1; ]
+ELSEIF(IR_$CHAMBER<=N_$CHAMBER)[
+    LAYER=N_CHM_$CHAMBER+(IR_$CHAMBER-N_CHM_$CHAMBER-3+1)/2;
+    "last term gives the layer number, i.e., "
+    "for region 1 in top part, the layer number(integer)=(1+1)/2=1"
+    "for region 2 in top part, the layer number(integer)=(2+1)/2=1"
+    "for region 3 in top part, the layer number(integer)=(3+1)/2=2"
+    "......                                        changed by CMa."
+    " this will be used only for the top and bottom parts         "
+]
+
+RF2_$CHAMBER=X(NP)**2+Y(NP)**2;
+RF_$CHAMBER=SQRT(RF2_$CHAMBER);
+IF( IR_$CHAMBER<=N_CHM_$CHAMBER ) [" inside the main ion chamber part "
+    DIST=MIN(  Z(NP)-Z_$CHAMBER(LAYER),   " upstream "
+    Z_$CHAMBER(LAYER+1)-Z(NP),     " downstream"
+    RCYS_$CHAMBER(LAYER,1)-RF_$CHAMBER  );
+    RETURN;
+]
+ELSEIF( IR_$CHAMBER<=N_CHM_$CHAMBER +3 )  [
+    " in the side wall or side gap or container wall "
+    DIST=MIN(  Z(NP)-Z_$CHAMBER(1),      " upstream "
+    Z_$CHAMBER(N_CHM_$CHAMBER+1)-Z(NP),  " downstream "
+    ABS( RF_$CHAMBER -RCYS_$CHAMBER(1, 1) ),
+    ABS( RF_$CHAMBER -RCYS_$CHAMBER(1, 2) ),
+    ABS( RF_$CHAMBER -RCYS_$CHAMBER(1, 3) ) );
+    RETURN;
+]
+ELSEIF( IR_$CHAMBER<=N_$CHAMBER )[   " except air gap. "
+    DIST=MIN(  Z(NP)-ZMIN_$CHAMBER,
+    " check the front face of the 1st layer in the top"
+    ABS( Z(NP)-Z_$CHAMBER(1) ),
+    " check the back face of the last layer in the top"
+    ABS( Z(NP)-Z_$CHAMBER(N_CHM_$CHAMBER+1) ),
+    " check the front face for the 1st layer in the bottom"
+    ZMAX_$CHAMBER-Z(NP),        " back face for the last in the bottom "
+    ABS(Z(NP)-Z_$CHAMBER(LAYER)),  " except the above case "
+    "this is for the front face of the layer"
+    ABS(Z_$CHAMBER(LAYER+1)-Z(NP)),
+    "this is for the back face of the layer"
+    "note we use ABS because the front face in the top layer"
+    "and the back face of the bottom layer may not be Z_$CHAMBER(LAYER)"
+    "and Z_$CHAMBER(LAYER+1)     --CMa"
+    ABS( RCYS_$CHAMBER(LAYER,1)-RF_$CHAMBER ) );
+    RETURN;
+]
+ELSEIF( IR(NP)=IREND_$CHAMBER & N_GAP_$CHAMBER=1)[
+    DIST=MIN(Z(NP)-ZFRONT_$CHAMBER, ZMIN_$CHAMBER-Z(NP));
+    RETURN;
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$CHAMBER"
+"End of CHAMBER_cm.mortran (Rev 1.8)"

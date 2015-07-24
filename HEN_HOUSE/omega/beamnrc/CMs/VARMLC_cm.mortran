@@ -1,0 +1,2399 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: Varian type multi-leaf collimator         "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Ajay Kapur, 2000                                          "
+"                   Charlie Ma, 2000                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This component module was originally derived from existing BEAM MLC        "
+"  component modules, and contributed back to NRC by the authors. The final   "
+"  version was extensively reworked by Blake Walters at NRC.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A Component module to be used in conjunction with BEAMnrc for Monte Carlo  "
+"  simulations of photon and electron beams (used in radiotherapy)            "
+"  transported through a Varian type Multileaf Collimator system. This CM     "
+"  takes into account the tongue and groove geometry and offers a  choice     "
+"  between rounded and divergent-focused leaf ends. It also accounts for the  "
+"  screws on the carriage railings explicitly. Gaps are allowed between       "
+"  adjacent leaves on the same carriage so that the leaves do not have to     "
+"  physically touch. The tongue and groove do not have to have identical      "
+"  cross sections                                                             "
+"                                                                             "
+"#############################################################################"
+
+
+%C80
+"***********************************************************************
+"
+"                             **************               ""toc:
+"                             *            *               ""toc:
+"                             *   VARMLC   *               ""toc:
+"                             *            *               ""toc:
+"                             **************               ""toc:
+"
+"
+"************************************************************************
+"************************************************************************
+"
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to
+"   simulate one component module of a clinical linear accelerator:
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+"
+"   1>. This module can be used as single or double focus multileaf
+"       collimators.
+"   2>. Used as x or y direction parallel to the leaf.
+"   3>. it can have max 100 leaf which are equal wide, symmetrical arranged
+"       with y axis or x axis.
+"   4>. Each leaf has two separate parts which can be moved in the leaf
+"       direction independently.
+"   5>. Rules to obey:
+"           i.  Input the top z coordinates  as ZMIN_$VARMLC
+"              and thickness respectively.
+"           ii. Input the num of leaf and the total width of the leaf, each
+"               leaf will have equal width.
+"           iii. All leaf have the same material structures.
+"           iv. The outside of the leaf will be the same material as leaf
+"           v.  Input the focus points for both directions(x and y). each
+"               leaf will be single or double focused according to the user.
+"
+"
+"
+;
+"I>
+"I> Geometry of VARMLC:
+"I> *********************
+"I>                                 top view
+"I>
+"I>            ------------------------------------------------
+"I>                                |
+"I>            ------------------------------------------------
+"I>                           |           |
+"I>           -----------------           ---------------------
+"I>                      |        opening     |
+"I>           ---------------     (IR=1)      -----------------
+"I>                         |                 |
+"I>           ------leaves--------      -----------------------
+"I>                 (IR=2)      |     |
+"I>           --------------------------------------------------
+"I>                                  |
+"I>           --------------------------------------------------
+"I>
+;
+"I>       cross-section through leaves taken perpendicular to leaves
+"I>
+"I>                               * ZFOCUS(1)
+"I>                           .   .   .
+"I>                       .    . .|. .    .
+"I> - - - - - - -     .     .   . | .   .     .
+"I> airgap(IR=3)  .      .     .  |  .     .      .
+"I>     -------- ------ ------ ---|--- ------ ------ ---------
+"I>   leaf     / leaf / leaf /leaf|leaf\ leaf  \ leaf \  leaf
+"I>   1    /    2  /     3  /  4  | 5   \  6     \  7    \  8
+"I>    /        /          /      |      \          \        \
+"I>    -------- ---------- -------|------- ---------- --------- -
+"I>                            Z-axis
+;
+"I>            cross-section through leaf taken || to leaf
+"I>
+"I>              I)  FOR FOCUSED DIVERGENT LEAF ENDS :
+"I>
+"I>                               * ZFOCUS(2)
+"I>  - - - - - - - - - - - -    . | .
+"I>  airgap(IR=3)              .  |  .
+"I>     ----------------------    |    ------------------------
+"I>                          /    |    \
+"I>        Leaf B  (-ve)    /     |     \    Leaf A (+ve)
+"I>                        /      |      \
+"I>    -------------------        |        ----------------------
+"I>                            Z-axis
+
+"I>              II)  FOR ROUNDED LEAF ENDS :
+"I>
+"I>                               *
+"I>  - - - - - - - - - - - -      |
+"I>  airgap(IR=3)                 |
+"I>     -------------             |              --------------
+"I>                   \           |            /
+"I>                    |          |           |<------Leafradius
+"I>       A           /           |            \    B
+"I>     -------------             |              --------------
+"I>                            Z-axis
+;
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |             Region            | Description         |
+"I>            |-------------------------------|---------------------|
+"I>            |  absolute       | local       |                     |
+"I>            |-----------------|-------------|                     |
+"I>            |                 |             |                     |
+"I>            |IRSTART_MLC      | IR_MLC      |  as shown in above  |
+"I>            |  +IR_MLC-1      |             |    (1 to 3)         |
+"I>            |                 |             |                     |
+"I>            |                 |             |                     |
+"I>            -------------------------------------------------------
+"I>
+
+
+" Subroutines:
+" ************
+"                      INPUT_$VARMLC
+"                      ISUMRY_$VARMLC
+"                      HOWFAR_$VARMLC
+"                      WHERE_AM_I_$VARMLC
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             *******************
+"
+"************************************************************************
+;
+"
+"                               INPUT FROM UNIT 5
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$VARMLC
+"I>  **************
+"I>  -1  Dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$VARMLC) (F10.0):  Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$VARMLC (60A1):  Title of CM.
+"I>
+"I>   2  ORIENT_$VARMLC, NGROUP_$VARMLC (2I5)
+"I>
+"I>            ORIENT_$VARMLC= 0 for leaves parallel to Y direction
+"I>                          = 1 for leaves parallel to X direction
+"I>            NGROUP_$VARMLC= number of groups of adjacent leaves where
+"I>                            all leaves in a group have the same width
+"I>                            (defaults to 1 if set <= 0)
+"I>
+"I>   3  ZMIN_$VARMLC (F15.0): Z of top of MLC (excluding airgap)
+"I>
+"I>   4  ZTHICK_$VARMLC (F15.0): Thickness of the leaves ( z-axis (cm))
+"I>
+"I>   Repeat 5 NGROUP_$VARMLC times
+"I>
+"I>   5  NUM_LEAF_$VARMLC(I), LEAFWIDTH_$VARMLC(I)  (I5,F15.0)
+"I>
+"I>           NUM_LEAF_$VARMLC(I):  Number of adjacent leaves in group I
+"I>           LEAFWIDTH_$VARMLC(I): Width of each leaf in group I
+"I>                          as projected at ZMIN_$VARMLC - the width does
+"I>                          not include the tongue (see figure).
+"I>
+"I>         Note: total number of leaves is stored in TOT_LEAF_$VARMLC
+"I>
+"I>   6  START_$VARMLC (F15.0) : the start position (cm) wrt the CAX of
+"I>                       leaf 1 tongue as projected to ZMIN_$VARMLC.
+"I>
+"I>   7  WSCREW_$VARMLC, HSCREW_$VARMLC (2F15.0) : The width and height
+"I>            of the screw on the carriage railing. The width is
+"I>            as projected at ZMIN_$VARMLC and the height projected at
+"I>            the z-axis.
+"I>
+"I>   8  WTONGUE_$VARMLC, HTONGUE_$VARMLC, ZTONGUE_$VARMLC (3F15.0) :
+"I>            The width and height of the tongue projected to ZMIN_$VARMLC
+"I>            and z-axis respectively and the Z starting position of the
+"I>            tongue.  ZTONGUE_$VARMLC=0 assumes that the tongue is centred
+"I>            at ZMIN_$VARMLC+ZTHICK_$VARMLC/2 (ie centre of leaf body).
+"I>
+"I>   9  WGROOVE_$VARMLC, HGROOVE_$VARMLC, ZGROOVE_$VARMLC (3F15.0) : The
+"I>            width and height of the groove projected to ZMIN_$VARMLC
+"I>            and z-axis respectively and the Z starting position of the
+"I>            groove.  ZGROOVE_$VARMLC=0 assumes that the groove is centred
+"I>            at ZMIN_$VARMLC+ZTHICK_$VARMLC/2 (ie centre of leaf body).
+"I>
+"I>            Note restriction: ZTONGUE >= ZGROOVE
+"I>                              ZTONGUE+HTONGUE <= ZGROOVE+HGROOVE
+"I>                              WTONGUE <= WGROOVE
+"I>
+"I>  10  LEAFGAP_$VARMLC (F15.0) : The width of the interleaf air gap
+"I>             at ZMIN_$VARMLC.
+"I>
+"I>            Note restriction: LEAFGAP_$VARMLC <=WTONGUE_$VARMLC
+"I>
+"I>  11  ENDTYPE_$VARMLC (I5) : The  type of leaf end :
+"I>             0 -- rounded leaf end and
+"I>             1 -- focused divergent leaf end.
+"I>
+"I>  12  ZFOCUS_$VARMLC (F15.0) : Focal point on Z-axis of leaf ends
+"I>                     (i.e. imaginary lines drawn extending the slopes
+"I>                     of leaf ends will all intersect the Z-axis
+"I>                     at this point) - chosen if ENDTYPE_$VARMLC = 1.
+"I>
+"I>        Note restriction: ZFOCUS_$VARMLC(1) < ZMIN_$VARMLC or
+"I>                                     > ZMIN_$VARMLC + ZTHICK_$VARMLC
+"I>
+"I>      LEAFRADIUS_$VARMLC (F15.0) : Radius of the leaf end if
+"I>                           ENDTYPE_$VARMLC = 0. This must be greater
+"I>                           than or equal to half the leaf thickness.
+"I>
+"I>  13  ZFOCUS_$VARMLC(1) (F15.0): Focal point on Z-axis of leaf sides
+"I>                        imaginary lines drawn extending the slopes of
+"I>                        the leaf sides will all intersect the Z-axis
+"I>                        at this point)
+"I>
+"I>        Note restriction: ZFOCUS_$VARMLC(1) < ZMIN_$VARMLC or
+"I>                               > ZMIN_$VARMLC + ZTHICK_$VARMLC
+"I>
+"I>                      For focused ends the leaf position is defined
+"I>                      at ZMIN_$VARMLC; for rounded at ZMIN_$VARMLC +
+"I>                     0.5*ZTHICK_$VARMLC (ie center of the leaf in z)
+"I>
+"I>   Repeat 14 until coordinates of all leaves are defined once.  Leaves
+"I>   are numbered 1,2,...TOT_LEAF_$VARMLC, where numbering goes from leaf
+"I>   1 to leaf TOT_LEAF_$VARMLC. Convention is lower to upper or
+"I>   left to right depending on ORIENT_$VARMLC i.e from negative to
+"I>   positive.
+"I>
+"I>  14  NEG_$VARMLC, POS_$VARMLC, NUM_$VARMLC (2F15.0,I5)
+"I>
+"I>    NEG_$VARMLC:   Min. Y (ORIENT_$VARMLC=0) or X (ORIENT_$VARMLC=1)
+"I>                   of front opening in leaf I (ie the opening at
+"I>                   ZMIN_$VARMLC) if ENDTYPE=1, or of rounded end
+"I>                   of leaf I if ENDTYPE=0.
+"I>    POS_$VARMLC:   Max. Y (ORIENT_$VARMLC=0) or X (ORIENT_$VARMLC=1)
+"I>                   of front opening in leaf I if ENDTYPE=1, or of
+"I>                   rounded end of leaf I if ENDTYPE=0.
+"I>    NUM_$VARMLC:   Apply NEG_$VARMLC and POS_$VARMLC to leaves
+"I>                   I,...,I+NUM_$VARMLC-1.  Defaults to 1 if set <=0.
+"I>                   Defaults to TOT_LEAF_$VARMLC-I+1 if set >
+"I>                   TOT_LEAF_$VARMLC-I+1.
+"I>
+"I>  15   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and
+"I>                                             air gaps (2F15.0,2I5)
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>   16  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>                      used to set MED_INDEX.
+"I>
+"I>   17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$VARMLC
+"I>                                                         (2F15.0,3I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>        IGNOREGAPS:   If set to 1, ignore all air gaps when doing range
+"I>                      rejection in leaf material when the particle X
+"I>                      position
+"I>                      is < min X of all leaf openings (not including leaf
+"I>                      ends) or > max X of leaf openings (not including ends)
+"I>                      (ORIENT_$VARMLC=1) or if the particle Y position
+"I>                      is < min Y of all leaf openings (not including leaf
+"I>                      ends) or > max Y of leaf openings (not including ends)
+"I>                      (ORIENT_$VARMLC=0). This approximation is designed
+"I>                      to make range rejection more efficient deep in the
+"I>                      leaves, while still preserving accurate transport
+"I>                      in the leaf ends.  Note that if you have significant
+"I>                      air gaps between leaves, it is recommended that
+"I>                      you not use this option (ie run with the default
+"I>                      setting of 0).
+"I>
+"I>   18  MED_IN (24A1):  Medium of leaves,
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example defines a multi-leaf collimator design based
+"I>   loosely on that used with the Varian Clinac 2100C 26 leaf pair.
+"I>   Actual parameters are DIFFERENT - this serves just as a template.
+"I>   Do not attempt to use these parameters for a simulation of the real
+"I>   machine.
+"I>
+"I>   The collimator starts at Z=50 cm and has 26 tungsten leaves opening
+"I>   in the X direction.  The leaves are each 0.5cm wide and 6.0cm
+"I>   thick.  The Z focus of the leaf sides is at Z=-1000 cm, resulting
+"I>   in sides that are essentially straight up and down.  The Z focus
+"I>   of the leaf ends is at Z=0, which is the position of the beam source.
+"I>   In this example, leaf opening coordinates are chosen to create a
+"I>   pattern of alternating open and closed leaves.
+"I>
+"I>   Electrons and photons in both the collimator and the opening regions
+"I>   will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+"I>   PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+"I>   in dose zone 2, and dose deposited in the opening will be stored
+"I>   in dose zone 1.  Finally, the option to ignore air gaps when doing
+"I>   range rejection deep in the leaves is off.
+"I>
+"I>   26.0,           RMAX_CM
+"I>   MLC based on mock 26 leaf pair Varian 2100C type of accelerator
+"I>   1,1,            Leaves open in X direction, all have same thickness
+"I>   50.0,           ZMIN
+"I>   6.0,            ZTHICK
+"I>   26, 0.50,       NUM_LEAF, LEAFWIDTH
+"I>   -6.5,           START POSITION
+"I>   0,2, 0,4,       WIDTH AND HEIGHT OF SCREW
+"I>   0.2, 2,0,       WIDTH, HEIGHT, Z OF TONGUE, tongue centred in leaf
+"I>   0.21,2.6,0,     WIDTH, HEIGHT, Z OF GROOVE, groove centred in leaf
+"I>   0.005,          LEAFGAP BETWEEN ADJACENT LEAVES
+"I>   1,              ENDTYPE IS FOCUSED AND DIVERGENT
+"I>   0.0,            ZFOCUS(2)
+"I>   -1000.0         ZFOCUS(1)
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.0,0.0
+"I>   -5.0, 5.0
+"I>   0.5210,  0.010,  1,  0
+"I>   AIR700ICRU
+"I>   0.5210,  0.010,  2,  0, 0
+"I>   W700ICRU
+;
+"*************************************************************************
+"*************************  ERROR CONDITIONS  ****************************
+"*************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"***********************************************************************
+
+%E "Start of subroutine HOWFAR_$VARMLC (Rev 1.11)"
+"************************************************************************
+"********************Component Module VARMLC *****************************
+"************************************************************************
+"
+"                          Subroutine HOWFAR_$VARMLC
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module VARMLC,
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+"
+"   There are N_$VARMLC local regions + an air gap (if present):
+"
+"  local              absolute                       description
+"--------   ------------------------------     ----------------------
+" IR_$VARMLC   IR_start_CM(ICM_$VARMLC)+IR_$VARMLC-1 exclude front air gap
+"--------   ------------------------------     -----------------------
+"   Geometrical co-ordinates, as set in INPUT_$VARMLC are:
+"
+"   ZFRONT_$VARMLC     front of CM (upstream surface, air region)
+"   ZMIN_$VARMLC       front of cone
+"   ZBACK_$VARMLC      back of cone
+"   RMAX_$VARMLC       radius of last cylinder (largest)
+"
+"*************************************************************************
+;
+;SUBROUTINE HOWFAR_$VARMLC;
+
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH {
+  ;IF({P1}~=0.00 ) [
+    IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]
+   ]
+   ELSE [{P1}={P1}+1.0E-5;];
+
+}
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$VARMLC,EPCONT,STACK/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$VARMLC
+"T>**********************************
+"T>
+INTEGER
+   COUNT,
+   IRL,        "T>local region number (absolute), required by HOWNEAR macro
+   I, J,        "T>loop control
+   REGION_$VARMLC,     "T>region number within CM (relative)
+   NEWREGION_$VARMLC,     "T>region number within CM (relative)
+   NX,NY,NZ,        "T> Subindices for region
+   OUTOFCMFLAG,     "T> Flag to denote particle out of CM
+   OUTOFMLCFLAG,    "T> Flag to denote particle out of MLC
+   OFFEDGECM,     "T> Flag to denote particle beyond RMAX_CM
+   LEAFIS,          "T> Leaf number
+   LHS,RHS,     "T> Macro variables to find + and - closest boundary index
+   ZLHS,ZRHS,
+   IDIR;        "T> direction sign, used in call to where_am_i
+
+$REAL
+   XYL(2),    "T>rearranged x and y coordinates
+   DIST,      "T>Distance to z boundary along current particle trajectory
+   XYFL(2),   "T>temporary variable
+   UVL(2),    "T>temporary variable
+   ZFL,
+   TRYY1,TRYY2,
+   XoN,XoP,    "T> Negative and Positive leaf centers (rounded leaf)
+   Zo,         "T> z position of rounded leaf tip
+   XP,XN,YP,YN,ZP,ZN,    "T>+ and - distances in x,y, z directions
+   XDIST,YDIST,ZDIST,    "T> x,y, Z distances to nearest boundaries
+   DIST1,DIST2,DIST3,    "T> Variables to control particle propagation
+   STEP2,                "T>  "
+   TLHS,TRHS,            "T> temporary macro variables like lhs,rhs
+   DISCRIMINANT,         "T> Variable for rounded leaf
+   TEMP,TEMP1, TEMP2, TEMP3, TEMP4, TEMP5,
+   STEP_UNIT,one;
+parameter (one = 1);
+
+" prepare the local variables
+"=============================
+
+IRL = IR(NP); "local region number (absolute)
+IR_$VARMLC = IRL - IRSTART_$VARMLC + 1;   "rel. local region number
+IF(ORIENT_$VARMLC=1) [
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
+]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+;
+
+
+STEP_UNIT=0.0;
+COUNT = 0;
+OUTOFCMFLAG=0;
+OFFEDGECM=0;
+OUTOFMLCFLAG=0;
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module ,if so
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM or regions in z direction
+"      2.                        the regions in xy directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap check if existed.
+"=====================================
+
+
+IF(N_GAP_$VARMLC=1 & IR_$VARMLC=3 ) "  check the air gap first
+[
+   IF(W(NP)>0.0)
+   ["Particle going forward
+      DIST = (ZMIN_$VARMLC - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=0.0;
+          $VARMLC_FIND(IR_$VARMLC, 0.0);
+          IF( IR_$VARMLC=1 )
+          [  IRNEW =IRSTART_$VARMLC; RETURN;]
+          ELSE[IRNEW =IRSTART_$VARMLC+1; RETURN;]
+      ] " double check if a particle is out of the AIR GAP
+
+   ]
+   ELSEIF(W(NP)<0.0)
+   [ " particle going backward"
+      DIST = (ZFRONT_$VARMLC - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=1.E-16; "ensures call to AUSGAB on leaving CM"
+          CALL WHERE_AM_I(ICM_$VARMLC,-1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+]
+ELSEIF(IR_$VARMLC=1 | IR_$VARMLC=2)  " in the local region 1 or 2
+[
+   IF(W(NP) > 0.0)
+   [  "particle going forward"
+      DIST = (ZMAX_$VARMLC - Z(NP))/W(NP); "distance to back of CM
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
+      ELSE [ STEP_UNIT=DIST;  ]
+      IF(DIST <=0.0)
+      [
+          USTEP=1.E-16;
+          CALL WHERE_AM_I(ICM_$VARMLC,1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+   ELSEIF(W(NP) < 0.0)
+   [  "particle going backward"
+      DIST = (ZMIN_$VARMLC - Z(NP))/W(NP); "distance to back of CM "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
+      ELSE [ STEP_UNIT=DIST; ]
+      IF(DIST <= 0.0)
+      [
+          USTEP=0.0;
+          IF(N_GAP_$VARMLC = 1)
+          [ IRNEW =IREND_$VARMLC; RETURN; ]
+          ELSE[ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$VARMLC,-1); RETURN; ]
+      ] " double check if a particle is out of the main body to air gap
+   ]
+   ELSE[  STEP_UNIT=USTEP;]  " for w(np)=0.0 case
+]
+
+" end of z direction check
+"=========================
+
+$VARMLC_FIND(REGION_$VARMLC,0.0);
+
+IF(REGION_$VARMLC=3) [ "Particle is in the air gap "
+
+  REGION_$VARMLC=IRSTART_$VARMLC-1 +REGION_$VARMLC;
+
+  IF(W(NP) > 0.0)[
+    IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      $GEO_SHIFT_1_(DIST);
+      USTEP = DIST;
+      $VARMLC_FIND(NEWREGION_$VARMLC,USTEP);
+      IF( NEWREGION_$VARMLC=1) [  IRNEW =IRSTART_$VARMLC; RETURN;]
+      ELSE[IRNEW =IRSTART_$VARMLC+1; RETURN;]
+    ]
+    ELSE[ RETURN;]
+  ] "end of particle going forward
+  ELSEIF(W(NP) < 0.0) ["particle going backward"
+    IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      $GEO_SHIFT_1_(DIST);
+      USTEP = DIST;
+      CALL WHERE_AM_I(ICM_$VARMLC,-1);
+      RETURN;
+    ]
+    ELSE [RETURN;]
+  ] " end of going backward"
+  ELSE[RETURN;]   " W=0.0 CASE "
+] ;" end of region 3
+
+IF( OUTOFMLCFLAG=1 ) [
+
+  STEP2=STEP_UNIT;
+  TEMP1=(SURPARA1_$VARMLC(1,1)*(ZFL-ZFOCUS_$VARMLC(1))-XYFL(1));
+  IF( (UVL(1)-SURPARA1_$VARMLC(1,1)*W(NP))~=0.0 ) [
+     TEMP1=TEMP1/(UVL(1)-SURPARA1_$VARMLC(1,1)*W(NP));
+  ]
+  ELSE [ TEMP1 = -1000.00 ];
+
+  TEMP2=(SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*
+        (ZFL-ZFOCUS_$VARMLC(1))-XYFL(1));
+  IF( (UVL(1)-SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*W(NP))~=0.0 ) [
+     TEMP2=TEMP2/(UVL(1)-SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*W(NP));
+  ]
+  ELSE [ TEMP2 = -1000.00 ];
+
+  IF( STEP2>=0.0)[
+    TEMP=STEP2;
+    IF( TEMP1>=0 ) [TEMP=MIN(TEMP,TEMP1);];
+    IF( TEMP2>=0 ) [TEMP=MIN(TEMP,TEMP2);];
+  ]
+  ELSEIF ( (TEMP1>0.0) & (TEMP2>0.0) ) [TEMP=MIN(TEMP1,TEMP2);]
+  ELSE [TEMP=MAX(TEMP2,TEMP1);];
+
+  STEP2 = TEMP;
+
+  $GEO_SHIFT_1_(STEP2);
+  $VARMLC_FIND(IRNEW,STEP2);
+  IRNEW=IRNEW+IRSTART_$VARMLC-1;
+  USTEP=STEP2;
+  RETURN;
+]
+
+$VARMLC_MINDISTANCE(DIST1);
+
+IF( (STEP_UNIT<=DIST1) | (DIST1<0.0) ) [
+
+    STEP2=STEP_UNIT;
+    $GEO_SHIFT_1_(STEP2);
+    $VARMLC_FIND(IRNEW,STEP2);
+    USTEP=STEP2;
+    IF(OUTOFCMFLAG=1)["call where_am_i"
+       IDIR=SIGN(one,W(NP));
+       CALL WHERE_AM_I(ICM_$VARMLC,IDIR);
+       RETURN;
+    ]
+    ELSEIF(OFFEDGECM=1)["call where_am_i with IDIR=0"
+       IDIR=0;
+       CALL WHERE_AM_I(ICM_$VARMLC,IDIR);
+       RETURN;
+    ]
+    ELSE[
+      IRNEW=IRNEW+IRSTART_$VARMLC-1;
+      RETURN;
+    ]
+]
+ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0.0) ) [
+
+    REGION_$VARMLC=REGION_$VARMLC+IRSTART_$VARMLC-1;
+
+    LOOP[
+      DIST1=DIST1+1.0E-5; "we have to shift it regardless to avoid infinite"
+                          "loops"
+      IF(DIST1>=STEP_UNIT)[EXIT;]
+      ELSE[
+        $VARMLC_FIND(NEWREGION_$VARMLC,DIST1);
+        NEWREGION_$VARMLC=NEWREGION_$VARMLC+IRSTART_$VARMLC-1;
+
+        IF( OUTOFCMFLAG=1 | OFFEDGECM=1) [ EXIT;]
+        ELSEIF( (NEWREGION_$VARMLC~=REGION_$VARMLC) | OUTOFMLCFLAG=1 )[
+         USTEP = MIN(USTEP,DIST1);"take min. because we shifted DIST1"
+         IRNEW = NEWREGION_$VARMLC;
+         RETURN;
+        ]
+        ELSE [
+         $VARMLC_MINDISTANCE(DIST2);
+         DIST1=DIST1+DIST2;
+        ]
+      ]
+    ];
+
+"if it gets here, then it exited either because OUTOFCMFLAG=1, OFFEDGECM=1"
+"or because DIST1 >= STEP_UNIT"
+
+    IF( OUTOFCMFLAG=1)[
+      "since flag is based on distance to Z bdy, DIST1 is >= STEP_UNIT now"
+      DIST1=STEP_UNIT;
+      $GEO_SHIFT_1_(DIST1);
+      USTEP = DIST1;
+      IDIR=SIGN(one,W(NP));
+      CALL WHERE_AM_I(ICM_$VARMLC,IDIR);
+      RETURN;
+    ]
+    ELSEIF( OFFEDGECM=1)[
+      "DIST1 is <= STEP_UNIT"
+      USTEP = DIST1;
+      IDIR=0;
+      CALL WHERE_AM_I(ICM_$VARMLC,IDIR);
+      RETURN;
+    ]
+    ELSE [
+      "exited only because DIST1 is >= STEP_UNIT"
+      DIST1=STEP_UNIT;
+      $GEO_SHIFT_1_(DIST1);
+      USTEP = DIST1;
+      $VARMLC_FIND(NEWREGION_$VARMLC,DIST1);
+      "still have to check if we have left the CM in case STEP_UNIT"
+      "was the distance to the bottom of the CM"
+      IF(OUTOFCMFLAG=1)[
+        IDIR=SIGN(one,W(NP));
+        CALL WHERE_AM_I(ICM_$VARMLC,IDIR);
+        RETURN;
+      ]
+      ELSE["not leaving CM"
+        NEWREGION_$VARMLC=NEWREGION_$VARMLC+IRSTART_$VARMLC-1;
+        IRNEW = NEWREGION_$VARMLC;
+        RETURN;
+      ]
+    ]
+]; "End of IF loop for step_unit>dist1
+
+;
+"   end of HOWFAR_$VARMLC
+"   ===================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$VARMLC"
+%E "Start of WHERE_AM_I_$VARMLC (Rev 1.11)"
+"************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$VARMLC
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$VARMLC determines the new region number when a particle
+" traverses a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$VARMLC subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$VARMLC from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$VARMLC(IDIR);
+
+;IMPLICIT NONE;
+;COMIN/CM_$VARMLC,EPCONT,STACK,CMs/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$VARMLC
+"T>**************************************
+"T>
+INTEGER NX,NY,NZ,   "T>Indices of subregions
+        I,
+        OUTOFCMFLAG, "Flags to denote out of CM and
+        OUTOFMLCFLAG, " MLC respectively
+        OFFEDGECM,    "Flag to denote particle beyond RMAX_CM
+        LEAFIS,       " Leaf number
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XYL(2), XYFL(2), UVL(2),ZFL, XoN, XoP, Zo, TEMP1,TEMP2;
+
+IF(ORIENT_$VARMLC=1)
+
+   [ XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
+
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+
+IF (IDIR=1)
+["particle entering this CM through front face (upstream)
+   IF(N_GAP_$VARMLC = 0)
+   ["no air gap this CM"
+       IF(IRSTART_$VARMLC=2)   " the first CM
+       [$VARMLC_FIND(IR_$VARMLC,0.0); ]
+       ELSE[$VARMLC_FIND(IR_$VARMLC, USTEP);]
+       IF(IR_$VARMLC=1)
+       [IRNEW=IRSTART_$VARMLC; RETURN;]
+       ELSE[ IRNEW=IRSTART_$VARMLC+1; RETURN; ]
+   ]         " end of the no air gap case
+   ELSE
+   ["this CM has an air gap at the front
+      IRNEW = IREND_$VARMLC;
+   ]
+]
+ELSE
+["particle entering this CM through back face (downstream)
+   $VARMLC_FIND(IR_$VARMLC, USTEP);
+   IF(IR_$VARMLC=1)
+   [IRNEW=IRSTART_$VARMLC; RETURN;]
+   ELSE[ IRNEW=IRSTART_$VARMLC+1; RETURN; ]
+]
+
+RETURN;
+
+END; "End of subroutine WHERE_AM_I_$VARMLC"
+%E "Start of subroutine INPUT_$VARMLC (Rev 1.11)"
+
+"*************************************************************************
+
+"                           Subroutine INPUT_$VARMLC
+"
+"*************************************************************************
+"*************************************************************************
+
+"  A CM input subroutine for a series of 2 or more slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section INPUT FROM UNIT 5
+"   in the above documentation.
+"
+"************************************************************************
+
+;SUBROUTINE INPUT_$VARMLC;
+
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$VARMLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+
+"  **************************************************************** "
+"              TYPE DECLARATIONS FOR INPUT_$VARMLC
+"  **************************************************************** "
+
+$REAL  NEG_$VARMLC,     "T>Leaf B tip
+       POS_$VARMLC,     "T>Leaf A Tip
+       TEMP1,
+       TEMP2;
+
+INTEGER I,J,K,L,        "T>DO loop indices
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,   "T>medium index, set after medium sort by $MED_INPUT
+        NUM_$VARMLC, "T>number of adjacent leaves with same opening coordinates
+        GROOVE_BOT,  "T>set to 1 if groove goes to bottom of leaf body
+        GROOVE_TOP,  "T>set to 1 if groove starts at top of leaf body
+        TONGUE_BOT,  "T>set to 1 if tongue goes to bottom of leaf body
+        TONGUE_TOP,  "T>set to 1 if tongue starts at top of leaf body
+        MIN_INDEX,   "T>index of leaf with min. opening coordinate
+        MAX_INDEX;   "T>index of leaf with max. opening coordinate
+
+" **************************************************************** "
+
+"                 STEP I : INITIALIZE PARAMETERS
+"                          =====================
+
+" **************************************************************** "
+
+"I. GET THE TITLE "
+"================ "
+
+OUTPUT;(/' Next component is a VARIAN type MLC'/' Title: ',$);
+MINPUT ($VARMLC) TITLE_$VARMLC;(60A1);
+          "MINPUT is a replacement macro with EOF and
+          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$VARMLC;(' ',60A1);
+            "OUTPUT is a replacement macro which writes to
+            "unit 5.  Used here for echo of user input
+
+"II. CHOOSE THE VARMLC ORIENTATION "
+"============================== "
+
+OUTPUT; (' Input leaf orientation (0=parallel to y, 1=parallel to x) and '/
+         ' no. of groups of leaves with equal width on one line '/' :',$);
+MINPUT ($VARMLC) ORIENT_$VARMLC, NGROUP_$VARMLC; (2I5);
+OUTPUT ORIENT_$VARMLC,NGROUP_$VARMLC; (2I5/);
+IF(ORIENT_$VARMLC~=1)[
+      ORIENT_$VARMLC=0;
+      OUTPUT;(/' Orientation defaults to 0.'/);
+]
+IF(NGROUP_$VARMLC<=0)[
+      NGROUP_$VARMLC=1;
+      OUTPUT;(/' No. of groups defaults to 1.'/);
+]
+
+"III. DESIGNATE REGION NUMBERS "
+"============================= "
+
+N_$VARMLC = 2;
+           "Number of regions in this CM (excluding front air gap)
+ICM_$VARMLC = ICM;      "CM index for this component module
+IRSTART_$VARMLC = IR_start_CM(ICM_$VARMLC);
+                      "Index of first region in this CM,
+                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$VARMLC) = 0; "Geometry-checking flag, 0 if no error detected
+
+"IV. GET DISTANCE FROM THE REFERENCE PLANE, z=0 "
+"============================================== "
+
+OUTPUT; (' Z position of top of Varian MLC (>=0) : ',$);
+;MINPUT ($VARMLC) ZMIN_$VARMLC;(F15.0);
+OUTPUT ZMIN_$VARMLC;(F12.5/);
+IF(Z_min_CM(ICM_$VARMLC)>ZMIN_$VARMLC)[
+   IF(ICM_$VARMLC=1)[
+      Z_min_CM(ICM_$VARMLC)=ZMIN_$VARMLC;
+      OUTPUT ICM_$VARMLC, Z_min_CM(ICM_$VARMLC);
+       (//' ***WARNING IN CM ',I4,' ($VARMLC):'/
+          ' Z_min_CM(1) > distance to front of MLC '/
+          ' Z_min_CM(1) reset to ',F8.5,' cm'//);
+      WRITE(IOUTLIST,400)ICM_$VARMLC, Z_min_CM(ICM_$VARMLC);
+400 FORMAT(//' ***WARNING IN CM ',I4,' ($VARMLC):'/
+   ' Z_min_CM(1) > distance to front of collimator'/
+   ' Z_min_CM(1) reset to '',F8.5,'' cm'//);
+    ]
+    ELSE[
+      OUTPUT ICM_$VARMLC;
+       (//' ***** WARNING WARNING WARNING *****'/
+          ' ***ERROR IN CM ',I4,' ($VARMLC):'/
+          ' Overlaps with previous CM'/
+          ' Error will be propagated'//);
+      WRITE(IOUTLIST,401)ICM_$VARMLC;
+401   FORMAT(//' ***WARNING IN CM ',I4,' ($VARMLC):'/
+          ' Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+    ]
+]
+
+" ************************************************************** "
+
+"              STEP TWO : GET VARMLC GEOMETRY INFORMATION
+"                         ============================
+
+" ************************************************************** "
+
+" I. THICKNESS OF LEAVES "
+" =======================
+
+OUTPUT; (' MLC Leaf thickness (cm):',$);
+;MINPUT ($VARMLC) ZTHICK_$VARMLC; (F15.0);
+OUTPUT ZTHICK_$VARMLC;(F15.5, ' cm'/);
+
+" Validate the user-input thickness "
+
+IF(ZTHICK_$VARMLC<0.0) [
+    OUTPUT ICM_$VARMLC;(//' ***ERROR IN CM ',I4,' ($VARMLC):'/
+                          ' ZTHICK < 0.0'//);
+    IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+ZMAX_$VARMLC = ZMIN_$VARMLC + ZTHICK_$VARMLC;
+
+
+" II. NUMBER OF LEAVES AND LEAF WIDTH"
+" ==================================="
+
+OUTPUT NGROUP_$VARMLC,$MAXLEAF;
+(/' For each of the ',I3,' groups of leaves, input the # of leaf pairs (total'/
+ ' # of leaves cannot exceed ',I3,') and width (in cm) of each leaf at the'/
+ ' top of the MLC:'/);
+TOT_LEAF_$VARMLC=0;
+DO I=1,NGROUP_$VARMLC[
+   OUTPUT I;
+   (' Group ',I3,':'/
+    '   No. of leaves, leaf width :',$);
+   MINPUT ($VARMLC) NUM_LEAF_$VARMLC(I), LEAFWIDTH_$VARMLC(I); (I5,F15.0);
+   OUTPUT NUM_LEAF_$VARMLC(I), LEAFWIDTH_$VARMLC(I);(I5,F12.5/);
+   TOT_LEAF_$VARMLC=TOT_LEAF_$VARMLC+NUM_LEAF_$VARMLC(I);
+   IF((LEAFWIDTH_$VARMLC(I)<=0)|
+      (LEAFWIDTH_$VARMLC(I)>2*RMAX_CM(ICM_$VARMLC)))[
+     OUTPUT ICM_$VARMLC;
+            (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+             ' Width of leaves <= 0 or > CM boundary'//);
+     IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+   ]
+]
+
+IF(TOT_LEAF_$VARMLC>$MAXLEAF) [
+    TOT_LEAF_$VARMLC=$MAXLEAF;
+    OUTPUT ICM_$VARMLC,TOT_LEAF_$VARMLC;
+            (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+             ' Total # of leaves > max allowed'/
+             ' Total # of leaves reduced to ',I4,' for now'//);
+    IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(TOT_LEAF_$VARMLC<=0)[
+    TOT_LEAF_$VARMLC=1;
+    OUTPUT ICM_$VARMLC,TOT_LEAF_$VARMLC;
+            (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+             ' Total # of leaves <= 0'/
+             ' Total # of leaves set to ',I4,' for now'//);
+    IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+" III. START POSITION OF LEAVES"
+" ============================="
+
+OUTPUT ZMIN_$VARMLC; (/' Input the starting X (ORIENT_$VARMLC=0) or '/
+         ' Y (ORIENT_$VARMLC=1) position at z = ',F15.0, ' cm : ', $);
+MINPUT ($VARMLC) START_$VARMLC; (F15.0);
+OUTPUT START_$VARMLC; (F12.5);
+
+" Checking the validity of user-input"
+
+IF(ABS(START_$VARMLC)-RMAX_CM(ICM_$VARMLC)>1.E-5) [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' START POSITION EXCEEDS CM BOUNDARY'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+"IV. INFORMATION ON LEAF SCREWS ON CARRIAGE RAILINGS "
+"=================================================== "
+
+OUTPUT ; (/' Input the Screw Width and Height ',$);
+MINPUT ($VARMLC) WSCREW_$VARMLC, HSCREW_$VARMLC; (2F15.0);
+OUTPUT WSCREW_$VARMLC, HSCREW_$VARMLC; (F12.5,5X,F12.5);
+
+"Check validity of user-input"
+
+IF(HSCREW_$VARMLC<0|WSCREW_$VARMLC<0) [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Height or width of screw negative - check values '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+DO I=1,NGROUP_$VARMLC[
+  IF(WSCREW_$VARMLC>LEAFWIDTH_$VARMLC(I)) [
+  OUTPUT ICM_$VARMLC,I;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Width of screw exceeds Leaf width in group',I4,//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+  ]
+]
+
+IF(HSCREW_$VARMLC>ZTHICK_$VARMLC) [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Height of screw exceeds Leaf thickness  '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+"V. INFORMATION AND RESTRICTIONS ON TONGUE AND GROOVE "
+"==================================================== "
+
+GROOVE_TOP=0;
+GROOVE_BOT=0;
+TONGUE_TOP=0;
+TONGUE_BOT=0;
+
+OUTPUT; (/'Input the Tongue width, height and starting Z position'/': ',$);
+MINPUT ($VARMLC) WTONGUE_$VARMLC, HTONGUE_$VARMLC,
+                 ZTONGUE_$VARMLC; (3F15.0);
+OUTPUT WTONGUE_$VARMLC, HTONGUE_$VARMLC, ZTONGUE_$VARMLC;
+                                    (F12.5,5X,F12.5,5X,F12.5);
+
+OUTPUT; (/'Input the Groove width, height and starting Z position'/': ',$);
+MINPUT ($VARMLC) WGROOVE_$VARMLC, HGROOVE_$VARMLC,
+                 ZGROOVE_$VARMLC; (3F15.0);
+OUTPUT WGROOVE_$VARMLC, HGROOVE_$VARMLC, ZGROOVE_$VARMLC;
+                                    (F12.5,5X,F12.5,5X,F12.5);
+
+IF(ZTONGUE_$VARMLC=0.0) [
+    ZTONGUE_$VARMLC=ZMIN_$VARMLC+
+                    (ZTHICK_$VARMLC-HTONGUE_$VARMLC)/2;
+    OUTPUT ZTONGUE_$VARMLC;
+           (/' ZTONGUE was 0.  It will be reset to ',F12.5, ' cm'/
+             ' so that the tongue will be centered wrt the leaf body.'/);
+]
+
+IF(ZGROOVE_$VARMLC=0.0) [
+    ZGROOVE_$VARMLC=ZMIN_$VARMLC+
+                     (ZTHICK_$VARMLC-HGROOVE_$VARMLC)/2;
+    OUTPUT ZGROOVE_$VARMLC;
+           (/' ZGROOVE was 0.  It will be reset to ',F12.5, ' cm'/
+             ' so that the groove will be centered wrt the leaf body.'/);
+]
+
+DO I=1,NGROUP_$VARMLC[
+  IF(WTONGUE_$VARMLC>LEAFWIDTH_$VARMLC(I)|
+     WGROOVE_$VARMLC>LEAFWIDTH_$VARMLC(I)) [
+     OUTPUT ICM_$VARMLC,I;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Width of tongue or groove exceeds leaf width in group ',I3,//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+  ]
+]
+
+IF(WTONGUE_$VARMLC<0.0|WGROOVE_$VARMLC<0.0)[
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Width of tongue or groove is < 0.0  '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(HTONGUE_$VARMLC<0.0|HGROOVE_$VARMLC<0.0)  [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Height of tongue or groove < 0.0  '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(ZTONGUE_$VARMLC>ZMIN_$VARMLC+ZTHICK_$VARMLC-HSCREW_$VARMLC)[
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Z of top of tongue goes beyond bottom of leaf body.'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(ZGROOVE_$VARMLC>ZMIN_$VARMLC+ZTHICK_$VARMLC-HSCREW_$VARMLC)[
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Z of top of groove goes beyond bottom of leaf body.'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(ZTONGUE_$VARMLC<=ZMIN_$VARMLC+HSCREW_$VARMLC)[
+ZTONGUE_$VARMLC=ZMIN_$VARMLC+HSCREW_$VARMLC;
+TONGUE_TOP=1;
+OUTPUT ZTONGUE_$VARMLC;
+     (/' Z of top of tongue set to ',F12.5,' and tongue'/
+       ' will be treated as starting right at the top of the leaf body. '/);
+]
+
+IF(ZGROOVE_$VARMLC<=ZMIN_$VARMLC+HSCREW_$VARMLC)[
+ZGROOVE_$VARMLC=ZMIN_$VARMLC+HSCREW_$VARMLC;
+GROOVE_TOP=1;
+OUTPUT ZGROOVE_$VARMLC;
+     (/' Z of top of groove set to ',F12.5,' and groove'/
+       ' will be treated as starting right at the top of the leaf body. '/);
+]
+
+IF(ZTONGUE_$VARMLC+HTONGUE_$VARMLC>=ZMIN_$VARMLC+ZTHICK_$VARMLC-
+   HSCREW_$VARMLC) [
+  TONGUE_BOT=1;
+  HTONGUE_$VARMLC=ZMIN_$VARMLC+ZTHICK_$VARMLC-HSCREW_$VARMLC-
+                ZTONGUE_$VARMLC;
+  OUTPUT HTONGUE_$VARMLC;
+     (/' Height of tongue set to ',F12.5,' cm and tongue'/
+       ' will be treated as extending right to bottom of leaf body.'/);
+];
+
+IF(ZGROOVE_$VARMLC+HGROOVE_$VARMLC>ZMIN_$VARMLC+ZTHICK_$VARMLC-
+   HSCREW_$VARMLC) [
+  HGROOVE_$VARMLC=ZMIN_$VARMLC+ZTHICK_$VARMLC-HSCREW_$VARMLC-
+                ZGROOVE_$VARMLC;
+  GROOVE_BOT=1;
+  OUTPUT HGROOVE_$VARMLC;
+     (/' Height of groove set to ',F12.5,' cm and groove'/
+       ' will be treated as extending right to bottom of leaf body.'/);
+];
+
+IF(WTONGUE_$VARMLC>WGROOVE_$VARMLC) [
+WTONGUE_$VARMLC=WGROOVE_$VARMLC;
+
+"This must be done so that there is no overlap in the region of
+"the tongue and groove for zero inter-leaf air gap thickness."
+
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Width of tongue exceeds that of groove ',/
+   ' Reset to be equal to the width of the groove '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(ZGROOVE_$VARMLC>ZTONGUE_$VARMLC) [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Z of top of groove > Z of top of tongue. '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(ZTONGUE_$VARMLC+HTONGUE_$VARMLC>ZGROOVE_$VARMLC+HGROOVE_$VARMLC) [
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Z of bottom of tongue > Z of bottom of groove '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+DO I=1,NGROUP_$VARMLC[
+
+  IF((LEAFWIDTH_$VARMLC(I)-WSCREW_$VARMLC)/2<WGROOVE_$VARMLC) [
+
+   OUTPUT ICM_$VARMLC,I;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   'The screw side goes beyond the groove in leaf group ',I3,/
+   'Change parameters so that ',/
+   'LEAFWIDTH_$VARMLC(I)-WSCREW_$VARMLC)/2 >= WGROOVE_$VARMLC'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+   STOP;
+  ]
+]
+
+"VI. INTER-LEAF AIR GAP "
+"====================== "
+
+OUTPUT; (/'Input the inter-leaf air gap(>=0.0) : ',$);
+MINPUT ($VARMLC) LEAFGAP_$VARMLC; (F15.0);
+OUTPUT LEAFGAP_$VARMLC; (F12.5);
+
+IF(LEAFGAP_$VARMLC>WTONGUE_$VARMLC) [
+LEAFGAP_$VARMLC=WTONGUE_$VARMLC;
+
+"This is done to ensure there are no entirely unblocked areas between
+"adjacent leaves"
+
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Width of inter-leaf airgap exceeds that of tongue',/
+   ' Reset to be equal to the width of the tongue '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+IF(LEAFGAP_$VARMLC<0.0) [
+LEAFGAP_$VARMLC=0.0;
+OUTPUT ICM_$VARMLC;
+   (//'***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Inter-leaf air gap is negative - reset to 0.0 '//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+];
+
+LEAFGAP2_$VARMLC=WGROOVE_$VARMLC+LEAFGAP_$VARMLC-WTONGUE_$VARMLC;
+
+IF(LEAFGAP2_$VARMLC<0.0|LEAFGAP2_$VARMLC<LEAFGAP_$VARMLC-1.E-4)[
+OUTPUT; (/' Something is wrong with Tongue and groove widths ');
+IF(LEAFGAP2_$VARMLC-LEAFGAP_$VARMLC<-1e-5) [
+STOP;
+]
+ELSE [
+OUTPUT LEAFGAP2_$VARMLC-LEAFGAP_$VARMLC,LEAFGAP2_$VARMLC,LEAFGAP_$VARMLC;
+(' Probably a round-off error problem: ',f11.8,f11.8,f11.8);
+LEAFGAP2_$VARMLC=LEAFGAP_$VARMLC;
+]
+];
+
+"VII. TYPE OF LEAF ENDS - ROUNDED VS FLAT DIVERGENT "
+"================================================ "
+
+OUTPUT; (/'Input the type of leaf end desired : ',/,
+          '   0 --- Rounded leaf end or ',/
+          '   1 --- Focused leaf end  ');
+OUTPUT; ('Input your choice : ', $);
+MINPUT ($VARMLC) ENDTYPE_$VARMLC; (I5);
+OUTPUT ENDTYPE_$VARMLC; (I5/);
+
+IF(ENDTYPE_$VARMLC=1) [
+
+   OUTPUT; (' Input the z focus of the leaf ends : ',$);
+   MINPUT ($VARMLC) ZFOCUS_$VARMLC(2); (F15.0);
+   OUTPUT ZFOCUS_$VARMLC(2);(F12.5/);
+
+   IF(ABS(ZFOCUS_$VARMLC(2)-ZMIN_$VARMLC)<1.E-5) [
+      ZFOCUS_$VARMLC(2)=ZMIN_$VARMLC-1.E-4;
+      OUTPUT ICM_$VARMLC,ZFOCUS_$VARMLC(2);
+          (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+           ' ZFOCUS(2) cannot be equal to ZMIN_$VARMLC'/
+           ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+      IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+    ]
+ELSEIF(ZFOCUS_$VARMLC(2)>ZMIN_$VARMLC & ZFOCUS_$VARMLC(2)<ZMAX_$VARMLC)[
+       ZFOCUS_$VARMLC(2)=ZMAX_$VARMLC;
+       OUTPUT ICM_$VARMLC,ZFOCUS_$VARMLC(2);
+          (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+          ' ZFOCUS(2) is between ZMIN_$VARMLC and ZMAX_$VARMLC'/
+          ' This will cause leaf ends to overlap'/
+          ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+       IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+     ];
+]
+ELSE  [ "Defaults to rounded ends "
+
+   OUTPUT (ZTHICK_$VARMLC/2);
+          (' Input the radius >= ', F12.5, ' cm ', /
+          ' of the leaf ends : ',$);
+
+   MINPUT ($VARMLC) LEAFRADIUS_$VARMLC; (F15.0);
+   OUTPUT LEAFRADIUS_$VARMLC; (F15.0/);
+
+   IF((LEAFRADIUS_$VARMLC < (0.5*ZTHICK_$VARMLC)) |
+      (LEAFRADIUS_$VARMLC < 0.0)) [
+
+" This is done to ensure that the leaf end is rounded all the
+" way from zmin_$varmlc to zmax_$varmlc. Otherwise the curvature
+" will fall short."
+
+   LEAFRADIUS_$VARMLC=0.5*ZTHICK_$VARMLC;
+   OUTPUT ICM_$VARMLC,LEAFRADIUS_$VARMLC;
+      (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+      ' LEAFRADIUS_$VARMLC is less than minimum acceptable'/
+      ' RESET TO ', F15.5, ' cm for now'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+   ]
+]; " End of checking the leaf end ;
+
+
+"VIII. FOCUS FOR DIVERGENT LEAF SIDES "
+"==================================== "
+
+OUTPUT; (' Input the Z focus point of the leaf sides: ',$);
+MINPUT ($VARMLC) ZFOCUS_$VARMLC(1); (F15.0);
+OUTPUT ZFOCUS_$VARMLC(1); (F12.5/);
+IF(ABS(ZFOCUS_$VARMLC(1)-ZMIN_$VARMLC)<1.E-5) [
+   ZFOCUS_$VARMLC(1)=ZMIN_$VARMLC-1.E-4;
+   OUTPUT ICM_$VARMLC,ZFOCUS_$VARMLC(1);
+      (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+       ' ZFOCUS(1) cannot be equal to ZMIN_$VARMLC'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+                                               ]
+ELSEIF(ZFOCUS_$VARMLC(1)>ZMIN_$VARMLC & ZFOCUS_$VARMLC(1) < ZMAX_$VARMLC)[
+   ZFOCUS_$VARMLC(1)=ZMAX_$VARMLC;
+   OUTPUT ICM_$VARMLC,ZFOCUS_$VARMLC(1);
+      (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+       ' ZFOCUS(1) is between ZMIN_$VARMLC and ZMAX_$VARMLC'/
+       ' This will cause leaf sides to overlap'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+]
+
+"IX. CALCULATE THE Z-AXIS COORDINATES OF DIFFERENT SUB-REGIONS "
+"============================================================= "
+
+ZREG_$VARMLC(1)=ZMIN_$VARMLC;
+ZREG_$VARMLC(2)=ZMIN_$VARMLC+HSCREW_$VARMLC;
+ZREG_$VARMLC(3)=ZGROOVE_$VARMLC;
+ZREG_$VARMLC(4)=ZTONGUE_$VARMLC;
+ZREG_$VARMLC(5)=ZREG_$VARMLC(4)+HTONGUE_$VARMLC;
+ZREG_$VARMLC(6)=ZREG_$VARMLC(3)+HGROOVE_$VARMLC;
+ZREG_$VARMLC(7)=ZMAX_$VARMLC-HSCREW_$VARMLC;
+ZREG_$VARMLC(8)=ZMAX_$VARMLC;
+
+
+"X. CALC PARAMETERS IN DIRECTION PERPENDICULAR TO LEAF ORIENTATION
+"==================================================================
+
+TEMP1 = (ZMIN_$VARMLC-ZFOCUS_$VARMLC(1) );
+
+K=0;
+LOOP[
+  K=K+1;
+]UNTIL(NUM_LEAF_$VARMLC(K)>0);
+
+TEMP2 = (LEAFWIDTH_$VARMLC(K)-WSCREW_$VARMLC)/2;
+
+YREG_$VARMLC(1,1)=START_$VARMLC;
+YREG_$VARMLC(1,2)=YREG_$VARMLC(1,1)+WTONGUE_$VARMLC;
+YREG_$VARMLC(1,3)=YREG_$VARMLC(1,2)+TEMP2;
+YREG_$VARMLC(1,4)=YREG_$VARMLC(1,3)+WSCREW_$VARMLC;
+YREG_$VARMLC(1,5)=YREG_$VARMLC(1,2)+LEAFWIDTH_$VARMLC(K)-WGROOVE_$VARMLC;
+YREG_$VARMLC(1,6)=YREG_$VARMLC(1,2)+LEAFWIDTH_$VARMLC(K);
+
+DO I = 1,6 [
+   SURPARA1_$VARMLC(1,I)=YREG_$VARMLC(1,I)/TEMP1;
+           ];
+
+" Now do the same for all the leaves "
+
+IF(TOT_LEAF_$VARMLC>1) [
+   L=0;
+   DO I = 2, TOT_LEAF_$VARMLC [
+      IF(I-L>NUM_LEAF_$VARMLC(K)) [
+         L=L+NUM_LEAF_$VARMLC(K); "keep track of number of leaves so far"
+         LOOP[
+           K=K+1;
+         ]UNTIL(NUM_LEAF_$VARMLC(K)>0);
+         TEMP2 = (LEAFWIDTH_$VARMLC(K)-WSCREW_$VARMLC)/2;
+      ]
+YREG_$VARMLC(I,1)=YREG_$VARMLC(I-1,5)+LEAFGAP2_$VARMLC;
+YREG_$VARMLC(I,2)=YREG_$VARMLC(I,1)+WTONGUE_$VARMLC;
+YREG_$VARMLC(I,3)=YREG_$VARMLC(I,2)+TEMP2;
+YREG_$VARMLC(I,4)=YREG_$VARMLC(I,3)+WSCREW_$VARMLC;
+YREG_$VARMLC(I,5)=YREG_$VARMLC(I,2)+LEAFWIDTH_$VARMLC(K)-WGROOVE_$VARMLC;
+YREG_$VARMLC(I,6)=YREG_$VARMLC(I,2)+LEAFWIDTH_$VARMLC(K);
+
+      DO J = 1, 6 [
+        SURPARA1_$VARMLC(I,J)=YREG_$VARMLC(I,J)/TEMP1;
+                  ];                "End of J Loop"
+
+                              ]; "End of I Loop"
+                       ];   "End of IF statement"
+
+" Check to see if the VARMLC will go outside the CM boundary "
+
+TEMP1 = ABS((ZMAX_$VARMLC-ZFOCUS_$VARMLC(1))*SURPARA1_$VARMLC(1,2));
+TEMP2 = ABS((ZMAX_$VARMLC-ZFOCUS_$VARMLC(1))*
+            SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,5));
+
+IF(TEMP1>RMAX_CM(ICM_$VARMLC)|TEMP2>RMAX_CM(ICM_$VARMLC)) [
+
+OUTPUT; (/' The VARMLC is not contained within the CM boundaries', /
+        ' Please check ZFOCUS_$VARMLC(1) and or RMAX_CM(ICM_$VARMLC)'/);
+
+STOP;
+                                                          ];
+
+
+"XI. INPUT THE COORDINATES NEG_$VARMLC AND POS_$VARMLC "
+"===================================================== "
+
+DO I=1, TOT_LEAF_$VARMLC
+[
+    LEAFB_$VARMLC(I)=0.0;LEAFA_$VARMLC(I)=0.0;
+]
+
+OUTPUT; (' Input for MLC A and B leaf tips '/);
+IF(ORIENT_$VARMLC=1)[
+    IF(ENDTYPE_$VARMLC=1)[
+      OUTPUT;(' Input min. X, max. X of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. X, max. X of rounded leaf ends,');
+    ]
+]
+ELSE[
+    IF(ENDTYPE_$VARMLC=1)[
+      OUTPUT;(' Input min. Y, max. Y of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. Y, max. Y of rounded leaf ends,');
+    ]
+]
+OUTPUT;(' # of adjacent leaves with these coordinates:');
+I=1;
+LOOP[
+  OUTPUT I;('   For leaf',I4,' :',$)
+  MINPUT ($VARMLC) NEG_$VARMLC, POS_$VARMLC, NUM_$VARMLC; (2F15.0,I5);
+  IF(NUM_$VARMLC<=0) NUM_$VARMLC=1;
+  OUTPUT NEG_$VARMLC, POS_$VARMLC, NUM_$VARMLC; (2F12.5,I5);
+  IF(NEG_$VARMLC > POS_$VARMLC)[
+     NEG_$VARMLC = POS_$VARMLC;
+     OUTPUT ICM_$VARMLC,I,I+NUM_$VARMLC-1,NEG_$VARMLC;
+      (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+   ' Min. and max. opening coordinates in leaves ',I4,' - ',I4,' overlap'/
+   ' Both coordinates set to ',F15.5,' cm for now'//);
+     IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+                               ]
+
+  IF(ABS(NEG_$VARMLC)>RMAX_CM(ICM_$VARMLC)|
+     ABS(POS_$VARMLC)>RMAX_CM(ICM_$VARMLC)) [
+
+     OUTPUT ICM_$VARMLC,I,I+NUM_$VARMLC-1;
+      (//' ***ERROR IN CM ',I4,' ($VARMLC)'/
+      ' Tip of leaves ',I4,' - ',I4,' are outside CM '//);
+
+     IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+                                            ];
+  DO J=I,I+NUM_$VARMLC-1["define opening for all leaves in group"
+    IF(J>TOT_LEAF_$VARMLC) EXIT;
+    LEAFB_$VARMLC(J)=NEG_$VARMLC;
+    LEAFA_$VARMLC(J)=POS_$VARMLC;
+  ]
+  I=J;
+]WHILE(I<=TOT_LEAF_$VARMLC);"End of Coordinate inputs for || direction "
+
+IF(ENDTYPE_$VARMLC=1)[
+DO I=1, TOT_LEAF_$VARMLC [
+
+SURPARA2_B_$VARMLC(I)=LEAFB_$VARMLC(I)/(ZMIN_$VARMLC-ZFOCUS_$VARMLC(2) );
+
+SURPARA2_A_$VARMLC(I)=LEAFA_$VARMLC(I)/(ZMIN_$VARMLC-ZFOCUS_$VARMLC(2) );
+
+                         ];
+                    ];
+
+
+
+"XII. ESTABLISH TOP OF FIRST CM
+"==============================
+
+ZFRONT_$VARMLC = Z_min_CM(ICM_$VARMLC);
+
+"
+"XIII. ESTABLISH START OF NEXT CM
+"================================
+
+Z_min_CM(ICM_$VARMLC+1) = ZMAX_$VARMLC;
+
+"
+"XIV. GET ECUT, PCUT, DOSE SCORING ZONE AND MATERIAL IN EACH REGION
+"==================================================================
+
+IRA = IRSTART_$VARMLC-1;
+DO IR_$VARMLC = 1,N_$VARMLC
+["loop through regions to get information"
+   IRA = IRA+1;
+   IF (IR_$VARMLC = 1)[
+       ;OUTPUT IR_$VARMLC;
+        (/' Region',I4,' (MLC opening):'/
+          ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+          ' :',$);
+       ;MINPUT ($VARMLC)
+         ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   ]
+   ELSE[
+      ;OUTPUT IR_$VARMLC;
+        (/' Region',I4,' (MLC leaves):'/
+' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT, IGNOREGAPS'/
+         ' :',$);
+      ;MINPUT ($VARMLC)
+   ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),IGNOREGAPS_$VARMLC;
+         (2F15.0,3I5);
+   ]
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   IF (IR_$VARMLC = 1)[
+     ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+   ]
+   ELSE[
+     ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+       IGNOREGAPS_$VARMLC;(2F15.5,3I5);
+   ]
+      OUTPUT IR_$VARMLC;(' material of region ',I3,' ',$);
+   ;$MED_INPUT($VARMLC); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$VARMLC"
+
+IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
+   IF(ORIENT_$VARMLC=1)["leaves parallel to X"
+       OUTPUT;(/' *******Range rejection in $VARMLC will ignore all'/
+               ' air gaps if the particle is in the leaves and has'/
+               ' X < min. X of leaf openings (not including leaf ends)'/
+               ' or X > max. X of leaf openings (not including ends)'/);
+   ]
+   ELSE["leaves parallel to Y"
+       OUTPUT;(/' *******Range rejection in $VARMLC will ignore all'/
+               ' air gaps if the particle is in the leaves and has'/
+               ' Y < min. Y of leaf openings (not including leaf ends)'/
+               ' or Y > max. Y of leaf openings (not including ends)'/);
+   ]
+   DO I=1,TOT_LEAF_$VARMLC["loop through leaves to find index of those with"
+                           "max. +ve opening and min. -ve opening"
+       IF(I=1)[
+           MIN_INDEX=I;
+           MAX_INDEX=I;
+       ]
+       ELSE[
+           IF(LEAFB_$VARMLC(I)<LEAFB_$VARMLC(I-1))MIN_INDEX=I;
+           IF(LEAFA_$VARMLC(I)>LEAFA_$VARMLC(I-1))MAX_INDEX=I;
+       ]
+   ]
+   IF(ENDTYPE_$VARMLC=1)["straight, focused ends"
+       MIN_PLANE_$VARMLC=MIN(LEAFB_$VARMLC(MIN_INDEX),
+                        SURPARA2_B_$VARMLC(MIN_INDEX)*
+                       (ZMIN_$VARMLC+ZTHICK_$VARMLC-ZFOCUS_$VARMLC(2)));
+       MAX_PLANE_$VARMLC=MAX(LEAFA_$VARMLC(MAX_INDEX),
+                         SURPARA2_A_$VARMLC(MAX_INDEX)*
+                         (ZMIN_$VARMLC+ZTHICK_$VARMLC-ZFOCUS_$VARMLC(2)));
+   ]
+   ELSE["rounded leaf ends"
+       MIN_PLANE_$VARMLC=LEAFB_$VARMLC(MIN_INDEX)-LEAFRADIUS_$VARMLC+
+                         SQRT(LEAFRADIUS_$VARMLC**2-(ZTHICK_$VARMLC/2.)**2);
+       MAX_PLANE_$VARMLC=LEAFA_$VARMLC(MIN_INDEX)+LEAFRADIUS_$VARMLC-
+                         SQRT(LEAFRADIUS_$VARMLC**2-(ZTHICK_$VARMLC/2.)**2);
+   ]
+]
+ELSE["set to default"
+   IGNOREGAPS_$VARMLC=0;
+]
+
+"
+"XV. SET UP AIR GAP TO PREVIOUS CM IF PRESENT
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though its
+"  the top of the component module.  This is to allow the assignment of
+"  region numbers on input of the parameters of each local region
+"  (mainly to assign the medium number of the region).
+"  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$mlc=1) then the gap thickness
+"Z_gap_THICK(ICM_$varmlc) = 0, which is used as a flag for no air gap
+
+Z_gap_THICK(ICM_$VARMLC) = ZMIN_$VARMLC - Z_min_CM(ICM_$VARMLC);
+IF (Z_gap_THICK(ICM_$VARMLC) < = 0.0)
+[
+   Z_gap_THICK(ICM_$VARMLC) = 0.;
+   N_GAP_$VARMLC = 0; "no air gap for this CM
+]
+ELSE
+[
+   N_GAP_$VARMLC = 1; "this CM has an air gap
+   IRA = IRSTART_$VARMLC+N_$VARMLC; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+]
+
+"
+"XVI. SET UP REGION NUMBERS
+"===========================
+"
+"  This CM has N_$VARMLC+N_GAP_$mlc regions
+"
+;
+"Index last region
+IREND_$VARMLC = (IRSTART_$VARMLC -1) + N_$VARMLC+N_GAP_$VARMLC;
+NREG = NREG+N_$VARMLC+N_GAP_$VARMLC;
+                            "Total no of regions in full geometry up
+                            "to and including this CM
+IF (NREG <= $MXREG)
+[ IR_start_CM(ICM_$VARMLC+1) = IREND_$VARMLC+1; ]
+                       "have not exceeded maximum region number
+                       "Index of first region in next CM:"
+ELSE
+[
+      OUTPUT ICM_$VARMLC,NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' ($VARMLC):'/
+         T2,I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$VARMLC)=IERR_GEOM(ICM_$VARMLC)+1;
+]
+
+"
+"XVII.  ESTABLISH CM BOUNDARY
+"============================
+"
+RMAX_CM_FLAG(ICM_$VARMLC) = 2; "put a square boundary about CM
+"
+"XVIII. ESTABLISH DOSE SCORING ZONES AND BIT SETTING FOR EACH REGION
+"===================================================================
+"
+IRA = IRSTART_$VARMLC-1; "absolute region number"
+DO IR_$VARMLC=1,N_$VARMLC
+["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region GXD
+   E_min_out(ICM_$VARMLC)=ECUT(IRA); "Minimum energy on exit from CM
+
+] "end of loop over IR_$VARMLC
+
+"XIX. ESTABLISH SUB-REGION IR VALUES
+"===================================
+
+DO I=1,3 [
+   DO J =1,5 [
+      DO K = 1, 7 [
+    SUBINDEX_$VARMLC(I,J,K)=1;
+                  ];
+            ];
+         ];
+
+DO I =2,3 [
+   DO J = 2, 4 [
+      DO K = 2,6 [
+   SUBINDEX_$VARMLC(I,J,K)=2;
+                 ];
+               ];
+
+   SUBINDEX_$VARMLC(I,3,1)=2;
+   SUBINDEX_$VARMLC(I,3,7)=2;
+   SUBINDEX_$VARMLC(I,1,4)=2;
+   SUBINDEX_$VARMLC(I,5,2)=2;
+   SUBINDEX_$VARMLC(I,5,6)=2;
+   IF(GROOVE_TOP=1) SUBINDEX_$VARMLC(I,5,2)=1; "set to air"
+   IF(GROOVE_BOT=1) SUBINDEX_$VARMLC(I,5,6)=1;
+   IF(TONGUE_TOP=1) SUBINDEX_$VARMLC(I,1,3)=2; "set to leaf med"
+   IF(TONGUE_BOT=1) SUBINDEX_$VARMLC(I,1,5)=2;
+
+  "below for QA"
+  " SUBINDEX_$VARMLC(I,1,2)=2;
+  " SUBINDEX_$VARMLC(I,1,3)=2;
+  " SUBINDEX_$VARMLC(I,1,5)=2;
+  " SUBINDEX_$VARMLC(I,1,6)=2;
+  " SUBINDEX_$VARMLC(I,5,3)=2;
+  " SUBINDEX_$VARMLC(I,5,4)=2;
+  " SUBINDEX_$VARMLC(I,5,5)=2;
+          ];
+
+"   =======================
+"
+RETURN;
+
+"XX. ERROR MESSAGES
+"==================
+"
+:EOF_$VARMLC:
+;OUTPUT ICM;
+  (//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$VARMLC:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$VARMLC"
+
+%E "Start of subroutine ISUMRY_$VARMLC (Rev 1.11)"
+"***********************************************************************
+"
+"                          Subroutine ISUMRY_$VARMLC
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters
+" that require medium information obtained from HATCH call.
+"
+"***********************************************************************
+
+;SUBROUTINE ISUMRY_$VARMLC;
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$VARMLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$VARMLC
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR, "T>colour of CM for EGS_Windows
+"   ID,     already defined gf  T>index of dose scoring zone
+   IRA,     "T>absolute region number
+   I,J,     "T>DO loop index
+   YY1(7),          "T> YY1 and YY2 index subregion along perpendicular..
+   YY2(7);          "T> ..direction to MLC orientation
+
+$REAL  VOL_$VARMLC(2), "T> region volumes
+       Zo,             "T> THe z-coordinate of the leaf center
+       XoP,XoN,        "T> The center of the rounded leaves ends along leaf
+       M1,M2,          "T> Variables related to partial(rounded) leaf volume
+       THETASUB,       "T> Angle at leaf end subtended by Z boundaries of reg.
+       TOTALVOL,       "T> Total volume of MLC CM
+       ZSQUARE,ZCUBE,AREA,   "T> Variables related to partial leaf volumes
+       TEMP,TEMP1,TEMP2, "T> Variables related to partial leaf volumes
+       HOLD;            "T> to hold a TEMP value
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the
+"region density is set if it was allowed to default in INPUT_$mlc.
+"This volume calculation is approximate, but close enough
+"
+TOTALVOL = (ZMAX_$VARMLC-ZMIN_$VARMLC)*4*RMAX_CM(ICM_$VARMLC)**2;
+VOL_$VARMLC(1) = 0.;
+VOL_$VARMLC(2) = 0.;
+
+DATA ( YY1(I), I=1,7) /3,2,2,1,2,2,3/ ;
+DATA ( YY2(I), I=1,7) /4,6,5,5,5,6,4/ ;
+
+Zo = ZMIN_$VARMLC + (ZTHICK_$VARMLC/2);
+
+DO J = 1, TOT_LEAF_$VARMLC [
+
+   DO I = 2,8 [ " 7 subregions in z-direction"
+
+       ZSQUARE=ZREG_$VARMLC(I)**2 - ZREG_$VARMLC(I-1)**2 -
+              2*ZREG_$VARMLC(I)*ZFOCUS_$VARMLC(1) +
+              2*ZREG_$VARMLC(I-1)*ZFOCUS_$VARMLC(1);
+       AREA=SURPARA1_$VARMLC(J,YY2(I-1))/2*ZSQUARE -
+               SURPARA1_$VARMLC(J,YY1(I-1))/2*ZSQUARE;
+
+   IF(ENDTYPE_$VARMLC=0) [ "Rounded leaf end
+
+        XoN=LEAFB_$VARMLC(J)-LEAFRADIUS_$VARMLC;
+        XoP=LEAFA_$VARMLC(J)+LEAFRADIUS_$VARMLC;
+        TEMP1=SQRT(LEAFRADIUS_$VARMLC**2-(ZREG_$VARMLC(I-1)-Zo)**2);
+        TEMP2=SQRT(LEAFRADIUS_$VARMLC**2-(ZREG_$VARMLC(I)-Zo)**2);
+        M1=ASIN(TEMP1/LEAFRADIUS_$VARMLC);
+        M2=ASIN(TEMP2/LEAFRADIUS_$VARMLC);
+        THETASUB=ABS(M1-M2);
+        TEMP=AREA*(2*RMAX_CM(ICM_$VARMLC)-(XoP-MIN(TEMP1,TEMP2)-
+                      XoN-MIN(TEMP1,TEMP2)));
+        TEMP=TEMP+((ZREG_$VARMLC(I)-ZREG_$VARMLC(I-1))*ABS(TEMP1-TEMP2)
+             +LEAFRADIUS_$VARMLC**2*(THETASUB-SIN(THETASUB)))*
+             ((SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I)-ZFOCUS_$VARMLC(1)) +
+             (SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I-1)-ZFOCUS_$VARMLC(1)))/2;
+
+        VOL_$VARMLC(2)=VOL_$VARMLC(2)+TEMP;
+
+   ]
+   ELSE[ "Focused divergent leaf end "
+
+        TEMP1=SURPARA2_A_$VARMLC(J)*(ZREG_$VARMLC(I-1)-ZFOCUS_$VARMLC(2));
+        TEMP2=SURPARA2_A_$VARMLC(J)*(ZREG_$VARMLC(I)-ZFOCUS_$VARMLC(2));
+        "do positive part of leaf first"
+        TEMP=AREA*(RMAX_CM(ICM_$VARMLC)-MAX(TEMP1,TEMP2));
+        TEMP=TEMP+(ABS(TEMP1-TEMP2)*(ZREG_$VARMLC(I)-ZREG_$VARMLC(I-1)))/2*
+            ((SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I)-ZFOCUS_$VARMLC(1)) +
+             (SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I-1)-ZFOCUS_$VARMLC(1)))/2;
+        "now do negative part of leaf"
+        TEMP1=SURPARA2_B_$VARMLC(J)*(ZREG_$VARMLC(I-1)-ZFOCUS_$VARMLC(2));
+        TEMP2=SURPARA2_B_$VARMLC(J)*(ZREG_$VARMLC(I)-ZFOCUS_$VARMLC(2));
+        TEMP=TEMP+AREA*(MIN(TEMP1,TEMP2)+RMAX_CM(ICM_$VARMLC));
+        TEMP=TEMP+(ABS(TEMP1-TEMP2)*(ZREG_$VARMLC(I)-ZREG_$VARMLC(I-1)))/2*
+            ((SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I)-ZFOCUS_$VARMLC(1)) +
+             (SURPARA1_$VARMLC(J,YY2(I-1))-SURPARA1_$VARMLC(J,YY1(I-1)))*
+             (ZREG_$VARMLC(I-1)-ZFOCUS_$VARMLC(1)))/2;
+
+        VOL_$VARMLC(2)=VOL_$VARMLC(2)+TEMP;
+
+   ];
+   IF(I=5 & J=1) HOLD=TEMP;
+ ];  "End of I loop
+];       "End of J Loop
+
+"now add the volume between the outer edges of the first and last leaves"
+"+-RMAX in the direction perpendicular to the leaf opening direction"
+"IF(SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*(ZMAX_$VARMLC-ZFOCUS_$VARMLC(1)) >
+"   RMAX_CM(ICM_$VARMLC))[
+"   TEMP=RMAX_CM(ICM_$VARMLC)/SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6) +
+"        ZFOCUS_$VARMLC(1);
+"   VOL_$VARMLC(2)=VOL_$VARMLC(2)+
+"                  RMAX_CM(ICM_$VARMLC)*(RMAX_CM(ICM_$VARMLC)-
+"                  YREG_$VARMLC(TOT_LEAF_$VARMLC,6))*
+"                  (TEMP-ZMIN_$VARMLC);
+"]
+"ELSE[
+"   TEMP=SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*
+"        (ZMAX_$VARMLC-ZFOCUS_$VARMLC(1));
+"   VOL_$VARMLC(2)=VOL_$VARMLC(2)+
+"                  2*RMAX_CM(ICM_$VARMLC)*((RMAX_CM(ICM_$VARMLC)-
+"                  MAX(TEMP,YREG_$VARMLC(TOT_LEAF_$VARMLC,6))) *
+"                  (ZMAX_$VARMLC-ZMIN_$VARMLC) +
+"                  ABS(TEMP-YREG_$VARMLC(TOT_LEAF_$VARMLC,6)) *
+"                  (ZMAX_$VARMLC-ZMIN_$VARMLC)/2);
+"]
+
+"TEMP=(SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,5)-
+"      SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6))*
+"      (ZREG_$VARMLC(6)-ZFOCUS_$VARMLC(1))**2;
+"TEMP=TEMP-(SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,5)-
+"      SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6))*
+"      (ZREG_$VARMLC(3)-ZFOCUS_$VARMLC(1))**2;
+"VOL_$VARMLC(2)=VOL_$VARMLC(2)+RMAX_CM(ICM_$VARMLC)*TEMP;
+
+"IF(SURPARA1_$VARMLC(1,2)*(ZMAX_$VARMLC-ZFOCUS_$VARMLC(1)) <
+"   -RMAX_CM(ICM_$VARMLC))[
+"   TEMP=-RMAX_CM(ICM_$VARMLC)/SURPARA1_$VARMLC(1,2) +
+"        ZFOCUS_$VARMLC(1);
+"   VOL_$VARMLC(2)=VOL_$VARMLC(2)+RMAX_CM(ICM_$VARMLC)*(YREG_$VARMLC(1,2)+
+"                                 RMAX_CM(ICM_$VARMLC))*(TEMP-ZMIN_$VARMLC)-
+"                                 HOLD;
+"]
+"ELSE[
+"   TEMP=SURPARA1_$VARMLC(1,2)*(ZMAX_$VARMLC-ZFOCUS_$VARMLC(1));
+"   VOL_$VARMLC(2)=VOL_$VARMLC(2)+2*RMAX_CM(ICM_$VARMLC)*
+"                  ((MIN(TEMP,YREG_$VARMLC(1,2))+ RMAX_CM(ICM_$VARMLC))*
+"                    (ZMAX_$VARMLC-ZMIN_$VARMLC) +
+"                   ABS(TEMP-YREG_$VARMLC(1,2)) *
+"                   (ZMAX_$VARMLC-ZMIN_$VARMLC)/2) - HOLD;
+"]
+
+VOL_$VARMLC(1) = TOTALVOL - VOL_$VARMLC(2);
+
+"i.e. Air Volume = Total Volume - Volume of Leaves
+
+IRA = IRSTART_$VARMLC-1; "absolute region number
+DO IR_$VARMLC=1,N_$VARMLC+N_GAP_$VARMLC
+["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0)
+   ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$VARMLC(IR_$VARMLC)*RHOR(IRA);
+   ]
+] "end of loop over IR_$VARMLC"
+
+"   Summarize geometrical information for this CM in listing file
+"   ==============================================================
+"
+WRITE(IOUTLIST,110) ICM_$VARMLC,TITLE_$VARMLC;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$VARMLC), RMAX_CM(ICM_$VARMLC);
+IF(N_GAP_$VARMLC~=0)[
+          WRITE(IOUTLIST,124) Z_min_CM(ICM_$VARMLC),
+                             ZMIN_$VARMLC-Z_min_CM(ICM_$VARMLC);
+]
+IF(ORIENT_$VARMLC~=0)[
+  IF(ENDTYPE_$VARMLC=1) [
+    WRITE(IOUTLIST,122) ZTHICK_$VARMLC,'X',NGROUP_$VARMLC,
+                       'Y',
+                       (I,NUM_LEAF_$VARMLC(I),LEAFWIDTH_$VARMLC(I),
+                        I=1,NGROUP_$VARMLC);
+    WRITE(IOUTLIST,123)ENDTYPE_$VARMLC,
+                       ZFOCUS_$VARMLC(1), ZFOCUS_$VARMLC(2),
+                       START_$VARMLC,WSCREW_$VARMLC,HSCREW_$VARMLC,
+                       WTONGUE_$VARMLC,HTONGUE_$VARMLC,ZTONGUE_$VARMLC,
+                       WGROOVE_$VARMLC,HGROOVE_$VARMLC,ZGROOVE_$VARMLC,
+                       LEAFGAP_$VARMLC, LEAFGAP2_$VARMLC, VOL_$VARMLC(1),
+                       VOL_$VARMLC(2),TOTALVOL;
+                         ]
+  ELSE                   [
+    WRITE(IOUTLIST,122) ZTHICK_$VARMLC,'X',NGROUP_$VARMLC,
+                       'Y',
+                       (I,NUM_LEAF_$VARMLC(I),LEAFWIDTH_$VARMLC(I),
+                        I=1,NGROUP_$VARMLC);
+    WRITE(IOUTLIST,123)ENDTYPE_$VARMLC,
+                       ZFOCUS_$VARMLC(1), LEAFRADIUS_$VARMLC,
+                       START_$VARMLC,WSCREW_$VARMLC,HSCREW_$VARMLC,
+                       WTONGUE_$VARMLC,HTONGUE_$VARMLC,ZTONGUE_$VARMLC,
+                       WGROOVE_$VARMLC,HGROOVE_$VARMLC,ZGROOVE_$VARMLC,
+                       LEAFGAP_$VARMLC, LEAFGAP2_$VARMLC, VOL_$VARMLC(1),
+                       VOL_$VARMLC(2),TOTALVOL;
+                         ];
+]
+ELSE[
+  IF(ENDTYPE_$VARMLC=1) [
+    WRITE(IOUTLIST,122)  ZTHICK_$VARMLC,'Y',NGROUP_$VARMLC,
+                        'X',
+                       (I,NUM_LEAF_$VARMLC(I),LEAFWIDTH_$VARMLC(I),
+                        I=1,NGROUP_$VARMLC);
+    WRITE(IOUTLIST,123)ENDTYPE_$VARMLC,
+                        ZFOCUS_$VARMLC(1), ZFOCUS_$VARMLC(2),
+                       START_$VARMLC,WSCREW_$VARMLC,HSCREW_$VARMLC,
+                       WTONGUE_$VARMLC,HTONGUE_$VARMLC,ZTONGUE_$VARMLC,
+                       WGROOVE_$VARMLC,HGROOVE_$VARMLC,ZGROOVE_$VARMLC,
+                       LEAFGAP_$VARMLC, LEAFGAP2_$VARMLC, VOL_$VARMLC(1),
+                       VOL_$VARMLC(2),TOTALVOL;
+                        ]
+  ELSE                  [
+    WRITE(IOUTLIST,122) ZTHICK_$VARMLC,'Y',NGROUP_$VARMLC,
+                        'X',
+                       (I,NUM_LEAF_$VARMLC(I),LEAFWIDTH_$VARMLC(I),
+                        I=1,NGROUP_$VARMLC);
+    WRITE(IOUTLIST,123)ENDTYPE_$VARMLC,
+                      ZFOCUS_$VARMLC(1), LEAFRADIUS_$VARMLC,
+                       START_$VARMLC,WSCREW_$VARMLC,HSCREW_$VARMLC,
+                       WTONGUE_$VARMLC,HTONGUE_$VARMLC,ZTONGUE_$VARMLC,
+                       WGROOVE_$VARMLC,HGROOVE_$VARMLC,ZGROOVE_$VARMLC,
+                       LEAFGAP_$VARMLC, LEAFGAP2_$VARMLC, VOL_$VARMLC(1),
+                       VOL_$VARMLC(2),TOTALVOL;
+                        ];
+];
+IF(ORIENT_$VARMLC~=0)[
+      WRITE(IOUTLIST,126)'Y','X';
+]
+ELSE[
+      WRITE(IOUTLIST,126)'X','Y';
+]
+
+DO I =1, TOT_LEAF_$VARMLC [
+
+WRITE(IOUTLIST,128)I,I,YREG_$VARMLC(I,1),YREG_$VARMLC(I,6),
+                   LEAFB_$VARMLC(I),LEAFA_$VARMLC(I);
+
+                          ];
+
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$VARMLC-1;
+DO IR_$VARMLC=1,N_$VARMLC[
+   IRA = IRA+1;
+   IF(IR_$VARMLC=1)[
+      IF (MED(IRA)=0)["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$VARMLC,'opening',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$VARMLC,'opening',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$VARMLC=2)[
+      IF (MED(IRA)=0)["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$VARMLC,'leaves',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$VARMLC,'leaves',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+]
+
+IF(N_GAP_$VARMLC ~=0)[
+   IRA=IRSTART_$VARMLC+N_$VARMLC;
+      WRITE(IOUTLIST,140) IR_$VARMLC,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      WRITE(IOUTLIST,141)'at top';
+]
+
+IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
+  IF(ORIENT_$VARMLC=1)["leaves parallel to X"
+   WRITE(IOUTLIST,'(/'' *******Range rejection in $VARMLC will ignore all''/
+                   '' air gaps if the particle is in the leaves and has''/
+                   '' X < min. X of leaf openings (not including leaf ends)''/
+                   '' or X > max. X of leaf openings (not including ends)''/)');
+  ]
+  ELSE["leaves parallel to Y"
+   WRITE(IOUTLIST,'(/'' *******Range rejection in $VARMLC will ignore all''/
+                   '' air gaps if the particle is in the leaves and has''/
+                   '' Y < min. Y of leaf openings (not including leaf ends)''/
+                   '' or Y > max. Y of leaf openings (not including ends)''/)');
+  ]
+]
+
+110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
+            ' (3 regions Rev 1.11)',
+           /'  -------------------------------------------------',
+            '------------------',
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$VARMLC geometry parameters:',
+           /T2,'------------------------',
+           /T2,'Distance from front of CM from reference plane = ',T51,
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',T51,F15.5,' cm');
+122 FORMAT(T2,'Thickness of collimator = ',T51,F15.5,' cm',
+           /T2,'Leaves open parallel to the ',A1,' axis'
+           /T2,'No. of groups of leaves with equal width = ',T51,I5,
+           /T2,'Width of leaves in the ',A1,' direction:',
+           /T2,'  Group    No. of leaves    width (cm)',
+           /T2,'  -----    -------------    ----------',
+           $MAXLEAF(/T2,I5,I16,F15.5,$));
+123 FORMAT( T2,'Type of Leaf end (0-Rounded and 1-Focused) = ',T51,I5,
+           /T2,'Z focus of leaf side surfaces = ',T51,F15.5,' cm',
+           /T2,'Parameter for leaf end surfaces = ',T51,F15.5,' cm',
+           /T2,'(i.e. Leaf Radius or Z focus of leaf end)',
+           /T2,'Start position of leaves perpendicular to MLC leaves = ',
+               T51, F15.5, 'cm',
+           /T2,'Width of screw on carriage railing = ',T51,
+               F15.5, 'cm',
+           /T2,'Height of screw on carriage railing = ',T51,
+               F15.5, 'cm',
+           /T2,'Width of Tongue = ',T51,
+               F15.5, 'cm',
+           /T2,'Height of Tongue = ',T51,
+               F15.5, 'cm',
+           /T2,'Z of top of tongue = ',T51,
+               F15.5, 'cm',
+           /T2,'Width of Groove = ',T51,
+               F15.5, 'cm',
+           /T2,'Height of Groove = ',T51,
+               F15.5, 'cm',
+           /T2,'Z of top of groove = ',T51,
+               F15.5, 'cm',
+           /T2,'Gap between adjacent leaves on the same carriage = ',T51,
+               F15.5, 'cm',
+           /T2,'Gap between adjacent leaves in T&G region = ',T51,
+               F15.5, 'cm',
+           /T2,'Volume of region between leaves = ',T51,
+               F15.5, 'cm**3',
+           /T2,'Volume of leaves = ',T51,
+               F15.5, 'cm**3',
+           /T2,'Volume of Multileaf Collimator Component Module = ',T51,
+               F15.5, 'cm**3');
+
+
+124 FORMAT(T2,'There is an airgap starting at Z = ',F8.3,' cm with',
+              ' thickness ',F8.3,' cm');
+126 FORMAT
+(/T2,'Leaves              ',A1,' range             ',A1,
+' coordinates of opening',
+ /T2,'                  spanned (cm)               A    (cm)    B ');
+128 FORMAT(T2,I3,'-',I3,3X,F10.5,' - ',F10.5,5X,F10.5,5X,F10.5);
+130 FORMAT(/T2,'$VARMLC region parameters:',
+           /T2,'----------------------',
+           /T2,'local  location  electron  photon',
+               '  range-rejection   dose  bit  medium'
+           /T2,'region            cutoff   cutoff',
+               '   level     max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+               '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,3X,9A1);
+141 FORMAT(T9,A7);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;
+
+] "End of graphics output"
+
+200 FORMAT(' ',I1,A3,A1,10(F7.2,','));
+;RETURN;
+END;
+
+%E "Start of subroutine HOWNEAR_$VARMLC (Rev 1.11)"
+"***********************************************************************
+"
+"                          Subroutine HOWNEAR_$VARMLC
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary
+" Used to be HOWNEAR macro, but is now called from that macro.
+"
+"***********************************************************************
+
+;SUBROUTINE HOWNEAR_$VARMLC(DIST);
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$VARMLC,STACK/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      XYL1,XYL2, "T> X(NP) and Y(NP)
+      TEMP1,TEMP2; "T> temp. distance variables
+
+$INTEGER I, "T> looping index
+         NZ, "T> index of subregion in Z direction
+         NY, "T> index of subregion perpendicular to leaf opening direction
+         LEAFIS, "T> leaf no. where particle is located
+         I1,I2; "T> used to mark min. max. Z boundaries for calculating dist
+
+IR_$VARMLC=IR(NP) - IRSTART_$VARMLC + 1;
+IF(IR_$VARMLC=3) [ "in the air gap at the top"
+  DIST=MIN(Z(NP)-ZFRONT_$VARMLC,ZMIN_$VARMLC-Z(NP));
+]
+ELSE [
+ IF(ORIENT_$VARMLC=1) [ XYL1=Y(NP); XYL2=X(NP); ]
+ ELSE [ XYL1=X(NP); XYL2=Y(NP); ]
+
+ IF(IGNOREGAPS_$VARMLC=1 & XYL2 < MIN_PLANE_$VARMLC &
+ XYL1 > SURPARA1_$VARMLC(1,1)*(Z(NP)-ZFOCUS_$VARMLC(1)) &
+ XYL1 < SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*(Z(NP)-ZFOCUS_$VARMLC(1)) &
+ IR_$VARMLC=2)[
+   "particle within negative leaves, ignore air gaps for range rejection"
+
+  "distance to most -ve leaf side...note this is to the tip of the tongue"
+  TEMP1=SURPARA1_$VARMLC(1,1);
+  TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+
+  "distance to most +ve leaf side...note this is to the back of the last"
+  "leaf...ie not to the groove"
+  TEMP2=SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6);
+  TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP2**2));
+
+  DIST=MIN(Z(NP)-ZMIN_$VARMLC,ZMIN_$VARMLC+ZTHICK_$VARMLC-Z(NP),
+           MIN_PLANE_$VARMLC-XYL2,TEMP1,TEMP2);
+ ]
+ ELSEIF(IGNOREGAPS_$VARMLC=1 & XYL2 > MAX_PLANE_$VARMLC &
+ XYL1 > SURPARA1_$VARMLC(1,1)*(Z(NP)-ZFOCUS_$VARMLC(1)) &
+ XYL1 < SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*(Z(NP)-ZFOCUS_$VARMLC(1)) &
+ IR_$VARMLC=2)[
+   "particle within positive leaves, ignore air gaps for range rejection"
+
+  "distance to most -ve leaf side...note this is to the tip of the tongue"
+  TEMP1=SURPARA1_$VARMLC(1,1);
+  TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+
+  "distance to most +ve leaf side...note this is to the back of the last"
+  "leaf...ie not just to the groove"
+  TEMP2=SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6);
+  TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP2**2));
+
+  DIST=MIN(Z(NP)-ZMIN_$VARMLC,ZMIN_$VARMLC+ZTHICK_$VARMLC-Z(NP),
+           XYL2-MAX_PLANE_$VARMLC,TEMP1,TEMP2);
+ ]
+ ELSE["do not ignore air gaps for range rejection"
+
+  IF(Z(NP)<ZREG_$VARMLC(1))[
+    NZ=1;
+  ]
+  ELSEIF(Z(NP)>ZREG_$VARMLC(8))[
+    NZ=7;
+  ]
+  ELSE[
+    DO I = 1,7 [
+      IF( (ZREG_$VARMLC(I)<=Z(NP)) & (Z(NP)<=ZREG_$VARMLC(I+1)) ) [NZ=I; EXIT;]
+    ];
+  ]
+  LEAFIS=0;
+  DO I = 1,TOT_LEAF_$VARMLC [
+
+    TEMP1=SURPARA1_$VARMLC(I,1)*(Z(NP)-ZFOCUS_$VARMLC(1));
+    TEMP2=SURPARA1_$VARMLC(I,6)*(Z(NP)-ZFOCUS_$VARMLC(1));
+    IF( (TEMP1<=XYL1) & (XYL1<=TEMP2)) [
+       LEAFIS=I; EXIT;
+    ]
+  ];
+  IF(LEAFIS~=0) [
+    TEMP1=SURPARA1_$VARMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$VARMLC(1));
+    TEMP2=SURPARA1_$VARMLC(LEAFIS,6)*(Z(NP)-ZFOCUS_$VARMLC(1));
+    IF(XYL1<TEMP1)[
+       NY=1;
+    ]
+    ELSEIF(XYL1>TEMP2)[
+       NY=5;
+    ]
+    ELSE[
+     DO I =1,5 [
+      TEMP1=SURPARA1_$VARMLC(LEAFIS,I)*(Z(NP)-ZFOCUS_$VARMLC(1));
+      TEMP2=SURPARA1_$VARMLC(LEAFIS,I+1)*(Z(NP)-ZFOCUS_$VARMLC(1));
+      IF(TEMP1<=XYL1 & XYL1<=TEMP2) [NY=I; EXIT;]
+     ];
+    ]
+
+    IF(NY=5 & NZ=4) [
+      IF(XYL1>SURPARA1_$VARMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$VARMLC(1))) [
+        LEAFIS=LEAFIS+1; NY=1;
+      ]
+    ];
+    IF(NY=1 & NZ=1) [I1=1; I2=2;]
+    ELSEIF(NY=1 & NZ=2) [I1=1; I2=4;]
+    ELSEIF(NY=1 & NZ=3) [I1=3; I2=4;]
+    ELSEIF(NY=1 & NZ=4) [I1=4;I2=5;]
+    ELSEIF(NY=1 & NZ=5) [I1=5; I2=6;]
+    ELSEIF(NY=1 & NZ=6) [I1=5;I2=8;]
+    ELSEIF(NY=1 & NZ=7) [I1=7; I2=8;]
+
+    ELSEIF(NY=2 & NZ=1) [I1=1; I2=2;]
+    ELSEIF(NY=2 & NZ=7) [I1=7; I2=8;]
+    ELSEIF(NY=2) [I1=2; I2=7;]
+
+    ELSEIF(NY=3 & (NZ=1 | NZ=7)) [I1=1; I2=8;]
+    ELSEIF(NY=3) [I1=2; I2=7;]
+
+    ELSEIF(NY=4 & NZ=1) [I1=1; I2=2;]
+    ELSEIF(NY=4 & NZ=7) [I1=7; I2=8;]
+    ELSEIF(NY=4) [I1=2; I2=7;]
+
+    ELSEIF(NY=5 & NZ=1) [I1=1; I2=2;]
+    ELSEIF(NY=5 & NZ=2) [I1=2; I2=3;]
+    ELSEIF(NY=5 & NZ=3) [I1=3; I2=4;]
+    ELSEIF(NY=5 & NZ=4) [I1=3; I2=6;]
+    ELSEIF(NY=5 & NZ=5) [I1=5; I2=6;]
+    ELSEIF(NY=5 & NZ=6) [I1=6; I2=7;]
+    ELSEIF(NY=5 & NZ=7) [I1=7; I2=8;]
+
+
+    DIST=MIN(ABS(ZREG_$VARMLC(I1)-Z(NP)),ABS(ZREG_$VARMLC(I2)-Z(NP)));
+    IF((NZ=1 |NZ=7) & NY<=2)[
+       IF(LEAFIS=1)[ TEMP1=SURPARA1_$VARMLC(LEAFIS,1);]
+       ELSE[ TEMP1=SURPARA1_$VARMLC(LEAFIS-1,4);]
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,3);
+    ]
+    ELSEIF((NZ=1|NZ=7) & NY=3)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,3);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,4);
+    ]
+    ELSEIF((NZ=1 |NZ=7) & NY<=5)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,4);
+       IF(LEAFIS=TOT_LEAF_$VARMLC)[ TEMP2=SURPARA1_$VARMLC(LEAFIS,6);]
+       ELSE[ TEMP2=SURPARA1_$VARMLC(LEAFIS+1,3);]
+    ]
+
+    ELSEIF((NZ=2 | NZ=6) & NY=1)[
+       IF(LEAFIS=1)[TEMP1=SURPARA1_$VARMLC(LEAFIS,1);]
+       ELSE[ TEMP1=SURPARA1_$VARMLC(LEAFIS-1,6);]
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,2);
+    ]
+    ELSEIF(NZ=2 | NZ=6)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,2);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,6);
+    ]
+
+    ELSEIF((NZ=3 | NZ=5) & NY=1)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,1);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,2);
+    ]
+    ELSEIF((NZ=3 | NZ=5) & NY<=4)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,2);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,5);
+    ]
+    ELSEIF((NZ=3 | NZ=5) & NY=5)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,5);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,6);
+    ]
+
+    ELSEIF(NZ=4 & NY=5)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,5);
+       IF(LEAFIS=TOT_LEAF_$VARMLC)[TEMP2=SURPARA1_$VARMLC(LEAFIS,6);]
+       ELSE[TEMP2=SURPARA1_$VARMLC(LEAFIS+1,1);]
+    ]
+    ELSEIF(NZ=4)[
+       TEMP1=SURPARA1_$VARMLC(LEAFIS,1);
+       TEMP2=SURPARA1_$VARMLC(LEAFIS,5);
+    ]
+
+    TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+    TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP2**2));
+
+    DIST = MIN(DIST,TEMP1,TEMP2);
+
+    IF(ENDTYPE_$VARMLC=1) [
+
+      TEMP1=SURPARA2_B_$VARMLC(LEAFIS);
+      TEMP1=1/SQRT(1+TEMP1**2);
+      TEMP2=SURPARA2_A_$VARMLC(LEAFIS);
+      TEMP2=1/SQRT(1+TEMP2**2);
+
+      DIST=MIN(DIST,
+      ABS((SURPARA2_B_$VARMLC(LEAFIS)*(Z(NP)-ZFOCUS_$VARMLC(2))-XYL2)*TEMP1),
+      ABS((SURPARA2_A_$VARMLC(LEAFIS)*(Z(NP)-ZFOCUS_$VARMLC(2))-XYL2)*TEMP2));
+
+    ]
+    ELSE[
+      IF(XYL2 > LEAFB_$VARMLC(LEAFIS)-LEAFRADIUS_$VARMLC)[
+          TEMP1=ABS( SQRT((Z(NP)-(ZMIN_$VARMLC+ZTHICK_$VARMLC/2))**2 +
+                     (XYL2-(LEAFB_$VARMLC(LEAFIS)-LEAFRADIUS_$VARMLC))**2) -
+                 LEAFRADIUS_$VARMLC);
+      ]
+      ELSE[ TEMP1=1E20;]
+      IF(XYL2 < LEAFA_$VARMLC(LEAFIS)+LEAFRADIUS_$VARMLC)[
+          TEMP2=ABS( SQRT((Z(NP)-(ZMIN_$VARMLC+ZTHICK_$VARMLC/2))**2 +
+                     ((LEAFA_$VARMLC(LEAFIS)+LEAFRADIUS_$VARMLC)-XYL2)**2) -
+                 LEAFRADIUS_$VARMLC);
+      ]
+      ELSE[ TEMP2=1E20;]
+      DIST=MIN(DIST,TEMP1,TEMP2);
+    ]
+  ]
+  ELSE[ "beyond outer edges VARMLC"
+    IF(XYL1 <= SURPARA1_$VARMLC(1,1)*(Z(NP)-ZFOCUS_$VARMLC(1)))[
+      TEMP1=SURPARA1_$VARMLC(1,1);
+      TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+    ]
+    ELSEIF(XYL1 >= SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6)*
+                   (Z(NP)-ZFOCUS_$VARMLC(1)))[
+      TEMP1=SURPARA1_$VARMLC(TOT_LEAF_$VARMLC,6);
+      TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$VARMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+    ]
+    DIST=MIN(Z(NP)-ZREG_$VARMLC(1),ZREG_$VARMLC(8)-Z(NP),TEMP1);
+  ]
+ ]"end of not ignoring air gaps for range rejection"
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$VARMLC(Rev 1.11)"
+"************************************************************************
+"End of VARMLC_cm.mortran (Rev 1.11)"

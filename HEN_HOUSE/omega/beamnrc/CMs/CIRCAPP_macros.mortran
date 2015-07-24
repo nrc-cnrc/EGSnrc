@@ -1,0 +1,316 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: set of circular scrapers           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Geoff Zhang, 1997                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     CIRCAPP miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$CIRCAPP} WITH {10}
+"       ==================="
+REPLACE {$GAP_F_B_AIR_MIN} WITH {0.01}
+"       ================"
+"$GAP_F_B_AIR_MIN is the thickness of the air gap in the front and the back of"
+"this component module. The air gap must be present as they are designed to"
+"easily sort out which region a particle is going into."
+
+REPLACE {$CIRCAPP_CHECK_HIT_CYLINDER;} WITH {;
+"solve the equations of straight line the particle is traveling "
+"(x-x0)/U=(y-y0)/V=(z-z0)/W and the cylinder(x**2+y**2=R**2). the condition "
+"that the particle hit the cylinder is "
+"(ay0-R*SQRT(a**2+1)) < x0 < (ay0+R*SQRT(a**2+1)), a=U/V, x0=x(np), and the "
+"intersection point is within the z range, zmin<z<zmax."
+  IF(ABS(U(NP))<1.E-5 & V(NP)~=0.0)["particle traveling perpenticular to x axis"
+    IF(ABS(X(NP))<ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))[
+      "particle may hit air cylinder"
+      AR=XBA*X(NP); "if in the same phase, ar>0, change phase, <0"
+      IF(AR<0.0)[ "particle moves to other phase, must hit cylinder"
+        IHIT=1;
+      ]
+    ]
+  ]
+  ELSEIF(ABS(V(NP))<1.E-5)[ "particle traveling perpenticular to y axis"
+    IF(ABS(Y(NP))<ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))[
+      AR=YBA*Y(NP); "if in the same phase, ar>0, change phase, <0"
+      IF(AR<0.0)[ "particle moves to other phase, must hit cylinder"
+        IHIT=1;
+      ]
+    ]
+  ]
+  ELSE[
+    AR=U(NP)/V(NP);
+    ZAR1=AR*Y(NP)-X(NP);
+    TVAR=(AR**2+1)*ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)**2;
+    IF(TVAR-ZAR1**2 >= 0.0)[
+"there are real roots"
+"now see if they are within Z-range"
+       YAR1=(AR*ZAR1+SIGN(one,AR*ZAR1)*SQRT(TVAR-ZAR1**2))/(AR**2+1);
+       YAR2=(ZAR1**2 - ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)**2)/
+             (AR*ZAR1+SIGN(one,AR*ZAR1)*SQRT(TVAR-ZAR1**2));
+       ZAR1=(YAR1-Y(NP))*W(NP)/V(NP)+Z(NP);
+       ZAR2=(YAR2-Y(NP))*W(NP)/V(NP)+Z(NP);
+       IF((ZAR1<=ZMAXT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP) &
+         ZAR1>=ZMINT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)) |
+         (ZAR2<=ZMAXT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP) &
+         ZAR2>=ZMINT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))) [
+         IF((W(NP)>0.0 & ZAR1>Z(NP)) | (W(NP)<0.0 & ZAR1<Z(NP)))[
+            IHIT=1;
+         ]
+         ELSEIF(W(NP)=0.0)[
+            IF((V(NP)>=0.0 & YAR1>=Y(NP)) | (V(NP)<0.0 & YAR1<Y(NP)))[
+               IHIT=1;
+            ]
+         ]
+       ]
+    ]
+  ]
+}
+;
+
+REPLACE {$CIRCAPP_DIST_TO_CYLINDER;} WITH {;
+  IF(ABS(U(NP))<1.E-5)["particle moves perpenticular to x axis"
+     YAR1=SQRT(ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)**2-X(NP)**2);
+     ZAR1=(YAR1-Y(NP))*W(NP)/V(NP)+Z(NP);
+     ZAR2=(-YAR1-Y(NP))*W(NP)/V(NP)+Z(NP);
+     DAR1=SQRT((Y(NP)-YAR1)**2+(Z(NP)-ZAR1)**2);
+     DAR2=SQRT((Y(NP)+YAR1)**2+(Z(NP)-ZAR2)**2);
+  ]
+  ELSEIF(ABS(V(NP))<1.E-5)["particle moves perpenticular to y axis"
+     XAR1=SQRT(ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)**2-Y(NP)**2);
+     ZAR1=(XAR1-X(NP))*W(NP)/U(NP)+Z(NP);
+     ZAR2=(-XAR1-X(NP))*W(NP)/U(NP)+Z(NP);
+     DAR1=SQRT((X(NP)-XAR1)**2+(Z(NP)-ZAR1)**2);
+     DAR2=SQRT((X(NP)+XAR1)**2+(Z(NP)-ZAR2)**2);
+  ]
+  ELSE[
+     XAR1=AR*(YAR1-Y(NP))+X(NP);
+     XAR2=AR*(YAR2-Y(NP))+X(NP);
+     DAR1=SQRT((X(NP)-XAR1)**2+(Y(NP)-YAR1)**2+(Z(NP)-ZAR1)**2);
+     DAR2=SQRT((X(NP)-XAR2)**2+(Y(NP)-YAR2)**2+(Z(NP)-ZAR2)**2);
+  ]
+  DIST=MIN(DAR1,DAR2);
+}
+;
+
+REPLACE {$CIRCAPP_HIT_CYLINDER(#);} WITH {;
+  IF(ABS(U(NP))<1.E-5)["particle moves perpenticular to x axis"
+     YAR1=SQRT(ROPENT_$CIRCAPP({P1},IB_$CIRCAPP)**2-X(NP)**2);
+     IF(V(NP)<0.0)[
+        YAR1=-YAR1;
+     ]
+     ZAR1=(YAR1-Y(NP))*W(NP)/V(NP)+Z(NP);
+     DTEM=SQRT((Y(NP)-YAR1)**2+(Z(NP)-ZAR1)**2);
+  ]
+  ELSEIF(ABS(V(NP))<1.E-5)["particle moves perpenticular to y axis"
+     XAR1=SQRT(ROPENT_$CIRCAPP({P1},IB_$CIRCAPP)**2-Y(NP)**2);
+     IF(U(NP)<0.0)[
+        XAR1=-XAR1;
+     ]
+     ZAR1=(XAR1-X(NP))*W(NP)/U(NP)+Z(NP);
+     DTEM=SQRT((X(NP)-XAR1)**2+(Z(NP)-ZAR1)**2);
+  ]
+  ELSE[
+     AR=U(NP)/V(NP);
+     ZAR1=AR*Y(NP)-X(NP);
+     TVAR=(AR**2+1)*ROPENT_$CIRCAPP({P1},IB_$CIRCAPP)**2;
+     YAR1=(AR*ZAR1+SIGN(one,AR*ZAR1)*SQRT(TVAR-ZAR1**2))/(AR**2+1);
+     YAR2=(ZAR1**2 - ROPENT_$CIRCAPP({P1},IB_$CIRCAPP)**2)/
+          (AR*ZAR1+SIGN(one,AR*ZAR1)*SQRT(TVAR-ZAR1**2));
+     IF(IB_$CIRCAPP=1)[ "inside scraper"
+        IF(V(NP)>0.0)[
+           YAR1=MIN(YAR1,YAR2); "chose the one close to x(np),y,z"
+        ]
+        ELSE[YAR1=MAX(YAR1,YAR2);] "chose the one close to x(np),y,z"
+     ]
+     ELSE[   "in air"
+        IF(V(NP)>0.0)[
+           YAR1=MAX(YAR1,YAR2);  "chose the one farther away from x,y,z"
+        ]                        "or the one in the right direction"
+        ELSE[YAR1=MIN(YAR1,YAR2);]
+     ]
+     ZAR1=(YAR1-Y(NP))*W(NP)/V(NP)+Z(NP);
+     XAR1=AR*(YAR1-Y(NP))+X(NP);
+     DTEM=SQRT((X(NP)-XAR1)**2+(Y(NP)-YAR1)**2+(Z(NP)-ZAR1)**2);
+  ]
+}
+;
+
+REPLACE {$CIRCAPP_MAY_HIT_INSIDE(#,#,#,#,#,#,#);} WITH {;
+"        =============================";
+   {P1}=0;
+   {P2}={P7};
+   IF(ABS({P6}) > {P4} & V(NP)*{P6}<0.0)[
+      TVAR=(ABS({P6})-{P4})/ABS(V(NP));
+      IF(ABS({P5}+U(NP)*TVAR) <= {P3} & TVAR < {P7})[
+         {P1}=1;
+         {P2}=TVAR;
+         ]
+      ]
+   IF(ABS({P5}) > {P3} & U(NP)*{P5}<0.0)[
+      TVAR=(ABS({P5})-{P3})/ABS(U(NP));
+      IF(ABS({P6}+V(NP)*TVAR) <= {P4} & TVAR < {P7})[
+         {P1}=1;
+         {P2}=MIN({P2},TVAR);
+         ]
+      ]
+}
+;
+
+REPLACE {$CIRCAPP_HIT_OUTER;} WITH {;
+"        ========================";
+IF(ABS(U(NP)) < 1.E-5)[
+  XAR1=X(NP);
+  YAR1=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+  IF(V(NP) < 0.0)[YAR1=-YAR1;]
+  ZAR1=Z(NP)+W(NP)*(YAR1-Y(NP))/V(NP);
+]
+ELSEIF(ABS(V(NP)) < 1.E-5)[
+  YAR1=Y(NP);
+  XAR1=XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+  IF(U(NP)<0.0)[XAR1=-XAR1;]
+  ZAR1=Z(NP)+W(NP)*(XAR1-X(NP))/U(NP);
+]
+ELSE[
+  IF(U(NP)>0.0)[XAR1=XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)]
+  ELSE[XAR1=-XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);]
+  YAR1=Y(NP)+V(NP)*(XAR1-X(NP))/U(NP);
+  YAR2=ABS(YAR1);
+  IF(YAR2<=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))[
+    ZAR1=Z(NP)+W(NP)*(XAR1-X(NP))/U(NP);
+  ]
+  ELSE[
+    IF(V(NP)>0.0)[YAR1=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);]
+    ELSE[YAR1=-YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);]
+    XAR1=X(NP)+U(NP)*(YAR1-Y(NP))/V(NP);
+    ZAR1=Z(NP)+W(NP)*(YAR1-Y(NP))/V(NP);
+  ]
+]
+DIST=SQRT((XAR1-X(NP))**2+(YAR1-Y(NP))**2+(ZAR1-Z(NP))**2);
+}
+;
+
+"-------------------------------------------------------------------------------
+"     CIRCAPP component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$CIRCAPP/
+"V>================
+"V>XMIN_$CIRCAPP(IRL) = minimum X of scraper IRL
+"V>YMIN_$CIRCAPP(IRL) = minimum Y of scraper IRL
+"V>XMAX_$CIRCAPP(IRL) = maximum X of scraper IRL
+"V>YMAX_$CIRCAPP(IRL) = maximum Y of scraper IRL
+"V>XMINT_$CIRCAPP(IRL,2) = minimum X of scraper IRL
+"V>YMINT_$CIRCAPP(IRL,2) = minimum Y of scraper IRL
+"V>XMAXT_$CIRCAPP(IRL,2) = maximum X of scraper IRL
+"V>YMAXT_$CIRCAPP(IRL,2) = maximum Y of scraper IRL
+"V>ICM_$CIRCAPP = index of CM, set as ICM in INPUT_$tag and never re-set
+"V>IRSTART_$CIRCAPP = first region number for this CM
+"V>IREND_$CIRCAPP = last region number for this CM
+"V>N_$CIRCAPP = number of slabs in CM
+"V>TITLE_$CIRCAPP = title of CM
+"V>ZBACK_$CIRCAPP = Back of CM (air)
+"V>ZFRONT_$CIRCAPP = Front of CM (air)
+"V>ZMIN_$CIRCAPP(IRL) = Upstream Z boundary of slab IRL in CIRCAPP
+"V>ZMAX_$CIRCAPP(IRL) = Downstream Z boundary of slab IRL in CIRCAPP
+"V>ZMINT_$CIRCAPP(IRL,2) = Upstream Z boundary of slab IRL in CIRCAPP
+"V>ZMAXT_$CIRCAPP(IRL,2) = Downstream Z boundary of slab IRL in CIRCAPP
+"V>IR_$CIRCAPP = local region number
+;
+REPLACE {;COMIN/CM_$CIRCAPP/;} WITH {
+   ;COMMON/CM_$CIRCAPP/
+      ICM_$CIRCAPP,IRSTART_$CIRCAPP,IREND_$CIRCAPP,N_$CIRCAPP,
+      IR_$CIRCAPP,
+      TITLE_$CIRCAPP,ROPEN_$CIRCAPP,XOUTER_$CIRCAPP,
+      YOUTER_$CIRCAPP,
+      ZMIN_$CIRCAPP,ZMAX_$CIRCAPP,ZBACK_$CIRCAPP,ZFRONT_$CIRCAPP,
+      ROPENT_$CIRCAPP,XOUTERT_$CIRCAPP,YOUTERT_$CIRCAPP,
+      ZMINT_$CIRCAPP,ZMAXT_$CIRCAPP,
+      AIRGAPMIN_$CIRCAPP;
+   INTEGER
+      ICM_$CIRCAPP,IRSTART_$CIRCAPP,IREND_$CIRCAPP,N_$CIRCAPP,
+      IR_$CIRCAPP;
+   $REAL
+      ROPEN_$CIRCAPP($MAX_N_$CIRCAPP),
+      XOUTER_$CIRCAPP($MAX_N_$CIRCAPP),
+      YOUTER_$CIRCAPP($MAX_N_$CIRCAPP),
+      ZMIN_$CIRCAPP($MAX_N_$CIRCAPP),
+      ZMAX_$CIRCAPP($MAX_N_$CIRCAPP),
+      ZBACK_$CIRCAPP,ZFRONT_$CIRCAPP,
+      ROPENT_$CIRCAPP($MAX_N_$CIRCAPP,2),
+      XOUTERT_$CIRCAPP($MAX_N_$CIRCAPP,2),
+      YOUTERT_$CIRCAPP($MAX_N_$CIRCAPP,2),
+      ZMINT_$CIRCAPP($MAX_N_$CIRCAPP,2),
+      ZMAXT_$CIRCAPP($MAX_N_$CIRCAPP,2),
+      AIRGAPMIN_$CIRCAPP;
+   CHARACTER*1 TITLE_$CIRCAPP(60);
+} "end of replacement defining common for this CM"
+;
+
+;
+"-------------------------------------------------------------------------------
+"     CIRCAPP HOWNEAR replacement macro
+"-------------------------------------------------------------------------------
+"
+
+REPLACE {$CIRCAPP_CM_HOWNEAR(#)} WITH {   "{P1} is DNEAR"
+CALL HOWNEAR_$CIRCAPP({P1});
+}
+;
+"end of CIRCAPP_macros.mortran (Rev 1.2)"

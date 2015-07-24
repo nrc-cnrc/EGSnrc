@@ -1,0 +1,1399 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: mirror plane                              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the MIRR component module written by     "
+"  George Ding, starting in 1992, and subsequently edited by Charlie Ma.      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ***********              ""toc:
+"                             *         *              ""toc:
+"                             * MIRROR  *              ""toc:
+"                             *         *              ""toc:
+"                             ***********              ""toc:
+"
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  A mirror plane of arbitrary layer,thickness and
+"   material in air.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  a mirror.
+"
+%E   "MIRROR_cm.mortran  -- start of geometry picture"
+"I>
+"I> Geometry of MIRROR:
+"I> ******************
+"I>
+"I>                          |         | \ \ \   IR = N+1   |
+"I>                          |         |\ \ \ \             |
+"I>                          |         | \ \ \ \            |
+"I>                          |         |  \ \ \ \           |
+"I>                          |         |   \ \ \ \          |
+"I>      ----------->        | IR= N+3 |    \ \ \ \         |
+"I>                          |         |   IR=1,2,N\        |
+"I>      beam direction      |         |      \ \ \ \       |
+"I>                          |         |       \ \ \ \      |
+"I>                          |         |        \ \ \ \     |
+"I>                          |         |         \ \ \ \    |
+"I>                          |         |          \ \ \ \   |
+"I>                          |         |           \ \ \ \  |
+"I>                          |         |            \ \ \ \ |
+"I>                          |         |  IR = N+2   \ \ \ \|
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            -------------------------------------------------
+"I>            |          Region         | Description         |
+"I>            |-------------------------|---------------------|
+"I>            |  absolute    | local    |                     |
+"I>            |--------------|----------|                     |
+"I>            |              |          |                     |
+"I>            |IRSTART_MIRROR| IR_MIRROR|  as shown in above  |
+"I>            |  +IR_MIRROR-1|          |    (1 to N+3)       |
+"I>            |              |          |                     |
+"I>            |              |          |                     |
+"I>            -------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$MIRROR
+"                      ISUMRY_$MIRROR
+"                      HOWFAR_$MIRROR
+"                      WHERE_AM_I_$MIRROR
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOW BUGS
+"                             *****************************
+"
+"
+"*******************************************************************************
+%E   "MIRROR_cm.mortran  -- start of description of user input file"
+"
+"                               INPUT FROM UNIT 5       ""toc:
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$MIRROR
+"I>  **************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$MIRROR) (F10.0): Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$MIRROR (60A1): Title of CM.
+"I>
+"I>   2  ZMIN_$MIRROR,ZTHICK_$MIRROR (2F15.0):
+"I>
+"I>           ZMIN_$MIRROR:   Distance from front of CM(excluding air gap) to
+"I>                           ref plane(Z=0).
+"I>           ZTHICK_$MIRROR: Z-direction span.
+"I>
+"I>   3  XFMIN_$MIRROR, XBMIN_$MIRROR (2F15.0):
+"I>
+"I>           XFMIN_$MIRROR:  X value at which front face of mirror
+"I>                           intersects ZMIN_$MIRROR.
+"I>           XBMIN_$MIRROR:  X value at which front face of mirror
+"I>                           intersects ZMIN_$MIRROR + ZTHICK_$MIRROR.
+"I>      Note restriction:
+"I>    5 degrees<ATAN(ZTHICK_$MIRROR/(XFMIN_$MIRROR-XBMIN_$MIRROR)<90 degrees
+"I>
+"I>   4  N_$MIRROR, (I10):    Number of layers
+"I>
+"I>   Repeat 5 for I=1,N_$MIRROR
+"I>
+"I>   5  DTHICK_$MIRROR(I) (F15.0): Thickness of layer I in mirror,
+"I>                                 in cm.  Layer 1 is the front face
+"I>                                 of the mirror.
+"I>
+"I>   Repeat 6 and 7 for I=1,N_$MIRROR.
+"I>
+"I>   6  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0, 2I5): for each layer
+"I>
+"I>          ECUT, PCUT:  Cutoff energies for electrons and photons in
+"I>                       layer I.
+"I>          DOSE_ZONE:   Dose scoring flag in layer I.
+"I>     IREGION_TO_BIT:   bit to associate local region of layer I with
+"I>
+"I>   7  MED_IN (24A1):  Medium of layer I, used to set MED_INDEX.
+"I>
+"I>   8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region behind mirror
+"I>                                                       (2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+"I>    IREGION_TO_BIT:   bit to associate local region with
+"I>
+"I>   9  MED_IN (24A1):  Medium of local region behind the mirror,
+"I>                      used to set MED_INDEX.
+"I>
+"I>   10  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region in front of
+"I>                                             mirror(2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+"I>    IREGION_TO_BIT:   bit to associate local region with
+"I>
+"I>   11  MED_IN (24A1): Medium of region in front of mirror,
+"I>                      used to set MED_INDEX.
+"I>
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following describes a mirror composed of 1 AL slab.
+"I>   The front face of the mirror intersects the front of the
+"I>   CM (excluding any airgap) at X=3cm and the back of the CM at X=-3cm.
+"I>   The mirror starts at 19.7cm and is 2cm in the z-direction.
+"I>   The thickness of the AL slab is 0.00508cm.
+"I>   Note that thickness is measured perpendicular to the
+"I>   face of the mirror.  AIR is both in front of and behind
+"I>   the AL mirror.  No dose is scored in this example.
+"I>
+"I>   10.00   RMAX_CM
+"I>   MIRROR : z=19.5074 downstream, original, dif overlap
+"I>   19.70, 2.0
+"I>   3.0, -3.0
+"I>   1
+"I>   0.00508
+"I>   0.0, 0.0, 0, 0
+"I>   AL
+"I>   0.0, 0.0, 0, 0
+"I>   AIR
+"I>   0.0, 0.0, 0, 0
+"I>   AIR
+"I>
+"I>
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+%E   "start of subroutine HOWFAR_$MIRROR (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_$MIRROR
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module MIRR, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_$MIRROR local regions :
+"
+"     local               absolute                       description
+"   ------------    ------------------------------     ----------------------
+"   IR_$MIRROR      IR_start_CM(ICM_MIRROR)+IR_MIRROR-1      as shown above
+"   ------------    ------------------------------     -----------------------
+"   Geometrical co-ordinates, as set in INPUT_MIRROR are:
+"
+"   ZFRONT_MIRROR     front of CM (upstream surface, air region)
+"   ZMIN_MIRROR       front of mirror
+"   ZBACK_MIRROR       back of mirror
+"   RMAX_MIRROR       dimmension limit (in x and y)
+"
+"******************************************************************************
+REPLACE {$PRINT_1_N1;} WITH {;
+IF( X(NP)-A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR) > $BDY_TOL)[
+   OUTPUT IR_$MIRROR,Z(NP),X(NP),A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR);
+       (' print1-n1:ir,z, x, a+bmax ',I3,3F16.8);
+]
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_1_N2;} WITH {;
+OUTPUT IR_$MIRROR,Z(NP),X(NP),A_$MIRROR*Z(NP)+BMINT_$MIRROR(IR_$MIRROR);
+       (' print1-n2:ir,z, x, a+bmin ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_N+1;} WITH {;
+OUTPUT IR_$MIRROR,Z(NP),X(NP),A_$MIRROR*Z(NP)+BMAX_$MIRROR(N_$MIRROR);
+       (' printn+1:ir,z, x, a+bmax ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_N+2;} WITH {;
+OUTPUT IR_$MIRROR,Z(NP),X(NP),A_$MIRROR*Z(NP)+BMIN_$MIRROR(1);
+       (' printn+1:ir,z, x, a+bmax ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+;SUBROUTINE HOWFAR_$MIRROR;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$MIRROR,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_MIRROR
+"T>**********************************
+"T>
+INTEGER
+   IRL,           "T>local region number (absolute), required by HOWNEAR macro
+   IRNEW_$MIRROR, "T>tentative new region number within CM (absolute)
+   I,             "T> loop index
+   NERROR_M;      "T> number of errors in howfar (particle neglected)
+
+$REAL
+   DIST,          "T>distance to region boundary along current trajectory
+   XPLN_$MIRROR;  "T> Temporary variable
+;
+" Determine local region number
+" *****************************
+
+IRL = IR(NP); "local region number (absolute)
+
+" Set DNEAR
+" *********
+" This replacement macros sets DMIN_$MIRROR as well as defining IR_$MIRROR
+"
+;$MIRROR_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module MIRR, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+IF(IR_$MIRROR > 0 & IR_$MIRROR <= N_$MIRROR )[   "local region 1 to N
+   IF(X(NP) > A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR))[
+      IRNEW = IRSTART_$MIRROR + IR_$MIRROR;
+      "$PRINT_1_N1;"
+      USTEP = 0;
+      RETURN;
+   ]
+   ELSEIF(X(NP) < A_$MIRROR*Z(NP)+BMINT_$MIRROR(IR_$MIRROR))[
+      IRNEW = IRSTART_$MIRROR + IR_$MIRROR - 2;
+      IF(IR_$MIRROR = 1)[IRNEW = IRSTART_$MIRROR + N_$MIRROR + 1;]
+      "$PRINT_1_N2;"
+      USTEP = 0;
+      RETURN;
+   ]
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;] "ensures call to ausgab if leaving CM"
+      IRNEW_$MIRROR = 1;
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(XPLN_$MIRROR > XBMAXT_$MIRROR(IR_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR)
+                 -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+      ELSEIF(XPLN_$MIRROR < XBMINT_$MIRROR(IR_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         IF(IR_$MIRROR = 1)[
+            IRNEW_$MIRROR = IRSTART_$MIRROR + N_$MIRROR + 1;
+         ]
+         DIST = (A_$MIRROR*Z(NP)+BMINT_$MIRROR(IR_$MIRROR)
+                -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GAP_$MIRROR=0)[DIST=1.E-16;]
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IRNEW_$MIRROR = IREND_$MIRROR;
+      IF(N_GAP_$MIRROR = 0)[IRNEW_$MIRROR = 1;]
+      IF(XPLN_$MIRROR > XFMAXT_$MIRROR(IR_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR)
+                -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+      ELSEIF(XPLN_$MIRROR < XFMINT_$MIRROR(IR_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         IF(IR_$MIRROR = 1)[
+            IRNEW_$MIRROR = IRSTART_$MIRROR + N_$MIRROR + 1;
+         ]
+         DIST = (A_$MIRROR*Z(NP)+BMINT_$MIRROR(IR_$MIRROR)
+                -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSE[
+      IF(U(NP) > 0.0)[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMAXT_$MIRROR(IR_$MIRROR)-X(NP))/U(NP);
+      ]
+      ELSEIF(U(NP) < 0.0)[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         IF(IR_$MIRROR = 1)[
+            IRNEW_$MIRROR = IRSTART_$MIRROR + N_$MIRROR + 1;
+         ]
+         DIST = (A_$MIRROR*Z(NP)+BMINT_$MIRROR(IR_$MIRROR)-X(NP))/U(NP);
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$MIRROR=1) ["leaving CM through back"
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$MIRROR; "new region number"
+      ]
+   ]
+]"end of IR = 1-N
+
+ELSEIF(IR_$MIRROR = N_$MIRROR + 1)[ "local region N_$MIRROR + 1
+   IF(X(NP) < A_$MIRROR*Z(NP)+BMAX_$MIRROR(N_$MIRROR))[
+      IRNEW = IRSTART_$MIRROR + N_$MIRROR - 1;
+      USTEP = 0;
+      RETURN;
+   ]
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;]
+      IRNEW_$MIRROR = 1;
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(XPLN_$MIRROR < XBMAX_$MIRROR(N_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         DIST = (A_$MIRROR*Z(NP)+BMAX_$MIRROR(N_$MIRROR)
+                   -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GAP_$MIRROR = 0)[DIST=1.E-16;]
+      IRNEW_$MIRROR = IREND_$MIRROR;
+      IF(N_GAP_$MIRROR = 0)[IRNEW_$MIRROR = 1;]
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(XPLN_$MIRROR < XFMAX_$MIRROR(N_$MIRROR))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         DIST = (A_$MIRROR*Z(NP)+BMAX_$MIRROR(N_$MIRROR)
+                  -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSE[
+      IF(U(NP) < 0.0)[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + IR_$MIRROR - 2;
+         DIST = (A_$MIRROR*Z(NP)+BMAX_$MIRROR(N_$MIRROR)-X(NP))/U(NP);
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$MIRROR=1) ["leaving CM"
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$MIRROR; "new region number"
+      ]
+   ]
+]
+ELSEIF(IR_$MIRROR = N_$MIRROR + 2)[ "local region N_$MIRROR + 2
+   IF(X(NP) > A_$MIRROR*Z(NP)+BMIN_$MIRROR(1))[
+      IRNEW = IRSTART_$MIRROR;
+      USTEP = 0;
+      RETURN;
+   ]
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;]
+      IRNEW_$MIRROR = 1;
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(XPLN_$MIRROR > XBMIN_$MIRROR(1))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMIN_$MIRROR(1)
+                   -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$MIRROR - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GAP_$MIRROR = 0)[DIST=1.E-16;]
+      IRNEW_$MIRROR = IREND_$MIRROR;
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(N_GAP_$MIRROR = 0)[IRNEW_$MIRROR = 1;]
+      IF(XPLN_$MIRROR > XFMIN_$MIRROR(1))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMIN_$MIRROR(1)
+                  -X(NP))/(U(NP)-W(NP)*A_$MIRROR);
+      ]
+   ]
+   ELSE[
+      IF(U(NP) > 0.0)[
+         IRNEW_$MIRROR = IRSTART_$MIRROR;
+         DIST = (A_$MIRROR*Z(NP)+BMIN_$MIRROR(1)-X(NP))/U(NP);
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$MIRROR=1) ["leaving CM "
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$MIRROR,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$MIRROR; "new region number"
+      ]
+   ]
+]
+ELSEIF(IR_$MIRROR = N_$MIRROR + 3)[ "local region N_$MIRROR + 3
+   IF(W(NP) > 0.0)[
+      DIST = (ZMIN_$MIRROR - Z(NP))/W(NP);
+      IF(DIST < 0.0)[DIST = 0.0;]
+      XPLN_$MIRROR = X(NP) + U(NP)*DIST;
+      IF(XPLN_$MIRROR < XFMIN_$MIRROR(1))[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + N_$MIRROR + 1;
+      ]
+      ELSEIF(XPLN_$MIRROR < XFMAX_$MIRROR(N_$MIRROR))[
+         DO I = 1, N_$MIRROR[
+            IF(XPLN_$MIRROR < XFMAX_$MIRROR(I))[
+               IRNEW_$MIRROR = IRSTART_$MIRROR + I - 1;
+               EXIT;
+            ]
+         ]
+      ]
+      ELSE[
+         IRNEW_$MIRROR = IRSTART_$MIRROR + N_$MIRROR;
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZFRONT_$MIRROR - Z(NP))/W(NP);
+      IF(DIST <= 0.0)[DIST = 1.E-16;]
+      IRNEW_$MIRROR = 1;
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$MIRROR = 1) ["leaving CM through back"
+         CALL WHERE_AM_I(ICM_$MIRROR,-1);
+      ]
+      ELSE ["still in CM
+         IRNEW = IRNEW_$MIRROR; "new region number"
+      ]
+   ]
+] " end of region N_$MIRROR + 3
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$MIRROR+1,IR(NP),
+          ICM_$MIRROR,IR_start_CM(ICM_$MIRROR);
+      (//' ************'//' HOWFAR_$MIRROR error: region # confused,'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         '    This particle is being terminated on spot.',
+         ' ************'//);
+   NERROR_M=NERROR_M+1;
+   IDISC=1;
+   USTEP = 0.; IRNEW = IRL;
+   IF(NERROR_M.EQ.10)[
+      OUTPUT;(//' TOO MANY PARTICLES ARE NEGLECTED IN THIS CM!!'//);
+      STOP;
+   ]
+] "end of IF statement"
+;
+RETURN;
+END; "End of subroutine HOWFAR_$MIRROR"
+
+%E   "start of subroutine INPUT_$MIRROR (Rev 1.5)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_$MIRROR
+"                           **********************
+"
+"  A CM input subroutine for a series of 2 or more semi-infinite slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$MIRROR;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MIRROR,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_$MIRROR
+"T>*********************************
+"T>
+$REAL
+      BDYTOL;            "T>boundary tolerence
+INTEGER I,J,NDO,         "T>DO loop indeces
+        IRA,             "T>Absolute region number
+        MED_FLAG,        "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX;       "T>medium index, set after medium sort by $MED_INPUT
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$MIRROR = ICM;      "CM index for this component module
+IRSTART_$MIRROR = IR_start_CM(ICM_$MIRROR); "Index of first region in this CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$MIRROR) = 0; "Geometry-checking flag, 0 if no error detected
+"
+"  get the title line
+"  ==================
+OUTPUT;(/' $MIRROR (MIRROR Rev 1.5)');
+OUTPUT RMAX_CM(ICM);(/' Next component is a flat inclined mirror'/
+  '      Outer boundary is a square with |x| & |y| <',F10.2,' cm');
+IF(ICM_$MIRROR = 1)[OUTPUT Z_min_CM(1);
+   (' This component starts at',F10.4,' cm from the ref plane(Z=0)');]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$MIRROR);(' Previous CM ends at:',F12.5,' cm');]
+
+OUTPUT;(' TITLE: ',$);
+MINPUT ($MIRROR) TITLE_$MIRROR;(60A1); "MINPUT is a macro with EOF and
+                                "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$MIRROR;(' ',60A1);
+"
+" get distance from reference plane, z=0"
+"   =============================
+OUTPUT; (' Z position at which mirror (excluding air gap) starts '/
+  'and thickness of mirror in Z direction (on one line)'/' : ',$);
+MINPUT ($MIRROR) ZMIN_$MIRROR,ZTHICK_$MIRROR;(2F15.0);
+OUTPUT ZMIN_$MIRROR,ZTHICK_$MIRROR;(2F15.5);
+IF(Z_min_CM(ICM_$MIRROR)>ZMIN_$MIRROR)[
+   IF(ICM_$MIRROR=1)[
+     OUTPUT ICM_$MIRROR, ZMIN_$MIRROR,Z_min_CM(ICM_$MIRROR);
+      (//' ***WARNING IN CM ',I4,' (MIRROR):'/
+         ' Z_min_CM(1) > Z at which mirror starts'/
+         ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+     WRITE(IOUTLIST,100)ICM_$MIRROR, ZMIN_$MIRROR,Z_min_CM(ICM_$MIRROR);
+     100 FORMAT(//' ***WARNING IN CM ',I4,' (MIRROR):'/
+         ' Z_min_CM(1) > Z at which mirror starts'/
+         ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      Z_min_CM(ICM_$MIRROR)=ZMIN_$MIRROR;
+   ]
+   ELSE[
+     OUTPUT ICM_$MIRROR;
+      (//'***ERROR IN CM ',I4,' (MIRROR):'/
+         'Overlaps with previous CM'//);
+     IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+   ]
+]
+IF(ZTHICK_$MIRROR<0.0)[
+  OUTPUT ICM_$MIRROR;
+   (//'***ERROR IN CM ',I4,' (MIRROR):'/
+      'ZTHICK < 0.0'//);
+   IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+
+OUTPUT;
+   (' XFMIN (X position that front face crosses front of CM) and'/,
+    ' XBMIN (X position that front face crosses back of CM): ',$);
+MINPUT ($MIRROR) XFMIN_$MIRROR(1),XBMIN_$MIRROR(1);(2F15.0);
+OUTPUT XFMIN_$MIRROR(1),XBMIN_$MIRROR(1);(2F11.5);
+IF(XFMIN_$MIRROR(1) < XBMIN_$MIRROR(1))[
+   OUTPUT ICM_$MIRROR;
+     (//'***ERROR IN CM ',I4,' (MIRROR):'/
+        'XFMIN < XBMIN'//);
+   IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+ELSEIF(ZTHICK_$MIRROR>0.0 &
+       ZTHICK_$MIRROR/(XFMIN_$MIRROR(1) - XBMIN_$MIRROR(1)).LT.0.0875)[
+   "for angles < 5 degrees, one should not use this component module"
+   OUTPUT ICM_$MIRROR;
+   (//'***ERROR IN CM ',I4,' (MIRROR):'/
+      'Mirror angle too small which will result in simulation error'/
+      ' Module SLABS can be used for such small angle simulations.'//);
+   IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+IF(ABS(XFMIN_$MIRROR(1))>RMAX_CM(ICM_$MIRROR))[
+   OUTPUT ICM_$MIRROR;
+    (//'***WARNING IN CM ',I4,' (MIRROR):'/
+       'XFMIN(1) is outside RMAX_CM'//);
+   WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (MIRROR):''/
+       ''XFMIN(1) is outside RMAX_CM''//)')
+       ICM_$MIRROR;
+]
+IF(ABS(XBMIN_$MIRROR(1))>RMAX_CM(ICM_$MIRROR))[
+   OUTPUT ICM_$MIRROR;
+    (//'***WARNING IN CM ',I4,' (MIRROR):'/
+       'XBMIN(1) is outside RMAX_CM'//);
+   WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (MIRROR):''/
+       ''XBMIN(1) is outside RMAX_CM''//)')
+       ICM_$MIRROR;
+]
+"
+"   get geometry information for mirror
+"   =================================================
+"
+N_$MIRROR = $MAX_N_$MIRROR;
+OUTPUT N_$MIRROR;(' Number of layers of the mirror, minimum 1, maximum',I4);
+MINPUT ($MIRROR) N_$MIRROR; (I10);
+OUTPUT N_$MIRROR;(' Number of layers in this mirror is',I4);
+IF(N_$MIRROR>$MAX_N_$MIRROR)[
+   N_$MIRROR=$MAX_N_$MIRROR;
+   OUTPUT ICM_$MIRROR, N_$MIRROR;
+    (//'***ERROR IN CM ',I4,' (MIRROR):'/
+       '# of layers > max. allowed'/
+       '# of layers reduced to ',F8.5,' for now'//);
+   IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+ELSEIF(N_$MIRROR<1)[
+   N_$MIRROR=1;
+   OUTPUT ICM_$MIRROR;
+    (//'***ERROR IN CM ',I4,' (MIRROR):'/
+       '# of layers < 1'/
+       '# of layers reset to 1 for now'//);
+   IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+DO I =1, N_$MIRROR [
+   OUTPUT I;(' Thickness of layer',I3,'(in cm): ',$);
+   ;MINPUT ($MIRROR) DTHICK_$MIRROR(I);(F15.0);
+   OUTPUT DTHICK_$MIRROR(I);(F15.5);
+   IF(DTHICK_$MIRROR(I)<0.0)[
+      OUTPUT ICM_$MIRROR, I;
+       (//'***ERROR IN CM ',I4,' (MIRROR):'/
+          'DTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+   ]
+]
+
+XFMAX_$MIRROR(1) = XFMIN_$MIRROR(1) +
+      SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+      XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(1);
+XBMAX_$MIRROR(1) = XBMIN_$MIRROR(1) +
+      SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+      XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(1);
+IF(N_$MIRROR > 1)[
+   DO I =2, N_$MIRROR[
+      XFMIN_$MIRROR(I) = XFMIN_$MIRROR(I-1) +
+         SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+         XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(I-1);
+      XFMAX_$MIRROR(I-1) = XFMIN_$MIRROR(I);
+      XBMIN_$MIRROR(I) = XBMIN_$MIRROR(I-1) +
+         SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+         XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(I-1);
+      XBMAX_$MIRROR(I-1) = XBMIN_$MIRROR(I);
+      XFMAX_$MIRROR(I) = XFMAX_$MIRROR(I-1) +
+         SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+         XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(I);
+      XBMAX_$MIRROR(I) = XBMAX_$MIRROR(I-1) +
+         SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(1)-
+         XBMIN_$MIRROR(1))**2)/ZTHICK_$MIRROR*DTHICK_$MIRROR(I);
+   ]
+]
+"
+"   get ECUT, PCUT, dose scoring zone, and material in each region
+"   ===============================================================
+IRA = IRSTART_$MIRROR-1;
+DO IR_$MIRROR = 1,N_$MIRROR+2["loop through regions to get information"
+   IRA = IRA+1;
+   IF(IR_$MIRROR <= N_$MIRROR) [
+         OUTPUT IR_$MIRROR;(/' For layer',I3,' of mirror:');
+   ]
+   ELSEIF(IR_$MIRROR = N_$MIRROR+1)[OUTPUT;(/' For region behind mirror:');]
+   ELSEIF(IR_$MIRROR = N_$MIRROR+2)[OUTPUT;
+                 (/' For region in front of mirror:');]
+   ;OUTPUT;(' ECUT, PCUT(MeV), DOSE ZONE(0=DO NOT SCORE DOSE), IREGION_TO_BIT'/
+   ' :',$);
+   ;MINPUT ($MIRROR) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (2F15.0,2I5);
+   OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+      IREGION_TO_BIT(IRA); (F8.3,F9.3,I15,I19);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   IF(IR_$MIRROR=N_$MIRROR+1)[
+      OUTPUT; (' Material of region behind mirror ',$);]
+   ELSEIF(IR_$MIRROR=N_$MIRROR+2)[
+      OUTPUT; (' Material of region in front of mirror ',$);]
+   ELSE[
+      OUTPUT IR_$MIRROR;(' Material of layer ',I3,' ',$);]
+   ;$MED_INPUT($MIRROR); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$MIRROR"
+
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+Z_gap_THICK(ICM_$MIRROR) = ZMIN_$MIRROR - Z_min_CM(ICM_$MIRROR);
+IF (Z_gap_THICK(ICM_$MIRROR) < $MIN_GAP) [
+   Z_gap_THICK(ICM_$MIRROR) = 0.;
+   ZMIN_$MIRROR=Z_min_CM(ICM_$MIRROR);
+   N_GAP_$MIRROR = 0; "no air gap for this CM
+]
+ELSE[ N_GAP_$MIRROR = 1; "this CM has an air gap "]
+
+IF(N_GAP_$MIRROR =1)[
+    IRA = IRSTART_$MIRROR + N_$MIRROR + 2;
+    ECUT(IRA) = ECUT(IRA-1);
+    PCUT(IRA) = PCUT(IRA-1);
+    MED(IRA)  = AIR_INDEX; " medium of the air gap
+    ESAVE(IRA)=ESAVE_GLOBAL;
+]
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+"
+BDYTOL = $BDY_TOL;
+A_$MIRROR =  (XBMIN_$MIRROR(1) - XFMIN_$MIRROR(1))/ZTHICK_$MIRROR;
+DO I = 1, N_$MIRROR[
+   BMIN_$MIRROR(I) = XFMIN_$MIRROR(I) - A_$MIRROR*ZMIN_$MIRROR;
+   BMAX_$MIRROR(I) = XFMAX_$MIRROR(I) - A_$MIRROR*ZMIN_$MIRROR;
+   BMINT_$MIRROR(I) = BMIN_$MIRROR(I) - BDYTOL;
+   BMAXT_$MIRROR(I) = BMAX_$MIRROR(I) + BDYTOL;
+   XFMINT_$MIRROR(I) = XFMIN_$MIRROR(I) - BDYTOL;
+   XFMAXT_$MIRROR(I) = XFMAX_$MIRROR(I) + BDYTOL;
+   XBMINT_$MIRROR(I) = XBMIN_$MIRROR(I) - BDYTOL;
+   XBMAXT_$MIRROR(I) = XBMAX_$MIRROR(I) + BDYTOL;
+]
+"
+"establish start of next CM
+ZBACK_$MIRROR = ZMIN_$MIRROR + ZTHICK_$MIRROR;
+Z_min_CM(ICM_$MIRROR+1) = ZBACK_$MIRROR;
+ZFRONT_$MIRROR = Z_min_CM(ICM_$MIRROR);
+"
+"
+"  set up region numbers
+"  =====================
+"  This CM has N_$MIRROR + 2 + N_GAP_$MIRROR regions
+"
+IREND_$MIRROR = IRSTART_$MIRROR + N_$MIRROR + N_GAP_$MIRROR + 1;
+               "Index of last region
+NREG = NREG + N_$MIRROR + N_GAP_$MIRROR + 2;  "Total number of regions up
+                                              "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$MIRROR+1) = IREND_$MIRROR + 1;
+]
+ELSE [
+      OUTPUT ICM_$MIRROR,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (MIRROR):'/
+        I4,' regions requested, only',I4,' available');
+         N_$MIRROR=$MAX_N_$MIRROR;
+     IERR_GEOM(ICM_$MIRROR)=IERR_GEOM(ICM_$MIRROR)+1;
+]
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$MIRROR) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$MIRROR-1; "absolute region number"
+DO IR_$MIRROR=1,N_$MIRROR+2["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   IF(NDOSE_ZONE > $MAX_DOSE_ZONE)[
+      OUTPUT NDOSE_ZONE;
+       (' Too many dose zone !', 'NDOSE_ZONE =',I5,
+        ' > $MAX_DOSE_ZONE');
+      STOP;
+   ]
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT);
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+] "end of loop over IR_$MIRROR
+
+"Initialize for automated range rejection"
+
+"set up minimum thicknesses which in this case are just the last 5"
+"slabs"
+"If we ever need more than 5 slabs, we should extend this or do
+"something fancy like group similar materials"
+
+NDO = MIN(5,N_$MIRROR); "consider at most 5 slabs of material"
+                        "air gap handled below"
+IF (IREJCT_GLOBAL = 1)[" i.e. will use automated range rejection"
+   ;OUTPUT;(//' ************************************************************'/
+        ' NOTE: MIRRORs RANGE REJECTION ALGORITHM ASSUMES THE MIRROR'/
+        ' INTERSECTS THE ENTIRE BEAM!!!   CHECK IT'/
+        ' ***********************************************************'//);
+   WRITE(IOUTLIST,'(''*********************************************''/
+      '' NOTE: MIRRORs RANGE REJECTION ALGORITHM ASSUMES THE MIRROR''/
+      '' INTERSECTS THE ENTIRE BEAM!!!   CHECK IT''/
+      '' ***********************************************************''//)');
+   DO IR_$MIRROR = 1, NDO [
+      IRA = IR_$MIRROR + IRSTART_$MIRROR-1;   "absolute region"
+      Z_min_thick(ICM,IR_$MIRROR) = DTHICK_$MIRROR(IR_$MIRROR);
+      MED_min_thick(ICM, IR_$MIRROR) = MED(IRA);
+      "OUTPUT IR_$MIRROR,IRA,ICM, IR_$MIRROR, Z_min_thick(ICM,IR_$MIRROR),
+         "ICM,IR_$MIRROR, MED_min_thick(ICM, IR_$MIRROR);
+         "(' IR_$MIRROR,IRA=',I2,',',I3,T25,'Z_min_thick(',2I2,')=',F10.3,
+         "'  MED_min_thick(',2I3,')=',I2);
+   ]"have set parameters for actual mirror materials"
+   IF(NDO < 5)[  "still some of 5 locations available"
+       "Use an approximation and treat entire rest of CM as if filled"
+       "with air and with no reduction because of material in mirror"
+       "This may be a bad approximation if used for anything other than a"
+       "MIRROR ********************"
+       Z_min_thick(ICM,NDO+1) = ZTHICK_$MIRROR + Z_gap_thick(ICM_$MIRROR);
+       MED_min_thick(ICM,NDO+1) = AIR_INDEX; "AIR_INDEX is 0 or 1"
+       OUTPUT ICM,NDO+1,Z_min_thick(ICM,NDO+1),ICM,NDO+1,
+                    MED_min_thick(ICM,NDO+1);
+       (' For air in CM ',T25,' Z_min_thick(',2I2,')=',F10.3,
+                    '  MED_min_thick(',2I3,')=',I2);
+   ]
+]"end of loop on IREJCT_GLOBAL=1"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$MIRROR:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$MIRROR:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$MIRROR"
+%E   "start of subroutine ISUMRY_$MIRROR (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_MIRROR
+"                          ************************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$MIRROR;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$MIRROR,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_MIRROR
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,    "T>colour of CM for EGS_Windows
+   IRA,        "T>absolute region number
+   I,J;        "T>DO loop index
+
+$REAL VOL_$MIRROR($MAX_N_$MIRROR),   "T>volume
+      YWIDTH,
+      VOLTOT_$MIRROR;
+"
+"   Mass of dose zone
+"   =================
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$MIRROR.
+VOLTOT_$MIRROR=0.;
+IRA=IRSTART_$MIRROR-1;
+DO I = 1, N_$MIRROR + 2 [
+   IRA = IRA+1; "absolute region number
+   IF(I<=N_$MIRROR)["one of the mirror slabs
+     VOL_$MIRROR(I)=SQRT(ZTHICK_$MIRROR**2+(XFMIN_$MIRROR(I)-
+                    XBMIN_$MIRROR(I))**2)*DTHICK_$MIRROR(I)*
+                    2*RMAX_CM(ICM_$MIRROR);
+     IF(XBMIN_$MIRROR(I)<-RMAX_CM(ICM_$MIRROR) &
+       XBMAX_$MIRROR(I)>=-RMAX_CM(ICM_$MIRROR))[
+         VOL_$MIRROR(I)=VOL_$MIRROR(I)-(ABS(XBMIN_$MIRROR(I))-
+                        RMAX_CM(ICM_$MIRROR))**2*(ZTHICK_$MIRROR/
+                        (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I)))*
+                        RMAX_CM(ICM_$MIRROR);
+     ]
+     ELSEIF(XBMIN_$MIRROR(I)<-RMAX_CM(ICM_$MIRROR) &
+       XBMAX_$MIRROR(I)<-RMAX_CM(ICM_$MIRROR))[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)-(XBMAX_$MIRROR(I)-
+                         XBMIN_$MIRROR(I))*(ABS(XBMAX_$MIRROR(I))-
+                         RMAX_CM(ICM_$MIRROR))*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*2*
+                         RMAX_CM(ICM_$MIRROR)-(XBMAX_$MIRROR(I)-
+                         XBMIN_$MIRROR(I))**2*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*
+                         RMAX_CM(ICM_$MIRROR);
+     ]
+     IF(XFMAX_$MIRROR(I)>RMAX_CM(ICM_$MIRROR) &
+     XFMIN_$MIRROR(I)<=RMAX_CM(ICM_$MIRROR))[
+         IF(XBMAX_$MIRROR(I)>RMAX_CM(ICM_$MIRROR))[
+             VOL_$MIRROR(I)=VOL_$MIRROR(I)-(XFMAX_$MIRROR(I)-
+                        XBMAX_$MIRROR(I))*ZTHICK_$MIRROR*
+                        RMAX_CM(ICM_$MIRROR)-(XBMAX_$MIRROR(I)-
+                        RMAX_CM(ICM_$MIRROR))*ZTHICK_$MIRROR*
+                        2*RMAX_CM(ICM_$MIRROR);
+         ]
+         ELSE[
+         VOL_$MIRROR(I)=VOL_$MIRROR(I)-(ABS(XFMAX_$MIRROR(I))-
+                        RMAX_CM(ICM_$MIRROR))**2*ZTHICK_$MIRROR/
+                        (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*
+                        RMAX_CM(ICM_$MIRROR);
+         ]
+     ]
+     ELSEIF(XFMAX_$MIRROR(I)>RMAX_CM(ICM_$MIRROR) &
+     XFMIN_$MIRROR(I)>RMAX_CM(ICM_$MIRROR))[
+        IF(XBMAX_$MIRROR(I)>RMAX_CM(ICM_$MIRROR))[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)-(XFMAX_$MIRROR(I)-
+                         XFMIN_$MIRROR(I))*(XFMIN_$MIRROR(I)-
+                         RMAX_CM(ICM_$MIRROR))*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*2*
+                         RMAX_CM(ICM_$MIRROR)-(XFMAX_$MIRROR(I)-
+                         XFMIN_$MIRROR(I))**2*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*
+                         RMAX_CM(ICM_$MIRROR)+(XBMAX_$MIRROR(I)-
+                         RMAX_CM(ICM_$MIRROR))**2*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*
+                         RMAX_CM(ICM_$MIRROR);
+        ]
+        ELSE[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)-(XFMAX_$MIRROR(I)-
+                         XFMIN_$MIRROR(I))*(ABS(XFMIN_$MIRROR(I))-
+                         RMAX_CM(ICM_$MIRROR))*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*2*
+                         RMAX_CM(ICM_$MIRROR)-(XFMAX_$MIRROR(I)-
+                        XFMIN_$MIRROR(I))**2*ZTHICK_$MIRROR/
+                         (XFMIN_$MIRROR(I)-XBMIN_$MIRROR(I))*
+                         RMAX_CM(ICM_$MIRROR);
+        ]
+     ]
+     VOLTOT_$MIRROR=VOLTOT_$MIRROR+VOL_$MIRROR(I);
+   ]
+   ELSEIF(I=N_$MIRROR+1)["region underneath mirror"
+     IF(XBMAX_$MIRROR(N_$MIRROR)>RMAX_CM(ICM_$MIRROR))[
+       VOL_$MIRROR(I)=0.0;
+     ]
+     ELSE[
+       VOL_$MIRROR(I)=ZTHICK_$MIRROR*(XFMAX_$MIRROR(N_$MIRROR)
+                    -XBMAX_$MIRROR(N_$MIRROR))*
+                    RMAX_CM(ICM_$MIRROR);
+       IF(XFMAX_$MIRROR(N_$MIRROR)>RMAX_CM(ICM_$MIRROR))[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)-(RMAX_CM(ICM_$MIRROR)-
+                       XBMAX_$MIRROR(N_$MIRROR))*ZTHICK_$MIRROR/
+                       (XFMAX_$MIRROR(N_$MIRROR)-
+                        XBMAX_$MIRROR(N_$MIRROR))*
+                        (XFMAX_$MIRROR(N_$MIRROR)-
+                        RMAX_CM(ICM_$MIRROR))*2*RMAX_CM(ICM_$MIRROR)-
+                        (XFMAX_$MIRROR(N_$MIRROR)-
+                         RMAX_CM(ICM_$MIRROR))**2*ZTHICK_$MIRROR/
+                         (XFMAX_$MIRROR(N_$MIRROR)-
+                        XBMAX_$MIRROR(N_$MIRROR))*
+                        RMAX_CM(ICM_$MIRROR);
+       ]
+       ELSE[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)+ZTHICK_$MIRROR*
+                       (RMAX_CM(ICM_$MIRROR)-
+                        XFMAX_$MIRROR(N_$MIRROR))*2*
+                        RMAX_CM(ICM_$MIRROR);
+       ]
+       IF(XBMAX_$MIRROR(N_$MIRROR)<-RMAX_CM(ICM_$MIRROR))[
+          VOL_$MIRROR(I)=VOL_$MIRROR(I)-
+                       (ABS(XBMAX_$MIRROR(N_$MIRROR))-
+                       RMAX_CM(ICM_$MIRROR))**2*ZTHICK_$MIRROR/
+                       (XFMAX_$MIRROR(N_$MIRROR)-
+                        XBMAX_$MIRROR(N_$MIRROR))*
+                        RMAX_CM(ICM_$MIRROR);
+       ]
+    ]
+    VOLTOT_$MIRROR=VOLTOT_$MIRROR+VOL_$MIRROR(I)
+   ]
+   ELSEIF(I=N_$MIRROR+2)["region above mirror"
+     VOL_$MIRROR(I)=ZTHICK_$MIRROR*4*RMAX_CM(ICM_$MIRROR)**2-
+                    VOLTOT_$MIRROR;
+   ]
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$MIRROR(I)*RHOR(IRA);
+   ]
+]"end of do loop over regions"
+
+
+"   Calculate four corner of the mirror for graph
+"   =============================================
+"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+
+WRITE(IOUTLIST,110) ICM_$MIRROR,TITLE_$MIRROR;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$MIRROR),RMAX_CM(ICM_$MIRROR),
+                    ZMIN_$MIRROR,ZTHICK_$MIRROR;
+WRITE(IOUTLIST,122);
+IF(N_GAP_$MIRROR~=0)[
+   WRITE(IOUTLIST,126) 'airgap',ZMIN_$MIRROR-Z_min_CM(ICM_$MIRROR),
+                       'NA','NA','NA','NA';
+   WRITE(IOUTLIST,126) 'at top';
+]
+DO I=1,N_$MIRROR[
+   IF(I=1)[
+   WRITE(IOUTLIST,124) I,'(front)',DTHICK_$MIRROR(I),
+                       XFMIN_$MIRROR(I),XBMIN_$MIRROR(I),
+                       XFMAX_$MIRROR(I),XBMAX_$MIRROR(I);
+   ]
+   ELSE[
+   WRITE(IOUTLIST,123) I,DTHICK_$MIRROR(I),
+                       XFMIN_$MIRROR(I),XBMIN_$MIRROR(I),
+                       XFMAX_$MIRROR(I),XBMAX_$MIRROR(I);
+   ]
+]
+WRITE(IOUTLIST,125) ATAN((XFMIN_$MIRROR(1)-XBMIN_$MIRROR(1))/
+                         ZTHICK_$MIRROR)*180./3.1415926;
+WRITE(IOUTLIST,130);
+
+IRA = IRSTART_$MIRROR-1;
+DO IR_$MIRROR=1,N_$MIRROR+2+N_GAP_$MIRROR[
+   IRA = IRA+1;
+   IF(IR_$MIRROR<=N_$MIRROR)[
+      IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,140) IR_$MIRROR,IR_$MIRROR,'layer',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+      ]
+      ELSE[
+         WRITE(IOUTLIST,140) IR_$MIRROR,IR_$MIRROR,'layer',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$MIRROR<=N_$MIRROR+2)[
+       IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,141) IR_$MIRROR,'NA','region',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+       ]
+       ELSE[
+         WRITE(IOUTLIST,141) IR_$MIRROR,'NA','region',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+       ]
+       IF(IR_$MIRROR=N_$MIRROR+1)[
+            WRITE(IOUTLIST,142)'behind';
+       ]
+       ELSEIF(IR_$MIRROR=N_$MIRROR+2)[
+            WRITE(IOUTLIST,142)'in front';
+       ]
+   ]
+   ELSEIF(IR_$MIRROR=N_$MIRROR+2+N_GAP_$MIRROR)[
+       IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,141) IR_$MIRROR,'NA','airgap',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+              'V','a','c','u','u','m';
+       ]
+       ELSE[
+         WRITE(IOUTLIST,141) IR_$MIRROR,'NA','airgap',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+              (MEDIA(J,MED(IRA)),J=1,9);
+       ]
+       WRITE(IOUTLIST,142)'at top';
+   ]
+
+]
+
+110 FORMAT(///1X,79('-')/'  Component module',I3,' is a flat inclined',
+           ' mirror MIRROR (Rev 1.5) '
+           /1X,79('-')
+           //T2,'Title: ',68A1);
+120 FORMAT(/T2,'$MIRROR geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm',
+           /T2,'Z at which mirror starts = ',F15.5,
+               ' cm',
+           /T2,'Z span of mirror = ',F15.5,' cm');
+122 FORMAT(/T2,
+'layer #      thickness         XFMIN     XBMIN     XFMAX     XBMAX',
+/T2,
+'               (cm)                            (cm)');
+123 FORMAT(T2,I2,F17.3,F17.3,3F10.3);
+124 FORMAT(T2,I2,A7,F10.3,F17.3,3F10.3);
+126 FORMAT(T2,A7,F12.3,A17,3A10);
+125 FORMAT(/T2,'Angle of mirror face wrt z-axis = ',F15.5,' degrees');
+130 FORMAT(/T2,'$MIRROR region parameters:',
+           /T2,'---------------------------',
+           /T2,'local layer  location   electron   photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region                   cutoff    cutoff',
+           '   level     max    zone  set',
+           /T2,'                         (MeV)      (MeV)',
+           '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,I7,2X,A8,F11.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T2,I3,A7,2X,A8,F11.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+142 FORMAT(T14,A8);
+
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+ICOLOUR = 1;
+YWIDTH = MIN(RMAX_CM(ICM_$MIRROR),3.);
+IF(IWATCH = 4 | IZLAST = 2) [   "Creat a graphics file "
+  ;$SELECT-COLOUR;
+   DO I =1, N_$MIRROR[
+      WRITE(IOUTGEOM,201) ICOLOUR,'QUAD',
+          XFMIN_$MIRROR(I), YWIDTH,ZMIN_$MIRROR,
+          XBMIN_$MIRROR(I), YWIDTH,ZBACK_$MIRROR,
+          XBMIN_$MIRROR(I),-YWIDTH,ZBACK_$MIRROR,
+          XFMIN_$MIRROR(I),-YWIDTH,ZMIN_$MIRROR;
+   ]
+      WRITE(IOUTGEOM,201) ICOLOUR,'QUAD',
+          XFMAX_$MIRROR(N_$MIRROR), YWIDTH,ZMIN_$MIRROR,
+          XBMAX_$MIRROR(N_$MIRROR), YWIDTH,ZBACK_$MIRROR,
+          XBMAX_$MIRROR(N_$MIRROR),-YWIDTH,ZBACK_$MIRROR,
+          XFMAX_$MIRROR(N_$MIRROR),-YWIDTH,ZMIN_$MIRROR;
+
+201   FORMAT(' ',I1,A4,12(F7.2,','));
+]"End of graphics output"
+
+"   end of ISUMRY_$MIRROR
+"   ===================
+"
+RETURN;
+END; "end of subroutine ISUMRY_$MIRROR"
+%E   "start of subroutine WHERE_AM_I_$MIRROR (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$MIRR
+"                          ***************************
+"
+" WHERE_AM_I routine for a MIRROR"
+"
+" WHERE_AM_I_$MIRROR determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$MIRROR subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$MIRROR from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$MIRROR(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$MIRROR,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$MIRROR
+"T>**************************************
+"T>
+INTEGER I,     "T>loop index
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XF_$MIRROR;
+XF_$MIRROR = X(NP) + USTEP*U(NP);
+IF(IDIR=1) ["particle entering this CM through front face (upstream)
+   IF(N_GAP_$MIRROR ~= 0)[
+      IRNEW = IREND_$MIRROR;
+   ]
+   ELSE[
+      IF(IRSTART_$MIRROR = 2) [XF_$MIRROR = X(NP);]
+      IF(XF_$MIRROR < XFMIN_$MIRROR(1))[
+         IRNEW = IRSTART_$MIRROR + N_$MIRROR + 1;
+      ]
+      ELSEIF(XF_$MIRROR < XFMAX_$MIRROR(N_$MIRROR))[
+         DO I = 1, N_$MIRROR[
+            IF(XF_$MIRROR < XFMAX_$MIRROR(I))[
+               IRNEW = IRSTART_$MIRROR + I - 1;
+               RETURN;
+            ]
+         ]
+      ]
+      ELSE[
+         IRNEW = IRSTART_$MIRROR + N_$MIRROR;
+      ]
+   ]
+]
+ELSE["particle entering this CM through back face (downstream)
+   IF(XF_$MIRROR > XBMAX_$MIRROR(N_$MIRROR))[
+      IRNEW = IRSTART_$MIRROR + N_$MIRROR;
+   ]
+   ELSEIF(XF_$MIRROR > XBMIN_$MIRROR(1))[
+      DO I = 1, N_$MIRROR[
+         IF(XF_$MIRROR <= XBMAX_$MIRROR(I))[
+            IRNEW = IRSTART_$MIRROR + I - 1;
+            RETURN;
+         ]
+      ]
+   ]
+   ELSE[
+      IRNEW = IRSTART_$MIRROR + N_$MIRROR + 1;
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$MIRROR"
+
+%E   "start of subroutine HOWNEAR_$MIRROR (Rev 1.5)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_MIRROR
+"                          ************************
+"
+" Calculates min. distance to nearest region boundary.
+" Used to be a macro, but now the macro calls this subroutine.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$MIRROR(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$MIRROR,STACK/;
+
+$REAL DIST; "T> the min. distance to the nearest region boundary
+
+IR_$MIRROR = IR(NP) - IRSTART_$MIRROR + 1;"local region number (relative)"
+IF(IR_$MIRROR > 0 & IR_$MIRROR <= N_$MIRROR )[   "local region 1 to N"
+        DIST=MIN( Z(NP)-ZMIN_$MIRROR,  "distance to the top surface"
+        ZBACK_$MIRROR-Z(NP),      "distance to the bottom"
+        (X(NP)-XBMIN_$MIRROR(IR_$MIRROR))*(ZTHICK_$MIRROR/
+           SQRT((XBMIN_$MIRROR(1)
+           -XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+           -(ZBACK_$MIRROR-Z(NP))*((XFMIN_$MIRROR(1)-
+           XBMIN_$MIRROR(1))/SQRT((XBMIN_$MIRROR(1)
+           -XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2)), "distance to the side"
+        (ZBACK_$MIRROR-Z(NP))*((XFMIN_$MIRROR(1)-
+           XBMIN_$MIRROR(1))/SQRT((XBMIN_$MIRROR(1)
+           -XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+           - (X(NP)-XBMAX_$MIRROR(IR_$MIRROR))*(ZTHICK_$MIRROR/
+           SQRT((XBMIN_$MIRROR(1)-XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+        "distance to the side"
+        );
+]
+ELSEIF(IR_$MIRROR=N_$MIRROR+1)["the air region below the mirror"
+        DIST=MIN( Z(NP)-ZMIN_$MIRROR,  "distance to the top surface"
+        ZBACK_$MIRROR-Z(NP),      "distance to the bottom"
+        (X(NP)-XBMAX_$MIRROR(N_$MIRROR))*(ZTHICK_$MIRROR
+         /SQRT((XBMIN_$MIRROR(1)-XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+           -(ZBACK_$MIRROR-Z(NP))*((XFMIN_$MIRROR(1)-XBMIN_$MIRROR(1))/
+           SQRT((XBMIN_$MIRROR(1)-XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+        "distance to the side"
+        );
+]
+ELSEIF(IR_$MIRROR=N_$MIRROR+2)["the air region above the mirror"
+        DIST=MIN( Z(NP)-ZMIN_$MIRROR,  "distance to the top surface"
+        ZBACK_$MIRROR-Z(NP),      "distance to the bottom"
+        (ZBACK_$MIRROR-Z(NP))*((XFMIN_$MIRROR(1)-
+           XBMIN_$MIRROR(1))/SQRT((XBMIN_$MIRROR(1)
+           -XFMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+           -(X(NP)-XBMIN_$MIRROR(1))*(ZTHICK_$MIRROR/SQRT((XFMIN_$MIRROR(1)
+           -XBMIN_$MIRROR(1))**2+ZTHICK_$MIRROR**2))
+        "distance to the side"
+        );
+]
+ELSEIF((N_GAP_$MIRROR.EQ.1)&(IR_$MIRROR=N_$MIRROR+3))["in the air gap"
+   DIST=MIN( Z(NP)-ZFRONT_$MIRROR,  "distance to the front surface of the CM"
+   ZMIN_$MIRROR-Z(NP)      "distance to the lower boundary of the region"
+   );
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$MIRROR(Rev 1.5)"
+"*******************************************************************************
+"End of MIRROR_cm.mortran (Rev 1.5)"

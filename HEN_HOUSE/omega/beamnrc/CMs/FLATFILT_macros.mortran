@@ -1,0 +1,436 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: photon flattening filter           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     CON miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$FLATFILT} WITH {80}
+REPLACE {$MAX_N_SC_$FLATFILT} WITH {80}
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     FLATFILT component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$FLATFILT/
+"V>================
+"V>ICM_$FLATFILT = index of CM, set as ICM in INPUT__$flatfilt and never re-set
+"V>IRSTART_$FLATFILT    = first region number for this CM
+"V>IREND_$FLATFILT      = last region number for this CM
+"V>N_$FLATFILT          = number of regions in CM
+"V>TITLE_$FLATFILT      = title of CM
+"V>ISCM_NO_$FLATFILT    = number of layers in the CM
+"V>ISSCM_NO_$FLATFILT($MAX_N_$FLATFILT) = number of coaxial cones in each layer
+"V>ZMIN_$FLATFILT($MAX_N_$FLATFILT)      = Front of each layer
+"V>ZMAX_$FLATFILT       = back of each layer
+"V>ZFRONT_$FLATFILT     = Upstream Z boundary of this CM
+"V>RTOP_$FLATFILT       = radius at front
+"V>RBOT_$FLATFILT       = radius at back
+"V>COSA_$FLATFILT       = cos of the cone
+"V>IR_$FLATFILT         = local region number
+;
+REPLACE {;COMIN/CM_$FLATFILT/;} WITH {
+   ;COMMON/CM_$FLATFILT/
+      ZMIN_$FLATFILT,
+      ZMAX_$FLATFILT,
+      RTOP_$FLATFILT,
+      RBOT_$FLATFILT,
+      COSA_$FLATFILT,
+      ZFRONT_$FLATFILT,
+      TITLE_$FLATFILT,
+      ICM_$FLATFILT,
+      IRSTART_$FLATFILT,
+      IREND_$FLATFILT,
+      N_$FLATFILT,
+      N_GAP_$FLATFILT,
+      ISCM_NO_$FLATFILT,
+      ISSCM_NO_$FLATFILT,
+      IR_$FLATFILT,
+      ISCM_$FLATFILT,
+      ISCM_$FLATFILT_C,
+      IISSC_$FLATFILT,
+      IISSC_$FLATFILT_C;
+   INTEGER
+      ICM_$FLATFILT,
+      IRSTART_$FLATFILT,
+      IREND_$FLATFILT,
+      N_$FLATFILT,
+      N_GAP_$FLATFILT,
+      ISCM_$FLATFILT,
+      ISCM_$FLATFILT_C,
+      IISSC_$FLATFILT,
+      IISSC_$FLATFILT_C,
+      ISCM_NO_$FLATFILT,
+      ISSCM_NO_$FLATFILT($MAX_N_SC_$FLATFILT),
+      IR_$FLATFILT;
+   $REAL
+      ZFRONT_$FLATFILT,
+      RTOP_$FLATFILT($MAX_N_$FLATFILT,$MAX_N_SC_$FLATFILT),
+      RBOT_$FLATFILT($MAX_N_$FLATFILT,$MAX_N_SC_$FLATFILT),
+      COSA_$FLATFILT($MAX_N_$FLATFILT,$MAX_N_SC_$FLATFILT,2);
+   REAL*8
+      ZMIN_$FLATFILT($MAX_N_$FLATFILT),ZMAX_$FLATFILT($MAX_N_$FLATFILT);
+      "above needed for cases of very thin slabs P Selvam 2005"
+   CHARACTER*1 TITLE_$FLATFILT(60);
+   } "end of replacement defining common for this CM"
+;
+;
+"-------------------------------------------------------------------------------
+"     FLAT HOWNEAR replacement macro
+" Now just calls HOWNEAR_$FLATFILT subroutine
+"-------------------------------------------------------------------------------
+"V>$FLAT_CM_HOWNEAR(#)
+"V>===================
+"V>
+;
+REPLACE {$FLATFILT_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$FLATFILT({P1});
+}
+;
+;
+"V>$FLATFILT_GET_SQXY(#,#);
+"V>=============
+"V>
+;
+REPLACE {$FLATFILT_GET_SQXY(#,#);} WITH {
+ ;XF_$FLATFILT = X(NP)+{P1}*U(NP);
+ YF_$FLATFILT = Y(NP)+{P1}*V(NP);
+ {P2} = XF_$FLATFILT**2 + YF_$FLATFILT**2;
+}
+
+"p outside
+
+REPLACE {$FLATFILT_GET_DICO_OU(#,#);} WITH {
+;
+ALO_$FLATFILT = (RBOT_$FLATFILT({P1},{P2}-1)
+                - RTOP_$FLATFILT({P1},{P2}-1))/
+                (ZMAX_$FLATFILT({P1}) - ZMIN_$FLATFILT({P1}));
+BLO_$FLATFILT = RTOP_$FLATFILT({P1},{P2}-1) - $BDY_TOL
+                - ZMIN_$FLATFILT({P1})*ALO_$FLATFILT;
+IF(X(NP)**2+Y(NP)**2 -(Z(NP)*ALO_$FLATFILT+
+   BLO_$FLATFILT)**2 < 0.0)[
+   "inside cone, change region and return"
+   IF(SQRT(X(NP)**2+Y(NP)**2) -Z(NP)*ALO_$FLATFILT-
+   BLO_$FLATFILT < -$BDY_TOL)[
+      I_outside=I_outside+1;
+      IF(I_outside>1000)[
+         OUTPUT {P2},{P1};
+         (/' ***WARNING in cone ',I4,' of layer ',I4,' in $FLATFILT'/
+         ' Particle radial position < radius of cone corresponding to its'/
+         ' region no.'/);
+         I_outside=0;
+      ]
+   ]
+   IRNEW=IRL-1;
+   USTEP=0.0;
+   RETURN;
+]
+ELSE[
+   I_outside=0;
+]
+AUP_$FLATFILT = U(NP)**2+V(NP)**2 - W(NP)*W(NP)*ALO_$FLATFILT**2;
+BUP_$FLATFILT = U(NP)*X(NP)+V(NP)*Y(NP)
+              - ALO_$FLATFILT**2*W(NP)*Z(NP)
+              - ALO_$FLATFILT*BLO_$FLATFILT*W(NP);
+CUP_$FLATFILT = X(NP)**2+Y(NP)**2
+              - (Z(NP)*ALO_$FLATFILT + BLO_$FLATFILT)**2;
+DUP_$FLATFILT = BUP_$FLATFILT**2 - AUP_$FLATFILT*CUP_$FLATFILT;
+IF(DUP_$FLATFILT <= 0.0 | AUP_$FLATFILT = 0.0 ) [DIST_COU = 1E5;]
+ELSE[
+   TQ_$FLATFILT = - BUP_$FLATFILT - SIGN(one,BUP_$FLATFILT)*
+                    SQRT(DUP_$FLATFILT);
+   T1_$FLATFILT = TQ_$FLATFILT/AUP_$FLATFILT;
+   T2_$FLATFILT = CUP_$FLATFILT/TQ_$FLATFILT;
+   DIST_COU = MIN(T1_$FLATFILT, T2_$FLATFILT);
+   IF(DIST_COU < 0.0) [
+      DIST_COU = MAX(T1_$FLATFILT, T2_$FLATFILT);
+   ]
+   IF(DIST_COU <= 0.0) [
+       DIST_COU = 1E5;
+   ]
+   ELSEIF(DIST_COU < $BDY_TOL)[
+       DIST_COU = $BDY_TOL;
+   ]
+]
+
+IF(DIST_COU < DIST)[
+   DIST = DIST_COU;
+   IRNEW_$FLATFILT  = IRL - 1;
+]
+}
+
+"p inside
+
+"V>$FLATFILT_GET_DICO_IN;
+"V>=============
+"V>
+;
+REPLACE {$FLATFILT_GET_DICO_IN(#,#);} WITH {
+ALO_$FLATFILT = (RBOT_$FLATFILT({P1},{P2}) - RTOP_$FLATFILT({P1},{P2}))/
+                (ZMAX_$FLATFILT({P1}) - ZMIN_$FLATFILT({P1}));
+BLO_$FLATFILT = RTOP_$FLATFILT({P1},{P2}) + $BDY_TOL
+                - ZMIN_$FLATFILT({P1})*ALO_$FLATFILT;
+IF(X(NP)**2+Y(NP)**2 -(Z(NP)*ALO_$FLATFILT+
+   BLO_$FLATFILT)**2 > 0.0)[
+   "outside cone, change region and return"
+   IF(SQRT(X(NP)**2+Y(NP)**2) -Z(NP)*ALO_$FLATFILT-
+   BLO_$FLATFILT > $BDY_TOL)[
+      I_inside=I_inside+1;
+      IF(I_inside>1000)[
+         OUTPUT {P2},{P1};
+         (/' ***WARNING in cone ',I4,' of layer ',I4,' in $FLATFILT'/
+         ' Particle radial position > radius of cone corresponding to its'/
+         ' region no.'/);
+         I_inside=0;
+      ]
+   ]
+   IRNEW=IRL+1;
+   USTEP=0.0;
+   RETURN;
+]
+ELSE[
+   I_inside=0;
+]
+AUP_$FLATFILT = U(NP)**2 + V(NP)**2 - W(NP)**2*ALO_$FLATFILT**2;
+BUP_$FLATFILT = U(NP)*X(NP)+V(NP)*Y(NP)
+           - ALO_$FLATFILT**2*W(NP)*Z(NP)
+           - ALO_$FLATFILT*BLO_$FLATFILT*W(NP);
+CUP_$FLATFILT = X(NP)**2+Y(NP)**2
+           -(Z(NP)*ALO_$FLATFILT+BLO_$FLATFILT)**2;
+DUP_$FLATFILT = BUP_$FLATFILT*BUP_$FLATFILT - AUP_$FLATFILT*CUP_$FLATFILT;
+IF(AUP_$FLATFILT ~= 0.0 & DUP_$FLATFILT >= 0.0)[
+   TQ_$FLATFILT = -BUP_$FLATFILT - SIGN(one,BUP_$FLATFILT)*SQRT(DUP_$FLATFILT);
+   T1_$FLATFILT = TQ_$FLATFILT/AUP_$FLATFILT;
+   T2_$FLATFILT = CUP_$FLATFILT/TQ_$FLATFILT;
+   IF(T1_$FLATFILT > 0.0 &
+      T2_$FLATFILT > 0.0 )[
+      DIST_CIN = MIN(T1_$FLATFILT, T2_$FLATFILT);
+   ]
+   ELSE[
+      DIST_CIN = MAX(T1_$FLATFILT, T2_$FLATFILT);
+   ]
+]
+ELSE[
+   DIST_CIN = 1E5;
+  " OUTPUT AUP_$FLATFILT,DUP_$FLATFILT;"
+  "  (' No hit! in $FLATFILT_IN_HIT, AUP,DUP =',2F11.5/);"
+]
+IF(DIST_CIN <= 0.) [
+     DIST_CIN = 1E5;
+]
+ELSEIF(DIST_CIN < $BDY_TOL)[
+       DIST_CIN = $BDY_TOL;
+]
+
+IF(DIST_CIN < DIST)[
+   DIST = DIST_CIN;
+   IRNEW_$FLATFILT  = IRL + 1;
+]
+
+}
+;
+
+REPLACE {$FLATFILT_FIND_I_II(#,#);} WITH {
+   I1 = 0;
+   I2 = 0;
+   DO I = 1, ISCM_NO_$FLATFILT [ " find local region index"
+      I2 = I2 + ISSCM_NO_$FLATFILT(I) + 1;
+      IF(IR_$FLATFILT <= I2)[
+         ISCM_$FLATFILT = I;
+         IF(ISCM_$FLATFILT > 1)[
+            DO II = 1, ISCM_$FLATFILT - 1[
+               I1 = I1 + ISSCM_NO_$FLATFILT(II) + 1;
+            ]
+         ]
+         IISSC_$FLATFILT = IR_$FLATFILT - I1;
+         EXIT;
+      ]
+   ]
+
+IF(IR_$FLATFILT = N_$FLATFILT + 1 & Z(NP) > ZMIN_$FLATFILT(1))[
+   IDISC = 1;
+   RETURN;
+]
+
+IF(IISSC_$FLATFILT_C ~= IISSC_$FLATFILT | ISCM_$FLATFILT_C ~= ISCM_$FLATFILT)[
+   IISSC_$FLATFILT = IISSC_$FLATFILT_C;
+   ISCM_$FLATFILT = ISCM_$FLATFILT_C;
+]
+}
+
+
+REPLACE {$FLATFILT_NEGTIVE_USTEP;} WITH {;
+IF(USTEP < -$BDY_TOL)[
+   OUTPUT IR(NP);(' check negtive IR(NP)=  ', I8);
+   OUTPUT ISCM_$FLATFILT,IISSC_$FLATFILT;
+         ('I,II ', 4I8);
+   OUTPUT X(NP),Y(NP),Z(NP),U(NP),V(NP),
+          W(NP),SQRT(X(NP)**2+Y(NP)**2),USTEP,DIST;
+         ('x,y,z,u,v,w, r,ustep,dist= ',9F12.4);
+]
+}
+
+REPLACE {$FLATFILT_CHECK_OUTSIDE;} WITH {;
+IF( Z(NP) > ZMAX_$FLATFILT(ISCM_NO_$FLATFILT) + $BDY_TOL & W(NP) > 0 )[
+  Z(NP) = ZMAX_$FLATFILT(ISCM_NO_$FLATFILT);
+  CALL WHERE_AM_I(ICM_$FLATFILT,1);
+  RETURN;
+]
+IF( Z(NP) > ZMAX_$FLATFILT(ISCM_NO_$FLATFILT) + $BDY_TOL & W(NP) < 0 )[
+  Z(NP) = ZMAX_$FLATFILT(ISCM_NO_$FLATFILT);
+]
+}
+
+"p outside
+
+REPLACE {$FLATFILT_GET_DICO_OU_WLTZ(#,#);} WITH {
+;
+ALO_$FLATFILT = (RBOT_$FLATFILT({P1},{P2}-1)
+                - RTOP_$FLATFILT({P1},{P2}-1))/
+                (ZMAX_$FLATFILT({P1}) - ZMIN_$FLATFILT({P1}));
+BLO_$FLATFILT = RTOP_$FLATFILT({P1},{P2}-1) - $BDY_TOL
+                - ZMIN_$FLATFILT({P1})*ALO_$FLATFILT;
+IF(X(NP)**2+Y(NP)**2 -(Z(NP)*ALO_$FLATFILT+
+   BLO_$FLATFILT)**2 < 0.0)[
+   "inside cone, change region and return"
+   IF(SQRT(X(NP)**2+Y(NP)**2) -Z(NP)*ALO_$FLATFILT-
+   BLO_$FLATFILT < -$BDY_TOL)[
+      I_outside=I_outside+1;
+      IF(I_outside>1000)[
+         OUTPUT {P2},{P1};
+         (/' ***WARNING in cone ',I4,' of layer ',I4,' in $FLATFILT'/
+         ' Particle radial position < radius of cone corresponding to its'/
+         ' region no.'/);
+         I_outside=0;
+      ]
+   ]
+   IRNEW=IRL-1;
+   USTEP=0.0;
+   RETURN;
+]
+ELSE[
+   I_outside=0;
+]
+AUP_$FLATFILT = U(NP)**2+V(NP)**2 - W(NP)*W(NP)*ALO_$FLATFILT**2;
+BUP_$FLATFILT = U(NP)*X(NP)+V(NP)*Y(NP)
+              - ALO_$FLATFILT**2*W(NP)*Z(NP)
+              - ALO_$FLATFILT*BLO_$FLATFILT*W(NP);
+CUP_$FLATFILT = X(NP)**2+Y(NP)**2
+              - (Z(NP)*ALO_$FLATFILT + BLO_$FLATFILT)**2;
+DUP_$FLATFILT = BUP_$FLATFILT**2 - AUP_$FLATFILT*CUP_$FLATFILT;
+IF(DUP_$FLATFILT <= 0.0 | AUP_$FLATFILT = 0.0 ) [DIST_COU = 1E5;]
+ELSE[
+   TQ_$FLATFILT = - BUP_$FLATFILT - SIGN(one,BUP_$FLATFILT)*
+                    SQRT(DUP_$FLATFILT);
+   T1_$FLATFILT = TQ_$FLATFILT/AUP_$FLATFILT;
+   T2_$FLATFILT = CUP_$FLATFILT/TQ_$FLATFILT;
+   DIST_COU = MIN(T1_$FLATFILT, T2_$FLATFILT);
+   IF(DIST_COU < 0.0) [
+      DIST_COU = MAX(T1_$FLATFILT, T2_$FLATFILT);
+   ]
+   IF(DIST_COU <= 0.0) [
+       DIST_COU = 1E5;
+   ]
+   ELSEIF(DIST_COU < $BDY_TOL)[
+       DIST_COU = $BDY_TOL;
+   ]
+]
+IF(DIST_COU < DIST)[
+   DIST = DIST_COU;
+   IRNEW_$FLATFILT  = IRL - 1;
+]
+}
+
+
+
+REPLACE {$FLATFILT_CHECH_DIST1;} WITH {;
+IF(DIST < -$BDY_TOL)[
+   OUTPUT IR(NP);(' check dist1 IR(NP)=  ', I8);
+   OUTPUT ISCM_$FLATFILT,IISSC_$FLATFILT;
+         ('I,II ', 4I8);
+   OUTPUT X(NP),Y(NP),Z(NP),U(NP),V(NP),
+          W(NP),SQRT(X(NP)**2+Y(NP)**2),DIST;
+         ('x,y,z,u,v,w, r,dist= ',8F12.4);
+
+]
+}
+REPLACE {$FLATFILT_CHECH_DIST2;} WITH {;
+IF(DIST < -$BDY_TOL)[
+   OUTPUT IR(NP);(' check dist2 IR(NP)=  ', I8);
+   OUTPUT ISCM_$FLATFILT,IISSC_$FLATFILT;
+         ('I,II ', 4I8);
+   OUTPUT X(NP),Y(NP),Z(NP),U(NP),V(NP),
+          W(NP),SQRT(X(NP)**2+Y(NP)**2),DIST;
+         ('x,y,z,u,v,w, r= ',8F12.4);
+]
+}
+
+REPLACE {$FLATFILT_CHECH_DIST3;} WITH {;
+IF(DIST < -$BDY_TOL)[
+   OUTPUT IR(NP);(' check dist3 IR(NP)=  ', I8);
+   OUTPUT ISCM_$FLATFILT,IISSC_$FLATFILT;
+         ('I,II ', 4I8);
+   OUTPUT X(NP),Y(NP),Z(NP),U(NP),V(NP),
+          W(NP),SQRT(X(NP)**2+Y(NP)**2),DIST;
+         ('x,y,z,u,v,w, r= ',8F12.4);
+]
+}
+"End of FLATFILT_macros.mortran (Rev 1.2)"

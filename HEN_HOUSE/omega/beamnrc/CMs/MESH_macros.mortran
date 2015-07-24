@@ -1,0 +1,143 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: fine wire mesh                     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Dave Rogers, 1994                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+REPLACE {$MAX_N_$MESH} WITH  {5};      "maximum number of local regions"
+
+"-------------------------------------------------------------------------------
+"     $MESH component module common                 ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$MESH/
+"V>================
+"V>ICM_$MESH          CM index, set =ICM in INPUT_$MESH and never re-set
+"V>IRSTART_$MESH      first region number for this CM
+"V>IREND_$MESH        last region number for this CM
+"V>N_GAP_$MESH        0 if no air gap this CM, = 1 if air gap at top of CM
+"V>TITLE_$MESH        title of CM
+"V>ZBACK_$MESH        Downstream Z boundary of MESH
+"V>ZFRONT_$MESH       Upstream Z boundary of MESH (excluding air)
+"V>XINNER_$MESH       inside of wire mesh in x direction (outside of air)
+"V>YINNER_$MESH       inside of wire mesh in y direction (outside of air)
+"V>XOUTER_$MESH       outside of wire mesh in x direction (outside of air)
+"V>YOUTER_$MESH       outside of wire mesh in y direction (outside of air)
+"V>XTOTAL_$MESH       outer edge of entire mesh in x direction (air outside)
+"V>YTOTAL_$MESH       outer edge of entire mesh in y direction (air outside)
+"V>X_CELL_$MESH       total x-width of a single cell.
+"V>Y_CELL_$MESH       total y-width of a single cell.
+"V>X_CELLBY2_$MESH    half of x-width of a single cell.
+"V>Y_CELLBY2_$MESH    half of y-width of a single cell.
+"V>WIRE_WIDTH_$MESH   width of wire
+"V>WIRE_THICK_$MESH   thickness of wire
+"V>IX_$MESH           which cell actually in (+ve, -ve and 0 allowed)
+"V>IY_$MESH           which cell actually in (+ve, -ve and 0 allowed)
+"V>ITRANSLATE_X_$MESH flag set in where_am_i_$MESH if X translation to
+"V>                   central cell done (not done if outside mesh).
+"V>ITRANSLATE_Y_$MESH flag set in where_am_i_$MESH if Y translation to
+"V>                   central cell done (not done if outside mesh).
+"V>IR_$MESH           local region number
+
+REPLACE{;COMIN/CM_$MESH/;} WITH {
+   ;COMMON/CM_$MESH/ZBACK_$MESH,ZFRONT_$MESH,XINNER_$MESH,
+         YINNER_$MESH,XOUTER_$MESH,YOUTER_$MESH,
+         X_CELL_$MESH,Y_CELL_$MESH,
+         X_CELLBY2_$MESH,Y_CELLBY2_$MESH,
+         WIRE_WIDTH_$MESH, WIRE_THICK_$MESH,
+         XTOTAL_$MESH,YTOTAL_$MESH,
+         ICM_$MESH,   IRSTART_$MESH,  IREND_$MESH,
+         N_GAP_$MESH, IX_$MESH, IY_$MESH,
+         ITRANSLATE_X_$MESH, ITRANSLATE_Y_$MESH, IR_$MESH,
+         TITLE_$MESH;
+   $REAL ZBACK_$MESH,ZFRONT_$MESH,XINNER_$MESH,
+         YINNER_$MESH,XOUTER_$MESH,YOUTER_$MESH,
+         X_CELL_$MESH,Y_CELL_$MESH,
+         X_CELLBY2_$MESH,Y_CELLBY2_$MESH,
+         WIRE_WIDTH_$MESH, WIRE_THICK_$MESH,
+         XTOTAL_$MESH,YTOTAL_$MESH;
+   INTEGER ICM_$MESH,   IRSTART_$MESH,  IREND_$MESH,
+           N_GAP_$MESH, IX_$MESH, IY_$MESH,
+           ITRANSLATE_X_$MESH, ITRANSLATE_Y_$MESH, IR_$MESH;
+   CHARACTER*1 TITLE_$MESH(60);
+} "end of replacement defining common for this CM"
+;
+;
+"-------------------------------------------------------------------------------
+"     $MESH HOWNEAR replacement macro
+"  Just calls HOWNEAR_$MESH now
+"-------------------------------------------------------------------------------
+"
+REPLACE{$MESH_CM_HOWNEAR(#)} WITH  {  "{P1} is DNEAR"
+"       ==================="
+CALL HOWNEAR_$MESH({P1});
+}
+;
+REPLACE {$MESH_FIND_CELL(#,#);} WITH {
+"        ================"
+" given a pair of values, this returns the cell which the point"
+" is in"
+" Cells are centered about the origin which is in cell (0,0)"
+
+IX_$MESH = INT((ABS({P1}) - X_CELLBY2_$MESH)/X_CELL_$MESH +0.99999);
+IF({P1} < 0.0) [IX_$MESH = -IX_$MESH;"only truncates properly for +ve"]
+"assumes that INT truncates"
+IY_$MESH = INT((ABS({P2}) - Y_CELLBY2_$MESH)/Y_CELL_$MESH +0.99999);
+IF({P2} < 0.0) [IY_$MESH = -IY_$MESH;"only truncates properly for +ve"]
+}
+"End of MESH_macros.mortran (Rev 1.2)"

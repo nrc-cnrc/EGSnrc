@@ -1,0 +1,148 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: x-ray tube                         "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Charlie Ma, 1993                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     XTUBE miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$XTUBE} WITH {10}
+"       ==========="
+"
+"-------------------------------------------------------------------------------
+"     XTUBE component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$XTUBE/
+"V>================
+"V>ICM_$XTUBE        = CM index , set as ICM in INPUT_$XTUBE, never re-set
+"V>IRSTART_$XTUBE    = first region number for this CM
+"V>IREND_$XTUBE      = last region number for this CM
+"V>N_$XTUBE          = number of slabs of the target
+"V>TITLE_$XTUBE      = title of CM
+"V>ZFRONT_$XTUBE     = top of CM (air)
+"V>ZBACK_$XTUBE      = bottom of CM (air)
+"V>A_$XTUBE          = a in X = a*Z + b
+"V>BMAX_$XTUBE       = b in X = a*Z + b
+"V>BMIN_$XTUBE       = b in X = a*Z + b
+"V>HXTRA_$XTUBE,WXTRA_$XTUBE = Z and Y dimension of extra central region
+"V>                            in outermost target layer
+"V>XFMIN_XTRA_$XTUBE,XFMAX_XTRA_$XTUBE,XBMIN_XTRA_$XTUBE,XBMAX_XTRA_$XTUBE =
+"V>                            min, max X values at front and back of extra
+"V>                            central region
+"V>XFMINT_XTRA_$XTUBE,XFMAXT_XTRA_$XTUBE,XBMINT_XTRA_$XTUBE,XBMAXT_XTRA_$XTUBE=
+"V>                            same as above but with BDYTOL added to them
+"V>ANGLEI           = angle between target surface and z-axis
+"V>IR_$XTUBE        = local region number
+"V>I_XTRA_$XTUBE    = 1 if there is an extra central region in the outermost
+"V>                   target layer, 0 otherwise
+;
+REPLACE {COMIN/CM_$XTUBE/;} WITH {
+   COMMON/CM_$XTUBE/
+      ICM_$XTUBE,    IRSTART_$XTUBE, IREND_$XTUBE,
+      N_$XTUBE,               N_GP_$XTUBE, IR_$XTUBE,
+      I_XTRA_$XTUBE,
+      TITLE_$XTUBE,  ZFRONT_$XTUBE,  ZMIN_$XTUBE,
+      ZBACK_$XTUBE,  A_$XTUBE,       ANGLEI,
+      BMIN_$XTUBE,    BMAX_$XTUBE,
+      BMINT_$XTUBE,  BMAXT_$XTUBE,   XFMIN_$XTUBE,
+      XFMAX_$XTUBE,  XBMIN_$XTUBE,   XBMAX_$XTUBE,
+      XFMINT_$XTUBE, XFMAXT_$XTUBE,  XBMINT_$XTUBE,
+      XBMAXT_$XTUBE, ZTHICK_$XTUBE,  DTHICK_$XTUBE,
+      HXTRA_$XTUBE,WXTRA_$XTUBE,
+      XFMIN_XTRA_$XTUBE,XFMAX_XTRA_$XTUBE,
+      XBMIN_XTRA_$XTUBE,XBMAX_XTRA_$XTUBE,
+      XFMINT_XTRA_$XTUBE,XFMAXT_XTRA_$XTUBE,
+      XBMINT_XTRA_$XTUBE,XBMAXT_XTRA_$XTUBE;
+   INTEGER
+      ICM_$XTUBE,    IRSTART_$XTUBE, IREND_$XTUBE,
+      N_$XTUBE,             N_GP_$XTUBE, IR_$XTUBE,
+      I_XTRA_$XTUBE;
+   $REAL
+      ZFRONT_$XTUBE, ZMIN_$XTUBE,  ZBACK_$XTUBE, A_$XTUBE,
+      ANGLEI,   BMIN_$XTUBE($MAX_N_$XTUBE),
+      BMAX_$XTUBE($MAX_N_$XTUBE),  BMINT_$XTUBE($MAX_N_$XTUBE),
+      BMAXT_$XTUBE($MAX_N_$XTUBE), XFMIN_$XTUBE($MAX_N_$XTUBE),
+      XFMAX_$XTUBE($MAX_N_$XTUBE), XBMIN_$XTUBE($MAX_N_$XTUBE),
+      XBMAX_$XTUBE($MAX_N_$XTUBE), XFMINT_$XTUBE($MAX_N_$XTUBE),
+      XFMAXT_$XTUBE($MAX_N_$XTUBE),XBMINT_$XTUBE($MAX_N_$XTUBE),
+      XBMAXT_$XTUBE($MAX_N_$XTUBE), ZTHICK_$XTUBE,
+      DTHICK_$XTUBE($MAX_N_$XTUBE),
+      HXTRA_$XTUBE,WXTRA_$XTUBE,
+      XFMIN_XTRA_$XTUBE,XFMAX_XTRA_$XTUBE,
+      XBMIN_XTRA_$XTUBE,XBMAX_XTRA_$XTUBE,
+      XFMINT_XTRA_$XTUBE(2),XFMAXT_XTRA_$XTUBE(2),
+      XBMINT_XTRA_$XTUBE(2),XBMAXT_XTRA_$XTUBE(2);
+   CHARACTER*1 TITLE_$XTUBE(60);
+
+} "end of replacement defining common for this CM"
+;
+;
+"-------------------------------------------------------------------------------
+"     XTUBE HOWNEAR replacement macro
+" Now just calls subroutine HOWNEAR_$XTUBE
+"-------------------------------------------------------------------------------
+"V>$XTUBE_CM_HOWNEAR(#)
+"V>===================
+"V>
+;
+REPLACE {$XTUBE_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$XTUBE({P1});
+}
+"end of XTUBE_macros.mortran (Rev 1.2)"

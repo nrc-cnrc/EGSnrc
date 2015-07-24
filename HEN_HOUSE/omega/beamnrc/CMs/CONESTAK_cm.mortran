@@ -1,0 +1,1489 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: stack of conical geometries               "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Geoff Zhang                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the CONS component module written by     "
+"  George Ding, starting in 1992, and subsequently edited by Charlie Ma.      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ************               ""toc:
+"                             *          *               ""toc:
+"                             * CONESTAK *               ""toc:
+"                             *          *               ""toc:
+"                             ************               ""toc:
+"
+"   See sccs for history of modifications
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  primary collimator (cone geormetry of
+"   arbitrary thickness, angle and material in and out).
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator: primary collimator
+"
+"I>
+"I> Geometry of CONESTAK:                              ""toc:
+"I> ******************
+"I>                                       |
+"I>                                       |  beam direction
+"I>                                       |
+"I>                                      \|/
+"I>
+"I>                  ----------------------------------------------
+"I>                               Air gap IR = N+1 if exist
+"I>                  ----------------------------------------------
+"I>                  |               /        \                  |
+"I>          IR = 3  |    IR = 2    / IR = 1   \  IR = 2         | IR = 3
+"I>                  |             /            \                |
+"I>                  |            /              \               |
+"I>      outer wall  |-------------------------------------------|
+"I>                  |          /                  \             |
+"I>                  |         /   IR = 3*(I-1)+1   \IR=3(I-1)+2 |IR=3(I-1)+3
+"I>                  |        /                      \           |
+"I>                  |-------------------------------------------|
+"I>                                    .......
+"I>
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |          Region              | Description         |
+"I>            |------------------------------|---------------------|
+"I>            |  absolute      | local       |                     |
+"I>            |----------------|-------------|                     |
+"I>            |                |             |                     |
+"I>            |IRSTART_CONESTAK| IR_CONESTAK |  as shown in above  |
+"I>            | +IR_CONESTAK-1 |             |    (1 to 2)         |
+"I>            |                |             |                     |
+"I>            |                |             |                     |
+"I>            ------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$CONESTAK
+"                      ISUMRY_$CONESTAK
+"                      HOWFAR_$CONESTAK
+"                      WHERE_AM_I_$CONESTAK
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS/KNOWN BUGS        ""toc:
+"                             ***********************
+"
+"
+"*******************************************************************************
+;
+"
+"                               INPUT FROM UNIT 5             ""toc:
+"                               *****************             ""toc:
+"
+"I>
+"I>  CARDS CM_$CONESTAK (CONESTAK Rev 1.8)
+"I>  ********************************
+"I>
+"I>   -1  dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$CONESTAK) (F10.0): Outer radial boundary (cm).
+"I>
+"I>   1  TITLE_$CONESTAK (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$CONESTAK, RBN_$CONESTAK (2F15.0):
+"I>
+"I>         ZMIN_$CONESTAK:  Distance from front of first cone to
+"I>                          reference plane (Z=0),
+"I>         RBN_$CONESTAK:   Inner radius of outer wall
+"I>                          (Set to 0 if you do not want an outer wall)
+"I>
+"I>   3  ISCM_MAX_$CONESTAK (I5): Number of conical layers
+"I>
+"I>   Repeat 4 once for I=1,ISCM_MAX_$CONESTAK
+"I>
+"I>   4  ZTHICK_$CONESTAK(I), RMIN_$CONESTAK(I), RMAX_$CONESTAK(I) (3F15.0):
+"I>
+"I>        ZTHICK_$CONESTAK(I):  Thickness of conical layer.
+"I>        RMIN_$CONESTAK(I):    Front radius of conical layer.
+"I>        RMAX_$CONESTAK(I):    Back radius of conical layer.
+"I>                           Note restrictions:
+"I>                           RMAX_$CONESTAK(I)>=RMIN_$CONESTAK(I)
+"I>                           RMIN_$CONESTAK(I+1)>=RMAX_$CONESTAK(I)
+"I>
+"I>   5 and 6 are only required if there is an outer wall (ie RBN_$CONESTAK~=0)
+"I>
+"I>   5  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 3 (outer wall):
+"I>                                                  (2F15.0,2I5)
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, non-zero to score dose
+"I>                      deposited in it
+"I>         IREGION_TO_BIT:   Bit setting number for the region
+"I>
+"I>   6  MED_IN (24A1):  Medium of local region 3
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Repeat 7-10 for each conical layer
+"I>
+"I>   7  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 1 (inside cone):
+"I>                                                  (2F15.0,2I5)
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+"I>         IREGION_TO_BIT:   Bit setting number for the region
+"I>
+"I>   8  MED_IN (24A1):  Medium of local region 1 (inside cone),
+"I>                      used to set MED_INDEX
+"I>
+"I>   9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2 (outside cone):
+"I>                                                    (2F15.0,2I5)
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+"I>         IREGION_TO_BIT:   Bit setting number for the region
+"I>
+"I>   10  MED_IN (24A1):  Medium of local region 2 (outside of cone),
+"I>                       used to set MED_INDEX
+"I>   Example
+"I>   *******
+"I>
+"I>  The following input example describes two conical layers.  The first
+"I>  layer is a flat-top cone 1.0cm thick, with a radius at the top of 0.8cm
+"I>  and a radius at the base of 1.2cm.  The second layer is a cylinder, also
+"I>  1.0cm thick, of radius 1.2cm.  The top cone is made of Cu and the bottom
+"I>  cylinder is made of Pb.  The entire structure is encircled by a Pb wall
+"I>  with inner radius 4cm and outer radius 5cm.
+"I>  In both layers, the medium between the cone and the outer wall is H2O.
+"I>
+"I>  Dose in the Cu cone will be scored in dose zone 1.  Dose in the PB cylinder
+"I>  will appear in dose zone 2.  The dose to the encircling PB wall will be in
+"I>  zone 3.  And the dose to the water in both layers will be scored in zone 4.
+"I>  ECUT and PCUT in all cases is 0.521MeV and 0.01MeV respectively.
+"I>
+"I>  5.0                   RMAX_CM
+"I>  cone and cylinder surrounded by PB wall
+"I>  0.0, 4.0
+"I>  2
+"I>  1.0, 0.8, 1.2
+"I>  1.0, 1.2, 1.2
+"I>  0.521, 0.01, 3, 0
+"I>  PB
+"I>  0.521, 0.01, 1, 0
+"I>  CU
+"I>  0.521, 0.01, 4, 0
+"I>  H2O
+"I>  0.521, 0.01, 2, 0
+"I>  PB
+"I>  0.521, 0.01, 4, 0
+"I>  H2O
+"I>
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+
+%E   "start of subroutine HOWFAR_$CONESTAK (Rev 1.8)"
+"*******************************************************************************
+"************************** Component Module CONESTAK **************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_CONESTAK
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module CONESTAK, and
+" if so evaluate DIST, distance to region boundary along current trajectory.
+"  USTEP must not exceed DIST.
+"
+"   There are N_CONESTAK local regions + an air gap (if present):
+"
+"     local               absolute                       description
+"  -----------  --------------------------------------  ----------------------
+"  IR_CONESTAK  IR_start_CM(ICM_CONESTAK)+IR_CONESTAK-1 excluding front air gap
+" ------------  --------------------------------------  -----------------------
+"   Geometrical co-ordinates, as set in INPUT_CONESTAK are:
+"
+"   ZFRONT_CONESTAK     front of CM (upstream surface, air region)
+"   ZMIN_CONESTAK       front of cone
+"   ZBACK_CONESTAK      back of cone
+"   RMAX_CONESTAK       radius of bottom conical layer (largest)
+"
+"******************************************************************************
+;SUBROUTINE HOWFAR_$CONESTAK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ CMs,CM_$CONESTAK,EPCONT,STACK,SCORE,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_CONESTAK
+"T>**********************************
+"T>
+INTEGER
+   IRNEW_$CONESTAK, "T>tentative new region number within CM (absolute)
+   IB_$CONESTAK,    "T>index to deal with round off errors (=1,2 in region 1,2)
+   IHIT;            "T>Index for hit(=1) or not (=0)
+
+$REAL
+   DIST,           "T>distance to region boundary along current trajectory
+   XF_$CONESTAK,   "T>temporary variable
+   YF_$CONESTAK,   "T>temporary variable
+   ZF_$CONESTAK,   "T>temporary variable
+   TCON_$CONESTAK, "T>temporary variable
+   SQXY_$CONESTAK;
+$REAL
+   AUP_$CONESTAK, CUP_$CONESTAK,  TQ_$CONESTAK,
+   A_$CONESTAK,   B_$CONESTAK,    B2_$CONESTAK,
+   C_$CONESTAK,   COUT_$CONESTAK, RAD_$CONESTAK,
+   BUP_$CONESTAK, DUP_$CONESTAK,  T1_$CONESTAK,
+   T2_$CONESTAK,  I1,  I2;
+$REAL one;
+parameter (one = 1);
+
+;
+" Determine local region number
+"
+" This replacement macros sets DMIN_$CONESTAK as well as defining IR_$CONESTAK
+;$CONESTAK_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module CONESTAK,
+" and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+IF(IR_$CONESTAK = 3*ISCM_MAX_$CONESTAK + 1) [ "particle in front air gap
+   IF(W(NP) > 0.0) ["particle going forward"
+      DIST = (ZMIN_$CONESTAK(1) - Z(NP))/W(NP); "distance to front of SCM
+      IRNEW_$CONESTAK = IRSTART_$CONESTAK;
+      ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+      IF(SQXY_$CONESTAK > RBN2_$CONESTAK)[
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 2;
+      ]
+      ELSEIF(SQXY_$CONESTAK > RMIN2_$CONESTAK(1))[
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 1;
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$CONESTAK; "new region number"
+      ]
+   ] "end of particle going forward
+   ELSEIF(W(NP) < 0.0) ["particle going backward"
+      DIST = (ZFRONT_$CONESTAK - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST<=0.)[DIST=1.E-16;]"see SLABS_cm.mortran for explanation"
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         CALL WHERE_AM_I(ICM_$CONESTAK,-1);
+      ]
+   ] " end of going backward"
+] " end of region of air gap
+ELSEIF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1)+1)[   "local region 1
+   IB_$CONESTAK=1;
+   ;;$CONESTAK_CHECK_RIN(ISCM_$CONESTAK,IB_$CONESTAK);
+   IF(W(NP) > 0.0) [  "particle going forward"
+      DIST = (ZMAX_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+                  "distance to back of this SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(DIST=0. & ISCM_$CONESTAK=ISCM_MAX_$CONESTAK)[DIST=1.E-16;]
+            "see SLABS_cm.mortran for explanation"
+      IRNEW_$CONESTAK = 1;
+      ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);  "get r**2 on ZMAX_$CONESTAK
+      IF(SQXY_$CONESTAK <= RMAX2T_$CONESTAK(ISCM_$CONESTAK,IB_$CONESTAK))[
+         IF(ISCM_$CONESTAK ~= ISCM_MAX_$CONESTAK)[
+            IF(SQXY_$CONESTAK < RMIN2_$CONESTAK(ISCM_$CONESTAK+1))[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK;
+            ]
+            ELSE[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 1;
+            ]
+         ]
+      ]
+      ELSE[
+         ;;$CONESTAK_IN_HIT(TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+          DIST = TCON_$CONESTAK;
+          IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$CONESTAK = 1) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$CONESTAK,1);
+         ]
+         ELSE ["still in this CM
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] "end of particle going forward
+   ELSEIF(W(NP) < 0.0) [  "particle going backward"
+      DIST = (ZMIN_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+      "distance to back of SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(DIST=0. & ISCM_$CONESTAK=1 & N_GAP_$CONESTAK=0)[DIST=1.E-16;]
+      ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);  "get r**2 on ZMIN
+      IF(SQXY_$CONESTAK > RMIN2T_$CONESTAK(ISCM_$CONESTAK,IB_$CONESTAK) )[
+         ;;$CONESTAK_IN_HIT(TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+         DIST = TCON_$CONESTAK;
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+      ]
+      ELSE[
+         IF(ISCM_$CONESTAK = 1)[
+            IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK;
+                         "air gap region
+            IF(N_GAP_$CONESTAK = 0)[IRNEW_$CONESTAK = 1;]
+         ]
+         ELSE[ " ISCM_$CONESTAK > 1
+            ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+            IF(SQXY_$CONESTAK < RMAX2_$CONESTAK(ISCM_$CONESTAK-1))[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-2);
+            ]
+            ELSE[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-2) + 1;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$CONESTAK = 1) ["leaving CM through front"
+            CALL WHERE_AM_I(ICM_$CONESTAK,-1);
+         ]
+         ELSE ["still in CM, entering another region"
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] " end of going backward"
+   ELSE[  "particle W=0
+      ;;$CONESTAK_IN_HIT(TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+      DIST = TCON_$CONESTAK;
+      IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$CONESTAK; "new region number"
+      ]
+   ] " end of W=0
+] " end of region 1
+ELSEIF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1)+2)[ "particle in region 2
+   IB_$CONESTAK=2;   " =2 in region 2
+   ;;$CONESTAK_CHECK_ROUT(ISCM_$CONESTAK,IB_$CONESTAK);
+   IF(W(NP) > 0.0) [  "particle going forward"
+      DIST = (ZMAX_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+                             "distance to back of SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(DIST=0. & ISCM_$CONESTAK=ISCM_MAX_$CONESTAK)[DIST=1.E-16;]
+      ;;$CONESTAK_OUT(IHIT,TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+      IF(IHIT = 1)[
+         ZF_$CONESTAK = Z(NP) + TCON_$CONESTAK * W(NP);
+         IF(ZF_$CONESTAK < ZMAX_$CONESTAK(ISCM_$CONESTAK) &
+            ZF_$CONESTAK > ZMIN_$CONESTAK(ISCM_$CONESTAK))[
+            DIST = TCON_$CONESTAK;
+            IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1);
+         ]
+         ELSE[
+            ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+            "get r**2 on ZMAX_$CONESTAK
+            IF(ISCM_$CONESTAK < ISCM_MAX_$CONESTAK)[
+               IF(SQXY_$CONESTAK < RMIN2_$CONESTAK(ISCM_$CONESTAK+1))[
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK;
+               ]
+               ELSEIF(SQXY_$CONESTAK < RBN2T_$CONESTAK(IB_$CONESTAK))[
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 1;
+               ]
+               ELSE[
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 1;
+                  ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+                  DIST = TCON_$CONESTAK;
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                   3*(ISCM_$CONESTAK-1) + 2;
+               ]
+            ]
+            ELSE[ "ISCM_$CONESTAK = ISCM_MAX_$CONESTAK)
+               IRNEW_$CONESTAK = 1;
+               IF(SQXY_$CONESTAK > RBN2T_$CONESTAK(IB_$CONESTAK))[
+                  ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+                  DIST = TCON_$CONESTAK;
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                     3*(ISCM_$CONESTAK-1) + 2;
+               ]
+            ]
+         ]
+      ]
+      ELSE[ "IHIT = 0
+         ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);  "get r**2 on ZMAX_$CONESTAK
+         IF(ISCM_$CONESTAK < ISCM_MAX_$CONESTAK)[
+            IF(SQXY_$CONESTAK < RMIN2_$CONESTAK(ISCM_$CONESTAK+1))[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK;
+            ]
+            ELSEIF(SQXY_$CONESTAK < RBN2T_$CONESTAK(IB_$CONESTAK))[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 1;
+            ]
+            ELSE[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 1;
+               ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                   3*(ISCM_$CONESTAK-1) + 2;
+            ]
+         ]
+         ELSE[ "ISCM_$CONESTAK = ISCM_MAX_$CONESTAK)
+            IRNEW_$CONESTAK = 1;
+            IF(SQXY_$CONESTAK > RBN2T_$CONESTAK(IB_$CONESTAK))[
+               ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+                DIST = TCON_$CONESTAK;
+                IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                    3*(ISCM_$CONESTAK-1) + 2;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF( IRNEW_$CONESTAK = 1 )["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$CONESTAK,1);
+         ]
+         ELSE ["still in CM, entering region 2 or 3"
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] " end of particle going forward"
+   ELSEIF(W(NP) < 0.0) [  "particle going backward"
+      DIST = (ZMIN_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+                                  "distance to back of SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(ISCM_$CONESTAK = 1)[
+         ;;$CONESTAK_OUT(IHIT,TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+         IF (IHIT = 0 & DIST=0.)[
+            IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK;
+         ]
+         ELSEIF(IHIT = 1)[
+            ZF_$CONESTAK = Z(NP) + TCON_$CONESTAK * W(NP);
+            IF(ZF_$CONESTAK > ZMIN_$CONESTAK(ISCM_$CONESTAK) &
+               ZF_$CONESTAK < ZMAX_$CONESTAK(ISCM_$CONESTAK))[
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK;
+            ]
+            ELSE[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK;
+            ]
+         ]
+         ELSE[ " IHIT = 0
+            IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK;
+            "assume we will just exit through top or enter airgap at top"
+            ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+                       "get r**2 on ZMIN_$CONESTAK
+            IF(SQXY_$CONESTAK > RBN2T_$CONESTAK(IB_$CONESTAK))[
+               ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+               IF(TCON_$CONESTAK*W(NP)+Z(NP) > ZMIN_$CONESTAK(ISCM_$CONESTAK) &
+                  TCON_$CONESTAK*W(NP)+Z(NP) < ZMAX_$CONESTAK(ISCM_$CONESTAK))[
+                  DIST = TCON_$CONESTAK;
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                        3*(ISCM_$CONESTAK-1) + 2;
+               ]
+            ]
+         ]
+         IF(IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK &
+            N_GAP_$CONESTAK=0 & DIST=0.)[DIST=1.0E-16;]
+                          "make sure it goes into prev. CM"
+      ]
+      ELSE[ " ISCM > 1
+         ;;$CONESTAK_OUT(IHIT,TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+         IF(IHIT = 1)[
+            ZF_$CONESTAK = Z(NP) + TCON_$CONESTAK * W(NP);
+            IF(ZF_$CONESTAK > ZMIN_$CONESTAK(ISCM_$CONESTAK) &
+               ZF_$CONESTAK < ZMAX_$CONESTAK(ISCM_$CONESTAK))[
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK -1);
+            ]
+            ELSE[
+               ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+               IF(SQXY_$CONESTAK < RBN2T_$CONESTAK(IB_$CONESTAK))[
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                    3*(ISCM_$CONESTAK-2) + 1;
+               ]
+               ELSEIF(SQXY_$CONESTAK > RBN2T_$CONESTAK(IB_$CONESTAK))[
+                  IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                    3*(ISCM_$CONESTAK-2) + 1;
+                  ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+                   DIST = TCON_$CONESTAK;
+                   IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                    3*(ISCM_$CONESTAK-1) + 2;
+               ]
+            ]
+         ]
+         ELSE[ " IHIT = 0
+            ;;$CONESTAK_GET_SQXY(DIST,SQXY_$CONESTAK);
+                  "get r**2 on ZMIN_$CONESTAK
+            IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-2) + 1;
+            IF(SQXY_$CONESTAK > RBN2T_$CONESTAK(IB_$CONESTAK))[
+               ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK +
+                                    3*(ISCM_$CONESTAK-1) + 2;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(N_GAP_$CONESTAK = 0 )[ "leaving CM through front"
+            IF(IRNEW_$CONESTAK => IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK) [
+               CALL WHERE_AM_I(ICM_$CONESTAK,-1);
+            ]
+            ELSE ["still in CM, entering another region"
+               IRNEW = IRNEW_$CONESTAK; "new region number"
+            ]
+         ]
+         ELSE [ "still in CM, entering another region
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] " end of particle going bachward"
+   ELSE [  "particle W=0
+      ;;$CONESTAK_OUT(IHIT,TCON_$CONESTAK,ISCM_$CONESTAK,IB_$CONESTAK);
+      IF(IHIT = 1)[
+         DIST = TCON_$CONESTAK;
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1);
+      ]
+      ELSE[
+         ;;$CONESTAK_IN_HIT_CYL(TCON_$CONESTAK,IB_$CONESTAK);
+         DIST = TCON_$CONESTAK;
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 2;
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$CONESTAK; "new region number"
+      ]
+   ] " end of particle W=0"
+] " end of region 2
+ELSEIF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1)+3) ["particle in region 3
+IB_$CONESTAK = 1;
+   IF(W(NP) > 0.0)[
+      DIST = (ZMAX_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+                        "distance to back of SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(DIST=0. & ISCM_$CONESTAK=ISCM_MAX_$CONESTAK)[DIST=1.E-16;]
+      IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_$CONESTAK + 2;
+      IF(ISCM_$CONESTAK = ISCM_MAX_$CONESTAK)[IRNEW_$CONESTAK = 1;]
+      IF(U(NP)*X(NP)+V(NP)*Y(NP) < 0)[
+         ;;$CONESTAK_OUT_CYL(IHIT,TCON_$CONESTAK,IB_$CONESTAK);
+         IF(IHIT = 1)[
+            ZF_$CONESTAK = Z(NP) + TCON_$CONESTAK * W(NP);
+            IF(ZF_$CONESTAK < ZMAX_$CONESTAK(ISCM_$CONESTAK)&
+               ZF_$CONESTAK > ZMIN_$CONESTAK(ISCM_$CONESTAK))[
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+               DIST = TCON_$CONESTAK;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$CONESTAK = 1 )[ "leaving CM through front"
+            CALL WHERE_AM_I(ICM_$CONESTAK,1);
+         ]
+         ELSE [ "still in CM, entering another region
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] " end of particle going forward"
+   ELSEIF(W(NP) < 0.0)[
+
+      DIST = (ZMIN_$CONESTAK(ISCM_$CONESTAK) - Z(NP))/W(NP);
+                   "distance to front of SCM
+      IF(DIST < 0)[DIST=0.;]
+      IF(DIST=0. & N_GAP_$CONESTAK = 0 & ISCM_$CONESTAK = 1)[DIST=1.E-16;]
+      IF(ISCM_$CONESTAK = 1)[
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*ISCM_MAX_$CONESTAK;
+         IF(N_GAP_$CONESTAK = 0)[IRNEW_$CONESTAK = 1;]
+         IF(U(NP)*X(NP)+V(NP)*Y(NP) < 0)[
+            ;;$CONESTAK_OUT_CYL(IHIT,TCON_$CONESTAK,IB_$CONESTAK);
+            IF(IHIT = 1 &
+               (Z(NP) + TCON_$CONESTAK * W(NP)) >= ZMIN_$CONESTAK(1) &
+               (Z(NP) + TCON_$CONESTAK * W(NP)) <= ZMAX_$CONESTAK(1))[
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 1;
+            ]
+         ]
+      ]
+      ELSE[   "ISCM > 1
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-2) + 2;
+         IF(U(NP)*X(NP)+V(NP)*Y(NP) < 0)[
+            ;;$CONESTAK_OUT_CYL(IHIT,TCON_$CONESTAK,IB_$CONESTAK);
+            IF(IHIT = 1 &
+               (Z(NP) + TCON_$CONESTAK * W(NP)) >=
+                 ZMIN_$CONESTAK(ISCM_$CONESTAK) &
+               (Z(NP) + TCON_$CONESTAK * W(NP)) <=
+                 ZMAX_$CONESTAK(ISCM_$CONESTAK))[
+               DIST = TCON_$CONESTAK;
+               IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$CONESTAK = 1)[ "leaving CM through front"
+            CALL WHERE_AM_I(ICM_$CONESTAK,-1);
+         ]
+         ELSE [ "still in CM, entering another region
+            IRNEW = IRNEW_$CONESTAK; "new region number"
+         ]
+      ]
+   ] " end of particle going backward"
+   ELSE[   " W(NP) = 0.0
+      DIST=1E10;
+      ;;$CONESTAK_OUT_CYL(IHIT,TCON_$CONESTAK,IB_$CONESTAK);
+      IF(IHIT = 1)[
+         DIST = TCON_$CONESTAK;
+         IRNEW_$CONESTAK = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;  "still in CM, entering another region
+         IRNEW = IRNEW_$CONESTAK; "new region number"
+      ]
+   ] " end of particle w=0
+]
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$CONESTAK+1,IR(NP),ICM_$CONESTAK,
+          IR_start_CM(ICM_$CONESTAK);
+      (//' ************'//' HOWFAR_$CONESTAK error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+;
+RETURN;
+END; "End of subroutine HOWFAR_$CONESTAK"
+%E "start of subroutine WHERE_AM_I_$CONESTAK (Rev 1.8)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$CONESTAK
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$CONESTAK determines the new region number when a
+" particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$CONESTAK subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$CONESTAK from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$CONESTAK(IDIR);
+
+Copyright NRC 1999
+
+REPLACE {$CHECK_FRONT_$CONESTAK;} WITH {;}
+REPLACE {$CHECK_BACK_$CONESTAK;} WITH {;}
+;IMPLICIT NONE;
+;COMIN/CM_$CONESTAK,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$CONESTAK
+"T>**************************************
+"T>
+INTEGER IDIR,  "T>direction of particle, +1=forward, -1=backward
+           I;  "T>looping index
+$REAL XBDY_$CONESTAK,YBDY_$CONESTAK,RBDY2_$CONESTAK;
+XBDY_$CONESTAK = X(NP) + U(NP)*USTEP;
+YBDY_$CONESTAK = Y(NP) + V(NP)*USTEP;
+RBDY2_$CONESTAK = XBDY_$CONESTAK*XBDY_$CONESTAK + YBDY_$CONESTAK*YBDY_$CONESTAK;
+IF(IRSTART_$CONESTAK = 2)[ " this is first CM and from front
+   IF(IDIR =1)[RBDY2_$CONESTAK = X(NP)**2 + Y(NP)**2;]
+]
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   IF(N_GAP_$CONESTAK = 0) ["no air gap this CM"
+      IRNEW = IRSTART_$CONESTAK;
+      IF(RBDY2_$CONESTAK > RBN2_$CONESTAK)[
+         IRNEW = IRSTART_$CONESTAK + 2;
+      ]
+      ELSEIF(RBDY2_$CONESTAK > RMIN2_$CONESTAK(1))[
+         IRNEW = IRSTART_$CONESTAK + 1;
+      ]
+   ]
+   ELSE ["this CM has an air gap at the front
+      $CHECK_FRONT_$CONESTAK;
+      IRNEW = IREND_$CONESTAK;
+   ]
+]
+ELSEIF (IDIR=-1) ["particle entering this CM through back face (downstream)
+   $CHECK_BACK_$CONESTAK;
+   IRNEW = IRSTART_$CONESTAK + 3*(ISCM_MAX_$CONESTAK-1);
+   IF(RBDY2_$CONESTAK > RBN2_$CONESTAK)[
+      IRNEW = IRSTART_$CONESTAK + 3*(ISCM_MAX_$CONESTAK-1) + 2;
+   ]
+   ELSEIF(RBDY2_$CONESTAK > RMAX2_$CONESTAK(ISCM_MAX_$CONESTAK))[
+      IRNEW = IRSTART_$CONESTAK + 3*(ISCM_MAX_$CONESTAK-1) + 1;
+   ]
+]
+ELSEIF (IDIR=2) ["particle originating within the CM (source 3)
+   IF(Z(NP)<ZMIN_$CONESTAK(1))["in front air gap
+      IRNEW = IREND_$CONESTAK;
+   ]
+   ELSE[
+      DO I=1,ISCM_MAX_$CONESTAK[
+         IF(Z(NP)<=ZMAX_$CONESTAK(I) & Z(NP)>=ZMIN_$CONESTAK(I))[
+            IRNEW = IRSTART_$CONESTAK + 3*(I-1);
+            IF(SQRT(X(NP)**2+Y(NP)**2) > RBN_$CONESTAK)[
+               IRNEW = IRSTART_$CONESTAK + 3*(I-1) + 2;
+            ]
+            ELSEIF(SQRT(X(NP)**2+Y(NP)**2) >
+               Z(NP)*ALO_$CONESTAK(I)+BLO_$CONESTAK(I))[
+                  IRNEW = IRSTART_$CONESTAK + 3*(I-1) + 1;
+            ]
+            EXIT;
+         ]
+      ]
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$CONESTAK"
+%E   "start of subroutine INPUT_$CONESTAK (Rev 1.8)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_$CONESTAK
+"                           **********************
+"
+"  A CM input subroutine for a series of 2 or more semi-infinite slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$CONESTAK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$CONESTAK,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_$CONESTAK
+"T>*********************************
+"T>
+$REAL ZTHICK_$CONESTAK(20),  "T>thickness of cone in this SCM
+      BDYTOL,                "T>may set differ from  $BDY_TOL
+      AIRGAPMIN_$CONESTAK;   "T>minimum air gap in front and back of CM
+
+INTEGER I,J,            "T>DO loop indeces
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        IRA_WALL,       "T> region no tmp
+        MED_INDEX_WALL, "T>  medium of wall local
+        MED_INDEX;      "T>medium index, set after medium sort by $MED_INPUT
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$CONESTAK = ICM;      "CM index for this component module
+IRSTART_$CONESTAK = IR_start_CM(ICM_$CONESTAK);
+                    "Index of first region in this CM,
+                    "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$CONESTAK) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$CONESTAK = 0.1; "set a minimum 0.1 cm air gap at front of CM
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' Next component is a stacked set of truncated cones ');
+OUTPUT;(/' $CONESTAK (CONESTAK Rev 1.8)');
+IF(ICM_$CONESTAK = 1)[
+   OUTPUT Z_min_CM(1);
+   (' This is the first component and starts at Z=',F11.4,' cm');
+]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$CONESTAK);
+    (' Previous CM ends at:',F12.5,' cm'/);
+]
+OUTPUT; (' TITLE: ',$);
+MINPUT ($CONESTAK) TITLE_$CONESTAK;(60A1);
+";MINPUT is a replacement macro with EOF and
+          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$CONESTAK;(' ',60A1);
+"
+" get distance from reference plane, z=0"
+"   =============================
+NOWALL_$CONESTAK = 0;
+OUTPUT;
+(' Distance front 1st cone to ref plane(z=0), inner radius outer wall(0=>none)'/
+ ' : ',$);
+MINPUT ($CONESTAK) ZMIN_$CONESTAK(1),RBN_$CONESTAK;(2F15.0);
+OUTPUT ZMIN_$CONESTAK(1),RBN_$CONESTAK;(2F25.5);
+IF(Z_min_CM(ICM_$CONESTAK)>ZMIN_$CONESTAK(1))[
+   IF(ICM_$CONESTAK=1)[
+     OUTPUT ICM_$CONESTAK, ZMIN_$CONESTAK(1),Z_min_CM(1);
+       (//' ***WARNING IN CM ',I4,' (CONESTAK):'/
+        ' Z_min_CM(1) < ZMIN(1)'/
+        ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+     WRITE(IOUTLIST,100)ICM_$CONESTAK, ZMIN_$CONESTAK(1),
+           Z_min_CM(1);
+     100 FORMAT(//' ***WARNING IN CM ',I4,' (CONESTAK):'/
+        ' Z_min_CM(1) < ZMIN(1)'/
+        ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+     Z_min_CM(1)=ZMIN_$CONESTAK(1);
+   ]
+   ELSE[
+     OUTPUT ICM_$CONESTAK;
+       (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+          'Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+   ]
+]
+IF(RBN_$CONESTAK = 0) [
+   NOWALL_$CONESTAK = 1;
+   OUTPUT ZMIN_$CONESTAK(1),RBN_$CONESTAK;(2F25.5,',  No outer wall!!');
+]
+ELSEIF(RBN_$CONESTAK > RMAX_CM(ICM_$CONESTAK))[
+   OUTPUT ICM_$CONESTAK;
+     (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+       'inner radius of outer wall > RMAX_CM'//);
+   IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+]
+IF(RBN_$CONESTAK = 0) [RBN_$CONESTAK = RMAX_CM(ICM_$CONESTAK); ]
+ISCM_MAX_$CONESTAK = $MAX_N_$CONESTAK;
+"Maximum number of slab cone permitted
+OUTPUT ISCM_MAX_$CONESTAK;
+(' NUMBER OF layers (MINIMUM 1, MAXIMUM',I3,'): ',$);
+MINPUT ($CONESTAK) ISCM_MAX_$CONESTAK; (I5);
+OUTPUT ISCM_MAX_$CONESTAK; (I5);
+IF(ISCM_MAX_$CONESTAK > $MAX_N_$CONESTAK)[
+   OUTPUT ICM_$CONESTAK, $MAX_N_$CONESTAK;
+     (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+        '# of layers > max. allowed.'/
+        '# of layers reduced to ',I4,' for now.'//);
+   IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+   ISCM_MAX_$CONESTAK=$MAX_N_$CONESTAK;
+]
+ELSEIF(ISCM_MAX_$CONESTAK<1)[
+   ISCM_MAX_$CONESTAK=1;
+   OUTPUT ICM_$CONESTAK;
+    (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+       '# of layers < 1'/
+       '# of layers reset to 1 for now'//);
+   IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+]
+N_$CONESTAK = 3*ISCM_MAX_$CONESTAK;
+"Number of regions in this CM (excluding front air gap)
+"
+"   get  each cone slab geometry information
+"   =================================
+"
+"loop over bars
+DO I = 1,ISCM_MAX_$CONESTAK ["loop to get each slab location"
+   OUTPUT I;(/' Cone layer No:',I3,
+   /' Thickness of conical layer,  top(r1) and  bottom(r2) radii (r1<=r2)'/
+   ' : ',$);
+   ;MINPUT ($CONESTAK) ZTHICK_$CONESTAK(I),
+    RMIN_$CONESTAK(I),RMAX_$CONESTAK(I); (3F15.0);
+   OUTPUT ZTHICK_$CONESTAK(I),RMIN_$CONESTAK(I),RMAX_$CONESTAK(I);(3F15.5);
+   IF(ZTHICK_$CONESTAK(I) < 0.0)[
+      OUTPUT ICM_$CONESTAK, I;
+        (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+           'ZTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+   ]
+   IF(RMIN_$CONESTAK(I) > RMAX_$CONESTAK(I))[
+      OUTPUT ICM_$CONESTAK, I, I;
+        (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+           'RMIN(',I4,') > RMAX(',I4,')'//);
+      IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+   ]
+   IF(RMIN_$CONESTAK(I)=RMAX_$CONESTAK(I) & RMIN_$CONESTAK(I)<$BDY_TOL)[
+      "this will cause problems with region check during run"
+      RMIN_$CONESTAK(I)=$BDY_TOL;
+      RMAX_$CONESTAK(I)=$BDY_TOL;
+      OUTPUT ICM_$CONESTAK, I,$BDY_TOL;
+        (//' ***WARNING IN CM ',I4,' (CONESTAK):'/
+           ' RMIN=RMAX<$BDY_TOL (BOUNDARY TOLERANCE) IN LAYER ',I4/
+           ' THIS CAN CAUSE ENDLESS LOOPS'/
+           ' RMIN AND RMAX HAVE BEEN RESET TO ',F8.5//);
+      WRITE(IOUTLIST,:WARNLAB1:) ICM_$CONESTAK, I,$BDY_TOL;
+:WARNLAB1: FORMAT(//' ***WARNING IN CM ',I4,' (CONESTAK):'/
+           ' RMIN=RMAX<$BDY_TOL (BOUNDARY TOLERANCE) IN LAYER ',I4/
+           ' THIS CAN CAUSE ENDLESS LOOPS'/
+           ' RMIN AND RMAX HAVE BEEN RESET TO ',F8.5//);
+   ]
+   IF(NOWALL_$CONESTAK=1 & RMIN_$CONESTAK(I)>RMAX_CM(ICM_$CONESTAK))[
+      OUTPUT ICM_$CONESTAK, I;
+        (//'***WARNING IN CM ',I4,' (CONESTAK):'/
+           'RMIN(',I4,') > RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CONESTAK):''/
+           ''RMIN('',I4,'') > RMAX_CM''//)')
+            ICM_$CONESTAK, I;
+   ]
+   IF(NOWALL_$CONESTAK=1 & RMAX_$CONESTAK(I)>RMAX_CM(ICM_$CONESTAK))[
+      OUTPUT ICM_$CONESTAK, I;
+        (//'***WARNING IN CM ',I4,' (CONESTAK):'/
+           'RMAX(',I4,') > RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CONESTAK):''/
+           ''RMAX('',I4,'') > RMAX_CM''//)')
+            ICM_$CONESTAK, I;
+   ]
+   IF(I > 1 & RMAX_$CONESTAK(I-1) > RMIN_$CONESTAK(I))[
+      OUTPUT ICM_$CONESTAK, I, I-1;
+       (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+          'RMIN(',I4,') < RMAX(',I4,')'//);
+      IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+   ]
+]
+IF(NOWALL_$CONESTAK = 0 &
+    RBN_$CONESTAK < RMAX_$CONESTAK(ISCM_MAX_$CONESTAK))[
+    OUTPUT ICM_$CONESTAK;
+      (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+         'Inner radius of outer wall < max. cone radius.'//);
+    IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+]
+
+"   get ECUT, PCUT, dose scoring zone, and material in each region
+"   ===============================================================
+IRA = IRSTART_$CONESTAK-1;
+DO IR_$CONESTAK = 1,N_$CONESTAK["loop through regions to get information"
+   IRA = IRA+1;
+   IF(NOWALL_$CONESTAK = 0 & IR_$CONESTAK = 1)[
+      OUTPUT ;(/' For outer wall:'/
+' ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT'/' : ',$);
+     ;MINPUT ($CONESTAK)
+      ECUT(IRA+2),PCUT(IRA+2),DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2);
+      (2F15.0,2I5);
+      IRA_WALL = IRA+2;
+      IF(ECUT(IRA+2) < ECUTIN)[ECUT(IRA+2)=ECUTIN;]
+      IF(PCUT(IRA+2) < PCUTIN)[PCUT(IRA+2)=PCUTIN;]
+      ;OUTPUT ECUT(IRA+2),PCUT(IRA+2),DOSE_ZONE(IRA+2),
+             IREGION_TO_BIT(IRA+2);(F10.5,F10.3,I12,I20);
+      OUTPUT ;(' Material of outer wall ',$);
+     ;$MED_INPUT($CONESTAK);
+            "inputs character array MED_IN from unit 5, loops
+     "through array MEDIA(24,I) to check if medium was previously input.
+     "If so, sets MED_INDEX to index of previous medium.  If not,
+     "increments NMED and sets MED_INDEX to NMED.
+      MED(IRA+2) = MED_INDEX; " medium of the planar slab
+      MED_INDEX_WALL = MED_INDEX;
+   ]
+   IF(NOWALL_$CONESTAK = 1 & IR_$CONESTAK = 1)[
+         IRA_WALL = IRA+2;
+         ECUT(IRA+2) = ECUTIN;
+         PCUT(IRA+2) = PCUTIN;
+         DOSE_ZONE(IRA+2)= 0;
+         IREGION_TO_BIT(IRA+2) = 0;
+         MED(IRA+2) = 0;
+   ]
+
+   IF(MOD(IR_$CONESTAK,3) = 1)[
+      OUTPUT IR_$CONESTAK/3+1;(/' For layer',I3);
+      OUTPUT IR_$CONESTAK;(' Local region ',I3,' (inside of cone)'/
+ ' ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT'/' : ',$);
+   ]
+   IF(MOD(IR_$CONESTAK,3) = 2)[
+      OUTPUT IR_$CONESTAK;(' Local region ',I3,' (outside of cone)'/
+ ' ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT'/' : ',$);
+   ]
+   IF(MOD(IR_$CONESTAK,3) ~= 0)[
+     ;MINPUT ($CONESTAK)
+      ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+      IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+      IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+      ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+             IREGION_TO_BIT(IRA);(F10.5,F10.3,I12,I20);
+      OUTPUT IR_$CONESTAK;(' Material of region ',I3,' ',$);
+     ;$MED_INPUT($CONESTAK); " inputs character array MED_IN from unit 5, loops
+     "through array MEDIA(24,I) to check if medium was previously input.
+     "If so, sets MED_INDEX to index of previous medium.  If not,
+     "increments NMED and sets MED_INDEX to NMED.
+      MED(IRA) = MED_INDEX; " medium of the planar slab
+   ]
+   IF(MOD(IR_$CONESTAK,3) = 0)[
+      ECUT(IRA) = ECUT(IRA_WALL);
+      PCUT(IRA) = PCUT(IRA_WALL);
+      DOSE_ZONE(IRA)= DOSE_ZONE(IRA_WALL);
+      IREGION_TO_BIT(IRA) = IREGION_TO_BIT(IRA_WALL) ;
+      MED(IRA) = MED_INDEX_WALL;
+      IF(NOWALL_$CONESTAK = 1)[MED(IRA) = 0; ]
+   ]
+] "end of loop over IR_$CONESTAK"
+
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$CONESTAK=1) then the gap thickness
+"Z_gap_THICK(ICM_$CONESTAK) = 0, which is used as a flag that there is no
+"air gap
+
+"front of air gap
+Z_gap_THICK(ICM_$CONESTAK) = ZMIN_$CONESTAK(1) - Z_min_CM(ICM_$CONESTAK);
+IF (Z_gap_THICK(ICM_$CONESTAK) < $MIN_GAP) [
+   Z_gap_THICK(ICM_$CONESTAK) = 0.;
+   ZMIN_$CONESTAK(1)=Z_min_CM(ICM_$CONESTAK);
+   N_GAP_$CONESTAK = 0; "no air gap for this CM
+]
+ELSE [
+   N_GAP_$CONESTAK = 1; "this CM has an air gap
+   IRA = IRSTART_$CONESTAK+N_$CONESTAK; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+   ECUT(IRA) = ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+"
+" define the cone geometry here:
+
+BDYTOL= $BDY_TOL;
+ZMAX_$CONESTAK(1) = ZMIN_$CONESTAK(1) + ZTHICK_$CONESTAK(1);
+DO I = 2, ISCM_MAX_$CONESTAK[
+   ZMIN_$CONESTAK(I) = ZMIN_$CONESTAK(I-1) +
+   ZTHICK_$CONESTAK(I-1);
+   ZMAX_$CONESTAK(I) = ZMIN_$CONESTAK(I) + ZTHICK_$CONESTAK(I);
+]
+DO I = 1, ISCM_MAX_$CONESTAK[
+   ALO_$CONESTAK(I) = (RMAX_$CONESTAK(I)-
+   RMIN_$CONESTAK(I))/(ZMAX_$CONESTAK(I) - ZMIN_$CONESTAK(I));
+   BLO_$CONESTAK(I) = RMIN_$CONESTAK(I) -
+   ZMIN_$CONESTAK(I)*ALO_$CONESTAK(I);
+   RMINT_$CONESTAK(I,1)  = RMIN_$CONESTAK(I) + BDYTOL;
+   RMINT_$CONESTAK(I,2)  = RMIN_$CONESTAK(I) - BDYTOL;
+   RMAXT_$CONESTAK(I,1)  = RMAX_$CONESTAK(I) + BDYTOL;
+   RMAXT_$CONESTAK(I,2)  = RMAX_$CONESTAK(I) - BDYTOL;
+   RMIN2_$CONESTAK(I)    = RMIN_$CONESTAK(I)**2;
+   RMAX2_$CONESTAK(I)    = RMAX_$CONESTAK(I)**2;
+   RMIN2T_$CONESTAK(I,1) = RMINT_$CONESTAK(I,1)**2;
+   RMIN2T_$CONESTAK(I,2) = RMINT_$CONESTAK(I,2)**2;
+   RMAX2T_$CONESTAK(I,1) = RMAXT_$CONESTAK(I,1)**2;
+   RMAX2T_$CONESTAK(I,2) = RMAXT_$CONESTAK(I,2)**2;
+   BLOT_$CONESTAK(I,1) = BLO_$CONESTAK(I) + BDYTOL;
+   BLOT_$CONESTAK(I,2) = BLO_$CONESTAK(I) - BDYTOL;
+   COSA_$CONESTAK(I)  = (ZMAX_$CONESTAK(I) - ZMIN_$CONESTAK(I))/
+            SQRT( (ZMAX_$CONESTAK(I) - ZMIN_$CONESTAK(I))**2
+                 +(RMAX_$CONESTAK(I) - RMIN_$CONESTAK(I))**2 );
+]
+RBN2_$CONESTAK     = RBN_$CONESTAK**2;
+RBNT_$CONESTAK(1)  = RBN_$CONESTAK - BDYTOL;
+RBNT_$CONESTAK(2)  = RBN_$CONESTAK + BDYTOL;
+RBN2T_$CONESTAK(1) = RBNT_$CONESTAK(1)**2;
+RBN2T_$CONESTAK(2) = RBNT_$CONESTAK(2)**2;
+
+"set the variable zfront, which is only used once
+ZFRONT_$CONESTAK = Z_min_CM(ICM_$CONESTAK);
+
+"establish start of next CM
+"
+Z_min_CM(ICM_$CONESTAK+1) = ZMAX_$CONESTAK(ISCM_MAX_$CONESTAK);
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_$CONESTAK+N_GAP_$CONESTAK regions, a series of cone slabs
+"
+;
+IREND_$CONESTAK = IRSTART_$CONESTAK + N_$CONESTAK+ N_GAP_$CONESTAK - 1;
+ "Index of last region
+NREG = NREG+N_$CONESTAK+N_GAP_$CONESTAK;
+                          "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$CONESTAK+1) = IREND_$CONESTAK+1;
+]
+ELSE [
+      OUTPUT ICM_$CONESTAK,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (CONESTAK):'/
+         I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$CONESTAK)=IERR_GEOM(ICM_$CONESTAK)+1;
+]
+"
+"  establish CM boundary
+"  =====================
+RMAX_CM_FLAG(ICM_$CONESTAK) = 1; "put a cylindrical boundary about CM
+"
+"  establish dose scoring zones and latch bit setting
+"  ==================================================
+"
+IRA = IRSTART_$CONESTAK-1; "absolute region number"
+DO IR_$CONESTAK=1,N_$CONESTAK["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   IF(NDOSE_ZONE > $MAX_DOSE_ZONE)[
+      OUTPUT NDOSE_ZONE;
+       (' Too many dose zone !', 'NDOSE_ZONE =',I5,
+        ' > $MAX_DOSE_ZONE');
+      STOP;
+   ]
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$CONESTAK)=ECUT(IRA); "Minimum energy on exit from CM
+] "end of loop over IR_$CONESTAK
+
+"   return from INPUT_$CONESTAK
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$CONESTAK:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$CONESTAK:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of subroutine INPUT_$CONESTAK"
+%E   "start of subroutine ISUMRY_$CONESTAK (Rev 1.8)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_$CONESTAK
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$CONESTAK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$CONESTAK,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$CONESTAK
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,       "T>colour of CM for EGS_Windows
+   IRA,           "T>absolute region number
+   I,J;           "T>DO loop index
+
+$REAL VOL_$CONESTAK(3*$MAX_N_$CONESTAK+1),PIL;  "T> region volume
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$CONESTAK.
+"
+PIL=4.0*ATAN(1.0);
+
+" calc. the vol for each region.
+
+DO I = 1,ISCM_MAX_$CONESTAK[
+   VOL_$CONESTAK(3*(I-1)+1) = PIL/3.0*(ZMAX_$CONESTAK(I)-ZMIN_$CONESTAK(I))*
+                    ( RMIN_$CONESTAK(I)**2 + RMAX_$CONESTAK(I)**2
+                      +RMIN_$CONESTAK(I)*RMAX_$CONESTAK(I) );
+   VOL_$CONESTAK(3*(I-1)+2) =
+          PIL*(ZMAX_$CONESTAK(I)-ZMIN_$CONESTAK(I))*RBN_$CONESTAK**2-
+           VOL_$CONESTAK(3*(I-1)+1);
+   VOL_$CONESTAK(3*(I-1)+3) =
+          PIL*(ZMAX_$CONESTAK(I)-
+            ZMIN_$CONESTAK(I))*(RMAX_CM(ICM_$CONESTAK)**2-
+              RBN_$CONESTAK**2);
+]
+
+IRA = IRSTART_$CONESTAK-1; "absolute region number
+DO IR_$CONESTAK=1,N_$CONESTAK+N_GAP_$CONESTAK ["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$CONESTAK(IR_$CONESTAK)*RHOR(IRA);
+      IF(AMASS(ID)<0.0 & ABS(AMASS(ID))<0.000001)[AMASS(ID)=0.0;]
+   ]
+] "end of loop over IR_$CONESTAK"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+
+WRITE(IOUTLIST,110) ICM_$CONESTAK,TITLE_$CONESTAK;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$CONESTAK),RMAX_CM(ICM_$CONESTAK);
+IF(NOWALL_$CONESTAK=1)[
+   WRITE(IOUTLIST,122);
+]
+ELSE[ WRITE(IOUTLIST,121)RBN_$CONESTAK; ]
+WRITE(IOUTLIST,123);
+IF(N_GAP_$CONESTAK~=0)[
+   WRITE(IOUTLIST,124)'airgap',Z_min_CM(ICM_$CONESTAK),
+                      ZMIN_$CONESTAK(1)-Z_min_CM(ICM_$CONESTAK),
+                      RMAX_CM(ICM_$CONESTAK),RMAX_CM(ICM_$CONESTAK);
+]
+DO I=1,ISCM_MAX_$CONESTAK[
+   WRITE(IOUTLIST,130)I,ZMIN_$CONESTAK(I),ZMAX_$CONESTAK(I)-
+               ZMIN_$CONESTAK(I),
+               RMIN_$CONESTAK(I),RMAX_$CONESTAK(I);
+]
+WRITE(IOUTLIST,140);
+IRA = IRSTART_$CONESTAK - 1;
+DO IR_$CONESTAK=1,N_$CONESTAK-1,3[
+   ISCM_$CONESTAK = (IR_$CONESTAK - 1)/3 + 1;
+   IRA = IRSTART_$CONESTAK + IR_$CONESTAK - 1;
+   IF(MED(IRA)~=0)[
+      WRITE(IOUTLIST,150) IR_$CONESTAK,ISCM_$CONESTAK,'inside',
+         ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+   ]
+   ELSEIF(MED(IRA)=0)[
+      WRITE(IOUTLIST,150) IR_$CONESTAK,ISCM_$CONESTAK,'inside',
+         ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+   ]
+   IF(MED(IRA+1)~=0)[
+      WRITE(IOUTLIST,150) IR_$CONESTAK+1,ISCM_$CONESTAK,'outside',
+         ECUT(IRA+1),PCUT(IRA+1),ECUTRR(IRA+1),ESAVE(IRA+1),
+         DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),(MEDIA(J,MED(IRA+1)),J=1,9);
+   ]
+   ELSEIF(MED(IRA+1)=0)[
+      WRITE(IOUTLIST,150) IR_$CONESTAK+1,ISCM_$CONESTAK,'outside',
+         ECUT(IRA+1),PCUT(IRA+1),ECUTRR(IRA+1),ESAVE(IRA+1),
+         DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),'V','a','c','u','u','m';
+   ]
+   IF(NOWALL_$CONESTAK~=1)[
+      IF(MED(IRA+2)~=0)[
+         WRITE(IOUTLIST,150) IR_$CONESTAK+2,ISCM_$CONESTAK,'wall',
+         ECUT(IRA+2),PCUT(IRA+2),ECUTRR(IRA+2),ESAVE(IRA+2),
+         DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),(MEDIA(J,MED(IRA+2)),J=1,9);
+      ]
+      ELSEIF(MED(IRA+2)=0)[
+         WRITE(IOUTLIST,150) IR_$CONESTAK+2,ISCM_$CONESTAK,'wall',
+         ECUT(IRA+2),PCUT(IRA+2),ECUTRR(IRA+2),ESAVE(IRA+2),
+         DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),'V','a','c','u','u','m';
+      ]
+   ]
+   ELSE[        "nowall"
+      WRITE(IOUTLIST,153) IR_$CONESTAK+2,ISCM_$CONESTAK,'nowall',
+         'NA','NA','NA','NA','NA','NA','V','a','c','u','u','m';
+   ]
+]
+IF(N_GAP_$CONESTAK ~= 0 )[
+   IRA = IRSTART_$CONESTAK+N_$CONESTAK;
+   WRITE(IOUTLIST,151) N_$CONESTAK+N_GAP_$CONESTAK,'NA','airgap',
+       ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+       DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+   WRITE(IOUTLIST,152)'at top';
+]
+
+110 FORMAT(///1x,79('-')/ '  Component module',I3,
+           ' is stacked set of truncated cones (CONESTAK:Rev 1.8)'
+           /1x,79('-')
+           //T2,'Title: ',68A1);
+120 FORMAT(/T2,'$CONESTAK geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',F15.5,' cm');
+121 FORMAT(T2,'Inner radius of outer wall = ',F8.5,' cm');
+122 FORMAT(T2,'There is no outer wall.');
+123 FORMAT(/T2,'layer    Z front   thickness   top radius   bottom radius',
+           /T2,'  #       face',
+           /T2,'          (cm)       (cm)         (cm)         (cm)');
+140 FORMAT(/T2,'$CONESTAK region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  layer  location  electron  photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region                   cutoff   cutoff',
+           '   level     max    zone  set'
+           /T2,'                          (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+150 FORMAT(T2,I3,I7,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+151 FORMAT(T2,I3,4X,A3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+152 FORMAT(T16,A7);
+153 FORMAT(T2,I3,I7,4X,A7,A10,A9,A8,A9,A6,A5,2X,9A1);
+130 FORMAT(T2,I3,F12.3,F12.3,F12.3,F13.3);
+124 FORMAT(T2,A6,F9.3,F12.3,F12.3,F13.3);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
+   ICOLOUR=4;
+"   WRITE(IOUTGEOM,201) ICOLOUR,'DISK',0.0,0.0,ZMIN_$CONESTAK,RMIN_$CONESTAK;
+   "cone geometry"
+   DO I = 1, ISCM_MAX_$CONESTAK[
+      WRITE(IOUTGEOM,201)ICOLOUR,'CYLZ',ZMIN_$CONESTAK(I),
+          RMIN_$CONESTAK(I),ZMAX_$CONESTAK(I),RMAX_$CONESTAK(I),0.0,0.0;
+          201   FORMAT(' ',I1,A4,10(F7.2,','));
+   ]
+]"End of graphics output"
+RETURN;
+END;  "end of subroutine ISUMRY_$CONESTAK"
+%E   "start of subroutine HOWNEAR_$CONESTAK (Rev 1.8)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_$CONESTAK
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary.
+" Used to be contained in a macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$CONESTAK(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$CONESTAK,STACK/;
+
+$REAL DIST; "T> the min. distance to nearest region boundary
+
+IR_$CONESTAK = IR(NP) - IRSTART_$CONESTAK + 1;
+ISCM_$CONESTAK = (IR_$CONESTAK-1)/3 + 1;
+IF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1) + 1)[
+  DIST = (ALO_$CONESTAK(ISCM_$CONESTAK)*Z(NP) +
+           BLO_$CONESTAK(ISCM_$CONESTAK)
+          - SQRT(X(NP)**2 + Y(NP)**2))*COSA_$CONESTAK(ISCM_$CONESTAK);
+  DIST = MIN(DIST,Z(NP)-ZMIN_$CONESTAK(ISCM_$CONESTAK),
+         ZMAX_$CONESTAK(ISCM_$CONESTAK)-Z(NP));
+]
+ELSEIF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1)+2)[
+  IF(NOWALL_$CONESTAK=1)[
+      DIST = (SQRT(X(NP)*X(NP) + Y(NP)*Y(NP))
+           - ALO_$CONESTAK(ISCM_$CONESTAK)*Z(NP)
+           - BLO_$CONESTAK(ISCM_$CONESTAK))*COSA_$CONESTAK(ISCM_$CONESTAK);
+  ]
+  ELSE[
+      DIST = MIN((SQRT(X(NP)*X(NP) + Y(NP)*Y(NP))
+                  - ALO_$CONESTAK(ISCM_$CONESTAK)*Z(NP)
+                  - BLO_$CONESTAK(ISCM_$CONESTAK))
+                  *COSA_$CONESTAK(ISCM_$CONESTAK),
+                 RBN_$CONESTAK-SQRT(X(NP)*X(NP) + Y(NP)*Y(NP)));
+  ]
+  DIST = MIN(DIST,Z(NP)-ZMIN_$CONESTAK(ISCM_$CONESTAK),
+         ZMAX_$CONESTAK(ISCM_$CONESTAK)-Z(NP));
+]
+ELSEIF(IR_$CONESTAK = 3*(ISCM_$CONESTAK-1)+3)[
+  DIST = MIN(SQRT(X(NP)*X(NP) + Y(NP)*Y(NP)) - RBN_$CONESTAK,
+             Z(NP)-ZMIN_$CONESTAK(ISCM_$CONESTAK),
+             ZMAX_$CONESTAK(ISCM_$CONESTAK)-Z(NP));
+]
+ELSE[
+   DIST=0.0;
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$CONESTAK (Rev 1.8)"
+"*******************************************************************************
+"End of CONESTAK_cm.mortran (Rev 1.8)"

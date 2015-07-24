@@ -1,0 +1,363 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: stack of conical geometries        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     $CONESTAK miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$CONESTAK} WITH {15}
+;
+"-------------------------------------------------------------------------------
+"     $CONESTAK component module common                 ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$CONESTAK/
+"V>
+"V>ICM_$CONESTAK        = CM index, set as ICM in INPUT_$CONESTAK, not re-set
+"V>IRSTART_$CONESTAK    = first region number for this CM
+"V>IREND_$CONESTAK      = last region number for this CM
+"V>N_$CONESTAK          = number of regions in CM
+"V>TITLE_$CONESTAK      = title of CM
+"V>ZMIN_$CONESTAK       = Front of cone
+"V>ZMAX_$CONESTAK       = back of cone
+"V>ZFRONT_$CONESTAK     = Upstream Z boundary of this CM
+"V>RMIN_$CONESTAK       = radius at front
+"V>RMAX_$CONESTAK       = radius at back
+"V>RMINT_$CONESTAK(2)   = radius
+"V>RMAXT_$CONESTAK(2)   = radius
+"V>RMIN2_$CONESTAK      = squre of radius at front
+"V>RMAX2_$CONESTAK      = squre of radius at back
+"V>RMIN2T_$CONESTAK(2)  = squre of radius
+"V>RMAX2T_$CONESTAK(2)  = squre of radius
+"V>ALO_$CONESTAK        = slop of the cone
+"V>BLO_$CONESTAK        = constant of the eq. x = az + b
+"V>BLOT_$CONESTAK(2)    = constant of the eq. x = az + b
+"V>COSA_$CONESTAK       = cos of the cone
+"V>NOWALL_$CONESTAK     = is there an outer wall or not?
+"V>IR_$CONESTAK         = local region number
+;
+REPLACE {;COMIN/CM_$CONESTAK/;} WITH {
+   ;COMMON/CM_$CONESTAK/
+      ICM_$CONESTAK,    IRSTART_$CONESTAK,
+      IREND_$CONESTAK,  N_$CONESTAK,        N_GAP_$CONESTAK,
+      ISCM_$CONESTAK,   ISCM_MAX_$CONESTAK, IR_$CONESTAK,
+      ZFRONT_$CONESTAK, ZMIN_$CONESTAK,     ZMAX_$CONESTAK,
+      RMIN_$CONESTAK,   RMAX_$CONESTAK,     RBN_$CONESTAK,
+      RBNT_$CONESTAK,   RBN2_$CONESTAK,     RBN2T_$CONESTAK,
+      RMINT_$CONESTAK,  RMAXT_$CONESTAK,    RMIN2_$CONESTAK,
+      RMIN2T_$CONESTAK, RMAX2_$CONESTAK,    RMAX2T_$CONESTAK,
+      ALO_$CONESTAK,    BLO_$CONESTAK,      BLOT_$CONESTAK,
+      COSA_$CONESTAK,   NOWALL_$CONESTAK,
+      TITLE_$CONESTAK;
+   INTEGER
+      ICM_$CONESTAK,IRSTART_$CONESTAK,
+      IREND_$CONESTAK,N_$CONESTAK,N_GAP_$CONESTAK,
+      ISCM_$CONESTAK,ISCM_MAX_$CONESTAK,IR_$CONESTAK,
+      NOWALL_$CONESTAK;
+   $REAL
+      ZFRONT_$CONESTAK, ZMIN_$CONESTAK($MAX_N_$CONESTAK),
+      ZMAX_$CONESTAK($MAX_N_$CONESTAK),
+      RMIN_$CONESTAK($MAX_N_$CONESTAK),
+      RMAX_$CONESTAK($MAX_N_$CONESTAK),
+      RBN_$CONESTAK, RBNT_$CONESTAK(2), RBN2_$CONESTAK, RBN2T_$CONESTAK(2),
+      RMINT_$CONESTAK($MAX_N_$CONESTAK,2),
+      RMAXT_$CONESTAK($MAX_N_$CONESTAK,2),
+      RMIN2_$CONESTAK($MAX_N_$CONESTAK),
+      RMIN2T_$CONESTAK($MAX_N_$CONESTAK,2),
+      RMAX2_$CONESTAK($MAX_N_$CONESTAK),
+      RMAX2T_$CONESTAK($MAX_N_$CONESTAK,2),
+      ALO_$CONESTAK($MAX_N_$CONESTAK),
+      BLO_$CONESTAK($MAX_N_$CONESTAK),
+      BLOT_$CONESTAK($MAX_N_$CONESTAK,2),
+      COSA_$CONESTAK($MAX_N_$CONESTAK);
+   CHARACTER*1 TITLE_$CONESTAK(60);
+} "end of replacement defining common for this CM"
+;
+;
+"-------------------------------------------------------------------------------
+"     CONESTAK HOWNEAR replacement macro
+" Now just calls the HOWNEAR_$CONESTAK subroutine
+"-------------------------------------------------------------------------------
+"V>$CONESTAK_CM_HOWNEAR(#)
+"V>===================
+"V>
+;
+REPLACE {$CONESTAK_CM_HOWNEAR(#);} WITH  {
+CALL HOWNEAR_$CONESTAK({P1});
+}
+;
+"V>CONESTAK_CHECK_RIN(#,#);
+"V>=================
+"V>
+REPLACE {$CONESTAK_CHECK_RIN(#,#);} WITH {;
+IF(Z(NP) > ZMAX_$CONESTAK(ISCM_$CONESTAK) + $BDY_TOL |
+   Z(NP) < ZMIN_$CONESTAK(ISCM_$CONESTAK) - $BDY_TOL )[
+   I1 = I1 +1;
+   IF(I1 > 1000)[
+       OUTPUT {P1};
+      (' ***WARNING in inner cone of layer ',I4,' in $CONESTAK'/
+       ' Z of particle outside the layer.');
+   ]
+   IRNEW = 1;
+   USTEP = 0.0;
+   RETURN;
+]
+IF(X(NP)**2+Y(NP)**2 -(Z(NP)*ALO_$CONESTAK({P1})+
+   BLOT_$CONESTAK({P1},{P2}))**2 >= 0.0)[
+   IF(SQRT(X(NP)**2+Y(NP)**2)-Z(NP)*ALO_$CONESTAK({P1})-
+      BLOT_$CONESTAK({P1},{P2})>$BDY_TOL)[
+          I1 = I1 +1;
+          IF(I1 > 1000)[
+             OUTPUT {P1};
+             (' ***WARNING in inner cone of layer ',I4,' in $CONESTAK'/
+              ' Particle radius > radius of cone.');
+             IF(ABS(Z(NP)*ALO_$CONESTAK({P1})+BLO_$CONESTAK({P1})
+                - RBN_$CONESTAK) < $BDY_TOL)[
+                OUTPUT;
+                (/' Confusion could be because cone touches outer wall.');
+             ]
+          ]
+   ]
+   IRNEW = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1) + 1;
+   USTEP = 0.0;
+   RETURN;
+]
+}
+
+"V>CONESTAK_CHECK_ROUT(#,#);
+"V>=================
+"V>
+REPLACE {$CONESTAK_CHECK_ROUT(#,#);} WITH {;
+IF(Z(NP) > ZMAX_$CONESTAK(ISCM_$CONESTAK) + $BDY_TOL |
+   Z(NP) < ZMIN_$CONESTAK(ISCM_$CONESTAK) - $BDY_TOL )[
+   I2 = I2 +1;
+   IF(I2 > 1000)[
+       OUTPUT {P1};
+      (' ***WARNING in outer cone of layer ',I4,' in $CONESTAK'/
+       ' Z of particle outside the layer.');
+   ]
+   IRNEW = 1;
+   USTEP = 0.0;
+   RETURN;
+]
+IF(X(NP)**2+Y(NP)**2 -(Z(NP)*ALO_$CONESTAK({P1})+
+   BLOT_$CONESTAK({P1},{P2}))**2 <= 0.0)[
+   IF(Z(NP)*ALO_$CONESTAK({P1})+BLOT_$CONESTAK({P1},{P2})-
+      SQRT(X(NP)**2+Y(NP)**2)>$BDY_TOL)[
+      I2 = I2 +1;
+      IF(I2 > 1000)[
+          OUTPUT {P1};
+          (' ***WARNING in outer cone of layer ',I4,' in $CONESTAK'/
+           ' Particle radius < radius of inner cone.');
+          IF(ABS(Z(NP)*ALO_$CONESTAK({P1})+BLO_$CONESTAK({P1})
+             - RBN_$CONESTAK) < $BDY_TOL)[
+                OUTPUT;
+               (/' Confusion could be because cone touches outer wall.');
+          ]
+      ]
+   ]
+   IRNEW = IRSTART_$CONESTAK + 3*(ISCM_$CONESTAK-1);
+   USTEP = 0.0;
+   RETURN;
+]
+}
+;
+"V>CONESTAK_IN_HIT(#,#,#);
+"V>=============
+"V>
+;
+REPLACE {$CONESTAK_IN_HIT(#,#,#);} WITH {
+AUP_$CONESTAK = U(NP)**2 + V(NP)**2 - W(NP)**2*ALO_$CONESTAK({P2})**2;
+BUP_$CONESTAK = U(NP)*X(NP)+V(NP)*Y(NP)
+           - ALO_$CONESTAK({P2})**2*W(NP)*Z(NP)
+           - ALO_$CONESTAK({P2})*BLOT_$CONESTAK({P2},{P3})*W(NP);
+CUP_$CONESTAK = X(NP)**2+Y(NP)**2
+           -(Z(NP)*ALO_$CONESTAK({P2})+BLOT_$CONESTAK({P2},{P3}))**2;
+DUP_$CONESTAK = BUP_$CONESTAK*BUP_$CONESTAK - AUP_$CONESTAK*CUP_$CONESTAK;
+IF(AUP_$CONESTAK ~= 0.0 & DUP_$CONESTAK >= 0.0)[
+   TQ_$CONESTAK = -BUP_$CONESTAK - SIGN(one,BUP_$CONESTAK)*SQRT(DUP_$CONESTAK);
+   T1_$CONESTAK = TQ_$CONESTAK/AUP_$CONESTAK;
+   T2_$CONESTAK = CUP_$CONESTAK/TQ_$CONESTAK;
+   IF(T1_$CONESTAK > 0.0 &
+      T2_$CONESTAK > 0.0 )[
+      {P1} = MIN(T1_$CONESTAK, T2_$CONESTAK);
+   ]
+   ELSE[
+      {P1} = MAX(T1_$CONESTAK, T2_$CONESTAK);
+   ]
+]
+ELSE[
+      {P1}=1E5;
+  " OUTPUT AUP_$CONESTAK,DUP_$CONESTAK;"
+  "  (' ERROR in $CONESTAK_IN_HIT, AUP,DUP =',2F11.5/);"
+]
+}
+;
+
+"V>CONESTAK_IN_HIT_CYL(#,#);
+"V>=================
+"V>
+;
+REPLACE {$CONESTAK_IN_HIT_CYL(#,#);} WITH {;
+A_$CONESTAK = U(NP)**2+V(NP)**2;
+B_$CONESTAK = X(NP)*U(NP)+Y(NP)*V(NP);
+B2_$CONESTAK = B_$CONESTAK**2;
+C_$CONESTAK = X(NP)**2+Y(NP)**2;
+COUT_$CONESTAK = C_$CONESTAK - RBN2T_$CONESTAK({P2});
+IF(COUT_$CONESTAK > 0.0)[
+   IF(IWATCH > 0)[;OUTPUT COUT_$CONESTAK;(' COUT=',E11.3);]
+   COUT_$CONESTAK = 0.0;
+]
+IF(B_$CONESTAK > 0.0)[
+   IF((COUT_$CONESTAK/B2_$CONESTAK) > (-1.0E-3))[
+      {P1}=-0.5*COUT_$CONESTAK/B_$CONESTAK;
+   ]
+   ELSE[
+      {P1}=-COUT_$CONESTAK/(SQRT(B2_$CONESTAK-
+      A_$CONESTAK*COUT_$CONESTAK)+B_$CONESTAK);
+   ]
+]
+ELSEIF(B_$CONESTAK < 0.0)[
+   IF(COUT_$CONESTAK/B2_$CONESTAK > (-1.0E-3))[
+      {P1} = -2.*B_$CONESTAK/A_$CONESTAK*(1.-
+      0.25*A_$CONESTAK*COUT_$CONESTAK/B2_$CONESTAK);
+   ]
+   ELSE[
+      {P1}=(SQRT(B2_$CONESTAK-A_$CONESTAK*COUT_$CONESTAK)-
+              B_$CONESTAK)/A_$CONESTAK;
+   ]
+]
+ELSEIF(A_$CONESTAK = 0.0)[ {P1} = 1E30;]
+ELSE[{P1}=SQRT(-COUT_$CONESTAK/A_$CONESTAK);]
+}
+;
+"V>CONESTAK_OUT(#,#,#,#);
+"V>=============
+"V>
+;
+REPLACE {$CONESTAK_OUT(#,#,#,#);} WITH
+{;
+{P1}=1;
+AUP_$CONESTAK = U(NP)**2+V(NP)**2 - W(NP)*W(NP)*ALO_$CONESTAK({P3})**2;
+BUP_$CONESTAK = U(NP)*X(NP)+V(NP)*Y(NP)
+           - ALO_$CONESTAK({P3})**2*W(NP)*Z(NP)
+           - ALO_$CONESTAK({P3})*BLOT_$CONESTAK({P3},{P4})*W(NP);
+CUP_$CONESTAK = X(NP)**2+Y(NP)**2
+           -(Z(NP)*ALO_$CONESTAK({P3}) + BLOT_$CONESTAK({P3},{P4}))**2;
+DUP_$CONESTAK = BUP_$CONESTAK**2 - AUP_$CONESTAK*CUP_$CONESTAK;
+IF(DUP_$CONESTAK <= 0.0 | AUP_$CONESTAK = 0.0 ) [{P1} = 0;]
+ELSE[
+   TQ_$CONESTAK = -BUP_$CONESTAK - SIGN(one,BUP_$CONESTAK)*SQRT(DUP_$CONESTAK);
+   T1_$CONESTAK = TQ_$CONESTAK/AUP_$CONESTAK;
+   T2_$CONESTAK = CUP_$CONESTAK/TQ_$CONESTAK;
+   {P2} = MIN(T1_$CONESTAK, T2_$CONESTAK);
+   IF({P2} < 0.0) [
+      {P2} = MAX(T1_$CONESTAK, T2_$CONESTAK);
+   ]
+   IF({P2} <= 0.0) [
+       {P1} = 0;
+   ]
+]
+}
+;
+"V> $CMRM(OUT_CYL,IHIT,TCON_$CONESTAK,IB_$CONESTAK);
+"   =======================================
+"V>
+REPLACE {$CONESTAK_OUT_CYL(#,#,#);} WITH
+{;
+A_$CONESTAK  = U(NP)**2+V(NP)**2;
+B_$CONESTAK  = X(NP)*U(NP)+Y(NP)*V(NP);
+B2_$CONESTAK = B_$CONESTAK**2;
+C_$CONESTAK  = X(NP)**2+Y(NP)**2;
+IF(B_$CONESTAK.GE.0.0 | A_$CONESTAK = 0.0)[{P1}=0;{P2}=1.0E20]
+ELSE[
+   COUT_$CONESTAK = C_$CONESTAK - RBN2T_$CONESTAK({P3});
+   IF(COUT_$CONESTAK < 0.0)[
+      IF(IWATCH>0)[OUTPUT COUT_$CONESTAK;(' CIN=',E11.3);]
+      COUT_$CONESTAK=0.0;
+   ]
+   RAD_$CONESTAK = B2_$CONESTAK - A_$CONESTAK*COUT_$CONESTAK;
+   IF(RAD_$CONESTAK < 0.0)[{P1} = 0; {P2}=1E20;]
+   ELSE[
+      {P1}=1;
+      IF(COUT_$CONESTAK/B2_$CONESTAK < 1.0E-3)[
+         {P2}=-0.5*COUT_$CONESTAK/B_$CONESTAK;]
+      ELSE[
+         IF((SQRT(RAD_$CONESTAK)-B_$CONESTAK) ~= 0.0)[
+            {P2} = COUT_$CONESTAK/(SQRT(RAD_$CONESTAK)-B_$CONESTAK);
+         ]
+         ELSE[{P2} = 1.0E30;]
+      ]
+   ]
+]
+}
+
+;
+"V>$GET_SQXY(#,#);
+"V>=============
+"V>
+;
+REPLACE {$CONESTAK_GET_SQXY(#,#);} WITH
+{;
+ XF_$CONESTAK = X(NP)+{P1}*U(NP);
+ YF_$CONESTAK = Y(NP)+{P1}*V(NP);
+ {P2} = XF_$CONESTAK*XF_$CONESTAK + YF_$CONESTAK*YF_$CONESTAK;
+}
+"End of CONESTAK_macros.mortran (Rev 1.3)"

@@ -1,0 +1,2084 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: Elekta type multi-leaf collimator         "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Jarno Van de Walle, 2004                                  "
+"                   Nick Reynaert, 2004                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This component module was originally derived from existing BEAM MLC        "
+"  component modules, and contributed back to NRC by the authors. The final   "
+"  version was extensively reworked by Blake Walters at NRC.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A Component module to be used in conjunction with BEAMnrc for Monte Carlo  "
+"  simulations of photon and electron beams (used in radiotherapy)            "
+"  transported through an Elekta type Multileaf Collimator system. This CM    "
+"  takes into account the tongue and groove geometry and offers a choice      "
+"  between rounded and divergent-focused leaf ends. It also accounts for the  "
+"  screws on the carriage railings explicitly. Gaps are allowed between       "
+"  adjacent leaves on the same carriage so that the leaves do not have to     "
+"  physically touch. The tongue and groove do not have to have identical      "
+"  cross sections.                                                            "
+"                                                                             "
+"#############################################################################"
+
+
+%C80
+"***********************************************************************
+"
+"                             **************               ""toc:
+"                             *            *               ""toc:
+"                             *    MLCE    *               ""toc:
+"                             *            *               ""toc:
+"                             **************               ""toc:
+"
+"
+"************************************************************************
+"************************************************************************
+"
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to
+"   simulate one component module of a clinical linear accelerator:
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+"
+"   1>. This module can be used for the Elekta  multileaf
+"       collimators.
+"   2>. Used as x or y direction parallel to the leaf.
+"   3>. it can have max 100 leaf which are equal wide, symmetrical arranged
+"       with y axis or x axis.
+"   4>. Each leaf has two separate parts which can be moved in the leaf
+"       direction independently.
+"
+;
+"I>
+"I> Geometry of MLCE:
+"I> *********************
+"I>                                 top view
+"I>
+"I>            ------------------------------------------------
+"I>                                |
+"I>            ------------------------------------------------
+"I>                           |           |
+"I>           -----------------           ---------------------
+"I>                      |        opening     |
+"I>           ---------------     (IR=1)      -----------------
+"I>                         |                 |
+"I>           ------leaves--------      -----------------------
+"I>                 (IR=2)      |     |
+"I>           --------------------------------------------------
+"I>                                  |
+"I>           --------------------------------------------------
+"I>
+;
+"I>       cross-section through leaves taken perpendicular to leaves
+"I>
+"I>                               * ZFOCUS(1)
+"I>                           .   .   .
+"I>                       .    . .|. .    .
+"I> - - - - - - -     .     .   . | .   .     .
+"I> airgap(IR=3)  .      .     .  |  .     .      .
+"I>     -------- ------ ------ ---|--- ------ ------ ---------
+"I>   leaf     / leaf / leaf /leaf|leaf\ leaf  \ leaf \  leaf
+"I>   1    /    2  /     3  /  4  | 5   \  6     \  7    \  8
+"I>    /        /          /      |      \          \        \
+"I>    -------- ---------- -------|------- ---------- --------- -
+"I>                            Z-axis
+;
+"I>            cross-section through leaf taken || to leaf
+"I>
+"I>              I)  FOR FOCUSED DIVERGENT LEAF ENDS :
+"I>
+"I>                               * ZFOCUS(2)
+"I>  - - - - - - - - - - - -    . | .
+"I>  airgap(IR=3)              .  |  .
+"I>     ----------------------    |    ------------------------
+"I>                          /    |    \
+"I>        Leaf B  (-ve)    /     |     \    Leaf A (+ve)
+"I>                        /      |      \
+"I>    -------------------        |        ----------------------
+"I>                            Z-axis
+
+"I>              II)  FOR ROUNDED LEAF ENDS :
+"I>
+"I>                               *
+"I>  - - - - - - - - - - - -      |
+"I>  airgap(IR=3)                 |
+"I>     -------------             |              --------------
+"I>                   \           |            /
+"I>                    |          |           |<------Leafradius
+"I>       A           /           |            \    B
+"I>     -------------             |              --------------
+"I>                            Z-axis
+;
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |             Region            | Description         |
+"I>            |-------------------------------|---------------------|
+"I>            |  absolute       | local       |                     |
+"I>            |-----------------|-------------|                     |
+"I>            |                 |             |                     |
+"I>            |IRSTART_MLC      | IR_MLC      |  as shown in above  |
+"I>            |  +IR_MLC-1      |             |    (1 to 3)         |
+"I>            |                 |             |                     |
+"I>            |                 |             |                     |
+"I>            -------------------------------------------------------
+"I>
+
+
+" Subroutines:
+" ************
+"                      INPUT_$MLCE
+"                      ISUMRY_$MLCE
+"                      HOWFAR_$MLCE
+"                      WHERE_AM_I_$MLCE
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             *******************
+"
+"************************************************************************
+;
+"
+"                               INPUT FROM UNIT 5
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$MLCE
+"I>  **************
+"I>  -1  Dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$MLCE) (F10.0):  Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$MLCE (60A1):  Title of CM.
+"I>
+"I>   2  ORIENT_$MLCE (I5) = 0 for leaves parallel to Y direction
+"I>                          = 1 for leaves parallel to X direction
+"I>
+"I>   3  NUM_LEAF_$MLCE: Number of leaves.  Note: this must be even.
+"I>
+"I>   4  ZMIN_$MLCE,ZMAX_$MLCE (2F15.0): upper and lower z coordinates
+"I>        of leafbank (before tilt, see below)
+"I>
+"I>   5  ZSTEPL_$MLCE, ZSTEPR_$MLCE: Z-coordinates of left and right step
+"I>        in central leaf (an imaginary, unrotated leaf on the Z axis).
+"I>
+"I>   6  TGW_$MLCE (F15.0): X (ORIENT_$MLCE=0) or Y (ORIENT_$MLCE=1)
+"I>        width of steps in central leaf (cm).
+"I>
+"I>   7  X3_$MLCE, X4_$MLCE (2F15.0): X (ORIENT_$MLCE=0) or Y
+"I>         (ORIENT_$MLCE=1) coordinates of the upper right and
+"I>         lower right corners of central leaf, ignoring steps defined above.
+"I>
+"I>   8  SPACE_$MLCE, SSD_$MLCE (2F15.0)
+"I>
+"I>         SPACE_$MLCE: distance between centres of adjacent leaves in X
+"I>                      (ORIENT_$MLCE=0) or Y (ORIENT_$MLCE=1) direction
+"I>                      as projected to SSD_$MLCE (cm).
+"I>           SSD_$MLCE: distance from Z=0 at which SPACE_$MLCE is
+"I>                      defined (cm).
+"I>
+"I>        Leaf numbers I= 1-NUM_LEAF_$MLCE/2 are created by rotating a
+"I>        duplicate of the central leaf about the axis X=0 (if
+"I>        ORIENT_$MLCE=0) or Y=0 (if ORIENT_$MLCE=1),
+"I>        Z=ZMIN_$MLCE by an angle:
+"I>        ARCTAN(-(2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE)
+"I>        and then translating it in the X (if ORIENT_$MLCE=0) or
+"I>        or Y (ORIENT_$MLCE=1) direction by a distance
+"I>        -(2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE
+"I>
+"I>    Leaf numbers I= NUM_LEAF_$MLCE/2+1 NUM_LEAF_$MLCE are created by
+"I>    rotating a duplicate of the central leaf about the axis X=0
+"I>    (if ORIENT_$MLCE=0) or Y=0 (if ORIENT_$MLCE=1), Z=ZMIN_$MLCE by:
+"I>    ARCTAN((2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE)
+"I>    and then translating it in the X (if ORIENT_$MLCE=0) or
+"I>    or Y (ORIENT_$MLCE=1) direction by a distance
+"I>    (2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE
+"I>
+"I>   9  LBROT_$MLCE (F15.0): Leaf bank rototian angle (tilt) about
+"I>       X=0 (ORIENT_$MLCE=0) or Y=0 (ORIENT_$MLCE=1) and Z=ZMIN_$MLCE
+"I>       (radians).  This is applied to the leaves after they have been
+"I>       translated/rotated according to SPACE_$MLCE, SSD_$MLCE above.
+"I>
+"I>  10  ENDTYPE_$MLCE (I5) : The  type of leaf end :
+"I>             0 -- rounded (cylindrical) leaf end and
+"I>             1 -- focused divergent leaf end.
+"I>
+"I>  IF ENDTYPE_$MLCE=0
+"I>  11  LEAFRADIUS_$MLCE,CIL_$MLCE (2F15.0)
+"I>
+"I>          LEAFRADIUS_$MLCE:  Radius curvature leaf ends
+"I>                 CIL_$MLCE:  Z position from which LEAFRADIUS_$MLCE is
+"I>                             defined
+"I>
+"I>  IF ENDTYPE_$MLCE=1
+"I>  11  ZFOCUS_$MLCE (F15.0):  Z position of focal point of leaf ends
+"I>
+"I>   Repeat 12 until coordinates of all leaves are defined once.  Leaves
+"I>   are numbered 1,2,...NUM_LEAF_$MLCE, where numbering goes from leaf
+"I>   1 to leaf NUM_LEAF_$MLCE. Convention is lower to upper or
+"I>   left to right depending on ORIENT_$MLCE i.e from negative to
+"I>   positive.
+"I>
+"I>  12  NEG_$MLCE, POS_$MLCE, NUM_$MLCE (2F15.0,I5)
+"I>
+"I>    NEG_$MLCE:   Min. Y (ORIENT_$MLCE=0) or X (ORIENT_$MLCE=1)
+"I>                   of a) opening in leaf I at ZMIN_$MLCE (ENDTYPE=1)
+"I>                   or b) of origin of cylindrical leaf end (ENDTYPE=0)
+"I>    POS_$MLCE:   Max. Y (ORIENT_$MLCE=0) or X (ORIENT_$MLCE=1)
+"I>                   of a) opening in leaf I at ZMIN_$MLCE (ENDTYPE=1)
+"I>                   or b) of origin of cylindrical leaf end (ENDTYPE=0)
+"I>    NUM_$MLCE:   Apply NEG_$MLCE and POS_$MLCE to leaves
+"I>                   I,...,I+NUM_$MLCE-1.  Defaults to 1 if set <=0.
+"I>                   Defaults to NUM_LEAF_$MLCE-I+1 if set >
+"I>                   NUM_LEAF_$MLCE-I+1.
+"I>
+"I>  13   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and
+"I>                                             air gaps (2F15.0,I5)
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>  14  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>                      used to set MED_INDEX.
+"I>
+"I>  15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>  16  MED_IN (24A1):  Medium of leaves,
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example defines a multi-leaf collimator design based
+"I>   loosely on that used with the Elekta SLiplus 40 leaf pair.
+"I>   Actual parameters are DIFFERENT - this serves just as a template.
+"I>   Do not attempt to use these parameters for a simulation of the real
+"I>   machine.
+"I>
+"I>   The collimator starts at Z=30 cm and has 40 tungsten leaves opening
+"I>   in the X direction.  The leaves are each ~0.4cm wide and 7.0 cm
+"I>   thick.  In this example, the leaf openings will form a barbel shape
+"I>   with its long axis parallel to Y.  It will be slightly off-centre
+"I>   due to the leaf bank rotation of -0.01 rads.
+"I>
+"I>   Electrons and photons in both the collimator and the opening regions
+"I>   will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+"I>   PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+"I>   in dose zone 2, and dose deposited in the opening will be stored
+"I>   in dose zone 1.
+"I>
+"I>
+"I>   In this example the numbers are only approximate, more details should
+"I>   be obtained from the vendor
+"I>   26.0,           RMAX_CM
+"I>   MLC based on mock 40 leaf pair Elekta SLiplus type of accelerator
+"I>   1,              Leaves open in X direction
+"I>   40,             40 leaf paires
+"I>   30.0,37.0,      ZMIN,ZMAX
+"I>   34.0, 33.5,     ZSTEPL,ZSTEPR
+"I>   0.04,           step width
+"I>   0.17,0.2,       X3, X4 of central leaf
+"I>   1.2, 100.0,     leaf centres spaced 1.2 cm apart projected to SSD=100cm
+"I>   -0.01,          leaf bank tilt angle (radians)
+"I>   0,              ENDTYPE IS CURVED
+"I>   15.0,33.5,      curvature radius, zposition cylinder axis curvature
+"I>  -15.0, 15.0, 16
+"I>  -17.0, 17.0, 2
+"I>  -16.0, 16.0, 4
+"I>  -17.0, 17.0, 2
+"I>  -15.0, 15.0, 16
+"I>  0.5210,  0.010,  1,  0
+"I>  AIR700ICRU
+"I>  0.5210,  0.010,  2,  0
+"I>  W700ICRU
+;
+"*************************************************************************
+"*************************  ERROR CONDITIONS  ****************************
+"*************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"***********************************************************************
+
+%E "MLCE_cm.mortran  start of subroutine HOWFAR_$MLCE (SID 1.12)"
+"************************************************************************
+"********************Component Module MLCE *****************************
+"************************************************************************
+"
+"                          Subroutine HOWFAR_$MLCE
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module MLCE,
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+"
+"   There are N_$MLCE local regions + an air gap (if present):
+"
+"  local              absolute                       description
+"--------   ------------------------------     ----------------------
+" IR_$MLCE   IR_start_CM(ICM_$MLCE)+IR_$MLCE-1
+" exclude front air gap
+"--------   ------------------------------     -----------------------
+"   Geometrical co-ordinates, as set in INPUT_$MLCE are:
+"
+"   ZFRONT_$MLCE     front of CM (upstream surface, air region)
+"   ZMIN_$MLCE       front of cone
+"   ZBACK_$MLCE      back of cone
+"   RMAX_$MLCE       radius of last cylinder (largest)
+"
+"*************************************************************************
+;
+;SUBROUTINE HOWFAR_$MLCE;
+
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH {
+   ;{P1}=MIN({P1}+1.0E-5,USTEP);
+}
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$MLCE,EPCONT,STACK,GEOM/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$MLCE
+"T>**********************************
+"T>
+INTEGER
+   COUNT,
+   IRL,        "T>local region number (absolute), required by HOWNEAR macro
+   I, J, N,       "T>loop control
+   REGION_$MLCE,     "T>region number within CM (relative)
+   NEWREGION_$MLCE,     "T>region number within CM (relative)
+   NX,NY,NZ,        "T> Subindices for region
+   OUTOFCMFLAG,     "T> Flag to denote particle out of CM
+   OUTOFMLCFLAG,    "T> Flag to denote particle out of MLC
+   OFFEDGECM,       "T> Flag to denote particle beyond RMAX_CM
+   LEAFIS,          "T> Leaf number
+   BETWEEN_LEAF,  "T> Set to 1 if in gap between leaves but not associated
+                    "   with any leaf
+   ITEL,
+   IDIR;        "T> direction sign, used in call to where_am_i
+
+$REAL
+   XYL(2),    "T>rearranged x and y coordinates
+   DIST,      "T>Distance to z boundary along current particle trajectory
+   XYFL(2),   "T>temporary variable
+   UVL(2),    "T>temporary variable
+   ZFL,
+   TRYY1,TRYY2,
+   XoN,XoP,    "T> Negative and Positive leaf centers (rounded leaf)
+   Zo,         "T> z position of rounded leaf tip
+   XP,XN,YP,YN,ZP,ZN,    "T>+ and - distances in x,y, z directions
+   XDIST,YDIST,ZDIST,    "T> x,y, Z distances to nearest boundaries
+   DIST1,DIST2,DIST3,    "T> Variables to control particle propagation
+   STEP2,                "T>  "
+   TLHS,TRHS,            "T> temporary macro variables like lhs,rhs
+   DISCRIMINANT,         "T> Variable for rounded leaf
+   TEMP,TEMP1, TEMP2, TEMP3, TEMP4, TEMP5,
+   STEP_UNIT,ZBORDER,
+   TMP_A,TMP_B,DET_A,DET_B,SOL1,SOL2,SOL3,SOL4,
+   TMP1,TMP2,TMP3,TMP4,TMP5,TMP6,TMP7,TMP8,one;
+parameter (one = 1);
+
+" prepare the local variables
+"=============================
+
+IRL = IR(NP); "local region number (absolute)
+IR_$MLCE = IRL - IRSTART_$MLCE + 1;   "rel. local region number
+IF(ORIENT_$MLCE=1) [
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
+]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+;
+
+STEP_UNIT=0.0;
+COUNT = 0;
+OUTOFCMFLAG=0;
+OFFEDGECM=0;
+OUTOFMLCFLAG=0;
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module ,if so
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM or regions in z direction
+"      2.                        the regions in xy directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap check if existed.
+"=====================================
+
+IF(N_GAP_$MLCE=1 & IR_$MLCE=3 ) "  check the air gap first
+[
+   IF(W(NP)>0.0)
+   ["Particle going forward
+      DIST = (ZMIN_$MLCE - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=0.0;
+          $MLCE_FIND(IR_$MLCE, 0.0);
+          IF( IR_$MLCE=1 )
+          [  IRNEW =IRSTART_$MLCE; RETURN;]
+          ELSE[IRNEW =IRSTART_$MLCE+1; RETURN;]
+      ] " double check if a particle is out of the AIR GAP
+
+   ]
+   ELSEIF(W(NP)<0.0)
+   [ " particle going backward"
+      DIST = (ZFRONT_$MLCE - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=1.E-16; "ensures call to AUSGAB on leaving CM";
+          CALL WHERE_AM_I(ICM_$MLCE,-1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+]
+ELSEIF(IR_$MLCE=1 | IR_$MLCE=2)  " in the local region 1 or 2
+[
+   IF(W(NP) > 0.0)
+   [  "particle going forward"
+      DIST = (ZMAX_$MLCE - Z(NP))/W(NP); "distance to back of CM
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
+      ELSE [ STEP_UNIT=DIST;  ]
+      IF(DIST <=0.0)
+      [
+          USTEP=1.E-16; "ensures call to AUSGAB on leaving CM";
+          CALL WHERE_AM_I(ICM_$MLCE,1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+   ELSEIF(W(NP) < 0.0)
+   [  "particle going backward"
+      DIST = (ZMIN_$MLCE - Z(NP))/W(NP); "distance to back of CM "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
+      ELSE [ STEP_UNIT=DIST; ]
+      IF(DIST <= 0.0)
+      [
+          USTEP=0.0;
+          IF(N_GAP_$MLCE = 1)
+          [ IRNEW =IREND_$MLCE; RETURN; ]
+          ELSE[ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$MLCE,-1); RETURN; ]
+      ] " double check if a particle is out of the main body to air gap
+   ]
+   ELSE[  STEP_UNIT=USTEP;]  " for w(np)=0.0 case
+]
+
+" end of z direction check
+"=========================
+
+$MLCE_FIND(REGION_$MLCE,0.0);
+
+IF(REGION_$MLCE=3) [ "Particle is in the air gap "
+
+  REGION_$MLCE=IRSTART_$MLCE-1 +REGION_$MLCE;
+
+  IF(W(NP) > 0.0)[
+    IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      $GEO_SHIFT_1_(DIST);
+      USTEP = DIST;
+      $MLCE_FIND(NEWREGION_$MLCE,USTEP);
+      IF( NEWREGION_$MLCE=1) [  IRNEW =IRSTART_$MLCE; RETURN;]
+      ELSE[IRNEW =IRSTART_$MLCE+1; RETURN;]
+    ]
+    ELSE[ RETURN;]
+  ] "end of particle going forward
+  ELSEIF(W(NP) < 0.0) ["particle going backward"
+    IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      $GEO_SHIFT_1_(DIST);
+      USTEP = DIST;
+      CALL WHERE_AM_I(ICM_$MLCE,-1);
+      RETURN;
+    ]
+    ELSE [RETURN;]
+  ] " end of going backward"
+  ELSE[RETURN;]   " W=0.0 CASE "
+] ;" end of region 3
+
+IF( OUTOFMLCFLAG=1 ) [
+
+  STEP2=STEP_UNIT;
+TEMP1=((A_$MLCE(1,1)*XYFL(1))-(A_$MLCE(1,1)*B_$MLCE(1,1))-
+(ZFL*(A_$MLCE(1,1)**2)))**2;
+TEMP1=TEMP1+((A_$MLCE(1,1)*ZFL)+B_$MLCE(1,1)-XYFL(1))**2;
+TEMP1=(1/(1+(A_$MLCE(1,1))**2))*sqrt(TEMP1);
+TEMP2=((A_$MLCE(NUM_LEAF_$MLCE,4)*XYFL(1))-
+(A_$MLCE(NUM_LEAF_$MLCE,4)*B_$MLCE(NUM_LEAF_$MLCE,4))-
+(ZFL*(A_$MLCE(NUM_LEAF_$MLCE,4)**2)))**2;
+TEMP2=TEMP2+((A_$MLCE(NUM_LEAF_$MLCE,4)*ZFL)+
+B_$MLCE(NUM_LEAF_$MLCE,4)-XYFL(1))**2;
+TEMP2=(1/(1+(A_$MLCE(NUM_LEAF_$MLCE,4))**2))*sqrt(TEMP2);
+  IF( STEP2>=0.0)[
+    TEMP=STEP2;
+    IF( TEMP1>=0 ) [TEMP=MIN(TEMP,TEMP1);];
+    IF( TEMP2>=0 ) [TEMP=MIN(TEMP,TEMP2);];
+  ]
+  ELSEIF ( (TEMP1>0.0) & (TEMP2>0.0) ) [TEMP=MIN(TEMP1,TEMP2);]
+  ELSE [TEMP=MAX(TEMP2,TEMP1);];
+
+  STEP2 = TEMP;
+
+  $GEO_SHIFT_1_(STEP2);
+  $MLCE_FIND(IRNEW,STEP2);
+  IRNEW=IRNEW+IRSTART_$MLCE-1;
+  USTEP=STEP2;
+  RETURN;
+]
+
+$MLCE_MINDISTANCE(DIST1);
+
+IF( (STEP_UNIT<=DIST1) | (DIST1<0.0) ) [
+    STEP2=STEP_UNIT;
+    $GEO_SHIFT_1_(STEP2);
+    $MLCE_FIND(IRNEW,STEP2);
+    USTEP=STEP2;
+    IF(OUTOFCMFLAG=1)["call where_am_i"
+       IDIR=SIGN(one,W(NP));
+       CALL WHERE_AM_I(ICM_$MLCE,IDIR);
+       RETURN;
+    ]
+    ELSEIF(OFFEDGECM=1)["call where_am_i with IDIR=0"
+       IDIR=0;
+       CALL WHERE_AM_I(ICM_$MLCE,IDIR);
+       RETURN;
+    ]
+    ELSE[
+      IRNEW=IRNEW+IRSTART_$MLCE-1;
+      RETURN;
+    ]
+]
+ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0.0) ) [
+    REGION_$MLCE=REGION_$MLCE+IRSTART_$MLCE-1;
+    LOOP[
+      DIST1=DIST1+1.0E-5; "we have to shift it regardless to avoid infinite"
+                          "loops"
+      $MLCE_FIND(NEWREGION_$MLCE,DIST1);
+      NEWREGION_$MLCE=NEWREGION_$MLCE+IRSTART_$MLCE-1;
+
+      IF( OUTOFCMFLAG=1 | OFFEDGECM=1) [ EXIT;]
+      ELSEIF(DIST1>=STEP_UNIT)[EXIT;]
+      ELSEIF( (NEWREGION_$MLCE~=REGION_$MLCE) | OUTOFMLCFLAG=1 )[
+         USTEP = MIN(USTEP,DIST1);"take min. because we shifted DIST1"
+         IRNEW = NEWREGION_$MLCE;
+         RETURN;
+      ]
+      ELSE [
+         $MLCE_MINDISTANCE(DIST2);
+         DIST1=DIST1+DIST2;
+      ]
+    ];
+
+"if it gets here, then it exited either because OUTOFCMFLAG=1, OFFEDGECM=1"
+"or because DIST1 >= STEP_UNIT"
+
+    IF( OFFEDGECM=1)[
+      "DIST1 is <= STEP_UNIT"
+      USTEP=DIST1;
+      IDIR=0;
+      CALL WHERE_AM_I(ICM_$MLCE,IDIR);
+      RETURN;
+    ]
+    ELSE[
+      "DIST1 is >= STEP_UNIT, even if OUTOFCMFLAG=1, since that flag is"
+      "based on distance to Z bdy"
+      DIST1=STEP_UNIT;
+      $GEO_SHIFT_1_(DIST1);
+      USTEP = DIST1;
+      OUTOFCMFLAG=0; "needs to be reset before FIND"
+      $MLCE_FIND(NEWREGION_$MLCE,DIST1);
+      IF( OUTOFCMFLAG=0 ) [
+        NEWREGION_$MLCE=NEWREGION_$MLCE+IRSTART_$MLCE-1;
+        IRNEW = NEWREGION_$MLCE;
+        RETURN;
+      ]
+      ELSE[ "call where_am_i"
+        IDIR=SIGN(one,W(NP));
+        CALL WHERE_AM_I(ICM_$MLCE,IDIR);
+        RETURN;
+      ]
+    ]
+
+]; "End of IF loop for step_unit>dist1
+
+;
+"   end of HOWFAR_$MLCE
+"   ===================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$MLCE"
+%E "MLCE_cm.mortran  start of subroutine WHERE_AM_I_$MLCE (SID 1.12)"
+"************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$MLCE
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$MLCE determines the new region number when a particle
+" traverses a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$MLCE subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$MLCE from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$MLCE(IDIR);
+
+;IMPLICIT NONE;
+;COMIN/CM_$MLCE,EPCONT,STACK,CMs,GEOM/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$MLCE
+"T>**************************************
+"T>
+INTEGER
+        NX,NY,NZ,   "T>Indices of subregions
+        I,
+        OUTOFCMFLAG, "Flags to denote out of CM and
+        OUTOFMLCFLAG, " MLC respectively
+        OFFEDGECM,    "Flag for particle beyond RMAX_CM
+        LEAFIS,       " Leaf number
+        BETWEEN_LEAF, "set to 1 if in air between leaves
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XYL(2), XYFL(2), UVL(2),ZFL, XoN, XoP, Zo, TEMP1,TEMP2,ZBORDER,
+      TMP1,TMP2;
+IF(ORIENT_$MLCE=1)
+
+   [ XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
+
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+IF (IDIR=1)
+["particle entering this CM through front face (upstream)
+   IF(N_GAP_$MLCE = 0)
+   ["no air gap this CM"
+       IF(IRSTART_$MLCE=2)   " the first CM
+       [$MLCE_FIND(IR_$MLCE,0.0); ]
+       ELSE[$MLCE_FIND(IR_$MLCE, USTEP);]
+       IF(IR_$MLCE=1)
+       [IRNEW=IRSTART_$MLCE; RETURN;]
+       ELSE[ IRNEW=IRSTART_$MLCE+1; RETURN; ]
+   ]         " end of the no air gap case
+   ELSE
+   ["this CM has an air gap at the front
+      IRNEW = IREND_$MLCE;
+   ]
+]
+ELSE
+["particle entering this CM through back face (downstream)
+   $MLCE_FIND(IR_$MLCE, USTEP);
+   IF(IR_$MLCE=1)
+   [IRNEW=IRSTART_$MLCE; RETURN;]
+   ELSE[ IRNEW=IRSTART_$MLCE+1; RETURN; ]
+]
+
+RETURN;
+
+END; "End of subroutine WHERE_AM_I_$MLCE"
+%E "MLCE_cm.mortran  start of subroutine INPUT_$MLCE (SID 1.12)"
+
+"*************************************************************************
+
+"                           Subroutine INPUT_$MLCE
+"
+"*************************************************************************
+"*************************************************************************
+
+"  A CM input subroutine for a series of 2 or more slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section INPUT FROM UNIT 5
+"   in the above documentation.
+"
+"************************************************************************
+
+;SUBROUTINE INPUT_$MLCE;
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MLCE,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+
+"  **************************************************************** "
+"              TYPE DECLARATIONS FOR INPUT_$MLCE
+"  **************************************************************** "
+
+$REAL  NEG_$MLCE,     "T>Leaf B tip
+       POS_$MLCE,     "T>Leaf A Tip
+       TEMP1,
+       TEMP2,
+       TRANSLR($MAXLEAF),
+       TRANSLL($MAXLEAF),  "leaf right and left translations
+       TRANSLR1, "store TRANSLR(1)
+       TRANSLL1, "store TRANSLL(1)
+       ROTR, "right rotation of leaves
+       ROTL, "left rotation of leaves
+       XREF(8),ZREF(8), "used to calculate X,Z parameters on input"
+       XTEMPR1(8),XTEMPR2(8),ZTEMPR2(8),XTEMPL1(8),XTEMPL2(8),
+       ZTEMPL2(8),
+       XTEMPR_STORE5,ZTEMPR_STORE5;
+
+
+INTEGER I,J,K,N,IJ,        "T>DO loop indices
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,   "T>medium index, set after medium sort by $MED_INPUT
+        NUM_$MLCE; "T>number of adjacent leaves same opening coordinates
+CHARACTER*1 BEAM_NR(60);
+
+" **************************************************************** "
+
+"                 STEP I : INITIALIZE PARAMETERS
+"                          =====================
+
+" **************************************************************** "
+
+"I. GET THE TITLE "
+"================ "
+
+OUTPUT;(/' Next component is an MLCE type MLC'/' Title: ',$);
+MINPUT ($MLCE) TITLE_$MLCE;(60A1);
+          "MINPUT is a replacement macro with EOF and
+          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$MLCE;(' ',60A1);
+            "OUTPUT is a replacement macro which writes to
+            "unit 5.  Used here for echo of user input
+
+"II. CHOOSE THE MLCE ORIENTATION "
+"============================== "
+
+OUTPUT; (' The leaves can be arranged as:',/,
+            ' 0 ---- parallel to y direction',/,
+            ' 1 ---- parallel to x direction (default).');
+
+OUTPUT; (' Input your choice: ',$);
+MINPUT ($MLCE) ORIENT_$MLCE; (I5);
+IF(ORIENT_$MLCE~=0)[ORIENT_$MLCE=1;OUTPUT;(' Default to ');]
+OUTPUT ORIENT_$MLCE; (I5/);
+
+"III. DESIGNATE REGION NUMBERS "
+"============================= "
+
+N_$MLCE = 2;
+           "Number of regions in this CM (excluding front air gap)
+ICM_$MLCE = ICM;      "CM index for this component module
+IRSTART_$MLCE = IR_start_CM(ICM_$MLCE);
+                      "Index of first region in this CM,
+                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$MLCE) = 0; "Geometry-checking flag, 0 if no error detected
+
+" ************************************************************** "
+
+"              STEP TWO : GET MLCE GEOMETRY INFORMATION
+"                         ============================
+
+" ************************************************************** "
+
+" II. NUMBER OF LEAVES"
+" ===================="
+
+OUTPUT $MAXLEAF;
+(' Input the # of leaf pairs (less than ',I3,')'/
+ ' This must be an even no. (usually 40): ', $);
+MINPUT ($MLCE) NUM_LEAF_$MLCE; (I5);
+OUTPUT NUM_LEAF_$MLCE;(I5/);
+
+IF(NUM_LEAF_$MLCE>$MAXLEAF) [
+    NUM_LEAF_$MLCE=$MAXLEAF;
+    OUTPUT ICM_$MLCE,NUM_LEAF_$MLCE;
+            (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+             ' # of leaves > max allowed'/
+             ' # of leaves reduced to ',I4,' for now'//);
+    IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+];
+
+IF(NUM_LEAF_$MLCE<=0)[
+    NUM_LEAF_$MLCE=2;
+    OUTPUT ICM_$MLCE,NUM_LEAF_$MLCE;
+            (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+             ' # of leaves <= 0'/
+             ' # of leaves set to ',I4,' for now'//);
+    IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+];
+
+IF(MOD(NUM_LEAF_$MLCE,2)~=0)[
+    OUTPUT ICM_$MLCE,NUM_LEAF_$MLCE;
+            (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+             ' # of leaves (',I4,') not an even number'/
+             ' Reset to 2 for now'//);
+    NUM_LEAF_$MLCE=2;
+    IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+]
+
+"ALL PARAMETERS"
+"=============="
+
+OUTPUT;('Z position of top MLC, Z Position of bottom MLC = ',$);
+MINPUT ($MLCE) ZMIN_$MLCE,ZMAX_$MLCE; (2F15.0);
+OUTPUT ZMIN_$MLCE,ZMAX_$MLCE;(2F12.5/);
+
+ZMIN_INPUT_$MLCE=ZMIN_$MLCE;
+ZMAX_INPUT_$MLCE=ZMAX_$MLCE;
+
+OUTPUT;('Z position of left step central leaf,'/
+        'Z Position of right step central leaf:',$);
+MINPUT ($MLCE) ZSTEPL_$MLCE,ZSTEPR_$MLCE; (2F15.0);
+OUTPUT ZSTEPL_$MLCE,ZSTEPR_$MLCE; (2F12.5/);
+IF(ZSTEPL_$MLCE<ZSTEPR_$MLCE)[
+   OUTPUT ICM_$MLCE;
+    (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+       ' Geometry assumes Z of left step <= Z of right step.'/
+       ' Check step Z positons and try again.'//);
+       STOP;
+]
+IF(ZSTEPL_$MLCE>=ZMAX_$MLCE)[
+   OUTPUT ICM_$MLCE;
+    (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+       ' Z position of left step must be < Z of bottom of MLC.'/
+       ' Check geometry and try again.'//);
+       STOP;
+]
+IF(ZSTEPR_$MLCE<=ZMIN_$MLCE)[
+   OUTPUT ICM_$MLCE;
+    (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+       ' Z position of right step must be > Z of top of MLC.'/
+       ' Check geometry and try again.'//);
+       STOP;
+]
+
+OUTPUT;('Width of step (TGW) :',$);
+MINPUT ($MLCE) TGW_$MLCE; (F15.0);
+OUTPUT TGW_$MLCE;(F12.5/);
+
+OUTPUT;
+('Upper (X3) and lower (X4) right coordinates of central leaf ignoring step'/
+ ':',$);
+MINPUT ($MLCE) X3_$MLCE,X4_$MLCE; (2F15.0);
+OUTPUT X3_$MLCE,X4_$MLCE;(2F12.5/);
+
+X1_$MLCE=-X3_$MLCE;
+X2_$MLCE=-X4_$MLCE;
+
+IF(ORIENT_$MLCE=0)[
+   OUTPUT;('Distance between leaf centres in Y direction (SPACE),'/
+        'distance from Z=0 where SPACE is defined :',$);
+]
+ELSE[
+   OUTPUT;('Distance between leaf centres in X direction (SPACE),'/
+        'distance from Z=0 where SPACE is defined :',$);
+]
+MINPUT ($MLCE) SPACE_$MLCE, SSD_$MLCE; (2F15.0);
+OUTPUT SPACE_$MLCE, SSD_$MLCE;(F12.5,F15.5/);
+
+OUTPUT;('Leaf bank rotation angle = ',$);
+MINPUT ($MLCE) LBROT_$MLCE; (F15.0);
+OUTPUT LBROT_$MLCE;(F12.5/);
+
+XREF(4)=X2_$MLCE;
+XREF(3)=(X2_$MLCE-X1_$MLCE)*((ZSTEPL_$MLCE-ZMIN_$MLCE)/
+        (ZMAX_$MLCE-ZMIN_$MLCE)) +X1_$MLCE;
+XREF(2)=XREF(3)+TGW_$MLCE;
+XREF(1)=(X2_$MLCE-X1_$MLCE)*((ZMIN_$MLCE-ZSTEPL_$MLCE)/
+        (ZMAX_$MLCE-ZMIN_$MLCE)) +XREF(2);
+XREF(8)=X3_$MLCE;
+XREF(7)=(X4_$MLCE-X3_$MLCE)*((ZSTEPR_$MLCE-ZMIN_$MLCE)/
+        (ZMAX_$MLCE-ZMIN_$MLCE)) +XREF(8);
+XREF(6)=XREF(7)-TGW_$MLCE;
+XREF(5)=(X4_$MLCE-X3_$MLCE)*((ZMAX_$MLCE-ZSTEPL_$MLCE)/
+       (ZMAX_$MLCE-ZMIN_$MLCE)) +XREF(6);
+"DO J=1,8[
+"OUTPUT XREF(J);('XREF = ',F15.5);];
+ZREF(1)=ZMIN_$MLCE;
+ZREF(2)=ZSTEPL_$MLCE;
+ZREF(3)=ZSTEPL_$MLCE;
+ZREF(4)=ZMAX_$MLCE;
+ZREF(5)=ZMAX_$MLCE;
+ZREF(6)=ZSTEPR_$MLCE;
+ZREF(7)=ZSTEPR_$MLCE;
+ZREF(8)=ZMIN_$MLCE;
+
+"VII. TYPE OF LEAF ENDS - ROUNDED VS FLAT DIVERGENT "
+"================================================ "
+
+OUTPUT; (/'Input the type of leaf end desired : ',/,
+          '   0 --- Rounded leaf end or ',/
+          '   1 --- Focused leaf end  ');
+OUTPUT; ('Input your choice : ', $);
+MINPUT ($MLCE) ENDTYPE_$MLCE; (I5);
+OUTPUT ENDTYPE_$MLCE; (I5/);
+
+IF(ENDTYPE_$MLCE=1) [
+
+   OUTPUT; (' Input the z focus of the leaf ends : ',$);
+   MINPUT ($MLCE) ZFOCUS_$MLCE; (F15.0);
+   OUTPUT ZFOCUS_$MLCE;(F12.5/);
+
+   IF(ABS(ZFOCUS_$MLCE-ZMIN_$MLCE)<1.E-5) [
+      ZFOCUS_$MLCE=ZMIN_$MLCE-1.E-4;
+      OUTPUT ICM_$MLCE,ZFOCUS_$MLCE;
+          (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+           ' ZFOCUS(2) cannot be equal to ZMIN_$MLCE'/
+           ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+      IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+    ]
+ELSEIF(ZFOCUS_$MLCE>ZMIN_$MLCE & ZFOCUS_$MLCE<ZMAX_$MLCE)[
+       ZFOCUS_$MLCE=ZMAX_$MLCE;
+       OUTPUT ICM_$MLCE,ZFOCUS_$MLCE;
+          (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+          ' ZFOCUS(2) is between ZMIN_$MLCE and ZMAX_$MLCE'/
+          ' This will cause leaf ends to overlap'/
+          ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+       IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+     ];
+     LEAFRADIUS_$MLCE=0.;"used in calculations later"
+]
+ELSE  [ "Defaults to rounded ends "
+
+   OUTPUT;(' Input the radius of the leaf ends (>3.75 cm),'/
+           ' Z at which this radius is defined : ',$);
+
+   MINPUT ($MLCE) LEAFRADIUS_$MLCE,CIL_$MLCE; (2F15.0);
+   OUTPUT LEAFRADIUS_$MLCE,CIL_$MLCE; (2F15.5/);
+
+   IF((LEAFRADIUS_$MLCE < 3.75) |
+      (LEAFRADIUS_$MLCE < 0.0)) [
+
+" This is done to ensure that the leaf end is rounded all the
+" way from zmin_$varmlc to zmax_$varmlc. Otherwise the curvature
+" will fall short."
+
+   LEAFRADIUS_$MLCE=3.75;
+   OUTPUT ICM_$MLCE,LEAFRADIUS_$MLCE;
+      (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+      ' LEAFRADIUS_$MLCE is less than minimum acceptable'/
+      ' RESET TO ', F15.5, ' cm for now'//);
+   IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+   ]
+]; " End of checking the leaf end ;
+
+"CALCULATE A AND B : XYL(1)=A*Z+B"
+"================================"
+
+DO N=1,NUM_LEAF_$MLCE/2 [
+"  OUTPUT NUM_LEAF_$MLCE/2,N;('Leaf nr = ',I2,'+',I2);
+  TRANSLR(N)=(2*N-1)*(SPACE_$MLCE/2.)*ZMIN_INPUT_$MLCE/SSD_$MLCE;
+  TRANSLL(N)=((2*N-1)*(-SPACE_$MLCE/2.)*ZMIN_INPUT_$MLCE)/SSD_$MLCE;
+  IF(N=1)[
+    TRANSLL1=TRANSLL(1);
+    TRANSLR1=TRANSLR(1);
+  ]
+  IF(XREF(1)+TRANSLR1<XREF(8)+TRANSLL1)[
+                             "central leaves overlap"
+                             "unlikely that rotation will change this"
+    TRANSLR(N)=(2*N-1)*(SPACE_$MLCE/2.);
+    TRANSLL(N)=(2*N-1)*(-SPACE_$MLCE/2.);
+    IF(N=1)[
+       OUTPUT ICM_$MLCE,SPACE_$MLCE;
+       (//' ***WARNING IN CM ',I4,/
+          ' Leaves will overlap if translated according to input values of'/
+          ' SPACE, SSD and requirement to focus at Z=0.'/
+          ' Leaves will simply be translated to be ',F12.5,' cm apart.'//);
+    ]
+  ]
+"  OUTPUT TRANSLR(N);('Translation over = ',F15.5);
+  DO J=1,8[
+    XTEMPR1(J)=XREF(J)+TRANSLR(N);
+"    OUTPUT XTEMPR1(J);('XTEMPR1 = ',F15.5);
+  ]
+  ROTR=ATAN((2*N-1)*(SPACE_$MLCE/2.)/SSD_$MLCE);
+"  OUTPUT ROTR;('ROTATION RIGHT = ',F15.5);
+  DO J=1,8[
+    XTEMPR2(J)=TRANSLR(N)+cos(ROTR)*(XTEMPR1(J)-TRANSLR(N))
+             +sin(ROTR)*(ZREF(J)-ZREF(1));
+    ZTEMPR2(J)=ZREF(1)-sin(ROTR)*(XTEMPR1(J)-TRANSLR(N))
+             +cos(ROTR)*(ZREF(J)-ZREF(1));
+  "  OUTPUT XTEMPR2(J);('XTEMPR2 = ',F15.5);
+  ]
+  DO J=1,8[
+    X_$MLCE(J)=cos(LBROT_$MLCE)*XTEMPR2(J)+
+               sin(LBROT_$MLCE)*(ZTEMPR2(J)-ZMIN_INPUT_$MLCE);
+    Z_$MLCE(J)=-sin(LBROT_$MLCE)*XTEMPR2(J)+
+               cos(LBROT_$MLCE)*(ZTEMPR2(J)-ZMIN_INPUT_$MLCE)+
+               ZMIN_INPUT_$MLCE;
+  "  OUTPUT J,X_$MLCE(J),Z_$MLCE(J);
+  "  ('Coordinate X',I2,'= ',F15.5,' and Z= ',F15.5);
+    IF(Z_$MLCE(J)<ZMIN_$MLCE)[
+      ZMIN_$MLCE=Z_$MLCE(J);];
+    IF(Z_$MLCE(J)>ZMAX_$MLCE)[
+      ZMAX_$MLCE=Z_$MLCE(J);];
+  ];
+
+  IF(N=NUM_LEAF_$MLCE/2)[
+  TEMP2=ABS(X_$MLCE(5));
+  ];
+
+  A_$MLCE(NUM_LEAF_$MLCE/2+N,1)=(X_$MLCE(4)-X_$MLCE(3))/
+  (Z_$MLCE(4)-Z_$MLCE(3));
+  B_$MLCE(NUM_LEAF_$MLCE/2+N,1)=X_$MLCE(3)-
+  (Z_$MLCE(3)*A_$MLCE(NUM_LEAF_$MLCE/2+N,1));
+
+  A_$MLCE(NUM_LEAF_$MLCE/2+N,2)=(X_$MLCE(2)-X_$MLCE(1))/
+  (Z_$MLCE(2)-Z_$MLCE(1));
+  B_$MLCE(NUM_LEAF_$MLCE/2+N,2)=X_$MLCE(1)-
+  (Z_$MLCE(1)*A_$MLCE(NUM_LEAF_$MLCE/2+N,2));
+
+  A_$MLCE(NUM_LEAF_$MLCE/2+N,3)=(X_$MLCE(6)-X_$MLCE(5))/
+  (Z_$MLCE(6)-Z_$MLCE(5));
+  B_$MLCE(NUM_LEAF_$MLCE/2+N,3)=X_$MLCE(5)-
+  (Z_$MLCE(5)*A_$MLCE(NUM_LEAF_$MLCE/2+N,3));
+
+  A_$MLCE(NUM_LEAF_$MLCE/2+N,4)=(X_$MLCE(8)-X_$MLCE(7))/
+  (Z_$MLCE(8)-Z_$MLCE(7));
+  B_$MLCE(NUM_LEAF_$MLCE/2+N,4)=X_$MLCE(7)-
+  (Z_$MLCE(7)*A_$MLCE(NUM_LEAF_$MLCE/2+N,4));
+
+  C_$MLCE(NUM_LEAF_$MLCE/2+N,1)=(Z_$MLCE(8)-Z_$MLCE(1))/
+  (X_$MLCE(8)-X_$MLCE(1));
+  D_$MLCE(NUM_LEAF_$MLCE/2+N,1)=Z_$MLCE(1)-
+                           (X_$MLCE(1)*C_$MLCE(NUM_LEAF_$MLCE/2+N,1));
+  C_$MLCE(NUM_LEAF_$MLCE/2+N,4)=(Z_$MLCE(5)-Z_$MLCE(4))/
+  (X_$MLCE(5)-X_$MLCE(4));
+  D_$MLCE(NUM_LEAF_$MLCE/2+N,2)=Z_$MLCE(4)-
+                            (X_$MLCE(4)*C_$MLCE(NUM_LEAF_$MLCE/2+N,4));
+  C_$MLCE(NUM_LEAF_$MLCE/2+N,2)=Z_$MLCE(7);
+  C_$MLCE(NUM_LEAF_$MLCE/2+N,3)=Z_$MLCE(2);
+
+  IF(N>=2)[
+    IF(X_$MLCE(1)<A_$MLCE(NUM_LEAF_$MLCE/2+N-1,4)*Z_$MLCE(1)+
+                  B_$MLCE(NUM_LEAF_$MLCE/2+N-1,4))[
+       "check to see if upper left corner of leaf will overlap"
+       "side of previous leaf"
+       OUTPUT ICM_$MLCE;
+       (//' ***ERROR IN CM ',I4,/
+          ' After translation and rotation, left corner of leaf overlaps'/
+          ' side of previous leaf.  Check inputs and try again.'//);
+       STOP;
+    ]
+    IF(XTEMPR_STORE5>A_$MLCE(NUM_LEAF_$MLCE/2+N,1)*ZTEMPR_STORE5+
+                     B_$MLCE(NUM_LEAF_$MLCE/2+N,1))[
+       "lower right corner of previous leaf will overlap"
+       "side of current leaf"
+       OUTPUT ICM_$MLCE;
+       (//' ***ERROR IN CM ',I4,/
+          ' After translation and rotation, left side of leaf overlaps'/
+     ' lower right corner of previous leaf.  Check inputs and try again.'//);
+       STOP;
+    ]
+  ]
+  XTEMPR_STORE5=X_$MLCE(5);
+  ZTEMPR_STORE5=Z_$MLCE(5);
+
+"now do leaves 1 - NUM_LEAF_$MLC/2"
+
+"  OUTPUT NUM_LEAF_$MLCE/2+1,N;('Leaf nr = ',I2,'-',I2);
+"  OUTPUT TRANSLL(N);('TRANSLATIE LINKS = ',F15.5);
+  DO J=1,8[
+    XTEMPL1(J)=XREF(J)+TRANSLL(N);
+  "  OUTPUT XTEMPL1(J);('XTEMPL1 = ',F15.5);
+  ]
+
+  ROTL=ATAN((2*N-1)*(-SPACE_$MLCE/2.)/SSD_$MLCE);
+"  OUTPUT ROTL;('ROTATIE LINKS = ',F15.5);
+  DO J=1,8[
+    XTEMPL2(J)=TRANSLL(N)+cos(ROTL)*(XTEMPL1(J)-TRANSLL(N))
+             +sin(ROTL)*(ZREF(J)-ZREF(8));
+  "  OUTPUT XTEMPL2(J);('XTEMPL2 = ',F15.5);
+    ZTEMPL2(J)=ZREF(8)-sin(ROTL)*(XTEMPL1(J)-TRANSLL(N))
+             +cos(ROTL)*(ZREF(J)-ZREF(8));
+  "  OUTPUT ZTEMPL2(J);('ZTEMPL2 = ',F15.5);
+  ]
+  DO J=1,8[
+    X_$MLCE(J)=cos(LBROT_$MLCE)*XTEMPL2(J)+
+               sin(LBROT_$MLCE)*(ZTEMPL2(J)-ZMIN_INPUT_$MLCE);
+    Z_$MLCE(J)=-sin(LBROT_$MLCE)*XTEMPL2(J)+
+               cos(LBROT_$MLCE)*(ZTEMPL2(J)-ZMIN_INPUT_$MLCE)+
+               ZMIN_INPUT_$MLCE;
+  "  OUTPUT J,X_$MLCE(J),Z_$MLCE(J);
+  "    ('Coordinate X',I2,'= ',F15.5,' and Z= ',F15.5);
+    IF(Z_$MLCE(J)<ZMIN_$MLCE)[
+      ZMIN_$MLCE=Z_$MLCE(J);];
+    IF(Z_$MLCE(J)>ZMAX_$MLCE)[
+      ZMAX_$MLCE=Z_$MLCE(J);];
+  ];
+  IF(N=NUM_LEAF_$MLCE/2)[
+  TEMP1=ABS(X_$MLCE(4));
+  ];
+
+  A_$MLCE(NUM_LEAF_$MLCE/2+1-N,1)=(X_$MLCE(4)-X_$MLCE(3))/
+  (Z_$MLCE(4)-Z_$MLCE(3));
+  B_$MLCE(NUM_LEAF_$MLCE/2+1-N,1)=X_$MLCE(3)-
+  (Z_$MLCE(3)*A_$MLCE(NUM_LEAF_$MLCE/2+1-N,1));
+  A_$MLCE(NUM_LEAF_$MLCE/2+1-N,2)=(X_$MLCE(2)-X_$MLCE(1))/
+  (Z_$MLCE(2)-Z_$MLCE(1));
+  B_$MLCE(NUM_LEAF_$MLCE/2+1-N,2)=X_$MLCE(1)-
+  (Z_$MLCE(1)*A_$MLCE(NUM_LEAF_$MLCE/2+1-N,2));
+  A_$MLCE(NUM_LEAF_$MLCE/2+1-N,3)=(X_$MLCE(6)-X_$MLCE(5))/
+  (Z_$MLCE(6)-Z_$MLCE(5));
+  B_$MLCE(NUM_LEAF_$MLCE/2+1-N,3)=X_$MLCE(5)-
+  (Z_$MLCE(5)*A_$MLCE(NUM_LEAF_$MLCE/2+1-N,3));
+  A_$MLCE(NUM_LEAF_$MLCE/2+1-N,4)=(X_$MLCE(8)-X_$MLCE(7))/
+  (Z_$MLCE(8)-Z_$MLCE(7));
+  B_$MLCE(NUM_LEAF_$MLCE/2+1-N,4)=X_$MLCE(7)-
+  (Z_$MLCE(7)*A_$MLCE(NUM_LEAF_$MLCE/2+1-N,4));
+
+  C_$MLCE(NUM_LEAF_$MLCE/2+1-N,1)=(Z_$MLCE(8)-Z_$MLCE(1))/
+  (X_$MLCE(8)-X_$MLCE(1));
+  D_$MLCE(NUM_LEAF_$MLCE/2+1-N,1)=Z_$MLCE(1)-
+                         (X_$MLCE(1)*C_$MLCE(NUM_LEAF_$MLCE/2+1-N,1));
+  C_$MLCE(NUM_LEAF_$MLCE/2+1-N,4)=(Z_$MLCE(5)-Z_$MLCE(4))/
+  (X_$MLCE(5)-X_$MLCE(4));
+  D_$MLCE(NUM_LEAF_$MLCE/2+1-N,2)=Z_$MLCE(4)-
+                         (X_$MLCE(4)*C_$MLCE(NUM_LEAF_$MLCE/2+1-N,4));
+  C_$MLCE(NUM_LEAF_$MLCE/2+1-N,2)=Z_$MLCE(7);
+  C_$MLCE(NUM_LEAF_$MLCE/2+1-N,3)=Z_$MLCE(2);
+];
+
+IF(ZMIN_$MLCE ~= ZMIN_INPUT_$MLCE)[
+   OUTPUT ZMIN_INPUT_$MLCE,ZMIN_$MLCE;
+   (/' Due to leaf rotations, ZMIN in $MLCE changed from ',F15.8,' cm'/
+     ' to ',F15.8,' cm.'/);
+]
+IF(ZMAX_$MLCE ~= ZMAX_INPUT_$MLCE)[
+   OUTPUT ZMAX_INPUT_$MLCE,ZMAX_$MLCE;
+   (/' Due to leaf rotations, ZMAX in $MLCE changed from ',F15.8,' cm'/
+     ' to ',F15.8,' cm.  Be aware of this when specifying downstream CM.'/);
+]
+IF(ZMIN_$MLCE<Z_min_CM(ICM_$MLCE))["cannot have this or else it will"
+                                   "interfere with CM above and screw"
+                                   "up HOWNEAR calculations"
+   OUTPUT ICM_$MLCE;
+      (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+      ' Adjusted ZMIN is < Z_min_CM(ICM_$MLCE).'/
+      ' This will cause errors in HOWFAR and HOWNEAR.'//);
+   IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+]
+IF(TEMP1>RMAX_CM(ICM_$MLCE)|TEMP2>RMAX_CM(ICM_$MLCE)) [
+   OUTPUT ICM_$MLCE;
+   (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+      ' After rotation, leaves are not contained within the CM boundaries.'/
+      ' Please check ZFOCUS_$MLCE(1) and or RMAX_CM(ICM_$MLCE)'//);
+   IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+]
+
+"XI. INPUT THE COORDINATES NEG_$MLCE AND POS_$MLCE "
+"===================================================== "
+DO I=1, NUM_LEAF_$MLCE
+[
+    LEAFB_$MLCE(I)=0.0;LEAFA_$MLCE(I)=0.0;
+]
+
+OUTPUT; (' Input for MLC A and B leaf tips '/);
+IF(ORIENT_$MLCE=1)[
+    IF(ENDTYPE_$MLCE=1)[
+      OUTPUT;(' Input min. X, max. X of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. X, max. X of origin of cylindrical leaf ends,');
+    ]
+]
+ELSE[
+    IF(ENDTYPE_$MLCE=1)[
+      OUTPUT;(' Input min. Y, max. Y of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. Y, max. Y of origin of cylindrical leaf ends,');
+    ]
+]
+OUTPUT;(' # of adjacent leaves with these coordinates:');
+I=1;
+LOOP[
+  OUTPUT I;('   For leaf',I4,' :',$)
+  MINPUT ($MLCE) NEG_$MLCE, POS_$MLCE, NUM_$MLCE;
+  (2F15.0,I5);
+  IF(NUM_$MLCE<=0) NUM_$MLCE=1;
+  OUTPUT NEG_$MLCE, POS_$MLCE, NUM_$MLCE; (2F15.5,I5);
+  IF(NEG_$MLCE+LEAFRADIUS_$MLCE > POS_$MLCE-LEAFRADIUS_$MLCE)[
+     NEG_$MLCE = POS_$MLCE-LEAFRADIUS_$MLCE;
+     OUTPUT ICM_$MLCE,I,I+NUM_$MLCE-1,NEG_$MLCE;
+      (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+   ' Min. and max. opening coordinates in leaves ',I4,' - ',I4,' overlap'/
+   ' Negative coordinate set to ',F15.5,' cm for now'//);
+     IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+                               ]
+
+  IF(ABS(NEG_$MLCE)>RMAX_CM(ICM_$MLCE)+LEAFRADIUS_$MLCE|
+     ABS(POS_$MLCE)>RMAX_CM(ICM_$MLCE)+LEAFRADIUS_$MLCE) [
+
+     OUTPUT ICM_$MLCE,I,I+NUM_$MLCE-1;
+      (//' ***ERROR IN CM ',I4,' ($MLCE)'/
+      ' Tip of leaves ',I4,' - ',I4,' are outside CM '//);
+
+     IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+                                            ];
+  DO J=I,I+NUM_$MLCE-1["define opening for all leaves in group"
+    IF(J>NUM_LEAF_$MLCE) EXIT;
+    LEAFB_$MLCE(J)=NEG_$MLCE;
+    LEAFA_$MLCE(J)=POS_$MLCE;
+  ]
+  I=J;
+]WHILE(I<=NUM_LEAF_$MLCE);"End of Coordinate inputs for || direction "
+
+IF(ENDTYPE_$MLCE=1)[
+DO I=1, NUM_LEAF_$MLCE [
+
+SURPARA2_B_$MLCE(I)=LEAFB_$MLCE(I)/
+(ZMIN_$MLCE-ZFOCUS_$MLCE );
+
+SURPARA2_A_$MLCE(I)=LEAFA_$MLCE(I)/
+(ZMIN_$MLCE-ZFOCUS_$MLCE );
+
+                         ];
+                    ];
+
+"XII. ESTABLISH TOP OF FIRST CM
+"==============================
+
+ZFRONT_$MLCE = Z_min_CM(ICM_$MLCE);
+
+"
+"XIII. ESTABLISH START OF NEXT CM
+"================================
+
+Z_min_CM(ICM_$MLCE+1) = ZMAX_$MLCE;
+
+"
+"XIV. GET ECUT, PCUT, DOSE SCORING ZONE AND MATERIAL IN EACH REGION
+"==================================================================
+
+IRA = IRSTART_$MLCE-1;
+DO IR_$MLCE = 1,N_$MLCE
+["loop through regions to get information"
+   IRA = IRA+1;
+   IF (IR_$MLCE = 1)[
+       ;OUTPUT IR_$MLCE;
+        (/' Region',I4,' (MLC opening):'/
+          ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+          ' :',$);
+   ]
+   ELSE[
+      ;OUTPUT IR_$MLCE;
+        (/' Region',I4,' (MLC leaves):'/
+         ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+         ' :',$);
+   ]
+   ;MINPUT ($MLCE)
+      ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+     ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+      OUTPUT IR_$MLCE;(' material of region ',I3,' ',$);
+   ;$MED_INPUT($MLCE); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   med(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$MLCE"
+
+"
+"XV. SET UP AIR GAP TO PREVIOUS CM IF PRESENT
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though its
+"  the top of the component module.  This is to allow the assignment of
+"  region numbers on input of the parameters of each local region
+"  (mainly to assign the medium number of the region).
+"  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$mlc=1) then the gap thickness
+"Z_gap_THICK(ICM_$varmlc) = 0, which is used as a flag for no air gap
+
+Z_gap_THICK(ICM_$MLCE) = ZMIN_$MLCE - Z_min_CM(ICM_$MLCE);
+IF (Z_gap_THICK(ICM_$MLCE) < = 0.0)
+[
+   Z_gap_THICK(ICM_$MLCE) = 0.;
+   N_GAP_$MLCE = 0; "no air gap for this CM
+]
+ELSE
+[
+   N_GAP_$MLCE = 1; "this CM has an air gap
+   IRA = IRSTART_$MLCE+N_$MLCE; "absolute region number of air gap
+   med(IRA) = AIR_INDEX; "medium is air
+]
+
+"
+"XVI. SET UP REGION NUMBERS
+"===========================
+"
+"  This CM has N_$MLCE+N_GAP_$mlc regions
+"
+;
+"Index last region
+IREND_$MLCE = (IRSTART_$MLCE -1) + N_$MLCE+N_GAP_$MLCE;
+NREG = NREG+N_$MLCE+N_GAP_$MLCE;
+                            "Total no of regions in full geometry up
+                            "to and including this CM
+IF (NREG <= $MXREG)
+[ IR_start_CM(ICM_$MLCE+1) = IREND_$MLCE+1; ]
+                       "have not exceeded maximum region number
+                       "Index of first region in next CM:"
+ELSE
+[
+      OUTPUT ICM_$MLCE,NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' ($MLCE):'/
+         T2,I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$MLCE)=IERR_GEOM(ICM_$MLCE)+1;
+]
+
+"
+"XVII.  ESTABLISH CM BOUNDARY
+"============================
+"
+RMAX_CM_FLAG(ICM_$MLCE) = 2; "put a square boundary about CM
+"
+"XVIII. ESTABLISH DOSE SCORING ZONES AND BIT SETTING FOR EACH REGION
+"===================================================================
+"
+IRA = IRSTART_$MLCE-1; "absolute region number"
+DO IR_$MLCE=1,N_$MLCE
+["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region GXD
+   E_min_out(ICM_$MLCE)=ECUT(IRA); "Minimum energy on exit from CM
+
+] "end of loop over IR_$MLCE
+
+"XIX. ESTABLISH SUB-REGION IR VALUES
+"===================================
+
+DO I=1,3 [
+   DO J =1,3 [
+      DO K = 1,5  [
+    SUBINDEX_$MLCE(I,J,K)=1;
+                  ];
+            ];
+         ];
+
+DO I=2,3 [
+   DO K=2,4 [
+   SUBINDEX_$MLCE(I,2,K)=2;
+            ];
+
+   SUBINDEX_$MLCE(I,1,4)=2;
+   SUBINDEX_$MLCE(I,3,2)=2;
+         ];
+
+
+"   =======================
+"
+RETURN;
+
+"XX. ERROR MESSAGES
+"==================
+"
+:EOF_$MLCE:
+;OUTPUT ICM;
+  (//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$MLCE:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$MLCE"
+
+%E "MLCE_cm.mortran  start of subroutine ISUMRY_$MLCE (SID 1.12)"
+"***********************************************************************
+"
+"                          Subroutine ISUMRY_$MLCE
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters
+" that require medium information obtained from HATCH call.
+"
+"***********************************************************************
+
+;SUBROUTINE ISUMRY_$MLCE;
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MLCE,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$MLCE
+"T>**********************************
+"T>
+INTEGER
+"   ID,     already defined gf  T>index of dose scoring zone
+   IRA,     "T>absolute region number
+   I,J;     "T>DO loop index
+
+$REAL  VOL_$MLCE(2), "T> region volumes
+       TOTALVOL,       "T> Total volume of MLC CM
+       VOLLEAF,       "T>volume of a single leaf
+       XINT_TOPA,     "intersection of +ve leaf end with ZMIN_INPUT
+       XINT_BOTB,     "intersection of -ve leaf end with ZMAX_INPUT
+       XINT_TOPB,     "intersection of -ve leaf end with ZMIN_INPUT
+       R,            "distance of chord of rounded leaf end from CIL
+       CHORD,         "area contained in chords at end of leaves
+       OPENINGAREA;   "area of the opening between +ve and -ve leaves
+
+
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the
+"region density is set if it was allowed to default in INPUT_$mlc.
+"This volume calculation is approximate, but close enough
+"
+TOTALVOL = (ZMAX_$MLCE-ZMIN_$MLCE)*4*RMAX_CM(ICM_$MLCE)**2;
+VOL_$MLCE(1) = 0.;
+VOL_$MLCE(2) = 0.;
+
+"volume of a pair of leaves, ignoring leaf ends/openings"
+VOLLEAF=(2*X4_$MLCE*(ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)-
+        (X4_$MLCE-X3_$MLCE)*(ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)-
+        TGW_$MLCE*(ZSTEPL_$MLCE-ZMIN_INPUT_$MLCE)-
+        TGW_$MLCE*(ZMAX_INPUT_$MLCE-ZSTEPR_$MLCE))*
+        2*RMAX_CM(ICM_$MLCE);
+
+DO J = 1, NUM_LEAF_$MLCE [
+
+    IF(ENDTYPE_$MLCE=0)["rounded leaf ends"
+
+      "find out where the circle defining the ends intersects the
+      "leaf
+      XINT_TOPB=LEAFB_$MLCE(J)+SQRT(LEAFRADIUS_$MLCE**2-
+                                   (ZMIN_INPUT_$MLCE-CIL_$MLCE)**2);
+      XINT_BOTB=LEAFB_$MLCE(J)+SQRT(LEAFRADIUS_$MLCE**2-
+                                   (ZMAX_INPUT_$MLCE-CIL_$MLCE)**2);
+      XINT_TOPA=LEAFA_$MLCE(J)-SQRT(LEAFRADIUS_$MLCE**2-
+                                    (ZMIN_INPUT_$MLCE-CIL_$MLCE)**2);
+      R=SQRT(LEAFRADIUS_$MLCE**2-
+   ((ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)**2+(XINT_TOPB-XINT_BOTB)**2)/4.);
+      CHORD=LEAFRADIUS_$MLCE**2*
+              ACOS(R/LEAFRADIUS_$MLCE)-R*SQRT(LEAFRADIUS_$MLCE**2-R**2);
+      IF(CHORD<0) CHORD=0.; "can happen for large LEAFRADIUS"
+      OPENINGAREA=(ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                  (XINT_TOPA-XINT_BOTB)-2*CHORD;
+      VOL_$MLCE(2)=VOL_$MLCE(2)+VOLLEAF*
+                   ((ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                   2*RMAX_CM(ICM_$MLCE)-OPENINGAREA)/
+                   ((ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                    2*RMAX_CM(ICM_$MLCE));
+   ]
+   ELSE["focused leaf ends"
+      XINT_TOPA=LEAFA_$MLCE(J);
+      XINT_BOTB=(ZMAX_INPUT_$MLCE-ZFOCUS_$MLCE)*LEAFB_$MLCE(J)/
+                (ZMIN_INPUT_$MLCE-ZFOCUS_$MLCE);
+      OPENINGAREA=(ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                  (XINT_TOPA-XINT_BOTB);
+      VOL_$MLCE(2)=VOL_$MLCE(2)+VOLLEAF*
+                  ((ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                   2*RMAX_CM(ICM_$MLCE)-OPENINGAREA)/
+                   ((ZMAX_INPUT_$MLCE-ZMIN_INPUT_$MLCE)*
+                   2*RMAX_CM(ICM_$MLCE));
+   ]
+]
+
+VOL_$MLCE(1) = TOTALVOL - VOL_$MLCE(2);
+
+"i.e. Air Volume = Total Volume - Volume of Leaves"
+
+IRA = IRSTART_$MLCE-1;
+DO IR_$MLCE=1,N_$MLCE+N_GAP_$MLCE
+[
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0)
+   [
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$MLCE(IR_$MLCE)*RHOR(IRA);
+   ]
+]
+
+"   Summarize geometrical information for this CM in listing file"
+"   =============================================================="
+
+WRITE(IOUTLIST,110) ICM_$MLCE,TITLE_$MLCE;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$MLCE), RMAX_CM(ICM_$MLCE);
+IF(N_GAP_$MLCE~=0)[
+          WRITE(IOUTLIST,124) Z_min_CM(ICM_$MLCE),
+                             ZMIN_$MLCE-Z_min_CM(ICM_$MLCE);
+]
+IF(ORIENT_$MLCE~=0)["leaves parallel to X"
+  IF(ENDTYPE_$MLCE=0) [
+    WRITE(IOUTLIST,122)NUM_LEAF_$MLCE,'X',ZMIN_INPUT_$MLCE,
+                       ZMAX_INPUT_$MLCE,ZSTEPL_$MLCE, ZSTEPR_$MLCE,'Y',
+                       TGW_$MLCE,'Y',X3_$MLCE,'Y',X4_$MLCE,
+                       SPACE_$MLCE, SSD_$MLCE, LBROT_$MLCE,
+                       LEAFRADIUS_$MLCE,CIL_$MLCE,
+                       VOL_$MLCE(1),VOL_$MLCE(2),TOTALVOL;
+  ]
+  ELSE                   [
+    WRITE(IOUTLIST,123)NUM_LEAF_$MLCE,'X',ZMIN_INPUT_$MLCE,
+                       ZMAX_INPUT_$MLCE,ZSTEPL_$MLCE, ZSTEPR_$MLCE,'Y',
+                       TGW_$MLCE,'Y',X3_$MLCE,'Y',X4_$MLCE,
+                       SPACE_$MLCE, SSD_$MLCE, LBROT_$MLCE,
+                       ZFOCUS_$MLCE,VOL_$MLCE(1),VOL_$MLCE(2),TOTALVOL;
+  ]
+]
+ELSE["leaves parallel to Y"
+  IF(ENDTYPE_$MLCE=0) [
+    WRITE(IOUTLIST,122)NUM_LEAF_$MLCE,'Y',ZMIN_INPUT_$MLCE,
+                       ZMAX_INPUT_$MLCE,ZSTEPL_$MLCE, ZSTEPR_$MLCE,'X',
+                       TGW_$MLCE,'X',X3_$MLCE,'X',X4_$MLCE,
+                       SPACE_$MLCE, SSD_$MLCE, LBROT_$MLCE,
+                       LEAFRADIUS_$MLCE,CIL_$MLCE,
+                       VOL_$MLCE(1),VOL_$MLCE(2),TOTALVOL;
+  ]
+  ELSE                   [
+    WRITE(IOUTLIST,123)NUM_LEAF_$MLCE,'Y',ZMIN_INPUT_$MLCE,
+                       ZMAX_INPUT_$MLCE,ZSTEPL_$MLCE, ZSTEPR_$MLCE,'X',
+                       TGW_$MLCE,'X',X3_$MLCE,'X',X4_$MLCE,
+                       SPACE_$MLCE, SSD_$MLCE, LBROT_$MLCE,
+                       ZFOCUS_$MLCE,VOL_$MLCE(1),VOL_$MLCE(2),TOTALVOL;
+  ]
+];
+IF(ORIENT_$MLCE~=0)["leaves parallel to X"
+      WRITE(IOUTLIST,126)'X';
+]
+ELSE["leaves parallel to Y"
+      WRITE(IOUTLIST,126)'Y';
+]
+
+DO I =1, NUM_LEAF_$MLCE [
+
+WRITE(IOUTLIST,128)I,LEAFB_$MLCE(I),LEAFA_$MLCE(I);
+
+]
+
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$MLCE-1;
+DO IR_$MLCE=1,N_$MLCE[
+   IRA = IRA+1;
+   IF(IR_$MLCE=1)[
+      IF (MED(IRA)=0)[
+         WRITE(IOUTLIST,140) IR_$MLCE,'opening',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE[
+         WRITE(IOUTLIST,140) IR_$MLCE,'opening',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$MLCE=2)[
+      IF (MED(IRA)=0)[
+         WRITE(IOUTLIST,140) IR_$MLCE,'leaves',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE[
+         WRITE(IOUTLIST,140) IR_$MLCE,'leaves',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+]
+
+IF(N_GAP_$MLCE ~=0)[
+   IRA=IRSTART_$MLCE+N_$MLCE;
+      WRITE(IOUTLIST,140) IR_$MLCE,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      WRITE(IOUTLIST,141)'at top';
+]
+
+110 FORMAT(/' Component module',I3,' is a multi-leaf collimator (MLCE)',
+            ' (3 regions SID 1.12)',
+           /'  -------------------------------------------------',
+            '------------------',
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$MLCE geometry parameters:',
+           /T2,'------------------------',
+           /T2,'Distance from front of CM from reference plane = ',T51,
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',T51,F15.5,' cm');
+122 FORMAT(T2,'No. of leaf pairs = ',T51,I5,
+           /T2,'Leaves open parallel to the ',A1,' axis'
+           /T2,'Min. Z of leaf bank as input = ',T51,F15.5,' cm',
+           /T2,'Max. Z of leaf bank as input = ',T51,F15.5,' cm',
+           /T2,'Z of left step in central leaf = ',T51,F15.5,' cm',
+           /T2,'Z of right step in central leaf = ',T51,F15.5,' cm',
+           /T2,'Width of steps in the ',A1,' direction = ',T51,
+               F15.5,' cm',
+           /T2,'Upper right ',A1,' coord. of central leaf = ',T51,F15.5,' cm',
+           /T2,'Lower right ',A1,' coord. of central leaf = ',T51,F15.5,' cm',
+           /T2,'Space between leaf centres = ',T51,F15.5,' cm',
+           /T2,'SSD at which above space is defined = ',T51,F15.5,' cm',
+           /T2,'Leaf bank rotation angle = ',T51,F15.5,' rad',
+           /T2,'Radius of curvature of rounded leaf ends = ',T51,F15.5,' cm',
+           /T2,'Z of origin of curvature = ',T51,F15.5,' cm',
+           /T2,'Volume of region between leaves = ',T51,
+               F15.5, ' cm**3',
+           /T2,'Volume of leaves = ',T51,
+               F15.5, ' cm**3',
+           /T2,'Volume of Multileaf Collimator Component Module = ',T51,
+               F15.5, ' cm**3');
+123 FORMAT(T2,'No. of leaf pairs = ',T51,I5,
+           /T2,'Leaves open parallel to the ',A1,' axis'
+           /T2,'Min. Z of leaf bank as input = ',T51,F15.5,' cm',
+           /T2,'Max. Z of leaf bank as input = ',T51,F15.5,' cm',
+           /T2,'Z of left step in central leaf = ',T51,F15.5,' cm',
+           /T2,'Z of right step in central leaf = ',T51,F15.5,' cm',
+           /T2,'Width of steps in the ',A1,' direction = ',T51,
+               F15.5,' cm',
+           /T2,'Upper right ',A1,' coord. of central leaf = ',T51,F15.5,' cm',
+           /T2,'Lower right ',A1,' coord. of central leaf = ',T51,F15.5,' cm',
+           /T2,'Space between leaf centres = ',T51,F15.5,' cm',
+           /T2,'SSD at which above space is defined = ',T51,F15.5,' cm',
+           /T2,'Leaf bank rotation angle = ',T51,F15.5,' rad',
+           /T2,'Z focus of straight leaf ends = ',T51,F15.5,' cm',
+           /T2,'Volume of region between leaves = ',T51,
+               F15.5, ' cm**3',
+           /T2,'Volume of leaves = ',T51,
+               F15.5, ' cm**3',
+           /T2,'Volume of Multileaf Collimator Component Module = ',T51,
+               F15.5, ' cm**3');
+
+
+124 FORMAT(T2,'There is an airgap starting at Z = ',F8.3,' cm with',
+              ' thickness ',F8.3,' cm');
+126 FORMAT
+(/T2,'  Leaf          ',A1,' coordinates of opening',
+ /T2,'                  NEG     (cm)        POS');
+128 FORMAT(T2,I5,5X,F15.5,5X,F15.5);
+130 FORMAT(/T2,'$MLCE region parameters:',
+           /T2,'----------------------',
+           /T2,'local  location  electron  photon',
+               '  range-rejection   dose  bit  medium'
+           /T2,'region            cutoff   cutoff',
+               '   level     max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+               '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,3X,9A1);
+141 FORMAT(T9,A7);
+
+"   Output representation of this component module to file for EGS_Windows"
+"   ======================================================================"
+
+"IF (IWATCH = 4 | IZLAST = 2) ["
+"   ;"
+
+"] "
+
+"200 FORMAT(' ',I1,A3,A1,10(F7.2,','));"
+;RETURN;
+END;
+
+%E "Start of subroutine HOWNEAR_$MLCE (Rev 1.4)"
+"***********************************************************************
+"
+"                          Subroutine HOWNEAR_$MLCE
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary
+" Used to be HOWNEAR macro, but is now called from that macro.
+"
+"***********************************************************************
+
+;SUBROUTINE HOWNEAR_$MLCE(DIST);
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$MLCE,STACK,GEOM/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      XYL1,XYL2,ZBOR(5), "T> X(NP) and Y(NP)
+      TMP1,TMP2,TMP3,TMP4,
+      TMP5,TMP6,TMP7,TMP8,UPB,DOWN;
+
+$INTEGER I, "T> looping index
+         NZ, "T> index of subregion in Z direction
+         NY, "T> index of subregion perpendicular to leaf opening direction
+         LEAFIS; "T> leaf no. where particle is located
+
+IR_$MLCE=IR(NP) - IRSTART_$MLCE + 1;
+IF(IR_$MLCE=3) [ "in the air gap at the top"
+  DIST=MIN(Z(NP)-ZFRONT_$MLCE,ZMIN_$MLCE-Z(NP));
+]
+ELSE [
+  IF(ORIENT_$MLCE=1) [ XYL1=Y(NP); XYL2=X(NP); ]
+  ELSE [ XYL1=X(NP); XYL2=Y(NP); ]
+
+LEAFIS=0;
+
+DO I=1,NUM_LEAF_$MLCE [
+
+TMP1=(A_$MLCE(I,1)*Z(NP))+B_$MLCE(I,1);
+TMP2=(A_$MLCE(I,4)*Z(NP))+B_$MLCE(I,4);
+
+IF( (TMP1<=XYL1) & (XYL1<=TMP2)) [
+
+LEAFIS=I; EXIT; ];
+
+];
+
+IF( LEAFIS~=0 )[
+
+  TMP1=(A_$MLCE(LEAFIS,1)*Z(NP))+B_$MLCE(LEAFIS,1);
+  TMP2=(A_$MLCE(LEAFIS,4)*Z(NP))+B_$MLCE(LEAFIS,4);
+  IF(XYL1<TMP1)[
+    NY=1;
+  ]
+  ELSEIF(XYL1>TMP2)[
+    NY=3;
+  ]
+  ELSE[
+
+DO I =1,3 [
+
+TMP1=(A_$MLCE(LEAFIS,I)*Z(NP))+B_$MLCE(LEAFIS,I);
+TMP2=(A_$MLCE(LEAFIS,I+1)*Z(NP))+B_$MLCE(LEAFIS,I+1);
+
+IF(TMP1<=XYL1 & XYL1<=TMP2)[
+
+NY=I; EXIT;];
+
+          ];
+  ]
+
+ZBORDERS_$MLCE(1)=(C_$MLCE(LEAFIS,1)*XYL1)+D_$MLCE(LEAFIS,1);
+ZBORDERS_$MLCE(2)=C_$MLCE(LEAFIS,2);
+ZBORDERS_$MLCE(3)=C_$MLCE(LEAFIS,3);
+ZBORDERS_$MLCE(4)=(C_$MLCE(LEAFIS,4)*XYL1)+D_$MLCE(LEAFIS,2);
+
+NZ=0;
+DO I=1,4 [
+   IF(Z(NP)=<ZBORDERS_$MLCE(I)) [ NZ=I; EXIT; ];
+];
+IF(NZ=0 & (Z(NP)<=ZMAX_$MLCE) )[ NZ=5; ];
+
+"check overlapping leaf"
+
+IF(NY=3 & Z(NP)>=C_$MLCE(LEAFIS,2) & LEAFIS~=NUM_LEAF_$MLCE )
+[
+ IF(XYL1>=(A_$MLCE(LEAFIS+1,1)*Z(NP))+B_$MLCE(LEAFIS+1,1))
+ [
+   LEAFIS=LEAFIS+1;
+   NY=1;
+   "NZ=4;  this is not necessarily the case,  nick"
+   ZBOR(2)=C_$MLCE(LEAFIS,2);
+   ZBOR(3)=C_$MLCE(LEAFIS,3);
+   ZBOR(4)=(C_$MLCE(LEAFIS,4)*XYL1)+D_$MLCE(LEAFIS,2);
+   NZ=0;
+   DO I=2,4 [
+    IF(Z(NP)=<ZBOR(I)) [ NZ=I; EXIT; ];
+   ];
+   IF(NZ=0 & (Z(NP)<=ZMAX_$MLCE) )[ NZ=5; ];
+ ];
+];
+
+"initialization of variables"
+
+TMP1=((XYL1*(C_$MLCE(LEAFIS,1)**2))-(Z(NP)*C_$MLCE(LEAFIS,1))+
+(C_$MLCE(LEAFIS,1)*D_$MLCE(LEAFIS,1)))**2;
+TMP1=TMP1+(Z(NP)-(XYL1*C_$MLCE(LEAFIS,1))-D_$MLCE(LEAFIS,1))**2;
+TMP1=(1/(1+C_$MLCE(LEAFIS,1)**2))*sqrt(TMP1);
+
+TMP2=((XYL1*(C_$MLCE(LEAFIS,4)**2))-(Z(NP)*C_$MLCE(LEAFIS,4))+
+(C_$MLCE(LEAFIS,4)*D_$MLCE(LEAFIS,2)))**2;
+TMP2=TMP2+(Z(NP)-(XYL1*C_$MLCE(LEAFIS,4))-D_$MLCE(LEAFIS,2))**2;
+TMP2=(1/(1+C_$MLCE(LEAFIS,4)**2))*sqrt(TMP2);
+
+"start check"
+
+    IF(NY=1 & (NZ=1|NZ=2|NZ=3) )[
+      DOWN=Z(NP)-ZMIN_$MLCE;
+      UPB=C_$MLCE(LEAFIS,3)-Z(NP);
+      ]
+    ELSEIF(NY=1 & NZ=4)[
+      DOWN=Z(NP)-C_$MLCE(LEAFIS,3);
+      UPB=TMP2;
+      ]
+    ELSEIF(NZ=5 & (NY=1|NY=2))[
+      DOWN=TMP2;
+      UPB=ZMAX_$MLCE-Z(NP);
+      ]
+    ELSEIF(NZ=1)[
+      DOWN=Z(NP)-ZMIN_$MLCE;
+      UPB=TMP1;
+      ]
+    ELSEIF(NY=2)[
+      DOWN=TMP1;
+      UPB=TMP2;
+      ]
+    ELSEIF(NZ=2)[
+      DOWN=TMP1;
+      UPB=C_$MLCE(LEAFIS,2)-Z(NP);
+      ]
+    ELSEIF(NY=3)[
+      DOWN=Z(NP)-C_$MLCE(LEAFIS,2);
+      UPB=ZMAX_$MLCE-Z(NP);
+    " following not necessary as already checke above"
+    "  IF(LEAFIS~=NUM_LEAF_$MLCE & "
+    "    (XYL1>((A_$MLCE(LEAFIS+1,1)*Z(NP))+B_$MLCE(LEAFIS+1,1))))["
+    "     UPB=(C_$MLCE(LEAFIS+1,3)-Z(NP));]; "
+      ];
+
+    DIST=MIN(UPB,DOWN);
+
+TMP1=((A_$MLCE(LEAFIS,1)*XYL1)-
+       (A_$MLCE(LEAFIS,1)*B_$MLCE(LEAFIS,1))-
+       (Z(NP)*(A_$MLCE(LEAFIS,1))**2))**2;
+TMP1=TMP1+((A_$MLCE(LEAFIS,1)*Z(NP))+B_$MLCE(LEAFIS,1)-XYL1)**2;
+TMP1=(1/(1+(A_$MLCE(LEAFIS,1)**2)))*sqrt(TMP1);
+
+TMP2=((A_$MLCE(LEAFIS,2)*XYL1)-
+      (A_$MLCE(LEAFIS,2)*B_$MLCE(LEAFIS,2))-
+      (Z(NP)*(A_$MLCE(LEAFIS,2)**2)))**2;
+TMP2=TMP2+((A_$MLCE(LEAFIS,2)*Z(NP))+B_$MLCE(LEAFIS,2)-XYL1)**2;
+TMP2=(1/(1+(A_$MLCE(LEAFIS,2)**2)))*sqrt(TMP2);
+
+TMP3=((A_$MLCE(LEAFIS,3)*XYL1)-
+      (A_$MLCE(LEAFIS,3)*B_$MLCE(LEAFIS,3))-
+      (Z(NP)*(A_$MLCE(LEAFIS,3)**2)))**2;
+TMP3=TMP3+((A_$MLCE(LEAFIS,3)*Z(NP))+B_$MLCE(LEAFIS,3)-XYL1)**2;
+TMP3=(1/(1+(A_$MLCE(LEAFIS,3)**2)))*sqrt(TMP3);
+
+TMP4=((A_$MLCE(LEAFIS,4)*XYL1)-
+      (A_$MLCE(LEAFIS,4)*B_$MLCE(LEAFIS,4))-
+      (Z(NP)*(A_$MLCE(LEAFIS,4)**2)))**2;
+TMP4=TMP4+((A_$MLCE(LEAFIS,4)*Z(NP))+B_$MLCE(LEAFIS,4)-XYL1)**2;
+TMP4=(1/(1+(A_$MLCE(LEAFIS,4)**2)))*sqrt(TMP4);
+
+IF(LEAFIS~=1)[
+TMP5=((A_$MLCE(LEAFIS-1,3)*XYL1)-
+      (A_$MLCE(LEAFIS-1,3)*B_$MLCE(LEAFIS-1,3))-
+      (Z(NP)*(A_$MLCE(LEAFIS-1,3))**2))**2;
+TMP5=TMP5+((A_$MLCE(LEAFIS-1,3)*Z(NP))+B_$MLCE(LEAFIS-1,3)-XYL1)**2;
+TMP5=(1/(1+(A_$MLCE(LEAFIS-1,3)**2)))*sqrt(TMP5);
+
+TMP6=((A_$MLCE(LEAFIS-1,4)*XYL1)-
+      (A_$MLCE(LEAFIS-1,4)*B_$MLCE(LEAFIS-1,4))-
+      (Z(NP)*(A_$MLCE(LEAFIS-1,4))**2))**2;
+TMP6=TMP6+((A_$MLCE(LEAFIS-1,4)*Z(NP))+B_$MLCE(LEAFIS-1,4)-XYL1)**2;
+TMP6=(1/(1+(A_$MLCE(LEAFIS-1,4)**2)))*sqrt(TMP6);
+];
+
+IF(LEAFIS~=NUM_LEAF_$MLCE)[
+TMP7=((A_$MLCE(LEAFIS+1,1)*XYL1)-
+      (A_$MLCE(LEAFIS+1,1)*B_$MLCE(LEAFIS+1,1))-
+      (Z(NP)*(A_$MLCE(LEAFIS+1,1)**2)))**2;
+TMP7=TMP7+((A_$MLCE(LEAFIS+1,1)*Z(NP))+B_$MLCE(LEAFIS+1,1)-XYL1)**2;
+TMP7=(1/(1+(A_$MLCE(LEAFIS+1,1)**2)))*sqrt(TMP7);
+
+TMP8=((A_$MLCE(LEAFIS+1,2)*XYL1)-
+      (A_$MLCE(LEAFIS+1,2)*B_$MLCE(LEAFIS+1,2))-
+      (Z(NP)*(A_$MLCE(LEAFIS+1,2)**2)))**2;
+TMP8=TMP8+((A_$MLCE(LEAFIS+1,2)*Z(NP))+B_$MLCE(LEAFIS+1,2)-XYL1)**2;
+TMP8=(1/(1+(A_$MLCE(LEAFIS+1,2)**2)))*sqrt(TMP8);
+];
+
+    IF( NZ=2 & (NY=2|NY=3) )[
+       DOWN=TMP2; UPB=TMP4;]
+    ELSEIF( NZ=3 & NY=2 )[
+       DOWN=TMP2; UPB=TMP3;]
+    ELSEIF( NZ=4 & (NY=1|NY=2) )[
+       DOWN=TMP1; UPB=TMP3;]
+    ELSEIF( NZ=1 )[
+       IF( LEAFIS=1 )[ DOWN=TMP1;UPB=TMP8;]
+       ELSEIF( LEAFIS=NUM_LEAF_$MLCE )[ DOWN=TMP6;UPB=TMP4;]
+       ELSE[ DOWN=TMP6;UPB=TMP8;];
+       ]
+    ELSEIF( NZ=5 )[
+       IF( LEAFIS=1 )[ DOWN=TMP1;UPB=TMP7;]
+       ELSEIF( LEAFIS=NUM_LEAF_$MLCE )[ DOWN=TMP5;UPB=TMP4;]
+       ELSE[ DOWN=TMP5;UPB=TMP7;];
+       ]
+    ELSEIF( NY=1 )[
+       UPB=TMP2;
+       IF( LEAFIS=1 )[DOWN=TMP1;]
+       ELSE[
+       DOWN=TMP6;
+       IF(Z(NP)>C_$MLCE(LEAFIS-1,2))[
+          DOWN=TMP5;];
+       ];
+       ]
+    ELSEIF( NY=3 )[
+       DOWN=TMP3;
+       IF( LEAFIS=NUM_LEAF_$MLCE )[UPB=TMP4;]
+       ELSE[
+       UPB=TMP7;
+       IF(Z(NP)<C_$MLCE(LEAFIS+1,3))[UPB=TMP8;];
+       ];
+       ];
+
+    DIST = MIN(DIST,UPB,DOWN);
+
+    IF(ENDTYPE_$MLCE=1) [
+
+      TMP1=SURPARA2_B_$MLCE(LEAFIS);
+      TMP1=1/SQRT(1+TMP1**2);
+      TMP2=SURPARA2_A_$MLCE(LEAFIS);
+      TMP2=1/SQRT(1+TMP2**2);
+
+      DIST=MIN(DIST,
+     ABS((SURPARA2_B_$MLCE(LEAFIS)*(Z(NP)-ZFOCUS_$MLCE)-XYL2)*TMP1),
+     ABS((SURPARA2_A_$MLCE(LEAFIS)*(Z(NP)-ZFOCUS_$MLCE)-XYL2)*TMP2));
+
+    ]
+    ELSE[
+
+     TMP1=ABS(sqrt((XYL2-LEAFA_$MLCE(LEAFIS))**2+
+     (Z(NP)-CIL_$MLCE)**2)-LEAFRADIUS_$MLCE);
+     TMP2=ABS(sqrt((Z(NP)-CIL_$MLCE)**2+
+     (XYL2-LEAFB_$MLCE(LEAFIS))**2)-LEAFRADIUS_$MLCE);
+"     IF(XYL2>LEAFA_$MLCE(LEAFIS))[ TMP1=1.0E20; ];"
+"     IF(XYL2<LEAFB_$MLCE(LEAFIS))[ TMP2=1.0E20; ];"
+
+     DIST=MIN(DIST,TMP1,TMP2);
+    ]
+  ]
+  ELSE[ "beyond outer edges MLCE"
+    IF(XYL1 <= A_$MLCE(1,1)*Z(NP)+B_$MLCE(1,1))[
+      TMP1=((A_$MLCE(1,1)*Z(NP))+B_$MLCE(1,1)-XYL1)**2;
+      TMP1=TMP1+((A_$MLCE(1,1)*XYL1)-(B_$MLCE(1,1)*
+      A_$MLCE(1,1))-
+      (Z(NP)*A_$MLCE(1,1)**2))**2;
+      TMP1=(1/(1+A_$MLCE(1,1)**2))*sqrt(TMP1);
+    ]
+    ELSEIF(XYL1 >= A_$MLCE(NUM_LEAF_$MLCE,4)*Z(NP)+
+                   B_$MLCE(NUM_LEAF_$MLCE,4))[
+      TMP1=((A_$MLCE(NUM_LEAF_$MLCE,4)*Z(NP))+
+      B_$MLCE(NUM_LEAF_$MLCE,4)-XYL1)**2;
+      TMP1=TMP1+((A_$MLCE(NUM_LEAF_$MLCE,4)*XYL1)-
+      (B_$MLCE(NUM_LEAF_$MLCE,4)*
+      A_$MLCE(NUM_LEAF_$MLCE,4))-
+      (Z(NP)*A_$MLCE(NUM_LEAF_$MLCE,4)**2))**2;
+      TMP1=(1/(1+A_$MLCE(NUM_LEAF_$MLCE,4)**2))*sqrt(TMP1);
+    ]
+    DIST=MIN(Z(NP)-ZMIN_$MLCE,ZMAX_$MLCE-Z(NP),TMP1);
+
+  ]
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$MLCE
+"************************************************************************
+"End of MLCE_cm.mortran (SID 1.12)"
+
+
+
+

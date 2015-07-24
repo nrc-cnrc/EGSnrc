@@ -1,0 +1,1396 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: set of paired bars                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          George Ding, 1992                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             **************      ""toc:
+"                             *            *      ""toc:
+"                             *    JAWS    *      ""toc:
+"                             *            *      ""toc:
+"                             **************      ""toc:
+"
+"   Programmer:  George Ding.
+"
+"   Development  Version, begun September 5, 1992. Completed in October,1992
+"
+"   For complete history see sccs record.
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.
+"   Set of paired bars.(collimator jaws or applicator)
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  a set of 1 or more
+"   paired bars. The bas are of arbitrary thickness and material,and X or Y.
+"   orintation.
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module in
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+%E   "JAWS_cm.mortran - start of geometry description
+"I>
+"I> Geometry of JAWS:                             ""toc:
+"I> ******************
+"I>                                  ||
+"I>                                \ || /   beam
+"I>                                 \||/
+"I>                                  \/
+"I>
+"I>             ---------------------------------------------------
+"I>
+"I>             -------------     IR=1      ----------------
+"I>                         /              |
+"I>  ISCM=1       IR=3     /               |   IR=2
+"I>            ------------  - - - - - - -  -----------------
+"I>
+"I>           ---------------    IR=4     ---------------------
+"I>                         /            \
+"I>  ISCM=2       IR=6     /              \  IR=5
+"I>       ----------------- - - - - - - -  -----------------------
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are N_JAWS local
+"I>   regions. The first region is between bars or jaws.  An air gap is
+"I>   always present at the front.
+"I>
+"I>
+"I>            --------------------------------------------------------
+"I>            |          Region               | Description          |
+"I>            |-------------------------------|----------------------|
+"I>            |  absolute       | local       |                      |
+"I>            |-----------------|-------------|                      |
+"I>            | IRSTART_JAWS    |  IR_JAWS    |   see graph          |
+"I>            |   +IR_JAWS-1    |             |                      |
+"I>            --------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$JAWS
+"                      ISUMRY_$JAWS
+"                      HOWFAR_$JAWS
+"                      WHERE_AM_I_$JAWS
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/BUGS
+"                             ************************
+"
+" 1. Very small jaw angles lead to approximations because of boundary
+"    tolerance.  Particles may step right through the tips of jaws,
+"    without recognizing that they have entered and exited a distinct
+"    region, where jaw thickness is ~$BDY_TOL cm.
+"
+"*******************************************************************************
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                             COMMON BLOCK VARIABLES
+"                             **********************
+"
+"  Refer to the replacement macros in BEAM.MORTRAN and BEAM_COMMON.MORTRAN
+"  which define the common block variables.
+"
+"*******************************************************************************
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+"*******************************************************************************
+"
+"                   Description of Users Input from Unit 5   ""toc:
+"                   **************************************
+"
+"I>
+"I>  CARDS CM_$JAWS(JAWS: Rev 1.8)
+"I>  **************
+"I>
+"I>  -1  dummy line read in main used to separate input for CMs
+"I>
+"I>   0  RMAX_CM(ICM_JAWS) (F10.0):
+"I>                         Perpendicular distance from Z-axis to boundary
+"I>                         surrounding component module.  This component
+"I>                         module has a square boundary.
+"I>
+"I>   1  TITLE_$JAWS (60A1):  Title of CM.
+"I>
+"I>   2  ISCM_MAX_$JAWS (I5):  Number of paired bars or jaws in CM.
+"I>
+"I>   Repeat 3 and 4 for I=1,ISCM_MAX_$JAWS
+"I>
+"I>   3  XY_CHOICE (A1):  indicate orientation of the paired bars/jaws
+"I>                        X means bars/jaws perpendicular to x axis
+"I>                       i.e. separation and movement is along x-axis
+"I>
+"I>   4  ZMIN_$JAWS(I), ZMAX_$JAWS(I), XFP_$JAWS(I), XBP_$JAWS(I),
+"I>      XFN_$JAWS(I), XBN_$JAWS(I) (6F15.0)
+"I>
+"I>        ZMIN_$JAWS(I): Distance front of bars/jaws to reference plane.
+"I>        ZMAX_$JAWS(I): Distance back of bars/jaws to reference plane.
+"I>        XFP_$JAWS(I):  positive bar/jaw x or y coodinate at front.
+"I>        XBP_$JAWS(I):  positive bar/jaw x or y coodinate at back.
+"I>        XFN_$JAWS(I):  negative bar/jaw x or y coodinate at front.
+"I>        XBN_$JAWS(I):  negative bar/jaw x or y coodinate at back.
+"I>
+"I>   5   ECUT, PCUT, DOSE_ZONE, IREGION_to_BIT (2F15.0,2I5): for interior
+"I>                                                     (assumed to be AIR)
+"I>
+"I>          ECUT, PCUT:     Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:      Dose scoring zone of air surrounding bars.
+"I>          IREGION_TO_BIT: This region associated with this bit in LATCH
+"I>
+"I>   Repeat 6 and 7 for I=1,ISCM_MAX_$JAWS
+"I>
+"I>   6   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5)
+"I>
+"I>          ECUT, PCUT:     Cutoff energies for electrons and photons in
+"I>                          jaw I.
+"I>          DOSE_ZONE:      Dose scoring zone for jaw I.
+"I>          IREGION_TO_BIT: Both bars of jaw I associated with this bit.
+"I>
+"I>   7   MED_IN (24A1):  Medium of jaw I, used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following set of cards defines a pair of 5 cm-thick Al jaws.
+"I>  The first set of bars open along the X axis.  The inside faces of
+"I>  this jaw are vertical at |X|=3cm.  The second set of bars open along
+"I>  the Y axis.  The inside
+"I>  faces of this jaw are angled out slightly, beginning at |Y|=3cm at the top
+"I>  of the jaw and ending at |Y|=3.05cm at the bottom of the jaw.
+"I>  The first jaw starts at Z=30.0 cm.  Note the 0.01 cm airgap between
+"I>  the two jaws.
+"I>
+"I>  Electrons will be followed in the CM down to kinetic energies of
+"I>  10 keV (total energies of 0.521 MeV) and photons will be followed down
+"I>  to energies of 1 keV.  The dose deposited in the air will be scored and
+"I>  added to the dose deposited in the bars in dose zone 1.
+"I>
+"I>  15.0    RMAX_CM
+"I>  JAWS: 2 Al jaws, 5cm thick
+"I>  2
+"I>  X
+"I>  30.0, 35.0, 3.0, 3.0, -3.0, -3.0
+"I>  Y
+"I>  35.01, 40.01, 3.0, 3.05, -3.0, -3.05
+"I>  0.0, 0.0, 1, 0
+"I>  0.0, 0.0, 1, 0
+"I>  AL
+"I>  0.0, 0.0, 1, 0
+"I>  AL
+"I>
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules not allowed
+"
+"   2)  Overlapping bars not allowed
+"
+"   3)  Air gap at front of CM required
+"
+"   4)  Inner boundary of all bars must be within CM boundary, RMAX_CM
+"
+"*******************************************************************************
+
+%E   "Start of subroutine HOWFAR_$JAWS (Rev 1.8)"
+"*******************************************************************************
+"************************** Component Module JAWS ******************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_JAWS
+"                          ***********************
+"
+" HOWFAR routine for set of paired bars.
+"
+" Determine if current region number is within component module JAWS, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are 4xISCM local regions see above graph:
+"
+"      local                    absolute                   description
+"   ------------  ------------------------------------   ---------------
+"       IRL       IR_start_CM(ICM_JAWS)+IRL-1               IRL
+"
+"   Geometrical co-ordinates, as set in INPUT_JAWS are:
+"
+"   ZFRONT_JAWS     front of CM (upstream surface, air region)
+"   ZBACK_JAWS      back of CM (downstream surface, air region)
+"   ZMIN_JAWS(IRL)  front of bars ISCM,
+"   ZMAX_JAWS(IRL)  back of bars ISCM
+"
+"*******************************************************************************
+;SUBROUTINE HOWFAR_$JAWS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$JAWS,EPCONT,STACK,EGS-IO/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_JAWS
+"T>**********************************
+"T>
+INTEGER
+   IRL,        "T>local region number (absolute), required by HOWNEAR macro
+   IB_$JAWS,    "T>index to deal with round off errors
+   I_tpo,I_tne, "T>error indices
+   IRNEW_$JAWS; "T>tentative new region number within CM (absolute)
+
+$REAL
+   DIST,       "T>distance to region boundary along current particle trajectory
+   DIST1,      "T>holds value of DIST while further checks are done
+   XPLN_$JAWS,  "T>X or Y at a plane surface along particle trajectory
+   ZPLN_$JAWS;  "T>Z along particle trajectory
+
+DATA I_tpo,I_tne/0,0/;
+
+IRL = IR(NP); "local region number (absolute)
+"
+" This replacement macros sets DNEAR as well as defining IR_$JAWS,
+ ;$JAWS_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module JAWS, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+";$JAWS_SET_XY_UV(ISCM_$JAWS);"" needed if no dnear caln in howfar"
+IF(IR_$JAWS = 3*ISCM_$JAWS-2) ["particle not in positive or negative bar
+   IB_$JAWS=1;
+   IF(W(NP) > 0.0 )[
+      IF(Z(NP) < ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL) [
+         DIST = (ZMIN_$JAWS(ISCM_$JAWS) - Z(NP) + $BDY_TOL)/W(NP);
+         XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+         ZPLN_$JAWS = Z(NP)+DIST*W(NP);
+         IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+            BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            "must check against plane of jaws at actual Z posn of particle"
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+         ]
+         ELSEIF(XPLN_$JAWS < ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+                BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+         ]
+         ELSE[
+            DIST = (ZMAX_$JAWS(ISCM_$JAWS)-Z(NP) + $BDY_TOL)/W(NP);
+            IF(DIST < 0) [DIST = 0.0;]
+            IF(DIST=0. & ISCM_$JAWS=ISCM_MAX_$JAWS)[DIST=1.E-16;]
+            XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+            ZPLN_$JAWS = Z(NP)+DIST*W(NP);
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*ISCM_$JAWS;
+            IF(ISCM_$JAWS = ISCM_MAX_$JAWS)[IRNEW_$JAWS =1;]
+            DIST1=DIST;
+            IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+               BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+               ;$JAWS_TPOSITIVE;
+               IF(DIST<DIST1)[
+                 IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+               ]
+               ELSE[
+                 DIST=DIST1;
+               ]
+            ]
+            ELSEIF(XPLN_$JAWS < ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+                BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+               ;$JAWS_TNEGATIVE;
+               IF(DIST<DIST1)[
+                 IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+               ]
+               ELSE[
+                 DIST=DIST1;
+               ]
+            ]
+         ]
+      ]
+      ELSE[ "Z(NP)> ZMIN_$JAWS(ISCM_$JAWS)
+         IF( XY_$JAWS > APO_$JAWS(ISCM_$JAWS)*Z(NP) +
+             BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+             Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL  &
+             Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) - $BDY_TOL )[
+            IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+            USTEP = 0.0;
+            RETURN;
+         ]
+         IF( XY_$JAWS < ANE_$JAWS(ISCM_$JAWS)*Z(NP) +
+             BNET_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+             Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL &
+             Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) - $BDY_TOL )[
+            IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+            USTEP = 0.0;
+            RETURN;
+         ]
+         DIST = (ZMAX_$JAWS(ISCM_$JAWS) - Z(NP) + $BDY_TOL)/W(NP);
+         IRNEW_$JAWS = IRSTART_$JAWS + 3*ISCM_$JAWS;
+         IF(ISCM_$JAWS = ISCM_MAX_$JAWS)[IRNEW_$JAWS =1;]
+         XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+         ZPLN_$JAWS = Z(NP)+DIST*W(NP);
+         DIST1=DIST;
+         IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+               BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            ;$JAWS_TPOSITIVE;
+            IF(DIST<DIST1)[
+              IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+            ]
+            ELSE[
+              DIST=DIST1;
+            ]
+         ]
+         ELSEIF(XPLN_$JAWS < ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+                BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            ;$JAWS_TNEGATIVE;
+            IF(DIST<DIST1)[
+              IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+            ]
+            ELSE[
+              DIST=DIST1;
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$JAWS=1) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$JAWS,1);
+         ]
+         ELSE ["still in CM, entering between bars
+            IRNEW = IRNEW_$JAWS; "new region number"
+         ]
+      ]
+   ]"end of w > 0.0
+   ELSEIF (W(NP) < 0.0)[
+      IF(Z(NP) < ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL) [
+         IF(ISCM_$JAWS = 1)[
+            DIST = (ZFRONT_$JAWS - Z(NP))/W(NP);
+            IF(DIST <= 0)[ DIST = 1.E-16;]
+            IRNEW_$JAWS = 1;
+         ]
+         ELSE[ "  ISCM_$JAWS > 1
+            ;$JAWS_SET_XY_UV(ISCM_$JAWS-1);
+            DIST = (ZMAX_$JAWS(ISCM_$JAWS-1) - Z(NP) - $BDY_TOL)/W(NP);
+            XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+            ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2);
+            IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS-1)*ZPLN_$JAWS +
+               BPOT_$JAWS(ISCM_$JAWS-1,IB_$JAWS))[
+               IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2) + 1;
+            ]
+            ELSEIF(XPLN_$JAWS < ANE_$JAWS(ISCM_$JAWS-1)*ZPLN_$JAWS +
+                BNET_$JAWS(ISCM_$JAWS-1,IB_$JAWS))[
+               IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2) + 2;
+            ]
+         ]
+      ]
+      ELSE[ "Z(NP)> ZMIN_$JAWS(ISCM_$JAWS)
+         IF( XY_$JAWS > APO_$JAWS(ISCM_$JAWS)*Z(NP) +
+             BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+             Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL  &
+             Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) - $BDY_TOL )[
+            IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+            USTEP = 0.0;
+            RETURN;
+         ]
+         IF( XY_$JAWS < ANE_$JAWS(ISCM_$JAWS)*Z(NP) +
+             BNET_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+             Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) + $BDY_TOL &
+             Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) - $BDY_TOL )[
+            IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+            USTEP = 0.0;
+            RETURN;
+         ]
+         DIST = (ZMIN_$JAWS(ISCM_$JAWS)-Z(NP) - $BDY_TOL)/W(NP);
+         IF(DIST < 0)[ DIST = 0.0;]
+         XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+         ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+         DIST1=DIST;
+         IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+               BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            ;$JAWS_TPOSITIVE;
+            IF(DIST<DIST1)[
+              IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+            ]
+            ELSE[
+              DIST=DIST1;
+            ]
+         ]
+         ELSEIF(XPLN_$JAWS < ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+                BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+            ;$JAWS_TNEGATIVE;
+            IF(DIST<DIST1)[
+              IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+            ]
+            ELSE[
+              DIST=DIST1;
+            ]
+         ]
+         ELSE[
+            IF(ISCM_$JAWS = 1)[
+               DIST = (ZFRONT_$JAWS - Z(NP))/W(NP);
+               IF(DIST <= 0)[ DIST = 1.E-16;]
+               IRNEW_$JAWS = 1;
+            ]
+            ELSE[ "  ISCM_$JAWS > 1
+               ;$JAWS_SET_XY_UV(ISCM_$JAWS-1);
+               DIST = (ZMAX_$JAWS(ISCM_$JAWS-1) - Z(NP) - $BDY_TOL)/W(NP);
+               IF(DIST < 0)[ DIST = 0.0;]
+               XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+               ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+               IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2);
+               IF(XPLN_$JAWS > APO_$JAWS(ISCM_$JAWS-1)*ZPLN_$JAWS +
+                  BPOT_$JAWS(ISCM_$JAWS-1,IB_$JAWS))[
+                  IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2) + 1;
+               ]
+               ELSEIF(XPLN_$JAWS <
+                      ANE_$JAWS(ISCM_$JAWS-1)*ZPLN_$JAWS +
+                      BNET_$JAWS(ISCM_$JAWS-1,IB_$JAWS))[
+                  IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-2) + 2;
+               ]
+            ]
+         ]
+      ]
+      IF(DIST <= USTEP ) [
+         USTEP = DIST;
+         IF(IRNEW_$JAWS = 1)["particle moving out from front CM
+            CALL WHERE_AM_I(ICM_$JAWS,-1);
+         ]
+         ELSE[  "still in CM
+            USTEP = DIST;
+            IRNEW = IRNEW_$JAWS; "new region number"
+         ]
+      ]
+   ] "end of w < 0.0
+   ELSE[ "(W(NP) = 0.0
+      DIST=1.0E20;
+      IF(Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) ) [
+         IF(UV_$JAWS > 0.0)[
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 1;
+            ;$JAWS_TPOSITIVE;
+         ]
+         ELSE[
+            IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1) + 2;
+            ;$JAWS_TNEGATIVE;
+         ]
+      ]
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$JAWS; "new region number"
+      ]
+   ]"end of w = 0.0
+] "end of region 1
+ELSEIF(IR_$JAWS = 3*ISCM_$JAWS-1) [ "particle in positive bars
+   IB_$JAWS=2;
+   IF( XY_$JAWS < APO_$JAWS(ISCM_$JAWS)*Z(NP) +
+       BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+      Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) - $BDY_TOL  &
+      Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) + $BDY_TOL )[
+      IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+      USTEP = 0.0;
+      RETURN;
+   ]
+   IF (W(NP) > 0.0) [
+      DIST = (ZMAX_$JAWS(ISCM_$JAWS)-Z(NP)+$BDY_TOL)/W(NP);
+      IF(DIST < 0)[DIST = 0.0;]
+      IF(DIST=0. & ISCM_$JAWS = ISCM_MAX_$JAWS)[DIST=1.E-16;]
+      IRNEW_$JAWS = IRSTART_$JAWS + 3*ISCM_$JAWS;
+      IF(ISCM_$JAWS = ISCM_MAX_$JAWS)[IRNEW_$JAWS =1;]
+      XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+      ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+      IF(XPLN_$JAWS < APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+       BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+         IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+         ;$JAWS_TPOSITIVE;
+      ]
+   ]"end of w > 0.0
+   ELSEIF (W(NP) < 0.0)[
+      DIST = (ZMIN_$JAWS(ISCM_$JAWS)-Z(NP)-$BDY_TOL)/W(NP);
+      IF(DIST < 0)[DIST = 0.0;]
+      IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+      XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+      ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+      IF(XPLN_$JAWS < APO_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+       BPOT_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+         ;$JAWS_TPOSITIVE;
+      ]
+   ] "end of w < 0.0
+   ELSE[ "(W(NP) = 0.0
+      DIST=1.0E20;
+      IF(UV_$JAWS < 0.0)[
+         IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+         ;$JAWS_TPOSITIVE;
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF (IRNEW_$JAWS=1) ["leaving CM through back"
+         CALL WHERE_AM_I(ICM_$JAWS,1);
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$JAWS; "new region number"
+      ]
+   ]
+]  "end of region 2
+ELSEIF(IR_$JAWS = 3*ISCM_$JAWS) [ "particle in negative bars
+   IB_$JAWS=2;
+   IF( XY_$JAWS > ANE_$JAWS(ISCM_$JAWS)*Z(NP) +
+       BNET_$JAWS(ISCM_$JAWS,IB_$JAWS) &
+      Z(NP) > ZMIN_$JAWS(ISCM_$JAWS) - $BDY_TOL &
+      Z(NP) < ZMAX_$JAWS(ISCM_$JAWS) + $BDY_TOL )[
+      IRNEW = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+      USTEP = 0.0;
+      RETURN;
+   ]
+   IF (W(NP) > 0.0) [
+      DIST = (ZMAX_$JAWS(ISCM_$JAWS)-Z(NP)+$BDY_TOL)/W(NP);
+      IF(DIST < 0)[DIST = 0.0;]
+      IF(DIST=0. & ISCM_$JAWS = ISCM_MAX_$JAWS)[DIST=1.E-16;]
+      IRNEW_$JAWS = IRSTART_$JAWS + 3*ISCM_$JAWS;
+      IF(ISCM_$JAWS = ISCM_MAX_$JAWS)[IRNEW_$JAWS =1;]
+      XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+      ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+      IF(XPLN_$JAWS > ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+       BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+         IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+         ;$JAWS_TNEGATIVE;
+      ]
+   ] "end of w > 0.0
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$JAWS(ISCM_$JAWS)-Z(NP)-$BDY_TOL)/W(NP);
+      IF(DIST < 0)[DIST = 0.0;]
+      IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+      XPLN_$JAWS = XY_$JAWS + UV_$JAWS * DIST;
+      ZPLN_$JAWS = Z(NP) + DIST*W(NP);
+      IF(XPLN_$JAWS > ANE_$JAWS(ISCM_$JAWS)*ZPLN_$JAWS +
+       BNET_$JAWS(ISCM_$JAWS,IB_$JAWS))[
+         ;$JAWS_TNEGATIVE;
+      ]
+   ]"end of w < 0.0
+   ELSE[ "(W(NP) = 0.0
+      DIST=1.0E20;
+      IF(UV_$JAWS > 0.0)[
+         IRNEW_$JAWS = IRSTART_$JAWS + 3*(ISCM_$JAWS-1);
+         ;$JAWS_TNEGATIVE;
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF (IRNEW_$JAWS=1) ["leaving CM through back"
+         CALL WHERE_AM_I(ICM_$JAWS,1);
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$JAWS; "new region number"
+      ]
+   ]
+] "end of region 3
+"end of CM regions"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$JAWS+1, IR(NP), ICM_$JAWS,
+          IR_start_CM(ICM_$JAWS);
+      (//' ************'//' HOWFAR_JAWS error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN;
+END; "End of subroutine HOWFAR_$JAWS"
+%E   "Start of subroutine WHERE_AM_I_$JAWS (Rev 1.8)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_JAWS
+"                          ***************************
+"
+" WHERE_AM_I routine for set of JAWS.
+"
+" WHERE_AM_I_$JAWS determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$JAWS subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$JAWS from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+;SUBROUTINE WHERE_AM_I_$JAWS(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$JAWS,EPCONT,STACK/;
+
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_JAWS
+"T>**************************************
+"T>
+INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
+$REAL XBDY_$JAWS;
+XBDY_$JAWS = X(NP) + U(NP)*USTEP;
+IF(IXY_CHOICE_$JAWS(ISCM_MAX_$JAWS) = 1)[
+   XBDY_$JAWS = Y(NP) + V(NP)*USTEP;
+]
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   "$CHECK_FRONT_$JAWS;"
+   IRNEW = IRSTART_$JAWS;
+]
+ELSE ["particle entering this CM through back face (downstream)
+   IRNEW = IRSTART_$JAWS + 3*ISCM_MAX_$JAWS - 3;
+   "$CHECK_BACK_$JAWS;"
+   IF(XBDY_$JAWS > XBP_$JAWS(ISCM_MAX_$JAWS))[
+      IRNEW = IRSTART_$JAWS + 3*ISCM_MAX_$JAWS-2;
+   ]
+   ELSEIF(XBDY_$JAWS < XBN_$JAWS(ISCM_MAX_$JAWS))[
+      IRNEW = IRSTART_$JAWS + 3*ISCM_MAX_$JAWS - 1;
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$JAWS"
+%E   "Start of subroutine INPUT_$JAWS (Rev 1.8)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_JAWS
+"                           **********************
+"
+"  A CM input subroutine for a series of 1 or more paired bars.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$JAWS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$JAWS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_JAWS
+"T>*********************************
+"T>
+INTEGER I,J,         "T>DO loop indeces
+        IRA,         "T>Absolute region number
+        MED_FLAG,    "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX;   "T>medium index, set after medium sort by $MED_INPUT
+
+$REAL AIRGAPMIN_$JAWS,  "T>minimum air gap in front and back of CM
+      BDYTOL;          "T>stores $BDY_TOL
+CHARACTER*1 XY_CHOICE(1);
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$JAWS = ICM;      "CM index for this component module
+IRSTART_$JAWS = IR_start_CM(ICM_$JAWS); "Index of first region in this CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$JAWS) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$JAWS = 0.01; "Minimum 0.01 cm air gap at front and back of CM
+
+OUTPUT RMAX_CM(ICM); (' This component is sets of paired bars or jaws'/
+  '      Outer boundary is a square with |x| & |y| <',F10.2,' cm');
+OUTPUT;(' TITLE: ',$);
+;MINPUT ($JAWS) TITLE_$JAWS;(60A1);
+                          ";MINPUT is a replacement macro with EOF and
+                          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$JAWS;(' ',60A1);
+IF(ICM_$JAWS = 1)[
+   OUTPUT;(' This is the first component and starts at the reference plane');]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$JAWS);(' Previous CM ends at:',F12.5,' cm');]
+
+"
+"   get geometry information
+"   =============================
+"
+"get the number of paired bars/jaws"
+ISCM_MAX_$JAWS = $MAX_N_$JAWS; "Max number of paired bars/jaws permitted
+OUTPUT ISCM_MAX_$JAWS;
+       (' NUMBER OF paired bars/jaws (minimum 1, maximum',I3,'): ',$);
+;MINPUT ($JAWS) ISCM_MAX_$JAWS; (I5);
+OUTPUT ISCM_MAX_$JAWS; (I5);
+IF(ISCM_MAX_$JAWS > $MAX_N_$JAWS)[
+   OUTPUT ICM_$JAWS, $MAX_N_$JAWS;
+   (//'***ERROR IN CM ',I4,' (JAWS):'/
+      '# of paired bars > max. allowed.'/
+      '# of pared bars reduced to ',I4,' for now.'//);
+   ISCM_MAX_$JAWS=$MAX_N_$JAWS;
+   IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+]
+ELSEIF(ISCM_MAX_$JAWS<1)[
+   ISCM_MAX_$JAWS=1;
+   OUTPUT ICM_$JAWS;
+   (//'***ERROR IN CM ',I4,' (JAWS):'/
+      '# of paired bars < 1'/
+      '# of pared bars reset to 1 for now.'//);
+   IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+]
+N_$JAWS = 3*ISCM_MAX_$JAWS;
+
+"loop over bars
+DO I = 1,ISCM_MAX_$JAWS ["loop to get each bar location"
+   OUTPUT I;(/' Paired bar/jaw set no:',I3,/
+    ' Are bars/jaws perpendicular to x or y axis'/
+    ' i.e. is separation measured on x or y axis'/
+    ' (Input "y" or "Y" for Y jaws, any other character for X jaws): ',$);
+   ;MINPUT ($JAWS) XY_CHOICE;(1A1);
+   OUTPUT XY_CHOICE;(' ',1A1);
+   IXY_CHOICE_$JAWS(I) = 0;
+   IF(XY_CHOICE(1) ='Y' | XY_CHOICE(1) ='y')[ IXY_CHOICE_$JAWS(I) = 1;]
+   IF(IXY_CHOICE_$JAWS(I) = 0)["this is x bars/jaws"
+         OUTPUT;(' Input ZMIN, ZMAX & jaw coordinates: XFP, XBP,',
+         ' XFN, XBN(cm) all on one line');
+   ]
+   ELSE ["this is y bars/jaws"
+         OUTPUT;(' Input ZMIN, ZMAX & jaw coordinates: YFP, YBP,',
+         ' YFN, YBN(cm) all on one line');
+   ]
+   IF(I=1)[
+         OUTPUT AIRGAPMIN_$JAWS;
+          (' (leave at least min. airgap = ',F8.5,' before 1st jaws)',
+          /' : ',$);
+   ]
+   ELSE[
+         OUTPUT AIRGAPMIN_$JAWS;
+          (' (leave at least min. airgap = ',F8.5,' between jaws)',
+           /' : ',$);
+   ]
+   ;MINPUT ($JAWS) ZMIN_$JAWS(I), ZMAX_$JAWS(I), XFP_$JAWS(I),
+      XBP_$JAWS(I), XFN_$JAWS(I), XBN_$JAWS(I);(6F15.0);
+   ;OUTPUT ZMIN_$JAWS(I),ZMAX_$JAWS(I), XFP_$JAWS(I),
+      XBP_$JAWS(I), XFN_$JAWS(I),XBN_$JAWS(I); (6F11.5);
+   IF(I=1)[
+       IF(ICM_$JAWS=1 &
+         Z_min_CM(ICM_$JAWS)>ZMIN_$JAWS(1)-AIRGAPMIN_$JAWS)[
+         OUTPUT ICM_$JAWS, AIRGAPMIN_$JAWS,
+         ZMIN_$JAWS(1)-AIRGAPMIN_$JAWS,Z_min_CM(1);
+           (//' ***WARNING IN CM ',I4,' (JAWS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st jaws.'/
+              ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+           WRITE(IOUTLIST,100)ICM_$JAWS, AIRGAPMIN_$JAWS,
+              ZMIN_$JAWS(1)-AIRGAPMIN_$JAWS,Z_min_CM(1);
+          100 FORMAT(//' ***WARNING IN CM ',I4,' (JAWS):'/
+              ' Less than min. airgap (',F8.5,' cm) between top',
+              ' of CM and 1st jaws.'/
+              ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+          Z_min_CM(1)=ZMIN_$JAWS(1)-AIRGAPMIN_$JAWS;
+       ]
+       ELSEIF(Z_min_CM(ICM_$JAWS)>ZMIN_$JAWS(1))[
+         OUTPUT ICM_$JAWS;
+           (//'***ERROR IN CM ',I4,' (JAWS):'/
+              'Overlaps with previous CM'//);
+           IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+       ]
+       ELSEIF(Z_min_CM(ICM_$JAWS)>ZMIN_$JAWS(1)-AIRGAPMIN_$JAWS)[
+         OUTPUT ICM_$JAWS, AIRGAPMIN_$JAWS,
+         Z_min_CM(ICM_$JAWS)+AIRGAPMIN_$JAWS,
+                ZMIN_$JAWS(1);
+           (//' ***WARNING IN CM ',I4,' (JAWS):'/
+              ' Less than min. airgap (',F8.5,' cm) between',
+              ' top of CM and first jaws.'/
+              ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         WRITE(IOUTLIST,101)ICM_$JAWS, AIRGAPMIN_$JAWS,
+                Z_min_CM(ICM_$JAWS)+AIRGAPMIN_$JAWS,ZMIN_$JAWS(1);
+         101 FORMAT(//' ***WARNING IN CM ',I4,' (JAWS):'/
+              ' Less than min. airgap (',F8.5,' cm) between',
+              ' top of CM and first jaws.'/
+              ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         ZMIN_$JAWS(1)=Z_min_CM(ICM_$JAWS)+AIRGAPMIN_$JAWS;
+       ]
+   ]
+   ELSE[
+     IF (ZMAX_$JAWS(I-1)>ZMIN_$JAWS(I))[
+        OUTPUT ICM_$JAWS, I-1, I;
+         (//'***ERROR IN CM ',I4,' (JAWS):'/
+            'Paired bars ',I4,' overlap with paired bars ',I4//);
+        IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+     ]
+     ELSEIF (ZMAX_$JAWS(I-1)>ZMIN_$JAWS(I)-AIRGAPMIN_$JAWS)[
+        OUTPUT ICM_$JAWS, AIRGAPMIN_$JAWS, I-1, I, I,
+                ZMAX_$JAWS(I-1)+AIRGAPMIN_$JAWS,ZMIN_$JAWS(I);
+          (//' ***WARNING IN CM ',I4,' (JAWS):'/
+             ' Less than min. airgap (',F8.5,' cm) between',
+             ' jaws ',I4,' and jaws',I4/
+             ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,102)ICM_$JAWS, AIRGAPMIN_$JAWS, I-1, I, I,
+                ZMAX_$JAWS(I-1)+AIRGAPMIN_$JAWS,ZMIN_$JAWS(I);
+        102 FORMAT(//' ***WARNING IN CM ',I4,' (JAWS):'/
+             ' Less than min. airgap (',F8.5,' cm) between',
+             ' jaws ',I4,' and jaws',I4/
+             ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        ZMIN_$JAWS(I)=ZMAX_$JAWS(I-1)+AIRGAPMIN_$JAWS;
+     ]
+   ]
+   IF(ZMIN_$JAWS(I) >= ZMAX_$JAWS(I))[
+      OUTPUT ICM_$JAWS, I, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'ZMIN(',I4,') >= ZMAX(',I4,')'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   IF(ABS(XFP_$JAWS(I))>RMAX_CM(ICM_$JAWS))[
+      OUTPUT ICM_$JAWS, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XFP(',I4,') beyond RMAX_CM'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   IF(ABS(XBP_$JAWS(I))>RMAX_CM(ICM_$JAWS))[
+      OUTPUT ICM_$JAWS, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XBP(',I4,') beyond RMAX_CM'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   IF(ABS(XFN_$JAWS(I))>RMAX_CM(ICM_$JAWS))[
+      OUTPUT ICM_$JAWS, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XFN(',I4,') beyond RMAX_CM'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   IF(ABS(XBN_$JAWS(I))>RMAX_CM(ICM_$JAWS))[
+      OUTPUT ICM_$JAWS, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XBN(',I4,') beyond RMAX_CM'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   IF(XFP_$JAWS(I) < XFN_$JAWS(I))[
+      OUTPUT ICM_$JAWS, I, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XFP(',I4,') < XFN(',I4,')'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   ELSEIF(XFP_$JAWS(I) - XFN_$JAWS(I) < $BDY_TOL*3 )[
+      XFP_$JAWS(I) = XFP_$JAWS(I) + $BDY_TOL*2;
+      XFN_$JAWS(I) = XFN_$JAWS(I) - $BDY_TOL*2;
+   ]
+   IF(XBP_$JAWS(I) < XBN_$JAWS(I))[
+      OUTPUT ICM_$JAWS, I, I;
+        (//'***ERROR IN CM ',I4,' (JAWS):'/
+           'XBP(',I4,') < XBN(',I4,')'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+   ]
+   ELSEIF(XBP_$JAWS(I) - XBN_$JAWS(I) < $BDY_TOL*3 )[
+      XBP_$JAWS(I) = XBP_$JAWS(I) + $BDY_TOL*2;
+      XBN_$JAWS(I) = XBN_$JAWS(I) - $BDY_TOL*2;
+   ]
+] "end of loop over paired bars/jaws"
+
+"set absolute region number to first region in CM for next set of inputs"
+IRA = IRSTART_$JAWS; "absolute region number
+OUTPUT ; (/'  Now input data re ECUT and PCUT for each region'/
+         /' For central region which is assumed to be air'
+         /' ECUT,       PCUT,   DOSE ZONE OF AIR,   REGION TO BIT '/' : ',$);
+MINPUT ($JAWS) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+        (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA); (2F11.5,2I5);
+IF (ECUT(IRA) <  ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA) <  PCUTIN) PCUT(IRA)=PCUTIN;
+"get material for each bar and determine material number for these regions
+MED(IRA) = AIR_INDEX; " medium of air
+"
+"now get info on each set of jaws"
+DO IR_$JAWS = 2, N_$JAWS-1, 3[
+   IRA = IRSTART_$JAWS  + IR_$JAWS - 1;"this is absolute region number"
+   "central region air, so pick up same parameters as assigned above"
+   "this is redundant on first time thru loop"
+   ECUT(IRA-1) = ECUT(IRSTART_$JAWS);
+   PCUT(IRA-1) = PCUT(IRSTART_$JAWS);
+   DOSE_ZONE(IRA-1) = DOSE_ZONE(IRSTART_$JAWS);
+   MED(IRA-1) = AIR_INDEX; " medium of air
+   OUTPUT IR_$JAWS/3 + 1 ; (/' Paired bars/jaws no:',I3,
+         /' ECUT,        PCUT,       DOSE ZONE,    IREGION_TO_BIT '/' :',$);
+  ;MINPUT ($JAWS) ECUT(IRA), PCUT(IRA), DOSE_ZONE(IRA),
+          IREGION_TO_BIT(IRA); (2F15.0,2I5);
+  ;OUTPUT ECUT(IRA),PCUT(IRA), DOSE_ZONE(IRA),
+          IREGION_TO_BIT(IRA); (2F11.5,2I5);
+   IREGION_TO_BIT(IRA -1) = IREGION_TO_BIT(IRSTART_$JAWS);
+   IF (ECUT(IRA) <  ECUTIN) ECUT(IRA)=ECUTIN;
+   IF (PCUT(IRA) <  PCUTIN) PCUT(IRA)=PCUTIN;
+   "get material for each bar and determine material number for these regions
+   OUTPUT;(' Medium in this region',$);
+   $MED_INPUT($JAWS); " inputs character array MED_IN from unit 5, loops
+      "through array MEDIA(24,I) to check if medium was previously input.
+      "If so, sets MED_INDEX to index of previous medium.  If not,
+      "increments NMED and sets MED_INDEX to NMED.
+      "error transfers to :ERROR_$JAWS:
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+   "both parts of jaw are same material so transfer parameters"
+   ECUT(IRA+1) = ECUT(IRA);
+   PCUT(IRA+1) = PCUT(IRA);
+   DOSE_ZONE(IRA+1) = DOSE_ZONE(IRA);
+   IREGION_TO_BIT(IRA +1) = IREGION_TO_BIT(IRA);
+   MED(IRA+1) = MED(IRA); "
+] "end of loop over IR_$JAWS"
+;
+"  set up region numbers
+"  =====================
+"
+"  CM has 4xISCM_MAX_$JAWS regions, series of paired bars/jaws surrounded
+"  by an air region.  paired bars are numbered in sequence starting from the
+"  furthest upstream.
+"
+IREND_$JAWS = IRSTART_$JAWS + N_$JAWS-1;  "Index of last region
+NREG = NREG+N_$JAWS;           "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$JAWS+1) = IREND_$JAWS+1;
+]
+ELSE [
+      OUTPUT ICM_$JAWS,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (JAWS):'/
+         I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$JAWS)=IERR_GEOM(ICM_$JAWS)+1;
+]
+"
+"  parameter definition
+"  ====================
+"
+"geometrical coordinates
+"
+"
+DO I = 1, ISCM_MAX_$JAWS[
+   APO_$JAWS(I) = (XBP_$JAWS(I)-XFP_$JAWS(I))/
+                           (ZMAX_$JAWS(I) - ZMIN_$JAWS(I));
+   ANE_$JAWS(I) = (XBN_$JAWS(I)-XFN_$JAWS(I))/
+                           (ZMAX_$JAWS(I) - ZMIN_$JAWS(I));
+   BPO_$JAWS(I) =  XFP_$JAWS(I) - ZMIN_$JAWS(I)*APO_$JAWS(I);
+   BNE_$JAWS(I) =  XFN_$JAWS(I) - ZMIN_$JAWS(I)*ANE_$JAWS(I);
+   COSP_$JAWS(I)= (ZMAX_$JAWS(I) - ZMIN_$JAWS(I))/
+                 SQRT( (ZMAX_$JAWS(I) - ZMIN_$JAWS(I))**2
+                      +( XBP_$JAWS(I) - XFP_$JAWS(I) )**2 );
+   COSN_$JAWS(I)= (ZMAX_$JAWS(I) - ZMIN_$JAWS(I))/
+                 SQRT( (ZMAX_$JAWS(I) - ZMIN_$JAWS(I))**2
+                       + (XBN_$JAWS(I) - XFN_$JAWS(I))**2 );
+]
+
+BDYTOL = $BDY_TOL;
+DO I = 1,ISCM_MAX_$JAWS ["loop through bars"
+   XFPT_$JAWS(I,1)  = XFP_$JAWS(I) + BDYTOL;
+   XFPT_$JAWS(I,2)  = XFP_$JAWS(I) - BDYTOL;
+   XBPT_$JAWS(I,1)  = XBP_$JAWS(I) + BDYTOL;
+   XBPT_$JAWS(I,2)  = XBP_$JAWS(I) - BDYTOL;
+   XFNT_$JAWS(I,1)  = XFN_$JAWS(I) - BDYTOL;
+   XFNT_$JAWS(I,2)  = XFN_$JAWS(I) + BDYTOL;
+   XBNT_$JAWS(I,1)  = XBN_$JAWS(I) - BDYTOL;
+   XBNT_$JAWS(I,2)  = XBN_$JAWS(I) + BDYTOL;
+   BPOT_$JAWS(I,1) =  BPO_$JAWS(I) + BDYTOL;
+   BPOT_$JAWS(I,2) =  BPO_$JAWS(I) - BDYTOL;
+   BNET_$JAWS(I,1) =  BNE_$JAWS(I) - BDYTOL;
+   BNET_$JAWS(I,2) =  BNE_$JAWS(I) + BDYTOL;
+] "end of loop over I"
+"
+
+"establish start of next CM
+Z_min_CM(ICM_$JAWS+1) = ZMAX_$JAWS(ISCM_MAX_$JAWS);
+"
+"
+ZFRONT_$JAWS = Z_min_CM(ICM_$JAWS);
+ZBACK_$JAWS = Z_min_CM(ICM_$JAWS+1);
+"
+"  establish CM boundary is a square
+"  =================================
+"
+RMAX_CM_FLAG(ICM_$JAWS) = 2; "=> put a square boundary about CM
+
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$JAWS-1; "absolute region number
+DO IR_$JAWS=1,N_$JAWS ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones and latch
+   "
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones"
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT);
+
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+] "end of loop over IR_$JAWS
+E_min_out(ICM_$JAWS)=ECUT(IRA); "Minimum energy on exit from CM
+
+
+"   return from INPUT_JAWS
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$JAWS:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$JAWS:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$JAWS"
+%E   "Start of subroutine ISUMRY_$JAWS (Rev 1.8)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_JAWS
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$JAWS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/
+   BOUNDS,CMs,CM_$JAWS,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_JAWS
+"T>**********************************
+"T>
+
+INTEGER
+   ICOLOUR,   "T>colour of CM for EGS_Windows
+   IRA,       "T>absolute region number
+   I,J;       "T>DO loop index
+
+$REAL
+   XYMAX,     "T>X or Y boundary
+   VOLAIR_$JAWS,  "T>air volume
+   VOL_$JAWS($MAX_N_$JAWS); "T>volume of air between bar
+CHARACTER*1 XY_CHOICE(1);
+
+"   Mass of dose zone
+"   =================
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$JAWS.
+"
+IRA = IRSTART_$JAWS-2; "absolute region number
+VOLAIR_$JAWS=(ZBACK_$JAWS-ZFRONT_$JAWS)*
+            4.*RMAX_CM2(ICM_$JAWS);"air volume"
+DO I = 1,ISCM_MAX_$JAWS [
+  IRA=IRA+3;
+   VOL_$JAWS(I)=(ZMAX_$JAWS(I)-ZMIN_$JAWS(I))*
+               (4.*RMAX_CM2(ICM_$JAWS)-
+               RMAX_CM(ICM_$JAWS)*
+               ABS(XFP_$JAWS(I)+
+               XBP_$JAWS(I)-XFN_$JAWS(I)-
+               XBN_$JAWS(I)));
+   VOLAIR_$JAWS=VOLAIR_$JAWS-VOL_$JAWS(I);
+   IF(DOSE_ZONE(IRA)~=0) [ "this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+     AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOL_$JAWS(I);
+   ]
+] "end of loop over IR_$JAWS"
+IRA = IRSTART_$JAWS; "absolute region number
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOLAIR_$JAWS;
+]
+
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$JAWS,TITLE_$JAWS;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$JAWS),RMAX_CM(ICM_$JAWS);
+WRITE(IOUTLIST,122);
+DO I=1, ISCM_MAX_$JAWS[
+   IF(I=1)[
+        WRITE(IOUTLIST,124)'airgap',Z_min_CM(ICM_$JAWS),ZMIN_$JAWS(1)-
+                           Z_min_CM(ICM_$JAWS),'NA','NA','NA','NA',
+                           'NA';
+   ]
+   ELSE[
+        WRITE(IOUTLIST,124)'airgap',ZMAX_$JAWS(I-1),ZMIN_$JAWS(I)-
+                           ZMAX_$JAWS(I-1),'NA','NA','NA','NA',
+                           'NA';
+   ]
+   IF(IXY_CHOICE_$JAWS(I) = 0)[XY_CHOICE(1) ='x';]
+   ELSE[XY_CHOICE(1) ='y';]
+   WRITE(IOUTLIST,123)I,ZMIN_$JAWS(I),ZMAX_$JAWS(I)-
+                      ZMIN_$JAWS(I),XY_CHOICE(1),
+                      XFP_$JAWS(I),XBP_$JAWS(I),
+                      XFN_$JAWS(I),XBN_$JAWS(I);
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$JAWS-1;
+DO I = 1, ISCM_MAX_$JAWS [
+   IRA = IRSTART_$JAWS + 3*(I-1);
+   IF(MED(IRA)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+1,I,'airgap',
+        ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+        WRITE(IOUTLIST,141)'above &';
+        WRITE(IOUTLIST,141)'centre';
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+1,I,'airgap',
+        ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+        WRITE(IOUTLIST,141)'above &';
+        WRITE(IOUTLIST,141)'centre';
+   ]
+   IF(MED(IRA+1)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+2,I,'+ve jaw',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),
+         IREGION_TO_BIT(IRA+1),(MEDIA(J,MED(IRA+1)),J=1,9);
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+2,I,'+ve jaw',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),
+         IREGION_TO_BIT(IRA+1),'V','a','c','u','u','m';
+   ]
+   IF(MED(IRA+2)~=0)[
+      WRITE(IOUTLIST,140) 3*(I-1)+3,I,'-ve jaw',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),
+         IREGION_TO_BIT(IRA+2),(MEDIA(J,MED(IRA+2)),J=1,9);
+   ]
+   ELSE[
+      WRITE(IOUTLIST,140) 3*(I-1)+3,I,'-ve jaw',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),
+         IREGION_TO_BIT(IRA+2),'V','a','c','u','u','m';
+   ]
+   WRITE(IOUTLIST,141)' ';
+]
+110 FORMAT(///1X,79('-')/
+'  Component module',I3,' is JAWS (Rev 1.8)'
+           /1X,79('-')
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$JAWS geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm');
+122 FORMAT(/T2,
+'jaw #    Z front    thickness    x or y               coordinates',
+/T2,
+'          face                   jaws        FP       BP       FN',
+'      BN',
+/T2,
+'          (cm)        (cm)                                (cm)');
+123 FORMAT(T2,I3,F12.3,F11.3,9X,A1,F12.3,F9.3,F9.3,F9.3);
+124 FORMAT(T2,A6,F9.3,F11.3,8X,A2,A11,A9,A9,A8);
+130 FORMAT(/T2,'$JAWS region parameters:',
+           /T2,'---------------------------',
+           /T2,'local jaw #   location  electron  photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region                   cutoff   cutoff',
+           '   level     max    zone  set'
+           /T2,'                          (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,I7,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+141 FORMAT(15X,A7);
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;$SELECT-COLOUR; "Macro for selecting ICOLOUR = 1, 2, or 3, colour of CM"
+   DO I =1,ISCM_MAX_$JAWS["Loop over local region number"
+      XYMAX = RMAX_CM(ICM_$JAWS);
+         IF(IXY_CHOICE_$JAWS(I) = 0)[
+            WRITE(IOUTGEOM,200)
+               ICOLOUR,'COLX',XYMAX,XFP_$JAWS(I),XBP_$JAWS(I),XYMAX,XYMAX,
+               ZMIN_$JAWS(I),ZMAX_$JAWS(I);
+            WRITE(IOUTGEOM,200)
+              ICOLOUR,'COLX',XFN_$JAWS(I),-XYMAX,-XYMAX,XBN_$JAWS(I),
+              XYMAX, ZMIN_$JAWS(I),ZMAX_$JAWS(I);
+         ]
+         ELSEIF(IXY_CHOICE_$JAWS(I) = 1)[
+            J = ICOLOUR-1;
+            IF(J < 1)[J = 4;]
+            WRITE(IOUTGEOM,200)
+               J,'COLY',XYMAX,XFP_$JAWS(I),XBP_$JAWS(I),XYMAX,XYMAX,
+               ZMIN_$JAWS(I),ZMAX_$JAWS(I);
+            WRITE(IOUTGEOM,200)
+               J,'COLY',XFN_$JAWS(I),-XYMAX,-XYMAX,XBN_$JAWS(I),XYMAX,
+               ZMIN_$JAWS(I),ZMAX_$JAWS(I);
+         ]
+   ]
+] "End of graphics output"
+
+200 FORMAT(' ',I1,A4,10(F7.2,','));
+
+"   end of ISUMRY_JAWS
+"   ===================
+"
+RETURN;
+END;  "End of subroutine ISUMRY_$JAWS"
+
+%E   "Start of subroutine HOWNEAR_$JAWS (Rev 1.8)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_JAWS
+"                          ***********************
+"
+" Returns min. distance to nearest region boundary
+" Replaces the old HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$JAWS(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$JAWS,STACK/;
+
+$REAL DIST; "T> min. distance to nearest boundary
+
+IR_$JAWS = IR(NP)-IRSTART_$JAWS+1;
+ISCM_$JAWS = (IR_$JAWS-1)/3 + 1;
+XY_$JAWS = X(NP);
+UV_$JAWS = U(NP);
+IF(IXY_CHOICE_$JAWS(ISCM_$JAWS) = 1)[
+   XY_$JAWS = Y(NP);
+   UV_$JAWS = V(NP);
+]
+IF(IR_$JAWS = 3*ISCM_$JAWS-1) [ "particle in positive bars"
+   DIST = COSP_$JAWS(ISCM_$JAWS)
+          *(XY_$JAWS-APO_$JAWS(ISCM_$JAWS)*Z(NP)
+           -BPOT_$JAWS(ISCM_$JAWS,2));
+   DIST = MIN(DIST,
+              ZMAX_$JAWS(ISCM_$JAWS)-Z(NP),
+              Z(NP) - ZMIN_$JAWS(ISCM_$JAWS));
+]
+ELSEIF(IR_$JAWS = 3*ISCM_$JAWS) [ "particle in negative bars"
+   DIST = COSN_$JAWS(ISCM_$JAWS)
+          *(ANE_$JAWS(ISCM_$JAWS)*Z(NP)
+          +BNET_$JAWS(ISCM_$JAWS,2)-XY_$JAWS) ;
+   DIST = MIN(DIST,
+              ZMAX_$JAWS(ISCM_$JAWS) - Z(NP),
+              Z(NP) - ZMIN_$JAWS(ISCM_$JAWS) );
+]
+ELSE[ "particle in air"
+   DIST = 0.0;
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$JAWS (Rev 1.8)"
+"*******************************************************************************
+"End of JAWS_cm.mortran (Rev 1.8)"

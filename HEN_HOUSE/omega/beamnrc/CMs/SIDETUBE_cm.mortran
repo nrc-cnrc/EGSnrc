@@ -1,0 +1,1136 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: cylinders perpendicular to beam           "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ************            ""toc:
+"                             *          *            ""toc:
+"                             * SIDETUBE *            ""toc:
+"                             *          *            ""toc:
+"                             ************            ""toc:
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  An arbitrary number of coaxial cylinders
+"   perpendicular to the beam direction.  Each cylinder has arbitrary outer
+"   radius and medium.  Excellent for simulating Co and Cs sources using
+"   ISOURCE=3.
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"I>
+"I> Geometry of SIDETUBE:
+"I> ********************
+"I>                     |
+"I>                     |  beam direction (central axis)
+"I>                     |
+"I>                    \|/
+"I>
+"I>       --------------------------------------------------------------------
+"I>           Air gap IR = N_SIDETUBE+2 if exist
+"I>       --------------------------------------------------------------------
+"I>             -------------------
+"I>            | IR = N_$SIDETUBE  |
+"I>            |-------------------|
+"I>            |         .         |
+"I>            |         .         |
+"I>            |         .         |     IR = N_$SIDETUBE + 1
+"I>            |-------------------|
+"I>            |    IR = 2         |
+"I>            |-------------------|
+"I>            |    IR = 1         |
+"I>         - - - - - - - - - - - - - - - - center of coaxial cylinders
+"I>            |                   |
+"I>            |-------------------|
+"I>            |                   |
+"I>            |-------------------|
+"I>            |         .         |
+"I>            |         .         |
+"I>            |         .         |
+"I>            |-------------------|
+"I>            |                   |
+"I>             -------------------
+"I>
+"I>      ----------------------------------------------------------------------
+;
+"I>
+"I>  IR is the region number within the CM.  There are N_$SIDETUBE+2
+"I>  local regions shown above.
+"I>
+"I>            ------------------------------------------------------
+"I>            |          Region              |    Description      |
+"I>            |------------------------------|---------------------|
+"I>            |  absolute      | local       |                     |
+"I>            |----------------|-------------|                     |
+"I>            |                |             |                     |
+"I>            |IRSTART_SIDETUBE| IR_SIDETUBE |  as shown in above  |
+"I>            |  +IR_SIDETUBE-1|             |                     |
+"I>            ------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$SIDETUBE
+"                      ISUMRY_$SIDETUBE
+"                      HOWFAR_$SIDETUBE
+"                      WHERE_AM_I_$SIDETUBE
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+;
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5          ""toc:
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$SIDETUBE
+"I>  ******************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$SIDETUBE) (F10.0): Half-width of outer boundary
+"I>                                      of CM (cm).
+"I>
+"I>   1  TITLE_$SIDETUBE (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$SIDETUBE (F10.0):  Distance from front of CM to reference plane
+"I>                               (not including air gap) in cm.
+"I>
+"I>   3  ZTHICK_$SIDETUBE (F10.0): Thickness of the CM in the Z-direction
+"I>                                (not including airgap) in cm
+"I>
+"I>   4  ZCYL_$SIDETUBE (F10.0):  Z position of axis of coaxial cylinders (cm)
+"I>
+"I>   5  XMIN_$SIDETUBE,XMAX_$SIDETUBE (2F10.0):
+"I>
+"I>          XMIN_$SIDETUBE: Lower X edge of cylinders (cm).
+"I>          XMAX_$SIDETUBE: Upper X edge of cylinders (cm).
+"I>
+"I>   6  N_$SIDETUBE (I5): Number of coaxial cylinders.
+"I>
+"I>   Repeat 7 for I=1,N_$SIDETUBE all on one line in order of increasing
+"I>   radius.
+"I>
+"I>   7  R_$SIDETUBE(I) (F15.0): Outer radius of cylinder I (cm).
+"I>
+"I>   Repeat 8-9 for I=1,N_$SIDETUBE+1.  When I=N_$SIDETUBE+1 you
+"I>   are specifying parameters for the region containing the concentric
+"I>   cylinders.
+"I>
+"I>   8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT  (2F15.0,2I5):
+"I>
+"I>          ECUT, PCUT:  Cutoff energies for electrons and photons
+"I>           DOSE_ZONE:  Dose scoring flag
+"I>      IREGION_TO_BIT:  Bit setting for the region
+"I>
+"I>   9  MED_IN (24A1):  Medium of region
+"I>                      used to set MED_INDEX.
+;
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example is a model of a cesium source parallel to
+"I>   the X-axis.  The source has radius 0.9cm and is made of cesium
+"I>   chloride, CSCL700.  This source cylinder is contained within an
+"I>   aluminum (AL700ICRU) cylinder of outer radius 1.25cm.  The
+"I>   aluminum-cesium chloride assembly is contained in a stainless steel
+"I>   (STEEL700ICRU) cylinder of inner radius 2.25cm and outer radius 2.4cm.
+"I>   Note that the airgap between the aluminum and stainless steel is
+"I>   modelled as a cylinder of air having outside radius 2.25cm.  The
+"I>   cylindrical source assembly extends from X=-1.25cm to X=1.25cm.  The
+"I>   volume of air in which the source assembly is located starts at
+"I>   ZMIN=-2.4cm and has a thickness, ZTHICK=4.8cm, allowing it to just
+"I>   contain the source assembly in the Z-direction.  Setting ZMIN=-2.4cm
+"I>   allows the cylinders comprising the source assembly to be centered at
+"I>   the reference plane (ZCYL=0).
+"I>
+"I>   In this example, ECUT, and PCUT in all regions are set to 0.7MeV
+"I>   and 0.01MeV respectively.  The cesium source has dose zone 1; the
+"I>   aluminum surrounding it has dose zone 2; the air between the aluminum
+"I>   and the stainless steel outer tube has dose zone 3; and the stainless
+"I>   steel tube has dose zone 4.
+"I>
+"I>   10.0,       Outer boundary
+"I>   100Ci Cs source in holder + crude model of SS tube
+"I>   -2.4,                ZMIN
+"I>   4.8,                 ZTHICK
+"I>   0.,                  ZCYL
+"I>   -1.125,1.125,        XMIN,XMAX
+"I>   4,                   Number of cylinders
+"I>   0.9,1.25,2.25,2.4,   Radii of cylinders
+"I>   0.700,0.01,0,1,      ECUT, PCUT,...,MED of 1st cylinder
+"I>   CSCL700
+"I>   0.700,0.01,0,2,      ECUT, PCUT,...,MED of 2nd cylinder
+"I>   AL700ICRU
+"I>   0.700,0.01,0,3,      ECUT, PCUT,...,MED of 3rd cylinder
+"I>   AIR700ICRU
+"I>   0.700,0.01,0,4,      ECUT, PCUT,...,MED of 4th cylinder
+"I>   STEEL700ICRU
+"I>   0.700,0.01,0,0,      ECUT, PCUT,...,MED surrounding cylinders
+"I>   AIR700ICRU
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+
+%E "Start of HOWFAR_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_SIDETUBE
+"                          ***********************
+"
+" HOWFAR routine for concentric cylindrical media
+"
+" Determine if current region number is within component module SIDETUBE,
+" and if so evaluate DIST, distance to region boundary along current
+" trajectory.  USTEP must not exceed DIST.
+"
+"   There are N_SIDETUBE+1 local regions + an air gap (if present):
+"
+"     local               absolute                       description
+"  ----------  -------------------------------------   -----------------------
+"  IR_SIDETUBE  IR_start_CM(ICM_SIDETUBE)+IR_SIDETUBE-1  excluding front air gap
+"  ----------  -------------------------------------   -----------------------
+"   Geometrical co-ordinates, as set in INPUT_SIDETUBE are:
+"
+"   ZMIN_SIDETUBE       front of sidetube (excluding airgap)
+"   ZMAX_SIDETUBE       back of sidetube
+"
+"******************************************************************************
+;SUBROUTINE HOWFAR_$SIDETUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$SIDETUBE,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_SIDETUBE
+"T>**********************************
+"T>
+INTEGER
+   IWATCH,         "T>the iwatch variable
+   IRL,            "T>local region number (absolute), required by HOWNEAR macro
+   IRNEW_$SIDETUBE,"T>tentative new region number within CM (absolute)
+   I,              "T>tmp loop index
+   IHIT;           "T>indicates whether particle hits cylinder or not
+
+$REAL
+   DIST,           "T>dist to region boundary along current particle trajectory
+   DIST1,          "T>temp dist variable
+   BDYTOL;         "T>boundary tolerance
+
+$REAL
+   A_$SIDETUBE,    "T>temp variable used for distance calc"
+   B_$SIDETUBE,    "T>              "
+   B2_$SIDETUBE,   "T>              "
+   C_$SIDETUBE,    "T>              "
+   COUT_$SIDETUBE, "T>              "
+   RAD_$SIDETUBE;  "T>              "
+;
+" Determine local region number
+" *****************************
+
+IRL = IR(NP); "local region number (absolute)
+BDYTOL=$BDY_TOL; "set the boundary tolerance"
+
+"set DNEAR and define IR_$SIDETUBE"
+;$SIDETUBE_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+IF(IR_$SIDETUBE = N_$SIDETUBE + 2)[" inside front air gap"
+  IF(W(NP)>0.)[
+    DIST=(ZMIN_$SIDETUBE - Z(NP))/W(NP);
+    IRNEW_$SIDETUBE= IRSTART_$SIDETUBE+N_$SIDETUBE;
+  ]
+  ELSEIF(W(NP) < 0.)[
+    DIST=(Z_min_CM(ICM_$SIDETUBE) - Z(NP))/W(NP);
+    IF(DIST<=0.)[DIST=1.E-16;] "ensures call to ausgab on leaving CM"
+    IRNEW_$SIDETUBE = 1;
+  ]
+  IF(DIST <= USTEP)[
+    USTEP = DIST;
+    IF(IRNEW_$SIDETUBE = 1)[
+       CALL WHERE_AM_I(ICM_$SIDETUBE,-1);
+    ]
+    ELSE[
+       IRNEW =  IRNEW_$SIDETUBE;
+    ]
+  ]
+]
+
+ELSEIF(IR_$SIDETUBE <= N_$SIDETUBE) [   "inside tube"
+  ;$SIDETUBE_IN_HIT(DIST,IR_$SIDETUBE);
+  IRNEW_$SIDETUBE=IRSTART_$SIDETUBE + IR_$SIDETUBE;
+  IF(IR_$SIDETUBE > 1)[
+      ;$SIDETUBE_OUT_HIT(IHIT,DIST1,IR_$SIDETUBE-1);
+      IF(IHIT = 1 & DIST1 < DIST)[
+        IRNEW_$SIDETUBE=IRSTART_$SIDETUBE + IR_$SIDETUBE - 2;
+        DIST=DIST1;
+      ]
+  ]
+  IF(X(NP)+U(NP)*DIST < XMIN_$SIDETUBE - BDYTOL)[
+        DIST= (XMIN_$SIDETUBE - X(NP) - BDYTOL)/U(NP);
+        IRNEW_$SIDETUBE=IRSTART_$SIDETUBE+N_$SIDETUBE;
+  ]
+  ELSEIF(X(NP)+U(NP)*DIST > XMAX_$SIDETUBE + BDYTOL)[
+        DIST = (XMAX_$SIDETUBE - X(NP) + BDYTOL)/U(NP);
+        IRNEW_$SIDETUBE=IRSTART_$SIDETUBE+N_$SIDETUBE;
+  ]
+  IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$SIDETUBE; "new region number"
+  ]
+]
+
+ELSEIF(IR_$SIDETUBE = N_$SIDETUBE + 1)[ "outside tube"
+  IF(W(NP) > 0.)[
+    DIST=(ZMAX_$SIDETUBE + BDYTOL - Z(NP))/W(NP);
+    IF(DIST<=0.)[DIST=1.E-16;]
+    IRNEW_$SIDETUBE= 1;
+  ]
+  ELSEIF(W(NP) < 0.)[
+    DIST=(ZMIN_$SIDETUBE - BDYTOL - Z(NP))/W(NP);
+    IF(N_GAP_$SIDETUBE = 1)["go into airgap region"
+      IRNEW_$SIDETUBE = IRSTART_$SIDETUBE+N_$SIDETUBE +1;
+    ]
+    ELSE["exit CM"
+      IF(DIST<=0.)[DIST=1.E-16;]
+      IRNEW_$SIDETUBE= 1;
+    ]
+  ]
+  ELSE[
+    DIST=1E30;
+  ]
+  IF(X(NP) < XMIN_$SIDETUBE & X(NP)+U(NP)*DIST > XMIN_$SIDETUBE)[
+      ;$SIDETUBE_END_HIT(IHIT,DIST1,XMIN_$SIDETUBE+BDYTOL);
+      IF(IHIT =1)[
+        DIST=DIST1;
+        DO I = 1, N_$SIDETUBE[
+          IF(SQRT((Y(NP)+V(NP)*DIST)**2+((Z(NP)-ZCYL_$SIDETUBE)+
+             W(NP)*DIST)**2) <= R_$SIDETUBE(I))[
+            IRNEW_$SIDETUBE= IRSTART_$SIDETUBE + I - 1;
+            EXIT;
+          ]
+        ]
+      ]
+      ELSEIF((XMIN_$SIDETUBE + BDYTOL - X(NP))/U(NP)<DIST)[
+        DIST=(XMIN_$SIDETUBE + BDYTOL - X(NP))/U(NP);
+        IRNEW_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE;
+      ]
+  ]
+  ELSEIF(X(NP) > XMAX_$SIDETUBE & X(NP)+ U(NP)*DIST < XMAX_$SIDETUBE)[
+      ;$SIDETUBE_END_HIT(IHIT,DIST1,XMAX_$SIDETUBE-BDYTOL);
+      IF(IHIT =1)[
+        DIST=DIST1;
+        DO I = 1, N_$SIDETUBE[
+          IF(SQRT((Y(NP)+V(NP)*DIST)**2+((Z(NP)-ZCYL_$SIDETUBE)+
+             W(NP)*DIST)**2) <= R_$SIDETUBE(I))[
+            IRNEW_$SIDETUBE= IRSTART_$SIDETUBE + I - 1;
+            EXIT;
+          ]
+        ]
+      ]
+      ELSEIF((XMAX_$SIDETUBE - BDYTOL - X(NP))/U(NP)<DIST)[
+        DIST=(XMAX_$SIDETUBE - BDYTOL - X(NP))/U(NP);
+        IRNEW_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE;
+      ]
+  ]
+  ELSEIF(X(NP) > XMIN_$SIDETUBE & X(NP) < XMAX_$SIDETUBE)[
+         ;$SIDETUBE_OUT_HIT(IHIT,DIST1,N_$SIDETUBE);
+         IF(IHIT = 1 & DIST1 < DIST & X(NP)+U(NP)*DIST1 < XMAX_$SIDETUBE &
+            X(NP)+U(NP)*DIST1 > XMIN_$SIDETUBE)[
+           DIST=DIST1;
+           IRNEW_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE - 1;
+         ]
+         ELSEIF(X(NP)+U(NP)*DIST < XMIN_$SIDETUBE &
+                (XMIN_$SIDETUBE - BDYTOL - X(NP))/U(NP)<DIST)[
+           DIST=(XMIN_$SIDETUBE - BDYTOL - X(NP))/U(NP);
+           IRNEW_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE;
+         ]
+         ELSEIF(X(NP)+U(NP)*DIST > XMAX_$SIDETUBE &
+                 (XMAX_$SIDETUBE + BDYTOL - X(NP))/U(NP)<DIST)[
+           DIST=(XMAX_$SIDETUBE + BDYTOL - X(NP))/U(NP);
+           IRNEW_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE;
+         ]
+  ]
+  IF(DIST <= USTEP)[
+    USTEP=DIST;
+    IF(IRNEW_$SIDETUBE = 1)[
+      IF(W(NP) > 0.)[
+        CALL WHERE_AM_I(ICM_$SIDETUBE,1);
+      ]
+      ELSEIF(W(NP)<0.)[
+        CALL WHERE_AM_I(ICM_$SIDETUBE,-1);
+      ]
+    ]
+    ELSE[
+      IRNEW=IRNEW_$SIDETUBE;
+    ]
+  ]
+]
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$SIDETUBE+1,IR(NP),ICM_$SIDETUBE,
+          IR_start_CM(ICM_$SIDETUBE);
+      (//' ************'//' HOWFAR_$SIDETUBE error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN;
+END; "End of subroutine HOWFAR_$SIDETUBE"
+
+%E "Start of WHERE_AM_I_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_SIDETUBE
+"                          ***************************
+"
+" WHERE_AM_I routine for concentric cylinders
+"
+" WHERE_AM_I_$SIDETUBE determines the new region # when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$SIDETUBE subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$SIDETUBE from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+
+;SUBROUTINE WHERE_AM_I_$SIDETUBE(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CM_$SIDETUBE,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_SIDETUBE
+"T>**** **********************************
+"T>
+INTEGER IDIR;      "T>direction of particle, +1=forward, -1=backward
+INTEGER I;         "T>loop index
+
+IF (IDIR =1)["particle entering this CM through front face
+   IF (N_GAP_$SIDETUBE=1) ["air gap"
+     IRNEW = IRSTART_$SIDETUBE + N_$SIDETUBE +1;
+   ]
+   ELSE[
+     IRNEW = IRSTART_$SIDETUBE + N_$SIDETUBE;
+   ]
+]
+ELSEIF (IDIR=-1) ["particle entering this CM through back face
+     IRNEW = IRSTART_$SIDETUBE + N_$SIDETUBE;
+]
+ELSEIF (IDIR = 2)["have a source 3"
+   IF(Z(NP) < ZMIN_$SIDETUBE)["in air gap region"
+      IRNEW = IRSTART_$SIDETUBE + N_$SIDETUBE +1;
+   ]
+   ELSEIF(X(NP) > XMAX_$SIDETUBE | X(NP) < XMIN_$SIDETUBE |
+      SQRT(Y(NP)**2+(Z(NP)-ZCYL_$SIDETUBE)**2) >
+            R_$SIDETUBE(N_$SIDETUBE))[
+     IRNEW = IRSTART_$SIDETUBE + N_$SIDETUBE;
+   ]
+   ELSE[
+     DO I=1,N_$SIDETUBE[
+        IF(SQRT(Y(NP)**2+(Z(NP)-ZCYL_$SIDETUBE)**2) <=
+            R_$SIDETUBE(I))[
+          IRNEW=IRSTART_$SIDETUBE + I - 1;
+          EXIT;
+        ]
+     ]
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$SIDETUBE"
+
+%E "Start of INPUT_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_SIDETUBE
+"                           **********************
+"
+"  A CM input subroutine for a series of 2 or more semi-infinite slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$SIDETUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$SIDETUBE,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_SIDETUBE
+"T>*********************************
+"T>
+
+$REAL ZTHICK_$SIDETUBE,     "T>thickness of the CM (excl airgap)"
+      AIRGAPMIN_$SIDETUBE;  "T>minimum air gap in front and back of CM
+
+INTEGER I,II,J,             "T>DO loop indeces
+        IRA,                "T>Absolute region number
+        MED_FLAG,           "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX;          "T>medium index, set after med sort by $MED_INPUT
+
+"  initialize parameters
+"  =====================
+"
+ICM_$SIDETUBE = ICM;      "CM index for this component module
+IRSTART_$SIDETUBE = IR_start_CM(ICM_$SIDETUBE);
+            "Index of first region in this CM,
+                "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$SIDETUBE) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$SIDETUBE = 0.1; "set a minimum 0.1 cm air gap at front of CM
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;
+(/' Next component is a set of concentric cylinders || to the X axis');
+OUTPUT;(/' $SIDETUBE (SIDETUBE Rev 1.5)');
+IF(ICM_$SIDETUBE = 1)[
+   OUTPUT Z_min_CM(1);
+   (' This is the first component and starts at Z=',F11.4,' cm');
+]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$SIDETUBE);
+    (' Previous CM ends at:',F12.5,' cm'/);
+]
+OUTPUT; (' TITLE: ',$);
+;MINPUT ($SIDETUBE) TITLE_$SIDETUBE;(60A1);
+                       ";MINPUT is a replacement macro with EOF and
+                       "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$SIDETUBE;(' ',60A1);
+                        "OUTPUT is a replacement macro which writes to
+                        "unit 5.  Used here for echo of user input
+"
+" get distance from reference plane, z=0"
+"   =============================
+OUTPUT; (' Z at which SIDETUBE starts in cm (excluding airgap) ',$);
+;MINPUT ($SIDETUBE) ZMIN_$SIDETUBE;(F10.0);
+OUTPUT ZMIN_$SIDETUBE;(F15.5);
+IF(Z_min_CM(ICM_$SIDETUBE)>ZMIN_$SIDETUBE)[
+   IF(ICM_$SIDETUBE=1)[
+      OUTPUT ICM_$SIDETUBE, ZMIN_$SIDETUBE,Z_min_CM(ICM_$SIDETUBE);
+       (//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,100)ICM_$SIDETUBE, ZMIN_$SIDETUBE,
+          Z_min_CM(ICM_$SIDETUBE);
+     100 FORMAT(//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      Z_min_CM(ICM_$SIDETUBE)=ZMIN_$SIDETUBE;
+   ]
+   ELSE[
+      OUTPUT ICM_$SIDETUBE;
+        (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+           ' Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+   ]
+]
+
+OUTPUT; (/' Thickness of SIDETUBE (cm) ',$);
+;MINPUT ($SIDETUBE) ZTHICK_$SIDETUBE;(F10.0);
+OUTPUT ZTHICK_$SIDETUBE;(F15.5);
+IF(ZTHICK_$SIDETUBE < 0.0)[
+      OUTPUT ICM_$SIDETUBE;
+          (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+             ' ZTHICK < 0.0'//);
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+
+OUTPUT;(/' Z of axis of coaxial cylinders:',$);
+;MINPUT ($SIDETUBE) ZCYL_$SIDETUBE;(F10.0);
+OUTPUT ZCYL_$SIDETUBE;(F15.5);
+IF(ZCYL_$SIDETUBE < ZMIN_$SIDETUBE |
+   ZCYL_$SIDETUBE > ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE)[
+   OUTPUT ICM_$SIDETUBE;
+         (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+            ' ZCYL IS OUTSIDE OF THE CM '//);
+   IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+
+OUTPUT;(/' Lower, upper X ends of cylinders:',$);
+;MINPUT ($SIDETUBE) XMIN_$SIDETUBE,XMAX_$SIDETUBE;(2F10.0);
+OUTPUT XMIN_$SIDETUBE,XMAX_$SIDETUBE;(2F15.5);
+IF(XMAX_$SIDETUBE > RMAX_CM(ICM_$SIDETUBE))[
+        OUTPUT ICM_$SIDETUBE,RMAX_CM(ICM_$SIDETUBE),XMAX_$SIDETUBE;
+          (//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' XMAX > RMAX_CM'/
+             ' XMAX reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,101)ICM_$SIDETUBE,
+          RMAX_CM(ICM_$SIDETUBE),XMAX_$SIDETUBE;
+      101 FORMAT(//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' XMAX > RMAX_CM'/
+             ' XMAX reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        XMAX_$SIDETUBE = RMAX_CM(ICM_$SIDETUBE);
+]
+IF(XMIN_$SIDETUBE < -RMAX_CM(ICM_$SIDETUBE))[
+        OUTPUT ICM_$SIDETUBE,-RMAX_CM(ICM_$SIDETUBE),XMIN_$SIDETUBE;
+          (//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' XMIN < -RMAX_CM'/
+             ' XMIN reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,102)ICM_$SIDETUBE,-RMAX_CM(ICM_$SIDETUBE),
+              XMIN_$SIDETUBE;
+       102 FORMAT(//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' XMIN < -RMAX_CM'/
+             ' XMIN reset to ',F8.5,' cm from ',F8.5,' cm'//);
+          XMIN_$SIDETUBE = -RMAX_CM(ICM_$SIDETUBE);
+]
+IF(XMIN_$SIDETUBE > XMAX_$SIDETUBE)[
+      OUTPUT ICM_$SIDETUBE;
+         (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+            ' XMAX < XMIN'//);
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+
+OUTPUT $MAX_N_$SIDETUBE;
+(/' Number of coaxial cylinders (Min 1, Max',I2,'):',$);
+;MINPUT ($SIDETUBE) N_$SIDETUBE; (I5);
+OUTPUT N_$SIDETUBE;(I5);
+IF(N_$SIDETUBE > $MAX_N_$SIDETUBE)[
+      OUTPUT ICM_$SIDETUBE,$MAX_N_$SIDETUBE;
+         (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+            ' # of cylinders  > max. allowed.'/
+            ' # of cylinders reduced to ',I4,' for now.'//);
+      N_$SIDETUBE=$MAX_N_$SIDETUBE;
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+ELSEIF(N_$SIDETUBE<1)[
+      N_$SIDETUBE=1;
+      OUTPUT ICM_$SIDETUBE;
+         (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+            ' # of cylinders < 1'/
+            ' # of cylinders set to 1 for now.'//);
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+
+OUTPUT;
+(/' Input radii of cylinders (on one line in order of increasing radius)'/
+': ',$);
+;MINPUT ($SIDETUBE) (R_$SIDETUBE(I), I=1,N_$SIDETUBE);
+        (10F15.0);
+OUTPUT (R_$SIDETUBE(I), I=1,N_$SIDETUBE);
+        (10F15.5);
+IF(R_$SIDETUBE(1) = 0.0)[R_$SIDETUBE(1) = 3*$BDY_TOL;]
+DO I=1,N_$SIDETUBE[
+  IF(ZCYL_$SIDETUBE+R_$SIDETUBE(I) > ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE |
+     ZCYL_$SIDETUBE-R_$SIDETUBE(I) < ZMIN_$SIDETUBE)[
+       OUTPUT ICM_$SIDETUBE,I,MIN(ZCYL_$SIDETUBE - ZMIN_$SIDETUBE,
+                  ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE - ZCYL_$SIDETUBE),
+              R_$SIDETUBE(I);
+          (//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' cylinder ',I4,' goes beyond top or bottom of CM'/
+             ' radius reset to ',F15.5,' cm from ',F15.5,' cm'//);
+       WRITE(IOUTLIST,103)ICM_$SIDETUBE,I,MIN(ZCYL_$SIDETUBE - ZMIN_$SIDETUBE,
+                  ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE - ZCYL_$SIDETUBE),
+              R_$SIDETUBE(I);
+       103 FORMAT(//' ***WARNING IN CM ',I4,' (SIDETUBE):'/
+             ' cylinder ',I4,' goes beyond top or bottom of CM'/
+             ' radius reset to ',F15.5,' cm from ',F15.5,' cm'//);
+        R_$SIDETUBE(I)=MIN(ZCYL_$SIDETUBE - ZMIN_$SIDETUBE,
+                  ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE - ZCYL_$SIDETUBE);
+  ]
+  ELSEIF(R_$SIDETUBE(I) < 0.0)[
+       OUTPUT ICM_$SIDETUBE,I;
+          (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+             ' RADIUS OF CYLINDER ',I4,' < 0.0'//);
+       IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+  ]
+  IF(I > 1)[
+        IF(R_$SIDETUBE(I) < R_$SIDETUBE(I-1))[
+          OUTPUT ICM_$SIDETUBE, I, I-1;
+            (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+               ' RADIUS OF CYLINDER ',I4,' < RADIUS OF CYLINDER ',I4//);
+          IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+        ]
+  ]
+]
+
+"   get ECUT, PCUT, dose scoring zone, and material in each region
+"   ===============================================================
+OUTPUT;(///' Inputs for ECUT, PCUT, dose zones, media ...');
+IRA = IRSTART_$SIDETUBE-1;
+IR_$SIDETUBE=0;
+DO II = 1, N_$SIDETUBE+1[
+   IF(II <= N_$SIDETUBE)[
+      OUTPUT II;(//' For cylinder',I5,' :');
+   ]
+   ELSE[
+      OUTPUT;(//' For region surrounding cylinders:');
+   ]
+   IR_$SIDETUBE=IR_$SIDETUBE+1;
+   IRA = IRA+1;
+   ;OUTPUT;(' ECUT, PCUT (MeV),',
+             ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT: '/,$);
+   ;MINPUT ($SIDETUBE)
+    ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+   OUTPUT;(' material ',$);
+   ;$MED_INPUT($SIDETUBE); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+]"end of loop over cylinders"
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+"
+" define the filter geometry here:
+
+ZMAX_$SIDETUBE = ZMIN_$SIDETUBE + ZTHICK_$SIDETUBE;
+
+"establish start of next CM
+"
+Z_min_CM(ICM_$SIDETUBE+1) = ZMAX_$SIDETUBE;
+
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$SIDETUBE=1) then the gap thickness
+"Z_gap_THICK(ICM_$SIDETUBE) = 0, which is used as a flag for no air gap
+
+Z_gap_THICK(ICM_$SIDETUBE) = ZMIN_$SIDETUBE - Z_min_CM(ICM_$SIDETUBE);
+IF(Z_gap_THICK(ICM_$SIDETUBE) < $MIN_GAP)[
+   ZMIN_$SIDETUBE=Z_min_CM(ICM_$SIDETUBE);
+   Z_gap_THICK(ICM_$SIDETUBE) = 0.;
+   N_GAP_$SIDETUBE = 0; "no air gap for this CM
+]
+ELSE[
+   N_GAP_$SIDETUBE = 1; "this CM has an air gap
+   IRA = IRSTART_$SIDETUBE + N_$SIDETUBE + 1; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+   ECUT(IRA) = ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_SIDETUBE+N_GAP_$SIDETUBE+1 regions
+"
+;
+IREND_$SIDETUBE = IRSTART_$SIDETUBE + N_$SIDETUBE+ N_GAP_$SIDETUBE;
+                            "Index of last region
+NREG = NREG + N_$SIDETUBE + N_GAP_$SIDETUBE + 1;
+                      "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$SIDETUBE+1) = IREND_$SIDETUBE+1;
+]
+ELSE [
+      OUTPUT ICM_$SIDETUBE,NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' (SIDETUBE):'/
+         I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$SIDETUBE)=IERR_GEOM(ICM_$SIDETUBE)+1;
+]
+
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$SIDETUBE) = 2; "put a square boundary about CM
+
+"
+"  establish dose scoring zones and latch bit setting
+"  ==================================================
+"
+IRA = IRSTART_$SIDETUBE-1; "absolute region number"
+DO IR_$SIDETUBE=1, N_$SIDETUBE+1 ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$SIDETUBE)=ECUT(IRA); "Minimum energy on exit from CM
+] "end of loop over IR_$SIDETUBE
+
+"   return from INPUT_SIDETUBE
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$SIDETUBE:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$SIDETUBE:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$SIDETUBE"
+
+%E "Start of ISUMRY_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_SIDETUBE
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$SIDETUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$SIDETUBE,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_SIDETUBE
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,       "T>colour of CM for EGS_Windows
+   IRA,           "T>absolute region number
+   I,J;           "T>DO loop indices
+
+$REAL VOLUME_$SIDETUBE($MAX_N_$SIDETUBE+1);  "T> region volume
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$SIDETUBE.
+"
+
+VOLUME_$SIDETUBE(N_$SIDETUBE + 1)=4*RMAX_CM(ICM_$SIDETUBE)**2*
+                                  (ZMAX_$SIDETUBE-ZMIN_$SIDETUBE);
+DO I = 1,N_$SIDETUBE[
+    IF(I=1)[
+       VOLUME_$SIDETUBE(I) = 3.1415926*R_$SIDETUBE(I)**2*(XMAX_$SIDETUBE -
+                             XMIN_$SIDETUBE);
+    ]
+    ELSE[
+      VOLUME_$SIDETUBE(I) = 3.1415926*(R_$SIDETUBE(I)**2 -
+                            R_$SIDETUBE(I -1)**2)*(XMAX_$SIDETUBE -
+                            XMIN_$SIDETUBE);
+    ]
+    VOLUME_$SIDETUBE(N_$SIDETUBE + 1)=VOLUME_$SIDETUBE(N_$SIDETUBE + 1)-
+                                      VOLUME_$SIDETUBE(I);
+]
+
+IRA = IRSTART_$SIDETUBE - 1; "absolute region number
+DO IR_$SIDETUBE = 1,N_$SIDETUBE +1 ["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA) ~= 0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID) = AMASS(ID)+VOLUME_$SIDETUBE(IR_$SIDETUBE)*RHOR(IRA);
+   ]
+] "end of loop over IR_$SIDETUBE"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$SIDETUBE,TITLE_$SIDETUBE;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$SIDETUBE),RMAX_CM(ICM_$SIDETUBE),
+                    ZMIN_$SIDETUBE,ZMAX_$SIDETUBE-ZMIN_$SIDETUBE,
+                    ZCYL_$SIDETUBE,
+                    XMIN_$SIDETUBE,XMAX_$SIDETUBE,N_$SIDETUBE;
+WRITE(IOUTLIST,122);
+DO I = 1 , N_$SIDETUBE[
+     WRITE(IOUTLIST,123)I,R_$SIDETUBE(I);
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$SIDETUBE - 1;
+DO I = 1 , N_$SIDETUBE + 1[
+      IRA = IRA + 1;
+      IF(I<=N_$SIDETUBE)[
+          IF(MED(IRA)=0) ["Medium is vacuum"
+              WRITE(IOUTLIST,140) I,I,
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE ["Medium is not vacuum"
+              WRITE(IOUTLIST,140) I,I,
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+      ]
+      ELSEIF(I=N_$SIDETUBE + 1)[
+          IF(MED(IRA)=0) ["Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'outside',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE ["Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'outside',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+      ]
+]
+IF(N_GAP_$SIDETUBE ~= 0 )[
+   IRA = IRSTART_$SIDETUBE + N_$SIDETUBE +1;
+   WRITE(IOUTLIST,141) N_$SIDETUBE+N_GAP_$SIDETUBE+1,'airgap',
+       ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+       DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+   WRITE(IOUTLIST,142)'at top';
+]
+
+
+110 FORMAT(///' Component module',I3,' is SIDETUBE (Rev 1.5)'
+           /'  --------------------------------------'
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$SIDETUBE geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm',
+           /T2,'Z of front of $SIDETUBE (not including airgap) = ',F15.5,' cm',
+           /T2,'Z span of $SIDETUBE (not including airgap) = ',F15.5,' cm',
+           /T2,'Z of centre of coaxial cylinders = ',F15.5,' cm',
+           /T2,'Lower X edge of cylinders = ',F15.5,' cm',
+           /T2,'Upper X edge of cylinders = ',F15.5,' cm',
+           /T2,'# of coaxial cylinders = ',I4);
+122 FORMAT
+(/T2,'cylinder     radius',
+ /T2,'   #          (cm)');
+123 FORMAT(T2,I5,F15.5);
+130 FORMAT(/T2,'$SIDETUBE region parameters:',
+           /T2,'---------------------------',
+           /T2,'local   cylinder  electron  photon',
+           '  range  rejection  dose  bit  medium'
+           /T2,'region             cutoff   cutoff',
+           '  level   maximum   zone  set'
+           /T2,'                   (MeV)     (MeV)',
+           '  (MeV)    (MeV)');
+140 FORMAT(T2,I3,I11,F11.3,F9.3,F7.3,F10.3,I5,I6,2x,9A1);
+141 FORMAT(T2,I3,A11,F11.3,F9.3,F7.3,F10.3,I5,I6,2x,9A1);
+142 FORMAT(T5,A11);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
+   ICOLOUR=4;
+"   WRITE(IOUTGEOM,201) ICOLOUR,'DISK',0.0,0.0,ZMIN_$SIDETUBE,RTOP_$SIDETUBE;
+   "filter geometry"
+   DO I = 1, N_$SIDETUBE[
+         WRITE(IOUTGEOM,201)ICOLOUR,'CYLZ',ZMIN_$SIDETUBE,
+                      R_$SIDETUBE(I),ZMAX_$SIDETUBE,
+                      R_$SIDETUBE(I),0.0,0.0;
+   ]
+]"End of graphics output"
+201   FORMAT(' ',I1,A4,10(F7.2,','));
+;RETURN;
+END; "End of subroutine ISUMRY_$SIDETUBE"
+
+%E "Start of HOWNEAR_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_SIDETUBE
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary.
+" Called from HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$SIDETUBE(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$SIDETUBE,STACK/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      DNER_IN, "T> temp. distance variable
+      DNER_OU; "T> temp. distance variable
+
+IR_$SIDETUBE = IR(NP) - IRSTART_$SIDETUBE + 1;
+
+IF(IR_$SIDETUBE<=N_$SIDETUBE)[
+   DNER_IN = 1E5;
+   DNER_OU = MIN(R_$SIDETUBE(IR_$SIDETUBE)-
+                 SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2),
+                 X(NP)-XMIN_$SIDETUBE,XMAX_$SIDETUBE-X(NP));
+   IF( IR_$SIDETUBE > 1 )[
+      DNER_IN =  SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2)-
+                 R_$SIDETUBE(IR_$SIDETUBE-1);
+   ]
+   DIST = MIN(DNER_IN,DNER_OU);
+]
+ELSEIF(IR_$SIDETUBE = N_$SIDETUBE +1)[
+   IF(X(NP) < XMIN_$SIDETUBE)[
+     IF(SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2) <
+        R_$SIDETUBE(N_$SIDETUBE))[
+       DNER_OU = XMIN_$SIDETUBE - X(NP);
+     ]
+     ELSE[
+       DNER_OU = SQRT((XMIN_$SIDETUBE - X(NP))**2 +
+                      (SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2) -
+                       R_$SIDETUBE(N_$SIDETUBE))**2);
+     ]
+   ]
+   ELSEIF(X(NP) > XMAX_$SIDETUBE)[
+     IF(SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2) <
+        R_$SIDETUBE(N_$SIDETUBE))[
+       DNER_OU = X(NP) - XMAX_$SIDETUBE;
+     ]
+     ELSE[
+       DNER_OU = SQRT((X(NP) - XMAX_$SIDETUBE)**2 +
+                      (SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2) -
+                       R_$SIDETUBE(N_$SIDETUBE))**2);
+     ]
+   ]
+   ELSE[
+     DNER_OU = SQRT(Y(NP)**2 + (Z(NP)-ZCYL_$SIDETUBE)**2) -
+                R_$SIDETUBE(N_$SIDETUBE);
+   ]
+   DIST=MIN(DNER_OU,Z(NP)-ZMIN_$SIDETUBE,ZMAX_$SIDETUBE-Z(NP));
+]
+ELSE[
+   DIST=0.;
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$SIDETUBE(Rev 1.5)"
+"*******************************************************************************
+"End of SIDETUBE_cm.mortran (Rev 1.5)"

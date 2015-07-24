@@ -1,0 +1,614 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: a single block with an opening     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Geoff Zhang, 1996                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   John Antolak                                              "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     BLOCK miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_SUB_$BLOCK} WITH {20}
+REPLACE {$MAX_POINT_$BLOCK} WITH {50}
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     BLOCK component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$BLOCK/
+"V>================
+"V>ICM_$BLOCK         index of CM, set as ICM in INPUT_$tag and never re-set
+"V>IRSTART_$BLOCK     first region number for this CM
+"V>IREND_$BLOCK       last region number for this CM
+"V>TITLE_$BLOCK       title of CM
+"V>ISUB_MAX_$BLOCK    number of sub-regions
+"V>ISUBR_$BLOCK       current inside-air subregion
+"V>NSUB_$BLOCK(J)     number of points defining sub-region J
+"V>ZBACK_$BLOCK       Back of CM
+"V>XPMAX_$BLOCK       max x of block at positive x direction
+"V>YPMAX_$BLOCK       max y of block at positive y direction
+"V>XNMAX_$BLOCK       max x of block at negative x direction
+"V>YNMAX_$BLOCK       max y of block at negative y direction
+"V>ZFRONT_$BLOCK      Front of CM
+"V>ZMIN_$BLOCK        Zmin of a paired bar
+"V>ZMAX_$BLOCK        Zmax of a paired bar
+"V>I_MAXX_$BLOCK(J)   index of max x value in sub-region J
+"V>I_MAXY_$BLOCK(J)   index of max y value in sub-region J
+"V>I_MINX_$BLOCK(J)   index of min x value in sub-region J
+"V>I_MINY_$BLOCK(J)   index of min y value in sub-region J
+"V>BDYTOL_$BLOCK             a small distance to be added to every step
+"V>ISAME_POINT_$BLOCK(I,J) index of whether this point is a shared point by
+"                          2 or more sub-regions. 1 shared; -1 not shared.
+"V>ISHARE_PLANE_$BLOCK(I,J)index of whether this plane is shared by more
+"                          than one subregion. -1, not shared
+"                          >0, shared by subregion ISHARE_PLANE_$BLOCK(I,J)
+"V>XMAX_OPEN_$BLOCK(J)     max x of subregion j at surface
+"V>YMAX_OPEN_$BLOCK(J)     max y of subregion j at surface
+"V>XMIN_OPEN_$BLOCK(J)     min x of subregion j at surface
+"V>YMIN_OPEN_$BLOCK(J)     min y of subregion j at surface
+"V>XHI_POINT_$BLOCK(I,J)   x of point I in sub-region J at up block surface
+"V>YHI_POINT_$BLOCK(I,J)   y of point I in sub-region J at up surface
+"V>XLO_POINT_$BLOCK(I,J)   x of point I in sub-region J at down surface
+"V>YLO_POINT_$BLOCK(I,J)   y of point I in sub-region J at down surface
+"V>A_PLANE_$BLOCK(I,J)     parameter a of the plane equation of edge face I
+"V>B_PLANE_$BLOCK(I,J)     parameter b of the plane equation of edge face I
+"V>C_PLANE_$BLOCK(I,J)     parameter c of the plane equation of edge face I
+"V>D_PLANE_$BLOCK(I,J)     parameter d of the plane equation of edge face I
+"V>IR_$BLOCK               local region number
+;
+REPLACE {;COMIN/CM_$BLOCK/;} WITH {
+   ;COMMON/CM_$BLOCK/
+      ICM_$BLOCK,      IRSTART_$BLOCK, IREND_$BLOCK,
+      ISUB_MAX_$BLOCK, ISUBR_$BLOCK, NSUB_$BLOCK,
+      I_MAXX_$BLOCK,   I_MAXY_$BLOCK,  I_MINX_$BLOCK,    I_MINY_$BLOCK,
+      ISAME_POINT_$BLOCK,  ISHARE_PLANE_$BLOCK, IR_$BLOCK,
+      BDYTOL_$BLOCK,
+      XMAX_OPEN_$BLOCK, YMAX_OPEN_$BLOCK,
+      XMIN_OPEN_$BLOCK, YMIN_OPEN_$BLOCK,
+      XHI_POINT_$BLOCK, YHI_POINT_$BLOCK,
+      XLO_POINT_$BLOCK, YLO_POINT_$BLOCK,
+      A_PLANE_$BLOCK, B_PLANE_$BLOCK, C_PLANE_$BLOCK, D_PLANE_$BLOCK,
+      XPMAX_$BLOCK,    XNMAX_$BLOCK,   YPMAX_$BLOCK,     YNMAX_$BLOCK,
+      ZFOCUS_$BLOCK,
+      ZMIN_$BLOCK,     ZMAX_$BLOCK,    ZBACK_$BLOCK,     ZFRONT_$BLOCK,
+      TITLE_$BLOCK;
+   INTEGER
+      ICM_$BLOCK,IRSTART_$BLOCK,IREND_$BLOCK,
+      ISUB_MAX_$BLOCK, ISUBR_$BLOCK,
+      NSUB_$BLOCK($MAX_SUB_$BLOCK),
+      I_MAXX_$BLOCK($MAX_SUB_$BLOCK),
+      I_MAXY_$BLOCK($MAX_SUB_$BLOCK),
+      I_MINX_$BLOCK($MAX_SUB_$BLOCK),
+      I_MINY_$BLOCK($MAX_SUB_$BLOCK),
+      ISAME_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+      ISHARE_PLANE_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+      IR_$BLOCK;
+   $REAL
+     ZMIN_$BLOCK,
+     ZMAX_$BLOCK,
+     ZBACK_$BLOCK, ZFRONT_$BLOCK, ZFOCUS_$BLOCK,
+     BDYTOL_$BLOCK,
+     XMAX_OPEN_$BLOCK($MAX_SUB_$BLOCK),
+     YMAX_OPEN_$BLOCK($MAX_SUB_$BLOCK),
+     XMIN_OPEN_$BLOCK($MAX_SUB_$BLOCK),
+     YMIN_OPEN_$BLOCK($MAX_SUB_$BLOCK),
+     XHI_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     YHI_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     XLO_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     YLO_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     A_PLANE_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     B_PLANE_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     C_PLANE_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     D_PLANE_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+     XPMAX_$BLOCK,
+     YPMAX_$BLOCK,
+     XNMAX_$BLOCK,
+     YNMAX_$BLOCK;
+    CHARACTER*1 TITLE_$BLOCK(60);
+} "end of replacement defining common for this CM"
+;
+"-------------------------------------------------------------------------------
+"     BLOCK HOWNEAR replacement macro
+"-------------------------------------------------------------------------------
+"
+;
+"The following macro checks if the particle is currently inside"
+"subregion j. Since the subregion is a concave solid, it suffices"
+"to check that the distance from the point to the plane is negative"
+"for all planes defining the subregion. This check is fairly"
+"efficient, and checking against the bounding box for simple"
+"subregions is sometimes faster, sometimes not."
+REPLACE {$CHECK_SUBREGION_$BLOCK(#,#,#,#,#);} WITH {
+"p1=x,p2=y,p3=z,p4=j(subregion), p5=1(inside) -1(outside)"
+ANYTHING=({P3}-ZFOCUS_$BLOCK)/(ZMIN_$BLOCK-ZFOCUS_$BLOCK);
+IF({P1}>XMAX_OPEN_$BLOCK({P4})*ANYTHING |
+   {P2}>YMAX_OPEN_$BLOCK({P4})*ANYTHING |
+   {P1}<XMIN_OPEN_$BLOCK({P4})*ANYTHING |
+   {P2}<YMIN_OPEN_$BLOCK({P4})*ANYTHING )[
+   "definitely out of subregion"
+   {P5}=-1;
+]
+ELSE [
+   {P5}=-1; "assume outside"
+   I = 1;
+   LOOP [ "loop over planes of subregion"
+      ANYTHING=-(A_PLANE_$BLOCK(I,{P4})*{P1} +
+                 B_PLANE_$BLOCK(I,{P4})*{P2} +
+                 C_PLANE_$BLOCK(I,{P4})*{P3} +
+                 D_PLANE_$BLOCK(I,{P4}) ); "distance from point to plane"
+      IF (ANYTHING <= 0.0) ["on inside of this plane"
+         IF (I=NSUB_$BLOCK({P4})) ["inside all planes of this subregion"
+            {P5}=1; "really inside"
+            I=NSUB_$BLOCK({P4})+1;  "to exit loop"
+         ]
+         ELSE [I=I+1;] "check next plane"
+      ]
+      ELSE [I=NSUB_$BLOCK({P4})+1] "point is outside subregion"
+   ] WHILE (I<=NSUB_$BLOCK({P4})); "end of loop over planes"
+]
+}
+;
+"The following macro checks if the particle is currently inside one"
+"of the subregions defining the block opening. To help with later"
+"computations, it sets ISUBR_$BLOCK to the subregion that the particle"
+"is inside."
+REPLACE{$CHECK_OPEN_AIR_$BLOCK(#);} WITH {; "p1=1(inside) -1(outside)"
+{P1}=0; "default to unknown"
+J = 1;
+LOOP [ "loop over subregions"
+   $CHECK_SUBREGION_$BLOCK(X(NP),Y(NP),Z(NP),J,{P1});
+   IF ({P1}=-1) [ "outside this subregion, check next one"
+      J=J+1;
+   ]
+   ELSE [ "inside this subregion"
+      ISUBR_$BLOCK=J;
+   ]
+] WHILE (J<=ISUB_MAX_$BLOCK & {P1}~=1); "end of loop over subregions"
+}
+;
+
+REPLACE {$PLANE_ABCD_$BLOCK(#,#,#,#,#,#);} WITH {;
+   "p1=i,p2=i+1 or 1,p3=a-plane,p4=b-plane,p5=c-plane,p6=d-plane"
+ANYTHING = ZMIN_$BLOCK - ZFOCUS_$BLOCK;
+{P3} = (YHI_POINT_$BLOCK({P1},J) - YHI_POINT_$BLOCK({P2},J)) * ANYTHING;
+{P4} = (XHI_POINT_$BLOCK({P2},J) - XHI_POINT_$BLOCK({P1},J)) * ANYTHING;
+{P5} = XHI_POINT_$BLOCK({P1},J)*YHI_POINT_$BLOCK({P2},J) -
+         XHI_POINT_$BLOCK({P2},J)*YHI_POINT_$BLOCK({P1},J);
+"make the (a,b,c) normal vector unit length, faster dnear computation"
+ANYTHING = SQRT({P3}**2 + {P4}**2 + {P5}**2);
+{P3} = {P3} / ANYTHING;
+{P4} = {P4} / ANYTHING;
+{P5} = {P5} / ANYTHING;
+{P6} = -ZFOCUS_$BLOCK * {P5};
+}
+;
+REPLACE {$DIST_POINT2PLANE(#,#,#,#,#,#);} WITH {; "p1=x,p2=y,p3=z,p4=i,p5=j"
+                                                  "p6=distance"
+"if the normal vector is unit length, distance is ax+by+cz+d"
+"otherwise, divide by magnitude of normal vector"
+"Note: this macro is not used in BLOCK CM anymore."
+{P6} = ABS(A_PLANE_$BLOCK({P4},{P5})*{P1} +
+           B_PLANE_$BLOCK({P4},{P5})*{P2} +
+           C_PLANE_$BLOCK({P4},{P5})*{P3} +
+           D_PLANE_$BLOCK({P4},{P5}) );
+}
+;
+REPLACE {$DIST_POINT2LINE(#,#,#,#,#,#,#);} WITH {;
+                          "p1=x1,p2=x2,p3=y1,p4=y2,p5=z1,p6=z2,p7=dist"
+{P7} = SQRT((((Y(NP)-{P3})*({P5}-{P6})-(Z(NP)-{P5})*({P3}-{P4}))**2 +
+              ((Z(NP)-{P5})*({P1}-{P2})-(X(NP)-{P1})*({P5}-{P6}))**2 +
+              ((X(NP)-{P1})*({P3}-{P4})-(Y(NP)-{P3})*({P1}-{P2}))**2) /
+             (({P1}-{P2})**2 + ({P3}-{P4})**2 + ({P5}-{P6})**2) );
+}
+;
+REPLACE {$DIST_POINT2POINT(#,#,#,#,#,#,#);} WITH {; "p1=x,p2=y,p3=z,"
+                          "p4=x1,p5=y1,p6=z1,p7=dist"
+{P7} = SQRT(({P1}-{P4})**2+({P2}-{P5})**2+({P3}-{P6})**2);
+}
+;
+
+REPLACE {$POINT_ON_PLANE_$BLOCK(#,#,#,#,#,#);} WITH {; "p1=i,p2=j,"
+                                    "p3=anything,p4=xhit,p5=yhit,p6=zhit"
+"when called, p3 is the distance along the plane normal (A,B,C)"
+"from the current point to the plane in question. This macro computes"
+"the coordinates of the hit point. It assumes that (A,B,C) is a unit"
+"length normal."
+{P4} = X(NP) + A_PLANE_$BLOCK({P1},{P2})*{P3};
+{P5} = Y(NP) + B_PLANE_$BLOCK({P1},{P2})*{P3};
+{P6} = Z(NP) + C_PLANE_$BLOCK({P1},{P2})*{P3};
+}
+;
+
+REPLACE{$CHECK_INPUT_$BLOCK;} WITH {;
+DO J = 1,ISUB_MAX_$BLOCK ["to check whether input in right way. the "
+ "right way is that in any sub-region, there is no inner angle > 180 degree"
+ "in this macro,check the cross product of the sets of two vectors (3 points)"
+ "defining every vertex in the subregion.  The sign of the cross product"
+ "should always be the same.  If not, this signifies a change in turning"
+ "direction and, hence, an inner angle > 180 degrees."
+   K=0;
+   DO I = 1,NSUB_$BLOCK(J)-1 [
+      IF(I<NSUB_$BLOCK(J)-1)[
+          NEWSIGN=SIGN(one,(XHI_POINT_$BLOCK(I+1,J)-XHI_POINT_$BLOCK(I,J))*
+                      (YHI_POINT_$BLOCK(I+2,J)-YHI_POINT_$BLOCK(I+1,J))-
+                      (YHI_POINT_$BLOCK(I+1,J)-YHI_POINT_$BLOCK(I,J))*
+                      (XHI_POINT_$BLOCK(I+2,J)-XHI_POINT_$BLOCK(I+1,J)));
+      ]
+      ELSE[
+          NEWSIGN=SIGN(one,(XHI_POINT_$BLOCK(I+1,J)-XHI_POINT_$BLOCK(I,J))*
+                      (YHI_POINT_$BLOCK(1,J)-YHI_POINT_$BLOCK(I+1,J))-
+                      (YHI_POINT_$BLOCK(I+1,J)-YHI_POINT_$BLOCK(I,J))*
+                      (XHI_POINT_$BLOCK(1,J)-XHI_POINT_$BLOCK(I+1,J)));
+      ]
+      IF(I>1 & OLDSIGN~=NEWSIGN)[
+          K=K+1;
+      ]
+      OLDSIGN=NEWSIGN;
+   ]
+   IF(K>0)[
+          OUTPUT ICM_$BLOCK,J;
+      (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+         ' Aperture ',I3,' has an inside angle > 180 degrees'/
+         ' Points may have been input in wrong order or else'/
+         ' try using multiple subregions to define this aperture.'//);
+          IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+   ]
+"If OLDSIGN is positive, the polygon is counterclockwise. If not,"
+"and ZFOCUS < ZMIN, reverse the order of the points to that the surface"
+"normals point towards the inside of the central air subregions."
+"On the other hand, if the user has input the polygon counterclockwise and"
+"ZFOCUS > ZMIN, the points must be rearranged so that they are clockwise"
+"in order for the normals to point inwards.  The loop below will do either."
+   IF((OLDSIGN<0.0 & ZFOCUS_$BLOCK < ZMIN_$BLOCK)|
+      (OLDSIGN>0.0 & ZFOCUS_$BLOCK > ZMIN_$BLOCK)) [ "reverse the array"
+      DO I = 1,NSUB_$BLOCK(J)/2 [
+         ANYTHING = XHI_POINT_$BLOCK(I,J);
+         XHI_POINT_$BLOCK(I,J)=XHI_POINT_$BLOCK(NSUB_$BLOCK(J)+1-I,J);
+         XHI_POINT_$BLOCK(NSUB_$BLOCK(J)+1-I,J)=ANYTHING;
+         ANYTHING = YHI_POINT_$BLOCK(I,J);
+         YHI_POINT_$BLOCK(I,J)=YHI_POINT_$BLOCK(NSUB_$BLOCK(J)+1-I,J);
+         YHI_POINT_$BLOCK(NSUB_$BLOCK(J)+1-I,J)=ANYTHING;
+      ]
+      I_MAXX_$BLOCK(J) = NSUB_$BLOCK(J)+1-I_MAXX_$BLOCK(J);
+      I_MINX_$BLOCK(J) = NSUB_$BLOCK(J)+1-I_MINX_$BLOCK(J);
+      I_MAXY_$BLOCK(J) = NSUB_$BLOCK(J)+1-I_MAXY_$BLOCK(J);
+      I_MINY_$BLOCK(J) = NSUB_$BLOCK(J)+1-I_MINY_$BLOCK(J);
+   ]
+] "end of input check"
+}
+;
+" The following macro is used if the particle is in the outside air"
+" region to test whether the particle hits one of the outside block"
+" faces before hitting the upper or lower plane. It assumes that DIST is"
+" already set to the distance to the distance to the upper or lower"
+" plane (or 1.E10 if w=0). If it hits one of the block faces, it sets"
+" DIST to the distance to the block face, and sets the new region number"
+" to the block material."
+REPLACE {$BLOCK_IN_HIT_OUTAIR;} WITH {;
+TDIST = 1.E10; "assume no hit on outer planes"
+IF(U(NP) > 0.0 & X(NP) <= XNMAX_$BLOCK)[ "in left air, heading right"
+   TDIST=(XNMAX_$BLOCK+BDYTOL_$BLOCK-X(NP))/U(NP);
+]
+ELSEIF(U(NP) < 0.0 & X(NP) >= XPMAX_$BLOCK)["in right air, heading left"
+   TDIST=(XPMAX_$BLOCK-BDYTOL_$BLOCK-X(NP))/U(NP);
+]; "TDIST is distance to the possible hit"
+
+IF(TDIST<DIST)[ "check if hit point is in y bounds"
+   IF((Y(NP)+V(NP)*TDIST) <= YPMAX_$BLOCK &
+      (Y(NP)+V(NP)*TDIST) >= YNMAX_$BLOCK)[
+      DIST=TDIST;
+      IRNEW_$BLOCK = IRSTART_$BLOCK + 2; "entering material region"
+   ]
+]
+
+"check outer y faces, just in case its closer still (roundoff?)"
+TDIST = 1.E10; "assume no hit on outer plane"
+IF(V(NP) > 0.0 & Y(NP) <= YNMAX_$BLOCK)[ "in bottom air, heading up"
+   TDIST=(YNMAX_$BLOCK+BDYTOL_$BLOCK-Y(NP))/V(NP);
+]
+ELSEIF(V(NP) < 0.0 & Y(NP) >= YPMAX_$BLOCK)[ "in top air, heading down"
+   TDIST=(YPMAX_$BLOCK-BDYTOL_$BLOCK-Y(NP))/V(NP);
+]; "TDIST is distance to the possible hit"
+
+IF(TDIST<DIST)[ "check if hit point is in x bounds"
+   IF((X(NP)+U(NP)*TDIST) <= XPMAX_$BLOCK &
+      (X(NP)+U(NP)*TDIST) >= XNMAX_$BLOCK)[
+      DIST=TDIST;
+      IRNEW_$BLOCK = IRSTART_$BLOCK + 2; "entering material region"
+   ]
+]
+}
+; "end of macro $BLOCK_IN_HIT_OUTAIR"
+
+"following macro does: 1. compute the dot product of the direction and"
+"the plane normal vectors. If negative, 2. compute the distance between"
+"the current point and the plane along the trajectory. 3. Set DIST to"
+"the minimum of TEMPDIST (distance to upper of lower boundary) and the"
+"current minimum DIST. It also updates IPLANE, the index of the plane"
+"where the minimum distance was found."
+"The plane is assumed to be described by the equation Ax+By+Cz+D=0, and"
+"the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
+
+REPLACE {$BLOCK_IN_HIT;} WITH {;
+ANYTHING = A_PLANE_$BLOCK(I,J)*U(NP) +
+           B_PLANE_$BLOCK(I,J)*V(NP) +
+           C_PLANE_$BLOCK(I,J)*W(NP);
+IF (ANYTHING<0.) [ "trajectory and normal in opposite directions"
+   ANYTHING = -(A_PLANE_$BLOCK(I,J)*X(NP) +
+                B_PLANE_$BLOCK(I,J)*Y(NP) +
+                C_PLANE_$BLOCK(I,J)*Z(NP) +
+                D_PLANE_$BLOCK(I,J) ) / ANYTHING ;
+
+"ANYTHING is the distance to plane along trajectory. If it is"
+"positive, the intersection is in the forward direction. If it is"
+"negative, the intersection is behind the particle. However, we"
+"are only testing planes for which there should be a positive"
+"distance. Therefore, set negative distances to zero."
+
+   IF (ANYTHING < DIST) ["closer intersection"
+      IPLANE = I;
+      DIST = ANYTHING;
+   ]
+]; "if trajectory and normal in opposite directions"
+};
+
+"following macro does: 1. compute the dot product of the direction and"
+"the plane normal vectors. If positive, 2. compute the distance between"
+"the current point and the plane along the trajectory. If distance less"
+"than current minimum distance, 3. Check that the intersection point is"
+"within the block face. If so, 4. update the minimum intersection"
+"distance."
+"The plane is assumed to be described by the equation Ax+By+Cz+D=0, and"
+"the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
+
+REPLACE {$BLOCK_OUT_HIT_INAIR(#);} WITH {
+"p1=i+1 or 1 (last plane)"
+ANYTHING = A_PLANE_$BLOCK(I,J)*U(NP) +
+           B_PLANE_$BLOCK(I,J)*V(NP) +
+           C_PLANE_$BLOCK(I,J)*W(NP);
+IF (ANYTHING>0.) [ "trajectory and normal in same general direction"
+   ANYTHING = -(A_PLANE_$BLOCK(I,J)*X(NP) +
+                B_PLANE_$BLOCK(I,J)*Y(NP) +
+                C_PLANE_$BLOCK(I,J)*Z(NP) +
+                D_PLANE_$BLOCK(I,J) ) / ANYTHING ;
+
+"ANYTHING is the distance to plane along trajectory. If it is"
+"positive, the intersection is in the forward direction. If it is"
+"negative, the intersection is behind the particle, and we are not"
+"interested. Unlike the central air case, it is very possible to"
+"have a plane behind the particle, but facing the right direction."
+
+   "if the hit distance was less than DIST, you are guaranteed to be"
+   "within the z range of the block face, so check x and y ranges"
+
+   IF (ANYTHING>=0.0 & ANYTHING<DIST) [
+      XHIT_$BLOCK = X(NP) + U(NP)*ANYTHING;
+      YHIT_$BLOCK = Y(NP) + V(NP)*ANYTHING;
+      ZHIT_$BLOCK = Z(NP) + W(NP)*ANYTHING;
+      "following macro calculates the x or y coordinate which is the"
+      "edge point at z=zhit for plane (i,j). Note p1=i+1 unless last plane"
+     ;$XY_AT_Z_$BLOCK(YPL1_$BLOCK,YHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+     ;$XY_AT_Z_$BLOCK(YPL2_$BLOCK,YHI_POINT_$BLOCK({P1},J),ZHIT_$BLOCK);
+      XYMAX = MAX(YPL1_$BLOCK,YPL2_$BLOCK)+BDYTOL_$BLOCK;
+      XYMIN = MIN(YPL1_$BLOCK,YPL2_$BLOCK)-BDYTOL_$BLOCK;
+      IF(YHIT_$BLOCK< XYMAX & YHIT_$BLOCK> XYMIN ) [ "in y range"
+       "following macro calculates the x or y coordinate which is the"
+       "edge point at z=zhit for plane (i,j). Note p1=i+1 unless last plane"
+       ;$XY_AT_Z_$BLOCK(XPL1_$BLOCK,
+                   XHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+       ;$XY_AT_Z_$BLOCK(XPL2_$BLOCK,
+                   XHI_POINT_$BLOCK({P1},J),ZHIT_$BLOCK);
+         XYMAX = MAX(XPL1_$BLOCK,XPL2_$BLOCK)+BDYTOL_$BLOCK;
+         XYMIN = MIN(XPL1_$BLOCK,XPL2_$BLOCK)-BDYTOL_$BLOCK;
+         IF(XHIT_$BLOCK<=XYMAX & XHIT_$BLOCK>=XYMIN)[ "in x range"
+            ICHECK = 1;
+            DIST=ANYTHING;
+         ] "if in x range"
+      ] "if in y range"
+   ] "if intersection in forward direction"
+] "if trajectory is not parallel to the plane"
+};
+
+REPLACE {$XY_AT_Z_$BLOCK(#,#,#);} WITH {; "p1=xpl or ypl, p2=x1 or y1,p3=zpl"
+{P1} = {P2}*({P3}-ZFOCUS_$BLOCK)/(ZMIN_$BLOCK-ZFOCUS_$BLOCK);
+}
+;
+
+"The following macro is only called when the particle is in the block"
+"material, and its trajectory does not intersect any of the inside"
+"block faces before hitting the upper or lower plane. Since the outer"
+"block faces and upper and lower plane enclose the particle in a"
+"box, we can just find the minimum positive distance to one of the"
+"boundaries and set DIST to that value. If the particle is a little"
+"past the boundary, set DIST to zero."
+REPLACE {$BLOCK_OUT_HIT_OUTAIR;} WITH {
+IHIT=0;
+IF(U(NP) < 0.0)[ "heading left"
+   TDIST=(XNMAX_$BLOCK-X(NP))/U(NP);
+   DIST = MAX(0.0, MIN(DIST,TDIST) );
+]
+ELSEIF(U(NP) > 0.0)[ "heading right"
+   TDIST=(XPMAX_$BLOCK-X(NP))/U(NP);
+   DIST = MAX(0.0, MIN(DIST,TDIST) );
+]
+IF(V(NP) < 0.0)[ "heading down"
+   TDIST=(YNMAX_$BLOCK-Y(NP))/V(NP);
+   DIST = MAX(0.0, MIN(DIST,TDIST) );
+]
+ELSEIF(V(NP) > 0.0)[ "heading up"
+   TDIST=(YPMAX_$BLOCK-Y(NP))/V(NP);
+   DIST = MAX(0.0, MIN(DIST,TDIST) );
+]
+}
+;
+
+REPLACE {$DIST_POINT2EDGE_$BLOCK(#,#,#,#,#,#,#);} WITH {;
+"p1=x1,p2=x2,p3=y1,p4=y2,p5=z1,p6=z2,p7=dist"
+"This is a special case of DIST_POINT2LINE. We want to find the"
+"distance from the current location to the line defined by the (i,j)"
+"block corner. If one of the points that we take to define the line is"
+"at zfocus, then x=y=0 for that point on the line, and some of the"
+"terms in the calculation drop out, making it faster. If you look at"
+"the formula in this macro, you will see that it reduces to the same"
+"formula as in DIST_POINT2LINE with x1=y1=0 (p1 and p3 not used)."
+;
+{P7} = SQRT(( ( Y(NP)*({P5}-{P6}) + (Z(NP)-{P5})*{P4} )**2 +
+              ( (Z(NP)-{P5})*{P2} + X(NP)*({P5}-{P6}) )**2 +
+              ( X(NP)*{P4} - Y(NP)*{P2} )**2) /
+                   (({P2})**2 + ({P4})**2 + ({P5}-{P6})**2) );
+}
+
+REPLACE {$BLOCK_CM_HOWNEAR(#)} WITH {  "{P1} is DNEAR"
+CALL HOWNEAR_$BLOCK({P1});
+}
+;
+REPLACE{$EGSW_OUTPUT_$BLOCK;} WITH {;
+   DO J =1,ISUB_MAX_$BLOCK [
+      DO I =1,NSUB_$BLOCK(J) [
+         IF(I~=NSUB_$BLOCK(J)) [ "not last wall"
+            IF(ISAME_POINT_$BLOCK(I,J)=-1   |
+                     ISAME_POINT_$BLOCK(I+1,J)=-1 )["not shared point"
+                 WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XHI_POINT_$BLOCK(I,J),
+                 YHI_POINT_$BLOCK(I,J),ZMIN_$BLOCK,
+                 XHI_POINT_$BLOCK(I+1,J),YHI_POINT_$BLOCK(I+1,J),
+                 ZMIN_$BLOCK,
+                 XLO_POINT_$BLOCK(I+1,J),YLO_POINT_$BLOCK(I+1,J),
+                 ZMAX_$BLOCK,
+                 XLO_POINT_$BLOCK(I,J),YLO_POINT_$BLOCK(I,J),
+                 ZMAX_$BLOCK;
+            ]
+            ELSE[
+               DO JJ=1,ISUB_MAX_$BLOCK [
+                  COUNT=0;
+                  IF(JJ~=J)[
+                    DO II = 1,NSUB_$BLOCK(JJ) [
+                       IF(XHI_POINT_$BLOCK(I,J)=XHI_POINT_$BLOCK(II,JJ) &
+                          YHI_POINT_$BLOCK(I,J)=YHI_POINT_$BLOCK(II,JJ))[
+                          COUNT=COUNT+1;
+                       ]
+                       IF(XHI_POINT_$BLOCK(I+1,J)=XHI_POINT_$BLOCK(II,JJ) &
+                          YHI_POINT_$BLOCK(I+1,J)=YHI_POINT_$BLOCK(II,JJ))[
+                          COUNT=COUNT+1;
+                       ]
+                    ]
+                  ]
+                  IF(COUNT=2)[EXIT;]
+               ]
+               IF(COUNT < 2)["not a shared plane"
+                 WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XHI_POINT_$BLOCK(I,J),
+                 YHI_POINT_$BLOCK(I,J),ZMIN_$BLOCK,
+                 XHI_POINT_$BLOCK(I+1,J),YHI_POINT_$BLOCK(I+1,J),
+                 ZMIN_$BLOCK,
+                 XLO_POINT_$BLOCK(I+1,J),YLO_POINT_$BLOCK(I+1,J),
+                 ZMAX_$BLOCK,
+                 XLO_POINT_$BLOCK(I,J),YLO_POINT_$BLOCK(I,J),
+                 ZMAX_$BLOCK;
+               ]
+            ]
+         ] "end of not last wall"
+         ELSE [ "last wall"
+            IF(ISAME_POINT_$BLOCK(1,J)=-1 |
+               ISAME_POINT_$BLOCK(I,J)=-1) [ "not shared plane"
+                 WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XHI_POINT_$BLOCK(I,J),
+                 YHI_POINT_$BLOCK(I,J),ZMIN_$BLOCK,
+                 XHI_POINT_$BLOCK(1,J),YHI_POINT_$BLOCK(1,J),
+                 ZMIN_$BLOCK,
+                 XLO_POINT_$BLOCK(1,J),YLO_POINT_$BLOCK(1,J),
+                 ZMAX_$BLOCK,
+                 XLO_POINT_$BLOCK(I,J),YLO_POINT_$BLOCK(I,J),
+                 ZMAX_$BLOCK;
+            ]
+            ELSE[
+               DO JJ=1,ISUB_MAX_$BLOCK [
+                  COUNT=0;
+                  IF(JJ~=J)[
+                    DO II = 1,NSUB_$BLOCK(JJ) [
+                       IF(XHI_POINT_$BLOCK(I,J)=XHI_POINT_$BLOCK(II,JJ) &
+                          YHI_POINT_$BLOCK(I,J)=YHI_POINT_$BLOCK(II,JJ))[
+                          COUNT=COUNT+1;
+                       ]
+                       IF(XHI_POINT_$BLOCK(1,J)=XHI_POINT_$BLOCK(II,JJ) &
+                          YHI_POINT_$BLOCK(1,J)=YHI_POINT_$BLOCK(II,JJ))[
+                          COUNT=COUNT+1;
+                       ]
+                    ]
+                  ]
+                  IF(COUNT=2)[EXIT;]
+               ]
+               IF(COUNT < 2)["not a shared plane"
+                 WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XHI_POINT_$BLOCK(I,J),
+                 YHI_POINT_$BLOCK(I,J),ZMIN_$BLOCK,
+                 XHI_POINT_$BLOCK(1,J),YHI_POINT_$BLOCK(1,J),
+                 ZMIN_$BLOCK,
+                 XLO_POINT_$BLOCK(1,J),YLO_POINT_$BLOCK(1,J),
+                 ZMAX_$BLOCK,
+                 XLO_POINT_$BLOCK(I,J),YLO_POINT_$BLOCK(I,J),
+                 ZMAX_$BLOCK;
+               ]
+            ]
+         ] "end of last wall"
+      ]
+   ]
+}
+;
+"REPLACE{$TEST_SOMETHING;} WITH {;"
+;
+"End of BLOCK_macros.mortran (Rev 1.2)"

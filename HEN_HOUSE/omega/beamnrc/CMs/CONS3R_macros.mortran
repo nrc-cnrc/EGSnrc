@@ -1,0 +1,337 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: 3-region stacked truncated cones   "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     $CONS3R miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$CONS3R} WITH {3}
+
+" THE MAX # OF POINTS TO BE ALLOWED IN THIS MODULE
+REPLACE {$NPOINT_$CONS3R} WITH {15}
+
+"-------------------------------------------------------------------------------
+"     CONS3R component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$CONS3R/
+"V>================
+"V>ICM_$CONS3R        index of CM, set as ICM in INPUT_$CONS3R, never re-set
+"V>IRSTART_$CONS3R    first region number for this CM
+"V>IREND_$CONS3R      last region number for this CM
+"V>N_$CONS3R          number of regions in CM
+"V>TITLE_$CONS3R      title of CM
+"V>ZMIN_$CONS3R       Front of polycone
+"V>ZMAX_$CONS3R       back of polycone
+"V>ZFRONT_$CONS3R     Upstream Z boundary of this CM
+"V>NUM_NODE_$CONS3R   the number of node in this module
+"V>INDEX_$CONS3R      the index to indicates the shape
+"V>                  1: z coordinates are in the order without decrement
+"V>                  0: any order
+"V>                  this is very important for speed
+"V>ZCORNER_$CONS3R($NPOINT_$CONS3R)   z coordinate of points
+"V>RCORNER_$CONS3R($NPOINT_$CONS3R)   r coordinate of points
+"V>RCORNER2_$CONS3R($NPOINT_$CONS3R)
+"V>SURPARA_$CONS3R($NPOINT_$CONS3R-1,4)  params to describe the n-1 surfaces
+"V>            cos(theta)*R + sin(theta)* Z - p =0
+"V>            SURPARA(i,1) * R + SURPARA(i,2)*Z - SURPARA(i,3) = 0
+"V>            SURPARA(i,4): the slope of the surface.
+"V>RMIN_$CONS3R       minimum radius
+"V>RMIN2_$CONS3R      minimum radius square
+"V>IR_$CONS3R         local region number
+"V>COUNT1_$CONS3R     counter for region check
+
+REPLACE {;COMIN/CM_$CONS3R/;} WITH {
+   ;COMMON/CM_$CONS3R/
+      ICM_$CONS3R,  IRSTART_$CONS3R,  IREND_$CONS3R,
+      N_$CONS3R,    N_GAP_$CONS3R, IR_$CONS3R,
+      COUNT1_$CONS3R,
+      TITLE_$CONS3R,   ZMIN_$CONS3R,     ZMAX_$CONS3R,
+      ZFRONT_$CONS3R,  NUM_NODE_$CONS3R, INDEX_$CONS3R,
+      ZCORNER_$CONS3R, RCORNER_$CONS3R,  RCORNER2_$CONS3R,
+      SURPARA_$CONS3R, RMIN_$CONS3R,     RMIN2_$CONS3R,
+      CRITOLD_$CONS3R;
+   INTEGER
+      ICM_$CONS3R,  IRSTART_$CONS3R,  IREND_$CONS3R,  N_$CONS3R,
+      N_GAP_$CONS3R, IR_$CONS3R, COUNT1_$CONS3R,
+      NUM_NODE_$CONS3R,INDEX_$CONS3R;
+   $REAL
+      ZMIN_$CONS3R, ZMAX_$CONS3R, ZFRONT_$CONS3R,
+      ZCORNER_$CONS3R($NPOINT_$CONS3R),RCORNER_$CONS3R($NPOINT_$CONS3R),
+      RCORNER2_$CONS3R($NPOINT_$CONS3R),
+      SURPARA_$CONS3R($NPOINT_$CONS3R-1,4),
+      RMIN_$CONS3R, RMIN2_$CONS3R, CRITOLD_$CONS3R;
+   CHARACTER*1 TITLE_$CONS3R(60);
+} "end of replacement defining common for this CM"
+;
+"-------------------------------------------------------------------------------
+"     $CONS3R HOWNEAR replacement macro
+"     Now just calls the HOWNEAR_$CONS3R subroutine
+"-------------------------------------------------------------------------------
+"V>$CONS3R_CM_HOWNEAR(#)
+"V>===================
+"V>
+"V>{P1} the dist to the nearest boundary
+;
+REPLACE {$CONS3R_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$CONS3R({P1});
+}
+
+;
+REPLACE {$GEO_SHIFT_2_(#,#)} WITH {
+;IF({P1}+1.0E-5< {P2}) [{P1}={P1}+1.0E-5;]  }
+
+
+"V>$CONS3R_MACRO_1_IN(#,#,#);
+"V>=============
+"V> {p1} = 1, if particle is inside now, for region # change
+"V>      = 0,                outside
+"V> {P2} the z coordinate for dist calc
+"V>      if go down, ZCORNER_$CONS3R(J+1)
+"V>            up    ZCORNER_$CONS3R(J)
+"V> {p3} = 1, if W(NP) > 0, used to call where_am_i
+"V>      = -1,         < 0 ,  not include the w=0 case
+;
+REPLACE {$CONS3R_MACRO_1_IN(#,#,#)} WITH {
+    CUT_COE=0.0;
+    CUT_COE1=0.0;
+    CUT_COE2=0.0;
+    DIST_TMP=({P2}-Z(NP))/W(NP);
+    DIRTMP = {P3};
+    IF(DIST_TMP>USTEP)[STEP_UNIT=USTEP;IU_D=0;]
+    ELSE[STEP_UNIT=DIST_TMP;IU_D=1;]
+    RF2_$CONS3R=(X(NP)+STEP_UNIT*U(NP))**2
+            +(Y(NP)+STEP_UNIT*V(NP))**2;
+    IF(STEP_UNIT<1.0E-5)[;]
+    ELSEIF(SURPARA_$CONS3R(J,4)>1.0E29)
+    [
+       IF(IU_D=1)
+       [
+          RF_$CONS3R=SQRT(RF2_$CONS3R);
+          IF(  RF_$CONS3R<MAX(RCORNER_$CONS3R(J), RCORNER_$CONS3R(J+1))
+              & RF_$CONS3R>MIN(RCORNER_$CONS3R(J), RCORNER_$CONS3R(J+1)))
+          [
+             $GEO_SHIFT_1_(STEP_UNIT);
+             USTEP=STEP_UNIT;
+             IRNEW = IRSTART_$CONS3R + {P1};
+             RETURN;
+           ]
+        ]
+        ELSE[ USTEP=STEP_UNIT;RETURN;]
+
+     ]
+     ELSE
+     [
+         RV_$CONS3R=RCORNER_$CONS3R(J)+SURPARA_$CONS3R(J,4)
+                  *(Z(NP)+STEP_UNIT*W(NP)-ZCORNER_$CONS3R(J));
+         RV2_$CONS3R=RV_$CONS3R**2;
+         IF(RV2_$CONS3R<=RF2_$CONS3R)
+         [
+             RV_$CONS3R=RCORNER_$CONS3R(J)
+                      +SURPARA_$CONS3R(J,4)*(Z(NP)-ZCORNER_$CONS3R(J));
+             RV2_$CONS3R=RV_$CONS3R**2;
+             R0DELR=X(NP)*U(NP)+Y(NP)*V(NP);
+             DELRSQ=U(NP)*U(NP)+V(NP)*V(NP);
+             A=DELRSQ-(SURPARA_$CONS3R(J,4)**2)*(W(NP)**2);
+             B=R0DELR-SURPARA_$CONS3R(J,4)*RV_$CONS3R*W(NP);
+             B2=B*B;
+             C=R0SQ-RV2_$CONS3R;
+             IF(A=0.0)
+             [
+                 IF(B~=0.0)[CUT_COE=-0.5*C/B;]
+                 ELSE [ CUT_COE=-1.0E5; ]
+             ]
+             ELSE
+             [
+                 TEMP1=B2-A*C;
+                 IF(TEMP1>=0.0)
+                 [
+                     TEMP1=-(B+SIGN(one,B)*SQRT(TEMP1) );
+                     CUT_COE1=TEMP1/A;
+                     CUT_COE2=C/TEMP1;
+                     IF(CUT_COE1>STEP_UNITOLD & CUT_COE2>STEP_UNITOLD)
+                     [CUT_COE=MIN(CUT_COE1,CUT_COE2);]
+                     ELSE[ CUT_COE=MAX(CUT_COE1,CUT_COE2);]
+                 ]
+             ]
+             IF(CUT_COE>STEP_UNITOLD & CUT_COE<STEP_UNIT)
+             [
+                 $GEO_SHIFT_2_(CUT_COE,STEP_UNIT);
+                 USTEP=CUT_COE;
+                 IRNEW = IRSTART_$CONS3R + {P1};
+                 RETURN;
+             ]
+             ELSEIF( CUT_COE = STEP_UNIT & IU_D=1 )
+             [
+                 $GEO_SHIFT_1_(CUT_COE);
+                 USTEP=CUT_COE;
+                 IF(DIRTMP=1 & J+1=NUM_NODE_$CONS3R)
+                 [  CALL WHERE_AM_I(ICM_$CONS3R,{P3});RETURN;]
+                 ELSEIF( DIRTMP=-1 & J=1 )
+                 [
+                    IF(N_GAP_$CONS3R=0)
+                    [IRNEW=IREND_$CONS3R; RETURN; ]
+                    ELSE[CALL WHERE_AM_I(ICM_$CONS3R,{P3}); RETURN;]
+                 ]
+             ]
+             ELSE[USTEP=STEP_UNIT;IRNEW =IRSTART_$CONS3R+{P1};RETURN;]
+         ]
+         ELSEIF(IU_D=0)[ USTEP=STEP_UNIT;RETURN;]
+    ]
+    STEP_UNITOLD=STEP_UNIT;
+
+;}
+
+
+"V>$CONS3R_MACRO_1_OUT(#,#,#);
+"V>=============
+"V> {p1} = 1, if particle is inside now, for region # change
+"V>      = 0,                outside
+"V> {P2} the z coordinate for dist calc
+"V>      if go down, ZCORNER_$CONS3R(J+1)
+"V>            up    ZCORNER_$CONS3R(J)
+"V> {p3} = 1, if W(NP) > 0, used to call where_am_i
+"V>      = -1,         < 0 ,  not include the w=0 case
+;
+REPLACE {$CONS3R_MACRO_1_OUT(#,#,#);} WITH {
+    CUT_COE=0.0;
+    CUT_COE1=0.0;
+    CUT_COE2=0.0;
+    DIST_TMP=({P2}-Z(NP))/W(NP);
+    DIRTMP={P3};
+    IF(DIST_TMP>USTEP)[STEP_UNIT=USTEP;IU_D=0;]
+    ELSE[STEP_UNIT=DIST_TMP;IU_D=1;]
+    IF(SURPARA_$CONS3R(J,4)>1.0E29)
+    [
+        IF(IU_D=1)
+        [
+            RF2_$CONS3R=(X(NP)+STEP_UNIT*U(NP))**2+(Y(NP)
+                    +STEP_UNIT*V(NP))**2;
+            RF_$CONS3R=SQRT(RF2_$CONS3R);
+            IF(  RF_$CONS3R<MAX(RCORNER_$CONS3R(J), RCORNER_$CONS3R(J+1))
+              & RF_$CONS3R>MIN(RCORNER_$CONS3R(J), RCORNER_$CONS3R(J+1)))
+            [
+                $GEO_SHIFT_1_(STEP_UNIT);
+                USTEP=STEP_UNIT;
+                IRNEW = IRSTART_$CONS3R+{P1};
+                RETURN;
+            ]
+         ]
+         ELSE[USTEP=STEP_UNIT; RETURN; ]
+     ]
+     ELSE
+     [
+        RV_$CONS3R=RCORNER_$CONS3R(J)
+                +SURPARA_$CONS3R(J,4)*(Z(NP)-ZCORNER_$CONS3R(J));
+        RV2_$CONS3R=RV_$CONS3R**2;
+        R0DELR=X(NP)*U(NP)+Y(NP)*V(NP);
+        DELRSQ=U(NP)*U(NP)+V(NP)*V(NP);
+        A=DELRSQ-(SURPARA_$CONS3R(J,4)**2)*(W(NP)**2);
+        B=R0DELR-SURPARA_$CONS3R(J,4)*RV_$CONS3R*W(NP);
+        B2=B*B;
+        C=R0SQ-RV2_$CONS3R;
+        IF(A>0.0 & B>0.0 & C>0.0)
+        [IF(IU_D=0)[USTEP=STEP_UNIT; RETURN; ] ]
+        IF(A=0.0)
+        [
+           IF(B~=0.0)[CUT_COE=-0.5*C/B;]
+           ELSE [ CUT_COE=-1.0E5; ]
+        ]
+        ELSE
+        [
+            TEMP1=B2-A*C;
+            IF(TEMP1>=0.0)
+            [
+                TEMP1=-(B+SIGN(one,B)*SQRT(TEMP1) );
+                CUT_COE1=TEMP1/A;
+                CUT_COE2=C/TEMP1;
+                IF(CUT_COE1>STEP_UNITOLD & CUT_COE2>STEP_UNITOLD)
+                [CUT_COE=MIN(CUT_COE1,CUT_COE2);]
+                ELSE[ CUT_COE=MAX(CUT_COE1,CUT_COE2);]
+            ]
+        ]
+        IF(CUT_COE>STEP_UNITOLD & CUT_COE<STEP_UNIT)
+        [
+            $GEO_SHIFT_2_(CUT_COE,STEP_UNIT);
+            USTEP=CUT_COE;
+            IRNEW = IRSTART_$CONS3R+{P1};
+            RETURN;
+        ]
+        ELSEIF( CUT_COE = STEP_UNIT & IU_D=1 )
+        [
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IF(DIRTMP=1 & J+1=NUM_NODE_$CONS3R )
+            [ CALL WHERE_AM_I(ICM_$CONS3R,{P3}); RETURN;  ]
+            ELSEIF( DIRTMP=-1 & J=1 )
+            [
+                IF(N_GAP_$CONS3R=1)
+                [IRNEW=IREND_$CONS3R; RETURN; ]
+                ELSE[CALL WHERE_AM_I(ICM_$CONS3R,{P3}); RETURN;]
+            ]
+        ]
+        ELSEIF(CUT_COE = STEP_UNIT & IU_D=0 )
+        [ IRNEW=IRSTART_$CONS3R+{P1};USTEP=STEP_UNIT; RETURN;]
+        ELSEIF(IU_D=0)[USTEP=STEP_UNIT;RETURN;]
+    ]
+    STEP_UNITOLD=STEP_UNIT;
+;}
+"End of CONS3R_macros.mortran (Rev 1.3)"

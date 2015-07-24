@@ -1,0 +1,107 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: stacked planes                     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the SLAB component module written by     "
+"  Dave Rogers and Bruce Faddegon, starting in 1991, and subsequently edited  "
+"  by George Ding.                                                            "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     $SLABS (SLABS) miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$SLABS} WITH {30}          "maximum number of slabs"
+;
+"-------------------------------------------------------------------------------
+"     $SLABS component module common                 ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$SLABS/
+"V>================
+"V>ICM_$SLABS          CM index, set =ICM in INPUT_$SLABS and never re-set
+"V>IRSTART_$SLABS      first region number for this CM
+"V>IREND_$SLABS        last region number for this CM
+"V>TITLE_$SLABS        title of CM
+"V>N_$SLABS            number of slabs in CM
+"V>N_GAP_$SLABS        0 if no air gap this CM, = 1 if air gap at top of CM
+"V>ZBACK_$SLABS(IRL)   Downstream Z boundary of slab IRL in SLABS
+"V>ZFRONT_$SLABS(IRL)  Upstream Z boundary of slab IRL in SLABS
+"V>ZTHICK_$SLABS(IRL)  thickness of slab IRL
+"V>IR_$SLABS           local region number
+
+REPLACE {;COMIN/CM_$SLABS/;} WITH {
+   ;COMMON/CM_$SLABS/ICM_$SLABS,IRSTART_$SLABS,IREND_$SLABS,
+   N_$SLABS,N_GAP_$SLABS,TITLE_$SLABS,ZBACK_$SLABS,ZFRONT_$SLABS,
+   ZTHICK_$SLABS,IR_$SLABS;
+   INTEGER ICM_$SLABS,IRSTART_$SLABS,IREND_$SLABS,N_$SLABS,
+           N_GAP_$SLABS,IR_$SLABS;
+   $REAL ZBACK_$SLABS($MAX_N_$SLABS),ZFRONT_$SLABS($MAX_N_$SLABS),
+         ZTHICK_$SLABS($MAX_N_$SLABS);
+   CHARACTER*1 TITLE_$SLABS(60);
+} "end of replacement defining common for this CM"
+;
+"-------------------------------------------------------------------------------
+"     $SLABS HOWNEAR replacement macro
+"     Now just calls the HOWNEAR_$SLABS subroutine
+"-------------------------------------------------------------------------------
+"
+REPLACE {$SLABS_CM_HOWNEAR(#)} WITH  {  "{P1} is DNEAR"
+CALL HOWNEAR_$SLABS({P1});
+}
+"end of SLABS_macros.mortran (Rev 1.3)"

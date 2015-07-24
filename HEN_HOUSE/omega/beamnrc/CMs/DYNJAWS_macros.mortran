@@ -1,0 +1,392 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: dynamic jaws                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 2007                                       "
+"                                                                             "
+"  Contributors:    Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the JAWS component module written by     "
+"  George Ding, starting in 1992.                                             "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     JAWS miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$DYNJAWS} WITH {12}
+
+REPLACE {$MAXFIELD_$DYNJAWS} WITH {100}
+
+REPLACE {$MAXFS_$DYNJAWS} WITH {{COMPUTE $MAX_N_$DYNJAWS*$MAXFIELD_$DYNJAWS}}
+
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     $DYNJAWS (JAWS) component module common                  ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$DYNJAWS/
+"V>================
+"V>ICM_$DYNJAWS      = CM index, set as ICM in INPUT_$DYNJAWS - never re-set
+"V>IRSTART_$DYNJAWS  = first region number for this CM
+"V>IREND_$DYNJAWS    = last region number for this CM
+"V>N_$DYNJAWS        = number of regions in CM
+"V>ISCM_$DYNJAWS     = index of pired bars in CM
+"V>TITLE_$DYNJAWS    = title of CM
+"V>XY_CHOICE_$DYNJAWS = chose X or Y oringtation of the bar
+"V>ZBACK_$DYNJAWS    = Back of CM
+"V>ZFRONT_$DYNJAWS   = Front of CM
+"V>IXY_CHOICE_$DYNJAWS(ISCM) = index for x or y bar direction
+"V>IR_$DYNJAWS       = local region number
+"V>ISCM_$DYNJAWS     = local sub-component region number
+"V>XY_$DYNJAWS       = X(NP) or Y(NP)
+"V>UV_$DYNJAWS       = U(NP) or V(NP)
+;
+REPLACE {;COMIN/CM_$DYNJAWS/;} WITH {
+   ;COMMON/CM_$DYNJAWS/ ZBACK_$DYNJAWS, ZFRONT_$DYNJAWS,
+      XY_$DYNJAWS,UV_$DYNJAWS,ICM_$DYNJAWS,
+      IRSTART_$DYNJAWS,  IREND_$DYNJAWS,  N_$DYNJAWS,
+      IR_$DYNJAWS,IXY_CHOICE_$DYNJAWS,ISCM_$DYNJAWS,
+      TITLE_$DYNJAWS;
+   $REAL
+      ZBACK_$DYNJAWS, ZFRONT_$DYNJAWS,
+      XY_$DYNJAWS,UV_$DYNJAWS;
+   INTEGER
+      ICM_$DYNJAWS,IRSTART_$DYNJAWS,IREND_$DYNJAWS,
+      N_$DYNJAWS,IR_$DYNJAWS,
+      IXY_CHOICE_$DYNJAWS($MAX_N_$DYNJAWS), ISCM_$DYNJAWS;
+   CHARACTER*1 TITLE_$DYNJAWS(60);
+
+} "end of replacement defining common for this CM"
+;
+
+"V>COMMON/USERDYNJAWS/
+"V>
+"V>ISCM_MAX_$DYNJAWS = number of pired bars in CM
+"V>MODE_$DYNJAWS = 0 for static jaws, 1 for dynamic jaw positioning, 2
+"V>                for step-and-shoot positioning
+"V>NFIELDS_$DYNJAWS = no. of jaw fields
+"V>I_$DYNJAWS,J_$DYNJAWS = looping indices
+"V>ZMIN_$DYNJAWS(I)  = Zmin of a paired bar
+"V>ZMAX_$DYNJAWS(I)  = Zmax of a paired bar
+"V>XFP_$DYNJAWS(I)   = Front of positive bar in this ISCM (X or Y)
+"V>XFN_$DYNJAWS(I)   = Front of negative bar in this ISCM (X or Y)
+"V>XBP_$DYNJAWS(I)   = Back of positive bar in this ISCM (X or Y)
+"V>XBN_$DYNJAWS(I)   = Back of negative bar in this ISCM (X or Y)
+"V>DZMIN_$DYNJAWS(J) = values of Zmin for all bars for all fields
+"V>DZMAX_$DYNJAWS(J) = values of Zmax for all bars for all fields
+"V>DXFP_$DYNJAWS(J)  = values of XFP for all bars for all fields
+"V>DXFN_$DYNJAWS(J)  = values of XFN for all bars for all fields
+"V>DXBP_$DYNJAWS(J)  = values of XBP for all bars for all fields
+"V>DXBN_$DYNJAWS(J)  = values of XBN for all bars for all fields
+"V>XFPT_$DYNJAWS(I,2)= Front of positive bar in this ISCM (X or Y)
+"V>XFNT_$DYNJAWS(I,2)= Front of negative bar in this ISCM (X or Y)
+"V>XBPT_$DYNJAWS(I,2)= Back of positive bar in this ISCM (X or Y)
+"V>XBNT_$DYNJAWS(I,2)= Back of negative bar in this ISCM (X or Y)
+"V>APO_$DYNJAWS(I)   = Slope of positive bar in this ISCM (X or Y)
+"V>ANE_$DYNJAWS(I)   = Slope of negative bar in this ISCM (X or Y)
+"V>BPO_$DYNJAWS(I)   = Constant  b of positive bar in equation x = a*z + b
+"V>BNE_$DYNJAWS(I)   = Constant  b of negative bar in equation x = a*z + b
+"V>BPOT_$DYNJAWS(I,2)= Constant  b of positive bar in equation x = a*z + b
+"V>BNET_$DYNJAWS(I,2)= Constant  b of negative bar in equation x = a*z + b
+"V>COSP_$DYNJAWS(I)  = cos of positive bar in this ISCM
+"V>COSN_$DYNJAWS(I)  = cos of negative bar in this ISCM
+"V>INDEX_$DYNJAWS(K) = index for field I.  If INDEX_$DYNJAWS(K)>=
+"V>                            RNDM1_$DYNJAWS then field I is used.
+"V>INDEX1_$DYNJAWS,INDEX2_$DYNJAWS = temporary variables to store
+"V>                                  INDEX_$DYNJAWS(K) values so that
+"V>                                  jaw positions can be interpolated during
+"V>                                  dynamic simulations
+"V>RNDM1_$DYNJAWS = random no. (0,1) selected before each history and compared
+"V>                 to INDEX_$DYNJAWS(K) to determin what field to used
+
+
+REPLACE {;COMIN/USER-DYNJAWS/;} WITH {;
+
+COMMON/USERDYNJAWS/ZMIN_$DYNJAWS, ZMAX_$DYNJAWS,
+       XFP_$DYNJAWS,XFN_$DYNJAWS,XBP_$DYNJAWS,XBN_$DYNJAWS,
+       DZMIN_$DYNJAWS, DZMAX_$DYNJAWS,
+       DXFP_$DYNJAWS,DXFN_$DYNJAWS,DXBP_$DYNJAWS,DXBN_$DYNJAWS,
+       APO_$DYNJAWS, ANE_$DYNJAWS,BPO_$DYNJAWS,BNE_$DYNJAWS,
+       COSP_$DYNJAWS,COSN_$DYNJAWS,XFPT_$DYNJAWS,XFNT_$DYNJAWS,
+       XBPT_$DYNJAWS,XBNT_$DYNJAWS,BPOT_$DYNJAWS,BNET_$DYNJAWS,
+       RNDM1_$DYNJAWS,INDEX_$DYNJAWS,INDEX1_$DYNJAWS,
+       INDEX2_$DYNJAWS,ISCM_MAX_$DYNJAWS,MODE_$DYNJAWS,NFIELDS_$DYNJAWS,
+       I_$DYNJAWS,J_$DYNJAWS;
+$REAL ZMIN_$DYNJAWS($MAX_N_$DYNJAWS),  ZMAX_$DYNJAWS($MAX_N_$DYNJAWS),
+      XFP_$DYNJAWS($MAX_N_$DYNJAWS),XFN_$DYNJAWS($MAX_N_$DYNJAWS),
+      XBP_$DYNJAWS($MAX_N_$DYNJAWS), XBN_$DYNJAWS($MAX_N_$DYNJAWS),
+      DZMIN_$DYNJAWS($MAXFS_$DYNJAWS), DZMAX_$DYNJAWS($MAXFS_$DYNJAWS),
+      DXFP_$DYNJAWS($MAXFS_$DYNJAWS),DXFN_$DYNJAWS($MAXFS_$DYNJAWS),
+      DXBP_$DYNJAWS($MAXFS_$DYNJAWS),DXBN_$DYNJAWS($MAXFS_$DYNJAWS),
+      APO_$DYNJAWS($MAX_N_$DYNJAWS),ANE_$DYNJAWS($MAX_N_$DYNJAWS),
+      BPO_$DYNJAWS($MAX_N_$DYNJAWS), BNE_$DYNJAWS($MAX_N_$DYNJAWS),
+      COSP_$DYNJAWS($MAX_N_$DYNJAWS),COSN_$DYNJAWS($MAX_N_$DYNJAWS),
+      XFPT_$DYNJAWS($MAX_N_$DYNJAWS,2),XFNT_$DYNJAWS($MAX_N_$DYNJAWS,2),
+      XBPT_$DYNJAWS($MAX_N_$DYNJAWS,2),XBNT_$DYNJAWS($MAX_N_$DYNJAWS,2),
+      BPOT_$DYNJAWS($MAX_N_$DYNJAWS,2),BNET_$DYNJAWS($MAX_N_$DYNJAWS,2),
+      RNDM1_$DYNJAWS,INDEX_$DYNJAWS($MAXFIELD_$DYNJAWS),INDEX1_$DYNJAWS,
+       INDEX2_$DYNJAWS;
+$INTEGER ISCM_MAX_$DYNJAWS,MODE_$DYNJAWS,NFIELDS_$DYNJAWS,
+        I_$DYNJAWS,J_$DYNJAWS;
+$INTEGER BIMIN_$DYNJAWS, BIMAX_$DYNJAWS, BIMID_$DYNJAWS;
+}
+
+
+
+REPLACE {$SET_DYNJAWS_COMP} WITH {;
+IF(MODE_$DYNJAWS=1 | MODE_$DYNJAWS=2)[
+    $RANDOMSET RNDM1_$DYNJAWS;
+
+    IF (RNDM1_$DYNJAWS < INDEX_$DYNJAWS(NFIELDS_$DYNJAWS))  [
+
+        "Binary search"
+        IF (RNDM1_$DYNJAWS < INDEX_$DYNJAWS(1)) [
+            BIMAX_$DYNJAWS = 1;
+        ]
+        ELSE [
+            BIMIN_$DYNJAWS = 1;
+            BIMAX_$DYNJAWS = NFIELDS_$DYNJAWS;
+            WHILE (BIMIN_$DYNJAWS < BIMAX_$DYNJAWS-1) [
+                BIMID_$DYNJAWS = BIMIN_$DYNJAWS +
+                  (BIMAX_$DYNJAWS-BIMIN_$DYNJAWS)/2;
+                IF (INDEX_$DYNJAWS(BIMID_$DYNJAWS) >= RNDM1_$DYNJAWS) [
+                   BIMAX_$DYNJAWS = BIMID_$DYNJAWS; ]
+                ELSE [ BIMIN_$DYNJAWS = BIMID_$DYNJAWS; ];
+            ]
+        ]
+        I_$DYNJAWS = BIMAX_$DYNJAWS;
+
+
+        INDEX2_$DYNJAWS = INDEX_$DYNJAWS(I_$DYNJAWS);
+        IF(MODE_$DYNJAWS=1 & I_$DYNJAWS>1)
+                INDEX1_$DYNJAWS = INDEX_$DYNJAWS(I_$DYNJAWS-1);
+        DO J_$DYNJAWS=1,ISCM_MAX_$DYNJAWS[
+        IF(MODE_$DYNJAWS=1 & I_$DYNJAWS>1)[
+            "calculate settings between fields I_$DYNJAWS and I_$DYNJAWS-1"
+            ZMIN_$DYNJAWS(J_$DYNJAWS)=
+            DZMIN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DZMIN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DZMIN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+            ZMAX_$DYNJAWS(J_$DYNJAWS)=
+            DZMAX_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DZMAX_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DZMAX_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+            XFP_$DYNJAWS(J_$DYNJAWS)=
+            DXFP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DXFP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DXFP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+            XBP_$DYNJAWS(J_$DYNJAWS)=
+            DXBP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DXBP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DXBP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+            XFN_$DYNJAWS(J_$DYNJAWS)=
+            DXFN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DXFN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DXFN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+            XBN_$DYNJAWS(J_$DYNJAWS)=
+            DXBN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS)+
+            (DXBN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS)-
+                DXBN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-2)*ISCM_MAX_$DYNJAWS))*
+            ((RNDM1_$DYNJAWS-INDEX1_$DYNJAWS)/
+                (INDEX2_$DYNJAWS-INDEX1_$DYNJAWS));
+        ]
+        ELSE[
+            ZMIN_$DYNJAWS(J_$DYNJAWS)=
+                DZMIN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+            ZMAX_$DYNJAWS(J_$DYNJAWS)=
+                DZMAX_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+            XFP_$DYNJAWS(J_$DYNJAWS)=
+                DXFP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+            XBP_$DYNJAWS(J_$DYNJAWS)=
+                DXBP_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+            XFN_$DYNJAWS(J_$DYNJAWS)=
+                DXFN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+            XBN_$DYNJAWS(J_$DYNJAWS)=
+                DXBN_$DYNJAWS(J_$DYNJAWS+(I_$DYNJAWS-1)*ISCM_MAX_$DYNJAWS);
+        ]
+        APO_$DYNJAWS(J_$DYNJAWS) = (XBP_$DYNJAWS(J_$DYNJAWS)-
+                                    XFP_$DYNJAWS(J_$DYNJAWS))/
+                        (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                            ZMIN_$DYNJAWS(J_$DYNJAWS));
+        ANE_$DYNJAWS(J_$DYNJAWS) = (XBN_$DYNJAWS(J_$DYNJAWS)-
+                                    XFN_$DYNJAWS(J_$DYNJAWS))/
+                        (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                            ZMIN_$DYNJAWS(J_$DYNJAWS));
+        BPO_$DYNJAWS(J_$DYNJAWS) =  XFP_$DYNJAWS(J_$DYNJAWS) -
+                                ZMIN_$DYNJAWS(J_$DYNJAWS)*
+                                APO_$DYNJAWS(J_$DYNJAWS);
+        BNE_$DYNJAWS(J_$DYNJAWS) =  XFN_$DYNJAWS(J_$DYNJAWS) -
+                                ZMIN_$DYNJAWS(J_$DYNJAWS)*
+                                ANE_$DYNJAWS(J_$DYNJAWS);
+        COSP_$DYNJAWS(J_$DYNJAWS)= (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                    ZMIN_$DYNJAWS(J_$DYNJAWS))/
+                    SQRT( (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                    ZMIN_$DYNJAWS(J_$DYNJAWS))**2
+                    +( XBP_$DYNJAWS(J_$DYNJAWS) -
+                    XFP_$DYNJAWS(J_$DYNJAWS) )**2 );
+        COSN_$DYNJAWS(J_$DYNJAWS)= (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                    ZMIN_$DYNJAWS(J_$DYNJAWS))/
+                SQRT( (ZMAX_$DYNJAWS(J_$DYNJAWS) -
+                        ZMIN_$DYNJAWS(J_$DYNJAWS))**2
+                    + (XBN_$DYNJAWS(J_$DYNJAWS) -
+                        XFN_$DYNJAWS(J_$DYNJAWS))**2 );
+        XFPT_$DYNJAWS(J_$DYNJAWS,1)  = XFP_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        XFPT_$DYNJAWS(J_$DYNJAWS,2)  = XFP_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        XBPT_$DYNJAWS(J_$DYNJAWS,1)  = XBP_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        XBPT_$DYNJAWS(J_$DYNJAWS,2)  = XBP_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        XFNT_$DYNJAWS(J_$DYNJAWS,1)  = XFN_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        XFNT_$DYNJAWS(J_$DYNJAWS,2)  = XFN_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        XBNT_$DYNJAWS(J_$DYNJAWS,1)  = XBN_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        XBNT_$DYNJAWS(J_$DYNJAWS,2)  = XBN_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        BPOT_$DYNJAWS(J_$DYNJAWS,1) =  BPO_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        BPOT_$DYNJAWS(J_$DYNJAWS,2) =  BPO_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        BNET_$DYNJAWS(J_$DYNJAWS,1) =  BNE_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
+        BNET_$DYNJAWS(J_$DYNJAWS,2) =  BNE_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
+        ]
+    ]
+]
+;
+}
+"-------------------------------------------------------------------------------
+"     $DYNJAWS (JAWS) HOWNEAR replacement macro                   ""toc:
+"-------------------------------------------------------------------------------
+"
+"
+REPLACE {$DYNJAWS_CM_HOWNEAR(#)} WITH {  "{P1} is DNEAR"
+"       ==================="
+CALL HOWNEAR_$DYNJAWS({P1});
+}
+;
+REPLACE {$DYNJAWS_TPOSITIVE;} WITH {;
+DIST = (APO_$DYNJAWS(ISCM_$DYNJAWS)*Z(NP) +
+        BPOT_$DYNJAWS(ISCM_$DYNJAWS,IB_$DYNJAWS)
+         - XY_$DYNJAWS)/(UV_$DYNJAWS-W(NP)*APO_$DYNJAWS(ISCM_$DYNJAWS));
+IF(DIST < 0.0)[
+   I_tpo = I_tpo + 1;
+   DIST = 0.0;
+   IF(Z(NP) < ZFRONT_$DYNJAWS-0.1 | Z(NP) > ZBACK_$DYNJAWS+0.1 )[
+      OUTPUT; (/' ***WARNING in +ve bar of JAWS'/
+            ' Particle is well above or below jaw, yet region number '/
+            ' indicates the particle is still in the jaw.'/
+            ' The particle is being discarded but this is a bug.'/
+            ' Please contact the NRC.'/);
+      IDISC=1; RETURN;
+   ]
+   ELSEIF(I_tpo > 20)[
+      OUTPUT; (/' ***WARNING in +ve bar of JAWS'/
+            ' DIST calculated to jaw opening has been -ve and reset to '/
+            ' zero for the past 20 steps.  The particle could be assigned'/
+            ' to the wrong region number.  The particle is being discarded'/
+            ' but this is a bug.  Please contact the NRC.'/);
+      IDISC = 1; I_tpo = 0; RETURN;
+   ]
+]
+ELSE[
+   I_tpo = 0;
+              "reset counter in case another particle in this history has"
+              "this problem"
+]
+}
+;
+REPLACE {$DYNJAWS_TNEGATIVE;} WITH {;
+DIST = (ANE_$DYNJAWS(ISCM_$DYNJAWS)*Z(NP)+
+          BNET_$DYNJAWS(ISCM_$DYNJAWS,IB_$DYNJAWS)
+        - XY_$DYNJAWS)/(UV_$DYNJAWS-W(NP)*ANE_$DYNJAWS(ISCM_$DYNJAWS));
+IF(DIST < 0.0)[
+   I_tne = I_tne + 1;
+   DIST = 0.0;
+   IF(Z(NP) < ZFRONT_$DYNJAWS-0.1 | Z(NP) > ZBACK_$DYNJAWS+0.1 )[
+      OUTPUT; (/' ***WARNING in -ve bar of JAWS'/
+            ' Particle is well above or below jaw, yet region number '/
+            ' indicates the particle is still in the jaw.'/
+            ' The particle is being discarded but this is a bug.'/
+            ' Please contact the NRC.'/);
+      IDISC=1; RETURN;
+   ]
+   ELSEIF(I_tne > 20)[
+      OUTPUT; (/' ***WARNING in -ve bar of JAWS'/
+            ' DIST calculated to jaw opening has been -ve and reset to '/
+            ' zero for the past 20 steps.  The particle could be assigned'/
+            ' to the wrong region number.  The particle is being discarded'/
+            ' but this is a bug.  Please contact the NRC.'/);
+      IDISC = 1; I_tne = 0; RETURN;
+   ]
+]
+ELSE[
+   I_tne = 0;
+              "reset counter in case another particle in this history has"
+              "this problem"
+]
+}
+;
+REPLACE {$DYNJAWS_SET_XY_UV(#)} WITH {;
+XY_$DYNJAWS = X(NP);
+UV_$DYNJAWS = U(NP);
+IF(IXY_CHOICE_$DYNJAWS({P1}) = 1)[
+   XY_$DYNJAWS = Y(NP);
+   UV_$DYNJAWS = V(NP);
+]
+}
+"End of JAWS_macros.mortran (Rev 1.5)"

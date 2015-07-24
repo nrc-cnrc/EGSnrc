@@ -1,0 +1,730 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: Elekta type multi-leaf collimator  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Jarno Van de Walle, 2004                                  "
+"                   Nick Reynaert, 2004                                       "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This component module was originally derived from existing BEAM MLC        "
+"  component modules, and contributed back to NRC by the authors. The final   "
+"  version was extensively reworked by Blake Walters at NRC.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  A Component module to be used in conjunction with BEAMnrc for Monte Carlo  "
+"  simulations of photon and electron beams (used in radiotherapy)            "
+"  transported through an Elekta type Multileaf Collimator system. This CM    "
+"  takes into account the tongue and groove geometry and offers a choice      "
+"  between rounded and divergent-focused leaf ends. It also accounts for the  "
+"  screws on the carriage railings explicitly. Gaps are allowed between       "
+"  adjacent leaves on the same carriage so that the leaves do not have to     "
+"  physically touch. The tongue and groove do not have to have identical      "
+"  cross sections.                                                            "
+"                                                                             "
+"#############################################################################"
+
+
+"------------------------------------------------------------------------
+"     MLCE miscellaneous replacement macros
+"------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$MLCE} WITH {{REDUCE $MAXIMUM_N_$MLCE}}
+"       ==========="
+
+REPLACE {$MAXIMUM_N_$MLCE} WITH {3}
+"       ==================="
+
+" THE MAX # OF the leaves TO BE ALLOWED IN THIS MODULE"
+REPLACE {$MAXLEAF} WITH {170}
+
+"-------------------------------------------------------------------------
+"     MLCE component module common
+"-----------------------------------------------------------------------
+"
+"V>COMMON/CM_$MLCE/
+"V>================
+"V>ICM_$MLCE        = index of CM, set as ICM in INPUT_$MLCE,not
+"V>IRSTART_$MLCE    = first region number for this CM
+"V>IREND_$MLCE      = last region number for this CM
+"V>N_$MLCE          = number of regions in CM
+"V>TITLE_$MLCE      = title of CM
+"V>ZMIN_$MLCE       = Front of MLCE
+"V>ZMIN_INPUT_$MLCE = stores original value of ZMIN_$MLCE
+"V>ZMAX_$MLCE       = back of MLCE
+"V>ZMAX_INPUT_$MLCE = stores original value of ZMAX_$MLCE
+"V>ZSTEPL_$MLCE     = z coordinate left step central leaf
+"V>ZSTEPR_$MLCE     = z coordinate right step central leaf
+"V>ZTHICK_$MLCE     = Thickness of leaves
+"V>ZFRONT_$MLCE     = Upstream Z boundary of this CM
+"V>NUM_LEAF_$MLCE   = the number of leave in this module
+"V>LEAFWIDTH_$MLCE  = the width of each leaf at ZMIN_$MLCE excluding
+"V>                     the tongue
+"V>ORIENT_$MLCE     = the index to indicate the leave direction
+"V>                      0: default, leaf orientation in y
+"V>                      1:                           in x
+"V>START_$MLCE      = the start position wrt the CAX of the lowermost
+"V>                     leaf ie leaf 1 tongue as projected to ZMIN_$MLCE
+"V>HSCREW_$MLCE     = the height of the screw on the carriage railing
+"V>WSCREW_$MLCE     = the width of the screw on the carriage railing
+"V>WTONGUE_$MLCE    = the width of the tongue projected to ZMIN_$MLCE
+"V>WGROOVE_$MLCE    = the width of the groove projected to ZMIN_$MLCE
+"V>HTONGUE_$MLCE    = the height of the tongue projected on the z-axis
+"V>HGROOVE_$MLCE    = the height of the groove projected on the z-axis
+"V>LEAFGAP_$MLCE    = the width of the interleaf air gap at ZMIN_$MLCE
+"V>LEAFGAP2_$MLCE   = the width of the interleaf air gap at ZMIN_$MLCE
+"                       for the tongue-and-groove region
+"V>ENDTYPE_$MLCE    = the leaf end geomery ( 0 = rounded, 1 = focused )
+"V>LEAFRADIUS_$MLCE = the radius of the leaf end if ENDTYPE_$MLCE = 0
+"V>ZREG_$MLCE(4)    = the z boundaries of the 3 sub-regions in z direction
+"V>YREG_$MLCE(NUM_LEAF_$MLCE,4)
+"V>                   = the boundaries along the perpendicular direction
+"V>                     to the leaf orientation of sub-regions
+"V>SUBINDEX_$MLCE   = an index number to represent which region the
+"V>          belongs in based on sub-dividing each leaf into regions.
+"V>ZFOCUS_$MLCE(2) = the two focus point coordinates: 1. for leave side
+"V>                                                  2. for leave end.
+"V>SURPARA1_$MLCE($MAXLEAF,4)  the parameters to describe the leaf side
+"V>                               surface i.e. tangent along that side.
+"V>LEAFA_$MLCE(NUM_LEAF_$MLCE) = coordinates of A side leaves at
+"V>                     ZMIN_$MLCE if ENDTYPE_$MLCE = 1 or at
+"V>                     rounded leaf tip @ ZMIN_$MLCE+(ZTHICK_$MLCE)/2
+"V>LEAFB_$MLCE(NUM_LEAF_$MLCE) = coordinates of B side leaves at
+"V>                     ZMIN_$MLCE if ENDTYPE_$MLCE = 1 or at
+"V>                     rounded leaf tip @ ZMIN_$MLCE+(ZTHICK_$MLCE)/2.
+"V>SURPARA2_B_$MLCE($MAXLEAF)the parameters to describe the leaf end
+"V>                               surface i.e. tangent along that end.
+"V>SURPARA2_A_$MLCE($MAXLEAF)the parameters to describe the leaf end
+"V>                               surface i.e. tangent along that end.
+"V>SPACE_$MLCE = space between leaf centres defined at SSD_$MLCE
+"V>SSD_$MLCE = distance from Z=0 at which SPACE is defined
+
+;
+REPLACE{;COMIN/CM_$MLCE/;} WITH {
+;COMMON/CM_$MLCE/
+      ZMIN_$MLCE,
+      ZMIN_INPUT_$MLCE,
+      ZMAX_$MLCE,
+      ZMAX_INPUT_$MLCE,
+      ZSTEPL_$MLCE,
+      ZSTEPR_$MLCE,
+      ZFRONT_$MLCE,
+      SURPARA2_B_$MLCE,
+      SURPARA2_A_$MLCE,
+      LEAFRADIUS_$MLCE,
+      ZFOCUS_$MLCE,
+      CIL_$MLCE,
+      SPACE_$MLCE,
+      SSD_$MLCE,
+      LEAFA_$MLCE,
+      LEAFB_$MLCE,
+      X1_$MLCE,X2_$MLCE,X3_$MLCE,X4_$MLCE,
+      X_$MLCE,Z_$MLCE,
+      A_$MLCE,B_$MLCE,
+      C_$MLCE,D_$MLCE,
+      E_$MLCE,Z0_$MLCE,
+      TLW_$MLCE,
+      ZBORDERS_$MLCE,
+      TGW_$MLCE,
+      LBROT_$MLCE,
+      ICM_$MLCE,IRSTART_$MLCE,IREND_$MLCE,N_$MLCE,
+      N_GAP_$MLCE,
+      IR_$MLCE,NUM_LEAF_$MLCE, ORIENT_$MLCE,ENDTYPE_$MLCE,
+      SUBINDEX_$MLCE,TITLE_$MLCE;
+   $REAL
+      ZMIN_$MLCE,
+      ZMIN_INPUT_$MLCE,
+      ZMAX_$MLCE,
+      ZMAX_INPUT_$MLCE,
+      ZSTEPL_$MLCE,
+      ZSTEPR_$MLCE,
+      ZFRONT_$MLCE,
+      SURPARA2_B_$MLCE($MAXLEAF),
+      SURPARA2_A_$MLCE($MAXLEAF),
+      LEAFRADIUS_$MLCE,
+      ZFOCUS_$MLCE,
+      CIL_$MLCE,
+      SPACE_$MLCE,
+      SSD_$MLCE,
+      LEAFA_$MLCE($MAXLEAF),
+      LEAFB_$MLCE($MAXLEAF),
+      X1_$MLCE,X2_$MLCE,X3_$MLCE,X4_$MLCE,
+      X_$MLCE(8),Z_$MLCE(8),
+      A_$MLCE($MAXLEAF,4),B_$MLCE($MAXLEAF,4),
+      C_$MLCE($MAXLEAF,4),D_$MLCE($MAXLEAF,2),
+      E_$MLCE($MAXLEAF),Z0_$MLCE($MAXLEAF),
+      TLW_$MLCE,
+      ZBORDERS_$MLCE(4),
+      TGW_$MLCE,
+      LBROT_$MLCE;
+   INTEGER
+      ICM_$MLCE,IRSTART_$MLCE,IREND_$MLCE,N_$MLCE,
+      N_GAP_$MLCE,
+      IR_$MLCE,NUM_LEAF_$MLCE, ORIENT_$MLCE,ENDTYPE_$MLCE,
+      SUBINDEX_$MLCE(3,3,5);
+
+   CHARACTER*1 TITLE_$MLCE(60);
+
+}
+ "end of replacement defining common for this CM"
+;
+" $MLCE_FIND(REGION, DISTANCE);
+"=======================================
+" this macro is used to determine the regon #
+"{p1}: the return region value, local region
+"{p2}: the step dist which is used to calc. the particle final position
+
+REPLACE {$MLCE_FIND(#,#);} WITH {;
+    XYFL(1)=XYL(1)+{P2}*UVL(1);
+    XYFL(2)=XYL(2)+{P2}*UVL(2);
+    ZFL=Z(NP)+{P2}*W(NP);
+IF( (W(NP)>0. & ZFL>=ZMAX_$MLCE) | (W(NP)<0. & ZFL<=ZFRONT_$MLCE) )[
+          OUTOFCMFLAG=1;
+"put in = signs to get this to exit stepping loop in HOWFAR"
+]
+ELSEIF(ABS(XYFL(1))>RMAX_CM(ICM_$MLCE) | ABS(XYFL(2))>RMAX_CM(ICM_$MLCE))[
+          OFFEDGECM=1;
+"added this for the case where a particle is taking huge steps parallel"
+"to the leaf direction until, eventually, the 1e-5 perturbation added"
+"to the step to make sure it crosses the region boundary (usually a parallel"
+"boundary) becomes insignificant compared to the total step length.  This"
+"results in an endless loop in howfar, but, in most cases, the particle"
+"is beyond RMAX_CM by this point anyway."
+]
+
+IF( (ZFL<ZMIN_$MLCE | (ZFL=ZMIN_$MLCE & W(NP)<0.0) ) &
+    (ZFL>ZFRONT_$MLCE | ZFL=ZFRONT_$MLCE & W(NP)>0.0) ) [ {P1}=3; ]
+
+ELSE [
+LEAFIS=0;
+BETWEEN_LEAF=0;
+
+DO I=1,NUM_LEAF_$MLCE [
+
+TMP1=(A_$MLCE(I,1)*ZFL)+B_$MLCE(I,1);
+TMP2=(A_$MLCE(I,4)*ZFL)+B_$MLCE(I,4);
+
+IF( (TMP1<=XYFL(1)) & (XYFL(1)<=TMP2)) [
+
+LEAFIS=I; EXIT; ];
+
+IF(I>1)[
+  TMP2=(A_$MLCE(I-1,4)*ZFL)+B_$MLCE(I-1,4);
+  IF(TMP2<XYFL(1) & XYFL(1)<TMP1)[
+    "particle not in any leaf but in air between leaves"
+    {P1}=1;
+    LEAFIS=I;
+    BETWEEN_LEAF=1;
+    EXIT;
+  ]
+]
+];
+
+IF( LEAFIS=0)[ {P1}=1;OUTOFMLCFLAG=1;]"assume going into air, set {P1}=2 for"
+                                      "going into solid block"
+ELSEIF(BETWEEN_LEAF=0) [
+
+  TMP1=(A_$MLCE(LEAFIS,1)*ZFL)+B_$MLCE(LEAFIS,1);
+  TMP2=(A_$MLCE(LEAFIS,4)*ZFL)+B_$MLCE(LEAFIS,4);
+  IF(XYFL(1)<TMP1)[
+    NY=1;
+  ]
+  ELSEIF(XYFL(1)>TMP2)[
+    NY=3;
+  ]
+  ELSE[
+
+DO I =1,3 [
+
+TMP1=(A_$MLCE(LEAFIS,I)*ZFL)+B_$MLCE(LEAFIS,I);
+TMP2=(A_$MLCE(LEAFIS,I+1)*ZFL)+B_$MLCE(LEAFIS,I+1);
+
+IF(TMP1<=XYFL(1) & XYFL(1)<=TMP2)[
+
+NY=I; EXIT;];
+
+          ];
+  ]
+
+IF(NY~=3) [
+IF( (XYFL(1)=(A_$MLCE(LEAFIS,NY+1)*ZFL)+B_$MLCE(LEAFIS,NY+1)) &
+           (UVL(1)>0.0) ) [NY=NY+1;]
+          ];
+
+ZBORDERS_$MLCE(1)=(C_$MLCE(LEAFIS,1)*XYFL(1))+D_$MLCE(LEAFIS,1);
+ZBORDERS_$MLCE(2)=C_$MLCE(LEAFIS,2);
+ZBORDERS_$MLCE(3)=C_$MLCE(LEAFIS,3);
+ZBORDERS_$MLCE(4)=(C_$MLCE(LEAFIS,4)*XYFL(1))+D_$MLCE(LEAFIS,2);
+
+NZ=0;
+DO I=1,4 [
+   IF(ZFL=<ZBORDERS_$MLCE(I)) [ NZ=I; EXIT; ];
+];
+
+IF( NZ~=0 & (ZFL=ZBORDERS_$MLCE(NZ)) & (W(NP)>0) ) [NZ=NZ+1;];
+
+IF(NZ=0)[NZ=5;];
+
+IF(NY=3 & LEAFIS~=NUM_LEAF_$MLCE & ZFL>C_$MLCE(LEAFIS+1,3) ) [
+
+IF(XYFL(1)>(A_$MLCE(LEAFIS+1,1)*ZFL)+B_$MLCE(LEAFIS+1,1)) [
+         LEAFIS=LEAFIS+1; NY=1;
+         ZBORDER=(C_$MLCE(LEAFIS,4)*XYFL(1))+D_$MLCE(LEAFIS,2);
+         IF(ZFL<ZBORDER)[NZ=4;]
+	 ELSE[NZ=5;]
+]
+
+ELSEIF(XYFL(1)=(A_$MLCE(LEAFIS+1,1)*ZFL)+B_$MLCE(LEAFIS+1,1) &
+      UVL(1)>0 )  [
+      LEAFIS=LEAFIS+1; NY=1;
+      ZBORDER=(C_$MLCE(LEAFIS,4)*XYFL(1))+D_$MLCE(LEAFIS,2);
+      IF(ZFL<ZBORDER)[NZ=4;]
+      ELSE[NZ=5;]
+  ]
+
+];
+
+IF(NY=3 & LEAFIS~=NUM_LEAF_$MLCE & ZFL=C_$MLCE(LEAFIS+1,3)
+& W(NP)>0) [
+
+IF(XYFL(1)>(A_$MLCE(LEAFIS+1,1)*ZFL)+B_$MLCE(LEAFIS+1,1)) [
+         LEAFIS=LEAFIS+1; NY=1;
+         ZBORDER=(C_$MLCE(LEAFIS,4)*XYFL(1))+D_$MLCE(LEAFIS,2);
+         IF(ZFL<ZBORDER)[NZ=4;]
+	 ELSE[NZ=5;]
+]
+
+ELSEIF(XYFL(1)=(A_$MLCE(LEAFIS+1,1)*ZFL)+B_$MLCE(LEAFIS+1,1) &
+      UVL(1)>0 )  [
+      LEAFIS=LEAFIS+1; NY=1;
+      ZBORDER=(C_$MLCE(LEAFIS,4)*XYFL(1))+D_$MLCE(LEAFIS,2);
+      IF(ZFL<ZBORDER)[NZ=4;]
+      ELSE[NZ=5;]
+]
+
+];
+
+IF(ENDTYPE_$MLCE=1) [
+
+    TMP1=SURPARA2_B_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE);
+    TMP2=SURPARA2_A_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE);
+
+    IF( (TMP1<XYFL(2) & XYFL(2)<TMP2) |
+        (TMP1=XYFL(2) & UVL(2)>0.0)    |
+        (TMP2=XYFL(2) & UVL(2)<0.0) ) [NX=1;]
+
+    IF( (XYFL(2)<TMP1) | (XYFL(2)=TMP1 & UVL(2)<=0.0) ) [NX=2;]
+    IF( (XYFL(2)>TMP2) | (XYFL(2)=TMP2 & UVL(2)>=0.0) ) [NX=3;]
+
+                     ]
+
+ELSE [
+
+TMP1=sqrt((XYFL(2)-LEAFB_$MLCE(LEAFIS))**2+
+(ZFL-CIL_$MLCE)**2)-LEAFRADIUS_$MLCE;
+TMP2=sqrt((XYFL(2)-LEAFA_$MLCE(LEAFIS))**2+
+(ZFL-CIL_$MLCE)**2)-LEAFRADIUS_$MLCE;
+
+  IF( (TMP1>0 & TMP2>0) |
+      (TMP1=0 & UVL(2)*(XYFL(2)-LEAFB_$MLCE(LEAFIS))+
+      W(NP)*(ZFL-CIL_$MLCE)>0) |
+      (TMP2=0 & UVL(2)*(XYFL(2)-LEAFA_$MLCE(LEAFIS))+
+      W(NP)*(ZFL-CIL_$MLCE)>0) |
+      (TMP1=0 & UVL(2)*(XYFL(2)-LEAFB_$MLCE(LEAFIS))+
+      W(NP)*(ZFL-CIL_$MLCE)=0) |
+      (TMP2=0 & UVL(2)*(XYFL(2)-LEAFA_$MLCE(LEAFIS))+
+      W(NP)*(ZFL-CIL_$MLCE)=0) )[
+      NX=1;
+      ]
+  ELSEIF( (TMP1<0 & TMP2>0) |
+          (TMP1=0 &
+           UVL(2)*(XYFL(2)-LEAFB_$MLCE(LEAFIS))+
+	   W(NP)*(ZFL-CIL_$MLCE)<0) )[
+        NX=2;
+      ]
+  ELSEIF( (TMP1>0 & TMP2<0) |
+          (TMP2=0 &
+	   UVL(2)*(XYFL(2)-LEAFA_$MLCE(LEAFIS))+
+	   W(NP)*(ZFL-CIL_$MLCE)<0) )[
+      NX=3;
+      ]
+];
+IF(LEAFIS=1 & (NX=2|NX=3) & (NZ=1|NZ=2) & NY=1)[
+{P1}=2;]
+ELSE[
+{P1}=SUBINDEX_$MLCE(NX,NY,NZ);
+];
+     ];
+     ];
+;}
+
+;
+
+
+" $MLCE_MINDISTANCE;
+"===============================
+"
+" The following macro will give the nearest distance the particle
+" can travel along its given direction before it strikes the boundary
+" in the x, y or z direction.
+
+"{P1}: The change value for ir region #
+
+REPLACE {$MLCE_MINDISTANCE(#);} WITH {;
+
+IF(BETWEEN_LEAF=0)[
+
+IF( NZ=1 )[
+   ZP=ZFL-(C_$MLCE(LEAFIS,1)*XYFL(1))-D_$MLCE(LEAFIS,1);
+   ZP=ZP/((UVL(1)*C_$MLCE(LEAFIS,1))-W(NP));
+   ZN=(ZMIN_$MLCE-ZFL)/W(NP);
+]
+ELSEIF( NY = 1 & ( NZ = 2|NZ = 3) )[
+   ZP=(C_$MLCE(LEAFIS,3)-ZFL)/W(NP);
+   ZN=(ZMIN_$MLCE-ZFL)/W(NP);
+]
+ELSEIF( NZ=2 & (NY=2|NY=3) )[
+   ZP=(C_$MLCE(LEAFIS,2)-ZFL)/W(NP);
+   ZN=(ZFL-(C_$MLCE(LEAFIS,1)*XYFL(1))-D_$MLCE(LEAFIS,1));
+   ZN=ZN/((UVL(1)*C_$MLCE(LEAFIS,1))-W(NP));
+]
+ELSEIF( NZ=3 & (NY=2) )[
+   ZP=(ZFL-(C_$MLCE(LEAFIS,4)*XYFL(1))-D_$MLCE(LEAFIS,2));
+   ZP=ZP/((UVL(1)*C_$MLCE(LEAFIS,4))-W(NP));
+   ZN=ZFL-(C_$MLCE(LEAFIS,1)*XYFL(1))-D_$MLCE(LEAFIS,1);
+   ZN=ZN/((UVL(1)*C_$MLCE(LEAFIS,1))-W(NP));
+]
+ELSEIF( NZ=4 & (NY=1|NY=2) )[
+   ZP=(ZFL-(C_$MLCE(LEAFIS,4)*XYFL(1))-D_$MLCE(LEAFIS,2));
+   ZP=ZP/((UVL(1)*C_$MLCE(LEAFIS,4))-W(NP));
+   ZN=(C_$MLCE(LEAFIS,3)-ZFL)/W(NP);
+]
+ELSEIF( NZ=5 )[
+   ZP=(ZMAX_$MLCE-ZFL)/W(NP);
+   ZN=(ZFL-(C_$MLCE(LEAFIS,4)*XYFL(1))-D_$MLCE(LEAFIS,2));
+   ZN=ZN/((UVL(1)*C_$MLCE(LEAFIS,4))-W(NP));
+]
+ELSEIF( NY=3 & (NZ=3|NZ=4) )[
+   ZP=(ZMAX_$MLCE-ZFL)/W(NP);
+   ZN=(C_$MLCE(LEAFIS,2)-ZFL)/W(NP);
+   IF( LEAFIS~=NUM_LEAF_$MLCE & ZFL<C_$MLCE(LEAFIS+1,3) )[
+      IF( XYFL(1)>=((A_$MLCE(LEAFIS+1,1)*ZFL)+B_$MLCE(LEAFIS+1,1)))
+      [
+         ZP=(C_$MLCE(LEAFIS+1,3)-ZFL)/W(NP);
+      ];
+   ];
+];
+
+  IF( (ZP>=0.0) & (ZN>=0.0) ) [ ZDIST =MIN(ZP, ZN); ]
+  ELSE [ ZDIST = MAX(ZP, ZN); ]
+
+TMP1=XYFL(1)-(A_$MLCE(LEAFIS,1)*ZFL)-B_$MLCE(LEAFIS,1);
+TMP1=TMP1/((A_$MLCE(LEAFIS,1)*W(NP))-UVL(1));
+
+TMP2=XYFL(1)-(A_$MLCE(LEAFIS,2)*ZFL)-B_$MLCE(LEAFIS,2);
+TMP2=TMP2/((A_$MLCE(LEAFIS,2)*W(NP))-UVL(1));
+
+TMP3=XYFL(1)-(A_$MLCE(LEAFIS,3)*ZFL)-B_$MLCE(LEAFIS,3);
+TMP3=TMP3/((A_$MLCE(LEAFIS,3)*W(NP))-UVL(1));
+
+TMP4=XYFL(1)-(A_$MLCE(LEAFIS,4)*ZFL)-B_$MLCE(LEAFIS,4);
+TMP4=TMP4/((A_$MLCE(LEAFIS,4)*W(NP))-UVL(1));
+
+IF(LEAFIS~=NUM_LEAF_$MLCE)[
+TMP5=XYFL(1)-(A_$MLCE(LEAFIS+1,1)*ZFL)-B_$MLCE(LEAFIS+1,1);
+TMP5=TMP5/((A_$MLCE(LEAFIS+1,1)*W(NP))-UVL(1));
+
+TMP6=XYFL(1)-(A_$MLCE(LEAFIS+1,2)*ZFL)-B_$MLCE(LEAFIS+1,2);
+TMP6=TMP6/((A_$MLCE(LEAFIS+1,2)*W(NP))-UVL(1));];
+
+IF(LEAFIS~=1)[
+TMP7=XYFL(1)-(A_$MLCE(LEAFIS-1,3)*ZFL)-B_$MLCE(LEAFIS-1,3);
+TMP7=TMP7/((A_$MLCE(LEAFIS-1,3)*W(NP))-UVL(1));
+
+TMP8=XYFL(1)-(A_$MLCE(LEAFIS-1,4)*ZFL)-B_$MLCE(LEAFIS-1,4);
+TMP8=TMP8/((A_$MLCE(LEAFIS-1,4)*W(NP))-UVL(1));];
+
+IF( NZ=1 )[
+   IF( LEAFIS = 1 )[
+   YP=TMP6;YN=TMP1;]
+   ELSEIF( LEAFIS = NUM_LEAF_$MLCE )[
+   YP=TMP4;YN=TMP8;]
+   ELSE[
+   YP=TMP6;YN=TMP8;];
+]
+ELSEIF( NZ=2 & (NY=2|NY=3) )[
+   YN=TMP2;YP=TMP4;]
+ELSEIF( NZ=3 & NY=2 )[
+   YN=TMP2;YP=TMP3;]
+ELSEIF( NZ=4 & (NY=1|NY=2) )[
+   YN=TMP1;YP=TMP3;]
+ELSEIF( NZ=5 )[
+   IF( LEAFIS=1 )[
+   YN=TMP1;YP=TMP5;]
+   ELSEIF( LEAFIS=NUM_LEAF_$MLCE )[
+   YN=TMP7;YP=TMP4;]
+   ELSE[ YN=TMP7;YP=TMP5;];
+]
+ELSEIF( NY=1 )[
+   YP=TMP2;
+   IF( LEAFIS=1 )[YN=TMP1;]
+   ELSE[ YN=TMP8;
+   IF( ZFL>C_$MLCE(LEAFIS-1,2) )[YN=TMP7;];
+       ];
+]
+ELSEIF( NY=3 )[
+   YN=TMP3;
+   IF( LEAFIS=NUM_LEAF_$MLCE )[YP=TMP4;]
+   ELSE[ YP=TMP5;
+   IF( ZFL<C_$MLCE(LEAFIS+1,3) )[YP=TMP6;];
+   ];
+];
+
+  IF( (YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
+
+  ELSE [ YDIST = MAX(YP,YN); ]
+
+IF( ENDTYPE_$MLCE = 1) [
+
+   IF( NX = 1 ) [
+
+     IF( (UVL(2)-SURPARA2_A_$MLCE(LEAFIS)*W(NP)) ~= 0) [
+      XP  = SURPARA2_A_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE) -XYFL(2);
+      XP  = XP/(UVL(2)-SURPARA2_A_$MLCE(LEAFIS)*W(NP));
+     ]
+     ELSE [
+      XP = 1.0E20;
+     ]
+
+     IF( (UVL(2)-SURPARA2_B_$MLCE(LEAFIS)*W(NP)) ~= 0) [
+      XN  = SURPARA2_B_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE) -XYFL(2);
+      XN  = XN/(UVL(2)-SURPARA2_B_$MLCE(LEAFIS)*W(NP));
+     ]
+     ELSE [
+      XN = 1.0E20;
+     ]
+
+   ]
+   ELSEIF( NX = 2 ) [
+
+    XN=1.0E20;
+
+    IF( (UVL(2)-SURPARA2_B_$MLCE(LEAFIS)*W(NP)) ~= 0) [
+     XP  = SURPARA2_B_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE) -XYFL(2);
+     XP  = XP/(UVL(2)-SURPARA2_B_$MLCE(LEAFIS)*W(NP));
+    ]
+    ELSE [ XP = 1.0E20; ]
+
+
+   ]
+   ELSE [
+
+     XP=1.0E20;
+
+     IF( (UVL(2)-SURPARA2_A_$MLCE(LEAFIS)*W(NP)) ~= 0) [
+      XN = SURPARA2_A_$MLCE(LEAFIS)*(ZFL-ZFOCUS_$MLCE) -XYFL(2);
+      XN = XN/(UVL(2)-SURPARA2_A_$MLCE(LEAFIS)*W(NP));
+     ]
+     ELSE [ XN = 1.0E20; ];
+
+   ]
+]
+ELSE [
+
+    TMP1=UVL(2)**2+W(NP)**2;
+    DET_A=-(UVL(2)*(ZFL-CIL_$MLCE)-W(NP)*(XYFL(2)-
+    LEAFA_$MLCE(LEAFIS)))**2+TMP1*LEAFRADIUS_$MLCE**2;
+    DET_B=-(UVL(2)*(ZFL-CIL_$MLCE)-W(NP)*(XYFL(2)-
+    LEAFB_$MLCE(LEAFIS)))**2+TMP1*LEAFRADIUS_$MLCE**2;
+    TMP_A=UVL(2)*(XYFL(2)-LEAFA_$MLCE(LEAFIS))+W(NP)*
+    (ZFL-CIL_$MLCE);
+    TMP_B=UVL(2)*(XYFL(2)-LEAFB_$MLCE(LEAFIS))+W(NP)*
+    (ZFL-CIL_$MLCE);
+
+    IF( NX = 1 ) [ "in centre air"
+
+      IF (TMP1=0) [ XN=1.0E20;XP=1.0E20;]
+
+      ELSEIF ( DET_B<0 & DET_A>=0 ) [
+        XN=1.0E20;
+	SOL1=(-TMP_A+sqrt(DET_A))/TMP1;
+	SOL2=(-TMP_A-sqrt(DET_A))/TMP1;
+
+          IF(SOL1<0 & SOL2>=0)[ XP=SOL2;]
+	  ELSEIF(SOL1>=0 & SOL2<0)[ XP=SOL1;]
+	  ELSEIF(SOL1=0. | SOL2=0.)[ XP=0.;]
+	  ELSEIF(SOL1<0 & SOL2<0)[ XP=1.0E20;]
+	  ELSE[ XP=MIN(SOL1,SOL2);];
+      ]
+      ELSEIF ( DET_B>=0 & DET_A<0 ) [
+        XP=1.0E20;
+	SOL1=(-TMP_B+sqrt(DET_B))/TMP1;
+	SOL2=(-TMP_B-sqrt(DET_B))/TMP1;
+
+          IF(SOL1<0 & SOL2>=0)[ XN=SOL2;]
+	  ELSEIF(SOL1>=0 & SOL2<0)[ XN=SOL1;]
+	  ELSEIF(SOL1=0. | SOL2=0.)[ XN=0.;]
+	  ELSEIF(SOL1<0 & SOL2<0)[ XN=1.0E20;]
+	  ELSE[ XN=MIN(SOL1,SOL2);];
+      ]
+      ELSEIF ( DET_B<0 & DET_A<0 ) [
+        XP=1.0E20; XN=1.0E20;
+      ]
+      ELSEIF ( DET_B>0 & DET_A>0 ) [
+	SOL1=(-TMP_A+sqrt(DET_A))/TMP1;
+	SOL2=(-TMP_A-sqrt(DET_A))/TMP1;
+	SOL3=(-TMP_B+sqrt(DET_B))/TMP1;
+	SOL4=(-TMP_B-sqrt(DET_B))/TMP1;
+
+	  IF(SOL1<0 & SOL2>=0)[ XP=SOL2; ]
+	  ELSEIF(SOL1>=0 & SOL2<0)[ XP=SOL1; ]
+	  ELSEIF(SOL1=0. | SOL2=0.)[ XP=0.; ]
+	  ELSEIF(SOL1<0 & SOL2<0)[ XP=1.0E20;]
+	  ELSE[ XP=MIN(SOL1,SOL2);];
+
+	  IF(SOL3<0 & SOL4>=0)[ XN=SOL2; ]
+	  ELSEIF(SOL3>=0 & SOL4<0)[ XN=SOL1; ]
+	  ELSEIF(SOL3=0. | SOL4=0.)[ XN=0.; ]
+	  ELSEIF(SOL3<0 & SOL4<0)[ XN=1.0E20; ]
+	  ELSE[ XN=MIN(SOL3,SOL4);];
+
+      ]
+
+    ]
+
+    ELSEIF( NX = 2 ) [ "in negative portion of leaf"
+
+       XN = 1.0E20 ;
+       IF(TMP1=0)[ XP=1.0E20; ]
+       ELSE[
+       SOL1=(-TMP_B+SQRT(DET_B))/TMP1;
+       SOL2=(-TMP_B-SQRT(DET_B))/TMP1;
+         IF(SOL1>=0 & SOL2<0)[ XP=SOL1;]
+         ELSEIF(SOL1<0 & SOL2>=0)[ XP=SOL2;]
+         ELSEIF(SOL1<0 & SOL2<0)[ XP=1.0E20;]
+	 ELSEIF(SOL1=0. | SOL2=0.)[ XP=0.;]
+	 ELSE[ XP=MIN(SOL1,SOL2);];
+       ]
+    ]
+
+    ELSEIF(NX = 3) [ "in positive portion of leaf"
+
+       XP=1.0E20 ;
+       IF(TMP1=0)[ XN=1.0E20; ]
+       ELSE[
+       SOL1=(-TMP_A+SQRT(DET_A))/TMP1;
+       SOL2=(-TMP_A-SQRT(DET_A))/TMP1;
+         IF(SOL1>=0 & SOL2<0)[ XN=SOL1;]
+         ELSEIF(SOL1<0 & SOL2>=0)[ XN=SOL2;]
+         ELSEIF(SOL1<0 & SOL2<0)[ XN=1.0E20;]
+	 ELSEIF(SOL1=0. | SOL2=0.)[ XN=0.;]
+	 ELSE[ XN=MIN(SOL1,SOL2);];
+       ]
+    ];
+];
+IF( (XP>=0.0) & (XN>=0.0) ) [ XDIST =MIN(XP, XN); ]
+
+ELSE [ XDIST = MAX(XP,XN) ];
+
+IF( ZDIST>=0.0)
+  [ TEMP=ZDIST;
+    IF( YDIST>=0 ) [TEMP=MIN(TEMP,YDIST);]
+    IF( XDIST>=0 ) [TEMP=MIN(TEMP,XDIST);]
+  ]
+
+ELSEIF ( (YDIST>=0.0) & (XDIST>=0.0) ) [TEMP=MIN(XDIST,YDIST);]
+
+ELSE [TEMP=MAX(XDIST,YDIST);]
+]
+ELSEIF(BETWEEN_LEAF=1)["in air gap between leaves"
+  IF(W(NP)>0)[
+    ZDIST=(ZMAX_$MLCE-ZFL)/W(NP);
+  ]
+  ELSEIF(W(NP)<0)[
+    ZDIST=(ZMIN_$MLCE-ZFL)/W(NP);
+  ]
+  ELSE[
+    ZDIST=1E20;
+  ]
+  "now find distance to extreme y boundaries of leaves that particle"
+  "is between"
+  TMP1=XYFL(1)-(A_$MLCE(LEAFIS-1,4)*ZFL)-B_$MLCE(LEAFIS-1,4);
+  TMP1=TMP1/((A_$MLCE(LEAFIS-1,4)*W(NP))-UVL(1));
+  TMP2=XYFL(1)-(A_$MLCE(LEAFIS,1)*ZFL)-B_$MLCE(LEAFIS,1);
+  TMP2=TMP2/((A_$MLCE(LEAFIS,1)*W(NP))-UVL(1));
+  YN=TMP1;YP=TMP2;
+  IF( (YP>=0.0) & (YN>=0.0) ) [ YDIST =MIN(YP, YN); ]
+  ELSE [ YDIST = MAX(YP,YN); ]
+
+  IF(YDIST>=0.0 & ZDIST >= 0.0)[
+    TEMP=MIN(ZDIST,YDIST);
+  ]
+  ELSE[
+    TEMP=MAX(ZDIST,YDIST);
+  ]
+]
+{P1}=TEMP;
+;} " End of $MLCE_MINDISTANCE macro"
+
+;
+
+" NEXT COMES HOWNEAR MACRO
+"=========================
+
+REPLACE {$MLCE_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$MLCE({P1});
+}
+;
+"End of MLCE_macros.mortran "
+

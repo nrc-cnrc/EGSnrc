@@ -1,0 +1,194 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: set of rectangular applicators     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Geoff Zhang                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     APPLICAT miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$APPLICAT} WITH {10}
+"       ==================="
+REPLACE {$GAP_F_B_AIR_MIN} WITH {0.01}
+"       ================"
+"$GAP_F_B_AIR_MIN is the thickness of the air gap in the front and the back of"
+"this component module. The air gap must be present as they are designed to"
+"easily sort out which region a particle is going into."
+
+REPLACE {$APPLICAT_MAY_HIT_INSIDE(#,#,#,#,#,#,#);} WITH {;
+"        =============================";
+   {P1}=0;
+   {P2}={P7};
+   IF(ABS({P6}) > {P4} & V(NP)*{P6}<0.0)[
+      TVAR=(ABS({P6})-{P4})/ABS(V(NP));
+      IF(ABS({P5}+U(NP)*TVAR) <= {P3} & TVAR < {P7})[
+         {P1}=1;
+         {P2}=TVAR;
+         ]
+      ]
+   IF(ABS({P5}) > {P3} & U(NP)*{P5}<0.0)[
+      TVAR=(ABS({P5})-{P3})/ABS(U(NP));
+      IF(ABS({P6}+V(NP)*TVAR) <= {P4} & TVAR < {P7})[
+         {P1}=1;
+         {P2}=MIN({P2},TVAR);
+         ]
+      ]
+}
+
+REPLACE {$APPLICAT_HIT_OUTSIDE(#,#,#,#,#);} WITH {;
+"        ========================";
+IF(U(NP)~=0.0)[
+   IF(U(NP) > 0.0)[TVAR=({P2}-{P4})/U(NP);]
+   ELSE [TVAR=-({P2}+{P4})/U(NP);]
+   IF(ABS({P5}+V(NP)*TVAR) <= {P3})[
+      {P1}=TVAR;
+         ]
+   ELSEIF(V(NP)>0.0) [
+      {P1}=({P3}-{P5})/V(NP);
+      ]
+   ELSEIF(V(NP)<0.0) [
+      {P1}=(-{P3}-{P5})/V(NP);
+      ]
+   ELSE [{P1}=TVAR; ]
+   ]
+ELSE [
+   IF(V(NP)>0.0) [
+      {P1}=({P3}-{P5})/V(NP);
+      ]
+   ELSEIF(V(NP)<0.0) [
+      {P1}=(-{P3}-{P5})/V(NP);
+      ]
+   ELSE [ {P1}=1.0E30; ]
+   ]
+}
+;
+"-------------------------------------------------------------------------------
+"     APPLICAT component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$APPLICAT/
+"V>================
+"V>XMIN_$APPLICAT(IRL) = minimum X of scraper IRL
+"V>YMIN_$APPLICAT(IRL) = minimum Y of scraper IRL
+"V>XMAX_$APPLICAT(IRL) = maximum X of scraper IRL
+"V>YMAX_$APPLICAT(IRL) = maximum Y of scraper IRL
+"V>XMINT_$APPLICAT(IRL,2) = minimum X of scraper IRL
+"V>YMINT_$APPLICAT(IRL,2) = minimum Y of scraper IRL
+"V>XMAXT_$APPLICAT(IRL,2) = maximum X of scraper IRL
+"V>YMAXT_$APPLICAT(IRL,2) = maximum Y of scraper IRL
+"V>ICM_$APPLICAT = index of CM, set as ICM in INPUT_$tag and never re-set
+"V>IRSTART_$APPLICAT = first region number for this CM
+"V>IREND_$APPLICAT = last region number for this CM
+"V>N_$APPLICAT = number of slabs in CM
+"V>TITLE_$APPLICAT = title of CM
+"V>ZBACK_$APPLICAT = Back of CM (air)
+"V>ZFRONT_$APPLICAT = Front of CM (air)
+"V>ZMIN_$APPLICAT(IRL) = Upstream Z boundary of slab IRL in APPLICAT
+"V>ZMAX_$APPLICAT(IRL) = Downstream Z boundary of slab IRL in APPLICAT
+"V>ZMINT_$APPLICAT(IRL,2) = Upstream Z boundary of slab IRL in APPLICAT
+"V>ZMAXT_$APPLICAT(IRL,2) = Downstream Z boundary of slab IRL in APPLICAT
+"V>IR_$APPLICAT = local region number
+"V>ABSX_$APPLICAT = abs(X(NP))
+"V>ABSY_$APPLICAT = abs(Y(NP))
+"V>
+;
+REPLACE {;COMIN/CM_$APPLICAT/;} WITH {
+   ;COMMON/CM_$APPLICAT/
+      ICM_$APPLICAT,IRSTART_$APPLICAT,IREND_$APPLICAT,N_$APPLICAT,
+      IR_$APPLICAT,
+      TITLE_$APPLICAT,XMIN_$APPLICAT,YMIN_$APPLICAT,XMAX_$APPLICAT,
+      YMAX_$APPLICAT,
+      ZMIN_$APPLICAT,ZMAX_$APPLICAT,ZBACK_$APPLICAT,ZFRONT_$APPLICAT,
+      XMINT_$APPLICAT,YMINT_$APPLICAT,XMAXT_$APPLICAT,YMAXT_$APPLICAT,
+      ZMINT_$APPLICAT,ZMAXT_$APPLICAT,
+      AIRGAPMIN_$APPLICAT,ABSX_$APPLICAT,ABSY_$APPLICAT;
+   INTEGER
+      ICM_$APPLICAT,IRSTART_$APPLICAT,IREND_$APPLICAT,N_$APPLICAT,
+      IR_$APPLICAT;
+   $REAL
+      XMIN_$APPLICAT($MAX_N_$APPLICAT),
+      YMIN_$APPLICAT($MAX_N_$APPLICAT),
+      XMAX_$APPLICAT($MAX_N_$APPLICAT),
+      YMAX_$APPLICAT($MAX_N_$APPLICAT),
+      ZMIN_$APPLICAT($MAX_N_$APPLICAT),
+      ZMAX_$APPLICAT($MAX_N_$APPLICAT),
+      ZBACK_$APPLICAT,ZFRONT_$APPLICAT,
+      XMINT_$APPLICAT($MAX_N_$APPLICAT,2),
+      YMINT_$APPLICAT($MAX_N_$APPLICAT,2),
+      XMAXT_$APPLICAT($MAX_N_$APPLICAT,2),
+      YMAXT_$APPLICAT($MAX_N_$APPLICAT,2),
+      ZMINT_$APPLICAT($MAX_N_$APPLICAT,2),
+      ZMAXT_$APPLICAT($MAX_N_$APPLICAT,2),
+      AIRGAPMIN_$APPLICAT,ABSX_$APPLICAT,ABSY_$APPLICAT;
+   CHARACTER*1 TITLE_$APPLICAT(60);
+} "end of replacement defining common for this CM"
+;
+
+;
+"-------------------------------------------------------------------------------
+"     APPLICAT HOWNEAR replacement macro
+"     Now just a call to HOWNEAR subroutine.
+"-------------------------------------------------------------------------------
+"
+
+REPLACE {$APPLICAT_CM_HOWNEAR(#)} WITH {   "{P1} is DNEAR"
+CALL HOWNEAR_$APPLICAT({P1});
+}
+;
+"end of APPLICAT_macros.mortran (Rev 1.4)"

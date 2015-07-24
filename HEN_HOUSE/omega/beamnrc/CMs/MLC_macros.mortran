@@ -1,0 +1,378 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: multi-leaf collimator              "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Jiansu Wei, 1992                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"     This version has Guang Fang (UW) corrections/updates
+"-------------------------------------------------------------------------------
+"     MLC miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+"       ==================="
+
+" THE MAX # OF the leaves TO BE ALLOWED IN THIS MODULE"
+REPLACE {$MAXLEAF} WITH {64}
+
+"-------------------------------------------------------------------------------
+"     MLC component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$MLC/
+"V>================
+"V>ICM_$MLC        = index of CM, set as ICM in INPUT_$MLC, never re-set
+"V>IRSTART_$MLC    = first region number for this CM
+"V>IREND_$MLC      = last region number for this CM
+"V>N_$MLC          = number of regions in CM
+"V>TITLE_$MLC      = title of CM
+"V>ZMIN_$MLC       = Front of MLC
+"V>ZMAX_$MLC       = back of MLC
+"V>ZFRONT_$MLC     = Upstream Z boundary of this CM
+"V>NUM_LEAF_$MLC   = the number of leave in this module
+"V>IDMLFC_$MLC      = the index to indicate the leave direction
+"V>                  0: default, leave direction in y
+"V>                  1:                          in x
+"V>ZFOCUS_$MLC(2) = the two focus point coordinates: 1. for leave side
+"V>                                                  2. for leave end.
+"V>UP_COORD1_$MLC(2,$MAXLEAF/2)   coordinates of the leaf perpendicular
+"V>DOWN_COORD1_$MLC(2,$MAXLEAF/2) to leaf direction, positvie and negative
+"V>                               side symmetry.
+"V>SURPARA1_$MLC(2,$MAXLEAF/2,4)  the parameters to describe the leaf side
+"V>                               surface.
+"V>UP_COORD2_P_$MLC(2,$MAXLEAF/2) the coordinates of the leaf
+"V>                               parallel to the leaf
+"V>DOWN_COORD2_P_$MLC(2,$MAXLEAF/2) direction, 1: negative side
+"V>                                            2: positive side
+"V>SURPARA2_P_$MLC(2,$MAXLEAF/2,4)the parameters to describe the leaf end
+"V>                               surface.
+"V>UP_COORD2_N_$MLC(2,$MAXLEAF/2) the coordinates of the leaf
+"V>                               parallel to the leaf
+"V>DOWN_COORD2_N_$MLC(2,$MAXLEAF/2) direction, 1: negative side
+"V>                                            2: positive side
+"V>SURPARA2_N_$MLC(2,$MAXLEAF/2,4)the parameters to describe the leaf end
+"V>                               surface.
+"V>LEAF_OPEN_$MLC(2)              to indicate the leaf open siturations
+"V>TWIDTH_$MLC                    total width of leaves
+"V>IR_$MLC                        local region number
+;
+REPLACE{;COMIN/CM_$MLC/;} WITH {
+;COMMON/CM_$MLC/
+      ZMIN_$MLC,
+      ZMAX_$MLC,
+      ZFRONT_$MLC,
+      ZFOCUS_$MLC,
+      UP_COORD1_$MLC,
+      DOWN_COORD1_$MLC,
+      SURPARA1_$MLC,
+      UP_COORD2_P_$MLC,
+      DOWN_COORD2_P_$MLC,
+      SURPARA2_P_$MLC,
+      UP_COORD2_N_$MLC,
+      DOWN_COORD2_N_$MLC,
+      SURPARA2_N_$MLC,
+      TWIDTH_$MLC,ICM_$MLC,IRSTART_$MLC,IREND_$MLC,N_$MLC,N_GAP_$MLC,
+      IR_$MLC,
+      NUM_LEAF_$MLC, IDMLFC_$MLC, OPEN_IND_$MLC,
+      LEAF_OPEN_$MLC,TITLE_$MLC;
+
+   $REAL
+      ZMIN_$MLC,
+      ZMAX_$MLC,
+      ZFRONT_$MLC,
+      ZFOCUS_$MLC(2),
+      UP_COORD1_$MLC(2,$MAXLEAF/2+1),
+      DOWN_COORD1_$MLC(2,$MAXLEAF/2+1),
+      SURPARA1_$MLC(2,$MAXLEAF/2+1,4),
+      UP_COORD2_P_$MLC(2,$MAXLEAF/2+1),
+      DOWN_COORD2_P_$MLC(2,$MAXLEAF/2+1),
+      SURPARA2_P_$MLC(2,$MAXLEAF/2+1,4),
+      UP_COORD2_N_$MLC(2,$MAXLEAF/2+1),
+      DOWN_COORD2_N_$MLC(2,$MAXLEAF/2+1),
+      SURPARA2_N_$MLC(2,$MAXLEAF/2+1,4),
+      TWIDTH_$MLC;
+   INTEGER
+      ICM_$MLC,IRSTART_$MLC,IREND_$MLC,N_$MLC,N_GAP_$MLC,
+      IR_$MLC,
+      NUM_LEAF_$MLC, IDMLFC_$MLC, OPEN_IND_$MLC(2,$MAXLEAF/2+1),
+      LEAF_OPEN_$MLC(2);
+   CHARACTER*1 TITLE_$MLC(60);
+
+}
+ "end of replacement defining common for this CM"
+;
+" $UP_DOWN_REGION_ALLOCATION(UP,IR_$TAG, 0.0);
+"=======================================
+" this macro is used to determine the regon #
+"{p1}: the interesting up or down xy plane surface
+"{p2}: the return region value, local region
+"{p3}: the step dist which is used to calc. the particle final position
+REPLACE {$MLC_UP_DOWN_REGION_ALLOCATION(#,#,#);} WITH {;
+    XYFL(1)=XYL(1)+{P3}*UVL(1);
+    XYFL(2)=XYL(2)+{P3}*UVL(2);
+    ZFL=Z(NP)+{P3}*W(NP);
+    IF(XYFL(1)>=0.0)
+    [ J_$MLC=2;]
+    ELSE[J_$MLC=1;]
+    DO I=1, LEAF_OPEN_$MLC(J_$MLC)
+    [
+       TEMP=XYFL(1)-SURPARA1_$MLC(J_$MLC,I,4)*(ZFL-ZFOCUS_$MLC(1));
+       IF(  (TEMP<=0.0 & J_$MLC=2)
+          | (TEMP>=0.0 & J_$MLC=1) )[ EXIT;]
+    ]
+    IF(   XYFL(2)<{P1}_COORD2_P_$MLC(J_$MLC,I)
+       &  XYFL(2)>{P1}_COORD2_N_$MLC(J_$MLC,I) )
+    [{P2}=1;]
+    ELSE[{P2}=2;]
+;}
+
+;
+"  The following macros will be used to answer the question:
+"===========================================================
+"
+"   1. The particle hits the boundary or not and where
+"   2. decide hitting which boundary first?
+"   3. if hitting, does this hitting change the ir or not?
+"   4. need to go for the next loop or nor.
+"   IHIT used to control the loop index, if ihit=1, which will make the loop
+"   index go bakward.
+
+" $MLC_CUT_COE_MACRO;
+"===============================
+"
+"{P1}: The change value for ir region #
+
+REPLACE {$MLC_MLFC_CUT_COE_MACRO(#);} WITH {;
+
+    CUT_COE=0.0;
+    CUT_COEL(1)=0.0;
+    CUT_COEL(2)=0.0;
+    CUT_COE_TMP(1)=0.0;
+    CUT_COE_TMP(2)=0.0;
+    TEMP1=UVL(1)-SURPARA1_$MLC(L,K,4)*W(NP);
+    IF(TEMP1=0.0)[CUT_COE_TMP(1)=0.0;]
+    ELSE
+    [
+         CUT_COE_TMP(1)=(  UP_COORD1_$MLC(L,K) - XYL(1)
+                         + SURPARA1_$MLC(L,K,4)*(Z(NP)-ZMIN_$MLC) )
+                           /TEMP1;
+    ]
+    IF(K-1=0)[ TEMP2=UVL(1);]
+    ELSE[ TEMP2=UVL(1)-SURPARA1_$MLC(L,K-1,4)*W(NP); ]
+    IF(TEMP2=0.0)[CUT_COE_TMP(2)=0;]
+    ELSE
+    [
+       IF(K-1=0)
+       [
+           CUT_COE_TMP(2)=- XYL(1)/TEMP2;
+       ]
+       ELSE
+       [
+          CUT_COE_TMP(2)=(  UP_COORD1_$MLC(L,K-1) - XYL(1)
+                         + SURPARA1_$MLC(L,K-1,4)*(Z(NP)-ZMIN_$MLC) )
+                           /TEMP2;
+       ]
+    ]
+    IF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+    [ CUT_COEL(1)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+    ELSE [ CUT_COEL(1)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+    IF(CUT_COEL(1)=CUT_COE_TMP(2))
+    [ KINC=1; IF(J<0) [ J=J+1;] ELSE[J=J-1;] ]
+    ELSE[ KINC=0; IF(J<0) [ J=J-1;] ELSE[J=J+1;] ]
+    IF(CUT_COEL(1)>STEP_UNITOLD & CUT_COEL(1)<=STEP_UNIT)
+    [IXYU_D=1; ]
+    ELSE[IXYU_D=0; CUT_COEL(1)=STEP_UNIT;]
+    IF(K<=LEAF_OPEN_$MLC(L) & OPEN_IND_$MLC(L,K)=1)
+    [
+       TEMP1=UVL(2)-SURPARA2_P_$MLC(L,K,4)*W(NP);
+       IF(TEMP1=0.0)[CUT_COE_TMP(1)=0;]
+       ELSE
+       [
+          CUT_COE_TMP(1)=(  UP_COORD2_P_$MLC(L,K) - XYL(2)
+                         + SURPARA2_P_$MLC(L,K,4)*(Z(NP)-ZMIN_$MLC) )
+                           /TEMP1;
+       ]
+       TEMP2=UVL(2)-SURPARA2_N_$MLC(L,K,4)*W(NP);
+       IF(TEMP2=0.0)[CUT_COE_TMP(2)=0;]
+       ELSE
+       [
+           CUT_COE_TMP(2)=(  UP_COORD2_N_$MLC(L,K) - XYL(2)
+                         + SURPARA2_N_$MLC(L,K,4)*(Z(NP)-ZMIN_$MLC) )
+                           /TEMP2;
+       ]
+       IF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+       [ CUT_COEL(2)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+       ELSE [ CUT_COEL(2)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+    ]
+    ELSE[ CUT_COEL(2)=-1.0E5; ]
+    IF(  CUT_COEL(2)>0.0 & CUT_COEL(2)> STEP_UNITOLD
+       & CUT_COEL(2)< CUT_COEL(1) )
+    [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IRNEW=IRSTART_$MLC+{P1};
+       RETURN;
+    ]
+    ELSEIF(CUT_COEL(2)=CUT_COEL(1) & IXYU_D=0 )
+    [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IF(IZU_D=1)
+       [
+          IF(W(NP)<0.0 & N_GAP_$MLC=1)
+          [ IRNEW=IREND_$MLC; RETURN;]
+          ELSE
+          [
+             IDIR=SIGN(one,W(NP));
+             CALL WHERE_AM_I(ICM_$MLC, IDIR );
+             RETURN;
+          ]
+       ]
+       ELSE [IRNEW=IRSTART_$MLC+{P1};RETURN; ]
+    ]
+    ELSEIF(IXYU_D=0)
+    [
+       IF(IZU_D=1)
+       [
+         $GEO_SHIFT_1_(STEP_UNIT);
+         USTEP=STEP_UNIT;
+         IF(W(NP)>0.0)
+         [ CALL WHERE_AM_I(ICM_$MLC,1); RETURN;]
+         ELSEIF(W(NP)<0.0 & N_GAP_$MLC=0)
+         [ CALL WHERE_AM_I(ICM_$MLC,-1); RETURN;]
+         ELSEIF(W(NP)<0.0)[ IRNEW=IREND_$MLC; RETURN;]
+       ]
+       ELSE[ RETURN;]
+    ]
+    ELSE
+    [
+        IF(K>=LEAF_OPEN_$MLC(L) & KINC=0 )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_2_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLC+1;
+            RETURN;
+        ]
+        XYFL(2)=XYL(2)+CUT_COEL(1)*UVL(2);
+        ZFL=Z(NP)+CUT_COEL(1)*W(NP);
+        IF(UVL(1)<0.0)
+        [
+           IF(J=0) [J=J+1; L=1;]
+           IF(J<0) [ K=-J; L=2;]
+           ELSE[ K=J; L=1;]
+        ]
+        ELSE
+        [
+           IF(J=0) [J=J+1; l=2;]
+           IF(J<0) [ K=-J; L=1;]
+           ELSE[ K=J; L=2;]
+        ]
+        TEMP1=SURPARA2_P_$MLC(L,K,1)*XYFL(2)
+                   +SURPARA2_P_$MLC(L,K,2)*ZFL
+                   +SURPARA2_P_$MLC(L,K,3);
+        TEMP2= SURPARA2_N_$MLC(L,K,1)*XYFL(2)
+                   +SURPARA2_N_$MLC(L,K,2)*ZFL
+                   +SURPARA2_N_$MLC(L,K,3);
+
+        IF( ( TEMP1<0.0 & TEMP2>0.0 & IR_$MLC=2 )
+           |( TEMP1*TEMP2>0.0 & IR_$MLC = 1)
+          | (OPEN_IND_$MLC(L,K)=0 & IR_$MLC = 1) )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLC+{P1};
+            RETURN;
+        ]
+    ]
+    STEP_UNITOLD=CUT_COEL(1);
+;}
+
+;
+
+REPLACE {$MLC_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$MLC({P1});
+}
+;
+
+REPLACE {$MLC_REGION_RESET_WARNNING_MACRO(#);} WITH {
+    IRNEW=IRSTART_$MLC+{P1};
+    USTEP=MIN(USTEP,1.0E-5);
+    IF(X(NP)+Y(NP)+Z(NP)=TEMPOLD) [
+        COUNT1=COUNT1+1;
+        IF(COUNT1=20) [
+           OUTPUT X(NP), Y(NP), Z(NP), U(NP), V(NP), W(NP), E(NP),
+                IQ(NP), IR(NP), I;
+           (' THE PARTICLE INTENDS TO THE INFINITE LOOP in MLC cm,',
+           ' TO BE forced to move the step 1.0e-5 !!',
+                7F15.8, 3I4 );
+           OUTPUT IR_$MLC,I; (2I4);
+           COUNT1=0;
+           USTEP=0.;
+           IDISC=1; OUTPUT; ( ' THE PARTICLE  WILL BE DISCARDED!!!');
+           RETURN;
+        ]
+    ]
+    ELSE[COUNT1=0;]
+    TEMPOLD=X(NP)+Y(NP)+Z(NP);
+    RETURN;
+}
+;
+"End of MLC_macros.mortran (Rev 1.2)"

@@ -1,0 +1,404 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: synchronized dynamic jaws          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Tony Popescu, 2010                                        "
+"                   Julio Lobo, 2010                                          "
+"                                                                             "
+"  Contributors:    Frederic Tessier                                          "
+"                   Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally derived from the existing BEAMnrc JAWS component  "
+"  module and contributed back to NRC by the authors in 2010. It was rebased  "
+"  on the DYNJAWS component module by Blake Walters in 2013.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     SYNCJAWS miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+REPLACE {$MAX_N_$SYNCJAWS} WITH {12}
+
+REPLACE {$MAXFIELD_$SYNCJAWS} WITH {100}
+
+REPLACE {$MAXFS_$SYNCJAWS} WITH {{COMPUTE $MAX_N_$SYNCJAWS*$MAXFIELD_$SYNCJAWS}}
+
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     $SYNCJAWS (SYNCJAWS) component module common                  ""toc:
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$SYNCJAWS/
+"V>================
+"V>ICM_$SYNCJAWS      = CM index, set as ICM in INPUT_$SYNCJAWS - never re-set
+"V>IRSTART_$SYNCJAWS  = first region number for this CM
+"V>IREND_$SYNCJAWS    = last region number for this CM
+"V>N_$SYNCJAWS        = number of regions in CM
+"V>ISCM_$SYNCJAWS     = index of pired bars in CM
+"V>TITLE_$SYNCJAWS    = title of CM
+"V>XY_CHOICE_$SYNCJAWS = chose X or Y oringtation of the bar
+"V>ZBACK_$SYNCJAWS    = Back of CM
+"V>ZFRONT_$SYNCJAWS   = Front of CM
+"V>IXY_CHOICE_$SYNCJAWS(ISCM) = index for x or y bar direction
+"V>IR_$SYNCJAWS       = local region number
+"V>ISCM_$SYNCJAWS     = local sub-component region number
+"V>XY_$SYNCJAWS       = X(NP) or Y(NP)
+"V>UV_$SYNCJAWS       = U(NP) or V(NP)
+;
+REPLACE {;COMIN/CM_$SYNCJAWS/;} WITH {
+   ;COMMON/CM_$SYNCJAWS/ ZBACK_$SYNCJAWS, ZFRONT_$SYNCJAWS,
+      XY_$SYNCJAWS,UV_$SYNCJAWS,ICM_$SYNCJAWS,
+      IRSTART_$SYNCJAWS,  IREND_$SYNCJAWS,  N_$SYNCJAWS,
+      IR_$SYNCJAWS,IXY_CHOICE_$SYNCJAWS,ISCM_$SYNCJAWS,
+      TITLE_$SYNCJAWS;
+   $REAL
+      ZBACK_$SYNCJAWS, ZFRONT_$SYNCJAWS,
+      XY_$SYNCJAWS,UV_$SYNCJAWS;
+   INTEGER
+      ICM_$SYNCJAWS,IRSTART_$SYNCJAWS,IREND_$SYNCJAWS,
+      N_$SYNCJAWS,IR_$SYNCJAWS,
+      IXY_CHOICE_$SYNCJAWS($MAX_N_$SYNCJAWS), ISCM_$SYNCJAWS;
+   CHARACTER*1 TITLE_$SYNCJAWS(60);
+
+} "end of replacement defining common for this CM"
+;
+
+"V>COMMON/USERSYNCJAWS/
+"V>
+"V>ISCM_MAX_$SYNCJAWS = number of pired bars in CM
+"V>MODE_$SYNCJAWS = 0 for static jaws, 1 for dynamic jaw positioning, 2
+"V>                for step-and-shoot positioning
+"V>NFIELDS_$SYNCJAWS = no. of jaw fields
+"V>I_$SYNCJAWS,J_$SYNCJAWS = looping indices
+"V>ZMIN_$SYNCJAWS(I)  = Zmin of a paired bar
+"V>ZMAX_$SYNCJAWS(I)  = Zmax of a paired bar
+"V>XFP_$SYNCJAWS(I)   = Front of positive bar in this ISCM (X or Y)
+"V>XFN_$SYNCJAWS(I)   = Front of negative bar in this ISCM (X or Y)
+"V>XBP_$SYNCJAWS(I)   = Back of positive bar in this ISCM (X or Y)
+"V>XBN_$SYNCJAWS(I)   = Back of negative bar in this ISCM (X or Y)
+"V>DZMIN_$SYNCJAWS(J) = values of Zmin for all bars for all fields
+"V>DZMAX_$SYNCJAWS(J) = values of Zmax for all bars for all fields
+"V>DXFP_$SYNCJAWS(J)  = values of XFP for all bars for all fields
+"V>DXFN_$SYNCJAWS(J)  = values of XFN for all bars for all fields
+"V>DXBP_$SYNCJAWS(J)  = values of XBP for all bars for all fields
+"V>DXBN_$SYNCJAWS(J)  = values of XBN for all bars for all fields
+"V>XFPT_$SYNCJAWS(I,2)= Front of positive bar in this ISCM (X or Y)
+"V>XFNT_$SYNCJAWS(I,2)= Front of negative bar in this ISCM (X or Y)
+"V>XBPT_$SYNCJAWS(I,2)= Back of positive bar in this ISCM (X or Y)
+"V>XBNT_$SYNCJAWS(I,2)= Back of negative bar in this ISCM (X or Y)
+"V>APO_$SYNCJAWS(I)   = Slope of positive bar in this ISCM (X or Y)
+"V>ANE_$SYNCJAWS(I)   = Slope of negative bar in this ISCM (X or Y)
+"V>BPO_$SYNCJAWS(I)   = Constant  b of positive bar in equation x = a*z + b
+"V>BNE_$SYNCJAWS(I)   = Constant  b of negative bar in equation x = a*z + b
+"V>BPOT_$SYNCJAWS(I,2)= Constant  b of positive bar in equation x = a*z + b
+"V>BNET_$SYNCJAWS(I,2)= Constant  b of negative bar in equation x = a*z + b
+"V>COSP_$SYNCJAWS(I)  = cos of positive bar in this ISCM
+"V>COSN_$SYNCJAWS(I)  = cos of negative bar in this ISCM
+"V>INDEX_$SYNCJAWS(K) = index for field I.  If INDEX_$SYNCJAWS(K)>=
+"V>                            RNDM1_$SYNCJAWS then field I is used.
+"V>INDEX1_$SYNCJAWS,INDEX2_$SYNCJAWS = temporary variables to store
+"V>                                  INDEX_$SYNCJAWS(K) values so that
+"V>                                  jaw positions can be interpolated during
+"V>                                  dynamic simulations
+"V>RNDM1_$SYNCJAWS = random no. (0,1) selected before each history and compared
+"V>                 to INDEX_$SYNCJAWS(K) to determin what field to used
+
+
+REPLACE {;COMIN/USER-SYNCJAWS/;} WITH {;
+
+COMMON/USERSYNCJAWS/ZMIN_$SYNCJAWS, ZMAX_$SYNCJAWS,
+       XFP_$SYNCJAWS,XFN_$SYNCJAWS,XBP_$SYNCJAWS,XBN_$SYNCJAWS,
+       DZMIN_$SYNCJAWS, DZMAX_$SYNCJAWS,
+       DXFP_$SYNCJAWS,DXFN_$SYNCJAWS,DXBP_$SYNCJAWS,DXBN_$SYNCJAWS,
+       APO_$SYNCJAWS, ANE_$SYNCJAWS,BPO_$SYNCJAWS,BNE_$SYNCJAWS,
+       COSP_$SYNCJAWS,COSN_$SYNCJAWS,XFPT_$SYNCJAWS,XFNT_$SYNCJAWS,
+       XBPT_$SYNCJAWS,XBNT_$SYNCJAWS,BPOT_$SYNCJAWS,BNET_$SYNCJAWS,
+       RNDM1_$SYNCJAWS,INDEX_$SYNCJAWS,INDEX1_$SYNCJAWS,
+       INDEX2_$SYNCJAWS,ISCM_MAX_$SYNCJAWS,MODE_$SYNCJAWS,NFIELDS_$SYNCJAWS,
+       I_$SYNCJAWS,J_$SYNCJAWS;
+$REAL ZMIN_$SYNCJAWS($MAX_N_$SYNCJAWS),  ZMAX_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      XFP_$SYNCJAWS($MAX_N_$SYNCJAWS),XFN_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      XBP_$SYNCJAWS($MAX_N_$SYNCJAWS), XBN_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      DZMIN_$SYNCJAWS($MAXFS_$SYNCJAWS), DZMAX_$SYNCJAWS($MAXFS_$SYNCJAWS),
+      DXFP_$SYNCJAWS($MAXFS_$SYNCJAWS),DXFN_$SYNCJAWS($MAXFS_$SYNCJAWS),
+      DXBP_$SYNCJAWS($MAXFS_$SYNCJAWS),DXBN_$SYNCJAWS($MAXFS_$SYNCJAWS),
+      APO_$SYNCJAWS($MAX_N_$SYNCJAWS),ANE_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      BPO_$SYNCJAWS($MAX_N_$SYNCJAWS), BNE_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      COSP_$SYNCJAWS($MAX_N_$SYNCJAWS),COSN_$SYNCJAWS($MAX_N_$SYNCJAWS),
+      XFPT_$SYNCJAWS($MAX_N_$SYNCJAWS,2),XFNT_$SYNCJAWS($MAX_N_$SYNCJAWS,2),
+      XBPT_$SYNCJAWS($MAX_N_$SYNCJAWS,2),XBNT_$SYNCJAWS($MAX_N_$SYNCJAWS,2),
+      BPOT_$SYNCJAWS($MAX_N_$SYNCJAWS,2),BNET_$SYNCJAWS($MAX_N_$SYNCJAWS,2),
+      RNDM1_$SYNCJAWS,INDEX_$SYNCJAWS($MAXFIELD_$SYNCJAWS),INDEX1_$SYNCJAWS,
+       INDEX2_$SYNCJAWS;
+$INTEGER ISCM_MAX_$SYNCJAWS,MODE_$SYNCJAWS,NFIELDS_$SYNCJAWS,
+        I_$SYNCJAWS,J_$SYNCJAWS;
+$INTEGER BIMIN_$SYNCJAWS, BIMAX_$SYNCJAWS_$SYNCJAWS, BIMID_$SYNCJAWS;
+}
+
+
+
+REPLACE {$SET_SYNCJAWS_COMP} WITH {;
+IF(MODE_$SYNCJAWS=1 | MODE_$SYNCJAWS=2)[
+  IF(BEAM_MU_INDEX=BEAM_MU_INDEX_OLD)[
+   "Added by Tony Popescu and Julio Lobo to communicate setting."
+   "The random number has not been set before this CM"
+   $RANDOMSET RNDM1_$SYNCJAWS;
+   BEAM_MU_INDEX = RNDM1_$SYNCJAWS;
+   ]
+   ELSE[
+   "the random number has already been set before this CM"
+   "so use this already set number"
+   RNDM1_$SYNCJAWS = BEAM_MU_INDEX;
+   ]
+
+    IF (RNDM1_$SYNCJAWS < INDEX_$SYNCJAWS(NFIELDS_$SYNCJAWS))  [
+
+        "Binary search"
+        IF (RNDM1_$SYNCJAWS < INDEX_$SYNCJAWS(1)) [
+            BIMAX_$SYNCJAWS_$SYNCJAWS = 1;
+        ]
+        ELSE [
+            BIMIN_$SYNCJAWS = 1;
+            BIMAX_$SYNCJAWS_$SYNCJAWS = NFIELDS_$SYNCJAWS;
+            WHILE (BIMIN_$SYNCJAWS < BIMAX_$SYNCJAWS_$SYNCJAWS-1) [
+                BIMID_$SYNCJAWS = BIMIN_$SYNCJAWS +
+                    (BIMAX_$SYNCJAWS_$SYNCJAWS-BIMIN_$SYNCJAWS)/2;
+                IF (INDEX_$SYNCJAWS(BIMID_$SYNCJAWS) >= RNDM1_$SYNCJAWS) [
+                    BIMAX_$SYNCJAWS_$SYNCJAWS = BIMID_$SYNCJAWS; ]
+                ELSE [ BIMIN_$SYNCJAWS = BIMID_$SYNCJAWS; ];
+            ]
+        ]
+        I_$SYNCJAWS = BIMAX_$SYNCJAWS_$SYNCJAWS;
+
+        INDEX2_$SYNCJAWS = INDEX_$SYNCJAWS(I_$SYNCJAWS);
+        IF(MODE_$SYNCJAWS=1 & I_$SYNCJAWS>1)
+                 INDEX1_$SYNCJAWS = INDEX_$SYNCJAWS(I_$SYNCJAWS-1);
+        DO J_$SYNCJAWS=1,ISCM_MAX_$SYNCJAWS[
+           IF(MODE_$SYNCJAWS=1 & I_$SYNCJAWS>1)[
+             "calculate settings between fields I_$SYNCJAWS and I_$SYNCJAWS-1"
+             ZMIN_$SYNCJAWS(J_$SYNCJAWS)=
+               DZMIN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DZMIN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DZMIN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))
+		*((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                 (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+             ZMAX_$SYNCJAWS(J_$SYNCJAWS)=
+               DZMAX_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DZMAX_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DZMAX_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))
+		* ((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                 (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+             XFP_$SYNCJAWS(J_$SYNCJAWS)=
+               DXFP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DXFP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DXFP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))*
+               ((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                 (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+             XBP_$SYNCJAWS(J_$SYNCJAWS)=
+               DXBP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DXBP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DXBP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))*
+               ((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                 (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+             XFN_$SYNCJAWS(J_$SYNCJAWS)=
+               DXFN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DXFN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DXFN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))*
+               ((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+             XBN_$SYNCJAWS(J_$SYNCJAWS)=
+               DXBN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS)+
+               (DXBN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS)-
+                DXBN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-2)*ISCM_MAX_$SYNCJAWS))*
+               ((RNDM1_$SYNCJAWS-INDEX1_$SYNCJAWS)/
+                 (INDEX2_$SYNCJAWS-INDEX1_$SYNCJAWS));
+           ]
+           ELSE[
+             ZMIN_$SYNCJAWS(J_$SYNCJAWS)=
+                DZMIN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+             ZMAX_$SYNCJAWS(J_$SYNCJAWS)=
+                DZMAX_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+             XFP_$SYNCJAWS(J_$SYNCJAWS)=
+                 DXFP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+             XBP_$SYNCJAWS(J_$SYNCJAWS)=
+                 DXBP_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+             XFN_$SYNCJAWS(J_$SYNCJAWS)=
+                 DXFN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+             XBN_$SYNCJAWS(J_$SYNCJAWS)=
+                 DXBN_$SYNCJAWS(J_$SYNCJAWS+(I_$SYNCJAWS-1)*ISCM_MAX_$SYNCJAWS);
+           ]
+           APO_$SYNCJAWS(J_$SYNCJAWS) = (XBP_$SYNCJAWS(J_$SYNCJAWS)-
+                                      XFP_$SYNCJAWS(J_$SYNCJAWS))/
+                           (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                             ZMIN_$SYNCJAWS(J_$SYNCJAWS));
+           ANE_$SYNCJAWS(J_$SYNCJAWS) = (XBN_$SYNCJAWS(J_$SYNCJAWS)-
+                                      XFN_$SYNCJAWS(J_$SYNCJAWS))/
+                           (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                             ZMIN_$SYNCJAWS(J_$SYNCJAWS));
+           BPO_$SYNCJAWS(J_$SYNCJAWS) =  XFP_$SYNCJAWS(J_$SYNCJAWS) -
+                                ZMIN_$SYNCJAWS(J_$SYNCJAWS)*
+                                APO_$SYNCJAWS(J_$SYNCJAWS);
+           BNE_$SYNCJAWS(J_$SYNCJAWS) =  XFN_$SYNCJAWS(J_$SYNCJAWS) -
+                                ZMIN_$SYNCJAWS(J_$SYNCJAWS)*
+                                ANE_$SYNCJAWS(J_$SYNCJAWS);
+           COSP_$SYNCJAWS(J_$SYNCJAWS)= (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                      ZMIN_$SYNCJAWS(J_$SYNCJAWS))/
+                      SQRT( (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                      ZMIN_$SYNCJAWS(J_$SYNCJAWS))**2
+                      +( XBP_$SYNCJAWS(J_$SYNCJAWS) -
+                       XFP_$SYNCJAWS(J_$SYNCJAWS) )**2 );
+           COSN_$SYNCJAWS(J_$SYNCJAWS)= (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                      ZMIN_$SYNCJAWS(J_$SYNCJAWS))/
+                 SQRT( (ZMAX_$SYNCJAWS(J_$SYNCJAWS) -
+                        ZMIN_$SYNCJAWS(J_$SYNCJAWS))**2
+                       + (XBN_$SYNCJAWS(J_$SYNCJAWS) -
+                        XFN_$SYNCJAWS(J_$SYNCJAWS))**2 );
+           XFPT_$SYNCJAWS(J_$SYNCJAWS,1)= XFP_$SYNCJAWS(J_$SYNCJAWS)+ $BDY_TOL;
+           XFPT_$SYNCJAWS(J_$SYNCJAWS,2)= XFP_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           XBPT_$SYNCJAWS(J_$SYNCJAWS,1)= XBP_$SYNCJAWS(J_$SYNCJAWS) + $BDY_TOL;
+           XBPT_$SYNCJAWS(J_$SYNCJAWS,2)= XBP_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           XFNT_$SYNCJAWS(J_$SYNCJAWS,1)= XFN_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           XFNT_$SYNCJAWS(J_$SYNCJAWS,2)= XFN_$SYNCJAWS(J_$SYNCJAWS) + $BDY_TOL;
+           XBNT_$SYNCJAWS(J_$SYNCJAWS,1)= XBN_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           XBNT_$SYNCJAWS(J_$SYNCJAWS,2)= XBN_$SYNCJAWS(J_$SYNCJAWS) + $BDY_TOL;
+           BPOT_$SYNCJAWS(J_$SYNCJAWS,1)= BPO_$SYNCJAWS(J_$SYNCJAWS) + $BDY_TOL;
+           BPOT_$SYNCJAWS(J_$SYNCJAWS,2)= BPO_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           BNET_$SYNCJAWS(J_$SYNCJAWS,1)= BNE_$SYNCJAWS(J_$SYNCJAWS) - $BDY_TOL;
+           BNET_$SYNCJAWS(J_$SYNCJAWS,2)= BNE_$SYNCJAWS(J_$SYNCJAWS) + $BDY_TOL;
+        ]
+    ]
+]
+;
+}
+"-------------------------------------------------------------------------------
+"     $SYNCJAWS (JAWS) HOWNEAR replacement macro                   ""toc:
+"-------------------------------------------------------------------------------
+"
+"
+REPLACE {$SYNCJAWS_CM_HOWNEAR(#)} WITH {  "{P1} is DNEAR"
+"       ==================="
+CALL HOWNEAR_$SYNCJAWS({P1});
+}
+;
+REPLACE {$SYNCJAWS_TPOSITIVE;} WITH {;
+DIST = (APO_$SYNCJAWS(ISCM_$SYNCJAWS)*Z(NP) +
+        BPOT_$SYNCJAWS(ISCM_$SYNCJAWS,IB_$SYNCJAWS)
+         - XY_$SYNCJAWS)/(UV_$SYNCJAWS-W(NP)*APO_$SYNCJAWS(ISCM_$SYNCJAWS));
+IF(DIST < 0.0)[
+   I_tpo = I_tpo + 1;
+   DIST = 0.0;
+   IF(Z(NP) < ZFRONT_$SYNCJAWS-0.1 | Z(NP) > ZBACK_$SYNCJAWS+0.1 )[
+      OUTPUT; (/' ***WARNING in +ve bar of SYNCJAWS'/
+            ' Particle is well above or below jaw, yet region number '/
+            ' indicates the particle is still in the jaw.'/
+            ' The particle is being discarded but this is a bug.'/
+            ' Please contact the NRC.'/);
+      IDISC=1; RETURN;
+   ]
+   ELSEIF(I_tpo > 20)[
+      OUTPUT; (/' ***WARNING in +ve bar of SYNCJAWS'/
+            ' DIST calculated to jaw opening has been -ve and reset to '/
+            ' zero for the past 20 steps.  The particle could be assigned'/
+            ' to the wrong region number.  The particle is being discarded'/
+            ' but this is a bug.  Please contact the NRC.'/);
+      IDISC = 1; I_tpo = 0; RETURN;
+   ]
+]
+ELSE[
+   I_tpo = 0;
+              "reset counter in case another particle in this history has"
+              "this problem"
+]
+}
+;
+REPLACE {$SYNCJAWS_TNEGATIVE;} WITH {;
+DIST = (ANE_$SYNCJAWS(ISCM_$SYNCJAWS)*Z(NP)+
+          BNET_$SYNCJAWS(ISCM_$SYNCJAWS,IB_$SYNCJAWS)
+        - XY_$SYNCJAWS)/(UV_$SYNCJAWS-W(NP)*ANE_$SYNCJAWS(ISCM_$SYNCJAWS));
+IF(DIST < 0.0)[
+   I_tne = I_tne + 1;
+   DIST = 0.0;
+   IF(Z(NP) < ZFRONT_$SYNCJAWS-0.1 | Z(NP) > ZBACK_$SYNCJAWS+0.1 )[
+      OUTPUT; (/' ***WARNING in -ve bar of SYNCJAWS'/
+            ' Particle is well above or below jaw, yet region number '/
+            ' indicates the particle is still in the jaw.'/
+            ' The particle is being discarded but this is a bug.'/
+            ' Please contact the NRC.'/);
+      IDISC=1; RETURN;
+   ]
+   ELSEIF(I_tne > 20)[
+      OUTPUT; (/' ***WARNING in -ve bar of SYNCJAWS'/
+            ' DIST calculated to jaw opening has been -ve and reset to '/
+            ' zero for the past 20 steps.  The particle could be assigned'/
+            ' to the wrong region number.  The particle is being discarded'/
+            ' but this is a bug.  Please contact the NRC.'/);
+      IDISC = 1; I_tne = 0; RETURN;
+   ]
+]
+ELSE[
+   I_tne = 0;
+              "reset counter in case another particle in this history has"
+              "this problem"
+]
+}
+;
+REPLACE {$SYNCJAWS_SET_XY_UV(#)} WITH {;
+XY_$SYNCJAWS = X(NP);
+UV_$SYNCJAWS = U(NP);
+IF(IXY_CHOICE_$SYNCJAWS({P1}) = 1)[
+   XY_$SYNCJAWS = Y(NP);
+   UV_$SYNCJAWS = V(NP);
+]
+}
+"End of SYNCJAWS_macros.mortran (Rev 1.5)"

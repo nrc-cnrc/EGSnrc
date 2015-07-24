@@ -1,0 +1,1590 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: set of rectangular applicators            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Geoff Zhang                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ****************          ""toc:
+"                             *              *          ""toc:
+"                             *   APPLICAT   *          ""toc:
+"                             *              *          ""toc:
+"                             ****************          ""toc:
+"
+"   History of modifications given by sccs
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  Set of rectangular applicators.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.mortran to simulate
+"   one component module of a clinical linear accelerator:  a set of 1 or more
+"   applicators.  Each applicator is defined by two concentric, symmetric
+"   rectangles or squares, the inner region being air.  The scrapers are
+"   of arbitrary thickness, width and position relative to the reference
+"   plane (Z=0). The applicators may have different materials.
+"
+"   This is an extention of APPSQ_cm.mortran starting from SID 1.53 last
+"   edited on 14 Aug 1998.
+"
+%E   "APPLICAT_cm.mortran - start of geometry description
+"I>
+"I> Geometry of $APPLICAT (APPLICAT):               ""toc:
+"I> *********************
+"I>
+"I>                     |                  ___         _____   |
+"I>                     |    ____         |   |       |     |  |
+"I>                     |   |    |        |IR=|       |IR=  |  |
+"I>                     |   |IR=1|        |  2|       |N_SC |  |
+"I>                     |   |____|        |___|       |_____|  |
+"I>                     |                                      |
+"I>       --------->    |                                      |
+"I>          beam       |            IR=N_SC+1                 |
+"I>       direction     |    ____          ___         _____   |
+"I>                     |   |    |        |IR=|       |IR=  |  |
+"I>                     |   |IR=1|        |  2|       |N_SC |  |
+"I>                     |   |____|        |   |       |     |  |
+"I>                     |                 |___|       |_____|  |
+"I>                     |                                      |
+"I>
+"I>   IR is the region number within the CM.  There are N_APPLICAT+1 local
+"I>   regions. The first region is the furthest upstream.  An air gap is
+"I>   always present at the front and back of the CM.
+"I>
+"I>
+"I>            --------------------------------------------------------
+"I>            |          Region               | Description          |
+"I>            |-------------------------------|----------------------|
+"I>            |  absolute       | local       |                      |
+"I>            |-----------------|-------------|                      |
+"I>            |IRSTART_APPLICAT | IR_APPLICAT |  applicator          |
+"I>            |  +IR_APPLICAT-1 |             |                      |
+"I>            |IRSTART_APPLICAT | N_APPLICAT+1| intervening air space|
+"I>            |  +N_APPLICAT    |             |                      |
+"I>            --------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$APPLICAT
+"                      ISUMRY_$APPLICAT
+"                      HOWFAR_$APPLICAT
+"                      WHERE_AM_I_$APPLICAT
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/BUGS         ""toc:
+"                             *******************
+"
+"
+;
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                             COMMON BLOCK VARIABLES
+"                             **********************
+"
+"  Refer to the replacement macros in BEAM.mortran and APPLICAT_macros.mortran
+"  which define the common block variables.
+"
+"*******************************************************************************
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5              ""toc:
+"                               *****************              ""toc:
+"
+"I>
+"I>  CARDS CM_APPLICAT
+"I>  *****************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$APPLICAT) (F10.0): Half-width of outer boundary of CM (cm).
+"I>
+"I>   1  TITLE_$APPLICAT (60A1):  Title of CM.
+"I>
+"I>   2  ZBACK_$APPLICAT (F15.0): Z of back face of the CM
+"I>                           (air will be added if necessary below the
+"I>                           last applicator)
+"I>
+"I>       Note that there is always an air gap (thickness =
+"I>       AIRGAPMIN) in the front and the back of this CM.
+"I>       Therefore ZBACK_$APPLICAT should be >= Z of the back face of the
+"I>       last scraper + AIRGAPMIN.
+"I>
+"I>   3  N_$APPLICAT, ISHAPE (2I5):
+"I>        N_$APPLICAT:  Number of scrapers in the CM.
+"I>        ISHAPE:       Index of applicators' shape, default to square, 1 for
+"I>                      rectangle.
+"I>
+"I>   Repeat 4 for I=1,N_$APPLICAT.
+"I>
+"I>   4  ZMIN_$APPLICAT(I), ZTHICK_$APPLICAT(I), XMIN_$APPLICAT(I),
+"I>      YMIN_$APPLICAT(I),
+"I>      WIDTHX_$APPLICAT(I), WIDTHY_$APPLICAT(I),
+"I>      DOSE_ZONE,IREGION_TO_BIT (6F15.0,2I4):
+"I>
+"I>        ZMIN_$APPLICAT(I):   Z of front face of scraper I.
+"I>                             Note that ZMIN_$APPLICAT(1)-
+"I>                             Z_min_CM must be >= AIRGAPMIN.
+"I>        ZTHICK_$APPLICAT(I): Thickness of scraper I.  Note that
+"I>                             ZMIN_$APPLICAT(I+1)-(ZMIN_$APPLICAT(I)+
+"I>                             ZTHICK_$APPLICAT(I))
+"I>                             must be >= AIRGAPMIN.
+"I>        XMIN_$APPLICAT(I):   (ISHAPE=1)  Half-width of inner opening in
+"I>                                         x in scraper I.
+"I>                             (ISHAPE~=1) Half-width of inner opening in x
+"I>                                         and y in scraper I.
+"I>        YMIN_$APPLICAT(I):   (ISHAPE=1)  Half-width of inner opening in y in
+"I>                                         scraper I.
+"I>                             (ISHAPE~=1) Not required.
+"I>        WIDTHX_$APPLICAT(I): (ISHAPE=1)  Width of bar in x (ie material
+"I>                                         surrounding inner opening) of
+"I>                                         scraper I.
+"I>                             (ISHAPE~=1) Width of bar in x and y for
+"I>                                         scraper I.
+"I>        WIDTHY_$APPLICAT(I): (ISHAPE=1)  Width of bar in y (ie material
+"I>                                         surrounding inner opening) of
+"I>                                         scraper I.
+"I>                             (ISHAPE~=1) Not required.
+"I>        DOSE_ZONE:           Dose scoring zone for the scraper bar.
+"I>        IREGION_TO_BIT:      Bit setting number for the scraper bar.
+"I>
+"I>        Note restrictions to allow air gaps between scrapers and
+"I>        before the first scraper:
+"I>         ZMIN_$APPLICAT(1)-Z_min_CM >= AIRGAPMIN
+"I>         ZMIN_$APPLICAT(I+1)-(ZMIN_$APPLICAT(I)+ZTHICK_$APPLICAT(I)) >=
+"I>         AIRGAPMIN
+"I>
+"I>   6   ECUT, PCUT, DOSE_ZONE_AIR,IREGION_TO_BIT_AIR (2F15.0,2I5):
+"I>
+"I>          ECUT, PCUT:     Cutoff energies for electrons and photons for
+"I>                          both the bars and the surrounding (air) region
+"I>          DOSE_ZONE_AIR:  Dose scoring zone for the surrounding region
+"I>     IREGION_TO_BIT_AIR:  Bit set number for the surrounding (air) region
+"I>
+"I>   Repeat 7 for I=1,N_$APPLICAT.
+"I>
+"I>   7   MED_IN (24A1):  Medium of the bar of scraper I, used to
+"I>                       set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following set of cards defines an applicator consisting of 2
+"I>  0.2cm-thick Al scrapers.  The scrapers are separated by 8cm of air.
+"I>  Scrapers can be thought of as made of 4 bars arranged in a rectangle
+"I>  orthogonal to the Z axis.  For both scrapers in this example, the half-
+"I>  width of the openings created by the bars is 2cm in x, 4cm in y, and the
+"I>  width of the bars themselves is 1cm in x, 1.5cm in y.  The front scraper
+"I>  starts at Z=60.5 cm.
+"I>
+"I>  Electrons will be followed in the CM down to kinetic energies of
+"I>  10 keV (total energies of 0.521 MeV) and photons will be followed down
+"I>  to energies of 1 keV.  The dose deposited in the air will be scored and
+"I>  added to the dose from the other regions in dose scoring zone 1, and the
+"I>  dose deposited in both scrapers will be scored and added to the dose
+"I>  from the other regions in dose scoring zone 2.  There is a minimum 0.1 cm
+"I>  air gap at the front and back of the scrapers CM so that the applicator
+"I>  bars are completely surrounded by air.
+"I>
+"I>  10.0,    RMAX_CM
+"I>  Applicators: 0.2cm Al at 60.5cm and 68.7cm, ECUT=0.521, PCUT=0.01
+"I>  100.0,   extended air to Z=100 cm
+"I>  2, 1,    two rectangular applicators
+"I>  60.5, 0.2, 2.0, 4.0, 1.0, 1.5, 2,3
+"I>  68.7, 0.2, 2.0, 4.0, 1.0, 1.5, 2,2
+"I>  0.521, 0.01, 1, 0
+"I>  AL521ICRU
+"I>  AL521ICRU
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules not allowed
+"
+"   2)  Overlapping scrapers not allowed
+"
+"   3)  Air gap at front and back of CM required
+"
+"   4)  Inner boundary of all scrapers must be within CM boundary, RMAX_CM
+"
+"*******************************************************************************
+
+%E "start of subroutine HOWFAR_$APPLICAT (Rev 1.6)"
+"*******************************************************************************
+"************************** Component Module APPLICAT **************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_APPLICAT
+"                          **************************
+"
+" HOWFAR routine for set of scrapers.
+"
+" Determine if current region number is within component module APPLICAT, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_APPLICAT+1 local regions + an air gap (if present):
+"
+"      local                    absolute                   description
+"   ------------  ------------------------------------   ---------------
+"       IRL       IR_start_CM(ICM_APPLICAT)+IRL-1        scraper IRL
+"   N_APPLICAT+1  IR_start_CM(ICM_APPLICAT)+N_APPLICAT   intervening air
+"
+"   Geometrical co-ordinates, as set in INPUT_APPLICAT are:
+"
+"   ZFRONT_APPLICAT     front of CM (upstream surface, air region)
+"   ZBACK_APPLICAT      back of CM (downstream surface, air region)
+"   ZMIN_APPLICAT(IRL)  front of scraper IRL, or front of surrounding air
+"                      region for IRL=N_APPLICAT+1
+"   ZMAX_APPLICAT(IRL)  back of scraper IRL or air region
+"   XMIN_APPLICAT(IRL)  minimum X of scraper IRL
+"   YMIN_APPLICAT(IRL)  minimum Y of scraper IRL
+"   XMAX_APPLICAT(IRL)  maximum X of scraper IRL
+"   YMAX_APPLICAT(IRL)  maximum Y of scraper IRL
+"
+"*******************************************************************************
+;
+;SUBROUTINE HOWFAR_$APPLICAT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CMs,CM_$APPLICAT,EPCONT,STACK,EGS-IO/;
+
+"T>
+"T>*************************************
+"T>TYPE DECLARATIONS FOR HOWFAR_APPLICAT
+"T>*************************************
+"T>
+
+INTEGER
+   I,II,            "T>loop variable
+   IRL,             "T>local region number (absolute), required by HOWNEAR macro
+   IRNEW_$APPLICAT, "T>tentative new region number within CM (absolute)
+   IB_$APPLICAT,    "T>index to deal with round off errors
+   IHIT;            "T>Index for hit(=1) or not (=0)
+
+$REAL
+   DIST,            "T>distance to region boundary along current particle
+"                      trajectory
+   DFR,             "T>distance to front scraper plane on particle trajectory
+   XFR,             "T>X at scraper front surface along particle trajectory
+   YFR,             "T>Y at scraper front surface along particle trajectory
+   DBA,             "T>distance to back scraper plane on particle trajectory
+   XBA,             "T>X at scraper back surface along particle trajectory
+   YBA,             "T>Y at scraper back surface along particle trajectory
+   DTEM,            "T>temperary dist;
+   ZFRBA,           "T>front or back of a scraper plane z coordinate
+   TVAR;            "T>temperary variable to reduce repeated calculation
+
+IRL = IR(NP); "local region number (absolute)
+
+" Set DNEAR
+" *********
+" This replacement macros sets DNEAR and defines IR_$APPLICAT
+
+;$APPLICAT_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module APPLICAT, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+IF (IR_$APPLICAT>0 & IR_$APPLICAT<N_$APPLICAT+1) [
+   "particle in a scraper, all treated the same"
+   "establish nearest boundary in Z-direction"
+   IB_$APPLICAT=1; "inside srapers is 1"
+   IF (W(NP)~=0.0) [
+      ZFRBA=ZMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT);
+      IF(W(NP)<0.0)[ZFRBA=ZMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT);]
+      DBA = (ZFRBA-Z(NP))/W(NP);
+      XBA = ABS(X(NP)+U(NP)*DBA); "X at Back
+      YBA = ABS(Y(NP)+V(NP)*DBA); "Y at Back
+      $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+      XMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),
+      YMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),X(NP),Y(NP),DBA);
+      IF(IHIT=1)[ DIST=DTEM;]
+      ELSEIF((
+            XBA>XMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT)|
+            YBA>YMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT))&
+            XBA<XMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT) &
+            YBA<YMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT))[
+            DIST=DBA;
+      ]
+      ELSE[
+            $APPLICAT_HIT_OUTSIDE(DTEM,
+            XMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),
+            YMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),X(NP),Y(NP));
+            DIST=DTEM;
+      ]
+      DIST=MIN(DIST,DBA);
+   ]
+   ELSE[                        " (W(NP)=0.0"
+      $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+      XMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),
+      YMINT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),X(NP),Y(NP),1E10);
+      IF(IHIT=1)[
+         DIST=DTEM;
+      ]
+      ELSE[
+         $APPLICAT_HIT_OUTSIDE(DTEM,
+         XMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),
+         YMAXT_$APPLICAT(IR_$APPLICAT,IB_$APPLICAT),X(NP),Y(NP));
+         DIST=DTEM;
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary, still in CM
+      USTEP = DIST;
+      IRNEW = IRSTART_$APPLICAT+N_$APPLICAT; "new region number
+   ]
+]" end of scraper block"
+ELSEIF (IR_$APPLICAT=N_$APPLICAT+1) [ "particle in air region "
+   IB_$APPLICAT=2;    "in air the index is 2"
+   IF (W(NP)>0.0)[   "particle moving forward"
+      "check scrapers for possible intersection with particle trajectory
+      DIST = (ZBACK_$APPLICAT-Z(NP))/W(NP); "distance to back of CM
+      IF(DIST<=0)[DIST=1.E-16;]
+      IRNEW_$APPLICAT = 1; "new region number for large USTEP
+      DO I=1,N_$APPLICAT ["loop through scrapers
+         IF(Z(NP)>ZMINT_$APPLICAT(I,IB_$APPLICAT)&
+            Z(NP)<ZMAXT_$APPLICAT(I,IB_$APPLICAT))["check Z between wall first "
+            DBA=(ZMAXT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+            XBA=X(NP)+DBA*U(NP);
+            YBA=Y(NP)+DBA*V(NP);
+            IF(ABS(X(NP)) < XMINT_$APPLICAT(I,IB_$APPLICAT)&
+               ABS(Y(NP)) < YMINT_$APPLICAT(I,IB_$APPLICAT))[ "inside Amin
+               IF(ABS(XBA)>XMINT_$APPLICAT(I,IB_$APPLICAT)|
+                  ABS(YBA)>YMINT_$APPLICAT(I,IB_$APPLICAT))[ "hit wall
+                  $APPLICAT_HIT_OUTSIDE(DTEM,
+                  XMINT_$APPLICAT(I,IB_$APPLICAT),
+                  YMINT_$APPLICAT(I,IB_$APPLICAT),X(NP),Y(NP));
+                  DIST=DTEM;IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I < N_$APPLICAT)[
+                  DO II=I+1,N_$APPLICAT[ " continue down the way check"
+                     DFR=(ZMINT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                     XFR = X(NP)+U(NP)*DFR;   "X at front
+                     YFR = Y(NP)+V(NP)*DFR;   "X at front
+                     IF(
+                       (ABS(XFR)>=XMINT_$APPLICAT(II,IB_$APPLICAT) |
+                        ABS(YFR)>=YMINT_$APPLICAT(II,IB_$APPLICAT))&
+                        ABS(XFR)<=XMAXT_$APPLICAT(II,IB_$APPLICAT) &
+                        ABS(YFR)<=YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DIST=DFR;
+                        "I=N_$APPLICAT;"
+                        IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                        GOTO :OUTLOOP1:;
+                     ]
+                     ELSEIF(ABS(XFR) < XMINT_$APPLICAT(II,IB_$APPLICAT)&
+                        ABS(YFR) < YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                        DBA=(ZMAXT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        IF(ABS(XBA)>XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                           ABS(YBA)>YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                           $APPLICAT_HIT_OUTSIDE(DTEM,
+                           XMINT_$APPLICAT(II,IB_$APPLICAT),
+                           YMINT_$APPLICAT(II,IB_$APPLICAT),XFR,YFR);
+                           DIST=DTEM+DFR;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP1:;
+                        ]
+                     ]
+                  ]
+               ]
+            ]"end inside
+            ELSEIF(ABS(X(NP)) > XMAXT_$APPLICAT(I,IB_$APPLICAT)|
+               ABS(Y(NP)) > YMAXT_$APPLICAT(I,IB_$APPLICAT))[  "outside Amax
+               $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XMAXT_$APPLICAT(I,IB_$APPLICAT),
+                  YMAXT_$APPLICAT(I,IB_$APPLICAT),X(NP),Y(NP),DBA);
+               IF(IHIT =1)[
+                  DIST=DTEM;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I < N_$APPLICAT)[
+                  DO II=I+1,N_$APPLICAT[ " continue down the way check"
+                     DFR=(ZMINT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                     XFR = X(NP)+U(NP)*DFR;   "X at front
+                     YFR = Y(NP)+V(NP)*DFR;   "X at front
+                     IF((
+                        ABS(XFR)>=XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                        ABS(YFR)>=YMINT_$APPLICAT(II,IB_$APPLICAT))&
+                        ABS(XFR)<=XMAXT_$APPLICAT(II,IB_$APPLICAT) &
+                        ABS(YFR)<=YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DIST=DFR;
+                        "I=N_$APPLICAT;"
+                        IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                        GOTO :OUTLOOP1:;
+                     ]
+                     ELSEIF(ABS(XFR)<XMINT_$APPLICAT(II,IB_$APPLICAT)&
+                        ABS(YFR)<YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                        DBA=(ZMAXT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        IF(ABS(XBA)>XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                           ABS(YBA)>YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                           $APPLICAT_HIT_OUTSIDE(DTEM,
+                           XMINT_$APPLICAT(II,IB_$APPLICAT),
+                           YMINT_$APPLICAT(II,IB_$APPLICAT),XFR,YFR);
+                           DIST = DTEM+DFR;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP1:;
+                        ]
+                     ]
+                     ELSEIF(
+                        ABS(XFR) > XMAXT_$APPLICAT(II,IB_$APPLICAT)|
+                        ABS(YFR) > YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DBA=(ZMAXT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+                           XMAXT_$APPLICAT(II,IB_$APPLICAT),
+                           YMAXT_$APPLICAT(II,IB_$APPLICAT),XFR,YFR,DBA-DFR);
+                        IF(IHIT =1)[
+                           DIST = DTEM+DFR;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP1:;
+                        ]
+                     ]
+                  ] " end of down the way check"
+               ]
+            ]"end outside Amax
+         ]
+         ELSEIF(Z(NP)<ZMINT_$APPLICAT(I,IB_$APPLICAT))[
+            "check Z not between scrapers,"
+            DFR=(ZMINT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+            XFR = X(NP)+U(NP)*DFR;   "X at front
+            YFR = Y(NP)+V(NP)*DFR;   "X at front
+            IF((
+               ABS(XFR) >= XMINT_$APPLICAT(I,IB_$APPLICAT)|
+               ABS(YFR) >= YMINT_$APPLICAT(I,IB_$APPLICAT))&
+               ABS(XFR) <= XMAXT_$APPLICAT(I,IB_$APPLICAT) &
+               ABS(YFR) <= YMAXT_$APPLICAT(I,IB_$APPLICAT))[
+               DIST = DFR;
+               IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+               EXIT;
+            ]
+            ELSEIF(
+               ABS(XFR)<XMINT_$APPLICAT(I,IB_$APPLICAT)&
+               ABS(YFR)<YMINT_$APPLICAT(I,IB_$APPLICAT))[
+               DBA=(ZMAXT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+               XBA = X(NP)+U(NP)*DBA; "X at Back
+               YBA = Y(NP)+V(NP)*DBA; "X at Back
+               IF(ABS(XBA)>XMINT_$APPLICAT(I,IB_$APPLICAT)|
+                  ABS(YBA)>YMINT_$APPLICAT(I,IB_$APPLICAT))[
+                  $APPLICAT_HIT_OUTSIDE(DTEM,
+                  XMINT_$APPLICAT(I,IB_$APPLICAT),
+                  YMINT_$APPLICAT(I,IB_$APPLICAT),XFR,YFR);
+                  DIST = DTEM+DFR;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+            ]
+         ]
+      ]
+      :OUTLOOP1:;
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$APPLICAT=1) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$APPLICAT,1);
+         ]
+         ELSE ["still in CM, entering scraper"
+            IRNEW = IRNEW_$APPLICAT; "new region number"
+         ]
+      ]
+   ]
+
+   ELSEIF (W(NP)<0.0) [" particle move backward"
+      DIST = (ZFRONT_$APPLICAT-Z(NP))/W(NP); "distance to front of CM
+      IF(DIST<=0)[DIST=1.E-16;]
+      IRNEW_$APPLICAT = 1; "new region number for large USTEP
+      DO I=N_$APPLICAT,1,-1 ["loop through scrapers
+         IF(Z(NP) > ZMINT_$APPLICAT(I,IB_$APPLICAT)&
+            Z(NP) < ZMAXT_$APPLICAT(I,IB_$APPLICAT))[
+            "check Z between a scraper first"
+            IF(ABS(X(NP)) < XMINT_$APPLICAT(I,IB_$APPLICAT) &
+               ABS(Y(NP)) < YMINT_$APPLICAT(I,IB_$APPLICAT))[  "inside Amin
+               DFR = (ZMINT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+               XFR = X(NP)+DFR*U(NP);
+               YFR = Y(NP)+DFR*V(NP);
+               IF(ABS(XFR) > XMINT_$APPLICAT(I,IB_$APPLICAT) |
+                  ABS(YFR) > YMINT_$APPLICAT(I,IB_$APPLICAT))[
+                  $APPLICAT_HIT_OUTSIDE(DTEM,
+                  XMINT_$APPLICAT(I,IB_$APPLICAT),
+                  YMINT_$APPLICAT(I,IB_$APPLICAT),X(NP),Y(NP));
+                  DIST=DTEM;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I > 1)[
+                  DO II=I-1,1,-1[ " continue down the way check"
+                     DBA = (ZMAXT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                     XBA = X(NP)+U(NP)*DBA;   "X at back
+                     YBA = Y(NP)+V(NP)*DBA;   "X at back
+                     IF((
+                        ABS(XBA) >= XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                        ABS(YBA) >= YMINT_$APPLICAT(II,IB_$APPLICAT))&
+                        ABS(XBA) <= XMAXT_$APPLICAT(II,IB_$APPLICAT) &
+                        ABS(YBA) <= YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DIST = DBA;
+                        IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                        GOTO :OUTLOOP2:;
+                     ]
+                     ELSEIF(
+                        ABS(XBA) < XMINT_$APPLICAT(II,IB_$APPLICAT)&
+                        ABS(YBA) < YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                        DFR = (ZMINT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XFR = X(NP)+U(NP)*DFR; "X at front
+                        YFR = Y(NP)+V(NP)*DFR; "X at front
+                        IF(ABS(XFR) > XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                           ABS(YFR) > YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                           $APPLICAT_HIT_OUTSIDE(DTEM,
+                           XMINT_$APPLICAT(II,IB_$APPLICAT),
+                           YMINT_$APPLICAT(II,IB_$APPLICAT),XBA,YBA);
+                           DIST = DTEM+DBA;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP2:;
+                        ]
+                     ]
+                  ] " end of continue down the way check"
+               ]
+            ] "end of Z between scraper and inside Amin
+
+            ELSEIF(
+               ABS(X(NP)) > XMAXT_$APPLICAT(I,IB_$APPLICAT)|
+               ABS(Y(NP)) > YMAXT_$APPLICAT(I,IB_$APPLICAT))
+               [" Z between a scraper but out side Amax
+               DFR = (ZMINT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+               XFR = X(NP)+DFR*U(NP);
+               YFR = Y(NP)+DFR*V(NP);
+               $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XMAXT_$APPLICAT(I,IB_$APPLICAT),
+                  YMAXT_$APPLICAT(I,IB_$APPLICAT),X(NP),Y(NP),DFR);
+               IF(IHIT = 1)[
+                  DIST=DTEM;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I > 1)[
+                  DO II=I-1,1,-1[ " continue down the way check"
+                     DBA = (ZMAXT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                     XBA = X(NP)+U(NP)*DBA;   "X at back
+                     YBA = Y(NP)+V(NP)*DBA;   "X at back
+                     IF((
+                        ABS(XBA) >= XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                        ABS(YBA) >= YMINT_$APPLICAT(II,IB_$APPLICAT))&
+                        ABS(XBA) <= XMAXT_$APPLICAT(II,IB_$APPLICAT) &
+                        ABS(YBA) <= YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DIST = DBA;
+                        IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                        GOTO :OUTLOOP2:;
+                     ]
+                     ELSEIF(
+                        ABS(XBA) < XMINT_$APPLICAT(II,IB_$APPLICAT)&
+                        ABS(YBA) < YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                        DFR=(ZMINT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XFR = X(NP)+U(NP)*DFR; "X at front
+                        YFR = Y(NP)+V(NP)*DFR; "X at front
+                        IF(ABS(XFR) > XMINT_$APPLICAT(II,IB_$APPLICAT)|
+                           ABS(YFR) > YMINT_$APPLICAT(II,IB_$APPLICAT))[
+                           $APPLICAT_HIT_OUTSIDE(DTEM,
+                           XMINT_$APPLICAT(II,IB_$APPLICAT),
+                           YMINT_$APPLICAT(II,IB_$APPLICAT),XBA,YBA);
+                           DIST = DTEM+DBA;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP2:;
+                        ]
+                     ]
+                     ELSEIF(
+                        ABS(XBA) > XMAXT_$APPLICAT(II,IB_$APPLICAT)|
+                        ABS(YBA) > YMAXT_$APPLICAT(II,IB_$APPLICAT))[
+                        DFR=(ZMINT_$APPLICAT(II,IB_$APPLICAT)-Z(NP))/W(NP);
+                        XFR = X(NP) + U(NP)*DFR; "X at front
+                        YFR = Y(NP) + V(NP)*DFR; "X at front
+                        $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+                           XMAXT_$APPLICAT(II,IB_$APPLICAT),
+                           YMAXT_$APPLICAT(II,IB_$APPLICAT),XBA,YBA,DFR-DBA);
+                        IF(IHIT =1)[
+                           DIST = DTEM+DBA;
+                           IRNEW_$APPLICAT = IRSTART_$APPLICAT+II-1;
+                           GOTO :OUTLOOP2:;
+                        ]
+                     ]
+                  ] " end of continue down the way check"
+               ]
+            ]  "end of Z between scraper end of out side Amax"
+         ] "end of Z between a scraper"
+         ELSEIF(Z(NP) > ZMAXT_$APPLICAT(I,IB_$APPLICAT))[
+            " Z not between a scraper"
+            DBA = (ZMAXT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+            XBA = X(NP)+U(NP)*DBA;   "X at front
+            YBA = Y(NP)+V(NP)*DBA;   "X at front
+            IF((
+               ABS(XBA) >= XMINT_$APPLICAT(I,IB_$APPLICAT)|
+               ABS(YBA) >= YMINT_$APPLICAT(I,IB_$APPLICAT))&
+               ABS(XBA) <= XMAXT_$APPLICAT(I,IB_$APPLICAT) &
+               ABS(YBA) <= YMAXT_$APPLICAT(I,IB_$APPLICAT))[
+               DIST=DBA;
+               IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+               EXIT;
+            ]
+            ELSEIF(
+               ABS(XBA) < XMINT_$APPLICAT(I,IB_$APPLICAT) &
+               ABS(YBA) < YMINT_$APPLICAT(I,IB_$APPLICAT))[
+               DFR=(ZMINT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+               XFR = X(NP)+U(NP)*DFR; "X at Back
+               YFR = Y(NP)+V(NP)*DFR; "X at Back
+               IF(ABS(XFR) > XMINT_$APPLICAT(I,IB_$APPLICAT)|
+                  ABS(YFR) > YMINT_$APPLICAT(I,IB_$APPLICAT))[
+                  $APPLICAT_HIT_OUTSIDE(DTEM,
+                  XMINT_$APPLICAT(I,IB_$APPLICAT),
+                  YMINT_$APPLICAT(I,IB_$APPLICAT),XBA,YBA);
+                  DIST = DTEM + DBA;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+            ]
+            ELSEIF(
+               ABS(XBA) > XMAXT_$APPLICAT(I,IB_$APPLICAT)|
+               ABS(YBA) > YMAXT_$APPLICAT(I,IB_$APPLICAT))[
+               DFR = (ZMINT_$APPLICAT(I,IB_$APPLICAT)-Z(NP))/W(NP);
+               XFR = X(NP)+U(NP)*DFR; "X at Back
+               YFR = Y(NP)+V(NP)*DFR; "X at Back
+               $APPLICAT_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XMAXT_$APPLICAT(I,IB_$APPLICAT),
+                  YMAXT_$APPLICAT(I,IB_$APPLICAT),XBA,YBA,DFR-DBA);
+               IF(IHIT =1)[
+                  DIST = DTEM+DBA;
+                  IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+                  EXIT;
+               ]
+            ]
+         ]
+      ]" end of not between a scraper"
+:OUTLOOP2:
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$APPLICAT=1) ["leaving CM through front"
+            CALL WHERE_AM_I(ICM_$APPLICAT,-1);
+         ]
+         ELSE ["still in CM, entering scraper"
+            IRNEW = IRNEW_$APPLICAT; "new region number"
+         ]
+      ]
+   ] " end of move backward"
+   ELSEIF (W(NP)=0.0) [ " w=0"
+      DIST = 1.E30; "set large distance in case of particle missing scrapers
+      DO I=1,N_$APPLICAT ["loop through scrapers
+         IF(Z(NP) >= ZMINT_$APPLICAT(I,IB_$APPLICAT)&
+            Z(NP) <= ZMAXT_$APPLICAT(I,IB_$APPLICAT)) ["if between a scraper
+            $APPLICAT_HIT_OUTSIDE(DTEM,
+            XMINT_$APPLICAT(I,IB_$APPLICAT),
+            YMINT_$APPLICAT(I,IB_$APPLICAT),X(NP),Y(NP));
+            DIST = DTEM;
+            IRNEW_$APPLICAT = IRSTART_$APPLICAT+I-1;
+            IF(DIST <= USTEP ) ["particle to be moved to region boundary
+               USTEP = DIST;
+               IRNEW = IRNEW_$APPLICAT; "new region number"
+            ]
+            EXIT;
+         ]
+      ]
+
+   ] "end of w=0"
+
+] "end of air region
+"end of CM regions"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$APPLICAT+1,IR(NP),ICM_$APPLICAT,
+      IR_start_CM(ICM_$APPLICAT);
+      (//' ************'//' HOWFAR_APPLICAT error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+
+"   end of HOWFAR_APPLICAT
+"   ======================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$APPLICAT"
+%E "start of subroutine WHERE_AM_I_$APPLICAT (Rev 1.6)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_APPLICAT
+"                          ******************************
+"
+" WHERE_AM_I routine for set of scrapers.
+"
+" WHERE_AM_I_$APPLICAT determines the new region number when a particle crosses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$APPLICAT subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$APPLICAT from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$APPLICAT(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$APPLICAT,EPCONT/; "/STACK/would be needed for more complicated"
+                        "geometries."
+"T>
+"T>*****************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_APPLICAT
+"T>*****************************************
+"T>
+;
+INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
+IRNEW = IREND_$APPLICAT; "particle always enters air region surrounding scrapers"
+RETURN;
+END; "End of subroutine WHERE_AM_I_$APPLICAT"
+%E  "start of subroutine INPUT_$APPLICAT (Rev 1.6)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_APPLICAT
+"                           *************************
+"
+"  A CM input subroutine for a series of 1 or more scrapers.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$APPLICAT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$APPLICAT,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>************************************
+"T>TYPE DECLARATIONS FOR INPUT_APPLICAT
+"T>************************************
+"T>
+INTEGER
+        DOSE_ZONE_AIR, "T>dose scoring zone of air region surrounding scrapers
+        I,J,K,         "T>DO loop indeces
+        IRA,           "T>Absolute region number
+        IR_TO_BIT_AIR, "T>Bit setting number for air region
+        MED_FLAG,      "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,     "T>medium index, set after medium sort by $MED_INPUT
+        ISHAPE;        "T>shape index, square (default) or rectangular (1)
+$REAL ZTHICK_$APPLICAT($MAX_N_$APPLICAT), "T>thickness of each scraper in CM
+      WIDTHX_$APPLICAT($MAX_N_$APPLICAT), "T>x width of each scraper in this CM
+      WIDTHY_$APPLICAT($MAX_N_$APPLICAT); "T>y width of each scraper in this CM
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$APPLICAT = ICM;      "CM index for this component module
+IRSTART_$APPLICAT = IR_start_CM(ICM_$APPLICAT);"Index of first region in CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$APPLICAT) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$APPLICAT = $GAP_F_B_AIR_MIN; "Minimum air gap at front and back of CM
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' Next component is a set of square or rectangular scrapers '//
+       '$APPLICAT   (APPLICAT: Rev 1.6)'//' TITLE: ',$);
+;MINPUT ($APPLICAT) TITLE_$APPLICAT;(60A1);
+                  ";MINPUT is a replacement macro with EOF and
+                                "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$APPLICAT;(' ',60A1);
+
+"  get the Z coordinate of CM starting and ending if default is not used
+"  ==================================================================
+OUTPUT AIRGAPMIN_$APPLICAT;
+   (/' Input ZBACK_$APPLICAT, the Z coordinate of the back face of this CM',
+    /' [Note: Leave at least min. airgap (=',F8.5,' cm) between'/
+     ' the back of the last scraper and ZBACK]:',$);
+
+;MINPUT ($APPLICAT) ZBACK_$APPLICAT;(F15.0);
+OUTPUT ZBACK_$APPLICAT; (F15.5);
+
+"
+"   get information for each layer of applicator
+"   ============================================
+"
+"get number of slabs"
+"
+N_$APPLICAT = $MAX_N_$APPLICAT; "Maximum number of applicators permitted"
+OUTPUT N_$APPLICAT;
+   (/' Number of scrapers in the CM (minimum 1, maximum',I2,'): '
+    /' and the index for scrapers shape: 0 (default) for square, '
+    /'                                    1 for rectangualr ',$);
+;MINPUT ($APPLICAT) N_$APPLICAT,ISHAPE; (2I5);
+OUTPUT N_$APPLICAT,ISHAPE; (2I5);
+IF(N_$APPLICAT > $MAX_N_$APPLICAT)[
+   N_$APPLICAT=$MAX_N_$APPLICAT;
+   OUTPUT ICM_$APPLICAT, N_$APPLICAT;
+     (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+        '# of scrapers > max. allowed'/
+        '# of scrapers reduced to ',I4,' for now'//);
+   IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+]
+ELSEIF(N_$APPLICAT<1)[
+   N_$APPLICAT=1;
+   OUTPUT ICM_$APPLICAT;
+     (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+        '# of scrapers < 1'/
+        '# of scrapers reset to 1 for now'//);
+   IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+]
+IF(ISHAPE<=0)[
+   ISHAPE=0;
+   OUTPUT; (/' scrapers to be square, use square scraper input format.',$);
+]
+ELSEIF(ISHAPE>1)[
+   ISHAPE=1;
+   OUTPUT; (/' ***WARNING: scrapers set to be rectangular***'/
+              ' use rectangualr scraper input format.',$);
+]
+ELSE [      "rectangular scrapers"
+   OUTPUT; (/' rectangular scraper. Use rectangular scraper input format.'
+            ,$);
+]
+
+"loop over scrapers
+"
+IRA = IRSTART_$APPLICAT - 1; "absolute region number
+DO IR_$APPLICAT=1,N_$APPLICAT [
+   "loop through local region number to get slab information"
+   IRA = IRA+1;
+   "get Z of front face, thickness, and width of scraper IR_APPLICAT
+   "
+   IF(ISHAPE=0)[   "square scraper input"
+      OUTPUT IR_$APPLICAT, AIRGAPMIN_$APPLICAT;
+         (/' Scraper',I3,':'/
+' Z OF FRONT FACE, THICKNESS (in Z), HALF-WIDTH OF OPENING,'/
+' BAR WIDTH(cm), DOSE ZONE, IREGION_TO_BIT (all on one line)'/
+' [Leave at least the min. airgap (= ',F8.5,' cm) between scrapers]',/
+          ' : ',$);
+      ;MINPUT ($APPLICAT)
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZTHICK_$APPLICAT(IR_$APPLICAT),
+         XMIN_$APPLICAT(IR_$APPLICAT),
+         WIDTHX_$APPLICAT(IR_$APPLICAT),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+         (4F15.0,2I4);
+      ;OUTPUT
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZTHICK_$APPLICAT(IR_$APPLICAT),
+         XMIN_$APPLICAT(IR_$APPLICAT),
+         WIDTHX_$APPLICAT(IR_$APPLICAT),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+         (4F8.2,2I12);
+      YMIN_$APPLICAT(IR_$APPLICAT)=XMIN_$APPLICAT(IR_$APPLICAT);
+      WIDTHY_$APPLICAT(IR_$APPLICAT)=WIDTHX_$APPLICAT(IR_$APPLICAT);
+   ]
+   ELSE[   "rectangular scraper input"
+      OUTPUT IR_$APPLICAT, AIRGAPMIN_$APPLICAT;
+         (/' Scraper',I3,':'/
+      ' Z OF FRONT FACE, THICKNESS (in Z), HALF-WIDTH OF OPENING in X,'/
+      ' HALF-WIDTH OF OPENING in Y, BAR WIDTH(cm) in X, BAR WIDTH(cm) in Y,'/
+      ' DOSE ZONE, IREGION_TO_BIT (all on one line)'/
+      ' [Leave at least the min. airgap (= ',F8.5,' cm) between scrapers]',/
+          ' : ',$);
+      ;MINPUT ($APPLICAT)
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZTHICK_$APPLICAT(IR_$APPLICAT),
+         XMIN_$APPLICAT(IR_$APPLICAT),YMIN_$APPLICAT(IR_$APPLICAT),
+         WIDTHX_$APPLICAT(IR_$APPLICAT),WIDTHY_$APPLICAT(IR_$APPLICAT),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+         (6F15.0,2I4);
+      ;OUTPUT
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZTHICK_$APPLICAT(IR_$APPLICAT),
+         XMIN_$APPLICAT(IR_$APPLICAT),YMIN_$APPLICAT(IR_$APPLICAT),
+         WIDTHX_$APPLICAT(IR_$APPLICAT),WIDTHY_$APPLICAT(IR_$APPLICAT),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+         (6F8.2,2I12);
+   ]
+   IF(IR_$APPLICAT=1)[
+     IF(ICM_$APPLICAT=1 & Z_min_CM(ICM_$APPLICAT) > ZMIN_$APPLICAT(1)-
+         AIRGAPMIN_$APPLICAT)[
+        OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,
+        ZMIN_$APPLICAT(1)-AIRGAPMIN_$APPLICAT,Z_min_CM(1);
+         (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+            ' Less than min. airgap (',F8.5,' cm) between top',
+            ' of CM and 1st scraper.'/
+            ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,100)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,
+             ZMIN_$APPLICAT(1)-AIRGAPMIN_$APPLICAT,Z_min_CM(1);
+       100 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+            ' Less than min. airgap (',F8.5,' cm) between top',
+            ' of CM and 1st scraper.'/
+            ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        Z_min_CM(1)= ZMIN_$APPLICAT(1)-AIRGAPMIN_$APPLICAT;
+     ]
+     ELSEIF(Z_min_CM(ICM_$APPLICAT) > ZMIN_$APPLICAT(1))[
+         OUTPUT ICM_$APPLICAT;
+           (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+              ' Overlaps with previous CM.'//);
+         IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+     ]
+     ELSEIF(Z_min_CM(ICM_$APPLICAT) > ZMIN_$APPLICAT(1) - AIRGAPMIN_$APPLICAT)[
+         OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,
+         Z_min_CM(ICM_$APPLICAT)+AIRGAPMIN_$APPLICAT,ZMIN_$APPLICAT(1);
+          (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+             ' Less than min. airgap (',F8.5,' cm) between top',
+             ' of CM and 1st scraper.'/
+             ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         WRITE(IOUTLIST,101)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,
+              Z_min_CM(ICM_$APPLICAT)+AIRGAPMIN_$APPLICAT,ZMIN_$APPLICAT(1);
+         101 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+             ' Less than min. airgap (',F8.5,' cm) between top',
+             ' of CM and 1st scraper.'/
+             ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         ZMIN_$APPLICAT(1)=Z_min_CM(ICM_$APPLICAT)+AIRGAPMIN_$APPLICAT;
+     ]
+   ]
+   ELSE[
+     IF(ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1) >
+        ZMIN_$APPLICAT(IR_$APPLICAT))[
+         OUTPUT ICM_$APPLICAT, IR_$APPLICAT-1, IR_$APPLICAT;
+           (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+              ' Scraper ',I4,' overlaps with scraper ',I4//);
+         IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+     ]
+     ELSEIF (ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1)>
+        ZMIN_$APPLICAT(IR_$APPLICAT)-AIRGAPMIN_$APPLICAT)[
+            OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT, IR_$APPLICAT-1,
+            IR_$APPLICAT, IR_$APPLICAT,
+            ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1)+
+            AIRGAPMIN_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT);
+            (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+               ' Less than min. airgap (',F8.5,' cm) between scraper ',
+               I4,' and scraper ',I4/
+               ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+            WRITE(IOUTLIST,103)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,IR_$APPLICAT-1,
+       IR_$APPLICAT, IR_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT-1)+
+       ZTHICK_$APPLICAT(IR_$APPLICAT-1)+AIRGAPMIN_$APPLICAT,
+       ZMIN_$APPLICAT(IR_$APPLICAT);
+           103 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+               ' Less than min. airgap (',F8.5,' cm) between scraper ',
+               I4,' and scraper ',I4/
+               ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+           ZMIN_$APPLICAT(IR_$APPLICAT)=ZMIN_$APPLICAT(IR_$APPLICAT-1)+
+                       ZTHICK_$APPLICAT(IR_$APPLICAT-1)+AIRGAPMIN_$APPLICAT;
+     ]
+   ]
+   IF(ZTHICK_$APPLICAT(IR_$APPLICAT)<0.0)[
+      OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+        (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+           ' ZTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+   ]
+   IF(IR_$APPLICAT=N_$APPLICAT &
+     ZMIN_$APPLICAT(IR_$APPLICAT)+ZTHICK_$APPLICAT(IR_$APPLICAT) >
+     ZBACK_$APPLICAT-AIRGAPMIN_$APPLICAT)[
+       OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT, ZMIN_$APPLICAT(IR_$APPLICAT)+
+                       ZTHICK_$APPLICAT(IR_$APPLICAT)+
+                       AIRGAPMIN_$APPLICAT,ZBACK_$APPLICAT;
+        (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+           ' Less than min. airgap (',F8.5,' cm) between last'/
+           ' scraper and ZBACK'/
+           ' ZBACK reset to ',F8.5,' cm from ',F8.5,' cm'//);
+       WRITE(IOUTLIST,104)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,
+         ZMIN_$APPLICAT(IR_$APPLICAT)+ZTHICK_$APPLICAT(IR_$APPLICAT)+
+         AIRGAPMIN_$APPLICAT,ZBACK_$APPLICAT;
+      104 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+           ' Less than min. airgap (',F8.5,' cm) between last'/
+           ' scraper and ZBACK'/
+           ' ZBACK reset to ',F8.5,' cm from ',F8.5,' cm'//);
+       ZBACK_$APPLICAT=ZMIN_$APPLICAT(IR_$APPLICAT)+
+                       ZTHICK_$APPLICAT(IR_$APPLICAT)+
+                       AIRGAPMIN_$APPLICAT;
+   ]
+   IF(XMIN_$APPLICAT(IR_$APPLICAT)<0.0)[
+      OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Half-width of opening in x in scraper ',I4,' < 0.0'//);
+      IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+   ]
+   IF(YMIN_$APPLICAT(IR_$APPLICAT)<0.0)[
+      OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Half-width of opening in y in scraper ',I4,' < 0.0'//);
+      IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+   ]
+   ELSEIF(XMIN_$APPLICAT(IR_$APPLICAT)>RMAX_CM(ICM_$APPLICAT))[
+        OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Half-width of opening in x inscraper ',I4,' > RMAX_CM'//);
+      IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+   ]
+   ELSEIF(YMIN_$APPLICAT(IR_$APPLICAT)>RMAX_CM(ICM_$APPLICAT))[
+        OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Half-width of opening in y inscraper ',I4,' > RMAX_CM'//);
+      IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+   ]
+   ELSEIF(WIDTHX_$APPLICAT(IR_$APPLICAT)>=0.0 &
+        XMIN_$APPLICAT(IR_$APPLICAT)+WIDTHX_$APPLICAT(IR_$APPLICAT)>
+        RMAX_CM(ICM_$APPLICAT))[
+       OUTPUT ICM_$APPLICAT, IR_$APPLICAT, IR_$APPLICAT,
+         RMAX_CM(ICM_$APPLICAT)-XMIN_$APPLICAT(IR_$APPLICAT),
+          WIDTHX_$APPLICAT(IR_$APPLICAT);
+        (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+         ' Scraper in x ',I4,' extends beyond RMAX_CM'/
+         ' Bar width in x of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+  WRITE(IOUTLIST,105)ICM_$APPLICAT, IR_$APPLICAT, IR_$APPLICAT,
+          RMAX_CM(ICM_$APPLICAT)-XMIN_$APPLICAT(IR_$APPLICAT),
+          WIDTHX_$APPLICAT(IR_$APPLICAT);
+   105 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+         ' Scraper in x ',I4,' extends beyond RMAX_CM'/
+         ' Bar width in x of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+       WIDTHX_$APPLICAT(IR_$APPLICAT)=RMAX_CM(ICM_$APPLICAT)
+                               -XMIN_$APPLICAT(IR_$APPLICAT);
+   ]
+   ELSEIF(WIDTHY_$APPLICAT(IR_$APPLICAT)>=0.0 &
+        YMIN_$APPLICAT(IR_$APPLICAT)+WIDTHY_$APPLICAT(IR_$APPLICAT)>
+        RMAX_CM(ICM_$APPLICAT))[
+       OUTPUT ICM_$APPLICAT, IR_$APPLICAT, IR_$APPLICAT,
+         RMAX_CM(ICM_$APPLICAT)-YMIN_$APPLICAT(IR_$APPLICAT),
+         WIDTHY_$APPLICAT(IR_$APPLICAT);
+        (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+         ' Scraper in y ',I4,' extends beyond RMAX_CM'/
+         ' Bar width in y of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,106)ICM_$APPLICAT, IR_$APPLICAT, IR_$APPLICAT,
+          RMAX_CM(ICM_$APPLICAT)-YMIN_$APPLICAT(IR_$APPLICAT),
+          WIDTHY_$APPLICAT(IR_$APPLICAT);
+    106 FORMAT(//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+         ' Scraper in y ',I4,' extends beyond RMAX_CM'/
+         ' Bar width in y of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+        WIDTHY_$APPLICAT(IR_$APPLICAT)=RMAX_CM(ICM_$APPLICAT)
+                               -YMIN_$APPLICAT(IR_$APPLICAT);
+   ]
+   IF(WIDTHX_$APPLICAT(IR_$APPLICAT)<0.0)[
+      OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Bar width in x of scraper ',I4,' < 0.0'//);
+   ]
+   IF(WIDTHY_$APPLICAT(IR_$APPLICAT)<0.0)[
+      OUTPUT ICM_$APPLICAT, IR_$APPLICAT;
+       (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+          ' Bar width in y of scraper ',I4,' < 0.0'//);
+   ]
+] "end of loop over IR_$APPLICAT"
+
+"set absolute region number to first region in CM for next set of inputs"
+"
+IRA = IRSTART_$APPLICAT;
+
+"get energy cutoffs and dose scoring zones"
+"
+OUTPUT ; (/' ECUT, PCUT of scrapers & air',/
+          ' & DOSE ZONE, IREGION_TO_BIT of air (all in one line): '/,$);
+;MINPUT ($APPLICAT) ECUT(IRA),PCUT(IRA),
+               DOSE_ZONE_AIR,IR_TO_BIT_AIR; (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE_AIR,IR_TO_BIT_AIR;
+      (2F15.5,2I5);
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+
+"get material for scrapers and determine material number for these regions
+"
+IRA = IRSTART_$APPLICAT - 1;
+DO K = 1,N_$APPLICAT[
+   OUTPUT K;(/' SCRAPER ',I4,$);
+   IRA = IRA + 1;
+   ;$MED_INPUT($APPLICAT); " inputs character array MED_IN from unit 5, loops
+   "through array MEDIA(24,I) to check if medium was previously input.
+   "If so, sets MED_INDEX to index of previous medium.  If not,
+   "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of each scraper
+]
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_APPLICAT+1 regions, a series of applicators completely
+"  surrounded by an air region. Scrapers are numbered in sequence
+"  starting from the furthest upstream.
+"
+IREND_$APPLICAT = IRSTART_$APPLICAT+N_$APPLICAT;  "Index of last region
+NREG = NREG+N_$APPLICAT+1;    "Total number of regions in full geometry up
+                              "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$APPLICAT+1) = IREND_$APPLICAT+1;
+]
+ELSE [
+      OUTPUT ICM_$APPLICAT, NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' (APPLICAT):'/
+         I4,' regions requested, only',I4,' available');
+     IERR_GEOM(ICM_$APPLICAT)=IERR_GEOM(ICM_$APPLICAT)+1;
+]
+"
+"  parameter definition
+"  ====================
+"
+"geometrical coordinates, material, and energy cutoffs of applicators
+"
+"
+IRA = IRSTART_$APPLICAT-1; "absolute region number"
+DO IR_$APPLICAT=1,N_$APPLICAT ["loop through applicators"
+   IRA = IRA+1;
+   ZMAX_$APPLICAT(IR_$APPLICAT) = ZMIN_$APPLICAT(IR_$APPLICAT)+
+       ZTHICK_$APPLICAT(IR_$APPLICAT);
+   ZMAXT_$APPLICAT(IR_$APPLICAT,1) = ZMAX_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   ZMAXT_$APPLICAT(IR_$APPLICAT,2) = ZMAX_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   ZMINT_$APPLICAT(IR_$APPLICAT,1) = ZMIN_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   ZMINT_$APPLICAT(IR_$APPLICAT,2) = ZMIN_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   XMAX_$APPLICAT(IR_$APPLICAT) = XMIN_$APPLICAT(IR_$APPLICAT)+
+        WIDTHX_$APPLICAT(IR_$APPLICAT);
+   YMAX_$APPLICAT(IR_$APPLICAT) = YMIN_$APPLICAT(IR_$APPLICAT)+
+        WIDTHY_$APPLICAT(IR_$APPLICAT);
+   XMAXT_$APPLICAT(IR_$APPLICAT,1) =XMAX_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   XMAXT_$APPLICAT(IR_$APPLICAT,2) =XMAX_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   XMINT_$APPLICAT(IR_$APPLICAT,1) =XMIN_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   XMINT_$APPLICAT(IR_$APPLICAT,2) =XMIN_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   YMAXT_$APPLICAT(IR_$APPLICAT,1) =YMAX_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   YMAXT_$APPLICAT(IR_$APPLICAT,2) =YMAX_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   YMINT_$APPLICAT(IR_$APPLICAT,1) =YMIN_$APPLICAT(IR_$APPLICAT)-$BDY_TOL;
+   YMINT_$APPLICAT(IR_$APPLICAT,2) =YMIN_$APPLICAT(IR_$APPLICAT)+$BDY_TOL;
+   "MED(IRA) = MED(IRSTART_$APPLICAT);"
+   ECUT(IRA) = ECUT(IRSTART_$APPLICAT);
+   PCUT(IRA) = PCUT(IRSTART_$APPLICAT);
+] "end of loop over IR_$APPLICAT"
+"
+"establish start of next CM
+"
+Z_min_CM(ICM_$APPLICAT+1) = ZBACK_$APPLICAT;
+"
+"geometrical coordinates, material, and energy cutoffs of air region surrounding
+"applicators
+"
+ZFRONT_$APPLICAT = Z_min_CM(ICM_$APPLICAT);
+IRA = IREND_$APPLICAT; "absolute region number"
+MED(IRA) = AIR_INDEX; "air region"
+ECUT(IRA) = ECUT(IRSTART_$APPLICAT); "same energy cutoffs as applicators"
+PCUT(IRA) = PCUT(IRSTART_$APPLICAT);
+ESAVE(IRA)=ESAVE_GLOBAL;
+"
+"  establish CM boundary
+"  =====================
+"
+"Used to establish scraper boundaries here, but they are now defined
+"right at input
+RMAX_CM_FLAG(ICM_$APPLICAT) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$APPLICAT-1; "absolute region number
+DO IR_$APPLICAT=1,N_$APPLICAT ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),DOSE_ZONE_AIR,NDOSE_ZONE);"# dose zones"
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+] "end of loop over IR_$APPLICAT
+IRA = IRA+1; "absolute region number of air surrounding applicators
+DOSE_ZONE(IRA) = DOSE_ZONE_AIR;
+E_min_out(ICM_$APPLICAT)=ECUT(IRA); "Minimum energy on exit from CM
+IRA = IRSTART_$APPLICAT-1; "absolute region number
+DO I =1,N_$APPLICAT[
+   IRA = IRA + 1;
+   MAX_BIT = MAX(MAX_BIT,IREGION_TO_BIT(IRA));
+]
+IREGION_TO_BIT(IREND_$APPLICAT) = IR_TO_BIT_AIR;
+MAX_BIT = MAX(MAX_BIT,IR_TO_BIT_AIR);
+"
+"   return from INPUT_APPLICAT
+"   ==========================
+"
+RETURN;
+"   error messages
+"   ==============
+"
+:EOF_$APPLICAT:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+:ERROR_$APPLICAT:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$APPLICAT"
+%E "start of subroutine ISUMRY_$APPLICAT (Rev 1.6)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_APPLICAT
+"                          **************************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$APPLICAT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$APPLICAT,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>*************************************
+"T>TYPE DECLARATIONS FOR ISUMRY_APPLICAT
+"T>*************************************
+"T>
+INTEGER
+   ICOLOUR,                        "T>colour of CM for EGS_Windows
+   IRA,                            "T>absolute region number
+   J;                              "T>DO loop index
+
+$REAL
+   XMAXA,                          "T>outer applicator boundary in x
+   XMINA,                          "T>inner applicator boundary in x
+   YMAXA,                          "T>outer applicator boundary in y
+   YMINA,                          "T>inner applicator boundary in y
+   VOLAIR_$APPLICAT,               "T>air volume
+   VOLSCRAPER_$APPLICAT;           "T>volume of individual applicators
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$APPLICAT.
+IRA = IRSTART_$APPLICAT-1; "absolute region number
+VOLAIR_$APPLICAT = (ZBACK_$APPLICAT-ZFRONT_$APPLICAT)*4*RMAX_CM2(ICM_$APPLICAT);
+"air volume"
+DO IR_$APPLICAT=1,N_$APPLICAT ["loop over local region numbers of applicators
+   IRA = IRA+1;
+   IF (RMAX_CM(ICM_$APPLICAT)>XMAX_$APPLICAT(IR_$APPLICAT))&
+      (RMAX_CM(ICM_$APPLICAT)>YMAX_$APPLICAT(IR_$APPLICAT)) [
+      "applicator boundary is (XMAXA x YMAXA)"
+      VOLSCRAPER_$APPLICAT = (ZMAX_$APPLICAT(IR_$APPLICAT)-
+         ZMIN_$APPLICAT(IR_$APPLICAT))*
+         (4*XMAX_$APPLICAT(IR_$APPLICAT)*YMAX_$APPLICAT(IR_$APPLICAT)-
+         4*XMIN_$APPLICAT(IR_$APPLICAT)*YMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+   ELSEIF (RMAX_CM(ICM_$APPLICAT)<=XMAX_$APPLICAT(IR_$APPLICAT))&
+      (RMAX_CM(ICM_$APPLICAT)<=YMAX_$APPLICAT(IR_$APPLICAT)) [
+      "applicator boundary is RMAX_CM"
+      VOLSCRAPER_$APPLICAT = (ZMAX_$APPLICAT(IR_$APPLICAT)-
+         ZMIN_$APPLICAT(IR_$APPLICAT))*
+         (4*RMAX_CM2(ICM_$APPLICAT)-
+         4*XMIN_$APPLICAT(IR_$APPLICAT)*YMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+   ELSEIF (RMAX_CM(ICM_$APPLICAT)>XMAX_$APPLICAT(IR_$APPLICAT))&
+      (RMAX_CM(ICM_$APPLICAT)<YMAX_$APPLICAT(IR_$APPLICAT)) [
+      "applicator boundary in y is RMAX_CM"
+      VOLSCRAPER_$APPLICAT = (ZMAX_$APPLICAT(IR_$APPLICAT)-
+         ZMIN_$APPLICAT(IR_$APPLICAT))*
+         (4*XMAX_$APPLICAT(IR_$APPLICAT)*RMAX_CM(IR_$APPLICAT)-
+         4*XMIN_$APPLICAT(IR_$APPLICAT)*YMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+   ELSE ["applicator boundary in x is RMAX"
+      VOLSCRAPER_$APPLICAT = (ZMAX_$APPLICAT(IR_$APPLICAT)-
+         ZMIN_$APPLICAT(IR_$APPLICAT))*
+         (4*RMAX_CM(IR_$APPLICAT)*YMAX_$APPLICAT(IR_$APPLICAT)-
+         4*XMIN_$APPLICAT(IR_$APPLICAT)*YMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+   VOLAIR_$APPLICAT = VOLAIR_$APPLICAT-VOLSCRAPER_$APPLICAT; "air volume"
+   IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOLSCRAPER_$APPLICAT;
+   ]
+] "end of loop over IR_$APPLICAT"
+IRA = IRA+1; "absolute region number of air surrounding applicators"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOLAIR_$APPLICAT;
+]
+"
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$APPLICAT,TITLE_$APPLICAT;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$APPLICAT),RMAX_CM(ICM_$APPLICAT),
+                    Z_min_CM(ICM_$APPLICAT+1);
+WRITE(IOUTLIST,122);
+DO IR_$APPLICAT=1,N_$APPLICAT [
+   IF(IR_$APPLICAT=1)[
+      WRITE(IOUTLIST,126)'airgap',Z_min_CM(ICM_$APPLICAT),
+                         ZMIN_$APPLICAT(1)-Z_min_CM(ICM_$APPLICAT),
+                         'NA','NA','NA','NA';
+   ]
+   ELSE[
+      WRITE(IOUTLIST,126)'airgap',ZMAX_$APPLICAT(IR_$APPLICAT-1),
+                         ZMIN_$APPLICAT(IR_$APPLICAT)-
+                         ZMAX_$APPLICAT(IR_$APPLICAT-1),
+                         'NA','NA','NA','NA';
+   ]
+   WRITE(IOUTLIST,123)
+      IR_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT),
+      ZMAX_$APPLICAT(IR_$APPLICAT)-ZMIN_$APPLICAT(IR_$APPLICAT),
+      XMIN_$APPLICAT(IR_$APPLICAT),
+      YMIN_$APPLICAT(IR_$APPLICAT),
+      XMAX_$APPLICAT(IR_$APPLICAT)-XMIN_$APPLICAT(IR_$APPLICAT),
+      YMAX_$APPLICAT(IR_$APPLICAT)-YMIN_$APPLICAT(IR_$APPLICAT);
+   IF(IR_$APPLICAT=N_$APPLICAT)[
+      WRITE(IOUTLIST,126)'airgap',ZMAX_$APPLICAT(N_$APPLICAT),
+                         Z_min_CM(ICM_$APPLICAT+1)-
+                         ZMAX_$APPLICAT(N_$APPLICAT),'NA','NA','NA','NA';
+   ]
+]
+123 FORMAT(T5,I6,6F11.4);
+WRITE(IOUTLIST,124);
+IF(Z_min_CM(ICM_$APPLICAT + 1) >
+   ZMAX_$APPLICAT(N_$APPLICAT)+AIRGAPMIN_$APPLICAT)[
+   WRITE(IOUTLIST,125);
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$APPLICAT-1;"absolute region number"
+DO IR_$APPLICAT=1,N_$APPLICAT+1 [
+   IRA = IRA+1;
+   IF (IR_$APPLICAT<=N_$APPLICAT)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$APPLICAT,IR_$APPLICAT,'scraper',
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$APPLICAT,IR_$APPLICAT,'scraper',
+         ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$APPLICAT=N_$APPLICAT+1)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,141) IR_$APPLICAT,'NA','surrounding',
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,141) IR_$APPLICAT,'NA','surrounding',
+         ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+      WRITE(IOUTLIST,142)'air';
+   ]
+]
+110 FORMAT(///1x,79('-')/'  Component module',I3,
+          ' is a set of square scrapers (APPLICAT: Rev 1.6) '/
+          1x,79('-') //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$APPLICAT geometry parameters:',
+           /T2,'--------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm',
+           /T2,'Z of back face of CM = ',F15.5,' cm');
+122 FORMAT(
+/T5,'scraper   Z of     bar/gap  x half-width  y half-width  x bar   y bar',
+/T5,'number  front face  thick     opening       opening     width   width',
+/T5,'         (cm)       (cm)       (cm)         (cm)        (cm)     (cm) ');
+126 FORMAT(T5,A6,2F11.4,4A11);
+124 FORMAT(/T2,
+'Note gap between the last scraper and the back of the CM.');
+125 FORMAT(/T2,
+'This gap was not set to the default value of airgapmin but'/T2,
+'was set to a user-defined value > airgapmin.');
+130 FORMAT(/T2,'$APPLICAT region parameters:',
+           /T2,'------------------------',
+           /T2,'local scraper  location  electron   photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region   #                cutoff    cutoff',
+           '   level     max    zone  set'
+/T2,'                          (MeV)    (MeV)    (MeV)    (MeV)');
+140 FORMAT(T2,I3,I6,3X,A11,F8.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T2,I3,3X,A3,3X,A11,F8.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+142 FORMAT(T14,A11);
+"
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;$SELECT-COLOUR; "Macro for selecting ICOLOUR = 1, 2, or 3, colour of CM"
+   DO IR_$APPLICAT=1,N_$APPLICAT ["Loop over local region number"
+      XMINA = XMIN_$APPLICAT(IR_$APPLICAT);
+      YMINA = YMIN_$APPLICAT(IR_$APPLICAT);
+      XMAXA = MIN(XMAX_$APPLICAT(IR_$APPLICAT),
+                  MAX(XMINA,RMAX_CM(ICM_$APPLICAT)));
+      YMAXA = MIN(YMAX_$APPLICAT(IR_$APPLICAT),
+                  MAX(YMINA,RMAX_CM(ICM_$APPLICAT)));
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'COLX',XMAXA,XMINA,XMINA,XMAXA,YMAXA,
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZMAX_$APPLICAT(IR_$APPLICAT);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'COLX',-XMAXA,-XMINA,-XMINA,-XMAXA,YMAXA,
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZMAX_$APPLICAT(IR_$APPLICAT);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'COLY',YMAXA,YMINA,YMINA,YMAXA,XMINA,
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZMAX_$APPLICAT(IR_$APPLICAT);
+      WRITE(IOUTGEOM,200)
+         ICOLOUR,'COLY',-YMAXA,-YMINA,-YMINA,-YMAXA,XMINA,
+         ZMIN_$APPLICAT(IR_$APPLICAT),ZMAX_$APPLICAT(IR_$APPLICAT);
+   ]
+] "End of graphics output"
+200 FORMAT(' ',I1,A4,10(F7.2,','));
+;RETURN;END;
+"APPLICAT_cm.mortran end of ISUMRY_$APPLICAT"
+
+%E "start of subroutine HOWNEAR_$APPLICAT (Rev 1.6)"
+"*******************************************************************************
+"
+"                          Subroutine HOWNEAR_$APPLICAT
+"                          **************************
+"
+" Returns min. distance to nearest region boundary.  Used to be a macro but
+" now the macro is replaced by a call to this subroutine.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$APPLICAT(DIST);
+
+Copyright NRC 1999
+$IMPLICIT-NONE;
+COMIN/CMs,CM_$APPLICAT,STACK/;
+
+$REAL DIST; "T> distance to nearest region boundary"
+
+IR_$APPLICAT = IR(NP)-IRSTART_$APPLICAT+1;
+IF (IR_$APPLICAT=N_$APPLICAT+1) ["in air region sorrounding scrapers"
+   DIST = 0.0; "simple solution for now"
+]
+ELSE ["in scraper IR_$APPLICAT"
+   DIST = MIN(ZMAX_$APPLICAT(IR_$APPLICAT)-Z(NP),
+                 Z(NP)-ZMIN_$APPLICAT(IR_$APPLICAT),
+                 XMAX_$APPLICAT(IR_$APPLICAT)-ABS(X(NP)),
+                 YMAX_$APPLICAT(IR_$APPLICAT)-ABS(Y(NP)));
+   IF ABS(X(NP))>XMINT_$APPLICAT(IR_$APPLICAT,1) [
+        DIST = MIN(DIST,ABS(X(NP))-XMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+   IF ABS(Y(NP))>YMINT_$APPLICAT(IR_$APPLICAT,1) [
+        DIST = MIN(DIST,ABS(Y(NP))-YMIN_$APPLICAT(IR_$APPLICAT));
+   ]
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$APPLICAT (Rev 1.6)"
+"*****************************************************************************
+"End of APPLICAT_cm.mortran (Rev 1.6)"

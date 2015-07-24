@@ -1,0 +1,552 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: arc-shaped ion chamber             "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Marv Glass, 1998                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAM code system for Monte Carlo simulation of    "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     ARCCHM component module common
+"-------------------------------------------------------------------------------
+"
+REPLACE {$MAX_N_$ARCCHM} WITH {1500}
+"
+"
+"V>COMMON/CM_$ARCCHM/
+"V>================
+"V>ICM_$ARCCHM = index of CM, set as ICM in INPUT_$ARCCHM and never re-set
+"V>IRSTART_$ARCCHM    = first region number for this CM
+"V>IREND_$ARCCHM      = last region number for this CM
+"V>N_GAP_$ARCCHM      = air gap flag.  If set=1
+"V>TITLE_$ARCCHM      = title of CM
+"V>ZMIN_$ARCCHM       = Front of CM
+"V>ZMAX_$ARCCHM       = Back of CM
+"V>ZRAD_$ARCCHM       = radius of arc
+"V>ARCTHICK_$ARCCHM   = thickness of arc
+"V>ZTHICK_$ARCCHM     = thickness of CM
+"V>XMIN1_$ARCCHM      = lower X edge of arc corresponding to outer wall
+"V>XMAX2_$ARCCHM      = upper X edge of arc corresponding to outer wall
+"V>XMIN2_$ARCCHM      = lower X edge of arc corresponding to inner wall
+"V>XMAX1_$ARCCHM      = upper X edge of arc corresponding to inner wall
+"V>ZSRC_$ARCCHM       = distance to arc
+"V>PHI_$ARCCHM        = angular extent of arc
+"V>YMIN_$ARCCHM       = minimum distance of CM along y-axis"
+"V>YMAX_$ARCCHM       = maximum distance of CM along y-axis"
+"V>IR_$ARCCHM         = local region number"
+;
+REPLACE {;COMIN/CM_$ARCCHM/;} WITH {
+   ;COMMON/CM_$ARCCHM/
+      PERP_$ARCCHM,
+      P_$ARCCHM,
+      THETA_$ARCCHM,
+      XMIN1_$ARCCHM,
+      XMAX2_$ARCCHM,
+      XMIN2_$ARCCHM,
+      XMAX1_$ARCCHM,
+      ZMIN_$ARCCHM,
+      ZMAX_$ARCCHM,
+      ZRAD1_$ARCCHM,
+      ZRAD2_$ARCCHM,
+      ZRAD3_$ARCCHM,
+      ZRAD4_$ARCCHM,
+      ZSRC_$ARCCHM,
+      WIDTHCHM_$ARCCHM,
+      WIDTHSEP_$ARCCHM,
+      FRONTHCK_$ARCCHM,
+      BACKTHCK_$ARCCHM,
+      ARCTHICK_$ARCCHM,
+      ZTHICK_$ARCCHM,
+      WIDXWALL_$ARCCHM,
+      PHI_$ARCCHM,
+      YMIN1_$ARCCHM,
+      YMAX1_$ARCCHM,
+      YMIN2_$ARCCHM,
+      YMAX2_$ARCCHM,
+      NUMCHM_$ARCCHM,
+      ICM_$ARCCHM,
+      NUMREG_$ARCCHM,
+      IRSTART_$ARCCHM,
+      IREND_$ARCCHM,
+      N_GAP_$ARCCHM,
+      IR_$ARCCHM,
+      TITLE_$ARCCHM;
+   DOUBLE PRECISION
+      PERP_$ARCCHM(3,2*$MAX_N_$ARCCHM),
+      P_$ARCCHM(3,2*$MAX_N_$ARCCHM),
+      THETA_$ARCCHM(2*$MAX_N_$ARCCHM),
+      XMIN1_$ARCCHM,
+      XMAX2_$ARCCHM,
+      XMIN2_$ARCCHM,
+      XMAX1_$ARCCHM,
+      ZMIN_$ARCCHM,
+      ZMAX_$ARCCHM,
+      ZRAD1_$ARCCHM,
+      ZRAD2_$ARCCHM,
+      ZRAD3_$ARCCHM,
+      ZRAD4_$ARCCHM,
+      ZSRC_$ARCCHM;
+
+   REAL
+      WIDTHCHM_$ARCCHM,
+      WIDTHSEP_$ARCCHM,
+      FRONTHCK_$ARCCHM,
+      BACKTHCK_$ARCCHM,
+      ARCTHICK_$ARCCHM,
+      ZTHICK_$ARCCHM,
+      WIDXWALL_$ARCCHM,
+      PHI_$ARCCHM,
+      YMIN1_$ARCCHM,
+      YMAX1_$ARCCHM,
+      YMIN2_$ARCCHM,
+      YMAX2_$ARCCHM;
+
+   INTEGER
+      NUMCHM_$ARCCHM,
+      ICM_$ARCCHM,
+      IRSTART_$ARCCHM,
+      IREND_$ARCCHM,
+      NUMREG_$ARCCHM,
+      N_GAP_$ARCCHM,
+      IR_$ARCCHM;
+   CHARACTER*1 TITLE_$ARCCHM(60);
+   } "end of replacement defining common for this CM"
+;
+;
+REPLACE {$ARCCHM_REGION_CHECK(#);} WITH {
+PERP_PL = PERP_$ARCCHM(1,{P1}-3)*(X(NP)-P_$ARCCHM(1,{P1}-3)) +
+          PERP_$ARCCHM(2,{P1}-3)*(Y(NP)-P_$ARCCHM(2,{P1}-3)) +
+          PERP_$ARCCHM(3,{P1}-3)*(Z(NP)-P_$ARCCHM(3,{P1}-3));
+PERP_PR = PERP_$ARCCHM(1,{P1}-2)*(X(NP)-P_$ARCCHM(1,{P1}-2)) +
+          PERP_$ARCCHM(2,{P1}-2)*(Y(NP)-P_$ARCCHM(2,{P1}-2)) +
+          PERP_$ARCCHM(3,{P1}-2)*(Z(NP)-P_$ARCCHM(3,{P1}-2));
+
+IF({P1}=NUMCHM_$ARCCHM+3)[
+    IF (PERP_PL < -BDYTOL & PERP_PR > BDYTOL)[
+      OUTPUT;(/' Warning 1 in ARCCHM: particle region number is central septum'/
+              ' but physical location is left of this.  Particle region'/
+              ' will be changed to reflect the correct chamber/septum.'/
+              ' Please report this to the NRC. '/);
+      DO I={P1}-4,1,-1[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(PERP_PR < 0 & PERP_PL > 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+      ]
+    ]
+    ELSEIF(PERP_PL > BDYTOL & PERP_PR < -BDYTOL)[
+      OUTPUT;(/' Warning 2 in ARCCHM: particle region number is central septum'/
+              ' but physical location is right of this.  Particle region'/
+              ' will be changed to reflect the correct chamber/septum.'/
+              ' Please report this to the NRC. '/);
+      DO I={P1}-2,2*NUMCHM_$ARCCHM-1[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(PERP_PR > 0 & PERP_PL < 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+      ]
+    ]
+]
+ELSEIF(Y(NP)<0)[
+    IF(PERP_PL<-BDYTOL & PERP_PR<-BDYTOL)[
+       OUTPUT;(/' Warning 3 in ARCCHM: physical location of particle is'/
+       ' left of the chamber/septum that the region number indicates.'/
+       ' Region number will be changed to reflect the correct chamber/septum.'/
+       ' Please report this to the NRC. '/);
+       DO I={P1}-4,1,-1[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(PERP_PR < 0 & PERP_PL > 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+      ]
+    ]
+    ELSEIF(PERP_PL>BDYTOL & PERP_PR > BDYTOL)[
+       OUTPUT;(/' Warning 4 in ARCCHM: physical location of particle is'/
+       ' right of the chamber/septum that the region number indicates.'/
+       ' Region number will be changed to reflect the correct chamber/septum.'/
+       ' Please report this to the NRC. '/);
+       DO I={P1}-2,NUMCHM_$ARCCHM[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(I<NUMCHM_$ARCCHM & PERP_PR < 0 & PERP_PL > 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+         ELSEIF(I=NUMCHM_$ARCCHM & PERP_PR >0 & PERP_PL > 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+       ]
+    ]
+]
+ELSEIF(Y(NP)>0)[
+    IF(PERP_PL>BDYTOL & PERP_PR>BDYTOL)[
+       OUTPUT;(/' Warning 5 in ARCCHM: physical location of particle is'/
+       ' left of the chamber/septum that the region number indicates.'/
+       ' Region number will be changed to reflect the correct chamber/septum.'/
+       ' Please report this to the NRC. '/);
+       DO I={P1}-4,NUMCHM_$ARCCHM,-1[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(I>NUMCHM_$ARCCHM & PERP_PR > 0 & PERP_PL < 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+         ELSEIF(I=NUMCHM_$ARCCHM & PERP_PR > 0 & PERP_PL > 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+      ]
+    ]
+    ELSEIF(PERP_PL < -BDYTOL & PERP_PR < -BDYTOL)[
+       OUTPUT;(/' Warning 6 in ARCCHM: physical location of particle is'/
+       ' right of the chamber/septum that the region number indicates.'/
+       ' Region number will be changed to reflect the correct chamber/septum.'/
+       ' Please report this to the NRC. '/);
+       DO I={P1}-2,2*NUMCHM_$ARCCHM-1[
+         PERP_PR = PERP_$ARCCHM(1,I+1)*(X(NP)-P_$ARCCHM(1,I+1)) +
+         PERP_$ARCCHM(2,I+1)*(Y(NP)-P_$ARCCHM(2,I+1)) +
+         PERP_$ARCCHM(3,I+1)*(Z(NP)-P_$ARCCHM(3,I+1));
+         PERP_PL = PERP_$ARCCHM(1,I)*(X(NP)-P_$ARCCHM(1,I)) +
+         PERP_$ARCCHM(2,I)*(Y(NP)-P_$ARCCHM(2,I)) +
+         PERP_$ARCCHM(3,I)*(Z(NP)-P_$ARCCHM(3,I));
+         IF(PERP_PR > 0 & PERP_PL < 0)[
+            USTEP=0.;
+            IRNEW=I+3+IRSTART_$ARCCHM-1;
+            RETURN;
+         ]
+       ]
+    ]
+]
+
+}
+;
+"
+"************************************"
+"     ARCCHM WALL replacement macro *"
+"************************************"
+"
+REPLACE {$ARCCHM_WALL(#,#,#,#,#);} WITH {
+PERP_P = PERP_$ARCCHM(1,{P1})*(X(NP)-P_$ARCCHM(1,{P1})) +
+         PERP_$ARCCHM(2,{P1})*(Y(NP)-P_$ARCCHM(2,{P1})) +
+         PERP_$ARCCHM(3,{P1})*(Z(NP)-P_$ARCCHM(3,{P1}));
+
+PERP_U = PERP_$ARCCHM(1,{P1})*U(NP) + PERP_$ARCCHM(2,{P1})*V(NP)
+         + PERP_$ARCCHM(3,{P1})*W(NP);
+
+IOUTSD = {P2};
+
+IF (PERP_P <= 1.0E-6 & PERP_P >= -1.0E-6)
+[ "case where particle is on the plane n*(P-p) = 0"
+   IF (PERP_U > 0.0 & IOUTSD = 1)
+   [
+      {P5} = 0;
+   ]
+   IF (PERP_U < 0.0 & IOUTSD = -1)
+   [
+      {P5} = 0;
+   ]
+   IF (PERP_U > 0.0 & IOUTSD = -1)
+   [
+      IF (Y(NP) < 0.0)
+      [
+         {P5} = 1;
+      ]
+      ELSE
+      [
+         {P5} = -1;
+      ]
+   ]
+   IF (PERP_U < 0.0 & IOUTSD = 1)
+   [
+      IF (Y(NP) < 0.0)
+      [
+         {P5} = -1;
+      ]
+      ELSE
+      [
+         {P5} = 1;
+      ]
+   ]
+]
+
+IF (PERP_U = 0.0)
+[ "case where particle is traveling parallel to chamber/septa wall"
+   {P3} = 1.0E20;
+   {P4} = 1.0E20;
+]
+ELSE IF (PERP_P >= 0.0 & IOUTSD = 1)
+[
+  {P3} = ABS(PERP_P);
+  IF (PERP_U < 0.0)
+  [
+     DIST4 = -PERP_P/PERP_U;
+     {P4} = DIST4;
+  ]
+  ELSE IF (PERP_U > 0.0)
+  [
+     {P4} = 1.0E20;
+  ]
+]
+ELSE IF (PERP_P <= 0.0 & IOUTSD = -1)
+[
+  {P3} = ABS(PERP_P);
+  IF (PERP_U > 0.0)
+  [
+     DIST4 = -PERP_P/PERP_U;
+     {P4} = DIST4;
+  ]
+  ELSE IF (PERP_U < 0.0)
+  [
+     {P4} = 1.0E20;
+  ]
+]
+ELSE IF (PERP_P < 0.0 & IOUTSD = 1)
+[  "overshoot/undershoot case"
+  {P3} = ABS(PERP_P);
+  IF (PERP_U < 0.0) "overshoot"
+  [
+     {P4} = 0.0;
+     IF (Y(NP) < 0.0) "decrement the region number"
+     [
+         {P5} = -1;
+     ]
+     ELSEIF (Y(NP) > 0.0) "increment the region number"
+     [
+         {P5} = 1;
+     ]
+  ]
+  ELSE IF (PERP_U > 0.0) "undershoot"
+  [
+     {P4} = 1.0E20;
+  ]
+]
+ELSE IF (PERP_P > 0.0 & IOUTSD = -1)
+[ "overshoot and undershoot"
+  {P3} = ABS(PERP_P);
+  IF (PERP_U > 0.0) "overshoot"
+  [
+     {P4} = 0.0;
+     IF (Y(NP) < 0.0) "increment the region number"
+     [
+          {P5} = 1;
+     ]
+     ELSEIF (Y(NP) > 0.0) "decrement the region number"
+     [
+         {P5} = -1;
+     ]
+  ]
+  ELSE IF (PERP_U < 0.0) "undershoot"
+  [
+     {P4} = 1.0E20;
+  ]
+]
+
+}
+;
+"
+"********************************************"
+"     ARCCHM HOWNEAR replacement macro      *"
+" Now just calls subroutine HOWNEAR_$ARCCHM *"
+"********************************************"
+"
+REPLACE {$ARCCHM_CM_HOWNEAR(#);} WITH {
+CALL HOWNEAR_$ARCCHM({P1});
+}
+;
+
+REPLACE {$ARCCHM_IN_HIT(#,#);} WITH {;
+A_$ARCCHM = W(NP)**2+V(NP)**2;
+B_$ARCCHM = (Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)*W(NP)+Y(NP)*V(NP);
+B2_$ARCCHM = B_$ARCCHM**2;
+C_$ARCCHM = (Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)**2+Y(NP)**2;
+COUT_$ARCCHM = C_$ARCCHM - ({P2}+BDYTOL)**2;
+
+IF(COUT_$ARCCHM > 0.0)
+[
+   IF(IWATCH > 0)
+   [
+     ;OUTPUT COUT_$ARCCHM;(' COUT=',E11.3);
+   ]
+   COUT_$ARCCHM = 0.0;
+]
+IF(B_$ARCCHM > 0.0)
+[
+   IF((COUT_$ARCCHM/B2_$ARCCHM) > (-1.0E-4))
+   [
+      {P1}=-0.5*COUT_$ARCCHM/B_$ARCCHM;
+   ]
+   ELSEIF((COUT_$ARCCHM/B2_$ARCCHM) <= (1.0E-4))
+   [
+      {P1}=-COUT_$ARCCHM/(SQRT(B2_$ARCCHM-
+      A_$ARCCHM*COUT_$ARCCHM)+B_$ARCCHM);
+   ]
+]
+ELSEIF(B_$ARCCHM < 0.0)
+[
+   IF(COUT_$ARCCHM/B2_$ARCCHM > (-1.0E-4))
+   [
+      {P1} = -2.*B_$ARCCHM/A_$ARCCHM*(1.-
+      0.25*A_$ARCCHM*COUT_$ARCCHM/B2_$ARCCHM);
+   ]
+   ELSEIF((COUT_$ARCCHM/B2_$ARCCHM) <= (1.0E-4))
+   [
+      {P1}=(SQRT(B2_$ARCCHM-A_$ARCCHM*COUT_$ARCCHM)-
+              B_$ARCCHM)/A_$ARCCHM;
+   ]
+]
+ELSEIF(A_$ARCCHM ~= 0.0)
+[
+   {P1} = SQRT(-COUT_$ARCCHM/A_$ARCCHM);
+]
+}
+;
+REPLACE {$ARCCHM_OUT_HIT(#,#,#);} WITH {;
+A_$ARCCHM  = W(NP)**2+V(NP)**2;
+B_$ARCCHM  = (Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)*W(NP)+Y(NP)*V(NP);
+B2_$ARCCHM = B_$ARCCHM**2;
+C_$ARCCHM  = (Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)**2+Y(NP)**2;
+IF(B_$ARCCHM.GE.0.0 | A_$ARCCHM = 0.0)
+[
+  {P1}=0;
+  {P2}=1.0E20
+]
+ELSE
+[     "the particle may have hit the arc from the outside"
+   COUT_$ARCCHM = C_$ARCCHM - ({P3}-BDYTOL)**2;
+   IF(COUT_$ARCCHM < 0.0)
+   [          "particle is inside the inner arc"
+      IF(IWATCH>0)
+      [
+        OUTPUT COUT_$ARCCHM;(' CIN=',E11.3);
+      ]
+      COUT_$ARCCHM=0.0;
+   ]
+   RAD_$ARCCHM = B2_$ARCCHM - A_$ARCCHM*COUT_$ARCCHM;
+   IF(RAD_$ARCCHM < 0.0)
+   [     "particle missed inner arc"
+      {P1} = 0;
+      {P2}=1E20;
+   ]
+   ELSE
+   [     "particle hit inner arc"
+      {P1}=1;
+      IF(COUT_$ARCCHM/B2_$ARCCHM < 1.0E-3)
+      [
+         {P2}=-0.5*COUT_$ARCCHM/B_$ARCCHM;
+      ]
+      ELSE
+      [
+         IF((SQRT(RAD_$ARCCHM)-B_$ARCCHM) ~= 0.0)
+         [
+            {P2} = COUT_$ARCCHM/(SQRT(RAD_$ARCCHM)-B_$ARCCHM);
+         ]
+         ELSE
+         [
+            {P2} = 1.0E30;
+         ]
+      ]
+   ]
+]
+}
+;
+REPLACE {$ARCCHM_END_HIT(#,#,#);} WITH
+{;
+{P1}=0;  "assume particle did not hit the x end of the arcstop"
+{P2} = ({P3}-X(NP))/U(NP);   "distance to x end of the arcstop"
+VAR1=SQRT((Y(NP)+V(NP)*{P2})**2 +
+      ((Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)+W(NP)*{P2})**2);
+IF(VAR1<= ZRAD4_$ARCCHM & Z(NP)+W(NP)*{P2} > ZMIN_$ARCCHM)
+[
+  {P1}=1;  "particle hit the end of ARCCHM"
+]
+}
+;
+"End of ARCCHM_macros.mortran (Rev 1.5)"

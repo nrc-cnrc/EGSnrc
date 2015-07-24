@@ -1,0 +1,1836 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: x-ray tube                                "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Charlie Ma, 1993                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ***********           ""toc:
+"                             *         *           ""toc:
+"                             *  XTUBE  *           ""toc:
+"                             *         *           ""toc:
+"                             ***********           ""toc:
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM to simulate the target in an x-ray tube of
+"   arbitrary layers and materials.
+"
+"   Version 1.0 completed May,1993 by CMa
+"
+"   See sccs for history of modifications
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical treatment head:  an x-ray tube target.
+"
+"   Note: this component module should always be the first CM in the geoemtry!
+"
+"I>
+"I> Geometry of XTUBE:
+"I> ******************
+"I>            ----------------------------------------------------
+"I>              IR = i + 3 (note: no air gap for this CM)
+"I>            ----------------------------------------------------
+"I>                            IR = i+2    | / / / /
+"I>                                        |/ / / /
+"I>                     (target holder)    / / / /
+"I>                                       /|/ / /
+"I>                                      / / / /<--------------
+"I>                                     / /|/ /
+"I>                                  IR=1,2,i/
+"I>                                   / / /|/
+"I>          ------(X axis)------>   / / / /<--------- beam direction
+"I>                                 / / / /|
+"I>                                / / / / |
+"I>                               / / / /  |
+"I>                              / / / /<-----------------
+"I>                             / / / /    |
+"I>                            / / / /     |       IR = i + 1
+"I>                           / / / /      |
+"I>                          / / / /       |
+"I>            ----------------------------------------------------
+"I>                              /         |
+"I>                        ---->/  (angle) |<-----
+"I>                            /           |
+"I>
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            --------------------------------------------------
+"I>            |          Region          | Description         |
+"I>            |--------------------------|---------------------|
+"I>            |  absolute     | local    |                     |
+"I>            |---------------|----------|                     |
+"I>            |               |          |                     |
+"I>            |IRSTART_XTUBE  | IR_XTUBE |  as shown in above  |
+"I>            |  +IR_XTUBE-1  |          |    (1 to i+3)       |
+"I>            |               |          |                     |
+"I>            |               |          |                     |
+"I>            --------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$XTUBE
+"                      ISUMRY_$XTUBE
+"                      HOWFAR_$XTUBE
+"                      WHERE_AM_I_$XTUBE
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+"
+"
+"*******************************************************************************
+"
+"                       Description of users input               ""toc:
+"                       **************************
+"
+"I>
+"I>  CARDS CM_XTUBE  (XTUBE SID: 2.5)
+"I>  **************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$XTUBE) (F10.0): Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$XTUBE (60A1): Title of CM.
+"I>
+"I>   2  ZMIN_$XTUBE,ZTHICK_$XTUBE (2F15.0):
+"I>
+"I>        ZMIN_$XTUBE: Distance from front of CM to reference plane(Z=0).
+"I>      ZTHICK_$XTUBE: Thickness of xtube in Z-direction.
+"I>
+"I>      Note that there will usually be no air gap at the front of
+"I>      this CM.
+"I>
+"I>   3  ANGLEI (F15.0):  Angle between the target surface
+"I>                       and Z-axis (in degrees >= 0. and <75.)
+"I>
+"I>   4  N_$XTUBE, I_XTRA_$XTUBE (I5):
+"I>
+"I>            N_$XTUBE:   Number of layers in the target
+"I>
+"I>   Repeat 5-7 for I=N_$XTUBE,N_$XTUBE-1,...,1
+"I>    (in XTUBE the first layer of the target is I=N_$XTUBE)
+"I>
+"I>   5  DTHICK_$XTUBE(I), I_XTRA_$XTUBE (F15.0,I5)
+"I>
+"I>    DTHICK_$XTUBE(I): Thickness of layer I (cm)
+"I>       I_XTRA_$XTUBE: Set to 1 if the layer has an extra central region
+"I>                      (only input for the outermost target layer)
+"I>
+"I>   6  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:       Cutoff energies for electron and photon transport
+"I>                           of layer I.
+"I>          DOSE_ZONE:       Dose scoring flag of layer I.
+"I>          IREGION_TO_BIT:  Bit setting of region # corresponding to layer I.
+"I>
+"I>   7  MED_IN (24A1):  Medium of layer I
+"I>
+"I>   Note that inputs 8-10 below are only required if I_XTRA_$XTUBE=1
+"I>   (i.e. the outermost target layer has an extra central region)
+"I>
+"I>   8  WXTRA_$XTUBE, HXTRA_$XTUBE (2F15.0):
+"I>
+"I>       WXTRA_$XTUBE:  Width of extra central region in layer
+"I>                      N_$XTUBE (cm).
+"I>       HXTRA_$XTUBE:  Height of extra central region in layer
+"I>                      N_$XTUBE (cm).
+"I>
+"I>   9  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+"I>
+"I>         ECUT, PCUT:       Cutoff energies for electron and photon transport
+"I>                           in extra central region of layer N_$XTUBE.
+"I>          DOSE_ZONE:       Dose scoring flag of extra central region.
+"I>          IREGION_TO_BIT:  Bit setting of extra central region.
+"I>
+"I>  10  MED_IN (24A1):  Medium of extra central region.
+"I>
+"I>  11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for region in
+"I>                                                     front of target
+"I>
+"I>          ECUT, PCUT:     Cutoff energies for electron and photon transport
+"I>                          in front of target
+"I>          DOSE_ZONE:      Dose scoring flag for this region.
+"I>          IREGION_TO_BIT: Bit setting of region # corresponding to this one.
+"I>
+"I>  12  MED_IN (24A1):  Medium in front of target
+"I>
+"I>  13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for target holder.
+"I>
+"I>          ECUT, PCUT:      Cutoff energies for electron and photon transport
+"I>                           in target holder.
+"I>          DOSE_ZONE:       Dose scoring flag for target holder.
+"I>          IREGION_TO_BIT:  Bit setting of region for target holder.
+"I>
+"I>  14  MED_IN (24A1):  Medium of target holder
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example describes a tungsten target, 1mm thick,
+"I>   mounted on a copper holder.  The target is angled at 22 degrees
+"I>   with respect to the z-axis.  It spans 2cm in the z direction.
+"I>   The medium in front of the target is AIR.
+"I>   ECUT and PCUT for all regions are set to 0.521, 0.01 respectively.
+"I>   Note that the input file specifies the target to start at 10cm
+"I>   from the reference plane; if Z_min_CM(1) is not 10cm and XTUBE
+"I>   is the first CM in the beam, the code will autumatically reset the
+"I>   target to start at Z_min_CM(1).
+"I>
+"I>   10.0       RMAX_CM
+"I>   XTUBE: z=10 cm, 1mm Tungsten target(1 slab), copper holder, 22 degrees
+"I>   10.0, 2.0; distance to reference plane = 10 cm, total thickness=2 cm
+"I>   22.0;      angle = 22 degrees
+"I>   1;         1 slab in the target
+"I>   0.1;       thickness of the slab = 0.1 cm
+"I>   0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for this slab
+"I>   T;         medium is Tungsten
+"I>   0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT in front of target
+"I>   AIR        medium is AIR
+"I>   0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for the holder
+"I>   CU;        medium for the holder is copper
+"I>
+"I>
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+
+%E   "start of subroutine HOWFAR_$XTUBE (Rev 1.5)"
+"*******************************************************************************
+"************************** Component Module XTUBE *****************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_$XTUBE
+"                          ***********************
+"
+" HOWFAR routine for a layered geometry.
+"
+" Determine if current region number is within component module XTUBE, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_$XTUBE local regions :
+"
+"     local               absolute                       description
+"   ------------    ------------------------------     ----------------------
+"   IR_$XTUBE        IR_start_CM(ICM_$XTUBE)+IR_$XTUBE-1   as shown above
+"   ------------    ------------------------------     -----------------------
+"   Geometrical co-ordinates, as set in INPUT_$XTUBE are:
+"
+"   ZFRONT_$XTUBE     top of CM (upstream surface, air region)
+"   ZMIN_$XTUBE       top of target
+"   ZBACK_$XTUBE      bottom of target
+"   RMAX_$XTUBE       dimmensions (in x and y)
+"
+"******************************************************************************
+REPLACE {$PRINT_1_N1;} WITH {;
+IF( X(NP)-A_$XTUBE*Z(NP)+BMAXT_$XTUBE(IR_$XTUBE) > $BDY_TOL)[
+   OUTPUT IR_$XTUBE,Z(NP),X(NP),A_$XTUBE*Z(NP)+BMAXT_$XTUBE(IR_$XTUBE);
+       (' print1-n1:ir,z, x, a+bmax ',I3,3F16.8);
+]
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_1_N2;} WITH {;
+OUTPUT IR_$XTUBE,Z(NP),X(NP),A_$XTUBE*Z(NP)+BMINT_$XTUBE(IR_$XTUBE);
+       (' print1-n2:ir,z, x, a+bmin ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_N+1;} WITH {;
+OUTPUT IR_$XTUBE,Z(NP),X(NP),A_$XTUBE*Z(NP)+BMAX_$XTUBE(N_$XTUBE);
+       (' printn+1:ir,z, x, a+bmax ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+REPLACE {$PRINT_N+2;} WITH {;
+OUTPUT IR_$XTUBE,Z(NP),X(NP),A_$XTUBE*Z(NP)+BMIN_$XTUBE(1);
+       (' printn+1:ir,z, x, a+bmax ',I3,3F16.8);
+J = J + 1;
+IF(J>1000)[STOP;]
+}
+
+;SUBROUTINE HOWFAR_$XTUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$XTUBE,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$XTUBE
+"T>**********************************
+"T>
+INTEGER
+   IRL,           "T>local region number (absolute), required by HOWNEAR macro
+   IRNEW_$XTUBE,  "T>tentative new region number within CM (absolute)
+   I,XTRA_INDEX;             "T>loop index
+
+$REAL
+   DIST,          "T>distance to region boundary along current trajectory
+   XPLN_$XTUBE,YPLN_$XTUBE,ZPLN_$XTUBE,   "T> Temporary variable
+   DISTTEMP,DISTZ,DISTY, "T>temporary DIST holders
+   BDYTOL;  "T> stores $BDY_TOL
+
+BDYTOL = $BDY_TOL;
+DIST = 1e10;  "Initialise to large value, will be set smaller as necessary
+
+IRL = IR(NP); "local region number (absolute)
+IR_$XTUBE = IRL - IRSTART_$XTUBE + 1;"local region number (relative)
+
+" This replacement macros sets DMIN_$XTUBE as well as defining IR_$XTUBE
+";$XTUBE_CM_HOWNEAR(DNEAR(NP)); DNEAR should be calculated here if PRESTA is"
+"                               switched off, otherwise no need to do it again"
+"                               because it was done already in ELECTR "
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module XTUBE, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+
+IF(IR_$XTUBE = N_$XTUBE+3 & I_XTRA_$XTUBE=1)[
+"in extra central region"
+   IF(W(NP) > 0.0)[
+      IF(HXTRA_$XTUBE+BDYTOL<ZTHICK_$XTUBE)[
+        DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.+BDYTOL-Z(NP))/W(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+        XTRA_INDEX=1;
+      ]
+      ELSE[
+        DIST = (ZBACK_$XTUBE - Z(NP))/W(NP);
+        IRNEW_$XTUBE = 1;
+        XTRA_INDEX=2;
+      ]
+      IF(DIST<=0.)[DIST=1.E-16;]
+      XPLN_$XTUBE=X(NP)+DIST*U(NP);
+      IF(XPLN_$XTUBE > XBMAXT_XTRA_$XTUBE(XTRA_INDEX))[
+        DIST = (A_$XTUBE*Z(NP)+BMAXT_$XTUBE(N_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE;
+      ]
+      ELSEIF(XPLN_$XTUBE<XBMINT_XTRA_$XTUBE(XTRA_INDEX))[
+        IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE - 2;
+        IF(N_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE+N_$XTUBE+1;]
+        DIST = (A_$XTUBE*Z(NP)+BMINT_$XTUBE(N_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+      ]
+      YPLN_$XTUBE=Y(NP)+DIST*V(NP);
+      IF(YPLN_$XTUBE<-WXTRA_$XTUBE/2.-BDYTOL)[
+        DIST=(-WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+      ELSEIF(YPLN_$XTUBE>WXTRA_$XTUBE/2.+BDYTOL)[
+        DIST=(WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      IF(HXTRA_$XTUBE+BDYTOL<ZTHICK_$XTUBE)[
+         DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.-BDYTOL-Z(NP))/W(NP);
+         IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+         XTRA_INDEX=1;
+      ]
+      ELSE[
+         DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
+         IRNEW_$XTUBE = IREND_$XTUBE;
+         XTRA_INDEX=2;
+         IF(N_GP_$XTUBE = 0)[IRNEW_$XTUBE = 1;]
+      ]
+      IF(DIST<=0. & N_GP_$XTUBE = 0)[DIST=1.E-16;]
+      XPLN_$XTUBE=X(NP)+DIST*U(NP);
+      IF(XPLN_$XTUBE > XFMAXT_XTRA_$XTUBE(XTRA_INDEX))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+
+         BMAXT_$XTUBE(N_$XTUBE)-X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+      ]
+      ELSEIF(XPLN_$XTUBE < XFMINT_XTRA_$XTUBE(XTRA_INDEX))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE - 2;
+         IF(N_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE +N_$XTUBE+1;]
+         DIST = (A_$XTUBE*Z(NP)+
+         BMINT_$XTUBE(N_$XTUBE)-X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+      ]
+      YPLN_$XTUBE=Y(NP)+DIST*V(NP);
+      IF(YPLN_$XTUBE<-WXTRA_$XTUBE/2.-BDYTOL)[
+        DIST=(-WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+      ELSEIF(YPLN_$XTUBE>WXTRA_$XTUBE/2.+BDYTOL)[
+        DIST=(WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+   ]
+   ELSE[
+      IF(U(NP)>0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+
+         BMAXT_$XTUBE(N_$XTUBE)-X(NP))/U(NP);
+      ]
+      ELSEIF(U(NP)<0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE - 2;
+         IF(N_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE +N_$XTUBE+1;]
+         DIST = (A_$XTUBE*Z(NP)+
+         BMINT_$XTUBE(N_$XTUBE)-X(NP))/U(NP);
+      ]
+      ELSE[
+         DIST=1.E20;
+      ]
+      YPLN_$XTUBE=Y(NP)+DIST*V(NP);
+      IF(YPLN_$XTUBE<-WXTRA_$XTUBE/2.-BDYTOL)[
+        DIST=(-WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+      ELSEIF(YPLN_$XTUBE>WXTRA_$XTUBE/2.+BDYTOL)[
+        DIST=(WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+        IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$XTUBE=1) ["leaving CM through back"
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$XTUBE; "new region number"
+      ]
+   ]
+]
+ELSEIF(IR_$XTUBE > 0 & IR_$XTUBE <= N_$XTUBE )[   "local region 1 to N
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;] "ensures call to ausgab if leaving CM"
+      IRNEW_$XTUBE = 1;
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(XPLN_$XTUBE > XBMAXT_$XTUBE(IR_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+BMAXT_$XTUBE(IR_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1 & IR_$XTUBE=N_$XTUBE-1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+      ELSEIF(XPLN_$XTUBE < XBMINT_$XTUBE(IR_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         IF(IR_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE+N_$XTUBE+1;]
+         DIST = (A_$XTUBE*Z(NP)+BMINT_$XTUBE(IR_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+      ]
+      IF(IR_$XTUBE=N_$XTUBE & I_XTRA_$XTUBE=1)[
+         DISTTEMP=1.E20;
+         DISTZ=1.E20;
+         DISTY=1.E20;
+         IF(Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.)[
+            DISTZ=(ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.
+                    +BDYTOL-Z(NP))/W(NP);
+            YPLN_$XTUBE=Y(NP) + V(NP)*DISTZ;
+            IF(ABS(YPLN_$XTUBE)>WXTRA_$XTUBE/2.)DISTZ=1.E20;
+         ]
+         IF(Y(NP)>WXTRA_$XTUBE/2. & V(NP)<0.)[
+            DISTY=(WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         ELSEIF(Y(NP)<-WXTRA_$XTUBE/2. & V(NP)>0.)[
+            DISTY=(-WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         DISTTEMP=MIN(DISTZ,DISTY);
+         IF(DISTTEMP<DIST)[
+           DIST=DISTTEMP;
+           IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GP_$XTUBE = 0)[DIST=1.E-16;]
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IRNEW_$XTUBE = IREND_$XTUBE;
+      IF(N_GP_$XTUBE = 0)[IRNEW_$XTUBE = 1;]
+      IF(XPLN_$XTUBE > XFMAXT_$XTUBE(IR_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+
+         BMAXT_$XTUBE(IR_$XTUBE)-X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1 & IR_$XTUBE=N_$XTUBE-1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+      ELSEIF(XPLN_$XTUBE < XFMINT_$XTUBE(IR_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         IF(IR_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE +N_$XTUBE+1;]
+         DIST = (A_$XTUBE*Z(NP)+
+         BMINT_$XTUBE(IR_$XTUBE)-X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+      ]
+      IF(IR_$XTUBE=N_$XTUBE & I_XTRA_$XTUBE=1)[
+         DISTTEMP=1.E20;
+         DISTZ=1.E20;
+         DISTY=1.E20;
+         IF(Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)[
+            DISTZ=(ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.
+                   -BDYTOL-Z(NP))/W(NP);
+            YPLN_$XTUBE=Y(NP) + V(NP)*DISTZ;
+            IF(ABS(YPLN_$XTUBE)>WXTRA_$XTUBE/2.)DISTZ=1.E20;
+         ]
+         IF(Y(NP)>WXTRA_$XTUBE/2. & V(NP)<0.)[
+            DISTY=(WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         ELSEIF(Y(NP)<-WXTRA_$XTUBE/2. & V(NP)>0.)[
+            DISTY=(-WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         DISTTEMP=MIN(DISTZ,DISTY);
+         IF(DISTTEMP<DIST)[
+           DIST=DISTTEMP;
+           IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSE[
+      IF(U(NP) > 0.0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+BMAXT_$XTUBE(IR_$XTUBE)-X(NP))/U(NP);
+         IF(I_XTRA_$XTUBE=1 & IR_$XTUBE=N_$XTUBE-1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+      ELSEIF(U(NP) < 0.0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         IF(IR_$XTUBE =1)[IRNEW_$XTUBE =IRSTART_$XTUBE+N_$XTUBE+1;]
+         DIST = (A_$XTUBE*Z(NP)+BMINT_$XTUBE(IR_$XTUBE)-X(NP))/U(NP);
+      ]
+      IF(IR_$XTUBE=N_$XTUBE & I_XTRA_$XTUBE=1)[
+         DISTY=1.E20;
+         IF(Y(NP)>WXTRA_$XTUBE/2. & V(NP)<0.)[
+            DISTY=(WXTRA_$XTUBE/2.-BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         ELSEIF(Y(NP)<-WXTRA_$XTUBE/2. & V(NP)>0.)[
+            DISTY=(-WXTRA_$XTUBE/2.+BDYTOL-Y(NP))/V(NP);
+            ZPLN_$XTUBE=Z(NP)+W(NP)*DISTY;
+            IF(ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. |
+               ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                DISTY=1.E20;
+         ]
+         IF(DIST<DISTY)[
+           DIST=DISTY;
+           IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$XTUBE=1) ["leaving CM through back"
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$XTUBE; "new region number"
+      ]
+   ]
+]"end of IR = 1-N
+
+ELSEIF(IR_$XTUBE = N_$XTUBE + 1)[ "local region N_$XTUBE + 1
+   IF(X(NP) < A_$XTUBE*Z(NP)+BMAX_$XTUBE(N_$XTUBE))[
+      IRNEW = IRSTART_$XTUBE + N_$XTUBE - 1;
+      IF(I_XTRA_$XTUBE=1)[
+         IF(ABS(Y(NP))<WXTRA_$XTUBE/2. &
+            Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2. &
+            Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.)
+         IRNEW = IRSTART_$XTUBE + N_$XTUBE+2;
+      ]
+      USTEP = 0;
+      RETURN;
+   ]
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;]
+      IRNEW_$XTUBE = 1;
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(XPLN_$XTUBE < XBMAX_$XTUBE(N_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         DIST = (A_$XTUBE*Z(NP)+BMAX_$XTUBE(N_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GP_$XTUBE = 0)[DIST=1.E-16;]
+      IRNEW_$XTUBE = IREND_$XTUBE;
+      IF(N_GP_$XTUBE = 0)[IRNEW_$XTUBE = 1;]
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(XPLN_$XTUBE < XFMAX_$XTUBE(N_$XTUBE))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         DIST = (A_$XTUBE*Z(NP)+BMAX_$XTUBE(N_$XTUBE)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSE[
+      IF(U(NP) < 0.0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + IR_$XTUBE - 2;
+         DIST = (A_$XTUBE*Z(NP)+BMAX_$XTUBE(N_$XTUBE)-X(NP))/U(NP);
+         IF(I_XTRA_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$XTUBE=1) ["leaving CM"
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$XTUBE; "new region number"
+      ]
+   ]
+]
+ELSEIF(IR_$XTUBE = N_$XTUBE + 2)[ "local region N_$XTUBE + 2
+   IF(X(NP) > A_$XTUBE*Z(NP)+BMIN_$XTUBE(1))[
+      IRNEW = IRSTART_$XTUBE;
+      IF(I_XTRA_$XTUBE=1 & N_$XTUBE=1)[
+         IF(ABS(Y(NP))<WXTRA_$XTUBE/2. &
+            Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2. &
+            Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.)
+            IRNEW = IRSTART_$XTUBE + N_$XTUBE+2;
+      ]
+      USTEP = 0;
+      RETURN;
+   ]
+   IF(W(NP) > 0.0)[
+      DIST = (ZBACK_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;]
+      IRNEW_$XTUBE = 1;
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(XPLN_$XTUBE > XBMIN_$XTUBE(1))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE;
+         DIST=(A_$XTUBE*Z(NP)+BMIN_$XTUBE(1)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1 & N_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
+      IF(DIST<=0. & N_GP_$XTUBE=0)[DIST=1.E-16;]
+      IRNEW_$XTUBE = IREND_$XTUBE;
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(N_GP_$XTUBE = 0)[IRNEW_$XTUBE = 1;]
+      IF(XPLN_$XTUBE > XFMIN_$XTUBE(1))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+BMIN_$XTUBE(1)-
+         X(NP))/(U(NP)-W(NP)*A_$XTUBE);
+         IF(I_XTRA_$XTUBE=1 & N_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           ZPLN_$XTUBE = Z(NP) + W(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              ZPLN_$XTUBE>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              ZPLN_$XTUBE<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   ELSE[
+      IF(U(NP) > 0.0)[
+         IRNEW_$XTUBE = IRSTART_$XTUBE;
+         DIST = (A_$XTUBE*Z(NP)+BMIN_$XTUBE(1)-X(NP))/U(NP);
+         IF(I_XTRA_$XTUBE=1 & N_$XTUBE=1)[
+           YPLN_$XTUBE = Y(NP) + V(NP)*DIST;
+           IF(ABS(YPLN_$XTUBE)<WXTRA_$XTUBE/2. &
+              Z(NP)>ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+              Z(NP)<ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+                IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE+2;
+         ]
+      ]
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$XTUBE=1) ["leaving CM "
+         IF(W(NP) > 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,1);]
+         ELSEIF(W(NP) < 0.0)[CALL WHERE_AM_I(ICM_$XTUBE,-1);]
+      ]
+      ELSE ["still in CM, entering between bars
+         IRNEW = IRNEW_$XTUBE; "new region number"
+      ]
+   ]
+]
+ELSEIF(IR_$XTUBE = N_$XTUBE + 3 + I_XTRA_$XTUBE)[ "local region N_$XTUBE + 3
+   IF(W(NP) > 0.0)[
+      DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
+      IF(DIST < 0.0)[DIST = 0.0;]
+      XPLN_$XTUBE = X(NP) + U(NP)*DIST;
+      IF(XPLN_$XTUBE < XFMIN_$XTUBE(1))[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE + 1;
+      ]
+      ELSEIF(XPLN_$XTUBE < XFMAX_$XTUBE(N_$XTUBE))[
+         DO I = 1, N_$XTUBE[
+            IF(XPLN_$XTUBE < XFMAX_$XTUBE(I))[
+               IRNEW_$XTUBE = IRSTART_$XTUBE + I - 1;
+               IF(I=N_$XTUBE & I_XTRA_$XTUBE=1 &
+                  HXTRA_$XTUBE + BDYTOL > ZTHICK_$XTUBE)
+                  IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE +2;
+               EXIT;
+            ]
+         ]
+      ]
+      ELSE[
+         IRNEW_$XTUBE = IRSTART_$XTUBE + N_$XTUBE;
+      ]
+   ]
+   ELSEIF(W(NP) < 0.0)[
+      DIST = (ZFRONT_$XTUBE - Z(NP))/W(NP);
+      IF(DIST <= 0.0)[DIST = 1.E-16;]
+      IRNEW_$XTUBE = 1;
+   ]
+   IF(DIST <= USTEP ) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$XTUBE = 1) ["leaving CM through back"
+         CALL WHERE_AM_I(ICM_$XTUBE,-1);
+      ]
+      ELSE ["still in CM
+         IRNEW = IRNEW_$XTUBE; "new region number"
+      ]
+   ]
+] " end of region N_$XTUBE + 3
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$XTUBE+1,IR(NP),ICM_$XTUBE,
+      IR_start_CM(ICM_$XTUBE);
+      (//' ************'//' HOWFAR_$XTUBE error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+;
+RETURN;
+END; "End of subroutine HOWFAR_$XTUBE"
+%E   "start of subroutine WHERE_AM_I_$XTUBE (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$XTUBE
+"                          ***************************
+"
+"*******************************************************************************
+"
+" WHERE_AM_I routine for XTUBE.
+"
+" WHERE_AM_I_$XTUBE determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$XTUBE subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$XTUBE from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$XTUBE(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$XTUBE,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$XTUBE
+"T>**************************************
+"T>
+INTEGER I,     "T>loop index
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XF_$XTUBE,YF_$XTUBE,ZF_$XTUBE;
+
+XF_$XTUBE = X(NP) + USTEP*U(NP);
+YF_$XTUBE = Y(NP) + USTEP*V(NP);
+ZF_$XTUBE = Z(NP) + USTEP*W(NP);
+
+IF(IDIR=0) ["particles from the source (along x-axis)"
+   IRNEW = IRSTART_$XTUBE + N_$XTUBE-1; "to start at the target surface"
+   IF(I_XTRA_$XTUBE=1 & ABS(Y(NP))<= WXTRA_$XTUBE/2. &
+      Z(NP)>=ZMIN_$XTUBE + (ZTHICK_$XTUBE-HXTRA_$XTUBE)/2. &
+      Z(NP)<=ZMIN_$XTUBE + (ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.)
+      IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2; "in extra central region"
+]
+ELSEIF(IDIR=1) ["particle entering this CM through front face (upstream)
+   IF(IRSTART_$XTUBE = 2) [XF_$XTUBE = X(NP);]
+   IF(XF_$XTUBE < XFMIN_$XTUBE(1))[
+      IRNEW = IRSTART_$XTUBE + N_$XTUBE + 1;
+   ]
+   ELSEIF(XF_$XTUBE < XFMAX_$XTUBE(N_$XTUBE))[
+      DO I = 1, N_$XTUBE[
+         IF(XF_$XTUBE < XFMAX_$XTUBE(I))[
+            IRNEW = IRSTART_$XTUBE + I - 1;
+            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<= WXTRA_$XTUBE/2. &
+               HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
+               IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2; "in extra central region"
+            RETURN;
+         ]
+      ]
+   ]
+   ELSE[IRNEW = IRSTART_$XTUBE + N_$XTUBE;]
+]
+ELSE["particle entering this CM through back face (downstream)
+   IF(XF_$XTUBE > XBMAX_$XTUBE(N_$XTUBE))[
+      IRNEW = IRSTART_$XTUBE + N_$XTUBE;"in air region in front of target"
+   ]
+   ELSEIF(XF_$XTUBE > XBMIN_$XTUBE(1))[
+      DO I = 1, N_$XTUBE[
+         IF(XF_$XTUBE < XBMAX_$XTUBE(I))[
+            IRNEW = IRSTART_$XTUBE + I - 1;"in the target"
+            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<= WXTRA_$XTUBE/2. &
+                  HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
+                IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2; "in extra central region"
+            RETURN;
+         ]
+      ]
+   ]
+   ELSE[IRNEW = IRSTART_$XTUBE + N_$XTUBE + 1;"in the holder"]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$XTUBE"
+%E   "start of subroutine INPUT_$XTUBE (Rev 1.5)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_$XTUBE
+"                           **********************
+"*******************************************************************************
+"
+"  A CM input subroutine for the simulation of an x-ray target.
+"
+"  All parameters in COMMON/CMs/ must be filled associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$XTUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$XTUBE,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_$XTUBE
+"T>*********************************
+"T>
+$REAL
+      BDYTOL,       "T>boundary tolerence
+      TRTHCK;       "T>overall thickness of the target
+INTEGER I,J,        "T>DO loop indeces
+      IRA,          "T>Absolute region number
+      MED_FLAG,     "T>flag used by media-sort macro $MED_INPUT
+      MED_INDEX;    "T>medium index, set after medium sort by $MED_INPUT
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$XTUBE = ICM;      "CM index for this component module
+IRSTART_$XTUBE = IR_start_CM(ICM_$XTUBE); "Index of first region in this CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$XTUBE) = 0; "Geometry-checking flag, 0 if no error detected
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' $XTUBE (XTUBE SID: 2.5)'
+        /' This component is a target in an x-ray tube'/
+       ' TITLE: ',$);
+;MINPUT ($XTUBE) TITLE_$XTUBE;(60A1);
+";MINPUT is a replacement macro with EOF and
+"ERR branching to :EOF_$XTUBE: and :ERR_$XTUBE:
+OUTPUT TITLE_$XTUBE;(/' ',60A1);
+"OUTPUT is a replacement macro which writes to
+"unit 6.  Used here for echo of user input
+"
+" get distance from reference plane, z=0"
+" ======================================
+OUTPUT; (/' DISTANCE FROM TOP OF CM TO REFERENCE PLANE (overrides',
+' Z_min_CM)'/' and Z SPAN (on one line) :',$);
+;MINPUT ($XTUBE) ZMIN_$XTUBE,ZTHICK_$XTUBE;(2F15.0);
+OUTPUT ZMIN_$XTUBE,ZTHICK_$XTUBE;(2F15.5);
+IF(ICM_$XTUBE~=1 & Z_min_CM(ICM_$XTUBE)>ZMIN_$XTUBE)[
+    OUTPUT ICM_$XTUBE;
+     (//'***ERROR IN CM ',I4,' (XTUBE):'/
+          'Overlaps previous CM'//);
+    IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+IF(ZTHICK_$XTUBE<0.0)[
+    OUTPUT ICM_$XTUBE;
+     (//'***ERROR IN CM ',I4,' (XTUBE):'/
+        'ZTHICK < 0.0'//);
+    IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+"
+" get x-dimensions for target
+" =================================================
+"
+OUTPUT; (/' ANGLE BETWEEN THE TARGET SURFACE AND Z-AXIS(in degrees<75.):',$);
+;MINPUT ($XTUBE) ANGLEI; (F15.0);
+;OUTPUT ANGLEI;(F15.5);
+IF(ANGLEI => 75.|ANGLEI<0.0)[
+   OUTPUT ICM_$XTUBE;
+    (//'***ERROR IN CM ',I4,' (XTUBE):'/
+       'Angle out of range (range: 0 - 75.0 degrees)'//);
+   IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+ANGLE=ANGLEI*3.1415926/180.;"get angle in radius"
+"
+"   get geometry information for target
+"   =================================================
+"
+N_$XTUBE = $MAX_N_$XTUBE;
+OUTPUT N_$XTUBE;
+(/' Number of slabs in the target (maximum=',I4,'):',$);
+;MINPUT ($XTUBE) N_$XTUBE; (I5);
+OUTPUT N_$XTUBE;(I4);
+IF(N_$XTUBE>$MAX_N_$XTUBE)[
+   N_$XTUBE=$MAX_N_$XTUBE;
+   OUTPUT ICM_$XTUBE, N_$XTUBE;
+    (//'***ERROR IN CM ',I4,' (XTUBE):'/
+       '# of target slabs > max. allowed'/
+       '# of target slabs reduced to ',I4,' for now'//);
+   IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+ELSEIF(N_$XTUBE<1)[
+    N_$XTUBE=1;
+       OUTPUT ICM_$XTUBE;
+    (//'***ERROR IN CM ',I4,' (XTUBE):'/
+       '# of target slabs < 1'/
+       '# of target slabs reset to 1 for now'//);
+   IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+TRTHCK=0.0;
+
+OUTPUT;(/' Now input for the target:');
+IRA = IRSTART_$XTUBE+N_$XTUBE;
+DO IR_$XTUBE = N_$XTUBE,1,-1["loop through each slab"
+   IRA = IRA-1;
+   IF(IR_$XTUBE=N_$XTUBE)[
+      OUTPUT N_$XTUBE-IR_$XTUBE+1;
+ (/' Thickness for slab ',I3,', I_XTRA (1 if there is an  extra'/
+   ' central region in this slab, 0 otherwise):');
+      ;MINPUT ($XTUBE) DTHICK_$XTUBE(IR_$XTUBE),I_XTRA_$XTUBE;(F15.0,I5);
+      ;OUTPUT DTHICK_$XTUBE(IR_$XTUBE),I_XTRA_$XTUBE;(F15.5,I5);
+   ]
+   ELSE[
+      ;OUTPUT N_$XTUBE-IR_$XTUBE+1;(/' Thickness for slab ',I3,':');
+      ;MINPUT ($XTUBE) DTHICK_$XTUBE(IR_$XTUBE);(F15.0);
+      ;OUTPUT DTHICK_$XTUBE(IR_$XTUBE);(F15.5);
+   ]
+   IF(DTHICK_$XTUBE(IR_$XTUBE)<0.0)[
+      OUTPUT ICM_$XTUBE, IR_$XTUBE;
+       (//'***ERROR IN CM ',I4,' (XTUBE):'/
+          'DTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+   ]
+   TRTHCK=TRTHCK+DTHICK_$XTUBE(IR_$XTUBE);
+   "get the overall thickness of the target"
+
+   ;OUTPUT N_$XTUBE-IR_$XTUBE+1;(/' For slab ',I3,', ECUT, PCUT (MeV),',
+             ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT: ',$);
+   ;MINPUT ($XTUBE)
+   ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+   IREGION_TO_BIT(IRA);
+   (2F15.5,2I5);
+   OUTPUT N_$XTUBE-IR_$XTUBE+1;(/' Material of slab ', I3,':', $);
+   ;$MED_INPUT($XTUBE); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+]
+
+IF(I_XTRA_$XTUBE~=1)I_XTRA_$XTUBE=0;
+
+XFMIN_$XTUBE(1)=ZTHICK_$XTUBE*TAN(ANGLE)/2.-TRTHCK/COS(ANGLE);
+XBMIN_$XTUBE(1)=-ZTHICK_$XTUBE*TAN(ANGLE)/2.-TRTHCK/COS(ANGLE);
+
+XFMAX_$XTUBE(1)=XFMIN_$XTUBE(1)+DTHICK_$XTUBE(1)/COS(ANGLE);
+XBMAX_$XTUBE(1) = XBMIN_$XTUBE(1) + DTHICK_$XTUBE(1)/COS(ANGLE);
+IF(N_$XTUBE > 1)[
+   DO I =2, N_$XTUBE[
+      XFMIN_$XTUBE(I) = XFMAX_$XTUBE(I-1);
+      XFMAX_$XTUBE(I) = XFMIN_$XTUBE(I)+DTHICK_$XTUBE(I)/COS(ANGLE);
+      XBMIN_$XTUBE(I) = XBMAX_$XTUBE(I-1);
+      XBMAX_$XTUBE(I) = XBMIN_$XTUBE(I)+DTHICK_$XTUBE(I)/COS(ANGLE);
+   ]
+]
+
+"get dimensions, ECUT, PCUT, material etc for the extra central region in the
+"outermost target layer, if any
+IF(I_XTRA_$XTUBE=1)[
+   OUTPUT N_$XTUBE;(/' Now input for the the extra central region in the last'/
+            ' (outermost) target layer (layer no. ',I4,'):');
+   IRA = IRSTART_$XTUBE+N_$XTUBE+2;
+   OUTPUT;(/' width, height of central region (cm):');
+   ;MINPUT ($XTUBE) WXTRA_$XTUBE,HXTRA_$XTUBE;(2F15.0);
+   ;OUTPUT WXTRA_$XTUBE,HXTRA_$XTUBE;(2F15.5);
+   IF(WXTRA_$XTUBE<0.0 | HXTRA_$XTUBE<0.0)[
+      OUTPUT ICM_$XTUBE;
+       (//'***ERROR IN CM ',I4,' (XTUBE):'/
+          'Height or width of extra central region < 0.0'//);
+      IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+   ]
+   IF(HXTRA_$XTUBE>ZTHICK_$XTUBE)[
+      OUTPUT ICM_$XTUBE;
+       (//'***ERROR IN CM ',I4,' (XTUBE):'/
+          'Height of extra central region > total xtube thickness'//);
+      IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+   ]
+   IF(WXTRA_$XTUBE>2*RMAX_CM(ICM_$XTUBE))[
+      OUTPUT ICM_$XTUBE;
+       (//'***ERROR IN CM ',I4,' (XTUBE):'/
+          'width of extra central region > RMAX_CM'//);
+      IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+   ]
+   ;OUTPUT;(/' ECUT, PCUT (MeV),',
+             ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT: ',$);
+   ;MINPUT ($XTUBE)
+   ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+   IREGION_TO_BIT(IRA);
+   (2F15.5,2I5);
+   OUTPUT;(/' Medium :', $);
+   ;$MED_INPUT($XTUBE); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+]
+
+
+"
+"   get ECUT, PCUT, dose scoring zone, and material in the rest regions
+"   ===============================================================
+IRA = IRSTART_$XTUBE+N_$XTUBE;
+IR_$XTUBE = N_$XTUBE+1;
+OUTPUT;(/' Now input for the region in front of the target:'/
+        ' ECUT,PCUT,DOSE ZONE(0=DO NOT SCORE DOSE),IREGION_TO_BIT: ',$);
+;MINPUT ($XTUBE)
+ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+(2F15.0,2I5);
+IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+IREGION_TO_BIT(IRA);
+(2F15.5,2I5);
+OUTPUT;(/' Medium in front of target:',$);
+;$MED_INPUT($XTUBE);
+MED(IRA) = MED_INDEX;
+
+IR_$XTUBE = N_$XTUBE+2;"the target holder"
+IRA = IRA+1;
+OUTPUT;(/' Now input for the target holder:'/
+        ' ECUT,PCUT,DOSE ZONE(0=DO NOT SCORE DOSE),IREGION_TO_BIT: ',$);
+;MINPUT ($XTUBE)
+ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+(2F15.0,2I5);
+IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+(2F15.5,2I5);
+OUTPUT;(/' Material for the holder:',$);
+;$MED_INPUT($XTUBE);
+MED(IRA) = MED_INDEX; " medium of the holder, i.e., the backing material"
+
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+"
+BDYTOL = $BDY_TOL;
+A_$XTUBE =  -TAN(ANGLE);
+DO I = 1, N_$XTUBE[
+   BMIN_$XTUBE(I) = XFMIN_$XTUBE(I) - A_$XTUBE*ZMIN_$XTUBE;
+   BMAX_$XTUBE(I) = XFMAX_$XTUBE(I) - A_$XTUBE*ZMIN_$XTUBE;
+   BMINT_$XTUBE(I) = BMIN_$XTUBE(I) - BDYTOL;
+   BMAXT_$XTUBE(I) = BMAX_$XTUBE(I) + BDYTOL;
+   XFMINT_$XTUBE(I) = XFMIN_$XTUBE(I) - BDYTOL;
+   XFMAXT_$XTUBE(I) = XFMAX_$XTUBE(I) + BDYTOL;
+   XBMINT_$XTUBE(I) = XBMIN_$XTUBE(I) - BDYTOL;
+   XBMAXT_$XTUBE(I) = XBMAX_$XTUBE(I) + BDYTOL;
+]
+IF(I_XTRA_$XTUBE=1)[
+   XFMAX_XTRA_$XTUBE=HXTRA_$XTUBE*TAN(ANGLE)/2.;
+   XBMAX_XTRA_$XTUBE=-HXTRA_$XTUBE*TAN(ANGLE)/2.;
+   XFMIN_XTRA_$XTUBE=XFMAX_XTRA_$XTUBE-DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
+   XBMIN_XTRA_$XTUBE= XBMAX_XTRA_$XTUBE - DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
+   XFMAXT_XTRA_$XTUBE(1)=(HXTRA_$XTUBE/2.+BDYTOL)*TAN(ANGLE) + BDYTOL;
+   XFMAXT_XTRA_$XTUBE(2)=XFMAX_XTRA_$XTUBE + BDYTOL;
+   XFMINT_XTRA_$XTUBE(1)=(HXTRA_$XTUBE/2.+BDYTOL)*TAN(ANGLE)-
+                       DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE) - BDYTOL;
+   XFMINT_XTRA_$XTUBE(2)=XFMIN_XTRA_$XTUBE - BDYTOL;
+   XBMAXT_XTRA_$XTUBE(1)=(-HXTRA_$XTUBE/2.-BDYTOL)*TAN(ANGLE) + BDYTOL;
+   XBMAXT_XTRA_$XTUBE(2)=XBMAX_XTRA_$XTUBE  + BDYTOL;
+   XBMINT_XTRA_$XTUBE(1)=(-HXTRA_$XTUBE/2.-BDYTOL)*TAN(ANGLE)-
+                       DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE) - BDYTOL;
+   XBMINT_XTRA_$XTUBE(2)=XBMIN_XTRA_$XTUBE - BDYTOL;
+]
+
+"establish top of first CM
+"
+XTUBE_EXISTS = 0;"initialize flag, this CM must be first CM in the geometry"
+IF (ICM_$XTUBE = 1) [
+   Z_min_CM(1)=ZMIN_$XTUBE;
+   XTUBE_EXISTS = 1;"flag: target is first component module in the geometry"
+]
+
+"
+"establish start of next CM
+ZBACK_$XTUBE = ZMIN_$XTUBE + ZTHICK_$XTUBE;
+Z_min_CM(ICM_$XTUBE+1) = ZBACK_$XTUBE;
+ZFRONT_$XTUBE = Z_min_CM(ICM_$XTUBE);
+
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+Z_gap_THICK(ICM_$XTUBE) = 0.;
+N_GP_$XTUBE = 0; "no air gap for this CM
+
+"  set up region numbers
+"  This CM has N_$XTUBE + 2 + N_GP_$XTUBE regions
+"  Index of last region
+IREND_$XTUBE = IRSTART_$XTUBE + N_$XTUBE + N_GP_$XTUBE + 1 + I_XTRA_$XTUBE;
+NREG = NREG + N_$XTUBE + N_GP_$XTUBE + 2+ I_XTRA_$XTUBE;
+                                           "Total number of regions up
+                                           "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$XTUBE+1) = IREND_$XTUBE + 1;
+]
+ELSE [
+      OUTPUT ICM_$XTUBE, NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (XTUBE):'/
+         I4,' regions requested, but only ',I4,' available'//);
+      IERR_GEOM(ICM_$XTUBE)=IERR_GEOM(ICM_$XTUBE)+1;
+]
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$XTUBE) = 2; "put a square boundary about CM
+DO IRA=IRSTART_$XTUBE,NREG [
+   "loop over absolute region numbers within CM + air gap
+]
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$XTUBE-1; "absolute region number"
+DO IR_$XTUBE=1,N_$XTUBE+2+N_GP_$XTUBE+I_XTRA_$XTUBE[
+                         "loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT);
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$XTUBE)=ECUT(IRA); "Minimum energy on exit from CM
+] "end of loop over IR_$XTUBE
+
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$XTUBE:;
+OUTPUT ICM;
+(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$XTUBE:;
+OUTPUT ICM;
+(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$XTUBE"
+%E   "start of subroutine ISUMRY_$XTUBE (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_$XTUBE
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$XTUBE;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$XTUBE,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$XTUBE
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR, "T>colour of CM for EGS_Windows
+   IRA,     "T>absolute region number
+   I,J;     "T>DO loop index
+
+$REAL VOL_$XTUBE($MAX_N_$XTUBE),   "T>cylinder volume
+      YWIDTH,
+      VOLTOT_$XTUBE;
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$XTUBE.
+"
+VOLTOT_$XTUBE=0.;
+IRA=IRSTART_$XTUBE-1;
+DO I = 1, N_$XTUBE + 2 [
+   IRA = IRA+1; "absolute region number
+   IF(I<=N_$XTUBE)["one of the xtube slabs
+     VOL_$XTUBE(I)=SQRT(ZTHICK_$XTUBE**2+(XFMIN_$XTUBE(I)-
+                    XBMIN_$XTUBE(I))**2)*DTHICK_$XTUBE(I)*
+                    2*RMAX_CM(ICM_$XTUBE);
+     IF(XBMIN_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE) &
+       XBMAX_$XTUBE(I)>=-RMAX_CM(ICM_$XTUBE))[
+         IF(XFMIN_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE))[
+           VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XFMIN_$XTUBE(I)-
+                         XBMIN_$XTUBE(I))*ZTHICK_$XTUBE*
+                         RMAX_CM(ICM_$XTUBE)-(-RMAX_CM(ICM_$XTUBE)-
+                         XFMIN_$XTUBE(I))*ZTHICK_$XTUBE*
+                         2*RMAX_CM(ICM_$XTUBE);
+         ]
+         ELSE[
+           VOL_$XTUBE(I)=VOL_$XTUBE(I)-(ABS(XBMIN_$XTUBE(I))-
+                        RMAX_CM(ICM_$XTUBE))**2*(ZTHICK_$XTUBE/
+                        (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I)))*
+                        RMAX_CM(ICM_$XTUBE);
+         ]
+     ]
+     ELSEIF(XBMIN_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE) &
+       XBMAX_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE))[
+          IF(XFMIN_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE))[
+            VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XBMAX_$XTUBE(I)-
+                         XBMIN_$XTUBE(I))*(ABS(XBMAX_$XTUBE(I))-
+                         RMAX_CM(ICM_$XTUBE))*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*2*
+                         RMAX_CM(ICM_$XTUBE)-(XBMAX_$XTUBE(I)-
+                         XBMIN_$XTUBE(I))**2*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                         RMAX_CM(ICM_$XTUBE)+(-RMAX_CM(ICM_$XTUBE)-
+                         XFMIN_$XTUBE(I))**2/TAN(ANGLE)*
+                         RMAX_CM(ICM_$XTUBE);
+          ]
+          ELSE[
+            VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XBMAX_$XTUBE(I)-
+                         XBMIN_$XTUBE(I))*(ABS(XBMAX_$XTUBE(I))-
+                         RMAX_CM(ICM_$XTUBE))*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*2*
+                         RMAX_CM(ICM_$XTUBE)-(XBMAX_$XTUBE(I)-
+                         XBMIN_$XTUBE(I))**2*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                         RMAX_CM(ICM_$XTUBE);
+          ]
+     ]
+     IF(XFMAX_$XTUBE(I)>RMAX_CM(ICM_$XTUBE) &
+     XFMIN_$XTUBE(I)<=RMAX_CM(ICM_$XTUBE))[
+           IF(XBMAX_$XTUBE(I)>RMAX_CM(ICM_$XTUBE))[
+             VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XFMAX_$XTUBE(I)-
+                        XBMAX_$XTUBE(I))*ZTHICK_$XTUBE*
+                        RMAX_CM(ICM_$XTUBE)-(XBMAX_$XTUBE(I)-
+                        RMAX_CM(ICM_$XTUBE))*ZTHICK_$XTUBE*
+                        2*RMAX_CM(ICM_$XTUBE);
+           ]
+           ELSE[
+              VOL_$XTUBE(I)=VOL_$XTUBE(I)-(ABS(XFMAX_$XTUBE(I))-
+                        RMAX_CM(ICM_$XTUBE))**2*ZTHICK_$XTUBE/
+                        (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                        RMAX_CM(ICM_$XTUBE);
+           ]
+     ]
+     ELSEIF(XFMAX_$XTUBE(I)>RMAX_CM(ICM_$XTUBE) &
+     XFMIN_$XTUBE(I)>RMAX_CM(ICM_$XTUBE))[
+        IF(XBMAX_$XTUBE(I)>RMAX_CM(ICM_$XTUBE))[
+          VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XFMAX_$XTUBE(I)-
+                         XFMIN_$XTUBE(I))*(XFMIN_$XTUBE(I)-
+                         RMAX_CM(ICM_$XTUBE))*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*2*
+                         RMAX_CM(ICM_$XTUBE)-(XFMAX_$XTUBE(I)-
+                         XFMIN_$XTUBE(I))**2*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                         RMAX_CM(ICM_$XTUBE)+(XBMAX_$XTUBE(I)-
+                         RMAX_CM(ICM_$XTUBE))**2*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                         RMAX_CM(ICM_$XTUBE);
+        ]
+        ELSE[
+          VOL_$XTUBE(I)=VOL_$XTUBE(I)-(XFMAX_$XTUBE(I)-
+                         XFMIN_$XTUBE(I))*(ABS(XFMIN_$XTUBE(I))-
+                         RMAX_CM(ICM_$XTUBE))*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*2*
+                         RMAX_CM(ICM_$XTUBE)-(XFMAX_$XTUBE(I)-
+                        XFMIN_$XTUBE(I))**2*ZTHICK_$XTUBE/
+                         (XFMIN_$XTUBE(I)-XBMIN_$XTUBE(I))*
+                         RMAX_CM(ICM_$XTUBE);
+        ]
+      ]
+      ELSEIF(XFMAX_$XTUBE(I)<-RMAX_CM(ICM_$XTUBE))[
+         VOL_$XTUBE(I)=0.;
+      ]
+      VOLTOT_$XTUBE=VOLTOT_$XTUBE+VOL_$XTUBE(I);
+   ]
+   ELSEIF(I=N_$XTUBE+1)["region in front of xtube"
+     IF(XBMAX_$XTUBE(N_$XTUBE)>RMAX_CM(ICM_$XTUBE))[
+       VOL_$XTUBE(I)=0.0;
+     ]
+     ELSEIF(XFMAX_$XTUBE(N_$XTUBE)<-RMAX_CM(ICM_$XTUBE))[
+       VOL_$XTUBE(I)=ZTHICK_$XTUBE*4*RMAX_CM(ICM_$XTUBE)**2;
+     ]
+     ELSE[
+       VOL_$XTUBE(I)=ZTHICK_$XTUBE*(XFMAX_$XTUBE(N_$XTUBE)
+                    -XBMAX_$XTUBE(N_$XTUBE))*
+                    RMAX_CM(ICM_$XTUBE);
+       IF(XFMAX_$XTUBE(N_$XTUBE)>RMAX_CM(ICM_$XTUBE))[
+          VOL_$XTUBE(I)=VOL_$XTUBE(I)-(RMAX_CM(ICM_$XTUBE)-
+                       XBMAX_$XTUBE(N_$XTUBE))*ZTHICK_$XTUBE/
+                       (XFMAX_$XTUBE(N_$XTUBE)-
+                        XBMAX_$XTUBE(N_$XTUBE))*
+                        (XFMAX_$XTUBE(N_$XTUBE)-
+                        RMAX_CM(ICM_$XTUBE))*2*RMAX_CM(ICM_$XTUBE)-
+                        (XFMAX_$XTUBE(N_$XTUBE)-
+                         RMAX_CM(ICM_$XTUBE))**2*ZTHICK_$XTUBE/
+                         (XFMAX_$XTUBE(N_$XTUBE)-
+                        XBMAX_$XTUBE(N_$XTUBE))*
+                        RMAX_CM(ICM_$XTUBE);
+       ]
+       ELSE[
+          VOL_$XTUBE(I)=VOL_$XTUBE(I)+ZTHICK_$XTUBE*
+                       (RMAX_CM(ICM_$XTUBE)-
+                        XFMAX_$XTUBE(N_$XTUBE))*2*
+                        RMAX_CM(ICM_$XTUBE);
+       ]
+       IF(XBMAX_$XTUBE(N_$XTUBE)<-RMAX_CM(ICM_$XTUBE))[
+          VOL_$XTUBE(I)=VOL_$XTUBE(I)-
+                       (ABS(XBMAX_$XTUBE(N_$XTUBE))-
+                       RMAX_CM(ICM_$XTUBE))**2*ZTHICK_$XTUBE/
+                       (XFMAX_$XTUBE(N_$XTUBE)-
+                        XBMAX_$XTUBE(N_$XTUBE))*
+                        RMAX_CM(ICM_$XTUBE);
+       ]
+     ]
+     VOLTOT_$XTUBE=VOLTOT_$XTUBE+VOL_$XTUBE(I)
+   ]
+   ELSEIF(I=N_$XTUBE+2)["xtube holder"
+     IF(XFMIN_$XTUBE(N_$XTUBE)<-RMAX_CM(ICM_$XTUBE))[
+       VOL_$XTUBE(I)=0.;
+     ]"prevents roundoff error indicating there is a vol. when there"
+      "is not one"
+     ELSE[
+     VOL_$XTUBE(I)=ZTHICK_$XTUBE*4*RMAX_CM(ICM_$XTUBE)**2-
+                    VOLTOT_$XTUBE;
+     ]
+   ]
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$XTUBE(I)*RHOR(IRA);
+   ]
+]"end of do loop over regions"
+IF(I_XTRA_$XTUBE=1)["extra central layer"
+   IRA=IRA+1;
+   VOL_$XTUBE(N_$XTUBE+3)=SQRT(HXTRA_$XTUBE**2+(XFMIN_XTRA_$XTUBE-
+                    XBMIN_XTRA_$XTUBE)**2)*DTHICK_$XTUBE(N_$XTUBE)*
+                    WXTRA_$XTUBE;
+   IF(XBMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE) &
+       XBMAX_XTRA_$XTUBE>=-RMAX_CM(ICM_$XTUBE))[
+         IF(XFMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
+           VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMIN_XTRA_$XTUBE-
+                         XBMIN_XTRA_$XTUBE)*HXTRA_$XTUBE*
+                         WXTRA_$XTUBE/2.-(-RMAX_CM(ICM_$XTUBE)-
+                         XFMIN_XTRA_$XTUBE)*HXTRA_$XTUBE*
+                         WXTRA_$XTUBE;
+         ]
+         ELSE[
+           VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                        (ABS(XBMIN_XTRA_$XTUBE)-
+                        RMAX_CM(ICM_$XTUBE))**2*(HXTRA_$XTUBE/
+                        (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE))*
+                        WXTRA_$XTUBE/2.;
+         ]
+   ]
+   ELSEIF(XBMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE) &
+       XBMAX_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
+          IF(XFMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
+            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XBMAX_XTRA_$XTUBE-
+                         XBMIN_XTRA_$XTUBE)*(ABS(XBMAX_XTRA_$XTUBE)-
+                         RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE-(XBMAX_XTRA_$XTUBE-
+                         XBMIN_XTRA_$XTUBE)**2*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE/2.+(-RMAX_CM(ICM_$XTUBE)-
+                         XFMIN_XTRA_$XTUBE)**2/TAN(ANGLE)*
+                         WXTRA_$XTUBE/2.;
+          ]
+          ELSE[
+            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XBMAX_XTRA_$XTUBE-
+                         XBMIN_XTRA_$XTUBE)*(ABS(XBMAX_XTRA_$XTUBE)-
+                         RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE-(XBMAX_XTRA_$XTUBE-
+                         XBMIN_XTRA_$XTUBE)**2*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE/2.;
+          ]
+   ]
+   IF(XFMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE) &
+     XFMIN_XTRA_$XTUBE<=RMAX_CM(ICM_$XTUBE))[
+           IF(XBMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE))[
+             VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                        (XFMAX_XTRA_$XTUBE-
+                        XBMAX_XTRA_$XTUBE)*HXTRA_$XTUBE*
+                        WXTRA_$XTUBE/2.-(XBMAX_XTRA_$XTUBE-
+                        RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE*
+                        WXTRA_$XTUBE;
+           ]
+           ELSE[
+              VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                       (ABS(XFMAX_XTRA_$XTUBE)-
+                        RMAX_CM(ICM_$XTUBE))**2*HXTRA_$XTUBE/
+                        (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                        WXTRA_$XTUBE/2.;
+           ]
+   ]
+   ELSEIF(XFMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE) &
+     XFMIN_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE))[
+        IF(XBMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE))[
+          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMAX_XTRA_$XTUBE-
+                         XFMIN_XTRA_$XTUBE)*(XFMIN_XTRA_$XTUBE-
+                         RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE-(XFMAX_XTRA_$XTUBE-
+                         XFMIN_XTRA_$XTUBE)**2*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE/2.+(XBMAX_XTRA_$XTUBE-
+                         RMAX_CM(ICM_$XTUBE))**2*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE/2.;
+        ]
+        ELSE[
+          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMAX_XTRA_$XTUBE-
+                         XFMIN_XTRA_$XTUBE)*(ABS(XFMIN_XTRA_$XTUBE)-
+                         RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE-(XFMAX_XTRA_$XTUBE-
+                        XFMIN_XTRA_$XTUBE)**2*HXTRA_$XTUBE/
+                         (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
+                         WXTRA_$XTUBE/2.;
+        ]
+   ]
+   ELSEIF(XFMAX_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
+         VOL_$XTUBE(N_$XTUBE+3)=0.;
+   ]
+   VOL_$XTUBE(N_$XTUBE)=VOL_$XTUBE(N_$XTUBE)-VOL_$XTUBE(N_$XTUBE+3);
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$XTUBE(N_$XTUBE+3)*RHOR(IRA);
+   ]
+   IF(DOSE_ZONE(IRA-3).NE.0) [
+      ID=DOSE_ZONE(IRA-3);
+      AMASS(ID)=AMASS(ID)+VOL_$XTUBE(N_$XTUBE)*RHOR(IRA-3);
+   ]
+]
+
+
+
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$XTUBE,TITLE_$XTUBE;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$XTUBE),RMAX_CM(ICM_$XTUBE),
+                    ZTHICK_$XTUBE,ANGLEI;
+WRITE(IOUTLIST,122);
+DO I=N_$XTUBE,1,-1[
+   IF(I=N_$XTUBE)[
+   WRITE(IOUTLIST,124) N_$XTUBE-I+1,'(front)',DTHICK_$XTUBE(I),
+                       XFMAX_$XTUBE(I),XBMAX_$XTUBE(I),
+                       XFMIN_$XTUBE(I),XBMIN_$XTUBE(I);
+   ]
+   ELSE[
+   WRITE(IOUTLIST,123) N_$XTUBE-I+1,DTHICK_$XTUBE(I),
+                       XFMAX_$XTUBE(I),XBMAX_$XTUBE(I),
+                       XFMIN_$XTUBE(I),XBMIN_$XTUBE(I);
+   ]
+]
+IF(I_XTRA_$XTUBE=1)[
+   WRITE(IOUTLIST,127) HXTRA_$XTUBE, WXTRA_$XTUBE;
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$XTUBE-1;
+DO IR_$XTUBE=1,N_$XTUBE+2[
+   IRA = IRA+1;
+   IF(IR_$XTUBE<=N_$XTUBE)[
+      IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,140) IR_$XTUBE,N_$XTUBE-IR_$XTUBE+1,'slab',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+      ]
+      ELSE[
+         WRITE(IOUTLIST,140) IR_$XTUBE,N_$XTUBE-IR_$XTUBE+1,'slab',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$XTUBE=N_$XTUBE+1)[
+       IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,141) IR_$XTUBE,'NA','region',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+       ]
+       ELSE[
+         WRITE(IOUTLIST,141) IR_$XTUBE,'NA','region',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+       ]
+       WRITE(IOUTLIST,142)'in front';
+   ]
+   ELSEIF(IR_$XTUBE=N_$XTUBE+2)[
+       IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,141) IR_$XTUBE,'NA','holder',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+       ]
+       ELSE[
+         WRITE(IOUTLIST,141) IR_$XTUBE,'NA','holder',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+       ]
+    ]
+
+]
+IF(I_XTRA_$XTUBE=1)[
+  IRA=IRA+1;
+  IR_$XTUBE=N_$XTUBE+3;
+  IF(MED(IRA)=0)[
+         WRITE(IOUTLIST,140) IR_$XTUBE,1,'extra',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               'V','a','c','u','u','m';
+  ]
+  ELSE[
+         WRITE(IOUTLIST,140) IR_$XTUBE,1,'extra',
+               ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+               DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+               (MEDIA(J,MED(IRA)),J=1,9);
+  ]
+  WRITE(IOUTLIST,142)' region'
+]
+
+
+110 FORMAT(///'  Component module',I3,' is $XTUBE (Rev 1.5) '
+           /'  ------------------------------------'
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$XTUBE geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm',
+           /T2,'Thickness of target in Z direction = ',F15.5,' cm',
+           /T2,'Angle between the target surface and Z-axis:',F15.5,
+            ' degrees'//
+           /T2,'Note that since XTUBE must be the first CM, there',
+           ' is no airgap at the top.');
+122 FORMAT(/T2,
+'slab #      thickness                      coordinates',
+/T2,
+'                               XFMAX     XBMAX     XFMIN     XBMIN',
+/T2,
+'              (cm)                             (cm)');
+123 FORMAT(T2,I2,F17.3,F17.3,3F10.3);
+124 FORMAT(T2,I2,A7,F10.3,F17.3,3F10.3);
+127 FORMAT(/T2,'Slab 1 has an extra central (target) region with:'/
+            T34,'height = ',F10.3,/
+            T34,'width = ',F10.3);
+130 FORMAT(/T2,'$XTUBE region parameters:',
+           /T2,'------------------------',
+           /T2,'local  slab  location   electron   photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region                   cutoff    cutoff',
+           '   level     max    zone  set',
+/T2,'                         (MeV)     (MeV)    (MeV)    (MeV)');
+140 FORMAT(T2,I3,I7,2X,A8,F11.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T2,I3,A7,2X,A8,F11.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+142 FORMAT(T14,A8);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+ICOLOUR = 1;
+YWIDTH = MIN(RMAX_CM(ICM_$XTUBE),3.);
+IF(IWATCH = 4 | IZLAST = 2) [   "Creat a graphics file "
+  ;$SELECT-COLOUR;
+   DO I =1, N_$XTUBE[
+      WRITE(IOUTGEOM,201) ICOLOUR,'QUAD',
+          XFMIN_$XTUBE(I), YWIDTH,ZMIN_$XTUBE,
+          XBMIN_$XTUBE(I), YWIDTH,ZBACK_$XTUBE,
+          XBMIN_$XTUBE(I),-YWIDTH,ZBACK_$XTUBE,
+          XFMIN_$XTUBE(I),-YWIDTH,ZMIN_$XTUBE;
+   ]
+      WRITE(IOUTGEOM,201) ICOLOUR,'QUAD',
+          XFMAX_$XTUBE(N_$XTUBE), YWIDTH,ZMIN_$XTUBE,
+          XBMAX_$XTUBE(N_$XTUBE), YWIDTH,ZBACK_$XTUBE,
+          XBMAX_$XTUBE(N_$XTUBE),-YWIDTH,ZBACK_$XTUBE,
+          XFMAX_$XTUBE(N_$XTUBE),-YWIDTH,ZMIN_$XTUBE;
+
+201   FORMAT(' ',I1,A4,12(F7.2,','));
+
+   ]"End of graphics output"
+;RETURN;
+END; "end of subroutine ISUMRY_$XTUBE"
+
+%E   "start of subroutine HOWNEAR_$XTUBE (Rev 1.5)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_$XTUBE
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary.
+" Called from HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$XTUBE(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$XTUBE,STACK,CMs/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      Z_TMP; "T> Z of particle relative to Z of centre of XTUBE
+
+IR_$XTUBE = IR(NP) - IRSTART_$XTUBE + 1;"local region number (relative)"
+Z_TMP=Z(NP)-ZMIN_$XTUBE-ZTHICK_$XTUBE/2.;
+IF(I_XTRA_$XTUBE=1 & IR_$XTUBE = N_$XTUBE + 3)[
+"in extra region in outermost target layer"
+     DIST=MIN( Z(NP)-(ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.),
+     ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.-Z(NP),
+     (X(NP)-XBMIN_$XTUBE(N_$XTUBE))*COS(ANGLE)
+        -(ZBACK_$XTUBE-Z(NP))*SIN(ANGLE),
+     (ZBACK_$XTUBE-Z(NP))*SIN(ANGLE)
+      -(X(NP)-XBMAX_$XTUBE(N_$XTUBE))*COS(ANGLE),
+      WXTRA_$XTUBE/2.-ABS(Y(NP)));
+]
+ELSEIF(IR_$XTUBE > 0 & IR_$XTUBE <= N_$XTUBE )[   "local region 1 to N"
+     DIST=MIN( Z(NP)-ZMIN_$XTUBE,  "distance to the top surface"
+     ZBACK_$XTUBE-Z(NP),      "distance to the bottom"
+     (X(NP)-XBMIN_$XTUBE(IR_$XTUBE))*COS(ANGLE)
+        -(ZBACK_$XTUBE-Z(NP))*SIN(ANGLE), "distance to the side"
+     (ZBACK_$XTUBE-Z(NP))*SIN(ANGLE)
+      -(X(NP)-XBMAX_$XTUBE(IR_$XTUBE))*COS(ANGLE)"distance to the side"
+     );
+     IF(IR_$XTUBE = N_$XTUBE & I_XTRA_$XTUBE=1)[
+        IF(ABS(Z_TMP)>HXTRA_$XTUBE/2. & ABS(Y(NP))>WXTRA_$XTUBE/2.)[
+           DIST=MIN(DIST,SQRT((Z_TMP-HXTRA_$XTUBE/2.)**2+(Y(NP)-
+                WXTRA_$XTUBE/2.)**2));
+        ]
+        ELSEIF(ABS(Z_TMP)>=HXTRA_$XTUBE/2.)[
+           DIST=MIN(DIST,ABS(Z_TMP)-HXTRA_$XTUBE/2.);
+        ]
+        ELSE[
+           DIST=MIN(DIST,ABS(Y(NP))-WXTRA_$XTUBE/2.);
+        ]
+     ]
+]
+ELSEIF(IR_$XTUBE=N_$XTUBE+1)["the air region in front of the target"
+  DIST=MIN( Z(NP)-ZMIN_$XTUBE,  "distance to the top surface"
+     ZBACK_$XTUBE-Z(NP),      "distance to the bottom"
+     (X(NP)-XBMAX_$XTUBE(N_$XTUBE))*COS(ANGLE)
+        -(ZBACK_$XTUBE-Z(NP))*SIN(ANGLE) "distance to the side"
+     );
+]
+ELSEIF(IR_$XTUBE=N_$XTUBE+2)["the target holder"
+     DIST=MIN( Z(NP)-ZMIN_$XTUBE,  "distance to the top surface"
+     ZBACK_$XTUBE-Z(NP),      "distance to the bottom"
+     (ZBACK_$XTUBE-Z(NP))*SIN(ANGLE)
+        -(X(NP)-XBMIN_$XTUBE(1))*COS(ANGLE)"distance to the side"
+     );
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$XTUBE(Rev 1.5)"
+
+"*******************************************************************************
+"End of XTUBE_cm.mortran (Rev 1.5)"

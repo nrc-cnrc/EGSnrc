@@ -1,0 +1,2295 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: multi-leaf collimator                     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Hugo Palmans, 1998                                        "
+"                   Kristiaan De Vlamynck, 1998                               "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This component module was originally derived from existing BEAM MLC        "
+"  component modules, and contributed back to NRC by the authors. The final   "
+"  version was extensively reworked by Blake Walters at NRC.                  "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             **************               ""toc:
+"                             *            *               ""toc:
+"                             *   MLCQ     *               ""toc:
+"                             *            *               ""toc:
+"                             **************               ""toc:
+"
+"   Programmers: Hugo Palmans and Kristiaan De Vlamynck
+"                University of Gent
+"
+"   Sept '98: Development version delivered to NRC
+"   Mar  '99: Version 1.0 -- significant changes made from development version
+"                            by Blake Walters
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  It will be used to model a multi-leaf
+"   collimator with the leaves having rounded ends.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module in
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+"
+"   1>. This module can be used as a single focus multileaf collimator with
+"       rounded leaf ends.
+"   2>. Leaf direction can be parallel to the x or y axis.
+"   3>. Leaves all have equal width, and are symmetrically arranged
+"       about the x axis (if they are parallel to the x axis) or y axis
+"       (if they are parallel to the y axis).
+"   4>. Each leaf has two separate parts which can be moved in the leaf
+"       direction independently.
+"   5>. Rules to obey:
+"           i.  Input the top z coordinates  as ZMIN_$MLCQ
+"               and thickness respectively.
+"           ii. Input the num of leaf and the total width of the leaf, each
+"               leaf will have equal width.
+"           iii. All leaf have the same material structures.
+"           iv. Any of the collimator structure that is not broken up
+"               into leaves (ie the total width of the leaves does not
+"               extend to RMAX_CM) is made of the same material as the leaves.
+"           v.  Input the focus point for the leaf sides, the radius of the
+"               leaf ends and the Z of the point from which the leaf radius
+"               is measured.
+"
+;
+"I>
+"I> Geometry of MLCQ:
+"I> *********************
+"I>                                 top view
+"I>
+"I>            ------------------------------------------------
+"I>                                |
+"I>            ------------------------------------------------
+"I>                           |           |
+"I>           -----------------           ---------------------
+"I>                      |        opening     |
+"I>           ---------------     (IR=1)      -----------------
+"I>                         |                 |
+"I>           ------leaves--------      -----------------------
+"I>                 (IR=2)      |     |
+"I>           --------------------------------------------------
+"I>                                  |
+"I>           --------------------------------------------------
+"I>
+;
+"I>       cross-section through leaves taken perpendicular to leaves
+"I>
+"I>                               * ZFOCUS(1)
+"I>                           .   .   .
+"I>                       .    . .|. .    .
+"I> - - - - - - -     .     .   . | .   .     .
+"I> airgap(IR=3)  .      .     .  |  .     .      .
+"I>     -------- ------ ------ ---|--- ------ ------ ---------
+"I>   leaf     / leaf / leaf /leaf|leaf\ leaf  \ leaf \  leaf
+"I>   1    /    2  /     3  /  4  | 5   \  6     \  7    \  8
+"I>    /        /          /      |      \          \        \
+"I>    -------- ---------- -------|------- ---------- --------- -
+"I>                            Z-axis
+;
+"I>            cross-section through leaf taken || to leaf
+"I>
+"I>                               * ZFOCUS(2)
+"I>  - - - - - - - - - - - -    . | .
+"I>  airgap(IR=3)              .  |  .
+"I>     ------------------        |        --------------------
+"I>        negative leaf   \             / positive leaf
+"I>             R0LEAF      \     |     /
+"I>          *<-----------> |     |     | <----------->* (XYL0LEAF_P,Z0LEAF)
+"I> (XYL0LEAF_N,Z0LEAF)    /      |      \   R0LEAF
+"I>    -------------------        |        ----------------------
+"I>                            Z-axis
+;
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |             Region            | Description         |
+"I>            |-------------------------------|---------------------|
+"I>            |  absolute       | local       |                     |
+"I>            |-----------------|-------------|                     |
+"I>            |                 |             |                     |
+"I>            |IRSTART_MLC      | IR_MLC      |  as shown in above  |
+"I>            |  +IR_MLC-1      |             |    (1 to 3)         |
+"I>            |                 |             |                     |
+"I>            |                 |             |                     |
+"I>            -------------------------------------------------------
+"I>
+
+
+" Subroutines:
+" ************
+"                      INPUT_$MLCQ
+"                      ISUMRY_$MLCQ
+"                      HOWFAR_$MLCQ
+"                      WHERE_AM_I_$MLCQ
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             *******************
+"
+"*******************************************************************************
+;
+"
+"                               INPUT FROM UNIT 5
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$MLCQ
+"I>  **************
+"I>  -1  Dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$MLCQ) (F10.0):  Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$MLCQ (60A1):  Title of CM.
+"I>
+"I>   2  IDMLFC_$MLCQ (I5) = 0 for leaves parallel to Y direction
+"I>                       = 1 for leaves parallel to X direction
+"I>
+"I>   3  ZMIN_$MLCQ (F15.0): Z of top of collimator (excluding airgap)
+"I>
+"I>   4  ZTHICK_$MLCQ (F15.0): Thickness of the leaves (cm)
+"I>
+"I>   5  NUM_LEAF_$MLCQ, TWIDTH_$MLCQ (I5,F15.0)
+"I>
+"I>           NUM_LEAF_$MLCQ: Number of leaves
+"I>           TWIDTH_$MLCQ:   Total width of leaves in X (IDMLFC_$MLCQ=0)
+"I>                          or Y (IDMLFC_$MLCQ=1) direction (cm)
+"I>
+"I>        Note: width of each leaf = TWIDTH_$MLCQ/NUM_LEAF_$MLCQ
+"I>
+"I>   6  ZFOCUS_$MLCQ(1) (F15.0): Focal point on Z-axis of leaf sides (ie.
+"I>                              imaginary lines drawn extending the slopes of
+"I>                              the leaf sides will all intersect the Z-axis
+"I>                              at this point)
+"I>
+"I>        Note restriction: ZFOCUS_$MLCQ(1) < ZMIN_$MLCQ or
+"I>                                         > ZMIN_$MLCQ + ZTHICK_$MLCQ
+"I>
+"I>   7  R0LEAF_$MLCQ,Z0LEAF_$MLCQ (2F15.0)
+"I>
+"I>           R0LEAF_$MLCQ: Radius of leaf ends in cm.
+"I>           Z0LEAF_$MLCQ: Z where radius of leaf ends originates in cm.
+"I>
+"I>      Note restrictions: 1. ZMIN_$MLCQ < Z0LEAF_$MLCQ <
+"I>                                          ZMIN_$MLCQ + ZTHICK_$MLCQ
+"I>                         2. R0LEAF_$MLCQ >
+"I>                           MAX(ZMIN_$MLCQ+ZTHICK_$MLCQ-Z0LEAF_$MLCQ,
+"I>                                Z0LEAF_$MLCQ-ZMIN_$MLCQ)
+;
+"I>      Repeat 8 until coordinates of all leaves are defined once.  Leaves
+"I>      are numbered 1,2,...NUM_LEAF_$MLCQ, where numbering goes from left
+"I>      to right in the X-Y plane if IDMLFC_$MLCQ=0 and from top to bottom
+"I>      in the X-Y plane if IDMLFC_$MLCQ=1.
+"I>
+"I>   8  X0N_$MLCQ, X0P_$MLCQ, NUM_$MLCQ (2F15.0,I5)
+"I>
+"I>        X0N_$MLCQ:   Y (IDMLFC_$MLCQ=0) or X (IDMLFC_$MLCQ=1)
+"I>                     of origin of radius of negative part of leaf I
+"I>        XOP_$MLCQ:   Y (IDMLFC_$MLCQ=0) or X (IDMLFC_$MLCQ=1)
+"I>                     of origin of radius of positive part of leaf I
+"I>        NUM_$MLCQ:   Apply X0N_$MLCQ and X0P_$MLCQ to leaves
+"I>                     I,...,I+NUM_$MLCQ-1.  Defaults to 1 if set <= 0.
+"I>                     Defaults to NUM_LEAF_$MLCQ-I+1 if set >
+"I>                     NUM_LEAF_$MLCQ-I+1
+"I>
+"I>    9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 1
+"I>                                          (inside collimator) (2F15.0,I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>   10  MED_IN (24A1):  Medium of in local region 1 (inside collimator)
+"I>                      used to set MED_INDEX.
+"I>
+"I>   11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2
+"I>                                          (collimator leaves) (2F15.0,I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>   12  MED_IN (24A1):  Medium of local region 2 (collimator leaves),
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example defines a multi-leaf collimator
+"I>   that starts at Z=65 cm and has 64 tungsten leaves opening
+"I>   in the X direction.  The leaves are each 0.8125cm wide and 7.5cm
+"I>   thick.  The Z focus of the leaf sides is at Z=-1000 cm, resulting
+"I>   in sides that are essentially straight up and down.  The radius
+"I>   of the leaf ends is 10cm and has a Z origin of 65cm (ie ZMIN),
+"I>   The unique position of the Z origin of the radius means that the X
+"I>   dimensions of the opening in each leaf at the top of the collimator
+"I>   (ZMIN) will be given by X0N+10 - X0P-10 cm.
+"I>   In this example, the X origins of the radii of the individual leaves
+"I>   are chosen to create an irregular off-center collimator opening.
+"I>
+"I>   Electrons and photons in both the collimator and the opening regions
+"I>   will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+"I>   PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+"I>   in dose zone 2, and dose deposited in the opening will be stored
+"I>   in dose zone 1.
+"I>
+"I>   26.0,           RMAX_CM
+"I>   Collimator based on MLC for MM50 accelerator
+"I>   1,              Leaves open in X direction
+"I>   65.0,           ZMIN
+"I>   7.5,            ZTHICK
+"I>   64, 52.0,       NUM_LEAF, TWIDTH
+"I>   -1000.0,        ZFOCUS(1)
+"I>   10.0,65.0       R0LEAF,Z0LEAF
+"I>   -10.0,10.0,15,  15 leaves closed at top
+"I>   -10.0,12.0,5,   5 leaves with opening 0.0 - 2.0 at top
+"I>   -9.5,13.0,2     2 leaves with 0.5 - 3.0 at top
+"I>   -9.0,14.0,3     3 leaves with 1.0 - 4.0 at top
+"I>   -8.0,17.0,10,   10 leaves with opening 2.0 - 7.0 at top
+"I>   -8.5,16.0
+"I>   -9.0,16.0
+"I>   -10.0,15.0,3,   3 leaves with 0.0 - 5.0 at top
+"I>   -11.0,14.0,5,   5 leaves with -1.0 - 4.0 at top
+"I>   -12.0,14.0,3,   3 leaves with -2.0 - 4.0 at top
+"I>   -14.0,14.0,5,   5 leaves with -4.0 - 4.0 at top
+"I>   -15.0,13.0
+"I>   -16.0,11.0
+"I>   -18.0,10.0
+"I>   -20.0,8.0,3,    3 leaves with -10.0 - -2.0 at top
+"I>   -22.0,8.0,2,    2 leaves with -12.0 - -2.0 at top
+"I>   -25.0,7.0,2,    2 leaves with -15.0 - -3.0 at top
+"I>   -25.0,-5.0
+"I>   0.5210,  0.010,  1,  0
+"I>   AIR700ICRU
+"I>   0.5210,  0.010,  2,  0
+"I>   W700ICRU
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+
+%E "start of subroutine HOWFAR_$MLCQ (Rev 1.5)"
+"*******************************************************************************
+"************************** Component Module MLC *****************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_$MLCQ
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module MLC, if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_$MLCQ local regions + an air gap (if present):
+"
+"  local              absolute                       description
+"--------   ------------------------------     ----------------------
+" IR_$MLCQ   IR_start_CM(ICM_$MLCQ)+IR_$MLCQ-1    exclude front air gap
+"--------   ------------------------------     -----------------------
+"   Geometrical co-ordinates, as set in INPUT_$MLCQ are:
+"
+"   ZFRONT_$MLCQ     front of CM (upstream surface, air region)
+"   ZMIN_$MLCQ       front of cone
+"   ZBACK_$MLCQ      back of cone
+"   RMAX_$MLCQ       radius of last cylinder (largest)
+"
+"******************************************************************************
+;
+;SUBROUTINE HOWFAR_$MLCQ;
+Copyright NRC 1999
+
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH {
+   {P1}=MIN({P1}+1.0E-5,USTEP);
+  ";IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]"
+}
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$MLCQ,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$MLCQ
+"T>**********************************
+"T>
+INTEGER
+   COUNT, COUNT1, JDEBUG, KINC,
+   IRL,             "T>local region number (absolute), required by HOWNEAR macro
+   J_$MLCQ, IDIR,
+   I, J, K,L,       "T>loop control
+   IZU_D, IXYU_D;   "T>to indicate the relations bet ustep and dist
+
+
+$REAL
+   XYL(2),    "T>rearranged x and y coordinates
+   DIST,      "T>farest distance to z boundary along current particle trajectory
+   XYFL(2),   "T>temporary variable
+   UVL(2),    "T>temporary variable
+   ZFL,
+   TEMP,TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,
+   TEMPX1,TEMPX2,TEMPZ1,TEMPZ2,TEMPOLD,TEMP1OLD,TEMP2OLD,
+   CUT_COEL(2), CUT_COE_TMP(2), CUT_COE,
+   STEP_UNIT, STEP_UNITOLD,BDYTOL,one;
+parameter (one = 1);
+
+
+" prepare the local variables
+"=============================
+
+BDYTOL=$BDY_TOL;
+
+IRL = IR(NP); "local region number (absolute)
+IR_$MLCQ = IRL - IRSTART_$MLCQ + 1;   "local region number( relative )
+IF(IDMLFC_$MLCQ=1) [
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);
+]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+;
+
+STEP_UNIT=0.0;
+STEP_UNITOLD=0.0;  " this one will be used to control the cut_coe in the loop
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module GAPPLIR,if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM or regions in z direction
+"      2.                        the regions in xy directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap check if existed.
+"=====================================
+
+
+IF(N_GAP_$MLCQ=1 & IR_$MLCQ=3 ) "  check the air gap first
+[
+   IF(W(NP)>0.0)
+   ["particle going forward"
+      DIST = (ZMIN_$MLCQ - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [ " particle going forward"
+          USTEP=0.0;
+          $MLCQ_UP_DOWN_REGION_ALLOCATION(UP,IR_$MLCQ, 0.0);
+          IF( IR_$MLCQ=1 )
+          [  IRNEW =IRSTART_$MLCQ; RETURN;]
+          ELSE[IRNEW =IRSTART_$MLCQ+1; RETURN;]
+      ] " double check if a particle is out of the AIR GAP
+
+   ]
+   ELSEIF(W(NP)<0.0)
+   [ " particle going backward"
+      DIST = (ZFRONT_$MLCQ - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=1.E-16; "ensures call to ausgab on leaving CM"
+          CALL WHERE_AM_I(ICM_$MLCQ,-1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+]
+ELSEIF(IR_$MLCQ=1 | IR_$MLCQ=2)  " in the local region 1 or 2
+[
+   IF(W(NP) > 0.0)
+   [  "particle going forward"
+      DIST = (ZMAX_$MLCQ - Z(NP))/W(NP); "distance to back of CM
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IZU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IZU_D=1; ]
+      IF(DIST <=0.0)
+      [
+          USTEP=1.E-16;
+          CALL WHERE_AM_I(ICM_$MLCQ,1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+   ELSEIF(W(NP) < 0.0)
+   [  "particle going backward"
+      DIST = (ZMIN_$MLCQ - Z(NP))/W(NP); "distance to back of CM "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IZU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IZU_D=1; ]
+      IF(DIST <= 0.0)
+      [
+          USTEP=0.0;
+          IF(N_GAP_$MLCQ = 1)
+          [ IRNEW =IREND_$MLCQ; RETURN; ]
+          ELSE[ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$MLCQ,-1); RETURN; ]
+      ] " double check if a particle is out of the main body to air gap
+   ]
+   ELSE[ IZU_D=0; STEP_UNIT=USTEP;]  " for w(np)=0.0 case
+]
+
+" end of z direction check
+"=========================
+
+" now do the check in XY direction
+"================================
+"Note: in some unusual cases, if the particle z(np)=zcorner_gapplir(i),
+"      the folloing block may print out the error message, but it is not an
+"      error!!
+
+
+JDEBUG=JDEBUG+1; " for debug index
+IF(IR_$MLCQ=1|IR_$MLCQ=2 )
+[
+   IF(XYL(1)>0.0)[ L=2; ]
+   ELSEIF(XYL(1)<0.0)[L=1;]
+   ELSEIF(UVL(1)<0.0)[L=1;]
+   ELSE[L=2;]
+   DO I=1,LEAF_OPEN_$MLCQ(L)[
+      TEMP= XYL(1)-SURPARA1_$MLCQ(L,I,4)*(Z(NP)-ZFOCUS_$MLCQ(1));
+      IF((TEMP<=0.0 & L=2) | (TEMP>=0.0 & L=1))[EXIT;]
+   ]
+   "IF(I>LEAF_OPEN_$MLCQ(L) & IR_$MLCQ=1)[
+      ";$MLCQ_REGION_RESET_WARNNING_MACRO(1);
+   "]
+   "ELSEIF(OPEN_IND_$MLCQ(L,I)=1)[
+   "   TEMP1=SQRT((XYL(2)-XYL0LEAF_P_$MLCQ(L,I))**2+
+   "              (Z(NP)-Z0LEAF_$MLCQ)**2)-R0LEAF_$MLCQ;
+   "   TEMP2=SQRT((XYL(2)-XYL0LEAF_N_$MLCQ(L,I))**2+
+   "              (Z(NP)-Z0LEAF_$MLCQ)**2)-R0LEAF_$MLCQ;
+   "   IF( ( (TEMP1>1.E-4  & TEMP2>1.E-4) |
+   "         (TEMP1=0.0 & (XYL0LEAF_P_$MLCQ(L,I)-XYL(2))*UVL(2)+
+   "                      (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 & TEMP2~=0.0) |
+   "         (TEMP2=0.0 & (XYL0LEAF_N_$MLCQ(L,I)-XYL(2))*UVL(2)+
+   "                      (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 & TEMP1~=0.0) )
+   "         & IR_$MLCQ=2)[
+           ";$MLCQ_REGION_RESET_WARNNING_MACRO(0);
+   "   ]
+   "   ELSEIF( ( (TEMP1 < -1.E-4 | TEMP2 < -1.E-4) |
+   "             (TEMP1 = 0.0 & (XYL0LEAF_P_$MLCQ(L,I)-XYL(2))*UVL(2)+
+   "                      (Z0LEAF_$MLCQ-Z(NP))*W(NP)>0.0  & TEMP2~=0.0) |
+   "             (TEMP2 = 0.0 & (XYL0LEAF_N_$MLCQ(L,I)-XYL(2))*UVL(2)+
+   "                      (Z0LEAF_$MLCQ-Z(NP))*W(NP)>0.0 & TEMP1~=0.0) )
+   "             & IR_$MLCQ=1)[
+          ";$MLCQ_REGION_RESET_WARNNING_MACRO(1);
+   "   ]
+   "]
+]
+
+
+" end of the double check in XY direction
+"========================================
+
+
+
+" now in the main body of the module
+"===================================
+
+" do the region 1 first
+"======================
+
+IF(IR_$MLCQ = 1)
+[   "local region 1
+   IF(UVL(1)*XYL(1)<0.0)[ J=-I; ]
+   ELSE [ J=I; ]
+
+   LOOP
+   [  " make sure here k never be zero.
+      IF(UVL(1)<0.0)    " particle is going to the negative dircetion
+      [                 " perpendicularly to the leaf direction
+         IF(J=0) [J=J+1; L=1;K=J;]      " in fortran no 0 subindex
+         ELSEIF(J<0) [ K=-J; L=2;]  " l=2 for positive component
+         ELSE[ K=J; L=1;]           " l=1 for negative component
+      ]
+      ELSEIF(UVL(1)>0.0)    " particle is going to the positive dircetion
+      [                 " perpendicularly to the leaf direction
+         IF(J=0) [J=J+1; L=2; K=J;]      " in fortran no 0 subindex
+         ELSEIF(J<0) [ K=-J; L=1;]  " l=2 for positive component
+         ELSE[ K=J; L=2;]               " l=1 for negative component
+      ]
+      ELSE                  "UVL(1)=0.0 CASE
+      [
+          IF(XYL(1)<0.0) [ L=1; K=J;]
+          ELSE [L=2; K=J;]
+      ]
+      CUT_COE=0.0;
+      CUT_COEL(1)=0.0;
+      CUT_COEL(2)=0.0;
+      CUT_COE_TMP(1)=0.0;
+      CUT_COE_TMP(2)=0.0;
+      TEMP1=UVL(1)-SURPARA1_$MLCQ(L,K,4)*W(NP);
+      IF(TEMP1=0.0)[CUT_COE_TMP(1)=0.0;]
+      ELSE
+      [
+         CUT_COE_TMP(1)=(  UP_COORD1_$MLCQ(L,K) - XYL(1)
+                         + SURPARA1_$MLCQ(L,K,4)*(Z(NP)-ZMIN_$MLCQ) )
+                           /TEMP1;
+      ]
+      IF(K-1=0)[ TEMP2=UVL(1);]
+      ELSE[ TEMP2=UVL(1)-SURPARA1_$MLCQ(L,K-1,4)*W(NP); ]
+      IF(TEMP2=0.0)[CUT_COE_TMP(2)=0;]
+      ELSE
+      [
+       IF(K-1=0)
+       [
+           CUT_COE_TMP(2)= - XYL(1)/TEMP2;
+       ]
+       ELSE
+       [
+          CUT_COE_TMP(2)=(  UP_COORD1_$MLCQ(L,K-1) - XYL(1)
+                         + SURPARA1_$MLCQ(L,K-1,4)*(Z(NP)-ZMIN_$MLCQ) )
+                           /TEMP2;
+       ]
+      ]
+      IF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+      [ CUT_COEL(1)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      ELSE [ CUT_COEL(1)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      IF(CUT_COEL(1)=CUT_COE_TMP(2))
+      [ KINC=1; IF(J<0) [ J=J+1;] ELSE[J=J-1;] ]
+      ELSE[ KINC=0; IF(J<0) [ J=J-1;] ELSE[J=J+1;] ]
+      IF((CUT_COEL(1)>STEP_UNITOLD & CUT_COEL(1)<=STEP_UNIT))[
+        "| (CUT_COEL(1)<0.0 & CUT_COEL(1)>-1.E-5))["
+"second condition is to deal with rebound particles"
+         IXYU_D=1;
+      ]
+      ELSE[
+         IXYU_D=0;
+         CUT_COEL(1)=STEP_UNIT;
+      ]
+      IF(K<=LEAF_OPEN_$MLCQ(L) & OPEN_IND_$MLCQ(L,K)=1)
+      [
+       TEMP3=UVL(2)**2+W(NP)**2;
+       TEMP4=UVL(2)*(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))
+        +W(NP)*(Z(NP)-Z0LEAF_$MLCQ);
+       TEMP5=(Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))**2;
+       IF(TEMP4>=0.0 | TEMP3=0.0)[CUT_COE_TMP(1)=1.0E6;]
+       ELSE[
+         TEMP5=TEMP5-(R0LEAF_$MLCQ)**2;
+         IF(TEMP5 < 0.0)[TEMP5=0.0;]
+         TEMP3=TEMP4**2 - TEMP3*TEMP5;
+         IF(TEMP3 < 0.0)[CUT_COE_TMP(1)=1.0E6;]
+         ELSE[
+           IF(TEMP5/(TEMP4**2) < 1.0E-3)[
+              CUT_COE_TMP(1)=-0.5*TEMP5/TEMP4;
+           ]
+           ELSE[
+              IF(SQRT(TEMP3)-TEMP4~=0.0)[
+                CUT_COE_TMP(1)=TEMP5/(SQRT(TEMP3)-TEMP4);
+              ]
+              ELSE[CUT_COE_TMP(1)=1.0E6;]
+           ]
+         ]
+       ]
+       TEMP3=UVL(2)**2+W(NP)**2;
+       TEMP4=UVL(2)*(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))
+        +W(NP)*(Z(NP)-Z0LEAF_$MLCQ);
+       TEMP5=(Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))**2;
+       IF(TEMP4>=0.0 | TEMP3=0.0)[CUT_COE_TMP(2)=1.0E6;]
+       ELSE[
+         TEMP5=TEMP5-(R0LEAF_$MLCQ)**2;
+         IF(TEMP5 < 0.0)[TEMP5=0.0;]
+         TEMP3=TEMP4**2 - TEMP3*TEMP5;
+         IF(TEMP3 < 0.0)[CUT_COE_TMP(2)=1.0E6;]
+         ELSE[
+           IF(TEMP5/(TEMP4**2) < 1.0E-3)[
+              CUT_COE_TMP(2)=-0.5*TEMP5/TEMP4;
+           ]
+           ELSE[
+              IF(SQRT(TEMP3)-TEMP4~=0.0)[
+                CUT_COE_TMP(2)=TEMP5/(SQRT(TEMP3)-TEMP4);
+              ]
+              ELSE[CUT_COE_TMP(2)=1.0E6;]
+           ]
+         ]
+       ]
+       IF(CUT_COE_TMP(1)=0.0 | CUT_COE_TMP(2)=0.0)[
+          CUT_COEL(2)=0.0;
+       ]
+       ELSEIF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+       [ CUT_COEL(2)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+       ELSE [ CUT_COEL(2)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      ]
+      ELSE[ CUT_COEL(2)=-1.0E5; ]
+      IF(CUT_COEL(2)=0.0 & STEP_UNITOLD=0.)[
+         CUT_COE=CUT_COEL(2);
+         $GEO_SHIFT_1_(CUT_COE);
+         USTEP=CUT_COE;
+         IF((CUT_COE_TMP(1)=0.0 &
+            (XYL0LEAF_P_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)>0.0) |
+             (CUT_COE_TMP(2)=0.0 &
+            (XYL0LEAF_N_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)>0.0))[
+             IRNEW=IRSTART_$MLCQ+1;
+             RETURN;
+         ]
+      ]
+      ELSEIF(  CUT_COEL(2)>0.0 & CUT_COEL(2)> STEP_UNITOLD
+       & CUT_COEL(2)< CUT_COEL(1) )
+      [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IRNEW=IRSTART_$MLCQ+1;
+       RETURN;
+      ]
+      ELSEIF(CUT_COEL(2)=CUT_COEL(1) & IXYU_D=0 )
+      [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IF(IZU_D=1)
+       [
+          IF(W(NP)<0.0 & N_GAP_$MLCQ=1)
+          [ IRNEW=IREND_$MLCQ; RETURN;]
+          ELSE
+          [
+             IDIR=SIGN(one,W(NP));
+             CALL WHERE_AM_I(ICM_$MLCQ, IDIR );
+             RETURN;
+          ]
+       ]
+       ELSE [IRNEW=IRSTART_$MLCQ+1;RETURN; ]
+      ]
+      ELSEIF(IXYU_D=0)
+      [
+       IF(IZU_D=1)
+       [
+         $GEO_SHIFT_1_(STEP_UNIT);
+         USTEP=STEP_UNIT;
+         IF(W(NP)>0.0)
+         [ CALL WHERE_AM_I(ICM_$MLCQ,1); RETURN;]
+         ELSEIF(W(NP)<0.0 & N_GAP_$MLCQ=0)
+         [ CALL WHERE_AM_I(ICM_$MLCQ,-1); RETURN;]
+         ELSEIF(W(NP)<0.0)[ IRNEW=IREND_$MLCQ; RETURN;]
+       ]
+       ELSE[ RETURN;]
+      ]
+      ELSE
+      [
+        IF(K>=LEAF_OPEN_$MLCQ(L) & KINC=0 )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLCQ+1;
+            RETURN;
+        ]
+        XYFL(2)=XYL(2)+CUT_COEL(1)*UVL(2);
+        ZFL=Z(NP)+CUT_COEL(1)*W(NP);
+        IF(UVL(1)<0.0)
+        [
+           IF(J=0) [J=J+1; L=1;]
+           IF(J<0) [ K=-J; L=2;]
+           ELSE[ K=J; L=1;]
+        ]
+        ELSE
+        [
+           IF(J=0) [J=J+1; l=2;]
+           IF(J<0) [ K=-J; L=1;]
+           ELSE[ K=J; L=2;]
+        ]
+
+        TEMP3=(XYFL(2)-XYL0LEAF_P_$MLCQ(L,K))**2+(ZFL-Z0LEAF_$MLCQ)**2;
+        IF(TEMP3=0.0)
+        [TEMP1=R0LEAF_$MLCQ;]
+        ELSE
+        [
+          TEMP3=SQRT(TEMP3);
+          IF (XYFL(2)<XYL0LEAF_P_$MLCQ(L,K))
+          [
+            TEMPZ1=Z0LEAF_$MLCQ
+             +R0LEAF_$MLCQ*(ZFL-Z0LEAF_$MLCQ)/TEMP3;
+            IF(TEMPZ1<ZMIN_$MLCQ)
+            [
+              TEMP1=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+               +(ZFL-ZMIN_$MLCQ)**2;
+              TEMP1=SQRT(TEMP1);
+              IF(TEMP3>R0LEAF_$MLCQ)
+              [TEMP1=-TEMP1;]
+            ]
+            ELSE
+            [
+              IF(TEMPZ1>ZMAX_$MLCQ)
+              [
+                TEMP1=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+                 +(ZFL-ZMAX_$MLCQ)**2;
+                TEMP1=SQRT(TEMP1);
+                IF(TEMP3>R0LEAF_$MLCQ)
+                [TEMP1=-TEMP1;]
+              ]
+              ELSE
+              [
+                TEMP1=R0LEAF_$MLCQ-TEMP3;
+              ]
+            ]
+          ]
+          ELSE
+          [
+            TEMP4=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMIN_$MLCQ)**2;
+            TEMP5=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMAX_$MLCQ)**2;
+            TEMP1=MIN(TEMP4,TEMP5);
+            TEMP1=SQRT(TEMP1);
+          ]
+        ]
+        IF(TEMP1=0. & UVL(2)<0.)TEMP1=-1.;
+
+        TEMP3=(XYFL(2)-XYL0LEAF_N_$MLCQ(L,K))**2+(ZFL-Z0LEAF_$MLCQ)**2;
+        IF(TEMP3=0.0)
+        [TEMP2=-R0LEAF_$MLCQ;]
+        ELSE
+        [
+          TEMP3=SQRT(TEMP3);
+          IF (XYFL(2)>XYL0LEAF_N_$MLCQ(L,K))
+          [
+            TEMPZ1=Z0LEAF_$MLCQ
+             +R0LEAF_$MLCQ*(ZFL-Z0LEAF_$MLCQ)/TEMP3;
+            IF(TEMPZ1<ZMIN_$MLCQ)
+            [
+              TEMP2=(XYFL(2)-UP_COORD2_N_$MLCQ(L,K))**2
+               +(ZFL-ZMIN_$MLCQ)**2;
+              TEMP2=SQRT(TEMP2);
+              IF(TEMP3<R0LEAF_$MLCQ)
+              [TEMP2=-TEMP2;]
+            ]
+            ELSE
+            [
+              IF(TEMPZ1>ZMAX_$MLCQ)
+              [
+                TEMP2=(XYFL(2)-DOWN_COORD2_N_$MLCQ(L,K))**2
+                 +(ZFL-ZMAX_$MLCQ)**2;
+                TEMP2=SQRT(TEMP2);
+                IF(TEMP3<R0LEAF_$MLCQ)
+                [TEMP2=-TEMP2;]
+              ]
+              ELSE
+              [
+                TEMP2=TEMP3-R0LEAF_$MLCQ;
+              ]
+            ]
+          ]
+          ELSE
+          [
+            TEMP4=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMIN_$MLCQ)**2;
+            TEMP5=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMAX_$MLCQ)**2;
+            TEMP2=MIN(TEMP4,TEMP5);
+            TEMP2=-SQRT(TEMP2);
+          ]
+        ]
+        IF(TEMP2=0. & UVL(2)>0.)TEMP2=1.;
+
+        IF( ( TEMP1<0.0 & TEMP2>0.0 & IR_$MLCQ=2 )
+           |( TEMP1*TEMP2>0.0 & IR_$MLCQ = 1)
+          | (OPEN_IND_$MLCQ(L,K)=0 & IR_$MLCQ = 1) )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLCQ+1;
+            RETURN;
+        ]
+      ]
+      STEP_UNITOLD=CUT_COEL(1);
+   ]  " will auto end the loop
+
+]            " end of the region 1
+
+ELSEIF(IR_$MLCQ = 2)
+[ "particle in region 2
+   IF(UVL(1)*XYL(1)<0.0)[ J=-I; ]
+   ELSE [ J=I; ]
+   LOOP
+   [
+      IF(UVL(1)<0.0)    " particle is going to the negative dircetion
+      [                 " perpendicularly to the leaf direction
+         IF(J=0) [J=J+1; L=1;K=J;]      " in fortran no 0 subindex
+         ELSEIF(J<0) [ K=-J; L=2;]  " l=2 for positive component
+         ELSE[ K=J; L=1;]           " l=1 for negative component
+      ]
+      ELSEIF(UVL(1)>0.0)   " particle is going to the positive dircetion
+      [                 " perpendicularly to the leaf direction
+         IF(J=0) [J=J+1; L=2;K=J;]      " in fortran no 0 subindex
+         ELSEIF(J<0) [ K=-J; L=1;]  " l=2 for positive component
+         ELSE[ K=J; L=2;]               " l=1 for negative component
+      ]
+      ELSE                  "UVL(1)=0.0 CASE
+      [
+          IF(XYL(1)<0.0) [ L=1; K=J;]
+          ELSE [L=2; K=J;]
+      ]
+      CUT_COE=0.0;
+      CUT_COEL(1)=0.0;
+      CUT_COEL(2)=0.0;
+      CUT_COE_TMP(1)=0.0;
+      CUT_COE_TMP(2)=0.0;
+      TEMP1=UVL(1)-SURPARA1_$MLCQ(L,K,4)*W(NP);
+      IF(TEMP1=0.0)[CUT_COE_TMP(1)=0.0;]
+      ELSE
+      [
+         CUT_COE_TMP(1)=(  UP_COORD1_$MLCQ(L,K) - XYL(1)
+                         + SURPARA1_$MLCQ(L,K,4)*(Z(NP)-ZMIN_$MLCQ) )
+                           /TEMP1;
+      ]
+      IF(K-1=0)[ TEMP2=UVL(1);]
+      ELSE[ TEMP2=UVL(1)-SURPARA1_$MLCQ(L,K-1,4)*W(NP); ]
+      IF(TEMP2=0.0)[CUT_COE_TMP(2)=0;]
+      ELSE
+      [
+       IF(K-1=0)
+       [
+           CUT_COE_TMP(2)=- XYL(1)/TEMP2;
+       ]
+       ELSE
+       [
+          CUT_COE_TMP(2)=(  UP_COORD1_$MLCQ(L,K-1) - XYL(1)
+                         + SURPARA1_$MLCQ(L,K-1,4)*(Z(NP)-ZMIN_$MLCQ) )
+                           /TEMP2;
+       ]
+      ]
+      IF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+      [ CUT_COEL(1)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      ELSE [ CUT_COEL(1)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      IF(CUT_COEL(1)=CUT_COE_TMP(2))
+      [ KINC=1; IF(J<0) [ J=J+1;] ELSE[J=J-1;] ]
+      ELSE[ KINC=0; IF(J<0) [ J=J-1;] ELSE[J=J+1;] ]
+      IF(CUT_COEL(1)>STEP_UNITOLD & CUT_COEL(1)<=STEP_UNIT)
+      [IXYU_D=1; ]
+      ELSE[IXYU_D=0; CUT_COEL(1)=STEP_UNIT;]
+      IF(K<=LEAF_OPEN_$MLCQ(L) & OPEN_IND_$MLCQ(L,K)=1)
+      [
+       TEMP3=UVL(2)**2+W(NP)**2;
+       IF(R0LEAF_$MLCQ-SQRT((XYL(2)-XYL0LEAF_P_$MLCQ(L,K))**2 +
+          (Z(NP)-Z0LEAF_$MLCQ)**2) < -1.E-5)[
+          CUT_COE_TMP(1)=1.0E6;
+       ]
+       ELSE[
+       TEMP4=UVL(2)*(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))
+        +W(NP)*(Z(NP)-Z0LEAF_$MLCQ);
+       TEMP5=(Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))**2;
+       TEMP5=TEMP5-(R0LEAF_$MLCQ)**2;
+       IF(TEMP5 > 0.0)[
+           TEMP5=0.0;
+       ]
+       IF(TEMP4 > 0.0)[
+          IF(TEMP5/TEMP4**2 > -1.0E-3)[
+               CUT_COE_TMP(1)=-0.5*TEMP5/TEMP4;
+          ]
+          ELSE[
+               CUT_COE_TMP(1)=-TEMP5/(SQRT(TEMP4**2-TEMP3*TEMP5)+TEMP4);
+          ]
+       ]
+       ELSEIF(TEMP4 < 0.0)[
+          IF(TEMP5/TEMP4**2 > -1.0E-3)[
+               CUT_COE_TMP(1)=-2.*TEMP4/TEMP3*(1-0.25*TEMP3*TEMP5/TEMP4**2);
+          ]
+          ELSE[
+               CUT_COE_TMP(1)=(SQRT(TEMP4**2-TEMP3*TEMP5)-TEMP4)/TEMP3;
+          ]
+       ]
+       ELSEIF(TEMP3 ~=0.0)[
+          CUT_COE_TMP(1)=SQRT(-TEMP5/TEMP3);
+       ]
+       ]
+       TEMP3=UVL(2)**2+W(NP)**2;
+       IF(R0LEAF_$MLCQ-SQRT((XYL(2)-XYL0LEAF_N_$MLCQ(L,K))**2 +
+          (Z(NP)-Z0LEAF_$MLCQ)**2) < -1.E-5)[
+          CUT_COE_TMP(2)=1.0E6;
+       ]
+       ELSE[
+       TEMP4=UVL(2)*(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))
+        +W(NP)*(Z(NP)-Z0LEAF_$MLCQ);
+       TEMP5=(Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))**2;
+       TEMP5=TEMP5-(R0LEAF_$MLCQ)**2;
+       IF(TEMP5 > 0.0)[
+           TEMP5=0.0;
+       ]
+       IF(TEMP4 > 0.0)[
+          IF(TEMP5/TEMP4**2 > -1.0E-3)[
+               CUT_COE_TMP(2)=-0.5*TEMP5/TEMP4;
+          ]
+          ELSE[
+               CUT_COE_TMP(2)=-TEMP5/(SQRT(TEMP4**2-TEMP3*TEMP5)+TEMP4);
+          ]
+       ]
+       ELSEIF(TEMP4 < 0.0)[
+          IF(TEMP5/TEMP4**2 > -1.0E-3)[
+               CUT_COE_TMP(2)=-2.*TEMP4/TEMP3*(1-0.25*TEMP3*TEMP5/TEMP4**2);
+          ]
+          ELSE[
+               CUT_COE_TMP(2)=(SQRT(TEMP4**2-TEMP3*TEMP5)-TEMP4)/TEMP3;
+          ]
+       ]
+       ELSEIF(TEMP3 ~=0.0)[
+          CUT_COE_TMP(2)=SQRT(-TEMP5/TEMP3);
+       ]
+       ]
+       IF(CUT_COE_TMP(1)=0.0 | CUT_COE_TMP(2)=0.0)[
+          CUT_COEL(2)=0.0;
+       ]
+       ELSEIF(CUT_COE_TMP(1)>STEP_UNITOLD & CUT_COE_TMP(2)>STEP_UNITOLD )
+       [ CUT_COEL(2)=MIN(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+       ELSE [ CUT_COEL(2)=MAX(CUT_COE_TMP(1), CUT_COE_TMP(2) ); ]
+      ]
+      ELSE[ CUT_COEL(2)=-1.0E5; ]
+      IF(CUT_COEL(2)=0.0 & STEP_UNITOLD=0.0)[
+         IF((CUT_COE_TMP(1)=0.0 &
+            (XYL0LEAF_P_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 &
+          SQRT((Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))**2)-
+             R0LEAF_$MLCQ~=0.) |
+             (CUT_COE_TMP(2)=0.0 &
+            (XYL0LEAF_N_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 &
+          SQRT((Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))**2)-
+             R0LEAF_$MLCQ~=0.))[
+             CUT_COE=CUT_COEL(2);
+             $GEO_SHIFT_1_(CUT_COE);
+             USTEP=CUT_COE;
+             IRNEW=IRSTART_$MLCQ;
+             RETURN;
+         ]
+         ELSE IF(CUT_COE_TMP(1)=0.0 &
+            (XYL0LEAF_P_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 &
+          SQRT((Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_N_$MLCQ(L,K))**2)-
+             R0LEAF_$MLCQ=0.)[
+            CUT_COEL(2)=CUT_COE_TMP(2);
+         ]
+         ELSE IF(CUT_COE_TMP(2)=0.0 &
+            (XYL0LEAF_N_$MLCQ(L,K)-XYL(2))*UVL(2)+
+                        (Z0LEAF_$MLCQ-Z(NP))*W(NP)<0.0 &
+          SQRT((Z(NP)-Z0LEAF_$MLCQ)**2+(XYL(2)-XYL0LEAF_P_$MLCQ(L,K))**2)-
+             R0LEAF_$MLCQ=0.)[
+            CUT_COEL(2)=CUT_COE_TMP(1);
+         ]
+         ELSE[
+            CUT_COE=CUT_COEL(2);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+         ]
+      ]
+      IF(  CUT_COEL(2)>0.0 & CUT_COEL(2)> STEP_UNITOLD
+         & CUT_COEL(2)< CUT_COEL(1) )
+      [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IRNEW=IRSTART_$MLCQ;
+       RETURN;
+      ]
+      ELSEIF(CUT_COEL(2)=CUT_COEL(1) & IXYU_D=0 )
+      [
+       CUT_COE=CUT_COEL(2);
+       $GEO_SHIFT_1_(CUT_COE);
+       USTEP=CUT_COE;
+       IF(IZU_D=1)
+       [
+          IF(W(NP)<0.0 & N_GAP_$MLCQ=1)
+          [ IRNEW=IREND_$MLCQ; RETURN;]
+          ELSE
+          [
+             IDIR=SIGN(one,W(NP));
+             CALL WHERE_AM_I(ICM_$MLCQ, IDIR );
+             RETURN;
+          ]
+       ]
+       ELSE [IRNEW=IRSTART_$MLCQ;RETURN; ]
+      ]
+      ELSEIF(IXYU_D=0)
+      [
+       IF(IZU_D=1)
+       [
+         $GEO_SHIFT_1_(STEP_UNIT);
+         USTEP=STEP_UNIT;
+         IF(W(NP)>0.0)
+         [ CALL WHERE_AM_I(ICM_$MLCQ,1); RETURN;]
+         ELSEIF(W(NP)<0.0 & N_GAP_$MLCQ=0)
+         [ CALL WHERE_AM_I(ICM_$MLCQ,-1); RETURN;]
+         ELSEIF(W(NP)<0.0)[ IRNEW=IREND_$MLCQ; RETURN;]
+       ]
+       ELSE[ RETURN;]
+      ]
+      ELSE
+      [
+        IF(K>=LEAF_OPEN_$MLCQ(L) & KINC=0 )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLCQ+1;
+            RETURN;
+        ]
+        XYFL(2)=XYL(2)+CUT_COEL(1)*UVL(2);
+        ZFL=Z(NP)+CUT_COEL(1)*W(NP);
+        IF(UVL(1)<0.0)
+        [
+           IF(J=0) [J=J+1; L=1;]
+           IF(J<0) [ K=-J; L=2;]
+           ELSE[ K=J; L=1;]
+        ]
+        ELSE
+        [
+           IF(J=0) [J=J+1; l=2;]
+           IF(J<0) [ K=-J; L=1;]
+           ELSE[ K=J; L=2;]
+        ]
+
+        TEMP3=(XYFL(2)-XYL0LEAF_P_$MLCQ(L,K))**2+(ZFL-Z0LEAF_$MLCQ)**2;
+        IF(TEMP3=0.0)
+        [TEMP1=R0LEAF_$MLCQ;]
+        ELSE
+        [
+          TEMP3=SQRT(TEMP3);
+          IF (XYFL(2)<XYL0LEAF_P_$MLCQ(L,K))
+          [
+            TEMPZ1=Z0LEAF_$MLCQ
+             +R0LEAF_$MLCQ*(ZFL-Z0LEAF_$MLCQ)/TEMP3;
+            IF(TEMPZ1<ZMIN_$MLCQ)
+            [
+              TEMP1=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+               +(ZFL-ZMIN_$MLCQ)**2;
+              TEMP1=SQRT(TEMP1);
+              IF(TEMP3>R0LEAF_$MLCQ)
+              [TEMP1=-TEMP1;]
+            ]
+            ELSE
+            [
+              IF(TEMPZ1>ZMAX_$MLCQ)
+              [
+                TEMP1=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+                 +(ZFL-ZMAX_$MLCQ)**2;
+                TEMP1=SQRT(TEMP1);
+                IF(TEMP3>R0LEAF_$MLCQ)
+                [TEMP1=-TEMP1;]
+              ]
+              ELSE
+              [
+                TEMP1=R0LEAF_$MLCQ-TEMP3;
+              ]
+            ]
+          ]
+          ELSE
+          [
+            TEMP4=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMIN_$MLCQ)**2;
+            TEMP5=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMAX_$MLCQ)**2;
+            TEMP1=MIN(TEMP4,TEMP5);
+            TEMP1=SQRT(TEMP1);
+          ]
+        ]
+        IF(TEMP1=0. & UVL(2)<0.)TEMP1=-1.;
+
+        TEMP3=(XYFL(2)-XYL0LEAF_N_$MLCQ(L,K))**2+(ZFL-Z0LEAF_$MLCQ)**2;
+        IF(TEMP3=0.0)
+        [TEMP2=-R0LEAF_$MLCQ;]
+        ELSE
+        [
+          TEMP3=SQRT(TEMP3);
+          IF (XYFL(2)>XYL0LEAF_N_$MLCQ(L,K))
+          [
+            TEMPZ1=Z0LEAF_$MLCQ
+             +R0LEAF_$MLCQ*(ZFL-Z0LEAF_$MLCQ)/TEMP3;
+            IF(TEMPZ1<ZMIN_$MLCQ)
+            [
+              TEMP2=(XYFL(2)-UP_COORD2_N_$MLCQ(L,K))**2
+               +(ZFL-ZMIN_$MLCQ)**2;
+              TEMP2=SQRT(TEMP2);
+              IF(TEMP3<R0LEAF_$MLCQ)
+              [TEMP2=-TEMP2;]
+            ]
+            ELSE
+            [
+              IF(TEMPZ1>ZMAX_$MLCQ)
+              [
+                TEMP2=(XYFL(2)-DOWN_COORD2_N_$MLCQ(L,K))**2
+                 +(ZFL-ZMAX_$MLCQ)**2;
+                TEMP2=SQRT(TEMP2);
+                IF(TEMP3<R0LEAF_$MLCQ)
+                [TEMP2=-TEMP2;]
+              ]
+              ELSE
+              [
+                TEMP2=TEMP3-R0LEAF_$MLCQ;
+              ]
+            ]
+          ]
+          ELSE
+          [
+            TEMP4=(XYFL(2)-UP_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMIN_$MLCQ)**2;
+            TEMP5=(XYFL(2)-DOWN_COORD2_P_$MLCQ(L,K))**2
+             +(ZFL-ZMAX_$MLCQ)**2;
+            TEMP2=MIN(TEMP4,TEMP5);
+            TEMP2=-SQRT(TEMP2);
+          ]
+        ]
+        IF(TEMP2=0. & UVL(2)>0.)TEMP2=1.;
+
+        IF( ( TEMP1<0.0 & TEMP2>0.0 & IR_$MLCQ=2 )
+           |( TEMP1*TEMP2>0.0 & IR_$MLCQ = 1)
+          | (OPEN_IND_$MLCQ(L,K)=0 & IR_$MLCQ = 1) )
+        [
+            CUT_COE=CUT_COEL(1);
+            $GEO_SHIFT_1_(CUT_COE);
+            USTEP=CUT_COE;
+            IRNEW=IRSTART_$MLCQ;
+            RETURN;
+        ]
+      ]
+      STEP_UNITOLD=CUT_COEL(1);
+   ]  " will auto end the loop
+]            " end of the region 2
+
+ELSEIF(IR_$MLCQ = 3)
+["particle in region 3
+   IF(W(NP) > 0.0)
+   ["particle going backward"
+      IF(DIST <= USTEP )
+      ["particle to be moved to region boundary
+         $GEO_SHIFT_1_(DIST);
+         USTEP = DIST;
+         $MLCQ_UP_DOWN_REGION_ALLOCATION(UP,IR_$MLCQ,USTEP);
+         IF( IR_$MLCQ=1)
+         [  IRNEW =IRSTART_$MLCQ; RETURN;]
+         ELSE[IRNEW =IRSTART_$MLCQ+1; RETURN;]
+
+      ] "end of particle going forward
+      ELSE[ RETURN;]
+   ]
+   ELSEIF(W(NP) < 0.0)
+   ["particle going backward"
+      IF(DIST <= USTEP )
+      ["particle to be moved to region boundary
+         $GEO_SHIFT_1_(DIST);
+         USTEP = DIST;
+         CALL WHERE_AM_I(ICM_$MLCQ,-1);
+         RETURN;
+      ]
+      ELSE[RETURN;]
+   ] " end of going backward"
+   ELSE[RETURN;]   " W=0.0 CASE "
+] " end of region 3
+
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$MLCQ+1,IR(NP),ICM_$MLCQ,
+                                                IR_start_CM(ICM_$MLCQ);
+      (//' ************'//' HOWFAR_$MLCQ error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+;
+"   end of HOWFAR_$MLCQ
+"   ===================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$MLCQ"
+%E "start of subroutine WHERE_AM_I_$MLCQ (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$MLCQ
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$MLCQ determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$MLCQ subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$MLCQ from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$MLCQ(IDIR);
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$MLCQ,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$MLCQ
+"T>**************************************
+"T>
+INTEGER  I, J_$MLCQ,
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XYL(2), XYFL(2), UVL(2),ZFL, TEMP;
+
+IF(IDMLFC_$MLCQ=1) [ XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+
+IF (IDIR=1)
+["particle entering this CM through front face (upstream)
+   IF(N_GAP_$MLCQ = 0)
+   ["no air gap this CM"
+       IF(IRSTART_$MLCQ=2)   " the first CM
+       [$MLCQ_UP_DOWN_REGION_ALLOCATION(UP,IR_$MLCQ, 0.0); ]
+       ELSE[$MLCQ_UP_DOWN_REGION_ALLOCATION(UP,IR_$MLCQ, USTEP);]
+       IF(IR_$MLCQ=1)
+       [IRNEW=IRSTART_$MLCQ; RETURN;]
+       ELSE[ IRNEW=IRSTART_$MLCQ+1; RETURN; ]
+   ]         " end of the no air gap case
+   ELSE
+   ["this CM has an air gap at the front
+      IRNEW = IREND_$MLCQ;
+   ]
+]
+ELSE
+["particle entering this CM through back face (downstream)
+   $MLCQ_UP_DOWN_REGION_ALLOCATION(DOWN,IR_$MLCQ, USTEP);
+   IF(IR_$MLCQ=1)
+   [IRNEW=IRSTART_$MLCQ; RETURN;]
+   ELSE[ IRNEW=IRSTART_$MLCQ+1; RETURN; ]
+]
+
+RETURN;
+
+END; "End of subroutine WHERE_AM_I_$MLCQ"
+%E "start of subroutine INPUT_$MLCQ (Rev 1.5)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_$MLCQ
+"                           **********************
+"
+"  A CM input subroutine for a series of 2 or more semi-infinite slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$MLCQ;
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MLCQ,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_$MLCQ
+"T>*********************************
+"T>
+$REAL ZTHICK_$MLCQ,  "T>thickness of cone in this CM
+      TEMP, TEMP1,
+      DELTAWIDTH,
+      X0N_$MLCQ,      "T>input variable for coord. of negative part of leaves
+      X0P_$MLCQ;      "T>input variable for coord. of positive part of leaves
+
+INTEGER I,J,      "T>DO loop indeces
+        NUM_$MLCQ, "T>input variable to apply leaf coordinates to multiple
+                  "  leaves
+        IRA,      "T>Absolute region number
+        MED_FLAG, "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,"T>medium index, set after medium sort by $MED_INPUT
+        NEG_FLAG_SIDE,
+        NEG_FLAG_END; "T>flags to check whether a warning has been given or not
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' Next component is a multileaf collimator'/' Title: ',$);
+MINPUT ($MLCQ) TITLE_$MLCQ;(60A1);
+          "MINPUT is a replacement macro with EOF and
+          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$MLCQ;(' ',60A1);
+            "OUTPUT is a replacement macro which writes to
+            "unit 5.  Used here for echo of user input
+
+"  initialize parameters
+"  =====================
+"
+"  first to choose the MLC types:
+"
+OUTPUT; (' The module can be arranged as:',/,
+             ' 0----leaf direction parallel to y direction(default),',/,
+             ' 1----leaf direction parallel to x direction.');
+OUTPUT; (' Input your choice: ',$);
+MINPUT ($MLCQ) IDMLFC_$MLCQ; (I5);
+IF(IDMLFC_$MLCQ~=1)[IDMLFC_$MLCQ=0;OUTPUT;(' default to ');]" set default
+OUTPUT IDMLFC_$MLCQ; (I5/);
+
+N_$MLCQ = 2;
+           "Number of regions in this CM (excluding front air gap)
+ICM_$MLCQ = ICM;      "CM index for this component module
+IRSTART_$MLCQ = IR_start_CM(ICM_$MLCQ); "Index of first region in this CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$MLCQ) = 0; "Geometry-checking flag, 0 if no error detected
+
+" get distance from reference plane, z=0"
+"   =============================
+
+OUTPUT; (' Z position of top of collimator: ',$);
+;MINPUT ($MLCQ) ZMIN_$MLCQ;(F15.0);
+OUTPUT ZMIN_$MLCQ;(F12.5/);
+IF(Z_min_CM(ICM_$MLCQ)>ZMIN_$MLCQ)[
+   IF(ICM_$MLCQ=1)[
+      Z_min_CM(ICM_$MLCQ)=ZMIN_$MLCQ;
+      OUTPUT ICM_$MLCQ, Z_min_CM(ICM_$MLCQ);
+      (//' ***WARNING IN CM ',I4,' ($MLCQ):'/
+         ' Z_min_CM(1) > distance to front of collimator'/
+         ' Z_min_CM(1) reset to ',F8.5,' cm'//);
+      WRITE(IOUTLIST,100)ICM_$MLCQ, Z_min_CM(ICM_$MLCQ);
+100 FORMAT(//' ***WARNING IN CM ',I4,' ($MLCQ):'/
+          ' Z_min_CM(1) > distance to front of collimator'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm'//);
+    ]
+    ELSE[
+      OUTPUT ICM_$MLCQ;
+       (//' ***ERROR IN CM ',I4,' ($MLCQ):'/
+          ' Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+    ]
+]
+"
+"   get  MLC geometry information
+"   =================================
+"
+OUTPUT; (' Collimator thickness (cm):',$);
+;MINPUT ($MLCQ) ZTHICK_$MLCQ; (F15.0);
+OUTPUT ZTHICK_$MLCQ;(F15.5/);
+IF(ZTHICK_$MLCQ<0.0) [
+    OUTPUT ICM_$MLCQ;(//' ***ERROR IN CM ',I4,' ($MLCQ):'/
+                          ' ZTHICK < 0.0'//);
+    IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+
+ZMAX_$MLCQ = ZMIN_$MLCQ + ZTHICK_$MLCQ;
+
+OUTPUT $MAXLEAF;
+(' Input the # of leaves(<',I3,' must be even) and total width of leaves'/
+ ' at the top of the collimator: ', $);
+MINPUT ($MLCQ) NUM_LEAF_$MLCQ, TWIDTH_$MLCQ; (I5,F15.0);
+OUTPUT NUM_LEAF_$MLCQ, TWIDTH_$MLCQ;(I5,F12.5/);
+IF(MOD(NUM_LEAF_$MLCQ,2)~=0) [
+   NUM_LEAF_$MLCQ=NUM_LEAF_$MLCQ+1;
+   OUTPUT ICM_$MLCQ,NUM_LEAF_$MLCQ;
+               (//' ***WARNING IN CM ',I4,' ($MLCQ)'/
+                  ' Odd number of leaves'/
+                  ' Number of leaves rounded up to ',I4//);
+   WRITE(IOUTLIST,
+         '(//'' ***WARNING IN CM '',I4,'' ($MLCQ)''/
+           '' Odd number of leaves''/
+           '' Number of leaves rounded up to '',I4//)')
+           ICM_$MLCQ,NUM_LEAF_$MLCQ;
+]
+IF(NUM_LEAF_$MLCQ>$MAXLEAF) [
+    NUM_LEAF_$MLCQ=$MAXLEAF;
+    OUTPUT ICM_$MLCQ,NUM_LEAF_$MLCQ;
+            (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+             ' # of leaves > max allowed'/
+             ' # of leaves reduced to ',I4,' for now'//);
+    IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+IF(NUM_LEAF_$MLCQ<=0)[
+    NUM_LEAF_$MLCQ=2;
+    OUTPUT ICM_$MLCQ,NUM_LEAF_$MLCQ;
+            (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+             ' # of leaves <= 0'/
+             ' # of leaves set to ',I4,' for now'//);
+    IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+IF(TWIDTH_$MLCQ<=0)[
+    OUTPUT ICM_$MLCQ;
+            (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+             ' Total width of leaves <= 0'//);
+    IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+
+OUTPUT; (' Input the Z focus point of the leaf sides: ',$);
+MINPUT ($MLCQ) ZFOCUS_$MLCQ(1); (F15.0);
+OUTPUT ZFOCUS_$MLCQ(1); (F12.5/);
+IF(ABS(ZFOCUS_$MLCQ(1)-ZMIN_$MLCQ)<1.E-5) [
+   ZFOCUS_$MLCQ(1)=ZMIN_$MLCQ-1.E-4;
+   OUTPUT ICM_$MLCQ,ZFOCUS_$MLCQ(1);
+      (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+       ' ZFOCUS(1) cannot be equal to ZMIN_$MLCQ'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+ELSEIF(ZFOCUS_$MLCQ(1)>ZMIN_$MLCQ & ZFOCUS_$MLCQ(1) < ZMAX_$MLCQ)[
+   ZFOCUS_$MLCQ(1)=ZMAX_$MLCQ;
+   OUTPUT ICM_$MLCQ,ZFOCUS_$MLCQ(1);
+      (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+       ' ZFOCUS(1) is between ZMIN_$MLCQ and ZMAX_$MLCQ'/
+       ' This will cause leaf sides to overlap'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+
+" CALC. THE PARAMETERS FOR DIRECTION PERPENDICULARLY TO leaf DIRECTION
+"=====================================
+DELTAWIDTH=TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+DO I=1, NUM_LEAF_$MLCQ/2 [
+   UP_COORD1_$MLCQ(2,I)=I*DELTAWIDTH;
+   UP_COORD1_$MLCQ(1,I)=-I*DELTAWIDTH;
+   SURPARA1_$MLCQ(2,I,4)=UP_COORD1_$MLCQ(2,I)/
+                                           (ZMIN_$MLCQ-ZFOCUS_$MLCQ(1) );
+   SURPARA1_$MLCQ(1,I,4)=UP_COORD1_$MLCQ(1,I)/
+                                           (ZMIN_$MLCQ-ZFOCUS_$MLCQ(1) );
+   DOWN_COORD1_$MLCQ(2,I)=SURPARA1_$MLCQ(2,I,4)*
+                                           (ZMAX_$MLCQ-ZFOCUS_$MLCQ(1) );
+   DOWN_COORD1_$MLCQ(1,I)=SURPARA1_$MLCQ(1,I,4)*
+                                           (ZMAX_$MLCQ-ZFOCUS_$MLCQ(1) );
+   SURPARA1_$MLCQ(2,I,1)=1.0/SQRT(1+SURPARA1_$MLCQ(2,I,4)**2);
+   SURPARA1_$MLCQ(2,I,2)=-SURPARA1_$MLCQ(2,I,4)*
+                                              SURPARA1_$MLCQ(2,I,1);
+   SURPARA1_$MLCQ(2,I,3)=( SURPARA1_$MLCQ(2,I,4)*
+        ZMIN_$MLCQ-UP_COORD1_$MLCQ(2,I) ) * SURPARA1_$MLCQ(2,I,1);
+
+   SURPARA1_$MLCQ(1,I,1)=1.0/SQRT(1+SURPARA1_$MLCQ(1,I,4)**2);
+   SURPARA1_$MLCQ(1,I,2)=-SURPARA1_$MLCQ(1,I,4)*SURPARA1_$MLCQ(1,I,1);
+   SURPARA1_$MLCQ(1,I,3)=( SURPARA1_$MLCQ(1,I,4)*
+               ZMIN_$MLCQ-UP_COORD1_$MLCQ(1,I) )*SURPARA1_$MLCQ(1,I,1);
+]
+
+"init the parameters, set each leaf closed by default
+"====================================================
+DO I=1, NUM_LEAF_$MLCQ/2+1
+[
+    UP_COORD2_P_$MLCQ(1,I)=0.0;UP_COORD2_P_$MLCQ(2,I)=0.0;
+    UP_COORD2_N_$MLCQ(1,I)=0.0;UP_COORD2_N_$MLCQ(2,I)=0.0;
+    OPEN_IND_$MLCQ(1,I)=0 ; OPEN_IND_$MLCQ(2,I)=0;
+]
+OUTPUT;
+(' Input radius of leaf ends (cm) and Z where radius originates on one line '/
+ ' : ',$);
+MINPUT ($MLCQ) R0LEAF_$MLCQ,Z0LEAF_$MLCQ; (2F15.0);
+OUTPUT R0LEAF_$MLCQ,Z0LEAF_$MLCQ;(2F12.5/);
+IF(Z0LEAF_$MLCQ<ZMIN_$MLCQ|Z0LEAF_$MLCQ>ZMAX_$MLCQ)[
+   Z0LEAF_$MLCQ=ZMAX_$MLCQ;
+   OUTPUT ICM_$MLCQ,Z0LEAF_$MLCQ;
+      (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+       ' Z0LEAF_$MLCQ must be between ZMIN_$MLCQ and ZMAX_$MLCQ'/
+       ' This will cause leaf ends to overlap'/
+       ' Z0LEAF_$MLCQ reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+IF(R0LEAF_$MLCQ<MAX((ZMAX_$MLCQ-Z0LEAF_$MLCQ),
+                    (Z0LEAF_$MLCQ-ZMIN_$MLCQ)))[
+   R0LEAF_$MLCQ=MAX((ZMAX_$MLCQ-Z0LEAF_$MLCQ),
+                    (Z0LEAF_$MLCQ-ZMIN_$MLCQ));
+   OUTPUT ICM_$MLCQ,R0LEAF_$MLCQ;
+   (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+ ' R0LEAF_$MLCQ must be larger then max dist to ZMIN_$MLCQ,ZMAX_$MLCQ'/
+ ' R0LEAF_$MLCQ reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+
+" COMMENT:
+"     P: means the positive part || to the leaf
+"     N: means the negative part || to the leaf
+"     1: means the negative part perp to the leaf
+"     2: means the positive part perp to the leaf
+OUTPUT; (' Input for collimator leaves'/);
+IF(IDMLFC_$MLCQ=1)[
+    OUTPUT;
+(' Input X origin of radius of leaf ends for -ve portion of leaves,'/
+ ' +ve portion of leaves, # of leaves with these end radius origins:');
+]
+ELSE[
+    OUTPUT;
+(' Input Y origin of radius of leaf ends for -ve portion of leaves,'/
+ ' +ve portion of leaves, # of leaves with these end radius origins:');
+]
+I=1;
+LOOP[
+  OUTPUT I;('   For leaf',I4,' :',$)
+  MINPUT ($MLCQ) X0N_$MLCQ, X0P_$MLCQ, NUM_$MLCQ; (2F15.0,I5);
+  IF(NUM_$MLCQ<=0)[NUM_$MLCQ=1;]
+  OUTPUT X0N_$MLCQ, X0P_$MLCQ, NUM_$MLCQ; (2F12.5, I5);
+  IF(X0P_$MLCQ-X0N_$MLCQ<2*R0LEAF_$MLCQ)[
+     X0N_$MLCQ = -R0LEAF_$MLCQ-1.0E4;
+     X0P_$MLCQ = R0LEAF_$MLCQ+1.0E4;
+     OUTPUT ICM_$MLCQ,I,I+NUM_$MLCQ-1,X0P_$MLCQ;
+      (//' ***ERROR IN CM ',I4,' ($MLCQ)'/
+   ' Min. and max. opening coordinates in leaves ',I4,' - ',I4,' overlap'/
+   ' Both coordinates set to ',F15.5,' cm for now'//);
+     IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+  ]
+  DO J=I,I+NUM_$MLCQ-1[
+     IF(J<=NUM_LEAF_$MLCQ/2)[
+         XYL0LEAF_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0N_$MLCQ;
+         XYL0LEAF_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0P_$MLCQ;
+         TEMP1=SQRT(R0LEAF_$MLCQ**2-(ZMIN_$MLCQ-Z0LEAF_$MLCQ)**2);
+         UP_COORD2_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0N_$MLCQ+TEMP1;
+         UP_COORD2_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0P_$MLCQ-TEMP1;
+         TEMP1=SQRT(R0LEAF_$MLCQ**2-(ZMAX_$MLCQ-Z0LEAF_$MLCQ)**2);
+         DOWN_COORD2_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0N_$MLCQ+TEMP1;
+         DOWN_COORD2_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=X0P_$MLCQ-TEMP1;
+     ]
+     ELSEIF(J<=NUM_LEAF_$MLCQ)[
+         XYL0LEAF_N_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0N_$MLCQ;
+         XYL0LEAF_P_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0P_$MLCQ;
+         TEMP1=SQRT(R0LEAF_$MLCQ**2-(ZMIN_$MLCQ-Z0LEAF_$MLCQ)**2);
+         UP_COORD2_N_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0N_$MLCQ+TEMP1;
+         UP_COORD2_P_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0P_$MLCQ-TEMP1;
+         TEMP1=SQRT(R0LEAF_$MLCQ**2-(ZMAX_$MLCQ-Z0LEAF_$MLCQ)**2);
+         DOWN_COORD2_N_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0N_$MLCQ+TEMP1;
+         DOWN_COORD2_P_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=X0P_$MLCQ-TEMP1;
+     ]
+     ELSE[
+         EXIT;
+     ]
+  ]
+  I=J;
+]WHILE(I<=NUM_LEAF_$MLCQ);
+
+" find out the max index of opened leaf
+
+LEAF_OPEN_$MLCQ(1)=0;
+LEAF_OPEN_$MLCQ(2)=0;
+
+DO I= NUM_LEAF_$MLCQ/2, 1, -1 [
+   IF(UP_COORD2_P_$MLCQ(1,I)~=UP_COORD2_N_$MLCQ(1,I))[
+      OPEN_IND_$MLCQ(1,I)=1;
+   ]
+
+   IF(UP_COORD2_P_$MLCQ(2,I)~=UP_COORD2_N_$MLCQ(2,I))[
+      OPEN_IND_$MLCQ(2,I)=1;
+   ]
+   IF(LEAF_OPEN_$MLCQ(1)=0 &
+              UP_COORD2_P_$MLCQ(1, I) ~= UP_COORD2_N_$MLCQ(1, I) )[
+      LEAF_OPEN_$MLCQ(1)=I;
+   ]
+   IF(LEAF_OPEN_$MLCQ(2)=0 &
+                     UP_COORD2_P_$MLCQ(2, I) ~= UP_COORD2_N_$MLCQ(2, I))[
+      LEAF_OPEN_$MLCQ(2)=I;
+   ]
+]
+
+UP_COORD2_P_$MLCQ(1,LEAF_OPEN_$MLCQ(1)+1 ) =0.0;
+UP_COORD2_P_$MLCQ(2,LEAF_OPEN_$MLCQ(2)+1 ) =0.0;
+
+DO I=LEAF_OPEN_$MLCQ(1)+1, $MAXLEAF/2+1 [UP_COORD1_$MLCQ(1,I)=-1.0E30;]
+
+DO I= LEAF_OPEN_$MLCQ(2)+1, $MAXLEAF/2+1 [ UP_COORD1_$MLCQ(2,I)=1.0E30;]
+
+
+" COMMENT:
+"     P: means the positive part || to the leaf
+"     N: means the negative part || to the leaf
+"     1: means the negative part perp. to the leaf
+"     2: means the positive part perp. to the leaf
+NEG_FLAG_SIDE=0;
+NEG_FLAG_END=0;
+DO I=1,MAX(LEAF_OPEN_$MLCQ(1),LEAF_OPEN_$MLCQ(2))[
+   IF((I<=LEAF_OPEN_$MLCQ(1) & ABS(DOWN_COORD1_$MLCQ(1,I))>
+         RMAX_CM(ICM_$MLCQ) & NEG_FLAG_SIDE=0) |
+      (I<=LEAF_OPEN_$MLCQ(2) & ABS(DOWN_COORD1_$MLCQ(2,I))>
+         RMAX_CM(ICM_$MLCQ) & NEG_FLAG_SIDE=0) )[
+         NEG_FLAG_SIDE=1;
+         OUTPUT ICM_$MLCQ;(//' ***WARNING IN CM',I4,' ($MLCQ)'/
+     ' Lower side coordinates of some leaves go beyond RMAX_CM'/
+     ' Dose zone masses will not be calculated correctly.'//);
+         WRITE(IOUTLIST,
+     '(//'' ***WARNING IN CM'',I4,'' ($MLCQ)''/
+     '' Lower side coordinates of some leaves go beyond RMAX_CM''/
+     '' Dose zone masses will not be calculated correctly.''//)')
+         ICM_$MLCQ;
+   ]
+   IF((I<=LEAF_OPEN_$MLCQ(1) & (ABS(DOWN_COORD2_N_$MLCQ(1,I))>
+          RMAX_CM(ICM_$MLCQ) | ABS(DOWN_COORD2_P_$MLCQ(1,I))>
+          RMAX_CM(ICM_$MLCQ)) & NEG_FLAG_END=0) |
+      (I<=LEAF_OPEN_$MLCQ(2) & (ABS(DOWN_COORD2_N_$MLCQ(2,I))>
+          RMAX_CM(ICM_$MLCQ) | ABS(DOWN_COORD2_P_$MLCQ(2,I))>
+          RMAX_CM(ICM_$MLCQ)) & NEG_FLAG_END=0) ) [
+          OUTPUT ICM_$MLCQ;(//' ***WARNING IN CM',I4,' ($MLCQ)'/
+         ' Lower end coordinates of some leaves go beyond RMAX_CM'/
+         ' Dose zone masses will not be calculated correctly.'//);
+          NEG_FLAG_END=1;
+          WRITE(IOUTLIST,
+     '(//'' ***WARNING IN CM'',I4,'' ($MLCQ)''/
+         '' Lower end coordinates of some leaves go beyond RMAX_CM''/
+         '' Dose zone masses will not be calculated correctly.''//)')
+           ICM_$MLCQ;
+   ]
+]
+
+
+
+
+"establish top of first CM
+"
+
+ZFRONT_$MLCQ = Z_min_CM(ICM_$MLCQ);
+"
+"establish start of next CM
+"
+Z_min_CM(ICM_$MLCQ+1) = ZMAX_$MLCQ;
+
+"
+"   get ECUT, PCUT, dose scoring zone, and material in each region
+"   ===============================================================
+IRA = IRSTART_$MLCQ-1;
+DO IR_$MLCQ = 1,N_$MLCQ
+["loop through regions to get information"
+   IRA = IRA+1;
+   IF (IR_$MLCQ = 1)[
+       ;OUTPUT IR_$MLCQ;
+        (/' Region',I4,' (collimator opening):'/
+          ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+          ' :',$);
+   ]
+   ELSE[
+      ;OUTPUT IR_$MLCQ;
+        (/' Region',I4,' (collimator leaves):'/
+         ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+         ' :',$);
+   ]
+   ;MINPUT ($MLCQ)
+      ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+     ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+      OUTPUT IR_$MLCQ;(' material of region ',I3,' ',$);
+   ;$MED_INPUT($MLCQ); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$MLCQ"
+
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$mlc=1) then the gap thickness
+"Z_gap_THICK(ICM_$mlc) = 0, which is used as a flag that there is no air gap
+
+Z_gap_THICK(ICM_$MLCQ) = ZMIN_$MLCQ - Z_min_CM(ICM_$MLCQ);
+IF (Z_gap_THICK(ICM_$MLCQ) < = 0.0)
+[
+   Z_gap_THICK(ICM_$MLCQ) = 0.;
+   N_GAP_$MLCQ = 0; "no air gap for this CM
+]
+ELSE
+[
+   N_GAP_$MLCQ = 1; "this CM has an air gap
+   IRA = IRSTART_$MLCQ+N_$MLCQ; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+]
+
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_$MLCQ+N_GAP_$mlc regions
+"
+;
+"Index last region
+IREND_$MLCQ = (IRSTART_$MLCQ -1) + N_$MLCQ+N_GAP_$MLCQ;
+NREG = NREG+N_$MLCQ+N_GAP_$MLCQ;  "Total no of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG)
+[ IR_start_CM(ICM_$MLCQ+1) = IREND_$MLCQ+1; ]
+                       "have not exceeded maximum region number
+                       "Index of first region in next CM:"
+ELSE
+[
+      OUTPUT ICM_$MLCQ,NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' ($MLCQ):'/
+         T2,I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$MLCQ)=IERR_GEOM(ICM_$MLCQ)+1;
+]
+
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$MLCQ) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and bit setting for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$MLCQ-1; "absolute region number"
+DO IR_$MLCQ=1,N_$MLCQ
+["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region GXD
+   E_min_out(ICM_$MLCQ)=ECUT(IRA); "Minimum energy on exit from CM
+
+] "end of loop over IR_$MLCQ
+
+"   return from INPUT_$MLCQ
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$MLCQ:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$MLCQ:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$MLCQ"
+
+%E "start of subroutine ISUMRY_$MLCQ (Rev 1.5)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_$MLCQ
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$MLCQ;
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$MLCQ,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$MLCQ
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR, "T>colour of CM for EGS_Windows
+"   ID,     already defined gf  T>index of dose scoring zone
+   IRA,     "T>absolute region number
+   I,J;     "T>DO loop index
+
+$REAL  VOL_$MLCQ(3),  "T> region volumes
+       N_SIDE,
+       TEMP,
+       P_SIDE,       "T> variables to keep track of min and max dimensions
+       N_END,
+       P_END;
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$mlc.
+"
+VOL_$MLCQ(2) = (ZMAX_$MLCQ-ZMIN_$MLCQ)*4*RMAX_CM(ICM_$MLCQ)**2;
+VOL_$MLCQ(1) = 0.;
+
+"new exact formula for the volume below"
+TEMP=SQRT((DOWN_COORD2_P_$MLCQ(1,1)-UP_COORD2_P_$MLCQ(1,1))**2 +
+          (ZMAX_$MLCQ-ZMIN_$MLCQ)**2);
+TEMP=R0LEAF_$MLCQ**2/(ZMAX_$MLCQ-ZMIN_$MLCQ)*
+    (ASIN(0.5*TEMP/R0LEAF_$MLCQ)-
+     0.5*TEMP/R0LEAF_$MLCQ*SQRT(1-0.25*(TEMP/R0LEAF_$MLCQ)**2));
+DO I=1,LEAF_OPEN_$MLCQ(1)[
+    IF(I=1)[
+       VOL_$MLCQ(1)=VOL_$MLCQ(1)+((ZMAX_$MLCQ-ZMIN_$MLCQ)/6)*
+         ABS(UP_COORD1_$MLCQ(1,I)*(2.*(UP_COORD2_N_$MLCQ(1,I)+TEMP)+
+       (DOWN_COORD2_N_$MLCQ(1,I)+TEMP)-(DOWN_COORD2_P_$MLCQ(1,I)-TEMP)-
+         2.*(UP_COORD2_P_$MLCQ(1,I)-TEMP)) + DOWN_COORD1_$MLCQ(1,I)*
+     (2.*(DOWN_COORD2_N_$MLCQ(1,I)+TEMP)+(UP_COORD2_N_$MLCQ(1,I)+TEMP)-
+       (UP_COORD2_P_$MLCQ(1,I)-TEMP)-2.*(DOWN_COORD2_P_$MLCQ(1,I)-TEMP)));
+    ]
+    ELSE[
+       VOL_$MLCQ(1)=VOL_$MLCQ(1)+((ZMAX_$MLCQ-ZMIN_$MLCQ)/6)*
+         ABS(UP_COORD1_$MLCQ(1,I-1)*(2.*(UP_COORD2_P_$MLCQ(1,I)-TEMP)+
+         (DOWN_COORD2_P_$MLCQ(1,I)-TEMP)-(DOWN_COORD2_N_$MLCQ(1,I)+TEMP)-
+         2.*(UP_COORD2_N_$MLCQ(1,I)+TEMP))+DOWN_COORD1_$MLCQ(1,I-1)*
+        (2.*(DOWN_COORD2_P_$MLCQ(1,I)-TEMP)+(UP_COORD2_P_$MLCQ(1,I)-TEMP)-
+        (UP_COORD2_N_$MLCQ(1,I)+TEMP)-2.*(DOWN_COORD2_N_$MLCQ(1,I)+TEMP))+
+         UP_COORD1_$MLCQ(1,I)*(2.*(UP_COORD2_N_$MLCQ(1,I)+TEMP) +
+       (DOWN_COORD2_N_$MLCQ(1,I)+TEMP)-(DOWN_COORD2_P_$MLCQ(1,I)-TEMP)-
+         2.*(UP_COORD2_P_$MLCQ(1,I)-TEMP))+DOWN_COORD1_$MLCQ(1,I)*
+        (2.*(DOWN_COORD2_N_$MLCQ(1,I)+TEMP)+(UP_COORD2_N_$MLCQ(1,I)+TEMP)-
+       (UP_COORD2_P_$MLCQ(1,I)-TEMP)-2.*(DOWN_COORD2_P_$MLCQ(1,I)-TEMP)));
+    ]
+]
+DO I=1,LEAF_OPEN_$MLCQ(2)[
+    IF(I=1)[
+       VOL_$MLCQ(1)=VOL_$MLCQ(1)+((ZMAX_$MLCQ-ZMIN_$MLCQ)/6)*
+         ABS(UP_COORD1_$MLCQ(2,I)*(2.*(UP_COORD2_P_$MLCQ(2,I)-TEMP)+
+        (DOWN_COORD2_P_$MLCQ(2,I)-TEMP)-(DOWN_COORD2_N_$MLCQ(2,I)+TEMP)-
+         2.*(UP_COORD2_N_$MLCQ(2,I)+TEMP))+DOWN_COORD1_$MLCQ(2,I)*
+        (2.*(DOWN_COORD2_P_$MLCQ(2,I)-TEMP)+(UP_COORD2_P_$MLCQ(2,I)-TEMP)-
+       (UP_COORD2_N_$MLCQ(2,I)+TEMP)-2.*(DOWN_COORD2_N_$MLCQ(2,I)+TEMP)));
+    ]
+    ELSE[
+       VOL_$MLCQ(1)=VOL_$MLCQ(1)+((ZMAX_$MLCQ-ZMIN_$MLCQ)/6)*
+         ABS(UP_COORD1_$MLCQ(2,I)*(2.*(UP_COORD2_P_$MLCQ(2,I)-TEMP)+
+         (DOWN_COORD2_P_$MLCQ(2,I)-TEMP)-(DOWN_COORD2_N_$MLCQ(2,I)+TEMP)-
+         2.*(UP_COORD2_N_$MLCQ(2,I)+TEMP))+DOWN_COORD1_$MLCQ(2,I)*
+        (2.*(DOWN_COORD2_P_$MLCQ(2,I)-TEMP)+(UP_COORD2_P_$MLCQ(2,I)-TEMP)-
+        (UP_COORD2_N_$MLCQ(2,I)+TEMP)-2.*(DOWN_COORD2_N_$MLCQ(2,I)+TEMP))+
+         UP_COORD1_$MLCQ(2,I-1)*(2.*(UP_COORD2_N_$MLCQ(2,I)+TEMP)+
+         (DOWN_COORD2_N_$MLCQ(2,I)+TEMP)-(DOWN_COORD2_P_$MLCQ(2,I)-TEMP)-
+         2.*(UP_COORD2_P_$MLCQ(2,I)-TEMP))+DOWN_COORD1_$MLCQ(2,I-1)*
+        (2.*(DOWN_COORD2_N_$MLCQ(2,I)+TEMP)+(UP_COORD2_N_$MLCQ(2,I)+TEMP)-
+       (UP_COORD2_P_$MLCQ(2,I)-TEMP)-2.*(DOWN_COORD2_P_$MLCQ(2,I)-TEMP)));
+    ]
+]
+VOL_$MLCQ(2) = VOL_$MLCQ(2) - VOL_$MLCQ(1);
+
+IRA = IRSTART_$MLCQ-1; "absolute region number
+DO IR_$MLCQ=1,N_$MLCQ+N_GAP_$MLCQ
+["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0)
+   ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$MLCQ(IR_$MLCQ)*RHOR(IRA);
+   ]
+] "end of loop over IR_$MLCQ"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$MLCQ,TITLE_$MLCQ;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$MLCQ), RMAX_CM(ICM_$MLCQ);
+IF(N_GAP_$MLCQ~=0)[
+          WRITE(IOUTLIST,124) Z_min_CM(ICM_$MLCQ),
+                             ZMIN_$MLCQ-Z_min_CM(ICM_$MLCQ);
+]
+IF(IDMLFC_$MLCQ~=0)[
+    WRITE(IOUTLIST,122) ZMAX_$MLCQ-ZMIN_$MLCQ,'X',
+                       'Y', TWIDTH_$MLCQ/NUM_LEAF_$MLCQ,
+                       ZFOCUS_$MLCQ(1), R0LEAF_$MLCQ,Z0LEAF_$MLCQ;
+]
+ELSE[
+    WRITE(IOUTLIST,122) ZMAX_$MLCQ-ZMIN_$MLCQ,'Y',
+                       'X', TWIDTH_$MLCQ/NUM_LEAF_$MLCQ,
+                       ZFOCUS_$MLCQ(1), R0LEAF_$MLCQ,Z0LEAF_$MLCQ;
+]
+IF(IDMLFC_$MLCQ~=0)[
+      WRITE(IOUTLIST,126)'Y','X';
+]
+ELSE[
+      WRITE(IOUTLIST,126)'X','Y';
+]
+I=1;
+LOOP[
+   IF(I<=NUM_LEAF_$MLCQ/2)[
+      IF(I=NUM_LEAF_$MLCQ/2)[
+         P_SIDE=0.;
+      ]
+      ELSE[
+         P_SIDE=UP_COORD1_$MLCQ(1,NUM_LEAF_$MLCQ/2-I);
+      ]
+      IF(NUM_LEAF_$MLCQ/2-I+1>LEAF_OPEN_$MLCQ(1))[
+          N_SIDE=-(NUM_LEAF_$MLCQ/2-I+1)*
+                  TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+      ]
+      ELSE[
+          N_SIDE=UP_COORD1_$MLCQ(1,NUM_LEAF_$MLCQ/2-I+1);
+      ]
+      N_END=XYL0LEAF_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-I+1);
+      P_END=XYL0LEAF_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-I+1);
+   ]
+   ELSE[
+      IF(I=NUM_LEAF_$MLCQ/2+1)[
+         N_SIDE=0.;
+      ]
+      ELSE[
+         N_SIDE=UP_COORD1_$MLCQ(2,I-NUM_LEAF_$MLCQ/2-1);
+      ]
+      IF(I-NUM_LEAF_$MLCQ/2>LEAF_OPEN_$MLCQ(2))[
+         P_SIDE=(I-NUM_LEAF_$MLCQ)*
+                TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+      ]
+      ELSE[
+         P_SIDE=UP_COORD1_$MLCQ(2,I-NUM_LEAF_$MLCQ/2);
+      ]
+      N_END=XYL0LEAF_N_$MLCQ(2,I-NUM_LEAF_$MLCQ/2);
+      P_END=XYL0LEAF_P_$MLCQ(2,I-NUM_LEAF_$MLCQ/2);
+   ]
+   J=I+1;
+   LOOP[
+       IF(J=NUM_LEAF_$MLCQ/2+1)[
+          IF((XYL0LEAF_P_$MLCQ(1,1)=XYL0LEAF_P_$MLCQ(2,1)) &
+            (XYL0LEAF_N_$MLCQ(1,1)=XYL0LEAF_N_$MLCQ(2,1)))[
+             IF(J-NUM_LEAF_$MLCQ/2>LEAF_OPEN_$MLCQ(2))[
+                 P_SIDE=(J-NUM_LEAF_$MLCQ/2)*
+                         TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+             ]
+             ELSE[
+                 P_SIDE=UP_COORD1_$MLCQ(2,1);
+             ]
+             J=J+1;
+             IF(J>NUM_LEAF_$MLCQ)[EXIT;]
+          ]
+          ELSE[
+             EXIT;
+          ]
+       ]
+       ELSEIF(J>NUM_LEAF_$MLCQ/2+1)[
+          IF((XYL0LEAF_P_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=
+              XYL0LEAF_P_$MLCQ(2,J-NUM_LEAF_$MLCQ/2-1)) &
+            (XYL0LEAF_N_$MLCQ(2,J-NUM_LEAF_$MLCQ/2)=
+              XYL0LEAF_N_$MLCQ(2,J-NUM_LEAF_$MLCQ/2-1)))[
+              IF(J-NUM_LEAF_$MLCQ/2>LEAF_OPEN_$MLCQ(2))[
+                  P_SIDE=(J-NUM_LEAF_$MLCQ/2)*
+                          TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+              ]
+              ELSE[
+                  P_SIDE=UP_COORD1_$MLCQ(2,J-NUM_LEAF_$MLCQ/2);
+              ]
+              J=J+1;
+              IF(J>NUM_LEAF_$MLCQ)[EXIT;]
+          ]
+          ELSE[
+             EXIT;
+          ]
+       ]
+       ELSE[
+          IF((XYL0LEAF_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=
+              XYL0LEAF_P_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+2)) &
+            (XYL0LEAF_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+1)=
+              XYL0LEAF_N_$MLCQ(1,NUM_LEAF_$MLCQ/2-J+2)))[
+              IF(J=NUM_LEAF_$MLCQ/2)[
+                  P_SIDE=0.;
+              ]
+              ELSEIF(NUM_LEAF_$MLCQ/2-J > LEAF_OPEN_$MLCQ(1))[
+                  P_SIDE=-(NUM_LEAF_$MLCQ/2-J)*
+                           TWIDTH_$MLCQ/NUM_LEAF_$MLCQ;
+              ]
+              ELSE[
+                  P_SIDE=UP_COORD1_$MLCQ(1,NUM_LEAF_$MLCQ/2-J);
+              ]
+              J=J+1;
+          ]
+          ELSE[
+             EXIT;
+          ]
+       ]
+   ]
+   WRITE(IOUTLIST,128) I,J-1,
+                       N_SIDE,P_SIDE,N_END,P_END;
+   I=J;
+]WHILE(I<=NUM_LEAF_$MLCQ);
+
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$MLCQ-1;
+DO IR_$MLCQ=1,N_$MLCQ[
+   IRA = IRA+1;
+   IF(IR_$MLCQ=1)[
+      IF (MED(IRA)=0)["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$MLCQ,'opening',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$MLCQ,'opening',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$MLCQ=2)[
+      IF (MED(IRA)=0)["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$MLCQ,'leaves',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$MLCQ,'leaves',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+]
+
+IF(N_GAP_$MLCQ ~=0)[
+   IRA=IRSTART_$MLCQ+N_$MLCQ;
+      WRITE(IOUTLIST,140) IR_$MLCQ,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      WRITE(IOUTLIST,141)'at top';
+]
+
+110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
+            ' (3 regions Rev 1.5)',
+           /'  -------------------------------------------------',
+            '------------------',
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$MLCQ geometry parameters:',
+           /T2,'------------------------',
+           /T2,'Distance from front of CM from reference plane = ',T51,
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',T51,F15.5,' cm');
+122 FORMAT(T2,'Thickness of collimator = ',T51,F15.5,' cm',
+           /T2,'Leaves open parallel to the ',A1,' axis'
+           /T2,'Width of each leaf in the ',A1,' direction = ',T51,
+               F15.5,' cm',
+           /T2,'Z focus of leaf side surfaces = ',T51,F15.5,' cm',
+           /T2,'Radius of leaf ends = ',T51,F15.5,' cm',
+           /T2,'Z where radius of leaf ends originates = ',T51,F15.5,' cm');
+124 FORMAT(T2,'There is an airgap starting at Z = ',F8.3,' cm with',
+              ' thickness ',F8.3,' cm');
+126 FORMAT
+(/T2,'leaves              ',A1,' range          ',A1,
+' origin of radius of leaf ends',
+ /T2,'                  spanned (cm)         -ve leaves  (cm)  +ve leaves');
+128 FORMAT(T2,I3,'-',I3,3X,F10.5,' - ',F10.5,5X,F10.5,7X,F10.5);
+130 FORMAT(/T2,'$MLCQ region parameters:',
+           /T2,'----------------------',
+           /T2,'local  location  electron  photon',
+               '  range-rejection   dose  bit  medium'
+           /T2,'region            cutoff   cutoff',
+               '   level     max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+               '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,3X,9A1);
+141 FORMAT(T9,A7);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;
+
+] "End of graphics output"
+
+200 FORMAT(' ',I1,A3,A1,10(F7.2,','));
+;RETURN;
+END;
+
+%E "start of subroutine HOWNEAR_$MLCQ (Rev 1.5)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_$MLCQ
+"                          ***********************
+"
+" Returns the min. distance to the nearest region boundary.
+" Called from the HOWNEAR macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$MLCQ(DIST);
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$MLCQ,STACK,CMs/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      XYL1,XYL2, "T> store X(NP), Y(NP)
+      TEMP,TEMP1,TEMP2; "T> temporary distance variables
+
+$INTEGER I_$MLCQ,J_$MLCQ,K; "T> leaf and looping indices
+
+IR_$MLCQ=IR(NP) - IRSTART_$MLCQ + 1;
+IF(IR_$MLCQ=3) [DIST=0.0;]
+ELSE [
+  IF(IDMLFC_$MLCQ=1) [ XYL1=Y(NP); XYL2=X(NP); ]
+  ELSE [ XYL1=X(NP); XYL2=Y(NP); ]
+  IF(XYL1>=0) [
+     J_$MLCQ=2;
+     DO I_$MLCQ=1, NUM_LEAF_$MLCQ/2 [
+        TEMP=SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,3);
+        IF(TEMP<=0.0)[ EXIT;]
+     ]
+   ]
+   ELSE [
+     J_$MLCQ=1;
+     DO I_$MLCQ=1, NUM_LEAF_$MLCQ/2 [
+        TEMP=  SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,3);
+        IF(TEMP>=0.0)[ EXIT;]
+     ]
+   ]
+   IF(I_$MLCQ=1)[
+     DIST=MIN(ABS(XYL1),
+           ABS(SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,3)));
+   ]
+   ELSEIF(I_$MLCQ=NUM_LEAF_$MLCQ/2+1)[
+     DIST=ABS( SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,3) );
+   ]
+   ELSE [
+     DIST=MIN(ABS( SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ-1,3) ),
+              ABS( SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,I_$MLCQ,3) ));
+   ]
+   IF(I_$MLCQ=NUM_LEAF_$MLCQ/2+1)[
+      DIST= MIN( Z(NP)-ZMIN_$MLCQ , ZMAX_$MLCQ-Z(NP),
+              DIST);
+   ]
+   ELSE[
+      DO K=1, NUM_LEAF_$MLCQ/2 [
+        TEMP=  SURPARA1_$MLCQ(J_$MLCQ,K,1)*XYL1
+              +SURPARA1_$MLCQ(J_$MLCQ,K,2)*Z(NP)
+              +SURPARA1_$MLCQ(J_$MLCQ,K,3);
+        IF((J_$MLCQ=1 & TEMP>=0.0) |
+           (J_$MLCQ=2 & TEMP<=0.0))[ EXIT;]
+      ]
+      IF(IR_$MLCQ=1)[
+TEMP1=SQRT((XYL2-XYL0LEAF_P_$MLCQ(J_$MLCQ,K))**2+
+      (Z(NP)-Z0LEAF_$MLCQ)**2)-R0LEAF_$MLCQ;
+TEMP2=SQRT((XYL2-XYL0LEAF_N_$MLCQ(J_$MLCQ,K))**2+
+      (Z(NP)-Z0LEAF_$MLCQ)**2)-R0LEAF_$MLCQ;
+        DIST= MIN(Z(NP)-ZMIN_$MLCQ,ZMAX_$MLCQ-Z(NP),DIST,TEMP1,TEMP2,
+                  RMAX_CM(ICM_$MLCQ)-ABS(X(NP)),
+                  RMAX_CM(ICM_$MLCQ)-ABS(Y(NP)));
+      ]
+      ELSEIF(IR_$MLCQ=2)[
+        IF(XYL2>XYL0LEAF_P_$MLCQ(J_$MLCQ,K) |
+          XYL2<XYL0LEAF_N_$MLCQ(J_$MLCQ,K))[
+          "if leaf is constructed properly, particle"
+          "will hit upper or lower surface before"
+          "radial boundary"
+          DIST=MIN(Z(NP)-ZMIN_$MLCQ,ZMAX_$MLCQ-Z(NP),DIST);
+        ]
+        ELSE[
+TEMP1=R0LEAF_$MLCQ-
+      SQRT((XYL2-XYL0LEAF_P_$MLCQ(J_$MLCQ,K))**2+
+         (Z(NP)-Z0LEAF_$MLCQ)**2);
+TEMP2=R0LEAF_$MLCQ-
+      SQRT((XYL2-XYL0LEAF_N_$MLCQ(J_$MLCQ,K))**2+
+         (Z(NP)-Z0LEAF_$MLCQ)**2);
+        IF(TEMP1>=0.0 & TEMP2<=0.0)[
+           DIST=MIN(Z(NP)-ZMIN_$MLCQ,ZMAX_$MLCQ-Z(NP),DIST,TEMP1);
+        ]
+        ELSE[
+           DIST=MIN(Z(NP)-ZMIN_$MLCQ,ZMAX_$MLCQ-Z(NP),DIST,TEMP2);
+        ]
+       ]
+      ]
+   ]
+]
+RETURN;
+END;"End of subroutine HOWNEAR_$MLCQ (Rev 1.5)"
+
+"*******************************************************************************
+"End of MLC_cm.mortran (Rev 1.5)"
