@@ -1,0 +1,1382 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: photon flattening filter                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the FFILTER component module written by  "
+"  George Ding, starting in 1992.                                             "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ************            ""toc:
+"                             *          *            ""toc:
+"                             * FLATFILT *            ""toc:
+"                             *          *            ""toc:
+"                             ************            ""toc:
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  Photon flattering filter (filter geormetry for
+"   arbitrary shape and material).
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator: primary collimator
+"
+"I>
+"I> Geometry of FLATFILT:
+"I> ********************
+"I>                     |
+"I>                     |  beam direction (central axis)
+"I>                     |
+"I>                    \|/
+"I>
+"I>       --------------------------------------------------------------------
+"I>           Air gap IR = Sum(J=1,ISCM_NO)[ISSCM_NO(J) +1] +1 if exists
+"I>       --------------------------------------------------------------------
+"I>                 /       \         |               |
+"I>       ...      / IR = 1  \ IR = 2 |   IR = ...    | IR=ISSCM_NO(1)+1
+"I>               /           \       |               |
+"I>              /             \      |               |
+"I>       ---------------------------------------------------------------------
+"I>               \  ....     /      \
+"I>       ...      \         /   .... \    IR=Sum(J=1,ISCM_NO)[ISSCM_NO(J) +1]
+"I>                 \       /          \
+"I>      ----------------------------------------------------------------------
+
+"I>
+"I>
+"I>  IR is the region number within the CM.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |          Region              |    Description      |
+"I>            |------------------------------|---------------------|
+"I>            |  absolute      | local       |                     |
+"I>            |----------------|-------------|                     |
+"I>            |                |             |                     |
+"I>            |IRSTART_FLATFILT| IR_FLATFILT |  as shown in above  |
+"I>            |  +IR_FLATFILT-1|             |                     |
+"I>            |                |             |                     |
+"I>            |                |             |                     |
+"I>            ------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$flatfilt
+"                      ISUMRY_$flatfilt
+"                      HOWFAR_$flatfilt
+"                      WHERE_AM_I_$flatfilt
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+;
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5          ""toc:
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$FLATFILT
+"I>  ******************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$FLATFILT) (F10.0): Radius of outer boundary of CM (cm).
+"I>
+"I>   1  TITLE_$FLATFILT (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$FLATFILT (F10.0):  Distance from front of CM (front of
+"I>       the first layer) to reference plane (Z=0),
+"I>       not including air gap.
+"I>
+"I>   3  ISCM_NO_$FLATFILT (I5): Number of layers.
+"I>
+"I>   Repeat 4-6 for I=1,ISCM_NO_$FLATFILT
+"I>
+"I>   4  ISSCM_NO_$FLATFILT(I), ZTHICK_$FLATFILT(I)  (I5,F15.0):
+"I>
+"I>             ISSCM_NO_$FLATFILT(I): # cones in layer I(ex outer region).
+"I>             ZTHICK_$FLATFILT(I):   Thickness of layer I.
+"I>
+"I>   Repeat 5 for J=1,ISSCM_NO_$FLATFILT(I) all on one line in order
+"I>   of increasing cone radius.
+"I>
+"I>   5  RTOP_$FLATFILT(I,J) (F15.0):
+"I>             Top radius of cone J in layer I.
+"I>             Note restriction: RTOP_$FLATFILT(I,J+1)>RTOP_$FLATFILT(I,J)
+"I>
+"I>   Repeat 6 for J=1,ISSCM_NO_$FLATFILT(I) all on one line in order
+"I>   of increasing cone radius.
+"I>
+"I>   6  RBOT_$FLATFILT(I,J) (F15.0):
+"I>             Bottom radius of cone J in layer I.
+"I>             Note restriction: RBOT_$FLATFILT(I,J+1)>RBOT_$FLATFILT(I,J)
+"I>
+"I>   Repeat 7 and 8 for J=1,ISSCM_NO_$FLATFILT(I)+1 for every layer I.
+"I>   When J=ISSCM_NO_$FLATFILT(I)+1, you are specifying ECUT, PCUT,
+"I>   MED_IN, etc. for the region between the outermost cone and RMAX_CM
+"I>   in layer I.
+"I>
+"I>   7  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT  (2F15.0,2I5):
+"I>
+"I>          ECUT, PCUT:  Cutoff energies for electrons and photons
+"I>                       in cone J.
+"I>          DOSE_ZONE:   Dose scoring flag for cone J.
+"I>       IREGION_TO_BIT: Bit setting for region defined by cone J.
+"I>
+"I>   8  MED_IN (24A1):  Medium of cone J
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following example describes a FLATFILT with 2 layers.  The
+"I>  RMAX of this FLATFILT is 2cm.  There is no air gap between the
+"I>  first layer and the top of the CM.
+"I>
+"I>  The first layer is 0.3 cm thick and comprises a convex cone made
+"I>  of H2O within a concave cone made of PB.  The convex H2O cone has
+"I>  a top radius of 0.0cm and a bottom radius of 1.0cm.  The concave PB
+"I>  cone has a top radius of 1.5cm and a bottom radius of 1.1cm.
+"I>  The region between the outer, concave cone and RMAX_CM is AIR.
+"I>  The second layer is also 0.3 cm thick and comprises a single
+"I>  cylinder of H2O having radius 1cm (ie top radius=bottom
+"I>  radius=1cm).  The region between the outer boundary of this
+"I>  cylinder and RMAX_CM (an annular region) is AIR.
+"I>
+"I>  The dose to the AIR regions is scored in dose zone 1.  The dose
+"I>  to H2O regions (the convex cone in the first layer and the cylinder
+"I>  in the second layer) is scored in zone 2.  And the dose to PB
+"I>  (the concave cone in the first layer) is scored in zone 3.
+"I>  ECUT and PCUT for all regions are 0.521 MeV and 0.01 MeV
+"I>  respectively.
+"I>
+"I>  2.00000,               RMAX_CM
+"I>  flatfilt
+"I>  0.0,                   ZMIN of first layer
+"I>  2,                     no. of layers
+"I>  2,  0.30,              no. of cones in first layer and thickness
+"I>  0.0,1.5,               top radii of cones
+"I>  1.0,1.1,               bottom radii of cones
+"I>  1, 0.3                 no. of cones in second layer and thickness
+"I>  1.0                    top radius of cone
+"I>  1.0                    bottom radius of cone
+"I>  0.521, 0.01, 2, 0,     ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT
+"I>  H2O                    MEDIUM -- for layer 1, cone 1
+"I>  0.521, 0.01, 3, 0
+"I>  PB                            -- for layer 1, cone 2
+"I>  0.521, 0.01, 1, 0
+"I>  AIR                           -- for region between cone 2 and RMAX
+"I>  0.521, 0.01, 2, 0
+"I>  H2O                           -- for layer 2, cone 1
+"I>  0.521, 0.01, 1, 0
+"I>  AIR                           -- for region between cone 1 and RMAX
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+
+%E "Start of HOWFAR_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_FLATFILT
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module FLAT, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_FLATFILT local regions + an air gap (if present):
+"
+"     local               absolute                       description
+"  ----------  -------------------------------------   -----------------------
+"  IR_FLATFILT  IR_start_CM(ICM_FLATFILT)+IR_FLATFILT-1  excluding front air gap
+"  ----------  -------------------------------------   -----------------------
+"   Geometrical co-ordinates, as set in INPUT_FLATFILT are:
+"
+"   ZFRONT_FLATFILT     front of CM (upstream surface, air region)
+"   ZMIN_FLATFILT       front of filter
+"   ZBACK_FLATFILT      back of filter
+"   RBOT_FLATFILT       radius of last cylinder (largest)
+"
+"******************************************************************************
+;SUBROUTINE HOWFAR_$FLATFILT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$FLATFILT,EPCONT,STACK,USER,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_FLATFILT
+"T>**********************************
+"T>
+INTEGER
+   IRL,         "T> absolute region number
+   IRNEW_$FLATFILT,"T>tentative new region number within CM (absolute)
+   I,II,        "T> tmp loop index
+   I_inside,I_outside; "T> error indices for particles in the wrong cone
+
+$REAL
+   DIST,           "T>dist to region boundary along current particle trajectory
+   DIST_CIN,       "T>dist to cone boundary along current particle trajectory
+   DIST_COU,       "T>dist to cone boundary along current particle trajectory
+   XF_$FLATFILT,   "T>temperary variable
+   YF_$FLATFILT,   "T>temperary variable
+   SQXY_$FLATFILT,
+   DIST_PLANE;       "T>stores DIST to a plane when W>0
+$REAL             "local tem variables
+   ALO_$FLATFILT,
+   BLO_$FLATFILT,
+   AUP_$FLATFILT,
+   CUP_$FLATFILT,
+   TQ_$FLATFILT,
+   BUP_$FLATFILT,
+   DUP_$FLATFILT,
+   T1_$FLATFILT,
+   T2_$FLATFILT;
+;
+$REAL one;
+parameter (one = 1);
+
+DATA I_inside,I_outside/0,0/;
+SAVE I_inside;
+SAVE I_outside;
+" Determine local region number
+" *****************************
+IRL=IR(NP);
+
+;$FLATFILT_CHECK_OUTSIDE;
+
+" Set DNEAR
+" *********
+" This replacement macros sets DMIN_$FLATFILT as well as defining IR_$FLATFILT
+
+;$FLATFILT_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+IF(IR_$FLATFILT <= N_$FLATFILT) [   "inside filter"
+   IF(W(NP) > 0)[ " when w > 0.0"
+      DIST = (ZMAX_$FLATFILT(ISCM_$FLATFILT)
+              - Z(NP))/W(NP);
+      DIST_PLANE=DIST;
+      IF(DIST < 0.)[DIST=0.;]
+      IF(DIST=0. & ISCM_$FLATFILT=ISCM_NO_$FLATFILT)[DIST=1.E-16;]
+      $FLATFILT_GET_SQXY(DIST,SQXY_$FLATFILT);
+      IF(ISCM_$FLATFILT < ISCM_NO_$FLATFILT)[
+         DO II = 1, ISSCM_NO_$FLATFILT(ISCM_$FLATFILT+1) [
+            IF(SQXY_$FLATFILT <=
+               RTOP_$FLATFILT(ISCM_$FLATFILT+1,II)**2)[
+               IRNEW_$FLATFILT = IRSTART_$FLATFILT
+                       + IR_$FLATFILT - IISSC_$FLATFILT
+                       + ISSCM_NO_$FLATFILT(ISCM_$FLATFILT) + II;
+               EXIT;
+            ]
+            ELSEIF(SQXY_$FLATFILT >
+               RTOP_$FLATFILT(ISCM_$FLATFILT+1,
+               ISSCM_NO_$FLATFILT(ISCM_$FLATFILT+1))**2)[
+               IRNEW_$FLATFILT  =
+                        IRSTART_$FLATFILT + IR_$FLATFILT
+                       - IISSC_$FLATFILT + 1
+                       + ISSCM_NO_$FLATFILT(ISCM_$FLATFILT)
+                       + ISSCM_NO_$FLATFILT(ISCM_$FLATFILT+1);
+            ]
+         ]
+      ]
+      ELSEIF(ISCM_$FLATFILT = ISCM_NO_$FLATFILT)[
+         IRNEW_$FLATFILT = 1;
+      ]
+      IF(IISSC_$FLATFILT > 1)[
+         $FLATFILT_GET_DICO_OU(ISCM_$FLATFILT,IISSC_$FLATFILT);
+      ]
+      IF(IISSC_$FLATFILT <= ISSCM_NO_$FLATFILT(ISCM_$FLATFILT))[
+         $FLATFILT_GET_DICO_IN(ISCM_$FLATFILT,IISSC_$FLATFILT);
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$FLATFILT = 1 )[ "leaving CM through back"
+            CALL WHERE_AM_I(ICM_$FLATFILT,1);
+         ]
+         ELSE [ "still in CM, entering another region
+            IRNEW = IRNEW_$FLATFILT; "new region number"
+         ]
+         IF(DIST=DIST_PLANE & IBRSPL=2 & ICM_DBS=ICM_$FLATFILT &
+            ISCM_$FLATFILT+1=ZPLANE_DBS & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+             IAUSFL(6)=1; "to call ausgab after step"
+             ESPLIT_DBS=1; "to do electron splitting"
+         ]
+      ]
+   ]
+   ELSEIF(W(NP) < 0)[  "when w < 0.0
+      DIST = (ZMIN_$FLATFILT(ISCM_$FLATFILT)
+              - Z(NP))/W(NP);
+      IF(DIST < 0.)[DIST=0.;]
+      IF(DIST=0. & ISCM_$FLATFILT=1 & N_GAP_$FLATFILT=0)[DIST=1.E-16;]
+     ;$FLATFILT_CHECH_DIST1;
+
+      $FLATFILT_GET_SQXY(DIST,SQXY_$FLATFILT);
+      IF(ISCM_$FLATFILT > 1)[
+         DO II = 1, ISSCM_NO_$FLATFILT(ISCM_$FLATFILT-1) [
+            IF(SQXY_$FLATFILT <=
+               RBOT_$FLATFILT(ISCM_$FLATFILT-1,II)**2)[
+               IRNEW_$FLATFILT  = IRSTART_$FLATFILT
+                       + IR_$FLATFILT - 2- IISSC_$FLATFILT
+                       - ISSCM_NO_$FLATFILT(ISCM_$FLATFILT-1) + II;
+               EXIT;
+            ]
+            ELSEIF(SQXY_$FLATFILT >
+               RBOT_$FLATFILT(ISCM_$FLATFILT-1,
+               ISSCM_NO_$FLATFILT(ISCM_$FLATFILT-1))**2)[
+               IRNEW_$FLATFILT = IRSTART_$FLATFILT
+                       + IR_$FLATFILT - 1 - IISSC_$FLATFILT;
+            ]
+         ]
+      ]
+      ELSEIF(ISCM_$FLATFILT = 1 & N_GAP_$FLATFILT ~= 0)[
+         IRNEW_$FLATFILT = IREND_$FLATFILT;
+      ]
+      ELSEIF(ISCM_$FLATFILT = 1 & N_GAP_$FLATFILT = 0)[
+         IRNEW_$FLATFILT = 1;
+      ]
+      IF(IISSC_$FLATFILT > 1)[
+         $FLATFILT_GET_DICO_OU_WLTZ(ISCM_$FLATFILT,IISSC_$FLATFILT);
+        ;$FLATFILT_CHECH_DIST2;
+      ]
+      IF(IISSC_$FLATFILT <= ISSCM_NO_$FLATFILT(ISCM_$FLATFILT))[
+         $FLATFILT_GET_DICO_IN(ISCM_$FLATFILT,IISSC_$FLATFILT);
+        ;$FLATFILT_CHECH_DIST3;
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$FLATFILT = 1 )[ "leaving CM through front"
+            CALL WHERE_AM_I(ICM_$FLATFILT,-1);
+         ]
+         ELSE [ "still in CM, entering another region
+            IRNEW = IRNEW_$FLATFILT; "new region number"
+         ]
+      ]
+   ]
+   ELSE[  "when w = 0.0"
+      DIST = 1E10;
+      IF(IISSC_$FLATFILT > 1 &
+         U(NP)*X(NP) + V(NP)*Y(NP) < 0.0)[
+         $FLATFILT_GET_DICO_OU(ISCM_$FLATFILT,IISSC_$FLATFILT);
+         IRNEW_$FLATFILT = IR(NP) - 1;
+      ]
+      ELSEIF(IISSC_$FLATFILT <= ISSCM_NO_$FLATFILT(ISCM_$FLATFILT) &
+         U(NP)*X(NP) + V(NP)*Y(NP) > 0.0) [
+         $FLATFILT_GET_DICO_IN(ISCM_$FLATFILT,IISSC_$FLATFILT);
+         IRNEW_$FLATFILT = IR(NP) + 1;
+      ]
+      IF(DIST <= USTEP) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IRNEW = IRNEW_$FLATFILT; "new region number"
+      ]
+   ]
+]
+
+
+ELSEIF(IR_$FLATFILT = N_$FLATFILT + 1) [   "in front air gap
+   IF(W(NP) > 0.0) ["particle going forward"
+      DIST = (ZMIN_$FLATFILT(1)
+                - Z(NP))/W(NP); "distance to front of SCM
+      IF(DIST < 0.)[DIST=0.;]
+      DO I = 1, ISSCM_NO_$FLATFILT(1)[
+         IF((X(NP)+DIST*U(NP))**2 + (Y(NP)+DIST*V(NP))**2 <=
+            RTOP_$FLATFILT(1,I)**2)[
+            IRNEW_$FLATFILT = IRSTART_$FLATFILT + I -1;
+            EXIT;
+         ]
+         ELSEIF( (X(NP)+DIST*U(NP))**2 + (Y(NP)+DIST*V(NP))**2 >
+            RTOP_$FLATFILT(1,ISSCM_NO_$FLATFILT(1))**2 )[
+            IRNEW_$FLATFILT = IRSTART_$FLATFILT +
+                              ISSCM_NO_$FLATFILT(1);
+         ]
+      ]
+   ] "end of particle going forward
+   ELSEIF(W(NP) < 0.0) ["particle going backward"
+      DIST = (ZFRONT_$FLATFILT
+              - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.)[DIST=1.e-16;]
+      IRNEW_$FLATFILT = 1;
+   ]" end of going backward"
+   ELSE[DIST = 1E10;]
+
+   IF(DIST <= USTEP) ["particle to be moved to region boundary
+      USTEP = DIST;
+      IF(IRNEW_$FLATFILT = 1 )[ "leaving CM through front"
+         CALL WHERE_AM_I(ICM_$FLATFILT,-1);
+      ]
+      ELSE [ "still in CM, entering another region
+         IRNEW = IRNEW_$FLATFILT; "new region number"
+      ]
+      IF(W(NP)>0.0 & IBRSPL=2 & ICM_DBS=ICM_$FLATFILT &
+            ZPLANE_DBS=1 & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+             IAUSFL(6)=1; "to call ausgab after step"
+             ESPLIT_DBS=1; "to do electron splitting"
+      ]
+   ]
+] " end of region of air gap
+ELSE[
+   IDISC = 1;
+   IRNEW = 1;
+   OUTPUT IR_$FLATFILT, Z(NP), SQRT(X(NP)**2+Y(NP)**2);
+          (' some thing is wrong IR_$FLATFILT, Z ',I5,4F10.4);
+]
+"   outside of CM, something is wrong
+"   =================================
+;
+;$FLATFILT_NEGTIVE_USTEP;
+RETURN;
+END; "End of subroutine HOWFAR_$FLATFILT"
+
+%E "Start of WHERE_AM_I_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_FLATFILT
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$flatfilt determines the new region # when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$flatfilt subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$flatfilt from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+
+REPLACE {$CHECK_FRONT_$FLATFILT;} WITH {;
+   IF(ABS(Z(NP)+USTEP*W(NP) - ZFRONT_$FLATFILT) > $BDY_TOL)[
+       OUTPUT Z(NP), Z(NP)+USTEP*W(NP),ZFRONT_$FLATFILT,W(NP),USTEP;
+          ( ' in front of CM - cons z, z+d*w, zf,w ustep = ', /5F16.8);
+   ]
+}
+REPLACE {$CHECK_BACK_$FLATFILT;} WITH {;
+   IF(ABS(Z(NP)+USTEP*W(NP) - ZMAX_$FLATFILT(ISCM_NO_$FLATFILT)) > $BDY_TOL)[
+       OUTPUT Z(NP), Z(NP)+USTEP*W(NP),ZMAX_$FLATFILT(ISCM_NO_$FLATFILT),
+           W(NP),USTEP;
+          ( ' in back of CM - cons z, z+d*w =, zmax, w ,ustep ', /5F16.8);
+   ]
+
+}
+;SUBROUTINE WHERE_AM_I_$FLATFILT(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CM_$FLATFILT,EPCONT,STACK,USER/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_FLATFILT
+"T>**** **********************************
+"T>
+INTEGER IDIR;      "T>direction of particle, +1=forward, -1=backward
+INTEGER I,II,         "T>loop indices
+        TEMPIR;       "T>keeps track of local region numbers in a loop
+$REAL XBDY_$FLATFILT,YBDY_$FLATFILT,RBDY2_$FLATFILT;
+
+XBDY_$FLATFILT = X(NP) + U(NP)*USTEP;
+YBDY_$FLATFILT = Y(NP) + V(NP)*USTEP;
+RBDY2_$FLATFILT = XBDY_$FLATFILT*XBDY_$FLATFILT
+                + YBDY_$FLATFILT*YBDY_$FLATFILT;
+IF(IRSTART_$FLATFILT = 2 & IDIR = 1)[ " this is first CM and from front
+   RBDY2_$FLATFILT = X(NP)**2 + Y(NP)**2;
+]
+IF (IDIR=1) ["particle entering this CM through front face
+   IF(N_GAP_$FLATFILT = 0) ["no air gap this CM"
+      IRNEW = IRSTART_$FLATFILT;
+      DO I = ISSCM_NO_$FLATFILT(1),1,-1[
+            IF(RBDY2_$FLATFILT > RTOP_$FLATFILT(1,I)**2)[
+               IRNEW = IRSTART_$FLATFILT + I;
+               EXIT;
+            ]
+      ]
+      IF(IBRSPL=2 & ICM_DBS=ICM_$FLATFILT &
+            ZPLANE_DBS=1 & IQ(NP)~=0 & IPHAT(NP)=NBRSPL)[
+             "electron is about to hit splitting plane and is fat"
+             IAUSFL(6)=1; "to call ausgab after step"
+             ESPLIT_DBS=1; "to do electron splitting"
+     ]
+   ]
+   ELSE ["this CM has an air gap at the front
+      IRNEW = IREND_$FLATFILT;
+   ]
+]
+ELSEIF(IDIR=-1) ["particle entering this CM through back face (downstream)
+  IRNEW= IRSTART_$FLATFILT+ N_$FLATFILT -1
+         - ISSCM_NO_$FLATFILT(ISCM_NO_$FLATFILT);
+  DO I = ISSCM_NO_$FLATFILT(ISCM_NO_$FLATFILT),1,-1[
+        IF(RBDY2_$FLATFILT > RBOT_$FLATFILT(ISCM_NO_$FLATFILT,I)**2)[
+             IRNEW = IRSTART_$FLATFILT+ N_$FLATFILT -1
+                     - ISSCM_NO_$FLATFILT(ISCM_NO_$FLATFILT) + I;
+             EXIT;
+        ]
+  ]
+]
+ELSEIF(IDIR=2)["particle originating within the CM (source 3)
+  IF(Z(NP)<ZMIN_$FLATFILT(1))["in front air gap
+     IRNEW = IREND_$FLATFILT;
+  ]
+  ELSE["somewhere within the flatfilt
+     TEMPIR=0;
+     DO I=1,ISCM_NO_$FLATFILT[
+        IF(Z(NP) >= ZMIN_$FLATFILT(I) & Z(NP) <= ZMAX_$FLATFILT(I))[
+           DO II=1,ISSCM_NO_$FLATFILT(I)+1[
+              IF(II<ISSCM_NO_$FLATFILT(I)+1)[
+                IF(SQRT(X(NP)**2+Y(NP)**2) <=
+                   Z(NP)*(RBOT_$FLATFILT(I,II)-RTOP_$FLATFILT(I,II))/
+                       (ZMAX_$FLATFILT(I)-ZMIN_$FLATFILT(I)) +
+                   RTOP_$FLATFILT(I,II) - ZMIN_$FLATFILT(I)*
+                       (RBOT_$FLATFILT(I,II)-RTOP_$FLATFILT(I,II))/
+                       (ZMAX_$FLATFILT(I)-ZMIN_$FLATFILT(I)))[
+                     IRNEW=IRSTART_$FLATFILT + TEMPIR +
+                           II -1;
+                     EXIT;
+                ]
+              ]
+              ELSE[
+                IRNEW=IRSTART_$FLATFILT + TEMPIR +
+                      II -1;
+                EXIT;
+              ]
+           ]
+        ]
+        ELSE[
+           TEMPIR=TEMPIR+ISSCM_NO_$FLATFILT(I)+1;
+        ]
+     ]
+  ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$FLATFILT"
+
+%E "Start of INPUT_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_FLATFILT
+"                           **********************
+"
+"  A CM input subroutine for a series of 2 or more semi-infinite slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$FLATFILT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$FLATFILT,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_FLATFILT
+"T>*********************************
+"T>
+
+$REAL ZTHICK_$FLATFILT($MAX_N_SC_$FLATFILT),  "T>thickness of the filter
+      BDYTOL,               "T>may set differ from $BDY_TOL
+      AIRGAPMIN_$FLATFILT;  "T>minimum air gap in front and back of CM
+
+INTEGER I,II,III,J,         "T>DO loop indeces
+        IRA,                "T>Absolute region number
+        MED_FLAG,           "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX;          "T>medium index, set after med sort by $MED_INPUT
+
+"  initialize parameters
+"  =====================
+"
+ICM_$FLATFILT = ICM;      "CM index for this component module
+IRSTART_$FLATFILT = IR_start_CM(ICM_$FLATFILT);
+            "Index of first region in this CM,
+                "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$FLATFILT) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$FLATFILT = 0.1; "set a minimum 0.1 cm air gap at front of CM
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' Next component is a set of conical  slabs'/
+' TITLE: ',$);
+;MINPUT ($FLATFILT) TITLE_$FLATFILT;(60A1);
+                       ";MINPUT is a replacement macro with EOF and
+                       "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$FLATFILT;(' ',60A1);
+                        "OUTPUT is a replacement macro which writes to
+                        "unit 5.  Used here for echo of user input
+"
+" get distance from reference plane, z=0"
+"   =============================
+OUTPUT; (' Z at which FLATFILT (excluding air gap) starts (cm) ',$);
+;MINPUT ($FLATFILT) ZMIN_$FLATFILT(1);(F10.0);
+OUTPUT ZMIN_$FLATFILT(1);(F15.5);
+IF(Z_min_CM(ICM_$FLATFILT)>ZMIN_$FLATFILT(1))[
+   IF(ICM_$FLATFILT=1)[
+      OUTPUT ICM_$FLATFILT, ZMIN_$FLATFILT(1),
+       Z_min_CM(ICM_$FLATFILT);
+       (//' ***WARNING IN CM ',I4,' (FLATFILT):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,100)ICM_$FLATFILT, ZMIN_$FLATFILT(1),
+       Z_min_CM(ICM_$FLATFILT);
+      100 FORMAT(//' ***WARNING IN CM ',I4,' (FLATFILT):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      Z_min_CM(ICM_$FLATFILT)=ZMIN_$FLATFILT(1);
+   ]
+   ELSE[
+      OUTPUT ICM_$FLATFILT;
+        (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+           'Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+   ]
+]
+
+ISCM_NO_$FLATFILT = $MAX_N_$FLATFILT;
+            "Maximum number of slab cone permitted
+OUTPUT ISCM_NO_$FLATFILT;
+   (' Number of layers (MINIMUM 1, MAXIMUM',I2,'): ',$);
+;MINPUT ($FLATFILT) ISCM_NO_$FLATFILT; (I5);
+OUTPUT ISCM_NO_$FLATFILT; (I5);
+IF(ISCM_NO_$FLATFILT > $MAX_N_$FLATFILT)[
+   OUTPUT ICM_$FLATFILT, $MAX_N_$FLATFILT;
+      (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+         '# of layers > max. layers allowed.'/
+         '# of layers reduced to ',I4,' for now.'//);
+   ISCM_NO_$FLATFILT=$MAX_N_$FLATFILT;
+   IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+]
+ELSEIF(ISCM_NO_$FLATFILT<1)[
+   ISCM_NO_$FLATFILT=1;
+   OUTPUT ICM_$FLATFILT;
+      (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+         '# of layers < 1'/
+         '# of layers reset to 1 for now.'//);
+   IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+]
+
+"   get  each layer's geometry information
+"   =================================
+DO I = 1, ISCM_NO_$FLATFILT[
+   ISSCM_NO_$FLATFILT(I) = $MAX_N_SC_$FLATFILT;
+   OUTPUT I;(//' For layer ',I5,' :');
+   OUTPUT I,ISSCM_NO_$FLATFILT(I);
+    (/' Number of coaxial cones in layer',I5,' (Min 1, Max',I2,')',/,
+     ' and thickness of this layer: ',$);
+   ;MINPUT ($FLATFILT) ISSCM_NO_$FLATFILT(I),ZTHICK_$FLATFILT(I); (I5,F15.0);
+   IF(ZTHICK_$FLATFILT(I) = 0.0)[ZTHICK_$FLATFILT(I) = 2*$BDY_TOL;]
+   OUTPUT ISSCM_NO_$FLATFILT(I),ZTHICK_$FLATFILT(I); (I5,F15.5);
+   IF(ISSCM_NO_$FLATFILT(I) > $MAX_N_SC_$FLATFILT)[
+      OUTPUT ICM_$FLATFILT,I, $MAX_N_SC_$FLATFILT;
+         (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+            '# of cones in layer ',I4,' > max. allowed.'/
+            '# of cones reduced to ',I4,' for now.'//);
+      ISSCM_NO_$FLATFILT(I)=$MAX_N_SC_$FLATFILT;
+      IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+   ]
+   ELSEIF(ISSCM_NO_$FLATFILT(I)<1)[
+      ISSCM_NO_$FLATFILT(I)=1;
+      OUTPUT ICM_$FLATFILT,I;
+         (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+            '# of cones in layer ',I4,' < 1'/
+            '# of cones set to 1 for now.'//);
+      IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+   ]
+   IF(ZTHICK_$FLATFILT(I) < 0.0)[
+      OUTPUT ICM_$FLATFILT,I;
+          (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+             'ZTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+   ]
+    OUTPUT I;(/' input top radii of cones in layer',I5,
+         /' (on one line in order of increasing radius)'/': ',$);
+   ;MINPUT ($FLATFILT) (RTOP_$FLATFILT(I,J), J=1,ISSCM_NO_$FLATFILT(I));
+        ($MAX_N_SC_$FLATFILT F15.0);
+    OUTPUT (RTOP_$FLATFILT(I,J), J=1,ISSCM_NO_$FLATFILT(I));
+          ($MAX_N_SC_$FLATFILT F15.5);
+    IF(RTOP_$FLATFILT(I,1) = 0.0)[RTOP_$FLATFILT(I,1) = 3*$BDY_TOL;]
+    ELSEIF(RTOP_$FLATFILT(I,1) < 0.0)[
+       OUTPUT ICM_$FLATFILT,I;
+          (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+             'RTOP(',I4,',1) < 0.0'//);
+       IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+    ]
+    ELSEIF(RTOP_$FLATFILT(I,1) > RMAX_CM(ICM_$FLATFILT))[
+        OUTPUT ICM_$FLATFILT, I;
+          (//'***WARNING IN CM ',I4,' (FLATFILT):'/
+             'RTOP(',I4,',1) > RMAX_CM'//);
+        WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (FLATFILT):''/
+             ''RTOP('',I4,'',1) > RMAX_CM''//)')
+             ICM_$FLATFILT, I;
+    ]
+    DO II = 2, ISSCM_NO_$FLATFILT(I)[
+       IF(RTOP_$FLATFILT(I,II)<0.0)[
+          OUTPUT ICM_$FLATFILT,I,II;
+           (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+              'RTOP(',I4,',',I4,') < 0.0'//);
+          IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+       ]
+       ELSEIF(RTOP_$FLATFILT(I,II) < RTOP_$FLATFILT(I,II-1))[
+          OUTPUT ICM_$FLATFILT, I, II, I, II-1;
+            (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+               'RTOP(',I4,',',I4,') < RTOP(',I4,',',I4,')'//);
+          IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+       ]
+       IF( RTOP_$FLATFILT(I,II) > RMAX_CM(ICM_$FLATFILT))[
+          OUTPUT ICM_$FLATFILT, I, II;
+            (//'***WARNING IN CM ',I4,' (FLATFILT):'/
+               'RTOP(',I4,',',I4,') > RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (FLATFILT):''/
+               ''RTOP('',I4,'','',I4,'') > RMAX_CM''//)')
+                ICM_$FLATFILT, I, II;
+       ]
+    ]
+    IF(RTOP_$FLATFILT(I,ISSCM_NO_$FLATFILT(I))<=RMAX_CM(ICM_$FLATFILT))[
+         RTOP_$FLATFILT(I,ISSCM_NO_$FLATFILT(I)+1)=
+           RMAX_CM(ICM_$FLATFILT);
+    ]
+    OUTPUT I;(/' input bottom radii of cones in layer',I5,/
+  ' (on one line in order of increasing radius--Note that'/
+  ' cones in one layer cannot cross)'/' :',$);
+   ;MINPUT ($FLATFILT) (RBOT_$FLATFILT(I,J), J=1,ISSCM_NO_$FLATFILT(I));
+        ($MAX_N_SC_$FLATFILT F15.0);
+    OUTPUT (RBOT_$FLATFILT(I,J), J=1,ISSCM_NO_$FLATFILT(I));
+          ($MAX_N_SC_$FLATFILT F15.5);
+    IF(RBOT_$FLATFILT(I,1) = 0.0)[RBOT_$FLATFILT(I,1) = 3*$BDY_TOL;]
+    ELSEIF(RBOT_$FLATFILT(I,1) < 0.0)[
+       OUTPUT ICM_$FLATFILT,I;
+          (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+             'RBOT(',I4,',1) < 0.0'//);
+       IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+    ]
+    ELSEIF(RBOT_$FLATFILT(I,1) > RMAX_CM(ICM_$FLATFILT))[
+        OUTPUT ICM_$FLATFILT, I;
+          (//'***WARNING IN CM ',I4,' (FLATFILT):'/
+             'RBOT(',I4,',1) > RMAX_CM'//);
+        WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (FLATFILT):''/
+             ''RBOT('',I4,'',1) > RMAX_CM''//)')
+             ICM_$FLATFILT, I;
+    ]
+    DO II = 2, ISSCM_NO_$FLATFILT(I)[
+       IF(RBOT_$FLATFILT(I,II) < 0.0)[
+          OUTPUT ICM_$FLATFILT, I, II;
+           (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+              'RBOT(',I4,',',I4,') < 0.0'//);
+          IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+       ]
+       ELSEIF(  RBOT_$FLATFILT(I,II) < RBOT_$FLATFILT(I,II-1))[
+          OUTPUT ICM_$FLATFILT, I, II, I, II-1;
+            (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+               'RBOT(',I4,',',I4,') < RBOT(',I4,',',I4,')'//);
+          IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+       ]
+       IF( RBOT_$FLATFILT(I,II) > RMAX_CM(ICM_$FLATFILT))[
+          OUTPUT ICM_$FLATFILT, I, II;
+            (//'***WARNING IN CM ',I4,' (FLATFILT):'/
+               'RBOT(',I4,',',I4,') > RMAX_CM'//);
+      WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (FLATFILT):''/
+               ''RBOT('',I4,'','',I4,'') > RMAX_CM''//)')
+               ICM_$FLATFILT, I, II;
+       ]
+    ]
+    IF(RBOT_$FLATFILT(I,ISSCM_NO_$FLATFILT(I))<=RMAX_CM(ICM_$FLATFILT))[
+         RBOT_$FLATFILT(I,ISSCM_NO_$FLATFILT(I)+1)=
+           RMAX_CM(ICM_$FLATFILT);
+    ]
+]
+
+
+N_$FLATFILT = 0;
+DO I = 1, ISCM_NO_$FLATFILT[
+   N_$FLATFILT = N_$FLATFILT + ISSCM_NO_$FLATFILT(I) + 1;
+] "Number of regions in this CM (excluding air gap)
+"
+
+"   get ECUT, PCUT, dose scoring zone, and material in each region
+"   ===============================================================
+OUTPUT;(///' Inputs for ECUT, PCUT, dose zones, media ...');
+IRA = IRSTART_$FLATFILT-1;
+IR_$FLATFILT=0;
+DO II = 1, ISCM_NO_$FLATFILT[
+   OUTPUT II;(//' For layer',I5,' :');
+   DO III = 1, ISSCM_NO_$FLATFILT(II)+1[
+      IR_$FLATFILT=IR_$FLATFILT+1;
+      IRA = IRA+1;
+      IF(III<=ISSCM_NO_$FLATFILT(II))[
+         OUTPUT III;(/' For cone',I5,' :');
+         IF(ISSCM_NO_$FLATFILT(II)>1 & III=1)[
+           OUTPUT;(' (innermost cone)');
+         ]
+         ELSEIF(ISSCM_NO_$FLATFILT(II)>1 & III=ISSCM_NO_$FLATFILT(II))[
+           OUTPUT;(' (outermost cone)');
+         ]
+      ]
+      ELSEIF(III=ISSCM_NO_$FLATFILT(II)+1)[
+         OUTPUT;(/' For region between outermost cone and RMAX_CM :');
+      ]
+      ;OUTPUT;(' ECUT, PCUT (MeV),',
+             ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT: '/,$);
+      ;MINPUT ($FLATFILT)
+      ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+      IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+      IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+      OUTPUT;(' material ',$);
+   ;$MED_INPUT($FLATFILT); " inputs character array MED_IN from unit 5, loops
+  "through array MEDIA(24,I) to check if medium was previously input.
+  "If so, sets MED_INDEX to index of previous medium.  If not,
+  "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+   ]
+]"end of loop over regions"
+
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+"
+" define the filter geometry here:
+
+BDYTOL= $BDY_TOL;
+ZMAX_$FLATFILT(1) = ZMIN_$FLATFILT(1) + ZTHICK_$FLATFILT(1);
+DO I = 2, ISCM_NO_$FLATFILT[
+   ZMIN_$FLATFILT(I) = ZMIN_$FLATFILT(I-1) + ZTHICK_$FLATFILT(I-1);
+   ZMAX_$FLATFILT(I) = ZMIN_$FLATFILT(I) + ZTHICK_$FLATFILT(I);
+]
+
+IF(ICM_$FLATFILT=ICM_DBS)[
+    IF(ZPLANE_DBS > ISCM_NO_$FLATFILT+1)[
+      OUTPUT ZPLANE_DBS,ISCM_NO_$FLATFILT+1;
+  (/' ****DBS WARNING in $FLATFILT****'/
+  ' Plane chosen for electron splitting in DBS was ',I4,/
+  ' This is > than the no. of planes in this FLATFILT geometry.'/
+  ' Splitting plane will be reset to the bottom plane no.'/
+  ' in this FLATFILT ( ',I4,').'/);
+      WRITE(IOUTLIST,101) ZPLANE_DBS,ISCM_NO_$FLATFILT+1;
+  101 FORMAT(/' ****DBS WARNING in $FLATFILT****'/
+  ' Plane chosen for electron splitting in DBS was ',I4,/
+  ' This is > than the no. of planes in this FLATFILT geometry.'/
+  ' Splitting plane will be reset to the bottom plane no.'/
+  ' in this FLATFILT ( ',I4,').'/);
+      ZPLANE_DBS=ISCM_NO_$FLATFILT+1;
+    ]
+    OUTPUT NBRSPL,ZPLANE_DBS;
+  (/' DBS in $FLATFILT:'/
+    '   Electron splitting no.        = ',I12,/
+    '   Electron splitting plane no.  = ',I12);
+  IF(ZPLANE_DBS=1)[
+    ZPOSN_DBS=ZMIN_$FLATFILT(1);
+  ]
+  ELSE[
+    ZPOSN_DBS=ZMAX_$FLATFILT(ZPLANE_DBS-1);
+  ]
+  OUTPUT ZPOSN_DBS;
+   ('   Z position of splitting plane = ',F10.5,' cm'/);
+  IF(IRAD_DBS=1)[
+    OUTPUT;(' Split electrons will be distributed with radial symmetry about'/
+            ' the beam axis in this plane.'/);
+  ]
+  OUTPUT ZRR_DBS;
+  (/'   Reminder: Z position of russian roulette plane = ',F10.5,' cm'/);
+]
+
+"establish top of first CM
+"
+ZFRONT_$FLATFILT = Z_min_CM(ICM_$FLATFILT);
+
+"
+"establish start of next CM
+"
+Z_min_CM(ICM_$FLATFILT+1) = ZMAX_$FLATFILT(ISCM_NO_$FLATFILT);
+
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$flatfilt=1) then the gap thickness
+"Z_gap_THICK(ICM_$flatfilt) = 0, which is used as a flag for no air gap
+
+Z_gap_THICK(ICM_$FLATFILT) = ZMIN_$FLATFILT(1) - Z_min_CM(ICM_$FLATFILT);
+IF(Z_gap_THICK(ICM_$FLATFILT) < $MIN_GAP)[
+   Z_gap_THICK(ICM_$FLATFILT) = 0.;
+   N_GAP_$FLATFILT = 0; "no air gap for this CM
+   ZMIN_$FLATFILT(1) = Z_min_CM(ICM_$FLATFILT);
+]
+ELSE[
+   N_GAP_$FLATFILT = 1; "this CM has an air gap
+   IRA = IRSTART_$FLATFILT + N_$FLATFILT; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+   ECUT(IRA) = ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_FLATFILT+N_GAP_$flatfilt regions
+"
+;
+IREND_$FLATFILT = IRSTART_$FLATFILT + N_$FLATFILT+ N_GAP_$FLATFILT - 1;
+                            "Index of last region
+NREG = NREG + N_$FLATFILT + N_GAP_$FLATFILT;
+                      "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$FLATFILT+1) = IREND_$FLATFILT+1;
+]
+ELSE [
+      OUTPUT ICM_$FLATFILT,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (FLATFILT):'/
+         I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$FLATFILT)=IERR_GEOM(ICM_$FLATFILT)+1;
+]
+
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$FLATFILT) = 1; "put a cylindrical boundary about CM
+
+"
+"  establish dose scoring zones and latch bit setting
+"  ==================================================
+"
+IRA = IRSTART_$FLATFILT-1; "absolute region number"
+DO IR_$FLATFILT=1, N_$FLATFILT ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$FLATFILT)=ECUT(IRA); "Minimum energy on exit from CM
+] "end of loop over IR_$FLATFILT
+
+"   return from INPUT_FLATFILT
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$FLATFILT:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$FLATFILT:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$FLATFILT"
+
+%E "Start of ISUMRY_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_FLATFILT
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$FLATFILT;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$FLATFILT,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_FLATFILT
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,       "T>colour of CM for EGS_Windows
+   IRA,           "T>absolute region number
+   I,J,K,L,II;    "T>DO loop index
+
+$REAL VOL_$FLATFILT($MAX_N_SC_$FLATFILT,$MAX_N_SC_$FLATFILT),
+      VOLUME_$FLATFILT($MAX_N_SC_$FLATFILT*$MAX_N_SC_$FLATFILT),
+                                                           "T> region volume
+      R1, R2, H;
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$flatfilt.
+"
+II = 0;
+DO I = 1,ISCM_NO_$FLATFILT[
+   K = 0;
+   DO J = 1,ISSCM_NO_$FLATFILT(I) + 1[
+      K = K + 1;
+      IF(J<=ISSCM_NO_$FLATFILT(I))[
+         R1 = RTOP_$FLATFILT(I,J);
+         R2 = RBOT_$FLATFILT(I,J);
+      ]
+      ELSE[
+         R1 = RMAX_CM(ICM_$FLATFILT);
+         R2 = RMAX_CM(ICM_$FLATFILT);
+      ]
+      H = ZMAX_$FLATFILT(I) - ZMIN_$FLATFILT(I);
+      VOL_$FLATFILT(I,J) = 3.1415926/3.0*H*(R1**2 + R2**2 + R1*R2);
+      II= II + 1;
+      IF(K > 1)[
+         DO L = 1, K - 1[
+            VOL_$FLATFILT(I,J) =
+            VOL_$FLATFILT(I,J) - VOL_$FLATFILT(I,L);
+         ]
+      ]
+      VOLUME_$FLATFILT(II) = VOL_$FLATFILT(I,J);
+   ]
+]
+
+IRA = IRSTART_$FLATFILT - 1; "absolute region number
+DO IR_$FLATFILT = 1,N_$FLATFILT ["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA) ~= 0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID) = AMASS(ID)+VOLUME_$FLATFILT(IR_$FLATFILT)*RHOR(IRA);
+   ]
+] "end of loop over IR_$FLATFILT"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+
+WRITE(IOUTLIST,110) ICM_$FLATFILT,TITLE_$FLATFILT;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$FLATFILT),RMAX_CM(ICM_$FLATFILT);
+
+WRITE(IOUTLIST,122);
+DO I = 1, ISCM_NO_$FLATFILT[
+   DO II = 1 , ISSCM_NO_$FLATFILT(I)[
+      IF(II=1)[
+        WRITE(IOUTLIST,123)I,ZMIN_$FLATFILT(I),ZMAX_$FLATFILT(I)-
+                           ZMIN_$FLATFILT(I),
+                           II,RTOP_$FLATFILT(I,II),
+                           RBOT_$FLATFILT(I,II);
+      ]
+      ELSE[
+        WRITE(IOUTLIST,124)II,RTOP_$FLATFILT(I,II),
+                           RBOT_$FLATFILT(I,II);
+      ]
+   ]
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$FLATFILT - 1;
+DO I = 1, ISCM_NO_$FLATFILT[
+   DO II = 1 , ISSCM_NO_$FLATFILT(I) + 1[
+      IRA = IRA + 1;
+      IR_$FLATFILT = IRA - IRSTART_$FLATFILT + 1;
+      IF(II<=ISSCM_NO_$FLATFILT(I))[
+          IF(MED(IRA)=0) ["Medium is vacuum"
+              WRITE(IOUTLIST,140) IR_$FLATFILT,I,II,'cone',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE ["Medium is not vacuum"
+              WRITE(IOUTLIST,140) IR_$FLATFILT,I,II,'cone',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+      ]
+      ELSEIF(II=ISSCM_NO_$FLATFILT(I) + 1)[
+          IF(MED(IRA)=0) ["Medium is vacuum"
+              WRITE(IOUTLIST,141) IR_$FLATFILT,I,'NA','between',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE ["Medium is not vacuum"
+              WRITE(IOUTLIST,141) IR_$FLATFILT,I,'NA','between',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+          WRITE(IOUTLIST,142)'outer';
+          WRITE(IOUTLIST,142)'cone and';
+          WRITE(IOUTLIST,142)'RMAX_CM';
+      ]
+    ]
+    WRITE(IOUTLIST,142)' ';
+]
+IF(N_GAP_$FLATFILT ~= 0 )[
+   IRA = IRSTART_$FLATFILT + N_$FLATFILT;
+   WRITE(IOUTLIST,143) N_$FLATFILT+N_GAP_$FLATFILT,'NA','NA','airgap',
+       ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+       DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+   WRITE(IOUTLIST,142)'at top';
+]
+
+
+110 FORMAT(///' Component module',I3,' is FLATFILT (Rev 1.6)'
+           /'  --------------------------------------'
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$FLATFILT geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',F15.5,' cm');
+122 FORMAT
+(/T2,'layer  Z front  thickness  cone  top radius  bottom radius',
+ /T2,'  #     face                #',
+ /T2,'        (cm)       (cm)            (cm)          (cm)');
+123 FORMAT(T2,I3,F9.3,F11.3,I6,F11.3,F14.3);
+124 FORMAT(T25,I6,F11.3,F14.3);
+130 FORMAT(/T2,'$FLATFILT region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  layer  cone  loc.  electron  photon',
+           '  range  rejection  dose  bit  medium'
+           /T2,'region                     cutoff   cutoff',
+           '  level   maximum   zone  set'
+           /T2,'                           (MeV)     (MeV)',
+           '  (MeV)    (MeV)');
+140 FORMAT(T2,I3,I7,I6,A9,F8.3,F9.3,F7.3,F10.3,I5,I4,2x,9A1);
+141 FORMAT(T2,I3,I7,A6,A9,F8.3,F9.3,F7.3,F10.3,I5,I4,2x,9A1);
+142 FORMAT(T18,A9);
+143 FORMAT(T2,I3,A7,A6,A9,F8.3,F9.3,F7.3,F10.3,I5,I4,2x,9A1);
+
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
+   ICOLOUR=4;
+"   WRITE(IOUTGEOM,201) ICOLOUR,'DISK',0.0,0.0,ZMIN_$FLATFILT,RTOP_$FLATFILT;
+   "filter geometry"
+   DO I = 1, ISCM_NO_$FLATFILT[
+      DO J = 1, ISSCM_NO_$FLATFILT(I)[
+         WRITE(IOUTGEOM,201)ICOLOUR,'CYLZ',ZMIN_$FLATFILT(I),
+                      RTOP_$FLATFILT(I,J),ZMAX_$FLATFILT(I),
+                      RBOT_$FLATFILT(I,J),0.0,0.0;
+      ]
+   ]
+]"End of graphics output"
+201   FORMAT(' ',I1,A4,10(F7.2,','));
+;RETURN;
+END; "End of subroutine ISUMRY_$FLATFILT"
+
+%E "Start of HOWNEAR_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_$FLATFILT
+"                          ***********************
+"
+" Returns min. distance to nearest region boundary.
+" Used to be a macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$FLATFILT(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$FLATFILT,STACK/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      DNER_Z,DNER_IN,DNER_OU,  "T> temp. distance variables
+      tmp1,tmp2,tmp3,tmp4,tmp5, "T> temp. distance variables
+      ALO_$FLATFILT,  "T> part of equation of line describing cone bdy
+      BLO_$FLATFILT;  "T> part of equation of line describing cone bdy
+
+$INTEGER I1,I,II; "T> looping indices
+
+IR_$FLATFILT = IR(NP) - IRSTART_$FLATFILT + 1;
+I1 = 0;
+DO I = 1, ISCM_NO_$FLATFILT [
+    DO II= 1, ISSCM_NO_$FLATFILT(I)+1 [
+       I1=I1+1;
+       IF(I1=IR_$FLATFILT)[
+         ISCM_$FLATFILT=I;
+         IISSC_$FLATFILT=II;
+         EXIT;
+       ]
+    ]
+    IF(I1=IR_$FLATFILT)[
+       EXIT;
+    ]
+]
+IF(IR_$FLATFILT<=N_$FLATFILT)[
+   DNER_OU = 1E20;
+   DNER_IN = 1E20;
+   DNER_Z = MIN(ZMAX_$FLATFILT(ISCM_$FLATFILT) - Z(NP),
+                Z(NP) - ZMIN_$FLATFILT(ISCM_$FLATFILT) );
+   IF(IISSC_$FLATFILT <= ISSCM_NO_$FLATFILT(ISCM_$FLATFILT))[
+     tmp1 = ZMAX_$FLATFILT(ISCM_$FLATFILT)
+       - ZMIN_$FLATFILT(ISCM_$FLATFILT);
+     tmp2 = ABS(RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT)
+        - RBOT_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT));
+     tmp3 = tmp1/SQRT(tmp1**2+tmp2**2);
+     tmp4 = SQRT(X(NP)**2 + Y(NP)**2);
+     ALO_$FLATFILT = (RBOT_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT)
+                  - RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT))/
+                    (ZMAX_$FLATFILT(ISCM_$FLATFILT)
+                  - ZMIN_$FLATFILT(ISCM_$FLATFILT));
+     BLO_$FLATFILT = RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT)
+                 - ZMIN_$FLATFILT(ISCM_$FLATFILT)*ALO_$FLATFILT;
+     tmp5 = ALO_$FLATFILT * Z(NP) + BLO_$FLATFILT;
+     DNER_OU =  (tmp5 - tmp4) * tmp3;
+   ]
+   IF(IISSC_$FLATFILT > 1 )[
+      tmp1 = ZMAX_$FLATFILT(ISCM_$FLATFILT)
+            - ZMIN_$FLATFILT(ISCM_$FLATFILT);
+      tmp2 = ABS(RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT-1)
+            - RBOT_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT-1));
+      tmp3 = tmp1/SQRT(tmp1**2+tmp2**2);
+      tmp4 = SQRT(X(NP)**2 + Y(NP)**2);
+      ALO_$FLATFILT = (RBOT_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT-1)
+               - RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT-1))/
+                (ZMAX_$FLATFILT(ISCM_$FLATFILT)
+               - ZMIN_$FLATFILT(ISCM_$FLATFILT));
+      BLO_$FLATFILT = RTOP_$FLATFILT(ISCM_$FLATFILT,IISSC_$FLATFILT-1)
+               - ZMIN_$FLATFILT(ISCM_$FLATFILT)*ALO_$FLATFILT;
+      tmp5 = ALO_$FLATFILT * Z(NP) + BLO_$FLATFILT;
+      DNER_IN =  (tmp4 - tmp5) * tmp3;
+   ]
+   DIST = MIN(DNER_IN,DNER_OU,DNER_Z);
+]
+ELSEIF(IR_$FLATFILT=N_$FLATFILT+1)[
+  DIST=MIN(Z(NP)-ZFRONT_$FLATFILT,ZMIN_$FLATFILT(1)-Z(NP));
+]
+RETURN;
+END;"End of subroutine HOWNEAR_$FLATFILT(Rev 1.6)
+
+"*******************************************************************************
+"End of FLATFILT_cm.mortran (Rev 1.6)"

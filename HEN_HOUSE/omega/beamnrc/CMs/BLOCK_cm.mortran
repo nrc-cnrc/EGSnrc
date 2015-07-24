@@ -1,0 +1,1874 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: a single block with an opening            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Geoff Zhang, 1996                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Dave Rogers                                               "
+"                   John Antolak                                              "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             **************             ""toc:
+"                             *            *             ""toc:
+"                             *   BLOCK    *             ""toc:
+"                             *            *             ""toc:
+"                             **************             ""toc:
+"
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  A single BLOCK of which the opening can
+"   be of any geometry defined by multi-straight-line for modeling any
+"   shape block used in treatment.
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               REVISIONS
+"                               *********
+"
+"   Aug, 2000  John Antolak of the M.D. Anderson Cancer Center made extensive
+"              corrections and improvements to this CM.  In the process, he
+"              corrected several serious bugs:
+"
+"              1. Divide by zero errors when particles are travelling ||
+"                 to interior planar surfaces.
+"              2. Inability to have ZFOCUS=0.
+"              3. Allowed some particles to take one step in block material
+"                 as if it was central air.
+"              4. Assumption that if subregions share 2 consecutive points
+"                 then the segment between them is also shared.
+"              5. Unnecessary checking of distance to corner points in
+"                 HOWNEAR
+"              6. Errors in the macros $BLOCK_IN_HIT_OUTAIR
+"                 $DIST_POINT2PLANE
+"              7. When W=0 in the block region, IRNEW not set correctly.
+"              8. No error message when the max. number of points in
+"                 a subregion exceeded.
+"              9. Potential bug in $CHECK_OPEN_AIR_$BLOCK macro which
+"                 could cause it to fail if 3 or more vertices were colinear
+"                 vertically or horizontally.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+;
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  A single BLOCK.
+"
+%E  "BLOCK_cm   start of geometry description"
+"I>
+"I> Geometry of BLOCK:                          ""toc:
+"I> ******************
+"I>                                  ||
+"I>                                \ || /   beam
+"I>                                 \||/
+"I>                                  \/
+"I>
+"I>         ---------------------------------------------------
+"I>                                 IR =1
+"I>           - - - - ----------- - - - - - - ---------- - - - -
+"I>             IR=2  |         /    IR=2    /         |  IR=2
+"I>                   |  IR=3  /            /   IR=3   |
+"I>           - - - - -------- - - - - - - ------------- - - - -
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are 3 local regions.
+"I>   The first region is the air gap which is always present at the front.
+"I>
+"I>
+"I>            --------------------------------------------------------
+"I>            |          Region               | Description          |
+"I>            |-------------------------------|----------------------|
+"I>            |  absolute       | local       |                      |
+"I>            |-----------------|-------------|                      |
+"I>            |IRSTART_BLOCK    | IR_BLOCK    |   see graph          |
+"I>            |  +IR_BLOCK-1    |             |                      |
+"I>            --------------------------------------------------------
+"I>
+;
+" Subroutines:
+" ************
+"                      INPUT_$BLOCK
+"                      ISUMRY_$BLOCK
+"                      HOWFAR_$BLOCK
+"                      WHERE_AM_I_$BLOCK
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+"
+"    Warning: Use PYRAMIDS to model simple rectangular apertures, since
+"             BLOCK requires up to 2x more CPU time than PYRAMIDS to model
+"             such simple geometries.
+"*******************************************************************************
+"
+"                   Description of user input for BLOCK           ""toc:
+"                   **************************************
+"I>
+"I>  CARDS CM_BLOCK(Rev 1.4)
+"I>  *****************
+"I>
+"I>  -1  dummy line filled with ***  read in main
+"I>
+"I>   0  RMAX_CM(ICM_$BLOCK):  Perpendicular distance from Z-axis
+"I>                            to boundary surrounding component
+"I>                            This component module has a square
+"I>                            boundary.
+"I>
+"I>   1  TITLE_$BLOCK (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$BLOCK, ZMAX_$BLOCK, ZFOCUS_$BLOCK (3F15.0):
+"I>
+"I>        ZMIN_$BLOCK:  Z of front of CM (not including airgap) (cm).
+"I>        ZMAX_$BLOCK:  Z of back of CM (cm).
+"I>      ZFOCUS_$BLOCK:  Z at which the inner sides of the opening(s)
+"I>                      in the block are focused (cm).
+"I>
+"I>         Note restrictions: ZMAX < ZFOCUS or ZFOCUS < ZMIN, ie not in between
+"I>                            ZMIN - ZFOCUS >= 0.01 if ZFOCUS < ZMIN
+"I>
+"I>   3  ISUB_MAX_$BLOCK (I5): Number of subregions.  Each opening is made
+"I>                            up of one or more subregions.
+"I>
+"I>   Repeat 4 - 4a for J = 1, ISUB_MAX_$BLOCK
+"I>
+"I>   4  NSUB_$BLOCK(J)   (I5)
+"I>
+"I>        NSUB_$BLOCK(J):  number of points defining subregion J
+"I>
+"I>   Repeat 4a for I = 1, NSUB_$BLOCK(J)
+"I>
+"I>  4a  XHI_POINT_$BLOCK(I,J),YHI_POINT_$BLOCK(I,J) (2F15.0):
+"I>
+"I>      XHI_POINT_$BLOCK(I,J): X coordinate of point I at upper surface (cm)
+"I>      YHI_POINT_$BLOCK(I,J): Y coordinate of point I at upper surface (cm)
+"I>
+"I>      NOTE:  Input the points clockwise or counter-clockwise around
+"I>             the perimeter of each subregion.  A subregion may not
+"I>             have an interior angle > 180 degrees.
+"I>
+"I>   5  XPMAX_$BLOCK,YPMAX_$BLOCK,XNMAX_$BLOCK,YNMAX_$BLOCK (4F15.0):
+"I>
+"I>        XPMAX_$BLOCK: X coordinate of block edge in +X direction (cm)
+"I>        YPMAX_$BLOCK: Y coordinate of block edge in +Y direction (cm)
+"I>        XNMAX_$BLOCK: X coordinate of block edge in -X direction (cm)
+"I>        YNMAX_$BLOCK: Y coordinate of block edge in -Y direction (cm)
+"I>
+"I>   6   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) for air
+"I>                           in gap at top.
+"I>
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons.
+"I>          DOSE_ZONE:   Dose scoring zone of air.
+"I>     IREGION_TO_BIT:   mapping of region to bit for LATCH
+"I>
+"I>   7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in openings
+"I>                               and beyond edges of the block
+"I>
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons in
+"I>                       openings and beyond edges of block
+"I>          DOSE_ZONE:   Dose scoring zone of openings and region beyond
+"I>                       edges of block
+"I>     IREGION_TO_BIT:   mapping of region comprising openings and region
+"I>                       beyond block edges to bit for LATCH
+"I>
+"I>   8   MED_IN (24A1):  Medium in openings and beyond block edges,
+"I>                       used to set MED_INDEX.
+"I>
+"I>   9   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in block material
+"I>
+"I>         ECUT, PCUT:   Cutoff energies for electrons and photons
+"I>                       in material surrounding openings
+"I>          DOSE_ZONE:   Dose scoring zone of material surrounding
+"I>                       openings.
+"I>     IREGION_TO_BIT:   mapping of region surrounding openings
+"I>                       to bit for LATCH
+"I>
+"I>   10  MED_IN (24A1):  Medium of block,
+"I>                       used to set MED_INDEX.
+;
+"I>   Example
+"I>   *******
+"I>  The following input file describes a BLOCK of 4cm thick.
+"I>  The block begins at Z=0.0 cm and is made of MILDSTEEL. The air-filled
+"I>  opening(s) focus at Z=-10cm. Its positive X boundary begins at XPMAX=4.2cm,
+"I>  positive Y boundary at YPMAX=4.8cm, and its negative X boundary at
+"I>  XNMAX=-5.0cm, negative Y boundary at YNMAX=-3.0cm.
+"I>  There are 2 sub-regions describing one opening shaped like an arrow.
+"I>  In the first sub-region, there are 5 defining points; in the second one,
+"I>  there are 4 defining points. The defining points should be input
+"I>  clockwisely or counter-clockwisely. Each point is input as x, y in
+"I>  a line.
+"I>  In this particular input file, there is no gap at the top of the
+"I>  CM, so Z_min_CM will be automatically reset to -0.01cm to
+"I>  provide the required gap.
+"I>
+"I>  Dose in the air regions will be scored in dose zone 1.
+"I>  Dose in the block material will be scored in zone 2.
+"I>  ECUT and PCUT in all regions are set to 0.521MeV and
+"I>  0.01 MeV respectively.
+"I>
+"I>  ***********************************************
+"I>  10.0,           RMAX
+"I>  arrow shaped cutoff
+"I>  0.0, 4.0, -10.0,     ZMIN, ZMAX, ZFOCUS
+"I>  2,             2 sub-regions
+"I>  5,       5 defining points in sub 1
+"I>  0., 3.,        x,y of point 1 in sub 1
+"I>  -2., 1.,       x,y of point 2 in sub 1
+"I>  -1., 0.,       x,y of point 3 in sub 1
+"I>  1., 0.,        x,y of point 4 in sub 1
+"I>  2., 1.,        x,y of point 5 in sub 1      end of sub 1
+"I>  4,       4 defining points in sub 2
+"I>  -1., 0.,       x,y of point 1 in sub 2
+"I>  1., 0.,        x,y of point 2 in sub 2
+"I>  1., -2.,       x,y of point 3 in sub 2
+"I>  -1., -2.,      x,y of point 4 in sub 2.    end of sub 2.
+"I>  4.2, 4.8, -5.0, -3.0,      xpmax,ypmax,xnmax,ynmax
+"I>  0.0, 0.0, 1, 0,     ecut, pcut, dose-zone, ir-to-bit for air
+"I>  0.0, 0.0, 1, 0,     ecut, pcut, dose-zone, ir-to-bit for openings
+"I>  AIR521ICRU
+"I>  0.0, 0.0, 2, 0,     ecut, pcut, dose-zone, ir-to-bit for materail
+"I>  MILDSTEEL521
+"I>  ***********************************************
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules not allowed
+"
+"   2)  Overlapping openings and/or sub-regions not allowed
+"
+"   3)  Air gap at front of CM required
+"
+"   4)  Inner boundary of all openings must be within CM boundary, RMAX_CM
+"
+"*******************************************************************************
+
+%E    "Start of subroutine HOWFAR_$BLOCK (Rev 1.4)"
+"*******************************************************************************
+"************************** Component Module BLOCK **************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_BLOCK
+"                          ***********************
+"
+" HOWFAR routine for block with any shape openings.
+"
+" Determine if current region number is within component module BLOCK, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are 3 local regions, see above graph:
+"
+"      local                    absolute                   description
+"   ------------  ------------------------------------   ---------------
+"    IR_BLOCK       IR_start_CM(ICM_BLOCK)+IR_BLOCK-1
+"       1                                                 front air
+"       2                                                 central air
+"       3                                                 block material
+"
+"   Geometrical co-ordinates, as set in INPUT_BLOCK are:
+"
+"   ZFRONT_BLOCK     front of CM (upstream surface, air region)
+"   ZBACK_BLOCK      back of CM (downstream surface, air region)
+"   ZMIN_BLOCK       front of block,
+"   ZMAX_BLOCK       back of block
+"
+"*******************************************************************************
+;SUBROUTINE HOWFAR_$BLOCK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$BLOCK,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_BLOCK
+"T>**********************************
+"T>
+INTEGER
+   I,J,K,II,JJ,  "T>DO loop indeces
+   IHIT,         "T>index 1 hit; 0 not hit
+   ICHECK,       "T>index of whether particle inside opening or not
+   IPLANE,       "T>index of block face with minimum intersection distance
+   IRNEW_$BLOCK; "T>tentative new region number within CM (absolute)
+$REAL
+   DIST,         "T>dist to region boundary along current particle trajectory
+   TDIST,        "T>dist to region boundary along current particle trajectory
+   TEMPDIST,     "T>dist to region boundary along current particle trajectory
+   XPLN_$BLOCK, "T>X coordinate at a plane surface along particle trajectory
+   YPLN_$BLOCK, "T>Y coordinate at a plane surface along particle trajectory
+   XPL1_$BLOCK, "T>X coordinate at a plane surface along particle trajectory
+   YPL1_$BLOCK, "T>Y coordinate at a plane surface along particle trajectory
+   XPL2_$BLOCK, "T>X coordinate at a plane surface along particle trajectory
+   YPL2_$BLOCK, "T>Y coordinate at a plane surface along particle trajectory
+   XHIT_$BLOCK, "T>X coordinate particle hits a plane or a line
+   YHIT_$BLOCK, "T>Y coordinate particle hits a plane or a line
+   ZHIT_$BLOCK, "T>Z coordinate particle hits a plane or a line
+   XYMAX,       "T>max x or y, temporary variable
+   XYMIN,       "T>min x or y, temporary variable
+   ANYTHING;    "T>temporary variable to save computing time
+
+"Following replacement macros sets DNEAR as well as defining IR_$BLOCK"
+";$BLOCK_CM_HOWNEAR(DNEAR(NP));" "do not calculate dnear here"
+"
+" Boundary-crossing check
+" ***********************
+"
+IR_$BLOCK = IR(NP)-IRSTART_$BLOCK+1;
+" Determine if current region number is within component module BLOCK, and if
+" so evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+"
+IF(IR_$BLOCK = 1)["particle in front air region"
+   IF(W(NP) > 0.0 )[
+      DIST = (ZMIN_$BLOCK - Z(NP))/W(NP);
+      IF(DIST < 0) [DIST=0.;]
+      IRNEW_$BLOCK = IRSTART_$BLOCK + 2; "default to block material region"
+      XPLN_$BLOCK = X(NP) + U(NP) * DIST ;
+      YPLN_$BLOCK = Y(NP) + V(NP) * DIST ;
+      ICHECK = 0;
+      IF(XPLN_$BLOCK >= XPMAX_$BLOCK | XPLN_$BLOCK <= XNMAX_$BLOCK |
+         YPLN_$BLOCK >= YPMAX_$BLOCK | YPLN_$BLOCK <= YNMAX_$BLOCK )[
+         ICHECK = 1;
+      ]
+      ELSE [ "check whether it in center air or not"
+         J = 1;
+         LOOP [ "loop over subregions"
+            $CHECK_SUBREGION_$BLOCK(
+                  XPLN_$BLOCK,YPLN_$BLOCK,ZMIN_$BLOCK,J,ICHECK);
+            IF (ICHECK=-1) [ "outside this subregion, check next one"
+               J=J+1;
+            ]
+         ] WHILE (J<=ISUB_MAX_$BLOCK & ICHECK~=1);
+      ]
+
+      IF(ICHECK=1)[
+         IRNEW_$BLOCK = IRSTART_$BLOCK + 1; "opening and outside block air"
+      ]
+      IF(DIST <= USTEP ) ["particle to move to region boundary"
+         USTEP = DIST;
+         IRNEW = IRNEW_$BLOCK; "new region number"
+      ]
+   ]    " end of w > 0"
+   ELSEIF(W(NP) < 0.0 )[ "particle going backward in front air"
+      DIST = (ZFRONT_$BLOCK - Z(NP))/W(NP);
+      IF(DIST <= 0)[DIST=1.E-16;]
+      IF(DIST <= USTEP ) ["particle leave cm from front"
+         USTEP = DIST;
+         CALL WHERE_AM_I(ICM_$BLOCK,-1);
+      ]
+   ] " end of w < 0"
+] "end of front air region"
+ELSEIF(IR_$BLOCK = 2)["particle in center air and outside air region"
+"   ;$BLOCK_CHECK_IN;   "
+   IF(X(NP)>=XPMAX_$BLOCK | X(NP)<=XNMAX_$BLOCK |
+      Y(NP)>=YPMAX_$BLOCK | Y(NP)<=YNMAX_$BLOCK )[ "particle in outside air"
+      IF( W(NP) > 0.0 )[ "going along positive z"
+         IRNEW_$BLOCK = 1;          "default to new CM"
+         DIST = (ZMAX_$BLOCK - Z(NP))/W(NP);
+         IF(DIST<=0.)[DIST=1.E-16;] "ensure call to ausgab if leaving CM"
+      ]
+      ELSEIF( W(NP) < 0.0 ) [ "going along negative z"
+         IRNEW_$BLOCK = IRSTART_$BLOCK; "default to front air region"
+         DIST = (ZMIN_$BLOCK - Z(NP))/W(NP);
+      ]
+      ELSE [ "moving in x-y plane"
+         IRNEW_$BLOCK = IRSTART_$BLOCK + 2; "default to block region"
+         DIST = 1.E10;
+      ]
+      TEMPDIST=DIST; "save plane intersection distance"
+      IF(DIST < 0.) ["wrong region, skip block face check and go to new region"
+         DIST=0.;
+      ]
+      ELSE [ "check the outside block faces for a closer hit point"
+        ;$BLOCK_IN_HIT_OUTAIR; "checks for hit on outer block faces"
+      ]
+      IF(DIST<TEMPDIST)["found closer block face hit point,"
+                        "particle going to block material"
+         IRNEW_$BLOCK = IRSTART_$BLOCK + 2;
+      ]
+      IF(DIST <= USTEP ) ["particle to move to region boundary
+            USTEP = DIST;
+            IF (IRNEW_$BLOCK=1) ["leaving CM through back"
+               CALL WHERE_AM_I(ICM_$BLOCK,1);
+            ]
+            ELSE ["still in CM"
+               IRNEW = IRNEW_$BLOCK; "new region number"
+            ]
+      ]
+   ] " end of outer air region"
+   ELSE ["particle in center air"
+"following macro checks whether the particle is really inside opening air."
+"that's for the consideration to avoid particle entering wrong region."
+"if it's wrong region, the particle would be sent back to the right one."
+"It also updates ISUBR_$BLOCK to be the current subregion."
+     ;$CHECK_OPEN_AIR_$BLOCK(ICHECK);
+      IF(ICHECK = -1) ["particle is outside all subregions"
+         USTEP = 0.0;
+         IRNEW = IRSTART_$BLOCK + 2; "in block region"
+         RETURN;
+      ]
+      IF( W(NP) > 0.0 )[ "going along positive z"
+         IRNEW_$BLOCK = 1;          "default to new CM"
+         DIST = (ZMAX_$BLOCK - Z(NP))/W(NP);
+         IF(DIST<=0.)[DIST=1.E-16;]
+      ]
+      ELSEIF( W(NP) < 0.0 ) [ "going along negative z"
+         IRNEW_$BLOCK = IRSTART_$BLOCK; "default to front air region"
+         DIST = (ZMIN_$BLOCK - Z(NP))/W(NP);
+      ]
+      ELSE [ "moving in x-y plane"
+         IRNEW_$BLOCK = IRSTART_$BLOCK + 2; "default to block region"
+         DIST = 1.E10;
+      ]
+      TEMPDIST=DIST; "save plane intersection distance"
+      IF(DIST < 0.) ["wrong region, skip block face check and go to new region"
+         DIST=0.;
+      ]
+      ELSE [ "check all the inside block faces for a closer hit point"
+
+"In the current subregion, find the shortest distance to any block"
+"face where the dot product of the direction vector and the block face"
+"normal is negative. If the plane is NOT a shared plane, this is the"
+"distance to the block. If the plane is a shared plane, find out which"
+"subregion it goes to, and repeat for the new subregion."
+
+         LOOP [
+            J = ISUBR_$BLOCK;
+            IPLANE=0;
+            DO I = 1,NSUB_$BLOCK(J) [ "loop over all edge planes"
+
+"following macro does: 1. compute the dot product of the direction and"
+"the plane normal vectors. If negative, 2. compute the distance between"
+"the current point and the plane along the trajectory. 3. Set DIST to"
+"the minimum of TEMPDIST (distance to upper of lower boundary) and the"
+"current minimum DIST. It also updates IPLANE, the index of the plane"
+"where the minimum distance was found."
+"The plane is assumed to be described by the equation Ax+By+Cz+D=0, and"
+"the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
+               ;$BLOCK_IN_HIT;
+            ]
+            IF( IPLANE>0 & DIST<TEMPDIST & ISHARE_PLANE_$BLOCK(IPLANE,J)>0 ) [
+               "found closer intersection and plane is shared"
+               DIST = TEMPDIST; "reset DIST for next subregion"
+               ISUBR_$BLOCK = ISHARE_PLANE_$BLOCK(IPLANE,J);
+            ]
+            ELSE [ "exit the loop"
+               J = ISUB_MAX_$BLOCK+1;
+            ]
+         ] WHILE (J<=ISUB_MAX_$BLOCK);
+      ]
+
+      IF(DIST<TEMPDIST)["found closer block face hit point,"
+                        "particle going to block material"
+         IRNEW_$BLOCK = IRSTART_$BLOCK + 2;
+      ]
+
+      IF(DIST <= USTEP ) ["particle to region boundary"
+            USTEP = MIN(USTEP, DIST+BDYTOL_$BLOCK); "to avoid stalling"
+            "Note: irnew_$block=1 can only be for w(np)>0."
+            "Previous code also had this for w<0, but exiting through top"
+            "always goes into the air region above the block."
+            IF (IRNEW_$BLOCK=1|Z(NP)=ZMAX_$BLOCK) ["leaving CM through back"
+               CALL WHERE_AM_I(ICM_$BLOCK,1);
+            ]
+            ELSE ["still in CM"
+               IRNEW = IRNEW_$BLOCK; "new region number"
+            ]
+      ]
+   ] "end of center air"
+] "end of center and outside air region"
+ELSEIF(IR_$BLOCK = 3) ["particle in block material region"
+"If the particle is outside the block boundary, or inside one"
+"of the internal subregions, send it back to the air region."
+   IF(X(NP)>XPMAX_$BLOCK | X(NP)<XNMAX_$BLOCK |
+      Y(NP)>YPMAX_$BLOCK | Y(NP)<YNMAX_$BLOCK )[ "particle in outside air"
+         USTEP = 0.0;
+         IRNEW = IRSTART_$BLOCK + 1; "air region"
+         RETURN;
+   ]
+   $CHECK_OPEN_AIR_$BLOCK(ICHECK);
+   IF(ICHECK = 1) ["particle is inside one of the subregions"
+      USTEP = 0.0;
+      IRNEW = IRSTART_$BLOCK + 1; "air region"
+      RETURN;
+   ]
+
+"We now know that the particle is in the block region. Because this"
+"region is not concave, we not only have to check for planar"
+"intersections, we have to verify that the intersections are on the"
+"actual block face. To do so, we loop over all internal subregions,"
+"looking for planar faces where the dot product of the direction and"
+"plane normal vectors is positive. For each of those faces, we compute"
+"the distance to the intersection, and compare to the current minimum"
+"distance. If it is less than the current minimum, we check to see of"
+"the intersection point is on the actual block face. If so, we set the"
+"new minimum to that distance."
+   IF( W(NP) > 0.0 )[ "going along positive z"
+      IRNEW_$BLOCK = 1;          "default to new CM"
+      DIST = (ZMAX_$BLOCK - Z(NP))/W(NP);
+      IF(DIST<=0.)[DIST=1.E-16;]
+   ]
+   ELSEIF( W(NP) < 0.0 ) [ "going along negative z"
+      IRNEW_$BLOCK = IRSTART_$BLOCK; "default to front air region"
+      DIST = (ZMIN_$BLOCK - Z(NP))/W(NP);
+   ]
+   ELSE [ "moving in x-y plane"
+      IRNEW_$BLOCK = IRSTART_$BLOCK + 1; "default to air region"
+      DIST = 1.E10;
+   ]
+   TEMPDIST=DIST;
+   IF(DIST < 0) ["wrong region, skip block face check and go to new region"
+      DIST=0.;
+   ]
+   ELSE [ "check all the block faces for a closer hit point"
+      DO J = 1,ISUB_MAX_$BLOCK [ "loop through all sub-regions"
+         DO I = 1,NSUB_$BLOCK(J) [ "loop over all edge planes"
+            IF(ISHARE_PLANE_$BLOCK(I,J)=-1)["not shared plane"
+               IF(I~=NSUB_$BLOCK(J)) [ "not last point"
+
+"following macro does: 1. compute the dot product of the direction and"
+"the plane normal vectors. If positive, 2. compute the distance between"
+"the current point and the plane along the trajectory. If distance less"
+"than current minimum distance, 3. Check that the intersection point is"
+"within the block face. If so, 4. update the minimum intersection"
+"distance."
+"The plane is assumed to be described by the equation Ax+By+Cz+D=0, and"
+"the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
+
+                  ;$BLOCK_OUT_HIT_INAIR(I+1);
+               ]
+               ELSE [ "last plane"
+                  ;$BLOCK_OUT_HIT_INAIR(1);
+               ]
+            ]
+         ]
+      ] "finished checking inside block faces"
+
+      "check the outside block faces if an inside face was not hit"
+      IF (DIST=TEMPDIST) ["no intersection with inside block faces"
+         "following macro gives dist"
+            ;$BLOCK_OUT_HIT_OUTAIR;
+      ]
+   ]
+   IF(DIST<TEMPDIST)["found closer block face hit point,"
+                     "particle going to air outside or inside"
+      IRNEW_$BLOCK = IRSTART_$BLOCK + 1;
+   ]
+   IF(DIST <= USTEP ) ["particle to region boundary"
+         USTEP = MIN(USTEP, DIST+BDYTOL_$BLOCK); "to avoid stalling"
+         "Note: irnew_$block=1 can only be for w(np)>0."
+         "Previous code also had this for w<0, but exiting through top"
+         "always goes into the air region above the block."
+         IF (IRNEW_$BLOCK=1|Z(NP)=ZMAX_$BLOCK) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$BLOCK,1);
+         ]
+         ELSE ["still in CM"
+            IRNEW = IRNEW_$BLOCK; "new region number"
+         ]
+   ]
+] " end of material region"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE [
+   OUTPUT IR(NP)-IRSTART_$BLOCK+1,IR(NP),ICM_$BLOCK,
+   IR_start_CM(ICM_$BLOCK);(//' ************'//' HOWFAR_$BLOCK error'/
+   '    Region, local, absolute =',2I5/
+   '    CM number=',I5,' start region =',I5/ ' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN;
+END; "End of subroutine HOWFAR_$BLOCK"
+%E    "Start of subroutine WHERE_AM_I_$BLOCK (Rev 1.4)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_BLOCK
+"                          ***************************
+"
+" WHERE_AM_I routine for set of BLOCK.
+"
+" WHERE_AM_I_$BLOCK determines the new region number when a
+" particle traverses  a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$BLOCK subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$BLOCK from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$BLOCK(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$BLOCK,EPCONT,STACK/; "/STACK/ is needed for the geometries.
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_BLOCK
+"T>**************************************
+"T>
+;
+INTEGER ICHECK,     "T>+1 inside central air, -1 outside air"
+        I,J,        "T>loop counters"
+        IDIR;       "T>direction of particle, +1=forward, -1=backward"
+$REAL
+   XBDY_$BLOCK,  "T>x coordinate at bottom of block"
+   YBDY_$BLOCK,  "T>y coordinate at bottom of block"
+   ANYTHING;     "T>temporary variable"
+
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   IRNEW = IRSTART_$BLOCK;
+]
+ELSE ["particle entering this CM through back face (downstream)
+   XBDY_$BLOCK = X(NP) + U(NP)*USTEP;
+   YBDY_$BLOCK = Y(NP) + V(NP)*USTEP;
+   IRNEW = IRSTART_$BLOCK + 2; "default to material region"
+   ICHECK = 0;
+   IF(XBDY_$BLOCK >= XPMAX_$BLOCK | XBDY_$BLOCK <= XNMAX_$BLOCK |
+      YBDY_$BLOCK >= YPMAX_$BLOCK | YBDY_$BLOCK <= YNMAX_$BLOCK )[
+      ICHECK = 1;
+   ]
+   ELSE [ "check whether it in center air or not"
+      J = 1;
+      LOOP [ "loop over subregions"
+         $CHECK_SUBREGION_$BLOCK(
+               XBDY_$BLOCK,YBDY_$BLOCK,ZMAX_$BLOCK,J,ICHECK);
+         IF (ICHECK=-1) [ "outside this subregion, check next one"
+            J=J+1;
+         ]
+      ] WHILE (J<=ISUB_MAX_$BLOCK & ICHECK~=1);
+   ]
+   IF(ICHECK=1)[ "particle entering air region"
+      IRNEW = IRSTART_$BLOCK + 1;
+   ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$BLOCK"
+%E    "Start of subroutine INPUT_$BLOCK (Rev 1.4)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_BLOCK
+"                           **********************
+"
+"  A CM input subroutine for a block of one or more openings.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section
+"  'Description of user input for BLOCK' in  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$BLOCK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$BLOCK,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_BLOCK
+"T>*********************************
+"T>
+INTEGER I,J,K,II,JJ,    "T>DO loop indeces
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX;      "T>medium index, set after medium sort by $MED_INPUT
+$REAL
+     XMAX_$BLOCK, "T>max x for all subregions
+     XMIN_$BLOCK, "T>min x for all subregions
+     YMAX_$BLOCK, "T>max y for all subregions
+     YMIN_$BLOCK, "T>min y for all subregions
+     ANYTHING,    "T>temp vari.
+     OLDSIGN,     "T>used to check >180 degree angle in subregion
+     NEWSIGN,     "T>used to check >180 degree angle in subregion
+AIRGAPMIN_$BLOCK; "T>minimum air gap in front of CM
+$REAL one;
+parameter (one = 1);
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$BLOCK = ICM;      "CM index for this component module
+"Get index of first region in this CM,
+IRSTART_$BLOCK = IR_start_CM(ICM_$BLOCK);
+                     "IR_start_CM  set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$BLOCK) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$BLOCK = 0.01;   "Minimum 0.01 cm air gap at front of CM
+"
+OUTPUT;
+ (/' Next component is a block ($BLOCK -- BLOCK SID: 1.24)'/
+  ' Title: ',$);
+MINPUT ($BLOCK) TITLE_$BLOCK;(60A1);
+            ";MINPUT is a replacement macro with EOF and
+            "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$BLOCK;(' ',60A1);
+
+IF(ICM_$BLOCK = 1)[
+   OUTPUT;(' This is the first component and starts at the reference plane');
+]
+ELSE [OUTPUT Z_min_CM(ICM_$BLOCK);(' Previous CM ends at:',F12.5,' cm');]
+
+"
+"   get geometry information
+"   =============================
+"get the z position of the block
+"
+OUTPUT;(/' Input Z of front of block (not including top airgap) (cm), '/
+         ' Z of back of block (cm), and Z focus point of the openings in'/
+         ' the block (cm): ',$);
+MINPUT ($BLOCK) ZMIN_$BLOCK,ZMAX_$BLOCK,ZFOCUS_$BLOCK; (3F15.0);
+OUTPUT ZMIN_$BLOCK,ZMAX_$BLOCK,ZFOCUS_$BLOCK; (3F12.5)
+
+IF(ICM_$BLOCK=1 & Z_min_CM(ICM_$BLOCK) > ZMIN_$BLOCK-AIRGAPMIN_$BLOCK)[
+  Z_min_CM(1)=ZMIN_$BLOCK-AIRGAPMIN_$BLOCK;
+  OUTPUT ICM_$BLOCK, AIRGAPMIN_$BLOCK, ZMIN_$BLOCK-AIRGAPMIN_$BLOCK,
+         Z_min_CM(1);
+     (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+        ' Less than min. airgap (',F8.5,' cm) between top',
+        ' of CM and the block.'/
+        ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+  WRITE(IOUTLIST,100)ICM_$BLOCK, AIRGAPMIN_$BLOCK,
+        ZMIN_$BLOCK-AIRGAPMIN_$BLOCK, Z_min_CM(1);
+  100 FORMAT(//' ***WARNING IN CM ',I4,' (BLOCK):'/
+        ' Less than min. airgap (',F8.5,' cm) between top',
+        ' of CM and the block.'/
+        ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+  Z_min_CM(1)=ZMIN_$BLOCK-AIRGAPMIN_$BLOCK;
+]
+ELSEIF(Z_min_CM(ICM_$BLOCK)>ZMIN_$BLOCK)[
+   OUTPUT ICM_$BLOCK; (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' Overlaps with previous CM'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+ELSEIF(Z_min_CM(ICM_$BLOCK) > ZMIN_$BLOCK-AIRGAPMIN_$BLOCK)[
+     OUTPUT ICM_$BLOCK, AIRGAPMIN_$BLOCK,
+       Z_min_CM(ICM_$BLOCK)+AIRGAPMIN_$BLOCK,ZMIN_$BLOCK;
+     (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+        ' Less than min. airgap (',F8.5,' cm) between top',
+        ' of CM and the block.'/
+        ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+     WRITE(IOUTLIST,101)ICM_$BLOCK, AIRGAPMIN_$BLOCK,
+       Z_min_CM(ICM_$BLOCK)+AIRGAPMIN_$BLOCK,ZMIN_$BLOCK;
+     101 FORMAT(//' ***WARNING IN CM ',I4,' (BLOCK):'/
+        ' Less than min. airgap (',F8.5,' cm) between top',
+        ' of CM and the block.'/
+        ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+     ZMIN_$BLOCK=Z_min_CM(ICM_$BLOCK)+AIRGAPMIN_$BLOCK;
+]
+IF(ZMIN_$BLOCK >= ZMAX_$BLOCK)[
+   OUTPUT ICM_$BLOCK; (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' ZMAX less than ZMIN'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+IF(ZFOCUS_$BLOCK > ZMIN_$BLOCK & ZFOCUS_$BLOCK < ZMAX_$BLOCK)[
+   OUTPUT ICM_$BLOCK; (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' Focus point is between ZMIN and ZMAX'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+IF(ZFOCUS_$BLOCK <= ZMIN_$BLOCK & ZMIN_$BLOCK - ZFOCUS_$BLOCK < 0.01)[
+   OUTPUT ICM_$BLOCK; (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+        ' Focus point is < 0.01cm above ZMIN'/
+        ' This will lead to erroneous results'//);
+   WRITE(IOUTLIST,'(//'' ***WARNING IN CM '',I4,'' (BLOCK):''/
+        '' Focus point is < 0.01cm above ZMIN''/
+        '' This will lead to erroneous results''//)') ICM_$BLOCK;
+]
+"
+" get number of sub-regions"
+OUTPUT $MAX_SUB_$BLOCK+1;
+(//' Number of subregions in the block (0 < # of subregions < ',I4,'):',$);
+MINPUT ($BLOCK) ISUB_MAX_$BLOCK; (I5);
+OUTPUT ISUB_MAX_$BLOCK; (I5);
+IF(ISUB_MAX_$BLOCK<1)[
+   ISUB_MAX_$BLOCK=1;
+   OUTPUT ICM_$BLOCK;
+     (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' # of subregions < 1'/
+        ' # of subregions reset to 1 for now'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+IF(ISUB_MAX_$BLOCK>$MAX_SUB_$BLOCK)["need to make $MAX_SUB_$BLOCK greater"
+   ISUB_MAX_$BLOCK=$MAX_SUB_$BLOCK;
+   OUTPUT ICM_$BLOCK, $MAX_SUB_$BLOCK;
+     (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' # of subregions greater than max. allowed.'/
+        ' # of subregions reduced to ',I4,' for now.'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+"
+" get coordinates of each points in each sub-region"
+" and find max, min values of x, y in each sub-region"
+DO J=1,ISUB_MAX_$BLOCK [    "to initialize array for max,min x,y in each sub"
+   XMAX_OPEN_$BLOCK(J) = -100.;
+   YMAX_OPEN_$BLOCK(J) = -100.;
+   XMIN_OPEN_$BLOCK(J) = 100.;
+   YMIN_OPEN_$BLOCK(J) = 100.;
+]
+DO J = 1, ISUB_MAX_$BLOCK [   "loop over subregions"
+   "j--sub-region counter,i--point in a sub-region counter."
+   OUTPUT J;
+    (//' For subregion # ',I4,' :');
+   OUTPUT; (/' # of points defining the subregion :',$);
+   MINPUT ($BLOCK) NSUB_$BLOCK(J); (I5); "get # of points defining sub J"
+   IF(NSUB_$BLOCK(J)>$MAX_POINT_$BLOCK)[
+      "need to make $MAX_POINT_$BLOCK greater or make subregions"
+      NSUB_$BLOCK(J)=$MAX_POINT_$BLOCK;
+      OUTPUT ICM_$BLOCK, $MAX_POINT_$BLOCK;
+        (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+           ' # of points greater than max. allowed.'/
+           ' # of points reduced to ',I4,' for now.'//);
+      IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+   ]
+   OUTPUT NSUB_$BLOCK(J); (I5);
+   OUTPUT; (/' Now input the (x,y) coordinates of each point at the top '/
+             ' of the block in cm (1 point/line).  Be sure to input points '/
+             ' either clockwise or counter-clockwise around the subregion. ');
+   DO I = 1, NSUB_$BLOCK(J) [  "loop over points defining sub-region J"
+      OUTPUT I;
+       (/' Point ',I4,' : ',$);
+      MINPUT ($BLOCK) XHI_POINT_$BLOCK(I,J),YHI_POINT_$BLOCK(I,J);
+                     (2F15.0);
+      OUTPUT XHI_POINT_$BLOCK(I,J),YHI_POINT_$BLOCK(I,J);
+                     (2F12.5);
+      IF(XHI_POINT_$BLOCK(I,J)>XMAX_OPEN_$BLOCK(J))[ "for max x, I of max_x"
+         XMAX_OPEN_$BLOCK(J) = XHI_POINT_$BLOCK(I,J);
+         I_MAXX_$BLOCK(J) = I;
+      ]
+      IF(YHI_POINT_$BLOCK(I,J)>YMAX_OPEN_$BLOCK(J))[ "for max y, I of max_y"
+         YMAX_OPEN_$BLOCK(J) = YHI_POINT_$BLOCK(I,J);
+         I_MAXY_$BLOCK(J) = I;
+      ]
+      IF(XHI_POINT_$BLOCK(I,J)<XMIN_OPEN_$BLOCK(J))[ "for min x, I of min_x"
+         XMIN_OPEN_$BLOCK(J) = XHI_POINT_$BLOCK(I,J);
+         I_MINX_$BLOCK(J) = I;
+      ]
+      IF(YHI_POINT_$BLOCK(I,J)<YMIN_OPEN_$BLOCK(J))[ "for min y, I of min_y"
+         YMIN_OPEN_$BLOCK(J) = YHI_POINT_$BLOCK(I,J);
+         I_MINY_$BLOCK(J) = I;
+      ]
+   ] "end of loop through I"
+]
+OUTPUT; (' ');
+"following macros checks whether input in the right way"
+"It also reverses clockwise regions to make surface normals"
+"point towards the inside of the air cavity."
+$CHECK_INPUT_$BLOCK;
+DO J = 1,ISUB_MAX_$BLOCK [
+   OUTPUT J,NSUB_$BLOCK(J),XMIN_OPEN_$BLOCK(J),XMAX_OPEN_$BLOCK(J),
+          YMIN_OPEN_$BLOCK(J),YMAX_OPEN_$BLOCK(J);
+   (/' Aperture ',I5,' has ',I5,' defining points.'/
+    ' the outermost points in x at the top of the block are: ',2F10.4,/
+    ' the outermost points in y at the top of the block are: ',2F10.4,/);
+]
+"
+"  parameter definition
+"  ====================
+"
+"geometrical coordinates
+"
+   "for each sub-region, there may be some points shared by more than one"
+   "sub-regions. if there are no such points, or only one such point,"
+   "this sub-region is a new opening. following is to label all the points,"
+   "set an index ISAME_POINT_$BLOCK(I,J)=1 to those shared points, and  "
+   "ISAME_POINT_$BLOCK(I,J)=-1 to those not shared points."
+   "Check for shared edges at the same time."
+" "
+DO J = 1,ISUB_MAX_$BLOCK [ "loop over sub-regions"
+   DO I = 1, NSUB_$BLOCK(J) [ "loop over points defining sub-region J"
+      ISAME_POINT_$BLOCK(I,J) = -1;
+      ISHARE_PLANE_$BLOCK(I,J) = -1;
+   ]
+]
+IF (ISUB_MAX_$BLOCK > 1) [ "need to check for shared edges"
+   DO J = 1,ISUB_MAX_$BLOCK-1 [ "loop over sub-regions"
+     DO I = 1, NSUB_$BLOCK(J) [ "loop over points defining sub-region J"
+       DO JJ = J+1, ISUB_MAX_$BLOCK [ "loop over sub-regions"
+          DO II = 1, NSUB_$BLOCK(JJ) [ "loop over points in sub JJ"
+             IF(XHI_POINT_$BLOCK(I,J)=XHI_POINT_$BLOCK(II,JJ) &
+                YHI_POINT_$BLOCK(I,J)=YHI_POINT_$BLOCK(II,JJ) ) [
+               ISAME_POINT_$BLOCK(I,J) = 1;
+               "check next point on (i,j) vs previous (ii,jj)"
+               IF(I<NSUB_$BLOCK(J)) [
+                  IF(II>1) [
+                    IF(XHI_POINT_$BLOCK(I+1,J)=XHI_POINT_$BLOCK(II-1,JJ) &
+                     YHI_POINT_$BLOCK(I+1,J)=YHI_POINT_$BLOCK(II-1,JJ) ) [
+                        ISHARE_PLANE_$BLOCK(I,J) = JJ;
+                        ISHARE_PLANE_$BLOCK(II-1,JJ) = J;
+                    ]
+                  ]
+                  ELSE [ "ii=1"
+                     K=NSUB_$BLOCK(JJ);
+                     IF(XHI_POINT_$BLOCK(I+1,J)=XHI_POINT_$BLOCK(K,JJ) &
+                        YHI_POINT_$BLOCK(I+1,J)=YHI_POINT_$BLOCK(K,JJ) ) [
+                        ISHARE_PLANE_$BLOCK(I,J) = JJ;
+                        ISHARE_PLANE_$BLOCK(K,JJ) = J;
+                     ]
+                  ]
+               ]
+               ELSE [
+                  IF(II>1) [
+                     IF(XHI_POINT_$BLOCK(1,J)=XHI_POINT_$BLOCK(II-1,JJ) &
+                        YHI_POINT_$BLOCK(1,J)=YHI_POINT_$BLOCK(II-1,JJ) ) [
+                        ISHARE_PLANE_$BLOCK(I,J) = JJ;
+                        ISHARE_PLANE_$BLOCK(II-1,JJ) = J;
+                     ]
+                  ]
+                  ELSE [
+                  K=NSUB_$BLOCK(JJ);
+                     IF(XHI_POINT_$BLOCK(1,J)=XHI_POINT_$BLOCK(K,JJ) &
+                        YHI_POINT_$BLOCK(1,J)=YHI_POINT_$BLOCK(K,JJ) ) [
+                        ISHARE_PLANE_$BLOCK(I,J) = JJ;
+                        ISHARE_PLANE_$BLOCK(II,JJ) = J;
+                     ]
+                  ]
+               ]
+             ]
+          ]
+       ]
+     ]
+   ]
+]
+;
+   "calculate parameters for each edge plane. A plane's equation is"
+   "in the form of ax+by+cz+d=0. The parameters are stored in"
+   "A_PLANE_$BLOCK(I,J),B_PLANE_$BLOCK(I,J), and so on, for plane I"
+   "in sub-region J. (a,b,c) is the plane's unit length normal vector."
+
+DO J = 1, ISUB_MAX_$BLOCK [ "loop over sub-regions"
+   DO I = 1, NSUB_$BLOCK(J) [ "loop over points defining sub-region J"
+      IF(I~=NSUB_$BLOCK(J))[ "not last plane"
+        ;$PLANE_ABCD_$BLOCK(I,I+1,A_PLANE_$BLOCK(I,J),B_PLANE_$BLOCK(I,J),
+             C_PLANE_$BLOCK(I,J),D_PLANE_$BLOCK(I,J));
+      ]
+      ELSE [   "last plane"
+        ;$PLANE_ABCD_$BLOCK(I,1,A_PLANE_$BLOCK(I,J),B_PLANE_$BLOCK(I,J),
+             C_PLANE_$BLOCK(I,J),D_PLANE_$BLOCK(I,J));
+      ]
+   ]
+]
+
+   "For each pair of adjacent planes, there is a line. "
+   "For each adjacent line, there is a point at plane z=ZMAX. All these"
+   "points define the lower opening edges. The coordinates of the point"
+   "are XLO_POINT_$BLOCK(I,J),YLO_POINT_$BLOCK(I,J),ZMAX_$BLOCK."
+   "The following section finds XLO and YLO and also determines"
+   "the max and min values of X and Y over all subregions."
+
+XMAX_$BLOCK=0.;
+XMIN_$BLOCK=0.;
+YMAX_$BLOCK=0.;
+YMIN_$BLOCK=0.;
+DO J = 1,ISUB_MAX_$BLOCK [ "loop through all sub-regions"
+   DO I = 1,NSUB_$BLOCK(J) [ "loop through all points in sub J"
+     ;$XY_AT_Z_$BLOCK(XLO_POINT_$BLOCK(I,J),
+                      XHI_POINT_$BLOCK(I,J),ZMAX_$BLOCK);
+     ;$XY_AT_Z_$BLOCK(YLO_POINT_$BLOCK(I,J),
+                      YHI_POINT_$BLOCK(I,J),ZMAX_$BLOCK);
+     IF (I=I_MAXX_$BLOCK(J)) [
+        IF (ZFOCUS_$BLOCK <= ZMIN_$BLOCK &
+            XLO_POINT_$BLOCK(I,J) > XMAX_$BLOCK)[
+              XMAX_$BLOCK = XLO_POINT_$BLOCK(I,J);
+        ]
+        ELSEIF (ZFOCUS_$BLOCK >= ZMAX_$BLOCK &
+                XHI_POINT_$BLOCK(I,J) > XMAX_$BLOCK)[
+              XMAX_$BLOCK = XHI_POINT_$BLOCK(I,J);
+        ]
+     ]
+     IF (I=I_MINX_$BLOCK(J)) [
+        IF (ZFOCUS_$BLOCK <= ZMIN_$BLOCK &
+            XLO_POINT_$BLOCK(I,J) < XMIN_$BLOCK)[
+              XMIN_$BLOCK = XLO_POINT_$BLOCK(I,J);
+        ]
+        ELSEIF (ZFOCUS_$BLOCK >= ZMAX_$BLOCK &
+                XHI_POINT_$BLOCK(I,J) < XMIN_$BLOCK)[
+               XMIN_$BLOCK = XHI_POINT_$BLOCK(I,J);
+        ]
+     ]
+     IF (I=I_MAXY_$BLOCK(J)) [
+        IF (ZFOCUS_$BLOCK <= ZMIN_$BLOCK &
+            YLO_POINT_$BLOCK(I,J) > YMAX_$BLOCK)[
+              YMAX_$BLOCK = YLO_POINT_$BLOCK(I,J);
+        ]
+        ELSEIF (ZFOCUS_$BLOCK >= ZMAX_$BLOCK &
+                YHI_POINT_$BLOCK(I,J) > YMAX_$BLOCK)[
+              YMAX_$BLOCK = YHI_POINT_$BLOCK(I,J);
+        ]
+     ]
+     IF (I=I_MINY_$BLOCK(J)) [
+        IF (ZFOCUS_$BLOCK <= ZMIN_$BLOCK &
+            YLO_POINT_$BLOCK(I,J) < YMIN_$BLOCK)[
+              YMIN_$BLOCK = YLO_POINT_$BLOCK(I,J);
+        ]
+        ELSEIF (ZFOCUS_$BLOCK >= ZMAX_$BLOCK &
+                YHI_POINT_$BLOCK(I,J) < YMIN_$BLOCK)[
+               YMIN_$BLOCK = YHI_POINT_$BLOCK(I,J);
+        ]
+     ]
+   ]
+]
+"
+BDYTOL_$BLOCK = $BDY_TOL;
+"
+"read in the outer edge of block"
+OUTPUT;
+(/' Input rectangular outer boundary of block--X coordinate of +X edge,'/
+  ' Y coordinate of +Y edge, X coordinate of -X edge, Y coordinate'/
+  ' of -Y edge in cm (all on one line)'/
+  ' : ',$);
+MINPUT ($BLOCK) XPMAX_$BLOCK,YPMAX_$BLOCK,
+                XNMAX_$BLOCK,YNMAX_$BLOCK; (4F15.0);
+OUTPUT XPMAX_$BLOCK,YPMAX_$BLOCK,
+                XNMAX_$BLOCK,YNMAX_$BLOCK; (4F12.5);
+IF(XPMAX_$BLOCK < XNMAX_$BLOCK)[
+   OUTPUT ICM_$BLOCK;
+     (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' +X edge overlaps -X edge'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+IF(YPMAX_$BLOCK < YNMAX_$BLOCK)[
+   OUTPUT ICM_$BLOCK;
+     (//' ***ERROR IN CM ',I4,' (BLOCK):'/
+        ' +Y edge overlaps -Y edge'//);
+   IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+IF(XPMAX_$BLOCK>RMAX_CM(ICM_$BLOCK)) [  "outer edge in positive x too big"
+   OUTPUT RMAX_CM(ICM_$BLOCK),XPMAX_$BLOCK;
+    (//' ***WARNING IN CM BLOCK:'/
+    ' XPMAX too big, set to be RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   WRITE(IOUTLIST,102)RMAX_CM(ICM_$BLOCK),XPMAX_$BLOCK;
+   102 FORMAT(//' ***WARNING IN CM BLOCK:'/
+    ' XPMAX too big, set to be RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   XPMAX_$BLOCK = RMAX_CM(ICM_$BLOCK);
+]
+IF(YPMAX_$BLOCK>RMAX_CM(ICM_$BLOCK)) [  "outer edge in positive y too big"
+   OUTPUT RMAX_CM(ICM_$BLOCK),YPMAX_$BLOCK;
+    (//' ***WARNING IN CM BLOCK:'/
+    ' YPMAX too big, set to be RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   WRITE(IOUTLIST,103)RMAX_CM(ICM_$BLOCK),YPMAX_$BLOCK;
+   103 FORMAT(//' ***WARNING IN CM BLOCK:'/
+    ' YPMAX too big, set to be RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   YPMAX_$BLOCK = RMAX_CM(ICM_$BLOCK);
+]
+IF(XNMAX_$BLOCK<-RMAX_CM(ICM_$BLOCK)) [  "outer edge in negative x too big"
+   OUTPUT -RMAX_CM(ICM_$BLOCK),XNMAX_$BLOCK;
+   (//' ***WARNING IN CM BLOCK:'/
+    ' XNMAX too big, set to be -RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   WRITE(IOUTLIST,104)-RMAX_CM(ICM_$BLOCK),XNMAX_$BLOCK;
+   104 FORMAT(//' ***WARNING IN CM BLOCK:'/
+    ' XNMAX too big, set to be -RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   XNMAX_$BLOCK = -RMAX_CM(ICM_$BLOCK);
+]
+IF(YNMAX_$BLOCK<-RMAX_CM(ICM_$BLOCK)) [  "outer edge in negative y too big"
+   OUTPUT -RMAX_CM(ICM_$BLOCK),YNMAX_$BLOCK;
+    (//' ***WARNING IN CM BLOCK:'/
+    ' YNMAX too big, set to be -RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   WRITE(IOUTLIST,105)-RMAX_CM(ICM_$BLOCK),YNMAX_$BLOCK;
+  105 FORMAT(//' ***WARNING IN CM BLOCK:'/
+    ' YNMAX too big, set to be -RMAX ',F15.4/
+    ' from ',F15.4,' cm'//);
+   YNMAX_$BLOCK = -RMAX_CM(ICM_$BLOCK);
+]
+IF(YNMAX_$BLOCK > YMIN_$BLOCK) [
+   OUTPUT ICM_$BLOCK; (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+    ' A subregion extends beyond -Y edge.'/
+    ' This will lead to erroneous mass/dose results.'//);
+   WRITE(IOUTLIST,
+   '(//'' ***WARNING IN CM '',I4,'' (BLOCK):''/
+  '' A subregion extends beyond -Y edge.''/
+  '' This will lead to erroneous mass/dose results.''//)') ICM_$BLOCK;
+]
+IF(YPMAX_$BLOCK < YMAX_$BLOCK) [
+   OUTPUT ICM_$BLOCK; (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+    ' A subregion extends beyond +Y edge.'/
+    ' This will lead to erroneous mass/dose results.'//);
+   WRITE(IOUTLIST,
+   '(//'' ***WARNING IN CM '',I4,'' (BLOCK):''/
+  '' A subregion extends beyond +Y edge.''/
+  '' This will lead to erroneous mass/dose results.''//)') ICM_$BLOCK;
+]
+IF(XNMAX_$BLOCK > XMIN_$BLOCK) [
+   OUTPUT ICM_$BLOCK; (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+    ' A subregion extends beyond -X edge.'/
+    ' This will lead to erroneous mass/dose results.'//);
+   WRITE(IOUTLIST,
+   '(//'' ***WARNING IN CM '',I4,'' (BLOCK):''/
+ '' A subregion extends beyond -X edge.''/
+  '' This will lead to erroneous mass/dose results.''//)') ICM_$BLOCK;
+]
+IF(XPMAX_$BLOCK < XMAX_$BLOCK) [
+   OUTPUT ICM_$BLOCK; (//' ***WARNING IN CM ',I4,' (BLOCK):'/
+    ' A subregion extends beyond +X edge.'/
+    ' This will lead to erroneous mass/dose results.'//);
+   WRITE(IOUTLIST,
+   '(//'' ***WARNING IN CM '',I4,'' (BLOCK):''/
+  '' A subregion extends beyond +X edge.''/
+  '' This will lead to erroneous mass/dose results.''//)') ICM_$BLOCK;
+]
+"
+"set absolute region number to air regions in CM, set ECUT,PCUT,etc."
+IRA = IRSTART_$BLOCK; "absolute region number
+OUTPUT ; (/' For air gap above the block',
+          /' ECUT, PCUT, DOSE ZONE OF AIR, REGION TO BIT'/' :',$);
+MINPUT ($BLOCK) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+       (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA); (2F15.5,2I5);
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+MED(IRA) = AIR_INDEX; " medium of air in airgap
+"get material for openings and beyond edges"
+IRA=IRA+1;
+OUTPUT ; (/' For openings and beyond edges of the block',
+          /' ECUT, PCUT, DOSE ZONE, REGION TO BIT'/' :',$);
+MINPUT ($BLOCK) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+       (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA); (2F15.5,2I5);
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+OUTPUT;(' Medium of openings and beyond block edges: ',$);
+$MED_INPUT($BLOCK); " inputs character array MED_IN from unit 5, loops
+   "through array MEDIA(24,I) to check if medium was previously input.
+   "If so, sets MED_INDEX to index of previous medium.  If not,
+   "increments NMED and sets MED_INDEX to NMED. "
+MED(IRA) = MED_INDEX; " medium of the block
+"get material for block"
+IRA=IRA+1;
+OUTPUT; (/' For block material region: '
+          /' ECUT, PCUT, DOSE ZONE, IREGION_TO_BIT '/' :',$);
+MINPUT ($BLOCK) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+       IREGION_TO_BIT(IRA); (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+       (2F15.5,2I5);
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+   "get material for block outer region
+   " and determine material number for these region
+   OUTPUT;(' Medium of block: ',$);
+$MED_INPUT($BLOCK); " inputs character array MED_IN from unit 5, loops
+   "through array MEDIA(24,I) to check if medium was previously input.
+   "If so, sets MED_INDEX to index of previous medium.  If not,
+   "increments NMED and sets MED_INDEX to NMED. "
+MED(IRA) = MED_INDEX; " medium of the block
+;
+"  set up region numbers
+"  =====================
+"
+"  This CM has 3 regions,
+"
+IREND_$BLOCK = IRSTART_$BLOCK + 2;  "Index of last region
+NREG = NREG+3;           "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$BLOCK+1) = IREND_$BLOCK+1;
+]
+ELSE [
+   OUTPUT ICM_$BLOCK,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (BLOCK):'/
+       I4,' regions requested, only',I4,' available');
+      IERR_GEOM(ICM_$BLOCK)=IERR_GEOM(ICM_$BLOCK)+1;
+]
+"
+"establish start of next CM
+Z_min_CM(ICM_$BLOCK+1) = ZMAX_$BLOCK;
+"
+"
+ZFRONT_$BLOCK = Z_min_CM(ICM_$BLOCK);
+ZBACK_$BLOCK = Z_min_CM(ICM_$BLOCK+1);
+"
+"  establish CM boundary
+"  =====================
+"
+RMAX_CM_FLAG(ICM_$BLOCK) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$BLOCK-1; "absolute region number
+DO I = 1,3 ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones and latch
+   "
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones"
+   IF(NDOSE_ZONE > $MAX_DOSE_ZONE)[
+      OUTPUT NDOSE_ZONE;
+       (' Too many dose zone !', 'NDOSE_ZONE =',I5,
+        ' > $MAX_DOSE_ZONE');
+      STOP;
+   ]
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT);
+
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+] "end of loop over IR_$BLOCK
+E_min_out(ICM_$BLOCK)=ECUT(IRA); "Minimum energy on exit from CM
+
+RETURN;
+"   error messages
+"   ==============
+"
+:EOF_$BLOCK:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for '
+            ,'BLOCK CM',I3);
+STOP;
+
+:ERROR_$BLOCK:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for block CM',I3);
+STOP;
+END;  "End of INPUT_$BLOCK"
+%E    "Start of subroutine ISUMRY_$BLOCK (Rev 1.4)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_BLOCK
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$BLOCK;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$BLOCK,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_BLOCK
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,   "T>colour of CM for EGS_Windows
+   IDD,       "T>index of dose scoring zone
+   IRA,       "T>absolute region number
+   I,J,II,JJ,       "T>DO loop index
+   COUNT;     "T>to determine if a points define a common plane
+
+$REAL
+   AREA1,     "T>temp. area variable
+   AREA     , "T>area of opening at (zmax-zmin)/2
+   VOLAIR_$BLOCK,  "T>air volume
+   VOL_$BLOCK, "T>volume of material
+   XMID_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+   YMID_POINT_$BLOCK($MAX_POINT_$BLOCK,$MAX_SUB_$BLOCK),
+              "T>x,y coordinates at (zmax-zmin)/2
+   X_CENTR_$BLOCK, "T>x of centroid of subregion
+   Y_CENTR_$BLOCK; "T>y of centroid of subregion
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$BLOCK.
+"
+"the volume of air in the opening is the area of the opening at (zmax-zmin)/2
+"times the thickness (zmax-zmin). the outside air volume is
+"rmax**2*(zmax-zmin)-(xpmax-xnmax)*(ypmax-ynmax)*(zmax-zmin). the total air
+"volume VOLAIR_$BLOCK is above 2 volumes together. the volume of the material
+"region is rmax**2*(zmax-zmin)-VOLAIR_$BLOCK.
+
+AREA = 0.;
+DO J = 1, ISUB_MAX_$BLOCK [ "to calculate area of opening at mid z"
+   X_CENTR_$BLOCK = 0.;
+   Y_CENTR_$BLOCK = 0.;
+   AREA1 = 0;
+   DO I = 1,NSUB_$BLOCK(J) [ "to calculate xmid and ymid"
+      XMID_POINT_$BLOCK(I,J) = (XHI_POINT_$BLOCK(I,J)+
+                                XLO_POINT_$BLOCK(I,J))/2;
+      YMID_POINT_$BLOCK(I,J) = (YHI_POINT_$BLOCK(I,J)+
+                                YLO_POINT_$BLOCK(I,J))/2;
+      X_CENTR_$BLOCK = X_CENTR_$BLOCK + XMID_POINT_$BLOCK(I,J);
+      Y_CENTR_$BLOCK = Y_CENTR_$BLOCK + YMID_POINT_$BLOCK(I,J);
+   ]
+   X_CENTR_$BLOCK = X_CENTR_$BLOCK/NSUB_$BLOCK(J);
+   Y_CENTR_$BLOCK = Y_CENTR_$BLOCK/NSUB_$BLOCK(J);
+   DO I = 1,NSUB_$BLOCK(J) [ "now sum up triangular areas"
+      IF (I < NSUB_$BLOCK(J)) [
+        AREA1=AREA1 +
+          SQRT((XMID_POINT_$BLOCK(I+1,J) - XMID_POINT_$BLOCK(I,J))**2 +
+               (YMID_POINT_$BLOCK(I+1,J) - YMID_POINT_$BLOCK(I,J))**2) *
+          SQRT((X_CENTR_$BLOCK - (XMID_POINT_$BLOCK(I+1,J) +
+                                  XMID_POINT_$BLOCK(I,J))/2.)**2 +
+               (Y_CENTR_$BLOCK - (YMID_POINT_$BLOCK(I+1,J) +
+                                  YMID_POINT_$BLOCK(I,J))/2.)**2)/2;
+      ]
+      ELSEIF (I = NSUB_$BLOCK(J)) [
+        AREA1=AREA1 +
+          SQRT((XMID_POINT_$BLOCK(1,J) - XMID_POINT_$BLOCK(I,J))**2 +
+               (YMID_POINT_$BLOCK(1,J) - YMID_POINT_$BLOCK(I,J))**2) *
+          SQRT((X_CENTR_$BLOCK - (XMID_POINT_$BLOCK(1,J) +
+                                  XMID_POINT_$BLOCK(I,J))/2.)**2 +
+               (Y_CENTR_$BLOCK - (YMID_POINT_$BLOCK(1,J) +
+                                  YMID_POINT_$BLOCK(I,J))/2.)**2)/2;
+      ]
+   ]
+   AREA = AREA + AREA1;
+] "end of calculation of area of opening at mid z"
+VOLAIR_$BLOCK = AREA*(ZMAX_$BLOCK-ZMIN_$BLOCK);
+VOL_$BLOCK = (XPMAX_$BLOCK-XNMAX_$BLOCK)*(YPMAX_$BLOCK-YNMAX_$BLOCK)*
+             (ZMAX_$BLOCK-ZMIN_$BLOCK)-VOLAIR_$BLOCK; "material volume"
+VOLAIR_$BLOCK = (ZMAX_$BLOCK - ZMIN_$BLOCK)*4*RMAX_CM2(ICM_$BLOCK) -
+                VOL_$BLOCK;
+IRA = IRSTART_$BLOCK+2; "absolute region number for block material region"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+   IDD=DOSE_ZONE(IRA);
+   AMASS(IDD)=AMASS(IDD)+RHOR(IRA)*VOL_$BLOCK;
+]
+IRA = IRSTART_$BLOCK+1; "absolute region number for openings + surrounding"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+   IDD=DOSE_ZONE(IRA);
+   AMASS(IDD)=AMASS(IDD)+RHOR(IRA)*VOLAIR_$BLOCK;
+]
+IRA = IRSTART_$BLOCK; "absolute region number for air region"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+   IDD=DOSE_ZONE(IRA);
+   AMASS(IDD)=AMASS(IDD)+RHOR(IRA)*(ZMIN_$BLOCK - ZFRONT_$BLOCK)*
+                                    4*RMAX_CM2(ICM_$BLOCK);
+]
+"
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$BLOCK,TITLE_$BLOCK;
+110 FORMAT(///1X,79('-')/'  Component module',I3,
+    ' is a BLOCK $BLOCK (BLOCK Rev 1.4)' /
+    1X,79('-')//T5,'Title: ',68A1);
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$BLOCK),RMAX_CM(ICM_$BLOCK);
+120 FORMAT(/T2,'$BLOCK geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm');
+WRITE(IOUTLIST,121)ZMIN_$BLOCK-Z_min_CM(ICM_$BLOCK),ZMIN_$BLOCK,
+                   ZMAX_$BLOCK,ZFOCUS_$BLOCK;
+121 FORMAT(T2,'Thickness of airgap at top of BLOCK = ',F15.5,' cm',
+           /T2,'Z of front face of BLOCK (not incl. airgap) = ',F15.5,' cm',
+           /T2,'Z of back face of BLOCK = ',F15.5,' cm',
+           /T2,'Apertures are focused at (0, 0, ',F15.5,').');
+WRITE(IOUTLIST,112)XPMAX_$BLOCK,XNMAX_$BLOCK,YPMAX_$BLOCK,YNMAX_$BLOCK,
+                   ISUB_MAX_$BLOCK;
+112 FORMAT(/T2,'Outer boundary of BLOCK:',
+           /T2,'Positive X boundary = ',F15.5,' cm',
+           /T2,'Negative X boundary = ',F15.5,' cm',
+           /T2,'Positive Y boundary = ',F15.5,' cm',
+           /T2,'Negative Y boundary = ',F15.5,' cm',/
+           /T2,'Number of subregions = ',I5,/
+           /T4,'     Aperture #    POINT #     X at top       Y at top ');
+DO J=1,ISUB_MAX_$BLOCK [
+   DO I = 1,NSUB_$BLOCK(J) [
+      WRITE(IOUTLIST,122)J,I,XHI_POINT_$BLOCK(I,J),YHI_POINT_$BLOCK(I,J);
+   ]
+]
+122 FORMAT(T4,I12,I12,F15.5,F15.5);
+WRITE(IOUTLIST,130);
+130 FORMAT(/T2,'$BLOCK region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  location  electron  photon',
+           '  range-rejection  dose  bit  medium'
+           /T1,'region             cutoff   cutoff',
+           '   level    max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+           '   (MeV)   (MeV)');
+IRA = IRSTART_$BLOCK;
+IF(MED(IRA)~=0)[
+   WRITE(IOUTLIST,140) '1','airgap',
+     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+    (MEDIA(J,MED(IRA)),J=1,9);
+]
+ELSE[
+   WRITE(IOUTLIST,140) '1','airgap',
+     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+]
+140 FORMAT(T2,A3,2X,A10,F9.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+WRITE(IOUTLIST,141)'at top';
+141 FORMAT(T7,A10);
+IF(MED(IRA+1)~=0)[
+   WRITE(IOUTLIST,140) '2','subregion +',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),
+        (MEDIA(J,MED(IRA+1)),J=1,9);
+]
+ELSE[
+   WRITE(IOUTLIST,140) '2','subregion ',
+        ECUT(IRA+1),PCUT(IRA+1), ECUTRR(IRA+1),ESAVE(IRA+1),
+        DOSE_ZONE(IRA+1),IREGION_TO_BIT(IRA+1),
+        'V','a','c','u','u','m';
+]
+WRITE(IOUTLIST,141)'+ outside';
+IF(MED(IRA+2)~=0)[
+   WRITE(IOUTLIST,140) '3','block',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),
+        (MEDIA(J,MED(IRA+2)),J=1,9);
+]
+ELSE[
+   WRITE(IOUTLIST,140) '3','block',
+        ECUT(IRA+2),PCUT(IRA+2), ECUTRR(IRA+2),ESAVE(IRA+2),
+        DOSE_ZONE(IRA+2),IREGION_TO_BIT(IRA+2),
+        'V','a','c','u','u','m';
+]
+WRITE(IOUTLIST,141)' ';
+"
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+"cuurently, this component module looks like a block without opening under
+"EGS_Windows since so far EGS_Windows can not handle so complicate geometry.
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;$SELECT-COLOUR; "Macro for selecting ICOLOUR = 1, 2, or 3, colour of CM"
+"   WRITE(IOUTGEOM,200)
+ "     ICOLOUR,'COLX',XPMAX_$BLOCK,XPMAX_$BLOCK,XNMAX_$BLOCK,
+  "    XNMAX_$BLOCK,YPMAX_$BLOCK-YNMAX_$BLOCK,
+   "   ZMIN_$BLOCK,ZMAX_$BLOCK;
+  WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XPMAX_$BLOCK,YPMAX_$BLOCK,ZMIN_$BLOCK,
+                       XPMAX_$BLOCK+1E-2,YPMAX_$BLOCK,ZMAX_$BLOCK,
+                       XPMAX_$BLOCK+1E-2,YNMAX_$BLOCK,ZMAX_$BLOCK,
+                       XPMAX_$BLOCK,YNMAX_$BLOCK,ZMIN_$BLOCK;
+  WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XPMAX_$BLOCK,YPMAX_$BLOCK,ZMIN_$BLOCK,
+                       XPMAX_$BLOCK,YPMAX_$BLOCK+1E-2,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK,YPMAX_$BLOCK+1E-2,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK,YPMAX_$BLOCK,ZMIN_$BLOCK;
+  WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XNMAX_$BLOCK,YPMAX_$BLOCK,ZMIN_$BLOCK,
+                       XNMAX_$BLOCK+1E-2,YPMAX_$BLOCK,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK+1E-2,YNMAX_$BLOCK,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK,YNMAX_$BLOCK,ZMIN_$BLOCK;
+  WRITE(IOUTGEOM,206)ICOLOUR,'QUAD',XPMAX_$BLOCK,YNMAX_$BLOCK,ZMIN_$BLOCK,
+                       XPMAX_$BLOCK,YNMAX_$BLOCK+1E-2,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK,YNMAX_$BLOCK+1E-2,ZMAX_$BLOCK,
+                       XNMAX_$BLOCK,YNMAX_$BLOCK,ZMIN_$BLOCK;
+   $EGSW_OUTPUT_$BLOCK;
+] "End of graphics output"
+
+200 FORMAT(' ',I1,A4,10(F7.2,','));
+206 FORMAT(' ',I1,A4,12(F7.2,','));
+
+"   end of ISUMRY_BLOCK
+"   ===================
+"
+RETURN;
+END; "End of subroutine ISUMRY_$BLOCK"
+"
+%E    "Start of subroutine HOWNEAR_$BLOCK (Rev 1.4)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_BLOCK
+"                          ***********************
+"
+" Calculates min. distance to nearest region boundary
+" Used to be a macro, but was converted to a subroutine for EGSnrc
+"
+"******************************************************************************
+SUBROUTINE HOWNEAR_$BLOCK(DIST);
+
+$IMPLICIT-NONE;
+
+COMIN/STACK,CM_$BLOCK/;
+
+$REAL DIST,  "T> min. distance to nearest boundary
+   DIST1, "T> temp. distance variable
+   ANYTHING,    "T>temporary variable to save computing time
+   XHIT_$BLOCK, "T>X coordinate particle hits a plane or a line
+   YHIT_$BLOCK, "T>Y coordinate particle hits a plane or a line
+   ZHIT_$BLOCK, "T>Z coordinate particle hits a plane or a line
+   XPL1_$BLOCK, "T>X coordinate at a plane surface along particle trajectory
+   YPL1_$BLOCK, "T>Y coordinate at a plane surface along particle trajectory
+   XPL2_$BLOCK, "T>X coordinate at a plane surface along particle trajectory
+   YPL2_$BLOCK, "T>Y coordinate at a plane surface along particle trajectory
+   XYMAX,       "T>max x or y, temporary variable
+   XYMIN;       "T>min x or y, temporary variable
+
+$INTEGER I,J;  "T> looping indices
+
+IR_$BLOCK = IR(NP)-IRSTART_$BLOCK+1;
+
+"If the particle is in the block material, the possible nearest points"
+"are on the top and bottom z-planes, somewhere in the middle of the"
+"outside of one of the block faces, or somewhere on one of the lines"
+"joining a block vertex on the upper surface with the corresponding"
+"vertex on the lower surface."
+;
+"Since we have made sure that all of the block face normals face"
+"towards the inside of the opening, we can use that information to help"
+"us. To find the closest point on the plane, we essentially assign the"
+"planes normal as the direction of the particle, and find the distance"
+"using -(Ax+By+Cz+D). If the distance is negative, we are already on"
+"the INSIDE of the plane, so we don't have to check if the intersection"
+"is on the block face (it can't be). If the distance to the plane is"
+"positive, then we need to make sure that the intersection point is on"
+"the block face."
+;
+"To speed up the calculation, we first find the minimum of the distance"
+"to the top or bottom plane. If the distance to the plane and line is"
+"greater than the current minimum, we can skip checking whether the"
+"point is on the block face or not (or if the intersection with the"
+"line is within the z-range). Similarly, if the distance is less than"
+"the current minimum, we don't have to check if the hit point is in the"
+"z-range (it has to be if the distance is less than the minimum z"
+"distance)."
+;
+"The previous version of this code also checked all of the distances to"
+"the upper and lower vertices, but this is not needed. For any point"
+"inside the block material, construct a sphere centered at the current"
+"point that contains the block vertex. It is trivial to see that the"
+"sphere will go outside the z-plane that the vertex is on. Another way"
+"of looking at this is that we are inflating a spherical balloon"
+"centered at the current point and wanting to calculate how big it can"
+"be before hitting one of the boundaries. It is easy to see that we"
+"can't make a sphere that hits one of the corners of the boundary."
+;
+IF(IR_$BLOCK = 3) [  "particle in block material"
+   "use dist 1 to keep track of the current minimum"
+   DIST1= MAX (0.0,
+               MIN(ZMAX_$BLOCK-Z(NP),Z(NP)-ZMIN_$BLOCK,
+                   XPMAX_$BLOCK-X(NP),YPMAX_$BLOCK-Y(NP),
+                   X(NP)-XNMAX_$BLOCK,Y(NP)-YNMAX_$BLOCK) );
+
+   DO J = 1,ISUB_MAX_$BLOCK [ "loop through all sub-regions"
+      DO I = 1,NSUB_$BLOCK(J) [ "loop through planes in sub-region J"
+         "following macro calculates distance to block corner edge line"
+         "all corners are possible dnear candidates"
+         $DIST_POINT2EDGE_$BLOCK(ZERO, XHI_POINT_$BLOCK(I,J),
+                                 ZERO, YHI_POINT_$BLOCK(I,J),
+                                 ZFOCUS_$BLOCK, ZMIN_$BLOCK,
+                                 ANYTHING);
+         DIST1 = MIN (DIST1, ANYTHING);
+         IF(ISHARE_PLANE_$BLOCK(I,J) = -1) ["not shared plane"
+            ANYTHING =  -(A_PLANE_$BLOCK(I,J)*X(NP) +
+                          B_PLANE_$BLOCK(I,J)*Y(NP) +
+                          C_PLANE_$BLOCK(I,J)*Z(NP) +
+                          D_PLANE_$BLOCK(I,J) );
+            "ANYTHING is the distance to the plane along the"
+            "direction of the normal. If the distance is positive,"
+            "the point is on the outside of the plane and we need"
+            "to test if the hit point is on the block face."
+            IF (ANYTHING>-BDYTOL_$BLOCK & ANYTHING<DIST1) ["possible dnear"
+               "following macro computes the coordinates of"
+               "the point where particle hits plane with shortest distance"
+              ;$POINT_ON_PLANE_$BLOCK(I,J,ANYTHING,
+                                   XHIT_$BLOCK,YHIT_$BLOCK,ZHIT_$BLOCK);
+               IF(I~=NSUB_$BLOCK(J)) [ "not last point"
+                  "following macro calculates the x or y coordinate which is"
+                  "the edge point at z=zhit for plane (i,j)."
+                 ;$XY_AT_Z_$BLOCK(YPL1_$BLOCK,
+                         YHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                 ;$XY_AT_Z_$BLOCK(YPL2_$BLOCK,
+                         YHI_POINT_$BLOCK(I+1,J),ZHIT_$BLOCK);
+                  XYMAX = MAX(YPL1_$BLOCK,YPL2_$BLOCK)+BDYTOL_$BLOCK;
+                  XYMIN = MIN(YPL1_$BLOCK,YPL2_$BLOCK)-BDYTOL_$BLOCK;
+                  IF(YHIT_$BLOCK< XYMAX & YHIT_$BLOCK> XYMIN ) ["in y range"
+                    ;$XY_AT_Z_$BLOCK(XPL1_$BLOCK,
+                         XHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                    ;$XY_AT_Z_$BLOCK(XPL2_$BLOCK,
+                         XHI_POINT_$BLOCK(I+1,J),ZHIT_$BLOCK);
+                     XYMAX = MAX(XPL1_$BLOCK,XPL2_$BLOCK)+BDYTOL_$BLOCK;
+                     XYMIN = MIN(XPL1_$BLOCK,XPL2_$BLOCK)-BDYTOL_$BLOCK;
+                     IF(XHIT_$BLOCK<=XYMAX & XHIT_$BLOCK>=XYMIN)[
+                        "x distance is closer than current dnear"
+                        DIST1 = ANYTHING;
+                     ]
+                  ]
+               ]
+               ELSE [ "last point"
+                  "following macro calculates the x or y coordinate which is"
+                  "the edge point at z=zhit for plane (i,j)."
+                 ;$XY_AT_Z_$BLOCK(YPL1_$BLOCK,
+                         YHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                 ;$XY_AT_Z_$BLOCK(YPL2_$BLOCK,
+                         YHI_POINT_$BLOCK(1,J),ZHIT_$BLOCK);
+                  XYMAX = MAX(YPL1_$BLOCK,YPL2_$BLOCK)+BDYTOL_$BLOCK;
+                  XYMIN = MIN(YPL1_$BLOCK,YPL2_$BLOCK)-BDYTOL_$BLOCK;
+                  IF(YHIT_$BLOCK< XYMAX & YHIT_$BLOCK> XYMIN ) ["in y range"
+                    ;$XY_AT_Z_$BLOCK(XPL1_$BLOCK,
+                         XHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                    ;$XY_AT_Z_$BLOCK(XPL2_$BLOCK,
+                         XHI_POINT_$BLOCK(1,J),ZHIT_$BLOCK);
+                     XYMAX = MAX(XPL1_$BLOCK,XPL2_$BLOCK)+BDYTOL_$BLOCK;
+                     XYMIN = MIN(XPL1_$BLOCK,XPL2_$BLOCK)-BDYTOL_$BLOCK;
+                     IF(XHIT_$BLOCK<=XYMAX & XHIT_$BLOCK>=XYMIN)[
+                        "x distance is closer than current dnear"
+                        DIST1 = ANYTHING;
+                     ]
+                  ]
+               ]
+            ] "if possible dnear"
+         ] "if not shared plane"
+      ] "loop over planes"
+   ] "loop over subregions"
+   DIST = DIST1;
+] "end of in region 3"
+ELSEIF(IR_$BLOCK = 2)["particle in center air or outside air region"
+   "use dist1 to keep track of the current minimum"
+   DIST1= MAX (0.0, MIN(ZMAX_$BLOCK-Z(NP),Z(NP)-ZMIN_$BLOCK) );
+
+   IF(X(NP)>=XPMAX_$BLOCK) [ "particle in right x outer region"
+      IF(Y(NP)>YPMAX_$BLOCK) [ "particle in upper y outer region"
+         DIST1=MIN (DIST1,
+               SQRT((X(NP)-XPMAX_$BLOCK)**2 + (Y(NP)-YPMAX_$BLOCK)**2));
+      ]
+      ELSEIF(Y(NP)<YNMAX_$BLOCK) [ "particle in lower y outer region"
+         DIST1=MIN (DIST1,
+               SQRT((X(NP)-XPMAX_$BLOCK)**2 + (YNMAX_$BLOCK-Y(NP))**2));
+      ]
+      ELSE [ "particle in middle y region"
+         DIST1=MIN (DIST1, X(NP)-XPMAX_$BLOCK);
+      ]
+   ]
+   ELSEIF(X(NP)<=XNMAX_$BLOCK) [ "particle in left x outer region"
+      IF(Y(NP)>YPMAX_$BLOCK) [ "particle in upper y outer region"
+         DIST1=MIN (DIST1,
+               SQRT((X(NP)-XNMAX_$BLOCK)**2 + (Y(NP)-YPMAX_$BLOCK)**2));
+      ]
+      ELSEIF(Y(NP)<YNMAX_$BLOCK) [ "particle in lower y outer region"
+         DIST1=MIN (DIST1,
+               SQRT((X(NP)-XNMAX_$BLOCK)**2 + (Y(NP)-YNMAX_$BLOCK)**2));
+      ]
+      ELSE [ "particle in middle y region"
+         DIST1=MIN (DIST1, XNMAX_$BLOCK-X(NP));
+      ]
+   ]
+   ELSEIF(Y(NP)>=YPMAX_$BLOCK) [ "particle in middle x, upper y"
+      DIST1=MIN (DIST1, Y(NP)-YPMAX_$BLOCK);
+   ]
+   ELSEIF(Y(NP)<=YNMAX_$BLOCK) [ "particle in middle x, lower y"
+      DIST1=MIN (DIST1, YNMAX_$BLOCK-Y(NP));
+   ]
+"At this point, we have covered all of the possibilities for a particle"
+"in the outer air region, so the only other possibility is the central"
+"air subregions. A single subregion is a special case, because all we"
+"have to do is set DIST1 to the minumum distance to any plane, without"
+"testing hit points."
+   ELSEIF(ISUB_MAX_$BLOCK=1) [
+      "particle in single central subregion"
+      DO I = 1,NSUB_$BLOCK(1) [ "loop through planes"
+         "distance is -(Ax+By+Cz+D), and should be negative"
+         "therefore, find minimum of Ax+By+Cz+D"
+         DIST1 = MIN(DIST1, A_PLANE_$BLOCK(I,1)*X(NP) +
+                            B_PLANE_$BLOCK(I,1)*Y(NP) +
+                            C_PLANE_$BLOCK(I,1)*Z(NP) +
+                            D_PLANE_$BLOCK(I,1) );
+      ]
+      DIST1=MAX(0.0, DIST1); "just in case a little outside"
+   ]
+   ELSE [ "particle in more than one central subregion, air"
+
+"If we get here, the particle is in the central air region and there"
+"are multiple subregions. The subregions could be connected (have"
+"shared planes) or not. If the plane is not shared, then we check for a"
+"possible dnear point on the plane. If the plane is shared, we can skip"
+"the plane check, but we have to check the two corner edges. We assume"
+"that all vertices of the subregions actually define the boundary"
+"between the inside and outside of the air cavity. For example, this"
+"algorithm won't handle multiple spokes as shown in the simplified"
+"figure below."
+;
+
+"      *-----*  "
+"      |\   /|  "
+"      | \ / |  "
+"      |  *  |  "
+"      | / \ |  "
+"      |/   \|  "
+"      *-----*  "
+;
+"It is unlikely that someone would divide a rectangular region as"
+"shown, but there is nothing explicitly disallowing single points to be"
+"shared by more than one shared plane. Perhaps the documentation should"
+"reflect that the algorithm assumes that points interior to the region"
+"are not used to divide the region into subregions. It would be"
+"possible to cover this situation by seeing if the 2 planes on either"
+"side of the edge line are shared."
+
+    DO J = 1,ISUB_MAX_$BLOCK [ "loop through all sub-regions"
+      DO I = 1,NSUB_$BLOCK(J) [ "loop through planes in sub-region J"
+         IF(ISHARE_PLANE_$BLOCK(I,J) = -1) ["not shared plane"
+            ANYTHING =   (A_PLANE_$BLOCK(I,J)*X(NP) +
+                          B_PLANE_$BLOCK(I,J)*Y(NP) +
+                          C_PLANE_$BLOCK(I,J)*Z(NP) +
+                          D_PLANE_$BLOCK(I,J) );
+            "ANYTHING is the distance to the plane along the opposite"
+            "direction of the normal. If the distance is negative"
+            "(ANYTHING positive), the point is on the inside of the"
+            "plane and we need to test if the hit point is on the"
+            "block face."
+            IF (ANYTHING>-BDYTOL_$BLOCK & ANYTHING<DIST1) ["possible dnear"
+               "following macro computes the coordinates of"
+               "the point where particle hits plane with shortest distance"
+              ;$POINT_ON_PLANE_$BLOCK(I,J,(-ANYTHING),
+                                   XHIT_$BLOCK,YHIT_$BLOCK,ZHIT_$BLOCK);
+               IF(I~=NSUB_$BLOCK(J)) [ "not last point"
+                  "following macro calculates the x or y coordinate which is"
+                  "the edge point at z=zhit for plane (i,j)."
+                 ;$XY_AT_Z_$BLOCK(YPL1_$BLOCK,
+                         YHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                 ;$XY_AT_Z_$BLOCK(YPL2_$BLOCK,
+                         YHI_POINT_$BLOCK(I+1,J),ZHIT_$BLOCK);
+                  XYMAX = MAX(YPL1_$BLOCK,YPL2_$BLOCK)+BDYTOL_$BLOCK;
+                  XYMIN = MIN(YPL1_$BLOCK,YPL2_$BLOCK)-BDYTOL_$BLOCK;
+                  IF(YHIT_$BLOCK< XYMAX & YHIT_$BLOCK> XYMIN ) ["in y range"
+                    ;$XY_AT_Z_$BLOCK(XPL1_$BLOCK,
+                         XHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                    ;$XY_AT_Z_$BLOCK(XPL2_$BLOCK,
+                         XHI_POINT_$BLOCK(I+1,J),ZHIT_$BLOCK);
+                     XYMAX = MAX(XPL1_$BLOCK,XPL2_$BLOCK)+BDYTOL_$BLOCK;
+                     XYMIN = MIN(XPL1_$BLOCK,XPL2_$BLOCK)-BDYTOL_$BLOCK;
+                     IF(XHIT_$BLOCK<=XYMAX & XHIT_$BLOCK>=XYMIN)[
+                        DIST1 = ANYTHING;
+                        "x distance is closer than current dnear"
+                     ]
+                  ]
+               ]
+               ELSE [ "last point"
+                  "following macro calculates the x or y coordinate which is"
+                  "the edge point at z=zhit for plane (i,j)."
+                 ;$XY_AT_Z_$BLOCK(YPL1_$BLOCK,
+                         YHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                 ;$XY_AT_Z_$BLOCK(YPL2_$BLOCK,
+                         YHI_POINT_$BLOCK(1,J),ZHIT_$BLOCK);
+                  XYMAX = MAX(YPL1_$BLOCK,YPL2_$BLOCK)+BDYTOL_$BLOCK;
+                  XYMIN = MIN(YPL1_$BLOCK,YPL2_$BLOCK)-BDYTOL_$BLOCK;
+                  IF(YHIT_$BLOCK< XYMAX & YHIT_$BLOCK> XYMIN ) ["in y range"
+                    ;$XY_AT_Z_$BLOCK(XPL1_$BLOCK,
+                         XHI_POINT_$BLOCK(I,J),ZHIT_$BLOCK);
+                    ;$XY_AT_Z_$BLOCK(XPL2_$BLOCK,
+                         XHI_POINT_$BLOCK(1,J),ZHIT_$BLOCK);
+                     XYMAX = MAX(XPL1_$BLOCK,XPL2_$BLOCK)+BDYTOL_$BLOCK;
+                     XYMIN = MIN(XPL1_$BLOCK,XPL2_$BLOCK)-BDYTOL_$BLOCK;
+                     IF(XHIT_$BLOCK<=XYMAX & XHIT_$BLOCK>=XYMIN)[
+                        DIST1 = ANYTHING;
+                        "x distance is closer than current dnear"
+                     ]
+                  ]
+               ]
+            ] "if possible dnear"
+         ] "if not shared plane"
+         ELSE [ "shared plane, check edge lines only"
+            "We can get away with testing only the (i,j) vertex because"
+            "the (i+1,j) vertex will be checked when we are in the"
+            "subregion that this plane is shared with."
+
+            "following macro calculates distance to block corner edge line"
+            $DIST_POINT2EDGE_$BLOCK(ZERO, XHI_POINT_$BLOCK(I,J),
+                                    ZERO, YHI_POINT_$BLOCK(I,J),
+                                    ZFOCUS_$BLOCK, ZMIN_$BLOCK,
+                                    ANYTHING);
+            DIST1 = MIN (DIST1, ANYTHING);
+         ]
+      ] "loop over planes"
+    ] "loop over subregions"
+   ]
+   DIST = DIST1;
+] "end of in region 2"
+ELSE [ "particle in air"
+   DIST = MAX(0.0, MIN(Z(NP)-ZMIN_$BLOCK,ZFRONT_$BLOCK-Z(NP)));
+]
+RETURN;
+END; "end of HOWNEAR_$BLOCK (Rev 1.4);
+
+"*******************************************************************************
+"End of BLOCK_cm.mortran (Rev 1.4)

@@ -1,0 +1,2924 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: arc-shaped ion chamber                    "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Marv Glass, 1998                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAM code system for Monte Carlo simulation of    "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*************************************************************************
+"
+"                             ************            ""toc:
+"                             *          *            ""toc:
+"                             *  ARCCHM  *            ""toc:
+"                             *   2.1    *            ""toc:
+"                             *          *            ""toc:
+"                             ************            ""toc:
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  An arc-shaped ion chamber perpendicular to
+"   the beam direction.  Used for the UW Tomotherapy design
+"
+"                               HISTORY
+"                               *******
+"   Version 1.0:  Apr. 1998 by Marv Glass (University of Wisconsin--Madison)
+"
+"**************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"I>
+"I> Geometry of ARCCHM:
+"I> ********************
+"I>                     |
+"I>                     |  beam direction (central axis)
+"I>                     |
+"I>                    \|/
+"I>
+"I>       --------------------------------------------------------------------
+"I>           Air gap IR = 2*NUMCHM+6 if it exists
+"I>       --------------------------------------------------------------------
+"I>    ========                  ========
+"I>     ===   ===      1       ===   ===
+"I>      ===   ===            ===   ===
+"I>       ===   ===============   ===
+"I>         ======================
+"I>  the general shape of this chamber as is above.  There are too many regions
+"I>  to draw a simple shape.
+"I>      ----------------------------------------------------------------------
+"I>
+"I>  IR is the region number within the CM.  There are 2*NUMCHM + 5 regions
+"I>     without an air gap and 2*NUMCHM + 6 regions with an air gap.
+"I>
+"I>            ------------------------------------------------------
+"I>            |          Region              |    Description      |
+"I>            |------------------------------|---------------------|
+"I>            |  absolute      | local       |                     |
+"I>            |----------------|-------------|                     |
+"I>            |                |             |                     |
+"I>            |IRSTART_ARCCHM  | IR_ARCCHM   |  as shown in above  |
+"I>            |  +IR_ARCCHM-1  |             |                     |
+"I>            ------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$ARCCHM
+"                      ISUMRY_$ARCCHM
+"                      HOWFAR_$ARCCHM
+"                      WHERE_AM_I_$ARCCHM
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"******************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             ******************************
+"  Program Notes:
+"    This CM assumes XMIN is negative and XMAX is positive.  This feature
+"    was inherited from both ARCSTP and SIDETUBE.  It was not modified to
+"    accept positive values of XMIN or negative values of XMAX since most
+"    geometries modeled using these CMs are symmetric about the x axis.
+"    mjg
+"    We do not recommend photon forcing more than 5 times in this
+"    CM.  Tests with 20x bremsstrahlung splitting and 20x photon forcing
+"    produced a small number of *** WARNING *** ICM=ICMNEW= 1 when IAUSFL(6)= 1
+"    warnings for particles of very small (10^-8 - 10^-9) weight.
+"    BW
+"
+"******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  ************************
+"******************************************************************************
+"
+"                               INPUT FROM UNIT 5          ""toc:
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$ARCCHM
+"I>  ******************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$ARCCHM) (F10.0): Half-width of outer boundary
+"I>                                      of CM (cm) Read in MAIN
+"I>
+"I>   1  TITLE_$ARCCHM (60A1):  Title of CM.
+"I>
+"I>   2  ZSRC_$ARCCHM (F15.0): Distance from front face of chamber at Y=0
+"I>                            (ie the lowest point in the arc) to reference
+"I>                            plane in cm.
+"I>
+"I>   3  ZRAD1_$ARCCHM (F15.0): Radius of front face of chamber in cm.  For
+"I>                             a fully-divergent beam, this may equal
+"I>                             ZSRC_$ARCCHM.
+"I>
+"I>   4  NUMCHM_$ARCCHM (I4):  Number of individual ion chambers
+"I>
+"I>   5  WIDTHCHM_$ARCCHM (F15.0): Width of each ion chamber in cm.
+"I>
+"I>   6  WIDTHSEP_$ARCCHM (F15.0): Width of each septum in cm.
+"I>
+"I>   7  ARCTHICK_$ARCCHM (F15.0): Thickness of chambers & septa in cm.
+"I>
+"I>   8  FRONTHCK_$ARCCHM (F15.0):  Thickness of front face of chamber in cm.
+"I>
+"I>   9  BACKTHCK_$ARCCHM (F15.0):  Thickness of back face of chamber in cm.
+"I>
+"I>  10  WIDXWALL_$ARCCHM (F15.0):  Width of chamber wall along x in cm.
+"I>
+"I>  11  XMIN1_$ARCCHM,XMAX2_$ARCCHM (2F15.0):
+"I>
+"I>          XMIN1_$ARCCHM: Min x dimension outside of x wall (cm).
+"I>          XMAX2_$ARCCHM: Max x dimension outside of x wall (cm).
+"I>       All YMIN and YMAX are calculated from ZRADs and PHI
+"I>       The min/max x dimensions inside of the x wall are calculated.
+"I>       ZMIN is calculated from ZRAD, ZSRC, and PHI
+"I>
+"I>  12  ZMAX_$ARCCHM (F15.0):  The max Z of the CM in cm.  Note that
+"I>                             ZMAX must be >= ZSRC+ARCTHICK+FRONTHCK+
+"I>                                             BACKTHCK
+"I>
+"I>   Repeat 13-14 for the following regions:
+"I>         Region 1:  region before arc-shaped ion chamber.
+"I>         Region 2:  front face of arc-shaped ion chamber.
+"I>         Region 3:  ends of the ion chamber.
+"I>         Region 4 -- 2*NUMCHM+2: chamber or septa
+"I>               EVEN:  chamber   ODD: septa  Numbering of chambers and
+"I>               septa goes from -Y to +Y  (13-14 only have to be
+"I>               repeated twice for these regions if IREPEAT=1.  See
+"I>               below.)
+"I>         Region 2*NUMCHM+3:  back face of arc-shaped ion chamber.
+"I>         Region 2*NUMCHM+4:  region surrounding the arc.
+"I>         Region 2*NUMCHM+5:  x walls of the chamber
+"I>
+"I>  13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (IREPEAT) (2F15.0,2I5,(I5)):
+"I>
+"I>          ECUT, PCUT:  Cutoff energies for electrons and photons
+"I>           DOSE_ZONE:  Dose scoring flag
+"I>      IREGION_TO_BIT:  Bit setting for the region
+"I>             IREPEAT:  Only input for Region 4.  Set to 1 to apply this
+"I>                       ECUT, PCUT, IREGION_TO_BIT and MED_IN to all
+"I>                       chambers (if DOSE_ZONE > 0, then it will be
+"I>                       incremented automatically for each chamber) and the
+"I>                       following ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT and
+"I>                       MED_IN to all septa.
+"I>
+"I>  14  MED_IN (24A1):  Medium of region
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example is an arc-shaped ion chamber containing 10
+"I>   individual chambers.  Used for the tomotherapy prototype under
+"I>   development at the UW.
+"I>
+"I>   In this example, ECUT, and PCUT in all regions are set to 0.7 MeV
+"I>   and 0.01 MeV respectively.  Note that IREPEAT is set to 1 for the
+"I>   first chamber so that ECUT, PCUT, etc only have to be input once
+"I>   for all chambers and once for all septa.  Also, DOSE_ZONE will
+"I>   be incremented automatically for the chambers, so that the chambers
+"I>   will have dose zones 1-10.
+"I>
+"I>   ************dummy line to indicate new CM***********************
+"I>   60.0,               RMAX:  outer boundary
+"I>   Tomotherapy ion chamber
+"I>   133.0,               ZSRC: distance to front of ARC
+"I>   133.0,               ZRAD1: radius of front of arc
+"I>   10,                  NUMCHM: the number of individual ion chambers
+"I>   1.0,                 WIDTHCHM: width of each individual ion chamber
+"I>   0.1,                 WIDTHSEP: width of septa
+"I>   5.0,                 ARCTHICK: thickness of the arc
+"I>   0.1,                 FRONTHCK: thickness of front face of chamber
+"I>   0.2,                 BACKTHCK: thickness of back face of chamber
+"I>   0.2,                 WIDXWALL: thickness of x wall
+"I>   -5.0, 5.0,           XMIN1, XMAX2: min/max x dimension outside of x wall
+"I>   139.0,               ZMAX: Z limit of CM
+"I>   0.700,0.01,0,1,      ECUT, PCUT,...,MED of region 1
+"I>   AIR521ICRU
+"I>   0.700,0.01,0,2,      ECUT, PCUT,...,MED of front face
+"I>   AL521ICRU
+"I>   0.700,0.01,0,3,      ECUT, PCUT,...,MED of edges of chamber
+"I>   AL521ICRU
+"I>   0.700,0.01,1,1,1,    ECUT, PCUT,...,MED of all chambers
+"I>   H2O521ICRU
+"I>   0.700,0.01,0,1,      ECUT, PCUT,...,MED of all septa
+"I>   PB521ICRU
+"I>   0.700,0.01,0,2,      ECUT, PCUT,...,MED of back face
+"I>   AL521ICRU
+"I>   0.700,0.01,0,1,      ECUT, PCUT,...,MED of region surrounding arc
+"I>   AIR521ICRU
+"I>   0.700,0.01,0,2,      ECUT, PCUT,...,MED of x walls
+"I>   AL521ICRU
+"******************************************************************************
+"*******************************  ERROR CONDITIONS  ***************************
+"******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+
+%E "Start of sub. HOWFAR_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+"******************************************************************************
+"
+"                          Subroutine HOWFAR_ARCCHM
+"                          ***********************
+"
+" HOWFAR routine for an arc-shaped ion chamber
+"
+" Determine if current region number is within component module ARCCHM,
+" and if so evaluate DIST, distance to region boundary along current
+" trajectory.  USTEP must not exceed DIST.
+"
+"   There are 2*(number of chambers)+5 local regions + an air gap (if present)
+"
+"     local               absolute                       description
+"  ----------  -------------------------------------   -----------------------
+"  IR_ARCCHM  IR_start_CM(ICM_ARCCHM)+IR_ARCCHM-1  excluding front air gap
+"  ----------  -------------------------------------   -----------------------
+"   Geometrical co-ordinates, as set in INPUT_ARCCHM are:
+"
+"   ZMIN_ARCCHM       front of ARCCHM (excluding airgap)
+"   ZMAX_ARCCHM       back of ARCCHM
+"
+"        Version 1.0:  First operational version
+"        Version 1.1:  Changed arguments of ARCCHM_WALL to reflect new algorithm
+"        Version 2.0:  Changed ARCCHM_WALL to accomodate overshoots/undershoots
+"*******************************************************************************
+;SUBROUTINE HOWFAR_$ARCCHM;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$ARCCHM,EPCONT,STACK,EGS-IO/;
+"T>
+"T>***********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_ARCCHM
+"T>***********************************
+"  IOUTSD is +1 if the particle is outside and -1 if the  "
+"  particle is inside.  By convention, a particle is      "
+"  outside if it is on the same side as the normal vector "
+"  is pointing and inside for the opposite case           "
+INTEGER
+   IWATCH,    "T>the iwatch variable
+   INCREG,    "T>variable to increment/decrement/retain region for anomalies
+   IRNEW_$ARCCHM,  "T>tentative new region number within CM (absolute)
+   I,J,            "T>tmp loop index
+   IOUTSD,         "T>variable to indicate whether particle is outside plane
+   IHIT;           "T>indicates whether particle hits arc or not
+
+
+DOUBLE PRECISION
+   A_$ARCCHM,     "T>temp variable used for distance calc"
+   B_$ARCCHM,     "T>              "
+   B2_$ARCCHM,    "T>              "
+   C_$ARCCHM,     "T>              "
+   COUT_$ARCCHM,  "T>              "
+   DWALL,         "T>perpendicular distance to chamber or septa wall
+   DWALL_LEFT,    "T>perpendicular distance to chamber or septa wall
+   DWALL_RIGHT,   "T>perpendicular distance to chamber or septa wall
+   VAR1,          "T>temporary distance variable
+   RAD_$ARCCHM,   "T>temp variable for distance"
+   PERP_PR,PERP_PL;
+
+DOUBLE PRECISION
+    BDYTOL,      "T>boundary tolerance
+    DIST,        "T>dist to region boundary along particle trajectory
+    DIST1,       "T>temp dist variable
+    DIST2,       "T>temp dist variable
+    DIST3,       "T>temp dist variable
+    DIST4,       "T>temp dist variable in WALL
+    PERP_P,      "T>cross product of normal of plane with point difference
+    PERP_U,      "T>cross product of normal of plane with direction cosines
+    F,           "T>temporary radius
+    R,           "T>temporary radius
+    S,           "T>the total arc length
+    XENTER,      "T>x coordinate of where particle will enter ARCCHM
+    YENTER,      "T>y coordinate of where particle will enter ARCCHM
+    YLEFT,       "T>y coordinate of the left chamber/septa wall
+    YRIGHT,      "T>y coordinate of the right chamber/septa wall
+    ZENTER;      "T>z coordinate of where particle will enter ARCCHM
+
+REAL*4 ZDIFF;    "T>temporary variable used for z difference
+;
+"
+"    *************************************************
+"    Determine local region number and initialize IHIT
+"    *************************************************
+"
+IHIT = 0;  "by default the particle didn't hit another arc"
+BDYTOL= $BDY_TOL;
+
+"set DNEAR and define IR_$ARCCHM"
+;$ARCCHM_CM_HOWNEAR(DNEAR(NP));
+"
+"     ***********************
+"     Boundary-crossing check
+"     ***********************
+"
+" Determine if current region number is within component module, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+"
+"     **********************
+"     Look at air gap region
+"     **********************
+"
+IF(IR_$ARCCHM = (2*NUMCHM_$ARCCHM+6) )
+[       "inside front air gap"
+
+   IF(W(NP)>0.)
+   [    "particle is heading toward the arc"
+     DIST=(ZMIN_$ARCCHM - Z(NP) + BDYTOL)/W(NP);
+     YENTER=Y(NP)+DIST*V(NP);
+     XENTER=X(NP)+DIST*U(NP);
+     IF(ABS(YENTER)<YMIN1_$ARCCHM)
+     [
+        IRNEW_$ARCCHM= IRSTART_$ARCCHM; "region 1"
+     ]
+     ELSEIF(ABS(YENTER)<YMIN2_$ARCCHM & ABS(YENTER)>=YMIN1_$ARCCHM)
+     [
+        IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+1;
+                                "front face region 2"
+        ]
+     ]
+     ELSEIF(ABS(YENTER)<YMAX1_$ARCCHM & ABS(YENTER)>=YMIN2_$ARCCHM)
+     [
+        IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2; "chamber sides region 3"
+        ]
+     ]
+     ELSEIF(ABS(YENTER)<YMAX2_$ARCCHM & ABS(YENTER)>=YMAX1_$ARCCHM)
+     [
+        IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                "exterior wall"
+        ]
+        IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+        [
+           IRNEW_$ARCCHM= IRSTART_$ARCCHM +
+                       2*NUMCHM_$ARCCHM+2;
+                                "back face"
+        ]
+     ]
+     ELSEIF(ABS(YENTER)>=YMAX2_$ARCCHM)
+     [
+        IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+3;
+                                "outside arc"
+     ]
+     IF(XENTER <= XMIN1_$ARCCHM | XENTER >= XMAX2_$ARCCHM)
+     [
+        IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+3;
+                                "outside arc"
+     ]
+   ]
+   ELSEIF(W(NP) < 0.)
+   [     "particle is heading back out of ARCCHM
+     DIST=(Z_min_CM(ICM_$ARCCHM)- Z(NP))/W(NP);
+     IF(DIST<=0.)[DIST=1.E-16;]
+     IRNEW_$ARCCHM = 1;
+   ]
+   ELSE
+   [     "W=0, assign DIST to some great big number"
+     DIST = 1.0E20;
+   ]
+
+   IF(DIST <= USTEP)
+   [     "distance to front of ARCCHM is less than user step"
+     USTEP = DIST;
+     IF(IRNEW_$ARCCHM = 1)
+     [     "particle is leaving ARCCHM"
+        CALL WHERE_AM_I(ICM_$ARCCHM,-1);
+     ]
+     ELSE
+     [      "particle is entering arc regions"
+        IRNEW =  IRNEW_$ARCCHM;
+     ]
+   ]
+
+]
+"
+"     ******************************************************
+"     Look at region 1 the area in the CM before the chamber
+"     ******************************************************
+"
+ELSEIF(IR_$ARCCHM = 1)
+[
+"
+"          *************************************************************
+"          particle hit the outer arc. New region needs to be determined
+"          *************************************************************
+"
+
+  ;$ARCCHM_IN_HIT(DIST,ZRAD1_$ARCCHM);   "particle hit interior of arc"
+
+  XENTER = X(NP)+U(NP)*DIST;
+  IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+  [        "particle smacked into the x walls of the chamber"
+       IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+  ]
+  IF(XENTER >= XMAX1_$ARCCHM & XENTER < XMAX2_$ARCCHM)
+  [        "particle smacked into the x walls of the chamber"
+       IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+  ]
+  IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+  [        "particle smacked into the front face of the chamber"
+      IRNEW_$ARCCHM = IRSTART_$ARCCHM + 1;
+  ]
+  IF(XENTER <= XMIN1_$ARCCHM | XENTER >= XMAX2_$ARCCHM)
+  [        "particle is going into region around arc"
+
+      IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+  ]
+"
+"          *******************************************************
+"          particle hit the air gap.  New region is air gap region
+"          *******************************************************
+"
+  IF(W(NP)<0.0)
+  [      "if the particle is backscattered get this distance"
+    DIST2=(ZMIN_$ARCCHM-BDYTOL-Z(NP))/W(NP);  "distance to front of ARCCHM"
+  ]
+  ELSE
+  [      "assign DIST2 to some great big number"
+    DIST2 = 1E20;
+  ]
+  IF(DIST2<DIST)
+  [     "if distance to front of ARCCHM is less than INHIT distance"
+    DIST=DIST2;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + (2*NUMCHM_$ARCCHM+5);
+        "particle goes back into air gap"
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+     USTEP = DIST;
+     IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+
+]
+"
+"     ********************
+"     Front Face  Region 2
+"     ********************
+"
+ELSEIF( IR_$ARCCHM = 2 )
+[
+
+"
+"          **********************************************************
+"          particle hit the outer arc.  New region is a chamber/septa
+"          The chamber/septa number needs to be determined by where
+"          the particle enters
+"          **********************************************************
+"
+  ;$ARCCHM_IN_HIT(DIST,ZRAD2_$ARCCHM);   "particle hit interior of arc"
+
+"
+"          ***************************************************
+"          particle hit the inner arc.  New region is region 1
+"          ***************************************************
+"
+   DIST1 = 1.0E20;
+  ;$ARCCHM_OUT_HIT(IHIT,DIST1,ZRAD1_$ARCCHM);
+
+  IF(IHIT = 1 & DIST1 < DIST)
+  [     "the particle hit the inner arc from the outside"
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM;
+        "going into region 1"
+     DIST=DIST1;
+  ]
+  ELSE
+  [
+    YENTER=Y(NP)+DIST*V(NP);
+    DO J=4, 2*NUMCHM_$ARCCHM + 2
+     [   "determine the region the particle is going into"
+      IF(Y(NP) <= 0.0)
+      [
+        IF (YENTER > P_$ARCCHM(2,J-3) & YENTER <= P_$ARCCHM(2,J-2))
+        [
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                        "new region is chamber or septa region "
+        ]
+        IF (J = 4 & YENTER <= P_$ARCCHM(2,J-3))
+        [
+          IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2;
+                       "particle is heading back into region 3"
+        ]
+      ]
+      ELSEIF(Y(NP) > 0.0)
+      [
+        IF (YENTER < P_$ARCCHM(2,J-2) & YENTER >= P_$ARCCHM(2,J-3))
+        [
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                        "new region is chamber or septa region "
+        ]
+        IF (J = 2*NUMCHM_$ARCCHM+2 & YENTER >= P_$ARCCHM(2,J-2))
+        [
+          IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2;
+                       "particle is heading back into region 3"
+        ]
+      ]
+    ]
+  ]
+"
+"          ***************************************************
+"          distance to either x wall is less than distance to
+"          air gap, chamber/septa wall or INHIT distance.
+"          New region is one of the x walls of the chamber
+"          ***************************************************
+"
+  XENTER = X(NP)+U(NP)*DIST;
+  IF(XENTER < XMIN2_$ARCCHM - BDYTOL)
+  [     "distance to min. X of arc"
+     DIST= (XMIN2_$ARCCHM - X(NP) - BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+  ELSEIF(XENTER > XMAX1_$ARCCHM + BDYTOL)
+  [     "distance to max. X of arc"
+     DIST = (XMAX1_$ARCCHM - X(NP) + BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+"
+"          *******************************************************
+"          particle hit the air gap.  New region is air gap region
+"          *******************************************************
+"
+  IF(W(NP)<0.0)
+  [      "if the particle is backscattered get this distance"
+    DIST2=(ZMIN_$ARCCHM-BDYTOL-Z(NP))/W(NP);  "distance to front of ARCCHM"
+  ]
+  ELSE
+  [      "assign DIST2 to some great big number"
+    DIST2 = 1E20;
+  ]
+  IF(DIST2<DIST)
+  [     "if distance to front of ARCCHM is less than INHIT distance"
+    DIST=DIST2;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+        "particle goes back into air gap"
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+     USTEP = DIST;
+     IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+
+]
+"
+"     ********************************************
+"     Look at region 3 the ends of the ion chamber
+"     ********************************************
+"
+ELSEIF(IR_$ARCCHM = 3)
+[
+"
+"          ****************************************************
+"          particle hit the outer arc.  New region is back face
+"          ****************************************************
+"
+  ;$ARCCHM_IN_HIT(DIST,ZRAD3_$ARCCHM);   "particle hit interior of arc"
+  IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+2;
+                      "particle goes into back face"
+"
+"          *******************************************************
+"          particle hit the air gap.  New region is air gap region
+"          *******************************************************
+"
+  IF(W(NP)<0.0)
+  [      "if the particle is backscattered get this distance"
+    DIST2=(ZMIN_$ARCCHM-BDYTOL-Z(NP))/W(NP);  "distance to front of ARCCHM"
+  ]
+  ELSE
+  [      "assign DIST2 to some great big number"
+    DIST2 = 1E20;
+  ]
+  IF(DIST2<DIST)
+  [     "if distance to front of ARCCHM is less than INHIT distance"
+    DIST=DIST2;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+        "particle goes back into air gap"
+  ]
+"
+"          ***************************************************
+"          particle hit the chamber/septa wall.  New region is
+"          adjacent wall or septa.
+"          ***************************************************
+"
+  IF(Y(NP) < 0.0)
+  [     "get the perpendicular distance to the right wall"
+    ;$ARCCHM_WALL(1,-1,DWALL,DIST3,INCREG);
+  ]
+  ELSEIF(Y(NP) > 0.0)
+  [     "get the perpendicular distance to the left wall"
+    ;$ARCCHM_WALL(2*NUMCHM_$ARCCHM,-1,DWALL,DIST3,INCREG);
+  ]
+  ELSE
+  [
+    DIST3 = 1.E30;
+  ]
+
+  IF (DIST3<DIST)
+  [     "if distance to chamber wall is less than INHIT/ARCCHM distance"
+    DIST=DIST3;
+    IF(Y(NP) < 0.0)
+    [   "ye ole particle is going into the 1st chamber"
+      IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM;
+    ]
+    ELSEIF(Y(NP) > 0.0)
+    [   "ye ole particle is going into the last chamber"
+      IRNEW_$ARCCHM=IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+IR_$ARCCHM-2;
+    ]
+  ]
+"
+"          ***************************************************
+"          distance to either x wall is less than distance to
+"          air gap, chamber/septa wall or INHIT distance.
+"          New region is the one of the x walls of the chamber
+"          ***************************************************
+"
+  IF(X(NP)+U(NP)*DIST < XMIN2_$ARCCHM - BDYTOL)
+  [     "distance to min. X of arc"
+     DIST= (XMIN2_$ARCCHM - X(NP) - BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+  ELSEIF(X(NP)+U(NP)*DIST > XMAX1_$ARCCHM + BDYTOL)
+  [     "distance to max. X of arc"
+     DIST = (XMAX1_$ARCCHM - X(NP) + BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+     USTEP = DIST;
+     IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+]
+"
+"     ****************************************
+"     General algorithm for chambers and septa
+"     ****************************************
+"
+ELSEIF(IR_$ARCCHM > 3 & IR_$ARCCHM <= 2*NUMCHM_$ARCCHM+2)
+[
+  $ARCCHM_REGION_CHECK(IR_$ARCCHM);
+
+"
+"          ****************************************************
+"          particle hit the outer arc.  New region is back face
+"          ****************************************************
+"
+  ;$ARCCHM_IN_HIT(DIST,ZRAD3_$ARCCHM);   "particle hit interior of arc"
+  IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+2;
+                        "particle goes into back face"
+
+"
+"          *****************************************************
+"          particle hit the inner arc.  New region is front face
+"          *****************************************************
+"
+  ;$ARCCHM_OUT_HIT(IHIT,DIST1,ZRAD2_$ARCCHM);
+
+  IF(IHIT = 1 & DIST1 < DIST)
+  [     "the particle hit the inner arc from the outside"
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 1;
+        "going into front face of chamber always local region 2"
+     DIST=DIST1;
+  ]
+"
+"          ***************************************************
+"          particle hit the chamber/septa wall.  New region is
+"          adjacent wall or septa.
+"          ***************************************************
+"
+
+  IF( Y(NP) <= 0.0)
+  [
+  ;$ARCCHM_WALL(IR_$ARCCHM-3,1,DWALL,DIST2,INCREG);
+  ;$ARCCHM_WALL(IR_$ARCCHM-2,-1,DWALL,DIST3,INCREG);
+  ]
+  ELSE IF( Y(NP) > 0.0)
+  [
+  ;$ARCCHM_WALL(IR_$ARCCHM-3,-1,DWALL,DIST2,INCREG);
+  ;$ARCCHM_WALL(IR_$ARCCHM-2,1,DWALL,DIST3,INCREG);
+  ]
+  IF ( IR_$ARCCHM = NUMCHM_$ARCCHM+3 )
+  [
+  ;$ARCCHM_WALL(IR_$ARCCHM-3,1,DWALL,DIST2,INCREG);
+  ;$ARCCHM_WALL(IR_$ARCCHM-2,1,DWALL,DIST3,INCREG);
+  ]
+
+
+  IF (DIST2 = 0.00 | DIST3 = 0.00)
+  [
+     IF (INCREG = 0)
+     [  "keep the region number the same"
+       IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM - 1;
+     ]
+     ELSEIF (INCREG = -1)
+     [  "decrement the region number"
+       IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM - 2;
+     ]
+     ELSEIF (INCREG = 1)
+     [  "increment the region number"
+       IF(IR_$ARCCHM=2*NUMCHM_$ARCCHM+2)[
+         IRNEW_$ARCCHM=IRSTART_$ARCCHM+2;
+       ]
+       ELSE[
+         IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM;
+       ]
+     ]
+  ]
+
+  IF (DIST2<DIST & DIST2 ~= 0.00)
+  [     "if distance to chamber wall is less than INHIT/ARCCHM distance"
+    DIST=DIST2;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM - 2;
+  ]
+  ELSEIF (DIST3<DIST & DIST3 ~= 0.00)
+  [
+    DIST=DIST3;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + IR_$ARCCHM;
+    IF(IR_$ARCCHM = 2*NUMCHM_$ARCCHM + 2)
+    [
+      IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2;
+    ]
+  ]
+"
+"          ***************************************************
+"          distance to either x wall is less than distance to
+"          air gap, chamber/septa wall or INHIT distance.
+"          New region is the one of the x walls of the chamber
+"          ***************************************************
+"
+"
+  IF(X(NP)+U(NP)*DIST < XMIN2_$ARCCHM - BDYTOL)
+  [     "distance to min. X of arc"
+     DIST= (XMIN2_$ARCCHM - X(NP) - BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+  ELSEIF(X(NP)+U(NP)*DIST > XMAX1_$ARCCHM + BDYTOL)
+  [     "distance to max. X of arc"
+     DIST = (XMAX1_$ARCCHM - X(NP) + BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+
+  IF (DIST2 = 0.00 | DIST3 = 0.00)
+  [
+         DIST = 0.00;
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+    IF(DIST=0.0)
+    [
+      USTEP = MIN(USTEP,1.0E-5);
+    ]
+    ELSE
+    [
+      USTEP = DIST;
+    ]
+    IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+
+]
+"
+"     ***************************************************
+"     Back Face  Region is given by 2*NUMCHM_$ARCCHM+3
+"     ***************************************************
+"
+ELSEIF(IR_$ARCCHM = 2*NUMCHM_$ARCCHM+3)
+[
+"
+"          *****************************************************
+"          particle hit the outer arc.  New region is the region
+"          surrounding the arc
+"          *****************************************************
+"
+  ;$ARCCHM_IN_HIT(DIST,ZRAD4_$ARCCHM);   "particle hit interior of arc"
+  IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+                "particle goes into region outside of arc"
+"
+"          **********************************************************
+"          particle hit the inner arc.  New region is a chamber/septa
+"          The chamber/septa number needs to be determined by where
+"          the particle enters
+"          **********************************************************
+"
+  DIST1=1.0E20;  "set the OUTHIT distance to a great big number"
+  ;$ARCCHM_OUT_HIT(IHIT,DIST1,ZRAD3_$ARCCHM);
+  IF(IHIT = 1 & DIST1 < DIST)
+  [     "the particle hit the inner arc from the outside"
+        "determine what chamber/septa the particle is entering"
+    YENTER=Y(NP)+DIST1*V(NP);
+    DO J=4, 2*NUMCHM_$ARCCHM + 2
+    [
+      YLEFT = ZRAD3_$ARCCHM * SIN(THETA_$ARCCHM(J-3));
+      YRIGHT = ZRAD3_$ARCCHM * SIN(THETA_$ARCCHM(J-2));
+      IF(Y(NP) <= 0.0)
+      [
+        IF (YENTER > YLEFT & YENTER <= YRIGHT)
+        [
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                          "new region is chamber or septa region "
+        ]
+        IF ( J = 4 & YENTER < YLEFT)
+        [
+          IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2;
+                        "particle is going into region 3"
+        ]
+      ]
+      ELSEIF(Y(NP) > 0.0)
+      [
+        IF (YENTER < YRIGHT & YENTER >= YLEFT)
+        [
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                          "new region is chamber or septa region "
+        ]
+        IF (J = 2*NUMCHM_$ARCCHM+2 & YENTER > YRIGHT)
+        [
+          IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2;
+                        "particle is going into region 3"
+        ]
+      ]
+    ]
+    DIST = DIST1;
+  ]
+"
+"          *******************************************************
+"          particle hit the air gap.  New region is air gap region
+"          *******************************************************
+"
+  IF(W(NP)<0.0)
+  [      "if the particle is backscattered get this distance"
+    DIST2=(ZMIN_$ARCCHM-BDYTOL-Z(NP))/W(NP);  "distance to front of ARCCHM"
+  ]
+  ELSE
+  [      "assign DIST2 to some great big number"
+    DIST2 = 1E20;
+  ]
+  IF(DIST2<DIST)
+  [     "if distance to front of ARCCHM is less than INHIT distance"
+    DIST=DIST2;
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+        "particle goes back into air gap"
+  ]
+"
+"          ***************************************************
+"          distance to either x wall is less than distance to
+"          air gap, chamber/septa wall or INHIT distance.
+"          New region is the one of the x walls of the chamber
+"          ***************************************************
+"
+  IF(X(NP)+U(NP)*DIST < XMIN2_$ARCCHM - BDYTOL)
+  [     "distance to min. X of arc: U must be negative"
+     DIST= (XMIN2_$ARCCHM - X(NP) - BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+  ELSEIF(X(NP)+U(NP)*DIST > XMAX1_$ARCCHM + BDYTOL)
+  [     "distance to max. X of arc: U must be positive"
+     DIST = (XMAX1_$ARCCHM - X(NP) + BDYTOL)/U(NP);
+     IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+        "particle is going into x wall of chamber"
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+     USTEP = DIST;
+     IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+]
+"
+"     *************************************
+"     Look at the region outside of the arc
+"     *************************************
+"
+ELSEIF(IR_$ARCCHM = 2*NUMCHM_$ARCCHM+4)
+[
+  IF(W(NP) > 0.)
+  [  "assume particle is exiting ARCCHM"
+    DIST=(ZMAX_$ARCCHM + BDYTOL - Z(NP))/W(NP);
+    IF(DIST<=0)DIST=1.E-16; "introduced to fix NEGATIVE USTEP error"
+    IRNEW_$ARCCHM= 1;
+  ]
+  ELSEIF(W(NP) < 0.)
+  [  "particle is backscattering and may hit arc"
+    DIST=(ZMIN_$ARCCHM - BDYTOL - Z(NP))/W(NP);
+    IF(DIST<0)DIST=0.; "introduced to fix NEGATIVE USTEP error"
+    IF(DIST=0. & N_GAP_$ARCCHM = 0)[DIST=1.E-16;]
+    IF(N_GAP_$ARCCHM = 1)
+    [  "particle is heading into air gap region"
+      IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+    ]
+    ELSE
+    [   "assume particle is exiting ARCCHM"
+      IRNEW_$ARCCHM= 1;
+    ]
+  ]
+  ELSE
+  [
+    DIST=1E30;
+  ]
+
+  IF(X(NP) < XMIN1_$ARCCHM & X(NP)+U(NP)*DIST > XMIN1_$ARCCHM)
+  [
+    ;$ARCCHM_END_HIT(IHIT,DIST1,XMIN1_$ARCCHM+BDYTOL);
+    IF(IHIT =1)
+    [     "particle hit the end of ARCCHM"
+      DIST=DIST1;
+      F=SQRT((Y(NP)+V(NP)*DIST)**2+
+            ((Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)+W(NP)*DIST)**2);
+      IF(F<= ZRAD1_$ARCCHM)
+      [   "particle is entering region 1
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM;
+      ]
+      ELSEIF(F>ZRAD1_$ARCCHM & F<=ZRAD4_$ARCCHM)
+      [  "particle smacked into the x walls of the chamber"
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+      ]
+      ELSE
+      [   "this shouldn't happen"
+          OUTPUT;(' ******WARNING HIT AND MISS****** '); ;
+      ]
+    ]
+    ELSE
+    [  "it's a miss: particle is still in region surrounding arc"
+       DIST=(XMIN1_$ARCCHM + BDYTOL - X(NP))/U(NP);
+       IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+    ]
+  ]
+  ELSEIF(X(NP) > XMAX2_$ARCCHM & X(NP)+ U(NP)*DIST < XMAX2_$ARCCHM)
+  [
+    ;$ARCCHM_END_HIT(IHIT,DIST1,XMAX2_$ARCCHM-BDYTOL);
+    IF(IHIT =1)
+    [
+      DIST=DIST1;
+      F=SQRT((Y(NP)+V(NP)*DIST)**2+
+             ((Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)+W(NP)*DIST)**2);
+      IF(F<= ZRAD1_$ARCCHM)
+      [   "particle is entering region 1
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM;
+      ]
+      ELSEIF(F>ZRAD1_$ARCCHM & F<=ZRAD4_$ARCCHM)
+      [  "particle smacked into the x walls of the chamber"
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+      ]
+      ELSE
+      [   "this shouldn't happen"
+          OUTPUT;(' ******WARNING HIT AND MISS****** '); ;
+      ]
+    ]
+    ELSE
+    [   "it's a miss: particle is still in region surrounding arc"
+      DIST=(XMAX2_$ARCCHM - BDYTOL - X(NP))/U(NP);
+      IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+    ]
+  ]
+
+  ELSEIF(X(NP) > XMIN1_$ARCCHM & X(NP) < XMAX2_$ARCCHM)
+  [     "alongside arc"
+    ;$ARCCHM_OUT_HIT(IHIT,DIST1,ZRAD4_$ARCCHM);
+    IF(IHIT = 1 & DIST1 < DIST & X(NP)+U(NP)*DIST1 < XMAX2_$ARCCHM &
+          X(NP)+U(NP)*DIST1 > XMIN1_$ARCCHM)
+    [             "the arc was hit"
+      DIST=DIST1;
+      XENTER = X(NP)+U(NP)*DIST;
+      IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+      [  "particle smacked into the x walls of the chamber"
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+      ]
+      IF(XENTER >= XMAX1_$ARCCHM & XENTER < XMAX2_$ARCCHM)
+      [  "particle smacked into the x walls of the chamber"
+          IRNEW_$ARCCHM= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+4;
+      ]
+      IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+      [  "particle smacked into the back face of the chamber"
+          IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+2;
+      ]
+    ]
+    ELSEIF(X(NP)+U(NP)*DIST < XMIN1_$ARCCHM)
+    [    "missed the min side of arc"
+      DIST2=(XMIN1_$ARCCHM - BDYTOL - X(NP))/U(NP);
+      IF(DIST2 < DIST)
+      [
+         DIST=DIST2;
+      ]
+         IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+             "stays in region surrounding the arc"
+    ]
+    ELSEIF(X(NP)+U(NP)*DIST > XMAX2_$ARCCHM)
+    [     "missed the max side of arc"
+      DIST2=(XMAX2_$ARCCHM + BDYTOL - X(NP))/U(NP);
+      IF(DIST2 < DIST)
+      [
+         DIST=DIST2;
+      ]
+         IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+             "stays in region surrounding the arc"
+    ]
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [
+    USTEP=DIST;
+    IF(IRNEW_$ARCCHM = 1)
+    [
+      IF(W(NP) > 0.)
+      [
+        CALL WHERE_AM_I(ICM_$ARCCHM,1);
+      ]
+      ELSEIF(W(NP)<0.)
+      [
+        CALL WHERE_AM_I(ICM_$ARCCHM,-1);
+      ]
+    ]
+    ELSE
+    [
+      IRNEW=IRNEW_$ARCCHM;
+    ]
+  ]
+]
+"
+"     **********************************
+"     Look at the x walls of the chamber
+"     **********************************
+"
+ELSEIF(IR_$ARCCHM = 2*NUMCHM_$ARCCHM+5)
+[
+"
+"          *****************************************************
+"          particle hit the outer arc.  New region is the back
+"          face of the chamber
+"          *****************************************************
+"
+  ;$ARCCHM_IN_HIT(DIST,ZRAD4_$ARCCHM);   "particle hit interior of arc"
+  IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+         "into the region surrounding the chamber"
+"
+"          **********************************************************
+"          particle hit the inner arc.  New region is the front face
+"          of the chamber
+"          **********************************************************
+"
+  DIST1=1.0E20;  "set the OUTHIT distance to a great big number"
+
+  ;$ARCCHM_OUT_HIT(IHIT,DIST1,ZRAD1_$ARCCHM);
+
+  IF(IHIT = 1 & DIST1 < DIST)
+  [
+    IRNEW_$ARCCHM=IRSTART_$ARCCHM;
+        "going into region 1"
+    DIST = DIST1;
+  ]
+"
+"          ******************************************************
+"          two cases where the particles are moving into the area
+"          surrounding the chamber
+"          ******************************************************
+"
+  IF(X(NP) < 0.0 & U(NP) < 0.0)
+  [
+    DIST3 = (XMIN1_$ARCCHM - BDYTOL - X(NP))/U(NP);
+    IF(DIST3 < DIST)
+    [
+      IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+              "particle going to region surrounding the arc"
+      DIST = DIST3;
+    ]
+  ]
+  ELSEIF(X(NP) > 0.0 & U(NP) > 0.0)
+  [
+    DIST3 = (XMAX2_$ARCCHM + BDYTOL - X(NP))/U(NP);
+    IF(DIST3 < DIST)
+    [
+      IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+            "particle going to region surrounding the arc"
+      DIST = DIST3;
+    ]
+  ]
+"
+"          *******************************************************
+"          two cases where the particles are moving into a chamber
+"          or septa.  Need to determine what region number
+"          ******************************************************
+"
+  ELSEIF( (X(NP) < 0.0 & U(NP) > 0.0) | (X(NP) > 0.0 & U(NP) < 0.0) )
+  [
+    IF( X(NP) < 0.0)
+    [
+       DIST3 = (XMIN2_$ARCCHM + BDYTOL - X(NP))/U(NP);
+    ]
+    ELSE
+    [
+       DIST3 = (XMAX1_$ARCCHM - BDYTOL- X(NP))/U(NP);
+    ]
+    IF(DIST3 < 0.0) DIST3=0.0;"added to fix a NEGATIVE USTEP ERROR"
+    IF(DIST3 < DIST)
+    [     "it is closer so determine the new region"
+      DIST = DIST3;
+      YENTER = Y(NP)+DIST*V(NP);
+      ZENTER = Z(NP)+DIST*W(NP);
+      ZDIFF = ZENTER - ZSRC_$ARCCHM + ZRAD1_$ARCCHM;
+      IF( SQRT(ZDIFF**2. + YENTER**2.) < ZRAD2_$ARCCHM)
+      [              "front face"
+         IRNEW_$ARCCHM=IRSTART_$ARCCHM + 1;
+            "going into front face of chamber always local region 2"
+      ]
+      ELSEIF ( SQRT(ZDIFF**2. + YENTER**2.) >= ZRAD2_$ARCCHM &
+               SQRT(ZDIFF**2. + YENTER**2.) < ZRAD3_$ARCCHM)
+      [          "one of the chambers or septa"
+        DO J=4, 2*NUMCHM_$ARCCHM + 2
+        [
+          R = SQRT(YENTER**2. + ZDIFF**2.);
+          YLEFT = R * SIN(THETA_$ARCCHM(J-3));
+          YRIGHT = R * SIN(THETA_$ARCCHM(J-2));
+
+          IF(YENTER <= 0.0)
+          [
+            IF (YENTER > YLEFT & YENTER <= YRIGHT)
+            [
+              IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                            "new region is chamber or septa region "
+            ]
+            IF (J = 4 & YENTER < YLEFT)
+            [
+              IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2;
+                        "particle is going into region 3"
+            ]
+          ]
+          ELSEIF(YENTER > 0.0)
+          [
+            IF (YENTER < YRIGHT & YENTER >= YLEFT)
+            [
+              IRNEW_$ARCCHM= IRSTART_$ARCCHM + J - 1;
+                            "new region is chamber or septa region"
+            ]
+            IF (J = 2*NUMCHM_$ARCCHM+2 & YENTER > YRIGHT)
+            [
+              IRNEW_$ARCCHM=IRSTART_$ARCCHM + 2;
+                        "particle is going into region 3"
+            ]
+          ]
+        ]
+      ]
+      ELSEIF ( SQRT(ZDIFF**2. + YENTER**2.) >= ZRAD3_$ARCCHM )
+      [              "the particle is entering the back face"
+        IRNEW_$ARCCHM = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+2;
+               "into the back face of the chamber"
+      ]
+      ELSE
+      [   "the shit hit the fan"
+          OUTPUT;(' ****** WARNING: LOST PARTICLE FROM X WALL ****** ');
+      ]
+          "assign DIST to the distance calculated from geometry"
+    ]
+  ]
+"
+"          *******************************************************
+"          case where the particles are on the edge of the arc
+"          and could go into the air gap
+"          ******************************************************
+"
+  IF(W(NP) < 0.0)
+  [
+     DIST3=(ZMIN_$ARCCHM - BDYTOL - Z(NP))/W(NP);
+     IF(DIST3<DIST)
+     [
+        DIST=DIST3;
+        IRNEW_$ARCCHM= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+5;
+                                "back into air gap"
+     ]
+  ]
+"
+"          ***************************************************
+"          if the distance to the ARCCHM wall is less than the
+"          USER step, make the USER step the ARCCHM distance.
+"          Make the global region be the new region determined
+"          from ARCCHM geometry.
+"          ***************************************************
+"
+  IF(DIST <= USTEP)
+  [     "particle to be moved to region boundary"
+     USTEP = DIST;
+     IRNEW = IRNEW_$ARCCHM; "new region number is assigned"
+  ]
+]
+"
+"     *******************************************************
+"     The particle is outside of ARCCHM. Something is haywire
+"     *******************************************************
+"
+ELSE
+[     "something is wrong"
+   OUTPUT IR(NP)-IRSTART_$ARCCHM+1,IR(NP),ICM_$ARCCHM,
+          IR_start_CM(ICM_$ARCCHM);
+      (//' ************'//' HOWFAR_$ARCCHM error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of of all regions"
+RETURN;
+END; "End of subroutine HOWFAR_$ARCCHM"
+
+
+%E "Start of WHERE_AM_I_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+"******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_ARCCHM
+"                          ***************************
+"
+" WHERE_AM_I routine for an arc-shaped ion chamber
+"
+" WHERE_AM_I_$ARCCHM determines the new region # when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$ARCCHM subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$ARCCHM from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"       Version History:
+"          1.0    Initial operating version
+"          1.1    Set W(NP) to a small number in the event W(NP) is 0.00
+"                 to avoid division by zero
+"
+"******************************************************************************
+
+
+;SUBROUTINE WHERE_AM_I_$ARCCHM(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CM_$ARCCHM,EPCONT,STACK/;
+"T>
+"T>    ***************************************
+"T>    TYPE DECLARATIONS FOR WHERE_AM_I_ARCCHM
+"T>    ***************************************
+"T>
+INTEGER IDIR;         "T>direction of particle, +1=forward, -1=backward
+REAL DIST;            "T>distance to arc
+REAL YENTER;          "T>the y coordinate of the particle as it enters the arc
+REAL XENTER;          "T>the x coordinate of the particle as it enters the arc
+DOUBLE PRECISION BDYTOL;"T>boundary tolerance
+BDYTOL= $BDY_TOL;
+"
+"     ****************************************************
+"     Determine the region the particle is entering ARCCHM
+"     ****************************************************
+"
+IF (IDIR =1)
+[       "particle entering this CM through front face"
+
+   IF ( W(NP) = 0.000 )
+   [
+      W(NP) = 1.0E-05;
+   ]
+
+   DIST=(ZMIN_$ARCCHM- Z(NP) + BDYTOL)/W(NP);
+   YENTER=Y(NP)+DIST*V(NP);
+   XENTER=X(NP)+DIST*U(NP);
+   IF (N_GAP_$ARCCHM=1)
+   [    "air gap"
+     IRNEW = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+   ]
+   ELSE
+   [    "find out where will it smack the arc"
+      IF(ABS(YENTER)<YMIN1_$ARCCHM)
+      [
+         IRNEW= IRSTART_$ARCCHM; "region 1"
+      ]
+      ELSEIF(ABS(YENTER)<YMIN2_$ARCCHM & ABS(YENTER)>=YMIN1_$ARCCHM)
+      [
+         IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+1;
+                                 "front face region 2"
+         ]
+      ]
+      ELSEIF(ABS(YENTER)<YMAX1_$ARCCHM & ABS(YENTER)>=YMIN2_$ARCCHM)
+      [
+         IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2; "chamber sides region 3"
+         ]
+      ]
+      ELSEIF(ABS(YENTER)<YMAX2_$ARCCHM & ABS(YENTER)>=YMAX1_$ARCCHM)
+      [
+         IF(XENTER > XMIN1_$ARCCHM & XENTER <= XMIN2_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER < XMAX2_$ARCCHM & XENTER >= XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+4;
+                                 "exterior wall"
+         ]
+         IF(XENTER > XMIN2_$ARCCHM & XENTER < XMAX1_$ARCCHM)
+         [
+            IRNEW= IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+2;
+                                 "back face"
+         ]
+      ]
+      ELSEIF(ABS(YENTER)>=YMAX2_$ARCCHM)
+      [
+         IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+3;
+                                 "outside arc"
+      ]
+      IF(XENTER <= XMIN1_$ARCCHM | XENTER >= XMAX2_$ARCCHM)
+      [
+         IRNEW= IRSTART_$ARCCHM+2*NUMCHM_$ARCCHM+3;
+                                 "outside arc"
+      ]
+   ]    "end of case where particle is hitting regions"
+]  "end of particle entering through front face"
+ELSEIF(IDIR=-1)
+[         "particle entering this CM through region surrounding arc"
+     IRNEW = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+3;
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$ARCCHM"
+
+
+%E "Start of sub. INPUT_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+"******************************************************************************
+"
+"                           Subroutine INPUT_ARCCHM
+"                           **********************
+"
+"  A CM input subroutine for an arc-shaped ion chamber
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"  Version 2.0 5/23/99:  Corrected problem with calculation of planar
+"                        normal vector
+"
+"  RMAX_$ARCCHM is input in MAIN and is checked there
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$ARCCHM;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$ARCCHM,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR INPUT_ARCCHM
+"T>**********************************
+"T>
+$REAL AIRGAPMIN_$ARCCHM,  "T>minimum air gap in front and back of CM
+      ANGLE1,             "T>angle used to test for calc of YMIN1
+      ANGLE2,             "T>angle used to calc YMIN1
+      BDYTOL,             "T>may set differ from $BDY_TOL
+      NC,                 "T>calculated number of chambers
+      NS,                 "T>calculated number of septa
+      NUM3,               "T>odd/even variable
+      RNUM2,              "T>odd/even variable
+      VAR1,               "T>temporary distance variable
+      VAR3,               "T>temporary distance variable
+      V1,                 "T>temporary variable used to calculate chambers/septa
+      V2;                 "T>temporary variable used to calculate chambers/septa
+
+DOUBLE PRECISION
+    Top_Y,       "T>Y component of point at top of chamber
+    Top_Z,       "T>Z component of point at top of chamber
+    Bot_Y,       "T>Y component of point at bottom of chamber
+    Bot_Z,       "T>Z component of point at bottom of chamber
+    Vec_Y,       "T>Y componenet of vector representing plane
+    Vec_Z,       "T>Z componenet of vector representing plane
+    Mag,         "T>magnitude of vector representing plane
+    S,           "T>inner arc length of entire chamber
+    the_sign;    "T>sign of the sector length
+
+INTEGER I,II,               "T>DO loop indices
+        IRA,                "T>Absolute region number
+        J,                  "T>medium index
+        MED_FLAG,           "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,          "T>medium index, set after med sort by $MED_INPUT
+        INUM4,              "T>temporary variable for rounding
+        IV3,                "T>temporary variable for even/odd
+        IREPEAT;            "T>apply ECUT,PCUT,etc to all chambers, septa
+"
+"      ***********************
+"      * INITIALIZE PARAMETERS
+"      ***********************
+"
+ICM_$ARCCHM = ICM;      "CM index for this component module
+IRSTART_$ARCCHM = IR_start_CM(ICM_$ARCCHM);
+            "Index of first region in this CM,
+                "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$ARCCHM) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$ARCCHM = 0.1; "set a minimum 0.1 cm air gap at front of CM
+"
+"      ********************
+"      * GET THE TITLE LINE
+"      ********************
+"
+OUTPUT;
+(/' Next component is an arc-shaped ion chamber || to the X axis');
+OUTPUT;(/' $ARCCHM (ARCCHM Rev 1.7)');
+IF(ICM_$ARCCHM = 1)
+[
+   OUTPUT Z_min_CM(1);
+   (' This is the first component and starts at Z=',F11.4,' cm');
+]
+ELSE
+[
+   OUTPUT Z_min_CM(ICM_$ARCCHM);
+    (' Previous CM ends at:',F12.5,' cm'/);
+]
+OUTPUT; (' TITLE: ',$);
+;MINPUT ($ARCCHM) TITLE_$ARCCHM;(60A1);
+                       ";MINPUT is a replacement macro with EOF and
+                       "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$ARCCHM;(' ',60A1);
+                        "OUTPUT is a replacement macro which writes to
+                        "unit 5.  Used here for echo of user input
+"
+"      **************************************************
+"      *  GET DISTANCE FROM REFERENCE Z=0 TO FRONT OF ARC
+"      **************************************************
+"
+OUTPUT; (/' Z of front of arc at Y=0 (excluding airgap): ',$);
+;MINPUT ($ARCCHM) ZSRC_$ARCCHM;(F15.0);
+OUTPUT ZSRC_$ARCCHM;(F12.5);
+
+"
+"      *************************************************************
+"      * GET THE RADIUS OF THE CHAMBER CORRESPONDING TO THE FRONT OF
+"      * THE ION CHAMBER:  FRONT FACE
+"      *************************************************************
+"
+OUTPUT;
+(/' Radius of front of arc in cm: ',$);
+;MINPUT ($ARCCHM) ZRAD1_$ARCCHM;(F15.0);
+OUTPUT ZRAD1_$ARCCHM;(F12.5);
+
+"
+"      ******************************************************************
+"      * GET THE NUMBER OF SEGMENTED ION CHAMBERS.  THIS MUST BE AN EVEN
+"      * NUMBER AND IS TESTED AND RESET IF NECESSARY.  I KNOW YOU MUST BE
+"      * SAYING THERE HAS TO BE A FORTRAN LIBRARY FUNCTION TO TEST IF A
+"      * NUMBER IS EVEN OR ODD BUT WE DO NOT HAVE THE DEC FORTRAN MANUALS.
+"      * THEREFORE BEAR WITH ME--PUT ON YOUR BELL BOTTOMS,AND BE PREPARED
+"      * TO DO SOME OLD GUY FORTRAN.   MAX OF 20 CHAMBERS--COULD BE PUT
+"      * INTO A REPLACEMENT MACRO
+"      ******************************************************************
+"
+OUTPUT $MAX_N_$ARCCHM;
+(/' Number of segmented ion chambers (max of ',I4,' )'/
+  ' :',$);
+;MINPUT ($ARCCHM) NUMCHM_$ARCCHM;(I4);
+OUTPUT NUMCHM_$ARCCHM;(I4);
+RNUM2 = NUMCHM_$ARCCHM/2;
+INUM4 = INT(RNUM2);
+NUM3 = FLOAT(INUM4);
+IF((RNUM2-NUM3) ~= 0.0)
+[        "sonofagun the number is NOT even"
+   NUMCHM_$ARCCHM = NUMCHM_$ARCCHM + 1.;  "make it so"
+   OUTPUT ICM_$ARCCHM;
+     (//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+        ' Number of chambers requested is not even'//);
+   OUTPUT NUMCHM_$ARCCHM;
+     (//'NUMCHM reset to ',F4.1,//);
+   WRITE(IOUTLIST,'(//'' ***WARNING IN CM '',I4,'' (ARCCHM):''/
+        '' Number of chambers ''/
+        '' requested is not even''//)')
+        ICM_$ARCCHM;
+   WRITE(IOUTLIST,'(//'' NUMCHM reset to '',F3.0,//)')
+        NUMCHM_$ARCCHM;
+]
+IF(NUMCHM_$ARCCHM > $MAX_N_$ARCCHM)
+[
+      OUTPUT ICM_$ARCCHM;
+          (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+             ' NUMBER OF CHAMBERS REQUESTED EXCEEDS MAXIMUM'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      *********************************************
+"      * GET THE WIDTH OF EACH SEGMENTED ION CHAMBER
+"      *********************************************
+"
+OUTPUT; (/' Width of each ion chamber in cm: ',$);
+;MINPUT ($ARCCHM) WIDTHCHM_$ARCCHM;(F15.0);
+OUTPUT WIDTHCHM_$ARCCHM;(F12.5);
+"
+"      *********************************************
+"      * GET THE WIDTH OF THE SEPTA BETWEEN CHAMBERS
+"      *********************************************
+"
+OUTPUT; (/' Width of each septum between chambers in cm: ',$);
+;MINPUT ($ARCCHM) WIDTHSEP_$ARCCHM;(F15.0);
+OUTPUT WIDTHSEP_$ARCCHM;(F12.5);
+"
+"      **************************
+"      * GET THICKNESS OF CHAMBER
+"      **************************
+"
+OUTPUT; (/' Thickness of chambers & septa in cm: ',$);
+;MINPUT ($ARCCHM) ARCTHICK_$ARCCHM;(F15.0);
+OUTPUT ARCTHICK_$ARCCHM;(F12.5);
+IF(ARCTHICK_$ARCCHM < 0.0)
+[
+      OUTPUT ICM_$ARCCHM;
+          (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+             ' ARCTHICK < 0.0'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      ********************************************
+"      * GET THE THICKNESS OF FRONT FACE OF CHAMBER
+"      ********************************************
+"
+OUTPUT; (/' Thickness of front face of chamber in cm: ',$);
+;MINPUT ($ARCCHM) FRONTHCK_$ARCCHM;(F15.0);
+OUTPUT FRONTHCK_$ARCCHM;(F12.5);
+IF(FRONTHCK_$ARCCHM < 0.0)
+[
+      OUTPUT ICM_$ARCCHM;
+          (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+             ' FRONTHCK < 0.0'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      *******************************************
+"      * GET THE THICKNESS OF BACK FACE OF CHAMBER
+"      *******************************************
+"
+OUTPUT; (/' Thickness of back face of chamber in cm: ',$);
+;MINPUT ($ARCCHM) BACKTHCK_$ARCCHM;(F15.0);
+OUTPUT BACKTHCK_$ARCCHM;(F12.5);
+IF(BACKTHCK_$ARCCHM < 0.0)
+[
+      OUTPUT ICM_$ARCCHM;
+          (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+             ' BACKTHCK < 0.0'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"      *************************************************
+"      * CALCULATE THE ARC LENGTH BASED ON THE NUMBER OF
+"      * CHAMBERS AND WIDTHS OF THE CHAMBER AND SEPTA
+"      *************************************************
+"
+S = NUMCHM_$ARCCHM*WIDTHCHM_$ARCCHM + (NUMCHM_$ARCCHM-1)*WIDTHSEP_$ARCCHM;
+"
+"      *************************************************
+"      * CALCULATE THE OTHER THREE RADII THAT DEFINE THE
+"      * CHAMBER
+"      *************************************************
+"
+ZRAD2_$ARCCHM = ZRAD1_$ARCCHM + FRONTHCK_$ARCCHM;
+ZRAD3_$ARCCHM = ZRAD2_$ARCCHM + ARCTHICK_$ARCCHM;
+ZRAD4_$ARCCHM = ZRAD3_$ARCCHM + BACKTHCK_$ARCCHM;
+"
+"      **************************************************
+"      * CALCULATE THE ANGLE CORRESPONDING TO THE CHAMBER
+"      **************************************************
+"
+PHI_$ARCCHM = S/ZRAD2_$ARCCHM;
+ANGLE2 = S/ZRAD1_$ARCCHM;
+"
+"      ************************************
+"      * CALCULATE ZMIN AND TEST FOR ERRORS
+"      ************************************
+"
+ZMIN_$ARCCHM=ZSRC_$ARCCHM + FRONTHCK_$ARCCHM -ZRAD2_$ARCCHM*
+             (1.0-COS(PHI_$ARCCHM/2.));
+
+OUTPUT ZMIN_$ARCCHM;
+(/' ZMIN of the arc = ',F12.5,' cm');
+IF(Z_min_CM(ICM_$ARCCHM)>ZMIN_$ARCCHM)
+[
+   IF(ICM_$ARCCHM=1)
+   [
+      OUTPUT ICM_$ARCCHM, ZMIN_$ARCCHM,Z_min_CM(ICM_$ARCCHM);
+       (//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,100)ICM_$ARCCHM, ZMIN_$ARCCHM,Z_min_CM(ICM_$ARCCHM);
+     100 FORMAT(//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+          ' Z_min_CM(1) > Z of first layer'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      Z_min_CM(ICM_$ARCCHM)=ZMIN_$ARCCHM;
+   ]
+   ELSE
+   [
+      OUTPUT ICM_$ARCCHM;
+        (//'***ERROR IN CM ',I4,' (ARCCHM):'/
+           'Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+   ]
+]
+"
+"      *******************************************
+"      * CALCULATE MIN AND MAX Y VALUES OF CHAMBER
+"      * BOTH FOR THE INNER PART AND OUTER PART
+"      *******************************************
+"                   CHAMBER PAIR
+YMIN2_$ARCCHM=ZRAD2_$ARCCHM*SIN(PHI_$ARCCHM/2.);
+YMAX1_$ARCCHM=SQRT((ZRAD3_$ARCCHM)**2.0
+                  -(ZRAD2_$ARCCHM*COS(PHI_$ARCCHM/2.))**2.0);
+OUTPUT YMIN2_$ARCCHM,YMAX1_$ARCCHM;
+(/' YMIN2, YMAX1 = ',F12.5,'cm, ',F12.5,'cm');
+"
+"
+IF(ZRAD1_$ARCCHM**2.0 - (ZRAD2_$ARCCHM*COS(PHI_$ARCCHM/2.))**2.0 < 0.)
+[
+    OUTPUT ICM_$ARCCHM;
+       (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+          ' Y EXTENT OF CHAMBER IS TOO SMALL'//);
+    IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+    YMIN1_$ARCCHM = 0.01;
+]
+ELSE
+[
+"                      FRONT AND BACK FACE PAIR
+YMIN1_$ARCCHM=SQRT(ZRAD1_$ARCCHM**2.0 -
+              (ZRAD2_$ARCCHM*COS(PHI_$ARCCHM/2.))**2.0);
+
+]
+YMAX2_$ARCCHM=SQRT( ZRAD4_$ARCCHM**2.0
+                  -(ZRAD2_$ARCCHM*COS(PHI_$ARCCHM/2.))**2.0);
+OUTPUT YMIN1_$ARCCHM,YMAX2_$ARCCHM;
+(/' YMIN1, YMAX2 = ',F12.5,'cm, ',F12.5,'cm');
+"
+IF(YMAX2_$ARCCHM > RMAX_CM(ICM_$ARCCHM))
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' CALCULATED YMAX2 EXCEEDS RADIUS OF CM'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      ********************************************
+"      * GET THICKNESS OF CHAMBER WALL ALONG X-AXIS
+"      ********************************************
+"
+OUTPUT;(/' Width of chamber wall along x-axis: ',$);
+;MINPUT ($ARCCHM) WIDXWALL_$ARCCHM;(F5.1);
+OUTPUT WIDXWALL_$ARCCHM;(F5.1);
+IF(WIDXWALL_$ARCCHM < 0.0)
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' X WIDTH OF THE CHAMBER WALL IS LESS THAN ZERO'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      *************************************
+"      * GET MIN AND MAX X VALUES OF CHAMBER
+"      *************************************
+"
+OUTPUT;(/' Min, Max X extent of arc including wall thickness: ',$);
+;MINPUT ($ARCCHM) XMIN1_$ARCCHM,XMAX2_$ARCCHM;(2F15.0);
+OUTPUT XMIN1_$ARCCHM,XMAX2_$ARCCHM;(2F8.3);
+IF(XMAX2_$ARCCHM > RMAX_CM(ICM_$ARCCHM))
+[
+        OUTPUT ICM_$ARCCHM,RMAX_CM(ICM_$ARCCHM),XMAX2_$ARCCHM;
+          (//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+             ' XMAX2 > RMAX_CM'/
+             ' XMAX2 reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,101)ICM_$ARCCHM,RMAX_CM(ICM_$ARCCHM),
+             XMAX2_$ARCCHM;
+         101 FORMAT(//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+             ' XMAX2 > RMAX_CM'/
+             ' XMAX2 reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        XMAX2_$ARCCHM = RMAX_CM(ICM_$ARCCHM);
+]
+IF(XMIN1_$ARCCHM < -RMAX_CM(ICM_$ARCCHM))
+[
+       OUTPUT ICM_$ARCCHM,-RMAX_CM(ICM_$ARCCHM),XMIN1_$ARCCHM;
+          (//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+             ' XMIN1 < -RMAX_CM'/
+             ' XMIN1 reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,102)ICM_$ARCCHM,-RMAX_CM(ICM_$ARCCHM),
+            XMIN1_$ARCCHM;
+     102 FORMAT(//' ***WARNING IN CM ',I4,' (ARCCHM):'/
+             ' XMIN1 < -RMAX_CM'/
+             ' XMIN1 reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        XMIN1_$ARCCHM = -RMAX_CM(ICM_$ARCCHM);
+]
+IF(XMIN1_$ARCCHM > XMAX2_$ARCCHM)
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' XMAX2 < XMIN1'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      ******************************************************
+"      * CALCULATE INNER VALUES XMIN AND XMAX XMIN2 AND XMAX1
+"      ******************************************************
+"
+XMIN2_$ARCCHM = XMIN1_$ARCCHM + WIDXWALL_$ARCCHM;
+XMAX1_$ARCCHM = XMAX2_$ARCCHM - WIDXWALL_$ARCCHM;
+IF(XMIN2_$ARCCHM > XMAX1_$ARCCHM)
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' XMAX1 < XMIN2'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+IF(ABS(XMIN2_$ARCCHM) > ABS(XMIN1_$ARCCHM))
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' INNER WALL X MINIMUM EXCEEDS OUTER WALL MINIMUM '//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+IF(ABS(XMAX1_$ARCCHM) > ABS(XMAX2_$ARCCHM))
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' INNER WALL X MAXIMUM EXCEEDS OUTER WALL MAXIMUM '//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"      *************************************
+"      * GET ZMAX AND CHECK FOR ERRORS
+"      *************************************
+"
+OUTPUT ZMIN_$ARCCHM,ZSRC_$ARCCHM + FRONTHCK_$ARCCHM + ARCTHICK_$ARCCHM
+                   + BACKTHCK_$ARCCHM;
+(/' Input the ZMAX of the CM (The arc itself extends from '/
+ ' Z = ',F12.5,' - ', F12.5,' cm): ',$);
+;MINPUT ($ARCCHM) ZMAX_$ARCCHM;(F15.0);
+OUTPUT ZMAX_$ARCCHM;(F12.5);
+IF(ZMAX_$ARCCHM < (ZSRC_$ARCCHM + FRONTHCK_$ARCCHM + ARCTHICK_$ARCCHM
+                   + BACKTHCK_$ARCCHM ))
+[
+      OUTPUT ICM_$ARCCHM;
+         (//' ***ERROR IN CM ',I4,' (ARCCHM):'/
+            ' ARC EXTENDS BEYOND CM IN THE Z DIRECTION'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"
+"      ********************************************
+"      * CALCULATE PLANE INFORMATION FOR EACH PLANE
+"      ********************************************
+"
+DO I=1, 2*NUMCHM_$ARCCHM - 1,2
+[
+"
+"  ****************************************************************"
+"  * Determine the sign of the arc and the x components of vectors*
+"  ****************************************************************"
+"
+     IF(I <= NUMCHM_$ARCCHM)
+     [
+       the_sign = -1.0;
+     ]
+     ELSE
+     [
+       the_sign = 1.0;
+     ]
+"
+"  *****************************************"
+"  * Determine the parameters for the LEFT *
+"  *****************************************"
+"
+"         ******************
+"         * Chambers/septa *
+"         ******************
+"
+     V1 = ABS(0.5 * (FLOAT(I) - (NUMCHM_$ARCCHM + 0.5)) );
+     V2 = V1 + 0.5;
+     IV3 = INT(V2);
+     NC = FLOAT(IV3);
+     NS = V1 + the_sign*0.25;
+
+"
+"         ********************
+"         * Arc length/angle *
+"         ********************
+"
+     S = the_sign*(WIDTHCHM_$ARCCHM*NC + WIDTHSEP_$ARCCHM*NS);
+     THETA_$ARCCHM(I)= S / ZRAD2_$ARCCHM;
+"
+"         *******************************************************"
+"         * Top and bottom points of the plane                  *"
+"         *******************************************************"
+"
+     Top_Y = ZRAD2_$ARCCHM * SIN(THETA_$ARCCHM(I));
+     Top_Z = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+             + ZRAD2_$ARCCHM * COS(THETA_$ARCCHM(I));
+     Bot_Y = ZRAD3_$ARCCHM * SIN(THETA_$ARCCHM(I));
+     Bot_Z = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+             + ZRAD3_$ARCCHM * COS(THETA_$ARCCHM(I));
+"
+"        *****************************************************"
+"        * Vector along line                                 *
+"        *****************************************************"
+"
+     Vec_Y = Top_Y - Bot_Y;
+     Vec_Z = Top_Z - Bot_Z;
+"
+"        *********************************"
+"        * Magnitude of vector           *"
+"        *********************************"
+"
+     Mag = SQRT(Vec_Y**2 + Vec_Z**2);
+"
+"       ******************************"
+"       * Normal vector to the plane *
+"       ******************************"
+"
+     PERP_$ARCCHM(1,I) = 0.00;
+     PERP_$ARCCHM(2,I) = the_sign*Vec_Z / Mag;
+     PERP_$ARCCHM(3,I) = -the_sign*Vec_Y / Mag;
+"
+"       *****************************************************************"
+"       * A point on the plane 1:x-component 2:y-component 3:z-component*"
+"       * z direction must be relative to the distance to the source    *"
+"       *****************************************************************"
+"
+     P_$ARCCHM(1,I) = 0.0;
+     P_$ARCCHM(2,I) = ZRAD2_$ARCCHM * SIN(THETA_$ARCCHM(I));
+     P_$ARCCHM(3,I) = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+                      + ZRAD2_$ARCCHM * COS(THETA_$ARCCHM(I));
+"
+"  ******************************************"
+"  * Determine the parameters for the RIGHT *
+"  ******************************************"
+"
+"         ******************
+"         * Chambers/septa *
+"         ******************
+"
+     V1 = ABS(0.5 * (FLOAT(I) - (NUMCHM_$ARCCHM - 0.5)) );
+     V2 = V1 + 0.5;
+     IV3 = INT(V2);
+     NC = FLOAT(IV3);
+     NS = V1 - the_sign*0.25;
+"
+"         ********************
+"         * Arc length/angle *
+"         ********************
+"
+     S = the_sign*(WIDTHCHM_$ARCCHM*NC + WIDTHSEP_$ARCCHM*NS);
+     THETA_$ARCCHM(I+1)= S / ZRAD2_$ARCCHM;
+"
+"         *******************************************************"
+"         * Top and bottom points of the plane                  *"
+"         *******************************************************"
+"
+     Top_Y = ZRAD2_$ARCCHM * SIN(THETA_$ARCCHM(I+1));
+     Top_Z = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+             + ZRAD2_$ARCCHM * COS(THETA_$ARCCHM(I+1));
+     Bot_Y = ZRAD3_$ARCCHM * SIN(THETA_$ARCCHM(I+1));
+     Bot_Z = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+             + ZRAD3_$ARCCHM * COS(THETA_$ARCCHM(I+1));
+"
+"        *****************************************************"
+"        * Vector along line                                 *
+"        *****************************************************"
+"
+     Vec_Y = Top_Y - Bot_Y;
+     Vec_Z = Top_Z - Bot_Z;
+"
+"        *********************************"
+"        * Magnitude of vector           *"
+"        *********************************"
+"
+     Mag = SQRT(Vec_Y**2 + Vec_Z**2);
+"
+"       ******************************"
+"       * Normal vector to the plane *
+"       ******************************"
+"
+     PERP_$ARCCHM(1,I+1) = 0.00;
+     PERP_$ARCCHM(2,I+1) = the_sign*Vec_Z / Mag;
+     PERP_$ARCCHM(3,I+1) = -the_sign*Vec_Y / Mag;
+"
+"       *****************************************************************"
+"       * A point on the plane 1:x-component 2:y-component 3:z-component*"
+"       * z direction must be relative to the distance to the source    *"
+"       *****************************************************************"
+"
+     P_$ARCCHM(1,I+1) = 0.0;
+     P_$ARCCHM(2,I+1) = ZRAD2_$ARCCHM * SIN(THETA_$ARCCHM(I+1));
+     P_$ARCCHM(3,I+1) = ZSRC_$ARCCHM - ZRAD1_$ARCCHM
+                      + ZRAD2_$ARCCHM * COS(THETA_$ARCCHM(I+1));
+"
+"      ********************************************
+"      * END OF DO LOOP COMPUTING PLANE INFORMATION
+"      ********************************************
+"
+]
+"
+"      **************************************************
+"      * CALCULATE THE NUMBER OF REGIONS THIS SUCKER HAS.
+"      * THIS NUMBER NEVER INCLUDES THE AIR GAP
+"      **************************************************
+"
+NUMREG_$ARCCHM = 2 * NUMCHM_$ARCCHM + 5;
+"
+"      ***********************************************************
+"      * GET ECUT,PCUT,DOSE SCORING ZONE,MATERIAL FOR EACH REGION
+"      ***********************************************************
+"
+OUTPUT;(///' Inputs for ECUT, PCUT, dose zones, media ...');
+IRA = IRSTART_$ARCCHM-1;
+IR_$ARCCHM=0;
+IREPEAT=0;
+DO II = 1, NUMREG_$ARCCHM
+[
+   IR_$ARCCHM=IR_$ARCCHM+1;
+   IRA = IRA+1;
+   IF(II=1)[
+      OUTPUT;(/' for region in front of chambers : '/);
+   ]
+   ELSEIF(II=2)[
+      OUTPUT;(/' for front face of all chambers: '/);
+   ]
+   ELSEIF(II=3)[
+      OUTPUT;(/' for Y ends of chambers: '/);
+   ]
+   ELSEIF(II<=2*NUMCHM_$ARCCHM + 2)[
+     IF(MOD(II,2)=0 & IREPEAT=0)[
+        OUTPUT (II-2)/2;(/' for chamber ',I4,' :'/);
+        IF(II=4)[
+           OUTPUT;(' (numbering goes from -Y to +Y; set IREPEAT=1 to apply '/
+                   '  to all chambers)'/);
+        ]
+     ]
+     ELSE[
+        IF(IREPEAT=1 & II=5)[
+           OUTPUT;(/' for all septa:'/);
+        ]
+        ELSEIF(IREPEAT=0)[
+           OUTPUT (II-3)/2;(/' for septum ',I4,' :'/);
+        ]
+     ]
+   ]
+   ELSEIF(II=2*NUMCHM_$ARCCHM + 3)[
+        OUTPUT;(/' for back face of all chambers: '/);
+   ]
+   ELSEIF(II=2*NUMCHM_$ARCCHM + 4)[
+        OUTPUT;(/' for region behind chambers: '/);
+   ]
+   ELSEIF(II=2*NUMCHM_$ARCCHM + 5)[
+        OUTPUT;(/' for X ends of chambers: '/);
+   ]
+   IF(II=4)[
+    ;OUTPUT;(' ECUT, PCUT (MeV),',
+    ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT, IREPEAT: '/,$);
+        ;MINPUT ($ARCCHM)
+      ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),IREPEAT;
+      (2F15.0,3I5);
+      IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+      IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+      ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+       IREPEAT;
+         (2F15.5,3I5);
+      OUTPUT;(' material ',$);
+      ;$MED_INPUT($ARCCHM); " inputs character array MED_IN from unit 5, loops
+      "through array MEDIA(24,I) to check if medium was previously input.
+      "If so, sets MED_INDEX to index of previous medium.  If not,
+      "increments NMED and sets MED_INDEX to NMED.
+       MED(IRA) = MED_INDEX; " medium of the region
+   ]
+   ELSEIF(IREPEAT=0|(IREPEAT=1 & II=5)|II > 2*NUMCHM_$ARCCHM + 2)[
+    ;OUTPUT;(' ECUT, PCUT (MeV),',
+             ' DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT: '/,$);
+    ;MINPUT ($ARCCHM)
+     ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+     IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+     IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+     ;OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.5,2I5);
+     OUTPUT;(' material ',$);
+     ;$MED_INPUT($ARCCHM); " inputs character array MED_IN from unit 5, loops
+      "through array MEDIA(24,I) to check if medium was previously input.
+      "If so, sets MED_INDEX to index of previous medium.  If not,
+      "increments NMED and sets MED_INDEX to NMED.
+       MED(IRA) = MED_INDEX; " medium of the region
+   ]
+   ELSE["setting up chambers and septa with same material"
+     ECUT(IRA)=ECUT(IRA-2);
+     PCUT(IRA)=PCUT(IRA-2);
+     IREGION_TO_BIT(IRA)=IREGION_TO_BIT(IRA-2);
+     MED(IRA)=MED(IRA-2);
+     IF(MOD(II,2)=0 & DOSE_ZONE(IRA-2)>0)[
+       DOSE_ZONE(IRA)=DOSE_ZONE(IRA-2)+1; "advance dose zones by one in"
+                                          "chambers"
+     ]
+     ELSE[
+       DOSE_ZONE(IRA)=DOSE_ZONE(IRA-2);"one dose zone only in septa"
+     ]
+   ]
+]        "end of loop over regions"
+"
+"      **********************************************************
+"      * DEFINE BOUNDARY TOLERANCE AND ESTABLISH START OF NEXT CM
+"      **********************************************************
+"
+BDYTOL= $BDY_TOL;
+
+Z_min_CM(ICM_$ARCCHM+1) = ZMAX_$ARCCHM;
+"
+"      ******************************************
+"      * SET UP AIR GAP TO PREVIOUS CM IF PRESENT
+"      ******************************************
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$ARCCHM=1) then the gap thickness
+"Z_gap_THICK(ICM_$ARCCHM) = 0, which is used as a flag for no air gap
+"
+Z_gap_THICK(ICM_$ARCCHM) = ZMIN_$ARCCHM - Z_min_CM(ICM_$ARCCHM);
+;OUTPUT Z_gap_THICK(ICM_$ARCCHM);(F15.5);
+;OUTPUT Z_min_CM(ICM_$ARCCHM);(F15.5);
+
+IF(Z_gap_THICK(ICM_$ARCCHM) < $MIN_GAP)
+[
+   ZMIN_$ARCCHM=Z_min_CM(ICM_$ARCCHM);
+   Z_gap_THICK(ICM_$ARCCHM) = 0.;
+   N_GAP_$ARCCHM = 0; "no air gap for this CM
+]
+ELSE
+[
+   N_GAP_$ARCCHM = 1; "this CM has an air gap
+   IRA = IRSTART_$ARCCHM + NUMREG_$ARCCHM; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air
+        "MED(IRA) = 0;put in for QA"
+   ECUT(IRA) = ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+"
+"      ***********************
+"      * SET UP REGION NUMBERS
+"      ***********************
+"
+"  This CM has (2*(#of chambers) + 5) regions,
+"              (2*(# of chambers)+6) regions if an air gap is present
+"
+;
+IREND_$ARCCHM = IRSTART_$ARCCHM + NUMREG_$ARCCHM-1 + N_GAP_$ARCCHM;
+                            "Index of last region
+NREG = NREG + NUMREG_$ARCCHM + N_GAP_$ARCCHM;
+                      "Total number of regions in full geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG)
+[            "have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$ARCCHM+1) = IREND_$ARCCHM+1;
+]
+ELSE
+[
+      OUTPUT ICM_$ARCCHM,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (ARCCHM):'/
+         I4,' regions requested, only ',I4,' available'//);
+      IERR_GEOM(ICM_$ARCCHM)=IERR_GEOM(ICM_$ARCCHM)+1;
+]
+"      ***********************
+"      * ESTABLISH CM BOUNDARY
+"      ***********************
+"
+RMAX_CM_FLAG(ICM_$ARCCHM) = 2; "put a square boundary about CM
+"
+"      *****************************************************
+"      * ESTABLISH DOSE SCORING ZONES AND LATCH BIT SETTINGS
+"      *****************************************************
+"
+IRA = IRSTART_$ARCCHM; "absolute region number"
+DO J=1, NUMREG_$ARCCHM
+[     "loop over local region number, not incl air gap"
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+        "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$ARCCHM)=ECUT(IRA); "Minimum energy on exit from CM
+] "end of loop over J
+"
+"      **************************
+"      * RETURN FROM INPUT_ARCCHM
+"      **************************
+"
+RETURN;
+"
+"      ****************
+"      * ERROR MESSAGES
+"      ****************
+"
+:EOF_$ARCCHM:
+;OUTPUT ICM;(//' *** ERROR ***unexpected EOF reading input for CM',I3);
+STOP;
+
+:ERROR_$ARCCHM:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$ARCCHM"
+
+
+%E "Start of sub. ISUMRY_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+"******************************************************************************
+"
+"                          Subroutine ISUMRY_ARCCHM
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$ARCCHM;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/ BOUNDS,CMs,CM_$ARCCHM,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>***********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_ARCCHM
+"T>***********************************
+"T>
+INTEGER
+   IRA,           "T>absolute region number
+   I,J,           "T>do loop indices
+   I1,            "T>index of volume array
+   I2,            "T>index of volume array
+   I3,            "T>index of volume array
+   AIRREG;        "T>integer value of air gap region
+REAL
+   V1,            "T>temporary volume measurement
+   V2;            "T>temporary volume measurement
+DOUBLE PRECISION
+   PHI1,          "T>temporary angle measurement
+   PHI2;          "T>temporary angle measurement
+
+$REAL VOLUME_$ARCCHM(2*$MAX_N_$ARCCHM+5);  "T> region volume
+"
+"      **************************************
+"      * Calculate the mass of the dose zones
+"      **************************************
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$ARCCHM.
+"
+"           **************************************
+"           * volume of region surrounding the arc
+"           **************************************
+"
+I1 = 2*NUMCHM_$ARCCHM+4;
+VOLUME_$ARCCHM(I1) = 4.*RMAX_CM(ICM_$ARCCHM)**2.
+                       *(ZMAX_$ARCCHM-ZMIN_$ARCCHM);
+                      "total volume of region surrounding arc"
+PHI1 = ASIN(YMAX2_$ARCCHM/ZRAD4_$ARCCHM);
+
+V1 = (PHI1 * ZRAD4_$ARCCHM**2.
+     -YMAX2_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM))
+                   *(XMAX2_$ARCCHM - XMIN1_$ARCCHM);
+VOLUME_$ARCCHM(I1) = VOLUME_$ARCCHM(I1) - V1;
+"
+"           ********************
+"           * volume of region 1
+"           ********************
+"
+PHI1 = ASIN(YMIN1_$ARCCHM/ZRAD1_$ARCCHM);
+VOLUME_$ARCCHM(1) = (PHI1 * ZRAD1_$ARCCHM**2.
+                    -YMIN1_$ARCCHM *
+                     (ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)) *
+                     (XMAX1_$ARCCHM - XMIN2_$ARCCHM);
+                           "volume of region 1"
+"
+"           *******************************
+"           * volume of front face region 2
+"           *******************************
+"
+V1 = (PHI_$ARCCHM * ZRAD2_$ARCCHM**2. / 2.0
+     -YMIN2_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM))
+                   *(XMAX1_$ARCCHM - XMIN2_$ARCCHM);
+VOLUME_$ARCCHM(2) = V1 - VOLUME_$ARCCHM(1);
+     "volume of front face is just a larger sector like region 1"
+     "minus the sector volume from region 1"
+"
+"           ****************************************
+"           * volume of region 3.  Region 3 includes
+"           * BOTH ends of the chamber
+"           ****************************************
+"
+PHI1 = ASIN(YMAX1_$ARCCHM/ZRAD3_$ARCCHM);
+VOLUME_$ARCCHM(3) = ( (PHI1-PHI_$ARCCHM/2.)*ZRAD3_$ARCCHM**2.
+                    - (YMAX1_$ARCCHM-YMIN2_$ARCCHM)
+                          *(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM) )
+                    * (XMAX1_$ARCCHM - XMIN2_$ARCCHM);
+"
+"           ***************************
+"           * volumes of chambers/septa
+"           ***************************
+"
+PHI1 = WIDTHCHM_$ARCCHM/ZRAD2_$ARCCHM;
+         "angle for chambers"
+PHI2 = WIDTHSEP_$ARCCHM/ZRAD2_$ARCCHM;
+         "angle for septa"
+
+DO I = 4,NUMREG_$ARCCHM-3,2
+[       "calculate the volume for each individual chamber"
+  VOLUME_$ARCCHM(I) = 0.5*PHI1 *
+                 (ZRAD3_$ARCCHM**2.-ZRAD2_$ARCCHM**2.) *
+                 (XMAX1_$ARCCHM-XMIN2_$ARCCHM);
+]
+DO I = 5,NUMREG_$ARCCHM-4,2
+[       "calculate the volume for each individual septa"
+  VOLUME_$ARCCHM(I) = 0.5*PHI2 *
+                 (ZRAD3_$ARCCHM**2.-ZRAD2_$ARCCHM**2.) *
+                 (XMAX1_$ARCCHM-XMIN2_$ARCCHM);
+]
+"
+"           *********************
+"           * volume of back face
+"           *********************
+"
+I1 = 2*NUMCHM_$ARCCHM+3;
+PHI1 = ASIN(YMAX2_$ARCCHM/ZRAD4_$ARCCHM);
+PHI2 = ASIN(YMAX1_$ARCCHM/ZRAD3_$ARCCHM);
+
+V1 = (2.*PHI1 * ZRAD4_$ARCCHM**2. / 2.0
+     -YMAX2_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM))
+                   *(XMAX1_$ARCCHM - XMIN2_$ARCCHM);
+V2 = (2.*PHI2 * ZRAD3_$ARCCHM**2. / 2.0
+     -YMAX1_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM))
+                   *(XMAX1_$ARCCHM - XMIN2_$ARCCHM);
+VOLUME_$ARCCHM(I1) = V1 - V2;
+"
+"           *******************
+"           * volume of x walls
+"           *******************
+"
+I1 = 2*NUMCHM_$ARCCHM+5;
+PHI1 = ASIN(YMAX1_$ARCCHM/ZRAD3_$ARCCHM);
+PHI2 = ASIN(YMIN2_$ARCCHM/ZRAD2_$ARCCHM);
+
+V1 = 2.*PHI1 * ZRAD3_$ARCCHM**2. / 2.0
+     -YMAX1_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM);
+
+V2 = 2.*PHI2 * ZRAD2_$ARCCHM**2. / 2.0
+     -YMIN2_$ARCCHM*(ZMIN_$ARCCHM-ZSRC_$ARCCHM+ZRAD1_$ARCCHM);
+
+VOLUME_$ARCCHM(I1) = (V1 - V2) *
+      (XMAX2_$ARCCHM-XMAX1_$ARCCHM+XMIN2_$ARCCHM-XMIN1_$ARCCHM);
+"
+"           *******************************************
+"           * define which regions will be dose regions
+"           *******************************************
+"
+IRA = IRSTART_$ARCCHM - 1; "absolute region number"
+DO J = 1,NUMREG_$ARCCHM
+[     "loop over local region numbers for everything but the air gap"
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA) ~= 0)
+   [      "this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID) = AMASS(ID)+VOLUME_$ARCCHM(J)*RHOR(IRA);
+   ]
+] "end of loop over J"
+"
+"      ***************************************************************
+"      * Summary of geometrical information for ARCCHM in egs4lst file
+"      ***************************************************************
+"
+"
+"           ***************************************************
+"           * output all of the input and calculated parameters
+"           ***************************************************
+"
+I1 = 2*NUMCHM_$ARCCHM+3;
+I2 = 2*NUMCHM_$ARCCHM+4;
+I3 = 2*NUMCHM_$ARCCHM+5;
+
+WRITE(IOUTLIST,110) ICM_$ARCCHM,TITLE_$ARCCHM;
+WRITE(IOUTLIST,120) RMAX_CM(ICM_$ARCCHM),Z_min_CM(ICM_$ARCCHM),
+                    ZSRC_$ARCCHM,ZRAD1_$ARCCHM,NUMCHM_$ARCCHM,
+                    WIDTHCHM_$ARCCHM,WIDTHSEP_$ARCCHM,ARCTHICK_$ARCCHM,
+                    FRONTHCK_$ARCCHM,BACKTHCK_$ARCCHM,WIDXWALL_$ARCCHM,
+                    XMIN1_$ARCCHM,XMAX2_$ARCCHM,ZMAX_$ARCCHM;
+WRITE(IOUTLIST,122) ZMIN_$ARCCHM,ZSRC_$ARCCHM+FRONTHCK_$ARCCHM+
+                    ARCTHICK_$ARCCHM+BACKTHCK_$ARCCHM,YMIN2_$ARCCHM,
+                    YMAX1_$ARCCHM,YMIN1_$ARCCHM,
+                    YMAX2_$ARCCHM,180.*PHI_$ARCCHM/3.1415927;
+"
+"           ****************************************************
+"           * output the regions by local region number and name
+"           ****************************************************
+"
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$ARCCHM - 1;
+DO I = 1 , NUMREG_$ARCCHM
+[
+      IRA = IRA + 1;
+      IF(I=1)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'air in','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+              WRITE(IOUTLIST,142)'front';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'air in','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+              WRITE(IOUTLIST,142)'front';
+          ]
+
+      ]
+      ELSEIF(I=2)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'chamber','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+              WRITE(IOUTLIST,142)'front';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'chamber','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+              WRITE(IOUTLIST,142)'front';
+          ]
+      ]
+      ELSEIF(I=3)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'Y ends','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'Y ends','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+      ]
+      ELSEIF(I > 3 & I <= 2*NUMCHM_$ARCCHM+2)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+            IF(MOD(I,2)=0)["this is a chamber"
+              WRITE(IOUTLIST,140) I,'chamber',(I-2)/2,
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+            ]
+            ELSE["this is a septum"
+              WRITE(IOUTLIST,140) I,'septum',(I-3)/2,
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+            ]
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+            IF(MOD(I,2)=0)["this is a chamber"
+              WRITE(IOUTLIST,140) I,'chamber',(I-2)/2,
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+            ]
+            ELSE["this is a septum"
+              WRITE(IOUTLIST,140) I,'septum',(I-3)/2,
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+            ]
+          ]
+      ]
+      ELSEIF(I = 2*NUMCHM_$ARCCHM+3)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'chamber','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+              WRITE(IOUTLIST,142)'back';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'chamber','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+              WRITE(IOUTLIST,142)'back';
+          ]
+      ]
+      ELSEIF(I = 2*NUMCHM_$ARCCHM+4)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'air in','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+              WRITE(IOUTLIST,142)'back';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'air in','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+              WRITE(IOUTLIST,142)'back';
+          ]
+      ]
+      ELSEIF(I = 2*NUMCHM_$ARCCHM+5)
+      [
+          IF(MED(IRA)=0)
+          [     "Medium is vacuum"
+              WRITE(IOUTLIST,141) I,'X walls','NA',
+                     ECUT(IRA),PCUT(IRA), ECUTRR(IRA),ESAVE(IRA),
+                     DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                     'V','a','c','u','u','m';
+          ]
+          ELSE
+          [     "Medium is not vacuum"
+              WRITE(IOUTLIST,141) I,'X walls','NA',
+                             ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+                             DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+                             (MEDIA(J,MED(IRA)),J=1,9);
+          ]
+      ]
+]
+
+IF(N_GAP_$ARCCHM ~= 0 )
+[
+   IRA = IRSTART_$ARCCHM + 2*NUMCHM_$ARCCHM+5;
+   AIRREG = N_GAP_$ARCCHM+2*NUMCHM_$ARCCHM+5;
+   IF(MED(IRA)=0)
+   [
+      WRITE(IOUTLIST,141) AIRREG,'airgap','NA',
+       ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+       DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+       'V','a','c','u','u','m';
+      WRITE(IOUTLIST,142)'at top';
+   ]
+   ELSE
+   [
+      WRITE(IOUTLIST,141) AIRREG,'airgap','NA',
+       ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+       DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      WRITE(IOUTLIST,142)'at top';
+   ]
+]
+
+110 FORMAT(///
+' Component module',I3,' is ARCCHM (Rev 1.7)'
+/'  --------------------------------------'
+//T5,'Title: ',68A1);
+120 FORMAT(/T2,'$ARCCHM geometry parameters:',
+           /T2,'-----------------------------',
+      //T2,'Input parameters:'/
+/T2,'Half-width of outer boundary:                 RMAX = ',F12.5,' cm',
+/T2,'Z of front of CM with air gap:            Z_min_CM = ',F12.5,' cm',
+/T2,'Z of front of arc at Y=0:                     ZSRC = ',F12.5,' cm',
+/T2,'Radius of front of arc:                      ZRAD1 = ',F12.5,' cm',
+/T2,'Number of ion chambers:                     NUMCHM = ',I12,
+/T2,'Width of each chamber:                    WIDTHCHM = ',F12.5,' cm',
+/T2,'Width of each septum:                     WIDTHSEP = ',F12.5,' cm',
+/T2,'Thickness of chambers & septa             ARCTHICK = ',F12.5,' cm',
+/T2,'Thickness of front face:                  FRONTHCK = ',F12.5,' cm',
+/T2,'Thickness of back face:                   BACKTHCK = ',F12.5,' cm',
+/T2,'Thickness of x walls:                     WIDXWALL = ',F12.5,' cm',
+/T2,'Min.outer x dimension of x wall:             XMIN1 = ',F12.5,' cm',
+/T2,'Max.outer x dimension of x wall:             XMAX2 = ',F12.5,' cm',
+/T2,'Z of bottom of CM:                            ZMAX = ',F12.5,' cm');
+122 FORMAT(//T2,'Calculated parameters:'/
+/T2,'Min. Z of arc:                                ZMIN = ',F12.5,' cm',
+/T2,'Max. Z of arc:                                     = ',F12.5,' cm',
+/T2,'Min. Y at which chamber end intersects ZMIN: YMIN2 = ',F12.5,' cm',
+/T2,'Max. Y at which chamber end intersects ZMIN: YMAX1 = ',F12.5,' cm',
+/T2,'Y at which chamber front intersects ZMIN:    YMIN1 = ',F12.5,' cm',
+/T2,'Y at which chamber back intersects ZMIN:     YMAX2 = ',F12.5,' cm',
+/T2,'Angular extent of arc:                         PHI = ',F12.5,' degrees');
+
+123 FORMAT(T2,I5,F15.5);
+130 FORMAT(/T2,'$ARCCHM region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  loc.  chamber/ electron  photon',
+           '  range  rejection  dose  bit  medium'
+           /T2,'region       septum #  cutoff   cutoff',
+           '  level   maximum   zone  set'
+           /T2,'                       (MeV)     (MeV)',
+           '  (MeV)    (MeV)');
+140 FORMAT(T2,I3,A9,I7,F10.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+141 FORMAT(T2,I3,A9,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,2X,9A1);
+142 FORMAT(T5,A9);
+"142 FORMAT(T2,I3,A7,F11.3,F9.3,F7.3,F10.3,I5,I6,2x,9A1);
+"143 FORMAT(T25,A11);
+"
+"      ********************************************
+"      * Output of ARCCHM to file for EGS_WINDOWS
+"      * This is not done for now--may be too tough
+"      ********************************************
+"
+IF(IWATCH = 4 | IZLAST = 2)
+[     "Create a graphics file "
+;
+]    "End of graphics output"
+"
+"      ***************************
+"      * RETURN FROM ISUMRY_ARCCHM
+"      ***************************
+"
+RETURN;
+END; "End of subroutine ISUMRY_$ARCCHM"
+
+
+%E "Start of sub. HOWNEAR_$ARCCHM (Rev 1.7)
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_ARCCHM
+"                          *************************
+"
+" Returns min. distance to nearest region boundary.
+" Used to all be contained in a macro.
+"
+"*******************************************************************************
+
+SUBROUTINE HOWNEAR_$ARCCHM(DIST);
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$ARCCHM,STACK/;
+
+$REAL DIST; "min. distance to nearest region boundary"
+
+DOUBLE PRECISION
+    VAR2, "temp. distance variable
+    VAR4, "temp. distance variable
+    VAR5, "temp. distance variable
+    VAR6, "temp. distance variable
+    DNER_IN, "temp. distance variable
+    DNER_OU, "temp. distance variable
+    DWALL,         "T>perpendicular distance to chamber or septa wall
+    DWALL_LEFT,    "T>perpendicular distance to chamber or septa wall
+    DWALL_RIGHT,   "T>perpendicular distance to chamber or septa wall
+    PERP_P,      "T>cross product of normal of plane with point difference
+    PERP_U,      "T>cross product of normal of plane with direction cosines
+    DIST3,       "T>temp dist variable
+    DIST4;       "T>temp dist variable in WALL
+
+$INTEGER IOUTSD,     "T>variable to indicate whether particle is outside plane
+    INCREG;      "T>variable to increment/decrement/retain region for anomalies
+
+
+IR_$ARCCHM = IR(NP) - IRSTART_$ARCCHM + 1;
+VAR2=SQRT(Y(NP)**2+(Z(NP)-ZSRC_$ARCCHM+ZRAD1_$ARCCHM)**2);
+
+"*********************************************"
+"*  If particle is in one of ARCCHM's regions*"
+"*********************************************"
+
+IF(IR_$ARCCHM<=NUMREG_$ARCCHM)
+[
+"  *********************************************"
+"  * Particle is in the region before the arc  *"
+"  * This region extends in air to the outside *"
+"  * wall of the chamber                       *"
+"  *********************************************"
+   IF( IR_$ARCCHM = 1 )
+   [
+      DNER_IN = Z(NP)-ZMIN_$ARCCHM;
+      DNER_OU = MIN(ZRAD1_$ARCCHM-VAR2,
+                X(NP)-XMIN1_$ARCCHM,XMAX2_$ARCCHM-X(NP));
+   ]
+"  *********************************************"
+"  * Particle is in the front face             *"
+"  *********************************************"
+   IF( IR_$ARCCHM = 2 )
+   [
+     DNER_IN = MIN(VAR2-ZRAD1_$ARCCHM,Z(NP)-ZMIN_$ARCCHM);
+     DNER_OU = MIN(ZRAD2_$ARCCHM-VAR2,
+                X(NP)-XMIN2_$ARCCHM,XMAX1_$ARCCHM-X(NP));
+   ]
+"  *********************************************"
+"  * Particle is in one of the ends of the arc *"
+"  *********************************************"
+   IF( IR_$ARCCHM = 3 )
+   [
+      DNER_IN = Z(NP)-ZMIN_$ARCCHM;
+      IF(Y(NP) < 0.0)
+      [
+      ;$ARCCHM_WALL(1,-1,DWALL,DIST3,INCREG);
+      ]
+      ELSEIF(Y(NP) > 0.0)
+      [
+      ;$ARCCHM_WALL(2*NUMCHM_$ARCCHM,-1,DWALL,DIST3,INCREG);
+      ]
+      VAR4 = ZRAD3_$ARCCHM-VAR2;
+      VAR5 = X(NP)-XMIN2_$ARCCHM;
+      VAR6 = XMAX1_$ARCCHM-X(NP);
+      DNER_OU = MIN(DWALL,VAR4,VAR5,VAR6);
+   ]
+"  **********************************************"
+"  * Particle is in one of the chambers or septa*"
+"  **********************************************"
+   IF(IR_$ARCCHM > 3 & IR_$ARCCHM <= (2*NUMCHM_$ARCCHM+2))
+   [
+      DNER_IN = VAR2-ZRAD2_$ARCCHM;
+      IF( Y(NP) <= 0.0)
+      [
+       ;$ARCCHM_WALL(IR_$ARCCHM-3,1,DWALL_LEFT,DIST3,INCREG);
+       ;$ARCCHM_WALL(IR_$ARCCHM-2,-1,DWALL_RIGHT,DIST3,INCREG);
+      ]
+      ELSE IF( Y(NP) > 0.0)
+      [
+       ;$ARCCHM_WALL(IR_$ARCCHM-3,-1,DWALL_LEFT,DIST3,INCREG);
+       ;$ARCCHM_WALL(IR_$ARCCHM-2,1,DWALL_RIGHT,DIST3,INCREG);
+      ]
+      IF ( IR_$ARCCHM = NUMCHM_$ARCCHM+3 )
+      [
+       ;$ARCCHM_WALL(IR_$ARCCHM-3,1,DWALL_LEFT,DIST3,INCREG);
+       ;$ARCCHM_WALL(IR_$ARCCHM-2,1,DWALL_RIGHT,DIST3,INCREG);
+      ]
+      VAR4 = ZRAD3_$ARCCHM-VAR2;
+      VAR5 = X(NP)-XMIN2_$ARCCHM;
+      VAR6 = XMAX1_$ARCCHM-X(NP);
+      DNER_OU = MIN(VAR4,DWALL_LEFT,DWALL_RIGHT,VAR5,VAR6);
+      IF ( DIST3 = 0.0 )
+      [
+          DNER_OU = 0.0;
+      ]
+   ]
+"  *********************************************"
+"  * Particle is in the back face              *"
+"  *********************************************"
+   IF( IR_$ARCCHM = (2*NUMCHM_$ARCCHM+3) )
+   [
+      DNER_IN = MIN(VAR2-ZRAD3_$ARCCHM,Z(NP)-ZMIN_$ARCCHM);
+      DNER_OU = MIN(ZRAD4_$ARCCHM-VAR2,
+                X(NP)-XMIN2_$ARCCHM,XMAX1_$ARCCHM-X(NP));
+   ]
+"  *************************************************"
+"  * Particle is in the region surrounding the arc *"
+"  *************************************************"
+   IF( IR_$ARCCHM = (2*NUMCHM_$ARCCHM+4) )
+   [
+     DNER_IN = MIN(Z(NP)-ZMIN_$ARCCHM, ZMAX_$ARCCHM - Z(NP));
+     IF(X(NP) < XMIN1_$ARCCHM)
+     [
+       IF(VAR2 < ZRAD4_$ARCCHM)
+       [
+         DNER_OU = XMIN1_$ARCCHM - X(NP);
+       ]
+       ELSE
+       [
+         DNER_OU = SQRT((XMIN1_$ARCCHM - X(NP))**2 +
+                        (VAR2 - ZRAD4_$ARCCHM)**2);
+       ]
+     ]
+     ELSEIF(X(NP) > XMAX2_$ARCCHM)
+     [
+       IF(VAR2 < ZRAD4_$ARCCHM)
+       [
+         DNER_OU = X(NP) - XMAX2_$ARCCHM;
+       ]
+       ELSE
+       [
+         DNER_OU = SQRT((X(NP) - XMAX2_$ARCCHM)**2 +
+                        (VAR2 - ZRAD4_$ARCCHM)**2);
+       ]
+     ]
+     ELSE
+     [
+         DNER_OU = VAR2 - ZRAD4_$ARCCHM;
+     ]
+   ]
+"  *********************************************"
+"  * Particle is in the x walls of the chamber *"
+"  *********************************************"
+   IF(IR_$ARCCHM = (2*NUMCHM_$ARCCHM+5))
+   [
+     DNER_IN = MIN(VAR2 - ZRAD1_$ARCCHM, Z(NP)-ZMIN_$ARCCHM,
+               ZRAD4_$ARCCHM - VAR2);
+     IF( X(NP) < 0.0 )
+     [
+        DNER_OU = MIN(X(NP)-XMIN1_$ARCCHM,XMIN2_$ARCCHM-X(NP));
+     ]
+     ELSEIF( X(NP) > 0.0)
+     [
+        DNER_OU = MIN(X(NP)-XMAX1_$ARCCHM,XMAX2_$ARCCHM-X(NP));
+     ]
+   ]
+   DIST = MIN(DNER_IN,DNER_OU);
+]
+ELSE
+[
+   DIST =0.;
+]
+RETURN;
+END;
+"******************************************************************************
+"End of ARCCHM_cm.mortran (Rev 1.7 last edited  2003-08-13 16:16:22-04)"

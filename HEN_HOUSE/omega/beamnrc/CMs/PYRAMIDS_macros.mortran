@@ -1,0 +1,843 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module macros: stack of truncated pyramids        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the PYRMD component module written by    "
+"  George Ding, starting in 1992, and subsequently edited by Charlie Ma.      "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"-------------------------------------------------------------------------------
+"     PYRAMIDS miscellaneous replacement macros
+"-------------------------------------------------------------------------------
+"
+REPLACE{$MAX_N_$PYRAMIDS} WITH {10}
+"       ==================="
+;
+"-------------------------------------------------------------------------------
+"     PYRAMIDS component module common
+"-------------------------------------------------------------------------------
+"
+"V>COMMON/CM_$PYRAMIDS/
+"V>================
+"V>ICM_$PYRAMIDS         index of CM, set as ICM in INPUT_$tag and never re-set
+"V>IRSTART_$PYRAMIDS     first region number for this CM
+"V>IREND_$PYRAMIDS       last region number for this CM
+"V>N_$PYRAMIDS           number of regions in CM
+"V>ISCM_MAX_$PYRAMIDS    number of pired bars in CM
+"V>ISCM_$PYRAMIDS        index of pired bars in CM
+"V>TITLE_$PYRAMIDS       title of CM
+"V>XY_CHOICE_$PYRAMIDS   chose X or Y oringtation of the bar
+"V>ZBACK_$PYRAMIDS       Back of CM
+"V>ZFRONT_$PYRAMIDS      Front of CM
+"V>ZMIN_$PYRAMIDS(I)     Zmin of a paired bar
+"V>ZMAX_$PYRAMIDS(I)     Zmax of a paired bar
+"V>XFP_$PYRAMIDS(I)      Front of positive bar in this ISCM (X or Y)
+"V>YFP_$PYRAMIDS(I)      Front of negative bar in this ISCM (X or Y)
+"V>XBP_$PYRAMIDS(I)      Back of positive bar in this ISCM (X or Y)
+"V>YBP_$PYRAMIDS(I)      Back of negative bar in this ISCM (X or Y)
+"V>XMAX_$PYRAMIDS(I)     x outer edge of the bar in this ISCM
+"V>YMAX_$PYRAMIDS(I)     y outer edge of the bar in this ISCM
+"V>XFPT_$PYRAMIDS(I,2)   Front of positive bar in this ISCM (X or Y)
+"V>YFPT_$PYRAMIDS(I,2)   Front of negative bar in this ISCM (X or Y)
+"V>XBPT_$PYRAMIDS(I,2)   Back of positive bar in this ISCM (X or Y)
+"V>YBPT_$PYRAMIDS(I,2)   Back of negative bar in this ISCM (X or Y)
+"V>XMAXT_$PYRAMIDS(I,2)  x outer edge of the bar in this ISCM
+"V>YMAXT_$PYRAMIDS(I,2)  y outer edge of the bar in this ISCM
+"V>AXP_$PYRAMIDS(I)      Slope of positive bar in this ISCM (X or Y)
+"V>AYP_$PYRAMIDS(I)      Slope of negative bar in this ISCM (X or Y)
+"V>BXP_$PYRAMIDS(I)      Constant  b of positive bar in equation x = a*z + b
+"V>BYP_$PYRAMIDS(I)      Constant  b of negative bar in equation x = a*z + b
+"V>BXPT_$PYRAMIDS(I,2)   Constant  b of positive bar in equation x = a*z + b
+"V>BYPT_$PYRAMIDS(I,2)   Constant  b of negative bar in equation x = a*z + b
+"V>COSXP_$PYRAMIDS(I)    cos of x positive bar in this ISCM
+"V>COSYP_$PYRAMIDS(I)    cos of y negative bar in this ISCM
+"V>COSXN_$PYRAMIDS(I)    cos of x positive bar in this ISCM
+"V>COSYN_$PYRAMIDS(I)    cos of y negative bar in this ISCM
+"V>IFILL_$PYRAMIDS       fill index: 0 if openings are all air, 1 if not
+"V>IR_$PYRAMIDS          local region number
+;
+REPLACE{;COMIN/CM_$PYRAMIDS/;} WITH {
+   ;COMMON/CM_$PYRAMIDS/
+      ICM_$PYRAMIDS,IRSTART_$PYRAMIDS,IREND_$PYRAMIDS,
+      N_$PYRAMIDS,ISCM_MAX_$PYRAMIDS, IR_$PYRAMIDS,
+      ISCM_$PYRAMIDS,
+      TITLE_$PYRAMIDS, AXP_$PYRAMIDS, AXN_$PYRAMIDS,
+      AYP_$PYRAMIDS, AYN_$PYRAMIDS, XFP_$PYRAMIDS, XFPT_$PYRAMIDS,
+      YFP_$PYRAMIDS,YFPT_$PYRAMIDS, XFN_$PYRAMIDS, XFNT_$PYRAMIDS,
+      YFN_$PYRAMIDS,YFNT_$PYRAMIDS, XBP_$PYRAMIDS, XBPT_$PYRAMIDS,
+      YBP_$PYRAMIDS,YBPT_$PYRAMIDS, XBN_$PYRAMIDS, XBNT_$PYRAMIDS,
+      YBN_$PYRAMIDS,YBNT_$PYRAMIDS, BXP_$PYRAMIDS, BXPT_$PYRAMIDS,
+      BYP_$PYRAMIDS,BYPT_$PYRAMIDS, BXN_$PYRAMIDS, BXNT_$PYRAMIDS,
+      BYN_$PYRAMIDS,BYNT_$PYRAMIDS, XMAX_$PYRAMIDS,YMAX_$PYRAMIDS,
+      XMAXT_$PYRAMIDS, YMAXT_$PYRAMIDS, ZMIN_$PYRAMIDS,
+      ZMAX_$PYRAMIDS,  ZBACK_$PYRAMIDS, ZFRONT_$PYRAMIDS,
+      COSXP_$PYRAMIDS, COSYP_$PYRAMIDS, COSXN_$PYRAMIDS, COSYN_$PYRAMIDS,
+      IFILL_$PYRAMIDS;
+   INTEGER
+      ICM_$PYRAMIDS,IRSTART_$PYRAMIDS,IREND_$PYRAMIDS,
+      N_$PYRAMIDS,ISCM_MAX_$PYRAMIDS,IR_$PYRAMIDS,
+      ISCM_$PYRAMIDS,IFILL_$PYRAMIDS;
+   $REAL
+     ZMIN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     ZMAX_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     ZBACK_$PYRAMIDS, ZFRONT_$PYRAMIDS,
+      XFP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     YFP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     XFN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     YFN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     XBP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     YBP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     XBN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     YBN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     XMAX_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     YMAX_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     XFPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     YFPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     XFNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     YFNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     XBPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     YBPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     XBNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     YBNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     XMAXT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     YMAXT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     AXP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     AXN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     AYP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     AYN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     BXP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     BXN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     BYP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     BYN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     BXPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     BXNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     BYPT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     BYNT_$PYRAMIDS($MAX_N_$PYRAMIDS,2),
+     COSXP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     COSYP_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     COSXN_$PYRAMIDS($MAX_N_$PYRAMIDS),
+     COSYN_$PYRAMIDS($MAX_N_$PYRAMIDS);
+    CHARACTER*1 TITLE_$PYRAMIDS(60);
+} "end of replacement defining common for this CM"
+;
+"-------------------------------------------------------------------------------
+"     PYRAMIDS HOWNEAR replacement macro
+"  Now just calls subroutine HOWNEAR_$PYRAMIDS
+"-------------------------------------------------------------------------------
+"
+REPLACE {$PYRAMIDS_CM_HOWNEAR(#)} WITH {  "{P1} is DNEAR"
+"       ==================="
+CALL HOWNEAR_$PYRAMIDS({P1});
+}
+;
+REPLACE {$PYRAMIDS_IN_HIT(#,#,#,#);} WITH {;
+DIST1 = 1E10;
+DIST2 = 1E10;
+IF(XPLN_$PYRAMIDS > {P1})[
+   DIST1 = (AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+            BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-X(NP))
+           /(U(NP)-W(NP)*AXP_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF(DIST1 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to XP from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST1 = 0.0;
+   ]
+]
+ELSEIF(XPLN_$PYRAMIDS < {P2})[
+   DIST1 = (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+            BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-X(NP))
+           /(U(NP)-W(NP)*AXN_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF(DIST1 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to XN from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST1 = 0.0;
+   ]
+]
+IF(YPLN_$PYRAMIDS > {P3})[
+   DIST2 = (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+            BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-Y(NP))
+           /(V(NP)-W(NP)*AYP_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF(DIST2 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to YP from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST2 = 0.0;
+   ]
+]
+ELSEIF(YPLN_$PYRAMIDS < {P4})[
+   DIST2 = (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+            BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-Y(NP))
+           /(V(NP)-W(NP)*AYN_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF(DIST2 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to YN from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST2 = 0.0;
+   ]
+]
+DIST = MIN(DIST,DIST1,DIST2);
+}
+;
+REPLACE {$PYRAMIDS_IN_HIT_OUTAIR(#,#,#,#);} WITH {;
+DIST1= 1E10;
+DIST2 =1E10;
+IF(U(NP) ~= 0.0)[
+   DIST1 = ABS(({P1}-ABS({P3}))/U(NP));
+]
+IF(V(NP) ~= 0.0)[
+   DIST2 = ABS(({P2}-ABS({P4}))/V(NP));
+]
+DIST = MIN(DIST1,DIST2);
+}
+;
+REPLACE {$PYRAMIDS_IN_HIT_HR;} WITH {;
+DIST1 = 1E10;
+DIST2 = 1E10;
+IF(U(NP) ~= 0.0)[
+   IF(U(NP)>0.0)[
+      DIST1 = (AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+            BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-X(NP)) /U(NP);
+   ]
+   ELSEIF(U(NP)<0.0)[
+      DIST1 = (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+              BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-X(NP)) /U(NP);
+   ]
+   IF(DIST1 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to XN or XP from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST1 = 0.0;
+   ]
+   ]
+IF(V(NP) ~= 0.0)[
+   IF(V(NP) > 0.0)[
+      DIST2 = (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+              BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-Y(NP)) /V(NP);
+   ]
+   ELSEIF(V(NP) < 0.0)[
+      DIST2 = (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+              BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,1)-Y(NP)) /V(NP);
+   ]
+   IF(DIST2 < 0.0)[
+      OUTPUT ICM_$PYRAMIDS,ISCM_$PYRAMIDS,DIST1;
+       (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4/
+          ' dist calculated to YN or YP from particle position inside'/
+          ' opening < 0 (',F16.8,' ). dist reset to 0.'//);
+      DIST2 = 0.0;
+   ]
+]
+DIST = MIN(DIST1,DIST2);
+}
+REPLACE {$PYRAMIDS_IN_HIT_HOUTAIR(#,#,#,#,#);} WITH {;
+{P5}=0;
+IF(U(NP) > 0.0 & {P3} < 0.0)[
+   TDIST=({P1}+{P3})/U(NP);
+   IF(ABS({P4}+V(NP)*TDIST) <= {P2})[
+      DIST=TDIST;
+      {P5}=1;
+   ]
+]
+ELSEIF(U(NP) < 0.0 & {P3} > 0.0)[
+   TDIST=({P3}-{P1})/U(NP);
+   IF(ABS({P4}+V(NP)*TDIST) <= {P2})[
+      DIST=TDIST;
+      {P5}=1;
+   ]
+]
+IF({P5} = 0)[
+   IF(V(NP) > 0.0 & {P4} < 0.0)[
+      TDIST=({P2}+{P4})/V(NP);
+      IF(ABS({P3}+U(NP)*TDIST) <= {P1})[
+         DIST=TDIST;
+      ]
+   ]
+   ELSEIF(V(NP) < 0.0 & {P4} > 0.0)[
+      TDIST=({P4}-{P2})/V(NP);
+      IF(ABS({P3}+U(NP)*TDIST) <= {P1})[
+         DIST=TDIST;
+      ]
+   ]
+]
+}
+;
+REPLACE {$PYRAMIDS_OUT(#,#,#,#,#,#,#,#);} WITH {
+;{P5} = 0;
+IF(X(NP) >= AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) & XPLN_$PYRAMIDS < {P1})[
+   {P6} = (AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+           Z(NP)+BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-X(NP))
+           /(U(NP)-W(NP)*AXP_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF((Y(NP)+V(NP)*{P6} <=
+       AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+       BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) & (Y(NP)+V(NP)*{P6} >=
+       AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+
+       W(NP)*{P6})+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) )[
+      {P5} =1;
+      IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to XP from particle position inside material'/
+  ' surrounding opening (X(NP) > XP, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+         {P6} = 0.0;
+      ]
+   ]
+]
+ELSEIF(X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) & XPLN_$PYRAMIDS > {P7})[
+   {P6} = ({P7}-X(NP))/ABS(U(NP));
+   IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+      {P5} =1;
+      IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +XMAX from particle position inside material'/
+  ' surrounding opening (X(NP) > XP, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+         {P6} = 0.0;
+      ]
+   ]
+]
+ELSEIF (X(NP) <=
+   AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)
+   & XPLN_$PYRAMIDS > {P2})[
+   {P6} = (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-X(NP))
+           /(U(NP)-W(NP)*AXN_$PYRAMIDS(ISCM_$PYRAMIDS));
+   IF((Y(NP)+V(NP)*{P6} <=
+       AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+       BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) & (Y(NP)+V(NP)*{P6} >=
+       AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+
+       W(NP)*{P6})+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) )[
+      {P5} =1;
+      IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to XN from particle position inside material'/
+  ' surrounding opening (X(NP) < XN, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+         {P6} = 0.0;
+      ]
+   ]
+]
+ELSEIF (X(NP) <
+   AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)
+   & XPLN_$PYRAMIDS < -{P7})[
+   {P6} = (X(NP)+{P7})/ABS(U(NP));
+   IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+      {P5} =1;
+      IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -XMAX from particle position inside material'/
+  ' surrounding opening (X(NP) < XN, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+         {P6} = 0.0;
+      ]
+   ]
+]
+IF({P5} = 0)[
+   IF(Y(NP) >=
+      AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+      YPLN_$PYRAMIDS < {P3})[
+      {P6} = (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-Y(NP))
+           /(V(NP)-W(NP)*AYP_$PYRAMIDS(ISCM_$PYRAMIDS));
+      IF((X(NP)+U(NP)*{P6} <=
+          AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+          BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+          (X(NP)+U(NP)*{P6} >=
+          AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+          BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)))[
+         {P5} =1;
+         IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to YP from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) > YP)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) >
+      AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+      YPLN_$PYRAMIDS > {P8})[
+      {P6} = ({P8}-Y(NP))/ABS(V(NP));
+      IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+         {P5} =1;
+         IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +YMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) > YP)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) <= (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+          BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+      YPLN_$PYRAMIDS > {P4})[
+      {P6} = (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+          BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-Y(NP))
+           /(V(NP)-W(NP)*AYN_$PYRAMIDS(ISCM_$PYRAMIDS));
+      IF((X(NP)+U(NP)*{P6} <=
+          AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+          BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+         (X(NP)+U(NP)*{P6} >=
+          AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*(Z(NP)+W(NP)*{P6})+
+          BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)))[
+         {P5} =1;
+         IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to YN from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) < YN)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) < (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+          BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+      YPLN_$PYRAMIDS < -{P8})[
+      {P6} = (Y(NP)+{P8})/ABS(V(NP));
+      IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+         {P5} =1;
+         IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -YMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) < YN)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+         ]
+      ]
+   ]
+]
+IF({P5}=0)["correlated cases"
+   IF((X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) |
+       X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+       YPLN_$PYRAMIDS < -{P8})[
+        {P6} = (Y(NP)+{P8})/ABS(V(NP));
+        IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+           {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -YMAX from particle position inside material'/
+  ' surrounding opening (X(NP) < XN or X(NP) > XP, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF((X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) |
+       X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+       YPLN_$PYRAMIDS > {P8})[
+        {P6} = ({P8}-Y(NP))/ABS(V(NP));
+        IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+           {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +YMAX from particle position inside material'/
+  ' surrounding opening (X(NP) < XN or X(NP) > XP, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF((Y(NP) > AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) |
+       Y(NP) < AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+       XPLN_$PYRAMIDS < -{P7})[
+        {P6} = (X(NP)+{P7})/ABS(U(NP));
+        IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+           {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -XMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) < YN or Y(NP) > YP)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF((Y(NP) > AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) |
+       Y(NP) < AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+       XPLN_$PYRAMIDS > {P7})[
+        {P6} = ({P7}-X(NP))/ABS(U(NP));
+        IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+           {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +XMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) < YN or Y(NP) > YP)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+]
+IF({P5}=0)["other rare cases"
+   IF(X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+          XPLN_$PYRAMIDS < -{P7})[
+        {P6} = (X(NP)+{P7})/ABS(U(NP));
+        IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+          {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -XMAX from particle position inside material'/
+  ' surrounding opening (X(NP) > XP, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF(X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+          XPLN_$PYRAMIDS > {P7})[
+        {P6} = ({P7}-X(NP))/ABS(U(NP));
+        IF(ABS(Y(NP)+V(NP)*{P6}) <= {P8})[
+          {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +XMAX from particle position inside material'/
+  ' surrounding opening (X(NP) < XN, -YMAX < Y(NP) < YMAX)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF(Y(NP) > AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+          YPLN_$PYRAMIDS < -{P8})[
+        {P6} = (Y(NP)+{P8})/ABS(V(NP));
+        IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+          {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to -YMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) > YP)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+   ELSEIF(Y(NP) < AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+           BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+          YPLN_$PYRAMIDS > {P8})[
+        {P6} = ({P8}-Y(NP))/ABS(V(NP));
+        IF(ABS(X(NP)+U(NP)*{P6}) <= {P7})[
+          {P5}=1;
+           IF({P6} < 0.0)[
+            OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS, {P6};
+ (//' ***WARNING in CM ',I4,' (PYRAMIDS), layer ',I4//
+  ' dist calculated to +YMAX from particle position inside material'/
+  ' surrounding opening (-XMAX < X(NP) < XMAX, Y(NP) < YN)'/
+  ' is < 0 (',F16.8,').  dist reset to 0.'//);
+            {P6} = 0.0;
+           ]
+        ]
+   ]
+]
+}
+;
+REPLACE {$PYRAMIDS_OUT_HIT_HR} WITH {;
+DIST = 1E10;
+IHIT = 0;
+IF(X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+   U(NP) < 0.0)[
+   TDIST = (AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+          BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-X(NP)) /U(NP);
+   IF((Y(NP)+V(NP)*TDIST <=
+       AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+      (Y(NP)+V(NP)*TDIST >=
+       AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) )[
+      DIST = TDIST;
+      IHIT = 1;
+      IF(DIST < 0.)[
+         IF(DIST<-1.e-5)[
+            OUTPUT DIST;(' Warning in out_hit_hr 1 x, dist < -1e-5',F16.8);
+         ]
+         DIST = 0.0;
+      ]
+   ]
+]
+ELSEIF(X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+   U(NP) > 0.0)[
+   TDIST = (XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-ABS(X(NP)))/U(NP);
+   IF(ABS(Y(NP)+V(NP)*TDIST) <= YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2))[
+      DIST = TDIST;
+      IHIT = 1;
+      IF(DIST < 0.0)[
+         IF(DIST<-1.e-5)[
+           OUTPUT DIST;(' Warning in out_hit_hr 1 x, dist < -1e-5',F16.8);
+         ]
+         DIST = 0.0;
+      ]
+   ]
+]
+ELSEIF(X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+       Z(NP)+BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) & U(NP) > 0.0)[
+   TDIST = (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-X(NP)) /U(NP);
+   IF((Y(NP)+V(NP)*TDIST <=
+       AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+      (Y(NP)+V(NP)*TDIST >=
+       AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) )[
+      DIST = TDIST;
+      IHIT = 1;
+      IF(DIST < 0.0)[
+         IF(DIST<-1.e-5)[
+           OUTPUT DIST;(' Warning in out_hit_hr 2 x, dist < -1e-5',F16.8);
+         ]
+         DIST = 0.0;
+      ]
+   ]
+]
+ELSEIF(X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+       Z(NP)+BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) & U(NP) < 0.0)[
+   TDIST = (XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-ABS(X(NP))) /ABS(U(NP));
+   IF(ABS(Y(NP)+V(NP)*TDIST) <= YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2))[
+      DIST = TDIST;
+      IHIT = 1;
+      IF(DIST < 0.0)[
+         IF(DIST<-1.e-5)[
+           OUTPUT DIST;(' Warning in out_hit_hr 2 x, dist < -1e-5',F16.8);
+         ]
+         DIST = 0.0;
+      ]
+   ]
+]
+IF(IHIT = 0)[
+   IF(Y(NP) >
+      AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+      V(NP) < 0.0)[
+      TDIST = (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*
+      Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-Y(NP))/V(NP);
+      IF((X(NP)+U(NP)*TDIST <=
+         AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+         BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+         (X(NP)+U(NP)*TDIST >=
+         AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+         BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)))[
+         DIST = TDIST;
+         IF(DIST < 0.0)[
+            IF(DIST<-1.e-5)[
+              OUTPUT DIST;(' Warning in out_hit_hr 1 y, dist < -1e-5',F16.8);
+            ]
+            DIST = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) >
+      AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) &
+      V(NP) > 0.0)[
+      TDIST = (YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-ABS(Y(NP)))/V(NP);
+      IF(ABS(X(NP)+U(NP)*TDIST) <= XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2))[
+         DIST = TDIST;
+         IF(DIST < 0.0)[
+            IF(DIST<-1.e-5)[
+              OUTPUT DIST;(' Warning in out_hit_hr 1 y, dist < -1e-5',F16.8);
+            ]
+            DIST = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) < (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) & V(NP) > 0.0)[
+      TDIST = (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+      BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-Y(NP))/V(NP);
+      IF((X(NP)+U(NP)*TDIST <=
+          AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+          BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) &
+         (X(NP)+U(NP)*TDIST >=
+         AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+         BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)))[
+         DIST = TDIST;
+         IF(DIST < 0.0)[
+            IF(DIST<-1.e-5)[
+              OUTPUT DIST;(' Warning in out_hit_hr 2 y, dist < -1e-5',F16.8);
+            ]
+            DIST = 0.0;
+         ]
+      ]
+   ]
+   ELSEIF(Y(NP) < (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*
+          Z(NP)+BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2)) & V(NP) < 0.0)[
+      TDIST = (YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2)-ABS(Y(NP)))/ABS(V(NP));
+      IF(ABS(X(NP)+U(NP)*TDIST) <= XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2))[
+         DIST = TDIST;
+         IF(DIST < 0.0)[
+            IF(DIST<-1.e-5)[
+              OUTPUT DIST;(' Warning in out_hit_hr 2 y, dist < -1e-5',F16.8);
+            ]
+            DIST = 0.0;
+         ]
+      ]
+   ]
+]
+}
+;
+REPLACE {$PYRAMIDS_CHECK_IN;} WITH {;
+IF(((X(NP) > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) |
+   (X(NP) < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  |
+   (Y(NP) > AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  |
+   (Y(NP) < AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,1))) &
+   (X(NP) < XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+   (X(NP) > -XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+   (Y(NP) < YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  &
+   (Y(NP) > -YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)))[
+   IF(((X(NP)-$BDY_TOL > AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) |
+     (X(NP)+$BDY_TOL < AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  |
+     (Y(NP)-$BDY_TOL > AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  |
+     (Y(NP)+$BDY_TOL < AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,1))) &
+     (X(NP)+$BDY_TOL < XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+    (X(NP)-$BDY_TOL > -XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)) &
+     (Y(NP)+$BDY_TOL < YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1))  &
+     (Y(NP)-$BDY_TOL > -YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,1)))[
+     Iwarning = Iwarning + 1;
+     IF(Iwarning > 1000) [
+       OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS;
+      (//' ***ERROR in CM ',I4,' (PYRAMIDS)'/
+       ' Particle in layer ',I4,' incorrectly assigned to opening or '/
+       ' region beyond outer edges of layer.'/
+       ' Total number of region errors at this point > 1000.'//);
+       STOP;
+     ]
+   ]
+   IRNEW = IRL + 1;
+   USTEP = 0.0;
+   RETURN;
+]
+}
+;
+REPLACE {$PYRAMIDS_CHECK_OUT;} WITH {;
+IF(((AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > X(NP)) &
+   (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < X(NP)) &
+   (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > Y(NP)) &
+   (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+   BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < Y(NP))) |
+   (XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < X(NP)) |
+   (-XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > X(NP)) |
+   (YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < Y(NP)) |
+   (-YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > Y(NP)) )[
+   IF(((AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BXPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > X(NP)+$BDY_TOL) &
+     (AXN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BXNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < X(NP)-$BDY_TOL) &
+     (AYP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BYPT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > Y(NP)+$BDY_TOL) &
+     (AYN_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
+     BYNT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < Y(NP)-$BDY_TOL)) |
+     (XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < X(NP)-$BDY_TOL) |
+     (-XMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > X(NP)+$BDY_TOL) |
+     (YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) < Y(NP)-$BDY_TOL) |
+     (-YMAXT_$PYRAMIDS(ISCM_$PYRAMIDS,2) > Y(NP)+$BDY_TOL) )[
+     Iwarning = Iwarning + 1;
+     IF(Iwarning > 1000) [
+      OUTPUT ICM_$PYRAMIDS, ISCM_$PYRAMIDS;
+    (//' ***ERROR in CM ',I4,' (PYRAMIDS)'/
+       ' Particle in layer ',I4,' incorrectly assigned to material'/
+       ' surrounding opening.'/
+       ' Total number of region errors at this point > 1000.'//);
+      STOP;
+     ]
+   ]
+   IRNEW = IRL - 1;
+   USTEP = 0.0;
+   RETURN;
+]
+}
+"End of PYRAMIDS_macros.mortran (Rev 1.3)"

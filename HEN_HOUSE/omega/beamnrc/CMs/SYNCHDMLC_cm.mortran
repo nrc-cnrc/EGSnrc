@@ -1,0 +1,3885 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: synchronized dynamic HDMLC 120            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Tony Popescu, 2010                                        "
+"                   Julio Lobo, 2010                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code was originally derived from the existing BEAMnrc DYNVMLC         "
+"  component module and contributed back to NRC by the authors in 2013.       "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code is part of the BEAMnrc code system for Monte Carlo simulation of "
+"  radiotherapy treatments units. BEAM was originally developed at the        "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin, and was originally      "
+"  described in:                                                              "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+%C80
+"************************************************************************"
+"         -------------------------------------------------------        "
+"        Modifications by Tony Popsescu and Julio Lobo  (2012)           "
+"         *******************************************************        "
+"         Modifications were made to HDDYN to allow for                  "
+"         - dynamic delivery using sequence file                         "
+"         - synchronization with other CMs and DOSXYZnrc                 "
+"         In practice, SYNCHDMLC is similar to SYNCVMLC but includes     "
+"         The definitions of two classes of target/isocentre leaves:     "
+"         half and quarter.                                              "
+"***********************************************************************
+"***********************************************************************
+"
+"                             *****************               ""toc:
+"                             *               *               ""toc:
+"                             *   SYNCHDMLC     *               ""toc:
+"                             *               *               ""toc:
+"                             *****************               ""toc:
+"
+"
+"************************************************************************
+"************************************************************************
+"
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to
+"   simulate one component module of a clinical linear accelerator:
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+"
+"   1>. This module can be used as single or double focus multileaf
+"       collimators.
+"   2>. Used as x or y direction parallel to the leaf.
+"   3>. it can have max 100 leaf which are equal width, symmetrical
+"       arranged with y axis or x axis.
+"   4>. Each leaf has two separate parts which can be moved in the leaf
+"       direction independently.
+"   5>. Rules to obey:
+"           i.  Input the top z coordinates  as ZMIN_$SYNCHDMLC
+"              and thickness respectively.
+"           ii. Input the num of leaf and the total width of the leaf, each
+"               leaf will have equal width.
+"           iii. All leaf have the same material structures.
+"           iv. The outside of the leaf will be the same material as leaf
+"           v.  Input the focus points for both directions(x and y). each
+"               leaf will be single or double focused according to the user.
+"
+"
+"
+;
+"I>
+"I> Geometry of SYNCHDMLC:
+"I> **********************
+"I>                                 top view
+"I>
+"I>            ------------------------------------------------
+"I>                                |
+"I>            ------------------------------------------------
+"I>                           |           |
+"I>           -----------------           ---------------------
+"I>                      |        opening     |
+"I>           ---------------     (IR=1)      -----------------
+"I>                         |                 |
+"I>           ------leaves--------      -----------------------
+"I>                 (IR=2)      |     |
+"I>           --------------------------------------------------
+"I>                                  |
+"I>           --------------------------------------------------
+"I>
+;
+"I>       cross-section through leaves taken perpendicular to leaves
+"I>
+"I>                               * ZFOCUS(1)
+"I>                           .   .   .
+"I>                       .    . .|. .    .
+"I> - - - - - - -     .     .   . | .   .     .
+"I> airgap(IR=3)  .      .     .  |  .     .      .
+"I>     -------- ------ ------ ---|--- ------ ------ ---------
+"I>   leaf     / leaf / leaf /leaf|leaf\ leaf  \ leaf \  leaf
+"I>   1    /    2  /     3  /  4  | 5   \  6     \  7    \  8
+"I>    /        /          /      |      \          \        \
+"I>    -------- ---------- -------|------- ---------- --------- -
+"I>                            Z-axis
+;
+"I>            cross-section through leaf taken || to leaf
+"I>             I)  FOR FOCUSED DIVERGENT LEAF ENDS :
+"I>
+"I>                               * ZFOCUS(2)
+"I>  - - - - - - - - - - - -    . | .
+"I>  airgap(IR=4)              .  |  .
+"I>     ----------------------    |    ------------------------
+"I>                          /    |    \
+"I>        Leaf B  (-ve)    /     |     \    Leaf A (+ve)
+"I>                        /      |      \
+"I>    -------------------        |        ----------------------
+"I>                            Z-axis
+
+"I>              II)  FOR ROUNDED LEAF ENDS :
+"I>
+"I>                               *
+"I>  - - - - - - - - - - - -      |
+"I>  airgap(IR=4)                 |
+"I>     -------------             |              --------------
+"I>      --------\     \          |            /
+"I>    hole IR=3 | A   |          |           |<------Leafradius
+"I>     ---------/     /          |            \    B
+"I>     -------------             |              --------------
+"I>                            Z-axis
+;
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |             Region            | Description         |
+"I>            |-------------------------------|---------------------|
+"I>            |  absolute       | local       |                     |
+"I>            |-----------------|-------------|                     |
+"I>            |                 |             |                     |
+"I>            |IRSTART_MLC      | IR_MLC      |  as shown in above  |
+"I>            |  +IR_MLC-1      |             |    (1 to 4)         |
+"I>            |                 |             |                     |
+"I>            |                 |             |                     |
+"I>            -------------------------------------------------------
+"I>
+;
+
+" Subroutines:
+" ************
+"                      INPUT_$SYNCHDMLC
+"                      ISUMRY_$SYNCHDMLC
+"                      HOWFAR_$SYNCHDMLC
+"                      WHERE_AM_I_$SYNCHDMLC
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"************************************************************************
+"
+"                             RESTRICTIONS ON USE/KNOWN BUGS
+"                             *******************
+"
+"************************************************************************
+;
+"
+"                               INPUT FROM UNIT 5
+"                               *****************
+"
+"I>
+"I>  CARDS CM_$SYNCHDMLC
+"I>  ********************
+"I>  -1  Dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$SYNCHDMLC) (F10.5):  Half-width of CM boundary (cm).
+"I>
+"I>   1  TITLE_$SYNCHDMLC (60A1):  Title of CM.
+"I>
+"I>   2  ORIENT_$SYNCHDMLC, NGROUP_$SYNCHDMLC (2I5)
+"I>
+"I>            ORIENT_$SYNCHDMLC = 0 for leaves parallel to Y direction
+"I>                            = 1 for leaves parallel to X direction
+"I>            NGROUP_$SYNCHDMLC = number of groups of adjacent leaves where
+"I>                              all leaves in a group are:
+"I>                              1. FULL leaves
+"I>                              2. HALF TARGET/ISOCENTER pairs with TARGET leaf
+"I>                                 on the -X (ORIENT=0) or -Y (ORIENT=1) side
+"I>                              3. QUARTER TARGET/ISOCENTER pairs
+"I>                              NGROUP_$SYNCHDMLC defaults to 3 if set <=0
+"I>            MODE_$SYNCHCMLC = 0 for single setting of leaf openings (static
+"I>                            field)
+"I>                          = 1 for dynamic mlc delivery--simulated leaf
+"I>                            movement while beam is on
+"I>                          = 2 for step-and-shoot delivery--beam off while
+"I>                            leaf positions change
+"I>
+"I>
+"I>   3  ZMIN_$SYNCHDMLC (F15.0): Z of top of MLC (excluding airgap)
+"I>
+"I>   4  ZTHICK_$SYNCHDMLC (F15.0): Thickness of the leaves ( z-axis (cm))
+"I>
+"I>   5  LEAFWIDTH_$SYNCHDMLC(1), WTONGUE_$SYNCHDMLC(1), WGROOVE_$SYNCHDMLC(1),
+"I>      WTIP_$SYNCHDMLC(1), WRAILTOP_$SYNCHDMLC(1), WRAILBOT_$SYNCHDMLC(1),
+"I>      ZTIP_$SYNCHDMLC(1), ZLEAF_$SYNCHDMLC(1), ZTONGUE_$SYNCHDMLC(1),
+"I>      ZGROOVE_$SYNCHDMLC(1), ZHOLETOP_$SYNCHDMLC(1), ZHOLEBOT_$SYNCHDMLC(1),
+"I>      HOLEPOS_FULL_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(1), ZRAILBOT_$SYNCHDMLC(1)
+"I>         (15F15.0)
+"I>
+"I>        For a FULL type leaf (all dimensions in cm--all widths are
+"I>                              projected back to ZMIN_$SYNCHDMLC):
+"I>
+"I>           LEAFWIDTH_$SYNCHDMLC(1): Width of leaf (not including tongue)
+"I>             WTONGUE_$SYNCHDMLC(1): Width of tongue
+"I>             WGROOVE_$SYNCHDMLC(1): Width of groove
+"I>                WTIP_$SYNCHDMLC(1): Width of tip at top of leaf
+"I>            WRAILTOP_$SYNCHDMLC(1): Width of top of support rail
+"I>            WRAILBOT_$SYNCHDMLC(1): Width of bottom of support rail
+"I>                ZTIP_$SYNCHDMLC(1): Z at which tip at top of leaf begins
+"I>               ZLEAF_$SYNCHDMLC(1): Z of top of leaf
+"I>             ZTONGUE_$SYNCHDMLC(1): Z of bottom of tongue
+"I>             ZGROOVE_$SYNCHDMLC(1): Z of bottom of groove
+"I>            ZHOLETOP_$SYNCHDMLC(1): Z of top of driving screw hole
+"I>            ZHOLEBOT_$SYNCHDMLC(1): Z of bottom of driving screw hole
+"I>           HOLEPOS_FULL_$SYNCHDMLC: Distance of hole from leaf tip
+"I>            ZRAILTOP_$SYNCHDMLC(1): Z of top of support rail
+"I>            ZRAILBOT_$SYNCHDMLC(1): Z of bottom of support rail
+"I>
+"I>       Note: Z positions are input in order of increasing Z.  Thus
+"I>             ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+"I>             manual or GUI help for restrictions on widths.
+"I>
+"I>
+"I>   6  LEAFWIDTH_$SYNCHDMLC(2), WTONGUE_$SYNCHDMLC(2), WGROOVE_$SYNCHDMLC(2),
+"I>      WTIP_$SYNCHDMLC(2), WRAILTOP_$SYNCHDMLC(2), WRAILBOT_$SYNCHDMLC(2),
+"I>      ZRAILTOP_$SYNCHDMLC(2), ZRAILBOT_$SYNCHDMLC(2), ZHOLETOP_$SYNCHDMLC(2),
+"I>      ZHOLEBOT_$SYNCHDMLC(2), HOLEPOS_TAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(2),
+"I>      ZGROOVE_$SYNCHDMLC(2),ZLEAF_$SYNCHDMLC(2), ZTIP_$SYNCHDMLC(2) (15F15.0)
+"I>
+"I>        For a HALF TARGET type leaf (all dimensions in cm--all widths are
+"I>                              projected back to ZMIN_$SYNCHDMLC):
+"I>
+"I>           LEAFWIDTH_$SYNCHDMLC(2): Width of leaf (not including tongue)
+"I>             WTONGUE_$SYNCHDMLC(2): Width of tongue
+"I>             WGROOVE_$SYNCHDMLC(2): Width of groove
+"I>                WTIP_$SYNCHDMLC(2): Width of tip at bottom of leaf
+"I>            WRAILTOP_$SYNCHDMLC(2): Width of top of support rail
+"I>            WRAILBOT_$SYNCHDMLC(2): Width of bottom of support rail
+"I>            ZRAILTOP_$SYNCHDMLC(2): Z of top of support rail
+"I>            ZRAILBOT_$SYNCHDMLC(2): Z of bottom of support rail
+"I>            ZHOLETOP_$SYNCHDMLC(2): Z of top of driving screw hole
+"I>            ZHOLEBOT_$SYNCHDMLC(2): Z of bottom of driving screw hole
+"I>            HOLEPOS_TAR_$SYNCHDMLC: Distance of hole from leaf tip
+"I>             ZTONGUE_$SYNCHDMLC(2): Z of bottom of tongue
+"I>             ZGROOVE_$SYNCHDMLC(2): Z of top of groove
+"I>               ZLEAF_$SYNCHDMLC(2): Z of bottom of leaf
+"I>                ZTIP_$SYNCHDMLC(2): Z of bottom of tip at bottom of leaf
+"I>
+"I>       Note: Z positions are input in order of increasing Z.  Thus
+"I>             ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+"I>             manual or GUI help for restrictions on widths.
+"I>
+"I>
+"I>   7  LEAFWIDTH_$SYNCHDMLC(3), WTONGUE_$SYNCHDMLC(3), WGROOVE_$SYNCHDMLC(3),
+"I>      WTIP_$SYNCHDMLC(3), WRAILTOP_$SYNCHDMLC(3), WRAILBOT_$SYNCHDMLC(3),
+"I>      ZTIP_$SYNCHDMLC(3), ZLEAF_$SYNCHDMLC(3), ZTONGUE_$SYNCHDMLC(3),
+"I>      ZGROOVE_$SYNCHDMLC(3), ZHOLETOP_$SYNCHDMLC(3), ZHOLEBOT_$SYNCHDMLC(3),
+"I>      HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(3), ZRAILBOT_$SYNCHDMLC(3)
+"I>                  (15F15.0)
+"I>
+"I>        For a HALF ISOCENTER type leaf (all dimensions in cm--all widths are
+"I>                              projected back to ZMIN_$SYNCHDMLC):
+"I>
+"I>           LEAFWIDTH_$SYNCHDMLC(3): Width of leaf (not including tongue)
+"I>             WTONGUE_$SYNCHDMLC(3): Width of tongue
+"I>             WGROOVE_$SYNCHDMLC(3): Width of groove
+"I>                WTIP_$SYNCHDMLC(3): Width of tip at top of leaf
+"I>            WRAILTOP_$SYNCHDMLC(3): Width of top of support rail
+"I>            WRAILBOT_$SYNCHDMLC(3): Width of bottom of support rail
+"I>                ZTIP_$SYNCHDMLC(3): Z at which tip at top of leaf begins
+"I>               ZLEAF_$SYNCHDMLC(3): Z of top of leaf
+"I>             ZTONGUE_$SYNCHDMLC(3): Z of top of tongue
+"I>             ZGROOVE_$SYNCHDMLC(3): Z of bottom of groove
+"I>            ZHOLETOP_$SYNCHDMLC(3): Z of top of driving screw hole
+"I>            ZHOLEBOT_$SYNCHDMLC(3): Z of bottom of driving screw hole
+"I>            HOLEPOS_ISO_$SYNCHDMLC: Distance of hole from leaf tip
+"I>            ZRAILTOP_$SYNCHDMLC(3): Z of top of support rail
+"I>            ZRAILBOT_$SYNCHDMLC(3): Z of bottom of support rail
+"I>
+"I>       Note: Z positions are input in order of increasing Z.  Thus
+"I>             ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+"I>             manual or GUI help for restrictions on widths.
+"I>
+"I>        Note: 1. For TARGET and ISOCENTER leaves to fit together,
+"I>                 ZTONGUE_$SYNCHDMLC(3)>=ZGROOVE_$SYNCHDMLC(2) and
+"I>                 ZTONGUE_$SYNCHDMLC(2)<=ZGROOVE_$SYNCHDMLC(3).
+"I>              2. For TARGET and FULL leaves to fit together (FULL
+"I>                 leaf on -X [ORIENT=0] or -Y [ORIENT=1] side of TARGET
+"I>                 leaf only) ZTONGUE_$SYNCHDMLC(2)<=ZGROOVE_$SYNCHDMLC(1)
+"I>              3. For ISOCENTER and FULL leaves to fit together (FULL
+"I>                 leaf on +X [ORIENT=0] or +Y [ORIENT=1] side of ISOCENTER
+"I>                 leaf only) ZTONGUE_$SYNCHDMLC(1)<=ZGROOVE_$SYNCHDMLC(3)
+"I>
+"I>
+"I>   8  LEAFWIDTH_$SYNCHDMLC(4), WTONGUE_$SYNCHDMLC(4), WGROOVE_$SYNCHDMLC(4),
+"I>      WTIP_$SYNCHDMLC(4), WRAILTOP_$SYNCHDMLC(4), WRAILBOT_$SYNCHDMLC(4),
+"I>      ZRAILTOP_$SYNCHDMLC(4), ZRAILBOT_$SYNCHDMLC(4), ZHOLETOP_$SYNCHDMLC(4),
+"I>      ZHOLEBOT_$SYNCHDMLC(4), HOLEPOS_QTAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(4),
+"I>      ZGROOVE_$SYNCHDMLC(4), ZLEAF_$SYNCHDMLC(4),ZTIP_$SYNCHDMLC(4) (15F15.0)
+"I>
+"I>        For a QUARTER TARGET type leaf (all dimensions in cm--all widths are
+"I>                              projected back to ZMIN_$SYNCHDMLC):
+"I>
+"I>           LEAFWIDTH_$SYNCHDMLC(4): Width of leaf (not including tongue)
+"I>             WTONGUE_$SYNCHDMLC(4): Width of tongue
+"I>             WGROOVE_$SYNCHDMLC(4): Width of groove
+"I>                WTIP_$SYNCHDMLC(4): Width of tip at bottom of leaf
+"I>            WRAILTOP_$SYNCHDMLC(4): Width of top of support rail
+"I>            WRAILBOT_$SYNCHDMLC(4): Width of bottom of support rail
+"I>            ZRAILTOP_$SYNCHDMLC(4): Z of top of support rail
+"I>            ZRAILBOT_$SYNCHDMLC(4): Z of bottom of support rail
+"I>            ZHOLETOP_$SYNCHDMLC(4): Z of top of driving screw hole
+"I>            ZHOLEBOT_$SYNCHDMLC(4): Z of bottom of driving screw hole
+"I>            HOLEPOS_QTAR_$SYNCHDMLC: Distance of hole from leaf tip
+"I>             ZTONGUE_$SYNCHDMLC(4): Z of bottom of tongue
+"I>             ZGROOVE_$SYNCHDMLC(4): Z of top of groove
+"I>               ZLEAF_$SYNCHDMLC(4): Z of bottom of leaf
+"I>                ZTIP_$SYNCHDMLC(4): Z of bottom of tip at bottom of leaf
+"I>
+"I>       Note: Z positions are input in order of increasing Z.  Thus
+"I>             ZLEAF_$SYNCHDMLC(4)>=ZTIP_$SYNCHDMLC(4), etc.  See the BEAM
+"I>             manual or GUI help for restrictions on widths.
+"I>
+"I>
+"I>   9  LEAFWIDTH_$SYNCHDMLC(5), WTONGUE_$SYNCHDMLC(5), WGROOVE_$SYNCHDMLC(5),
+"I>      WTIP_$SYNCHDMLC(5), WRAILTOP_$SYNCHDMLC(5), WRAILBOT_$SYNCHDMLC(5),
+"I>      ZTIP_$SYNCHDMLC(5), ZLEAF_$SYNCHDMLC(5), ZTONGUE_$SYNCHDMLC(5),
+"I>      ZGROOVE_$SYNCHDMLC(5), ZHOLETOP_$SYNCHDMLC(5), ZHOLEBOT_$SYNCHDMLC(5),
+"I>      HOLEPOS_QISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(5), ZRAILBOT_$SYNCHDMLC(5)
+"I>                  (15F15.0)
+"I>
+"I>    For a QUARTER ISOCENTER type leaf (all dimensions in cm--all widths are
+"I>                              projected back to ZMIN_$SYNCHDMLC):
+"I>
+"I>           LEAFWIDTH_$SYNCHDMLC(5): Width of leaf (not including tongue)
+"I>             WTONGUE_$SYNCHDMLC(5): Width of tongue
+"I>             WGROOVE_$SYNCHDMLC(5): Width of groove
+"I>                WTIP_$SYNCHDMLC(5): Width of tip at top of leaf
+"I>            WRAILTOP_$SYNCHDMLC(5): Width of top of support rail
+"I>            WRAILBOT_$SYNCHDMLC(5): Width of bottom of support rail
+"I>                ZTIP_$SYNCHDMLC(5): Z at which tip at top of leaf begins
+"I>               ZLEAF_$SYNCHDMLC(5): Z of top of leaf
+"I>             ZTONGUE_$SYNCHDMLC(5): Z of top of tongue
+"I>             ZGROOVE_$SYNCHDMLC(5): Z of bottom of groove
+"I>            ZHOLETOP_$SYNCHDMLC(5): Z of top of driving screw hole
+"I>            ZHOLEBOT_$SYNCHDMLC(5): Z of bottom of driving screw hole
+"I>            HOLEPOS_QISO_$SYNCHDMLC: Distance of hole from leaf tip
+"I>            ZRAILTOP_$SYNCHDMLC(5): Z of top of support rail
+"I>            ZRAILBOT_$SYNCHDMLC(5): Z of bottom of support rail
+"I>
+"I>   Repeat 10 NGROUP_$SYNCHDMLC times
+"I>
+"I>   10  NUM_LEAF_$SYNCHDMLC(I), LEAFTYPE  (2I5)
+"I>
+"I>        NUM_LEAF_$SYNCHDMLC(I): Number of adjacent leaves in group I
+"I>             LEAFTYPE: Type of leaf in group I.
+"I>                       Set to: 1 for FULL leaves
+"I>                               2 for HALF TARGET/ISOCENTER pair with
+"I>                                 TARGET leaf on the -X (ORIENT=0)
+"I>                                 or -Y (ORIENT=1) side
+"I>                               3 for QUARTER TARGET/ISOCENTER pair with
+"I>                                 TARGET leaf on the -X (ORIENT=0)
+"I>                                 or -Y (ORIENT=1) side
+"I>
+"I>         Note: If LEAFTYPE is 2 or 3, then you must have an even number
+"I>               of leaves in the group.
+"I>
+"I>   9  START_$SYNCHDMLC (F15.0) : the start position (cm) wrt the CAX of
+"I>                       leaf 1 as projected to ZMIN_$SYNCHDMLC.
+"I>
+"I>  10  LEAFGAP_$SYNCHDMLC (F15.5) : The width of the interleaf air gap
+"I>             at ZMIN_$SYNCHDMLC.
+"I>
+"I>            Note restriction: LEAFGAP_$SYNCHDMLC<=WTONGUE_$SYNCHDMLC(1,2,3),
+"I>
+"I>  11  ENDTYPE_$SYNCHDMLC (I5) : The  type of leaf end :
+"I>             0 -- rounded leaf end and
+"I>             1 -- focused divergent leaf end.
+"I>
+"I>  12  ZFOCUS_$SYNCHDMLC (F15.5) : Focal point on Z-axis of leaf ends
+"I>                     (i.e. imaginary lines drawn extending the slopes
+"I>                     of leaf ends will all intersect the Z-axis
+"I>                     at this point) - chosen if ENDTYPE_$SYNCHDMLC = 1.
+"I>
+"I>        Note restriction: ZFOCUS_$SYNCHDMLC(1) < ZMIN_$SYNCHDMLC or
+"I>                                     > ZMIN_$SYNCHDMLC + ZTHICK_$SYNCHDMLC
+"I>
+"I>      LEAFRADIUS_$SYNCHDMLC (F15.5) : Radius of the leaf end if
+"I>                           ENDTYPE_$SYNCHDMLC = 0. This must be greater
+"I>                           than or equal to half the leaf thickness.
+"I>
+"I>  13  ZFOCUS_$SYNCHDMLC(1) (F15.5): Focal point on Z-axis of leaf sides
+"I>                        imaginary lines drawn extending the slopes of
+"I>                        the leaf sides will all intersect the Z-axis
+"I>                        at this point)
+"I>
+"I>        Note restriction: ZFOCUS_$SYNCHDMLC(1) < ZMIN_$SYNCHDMLC or
+"I>                               > ZMIN_$SYNCHDMLC + ZTHICK_$SYNCHDMLC
+"I>
+"I>                      For focused ends the leaf position is defined
+"I>                      at ZMIN_$SYNCHDMLC; for rounded at ZMIN_$SYNCHDMLC +
+"I>                     0.5*ZTHICK_$SYNCHDMLC (ie center of the leaf in z)
+"I>
+"I>   Repeat 14 until coordinates of all leaves are defined once.  Leaves
+"I>   are numbered 1,2,...TOT_LEAF_$SYNCHDMLC, where numbering goes from leaf
+"I>   1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is lower to upper or
+"I>   left to right depending on ORIENT_$SYNCHDMLC i.e from negative to
+"I>   positive.
+"I>
+"I>  14a  NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.5,I5)
+"I>
+"I>    NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
+"I>                   of front opening in leaf I (ie the opening at
+"I>                   ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
+"I>                   of leaf I if ENDTYPE=0.
+"I>    POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
+"I>                   of front opening in leaf I if ENDTYPE=1, or of
+"I>                   rounded end of leaf I if ENDTYPE=0.
+"I>    NUM_$SYNCHDMLC:   Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
+"I>                   I,...,I+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
+"I>                   Defaults to TOT_LEAF_$SYNCHDMLC-I+1 if set >
+"I>                   TOT_LEAF_$SYNCHDMLC-I+1.
+"I>
+"I>  If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
+"I>
+"I>  14b  mlc_file (A80)
+"I>
+"I>         mlc_file:  The full name of the file containing leaf opening
+"I>                    data.  The format of the file contents is as follows:
+"I>
+"I>      MLC_TITLE (A80)
+"I>      NFIELDS_$SYNCHDMLC (I10)
+"I>      FOR I=1,NFIELDS_$SYNCHDMLC[
+"I>       INDEX_$SYNCHDMLC(I) (F15.0)
+"I>       NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.0,I5) -- repeat
+"I>                                                               line until
+"I>                                                               coordinates
+"I>                                                               for all leaves
+"I>                                                               have been
+"I>                                                               defined for
+"I>                                                               field I.
+"I>      ]
+"I>
+"I>      where:
+"I>
+"I>             MLC_TITLE:  A title line
+"I>      NFIELDS_$SYNCHDMLC:  Total number of fields
+"I>     INDEX_$SYNCHDMLC(I):  Index of field I. 0 <=INDEX_$SYNCHDMLC(I) <= 1 and
+"I>                         INDEX_$SYNCHDMLC(I) > INDEX_$SYNCHDMLC(I-1).  This
+"I>                         number is compared to a random number on (0,1) at
+"I>                         the start of each history; if the random number is
+"I>                         <= INDEX_$SYNCHDMLC(I), then field I is used.
+"I>          NEG_$SYNCHDMLC:  Min. Y (ORIENT_$SYNCHDMLC=0) or
+"I>			      X (ORIENT_$SYNCHDMLC=1)
+"I>                         of front opening in leaf (ie the opening at
+"I>                         ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
+"I>                         of leaf if ENDTYPE=0 for leaf J in field I.
+"I>          POS_$SYNCHDMLC:  Max. Y (ORIENT_$SYNCHDMLC=0) or
+"I> 			      X (ORIENT_$SYNCHDMLC=1)
+"I>                         of front opening in leaf if ENDTYPE=1, or of
+"I>                         rounded end of leaf if ENDTYPE=0 for leaf J in
+"I>                         field I.
+"I>          NUM_$SYNCHDMLC:  Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
+"I>                         J,...,J+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
+"I>                         Defaults to TOT_LEAF_$SYNCHDMLC-J+1 if set >
+"I>                         TOT_LEAF_$SYNCHDMLC-J+1.
+"I>
+"I>  Note that the inputs NEG_$SYNCHDMLC, POS_$SYNCHDMLC and NUM_$SYNCHDMLC have
+"I>    the same meanings as in 14a (static field inputs) but that they must
+"I>    now be repeated for every field I.
+"I>
+"I>  15   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and
+"I>                                             air gaps (2F15.5,2I5)
+"I>
+"I>        ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>  16  MED_IN (24A1):  Medium in opening(s) and air gaps
+"I>                      used to set MED_INDEX.
+"I>
+"I>  17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$SYNCHDMLC
+"I>                                                         (2F15.0,3I5):
+"I>
+"I>        ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>        IGNOREGAPS:   If set to 1, ignore all air gaps and driving screw
+"I>                      holes when doing range
+"I>                      rejection in leaf material when the particle X position
+"I>                      is < min X of all leaf openings (not including leaf
+"I>                      ends) or > max X of leaf openings (not including ends)
+"I>                      (ORIENT_$SYNCHDMLC=1) or if the particle Y position
+"I>                      is < min Y of all leaf openings (not including leaf
+"I>                      ends) or > max Y of leaf openings (not including ends)
+"I>                      (ORIENT_$SYNCHDMLC=0). This approximation is designed
+"I>                      to make range rejection more efficient deep in the
+"I>                      leaves, while still preserving accurate transport
+"I>                      in the leaf ends.  Note that if you have significant
+"I>                      air gaps between leaves or are concerned with the
+"I>                      effects of the driving screw holes it is recommended
+"I>                      that you not use this option (ie run with the default
+"I>                      setting of 0).
+"I>
+"I>  18  MED_IN (24A1):  Medium of leaves,
+"I>                      used to set MED_INDEX.
+"I>
+"I>  19  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in driving screw holes
+"I>                                                       (2F15.5,2I5):
+"I>
+"I>        ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+"I>    IREGION_TO_BIT:   Bit number associated with this region
+"I>
+"I>  20  MED_IN (24A1):  Medium in driving screw holes,
+"I>                      used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>   The following example defines a multi-leaf tungsten collimator design
+"I>   based loosely on the TrueBeam high-definition mlc (HD120).
+"I>   Actual parameters are DIFFERENT - this serves just as a template.
+"I>   Do not attempt to use these parameters for a simulation of the real
+"I>   machine.
+"I>
+"I>   The collimator starts at Z=47.0 cm, is 7 cm thick and has 80 tungsten
+"I>   leaves opening in the X direction. Leaves 1-10 and 71-80 are FULL
+"I>   (type 1), leaves 11-24 and 57-70 are HALF TARGET/HALF ISOCENTER
+"I>   pairs, and leaves 25-56 are QUARTER TARGET/QUARTER ISOCENTER pairs.
+"I>   The Z focus of the leaf sides is at Z=0 cm which is the position of the
+"I>   source. The leaf ends are straight and also focused at Z=0 cm.
+"I>   In this example, the mlc is being run in step-and-shoot mode
+"I>   MODE=2 with the leaf opening coordinates read in from the file
+"I>   specified
+"I>
+"I> 20.5, RMAX
+"I> TrueBeam HDMLC
+"I> 1, 5, 2, ORIENT, NGROUP, MODE
+"I> 47.0, ZMIN
+"I> 7.0, ZTHICK
+"I> 0.5, 0.04, 0.04, 0.135, 0.325, 0.123, 47, 47.5, 49.5, 50.7, 51.0, 51.3,
+"I>   1.7, 52.5, 52.8, FULL leaf cross-section
+"I> 0.25, 0.04, 0.04, 0.093, 0.137, 0.137, 47, 47.4, 49.1, 49.4, 1.7, 50.5,
+"I>   50.5, 53.6, 53.7, HALF TARGET cross-section
+"I> 0.25, 0.04, 0.04, 0.075, 0.124, 0.123, 47.2, 47.4, 50.52, 50.521, 51.7,
+"I>   52.1, 1.7, 53.6, 53.8, HALF ISOCENTER cross-section
+"I> 0.11, 0.04, 0.04, 0.044, 0.074, 0.088, 47.1, 47.3, 47.9, 48.1, 1.7, 50.5,
+"I>   50.5, 53.6, 53.7, QUARTER TARGET cross-section
+"I> 0.11, 0.04, 0.04, 0.035, 0.08, 0.065, 47.2, 47.3, 50.55, 50.55, 52.9, 53.1,
+"I>   1.7, 53.6, 53.9,  QUARTER ISOCENTER cross-section
+"I> 10, 1, FULL leaves
+"I> 14, 2, HALF TARGET/ISOCENTER pairs
+"I> 32, 3, QUARTER TARGET/ISOCENTER pairs
+"I> 14, 2, HALF TARGET/ISOCENTER pairs
+"I> 10, 1, FULL leaves
+"I> -10.5, START
+"I> 0.005, LEAFGAP
+"I> 1, ENDTYPE
+"I> 0.0, ZFOCUS or RADIUS of leaf ends
+"I> 0.0, ZFOCUS of leaf sides
+"I> /home/bwalters/egsnrc_mp/BEAM_synchdmlc/sample_synchdmlc.sequence
+"I> 0.7, 0.01, 1, 0,
+"I> AIR700ICRU
+"I> 0.7, 0.01, 1, 0, 0,
+"I> W700ICRU
+"I> 0.7, 0.01, 1, 0,
+"I> AIR700ICRU
+;
+"*************************************************************************
+"*************************  ERROR CONDITIONS  ****************************
+"*************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"***********************************************************************
+;
+%E "Start of subroutine HOWFAR_$SYNCHDMLC (Rev 1.4)"
+"************************************************************************
+"********************Component Module SYNCHDMLC *****************************
+"************************************************************************
+"
+"                          Subroutine HOWFAR_$SYNCHDMLC
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module SYNCHDMLC,
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+"
+"   There are N_$SYNCHDMLC local regions + an air gap (if present):
+"
+"  local              absolute                                   description
+"-------------- --------------------------------------------- ---------------
+"IR_$SYNCHDMLC IR_start_CM(ICM_$SYNCHDMLC)+IR_$SYNCHDMLC-1 exclude front air gap
+"-------------- --------------------------------------------- ---------------
+"   Geometrical co-ordinates, as set in INPUT_$SYNCHDMLC are:
+"
+"   ZFRONT_$SYNCHDMLC     front of CM (upstream surface, air region)
+"   ZMIN_$SYNCHDMLC       front of cone
+"   ZBACK_$SYNCHDMLC      back of cone
+"   RMAX_$SYNCHDMLC       radius of last cylinder (largest)
+"
+"*************************************************************************
+;
+;SUBROUTINE HOWFAR_$SYNCHDMLC;
+
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH {
+  ;IF({P1}~=0.00 ) [
+    IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]
+   ]
+   ELSE [{P1}={P1}+1.0E-5;];
+
+}
+
+;IMPLICIT NONE;
+;COMIN/CMs,CM_$SYNCHDMLC,EPCONT,STACK,USER,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_$SYNCHDMLC
+"T>**********************************
+"T>
+INTEGER
+   COUNT,
+   IRL,        "T>local region number (absolute), required by HOWNEAR macro
+   I, J,        "T>loop control
+   REGION_$SYNCHDMLC,     "T>region number within CM (relative)
+   NEWREGION_$SYNCHDMLC,     "T>region number within CM (relative)
+   NX,NY,NZ,        "T> Subindices for region
+   OUTOFCMFLAG,     "T> Flag to denote particle out of CM
+   OUTOFMLCFLAG,    "T> Flag to denote particle out of MLC
+   LEAFIS,          "T> Leaf number
+   LHS,RHS,     "T> Macro variables to find + and - closest boundary index
+   ZLHS,ZRHS,
+   IDIR;        "T> direction sign, used in call to where_am_i
+
+DOUBLE PRECISION
+   DIST,      "T>Distance to z boundary along current particle trajectory
+   UVL(2),    "T>temporary variable
+   TRYY1,TRYY2,
+   XoN,XoP,    "T> Negative and Positive leaf centers (rounded leaf)
+   Zo,         "T> z position of rounded leaf tip
+   XP,XN,YP,YN,ZP,ZN,    "T>+ and - distances in x,y, z directions
+   XDIST,YDIST,ZDIST,    "T> x,y, Z distances to nearest boundaries
+   DIST1,DIST2,DIST3,    "T> Variables to control particle propagation
+   STEP2,                "T>  "
+   TLHS,TRHS,            "T> temporary macro variables like lhs,rhs
+   DISCRIMINANT,         "T> Variable for rounded leaf
+   TEMP,TEMP1, TEMP2, TEMP3, TEMP4, TEMP5, HOLE,
+   STEP_UNIT,
+   XYL(2),     "T> rearranged x and y coordinates
+   XYFL(2),
+   ZFL;
+
+$REAL one;
+parameter (one = 1);
+
+" prepare the local variables "
+"============================="
+
+IRL = IR(NP); "local region number (absolute)"
+IR_$SYNCHDMLC = IRL - IRSTART_$SYNCHDMLC + 1; "rel. local region number"
+"IR_$SYNCHDMLC = IRL - IRSTART_$SYNCHDMLC; rel. local region number"
+IF(ORIENT_$SYNCHDMLC=1) [
+    XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);]
+;
+
+STEP_UNIT=0.0;
+COUNT = 0;
+OUTOFCMFLAG=0;
+OUTOFMLCFLAG=0;
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module ,if so
+" evaluate DIST, distance to region boundary along current trajectory.
+" USTEP must not exceed DIST.
+"
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM or regions in z direction
+"      2.                        the regions in xy directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap check if existed.
+"=====================================
+"
+
+IF(N_GAP_$SYNCHDMLC=1 & IR_$SYNCHDMLC=4 ) ["Check the air gap first"
+   IF(W(NP)>0.0) ["Particle going forward"
+      DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to front of CM"
+      IF(DIST <= 0.0) [
+          USTEP=0.0;
+          $SYNCHDMLC_FIND(IR_$SYNCHDMLC, 0.0);
+          IF( IR_$SYNCHDMLC=1 ) "in air"
+            [IRNEW =IRSTART_$SYNCHDMLC; RETURN;]
+          ELSE[IRNEW =IRSTART_$SYNCHDMLC+1; RETURN;]
+       ] "double check if a particle is out of the AIR GAP"
+    ]
+   ELSEIF(W(NP)<0.0) [ "particle going backward"
+      DIST = (ZFRONT_$SYNCHDMLC - Z(NP))/W(NP); "distance to front of CM"
+      IF(DIST <= 0.0) [
+          USTEP=1.E-16;
+          CALL WHERE_AM_I(ICM_$SYNCHDMLC,-1);
+          RETURN;
+      ] " double check if a particle is out of the CM"
+    ];
+ ]
+ELSEIF(IR_$SYNCHDMLC=1 | IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
+   IF(W(NP) > 0.0) ["particle going forward"
+      DIST = (ZMAX_$SYNCHDMLC - Z(NP))/W(NP); "distance to back of CM"
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; ]
+      ELSE [ STEP_UNIT=DIST;  ]
+      IF(DIST <=0.0) [
+          USTEP=1.E-16;"ensures call to AUSGAB on leaving CM"
+          CALL WHERE_AM_I(ICM_$SYNCHDMLC,1);
+          RETURN;
+       ] "double check if a particle is out of the CM"
+    ]
+   ELSEIF(W(NP) < 0.0) [
+     "particle going backward"
+      DIST = (ZMIN_$SYNCHDMLC - Z(NP))/W(NP); "distance to back of CM "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP;  ]
+      ELSE [ STEP_UNIT=DIST; ]
+      IF(DIST <= 0.0) [
+          USTEP=0.0;
+          IF(N_GAP_$SYNCHDMLC = 1)
+            [IRNEW =IREND_$SYNCHDMLC; RETURN; ]
+          ELSE[ USTEP=1.E-16; CALL WHERE_AM_I(ICM_$SYNCHDMLC,-1); RETURN; ]
+      ] " double check if a particle is out of the main body to air gap"
+    ]
+   ELSE[STEP_UNIT=USTEP;]  " for w(np)=0.0 case"
+ ];
+
+" end of z direction check
+"=========================
+
+$SYNCHDMLC_FIND(REGION_$SYNCHDMLC,0.0);
+
+IF(REGION_$SYNCHDMLC=4) [ "Particle is in the air gap "
+  REGION_$SYNCHDMLC=IRSTART_$SYNCHDMLC-1+REGION_$SYNCHDMLC;
+   IF(W(NP) > 0.0)[
+    IF(DIST <= USTEP ) ["particle to be moved to region boundary"
+      $GEO_SHIFT_1_(DIST);
+      USTEP = DIST;
+      $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,USTEP);
+      IF( NEWREGION_$SYNCHDMLC=1) [IRNEW =IRSTART_$SYNCHDMLC; RETURN;]
+      ELSE[IRNEW =IRSTART_$SYNCHDMLC+1; RETURN;]
+    ]
+    ELSE[ RETURN;];
+    ] "end of particle going forward"
+    ELSEIF(W(NP) < 0.0) ["particle going backward"
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary"
+        $GEO_SHIFT_1_(DIST);
+        USTEP = DIST;
+        CALL WHERE_AM_I(ICM_$SYNCHDMLC,-1);
+        RETURN;
+        ]
+      ELSE [RETURN;]
+    ] " end of going backward"
+    ELSE[RETURN;];   " W=0.0 CASE "
+] ;" end of region 4"
+
+
+IF(OUTOFMLCFLAG=1) [
+
+"discard particle if it is outside lateral edges of MLC.  This was the
+"intent of the original programmer, but we do not want to do this in general.
+"  IF(Z(NP)>=ZMIN_$SYNCHDMLC & Z(NP)<=ZMAX_$SYNCHDMLC) [
+"    TEMP1=SURPARA1_$SYNCHDMLC(1,1)*(ZFL-ZFOCUS_$SYNCHDMLC(1));
+"    TEMP2=SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*
+"          (ZFL-ZFOCUS_$SYNCHDMLC(1));
+"    IF(XYFL(1)<=TEMP1|XYFL(1)>=TEMP2)[
+"      IDISC=1; RETURN;];
+"   ];
+
+  STEP2=STEP_UNIT;
+  TEMP1=(SURPARA1_$SYNCHDMLC(1,1)*(ZFL-ZFOCUS_$SYNCHDMLC(1))-XYFL(1));
+  IF( (UVL(1)-SURPARA1_$SYNCHDMLC(1,1)*W(NP))~=0.0 ) [
+     TEMP1=TEMP1/(UVL(1)-SURPARA1_$SYNCHDMLC(1,1)*W(NP));
+   ]
+  ELSE [ TEMP1 = -1000.00 ];
+
+  TEMP2=(SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*
+        (ZFL-ZFOCUS_$SYNCHDMLC(1))-XYFL(1));
+  IF( (UVL(1)-SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*W(NP))~=0.0 ) [
+    TEMP2=TEMP2/(UVL(1)-SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*W(NP));
+  ]
+  ELSE [ TEMP2 = -1000.00 ];
+
+  IF( STEP2>=0.0)[
+    TEMP=STEP2;
+    IF( TEMP1>=0 ) [TEMP=MIN(TEMP,TEMP1);];
+    IF( TEMP2>=0 ) [TEMP=MIN(TEMP,TEMP2);];
+  ]
+  ELSEIF ( (TEMP1>0.0) & (TEMP2>0.0) ) [TEMP=MIN(TEMP1,TEMP2);]
+  ELSE [TEMP=MAX(TEMP2,TEMP1);];
+
+  STEP2 = TEMP;
+
+  $GEO_SHIFT_1_(STEP2);
+  $SYNCHDMLC_FIND(IRNEW,STEP2);
+  IRNEW=IRNEW+IRSTART_$SYNCHDMLC-1;
+  USTEP=STEP2;
+  RETURN;
+ ]
+;
+
+$SYNCHDMLC_MINDISTANCE(DIST1);
+
+"OUTPUT REGION_$SYNCHDMLC;(I3);"
+
+IF((DIST1>=STEP_UNIT) | (DIST1<0)) [
+    STEP2=STEP_UNIT;
+    $GEO_SHIFT_1_(STEP2);
+    $SYNCHDMLC_FIND(IRNEW,STEP2);
+    USTEP=STEP2;
+    IF(OUTOFCMFLAG=1)[ "call where_am_i"
+       IDIR=SIGN(one,W(NP));
+       CALL WHERE_AM_I(ICM_$SYNCHDMLC,IDIR);
+       RETURN;
+    ]
+    ELSE[
+      IRNEW=IRNEW+IRSTART_$SYNCHDMLC-1;
+      RETURN;
+    ]
+]
+ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
+    "OUTPUT REGION_$SYNCHDMLC;(I3)-prints 1to4";
+    REGION_$SYNCHDMLC=REGION_$SYNCHDMLC+IRSTART_$SYNCHDMLC-1;
+    "OUTPUT REGION_$SYNCHDMLC;(I3);prints 67 to 69"
+    LOOP[
+      DIST1=DIST1+1.0E-5; "we have to shift it regardless to avoid "
+                          "infinite loops"
+    "OUTPUT REGION_$SYNCHDMLC;(I3);-prints 67 to 69"
+    "  IF(DIST1>=STEP_UNIT)[EXIT;]"
+    "  ELSE["
+        $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,DIST1);
+
+        NEWREGION_$SYNCHDMLC=NEWREGION_$SYNCHDMLC+IRSTART_$SYNCHDMLC-1;
+       " OUTPUT REGION_$SYNCHDMLC;(I3);"
+
+        IF( OUTOFCMFLAG=1 ) [
+          EXIT;
+        ] ELSEIF( (NEWREGION_$SYNCHDMLC~=REGION_$SYNCHDMLC)
+                   | OUTOFMLCFLAG=1 )[
+
+           USTEP = MIN(USTEP,DIST1); "take min. because we shifted DIST1"
+	  "start ray-tracing for debugging geometry"
+
+         " OUTPUT REGION_$SYNCHDMLC;(I3);"
+         " OUTPUT NEWREGION_$SYNCHDMLC;(I3)"
+
+         " OUTPUT; ('ANTES');"
+          IF((NEWREGION_$SYNCHDMLC=1 & REGION_$SYNCHDMLC=2)|
+             (NEWREGION_$SYNCHDMLC=2 & REGION_$SYNCHDMLC=1)|
+             (NEWREGION_$SYNCHDMLC=2 & REGION_$SYNCHDMLC=3)|
+             (NEWREGION_$SYNCHDMLC=3 & REGION_$SYNCHDMLC=2)) [
+
+             "OUTPUT; ('ENTREI')"
+          ] ELSE [
+         " OUTPUT REGION_$SYNCHDMLC;(I3);"
+         " OUTPUT NEWREGION_$SYNCHDMLC;(I3);"
+           " OUTPUT; ('NAO ENTREI!!!!!!!!!!') "
+          ]
+
+          IRNEW = NEWREGION_$SYNCHDMLC;
+          RETURN;
+       ] ELSE [
+         $SYNCHDMLC_MINDISTANCE(DIST2);
+         DIST1=DIST1+DIST2;
+       ];
+
+      " ]"
+    ];
+;
+"if it gets here, then it exited either because OUTOFCMFLAG=1"
+"or because DIST1 >= STEP_UNIT, in either case DIST1 >= STEP_UNIT"
+;
+    DIST1=STEP_UNIT;
+    $GEO_SHIFT_1_(DIST1);
+    USTEP = DIST1;
+
+    IF( OUTOFCMFLAG=0 ) [
+      $SYNCHDMLC_FIND(NEWREGION_$SYNCHDMLC,DIST1);
+      "still have to check if we have left the CM in case STEP_UNIT"
+      "was the distance to the bottom of the CM"
+      IF(OUTOFCMFLAG=1)[
+        IDIR=SIGN(one,W(NP));
+        CALL WHERE_AM_I(ICM_$SYNCHDMLC,IDIR);
+        RETURN;
+      ]
+      ELSE["not leaving CM"
+        NEWREGION_$SYNCHDMLC=NEWREGION_$SYNCHDMLC+IRSTART_$SYNCHDMLC-1;
+        IRNEW = NEWREGION_$SYNCHDMLC;
+        RETURN;
+      ]
+    ]
+    ELSE[ "call where_am_i"
+       "since flag is based on distance to Z bdy, DIST1 is >= STEP_UNIT now"
+       IDIR=SIGN(one,W(NP));
+       CALL WHERE_AM_I(ICM_$SYNCHDMLC,IDIR);
+       RETURN;
+    ]
+
+]; "End of IF loop for step_unit>dist1
+
+;
+"   end of HOWFAR_$SYNCHDMLC
+"   ===================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$SYNCHDMLC"
+%E "Start of WHERE_AM_I_$SYNCHDMLC (Rev 1.4)"
+"************************************************************************
+"
+"                          Subroutine WHERE_AM_I_$SYNCHDMLC
+"                          ***************************
+"
+" WHERE_AM_I routine for a stacked right cylinder slabs.
+"
+" WHERE_AM_I_$SYNCHDMLC determines the new region number when a particle
+" traverses a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$SYNCHDMLC subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$SYNCHDMLC from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$SYNCHDMLC(IDIR);
+;
+;IMPLICIT NONE;
+;COMIN/CM_$SYNCHDMLC,EPCONT,STACK,CMs,USER/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_$SYNCHDMLC
+"T>**************************************
+"T>
+INTEGER NX,NY,NZ,   "T>Indices of subregions
+        I,
+        OUTOFCMFLAG, "Flags to denote out of CM and
+        OUTOFMLCFLAG, " MLC respectively
+        LEAFIS,       " Leaf number
+        IDIR;  "T>direction of particle, +1=forward, -1=backward
+DOUBLE PRECISION   XYL(2), XYFL(2), ZFL, UVL(2), XoN, XoP, Zo, TEMP1, TEMP2,
+                   TEMP3, TEMP4, HOLE;
+
+IF(ORIENT_$SYNCHDMLC=1)
+    [ XYL(1)=Y(NP); XYL(2)=X(NP);UVL(1)=V(NP);UVL(2)=U(NP);]
+ELSE[ XYL(1)=X(NP); XYL(2)=Y(NP);UVL(1)=U(NP);UVL(2)=V(NP);];
+IF (IDIR=1) [
+ "particle entering this CM through front face (upstream)"
+   IF(N_GAP_$SYNCHDMLC = 0) [ "no air gap this CM"
+       IF(IRSTART_$SYNCHDMLC=2)   " the first CM"
+         [$SYNCHDMLC_FIND(IR_$SYNCHDMLC,0.0); ]
+       ELSE[$SYNCHDMLC_FIND(IR_$SYNCHDMLC, USTEP);]
+       IF(IR_$SYNCHDMLC=1)
+         [IRNEW=IRSTART_$SYNCHDMLC; RETURN;]
+       ELSE[ IRNEW=IRSTART_$SYNCHDMLC+1; RETURN; ]
+    ]         " end of the no air gap case"
+   ELSE [ "this CM has an air gap at the front"
+      IRNEW = IREND_$SYNCHDMLC;
+        ]
+ ]
+
+ELSE [ "particle entering CM through back face (downstream)"
+   $SYNCHDMLC_FIND(IR_$SYNCHDMLC, USTEP);
+   IF(IR_$SYNCHDMLC=1)
+     [IRNEW=IRSTART_$SYNCHDMLC; RETURN;]
+   ELSE[ IRNEW=IRSTART_$SYNCHDMLC+1; RETURN; ]
+ ];
+
+RETURN;
+;
+END; "End of subroutine WHERE_AM_I_$SYNCHDMLC"
+%E "Start of subroutine INPUT_$SYNCHDMLC (Rev 1.4)"
+
+"*************************************************************************
+
+"                           Subroutine INPUT_$SYNCHDMLC
+"
+"*************************************************************************
+"*************************************************************************
+
+"  A CM input subroutine for a series of 2 or more slabs.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section INPUT FROM UNIT 5
+"   in the above documentation.
+"
+"************************************************************************
+
+;SUBROUTINE INPUT_$SYNCHDMLC;
+;
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$SYNCHDMLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,
+EGS-IO/;
+
+"  **************************************************************** "
+"              TYPE DECLARATIONS FOR INPUT_$SYNCHDMLC
+"  **************************************************************** "
+
+DOUBLE PRECISION  NEG_$SYNCHDMLC,     "T>Leaf B tip
+                  POS_$SYNCHDMLC,     "T>Leaf A Tip
+                  TEMP1,
+                  TEMP2;
+
+INTEGER I,J,K,L,        "T>DO loop indices
+        IRA,            "T>Absolute region number
+        MED_FLAG,       "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,   "T>medium index, set after medium sort by $MED_INPUT
+     NUM_$SYNCHDMLC, "T>number of adjacent leaves with same opening coordinates
+       LEAFTYPE,     "T>temporary input variable for LEAFTYPE
+       MIN_INDEX,   "T>index of leaf with min. opening coordinate
+       MAX_INDEX,   "T>index of leaf with max. opening coordinate
+       mlc_unit,    "T>unit no. to assign mlc_file
+       egs_get_unit; "T>egs function used to assign unit to mlc_file
+CHARACTER*80 mlc_file, "T>name of file containing opening data for dynamic and
+                       "  step-and-shoot sequences
+             MLC_TITLE; "T> title line in mlc_file
+$REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
+                "  step-and-shoot simulations
+" **************************************************************** "
+
+"                 STEP I : INITIALIZE PARAMETERS
+"                          =====================
+
+" **************************************************************** "
+
+
+"I. GET THE TITLE "
+"================ "
+;
+OUTPUT;(/' Next component is a VARIAN type MLC'/' Title: ',$);
+MINPUT ($SYNCHDMLC) TITLE_$SYNCHDMLC;(60A1);
+          "MINPUT is a replacement macro with EOF and
+          "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$SYNCHDMLC;(' ',60A1);
+            "OUTPUT is a replacement macro which writes to
+            "unit 5.  Used here for echo of user input
+
+"II. CHOOSE THE SYNCHDMLC ORIENTATION "
+"============================== "
+
+OUTPUT; (' Input leaf orientation (0=parallel to y, 1=parallel to x) and '/
+         ' no. of groups of leaves with equal width on one line'/' :',$);
+MINPUT ($SYNCHDMLC) ORIENT_$SYNCHDMLC, NGROUP_$SYNCHDMLC,
+       MODE_$SYNCHDMLC; (3I5);
+OUTPUT ORIENT_$SYNCHDMLC,NGROUP_$SYNCHDMLC,MODE_$SYNCHDMLC; (3I5/);
+IF(ORIENT_$SYNCHDMLC~=1) [
+      ORIENT_$SYNCHDMLC=0;
+      OUTPUT;(/' Orientation defaults to 0.'/);
+ ];
+IF(NGROUP_$SYNCHDMLC<=0) [
+      NGROUP_$SYNCHDMLC=1;
+      OUTPUT;(/' No. of groups defaults to 1.'/);
+ ];
+IF(MODE_$SYNCHDMLC<0 | MODE_$SYNCHDMLC>2) [
+      MODE_$SYNCHDMLC=0;
+      OUTPUT;(/' Mode of leaf opening input defaults to 0.'/);
+ ];
+
+"III. DESIGNATE REGION NUMBERS "
+"============================= "
+"N_$SYNCHDMLC = 1;CB"
+N_$SYNCHDMLC = 3;
+           "Number of regions in this CM (excluding front air gap)
+ICM_$SYNCHDMLC = ICM;      "CM index for this component module
+IRSTART_$SYNCHDMLC = IR_start_CM(ICM_$SYNCHDMLC);
+                      "Index of first region in this CM,
+                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$SYNCHDMLC) = 0; "Geometry-checking flag, 0 if no error detected
+
+"IV. GET DISTANCE FROM THE REFERENCE PLANE, z=0 "
+"============================================== "
+;
+OUTPUT; (' Z position of top of Varian MLC (>=0) : ',$);
+;MINPUT ($SYNCHDMLC) ZMIN_$SYNCHDMLC;(F12.5);
+OUTPUT ZMIN_$SYNCHDMLC;(F12.5/);
+
+IF(Z_min_CM(ICM_$SYNCHDMLC)>ZMIN_$SYNCHDMLC) [
+   IF(ICM_$SYNCHDMLC=1) [
+      Z_min_CM(ICM_$SYNCHDMLC)=ZMIN_$SYNCHDMLC;
+      OUTPUT ICM_$SYNCHDMLC, Z_min_CM(ICM_$SYNCHDMLC);
+       (//' ***WARNING IN CM ',I4,' ($SYNCHDMLC):'/
+           ' Z_min_CM(1)  > distance to front of MLC '/
+           ' Z_min_CM(1) reset to ',F8.5,' cm'//);
+      WRITE(IOUTLIST,
+         '(//'' ***WARNING IN CM '',I4,'' ($SYNCHDMLC):''/
+        '' Z_min_CM(1)  > distance to front of collimator''/
+          '' Z_min_CM(1) reset to '',F8.5,'' cm''//)')
+          ICM_$SYNCHDMLC, Z_min_CM(ICM_$SYNCHDMLC);
+     ]
+    ELSE[
+      OUTPUT ICM_$SYNCHDMLC;
+       (//' ***** WARNING WARNING WARNING *****'/
+          ' ***ERROR IN CM ',I4,' ($SYNCHDMLC):'/
+          ' Overlaps with previous CM'/
+          ' Error will be propagated'//);
+      WRITE(IOUTLIST,
+        '(//'' ***WARNING IN CM '',I4,'' ($SYNCHDMLC):''/
+        '' Overlaps with previous CM''//)')
+          ICM_$SYNCHDMLC;
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+     ]
+ ]
+;
+" ************************************************************** "
+
+"              STEP TWO : GET SYNCHDMLC GEOMETRY INFORMATION
+"                         ============================
+
+" ************************************************************** "
+
+" I. THICKNESS OF LEAVES "
+" ======================= "
+;
+
+OUTPUT; (' MLC Leaf thickness (cm):',$);
+MINPUT ($SYNCHDMLC) ZTHICK_$SYNCHDMLC; (F15.0);
+OUTPUT ZTHICK_$SYNCHDMLC;(F15.5, ' cm'/);
+
+
+" Validate the user-input thickness "
+
+IF(ZTHICK_$SYNCHDMLC<0.0) [
+    OUTPUT ICM_$SYNCHDMLC;(//' ***ERROR IN CM ',I4,' ($SYNCHDMLC):'/
+                          ' ZTHICK < 0.0'//);
+    IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ];
+
+ZMAX_$SYNCHDMLC = ZMIN_$SYNCHDMLC + ZTHICK_$SYNCHDMLC;
+;
+
+" II. Input geometries of FULL, ISOCENTER and TARGET leaves"
+" =============================================================== "
+;
+OUTPUT;
+(/' For FULL leaves input (all in cm, widths projected to ZMIN): '/
+' leaf width (excl. tongue), width of tongue, width of groove, width of'/
+' tip at top, width of top of support rail, width of bottom of support rail,'/
+' Z of top of tip, Z of top of leaf, Z of bottom of tongue, Z of bottom of'/
+' groove, Z of top of driving screw hole, Z of bottom of driving screw hole,'/
+' distance of hole from leaf tip, Z of top of support rail, Z of bottom of'/
+' support rail:'/);
+MINPUT ($SYNCHDMLC) LEAFWIDTH_$SYNCHDMLC(1), WTONGUE_$SYNCHDMLC(1),
+      WGROOVE_$SYNCHDMLC(1), WTIP_$SYNCHDMLC(1), WRAILTOP_$SYNCHDMLC(1),
+      WRAILBOT_$SYNCHDMLC(1), ZTIP_$SYNCHDMLC(1), ZLEAF_$SYNCHDMLC(1),
+      ZTONGUE_$SYNCHDMLC(1), ZGROOVE_$SYNCHDMLC(1), ZHOLETOP_$SYNCHDMLC(1),
+      ZHOLEBOT_$SYNCHDMLC(1), HOLEPOS_FULL_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(1),
+      ZRAILBOT_$SYNCHDMLC(1); (15F15.0);
+OUTPUT LEAFWIDTH_$SYNCHDMLC(1), WTONGUE_$SYNCHDMLC(1), WGROOVE_$SYNCHDMLC(1),
+      WTIP_$SYNCHDMLC(1), WRAILTOP_$SYNCHDMLC(1), WRAILBOT_$SYNCHDMLC(1),
+      ZTIP_$SYNCHDMLC(1), ZLEAF_$SYNCHDMLC(1), ZTONGUE_$SYNCHDMLC(1),
+      ZGROOVE_$SYNCHDMLC(1), ZHOLETOP_$SYNCHDMLC(1), ZHOLEBOT_$SYNCHDMLC(1),
+      HOLEPOS_FULL_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(1), ZRAILBOT_$SYNCHDMLC(1);
+      (15F15.5);
+
+"now do checks on input dimensions"
+IF(WGROOVE_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+   ' WGROOVE_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1).  Groove is too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WTIP_$SYNCHDMLC(1)<WTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' WTIP_$SYNCHDMLC(1)<WTONGUE_$SYNCHDMLC(1).  Tip is too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WTIP_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1)+WTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' WTIP_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1)+WTONGUE_$SYNCHDMLC(1)'/
+      '                  -WGROOVE_$SYNCHDMLC(1).  Tip is too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1)-WGROOVE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(1)>LEAFWIDTH_$SYNCHDMLC(1)+WGROOVE_$SYNCHDMLC(1).'/
+      ' Upper rail too wide.'//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(1)<WTIP_$SYNCHDMLC(1)-WTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(1)<WTIP_$SYNCHDMLC(1)-WTONGUE_$SYNCHDMLC(1).'/
+      ' Upper rail too narrow or tip too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(1)>WRAILTOP_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+     ' WRAILBOT_$SYNCHDMLC(1)>WRAILTOP_$SYNCHDMLC(1).  Lower rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(1)-WRAILBOT_$SYNCHDMLC(1)<
+   WTIP_$SYNCHDMLC(1)-WTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(1)-WRAILBOT_$SYNCHDMLC(1)<'/
+      ' WTIP_$SYNCHDMLC(1)-WTONGUE_$SYNCHDMLC(1).'/
+      ' Lower rail too wide.  Or tip too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(1)<ZMIN_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(1)<ZMIN_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZLEAF_$SYNCHDMLC(1)<ZTIP_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZLEAF_$SYNCHDMLC(1)<ZTIP_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(1)<ZLEAF_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(1)<ZTIP_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZGROOVE_$SYNCHDMLC(1)<ZTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(1)<ZTONGUE_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLETOP_$SYNCHDMLC(1)<ZGROOVE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZHOLETOP_$SYNCHDMLC(1)<ZGROOVE_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLEBOT_$SYNCHDMLC(1)<ZHOLETOP_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZHOLEBOT_$SYNCHDMLC(1)<ZHOLETOP_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILTOP_$SYNCHDMLC(1)<ZHOLEBOT_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZRAILTOP_$SYNCHDMLC(1)<ZHOLEBOT_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(1)<ZRAILTOP_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(1)<ZRAILTOP_$SYNCHDMLC(1).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(1)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in FULL leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(1)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+OUTPUT;
+(/' For HALF TARGET leaves input (all in cm, widths projected to ZMIN): '/
+' leaf width (excl. tongue), width of tongue, width of groove, width of'/
+' tip at top, width of top of support rail, width of bottom of support rail,'/
+' Z of top of support rail, Z of bottom of support rail, Z of top of driving'/
+' screw hole, Z of bottom of driving screw hole, distance of hole from leaf'/
+' tip, Z of bottom of tongue, Z of top of groove, Z of bottom of leaf, Z of'/
+' bottom of tip:'/);
+MINPUT ($SYNCHDMLC) LEAFWIDTH_$SYNCHDMLC(2), WTONGUE_$SYNCHDMLC(2),
+      WGROOVE_$SYNCHDMLC(2), WTIP_$SYNCHDMLC(2), WRAILTOP_$SYNCHDMLC(2),
+      WRAILBOT_$SYNCHDMLC(2), ZRAILTOP_$SYNCHDMLC(2), ZRAILBOT_$SYNCHDMLC(2),
+      ZHOLETOP_$SYNCHDMLC(2), ZHOLEBOT_$SYNCHDMLC(2), HOLEPOS_TAR_$SYNCHDMLC,
+      ZTONGUE_$SYNCHDMLC(2), ZGROOVE_$SYNCHDMLC(2), ZLEAF_$SYNCHDMLC(2),
+      ZTIP_$SYNCHDMLC(2); (15F15.0);
+OUTPUT LEAFWIDTH_$SYNCHDMLC(2), WTONGUE_$SYNCHDMLC(2), WGROOVE_$SYNCHDMLC(2),
+      WTIP_$SYNCHDMLC(2), WRAILTOP_$SYNCHDMLC(2), WRAILBOT_$SYNCHDMLC(2),
+      ZRAILTOP_$SYNCHDMLC(2), ZRAILBOT_$SYNCHDMLC(2), ZHOLETOP_$SYNCHDMLC(2),
+      ZHOLEBOT_$SYNCHDMLC(2), HOLEPOS_TAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(2),
+     ZGROOVE_$SYNCHDMLC(2), ZLEAF_$SYNCHDMLC(2), ZTIP_$SYNCHDMLC(2); (15F15.5);
+
+"check input dimensions"
+IF(WGROOVE_$SYNCHDMLC(2)>LEAFWIDTH_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' WGROOVE_$SYNCHDMLC(2)>LEAFWIDTH_$SYNCHDMLC(2).  Groove too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+IF(WRAILBOT_$SYNCHDMLC(2)>LEAFWIDTH_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+   ' WRAILBOT_$SYNCHDMLC(2)>LEAFWIDTH_$SYNCHDMLC(2).  Lower rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(2)<WGROOVE_$SYNCHDMLC(2)+WTIP_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' WRAILBOT_$SYNCHDMLC(2)<WGROOVE_$SYNCHDMLC(2)+WTIP_$SYNCHDMLC(2).'/
+      ' Lower rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(2)>WRAILBOT_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(2)>WRAILBOT_$SYNCHDMLC(2).  Top rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(2)<WRAILBOT_$SYNCHDMLC(2)-WGROOVE_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(2)<WRAILBOT_$SYNCHDMLC(2)-WGROOVE_$SYNCHDMLC(2).'/
+      ' Top rail too narrow.'//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILTOP_$SYNCHDMLC(2)<ZMIN_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZRAILTOP_$SYNCHDMLC(2)<ZMIN_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(2)<ZRAILTOP_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(2)<ZRAILTOP_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLETOP_$SYNCHDMLC(2)<ZRAILBOT_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZHOLETOP_$SYNCHDMLC(2)<ZRAILBOT_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLEBOT_$SYNCHDMLC(2)<ZHOLETOP_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZHOLEBOT_$SYNCHDMLC(3)<ZHOLETOP_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(2)<ZHOLEBOT_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(2)<ZHOLEBOT_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZGROOVE_$SYNCHDMLC(2)<ZTONGUE_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(2)<ZTONGUE_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZLEAF_$SYNCHDMLC(2)<ZTONGUE_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZLEAF_$SYNCHDMLC(2)<ZTONGUE_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(2)<ZLEAF_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(2)<ZLEAF_$SYNCHDMLC(2).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(2)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF TARGET leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(2)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+
+OUTPUT;
+(/' For HALF ISOCENTER leaves input (all in cm, widths projected to ZMIN): '/
+' leaf width (excl. tongue), width of tongue, width of groove, width of'/
+' tip at top, width of top of support rail, width of bottom of support rail,'/
+' Z of top of tip, Z of top of leaf, Z of top of tongue, Z of bottom of'/
+' groove, Z of top of driving screw hole, Z of bottom of driving screw hole,'/
+' distance of hole from leaf tip, Z of top of support rail, Z of bottom of'/
+' support rail:'/);
+MINPUT ($SYNCHDMLC) LEAFWIDTH_$SYNCHDMLC(3), WTONGUE_$SYNCHDMLC(3),
+     WGROOVE_$SYNCHDMLC(3), WTIP_$SYNCHDMLC(3),WRAILTOP_$SYNCHDMLC(3),
+     WRAILBOT_$SYNCHDMLC(3), ZTIP_$SYNCHDMLC(3), ZLEAF_$SYNCHDMLC(3),
+     ZTONGUE_$SYNCHDMLC(3),ZGROOVE_$SYNCHDMLC(3), ZHOLETOP_$SYNCHDMLC(3),
+     ZHOLEBOT_$SYNCHDMLC(3), HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(3),
+     ZRAILBOT_$SYNCHDMLC(3); (15F15.0);
+OUTPUT LEAFWIDTH_$SYNCHDMLC(3), WTONGUE_$SYNCHDMLC(3), WGROOVE_$SYNCHDMLC(3),
+       WTIP_$SYNCHDMLC(3), WRAILTOP_$SYNCHDMLC(3), WRAILBOT_$SYNCHDMLC(3),
+       ZTIP_$SYNCHDMLC(3), ZLEAF_$SYNCHDMLC(3), ZTONGUE_$SYNCHDMLC(3),
+      ZGROOVE_$SYNCHDMLC(3), ZHOLETOP_$SYNCHDMLC(3), ZHOLEBOT_$SYNCHDMLC(3),
+      HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(3), ZRAILBOT_$SYNCHDMLC(3);
+      (15F15.5);
+
+"now do checks on input dimensions"
+IF(WGROOVE_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' WGROOVE_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3).  Groove too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WTIP_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3)-WGROOVE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' WTIP_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3)-WGROOVE_$SYNCHDMLC(3).'/
+      ' Tip too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3)+WTONGUE_$SYNCHDMLC(3)-
+   WGROOVE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(3)>LEAFWIDTH_$SYNCHDMLC(3)+WTONGUE_$SYNCHDMLC(3)-'/
+      '                  WGROOVE_$SYNCHDMLC(3).  Top of rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(3)<WTONGUE_$SYNCHDMLC(3)+WTIP_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(3)<WTONGUE_$SYNCHDMLC(3)+WTIP_$SYNCHDMLC(3).'/
+      ' Top of rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(3)>WRAILTOP_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+' WRAILBOT_$SYNCHDMLC(3)>WRAILTOP_$SYNCHDMLC(3).  Bottom of rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(3)<WRAILTOP_$SYNCHDMLC(3)-WTONGUE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' WRAILBOT_$SYNCHDMLC(3)<WRAILTOP_$SYNCHDMLC(3)-WTONGUE_$SYNCHDMLC(3).'/
+      ' Bottom of rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(3)<ZMIN_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(3)<ZMIN_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZLEAF_$SYNCHDMLC(3)<ZTIP_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZLEAF_$SYNCHDMLC(3)<ZTIP_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(3)<ZLEAF_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(3)<ZLEAF_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZGROOVE_$SYNCHDMLC(3)<ZTONGUE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(3)<ZTONGUE_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLETOP_$SYNCHDMLC(3)<ZGROOVE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZHOLETOP_$SYNCHDMLC(3)<ZGROOVE_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLEBOT_$SYNCHDMLC(3)<ZHOLETOP_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZHOLEBOT_$SYNCHDMLC(3)<ZHOLETOP_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILTOP_$SYNCHDMLC(3)<ZHOLEBOT_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZRAILTOP_$SYNCHDMLC(3)<ZHOLEBOT_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(3)<ZRAILTOP_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(3)<ZRAILTOP_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(3)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in HALF ISO leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(3)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+OUTPUT;
+(/' For QUARTER TARGET leaves input (all in cm, widths projected to ZMIN): '/
+' leaf width (excl. tongue), width of tongue, width of groove, width of'/
+' tip at top, width of top of support rail, width of bottom of support rail,'/
+' Z of top of support rail, Z of bottom of support rail, Z of top of driving'/
+' screw hole, Z of bottom of driving screw hole, distance of hole from leaf'/
+' tip, Z of bottom of tongue, Z of top of groove, Z of bottom of leaf, Z of'/
+' bottom of tip:'/);
+MINPUT ($SYNCHDMLC) LEAFWIDTH_$SYNCHDMLC(4), WTONGUE_$SYNCHDMLC(4),
+      WGROOVE_$SYNCHDMLC(4), WTIP_$SYNCHDMLC(4), WRAILTOP_$SYNCHDMLC(4),
+      WRAILBOT_$SYNCHDMLC(4), ZRAILTOP_$SYNCHDMLC(4), ZRAILBOT_$SYNCHDMLC(4),
+      ZHOLETOP_$SYNCHDMLC(4), ZHOLEBOT_$SYNCHDMLC(4), HOLEPOS_TAR_$SYNCHDMLC,
+      ZTONGUE_$SYNCHDMLC(4), ZGROOVE_$SYNCHDMLC(4), ZLEAF_$SYNCHDMLC(4),
+      ZTIP_$SYNCHDMLC(4); (15F15.0);
+OUTPUT LEAFWIDTH_$SYNCHDMLC(4), WTONGUE_$SYNCHDMLC(4), WGROOVE_$SYNCHDMLC(4),
+      WTIP_$SYNCHDMLC(4), WRAILTOP_$SYNCHDMLC(4), WRAILBOT_$SYNCHDMLC(4),
+      ZRAILTOP_$SYNCHDMLC(4), ZRAILBOT_$SYNCHDMLC(4), ZHOLETOP_$SYNCHDMLC(4),
+      ZHOLEBOT_$SYNCHDMLC(4), HOLEPOS_TAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(4),
+      ZGROOVE_$SYNCHDMLC(4), ZLEAF_$SYNCHDMLC(4), ZTIP_$SYNCHDMLC(4); (15F15.5);
+"check input dimensions"
+IF(WGROOVE_$SYNCHDMLC(4)>LEAFWIDTH_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' WGROOVE_$SYNCHDMLC(4)>LEAFWIDTH_$SYNCHDMLC(4).  Groove too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+IF(WRAILBOT_$SYNCHDMLC(4)>LEAFWIDTH_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+   ' WRAILBOT_$SYNCHDMLC(4)>LEAFWIDTH_$SYNCHDMLC(4).  Lower rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(4)<WGROOVE_$SYNCHDMLC(4)+WTIP_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' WRAILBOT_$SYNCHDMLC(4)<WGROOVE_$SYNCHDMLC(4)+WTIP_$SYNCHDMLC(4).'/
+      ' Lower rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(4)>WRAILBOT_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(4)>WRAILBOT_$SYNCHDMLC(4).  Top rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(4)<WRAILBOT_$SYNCHDMLC(4)-WGROOVE_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(4)<WRAILBOT_$SYNCHDMLC(4)-WGROOVE_$SYNCHDMLC(4).'/
+      ' Top rail too narrow.'//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILTOP_$SYNCHDMLC(4)<ZMIN_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZRAILTOP_$SYNCHDMLC(4)<ZMIN_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(4)<ZRAILTOP_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(4)<ZRAILTOP_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLETOP_$SYNCHDMLC(4)<ZRAILBOT_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZHOLETOP_$SYNCHDMLC(4)<ZRAILBOT_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLEBOT_$SYNCHDMLC(4)<ZHOLETOP_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZHOLEBOT_$SYNCHDMLC(3)<ZHOLETOP_$SYNCHDMLC(3).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(4)<ZHOLEBOT_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(4)<ZHOLEBOT_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZGROOVE_$SYNCHDMLC(4)<ZTONGUE_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(4)<ZTONGUE_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZLEAF_$SYNCHDMLC(4)<ZTONGUE_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZLEAF_$SYNCHDMLC(4)<ZTONGUE_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(4)<ZLEAF_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(4)<ZLEAF_$SYNCHDMLC(4).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(4)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in QTR TARGET leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(4)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+OUTPUT;
+(/'QUARTER ISOCENTER leaves input'/);
+"OUTPUT;
+"(/'For QUARTER ISOCENTER leaves input(all in cm, widths projected to ZMIN):'/
+"' leaf width (excl. tongue), width of tongue, width of groove, width of'/
+"' tip at top, width of top of support rail, width of bottom of support rail,'/
+"' Z of top of tip, Z of top of leaf, Z of top of tongue, Z of bottom of'/
+"' groove, Z of top of driving screw hole, Z of bottom of driving screw hole,'/
+"' distance of hole from leaf tip, Z of top of support rail, Z of bottom of'/
+"' support rail:'/);
+MINPUT ($SYNCHDMLC) LEAFWIDTH_$SYNCHDMLC(5), WTONGUE_$SYNCHDMLC(5),
+     WGROOVE_$SYNCHDMLC(5), WTIP_$SYNCHDMLC(5),WRAILTOP_$SYNCHDMLC(5),
+     WRAILBOT_$SYNCHDMLC(5), ZTIP_$SYNCHDMLC(5), ZLEAF_$SYNCHDMLC(5),
+     ZTONGUE_$SYNCHDMLC(5),ZGROOVE_$SYNCHDMLC(5), ZHOLETOP_$SYNCHDMLC(5),
+     ZHOLEBOT_$SYNCHDMLC(5), HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(5),
+     ZRAILBOT_$SYNCHDMLC(5); (15F15.0);
+OUTPUT LEAFWIDTH_$SYNCHDMLC(5), WTONGUE_$SYNCHDMLC(5), WGROOVE_$SYNCHDMLC(5),
+       WTIP_$SYNCHDMLC(5), WRAILTOP_$SYNCHDMLC(5), WRAILBOT_$SYNCHDMLC(5),
+       ZTIP_$SYNCHDMLC(5), ZLEAF_$SYNCHDMLC(5), ZTONGUE_$SYNCHDMLC(5),
+      ZGROOVE_$SYNCHDMLC(5), ZHOLETOP_$SYNCHDMLC(5), ZHOLEBOT_$SYNCHDMLC(5),
+      HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(5), ZRAILBOT_$SYNCHDMLC(5);
+      (15F15.5);
+
+"now do checks on input dimensions"
+IF(WGROOVE_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' WGROOVE_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5).  Groove too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WTIP_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5)-WGROOVE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' WTIP_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5)-WGROOVE_$SYNCHDMLC(5).'/
+      ' Tip too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5)+WTONGUE_$SYNCHDMLC(5)-
+   WGROOVE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(5)>LEAFWIDTH_$SYNCHDMLC(5)+WTONGUE_$SYNCHDMLC(5)-'/
+      '                  WGROOVE_$SYNCHDMLC(5).  Top of rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILTOP_$SYNCHDMLC(5)<WTONGUE_$SYNCHDMLC(5)+WTIP_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' WRAILTOP_$SYNCHDMLC(5)<WTONGUE_$SYNCHDMLC(5)+WTIP_$SYNCHDMLC(5).'/
+      ' Top of rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(5)>WRAILTOP_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+' WRAILBOT_$SYNCHDMLC(5)>WRAILTOP_$SYNCHDMLC(5).  Bottom of rail too wide.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WRAILBOT_$SYNCHDMLC(5)<WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' WRAILBOT_$SYNCHDMLC(5)<WRAILTOP_$SYNCHDMLC(5)-WTONGUE_$SYNCHDMLC(5).'/
+      ' Bottom of rail too narrow.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTIP_$SYNCHDMLC(5)<ZMIN_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZTIP_$SYNCHDMLC(5)<ZMIN_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZLEAF_$SYNCHDMLC(5)<ZTIP_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZLEAF_$SYNCHDMLC(5)<ZTIP_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(5)<ZLEAF_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(5)<ZLEAF_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+" We Want to allow ZGRoove to be bigger than ZTongue
+" Because Cissa says so (email 29 Jun 2009)
+IF(ZGROOVE_$SYNCHDMLC(5)>ZTONGUE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(5)<ZTONGUE_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLETOP_$SYNCHDMLC(5)<ZGROOVE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZHOLETOP_$SYNCHDMLC(5)<ZGROOVE_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZHOLEBOT_$SYNCHDMLC(5)<ZHOLETOP_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZHOLEBOT_$SYNCHDMLC(5)<ZHOLETOP_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILTOP_$SYNCHDMLC(5)<ZHOLEBOT_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZRAILTOP_$SYNCHDMLC(5)<ZHOLEBOT_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(5)<ZRAILTOP_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(5)<ZRAILTOP_$SYNCHDMLC(5).'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZRAILBOT_$SYNCHDMLC(5)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC)[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I5,' ($SYNCHDMLC) in QTR ISO leaf definition:'/
+      ' ZRAILBOT_$SYNCHDMLC(5)>ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC.'//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+
+"now check dimensions between leaf types"
+IF(ZTONGUE_$SYNCHDMLC(3)<=ZGROOVE_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(3)<=ZGROOVE_$SYNCHDMLC(2).'/
+      ' ISOCENTER/TARGET leaves will not fit together.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(2)>=ZGROOVE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(2)>=ZGROOVE_$SYNCHDMLC(3).'/
+      ' ISOCENTER/TARGET leaves will not fit together.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZGROOVE_$SYNCHDMLC(3)<=ZTONGUE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(3)<=ZTONGUE_$SYNCHDMLC(1).'/
+      ' ISOCENTER leaf will not fit with'/
+      ' FULL leaf if ISOCENTER leaf is on -X or -Y side.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(2)>=ZGROOVE_$SYNCHDMLC(1))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(2)>=ZGROOVE_$SYNCHDMLC(1).'/
+      ' TARGET leaf will not fit with'/
+      ' FULL leaf if FULL leaf is on -X or -Y side.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+"between quarter leaves"
+IF(ZTONGUE_$SYNCHDMLC(5)<=ZGROOVE_$SYNCHDMLC(4))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(5)<=ZGROOVE_$SYNCHDMLC(4).'/
+      ' QTR ISOCENTER/TARGET leaves will not fit together.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(ZTONGUE_$SYNCHDMLC(4)>=ZGROOVE_$SYNCHDMLC(5))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(4)>=ZGROOVE_$SYNCHDMLC(5).'/
+      ' QTR ISOCENTER/TARGET leaves will not fit together.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+"between half and quarter leaves"
+IF(ZGROOVE_$SYNCHDMLC(5)<=ZTONGUE_$SYNCHDMLC(2))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZGROOVE_$SYNCHDMLC(5)<=ZTONGUE_$SYNCHDMLC(2).'/
+      ' QUARTER ISOCENTER leaf will not fit with'/
+      ' HALF TARGET leaf if ISOCENTER leaf is on -X or -Y side.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+IF(ZTONGUE_$SYNCHDMLC(4)>=ZGROOVE_$SYNCHDMLC(3))[
+   OUTPUT ICM_$SYNCHDMLC;
+   (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC) in leaf definition:'/
+      ' ZTONGUE_$SYNCHDMLC(4)>=ZGROOVE_$SYNCHDMLC(3).'/
+      ' QUARTER TARGET leaf will not fit with'/
+      ' HALF ISO leaf if FULL leaf is on -X or -Y side.'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+TOT_LEAF_$SYNCHDMLC=0;
+K=0;
+OUTPUT;(' ');
+DO I=1,NGROUP_$SYNCHDMLC [
+   OUTPUT I;
+   (' Group ',I3,':'/
+    '   No. of leaves, leaf type (1. FULL leaves--the default, '/
+    '   2. HALF TARGET/ISOCENTER pairs with TARGET leaf on -X or -Y side'/
+    '   3. QUARTER TARGET/ISOCENTER pairs with TARGET leaf on -X or -Y side)'/
+    '   :',$);
+   MINPUT ($SYNCHDMLC) NUM_LEAF_$SYNCHDMLC(I), LEAFTYPE; (2I5);
+   OUTPUT NUM_LEAF_$SYNCHDMLC(I), LEAFTYPE; (2I5);
+
+
+   TOT_LEAF_$SYNCHDMLC=TOT_LEAF_$SYNCHDMLC+NUM_LEAF_$SYNCHDMLC(I);
+
+   IF(LEAFTYPE<=0|LEAFTYPE>3)[
+     LEAFTYPE=1;
+     OUTPUT ICM_$SYNCHDMLC,I;
+         (//' ***WARNING IN CM ',I3,' ($SYNCHDMLC)'/
+            ' Leaf type for group ',I3,' not recognized.'/
+            ' Will default to 1.'//);
+   ]
+   IF(MOD(NUM_LEAF_$SYNCHDMLC(I),2)~=0 & (LEAFTYPE=2 |
+     LEAFTYPE=3) )[
+      OUTPUT ICM_$SYNCHDMLC,I;
+         (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC)'/
+            ' Leaf group ',I3,' consists of TARGET/ISOCENTER pairs but'/
+            ' does not have an even number of leaves.'//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+   ]
+   "now set LEAFTYPE for each leaf"
+   DO J=1,NUM_LEAF_$SYNCHDMLC(I)[
+      K=K+1;
+      IF(LEAFTYPE=1)[
+         LEAFTYPE_$SYNCHDMLC(K)=1;
+      ]
+      ELSEIF(LEAFTYPE=2)["half target/isocenter pair"
+        IF(MOD(J,2)~=0)["target leaf"
+           LEAFTYPE_$SYNCHDMLC(K)=2;
+        ]
+        ELSE[
+           LEAFTYPE_$SYNCHDMLC(K)=3;
+        ]
+      ]
+     ELSE ["quarter target/isocenter pair"
+        IF(MOD(J,2)~=0)["target leaf"
+           LEAFTYPE_$SYNCHDMLC(K)=4;
+        ]
+        ELSE[
+           LEAFTYPE_$SYNCHDMLC(K)=5;
+        ]
+     ]
+  ]
+]
+;
+IF(TOT_LEAF_$SYNCHDMLC>$MAXLEAF) [
+    TOT_LEAF_$SYNCHDMLC=$MAXLEAF;
+    OUTPUT ICM_$SYNCHDMLC,TOT_LEAF_$SYNCHDMLC;
+            (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC)'/
+             ' Total # of leaves > max allowed'/
+             ' Total # of leaves reduced to ',I3,' for now'//);
+    IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ]
+;
+IF(TOT_LEAF_$SYNCHDMLC<=0) [
+    TOT_LEAF_$SYNCHDMLC=1;
+    OUTPUT ICM_$SYNCHDMLC,TOT_LEAF_$SYNCHDMLC;
+            (//' ***ERROR IN CM ',I3,' ($SYNCHDMLC)'/
+             ' Total # of leaves <= 0'/
+             ' Total # of leaves set to ',I3,' for now'//);
+    IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ];
+
+" III. START POSITION OF LEAVES"
+" ============================="
+;
+OUTPUT ZMIN_$SYNCHDMLC; (/' Input the starting X (ORIENT_$SYNCHDMLC=0) or '/
+         ' Y (ORIENT_$SYNCHDMLC=1) position at z = ',F15.0, ' cm : ', $);
+MINPUT ($SYNCHDMLC) START_$SYNCHDMLC; (F15.0);
+OUTPUT START_$SYNCHDMLC; (F12.5);
+
+" Checking the validity of user-input"
+
+IF(ABS(START_$SYNCHDMLC)-RMAX_CM(ICM_$SYNCHDMLC)>1.E-5) [
+  OUTPUT ICM_$SYNCHDMLC;
+   (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' START POSITION EXCEEDS CM BOUNDARY'//);
+   IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ];
+
+"IV. INTER-LEAF AIR GAP "
+"====================== "
+
+OUTPUT; (/'Input the inter-leaf air gap(>=0.0) : ',$);
+  "leaf gap defined at ZMIN"
+MINPUT ($SYNCHDMLC) LEAFGAP_$SYNCHDMLC; (F15.0);
+OUTPUT LEAFGAP_$SYNCHDMLC; (F12.5);
+
+IF (LEAFGAP_$SYNCHDMLC<0.0) [
+      LEAFGAP_$SYNCHDMLC=0;
+      OUTPUT ICM_$SYNCHDMLC;
+         (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+         ' Inter-leaf air gap is negative - reset to 0   '//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+      ];
+
+"Check that there are no unblocked areas between adjacent leaves"
+IF(LEAFGAP_$SYNCHDMLC>WTONGUE_$SYNCHDMLC(1))[
+        LEAFGAP_$SYNCHDMLC = WTONGUE_$SYNCHDMLC(1);
+        OUTPUT ICM_$SYNCHDMLC;
+        (//'**ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+       ' Width of inter-leaf airgap exceeds that of the FULL leaf tongue.',/
+       ' Reset to be equal to the width of the tongue. '//);
+         IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(LEAFGAP_$SYNCHDMLC>WTONGUE_$SYNCHDMLC(3))[
+        LEAFGAP_$SYNCHDMLC = WTONGUE_$SYNCHDMLC(3);
+        OUTPUT ICM_$SYNCHDMLC;
+        (//'**ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' Width of inter-leaf airgap exceeds that of the HALF ISO leaf tongue.',/
+   ' Reset to be equal to the width of the tongue. '//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(LEAFGAP_$SYNCHDMLC>WTONGUE_$SYNCHDMLC(2))[
+        LEAFGAP_$SYNCHDMLC = WTONGUE_$SYNCHDMLC(2);
+        OUTPUT ICM_$SYNCHDMLC;
+        (//'**ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' Width of inter-leaf airgap exceeds that of the HALF TARGET leaf tongue.',/
+   ' Reset to be equal to the width of the tongue. '//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(LEAFGAP_$SYNCHDMLC>WTONGUE_$SYNCHDMLC(4))[
+        LEAFGAP_$SYNCHDMLC = WTONGUE_$SYNCHDMLC(4);
+        OUTPUT ICM_$SYNCHDMLC;
+        (//'**ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' Width of inter-leaf airgap exceeds that of the QTR ISO leaf tongue.',/
+   ' Reset to be equal to the width of the tongue. '//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(LEAFGAP_$SYNCHDMLC>WTONGUE_$SYNCHDMLC(5))[
+        LEAFGAP_$SYNCHDMLC = WTONGUE_$SYNCHDMLC(5);
+        OUTPUT ICM_$SYNCHDMLC;
+        (//'**ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' Width of inter-leaf airgap exceeds that of the QTR TARGET leaf tongue.',/
+   ' Reset to be equal to the width of the tongue. '//);
+        IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+"check leaf gap between adjacent tongue and groove"
+IF(WGROOVE_$SYNCHDMLC(1)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(1)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in FULL leaf too wide for groove in FULL leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(2)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(3)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in ISOCENTER leaf too wide for groove in TARGET leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(1)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(2)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in TARGET leaf too wide for groove in FULL leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(3)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(1)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in FULL leaf too wide for groove in ISOCENTER leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(4)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(5)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in QTR ISO leaf too wide for groove in QTR TARGET leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(3)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(4)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in QTR TARGET leaf too wide for groove in HALF ISO leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+IF(WGROOVE_$SYNCHDMLC(5)+LEAFGAP_$SYNCHDMLC-WTONGUE_$SYNCHDMLC(2)<0.0)[
+    OUTPUT ICM_$SYNCHDMLC;
+     (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+        ' Tongue in HALF TARGET leaf too wide for groove in QTR ISO leaf. '//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+]
+
+
+"V. TYPE OF LEAF ENDS - ROUNDED VS FLAT DIVERGENT "
+"================================================ "
+
+OUTPUT; (/'Input the type of leaf end desired : ',/,
+          '   0 --- Rounded leaf end or ',/
+          '   1 --- Focused leaf end  ');
+OUTPUT; ('Input your choice : ', $);
+MINPUT ($SYNCHDMLC) ENDTYPE_$SYNCHDMLC; (I5);
+OUTPUT ENDTYPE_$SYNCHDMLC; (I5/);
+;
+IF(ENDTYPE_$SYNCHDMLC=1) [
+   OUTPUT; (' Input the z focus of the leaf ends : ',$);
+   MINPUT ($SYNCHDMLC) ZFOCUS_$SYNCHDMLC(2); (F15.0);
+   OUTPUT ZFOCUS_$SYNCHDMLC(2);(F12.5/);
+
+   IF(ABS(ZFOCUS_$SYNCHDMLC(2)-ZMIN_$SYNCHDMLC)<1.E-5) [
+      ZFOCUS_$SYNCHDMLC(2)=ZMIN_$SYNCHDMLC-1.E-4;
+      OUTPUT ICM_$SYNCHDMLC,ZFOCUS_$SYNCHDMLC(2);
+          (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+           ' ZFOCUS(2) cannot be equal to ZMIN_$SYNCHDMLC'/
+           ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+     ]
+   ELSEIF(ZFOCUS_$SYNCHDMLC(2)>ZMIN_$SYNCHDMLC &
+          ZFOCUS_$SYNCHDMLC(2)<ZMAX_$SYNCHDMLC)[
+        ZFOCUS_$SYNCHDMLC(2)=ZMAX_$SYNCHDMLC;
+        OUTPUT ICM_$SYNCHDMLC,ZFOCUS_$SYNCHDMLC(2);
+          (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+          ' ZFOCUS(2) is between ZMIN_$SYNCHDMLC and ZMAX_$SYNCHDMLC'/
+          ' This will cause leaf ends to overlap'/
+          ' ZFOCUS(2) reset to ',F15.5,' cm for now'//);
+       IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+     ];
+ ]
+ELSE  [ "Defaults to rounded ends "
+
+   OUTPUT (ZTHICK_$SYNCHDMLC/2);
+          (' Input the radius >= ', F12.5, ' cm ', /
+          ' of the leaf ends : ',$);
+
+   MINPUT ($SYNCHDMLC) LEAFRADIUS_$SYNCHDMLC; (F15.0);
+   OUTPUT LEAFRADIUS_$SYNCHDMLC; (F15.0/);
+
+   IF((LEAFRADIUS_$SYNCHDMLC < (0.5*ZTHICK_$SYNCHDMLC)) |
+      (LEAFRADIUS_$SYNCHDMLC < 0.0)) [
+
+" This is done to ensure that the leaf end is rounded all the"
+" way from zmin_$dynvmlc to zmax_$dynvmlc. "
+" Otherwise the curvature will fall short."
+
+     LEAFRADIUS_$SYNCHDMLC=0.5*ZTHICK_$SYNCHDMLC;
+     OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' LEAFRADIUS_$SYNCHDMLC is less than minimum acceptable'/
+      ' RESET TO ', F15.5, ' cm for now'//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+    IF(HOLEPOS_FULL_$SYNCHDMLC>=LEAFRADIUS_$SYNCHDMLC) [
+      HOLEPOS_FULL_$SYNCHDMLC=LEAFRADIUS_$SYNCHDMLC-0.1;
+      OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Hole position in FULL leaves is greater than leaf'/
+      ' radius. Reset to ',F12.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+    IF(HOLEPOS_ISO_$SYNCHDMLC>=LEAFRADIUS_$SYNCHDMLC) [
+      HOLEPOS_ISO_$SYNCHDMLC=LEAFRADIUS_$SYNCHDMLC-0.1;
+      OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Hole position in ISOCENTER leaves is greater than leaf'/
+      ' radius. Reset to ',F12.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+    IF(HOLEPOS_TAR_$SYNCHDMLC>=LEAFRADIUS_$SYNCHDMLC) [
+      HOLEPOS_TAR_$SYNCHDMLC=LEAFRADIUS_$SYNCHDMLC-0.1;
+      OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Hole position in TARGET leaves is greater than leaf'/
+      ' radius. Reset to ',F12.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+    IF(HOLEPOS_QISO_$SYNCHDMLC>=LEAFRADIUS_$SYNCHDMLC) [
+      HOLEPOS_QISO_$SYNCHDMLC=LEAFRADIUS_$SYNCHDMLC-0.1;
+      OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Hole position in QTR ISOCENTER leaves is greater than leaf'/
+      ' radius. Reset to ',F12.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+    IF(HOLEPOS_QTAR_$SYNCHDMLC>=LEAFRADIUS_$SYNCHDMLC) [
+      HOLEPOS_QTAR_$SYNCHDMLC=LEAFRADIUS_$SYNCHDMLC-0.1;
+      OUTPUT ICM_$SYNCHDMLC,LEAFRADIUS_$SYNCHDMLC;
+      (//'***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Hole position in QTR TARGET leaves is greater than leaf'/
+      ' radius. Reset to ',F12.5,' cm for now'//);
+      IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+    ]
+ ]; " End of checking the leaf end ;
+
+
+"VI. FOCUS FOR DIVERGENT LEAF SIDES "
+"==================================== "
+
+OUTPUT; (' Input the Z focus point of the leaf sides: ',$);
+MINPUT ($SYNCHDMLC)  ZFOCUS_$SYNCHDMLC(1); (F15.0);
+OUTPUT ZFOCUS_$SYNCHDMLC(1); (F12.5/);
+
+IF(ABS(ZFOCUS_$SYNCHDMLC(1)-ZMIN_$SYNCHDMLC)<1.E-5) [
+   ZFOCUS_$SYNCHDMLC(1)=ZMIN_$SYNCHDMLC-1.E-4;
+   OUTPUT ICM_$SYNCHDMLC,ZFOCUS_$SYNCHDMLC(1);
+      (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+       ' ZFOCUS(1) cannot be equal to ZMIN_$SYNCHDMLC'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ]
+ELSEIF(ZFOCUS_$SYNCHDMLC(1)>ZMIN_$SYNCHDMLC
+				& ZFOCUS_$SYNCHDMLC(1)<ZMAX_$SYNCHDMLC) [
+   ZFOCUS_$SYNCHDMLC(1)=ZMAX_$SYNCHDMLC;
+   OUTPUT ICM_$SYNCHDMLC,ZFOCUS_$SYNCHDMLC(1);
+      (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+       ' ZFOCUS(1) is between ZMIN_$SYNCHDMLC and ZMAX_$SYNCHDMLC'/
+       ' This will cause leaf sides to overlap'/
+       ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
+   IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ];
+
+"VII. CALCULATE THE Z-AXIS COORDINATES OF DIFFERENT SUB-REGIONS "
+"============================================================= "
+"this is done on a leaf-by-leaf basis"
+"Mail 30 Jun 2009: define materials by region"
+I=0;
+DO J=1,NGROUP_$SYNCHDMLC[
+  DO K=1,NUM_LEAF_$SYNCHDMLC(J)[
+    I=I+1;
+    ZREG_$SYNCHDMLC(I,1)=ZMIN_$SYNCHDMLC;
+    "Full Leafs not used in CB work so we will not change them"
+    IF(LEAFTYPE_$SYNCHDMLC(I)=1)["full leaf"
+      ZREG_$SYNCHDMLC(I,2)=ZTIP_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,3)=ZLEAF_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,4)=ZTONGUE_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,5)=ZGROOVE_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,6)=ZHOLETOP_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,7)=ZHOLEBOT_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,8)=ZRAILTOP_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,9)=ZRAILBOT_$SYNCHDMLC(1);
+      ZREG_$SYNCHDMLC(I,10)=ZREG_$SYNCHDMLC(I,1)+ZTHICK_$SYNCHDMLC;
+      HOLEPOS_$SYNCHDMLC(I)=HOLEPOS_FULL_$SYNCHDMLC;"do this here"
+    ]
+    ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
+      ZREG_$SYNCHDMLC(I,2)=ZRAILTOP_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,3)=ZRAILBOT_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,4)=ZHOLETOP_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,5)=ZHOLEBOT_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,6)=ZTONGUE_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,7)=ZGROOVE_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,8)=ZLEAF_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,9)=ZTIP_$SYNCHDMLC(2);
+      ZREG_$SYNCHDMLC(I,10)=ZREG_$SYNCHDMLC(I,1)+ZTHICK_$SYNCHDMLC;
+      HOLEPOS_$SYNCHDMLC(I)=HOLEPOS_TAR_$SYNCHDMLC;
+    ]
+    ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter"
+      ZREG_$SYNCHDMLC(I,2)=ZTIP_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,3)=ZLEAF_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,4)=ZTONGUE_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,5)=ZGROOVE_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,6)=ZHOLETOP_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,7)=ZHOLEBOT_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,8)=ZRAILTOP_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,9)=ZRAILBOT_$SYNCHDMLC(3);
+      ZREG_$SYNCHDMLC(I,10)=ZREG_$SYNCHDMLC(I,1)+ZTHICK_$SYNCHDMLC;
+      HOLEPOS_$SYNCHDMLC(I)=HOLEPOS_ISO_$SYNCHDMLC;
+    ]
+    ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
+      ZREG_$SYNCHDMLC(I,2)=ZRAILTOP_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,3)=ZRAILBOT_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,4)=ZHOLETOP_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,5)=ZHOLEBOT_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,6)=ZTONGUE_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,7)=ZGROOVE_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,8)=ZLEAF_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,9)=ZTIP_$SYNCHDMLC(4);
+      ZREG_$SYNCHDMLC(I,10)=ZREG_$SYNCHDMLC(I,1)+ZTHICK_$SYNCHDMLC;
+      HOLEPOS_$SYNCHDMLC(I)=HOLEPOS_QTAR_$SYNCHDMLC;
+    ]
+    ELSE ["qtr isocenter"
+      ZREG_$SYNCHDMLC(I,2)=ZTIP_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,3)=ZLEAF_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,4)=ZGROOVE_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,5)=ZTONGUE_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,6)=ZHOLETOP_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,7)=ZHOLEBOT_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,8)=ZRAILTOP_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,9)=ZRAILBOT_$SYNCHDMLC(5);
+      ZREG_$SYNCHDMLC(I,10)=ZREG_$SYNCHDMLC(I,1)+ZTHICK_$SYNCHDMLC;
+      HOLEPOS_$SYNCHDMLC(I)=HOLEPOS_QISO_$SYNCHDMLC;
+    ]
+  ]
+];
+
+"VIII. CALC PARAMETERS IN DIRECTION PERPENDICULAR TO LEAF ORIENTATION
+"==================================================================
+
+TEMP1 = (ZMIN_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(1));
+
+I=0;
+IF(TOT_LEAF_$SYNCHDMLC>0) [
+  DO L = 1,NGROUP_$SYNCHDMLC[
+   DO K = 1,NUM_LEAF_$SYNCHDMLC(L) [
+
+     I=I+1;
+     IF(I=1)[
+       YREG_$SYNCHDMLC(I,1)=START_$SYNCHDMLC;
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=1)[
+       YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+                          WTONGUE_$SYNCHDMLC(1);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
+         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+                          WTONGUE_$SYNCHDMLC(2);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter leaf"
+         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+                          WTONGUE_$SYNCHDMLC(3);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
+         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+                          WTONGUE_$SYNCHDMLC(4);
+     ]
+     ELSE ["qtr iso leaf"
+         YREG_$SYNCHDMLC(I,1)=YREG_$SYNCHDMLC(I-1,7)+LEAFGAP_$SYNCHDMLC-
+                          WTONGUE_$SYNCHDMLC(5);
+     ]
+     "we have now defined YREG_$SYNCHDMLC(I,1)"
+
+     IF(LEAFTYPE_$SYNCHDMLC(I)=1)["full leaf"
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(1);
+       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTIP_$SYNCHDMLC(1);
+       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,2)+WRAILTOP_$SYNCHDMLC(1)-
+                          WRAILBOT_$SYNCHDMLC(1);
+       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,2)+WRAILTOP_$SYNCHDMLC(1);
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(1)-
+                          WGROOVE_$SYNCHDMLC(1);
+       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(1);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=2)["half target leaf"
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(2);
+       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2)-
+                          WRAILBOT_$SYNCHDMLC(2);
+       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WRAILBOT_$SYNCHDMLC(2)
+                         -WGROOVE_$SYNCHDMLC(2)-WTIP_$SYNCHDMLC(2);
+       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,4)+WTIP_$SYNCHDMLC(2);
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,3)+WRAILTOP_$SYNCHDMLC(2);
+       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);
+
+       "YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(2);"
+       "YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2)-"
+       "                   WRAILTOP_$SYNCHDMLC(2);"
+       "YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WRAILBOT_$SYNCHDMLC(2)"
+       "                  -WGROOVE_$SYNCHDMLC(2)-WTIP_$SYNCHDMLC(2);"
+       "YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,4)+WTIP_$SYNCHDMLC(2);"
+       "YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(2);"
+       "YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,3)+WRAILBOT_$SYNCHDMLC(2);"
+
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=3)["half isocenter leaf"
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(3)-
+                          WRAILBOT_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WTIP_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(3)-
+                          WGROOVE_$SYNCHDMLC(3);
+       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(3);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(I)=4)["qtr target leaf"
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(4);
+       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
+                          WRAILBOT_$SYNCHDMLC(4);
+       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
+                           WGROOVE_$SYNCHDMLC(4)-WTIP_$SYNCHDMLC(4);
+       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
+                          WGROOVE_$SYNCHDMLC(4);
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4)-
+                          WRAILBOT_$SYNCHDMLC(4)+WRAILTOP_$SYNCHDMLC(4);
+       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,2)+LEAFWIDTH_$SYNCHDMLC(4);
+     ]
+     ELSE ["qtr isocenter leaf"
+       YREG_$SYNCHDMLC(I,2)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5)-
+                          WRAILBOT_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,3)=YREG_$SYNCHDMLC(I,1)+WTONGUE_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,4)=YREG_$SYNCHDMLC(I,3)+WTIP_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,5)=YREG_$SYNCHDMLC(I,1)+WRAILTOP_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,6)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(5)-
+                          WGROOVE_$SYNCHDMLC(5);
+       YREG_$SYNCHDMLC(I,7)=YREG_$SYNCHDMLC(I,3)+LEAFWIDTH_$SYNCHDMLC(5);
+     ]
+
+     DO J = 1, 7 [
+       SURPARA1_$SYNCHDMLC(I,J)=YREG_$SYNCHDMLC(I,J)/TEMP1;
+     "OUTPUT I, J, YREG_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
+     " OUTPUT I, J, SURPARA1_$SYNCHDMLC(I,J); (I5, I5, F12.6, ' ', $/);"
+     ];"End of J Loop"
+  ]; "End of K Loop"
+ ]; "End of L loop"
+];   "End of IF statement"
+
+" Check to see if the SYNCHDMLC will go outside the CM boundary "
+
+TEMP1 = ABS((ZMAX_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(1))*SURPARA1_$SYNCHDMLC(1,2));
+TEMP2 = ABS((ZMAX_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(1))*
+            SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,6));
+
+IF(TEMP1>RMAX_CM(ICM_$SYNCHDMLC)|TEMP2>RMAX_CM(ICM_$SYNCHDMLC)) [
+   OUTPUT; (/' The SYNCHDMLC is not contained within the CM boundaries', /
+        ' Please check ZFOCUS_$SYNCHDMLC(1) and RMAX_CM(ICM_$SYNCHDMLC)'/);
+   STOP;
+  ];
+
+
+"IX. INPUT THE COORDINATES NEG_$SYNCHDMLC AND POS_$SYNCHDMLC "
+"===================================================== "
+mlc_unit=70;
+DO I=1, TOT_LEAF_$SYNCHDMLC
+[
+    LEAFB_$SYNCHDMLC(I)=0.0;LEAFA_$SYNCHDMLC(I)=0.0;"
+]
+IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
+  OUTPUT;(/' Input full name of file containing leaf opening data:'/);
+  READ(i_input,'(A80)')mlc_file;
+  OUTPUT mlc_file;(A80/);
+  mlc_unit=egs_get_unit(mlc_unit);
+  IF(mlc_unit<1)[
+    $egs_fatal(*,
+         'MLC leaf opening file: failed to get a free Fortran I/O unit');
+  ]
+  open(mlc_unit,file=mlc_file,status='old',err=:no-mlc-data-file:);
+  read(mlc_unit,'(A80)') MLC_TITLE;
+  read(mlc_unit,'(I10)') NFIELDS_$SYNCHDMLC;
+  OUTPUT NFIELDS_$SYNCHDMLC; (I10);
+  DO I=1,NFIELDS_$SYNCHDMLC[
+  "read in non-default leaf positions for each field"
+     read(mlc_unit,'(F15.0)')INDEX_$SYNCHDMLC(I);
+     J=1;"counter for total no. of leaves input so far"
+     LOOP[
+     read(mlc_unit,'(2F15.0,I5)')NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC;
+       IF(NUM_$SYNCHDMLC<=0) NUM_$SYNCHDMLC=1;
+       DO K=J,J+NUM_$SYNCHDMLC-1[
+         IF(K>TOT_LEAF_$SYNCHDMLC) EXIT;
+         LEAFNEG_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC)=NEG_$SYNCHDMLC;
+         LEAFPOS_$SYNCHDMLC(K+(I-1)*TOT_LEAF_$SYNCHDMLC)=POS_$SYNCHDMLC;
+       ]
+       J=K;
+     ]WHILE(J<=TOT_LEAF_$SYNCHDMLC);
+  ]
+  CLOSE(UNIT=mlc_unit);
+
+  OUTPUT;('******MLC SEQUENCE FILE READ******');
+  IF (MODE_$SYNCHDMLC=1) [
+      OUTPUT; ('**dynamic delivery**');
+  ]
+  ELSEIF (MODE_$SYNCHDMLC=2) [
+      OUTPUT; ('**step and shoot delivery**');
+  ]
+]
+ELSE[
+OUTPUT; (' Input for MLC A and B leaf tips '/);
+IF(ORIENT_$SYNCHDMLC=1)[
+    IF(ENDTYPE_$SYNCHDMLC=1)[
+      OUTPUT;(' Input min. X, max. X of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. X, max. X of rounded leaf ends,');
+    ]
+]
+ELSE[
+    IF(ENDTYPE_$SYNCHDMLC=1)[
+      OUTPUT;(' Input min. Y, max. Y of top of opening in leaves,');
+    ]
+    ELSE[
+      OUTPUT;(' Input min. Y, max. Y of rounded leaf ends,');
+    ]
+]
+OUTPUT;(' # of adjacent leaves with these coordinates:');
+I=1;
+LOOP[
+  OUTPUT I;('   For leaf',I4,' :',$)
+  MINPUT ($SYNCHDMLC) NEG_$SYNCHDMLC,POS_$SYNCHDMLC,NUM_$SYNCHDMLC; (2F15.0,I5);
+  IF(NUM_$SYNCHDMLC<=0) NUM_$SYNCHDMLC=1;
+  OUTPUT NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC; (2F12.5,I5);
+  IF(NEG_$SYNCHDMLC > POS_$SYNCHDMLC)[
+     NEG_$SYNCHDMLC = POS_$SYNCHDMLC;
+     OUTPUT ICM_$SYNCHDMLC,I,I+NUM_$SYNCHDMLC-1,NEG_$SYNCHDMLC;
+      (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+   ' Min. and max. opening coordinates in leaves ',I4,' - ',I4,' overlap'/
+   ' Both coordinates set to ',F15.5,' cm for now'//);
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+                               ]
+
+  IF(ABS(NEG_$SYNCHDMLC)>RMAX_CM(ICM_$SYNCHDMLC)|
+     ABS(POS_$SYNCHDMLC)>RMAX_CM(ICM_$SYNCHDMLC)) [
+
+     OUTPUT ICM_$SYNCHDMLC,I,I+NUM_$SYNCHDMLC-1;
+      (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC)'/
+      ' Tip of leaves ',I4,' - ',I4,' are outside CM '//);
+
+     IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+                                            ];
+  DO J=I,I+NUM_$SYNCHDMLC-1["define opening for all leaves in group"
+    IF(J>TOT_LEAF_$SYNCHDMLC) EXIT;
+    LEAFB_$SYNCHDMLC(J)=NEG_$SYNCHDMLC;
+    LEAFA_$SYNCHDMLC(J)=POS_$SYNCHDMLC;
+  ]
+  I=J;
+]WHILE(I<=TOT_LEAF_$SYNCHDMLC);"End of Coordinate inputs for || direction "
+
+IF(ENDTYPE_$SYNCHDMLC=1)[
+DO I=1, TOT_LEAF_$SYNCHDMLC [
+
+SURPARA2_B_$SYNCHDMLC(I)=LEAFB_$SYNCHDMLC(I)/(ZMIN_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(2) );
+
+SURPARA2_A_$SYNCHDMLC(I)=LEAFA_$SYNCHDMLC(I)/(ZMIN_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(2) );
+
+                         ];
+                    ];
+]
+
+"X. ESTABLISH TOP OF FIRST CM
+"==============================
+
+ZFRONT_$SYNCHDMLC = Z_min_CM(ICM_$SYNCHDMLC);
+
+"
+"XI. ESTABLISH START OF NEXT CM
+"================================
+
+Z_min_CM(ICM_$SYNCHDMLC+1) = ZMAX_$SYNCHDMLC;
+
+"XII. GET ECUT, PCUT, DOSE SCORING ZONE AND MATERIAL IN EACH REGION
+"==================================================================
+
+IRA = IRSTART_$SYNCHDMLC-1;
+DO IR_$SYNCHDMLC = 1,N_$SYNCHDMLC ["loop through regions to get information"
+   IRA = IRA+1;
+   IF(IR_$SYNCHDMLC=1) [
+       OUTPUT IR_$SYNCHDMLC;
+        (/' Region',I4,' (MLC opening):'/
+          ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+          ' :',$);
+   ]
+   ELSEIF(IR_$SYNCHDMLC=2) [
+       OUTPUT IR_$SYNCHDMLC;
+        (/' Region',I4,' (MLC leaves):'/
+'ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT, IGNOREGAPS'/
+         ' :',$);
+   ]
+   ELSE[
+       OUTPUT IR_$SYNCHDMLC;
+        (/' Region',I4,' (driving screw holes):'/
+         ' ECUT, PCUT (MeV), DOSE ZONE (0=NO DOSE SCORED), IREGION_TO_BIT'/
+         ' :',$);
+   ]
+   IF(IR_$SYNCHDMLC~=2)[
+    MINPUT ($SYNCHDMLC) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (2F15.0,2I5);
+      OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+             (2F15.5,2I5);
+   ]
+   ELSE[
+      MINPUT ($SYNCHDMLC) ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+                       IREGION_TO_BIT(IRA),IGNOREGAPS_$SYNCHDMLC; (2F15.0,3I5);
+      OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+             IGNOREGAPS_$SYNCHDMLC; (2F15.5,3I5);
+   ]
+   IF(ECUT(IRA) < ECUTIN) [ECUT(IRA)=ECUTIN;];
+   IF(PCUT(IRA) < PCUTIN) [PCUT(IRA)=PCUTIN;];
+   OUTPUT IR_$SYNCHDMLC; (' material of region ',I3,' ',$);
+   $MED_INPUT($SYNCHDMLC); " inputs character array MED_IN from unit 5, loops"
+  "through array MEDIA(24,I) to check if medium was previously input."
+  "If so, sets MED_INDEX to index of previous medium.  If not,"
+  "increments NMED and sets MED_INDEX to NMED."
+   MED(IRA) = MED_INDEX; " medium of the planar slab"
+ ] "end of loop over IR_$SYNCHDMLC"
+;
+
+IF(IGNOREGAPS_$SYNCHDMLC=1 & IREJCT_GLOBAL>0)[
+   IF(ORIENT_$SYNCHDMLC=1)["leaves parallel to X"
+       OUTPUT;(/' *******Range rejection in $SYNCHDMLC will ignore all'/
+               ' air gaps if the particle is in the leaves and has'/
+               ' X < min. X of leaf openings (not including leaf ends)'/
+               ' or X > max. X of leaf openings (not including ends)'/);
+   ]
+   ELSE["leaves parallel to Y"
+       OUTPUT;(/' *******Range rejection in $SYNCHDMLC will ignore all'/
+               ' air gaps if the particle is in the leaves and has'/
+               ' Y < min. Y of leaf openings (not including leaf ends)'/
+               ' or Y > max. Y of leaf openings (not including ends)'/);
+   ]
+   IF(MODE_$SYNCHDMLC=0)[
+   DO I=1,TOT_LEAF_$SYNCHDMLC["loop through leaves to find index of those with"
+                           "max. +ve opening and min. -ve opening"
+       IF(I=1)[
+           MIN_INDEX=I;
+           MAX_INDEX=I;
+       ]
+       ELSE[
+           IF(LEAFB_$SYNCHDMLC(I)<LEAFB_$SYNCHDMLC(I-1))MIN_INDEX=I;
+           IF(LEAFA_$SYNCHDMLC(I)>LEAFA_$SYNCHDMLC(I-1))MAX_INDEX=I;
+       ]
+   ]
+   IF(ENDTYPE_$SYNCHDMLC=1)["straight, focused ends"
+       MIN_PLANE_$SYNCHDMLC=MIN(LEAFB_$SYNCHDMLC(MIN_INDEX),
+                        SURPARA2_B_$SYNCHDMLC(MIN_INDEX)*
+                      (ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(2)));
+       MAX_PLANE_$SYNCHDMLC=MAX(LEAFB_$SYNCHDMLC(MAX_INDEX),
+                         SURPARA2_B_$SYNCHDMLC(MAX_INDEX)*
+                      (ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC-ZFOCUS_$SYNCHDMLC(2)));
+   ]
+   ELSE["rounded leaf ends"
+       MIN_PLANE_$SYNCHDMLC=LEAFB_$SYNCHDMLC(MIN_INDEX)-LEAFRADIUS_$SYNCHDMLC+
+                       SQRT(LEAFRADIUS_$SYNCHDMLC**2-(ZTHICK_$SYNCHDMLC/2.)**2);
+       MAX_PLANE_$SYNCHDMLC=LEAFA_$SYNCHDMLC(MIN_INDEX)+LEAFRADIUS_$SYNCHDMLC-
+                       SQRT(LEAFRADIUS_$SYNCHDMLC**2-(ZTHICK_$SYNCHDMLC/2.)**2);
+   ]
+]
+]
+ELSE["set to default"
+   IGNOREGAPS_$SYNCHDMLC=0;
+]
+"
+"XIII. SET UP AIR GAP TO PREVIOUS CM IF PRESENT
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though its
+"  the top of the component module.  This is to allow the assignment of
+"  region numbers on input of the parameters of each local region
+"  (mainly to assign the medium number of the region).
+"  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$mlc=1) then the gap thickness
+"Z_gap_THICK(ICM_$dynvmlc) = 0, which is used as a flag for no air gap
+
+Z_gap_THICK(ICM_$SYNCHDMLC) = ZMIN_$SYNCHDMLC - Z_min_CM(ICM_$SYNCHDMLC);
+IF (Z_gap_THICK(ICM_$SYNCHDMLC) < = 0.0) [
+   Z_gap_THICK(ICM_$SYNCHDMLC) = 0.;
+   N_GAP_$SYNCHDMLC = 0; "no air gap for this CM"
+  ]
+ELSE [
+   N_GAP_$SYNCHDMLC = 1; "this CM has an air gap"
+   IRA = IRSTART_$SYNCHDMLC+N_$SYNCHDMLC; "absolute region number of air gap"
+   MED(IRA) = AIR_INDEX; "medium is air"
+ ];
+"
+"XIV. SET UP REGION NUMBERS
+"===========================
+"
+"  This CM has N_$SYNCHDMLC+N_GAP_$mlc regions
+"
+;
+"Index last region
+IREND_$SYNCHDMLC = (IRSTART_$SYNCHDMLC -1) + N_$SYNCHDMLC+N_GAP_$SYNCHDMLC;
+NREG = NREG+N_$SYNCHDMLC+N_GAP_$SYNCHDMLC;
+                            "Total no of regions in full geometry up
+                            "to and including this CM
+IF (NREG <= $MXREG) [
+
+    IR_start_CM(ICM_$SYNCHDMLC+1) = IREND_$SYNCHDMLC+1;
+
+  ]    "have not exceeded maximum region number
+       "Index of first region in next CM:"
+ELSE [
+   OUTPUT ICM_$SYNCHDMLC,NREG,$MXREG;
+   (//' ***ERROR IN CM ',I4,' ($SYNCHDMLC):'/
+   T2,I4,' regions requested, only ',I4,' available'//);
+   IERR_GEOM(ICM_$SYNCHDMLC)=IERR_GEOM(ICM_$SYNCHDMLC)+1;
+ ];
+
+"
+"XV.  ESTABLISH CM BOUNDARY
+"============================
+"
+RMAX_CM_FLAG(ICM_$SYNCHDMLC) = 2; "put a square boundary about CM
+"
+"XVI. ESTABLISH DOSE SCORING ZONES AND BIT SETTING FOR EACH REGION
+"===================================================================
+"
+IRA = IRSTART_$SYNCHDMLC-1; "absolute region number"
+DO IR_$SYNCHDMLC=1,N_$SYNCHDMLC ["loop over local region number"
+   IRA = IRA+1;
+   "dose-scoring zones"
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones"
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maximum"
+   "charged particle range rejection parameters"
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are"
+                            "considered for range rejection"
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region GXD"
+   E_min_out(ICM_$SYNCHDMLC)=ECUT(IRA); "Minimum energy on exit from CM"
+  ] "end of loop over IR_$SYNCHDMLC
+
+"XVII. ESTABLISH SUB-REGION IR VALUES
+"===================================
+DO L=1,TOT_LEAF_$SYNCHDMLC [
+      DO I=1,5 [ "NX"
+           DO J =1,6 [ "NY"
+                DO K = 1,9 [ "NZ"
+                  SUBINDEX_$SYNCHDMLC(L,I,J,K)=1; "set all regions to air"
+                  ];
+            ];
+         ];
+      ];
+;
+"Now define regions containing leaf medium"
+DO L=1,TOT_LEAF_$SYNCHDMLC[
+  DO I =2,5 [
+
+   IF(LEAFTYPE_$SYNCHDMLC(L)=2 | LEAFTYPE_$SYNCHDMLC(L)=4) [
+      "This is a target leaf"
+      SUBINDEX_$SYNCHDMLC(L,I,1,1)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,1,2)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,1,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,1,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,1)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,2)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,6)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,3,1)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,3,3)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,6)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,1)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,4,3)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,6)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,8)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,1)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,6)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,6)=2;
+    ]
+   ELSEIF(LEAFTYPE_$SYNCHDMLC(L)=1) [
+      "Full Leaf"
+      SUBINDEX_$SYNCHDMLC(L,I,1,2)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,1,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,2)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,4)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,6)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,2,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,4,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,4)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,6)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,8)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,6)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,8)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,9)=2;
+    ] ELSE [
+      "This is an Half or Quarter Isocenter Leaf"
+      "Common to both Half and Quarter"
+      SUBINDEX_$SYNCHDMLC(L,I,1,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,1,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,2,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,2,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,2,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,3,2)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,3,3)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,4)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,3,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,4,3)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,4)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,5)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,7)=2;"CB"
+      SUBINDEX_$SYNCHDMLC(L,I,4,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,3)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,4)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,8)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,5,9)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,5)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,7)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,8)=2;
+      SUBINDEX_$SYNCHDMLC(L,I,6,9)=2;
+
+      IF (LEAFTYPE_$SYNCHDMLC(L)=3) [
+        "Half Isocenter"
+        SUBINDEX_$SYNCHDMLC(L,I,1,4)=2;"CB"
+        SUBINDEX_$SYNCHDMLC(L,I,2,4)=2;"CB"
+      ]
+
+      IF(LEAFTYPE_$SYNCHDMLC(L)=5) [
+        "Quarter Isocenter"
+        SUBINDEX_$SYNCHDMLC(L,I,6,4)=2;
+      ];
+     ];
+  ];
+
+   "Now set driving screw hole to Air"
+   DO J=1,6 [
+
+     IF(LEAFTYPE_$SYNCHDMLC(L)=2 | LEAFTYPE_$SYNCHDMLC(L)=4) [
+       "Half or Quarter Target leaf"
+       SUBINDEX_$SYNCHDMLC(L,2,J,4)=3;
+       SUBINDEX_$SYNCHDMLC(L,5,J,4)=3;
+     ] ELSE [
+       "Full or Isocenter leaf"
+       SUBINDEX_$SYNCHDMLC(L,2,J,6)=3;
+       SUBINDEX_$SYNCHDMLC(L,5,J,6)=3;
+     ]
+   ];
+
+   IF(LEAFTYPE_$SYNCHDMLC(L)=1) [
+     "Full Leaf"
+     SUBINDEX_$SYNCHDMLC(L,2,1,6)=1;
+     SUBINDEX_$SYNCHDMLC(L,5,1,6)=1;
+   ];
+ ];
+  "   =======================
+"
+RETURN;
+
+"XVIII. ERROR MESSAGES
+"==================
+"
+:EOF_$SYNCHDMLC:
+;OUTPUT ICM;
+  (//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$SYNCHDMLC:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+
+:no-mlc-data-file:
+;OUTPUT;(//' *** ERROR: HDMLC leaf data file could not be opened');
+STOP;
+
+END;  "End of INPUT_$SYNCHDMLC"
+
+
+%E "Start of subroutine ISUMRY_$SYNCHDMLC (Rev 1.4)"
+"***********************************************************************
+"
+"                          Subroutine ISUMRY_$SYNCHDMLC
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters
+" that require medium information obtained from HATCH call.
+"
+"***********************************************************************
+
+;SUBROUTINE ISUMRY_$SYNCHDMLC;
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$SYNCHDMLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,
+USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_$SYNCHDMLC
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR, "T>colour of CM for EGS_Windows
+"   ID,     already defined gf  T>index of dose scoring zone
+   IRA,     "T>absolute region number
+   I,J,     "T>DO loop index
+   ISTART,IEND, "T>indices for outputting info"
+   YY1(9),          "T> YY1 and YY2 index subregion along perpendicular..
+   YY2(9),          "T> direction to MLC orientation
+   YY3(9),          "T> specific for target leaf
+   YY4(9),          "T>
+   YY5(9),          "T> same for full leaf
+   YY6(9),          "T>
+   YY7(9),          "T> same for isocenter leaf
+   YY8(9);         "T>
+
+$REAL  VOL_$SYNCHDMLC(3), "T> region volumes
+
+       Zo,             "T> THe z-coordinate of the leaf center
+       XoP,XoN,        "T> The center of the rounded leaves ends along leaf
+       M1,M2,          "T> Variables related to partial(rounded) leaf volume
+       THETASUB,       "T> Angle at leaf end subtended by Z boundaries of reg.
+       TOTALVOL,       "T> Total volume of MLC CM
+       ZSQUARE,ZCUBE,AREA,    "T> Variables related to partial leaf volumes
+       TEMP,TEMP1,TEMP2,TEMP3,"T> Variables related to partial leaf volumes
+       HOLD;            "T> to hold a TEMP value
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the
+"region density is set if it was allowed to default in INPUT_$mlc.
+"This volume calculation is approximate, but close enough
+"
+
+TOTALVOL = (ZMAX_$SYNCHDMLC-ZMIN_$SYNCHDMLC)*4*RMAX_CM(ICM_$SYNCHDMLC)**2;
+VOL_$SYNCHDMLC(1) = 0.;
+VOL_$SYNCHDMLC(2) = 0.;
+VOL_$SYNCHDMLC(3) = 0.;
+
+Zo = ZMIN_$SYNCHDMLC + (ZTHICK_$SYNCHDMLC/2);
+
+DATA ( YY3(I), I=1,9) /1,1,1,1,1,2,2,4,7/; "target leaf"
+DATA ( YY4(I), I=1,9) /6,3,7,7,7,7,5,5,7/;
+DATA ( YY5(I), I=1,9) /1,1,1,2,2,2,2,5,4/; "full leaf"
+DATA ( YY6(I), I=1,9) /1,3,6,6,7,7,7,7,7/;
+DATA ( YY7(I), I=1,9) /1,3,3,1,1,1,1,5,2/; "isocenter leaf"
+DATA ( YY8(I), I=1,9) /1,4,6,6,7,7,7,7,7/;
+
+DO J = 1, TOT_LEAF_$SYNCHDMLC [
+  IF(LEAFTYPE_$SYNCHDMLC(J)=2|LEAFTYPE_$SYNCHDMLC(J)=4) [
+    DO I=1,9[
+      YY1(I)=YY3(I);
+      YY2(I)=YY4(I);
+    ]
+   ]
+  ELSEIF(LEAFTYPE_$SYNCHDMLC(J)=1) [
+    DO I=1,9[
+      YY1(I)=YY5(I);
+      YY2(I)=YY6(I);
+    ]
+   ]
+  ELSE [
+    DO I=1,9[
+      YY1(I)=YY7(I);
+      YY2(I)=YY8(I);
+   "   OUTPUT LEAFTYPE_$SYNCHDMLC(J);(I3);"
+    ]
+   ]
+  DO I = 2,10 [ "9 subregions in z-direction"
+      ZSQUARE=(ZREG_$SYNCHDMLC(J,I)**2)-(ZREG_$SYNCHDMLC(J,I-1)**2) -
+              2*ZREG_$SYNCHDMLC(J,I)*ZFOCUS_$SYNCHDMLC(1) +
+              2*ZREG_$SYNCHDMLC(J,I-1)*ZFOCUS_$SYNCHDMLC(1);
+      AREA=SURPARA1_$SYNCHDMLC(J,YY2(I-1))/2*ZSQUARE -
+               SURPARA1_$SYNCHDMLC(J,YY1(I-1))/2*ZSQUARE;
+      IF(ENDTYPE_$SYNCHDMLC=0) [ "Rounded leaf end"
+        XoN=LEAFB_$SYNCHDMLC(J)-LEAFRADIUS_$SYNCHDMLC;
+        XoP=LEAFA_$SYNCHDMLC(J)+LEAFRADIUS_$SYNCHDMLC;
+        TEMP1=SQRT(LEAFRADIUS_$SYNCHDMLC**2-(ZREG_$SYNCHDMLC(J,I-1)-Zo)**2);
+        TEMP2=SQRT(LEAFRADIUS_$SYNCHDMLC**2-(ZREG_$SYNCHDMLC(J,I)-Zo)**2);
+        M1=ASIN(TEMP1/LEAFRADIUS_$SYNCHDMLC);
+        M2=ASIN(TEMP2/LEAFRADIUS_$SYNCHDMLC);
+        THETASUB=ABS(M1-M2);
+        TEMP=AREA*(2*RMAX_CM(ICM_$SYNCHDMLC)-(XoP-MIN(TEMP1,TEMP2)-
+                      XoN-MIN(TEMP1,TEMP2)));
+       TEMP=TEMP+((ZREG_$SYNCHDMLC(J,I)-ZREG_$SYNCHDMLC(J,I-1))*ABS(TEMP1-TEMP2)
+             +LEAFRADIUS_$SYNCHDMLC**2*(THETASUB-SIN(THETASUB)))*
+             ((SURPARA1_$SYNCHDMLC(J,YY2(I-1))-SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*
+             (ZREG_$SYNCHDMLC(J,I)-ZFOCUS_$SYNCHDMLC(1)) +
+             (SURPARA1_$SYNCHDMLC(J,YY2(I-1))-SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*
+             (ZREG_$SYNCHDMLC(J,I-1)-ZFOCUS_$SYNCHDMLC(1)))/2;
+        VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)+TEMP;
+       ]
+      ELSE[ "Focused divergent leaf end "
+        TEMP1=SURPARA2_A_$SYNCHDMLC(J)*
+              (ZREG_$SYNCHDMLC(J,I-1)-ZFOCUS_$SYNCHDMLC(2));
+     TEMP2=SURPARA2_A_$SYNCHDMLC(J)*(ZREG_$SYNCHDMLC(J,I)-ZFOCUS_$SYNCHDMLC(2));
+        "do positive part of leaf first"
+        TEMP=AREA*(RMAX_CM(ICM_$SYNCHDMLC)-MAX(TEMP1,TEMP2));
+        TEMP=TEMP+(ABS(TEMP1-TEMP2)*(ZREG_$SYNCHDMLC(J,I)-
+             ZREG_$SYNCHDMLC(J,I-1)))/2*((SURPARA1_$SYNCHDMLC(J,YY2(I-1))-
+             SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*(ZREG_$SYNCHDMLC(J,I)-
+             ZFOCUS_$SYNCHDMLC(1))+(SURPARA1_$SYNCHDMLC(J,YY2(I-1))-
+             SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*(ZREG_$SYNCHDMLC(J,I-1)-
+             ZFOCUS_$SYNCHDMLC(1)))/2;
+        "now do negative part of leaf"
+        TEMP1=SURPARA2_B_$SYNCHDMLC(J)*
+              (ZREG_$SYNCHDMLC(J,I-1)-ZFOCUS_$SYNCHDMLC(2));
+     TEMP2=SURPARA2_B_$SYNCHDMLC(J)*(ZREG_$SYNCHDMLC(J,I)-ZFOCUS_$SYNCHDMLC(2));
+        TEMP=TEMP+AREA*(MIN(TEMP1,TEMP2)+RMAX_CM(ICM_$SYNCHDMLC));
+        TEMP=TEMP+(ABS(TEMP1-TEMP2)*(ZREG_$SYNCHDMLC(J,I)-
+             ZREG_$SYNCHDMLC(J,I-1)))/2*((SURPARA1_$SYNCHDMLC(J,YY2(I-1))-
+             SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*(ZREG_$SYNCHDMLC(J,I)-
+             ZFOCUS_$SYNCHDMLC(1))+(SURPARA1_$SYNCHDMLC(J,YY2(I-1))-
+             SURPARA1_$SYNCHDMLC(J,YY1(I-1)))*(ZREG_$SYNCHDMLC(J,I-1)-
+             ZFOCUS_$SYNCHDMLC(1)))/2;
+        VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)+TEMP;
+       ];
+
+     "IF(I=5 & J=1) HOLD=TEMP;  <-- not using this for now"
+    ];  "End of I loop"
+    "now subtract volume of driving screw hole"
+   IF(LEAFTYPE_$SYNCHDMLC(J)=2 | LEAFTYPE_$SYNCHDMLC(J)=4) ["target leaf"
+     ZSQUARE=(ZREG_$SYNCHDMLC(J,5)**2)-(ZREG_$SYNCHDMLC(J,4)**2) -
+              2*ZREG_$SYNCHDMLC(J,5)*ZFOCUS_$SYNCHDMLC(1) +
+              2*ZREG_$SYNCHDMLC(J,4)*ZFOCUS_$SYNCHDMLC(1);
+     AREA=SURPARA1_$SYNCHDMLC(J,7)/2*ZSQUARE -
+               SURPARA1_$SYNCHDMLC(J,1)/2*ZSQUARE;
+     "positive portion of leaf"
+     TEMP=AREA*(RMAX_CM(ICM_$SYNCHDMLC)-LEAFA_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+     "negative portion of leaf"
+     TEMP=AREA*(LEAFB_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J)+RMAX_CM(ICM_$SYNCHDMLC));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+    ]
+  IF(LEAFTYPE_$SYNCHDMLC(J)=1) ["full leaf"
+     ZSQUARE=(ZREG_$SYNCHDMLC(J,7)**2)-(ZREG_$SYNCHDMLC(J,6)**2) -
+              2*ZREG_$SYNCHDMLC(J,7)*ZFOCUS_$SYNCHDMLC(1) +
+              2*ZREG_$SYNCHDMLC(J,6)*ZFOCUS_$SYNCHDMLC(1);
+     AREA=SURPARA1_$SYNCHDMLC(J,7)/2*ZSQUARE -
+               SURPARA1_$SYNCHDMLC(J,2)/2*ZSQUARE;
+     "positive portion of leaf"
+     TEMP=AREA*(RMAX_CM(ICM_$SYNCHDMLC)-LEAFA_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+     "negative portion of leaf"
+     TEMP=AREA*(LEAFB_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J)+RMAX_CM(ICM_$SYNCHDMLC));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+    ]
+  ELSE ["isocenter leaf"
+     ZSQUARE=(ZREG_$SYNCHDMLC(J,7)**2)-(ZREG_$SYNCHDMLC(J,6)**2) -
+              2*ZREG_$SYNCHDMLC(J,7)*ZFOCUS_$SYNCHDMLC(1) +
+              2*ZREG_$SYNCHDMLC(J,6)*ZFOCUS_$SYNCHDMLC(1);
+     AREA=SURPARA1_$SYNCHDMLC(J,7)/2*ZSQUARE -
+               SURPARA1_$SYNCHDMLC(J,1)/2*ZSQUARE;
+     "positive portion of leaf"
+     TEMP=AREA*(RMAX_CM(ICM_$SYNCHDMLC)-LEAFA_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+     "negative portion of leaf"
+     TEMP=AREA*(LEAFB_$SYNCHDMLC(J)-HOLEPOS_$SYNCHDMLC(J)+RMAX_CM(ICM_$SYNCHDMLC));
+     VOL_$SYNCHDMLC(2)=VOL_$SYNCHDMLC(2)-TEMP;
+     VOL_$SYNCHDMLC(3)=VOL_$SYNCHDMLC(3)+TEMP;
+    ]
+
+ ];       "End of J Loop"
+
+VOL_$SYNCHDMLC(1) = TOTALVOL - VOL_$SYNCHDMLC(2) - VOL_$SYNCHDMLC(3);
+
+"i.e. Air Volume = Total Volume - Volume of Leaves
+
+IRA = IRSTART_$SYNCHDMLC-1; "absolute region number
+DO IR_$SYNCHDMLC=1,N_$SYNCHDMLC [ "loop over local region number"
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$SYNCHDMLC(IR_$SYNCHDMLC)*RHOR(IRA);
+    ];
+ ]; "end of loop over IR_$SYNCHDMLC"
+
+"   Summarize geometrical information for this CM in listing file
+"   ==============================================================
+"
+WRITE(IOUTLIST,110) ICM_$SYNCHDMLC,TITLE_$SYNCHDMLC;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$SYNCHDMLC), RMAX_CM(ICM_$SYNCHDMLC);
+IF(N_GAP_$SYNCHDMLC~=0) [
+   WRITE(IOUTLIST,124) Z_min_CM(ICM_$SYNCHDMLC),
+                       ZMIN_$SYNCHDMLC-Z_min_CM(ICM_$SYNCHDMLC);
+  ];
+WRITE(IOUTLIST,122) ZTHICK_$SYNCHDMLC;
+IF(ORIENT_$SYNCHDMLC~=0) [
+   WRITE(IOUTLIST,123) 'X';
+]
+ELSE[
+   WRITE(IOUTLIST,123) 'Y';
+]
+IF(ENDTYPE_$SYNCHDMLC=1) [
+   WRITE(IOUTLIST,125) ZFOCUS_$SYNCHDMLC(2);
+]
+ELSE[
+   WRITE(IOUTLIST,126) LEAFRADIUS_$SYNCHDMLC;
+]
+WRITE(IOUTLIST,127) ZFOCUS_$SYNCHDMLC(1),LEAFGAP_$SYNCHDMLC,
+                     VOL_$SYNCHDMLC(1),VOL_$SYNCHDMLC(2),
+                     VOL_$SYNCHDMLC(3),TOTALVOL;
+WRITE(IOUTLIST,128) (LEAFWIDTH_$SYNCHDMLC(I),I=1,3),
+                    (WTONGUE_$SYNCHDMLC(I),I=1,3),
+                    (WGROOVE_$SYNCHDMLC(I),I=1,3),
+                    (WTIP_$SYNCHDMLC(I),I=1,3),
+                    (WRAILTOP_$SYNCHDMLC(I),I=1,3),
+                    (WRAILBOT_$SYNCHDMLC(I),I=1,3),
+                    (ZTIP_$SYNCHDMLC(I),I=1,3),
+                    (ZLEAF_$SYNCHDMLC(I),I=1,3),
+                    (ZTONGUE_$SYNCHDMLC(I),I=1,3),
+                    (ZGROOVE_$SYNCHDMLC(I),I=1,3),
+                    (ZHOLETOP_$SYNCHDMLC(I),I=1,3),
+                    (ZHOLEBOT_$SYNCHDMLC(I),I=1,3),
+                     HOLEPOS_FULL_$SYNCHDMLC,HOLEPOS_TAR_$SYNCHDMLC,
+                     HOLEPOS_ISO_$SYNCHDMLC,
+                    (ZRAILTOP_$SYNCHDMLC(I),I=1,3),
+                    (ZRAILBOT_$SYNCHDMLC(I),I=1,3);
+IF(ORIENT_$SYNCHDMLC~=0) [
+      WRITE(IOUTLIST,129)'Y','X';
+ ]
+ELSE [
+      WRITE(IOUTLIST,129)'X','Y';
+]
+ISTART=1;
+IEND=2;
+LOOP[
+  IF(IEND>TOT_LEAF_$SYNCHDMLC |
+     LEAFB_$SYNCHDMLC(IEND)~=LEAFB_$SYNCHDMLC(ISTART)|
+     LEAFA_$SYNCHDMLC(IEND)~=LEAFA_$SYNCHDMLC(ISTART)|
+     (LEAFTYPE_$SYNCHDMLC(ISTART)=1 &
+        LEAFTYPE_$SYNCHDMLC(IEND)~=LEAFTYPE_$SYNCHDMLC(ISTART))|
+     (LEAFTYPE_$SYNCHDMLC(ISTART)>1 & LEAFTYPE_$SYNCHDMLC(IEND)=1))[
+     IF(LEAFTYPE_$SYNCHDMLC(ISTART)=1)[
+        WRITE(IOUTLIST,130)ISTART,IEND-1,'1',
+                       YREG_$SYNCHDMLC(ISTART,1),YREG_$SYNCHDMLC(IEND-1,7),
+                       LEAFB_$SYNCHDMLC(ISTART),LEAFA_$SYNCHDMLC(ISTART);
+     ]
+     ELSEIF(LEAFTYPE_$SYNCHDMLC(ISTART)=2|LEAFTYPE_$SYNCHDMLC(ISTART)=4)[
+        WRITE(IOUTLIST,130)ISTART,IEND-1,'2',
+                       YREG_$SYNCHDMLC(ISTART,1),YREG_$SYNCHDMLC(IEND-1,7),
+                       LEAFB_$SYNCHDMLC(ISTART),LEAFA_$SYNCHDMLC(ISTART);
+     ]
+     ELSE[
+        WRITE(IOUTLIST,130)ISTART,IEND-1,'3',
+                       YREG_$SYNCHDMLC(ISTART,1),YREG_$SYNCHDMLC(IEND-1,7),
+                       LEAFB_$SYNCHDMLC(ISTART),LEAFA_$SYNCHDMLC(ISTART);
+     ]
+     ISTART=IEND;
+  ]
+  ELSE[
+     IEND=IEND+1;
+  ]
+]WHILE(ISTART<=TOT_LEAF_$SYNCHDMLC);
+WRITE(IOUTLIST,131);
+IRA=IRSTART_$SYNCHDMLC-1;
+DO IR_$SYNCHDMLC=1,N_$SYNCHDMLC [
+   IRA = IRA+1;
+   IF(IR_$SYNCHDMLC=1) [
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$SYNCHDMLC,'opening',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+       ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$SYNCHDMLC,'opening',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9);
+      ];
+   ]
+   ELSEIF(IR_$SYNCHDMLC=2 | IR_$SYNCHDMLC=3) [
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$SYNCHDMLC,'leaves',ECUT(IRA),PCUT(IRA),
+           ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+       ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$SYNCHDMLC,'leaves',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),(MEDIA(J,MED(IRA)),J=1,9)
+       ]
+   ];
+];
+
+IF(N_GAP_$SYNCHDMLC~=0) [
+   IRA=IRSTART_$SYNCHDMLC+N_$SYNCHDMLC;
+   WRITE(IOUTLIST,140) IR_$SYNCHDMLC,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+   WRITE(IOUTLIST,141)'at top'
+ ];
+
+IF(IGNOREGAPS_$SYNCHDMLC=1 & IREJCT_GLOBAL>0)[
+  IF(ORIENT_$SYNCHDMLC=1)["leaves parallel to X"
+   WRITE(IOUTLIST,'(/'' *******Range rejection in $SYNCHDMLC will ignore all''/
+                   '' air gaps if the particle is in the leaves and has''/
+                   '' X < min. X of leaf openings (not including leaf ends)''/
+                   '' or X > max. X of leaf openings (not including ends)''/)');
+  ]
+  ELSE["leaves parallel to Y"
+   WRITE(IOUTLIST,'(/'' *******Range rejection in $SYNCHDMLC will ignore all''/
+                   '' air gaps if the particle is in the leaves and has''/
+                   '' Y < min. Y of leaf openings (not including leaf ends)''/
+                   '' or Y > max. Y of leaf openings (not including ends)''/)');
+  ]
+]
+
+110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
+           /' (3 regions Rev 1.4)',
+           /'  -------------------------------------------------',
+           /'------------------',
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$SYNCHDMLC geometry parameters:',
+           /T2,'------------------------',
+           /T2,'Distance from front of CM from reference plane = ',T51,
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',T51,F15.5,' cm');
+122 FORMAT(T2,'Thickness of collimator = ',T51,F15.5,' cm');
+123 FORMAT(T2,'Leaves open parallel to the ',A1,' axis');
+124 FORMAT(T2,'There is an airgap starting at Z = ',F8.3,' cm with',
+              ' thickness ',F8.3,' cm');
+125 FORMAT(T2,'Straight leaf ends with Z focus = ',T51,F15.5,' cm');
+126 FORMAT(T2,'Cylindrical leaf ends with radius = ',T51,F15.5,' cm');
+127 FORMAT(T2,'Z focus of leaf sides = ',T51,F15.5,' cm'/
+T2,'Gap between adjacent leaves = ',T51,F15.5,' cm'/
+T2,'Volume of region between leaves = ',T51,F15.5, 'cm**3'/
+T2,'Volume of leaves = ',T51,F15.5, 'cm**3'/
+T2,'Volume of driving screw holes = ',T51,F15.5, 'cm**3'/
+T2,'Volume of Multileaf Collimator Component Module = ',T51,F15.5, 'cm**3');
+128 FORMAT(/T2,'Dimensions for leaf types (all in cm):'/
+T2,
+'                                        FULL(1)     TARGET(2)   ISOCENTER(3)'/
+T2,'                                         ----         ------     ---------'/
+T2,'        Leaf width (excl. tongue):',3F13.5/
+T2,'                  Width of tongue:',3F13.5/
+T2,'                  Width of groove:',3F13.5/
+T2,'                     Width of tip:',3F13.5/
+T2,'      Width of upper support rail:',3F13.5/
+T2,'      Width of lower support rail:',3F13.5/
+T2,'           Z of top/bottom of tip:',3F13.5/
+T2,'          Z of top/bottom of leaf:',3F13.5/
+T2,'        Z of top/bottom of tongue:',3F13.5/
+T2,'        Z of top/bottom of groove:',3F13.5/
+T2,'   Z of top of driving screw hole:',3F13.5/
+T2,'Z of bottom of driving screw hole:',3F13.5/
+T2,'   Distance of hole from leaf tip:',3F13.5/
+T2,'         Z of top of support rail:',3F13.5/
+T2,'      Z of bottom of support rail:',3F13.5);
+129 FORMAT(/
+T2,' Leaves     type            ',A1,' range             ',A1,
+' coordinates of opening'/
+T2,'                           spanned (cm)              NEG   (cm)   POS');
+130 FORMAT(T2,I3,'-',I3,5X,A3,4X,F10.5,' - ',F10.5,5X,F10.5,5X,F10.5);
+131 FORMAT(/T2,'$SYNCHDMLC region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  location  electron  photon',
+               '  range-rejection   dose  bit  medium'
+           /T2,'region            cutoff   cutoff',
+               '   level     max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+               '   (MeV)    (MeV)');
+140 FORMAT(T2,I3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,3X,9A1);
+141 FORMAT(T9,A7);
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+
+IF (IWATCH=4|IZLAST=2) [   "Graphics file requested"
+   ;
+    ]
+; "End of graphics output"
+
+200 FORMAT(' ',I1,A3,A1,10(F7.2,','));
+RETURN;
+END;
+
+%E "Start of subroutine HOWNEAR_$SYNCHDMLC (Rev 1.4)"
+"***********************************************************************"
+"                                                                       "
+"                          Subroutine HOWNEAR_$SYNCHDMLC               "
+"                          ******************************               "
+"                                                                       "
+" Calculates min. distance to nearest region boundary                   "
+" Used to be HOWNEAR macro, but is now called from that macro.          "
+"                                                                       "
+"***********************************************************************"
+
+;SUBROUTINE HOWNEAR_$SYNCHDMLC(DIST_sngl);
+;
+$IMPLICIT-NONE;
+
+COMIN/CMs,CM_$SYNCHDMLC,STACK,USER,EGS-IO/;
+
+$REAL   DIST_sngl; "T> min. distance to nearest region boundary"
+DOUBLE PRECISION   XYL1,XYL2, "T> X(NP) and Y(NP)"
+                   XoN, XoP, DIST,
+                   UVL1,UVL2,
+                   TEMP1,TEMP2,TEMP3,TEMP4,
+                   TEMP5,TEMP6,HOLE, "T> temp. distance variables"
+                   XL,XR,Lo,Ro,Zo;          "T>temp distance variables"
+$INTEGER I,J, "T> looping index"
+         NZ, "T> index of subregion in Z direction"
+         NY, "T> index of subregion perpendicular to leaf opening direction"
+         NX, "T> index of subregion in direction of leaf opening"
+         LEAFIS, "T> leaf no. where particle is located"
+         I1,I2; "T> used to mark min. max. Z boundaries for calculating dist"
+
+
+IR_$SYNCHDMLC=IR(NP)-IRSTART_$SYNCHDMLC +1;
+"IR_$SYNCHDMLC=IR(NP)-IRSTART_$SYNCHDMLC; CB"
+IF(IR_$SYNCHDMLC=4) [ "in the air gap at the top"
+  DIST=MIN(Z(NP)-ZFRONT_$SYNCHDMLC,ZMIN_$SYNCHDMLC-Z(NP));
+  ]
+
+ELSE [
+  IF(ORIENT_$SYNCHDMLC=1) [ XYL1=Y(NP);XYL2=X(NP);UVL1=V(NP);UVL2=U(NP); ]
+  ELSE [ XYL1=X(NP);XYL2=Y(NP);UVL1=U(NP);UVL2=V(NP);];
+
+  IF(IGNOREGAPS_$SYNCHDMLC=1 & XYL2 < MIN_PLANE_$SYNCHDMLC &
+  XYL1 > SURPARA1_$SYNCHDMLC(1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)) &
+  XYL1 <
+  SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))
+   & IR_$SYNCHDMLC=2)[
+   "particle within negative leaves, ignore air gaps for range rejection"
+
+   "distance to most -ve leaf side...note this is to the tip of the tongue"
+   TEMP1=SURPARA1_$SYNCHDMLC(1,1);
+   TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+
+   "distance to most +ve leaf side...note this is to the back of the last"
+   "leaf...ie not to the groove"
+   TEMP2=SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7);
+   TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/SQRT(1+TEMP2**2));
+
+   DIST=MIN(Z(NP)-ZMIN_$SYNCHDMLC,ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC-Z(NP),
+           MIN_PLANE_$SYNCHDMLC-XYL2,TEMP1,TEMP2);
+  ]
+  ELSEIF(IGNOREGAPS_$SYNCHDMLC=1 & XYL2 > MAX_PLANE_$SYNCHDMLC &
+  XYL1 > SURPARA1_$SYNCHDMLC(1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)) &
+  XYL1 < SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*
+       (Z(NP)-ZFOCUS_$SYNCHDMLC(1)) &IR_$SYNCHDMLC=2)[
+   "particle within positive leaves, ignore air gaps for range rejection"
+
+   "distance to most -ve leaf side...note this is to the tip of the tongue"
+   TEMP1=SURPARA1_$SYNCHDMLC(1,1);
+   TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/SQRT(1+TEMP1**2));
+
+   "distance to most +ve leaf side...note this is to the back of the last"
+   "leaf...ie not just to the groove"
+   TEMP2=SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7);
+   TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/SQRT(1+TEMP2**2));
+
+   DIST=MIN(Z(NP)-ZMIN_$SYNCHDMLC,ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC-Z(NP),
+           XYL2-MAX_PLANE_$SYNCHDMLC,TEMP1,TEMP2);
+  ]
+  ELSE["do not ignore air gaps for range rejection"
+
+LEAFIS=0; "Determine which leaf we are in, I is index of leaf number"
+DO I = 1,TOT_LEAF_$SYNCHDMLC [
+    TEMP1=SURPARA1_$SYNCHDMLC(I,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+    TEMP2=SURPARA1_$SYNCHDMLC(I,7)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+    IF(XYL1>=TEMP1 & TEMP2>=XYL1) [
+       LEAFIS=I; EXIT;];
+ ];
+
+IF(LEAFIS~=0) [
+  TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+  TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+  IF(XYL1<TEMP1)[
+    NY=1;
+  ]
+  ELSEIF(XYL1>TEMP2)[
+    NY=6;
+  ]
+  ELSE[
+
+    DO J =1,6 [ "Determine which Y region we are in"
+      TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,J)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+      TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,J+1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+      IF(TEMP1<=XYL1 & XYL1<=TEMP2) [NY=J; EXIT;]
+      ];
+  ]
+  IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+    NZ=1;
+  ]
+  ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+    NZ=9;
+  ]
+  ELSE[
+    DO J = 1,9 [ "Determine which Z region we are in for leaf I"
+   IF((ZREG_$SYNCHDMLC(LEAFIS,J)<=Z(NP))&(Z(NP)<=ZREG_$SYNCHDMLC(LEAFIS,J+1)))[
+       NZ=J; EXIT;];
+    ];
+  ]
+
+  "Check if we are in groove on leaf and move to adjacent leaf"
+  IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+				   "target leaf"
+    IF((NY=5|NY=6) & (NZ=7|NZ=8|NZ=9) & LEAFIS~=TOT_LEAF_$SYNCHDMLC) [
+       IF(XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
+          LEAFIS=LEAFIS+1;
+          TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+          IF(XYL1<TEMP1)[
+            NY=1;
+          ]
+          ELSEIF(XYL1>TEMP2)[
+            NY=6;
+          ]
+          ELSE[
+            DO J=1,6 [ "recheck Y region"
+             TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,J)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+             TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,J+1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1));
+             IF(TEMP1<=XYL1 & XYL1<=TEMP2) [NY=J; EXIT;]
+            ];
+          ]
+          IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+            NZ=1;
+          ]
+          ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+            NZ=9;
+          ]
+          ELSE[
+            DO J= 1,9 [ "recheck Z region"
+              IF((ZREG_$SYNCHDMLC(LEAFIS,J)<=Z(NP))
+               & (Z(NP)<=ZREG_$SYNCHDMLC(LEAFIS,J+1)) ) [NZ=J; EXIT;];
+            ];
+          ]
+         ];
+       ];
+      ]
+    ELSE [ "we are on a full leaf or isocenter leaf"
+       IF((NY=6 & NZ<=4 & LEAFIS~=TOT_LEAF_$SYNCHDMLC &
+           (LEAFTYPE_$SYNCHDMLC(LEAFIS)=1 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=3))
+            | (NY=6 & NZ<4 & LEAFIS~=TOT_LEAF_$SYNCHDMLC &
+            LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) [
+          "EH - for halfiso shouldn't the condition be NZ<4??"
+          "CB - I agree, but for quarter iso"
+
+          IF(XYL1>SURPARA1_$SYNCHDMLC(LEAFIS+1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
+             LEAFIS=LEAFIS+1; NY=1;
+             IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+                NZ=1;
+             ]
+             ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+                NZ=9;
+             ]
+             ELSE[
+               DO J=1,9 [ "recheck Z region"
+                  IF((ZREG_$SYNCHDMLC(LEAFIS,J)<=Z(NP))
+                   & (Z(NP)<=ZREG_$SYNCHDMLC(LEAFIS,J+1))) [NZ=J; EXIT;];
+               ];
+             ]
+             "***check that we have not moved into air gap on next leaf**"
+             IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+                "target leaf"
+                IF(NZ>=6) [LEAFIS=LEAFIS-1; NY=6; "****************"
+                  IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+                    NZ=1;
+                  ]
+                  ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+                    NZ=9;
+                  ]
+                  ELSE[
+                       DO J=1,9 [ "recheck Z"
+                         IF((ZREG_$SYNCHDMLC(LEAFIS,J)<=Z(NP))
+                         & (Z(NP)<=ZREG_$SYNCHDMLC(LEAFIS,J+1))) [NZ=J; EXIT;];
+                       ];
+                  ]
+                ];
+             ]
+             ELSE ["full leaf"
+                 IF(NZ>=4) [LEAFIS=LEAFIS-1; NY=6; "****************"
+                  IF(Z(NP)<ZREG_$SYNCHDMLC(LEAFIS,1))[
+                    NZ=1;
+                  ]
+                  ELSEIF(Z(NP)>ZREG_$SYNCHDMLC(LEAFIS,10))[
+                    NZ=9;
+                  ]
+                  ELSE[
+                   DO J=1,9 [ "recheck Z"
+                    IF((ZREG_$SYNCHDMLC(LEAFIS,J)<=Z(NP))
+                    & (Z(NP)<=ZREG_$SYNCHDMLC(LEAFIS,J+1))) [NZ=J; EXIT;];
+                   ];
+                  ]
+                 ];
+                ]
+           ];
+         ];
+      ];
+
+  "Determine which X region we are in"
+  IF(ENDTYPE_$SYNCHDMLC=1) [ "Focused leaf end"
+    TEMP1=SURPARA2_B_$SYNCHDMLC(LEAFIS)*(Z(NP)-ZFOCUS_$SYNCHDMLC(2));
+    TEMP2=SURPARA2_A_$SYNCHDMLC(LEAFIS)*(Z(NP)-ZFOCUS_$SYNCHDMLC(2));
+    HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
+    TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
+    TEMP4=LEAFA_$SYNCHDMLC(LEAFIS)+HOLE;
+    IF((XYL2>TEMP1 & XYL2<TEMP2) | (XYL2=TEMP1 & UVL2>=0.0) |
+       (XYL2=TEMP2 & UVL2<0.0)) [NX=1;]
+    ELSEIF((XYL2<TEMP1 & XYL2>TEMP3) | (XYL2=TEMP1 & UVL2>=0.0) |
+           (XYL2=TEMP3 & UVL2>=0.0)) [NX=3;]
+    ELSEIF((XYL2<TEMP3) | (XYL2=TEMP3 & UVL2<0.0)) [NX=2;]
+    ELSEIF((XYL2>TEMP2 & XYL2<TEMP4) | (XYL2=TEMP2 & UVL2>=0.0) |
+           (XYL2=TEMP4 & UVL2<0.0)) [NX=4;]
+    ELSEIF((XYL2>TEMP4) | (XYL2=TEMP4 & UVL2>=0.0)) [NX=5;]
+  ]
+  ELSE ["Rounded leaf end"
+    XoN=LEAFB_$SYNCHDMLC(LEAFIS)-LEAFRADIUS_$SYNCHDMLC;
+    XoP=LEAFA_$SYNCHDMLC(LEAFIS)+LEAFRADIUS_$SYNCHDMLC;
+    Zo=ZMIN_$SYNCHDMLC + (ZTHICK_$SYNCHDMLC)/2;
+    TEMP1=SQRT((XYL2-XoN)**2+(Zo-Z(NP))**2)-LEAFRADIUS_$SYNCHDMLC;
+    TEMP2=SQRT((XYL2-XoP)**2+(Zo-Z(NP))**2)-LEAFRADIUS_$SYNCHDMLC;
+    HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
+    TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
+    TEMP4=LEAFA_$SYNCHDMLC(LEAFIS)+HOLE;
+    IF(XYL2>=XoN & XYL2<=XoP & ((TEMP1>0.0 & TEMP2>0.0) |
+       (TEMP1=0.0 & UVL2*(XYL2-XoN)+W(NP)*(Z(NP)-Zo)>0.0) |
+       (TEMP2=0.0 & UVL2*(XYL2-XoP)+W(NP)*(Z(NP)-Zo)>0.0))) [NX=1;]
+    ELSEIF((TEMP1<0.0 & XYL2>TEMP3) | (XYL2=TEMP3 & UVL2>0.0) |
+           (TEMP1=0.0 & UVL2*(XYL2-XoN)+W(NP)*(Z(NP)-Zo)<=0.0)) [NX=3;]
+    ELSEIF((XYL2<TEMP3) | (XYL2=TEMP3 & UVL2<=0.0)) [NX=2;]
+    ELSEIF((TEMP2<0.0 & XYL2<TEMP4) | (XYL2=TEMP4 & UVL2<0.0) |
+           (TEMP2=0.0 & UVL2*(XYL2-XoP)+W(NP)*(Z(NP)-Zo)<=0.0)) [NX=4;]
+    ELSEIF((XYL2>TEMP4) | (XYL2=TEMP4 & UVL2>=0.0)) [NX=5;]
+  ];
+
+
+   "--> 2) 7 Jul 2009"
+   "Set minimum and maximum Z boundaries"
+    IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+      "Quarter or Half Target leaf"
+
+      IF((NY=1|NY=2) & NZ<=3) [I1=1; I2=4;]
+      ELSEIF(NY=1 & NZ=5) [I1=5; I2=6;]
+      ELSEIF(NY=1 & NZ>=6) [I1=6; I2=10;]
+      ELSEIF(NZ=4) [I1=4; I2=5;]
+      ELSEIF((NY=2|NY=3) & NZ>=8) [I1=8; I2=10;]
+      ELSEIF((NY=3|NY=4|NY=5) & NZ=1) [I1=1; I2=2;]
+      ELSEIF((NY=3|NY=4|NY=5) & NZ=2) [I1=2; I2=3;]
+      ELSEIF(NY>=3 & NZ=3) [I1=3; I2=4;]
+      ELSEIF((NY=2|NY=3) & (NZ=5|NZ=6|NZ=7)) [I1=5; I2=8;]
+      ELSEIF(NY=4 & (NZ=5|NZ=6|NZ=7|NZ=8)) [I1=5; I2=9;]
+      ELSEIF(NY=4 & NZ=9) [I1=9; I2=10;]
+      ELSEIF((NY=5|NY=6) & (NZ=5|NZ=6)) [I1=5; I2=7;]
+      ELSEIF((NY=5|NY=6) & NZ>=7) [I1=7; I2=10;]
+      ELSEIF(NY=6 & NZ<=2) [I1=1; I2=3;]
+
+    ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=1) [
+      "Full leaf"
+
+      IF((NY=1|NY=2) & NZ=1) [I1=1; I2=2;]
+      ELSEIF(NY=1 & (NZ=2|NZ=3)) [I1=2; I2=4;]
+      ELSEIF(NY=1 & NZ>=4) [I1=4; I2=10;]
+      ELSEIF(NY=2 & (NZ=2|NZ=3|NZ=4|NZ=5)) [I1=2; I2=6;]
+      ELSEIF(NY>=2 & NZ=6) [I1=6; I2=7;]
+      ELSEIF((NY=2|NY=3|NY=4) & NZ=7) [I1=7; I2=8;]
+      ELSEIF(NY=2 & NZ>=8) [I1=8; I2=10;]
+      ELSEIF((NY=3|NY=4|NY=5) & (NZ=1|NZ=2)) [I1=1; I2=3;]
+      ELSEIF((NY=3|NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [I1=3; I2=6;]
+      ELSEIF(NY=3 & NZ>=8) [I1=8; I2=10;]
+      ELSEIF(NY=4 & NZ=8) [I1=8; I2=9;]
+      ELSEIF(NY=4 & NZ=9) [I1=9; I2=10;]
+      ELSEIF((NY=5|NY=6) & NZ>=7) [I1=7; I2=10;]
+      ELSEIF(NY=6 & NZ<=4) [I1=1; I2=5;]
+      ELSEIF(NY=6 & NZ=5) [I1=5; I2=6;]
+
+    ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=3) [
+      "Half Isocenter leaf"
+
+      IF((NY=1|NY=2) & NZ<=3) [I1=1; I2=4;]
+      ELSEIF((NY=1|NY=2) & (NZ=4|NZ=5)) [I1=4; I2=6;]
+      ELSEIF(NZ=6) [I1=6; I2=7;]
+      ELSEIF(NY<=4 & NZ=7) [I1=7; I2=8;]
+      ELSEIF(NY=1 & NZ>=8) [I1=8; I2=10;]
+      ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [I1=8; I2=9;]
+      ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [I1=9; I2=10;]
+      ELSEIF(NY=3 & NZ=1) [I1=1; I2=2;]
+      ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [I1=2; I2=6;]
+      ELSEIF((NY=4|NY=5) & NZ<=2) [I1=1; I2=3;]
+      ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [I1=3; I2=6;]
+      ELSEIF((NY=5|NY=6) & NZ>=7) [I1=7; I2=10;]
+      ELSEIF(NY=6 & NZ<=4) [I1=1; I2=5;]
+      ELSEIF(NY=6 & NZ=5) [I1=5; I2=6;]
+
+    ] ELSE [
+      "Quarter Isocenter leaf"
+
+      "!= from Half Isocenter"
+      IF((NY=1|NY=2) & NZ<=4) [I1=1; I2=5;]
+      "!= from Half Isocenter"
+      ELSEIF((NY=1|NY=2) & (NZ=5)) [I1=5; I2=6;]
+      ELSEIF(NZ=6) [I1=6; I2=7;]
+      ELSEIF(NY<=4 & NZ=7) [I1=7; I2=8;]
+      ELSEIF(NY=1 & NZ>=8) [I1=8; I2=10;]
+      ELSEIF((NY=2|NY=3|NY=4) & NZ=8) [I1=8; I2=9;]
+      ELSEIF((NY=2|NY=3|NY=4) & NZ=9) [I1=9; I2=10;]
+      ELSEIF(NY=3 & NZ=1) [I1=1; I2=2;]
+      ELSEIF(NY=3 & (NZ=2|NZ=3|NZ=4|NZ=5)) [I1=2; I2=6;]
+      ELSEIF((NY=4|NY=5) & NZ<=2) [I1=1; I2=3;]
+      ELSEIF((NY=4|NY=5) & (NZ=3|NZ=4|NZ=5)) [I1=3; I2=6;]
+      ELSEIF((NY=5|NY=6) & NZ>=7) [I1=7; I2=10;]
+      "!= from Half Isocenter"
+      ELSEIF(NY=6 & NZ<=3) [I1=1; I2=4;]
+      "!= from Half Isocenter"
+      ELSEIF(NY=6 & (NZ=4|NZ=5)) [I1=4; I2=6;]
+
+    ];
+
+    DIST=MIN(ABS(ZREG_$SYNCHDMLC(LEAFIS,I1)-Z(NP)),
+             ABS(ZREG_$SYNCHDMLC(LEAFIS,I2)-Z(NP)));
+
+    "Calculates distance to closest boundary in z direction"
+    "--> 3) 7 Jul 2009"
+    "Calculate distance to nearest boundary perpendicular to leaf openings --->"
+    IF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=2 | LEAFTYPE_$SYNCHDMLC(LEAFIS)=4) [
+      "Target leaf"
+
+       IF(NZ=1 & NY<=5) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+
+      ] ELSEIF(NZ=1 & NY=6) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+        ] ELSE [
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);
+        ]
+
+      ] ELSEIF(NZ=2 & NY<=2) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+
+      ] ELSEIF(NZ=2 & NY>=3) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,3);]
+
+      ] ELSEIF(NZ=3|NZ=4|NZ=5) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+
+      ] ELSEIF(NY=1 & (NZ=6|NZ=7)) [
+
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+
+      ] ELSEIF(NY>=2 & NZ=6) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+
+      ] ELSEIF(NZ=7 & (NY=2|NY=3|NY=4)) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+
+      ] ELSEIF((NZ=7|NZ=8) & NY>=5) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+          TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+
+      ] ELSEIF(NZ=8 & NY<=3) [IF(LEAFIS=1) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+
+      ]
+     ELSEIF(NZ=8 & NY=4) [
+       TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+       TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+      ]
+     ELSEIF(NZ=9) [IF(LEAFIS=1) [
+       TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+       ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+       IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [
+         TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+       ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+     ]
+    ] ELSEIF(LEAFTYPE_$SYNCHDMLC(LEAFIS)=1) ["Full leaf"
+      IF(NZ=1) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,6);]
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+       ]
+      ELSEIF(NZ=2 & NY<=2) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+       ]
+      ELSEIF(NZ=2 & NY>=3) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+       ]
+      ELSEIF(NZ=3 & NY<=5) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+       ]
+      ELSEIF((NZ=3|NZ=4) & NY=6) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);]
+       ]
+      ELSEIF((NZ=4|NZ=5|NZ=6|NZ=7) & NY=1) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+       ]
+      ELSEIF(NZ=4 & (NY=2|NY=3|NY=4|NY=5)) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+       ]
+      ELSEIF((NZ=5|NZ=6|NZ=7) & NY>=2) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+      ELSEIF(NZ=8 & NY<=4) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+       ]
+      ELSEIF(NZ=8 & NY>=5) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+      ELSEIF(NZ=9 & NY<=3) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+       ]
+      ELSEIF(NZ=9 & NY>=4) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+     ]
+    ELSE ["Isocenter leaf"
+      "EH - because the quarter and half leaves are slightly different"
+      "     you will need a modification for NZ=4 and NY=6"
+
+      IF(NZ=1) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);];
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
+       ]
+      ELSEIF(((NZ=2|NZ=3) & (NY=1|NY=2)) |
+          ((NY<3) & (NZ=4) & LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,7);];
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+       ]
+      ELSEIF(NZ=2 & NY=3) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+       ]
+      ELSEIF(NZ=2 & NY>=4) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,4);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
+       ]
+      ELSEIF(NZ=3 & (NY=3|NY=4|NY=5)) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+       ]
+      ELSEIF((NZ=3 & NY=6)
+              | (NZ=4 & NY=6 & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=3))) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+        IF(LEAFIS=TOT_LEAF_$SYNCHDMLC) [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);]
+        ELSE [TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS+1,1);];
+       ]
+      ELSEIF (NZ=4 & NY>=3
+              & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,3);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+     " ELSEIF (NZ=4 & NY<3"
+      "        & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=5)) ["
+
+      "  IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]"
+      "  ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);];"
+      "  TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,3);"
+     " ]"
+      ELSEIF(NZ=4 & NY<=5 & (LEAFTYPE_$SYNCHDMLC(LEAFIS)=3)) [
+
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,6);
+       ]
+      ELSEIF(NZ=5|NZ=6|NZ=7) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+      ELSEIF(NZ=8 & NY<=4) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);];
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+       ]
+      ELSEIF(NZ=8 & NY>=5) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,5);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+      ELSEIF(NZ=9 & NY=1) [
+        IF(LEAFIS=1) [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,1);]
+        ELSE [TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS-1,5);]
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+       ]
+      ELSEIF(NZ=9 & NY>=2) [
+        TEMP1=SURPARA1_$SYNCHDMLC(LEAFIS,2);
+        TEMP2=SURPARA1_$SYNCHDMLC(LEAFIS,7);
+       ]
+     ];
+    TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
+          SQRT(1+TEMP1**2));
+    TEMP2=ABS((TEMP2*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
+          SQRT(1+TEMP2**2));
+
+    DIST = MIN(DIST,TEMP1,TEMP2);
+ "NOW CHECK DISTANCE IN X DIRECTION"
+    IF(ENDTYPE_$SYNCHDMLC=1) [ "focused leaf end"
+      TEMP1=SURPARA2_B_$SYNCHDMLC(LEAFIS);
+      TEMP1=1/SQRT(1+TEMP1**2);
+      TEMP2=SURPARA2_A_$SYNCHDMLC(LEAFIS);
+      TEMP2=1/SQRT(1+TEMP2**2);
+      HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
+      TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
+      TEMP4=LEAFA_$SYNCHDMLC(LEAFIS)+HOLE;
+      TEMP5=SURPARA2_B_$SYNCHDMLC(LEAFIS)*(Z(NP)-ZFOCUS_$SYNCHDMLC(2));
+      TEMP6=SURPARA2_A_$SYNCHDMLC(LEAFIS)*(Z(NP)-ZFOCUS_$SYNCHDMLC(2));
+      IF(NX=1) [
+        XL=ABS((TEMP5-XYL2)*TEMP1);
+        XR=ABS((TEMP6-XYL2)*TEMP2);
+       ]
+      ELSEIF(NX=2) [
+        XL=ABS(RMAX_CM(ICM_$SYNCHDMLC)-XYL2);
+        XR=ABS(TEMP3-XYL2);
+       ]
+      ELSEIF(NX=3) [
+        XL=ABS(XYL2-TEMP3);
+        XR=ABS((TEMP5-XYL2)*TEMP1);
+       ]
+      ELSEIF(NX=4) [
+        XL=ABS((XYL2-TEMP6)*TEMP2);
+        XR=ABS(XYL2-TEMP4);
+       ]
+      ELSEIF(NX=5) [
+        XL=ABS(XYL2-TEMP4);
+        XR=ABS(RMAX_CM(ICM_$SYNCHDMLC)-XYL2);
+       ]
+      DIST=MIN(DIST,XL,XR);
+     ]
+    ELSE ["rounded leaf end"
+      TEMP1=ABS(SQRT((Z(NP)-(ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC/2))**2+
+                     (XYL2-(LEAFB_$SYNCHDMLC(LEAFIS)-LEAFRADIUS_$SYNCHDMLC))**2)-
+                      LEAFRADIUS_$SYNCHDMLC);
+      TEMP2=ABS(SQRT((Z(NP)-(ZMIN_$SYNCHDMLC+ZTHICK_$SYNCHDMLC/2))**2+
+                     (XYL2-(LEAFA_$SYNCHDMLC(LEAFIS)+LEAFRADIUS_$SYNCHDMLC))**2)-
+                     LEAFRADIUS_$SYNCHDMLC);
+      HOLE=HOLEPOS_$SYNCHDMLC(LEAFIS);
+      TEMP3=LEAFB_$SYNCHDMLC(LEAFIS)-HOLE;
+      TEMP4=LEAFA_$SYNCHDMLC(LEAFIS)+HOLE;
+      IF(NX=1) [
+        XL=TEMP1;
+        XR=TEMP2;
+        ]
+      IF(NX=3) [
+        XL=ABS(XYL2-TEMP3);
+        XR=TEMP1;
+       ]
+      IF(NX=2) [
+        XL=ABS(-RMAX_CM(ICM_$SYNCHDMLC)-XYL2);
+        XR=ABS(XYL2-TEMP3);
+       ]
+      IF(NX=4) [
+        XL=TEMP2;
+        XR=ABS(TEMP4-XYL2);
+       ]
+      IF(NX=5) [
+        XL=ABS(XYL2-TEMP4);
+        XR=ABS(RMAX_CM(ICM_$SYNCHDMLC)-XYL2);
+       ]
+      DIST=MIN(DIST,XL,XR);
+    ]
+IF(DIST<0) [OUTPUT LEAFIS,NX,NY,NZ; ('negative dist: ',4I3);]
+ ]
+ELSE[ "beyond outer edges of leaf bank"
+  IF(XYL1 <= SURPARA1_$SYNCHDMLC(1,1)*(Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
+      TEMP1=SURPARA1_$SYNCHDMLC(1,1);
+      TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
+                 SQRT(1+TEMP1**2));
+    ]
+  ELSEIF(XYL1 >= SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7)*
+                   (Z(NP)-ZFOCUS_$SYNCHDMLC(1)))[
+      TEMP1=SURPARA1_$SYNCHDMLC(TOT_LEAF_$SYNCHDMLC,7);
+      TEMP1=ABS((TEMP1*(Z(NP)-ZFOCUS_$SYNCHDMLC(1))-XYL1)/
+                 SQRT(1+TEMP1**2));
+    ]
+  DIST=MIN(Z(NP)-ZMIN_$SYNCHDMLC,ZMAX_$SYNCHDMLC-Z(NP),TEMP1);
+ ]
+ ]
+ ];
+ DIST_sngl=SNGL(DIST);
+RETURN;
+END; "End of subroutine HOWNEAR_$SYNCHDMLC(Rev 1.4)"
+"************************************************************************"
+"End of SYNCHDMLC_cm.mortran (Rev 1.4)"
+
+

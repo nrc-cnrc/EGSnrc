@@ -1,0 +1,1401 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: 3-region stacked truncated cones          "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Charlie Ma                                                "
+"                   Dave Rogers                                               "
+"                   Joanne Treurniet                                          "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             **************                 ""toc:
+"                             *            *                 ""toc:
+"                             *   CONS3R   *                 ""toc:
+"                             *            *                 ""toc:
+"                             **************                 ""toc:
+"
+"   History of modifications given by SCCS
+"
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  It is can be used for any case for r symmetry
+"   if there are only two region in r direction, e.g, slab, ring, stack rings,
+"   cone(primary collimator), cone stack. limit: the first version only can
+"   allow the convex shapes in z direction, not the concave shapes, if required,
+"   can be changed.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator: primary collimator
+"
+%E   "$CONS3R_cm   start of geometry description (CONS3R)
+"I>
+"I> Geometry of $CONS3R: (CONS3R: Rev 1.10) ""toc:
+"I> *********************************
+"I>                                        |
+"I>                            |           |  beam direction
+"I>                            .           |
+"I>                            |          \|/
+"I>                            .           .
+"I>                  ----------------------------------------------
+"I>                            |    Air gap IR= 3 if it exists
+"I>                  ----------------------------/------------------
+"I>                            .                / point 1
+"I>                            |       point 2 /
+"I>                            .               \ IR = 2
+"I>                            |        IR = 1  \  point 3
+"I>                            .                /
+"I>                                            /
+"I>              central axis  |               \ point i-1
+"I>                            .                \
+"I>                            |                 \ point i
+"I>                            .                 /
+"I>                            |                / point i+1
+"I>                            .                \
+"I>                            |                 \
+"I>                            .                  \ .....
+"I>                            |                  |
+"I>                            .                  |
+"I>                            |                  |
+"I>                            .                  | point n
+"I>                  ----------------------------------------------
+"I>
+"I>
+"I>
+"I>
+"I>   IR is the region number within the CM.  There are three local regions
+"I>   shown above.
+"I>
+"I>
+"I>            ------------------------------------------------------
+"I>            |             Region            | Description         |
+"I>            |-------------------------------|---------------------|
+"I>            |  absolute       | local       |                     |
+"I>            |-----------------|-------------|                     |
+"I>            |                 |             |                     |
+"I>            |IRSTART_CONS3R   | IR_CONS3R   |  as shown in above  |
+"I>            |  +IR_CONS3R-1   |             |    (1 to 2)         |
+"I>            |                 |             |                     |
+"I>            |                 |             |                     |
+"I>            -------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$CONS3R
+"                      ISUMRY_$CONS3R
+"                      HOWFAR_$CONS3R
+"                      WHERE_AM_I_$CONS3R
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"
+"                             RESTRICTIONS ON USE/BUGS           ""toc:
+"                             ************************
+"
+"
+"*******************************************************************************
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                             COMMON BLOCK VARIABLES
+"                             **********************
+"
+"  Refer to the replacement macros in BEAM.MORTRAN and BEAM_COMMON.MORTRAN
+"  which define the common block variables.
+"
+"*******************************************************************************
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+"*******************************************************************************
+"
+"                    Description of user input for CONS3R        ""toc:
+"                    ************************************        ""toc:
+"
+"I>
+"I>  CARDS CM_$CONS3R (CONS3R: Rev 1.10)
+"I>  **************
+"I>
+"I>   -1 Dummy line to indicate start of CM
+"I>
+"I>   0  RMAX_CM(ICM_$CONS3R) (F10.0):  Outer radial boundary of CM (cm).
+"I>
+"I>   1  TITLE_$CONS3R (60A1):  Title of CM.
+"I>
+"I>   2  ZMIN_$CONS3R (F15.0):  Dist from front of cones to
+"I>                             reference plane (Z=0).
+"I>
+"I>   3  ZTHICK_$CONS3R (F15.0): The thickness of cones (excludes front air).
+"I>
+"I>   4  NUM_NODE_$CONS3R (I5):  The # of points to be used <$NPOINT_CONS3R.
+"I>
+"I>   Repeat 5 for I=1,NUM_NODE_$CONS3R
+"I>
+"I>   5  ZCORNER_$CONS3R(I), RCORNER_$CONS3R(I) (2F15.0):
+"I>        Positions (Z, R) for node I.  First & last must match
+"I>        ZMIN_$CONS3R and ZMIN_$CONS3R+ZTHICK_$CONS3R.  Note also the
+"I>        restriction Z(I+1) >= Z(I).
+"I>
+"I>   Repeat 6, 7 for inner (ie inside cons3r), then outer region
+"I>
+"I>   6  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, IREJCTIN  (2F15.0,3I5):
+"I>
+"I>         ECUT, PCUT:  Cutoff energies for electrons and photons.
+"I>         DOSE_ZONE:   If non-zero, dose in this zone is scored in this
+"I>                      dose zone
+"I>         IREGION_TO_BIT:   region to LATCH bit correspondence for particles
+"I>                      interacting in this region
+"I>         IREJCTIN:    If IREJCT_GLOBAL is on, then by setting IREJCT=-1
+"I>                      here, range rejection is turned off in this region
+"I>                      If left blank or zero, the global value is used.
+"I>
+"I>   7  MED_IN (24A1):  Medium of region
+"I>                      used to set MED_INDEX.
+"I>
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following input example describes a 1cm thick flat-top cone, having
+"I>  a radius at the top of 0.8cm and a radius at the bottom of 1.2cm
+"I>  sitting on a 0.3cm thick cylinder of radius 1.5cm which, in turn,
+"I>  is sitting atop a flat-top cone of thickness 1.0cm with top radius
+"I>  0.5cm and bottom radius=0.8cm.  The two cones and cylinder are
+"I>  made of H2O--note that all of these structures MUST be of the same
+"I>  medium--and they are surrounded by AIR.  Dose in the surrounding
+"I>  AIR is stored in dose zone 1, and dose in the cones/cylinder
+"I>  structure is stored in zone 2.
+"I>
+"I>  5.0
+"I>  example cons3r
+"I>  0.0
+"I>  2.3
+"I>  6
+"I>  0.0, 0.8
+"I>  1.0, 1.2
+"I>  1.0, 1.5
+"I>  1.3, 1.5
+"I>  1.3, 0.5
+"I>  2.3, 0.8
+"I>  0.521, 0.01, 2, 0, 0
+"I>  H2O
+"I>  0.521, 0.01, 1, 0 ,0
+"I>  AIR
+"I>
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules
+"
+"*******************************************************************************
+
+%E   "CONS3R_cm - start of subroutine HOWFAR_$CONS3R (Rev 1.10)
+"*******************************************************************************
+"*********************** Component Module CONS3R *****************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_$CONS3R
+"                          ************************
+"
+" HOWFAR routine for stacked truncated cones
+"
+" Determine if current region number is within component module CONS3R, if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_$CONS3R local regions + an air gap (if present):
+"
+"     local               absolute                       description
+"   ----------    ------------------------------   ----------------------
+" IR_CONS3R    IR_start_CM(ICM_CONS3R)+IR_CONS3R-1 excluding front air gap
+"   ----------    ------------------------------   -----------------------
+"   Geometrical co-ordinates, as set in INPUT_CONS3R are:
+"
+"   ZFRONT_$CONS3R     front of CM (upstream surface, air region)
+"   ZMIN_$CONS3R       front of CM
+"   ZBACK_$CONS3R      back of CM
+"   RMIN_$CONS3R       smallest radius of the module
+"
+"******************************************************************************
+
+;SUBROUTINE HOWFAR_$CONS3R;
+
+Copyright NRC 1999
+
+"The following macros are used for boundary crossing. The particle is
+"shifted by 1.0E-5 at the end of a step to overcome possible numerical errors
+"V>$GEO_SHIFT_1_(#)
+"V>=============
+"V>{p1} the value to compare with ustep
+"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_1_(#)} WITH {
+; IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]  }
+
+"V>$GEO_SHIFT_2_(#,#)
+"V>=============
+"V>{p1} the value to compare with {P2}
+"V> if {p1}+1.0e-5 < {P2} shift it, otherwise no shift
+;
+REPLACE {$GEO_SHIFT_2_(#,#)} WITH {
+; IF({P1}+1.0E-5< {P2}) [{P1}={P1}+1.0E-5;]  }
+
+;IMPLICIT NONE;
+;COMIN/ CMs,CM_$CONS3R,EPCONT,STACK,EGS-IO/;
+
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_CONS3R
+"T>**********************************
+"T>
+INTEGER
+   IRL,        "T>local region number (absolute), required by HOWNEAR macro
+   I, J, K,    "T>loop control
+   IU_D,       "T>to indicate the relations bet ustep and dist
+   DIRTMP;     "T>temp variable for use as direction indicator in macros
+
+$REAL
+   DIST,         "T>farthest distance to z boundary along current trajectory
+   DIST_TMP,     "T>distance to z boundary along current particle trajectory
+   RF_$CONS3R,   "T>temporary variable
+   RF2_$CONS3R,  "T>temporary variable
+   R0SQ,         "T>temporary init position of the particle in x-y plane
+   R0DELR,       "T>temporary variable for vec r dot vec delta r
+   DELRSQ,       "T>temporary variables for the sq of delta r
+   RV_$CONS3R,   "T>temporary variable  for the r
+   RV2_$CONS3R,  "T>temporary variable  for the r
+   CRITERIOR_IR,
+   R0SQ_2,CRITERIOR_IR_2,  "T>used for boundary crossing
+   A, B, B2, C, TEMP1, CUT_COE1, CUT_COE2, CUT_COE,STEP_UNIT, STEP_UNITOLD,
+                 "T>temporary variables used for quadratic eq.
+   XPLN,YPLN,ZPLN;   "T>temp variable for storing x,y,z after planned step
+
+$REAL one;
+parameter (one = 1);
+
+" Determine local region number
+" *****************************
+IRL = IR(NP); "local region number (absolute)
+IR_$CONS3R = IRL - IRSTART_$CONS3R + 1;   "local region number( relative )
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module CONS3R,if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+;
+R0SQ=X(NP)**2+Y(NP)**2;
+STEP_UNIT=0.0;
+STEP_UNITOLD=0.0;  " this one will be used to control the cut_coe in the loop
+
+" the following block double check:
+"=================================
+"      1. the particle is out of the CM oe regions in z direction
+"      2.                        the regions in r directions
+"     if so reset the ir #, and print out the warning message.
+"comment: this block is not time consumming, can be kept in the final version
+"=======
+"
+"  now do the air gap check if existed.
+"=====================================
+
+IF(N_GAP_$CONS3R = 1 & IR_$CONS3R = 3 ) "  check the air gap first
+[
+   IF(W(NP)>0.0)
+   ["particle going forward"
+      DIST = (ZMIN_$CONS3R - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST < 0.0)
+      [ " particle going forward"
+          USTEP = 0.;
+          IF( R0SQ<RCORNER2_$CONS3R(1) )
+          [  IRNEW =IRSTART_$CONS3R; RETURN;]
+          ELSE[IRNEW =IRSTART_$CONS3R+1; RETURN;]
+      ] " double check if a particle is out of the AIR GAP
+
+   ]
+   ELSEIF(W(NP)<0.0)
+   [ " particle going backward"
+      DIST = (ZFRONT_$CONS3R - Z(NP))/W(NP); "distance to front of CM
+      IF(DIST <= 0.0)
+      [
+          USTEP=1.e-16; "ensures call to ausgab for crossing CM boundary"
+          CALL WHERE_AM_I(ICM_$CONS3R,-1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+]
+ELSEIF(IR_$CONS3R=1 | IR_$CONS3R=2)  " in the local region 1 or 2
+[
+   IF(W(NP) > 0.0)
+   [  "particle going forward"
+      DIST = (ZMAX_$CONS3R - Z(NP))/W(NP); "distance to back of CM
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <=0.0)
+      [
+          USTEP=1.e-16;
+          CALL WHERE_AM_I(ICM_$CONS3R,1);
+          RETURN;
+      ] " double check if a particle is out of the CM
+   ]
+   ELSEIF(W(NP) < 0.0)
+   [  "particle going backward"
+      DIST = (ZMIN_$CONS3R - Z(NP))/W(NP); "distance to back of CM "
+      IF(DIST>USTEP) [ STEP_UNIT=USTEP; IU_D=0; ]
+      ELSE [ STEP_UNIT=DIST; IU_D=1; ]
+      IF(DIST <= 0.)
+      [
+          IF(N_GAP_$CONS3R = 1)
+          [ USTEP=0.; IRNEW =IREND_$CONS3R; RETURN; ]
+          ELSE[ USTEP=1.e-16; CALL WHERE_AM_I(ICM_$CONS3R,-1); RETURN; ]
+      ] " double check if a particle is out of the main body to air gap
+   ]
+]
+
+" end of z direction check
+"=========================
+
+
+" now do the check in r direction
+"================================
+"Note: in some unusual cases, if the particle z(np)=zcorner_CONS3R(i),
+"      the folloing block may print out the error message, but it is not an
+"      error!!
+
+IF(IR_$CONS3R=1 |IR_$CONS3R=2 )[
+      IF(W(NP)>=0.0)[
+          DO I=1, NUM_NODE_$CONS3R[IF(Z(NP)<ZCORNER_$CONS3R(I))[EXIT;] ]
+          J=I-1;
+"         it will never happen j=i-1=num_node_CONS3R
+      ]
+      ELSE[
+          DO I=NUM_NODE_$CONS3R,1,-1[IF(Z(NP)>ZCORNER_$CONS3R(I))[EXIT;]]
+          J=I;
+"         it will never happen j=i=0
+      ]
+      IF(SURPARA_$CONS3R(J,4)<1.0E29)[
+        "SURPARA_$CONS3R(i,1)*R+SURPARA_$CONS3R(i,2)*Z+SURPARA_$CONS3R(i,3)=0
+        IF(COUNT1_$CONS3R>0)[
+           CRITERIOR_IR=CRITOLD_$CONS3R;
+        ]
+        ELSE[
+           CRITERIOR_IR=SQRT(R0SQ)-(RCORNER_$CONS3R(J)
+             +SURPARA_$CONS3R(J,4)*(Z(NP)-ZCORNER_$CONS3R(J)));
+        ]
+
+" the following block is used to control the unusual case, if the particle
+" cannot find the right region, it will be discarded and print the warning
+" message!!!!!!
+"=============================
+
+        IF(CRITERIOR_IR>0.0 & IR_$CONS3R =1 )[
+           "The particle is in the wrong region"
+           "following stmt used to be USTEP=1e-5 but this causes"
+           "problems for low energy electrons where this is > range"
+           "so now we just set USTEP=1e-5 if requested USTEP is"
+           "longer, otherwise we leave it at the electr determined USTEP"
+           "Bug reported by Joanne Moseley and Jeff Chen of London"
+           "regional Cancer center, Dec 1995"
+           IF(USTEP >= 1.0E-5 | USTEP = 0) USTEP=1.0E-5;
+           XPLN=X(NP)+U(NP)*USTEP;
+           YPLN=Y(NP)+V(NP)*USTEP;
+           ZPLN=Z(NP)+W(NP)*USTEP; "found necessary for roundoff errors"
+           R0SQ_2=XPLN**2 + YPLN**2;
+           IF(W(NP)>=0.0)[
+             DO I=1, NUM_NODE_$CONS3R[
+                IF(ZPLN<ZCORNER_$CONS3R(I))[EXIT;]
+             ]
+             K=I-1;
+           ]
+           ELSE[
+             DO I=NUM_NODE_$CONS3R,1,-1[
+                IF(ZPLN>ZCORNER_$CONS3R(I))[EXIT;]
+             ]
+             K=I;
+           ]
+           CRITERIOR_IR_2=SQRT(R0SQ_2)-(RCORNER_$CONS3R(K)+
+                         SURPARA_$CONS3R(K,4)*(ZPLN-ZCORNER_$CONS3R(K)));
+           IF(CRITERIOR_IR_2>0.0)[
+              IRNEW=IRSTART_$CONS3R+1;
+           ]
+           ELSE[
+              IRNEW=IRSTART_$CONS3R;
+           ]
+           COUNT1_$CONS3R=COUNT1_$CONS3R+1;
+           IF(COUNT1_$CONS3R>100)[
+              OUTPUT X(NP),Y(NP),X(NP)**2+Y(NP)**2,Z(NP),U(NP),
+                 V(NP),W(NP),E(NP),IQ(NP);
+                 (/' WARNING FROM CONS3R ($CONS3R):',
+                   ' TAKEN USTEP = 1.0E-5 FOR 100 TIMES, '/
+                   ' BUT THE PARTICLE STILL ENDS UP IN THE WRONG REGION'/
+                   ' (ie INSIDE CONE WHEN IT SHOULD BE OUTSIDE OR VICE VERSA)'/
+                   ' THE PARTICLE HAS BEEN DISCARDED.'/
+                   ' OUTPUT: x,y,r**2,z,u,v,w,E,IQ '/
+                    8F11.6,I3);
+                 IDISC=1;
+                 COUNT1_$CONS3R=0;
+                 USTEP=0.0;
+           ]
+           RETURN;
+        ]
+        ELSEIF(CRITERIOR_IR<0.0 & IR_$CONS3R=2 )[
+           IF(USTEP >= 1.0E-5 | USTEP = 0) USTEP=1.0E-5;
+           XPLN=X(NP)+U(NP)*USTEP;
+           YPLN=Y(NP)+V(NP)*USTEP;
+           ZPLN=Z(NP)+W(NP)*USTEP; "found necessary for roundoff errors"
+           R0SQ_2=XPLN**2 + YPLN**2;
+           IF(W(NP)>=0.0)[
+             DO I=1, NUM_NODE_$CONS3R[
+                IF(ZPLN<ZCORNER_$CONS3R(I))[EXIT;]
+             ]
+             K=I-1;
+           ]
+           ELSE[
+             DO I=NUM_NODE_$CONS3R,1,-1[
+                IF(ZPLN>ZCORNER_$CONS3R(I))[EXIT;]
+             ]
+             K=I;
+           ]
+           CRITERIOR_IR_2=SQRT(R0SQ_2)-(RCORNER_$CONS3R(K)+
+                          SURPARA_$CONS3R(K,4)*(ZPLN-ZCORNER_$CONS3R(K)));
+           IF(CRITERIOR_IR_2<0.0)[
+              IRNEW=IRSTART_$CONS3R;
+           ]
+           ELSE[
+              IRNEW=IRSTART_$CONS3R+1;
+           ]
+           COUNT1_$CONS3R=COUNT1_$CONS3R+1;
+           IF(COUNT1_$CONS3R>100)[
+              OUTPUT X(NP),Y(NP),X(NP)**2+Y(NP)**2,Z(NP),U(NP),
+                 V(NP),W(NP),E(NP),IQ(NP);
+                 (/' WARNING FROM CONS3R ($CONS3R):',
+                   ' TAKEN USTEP = 1.0E-5 FOR 100 TIMES, '/
+                   ' BUT THE PARTICLE STILL ENDS UP IN THE WRONG REGION'/
+                   ' (ie INSIDE CONE WHEN IT SHOULD BE OUTSIDE OR VICE VERSA)'/
+                   ' THE PARTICLE HAS BEEN DISCARDED.'/
+                   ' OUTPUT: x,y,r**2,z,u,v,w,E,IQ '/
+                    8F11.6,I3);
+                 IDISC=1;
+                 COUNT1_$CONS3R=0;
+                 USTEP=0.0;
+           ]
+           RETURN;
+        ]
+        ELSE["no problem, reset the error counter"
+           COUNT1_$CONS3R=0;
+        ]
+      ]
+]
+
+
+" end of the double check in r direction
+"========================================
+
+IF(IR_$CONS3R = 1)
+[   "local region 1
+
+   RF2_$CONS3R=(X(NP)+STEP_UNIT*U(NP))**2+(Y(NP)+STEP_UNIT*V(NP))**2;
+   IF(W(NP) > 0.0)
+   [
+      " do the fast step if possible
+      IF(RF2_$CONS3R<RMIN2_$CONS3R)
+      [
+            IF(IU_D=0)[ RETURN; ]  " ustep admitted"
+            ELSE
+            [
+                $GEO_SHIFT_1_(STEP_UNIT);
+                USTEP=STEP_UNIT;
+                CALL WHERE_AM_I(ICM_$CONS3R,1); RETURN;
+            ]
+      ]
+      ELSE   " answer the question: hits side wall or not and where ?
+      [
+           DO J=I-1, NUM_NODE_$CONS3R-1
+           [ ; $CONS3R_MACRO_1_IN(1,ZCORNER_$CONS3R(J+1),1); ]
+           IF(IU_D=1)
+           [
+                $GEO_SHIFT_1_(DIST);
+                USTEP=DIST;
+                CALL WHERE_AM_I(ICM_$CONS3R,1);
+                RETURN;
+           ]
+           ELSE[ RETURN; ] " ustep admitted and no region # changed "
+       ]
+   ]      " end of the w(np) > 0 case   "
+
+   IF(W(NP) < 0.0)
+   [  "particle going backward"
+      IF(RF2_$CONS3R<RMIN2_$CONS3R)
+      [
+            IF(IU_D=0)[ RETURN; ]  " ustep admitted"
+            ELSE
+            [
+               $GEO_SHIFT_1_(STEP_UNIT);
+               USTEP=STEP_UNIT;
+               IF(N_GAP_$CONS3R = 1)
+               [ IRNEW =IREND_$CONS3R; RETURN; ]
+               ELSE[ CALL WHERE_AM_I(ICM_$CONS3R,-1); RETURN; ]
+            ]
+      ]
+      ELSE   " answer the question: hits side wall or not and where ?
+      [
+           DO J=I, 1, -1
+           [  ;$CONS3R_MACRO_1_IN(1,ZCORNER_$CONS3R(J),-1); ]
+           IF(IU_D=1)
+           [
+               $GEO_SHIFT_1_(DIST);
+               USTEP=DIST;
+               IF(N_GAP_$CONS3R = 1)
+               [ IRNEW =IREND_$CONS3R; RETURN; ]
+               ELSE[ CALL WHERE_AM_I(ICM_$CONS3R,-1); RETURN; ]
+           ]
+           ELSE[ RETURN; ] " ustep admitted and no region # changed "
+      ]
+   ]      " end of the w(np) < 0 case   "
+
+   ELSE   " w(np) = 0 case "
+   [
+        J=I-1;  " no change in z direction, do not need loop
+        RV_$CONS3R=RCORNER_$CONS3R(J)
+               +SURPARA_$CONS3R(J,4)*(Z(NP)-ZCORNER_$CONS3R(J));
+        RV2_$CONS3R=RV_$CONS3R**2;
+        RF2_$CONS3R=(X(NP)+USTEP*U(NP))**2+(Y(NP)+USTEP*V(NP))**2;
+        IF(RF2_$CONS3R<RV2_$CONS3R) [ RETURN; ]
+                        " ustep admitted , no region # changed "
+        ELSE     " solve the equ to get the max ustep  "
+        [
+           R0DELR=X(NP)*U(NP)+Y(NP)*V(NP);
+           DELRSQ=U(NP)*U(NP)+V(NP)*V(NP);
+           CUT_COE=(SQRT(R0DELR*R0DELR+DELRSQ*(RV2_$CONS3R-R0SQ))-R0DELR)/
+                   DELRSQ;
+           IF(CUT_COE>0.0 & CUT_COE<= USTEP)
+           [
+               $GEO_SHIFT_1_(CUT_COE);
+               USTEP=CUT_COE;
+               IRNEW=IRSTART_$CONS3R+1;RETURN;
+           ]
+           ELSE[IRNEW=IRSTART_$CONS3R+1; RETURN;]  " ustep admitted "
+        ]
+   ]   " end of the w(np) =0 case  "
+]
+
+ELSEIF(IR_$CONS3R = 2)
+[ "particle in region 2
+   IF(W(NP) > 0.0)
+   [  "particle going forward"
+       " answer the question: hits side wall or not and where ?
+      DO J=I-1, NUM_NODE_$CONS3R-1
+      [  ;$CONS3R_MACRO_1_OUT(0,ZCORNER_$CONS3R(J+1),1);  ]
+      IF(IU_D=1)
+      [
+          $GEO_SHIFT_1_(DIST);
+          USTEP=DIST;
+          CALL WHERE_AM_I(ICM_$CONS3R,1);
+          RETURN;
+      ]
+      ELSE[ RETURN; ] " ustep admitted and no region # changed "
+   ]      " end of the w(np) > 0 case   "
+
+   IF(W(NP) < 0.0) [  "particle going backward"
+      DO J=I, 1, -1
+      [  ;$CONS3R_MACRO_1_OUT(0,ZCORNER_$CONS3R(J),-1);  ]
+      IF(IU_D=1)
+      [
+         $GEO_SHIFT_1_(DIST);
+         USTEP=DIST;
+         IF(N_GAP_$CONS3R = 1)
+         [ IRNEW =IREND_$CONS3R; RETURN; ]
+         ELSE[ CALL WHERE_AM_I(ICM_$CONS3R,-1); RETURN; ]
+      ]
+      ELSE[ RETURN; ] " ustep admitted and no region # changed "
+   ]      " end of the w(np) < 0 case   "
+
+   ELSE   " w(np) = 0 case "
+   [
+        J=I-1;
+        RV_$CONS3R=RCORNER_$CONS3R(J)
+               +SURPARA_$CONS3R(J,4)*(Z(NP)-ZCORNER_$CONS3R(J));
+        RV2_$CONS3R=RV_$CONS3R**2;
+        " solve the equ to get the max ustep  "
+        R0DELR=X(NP)*U(NP)+Y(NP)*V(NP);
+        DELRSQ=U(NP)*U(NP)+V(NP)*V(NP);
+        IF (R0DELR*R0DELR+DELRSQ*(RV2_$CONS3R-R0SQ) < 0.) [RETURN;]
+        CUT_COE=(-SQRT(R0DELR*R0DELR+DELRSQ*(RV2_$CONS3R-R0SQ))-R0DELR)/
+                   DELRSQ;
+        IF(CUT_COE>0.0 & CUT_COE<= USTEP)
+        [
+          $GEO_SHIFT_1_(CUT_COE);
+          USTEP=CUT_COE;
+          IRNEW = IRSTART_$CONS3R; RETURN;
+        ]
+          ELSE[ RETURN;]   " USTEP ADMITTED
+    ]   " end of the w(np) =0 case  "
+]
+
+
+ELSEIF(IR_$CONS3R = 3)
+["particle in region 3
+   IF(W(NP) > 0.0)
+   ["particle going backward"
+      IF(DIST <= USTEP )
+      ["particle to be moved to region boundary
+         $GEO_SHIFT_1_(DIST);
+         USTEP = DIST;
+         IF( ( (X(NP)+DIST*U(NP))**2+(Y(NP)+DIST*V(NP))**2)
+             <=RCORNER2_$CONS3R(1) )
+         [  IRNEW =IRSTART_$CONS3R; RETURN;]
+         ELSE[IRNEW =IRSTART_$CONS3R+1; RETURN;]
+
+      ] "end of particle going forward
+      ELSE[ RETURN;]
+   ]
+   ELSEIF(W(NP) < 0.0)
+   ["particle going backward"
+      IF(DIST <= USTEP )
+      ["particle to be moved to region boundary
+         $GEO_SHIFT_1_(DIST);
+         USTEP = DIST;
+         CALL WHERE_AM_I(ICM_$CONS3R,-1);
+         RETURN;
+      ]
+      ELSE[RETURN;]
+   ] " end of going backward"
+] " end of region 3
+
+ELSE
+["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$CONS3R+1, IR(NP), ICM_$CONS3R,
+          IR_start_CM(ICM_$CONS3R);
+      (//' ************'//' HOWFAR_$CONS3R error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN;
+END; "End of subroutine HOWFAR_$CONS3R"
+%E   "CONS3R_cm - start of subroutine WHERE_AM_I_$CONS3R (Rev 1.10)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_CONS3R
+"                          ***************************
+"
+" WHERE_AM_I_$CONS3R determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$CONS3R subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$CONS3R from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$CONS3R(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$CONS3R,EPCONT,STACK/;
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_CONS3R
+"T>**************************************
+"T>
+INTEGER IDIR;  "T>direction of particle, +1=forward, -1=backward
+$REAL XBDY_$CONS3R,YBDY_$CONS3R,RBDY2_$CONS3R;
+
+XBDY_$CONS3R = X(NP) + U(NP)*USTEP;      YBDY_$CONS3R = Y(NP) + V(NP)*USTEP;
+RBDY2_$CONS3R = XBDY_$CONS3R**2 + YBDY_$CONS3R**2;
+IF((IRSTART_$CONS3R = 2) & (IDIR =1))    " this is first CM and from front
+[  RBDY2_$CONS3R = X(NP)*X(NP) + Y(NP)*Y(NP); ]
+IF (IDIR=1)
+["particle entering this CM through front face (upstream)
+   IF(N_GAP_$CONS3R = 0)
+   ["no air gap this CM"
+      IF(RBDY2_$CONS3R < RCORNER2_$CONS3R(1)) [ IRNEW = IRSTART_$CONS3R;]
+      ELSE[ IRNEW = IRSTART_$CONS3R + 1; ]
+   ]
+   ELSE ["this CM has air gap at front" IRNEW = IREND_$CONS3R; ]
+]
+ELSE
+["particle entering this CM through back face (downstream)
+   IF(RBDY2_$CONS3R < RCORNER2_$CONS3R(NUM_NODE_$CONS3R))
+   [ IRNEW = IRSTART_$CONS3R; ]
+   ELSE[  IRNEW = IRSTART_$CONS3R + 1; ]
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_$CONS3R"
+%E   "CONS3R_cm - start of subroutine INPUT_$CONS3R (Rev 1.10)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_CONS3R
+"                           **********************
+"
+"  A CM input subroutine for a series of truncated cones.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$CONS3R;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$CONS3R,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_CONS3R
+"T>*********************************
+"T>
+$REAL ZTHICK_$CONS3R;      "T>thickness of  the CM
+
+INTEGER I,J,               "T>DO loop indeces
+        IRA,               "T>Absolute region number
+        MED_FLAG,          "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,         "T>medium index, set after medium sort by $MED_INPUT
+        IREJCTIN;          "T>possible override of global IREJCT_GLOBAL value
+"
+"  initialize parameters
+"  =====================
+"
+N_$CONS3R = 2;           "No. of regions in CM (if 3,including front air gap)
+ICM_$CONS3R = ICM;       "CM index for this component module
+IRSTART_$CONS3R = IR_start_CM(ICM_$CONS3R); "Index of first region in this CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$CONS3R) = 0; "Geometry-checking flag, 0 if no error detected
+COUNT1_$CONS3R=0; "start of error counter at 0"
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' $CONS3R (CONS3R: Rev 1.10)');
+OUTPUT;(/' This component is a set of stacked cones with 3 regions ')
+OUTPUT RMAX_CM(ICM);('    Outer boundary is a cylinder of radius',F12.3,' cm');
+IF(ICM = 1)["first CM"
+   OUTPUT Z_min_CM(1);
+   (' This is first component -- starts at',F10.4,' cm from z=0 ref plane');
+]
+ELSE["there is another CM upstream"
+   OUTPUT Z_min_CM(ICM);(' This CM starts at back of previous CM at',
+          F12.5,' cm');
+]
+OUTPUT;(' TITLE: ',$);
+;MINPUT ($CONS3R) TITLE_$CONS3R;(60A1);
+               ";MINPUT is a replacement macro with EOF and
+               "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$CONS3R;(' ',60A1); "OUTPUT is a replacement macro which writes to
+                             "unit 5.  Used here for echo of user input
+OUTPUT Z_min_CM(ICM_$CONS3R);
+       (' Air gap/front of this  CM starts at:',F10.4, ' cm');
+"
+" get distance from reference plane, z=0"
+"   =============================
+OUTPUT;
+   (' Distance from front of cones(not air gap) to z = 0.0 plane: ',$);
+;MINPUT ($CONS3R) ZMIN_$CONS3R;(F15.0);
+OUTPUT ZMIN_$CONS3R;(F15.5);
+IF(Z_min_CM(ICM_$CONS3R)>ZMIN_$CONS3R)[
+   IF(ICM_$CONS3R=1)[
+      OUTPUT ICM_$CONS3R, Z_min_CM(ICM_$CONS3R),ZMIN_$CONS3R;
+       (//' ***WARNING IN CM ',I4,' (CONS3R):'/
+          ' Z_min_CM(1) > distance to front of cones'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      WRITE(IOUTLIST,100)ICM_$CONS3R, Z_min_CM(ICM_$CONS3R),ZMIN_$CONS3R;
+100 FORMAT(//' ***WARNING IN CM ',I4,' (CONS3R):'/
+          ' Z_min_CM(1) > distance to front of cones'/
+          ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      Z_min_CM(ICM_$CONS3R)=ZMIN_$CONS3R;
+    ]
+    ELSE[
+      OUTPUT ICM_$CONS3R;
+       (//'***ERROR IN CM ',I4,' (CONS3R):'/
+          'Overlaps with previous CM'//);
+      IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+    ]
+]
+"
+"   get  CONS3R geometry information
+"   =================================
+"
+OUTPUT; (' CONS3R total thickness (in cm, excluding front air): ',$);
+;MINPUT ($CONS3R) ZTHICK_$CONS3R; (F15.0);
+OUTPUT ZTHICK_$CONS3R; (F15.5);
+IF(ZTHICK_$CONS3R<0.0)[
+    OUTPUT ICM_$CONS3R;(//'***ERROR IN CM ',I4,' (CONS3R):'/
+                          'ZTHICK < 0.0'//);
+    IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+]
+OUTPUT $NPOINT_$CONS3R +1;
+  (' INPUT THE # OF NODES (VERTICES) DEFINING THE CONES ' /
+   ' (1 < # NODES < ',I4,'):',$);
+   ;MINPUT ($CONS3R) NUM_NODE_$CONS3R; (I5);
+   OUTPUT NUM_NODE_$CONS3R; (I5);
+IF(NUM_NODE_$CONS3R > $NPOINT_$CONS3R) [
+     OUTPUT ICM_$CONS3R, $NPOINT_$CONS3R;
+           (//'***ERROR IN CM ',I4,' (CONS3R):'/
+              '# of nodes input > max. # of nodes allowed',/
+              '# of nodes reduced to ',I4,' for now'//);
+     NUM_NODE_$CONS3R=$NPOINT_$CONS3R;
+     IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+]
+ELSEIF(NUM_NODE_$CONS3R < 2)[
+     OUTPUT ICM_$CONS3R; (//'***ERROR IN CM ',I4,' (CONS3R):'/
+                            '# nodes input < 2',/
+                            '# of nodes set to 2 for now'//);
+     NUM_NODE_$CONS3R=2;
+     IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+]
+;OUTPUT NUM_NODE_$CONS3R;
+(' INPUT THE  COORDINATES PAIRS (Z, R) FOR ', I5, ' NODES, ONE PAIR/LINE'/
+ ' RECALL THAT Z(i+1) >= Z(i)');
+DO I=1,NUM_NODE_$CONS3R
+[
+    OUTPUT I;(' INPUT COORDINATES OF NODE',I3, ' AS Z, R: ', $);
+    ;MINPUT ($CONS3R) ZCORNER_$CONS3R(I), RCORNER_$CONS3R(I); (2F15.0);
+     OUTPUT ZCORNER_$CONS3R(I), RCORNER_$CONS3R(I); (2F15.5);
+     IF(  ZCORNER_$CONS3R(1)~=ZMIN_$CONS3R)[
+        "this is done each time but who cares"
+        OUTPUT ICM_$CONS3R, ZMIN_$CONS3R,ZCORNER_$CONS3R(1);
+     (//' ***WARNING IN CM ',I4,' (CONS3R):'/
+     ' Z(1) must =',F15.5,' cm so value changed '/
+     ' from',F15.5,' cm'//);
+     WRITE(IOUTLIST,101)ICM_$CONS3R,ZMIN_$CONS3R,ZCORNER_$CONS3R(1);
+   101 FORMAT(//' ***WARNING IN CM ',I4,' (CONS3R):'/
+     ' Z(1) must =',F15.5,' cm so value changed '/
+     ' from',F15.5,' cm'//);
+      ZCORNER_$CONS3R(1)=ZMIN_$CONS3R;
+     ]
+     IF(I>1)[
+       IF(ZCORNER_$CONS3R(I-1)>ZCORNER_$CONS3R(I))[
+          OUTPUT ICM_$CONS3R, I, I-1; (//'***ERROR IN CM ',I4,' (CONS3R):'/
+                                 'Z(',I4,') < Z(',I4,')'//);
+          IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+       ]
+     ]
+     IF (RCORNER_$CONS3R(I) > RMAX_CM(ICM_$CONS3R))[
+        OUTPUT ICM_$CONS3R, I; (//'***WARNING IN CM ',I4,' (CONS3R):'/
+                               'R(',I4,') > RMAX_CM'//);
+        WRITE(IOUTLIST,'(//''***WARNING IN CM '',I4,'' (CONS3R):''/
+                              ''R('',I4,'') > RMAX_CM''//)')
+                         ICM_$CONS3R, I;
+     ]
+]
+IF(ZCORNER_$CONS3R(NUM_NODE_$CONS3R)~=ZMIN_$CONS3R+ZTHICK_$CONS3R)[
+   IF(ABS(ZCORNER_$CONS3R(NUM_NODE_$CONS3R) - (ZMIN_$CONS3R+ZTHICK_$CONS3R))
+          > 0.001) ["Print message if significant only"
+       OUTPUT ICM_$CONS3R, ZMIN_$CONS3R+ZTHICK_$CONS3R,
+          ZCORNER_$CONS3R(NUM_NODE_$CONS3R);
+       (//' ***WARNING IN CM ',I4,' (CONS3R):'/
+        ' Last Z must =',F15.5,' cm, so value changed'/
+        ' from',F15.5,' cm'//);
+       WRITE(IOUTLIST,102)ICM_$CONS3R, ZMIN_$CONS3R+ZTHICK_$CONS3R,
+                      ZCORNER_$CONS3R(NUM_NODE_$CONS3R);
+       102 FORMAT(//' ***WARNING IN CM ',I4,' (CONS3R):'/
+            ' Last Z must =',F15.5,' cm, so value changed'/
+            ' from',F15.5,' cm'//);
+   ]
+   ZCORNER_$CONS3R(NUM_NODE_$CONS3R) =  ZMIN_$CONS3R+ZTHICK_$CONS3R;
+]
+IF(   ZCORNER_$CONS3R(1)=ZCORNER_$CONS3R(2)
+    | ZCORNER_$CONS3R(NUM_NODE_$CONS3R)=ZCORNER_$CONS3R(NUM_NODE_$CONS3R-1))
+[  OUTPUT; (/ 1X,79('*')/' NOTE: the input is not economical because of',
+      ' 0 thickness regions, please, rearrange it for next run'
+      / 1X,79('*'));
+]
+DO I=1,NUM_NODE_$CONS3R [ "no negative radius allowed"
+   RCORNER_$CONS3R(I)=ABS(RCORNER_$CONS3R(I));
+]
+
+" get the smallest radius "
+RMIN_$CONS3R=RCORNER_$CONS3R(1);
+DO I=2,NUM_NODE_$CONS3R [
+   RMIN_$CONS3R=MIN(RCORNER_$CONS3R(I),RMIN_$CONS3R);
+]
+RMIN2_$CONS3R=RMIN_$CONS3R**2;
+
+"
+"   get ECUT, PCUT, dose scoring zone, LATCH correspondences,
+"       IREJCT overrides, material in each region
+"   ===============================================================
+IRA = IRSTART_$CONS3R-1;
+OUTPUT;(/' For this CM, the inner region is 1, the outer 2');
+DO IR_$CONS3R = 1,N_$CONS3R["loop through regions to get information"
+   IRA = IRA+1;
+   ;OUTPUT IR_$CONS3R,IREJCT_GLOBAL;(' For region',I3,/' ECUT, PCUT(MeV),',
+         ' DOSE ZONE (0=> NO DOSE), IREGION_TO_BIT, IREJCT(0=>',I2,
+         ' -1=>0)' /' : ',$);
+   ;MINPUT ($CONS3R) ECUT(IRA), PCUT(IRA), DOSE_ZONE(IRA),
+           IREGION_TO_BIT(IRA),IREJCTIN; (2F15.0,3I5);
+   IF(ECUT(IRA) < ECUTIN)[ECUT(IRA)=ECUTIN;]
+   IF(PCUT(IRA) < PCUTIN)[PCUT(IRA)=PCUTIN;]
+   IF(IREJCTIN < 0) [IREJCT(IRA) = 0; "ie can only force it from 1 to 0"]
+     OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE(IRA),
+            IREGION_TO_BIT(IRA),IREJCTIN; (2F15.5,3I10);
+     OUTPUT IR_$CONS3R;(' material of region ',I3,' ',$);
+     ;$MED_INPUT($CONS3R); "input character array MED_IN from unit 5,loops
+     "through array MEDIA(24,I) to check if medium was previously input.
+     "If so, sets MED_INDEX to index of previous medium.  If not,
+     "increments NMED and sets MED_INDEX to NMED.
+     MED(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$CONS3R"
+
+"
+"  parameter definition
+"  ====================
+"
+" define the geometry here:
+ZMAX_$CONS3R = ZMIN_$CONS3R + ZTHICK_$CONS3R;
+
+" To calc. the parameters for cone surfaces "
+DO I=1, NUM_NODE_$CONS3R-1
+[
+    IF(ZCORNER_$CONS3R(I)=ZCORNER_$CONS3R(I+1))  " parallel to the xy plane
+    [
+         SURPARA_$CONS3R(I,4)=1.0E30;
+         SURPARA_$CONS3R(I,1)=0.0;
+         SURPARA_$CONS3R(I,2)=-1.0;
+         SURPARA_$CONS3R(I,3)=ZCORNER_$CONS3R(I);
+    ]
+    ELSE
+    [
+         SURPARA_$CONS3R(I,4)=(RCORNER_$CONS3R(I+1)-RCORNER_$CONS3R(I))
+            /(ZCORNER_$CONS3R(I+1)-ZCORNER_$CONS3R(I));
+         SURPARA_$CONS3R(I,1)= 1.0/SQRT(1.0+SURPARA_$CONS3R(I,4)**2);
+         SURPARA_$CONS3R(I,2)=
+              -SURPARA_$CONS3R(I,4)/ SQRT(1.0+SURPARA_$CONS3R(I,4)**2);
+         SURPARA_$CONS3R(I,3)=
+              (SURPARA_$CONS3R(I,4)*ZCORNER_$CONS3R(I)-RCORNER_$CONS3R(I))
+                         /SQRT(1.0+SURPARA_$CONS3R(I,4)**2);
+    ]
+]
+
+DO I=1,NUM_NODE_$CONS3R [
+   RCORNER2_$CONS3R(I)=RCORNER_$CONS3R(I)**2;
+]
+
+ZFRONT_$CONS3R = Z_min_CM(ICM_$CONS3R);
+"
+"establish start of next CM
+Z_min_CM(ICM_$CONS3R+1) = ZMAX_$CONS3R;
+"
+"  set up the air gap, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+"note that if this is the first CM (ICM_$CONS3R=1) then the gap thickness
+"Z_gap_THICK(ICM_$CONS3R) = 0, which is used as a flag that there is no air gap
+
+Z_gap_THICK(ICM_$CONS3R) = ZMIN_$CONS3R - Z_min_CM(ICM_$CONS3R);
+IF (Z_gap_THICK(ICM_$CONS3R) < = 0.0)
+[
+   Z_gap_THICK(ICM_$CONS3R) = 0.;
+   N_GAP_$CONS3R = 0; "no air gap for this CM
+]
+ELSE
+[
+   N_GAP_$CONS3R = 1; "this CM has an air gap
+   IRA = IRSTART_$CONS3R+N_$CONS3R; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is nominal air
+   ESAVE(IRA)=ESAVE_GLOBAL;
+   ECUT(IRA)=ECUTIN;
+   PCUT(IRA)=PCUTIN;
+   ECUTRR(IRA)=ECUT(IRA);
+]
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_CONS3R+N_GAP_$CONS3R regions
+"
+;
+IREND_$CONS3R = (IRSTART_$CONS3R -1) +N_$CONS3R+N_GAP_$CONS3R;
+             "Index of last region
+NREG = NREG+N_$CONS3R+N_GAP_$CONS3R;  "Total number of regions in geometry up
+                                "to and including this CM
+IF (NREG <= $MXREG) [IR_start_CM(ICM_$CONS3R+1) = IREND_$CONS3R+1; ]
+                       "have not exceeded maximum region number
+                       "Index of first region in next CM:"
+ELSE [
+      OUTPUT ICM_$CONS3R,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (CONS3R):'/
+         I4,' regions requested, only ',I4,' available');
+      IERR_GEOM(ICM_$CONS3R)=IERR_GEOM(ICM_$CONS3R)+1;
+]
+"
+"  establish CM boundary
+"  =====================
+RMAX_CM_FLAG(ICM_$CONS3R) = 1; "put a circular boundary about CM
+"
+"  establish dose-scoring zones and bit setting for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$CONS3R-1; "absolute region number"
+DO IR_$CONS3R=1,N_$CONS3R
+["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum
+   "charged particle range rejection parameters
+   "
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+   E_min_out(ICM_$CONS3R)=ECUT(IRA); "Minimum energy on exit from CM
+
+] "end of loop over IR_$CONS3R
+
+"   return from INPUT_CONS3R
+"   =======================
+"
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$CONS3R:
+;OUTPUT ICM;
+  (//' *** ERROR *** unexpected end of file reading input for CONS3R--CM',I3);
+STOP;
+
+:ERROR_$CONS3R:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CONS3R--CM',I3);
+STOP;
+
+END;  "End of subroutine INPUT_$CONS3R"
+%E   "CONS3R_cm - start of subroutine ISUMRY_$CONS3R (Rev 1.10)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_CONS3R
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$CONS3R;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$CONS3R,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_CONS3R
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,    "T>colour of CM for EGS_Windows
+   IRA,        "T>absolute region number
+   I,J;        "T>DO loop index
+$REAL  VOL_$CONS3R(3), PIL;   "T> region volume
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$CONS3R.
+"
+PIL=3.14159;
+
+"  init. the vol.
+/VOL_$CONS3R(1),VOL_$CONS3R(2),VOL_$CONS3R(3)/=0.0; "FOR AIR GAP, IF EXISTs"
+
+" calc. the vol for each region.
+IF(N_GAP_$CONS3R=1) ["there is an air gap"
+    VOL_$CONS3R(3)=PIL*(ZMIN_$CONS3R-Z_min_CM(ICM_$CONS3R))
+              *RMAX_CM(ICM_$CONS3R)**2;
+]
+DO I=1, NUM_NODE_$CONS3R-1 [
+    IF(ZCORNER_$CONS3R(I)~=ZCORNER_$CONS3R(I+1) )
+    [    VOL_$CONS3R(1)=VOL_$CONS3R(1)+
+                 PIL/3.0*(ZCORNER_$CONS3R(I+1)-ZCORNER_$CONS3R(I))*
+                 ( RCORNER_$CONS3R(I+1)**2 + RCORNER_$CONS3R(I)**2
+                 +RCORNER_$CONS3R(I+1)*RCORNER_$CONS3R(I) );
+    ]
+]
+VOL_$CONS3R(2)=PIL*(ZMAX_$CONS3R-ZMIN_$CONS3R)*
+                RMAX_CM(ICM_$CONS3R)**2-VOL_$CONS3R(1);
+
+IRA = IRSTART_$CONS3R-1; "absolute region number
+DO IR_$CONS3R=1,N_$CONS3R+N_GAP_$CONS3R
+["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA) ~= 0)
+   ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+VOL_$CONS3R(IR_$CONS3R)*RHOR(IRA);
+   ]
+] "end of loop over IR_$CONS3R"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+
+WRITE(IOUTLIST,110) ICM_$CONS3R,TITLE_$CONS3R;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$CONS3R),RMAX_CM(ICM_$CONS3R);
+IF(N_GAP_$CONS3R~=0)[
+         WRITE(IOUTLIST,124) Z_min_CM(ICM_$CONS3R),
+                             ZCORNER_$CONS3R(1)-Z_min_CM(ICM_$CONS3R);
+]
+IRA = IRSTART_$CONS3R-1;
+WRITE(IOUTLIST,122);
+DO I = 1,NUM_NODE_$CONS3R[
+   WRITE(IOUTLIST,123) I, ZCORNER_$CONS3R(I), RCORNER_$CONS3R(I);
+]
+WRITE(IOUTLIST,130);
+DO IR_$CONS3R=1,N_$CONS3R[
+   IRA = IRA+1;
+   IF(IR_$CONS3R=1)[
+     IF (MED(IRA)=0)
+     ["Medium is vacuum"
+      WRITE(IOUTLIST,140) IR_$CONS3R,'inside',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+            'V','a','c','u','u','m';
+     ]
+     ELSE
+     ["Medium is not vacuum"
+      WRITE(IOUTLIST,140) IR_$CONS3R,'inside',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+   ELSEIF(IR_$CONS3R=2)[
+     IF (MED(IRA)=0)
+     ["Medium is vacuum"
+      WRITE(IOUTLIST,140) IR_$CONS3R,'outside',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         'V','a','c','u','u','m';
+     ]
+     ELSE
+     ["Medium is not vacuum"
+      WRITE(IOUTLIST,140) IR_$CONS3R,'outside',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+     ]
+   ]
+]
+
+IF(N_GAP_$CONS3R ~=0)[
+   IRA=IRSTART_$CONS3R+N_$CONS3R;
+      WRITE(IOUTLIST,140) IR_$CONS3R,'airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      WRITE(IOUTLIST,141)'at top';
+]
+
+110 FORMAT(///1X,79('-')/'  Component module',I3,' - stacked truncated',
+           ' cones (3 regions CONS3R Rev 1.10)'
+           /1X,79('-')
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$CONS3R geometry parameters:',
+           /T2,'--------------------------',
+           /T2,'Distance from front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Radius of outer boundary of CM = ',F15.5,' cm');
+122 FORMAT(/T2,'node      Z(cm)     r(cm)');
+123 FORMAT(T2,I3,F11.3,F10.3);
+124 FORMAT(T2,'There is an airgap which starts at Z=',F8.5,' cm and is ',
+           F8.5,' cm thick.');
+130 FORMAT(/T2,'$CONS3R region parameters:',
+           /T2,'-------------------------',
+           /T2,'local  location  electron  photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region            cutoff   cutoff',
+           '   level     max    zone  set'
+           /T2,'                   (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+
+140 FORMAT(T2,I3,4X,A7,F10.3,F9.3,F8.3,F9.3,I6,I5,3X,9A1);
+141 FORMAT(T9,A7);
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+
+IF(IWATCH = 4 | IZLAST = 2)
+[  "Create a graphics file "
+        ICOLOUR=4;
+        IF(NUM_NODE_$CONS3R > 10)
+        [ "10 IS THE CURRENT MAX NO OF GROT PTS"
+          "THIS IS OK IF THERE ARE LESS THAN 20 PTS; 15 ARE ALLOWED NOW"
+          WRITE(IOUTGEOM,201)ICOLOUR,'GROT',0.0,0.0,0.0,0.0,
+               (ZCORNER_$CONS3R(I),
+                RCORNER_$CONS3R(I),I=1,10),0.0,0.0;
+          WRITE(IOUTGEOM,201)ICOLOUR,'GROT',0.0,0.0,0.0,0.0,
+               (ZCORNER_$CONS3R(I),
+                RCORNER_$CONS3R(I),I=10,NUM_NODE_$CONS3R),0.0,0.0;
+        ] ELSE [
+          WRITE(IOUTGEOM,201)ICOLOUR,'GROT',0.0,0.0,0.0,0.0,
+               (ZCORNER_$CONS3R(I),
+               RCORNER_$CONS3R(I),I=1,NUM_NODE_$CONS3R),0.0,0.0;
+        ]
+]"End of graphics output"
+201   FORMAT(' ',I1,A4,4(F7.2,','),$NPOINT_$CONS3R(F7.2,','),
+             $NPOINT_$CONS3R(F7.2,','));
+
+"   end of ISUMRY_CONS3R
+"   ===================
+"
+;RETURN;
+END; "end of subroutine ISUMRY_$CONS3R"
+%E   "CONS3R_cm - start of subroutine HOWNEAR_$CONS3R (Rev 1.10)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_$CONS3R
+"                          ***********************
+"
+" Returns min. distance to nearest region boundary
+" Used to be a macro, but now the macro calls this subroutine.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$CONS3R(DIST);
+
+Copyright NRC 1999
+$IMPLICIT-NONE;
+
+COMIN/CM_$CONS3R,STACK,CMs/;
+
+$REAL DIST, "T> min. distance to nearest region boundary
+      R_$CONS3R; "T> stores radial position of particle
+
+$INTEGER I_$CONS3R; "T> looping index"
+
+IR_$CONS3R = IR(NP) - IRSTART_$CONS3R + 1;
+R_$CONS3R=SQRT(X(NP)**2+Y(NP)**2);
+IF(IR_$CONS3R = 1) [
+    DIST=MIN(   Z(NP)-ZMIN_$CONS3R,
+                ZMAX_$CONS3R-Z(NP),
+                RMAX_CM(ICM_$CONS3R) -R_$CONS3R );
+    DO I_$CONS3R=1, NUM_NODE_$CONS3R-1
+     [
+       DIST=MIN(DIST, ABS(SURPARA_$CONS3R(I_$CONS3R,1)*R_$CONS3R
+            +SURPARA_$CONS3R(I_$CONS3R,2)*Z(NP)
+            +SURPARA_$CONS3R(I_$CONS3R,3)) );
+     ]
+]
+ELSEIF(IR_$CONS3R = 2) [
+         DIST=MIN( Z(NP)-ZMIN_$CONS3R,ZMAX_$CONS3R-Z(NP),
+            RMAX_CM(ICM_$CONS3R) -R_$CONS3R  );
+         DO I_$CONS3R=1, NUM_NODE_$CONS3R-1
+         [
+            DIST=MIN(DIST, ABS(SURPARA_$CONS3R(I_$CONS3R,1)*R_$CONS3R
+               +SURPARA_$CONS3R(I_$CONS3R,2)*Z(NP)
+                +SURPARA_$CONS3R(I_$CONS3R,3)) );
+         ]
+]
+ELSE [
+        DIST=0.0;
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$CONS3R(Rev 1.10)"
+"*******************************************************************************
+"End of CONS3R_cm.mortran (Rev 1.10)"

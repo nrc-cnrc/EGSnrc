@@ -1,0 +1,952 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: stacked planes                            "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 1995                                       "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Geoff Zhang                                               "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  This code originally evolved from the SLAB component module written by     "
+"  Dave Rogers and Bruce Faddegon, starting in 1991, and subsequently edited  "
+"  by George Ding.                                                            "
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ***********             ""toc:
+"                             *         *             ""toc:
+"                             *  SLABS  *             ""toc:
+"                             *         *             ""toc:
+"                             ***********             ""toc:
+"
+"   History of modifications given by sccs
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  Multiple planes of arbitrary thickness and
+"   material.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.MORTRAN to simulate
+"   one component module of a clinical linear accelerator:  a set of 2 or more
+"   slabs infinite in x & y.
+"
+"   This component module can be added to the simulation by including these
+"   routines in the MORTRAN file BEAM_CM.MORTRAN and including the MORTRAN
+"   replacement macros associated with this component module in the file
+"   BEAM_COMMON.MORTRAN.  The order of the component modules in either of
+"   these files is unimportant.  To explicitly include this component module in
+"   the simulation it must be included in the $CM_LIST replacement statement.
+"   The component modules in this list are stacked sequentially for the
+"   simulation, one on top of the other, and must not overlap.
+;
+%E   " SLABS_cm.mortran - start of geometry description
+"I>
+"I> Geometry of $SLABS (SLABS):             ""toc:
+"I> ******************
+"I>
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I> -------->    IR=    | IR=1   |  IR=2    | ...... |  IR=N_SLABS    |
+"I>    beam   N_SLABS+1 |        |          |        |                |
+"I> direction  (airgap) |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>                     |        |          |        |                |
+"I>
+"I>   IR is the region number within the CM.  There are N_SLABS(+1) local
+"I>   regions. The first region is the slab furthest upstream.  If there
+"I>   is an airgap at the front (top) then it is the last region,
+"I>   otherwise the last region is the slab furthest downstream.
+"I>
+"I>
+"I>            -----------------------------------------------
+"I>            |          Region        | Description        |
+"I>            |------------------------|--------------------|
+"I>            |  absolute    | local   |                    |
+"I>            |--------------|---------|                    |
+"I>            |IRSTART_SLABS | IR_SLABS| slab infinite x, y |
+"I>            |  +IR_SLABS-1 |         |                    |
+"I>            -----------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$SLABS
+"                      ISUMRY_$SLABS
+"                      HOWFAR_$SLABS
+"                      WHERE_AM_I_$SLABS
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/BUGS             ""toc:
+"                             ************************
+"
+"         As structured, one cannot assign IREGION_TO_BIT or DOSE_ZONE values
+"         to the air gap region if it exists.
+"
+"        in EGS_WINDOWS file, a disk instead of square is output
+"
+"*******************************************************************************
+"
+;
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5              ""toc:
+"                               *****************             ""toc:
+"
+"I>
+"I>  CARDS CM_$SLABS  (SLABS: Rev 1.6)
+"I>  **************
+"I>
+"I>  -1  dummy line (filled with ****)  read in main
+"I>
+"I>   0  RMAX_CM(ICM_$SLABS)       outer boundary for CM - 1/2 side of
+"I>                                square(read in main)
+"I>
+"I>   1  TITLE_$SLABS (60A1):  Title of CM.
+"I>
+"I>   2  N_$SLABS (I5):  Number of planar slabs in CM = # regions in CM,
+"I>                      excludes any air gap needed.
+"I>
+"I>   3  ZMIN_$SLABS (F15.0):  Distance from front of first slab to reference
+"I>                            plane  (Z=0).
+"I>
+"I>   4  Parameters of each slab from front to back (increasing Z).  One pair of
+"I>      cards (4a and 4b) for each of the slabs.
+"I>
+"I>      4a   ZTHICK_$SLABS, ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, ESAVEIN
+"I>                           (3F15.0,2I5,F15.0):
+"I>
+"I>              ZTHICK_$SLABS:   slab thickness.
+"I>              ECUT, PCUT:      Cutoff energies-defaults are ECUTIN,PCUTIN
+"I>              DOSE_ZONE:       Dose zone to score dose - 0 if not scored
+"I>              IREGION_TO_BIT:  map this region to this bit number in LATCH
+"I>              ESAVEIN:         Value of ESAVE for this region if range
+"I>                               rejection on. Default is ESAVE_GLOBAL.
+"I>
+"I>      4b   MED_IN (24A1):  Medium of the planar slab, used to set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The following set of cards defines a 1 cm thick slab of air sandwiched
+"I>  between two 0.1 cm thick slabs of tungsten.  The front slab is at
+"I>  Z=7.32 cm. Electrons will be followed in the slabs down to kinetic energies
+"I>  of 10 keV (total energies of 0.521 MeV) and photons will be followed down
+"I>  to energies of 1 keV.  The dose deposited in the air will be scored and
+"I>  added to the dose from the other regions in dose zone 1, and the
+"I>  dose deposited in both tungsten slabs will be scored and added to the dose
+"I>  from the other regions in dose zone 2.  Particles interacting in
+"I>  the first slab will be associated with BIT 1 in LATCH.  In all slabs,
+"I>  ESAVEIN=0, thus ESAVE in each slab will default to ESAVE_GLOBAL.
+"I>
+"I>  10.0,                         RMAX_CM
+"I>  Multiple slabs: 0.1cm W-1cm air-0.1cm W, ECUT=0.521, PCUT=0.001
+"I>  3,                            N_SLABS
+"I>  7.32,                         ZMIN_SLABS
+"I>  0.1, 0.521, 0.001, 2,1,0.0,   ZTHICK_SLABS etc
+"I>  W521ICRU
+"I>  1., 0.521, 0.001, 1,0,0.0
+"I>  AIR521ICRU
+"I>  0.1, 0.521, 0.001, 2,0,0.0
+"I>  W521ICRU
+"
+"
+%E   "Start of subroutine INPUT_$SLABS (Rev 1.6)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_SLABS
+"                           **********************
+"
+"  A CM input subroutine for a series of 1 or more slabs infinite in x & y.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$SLABS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ BOUNDS,CMs,CM_$SLABS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>*********************************
+"T>TYPE DECLARATIONS FOR INPUT_SLABS
+"T>*********************************
+"T>
+$REAL ZMIN_$SLABS,                   "T>minimum Z for this CM
+      ESAVEIN;                       "T>ESAVE value read in for each region
+
+INTEGER I,J,                         "T>DO loop indeces
+        IRA,                         "T>Absolute region number
+        MED_FLAG,                    "T>flag for media-sort macro $MED_INPUT
+        MED_INDEX,                   "T>medium index,set(post)sort $MED_INPUT
+        NDO;                         "T>loop index
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$SLABS = ICM;                   "CM index for this component module
+                                    "Note ICM_$SLABS not needed here since
+                                    "ICM is set, but it is not set when
+                                    "other routines called.
+IRSTART_$SLABS = IR_start_CM(ICM_$SLABS); "Index of first region in this CM,
+                                    "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$SLABS) = 0;          "Geometry-checking flag, 0 if no errors
+"
+"establish CM boundary as a square (was cylinder prior to April 13,1994)
+RMAX_CM_FLAG(ICM_$SLABS) = 2;       "put a square boundary about CM
+"
+OUTPUT;(/' $SLABS (SLABS: Rev 1.6)');
+OUTPUT RMAX_CM(ICM); (' This component is a set of planar slabs'/
+  '      Outer boundary is a square with |x| & |y| <',F10.2,' cm');
+IF(ICM_$SLABS = 1)[
+   OUTPUT Z_min_CM(ICM_$SLABS);
+   (' This is first component -- starts at ',F11.4,' cm from reference plane');]
+ELSE
+   [OUTPUT Z_min_CM(ICM_$SLABS);(' Previous CM ends at:',F12.5,' cm');]
+OUTPUT;(' TITLE: ',$);
+;MINPUT ($SLABS) TITLE_$SLABS;(60A1);
+               "MINPUT is a replacement macro with EOF and
+               "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$SLABS;(' ',60A1);
+"
+"   get information for each slab
+"   =============================
+"
+"
+"Get maximum number of slabs (and regions) permitted
+OUTPUT $MAX_N_$SLABS; (' NUMBER OF SLABS (MINIMUM 1, MAXIMUM',I3,'): ',$);
+;MINPUT ($SLABS) N_$SLABS; (I5);
+OUTPUT N_$SLABS; (I5);
+IF(N_$SLABS < 1)[
+         N_$SLABS=1;
+         OUTPUT ICM_$SLABS;
+          (//'***ERROR IN CM ',I4,' (SLABS):'/
+             '# of slabs < 1'/
+             '# of slabs set to 1 for now.'//);
+         IERR_GEOM(ICM_$SLABS)=IERR_GEOM(ICM_$SLABS)+1;
+]
+ELSEIF (N_$SLABS > $MAX_N_$SLABS)[
+               N_$SLABS=$MAX_N_$SLABS;
+               OUTPUT ICM_$SLABS, N_$SLABS;
+               (//'***ERROR IN CM ',I4,' (SLABS):'/
+                  '# of slabs > max. allowed'/
+                  '# of slabs reduced to ',I4,' for now'//);
+               IERR_GEOM(ICM_$SLABS)=IERR_GEOM(ICM_$SLABS)+1;
+]
+
+" get distance from reference plane, z=0"
+"
+OUTPUT;
+ (' DISTANCE FROM FRONT OF SLABS (excluding air gap) TO REF PLANE (z=0): ',$);
+;MINPUT ($SLABS) ZMIN_$SLABS;(F15.0);
+OUTPUT ZMIN_$SLABS;(F10.5);
+IF(ZMIN_$SLABS < Z_min_CM(ICM_$SLABS))["have overlapped two CMs"
+   IF(ICM_$SLABS = 1)["first CM is special case"
+     "Z_min_CM(1) is very front of accelerator, including air, input in main"
+     OUTPUT ICM_$SLABS, ZMIN_$SLABS,Z_min_CM(ICM_$SLABS);
+      (//' ***WARNING IN CM ',I4,' ($SLABS):'/
+       ' Z_min_CM(1) (=front of the accelerator) is past front of first slab'/
+       ' Z_min_CM(1) reset to value just input =',F8.5,' cm'/
+       ' from ',F8.5,' cm'//);
+     WRITE(IOUTLIST,:label1:) ICM_$SLABS, ZMIN_$SLABS,
+                              Z_min_CM(ICM_$SLABS);
+          :label1: FORMAT(//' ***WARNING IN CM ',I4,' ($SLABS):'/
+  ' Z_min_CM(1) (=front of the accelerator) is past front of first slab'/
+  ' Z_min_CM(1) reset to value just input =',F8.5,' cm'/
+  ' from ',F8.5,' cm'//);
+     Z_min_CM(ICM_$SLABS) = ZMIN_$SLABS;
+   ]
+   ELSE[
+     OUTPUT ICM_$SLABS;
+       (//'***ERROR IN CM ',I4,' ($SLABS):'/
+          'Overlaps with previous CM.'//);
+     IERR_GEOM(ICM_$SLABS)=IERR_GEOM(ICM_$SLABS)+1;
+   ]
+]
+
+"loop over slabs
+"
+IRA = IRSTART_$SLABS-1; "absolute region number
+DO IR_$SLABS=1,N_$SLABS [
+   "loop through local region number to get slab information"
+   IRA = IRA+1;
+   "get thickness, cutoff energies, and dose scoring zone"
+   "
+   OUTPUT IR_$SLABS;(//' Inputs for slab # ',I5);
+   OUTPUT; (' SLAB THICKNESS(cm), ECUT, PCUT,',
+         ' DOSE ZONE(0=>DONT SCORE), IREGION_TO_BIT,ESAVE'/' :',$);
+   ;MINPUT ($SLABS)
+      ZTHICK_$SLABS(IR_$SLABS),ECUT(IRA),PCUT(IRA),
+      DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),ESAVEIN;
+      (3F15.0,2I5,F15.0);
+   IF (ECUT(IRA) < ECUTIN) ECUT(IRA)=ECUTIN;
+   IF (PCUT(IRA) < PCUTIN) PCUT(IRA)=PCUTIN;
+   IF (ESAVEIN > 0.511) [ESAVE(IRA) = ESAVEIN;]
+   ELSE [ESAVE(IRA)=ESAVE_GLOBAL;]
+   "Particles with total energies < ESAVE are considered for range rejection"
+   "if range rejection is on.  Default is ESAVE_GLOBAL but values are set"
+   "back to zero in main if range rejection is off"
+   ;OUTPUT
+      ZTHICK_$SLABS(IR_$SLABS),ECUT(IRA),PCUT(IRA),
+      DOSE_ZONE(IRA),IREGION_TO_BIT(IRA), ESAVE(IRA);
+      (3F11.5,I9,I20,F11.5);
+   IF(ZTHICK_$SLABS(IR_$SLABS)<0.0)[
+      OUTPUT ICM_$SLABS, IR_$SLABS;
+       (//'***ERROR IN CM ',I4,' (SLABS):'/
+          'ZTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$SLABS)=IERR_GEOM(ICM_$SLABS)+1;
+   ]
+   "get material for this slab and determine material number for this region"
+
+   OUTPUT;(' SLAB ',$);
+   ;$MED_INPUT($SLABS); " inputs character array MED_IN from unit 5, loops
+      "through array MEDIA(24,I) to check if medium was previously input.
+      "If so, sets MED_INDEX to index of previous medium.  If not,
+      "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of the planar slab
+] "end of loop over IR_$SLABS"
+"
+"  parameter definition
+"  ====================
+"
+"fill arrays of distance from reference plane (z=0) to front and back of slabs
+ZFRONT_$SLABS(1) = ZMIN_$SLABS;
+IF (N_$SLABS > 1) [
+   DO IR_$SLABS=1,N_$SLABS-1 ["loop through local region number"
+      ZBACK_$SLABS(IR_$SLABS) = ZFRONT_$SLABS(IR_$SLABS) +
+                            ZTHICK_$SLABS(IR_$SLABS);
+      ZFRONT_$SLABS(IR_$SLABS+1) = ZBACK_$SLABS(IR_$SLABS);
+   ] "end of loop over IR_$SLABS"
+]
+ZBACK_$SLABS(N_$SLABS) = ZFRONT_$SLABS(N_$SLABS) +
+                             ZTHICK_$SLABS(N_$SLABS);
+"
+"establish start of next CM
+Z_min_CM(ICM_$SLABS+1) = ZBACK_$SLABS(N_$SLABS);
+"
+"  set up air gap to previous CM, if present
+"  =========================================
+"
+"  The air gap has the highest region number in the CM, even though it is at
+"  the top of the component module.  This is to allow the assignment of region
+"  numbers on input of the parameters of each local region (mainly to assign the
+"  medium number of the region).  The air gap is then assigned after all of the
+"  CM parameters have been input.
+"
+Z_gap_THICK(ICM_$SLABS) = ZMIN_$SLABS-Z_min_CM(ICM_$SLABS);
+
+IF (Z_gap_THICK(ICM_$SLABS) < $MIN_GAP) ["$MIN_GAP is defined in  main"
+   Z_gap_THICK(ICM_$SLABS) = 0.;
+   ZFRONT_$SLABS(1)=Z_min_CM(ICM_$SLABS);
+   N_GAP_$SLABS = 0; "no air gap for this CM
+]
+ELSE [
+   N_GAP_$SLABS = 1; "this CM has an air gap
+   IRA = IRSTART_$SLABS+N_$SLABS; "absolute region number of air gap
+   MED(IRA) = AIR_INDEX; "medium is air, vacuum or whatever assigned
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUT(IRA) = ECUTIN;
+   PCUT(IRA) = PCUTIN;
+   ZFRONT_$SLABS(N_$SLABS+1) = Z_min_CM(ICM_$SLABS);
+   "only for output listing
+]
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_$SLABS+N_GAP_$SLABS regions, plates infinite in x & y, with
+"  an air gap at the front, if present. Slabs are numbered in sequence starting
+"  from the furthest upstream slab to the last downstream slab, followed by the
+"  air gap, if present.
+"
+IREND_$SLABS = IRSTART_$SLABS+N_$SLABS+N_GAP_$SLABS-1;
+               "Index of last region
+NREG = NREG+N_$SLABS+N_GAP_$SLABS;  "Total of regions in full geometry up
+                                    "to and including this CM
+                                    "NREG is in comin GEOM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$SLABS+1) = IREND_$SLABS+1;
+]
+ELSE [
+      OUTPUT ICM_$SLABS,NREG,$MXREG;
+      (//'***ERROR IN CM ',I4,' (SLABS):'/
+         I4,' regions requested, only', I4,' available'/
+         '    Change $MXREG in beam_user_macros.mortran'//);
+      IERR_GEOM(ICM_$SLABS)=IERR_GEOM(ICM_$SLABS)+1;
+]
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+"Note air gap cannot be a dose scoring region as presently set up.
+IRA = IRSTART_$SLABS-1; "absolute region number
+DO IR_$SLABS=1,N_$SLABS ["loop over local region number
+   IRA = IRA+1;
+
+   "dose-scoring zones
+   "
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),NDOSE_ZONE); "Number of dose zones
+   MAX_BIT = MAX(IREGION_TO_BIT(IRA),MAX_BIT); " current maxmum number
+] "end of loop over IR_$SLABS
+
+"set up minimum thicknesses which in this case are just the last 5"
+"slabs"
+"If we ever need more than 5 slabs, we should extend this or do
+"something fancy like group similar materials"
+
+NDO = MIN(5,N_$SLABS); "consider at most 5 slabs of material"
+                       "air gap handled below"
+                       "limit of 5 not essential here, but needed in helpful"
+                       "in other cases"
+"OUTPUT NDO;(' For automated range rejection consider',I3,' slabs of material');
+DO IR_$SLABS = N_$SLABS, N_$SLABS-NDO+1, -1 [
+   IRA = IR_$SLABS + IRSTART_$SLABS-1;   "absolute region"
+   Z_min_thick(ICM,N_$SLABS+1 - IR_$SLABS) = ZTHICK_$SLABS(IR_$SLABS);
+   "MED_min_thick is in COMIN CMs"
+   MED_min_thick(ICM,N_$SLABS+1 - IR_$SLABS) = MED(IRA);
+   "OUTPUT IR_$SLABS,IRA,ICM, N_$SLABS+1-IR_$SLABS,
+      "Z_min_thick(ICM,N_$SLABS+1-IR_$SLABS),
+      "ICM,N_$SLABS+1 - IR_$SLABS,
+      "MED_min_thick(ICM,N_$SLABS+1 - IR_$SLABS);
+      "(' IR_$SLABS,IRA=',I2,',',I3,' Z_min_thick(',2I2,')=',F10.3,
+      "'  MED_min_thick(',2I3,')=',I2   );
+]
+IF(NDO < 5)[  "some not used - include air gap if there is one"
+    IF(N_GAP_$SLABS = 1)["There is an air gap"
+       Z_min_thick(ICM,NDO+1) = Z_gap_thick(ICM_$SLABS);
+       MED_min_thick(ICM,NDO+1) = 1; "AIR is 1"
+       OUTPUT ICM,NDO+1,Z_min_thick(ICM,NDO+1),ICM,NDO+1,
+                 MED_min_thick(ICM,NDO+1);
+       (' Front air gap',T20,' Z_min_thick(',I2,',',I2,')=',F10.3,
+                 '  MED_min_thick(',I2,',',I2,')=',I5   );
+       NDO = NDO +1;
+    ]"end of loop if there is an air gap"
+    IF(NDO < 5 )["check in case incremented by air gap"
+       DO I = NDO+1,5["zero remaining, unused values"
+         Z_min_thick(ICM,I) = 0.0;
+         MED_min_thick(ICM,I) = 0;
+       ]"end of do loop on I"
+    ]"end second NDO < 5 case"
+]"end NDO < 5 case"
+"
+"   return from INPUT_SLABS
+"   =======================
+RETURN;
+
+"   error messages
+"   ==============
+"
+:EOF_$SLABS:
+;OUTPUT ICM;
+(//' *** ERROR in $SLABS *** unexpected end of file reading input for CM',I3);
+STOP;
+
+:ERROR_$SLABS:
+;OUTPUT ICM;(//' *** ERROR  in $SLABS *** format error on input for CM',I3);
+STOP; END;
+"End of INPUT_$SLABS"
+
+%E   "start of subroutine ISUMRY_$SLABS (Rev 1.6)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_SLABS
+"                          ***********************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$SLABS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$SLABS,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR ISUMRY_SLABS
+"T>**********************************
+"T>
+INTEGER
+   ICOLOUR,   "T>colour of CM for EGS_Windows
+   IDD,       "T>index of dose scoring zone
+   IRA,       "T>absolute region number
+   J;         "T>DO loop index
+"
+"   Mass of dose zone
+"   =================
+"Need to calculate mass of dose zone here,after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$SLABS.
+"
+IRA = IRSTART_$SLABS-1; "absolute region number
+DO IR_$SLABS=1,N_$SLABS+N_GAP_$SLABS ["loop over local region number
+   IRA = IRA+1;
+   IF(DOSE_ZONE(IRA).NE.0) ["this is a dose zone"
+      IDD=DOSE_ZONE(IRA);
+      "add mass of square region to any previous mass in dose region"
+      AMASS(IDD)=AMASS(IDD) + RHOR(IRA)* (ZBACK_$SLABS(IR_$SLABS)
+                 - ZFRONT_$SLABS(IR_$SLABS))*4*(RMAX_CM2(ICM_$SLABS));
+      "note RHOR is the density which defaults to that from PEGS4 in HATCH
+      "but could be set to any value prior to call to hatch
+   ]
+] "end of loop over IR_$SLABS"
+
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+"Output to list file changed to make it more clear--B Walters 18/08/94"
+
+WRITE(IOUTLIST,110) ICM_$SLABS,TITLE_$SLABS;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$SLABS),RMAX_CM(ICM_$SLABS);
+WRITE(IOUTLIST,122);
+IF(N_GAP_$SLABS~=0)[
+   WRITE(IOUTLIST,124) 'airgap',Z_min_CM(ICM_$SLABS),
+                       ZFRONT_$SLABS(1)-Z_min_CM(ICM_$SLABS);
+]
+DO IR_$SLABS=1,N_$SLABS[
+   WRITE(IOUTLIST,123) IR_$SLABS,ZFRONT_$SLABS(IR_$SLABS),
+                       ZTHICK_$SLABS(IR_$SLABS);
+]
+WRITE(IOUTLIST,130);
+IRA = IRSTART_$SLABS-1;
+
+DO IR_$SLABS=1,N_$SLABS + N_GAP_$SLABS [
+   IRA = IRA+1;
+   IF(IR_$SLABS<=N_$SLABS)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$SLABS,IR_$SLABS,'slab',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140)
+         IR_$SLABS,IR_$SLABS,'slab',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSE[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,142)
+         IR_$SLABS,'NA','airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),
+         IREGION_TO_BIT(IRA),'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,142)
+         IR_$SLABS,'NA','airgap',ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+    WRITE(IOUTLIST,141)'at top';
+    ]
+]"end loop on IR_$SLABS"
+
+
+110 FORMAT(///1x,79('-')/
+ '  Component module',I3,' is one or more planar slabs  ',
+ '(SLABS Rev 1.6)'
+           /1x,79('-')
+           //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$SLABS geometry parameters:',
+           /T2,'-----------------------------',
+           /T2,'Distance of front of CM from reference plane = ',
+           F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm');
+122 FORMAT(/T2,
+'slab #    Z front    thickness',
+/T2,
+'           face               ',
+/T2,
+'           (cm)        (cm)   ');
+123 FORMAT(T2,I4,F12.3,F11.3);
+124 FORMAT(T2,A6,F10.3,F11.3);
+130 FORMAT(/T2,'$SLABS region parameters:',
+           /T2,'---------------------------',
+           /T2,'local  slab #  location  electron  photon',
+           '  range-rejection  dose  bit  medium'
+           /T2,'region                    cutoff   cutoff',
+           '   level     max   zone  set'
+           /T2,'                           (MeV)    (MeV)',
+           '   (MeV)    (MeV)');
+
+140 FORMAT(T2,I3,I7,5X,A7,F10.3,F9.3,F8.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T17,A7);
+142 FORMAT(T2,I3,5X,A2,5X,A7,F10.3,F9.3,F8.3,F9.3,I5,I5,2X,9A1);
+
+
+
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ICOLOUR = MOD(ICM_$SLABS,4)+1; "select ICOLOUR = 1, 2, or 3, colour of CM"
+   DO IR_$SLABS=1,N_$SLABS ["Loop over local region number"
+      WRITE(IOUTGEOM,200) ICOLOUR,'DISK',0.,0.,
+                       ZFRONT_$SLABS(IR_$SLABS),RMAX_CM(ICM_$SLABS);
+      "NOTE *** it was a disk but it is a square now!"
+   ]
+   WRITE(IOUTGEOM,200) ICOLOUR,'DISK',0.,0.,
+                       ZBACK_$SLABS(N_$SLABS),RMAX_CM(ICM_$SLABS);
+   200 FORMAT(' ',I1,A4,10(F7.2,','));
+] "End of graphics output"
+"
+;RETURN;END;
+"SLABS_cm.mortran end of ISUMRY_$SLABS"
+
+%E   "start of subroutine HOWFAR_$SLABS (Rev 1.6)"
+"*******************************************************************************
+"************************** Component Module SLABS *****************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_SLABS
+"                          ***********************
+"
+" HOWFAR routine for stacked planar media.
+"
+" Determine if current region number is within component module SLABS, and if so
+" evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_SLABS local regions + an air gap (if present):
+"
+"     local               absolute                  description
+"   ---------  ----------------------------------  -------------
+"   IR_SLABS   IR_start_CM(ICM_SLABS)+IR_SLABS-1   slab IR_SLABS
+"   N_SLABS+1  IR_start_CM(ICM_SLABS)+N_SLABS      air gap
+"
+"       Geometrical co-ordinates, as set in INPUT_SLABS are:
+"       ZFRONT_SLABS(IR_SLABS)     front of slab IR_SLABS (upstream surface)
+"       ZBACK_SLABS(IR_SLABS)      back of slab IR_SLABS (downstream surface)
+"
+"*******************************************************************************
+
+;SUBROUTINE HOWFAR_$SLABS;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/ CMs,CM_$SLABS,EPCONT,STACK,EGS-IO/;
+"T>
+"T>**********************************
+"T>TYPE DECLARATIONS FOR HOWFAR_SLABS
+"T>**********************************
+"T>
+INTEGER
+   IRL;         "T>local region number (absolute), required by HOWNEAR macro
+$REAL
+   DIST,        "T>distance to region boundary along current particle trajectory
+   DMIN_$SLABS, "T>minimum distance to boundaries checked thus far
+   ZNEAR;       "T>distance to nearest boundary
+
+IRL = IR(NP);   "local region number (absolute)
+
+" Set DNEAR
+" *********
+" This replacement macros sets DMIN_$SLABS as well as defining IR_$SLABS
+;
+$SLABS_CM_HOWNEAR(DMIN_$SLABS);
+DNEAR(NP) = DMIN_$SLABS;
+;
+" Boundary-crossing check
+" ***********************
+" Determine if current region number is within component module SLABS,
+"  and if so evaluate DIST, distance to region boundary along current
+" trajectory.  USTEP must not exceed DIST.
+"
+IF (IR_$SLABS>0 & IR_$SLABS<N_$SLABS+1) [
+   "particle in this CM (not in air gap)"
+   IF (W(NP)>0.0) ["particle going forward"
+      "calculate distance to back boundary"
+      ZNEAR = ZBACK_$SLABS(IR_$SLABS)-Z(NP);
+      DIST = ZNEAR/W(NP);
+      IF (DIST < 0.) [DIST=0.;]
+      "Above check was put in to handle the case where the distance"
+      "to interaction is ~ the distance to the"
+      "back of the SLABS CM.  In this case, particles initiated"
+      "by the interaction may actually have Z values that put them"
+      "in the next CM, but because the WHERE_AM_I for the next"
+      "CM has not been called yet, HOWFAR for SLABS is used, and a"
+      "negative USTEP results.  Note that this unusual case has"
+      "only been observed to occur between SLABS and CONS3R CMs"
+      "when incident particles are photons, SLABS is the target, and"
+      "CONS3R is the primary collimator immediately below the target"
+      "18/12/95"
+      IF(DIST=0. & IR_$SLABS=N_$SLABS)[DIST=1.E-16;]
+      "Above gives DIST a very small positive value in case of leaving CM"
+      "When collecting phase space immediately below a thin (0.01 cm) layer of"
+      "Mylar in a beam, there was a high probability of the calculated"
+      "value of USTEP (ie unmodified by HOWFAR) actually putting the particle"
+      "right on the back of the mylar layer.  When it came to the next step,"
+      "the calculated value of DIST was 0, which meant USTEP was set to 0,"
+      "and, as a result, AUSGAB was not called on leaving the CM."
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IR_$SLABS<N_$SLABS) ["particle will remain in CM"
+            IRNEW = IR(NP)+1; "new region number"
+         ]
+         ELSE ["particle will enter downstream CM"
+            CALL WHERE_AM_I(ICM_$SLABS,1); "get IRNEW, ICMNEW"
+         ]
+      ]
+   ]" end of forward going block"
+   ELSEIF (W(NP)<0.0) ["particle going backwards"
+      "calculate distance to front boundary"
+      ZNEAR = Z(NP)-ZFRONT_$SLABS(IR_$SLABS);
+      DIST = -ZNEAR/W(NP); "Direction cosine is negative"
+      IF (DIST < 0.) [DIST=0.;] "see reason above"
+      IF (DIST=0. & N_GAP_$SLABS=0 & IR_$SLABS=1)[ DIST=1.E-16;]
+      IF(DIST <= USTEP) [
+         USTEP = DIST;
+         IF (IR_$SLABS>1) ["particle will remain in CM"
+            IRNEW = IR(NP)-1; "new region number"
+         ]
+         ELSEIF (IR_$SLABS=1 & N_GAP_$SLABS=1) ["particle entering air gap"
+            IRNEW = IREND_$SLABS; "new region number"
+         ]
+         ELSE ["particle will enter upstream CM"
+            CALL WHERE_AM_I(ICM_$SLABS,-1); "get IRNEW, ICMNEW"
+         ]
+      ]
+   ]" end of backward going block"
+   "if W(NP)=0.0, never hit boundary, need not reset USTEP"
+]"end of CM regions"
+
+"   in air gap at top of CM
+"   =======================
+"
+ELSEIF (IR_$SLABS=N_$SLABS+1 & N_GAP_$SLABS=1) ["particle in air gap"
+   IF (W(NP)>0.0) ["particle going forward"
+      "calculate distance to back boundary"
+      ZNEAR = ZFRONT_$SLABS(1)-Z(NP);
+      DIST = ZNEAR/W(NP);
+      IF (DIST < 0.) [DIST=0.;] "See reason above"
+      IF(DIST <= USTEP ) ["particle will enter first slab, this CM
+         USTEP = DIST;
+         IRNEW = IRSTART_$SLABS; "new region number"
+      ]
+   ]" end of forward going block"
+   ELSEIF (W(NP)<0.0 ) ["particle going backwards"
+      "calculate distance to front boundary"
+      ZNEAR = Z(NP)-Z_min_CM(ICM_$SLABS);
+      DIST = -ZNEAR/W(NP); "Direction cosine is negative"
+      IF (DIST <= 0.) [DIST=1.E-16;] "See reason above"
+                                     "Always set to small +ve value since"
+                                     "we are definitely leaving through top"
+      IF(DIST <= USTEP) ["particle will enter upstream CM"
+         USTEP = DIST;
+         CALL WHERE_AM_I(ICM_$SLABS,-1); "get IRNEW, ICMNEW"
+      ]
+   ]" end of backward going block"
+   "if W(NP)=0.0, never hit boundary, need not reset USTEP"
+]"end of air-gap region"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$SLABS+1, IR(NP), ICM_$SLABS,
+      IR_start_CM(ICM_$SLABS); (//' ************'//' HOWFAR_$SLABS error'/
+      '    Region, local, absolute =',2I5/
+      '    CM number=',I5,' start region =',I5/' *********'//);
+   STOP;
+] "end of IF statement"
+RETURN; END; "End of subroutine HOWFAR_SLABS"
+
+%E   "start of subroutine WHERE_AM_I_$SLABS (Rev 1.6)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_SLABS
+"                          ***************************
+"
+" WHERE_AM_I routine for stacked planar slabs.
+"
+" WHERE_AM_I_$SLABS determines the new region number when a particle traverses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$SLABS subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$SLABS from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$SLABS(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$SLABS,EPCONT,STACK/; "/STACK/would be needed for more complicated
+                       "geometries.
+"T>
+"T>**************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_SLABS
+"T>**************************************
+"T>
+INTEGER IDIR,I;  "T>direction of particle, +1=forward, -1=backward
+
+IF (IDIR=1) ["particle entering this CM through front face (upstream)
+   IF (N_GAP_$SLABS=0) ["no air gap this CM"
+      IRNEW = IRSTART_$SLABS;
+   ]
+   ELSE ["this CM has an air gap at the front
+      IRNEW = IREND_$SLABS;
+   ]
+]
+ELSEIF(IDIR=2) ["particle starting within CM"
+   IF(N_GAP_$SLABS=1 & Z(NP)< ZFRONT_$SLABS(1))[
+      IRNEW = IREND_$SLABS;
+   ]
+   ELSE[
+     IRNEW=IRSTART_$SLABS+N_$SLABS-1;
+     DO I=1,N_$SLABS[
+      IF(Z(NP)<ZFRONT_$SLABS(I)+ZTHICK_$SLABS(I))[
+          IRNEW=IRSTART_$SLABS+I-1;
+          EXIT;
+      ]
+     ]
+   ]
+]
+ELSE ["particle entering this CM through back face (downstream)
+   IRNEW = IRSTART_$SLABS+N_$SLABS-1;
+]
+RETURN;
+END; "End of subroutine WHERE_AM_I_SLABS"
+
+%E  "start of subroutine HOWNEAR_$SLABS (Rev 1.6)"
+"*****************************************************************************
+"
+"                        Subroutine HOWNEAR_$SLABS
+"                        *************************
+"
+" Returns min. distance to nearest region boundary.  Used to be a macro, but
+" now the the macro calls this subroutine.
+"
+"*****************************************************************************
+
+;SUBROUTINE HOWNEAR_$SLABS(DIST);
+
+Copyright NRC 1999
+$IMPLICIT-NONE;
+
+COMIN/CM_$SLABS,STACK,CMs/;
+
+$REAL DIST; "T> min. distance to nearest region boundary
+
+IR_$SLABS = IR(NP)-IRSTART_$SLABS+1;
+IF(IR_$SLABS=N_$SLABS+1 & N_GAP_$SLABS=1)["particle is in air gap"
+   DIST=MIN(Z(NP)-Z_min_CM(ICM_$SLABS),ZFRONT_$SLABS(1)-Z(NP));
+]
+ELSE["particle is in one of the layers"
+   DIST=MIN(Z(NP)-ZFRONT_$SLABS(IR_$SLABS),
+       ZBACK_$SLABS(IR_$SLABS)-Z(NP));
+]
+RETURN;
+END; "End of subroutine HOWNEAR_$SLABS (Rev 1.6)"
+"******************************************************************************
+"End of SLABS_cm.mortran (Rev 1.6)"

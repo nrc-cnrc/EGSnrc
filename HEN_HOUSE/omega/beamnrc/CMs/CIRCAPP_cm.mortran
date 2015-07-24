@@ -1,0 +1,1587 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc BEAMnrc component module: set of circular scrapers                  "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Geoff Zhang, 1997                                         "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+"*******************************************************************************
+"
+"                             ****************          ""toc:
+"                             *              *          ""toc:
+"                             *    CIRCAPP   *          ""toc:
+"                             *              *          ""toc:
+"                             ****************          ""toc:
+"
+"   History of modifications given by sccs
+"
+"*******************************************************************************
+"*******************************************************************************
+"
+"                               PURPOSE
+"                               *******
+"   Component module for BEAM.  Set of circular scrapers in an applicator.
+"
+"*******************************************************************************
+"
+"                          GENERAL DESCRIPTION
+"                          *******************
+"
+"   This set of routines is used in conjunction with BEAM.mortran to simulate
+"   one component module of a clinical linear accelerator:  a set of 1 or more
+"   scrapers.  Each scraperor is defined by two concentric, symmetric
+"   rectangle or square and circle, the inner region being air.  The scrapers
+"   are of arbitrary thickness, width and position relative to the reference
+"   plane (Z=0). The scrapers may have different materials.
+"
+"   This is an extention of APPSQ_cm.mortran starting from SID 1.53 last
+"   edited on 14 Aug 1995.
+"
+%E   "CIRCAPP_cm.mortran - start of geometry description
+"I>
+"I> Geometry of $CIRCAPP (CIRCAPP):               ""toc:
+"I> *********************
+"I>
+"I>                     |                  ___         _____   |
+"I>                     |    ____         |   |       |     |  |
+"I>                     |   |    |        |IR=|       |IR=  |  |
+"I>                     |   |IR=1|        |  2|       |N_SC |  |
+"I>                     |   |____|        |___|       |_____|  |
+"I>                     |                                      |
+"I>       --------->    |                                      |
+"I>          beam       |            IR=N_SC+1                 |
+"I>       direction     |    ____          ___         _____   |
+"I>                     |   |    |        |IR=|       |IR=  |  |
+"I>                     |   |IR=1|        |  2|       |N_SC |  |
+"I>                     |   |____|        |   |       |     |  |
+"I>                     |                 |___|       |_____|  |
+"I>                     |                                      |
+"I>
+"I>   IR is the region number within the CM.  There are N_CIRCAPP+1 local
+"I>   regions. The first region is the furthest upstream.  An air gap is
+"I>   always present at the front and back of the CM.
+"I>
+"I>
+"I>            --------------------------------------------------------
+"I>            |          Region               | Description          |
+"I>            |-------------------------------|----------------------|
+"I>            |  absolute       | local       |                      |
+"I>            |-----------------|-------------|                      |
+"I>            |IRSTART_CIRCAPP  | IR_CIRCAPP  |  scraper             |
+"I>            |  +IR_CIRCAPP-1  |             |                      |
+"I>            |IRSTART_CIRCAPP  | N_CIRCAPP+1 | intervening air space|
+"I>            |  +N_CIRCAPP     |             |                      |
+"I>            --------------------------------------------------------
+"I>
+" Subroutines:
+" ************
+"                      INPUT_$CIRCAPP
+"                      ISUMRY_$CIRCAPP
+"                      HOWFAR_$CIRCAPP
+"                      WHERE_AM_I_$CIRCAPP
+"
+"       Called from BEAM's subroutines:
+"                      INPUT
+"                      ISUMRY
+"                      HOWFAR
+"
+"       Subroutines called:
+"                      WHERE_AM_I (a BEAM subroutine)
+"
+"*******************************************************************************
+"
+"                             RESTRICTIONS ON USE/BUGS         ""toc:
+"                             *******************
+"
+"
+;
+"*******************************************************************************
+"**************************  DESCRIPTION OF VARIABLES  *************************
+"*******************************************************************************
+"
+"                             COMMON BLOCK VARIABLES
+"                             **********************
+"
+"  Refer to the replacement macros in BEAM.mortran and CIRCAPP_macros.mortran
+"  which define the common block variables.
+"
+"*******************************************************************************
+"
+"                                OTHER VARIABLES
+"                                ***************
+"
+"  Refer to the section on type declarations for each subroutine. The following
+"  section describes the variables input from unit 5.  These variables define
+"  the parameters of each simulation.
+"
+"*******************************************************************************
+"
+"                               INPUT FROM UNIT 5              ""toc:
+"                               *****************              ""toc:
+"
+"I>
+"I>  CARDS CM_CIRCAPP
+"I>  *****************
+"I>
+"I>  -1  Dummy line to indicate start of CM.
+"I>
+"I>   0  RMAX_CM(ICM_$CIRCAPP) (F10.0): Half-width of outer boundary of CM (cm).
+"I>
+"I>   1  TITLE_$CIRCAPP (60A1):  Title of CM.
+"I>
+"I>   2  ZBACK_$CIRCAPP (F15.0): Z of back face of the CM
+"I>                           (air will be added if necessary below the
+"I>                           last scraper)
+"I>
+"I>       Note that there is always an air gap (thickness =
+"I>       AIRGAPMIN) in the front and the back of this CM.
+"I>       Therefore ZBACK_$CIRCAPP should be >= Z of the back face of the
+"I>       last scraper + AIRGAPMIN.
+"I>
+"I>   3  N_$CIRCAPP:
+"I>        N_$CIRCAPP:  Number of scrapers in the CM.
+"I>
+"I>   Repeat 4 for I=1,N_$CIRCAPP.
+"I>
+"I>   4  ZMIN_$CIRCAPP(I), ZTHICK_$CIRCAPP(I), ROPEN_$CIRCAPP(I),
+"I>      XOUTER_$CIRCAPP(I), YOUTER_$CIRCAPP(I),
+"I>      DOSE_ZONE,IREGION_TO_BIT (6F15.0,2I4):
+"I>
+"I>        ZMIN_$CIRCAPP(I):   Z of front face of scraper I. Note that
+"I>                            ZMIN_$CIRCAPP(1)-Z_min_CM must be >= AIRGAPMIN.
+"I>        ZTHICK_$CIRCAPP(I): Thickness of scraper I.  Note that
+"I>                             ZMIN_$CIRCAPP(I+1)-(ZMIN_$CIRCAPP(I)+
+"I>                             ZTHICK_$CIRCAPP(I)) must be >= AIRGAPMIN.
+"I>        ROPEN_$CIRCAPP(I):   Radius of inner opening in scraper I.
+"I>        XOUTER_$CIRCAPP(I):  X half-width of outer edge of scraper I.
+"I>        YOUTER_$CIRCAPP(I):  Y half-width of outer edge of scraper I.
+"I>        DOSE_ZONE:           Dose scoring zone for the scraper bar.
+"I>        IREGION_TO_BIT:      Bit setting number for the scraper bar.
+"I>
+"I>        Note restrictions to allow air gaps between scrapers and
+"I>        before the first scraper:
+"I>         ZMIN_$CIRCAPP(1)-Z_min_CM >= AIRGAPMIN
+"I>         ZMIN_$CIRCAPP(I+1)-(ZMIN_$CIRCAPP(I)+ZTHICK_$CIRCAPP(I)) >=
+"I>         AIRGAPMIN
+"I>
+"I>   6   ECUT, PCUT, DOSE_ZONE_AIR,IREGION_TO_BIT_AIR (2F15.0,2I5):
+"I>
+"I>          ECUT, PCUT:     Cutoff energies for electrons and photons for
+"I>                          both the bars and the surrounding (air) region
+"I>          DOSE_ZONE_AIR:  Dose scoring zone for the surrounding region
+"I>     IREGION_TO_BIT_AIR:  Bit set number for the surrounding (air) region
+"I>
+"I>   Repeat 7 for I=1,N_$CIRCAPP.
+"I>
+"I>   7   MED_IN (24A1):  Medium of the bar of scraper I, used to
+"I>                       set MED_INDEX.
+"I>
+"I>   Example
+"I>   *******
+"I>
+"I>  The input defines a circular applicator with 2 scrapers, one of Pb with
+"I>  radius of opening = 0.6cm, X and Y half-widths of 1.0cm, and thickness
+"I>  0.5cm. The other scraper, consisting of Al, has an opening with radius
+"I>  2.4cm, X half-width = 4.6cm, Y half-width = 3.2cm, and thickness 1.0cm.
+"I>  The scrapers are separated by 0.1cm of air. The front scraper starts at
+"I>  Z=1.1cm and the second at 1.6 cm.
+"I>
+"I>  Electrons will be followed down to kinetic energies of 10 keV (total
+"I>  energies of 0.521 MeV) and photons will be followed down to 1 keV.  The
+"I>  dose deposited in the air will be scored in dose zone 1, and the dose in
+"I>  the 2 scrapers will be scored in dose zones 2 and 3. There is a minimum
+"I>  0.1 cm air gap at the front and back of the CIRCAPP CM.
+"I>
+"I>  14.0,    RMAX_CM
+"I>  circular applicator
+"I>  44.0,     extended air to Z=44 cm
+"I>  2,      two scrapers
+"I>  1.10,  0.50,  0.600, 1.0, 1.0, 2, 6,
+"I>  1.60,  1.00,  2.40,  4.6, 3.2, 3, 7,
+"I>  0.521, 0.01, 1, 0,
+"I>  PB521ICRU
+"I>  AL521ICRU
+"
+;
+"*******************************************************************************
+"*******************************  ERROR CONDITIONS  ****************************
+"*******************************************************************************
+"
+"                              SIMULATION PARAMETERS
+"                              *********************
+"
+" Geometry checks:
+" ****************
+"
+"   1)  Overlapping component modules not allowed
+"
+"   2)  Overlapping scrapers not allowed
+"
+"   3)  Air gap at front and back of CM required
+"
+"   4)  Boundaries of all scrapers must be within CM boundary, RMAX_CM
+"
+"*******************************************************************************
+
+%E   "start of subroutine HOWFAR_$CIRCAPP (Rev 1.4)"
+"*******************************************************************************
+"************************** Component Module CIRCAPP **************************
+"*******************************************************************************
+"
+"                          Subroutine HOWFAR_CIRCAPP
+"                          **************************
+"
+" HOWFAR routine for set of scrapers.
+"
+" Determine if current region number is within component module CIRCAPP, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+"   There are N_CIRCAPP+1 local regions + an air gap (if present):
+"
+"      local                    absolute                   description
+"   ------------  ------------------------------------   ---------------
+"       IRL       IR_start_CM(ICM_CIRCAPP)+IRL-1        scraper IRL
+"   N_CIRCAPP+1  IR_start_CM(ICM_CIRCAPP)+N_CIRCAPP   intervening air
+"
+"   Geometrical co-ordinates, as set in INPUT_CIRCAPP are:
+"
+"   ZFRONT_CIRCAPP     front of CM (upstream surface, air region)
+"   ZBACK_CIRCAPP      back of CM (downstream surface, air region)
+"   ZMIN_CIRCAPP(IRL)  front of scraper IRL, or front of surrounding air
+"                      region for IRL=N_CIRCAPP+1
+"   ZMAX_CIRCAPP(IRL)  back of scraper IRL or air region
+"   ROPEN_CIRCAPP(IRL) radius of opening in scraper IRL
+"   XOUTER_CIRCAPP(IRL)  maximum X of scraper IRL
+"   YOUTER_CIRCAPP(IRL)  maximum Y of scraper IRL
+"
+"*******************************************************************************
+;
+;SUBROUTINE HOWFAR_$CIRCAPP;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+
+;COMIN/CMs,CM_$CIRCAPP,EPCONT,STACK,EGS-IO/;
+
+"T>
+"T>*************************************
+"T>TYPE DECLARATIONS FOR HOWFAR_CIRCAPP
+"T>*************************************
+"T>
+
+INTEGER
+   I,II,            "T>loop variable
+   IRL,             "T>local region number (absolute), required by HOWNEAR macro
+   IRNEW_$CIRCAPP, "T>tentative new region number within CM (absolute)
+   IB_$CIRCAPP,    "T>index to deal with round off errors
+   IHIT;            "T>Index for hit(=1) or not (=0)
+
+$REAL
+   DIST,            "T>distance to region boundary along current particle
+"                      trajectory
+   DFR,             "T>distance to front scraper plane on particle trajectory
+   XFR,             "T>X at scraper front surface along particle trajectory
+   YFR,             "T>Y at scraper front surface along particle trajectory
+   RFR,             "T>R at scraper front surface along particle trajectory
+   DBA,             "T>distance to back scraper plane on particle trajectory
+   XBA,             "T>X at scraper back surface along particle trajectory
+   YBA,             "T>Y at scraper back surface along particle trajectory
+   RBA,             "T>R at scraper back surface along particle trajectory
+   DTEM,            "T>temperary dist;
+   ZFRBA,           "T>front or back of a scraper plane z coordinate
+   AR,              "T>temperary variable to reduce repeated calculation
+   XAR1,            "T>temperary variable to reduce repeated calculation
+   XAR2,            "T>temperary variable to reduce repeated calculation
+   YAR1,            "T>temperary variable to reduce repeated calculation
+   YAR2,            "T>temperary variable to reduce repeated calculation
+   ZAR1,            "T>temperary variable to reduce repeated calculation
+   ZAR2,            "T>temperary variable to reduce repeated calculation
+   DAR1,            "T>temperary variable to reduce repeated calculation
+   DAR2,            "T>temperary variable to reduce repeated calculation
+   TVAR,            "T>temperary variable to reduce repeated calculation
+   RPARTI,          "T>r coordinate of particle
+   one;
+parameter (one = 1);
+
+IRL = IR(NP); "local region number (absolute)
+
+" Set DNEAR
+" *********
+" This replacement macros sets DNEAR as well as defining IR_$CIRCAPP, and if in
+" scraper region, ABSX_$CIRCAPP and ABSY_$CIRCAPP.
+
+;$CIRCAPP_CM_HOWNEAR(DNEAR(NP));
+
+" Boundary-crossing check
+" ***********************
+"
+" Determine if current region number is within component module CIRCAPP, and if
+" so evaluate DIST, distance to region boundary along current trajectory.  USTEP
+" must not exceed DIST.
+"
+IF (IR_$CIRCAPP>0 & IR_$CIRCAPP<N_$CIRCAPP+1) [
+   "particle in a scraper, all treated the same"
+   "establish nearest boundary in Z-direction"
+   IB_$CIRCAPP=1; "inside scrapers is 1"
+   IF (W(NP)~=0.0) [
+      ZFRBA=ZMAXT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+      IF(W(NP)<0.0)[ZFRBA=ZMINT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);]
+      DBA = (ZFRBA-Z(NP))/W(NP);
+      XBA = X(NP)+U(NP)*DBA; "X at Back
+      YBA = Y(NP)+V(NP)*DBA; "Y at Back
+      RBA = SQRT(XBA**2+YBA**2); "R at back
+      DIST=DBA;
+      IF(RBA<=ROPENT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))[
+      "hit air opening cylinder for sure"
+         $CIRCAPP_HIT_CYLINDER(IR_$CIRCAPP);
+         IF(DTEM < DBA)[
+           DIST=DTEM;
+         ]
+      ]
+      ELSE[
+         "first check if it hit the air opening cylinder and "
+         "if the intersection point is within the"
+         "z range -- zmin<z<zmax. if true, calculate the distance to the"
+         "cylinder wall."
+         IHIT=0; "default to not-hitting air opening cylinder"
+         $CIRCAPP_CHECK_HIT_CYLINDER; "macro to check if the particle "
+                                        "hits the cylinder"
+         IF(IHIT=1)["particle hits the air opening cylinder"
+            $CIRCAPP_DIST_TO_CYLINDER;"macro to calculate distance to cylinder"
+         ]
+         ELSEIF(IHIT=0&(ABS(XBA)>XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)|
+                   ABS(YBA)>YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP))) [
+              "particle hits outer boundary of the scraper"
+            $CIRCAPP_HIT_OUTER;
+         ]
+      ]
+      DIST=MIN(DIST,DBA);
+   ]
+   ELSE[                        " (W(NP)=0.0"
+      XBA=XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+      YBA=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+      IF(U(NP)>0.0)[
+         YBA=Y(NP)+V(NP)*
+            (XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)-X(NP))/U(NP);
+         IF(YBA>YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)) [
+            YBA=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+         ]
+         ELSEIF(YBA<-YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)) [
+            YBA=-YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+         ]
+         IF(V(NP)~=0.0)[
+            XBA=X(NP)+U(NP)*(YBA-Y(NP))/V(NP);
+         ]
+      ]
+      ELSEIF(U(NP)<0.0)[
+         YBA=Y(NP)+V(NP)*
+            (-XOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)-X(NP))/U(NP);
+         IF(YBA>YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)) [
+            YBA=YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+         ]
+         ELSEIF(YBA<-YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP)) [
+            YBA=-YOUTERT_$CIRCAPP(IR_$CIRCAPP,IB_$CIRCAPP);
+         ]
+         IF(V(NP)~=0.0)[
+            XBA=X(NP)+U(NP)*(YBA-Y(NP))/V(NP);
+         ]
+      ]
+      ELSE[    "U(NP)=0.0"
+         IF(V(NP)<0.0)[
+            XBA=X(NP);
+            YBA=-YBA;
+         ]
+      ] "above is to find the coordinates where it hits outer boundary."
+        "but before it hits the boundary, it may hit opening cylinder first."
+      IHIT=0; "default to not hitting air opening cylinder"
+      DIST=SQRT((XBA-X(NP))**2+(YBA-Y(NP))**2);
+      $CIRCAPP_CHECK_HIT_CYLINDER;
+      IF(IHIT=1)[
+         $CIRCAPP_DIST_TO_CYLINDER; "macro to calculate distance to cylinder"
+      ]
+      IF(IHIT=0) [ "particle hits outer boundary"
+         $CIRCAPP_HIT_OUTER;
+      ]
+   ] "end of w=0 in scraper"
+   IF(DIST <= USTEP ) ["particle moves to region boundary, still in CM"
+      USTEP = DIST;
+      IRNEW = IRSTART_$CIRCAPP+N_$CIRCAPP; "new region number"
+   ]
+]" end of scraper block"
+"
+ELSEIF (IR_$CIRCAPP=N_$CIRCAPP+1) [ "particle in air region "
+   IB_$CIRCAPP=2;    "in air the index is 2"
+   IF (W(NP)>0.0)[   "particle moving forward"
+      "check scrapers for possible intersection with particle trajectory"
+      DIST = (ZBACK_$CIRCAPP-Z(NP))/W(NP); "distance to back of CM"
+      IF(DIST<=0)[DIST=1.E-16;] "ensure call to ausgab if leaving CM"
+      IRNEW_$CIRCAPP = 1; "new region number for large USTEP"
+      DO I=1,N_$CIRCAPP ["loop through scrapers"
+         IF(Z(NP)>ZMINT_$CIRCAPP(I,IB_$CIRCAPP)&
+            Z(NP)<ZMAXT_$CIRCAPP(I,IB_$CIRCAPP))["check Z between wall first "
+            DBA=(ZMAXT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+            XBA=X(NP)+DBA*U(NP);
+            YBA=Y(NP)+DBA*V(NP);
+            RPARTI=SQRT(X(NP)**2+Y(NP)**2);
+            RBA = SQRT(XBA**2+YBA**2);
+            IF(RPARTI < ROPENT_$CIRCAPP(I,IB_$CIRCAPP))["in cylinder initially
+               IF(RBA>ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[ "hit cylinder
+                  $CIRCAPP_HIT_CYLINDER(I);
+                  IF(DTEM < DBA)[
+                     DIST=DTEM;
+                     IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                     EXIT;
+                  ]
+               ]
+               ELSEIF(I < N_$CIRCAPP)[
+                  DO II=I+1,N_$CIRCAPP[ " continue down the way check"
+                     DFR=(ZMINT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                     XFR = X(NP)+U(NP)*DFR;   "X at front
+                     YFR = Y(NP)+V(NP)*DFR;   "X at front
+                     RFR = SQRT(XFR**2+YFR**2);
+                     IF(RFR>=ROPENT_$CIRCAPP(II,IB_$CIRCAPP)&
+                        ABS(XFR)<=XOUTERT_$CIRCAPP(II,IB_$CIRCAPP) &
+                        ABS(YFR)<=YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        "hit front surface of scraper(ii)"
+                        DIST=DFR;
+                        "I=N_$CIRCAPP;"
+                        IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                        GOTO :OUTLOOP1:;
+                     ]
+                     ELSEIF(RFR < ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DBA=(ZMAXT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        RBA = SQRT(XBA**2+YBA**2);
+                        IF(RBA>ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        "going to the scraper ii from inside cylinder"
+                           $CIRCAPP_HIT_CYLINDER(II);
+                           IF(DTEM < DBA)[
+                              DIST=DTEM;
+                              IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                              GOTO :OUTLOOP1:;
+                           ]
+                        ]
+                     ]
+                  ]
+               ]
+            ]"end inside opening cylinder
+            ELSEIF(ABS(X(NP)) > XOUTERT_$CIRCAPP(I,IB_$CIRCAPP)|
+               ABS(Y(NP))>YOUTERT_$CIRCAPP(I,IB_$CIRCAPP))["outside scraper
+               $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XOUTERT_$CIRCAPP(I,IB_$CIRCAPP),
+                  YOUTERT_$CIRCAPP(I,IB_$CIRCAPP),X(NP),Y(NP),DBA);
+               IF(IHIT =1)[
+                  DIST=DTEM;
+                  IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I < N_$CIRCAPP)[
+                  DO II=I+1,N_$CIRCAPP[ " continue down the way check"
+                     DFR=(ZMINT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                     XFR = X(NP)+U(NP)*DFR;   "X at front
+                     YFR = Y(NP)+V(NP)*DFR;   "X at front
+                     RFR = SQRT(XFR**2+YFR**2); "R at front
+                     IF(RFR>=ROPENT_$CIRCAPP(II,IB_$CIRCAPP)&
+                        ABS(XFR)<=XOUTERT_$CIRCAPP(II,IB_$CIRCAPP) &
+                        ABS(YFR)<=YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        "going to the front surface of scraper ii"
+                        DIST=DFR;
+                        "I=N_$CIRCAPP;"
+                        IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                        GOTO :OUTLOOP1:;
+                     ]
+                     ELSEIF(RFR<ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                     "going to the center cylinder"
+                        DBA=(ZMAXT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        RBA = SQRT(XBA**2+YBA**2); "R at back
+                        IF(RBA>ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        "hit scraper ii from inside cylinder"
+                           $CIRCAPP_HIT_CYLINDER(II);
+                           IF(DTEM < DBA)[
+                              DIST = DTEM;
+                              IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                              GOTO :OUTLOOP1:;
+                           ]
+                        ]
+                     ]
+                     ELSEIF(ABS(XFR) > XOUTERT_$CIRCAPP(II,IB_$CIRCAPP)|
+                        ABS(YFR) > YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        "outside scraper at front, but may go through it"
+                        DBA=(ZMAXT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XBA = X(NP)+U(NP)*DBA; "X at Back
+                        YBA = Y(NP)+V(NP)*DBA; "X at Back
+                        $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                           XOUTERT_$CIRCAPP(II,IB_$CIRCAPP),
+                           YOUTERT_$CIRCAPP(II,IB_$CIRCAPP),XFR,YFR,DBA-DFR);
+                        IF(IHIT =1)[
+                           DIST = DTEM+DFR;
+                           IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                           GOTO :OUTLOOP1:;
+                        ]
+                     ]
+                  ] " end of down the way check"
+               ]
+            ]"end outside scraper
+         ]
+         ELSEIF(Z(NP)<ZMINT_$CIRCAPP(I,IB_$CIRCAPP))[
+            "check Z not between scrapers,"
+            DFR=(ZMINT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+            XFR = X(NP)+U(NP)*DFR;   "X at front
+            YFR = Y(NP)+V(NP)*DFR;   "X at front
+            RFR = SQRT(XFR**2+YFR**2); "R at front
+            IF(RFR >= ROPENT_$CIRCAPP(I,IB_$CIRCAPP)&
+               ABS(XFR) <= XOUTERT_$CIRCAPP(I,IB_$CIRCAPP) &
+               ABS(YFR) <= YOUTERT_$CIRCAPP(I,IB_$CIRCAPP))[
+               "going to the front surface of scraper"
+               DIST = DFR;
+               IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+               EXIT;
+            ]
+            ELSEIF(RFR<ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[
+            "going to the center air cylinder"
+               DBA=(ZMAXT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+               XBA = X(NP)+U(NP)*DBA; "X at Back
+               YBA = Y(NP)+V(NP)*DBA; "X at Back
+               RBA = SQRT(XBA**2+YBA**2); "R at back
+               IF(RBA>ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[
+               "hit cylinder wall from air"
+                  $CIRCAPP_HIT_CYLINDER(I);
+                  IF(DTEM < DBA)[
+                     DIST = DTEM;
+                     IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                     EXIT;
+                  ]
+               ]
+            ]
+         ]
+      ]
+      :OUTLOOP1:;
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF (IRNEW_$CIRCAPP=1) ["leaving CM through back"
+            CALL WHERE_AM_I(ICM_$CIRCAPP,1);
+         ]
+         ELSE ["still in CM, entering scraper"
+            IRNEW = IRNEW_$CIRCAPP; "new region number"
+         ]
+      ]
+   ]
+
+   ELSEIF (W(NP)<0.0) [" particle move backward"
+      DIST = (ZFRONT_$CIRCAPP-Z(NP))/W(NP); "distance to front of CM
+      IF(DIST<=0)[DIST=1.E-16;]
+      IRNEW_$CIRCAPP = 1; "new region number for large USTEP
+      DO I=N_$CIRCAPP,1,-1 ["loop through scrapers
+         IF(Z(NP) > ZMINT_$CIRCAPP(I,IB_$CIRCAPP)&
+            Z(NP) < ZMAXT_$CIRCAPP(I,IB_$CIRCAPP))[
+            "check Z between a scraper first"
+            RPARTI = SQRT(X(NP)**2+Y(NP)**2);
+            IF(RPARTI < ROPENT_$CIRCAPP(I,IB_$CIRCAPP))["inside air opening"
+               DFR = (ZMINT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+               XFR = X(NP)+DFR*U(NP);
+               YFR = Y(NP)+DFR*V(NP);
+               RFR = SQRT(XFR**2+YFR**2);
+               IF(RFR > ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[
+               "hit air opening cylinder from air"
+                  $CIRCAPP_HIT_CYLINDER(I);
+                  IF(DTEM < DFR)[
+                     DIST=DTEM;
+                     IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                     EXIT;
+                  ]
+               ]
+               ELSEIF(I > 1)[
+                  DO II=I-1,1,-1[ " continue down the way check"
+                     DBA = (ZMAXT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                     XBA = X(NP)+U(NP)*DBA;   "X at back
+                     YBA = Y(NP)+V(NP)*DBA;   "X at back
+                     RBA = SQRT(XBA**2+YBA**2); "R at back
+                     IF(RBA >= ROPENT_$CIRCAPP(II,IB_$CIRCAPP)&
+                        ABS(XBA) <= XOUTERT_$CIRCAPP(II,IB_$CIRCAPP) &
+                        ABS(YBA) <= YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DIST = DBA;
+                        IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                        GOTO :OUTLOOP2:;
+                     ]
+                     ELSEIF(RBA < ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DFR = (ZMINT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XFR = X(NP)+U(NP)*DFR; "X at front
+                        YFR = Y(NP)+V(NP)*DFR; "X at front
+                        RFR = SQRT(XFR**2+YFR**2); "R at front
+                        IF(RFR > ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                           $CIRCAPP_HIT_CYLINDER(II);
+                           IF(DTEM < DFR)[
+                             DIST=DTEM;
+                             IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                             GOTO :OUTLOOP2:;
+                           ]
+                        ]
+                     ]
+                  ] " end of continue down the way check"
+               ]
+            ] "end of Z between scraper and inside air opening
+
+            ELSEIF(
+               ABS(X(NP)) > XOUTERT_$CIRCAPP(I,IB_$CIRCAPP)|
+               ABS(Y(NP)) > YOUTERT_$CIRCAPP(I,IB_$CIRCAPP))
+               [" Z between a scraper but outside scraper
+               DFR = (ZMINT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+               XFR = X(NP)+DFR*U(NP);
+               YFR = Y(NP)+DFR*V(NP);
+               $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XOUTERT_$CIRCAPP(I,IB_$CIRCAPP),
+                  YOUTERT_$CIRCAPP(I,IB_$CIRCAPP),X(NP),Y(NP),DFR);
+               IF(IHIT = 1)[
+                  DIST=DTEM;
+                  IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                  EXIT;
+               ]
+               ELSEIF(I > 1)[
+                  DO II=I-1,1,-1[ " continue down the way check"
+                     DBA = (ZMAXT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                     XBA = X(NP)+U(NP)*DBA;   "X at back
+                     YBA = Y(NP)+V(NP)*DBA;   "X at back
+                     RBA = SQRT(XBA**2+YBA**2); "R at back
+                     IF(RBA >= ROPENT_$CIRCAPP(II,IB_$CIRCAPP)&
+                        ABS(XBA) <= XOUTERT_$CIRCAPP(II,IB_$CIRCAPP) &
+                        ABS(YBA) <= YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DIST = DBA;
+                        IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                        GOTO :OUTLOOP2:;
+                     ]
+                     ELSEIF(RBA < ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DFR=(ZMINT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XFR = X(NP)+U(NP)*DFR; "X at front
+                        YFR = Y(NP)+V(NP)*DFR; "X at front
+                        RFR = SQRT(XFR**2+YFR**2); "R at front
+                        IF(RFR > ROPENT_$CIRCAPP(II,IB_$CIRCAPP))[
+                           $CIRCAPP_HIT_CYLINDER(II);
+                           IF(DTEM < DFR)[
+                             DIST=DTEM;
+                             IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                             GOTO :OUTLOOP2:;
+                           ]
+                        ]
+                     ]
+                     ELSEIF(ABS(XBA) > XOUTERT_$CIRCAPP(II,IB_$CIRCAPP)|
+                        ABS(YBA) > YOUTERT_$CIRCAPP(II,IB_$CIRCAPP))[
+                        DFR=(ZMINT_$CIRCAPP(II,IB_$CIRCAPP)-Z(NP))/W(NP);
+                        XFR = X(NP) + U(NP)*DFR; "X at front
+                        YFR = Y(NP) + V(NP)*DFR; "X at front
+                        $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                           XOUTERT_$CIRCAPP(II,IB_$CIRCAPP),
+                           YOUTERT_$CIRCAPP(II,IB_$CIRCAPP),XBA,YBA,DFR-DBA);
+                        IF(IHIT =1)[
+                           DIST = DTEM+DBA;
+                           IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+II-1;
+                           GOTO :OUTLOOP2:;
+                        ]
+                     ]
+                  ] " end of continue down the way check"
+               ]
+            ]  "end of Z between scraper end of outside scraper"
+         ] "end of Z between a scraper"
+         ELSEIF(Z(NP) > ZMAXT_$CIRCAPP(I,IB_$CIRCAPP))[
+            " Z not between a scraper"
+            DBA = (ZMAXT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+            XBA = X(NP)+U(NP)*DBA;   "X at front
+            YBA = Y(NP)+V(NP)*DBA;   "X at front
+            RBA = SQRT(XBA**2+YBA**2); "R at front
+            IF(RBA >= ROPENT_$CIRCAPP(I,IB_$CIRCAPP)&
+               ABS(XBA) <= XOUTERT_$CIRCAPP(I,IB_$CIRCAPP) &
+               ABS(YBA) <= YOUTERT_$CIRCAPP(I,IB_$CIRCAPP))[
+               DIST=DBA;
+               IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+               EXIT;
+            ]
+            ELSEIF(RBA < ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[
+               DFR=(ZMINT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+               XFR = X(NP)+U(NP)*DFR; "X at Back
+               YFR = Y(NP)+V(NP)*DFR; "X at Back
+               RFR = SQRT(XFR**2+YFR**2); "R at back
+               IF(RFR > ROPENT_$CIRCAPP(I,IB_$CIRCAPP))[
+               "hit cylinder wall from air"
+                  $CIRCAPP_HIT_CYLINDER(I);
+                  IF(DTEM < DFR)[
+                     DIST = DTEM;
+                     IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                     EXIT;
+                  ]
+               ]
+            ]
+            ELSEIF(ABS(XBA) > XOUTERT_$CIRCAPP(I,IB_$CIRCAPP)|
+               ABS(YBA) > YOUTERT_$CIRCAPP(I,IB_$CIRCAPP))[
+               DFR = (ZMINT_$CIRCAPP(I,IB_$CIRCAPP)-Z(NP))/W(NP);
+               XFR = X(NP)+U(NP)*DFR; "X at Back
+               YFR = Y(NP)+V(NP)*DFR; "X at Back
+               $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XOUTERT_$CIRCAPP(I,IB_$CIRCAPP),
+                  YOUTERT_$CIRCAPP(I,IB_$CIRCAPP),XBA,YBA,DFR-DBA);
+               IF(IHIT =1)[
+                  DIST = DTEM+DBA;
+                  IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+                  EXIT;
+               ]
+            ]
+         ]
+      ]" end of not between a scraper"
+:OUTLOOP2:
+      IF(DIST <= USTEP ) ["particle to be moved to region boundary
+         USTEP = DIST;
+         IF(IRNEW_$CIRCAPP=1) ["leaving CM through front"
+            CALL WHERE_AM_I(ICM_$CIRCAPP,-1);
+         ]
+         ELSE ["still in CM, entering scraper"
+            IRNEW = IRNEW_$CIRCAPP; "new region number"
+         ]
+      ]
+   ] " end of move backward"
+   ELSEIF (W(NP)=0.0) [ " w=0"
+      IHIT=0;
+      DIST = 1.E30; "set large distance in case of particle missing scrapers
+      DO I=1,N_$CIRCAPP ["loop through scrapers
+         IF(Z(NP) >= ZMINT_$CIRCAPP(I,IB_$CIRCAPP)&
+            Z(NP) <= ZMAXT_$CIRCAPP(I,IB_$CIRCAPP)) ["if between a scraper
+            RPARTI = SQRT(X(NP)**2+Y(NP)**2);
+            IF(RPARTI<ROPENT_$CIRCAPP(I,IB_$CIRCAPP))["in air opening"
+               $CIRCAPP_HIT_CYLINDER(I);
+               IF(DTEM < DIST)[
+                 DIST = DTEM;
+                 IHIT=1;
+               ]
+            ]
+            ELSE["particle outside scraper"
+               $CIRCAPP_MAY_HIT_INSIDE(IHIT,DTEM,
+                  XOUTERT_$CIRCAPP(I,IB_$CIRCAPP),
+                  YOUTERT_$CIRCAPP(I,IB_$CIRCAPP),X(NP),Y(NP),DIST);
+               IF(IHIT =1)[
+                  DIST = DTEM;
+               ]
+            ]
+            IF(IHIT=1)[
+               IRNEW_$CIRCAPP = IRSTART_$CIRCAPP+I-1;
+            ]
+            IF(DIST <= USTEP ) ["particle to be moved to region boundary
+               USTEP = DIST;
+               IRNEW = IRNEW_$CIRCAPP; "new region number"
+            ]
+            EXIT;
+         ]
+      ]
+
+   ] "end of w=0"
+
+] "end of air region
+"end of CM regions"
+
+"   outside of CM, something is wrong
+"   =================================
+"
+ELSE ["something is wrong"
+   OUTPUT IR(NP)-IRSTART_$CIRCAPP+1,IR(NP),ICM_$CIRCAPP,
+      IR_start_CM(ICM_$CIRCAPP);
+      (//' ************'//' HOWFAR_CIRCAPP error'/
+         '    Region, local, absolute =',2I5/
+         '    CM number=',I5,' start region =',I5/
+         ' *********'//);
+   STOP;
+] "end of IF statement"
+
+"   end of HOWFAR_CIRCAPP
+"   ======================
+"
+RETURN;
+END; "End of subroutine HOWFAR_$CIRCAPP"
+%E "start of subroutine WHERE_AM_I_$CIRCAPP (Rev 1.4)"
+"*******************************************************************************
+"
+"                          Subroutine WHERE_AM_I_CIRCAPP
+"                          ******************************
+"
+" WHERE_AM_I routine for set of scrapers.
+"
+" WHERE_AM_I_$CIRCAPP determines the new region number when a particle crosses
+" a component module boundary.  The scheme is as follows:
+"
+"      Whenever a particle is to be transported to a component module
+"      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
+"      current component module and particle direction (backwards or
+"      forwards) are transferred to WHERE_AM_I in the CALL statement.
+"      WHERE_AM_I determines which component module the particle is
+"      about to enter and calls the WHERE_AM_I_$CIRCAPP subroutine for
+"      that component module, transferring the particle direction.
+"      The region number that the particle is about to enter is
+"      determined in WHERE_AM_I_$CIRCAPP from the knowledge of which
+"      surface the particle is entering through (front if IDIR=1,
+"      back if IDIR=-1) and the (X,Y) coordinates of the particle.
+"      The current particle being transported is NP (in /STACK/).
+"
+"*******************************************************************************
+
+;SUBROUTINE WHERE_AM_I_$CIRCAPP(IDIR);
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/CM_$CIRCAPP,EPCONT/; "/STACK/would be needed for more complicated"
+                        "geometries."
+"T>
+"T>*****************************************
+"T>TYPE DECLARATIONS FOR WHERE_AM_I_CIRCAPP
+"T>*****************************************
+"T>
+;
+INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
+IRNEW = IREND_$CIRCAPP; "particle always enters air region surrounding scrapers"
+RETURN;
+END; "End of subroutine WHERE_AM_I_$CIRCAPP"
+%E "start of subroutine INPUT_$CIRCAPP (Rev 1.4)"
+"*******************************************************************************
+"
+"                           Subroutine INPUT_CIRCAPP
+"                           *************************
+"
+"  A CM input subroutine for a series of 1 or more scrapers.
+"
+"  It must fill all parameters in COMMON/CMs/ associated with this CM.
+"
+"  Routine prints error messages on unit 6 for
+"      format error on input
+"      end of file hit
+"      error in logic of input file
+"
+"  The format of the input is presented in the section `INPUT FROM UNIT 5' in
+"  the above documentation.
+"
+"*******************************************************************************
+
+;SUBROUTINE INPUT_$CIRCAPP;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$CIRCAPP,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
+"T>
+"T>************************************
+"T>TYPE DECLARATIONS FOR INPUT_CIRCAPP
+"T>************************************
+"T>
+INTEGER
+        DOSE_ZONE_AIR, "T>dose scoring zone of air region surrounding scrapers
+        I,J,K,         "T>DO loop indeces
+        IRA,           "T>Absolute region number
+        IR_TO_BIT_AIR, "T>Bit setting number for air region
+        MED_FLAG,      "T>flag used by media-sort macro $MED_INPUT
+        MED_INDEX,     "T>medium index, set after medium sort by $MED_INPUT
+        ISHAPE;        "T>shape index, square (default) or rectangular (1)
+$REAL ZTHICK_$CIRCAPP($MAX_N_$CIRCAPP), "T>thickness of each scraper in CM
+      OUTER_$CIRCAPP($MAX_N_$CIRCAPP); "T>the smaller of x, y width of scraper
+"
+"  initialize parameters
+"  =====================
+"
+ICM_$CIRCAPP = ICM;      "CM index for this component module
+IRSTART_$CIRCAPP = IR_start_CM(ICM_$CIRCAPP);"Index of first region in CM,
+                                      "set by previous CM or in MAIN if ICM=1
+IERR_GEOM(ICM_$CIRCAPP) = 0; "Geometry-checking flag, 0 if no error detected
+AIRGAPMIN_$CIRCAPP = $GAP_F_B_AIR_MIN; "Minimum air gap at front and back of CM
+
+"
+"  get the title line
+"  ==================
+"
+OUTPUT;(/' Next component is a set of square or rectangular scrapers '//
+       '$CIRCAPP   (CIRCAPP: Rev 1.4)'//' TITLE: ',$);
+;MINPUT ($CIRCAPP) TITLE_$CIRCAPP;(60A1);
+                  ";MINPUT is a replacement macro with EOF and
+                                "ERR branching to :EOF_{P1}: and :ERR_{P1}:
+OUTPUT TITLE_$CIRCAPP;(' ',60A1);
+
+"  get the Z coordinate of CM starting and ending if default is not used
+"  ==================================================================
+OUTPUT AIRGAPMIN_$CIRCAPP;
+   (/' Input ZBACK_$CIRCAPP, the Z coordinate of the back face of this CM',
+    /' [Note: Leave at least min. airgap (=',F8.5,' cm) between'/
+     ' the back of the last scraper and ZBACK]:',$);
+
+;MINPUT ($CIRCAPP) ZBACK_$CIRCAPP;(F15.0);
+OUTPUT ZBACK_$CIRCAPP; (F15.5);
+
+"
+"   get information for each scraperr
+"   =================================
+"
+"get number of slabs"
+"
+N_$CIRCAPP = $MAX_N_$CIRCAPP; "Maximum number of scrapers permitted"
+OUTPUT N_$CIRCAPP;
+   (/' Number of scrapers in the CM (minimum 1, maximum',I2,'): ',$);
+;MINPUT ($CIRCAPP) N_$CIRCAPP; (I5);
+OUTPUT N_$CIRCAPP; (I5);
+IF(N_$CIRCAPP > $MAX_N_$CIRCAPP)[
+   N_$CIRCAPP=$MAX_N_$CIRCAPP;
+   OUTPUT ICM_$CIRCAPP, N_$CIRCAPP;
+     (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+        '# of scrapers > max. allowed'/
+        '# of scrapers reduced to ',I4,' for now'//);
+   IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+]
+ELSEIF(N_$CIRCAPP<1)[
+   N_$CIRCAPP=1;
+   OUTPUT ICM_$CIRCAPP;
+     (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+        '# of scrapers < 1'/
+        '# of scrapers reset to 1 for now'//);
+   IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+]
+
+"loop over scrapers
+"
+IRA = IRSTART_$CIRCAPP - 1; "absolute region number
+DO IR_$CIRCAPP=1,N_$CIRCAPP [
+   "loop through local region number to get slab information"
+   IRA = IRA+1;
+   "get Z of front face, thickness, and width of scraper IR_CIRCAPP
+   "
+   OUTPUT IR_$CIRCAPP, AIRGAPMIN_$CIRCAPP;
+         (/' Scraper',I3,':'/
+' Z OF FRONT FACE, THICKNESS (in Z), RADIUS OF OPENING, BAR HALF-WIDTH in X,'/
+' BAR HALF-WIDTH in Y (cm), DOSE ZONE, IREGION_TO_BIT (all on one line)'/
+' [Leave at least the min. airgap (= ',F8.5,' cm) between scrapers]',/
+          ' : ',$);
+   ;MINPUT ($CIRCAPP)
+      ZMIN_$CIRCAPP(IR_$CIRCAPP),ZTHICK_$CIRCAPP(IR_$CIRCAPP),
+      ROPEN_$CIRCAPP(IR_$CIRCAPP),XOUTER_$CIRCAPP(IR_$CIRCAPP),
+      YOUTER_$CIRCAPP(IR_$CIRCAPP),
+      DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (5F15.0,2I4);
+      ;OUTPUT
+      ZMIN_$CIRCAPP(IR_$CIRCAPP),ZTHICK_$CIRCAPP(IR_$CIRCAPP),
+      ROPEN_$CIRCAPP(IR_$CIRCAPP),XOUTER_$CIRCAPP(IR_$CIRCAPP),
+      YOUTER_$CIRCAPP(IR_$CIRCAPP),
+      DOSE_ZONE(IRA),IREGION_TO_BIT(IRA);
+      (5F8.2,2I12);
+   OUTER_$CIRCAPP(IR_$CIRCAPP)=MIN(XOUTER_$CIRCAPP(IR_$CIRCAPP),
+                                   YOUTER_$CIRCAPP(IR_$CIRCAPP));
+   IF(IR_$CIRCAPP=1)[
+     IF(ICM_$CIRCAPP=1 & Z_min_CM(ICM_$CIRCAPP) > ZMIN_$CIRCAPP(1)-
+         AIRGAPMIN_$CIRCAPP)[
+        OUTPUT ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+          ZMIN_$CIRCAPP(1)-AIRGAPMIN_$CIRCAPP,Z_min_CM(1);
+         (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+            ' Less than min. airgap (',F8.5,' cm) between top',
+            ' of CM and 1st scraper.'/
+            ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        WRITE(IOUTLIST,100)ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+          ZMIN_$CIRCAPP(1)-AIRGAPMIN_$CIRCAPP,Z_min_CM(1);
+       100 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+            ' Less than min. airgap (',F8.5,' cm) between top',
+            ' of CM and 1st scraper.'/
+            ' Z_min_CM(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+        Z_min_CM(1)= ZMIN_$CIRCAPP(1)-AIRGAPMIN_$CIRCAPP;
+     ]
+     ELSEIF(Z_min_CM(ICM_$CIRCAPP) > ZMIN_$CIRCAPP(1))[
+         OUTPUT ICM_$CIRCAPP;
+           (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+              ' Overlaps with previous CM.'//);
+         IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+     ]
+     ELSEIF(Z_min_CM(ICM_$CIRCAPP) > ZMIN_$CIRCAPP(1) - AIRGAPMIN_$CIRCAPP)[
+         OUTPUT ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+         Z_min_CM(ICM_$CIRCAPP)+AIRGAPMIN_$CIRCAPP,ZMIN_$CIRCAPP(1);
+          (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+             ' Less than min. airgap (',F8.5,' cm) between top',
+             ' of CM and 1st scraper.'/
+             ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         WRITE(IOUTLIST,101)ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+         Z_min_CM(ICM_$CIRCAPP)+AIRGAPMIN_$CIRCAPP,ZMIN_$CIRCAPP(1);
+     101 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+             ' Less than min. airgap (',F8.5,' cm) between top',
+             ' of CM and 1st scraper.'/
+             ' ZMIN(1) reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         ZMIN_$CIRCAPP(1)=Z_min_CM(ICM_$CIRCAPP)+AIRGAPMIN_$CIRCAPP;
+     ]
+   ]
+   ELSE[
+      IF(ZMIN_$CIRCAPP(IR_$CIRCAPP-1)+ZTHICK_$CIRCAPP(IR_$CIRCAPP-1) >
+        ZMIN_$CIRCAPP(IR_$CIRCAPP))[
+          OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP-1, IR_$CIRCAPP;
+        (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+           ' Scraper ',I4,' overlaps with scraper ',I4//);
+         IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+      ]
+      ELSEIF (ZMIN_$CIRCAPP(IR_$CIRCAPP-1)+ZTHICK_$CIRCAPP(IR_$CIRCAPP-1)>
+         ZMIN_$CIRCAPP(IR_$CIRCAPP)-AIRGAPMIN_$CIRCAPP)[
+         OUTPUT ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP, IR_$CIRCAPP-1,
+           IR_$CIRCAPP, IR_$CIRCAPP,
+           ZMIN_$CIRCAPP(IR_$CIRCAPP-1)+
+           ZTHICK_$CIRCAPP(IR_$CIRCAPP-1)+AIRGAPMIN_$CIRCAPP,
+           ZMIN_$CIRCAPP(IR_$CIRCAPP);
+           (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+              ' Less than min. airgap (',F8.5,' cm) between scraper ',
+                I4,' and scraper ',I4/
+              ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         WRITE(IOUTLIST,102)ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP, IR_$CIRCAPP-1,
+           IR_$CIRCAPP, IR_$CIRCAPP,
+           ZMIN_$CIRCAPP(IR_$CIRCAPP-1)+
+           ZTHICK_$CIRCAPP(IR_$CIRCAPP-1)+AIRGAPMIN_$CIRCAPP,
+           ZMIN_$CIRCAPP(IR_$CIRCAPP);
+        102 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+              ' Less than min. airgap (',F8.5,' cm) between scraper ',
+                I4,' and scraper ',I4/
+              ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+         ZMIN_$CIRCAPP(IR_$CIRCAPP)=ZMIN_$CIRCAPP(IR_$CIRCAPP-1)+
+                    ZTHICK_$CIRCAPP(IR_$CIRCAPP-1)+AIRGAPMIN_$CIRCAPP;
+      ]
+   ]
+   IF(ZTHICK_$CIRCAPP(IR_$CIRCAPP)<0.0)[
+      OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP;
+        (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+           ' ZTHICK(',I4,') < 0.0'//);
+      IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+   ]
+   IF(IR_$CIRCAPP=N_$CIRCAPP &
+     ZMIN_$CIRCAPP(IR_$CIRCAPP)+ZTHICK_$CIRCAPP(IR_$CIRCAPP) >
+     ZBACK_$CIRCAPP-AIRGAPMIN_$CIRCAPP)[
+       OUTPUT ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+          ZMIN_$CIRCAPP(IR_$CIRCAPP)+
+          ZTHICK_$CIRCAPP(IR_$CIRCAPP)+AIRGAPMIN_$CIRCAPP,
+          ZBACK_$CIRCAPP;
+        (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+           ' Less than min. airgap (',F8.5,' cm) between last'/
+           ' scraper and ZBACK'/
+           ' ZBACK reset to ',F8.5,' cm from ',F8.5,' cm'//);
+       WRITE(IOUTLIST,103)ICM_$CIRCAPP, AIRGAPMIN_$CIRCAPP,
+          ZMIN_$CIRCAPP(IR_$CIRCAPP)+
+          ZTHICK_$CIRCAPP(IR_$CIRCAPP)+AIRGAPMIN_$CIRCAPP,
+          ZBACK_$CIRCAPP;
+     103 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+           ' Less than min. airgap (',F8.5,' cm) between last'/
+           ' scraper and ZBACK'/
+           ' ZBACK reset to ',F8.5,' cm from ',F8.5,' cm'//);
+      ZBACK_$CIRCAPP=ZMIN_$CIRCAPP(IR_$CIRCAPP)+
+                       ZTHICK_$CIRCAPP(IR_$CIRCAPP)+
+                       AIRGAPMIN_$CIRCAPP;
+
+   ]
+   IF(ROPEN_$CIRCAPP(IR_$CIRCAPP)<0.0)[
+      OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP;
+       (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+          ' Radius of opening in scraper ',I4,' < 0.0'//);
+      IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+   ]
+   ELSEIF(ROPEN_$CIRCAPP(IR_$CIRCAPP)>OUTER_$CIRCAPP(IR_$CIRCAPP))[
+        OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP;
+       (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+          ' Radius of opening in scraper ',I4,' > boundary of the scraper'//);
+      IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+   ]
+   ELSEIF(XOUTER_$CIRCAPP(IR_$CIRCAPP)>RMAX_CM(ICM_$CIRCAPP))[
+       OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP, IR_$CIRCAPP,
+         RMAX_CM(ICM_$CIRCAPP),XOUTER_$CIRCAPP(IR_$CIRCAPP);
+        (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+         ' Scraper in x ',I4,' extends beyond RMAX_CM'/
+         ' width in x of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+     WRITE(IOUTLIST,104)ICM_$CIRCAPP, IR_$CIRCAPP, IR_$CIRCAPP,
+         RMAX_CM(ICM_$CIRCAPP),XOUTER_$CIRCAPP(IR_$CIRCAPP);
+    104 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+         ' Scraper in x ',I4,' extends beyond RMAX_CM'/
+         ' width in x of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+       XOUTER_$CIRCAPP(IR_$CIRCAPP)=RMAX_CM(ICM_$CIRCAPP);
+   ]
+   ELSEIF(YOUTER_$CIRCAPP(IR_$CIRCAPP)>RMAX_CM(ICM_$CIRCAPP))[
+       OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP, IR_$CIRCAPP,
+         RMAX_CM(ICM_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP);
+        (//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+         ' Scraper in y ',I4,' extends beyond RMAX_CM'/
+         ' width in y of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+  WRITE(IOUTLIST,105)ICM_$CIRCAPP, IR_$CIRCAPP, IR_$CIRCAPP,
+         RMAX_CM(ICM_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP);
+   105 FORMAT(//' ***WARNING IN CM ',I4,' (CIRCAPP):'/
+         ' Scraper in y ',I4,' extends beyond RMAX_CM'/
+         ' width in y of scraper ',I4,' reduced to ',F8.5,' cm'/
+         ' from ',F8.5,' cm'//);
+   ]
+   IF(XOUTER_$CIRCAPP(IR_$CIRCAPP)<0.0)[
+      OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP;
+       (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+          ' width in x of scraper ',I4,' < 0.0'//);
+   ]
+   IF(YOUTER_$CIRCAPP(IR_$CIRCAPP)<0.0)[
+      OUTPUT ICM_$CIRCAPP, IR_$CIRCAPP;
+       (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+          ' width in y of scraper ',I4,' < 0.0'//);
+   ]
+] "end of loop over IR_$CIRCAPP"
+
+"set absolute region number to first region in CM for next set of inputs"
+"
+IRA = IRSTART_$CIRCAPP;
+
+"get energy cutoffs and dose scoring zones"
+"
+OUTPUT ; (/' ECUT, PCUT of scrapers & air',/
+          ' & DOSE ZONE, IREGION_TO_BIT of air (all in one line): '/,$);
+;MINPUT ($CIRCAPP) ECUT(IRA),PCUT(IRA),
+               DOSE_ZONE_AIR,IR_TO_BIT_AIR; (2F15.0,2I5);
+OUTPUT ECUT(IRA),PCUT(IRA),DOSE_ZONE_AIR,IR_TO_BIT_AIR;
+      (2F15.5,2I5);
+IF (ECUT(IRA).LT.ECUTIN) ECUT(IRA)=ECUTIN;
+IF (PCUT(IRA).LT.PCUTIN) PCUT(IRA)=PCUTIN;
+
+"get material for scrapers and determine material number for these regions
+"
+IRA = IRSTART_$CIRCAPP - 1;
+DO K = 1,N_$CIRCAPP[
+   OUTPUT K;(/' SCRAPER ',I4,$);
+   IRA = IRA + 1;
+   ;$MED_INPUT($CIRCAPP); " inputs character array MED_IN from unit 5, loops
+   "through array MEDIA(24,I) to check if medium was previously input.
+   "If so, sets MED_INDEX to index of previous medium.  If not,
+   "increments NMED and sets MED_INDEX to NMED.
+   MED(IRA) = MED_INDEX; " medium of each scraper
+]
+"
+"  set up region numbers
+"  =====================
+"
+"  This CM has N_CIRCAPP+1 regions, a series of scrapers completely
+"  surrounded by an air region. Scrapers are numbered in sequence
+"  starting from the furthest upstream.
+"
+IREND_$CIRCAPP = IRSTART_$CIRCAPP+N_$CIRCAPP;  "Index of last region
+NREG = NREG+N_$CIRCAPP+1;    "Total number of regions in full geometry up
+                              "to and including this CM
+IF (NREG <= $MXREG) ["have not exceeded maximum region number
+      "Index of first region in next CM:"
+      IR_start_CM(ICM_$CIRCAPP+1) = IREND_$CIRCAPP+1;
+]
+ELSE [
+      OUTPUT ICM_$CIRCAPP, NREG,$MXREG;
+      (//' ***ERROR IN CM ',I4,' (CIRCAPP):'/
+         I4,' regions requested, only',I4,' available');
+     IERR_GEOM(ICM_$CIRCAPP)=IERR_GEOM(ICM_$CIRCAPP)+1;
+]
+"
+"  parameter definition
+"  ====================
+"
+"geometrical coordinates, material, and energy cutoffs of scrapers
+"
+"
+IRA = IRSTART_$CIRCAPP-1; "absolute region number"
+DO IR_$CIRCAPP=1,N_$CIRCAPP ["loop through scrapers"
+   IRA = IRA+1;
+   ZMAX_$CIRCAPP(IR_$CIRCAPP) = ZMIN_$CIRCAPP(IR_$CIRCAPP)+
+       ZTHICK_$CIRCAPP(IR_$CIRCAPP);
+   ZMAXT_$CIRCAPP(IR_$CIRCAPP,1) = ZMAX_$CIRCAPP(IR_$CIRCAPP)+$BDY_TOL;
+   ZMAXT_$CIRCAPP(IR_$CIRCAPP,2) = ZMAX_$CIRCAPP(IR_$CIRCAPP);
+   ZMINT_$CIRCAPP(IR_$CIRCAPP,1) = ZMIN_$CIRCAPP(IR_$CIRCAPP)-$BDY_TOL;
+   ZMINT_$CIRCAPP(IR_$CIRCAPP,2) = ZMIN_$CIRCAPP(IR_$CIRCAPP);
+   XOUTERT_$CIRCAPP(IR_$CIRCAPP,1) =XOUTER_$CIRCAPP(IR_$CIRCAPP)+$BDY_TOL;
+   XOUTERT_$CIRCAPP(IR_$CIRCAPP,2) =XOUTER_$CIRCAPP(IR_$CIRCAPP)-$BDY_TOL;
+   ROPENT_$CIRCAPP(IR_$CIRCAPP,1) =ROPEN_$CIRCAPP(IR_$CIRCAPP)-$BDY_TOL;
+   ROPENT_$CIRCAPP(IR_$CIRCAPP,2) =ROPEN_$CIRCAPP(IR_$CIRCAPP)+$BDY_TOL;
+   YOUTERT_$CIRCAPP(IR_$CIRCAPP,1) =YOUTER_$CIRCAPP(IR_$CIRCAPP)+$BDY_TOL;
+   YOUTERT_$CIRCAPP(IR_$CIRCAPP,2) =YOUTER_$CIRCAPP(IR_$CIRCAPP)-$BDY_TOL;
+   "MED(IRA) = MED(IRSTART_$CIRCAPP);"
+   ECUT(IRA) = ECUT(IRSTART_$CIRCAPP);
+   PCUT(IRA) = PCUT(IRSTART_$CIRCAPP);
+] "end of loop over IR_$CIRCAPP"
+"
+"establish start of next CM
+"
+Z_min_CM(ICM_$CIRCAPP+1) = ZBACK_$CIRCAPP;
+"
+"geometrical coordinates, material, and energy cutoffs of air region surrounding
+"scrapers
+"
+ZFRONT_$CIRCAPP = Z_min_CM(ICM_$CIRCAPP);
+IRA = IREND_$CIRCAPP; "absolute region number"
+MED(IRA) = AIR_INDEX; "air region"
+ECUT(IRA) = ECUT(IRSTART_$CIRCAPP); "same energy cutoffs as scrapers"
+PCUT(IRA) = PCUT(IRSTART_$CIRCAPP);
+ESAVE(IRA)=ESAVE_GLOBAL;
+"
+"  establish CM boundary
+"  =====================
+"
+"Used to establish scraper boundaries here, but they are now defined
+"right at input
+RMAX_CM_FLAG(ICM_$CIRCAPP) = 2; "put a square boundary about CM
+"
+"  establish dose-scoring zones and range rejection parameters for each region
+"  ===========================================================================
+"
+IRA = IRSTART_$CIRCAPP-1; "absolute region number
+DO IR_$CIRCAPP=1,N_$CIRCAPP ["loop over local region number
+   IRA = IRA+1;
+   "dose-scoring zones
+   NDOSE_ZONE = MAX(DOSE_ZONE(IRA),DOSE_ZONE_AIR,NDOSE_ZONE);"# dose zones"
+   "charged particle range rejection parameters
+   ESAVE(IRA)=ESAVE_GLOBAL; "Particles with total energies below ESAVE are
+                            "considered for range rejection
+   ECUTRR(IRA)=ECUT(IRA); "Minimum energy on exit from region
+] "end of loop over IR_$CIRCAPP
+IRA = IRA+1; "absolute region number of air surrounding scrapers
+DOSE_ZONE(IRA) = DOSE_ZONE_AIR;
+E_min_out(ICM_$CIRCAPP)=ECUT(IRA); "Minimum energy on exit from CM
+IRA = IRSTART_$CIRCAPP-1; "absolute region number
+DO I =1,N_$CIRCAPP[
+   IRA = IRA + 1;
+   MAX_BIT = MAX(MAX_BIT,IREGION_TO_BIT(IRA));
+]
+IREGION_TO_BIT(IREND_$CIRCAPP) = IR_TO_BIT_AIR;
+MAX_BIT = MAX(MAX_BIT,IR_TO_BIT_AIR);
+"
+"   return from INPUT_CIRCAPP
+"   ==========================
+"
+RETURN;
+"   error messages
+"   ==============
+"
+:EOF_$CIRCAPP:
+;OUTPUT ICM;(//' *** ERROR *** unexpected end of file reading input for CM',I3);
+STOP;
+:ERROR_$CIRCAPP:
+;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
+STOP;
+END;  "End of INPUT_$CIRCAPP"
+%E    "start of subroutine ISUMRY_$CIRCAPP (Rev 1.4)"
+"*******************************************************************************
+"
+"                          Subroutine ISUMRY_CIRCAPP
+"                          **************************
+"
+" Summarize input, write graphics file for EGS_Windows, and set parameters that
+" require medium information obtained from HATCH call.
+"
+"*******************************************************************************
+
+;SUBROUTINE ISUMRY_$CIRCAPP;
+
+Copyright NRC 1999
+
+;IMPLICIT NONE;
+;COMIN/BOUNDS,CMs,CM_$CIRCAPP,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
+"T>
+"T>*************************************
+"T>TYPE DECLARATIONS FOR ISUMRY_CIRCAPP
+"T>*************************************
+"T>
+INTEGER
+   ICOLOUR,                        "T>colour of CM for EGS_Windows
+   IRA,                            "T>absolute region number
+   J;                              "T>DO loop index
+
+$REAL
+   VOLAIR_$CIRCAPP,               "T>air volume
+   VOLSCRAPER_$CIRCAPP;           "T>volume of individual scrapers
+
+"   Mass of dose zone
+"   =================
+"
+"Need to calculate mass of dose zone here, after call to HATCH, where the region
+"density is set if it was allowed to default in INPUT_$CIRCAPP.
+IRA = IRSTART_$CIRCAPP-1; "absolute region number
+VOLAIR_$CIRCAPP = (ZBACK_$CIRCAPP-ZFRONT_$CIRCAPP)*4*RMAX_CM2(ICM_$CIRCAPP);
+"air volume"
+DO IR_$CIRCAPP=1,N_$CIRCAPP ["loop over local region numbers of scrapers
+   IRA = IRA+1;
+   IF (RMAX_CM(ICM_$CIRCAPP)>XOUTER_$CIRCAPP(IR_$CIRCAPP))&
+      (RMAX_CM(ICM_$CIRCAPP)>YOUTER_$CIRCAPP(IR_$CIRCAPP)) [
+      "scraper boundary is (XOUTER X YOUTER)"
+      VOLSCRAPER_$CIRCAPP = (ZMAX_$CIRCAPP(IR_$CIRCAPP)-
+         ZMIN_$CIRCAPP(IR_$CIRCAPP))*
+         (4*XOUTER_$CIRCAPP(IR_$CIRCAPP)*
+         YOUTER_$CIRCAPP(IR_$CIRCAPP)-3.1415926*
+         ROPEN_$CIRCAPP(IR_$CIRCAPP)*ROPEN_$CIRCAPP(IR_$CIRCAPP));
+   ]
+   ELSEIF (RMAX_CM(ICM_$CIRCAPP)<=XOUTER_$CIRCAPP(IR_$CIRCAPP))&
+      (RMAX_CM(ICM_$CIRCAPP)<=YOUTER_$CIRCAPP(IR_$CIRCAPP)) [
+      "scraper boundary is RMAX_CM"
+      VOLSCRAPER_$CIRCAPP = (ZMAX_$CIRCAPP(IR_$CIRCAPP)-
+         ZMIN_$CIRCAPP(IR_$CIRCAPP))*
+         (4*RMAX_CM2(ICM_$CIRCAPP)-3.1415926*
+         ROPEN_$CIRCAPP(IR_$CIRCAPP)*ROPEN_$CIRCAPP(IR_$CIRCAPP));
+   ]
+   ELSEIF (RMAX_CM(ICM_$CIRCAPP)>XOUTER_$CIRCAPP(IR_$CIRCAPP))&
+      (RMAX_CM(ICM_$CIRCAPP)<=YOUTER_$CIRCAPP(IR_$CIRCAPP)) [
+      "scraper boundary in y is RMAX_CM"
+      VOLSCRAPER_$CIRCAPP = (ZMAX_$CIRCAPP(IR_$CIRCAPP)-
+         ZMIN_$CIRCAPP(IR_$CIRCAPP))*
+         (4*XOUTER_$CIRCAPP(IR_$CIRCAPP)*RMAX_CM(IR_$CIRCAPP)-
+         3.1415926*ROPEN_$CIRCAPP(IR_$CIRCAPP)*
+         ROPEN_$CIRCAPP(IR_$CIRCAPP));
+   ]
+   ELSE ["scraper boundary in x is RMAX"
+      VOLSCRAPER_$CIRCAPP = (ZMAX_$CIRCAPP(IR_$CIRCAPP)-
+         ZMIN_$CIRCAPP(IR_$CIRCAPP))*
+         (4*RMAX_CM(IR_$CIRCAPP)*YOUTER_$CIRCAPP(IR_$CIRCAPP)-
+         3.1415626*ROPEN_$CIRCAPP(IR_$CIRCAPP)*
+         ROPEN_$CIRCAPP(IR_$CIRCAPP));
+   ]
+   VOLAIR_$CIRCAPP = VOLAIR_$CIRCAPP-VOLSCRAPER_$CIRCAPP; "air volume"
+   IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOLSCRAPER_$CIRCAPP;
+   ]
+] "end of loop over IR_$CIRCAPP"
+IRA = IRA+1; "absolute region number of air surrounding scrapers"
+IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
+      ID=DOSE_ZONE(IRA);
+      AMASS(ID)=AMASS(ID)+RHOR(IRA)*VOLAIR_$CIRCAPP;
+]
+"
+"   Summarize geometrical information for this component module in listing file
+"   ===========================================================================
+"
+WRITE(IOUTLIST,110) ICM_$CIRCAPP,TITLE_$CIRCAPP;
+WRITE(IOUTLIST,120) Z_min_CM(ICM_$CIRCAPP),RMAX_CM(ICM_$CIRCAPP),
+                    Z_min_CM(ICM_$CIRCAPP+1);
+110 FORMAT(///1x,79('-')/'  Component module',I3,
+          ' is a set of square scrapers (CIRCAPP: Rev 1.4) '/
+          1x,79('-') //T5,'Title: ',68A1);
+120 FORMAT(/T2,'$CIRCAPP geometry parameters:',
+           /T2,'--------------------------',
+           /T2,'Z of front face of CM = ',F15.5,' cm',
+           /T2,'Half-width of outer boundary of CM = ',F15.5,' cm',
+           /T2,'Z of back face of CM = ',F15.5,' cm');
+WRITE(IOUTLIST,122);
+122 FORMAT(
+/T5,'scraper   Z of     bar/gap    radius      x half   y half',
+/T5,'number  front face  thick     opening      width   width',
+/T5,'         (cm)       (cm)       (cm)        (cm)     (cm) ');
+DO IR_$CIRCAPP=1,N_$CIRCAPP [
+   IF(IR_$CIRCAPP=1)[
+      WRITE(IOUTLIST,126)'airgap',Z_min_CM(ICM_$CIRCAPP),
+                         ZMIN_$CIRCAPP(1)-Z_min_CM(ICM_$CIRCAPP),
+                         'NA','NA','NA';
+   ]
+   ELSE[
+      WRITE(IOUTLIST,126)'airgap',ZMAX_$CIRCAPP(IR_$CIRCAPP-1),
+                         ZMIN_$CIRCAPP(IR_$CIRCAPP)-
+                         ZMAX_$CIRCAPP(IR_$CIRCAPP-1),
+                         'NA','NA','NA';
+   ]
+   WRITE(IOUTLIST,123)
+      IR_$CIRCAPP,ZMIN_$CIRCAPP(IR_$CIRCAPP),
+      ZMAX_$CIRCAPP(IR_$CIRCAPP)-ZMIN_$CIRCAPP(IR_$CIRCAPP),
+      ROPEN_$CIRCAPP(IR_$CIRCAPP),
+      XOUTER_$CIRCAPP(IR_$CIRCAPP),
+      YOUTER_$CIRCAPP(IR_$CIRCAPP);
+   IF(IR_$CIRCAPP=N_$CIRCAPP)[
+      WRITE(IOUTLIST,126)'airgap',ZMAX_$CIRCAPP(N_$CIRCAPP),
+                         Z_min_CM(ICM_$CIRCAPP+1)-
+                         ZMAX_$CIRCAPP(N_$CIRCAPP),'NA','NA','NA','NA';
+   ]
+]
+126 FORMAT(T5,A6,2F11.4,3A11);
+123 FORMAT(T5,I6,5F11.4);
+WRITE(IOUTLIST,124);
+IF(Z_min_CM(ICM_$CIRCAPP + 1) >
+   ZMAX_$CIRCAPP(N_$CIRCAPP)+AIRGAPMIN_$CIRCAPP)[
+   WRITE(IOUTLIST,125);
+]
+124 FORMAT(/T2,
+'Note gap between the last scraper and the back of the CM.');
+125 FORMAT(/T2,
+'This gap was not set to the default value of airgapmin but'/T2,
+'was set to a user-defined value > airgapmin.');
+WRITE(IOUTLIST,130);
+130 FORMAT(/T2,'$CIRCAPP region parameters:',
+           /T2,'------------------------',
+           /T2,'local scraper  location  electron   photon',
+           '  range-rejection   dose  bit  medium'
+           /T2,'region   #                cutoff    cutoff',
+           '   level     max    zone  set'
+/T2,'                          (MeV)    (MeV)    (MeV)    (MeV)');
+IRA = IRSTART_$CIRCAPP-1;"absolute region number"
+DO IR_$CIRCAPP=1,N_$CIRCAPP+1 [
+   IRA = IRA+1;
+   IF (IR_$CIRCAPP<=N_$CIRCAPP)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,140) IR_$CIRCAPP,IR_$CIRCAPP,'scraper',
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,140) IR_$CIRCAPP,IR_$CIRCAPP,'scraper',
+         ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+   ]
+   ELSEIF(IR_$CIRCAPP=N_$CIRCAPP+1)[
+      IF (MED(IRA)=0) ["Medium is vacuum"
+         WRITE(IOUTLIST,141) IR_$CIRCAPP,'NA','surrounding',
+         ECUT(IRA),PCUT(IRA),
+         ECUTRR(IRA),ESAVE(IRA),DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         'V','a','c','u','u','m';
+      ]
+      ELSE ["Medium is not vacuum"
+         WRITE(IOUTLIST,141) IR_$CIRCAPP,'NA','surrounding',
+         ECUT(IRA),PCUT(IRA),ECUTRR(IRA),ESAVE(IRA),
+         DOSE_ZONE(IRA),IREGION_TO_BIT(IRA),
+         (MEDIA(J,MED(IRA)),J=1,9);
+      ]
+      WRITE(IOUTLIST,142)'air';
+   ]
+]
+140 FORMAT(T2,I3,I6,3X,A11,F8.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+141 FORMAT(T2,I3,3X,A3,3X,A11,F8.3,F9.3,F9.3,F9.3,I5,I5,2X,9A1);
+142 FORMAT(T14,A11);
+"
+"   Output representation of this component module to file for EGS_Windows
+"   ======================================================================
+"
+IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
+   ;$SELECT-COLOUR; "Macro for selecting ICOLOUR = 1, 2, or 3, colour of CM"
+   DO IR_$CIRCAPP=1,N_$CIRCAPP ["Loop over local region number"
+      WRITE(IOUTGEOM,201)ICOLOUR,'CYLZ',ZMIN_$CIRCAPP(IR_$CIRCAPP),
+                      ROPEN_$CIRCAPP(IR_$CIRCAPP),
+                ZMAX_$CIRCAPP(IR_$CIRCAPP),
+                ROPEN_$CIRCAPP(IR_$CIRCAPP),0.0,0.0;
+      WRITE(IOUTGEOM,200)ICOLOUR,'QUAD',XOUTER_$CIRCAPP(IR_$CIRCAPP),
+         YOUTER_$CIRCAPP(IR_$CIRCAPP),ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMIN_$CIRCAPP(IR_$CIRCAPP);
+      WRITE(IOUTGEOM,200)ICOLOUR,'QUAD',XOUTER_$CIRCAPP(IR_$CIRCAPP),
+         YOUTER_$CIRCAPP(IR_$CIRCAPP),ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP);
+      WRITE(IOUTGEOM,200)ICOLOUR,'QUAD',-XOUTER_$CIRCAPP(IR_$CIRCAPP),
+         YOUTER_$CIRCAPP(IR_$CIRCAPP),ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP);
+      WRITE(IOUTGEOM,200)ICOLOUR,'QUAD',-XOUTER_$CIRCAPP(IR_$CIRCAPP),
+         -YOUTER_$CIRCAPP(IR_$CIRCAPP),ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMIN_$CIRCAPP(IR_$CIRCAPP),
+         XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP),
+         -XOUTER_$CIRCAPP(IR_$CIRCAPP),-YOUTER_$CIRCAPP(IR_$CIRCAPP),
+         ZMAX_$CIRCAPP(IR_$CIRCAPP);
+    ]
+]"End of graphics output"
+
+201   FORMAT(' ',I1,A4,10(F7.2,','));
+200 FORMAT(' ',I1,A4,12(F7.2,','));
+;RETURN;END;
+"CIRCAPP_cm.mortran end of ISUMRY_$CIRCAPP"
+%E    "start of subroutine HOWNEAR_$CIRCAPP (Rev 1.4)"
+"******************************************************************************
+"
+"                          Subroutine HOWNEAR_CIRCAPP
+"                          **************************
+"
+" Calculates min. distance to nearest region boundary
+" Used to be a macro.
+"
+"*******************************************************************************
+;SUBROUTINE HOWNEAR_$CIRCAPP(DIST);
+
+Copyright NRC 1999
+
+$IMPLICIT-NONE;
+
+COMIN/CM_$CIRCAPP,STACK/;
+
+$REAL DIST, "T>  min. dist. to nearest region boundary
+   RPARTI, "T> r coordinate of particle
+   ABSX_$CIRCAPP,  "T>absolute value of X(NP)
+   ABSY_$CIRCAPP;  "T>absolute value of Y(NP)
+
+IR_$CIRCAPP = IR(NP)-IRSTART_$CIRCAPP+1;
+IF (IR_$CIRCAPP=N_$CIRCAPP+1) ["in air region sorrounding scrapers"
+    DIST = 0.0; "simple solution for now"
+]
+ELSE ["in scraper IR_$CIRCAPP"
+      ABSX_$CIRCAPP = ABS(X(NP));
+      ABSY_$CIRCAPP = ABS(Y(NP));
+      RPARTI = SQRT(ABSX_$CIRCAPP**2+ABSY_$CIRCAPP**2);
+      DIST = MIN(ZMAX_$CIRCAPP(IR_$CIRCAPP)-Z(NP),
+                 Z(NP)-ZMIN_$CIRCAPP(IR_$CIRCAPP),
+                 XOUTER_$CIRCAPP(IR_$CIRCAPP)-ABSX_$CIRCAPP,
+                 YOUTER_$CIRCAPP(IR_$CIRCAPP)-ABSY_$CIRCAPP,
+                 RPARTI-ROPEN_$CIRCAPP(IR_$CIRCAPP));
+]
+RETURN;
+END; "end of HOWNEAR_$CIRCAPP (Rev 1.4)"
+"End of CIRCAPP_cm.mortran (Rev 1.4)"
