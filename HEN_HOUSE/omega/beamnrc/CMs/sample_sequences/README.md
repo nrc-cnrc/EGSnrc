@@ -1,4 +1,4 @@
-## BEAMnrc sequence example for dynamic component modules.
+## BEAMnrc sequence example for dynamic component modules
 
 All files in this directory are part of EGSnrc.
 
