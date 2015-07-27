@@ -66,9 +66,6 @@
 #
 #  cd /usr; find . -name "*wish*" -print;
 #
-# The backslash at the end of the comment line below is a continuation
-# character in wish, but not in sh.
-#
 # The next line restarts using wish \
 exec wish "$0" ${1+"$@"}
 
