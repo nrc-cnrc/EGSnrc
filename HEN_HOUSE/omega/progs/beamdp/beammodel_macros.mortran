@@ -1,0 +1,1009 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc beam model replacement macros                                       "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Charlie Ma, 1994                                          "
+"                                                                             "
+"  Contributors:    Blake Walters                                             "
+"                   Iwan Kawrakow                                             "
+"                   Zdenko Sego                                               "
+"                   Dave Rogers                                               "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Set of MORTRAN replacement macros for beam characterization models that    "
+"  are available for modification.                                            "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Zdenko Sego, 2005: make compatible with BEAMnrcMP                          "
+"                                                                             "
+"  Zdenko Sego and Dave Rogers, 2006: extend the code to handle multiple      "
+"  energy spectra and more complex fluence regions. See associated            "
+"  documentation.                                                             "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%Q1
+%C80
+!INDENT F4;
+!INDENT M4;
+"*******************************************************************************
+"
+"         BEAM CHARACTERIZATION MODEL MORTRAN REPLACEMENT MACROS
+"         ******************************************************
+"
+"                           PROGRAMMER: C-M MA
+"                             April 12, 1994
+;
+"V>
+"V>The following are for source models based on phase-space data
+"V>SSMFPS = detailed descriptions of the source model
+"V>NSMFPS = number of sub-sources
+"V>ISMFPS($NS) = source type: 1-applicator,2-collimator,3-ring,
+"V>             cone&point source
+"V>IQSMFP($NS) = charge of particles
+"V>ILATCH($NS) = latch
+"V>SMFMNZ($NS) = distance from the sub-source to the phantom surface
+"V>SMFMXZ($NS) = SMFMNZ($NS) + height of the sub-source
+"V>SMFMNX($NS) = minimum x coordinate for a sub-source
+"V>SMFMXX($NS) = maximum x coordinate for a sub-source
+"V>SMFDXX($NS) = SMFMXX($NS)-SMFMNX($NS)
+"V>SMFMNY($NS) = minimum y coordinate for a sub-source
+"V>SMFMXY($NS) = maximum y coordinate for a sub-source
+"V>SMFDYY($NS) = SMFMXY($NS)-SMFMNY($NS)
+"V>SMFMNE,SMFMXE =minimum and maximum energy of the spectrum for a sub-source
+"V>ERADII($NSSMDIS) = energy spectrum different radii
+"V>SMFPXY($NS) = orientation of the collimator:0-along x-axis,1-along y-axis
+"V>SMFMNR($NS) = inner radius of the sub-source
+"V>SMFMXR($NS) = outer radius of the sub-source
+"V>SMFNR2($NS) = square of inner radius
+"V>SMFMR2($NS) = square of outer radius
+"V>SMFRTN($NS) = fractional fluence from this sub-source
+"V>MISMFP($INVDISSM) = array for relative source intensity for each sub-source
+"V>FSMFBN($NS,$NSSMDIS,$INVDISSM,2) = sampling func for spect distributions
+"V>FSMABN($INVDISSM,2) = sampling functions for angular distribution
+"V>MSMFXY($NS) = field type: 0-circular,1-square, 2-rectangular
+"V>NSMFXX($NS) = number of bins for the field fluence distribution along x-axis
+"V>NSMFYY($NS) = number of bins for the field fluence distribution along y-axis
+"V>NSMFRR($NS) = number of bins for the field fluence distribution along radius
+"V>FSMFRR($NS,$INVDISSM,2) = sampling function for radial or square distribution
+"V>FSMFR11($NS,$NSSMDIS) parameters for sampling
+"V>FSMFR12($NS,$NSSMDIS) parameters for sampling
+"V>$NS = maximum number of sub-sources used in simplified source model
+"V>$NB = max. number of bins for energy and fluence distribution inputs
+"V>$INVDISSM= max. number of bins for energy and fluence used for sampling
+"V>FLDRR2($NS) = square of defined field radius
+"V>FLDXX2($NS) = square of defined field X coordinate
+"V>FLDYY2($NS) = square of defined field Y coordinate
+"V>RTREAT = radius of treatment field defined by the user
+"V>RTREATe = radius of treatment field for energy spectrum defined by the user
+"V>YTREATMN = min y of treatment field defined by the user
+"V>XTREATMN = min x of treatment field defined by the user
+"V>YTREATMX = max y of treatment field defined by the user
+"V>XTREATMX = max x of treatment field defined by the user
+"V>NSCATT = counter for scattering sampling
+"V>RSCATT = mean scattering radius
+"V>RFACTOR1 = FLOAT(NFIELDi)/(RTREAT**2);
+"V>RFACTOR2 = FLOAT(NFIELDo)/(RFIELD**2-RTREAT**2);
+"V>SMFX2($NS)= outer x-boundary of the applicator or collimator
+"V>SMFY2($NS)= outer y-boundary of the applicator or collimator
+"V>XINSMX,XINSMN,YINSMX,YINSMN,XINS,YINS -- LOCAL VARIABLES
+"V>V>number of bins for field fluence distribution;
+"V>RFIELD = radius for field fluence distribution
+"V>RFIELDe = radius for energy spectrum
+"V>XFLDMN  = minimum x coordinate for field fluence distribution
+"V>XFLDMX = maximum x coordinate for field fluence distribution
+"V>YFLDMN = minimum y coordinate for field fluence distribution
+"V>YFLDMX = maximum y coordinate for field fluence distribution
+;
+REPLACE {;COMIN/BMODEL/;} WITH {
+;COMMON/BMODELC1/
+NSMFPS,ISMFPS,IQSMFP,ILATCH,NSMFXX,NSMFYY,NSMFRR,
+MSMFXY,MISMFP,SMFPXY,NSCATT,NFIELD,NFIELDi,NFIELDo,NFIELDe,
+RFIELD,RFIELDe,XFLDMN,XFLDMX,YFLDMN,YFLDMX,
+FLDRR2,FLDYY2,FLDXX2,SMFMNZ,SMFMNX,SMFMXX,
+SMFMNY,SMFX2,SMFY2,SMFMXY,SMFMNR,SMFMXR,
+SMFRTN,SSDVPS,FSMFBN,FSMABN,FSMFRR,FSMFXY,FSMFR11,
+FSMFR12,SMFDXX,SMFDYY,RFACTOR1,RFACTOR2,
+SMFNR2,SMFMR2,SMFMXZ,RSCATT,SMFMNE,SMFMXE,ERADII,
+SSMFPS,RTREAT,RTREATe,XTREATMN,XTREATMX,YTREATMN,YTREATMX,
+XINSMX,XINSMN,YINSMX,YINSMN,XINS,YINS,SMONAM,ABNTOTAL,ABNTOTALH;
+
+INTEGER
+nSrc,source,n,	"number of sub-source,source number"
+KKKK,IRBIN,	"local variables in the source=31 macros"
+ESTYPE,		"energy spectrum type"
+NSMFPS,ISMFPS($NS),IQSMFP($NS),ILATCH($NS),NSMFXX($NS),NSMFYY($NS),
+NSMFRR($NS),MSMFXY($NS),MISMFP($INVDISSM),SMFPXY($NS),NSCATT,
+NFIELD,NFIELDi,NFIELDo,NFIELDe;
+
+REAL
+RFIELD,RFIELDe,XFLDMN,XFLDMX,YFLDMN,YFLDMX,
+FLDRR2($NS),FLDXX2($NS),FLDYY2($NS),SMFMNZ($NS),SMFMNX($NS),SMFMXX($NS),
+SMFMNY($NS),SMFX2($NS),SMFY2($NS),SMFMXY($NS),SMFMNR($NS),SMFMXR($NS),
+SMFRTN($NS),SSDVPS($NS+3),FSMFBN($NS,$NSSMDIS,$INVDISSM,2),
+FSMABN($INVDISSM,2),FSMFRR($NS,$INVDISSM,2),
+FSMFXY($NS,$NSSMDIS,$NSSMDIS),FSMFR11($NS,$NSSMDIS),
+FSMFR12($NS,$NSSMDIS),SMFDXX($NS),SMFDYY($NS),RFACTOR1,RFACTOR2,
+SMFNR2($NS),SMFMR2($NS),SMFMXZ($NS),RSCATT,SMFMNE,SMFMXE,ERADII($NSSMDIS),
+RTREAT,RTREATe,XTREATMN,XTREATMX,YTREATMN,YTREATMX,
+RRR,RRR1,RRR2,XXX,YYY,XXX1,YYY1,ZZZ1,"temporary or random variables"
+DDMNX,DDMXX,DDMNY,DDMXY;
+
+REAL
+XINSMX,XINSMN,YINSMX,YINSMN,XINS,YINS,ABNTOTAL,ABNTOTALH;
+
+CHARACTER*80 SSMFPS,SMONAM;
+
+}
+
+REPLACE {$NBINANGLE} WITH {40}; "number of bins for the angular distribution"
+
+REPLACE {$MAXANGLE} WITH {0.1745};"ANGLE IN RAD, = 10 DEGREES"
+
+;
+REPLACE {$NS} WITH {22}
+;
+REPLACE {$INVDISSM} WITH {2000}
+;
+REPLACE {$NSSMDIS} WITH {200}
+;
+REPLACE {;COMIN/SSMDIS/;} WITH {
+;COMMON/SSMDIS/ISMMODE,NSSMDIS,IB_SSM,IC_SSM,
+     SSMDIS,SSMPDF,SSMCDF,SSMMIN,SSMMAX,CDFSSM;
+INTEGER ISMMODE,NSSMDIS,IB_SSM,IC_SSM;
+REAL SSMDIS($NSSMDIS),SSMPDF($NSSMDIS),SSMCDF($NSSMDIS),SSMMIN,SSMMAX,
+     CDFSSM($INVDISSM,2);
+}
+;
+
+"LOCAL VARIABLES USED IN THE BEAM SOURCE ROUTINE"
+REPLACE {$LOCAL-VARIABLES-SOURCE31} WITH {
+;;COMIN/BMODEL/;;
+}
+;
+
+"beam characterization model"
+"External file input"
+;
+REPLACE {$BEAMMODEL_SOURCE_INPUT} WITH {
+INIT_ICM=TEMP1;
+IF(INIT_ICM>MAX_CMs)|(INIT_ICM<1)[
+   INIT_ICM=1;
+   OUTPUT;(/' CMSOU DEFAULT TO 1'/);
+   ]
+OUTPUT INIT_ICM;
+(/' BEAM CHARACTERIZATION MODELS WILL BE USED'/
+  ' PARTICLES WILL START AT THE FRONT BOUNDARY OF CM',I3/);
+
+CALL BMODEL1;
+EKMAXSRC=SMFMXE;
+}
+;
+REPLACE{$BEAMMODEL-INPUT-MESSAGE} WITH {
+OUTPUT;
+(/
+    '  or  (4) Beam characterization model'                     /
+    '          Requires 2 inputs + parameter file stored in units 43:'/
+    '          charge (dummy, real charge determined by source parameters),'/
+    '          4 (mandatory, to identify source type),'               /
+    '          x-coordinate of the isocenter (cm),'                   /
+    '          y-coordinate of the isocenter (cm),'                   /
+    '          z-coordinate of the isocenter (cm),'                   /
+    '          polar angle of collimator center (degrees),'           /
+    '          azimuthal angle of collimator center (degrees),'       /
+    '          distance from source plane to isocenter (cm),'         /
+    '          source plane rotation angle (degrees)'                 /
+);
+}
+    "Beam characterization model input"
+REPLACE{$BEAMMODEL-SOURCE4-INPUT} WITH {
+    xiso    = temp(1);
+    yiso    = temp(2);
+    ziso    = temp(3);
+    theta(1)= temp(4);
+    phi(1)  = temp(5);
+    dsource = temp(6);
+    phicol  = temp(7);
+    iqphsp  = iqin;
+    OUTPUT xiso,yiso,ziso,theta(1),phi(1),dsource,phicol;
+        (/
+        ' Beam characterization model, source from an arbitrary direction'/
+        ' x-coordinate of the isocenter:'    ,t50,f8.3/
+        ' y-coordinate of the isocenter:'    ,t50,f8.3/
+        ' z-coordinate of the isocenter:'    ,t50,f8.3/
+        ' Polar angle of source center:'     ,t50,f8.3/
+        ' Azimuthal angle of source center:' ,t50,f8.3/
+        ' Distance from isocenter to source centre:',t50,f8.3/
+        ' Source rotation angle:'            ,t50,f8.3/
+        /);
+}
+;
+REPLACE{$BEAMMODEL-ENFLAG4-INPUT} WITH {
+;CALL BMODEL1;
+}
+;
+REPLACE {;$BEAMMODEL-SOURCE4-OUTPUT} WITH {
+;
+    OUTPUT xiso,yiso,ziso,theta(1),phi(1),dsource,phicol;
+    (/t20,' Beam characterization model'  //
+    t10,' x-coordinate of the isocenter,'    ,t55,f8.3,' cm'     /
+    t10,' y-coordinate of the isocenter,'    ,t55,f8.3,' cm'     /
+    t10,' z-coordinate of the isocenter,'    ,t55,f8.3,' cm'     /
+    t10,' Polar angle of source plane:'      ,t55,f8.3,' degrees'/
+    t10,' Azimuthal angle of source plane:'  ,t55,f8.3,' degrees'/
+    t10,' Distance from isocenter to source centre:',t55,f8.3,' cm'/
+    t10,' Source rotation angle,'            ,t55,f8.3,' degrees'/
+    );
+    UINC=0.;VINC=0.;WINC=0.;EIN=SMFMXE;
+    DO IQIN=1,NSMFPS["check particle type for each sub-source"
+       IF(IQSMFP(IQIN) = -1)[UINC=1.;]
+       ELSEIF(IQSMFP(IQIN) = 0)[VINC=2.;]
+       ELSEIF(IQSMFP(IQIN) = +1)[WINC=4.;]
+       ELSE[WINC=10.;]
+       ];
+    IQIN=INT(UINC+VINC+WINC);
+    IF(IQIN = 1)[WRITE(IOUTLIST,:SSM501:);]
+    ELSEIF(IQIN = 2)[WRITE(IOUTLIST,:SSM502:);]
+    ELSEIF(IQIN = 3)[WRITE(IOUTLIST,:SSM503:);]
+    ELSEIF(IQIN = 4)[WRITE(IOUTLIST,:SSM504:);]
+    ELSEIF(IQIN = 5)[WRITE(IOUTLIST,:SSM505:);]
+    ELSEIF(IQIN = 6)[WRITE(IOUTLIST,:SSM506:);]
+    ELSEIF(IQIN = 7)[WRITE(IOUTLIST,:SSM507:);]
+    ELSE[WRITE(IOUTLIST,:SSM508:);]
+:SSM501: FORMAT(T20,'INITIAL PARTICLES are electrons only');
+:SSM502: FORMAT(T20,'INITIAL PARTICLES are photons only');
+:SSM503: FORMAT(T20,'INITIAL PARTICLES are electrons and photons');
+:SSM504: FORMAT(T20,'INITIAL PARTICLES are positrons only');
+:SSM505: FORMAT(T20,'INITIAL PARTICLES are electrons and positrons');
+:SSM506: FORMAT(T20,'INITIAL PARTICLES are photons and positrons');
+:SSM507: FORMAT(T20,'INITIAL PARTICLES are electrons, photons and positrons');
+:SSM508: FORMAT(T20,'ERROR: INITIAL PARTICLES are unknown');
+}
+;
+REPLACE{$BEAMMODEL-SOURCE4-ENERGY} WITH {
+    ;IF(iqin ~= 0)[etotin = einsrc +0.511;]
+    ELSE[etotin = einsrc;]
+    esrc = esrc + einsrc;
+    IF(iqin =1)[esrc = esrc + 0.5110034;]
+}
+;
+REPLACE {$BEAMMODEL_SOURCE_OUTPUT} WITH
+{IF(ISOURC.EQ.31)WRITE(IOUTLIST,:SSM_OUT:) SMONAM,SSMFPS,SMFMXE,Z_SOURCE;
+    :SSM_OUT:FORMAT(//T20,'BEAM CHARACTERIZATION MODEL '//
+           T20,' SOURCE DATA FILE: '//
+           A80//
+           A80//
+           T20,'MAXIMUM PARTICLE ENERGY       E =',F10.3,' MeV.'//
+           T20,'SOURCE INCIDENT ON A PLANE AT Z =',F10.3,' cm.'/);
+}
+
+"Beam characterization model:  sampling particle parameters in BEAM"
+;REPLACE {$BEAMMODEL_SOURCE_SAMPLING} WITH {
+;$BEAMMODEL_SAMPLING1;
+;$BEAMMODEL_SAMPLING2;
+;$BEAMMODEL_SAMPLING3;
+" Save LATCH bit "
+LATCHI = ILATCH(nSrc);
+}
+
+ "Beam characterization model:  sampling particle parameters in dosxyz"
+;REPLACE {$BEAMMODEL_SOURCE4_SAMPLING} WITH {
+;  LOOP[
+      NNREAD = NNREAD +1;
+      ;$BEAMMODEL_SAMPLING1;
+      ;$BEAMMODEL_SAMPLING2;
+      ;$BEAMMODEL_SAMPLING3;
+      WSRC=WIN;
+      VSRC=VIN;
+      USRC=UIN;
+      YSRC=YIN;
+      XSRC=XIN;
+      EINSRC = EIN;
+   ] UNTIL(ABS(XSRC) < (BEAM_SIZE/2.0) & ABS(YSRC)<(BEAM_SIZE/2.0));
+}
+;
+REPLACE {$BEAMMODEL_SAMPLING1} WITH
+{  "select sub-source"
+;  $RANDOMSET ZZZ1;
+   source=INT(ZZZ1*$INVDISSM.);"obtain sub-source number"
+   IF(source >= $INVDISSM)[nSrc=MISMFP($INVDISSM);]
+   ELSE[nSrc=MISMFP(source+1);]
+
+   " Charge of the particle is determined by source type "
+   IQIN=IQSMFP(nSrc);
+
+   "Choose a point randomly in the field based on the spatial-profile"
+   " Circular field with symmetrical rings "
+   " ------------------------------------- "
+   IF(MSMFXY(nSrc) = 0)[
+    ; $RANDOMSET RRR;$RANDOMSET RRR1;
+      KKKK = MIN(FLOAT($INVDISSM)*RRR+1.,FLOAT($INVDISSM));
+      "MIN IN CASE RRR=1.0"
+      RBEAM = FSMFRR(nSrc,KKKK,1) + RRR1*FSMFRR(nSrc,KKKK,2);
+   ;  $RANDOMSET RRR1;YIN=RRR1*6.2831852;
+      XIN=RBEAM*COS(YIN);
+      YIN=RBEAM*SIN(YIN);
+"      IF( FSMFRR(nSrc,KKKK,1) <= RTREAT ) [ "
+"	IRBIN=INT(RFACTOR1*FSMFRR(nSrc,KKKK,1)**2)+1; "
+"	] "
+"      ELSE [ "
+"	IRBIN=INT(RFACTOR2*FSMFRR(nSrc,KKKK,1)**2)+NFIELDi; "
+"	] "
+      ]
+   " Rectangular field "
+   " ----------------- "
+   ELSEIF(MSMFXY(nSrc) =  2)[
+    ; $RANDOMSET XXX;$RANDOMSET YYY;
+      KKKK = MIN(FLOAT($INVDISSM)*XXX+1.,FLOAT($INVDISSM));
+      "MIN IN CASE XXX=1.0"
+      XIN = FSMFRR(nSrc,KKKK,1) + YYY*FSMFRR(nSrc,KKKK,2);
+      source=INT((XIN-XFLDMN)*FLOAT(NFIELD)/(XFLDMX-XFLDMN))+1;
+    ; $RANDOMSET XXX1;$RANDOMSET YYY1;
+      KKKK = MIN(FLOAT($INVDISSM)*XXX1+1.,FLOAT($INVDISSM));
+      "MIN IN CASE XXX1=1.0"
+
+      "Now calculate CDFSSM - we do not precalculate this array because"
+      "of its size. Thus, the cputime will be slight longer for this option"
+      XXX= FLOAT(KKKK)/FLOAT($INVDISSM);
+      DO IRBIN=1,NFIELD [
+         IF(XXX <= FSMFXY(nSrc,source,IRBIN))[
+	    GO TO :FOUND-BIN:;
+	 ]
+      ]
+      "WE SHOULD NEVER FALL THROUGH TO HERE"
+      :FOUND-BIN:
+      IF(IRBIN~=1)[XXX=(YFLDMX-YFLDMN)/FLOAT(NFIELD)*FLOAT(IRBIN-1)+YFLDMN;]
+      ELSE [XXX=YFLDMN;"THIS IS THE LOWER BOUNDARY FOR Y"]
+      IF(XXX.LE.YFLDMN)XXX=YFLDMN+0.00001*FLOAT(IRBIN-1);
+      "Make sure the bin boundaries are within the range"
+      YYY=(YFLDMX-YFLDMN)/FLOAT(NFIELD);
+
+      YIN = XXX + YYY1*YYY;
+      ]    "end of MSMFXY=2 case"
+   " Square field with symmetrical square rings "
+   " ------------------------------------------ "
+   ELSEIF(MSMFXY(nSrc) = 1)[
+    ; $RANDOMSET RRR;$RANDOMSET RRR2;
+      KKKK = MIN(FLOAT($INVDISSM)*RRR+1.,FLOAT($INVDISSM));
+      "MIN IN CASE RRR=1.0"
+
+      IF( FSMFRR(nSrc,KKKK,1) <= RTREAT ) [
+	IRBIN=INT(RFACTOR1*FSMFRR(nSrc,KKKK,1)**2)+1;
+	]
+      ELSE [
+	IRBIN=INT(RFACTOR2*(FSMFRR(nSrc,KKKK,1)**2-RTREAT**2))+NFIELDi+1;
+	]
+
+      IF(RRR2 <= 0.25)[
+         LOOP[
+     ;      $RANDOMSET RRR;$RANDOMSET RRR1;
+            XIN=FSMFRR(nSrc,KKKK,1) + RRR1*FSMFRR(nSrc,KKKK,2);
+            YIN=(2.*FSMFRR(nSrc,KKKK,1)+FSMFRR(nSrc,KKKK,2))*RRR
+              -FSMFRR(nSrc,KKKK,1);
+            RRR1=FSMFR11(nSrc,IRBIN)-FSMFR12(nSrc,IRBIN)*YIN*YIN;
+            $RANDOMSET RRR;
+            IF(RRR <= RRR1)GOTO :WEIGHT-IS-OK:;
+            ]
+          ]
+      ELSEIF(RRR2 <= 0.5)[
+          LOOP[
+     ;      $RANDOMSET RRR;$RANDOMSET RRR1;
+            YIN=FSMFRR(nSrc,KKKK,1) + RRR1*FSMFRR(nSrc,KKKK,2);
+            XIN=(2.*FSMFRR(nSrc,KKKK,1)+FSMFRR(nSrc,KKKK,2))*RRR
+              -FSMFRR(nSrc,KKKK,1)-FSMFRR(nSrc,KKKK,2);
+            RRR1=FSMFR11(nSrc,IRBIN)-FSMFR12(nSrc,IRBIN)*XIN*XIN;
+            $RANDOMSET RRR;
+            IF(RRR <= RRR1)GOTO :WEIGHT-IS-OK:;
+            ]
+         ]
+      ELSEIF(RRR2 <= 0.75)[
+         LOOP[
+     ;      $RANDOMSET RRR;$RANDOMSET RRR1;
+            XIN=-(FSMFRR(nSrc,KKKK,1) + RRR1*FSMFRR(nSrc,KKKK,2));
+            YIN=(2.*FSMFRR(nSrc,KKKK,1)+FSMFRR(nSrc,KKKK,2))*RRR
+              -FSMFRR(nSrc,KKKK,1)-FSMFRR(nSrc,KKKK,2);
+            RRR1=FSMFR11(nSrc,IRBIN)-FSMFR12(nSrc,IRBIN)*YIN*YIN;
+            $RANDOMSET RRR;
+            IF(RRR <= RRR1)GOTO :WEIGHT-IS-OK:;
+            ]
+          ]
+      ELSE[
+         LOOP[
+     ;      $RANDOMSET RRR;$RANDOMSET RRR1;
+            YIN=-(FSMFRR(nSrc,KKKK,1) + RRR1*FSMFRR(nSrc,KKKK,2));
+            XIN=(2.*FSMFRR(nSrc,KKKK,1)+FSMFRR(nSrc,KKKK,2))*RRR
+              -FSMFRR(nSrc,KKKK,1);
+            RRR1=FSMFR11(nSrc,IRBIN)-FSMFR12(nSrc,IRBIN)*XIN*XIN;
+            $RANDOMSET RRR;
+            IF(RRR <= RRR1)GOTO :WEIGHT-IS-OK:;
+            ]
+          ]
+      :WEIGHT-IS-OK:;
+      ]
+;}
+
+REPLACE {$BEAMMODEL_SAMPLING2} WITH
+{"calculate coordinates on subsource, XINS,YINS"
+
+   " sub-source is an aperture applicator "
+   " ------------------------------------ "
+   ;IF(ISMFPS(nSrc) =  1)[
+      NSCATT=0;
+      LOOP[
+       ;  $RANDOMSET ZZZ1;
+          IF(ZZZ1 ~= 0.0)["sample xins and yins around xin and yin"
+              RRR=SQRT(1/ZZZ1-1)*RSCATT*SMFMNZ(nSrc)/100.;
+              ]
+          ELSE[RRR=1.0E+30;]
+       ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+          XXX=SIN(XXX1);YYY=COS(XXX1);
+          XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+          YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+          IF(ABS(XINS) <= SMFX2(nSrc)) & (ABS(YINS) <= SMFY2(nSrc))[
+              GOTO :FOUND-POSITION-SOURCE1:;
+              ]
+          NSCATT=NSCATT+1;
+          IF(NSCATT =  3)[
+              XINS=(2.*ZZZ1-1.)*SMFX2(nSrc);
+              YINS=(0.31831*XXX1-1.)*SMFY2(nSrc);"0.31831=2./6.283185"
+              GOTO :FOUND-POSITION-SOURCE1:;
+              ]
+          ]
+      ;:FOUND-POSITION-SOURCE1:;
+      IF(XINS  < SMFMXX(nSrc))&(XINS >  SMFMNX(nSrc))&
+      (YINS  < SMFMXY(nSrc))&(YINS >  SMFMNY(nSrc))[
+          "source position is inside applicator opening"
+          IF(XIN  < SMFMXX(nSrc))&(XIN >  SMFMNX(nSrc))&
+          (YIN  < SMFMXY(nSrc))&(YIN >  SMFMNY(nSrc))[
+             "particle position is inside applicator opening"
+             "move it to the edge according to the inverse-square law"
+             DDMXX=1./((SMFMXX(nSrc)-XIN)*(SMFMXX(nSrc)
+             -XIN)+SMFMNZ(nSrc)*SMFMNZ(nSrc))**(1.5);
+             DDMNX=1./((SMFMNX(nSrc)-XIN)*(SMFMNX(nSrc)
+             -XIN)+SMFMNZ(nSrc)*SMFMNZ(nSrc))**(1.5)+DDMXX;
+             DDMXY=1./((SMFMXY(nSrc)-YIN)*(SMFMXY(nSrc)
+             -YIN)+SMFMNZ(nSrc)*SMFMNZ(nSrc))**(1.5)+DDMNX;
+             DDMNY=1./((SMFMNY(nSrc)-YIN)*(SMFMNY(nSrc)
+             -YIN)+SMFMNZ(nSrc)*SMFMNZ(nSrc))**(1.5)+DDMXY;
+          ;  $RANDOMSET XXX;  $RANDOMSET XXX1;
+             IF(XXX <= (DDMXX/DDMNY))[
+                 XINS=SMFMXX(nSrc)+XXX1*XXX1*(SMFX2(nSrc)-SMFMXX(nSrc));
+                 "using XXX1*XXX1 results in more particles around the edge"
+                 XXX=YINS*(XINS*XINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFY2(nSrc))YINS=XXX;
+                 "scale YINS according to the new XINS"
+                 "if it is outside the applicator surface use original YINS"
+                 ]
+             ELSEIF(XXX <= (DDMNX/DDMNY))[
+                 XINS=SMFMNX(nSrc)+XXX1*XXX1*(-SMFX2(nSrc)-SMFMNX(nSrc));
+                 XXX=YINS*(XINS*XINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFY2(nSrc))YINS=XXX;
+                 ]
+             ELSEIF(XXX <= (DDMXY/DDMNY))[
+                 YINS=SMFMXY(nSrc)+XXX1*XXX1*(SMFY2(nSrc)-SMFMXY(nSrc));
+                 XXX=XINS*(YINS*YINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFX2(nSrc))XINS=XXX;
+                 ]
+             ELSE[YINS=SMFMNY(nSrc)+XXX1*XXX1*(-SMFY2(nSrc)-SMFMNY(nSrc));
+                 XXX=XINS*(YINS*YINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFX2(nSrc))XINS=XXX;
+                 ]
+             ]
+          ELSE["particle position is outside applicator opening"
+             YINSMX=(YINS-YIN)/(XINS-XIN)*(SMFMXX(nSrc)-XINS)+YINS;
+             IF(YINSMX>SMFMXY(nSrc)|YINSMX<SMFMNY(nSrc))[DDMXY=0.;]
+             ELSE[
+                 DDMXY=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMXX(nSrc)-XIN)*
+                 (SMFMXX(nSrc)-XIN)+(YINSMX-YIN)*(YINSMX-YIN))**(1.5);
+                 ]
+             YINSMN=(YINS-YIN)/(XINS-XIN)*(SMFMNX(nSrc)-XINS)+YINS;
+             IF(YINSMN>SMFMXY(nSrc)|YINSMN<SMFMNY(nSrc))[DDMNY=DDMXY;]
+             ELSE[
+                 DDMNY=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMNX(nSrc)-XIN)*
+                 (SMFMNX(nSrc)-XIN)+(YINSMN-YIN)*(YINSMN-YIN))**(1.5)+DDMXY;
+                 ]
+             XINSMX=(XINS-XIN)/(YINS-YIN)*(SMFMXY(nSrc)-YINS)+XINS;
+             IF(XINSMX>SMFMXX(nSrc)|XINSMX<SMFMNX(nSrc))[DDMXX=DDMNY;]
+             ELSE[
+                 DDMXX=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMXY(nSrc)-YIN)*
+                 (SMFMXY(nSrc)-YIN)+(XINSMX-XIN)*(XINSMX-XIN))**(1.5)+DDMNY;
+                 ]
+             XINSMN=(XINS-XIN)/(YINS-YIN)*(SMFMNY(nSrc)-YINS)+XINS;
+             IF(XINSMN>SMFMXX(nSrc)|XINSMN<SMFMNX(nSrc))[DDMNX=DDMXX;]
+             ELSE[
+                 DDMNX=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMNY(nSrc)-YIN)*
+                 (SMFMNY(nSrc)-YIN)+(XINSMN-XIN)*(XINSMN-XIN))**(1.5)+DDMXX;
+                 ]
+          ;  $RANDOMSET XXX;
+             IF(    XXX <= (DDMXY/DDMNX))[XINS=SMFMXX(nSrc);YINS=YINSMX;]
+             ELSEIF(XXX <= (DDMNY/DDMNX))[XINS=SMFMNX(nSrc);YINS=YINSMN;]
+             ELSEIF(XXX <= (DDMXX/DDMNX))[XINS=XINSMX;YINS=SMFMXY(nSrc);]
+             ELSE[XINS=XINSMN;YINS=SMFMNY(nSrc);]
+             ]"end of particle position outside opening"
+          ]
+      ]"end of source 1"
+
+   " sub-source is a tubular applicator "
+   " ---------------------------------- "
+   ELSEIF(ISMFPS(nSrc) =  11)[
+      NSCATT=0;
+      RRR=ABS((YIN-SMFMNY(nSrc))*(XIN-SMFMNX(nSrc))*
+        (SMFMXY(nSrc)-YIN)*(SMFMXX(nSrc)-XIN))/625.;
+      IF(RRR>1.)[RRR=1;]
+      "RRR is now a parameter related to the particle position on the field"
+      "RRR=0 on the field edge and =1 at the centre"
+      RRR=SQRT(RRR)*(SMFMXZ(nSrc)-SMFMNZ(nSrc));
+      "RRR is now the position on the source related to the field position"
+      "Next we sample a real position (height on the source) around RRR"
+      :FIND-Z-POSITION:;
+      ;$RANDOMSET XXX1;XXX1=1.-2.*XXX1;"XXX1 now between -1 and 1"
+      ZZZ1=RRR+XXX1*(SMFMXZ(nSrc)-SMFMNZ(nSrc)-RRR);
+      "z-coordinate on the sub-source"
+      IF(ZZZ1>(SMFMXZ(nSrc)-SMFMNZ(nSrc)) | ZZZ1<0.) GOTO :FIND-Z-POSITION:;
+      LOOP[
+       ;  $RANDOMSET RRR;
+          IF(RRR ~= 0.0)["sampling scattering radius"
+             RRR=SQRT(1/RRR-1)*RSCATT*(ZZZ1+SMFMNZ(nSrc))/100.;
+             ]
+          ELSE[RRR=1.0E+30;]
+
+       ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+          XXX=SIN(XXX1);YYY=COS(XXX1);
+          XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-ZZZ1)/SSDVPS(nSrc);"source positions"
+          YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-ZZZ1)/SSDVPS(nSrc);
+          IF(ABS(XINS) <= SMFX2(nSrc)) & (ABS(YINS) <= SMFY2(nSrc))[
+              GOTO :FOUND-POSITION-SOURCE11:;
+              ]
+          NSCATT=NSCATT+1;
+          IF(NSCATT =  3)[
+              ;  $RANDOMSET RRR;XINS=(2.*RRR-1.)*SMFX2(nSrc);
+              YINS=(0.31831*XXX1-1.)*SMFY2(nSrc);"0.31831=2./6.283185"
+              GOTO :FOUND-POSITION-SOURCE11:;
+              ]
+          ]
+      ;:FOUND-POSITION-SOURCE11:;
+      IF(XINS  < SMFMXX(nSrc))&(XINS >  SMFMNX(nSrc))&
+      (YINS  < SMFMXY(nSrc))&(YINS >  SMFMNY(nSrc))[
+          "source position is inside applicator opening"
+          IF(XIN  < SMFMXX(nSrc))&(XIN >  SMFMNX(nSrc))&
+          (YIN  < SMFMXY(nSrc))&(YIN >  SMFMNY(nSrc))[
+             "particle position is inside applicator opening"
+             XXX=(ZZZ1+SMFMNZ(nSrc))*(ZZZ1+SMFMNZ(nSrc));
+             DDMXX=1./(XXX+(SMFMXX(nSrc)-XIN)*(SMFMXX(nSrc)-XIN))**(1.5);
+             DDMNX=1./(XXX+(SMFMNX(nSrc)-XIN)*(SMFMNX(nSrc)-XIN))**(1.5)+DDMXX;
+             DDMXY=1./(XXX+(SMFMXY(nSrc)-YIN)*(SMFMXY(nSrc)-YIN))**(1.5)+DDMNX;
+             DDMNY=1./(XXX+(SMFMNY(nSrc)-YIN)*(SMFMNY(nSrc)-YIN))**(1.5)+DDMXY;
+             "now sample based on inverse-square law"
+          ;  $RANDOMSET XXX;  $RANDOMSET XXX1;
+             IF(XXX <= (DDMXX/DDMNY))[
+                 XINS=SMFMXX(nSrc)+XXX1*XXX1*(SMFX2(nSrc)-SMFMXX(nSrc));
+                 "using XXX1*XXX1 results in more particles around edges"
+                 XXX=YINS*(XINS*XINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFY2(nSrc))YINS=XXX;
+                 ]
+             ELSEIF(XXX <= (DDMNX/DDMNY))[
+                 XINS=SMFMNX(nSrc)+XXX1*XXX1*(-SMFX2(nSrc)-SMFMNX(nSrc));
+                 XXX=YINS*(XINS*XINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFY2(nSrc))YINS=XXX;
+                 ]
+             ELSEIF(XXX <= (DDMXY/DDMNY))[
+                 YINS=SMFMXY(nSrc)+XXX1*XXX1*(SMFY2(nSrc)-SMFMXY(nSrc));
+                 XXX=XINS*(YINS*YINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFX2(nSrc))XINS=XXX;
+                 ]
+             ELSE[YINS=SMFMNY(nSrc)+XXX1*XXX1*(-SMFY2(nSrc)-SMFMNY(nSrc));
+                 XXX=XINS*(YINS*YINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+                 IF(ABS(XXX).LT.SMFX2(nSrc))XINS=XXX;
+                 ]
+             ]
+          ELSE["particle position is outside applicator opening"
+             YINSMX=(YINS-YIN)/(XINS-XIN)*(SMFMXX(nSrc)-XINS)+YINS;
+             XXX=(ZZZ1+SMFMNZ(nSrc))*(ZZZ1+SMFMNZ(nSrc));
+             IF(YINSMX>SMFMXY(nSrc)|YINSMX<SMFMNY(nSrc))[DDMXY=0.;]
+             ELSE[
+                 DDMXY=1./(XXX+(SMFMXX(nSrc)-XIN)*
+                 (SMFMXX(nSrc)-XIN)+(YINSMX-YIN)*(YINSMX-YIN))**(1.5);
+                 ]
+             YINSMN=(YINS-YIN)/(XINS-XIN)*(SMFMNX(nSrc)-XINS)+YINS;
+             IF(YINSMN>SMFMXY(nSrc)|YINSMN<SMFMNY(nSrc))[DDMNY=DDMXY;]
+             ELSE[
+                 DDMNY=1./(XXX+(SMFMNX(nSrc)-XIN)*
+                 (SMFMNX(nSrc)-XIN)+(YINSMN-YIN)*(YINSMN-YIN))**(1.5)+DDMXY;
+                 ]
+             XINSMX=(XINS-XIN)/(YINS-YIN)*(SMFMXY(nSrc)-YINS)+XINS;
+             IF(XINSMX>SMFMXX(nSrc)|XINSMX<SMFMNX(nSrc))[DDMXX=DDMNY;]
+             ELSE[
+                 DDMXX=1./(XXX+(SMFMXY(nSrc)-YIN)*
+                 (SMFMXY(nSrc)-YIN)+(XINSMX-XIN)*(XINSMX-XIN))**(1.5)+DDMNY;
+                 ]
+             XINSMN=(XINS-XIN)/(YINS-YIN)*(SMFMNY(nSrc)-YINS)+XINS;
+             IF(XINSMN>SMFMXX(nSrc)|XINSMN<SMFMNX(nSrc))[DDMNX=DDMXX;]
+             ELSE[
+                 DDMNX=1./(XXX+(SMFMNY(nSrc)-YIN)*
+                 (SMFMNY(nSrc)-YIN)+(XINSMN-XIN)*(XINSMN-XIN))**(1.5)+DDMXX;
+                 ]
+          ;  $RANDOMSET XXX;"sample using inverse-square lar"
+             IF(    XXX <= (DDMXY/DDMNX))[XINS=SMFMXX(nSrc);YINS=YINSMX;]
+             ELSEIF(XXX <= (DDMNY/DDMNX))[XINS=SMFMNX(nSrc);YINS=YINSMN;]
+             ELSEIF(XXX <= (DDMXX/DDMNX))[XINS=XINSMX;YINS=SMFMXY(nSrc);]
+             ELSE[XINS=XINSMN;YINS=SMFMNY(nSrc);]
+             ]"end of particle position outside opening"
+          ]
+      ]"end of source 11"
+
+   " sub-source is collimator "
+   " ------------------------ "
+   ELSEIF(ISMFPS(nSrc) =  2)[
+      NSCATT=0;
+      LOOP[
+       ;  $RANDOMSET ZZZ1;
+          IF(ZZZ1 ~= 0.0)[RRR=SQRT(1/ZZZ1-1)*RSCATT*SMFMNZ(nSrc)/100.;]
+          ELSE[RRR=1.0E+30;]
+       ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+          XXX=SIN(XXX1);YYY=COS(XXX1);
+          XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+          YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+          IF(ABS(XINS) <= SMFX2(nSrc))&(ABS(YINS) <= SMFY2(nSrc))[
+              GOTO :FOUND-POSITION-SOURCE2:;
+              ]
+          NSCATT=NSCATT+1;
+          IF(NSCATT =  3)[
+              XINS=(2.*ZZZ1-1.)*SMFX2(nSrc);
+              YINS=(0.31831*XXX1-1.)*SMFY2(nSrc);"0.31831=2./6.283185"
+              GOTO :FOUND-POSITION-SOURCE2:;
+              ]
+          ]
+      ;:FOUND-POSITION-SOURCE2:;
+      IF(SMFPXY(nSrc) =  0)["collimator along x-axis"
+          IF(YINS  < SMFMXY(nSrc))&(YINS > SMFMNY(nSrc))[
+              DDMXY=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMXY(nSrc)-YIN)*
+	      (SMFMXY(nSrc)-YIN))**(1.5);
+              DDMNY=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMNY(nSrc)-YIN)*
+	      (SMFMNY(nSrc)-YIN))**(1.5)+DDMXY;
+           ;  $RANDOMSET XXX;
+              IF(XXX <= (DDMXY/DDMNY))[YINS=SMFMXY(nSrc);]
+              ELSE[YINS=SMFMNY(nSrc);]
+              XXX=XINS*(YINS*YINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+              IF(ABS(XXX).LT.SMFX2(nSrc))XINS=XXX;
+              "scale XINS according to the new YINS."
+              ]
+          ]
+      ELSE["collimator along y-axis"
+          IF(XINS < SMFMXX(nSrc))&(XINS > SMFMNX(nSrc))[
+              DDMXX=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMXX(nSrc)-XIN)*
+	      (SMFMXX(nSrc)-XIN))**(1.5);
+              DDMNX=1./(SMFMNZ(nSrc)*SMFMNZ(nSrc)+(SMFMNX(nSrc)-XIN)*
+	      (SMFMNX(nSrc)-XIN))**(1.5)+DDMXX;
+           ;  $RANDOMSET XXX;
+              IF(XXX <= (DDMXX/DDMNX))[XINS=SMFMXX(nSrc);]
+              ELSE[XINS=SMFMNX(nSrc);]
+              XXX=YINS*(XINS*XINS+SMFMNZ(nSrc)*SMFMNZ(nSrc))/
+                 (SMFMNZ(nSrc)*SMFMNZ(nSrc));
+              IF(ABS(XXX).LT.SMFY2(nSrc))YINS=XXX;
+              ]
+          ]
+      ]"end of source 2"
+
+   " sub-source is ring or cone or point source "
+   " ------------------------------------------ "
+   ELSEIF(ISMFPS(nSrc) =  3)[
+      IF(SMFMNR(nSrc) =  0.0)["point source"XINS=0.0;YINS=0.0;]
+      ELSE["ring or cone"
+         NSCATT=0;
+         LOOP[
+          ;  $RANDOMSET ZZZ1;
+             IF(ZZZ1 ~= 0.0)[RRR=SQRT(1/ZZZ1-1)*RSCATT*SMFMNZ(nSrc)/100.;]
+             ELSE[RRR=1.0E+30;]
+          ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+             XXX=SIN(XXX1);YYY=COS(XXX1);
+             XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             IF((XINS*XINS+YINS*YINS) <= SMFMR2(nSrc))[
+                 GOTO :FOUND-POSITION-SOURCE3:;
+                 ]
+             NSCATT=NSCATT+1;
+             IF(NSCATT =  3)[
+                 RRR=ZZZ1*(SMFMXR(nSrc)-SMFMNR(nSrc))+SMFMNR(nSrc);
+                 XINS=RRR*XXX;YINS=RRR*YYY;
+                 GOTO :FOUND-POSITION-SOURCE3:;
+                 ]
+             ]
+         ;:FOUND-POSITION-SOURCE3:;
+          RRR=SQRT(XINS*XINS+YINS*YINS);
+          XINS=SMFMNR(nSrc)*XINS/RRR;YINS=SMFMNR(nSrc)*YINS/RRR;
+          "move the particle position to the edge"
+          ]
+      ]"end of source 3"
+
+   " sub-source is a rectangular plane "
+   " --------------------------------- "
+   ELSEIF(ISMFPS(nSrc) =  4)[
+         NSCATT=0;
+         LOOP[
+          ;  $RANDOMSET ZZZ1;
+             IF(ZZZ1 ~= 0.0)[
+                 RRR=SQRT(1/ZZZ1-1)*RSCATT*SMFMNZ(nSrc)/SSDVPS(nSrc);
+                 ]
+             ELSE[RRR=1.0E+30;]
+          ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+             XXX=SIN(XXX1);YYY=COS(XXX1);
+             XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             IF(XINS <= SMFMXX(nSrc))&(XINS >= SMFMNX(nSrc))&
+             (YINS <= SMFMXY(nSrc))&(YINS >= SMFMNY(nSrc))[
+                 GOTO :FOUND-POSITION-SOURCE4:;
+                 ]
+             NSCATT=NSCATT+1;
+             IF(NSCATT =  4)[
+                 XINS=(2.*ZZZ1-1)*(SMFMXX(nSrc)-SMFMNX(nSrc));
+                 YINS=(.31831*XXX1-1)*(SMFMXY(nSrc)-SMFMNY(nSrc));
+                 ".31831=2./6.283185"
+                 GOTO :FOUND-POSITION-SOURCE4:;
+                 ]
+             ]
+         ;:FOUND-POSITION-SOURCE4:;
+      ]"end of source 4"
+
+   " sub-source is a circular plane source "
+   " ------------------------------------- "
+   ELSEIF(ISMFPS(nSrc) =  5)[
+      IF(SMFMNR(nSrc) =  0.0)[
+         XINS=0.0;YINS=0.0;
+         ]
+      ELSE[
+         NSCATT=0;
+         LOOP[
+          ;  $RANDOMSET ZZZ1;
+             IF(ZZZ1 ~= 0.0)[
+                 RRR=SQRT(1/ZZZ1-1)*RSCATT*SMFMNZ(nSrc)/SSDVPS(nSrc);
+                 ]
+             ELSE[RRR=1.0E+30;]
+          ;  $RANDOMSET XXX1;XXX1=XXX1*6.283185;
+             XXX=SIN(XXX1);YYY=COS(XXX1);
+             XINS=(XIN+XXX*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             YINS=(YIN+YYY*RRR)*(SSDVPS(nSrc)-SMFMNZ(nSrc))/SSDVPS(nSrc);
+             IF((XINS*XINS+YINS*YINS) <= SMFNR2(nSrc))[
+                 GOTO :FOUND-POSITION-SOURCE5:;
+                 ]
+             NSCATT=NSCATT+1;
+             IF(NSCATT =  4)[
+                 RRR=ZZZ1*SMFMNR(nSrc);
+                 XINS=XIN+XXX*RRR;YINS=YIN+YYY*RRR;
+                 GOTO :FOUND-POSITION-SOURCE5:;
+                 ]
+             ]
+         ;:FOUND-POSITION-SOURCE5:;
+         ]
+      ]"end of source 5"
+
+   " wrong source "
+   " ------------ "
+   ELSE[
+      OUTPUT nSrc;(//' SOURCE TYPE =',I4,' ? SOMETHING MUST BE WRONG!'/
+                   ' YOU SHOULD CHECK THE SOURCE INPUT DATA. '/
+                   ' THE PROGRAMME STOPS HERE, SORRY!!!');
+      STOP;
+      ];
+}
+
+;REPLACE {$BEAMMODEL_SAMPLING3} WITH
+{ ;  "calculate incident angles"
+   IF(XINS =  0.0 & YINS = 0.0)["point source"
+      DIST_RAY=SQRT(XIN*XIN+YIN*YIN+SMFMNZ(nSrc)*SMFMNZ(nSrc));
+      UIN=XIN/DIST_RAY;VIN=YIN/DIST_RAY;
+      ]
+   ELSE[
+      XXX=(XIN-XINS);
+      YYY=(YIN-YINS);
+      IF(ISMFPS(nSrc) =  11)[
+          DIST_RAY=SQRT(XXX*XXX+YYY*YYY+(SMFMNZ(nSrc)+ZZZ1)*
+		(SMFMNZ(nSrc))+ZZZ1);
+          ]
+      ELSE[
+          DIST_RAY=SQRT(XXX*XXX+YYY*YYY+SMFMNZ(nSrc)*SMFMNZ(nSrc));
+          ]
+      UIN=XXX/DIST_RAY;VIN=YYY/DIST_RAY;
+      ]
+   WIN=MIN(1.0,SQRT(1.-UIN*UIN-VIN*VIN));
+
+   "The following is used to sample the angular fluctuation due to"
+   "the effect of electron scattering in air."
+   "For photons, we ignore the air scattering effect"
+   IF(IQSMFP(nSrc) ~= 0 & RSCATT ~=0.)["this is for electrons and positrons"
+"   IF(RSCATT ~=0.)[" "this is for electrons and positrons"
+      XXX1=UIN;YYY1=VIN;RRR2=WIN;
+      ;:SAMPLE-ANGLE:;
+      $RANDOMSET RRR;$RANDOMSET RRR1;
+      KKKK = MIN(FLOAT($INVDISSM)*RRR+1.,FLOAT($INVDISSM));
+      "MIN IN CASE RRR=1.0"
+      RRR = FSMABN(KKKK,1) + RRR1*FSMABN(KKKK,2);"angle THETA in rad"
+
+      IF(IQSMFP(nSrc)=0&ISMFPS(nSrc)>2)RRR=RRR*0.01;"this is a test CMa"
+
+   ;  $RANDOMSET RRR1;
+      RRR1=6.283185*RRR1;"ANGLE PHI IN RAD"
+      XXX=SIN(RRR)*COS(RRR1);"XXX=SINTHE*COSPHI"
+      YYY=SIN(RRR)*SIN(RRR1);"YYY=SINTHE*SINPHI"
+      RRR1=XXX1*XXX1+YYY1*YYY1;
+      IF(RRR1.LT.1.0E-20)["SMALL POLAR ANGLE"
+          UIN=XXX;VIN=YYY;
+          WIN=RRR2*COS(RRR);
+          ]
+      ELSE[
+          RRR1=SQRT(RRR1);
+          WIN=RRR2*COS(RRR)-XXX*RRR1;
+          IF(WIN.LE.0.0)GOTO :SAMPLE-ANGLE:;
+          " WIN SMALLER THAN 0. (PARTICLE GOING BACK) NOT ALLOWED"
+          UIN=XXX1*RRR2*XXX/RRR1-YYY1*YYY/RRR1+XXX1*COS(RRR);
+          VIN=YYY1*RRR2*XXX/RRR1+XXX1*YYY/RRR1+YYY1*COS(RRR);
+          ]
+      ]
+
+   "calculate incident energy"
+   $RANDOMSET RRR;$RANDOMSET RRR1;
+   KKKK = MIN(FLOAT($INVDISSM)*RRR+1.,FLOAT($INVDISSM));
+   "MIN IN CASE RRR=1.0"
+
+   " Circular field distribution "
+   " --------------------------- "
+   IF(MSMFXY(nSrc).EQ.0)[
+	" In the following loop both type of energy spectra were covered "
+	" Inside/outside because NFIELDe=2 "
+	" but also energy spectrum type with different radii "
+	DO n=1,NFIELDe [
+	   IF( SQRT(XIN*XIN+YIN*YIN) <= ERADII(n) ) [
+	      EIN = FSMFBN(nSrc,n,KKKK,1) + RRR1*FSMFBN(nSrc,n,KKKK,2);
+	      " Done, exit the loop "
+	      EXIT;
+	      ]
+	   ]
+        ]
+   " Square field distribution with symmetrical square rings "
+   " ------------------------------------------------------- "
+   ELSEIF(MSMFXY(nSrc).EQ.1)[
+	" In the following loop both type of energy spectra were covered "
+	" Inside/outside because NFIELDe=2 "
+	" but also energy spectrum type with different radii "
+	DO n=1,NFIELDe [
+	   IF((ABS(XIN) <= ERADII(n)) & (ABS(YIN) <= ERADII(n))) [
+	      EIN = FSMFBN(nSrc,n,KKKK,1) + RRR1*FSMFBN(nSrc,n,KKKK,2);
+	      " Done, exit the loop "
+	      EXIT;
+	      ]
+	   ]
+        ]
+   " Rectangular field "
+   " ----------------- "
+   ELSEIF(MSMFXY(nSrc).EQ.2)[
+        IF((XIN.LE.XTREATMX) & (YIN.LE.YTREATMX) &
+            (XIN.GT.XTREATMN) & (YIN.GT.YTREATMN))[
+            EIN = FSMFBN(nSrc,1,KKKK,1) + RRR1*FSMFBN(nSrc,1,KKKK,2);
+            "energy distribution, within treatment field"
+            ]
+        ELSE[
+            EIN = FSMFBN(nSrc,2,KKKK,1) + RRR1*FSMFBN(nSrc,2,KKKK,2);
+            "energy distribution, outside treatment field"
+            ]
+        ]
+}
+
+;
+REPLACE{$BEAMMODEL_PASSING_VARIABLES} WITH {
+   ZIN=Z_SOURCE; "Incident Z position"
+   ICM = INIT_ICM; "Starting component module"
+   IDIR = 1; "Entering from front"
+}
+
+;
+REPLACE {$BEAMMODEL_INITIAL_ENERGY} WITH
+{;IF(ISOURC.EQ.31)[
+    EI=EIN;
+    IF(IQIN.NE.0)EI=EIN+RM;
+    ];
+}"Use total energy for charged particles"
+;
+
+REPLACE{$BEAMMODEL-SOURCE4-SUMMARY} WITH {
+;WRITE(1,:OUTPUT-SUMMARY:) nnread,ncase+ncaseold,nsmiss;
+WRITE(6,:OUTPUT-SUMMARY:) nnread,ncase+ncaseold,nsmiss;
+:OUTPUT-SUMMARY: FORMAT(/
+  ' *********************************************************************'/
+ /'  No of particles reconstructed by source model          =',i12/
+  '  No of particles actually simulated                     =',i12/
+  '  No of particles started outside the region surrounding the '/
+  '  phantom and were excluded in the simulation            =',i12/
+ /' *********************************************************************'/);
+
+}
+;
+
+REPLACE {$BEAMMODEL_SRCOUT} WITH {
+
+;IF(ISOURC =31)[UINC=0.;VINC=0.;WINC=0.;
+   DO IQIN=1,NSMFPS["check particle type for each sub-source"
+      IF(IQSMFP(IQIN) =  -1)[UINC=1.;]
+      ELSEIF(IQSMFP(IQIN) =  0)[VINC=2.;]
+      ELSE[WINC=3.;]
+      ];
+   IQIN=INT(UINC+VINC+WINC);
+   IF(IQIN =  1)[WRITE(IOUTLIST,:SSM506:);]
+   ELSEIF(IQIN =  2)[WRITE(IOUTLIST,:SSM505:);]
+   ELSEIF(IQIN =  3)[WRITE(IOUTLIST,:SSM507:);]
+   ELSEIF(IQIN =  4)[WRITE(IOUTLIST,:SSM502:);]
+   ELSEIF(IQIN =  5)[WRITE(IOUTLIST,:SSM503:);]
+   ELSE[WRITE(IOUTLIST,:SSM504:);]
+   ]
+
+:SSM502: FORMAT(T20,'INITIAL PARTICLES are electrons and positrons');
+:SSM503: FORMAT(T20,'INITIAL PARTICLES are photons and positrons');
+:SSM504: FORMAT(T20,'INITIAL PARTICLES are electrons, photons and positrons');
+:SSM505: FORMAT(T20,'INITIAL PARTICLES are photons only');
+:SSM506: FORMAT(T20,'INITIAL PARTICLES are electrons only');
+:SSM507: FORMAT(T20,'INITIAL PARTICLES are positrons only');
+
+}
+;
+"end of beammodel_macros.mortran"
+;
