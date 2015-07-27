@@ -1,0 +1,3321 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc statdose utility source code                                        "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Authors:         Jiangshen Sun, 1991                                       "
+"                   Bruce Faddegon, 1991                                      "
+"                   H.C.E. McGowan, 1992                                      "
+"                                                                             "
+"  Contributors:    Charlie Ma                                                "
+"                   Blake Walters                                             "
+"                   Dave Rogers                                               "
+"                   Iwan Kawrakow                                             "
+"                   Frederic Tessier                                          "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%C80
+%Q1
+%I4
+!INDENT F2;
+!INDENT M2;
+"==============================================================================
+"                              statdose.mortran
+"                              ****************
+"
+"    A programme to read 3-d dose data from DOSXYZ and plot using XVGR
+"    This version is finalized after many chages in the scripts 'statdose',
+"    'compile_statdose', and Fortran source file plot_xvgr    C-M Ma
+"==============================================================================
+"
+"    Version 1.0    J. Sun and B. Faddegon,  H.C.E. McGowan and B. Faddegon
+"    Version 2.0    Apr. 1995    CMa   This working version
+"    Version 2.1    Oct. 1996    B Walters
+"
+"==============================================================================
+
+" History:
+"
+" PLOTDOSE:  Routine to plot dose bounds calculated by XYZDOS
+" and output to .egs4plot file.
+" J. Sun and B. Faddegon, Nov. 1991.
+
+" STATDOSE: Program with options:
+" Read, Statistical Analysis, Normalization, Rebinning, Plot and Save
+" for dose distributions generated by DOSXYZ
+
+" H.C.E. McGowan and B.A. Faddegon, May/June/July 1992.
+
+" C.M. Ma April 1995 modifications to work on the SGI, SUN and other machines,
+" necessary changes for the new SGI operating system and file system, and
+" completion of statdose directory which includes all the files and programmes
+" required and a brief introduction.
+"
+" B Walters, Oct. 1996: modified so that the code uses the generic
+" XVGRPLOT subroutine along with a subroutine called XVGR_SCRIPT to
+" write data in a format readable by xvgr/xmgr and then call xvgr/xmgr.
+" Formerly, the subroutine PLOT_XVGR used to do this.  In doing so,
+" X,Y,ERRY became 1-D arrays from 2-D, and CURVE_SPECS (not currently
+" used with this mod), CURVE_LABELS, and NPOINTS became single variables
+" from 1-D arrays.
+" Dec 1997 DWOR  Made dimensions in x,y,z independently variable
+"   so can handle large arrays.
+"
+" INPUT DATA NEEDED: DOSE(X,Y,Z), ERRDOSE(X,Y,Z)
+"----------------------------------------------------------------------
+"----------------------------------------------------------------------
+" THE READING OF THE RULES (MACRO DEFINITIONS)
+"----------------------------------------------------------------------
+" COMMON BLOCK MACROS
+" COMMON BLOCK #1 - DATA1 - essential variables used in all subroutines
+" CALLED FROM: MAINMENU,READDOSE,REBINNING,PLOTMENU,PLOTDOSE,COMPAREPLOT,SAVE
+      ;
+
+"We need the $REAL, $INTEGER and $LOGICAL macros "
+REPLACE {$REAL} WITH {real*4}
+REPLACE {$INTEGER} WITH {integer*4}
+REPLACE {$LOGICAL} WITH {logical}
+
+"REPLACE{$DEBUG}WITH{.true.};
+REPLACE{$DEBUG}WITH{.false.};
+
+REPLACE {$COMIN1/DATA/} WITH {
+"=============================="
+   COMMON/DATA1/N,NDIST1_FLAG,NFLAG,NUMCHAR,REPLY;
+   INTEGER N,NDIST1_FLAG($NDIST1_MAX),NFLAG,NUMCHAR;
+   CHARACTER*1 REPLY;
+};
+
+" COMMON BLOCK #2 - DATA2 - variables which are not necessary in the
+" menu routines, but are essential in the actual subroutines executing
+" the various headings found in the menus
+" CALLED FROM: READDOSE,REBINNING,PLOTDOSE,COMPAREPLOT,SAVE
+
+REPLACE {$COMIN2/DATA/} WITH {
+"=============================="
+   COMMON/DATA2/I,J,K,L,M,I0,J0,K0,IMAX,JMAX,KMAX,
+   ICOUNT,INTX,INTY,INTZ,ISTR,JSTR,LA_AXIS,LTOT,
+   MAX_CURVE,NCURVE,NDIST1,NDIST2,NUM_ARR,NPOINTS,IOPTION,NTYPE_SYMBOL,
+   NTYPE_CURVE,AXISDOSE,DDBIN_CHI,DDBIN_DIFF,DOSE,ERRDOSE,ERRY,
+   FREQ_CHI,FREQ_DIFF,PROFILEDOSE,PROFILERR,TOTALNORM,
+   XCOORD,YCOORD,ZCOORD,
+   XBOUND,YBOUND,ZBOUND,X,Y,VOXEL_MEAS,
+   CURVE_LABELS,CURVE_SPECS,FILEIN,THE_STRING,TITLE,XAXIS,YAXIS,
+   OUTFILE;
+
+   INTEGER I,J,K,L,M;
+   INTEGER I0, J0, K0;
+   INTEGER IMAX($NDIST1_MAX),JMAX($NDIST1_MAX),KMAX($NDIST1_MAX);
+   INTEGER ICOUNT;
+   INTEGER INTX,INTY,INTZ;
+   INTEGER ISTR,JSTR;
+   INTEGER LA_AXIS;
+   INTEGER LTOT;
+   INTEGER MAX_CURVE, NCURVE;
+   INTEGER NDIST1,NDIST2;
+   INTEGER NUM_ARR(10);
+   INTEGER NPOINTS,IOPTION(4);
+   INTEGER NTYPE_SYMBOL,NTYPE_CURVE;
+
+   REAL AXISDOSE($NDIST1_MAX,$MAXVOXEL);
+   REAL DDBIN_CHI;
+   REAL DDBIN_DIFF;
+   REAL DOSE($NDIST1_MAX,$MAXVOXX,$MAXVOXY,$MAXVOXZ);
+   REAL ERRDOSE($NDIST1_MAX,$MAXVOXX,$MAXVOXY,$MAXVOXZ);
+   REAL ERRY($MAXPOINTS);
+   REAL FREQ_CHI($MAXPOINTS);
+   REAL FREQ_DIFF($MAXPOINTS);
+   REAL PROFILEDOSE($MAXVOXEL+1),PROFILERR($MAXVOXEL+1);
+   REAL TOTALNORM($NDIST1_MAX);
+   REAL XCOORD, YCOORD, ZCOORD;
+   REAL XBOUND($NDIST1_MAX,$MAXVOXX+1),YBOUND($NDIST1_MAX,$MAXVOXY+1),
+      ZBOUND($NDIST1_MAX,$MAXVOXZ+1);
+   REAL X($MAXPOINTS),Y($MAXPOINTS);
+   REAL VOXEL_MEAS;
+
+   CHARACTER*60 CURVE_LABELS;
+   CHARACTER*2 CURVE_SPECS;
+   CHARACTER*70 FILEIN($NDIST1_MAX);
+   CHARACTER*($MAXCURVE) THE_STRING;
+   CHARACTER*60 TITLE,XAXIS,YAXIS,OUTFILE,SUBTITLE;
+   };
+
+" PARAMETER MACROS
+
+" - maximum number of data sets which can be stored in the program arrays
+" - note that 5 is about the largest number of curves able to be stored
+" without sending the array size out of this world
+
+REPLACE {$NDIST1_MAX} WITH {15};  "Was 5  DR "
+
+" - maximum number of curves which can be plotted
+" - this doesn't have to correspond to $NDIST1_MAX because
+" theoretically, one can plot 20 curves from one data set
+REPLACE {$MAXCURVE} WITH {10};
+
+" - maximum number of points in one curve I think which can be plotted
+REPLACE {$MAXPOINTS} WITH {400};
+
+" - maximum number of voxels in each direction which can be used
+REPLACE {$MAXVOXX} WITH {28};
+REPLACE {$MAXVOXY} WITH {28};
+REPLACE {$MAXVOXZ} WITH {400};
+REPLACE {$MAXVOXEL} WITH {400};  "Note: MAXVOLXEL must be the greatest of "
+                           "the above 3 values!!"
+"Note the main arrays are dimensioned $NDIST1_MAX*$MAXVOXX*$MAXVOXY*$MAXVOXZ"
+"2 x 128 x 128 x64 compiles under linux at NRC, but NOT SGI with 80MByte"
+
+" - maximum number of files which can be accessed (limit set simply for memory
+" allocation purposes, if necessary this can be bigger)
+REPLACE {$MAXFILE} WITH {40};
+
+
+" $OUT_THE_BOUNDS prints out the boundary values of the 3ddose array
+" in the desired direction
+" CALLED FROM: READDOSE,REBINNING
+
+REPLACE {$OUT_THE_BOUNDS(#,#,#);} WITH {;
+"=========================================="
+
+   OUTPUT {P2}BOUND({P3},1),{P2}BOUND({P3},{P1}MAX({P3})+1);
+   (1X,'Voxel-boundary values in {P2}-direction: ' ,F10.2,2X,'-',F7.2);
+   };
+
+" $CHECK_BOUNDS checks the binning structures for two distributions
+" - if the binning structures are not alike, it prompts the user to select
+" two different files
+
+" - if the binning structures are alike, it allows the program to continue
+"CALLED FROM: STATS
+
+REPLACE {$CHECK_BOUNDS(#,#);} WITH {;
+"======================================"
+
+    " - check that the distributions have an identical number of voxels "
+    IF {P1}MAX(NDIST1).NE.{P1}MAX(NDIST2) [
+      OUTPUT ;(1X, 'BINNING STRUCTURES INCOMPATIBLE, PLEASE SELECT AGAIN.');
+      " - prompt the user to select two different files "
+      GOTO :SELECT9:;
+    ]
+    " - check that the boundaries for each distribution are the same "
+    DO {P1}=1,{P1}MAX(NDIST1) [
+       IF {P2}BOUND(NDIST1,{P1}).NE.{P2}BOUND(NDIST2,{P1}) [
+          OUTPUT ;(' BINNING STRUCTURES INCOMPATIBLE, PLEASE SELECT AGAIN.');
+          " - prompt the user to select two different files "
+          GOTO :SELECT9:;
+       ]
+    ]
+       " - continue on in STATS if they are the same "
+};
+
+" $GET_AXISDOSE calculates the maximum dose on the central axis of a
+" distribution
+" - it checks the distribution to determine the properties of the central
+" axis, and decides whether it needs to average values, or just read
+" the appropriate data from the distribution
+" - if the central axis is obvious, no averaging occurs
+" CALLED FROM: STATS
+
+REPLACE {$GET_AXISDOSE(#);} WITH {;
+"===================================="
+
+" if there are an even number of voxels in the x direction, set the "
+" voxel limits for averaging the two central most voxels "
+IF (MOD(IMAX({P1}),2)) = 0 [ILO = IMAX({P1})/2; IHI = IMAX({P1})/2+1;]
+
+" otherwise, take only the central voxel into account "
+ELSE [ILO = IMAX({P1})/2+1; IHI = IMAX({P1})/2+1;]
+
+" if there are an even number of voxels in the y direction, set the "
+" voxel lims for averaging the two centralmost voxels "
+IF (MOD(JMAX({P1}),2)) = 0 [JLO = JMAX({P1})/2;JHI = JMAX({P1})/2+1;]
+
+" otherwise, take only the central voxel into account "
+ELSE [JLO = JMAX({P1})/2+1;  JHI = JMAX({P1})/2+1;]
+
+" find the average dose, using the above voxel limits, at the k-th level "
+" in the voxel grid "
+DO K = 1,KMAX({P1}) [
+   " must set to 0 for the each k-th voxel "
+   DOSE_STORE = 0;
+   DO I = ILO,IHI [
+      DO J = JLO,JHI [
+      " store dose in a cumulative sum "
+         DOSE_STORE = DOSE({P1},I,J,K)+DOSE_STORE;
+      ]
+   ]
+   " divide cumulative dose at the k-th level by the number of voxels "
+   " averaged "
+   DOSE_STORE = DOSE_STORE/((IHI-ILO+1)*(JHI-JLO+1));
+   AXISDOSE({P1},K) = DOSE_STORE;
+]
+};    "end of $GET_AXISDOSE"
+
+" $FIND_LIMS finds the upper and lower bin numbers for the calculation
+" of the appropriate average dose for a specific voxel
+" - it does this for each axis
+" - if the coordinate being checked is within 1/100th of a cm of the
+" voxel boundary in either direction, the next voxel in that direction
+" will be considered when calculating the average
+" - the average is calculated in the calling routine
+" CALLED FROM: SPECVOXEL
+"the logic in the following used to fail for {P2}COORD={P2}BOUND(NDIST1,{P1}0)"
+"It was only catestrophic if it was 1st bin in which case {P1}LO came back"
+"as zero which caused a segmentation fault"
+
+REPLACE {$FIND_LIMS(#,#);} WITH {;
+"=================================="
+   " set defaults "
+   {P1}LO = {P1}0;
+   {P1}HI = {P1}0;
+   " check upper voxel "
+   IF ({P2}BOUND(NDIST1,{P1}0+1)-{P2}COORD)<.01 [{P1}HI={P1}0+1;]
+   " check lower voxel "
+   IF ({P2}COORD-{P2}BOUND(NDIST1,{P1}0))< 0.01 [{P1}LO={P1}0-1;]
+   IF({P1}LO = 0)[{P1}LO=1;]
+};
+
+" $INIT_GRAPH initializes some of the graph variables to default settings
+" which are then passed to the routine plot_xvgr
+" - the variables initialized are: xaxis, yaxis and the ioption array
+" - xaxis, yaxis are axis labels
+" - ioption stores various graph settings options
+" - more information about the graph settings options can be found in
+" plot_xvgr or plotin
+" CALLED FROM: PLOTDOSE,COMPAREPLOT
+
+" - these settings are completely arbitrary, and have simply been
+" assigned as such in order to provide generic defaults in an effort to
+" avoid having to plague the user with annoying questions
+" these values can be changed here, or left as defaults and changed once
+" the graph has been popped onto the screen
+
+REPLACE {$INIT_GRAPH(#);} WITH {;
+"=================================="
+   XAXIS = '{P1} axis/cm';
+   YAXIS = 'dose /Gy';
+   DO L = 1,4   [ IOPTION(L) = 0; ]
+};
+
+" $PRINT_CURVEINFO prints the number and name of the current 3ddose
+" distribution
+" CALLED FROM: PLOTDOSE,COMPAREPLOT
+
+REPLACE {$PRINT_CURVEINFO;} WITH {;
+"==================================="
+
+   OUTPUT NDIST1,FILEIN(NDIST1)(1:NUMCHAR);
+   (/1X,'3D-dose distribution ',I2,': ',A);
+};
+
+" $FIND_BIN calculates the voxel position corresponding to each axis
+" coordinate
+" - the voxel position is denoted by {P1}0
+" - it loops through the bounds array from the second voxel to the last
+" voxel, checking at each to see whether the distance value stored in
+" the bounds array for that voxel is greater than the distance value
+" entered for the coordinate
+" - if the distance value is greater, the loop is exited
+" one is subtracted from the voxel position because if in the centre of the
+" voxel, we want to take the value of the lower boundary as the value of
+" the voxel
+" CALLED FROM: PLOTDOSE,COMPAREPLOT,SPECVOXEL
+
+REPLACE {$FIND_BIN(#,#);} WITH {;
+"=================================="
+
+   DO {P1}0 = 2,{P1}MAX(NDIST1) [
+      VOXEL_MEAS = {P2}BOUND(NDIST1,{P1}0);
+      IF (VOXEL_MEAS>{P2}COORD) [EXIT;]
+      ]
+   {P1}0 = {P1}0-1;
+   };
+
+" $PROFILE finds the dose and the error in the dose
+" at points along a specified axis (x,y or z)
+" at a specific coordinate
+" - the index {P1}0 is used in order that the macro may be utilized for
+" all three axes, since it allows the macro to increment either I0,J0,K0,
+" depending on the variable passed to the macro
+" CALLED FROM: PLOTDOSE,COMPAREPLOT
+
+REPLACE {$PROFILE(#,#);} WITH {;
+"================================"
+
+DO {P1}0 = 1,{P1}MAX(NDIST1) [
+   PROFILEDOSE({P1}0) = DOSE(NDIST1,I0,J0,K0);
+   PROFILERR({P1}0) = ERRDOSE(NDIST1,I0,J0,K0);
+   ]
+   };
+
+" $PRINT_BOUNDS prints the number of voxels in the x,y,z directions
+" on the screen (along with a message),the voxel grid boundary values (in cm)
+" in all three directions for the data set specified
+
+" - the macro also prints the dose and error in dose for points along
+" the selected axis at the coordinate specified
+" ie) it prints out the points being plotted
+" CALLED FROM: PLOTDOSE, COMPAREPLOT
+
+REPLACE {$PRINT_BOUNDS(#,#,#,#);} WITH {;
+"=========================================="
+
+   OUTPUT;(/' Following is PRINT_BOUNDS output');
+   OUTPUT {P3}0,{P4}0;(1X,'Profile along {P2}-axis at voxel :',2I3);
+   OUTPUT IMAX(NDIST1),JMAX(NDIST1),KMAX(NDIST1);
+          (/1X,'Number of voxels in x,y,z directions: ',3I10);
+
+   OUTPUT XBOUND(NDIST1,1),XBOUND(NDIST1,IMAX(NDIST1)+1);
+   (1X,'Voxel-boundary values in x-direction: ',F10.2,2X,'-',F7.2);
+
+   OUTPUT YBOUND(NDIST1,1),YBOUND(NDIST1,JMAX(NDIST1)+1);
+   (1X,'Voxel-boundary values in y-direction: ',F10.2,2X,'-',F7.2);
+
+   OUTPUT ZBOUND(NDIST1,1),ZBOUND(NDIST1,KMAX(NDIST1)+1);
+   (1X,'Voxel-boundary values in z-direction: ',F10.2,2X,'-',F7.2);
+
+" - this part will be removed when the program is complete, however, "
+" it has been left in at present in order to aid in debugging and QA "
+
+" - prints the dose and error in dose for points along the axis at "
+" the coordinate specified "
+
+   OUTPUT ;(' ');
+   DO {P1}0 = 1,{P1}MAX(NDIST1) [
+      OUTPUT (({P2}BOUND(NDIST1,{P1}0)+{P2}BOUND(NDIST1,{P1}0+1))/2),
+      PROFILEDOSE({P1}0),PROFILERR({P1}0);
+      (1X,'{P2}','BOUND=',E15.5,1X,'DOSE=',E12.5,1X,'ERRDOSE=',E12.5);
+      ]
+   OUTPUT ;(' ');
+   };
+
+" $THE_SPECS1,2 fill the arrays of data to be passed to the plot_xvgr
+" routine
+" - the horizontal axis contains the voxel positions (in cm, as taken
+" from the BOUNDS arrays) and the vertical axis contains the corresponding
+" dose
+" - default settings are assigned to the symbol variables which are also
+" passed to plot_xvgr and set the symbol settings.
+
+" 1 -
+" - the routine also finds a character string which corresponding to
+" the coordinate given by the user
+" (ie) the routine calls $FIND_STRING2)
+" - this is assigned to a variable which
+" is passed to plot_xvgr and used as a data identifier on the graph
+
+" 2 -
+" - the routine assigns the filename to the data identifier variable
+" instead
+
+" - for more information on the symbol settings, see the beginning of
+" plotin or plot_xvgr
+" - the two routines are essentially identical, except for the assignment
+" of different strings to the curve_labels variable
+" - the first routine is specific to the needs of PLOTDOSE, while
+" the second routine is specific to the needs of COMPAREPLOT in assigning a
+" default string to the title variable
+" CALLED FROM: PLOTDOSE
+
+REPLACE {$THE_SPECS1(#,#,#);} WITH {;
+"======================================"
+
+   NPOINTS = {P1}MAX(NDIST1);
+
+" - if the option for automatic offset has been selected, the x array is "
+" filled while adding 1/10th, 2/10th, 3/10ths, etc of the (cm) distance "
+" between voxels for each consecutive curve being plotted "
+   IF (REPLY='y') [
+      DO {P1}0=1,{P1}MAX(NDIST1) [
+
+" - the x values plotted are the averages of the two x distances "
+" which denote the particular voxel "
+
+         X({P1}0)=(({P2}BOUND(NDIST1,{P1}0)+
+         {P2}BOUND(NDIST1,{P1}0+1))/2)+(.1*({P3}-1)*
+         ({P2}BOUND(NDIST1,{P1}0+1)-{P2}BOUND(NDIST1,{P1}0)));
+
+" - the y values are the dose values for each voxel "
+
+         Y({P1}0)=PROFILEDOSE({P1}0);
+         ERRY({P1}0)=PROFILERR({P1}0);
+         ]
+      ]
+
+" - otherwise, the x array is filled with no additions "
+
+   ELSE [
+      DO {P1}0=1,{P1}MAX(NDIST1) [
+
+" - the x values plotted are the averages of the two x distances "
+" which denote the particular voxel "
+
+         X({P1}0)=(({P2}BOUND(NDIST1,{P1}0)+
+         {P2}BOUND(NDIST1,{P1}0+1))/2);
+
+" - the y values are the dose values for each voxel "
+
+         Y({P1}0)=PROFILEDOSE({P1}0);
+         ERRY({P1}0)=PROFILERR({P1}0);
+         ]
+      ]
+
+   IF LA_AXIS=1 [$FIND_STRING2(Y,Z,J0,K0);]
+   ELSEIF LA_AXIS=2 [$FIND_STRING2(X,Z,I0,K0);]
+   ELSEIF LA_AXIS=3 [$FIND_STRING2(X,Y,I0,J0);]
+
+" -the title label is set to the coordinate string "
+
+   CURVE_LABELS=THE_STRING;
+
+" -use mod to make a pseudo random assignment of possible combinations "
+" of default values for symbol type and curve type in order to "
+" ensure that multiple curves are distinct automatically, without "
+" having to have the user input stuff which they would have to "
+" think about "
+
+   NTYPE_SYMBOL = MOD({P3},9)+1;
+   NTYPE_CURVE = MOD({P3},5)+1;
+
+   CURVE_SPECS = CHAR(NTYPE_SYMBOL+48)//CHAR(NTYPE_CURVE+48);
+   };
+
+" CALLED FROM: COMPAREPLOT
+
+REPLACE {$THE_SPECS2(#,#,#);} WITH {;
+"======================================"
+
+   NPOINTS = {P1}MAX(NDIST1);
+
+" if the option for automatic offset has been selected, the x array is "
+" filled while adding 1/20th, 2/20th, 3/20ths, etc of the (cm) distance "
+" between voxels for each consecutive curve being plotted "
+
+ "        IF ((REPLY='y').OR.(REPLY=CHAR(32))) [ changed by CM"
+   IF (REPLY='y') [
+      DO {P1}0=1,{P1}MAX(NDIST1) [
+
+" the x values plotted are the averages of the two x distances which "
+" denote the particular voxel "
+
+         X({P1}0)=(({P2}BOUND(NDIST1,{P1}0)+
+         {P2}BOUND(NDIST1,{P1}0+1))/2)+(.05*({P3}-1)*
+         ({P2}BOUND(NDIST1,{P1}0+1)-{P2}BOUND(NDIST1,{P1}0)));
+
+" the y values are the dose values for each voxel "
+
+         Y({P1}0)=PROFILEDOSE({P1}0);
+         ERRY({P1}0)=PROFILERR({P1}0);
+         ]
+      ]
+   ELSE [
+      DO {P1}0=1,{P1}MAX(NDIST1) [
+
+" the x values plotted are the averages of the two x distances which "
+" denote the particular voxel "
+
+         X({P1}0)=(({P2}BOUND(NDIST1,{P1}0)+
+         {P2}BOUND(NDIST1,{P1}0+1))/2);
+
+" the y values are the dose values for each voxel "
+
+         Y({P1}0)=PROFILEDOSE({P1}0);
+         ERRY({P1}0)=PROFILERR({P1}0);
+         ]
+      ]
+
+   "added by CM to properly transfer the labels"
+   CALL LETTERCOUNT(FILEIN(NDIST1),J);
+   CURVE_LABELS='                    ';
+   CURVE_LABELS=FILEIN(NDIST1)(1:J);
+
+" -use mod to make a pseudo random assignment of possible combinations "
+" of default values for symbol type and curve type in order to "
+" ensure that multiple curves are distinct automatically, without "
+" having to have the user input stuff which they would have to "
+" think about "
+
+   NTYPE_SYMBOL = MOD({P3},9)+1;
+   NTYPE_CURVE = MOD({P3},5)+1;
+
+   CURVE_SPECS = CHAR(NTYPE_SYMBOL+48)//CHAR(NTYPE_CURVE+48);
+   };
+
+" $TRANSFER_BOUNDS assigns values to a BOUNDS array denoted by number
+" by the user
+" - it assigns the values along one axis, which is specified by the user
+" - the values are taken from an existing BOUNDS array, at intervals
+" corresponding to a rebinning factor entered by the user
+" CALLED FROM: REBINNING
+
+" check with bruce on this before finishing documentation
+
+REPLACE {$TRANSFER_BOUNDS(#,#);} WITH {;
+"========================================"
+
+" - calculate the number of full bins to be stored in the new rebinned bounds "
+" array "
+
+" takes into account a possible last bin which is not a full sized bin "
+
+    MAX_BIN = ({P1}MAX(NDIST1)+NBIN_FACT-1)/NBIN_FACT;
+
+" - calculate the width of the MAX_BIN, "
+" width of the last bin is the integer remainder of the division of "
+" the number of bins in the array being rebinned divided by the bin "
+" factor or if that is 0, it is NBIN_FACT"
+
+    LASTBIN_FACT = MOD({P1}MAX(NDIST1),NBIN_FACT);
+    IF LASTBIN_FACT=0 [LASTBIN_FACT = NBIN_FACT;]
+
+    DO I=1,MAX_BIN [
+
+" - assign rebinned array the contents of the array being rebinned at "
+" intervals corresponding to the rebinning factor "
+
+       {P2}BOUND(NDIST1_BIN,I) = {P2}BOUND(NDIST1,(I-1)*NBIN_FACT+1);
+       ]
+
+    {P2}BOUND(NDIST1_BIN,MAX_BIN+1) = {P2}BOUND(NDIST1,{P1}MAX(NDIST1)+1);
+
+" - the number of voxels of the rebinned array is the same as the maximum "
+" number of bins in the rebinned array "
+
+    {P1}MAX(NDIST1_BIN) = MAX_BIN;
+    };
+
+" $KEEP_BOUNDS assigns values to a BOUNDS array denoted by number by
+" the user
+" - it assigns the values along one axis, which is specified by the user
+" - the values are taken from an existing BOUNDS array and are simply
+" copied from array to array, along the specified axes
+" - this routine fills the array for the axes not being rebinned and
+" merely reassigns the values directly with no change
+" CALLED FROM: REBINNING
+
+REPLACE {$KEEP_BOUNDS(#,#);} WITH {;
+"===================================="
+   DO I=1,({P1}MAX(NDIST1)+1) [
+
+" the array values are simply reassigned, no changes are made "
+
+      {P2}BOUND(NDIST1_BIN,I) = {P2}BOUND(NDIST1,I);
+      ]
+   {P1}MAX(NDIST1_BIN) = {P1}MAX(NDIST1);
+   };
+
+" $REBIN_AXIS rebins the dose and errdose arrays along one axis
+" by a factor which was entered by the user
+" CALLED FROM: REBINNING
+
+REPLACE {$REBIN_AXIS(#,#,#);} WITH {;
+"======================================"
+
+" - to each voxel in the rebinning direction of the new distribution "
+" ( there are MAX_BIN voxels in this direction) "
+
+   DO {P1}=1,MAX_BIN [
+
+" at the last bin, the number doses being averaged is the number "
+" of old bins in the bin...this is not necessarily nbin_fact "
+
+      IF {P1}=MAX_BIN [JEND=LASTBIN_FACT;]
+
+" - to each voxel in the other two directions "
+" ( there are JMAX(NDIST1_BIN) and KMAX(NDIST1_BIN) voxels in these "
+" directions "
+
+      DO {P2}=1,{P2}MAX(NDIST1_BIN) [
+         DO {P3}=1,{P3}MAX(NDIST1_BIN) [
+
+" - assign the dose and errdose in the new distribution "
+" - loop a number of times corresponding to the number of bins being "
+" averaged "
+
+            DO L=1,JEND [
+
+" set values so that the multiplication factor is used for the "
+" appropriate variable, depending upon which axis was selected "
+
+               {P1}0=({P1}-1)*NBIN_FACT+L;
+               {P2}0={P2};
+               {P3}0={P3};
+
+" - assign the dose in a voxel in the new distribution by summing the "
+" doses in the corresponding JEND voxels of the old distribution "
+
+               DOSE(NDIST1_BIN,I,J,K)=DOSE(NDIST1_BIN,I,J,K)+
+                  DOSE(NDIST1,I0,J0,K0);
+
+" - assign the errdose in a voxel in the new distribution by summing the "
+" squares of the errdoses in the corresponding JEND voxels of the "
+" old distribution "
+" - this uses the standard method for propagating the errors "
+
+               ERRDOSE(NDIST1_BIN,I,J,K)=ERRDOSE(NDIST1_BIN,I,J,K)+
+                  ERRDOSE(NDIST1,I0,J0,K0)**2;
+               ]
+
+" - find the average dose by dividing by JEND (the number of doses "
+" which were added together "
+
+            DOSE(NDIST1_BIN,I,J,K)=DOSE(NDIST1_BIN,I,J,K)/JEND;
+
+" - find the average errdose by dividing the root of the errdose by "
+" NBIN_FACT ( the number of squares of errdoses which were added together) "
+
+            ERRDOSE(NDIST1_BIN,I,J,K)=
+               SQRT(ERRDOSE(NDIST1_BIN,I,J,K))/JEND;
+            ]
+         ]
+      ]
+
+    };
+
+" $FIND_STRING1 takes two numbers (a coordinate point) and converts them
+" into a coordinate string of form (#####.#,###.#)
+" there is always only one digit following the decimal point
+" The numbers can be arbitrarily long, but the entire string, including the
+" brackets and comma can be no more than 20 characters in length.
+" CALLED FROM: COMPAREPLOT
+
+REPLACE {$FIND_STRING1(#,#);} WITH {;
+"======================================"
+
+   ISTR=0;
+   JSTR=0;
+   ICOUNT = 0;
+
+" takes integer value to the nearest mm "
+" add .5 in order to round up "
+
+   INT{P1}=INT(ABS({P1}COORD)*10+0.5);
+   IF INT{P1}.NE.0 [
+      LOOP [
+         ISTR=ISTR+1;
+         NUM_ARR(ISTR) = INT{P1}-(INT{P1}/10)*10;
+         INT{P1} = INT{P1}/10;
+         ]
+      UNTIL INT{P1}=0;
+      THE_STRING=' (';
+      ICOUNT = 2;
+      IF {P1}COORD<0 [
+         THE_STRING=THE_STRING(1:ICOUNT)//'-';
+         ICOUNT = ICOUNT+1;
+         ]
+      DO N=ISTR,2,-1 [
+         THE_STRING=THE_STRING(1:ICOUNT)//CHAR(NUM_ARR(N)+48);
+         ICOUNT = ICOUNT+1;
+         ]
+      THE_STRING=THE_STRING(1:ICOUNT)//'.'//CHAR(NUM_ARR(1)+48);
+      ICOUNT=ICOUNT+2;
+      ]
+   ELSE [THE_STRING=' (0.0'; ICOUNT = 5;]
+
+   INT{P2}=INT(ABS({P2}COORD)*10+0.5);
+   IF INT{P2}.NE.0 [
+      LOOP [
+         JSTR=JSTR+1;
+         NUM_ARR(JSTR) = INT{P2}-(INT{P2}/10)*10;
+         INT{P2} = INT{P2}/10;
+         ]
+      UNTIL INT{P2}=0;
+      THE_STRING=THE_STRING(1:ICOUNT)//',';ICOUNT = ICOUNT+1;
+      IF {P2}COORD<0 [
+         THE_STRING=THE_STRING(1:ICOUNT)//'-';
+         ICOUNT=ICOUNT+1;
+         ]
+      DO M=JSTR,2,-1 [
+         THE_STRING=THE_STRING(1:ICOUNT)//CHAR(NUM_ARR(M)+48);
+         ICOUNT = ICOUNT+1;
+         ]
+      THE_STRING=THE_STRING(1:ICOUNT)//'.'//CHAR(NUM_ARR(1)+48);ICOUNT=
+      ICOUNT+2;
+      THE_STRING=THE_STRING(1:ICOUNT)//')'; ICOUNT = ICOUNT+1;
+      ]
+   ELSE [THE_STRING=THE_STRING(1:ICOUNT)//',0.0)';ICOUNT=ICOUNT+5;]
+   };
+
+" $FIND_STRING2 takes two numbers (a coordinate point) and converts them
+" into a coordinate string of form (#####.#,###.#)
+" there is always only one digit following the decimal point
+" The numbers can be arbitrarily long, but the entire string, including the
+" brackets and comma can be no more than 20 characters in length.
+" CALLED FROM: $THE_SPECS1
+
+" modified from FIND_STRING1: 92/08/12 so that it will find convert
+" the midpoint of the bin
+" rather thaN the user entered coordinate to the character string (HM)
+" which will be output on the legend
+" {P1}COORD REPLACED BY {P1}BOUND(NCURVE,{P3}) etc.
+
+REPLACE {$FIND_STRING2(#,#,#,#);} WITH {;
+"=========================================="
+   ISTR=0;
+   JSTR=0;
+   ICOUNT = 0;
+
+" takes integer value to the nearest mm "
+" add .5 in order to round up "
+
+   INT{P1}=INT((ABS({P1}BOUND(NDIST1,{P3})+{P1}BOUND(NDIST1,{P3}+1))/2)
+           *10+0.5);
+   IF INT{P1}.NE.0 [
+      LOOP [
+         ISTR=ISTR+1;
+         NUM_ARR(ISTR) = INT{P1}-(INT{P1}/10)*10;
+         INT{P1} = INT{P1}/10;
+         ]
+      UNTIL INT{P1}=0;
+      THE_STRING=' (';
+      ICOUNT = 2;
+      IF ({P1}BOUND(NDIST1,{P3})+{P1}BOUND(NDIST1,{P3}+1))/2<0 [
+         THE_STRING=THE_STRING(1:ICOUNT)//'-';
+         ICOUNT = ICOUNT+1;
+         ]
+      DO N=ISTR,2,-1 [
+         THE_STRING=THE_STRING(1:ICOUNT)//CHAR(NUM_ARR(N)+48);
+         ICOUNT = ICOUNT+1;
+         ]
+      THE_STRING=THE_STRING(1:ICOUNT)//'.'//CHAR(NUM_ARR(1)+48);
+      ICOUNT=ICOUNT+2;
+      ]
+   ELSE [THE_STRING=' (0.0'; ICOUNT = 5;]
+
+   INT{P2}=INT((ABS({P2}BOUND(NDIST1,{P4})+{P2}BOUND(NDIST1,{P4}+1))/2)
+           *10+0.5);
+   IF INT{P2}.NE.0 [
+      LOOP [
+         JSTR=JSTR+1;
+         NUM_ARR(JSTR) = INT{P2}-(INT{P2}/10)*10;
+         INT{P2} = INT{P2}/10;
+         ]
+      UNTIL INT{P2}=0;
+      THE_STRING=THE_STRING(1:ICOUNT)//',';ICOUNT = ICOUNT+1;
+      IF ({P2}BOUND(NDIST1,{P4})+{P2}BOUND(NDIST1,{P4}+1))/2<0 [
+         THE_STRING=THE_STRING(1:ICOUNT)//'-';
+         ICOUNT=ICOUNT+1;
+         ]
+      DO M=JSTR,2,-1 [
+         THE_STRING=THE_STRING(1:ICOUNT)//CHAR(NUM_ARR(M)+48);
+         ICOUNT = ICOUNT+1;
+         ]
+      THE_STRING=THE_STRING(1:ICOUNT)//'.'//CHAR(NUM_ARR(1)+48);ICOUNT=
+      ICOUNT+2;
+      THE_STRING=THE_STRING(1:ICOUNT)//')'; ICOUNT = ICOUNT+1;
+      ]
+   ELSE [THE_STRING=THE_STRING(1:ICOUNT)//',0.0)';ICOUNT=ICOUNT+5;]
+   };
+
+REPLACE {Copyright NRC 1999} WITH {
+!   Copyright National Research Council of Canada, Ottawa,;
+!   BEAM Code System 1999, all rights reserved;
+!   This code is covered by the BEAM General License;}
+;
+
+"----------------------------------------------------------------------
+" INTRODUCTION OF THE PLAYERS - GLOBAL VARIABLE DICTIONARY
+"----------------------------------------------------------------------
+" AXISDOSE - array which holds the dose at the k-th levels along the
+"            central axis for a dose distribution
+" CURVE_LABELS - string which holds the labels for a curve
+" CURVE_SPECS - variable which holds the symbol/line specs for a curve
+" PROFILEDOSE,PROFILERR - the dose and error in dose for the points along
+"                      a specified line
+" DDBIN_CHI - the bin width for the chi-squared frequency distribution
+" DDBIN_DIFF - the bin width for the dose-differences frequency distribution
+" DOSE,ERRDOSE - arrays which hold the dose and errdose at all points
+"                of the grid
+" ERRY - 1-D array which holds the errors in the y values
+" FILEIN - array of names of the input files/data sets
+" FREQ_CHI - frequency distribution of square of dose difference over error
+" FREQ_DIFF - frequency distribution of dose differences
+" ICOUNT - the number of characters in the string
+" I0,J0,K0 - the coordinates of a point in the grid (in voxel units)
+" IMAX, JMAX, KMAX - the maximum values of coordinates on each axis
+" INTX,INTY,INTZ - the truncated values of the coordinates entered
+"                  (ie) the truncated values of xcoord, ycoord, zcoord
+" IOPTION - array which holds the graph format options
+" ISTR, JSTR - the number of characters in the first and second numbers
+"              after truncation
+" I,J,K,L,M,N - counter variables
+" LA_AXIS - the axis of the desired plot
+" LTOT - the number of bins in the frequency distribution plot
+" MAX_CURVE - the maximum number of curves being plotted in a run
+"             (entered by the user at run time)
+" NCURVE - the number of the curve (in the current run) to which the
+"          data being used/entered pertains
+" NDIST1 - the number of a first 3ddose distribution
+" NDIST2 - the number of a second 3ddose distribution
+" NDIST1_FLAG - array of flags of 0 or 1 which indicate whether there is data
+"              loaded into the NDIST1 -th array
+" NFLAG - a flag variable
+" NUMCHAR - the number of characters in the string
+" NPOINTS - holds the number of points which will
+"           be plotted for the current curve (same as the number of voxels)
+" NTYPE_SYMBOL,NTYPE_CURVE - plot_xvgr parameters..see plot_xvgr for
+"                            more info
+"                          - store 1-digit codes which indicate symbol
+"                            and curve types
+" NUM_ARR - an array which holds the digits pertaining to the numbers
+"           being converted to a string
+" OUTFILE - name of the output file
+" REPLY - character input of y or n to a question posed
+" TOTALNORM - array holding cumulative normalization, as applied to each
+"             distribution
+" TITLE, XAXIS, YAXIS - labels (should be obvious!)
+" THE_STRING - holds the coordinate of the profile after conversion
+"              to a character string
+" VOXEL_MEAS - the distance measurement corresponding to the voxel
+" X,Y - 1-D arrays which hold the data to be plotted on the x and y axes
+" XBOUND,YBOUND,ZBOUND - the boundaries of the plot grid
+" XCOORD, YCOORD,ZCOORD - the coordiantes of the desired plot
+"----------------------------------------------------------------------
+
+"----------------------------------------------------------------------
+" LET THE GAMES BEGIN!!!
+"----------------------------------------------------------------------
+
+"----------------------------------------------------------------------
+" MAIN PROGRAM
+"----------------------------------------------------------------------
+Copyright NRC 1999
+"all variables MUST be declared
+"IMPLICIT NONE;"
+
+$COMIN1/DATA/;
+$COMIN2/DATA/;
+
+" - initialize the array of flags (which denote whether data is present
+" in the arrays for a given distribution number) to zero before
+" execution of the program begins
+
+DATA NDIST1_FLAG/$NDIST1_MAX*0/;
+
+" total normalization factor array must be initialized to 1's because
+" it is multiplicative
+DATA TOTALNORM/$NDIST1_MAX*1.0/;
+MAX_CURVE = 0;
+OUTPUT ; (/'*****************************************');
+OUTPUT ; ('        STATDOSE.MORTRAN(Rev 1.3)');
+OUTPUT $MAXVOXX,$MAXVOXY,$MAXVOXZ; ('        Max array dimensions:',3I4)
+OUTPUT $NDIST1_MAX ; ('        Max # data sets:',I3);
+OUTPUT ; ('*****************************************');
+" - display the program options
+CALL MAINMENU;
+STOP;
+END;
+
+"-----------------------------------------------------------------------
+" SUBROUTINE MAINMENU
+"-----------------------------------------------------------------------
+" called from: MAIN
+
+" PURPOSE: MAINMENU displays a table of options which can be selected while
+" running statdose
+" - the routine takes in numerical input from the user, and passes control
+"    to the routine corresponding to the option selected
+" - the routine will loop until appropriate input is entered or the desire
+"    to exit is indicated by the user
+
+" VARIABLES: ISELECT - the user's selection from the list of options
+
+SUBROUTINE MAINMENU;                                        "toc:"
+Copyright NRC 1999
+$COMIN1/DATA/;
+INTEGER ISELECT;
+SAVE;
+:MAINMENU:
+NFLAG = 0;
+ISELECT = 0;
+OUTPUT ;(/' MAIN MENU');
+OUTPUT ;(' --------');
+OUTPUT ;(' 0 - Exit');
+OUTPUT ;(' 1 - Read dose distributions');
+OUTPUT ;(' 2 - Statistical analysis');
+OUTPUT ;(' 3 - Normalization');
+OUTPUT ;(' 4 - Rebinning');
+OUTPUT ;(' 5 - Plot');
+OUTPUT ;(' 6 - Save'/);
+" - prompt user to make a selection from the above table
+OUTPUT ;(1X,'Selection: ',$); INPUT ISELECT;(I5);
+
+" - if out of range, redisplay main menu
+IF (ISELECT < 0 | ISELECT > 6) [GOTO :MAINMENU:;]
+ELSEIF (ISELECT = 0) [
+   " - confirm desire to exit
+   OUTPUT ;(/1X,'Are you sure? (y/n) [y]: ',$);
+   INPUT REPLY;(A);
+   IF ((REPLY = 'y') | (REPLY = CHAR(32))) [RETURN;]
+   ELSE [GOTO :MAINMENU:;]
+]
+ELSEIF (ISELECT = 1) [CALL READDOSE;]
+
+ELSEIF (ISELECT = 2) [ "statistical analysis"
+   " - check to see if there is more than one distribution loaded
+   DO N = 1,$NDIST1_MAX [ IF NDIST1_FLAG(N) = 1 [NFLAG = NFLAG+1;] ]
+
+   " - if there is pass control to the appropriate routine
+   IF (NFLAG > 1) [CALL STATSMENU;]
+   ELSE [ " - otherwise, redisplay the main menu"
+OUTPUT ;('Please read in more data before ',
+         'attempting to do stats comparisons');
+   ]
+]
+
+ELSEIF (ISELECT = 3) ["Normalization"
+   " - check that some data has been read in"
+   DO N = 1,$NDIST1_MAX [ IF NDIST1_FLAG(N) = 1 [NFLAG = 1;] ]
+   " - if data, proceed to the appropriate subroutine
+   IF NFLAG = 1 [CALL NORMMENU;]
+   " - otherwise, print a message and redisplay main menu
+   ELSE [OUTPUT ;(1X,'Please read in data before attempting normalization');]
+]
+ELSEIF (ISELECT = 4) ["Rebinning"
+   " - check that some data has been read in
+   DO N = 1,$NDIST1_MAX [ IF NDIST1_FLAG(N) = 1 [NFLAG = 1;] ]
+   " - if data, proceed to the appropriate subroutine
+   IF NFLAG=1 [CALL REBINNING;]
+   " - otherwise, print a message and redisplay main menu
+   ELSE [OUTPUT ;(1X,'Please read in data before rebinning');]
+]
+ELSEIF (ISELECT = 5) ["Plot"
+   " - check that some data has been read in
+   DO N = 1,$NDIST1_MAX [ IF NDIST1_FLAG(N) = 1 [NFLAG = 1;] ]
+   " - if data, proceed to the appropriate subroutine
+   IF NFLAG = 1 [CALL PLOTMENU;]
+   " - otherwise, print a message and redisplay main menu
+   ELSE [OUTPUT ;(1X,'Please read in data before plotting');]
+]
+ELSEIF (ISELECT = 6) ["Save"
+   " - check that some data has been read in
+   DO N = 1,$NDIST1_MAX [ IF NDIST1_FLAG(N) = 1 [NFLAG = 1;] ]
+   " - if data, proceed to the appropriate subroutine
+   IF NFLAG = 1 [CALL SAVE;]
+   " - otherwise, print a message and redisplay main menu
+   ELSE [OUTPUT ;(1X,'Please read in data before saving');]
+]
+" - redisplay the main menu
+GOTO :MAINMENU:;
+END;
+
+%E   "start of subroutine READDOSE"
+"-----------------------------------------------------------------------
+" SUBROUTINE READDOSE
+"-----------------------------------------------------------------------
+
+" called from: MAINMENU
+
+" PURPOSE: Readdose prompt the user for a file number and a filename
+" - the routine then reads data from the file (which must be of proper
+" format <see main documentation for this format> and end with the
+" extension .3ddose)
+" - the data from the file is stored in the appropriate arrays and
+" variables which correspond to the file number which was entered
+" - the routine will continue to read in files until the user indicates
+" that they are finished reading in files
+" - the files need not be read sequentially, one can read file number
+" 5, then 3, etc, and a file may be overwritten at any point
+
+" VARIABLES: ICOUNT - the number of .3ddose files in the directory
+" NUM - the number of the .3ddose file to read in
+" FILENAME - array which hold the names of the .3ddose files in the pwd
+
+SUBROUTINE READDOSE;                                        "toc:"
+Copyright NRC 1999
+"IMPLICIT NONE;"
+$COMIN1/DATA/;
+$COMIN2/DATA/;
+
+INTEGER NUM,istat,egs_system;
+CHARACTER*70 FILENAME($MAXFILE);
+SAVE;
+
+NUMCHAR  =  0;
+ICOUNT  =  0;
+
+:GETDOSE:
+
+"try Unix/Linux ls call first"
+istat=egs_system('ls *.3ddose > files');
+IF(istat~=0)["assume its a Windows system"
+   OUTPUT;(/' Will assume you are running on a Windows system.'/);
+   istat=egs_system('dir /B *.3ddose > files');
+]
+IF(istat~=0)["do not recognize the system"
+   OUTPUT;(//' Do not recognize the system you are running on.'/
+             ' .3ddose files cannot be listed.'//);
+   STOP;
+]
+"above should create a file with list of available 3ddose distns"
+
+
+OUTPUT ;(/1X,'READ DOSE DISTRIBUTIONS');
+OUTPUT ;(1X,'-----------------------');
+
+OPEN(UNIT = 8,FILE = 'files',STATUS = 'UNKNOWN');
+
+:GETNAMES:;
+READ(8,'(A)',END=28) FILENAME(ICOUNT+1);
+FILENAME(ICOUNT+1)=FILENAME(ICOUNT+1)(:index(FILENAME(ICOUNT+1),'.3ddose')-1);
+ICOUNT = ICOUNT+1;
+IF (ICOUNT = $MAXFILE) [
+   OUTPUT ICOUNT;
+(//' Have read in ',I4,' .3ddose files, which is the max. no. possible.'/
+   ' To read in more, you must increase $MAXFILE and recompile statdose'//);
+   GOTO 28;
+]
+GO TO :GETNAMES:;
+28 IF (ICOUNT = 0) [
+   OUTPUT;
+   (//' no files with extension .3ddose in this directory!'//);
+   RETURN;
+]
+CLOSE(UNIT=8);
+DO I=1,ICOUNT [ OUTPUT I,FILENAME(I);(1X,I2,1X,A70); ]
+
+" - prompt user for the number of the distribution which is to be read
+" in (so it can load the data into the appropriate array)
+
+:READIN:
+OUTPUT ICOUNT;(/1X,'Input file number to Read in: (1-',
+       I2,' or 0-Main Menu): ',$);
+INPUT NUM;(I2);
+
+" - 0 returns control to the main menu module
+
+IF (NUM = 0) [RETURN;]
+ELSEIF (NUM>ICOUNT) [
+   " - if number entered is out of range, print an appropriate message
+   OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.');
+   GOTO :READIN:;
+]
+
+OUTPUT $NDIST1_MAX;(1X,'File number for temporary storage: (1-',
+       I1,' or 0-Main Menu): ',$);
+INPUT NDIST1;(I2);
+" - 0 returns control to the main menu module
+IF (NDIST1=0) [RETURN;]
+ELSEIF (NDIST1 > $NDIST1_MAX) [
+   " - if number entered is out of range, print an appropriate message
+   OUTPUT $NDIST1_MAX;(1X,'Max is:',I3,' try again'); GOTO :READIN:;
+]
+
+" - otherwise, set a flag to indicate that a data set is present in the arrays
+" corresponding to the distribution number which was entered
+NDIST1_FLAG(NDIST1)=1;
+
+CALL LETTERCOUNT(FILENAME(NUM),NUMCHAR);
+
+"added by CM to initialize the variable"
+FILEIN(NDIST1)=
+      '                                                                      ';
+FILEIN(NDIST1)(1:NUMCHAR)=FILENAME(NUM)(1:NUMCHAR);
+OPEN(UNIT=4,FILE=FILEIN(NDIST1)(1:NUMCHAR)//'.3ddose',STATUS='OLD');
+" - read maximum number of voxels for each axis and output this to the
+" screen
+READ(4,*) IMAX(NDIST1),JMAX(NDIST1),KMAX(NDIST1);
+OUTPUT IMAX(NDIST1),JMAX(NDIST1),KMAX(NDIST1);
+(/1X,'Number of voxels in X,Y,Z directions: ',3I10);
+IF(IMAX(NDIST1) > $MAXVOXX | JMAX(NDIST1) > $MAXVOXY |
+   KMAX(NDIST1) > $MAXVOXZ)[
+   OUTPUT $MAXVOXX,$MAXVOXY,$MAXVOXZ;
+   ( ///' One of dimensions is greater than allowed',
+   ' limits of ', 3I4// ' Adjust in statdose.mortran and recompile');
+   STOP;
+]
+
+" - read the measurements (cm) at the voxel divisions for all 3 axes
+
+READ(4,*) (XBOUND(NDIST1,I),I=1,IMAX(NDIST1)+1);
+READ(4,*) (YBOUND(NDIST1,I),I=1,JMAX(NDIST1)+1);
+READ(4,*) (ZBOUND(NDIST1,I),I=1,KMAX(NDIST1)+1);
+
+" - display the minimum and maximum (cm) values of the 3ddose grid
+
+$OUT_THE_BOUNDS(I,X,NDIST1);
+$OUT_THE_BOUNDS(J,Y,NDIST1);
+$OUT_THE_BOUNDS(K,Z,NDIST1);
+
+OUTPUT ;(1X,'Reading dose distribution...');
+" - read dose array and determine absolute error
+" - read the dose in the order (1,1,1), (2,1,1), (3,1,1)...(1,2,1),(2,2,1), etc
+" - reads the error in the dose in the same order
+
+READ(4,*)
+(((DOSE(NDIST1,I,J,K),I=1,IMAX(NDIST1)),J=1,JMAX(NDIST1)),K=1,KMAX(NDIST1));
+" - errors in .3ddose files are percentage
+
+OUTPUT ; (1X,'Reading in the uncertainties on DOSE Distribution...');
+READ(4,*) (((ERRDOSE(NDIST1,I,J,K),I=1,IMAX(NDIST1)),J=1,JMAX(NDIST1)),
+K=1,KMAX(NDIST1));
+" - convert errors to absolute errors
+DO I = 1,IMAX(NDIST1)[
+   DO J = 1,JMAX(NDIST1)[
+      DO K = 1,KMAX(NDIST1)[
+         ERRDOSE(NDIST1,I,J,K)=DOSE(NDIST1,I,J,K)*ERRDOSE(NDIST1,I,J,K);
+      ]
+   ]
+]
+CLOSE(UNIT=4);
+OUTPUT ;(/1X,'Have read dose distributions');
+OUTPUT ;(1X,'-----------------------');
+
+" - prompt the user for the number of the next file to read in
+DO I = 1,ICOUNT [ OUTPUT I,FILENAME(I);(1X,I2,1X,A70); ]
+GOTO :READIN:;
+END;
+
+"-----------------------------------------------------------------------
+" SUBROUTINE STATSMENU
+"-----------------------------------------------------------------------
+" called from: MAINMENU
+
+" PURPOSE: STATSMENU prints a table of statistical analysis options
+" which could be used by the routine
+" - the subroutine passes the option selected to the subroutine STATS
+" VARIABLES: ISELECT1 - user's selection from list of type of plots
+"            ISELECT2 - user's selection from list of binning types
+
+      SUBROUTINE STATSMENU;                                        "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      $COMIN1/DATA/;
+
+      INTEGER ISELECT1, ISELECT2;
+      SAVE;
+
+:STATSMENU:
+      NFLAG = 0;
+      ISELECT1 = 0;
+
+" the following are new options introduced so that the dose difference
+" distributions can be plotted with respect to various percentage
+" differences
+
+  OUTPUT ;(/' STATS MENU');
+  OUTPUT ; (' ---------');
+  OUTPUT ;(' 0 - Return to main menu');
+  OUTPUT ;(' 1 - Plot frequency vs. D1-D2');
+  OUTPUT ;(' 2 - Plot frequency vs. (D1-D2)/[(D1+D2)/2] * 100%');
+  OUTPUT ;(' 3 - Plot frequency vs. (D1-D2)/max central axis dose * 100%');
+  OUTPUT ; (' 4 - Plot frequency vs. (D1-D2)/sqrt(err1**2+err2**2)');
+
+" - prompt user to make a selection from the above table
+
+      OUTPUT ;(/1X,'Selection: ',$);
+      INPUT ISELECT1;(I5);
+
+" - if out of range, redisplay main menu
+
+      IF (ISELECT1<0|ISELECT1>4) [GOTO :STATSMENU:;]
+      ELSEIF (ISELECT1 = 0) [RETURN;]
+
+:STATSOPTIONS:
+ISELECT2 = 0;
+
+OUTPUT ;(/' STATS OPTIONS');
+OUTPUT ;(' -------');
+OUTPUT ;(' 0 - Return to STATS MENU');
+OUTPUT ;(' 1 - Limit frequency distribution to maximum dose difference'/
+         '      or max % dose difference');
+OUTPUT ;(' 2 - Limit frequency distribution to (maximum dose)/10');
+OUTPUT ;(' 3 - Custom bin width');
+
+" - prompt user to make a selection from the above table
+OUTPUT ;(/1X,'Selection: ',$); INPUT ISELECT2;(I5);
+
+" - if out of range, redisplay main menu
+IF (ISELECT2<0|ISELECT2>3) [GOTO :STATSOPTIONS:;]
+ELSEIF (ISELECT2 = 0) [GOTO :STATSMENU:;]
+ELSEIF (ISELECT2 = 2 & ISELECT1 > 1) [
+  OUTPUT;(' Binning with respect to max dose does not make sense '/
+          ' when plotting frequency vs. % dose differences.'/
+          ' Choose another binning option:'/);
+  GOTO :STATSOPTIONS:
+]
+
+" - pass the selected option to the statistics routine
+
+      ELSE [CALL STATS(ISELECT1,ISELECT2);]
+
+      GOTO :STATSMENU:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE STATS
+"----------------------------------------------------------------------------
+
+" called from: STATSMENU
+
+" PURPOSE: STATS - calculates the chi squared (per degree of freedom) and
+" the rms deviations for two distributions with the same binning structures
+" - the routine also finds and gives the value and location of the maximum dose
+" along the central axis, as well as the value and location of the maximum
+" dose difference in dose values of the two distributions
+" - routine assumes that the errors coming in are the standard deviation
+
+" - as well, the routine calculates the 'chi-squared' frequencies and the
+" 'dose differences' frequencies for bins of width specified by the user in
+" the statsmenu options
+
+" - it plots these frequencies on two graphs by calling the routine
+" plotfreq
+
+" VARIABLES: CHI - chi squared deviation per degree of freedom of the two
+"                  distributions
+" DIFF - difference between the dose values
+" DIFFMAX - maximum difference in the dose values for the two distributions
+"           (LA_TYPE = 1 or 3)
+"         - or max value of (D1-D2)/[(D1+D2)/2] (LA_TYPE = 2)
+"         - or max value of (D1-D2)/SQRT(ERR1**2+ERR2**2)(LA_TYPE=4)
+" DIFFSQ - the square of the difference in dose values of the two distributions
+" DOSEMAX - the (averaged) maximum dose along the central axis
+" DOSES - the number of voxels which contain dose
+" DOSE_STORE - temporary storange of a dose value
+" ERRDIFFSQ - square in error in square in difference between the dose values
+" ILO,IHI,JLO,JHI,KLO,KHI - the voxel boundaries for averaging dose
+" KDMAX - the value of K at the point of maximum dose along the central axis
+" LA_TYPE - the type of distribution (ie as a function of d1-d2, d1-d2/davg,..)
+" LA_DELTA - the bin width option (for limiting the frequency distribution)
+" RMS - the root mean squared deviation of the two distributions
+
+      SUBROUTINE STATS(LA_TYPE,LA_DELTA);                            "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;     "Why this isn't COMIN/DATA1,DATA2/ is not clear"
+      $COMIN2/DATA/;     "      -same effect"
+
+      INTEGER LA_TYPE,LA_DELTA;
+
+      INTEGER ILO,IHI,JLO,JHI,LL,KDMAX;
+      REAL CHI,DIFF,DIFFMAX,DIFFSQ,DOSEMAX,DOSE_STORE,DOSES,ERRDIFFSQ,RMS,temp;
+      SAVE;
+
+      :STATS:
+
+" initialize variables to zero before beginning routine, as most are used
+" in running sums
+
+      CHI = 0.0;
+      DIFFMAX = 0.0;
+      DIFFSQ = 0.0;
+      DOSEMAX = 0.0;
+      DOSES = 0.0;
+      KDMAX = 0;
+      LL = 0;
+      LTOT = 0;
+      RMS = 0.0;
+
+      DO I = 1,$MAXPOINTS [
+         FREQ_DIFF(I) = 0.0;
+         FREQ_CHI(I) = 0.0;
+         ]
+
+      OUTPUT ;(/1X,'STATISTICAL ANALYSIS');
+      OUTPUT ;( 1X,'--------------------');
+
+      :SELECT9:
+
+" - list the distributions which are currently loaded
+
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'File #1 for analysis: (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF (NDIST1 > $NDIST1_MAX)  [
+         OUTPUT ;(1X,'Sorry, that is out of range.'/);
+         GOTO :SELECT9:;
+         ]
+
+
+      OUTPUT ;(1X,'File #2 for analysis: (0-MainMenu): ',$);
+      INPUT NDIST2;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST2 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST2>$NDIST1_MAX  [
+         OUTPUT ;(1X,'Sorry, that is out of range.'/);
+         GOTO :SELECT9:;
+         ]
+
+" check that the two distributions selected have the same binning structures
+" if they do not, the macro will bounce the routine back to :select9:
+
+      $CHECK_BOUNDS(I,X);
+      $CHECK_BOUNDS(J,Y);
+      $CHECK_BOUNDS(K,Z);
+      OUTPUT ;(1X,'Binning structure are the same, i.e. OK. ',
+              'Proceeding with stats routine...');
+
+      :GETBIN:
+
+      OUTPUT $MAXPOINTS;(/1X,'Maximum bins  =  ',I3);
+      OUTPUT ;
+       (1X,'Input number of bins in frequency distribution [default 101]: ',$);
+      INPUT LTOT;(I3);
+
+      IF LTOT = 0 [LTOT = 101;]
+      ELSEIF LTOT>$MAXPOINTS [
+         OUTPUT ;(1X,'Too many bins. Please re-enter.');
+         GOTO :GETBIN:;]
+      ELSEIF MOD(LTOT,2) = 0 [
+         OUTPUT ;(' Must have an odd # bins. Please re-enter.');
+         GOTO :GETBIN:;
+      ]
+
+" no interactive choice of bin width for chi-square frequency distribution yet
+" set bin width for chi-square frequency distribution
+
+      DDBIN_CHI = 10./LTOT;   "i.e. plot distn to 10"
+
+      " find the maximum dose along the central axis for both distributions
+
+      $GET_AXISDOSE(NDIST1);
+      $GET_AXISDOSE(NDIST2);
+
+      I0 = 0; J0 = 0; K0 = 0;
+
+      DO K = 1,KMAX(NDIST1) [
+         DO I = 1,IMAX(NDIST1) [
+            DO J = 1,JMAX(NDIST1) [
+
+               " calculate the difference in dose and its sq"
+               "        at the given coordinate"
+               DIFF = DOSE(NDIST1,I,J,K)-DOSE(NDIST2,I,J,K);
+               DIFFSQ = DIFF*DIFF;
+
+               " if at least one of the voxels contains some dose, "
+               " add one to the sum of voxels which contain dose"
+               IF (DOSE(NDIST1,I,J,K).NE.0. .AND. DOSE(NDIST2,I,J,K).NE.0.) [
+                  DOSES = DOSES+1;
+
+                  " keep a running sum of rms values and chi values, "
+                  RMS = DIFFSQ + RMS;
+                  CHI = CHI + DIFFSQ/
+                     (ERRDOSE(NDIST1,I,J,K)**2+ERRDOSE(NDIST2,I,J,K)**2);
+
+                  " keep track of the maximum difference in values"
+                  " set the voxel coordinates to coordinates where maximum "
+                  "was found"
+                  IF(LA_TYPE = 1 | LA_TYPE = 3)[ "ploting D1-D2 or"
+                     "(D1-D2)/max central axis dose * 100%"
+                     "need to keep track of max difference & location"
+                     IF ABS(DIFF)>DIFFMAX [
+                             DIFFMAX = ABS(DIFF); I0 = I; J0 = J; K0 = K;
+                     ]
+                  ] "end LA_TYPE 1 or 3"
+
+                  IF(LA_TYPE = 2)["plotting (D1-D2)/[(D1+D2)/2] * 100%"
+                     IF (ABS(DIFF*2/(DOSE(NDIST1,I,J,K)+DOSE(NDIST2,I,J,K)))
+                         >DIFFMAX)[
+                          DIFFMAX = ABS(DIFF*2/
+                               (DOSE(NDIST1,I,J,K)+DOSE(NDIST2,I,J,K)));
+                          I0 = I; J0 = J; K0 = K;
+                     ]
+                  ]
+
+                  IF(LA_TYPE = 4)["plotting (D1-D2)/sqrt(err1**2+err2**2)   "
+                     "changed Feb 2013 DWOR to make sense"
+                     temp= ABS(DIFF)/
+                      SQRT(ERRDOSE(NDIST1,I,J,K)**2+ERRDOSE(NDIST2,I,J,K)**2);
+                     IF( temp  > DIFFMAX)[
+                         DIFFMAX = temp;
+                         I0 = I; J0 = J; K0 = K;
+                     ] "end of if block"
+                  ] "end of LA_TYPE 4"
+               ]   "end of non-zero doses"
+            ] "end of loop over J"
+            ]  "end of loop over I"
+
+            " keep track of the maxium dose along the central axis "
+            "(only do this in  the loop for k)"
+            " if a maxiumum dose is found (ie) the array contains some data)"
+            " set voxel coordinate to coordinate where maxium found"
+
+            IF ((AXISDOSE(NDIST1,K)+AXISDOSE(NDIST2,K))/2)>DOSEMAX  [
+               DOSEMAX = (AXISDOSE(NDIST1,K)+AXISDOSE(NDIST2,K))/2;
+               KDMAX = K;
+            ] "end found new max"
+         ] "end of loop on K"
+
+       " select bin width: based on option chosen in OPTION_MENU
+       " note that dose values will be in the centre of the bins when graphed
+
+" 1 = limit frequency to maximum dose difference
+
+      IF LA_DELTA = 1 [
+         IF (LA_TYPE = 1 | LA_TYPE = 4)[DDBIN_DIFF = 2*DIFFMAX/LTOT;]
+         ELSEIF (LA_TYPE = 2) [DDBIN_DIFF = 2*DIFFMAX*100./LTOT;]
+         ELSEIF (LA_TYPE = 3) [DDBIN_DIFF = 2*DIFFMAX*100./DOSEMAX/LTOT;]
+      ]
+
+      ELSEIF LA_DELTA = 2 [ "limit frequency to maximum dose"
+         DDBIN_DIFF = DOSEMAX/INT(LTOT/2-1)*10.;
+      ]
+
+      ELSEIF LA_DELTA = 3 [ " custom bin width
+         OUTPUT ;(1X,'Bin width in dose or % dose difference units: ',$);
+         INPUT DDBIN_DIFF;(F10.0);
+         ]
+
+      " put each dose difference in the appropriate bin
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+
+            " calculate the difference in dose at given coordinate
+            " square of this difference and sum of squares of the
+            " errors at given coordinate from two files being compared
+
+             IF (DOSE(NDIST1,I,J,K).NE.0..AND.DOSE(NDIST2,I,J,K).NE.0.) [
+
+               DIFF = DOSE(NDIST1,I,J,K)-DOSE(NDIST2,I,J,K);
+               DIFFSQ = DIFF**2;
+               ERRDIFFSQ = ERRDOSE(NDIST1,I,J,K)*ERRDOSE(NDIST1,I,J,K)+
+                           ERRDOSE(NDIST2,I,J,K)*ERRDOSE(NDIST2,I,J,K);
+               IF(LA_TYPE  =  2)[
+                  DIFF = DIFF*2*100./(DOSE(NDIST1,I,J,K)+DOSE(NDIST2,I,J,K));
+               ]
+               ELSEIF(LA_TYPE  =  3)[
+                  DIFF = DIFF*100./DOSEMAX;
+               ]
+               ELSEIF(LA_TYPE  =  4)[
+                  DIFF = DIFF/SQRT(ERRDIFFSQ);
+               ]
+
+               " if both of the values are not zero
+
+" use this method to calculate the bin
+
+                  LL = NINT(DIFF/DDBIN_DIFF)+NINT(LTOT/2.);
+                  " ensure that ll falls within the range 1 to ltot
+                  IF (LL>LTOT) [LL = LTOT;]
+                  ELSEIF (LL<1) [LL = 1;]
+
+                 " count how many doses have been placed in each bin
+                  FREQ_DIFF(LL) = FREQ_DIFF(LL)+1;
+                  " accumulate frequency distribution for chi-square
+                  " use this method to calculate what bin it belongs in
+                  LL = INT(DIFFSQ/ERRDIFFSQ/DDBIN_CHI)+1;
+
+                  " ensure that ll falls within the range 1 to ltot
+                  IF (LL>LTOT) [LL = LTOT;] ELSEIF (LL<1) [LL = 1;]
+
+                 " count how many doses have been placed in each bin
+
+                  FREQ_CHI(LL) = FREQ_CHI(LL)+1;
+                  ]"end of block non-zero doses"
+               ]"end of loop on K"
+            ]"end of loop on J"
+         ]"end of loop on I"
+
+         " if at least one of voxels in distributions contained dose,
+         " calculate rms and chi-squared (per degree of freedom) deviations
+
+         IF DOSES.NE.0 [
+            RMS = RMS/DOSES;
+            RMS = SQRT(RMS);
+            CHI = CHI/DOSES;
+
+" divide the number of doses in each bin by the total number of voxels
+" which contained dose
+
+            DO LL = 1,LTOT [
+               FREQ_DIFF(LL) = FREQ_DIFF(LL)/DOSES;
+               FREQ_CHI(LL) = FREQ_CHI(LL)/DOSES;
+               ]
+            ]
+
+" output the results of the above calculations, so that the user can
+" see them
+" note that G format will default to real, unless the number is small or
+" big, in which case it will use exponential format
+
+
+      OUTPUT CHI;(/1X,'Chi-squared per degree of freedom: ',G10.3);
+      OUTPUT RMS;(1X,'RMS:                               ',G10.3);
+      OUTPUT DOSES/(IMAX(NDIST1)*JMAX(NDIST1)*KMAX(NDIST1)),IFIX(DOSES),
+            (IMAX(NDIST1)*JMAX(NDIST1)*KMAX(NDIST1));
+         (/1X,'Ratio of voxels containing dose to total voxels:',G10.3/
+           1x,'Number of voxels containing dose:             ',I12/
+           1x,'Total number of voxels:                       ',I12);
+
+      IF(LA_TYPE = 1)[
+         OUTPUT DIFFMAX;(/1X,'Maximum dose diff =  ',G10.2,' Gy * cm**2');
+      ]
+      ELSEIF(LA_TYPE = 2)[
+         OUTPUT DIFFMAX * 100.;
+            (/1X,'Maximum (D1-D2)/[(D1+D2)/2]  =  ',G10.2,' %');
+      ]
+      ELSEIF(LA_TYPE = 3)[
+         OUTPUT DIFFMAX/DOSEMAX * 100.;
+            (/1X,'Maximum (D1-D2)/max central axis dose  =  ',G10.2,' %');
+      ]
+      ELSEIF(LA_TYPE = 4)[
+        OUTPUT DIFFMAX;
+      "(/1X,'Max (D1-D2)/[(D1+D2)/2]/sqrt(err1**2+err2**2)  =  ',G10.2,' %');"
+      (/1X,'Maximum (D1-D2)/sqrt(err1**2+err2**2)  =  ',G10.2);
+      ]
+
+      IF (I0 = 0) .AND. (J0 = 0) .AND. (K0 = 0) [
+         OUTPUT ;(1X,'No differences in any values.');
+      ]
+      ELSE [
+         OUTPUT I0,J0,K0;(1X,'Occurs at voxel: ',3I9);
+         OUTPUT XBOUND(NDIST1,I0),XBOUND(NDIST1,I0+1),YBOUND(NDIST1,J0),
+            YBOUND(NDIST1,J0+1),ZBOUND(NDIST1,K0),ZBOUND(NDIST1,K0+1);
+            (1X,'Coordinates:',3(2X,F5.1,',',F5.1));
+         OUTPUT DOSE(NDIST1,I0,J0,K0),ERRDOSE(NDIST1,I0,J0,K0),
+             DOSE(NDIST2,I0,J0,K0),ERRDOSE(NDIST2,I0,J0,K0) ;
+             (1x,'Doses:',2(G10.3,'+-',G10.3));
+      ]
+
+      OUTPUT DOSEMAX;(/1X,'Maximum dose along central axis is:',G10.2);
+      XCOORD = 0.0;
+      YCOORD = 0.0;
+
+" find the point 0,0 in bin coordinates
+
+      $FIND_BIN(I,X);
+      $FIND_BIN(J,Y);
+
+      OUTPUT I0,J0,KDMAX;(1X,'Occurs at voxel: ',3I9);
+      OUTPUT XBOUND(NDIST1,I0),XBOUND(NDIST1,I0+1),
+      YBOUND(NDIST1,J0),YBOUND(NDIST1,J0+1),ZBOUND(NDIST1,KDMAX),
+      ZBOUND(NDIST1,KDMAX+1);(1X,'Coordinates:',3(2X,F5.1,',',F5.1));
+      OUTPUT DOSE(NDIST1,I0,J0,KDMAX),ERRDOSE(NDIST1,I0,J0,KDMAX),
+             DOSE(NDIST2,I0,J0,KDMAX),ERRDOSE(NDIST2,I0,J0,KDMAX) ;
+             (1x,'Doses:',2(G10.3,'+-',G10.3));
+
+
+
+      CALL PLOTFREQ(LA_TYPE);
+
+      RETURN;
+      END;
+
+"-----------------------------------------------------------------------
+" SUBROUTINE PLOTFREQ
+"-----------------------------------------------------------------------
+" called by: STATS
+
+" PURPOSE: PLOTFREQ sets the parameters for a plot of frequency distribution
+" as calculated in STATS, and then proceeds to call plot_xvgr for a single
+" curve
+
+" see plotin and plot_xvgr.f for more details on the plot options
+
+
+" VARIABLES: NUM1- the number of characters in the first filename
+" NUM2 - the number of characters in the second filename
+" X_TYPE - the type of binning on the X-axis (ie absolute diff, or % diff)
+
+
+      SUBROUTINE PLOTFREQ(X_TYPE);                                  "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      INTEGER NUM1,NUM2,X_TYPE;
+
+      REAL XMIN; "a dummy variable to pass to XVGRPLOT"
+
+      SAVE;
+" - find the number of letters in the file name of the desired distibution
+
+      CALL LETTERCOUNT(FILEIN(NDIST1),NUM1);
+      CALL LETTERCOUNT(FILEIN(NDIST2),NUM2);
+
+" - default value is as per below
+
+      TITLE  =  'frequency distribution of '//FILEIN(NDIST1)(1:MIN(10,NUM1))//
+              ' / '//FILEIN(NDIST2)(1:MIN(10,NUM2));
+
+" set labels for the x and y axes
+
+  IF(X_TYPE = 1)[ XAXIS=' D1 - D2  /Gy * cm**2)';]
+  ELSEIF(X_TYPE = 2)[ XAXIS=' (D1-D2)/[(D1+D2)/2] * 100%';]
+  ELSEIF(X_TYPE = 3)[ XAXIS=' (D1-D2)/DsmaxN * 100%';]
+  ELSEIF(X_TYPE = 4)[ XAXIS=' (D1-D2)/sqrt(err1**2+err2**2)';]
+      YAXIS=' normalized frequency distribution';
+
+      " set some plot options
+      DO L = 1,4 [ IOPTION(L) = 0;]
+
+      " get data specific to the dose diff frequencies plot
+      " - prompt the user for the output filename
+      OUTPUT ;(/1X,'Output Filename (default=freqdist1): ',$);
+      INPUT OUTFILE; (A);
+
+      " - default value is freqdist1
+      IF OUTFILE = ' ' [OUTFILE = 'freqdist1';]
+      outfile=outfile(1:lnblnk1(outfile))//'.agr';
+      OPEN(UNIT=7,STATUS='UNKNOWN',FILE=outfile);
+
+       " set label for the curve
+       IF(X_TYPE = 1)[CURVE_LABELS='dose difference';]
+       IF(X_TYPE = 2|X_TYPE = 3)[ CURVE_LABELS='% dose difference'; ]
+       ELSEIF(X_TYPE = 4)[
+           CURVE_LABELS='dose difference/sqrt(err1**2+err**2)';
+       ]
+
+      " set symbol and curve type
+      NTYPE_SYMBOL = 1;
+      NTYPE_CURVE = 1;
+      CURVE_SPECS = CHAR(NTYPE_SYMBOL+48)//CHAR(NTYPE_CURVE+48);
+      " set the number of points and the number of curves
+      NPOINTS = LTOT;
+      NCURVE = 1;
+
+      " set the x coordinates to the value of the dose in each bin
+      " set the y coordinates to the frequency with which that dose occurs
+      " set the error in y to zero
+
+      DO L = 1,LTOT [ " frequency distribution of dose differences
+         X(L) = DDBIN_DIFF*(L-(LTOT/2)-1);
+         Y(L) = FREQ_DIFF(L);
+         ERRY(L) = 0.0;
+      ]
+
+      " plot the dose diff frequency graph
+      SUBTITLE=' ';
+
+      XMIN=0.;
+      CALL XVGRPLOT(X,Y,ERRY,NPOINTS,NCURVE-1,CURVE_LABELS,
+       XAXIS,YAXIS,TITLE,SUBTITLE,7,IOPTION(1),XMIN,IOPTION(2));
+
+      " - pass all the information to the xvgr_script routine, which plots
+      " the data
+      OUTPUT ;(/1X,'Calling xmgrace...please be patient! ');
+      CLOSE(7);
+      CALL XVGR_SCRIPT;
+
+      " - get graphing parameters specific to the chi-squared frequency plot
+      " - prompt the user for the output filename
+      OUTPUT ;(/1X,'Output Filename (default = freqdist2): ',$);
+      INPUT OUTFILE; (A);
+
+      " - default value is freqdist2
+      IF OUTFILE = ' ' [OUTFILE = 'freqdist2';]
+      outfile=outfile(1:lnblnk1(outfile))//'.agr';
+      OPEN(UNIT=7,STATUS='UNKNOWN',FILE=outfile);
+
+      " - reset the x axis label
+      XAXIS=' chi-squared';
+
+      " set label for the curve
+      CURVE_LABELS='square of difference over error';
+
+      " set symbol and curve type
+      NTYPE_SYMBOL = 1;
+      NTYPE_CURVE = 1;
+      CURVE_SPECS = CHAR(NTYPE_SYMBOL+48)//CHAR(NTYPE_CURVE+48);
+
+      " set the number of points and the number of curves
+      NPOINTS = LTOT;
+      NCURVE = 1;
+      " set the x coordinates to the value of the dose in each bin
+      " set the y coordinates to the frequency with which that dose occurs
+      " set the error in y to zero
+
+      DO L = 1,LTOT [ " frequency distribution of 'chi-squares'
+         X(L) = DDBIN_CHI*(L-0.5);
+         Y(L) = FREQ_CHI(L);
+         ERRY(L) = 0.0;
+      ]
+
+      " - plot the chi-squared frequency graph
+      SUBTITLE=' ';
+
+      XMIN=0.;
+      CALL XVGRPLOT(X,Y,ERRY,NPOINTS,NCURVE-1,CURVE_LABELS,
+       XAXIS,YAXIS,TITLE,SUBTITLE,7,IOPTION(1),XMIN,IOPTION(2));
+
+" - call the xvgr_script routine, which plots
+" the data
+
+      OUTPUT ;(/1X,'Calling xmgrace...please be patient! ');
+
+      CLOSE(7);
+      CALL XVGR_SCRIPT;
+
+" - prompt the user for an axis for more plot profiles
+       RETURN;
+       END;
+
+"--------------------------------------------------------------------------
+" SUBROUTINE NORMMENU
+"--------------------------------------------------------------------------
+" called from: MAINMENU
+
+" PURPOSE: NORMMENU displays a table of normalizing options
+" - the routine accepts numerical input and passes control to a subroutine
+" corresponding to the option chosen
+
+" VARIABLES: ISELECT - holds the option selected by the user
+
+      SUBROUTINE NORMMENU;                                "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      $COMIN1/DATA/;
+
+      INTEGER ISELECT;
+      SAVE;
+      EXTERNAL SCALE;
+      :NORMMENU:
+      NFLAG = 0;
+      ISELECT = 0;
+
+      OUTPUT ;(/1X,'NORM MENU');
+      OUTPUT ;(1X,'--------');
+      OUTPUT ;(1X,'0 - Main menu');
+      OUTPUT ;(1X,'1 - Apply scaling factor');
+      OUTPUT ;(1X,'2 - Normalize to average dose');
+      OUTPUT ;(1X,'3 - Normalize to maximum dose along central axis');
+      OUTPUT ;(1X,'4 - Normalize to dose in specific voxel');
+      OUTPUT ;(1X,'5 - Denormalize');
+
+" - prompt the user to input the option desired
+
+      OUTPUT ;(/1X,'Selection: ',$);
+      INPUT ISELECT;(I5);
+
+" - if out of range, redisplay plot menu
+
+      IF (ISELECT<0|ISELECT>5) [GOTO :NORMMENU:;]
+
+" - 0 returns control to the main menu
+
+      ELSEIF (ISELECT = 0) [RETURN;]
+      ELSEIF (ISELECT = 1) [CALL SCALE;]
+      ELSEIF (ISELECT = 2) [CALL AVERAGEDOSE;]
+      ELSEIF (ISELECT = 3) [CALL CENTRALMAX;]
+      ELSEIF (ISELECT = 4) [CALL SPECVOXEL;]
+      ELSEIF (ISELECT = 5) [CALL DENORMALIZE;]
+
+" - redisplay norm menu-
+
+      GOTO :NORMMENU:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE SCALE
+"----------------------------------------------------------------------------
+
+" called from: NORMMENU
+
+" PURPOSE: SCALE prompts the user for a rescaling factor and applies it
+" to both the dose and errdose arrays
+" - the routine also keeps track of the overall scaling factor applied to
+" each array
+
+" VARIABLES: SCALE - the rescaling factor
+
+      SUBROUTINE SCALE;                                         "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      REAL SCALEFACT;
+      SAVE;
+      :SCALE:
+      SCALEFACT = 0;
+      OUTPUT ;(/1X,'Rescaling');
+      OUTPUT ;(1X,'---------');
+
+      :SELECT4:
+
+" - list the distributions which are currently loaded
+
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'Number of file to Rescale (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT4:;
+         ]
+
+" - get scaling factor
+
+      :GETSCALE:
+      OUTPUT ;(1X,'Scaling factor (0-Normmenu): ',$);
+      INPUT SCALEFACT;(F10.0);
+
+" - message if the value is out of range, and prompts the user to enter
+" the scale factor again
+
+      IF SCALEFACT<0 [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :GETSCALE:;
+         ]
+
+" - a factor of zero defaults to the norm menu
+
+      ELSEIF SCALEFACT = 0 [RETURN;]
+
+      OUTPUT ;(1X,'RESCALING ARRAY...');
+
+" multiply cumulative scale factor for the distribution by the scale factor
+
+      TOTALNORM(NDIST1) = SCALEFACT*TOTALNORM(NDIST1);
+
+" scale the dose and errdose arrays by the factor
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)*SCALEFACT;
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)*SCALEFACT;
+               ]
+            ]
+         ]
+
+" prompt the user to scale another distribution
+
+      GOTO :SCALE:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE AVERAGEDOSE
+"----------------------------------------------------------------------------
+
+" called from: NORMMENU
+
+" PURPOSE: AVERAGEDOSE finds the average dose of the distribution
+" specified by the user
+" - it normalizes the distribution to this factor, and stores the
+" cumulative normalization factor for each distribution in an array
+
+" VARIABLES: AVGDOSE - the average dose for the distribution
+
+      SUBROUTINE AVERAGEDOSE;                                         "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      REAL AVGDOSE;
+      SAVE;
+      :AVGDOSE:
+      AVGDOSE = 0;
+      OUTPUT ;(/1X,'Normalize to average dose');
+      OUTPUT ;(1X,'-------------------------');
+
+      :SELECT5:
+
+" - list the distributions which are currently loaded
+
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'Number of file to Normalize (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT5:;
+         ]
+
+
+      OUTPUT ;(1X,'NORMALIZING TO AVERAGE DOSE...');
+
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+
+" find the sum of the doses of all the voxels in the distribution
+
+               AVGDOSE = DOSE(NDIST1,I,J,K)+AVGDOSE;
+
+               ]
+            ]
+         ]
+
+" find the average dose for the distribution by dividing by the number
+" of voxels
+
+      AVGDOSE = AVGDOSE/(IMAX(NDIST1)*JMAX(NDIST1)*KMAX(NDIST1));
+
+      OUTPUT AVGDOSE;(1X,'AVERAGE DOSE: ',G10.4);
+
+
+" accumulate normalization factors for the distribution in an array
+
+      TOTALNORM(NDIST1)  =  TOTALNORM(NDIST1)/AVGDOSE;
+
+" normalize the dose and errdose arrays to avgdose
+" (treats avgdose as a scaling factor in error calculation)
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)/AVGDOSE;
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)/AVGDOSE;
+               ]
+            ]
+         ]
+
+" prompt the user to normalize another distribution to average dose
+
+      GOTO :AVGDOSE:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE CENTRALMAX
+"----------------------------------------------------------------------------
+
+" called from: NORMMENU
+
+" PURPOSE: CENTRALMAX calculates the maximum dose along the central axis
+" of a dose distribution, and then normalizes the distribution to this
+" number
+" - the maximum dose is calculated by taking into account various
+" distribution grids, and averaging central data if there is not an
+" obvious choice of central axis
+
+" VARIABLES: DOSE_STORE - temporary storage of cumulative dose
+" FACT_NORM - the normalization factor
+" ILO,IHI,JLO,JHI - the voxel boundaries for averaging dose
+
+      SUBROUTINE CENTRALMAX;                                         "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      INTEGER ILO,IHI,JLO,JHI
+;
+      REAL FACT_NORM;
+      REAL DOSE_STORE;
+
+      SAVE;
+      :CENTRALMAX:
+      FACT_NORM = 0;
+      OUTPUT ;(/1X,'Normalize along central maximum');
+      OUTPUT ;(1X,'-------------------------------');
+
+      :SELECT7:
+
+" - list the distributions which are currently loaded
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'Number of file to Normalize (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT7:;
+         ]
+
+" if there are an even number of voxels in the x direction, set the
+" voxel lims for averaging the two centralmost voxels
+
+      IF (MOD(IMAX(NDIST1),2)) = 0 [
+         ILO = IMAX(NDIST1)/2;
+         IHI = IMAX(NDIST1)/2+1;
+         ]
+
+" otherwise, take only the central voxel into account
+
+      ELSE [
+         ILO = IMAX(NDIST1)/2+1;
+         IHI = IMAX(NDIST1)/2+1;
+         ]
+
+" if there are an even number of voxels in the y direction, set the
+" voxel lims for averaging the two centralmost voxels
+
+      IF (MOD(JMAX(NDIST1),2)) = 0 [
+         JLO = JMAX(NDIST1)/2;
+         JHI = JMAX(NDIST1)/2+1;
+         ]
+
+" otherwise, take only the central voxel into account
+
+      ELSE [
+         JLO = JMAX(NDIST1)/2+1;
+         JHI = JMAX(NDIST1)/2+1;
+         ]
+
+" find the average dose, using the above voxel lims, at the k-th level
+" in the voxel grid
+
+      DO K = 1,KMAX(NDIST1) [
+
+" must set to 0 for the each k-th voxel
+
+         DOSE_STORE = 0;
+         DO I = ILO,IHI [
+            DO J = JLO,JHI [
+
+" store dose in a cumulative sum
+
+               DOSE_STORE = DOSE(NDIST1,I,J,K)+DOSE_STORE;
+            ]
+         ]
+
+" divide cumulative dose at the k-th level by the number of voxels
+" averaged
+
+         DOSE_STORE = DOSE_STORE/((IHI-ILO+1)*(JHI-JLO+1));
+         AXISDOSE(NDIST1,K) = DOSE_STORE;
+      ]
+
+" find the maximum dose along the central axis
+
+      DO K = 1,KMAX(NDIST1) [FACT_NORM = MAX(FACT_NORM,AXISDOSE(NDIST1,K));]
+
+" account for the normalization in the cumulative normalization global
+" for the distribution
+
+      TOTALNORM(NDIST1) = TOTALNORM(NDIST1)/FACT_NORM;
+      OUTPUT ;(1X,'Normalizing to maximum dose along central axis...');
+      OUTPUT (IHI-ILO+1);(1X,'Number of voxels averaged in X direction: ',I1);
+      OUTPUT (JHI-JLO+1);(1X,'Number of voxels averaged in Y direction: ',I1);
+      OUTPUT FACT_NORM;(1X,'Maximum dose along the axis: ',G10.2);
+
+" normalize the dose and errdose arrays to fact_norm
+" (treats fact_norm as a scaling factor in error calculation)
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)/FACT_NORM;
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)/FACT_NORM;
+            ]
+         ]
+      ]
+
+" prompt the user to normalize another distribution to dose along the
+" central axis
+
+      GOTO :CENTRALMAX:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE SPECVOXEL
+"----------------------------------------------------------------------------
+
+" called from: NORMMENU
+
+" PURPOSE: SPECVOXEL normalizes the specified dose and errdose distributions
+" to the voxel specified
+
+" VARIABLES: FACT_NORM - the normalization factor
+" ILO,IHI,JLO,JHI,KLO,KHI - the voxel boundaries for averaging dose
+
+SUBROUTINE SPECVOXEL;                                         "toc:"
+Copyright NRC 1999
+"IMPLICIT NONE;"
+
+$COMIN1/DATA/;
+$COMIN2/DATA/;
+
+INTEGER ILO,IHI,JLO,JHI,KLO,KHI;
+REAL FACT_NORM;
+SAVE;
+
+:SPECVOXEL:
+FACT_NORM = 0;
+OUTPUT ;(/1X,'Normalize to specific voxel');
+OUTPUT ;(1X,'---------------------------');
+
+:SELECT6:
+
+" - list the distributions which are currently loaded
+
+OUTPUT ;(1X,'Files currently loaded:'/);
+DO N = 1,$NDIST1_MAX [
+  IF (NDIST1_FLAG(N) = 1) [ OUTPUT N,FILEIN(N);(I2,' - ',A); ]
+]
+OUTPUT ;(/1X,'Number of file to Normalize (0-MainMenu): ',$);
+INPUT NDIST1;(I2);
+IF NDIST1 = 0 [RETURN;]
+
+"if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+ELSEIF NDIST1>$NDIST1_MAX  [
+   OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+   GOTO :SELECT6:;
+]
+
+OUTPUT ;(1X,'Voxel coordinates x,y,z (cm): ',$);
+read(5,*) XCOORD,YCOORD,ZCOORD;
+"INPUT XCOORD,YCOORD,ZCOORD;(3F10.0);  this didn't work??"
+IF($DEBUG)[OUTPUT XCOORD,YCOORD,ZCOORD;(' XCOORD,YCOORD,ZCOORD:',3F10.3);]
+
+" convert the cm coordinates to bin coordinates
+$FIND_BIN(I,X);       $FIND_BIN(J,Y);       $FIND_BIN(K,Z);
+IF($DEBUG) [OUTPUT I0, J0, K0;('Post FIND_BINB: I0, J0, K0=',3I4);]
+
+" find voxels to be included in a dose calculation for particular voxel"
+$FIND_LIMS(I,X);       $FIND_LIMS(J,Y);       $FIND_LIMS(K,Z);
+IF($DEBUG) [OUTPUT ILO, JLO, KLO;('Post FIND_LIMS: ILO, JLO, KLO=',3I4);]
+
+DO I = ILO,IHI [
+   DO J = JLO,JHI [
+      DO K = KLO,KHI [
+
+         " sum the doses in predetermined voxels
+          FACT_NORM = DOSE(NDIST1,I,J,K)+FACT_NORM;
+      ]
+  ]
+]
+IF($DEBUG)[OUTPUT ILO,IHI,JLO,JHI,KLO,KHI,FACT_NORM;
+  (' ILO,IHI,JLO,JHI,KLO,KHI,FACT_NORM:',6I4,3x,G10.4);
+]
+
+" find the average dose in the particular voxel by dividing the
+" sum of all the doses in the surrounding voxels by the number of
+" voxels considered
+
+FACT_NORM = FACT_NORM/((IHI-ILO+1)*(JHI-JLO+1)*(KHI-KLO+1));
+
+" account for this normalization in the total normalization for the
+" present distribution
+
+      TOTALNORM(NDIST1) = TOTALNORM(NDIST1)/FACT_NORM;
+      OUTPUT I0,J0,K0;(1X,'Normalizing to dose in voxel ',3I3);
+      OUTPUT (IHI-ILO+1);(1X,'Number of voxels averaged in X direction: ',I1);
+      OUTPUT (JHI-JLO+1);(1X,'Number of voxels averaged in Y direction: ',I1);
+      OUTPUT (KHI-KLO+1);(1X,'Number of voxels averaged in Z direction: ',I1);
+      OUTPUT FACT_NORM;(1X,'Dose in the voxel: ',G10.2);
+
+" normalize the dose and errdose arrays to fact_norm
+" (treats fact_norm as a scaling factor in error calculation)
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)/FACT_NORM;
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)/FACT_NORM;
+            ]
+         ]
+      ]
+
+" prompt the user to normalize another distribution to dose in a
+" specific voxel
+
+      GOTO :SPECVOXEL:;
+      END;
+
+"----------------------------------------------------------------------------
+" SUBROUTINE DENORMALIZE
+"----------------------------------------------------------------------------
+
+" called from: NORMMENU
+
+" PURPOSE: DENORMALIZE gets rid of the effects of all normalizations on
+" the distribution specified
+
+" VARIABLES:
+
+      SUBROUTINE DENORMALIZE;                                      "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+      SAVE;
+      :DENORMAL:
+      OUTPUT ;(/1X,'DENORMALIZE');
+      OUTPUT ;(1X,'-----------');
+
+      :SELECT8:
+
+" - list the distributions which are currently loaded
+
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'Number of file to DeNormalize (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT8:;
+         ]
+
+      OUTPUT ;(1X,'DENORMALIZING DISTRIBUTION...');
+
+" divide by the total normalization factor in order to eradicate the
+" effects of all normalizations performed on the dose and errdose
+" distributions
+
+" if totalnorm has not changed, all this routine does is divide by one
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)/TOTALNORM(NDIST1);
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)/TOTALNORM(NDIST1);
+               ]
+            ]
+         ]
+
+" prompt the user to denormalize another distribution
+
+      GOTO :DENORMAL:;
+      END;
+
+"------------------------------------------------------------------------
+" SUBROUTINE REBINNING
+"------------------------------------------------------------------------
+
+" called from: MAINMENU
+
+" PURPOSE: REBINNING creates a new distribution from an old data distribution
+" - the new data distribution corresponds to the old one, but has its
+" bins enlarged in one direction (or its sensitivity shrunk) by a factor
+" entered by the user
+
+" VARIABLES: JEND - number of old bins per new bin
+" LASTBIN_FACT - number of old bins in the last bin of the new distribution
+" MAX_BIN - number of bins along the desired axis in the new distribution
+" NBIN_FACT - number of old bins for every bin in the new distribution
+" NDIST1_BIN - number of the new distribution
+
+
+      SUBROUTINE REBINNING;                                         "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      INTEGER JEND, LASTBIN_FACT,MAX_BIN,NBIN_FACT,NDIST1_BIN;
+      SAVE;
+      :REBIN:
+      OUTPUT ;(/1X,'REBINNING');
+      OUTPUT ;(1X,'----------');
+
+      :SELECT3:
+
+" - list the distributions which are currently loaded
+
+      OUTPUT ;(1X,'Files currently loaded:'/);
+      DO N = 1,$NDIST1_MAX [
+          IF NDIST1_FLAG(N) = 1 [
+             OUTPUT N,FILEIN(N);(I2,' - ',A);
+             ]
+          ]
+      OUTPUT ;(/1X,'Number of file to Rebin (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1 = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT3:;
+         ]
+
+      :GETNUM:
+      OUTPUT ;(1X,'Number of Rebinned File (1-5,0-MainMenu): ',$);
+      INPUT NDIST1_BIN;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1_BIN = 0 [RETURN;]
+
+" - if the number is out of range, print the appropriate message
+" and prompt user to input another filename
+
+      ELSEIF NDIST1_BIN>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT3:;
+         ]
+
+" - the routine does not allow rewriting of the file being rebinned, as
+" this can cause errors
+
+      ELSEIF NDIST1_BIN = NDIST1 [
+         OUTPUT ;(1X,'YOU CANNOT OVERWRITE THE FILE YOU ARE REBINNING.');
+         GOTO :GETNUM:;
+         ]
+
+" - find the number of letters in the old filename
+
+      CALL LETTERCOUNT(FILEIN(NDIST1),NUMCHAR);
+
+" - ask user for name of new distribution and set the new filename
+" default is the oldfilaname.rb
+
+      OUTPUT FILEIN(NDIST1)(1:NUMCHAR);
+         (1X,'Name of rebinned file (default=',A,'.rb): ',$);
+      INPUT FILEIN(NDIST1_BIN);(A);
+      IF FILEIN(NDIST1_BIN) = ' ' [FILEIN(NDIST1_BIN)=FILEIN(NDIST1)(1:NUMCHAR)
+         //'.rb';]
+
+      :GETAXIS:
+      OUTPUT ;(1X,'Axis for rebinning (1-X,2-Y,3-Z): ',$);
+      INPUT LA_AXIS; (I5);
+      IF (LA_AXIS<1|LA_AXIS>3) [GOTO :GETAXIS:;]
+      :GETFACT:
+
+" - enter number of old bins for every new bin
+
+      OUTPUT ;(1X,'Rebinning factor: ',$);
+      INPUT NBIN_FACT;(I5);
+      IF NBIN_FACT = 0 [
+         OUTPUT ;('REBINNING FACTOR MUST BE AN INTEGER GREATER THAN 0');
+         GOTO :GETFACT:;
+         ]
+      OUTPUT ;(1X,'REBINNING......'/);
+
+
+" - ensure that the dose and errdose arrays for the new distribution are
+" set to 0's...this must be done since the data from an old file will
+" mess up the running total which is kept in the next part of the program
+
+      DO I = 1,IMAX(NDIST1) [
+         DO J = 1,JMAX(NDIST1) [
+            DO K = 1,KMAX(NDIST1) [
+               DOSE(NDIST1_BIN,I,J,K) = 0.;
+               ERRDOSE(NDIST1_BIN,I,J,K) = 0.;
+               ]
+            ]
+         ]
+
+" - must empty arrays, in case the routine is repeated
+" this is because the routine assumes that the initial
+" contents of the array are 0 when it begins calculation
+
+" number of doses being averaged together is the rebinning factor
+
+      JEND = NBIN_FACT;
+
+" only documented one of the next three options, since the only
+" variance in the routines is the axis along which the rebinning occurs
+
+      IF LA_AXIS = 1 [
+
+" - for the axis being rebinned, the old voxel boundaries (cm) are transferred
+" to the new distribution array taking into account the rebinning factor
+
+         $TRANSFER_BOUNDS(I,X);
+
+" - the old voxel boundaries (cm) for the other two axes are transferred from
+" the old distribution array to the new distribution array with no change
+
+         $KEEP_BOUNDS(J,Y);
+         $KEEP_BOUNDS(K,Z);
+
+"rebin the appropriate axis
+
+         $REBIN_AXIS(I,J,K);
+
+         ]
+
+      ELSEIF LA_AXIS = 2 [
+         $TRANSFER_BOUNDS(J,Y);
+         $KEEP_BOUNDS(I,X);
+         $KEEP_BOUNDS(K,Z);
+
+         $REBIN_AXIS(J,I,K);
+
+         ]
+      ELSEIF LA_AXIS = 3 [
+         $TRANSFER_BOUNDS(K,Z);
+         $KEEP_BOUNDS(I,X);
+         $KEEP_BOUNDS(J,Y);
+
+         $REBIN_AXIS(K,I,J);
+         ]
+
+" - display the number of voxels in each direction for the new array
+
+      OUTPUT IMAX(NDIST1_BIN),JMAX(NDIST1_BIN),KMAX(NDIST1_BIN);
+      (1X,'NUMBER OF VOXELS IN X,Y,Z DIRECTIONS: ',3I10);
+
+
+" - display the min/max dimensions of the 3d voxel grid (cm)
+
+      $OUT_THE_BOUNDS(I,X,NDIST1_BIN);
+      $OUT_THE_BOUNDS(J,Y,NDIST1_BIN);
+      $OUT_THE_BOUNDS(K,Z,NDIST1_BIN);
+
+" - flag that there is now data in the new array
+
+      NDIST1_FLAG(NDIST1_BIN)  =  1;
+
+" - prompt the user to rebin another file
+
+      GOTO :REBIN:;
+
+      "note, must check how to calculate errdose backwards, etc"
+      " and also check on whether can just write backward...."
+
+      " must recreate the out_the_bounds routine, from the_bounds"
+
+      END;
+
+"--------------------------------------------------------------------------
+" SUBROUTINE PLOTMENU
+"--------------------------------------------------------------------------
+" called from: MAINMENU
+
+" PURPOSE: PLOTMENU displays a table of plot options
+" - the routine accepts numerical input and passes control to a subroutine
+" corresponding to the option chosen
+
+" VARIABLES: ISELECT - holds the option selected by the user
+
+SUBROUTINE PLOTMENU;                                           "toc:"
+Copyright NRC 1999
+"IMPLICIT NONE;"
+$COMIN1/DATA/;
+
+INTEGER ISELECT;
+SAVE;
+
+:PLOTMENU:
+
+NFLAG = 0;
+ISELECT = 0;
+
+OUTPUT ;(/1X,'PLOT MENU');
+OUTPUT ;(1X,'--------');
+OUTPUT ;(1X,'0 - Main menu');
+OUTPUT ;(1X,'1 - Plot profiles');
+OUTPUT ;(1X,'2 - Comparison plot');
+
+" - prompt the user to input the option desired
+
+OUTPUT ;(/1X,'Selection: ',$);
+INPUT ISELECT;(I5);
+
+"if out of range, redisplay plot menu
+IF (ISELECT<0|ISELECT>2) [GOTO :PLOTMENU:;]
+
+"0 returns control to the main menu
+ELSEIF (ISELECT = 0) [RETURN;]
+ELSEIF (ISELECT = 1) [CALL PLOTDOSE;]
+ELSEIF (ISELECT = 2) [
+   " - check to see if there is more than one distribution loaded
+   DO N = 1,$NDIST1_MAX [
+       IF NDIST1_FLAG(N) = 1 [NFLAG=NFLAG+1;]
+   ]
+   IF($DEBUG)[OUTPUT NFLAG,(NDIST1_FLAG(N),N=1,$NDIST1_MAX);
+     (' NFLAG=',I3,'  NDIST1_FLAG='/ (10I4));
+   ]
+
+   "if there is pass control to the appropriate routine
+   IF NFLAG>1 [CALL COMPAREPLOT;]
+   ELSE [
+      " - otherwise, redisplay the plot menu
+      OUTPUT ;('Please read in more data before attempting to compare plots');
+   ]
+]
+
+
+" - redisplay plot menu-
+
+      GOTO :PLOTMENU:;
+      END;
+
+"-----------------------------------------------------------------------
+" SUBROUTINE PLOTDOSE
+"-----------------------------------------------------------------------
+" called by: PLOTMENU
+
+" PURPOSE: PLOTDOSE plots plot profiles from a single dose distribution
+" along various axes and at various points
+" - it uses the graphics package xmgrace, which is accessed by calling
+" the routine plot_xvgr written by Barfels and Rogers
+" - for a single distribution, up to 20 curves can be plotted at the same
+" time ( however, this would make a very messy graph)
+" - the user selects the desired axis for the plot, and the coordinates
+" of the dose profiles to be plotted
+" - a few options can be entered, or left as default values, and in
+" general for simplicity, most of the values are automatically set to
+" default values
+
+" VARIABLES:
+
+SUBROUTINE PLOTDOSE;                                        "toc:"
+Copyright NRC 1999
+"IMPLICIT NONE;"
+$COMIN1/DATA/;
+$COMIN2/DATA/;
+
+REAL XMIN; "a dummy variable to pass to XVGRPLOT"
+SAVE;
+:SELECT1:
+OUTPUT ;(/1X,'Data for dose plot');
+OUTPUT ;(1X,'------------------');
+OUTPUT ;(/1X,'Files currently loaded');
+OUTPUT ;(1X,'----------------------');
+
+" - lists the distributions which are currently loaded
+
+DO N = 1,$NDIST1_MAX [
+  IF NDIST1_FLAG(N) = 1 [ OUTPUT N,FILEIN(N);(I2,' - ',A);]
+]
+
+" - prompt user for the number of the file to plot
+
+OUTPUT ;(/1X,'Number of file to Plot (0-PlotMenu): ',$);
+INPUT NDIST1;(I1);
+IF NDIST1 = 0 [RETURN;]
+
+" if number out of range, prompt user "
+ELSEIF NDIST1>$NDIST1_MAX  [
+     OUTPUT ;(1X,'Sorry, that is out of range.');
+     OUTPUT ; (' ');
+     GOTO :SELECT1:;
+]
+
+MAX_CURVE  =  0;
+
+:ENTER_AXIS1:
+IF($DEBUG)[OUTPUT;(' Starting :ENTER_AXIS1:');]
+
+" prompt user for the axis of the profiles
+
+OUTPUT ;(/1X,'Axis for Profile (0-PlotMenu,1-X,2-Y,3-Z): ',$);
+INPUT LA_AXIS; (I5);
+IF (LA_AXIS = 0) [RETURN;]
+"if out of range, prompt user "
+IF (LA_AXIS<1|LA_AXIS>3) [GOTO :ENTER_AXIS1:;]
+
+ELSE [ " set some of the variables to default values
+   IF LA_AXIS = 1 [$INIT_GRAPH(X);]
+   ELSEIF LA_AXIS = 2 [$INIT_GRAPH(Y);]
+   ELSEIF LA_AXIS = 3 [$INIT_GRAPH(Z);]
+]
+IF($DEBUG)[OUTPUT LA_AXIS;(' Selected LA_AXIS=',I3);]
+
+" - find the number of letters in the file name of the desired distibution
+CALL LETTERCOUNT(FILEIN(NDIST1),NUMCHAR);
+
+"prompt the user for the title of the graph
+OUTPUT FILEIN(NDIST1)(1:NUMCHAR);(1X,'Graph Title (default=Profile for ',
+         A,'): ',$);
+INPUT TITLE; (A);
+
+"default value is Profile for filename
+IF TITLE = ' ' [TITLE = 'Profile for '//FILEIN(NDIST1)(1:NUMCHAR);]
+" - prompt the user for the output filename
+OUTPUT FILEIN(NDIST1)(1:NUMCHAR);(1X,'Output Filename (default=',A,
+         '): ',$);
+INPUT OUTFILE; (A);
+
+" default value is filename
+ IF OUTFILE = ' ' [ OUTFILE = FILEIN(NDIST1)(1:NUMCHAR); ]
+" - ask the user for the number of curves to be plotted
+
+OUTPUT ;(1X,'Number of curves to Plot: ',$);
+INPUT MAX_CURVE; (I5);
+IF MAX_CURVE = 0 [RETURN;]
+
+"ask if they want multiple curves to be offset from one another
+IF (MAX_CURVE > 1) [
+    OUTPUT ;(1X,'Generate Automatic Offset? (y/n) [n]: ',$);
+    INPUT REPLY;(A);
+]
+ELSE [REPLY='n';]
+
+OUTPUT ;(' ');
+NCURVE = 0;
+outfile = outfile(1:lnblnk1(outfile))//'.agr';
+OPEN(UNIT=7,STATUS='UNKNOWN',FILE=outfile);
+
+"get data and options and such stuff for each of the curves
+
+:DEFINE_CURVE1: "loop through NCURVE curves"
+
+IF($DEBUG)[OUTPUT;(' Starting :DEFINE_CURVE1: loop');]
+
+"each time this part is executed, add one to a counter
+NCURVE = NCURVE + 1;
+
+" - for desired axis, get coordinates of plot for each curve specified
+
+" - once it has been determined which axis the plot is going to be along,
+" the coordinates of the point in the plane perpendicular to this axis
+" (where the plot will take place) are set to constants"
+
+IF LA_AXIS = 1 [
+    OUTPUT ;(1X,'Coordinates of Axis (y,z): ',$);
+    "INPUT YCOORD,ZCOORD; (2F10.0);   doesnot work"
+    READ(5,*) YCOORD,ZCOORD;
+    IF($DEBUG)[OUTPUT YCOORD,ZCOORD;(1x,'Will plot at YCOORD,ZCOORD=',2F10.4);]
+]
+IF LA_AXIS = 2 [
+    OUTPUT ;(1X,'Coordinates of Axis (x,z): ',$);
+    "INPUT XCOORD,ZCOORD; (2F10.0);   does not work"
+    READ(5,*) XCOORD,ZCOORD;
+    IF($DEBUG)[OUTPUT XCOORD,ZCOORD;(1x,'Will plot at XCOORD,ZCOORD=',2F10.4);]
+]
+IF LA_AXIS = 3 [
+    OUTPUT ;(1X,'Coordinates of Axis (x,y): ');
+    READ(5,*) XCOORD,YCOORD;
+    "INPUT XCOORD,YCOORD; (2F10.0);"  "This won't work for some reason"
+    IF($DEBUG)[OUTPUT XCOORD,YCOORD;(1x,'Will plot at XCOORD,YCOORD=',2F10.4);]
+]
+
+" - print number and name of current dose distribution
+      $PRINT_CURVEINFO;
+/I0,J0,K0/ = 0;
+
+" - calculate voxel position from the coordinate entered
+" for the appropriate axis
+
+IF LA_AXIS = 1 [ $FIND_BIN(J,Y); $FIND_BIN(K,Z); ]
+ELSEIF LA_AXIS = 2 [ $FIND_BIN(I,X); $FIND_BIN(K,Z); ]
+ELSEIF LA_AXIS = 3 [ $FIND_BIN(I,X); $FIND_BIN(J,Y); ]
+
+IF LA_AXIS = 1  [
+   " - find the dose and the error in the dose
+   " at points along the specified axis (x,y or z)
+   " at a the specified coordinate
+
+   $PROFILE(I,X);
+
+   " print number of voxels in x,y,z directions (along with message),
+   " and voxel grid boundary values (in cm)
+
+   IF($DEBUG) [$PRINT_BOUNDS(I,X,J,K);]
+
+   " fill arrays of data to be passed to plot_xvgr routine
+
+    $THE_SPECS1(I,X,NCURVE);
+]"end of LA_AXIS = 1 block"
+
+"see above for documentation
+ELSEIF LA_AXIS = 2  [
+   $PROFILE(J,Y);
+   IF($DEBUG)[ $PRINT_BOUNDS(J,Y,I,K);]
+   $THE_SPECS1(J,Y,NCURVE);
+]
+
+ELSEIF LA_AXIS = 3  [
+    $PROFILE(K,Z);
+    IF($DEBUG)[ $PRINT_BOUNDS(K,Z,I,J);]
+    $THE_SPECS1(K,Z,NCURVE);
+]
+ELSE   [ OUTPUT ; (1X,'ERROR, illegal data for axis'); ]
+
+SUBTITLE=' ';
+
+XMIN=0.;
+CALL XVGRPLOT(X,Y,ERRY,NPOINTS,NCURVE-1,CURVE_LABELS,
+       XAXIS,YAXIS,TITLE,SUBTITLE,7,IOPTION(1),XMIN,IOPTION(2));
+
+" if the coordinates of all the curves desired have been entered,
+" call xvgr_script
+
+IF($DEBUG)[OUTPUT NCURVE,MAX_CURVE;
+   ('Have prepared data for curve',I3,' of',I3);
+]
+"prompt the user for another set of coordinates if needed
+IF(NCURVE < MAX_CURVE) GOTO :DEFINE_CURVE1:;
+
+:PROFILE1:
+
+" - pass all the information to the xvgr_script routine, which plots
+" the data
+
+OUTPUT ;(/1X,'Calling xmgrace...Please be patient! ');
+CLOSE(7);
+CALL XVGR_SCRIPT;
+
+" - prompt the user for an axis for more plot profiles
+
+GOTO :ENTER_AXIS1:;
+END;
+
+"------------------------------------------------------------------------
+" SUBROUTINE COMPAREPLOT
+"------------------------------------------------------------------------
+
+" called by: PLOTMENU
+
+" PURPOSE: COMPAREPLOT plots plot profiles from multiple dose distributions
+" along the same axis and at the same coordinates
+" - it uses the graphics package xvgr, which is accessed by calling
+" the routine plot_xvgr written by Barfels and Rogers
+" - for a multiple distributions, up to 5 curves can be plotted at the same
+" time
+" - the user selects the desired axis for the plot, and the coordinate
+" of the dose profiles to be plotted, as well as the files from which
+" each of the curves will be obtained
+" - a few options can be entered, or left as default values, and in
+" general for simplicity, most of the values are automatically set to
+" default values
+
+" VARIABLES:
+
+      SUBROUTINE COMPAREPLOT;                                       "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      REAL XMIN; "a dummy variable to pass to XVGRPLOT"
+
+      SAVE;
+      MAX_CURVE = 0;
+      DO I = 1,$MAXCURVE[
+         CURVE_LABELS='                    ';
+         ]
+      :ENTER_AXIS2:
+      OUTPUT ;(/1X,'COMPARE-PLOT');
+      OUTPUT ;(1X,'------------');
+
+" - prompts the user for the axis of the compare-plots
+
+      OUTPUT ;(1X,'Axis for Compare-plot (0-PlotMenu,1-X,2-Y,3-Z): ',$);
+      INPUT LA_AXIS; (I5);
+
+" - if out of range, control returns to plot menu
+
+      IF (LA_AXIS<1|LA_AXIS>3) [RETURN;]
+      ELSE [
+
+" - set some of the variables to default values
+
+         IF LA_AXIS = 1 [$INIT_GRAPH(X);]
+         ELSEIF LA_AXIS = 2 [$INIT_GRAPH(Y);]
+         ELSEIF LA_AXIS = 3 [$INIT_GRAPH(Z);]
+         ]
+
+" - prompt user for the coordinates of the compare-plots
+
+      IF LA_AXIS = 1 [
+         OUTPUT ;(1X,'Coordinates of Axis (y,z): ',$);
+         READ(5,*) YCOORD,ZCOORD;
+         "INPUT YCOORD,ZCOORD; (2F10.0);   didnot work??"
+         ]
+      IF LA_AXIS = 2 [
+         OUTPUT ;(1X,'Coordinates of Axis (x,z): ',$);
+         READ(5,*) XCOORD,ZCOORD;
+         ]
+      IF LA_AXIS = 3 [
+         OUTPUT ;(1X,'Coordinates of Axis (x,y): ',$);
+         READ(5,*) XCOORD,YCOORD;
+         ]
+
+
+" - convert the coordinate into a character string, in order that
+" it can be concatenated to the default title string
+
+      IF LA_AXIS = 1 [$FIND_STRING1(Y,Z);]
+      ELSEIF LA_AXIS = 2 [$FIND_STRING1(X,Z);]
+      ELSEIF LA_AXIS = 3 [$FIND_STRING1(X,Y);]
+
+" - prompt the user for the graph title
+
+      OUTPUT THE_STRING(1:ICOUNT);
+
+" - default is Compareplot at (coordinate)
+
+      (1X,'Graph Title (default=Compareplot at ',A,'): ',$);
+      INPUT TITLE; (A);
+      IF TITLE = ' ' [TITLE = 'Compareplot at '//THE_STRING(1:ICOUNT);]
+
+" - prompt the user for the output filename
+
+      OUTPUT ;(1X,'Output Filename (default=Compareplot.agr): ',$);
+      INPUT OUTFILE; (A);
+
+" - default is Compareplot
+
+      IF OUTFILE = ' ' [OUTFILE = 'Compareplot';]
+
+" - ask the user if they want the curves offset from one another
+
+      OUTPUT ;(/1X,'Generate Automatic Offset? (y/n) [n]: ',$);
+      INPUT REPLY;(A);
+
+      NCURVE = 0;
+      outfile=outfile(1:lnblnk1(outfile))//'.agr';
+      OPEN(UNIT=7,STATUS='UNKNOWN',FILE=outfile);
+
+      :DEFINE_CURVE2: "loop through NCURVE curves"
+
+      :SELECT2:
+
+" - lists distributions with data in them
+
+      OUTPUT ;(/1X,'Files currently loaded:'/);
+         DO N = 1,$NDIST1_MAX [
+            IF NDIST1_FLAG(N) = 1 [OUTPUT N,FILEIN(N);(I2,' - ',A);]
+            ]
+
+" - prompt user for the number of the curve to put on the
+" compare-plot
+
+      OUTPUT ;
+     (/1X,'Input curve # to be plotted in this graph (0=>View Graph): ',$);
+      INPUT NDIST1;(I2);
+
+" - if a 0 is entered, and if no curves have been loaded into the
+" graphing arrays, return to plot menu
+
+      IF NDIST1 = 0 [
+         IF NCURVE = 0 [RETURN;]
+
+" - if a 0 ies entered, and there are curves in the graphing arrays,
+" plot the graph
+
+         ELSE [GOTO :COMPARE_PLOT:;]
+         ]
+
+" - if out of range, return prompt the user for another curve
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'Sorry, that is out of range.'/);
+         GOTO :SELECT2:;
+         ]
+
+" - add one to a counter each time this part is executed
+
+      NCURVE  =  NCURVE + 1;
+
+
+      /I0,J0,K0/ = 0;
+
+" - calculate voxel position from the coordinate entered
+" for the appropriate axis
+
+      IF LA_AXIS = 1 [
+         $FIND_BIN(J,Y);
+         $FIND_BIN(K,Z);
+         ]
+      ELSEIF LA_AXIS = 2 [
+         $FIND_BIN(I,X);
+         $FIND_BIN(K,Z);
+         ]
+      ELSEIF LA_AXIS = 3 [
+         $FIND_BIN(I,X);
+         $FIND_BIN(J,Y);
+         ]
+
+
+" - print number and name of current dose distribution
+
+      $PRINT_CURVEINFO;
+
+      IF LA_AXIS = 1  [
+
+" - find the dose and the error in the dose
+" at points along the specified axis (x,y or z)
+" at the specified coordinate, for the specified curve
+
+         $PROFILE(I,X);
+
+" - print the number of voxels in the x,y,z directions
+" on the screen (along with a message)
+" and the voxel grid boundary values (in cm)
+
+      "   $PRINT_BOUNDS(I,X,J,K);"
+
+" - fill the arrays of data to be passed to the plot_xvgr routine
+
+         $THE_SPECS2(I,X,NCURVE);
+         ]
+
+" - see above for documentation
+
+      ELSEIF LA_AXIS = 2  [
+         $PROFILE(J,Y);
+       "  $PRINT_BOUNDS(J,Y,I,K);"
+         $THE_SPECS2(J,Y,NCURVE);
+         ]
+
+" - see above for documentation
+
+      ELSEIF LA_AXIS = 3  [
+         $PROFILE(K,Z);
+      "   $PRINT_BOUNDS(K,Z,I,J);"
+         $THE_SPECS2(K,Z,NCURVE);
+         ]
+      ELSE  [OUTPUT ; (1X,'ERROR, ILLEGAL DATA FOR AXIS');]
+
+      SUBTITLE=' ';
+
+      XMIN=0.;
+      CALL XVGRPLOT(X,Y,ERRY,NPOINTS,NCURVE-1,CURVE_LABELS,
+       XAXIS,YAXIS,TITLE,SUBTITLE,7,IOPTION(1),XMIN,IOPTION(2));
+
+" - if the maximum number of curves have been entered, plot the
+" graph
+
+      IF (NCURVE=$MAXCURVE) [GOTO :COMPARE_PLOT:;]
+
+" - otherwise get the data for the next curve
+
+      ELSE [GOTO :DEFINE_CURVE2:;]
+
+
+      :COMPARE_PLOT:
+
+" - call xvgr_script
+      OUTPUT ;(/1X,'CALLING XMGR...PLEASE BE PATIENT! ');
+
+      CLOSE(7);
+      CALL XVGR_SCRIPT;
+
+" - prompt the user for an axis for another compare-plot
+
+      GOTO :ENTER_AXIS2:;
+      END;
+
+"------------------------------------------------------------------------
+" SUBROUTINE SAVE
+"------------------------------------------------------------------------
+
+" - called from: MAINMENU
+
+" PURPOSE: SAVE saves any distribution currently loaded to a file
+" - it is mainly a facility for storing rebinned files, although
+" files could be rewritten (why anyone would want to do this, i don't
+" quite know)
+
+" VARIABLES: TEMPNAME - temporarily stores the distribution name
+" THERE - holds response to whether or not file currently exists
+
+
+      SUBROUTINE SAVE;                                              "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      $COMIN1/DATA/;
+      $COMIN2/DATA/;
+
+      CHARACTER*70 TEMPNAME;
+      LOGICAL THERE;
+      SAVE;
+
+      :SAVE:
+      OUTPUT ;(/1X,'SAVE FILES');
+      OUTPUT ;(1X,'----------');
+
+      :SELECT4:
+      OUTPUT ;(1X,'Files currently loaded:'/);
+
+" - list the distributions currently loaded
+
+      DO N = 1,$NDIST1_MAX [
+         IF NDIST1_FLAG(N) = 1 [OUTPUT N,FILEIN(N);(I2,' - ',A);]
+         ]
+
+" - prompt user to input the file which they want saved
+
+      OUTPUT ;(/1X,'Number of file to Save (0-MainMenu): ',$);
+      INPUT NDIST1;(I2);
+
+" - 0 returns control to the main menu
+
+      IF NDIST1=0 [RETURN;]
+
+" - if out of range, prompt the user to enter another number
+
+      ELSEIF NDIST1>$NDIST1_MAX  [
+         OUTPUT ;(1X,'SORRY, THAT IS OUT OF RANGE.'/);
+         GOTO :SELECT4:;
+         ]
+
+" - store the name of the distribution in TEMPNAME
+
+      TEMPNAME = FILEIN(NDIST1);
+
+" - calculate the number of letters in the current filename
+
+      CALL LETTERCOUNT(FILEIN(NDIST1),NUMCHAR);
+
+" - prompt the user for name of file to be saved
+
+      OUTPUT FILEIN(NDIST1)(1:NUMCHAR);
+        (1X,'Name of saved file (default=',A,'): ',$);
+      INPUT FILEIN(NDIST1);(A);
+
+" - default is current filename
+
+      IF FILEIN(NDIST1) = ' ' [FILEIN(NDIST1) = TEMPNAME;]
+
+" - calculate number of characters in new file name
+
+      CALL LETTERCOUNT(FILEIN(NDIST1),NUMCHAR);
+
+" - if file exists, open it
+
+      INQUIRE (FILE = FILEIN(NDIST1)(1:NUMCHAR)//'.3ddose',EXIST=THERE);
+      IF THERE [OPEN(UNIT=4,FILE=FILEIN(NDIST1)(1:NUMCHAR)//
+                '.3ddose',STATUS='OLD');]
+
+" - if file doesn't exist, open it
+
+      ELSE [OPEN(UNIT=4,FILE=FILEIN(NDIST1)(1:NUMCHAR)//
+            '.3ddose',STATUS='NEW');]
+
+" - write the number of voxels in each direction
+
+      WRITE(4,*) IMAX(NDIST1),JMAX(NDIST1),KMAX(NDIST1);
+
+" - write the voxel division values (cm)
+
+      DO I = 1,(IMAX(NDIST1)+1)  [
+         WRITE(4,*) XBOUND(NDIST1,I);
+         ]
+      DO I = 1,(JMAX(NDIST1)+1)  [
+         WRITE(4,*) YBOUND(NDIST1,I);
+         ]
+      DO I = 1,(KMAX(NDIST1)+1)  [
+         WRITE(4,*) ZBOUND(NDIST1,I);
+         ]
+
+      OUTPUT ;
+      (1X,'WRITING DOSE DISTRIBUTION...');
+
+" - write dose in the order (1,1,1), (2,1,1), (3,1,1),.. (1,2,1),(2,2,1)...
+
+      WRITE(4,*)
+      (((DOSE(NDIST1,I,J,K),I = 1,IMAX(NDIST1)),J = 1,JMAX(NDIST1)),
+      K = 1,KMAX(NDIST1));
+
+" - convert errors back into relative errors (from absolute errors)
+
+      OUTPUT ;
+      (1X,'WRITING ERROR IN DOSE DISTRIBUTION...');
+      DO I = 1,IMAX(NDIST1)  [
+         DO J = 1,JMAX(NDIST1)   [
+            DO K = 1,KMAX(NDIST1)   [
+               ERRDOSE(NDIST1,I,J,K) = ERRDOSE(NDIST1,I,J,K)/DOSE(NDIST1,I,J,K);
+               ]
+            ]
+         ]
+
+" - write errdose in the same order as dose
+
+      WRITE(4,*)
+      (((ERRDOSE(NDIST1,I,J,K),I = 1,IMAX(NDIST1)),J = 1,JMAX(NDIST1)),
+      K = 1,KMAX(NDIST1));
+       DO I = 1,IMAX(NDIST1)   [
+          DO J = 1,JMAX(NDIST1)   [
+             DO K = 1,KMAX(NDIST1)   [
+               ERRDOSE(NDIST1,I,J,K) = DOSE(NDIST1,I,J,K)*ERRDOSE(NDIST1,I,J,K);
+                ]
+             ]
+          ]
+
+      CLOSE(UNIT=4);
+
+" - prompt the user for the number of another curve to be saved
+
+      GOTO :SAVE:;
+      END;
+
+"-------------------------------------------------------------------------
+" SUBROUTINE LETTERCOUNT
+"-------------------------------------------------------------------------
+
+" called from: READDOSE, REBINNING, PLOTDOSE, SAVE
+
+" PURPOSE: lettercount counts the actual number of characters in
+" a string
+
+" VARIABLES: I,J - counters
+" FLAG - indicates whether all of the string has been counted
+" STRING - the string passed to the routine
+
+
+" Routine modified from Melanie Barfels' routine in plot_xvgr
+" NOTE: all strings fed to this routine MUST HAVE 70 characters
+" in their declarations, or this will not work!!!!!!! you have been
+" warned!
+
+      SUBROUTINE LETTERCOUNT(STRING,J);                          "toc:"
+Copyright NRC 1999
+      "IMPLICIT NONE;"
+      CHARACTER*70 STRING;
+      INTEGER I, J;
+      LOGICAL FLAG;
+      SAVE;
+
+" - initialization for letter counter
+
+      J = 0;
+
+" - loop one fewer times than the length of the string
+
+      DO I = 1,69 [
+
+" - if the next character in the string is not blank, add one to the counter
+
+         FLAG = STRING(I:I+1).NE.' ';
+         IF FLAG [J = J+1];
+         ]
+      FLAG = STRING(70:70).NE.' ';
+      IF FLAG [J = J+1];
+      RETURN;
+END;
+;
+;
+SUBROUTINE XVGR_SCRIPT;
+"
+" This is a subroutine used by statdose to generate a script and run xmgrace.
+"
+" PROGRAMMER C-M MA--Modified by B Walters 18/10/96
+"
+"*******************************************************************************
+"**VARIABLES**"
+
+"---Force declarations of all variables---"
+IMPLICIT NONE;
+
+$COMIN2/DATA/;
+
+CHARACTER*100 SCRIPT(4);
+INTEGER istat, egs_system;
+
+"CREATING A SCRIPT FILE FOR xmgrace"
+OPEN(4,FILE='xmgr_script',FORM='FORMATTED',STATUS='UNKNOWN');
+SCRIPT(3)(1:8)='xmgrace ';
+SCRIPT(3)(9:100) =  outfile;
+SCRIPT(1)='#!/bin/sh';
+SCRIPT(2)='#xmgr_script';
+SCRIPT(4)='exit';
+WRITE (4,*)SCRIPT(1)(1:60);
+WRITE (4,*)SCRIPT(2)(1:60);
+WRITE (4,*)SCRIPT(3)(1:);
+WRITE (4,*)SCRIPT(4)(1:60);
+CLOSE(4);
+istat=egs_system('sh xmgr_script &');
+IF(istat~=0)["do not have xmgr on this machine"
+  "currently on windows istat=0 because of the & in the command passed"
+  "to egs_system.  That means this nice message does not get printed."
+  OUTPUT;(//' xmgr/xmgrace is not available on this machine.'/
+           ' Will not be called.'//);
+]
+"executes xmgr_script file"
+"redirected output to null device, and runs xvgr in background"
+RETURN;
+END;
+;
