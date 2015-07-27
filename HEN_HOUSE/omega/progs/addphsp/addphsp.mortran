@@ -1,0 +1,560 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc addphsp utility                                                     "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Blake Walters, 2004                                       "
+"                                                                             "
+"  Contributors:    Ernesto Mainegra-Hing                                     "
+"                   Iwan Kawrakow                                             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The addphsp utility concatenate phase space files from parallel BEAM       "
+"  simulations. Naming scheme of phase space files is assumed to be:          "
+"                                                                             "
+"  infile_w(i).egsphsp?,infile_w(i+1).egsphsp?,...                            "
+"                                                                             "
+"  Carries out the same task as the old addphsp script, but it does not use   "
+"  BEAMDP and it can run on Windows                                           "
+"                                                                             "
+"#############################################################################"
+
+
+!INDENT F 2;
+%L
+%Q1
+%C80
+%I4
+%E
+%B132
+
+REPLACE {$MAX_SC_PLANES} WITH {1};
+"a dummy replacement needed for new write macros"
+
+CHARACTER*80 infile,outfile,arg,istart,iscore,iend,inum,tempinfile,resp,
+             i_iaea;
+INTEGER i,j,k,iipar,iargc,numarg,lnblnk1,iistart,iiscore,iiend,ndigits,
+        sumerr,ifirst,i_iaea_in;
+$LOGICAL ex,append;
+
+numarg=iargc();
+" where phsp files to be added have naming scheme:"
+"infile_w(istart).egsphsp(iscore),...,infile_w(istart+ipar-1).egsphsp(iscore)"
+" Summed phsp data will be stored in outfile.egsphsp(iscore)."
+
+IF(numarg<3)[
+  OUTPUT;(/' Usage: '//
+' addphsp infile(no ext.) outfile(no ext.) ipar [istart] [iscore] [i_iaea]'//
+' infile  = BEAM input file'/
+' outfile = output file for summed phsp data.  Extension .egsphsp(iscore)'/
+'           gets added automatically.'/
+' ipar    = no. of parallel runs to be added'/
+' istart  = starting index of parallel runs to be added (defaults to 1)'/
+' iscore  = scoring plane number (defaults to 1)--input 0 for no scoring plane'/
+' i_iaea  = set to 1 if files are in IAEA format (defaults to 0)'//
+' Note: phsp files to be added have naming scheme:'/
+' infile_w(istart).egsphsp(iscore),...,',
+'infile_w(istart+ipar-1).egsphsp(iscore)'/
+' or:'/
+' infile_w(istart).iscore.IAEAphsp,...,',
+'infile_w(istart+ipar-1).iscore.IAEAphsp'/);
+  stop;
+]
+
+
+call getarg(1,arg);
+infile=$cstring(arg);
+call getarg(2,arg);
+outfile=$cstring(arg);
+"now get iipar"
+call getarg(3,arg);
+iipar=0;
+DO i=1,lnblnk1(arg)[
+  iipar=iipar+(ichar(arg(i:i))-48)*10**(lnblnk1(arg)-i);
+]
+IF(numarg>3)[
+  call getarg(4,arg);
+  istart=$cstring(arg);
+  IF(numarg>4)[
+    call getarg(5,arg);
+    iscore=$cstring(arg);
+    IF(numarg>5)[
+      call getarg(6,arg);
+      i_iaea=$cstring(arg);
+    ]
+    ELSE[
+      i_iaea='0';
+    ]
+  ]
+  ELSE [
+    iscore='1';
+    i_iaea='0';
+  ]
+]
+ELSE [
+  istart='1';
+  iscore='1';
+  i_iaea='0';
+]
+
+"get integer versions of istart,iscore and i_iaea"
+iistart=0;
+iiscore=0;
+i_iaea_in=0;
+DO i=1,lnblnk1(istart)[
+  iistart=iistart+(ichar(istart(i:i))-48)*10**(lnblnk1(istart)-i);
+]
+DO i=1,lnblnk1(iscore)[
+  iiscore=iiscore+(ichar(iscore(i:i))-48)*10**(lnblnk1(iscore)-i);
+]
+IF(i_iaea='1')i_iaea_in=1;
+iiend=iistart+iipar-1;
+"convert iiend to a string version"
+"how many digits in iiend"
+DO i=1,80[
+  IF(mod(iiend,10**i)=iiend)[
+    ndigits=i;
+    EXIT;
+  ]
+]
+DO i=1,ndigits[
+  IF(i=1)[
+    iend=char(iiend/(10**(ndigits-i))+48);
+  ]
+  ELSE[
+    iend=iend(:lnblnk1(iend))//char(iiend/(10**(ndigits-i))+48);
+  ]
+  iiend=mod(iiend,10**(ndigits-i));
+]
+
+IF(i_iaea_in=1)[
+  IF($cstring(iscore)~='0') outfile=$cstring(outfile)//'.'//$cstring(iscore);
+  IF($cstring(iscore)~='0')[
+   OUTPUT $cstring(infile)//'_w'//$cstring(istart)//'.'//$cstring(iscore)//
+         '.IAEAphsp', $cstring(infile)//'_w'//$cstring(iend)//
+         '.'//$cstring(iscore)//'.IAEAphsp', $cstring(outfile)//'.IAEAphsp';
+       (/' Will sum from phsp file ',A/' to ',A/
+         ' And output result to ',A/);
+  ]
+  ELSE[
+   OUTPUT $cstring(infile)//'_w'//$cstring(istart)//
+         '.IAEAphsp', $cstring(infile)//'_w'//$cstring(iend)//
+         '.'//$cstring(iscore)//'.IAEAphsp', $cstring(outfile)//'.IAEAphsp';
+       (/' Will sum from phsp file ',A/' to ',A/
+         ' And output result to ',A/);
+  ]
+]
+ELSE[
+  outfile=$cstring(outfile)//'.egsphsp'//$cstring(iscore);
+  OUTPUT $cstring(infile)//'_w'//$cstring(istart)//'.egsphsp'//$cstring(iscore),
+       $cstring(infile)//'_w'//$cstring(iend)//'.egsphsp'//$cstring(iscore),
+       $cstring(outfile);
+       (/' Will sum from phsp file ',A/' to ',A/
+         ' And output result to ',A/);
+]
+
+append=.false.;
+"first, see if the output file already exists"
+inquire(file=outfile,exist=ex);
+IF(ex)[
+   OUTPUT $cstring(outfile);
+    (/' Output file ',A,' exists.'/
+      ' Add to it [add], overwrite it [ow], or quit [q--default]:',$);
+   READ(5,'(A)')resp;
+   IF($cstring(resp)='add')[
+     OUTPUT;(/' Will append phsp data to existing phsp file.'/);
+     append=.true.;
+   ]
+   ELSEIF($cstring(resp)='ow')[
+     OUTPUT;(/' Will overwrite existing file.'/);
+   ]
+   ELSE[
+     OUTPUT;(/' Quitting.'/);
+     stop;
+   ]
+]
+
+DO i=iistart,iistart+iipar-1[
+  k=i;
+  DO j=1,80[
+    IF(mod(k,10**j)=k)[
+      ndigits=j;
+      EXIT;
+    ]
+  ]
+  DO j=1,ndigits[
+    IF(j=1)[
+       inum=char(k/(10**(ndigits-j))+48);
+    ]
+    ELSE[
+       inum=inum(:lnblnk1(inum))//char(k/(10**(ndigits-j))+48);
+    ]
+    k=mod(k,10**(ndigits-j));
+  ]
+  IF(i_iaea_in=1)[
+    tempinfile=$cstring(infile)//'_w'//$cstring(inum);
+    IF($cstring(iscore)~='0')tempinfile=$cstring(tempinfile)//
+                             '.'//$cstring(iscore);
+  ]
+  ELSE[
+    tempinfile=$cstring(infile)//'_w'//$cstring(inum)//'.egsphsp'//
+             $cstring(iscore);
+  ]
+  IF((i=iistart | sumerr=3) & ~append)[
+    call add_files($cstring(tempinfile),$cstring(outfile),1,sumerr,i_iaea_in);
+  ]
+  ELSEIF(sumerr=2)[
+    EXIT;
+  ]
+  ELSE [
+    call add_files($cstring(tempinfile),$cstring(outfile),0,sumerr,i_iaea_in);
+  ]
+]
+
+OUTPUT;(/' Done.'/);
+
+stop;
+end;
+
+
+SUBROUTINE ADD_FILES(infile,outfile,ifirst,sumerr,i_iaea_in);
+"
+" A modified version of ADD_PHSP found in beamdp.mortran
+"
+"*************************************************************************
+
+"**VARIABLES**"
+
+IMPLICIT NONE;
+
+COMIN/RWPHSP/;
+character*80 infile,outfile;
+integer ifirst,sumerr,IZLAST1,IMUPHSP1,IMUPHSP2,
+        LATCHI,lnblnk1,i_iaea_in,i_log,
+        i_unit_in,i_unit_out,IZLAST2,NPASSI,IQ,IZSCORE1,IZSCORE2;
+$LONG_INT PARANOT,PARANOT1,PARANOP1,PARANOT2,PARANOP2,
+        IPARANOT1,IPARANOT2,LPARANINC1,LPARANINC2,LNINC,NHSTRY;
+real PARAEMAX1,PARAEMNE1,PARANINC1,PARAEMAX2,PARAEMNE2,PARANINC2,NINC,
+     ZLAST,EREAD,WEIGHT,XIN,YIN,ZIN,UIN,VIN,WIN,Z_SCORE,MU_IDX;
+character*5 MODE_RW1,MODE_RW2;
+integer itmp;
+
+
+$INITIALIZE_PHSP_VARIABLES;
+
+$INIT_PHSP_COUNTERS;
+sumerr=0;
+
+i_log=6;
+IF(i_iaea_in=1)[
+OUTPUT $cstring(INFILE)//'.IAEAphsp',$cstring(OUTFILE)//'.IAEAphsp';
+    (/' Adding ',A,' to ',A,': '/);
+]
+ELSE[
+OUTPUT $cstring(INFILE),$cstring(OUTFILE);
+    (/' Adding ',A,' to ',A,': '/);
+]
+    ;/PARANOT1,PARANOP1/=0;/PARAEMAX1,PARAEMNE1,PARANINC1/=0.;
+    MODE_RW1=' ';
+
+IF(i_iaea_in=1)[
+  OUTPUT $cstring(INFILE)//'.IAEAphsp'; (/' Header information for ',A,':'/);
+  i_unit_in=2;
+  IERR_PHSP=0;
+  $IAEA_OPEN_PHSP_FOR_READ(i_unit_in,INFILE);
+  IF(iaea_result<0)[
+    IF(ifirst=1) [
+      sumerr=3;
+    ]
+    ELSE[
+      sumerr=1;
+    ]
+    GOTO :RRR1:;
+  ]
+  $IAEA_READ_PHSP_HEADER(i_unit_in,PARANOT1,PARANOP1,PARAEMAX1,LPARANINC1,
+                           Z_SCORE,IZLAST1,IMUPHSP1,IZSCORE1);
+    OUTPUT PARANOT1,PARANOP1,PARAEMAX1,LPARANINC1;
+      (/'            TOTAL NUMBER OF PARTICLES IN FILE:',I13/
+        '                      TOTAL NUMBER OF PHOTONS:',I13/
+        '             THE REST ARE ELECTRONS/POSITRONS.'/
+        ' '/
+        '      MAXIMUM KINETIC ENERGY OF THE PARTICLES:',F13.3,' MeV'/
+        ' # OF INCIDENT PARTICLES FROM ORIGINAL SOURCE:',I13/);
+  IF(IZSCORE1=0)[
+    OUTPUT Z_SCORE;
+('                       Z AT WHICH PHSP SCORED:',F13.3,' cm'/);
+  ]
+  PARANOT=PARANOT1;
+]
+ELSE[
+  OUTPUT $cstring(INFILE); (/' Header information for ',A,':'/);
+  itmp=-1;
+  $OPEN_PHSP_FOR_READ(itmp,2,INFILE,MODE_RW1,PARANOT1,
+                       PARANOP1,PARAEMAX1,PARAEMNE1,PARANINC1);
+IF(IERR_PHSP~=0)[
+    IF(ifirst=1) [
+      sumerr=3;
+    ]
+    ELSE[
+      sumerr=1;
+    ]
+    GOTO :RRR1:;
+]
+
+IZLAST1=0;
+IF(MODE_RW1='MODE2') IZLAST1=1;
+
+PARANOT=PARANOT1; "store total for later"
+
+OUTPUT PARANOT1,PARANOP1,PARAEMAX1,PARAEMNE1,PARANINC1;
+      (/'            TOTAL NUMBER OF PARTICLES IN FILE:',I13/
+        '                      TOTAL NUMBER OF PHOTONS:',I13/
+        '             THE REST ARE ELECTRONS/POSITRONS.'/
+        ' '/
+        '      MAXIMUM KINETIC ENERGY OF THE PARTICLES:',F13.3,' MeV'/
+        '      MINIMUM KINETIC ENERGY OF THE ELECTRONS:',F13.3,' MeV'/
+        ' # OF INCIDENT PARTICLES FROM ORIGINAL SOURCE:',F13.1);
+]
+
+IF(i_iaea_in=1)[
+    OUTPUT $cstring(OUTFILE)//'.IAEAphsp';
+            (//' Header information for ',A,':'/);
+]
+ELSE[
+    OUTPUT $cstring(OUTFILE);(//' Header information for ',A,':'/);
+]
+
+    /PARANOT2,PARANOP2,LPARANINC2/=0;/PARAEMAX2,PARAEMNE2,PARANINC2/=0.;
+    MODE_RW2=' ';
+
+IF(ifirst=0)["not the first time we are adding to this file"
+
+     IF(i_iaea_in=1)[
+        i_unit_out=3;
+        $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,OUTFILE,IZLAST2,1,Z_SCORE,
+                                  IMUPHSP2,IZSCORE2);
+        IF(iaea_result<0)[
+       sumerr=2;
+       GOTO :RRR2:;
+        ]
+       $IAEA_READ_PHSP_HEADER(i_unit_out,PARANOT2,PARANOP2,PARAEMAX2,LPARANINC2,
+                           Z_SCORE,IZLAST2,IMUPHSP2,IZSCORE2);
+    OUTPUT PARANOT2,PARANOP2,PARAEMAX2,LPARANINC2;
+      (/'            TOTAL NUMBER OF PARTICLES IN FILE:',I13/
+        '                      TOTAL NUMBER OF PHOTONS:',I13/
+        '             THE REST ARE ELECTRONS/POSITRONS.'/
+        ' '/
+        '      MAXIMUM KINETIC ENERGY OF THE PARTICLES:',F13.3,' MeV'/
+        ' # OF INCIDENT PARTICLES FROM ORIGINAL SOURCE:',I13/);
+       IF(IZSCORE2=1)[
+     OUTPUT Z_SCORE;
+('                       Z AT WHICH PHSP SCORED:',F13.3,' cm'/);
+       ]
+       IF(IZLAST1 ~= IZLAST2)["FILES OF DIFFERENT MODES"
+        OUTPUT;
+        (/' FILE TO BE ADDED HAS A DIFFERENT MODE THAN SUMMED FILE!!! '/);
+        OUTPUT;
+        (/' WILL MOVE ON TO THE NEXT FILE TO BE ADDED.'/);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_in);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_out);
+        sumerr=1;
+        RETURN;
+       ]
+       IF(IZSCORE1 ~= IZSCORE2)["one file scores Z, the other does not"
+        OUTPUT;(/' Error: File mismatch in scoring of particle Z position.'/
+                 ' Will move on to the next file to be added.'/);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_in);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_out);
+        sumerr=1;
+        RETURN;
+       ]
+       IF(IMUPHSP1~=IMUPHSP2)["one file scores MU index, one does not"
+        OUTPUT;(/' Error: File mismatch in scoring of fractional MU index.'/
+                 ' Will move on to the next file to be added.'/);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_in);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_out);
+        sumerr=1;
+        RETURN;
+       ]
+       NHSTRY=LPARANINC2;
+     ]
+     ELSE[
+
+     itmp=-1;
+     $OPEN_PHSP_FOR_READ(itmp,3,OUTFILE,MODE_RW2,
+                        PARANOT2,PARANOP2,PARAEMAX2,PARAEMNE2,PARANINC2);
+     IF(IERR_PHSP~=0)[
+       sumerr=2;
+       GOTO :RRR2:;
+     ]
+
+     OUTPUT PARANOT2,PARANOP2,PARAEMAX2,PARAEMNE2,PARANINC2;
+      (/'            TOTAL NUMBER OF PARTICLES IN FILE:',I13/
+        '                      TOTAL NUMBER OF PHOTONS:',I13/
+        '             THE REST ARE ELECTRONS/POSITRONS.'/
+        ' '/
+        '      MAXIMUM KINETIC ENERGY OF THE PARTICLES:',F13.3,' MeV'/
+        '      MINIMUM KINETIC ENERGY OF THE ELECTRONS:',F13.3,' MeV'/
+        ' # OF INCIDENT PARTICLES FROM ORIGINAL SOURCE:',F13.1);
+
+     IF(MODE_RW2 ~= MODE_RW1)["FILES OF DIFFERENT MODES"
+        OUTPUT;
+        (/' FILE TO BE ADDED HAS A DIFFERENT MODE THAN SUMMED FILE!!! '/);
+        OUTPUT;
+        (/' WILL MOVE ON TO THE NEXT FILE TO BE ADDED.'/);
+        CLOSE(UNIT=2);
+        CLOSE(UNIT=3);
+        sumerr=1;
+        RETURN;
+     ]
+     NHSTRY=PARANINC2;
+     ]
+]
+ELSE["first time we are adding to this file--no header"
+
+     NHSTRY=0;
+     OUTPUT;(/' First time writing to this file.'/
+              ' No header data to display.'/);
+     IF(i_iaea_in=1)[
+       i_unit_out=3;
+       $IAEA_OPEN_PHSP_FOR_WRITE(i_unit_out,OUTFILE,IZLAST1,0,Z_SCORE,IMUPHSP1,
+         IZSCORE1);
+     ]
+     ELSE[
+      $OPEN_PHSP_FOR_WRITE(IZLAST1,3,OUTFILE,MODE_RW2);
+     ]
+]
+
+
+OUTPUT;(/' BEGIN READING/WRITING PH-SP DATA .....'/);
+
+IPARANOT2=PARANOT2+1;
+
+"check that summed files will not go over 2.147483648 GByte limit"
+/* this check is no longer necessary
+IF(i_iaea_in=1)[
+IF(IZLAST1=1 & PARANOT1+PARANOT2>58027027)[
+       OUTPUT; (//' ***WARNING***'/
+                   ' Combined file will go over 2.147 GByte limit.'//);
+]
+ELSEIF(PARANOT1+PARANOT2>65060606)[
+       OUTPUT; (//' ***WARNING***'/
+                  ' Combined file will go over 2.147 GByte limit.'//);
+]
+]
+ELSE[
+IF(IZLAST1=1 & PARANOT1+PARANOT2>67108863)[
+       OUTPUT; (//' ***WARNING***'/
+                   ' Combined file will go over 2.147 GByte limit.'//);
+]
+ELSEIF(PARANOT1+PARANOT2>76695843)[
+       OUTPUT; (//' ***WARNING***'/
+                  ' Combined file will go over 2.147 GByte limit.'//);
+]
+]
+*/
+
+IF(i_iaea_in=1)[
+        DO IPARANOT1=1,PARANOT1["read phase-space data from the data file 1"
+           $IAEA_READ_PHSP_RECORD(i_unit_in,NPASSI,NHSTRY,LATCHI,IQ,EREAD,
+              WEIGHT,XIN,YIN,ZIN,UIN,VIN,WIN,ZLAST,MU_IDX);
+           $IAEA_WRITE_PHSP_RECORD(i_unit_out,NPASSI,1,NHSTRY,LATCHI,IQ,EREAD,
+              WEIGHT,XIN,YIN,ZIN,UIN,VIN,WIN,ZLAST,MU_IDX);
+        ]
+        LNINC = LPARANINC1 + LPARANINC2;
+        $IAEA_SET_ORIGINAL_PARTICLES_IN_PHSP(i_unit_out,LNINC);
+        $IAEA_UPDATE_PHSP_HEADER(i_unit_out);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_in);
+        $IAEA_DESTROY_PHSP_FILE(i_unit_out);
+]
+ELSE["standard BEAMnrc format"
+PARANOP1=0; "only count photons as read in case we are not adding a full"
+                "file"
+DO IPARANOT1=2,PARANOT1+1["read phase-space data from the data file 1"
+      "NOTE THE SECOND RECORD STORES THE FIRST PARTICLE"
+       $READ_PHSP_RECORD(IZLAST1,2,IPARANOT1:NHSTRY,ZLAST,LATCHI,EREAD,
+                         WEIGHT,XIN,YIN,UIN,VIN);
+       IPARANOT2=IPARANOT2+1;
+       PARANOP1=PARANOP1+1-IBITS(LATCHI,29,1)-IBITS(LATCHI,30,1);
+            "bit 29 is set if electron, bit 30 if positron"
+$WRITE_PHSP_RECORD(IZLAST1,3,OUTFILE,IPARANOT2,1:NHSTRY,ZLAST,LATCHI,EREAD,
+                          WEIGHT,XIN,YIN,UIN,VIN);
+          "write to file2"
+]
+:end-of-file1-read:;
+$PHSP_BUFFER_FLUSH(IZLAST1,3,OUTFILE,IPARANOT2,1);
+"Re-write the first line of file 2"
+PARANOT2 = PARANOT2 + PARANOT1;
+PARANOP2 = PARANOP2 + PARANOP1;
+IF(PARANOT1>0 & PARAEMAX2 < PARAEMAX1)[PARAEMAX2=PARAEMAX1;]
+IF(PARANOT1>0 & PARAEMNE2 > PARAEMNE1)[PARAEMNE2=PARAEMNE1;]
+     "COMPUTE NINC"
+NINC = (PARANOT1/PARANOT)*PARANINC1 + PARANINC2;
+$WRITE_PHSP_HEADER(IZLAST1,3,OUTFILE,MODE_RW2,PARANOT2,PARANOP2,
+                       PARAEMAX2,PARAEMNE2,NINC);
+CLOSE(UNIT=2);
+CLOSE(UNIT=3);
+]
+OUTPUT;(/' Finished reading/writing ph-sp data .....'/);
+
+RETURN;
+
+:RRR1: OUTPUT;(//' CANNOT FIND/OPEN THE PH-SP FILE TO BE ADDED!!!'/
+                 ' WILL MOVE ON TO THE NEXT ONE IN THE SERIES.'///);
+"ask the user whether a different ph-sp file to be used"
+
+RETURN;
+
+:RRR2: OUTPUT;(//' CANNOT FIND/OPEN THE FILE CONTAINING SUMMED PHSP DATA!!!'/
+                 ' PROGRAM WILL TERMINATE.'///);
+RETURN;
+END;
