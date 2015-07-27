@@ -2669,12 +2669,9 @@ c        write(6,'(/a,$)') '  Mortran compiling ... '
 
       call getarg(1,arg)
       if( arg(1:).eq.'-help' ) then
-        write(6,'(/a/,a/,a/,a/,a/)')
+        write(6,'(/a/,a/)')
      & 'Mortran version 3.2 by Ray F. Cowan with modifications by ',
-     & 'Dave Rogers, Alex Bielajew and Iwan Kawrakow',
-     & 'Report problems to',
-     & '      Iwan Kawrakow    iwan@irs.phy.nrc.ca',
-     & '  or  Dave Rogers      dave@irs.phy.nrc.ca'
+     & 'Dave Rogers, Alex Bielajew and Iwan Kawrakow'
         write(6,'(/a/)') 'Usage: mortran3.exe [ options ]'
         write(6,'(a)')
      & ' If no options are given, mortran3 will attempt to use the ',
