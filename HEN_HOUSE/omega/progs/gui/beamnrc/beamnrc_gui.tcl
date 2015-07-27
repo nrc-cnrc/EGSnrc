@@ -1,7 +1,7 @@
 #!/bin/sh
 ###############################################################################
 #
-#  EGSnrc DOSXYZnrc graphical user interface: main program
+#  EGSnrc BEAMnrc graphical user interface: main program
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -70,7 +70,7 @@
 exec wish "$0" ${1+"$@"}
 
 
-# THIS IS THE MAIN PROGRAM FOR A GUI FOR THE DOSXYZnrc CODE.
+# THIS IS THE MAIN PROGRAM FOR A GUI FOR THE BEAMnrc CODE.
 # Started in June 1998 by Joanne Treurniet
 
 proc get_beam_user_defaults {} {
