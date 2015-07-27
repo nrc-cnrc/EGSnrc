@@ -65,13 +65,14 @@
 #  which reads the beamnrc_user_macros file to get the defaults set there.
 #
 #  It sets up the parameters used by the program for the main input parameters,
-#  the arrays names, num_opts, options and help_text. Names contains the
-#  labels displayed on the main input parameter window, num_opts is the number
-#  of options used in a pulldown menu for that parameter (if it is zero a
-#  textbox is used for that parameter), options contains the labels used in
-#  the pulldown menu (if num_opts>0) and help_text contains the text displayed
-#  for that parameter's help button.  Note that the array 'values' is used to
-#  store the current value of a main input parameter in the other scripts.
+#  the arrays names, num_opts, options and help_text. 'names' contains the
+#  labels displayed on the main input parameter window, 'num_opts' is the
+#  number of options used in a pulldown menu for that parameter (if it is zero
+#  a textbox is used for that parameter), 'options' contains the labels used
+#  in the pulldown menu (if num_opts>0) and 'help_text' contains the text
+#  displayed for that parameter's help button.  Note that the array 'values'
+#  is used to store the current value of a main input parameter in the other
+#  scripts.
 #
 #  It also defines the array cm_names, an array of 15 elements each containing
 #  the name of a component module.  It defines the help text for the component
