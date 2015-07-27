@@ -677,10 +677,7 @@ The code was written by J. Treurniet in 1998 under the direction\
            Blake Walters has provided numerous bug fixes and extensions \
            to acommodate new component modules and other options such as DBS.\
            Iwan Kawrakow and Blake Walters have adjusted the GUI to work with \
-           the new EGSnrcMP environment. \
-	    Questions, comments and suggestions are welcome and\
-	    should be directed to Ernesto Mainegra (mainegra@irs.phy.nrc.ca) \
-            or Frederic Tessier (frederic.tessier@nrc-cnrc.gc.ca)
+           the new EGSnrcMP environment.
 }
 
     frame .about_gui.msg -bd 5
@@ -734,11 +731,7 @@ guarantee of any kind, either expressed or implied, \
 as to its accuracy or ability to perform particular\
 calculations.  \
 
-Copyright NRC 1995-2011
-
-Questions and comments should be directed to Dave\
-Rogers (drogers@physics.carleton.ca) Ernesto Mainegra (mainegra@irs.phy.nrc.ca) \
-or Frederic Tessier (frederic.tessier@nrc-cnrc.gc.ca).}
+Copyright NRC 1995-2011}
 
     frame .about_BEAM.msg -bd 5
 
