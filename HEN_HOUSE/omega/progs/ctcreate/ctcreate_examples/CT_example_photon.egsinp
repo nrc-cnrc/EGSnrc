@@ -1,0 +1,10 @@
+CT_example_photon: 16 MVp photon beam from EX16MVp on a CT phantom
+0
+$EGS_HOME/dosxyznrc/image_001.egsphant
+0.70, 0.010, 5.0
+1, 0, 1
+2, 2, 16.0, 34.750, 14.0, 90.0, -90.0, 15.0, 0.0, 0.0
+2, 2, 1, 50.0
+$EGS_HOME/BEAM_EX16MVp/EX16MVp.egsphsp1
+500000, 0, 500.0, 97, 33, 100.0, 1, 0, 0, 1, 5.0
+0, 0, 0, 0, 0.0

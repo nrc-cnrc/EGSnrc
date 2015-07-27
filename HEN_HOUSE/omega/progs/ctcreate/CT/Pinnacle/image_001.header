@@ -1,0 +1,38 @@
+	byte_order = 0;
+	read_conversion = "";
+	write_conversion = "";
+	t_dim = 0;
+	x_dim = 256;
+	y_dim = 256;
+	z_dim = 28;
+	datatype = 0;
+	bitpix = 16;
+	bytes_pix = 2;
+	vol_max = 4095.000000;
+	vol_min = 0.000000;
+	t_pixdim = 0.000000;
+	x_pixdim = 0.122500;
+	y_pixdim = 0.122500;
+	z_pixdim = 1.000000;
+	t_start = 0.000000;
+	x_start = 0.000000;
+	y_start = 17.400000;
+	z_start = -9.000000;
+	z_time = 0.000000;
+	dim_units : cm
+	voxel_type : 
+	id = 0;
+	data_type : short
+	vol_type : Hounsfield
+	db_name : erased            
+	medical_record : erased
+	originator : erased
+	date : erased
+	scanner_id : SiemensHiQ
+	patient_position : 
+	orientation = 0;
+	comment : 
+	fname_format : 
+	fname_index_start = 0;
+	fname_index_delta = 0;
+	binary_header_size = 0;

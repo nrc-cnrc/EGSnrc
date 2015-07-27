@@ -1,0 +1,91 @@
+=============================================================
+ Running ctcreate
+=============================================================
+
+
+ ************************************************************
+ 
+           CT formats currently supported:
+           ------------------------------ 
+ 
+           1. Pinnacle                    
+           2. CADPLAN                     
+           3. DICOM (Linux, SGI, HP9000 and alpha)
+ 
+ ************************************************************
+
+
+ Input the format of your CT data
+ :                                                        DICOM
+
+
+ Input the full name of the file of DICOM file names
+ :                                                                                                                                                                                                                    /usr/people/omega/dosxyz/CT/DICOM/slice_names
+--------------------------------------------
+CT Volume subset selection.
+Please enter the positions of limiting 
+planes (cm):
+  xctsubmin,xctsubmax,yctsubmin,yctsubmax,zctsubmin,zctsubmax
+ :  -150.0000  150.0000 -150.0000  150.0000   -4.5000   45.0000
+Z lower limit out of bounds, will be set to 
+ lower bound.                               
+--------------------------------------------
+The voxel index limits are as follows:
+I Limits -> i=    39 to i=   473
+J Limits -> j=    39 to j=   473
+K Limits -> k=     1 to k=     1
+ xctsubmin,xctsubmax,yctsubmin,yctsubmax,zctsubmin,zctsubmax (cm)
+ after adjustment to fit integer no. of voxels 
+ :  -150.0749  150.0756 -150.0749  150.0756   40.5000   45.5000
+============================================
+
+ Resample CT data for dosxyz 
+ --------------------------- 
+
+ Input the x,y,z dimensions (cm) of the dosxyz voxels on one line
+ (min=      2.34492 x     2.34492 x     0.08929 cm)
+ :     2.50000     2.50000     1.00000
+New X voxel thickness ->       2.50
+New Y voxel thickness ->       2.50
+New Z voxel thickness ->       1.00
+New number X voxels   ->        120
+New number Y voxels   ->        120
+New number Z voxels   ->          5
+ Final x,y,z dimensions of dosxyz voxels in cm (adjusted so that an integer
+ number fit exactly on the CT data):     2.50125     2.50125     1.00000
+Calculating bounds and new CT values
+
+ The CT-Density Ramp
+ -------------------
+
+ Enter the number of media (max    5)--Enter 0 if 
+ you want to use the hard-wired ramp function:          0
+
+ Medium    1 : AIR700ICRU              
+ CT no. upper bound, density lower bound (g/cm^3),
+ density upper bound (g/cm^3), estepe (default=1.)--all on one line
+ :    50     0.00100     0.04400     1.00000
+
+ Medium    2 : LUNG700ICRU             
+ CT no. upper bound, density lower bound (g/cm^3),
+ density upper bound (g/cm^3), estepe (default=1.)--all on one line
+ :   300     0.04400     0.30200     1.00000
+
+ Medium    3 : ICRUTISSUE700ICRU       
+ CT no. upper bound, density lower bound (g/cm^3),
+ density upper bound (g/cm^3), estepe (default=1.)--all on one line
+ :  1125     0.30200     1.10100     1.00000
+
+ Medium    4 : ICRPBONE700ICRU         
+ CT no. upper bound, density lower bound (g/cm^3),
+ density upper bound (g/cm^3), estepe (default=1.)--all on one line
+ :  3000     1.10100     2.08800     1.00000
+
+ Writing CT phantom data into                                                                                                                                                                                                                                            slice_names.egs4phant to be read by dosxyz.
+
+
+
+ ***ERROR: 
+ Cannot write to                                                                                                                                                                                                                                            slice_names.egs4phant.  File already exists.
+
+

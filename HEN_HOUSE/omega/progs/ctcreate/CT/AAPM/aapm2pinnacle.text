@@ -1,0 +1,129 @@
+			aapm2pinnacle
+	
+Written By:	Julie Clare Zachman
+		Department of Medical Physics
+		University of Wisconsin
+		October 5, 1996
+				Update: Sept 1997 Dave Rogers
+
+Written For: 	Omega Workshop 96
+		Ottawa, Ontario
+
+Located: 	$OMEGA_HOME/dosxyz/CT/AAPM
+
+
+What: Routine to translate AAPM (RTOG) CT data delivered as a directory
+	of files, to Pinnacle format.
+
+Why:  DOSXYZ/ctcreate can read Pinnacle-style header and image files and thus
+	this allows the AAPM format to be input as well.
+
+How:  The routine is standalone, written in C, and compiled for
+      the following architectures (using the Makefile):
+
+        		Tested with Khoros	Tested with DOSXYZ
+SGI MIPS-EB		Yes			Yes
+
+Sun sparc 		Yes			No
+
+DEC alpha	 	Yes			Yes
+
+
+Command Line Interface:
+
+aapm2pinnacle aapm_directory [pinnacle_directory]
+
+or
+
+aapm2pinnacle
+
+The command "aapm2pinnacle" will not do anything but print a brief 
+description of the command line parameters.
+
+"aapm2pinnacle aapm_directory pinnacle_directory" does the following:
+   
+1) Parses "aapm_directory"
+   a) Saves the name "aapm_directory", and parses out the portion at 
+      the trailing end in order to construct the AAPM header
+      file name.  The AAPM header file name has the character string
+      "0000" concatenated onto it.
+      For example:
+  	"foo/bar/blah" parses to "foo/bar/blah/blah0000"
+	"./blah"       parses to "./blah/blah0000"
+	"../blah"      parses to "../blah/blah0000"
+	"$HOME/blah"   parses to "my_home_directory_path/blah/blah0000"
+	"~/blah"       parses to "my_home_directory_path/blah/blah0000"
+
+   b) Reads the AAPM header file, strips it of strange nonprinting 
+      characters, and copies it to a temporary file with a unique
+      name. The file is stored in a system directory according to the 
+      following rules:
+      i)   $TMPDIR if defined
+      ii)  /var/tmp if available
+      iii) /tmp if no other option
+     
+       
+2) Analyzes the AAPM header file and writes out a Pinnacle header file 
+   to the current directory with, following the previous example, 
+   the name "pinnacle_directory/blah.header".
+
+3) Reads the AAPM CT image data from the appropriate files, and writes 
+   them out as a single multi-scan CT image file in Pinnacle format.  The 
+   name of the image file will be "pinnacle_directory/blah.img".  As in
+   the case of aapm_directory, " ~ " and environment variables are expanded 
+   correctly.
+
+
+4) If "pinnacle_directory" is not given, the *.header and the *.img files are 
+   written to the current directory.
+
+
+WHAT aapm2pinnacle does NOT do:
+
+--handle multiple case AAPM directories
+--handle multiple plan AAPM directories
+
+  I.e. one patient and one plan per AAPM directory.
+
+--swap bytes
+  
+  The AAPM format specifies a "bigendian" byte order.  The Pinnacle
+  header format has an entry for byter order:  
+  byte_order = 0 for "littlendian",
+  byte_order = 1 for "bigendian".  
+  
+  It was decided that aapm2pinnacle will NOT swap bytes;  It
+  detects the native byte order of the machine it is running on
+  and sets the byte_order variable in the Pinnacle header file
+  accordingly.  Dosxyz reads Pinnacle CT data correctly as long
+  as the byte_order variable is correctly set.
+
+  The following table may clear up a small amount of confusion about 
+  "endian-ness":
+
+  Big Endian
+  ___________
+
+  o Address of a multi-byte word (short, int, long) is that of the 
+    Most Significant Byte (MSB)
+
+  o Bit order is left-to-right
+
+  o 68x00 chips are bigendian
+
+  o Sun sparcs and SGI's (MIPS-EB) are bigendian
+
+  Little Endian
+  _____________
+
+  o Address of a multi-byte word is that of the Least Significant Byte (LSB)
+
+  o Bit order is right-to-left
+
+  o Intel chips are littlendian
+
+  o DEC alpha's and Pentiums are littlendian
+
+
+
+
