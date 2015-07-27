@@ -584,10 +584,7 @@ proc about_XYZ_GUI {} {
 	    Ionizing Radiation Standards, at the National Research Council.  \
            Since then Blake Walters has provided numerous bug fixes\
            and extensions and together with Iwan Kawrakow has addapted\
-           the GUI to work with the new EGSnrcMP environment\
-	    Questions, comments and suggestions are welcome and\
-	    should be directed to Blake Walters (bwalters@irs.phy.nrc.ca) or\
-           Iwan Kawrakow (iwan@irs.phy.nrc.ca).}
+           the GUI to work with the new EGSnrcMP environment.}
 
     frame .about_gui.msg -bd 5
 
