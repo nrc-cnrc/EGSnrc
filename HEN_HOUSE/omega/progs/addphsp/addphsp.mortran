@@ -61,10 +61,10 @@
 "  The addphsp utility concatenate phase space files from parallel BEAM       "
 "  simulations. Naming scheme of phase space files is assumed to be:          "
 "                                                                             "
-"  infile_w(i).egsphsp?,infile_w(i+1).egsphsp?,...                            "
+"  infile_w(i).egsphsp?, infile_w(i+1).egsphsp?, ...                            "
 "                                                                             "
 "  Carries out the same task as the old addphsp script, but it does not use   "
-"  BEAMDP and it can run on Windows                                           "
+"  BEAMDP and it can run on Windows.                                          "
 "                                                                             "
 "#############################################################################"
 
