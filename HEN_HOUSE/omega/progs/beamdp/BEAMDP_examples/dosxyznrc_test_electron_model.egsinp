@@ -1,0 +1,41 @@
+test input file for dosxyznrc using example source model                         #!GUI1.0
+1
+H2O700ICRU
+0.7, 0.01, 0, 0
+-1, -1, -1, 0
+-10.0
+2.0, 10
+-10.0
+2.0, 10
+0.0
+1.0, 20
+0, 0, 0, 0, 0, 0, 0, 0
+0, 0, 0, 0, 0, 0, 0, 0
+1, 10, 1, 10, 1, 20, 1, 0
+0, 0, 0, 0, 0, 0, 0, 0
+2, 4, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.0, 0.0, 
+4, 0, 0, 50.0, 0, 0, 0, 0
+$EGS_HOME/dosxyznrc/beammodel.source
+30000, 0, 500.0, 97, 33, 100.0, 0, 0, 0, 0, , 0, 0, 0, 1
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 0.7
+ Global PCUT= 0.01
+ Global SMAX= 5
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= Off
+ 
+ :Stop MC Transport Parameter:
+ #########################

@@ -1,0 +1,646 @@
+%E
+"#############################################################################"
+"                                                                             "
+"  EGSnrc beam characterization model subroutines                             "
+"  Copyright (C) 2015 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Charlie Ma, 1994                                          "
+"                                                                             "
+"  Contributors:    Dave Rogers                                               "
+"                   Blake Walters                                             "
+"                   Zdenko Sego                                               "
+"                   Ernesto Mainegra-Hing                                     "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  The contributors named above are only those who could be identified from   "
+"  this file's revision history.                                              "
+"                                                                             "
+"  This code was originally part of the BEAM code system for Monte Carlo      "
+"  simulation of radiotherapy treatments units. It was developed at the       "
+"  National Research Council of Canada as part of the OMEGA collaborative     "
+"  research project with the University of Wisconsin. The system was          "
+"  originally described in:                                                   "
+"                                                                             "
+"  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,         "
+"  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,             "
+"  Medical Physics 22, 503-524 (1995).                                        "
+"                                                                             "
+"  BEAM User Manual                                                           "
+"  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,      "
+"  NRC Report PIRS-509A (rev D)                                               "
+"                                                                             "
+"  As well as the authors of this paper and report, Joanne Treurniet of NRC   "
+"  made significant contributions to the code system, in particular the GUIs  "
+"  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin "
+"  played important roles in the overall OMEGA project within which the BEAM  "
+"  code system was developed.                                                 "
+"                                                                             "
+"  There have been major upgrades in the BEAM code starting in 2000 which     "
+"  have been heavily supported by Iwan Kawrakow, most notably: the port to    "
+"  EGSnrc, the inclusion of history-by-history statistics and the development "
+"  of the directional bremsstrahlung splitting variance reduction technique.  "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Zdenko Sego and Dave Rogers, 2006: upgrade beamdp to handle multiple       "
+"  spectra and more complex fluence regions.                                  "
+"                                                                             "
+"#############################################################################"
+
+
+%L
+%Q1
+%C80
+!INDENT F4;
+!INDENT M4;
+"*******************************************************************************
+"
+"         BEAM CHARACTERIZATION MODEL ANALYSIS/RECONSTRUCTION ROUTINES
+"         ************************************************************
+"
+"                           PROGRAMMER: C-M MA
+"                             April 12, 1994
+"
+;
+SUBROUTINE BMODEL1;
+
+"** C-M Ma - April 11, 1993
+"** Subroutine to read data file for beam characterization models.
+"**
+
+;IMPLICIT NONE;
+
+;COMIN/ENERGYSRC,SSMDIS,BMODEL/;
+
+"T>*****************************
+"T>TYPE DECLARATIONS FOR ISOURCE
+"T>*****************************
+"T>
+;INTEGER I,II,IINSRC;
+
+"                          I/O INITIALIZATION                          ""toc:
+"                          ******************
+
+    IINSRC = 43;  "unit number for input of source parameters(input)"
+    OUTPUT;
+    (/' Input name of file with source parameters (<80 chars ',
+      'with extension): '/,$);
+
+    " Open and read source file */
+    READ(5,605,END=:EOF_ISOURCE:)SMONAM;
+    OUTPUT SMONAM;(/' Read source information from: '/A80);
+
+    OPEN(UNIT=IINSRC,STATUS='OLD',FILE=SMONAM,ERR=:EOF_RS3:);
+
+    READ(IINSRC,605,END=:EOF_ISOURCE:) SSMFPS;"descriptions of the source"
+
+    READ(IINSRC,*) NSMFPS;"number of sub-sources"
+    DO I=1,NSMFPS[
+        READ(IINSRC,*) ISMFPS(I),IQSMFP(I),ILATCH(I);
+	" OUTPUT I,ISMFPS(I),IQSMFP(I),ILATCH(I);
+	" ('Source# ',I2,' - type;',I2,' charge:',I2,' latch:',I2/);
+        "source type and charge of each sub-source"
+        IF (ISMFPS(I) = 1) ["model for aperture applicators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),SMFX2(I),
+            SMFY2(I);
+            "distance to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 11) ["model for tubular applicators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMXZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),
+            SMFX2(I),SMFY2(I);
+            "distances to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 2) ["model for collimators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),
+            SMFX2(I),SMFY2(I),SMFPXY(I);
+            "distance to phantom, dimensions and orientation of the source"
+            "SMFPXY(I)=0 along x-axis,  SMFPXY(I)=1 along y-axis"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 3) ["model for rings, cones & point source"
+            READ(IINSRC,*)
+                SMFMNZ(I),SMFMNR(I),SMFMXR(I);
+                "distance to the surface and radius of the source"
+                SMFNR2(I)=SMFMNR(I)*SMFMNR(I);
+                SMFMR2(I)=SMFMXR(I)*SMFMXR(I);
+            ]
+        ELSEIF(ISMFPS(I) = 4) ["model for rectangular plane sources"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I);
+            "distance to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 5) ["model for circular plane source"
+            READ(IINSRC,*)
+                SMFMNZ(I),SMFMNR(I);
+                "distance to the surface and radius of the source"
+                 SMFNR2(I)=SMFMNR(I)*SMFMNR(I);
+           ]
+        ELSE[
+            OUTPUT;(///' *** SORRY, DO NOT HAVE THIS TYPE OF SOURCE ***'/
+                     //' *** START AGAIN'///);
+            STOP;
+            ]
+        ]"end of input for each sub-source loop"
+
+    "number of energy bins and min. and max. energy for each energy bin"
+    READ(IINSRC,*)NSSMDIS,SSMMIN,SMFMXE;
+    OUTPUT NSSMDIS,SSMMIN,SMFMXE;
+    ('Energy bins: ',I4,' Emax:',F10.5,' Emin:',F10.5);
+
+    " Energy spectrum type: 0-inside/outside the field,1-diff radii "
+    " Do some testing since we had changed the source file structure "
+    READ(IINSRC,*)ESTYPE; "number of sub-sources"
+    IF(ESTYPE = 0) [
+	" energy spectrum type for Inside/outside the treatment field"
+	READ(IINSRC,*)RTREATe,RFIELDe;
+	ERADII(1) = RTREATe;
+	ERADII(2) = RFIELDe;
+	NFIELDe = 2; " for inside and outside the field "
+	]
+    ELSEIF(ESTYPE = 1) [
+	" energy spectrum with different radii "
+	READ(IINSRC,*)NFIELDe,RFIELDe;
+	" Test the size of NFIELDe "
+	IF(NFIELDe<0)|(NFIELDe>$NSSMDIS) [
+	   OUTPUT NFIELDe;
+	   (//'ERROR: number of bins for energy spectrum (',I3,')'/);
+	   STOP;
+	   ]
+	ELSE [
+	   READ(IINSRC,*)(ERADII(II),II=1,NFIELDe);
+	   ]
+	]
+    ELSE [
+	OUTPUT ESTYPE; (//'ERROR: Unknown energy type (',I3,')'/);
+        STOP;
+       ]
+
+    "type of field: circular=0, square field=1, rectangular=2"
+    READ(IINSRC,*,END=:EOF_ISOURCE:) MSMFXY(1);
+    OUTPUT MSMFXY(1); ('Type of field: ',I4);
+
+   " Circular field distribution "
+   " Square field with symmetrical rings "
+    IF(MSMFXY(1) = 0)|(MSMFXY(1) = 1)[
+	READ(IINSRC,*)NFIELDi,RTREAT,NFIELDo,RFIELD;
+	NFIELD = NFIELDi + NFIELDo;
+
+	OUTPUT NFIELDi,RTREAT,NFIELDo,RFIELD;
+	(/' NFIELDi=',I10,' RTREAT=',F10.3,' NFIELDo=',I10,
+	' RFIELD=',F10.3);
+	RFACTOR1=FLOAT(NFIELDi)/(RTREAT**2);
+	RFACTOR2=FLOAT(NFIELDo)/(RFIELD**2-RTREAT**2);
+	]
+    ELSEIF(MSMFXY(1) = 2)["rectangular field distribution"
+        "read these values because of the file structure"
+        READ(IINSRC,*)NFIELD,XFLDMN,XFLDMX,YFLDMN,YFLDMX;
+        READ(IINSRC,*)XTREATMN,XTREATMX,YTREATMN,YTREATMX;
+        ]
+    ELSE[
+	OUTPUT;(//' THERE IS SOMETHING WRONG WITH THE FIELD TYPE!'//);
+        STOP;
+	]
+
+    " Read phase-space file name "
+    READ(IINSRC,605)SMONAM;
+    OUTPUT SMONAM; ('Phase-space file name: ',A);
+
+    " Now, we read in the values for each sub-source "
+    DO I=1,NSMFPS[
+        READ(IINSRC,*) ISMFPS(I);
+	" Verify sub-source number "
+        IF(I ~= ISMFPS(I))[
+            OUTPUT;(/' There is something wrong with sub-source number!'/);
+            STOP;
+            ]
+
+	" Source type, charge and latch of each sub-source"
+        READ(IINSRC,*) ISMFPS(I),IQSMFP(I),ILATCH(I);
+	" OUTPUT I,ISMFPS(I),IQSMFP(I),ILATCH(I); "
+	" ('Source# ',I2,' - type;',I2,' charge:',I2,' latch:',I2/); "
+	IF((IQSMFP(I)<-1)|(IQSMFP(I)>1))[
+            OUTPUT;(/' There is something wrong with source charge!'/);
+            STOP;
+            ]
+	IF((ILATCH(I)<0)|(ILATCH(I)>22))[
+            OUTPUT;(/' There is something wrong with LATCH!'/);
+            STOP;
+            ]
+
+        IF (ISMFPS(I) = 1) ["model for aperture applicators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),SMFX2(I),
+            SMFY2(I);
+            "distance to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 11) ["model for tubular applicators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMXZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),
+            SMFX2(I),SMFY2(I);
+            "distances to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 2) ["model for collimators"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I),
+            SMFX2(I),SMFY2(I),SMFPXY(I);
+            "distance to phantom, dimensions and orientation of the source"
+            "SMFPXY(I)=0 along x-axis,  SMFPXY(I)=1 along y-axis"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 3) ["model for rings, cones & point source"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNR(I),SMFMXR(I);
+            "distance to the surface and radius of the source"
+            SMFNR2(I)=SMFMNR(I)*SMFMNR(I);
+            SMFMR2(I)=SMFMXR(I)*SMFMXR(I);
+            ]
+        ELSEIF(ISMFPS(I) = 4) ["model for rectangular plane sources"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNX(I),SMFMXX(I),SMFMNY(I),SMFMXY(I);
+            "distance to the surface and dimensions of the source"
+            SMFDXX(I)=SMFMXX(I)-SMFMNX(I);
+            SMFDYY(I)=SMFMXY(I)-SMFMNY(I);
+            ]
+        ELSEIF (ISMFPS(I) = 5) ["model for circular plane source"
+            READ(IINSRC,*)
+            SMFMNZ(I),SMFMNR(I);
+            "distance to the surface and radius of the source"
+            SMFNR2(I)=SMFMNR(I)*SMFMNR(I);
+           ]
+        ELSE[
+            OUTPUT;(///' *** SORRY, DO NOT HAVE THIS TYPE OF SOURCE ***'/
+                     //' *** CHECK IT OUT AND TRY AGAIN'///);
+            STOP;
+            ]
+
+	" Relative intensity of this source and virtual point source SSD "
+        READ(IINSRC,*) SMFRTN(I),SSDVPS(I);
+
+        IF(SSDVPS(I).LT.SMFMNZ(I))
+	   SSDVPS(I)=SMFMNZ(I);
+
+        OUTPUT I,I,SMFRTN(I);
+        (/' *** Source:',I3,' ***'//
+          ' Relative source intensity for sub-source',I3,' IS',F10.3);
+
+        IF(I > 1)[
+	   SMFRTN(I)=SMFRTN(I)+SMFRTN(I-1);
+	   ]
+
+        " Obtain total fluence "
+	" -------------------- "
+	" Number of energy bins, minimum and maximum energy "
+        READ(IINSRC,*)NSSMDIS,SSMMIN,SSMMAX;
+
+        " Bin top energy for the spectrum "
+        DO IB_SSM=1,NSSMDIS[
+            SSMDIS(IB_SSM)=SSMMAX/FLOAT(NSSMDIS)*FLOAT(IB_SSM);
+            IF(SSMDIS(IB_SSM) <= SSMMIN)[
+                SSMDIS(IB_SSM)=SSMMIN+.00001*FLOAT(IB_SSM);
+                ]
+            ]
+
+	" Print ESTYPE and the number of energy spectra "
+	" OUTPUT ESTYPE,NFIELDe,SSMMIN,SSMMAX;"
+	" (/' ESTYPE:',I5,' Number of energy spectra:',I5,' in the ',"
+	" F10.3,' MeV -',F12.3,' MeV range ');"
+
+	" Now, do for each energy sprectra "
+        DO II=1,NFIELDe[
+	   " probability for each energy bin "
+	   READ(IINSRC,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS);
+
+	   " OUTPUT NSSMDIS,II; "
+	   " (/' Have read',I5,' energy bins for spectra number',I2,':'); "
+	   " WRITE(6,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS); "
+
+	   CALL SSM_DISTRIBUTION;
+	   DO IB_SSM=1,$INVDISSM [
+	      FSMFBN(I,II,IB_SSM,1)=CDFSSM(IB_SSM,1);
+	      FSMFBN(I,II,IB_SSM,2)=CDFSSM(IB_SSM,2);
+	      ]
+	]
+
+        " Obtain particle spatial distributions "
+	" ------------------------------------- "
+        READ(IINSRC,*,END=:EOF_ISOURCE:) MSMFXY(I);
+
+        " Type of field: circular=0, square=1, rectangular=2 "
+        " Circular field distribution "
+	" --------------------------- "
+        IF(MSMFXY(I) = 0)[
+            "the following are only used for obtaining fluence information"
+            READ(IINSRC,*)NFIELDi,RTREAT,NFIELDo,RFIELD;
+	    NFIELD = NFIELDi + NFIELDo;
+	    NSSMDIS = NFIELD;
+	    SSMMIN = RTREAT;
+	    SSMMAX = RFIELD;
+
+            SSMMIN=0.0;
+            FLDRR2(I)=SMFMNR(I)*SMFMNR(I);
+            DO IB_SSM=1,NSSMDIS[
+	       IF( IB_SSM <= NFIELDi ) [
+		  SSMDIS(IB_SSM)=SQRT((FLOAT(IB_SSM)/FLOAT(NFIELDi))*
+		  (RTREAT**2));
+		  ]
+	       ELSE [
+		  SSMDIS(IB_SSM)=SQRT(((RFIELD**2-RTREAT**2)*
+		  ((FLOAT(IB_SSM-NFIELDi))/(FLOAT(NFIELDo))))+RTREAT**2);
+		  ]
+	       ]
+            "number of fluence bins and bin top R for the fluence"
+            READ(IINSRC,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS);
+            "probability for each R bin"
+
+	    " OUTPUT NSSMDIS; "
+	    " (/' Have read',I5,' R bins for spatial distribution:'); "
+	    " WRITE(6,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS); "
+
+	    SSMMAX = SSMDIS(NSSMDIS);"do some checks"
+
+	    " OUTPUT SSMMIN,SSMMAX; "
+	    " (' Radius range from',F10.3,' cm   TO',F12.3,' cm'/); "
+
+            CALL SSM_DISTRIBUTION;
+            DO IB_SSM=1,$INVDISSM [
+                FSMFRR(I,IB_SSM,1)=CDFSSM(IB_SSM,1);
+                FSMFRR(I,IB_SSM,2)=CDFSSM(IB_SSM,2);
+                ]"obtained field fluence sampling functions"
+            ]
+
+        " Square field distribution with symmetrical rings "
+	" ------------------------------------------------ "
+        ELSEIF(MSMFXY(I) = 1)[
+            "the following are only used for obtaining fluence information"
+            READ(IINSRC,*)NFIELDi,RTREAT,NFIELDo,RFIELD;
+	    NFIELD = NFIELDi + NFIELDo;
+	    NSSMDIS = NFIELD;
+	    SSMMAX = RFIELD;
+
+            SSMMIN=0.0;
+            FLDRR2(I)=SMFMNR(I)*SMFMNR(I);
+            DO IB_SSM=1,NSSMDIS[
+	       IF( IB_SSM <= NFIELDi ) [
+		  SSMDIS(IB_SSM)=SQRT((FLOAT(IB_SSM)/FLOAT(NFIELDi))*
+		  (RTREAT**2));
+		  ]
+	       ELSE [
+		  SSMDIS(IB_SSM)=SQRT(((RFIELD**2-RTREAT**2)*
+		  ((FLOAT(IB_SSM-NFIELDi))/(FLOAT(NFIELDo))))+RTREAT**2);
+		  ]
+	       ]
+
+            "number of fluence bins and bin top width for the fluence"
+            READ(IINSRC,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS);
+            "probability for each width bin"
+
+	    " OUTPUT NSSMDIS; "
+	    " (/' Have read',I5,' width bins for spatial distribution:'); "
+	    " WRITE(6,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS); "
+
+            SSMMAX = SSMDIS(NSSMDIS);"do some checks"
+
+	    " OUTPUT SSMMIN,SSMMAX; "
+	    " (' Width range from',F10.3,' cm to',F12.3,' cm'/); "
+
+            CALL SSM_DISTRIBUTION;
+            DO IB_SSM=1,$INVDISSM [
+                FSMFRR(I,IB_SSM,1)=CDFSSM(IB_SSM,1);
+                FSMFRR(I,IB_SSM,2)=CDFSSM(IB_SSM,2);
+                ]"obtained field fluence sampling functions"
+            READ(IINSRC,*)(FSMFR11(I,IB_SSM),IB_SSM=1,NFIELD);
+            READ(IINSRC,*)(FSMFR12(I,IB_SSM),IB_SSM=1,NFIELD);
+            "parameters used in sampling"
+            ]
+
+	" Rectangular field distribution "
+	" ------------------------------ "
+        ELSEIF(MSMFXY(I) = 2)[
+            "the following are only used for obtaining fluence information"
+            READ(IINSRC,*)NSSMDIS,SSMMIN,SSMMAX;
+            READ(IINSRC,*)NSSMDIS,YFLDMN,YFLDMX;
+            READ(IINSRC,*)((FSMFXY(I,IB_SSM,IC_SSM),
+                 IB_SSM=1,NSSMDIS),IC_SSM=1,NSSMDIS);
+            "probability for each surface voxel"
+            DO IB_SSM=1,NSSMDIS[
+                SSMDIS(IB_SSM)=(SSMMAX-SSMMIN)/FLOAT(NSSMDIS)*
+                   FLOAT(IB_SSM)+SSMMIN;
+                ]
+            " bin top X for the planar fluence"
+            DO IB_SSM=1,NSSMDIS[
+                SSMPDF(IB_SSM)=0.;
+                DO IC_SSM=1,NSSMDIS[
+                    SSMPDF(IB_SSM)=SSMPDF(IB_SSM)+FSMFXY(I,IB_SSM,IC_SSM);
+                    ]
+                ]"probability for x-direction, integrated over y"
+            CALL SSM_DISTRIBUTION;
+            DO IB_SSM=1,$INVDISSM [
+                FSMFRR(I,IB_SSM,1)=CDFSSM(IB_SSM,1);
+                FSMFRR(I,IB_SSM,2)=CDFSSM(IB_SSM,2);
+                ]"obtained planar fluence sampling functions for X direction"
+
+            FLDXX2(I)=(SMFMXX(I)-SMFMNX(I))*(SMFMXX(I)-SMFMNX(I))/4.;
+            "square of half opening width"
+            FLDYY2(I)=(SMFMXY(I)-SMFMNY(I))*(SMFMXY(I)-SMFMNY(I))/4.;
+            "square of half opening length"
+
+            SSMMIN=YFLDMN;SSMMAX=YFLDMX;
+            DO IC_SSM=1,NSSMDIS[
+                DO IB_SSM=1,NSSMDIS[
+                    SSMDIS(IB_SSM)=(SSMMAX-SSMMIN)/FLOAT(NSSMDIS)*
+                       FLOAT(IB_SSM)+SSMMIN;
+                    ]
+                    "bin top Y for the planar fluence"
+                DO IB_SSM=1,NSSMDIS[
+                   SSMPDF(IB_SSM)=FSMFXY(I,IC_SSM,IB_SSM);
+                   "probability for each Y bin"
+                   ]
+                CALL SSM_DISTRIBUTION;
+                DO IB_SSM=1,NSSMDIS [
+                    FSMFXY(I,IC_SSM,IB_SSM)=SSMCDF(IB_SSM);
+                    ]
+                ]
+                "obtained the normalised CPDF from the PDF for y directions"
+                "We calculate later to reduce the array size (save memory)"
+                "This will increase the CPU time a little bit - CMa"
+            ]
+	ELSE [
+	   OUTPUT;(//' THERE IS SOMETHING WRONG WITH THE FIELD TYPE!'//);
+           STOP;
+	   ]
+       ]"end of input for each sub-source loop"
+
+
+       NSSMDIS=$NBINANGLE;
+       SSMMIN=0.0;
+       SSMMAX=$MAXANGLE;
+       DO IB_SSM=1,NSSMDIS[
+           SSMDIS(IB_SSM)=SSMMAX/FLOAT(NSSMDIS)*FLOAT(IB_SSM);
+           ]
+       READ(IINSRC,*)(SSMPDF(IB_SSM),IB_SSM=1,NSSMDIS);
+        "probability for each angular bin"
+
+       ABNTOTAL=0.;
+       DO IB_SSM=1,$NBINANGLE[
+	  ABNTOTAL=ABNTOTAL+SSMPDF(IB_SSM);
+	  ]
+       ABNTOTALH=0.;
+       DO IB_SSM=1,$NBINANGLE[
+          ABNTOTALH=ABNTOTALH+SSMPDF(IB_SSM);
+          IF((ABNTOTAL.NE.0.).AND.(ABNTOTALH/ABNTOTAL.GE.0.707))[
+             RSCATT=100.*TAN(FLOAT(IB_SSM)*0.1745/FLOAT($NBINANGLE));
+             "calculating mean scattering radius"
+             IF((RSCATT.LE.0.).OR.(RSCATT.GT.50.))[RSCATT=5.;]
+             GOTO :FOUND-RSCATT:;
+             ]
+          ]
+       :FOUND-RSCATT:;
+
+       CALL SSM_DISTRIBUTION;
+       DO IB_SSM=1,$INVDISSM ["obtain sampling functions for the source"
+           FSMABN(IB_SSM,1)=CDFSSM(IB_SSM,1);
+           FSMABN(IB_SSM,2)=CDFSSM(IB_SSM,2);
+           ]
+
+    "calculate sampling functions for choosing sub-sources"
+    OUTPUT;
+    (/'             INFORMATION ABOUT THE SUB-SOURCES'//
+      ' SUB-SOURCE #   CHARGE   RELATIVE INTENSITY (%) (ACCUMULATED)   SSD'//);
+
+    DO I=1,NSMFPS [
+        IF(I = 1)[OUTPUT I,IQSMFP(I),SMFRTN(I)/SMFRTN(NSMFPS)*100.,
+            SMFRTN(I)/SMFRTN(NSMFPS)*100.,SMFMNZ(I);
+            (I8,I12,F15.2,' %  ',F15.2,' %',F12.2/);
+            ]
+        IF(I ~= NSMFPS)[
+            OUTPUT I+1,IQSMFP(I+1),
+            (SMFRTN(I+1)-SMFRTN(I))/SMFRTN(NSMFPS)*100.,
+            SMFRTN(I+1)/SMFRTN(NSMFPS)*100.,SMFMNZ(I+1);
+            (I8,I12,F15.2,' %  ',F15.2,' %',F12.2/);
+            ]
+        ]
+    DO I=1,NSMFPS[
+        SMFRTN(I)=SMFRTN(I)*$INVDISSM./SMFRTN(NSMFPS);
+        IF(I = NSMFPS)[SMFRTN(I)=$INVDISSM.;]
+        IF(I = 1)[
+            IF(INT(SMFRTN(I)) < 1)[
+	       OUTPUT I;
+	      (/' SUB-SOURCE ',I4,
+		' IGNORED AS FRACTIONAL FLUENCE IS TOO SMALL!'/);
+                ]
+            ELSE[
+		DO IB_SSM=1,INT(SMFRTN(I))[
+		   MISMFP(IB_SSM)=I;
+		   ]
+                ]
+            ]
+        ELSE[
+            IF(INT(SMFRTN(I)) = INT(SMFRTN(I-1)))[
+	       OUTPUT I;
+	       (/' SUB-SOURCE ',I4,
+		 ' IGNORED AS FRACTIONAL FLUENCE IS TOO SMALL!'/);
+	       ]
+	    ELSE[
+		DO IB_SSM=INT(SMFRTN(I-1))+1,INT(SMFRTN(I))[
+		   MISMFP(IB_SSM)=I;
+		   ]
+                ]
+            ]
+        ]
+
+    CLOSE(IINSRC);
+
+605 FORMAT(A80);
+100 FORMAT(' ',2(I2,' '),4(G14.7,' '));
+
+;
+RETURN;
+
+" Errors
+" ******
+:EOF_ISOURCE: "unexpected end of input file, stop and print message
+;OUTPUT;(//' *** unexpected end of file reading input for ISOURCE ***');
+STOP; "End of input file return"
+
+:ERROR_ISOURCE: "error on input, stop and print message
+;OUTPUT;(//' *** format error on input for ISOURCE ***');
+STOP; "Error in input file return"
+
+:EOF_RS3: "error on file opening"
+;OUTPUT;(//' *** No directory/file can be found. ***');
+STOP;
+
+END;
+
+
+%E     "start subroutine SSM_DISTRIBUTION"
+"************************************************************************
+SUBROUTINE SSM_DISTRIBUTION; "This is the standard NRC routine ensrc.mortran"
+"==========="
+"This is derived from the standard NRC routine ensrc.mortran"
+"THIS ROUTINE CALCULATES THE INVERSE OF THE CUMULATIVE PROBABILITY"
+"DISTRIBUTION THAT IS USED DURING EXECUTION TO SAMPLE THE INCIDENT PARTICLE"
+"ENERGY."
+
+;COMIN/SSMDIS/;
+
+"FIRST, CALCULATE THE CPDF FROM THE PDF AND NORMALIZE IT"
+SSMCDF(1)=SSMPDF(1);
+DO IB_SSM=2,NSSMDIS[ SSMCDF(IB_SSM)=SSMCDF(IB_SSM-1)+SSMPDF(IB_SSM); ]
+FNORM=1./SSMCDF(NSSMDIS);
+GRIDSZ=1/FLOAT($INVDISSM);
+DO IB_SSM=1,NSSMDIS[SSMCDF(IB_SSM)=FNORM*SSMCDF(IB_SSM);]
+"Finished normalization"
+
+"NOW, CALCULATE CDFSSM - AN ARRAY WHICH ALLOWS THE RAPID SAMPLING FOR THE"
+"ENERGY BY PRECOMPUTING THE RESULTS FOR A FINE GRID"
+
+DO K=1,$INVDISSM [
+   AK= FLOAT(K)*GRIDSZ;
+   DO I=1,NSSMDIS [
+      IF(AK <= SSMCDF(I))[ GO TO :FOUND-BIN:;]
+      ]
+   "WE SHOULD NEVER FALL THROUGH TO HERE"
+   :FOUND-BIN:
+   IF(I ~= 1)[CDFSSM(K,1)=SSMDIS(I-1);] ELSE [CDFSSM(K,1)=SSMMIN;]
+   CDFSSM(K,2)=SSMDIS(I)-CDFSSM(K,1);
+   ]"END LOOP OVER K"
+
+RETURN;
+END;   "end of subroutine ensrc
+
+"end of beammodel_routines.mortran"
+;

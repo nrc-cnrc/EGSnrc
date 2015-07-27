@@ -1,0 +1,340 @@
+18MeVe: file to create a phase space file for lab V. 18 MeV electron beam        #!GUI1.0
+AIR700ICRU
+0, 0, 0, 0, 0, 3, 1,  IWATCH ETC.
+5000000.0, 94, 32, 900.0, 0, 400, 0, 0,  NCASE ETC.
+-1, 19, -0.1, 0.0, 0.0, 1.0,  0.0, 0.0, 0.0, 0.0,  IQIN, ISOURCE + OPTIONS
+0, MONOENERGETIC
+18.78
+0, 0, 0.7, 0.01, 0, 2, 2.0,  0 , ECUT,PCUT,IREJCT,ESAVE
+0, 0, 0, 0, 0,  PHOTON FORCING
+1, 9,  SCORING INPUT
+5, 0
+10.0, 0, 0, 0, 0, 
+0,  DOSE COMPONENTS
+0.0, Z TO FRONT FACE
+*********** start of CM SLABS with identifier WINDOW  ***********
+5.0, RMAX
+CM #1 SLABS: Two Slab Target and Copper Base
+1, NSLABS
+1.0875, ZMIN
+0.0125, 0.7, 0.01, 1, 1, 0.6
+NI700ICRU
+*********** start of CM CONESTAK with identifier SCTFOIL1  ***********
+7.0, RMAX
+CM #2 primary scattering foil,  using position 3 
+1.298, 0, ZMIN, RBN
+1, NUMBER OF LAYERS
+0.0069, 7.0, 7.0, 
+0.7, 0.01, 2, 2, 
+TA700ICRU
+0.7, 0.01, 23, 23, 
+STEEL700ICRU
+*********** start of CM FLATFILT with identifier PRIMCOIL  ***********
+20.0, RMAX
+CM #2 FLATFILT: primary collimator
+1.5, ZMIN
+1, NUMBER OF LAYERS
+1, 10.1, # CONES, ZTHICK OF LAYER 1
+0.645, 
+3.145, 
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 4, 4, 
+WNICU700
+*********** start of CM FLATFILT with identifier SCTFOIL2  ***********
+20.0, RMAX
+CM #3 SCTFOIL2:  secondary scattering foil 
+13.422, ZMIN
+11, NUMBER OF LAYERS
+2, 1.35, # CONES, ZTHICK OF LAYER 1
+3.65, 3.9875, 
+3.65, 3.9875, 
+2, 0.5, # CONES, ZTHICK OF LAYER 2
+3.65, 3.99875, 
+3.65, 3.99875, 
+2, 0.015, # CONES, ZTHICK OF LAYER 3
+3.65, 4.65, 
+3.65, 4.65, 
+4, 0.085, # CONES, ZTHICK OF LAYER 4
+0.0625, 0.6, 3.65, 4.65, 
+0.0625, 0.75, 3.65, 4.65, 
+4, 0.175, # CONES, ZTHICK OF LAYER 5
+0.0625, 0.75, 3.65, 4.65, 
+0.0625, 1.54, 3.65, 4.65, 
+4, 0.0475, # CONES, ZTHICK OF LAYER 6
+0.0625, 1.54, 3.65, 4.65, 
+0.0625, 2.0, 3.65, 4.65, 
+4, 0.0275, # CONES, ZTHICK OF LAYER 7
+0.0625, 2.0, 3.65, 4.65, 
+0.0625, 2.0, 3.65, 4.65, 
+2, 0.0125, # CONES, ZTHICK OF LAYER 8
+0.0625, 4.6, 
+0.0625, 4.6, 
+2, 0.1, # CONES, ZTHICK OF LAYER 9
+3.9, 4.6, 
+3.9, 4.6, 
+2, 0.015, # CONES, ZTHICK OF LAYER 10
+0.0625, 2.25, 
+0.0625, 2.25, 
+2, 0.03, # CONES, ZTHICK OF LAYER 11
+0.0625, 1.25, 
+0.0625, 1.25, 
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+MILDSTEEL700
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 5, 
+AL700ICRU
+0.7, 0.01, 0, 23, 
+AIR700ICRU
+*********** start of CM CONESTAK with identifier IONCHAMB  ***********
+20.0, RMAX
+CM #4 CONESTAK as chamber-- plates made of carbon graphite ceramic
+16.44, 7.35, ZMIN, RBN
+13, NUMBER OF LAYERS
+0.1, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.1, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.1, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.1, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.1, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.22, 4.5, 4.5, 
+0.0012, 4.5, 4.5, 
+0.2, 4.5, 4.5, 
+0.7, 0.01, 23, 23, OUTER WALL
+AIR700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 7, 7, 
+CU700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 7, 7, 
+AL700ICRU
+*********** start of CM MIRROR with identifier MIRROR  ***********
+20.0, RMAX
+CM #6 MIRROR: mylar mirror
+19.0, 8.3, ZMIN, ZTHICK
+5.605, -5.605, XFMIN, XBMIN
+1, # LAYERS
+0.0012,  thickness of layer 1
+0.7, 0.01, 9, 9, 
+MYLAR700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+0.7, 0.01, 23, 23, 
+AIR700ICRU
+*********** start of CM JAWS with identifier MLCJAWS  ***********
+40.0, RMAX
+CM #7: jaws set for a 10x10cm field at SSD=100 cm
+4, # PAIRED BARS OR JAWS
+Y
+27.9, 31.9, 3.0662, 3.5058, -3.0662, -3.5058, 
+Y
+31.91, 37.91, 3.507, 4.1664, -3.507, -4.1664, 
+X
+39.9, 43.9, 3.97, 4.368, -3.97, -4.368, 
+X
+43.911, 49.911, 4.3691, 4.9661, -4.3691, -4.9661, 
+0, 0, 21, 21, 
+0.7, 0.01, 13, 13, 
+WNICU700
+0.7, 0.01, 13, 13, 
+PBSBICU700
+0.7, 0.01, 14, 14, 
+WNICU700
+0.7, 0.01, 14, 14, 
+PBSBICU700
+*********** start of CM SLABS with identifier AIRSLAB  ***********
+50.0, RMAX
+CM #8 SLABS: mylar screen
+1, NSLABS
+52.9, ZMIN
+0.0175, 0.7, 0.01, 15, 15, 0
+MYLAR700ICRU
+*********** start of CM APPLICAT with identifier APPLICAT  ***********
+40.0, RMAX
+CM #9: applicator for 10x10 cm field 
+100.0, ZBACK
+8, 1, #SCRAPERS, RECTANGLE
+54.1, 0.635, 7.1, 7.1, 1.9, 2.0, 16, 16, 
+71.5, 0.635, 6.5, 6.5, 5.4, 5.4, 17, 17, 
+72.1451, 0.6, 6.5, 6.5, 3.0, 3.0, 17, 17, 
+84.1, 0.6, 5.5, 5.5, 3.5, 3.5, 19, 19, 
+84.71, 0.635, 5.5, 5.5, 4.7, 3.7, 19, 19, 
+92.51, 0.635, 5.0, 5.0, 2.3, 1.5075, 20, 20, 
+93.1551, 1.0, 5.0, 5.0, 1.5, 1.455, 20, 20, 
+94.1651, 0.2, 5.2, 5.455, 1.2, 0, 20, 20, 
+0.7, 0.01, 0, 0, 
+AL700ICRU
+AL700ICRU
+PBSBICU700
+PBSBICU700
+AL700ICRU
+AL700ICRU
+PBSBICU700
+AL700ICRU
+*********** start of CM CHAMBER with identifier PHANTOM  ***********
+30.0, RMAX
+depth-dose phantom
+100.0, ZMIN
+0, -3, 0, N_TOP, N_CHM, N_BOT
+2.0, 30.0, 30.0, RADII FOR CENTRAL PART
+0.1, 15, ZTHICK, FLAG FOR GROUP 1 IN CENTRAL PART
+0.2, 17, ZTHICK, FLAG FOR GROUP 2 IN CENTRAL PART
+1.0, 5, ZTHICK, FLAG FOR GROUP 3 IN CENTRAL PART
+30, 30, 31, 0, 
+H2O700ICRU
+30, 30, 24, 0,   chamber wall
+H2O700ICRU
+30, 30, 25, 0,   gap
+H2O700ICRU
+30, 30, 26, 0,   container
+H2O700ICRU
+0, MRNGE
+*********************end of all CMs*****************************
+ #########################
+ :Start MC Transport Parameter:
+ 
+ Global ECUT= 0.7
+ Global PCUT= 0.01
+ Global SMAX= 5
+ ESTEPE= 0.25
+ XIMAX= 0.5
+ Boundary crossing algorithm= PRESTA-I
+ Skin depth for BCA= 0
+ Electron-step algorithm= PRESTA-II
+ Spin effects= On
+ Brems angular sampling= Simple
+ Brems cross sections= BH
+ Bound Compton scattering= Off
+ Pair angular sampling= Simple
+ Photoelectron angular sampling= Off
+ Rayleigh scattering= Off
+ Atomic relaxations= Off
+ Electron impact ionization= Off
+ 
+ :Stop MC Transport Parameter:
+ #########################
