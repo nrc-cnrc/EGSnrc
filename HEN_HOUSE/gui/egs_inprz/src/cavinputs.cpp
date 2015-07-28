@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs_inprz cavity inputs headers
+#  EGSnrc egs_inprz cavity inputs
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
