@@ -1,7 +1,7 @@
 ## IAEA phase space shared library
 
-The International Atomic Energy Agency (IAEA) created a standard phase space data
-format to share across computer codes and platforms. The source code provided
+The International Atomic Energy Agency (IAEA) created a standard phase space
+format to share data across computer codes and platforms. The source code provided
 in this directory build a shared library of functions that is used by EGSnrc to
 read and write phase space files in the IAEA format.
 
