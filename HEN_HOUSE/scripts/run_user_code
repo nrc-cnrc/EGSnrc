@@ -1,0 +1,221 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to run a user code interactively
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Script to run a EGSnrc user code interactively. It is provided for EGSnrc
+#  users who need to use a script to run a EGSnrc user code, instead of just
+#  issuing the command, e.g., cavrznrc -p 521icru -i some_input
+#
+###############################################################################
+
+
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+if test $# -lt 3; then
+    cat >&2 <<EOF
+
+Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx]
+
+$my_name runs the user code user_code, using input_file as input file
+(use two double quotes if there is no input file needed) and pegs_file
+as pegs4 data file. The optional argument noopt tells the script to
+use the executable compiled without optimizations, using config=xxx
+you can use a configuration different from the one specified by the
+environment variable EGS_CONFIG.
+
+EOF
+    exit 1
+fi
+
+user_code=$1
+input_file=$2
+pegs_file=$3
+egs_home="$EGS_HOME"
+egs_configuration="$EGS_CONFIG"
+what=
+
+if test "x$egs_home" = x; then
+
+    if test -f $HOME/.egsnrcrc; then
+      egs_home=`cat $HOME/.egsnrcrc | grep "EGS_HOME =" | sed 's/EGS_HOME = //'`
+    fi
+    if test "x$egs_home" = x; then
+      cat >&2 <<EOF
+
+The environment variable EGS_HOME is not set and there is no .egsnrcrc file
+in your home directory specifying EGS_HOME. Please correct and retry.
+
+EOF
+      exit 1
+    fi
+fi
+
+shift 3
+
+while test $# -gt 0; do
+
+    case "$1" in
+
+         noopt)  what=noopt  ;;
+         debug)  cat >&2 <<EOF
+
+This script does not support debug runs.
+To do a debug run, start your debugger with
+$egs_home/bin/my_machine/${user_code}_debug
+as argument (my_machine is the name you gave to the configuration
+that you want to debug) and then type
+
+run -p $pegs_file -i $input_file
+
+to start the run.
+
+EOF
+                 exit 1
+                  ;;
+      config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+             *)  ;; #ignore everything else
+
+    esac
+    shift
+
+done
+
+if test "x$egs_configuration" = x; then
+
+    if test "x$EGS_CONFIG" = x; then
+        cat >&2 <<EOF
+
+The environment variable 'EGS_CONFIG' is not set. You have to either
+define EGS_CONFIG to point to a valid EGSnrc configuration file or
+you must run this script as
+    $my_name ... config=some_configuration_file
+
+EOF
+        exit 1
+    fi
+    cat >&2 <<EOF
+
+There should be no spaces between 'config=' and the name of the configuration
+file!
+
+EOF
+    exit 1
+fi
+
+if test ! -f "$egs_configuration"; then
+
+    cat >&2 <<EOF
+
+The file $egs_configuration does not exist. The environment variable
+EGS_CONFIG or the config=some_config command line option must
+define the absolute path to a valid EGSnrc configuration file.
+
+EOF
+    exit 1
+fi
+
+if test "x$HEN_HOUSE" = x; then
+    hen_house=`cat $egs_configuration | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+else
+    hen_house="$HEN_HOUSE"
+fi
+canonical_system=`cat $egs_configuration | grep "canonical_system = " | sed 's/canonical_system = //'`
+my_machine=`cat $egs_configuration | grep "my_machine =" | sed 's/my_machine = //'`
+if test "x$hen_house" = x || test "x$canonical_system" = x || test "x$my_machine
+" = x; then
+    cat >&2 <<EOF
+
+The file $egs_configuration seems to be not a valid EGSnrc configuration file.
+Please check and retry.
+
+EOF
+     exit 1
+fi
+
+if test -f "$hen_house/scripts/config.guess"; then
+    test_system=`$hen_house/scripts/config.guess`
+    if test "x$test_system" != "x$canonical_system"; then
+        cat >&2 <<EOF
+
+The canonical system as returned by config.guess ($test_system) is not the
+same as the one found in the configuration file ($canonical_system).
+I hope you know what you are doing.
+
+EOF
+    fi
+else
+    cat >&2 <<EOF
+
+The file $hen_house/scripts/config.guess does not exist.
+Is this a recent EGSnrc installation ?
+
+EOF
+    exit 1
+fi
+
+
+if test ! -d "$egs_home"; then
+
+    echo "The directory '$egs_home' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+if test ! -d "$egs_home/$user_code"; then
+
+    echo "The directory '$egs_home/$user_code' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home/$user_code"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+executable="$egs_home/bin/$my_machine/$user_code$what"
+
+if test ! -x $executable; then
+    executable="$hen_house/bin/$my_machine/$user_code$what"
+    if test ! -x $executable; then
+        echo "No $user_code executable on your area or on HEN_HOUSE" >&2
+        exit 1
+    fi
+fi
+
+if test "x$input_file" = x; then
+    $executable -p $pegs_file
+else
+    $executable -p $pegs_file -i $input_file
+fi
+
+exit 0

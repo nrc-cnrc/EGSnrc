@@ -1,0 +1,203 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to clean up files after parallel runs
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Joanne Treurniet, 1999
+#
+#  Contributors:    Dave Rogers
+#                   Iwan Kawrakow
+#
+###############################################################################
+#
+#  This is a script to delete the $1_w* files resulting from a parallel
+#  processed run. It checks for the user that the $1.egslst file is newer than
+#  all of the $1_w*.egslst files, to ensure that needed files aren't erased.
+#  It also concatenates $1.egslst and $1_w1.egslst for the new EGSnrcMP
+#  parallel runs.
+#
+###############################################################################
+
+
+# Preliminaries
+if [ `uname` = "Linux" ]
+        then
+        ECHO="echo -e"
+else
+        ECHO=echo
+fi
+
+# Check that the proper number of arguments has been entered.
+if [ $# != 1 ]
+then
+  $ECHO "Usage: clean_after_parallel <filenamebase> will delete all files named"
+  $ECHO "       <filenamebase>_w*, if they have been post-processed."
+  exit
+fi
+
+# Check that the original input file exists
+if test ! -f $1.egsinp
+then
+  $ECHO "The original input file doesn't exist.  Could be a spelling error.  Exiting."
+  exit
+fi
+
+# If they haven't been post-processed yet, exit.
+if test ! -f $1.egslst
+then
+  $ECHO "These files haven't been post-processed.  Exiting."
+  exit
+fi
+
+#Now we check that the $1.egslst file is most recent
+#to ensure post-processing has been done
+#
+# Create a file containg all the egslst files, sorted in order of date created.
+# The first one is the most recent.
+ls -t $1.egslst $1_w*.egslst  > clean_after_parallel.filelist
+
+$ECHO "\nHere are relevant egslst files which were found: most recent first"
+more clean_after_parallel.filelist
+
+# The following command only reads the first line in the file clean_after_parallel.filelist
+read file < clean_after_parallel.filelist
+
+nfile=`cat clean_after_parallel.filelist | wc -l`
+
+if [ $file = $1.egslst ]
+then
+  # It's okay to delete everything, it's been post-processed since
+  # $1.egslst is the most recent file of them all.  Prompt to be sure.
+  # We now prompt below after listing all files
+  #$ECHO "Delete $1_w*? (y/[n]) \c"
+  #read ANS
+  #if test "$ANS" = "y"
+  #then
+    # Check that there are some files to remove
+    if [ $nfile -lt 2 ]
+    then
+      $ECHO "There are no files to remove."
+    else
+      # Check if $1_w*.egsphsp[123] exist.  If so, offer to run
+      # addphsp.
+      $ECHO "Now checking for associated phase space files, if they exist"
+      nphsp=`ls -l $1_w*.egsphsp* | wc -l`
+      if [ $nphsp -gt 0 ]
+      then
+        $ECHO "You have some phase space files with these."
+        $ECHO "The partial ones may be deleted or saved later <================"
+	$ECHO "Do you want to run addphsp on them? (y,[n]) \c"
+	read ANS
+	if test "$ANS" = "y"
+	then
+          $ECHO " inputs required by addphsp:"
+	  $ECHO ""
+          $ECHO " Enter P1=  ?.egsinp (default $1)"
+	  read p1
+          $ECHO " Enter P2=  splitnum (default $nphsp)"
+	  read p2
+          $ECHO " Enter P3=  _w? serial# to start (defaults to 1)"
+	  read p3
+          $ECHO " Enter P4=  .egsphsp? scoring plane number (defaults to 1)"
+	  read p4
+          if test -z "$p1"
+          then
+            p1=$1
+          fi
+          if test -z "$p2"
+          then
+            p2=$nphsp
+          fi
+          if test -z "$p3"
+          then
+            p3=1
+          fi
+          if test -z "$p4"
+          then
+            p4=1
+          fi
+	  #$HEN_HOUSE/pprocess/addphsp $p1 $p2 $p3 $p4
+	  addphsp $p1 $p2 $p3 $p4
+	fi
+      fi
+      ls -l $1_w* |cut -c1-10,15-23,33-120
+      $ECHO "\n\n Compare lst files"
+      ls -l $1_w1.egslst $1.egslst
+      $ECHO "\n Should we concatonate $1_w1.egslst to $1.egslst"
+      $ECHO "   This is NOT NEEDED for the BEAM codes (y/[n])?\c "
+      read ANS
+	if [ "$ANS" = "y" ]
+	  then
+	  echo "***Note this egslst has two sets of results ****" >temp.egslst
+	  echo "***First is from one parallel run           ****" >>temp.egslst
+	  echo "***Second is from combined results          ****" >>temp.egslst
+	  echo "***                                         ****" >>temp.egslst
+
+	  if [ -f $1_w1.egslst ]
+		then
+		cat $1_w1.egslst  $1.egslst >> temp.egslst
+	  elif [ -f $1_w2.egslst ]
+                then
+                cat $1_w2.egslst  $1.egslst >> temp.egslst
+	  elif [ -f $1_w3.egslst ]
+                then
+                cat $1_w3.egslst  $1.egslst >> temp.egslst
+	  else
+		echo "Did not find $1_w[123].egslst"
+		cat $1.egslst	            >> temp.egslst
+	  fi
+	  \rm $1.egslst
+	  mv temp.egslst  $1.egslst
+          $ECHO "Note that $1.egslst now has two sets of outputs"
+ 	fi
+      $ECHO "\n Delete above files (all(y)/ all except *.egsphsp* (e)/ [n]? \c "
+      read ANS
+      if [ "$ANS" = "y" ]
+        then
+        rm $1_w*
+      elif [ "$ANS" = "e" ]
+	then
+        rm $1_w*.egsinp
+        rm $1_w*.egslst
+        rm $1_w*.egslog
+        rm $1_w*.egsdat
+        rm $1_w*.errors
+        rm $1_w*.egstmpa
+        rm $1_w*.egsplot
+        rm $1_w*.eo
+      else
+        echo "Leaving all files"
+      fi
+    fi
+else
+  # Don't delete.  The files haven't been post-processed recently.
+  $ECHO "$1.egslst is not the most recent!"
+  $ECHO "This means that these files haven't been post-processed since"
+  $ECHO "last run as multiple jobs.  Exiting."
+  exit
+fi
+$ECHO "Here are the files left"
+ls -l $1_w* |cut -c1-10,15-23,33-120
+ls -l $1.* |cut -c1-10,15-23,33-120
+
+rm -f clean_after_parallel.filelist
+
+exit

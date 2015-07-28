@@ -1,0 +1,127 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to test BEAMnrc
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Dave Rogers, 1995
+#
+#  Contributors:    Iwan Kawrakow
+#                   Blake Walters
+#
+###############################################################################
+#
+#  For the example programs on the BEAMnrc distribution, this copies spec
+#  modules and input files to where they need to be. Many of these directories
+#  are set up by the BEAMnrc script when used, but we need to create them here
+#  for ease of testing.
+#
+###############################################################################
+
+
+echo This is test_BEAMnrc
+
+cd $HOME
+
+echo On $HOME
+if [ ! -d "$EGS_HOME" ]
+	then
+        echo "Making $EGS_HOME"
+	mkdir $EGS_HOME
+fi
+cd $EGS_HOME
+echo now on $EGS_HOME
+if [ ! -d beamnrc ]
+	then
+	echo Making beamnrc on $EGS_HOME
+	mkdir beamnrc
+fi
+cd beamnrc
+if [ ! -d spec_modules ]
+	then
+	echo Making spec_modules on beamnrc on $EGS_HOME
+	mkdir spec_modules
+fi
+cd spec_modules
+
+echo now on $EGS_HOME/beamnrc/spec_modules
+
+if [ $OMEGA_HOME ]
+        then
+        echo "OMEGA_HOME defined as $OMEGA_HOME"
+else
+        echo "         OMEGA_HOME not defined !!!"
+        echo "You should:  source $HEN_HOUSE/scripts/beamnrc_cshrc_additions   in your .cshrc"
+        exit
+fi
+
+
+#now on $EGS_HOME/beamnrc/spec_modules
+cp -p $OMEGA_HOME/beamnrc/BEAMnrc_examples/EX10MeVe/EX10MeVe.module .
+cp -p $OMEGA_HOME/beamnrc/BEAMnrc_examples/EX16MVp/EX16MVp.module .
+cp -p $OMEGA_HOME/beamnrc/BEAMnrc_examples/EXphantom/EXphantom.module .
+cp -p $OMEGA_HOME/beamnrc/BEAMnrc_examples/EXslabs/EXslabs.module .
+
+
+
+cd ../..	#now on $EGS_HOME
+
+if [ ! -d BEAM_EX16MVp ]
+	then
+	mkdir BEAM_EX16MVp
+fi
+cd BEAM_EX16MVp
+cp $OMEGA_HOME/beamnrc/BEAMnrc_examples/EX16MVp/EX16MVp.egsinp .
+beam_build.exe EX16MVp
+
+cd ..
+
+if [ ! -d BEAM_EX10MeVe ]
+	then
+	mkdir BEAM_EX10MeVe
+fi
+cd BEAM_EX10MeVe
+cp $OMEGA_HOME/beamnrc/BEAMnrc_examples/EX10MeVe/EX10MeVe.egsinp .
+beam_build.exe EX10MeVe
+cd ..
+
+if [ ! -d BEAM_EXphantom ]
+	then
+	mkdir BEAM_EXphantom
+fi
+cd BEAM_EXphantom
+cp $OMEGA_HOME/beamnrc/BEAMnrc_examples/EXphantom/EXphantom.egsinp .
+beam_build.exe EXphantom
+cd ..
+
+if [ ! -d BEAM_EXslabs ]
+	then
+	mkdir BEAM_EXslabs
+fi
+cd BEAM_EXslabs
+cp $OMEGA_HOME/beamnrc/BEAMnrc_examples/EXslabs/EXslabs.egsinp .
+beam_build.exe EXslabs
+cd ..
+
+echo "Ready to run BEAMnrc on EXslabs, EXphantom, EX10MeVe and EX16MVp"
+echo "Current directory is"
+pwd
+date
+ls -lR BEAM_EX*

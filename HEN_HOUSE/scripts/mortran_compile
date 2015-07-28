@@ -1,0 +1,160 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to compile a mortran user code
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+#
+###############################################################################
+#
+#  A script to simulate the functionality of the mortran3 script in EGS4 and
+#  EGSnrc V1-3 for people who desperately need to use a script for every task.
+#
+###############################################################################
+
+
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+
+if test $# -lt 1; then
+    cat <<EOF
+
+Usage: $my_name  mortran_file
+
+EOF
+    exit 1
+fi
+
+source=$1
+egs_config=$EGS_CONFIG
+target=
+the_target=opt
+
+shift 1
+
+while test $# -gt 0; do
+
+    case "$1" in
+            opt*)  the_target=opt ;;
+           noopt)  target=noopt ; the_target=noopt ;;
+           debug)  target=debug ; the_target=debug ;;
+        config=*)  egs_config=`echo $1 | sed 's/config=//'` ;;
+
+    esac
+    shift
+
+done
+
+if test "x$egs_config" = x; then
+    cat <<EOF
+
+Environment variable EGS_CONFIG is not set.
+You have to either set EGS_CONFIG or pass a valid EGSnrcMP configuration
+name as an option to this script using config=some_config
+
+EOF
+    exit 1
+fi
+
+hen_house=`cat $egs_config | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+my_machine=`cat $egs_config | grep "my_machine =" | sed 's/my_machine = //'`
+f77=`cat $egs_config | grep "F77 = " | sed 's/F77 = //'`
+fcflags=`cat $egs_config | grep "FCFLAGS = " | sed 's/FCFLAGS = //'`
+if test $the_target = opt; then
+    fopt=`cat $egs_config | grep "FOPT = " | sed 's/FOPT = //'`
+    fcflags="$fcflags $fopt"
+elif test $the_target = debug; then
+    fdeb=`cat $egs_config | grep "FDEBUG = " | sed 's/FDEBUG = //'`
+    fcflags="$fcflags $fdeb"
+fi
+
+if test "x$hen_house" = x || test "x$my_machine" = x; then
+    cat <<EOF
+
+The config file $egs_config does not appear to be a valid EGSnrcMP
+config file. Please check and retry.
+
+EOF
+    exit 1
+fi
+
+mortran_exe=$hen_house/bin/$my_machine/mortran3.exe
+mortran_data=$hen_house/bin/$my_machine/mortran3.dat
+
+if test ! -f $mortran_exe; then
+    cat <<EOF
+
+The mortran3 executable ($mortran_exe) does not exist.
+You have to create it first by going to $hen_house/mortran3 and
+executing \`make'.
+
+EOF
+    exit 1
+fi
+
+if test ! -f $mortran_data; then
+    cat <<EOF
+
+The mortran3 hex data file ($mortran_data) does not exist.
+You have to create it first by going to $hen_house/mortran3 and
+executing \`make'.
+
+EOF
+    exit 1
+fi
+
+if test ! -f $source.mortran; then
+    echo "No $source.mortran file found in the current directory."
+    exit 1
+fi
+
+sourcef=${source}_${my_machine}
+echo; echo "Mortran compiling $source.mortran:"
+if { $mortran_exe -d $mortran_data -f $source.mortran -o7 $sourcef.f -o8 $sourcef.mortlst; status=$?; (exit $status); }; then
+    echo; echo;
+else
+    cat <<EOF
+
+****************** mortran compilation failed *****************************
+
+EOF
+    exit 1
+fi
+
+echo "Fortran compiling $sourcef.f using flags '$fcflags'"
+if { $f77 $fcflags -o $sourcef.exe $sourcef.f; status=$?;
+      (exit $status); }; then
+      cat <<EOF
+
+****************** compilation was successful *********************************
+
+EOF
+      exit 0
+fi
+
+cat <<EOF
+
+****************** compilatiopn failed *********************************
+
+EOF
+exit 1

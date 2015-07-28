@@ -1,0 +1,86 @@
+#! /bin/sh
+###############################################################################
+#
+#  EGSnrc script to gather Fortran and C++ linking options
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2004
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Runs get_f77_libs and get_cxx_libs to determine the libraries linked by
+#  default by the fortran and c++ compiler. Outputs a list of libraries needed
+#  when linking C++ and Fortran together using the C++ compiler. Duplicates
+#  are removed from the list.
+#
+###############################################################################
+
+
+if test $# -lt 2; then
+    echo "Usage: $0 f_compiler cxx_compiler" >&2
+    exit 1
+fi
+
+script=`basename $0`
+get_f77=`echo $0 | sed "s/$script/get_f77_libs/"`
+get_cxx=`echo $0 | sed "s/$script/get_cxx_libs/"`
+#echo $get_f77 $get_cxx
+
+f77_libs=`$get_f77 $1 junk_f77.log`
+if test $? -ne 0; then
+    echo "Failed to determine f77_libs" >&2
+    exit 1
+fi
+cxx_libs=`$get_cxx $2 junk_cxx.log`
+if test $? -ne 0; then
+    echo "Failed to determine cxx_libs" >&2
+    exit 1
+fi
+
+final_libs=
+if test x"$f77_libs" = x; then
+    final_libs=""
+elif test x"$cxx_libs" = x; then
+    final_libs="$f77_libs"
+else
+    for f77_lib in $f77_libs; do
+        have_it=no
+        for cxx_lib in $cxx_libs; do
+            if test $f77_lib = $cxx_lib; then have_it=yes; break; fi
+        done
+        if test $have_it = no; then
+            if test x"$final_libs" = x; then
+                final_libs=$f77_lib
+            else
+                is_there=no
+                for lib in $final_libs; do
+                    if test $f77_lib = lib; then is_there=yes; break; fi
+                done
+                if test $is_there = no; then
+                    final_libs="$final_libs $f77_lib"
+                fi
+            fi
+        fi
+    done
+fi
+
+echo "fortran_libs = $final_libs"

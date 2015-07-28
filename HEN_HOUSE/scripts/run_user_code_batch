@@ -1,0 +1,477 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to submit jobs to a job scheduler
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Dave Rogers
+#                   Ernesto Mainegra-Hing
+#                   Frederic Tessier
+#                   Blake Walters
+#
+###############################################################################
+#
+#  Submits EGSnrc jobs to a queueing system. The queueing system used is
+#  determined by the environment variable EGS_BATCH_SYSTEM or by the argument
+#  batch=xxx.
+#
+#  If EGS_BATCH_SYSTEM is set or the batch=xxx argument is given, this script
+#  sources
+#
+#     $HEN_HOUSE/scripts/batch_options.$EGS_BATCH_SYSTEM
+#  or $HEN_HOUSE/scripts/batch_options.xxx
+#
+#  which defines things such as batch command, generic batch options, request
+#  naming batch options, queue names, etc. (see batch_options.nqs,
+#  batch_options.pbs and batch_options.at for three different settings
+#  provided with the distribution).
+#
+#  If EGS_BATCH_SYSTEM is not set, $HEN_HOUSE/scripts/batch_options.at is used.
+#
+#  You may add your own queueing system options by copying one of the provided
+#  files to batch_options.xxx, adjusting the various variables and defining
+#  EGS_BATCH_SYSTEM to be xxx.
+#
+###############################################################################
+
+
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+if test $# -lt 3; then
+    cat >&2 <<EOF
+
+Usage: $my_name user_code input_file pegs_file [noopt] [config=xxx]
+                [short|long|user1|user2|user3] [batch=batch_system] [p=N]
+
+$my_name runs the user code user_code, using input_file as input file
+(use two double quotes if there is no input file needed) and pegs_file
+as pegs4 data file. The optional argument noopt tells the script to
+use the executable compiled without optimizations, using config=xxx
+you can use a configuration different from the one specified by the
+environment variable EGS_CONFIG.
+
+One can also select the batch system by setting the batch variable
+on the command line and set the queue type (short,long,user1,user2,user3).
+For parallel job submission one needs to pass the number of jobs
+by setting the variable p to the number of jobs N.
+
+EOF
+    exit 1
+fi
+
+# The following is to be compatible with the egs_run scripts
+# prior to EGSnrc version 4.
+#
+user_code=$1
+input_file=$2
+pegs_file=$3
+egs_home="$EGS_HOME"
+hen_house_arg=
+start_job=0
+stop_job=0
+egs_configuration="$EGS_CONFIG"
+what=
+queue1=5
+n_parallel=0
+dshnodes=
+dshsleep=0
+other_args=
+testing=no
+egs_batch_system=at
+fresh=yes
+rc_simple=
+if test "x$EGS_BATCH_SYSTEM" != x; then
+    egs_batch_system="$EGS_BATCH_SYSTEM"
+fi
+
+
+shift 3
+
+while test $# -gt 0; do
+
+    case "$1" in
+
+       batch=*)  egs_batch_system=`echo $1 | sed 's/batch=//'` ;;
+     testing=*)  testing=`echo $1 | sed 's/testing=//'` ;;
+          eh=*)  egs_home=`echo $1 | sed 's/eh=//'` ;;
+          hh=*)  hen_house_arg=`echo $1 | sed 's/hh=//'` ;;
+         noopt)  what=noopt  ;;
+         debug)  cat >&2 <<EOF
+
+This script does not support debug runs.
+To do a debug run, start your debugger with
+$egs_home/bin/my_machine/${user_code}_debug
+as argument (my_machine is the name you gave to the configuration
+that you want to debug) and then type
+
+run -p $pegs_file -i $input_file
+
+to start the run.
+
+EOF
+                 exit 1
+                  ;;
+      config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+        simple)  rc_simple="-s" ;;
+         short)  queue1=1 ;;
+         user1)  queue1=2 ;;
+         user2)  queue1=3 ;;
+         user3)  queue1=4 ;;
+          long)  queue1=5 ;;
+           p=*)  n_parallel=`echo $1 | sed 's/p=//'` ;;
+    dshnodes=*)  dshnodes=`echo ${1#dsh}` ;;
+       sleep=*)  dshsleep=`echo $1 | sed 's/sleep=//'`;;
+       start=*)  start_job=`echo $1 | sed 's/start=//'`;;
+        stop=*)  stop_job=`echo $1 | sed 's/stop=//'`;;
+      fresh=no)  fresh=no ;;
+             *) # concatenate everything else to other_args
+                # and hope that the user knows what they are doing.
+                if test "x$other_args" = x; then
+                    other_args="$1"
+                else
+                    other_args="$other_args $1"
+                fi
+                ;;
+
+    esac
+    shift
+
+done
+
+if test "x$egs_home" = x; then
+
+    if test -f $HOME/.egsnrcrc; then
+      egs_home=`cat $HOME/.egsnrcrc | grep "EGS_HOME =" | sed 's/EGS_HOME = //'`
+    fi
+    if test "x$egs_home" = x; then
+      cat >&2 <<EOF
+
+The environment variable EGS_HOME is not set, you have not passed it
+as an argument to this script and there is no .egsnrcrc file
+in your home directory specifying EGS_HOME. Please correct and retry.
+
+EOF
+      exit 1
+    fi
+fi
+
+if test "x$egs_configuration" = x; then
+
+    if test "x$EGS_CONFIG" = x; then
+        cat >&2 <<EOF
+
+The environment variable 'EGS_CONFIG' is not set. You have to either
+define EGS_CONFIG to point to a valid EGSnrc config file or
+you must run this script as
+    $my_name ... config=some_config_file
+
+EOF
+        exit 1
+    fi
+    cat >&2 <<EOF
+
+There should be no spaces between 'config=' and the name of the configuration
+file!
+
+EOF
+    exit 1
+fi
+
+if test ! -f "$egs_configuration"; then
+
+    cat >&2 <<EOF
+
+The file $egs_configuration does not exist. The environment variable
+EGS_CONFIG or the config=some_config command line option must
+define the absolute path to a valid EGSnrc config file.
+
+EOF
+    exit 1
+fi
+
+if test "x$hen_house_arg" = x; then
+    if test "x$HEN_HOUSE" = x; then
+        hen_house=`cat $egs_configuration | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+    else
+        hen_house="$HEN_HOUSE"
+    fi
+else
+    hen_house=$hen_house_arg
+fi
+canonical_system=`cat $egs_configuration | grep "canonical_system = " | sed 's/canonical_system = //'`
+my_machine=`cat $egs_configuration | grep "my_machine =" | sed 's/my_machine = //'`
+if test "x$hen_house" = x || test "x$canonical_system" = x || test "x$my_machine
+" = x; then
+    cat >&2 <<EOF
+
+The file $egs_configuration seems to be not a valid EGSnrc configuration file.
+Please check and retry.
+hen_house = $hen_house
+canonical_system = $canonical_system
+my_machine = $my_machine
+
+EOF
+     exit 1
+fi
+
+if test -f "$hen_house/scripts/config.guess"; then
+    test_system=`$hen_house/scripts/config.guess`
+    if test "x$test_system" != "x$canonical_system"; then
+        cat >&2 <<EOF
+
+The canonical system as returned by config.guess ($test_system) is not the
+same as the one found in the config file ($canonical_system).
+I hope you know what you are doing.
+
+EOF
+    fi
+else
+    cat >&2 <<EOF
+
+The file $hen_house/scripts/config.guess does not exist.
+Is this a recent EGSnrc installation ?
+
+EOF
+    exit 1
+fi
+
+
+if test ! -d "$egs_home"; then
+
+    echo "The directory '$egs_home' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+if test ! -d "$egs_home/$user_code"; then
+
+    echo "The directory '$egs_home/$user_code' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home/$user_code"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+executable="$egs_home/bin/$my_machine/$user_code$what"
+
+if test ! -x $executable; then
+    executable="$hen_house/bin/$my_machine/$user_code$what"
+    if test ! -x $executable; then
+        echo "No $user_code executable on your area or on HEN_HOUSE" >&2
+        exit 1
+    fi
+fi
+
+if test "$pegs_file" = pegsless; then
+    command="$executable -b"
+else
+    command="$executable -p $pegs_file -b"
+fi
+
+if test "x$input_file" != x; then
+    command="$command -i $input_file"
+fi
+
+command="$command -e $egs_home -H $hen_house $rc_simple"
+
+# export the important environent variables just in case.
+# note the -x option for nqs, which exports the environment of the
+# calling process to the nqs job.
+#
+export EGS_HOME="$egs_home"
+export EGS_CONFIG="$egs_configuration"
+export HEN_HOUSE="$hen_house"
+
+if test -f $hen_house/scripts/batch_options.$egs_batch_system; then
+    \. $hen_house/scripts/batch_options.$egs_batch_system
+else
+    cat  >&2 <<EOF
+
+The file $hen_house/scripts/batch_options.$egs_batch_system does not exist.
+Please either define the environment variable EGS_BATCH_SYSTEM
+or pass an existing batch system definition file extension as argument to this
+script using batch=xxx and retry.
+
+EOF
+fi
+
+# Now define the queue based on the value stored in queue1
+#
+case $queue1 in
+    1) queue="$short_queue"; break;;
+    2) queue="$user1_queue"; break;;
+    3) queue="$user2_queue"; break;;
+    4) queue="$user3_queue"; break;;
+    *) queue="$long_queue";
+esac
+
+#cat >&2 <<EOF
+#
+#EGS_BATCH_SYSTEM: $EGS_BATCH_SYSTEM
+#egs_batch_system: $egs_batch_system
+#Batch command: $batch_command
+#generic: $generic_bo
+#output: $output_bo
+#rname: $rname_bo
+#
+#EOF
+
+if test $start_job -ge 0; then
+    if test $stop_job -gt $start_job; then
+        if test $n_parallel -eq 0; then
+            n_parallel=`expr $stop_job - $start_job`
+        fi
+    else
+        stop_job=`expr $start_job + $n_parallel`
+        #stop_job=$n_parallel
+    fi
+fi
+#echo "start_job = $start_job"
+#echo "stop_job = $stop_job"
+#echo "n_parallel = $n_parallel"
+#exit
+
+if test $egs_batch_system = at; then
+    if test "x$other_args" = x; then
+        other_args=now
+    fi
+fi
+
+
+###############################################################################
+# pbsdsh runs
+#
+if test $egs_batch_system = "pbsdsh"; then
+
+    # base name
+    basename=${input_file%.egsinp}
+
+    # job count and numbering
+    first_job=`expr $start_job + 1`
+
+    # batch options for scheduler
+    batch_options="$generic_bo"
+    if test -n "$output_bo"; then
+        batch_options="$batch_options $output_bo ${basename}.eo"
+    fi
+    if test -n "$rname_bo"; then
+        rn="${user_code}_${basename}_($n_parallel)"
+        len=`echo $rn | wc -c`
+        if test $len -gt $batch_mnl; then
+            len1=`expr $len - $batch_mnl + 1`
+            rname=`echo $rn | cut -c $len1-`
+        else
+            rname=$rn
+        fi
+        batch_options="$batch_options $rname_bo j$rname"
+    fi
+
+    # command to run on every virtual node (job number is set in run_task script)
+    command="$command -P $n_parallel"
+    if test $fresh = "yes"; then
+        command="$command -f $first_job"
+    fi
+
+    # submit the following stdin script to qsub, which will invoke the run_pbsdsh_task script
+    $batch_command $batch_options $queue $other_args <<EOF
+#!/bin/sh
+#PBS -l procs=$n_parallel
+#PBS -v HEN_HOUSE,EGS_HOME,EGS_CONFIG
+pbsdsh -c $n_parallel \$HEN_HOUSE/scripts/run_pbsdsh_task "$command" "$basename" "$dshsleep"
+EOF
+    exit 0
+fi
+#
+#
+###############################################################################
+
+
+if test $n_parallel -gt 0; then
+  command="$command -P $n_parallel"
+  #job=0
+  job=$start_job
+  first_job=`expr $start_job + 1`
+  while true; do
+    job=`expr $job + 1`
+    #if test $job -gt $n_parallel; then break; fi
+    if test $job -gt $stop_job; then break; fi
+    batch_options="$generic_bo"
+    if test "x$output_bo" != x; then
+        batch_options="$batch_options $output_bo ${input_file}_w${job}.eo"
+    fi
+    if test "x$rname_bo" != x; then
+        rn="${user_code}_${input_file}_w${job}"
+        len=`echo $rn | wc -c`
+        if test $len -gt $batch_mnl; then
+            len1=`expr $len - $batch_mnl + 1`
+            rname=`echo $rn | cut -c $len1-`
+        else
+            rname=$rn
+        fi
+        batch_options="$batch_options $rname_bo j$rname"
+    fi
+    if test $fresh = no; then
+        the_command="$command -j $job"
+    else
+        the_command="$command -j $job -f $first_job"
+    fi
+    if test "x$testing" = xyes; then
+        echo "Executing $the_command using $batch_command"
+        echo "batch options: $batch_options $queue $other_args"
+    else
+        echo "$the_command" | $batch_command $batch_options $queue $other_args
+    fi
+    if test "x$batch_sleep_time" != x; then
+        sleep $batch_sleep_time
+    fi
+  done
+else
+  batch_options="$generic_bo"
+  if test "x$output_bo" != x; then
+      batch_options="$batch_options $output_bo ${input_file}.eo"
+  fi
+  if test "x$rname_bo" != x; then
+      rn="${user_code}_${input_file}"
+      len=`echo $rn | wc -c`
+      if test $len -gt $batch_mnl; then
+          len1=`expr $len - $batch_mnl + 1`
+          rname=`echo $rn | cut -c $len1-`
+      else
+          rname=$rn
+      fi
+      batch_options="$batch_options $rname_bo j$rname"
+  fi
+  if test "x$testing" = xyes; then
+      echo "Executing $command using $batch_command"
+      echo "batch options: $batch_options $queue $other_args"
+  else
+      echo "$command" | $batch_command $batch_options $queue $other_args
+  fi
+fi
+exit 0

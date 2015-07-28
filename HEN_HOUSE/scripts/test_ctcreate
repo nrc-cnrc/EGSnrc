@@ -1,0 +1,79 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to test ctcreate
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Blake Walters, 2005
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Copies files necessary for ctcreate lab.
+#
+###############################################################################
+
+
+cd $HOME
+if [ ! -d $EGS_HOME ]
+        then
+        echo "Could not find $EGS_HOME.  EGSnrcMP and BEAMnrcMP"
+        echo "must be installed before running this script."
+        exit
+fi
+cd $EGS_HOME
+if [ ! -d dosxyznrc ] ; then
+        echo "Creating directory dosxyznrc on $EGS_HOME"
+	mkdir dosxyznrc
+fi
+cd dosxyznrc
+echo -e "Now on \c"; pwd
+if [ -f CT_create.inp ] ; then
+	echo "Found CT_create.inp already here - not changed"
+	ls -l CT_create.inp
+else
+	echo "Copying CT_create.inp"
+	cp -p $OMEGA_HOME/progs/ctcreate/ctcreate_examples/CT_create.inp .
+        ls -l CT_create.inp
+fi
+
+if [ -f CT_example_electron.egsinp ] ; then
+	echo "Found CT_example_electron.egsinp already here - not changed"
+	ls -l CT_example_electron.egsinp
+else
+	echo "Copying CT_example_electron.egsinp"
+	cp -p $OMEGA_HOME/progs/ctcreate/ctcreate_examples/CT_example_electron.egsinp .
+        ls -l CT_example_electron.egsinp
+fi
+
+if [ -f CT_example_photon.egsinp ] ; then
+        echo "Found CT_example_photon.egsinp already here - not changed"
+        ls -l CT_example_photon.egsinp
+else
+        echo "Copying CT_example_photon.egsinp"
+        cp -p $OMEGA_HOME/progs/ctcreate/ctcreate_examples/CT_example_photon.egsinp .
+        ls -l CT_example_photon.egsinp
+fi
+
+echo "Ready to create and simulate a CT phantom"
+echo "Current directory is"
+pwd
+date

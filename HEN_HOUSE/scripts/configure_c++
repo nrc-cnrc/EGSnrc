@@ -1,0 +1,545 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to configure a C++ compiler
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2007
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  A simple script to configure a C++ compiler for use with EGSnrc. Supported
+#  systems are:
+#
+#  Linux with g++ or icpc
+#  Darwin with g++
+#  Cygwin or mingw with g++
+#
+#  For other systems, the scripts simply uses the Linux/g++ settings. In any
+#  case, the user is given the option to adjust compilation switches and
+#  options. In all cases, a configuration file named egspp_${my_machine} is
+#  created and the script attempts to build egspp and the IAEA phase space
+#  library, returning 0 on success and 1 on failure.
+#
+#  The script is meant to be run from the main EGSnrc configuration
+#  script with the followingt command:
+#
+#  configure_c++ config=$EGS_CONFIG CXX=$CXX from_configure
+#
+###############################################################################
+
+
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+
+egs_config=$EGS_CONFIG
+CXX=
+from_configure=no
+
+while test $# -gt 0; do
+
+    case "$1" in
+
+        config=*) egs_config=`echo $1 | sed 's/config=//g'` ;;
+        CXX=*)    CXX=`echo $1 | sed 's/CXX=//g'` ;;
+        cxx=*)    CXX=`echo $1 | sed 's/cxx=//g'` ;;
+        from_configure) from_configure=yes ;;
+        *) echo "${my_name}: unknown argument $1" >&2 ;;
+
+    esac
+    shift
+
+done
+
+args_ok=yes
+if test "x$egs_config" = x; then args_ok=no; fi
+if test "x$CXX" = x; then args_ok=no; fi
+
+if test $args_ok = no; then
+    cat >&2 <<EOF
+
+Usage: $my_name CXX=C++_compiler_name [config=EGS_CONFIG] [from_configure]
+
+where EGS_CONFIG is an existing EGSnrc config file (including absolute path)
+      needed when the environment variable EGS_CONFIG is not set
+      (e.g. when installing EGSnrc for the first time)
+
+EOF
+    exit 1
+fi
+
+if test ! -f $egs_config; then
+    cat >&2 <<EOF
+
+The config file $egs_config does not exist!
+
+EOF
+    exit 1
+fi
+
+my_machine=`cat $egs_config | grep "my_machine =" | sed "s/my_machine = //g"`
+canonical_system=`cat $egs_config | grep "canonical_system =" | sed "s/canonical_system = //g"`
+make_prog=`cat $egs_config | grep "make_prog =" | sed "s/make_prog = //g"`
+hen_house=`cat $egs_config | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //g"`
+F77=`cat $egs_config | grep "F77 =" | sed "s/F77 = //g"`
+dlopen_lib=`cat $egs_config | grep "BEAMLIB_EXTRA_LIBS =" | sed 's/BEAMLIB_EXTRA_LIBS = //g' | sed 's/\$(IAEA_LIB)//g'`
+
+is_ok=yes
+if test "x$my_machine" = x; then
+    echo Variable my_machine not defined in $egs_config >&2
+    is_ok=no
+fi
+if test "x$canonical_system" = x; then
+    echo Variable canonical_system not defined in $egs_config >&2
+    is_ok=no
+fi
+if test "x$make_prog" = x; then
+    echo Variable make_prog not defined in $egs_config >&2
+    is_ok=no
+fi
+if test "x$hen_house" = x; then
+    echo Variable hen_house not defined in $egs_config >&2
+    is_ok=no
+fi
+if test "x$F77" = x; then
+    echo Variable F77 not defined in $egs_config >&2
+    is_ok=no
+fi
+if test $is_ok = no; then
+    echo $egs_config doesn\'t look like a valid EGSnrc config file >&2
+    exit 1
+fi
+
+case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
+      *c*,-n*) ECHO_N= ECHO_C='
+' ECHO_T='    ' ;;
+      *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
+      *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
+esac
+
+if test $from_configure = no; then
+    exec 5>config.log
+    cat >&5 <<EOF
+This file contains output from the C++ compiler configuration process
+
+EOF
+else
+    exec 5>>config.log
+    cat >&5 <<EOF
+
+***************************** begin of C++ configuration ***********************
+EOF
+fi
+
+ofile=${hen_house}specs/egspp_${my_machine}.conf
+
+while true; do
+
+create_config=yes
+if test -f $ofile; then
+    echo "EGSnrc C++ configuration file $ofile" >&2
+    echo $ECHO_N "already exists. Overwrite? (y/n) $ECHO_C" >&2
+    read yesno
+    if test "x$yesno" = xn; then
+        echo "OK, using existing configuration" >&2
+        create_config=no
+    fi
+fi
+
+if test $create_config=yes; then
+
+case $CXX in
+
+    *g++*) opt="-O3 -ffast-math";;# mingw32-g++ and g++4 also taken into account
+    icpc)  opt="-O3 -no-prec-div -fp-model fast=2";;
+    icc)   opt="-O3 -no-prec-div -fp-model fast=2";;
+    cl)    opt="-Ox -Ob2 -MD -GX -GR -nologo";;
+    *)     opt="-O2";;
+
+esac
+
+is_osx=no
+libpre=lib
+libext=.so
+shared="-shared"
+fpic=
+obje=o
+eout="-o "
+extra="-o \$@ $dlopen_lib"
+extra_link=
+lib_link1="-L\$(abs_dso) -Wl,-rpath,\$(abs_dso)"
+defines=
+link2_prefix="-l"
+link2_suffix=
+
+case $canonical_system in
+
+    x86_64-*-linux*) fpic="-fPIC";;
+    *-*-darwin*)
+        is_osx=yes;
+        libext=".dylib"; libext_bundle=".so"; defines="-DOSX";
+        lib_link1="-L\$(abs_dso)"; shared="-dynamiclib";
+        case $CXX in
+            g++) shared_bundle="-bundle" ;;
+            *)   shared_bundle="-qmkshrobj" ;; # assume xlC
+        esac
+        ;;
+    *cygwin*)
+        libpre=""; libext=".dll";
+        case $CXX in
+            *g++*)
+                defines="-DCYGWIN";
+                extra="-o \$@ -Wl,--out-implib,\$(@:.dll=.lib)";
+                ;;
+            cl)
+                defines="-DWIN32 -DMSVC"; obje=obj;
+                extra="-link -DLL -implib:\$(@:.dll=.lib) -out:\$@";
+                eout="-Fe"; lib_link1="";
+                link2_prefix="\$(ABS_DSO)"; link2_suffix=".lib";
+                ;;
+            *)  echo Unknown compiler $CXX on cygwin ;;
+        esac
+        ;;
+    *mingw*)
+        libpre=""; libext=".dll"; defines="-DWIN32";
+        case $CXX in
+            *g++*)
+                defines="-DWIN32";
+                extra="-o \$@ -Wl,--out-implib,\$(@:.dll=.lib)";
+                ;;
+            cl)
+                defines="-DWIN32 -DMSVC"; obje=obj;
+                extra="-link -DLL -implib:\$(@:.dll=.lib) -out:\$@";
+                eout="-Fe"; lib_link1="";
+                link2_prefix="\$(ABS_DSO)"; link2_suffix=".lib";
+                ;;
+            *)  echo Unknown compiler $CXX on mingw ;;
+        esac
+        ;;
+    *solaris*)
+        lib_link1="-L\$(abs_dso) -Wl,-R,\$(abs_dso)";
+        case $CXX in
+            g++) fpic="-fPIC" ;;
+            *)   fpic="-KPIC"; shared="-G" ;;
+        esac
+        ;;
+        #
+        # Note: I have actually never tried all of the following settings
+        #       They are simply taken from cmake platform definition files
+        #
+    *ibm-aix*)
+        shared="-G -Wl,-brtl"; lib_link1="-L\$(abs_dso) -Wl,-brtl,-bexpall";;
+    *) echo Unsupported architecture $canonical_system; fpic="-fPIC";;
+esac
+
+#
+# Try to determine fortran_libs
+#
+echo >&2
+echo $ECHO_N "Obtaining Fortran libraries needed when $CXX is the linker ...$ECHO_C" >&2
+fortran_libs=`$hen_house/scripts/get_f77_libs1 $F77 $CXX`
+if test $? -eq 0; then
+    echo "OK" >&2
+    f_libs=`echo $fortran_libs | sed "s/fortran_libs = //g"`
+else
+    echo "Failed" >&2
+    f_libs=""
+fi
+
+opt_options="Optimization options"
+pic_options="Generation of position independent code"
+def_options="Preprocessor defines"
+shared_options="Flag for creating shared libraries"
+out_options="Output/dlopen library"
+dso_path_options="DSO path encoded in the executable"
+link2_options="Linking against library some_lib"
+flibs_options="Fortran libraries needed by C++ linker"
+bundle_options="Creating library bundles on OSX"
+
+cat >&2 <<EOF
+
+Using the following compiler/linker switches for creating/linking against
+dynamic shared objects (DSO, a.k.a. shared library or DLL), where
+\$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
+EGSnrc DSO directory at compile/link time:
+
+1) $opt_options:                     $opt
+2) $pic_options:  $fpic
+3) $def_options:                     $defines
+4) $shared_options:       $shared
+5) $out_options:                    $extra
+6) $dso_path_options:       $lib_link1
+7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:   $f_libs
+EOF
+num_options=8
+if test $is_osx = yes; then
+    cat >&2 <<EOF
+9) $bundle_options:          $f_libs
+EOF
+    num_options=9
+fi
+
+cat >&5 <<EOF
+
+Using the following compiler/linker switches for creating/linking against
+dynamic shared objects (DSO, a.k.a. shared library or DLL), where
+\$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
+EGSnrc DSO directory at compile/link time:
+
+1) $opt_options:                     $opt
+2) $pic_options:  $fpic
+3) $def_options:                     $defines
+4) $shared_options:       $shared
+5) $out_options:                    $extra
+6) $dso_path_options:       $lib_link1
+7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:   $f_libs
+EOF
+if test $is_osx = yes; then
+    cat >&5 <<EOF
+9) $bundle_options:          $shared_bundle
+EOF
+fi
+
+options_modified=no
+while true; do
+
+    echo >&2
+    echo $ECHO_N "Input option to change, 0 to proceed without (further) changes: $ECHO_C" >&2
+    read ans
+    if test $ans -eq 0; then break; fi
+    if test $ans -gt $num_options; then continue; fi
+    options_modified=yes
+    case $ans in
+        1)  echo $ECHO_N "Input $opt_options: $ECHO_C" >&2
+            read opt ;;
+        2)  echo $ECHO_N "Input $pic_options: $ECHO_C" >&2
+            read fpic ;;
+        3)  echo $ECHO_N "Input $def_options: $ECHO_C" >&2
+            read defines ;;
+        4)  echo $ECHO_N "Input $shared_options: $ECHO_C" >&2
+            read shared ;;
+        5)  echo $ECHO_N "Input $out_options: $ECHO_C" >&2
+            read extra ;;
+        6)  echo $ECHO_N "Input $dso_path_options: $ECHO_C" >&2
+            read lib_link1 ;;
+        7)
+            echo $ECHO_N "Input link prefix: $ECHO_C" >&2
+            read link2_prefix
+            echo $ECHO_N "Input link suffix: $ECHO_C" >&2
+            read link2_suffix
+        ;;
+        8)  echo $ECHO_N "Input $flibs_options: $ECHO_C" >&2
+            read f_libs ;;
+        9)  echo $ECHO_N "Input $bundle_options: $ECHO_C" >&2
+            read shared_bundle ;;
+        *)
+    esac
+
+done
+
+if test $options_modified = yes; then
+
+    cat >&5 <<EOF
+
+Using the following user modified compiler/linker switches for
+creating/linking against DSOs
+
+1) $opt_options:                     $opt
+2) $pic_options:  $fpic
+3) $def_options:                     $defines
+4) $shared_options:       $shared
+5) $out_options:                    $extra
+6) $dso_path_options:       $lib_link1
+7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:   $f_libs
+EOF
+    if test $is_osx = yes; then
+        cat >&5 <<EOF
+9) $bundle_options:          $shared_bundle
+EOF
+    fi
+fi
+
+echo >&2
+echo $ECHO_N "Creating C++ config file ............................. $ECHO_C" >&2
+current_date=`date`
+cat >$ofile <<EOF
+#*************************************************************************
+#
+#  EGSnrc C++ config file
+#
+#  Created by $my_name on $current_date
+#
+#**************************************************************************
+#
+# The C++ compiler
+#
+CXX = $CXX
+
+#
+# The compilation options
+#
+opt = $opt
+
+#
+# The switch to create a shared library
+#
+shared = $shared
+
+#
+# Library prefix and extension
+#
+libpre = $libpre
+libext = $libext
+
+#
+# The object file extension
+#
+obje = $obje
+
+#
+# Configuration specific definitions for the preprocessor
+#
+DEF1 = $defines $fpic
+
+#
+# Extra arguments passed to the linker
+#
+extra = $extra
+
+#
+# Extra step after building the DSO (may be needed for Windows when
+# using g++ to create the .lib and .exp files using the lib tool
+#
+extra_link = $extra_link
+
+#
+# How to name the executable
+#
+EOUT = $eout
+
+#
+# How to encode the library path into the executable.
+# If this is not available for your system, you have to add the directory
+#    ${hen_house}egs++/dso/$my_machine
+# to your library search path. On many (but not all) systems, this is
+# achieved by defining the environment variable LD_LIBRARY_PATH to contain
+# the above path.
+#
+lib_link1 = $lib_link1
+
+#
+# Switches for linking against a shared library
+#
+link2_prefix = $link2_prefix
+link2_suffix = $link2_suffix
+
+#
+# Libraries needed when linking together C++ and Fortran code and the linking
+# is done by the C++ compiler.
+#
+fortran_libs = $f_libs
+EOF
+
+if test $is_osx = yes; then
+    cat >>$ofile <<EOF
+
+#
+# Unlike other systems, on OSX a dynamically loadable library is a
+# different thing from a shared library (it is called a bundle).
+# Thus, we need extra targets and switches to build bundles.
+#
+MACOSX = yes
+shared_bundle = $shared_bundle
+libext_bundle = $libext_bundle
+
+EOF
+fi
+echo "OK" >&2
+
+fi   # if $create_config = yes;
+
+if test ! -d $hen_house/egs++/dso; then
+    mkdir $hen_house/egs++/dso || echo "Failed to create DSO directory $hen_house/egs++/dso ?"
+fi
+
+echo $ECHO_N "Building the IAEA phase space library ................ $ECHO_C" >&2
+echo >&5; echo >&5;
+echo "****************** Building the IAEA phase space library *********************" >&5
+curdir=`pwd`
+if test -d $hen_house/egs++/dso/$my_machine; then
+    rm -rf $hen_house/egs++/dso/$my_machine/*
+else
+    mkdir $hen_house/egs++/dso/$my_machine
+fi
+cd $hen_house/iaea_phsp
+build_library='$make_prog EGS_CONFIG=$egs_config'
+$make_prog EGS_CONFIG=$egs_config >&5 2>&5
+if test $? -eq 0; then
+    echo " ********************* OK ************************" >&5
+    echo "OK" >&2
+    iaea_ok=yes
+else
+    echo "****************** Failed ******************************" >&5
+    echo "Failed" >&2
+    iaea_ok=no
+fi
+
+echo $ECHO_N "Building the EGSnrc C++ class library (be patient) ... $ECHO_C" >&2
+
+echo >&5; echo >&5
+echo "************************ Building the EGSnrc C++ class library ***************" >&5
+cd $hen_house/egs++
+$make_prog EGS_CONFIG=$egs_config >&5 2>&5
+if test $? -eq 0; then
+    echo " ********************** OK ************************" >&5
+    echo >&2 "OK"
+    egspp_ok=yes
+else
+    echo "****************** Failed ******************************" >&5
+    echo "Failed" >&2
+    egspp_ok=no
+fi
+
+if test $iaea_ok = yes && test $egspp_ok = yes; then
+    config_status=0
+    break
+else
+    config_status=1
+    cat >&2 <<EOF
+
+These settings did not work out. You may edit the source code
+(in case you can see where the problem is when building the C++ libraries
+from the config.log file) and/or try different compiler/linker options.
+
+EOF
+    echo $ECHO_N "Do you want to retry? (y/n) $ECHO_C" >&2
+    read ans
+    if test "x$ans" = xn; then break; fi
+    rm -f $ofile
+fi
+
+done
+
+cd $curdir
+exit $config_status

@@ -1,0 +1,85 @@
+
+###############################################################################
+#
+#  EGSnrc additional C shell definitions for EGSnrc
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Source this file from your .bashrc file if a C shell flavor is your
+#  default shell. It must be sourced AFTER egsnrc_bashrc_additions. You may
+#  put additional definitions and aliases into this file but be aware that
+#  changes will be lost if you rerun the installation. It is therefore better
+#  to put additional system wide definitions in:
+#
+#  $HEN_HOUSE/scripts/local_cshrc_additions
+#
+###############################################################################
+
+
+#  Environment variables
+#
+set my_machine = `cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = //"`
+setenv HEN_HOUSE `cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //"`
+
+# Path
+#
+setenv PATH "${HEN_HOUSE}bin/${my_machine}:${PATH}"
+if (-d ${EGS_HOME}bin/$my_machine) then
+    setenv PATH "${EGS_HOME}bin/${my_machine}:${PATH}"
+endif
+
+#  Aliases
+#
+alias mf '$HEN_HOUSE/scripts/compile_user_code mf'
+alias  f '$HEN_HOUSE/scripts/compile_user_code mf'
+alias  m '$HEN_HOUSE/scripts/compile_user_code m'
+alias ex '$HEN_HOUSE/scripts/run_user_code'
+alias exb '$HEN_HOUSE/scripts/run_user_code_batch'
+alias p4 '$HEN_HOUSE/bin/$my_machine/pegs4.exe'
+alias egsgui '$HEN_HOUSE/bin/$my_machine/egs_gui >& /dev/null &'
+alias egsinprz '$HEN_HOUSE/bin/$my_machine/egs_inprz >& /dev/null &'
+alias mor '$HEN_HOUSE/scripts/mortran_compile'
+alias switch_config 'source $hen_house/scripts/switch_config_cshrc'
+alias show_data '$HEN_HOUSE/pegs4/data/show_data'
+alias previewRZ '$HEN_HOUSE/previewRZ/previewRZ.tcl'
+alias clean_after_parallel '$HEN_HOUSE/scripts/clean_after_parallel'
+alias test_BEAMnrc '$HEN_HOUSE/scripts/test_BEAMnrc'
+
+# the following is for testing the distribution.
+alias test_distribution '$HEN_HOUSE/scripts/test_egsnrcmp_distribution'
+
+# Now check for local system wide csh additions
+#
+if (-f $HEN_HOUSE/scripts/local_cshrc_additions) then
+    source $HEN_HOUSE/scripts/local_cshrc_additions
+endif
+
+# Every individual user may customize their settings by creating a
+# .egsnrc_cshrc_additions file in their HOME directory.
+# Source this file if available
+#
+if (-f $HOME/.egsnrc_cshrc_additions) then
+    source $HOME/.egsnrc_cshrc_additions
+endif

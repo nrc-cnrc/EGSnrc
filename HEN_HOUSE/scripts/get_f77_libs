@@ -1,0 +1,230 @@
+#! /bin/sh
+###############################################################################
+#
+#  EGSnrc script to determine Fortran linking options
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Determines Fortran linking options which are required when linking is done
+#  by some other compiler
+#
+#  Usage: get_f77_libs compiler
+#
+#  Some portions of this script are derived from configure scripts generated
+#  by autoconf.
+#
+###############################################################################
+
+
+if test $# -lt 1; then
+  echo "Usage: $0 f_compiler" >&2
+  exit 1
+fi
+
+F77=$1
+fext=f
+oext=o
+
+if test x"$2" != x; then
+  exec 5>$2
+else
+  exec 5>junk.log
+fi
+
+# check if F77 is the GNU compiler
+rm -f conftest.*
+cat >conftest.F <<EOF
+#ifndef __GNUC__
+      so ein mist
+#else
+      program test
+#endif
+      end
+EOF
+test_compile='$F77 -c conftest.F >&5'
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); } && test -s conftest.$oext; then
+  is_gnu_fcompiler=true
+  echo "**********************************************************" >&5
+  echo $F77 is the GNU Fortran compiler >&5
+  echo "**********************************************************" >&5
+else
+  is_gnu_fcompiler=false
+  echo "**********************************************************" >&5
+  echo $F77 is not the GNU Fortran compiler >&5
+  echo "**********************************************************" >&5
+fi
+rm -f conftest.*
+
+cat >conftest.$fext <<EOF
+      program test
+      end
+EOF
+
+v_output=
+found_v_option=no
+v_option=
+test_compile='$F77 -c conftest.$fext >&5'
+echo "************************************************************" >&5
+echo "Checking how to get verbose output from $F77" >&5
+echo "************************************************************" >&5
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); } then
+  for v_arg in -v -verbose --verbose -V -\#\#\#; do
+    echo "*********** Trying $v_arg" >&5
+    test_link='$F77 -o conftest $v_arg conftest.$oext'
+    v_output=`eval $test_link 5>&1 2>&1 | grep -v 'Driving:'`
+    echo "************** Result:" >&5
+    echo $v_output >&5
+    if echo $v_output | grep xlfentry >/dev/null 2>&1; then
+      v_output=`echo $v_output | sed 's/,/ /g'`
+    fi
+    if echo $v_output | grep cft90 >/dev/null 2>&1; then
+      v_output=`echo $v_output | sed "s/\"//g"`
+    fi
+    for arg in $v_output; do
+      case $arg in
+        [\\/]*.a | ?:[\\/]*.a | -[lLRu]*)
+          found_v_option=yes
+          v_option=$v_arg
+          break 2 ;;
+      esac
+    done
+  done
+else
+  echo "$test_compile failed." >&5
+  exit 1
+fi
+
+f77_libs=
+if test "x$found_v_option" = xyes; then
+  echo "**************************************************************" >&5
+  echo "Verbose option is $v_option" >&5
+  echo "**************************************************************" >&5
+  save_positional="$@"
+  set X $v_output
+  while test $# != 1; do
+    shift
+    arg=$1
+    echo "******* Checking $arg" >&5
+    case $arg in
+      [\\/]*.a | ?:[\\/]*.a)
+        is_there=false
+        for i in $f77_libs; do
+          if test x"$arg" = x"$i"; then
+            is_there=true
+            break
+          fi
+        done
+        if test x"$is_there" = xtrue; then
+          :
+        else
+          f77_libs="$f77_libs $arg"
+        fi
+        ;;
+      -lang* | -lcrt0.o | -lc | -lgcc | -LANG:=*)
+        ;;
+      -lkernel32)
+        test x"$CYGWIN" != xyes && f77_libs="$f77_libs $arg"
+        ;;
+      -bI:*)
+        is_there=false
+        for i in $f77_libs; do
+          if test x"$arg" = x"$i"; then
+            is_there=true
+            break
+          fi
+        done
+        if test x"$is_there" = xtrue; then
+          :
+        else
+          if test x"$is_gnu_fcompiler" = xtrue; then
+            for link_opt in $arg; do
+              f77_libs="$f77_libs -Xlinker $link_opt"
+            done
+          else
+            f77_libs="$f77_libs $arg"
+          fi
+        fi
+        ;;
+      -[LRuY])
+        case $2 in
+          "" | -*);;
+          *)
+            arg="$arg$2"
+            shift; shift
+            set X $arg "$@"
+            ;;
+        esac
+        ;;
+      -YP,*)
+        for j in `echo $arg | sed -e 's/-YP,/-L/;s/:/ -L/g'`; do
+          echo "j = $j" >&5
+          is_there=false
+          for i in $f77_libs; do
+            if test x"$j" = x"$i"; then
+              is_there=true
+              break
+            fi
+          done
+          if test x"$is_there" = xtrue; then
+            :
+          else
+            arg="$arg $j"
+            f77_libs="$f77_libs $j"
+          fi
+        done
+        ;;
+      -[lLR]*)
+        is_there=false
+        for i in $f77_libs; do
+          if test x"$arg" = x"$i"; then
+            is_there=true
+            break
+          fi
+        done
+        if test x"$is_there" = xtrue; then
+          :
+        else
+          f77_libs="$f77_libs $arg"
+        fi
+        ;;
+    esac
+  done
+  set X $save_positional; shift
+
+  case `(uname -sr) 2>/dev/null` in
+    "SunOS 5"*)
+       run_path=`echo $v_output | sed -n 's,^.*LD_RUN_PATH *= *\(/[^ ]*\).*$,-R\1,p'`
+       test "x$run_path" != x && if test "$is_gnu_fcompiler" = yes; then
+         for link_opt in $run_path; do
+           f77_libs="$f77_libs -Xlinker $link_opt"
+         done
+       else
+         f77_libs="$f77_libs $run_path"
+       fi
+       ;;
+  esac
+fi
+rm -f conftest conftest.*
+echo "$f77_libs"

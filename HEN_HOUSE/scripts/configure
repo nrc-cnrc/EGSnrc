@@ -1,0 +1,2608 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to configure a Fortran compiler
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Dave Rogers
+#                   Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+# Configures a Fortran compiler for use with EGSnrc. It writes compiler name,
+# compiler flags and libraries to a config file specified by the user. It
+# checks if the compiler supports language extensions such as date_and_time,
+# fdate, hostnm, etc., and generates wrapper functions that should be used by
+# EGSnrc user codes.
+#
+###############################################################################
+
+
+# my version
+my_version='1.0'
+
+# my name
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+
+# echo stuff
+# shamelesly stolen from autoconf generated scripts.
+#
+case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
+  *c*,-n*) ECHO_N= ECHO_C='
+' ECHO_T='    ' ;;
+  *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
+  *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
+esac
+
+# testing for files
+as_executable="test -f"
+as_file="test -f"
+as_directory="test -d"
+
+# path separator
+echo "#! /bin/sh" >conftest.sh
+echo  "exit 0"   >>conftest.sh
+if { (PATH=".;."; conftest.sh) 2>/dev/null
+     test_status=$?
+     (exit $test_status); }; then
+  path_separator=';'
+else
+  path_separator=:
+fi
+rm -f conftest.sh
+
+# Now explain to the user what this script is going to do.
+#
+cat >&2 <<_ACEOF
+**************************************************************************
+
+EGSnrc $my_name version $my_version, $Date: 2014/10/15 15:14:32 $
+
+This script configures a Fortran compiler for use with the EGSnrc
+system.  The config options will be written to a file in the EGSnrc
+'specs' subdirectory. You can later use this config file by setting
+the environment variable EGS_CONFIG to point to this file. You can use
+this script to generate as many different configs as you wish (because,
+for instance, you may have many different compilers installed or you
+may have various Unix machines operating on the same file system).
+
+To use this script, you must have write permission on the HEN_HOUSE and
+the script must be run from the HEN_HOUSE/scripts area.
+
+If the environment variable HEN_HOUSE is set for previous EGSnrc or EGS4
+installations, it should be unset prior to calling this script.
+
+In the following you will be asked a few questions about compiler name,
+compiler options and possibly installation directories (if the environment
+variable HEN_HOUSE is not set). For most question you can obtain help
+by typing 'help' as response. For any questions that do not require any
+input (e.g. empty compilation flags), you can just hit enter.
+
+***************************************************************************
+
+hit return to continue
+_ACEOF
+
+read response
+
+echo
+echo $ECHO_N "Checking system type ... $ECHO_C" >&2
+canonical_system=`./config.guess`
+system_name=`uname -s`
+echo "$canonical_system" >&2
+is_x86_64=`echo $canonical_system | grep x86_64`
+
+echo $ECHO_N "Checking for make ... $ECHO_C" >&2
+have_make=no
+make_prog=''
+for prog in gmake make make.exe gmake.exe mingw32-make.exe; do
+    save_IFS=$IFS; IFS=$path_separator;
+    dummy="$PATH"
+    for make_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$make_dir/$prog" || continue
+        have_make=yes
+        make_prog=$prog
+        abs_make="$make_dir/$prog"
+        break
+    done
+    if test "x$have_make" = xyes; then
+        break
+    fi
+done
+if test "x$have_make" = xno; then
+    echo "no" >&2
+    echo >&2; echo >&2
+cat >&2 <<_ACEOF
+You don't have a 'make' utility installed on your system!
+make is essential for this and future releases of EGSnrc.
+If you are running a commercial Unix system, ask your vendor why
+make is not installed.
+In any case you can install the GNU make utility, see
+   http://www.gnu.org/software/make/make.html
+On Linux systems it is easiest to install the make package provided
+by your Linux distribution vendor.
+_ACEOF
+    exit 1
+fi
+echo "yes ($abs_make)" >&2
+
+# Now see which fortran compiler is to be used.
+# First check the availability of fortran compilers
+echo $ECHO_N "Looking for fortran compilers installed on your system ... $ECHO_C" >&2
+f_compilers=
+f_first=
+for fc_prog in g77 f77 xlf cf77 cft77 frt pgf77 fl32 af77 fort77 f90 xlf90 pgf90 epcf90 f95 fort xlf95 lf95 g95 asf77 ifort gfortran; do
+    save_IFS=$IFS; IFS=$path_separator;
+    dummy="$PATH"
+    for fc_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$fc_dir/$fc_prog" || continue
+        #echo "found $fc_dir/$fc_prog"
+        if test "x$f_first" = x; then
+            f_first=$fc_prog
+            f_compilers=$fc_prog
+        else
+            f_compilers="$f_compilers $fc_prog"
+        fi
+        break
+    done
+done
+echo "OK" >&2
+echo >&2; echo >&2
+if test "x$f_compilers" = x; then
+    echo "Did not find a FORTRAN compiler in your search path" >&2
+else
+    echo "Found the following FORTRAN compilers in your search path:" >&2
+    echo "    $f_compilers" >&2
+fi
+while true; do
+    echo
+    if test "x$f_compilers" = x; then
+        echo $ECHO_N "Input fortran compiler: $ECHO_C" >&2
+    else
+        echo $ECHO_N "Input fortran compiler [$f_first]: $ECHO_C" >&2
+    fi
+    read F77
+    if test "x$F77" = x; then
+      if test "x$f_first" = x; then
+          echo "You have to input a non-empty string here!" >&2
+      else
+          F77=$f_first
+          echo "Using $F77" >&2
+          break
+      fi
+    else
+    found_F77=
+    # is the input in the list of found compilers ?
+    if test ! "x$f_compilers" = x; then
+        for fc_prog in $f_compilers; do
+            if test "x$fc_prog" = "x$F77"; then
+                found_F77=$fc_prog
+                break
+            fi
+        done
+        if test ! "x$found_F77" = x; then
+            break;
+        fi
+    fi
+    # is it an absolute path name ?
+    if test -f "$F77"; then
+        break
+    fi
+    # it is not from the list and it is not an absolute path name
+    # => must be a compiler name not in the check list.
+    # see if it is in the search path
+    save_IFS=$IFS; IFS=$path_separator; dummy="$PATH"
+    for fc_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$fc_dir/$F77" || continue
+        found_F77=yes; break
+    done
+    if test "x$found_F77" = x; then
+        echo "No compiler with that name was found." >&2
+        echo "You must either give a full path name or include the directory" >&2
+        echo "where the compiler is installed in your search path or" >&2
+        echo "install a fortran compiler if you don't have one installed" >&2
+    else
+        break
+    fi
+    fi
+done
+
+exec 5>config.log
+cat >&5 <<EOF
+This file containes any messages produced by the compiler while
+running compilation tests to check the availibility of various
+functions and subroutines
+
+EOF
+
+# Check if the compiler works, extension for objects and executables, etc.
+test_ext=f
+cat >&5 <<EOF
+********************* basic compilation test *******************
+EOF
+cat >conftest.$test_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+echo $ECHO_N "Testing if $F77 works ... $ECHO_C" >&2
+test_compile='$F77 -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&5'
+rm -f conftest.o conftest.obj
+test_objext=''
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    for test_file in `(ls conftest.o conftest.obj; ls conftest.*) 2>/dev/null`; do
+        case $test_file in
+            *.$test_ext | *.xcoff | *.tds | *.d | *.pdb ) ;;
+            *) test_objext=`expr "$test_file" : '.*\.\(.*\)'`
+               break;;
+        esac
+    done
+    echo "yes. Object extension is '$test_objext'" >&2
+else
+    echo "no" >&2
+    echo "Error: your FORTRAN compiler failed to compile a simple test program" >&2
+    rm -f conftest.$test_ext conftest.o conftest.obj
+    exit 1
+fi
+rm -f conftest.$test_objext
+
+
+cat >&5 <<EOF
+
+********************* Can the compiler produce executables ? ******************
+EOF
+echo $ECHO_N "Testing if $F77 can create executables ... $ECHO_C" >&2
+test_compile='$F77 $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&5'
+test_exeext=''
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    for test_file in `ls a.exe conftest.exe 2>/dev/null;
+                ls a.out conftest 2>/dev/null;
+                ls a.* conftest.* 2>/dev/null`; do
+        case $test_file in
+            *.$test_ext | *.o | *.obj | *.xcoff | *.tds | *.d | *.pdb ) ;;
+            a.out ) break;;
+            *.* ) test_exeext=`expr "$test_file" : '[^.]*\(\..*\)'`
+                  break;;
+            * ) break;;
+        esac
+    done
+    echo "yes. Extension is '$test_exeext'" >&2
+else
+    echo "no" >&2
+    echo "error: this FORTRAN compiler can not create executables!" >&2
+    rm -f a.exe conftest.exe a.out conftest
+    exit 1
+fi
+rm -f a.out a.exe conftest.$test_exeext conftest.$test_ext
+
+cat >&5 <<EOF
+
+********************* Fortran version ***************************************
+EOF
+echo $ECHO_N "Checking for compiler version ... $ECHO_C" >&2
+cat >conftest.$test_ext <<EOF
+      program test
+      end
+EOF
+f_v_output=
+f_version=
+f_fflags=
+f_oflags=
+f_dflags=
+#for test_arg in -v -V --version; do
+dir_element=3
+need_fool_optimizer=no
+for test_arg in -v; do
+
+    f_test_output=`$F77 $test_arg -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&1 2>&1`
+    echo "test_arg = '$test_arg': " >&5
+    echo $f_test_output >&5
+    if test -s conftest.$test_objext; then
+        if test "x$f_test_output" != x; then
+            junk=`echo $f_test_output | grep "GNU F77 version"`
+            if test "x$junk" != x; then
+                junk=`echo $junk | sed 's/.*GNU F77 version//g' | awk '{print $1}'`
+                f_version="GNU F77 version $junk"
+                #f_fflags="-fno-automatic -finit-local-zero"
+                # don't need this with new EGSnrc
+                f_oflags="-O2"
+                f_dflags="-g"
+                if test ! x$is_x86_64 = x; then
+                    f_fflags="-fPIC"
+                fi
+                break
+            fi
+            junk=`echo $f_test_output | grep "GNU F95 version"`
+            if test "x$junk" != x; then
+                junk=`echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}'`
+                f_version="GNU F95 version $junk"
+                f_oflags="-O2"
+                f_dflags="-g"
+                if test ! x$is_x86_64 = x; then
+                    f_fflags="-fPIC"
+                fi
+                break
+            fi
+            junk=`echo $f_test_output | grep "decfort"`
+            if test "x$junk" != x; then
+                f_version="DEC Fortran compiler"
+                #f_flags="-noautomatic"
+                # don't need this with new EGSnrc
+                f_oflags="-fast"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "__sgi"`
+            if test "x$junk" != x; then
+                f_version="SGI Fortran compiler"
+                #f_fflags="-static"
+                f_oflags="-O3"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "xlfentry"`
+            if test "x$junk" != x; then
+                f_version="IBM XL Fortran compiler"
+                #f_fflags="-qsave"
+                f_oflags="-O3"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "SUNWs"`
+            if test "x$junk" != x; then
+                f_version="Sun Fortran compiler"
+                f_oflags="-fast"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "LPATH is"`
+            if test "x$junk" != x; then
+                f_version="HP Fortran compiler"
+                f_fflags="+E1 +E4 +U77 -K"
+                f_oflags="+O4"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "PGFTN"`
+            if test "x$junk" != x; then
+                dir_element=5
+                f_version="PGI Fortran compiler"
+                f_oflags="-fast"
+                f_dflags="-g -C"
+                break
+            fi
+            junk=`echo $f_test_output | grep "D__INTEL_COMPILER"`
+            if test "x$junk" != x; then
+                junk=`echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}'`
+                f_version="Intel(R) Fortran Compiler Version $junk"
+                f_oflags="-O3"
+                f_dflags="-g -CB"
+                need_fool_optimizer=yes
+                break
+            fi
+        fi
+    fi
+done
+if test "x$f_version" = x; then
+    echo "don't know" >&2
+else
+    echo "$f_version" >&2
+fi
+
+# Now ask for standard compilation flags.
+#
+echo >&2; echo >&2
+while true; do
+if test "x$f_fflags" = x; then
+    echo $ECHO_N "Input standard compilation flags: $ECHO_C" >&2
+else
+    echo $ECHO_N "Input standard compilation flags [$f_fflags]: $ECHO_C" >&2
+fi
+read response
+if test "x$response" = xhelp; then
+    cat >&2 << _ACEOF
+
+Originally EGSnrc assumed that local variables have static storage.
+However, with the current release, this assumption is no longer needed,
+nor is it needed for any of the EGSnrc user-codes distributed by NRC
+with the EGSnrc distribution.  However, other EGSnrc user-codes may
+assume that local variables have static storage.  While this was the
+default in early FORTRAN implementations, many modern compilers set by
+default local variables to automatic. To guarantee proper execution of
+such codes, you have to use a compilation flag that tells the compiler
+to use static storage for local variables. For the GNU g77 compiler this
+is '-fno-automatic -finit-local-zero', whereas for the IBM compiler
+you need '-qsave' and '-K' for the HP compiler. Many others require
+'-static'.  You may also want to turn off annoying warnings by using
+the appropriate compiler flag. If you intend to use EGSnrc with other
+languages (e.g. C), you may want to turn off function name decoration
+(also known as mangling) that is used by default by many compilers. For
+GNU g77 you need '-fno-underscoring' for this. Some compiler may also
+require switches for date and time routines (e.g. the HP compiler needs
+'+E1 +U77').  Best is to check the documentation of your compiler and
+input the proper compiler flags here. For the various flags, if the script
+recognizes your compiler, it will put in the default appropriate for the NRC
+user-codes.  If not recognized, the default will be blank (which also may
+be the recommendation, eg for the g77 compiler).
+
+_ACEOF
+elif test "x$response" = xnone; then
+    break
+elif test "x$response" = x; then
+    FFLAGS="$FFLAGS $f_fflags"
+    break
+else
+    FFLAGS="$FFLAGS $response"
+    break
+fi
+done
+
+while true; do
+if test "x$f_oflags" = x; then
+    echo $ECHO_N "Input optimization flags: $ECHO_C" >&2
+else
+    echo $ECHO_N "Input optimization flags [$f_oflags]: $ECHO_C" >&2
+fi
+read response
+if test "x$response" = xhelp; then
+    cat >&2 << _ACEOF
+Typical optimization flags are '-O3', '-fast' or '-Ofast'. You may also want
+to turn on some CPU specific optimizations, e.g. '-march=i686 -mcpu=i686'
+for the GNU compiler on Pentums/Athlons or '-mips2' for the SGI compiler and
+R4400 CPU. Best is to check your compiler documentation for supported
+optimization levels and options.
+
+_ACEOF
+elif test "x$response" = xnone; then
+    FOPT=
+    break
+elif test "x$response" = x; then
+    FOPT="$f_oflags"
+    break
+else
+    FOPT="$response"
+    break
+fi
+done
+
+while true; do
+if test "x$f_dflags" = x; then
+    echo $ECHO_N "Input flags for debugging [-g]: $ECHO_C" >&2
+else
+    echo $ECHO_N "Input flags for debugging [$f_dflags]: $ECHO_C" >&2
+fi
+read response
+if test "x$response" = xhelp; then
+    cat >&2 << _ACEOF
+Most compilers need the '-g' flag to output debugging information into the
+executables. Some compilers support different levels (e.g. -g0, -g1, etc.).
+Some compilers also support the '-C' option, which turns on run time array
+bound checking. Best is to check your compiler documentation.
+
+_ACEOF
+elif test "x$response" = x; then
+    if test "x$f_dflags" = x; then
+        FDEBUG="-g"
+    else
+        FDEBUG="$f_dflags"
+    fi
+    break
+else
+    FDEBUG="$response"
+    break
+fi
+done
+
+echo $ECHO_N "Input libraries that your compiler may need: $ECHO_C" >&2
+read response
+if test "x$response" = xhelp; then
+    cat >&2 << _ACEOF
+Most modern compilers work without additional libraries being specified on the
+command line. Some compilers require libraries to be specified in the form
+'-lsome_lib' for language extensions such as date and time routines to become
+available (e.g. the Intel compiler needs '-lPEPCF90' and older versions of
+the SGI compiler need '-lF77 -lI77' for this). Best is to check your compiler
+documentation.
+
+_ACEOF
+    echo $ECHO_N "Input libraries: $ECHO_C" >&2
+    read FLIBS
+else
+    FLIBS=$response
+fi
+
+echo >&2; echo >&2
+echo "Will use the following compiler settings: " >&2
+echo "     F77    = $F77" >&2
+echo "    FCFLAGS = $FFLAGS" >&2
+echo "     FDEBUG = $FDEBUG" >&2
+echo "     FOPT   = $FOPT" >&2
+echo "     FLIBS  = $FLIBS" >&2
+echo >&2; echo >&2
+
+echo "Checking for the availability of various system dependent functions:" >&2
+
+test_compile='$F77 $FFLAGS $LDFLAGS -o conftest$test_exeext conftest.$test_ext $FLIBS >&5'
+
+cat >&5 <<EOF
+********************* exit test ********************
+EOF
+have_exit=no
+exit_works=no
+exit_function=
+echo $ECHO_N "Checking for a working 'exit' subroutine ... $ECHO_C" >&2
+for exit_f in exit exit_; do
+  echo "Trying $exit_f" >&5
+  cat >conftest.$test_ext <<_ACEOF
+      program main
+      character*10 arg
+      call getarg(1,arg)
+      read(arg,*) istat
+      call $exit_f(istat)
+      end
+_ACEOF
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    test_failed=no
+    for istat in 0 1 25; do
+      ./conftest$test_exeext $istat >&5 2>&5
+      test_status=$?
+      echo "arg = $istat, returns $test_status" >&5
+      if test "x$test_status" != "x$istat"; then
+        test_failed=yes
+        break
+      fi
+    done
+    if test "x$test_failed" = xno; then
+      have_exit=yes
+      exit_works=yes
+      exit_function=$exit_f
+      exit_zero_status="call ${exit_f}(0)"
+      exit_nonzero_status="call ${exit_f}(1)"
+      break
+    fi
+  else
+    echo "Compilation fails" >&5
+  fi
+  rm -f conftest.$test_ext conftest$test_exeext
+done
+rm -f conftest.$test_ext conftest$test_exeext
+if test "x$exit_works" = xyes; then
+  echo "yes ($exit_function)" >&2
+else
+  echo "no"
+  cat >&5 <<EOF
+********************* stop test ********************
+EOF
+  echo $ECHO_N "Checking if 'stop x' returns x as exit status ... $ECHO_C" >&2
+  stop_works=yes
+  for stop_value in 0 1 25; do
+    echo "Trying stop_value = $stop_value" >&5
+    cat >conftest.$test_ext <<_ACEOF
+      program test
+      stop $stop_value
+      end
+_ACEOF
+    if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+      ./conftest$test_exeext >&5 2>&5
+      test_status=$?
+      echo "status = $test_status" >&5
+      if test "x$test_status" != "x$stop_value"; then
+        stop_works=no
+        break
+      fi
+    else
+      stop_works=no
+      break
+    fi
+    rm -f conftest.$test_ext conftest$test_exeext
+  done
+  if test "x$stop_works" = xyes; then
+    echo "yes" >&2
+    exit_zero_status="stop 0"
+    exit_nonzero_status="stop 1"
+  else
+    echo "no" >&2
+    cat >&2 <<EOF
+
+This is big trouble. Neither exit(status) nor stop status returns status
+as the exit value of a Fortran program. This means that a Make based build
+system is impossible (make may think that a mortran3 compilation has
+succeeded whereas it has failed or vice versa).
+
+Report this problem to Iwan Kawrakow (iwan@irs.phy.nrc.ca)
+Please include
+  - Operating system (e.g. the output from 'Checking system type' above)
+  - Compiler name and version
+  - Compilation flags
+in your e-mail. You should also attach the file 'config.log' in the
+HEN_HOUSE/scripts directory.
+
+EOF
+    exit 1
+  fi
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+********************* system intrinsic tests ******************
+EOF
+system_is_function=no
+echo $ECHO_N "Checking if the system intrinsic is available as a function ... $ECHO_C" >&2
+cat >conftest.$test_ext <<_ACEOF
+      program test
+      integer*4 i, istat, system
+      character*30 command
+      do i=1,len(command)
+        command(i:i) = ' '
+      end do
+      command = 'echo hallo'
+      command(11:11) = char(0)
+      istat = system(command)
+_ACEOF
+if test "x$exit_works" = xyes; then
+  cat >>conftest.$test_ext <<_ACEOF
+      if( istat.eq.0 ) then
+        call ${exit_function}(0)
+      else
+        call ${exit_function}(1)
+      endif
+      end
+_ACEOF
+else
+  cat >>conftest.$test_ext <<_ACEOF
+      if( istat.eq.0 ) then
+        stop 0
+      else
+        stop 1
+      endif
+      end
+_ACEOF
+fi
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+  ./conftest$test_exeext >&5 2>&5
+  test_status=$?
+  echo "test_status = $test_status" >&5
+  if test "x$test_status" = x0; then
+      system_is_function=yes
+  else
+      echo >&2 "no (echo returns a non-zero exit status)"
+  fi
+else
+  echo >&2 "no (compilation failes)"
+fi
+
+if test "x$system_is_function" = xyes; then
+  cat conftest.$test_ext | sed "s/echo hallo/blah__blah/" >xxx_conftest
+  rm -f conftest$test_exeext
+  mv -f xxx_conftest conftest.$test_ext
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    ./conftest$test_exeext >&5 2>&5
+    test_status=$?
+    echo "test_status = $test_status" >&5
+    if test "x$test_status" != x0; then
+      echo "yes" >&2
+    else
+      echo "no (blah__blah returns zero status?)" >&2
+      system_is_function=no
+    fi
+  else
+    echo "no (second compilation fails?)" >&2
+    system_is_function=no
+  fi
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+have_system_status=no
+if test "x$system_is_function" = xno; then
+  echo $ECHO_N "Checking if the system subroutine returns a status ... $ECHO_C" >&2
+  cat >conftest.$test_ext <<_ACEOF
+      program test
+      integer*4 i, istat
+      character*30 command
+      do i=1,len(command)
+        command(i:i) = ' '
+      end do
+      command = 'echo hallo'
+      command(11:11) = char(0)
+      istat = 222222
+      call system(command,istat)
+_ACEOF
+  if test "x$exit_works" = xyes; then
+    cat >>conftest.$test_ext <<_ACEOF
+      if( istat.eq.0 ) then
+        call ${exit_function}(0)
+      else
+        call ${exit_function}(1)
+      endif
+      end
+_ACEOF
+  else
+    cat >>conftest.$test_ext <<_ACEOF
+      if( istat.eq.0 ) then
+        stop 0
+      else
+        stop 1
+      endif
+      end
+_ACEOF
+  fi
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    test_run="./conftest$test_exeext >&5 2>&5"
+    if { (eval $test_run) 2>&5; test_status=$?; (exit $test_status); }; then
+      echo "test_status = $test_status" >&5
+      if test "x$test_status" = x0; then
+        have_system_status=yes
+        echo >&2 "yes"
+      else
+        echo >&2 "no (echo returns a non-zero exit status)"
+      fi
+    else
+      echo "no (does not run)" >&2
+    fi
+  else
+    echo >&2 "no (compilation fails)"
+  fi
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+#cat >conftest.$test_ext <<_ACEOF
+#      program main
+#      call exit(1)
+#      end
+#_ACEOF
+#if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+#    echo "yes" >&2
+#    have_exit='yes'
+#else
+#    echo "no" >&2
+#    have_exit='no'
+#fi
+#rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* date_and_time test ******************
+EOF
+echo $ECHO_N "Checking for the 'date_and_time' subroutine ... $ECHO_C" >&2
+cat >conftest.$test_ext <<_ACEOF
+      program main
+      character    dat*8, tim*10, zon*5
+      integer      values(8)
+      call date_and_time(dat,tim,zon,values)
+      end
+_ACEOF
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "yes" >&2
+    have_date_and_time='yes'
+else
+    echo "no" >&2
+    have_date_and_time='no'
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* flush test *****************
+EOF
+echo $ECHO_N "Checking for the 'flush' subroutine ... $ECHO_C" >&2
+have_flush='no'
+flush_routine=
+for test_routine in flush flush_; do
+    cat >conftest.$test_ext <<_ACEOF
+      program main
+      write(6,'(a,\$)') 'Hallo there ... '
+      call $test_routine(6)
+      write(6,*) 'by'
+      end
+_ACEOF
+    if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "yes  ($test_routine)" >&2
+        have_flush='yes'
+        flush_routine=$test_routine
+        break
+    fi
+done
+if test "x$have_flush" = xno; then
+    echo "no" >&2
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+#if test "x$have_date_and_time" = xno; then
+cat >&5 <<EOF
+
+********************* fdate test ******************
+EOF
+    echo $ECHO_N "Checking for the 'fdate' subroutine ... $ECHO_C" >&2
+    have_fdate='no'
+    fdate_routine=''
+    for test_routine in fdate fdate_; do
+      cat >conftest.$test_ext <<_ACEOF
+      program main
+      character    daten*24
+      call $test_routine(daten)
+      end
+_ACEOF
+        if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+            echo "yes  ($test_routine)" >&2
+            have_fdate='yes'
+            fdate_routine=$test_routine
+            break
+        fi
+    done
+    if test "x$have_fdate" = xno; then
+        echo "no" >&2
+    fi
+    rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* secnds test ******************
+EOF
+    echo $ECHO_N "Checking for the 'secnds' function ... $ECHO_C" >&2
+    have_secnds='no'
+    for test_routine in secnds secnds_; do
+      cat >conftest.$test_ext <<_ACEOF
+      program main
+      real t0,t1,$test_routine
+      t1 = $test_routine(t0)
+      end
+_ACEOF
+      if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+          echo "yes  ($test_routine)" >&2
+          have_secnds='yes'
+          secnds_function=$test_routine
+          break
+      fi
+    done
+    if test "x$have_secnds" = xno; then
+        echo "no" >&2
+    fi
+    rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* date test ******************
+EOF
+    echo $ECHO_N "Checking for the 'date' subroutine ... $ECHO_C" >&2
+    have_date='no'
+    for test_routine in date date_; do
+      cat >conftest.$test_ext <<_ACEOF
+      program main
+      character dat*11
+      call $test_routine(dat)
+      end
+_ACEOF
+      if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+          echo "yes  ($test_routine)" >&2
+          have_date='yes'
+          date_routine=$test_routine
+          break
+      fi
+    done
+    if test "x$have_date" = xno; then
+        echo "no" >&2
+    fi
+    rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* time test ******************
+EOF
+    echo $ECHO_N "Checking for the 'time' subroutine ... $ECHO_C" >&2
+    have_time='no'
+    for test_routine in time time_; do
+      cat >conftest.$test_ext <<_ACEOF
+      program main
+      character tim*8
+      call $test_routine(tim)
+      end
+_ACEOF
+      if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+          echo "yes  ($test_routine)" >&2
+          have_time='yes'
+          time_routine=$test_routine
+          break
+      fi
+    done
+    if test "x$have_time" = xno; then
+        echo "no" >&2
+    fi
+    rm -f conftest.$test_ext conftest$test_exeext
+
+#fi
+
+cat >&5 <<EOF
+
+********************* etime test ******************
+EOF
+
+echo $ECHO_N "Checking for the 'etime' function ... $ECHO_C" >&2
+have_etime='no'
+for test_routine in etime etime_; do
+    cat >conftest.$test_ext <<_ACEOF
+       program main
+       real tarray(2),$test_routine,res
+       res = $test_routine(tarray)
+       end
+_ACEOF
+    if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "yes  ($test_routine)" >&2
+        have_etime='yes'
+        etime_routine=$test_routine
+        break
+    fi
+done
+if test "x$have_etime" = xno; then
+    echo "no" >&2
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* lnblnk test ******************
+EOF
+echo $ECHO_N "Checking for the 'lnblnk' function ... $ECHO_C" >&2
+cat >conftest.$test_ext <<_ACEOF
+      program test
+      integer res,lnblnk
+      res = lnblnk('junk string')
+      end
+_ACEOF
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "yes" >&2
+    have_lnblnk='yes'
+else
+    echo "no" >&2
+    have_lnblnk='no'
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* hostnm test ******************
+EOF
+
+echo $ECHO_N "Checking for the 'hostnm' function ... $ECHO_C" >&2
+have_hostnm='no'
+for test_routine in hostnm hostnm_; do
+    cat >conftest.$test_ext <<_ACEOF
+      program main
+      integer res,$test_routine,lnblnk1
+      character*40 hname
+      res = $test_routine(hname)
+      if( res.eq.0 ) then
+        write(6,'(a)') hname(:lnblnk1(hname))
+        $exit_zero_status
+      else
+        write(6,'(a)') 'does not work'
+        $exit_nonzero_status
+      endif
+      end
+      integer function lnblnk1(c)
+      implicit none
+      character c*(*)
+      integer j
+      do j=len(c),1,-1
+        if( c(j:j).ne.' ' ) then
+          lnblnk1 = j
+          return
+        end if
+      end do
+      lnblnk1=0
+      return
+      end
+_ACEOF
+    if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "yes  ($test_routine)" >&2
+        have_hostnm='yes'
+        hostnm_routine=$test_routine
+        break
+    fi
+done
+if test "x$have_hostnm" = xno; then
+    echo "no" >&2
+else
+    echo $ECHO_N "Testing if hostnm works ... $ECHO_C" >&2
+    test_run=`./conftest$test_exeext`
+    if test "x$test_run" = "xdoes not work"; then
+        echo "no" >&2
+        have_hostnm='no'
+    else
+        echo "yes, returns $test_run" >&2
+    fi
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+cat >&5 <<EOF
+
+********************* lstat test ******************
+EOF
+
+echo $ECHO_N "Checking for the 'lstat' function ... $ECHO_C" >&2
+have_lstat='no'
+array_size=13
+dir_element=3
+if test "x$F77" = xpgf77; then
+  array_size=25
+  dir_element=5
+fi
+cat >conftest.$test_ext <<_ACEOF
+      program test_lstat
+      integer array($array_size),res
+      res = lstat('./',array)
+      if( res.ne.0 ) $exit_nonzero_status
+      if( .not.btest(array($dir_element),14) ) $exit_nonzero_status
+      $exit_zero_status
+      end
+_ACEOF
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "yes" >&2
+    echo $ECHO_N "Checking if lstat works ... $ECHO_C" >&2
+    if { ./conftest$test_exeext; mystatus=$?; (exit $mystatus); }; then
+        echo "yes" >&2
+        have_lstat='yes'
+    else
+        echo "no" >&2
+    fi
+else
+    echo "no" >&2
+fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+inquire_for_dirs=no
+#if test "x$have_lstat" = xno; then
+  cat >&5 <<EOF
+
+********************* inquire for directories ******************
+EOF
+
+  echo $ECHO_N "Checking if inquire works on directories ... $ECHO_C" >&2
+  cat >conftest.$test_ext <<_ACEOF
+      program test_lstat
+      logical ex
+      inquire(file='./',exist=ex)
+      if ( .not.ex ) $exit_nonzero_status
+      $exit_zero_status
+      end
+_ACEOF
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    if { ./conftest$test_exeext; mystatus=$?; (exit $mystatus); }; then
+      echo "yes" >&2
+      inquire_for_dirs=yes
+    else
+      echo "no" >&2
+    fi
+  else
+    echo "no (simple program failed to compile ???)" >&2
+  fi
+#fi
+rm -f conftest.$test_ext conftest$test_exeext
+
+
+# Record length
+#
+cat >&5 <<EOF
+
+********************* record length of unformatted I/O ******************
+EOF
+echo $ECHO_N "Checking for record length ... $ECHO_C" >&2
+know_recl=no
+for recl in 4 1; do
+  rm -f junk_file
+  cat >conftest.$test_ext <<_ACEOF
+      program main
+      real*4 t
+      ires = 0
+      open(3,file='junk_file',access='direct',form='unformatted',
+     &     recl=$recl)
+      t = 1.5
+      write(3,rec=1,err=100) t
+      close(3)
+      write(6,'(a)') 'yes'
+      goto 200
+100   continue
+      write(6,'(a)') 'no'
+200   continue
+      end
+_ACEOF
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    test_run=`./conftest$test_exeext`
+    if test "x$test_run" = xyes; then
+      junk_size=`ls -al junk_file | awk '{print $5}'`
+      if test "x$junk_size" = x4; then
+        know_recl=yes
+        recl_size=$recl
+        break
+      fi
+    fi
+  fi
+done
+if test "x$know_recl" = xyes; then
+  echo $recl_size >&2
+else
+  echo "can not determine" >&2
+fi
+rm -f junk_file conftest.$test_ext conftest$test_exeext
+
+# endianess
+endianess=xxxx
+if test "x$know_recl" = xyes; then
+  cat >&5 <<EOF
+
+********************* endianess  ******************
+EOF
+  echo $ECHO_N "Checking for the endianess of the machine ... $ECHO_C" >&2
+  cat >conftest.$test_ext <<_ACEOF
+      program test_endian
+      integer*4 itest
+      character c(4)
+      equivalence (itest,c)
+      itest = 305419896
+      if( ichar(c(1)).eq.18.and.ichar(c(2)).eq.52.and.
+     &    ichar(c(3)).eq.86.and.ichar(c(4)).eq.120 ) then
+        write(6,'(a)') '4321'  ! big endian
+      else if( ichar(c(1)).eq.120.and.ichar(c(2)).eq.86.and.
+     &         ichar(c(3)).eq.52.and.ichar(c(4)).eq.18 ) then
+        write(6,'(a)') '1234'  ! little endian
+      else
+        write(6,'(a)') 'xxxx'  ! some odd endianess
+      end if
+      end
+_ACEOF
+
+  if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    test_run=`./conftest$test_exeext`
+    if test "x$test_run" = x1234; then
+      echo little endian >&2
+      endianess=1234
+    elif test "x$test_run" = x4321; then
+      echo big endian >&2
+      endianess=4321
+    else
+      echo likely pdp endian >&2
+      endianess=3412
+    fi
+  else
+    echo "failed to compile test" >&2
+  fi
+fi
+
+if test "x$endianess" = xxxxx | test "x$endianess" = x3412; then
+  echo >&2
+  if test "x$endianess" = xxxxx; then
+    echo "Failed to determine the endianess of your machine." >&2
+  else
+    cat >&2 <<EOF
+Your machine is PDP endian. As we assumed that these days there are no
+PDP endian CPU's around, binary I/O for the spinms data is not supported
+for your CPU.
+EOF
+  fi
+  cat >&2 <<EOF
+
+This implies that you will not be able to use the new binary spinms
+data format. Please send a bug report to iwan@irs.phy.nrc.ca
+EOF
+fi
+
+# integer*8
+#
+cat >&5 <<EOF
+
+********************* availability of integer*8  ******************
+EOF
+echo $ECHO_N "Checking for integer*8 ... $ECHO_C" >&2
+long_integer=
+the_max_int="\"\$MAX_INT SET TO 2^63-1 in egsnrc.macros\""
+cat >conftest.$test_ext <<_ACEOF
+      program main
+      integer*8 i
+      i = 1
+      end
+_ACEOF
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "yes" >&2
+    long_integer="integer*8"
+else
+    echo "no" >&2
+    long_integer="integer*4"
+    the_max_int="REPLACE {\$MAX_INT} WITH {2147483647.}"
+fi
+rm -f junk_file conftest.$test_ext conftest$test_exeext
+
+# integer*8
+#
+cat >&5 <<EOF
+
+********************* availability of integer*2  ******************
+EOF
+echo $ECHO_N "Checking for integer*2 ... $ECHO_C" >&2
+short_integer=
+cat >conftest.$test_ext <<_ACEOF
+      program main
+      integer*2 i
+      i = 1
+      end
+_ACEOF
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "yes" >&2
+    short_integer="integer*2"
+else
+    echo "no" >&2
+    short_integer="integer*4"
+fi
+rm -f junk_file conftest.$test_ext conftest$test_exeext
+
+#*****************************************************************************
+#
+#                       Now check for a C compiler
+#
+#*****************************************************************************
+echo >&2; echo >&2
+echo $ECHO_N "Looking for C compilers installed on your system ... $ECHO_C" >&2
+c_compilers=
+c_first=
+have_c_compiler=no
+for cc_prog in gcc cc xlc cl c89 icc; do
+    save_IFS=$IFS; IFS=$path_separator;
+    dummy="$PATH"
+    for cc_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$cc_dir/$cc_prog" || continue
+        #echo "found $fc_dir/$fc_prog"
+        if test "x$c_first" = x; then
+            c_first=$cc_prog
+            c_compilers=$cc_prog
+        else
+            c_compilers="$c_compilers $cc_prog"
+        fi
+        break
+    done
+done
+
+if test "x$c_compilers" = x; then
+    echo "none found" >&2
+    cat >&2 <<EOF
+
+You appear to not have a C compiler installed.
+A C compiler is not necessary for the core EGSnrc system but without it
+you will be not able to use extensions such as the parallel processing
+implementation provided with the system.
+If you have a C compiler with an unusual name (other than gcc cc xlc
+cl c89 icc), abort the configuration now and edit this script (configure)
+to look for your compiler.
+
+EOF
+else
+
+  echo "$c_compilers" >&2
+  if test "$c_compilers" = "$c_first"; then
+    CC=$c_first
+  else
+    echo >&2
+
+    while true; do
+      echo $ECHO_N "Input the one you would like to use [$c_first]: $ECHO_C" >&2
+      read response
+      if test "x$response" = x; then
+        CC=$c_first
+      elif test "x$response" = xnone; then
+        CC=none
+        break
+      else
+        for cc_prog in $c_compilers; do
+          if test "x$cc_prog" = "x$response"; then
+            CC=$response
+            break
+          fi
+        done
+      fi
+      if test "x$CC" != x; then
+        break
+      fi
+    done
+  fi
+
+  if test "x$CC" = xnone; then
+  have_c_compiler=no
+  else
+  have_c_compiler=yes
+
+  default_cflags="-O2"
+  if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC"; fi
+  echo $ECHO_N "Input C-compiler flags to use [$default_cflags]: $ECHO_C" >&2
+  read response
+  if test "x$response" = x; then
+    C_FLAGS="$default_cflags"
+  else
+    C_FLAGS="$response"
+  fi
+
+  # Now check Fortran function name decorating so that the C functions
+  # can be called from Fortran and vice versa.
+  #
+  cat >&5 <<EOF
+
+************************ fortran name mangling scheme ********************
+
+EOF
+  echo >&2
+  echo $ECHO_N "Checking for fortran name mangling scheme ... $ECHO_C" >&2
+  echo "CC = $CC" >&5
+  echo "C_FLAGS = $C_FLAGS" >&5
+  test1_compile='$F77 $FFLAGS -c -o conftest.$test_objext conftest.$test_ext >&5'
+  testc_compile='$CC $C_FLAGS -c -o c_conftest.$test_objext c_conftest.c >&5'
+  test_link='$F77 $FFLAGS -o conftest$test_exeext conftest.$test_objext c_conftest.$test_objext >&5'
+  cat >conftest.$test_ext <<_ACEOF
+      program test
+      call junk
+      call junk_junk
+      end
+_ACEOF
+  found_scheme=no
+  if { (eval $test1_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    echo "Fortran compile OK" >&5
+    cat >c_conftest.c <<_ACEOF
+#include <stdio.h>
+
+void junk() {
+  printf("junk");
+}
+void junk_() {
+  printf("junk_");
+}
+void JUNK() {
+  printf("JUNK");
+}
+void JUNK_() {
+  printf("JUNK_");
+}
+void junk_junk() {
+  printf("junk_junk\n");
+}
+void junk_junk_() {
+  printf("junk_junk_\n");
+}
+void junk_junk__() {
+  printf("junk_junk__\n");
+}
+void JUNK_JUNK() {
+  printf("JUNK_JUNK\n");
+}
+void JUNK_JUNK_() {
+  printf("JUNK_JUNK_\n");
+}
+void JUNK_JUNK__() {
+  printf("JUNK_JUNK__\n");
+}
+_ACEOF
+    if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+      echo "C compile OK" >&5
+      if { (eval $test_link) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "Link step OK" >&5
+        test_run=`./conftest$test_exeext`
+        found_scheme=yes
+        case $test_run in
+          junkjunk_junk)
+            f77_function1="#define F77_OBJ(fname,FNAME) fname"
+            f77_function2="#define F77_OBJ_(fname,FNAME) fname"
+            print_scheme="lower case, no underscores"
+            ;;
+          junk_junk_junk_)
+            f77_function1="#define F77_OBJ(fname,FNAME) fname##_"
+            f77_function2="#define F77_OBJ_(fname,FNAME) fname##_"
+            print_scheme="lower case, _ and _"
+            ;;
+          junk_junk_junk__)
+            f77_function1="#define F77_OBJ(fname,FNAME) fname##_"
+            f77_function2="#define F77_OBJ_(fname,FNAME) fname##__"
+            print_scheme="lower case, _ and __"
+            ;;
+          JUNKJUNK_JUNK)
+            f77_function1="#define F77_OBJ(fname,FNAME) FNAME"
+            f77_function2="#define F77_OBJ_(fname,FNAME) FNAME"
+            print_scheme="upper case, no underscores"
+            ;;
+          JUNK_JUNK_JUNK_)
+            f77_function1="#define F77_OBJ(fname,FNAME) FNAME##_"
+            f77_function2="#define F77_OBJ_(fname,FNAME) FNAME##_"
+            print_scheme="upper case, _ and _"
+            ;;
+          JUNK_JUNK_JUNK__)
+            f77_function1="#define F77_OBJ(fname,FNAME) FNAME##_"
+            f77_function2="#define F77_OBJ_(fname,FNAME) FNAME##__"
+            print_scheme="upper case, _ and __"
+            ;;
+          *) found_scheme=no
+        esac
+      else
+        echo "Link step fails" >&5
+      fi
+    else
+      echo "C compilation fails"
+      have_c_compiler=no
+    fi
+  else
+    echo "Fortran compilation fails" >&5
+  fi
+  if test "x$found_scheme" = xyes; then
+    echo $print_scheme >&2
+  else
+    echo "failed to determine" >&2
+    have_c_compiler=no
+  fi
+
+  rm -f conftest.$test_ext c_conftest.* conftest.$test_objext conftest$test_exeext
+  fi
+
+fi
+
+if test $have_c_compiler = no; then
+    CC=""
+fi
+
+# Check if HEN_HOUSE is set and ask for it if not
+#
+echo >&2; echo >&2
+if test "x$HEN_HOUSE" = x; then
+
+    while true; do
+        echo $ECHO_N "Input the directory of your EGSnrc installation: $ECHO_C" >&2
+        read HEN_HOUSE
+        if test "x$HEN_HOUSE" = x; then
+          echo "You must input a non-empty string!" >&2
+        else
+        if test ! -f $HEN_HOUSE/specs/unix.spec; then
+            echo "There seems to be no EGSnrc installation under $HEN_HOUSE" >&2
+        else
+            break
+        fi
+        fi
+    done
+fi
+
+current_dir=`pwd`
+cd $HEN_HOUSE && HEN_HOUSE=`pwd`
+cd $current_dir
+junk_test=`echo $HEN_HOUSE | sed 's,.*[\\/],,'`
+if test "x$junk_test" != x; then
+    HEN_HOUSE="$HEN_HOUSE"
+fi
+
+# Get a file name to store this config file
+#
+try_conf_file="$canonical_system-$F77.conf"
+if test -f "$HEN_HOUSE/specs/$try_conf_name"; then
+    try_conf_file=
+fi
+try_conf_name="$canonical_system-$F77"
+if test -d "$HEN_HOUSE/lib/$try_conf_name"; then
+    try_conf_name=
+fi
+while true; do
+    if test "x$try_conf_file" = x; then
+      echo $ECHO_N "Input a unique file name to save this config file: $ECHO_C" >&2
+    else
+      echo $ECHO_N "Input a unique file name to save this config file [$try_conf_file]: $ECHO_C">&2
+    fi
+    read response
+    if test "x$response" = x; then
+      if test "x$try_conf_file" = x; then
+        echo "You must input a non-empty string!" >&2
+      else
+        response="$try_conf_file"
+        break
+      fi
+    else
+    if test "x$response" = xhelp; then
+        cat >&2 << _ACEOF
+
+EGSnrc config files are stored in the 'specs' sub-directory in the
+EGSnrc installation directory. A config file specifies the compiler
+name, compiler option, etc., and is used by all Makefiles for compiling
+EGSnrc user-codes. You may have as many different config files as
+you want.  A config file gets used by either specifying its file name
+on the command line when building EGSnrc user-codes or by defining the
+environment variable EGS_CONFIG to point to its file.
+
+_ACEOF
+       continue
+    fi
+    if $as_file $HEN_HOUSE/specs/$response; then
+        echo "This config file already exists!" >&2
+        echo $ECHO_N "Do you want to overwrite it ? (yes/no) $ECHO_C" >&2
+        read yesno
+        if test "x$yesno" = xyes; then
+            break
+        fi
+     else
+        break
+     fi
+   fi
+done
+conf_file="$response"
+
+# A name for this config
+#
+while true; do
+    if test "x$try_conf_name" = x; then
+      echo $ECHO_N "Input a name for this config: $ECHO_C" >&2
+    else
+      echo $ECHO_N "Input a name for this config: [$try_conf_name]: $ECHO_C" >&2
+    fi
+    read response
+    if test "x$response" = x; then
+      if test "x$try_conf_name" = x; then
+        echo "You must input a non-empty string!" >&2
+      else
+        response="$try_conf_name"
+        break
+      fi
+    else
+    if test "x$response" = xhelp; then
+        cat >&2 << _ACEOF
+
+Each EGSnrc config has a name. This name is used to distinguish
+between executables build with different configs. For instance,
+if you name this config 'test', all EGSnrc executables (e.g. pegs4)
+will be placed in
+  \$HEN_HOUSE/bin/test
+Machine dependent macros (and possibly libraries) will be placed in
+  \$HEN_HOUSE/lib/test
+Compiled user-codes will be in
+  \$EGS_HOME/bin/test
+It is a good idea to use the canonical system name or the operating system
+name for this purposes, but it is not a requirement.
+Your canonical system name is: '$canonical_system'
+Your operating system name is: '$system_name'
+
+_ACEOF
+        continue
+    fi
+    if test -d $HEN_HOUSE/bin/$response \
+       || test -d $HEN_HOUSE/lib/$response; then
+        echo "A config with that name already exists." >&2
+        echo $ECHO_N "Do you want to replace it (yes/no) ? $ECHO_C" >&2
+        read yesno
+        if test "x$yesno" = xyes; then
+           break
+        fi
+    else
+        break
+    fi
+    fi
+done
+conf_name="$response"
+
+if test "x$canonical_system-$F77" = "x$conf_name"; then
+    the_config=$canonical_system
+else
+    the_config="$canonical_system ($conf_name)"
+fi
+
+echo >&2; echo >&2
+echo "Using HEN_HOUSE          = $HEN_HOUSE" >&2
+echo "      config file        = $conf_file" >&2
+echo "      config  name       = $conf_name" >&2
+echo >&2; echo >&2
+
+# Now create the config file
+
+# But first create the  architecture dependent directory and if we have
+# a C compiler try to compile egs_c_utils.c
+#
+echo >&2; echo >&2
+machine_mortran_dir="$HEN_HOUSE/lib/$conf_name"
+machine_fortran="$machine_mortran_dir/machine.f"
+machine_macros="$machine_mortran_dir/machine.macros"
+if test ! -d $machine_mortran_dir; then
+    echo $ECHO_N "Creating architecture dependent directory ... $ECHO_C" >&2
+    mkdir $machine_mortran_dir
+    if test ! -d $machine_mortran_dir; then
+        echo "Failed!" >&2
+        echo "Error was: could not create $machine_mortran_dir" >&2
+        exit 1
+    fi
+    echo "OK" >&2
+fi
+cd $machine_mortran_dir
+c_compiler_works=no
+have_loadbeamlib=no
+pardose_object=
+vculib_object=
+if test "x$have_c_compiler" = xyes; then
+#   egs_config1.h
+    echo $ECHO_N "Creating egs_config1.h ... $ECHO_C" >&2
+    cat $HEN_HOUSE/pieces/egs_config1.h | sed "s/__f77_function1__/$f77_function1/g" | sed "s/__f77_function2__/$f77_function2/g" | sed "s/__config_name__/$conf_name/g" >egs_config1.h
+    echo "OK" >&2
+
+    echo $ECHO_N "Creating egs_c_utils.h,c ... $ECHO_C" >&2
+    cp -f $HEN_HOUSE/pieces/egs_c_utils.h egs_c_utils.h
+    cp -f $HEN_HOUSE/pieces/egs_c_utils_unix.c egs_c_utils.c
+    echo "OK" >&2
+
+    echo $ECHO_N "Compiling egs_c_utils.c ... $ECHO_C" >&2
+    echo " ******************** compile egs_c_utils.c **************" >&5
+    testc_compile='$CC $C_FLAGS -c -o egs_c_utils.$test_objext egs_c_utils.c >&5'
+    if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+      echo "OK" >&2
+      c_compiler_works=yes
+    else
+      echo "failed" >&2
+      cat >&2 <<EOF
+
+Failed to compile egs_c_utils.c. This may be due to a variety of reasons
+(e.g. non-standard include files, unsupported file lock operations, etc.
+Will disable now the availability of a C compiler.
+If you want to try to make the new parallel processing implementation in
+cavrznrc and dosrznrc work,
+  1. Go to $machine_mortran_dir
+  2. Edit egs_c_utils.h and egs_c_utils.c to make them compile with your
+     C compiler
+  3. Put
+     REPLACE {\$HAVE_C_COMPILER(#);} WITH {{EMIT;{P1}define HAVE_C_COMPILER};}
+     in machine.macros
+  4. Put
+     \$HAVE_C_COMPILER(#);
+     near the beginning of your user-code.
+  5. If your compiler requires some unusual options, include directives, etc.,
+     change the variable C_FLAGS in the spec file $conf_file in the
+     $HEN_HOUSE/specs/ directory.
+
+EOF
+    fi
+    echo $ECHO_N "Creating load_beamlib.o ... $ECHO_C" >&2
+    echo " ******************** compile load_beamlib.c **************" >&5
+    testc_compile='$CC $C_FLAGS -c -I. -o load_beamlib.$test_objext ../../cutils/load_beamlib.c >&5'
+    if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "OK" >&2
+        have_loadbeamlib=yes
+    else
+        echo "failed" >&2
+    fi
+    echo $ECHO_N "Creating load_vculib.o ... $ECHO_C" >&2
+    echo " ******************** compile load_vculib.c **************" >&5
+    testc_compile='$CC $C_FLAGS -c -I. -o load_vculib.$test_objext ../../cutils/load_vculib.c >&5'
+    if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "OK" >&2
+        vculib_object='$(EGS_LIBDIR)load_vculib.o'
+    else
+        echo "failed" >&2
+    fi
+    ################################################################
+    # test for an argument to see if I'm being run from install_egs
+    # and if not, assume script used to create a new configuration.
+    # Create $EGS_HOME/bin/$my_machine and dosxyznrc_$my_machine.spec
+    ################################################################
+    if test "x$1" = x; then
+       echo $ECHO_N "Creating read_write_pardose ... $ECHO_C" >&2
+       echo "********** compile read_write_pardose **********" >&5
+       testc_compile='$CC $C_FLAGS -c -I. -o read_write_pardose.o ../../user_codes/dosxyznrc/read_write_pardose.c >&5'
+       if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+            echo "OK" >&2
+            pardose_object='$(EGS_LIBDIR)read_write_pardose.o'
+       else
+            echo "Failed" >&2
+       fi
+       # Now create dosxyznrc.spec
+       #
+       echo $ECHO_N "Creating dosxyznrc_${conf_name}.spec ... $ECHO_C" >&2
+       cat >${HEN_HOUSE}/specs/dosxyznrc_${conf_name}.spec <<_ACEOF
+# This file specifies additional object files needed in the link
+# step of DOSXYZnrc.
+#
+PARDOSE_OBJECTS = $pardose_object
+VCULIB_OBJECTS  = $vculib_object
+_ACEOF
+       echo "OK" >&2
+       if test ! "x$EGS_HOME" = x && test -d "$EGS_HOME/bin" && test ! -d "$EGS_HOME/bin/$conf_name"; then
+        echo $ECHO_N "Creating $EGS_HOME/bin/$conf_name ... $ECHO_C" >&2
+        mkdir $EGS_HOME/bin/$conf_name || { echo "failed" >&2; exit 1; }
+        echo "OK" >&2
+       fi
+    fi
+    ################################################################
+    is_ok=no; dlopen_flags=
+    if test $have_loadbeamlib = yes; then
+        echo $ECHO_N "Library needed for dlopen ... $ECHO_C" >&2
+        echo " ******************** library for dlopen **************" >&5
+        testc_compile='$CC $C_FLAGS -o conftest.exe conftest.c $i'
+        for i in -ldl -lc ""; do
+            rm -rf conftest.c conftest.o conftest.exe
+            cat >conftest.c <<_ACEOF
+#include <dlfcn.h>
+int main() {
+    void *h, *sym;
+    h = dlopen("test.so",RTLD_LAZY);
+    sym = dlsym(h,"junk");
+    return 0;
+}
+_ACEOF
+           if { (eval $testc_compile) >&5 2>&5; test_status=$?; (exit $test_status); }; then
+               dlopen_flags="$i"; is_ok=yes; break
+           fi
+       done
+       rm -rf conftest.c conftest.o conftest.exe
+       if test $is_ok = yes; then
+           echo "OK ($dlopen_flags)" >&2
+       else
+           echo "Failed"
+       fi
+   fi
+fi
+
+# g77 on Darwin sucks.
+# It can not produce library bundles => one must use the C compiler with
+# -bundle
+F77_LINK=$F77
+SHLIB_FLAGS="-shared -Wl,-Bsymbolic"
+SHLIB_LIBS=""
+if test x$F77 = xg77 || test x$F77 = xgfortran; then
+    if test x$CC = xgcc; then
+        is_darwin=`echo $canonical_system | grep -i darwin`
+        if test ! x$is_darwin = x; then
+            F77_LINK=$CC
+            SHLIB_FLAGS="-bundle"
+            if test x$F77 = xg77; then
+                SHLIB_LIBS="-lg2c"
+            else
+                SHLIB_LIBS="-lgfortran"
+            fi
+            echo "A Darwin system with $F77 and $CC " >&2
+            echo "-> using $SHLIB_FLAGS and $SHLIB_LIBS when building shared libraries" >&2
+        fi
+    fi
+fi
+# We no longer need a static Fortran run time library
+#if test x$F77 = xg77 || test x$F77 = xgfortran; then
+#    echo >&5
+#    echo "*********************************************************" >&5
+#    echo "Looking for static fortran library and/or a Darwin system" >&5
+#    echo "*********************************************************" >&5
+#    if test x$CC = xgcc; then
+#        is_darwin=`echo $canonical_system | grep -i darwin`
+#        is_linux=`echo $canonical_system | grep -i linux`
+#        echo "is_darwin='$is_darwin' is_linux='$is_linux'" >&5
+#        if test ! x$is_darwin = x; then
+#            F77_LINK=$CC
+#            SHLIB_FLAGS="-bundle"
+#            if test x$F77 = xg77; then
+#                SHLIB_LIBS="-lg2c"
+#            else
+#                SHLIB_LIBS="-lgfortran"
+#            fi
+#            echo "A Darwin system with $F77 and $CC " >&2
+#            echo "-> using $SHLIB_FLAGS and $SHLIB_LIBS when building shared libraries" >&2
+#        elif test ! x$is_linux = x; then
+#            echo $ECHO_N "Looking for a static fortran run time library ... $ECHO_C" >&2
+#            for libdir in /lib64 /usr/lib64 /usr/local/lib64 /lib /usr/lib /usr/local/lib; do
+#                if test x$F77 = xg77; then
+#                    the_lib=$libdir/libg2c.a
+#                else
+#                    the_lib=$libdir/libgfortran.a
+#                fi
+#                echo "  Looking for $the_lib" >&5
+#                #the_lib=$libdir/libg2c.a
+#                if test -f $the_lib; then
+#                    SHLIB_LIBS="$the_lib"
+#                    echo "Found $the_lib" >&5
+#                    break;
+#                fi
+#            done
+#            if test x$SHLIB_LIBS = x; then
+#                echo "not found" >&2
+#                cat >&2 <<_ACEOF
+#
+#Did not find a static fortran run time library.
+#This implies that you will not be able to use BEAMnrc simulation
+#sources. To remedy this problem, install a static library
+#(libg2c.a or libgfortran.a) and rerun the configuration.
+#
+#_ACEOF
+#            else
+#                echo "OK ($SHLIB_LIBS)"
+#            fi
+#        fi
+#    fi
+#    echo >&5
+#fi
+
+echo $ECHO_N "Creating config file $conf_file ... $ECHO_C" >&2
+if test "x$F77" = xpgf77; then
+  fc_flags="\$(FOPT) \$(FCFLAGS) -Mnomain"
+else
+  fc_flags="\$(FOPT) \$(FCFLAGS)"
+fi
+current_date=`date`
+cat >$HEN_HOUSE/specs/$conf_file <<_ACEOF
+#*************************************************************************
+#
+# EGSnrc config file
+#
+# Created by $my_name version $my_version on $current_date
+#
+# Attention: all changes you make to this file may be lost next time
+# you run $my_name.
+#
+#*************************************************************************
+
+DSEP = /
+
+my_machine = $conf_name
+canonical_system = $canonical_system
+make_prog = $make_prog
+
+HEN_HOUSE = $HEN_HOUSE/
+SPEC_DIR = \$(HEN_HOUSE)specs/
+
+# Include the standard Unix spec file
+#
+include \$(SPEC_DIR)unix.spec
+
+# Include definitions common for all systems.
+# These are mainly directory names, executable names, etc.,
+# which are constructed from the previous definitions.
+#
+include \$(SPEC_DIR)all_common.spec
+
+# Fortran compiler name and options
+#
+F77 = $F77
+F77_LINK = $F77_LINK
+FCFLAGS = $FFLAGS
+FOPT = $FOPT
+FDEBUG = $FDEBUG
+FLIBS = $FLIBS
+FOUT = -o
+FOBJE = $test_objext
+
+_ACEOF
+if test "x$have_c_compiler" = xyes; then
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+
+# C compiler name and options
+#
+CC = $CC
+C_FLAGS = $C_FLAGS
+COUT = -o
+_ACEOF
+fi
+
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+
+# The following is for creating a DSO
+# (dynamic shared object, also known as DLL in the Windows world)
+# At this point we don't have a procedure in place to determine
+# the compile/link flags necessary to create a DSO.
+# We therefore put generic values here that are known to work
+# on Linux with the GNU, PGI and Intel compilers, on Windows
+# with the GNU compiler and on IRIX with the SGI compiler.
+# It is up to the user to adjust if this does not work for them.
+# Note that the -Wl,-Bsymbolic option is needed on the systems tested
+# to make fortran common blocks local to the DSO.
+#
+SHLIB_FLAGS = $SHLIB_FLAGS
+
+# When using the GNU compiler on Linux, one must link against the static
+# g2c library, otherwise I/O is shared between the
+# main process and the library => the library process fails
+# because units that it wants to open are already opened
+# by the main process.
+# The following variable is set to be empty, but if you use
+# the GNU compiler set it to /usr/lib/libg2c.a (or wherever your
+# static g2c library is installed).
+#
+SHLIB_LIBS = $SHLIB_LIBS
+
+# Use the following make variable in EGSnrc user codes that
+# use the new parallel processing implementation to set the variable
+# EGS_EXTRA_OBJECTS
+_ACEOF
+if test "x$c_compiler_works" = xyes; then
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+#
+CUTIL_OBJECTS = \$(HEN_HOUSE)lib/\$(my_machine)/egs_c_utils.$test_objext
+
+_ACEOF
+else
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+# You don't have a working C compiler.
+# If you ever manage to compile egs_c_utils.c, set the following variable
+# to \$(HEN_HOUSE)/lib/\$(my_machine)/egs_c_utils.$test_objext
+#
+CUTIL_OBJECTS =
+
+_ACEOF
+fi
+
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+# Use the following variable in EGSnrc user codes that
+# use a BEAMnrc user code compiled and linked as a DSO
+# (dynamic shared object, a.k.a DLL in the Windows world)
+# as a particle source.
+_ACEOF
+if test "x$have_loadbeamlib" = xyes; then
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+#
+BEAMLIB_OBJECTS = \$(HEN_HOUSE)lib/\$(my_machine)/load_beamlib.$test_objext
+
+# load_beamlib uses system calls to load a DSO and to resolve the addresses
+# of the various functions in the DSO (dlopen and dlsym on Unix,
+# LoadLibrary and GetProcAddress on Windows). On Linux, Windows with GCC
+# and various other Unixes the system library that must be linked to get
+# access to these system calls is dl. If this is not the case for you,
+# adjust accordingly.
+#
+BEAMLIB_EXTRA_LIBS = $dlopen_flags \$(IAEA_LIB)
+
+_ACEOF
+else
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+# If you ever manage to compile ${HEN_HOUSE}cutils/load_beamlib.c,
+# set the following variable to
+# \$(HEN_HOUSE)/lib/\$(my_machine)/load_beamlib.$test_objext
+#
+BEAMLIB_OBJECTS =
+
+# System libraries that provide access to the dynamic linking
+# facilities. Left empty as load_beamlib.c could not be compiled,
+# has to be changed to something like -ldl if you manage to compile
+# load_beamlib.c
+#
+BEAMLIB_EXTRA_LIBS =
+
+_ACEOF
+fi
+
+# ${HEN_HOUSE}cutils,
+cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
+# FC_FLAGS gets used for compiling the EGSnrc fortran routines and for
+# linking for EGSnrc user-codes written in C. We set FC_FLAGS by
+# default to be given by \$(FCFLAGS) \$(FOPT). This is OK for most
+# compilers. Unfortunately, some Fortran compilers insert a default
+# main function and then complain about multiply defined main
+# (theirs and the main of the user-code written in C), unless a special
+# flag is passed. For instance, the PGI compiler needs -Mnomain.
+# As I don't know how to test for this feature, it is left up to you
+# to read the documentation of your compiler and adjust FC_FLAGS in
+# case it does not work.
+#
+FC_FLAGS = $fc_flags
+_ACEOF
+
+echo "OK" >&2
+
+# Create the machine.macros file
+#
+echo $ECHO_N "Creating machine.macros ... $ECHO_C" >&2
+cd $machine_mortran_dir
+
+cat >$machine_macros <<_ACEOF
+%E
+%I4
+!INDENT F2;
+%C80
+%Q1
+"*************************************************************************
+"
+" EGSnrc machine dependent macro file for $the_config
+"
+" Created by $my_name version $my_version on $current_date
+"
+" You may add your own machine dependent macros to this file,
+" but be carefull to not overwrite it if you re-run $my_name.
+"
+"*************************************************************************
+
+REPLACE {\$MACHINE} WITH
+  {,'$the_config',};
+REPLACE {\$HEN_HOUSE} WITH
+  {'$HEN_HOUSE/'};
+REPLACE {\$CANONICAL_SYSTEM} WITH
+  {'$canonical_system'};
+REPLACE {\$CONFIGURATION_NAME} WITH
+  {'$conf_name'};
+REPLACE {\$EGS_CONFIG} WITH
+  {'$HEN_HOUSE/specs/$conf_file'};
+
+" System dependent stuff "
+"========================================"
+" Unfortunately, there appears to be no reliable way of copying files "
+" under Fortran => we use a system call for this"
+REPLACE {\$copy_file} WITH {'cp '};
+
+" Although one can move files using Fortran's intrinsic rename, "
+" we don't know whether the user has not created additional files in "
+" the temporary working directory => it is easiest to use a system call "
+" to move all files from the temporary working directory to the user-code "
+" directory. "
+REPLACE {\$move_file} WITH {'mv -f '};
+
+" There appears to be no way of removing a directory from Fortran "
+" => we use a system call for this. "
+REPLACE {\$remove_directory} WITH {'rm -rf '};
+
+" The directory separator "
+REPLACE {\$file_sep} WITH {'/'};
+
+REPLACE {\$LONG_INT} WITH { $long_integer };
+REPLACE {\$SHORT_INT} WITH { $short_integer };
+$the_max_int
+"The machine byte order"
+REPLACE {\$BYTE_ORDER} WITH {'$endianess'};
+;
+_ACEOF
+if test "x$know_recl" = xyes; then
+cat >>$machine_macros <<_ACEOF
+REPLACE {\$RECL-FACTOR} WITH {$recl_size};
+;
+_ACEOF
+else
+cat >>$machine_macros <<_ACEOF
+" !!!!!!!!!!!!!! Unknow record length for unformatted I/O !!!!!!!!!!!!!"
+" !!!!!!!!!!!!!! Please replace !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+REPLACE {\$RECL-FACTOR} WITH {'fixme!'}
+;
+_ACEOF
+fi
+if test "x$have_flush" = xyes; then
+cat >>$machine_macros <<_ACEOF
+REPLACE {\$FLUSH_UNIT(#);} WITH {call $flush_routine({P1});}
+;
+_ACEOF
+else
+cat >>$machine_macros <<_ACEOF
+" Your compiler appears to be not supporting the flush intrinsic "
+REPLACE {\$FLUSH_UNIT(#);} WITH {;}
+;
+_ACEOF
+fi
+if test "x$exit_works" = xyes; then
+cat >>$machine_macros <<_ACEOF
+" If you want your user-code to return an exit status, use the "
+" following macro to terminate execution"
+REPLACE {\$CALL_EXIT(#);} WITH {call $exit_function({P1});}
+;
+_ACEOF
+else
+cat >>$machine_macros <<_ACEOF
+" If you want your user-code to return an exit status, use the "
+" following macro to terminate execution"
+REPLACE {\$CALL_EXIT(#);} WITH {stop {P1};}
+;
+_ACEOF
+fi
+if test "x$c_compiler_works" = xyes; then
+cat >>$machine_macros <<_ACEOF
+" mortran3 gets confused by the # char => we need to pass it as an "
+" argument to the macro. "
+REPLACE {\$HAVE_C_COMPILER(#);} WITH {{EMIT;{P1}define HAVE_C_COMPILER};}
+;
+_ACEOF
+else
+cat >>$machine_macros <<_ACEOF
+" You either have no C compiler installed or it failed to compile "
+" egs_c_utils.c in this directory. If you install a C compiler that can "
+" compile egs_c_utils.c, uncomment the next line and remove the null "
+" replacement "
+"REPLACE {\$HAVE_C_COMPILER(#);} WITH {{EMIT;{P1}define HAVE_C_COMPILER};}"
+REPLACE {\$HAVE_C_COMPILER(#);} WITH {;}
+;
+_ACEOF
+fi
+if test "x$have_loadbeamlib" = xyes; then
+cat >>$machine_macros <<_ACEOF
+REPLACE {\$HAVE_LOAD_DSO(#);} WITH {{EMIT;{P1}define HAVE_LOAD_DSO};}
+;
+_ACEOF
+else
+cat >>$machine_macros <<_ACEOF
+" Same as above: if you manage to compile load_beamlib.c, uncomment the next "
+" line and remove the null replacement "
+"REPLACE {\$HAVE_LOAD_DSO(#);} WITH {{EMIT;{P1}define HAVE_LOAD_DSO};}"
+REPLACE {\$HAVE_LOAD_DSO(#);} WITH {;}
+;
+_ACEOF
+fi
+
+#if test "x$need_fool_optimizer" = xyes; then
+#cat >>$machine_macros <<_ACEOF
+#" You appear to be using the Intel compiler. This compiler miscompiles "
+#" some loops in init_spin when certain optimization options are "
+#" turned on. To prevent this, we define the following macro: "
+#REPLACE {\$FOOL-INTEL-OPTIMIZER(#) #;} WITH {;
+#  IF( fool_intel_optimizer ) [ write({P1},*) {P2}; ]
+#}
+#;
+#_ACEOF
+#fi
+echo "OK" >&2
+
+
+# And now create the machine.f file for this config
+#
+echo $ECHO_N "Creating machine.f ... $ECHO_C" >&2
+cat >machine.f <<_ACEOF
+C***************************************************************************
+C
+C   This file was automatically generated by $my_name version $my_version
+C   It contains various subroutines and functions for date, time,
+C   CPU time, host name, etc.
+C
+C   Attention: all changes will be lost the next time you run $my_name!
+C
+C***************************************************************************
+
+_ACEOF
+
+# egs_system
+#
+if test "x$system_is_function" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_system_v1.f >>machine.f
+else
+    if test "x$have_system_status" = xyes; then
+        cat $HEN_HOUSE/pieces/egs_system_v2.f >>machine.f
+    else
+        cat $HEN_HOUSE/pieces/egs_system_v3.f >>machine.f
+    fi
+fi
+
+# egs_isdir
+#
+if test "x$have_lstat" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_isdir_v1.f | sed "s/___dir_element___/$dir_element/" | sed "s/___array_size___/$array_size/" >>machine.f
+elif test "x$inquire_for_dirs" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_isdir_v2.f >>machine.f
+else
+    cat $HEN_HOUSE/pieces/egs_isdir_v3.f >>machine.f
+fi
+
+# egs_fdate
+#
+#have_fdate=no
+#have_date_and_time=no
+if test "x$have_fdate" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_fdate_v1.f | sed "s/__fdate__/$fdate_routine/" >>machine.f
+else
+  if test "x$have_date_and_time" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_fdate_v2.f >>machine.f
+    cat $HEN_HOUSE/pieces/time_stuff.f >>machine.f
+  else
+    cat $HEN_HOUSE/pieces/egs_fdate_stub.f >>machine.f
+  fi
+fi
+
+# egs_date_and_time
+#
+if test "x$have_date_and_time" = xyes; then
+  cat $HEN_HOUSE/pieces/egs_date_and_time_v1.f >>machine.f
+else
+  if test "x$have_fdate" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_date_and_time_v2.f | sed "s/__fdate__/$fdate_routine/" >>machine.f
+  else
+    cat $HEN_HOUSE/pieces/egs_date_and_time_stub.f >>machine.f
+  fi
+fi
+
+# egs_date
+#
+if test "x$have_fdate" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_date_v1.f | sed "s/__fdate__/$fdate_routine/" >>machine.f
+else
+  if test "x$have_date_and_time" = xyes; then
+    if test "x$have_date_and_time" = xyes; then
+      cat $HEN_HOUSE/pieces/egs_date_v2.f >>machine.f
+    else
+      if test "x$have_date" = xyes; then
+        cat $HEN_HOUSE/pieces/egs_date_v3.f sed "s/__date__/$date_routine/" >>machine.f
+      else
+        cat $HEN_HOUSE/pieces/egs_date_stub.f >>machine.f
+      fi
+    fi
+  fi
+fi
+
+# egs_time
+#
+if test "x$have_fdate" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_time_v1.f | sed "s/__fdate__/$fdate_routine/" >>machine.f
+else
+  if test "x$have_date_and_time" = xyes; then
+    if test "x$have_date_and_time" = xyes; then
+      cat $HEN_HOUSE/pieces/egs_time_v2.f >>machine.f
+    else
+      if test "x$have_time" = xyes; then
+        cat $HEN_HOUSE/pieces/egs_time_v3.f sed "s/__time__/$time_routine/" >>machine.f
+      else
+        cat $HEN_HOUSE/pieces/egs_time_stub.f >>machine.f
+      fi
+    fi
+  fi
+fi
+
+# egs_secnds and egs_tot_time
+#
+if test "x$have_date_and_time" = xyes; then
+  cat $HEN_HOUSE/pieces/egs_secnds_v1.f >>machine.f
+else
+  if test "x$have_fdate" = xyes; then
+    cat $HEN_HOUSE/pieces/egs_secnds_v2.f | sed "s/__fdate__/$fdate_routine/" >>machine.f
+  else
+    if test "x$have_secnds" = xyes; then
+      cat $HEN_HOUSE/pieces/egs_secnds_v3.f | sed "s/__secnds__/$secnds_function/" >>machine.f
+    else
+      if test "x$have_time" = xys; then
+        cat $HEN_HOUSE/pieces/egs_secnds_v4.f | sed "s/__time__/$time_routine/" >>machine.f
+      else
+        cat $HEN_HOUSE/pieces/egs_secnds_stub.f >>machine.f
+      fi
+    fi
+  fi
+fi
+
+# time difference routines
+#
+if test "x$have_data_and_time" = xyes || test "x$have_fdate" = xyes; then
+  cat $HEN_HOUSE/pieces/time_stuff.f >>machine.f
+fi
+
+# egs_etime
+#
+if test "x$have_etime" = xyes; then
+  cat $HEN_HOUSE/pieces/egs_etime.f | sed "s/__etime__/$etime_routine/" >>machine.f
+else
+  cat $HEN_HOUSE/pieces/egs_etime_stub.f >>machine.f
+fi
+
+# egs_canonical_system
+#
+cat $HEN_HOUSE/pieces/egs_canonical_system.f | sed "s/__canonical_system__/$canonical_system/g" >>machine.f
+
+# config name
+#
+cat $HEN_HOUSE/pieces/egs_configuration_name.f | sed "s/__configuration_name__/$conf_name/g" >>machine.f
+
+# egs_host_name
+#
+if test "x$have_hostnm" = xyes; then
+  cat $HEN_HOUSE/pieces/egs_hostnm_v1.f | sed "s/__hostnm__/$hostnm_routine/g" >>machine.f
+else
+  cat $HEN_HOUSE/pieces/egs_hostnm_v2.f | sed "s/__hostnm__/$hostnm_routine/g" >>machine.f
+fi
+
+# lnblnk
+#
+if test "x$have_lnblnk" = xno; then
+cat >>machine.f <<_ACEOF
+C*****************************************************************************
+C
+C Our coleague Blake Walters loves using lnblnk instead of the function
+C lnblnk1 provided by EGSnrc, even though he knows that lnblnk is not
+C available for all compilers. This one does not support it and so, here
+C is a replacement.
+C
+C*****************************************************************************
+      integer function lnblnk(string)
+      character*(*) string
+      integer i,j
+      do i=len(string),1,-1
+        j = ichar(string(i:i))
+        if( j.ne.9.and.j.ne.10.and.j.ne.11.and.j.ne.12.and.j.ne.13.
+     &      and.j.ne.32 ) then
+          lnblnk = i
+          return
+        end if
+      end do
+      lnblnk = 0
+      return
+      end
+
+_ACEOF
+fi
+
+echo "OK" >&2
+
+# machine.mortran is what will get used in mortran compilations
+# We generate it just as a wrapper around machine.f
+#
+echo $ECHO_N "Creating machine.mortran ... $ECHO_C" >&2
+echo "%F" >machine.mortran
+cat machine.f >>machine.mortran
+echo "%M" >>machine.mortran
+echo "OK" >&2
+
+echo >&2; echo >&2
+# Create bin and bin/$conf_name if they don't exist
+#
+if test ! -d "$HEN_HOUSE/bin"; then
+    if { mkdir "$HEN_HOUSE/bin" 2>&5; mystatus=$?; (exit $mystatus); }; then
+      echo "Created $HEN_HOUSE/bin directory" >&2
+    else
+      echo "Failed to create $HEN_HOUSE/bin." >&2
+      echo "Do you have write permission in $HEN_HOUSE ?" >&2
+      echo "******* Failed to create $HEN_HOUSE/bin ***** " >&5
+      exit 1
+    fi
+fi
+if test ! -d "$HEN_HOUSE/bin/$conf_name"; then
+    if { mkdir "$HEN_HOUSE/bin/$conf_name" 2>&5; mystatus=$?; (exit $mystatus); }; then
+      echo "Created $HEN_HOUSE/bin/$conf_name directory" >&2
+    else
+      echo "Failed to create $HEN_HOUSE/bin/$conf_name." >&2
+      echo "******* Failed to create $HEN_HOUSE/bin/$conf_name ***** " >&5
+      exit 1
+    fi
+fi
+
+# Now compile Mortran3 for this config
+#
+cat >&5 <<EOF
+
+********************* Compiling Mortran3 ******************
+EOF
+
+echo $ECHO_N "Compiling mortran3 ... $ECHO_C" >&2
+if cd $HEN_HOUSE/mortran3 2>&5; then
+    rm -f $HEN_HOUSE/bin/$conf_name/mortran3.exe $HEN_HOUSE/bin/$conf_name/mortran3.dat
+    # we MUST make mortran3.f writable by everyone, otherwise
+    # configuration on a multiuser system will fail.
+    chmod ugo+rw mortran3.f
+    mv -f mortran3.f mortran3.f.orig
+    if test "x$exit_works" = xyes; then
+      cat mortran3.f.orig | sed "s/call exit/call $exit_function/g" >mortran3.f
+    else
+      cat mortran3.f.orig | sed "s/call exit(.*\!//g" >mortran3.f
+    fi
+    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+         test_status=$?; (exit $test_status); }; then
+        echo "OK" >&2
+    else
+        echo "failed" >&2
+        echo "See config.log for the output of make" >&2
+        echo "Failed program was '$make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file'" >&5
+        exit 1
+    fi
+    mv -f mortran3.f.orig mortran3.f
+else
+    echo "oops" >&2
+    echo "The Mortran directory does not exist ???" >&2
+    echo "Something is wrong with your EGSnrc installation" >&2
+    echo "Failed to change to $HEN_HOUSE/mortrtran3" >&5
+    exit 1
+fi
+
+cat >&5 <<EOF
+
+********************* Compiling pegs4 ******************
+EOF
+
+echo $ECHO_N "Compiling pegs4 ... $ECHO_C" >&2
+if cd $HEN_HOUSE/pegs4; then
+    rm -f "pegs4_$conf_name.f"
+    rm -f "$HEN_HOUSE/bin/$conf_name/pegs4.exe"
+    if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+         test_status=$?; (exit $test_status); }; then
+        echo "OK" >&2
+    else
+        echo "failed" >&2
+        echo "See config.log for the output of make" >&2
+        echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
+        exit 1
+    fi
+else
+    echo "oops" >&2
+    echo "The pegs4 directory does not exist ???" >&2
+    echo "Something is wrong with your EGSnrc installation" >&2
+    echo "Failed to change to $HEN_HOUSE/pegs4" >&5
+    exit 1
+fi
+
+cat >&5 <<EOF
+
+********************* Splitting .del files ********************************
+EOF
+
+echo $ECHO_N "Generating .density files ... $ECHO_C" >&2
+cd density_corrections || { echo "Failed to cd to density corrections ?"; exit 1; }
+if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
+     test_status=$?; (exit $test_status); }; then
+     echo "OK" >&2
+     echo "*************************** OK *********************** " >&5
+else
+     echo "Failed ?"
+     echo "*************************** Failed *********************** " >&5
+fi
+
+#******************************************************************************
+#
+#                     C++ compiler
+#
+#******************************************************************************
+
+cxx_check_list="g++ g++4 mingw32-g++ icpc icc aCC CC cxx cc++ FCC KCC RCC xlC_r xlC gpp cl"
+cxx_compilers=""
+cxx_first=
+echo >&2;
+echo $ECHO_N "Looking for C++ compilers installed on your system ... $ECHO_C" >&2
+for cxx_prog in $cxx_check_list; do
+    save_IFS=$IFS; IFS=$path_separator;
+    dummy="$PATH"
+    for cxx_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$cxx_dir/$cxx_prog" || continue
+        if test "x$cxx_first" = x; then
+            cxx_first=$cxx_prog
+            cxx_compilers=$cxx_prog
+        else
+            cxx_compilers="$cxx_compilers $cxx_prog"
+        fi
+        break
+    done
+done
+echo "OK" >&2
+echo >&2; echo >&2
+if test "x$cxx_compilers" = x; then
+    echo "Did not find a C++ compiler in your search path" >&2
+else
+    echo "Found the following C++ compilers in your search path:" >&2
+    echo "    $cxx_compilers" >&2
+fi
+while true; do
+    echo
+    if test "x$cxx_compilers" = x; then
+        echo $ECHO_N "Input C++ compiler: $ECHO_C" >&2
+    else
+        echo $ECHO_N "Input C++ compiler [$cxx_first]: $ECHO_C" >&2
+    fi
+    read CXX
+    if test "x$CXX" = xnone; then break; fi
+    if test "x$CXX" = x; then
+      if test "x$cxx_first" = x; then
+          echo "You have to input a non-empty string here!" >&2
+          echo "(input \'none\' to skip C++ configuration)" >&2
+      else
+          CXX=$cxx_first
+          echo "Using $CXX" >&2
+          break
+      fi
+    else
+    found_CXX=
+    # is the input in the list of found compilers ?
+    if test ! "x$cxx_compilers" = x; then
+        for cxx_prog in $cxx_compilers; do
+            if test "x$cxx_prog" = "x$CXX"; then
+                found_CXX=$cxx_prog
+                break
+            fi
+        done
+        if test ! "x$found_CXX" = x; then
+            break;
+        fi
+    fi
+    # is it an absolute path name ?
+    if test -f "$CXX"; then
+        break
+    fi
+    # it is not from the list and it is not an absolute path name
+    # => must be a compiler name not in the check list.
+    # see if it is in the search path
+    save_IFS=$IFS; IFS=$path_separator; dummy="$PATH"
+    for cxx_dir in $dummy; do
+        IFS=$save_IFS
+        $as_executable "$cxx_dir/$CXX" || continue
+        found_CXX=yes; break
+    done
+    if test "x$found_CXX" = x; then
+        echo "No compiler with that name was found." >&2
+        echo "You must either give a full path name, or include the directory" >&2
+        echo "where the compiler is installed in your search path, or" >&2
+        echo "install a C++ compiler if you don't have one installed,"
+        echo "or input \'none\' when asked for a compiler name." >&2
+    else
+        break
+    fi
+    fi
+done
+
+cxx_ok=no
+if test ! "x$CXX" = xnone; then
+    echo >&2; echo "Calling configure_c++ script" >&2
+    cd $HEN_HOUSE/scripts
+    if { ./configure_c++ CXX=$CXX config=$HEN_HOUSE/specs/$conf_file from_configure; test_status=$?; (exit $test_status); }; then
+        lib_link1=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g"`
+        link2_prefix=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_prefix =" | sed "s/link2_prefix = //g"`
+        link2_suffix=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_suffix =" | sed "s/link2_suffix = //g"`
+        cxx_ok=yes
+    fi
+fi
+echo >&2;
+echo $ECHO_N "Adding base C++ make variables to the config file ... $ECHO_C" >&2
+cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+
+# The following variables are needed to define the IAEA phase space library
+# and the way EGSnrc user codes link against it.
+#
+dso = dso\$(DSEP)\$(my_machine)
+abs_dso = \$(HEN_HOUSE)egs++\$(DSEP)\$(dso)
+ABS_DSO = \$(abs_dso)\$(DSEP)
+EOF
+if test $cxx_ok = yes; then
+cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+IAEA_LIB = $lib_link1 ${link2_prefix}iaea_phsp${link2_suffix}
+IAEA_PHSP_MACROS = \$(EGS_UTILS)iaea_phsp_macros.mortran
+EOF
+else
+cat >>$HEN_HOUSE/specs/$conf_file <<EOF
+#
+# No C++ compiler configured => the following are left empty
+#
+IAEA_LIB =
+IAEA_PHSP_MACROS =
+EOF
+fi
+echo "OK" >&2
+
+cat >&5 <<EOF
+
+****************** config completed successfully ********************
+EOF
+
+cat >&2 <<EOF
+
+
+Congratulations! You successfully configured the EGSnrc build system for
+this compiler/operating system combination. You can use this config
+for compiling EGSnrc user-codes by the following 3 methods:
+
+1.Set the environment variable EGS_CONFIG to point to the file
+  $HEN_HOUSE/specs/$conf_file,
+  i.e. for the Bourne(again) shell or the Korn shell, do
+  the following in .bashrc (bash) or .profile(Korn or Bourne?):
+  export EGS_CONFIG="$HEN_HOUSE/specs/$conf_file"
+
+or:for the C-shell or tcsh-shell do the following in your .cshrc file:
+  setenv EGS_CONFIG "$HEN_HOUSE/specs/$conf_file"
+  then use either the compilation script (scripts/compile_user_code) or
+  just go to a user-code directory and type 'make'.
+
+2.By running the compile script with an argument specifying to use this
+  config, e.g.
+  $HEN_HOUSE/scripts/compile_user_code tutor1 config=${conf_file}
+
+3.By invoking make with an argument specifying to use this config, e.g
+  make EGS_CONFIG=${conf_file}
+
+
+EOF
+
+# test for an argument to see if I'm being run from install_egs
+# and if yes, echo the config file name and the make utility
+# name so that the install_egs script knows about them
+#
+if test "x$1" = "xfrom_install_egs"; then
+    echo "config=$conf_file make_prog=$make_prog"
+fi
+echo "About to exit from script scripts/configure"
+exit 0
