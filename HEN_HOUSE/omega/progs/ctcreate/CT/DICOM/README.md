@@ -16,4 +16,4 @@ xy cross sections appear as rectangles of bone with flanged ends surrounded
 by material of approximately tissue density. The file slice_names is simply
 a list of the *.ct files in order of increasing z and is to be used as the
 input file name for ctcreate (e.g., `CT_create_DICOM.inp` also in this
-directory)o.
+directory).
