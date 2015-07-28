@@ -631,8 +631,7 @@ as the exit value of a Fortran program. This means that a Make based build
 system is impossible (make may think that a mortran3 compilation has
 succeeded whereas it has failed or vice versa).
 
-Report this problem to Iwan Kawrakow (iwan@irs.phy.nrc.ca)
-Please include
+Please report this problem, including
   - Operating system (e.g. the output from 'Checking system type' above)
   - Compiler name and version
   - Compilation flags
@@ -1203,7 +1202,7 @@ EOF
   cat >&2 <<EOF
 
 This implies that you will not be able to use the new binary spinms
-data format. Please send a bug report to iwan@irs.phy.nrc.ca
+data format. Please submit a bug report
 EOF
 fi
 
