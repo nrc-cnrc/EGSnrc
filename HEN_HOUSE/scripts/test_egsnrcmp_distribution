@@ -1,0 +1,242 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to test EGSnrc installation
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Dave Rogers
+#                   Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  Tests an installed EGSnrc distribution. The script compiles and runs a
+#  set of user codes.
+#
+###############################################################################
+
+
+tutor1="tutor1___tutor_data___"
+tutor2="tutor2___tutor_data___"
+tutor3="tutor3___tutor_data___"
+tutor4="tutor4___tutor_data___"
+tutor5="tutor5___tutor_data___"
+tutor6="tutor6___tutor_data___5mev_e_1mm_Ta"
+tutor7="tutor7___tutor_data___test_tutor7"
+dosrz="dosrznrc___521icru___dosrznrc_template"
+flurz="flurznrc___700icru___flurznrc_template"
+cavrz="cavrznrc___521icru___cavrznrc_template"
+sprrz="sprrznrc___521icru___sprrznrc_template"
+
+test_list="$tutor2 $tutor3 $tutor4 $tutor5 $tutor6 $tutor7"
+test_list="$test_list $dosrz $cavrz $flurz $sprrz"
+
+# Check to see if EGS_HOME is set.
+#
+if test "x$EGS_HOME" = x; then
+  cat <<EOF
+
+The environment variable EGS_HOME is not set but it must be.
+Please define EGS_HOME in your .bashrc or .cshrc file and retry.
+
+EOF
+  exit 1
+fi
+
+# Check to see of EGS_CONFIG is set.
+#
+if test "x$EGS_CONFIG" = x; then
+  cat <<EOF
+
+The environment variable EGS_CONFIG is not set but it must be.
+Please define EGS_CONFIG in your .bashrc or .cshrc file and retry.
+
+EOF
+  exit 1
+fi
+
+# Now check if EGS_CONFIG points to a valid EGSnrcMP config file.
+#
+my_machine=`cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = //"`
+hen_house=`cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //"`
+canonical_system=`cat $EGS_CONFIG | grep "canonical_system = " | sed 's/canonical_system = //'`
+
+if test "x$my_machine" = x || test "x$hen_house" = x || test "x$canonical_system" = x; then
+  cat <<EOF
+
+$EGS_CONFIG does not appear to be a valid EGSnrcMP config file.
+Please correct and retry.
+
+EOF
+  exit 1
+fi
+
+if test -f "$hen_house/scripts/config.guess"; then
+    test_system=`$hen_house/scripts/config.guess`
+    if test "x$test_system" != "x$canonical_system"; then
+        cat <<EOF
+
+The canonical system as returned by config.guess ($test_system) is not the
+same as the one found in the configuration file ($canonical_system).
+I hope you know what you are doing.
+
+EOF
+    fi
+else
+    cat <<EOF
+
+The file $hen_house/scripts/config.guess does not exist.
+Is this a EGSnrcMP installation ?
+
+EOF
+    exit 1
+fi
+
+cat <<EOF
+*******************************************************************************
+                   test_distribution ($Revision: 1.9 $)
+*******************************************************************************
+EGS_CONFIG:       $EGS_CONFIG
+EGS_HOME:         $EGS_HOME
+HEN_HOUSE:        $hen_house
+canonical system: $canonical_system
+*******************************************************************************
+
+With EGSnrcMP, user codes can be built in 2 different ways:
+  - mf user_code  (just as EGSnrc V1-3 and EGS4)
+  - go to user code area and type 'make'
+
+With EGSnrcMP user codes can be run in 2 different ways
+  - ex user_code input_file pegs_file (just as EGSnrc V1-3 and EGS4)
+  - user_code -p pegs_file -i input_file
+
+I will try both ways for building and running on tutor1.
+For all others, just the new method will be tested
+(so that not too much duplicate output is produced).
+
+EOF
+
+ucode=tutor1
+pfile=tutor_data
+ifile=
+
+cat <<EOF
+
+******************************************************************************
+                            $ucode
+******************************************************************************
+
+Trying mf:
+==========
+
+EOF
+if { $hen_house/scripts/compile_user_code mf $ucode; mystatus=$?; (exit $mystatus;); } then
+    echo "*********************** OK *******************************"
+else
+    echo "*********************** failed *****************************"
+fi
+
+echo; echo "Trying make:"
+echo "============"; echo;
+cd $EGS_HOME/$ucode || { echo "Failed to cd to user code area ???; exit 1"; }
+echo; echo "First do 'make clean' to remove the stuff from mf"
+make clean
+
+echo; echo "Now make"
+if { make; mystatus=$?; (exit $mystatus;); } then
+    echo "*********************** OK *******************************"
+    compile_ok=yes
+else
+    echo "*********************** failed *****************************"
+    compile_ok=no
+fi
+
+if test $compile_ok = no; then
+    echo; echo "Compilation failed => not attempting to run"
+else
+    echo; echo "Executing using ex:"
+    echo "==================="
+    if test "x$ifile" = x; then
+        $hen_house/scripts/run_user_code $ucode "" $pfile
+    else
+        $hen_house/scripts/run_user_code $ucode $ifile $pfile
+    fi
+    echo; echo "Executing using explicit command:"
+          echo "================================="
+    if test "x$ifile" = x; then
+        $ucode -p $pfile
+    else
+        $ucode -p $pfile -i $ifile
+    fi
+fi
+
+for mytest in $test_list; do
+
+    teststring=`echo $mytest | sed "s/___/ /g"`
+    save_positional="$@"
+    set X $teststring
+    shift; ucode=$1
+    shift; pfile=$1
+    shift; ifile=$1
+
+    cat <<EOF
+
+******************************************************************************
+                            $ucode
+******************************************************************************
+
+EOF
+
+    echo "Trying make:"
+    echo "============"; echo;
+    cd $EGS_HOME/$ucode || { echo "Failed to cd to user code area ???; exit 1"; }
+    if { make; mystatus=$?; (exit $mystatus;); } then
+        echo "*********************** OK *******************************"
+        compile_ok=yes
+    else
+        echo "*********************** failed *****************************"
+        compile_ok=no
+    fi
+
+    if test $compile_ok = no; then
+        echo; echo "Compilation failed => not attempting to run"
+    else
+        echo; echo "Executing using explicit command:"
+              echo "================================="
+        if test "x$ifile" = x; then
+            $ucode -p $pfile
+        else
+            $ucode -p $pfile -i $ifile
+        fi
+        if test "x$ifile" != x && test -f $EGS_HOME/$ucode/$ifile.egslst; then
+            cat <<EOF
+
+Here follows listing file ( $ifile.egslst ):
+============================================
+
+EOF
+            cat $ifile.egslst
+        fi
+
+    fi
+
+    set X $save_positional
+done

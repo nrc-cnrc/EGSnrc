@@ -1,0 +1,69 @@
+#!/bin/bash
+###############################################################################
+#
+#  EGSnrc script to run a pbsdsh task
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Frederic Tessier, 2008
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  This script is called from 'run_user_code_batch' when using the PBS
+#  distributed shell (pbsdsh). In this mode PBS simply reserves the requested
+#  number of nodes and uses this script to launch each individual 'task'.
+#
+################################################################################
+
+
+# command to run
+command=$1
+basename=$2
+dshsleep=$3
+
+# go to working directory
+cd $PBS_O_WORKDIR
+
+# set job index in terms of the dsh task number
+job=`expr $PBS_TASKNUM - 1`
+
+# sleep jobs to avoid bottlenecks
+if [ $job -gt 1 ]; then
+
+    # all jobs but the first sleep 1 second
+    sleep 1
+
+    # sleep some more if needed, until the lock file is created
+    while [ ! -e $basename.lock ]; do
+        echo "SLEEPING job $job because there is no lock file yet"
+        sleep 1
+    done
+
+    # space all jobs by at least 0.5 seconds, to avoid race condition on lock file
+    usleep $(($job*500000))
+
+    # extra user-specified sleep seconds between each job
+    sleep $(($job*$dshsleep))
+fi
+
+# launch the job
+$command -j $job
+

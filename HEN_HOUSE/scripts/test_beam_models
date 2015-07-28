@@ -1,0 +1,132 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to test beam models
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Dave Rogers, 1995
+#
+#  Contributors:    Iwan Kawrakow
+#                   Blake Walters
+#
+###############################################################################
+#
+#  Sets up the users dosxyznrc area for lab V.
+#
+###############################################################################
+
+
+echo "";echo "This is $HEN_HOUSE/scripts/test_beam_models "
+cd $HOME
+if [ ! -d $EGS_HOME ]
+        then
+        echo "Could not find $EGS_HOME.  EGSnrcMP and BEAMnrcMP"
+        echo "must be installed before running this script."
+        exit
+fi
+cd $EGS_HOME
+if [ ! -d dosxyznrc ] ; then
+        echo "Creating directory dosxyznrc on $EGS_HOME"
+	mkdir dosxyznrc
+fi
+cd dosxyznrc
+echo -e "\nNow on \c"; pwd
+if [ -f beammodel_routines.mortran ] ; then
+	echo ""
+	echo "Found beammodel_routines.mortran already here - not changed"
+else
+	echo ""
+	echo "Copying beammodel_routines.mortran"
+	cp -p $OMEGA_HOME/progs/beamdp/beammodel_routines.mortran .
+fi
+ls -l beammodel_routines.mortran|cut -c16-160
+
+if [ -f beammodel_macros.mortran ] ; then
+    echo ""
+    echo "Found beammodel_macros.mortran already here - not changed"
+else
+     echo ""
+     echo "Copying beammodel_macros.mortran"
+     cp -p $OMEGA_HOME/progs/beamdp/beammodel_macros.mortran .
+fi
+ls -l beammodel_macros.mortran|cut -c16-160
+
+if [ -f dosxyznrc_18MeV_model_depth_dose.egsinp ] ; then
+     echo ""
+     echo "Found dosxyznrc_18MeV_model_depth_dose.egsinp already here"
+else
+     echo ""
+     echo "Copying dosxyznrc_18MeV_model_depth_dose.egsinp"
+     cp -p $OMEGA_HOME/progs/beamdp/BEAMDP_examples/dosxyznrc_18MeV_model_depth_dose.egsinp .
+fi
+ls -l dosxyznrc_18MeV_model_depth_dose.egsinp|cut -c16-160
+
+if [ -f dosxyznrc_18MeV_phsp_depth_dose.egsinp ] ; then
+    echo ""
+    echo "Found dosxyznrc_18MeV_phsp_depth_dose.egsinp already here"
+else
+    echo ""
+    echo "Copying dosxyznrc_18MeV_phsp_depth_dose.egsinp"
+    cp -p $OMEGA_HOME/progs/beamdp/BEAMDP_examples/dosxyznrc_18MeV_phsp_depth_dose.egsinp .
+fi
+ls -l dosxyznrc_18MeV_phsp_depth_dose.egsinp|cut -c16-160
+
+
+if [ -f 18MeVe.egsphsp1 ] ; then
+    echo ""
+    echo "Found 18MeVe.egsphsp1 already here"
+else
+    echo ""
+    echo "Copying 18MeVe.egsphsp1"
+    cp -p $OMEGA_HOME/progs/beamdp/BEAMDP_examples/18MeVe.egsphsp1 .
+fi
+ls -l 18MeVe.egsphsp1|cut -c16-160
+
+if [ -f beammodel_18MeV_cmd.inp  ] ; then
+    echo ""
+    echo "Found beammodel_18MeV_cmd.inp  already here"
+    ls -l beammodel_18MeV_cmd.inp |cut -c16-160
+else
+    echo ""
+    cp -p $OMEGA_HOME/progs/beamdp/BEAMDP_examples/beammodel_18MeV_cmd.inp  .
+    echo "Copying beammodel_18MeV_cmd.inp"
+    ls -l beammodel_18MeV_cmd.inp |cut -c16-160
+fi
+
+if [ -f $HEN_HOUSE/user_codes/dosxyznrc/Makefile.MS ] ; then
+   echo ""
+   echo "Copying $HEN_HOUSE/user_codes/dosxyznrc/Makefile into Makefile.NOMS"
+   cp -f $HEN_HOUSE/user_codes/dosxyznrc/Makefile Makefile.NOMS
+   echo ""
+   echo "Copying $HEN_HOUSE/user_codes/dosxyznrc/Makefile.MS into Makefile"
+   cp -f $HEN_HOUSE/user_codes/dosxyznrc/Makefile.MS Makefile
+else
+  echo ""
+  echo "Could not find $HEN_HOUSE/user_codes/dosxyznrc/Makefile.MS"
+  echo "This file must be copied to Makefile to enable multiple source models."
+  exit
+fi
+ls -l Makefile* |cut -c16-160
+echo ""
+
+echo "Ready to run multiple source models"
+echo -e "Current directory is"; pwd
+date
+echo ""

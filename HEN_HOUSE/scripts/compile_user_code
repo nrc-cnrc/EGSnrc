@@ -1,0 +1,318 @@
+#!/bin/sh
+###############################################################################
+#
+#  EGSnrc script to compile a EGSnrc user code
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+#
+###############################################################################
+#
+#  Replaces the old egs_compile scripts and is provided for users that need to
+#  use a script to compile a EGSnrc user code instead of issuing the 'make'
+#  command in the user code directory.
+#
+###############################################################################
+
+
+my_name=`echo "$0" |sed 's,.*[\\/],,'`
+if test $# -lt 1; then
+    cat >&2 <<EOF
+Usage: $my_name m|f|mf user_code [a] [opt|noopt|debug] [config=xxx]
+
+$my_name compiles the EGSnrc user code 'user_code'.
+The arguments `f' and `mf' are equivalent, `m' results in a
+mortan compilation only.
+The argument 'a' is here for historical reasons to provide
+compatibility with the typical invocation of EGS compilations in
+previous versions (e.g. 'mf user_code a opt2'). It is ignored if present.
+The optional argumens 'opt' or 'noopt' or 'debug' set optimization
+or no optimization or debug compilation flags for the Fortran compiler.
+'opt' is the default. The 'config=xxx' option lets you overwrite
+the EGSnrc configuration to be used, which is otherwise specified by
+the EGS_CONFIG environment variable. Note that 'xxx' MUST
+be an absolute path to a EGSnrc configuration file.
+
+EOF
+    exit 1
+fi
+
+compile_option=$1
+user_code="$2"
+target=
+the_target=opt
+egs_configuration="$EGS_CONFIG"
+egs_home="$EGS_HOME"
+make_prog=
+
+if test "x$egs_home" = x; then
+
+    if test -f $HOME/.egsnrcrc; then
+      egs_home=`cat $HOME/.egsnrcrc | grep "EGS_HOME =" | sed 's/EGS_HOME = //'`
+    fi
+    if test "x$egs_home" = x; then
+      cat >&2 <<EOF
+
+The environment variable EGS_HOME is not set and there is no .egsnrcrc file
+in your home directory specifying EGS_HOME. Please correct and retry.
+
+EOF
+      exit 1
+    fi
+fi
+
+shift 2
+
+while test $# -gt 0; do
+
+    case "$1" in
+
+             a)  ;; # ignore
+          opt*)  the_target=opt ;; # this is the default
+         noopt)  target=noopt ; the_target=noopt ;;
+         debug)  target=debug ; the_target=debug ;;
+      config=*)  egs_configuration=`echo $1 | sed 's/config=//'` ;;
+             *)  ;; #ignore everything else
+
+    esac
+    shift
+
+done
+
+case $compile_option in
+
+    f | mf | Mf) ;;
+    m | M) target=fortran ; the_target= ;;
+    *) echo "Wrong 1st argument. It must be f or mf or m or M or Mf" >&2 ;
+       exit 1 ;;
+
+esac
+
+if test "x$user_code" = x; then
+  echo "You must specify the user code to be compiled as the second" >&2
+  echo "argument to this script" >&2
+  exit 1
+fi
+
+if test "x$egs_configuration" = x; then
+
+    if test "x$EGS_CONFIG" = x; then
+        cat >&2 <<EOF
+
+The environment variable 'EGS_CONFIG' is not set. You have to either
+define EGS_CONFIG to point to a valid EGSnrc configuration file or
+you must run this script as
+    $my_name ... config=some_configuration_file
+
+EOF
+        exit 1
+    fi
+    cat >&2 <<EOF
+
+There should be no spaces between 'config=' and the name of the configuration
+file!
+
+EOF
+    exit 1
+fi
+
+if test ! -f "$egs_configuration"; then
+
+    cat >&2 <<EOF
+
+The file $egs_configuration does not exist. The environment variable
+EGS_CONFIG or the config=some_config command line option must
+define the absolute path to a valid EGSnrc configuration file.
+
+EOF
+    exit 1
+fi
+
+hen_house=`cat $egs_configuration | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+canonical_system=`cat $egs_configuration | grep "canonical_system = " | sed 's/canonical_system = //'`
+my_machine=`cat $egs_configuration | grep "my_machine =" | sed 's/my_machine = //'`
+make_prog=`cat $egs_configuration | grep "make_prog =" | sed 's/make_prog = //'`
+if test "x$hen_house" = x || test "x$canonical_system" = x || test "x$my_machine" = x || test "x$make_prog" = x; then
+    cat >&2 <<EOF
+
+The file $egs_configuration seems to be not a valid EGSnrc configuration file.
+Please check and retry.
+
+EOF
+     exit 1
+fi
+
+if test -f "$hen_house/scripts/config.guess"; then
+    test_system=`$hen_house/scripts/config.guess`
+    if test "x$test_system" != "x$canonical_system"; then
+        cat >&2 <<EOF
+
+The canonical system as returned by config.guess ($test_system) is not the
+same as the one found in the configuration file ($canonical_system).
+I hope you know what you are doing.
+
+EOF
+    fi
+else
+    cat >&2 <<EOF
+
+The file $hen_house/scripts/config.guess does not exist.
+Is this a recent EGSnrc installation ?
+
+EOF
+    exit 1
+fi
+
+if test ! -d "$egs_home"; then
+
+    echo "The directory '$egs_home' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+if test ! -d "$egs_home/$user_code"; then
+
+    echo "The directory '$egs_home/$user_code' dose not exist. Creating it." >&2
+    if { mkdir "$egs_home/$user_code"; status=$?; (exit $status); }; then
+       :
+    else
+       echo "Failed." >&2
+       exit 1
+    fi
+
+fi
+
+if test "x$egs_pert" = x; then
+    cat >&2 <<EOF
+
+$my_name: will use the following settings:
+=============================================================================
+
+    EGS_CONFIG                = $egs_configuration
+    HEN_HOUSE                 = $hen_house
+    my_machine                = $my_machine
+    EGS_HOME                  = $egs_home
+    User code                 = $user_code
+    opt|noopt|debug           = $the_target
+
+=============================================================================
+
+EOF
+fi
+
+cd "$egs_home" || { echo "Failed to cd to $egs_home" >&2; exit 1; };
+
+for area in bin bin/$my_machine; do
+
+  if test ! -d $area; then
+    echo "Creating $area" >&2
+    mkdir $area || { echo "Failed."; exit 1; }
+  fi
+
+done
+
+if test ! -d "$user_code"; then
+
+    if test -d "$hen_house/user_codes/$user_code"; then
+
+        mkdir "$user_code" || { echo "Failed to create $user_code directory" >&2; exit 1; };
+
+    else
+
+        echo "$user_code does not exist on $egs_home and $hen_house/user_codes/" >&2
+        exit 1
+    fi
+fi
+
+cd "$user_code" || { echo "Failed to cd to $user_code" >&2; exit 1; };
+
+standard_sources="\$(EGS_SOURCEDIR)egsnrc.macros \$(MACHINE_MACROS) \$(RANDOM).macros \$(USER_CODE).mortran \$(RANDOM).mortran \$(EGS_SOURCEDIR)nrcaux.mortran \$(MACHINE_MORTRAN) \$(EGS_SOURCEDIR)egsnrc.mortran"
+
+if test ! -f "${user_code}.make"; then
+    if test ! -f "$hen_house/user_codes/$user_code/${user_code}.make"; then
+        echo "There is no .make file for this user code ?" >&2
+        echo "=> Creating a dummy .make file" >&2
+        echo "# a dummy .make file" >${user_code}.make
+    else
+        cp -f "$hen_house/user_codes/$user_code/${user_code}.make" .
+    fi
+fi
+
+if test ! -f "${user_code}.io"; then
+    if test -f "$hen_house/user_codes/$user_code/${user_code}.io"; then
+        echo "Copying .io file from HEN_HOUSE user code area" >&2
+        cp -f "$hen_house/user_codes/$user_code/${user_code}.io" .
+    fi
+fi
+
+echo "Now calling $make_prog" >&2
+have_makefile=no
+failed=yes
+if test ! -f "Makefile"; then
+    if test -f "$hen_house/user_codes/$user_code/Makefile"; then
+        cp "$hen_house/user_codes/$user_code/Makefile" .
+        have_makefile=yes
+    fi
+else
+    have_makefile=yes
+fi
+
+if test "x$have_makefile" = xyes; then
+    echo "Using local Makefile"
+    if { $make_prog EGS_CONFIG="$egs_configuration" $target;
+         status=$?; (exit $status); }; then
+        failed=no
+    fi
+else
+    echo "Using $hen_house/Makefile"
+    if { $make_prog -f "$hen_house/Makefile" USER_CODE=$user_code \
+         EGS_CONFIG="$egs_configuration" \
+         SOURCES="$standard_sources" $target;
+         status=$?; (exit $status); }; then
+        failed=no
+    fi
+fi
+
+if test "x$failed" = xno; then
+     cat >&2 <<EOF
+
+
+********************* compilation completed successfully *********************
+
+EOF
+else
+     cat >&2 <<EOF
+
+
+***************************** compilation failed *****************************
+
+EOF
+     exit 1
+fi
+
+exit 0
