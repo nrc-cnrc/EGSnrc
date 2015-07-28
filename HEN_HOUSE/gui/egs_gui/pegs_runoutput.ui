@@ -1,0 +1,124 @@
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1"> <!--
+###############################################################################
+#
+#  EGSnrc user interface for egs_gui run output
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+-->
+<class>PEGS_RunOutput</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>PEGS_RunOutput</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>592</width>
+            <height>663</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>PEGS Output</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QTextEdit">
+            <property name="name">
+                <cstring>run_output</cstring>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout2</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer6</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>396</width>
+                            <height>21</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>pushButton8</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Close</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<connections>
+    <connection>
+        <sender>pushButton8</sender>
+        <signal>clicked()</signal>
+        <receiver>PEGS_RunOutput</receiver>
+        <slot>hideWindow()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">pegs_viewerrors.h</include>
+    <include location="local" impldecl="in implementation">pegs_runoutput.ui.h</include>
+</includes>
+<forwards>
+    <forward>class PEGS_ViewErrors;</forward>
+</forwards>
+<variables>
+    <variable access="private">QString ofile;</variable>
+    <variable access="private">PEGS_ViewErrors *view_errors;</variable>
+</variables>
+<signals>
+    <signal>windowClosed()</signal>
+</signals>
+<slots>
+    <slot>hideWindow()</slot>
+    <slot>insertText( const QString &amp; s )</slot>
+    <slot>viewErrors()</slot>
+    <slot>clearOutput()</slot>
+    <slot>setOutputFile( const QString &amp; s )</slot>
+    <slot access="protected">init()</slot>
+</slots>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

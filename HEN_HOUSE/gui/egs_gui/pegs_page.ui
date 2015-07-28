@@ -1,0 +1,741 @@
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1"> <!--
+###############################################################################
+#
+#  EGSnrc user interface for egs_gui pegs page
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:
+#
+###############################################################################
+-->
+<class>EGS_PegsPage</class>
+<widget class="QWidget">
+    <property name="name">
+        <cstring>EGS_PegsPage</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>645</width>
+            <height>579</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Form1</string>
+    </property>
+    <vbox>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout13</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QGroupBox">
+                    <property name="name">
+                        <cstring>groupBox6</cstring>
+                    </property>
+                    <property name="title">
+                        <string>Medium composition</string>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QTable">
+                            <column>
+                                <property name="text">
+                                    <string>Element   </string>
+                                </property>
+                            </column>
+                            <column>
+                                <property name="text">
+                                    <string> Fraction by weight </string>
+                                </property>
+                            </column>
+                            <property name="name">
+                                <cstring>composition_table</cstring>
+                            </property>
+                            <property name="enabled">
+                                <bool>false</bool>
+                            </property>
+                            <property name="numRows">
+                                <number>20</number>
+                            </property>
+                            <property name="numCols">
+                                <number>2</number>
+                            </property>
+                        </widget>
+                    </vbox>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout11</cstring>
+                    </property>
+                    <vbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QGroupBox">
+                            <property name="name">
+                                <cstring>groupBox11</cstring>
+                            </property>
+                            <property name="title">
+                                <string>Medium name</string>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QLineEdit">
+                                    <property name="name">
+                                        <cstring>medname_le</cstring>
+                                    </property>
+                                </widget>
+                            </hbox>
+                        </widget>
+                        <widget class="QLayoutWidget">
+                            <property name="name">
+                                <cstring>layout10</cstring>
+                            </property>
+                            <hbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QGroupBox">
+                                    <property name="name">
+                                        <cstring>groupBox8</cstring>
+                                    </property>
+                                    <property name="title">
+                                        <string>Medium type</string>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QComboBox">
+                                            <item>
+                                                <property name="text">
+                                                    <string>Element</string>
+                                                </property>
+                                            </item>
+                                            <item>
+                                                <property name="text">
+                                                    <string>Compound</string>
+                                                </property>
+                                            </item>
+                                            <item>
+                                                <property name="text">
+                                                    <string>Mixture</string>
+                                                </property>
+                                            </item>
+                                            <property name="name">
+                                                <cstring>medtype_cbox</cstring>
+                                            </property>
+                                            <property name="enabled">
+                                                <bool>false</bool>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget class="QGroupBox">
+                                    <property name="name">
+                                        <cstring>rho_group</cstring>
+                                    </property>
+                                    <property name="enabled">
+                                        <bool>false</bool>
+                                    </property>
+                                    <property name="title">
+                                        <string>Mass density</string>
+                                    </property>
+                                    <hbox>
+                                        <property name="name">
+                                            <cstring>unnamed</cstring>
+                                        </property>
+                                        <widget class="QLineEdit">
+                                            <property name="name">
+                                                <cstring>rho_le</cstring>
+                                            </property>
+                                        </widget>
+                                        <widget class="QComboBox">
+                                            <item>
+                                                <property name="text">
+                                                    <string>g/cm**3</string>
+                                                </property>
+                                            </item>
+                                            <item>
+                                                <property name="text">
+                                                    <string>kg/m**3</string>
+                                                </property>
+                                            </item>
+                                            <property name="name">
+                                                <cstring>comboBox2</cstring>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                            </hbox>
+                        </widget>
+                        <widget class="QGroupBox">
+                            <property name="name">
+                                <cstring>groupBox3</cstring>
+                            </property>
+                            <property name="title">
+                                <string>Options</string>
+                            </property>
+                            <vbox>
+                                <property name="name">
+                                    <cstring>unnamed</cstring>
+                                </property>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>dc_icru_check</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>ICRU density correction</string>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>rad_icru_check</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>ICRU radiative stopping power</string>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>rayleigh_check</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Include Rayleigh data</string>
+                                    </property>
+                                    <property name="checked">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                                <widget class="QCheckBox">
+                                    <property name="name">
+                                        <cstring>is_gas</cstring>
+                                    </property>
+                                    <property name="text">
+                                        <string>Medium is a gas</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
+                        <spacer>
+                            <property name="name">
+                                <cstring>spacer5</cstring>
+                            </property>
+                            <property name="orientation">
+                                <enum>Vertical</enum>
+                            </property>
+                            <property name="sizeType">
+                                <enum>Expanding</enum>
+                            </property>
+                            <property name="sizeHint">
+                                <size>
+                                    <width>20</width>
+                                    <height>30</height>
+                                </size>
+                            </property>
+                        </spacer>
+                    </vbox>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QGroupBox">
+            <property name="name">
+                <cstring>dc_group</cstring>
+            </property>
+            <property name="title">
+                <string>Density correction file</string>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLabel">
+                    <property name="name">
+                        <cstring>textLabel5</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Look in</string>
+                    </property>
+                </widget>
+                <widget class="QComboBox">
+                    <item>
+                        <property name="text">
+                            <string>HEN_HOUSE</string>
+                        </property>
+                    </item>
+                    <item>
+                        <property name="text">
+                            <string>EGS_HOME</string>
+                        </property>
+                    </item>
+                    <property name="name">
+                        <cstring>dc_where</cstring>
+                    </property>
+                </widget>
+                <widget class="QLineEdit">
+                    <property name="name">
+                        <cstring>dc_file</cstring>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>dc_button</cstring>
+                    </property>
+                    <property name="text">
+                        <string>...</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QGroupBox">
+            <property name="name">
+                <cstring>groupBox5</cstring>
+            </property>
+            <property name="title">
+                <string>Energy range</string>
+            </property>
+            <grid>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLayoutWidget" row="0" column="0">
+                    <property name="name">
+                        <cstring>layout4</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel1</cstring>
+                            </property>
+                            <property name="text">
+                                <string>AE</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>ae_le</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QComboBox">
+                            <item>
+                                <property name="text">
+                                    <string>keV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>MeV</string>
+                                </property>
+                            </item>
+                            <property name="name">
+                                <cstring>ae_units</cstring>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget" row="1" column="0">
+                    <property name="name">
+                        <cstring>layout5</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel2</cstring>
+                            </property>
+                            <property name="text">
+                                <string>AP</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>ap_le</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QComboBox">
+                            <item>
+                                <property name="text">
+                                    <string>keV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>MeV</string>
+                                </property>
+                            </item>
+                            <property name="name">
+                                <cstring>ap_units</cstring>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget" row="0" column="1">
+                    <property name="name">
+                        <cstring>layout6</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel3</cstring>
+                            </property>
+                            <property name="text">
+                                <string>UE</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>ue_le</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QComboBox">
+                            <item>
+                                <property name="text">
+                                    <string>keV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>MeV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>GeV</string>
+                                </property>
+                            </item>
+                            <property name="name">
+                                <cstring>ue_units</cstring>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget" row="1" column="1">
+                    <property name="name">
+                        <cstring>layout7</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel4</cstring>
+                            </property>
+                            <property name="text">
+                                <string>UP</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>up_le</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QComboBox">
+                            <item>
+                                <property name="text">
+                                    <string>keV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>MeV</string>
+                                </property>
+                            </item>
+                            <item>
+                                <property name="text">
+                                    <string>GeV</string>
+                                </property>
+                            </item>
+                            <property name="name">
+                                <cstring>up_units</cstring>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+            </grid>
+        </widget>
+        <widget class="QGroupBox">
+            <property name="name">
+                <cstring>groupBox10</cstring>
+            </property>
+            <property name="title">
+                <string>PEGS Output</string>
+            </property>
+            <vbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout16</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QCheckBox">
+                            <property name="name">
+                                <cstring>new_data_file</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Create new data file</string>
+                            </property>
+                        </widget>
+                        <spacer>
+                            <property name="name">
+                                <cstring>spacer2</cstring>
+                            </property>
+                            <property name="orientation">
+                                <enum>Horizontal</enum>
+                            </property>
+                            <property name="sizeType">
+                                <enum>Expanding</enum>
+                            </property>
+                            <property name="sizeHint">
+                                <size>
+                                    <width>85</width>
+                                    <height>21</height>
+                                </size>
+                            </property>
+                        </spacer>
+                        <widget class="QCheckBox">
+                            <property name="name">
+                                <cstring>append_to_datafile</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Append to existing data file</string>
+                            </property>
+                        </widget>
+                        <spacer>
+                            <property name="name">
+                                <cstring>spacer3</cstring>
+                            </property>
+                            <property name="orientation">
+                                <enum>Horizontal</enum>
+                            </property>
+                            <property name="sizeType">
+                                <enum>Expanding</enum>
+                            </property>
+                            <property name="sizeHint">
+                                <size>
+                                    <width>84</width>
+                                    <height>20</height>
+                                </size>
+                            </property>
+                        </spacer>
+                    </hbox>
+                </widget>
+                <widget class="QLayoutWidget">
+                    <property name="name">
+                        <cstring>layout9</cstring>
+                    </property>
+                    <hbox>
+                        <property name="name">
+                            <cstring>unnamed</cstring>
+                        </property>
+                        <widget class="QLabel">
+                            <property name="name">
+                                <cstring>textLabel6</cstring>
+                            </property>
+                            <property name="text">
+                                <string>Output file</string>
+                            </property>
+                        </widget>
+                        <widget class="QLineEdit">
+                            <property name="name">
+                                <cstring>ofile_le</cstring>
+                            </property>
+                        </widget>
+                        <widget class="QPushButton">
+                            <property name="name">
+                                <cstring>ofile_b</cstring>
+                            </property>
+                            <property name="text">
+                                <string>...</string>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+            </vbox>
+        </widget>
+        <widget class="QLayoutWidget">
+            <property name="name">
+                <cstring>layout12</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <spacer>
+                    <property name="name">
+                        <cstring>spacer4</cstring>
+                    </property>
+                    <property name="orientation">
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property name="sizeType">
+                        <enum>Expanding</enum>
+                    </property>
+                    <property name="sizeHint">
+                        <size>
+                            <width>330</width>
+                            <height>21</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>go_button</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Go</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>cancel_button</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Cancel</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>details_b</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Details&gt;&gt;</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<connections>
+    <connection>
+        <sender>dc_icru_check</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>dencityIcruChanged(bool)</slot>
+    </connection>
+    <connection>
+        <sender>composition_table</sender>
+        <signal>doubleClicked(int,int,int,const QPoint&amp;)</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>cellDoubleClicked(int,int,int,const QPoint&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>composition_table</sender>
+        <signal>pressed(int,int,int,const QPoint&amp;)</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>cellPressed(int,int,int,const QPoint&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>medtype_cbox</sender>
+        <signal>activated(const QString&amp;)</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>medtypeChanged(const QString&amp;)</slot>
+    </connection>
+    <connection>
+        <sender>dc_button</sender>
+        <signal>clicked()</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>getDensityFile()</slot>
+    </connection>
+    <connection>
+        <sender>details_b</sender>
+        <signal>clicked()</signal>
+        <receiver>EGS_PegsPage</receiver>
+        <slot>showHideDetails()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in implementation">pegs_runoutput.h</include>
+    <include location="local" impldecl="in implementation">pegs_page.ui.h</include>
+</includes>
+<forwards>
+    <forward>class QProcess;</forward>
+    <forward>class PEGS_RunOutput;</forward>
+    <forward>class EGS_ConfigReader;</forward>
+</forwards>
+<variables>
+    <variable access="private">bool output_is_active;</variable>
+    <variable access="private">PEGS_RunOutput *run_output;</variable>
+    <variable access="private">QProcess *pegs_process;</variable>
+    <variable access="private">double ae,ap,ue,up;</variable>
+    <variable access="private">int nelem;</variable>
+    <variable access="private">EGS_ConfigReader *config_reader;</variable>
+</variables>
+<slots>
+    <slot>tableCellChanged( int row, int col )</slot>
+    <slot>dencityIcruChanged( bool is_on )</slot>
+    <slot>cellClicked( int row, int col, int button, const QPoint &amp; p )</slot>
+    <slot>cellDoubleClicked( int row, int col, int button, const QPoint &amp; p )</slot>
+    <slot>cellPressed( int row, int col, int button, const QPoint &amp; p )</slot>
+    <slot>medtypeChanged( const QString &amp; s )</slot>
+    <slot>getDensityFile()</slot>
+    <slot>newDataFileChecked( bool b )</slot>
+    <slot>appendDataFileChecked( bool b )</slot>
+    <slot>setOfile()</slot>
+    <slot>startPegs()</slot>
+    <slot>stopPegs()</slot>
+    <slot>readPegsStdout()</slot>
+    <slot>readPegsStderr()</slot>
+    <slot>pegsFinished()</slot>
+    <slot>showHideDetails()</slot>
+    <slot>outputClosed()</slot>
+    <slot>launchReturned()</slot>
+    <slot>setConfigReader(EGS_ConfigReader *)</slot>
+</slots>
+<functions>
+    <function access="protected">init()</function>
+    <function access="private" returnType="bool">checkFields()</function>
+</functions>
+<pixmapinproject/>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>
