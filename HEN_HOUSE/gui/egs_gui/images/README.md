@@ -16,8 +16,8 @@ a copy of which is included in this directory for reference.
 
 The following images were created by Ghada Hamdan.who was contracted by the National Research
 Council of Canada. Copyright for these images is with the National Research Council of Canada.
-They are distributed under the terms of the Affero General Public License version 3, a copy of
-which is included in this directory for reference.
+They are distributed under the terms of the GNU Affero General Public License version 3, a
+copy of which is included in this directory for reference.
 
  Image file                 |
 :---------------------------|
