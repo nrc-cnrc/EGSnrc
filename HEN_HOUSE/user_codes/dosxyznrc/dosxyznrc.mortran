@@ -23,8 +23,13 @@
 "                                                                             "
 "  Author:          Dave Rogers, 1986                                         "
 "                                                                             "
-"  Contributors:    Charlie Ma                                                "
+"  Contributors:    Bruce Faddegon                                            "
+"                   George Ding                                               "
+"                   Charlie Ma                                                "
+"                   Alex Bielajew                                             "
+"                   Paul Reckwerdt                                            "
 "                   Blake Walters                                             "
+"                   Brian Geiser                                              "
 "                   Mark Holmes                                               "
 "                   Iwan Kawrakow                                             "
 "                   Frederic Tessier                                          "
@@ -70,6 +75,26 @@
 "  the XY plane on the page, X axis to the right, Y down and Z into the page. "
 "  Voxel dimensions are variable in all three directions. For more detail on  "
 "  geometry see the subroutine HOWFAR.                                        "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  DOSXYZ started out as a demonstration code that Dave Rogers wrote to show  "
+"  Ralph Nelson that special purpose coding of rectilinear voxels was faster  "
+"  than using his more general macros. It then got used to estimate the time  "
+"  required to do a full Monte Carlo treatment planning calculation and the   "
+"  results published three years later in 1990 in a book chapter (Rogers and  "
+"  Bielajew). It then became the basis for a Monte Carlo timing benchmark;    "
+"  see Bielajew and Rogers, Med. Phys. 19, 303, (1992).                       "
+"                                                                             "
+"  The OMEGA project took this code over and added a variety ofdifferent      "
+"  source routines with coding contributions from BA Faddegon, CM Ma, GX      "
+"  Ding, AF Bielajew and P Reckwerdt. More recent mods have reduced the array "
+"  space used by the code, and added beam characterization inputs (CM Ma),    "
+"  btree inputs (Brian Geiser), correlated sampling hooks (Mark Holmes).      "
+"  Blake Walters and Mark Holmes added the CT reading ability. Dave Rogers    "
+"  cleaned up code (and added errors?) in 1997.                               "
+"                                                                             "
+"  DOSXYZnrc was created from DOSXYZ by Blake Walters in 2001                 "
 "                                                                             "
 "#############################################################################"
 
@@ -720,37 +745,6 @@
 "                         start region < 1 or stop_region > $MXREG or
 "                         start region > stop region.
 "
-;
-"*******************************************************************************
-"
-"    Origin of DOSXYZ
-"    ================
-"
-"    DOSXYZ started out as a demonstration code that Dave Rogers wrote
-"    to show Ralph Nelson that special purpose coding of rectilinear
-"    voxels was faster than
-"    using his more general macros.  It then got used to estimate the
-"    time required to do a full Monte Carlo treatment planning
-"    calculation and the results published 3 years later in a book
-"    chapter (Rogers and Bielajew, 1990).  It then became the basis for
-"    a Monte Carlo timing benchmark (Bielajew and Rogers, Med. Phys.
-"    19, (1992) 303).
-"    The OMEGA project took this code over and added a variety of
-"    different source routines with coding contributions from
-"    B.A. Faddegon, C.M. Ma, G.X. Ding, A.F. Bielajew and P. Reckwerdt.
-"    More recent mods have reduced the array space used by the code,
-"    and added beam characterization inputs (C.M. Ma), btree inputs,
-"    (Brian Geiser), correlated sampling hooks (Mark Holmes).
-"    Blake Walters and Mark Holmes added the CT reading ability
-"    Dave Rogers cleaned up code (added errors??) in 1997.
-"
-"    DOSXYZnrc was created from DOSXYZ in January, 2001 by
-"    Blake Walters
-"
-"    The code is copyright by the OMEGA collaboration of NRCC and
-"    University of Wisconsin.  1995 1996 1997 1998
-"
-"*******************************************************************************
 ;
 
 "Step 1  User overrides and declarations                       ""toc:
@@ -3401,7 +3395,6 @@ end;
 "                         ======
 "
 subroutine ausgab(iarg);
-Copyright NRC 1999
 "
 "*******************************************************************************
 ;
@@ -3806,7 +3799,6 @@ return;end;
 "                      ======
 "
 subroutine howfar;
-Copyright NRC 1999
 
 "   howfar routine to use with a generalized cartesian coordinate system
 "
@@ -4197,7 +4189,6 @@ end;
 "                      =======
 "
 SUBROUTINE HOWNEAR (TPERP,X,Y,Z,IRL);
-Copyright NRC 1999
 
 "   hownear routine to use with a generalized cartesian coordinate system
 "
@@ -4273,7 +4264,6 @@ return;
 end;
 "******************************************************************************
 SUBROUTINE DATETIME(DUMMY);
-Copyright NRC 1999
 
 "calls the macros CALL DATE and CALL TIME to assign the current date and time
 "to DATEN and TIMEN, respectively.  A subroutine is used to call the macros so
@@ -4294,7 +4284,6 @@ RETURN; end;
 subroutine write_dose(iimax,jjmax,kkmax,xbnd,ybnd,zbnd,dd,ddun,unitnum,
                       writemax20);
 
-Copyright NRC 1999
 
 "Writes dose to file designated by unitnum.  Currently the subroutine only
 "writes in the .3ddose format (unitnum=3) and replaces a portion of the
