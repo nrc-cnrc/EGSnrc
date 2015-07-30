@@ -38,6 +38,7 @@
 #include "executiondlgImpl.h"
 #include "aboutform_rzImpl.h"
 #include "eventfilter.h"
+#include <qevent.h>
 #include <qlineedit.h>
 #include <qapplication.h>
 //#include <q3filedialog.h>
@@ -149,42 +150,38 @@ geoErrors    =  "";
 //                     isTclTkInstalled();
 
   //Initialize table defining regions to list fluence
-  InitializeTwoColumnTable( ListFluTable,ListFluTable_events );
-  ListFluTable->setEnabled( false );
+  InitializeTwoColumnTable( ListFluTable );
+  ListFluTable->setEnabled( false );//ListFluTable->installEventFilter(this);
 
   //Initialize table defining tops of output bins in MeV
   //qt3to4 -- BW
   //sloteFluTable->horizontalHeader()->setLabel(0,"bin top [MeV]");
   sloteFluTable->setHorizontalHeaderItem(0,new QTableWidgetItem("bin top [MeV]"));
+  //sloteFluTable->installEventFilter(this);
 
   //Initialize the stopping power output mode table
-  InitializeTable( sproutTable, "start region", "stop region",sproutTable_events );
-
+  InitializeTable( sproutTable, "start region", "stop region" );
   sproutTable->resizeColumnsToContents();
+  //sproutTable->installEventFilter(this);
 
   //Initialize the pulse height distribution table
-  InitializeTable( phdTable, "sensitive region", "bin top [MeV]",phdTable_events );
-
+  InitializeTable( phdTable, "sensitive region", "bin top [MeV]" );
+  //phdTable->installEventFilter(this);
   //Initialize media table
-  InitializeTable( mediaTable, "medium", "start region", "stop region", mt_events );
-  //mt_events = new TableEvents(mediaTable,0);
+  InitializeTable( mediaTable, "medium", "start region", "stop region" );
+  //mediaTable->installEventFilter(this);
 
   //Initialize the pegsless medium table
-  InitializeTable( pz_or_rhozTable, "element", "no. of atoms",pz_or_rhozTable_events );
-
+  InitializeTable( pz_or_rhozTable, "element", "no. of atoms" );
+  //pz_or_rhozTable->installEventFilter(this);
   //Initialize FF table
   //customFFTable->setValidator(false);
   QStringList sl; sl.append("medium");sl.append("FF file (full path)");
   v_float fra;
   fra.push_back(0.20); fra.push_back(0.80);
-  InitializeTable( customFFTable, sl, fra,fft_events );
-/*#ifdef WIN32
-  InitializeTable( customFFTable, sl );
-#else
-  InitializeTable( customFFTable, sl, fra );
-#endif*/
+  InitializeTable( customFFTable, sl, fra);
   customFFgroupBox->setEnabled( false );
-  //fft_events = new TableEvents(customFFTable,0);
+  //customFFTable->installEventFilter(this);
 
   //Initialize geometry tables
     globalStartR.push_back(1);
@@ -193,20 +190,21 @@ geoErrors    =  "";
 
   QStringList s; s.append( "# slabs" ); s.append("thickness [cm]");
   fra[0]=0.3;fra[1]=0.70;//fra[2]=0.35;
-  InitializeTable( geometryTable, s, fra,geometryTable_events );
-  s.clear(); s.append( "radius [cm]" );
-  InitializeTable( cylTable,  s,cylTable_events );
+  InitializeTable( geometryTable, s, fra );
+  s.clear(); s.append( "radius [cm]" );//geometryTable->installEventFilter(this);
+  InitializeTable( cylTable,  s );          //cylTable->installEventFilter(this);
 
   //Initialize cavity iformation
   //qt3to4 -- BW
   //cavTable->horizontalHeader()->setLabel(0,"region #");
   cavTable->setHorizontalHeaderItem(0,new QTableWidgetItem("region #"));
-  cavTable_events = new TableEvents(cavTable,0);
+  //cavTable->installEventFilter(this);
 
   //Initialize source information
-  InitializeTable( raddistTable, "Radial bin top", "Probability",raddistTable_events );
+  InitializeTable( raddistTable, "Radial bin top", "Probability");
   phasespaceGroupBox->setToolTip(PHSP_FILE );
-  /**************************************/
+  //raddistTable->installEventFilter(this);
+ /**************************************/
   /* Initialize beam source information */
   /**************************************/
   beamButton= new QPushButton( "&Setup beam source", sourceoptionsGroupBox );
@@ -280,14 +278,22 @@ geoErrors    =  "";
   /******************************************************/
 
   //Initialize MC transport parameters
-  InitializeTwoColumnTable( BoundComptonTable,BoundComptonTable_events );
-  InitializeTwoColumnTable( PEAngSamplingTable,PEAngSamplingTable_events );
-  InitializeTwoColumnTable( RayleighTable,RayleighTable_events );
-  InitializeTwoColumnTable( RelaxationsTable,RelaxationsTable_events );
+  InitializeTwoColumnTable( BoundComptonTable);
+  InitializeTwoColumnTable( PEAngSamplingTable);
+  InitializeTwoColumnTable( RayleighTable);
+  InitializeTwoColumnTable( RelaxationsTable);
 
-  InitializeThreeColumnTable( PCUTTable, "PCUT",PCUTTable_events );
-  InitializeThreeColumnTable( ECUTTable, "ECUT",ECUTTable_events );
-  InitializeThreeColumnTable( SMAXTable, "SMAX",SMAXTable_events );
+  InitializeThreeColumnTable( PCUTTable, "PCUT");
+  InitializeThreeColumnTable( ECUTTable, "ECUT");
+  InitializeThreeColumnTable( SMAXTable, "SMAX");
+
+  //BoundComptonTable->installEventFilter(this);
+  //PEAngSamplingTable->installEventFilter(this);
+  //RayleighTable->installEventFilter(this);
+  //RelaxationsTable->installEventFilter(this);
+  //PCUTTable->installEventFilter(this);
+  //ECUTTable->installEventFilter(this);
+  //SMAXTable->installEventFilter(this);
 
 
 // Tool tips for General Tab
@@ -707,7 +713,8 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
   BremsSplitTextLabel->setEnabled( false );
 
   //Initialize the cross section enhancement table
-  InitializeTwoColumnTable( CSEnhancementTable,CSEnhancementTable_events );
+  InitializeTwoColumnTable( CSEnhancementTable );
+  //CSEnhancementTable->installEventFilter(this);
 
   //qt3to4 -- BW -- below is redundant and results in zero width columns
   //int fullWidth  = CSEnhancementTable->visibleWidth();
@@ -721,15 +728,14 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
   PlotGroupBox->setEnabled( false );
 
   //Initialize the plot regions table
-  InitializeTable( PlotRegionsTable, "radial IX", "planar IZ",PlotRegionsTable_events );
-//Q3WhatsThis::add( PlotRegionsTable, QString(RADIAL_PLOT) + "\n" +
-//                                   QString(PLANAR_PLOT) + QString(INDEPENDENT));
+  InitializeTable( PlotRegionsTable, "radial IX", "planar IZ" );
+  //PlotRegionsTable->installEventFilter(this);
 
   PlotRegionsTable->setWhatsThis(QString(RADIAL_PLOT) + "\n" +QString(PLANAR_PLOT) + QString(INDEPENDENT));
   PlotRegionsTable->setToolTip(QString(RADIAL_PLOT) + "\n" +QString(PLANAR_PLOT) + QString(INDEPENDENT));
   //Initialize the plot regions table
-  InitializeTable( SpecPlotTable, "start", "stop",SpecPlotTable_events );
-
+  InitializeTable( SpecPlotTable, "start", "stop" );
+  //SpecPlotTable->installEventFilter(this);
   //Some tool tips for Media Definition tab
   /*
   QToolTip::add( MDFEdit, MATERIAL_DATA_FILE);
@@ -792,6 +798,9 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
 
 
   caught_errors();
+
+
+  TabWidgetRZ->setCurrentIndex(0);
 
 }
 
@@ -910,6 +919,9 @@ void inputRZImpl::UpDateInputRZForm( const MInputRZ* Input )
 
         update_caption( EGSfileName );
 
+        //cout << "... Updated form!!!" << endl;
+        //TabWidgetRZ->setCurrentWidget(GItab);
+        //TabWidgetRZ->setCurrentIndex(0);
 }
 
 // update form when a pegs4 data file is selected from combo box
@@ -3764,26 +3776,19 @@ void inputRZImpl::update_range_rejection( )
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeTable( Q3Table* t, const QStringList& s )
-void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s,TableEvents* t_events )
+void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s)
 {
 
-	t->horizontalHeader()->setUpdatesEnabled( false );
-
-        //qt3to4 -- BW
-	//for ( int i = 0;  i <  t->numCols(); i++ )  {
-	//     t->horizontalHeader()->setLabel( i, s[i]);
-	//}
-
-         t->setHorizontalHeaderLabels(s);
-         t->horizontalHeader()->setUpdatesEnabled( true );
-         t->resizeColumnsToContents();
-
-         t_events = new TableEvents(t,0);
-}
+    t->horizontalHeader()->setUpdatesEnabled( false );
+    t->setHorizontalHeaderLabels(s);
+    t->horizontalHeader()->setUpdatesEnabled( true );
+    //Proper way to resize table columns to fit the table -- EMH July 2015
+    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    t->installEventFilter(this);}
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeTable( Q3Table* t, const QStringList& s, v_float frac )
-void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s, v_float frac, TableEvents* t_events )
+void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s, v_float frac)
 {
    /* Avoid accessing unallocated memory by using minimum value */
    //qt3to4 -- BW
@@ -3792,131 +3797,86 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s, v_floa
    if (ncols>s.size()) ncols = s.size();
    if (ncols>frac.size()) ncols = frac.size();
 
-#ifndef WIN32
-   //qt3to4 -- BW
-   //int width  = t->visibleWidth();
-   QRect vrect = t->visibleRegion().boundingRect();
-   int width = vrect.width();
-#else
-   QRect tempRect = t->geometry();
-   int width = tempRect.width() - 50;
-#endif
    t->horizontalHeader()->setUpdatesEnabled( false );
-
    //qt3to4 -- BW
    t->setHorizontalHeaderLabels(s);
+   t->horizontalHeader()->setUpdatesEnabled( true );
 
+   //Better viewport width estimate -- EMH July 2015
+   int width = t->horizontalHeader()->width();
    for ( int i = 0;  i <  ncols; i++ )  {
-     //qt3to4 -- BW
-     //t->horizontalHeader()->setLabel( i, s[i]);
      t->setColumnWidth( i, frac[i]*width );
    }
 
-   t->horizontalHeader()->setUpdatesEnabled( true );
-   t->resizeColumnsToContents();
+   //Proper way to resize last column to fit the table -- EMH July 2015
+   t->horizontalHeader()->setStretchLastSection(true);
 
-   t_events = new TableEvents(t,0);
+   t->installEventFilter(this);
 }
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeTable( Q3Table* t, const QString& s0, const QString& s1 )
-void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0, const QString& s1, TableEvents* t_events )
+void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0, const QString& s1)
 {
-	t->horizontalHeader()->setUpdatesEnabled( false );
-        //qt3to4 -- BW
-	//t->horizontalHeader()->setLabel( 0, s0 );
-	//t->horizontalHeader()->setLabel( 1, s1 );
-	//t->horizontalHeader()->setUpdatesEnabled( true );
-	//int width  = t->visibleWidth()/2;
-        t->setHorizontalHeaderItem(0,new QTableWidgetItem(s0));
-        t->setHorizontalHeaderItem(1,new QTableWidgetItem(s1));
+    t->horizontalHeader()->setUpdatesEnabled( false );
+    //qt3to4 -- BW
+    t->setHorizontalHeaderItem(0,new QTableWidgetItem(s0));
+    t->setHorizontalHeaderItem(1,new QTableWidgetItem(s1));
+    t->horizontalHeader()->setUpdatesEnabled( true );
+    //Proper way to resize table columns to fit the table -- EMH July 2015
+    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
-        t->horizontalHeader()->setUpdatesEnabled( true );
-        QRect vrect = t->visibleRegion().boundingRect();
-        int width = vrect.width()/2;
-	t->setColumnWidth( 0, width );
-	t->setColumnWidth( 1, width );
-
-        //why do we need this?
-        t->resizeColumnsToContents();
-
-        t_events = new TableEvents(t,0);
+    t->installEventFilter(this);
 }
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeTable( Q3Table* t, const QString& s0,
 void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0,
                                               const QString& s1,
-                                              const QString& s2,
-                                              TableEvents* t_events )
+                                              const QString& s2)
 {
-        //qt3to4 -- BW
-	t->horizontalHeader()->setUpdatesEnabled( false );
-	//t->horizontalHeader()->setLabel( 0, s0 );
-	//t->horizontalHeader()->setLabel( 1, s1 );
-	//t->horizontalHeader()->setLabel( 2, s2 );
+    //qt3to4 -- BW
+    t->horizontalHeader()->setUpdatesEnabled( false );
+    t->setHorizontalHeaderItem(0, new QTableWidgetItem(s0) );
+    t->setHorizontalHeaderItem(1, new QTableWidgetItem(s1) );
+    t->setHorizontalHeaderItem(2, new QTableWidgetItem(s2) );
+    t->horizontalHeader()->setUpdatesEnabled( true );
+    //Proper way to resize table columns to fit the table -- EMH July 2015
+    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
-        t->setHorizontalHeaderItem(0, new QTableWidgetItem(s0) );
-        t->setHorizontalHeaderItem(1, new QTableWidgetItem(s1) );
-        t->setHorizontalHeaderItem(2, new QTableWidgetItem(s2) );
-        t->horizontalHeader()->setUpdatesEnabled( true );
-        t->resizeColumnsToContents();
-
-        t_events = new TableEvents(t,0);
+    t->installEventFilter(this);
 }
 
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeTwoColumnTable( Q3Table* table )
-void inputRZImpl::InitializeTwoColumnTable( QTableWidget* table,TableEvents* t_events )
+void inputRZImpl::InitializeTwoColumnTable( QTableWidget* table)
 {
-        //qt3to4 -- BW
-	table->horizontalHeader()->setUpdatesEnabled( false );
-	//table->horizontalHeader()->setLabel(0,"start");
-	//table->horizontalHeader()->setLabel(1,"stop");
-	//table->horizontalHeader()->setUpdatesEnabled( true );
-	//int width  = table->visibleWidth()/2;
+    //qt3to4 -- BW
+    table->horizontalHeader()->setUpdatesEnabled( false );
+    table->setHorizontalHeaderItem(0, new QTableWidgetItem("start"));
+    table->setHorizontalHeaderItem(1, new QTableWidgetItem("stop"));
+    table->horizontalHeader()->setUpdatesEnabled( true );
+    //Proper way to resize table columns to fit the table -- EMH July 2015
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
-        table->setHorizontalHeaderItem(0, new QTableWidgetItem("start"));
-        table->setHorizontalHeaderItem(1, new QTableWidgetItem("stop"));
-        table->horizontalHeader()->setUpdatesEnabled( true );
-        QRect vrect = table->visibleRegion().boundingRect();
-        int width = vrect.width()/2;
-
-	table->setColumnWidth( 0, width );
-	table->setColumnWidth( 1, width );
-        //why do we need this
-        table->resizeColumnsToContents();
-
-        t_events = new TableEvents(table,0);
+    table->installEventFilter(this);
 }
 
 //qt3to4 -- BW
 //void inputRZImpl::InitializeThreeColumnTable( Q3Table* table, const QString& rvalue )
-void inputRZImpl::InitializeThreeColumnTable( QTableWidget* table, const QString& rvalue, TableEvents* t_events )
+void inputRZImpl::InitializeThreeColumnTable( QTableWidget* table, const QString& rvalue)
 {
-        //qt3to4 -- BW
-	table->horizontalHeader()->setUpdatesEnabled( false );
-	//table->horizontalHeader()->setLabel(0,rvalue);
-	//table->horizontalHeader()->setLabel(1,"start");
-	//table->horizontalHeader()->setLabel(2,"stop");
-	//table->horizontalHeader()->setUpdatesEnabled( true );
-	//int width  = table->visibleWidth()/3;
+     //qt3to4 -- BW
+    table->horizontalHeader()->setUpdatesEnabled( false );
+    table->setHorizontalHeaderItem(0, new QTableWidgetItem(rvalue));
+    table->setHorizontalHeaderItem(1, new QTableWidgetItem("start"));
+    table->setHorizontalHeaderItem(2, new QTableWidgetItem("stop"));
+    table->horizontalHeader()->setUpdatesEnabled( true );
+    //Proper way to resize table columns to fit the table -- EMH July 2015
+    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 
-        table->setHorizontalHeaderItem(0, new QTableWidgetItem(rvalue));
-        table->setHorizontalHeaderItem(1, new QTableWidgetItem("start"));
-        table->setHorizontalHeaderItem(2, new QTableWidgetItem("stop"));
-        table->horizontalHeader()->setUpdatesEnabled( true );
-        QRect vrect = table->visibleRegion().boundingRect();
-        int width = vrect.width()/2;
-
-	table->setColumnWidth( 0, width );
-	table->setColumnWidth( 1, width );
-	table->setColumnWidth( 2, width );
-        //why do we need this?
-        table->resizeColumnsToContents();
-
-        t_events = new TableEvents(table,0);
+    table->installEventFilter(this);
 }
 /**********************************************************************
  * Reads data files in HEN_HOUSE/data and figures out which are
@@ -3978,5 +3938,124 @@ if (suffix.isEmpty()) {
 }
 suffix.prepend("Off"); suffix.prepend("On");
 EIIcomboBox->addItems(suffix);
+
+}
+
+/*******************************/
+// Event filter for InputRZForm:
+/*******************************/
+// Currently catches QTableWidget events for custom editing.
+// Implemented operations such as copy, cut, paste and delete.
+// If end of table reached, pressing enter adds an extra row.
+// QTableWidget objects need to invoke installEventFilter(this)
+// to use this eventFilter.
+//                                            -- EMH July 2015
+/***************************************************************/
+bool inputRZImpl::eventFilter(QObject *o, QEvent *e){
+
+   //if (o==cylTable){cout << "It caught an event on cylTable!!!" << endl;}
+
+   if (string(o->metaObject()->className())=="QTableWidget"){
+      //cout << "It caught an event on table " << o->objectName().toStdString().c_str() << endl;
+
+     QTableWidget *to = (QTableWidget *)o;
+     if( e->type() == QEvent::KeyPress) {
+         QKeyEvent *ke = (QKeyEvent*)e;
+         // Return advances one row, unless at bottom
+         // in which case a row is added
+         if ( ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter ) {
+           if( to->currentRow() >= to->rowCount() - 1 ){
+              to->setRowCount(to->rowCount() + 1 );
+              to->setCurrentCell(to->rowCount()-1,to->currentColumn());
+           }
+           else to->setCurrentCell(to->currentRow()+1,to->currentColumn());
+           return true;
+         }
+         //Contents of selected cells deleted
+         if ( ke->key() == Qt::Key_Delete ){
+             QList<QTableWidgetSelectionRange> ts = to->selectedRanges();
+             if(!ts.isEmpty()) {
+               for (int irow = ts.first().topRow(); irow <= ts.first().bottomRow(); irow++) {
+                 for(int icol = ts.first().leftColumn(); icol <= ts.first().rightColumn(); icol++) {
+                     to->setItem(irow,icol,0);
+                 }
+               }
+             }
+             return true;
+         }
+         //Contents of selected cells copied to a clipboard and deleted
+         if ( ke->key() == Qt::Key_X && ke->modifiers() == Qt::ControlModifier ){
+             QString cellText; itemCopy.clear(); copyRange.clear();
+             QList<QTableWidgetSelectionRange> ts = to->selectedRanges();
+             if(!ts.isEmpty()) {
+               for (int irow = ts.first().topRow(); irow <= ts.first().bottomRow(); irow++) {
+                 for(int icol = ts.first().leftColumn(); icol <= ts.first().rightColumn(); icol++) {
+                     QTableWidgetItem *w = to->item(irow,icol);
+                     if(w) cellText = w->text();
+                     if ( !cellText.isEmpty() ){
+                        itemCopy << cellText;
+                     }
+                     else
+                        itemCopy << "";
+                     to->setItem(irow,icol,0);
+                 }
+               }
+               copyRange = ts;
+               //cout << itemCopy.join(", ").toLatin1().data() << endl;
+             }
+             return true;
+         }
+         //Contents of selected cells copied to a clipboard
+         if ( ke->key() == Qt::Key_C && ke->modifiers() == Qt::ControlModifier ) {
+             QString cellText; itemCopy.clear(); copyRange.clear();
+             QList<QTableWidgetSelectionRange> ts = to->selectedRanges();
+             if(!ts.isEmpty()) {
+                for ( int irow = ts.first().topRow(); irow <= ts.first().bottomRow(); irow++){
+                     for ( int icol = ts.first().leftColumn(); icol <= ts.first().rightColumn(); icol++){
+                         QTableWidgetItem *w = to->item(irow,icol);
+                         if(w) cellText = w->text();
+                         if ( !cellText.isEmpty() ){
+                            itemCopy << cellText;
+                         }
+                         else
+                            itemCopy << " ";
+                     }
+                }
+                copyRange = ts;
+                //cout << itemCopy.join(", ").toLatin1().data() << endl;
+             }
+             else {
+                  QTableWidgetItem *w = to->item(to->currentRow(), to->currentColumn());
+                  if (w) cellText = w->text();
+                  if ( !cellText.isEmpty() )
+                       itemCopy << cellText;
+                  else itemCopy << "";
+             }
+             return true;
+         }
+         //Full content of the clipboard pasted at first cell of a selected cell range.
+         if ( ke->key() == Qt::Key_V && ke->modifiers() == Qt::ControlModifier &&
+              !itemCopy.isEmpty() && !copyRange.isEmpty()){
+            QList<QTableWidgetSelectionRange> cs = to->selectedRanges();
+            uint top = cs.first().topRow(), left = cs.first().leftColumn(), icount = 0;
+            QTableWidgetSelectionRange ts = QTableWidgetSelectionRange(
+                                            top , left,
+                                            top  + copyRange.first().rowCount()-1,
+                                            left + copyRange.first().columnCount()-1);
+            for ( int irow = ts.topRow(); irow <= ts.bottomRow(); irow++){
+                for ( int icol = ts.leftColumn(); icol <= ts.rightColumn(); icol++){
+                    if ( ++icount <= itemCopy.size() )
+                       to->setItem(irow, icol, new QTableWidgetItem(itemCopy[icount-1]));
+                }
+            }
+            return true;
+         }
+     }
+     return to->eventFilter(o, e) ;
+     //return false;
+   }
+   else{
+     return false;
+   }
 
 }
