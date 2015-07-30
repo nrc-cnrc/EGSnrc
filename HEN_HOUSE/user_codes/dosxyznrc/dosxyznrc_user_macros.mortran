@@ -154,21 +154,6 @@ REPLACE {$Corr_Vars} WITH {;};
 REPLACE {$Corr_Reseed} WITH {;};
 REPLACE {$Corr_Dump} WITH {;};
 
-REPLACE {Copyright OMEGA 1995} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-
-REPLACE {Copyright OMEGA 1997} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
-REPLACE {Copyright NRC 1999} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
 ;
 "*******************************************************************"
 "end of dosxyz_user_macros.mortran (Rev 1.4)"

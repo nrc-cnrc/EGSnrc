@@ -72,7 +72,7 @@
 SUBROUTINE XVGRPLOT (X, Y, ERRY, NPTS, CURVENUM, SERIESTITLE,
                         XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                         UNITNUM, TYPE, HISTXMIN, AXISTYPE);
-"Copyright NRC 1998
+
 "************************************************************************"
 "                                                                        "
 "  This subroutine is used to create an xvgr plot file that will plot    "

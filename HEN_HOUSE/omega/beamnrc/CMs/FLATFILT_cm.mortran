@@ -287,7 +287,6 @@
 "******************************************************************************
 ;SUBROUTINE HOWFAR_$FLATFILT;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$FLATFILT,EPCONT,STACK,USER,EGS-IO/;
@@ -566,7 +565,6 @@ REPLACE {$CHECK_BACK_$FLATFILT;} WITH {;
 }
 ;SUBROUTINE WHERE_AM_I_$FLATFILT(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -678,7 +676,6 @@ END; "End of subroutine WHERE_AM_I_$FLATFILT"
 
 ;SUBROUTINE INPUT_$FLATFILT;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1113,7 +1110,6 @@ END;  "End of INPUT_$FLATFILT"
 
 ;SUBROUTINE ISUMRY_$FLATFILT;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1304,7 +1300,6 @@ END; "End of subroutine ISUMRY_$FLATFILT"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$FLATFILT(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

@@ -246,13 +246,6 @@ REPLACE {$SWAPBYTESINT(#);} WITH {
       {P1}=SWAPI;
 }
 
-REPLACE {Copyright NRC 1995} WITH {
-;
-%F
-Copyright NRC Ottawa, BEAM Code 1995, all rights reserved.  The
-Code is covered by the BEAM General License
-%M
-;}
 ;
 
 REPLACE {$MAX_SC_PLANES} WITH {1};
@@ -266,7 +259,6 @@ REPLACE {$LOGICAL} WITH {logical}
 "
 "                             MAIN PROGRAM
 "                             ************
-Copyright NRC 1995
 "
 " Type declarations
 " *****************

@@ -346,7 +346,6 @@
 "*******************************************************************************
 ;SUBROUTINE HOWFAR_$DYNJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$DYNJAWS,EPCONT,STACK,EGS-IO,USER/;
@@ -750,7 +749,6 @@ END; "End of subroutine HOWFAR_$DYNJAWS"
 "*******************************************************************************
 ;SUBROUTINE WHERE_AM_I_$DYNJAWS(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$DYNJAWS,EPCONT,STACK,USER/;
@@ -804,7 +802,6 @@ END; "End of subroutine WHERE_AM_I_$DYNJAWS"
 
 ;SUBROUTINE INPUT_$DYNJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$DYNJAWS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1360,7 +1357,6 @@ END;  "End of INPUT_$DYNJAWS"
 
 ;SUBROUTINE ISUMRY_$DYNJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1559,7 +1555,6 @@ END;  "End of subroutine ISUMRY_$DYNJAWS"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$DYNJAWS(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

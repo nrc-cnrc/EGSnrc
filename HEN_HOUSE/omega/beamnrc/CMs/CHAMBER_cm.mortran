@@ -469,7 +469,6 @@
 
 ;SUBROUTINE HOWFAR_$CHAMBER;
 
-Copyright NRC 1999
 
 "V>$GEO_SHIFT_1_(#)
 "V>=============
@@ -1581,7 +1580,6 @@ END; "End of miscellaneous subroutines and functions"
 
 ;SUBROUTINE WHERE_AM_I_$CHAMBER(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1664,7 +1662,6 @@ END; "End of subroutine WHERE_AM_I_$CHAMBER"
 
 ;SUBROUTINE INPUT_$CHAMBER;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ BOUNDS,CMs,CM_$CHAMBER,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -2981,7 +2978,6 @@ END;  "End of INPUT_$CHAMBER"
 
 ;SUBROUTINE ISUMRY_$CHAMBER;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 

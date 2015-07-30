@@ -39,7 +39,6 @@ SUBROUTINE GET_INPUT_PLUS(UNITNUM,DELIM_START,DELIM_END);
 "---------------------------------------------------------------------------"
 ;IMPLICIT NONE;
 
-;Copyright NRC;
 COMIN/GetInput,EGS-IO/;
 
 "***************************************************************************"

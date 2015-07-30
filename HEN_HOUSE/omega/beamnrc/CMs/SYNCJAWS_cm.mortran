@@ -350,7 +350,6 @@
 "*******************************************************************************
 ;SUBROUTINE HOWFAR_$SYNCJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$SYNCJAWS,EPCONT,STACK,USER,EGS-IO/;
@@ -754,7 +753,6 @@ END; "End of subroutine HOWFAR_$SYNCJAWS"
 "*******************************************************************************
 ;SUBROUTINE WHERE_AM_I_$SYNCJAWS(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$SYNCJAWS,EPCONT,STACK,CMs,USER/;
@@ -808,7 +806,6 @@ END; "End of subroutine WHERE_AM_I_$SYNCJAWS"
 
 ;SUBROUTINE INPUT_$SYNCJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$SYNCJAWS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1364,7 +1361,6 @@ END;  "End of INPUT_$SYNCJAWS"
 
 ;SUBROUTINE ISUMRY_$SYNCJAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1563,7 +1559,6 @@ END;  "End of subroutine ISUMRY_$SYNCJAWS"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$SYNCJAWS(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

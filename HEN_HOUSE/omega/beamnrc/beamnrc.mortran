@@ -5412,7 +5412,6 @@ REPLACE {$CHECK-WEIGHTS(#);} WITH {;}
 "
                           SUBROUTINE AUSGAB(IARG);
 "                         *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "
@@ -7105,7 +7104,6 @@ END;  "End of subroutine AUSGAB"
 "************************************************************************
 SUBROUTINE EN_SAMPLE(ENIN);
 
-Copyright NRC 1999
 $IMPLICIT-NONE;
 ;COMIN/ENERGYSRC,RANDOM,SOURCE,EGS-IO/;
 
@@ -7140,7 +7138,6 @@ END;
 
 SUBROUTINE EN_INITIALIZE;
 
-Copyright NRC 1999
 $IMPLICIT-NONE;
 ;COMIN/ENERGYSRC,SCORE,SOURCE,EGS-IO/;
 
@@ -7208,7 +7205,6 @@ END;   "end of subroutine ensrc
 "
                           SUBROUTINE HOWFAR;
 "                         *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "     HOWFAR routine for BEAMnrc.
@@ -7381,7 +7377,6 @@ END; "End of subroutine HOWFAR
 "
                           SUBROUTINE INPUTS;
 "                         *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "                    TYPE DECLARATIONS AND COMMON BLOCKS
@@ -8245,7 +8240,6 @@ END; "END OF SUBROUTINE INPUTS
 "
 "     ROUTINES CALLED:  none
 "
-Copyright NRC 1999
 "*******************************************************************************
 "
 $IMPLICIT-NONE;
@@ -8719,7 +8713,6 @@ END;     "Last line of subroutine ISUMRY"
 "
 "     ROUTINES CALLED: none
 "
-Copyright NRC 1999
 "*******************************************************************************
 $IMPLICIT-NONE;
 ;COMIN/BOUNDS,BREMPR,CMs,EDGE,ELECIN,GEOM,IO_INFO,MEDIA,MISC,
@@ -9303,7 +9296,6 @@ END; "End of subroutine OSUMRY"
 "
                             SUBROUTINE ISOURCE;
 "                           ******************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "   Source input routine for BEAMnrc, particle position, direction, and energy.
@@ -10507,7 +10499,6 @@ END; "End of subroutine ISOURCE"
 "
                              SUBROUTINE SRCOTO(WEIGHT);
 "                            *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 " Calculation of one time only constants that may vary with source type.
@@ -11045,7 +11036,6 @@ END;    "End of subroutine SRCOTO
 "
                             SUBROUTINE SRCOUT;
 "                           *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "  Describe source.
@@ -11298,7 +11288,6 @@ END;    "End of subroutine SRCOUT
 "
                       SUBROUTINE SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT);
 "                     *****************
-Copyright NRC 1999
 "*******************************************************************************
 "
 " Determine history-dependent parameters of source.
@@ -12298,7 +12287,6 @@ END;   "End of subroutine SRCHST"
 "
                           SUBROUTINE WHERE_AM_I(IICM,IDIR);
 "                         *********************
-Copyright NRC 1999
 "*******************************************************************************
 "
 "     WHERE_AM_I routine for BEAMnrc.
@@ -12394,7 +12382,6 @@ END;     "Last line of subroutine WHERE_AM_I"
 "**********************************************************************"
               SUBROUTINE DATETIME(DUMMY);
 "
-Copyright NRC 1999
 "**********************************************************************"
 $IMPLICIT-NONE;
 ;COMIN/IO_INFO/;      "contains the variables DATEN,TIMEN,DNTIME"

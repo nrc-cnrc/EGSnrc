@@ -317,7 +317,6 @@
 "*******************************************************************************
 ;SUBROUTINE HOWFAR_$PYRAMIDS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$PYRAMIDS,EPCONT,STACK,USER,EGS-IO,SCORE/;
@@ -705,7 +704,6 @@ END; "End of subroutine HOWFAR_PYRAMIDS"
 
 ;SUBROUTINE WHERE_AM_I_$PYRAMIDS(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$PYRAMIDS,EPCONT,STACK/; "/STACK/ is needed for this geometries.
@@ -758,7 +756,6 @@ END; "End of subroutine WHERE_AM_I_PYRAMIDS"
 
 ;SUBROUTINE INPUT_$PYRAMIDS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$PYRAMIDS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1317,7 +1314,6 @@ END;  "End of INPUT_PYRAMIDS"
 
 ;SUBROUTINE ISUMRY_$PYRAMIDS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$PYRAMIDS,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
@@ -1593,7 +1589,6 @@ END; "End of subroutine ISUMRY_$PYRAMIDS"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$PYRAMIDS(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

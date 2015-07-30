@@ -56,7 +56,6 @@ SUBROUTINE EFUNS(E,V);
 "******************************************************************"
 implicit none;
 ;
-;Copyright NRC;
 
 $REAL4 E,V(8);
 
@@ -141,7 +140,6 @@ $REAL4 FUNCTION BREMTM(E0);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E0,BREMRM;
 COMIN/THRESHP,DERCON/;
@@ -157,7 +155,6 @@ $REAL4 FUNCTION BREMRM(E,K1,K2);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E,K1,K2;
 $INTEGER I;
@@ -238,7 +235,6 @@ $REAL4 FUNCTION BRMSFZ(K);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 K;
 $REAL4 EMKLOC,DELTA,SB1,SB2,EE;
@@ -265,7 +261,6 @@ $REAL4 FUNCTION AMOLTM(E0);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4    E0;
 $REAL4    T0,AMOLRM;
@@ -285,7 +280,6 @@ $REAL4 FUNCTION AMOLRM(EN0,EN1,EN2);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4    EN0,EN1,EN2;
 $REAL4    T0,T1,T2,TM,EM,C1,C2,BETASQ,CMOLL2,EPS1,EPSP1,EPS2,EPSP2;
@@ -319,7 +313,6 @@ $REAL4 FUNCTION BHABTM(E0);
 "***TOTAL CROSS SECTION FOR BHABHA SCATTERING WITH INCIDENT POSITRON"
 "   ENERGY(TOTAL) OF E0."
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E0,BHABRM;
 COMIN/THRESHP/;
@@ -337,7 +330,6 @@ $REAL4 FUNCTION BHABRM(EN0,EN1,EN2);
 "***BHABHA CROSS SECTION FOR INCIDENT POSITRON OF TOTAL ENERGY EN0 TO"
 "   PRODUCE SECONDARY ELECTRON IN THE TOTAL ENERGY RANGE EN1 TO EN2."
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 EN0,EN1,EN2;
 $REAL4 T0,T1,T2,TM,EM,Y,BETASI,CBHAB2,B1,B2,B3,B4,EPS1,EPS2;
@@ -371,7 +363,6 @@ $REAL4 FUNCTION ANIHTM(E0);
 "***TOTAL CROSS SECTION FOR TWO-PHOTON POSITRON-ELECTRON ANNIHILATION"
 "   WITH INCIDENT POSITRON ENERGY(TOTAL) OF E0."
 ;
-;Copyright NRC;
 implicit none;
 $REAL4    E0;
 $REAL4    GAM,P0P2,P0P,CANIH;
@@ -393,7 +384,6 @@ $REAL4 FUNCTION SPTOTP(E0,EE,EG);
 "******************************************************************"
 
 ;
-Copyright NRC;
 implicit none;
 $REAL4 E0,EE,EG;
 $REAL4 SPIONP,BRMSTM;
@@ -421,7 +411,6 @@ $REAL4 FUNCTION SPTOTE(E0,EE,EG);
 " patched DWOR, Jan 1988 to correct IURST=2,3,4 and add 6 and 7    "
 "******************************************************************"
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E0,EE,EG;
 $REAL4 SPIONE,BRMSTM;
@@ -469,7 +458,6 @@ $REAL4 FUNCTION SPIONB(E0,EE,POSITR);
 "   WE USE BERGER AND SELTZER'S FORMULATION.                         "
 "   STOPPING POWER IS RETURNED IN UNITS OF MEV/R.L.                  "
 ;
-;Copyright NRC;
 implicit none;
 $REAL4   E0,EE;
 LOGICAL POSITR;
@@ -575,7 +563,6 @@ $REAL4 FUNCTION BRMSTM(E0,EG);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E0,EG,BRMSRM,AU,zero;
 parameter (zero=0);
@@ -594,7 +581,6 @@ $REAL4 FUNCTION BRMSRM(E,K1,K2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E,K1,K2,BRMSRZ;
 $INTEGER I;
@@ -641,7 +627,6 @@ $REAL4 FUNCTION BRMSDZ(Z,EA,K);
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 Z,EA,K;
 $REAL4 APRIM,XSIFP,FCOULCP,BRMSFZ;
@@ -676,7 +661,6 @@ $REAL4 FUNCTION APRIM(Z,E);
 " different data on unit 22 and if necessary changing the array sizes: "
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 Z,E;
 $INTEGER  napre,naprz,ie,iz,aprim_unit,egs_get_unit,lnblnk1;
@@ -857,7 +841,6 @@ $REAL4 E;
 "FROM THESE IS DERIVED THE EQUATION THIS FUNCTION IS BASED ON:"
 "TMXB=(E**2*BETA**2/XCC**2)*BETA**2/LOG(BLCC*(E**2*BETA**2/XCC**2));"
 ;
-;Copyright NRC;
 $REAL4 ESQ,BETA2,PX2;
 COMIN/DERCON,MOLVAR/;
 ESQ=E**2;
@@ -874,7 +857,6 @@ $REAL4 FUNCTION ALKE(E);"LOG OF KINETIC ENERGY"
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 E;
 COMIN/DERCON/;
@@ -889,7 +871,6 @@ $REAL4 FUNCTION ALKEI(X);"INVERSE OF LOG OF KINETIC ENERGY"
 "******************************************************************"
 
 ;
-;Copyright NRC;
 implicit none;
 $REAL4 x;
 COMIN/DERCON/;
@@ -944,7 +925,6 @@ SUBROUTINE PWLF1(NI,NIMX,XL,XU,XR,EP,ZTHR,ZEP,NIP,XFUN,XFI,
 "   VFUNS IS A SUBROUTINE TO FILL AN ARRAY WITH THE VALUES OF THE    "
 "   FUNCTIONS TO BE FITTED.                                          "
 ;
-;Copyright NRC;
 implicit none;
 
 COMIN/EGS-IO/;
@@ -1673,7 +1653,6 @@ SUBROUTINE SPINIT(density_file);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-;Copyright NRC;
 implicit none;
 
 COMIN/PMCONS,SPCOMM,DERCON,MOLVAR,BREMPRP,ELEMTB,LSPION,EPSTAR,THRESHP,
@@ -1931,7 +1910,6 @@ SUBROUTINE MIX;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright NRC;
 
 implicit none;
 
@@ -2140,7 +2118,6 @@ SUBROUTINE DIFFER;
 "******************************************************************"
 implicit none;
 ;
-Copyright NRC;
 
 " IK: Variable declarations for implicit none"
 $REAL4 AL183,F10,F20,A1DEN,A2DEN,B1DEN,B2DEN,C1DEN,C2DEN;
@@ -2302,7 +2279,6 @@ END; "END OF SUBROUTINE DIFFER"
 
 $REAL4 function FCOULCP(Z);
 "************************"
-; Copyright NRC;
 implicit none;
 $REAL4 Z,ASQ;
 COMIN/DERCON/;
@@ -2314,7 +2290,6 @@ END;  "END OF FUNCTION FCOULC"
 
 $REAL4 function XSIFP(Z);
 "**********************"
-; Copyright NRC;
 implicit none;
 $REAL4 Z,FCOULCP;
 $INTEGER IZ;
@@ -2333,7 +2308,6 @@ $REAL4 FUNCTION ZTBL(IASYM);
 "******************************************************************"
 
 ;
-Copyright NRC
 implicit none;
 COMIN/ELEMTB,EGS-IO/;
 $TYPE IASYM,IA;

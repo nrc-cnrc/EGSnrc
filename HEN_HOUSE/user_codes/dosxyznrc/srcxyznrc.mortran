@@ -70,51 +70,6 @@
 "#############################################################################"
 
 
-%E
-/******************************************************************************
- *
- * $Id: srcxyznrc.mortran,v 1.39 2014/10/08 15:10:11 bwalters Exp $
- *
- * Started from Revision 1.6 of
- *   /usr/people/omega/dosxyznrc/RCS/srcxyznrc.mortran,v
- * last edited 2003-05-14 10:23:45-04
- *
- *****************************************************************************/
-"         Copyright 1999 by the National Research Council                "
-"         of Canada, all rights reserved.  This code is part             "
-"         of the BEAM code system for Monte carlo simulation             "
-"         of radiotherapy treatment units. It was developed              "
-"         at the National Research Council of Canada as part             "
-"         of the OMEGA collaborative project with the University         "
-"         of Wisconsin.  The system is described in:                     "
-"           BEAM: A Monte Carlo code to simulate radiotherapy            "
-"           treatment units                                              "
-"           D.W.O. Rogers, B.A. Faddegon, G.X. Ding, C.-M. Ma,           "
-"           J. Wei and T.R.Mackie                                        "
-"           Medical Physics 22 (1995) 503 -- 524.                        "
-"         in the                                                         "
-"           BEAM Users Manual                                   "
-"           D.W.O. Rogers, C.-M. Ma, B. Walters, G.X. Ding,              "
-"                                 D.  Sheikh-Bagheri and G. Zhang        "
-"           NRC Report PIRS-509A (rev D)                                 "
-"         and in the many other NRC reports cited in the Users Manual    "
-"                                                                        "
-"         As well as the authors of the above paper and report           "
-"         Joanne Treurniet of NRC made significant contributions to the  "
-"         code system, in particular the GUIs and EGS_Windows            "
-"         Mark Holmes, Brian Geiser and Paul Reckwerdt of Wiscosin       "
-"         were important parts of the overall OMEGA project within which "
-"         the BEAM code system was developed.                            "
-"         The BEAM code system (excluding the EGS4 portions of it)       "
-"         is copyright and subject to the BEAM General License           "
-"         which is included in the distribution.                         "
-"         The BEAM code system is provided as is without any warranty or "
-"         guarantee of any kind, either expressed or implied,            "
-"         as to its accuracy or ability to perform particular            "
-"         calculations.                                                  "
-Copyright NRC 1999
-"************************************************************************
-"
 %C80         "80 column mortran input"
 !INDENT M 4; "Indent 4 spaces for each nesting level in mortran listing file"
 !INDENT F 4; "Indent 4 spaces for each nesting level in fortran output file"
@@ -803,7 +758,6 @@ Copyright NRC 1999
 "**************************************************************************"
 "
 subroutine srcinput(ieof);
-Copyright NRC 1999
 
 implicit none;
 
@@ -2429,7 +2383,6 @@ end; "End of subroutine srcinput
 "**************************************************************************"
 "
 subroutine srcinit(weight);
-Copyright NRC 1999
 "
 "This subroutine calculates 'one time only constants' that do not change
 "for a given source configuration
@@ -2827,7 +2780,6 @@ end; "End of subroutine srcinit
 "**************************************************************************"
 "
 subroutine calibration_run(s_ratio);
-Copyright NRC 1999
 "
 "This subroutine describes the source configuration to the output files
 "
@@ -2924,7 +2876,6 @@ end; "End of subroutine beam_calibration_run
 "**************************************************************************"
 "
 subroutine srcout;
-Copyright NRC 1999
 "
 "This subroutine describes the source configuration to the output files
 "
@@ -3364,7 +3315,6 @@ end; "End of subroutine srcout"
 "*******************************************************************************
 "
 subroutine srchst(xin,yin,zin,uin,vin,win,irin,weight,latchi);
-Copyright NRC 1999
 "
 "This subroutine does the sampling of the source distribution
 "   Energy is passed in COMIN/SOURCE
@@ -4451,7 +4401,6 @@ end; "End of subroutine srchst"
 "**************************************************************************"
 "
 SUBROUTINE SHIFT_XYUV(NofREPEAT,xsrc,ysrc,usrc,vsrc);
-Copyright NRC 1999
 implicit none;
 
 $REAL xsrc,ysrc,usrc,vsrc,

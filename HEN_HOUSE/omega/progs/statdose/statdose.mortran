@@ -858,10 +858,6 @@ REPLACE {$FIND_STRING2(#,#,#,#);} WITH {;
    ELSE [THE_STRING=THE_STRING(1:ICOUNT)//',0.0)';ICOUNT=ICOUNT+5;]
    };
 
-REPLACE {Copyright NRC 1999} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
 ;
 
 "----------------------------------------------------------------------
@@ -930,7 +926,6 @@ REPLACE {Copyright NRC 1999} WITH {
 "----------------------------------------------------------------------
 " MAIN PROGRAM
 "----------------------------------------------------------------------
-Copyright NRC 1999
 "all variables MUST be declared
 "IMPLICIT NONE;"
 
@@ -972,7 +967,6 @@ END;
 " VARIABLES: ISELECT - the user's selection from the list of options
 
 SUBROUTINE MAINMENU;                                        "toc:"
-Copyright NRC 1999
 $COMIN1/DATA/;
 INTEGER ISELECT;
 SAVE;
@@ -1073,7 +1067,6 @@ END;
 " FILENAME - array which hold the names of the .3ddose files in the pwd
 
 SUBROUTINE READDOSE;                                        "toc:"
-Copyright NRC 1999
 "IMPLICIT NONE;"
 $COMIN1/DATA/;
 $COMIN2/DATA/;
@@ -1229,7 +1222,6 @@ END;
 "            ISELECT2 - user's selection from list of binning types
 
       SUBROUTINE STATSMENU;                                        "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       $COMIN1/DATA/;
 
@@ -1332,7 +1324,6 @@ ELSEIF (ISELECT2 = 2 & ISELECT1 > 1) [
 " RMS - the root mean squared deviation of the two distributions
 
       SUBROUTINE STATS(LA_TYPE,LA_DELTA);                            "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;     "Why this isn't COMIN/DATA1,DATA2/ is not clear"
@@ -1683,7 +1674,6 @@ Copyright NRC 1999
 
 
       SUBROUTINE PLOTFREQ(X_TYPE);                                  "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       $COMIN1/DATA/;
       $COMIN2/DATA/;
@@ -1827,7 +1817,6 @@ Copyright NRC 1999
 " VARIABLES: ISELECT - holds the option selected by the user
 
       SUBROUTINE NORMMENU;                                "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       $COMIN1/DATA/;
 
@@ -1884,7 +1873,6 @@ Copyright NRC 1999
 " VARIABLES: SCALE - the rescaling factor
 
       SUBROUTINE SCALE;                                         "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;
@@ -1976,7 +1964,6 @@ Copyright NRC 1999
 " VARIABLES: AVGDOSE - the average dose for the distribution
 
       SUBROUTINE AVERAGEDOSE;                                         "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;
@@ -2077,7 +2064,6 @@ Copyright NRC 1999
 " ILO,IHI,JLO,JHI - the voxel boundaries for averaging dose
 
       SUBROUTINE CENTRALMAX;                                         "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;
@@ -2216,7 +2202,6 @@ Copyright NRC 1999
 " ILO,IHI,JLO,JHI,KLO,KHI - the voxel boundaries for averaging dose
 
 SUBROUTINE SPECVOXEL;                                         "toc:"
-Copyright NRC 1999
 "IMPLICIT NONE;"
 
 $COMIN1/DATA/;
@@ -2322,7 +2307,6 @@ FACT_NORM = FACT_NORM/((IHI-ILO+1)*(JHI-JLO+1)*(KHI-KLO+1));
 " VARIABLES:
 
       SUBROUTINE DENORMALIZE;                                      "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;
@@ -2398,7 +2382,6 @@ Copyright NRC 1999
 
 
       SUBROUTINE REBINNING;                                         "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
 
       $COMIN1/DATA/;
@@ -2587,7 +2570,6 @@ Copyright NRC 1999
 " VARIABLES: ISELECT - holds the option selected by the user
 
 SUBROUTINE PLOTMENU;                                           "toc:"
-Copyright NRC 1999
 "IMPLICIT NONE;"
 $COMIN1/DATA/;
 
@@ -2659,7 +2641,6 @@ ELSEIF (ISELECT = 2) [
 " VARIABLES:
 
 SUBROUTINE PLOTDOSE;                                        "toc:"
-Copyright NRC 1999
 "IMPLICIT NONE;"
 $COMIN1/DATA/;
 $COMIN2/DATA/;
@@ -2873,7 +2854,6 @@ END;
 " VARIABLES:
 
       SUBROUTINE COMPAREPLOT;                                       "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       $COMIN1/DATA/;
       $COMIN2/DATA/;
@@ -3104,7 +3084,6 @@ Copyright NRC 1999
 
 
       SUBROUTINE SAVE;                                              "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       $COMIN1/DATA/;
       $COMIN2/DATA/;
@@ -3252,7 +3231,6 @@ Copyright NRC 1999
 " warned!
 
       SUBROUTINE LETTERCOUNT(STRING,J);                          "toc:"
-Copyright NRC 1999
       "IMPLICIT NONE;"
       CHARACTER*70 STRING;
       INTEGER I, J;

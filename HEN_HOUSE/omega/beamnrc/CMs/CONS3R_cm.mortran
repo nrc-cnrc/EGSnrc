@@ -304,7 +304,6 @@
 
 ;SUBROUTINE HOWFAR_$CONS3R;
 
-Copyright NRC 1999
 
 "The following macros are used for boundary crossing. The particle is
 "shifted by 1.0E-5 at the end of a step to overcome possible numerical errors
@@ -785,7 +784,6 @@ END; "End of subroutine HOWFAR_$CONS3R"
 
 ;SUBROUTINE WHERE_AM_I_$CONS3R(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$CONS3R,EPCONT,STACK/;
@@ -840,7 +838,6 @@ END; "End of subroutine WHERE_AM_I_$CONS3R"
 
 ;SUBROUTINE INPUT_$CONS3R;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ BOUNDS,CMs,CM_$CONS3R,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1184,7 +1181,6 @@ END;  "End of subroutine INPUT_$CONS3R"
 
 ;SUBROUTINE ISUMRY_$CONS3R;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ BOUNDS,CMs,CM_$CONS3R,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
@@ -1359,7 +1355,6 @@ END; "end of subroutine ISUMRY_$CONS3R"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$CONS3R(DIST);
 
-Copyright NRC 1999
 $IMPLICIT-NONE;
 
 COMIN/CM_$CONS3R,STACK,CMs/;

@@ -221,9 +221,7 @@ subroutine inputs;
 "       6 (determination of incident particle parameters)             "
 " are done is subroutine inputs                                       "
 "                                                                     "
-" Copyright National Research Council of Canada 2000                  "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 "The following are EGSnrc internal (private) common blocks"
@@ -527,7 +525,6 @@ subroutine howfar;
 "   This geometry is the same as in the other tutorial codes but coded"
 "   as a special case of an arbitrary number of slabs                 "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 COMIN/STACK, "contains positions,directions,region numbers and stack pointer"
       EPCONT,"irnew, ustep and idisc"
@@ -591,9 +588,7 @@ subroutine hownear(tperp,z,irl);
 "                                                                     "
 " For tutor6.mortran                                                  "
 "                                                                     "
-" Copyright National Research Council of Canada 2000                  "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL    tperp,z;
 $INTEGER irl;
@@ -615,9 +610,7 @@ subroutine ausgab(iarg);
 " For tutor6.mortran.  Provides an example of doing statistics        "
 " without batches using technique suggested by Francesc Salvat.       "
 "                                                                     "
-" Copyright National Research Council of Canada 2000                  "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $INTEGER iarg,irl;
 real*8   aux;

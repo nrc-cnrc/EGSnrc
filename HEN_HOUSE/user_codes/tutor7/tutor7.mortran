@@ -286,7 +286,6 @@ NMIN = {P1}; NMAX = {P2}; CALL GET_INPUT;
 }
 ;
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 "The following are EGSnrc internal (privat) common blocks"
@@ -588,7 +587,6 @@ end;
 
 subroutine howfar;
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 COMIN/STACK, "contains positions,directions,region numbers and stack pointer"
       EPCONT,"irnew, ustep and idisc"
@@ -655,7 +653,6 @@ end;
 
 subroutine hownear(tperp,z,irl);
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 $REAL    tperp,z;
@@ -673,7 +670,6 @@ end;
 
 subroutine ausgab(iarg);
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER iarg,irl,jp;
@@ -712,7 +708,6 @@ end;
  subroutine isumry(ounit);
 "======================================================================"
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER ounit,i,j,m;
