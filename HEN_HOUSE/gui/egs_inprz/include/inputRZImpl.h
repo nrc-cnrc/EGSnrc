@@ -367,6 +367,11 @@ public slots:
             void caught_errors();
             bool isTclTkInstalled();
 
+protected:
+  bool eventFilter(QObject *obj, QEvent *ev);
+  QStringList itemCopy;
+  QList<QTableWidgetSelectionRange> copyRange;
+
 private:
 
 // needed to update geometry and media tables properly
