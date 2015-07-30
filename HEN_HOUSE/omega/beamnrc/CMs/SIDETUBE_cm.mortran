@@ -279,7 +279,6 @@
 "******************************************************************************
 ;SUBROUTINE HOWFAR_$SIDETUBE;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$SIDETUBE,EPCONT,STACK,EGS-IO/;
@@ -500,7 +499,6 @@ END; "End of subroutine HOWFAR_$SIDETUBE"
 
 ;SUBROUTINE WHERE_AM_I_$SIDETUBE(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -568,7 +566,6 @@ END; "End of subroutine WHERE_AM_I_$SIDETUBE"
 
 ;SUBROUTINE INPUT_$SIDETUBE;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -913,7 +910,6 @@ END;  "End of INPUT_$SIDETUBE"
 
 ;SUBROUTINE ISUMRY_$SIDETUBE;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1075,7 +1071,6 @@ END; "End of subroutine ISUMRY_$SIDETUBE"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$SIDETUBE(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

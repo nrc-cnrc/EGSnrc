@@ -110,7 +110,7 @@ SUBROUTINE WATCH(IARG,IWATCH);
 "               so some of the output makes more sense BW                     "
 "                                                                             "
 "*****************************************************************************"
-;Copyright NRC;
+
 "define a local macro"
 REPLACE {$CNTOUT(#);(#);} WITH {
    ICOUNT=ICOUNT+1;
@@ -427,7 +427,6 @@ RETURN;END;
 %E
 SUBROUTINE SIGMA(NDATA,ISTAT,MODE,IERR);
 
-;Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER NDATA,ISTAT,MODE,IERR;
@@ -524,7 +523,6 @@ subroutine prepare_alias_sampling(nsbin,fs_array,ws_array,ibin_array);
 "
 "====================================================================
 
-;Copyright NRC;
 implicit none;
 
 $INTEGER  nsbin,ibin_array(nsbin);
@@ -579,7 +577,6 @@ $REAL function alias_sample(nsbin,xs_array,ws_array,ibin_array);
 "
 "===============================================================
 
-;Copyright NRC;
 implicit none;
 
 $INTEGER nsbin,ibin_array(nsbin);

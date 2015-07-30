@@ -313,7 +313,6 @@
 ;
 ;SUBROUTINE HOWFAR_$CIRCAPP;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -879,7 +878,6 @@ END; "End of subroutine HOWFAR_$CIRCAPP"
 
 ;SUBROUTINE WHERE_AM_I_$CIRCAPP(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$CIRCAPP,EPCONT/; "/STACK/would be needed for more complicated"
@@ -916,7 +914,6 @@ END; "End of subroutine WHERE_AM_I_$CIRCAPP"
 
 ;SUBROUTINE INPUT_$CIRCAPP;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$CIRCAPP,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1323,7 +1320,6 @@ END;  "End of INPUT_$CIRCAPP"
 
 ;SUBROUTINE ISUMRY_$CIRCAPP;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$CIRCAPP,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
@@ -1557,7 +1553,6 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$CIRCAPP(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

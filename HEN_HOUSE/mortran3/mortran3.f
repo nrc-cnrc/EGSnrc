@@ -31,7 +31,7 @@ C                   Iwan Kawrakow
 C
 C##############################################################################
 C
-C  Mortran3 is originally copyrighted by SLAC and is distributed by NRC under
+C  Mortran3 is originally copyright by SLAC and is distributed by NRC under
 C  the terms of the AGPL 3.0 licence, in agreement with SLAC. Mortran has a
 C  long history  dating back to the 1970s, and certainly involving many
 C  contributors. The contributors named above are only those who could be

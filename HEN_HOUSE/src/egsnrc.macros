@@ -3623,10 +3623,6 @@ REPLACE {$INIT-PEGS4-VARIABLES;} WITH {;}
 
 REPLACE {$DECLARE-PEGS4-COMMON-BLOCKS;} WITH {;}
 
-REPLACE {Copyright NRC} WITH {
- ! Copyright National Research Council of Canada, 2000.;
- ! All rights reserved.;}
-
 " The following macro is defined to fool the Intel Fortran compiler "
 " version 8.0, which miscompiles init_spin when certain optimizations"
 " are turned on and the code is run on an Athlon CPU. "
@@ -3634,9 +3630,3 @@ REPLACE {$FOOL-INTEL-OPTIMIZER(#) #;} WITH {;
     IF( fool_intel_optimizer ) [ write({P1},*) {P2}; ]
 }
 ;
-
-
-"******************************************************************"
-" Copyright NRC                                                    "
-"******************************************************************"
-" end of egsnrc.macros (Rev 1.11 last edited  2002-05-16 12:10:27-04)"

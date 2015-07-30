@@ -385,7 +385,6 @@
 "******************************************************************************
 ;
 ;SUBROUTINE HOWFAR_$MLC;
-Copyright NRC 1999
 
 "V>$GEO_SHIFT_1_(#)
 "V>=============
@@ -697,7 +696,6 @@ END; "End of subroutine HOWFAR_$MLC"
 "*******************************************************************************
 
 ;SUBROUTINE WHERE_AM_I_$MLC(IDIR);
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$MLC,EPCONT,STACK/;
@@ -761,7 +759,6 @@ END; "End of subroutine WHERE_AM_I_$MLC"
 "*******************************************************************************
 
 ;SUBROUTINE INPUT_$MLC;
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ BOUNDS,CMs,CM_$MLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1280,7 +1277,6 @@ END;  "End of INPUT_$MLC"
 "*******************************************************************************
 
 ;SUBROUTINE ISUMRY_$MLC;
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ BOUNDS,CMs,CM_$MLC,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
@@ -1716,7 +1712,6 @@ END;
 "
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$MLC(DIST);
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

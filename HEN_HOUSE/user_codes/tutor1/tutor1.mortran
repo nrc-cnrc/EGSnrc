@@ -168,7 +168,6 @@ SUBROUTINE AUSGAB(IARG);
 "  We get AUSGAB to print the required information at that point     "
 "                                                                    "
 "********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $INTEGER IARG;
 $REAL EKINE, ANGLE;
@@ -209,7 +208,6 @@ SUBROUTINE HOWFAR;
 "   vacuum          |     Ta        |       vacuum                    "
 "                                                                     "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL TVAL;
 COMIN/STACK,EPCONT,GEOM/;
@@ -262,7 +260,6 @@ SUBROUTINE HOWNEAR(tperp, x, y, z, irl);
 "  In general this can be a complex subroutine.                       "
 "                                                                     "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL tperp, x, y, z;
 $INTEGER irl;

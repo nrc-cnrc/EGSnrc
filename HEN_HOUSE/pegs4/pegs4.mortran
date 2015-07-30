@@ -103,10 +103,6 @@
 "******************************************************************"
 ;
 
-REPLACE {Copyright SLAC/NRC} WITH {;
- ! PEGS4 is Copyright by SLAC and NRC, 2000. ;
- ! Distributed by NRC under agreement with SLAC.;}
-
 
 "=================================================================="
 "SELECT THE FORTRAN STANDARD TO BE USED (1966 OR 1977)             "
@@ -672,7 +668,6 @@ program main_pegs4;
 implicit none;
 
 ;
-Copyright SLAC/NRC
 
 ;COMIN/BREMPR,DBRPR,DERCON,ELEMTB,FUNCS,LSPION,MIMSD,MIXDAT,MOLVAR,
    PHPAIR,PMCONS,PWLFIN,RAYLEI,RSLTS,THRESH,EPSTAR/;"MOD NOV 23,1988"
@@ -1160,7 +1155,6 @@ BLOCK DATA;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 
 "THIS ROUTINE CONTAINS PHYSICAL AND CONTROL DATA FOR PEGS          "
 ;COMIN/BREMPR,DBRPR,DERCON,ELEMTB,FUNCS,LSPION,MIMSD,MIXDAT,MOLVAR,
@@ -1435,7 +1429,6 @@ SUBROUTINE DIFFER;
 "******************************************************************"
 implicit none;
 ;
-Copyright SLAC/NRC
 
 " IK: Variable declarations for implicit none"
 $REAL AL183,F10,F20,A1DEN,A2DEN,B1DEN,B2DEN,C1DEN,C2DEN;
@@ -1599,7 +1592,6 @@ SUBROUTINE EFUNS(E,V);
 "******************************************************************"
 implicit none;
 ;
-Copyright SLAC/NRC
 
 $REAL E,V(8);
 
@@ -1684,7 +1676,6 @@ SUBROUTINE GFUNS(E,V);
 "******************************************************************"
 "*****SUBROUTINE TO COMPUTE PHOTON FUNCTIONS TO BE FIT             "
 "     IN A WAY THAT AVOIDS REPETITION.                             "
-Copyright SLAC/NRC
 implicit none;
 $REAL E,V(4);
 " IK: Variable declarations for implicit none"
@@ -1721,7 +1712,6 @@ SUBROUTINE HPLT1(EI,EL,EH,ICAP,NTIMES,NBINS,NH,IDF,IDSIG,
 " APPROX CDF,CDF INVERSE, PDF, D(SIGMA)/D(ES), INTEGRAL            "
 " D(SIGMA)/D(ES) AND TOTAL SIGMA FOR THE INTERACTION BEING TESTED. "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL EI,EL,EH;
 $INTEGER NTIMES,NBINS,NH(200),IDF,IDSIG,IRSIG,ITSIG;
@@ -1812,7 +1802,6 @@ END; "END OF SUBROUTINE HPLT1"
 SUBROUTINE LAY;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
-Copyright SLAC/NRC
 "PRODUCES DECK OF MATERIAL DEPENDENT DATA.                         "
 implicit none;
 
@@ -1920,7 +1909,6 @@ SUBROUTINE MIX;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 
 implicit none;
 
@@ -2122,7 +2110,6 @@ SUBROUTINE MOLIER;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 
 "COMPUTE MATERIAL INDEPENDENT MOLIERE DATA                         "
@@ -2360,7 +2347,6 @@ $REAL    EL,EH;
 "   IDF+1 IS THE NUMBER OF THE INVERSE DISTRIBUTION FUNCTION."
 "   NOPTNS IS INCLUDED FOR FUTURE EXPANSION."
 ;
-Copyright SLAC/NRC
 COMIN/FUNCS,MOLVAR,DERCON,EPSTAR/; "NRC MOD NOV 1988"
 ;COMIN/FileNames/;
 
@@ -2456,7 +2442,6 @@ SUBROUTINE PLOT1(IFUN,XP,IV,EL,EH,NPT,IDF);
 "   IDF+1 IS THE NUMBER OF THE INVERSE DISTRIBUTION FUNCTION."
 "   NOPTNS IS INCLUDED FOR FUTURE EXPANSION."
 ;
-Copyright SLAC/NRC
 implicit none;
 
 $INTEGER IFUN,IV,NPT,IDF;
@@ -2511,7 +2496,6 @@ SUBROUTINE PMDCON;
 "***SUBROUTINE TO ARRIVE AT PHYSICAL, MATHEMATICAL, AND DERIVED"
 "   CONSTANTS IN A VERY MNEMONIC WAY.                                  "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL FSCI;
 COMIN/PMCONS,DERCON/;
@@ -2608,7 +2592,6 @@ SUBROUTINE PWLF1(NI,NIMX,XL,XU,XR,EP,ZTHR,ZEP,NIP,XFUN,XFI,
 "   VFUNS IS A SUBROUTINE TO FILL AN ARRAY WITH THE VALUES OF THE    "
 "   FUNCTIONS TO BE FITTED.                                          "
 ;
-Copyright SLAC/NRC
 implicit none;
 
 $INTEGER NI,NIMX,NIP,NALM,NFUN;
@@ -2664,7 +2647,6 @@ SUBROUTINE RFUNS(E,V);
 "*****SUBROUTINE TO COMPUTE RAYLEIGH FUNCTIONS TO BE FIT           "
 "     IN A WAY THAT AVOIDS REPETITION.                             "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,V(1),AINTP;
 COMIN/RAYLEI/;
@@ -2679,7 +2661,6 @@ SUBROUTINE SPINIT;
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 
 COMIN/PMCONS,SPCOMM,DERCON,MOLVAR,MIXDAT,ELEMTB,LSPION,EPSTAR,THRESH/;
@@ -2936,7 +2917,6 @@ $REAL FUNCTION ADDMOL(X);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    X;
 
@@ -2953,7 +2933,6 @@ $REAL FUNCTION ADFMOL(X);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL X;
 
@@ -2970,7 +2949,6 @@ $REAL FUNCTION ADIMOL(X);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL X;
 
@@ -2988,7 +2966,6 @@ $REAL FUNCTION AFFACT(X);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL X,AINTP;
 COMIN/RAYLEI/;
@@ -3076,7 +3053,6 @@ $REAL FUNCTION ALKE(E);"LOG OF KINETIC ENERGY"
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E;
 COMIN/DERCON/;
@@ -3092,7 +3068,6 @@ $REAL FUNCTION ALKEI(X);"INVERSE OF LOG OF KINETIC ENERGY"
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL x;
 COMIN/DERCON/;
@@ -3110,7 +3085,6 @@ $REAL FUNCTION AMOLDM(EN0,EN);
 "***DIFFERENTIAL MOLLER CROSS SECTION FOR INCIDENT ELECTRON OF TOTAL"
 "   ENERGY EN0 TO PRODUCE SCATTERED ELECTRON OF TOTAL ENERGY EN."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL EN0,EN;
 $REAL TM,EM,BETASQ,AMOLFM;
@@ -3134,7 +3108,6 @@ $REAL FUNCTION AMOLFM(EN);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    EN;
 $REAL    T,EPS,EPSP,EPSI,EPSPI;
@@ -3156,7 +3129,6 @@ $REAL FUNCTION AMOLRM(EN0,EN1,EN2);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    EN0,EN1,EN2;
 $REAL    T0,T1,T2,TM,EM,C1,C2,BETASQ,CMOLL2,EPS1,EPSP1,EPS2,EPSP2;
@@ -3189,7 +3161,6 @@ $REAL FUNCTION AMOLTM(E0);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    E0;
 $REAL    T0,AMOLRM;
@@ -3212,7 +3183,6 @@ $REAL FUNCTION ANIHDM(E0,K);
 "***DIFFERENTIAL TWO-PHOTON ANNIHILATION CROSS SECTION FOR POSITRON OF"
 "   INCIDENT TOTAL ENERGY E0 TO PRODUCE SECONDARY PHOTON OF ENERGY K."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    E0,K;
 $REAL    GAM,T0P,ANIHFM;
@@ -3234,7 +3204,6 @@ $REAL FUNCTION ANIHFM(K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    K;
 COMIN/DERCON,LANIHM/;
@@ -3256,7 +3225,6 @@ $REAL FUNCTION ANIHRM(E0,K1,K2);
 "   TOTAL ENERGY E0 TO PRODUCE SECONDARY PHOTON IN THE ENERGY RANGE"
 "   K1 TO K2."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL  E0,K1,K2;
 COMIN/PMCONS,DERCON,MOLVAR/;
@@ -3283,7 +3251,6 @@ $REAL FUNCTION ANIHTM(E0);
 "***TOTAL CROSS SECTION FOR TWO-PHOTON POSITRON-ELECTRON ANNIHILATION"
 "   WITH INCIDENT POSITRON ENERGY(TOTAL) OF E0."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL    E0;
 $REAL    GAM,P0P2,P0P,CANIH;
@@ -3317,7 +3284,6 @@ $REAL FUNCTION APRIM(Z,E);
 " different data on unit 22 and if necessary changing the array sizes: "
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,E;
 $INTEGER  napre,naprz,ie,iz;
@@ -3415,7 +3381,6 @@ $REAL FUNCTION BHABDM(EN0,EN);
 "***DIFFERENTIAL BHABHA CROSS SECTION FOR INCIDENT POSITRON OF TOTAL"
 "   ENERGY EN0 TO PRODUCE SCATTERED ELECTRON OF TOTAL ENERGY EN."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL EN0,EN;
 $REAL TM,EM,Y,BHABFM;
@@ -3442,7 +3407,6 @@ $REAL FUNCTION BHABFM(EN);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL EN;
 $REAL T,EPS,EPSI;
@@ -3464,7 +3428,6 @@ $REAL FUNCTION BHABRM(EN0,EN1,EN2);
 "***BHABHA CROSS SECTION FOR INCIDENT POSITRON OF TOTAL ENERGY EN0 TO"
 "   PRODUCE SECONDARY ELECTRON IN THE TOTAL ENERGY RANGE EN1 TO EN2."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL EN0,EN1,EN2;
 $REAL T0,T1,T2,TM,EM,Y,BETASI,CBHAB2,B1,B2,B3,B4,EPS1,EPS2;
@@ -3499,7 +3462,6 @@ $REAL FUNCTION BHABTM(E0);
 "***TOTAL CROSS SECTION FOR BHABHA SCATTERING WITH INCIDENT POSITRON"
 "   ENERGY(TOTAL) OF E0."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,BHABRM;
 COMIN/THRESH,DERCON/;
@@ -3521,7 +3483,6 @@ $REAL EA,K;
 
 "EVALUATES EQUATION 2.7.108 OF SLAC-265"
 ;
-Copyright SLAC/NRC
 $INTEGER LS;
 $REAL    BREMFR;
 
@@ -3566,7 +3527,6 @@ $REAL FUNCTION BREMFR(K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K;
 $REAL EPS,DEL,DELTA,A,B;
@@ -3635,7 +3595,6 @@ $REAL FUNCTION BREMRM(E,K1,K2);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,K1,K2;
 $INTEGER I;
@@ -3683,7 +3642,6 @@ $REAL FUNCTION BREMTM(E0);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,BREMRM;
 COMIN/THRESH,DERCON/;
@@ -3700,7 +3658,6 @@ $REAL FUNCTION BREMTR(E0);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,BREMRR;
 COMIN/THRESH,DERCON/;
@@ -3717,7 +3674,6 @@ $REAL FUNCTION BRMSDZ(Z,EA,K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,EA,K;
 $REAL APRIM,XSIF,FCOULC,BRMSFZ;
@@ -3741,7 +3697,6 @@ $REAL FUNCTION BRMSFZ(K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K;
 $REAL EMKLOC,DELTA,SB1,SB2,EE;
@@ -3767,7 +3722,6 @@ $REAL FUNCTION BRMSRM(E,K1,K2);
 "                                VERSION 4.00  --  26 JAN 1986/1900"
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,K1,K2,BRMSRZ;
 $INTEGER I;
@@ -3814,7 +3768,6 @@ $REAL FUNCTION BRMSTM(E0,EG);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,EG,BRMSRM,AU,zero;
 parameter (zero=0);
@@ -3833,7 +3786,6 @@ $REAL FUNCTION COHETM(K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K,COHETZ;
 $INTEGER I;
@@ -3852,7 +3804,6 @@ $REAL FUNCTION COHETZ(Z,K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,K;
 $INTEGER IZ;
@@ -3877,7 +3828,6 @@ $REAL FUNCTION COMPDM(K0A,K);
 "***DIFFERENTIAL CROSS SECTION FOR INCIDENT PHOTON OF ENERGY K0A TO"
 "   COMPTON SCATTER TO SECONDARY ENERGY K."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K0A,K,K0P,COMPFM;
 COMIN/PMCONS,DERCON,MOLVAR,LCOMPM/;
@@ -3898,7 +3848,6 @@ $REAL FUNCTION COMPFM(K);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K,EPS,EPSI;
 COMIN/LCOMPM/;
@@ -3918,7 +3867,6 @@ $REAL FUNCTION COMPRM(K0,K1,K2);
 "***COMPTON CROSS SECTION FOR INCIDENT PHOTON OF ENERGY K0 TO SCATTER"
 "   INTO THE ENERGY RANGE K1 TO K2."
 ;
-Copyright SLAC/NRC
 implicit none;
 COMIN/PMCONS,DERCON,MOLVAR/;
 $REAL K0,K1,K2,CCOMP2;
@@ -3945,7 +3893,6 @@ $REAL FUNCTION COMPTM(K0);
 "***TOTAL CROSS SECTION FOR COMPTON SCATTERING WITH INCIDENT PHOTON"
 "   ENERGY K0."
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K0,K1,COMPRM;
 COMIN/DERCON/;
@@ -4453,7 +4400,6 @@ $REAL FUNCTION EBIND(E);
 
 "***FUNCTION TO GET AN AVERAGE PHOTOELECTRIC BINDING ENERGY.         "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E;
 $INTEGER I,J;
@@ -4493,7 +4439,6 @@ $REAL FUNCTION EDEDX(E);
 
 "***ELECTRON ENERGY LOST IN EDIST(2)                                 "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,SPTOTE;
 COMIN/THRESH/;
@@ -4524,7 +4469,6 @@ $REAL FUNCTION FCOULC(Z);
 "EVALUATES EQUATION 2.7.17 OF SLAC-265"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,ASQ;
 COMIN/DERCON/;
@@ -4602,7 +4546,6 @@ $INTEGER FUNCTION IFUNT(NAME);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $INTEGER I,J;
 $TYPE NAME(6);
@@ -4758,7 +4701,6 @@ $REAL FUNCTION PAIRDR(KA,E);
 
 "EVALUATES EQUATION 2.7.109 OF SLAC-265"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL KA,E,PAIRFR;
 $INTEGER LS;
@@ -4786,7 +4728,6 @@ $REAL FUNCTION PAIRDZ(Z,KA,E);
 
 "EVALUATES EQUATION 2.7.8 OF SLAC-265"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,KA,E;
 $REAL XSIF,FCOULC,PAIRFZ;
@@ -4810,7 +4751,6 @@ $REAL FUNCTION PAIRFR(E);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E;
 $REAL EPS,DEL,DELTA,A,CC;
@@ -4836,7 +4776,6 @@ $REAL FUNCTION PAIRFZ(E);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E;
 $REAL EPS,ONEEPS,DELTA,SB1,SB2,EPLUS;
@@ -4872,7 +4811,6 @@ $REAL FUNCTION PAIRRM(K,E1,E2);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K,E1,E2,PAIRRZ;
 $INTEGER I;
@@ -4950,7 +4888,6 @@ $REAL FUNCTION PAIRTE(K);
 "***'E' FOR EMPIRICAL OR EXPERIMENTAL PAIR PROD CROSS-SECTION.       "
 "   THIS FUNCTION GIVE THE PROPER MIX OF PAIRTZ'S.                   "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K,PAIRTZ;
 $INTEGER I;
@@ -4969,7 +4906,6 @@ $REAL FUNCTION PAIRTM(K0);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K0,PAIRRM;
 COMIN/DERCON/;
@@ -4986,7 +4922,6 @@ $REAL FUNCTION PAIRTR(K0);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K0,PAIRRR;
 COMIN/DERCON/;
@@ -5024,7 +4959,6 @@ $REAL FUNCTION PAIRTZ(Z,K);
 "   WOULD MAKE IF THERE WERE ONE/MOLECULE,I.E., TO GET THE ACTUAL    "
 "   CONTRIBUTION ONE MUST MULTIPLY BY PZ(I).                         "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,K;
 $REAL PCON,AINTP;
@@ -5079,7 +5013,6 @@ $REAL FUNCTION PDEDX(E);
 
 "***POSITRON ENERGY LOSS IN EDIST(2)                                 "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,SPTOTP;
 COMIN/THRESH/;
@@ -5097,7 +5030,6 @@ $REAL FUNCTION PHOTTE(K);
 "***'E' FOR EMPIRICAL OR EXPERIMENTAL PHOTOEFFECT CROSS-SECTION.     "
 "   THIS FUNCTION GIVE THE PROPER MIX OF PHOTTZ'S.                   "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL K,PHOTTZ;
 $INTEGER I;
@@ -5121,7 +5053,6 @@ $REAL FUNCTION PHOTTZ(Z,K);
 "   CONTRIBUTION ONE MUST MULTIPLY BY PZ(I).                         "
 "   COMMON WITH DATA FOR PHOTO AND PAIR.                             "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,K,PCON,AINTP;
 $INTEGER IZ;
@@ -5210,7 +5141,6 @@ $REAL FUNCTION SPIONB(E0,EE,POSITR);
 "   WE USE BERGER AND SELTZER'S FORMULATION.                         "
 "   STOPPING POWER IS RETURNED IN UNITS OF MEV/R.L.                  "
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL   E0,EE;
 LOGICAL POSITR;
@@ -5331,7 +5261,6 @@ $REAL FUNCTION SPTOTE(E0,EE,EG);
 " patched DWOR, Jan 1988 to correct IURST=2,3,4 and add 6 and 7    "
 "******************************************************************"
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,EE,EG;
 $REAL SPIONE,BRMSTM;
@@ -5360,7 +5289,6 @@ $REAL FUNCTION SPTOTP(E0,EE,EG);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E0,EE,EG;
 $REAL SPIONP,BRMSTM;
@@ -5400,7 +5328,6 @@ $REAL E;
 "FROM THESE IS DERIVED THE EQUATION THIS FUNCTION IS BASED ON:"
 "TMXB=(E**2*BETA**2/XCC**2)*BETA**2/ALOG(BLCC*(E**2*BETA**2/XCC**2));"
 ;
-Copyright SLAC/NRC
 $REAL ESQ,BETA2,PX2;
 COMIN/DERCON,MOLVAR/;
 ESQ=E**2;
@@ -5418,7 +5345,6 @@ $REAL FUNCTION TMXDE2(E);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL E,ESQ,BETASQ,TMXB;
 COMIN/DERCON/;
@@ -5458,7 +5384,6 @@ $REAL FUNCTION XSIF (Z);
 "EVALUATES EQUATION 2.7.21a OF SLAC-265"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 $REAL Z,FCOULC;
 $INTEGER IZ;
@@ -5478,7 +5403,6 @@ $REAL FUNCTION ZTBL(IASYM);
 "******************************************************************"
 
 ;
-Copyright SLAC/NRC
 implicit none;
 COMIN/ELEMTB/;
 $TYPE IASYM,IA;

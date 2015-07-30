@@ -2797,7 +2797,6 @@ RETURN; "END OF DAT FILE RETURN"
 END; "END OF SUBROUTINE INPUTS
 
 subroutine isumry(ounit);
-;Copyright NRC;
 $IMPLICIT-NONE;
 $INTEGER ounit, I, J, K;
 ;COMIN/
@@ -2949,7 +2948,6 @@ END;
 subroutine ausgab( iarg );"                                 *"
 "                                                           *"
 "************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $INTEGER iarg,irl,i,ic,
          ip,latchl,
@@ -4051,7 +4049,6 @@ SUBROUTINE COMPT_NO_DOPP;
 "   I.Kawrakow, January 1999                                       "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-COMPT;    "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -4241,5 +4238,3 @@ return;
 " Create here a zero energy electron if required (check user codes) "
 return;
 end;
-
-;Copyright NRC;

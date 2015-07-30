@@ -1633,7 +1633,6 @@ subroutine set_spline(x,f,a,b,c,d,n);
 " I.Kawrakow, NRC                                                      "
 "======================================================================"
 
-; Copyright NRC;
 implicit none;
 
 $INTEGER n;
@@ -1676,7 +1675,6 @@ $REAL function spline(s,x,a,b,c,d,n);
 " I.Kawrakow, NRC                                                      "
 "======================================================================"
 
-; Copyright NRC;
 implicit none;
 
 $INTEGER n;
@@ -1715,7 +1713,6 @@ subroutine prepare_alias_table(nsbin,xs_array,fs_array,ws_array,ibin_array);
 " Prepare an alias sampling table, given the histogram probabilities
 " xs_array,fs_array.
 "*****************************************************************************
-; Copyright NRC;
 implicit none;
 
 integer   nsbin;
@@ -1773,7 +1770,6 @@ $REAL function alias_sample1(nsbin,xs_array,fs_array,ws_array,ibin_array);
 " which must have been prepared with prepare_alias_table
 "
 "******************************************************************************
-; Copyright NRC;
 implicit none;
 
 integer   nsbin;
@@ -1818,7 +1814,6 @@ subroutine prepare_alias_histogram(nsbin,ws_array,ibin_array);
 "                                                                           "
 " Iwan Kawrakow, November 2001
 "***************************************************************************"
-;Copyright NRC;
 
 implicit none;
 
@@ -1870,7 +1865,6 @@ $INTEGER function sample_alias_histogram(nsbin,ws_array,ibin_array);
 "
 " Iwan Kawrakow, November 2001.
 "***********************************************************************
-;Copyright NRC;
 
 implicit none;
 
@@ -1900,7 +1894,6 @@ subroutine gauss_legendre(x1,x2,x,w,n);
 "     n - point quadrature formula
 "
 "******************************************************************************
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER n;

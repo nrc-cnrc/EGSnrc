@@ -84,7 +84,6 @@ SUBROUTINE ANNIH;
 "   I. Kawrakow, January 2000                                      "
 "                                                                  "
 "******************************************************************"
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-ANNIH;    "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:      "
@@ -191,7 +190,6 @@ SUBROUTINE ANNIH_AT_REST;
 " ELECTR subroutine.                                               "
 " I. Kawrakow, June 2005.                                          "
 "******************************************************************"
-; Copyright NRC;
 $IMPLICIT-NONE;
 $COMIN-ANNIH-ATREST;
 $REAL costhe,sinthe,cphi,sphi;
@@ -237,7 +235,6 @@ SUBROUTINE BHABHA;
 "   HOWEVER.  THE EXACT BHABHA DIFFERENTIAL CROSS SECTION IS USED. "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-BHABHA;   "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:      "
@@ -350,7 +347,6 @@ SUBROUTINE BREMS;
 "                                                                  "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-BREMS;    "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -553,7 +549,6 @@ SUBROUTINE COMPT;
 "                                                                  "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-COMPT;    "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -830,7 +825,6 @@ SUBROUTINE old_COMPT;
 "   I.Kawrakow, January 1999                                       "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-COMPT;    "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -991,7 +985,6 @@ SUBROUTINE ELECTR(IRCODE);
 "                                     for low energy transport     "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER IRCODE;
@@ -1824,7 +1817,6 @@ SUBROUTINE HATCH;
 "           To put it back search $UOUTPUT  and $ECHO and uncomment"
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 character*512 toUpper;
@@ -2292,7 +2284,6 @@ subroutine fix_brems;
 "
 "*******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 $declare_max_medium;
 ;COMIN/BREMPR,MEDIA,NIST-BREMS,THRESH/;
@@ -2379,7 +2370,6 @@ end;
 
 $REAL function FCOULC(Z);
 "************************"
-; Copyright NRC;
 $IMPLICIT-NONE;
 $REAL Z;
 $REAL fine,asq;
@@ -2391,7 +2381,6 @@ end;
 
 $REAL function XSIF(Z);
 "**********************"
-; Copyright NRC;
 $IMPLICIT-NONE;
 $REAL    Z;
 $INTEGER iZ;
@@ -2416,7 +2405,6 @@ subroutine init_compton;
 "  I.Kawrakow, January 99
 "******************************************************************"
 
-; Copyright NRC;
 implicit none;
 
 $COMIN-INIT-COMPT;
@@ -2542,7 +2530,6 @@ SUBROUTINE MOLLER;
 "   LOSS DURING TRANSPORT.                                         "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-MOLLER;   "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -2686,7 +2673,6 @@ subroutine mscati;
 " I.Kawrakow, NRC
 "**********************************************************************"
 
-; Copyright NRC;
 implicit none;
 
 $REAL ededx,ei,eil,eip1,eip1l,si,sip1,eke,elke,aux,ecutmn,tstbm,tstbmn;
@@ -2925,7 +2911,6 @@ subroutine mscat(lambda,chia2,q1,elke,beta2,qel,medium,
 " I.Kawrakow, NRC                                                         "
 "========================================================================="
 
-; Copyright NRC;
 implicit none;
 
 $REAL    lambda, chia2,q1,elke,beta2,cost,sint;
@@ -3108,7 +3093,6 @@ $REAL function spin_rejection(qel,medium,elke,beta2,q1,cost,
 " I.Kawrakow, NRC                                                             "
 "============================================================================="
 
-; Copyright NRC;
 implicit none;
 
 $REAL      elke,beta2,q1,cost;
@@ -3164,7 +3148,6 @@ subroutine sscat(chia2,elke,beta2,qel,medium,spin_effects,cost,sint);
 " I.Kawrakow, NRC                                                            "
 "============================================================================"
 
-; Copyright NRC;
 implicit none;
 
 $REAL    chia2,elke,beta2,cost,sint;
@@ -3207,7 +3190,6 @@ subroutine init_ms_SR;
 " I. Kawrakow, NRC                                               "
 "================================================================"
 
-; Copyright NRC;
 implicit none;
 
 COMIN/MS-Data,EGS-IO/;
@@ -3252,7 +3234,6 @@ subroutine init_spin;
 " I. Kawrakow, NRC                                                      "
 "======================================================================="
 
-; Copyright NRC;
 implicit none;
 $declare_max_medium;
 COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,EGS-IO/;
@@ -3657,7 +3638,6 @@ subroutine init_spin_old;
 " I. Kawrakow, NRC                                                      "
 "======================================================================="
 
-; Copyright NRC;
 implicit none;
 $declare_max_medium;
 COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,EGS-IO/;
@@ -3990,7 +3970,6 @@ subroutine msdist_pII
     us,vs,ws,xf,yf,zf,ustep                                         "Outputs
 );
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 " Input variables
@@ -4248,7 +4227,6 @@ subroutine msdist_pI
     us,vs,ws,xf,yf,zf,ustep                                         "Outputs
 );
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 " Input variables
@@ -4466,7 +4444,6 @@ SUBROUTINE PAIR;
 "   I. Kawrakow                                                    "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-PAIR;     "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -4991,7 +4968,6 @@ SUBROUTINE PHOTO;
 "               A.F. Bielajew (NRC) photoelectric angular distn    "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-PHOTO; "default replacement is:
@@ -5131,7 +5107,6 @@ SUBROUTINE RELAX(energy,n,iZ);
 
 REPLACE {$RELAX-CUTOFF} WITH {0.001}
 
-; Copyright NRC;
 implicit none;
 
 " Input variables "
@@ -5369,7 +5344,6 @@ subroutine egs_init_relax;
 "                          Modified for use with EGSnrc by EMH, June 2011 "
 "                          Corrected bugs and commented by EMH, April 2012"
 "*************************************************************************"
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $declare_max_medium;
@@ -5588,7 +5562,6 @@ REPLACE {$CHECK-RELAX-STACK(#,#);} WITH {;
 "                          Corrected bugs and commented by EMH, April 2012"
 "*************************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $declare_max_medium;
@@ -5812,7 +5785,6 @@ SUBROUTINE EDGSET(NREGLO,NREGHI);
 "******************************************************************"
 "                                                                  "
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 ;COMIN/EDGE,X-OPTIONS,EGS-IO/;
@@ -5911,7 +5883,6 @@ SUBROUTINE PHOTON(IRCODE);
 "                                                                  "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $INTEGER IRCODE; "1 => normal return"
@@ -6119,7 +6090,6 @@ SUBROUTINE SHOWER(IQI,EI,XI,YI,ZI,UI,VI,WI,IRI,WTI);
 "                                                                  "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-SHOWER;   "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -6223,7 +6193,6 @@ SUBROUTINE UPHI(IENTRY,LVL);
 "   DIRECTION COSINES WITH THEIR NEW VALUES.                       "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $COMIN-UPHI;     "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
@@ -6388,7 +6357,6 @@ $egs_fatal('(a,2i6)',' STOPPED IN UPHI WITH IENTRY,LVL=',IENTRY,LVL);
 subroutine init_nist_brems;
 "**************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 $REAL    energy_array($MXBREN),x_array($MXBRXX),
@@ -6863,7 +6831,6 @@ subroutine vmc_electron(ircode);
 "                                     with EGSnrc user codes       "
 "******************************************************************"
 
-; Copyright NRC;
 $IMPLICIT-NONE;
 
 ;COMIN/EGS-IO/;
@@ -8465,5 +8432,3 @@ edep = pzero; e(np) = pzero; wt(np) = 0;
 return;
 end;
 "******************************************************************"
-
-; Copyright NRC;

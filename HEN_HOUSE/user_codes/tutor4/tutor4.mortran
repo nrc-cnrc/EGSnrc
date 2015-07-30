@@ -201,7 +201,6 @@ SUBROUTINE AUSGAB(IARG);
 "  region 1 or 3, so score its energy.                               "
 "                                                                    "
 "********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $INTEGER IARG,IRL;
 
@@ -224,7 +223,6 @@ SUBROUTINE HOWFAR;
 "                                                                     "
 "    HOWFAR for use with tutor4 (same as with TUTOR1)                 "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL TVAL;
 COMIN/STACK,EPCONT,GEOM/;
@@ -278,7 +276,6 @@ SUBROUTINE HOWNEAR(tperp, x, y, z, irl);
 "  Note that this subroutine must be linked to $CALL-HOWNEAR(#)       "
 "                                                                     "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL tperp, x,y,z;
 $INTEGER irl;

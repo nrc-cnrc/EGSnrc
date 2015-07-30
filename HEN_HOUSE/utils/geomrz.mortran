@@ -173,7 +173,6 @@
 ;
 SUBROUTINE GEOMRZ;
 
-;Copyright NRC;
 
 $IMPLICIT-NONE;
 

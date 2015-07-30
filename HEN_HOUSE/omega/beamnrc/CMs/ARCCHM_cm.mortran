@@ -313,7 +313,6 @@
 "*******************************************************************************
 ;SUBROUTINE HOWFAR_$ARCCHM;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$ARCCHM,EPCONT,STACK,EGS-IO/;
@@ -1402,7 +1401,6 @@ END; "End of subroutine HOWFAR_$ARCCHM"
 
 ;SUBROUTINE WHERE_AM_I_$ARCCHM(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1543,7 +1541,6 @@ END; "End of subroutine WHERE_AM_I_$ARCCHM"
 
 ;SUBROUTINE INPUT_$ARCCHM;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -2322,7 +2319,6 @@ END;  "End of INPUT_$ARCCHM"
 
 ;SUBROUTINE ISUMRY_$ARCCHM;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 

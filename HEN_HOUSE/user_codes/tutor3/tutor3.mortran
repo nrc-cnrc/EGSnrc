@@ -212,7 +212,6 @@ SUBROUTINE HOWFAR;
 "                                                                     "
 "    HOWFAR for use with tutor3 (same as with TUTOR1)                 "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL TVAL;
 COMIN/STACK,EPCONT,GEOM/;
@@ -268,7 +267,6 @@ SUBROUTINE HOWNEAR(tperp, x, y, z, irl);
 "  By simply setting HOWNEAR = 0.0 one gets a single scattering run   "
 "                                                                     "
 "*********************************************************************"
-;Copyright NRC;
 $IMPLICIT-NONE;
 $REAL tperp, x,y,z;
 $INTEGER irl;

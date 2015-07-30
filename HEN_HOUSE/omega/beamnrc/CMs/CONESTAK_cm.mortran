@@ -297,7 +297,6 @@
 "******************************************************************************
 ;SUBROUTINE HOWFAR_$CONESTAK;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/ CMs,CM_$CONESTAK,EPCONT,STACK,SCORE,EGS-IO/;
@@ -770,7 +769,6 @@ END; "End of subroutine HOWFAR_$CONESTAK"
 
 ;SUBROUTINE WHERE_AM_I_$CONESTAK(IDIR);
 
-Copyright NRC 1999
 
 REPLACE {$CHECK_FRONT_$CONESTAK;} WITH {;}
 REPLACE {$CHECK_BACK_$CONESTAK;} WITH {;}
@@ -859,7 +857,6 @@ END; "End of subroutine WHERE_AM_I_$CONESTAK"
 
 ;SUBROUTINE INPUT_$CONESTAK;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$CONESTAK,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1266,7 +1263,6 @@ END;  "End of subroutine INPUT_$CONESTAK"
 
 ;SUBROUTINE ISUMRY_$CONESTAK;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$CONESTAK,GEOM,IO_INFO,MEDIA,MISC,SCORE,UPHIOT,USER/;
@@ -1442,7 +1438,6 @@ END;  "end of subroutine ISUMRY_$CONESTAK"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$CONESTAK(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 

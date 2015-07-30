@@ -283,37 +283,5 @@ REPLACE {$USER-BEFORE-SHOWER;} WITH {;}
 "macro for user to do things just after a call to shower"
 REPLACE {$USER-AFTER-SHOWER;} WITH {;}
 
-;
-"****************************************
-"   Copyright Macro
-"****************************************
-
-REPLACE {Copyright 1995} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
-REPLACE {Copyright NRC 1995} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
-"above two for compatibility with old version"
-;
-REPLACE {Copyright 1998} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
-REPLACE {Copyright NRC 1998} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
-REPLACE {Copyright NRC 1999} WITH {
-!   Copyright National Research Council of Canada, Ottawa,;
-!   BEAM Code System 1999, all rights reserved;
-!   This code is covered by the BEAM General License;}
-;
 " end of beamnrc_user_macros.mortran"
 ;

@@ -315,7 +315,6 @@
 "*******************************************************************************
 ;SUBROUTINE HOWFAR_$JAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CMs,CM_$JAWS,EPCONT,STACK,EGS-IO/;
@@ -719,7 +718,6 @@ END; "End of subroutine HOWFAR_$JAWS"
 "*******************************************************************************
 ;SUBROUTINE WHERE_AM_I_$JAWS(IDIR);
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/CM_$JAWS,EPCONT,STACK/;
@@ -773,7 +771,6 @@ END; "End of subroutine WHERE_AM_I_$JAWS"
 
 ;SUBROUTINE INPUT_$JAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 ;COMIN/BOUNDS,CMs,CM_$JAWS,GEOM,IO_INFO,MEDIA,MISC,SCORE,USER,EGS-IO/;
@@ -1156,7 +1153,6 @@ END;  "End of INPUT_$JAWS"
 
 ;SUBROUTINE ISUMRY_$JAWS;
 
-Copyright NRC 1999
 
 ;IMPLICIT NONE;
 
@@ -1355,7 +1351,6 @@ END;  "End of subroutine ISUMRY_$JAWS"
 "*******************************************************************************
 ;SUBROUTINE HOWNEAR_$JAWS(DIST);
 
-Copyright NRC 1999
 
 $IMPLICIT-NONE;
 
