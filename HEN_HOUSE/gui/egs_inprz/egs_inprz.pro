@@ -2,8 +2,7 @@
 #  $Id: egs_inprz.pro,v 1.18 2015/03/05 21:00:44 bwalters Exp $
 #*****************************************************
 
-SOURCES	+= src/aboutform_rzImpl.cpp \
-	src/cavinputs.cpp \
+SOURCES	+= src/cavinputs.cpp \
 	src/comboboxtooltip.cpp \
 	src/commandManager.cpp \
 	src/de_parser.cpp \
@@ -32,8 +31,7 @@ SOURCES	+= src/aboutform_rzImpl.cpp \
 	src/varinputs.cpp \
 	src/tools.cpp \
         src/egs_config_reader.cpp
-HEADERS	+= include/aboutform_rzImpl.h \
-	include/cavinputs.h \
+HEADERS	+= include/cavinputs.h \
 	include/comboboxtooltip.h \
 	include/commandManager.h \
 	include/datainp.h \
@@ -107,7 +105,6 @@ unix {
 TEMPLATE	=app
 FORMS	= ui/inputRZ.ui \
 	ui/executiondialog.ui \
-	ui/aboutform_rz.ui
 TEMPLATE	=app
 INCLUDEPATH	+= include ui ../egs_gui
 LANGUAGE	= C++
