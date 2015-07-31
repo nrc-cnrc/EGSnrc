@@ -36,7 +36,6 @@
 #include "errordlg.h"
 #include "commandManager.h"
 #include "executiondlgImpl.h"
-#include "aboutform_rzImpl.h"
 #include "eventfilter.h"
 #include <qevent.h>
 #include <qlineedit.h>
