@@ -3634,29 +3634,27 @@ void inputRZImpl::enable_external_plot()
      }
 }
 
+#define ABOUT_NRC  "Copyright (C) year National Research Council Canada"
+#define ABOUT_TEXT "Graphical User Interface for EGSnrc RZ user codes"\
+                   "\n\n            egs_inprz, version YYY "\
+                   "\n\nAuthors: Ernesto Mainegra, Iwan Kawrakow, and Blake Walters"\
+                   "\n\nThis program is distributed under the terms of the"\
+                   "\nGNU Affero General Public License, version 3."\
+                   "\n\nUsing Qt Version XXX"
+
 void inputRZImpl::show_about()
 {
-  AboutForm* about = new AboutForm(this);
+
   QString qt_version(qVersion());
-  QString aboutText = (about->aboutLabel->text()).replace("XXX",qt_version);
-          aboutText.replace("YYY",tr(VERSION));//defined in datainp.h
-   about->aboutLabel->setText(aboutText);
-
-  QString nrcText = about->nrcLabel->text();
-          nrcText.replace("year",the_year);
-   about->nrcLabel->setText(nrcText);
-
-  about->exec();
+  QString aboutText = QString(ABOUT_TEXT);
+  aboutText.replace("XXX",qt_version); aboutText.replace("YYY",tr(VERSION));//defined in datainp.h
+  QString nrcText = QString(ABOUT_NRC); nrcText.replace("year",the_year);
+  QString title = QString("About egs_inprz");
+  QMessageBox::about ( this, title, nrcText+"\n\n"+aboutText );
 
 }
 void inputRZImpl::show_errors()
 {
-    /*if ( ! confErrors.isEmpty() ||
-         ! openErrors.isEmpty() ||
-         ! pegsErrors.isEmpty() ||
-         ! formErrors.isEmpty() ){
-         //logfileButton->setEnabled( true );
-   */
  CommandManager* d = new CommandManager( this, "Error Dialog",
                      confErrors +
                      openErrors +
@@ -3665,8 +3663,6 @@ void inputRZImpl::show_errors()
                     formErrors );
  d->exec();
  zap(d);
-    //}
-    //else logfileButton->setEnabled( false );
 }
 
 void inputRZImpl::caught_errors()
