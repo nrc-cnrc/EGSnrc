@@ -50,7 +50,7 @@ using namespace std;
 
 //#define zap(x) if(x){delete(x); x=0;}
 
-#define VERSION "1.0"
+#define VERSION "2.0"
 
 #define WARNING_USER      "couldn't guess user code\n using cavrznrc!"
 #define WARNING_DEFAULTS  "<b>Error reading input file, defaults used instead.<br>" \
