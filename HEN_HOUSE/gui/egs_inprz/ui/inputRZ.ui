@@ -3928,7 +3928,7 @@
        </layout>
       </widget>
      </widget>
-     <widget class="QWidget" name="GItab">
+     <widget class="QWidget" name="Gtab">
       <attribute name="title">
        <string>Geometry</string>
       </attribute>
@@ -7517,10 +7517,6 @@
         </layout>
        </item>
       </layout>
-      <zorder>layoutWidget</zorder>
-      <zorder>layoutWidget</zorder>
-      <zorder>src20GroupBox</zorder>
-      <zorder>src20GroupBox</zorder>
      </widget>
      <widget class="QWidget" name="MCTPtab">
       <attribute name="title">
