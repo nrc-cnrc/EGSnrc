@@ -69,7 +69,7 @@
                                                "This is more general than the combo box, allowing\n"\
 			     "to open files in other locations."
 
-/* removed to sepparate file to give users redifining option
+/* removed to separate file to give users redifining option
 static const char* queues[] = {
 "20 minutes",
 "2 hours",
