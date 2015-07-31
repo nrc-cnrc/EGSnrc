@@ -167,17 +167,6 @@ QPushButton* beamButton;
 // Application clipboard
 QClipboard *clipBoard;
 
-//event filters for media table and custom form factor table
-TableEvents *fft_events;
-TableEvents *mt_events;
-//for remaining tables
-TableEvents *geometryTable_events, *cylTable_events, *sproutTable_events,
-             *ListFluTable_events, *sloteFluTable_events, *phdTable_events,
-             *cavTable_events, *pz_or_rhozTable_events, *raddistTable_events,
-             *CSEnhancementTable_events, *PCUTTable_events, *ECUTTable_events,
-             *SMAXTable_events, *BoundComptonTable_events, *RelaxationsTable_events,
-             *PEAngSamplingTable_events, *RayleighTable_events, *PlotRegionsTable_events, *SpecPlotTable_events;
-
 //event filter for media definition combo box
 ComboEvents *im_events;
 
@@ -212,17 +201,17 @@ void rearrange_media( MGEOInputs* geo, v_string* med );
 
 void open();
 MInputRZ*       GetInputRZ();
-MTitle*             GetTitle();
+MTitle*         GetTitle();
 MIOInputs*      GetIO();
-MMCInputs*    GetMC();
-MGEOInputs*  GetGEO();
-MPHDInputs*   GetPHD();
-MCAVInputs*  GetCAV();
-MSRCInputs*   GetSRC();
-MMCPInputs*  GetMCP();
+MMCInputs*      GetMC();
+MGEOInputs*     GetGEO();
+MPHDInputs*     GetPHD();
+MCAVInputs*     GetCAV();
+MSRCInputs*     GetSRC();
+MMCPInputs*     GetMCP();
 PEGSLESSInputs* GetPEGSLESS();
-MVARInputs*  GetVAR();
-MPLOTInputs* GetPLOT();
+MVARInputs*     GetVAR();
+MPLOTInputs*    GetPLOT();
 void save();
 
 
@@ -245,28 +234,28 @@ void InitializeTable( Q3Table* t, const QString& s0, const QString& s1 );
 void InitializeTable( Q3Table* t, const QString& s0, const QString& s1, const QString& s2 );
 */
 void DeactivateTable( QTableWidget* table );
-void InitializeTwoColumnTable( QTableWidget* table, TableEvents* t_events );
-void InitializeThreeColumnTable( QTableWidget* table, const QString& rvalue, TableEvents* t_events );
-void InitializeTable( QTableWidget* t, const QStringList& s, TableEvents* t_events );
-void InitializeTable( QTableWidget* t, const QStringList& s, v_float frac, TableEvents* t_events );
-void InitializeTable( QTableWidget* t, const QString& s0, const QString& s1, TableEvents* t_events );
-void InitializeTable( QTableWidget* t, const QString& s0, const QString& s1, const QString& s2, TableEvents* t_events );
+void InitializeTwoColumnTable( QTableWidget* table);
+void InitializeThreeColumnTable( QTableWidget* table, const QString& rvalue);
+void InitializeTable( QTableWidget* t, const QStringList& s);
+void InitializeTable( QTableWidget* t, const QStringList& s, v_float frac);
+void InitializeTable( QTableWidget* t, const QString& s0, const QString& s1);
+void InitializeTable( QTableWidget* t, const QString& s0, const QString& s1, const QString& s2);
 
 void InitializePhotonXSection();
 void InitializeEIIXSection();
 
 UserCodeType GetUserCode();
 
-QString getExecutable();
-QString readVarFromConf( const QString& var );
-QString find_usercode_name( const QString& dir );
-QString get_initial_usercode_area( QString* name );
+QString  getExecutable();
+QString  readVarFromConf( const QString& var );
+QString  find_usercode_name( const QString& dir );
+QString  get_initial_usercode_area( QString* name );
 QString  GetCurrentDir( const QString& rCodeName, const QString& rHome, const QString& rHenHouse );
 QString  GetPEGSDir( const QString& rCodeName, const QString& rHome, const QString& rHenHouse );
-QString GetUserCodeDir( const QString& rCodeName);
+QString  GetUserCodeDir( const QString& rCodeName);
 QString  TextRadioBChecked( int count, QRadioButton **r );
 QString  FToQStr( float Item );
-QString IntToQStr( int Item );
+QString  IntToQStr( int Item );
 QStringList StrListToQStrList( v_string Item );
 
 v_int    assign_medium_number(v_string med_list, v_string med_entry);
@@ -368,7 +357,7 @@ public slots:
             bool isTclTkInstalled();
 
 protected:
-  bool eventFilter(QObject *obj, QEvent *ev);
+  bool        eventFilter(QObject *obj, QEvent *ev);
   QStringList itemCopy;
   QList<QTableWidgetSelectionRange> copyRange;
 
