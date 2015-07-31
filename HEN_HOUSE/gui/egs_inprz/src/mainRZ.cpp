@@ -30,28 +30,22 @@
 
 
 #include <qapplication.h>
-#include <qlibrary.h>
 #include "inputRZImpl.h"
-#include <qmessagebox.h>
 
 int main( int argc, char* argv[] )
 {
 
+  //QApplication::setStyle("windows");
+
   QApplication app( argc, argv);
+
   inputRZImpl* inputRZ = new inputRZImpl(0,"egs_inprz",FALSE,0);
 
-//  app.setMainWidget( &inputRZ );
-//  inputRZ.show();
-  //qt3to4--BW
-  //app.setMainWidget( inputRZ );
   inputRZ->show();
-
 
   if ( argc > 1 )
   inputRZ->SetInpfileName( argv[1]);
-//  inputRZ.SetInpfileName( argv[1]);
 
   int ret = app.exec();
-  //delete inputRZ;
   return ret;
 }
