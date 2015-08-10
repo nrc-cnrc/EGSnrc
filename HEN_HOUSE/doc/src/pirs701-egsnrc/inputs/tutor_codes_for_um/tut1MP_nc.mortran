@@ -1,0 +1,84 @@
+\begin{figure}
+\caption{{\tt tutor1.mortran} without any comments.}
+\begin{boxedverbatim}
+%L
+!INDENT M 4;    
+!INDENT F 2;    
+$IMPLICIT-NONE; $INTEGER I,IQIN,IRIN; $REAL XIN,YIN,ZIN,EIN,WTIN,UIN,VIN,WIN;
+REPLACE {$MXMED} WITH {1}   
+REPLACE {$MXREG} WITH {3}  
+REPLACE {$MXSTACK} WITH {15}
+REPLACE {;COMIN/GEOM/;} WITH {;COMMON/GEOM/ZBOUND;$REAL ZBOUND;}
+REPLACE {$CALL-HOWNEAR(#);} WITH {;CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);}
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,THRESH/;
+CHARACTER*4 MEDARR(24);
+DATA  MEDARR /$S'TA',22*' '/; 
+CALL egs_init;
+DO I=1,24[MEDIA(I,1)=MEDARR(I);]
+/MED(1),MED(3)/=0;MED(2)=1;
+ECUT(2)=1.5;
+PCUT(2)=0.1;
+;OUTPUT;('\f  Start tutor1'//' CALL HATCH to get cross-section data'/);
+CALL HATCH;
+;OUTPUT AE(1)-0.511, AP(1);
+(/' knock-on electrons can be created and any electron followed down to'
+/T40,F8.3,' MeV kinetic energy'/
+'   brem photons can be created and any photon followed down to      ',
+/T40,F8.3,' MeV ');
+ZBOUND=0.1;
+;OUTPUT;(/T19,'Kinetic Energy(MeV)',T40,'charge',T48,
+'angle w.r.t. Z axis-degrees');
+IQIN=-1; EIN=20.511; /XIN,YIN,ZIN/=0.0;
+/UIN,VIN/=0.0;WIN=1.0; IRIN=2; WTIN=1.0;
+DO I=1,10[OUTPUT I;(' Start history',I4);
+CALL SHOWER(IQIN,EIN,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WTIN); ]
+CALL egs_finish;
+STOP;END;
+SUBROUTINE AUSGAB(IARG);
+$IMPLICIT-NONE;
+$INTEGER IARG; $REAL EKINE, ANGLE; COMIN/STACK/;
+IF(IARG = 3)[ ANGLE=ACOS(W(NP))*180./3.14159; 
+   IF(IQ(NP) = 0)[EKINE=E(NP);] ELSE [EKINE=E(NP)-0.511;]
+   OUTPUT EKINE,IQ(NP),ANGLE;(T21,F10.3,T33,I10,T49,F10.1);
+]
+RETURN;END;
+                                                   cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\caption{continued}
+\begin{boxedverbatim}
+SUBROUTINE HOWFAR;
+$IMPLICIT-NONE;
+$REAL TVAL;
+COMIN/STACK,EPCONT,GEOM/;
+IF(IR(NP) =  3) [IDISC = 1;RETURN;]
+ELSEIF(IR(NP) = 2)[
+   IF(W(NP) > 0.0)[ 
+      TVAL= (ZBOUND - Z(NP))/W(NP); 
+      IF(TVAL > USTEP)[RETURN;] ELSE[USTEP = TVAL; IRNEW=3; RETURN;]
+   ]
+   ELSEIF(W(NP) < 0.0)[ TVAL = -Z(NP)/W(NP); 
+      IF(TVAL > USTEP)[RETURN;] ELSE[USTEP = TVAL; IRNEW = 1; RETURN;]
+   ]
+   ELSEIF(W(NP) = 0.0)[RETURN;]
+]
+ELSEIF(IR(NP) = 1)[
+   IF(W(NP) >  0.0)[ USTEP = 0.0;IRNEW = 2;RETURN; ] ELSE[  IDISC=1;RETURN; ]
+]
+END;
+SUBROUTINE HOWNEAR(tperp, x, y, z, irl);
+$IMPLICIT-NONE;
+$REAL tperp, x, y, z;
+$INTEGER irl;
+;COMIN/GEOM/;
+IF(irl = 3) [OUTPUT;('Called HOWNEAR in region 3'); RETURN;]
+ELSEIF(irl = 2)[ tperp = min(z,  (ZBOUND - z)); ]
+ELSEIF(irl = 1)[OUTPUT;('Called HOWNEAR in region 1'); RETURN;]
+END;
+\end{boxedverbatim}
+\end{figure}

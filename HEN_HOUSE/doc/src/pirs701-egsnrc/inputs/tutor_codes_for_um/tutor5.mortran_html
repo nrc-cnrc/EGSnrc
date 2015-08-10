@@ -1,0 +1,200 @@
+\clearpage
+\index{tutor5.mortran!listing}
+\begin{figure}
+\caption{Portions of {\tt tutor5.mortran}  \label{fig_tutor5} }
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{figure}
+\begin{rawhtml}
+<pre>
+%L
+%E    "tutor5.mortran (SID 1.1 last edited 00/1/18)"
+
+!INDENT M 4;   "indent MORTRAN listing 4 per nesting level"
+!INDENT F 2;   "indent FORTRAN output 2 per nesting level"
+
+"*********************************************************************"
+"                                                                     "
+"                     ******************                              "
+"                     *                *                              "
+"                     * tutor5.mortran *                              "
+"                     *                *                              "
+"                     ******************                              "
+"                                                                     "
+"                                                                     "
+" An EGSnrc user code which scores the number and average energy of   "
+" primary, Rayleigh scattered and Compton scattered photons passing   "
+" through a  5 mm thick slab of water when a 50 keV pencil beam of    "
+" photons is incident normally                                        "
+"                                                                     "
+" For PIRS-701: Example of including Rayleigh scattering, using macros"
+"               to facilitate logic and use of the LATCH feature      "
+"      D.W.O.R.   Feb 1985  updated Jan 2000 for EGSnrc               "
+"                                                                     "
+"*********************************************************************"
+$IMPLICIT-NONE;
+$INTEGER I,IQIN,IRIN,NCASE;
+$REAL XIN,YIN,ZIN,EIN,WTIN,UIN,VIN,WIN,ANORM;
+
+"---------------------------------------------------------------------"
+"STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
+"---------------------------------------------------------------------"
+REPLACE {$MXMED} WITH {1}   "only 1 medium in the problem(default 10)"
+REPLACE {$MXREG} WITH {3}   "only 3 geometric regions (default 2000)"
+REPLACE {$MXSTACK} WITH {15}"less than 15 particles on stack at once"
+
+"Define a common to pass information to the geometry routine HOWFAR"
+REPLACE {;COMIN/GEOM/;} WITH {;COMMON/GEOM/ZBOUND;$REAL ZBOUND;}
+"Define a common for scoring in AUSGAB"
+REPLACE {;COMIN/SCORE/;} WITH {
+   ;COMMON/SCORE/COUNT(3),ENTOT(3); $REAL COUNT,ENTOT;}
+"  in COUNT(1),(2),(3) AUSGAB will count the number of transmitted  "
+"  primaries, rayleigh scattered or only compton scattered photons  "
+"  ENTOT adds up  the total energy of each of these components      "
+
+REPLACE {$CALL-HOWNEAR(#);} WITH {
+   ;CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);}
+
+;COMIN/BOUNDS,EPCONT,GEOM,MEDIA,MISC,SCORE,STACK,THRESH/;
+"       the above expands into a series of COMMON statements"
+
+%E   "tutor5.mortran"
+"---------------------------------------------------------------------"
+"STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
+"---------------------------------------------------------------------"
+CHARACTER*4 MEDARR(24);
+DATA  MEDARR /$S'H2O',21*' '/; "place medium name in an array"
+DO I=1,24[MEDIA(I,1)=MEDARR(I);]"this is to avoid a data statement for"
+"                                a variable in COMMON"
+"NMED and DUNIT default to 1, i.e. one medium and we work in cm"
+
+/MED(1),MED(3)/=0;MED(2)=1; "regions 1 and 3 are vacuum, region 2, H2O"
+
+ECUT(2)=1.5;"     terminate electron histories at 1.5 MeV in the slab"
+PCUT(2)=0.010;"   terminate   photon histories at 0.01 MeV in the slab"
+IRAYLR(2)=1;"     turn on Rayleigh scattering in the slab "
+"NOTE, above three parameters need to be set for all regions in which "
+"there is particle transport - just region 2 in this case             "
+
+"---------------------------------------------------------------------"
+"STEP 3   HATCH-CALL                                                  "
+"---------------------------------------------------------------------"
+ 
+;OUTPUT;('1  Start tutor5'//' Call HATCH to get cross-section data'/);
+CALL HATCH;"    pick up cross section data for H2O"
+"               data file must be assigned to unit 12"
+
+;OUTPUT AE(1)-0.511, AP(1);
+(/' Knock-on electrons can be created and any electron followed down to'
+  /T40,F8.3,' MeV kinetic energy'/
+' Brem photons can be created and any photon followed down to      '
+  /T40,F8.3,' MeV ');"NOTE, AE values can over-ride ECUT values"
+
+"---------------------------------------------------------------------"
+"STEP 4  INITIALIZATION-FOR-HOWFAR and HOWNEAR                        "
+"---------------------------------------------------------------------"
+ZBOUND=0.5;"     plate is 5 mm thick"
+
+"---------------------------------------------------------------------"
+"STEP 5  INITIALIZATION-FOR-AUSGAB                                    "
+"---------------------------------------------------------------------"
+DO I=1,3 [ COUNT(I)=0.0;ENTOT(I)=0.0;]"zero scoring array at start"
+
+"  We want to set flags in AUSGAB every time a Rayleigh scattering   "
+"  or compton scattering occurs. Set the flags in IAUSFL(COMIN      "
+"  EPCONT) to signal the  EGS system to make the appropriate calls  "
+/IAUSFL(18),IAUSFL(24)/=1;
+
+"---------------------------------------------------------------------"
+"STEP 6   DETERMINATION-OF-INICIDENT-PARTICLE-PARAMETERS              "
+"---------------------------------------------------------------------"
+"define initial variables for 20 MeV beam of electrons  incident"
+"perpendicular to the slab"
+
+IQIN=0;"                incident photons"
+EIN=0.050;"             50 keV"
+/XIN,YIN,ZIN/=0.0;"     incident at origin"
+/UIN,VIN/=0.0;WIN=1.0;" moving along z axis"
+IRIN=2;"                starts in region 2, could be 1"
+WTIN=1.0;"              weight = 1 since no variance reduction used"
+LATCHI=0;"              LATCH set to zero at start of each history"
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+NCASE=10000;  "initiate the shower NCASE times"
+DO I=1,NCASE [CALL SHOWER(IQIN,EIN,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WTIN);]
+
+"---------------------------------------------------------------------"
+"STEP 8   OUTPUT-OF-RESULTS                                           "
+"---------------------------------------------------------------------"
+ANORM = 100./FLOAT(NCASE); "normalize to % of photon number"
+DO I=1,3[
+   IF(COUNT(I)~=0)[ENTOT(I)=ENTOT(I)/COUNT(I);]"get average energies"
+]
+OUTPUT EIN*1000.,ZBOUND, PCUT(2), (ANORM*COUNT(I),ENTOT(I),I=1,3);
+(//' For',F6.1,' keV photons incident on',F4.1,' cm OF H2O'/
+' with PCUT=',F5.3,' MeV'
+//' Transmitted primaries=',T40,F8.2,'%  ave energy=',F10.3,' MeV'//
+' Fraction rayleigh scattering=',T40,F8.2,'%  ave energy=',F10.3,' MeV'
+//' Fraction compton scattering only=',T40,F8.2,'%  ave energy=',F10.3,
+' MeV'//)
+STOP;END;"end of tutor5 main routine"
+
+"**********************************************************************"
+"                                                                      "
+SUBROUTINE AUSGAB(IARG);
+"                                                                      "
+" In this AUSGAB routine for tutor5 we both set flags whenever there is"
+" a scattering event and then count histories when they have come      "
+" through the slab , according to what kind of scattering they have    "
+" undergone.                                                           "
+" The logic is as follows                                              "
+" set FLAG1 if a compton event occurs                                  "
+" set FLAG2 if a Rayleigh event occurs                                 "
+" The FLAGS are the units and thousands digits in the parameter LATCH  "
+"                                                                      "
+" When a history is terminated, increment various counters according   "
+" to whether no flags are set - i.e. its a primary, FLAG2 is set,      "
+" i.e. it has Rayleigh scattered or FLAG1 is set and FLAG2 is not set  "
+" i.e. only  compton scattering has occured.                           "
+"                                                                      "
+" First a few macros are defined to make the logic simpler to read and "
+" therefore verify                                                     "
+"                                                                      "
+"**********************************************************************"
+$IMPLICIT-NONE;
+$INTEGER IARG,JJ;
+REPLACE {$SET-FLAG1;} WITH {LATCH(NP)=LATCH(NP)+1;}
+REPLACE {$SET-FLAG2;} WITH {LATCH(NP)=LATCH(NP)+1000;}
+REPLACE {$FLAG1} WITH {MOD(LATCH(NP),100)}"i.e. units digit of LATCH"
+REPLACE {$FLAG2} WITH {MOD(LATCH(NP),10000)-$FLAG1} "thousands digit"
+
+;COMIN/SCORE,STACK/; "we use IR(NP) from STACK"
+
+"   first set flags when scattering events occur - IAUSFL was set "
+"   in step 5 of main to ensure AUSGAB was called at these points "
+
+IF(IARG=17)    [ "a compton scatter is about to occur"  $SET-FLAG1;]
+
+ELSEIF(IARG=23)[ "a rayleigh scatter is about to occur" $SET-FLAG2;]
+
+" if a history has terminated because leaving the slab, score it"
+ELSEIF(IARG = 3 ) [ "particle has left slab"
+   IF(IR(NP)=3 | IR(NP) = 1) [
+      "it is transmitted or reflected"
+      JJ=0;
+      IF(LATCH(NP) = 0)  [ "no scattering - a primary"       JJ=1;]
+      ELSEIF($FLAG2 ~= 0)[ "at least one rayleigh scatter"   JJ=2;]
+      ELSEIF($FLAG1 ~= 0)[">=1 compton scatter, no Rayleigh" JJ=3;]
+      ELSE ["debug";OUTPUT JJ,LATCH(NP); (' JJ,LATCH(NP)=',2I10);]
+      
+      IF(JJ ~= 0) [
+         COUNT(JJ)=COUNT(JJ) + 1.;  
+         ENTOT(JJ) = ENTOT(JJ) + E(NP);
+      ]
+   ]"end region 3 or 1 block"
+]"end IARG 3 block"
+RETURN;END;"end of AUSGAB"
+
+</pre>
+\end{rawhtml}
+\clearpage

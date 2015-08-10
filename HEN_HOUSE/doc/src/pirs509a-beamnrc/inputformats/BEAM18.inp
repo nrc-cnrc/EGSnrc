@@ -1,0 +1,44 @@
+\begin{verbatim}
+   Next record             SCORING PLANE INPUT
+   ***********             *******************
+   
+     NSC_PLANES, (IPLANE_to_CM(I), I=1,NSC_PLANES)
+ 
+        NSC_PLANES     number of scoring planes >=0
+        IPLANE_to_CM   CM numbers corresponding to the scoring planes
+                       fluence is scored at the back of a component module
+                       phase space data written from same planes
+ 
+        (Note only IPLANE_to_CM(1) is used for beam model analysis);
+   
+   Next record            SCORING ZONE TYPE/DIMENSIONS
+   ***********            ****************************
+ 
+   Repeat the next pair of lines for ISCORE=1,...,NSC_PLANES
+ 
+      NSC_ZONES(ISCORE), MZONE_TYPE(ISCORE)
+           NSC_ZONES     number of scoring zones within each scoring plane
+                         (= 0: maximum number available with equal zone area)
+           MZONE_TYPE    0 annular zones (default)
+                         1 square (ring) zones
+                         2 grid
+ 
+   Next record (for NSC_ZONES(ISCORE)>0 and MZONE_TYPE = 0 or 1)
+   ***********
+      (RSCORE_ZONE(ISCORE,I), I=1,NSC_ZONES)  (up to 10/line)
+           RSCORE_ZONE   outer radius of each scoring zone in order of
+                            increasing radius (MZONE_TYPE = 0)
+                         half width from origin of each scoring zone
+                            in order of increasing width (MZONE_TYPE = 1)
+ 
+   Next record (for NSC_ZONES(ISCORE)>0 and MZONE_TYPE = 2)
+   ***********
+      XMIN_ZONE, XMAX_ZONE, YMIN_ZONE, YMAX_ZONE, NX_ZONE, NY_ZONE
+             XMIN_ZONE     lower x bound of grid area (cm)
+             XMAX_ZONE     upper x bound of grid area (cm)
+             YMIN_ZONE     lower y bound of grid area (cm)
+             YMAX_ZONE     upper y bound of grid area (cm)
+             NX_ZONE       number of grid zones in x direction
+             NY_ZONE       number of grid zones in y direction
+ ---------------------------------------------------------------------------- 
+\end{verbatim}

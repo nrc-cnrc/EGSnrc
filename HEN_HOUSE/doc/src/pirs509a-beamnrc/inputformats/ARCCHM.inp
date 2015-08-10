@@ -1,0 +1,118 @@
+\begin{verbatim}
+   CARDS CM_$ARCCHM
+   ******************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$ARCCHM) (F10.0): Half-width of outer boundary 
+                                       of CM (cm) Read in MAIN
+   
+    1  TITLE_$ARCCHM (60A1):  Title of CM.
+   
+    2  ZSRC_$ARCCHM (F15.0): Distance from front face of chamber at Y=0 
+                             (ie the lowest point in the arc) to reference 
+                             plane in cm.
+ 
+    3  ZRAD1_$ARCCHM (F15.0): Radius of front face of chamber in cm.  For
+                              a fully-divergent beam, this may equal
+                              ZSRC_$ARCCHM. 
+ 
+    4  NUMCHM_$ARCCHM (I4):  Number of individual ion chambers
+                                
+    5  WIDTHCHM_$ARCCHM (F15.0): Width of each ion chamber in cm. 
+ 
+    6  WIDTHSEP_$ARCCHM (F15.0): Width of each septum in cm. 
+ 
+    7  ARCTHICK_$ARCCHM (F15.0): Thickness of chambers & septa in cm. 
+ 
+    8  FRONTHCK_$ARCCHM (F15.0):  Thickness of front face of chamber in cm.
+ 
+    9  BACKTHCK_$ARCCHM (F15.0):  Thickness of back face of chamber in cm.
+ 
+   10  WIDXWALL_$ARCCHM (F15.0):  Width of chamber wall along x in cm.
+                                
+   11  XMIN1_$ARCCHM,XMAX2_$ARCCHM (2F15.0):
+ 
+           XMIN1_$ARCCHM: Min x dimension outside of x wall (cm).
+           XMAX2_$ARCCHM: Max x dimension outside of x wall (cm).
+        All YMIN and YMAX are calculated from ZRADs and PHI
+        The min/max x dimensions inside of the x wall are calculated.
+        ZMIN is calculated from ZRAD, ZSRC, and PHI 
+ 
+   12  ZMAX_$ARCCHM (F15.0):  The max Z of the CM in cm.  Note that
+                              ZMAX must be >= ZSRC+ARCTHICK+FRONTHCK+
+                                              BACKTHCK
+ 
+    Repeat 13-14 for the following regions: 
+          Region 1:  region before arc-shaped ion chamber.
+          Region 2:  front face of arc-shaped ion chamber.
+          Region 3:  ends of the ion chamber.
+          Region 4 -- 2*NUMCHM+2: chamber or septa
+                EVEN:  chamber   ODD: septa  Numbering of chambers and
+                septa goes from -Y to +Y  (13-14 only have to be
+                repeated twice for these regions if IREPEAT=1.  See
+                below.)
+          Region 2*NUMCHM+3:  back face of arc-shaped ion chamber.
+          Region 2*NUMCHM+4:  region surrounding the arc.
+          Region 2*NUMCHM+5:  x walls of the chamber
+ 
+   13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (IREPEAT) (2F15.0,2I5,(I5)):
+   
+           ECUT, PCUT:  Cutoff energies for electrons and photons
+            DOSE_ZONE:  Dose scoring flag
+       IREGION_TO_BIT:  Bit setting for the region
+              IREPEAT:  Only input for Region 4.  Set to 1 to apply this
+                        ECUT, PCUT, IREGION_TO_BIT and MED_IN to all 
+                        chambers (if DOSE_ZONE > 0, then it will be 
+                        incremented automatically for each chamber) and the 
+                        following ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT and 
+                        MED_IN to all septa.
+  
+   14  MED_IN (24A1):  Medium of region 
+                       used to set MED_INDEX.
+ 
+    Example
+    *******
+                   
+    The following example is an arc-shaped ion chamber containing 10 
+    individual chambers.  Used for the tomotherapy prototype under
+    development at the UW.
+ 
+    In this example, ECUT, and PCUT in all regions are set to 0.7 MeV
+    and 0.01 MeV respectively.  Note that IREPEAT is set to 1 for the
+    first chamber so that ECUT, PCUT, etc only have to be input once
+    for all chambers and once for all septa.  Also, DOSE_ZONE will
+    be incremented automatically for the chambers, so that the chambers
+    will have dose zones 1-10. 
+ 
+    ************dummy line to indicate new CM***********************
+    60.0,               RMAX:  outer boundary
+    Tomotherapy ion chamber
+    133.0,               ZSRC: distance to front of ARC
+    133.0,               ZRAD1: radius of front of arc
+    10,                  NUMCHM: the number of individual ion chambers
+    1.0,                 WIDTHCHM: width of each individual ion chamber
+    0.1,                 WIDTHSEP: width of septa
+    5.0,                 ARCTHICK: thickness of the arc
+    0.1,                 FRONTHCK: thickness of front face of chamber
+    0.2,                 BACKTHCK: thickness of back face of chamber
+    0.2,                 WIDXWALL: thickness of x wall
+    -5.0, 5.0,           XMIN1, XMAX2: min/max x dimension outside of x wall
+    139.0,               ZMAX: Z limit of CM 
+    0.700,0.01,0,1,      ECUT, PCUT,...,MED of region 1
+    AIR521ICRU
+    0.700,0.01,0,2,      ECUT, PCUT,...,MED of front face
+    AL521ICRU
+    0.700,0.01,0,3,      ECUT, PCUT,...,MED of edges of chamber
+    AL521ICRU
+    0.700,0.01,1,1,1,    ECUT, PCUT,...,MED of all chambers
+    H2O521ICRU
+    0.700,0.01,0,1,      ECUT, PCUT,...,MED of all septa
+    PB521ICRU
+    0.700,0.01,0,2,      ECUT, PCUT,...,MED of back face
+    AL521ICRU
+    0.700,0.01,0,1,      ECUT, PCUT,...,MED of region surrounding arc
+    AIR521ICRU
+    0.700,0.01,0,2,      ECUT, PCUT,...,MED of x walls
+    AL521ICRU
+\end{verbatim}

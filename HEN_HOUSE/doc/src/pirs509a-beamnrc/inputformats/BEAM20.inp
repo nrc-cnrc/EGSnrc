@@ -1,0 +1,29 @@
+\begin{verbatim}
+   Next record           INPUT FRONT SURFACE (Z) FOR CM 1
+   ***********           ********************************
+   
+      Z_min_CM(1)  Z-coordinate of front surface for component module 1
+                   This includes any air gap and defines front of model.
+                   A common value will be 0.0 except for sources 8 & 9.
+                   For most sources except for ISOURC=3, 21 & 31, this is 
+                   also the source plane on which the particles are incident
+           Note that the front of all CMs is given w.r.t. z = 0.0, not
+           w.r.t. Z_min_CM(1).
+ 
+   Next record         Blank or dummy line indicating start of 
+   ***********         input for component modules
+ 
+ 
+   Next records (many)       COMPONENT MODULE INPUT
+   *************             **********************
+   
+   Component module parameters are input in order of their appearance in the
+   code, that is, in the order they occur in $CM_LIST.  See the 'INPUT FROM 
+   UNIT 5' section in each CM subroutine for the list of input parameters.
+ 
+    There are two lines before the input of parameters for each CM:
+    one is *********************************************** ,
+    the other is RMAX_CM, the outer boundary(radius or 1/2 of square) of CM
+ 
+   ---------------------------------------------------------------------------
+\end{verbatim}

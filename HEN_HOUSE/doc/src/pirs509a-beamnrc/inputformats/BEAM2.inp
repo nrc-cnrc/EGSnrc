@@ -1,0 +1,118 @@
+\begin{verbatim}
+   Next Record            MONTE CARLO CONTROL INPUT
+   ***********            *************************
+   
+      NCASE,IXXIN,JXXIN,TIMMAX,IBRSPL,NBRSPL,IRRLTT,ICM_SPLIT
+              NCASE  = # of histories to run for this simulation
+                       (min:$NCASEMIN = 100 for IWATCH=0)  
+              IXXIN  = 1st random number initial seed (blank or 0 OK)
+                       Note that, if using the ranlux random no. generator,
+                       this input is the luxury level and should have a
+                       value >=0 and <=4.  Otherwise, a default luxury 
+                       level of 1 will be used.
+              JXXIN  = 2nd random number initial seed (blank or 0 OK)
+              TIMMAX = max cpu time allowed for this run in hours 
+                       (default=0.99)
+              IBRSPL = 0 no brem splitting
+                     = 1 with uniform brem splitting
+                     = 2 with directional bremsstrahlung splitting (DBS) 
+                     = 29 with selective bremsstrahlung splitting
+              NBRSPL = (if IBRSPL = 1 or 2) brem splitting number AND 
+                       annihilation splitting number (if IRRLTT=2)
+                     = (if IBRSPL = 29) max. brem splitting number
+              IRRLTT = 0 no Russian Roulette (the default).  Also, no
+                         annihilation or higher-order splitting. 
+                     = 1 no longer used.  This defaults to IRRLTT=2 
+                     = 2 perform Russian Roulette--eliminates all but one
+                         of secondary charged particles created by split 
+                         photons. 
+                         If the surviving particle undergoes another (higher-
+                         order) bremsstrahlung event or an annihilation,
+                         resulting photons are split again by NBRSPL for
+                         IBRSPL=1. (ie uniform splitting) and by NMIN
+                         for IBRSPL=29 (i.e. selective brem splitting)
+ 
+              Note: The input IRRLTT is automatically set to 0 if IBRSPL=2
+                    This is because Directional Bremsstrahlung Splitting
+                    does not use the built-in Russian Roulette of EGSnrc
+ 
+           ICM_SPLIT = 0 no splitting of photons and electrons as they cross
+                         a plane at the start of a user-specified CM
+                     > 0 Split photons and electrons a user-specified number 
+                         of times as soon as they cross the arbitrary
+                         splitting plane at the top of this CM #.  
+ 
+   Next record (if IBRSPL=2 or 29)
+   ***********
+  
+      FS,SSD,(NMIN),(ICM_DBS,ZPLANE_DBS,IRAD_DBS,ZRR_DBS)  (3F12.0 or 6F12.0)
+                  FS = radius of field (cm) into which bremsstrahlung photons
+                       must be directed if they are to be split (IBRSPL=2)
+                       or length of side of square field (cm) in which 
+                       selective bremsstrahlung splitting probabilities are
+                       calculated for IBRSPL=29.
+                 SSD = distance from bremsstrahlung target where FS
+                       is defined.  FS and SSD only define an angle which is
+                       used (IBRSPL=29).
+                NMIN = background bremsstrahlung splitting number (ie even
+                       outside the field, bremsstrahlung events will be
+                       split into NMIN photons). Also equal to the
+                       higher generation brem splitting number
+                       and annihilation photon splitting number if IRRLTT=2.
+                       NMIN is only required for IBRSPL=29.
+         ICM_DBS and   These are only required to define the splitting
+                       plane if IBRSPL=2.  As soon as
+          ZPLANE_DBS   a fat electron reaches ZPLANE_DBS within CM number
+                       ICM_DBS, it gets split NBRSPL times.  This is designed
+                       to improve electron statistics in the current
+                       implementation of directional bremsstrahlung
+                       splitting (DBS).  If ICM_DBS=0, then no electron
+                       splitting is done (recommended if only good photon
+                       statistics are required).  Note that ZPLANE_DBS is
+                       the index of the plane within ICM_DBS, not the Z
+                       position of the plane.  Usually, ICM_DBS will
+                       be the CM number of the flattening filter in the
+                       accelerator.  If this is modelled using FLATFILT
+                       or CONESTAK, then ZPLANE_DBS will denote the layer
+                       no. (starting from the top).  If the flattening
+                       filter is modelled using CONS3R, then only two
+                       planes are available: ZPLANE_DBS=1 is the plane
+                       at the top of the structure and ZPLANE_DBS=2 is the
+                       plane at the bottom of the structure.  Currently,
+                       only FLATFILT, CONESTAK and CONS3R support these 
+                       inputs.  Usually ZPLANE_DBS is the plane defining the
+                       bottom of the flattening filter.
+            IRAD_DBS   Set to 1 if you want the NBRSPL split electrons
+                       to be distributed in a radially-symmetric manner
+                       about the beam axis.  Note that the beam must be
+                       radially symmetric above the splitting plane for this 
+                       to make sense.  Set to 0 (the default) otherwise.
+            ZRR_DBS    Z position of the russian roulette plane (cm).  Only 
+                       required if IBRSPL=2.  This defines the Z 
+                       position of a plane within the geometry below which
+                       non-fat photons about to undergo a compton, pair
+                       or photoelectric event will NOT be subject to 
+                       russian roulette and compton, pair or photoelectric
+                       events from fat photons will be split NBRSPL times.
+                       This is designed to increase the number of electrons
+                       (albeit with a lower weight) below this plane and
+                       is only used if electron splitting is on (ie
+                       ICM_DBS above is > 0).  Note that radiative events 
+                       (bremsstrahlung, annihilation) of non-fat electrons
+                       below this plane are not split. Usually, the Russian
+                       Roulette plane is above the electron splitting plane,
+                       and so it is within the flattening filter
+                       but somewhere above the bottom.  Note that ZRR_DBS is 
+                       in cm whereas the electron splitting plane must be
+                       on a horizontal boundary in a CM.
+ 
+   Next record (if ICM_SPLIT>0)
+   ***********
+ 
+      NSPLIT_PHOT,NSPLIT_ELEC (2I3)
+             NSPLIT_PHOT = The photon splitting number.
+             NSPLIT_ELEC = The electron splitting number.
+      This input is unrelatted to bremm splittin and is designed to improve
+      efficiency in phantom depth-dose calculations.
+ ------------------------------------------------------------------------
+\end{verbatim}

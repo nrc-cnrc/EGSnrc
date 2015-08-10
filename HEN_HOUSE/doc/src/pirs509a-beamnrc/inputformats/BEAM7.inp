@@ -1,0 +1,13 @@
+\begin{verbatim}
+   ISOURC = 6   RECTANGULAR BEAM INCIDENT FROM THE FRONT
+   **********
+ 
+      IQIN,ISOURC,XBEAM0,YBEAM0,XBEAM,YBEAM
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  = 6
+              XBEAM0  X position of centre of beam (cm)
+              YBEAM0  Y position of centre of beam (cm)
+              XBEAM   half-width in X direction (cm)
+              YBEAM   half-width in Y direction (cm)
+ ---------------------------------------------------------------------
+\end{verbatim}

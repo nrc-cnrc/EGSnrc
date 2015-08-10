@@ -1,0 +1,105 @@
+\begin{verbatim}
+   CARDS CM_APPLICAT
+   *****************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$APPLICAT) (F10.0): Half-width of outer boundary of CM (cm).
+   
+    1  TITLE_$APPLICAT (60A1):  Title of CM.
+   
+    2  ZBACK_$APPLICAT (F15.0): Z of back face of the CM
+                            (air will be added if necessary below the
+                            last applicator)
+ 
+        Note that there is always an air gap (thickness =
+        AIRGAPMIN) in the front and the back of this CM.
+        Therefore ZBACK_$APPLICAT should be >= Z of the back face of the 
+        last scraper + AIRGAPMIN.
+ 
+    3  N_$APPLICAT, ISHAPE (2I5):
+         N_$APPLICAT:  Number of scrapers in the CM.
+         ISHAPE:       Index of applicators' shape, default to square, 1 for 
+                       rectangle.
+   
+    Repeat 4 for I=1,N_$APPLICAT. 
+   
+    4  ZMIN_$APPLICAT(I), ZTHICK_$APPLICAT(I), XMIN_$APPLICAT(I),
+       YMIN_$APPLICAT(I),
+       WIDTHX_$APPLICAT(I), WIDTHY_$APPLICAT(I), 
+       DOSE_ZONE,IREGION_TO_BIT (6F15.0,2I4):
+   
+         ZMIN_$APPLICAT(I):   Z of front face of scraper I. 
+                              Note that ZMIN_$APPLICAT(1)-
+                              Z_min_CM must be >= AIRGAPMIN.
+         ZTHICK_$APPLICAT(I): Thickness of scraper I.  Note that
+                              ZMIN_$APPLICAT(I+1)-(ZMIN_$APPLICAT(I)+
+                              ZTHICK_$APPLICAT(I))
+                              must be >= AIRGAPMIN.
+         XMIN_$APPLICAT(I):   (ISHAPE=1)  Half-width of inner opening in 
+                                          x in scraper I. 
+                              (ISHAPE~=1) Half-width of inner opening in x 
+                                          and y in scraper I.
+         YMIN_$APPLICAT(I):   (ISHAPE=1)  Half-width of inner opening in y in 
+                                          scraper I.
+                              (ISHAPE~=1) Not required.
+         WIDTHX_$APPLICAT(I): (ISHAPE=1)  Width of bar in x (ie material 
+                                          surrounding inner opening) of 
+                                          scraper I.
+                              (ISHAPE~=1) Width of bar in x and y for
+                                          scraper I. 
+         WIDTHY_$APPLICAT(I): (ISHAPE=1)  Width of bar in y (ie material 
+                                          surrounding inner opening) of 
+                                          scraper I.
+                              (ISHAPE~=1) Not required.
+         DOSE_ZONE:           Dose scoring zone for the scraper bar.
+         IREGION_TO_BIT:      Bit setting number for the scraper bar.
+ 
+         Note restrictions to allow air gaps between scrapers and
+         before the first scraper:
+          ZMIN_$APPLICAT(1)-Z_min_CM >= AIRGAPMIN
+          ZMIN_$APPLICAT(I+1)-(ZMIN_$APPLICAT(I)+ZTHICK_$APPLICAT(I)) >= 
+          AIRGAPMIN
+          
+    6   ECUT, PCUT, DOSE_ZONE_AIR,IREGION_TO_BIT_AIR (2F15.0,2I5):
+ 
+           ECUT, PCUT:     Cutoff energies for electrons and photons for
+                           both the bars and the surrounding (air) region
+           DOSE_ZONE_AIR:  Dose scoring zone for the surrounding region
+      IREGION_TO_BIT_AIR:  Bit set number for the surrounding (air) region 
+                       
+    Repeat 7 for I=1,N_$APPLICAT.
+ 
+    7   MED_IN (24A1):  Medium of the bar of scraper I, used to 
+                        set MED_INDEX.
+   
+    Example
+    *******
+   
+   The following set of cards defines an applicator consisting of 2 
+   0.2cm-thick Al scrapers.  The scrapers are separated by 8cm of air. 
+   Scrapers can be thought of as made of 4 bars arranged in a rectangle
+   orthogonal to the Z axis.  For both scrapers in this example, the half-
+   width of the openings created by the bars is 2cm in x, 4cm in y, and the
+   width of the bars themselves is 1cm in x, 1.5cm in y.  The front scraper
+   starts at Z=60.5 cm.
+ 
+   Electrons will be followed in the CM down to kinetic energies of 
+   10 keV (total energies of 0.521 MeV) and photons will be followed down 
+   to energies of 1 keV.  The dose deposited in the air will be scored and 
+   added to the dose from the other regions in dose scoring zone 1, and the 
+   dose deposited in both scrapers will be scored and added to the dose 
+   from the other regions in dose scoring zone 2.  There is a minimum 0.1 cm 
+   air gap at the front and back of the scrapers CM so that the applicator
+   bars are completely surrounded by air. 
+   
+   10.0,    RMAX_CM
+   Applicators: 0.2cm Al at 60.5cm and 68.7cm, ECUT=0.521, PCUT=0.01
+   100.0,   extended air to Z=100 cm 
+   2, 1,    two rectangular applicators
+   60.5, 0.2, 2.0, 4.0, 1.0, 1.5, 2,3
+   68.7, 0.2, 2.0, 4.0, 1.0, 1.5, 2,2
+   0.521, 0.01, 1, 0
+   AL521ICRU
+   AL521ICRU
+\end{verbatim}

@@ -1,0 +1,42 @@
+\begin{verbatim}
+                      TRANSPORT CONTROL INPUT
+                      ***********************
+    Next Record
+    ***********
+      ESTEPIN,SMAX,ECUTIN,PCUTIN,IDORAY,IREJCT_GLOBAL,ESAVE_GLOBAL,IFLUOR
+ 
+              ESTEPIN Dummy variable (used to be ESTEPE -- max. fractional
+                      energy loss/electron step) 
+              SMAX    Dummy variable (used to be SMAX -- max. step length) 
+              ECUTIN  electron cut off in MeV - total energy
+                      If this is > ECUT as input in the EGSnrc input section
+                      (see below), then ECUT is set to ECUTIN.  Default
+                      value for ECUT is AE.
+              PCUTIN  photon cut off in MeV.  If this is > PCUT as input
+                      in the EGSnrc input section (see below), then PCUT 
+                      is set to PCUTIN.  Default value for PCUT is AP. 
+              IDORAY  Dummy variable (used to turn Rayleigh scattering on/off)
+       IREJCT_GLOBAL = 0 no electron range rejection
+                     = 1 do electron range rejection--if residual
+                         range to ECUTRR(IRL) is < DNEAR and
+                         electron energy is < ESAVE_GLOBAL, terminate
+                         history.  ECUTRR(IRL) may vary from component
+                         module to component module and is calculated based
+                         on the particle making it to the bottom of the
+                         accelerator with energy > ECUT
+                     = 2 as in =1, but use a non-calculated ECUTRR = ECUT(IRL)
+                         this should be used if interested in more  
+                         than phase-space data at base of simulation
+                  =-1,-2 Same as above, but now Russian Roulette is played 
+                         with ALL electrons that can not escape the region 
+                         and are not fat. Only applicable with DBS.
+        ESAVE_GLOBAL  energy below which an electron will be discarded
+                      If E<ESAVE_GLOBAL & the electron cannot escape from the
+                      current region with E>ECUTRR(IRL). This ignores brem 
+                      losses.
+              IFLUOR  Dummy variable (used to turn X-ray fluorescence on/off) 
+ 
+         The dummy inputs are retained for compatibility with EGS4/BEAM input
+         files.
+ ----------------------------------------------------------------------------
+\end{verbatim}

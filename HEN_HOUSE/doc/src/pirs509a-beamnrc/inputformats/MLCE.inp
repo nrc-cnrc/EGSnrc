@@ -1,0 +1,155 @@
+\begin{verbatim}
+   CARDS CM_$MLCE
+   **************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$MLCE) (F10.0):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$MLCE (60A1):  Title of CM.
+ 
+    2  ORIENT_$MLCE (I5) = 0 for leaves parallel to Y direction 
+                           = 1 for leaves parallel to X direction
+   
+    3  NUM_LEAF_$MLCE: Number of leaves.  Note: this must be even.
+ 
+    4  ZMIN_$MLCE,ZMAX_$MLCE (2F15.0): upper and lower z coordinates
+         of leafbank (before tilt, see below)
+ 
+    5  ZSTEPL_$MLCE, ZSTEPR_$MLCE: Z-coordinates of left and right step
+         in central leaf (an imaginary, unrotated leaf on the Z axis).
+          
+    6  TGW_$MLCE (F15.0): X (ORIENT_$MLCE=0) or Y (ORIENT_$MLCE=1)
+         width of steps in central leaf (cm).
+ 
+    7  X3_$MLCE, X4_$MLCE (2F15.0): X (ORIENT_$MLCE=0) or Y 
+          (ORIENT_$MLCE=1) coordinates of the upper right and 
+          lower right corners of central leaf, ignoring steps defined above. 
+ 
+    8  SPACE_$MLCE, SSD_$MLCE (2F15.0)   
+              
+          SPACE_$MLCE: distance between centres of adjacent leaves in X 
+                       (ORIENT_$MLCE=0) or Y (ORIENT_$MLCE=1) direction
+                       as projected to SSD_$MLCE (cm).
+            SSD_$MLCE: distance from Z=0 at which SPACE_$MLCE is 
+                       defined (cm).
+ 
+         Leaf numbers I= 1-NUM_LEAF_$MLCE/2 are created by rotating a 
+         duplicate of the central leaf about the axis X=0 (if 
+         ORIENT_$MLCE=0) or Y=0 (if ORIENT_$MLCE=1), 
+         Z=ZMIN_$MLCE by an angle:
+         ARCTAN(-(2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE)
+         and then translating it in the X (if ORIENT_$MLCE=0) or
+         or Y (ORIENT_$MLCE=1) direction by a distance
+         -(2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE
+ 
+     Leaf numbers I= NUM_LEAF_$MLCE/2+1 NUM_LEAF_$MLCE are created by 
+     rotating a duplicate of the central leaf about the axis X=0 
+     (if ORIENT_$MLCE=0) or Y=0 (if ORIENT_$MLCE=1), Z=ZMIN_$MLCE by:
+     ARCTAN((2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE)
+     and then translating it in the X (if ORIENT_$MLCE=0) or
+     or Y (ORIENT_$MLCE=1) direction by a distance
+     (2I-1)*SPACE_$MLCE/2.*ZMIN_$MLCE/SSD_$MLCE
+ 
+    9  LBROT_$MLCE (F15.0): Leaf bank rototian angle (tilt) about 
+        X=0 (ORIENT_$MLCE=0) or Y=0 (ORIENT_$MLCE=1) and Z=ZMIN_$MLCE
+        (radians).  This is applied to the leaves after they have been
+        translated/rotated according to SPACE_$MLCE, SSD_$MLCE above. 
+ 
+   10  ENDTYPE_$MLCE (I5) : The  type of leaf end :
+              0 -- rounded (cylindrical) leaf end and
+              1 -- focused divergent leaf end.
+ 
+   IF ENDTYPE_$MLCE=0
+   11  LEAFRADIUS_$MLCE,CIL_$MLCE (2F15.0)
+ 
+           LEAFRADIUS_$MLCE:  Radius curvature leaf ends 
+                  CIL_$MLCE:  Z position from which LEAFRADIUS_$MLCE is
+                              defined 
+ 
+   IF ENDTYPE_$MLCE=1
+   11  ZFOCUS_$MLCE (F15.0):  Z position of focal point of leaf ends
+ 
+    Repeat 12 until coordinates of all leaves are defined once.  Leaves
+    are numbered 1,2,...NUM_LEAF_$MLCE, where numbering goes from leaf
+    1 to leaf NUM_LEAF_$MLCE. Convention is lower to upper or
+    left to right depending on ORIENT_$MLCE i.e from negative to 
+    positive.
+ 
+   12  NEG_$MLCE, POS_$MLCE, NUM_$MLCE (2F15.0,I5) 
+ 
+     NEG_$MLCE:   Min. Y (ORIENT_$MLCE=0) or X (ORIENT_$MLCE=1)
+                    of a) opening in leaf I at ZMIN_$MLCE (ENDTYPE=1)
+                    or b) of origin of cylindrical leaf end (ENDTYPE=0) 
+     POS_$MLCE:   Max. Y (ORIENT_$MLCE=0) or X (ORIENT_$MLCE=1)
+                    of a) opening in leaf I at ZMIN_$MLCE (ENDTYPE=1)
+                    or b) of origin of cylindrical leaf end (ENDTYPE=0)
+     NUM_$MLCE:   Apply NEG_$MLCE and POS_$MLCE to leaves
+                    I,...,I+NUM_$MLCE-1.  Defaults to 1 if set <=0.
+                    Defaults to NUM_LEAF_$MLCE-I+1 if set >
+                    NUM_LEAF_$MLCE-I+1. 
+ 
+   13   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and 
+                                              air gaps (2F15.0,I5)
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   14  MED_IN (24A1):  Medium in opening(s) and air gaps 
+                       used to set MED_INDEX.
+   
+   15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   16  MED_IN (24A1):  Medium of leaves, 
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf collimator design based
+    loosely on that used with the Elekta SLiplus 40 leaf pair.
+    Actual parameters are DIFFERENT - this serves just as a template.
+    Do not attempt to use these parameters for a simulation of the real
+    machine.
+   
+    The collimator starts at Z=30 cm and has 40 tungsten leaves opening 
+    in the X direction.  The leaves are each ~0.4cm wide and 7.0 cm 
+    thick.  In this example, the leaf openings will form a barbel shape
+    with its long axis parallel to Y.  It will be slightly off-centre
+    due to the leaf bank rotation of -0.01 rads. 
+     
+    Electrons and photons in both the collimator and the opening regions 
+    will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+    PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+    in dose zone 2, and dose deposited in the opening will be stored
+    in dose zone 1.
+ 
+ 
+    In this example the numbers are only approximate, more details should
+    be obtained from the vendor
+    26.0,           RMAX_CM
+    MLC based on mock 40 leaf pair Elekta SLiplus type of accelerator
+    1,              Leaves open in X direction
+    40,             40 leaf paires
+    30.0,37.0,      ZMIN,ZMAX
+    34.0, 33.5,     ZSTEPL,ZSTEPR
+    0.04,           step width
+    0.17,0.2,       X3, X4 of central leaf 
+    1.2, 100.0,     leaf centres spaced 1.2 cm apart projected to SSD=100cm
+    -0.01,          leaf bank tilt angle (radians)
+    0,              ENDTYPE IS CURVED
+    15.0,33.5,      curvature radius, zposition cylinder axis curvature
+   -15.0, 15.0, 16
+   -17.0, 17.0, 2
+   -16.0, 16.0, 4
+   -17.0, 17.0, 2
+   -15.0, 15.0, 16
+   0.5210,  0.010,  1,  0
+   AIR700ICRU
+   0.5210,  0.010,  2,  0
+   W700ICRU
+\end{verbatim}

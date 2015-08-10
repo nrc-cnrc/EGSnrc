@@ -1,0 +1,416 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Authors:         Iwan Kawrakow
+%                   Ernesto Mainegra-Hing
+%                   Dave Rogers
+%                   Frederic Tessier
+%                   Blake Walters
+%
+%  Contributors:    
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[12pt,twoside]{article}  %indexm doesn't work with two sides
+%\usepackage{supertab}%this didn't work for some reason?
+
+\usepackage{moreverb}	%this is used for the boxedverbatim environment
+			%used to box the listing files for tutor programs
+\usepackage{amsmath}
+%\usepackage{showidx}    %shows index entries
+
+\setlength{\textwidth}{16.51cm}
+%\setlength{\textheight}{23.2cm}
+\setlength{\textheight}{23.5cm}
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\topmargin}{-1.5cm}
+\setlength{\parindent}{1.5em}
+\setlength{\topsep}{0ex}
+\setlength{\itemsep}{0ex}
+                       
+\newcommand{\Mol}{Moli\`ere}
+
+\newcommand{\Co}{$^{60}$Co}
+\newcommand{\parsp}{~\hspace*{1.5em}}
+\setlength{\parskip}{0.1in}
+\setlength{\baselineskip}{1.0cm}
+\newcommand{\head}[1]{\begin{center}\begin{Large}{\bf #1} 
+                                              \end{Large}\end{center}} 
+\newcommand{\cen}[1]{\begin{center} #1 \end{center} }
+\newcommand{\etal}{{\em et.al.}}
+\newcommand{\ie}{{\em i.e.}}
+\newcommand{\etc}{{\em etc.}}
+\newcommand{\viz}{{\em viz.}}
+\newcommand{\eg}{{\em eg.}}
+\newcommand{\note}[1]{\mbox{}\\ \noindent \rule{16cm}{0.5mm} \\
+{\em #1} \\ \noindent \rule{16cm}{0.5mm}\\
+\typeout{***********note active on this page *************************}
+}
+
+%\newcommand{\indexm}[1]{\index{#1}}
+%\typeout{~~~~~~~~~~~~***margin index feature OFF*****************************}
+%\typeout{~~~~~~~~~~~~***margin index feature OFF*****************************}
+%\typeout{~~~~~~~~~~~~***margin index feature OFF*****************************}
+\newcommand{\indexm}[1]{\marginpar{{\sf {\tiny I:#1} }}\index{#1}}
+\makeindex
+
+%	some commands to get 4 levels in the table of contents and
+%	number down to paragraphs
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+\renewcommand{\thesubsubsection}{\thesubsection.\arabic{subsubsection}}
+\renewcommand{\theparagraph}{\thesubsubsection.\roman{paragraph}}
+\renewcommand{\theequation}{\arabic{subsection}.\arabic{subsubsection}.\arabic{equation}}
+
+\renewcommand{\theenumii}{\roman{enumii}}
+\renewcommand{\labelenumii}{\theenumii.}
+
+%\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+%                                    {3.25ex \@plus1ex \@minus.2ex}%
+%                                    {-1em}%
+%                                    {\normalfont\normalsize\bfseries}}
+%above is copied from article.cls and it still causes a hang up!!
+%above explained p25-26 Latex Companion
+
+\renewcommand{\refname}{}
+
+
+\usepackage[breaklinks]{hyperref}
+\usepackage{epsf}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{longtable}
+
+%\input{epsf}
+
+%\usepackage{fancyheadings}
+\usepackage{fancyhdr}
+\usepackage{html}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\lhead[{\sffamily \thepage}]{{\sffamily {EGSnrc} Code System }}
+\rhead[{\sffamily NRCC Report PIRS-701 }]{{\sffamily ~\thepage}}
+%\rfoot[{\sffamily {\rightmark}}]{{\sffamily {\rightmark}}}
+\rfoot[]{{\sffamily {\rightmark}}}
+% Replace line with fixed date with the one below when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:57 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/05/02 18:36:27
+}}
+\cfoot{}
+
+\begin{latexonly}
+\typeout{***Have turned off overfull and underfull messages****}
+\tolerance=10000        %suppress Overfull only
+\hbadness=10000         %suppress Overfull and Underfull for text (horizontal)
+\vbadness=10000
+\end{latexonly}
+
+\begin{document}
+
+\begin{htmlonly}
+For information about the authors and/or institutions involved with this
+work, use the links provided in the author list.\\
+\begin{rawhtml}
+<br><br>
+\end{rawhtml}
+
+
+\begin{rawhtml}
+<br><br>
+\end{rawhtml}
+
+Postscript and pdf versions of the entire report are available.  You may have to
+download the compressed version to disk, uncompress or gunzip them and
+then read or print them.\\
+\begin{center}
+\htmladdnormallink{(uncompressed version 2.2 Mbyte)}{pirs701.ps}\\
+\htmladdnormallink{(gzip version 670 kbyte)}{pirs701.ps.gz}\\
+\htmladdnormallink{(pdf version 1.2 Mbyte)}{pirs701.pdf}
+\end{center}
+\begin{rawhtml}
+<br><br>
+\end{rawhtml}
+
+Use the Up button to get back to this page from within the document.
+\begin{rawhtml}
+<BR> <HR> <P>
+\end{rawhtml}
+\copyright 
+Copyright 2000 -- 2015, National Research Council of Canada
+Ottawa
+\begin{rawhtml}
+<BR> <HR> <P>
+\end{rawhtml}
+\end{htmlonly}
+
+\pagestyle{empty}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%               Title page to  preface
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{EGSnrc Code System}
+
+\begin{center} 
+{\sffamily \bfseries {\Huge The EGSnrc Code System:}\\
+{\Large Monte Carlo Simulation of Electron and Photon Transport
+\vspace{5mm}\\}}
+\begin{large}
+I. Kawrakow\\
+E. Mainegra-Hing, D.W.O. Rogers, F. Tessier and B.R.B. Walters\\
+\end{large}
+Ionizing Radiation Standards,\\
+National Research Council Canada,\\
+Ottawa, Canada\\
+
+\vspace{10mm}
+{\bfseries
+\today}
+\vspace{5mm}\\
+\hfill NRCC Report {\sf PIRS-701} \vspace*{15mm}\\
+
+
+\begin{figure}[h]
+\begin{center}
+\htmlimage{scale=1.2}
+\leavevmode
+\includegraphics[height=10.5cm]{figures/ion_chamber}
+%\caption{Improvement of EGSnrc compared to EGS4/PRESTA.}
+%\cen{\Large Improvement of EGSnrc compared to EGS4/PRESTA.}
+\end{center}
+\end{figure}
+\vfill
+
+\copyright NRC Canada, 2001--2015
+\end{center}
+\newpage   %Blank page behind cover
+\mbox{}
+
+
+\newpage
+\setlength{\baselineskip}{0.5cm}
+
+\pagestyle{fancy}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\input{inputs/preface.tex}
+
+
+\newpage
+
+\tableofcontents
+
+\newpage
+\listoffigures
+%\newpage
+\listoftables
+
+\setlength{\baselineskip}{0.5cm}
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		Introduction
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\leftmark}{{1: Introduction}}
+\typeout{Starting ``Introduction'' Should be on odd page}
+\input{inputs/intro.tex}
+
+\subsection{Associated documents}
+\input{inputs/associated_documents.tex}
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		Radiation Transport in EGSnrc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\mbox{}\newpage		%needed to get next section on odd page
+
+\renewcommand{\leftmark}{{2: Radiation transport in EGSnrc}}
+\typeout{   Starting ``Radiation transport in EGSnrc''  Should be odd page}
+\input{inputs/chapter2_1.tex}
+\input{inputs/chapter2_2.tex}
+\input{inputs/chapter2_3.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		EGSnrc User Manual
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\mbox{}\newpage
+\renewcommand{\leftmark}{{3: EGSnrc Reference Manual}}
+\typeout{Starting ``EGSnrc Reference Manual''  Should be odd page}
+%\renewcommand{\rightmark}{{EGSnrc Reference Manual}}
+\input{inputs/new_um_app2.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		Tutorial Programs
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+
+\renewcommand{\leftmark}{4: Tutorial programs}
+\vspace*{-18mm}
+\section{Some Short EGSnrc Tutorial Programs}
+\typeout{Starting ``Some Short EGSnrc Tutorial Programs'' should be odd
+page}
+\input{inputs/tutorials.tex}
+
+\clearpage
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		Changes from EGS4 and Upgrades
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\mbox{}\newpage		%needed to get next section on odd page
+
+\renewcommand{\leftmark}{{5: Adapting EGS4 Codes}}
+\section{Adapting EGS4 User Codes to EGSnrc}
+\typeout{Starting ``Adapting EGS4 User Codes to EGSnrc'' should be odd page}
+\input{inputs/adapt_new.tex}
+
+\index{upgrading from EGS4}
+\index{EGS4}
+\index{changes from EGS4}
+
+
+%\input{inputs/changes.tex}
+
+
+%\subsection{Adapting EGS4 User Codes}
+%\input{inputs/adapt.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		PEGS4 User Guide
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+%\mbox{}  \newpage		%needed to get next section on odd page
+\renewcommand{\leftmark}{{6:  PEGS4 User's Manual}}
+
+
+\typeout{****This is start of Using Pegs******** should be odd page }
+\input{inputs/pegs4_um.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%               Pegsless User Guide
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+%\mbox{}  \newpage              %needed to get next section on odd page
+\renewcommand{\leftmark}{{7:  Pegsless User's Manual}}
+
+
+\input{inputs/pegsless_um.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		Mortran3 Users Guide
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\newpage 
+\mbox{}  \newpage		%needed to get next section on odd page
+\renewcommand{\leftmark}{{8:  Users Guide to Mortran3}}
+\typeout{Starting Mortran3 manual - should be odd page}
+\input{inputs/mortran3_man.tex}
+
+%must change name of following once we generalize it
+% to cover systems considerations in general.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%		EGSnrc System Considerations
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\renewcommand{\leftmark}{{9: EGSnrc System Considerations}}
+
+\typeout{Starting ``EGSnrc System Considerations'' should be odd page}
+%This is just before egsnrc\_system\_considerations
+\input{inputs/egsnrc_system_considerations.tex}
+
+
+
+
+
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\typeout{}
+\typeout{***Start of Cited References****}
+\typeout{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand{\leftmark}{{References}}
+\renewcommand{\rightmark}{{References}}
+
+\section*{References}
+\addcontentsline{toc}{section}{\numberline{}References}
+\vspace*{-1.7cm}
+\bibliography{../irs}
+\typeout{}
+\typeout{******REMEMBER to create .bbl  and reset twice**********}
+\typeout{}
+\bibliographystyle{unsrt}
+
+
+
+\newpage
+\typeout{**********starting index here******************}
+\renewcommand{\leftmark}{{Index}}
+\renewcommand{\rightmark}{{Index}}
+\addcontentsline{toc}{section}{\numberline{}Index}
+\setlength{\baselineskip}{0.5cm}
+
+\input{pirs701-egsnrc.ind}
+
+\typeout{*********************************************************}
+\typeout{*********************************************************}
+\typeout{*********************************************************}
+\typeout{***Remember to execute rm_continued_figures then*********}
+\typeout{***on next pass, list is correct. Then get index*********}
+\typeout{***execute rm_continued_figures again and make***********}
+\typeout{***final pass********************************************}
+\typeout{*********************************************************}
+\typeout{*********************************************************}
+\typeout{*********************************************************}
+
+\end{document}
+

@@ -1,0 +1,43 @@
+\begin{figure}
+\index{AUSGAB!example}
+\begin{center}
+\caption{{\tt AUSGAB} subroutine from {\tt tutor2.mortran}
+                                 \label{fig_tutor2_ausgab}}
+\begin{boxedverbatim}
+
+
+%E  "tutor2.mortran"
+"********************************************************************"
+"                                                                    "
+SUBROUTINE AUSGAB(IARG);
+"                                                                    "
+" In this AUSGAB routine for tutor2, we score the energy deposited   "
+"  in the various regions. This amounts to the total energy          "
+"  reflected,deposited and transmitted by the slab.                  "
+"                                                                    "
+"  For IARG=0, an electron or photon step is about to occur and we   "
+"  score the energy deposited, if any. Note that only electrons      "
+"  deposit energy during a step, and due to our geometry, electrons  "
+"  only take steps in region 2 - however there is no need to check.  "
+"  For IARG=1,2 and 4, particles have been discarded for falling     "
+"  below various energy cutoffs and all their energy is deposited    "
+"  locally (in fact EDEP = particles kinetic energy).                "
+"  For IARG=3, we are discarding the particle since it is in         "
+"  region 1 or 3, so score its energy.                               "
+"                                                                    "
+"********************************************************************"
+IMPLICIT NONE;
+INTEGER IARG,IRL;
+
+COMIN/EPCONT,SCORE,STACK/; "we use EDEP from EPCONT,IR(NP) from STACK"
+"                        ESCORE is passed in user defined COMIN SCORE"
+IF(IARG <= 4) [
+   IRL = IR(NP);" pick up current region number"
+   ESCORE(IRL)=ESCORE(IRL)+EDEP;
+]
+RETURN;END;"end of AUSGAB"
+
+
+\end{boxedverbatim}
+\end{center}
+\end{figure}

@@ -1,0 +1,213 @@
+\begin{verbatim}
+   CARDS CM_$VARMLC
+   **************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$VARMLC) (F10.0):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$VARMLC (60A1):  Title of CM.
+ 
+    2  ORIENT_$VARMLC, NGROUP_$VARMLC (2I5) 
+ 
+             ORIENT_$VARMLC= 0 for leaves parallel to Y direction 
+                           = 1 for leaves parallel to X direction
+             NGROUP_$VARMLC= number of groups of adjacent leaves where
+                             all leaves in a group have the same width
+                             (defaults to 1 if set <= 0) 
+   
+    3  ZMIN_$VARMLC (F15.0): Z of top of MLC (excluding airgap)
+          
+    4  ZTHICK_$VARMLC (F15.0): Thickness of the leaves ( z-axis (cm))
+ 
+    Repeat 5 NGROUP_$VARMLC times
+ 
+    5  NUM_LEAF_$VARMLC(I), LEAFWIDTH_$VARMLC(I)  (I5,F15.0)
+           
+            NUM_LEAF_$VARMLC(I):  Number of adjacent leaves in group I
+            LEAFWIDTH_$VARMLC(I): Width of each leaf in group I 
+                           as projected at ZMIN_$VARMLC - the width does
+                           not include the tongue (see figure).
+ 
+          Note: total number of leaves is stored in TOT_LEAF_$VARMLC
+ 
+    6  START_$VARMLC (F15.0) : the start position (cm) wrt the CAX of 
+                        leaf 1 tongue as projected to ZMIN_$VARMLC.
+ 
+    7  WSCREW_$VARMLC, HSCREW_$VARMLC (2F15.0) : The width and height
+             of the screw on the carriage railing. The width is 
+             as projected at ZMIN_$VARMLC and the height projected at 
+             the z-axis.
+ 
+    8  WTONGUE_$VARMLC, HTONGUE_$VARMLC, ZTONGUE_$VARMLC (3F15.0) : 
+             The width and height of the tongue projected to ZMIN_$VARMLC 
+             and z-axis respectively and the Z starting position of the
+             tongue.  ZTONGUE_$VARMLC=0 assumes that the tongue is centred
+             at ZMIN_$VARMLC+ZTHICK_$VARMLC/2 (ie centre of leaf body).
+ 
+    9  WGROOVE_$VARMLC, HGROOVE_$VARMLC, ZGROOVE_$VARMLC (3F15.0) : The
+             width and height of the groove projected to ZMIN_$VARMLC 
+             and z-axis respectively and the Z starting position of the 
+             groove.  ZGROOVE_$VARMLC=0 assumes that the groove is centred
+             at ZMIN_$VARMLC+ZTHICK_$VARMLC/2 (ie centre of leaf body).
+             
+             Note restriction: ZTONGUE >= ZGROOVE
+                               ZTONGUE+HTONGUE <= ZGROOVE+HGROOVE
+                               WTONGUE <= WGROOVE 
+ 
+   10  LEAFGAP_$VARMLC (F15.0) : The width of the interleaf air gap 
+              at ZMIN_$VARMLC.
+  
+             Note restriction: LEAFGAP_$VARMLC <=WTONGUE_$VARMLC
+ 
+   11  ENDTYPE_$VARMLC (I5) : The  type of leaf end :
+              0 -- rounded leaf end and
+              1 -- focused divergent leaf end.
+ 
+   12  ZFOCUS_$VARMLC (F15.0) : Focal point on Z-axis of leaf ends 
+                      (i.e. imaginary lines drawn extending the slopes 
+                      of leaf ends will all intersect the Z-axis
+                      at this point) - chosen if ENDTYPE_$VARMLC = 1.
+ 
+         Note restriction: ZFOCUS_$VARMLC(1) < ZMIN_$VARMLC or
+                                      > ZMIN_$VARMLC + ZTHICK_$VARMLC
+ 
+       LEAFRADIUS_$VARMLC (F15.0) : Radius of the leaf end if
+                            ENDTYPE_$VARMLC = 0. This must be greater
+                            than or equal to half the leaf thickness.
+ 
+   13  ZFOCUS_$VARMLC(1) (F15.0): Focal point on Z-axis of leaf sides 
+                         imaginary lines drawn extending the slopes of
+                         the leaf sides will all intersect the Z-axis
+                         at this point)
+               
+         Note restriction: ZFOCUS_$VARMLC(1) < ZMIN_$VARMLC or
+                                > ZMIN_$VARMLC + ZTHICK_$VARMLC 
+ 
+                       For focused ends the leaf position is defined
+                       at ZMIN_$VARMLC; for rounded at ZMIN_$VARMLC +
+                      0.5*ZTHICK_$VARMLC (ie center of the leaf in z)
+ 
+    Repeat 14 until coordinates of all leaves are defined once.  Leaves
+    are numbered 1,2,...TOT_LEAF_$VARMLC, where numbering goes from leaf
+    1 to leaf TOT_LEAF_$VARMLC. Convention is lower to upper or
+    left to right depending on ORIENT_$VARMLC i.e from negative to 
+    positive.
+ 
+   14  NEG_$VARMLC, POS_$VARMLC, NUM_$VARMLC (2F15.0,I5) 
+ 
+     NEG_$VARMLC:   Min. Y (ORIENT_$VARMLC=0) or X (ORIENT_$VARMLC=1) 
+                    of front opening in leaf I (ie the opening at 
+                    ZMIN_$VARMLC) if ENDTYPE=1, or of rounded end
+                    of leaf I if ENDTYPE=0. 
+     POS_$VARMLC:   Max. Y (ORIENT_$VARMLC=0) or X (ORIENT_$VARMLC=1) 
+                    of front opening in leaf I if ENDTYPE=1, or of
+                    rounded end of leaf I if ENDTYPE=0.
+     NUM_$VARMLC:   Apply NEG_$VARMLC and POS_$VARMLC to leaves
+                    I,...,I+NUM_$VARMLC-1.  Defaults to 1 if set <=0.
+                    Defaults to TOT_LEAF_$VARMLC-I+1 if set >
+                    TOT_LEAF_$VARMLC-I+1. 
+ 
+   15   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and 
+                                              air gaps (2F15.0,2I5)
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+    16  MED_IN (24A1):  Medium in opening(s) and air gaps 
+                       used to set MED_INDEX.
+   
+    17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$VARMLC
+                                                          (2F15.0,3I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+         IGNOREGAPS:   If set to 1, ignore all air gaps when doing range 
+                       rejection in leaf material when the particle X 
+                       position
+                       is < min X of all leaf openings (not including leaf 
+                       ends) or > max X of leaf openings (not including ends)
+                       (ORIENT_$VARMLC=1) or if the particle Y position
+                       is < min Y of all leaf openings (not including leaf
+                       ends) or > max Y of leaf openings (not including ends)
+                       (ORIENT_$VARMLC=0). This approximation is designed
+                       to make range rejection more efficient deep in the
+                       leaves, while still preserving accurate transport
+                       in the leaf ends.  Note that if you have significant
+                       air gaps between leaves, it is recommended that
+                       you not use this option (ie run with the default
+                       setting of 0).
+   
+    18  MED_IN (24A1):  Medium of leaves, 
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf collimator design based
+    loosely on that used with the Varian Clinac 2100C 26 leaf pair.
+    Actual parameters are DIFFERENT - this serves just as a template.
+    Do not attempt to use these parameters for a simulation of the real
+    machine.
+   
+    The collimator starts at Z=50 cm and has 26 tungsten leaves opening 
+    in the X direction.  The leaves are each 0.5cm wide and 6.0cm 
+    thick.  The Z focus of the leaf sides is at Z=-1000 cm, resulting 
+    in sides that are essentially straight up and down.  The Z focus 
+    of the leaf ends is at Z=0, which is the position of the beam source.  
+    In this example, leaf opening coordinates are chosen to create a 
+    pattern of alternating open and closed leaves.
+     
+    Electrons and photons in both the collimator and the opening regions 
+    will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+    PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+    in dose zone 2, and dose deposited in the opening will be stored
+    in dose zone 1.  Finally, the option to ignore air gaps when doing
+    range rejection deep in the leaves is off.
+ 
+    26.0,           RMAX_CM
+    MLC based on mock 26 leaf pair Varian 2100C type of accelerator
+    1,1,            Leaves open in X direction, all have same thickness
+    50.0,           ZMIN
+    6.0,            ZTHICK  
+    26, 0.50,       NUM_LEAF, LEAFWIDTH  
+    -6.5,           START POSITION
+    0,2, 0,4,       WIDTH AND HEIGHT OF SCREW
+    0.2, 2,0,       WIDTH, HEIGHT, Z OF TONGUE, tongue centred in leaf 
+    0.21,2.6,0,     WIDTH, HEIGHT, Z OF GROOVE, groove centred in leaf
+    0.005,          LEAFGAP BETWEEN ADJACENT LEAVES
+    1,              ENDTYPE IS FOCUSED AND DIVERGENT
+    0.0,            ZFOCUS(2)
+    -1000.0         ZFOCUS(1)
+    0.0,0.0
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.0,0.0 
+    -5.0, 5.0
+    0.5210,  0.010,  1,  0
+    AIR700ICRU  
+    0.5210,  0.010,  2,  0, 0
+    W700ICRU 
+\end{verbatim}

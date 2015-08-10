@@ -1,0 +1,83 @@
+\begin{verbatim}
+   CARDS CM_CIRCAPP
+   *****************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$CIRCAPP) (F10.0): Half-width of outer boundary of CM (cm).
+   
+    1  TITLE_$CIRCAPP (60A1):  Title of CM.
+   
+    2  ZBACK_$CIRCAPP (F15.0): Z of back face of the CM
+                            (air will be added if necessary below the
+                            last scraper)
+ 
+        Note that there is always an air gap (thickness =
+        AIRGAPMIN) in the front and the back of this CM.
+        Therefore ZBACK_$CIRCAPP should be >= Z of the back face of the 
+        last scraper + AIRGAPMIN.
+ 
+    3  N_$CIRCAPP:
+         N_$CIRCAPP:  Number of scrapers in the CM.
+   
+    Repeat 4 for I=1,N_$CIRCAPP. 
+   
+    4  ZMIN_$CIRCAPP(I), ZTHICK_$CIRCAPP(I), ROPEN_$CIRCAPP(I),
+       XOUTER_$CIRCAPP(I), YOUTER_$CIRCAPP(I), 
+       DOSE_ZONE,IREGION_TO_BIT (6F15.0,2I4):
+   
+         ZMIN_$CIRCAPP(I):   Z of front face of scraper I. Note that 
+                             ZMIN_$CIRCAPP(1)-Z_min_CM must be >= AIRGAPMIN.
+         ZTHICK_$CIRCAPP(I): Thickness of scraper I.  Note that
+                              ZMIN_$CIRCAPP(I+1)-(ZMIN_$CIRCAPP(I)+
+                              ZTHICK_$CIRCAPP(I)) must be >= AIRGAPMIN.
+         ROPEN_$CIRCAPP(I):   Radius of inner opening in scraper I. 
+         XOUTER_$CIRCAPP(I):  X half-width of outer edge of scraper I.
+         YOUTER_$CIRCAPP(I):  Y half-width of outer edge of scraper I. 
+         DOSE_ZONE:           Dose scoring zone for the scraper bar.
+         IREGION_TO_BIT:      Bit setting number for the scraper bar.
+ 
+         Note restrictions to allow air gaps between scrapers and
+         before the first scraper:
+          ZMIN_$CIRCAPP(1)-Z_min_CM >= AIRGAPMIN
+          ZMIN_$CIRCAPP(I+1)-(ZMIN_$CIRCAPP(I)+ZTHICK_$CIRCAPP(I)) >= 
+          AIRGAPMIN
+          
+    6   ECUT, PCUT, DOSE_ZONE_AIR,IREGION_TO_BIT_AIR (2F15.0,2I5):
+ 
+           ECUT, PCUT:     Cutoff energies for electrons and photons for
+                           both the bars and the surrounding (air) region
+           DOSE_ZONE_AIR:  Dose scoring zone for the surrounding region
+      IREGION_TO_BIT_AIR:  Bit set number for the surrounding (air) region 
+                       
+    Repeat 7 for I=1,N_$CIRCAPP.
+ 
+    7   MED_IN (24A1):  Medium of the bar of scraper I, used to 
+                        set MED_INDEX.
+   
+    Example 
+    *******
+   
+   The input defines a circular applicator with 2 scrapers, one of Pb with 
+   radius of opening = 0.6cm, X and Y half-widths of 1.0cm, and thickness 
+   0.5cm. The other scraper, consisting of Al, has an opening with radius 
+   2.4cm, X half-width = 4.6cm, Y half-width = 3.2cm, and thickness 1.0cm.  
+   The scrapers are separated by 0.1cm of air. The front scraper starts at 
+   Z=1.1cm and the second at 1.6 cm.
+ 
+   Electrons will be followed down to kinetic energies of 10 keV (total 
+   energies of 0.521 MeV) and photons will be followed down to 1 keV.  The 
+   dose deposited in the air will be scored in dose zone 1, and the dose in 
+   the 2 scrapers will be scored in dose zones 2 and 3. There is a minimum 
+   0.1 cm air gap at the front and back of the CIRCAPP CM. 
+   
+   14.0,    RMAX_CM
+   circular applicator
+   44.0,     extended air to Z=44 cm
+   2,      two scrapers     
+   1.10,  0.50,  0.600, 1.0, 1.0, 2, 6,
+   1.60,  1.00,  2.40,  4.6, 3.2, 3, 7,
+   0.521, 0.01, 1, 0, 
+   PB521ICRU
+   AL521ICRU
+\end{verbatim}

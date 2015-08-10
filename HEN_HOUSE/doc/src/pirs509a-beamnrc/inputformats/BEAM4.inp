@@ -1,0 +1,21 @@
+\begin{verbatim}
+   ISOURC = 1   POINT SOURCE ON Z-AXIS INCIDENT FROM THE FRONT 
+   **********                circular or square
+ 
+      IQIN,ISOURC,DISTZ,RBEAM,GAMMA,XINL,XINU,YINL,YINU
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  1
+              DISTZ   distance of the point source above front of first
+                      CM at Z=Z_min_CM(1). Defaults to  100 cm 
+              RBEAM   radius of the beam on front of first CM
+                      defaults to max radius of first CM if GAMMA is also 0.
+                      or:
+                      If negative, denotes that that field on front of
+                      first CM is rectangular 
+              GAMMA   1/2 angle about z-axis(degrees) of source,
+                      ONLY if RBEAM=0.0
+              XINL,XINU,YINL,YINU  Lower and upper X boundaries and
+                      Y boundaries of rectangular field on first CM in
+                      cm.  ONLY if RBEAM<0. 
+ ------------------------------------------------------------------------
+\end{verbatim}

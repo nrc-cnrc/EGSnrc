@@ -1,0 +1,31 @@
+\begin{verbatim}
+   ISOURC = 24   FULL PHASE-SPACE SOURCE INCIDENT FROM USER-DEFINED ANGLE
+   ***********
+ 
+   Inputs identical to ISOURC = 21 with the following additional line of
+   inputs after SPCNAM:
+ 
+      ALPHA24,BETA24,DIST24 
+ 
+               ALPHA24   Angle of rotation of source plane about X-axis
+                         in degrees.  Positive angle is clockwise rotation.
+                         (-90 < ALPHA24 < 90)
+                BETA24   Angle of rotation of source plane about Y-axis
+                         in degrees.  Positive angle is counter-clockwise
+                         rotation. (-90 < ALPHA24 < 90)
+                DIST24   Distance of point of rotation above INIT_ICM.
+ 
+      Note restriction that if ALPHA24~=0 and/or BETA24 ~=0, then INIT_ICM
+      must be > 1.  This is because the rotation will result in some
+      particles incident within INIT_ICM-1.  Also, the following CMs
+      currently do not handle the general case of a forward-directed particle
+      incident from within them:
+      APPLICAT,ARCCHM,CHAMBER,CIRCAPP,CONESTAK,DYNJAWS,JAWS,MESH,PYRAMIDS,
+      SIDETUBE
+      Thus, if ALPHA24~=0 and/or BETA24 ~=0 and INIT_ICM or INIT_ICM-1 is
+      one of these, negative ustep errors may result. 
+ 
+      The initial idea and much of the coding for Source 24 is courtesy of 
+      Patrick Downes at University of Cardiff, Wales. 
+ ------------------------------------------------------------------------
+\end{verbatim}

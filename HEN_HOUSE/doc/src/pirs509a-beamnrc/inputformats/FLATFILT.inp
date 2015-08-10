@@ -1,0 +1,97 @@
+\begin{verbatim}
+   CARDS CM_$FLATFILT
+   ******************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$FLATFILT) (F10.0): Radius of outer boundary of CM (cm).
+   
+    1  TITLE_$FLATFILT (60A1):  Title of CM.
+   
+    2  ZMIN_$FLATFILT (F10.0):  Distance from front of CM (front of
+        the first layer) to reference plane (Z=0), 
+        not including air gap.
+ 
+    3  ISCM_NO_$FLATFILT (I5): Number of layers. 
+ 
+    Repeat 4-6 for I=1,ISCM_NO_$FLATFILT 
+ 
+    4  ISSCM_NO_$FLATFILT(I), ZTHICK_$FLATFILT(I)  (I5,F15.0): 
+ 
+              ISSCM_NO_$FLATFILT(I): # cones in layer I(ex outer region).
+              ZTHICK_$FLATFILT(I):   Thickness of layer I.
+ 
+    Repeat 5 for J=1,ISSCM_NO_$FLATFILT(I) all on one line in order
+    of increasing cone radius.
+ 
+    5  RTOP_$FLATFILT(I,J) (F15.0):
+              Top radius of cone J in layer I.
+              Note restriction: RTOP_$FLATFILT(I,J+1)>RTOP_$FLATFILT(I,J)
+ 
+    Repeat 6 for J=1,ISSCM_NO_$FLATFILT(I) all on one line in order
+    of increasing cone radius.
+ 
+    6  RBOT_$FLATFILT(I,J) (F15.0):
+              Bottom radius of cone J in layer I.
+              Note restriction: RBOT_$FLATFILT(I,J+1)>RBOT_$FLATFILT(I,J) 
+  
+    Repeat 7 and 8 for J=1,ISSCM_NO_$FLATFILT(I)+1 for every layer I.
+    When J=ISSCM_NO_$FLATFILT(I)+1, you are specifying ECUT, PCUT,
+    MED_IN, etc. for the region between the outermost cone and RMAX_CM
+    in layer I.  
+      
+    7  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT  (2F15.0,2I5):
+   
+           ECUT, PCUT:  Cutoff energies for electrons and photons
+                        in cone J.
+           DOSE_ZONE:   Dose scoring flag for cone J.
+        IREGION_TO_BIT: Bit setting for region defined by cone J.
+  
+    8  MED_IN (24A1):  Medium of cone J 
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+   The following example describes a FLATFILT with 2 layers.  The
+   RMAX of this FLATFILT is 2cm.  There is no air gap between the
+   first layer and the top of the CM.
+ 
+   The first layer is 0.3 cm thick and comprises a convex cone made
+   of H2O within a concave cone made of PB.  The convex H2O cone has
+   a top radius of 0.0cm and a bottom radius of 1.0cm.  The concave PB
+   cone has a top radius of 1.5cm and a bottom radius of 1.1cm.
+   The region between the outer, concave cone and RMAX_CM is AIR.
+   The second layer is also 0.3 cm thick and comprises a single
+   cylinder of H2O having radius 1cm (ie top radius=bottom
+   radius=1cm).  The region between the outer boundary of this 
+   cylinder and RMAX_CM (an annular region) is AIR.
+ 
+   The dose to the AIR regions is scored in dose zone 1.  The dose
+   to H2O regions (the convex cone in the first layer and the cylinder
+   in the second layer) is scored in zone 2.  And the dose to PB
+   (the concave cone in the first layer) is scored in zone 3.  
+   ECUT and PCUT for all regions are 0.521 MeV and 0.01 MeV
+   respectively.
+ 
+   2.00000,               RMAX_CM 
+   flatfilt
+   0.0,                   ZMIN of first layer 
+   2,                     no. of layers
+   2,  0.30,              no. of cones in first layer and thickness
+   0.0,1.5,               top radii of cones
+   1.0,1.1,               bottom radii of cones
+   1, 0.3                 no. of cones in second layer and thickness
+   1.0                    top radius of cone
+   1.0                    bottom radius of cone
+   0.521, 0.01, 2, 0,     ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT 
+   H2O                    MEDIUM -- for layer 1, cone 1 
+   0.521, 0.01, 3, 0
+   PB                            -- for layer 1, cone 2
+   0.521, 0.01, 1, 0
+   AIR                           -- for region between cone 2 and RMAX
+   0.521, 0.01, 2, 0
+   H2O                           -- for layer 2, cone 1 
+   0.521, 0.01, 1, 0
+   AIR                           -- for region between cone 1 and RMAX
+\end{verbatim}

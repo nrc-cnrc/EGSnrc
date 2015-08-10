@@ -1,0 +1,109 @@
+\begin{verbatim}
+   CARDS CM_XTUBE  (XTUBE SID: 2.5)
+   **************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$XTUBE) (F10.0): Half-width of CM boundary (cm).
+   
+    1  TITLE_$XTUBE (60A1): Title of CM.
+   
+    2  ZMIN_$XTUBE,ZTHICK_$XTUBE (2F15.0): 
+ 
+         ZMIN_$XTUBE: Distance from front of CM to reference plane(Z=0).
+       ZTHICK_$XTUBE: Thickness of xtube in Z-direction.
+ 
+       Note that there will usually be no air gap at the front of 
+       this CM. 
+                    
+    3  ANGLEI (F15.0):  Angle between the target surface 
+                        and Z-axis (in degrees >= 0. and <75.)
+ 
+    4  N_$XTUBE, I_XTRA_$XTUBE (I5):    
+            
+             N_$XTUBE:   Number of layers in the target 
+            
+    Repeat 5-7 for I=N_$XTUBE,N_$XTUBE-1,...,1
+     (in XTUBE the first layer of the target is I=N_$XTUBE) 
+ 
+    5  DTHICK_$XTUBE(I), I_XTRA_$XTUBE (F15.0,I5)
+ 
+     DTHICK_$XTUBE(I): Thickness of layer I (cm)
+        I_XTRA_$XTUBE: Set to 1 if the layer has an extra central region
+                       (only input for the outermost target layer)
+ 
+    6  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): 
+     
+          ECUT, PCUT:       Cutoff energies for electron and photon transport
+                            of layer I.
+           DOSE_ZONE:       Dose scoring flag of layer I.
+           IREGION_TO_BIT:  Bit setting of region # corresponding to layer I.
+   
+    7  MED_IN (24A1):  Medium of layer I 
+ 
+    Note that inputs 8-10 below are only required if I_XTRA_$XTUBE=1
+    (i.e. the outermost target layer has an extra central region)
+ 
+    8  WXTRA_$XTUBE, HXTRA_$XTUBE (2F15.0):
+ 
+        WXTRA_$XTUBE:  Width of extra central region in layer
+                       N_$XTUBE (cm).
+        HXTRA_$XTUBE:  Height of extra central region in layer
+                       N_$XTUBE (cm).    
+ 
+    9  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+ 
+          ECUT, PCUT:       Cutoff energies for electron and photon transport
+                            in extra central region of layer N_$XTUBE.
+           DOSE_ZONE:       Dose scoring flag of extra central region.
+           IREGION_TO_BIT:  Bit setting of extra central region. 
+ 
+   10  MED_IN (24A1):  Medium of extra central region.
+ 
+   11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for region in
+                                                      front of target
+ 
+           ECUT, PCUT:     Cutoff energies for electron and photon transport
+                           in front of target
+           DOSE_ZONE:      Dose scoring flag for this region.
+           IREGION_TO_BIT: Bit setting of region # corresponding to this one.
+ 
+   12  MED_IN (24A1):  Medium in front of target
+   
+   13  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for target holder. 
+   
+           ECUT, PCUT:      Cutoff energies for electron and photon transport
+                            in target holder.
+           DOSE_ZONE:       Dose scoring flag for target holder.
+           IREGION_TO_BIT:  Bit setting of region for target holder.
+ 
+   14  MED_IN (24A1):  Medium of target holder
+   
+    Example
+    *******
+ 
+    The following example describes a tungsten target, 1mm thick,
+    mounted on a copper holder.  The target is angled at 22 degrees
+    with respect to the z-axis.  It spans 2cm in the z direction.
+    The medium in front of the target is AIR.
+    ECUT and PCUT for all regions are set to 0.521, 0.01 respectively.
+    Note that the input file specifies the target to start at 10cm
+    from the reference plane; if Z_min_CM(1) is not 10cm and XTUBE
+    is the first CM in the beam, the code will autumatically reset the
+    target to start at Z_min_CM(1). 
+   
+    10.0       RMAX_CM
+    XTUBE: z=10 cm, 1mm Tungsten target(1 slab), copper holder, 22 degrees 
+    10.0, 2.0; distance to reference plane = 10 cm, total thickness=2 cm
+    22.0;      angle = 22 degrees
+    1;         1 slab in the target
+    0.1;       thickness of the slab = 0.1 cm
+    0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for this slab
+    T;         medium is Tungsten
+    0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT in front of target
+    AIR        medium is AIR 
+    0.521, 0.01, 0, 2; ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for the holder
+    CU;        medium for the holder is copper
+ 
+   
+\end{verbatim}

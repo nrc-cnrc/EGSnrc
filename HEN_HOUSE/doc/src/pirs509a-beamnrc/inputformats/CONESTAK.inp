@@ -1,0 +1,98 @@
+\begin{verbatim}
+   CARDS CM_$CONESTAK (CONESTAK Rev 1.8)
+   ********************************
+ 
+    -1  dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$CONESTAK) (F10.0): Outer radial boundary (cm).
+   
+    1  TITLE_$CONESTAK (60A1):  Title of CM.
+   
+    2  ZMIN_$CONESTAK, RBN_$CONESTAK (2F15.0):   
+ 
+          ZMIN_$CONESTAK:  Distance from front of first cone to 
+                           reference plane (Z=0), 
+          RBN_$CONESTAK:   Inner radius of outer wall 
+                           (Set to 0 if you do not want an outer wall) 
+   
+    3  ISCM_MAX_$CONESTAK (I5): Number of conical layers 
+ 
+    Repeat 4 once for I=1,ISCM_MAX_$CONESTAK
+      
+    4  ZTHICK_$CONESTAK(I), RMIN_$CONESTAK(I), RMAX_$CONESTAK(I) (3F15.0): 
+ 
+         ZTHICK_$CONESTAK(I):  Thickness of conical layer.
+         RMIN_$CONESTAK(I):    Front radius of conical layer.
+         RMAX_$CONESTAK(I):    Back radius of conical layer.
+                            Note restrictions: 
+                            RMAX_$CONESTAK(I)>=RMIN_$CONESTAK(I) 
+                            RMIN_$CONESTAK(I+1)>=RMAX_$CONESTAK(I)
+        
+    5 and 6 are only required if there is an outer wall (ie RBN_$CONESTAK~=0)
+ 
+    5  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 3 (outer wall): 
+                                                   (2F15.0,2I5)    
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, non-zero to score dose 
+                       deposited in it
+          IREGION_TO_BIT:   Bit setting number for the region 
+   
+    6  MED_IN (24A1):  Medium of local region 3
+                       used to set MED_INDEX.
+ 
+    Repeat 7-10 for each conical layer
+   
+    7  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 1 (inside cone):
+                                                   (2F15.0,2I5)
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+          IREGION_TO_BIT:   Bit setting number for the region 
+   
+    8  MED_IN (24A1):  Medium of local region 1 (inside cone), 
+                       used to set MED_INDEX
+ 
+    9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2 (outside cone):
+                                                     (2F15.0,2I5)
+ 
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+          IREGION_TO_BIT:   Bit setting number for the region
+ 
+    10  MED_IN (24A1):  Medium of local region 2 (outside of cone),     
+                        used to set MED_INDEX
+    Example
+    *******
+   
+   The following input example describes two conical layers.  The first
+   layer is a flat-top cone 1.0cm thick, with a radius at the top of 0.8cm
+   and a radius at the base of 1.2cm.  The second layer is a cylinder, also
+   1.0cm thick, of radius 1.2cm.  The top cone is made of Cu and the bottom
+   cylinder is made of Pb.  The entire structure is encircled by a Pb wall 
+   with inner radius 4cm and outer radius 5cm.  
+   In both layers, the medium between the cone and the outer wall is H2O.
+ 
+   Dose in the Cu cone will be scored in dose zone 1.  Dose in the PB cylinder
+   will appear in dose zone 2.  The dose to the encircling PB wall will be in
+   zone 3.  And the dose to the water in both layers will be scored in zone 4.  
+   ECUT and PCUT in all cases is 0.521MeV and 0.01MeV respectively.
+ 
+   5.0                   RMAX_CM             
+   cone and cylinder surrounded by PB wall 
+   0.0, 4.0              
+   2                     
+   1.0, 0.8, 1.2         
+   1.0, 1.2, 1.2         
+   0.521, 0.01, 3, 0      
+   PB                    
+   0.521, 0.01, 1, 0
+   CU
+   0.521, 0.01, 4, 0
+   H2O
+   0.521, 0.01, 2, 0
+   PB
+   0.521, 0.01, 4, 0
+   H2O
+   
+\end{verbatim}

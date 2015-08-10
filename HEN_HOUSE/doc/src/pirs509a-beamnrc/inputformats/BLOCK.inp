@@ -1,0 +1,126 @@
+\begin{verbatim}
+   CARDS CM_BLOCK(Rev 1.4)
+   *****************
+   
+   -1  dummy line filled with ***  read in main
+ 
+    0  RMAX_CM(ICM_$BLOCK):  Perpendicular distance from Z-axis
+                             to boundary surrounding component
+                             This component module has a square
+                             boundary.
+ 
+    1  TITLE_$BLOCK (60A1):  Title of CM.
+ 
+    2  ZMIN_$BLOCK, ZMAX_$BLOCK, ZFOCUS_$BLOCK (3F15.0):
+ 
+         ZMIN_$BLOCK:  Z of front of CM (not including airgap) (cm). 
+         ZMAX_$BLOCK:  Z of back of CM (cm).
+       ZFOCUS_$BLOCK:  Z at which the inner sides of the opening(s)
+                       in the block are focused (cm).
+ 
+          Note restrictions: ZMAX < ZFOCUS or ZFOCUS < ZMIN, ie not in between
+                             ZMIN - ZFOCUS >= 0.01 if ZFOCUS < ZMIN
+ 
+    3  ISUB_MAX_$BLOCK (I5): Number of subregions.  Each opening is made
+                             up of one or more subregions.
+ 
+    Repeat 4 - 4a for J = 1, ISUB_MAX_$BLOCK
+ 
+    4  NSUB_$BLOCK(J)   (I5)
+ 
+         NSUB_$BLOCK(J):  number of points defining subregion J
+ 
+    Repeat 4a for I = 1, NSUB_$BLOCK(J)
+ 
+   4a  XHI_POINT_$BLOCK(I,J),YHI_POINT_$BLOCK(I,J) (2F15.0):
+ 
+       XHI_POINT_$BLOCK(I,J): X coordinate of point I at upper surface (cm)
+       YHI_POINT_$BLOCK(I,J): Y coordinate of point I at upper surface (cm)
+         
+       NOTE:  Input the points clockwise or counter-clockwise around
+              the perimeter of each subregion.  A subregion may not
+              have an interior angle > 180 degrees.
+ 
+    5  XPMAX_$BLOCK,YPMAX_$BLOCK,XNMAX_$BLOCK,YNMAX_$BLOCK (4F15.0):
+ 
+         XPMAX_$BLOCK: X coordinate of block edge in +X direction (cm)
+         YPMAX_$BLOCK: Y coordinate of block edge in +Y direction (cm)
+         XNMAX_$BLOCK: X coordinate of block edge in -X direction (cm)
+         YNMAX_$BLOCK: Y coordinate of block edge in -Y direction (cm)
+ 
+    6   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) for air
+                            in gap at top.
+ 
+          ECUT, PCUT:   Cutoff energies for electrons and photons.
+           DOSE_ZONE:   Dose scoring zone of air.
+      IREGION_TO_BIT:   mapping of region to bit for LATCH
+ 
+    7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in openings
+                                and beyond edges of the block 
+ 
+          ECUT, PCUT:   Cutoff energies for electrons and photons in
+                        openings and beyond edges of block
+           DOSE_ZONE:   Dose scoring zone of openings and region beyond
+                        edges of block
+      IREGION_TO_BIT:   mapping of region comprising openings and region
+                        beyond block edges to bit for LATCH
+ 
+    8   MED_IN (24A1):  Medium in openings and beyond block edges,
+                        used to set MED_INDEX.
+ 
+    9   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5) in block material
+  
+          ECUT, PCUT:   Cutoff energies for electrons and photons
+                        in material surrounding openings 
+           DOSE_ZONE:   Dose scoring zone of material surrounding
+                        openings.
+      IREGION_TO_BIT:   mapping of region surrounding openings 
+                        to bit for LATCH
+ 
+    10  MED_IN (24A1):  Medium of block, 
+                        used to set MED_INDEX.
+    Example
+    *******
+   The following input file describes a BLOCK of 4cm thick.
+   The block begins at Z=0.0 cm and is made of MILDSTEEL. The air-filled
+   opening(s) focus at Z=-10cm. Its positive X boundary begins at XPMAX=4.2cm,
+   positive Y boundary at YPMAX=4.8cm, and its negative X boundary at 
+   XNMAX=-5.0cm, negative Y boundary at YNMAX=-3.0cm.
+   There are 2 sub-regions describing one opening shaped like an arrow.
+   In the first sub-region, there are 5 defining points; in the second one,
+   there are 4 defining points. The defining points should be input
+   clockwisely or counter-clockwisely. Each point is input as x, y in
+   a line. 
+   In this particular input file, there is no gap at the top of the
+   CM, so Z_min_CM will be automatically reset to -0.01cm to
+   provide the required gap.
+ 
+   Dose in the air regions will be scored in dose zone 1.
+   Dose in the block material will be scored in zone 2.
+   ECUT and PCUT in all regions are set to 0.521MeV and 
+   0.01 MeV respectively.
+ 
+   ***********************************************
+   10.0,           RMAX
+   arrow shaped cutoff
+   0.0, 4.0, -10.0,     ZMIN, ZMAX, ZFOCUS
+   2,             2 sub-regions
+   5,       5 defining points in sub 1
+   0., 3.,        x,y of point 1 in sub 1
+   -2., 1.,       x,y of point 2 in sub 1
+   -1., 0.,       x,y of point 3 in sub 1
+   1., 0.,        x,y of point 4 in sub 1
+   2., 1.,        x,y of point 5 in sub 1      end of sub 1
+   4,       4 defining points in sub 2
+   -1., 0.,       x,y of point 1 in sub 2
+   1., 0.,        x,y of point 2 in sub 2
+   1., -2.,       x,y of point 3 in sub 2
+   -1., -2.,      x,y of point 4 in sub 2.    end of sub 2.
+   4.2, 4.8, -5.0, -3.0,      xpmax,ypmax,xnmax,ynmax
+   0.0, 0.0, 1, 0,     ecut, pcut, dose-zone, ir-to-bit for air
+   0.0, 0.0, 1, 0,     ecut, pcut, dose-zone, ir-to-bit for openings 
+   AIR521ICRU
+   0.0, 0.0, 2, 0,     ecut, pcut, dose-zone, ir-to-bit for materail
+   MILDSTEEL521
+   ***********************************************
+\end{verbatim}

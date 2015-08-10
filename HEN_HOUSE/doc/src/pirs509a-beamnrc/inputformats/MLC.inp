@@ -1,0 +1,127 @@
+\begin{verbatim}
+   CARDS CM_$MLC
+   **************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$MLC) (F10.0):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$MLC (60A1):  Title of CM.
+ 
+    2  IDMLFC_$MLC (I5) = 0 for leaves parallel to Y direction 
+                        = 1 for leaves parallel to X direction
+   
+    3  ZMIN_$MLC (F15.0): Z of top of collimator (excluding airgap)
+          
+    4  ZTHICK_$MLC (F15.0): Thickness of the leaves (cm)
+ 
+    5  NUM_LEAF_$MLC, TWIDTH_$MLC (I5,F15.0)
+           
+            NUM_LEAF_$MLC: Number of leaves
+            TWIDTH_$MLC:   Total width of leaves in X (IDMLFC_$MLC=0)
+                           or Y (IDMLFC_$MLC=1) direction (cm)
+ 
+         Note: width of each leaf = TWIDTH_$MLC/NUM_LEAF_$MLC 
+       
+    6  ZFOCUS_$MLC(1) (F15.0): Focal point on Z-axis of leaf sides (ie.
+                               imaginary lines drawn extending the slopes of
+                               the leaf sides will all intersect the Z-axis
+                               at this point)
+               
+         Note restriction: ZFOCUS_$MLC(1) < ZMIN_$MLC or
+                                          > ZMIN_$MLC + ZTHICK_$MLC 
+ 
+    7  ZFOCUS_$MLC(2) (F15.0): Focal point on Z-axis of leaf ends (ie.  
+                               imaginary lines drawn extending the slopes of
+                               the leaf ends will all intersect the Z-axis
+                               at this point)
+ 
+         Note restriction: ZFOCUS_$MLC(1) < ZMIN_$MLC or
+                                          > ZMIN_$MLC + ZTHICK_$MLC
+   
+       Repeat 8 until coordinates of all leaves are defined once.  Leaves
+       are numbered 1,2,...NUM_LEAF_$MLC, where numbering goes from left
+       to right in the X-Y plane if IDMLFC_$MLC=0 and from top to bottom
+       in the X-Y plane if IDMLFC_$MLC=1.
+ 
+    8  NEG_$MLC, POS_$MLC, NUM_$MLC (2F15.0,I5) 
+ 
+         NEG_$MLC:    Min. Y (IDMLFC_$MLC=0) or X (IDMLFC_$MLC=1) 
+                      of front opening in leaf I (ie the opening at 
+                      ZMIN_$MLC)
+         POS_$MLC:    Max. Y (IDMLFC_$MLC=0) or X (IDMLFC_$MLC=1) 
+                      of front opening in leaf I
+         NUM_$MLC:    Apply NEG_$MLC(I) and POS_$MLC(I) to leaves
+                      I,...,I+NUM_$MLC-1.  Defaults to 1 if set <= 0.  
+                      Defaults to NUM_LEAF_$MLC-I+1 if set >
+                      NUM_LEAF_$MLC-I+1    
+ 
+     9  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 1 
+                                           (inside collimator) (2F15.0,I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+    10  MED_IN (24A1):  Medium of in local region 1 (inside collimator)
+                       used to set MED_INDEX.
+   
+    11  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in local region 2 
+                                           (collimator leaves) (2F15.0,I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+    12  MED_IN (24A1):  Medium of local region 2 (collimator leaves), 
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf collimator design based
+    loosely on that used with the MM50 Racetrack Microtron accelerator.  
+    The collimator starts at Z=65 cm and has 64 tungsten leaves opening 
+    in the X direction.  The leaves are each 0.8125cm wide and 7.5cm 
+    thick.  The Z focus of the leaf sides is at Z=-1000 cm, resulting 
+    in sides that are essentially straight up and down.  The Z focus 
+    of the leaf ends is at Z=0, which is the position of the beam source.  
+    In this example, leaf opening coordinates are chosen to create a 
+    irregular off-center collimator opening. 
+     
+    Electrons and photons in both the collimator and the opening regions 
+    will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+    PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+    in dose zone 2, and dose deposited in the opening will be stored
+    in dose zone 1.
+ 
+    26.0,           RMAX_CM
+    Collimator based on MLC for MM50 accelerator
+    1,              Leaves open in X direction
+    65.0,           ZMIN
+    7.5,            ZTHICK  
+    64, 52.0,       NUM_LEAF, TWIDTH  
+    -1000.0,        ZFOCUS(1)
+    0.0             ZFOCUS(2)
+    0.0,0.0,15,     15 closed leaves
+    0.0,2.0,5,      5 leaves with opening 0.0 - 2.0
+    0.5,3.0,2       2 leaves with 0.5 - 3.0
+    1.0,4.0,3       3 leaves with 1.0 - 4.0
+    2.0,7.0,10,     10 leaves with opening 2.0 - 7.0
+    1.5,6.0
+    1.0,6.0
+    0.0,5.0,3,      3 leaves with 0.0 - 5.0
+    -1.0,4.0,5,     5 leaves with -1.0 - 4.0
+    -2.0,4.0,3,     3 leaves with -2.0 - 4.0
+    -4.0,4.0,5,     5 leaves with -4.0 - 4.0
+    -5.0,3.0
+    -6.0,1.0
+    -8.0,0.0
+    -10.0,-2.0,3,   3 leaves with -10.0 - -2.0  
+    -12.0,-2.0,2,   2 leaves with -12.0 - -2.0
+    -15.0,-3.0,2,   2 leaves with -15.0 - -3.0
+    -15.0,-15.0  
+    0.5210,  0.010,  1,  0
+    AIR700ICRU  
+    0.5210,  0.010,  2,  0
+    W700ICRU 
+\end{verbatim}
