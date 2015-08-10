@@ -44,7 +44,7 @@ int main( int argc, char* argv[] )
   inputRZ->show();
 
   if ( argc > 1 )
-  inputRZ->SetInpfileName( argv[1]);
+      inputRZ->SetInpfileName( argv[1]);
 
   int ret = app.exec();
   return ret;
