@@ -413,18 +413,19 @@ v_int inputRZImpl::assign_medium_number(v_string med_list, v_string med_entry)
     v_int num;
     std::vector<string>::iterator iter1( med_entry.begin() );
     while ( iter1 != med_entry.end() ) {       // loops trough medium entries
-             std::vector<string>::iterator iter2( med_list.begin() );
-	int i = 0;
-	int index = 0;
-	while ( iter2 != med_list.end()  ) { // loops through list
-	      if ( *iter1 == *iter2 ) {      // match found
-	          index = i;
-		  break;
-	      }
-              i++; iter2++;
+        std::vector<string>::iterator iter2( med_list.begin() );
+        int i = 0;
+        int index = 0;
+        while ( iter2 != med_list.end()  ) { // loops through list
+          if ( *iter1 == *iter2 ) {      // match found
+             index = i;// C-indexing since 0th element set to vacuum
+             //index = i+1;// Fortran indexing starts at 1!
+             break;
+          }
+        i++; iter2++;
         }
-	num.push_back( index );
-	iter1++;
+        num.push_back( index );
+        iter1++;
     }
 
     return num;
