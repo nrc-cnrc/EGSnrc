@@ -208,6 +208,7 @@ MMCInputs* inputRZImpl::GetMC()
 
 MGEOInputs* inputRZImpl::GetGEO()
 {
+
  MGEOInputs* EGSgeo = new MGEOInputs;
 
  QRadioButton *rb[3] ;
@@ -220,7 +221,6 @@ MGEOInputs* inputRZImpl::GetGEO()
  if ( EGSgeo->inp_meth.toLower() == "cavity description" )
      EGSgeo->inp_meth = "cavity information";
  EGSgeo->zface          = ZFaceEdit->text();
- EGSgeo->description_by = mediaComboBox->currentText();
 
  if ( EGSgeo->inp_meth.toLower() == "groups" ){
     get_col_content( 0, geometryTable, EGSgeo->nslab );
@@ -233,42 +233,64 @@ MGEOInputs* inputRZImpl::GetGEO()
  get_col_content( 0, cylTable, EGSgeo->radii );
 
  v_string medium;
-
+ // Use the current value, not the new value in the combo box
+ EGSgeo->description_by = current_description_by;
  get_col_explicit( 0, mediaTable, medium, string("NO MEDIUM") );
- get_col_explicit( 1, mediaTable, EGSgeo->start_reg_slab,0 );
- get_col_explicit( 2, mediaTable, EGSgeo->stop_reg_slab,0 );
+//  medium.insert( medium.begin(), "VACUUM");//<=== zero element in media list
+ if ( current_description_by.toLower() == "regions" ) {
+    get_col_explicit( 1, mediaTable, EGSgeo->start_reg,0 );
+    get_col_explicit( 2, mediaTable, EGSgeo->stop_reg,0 );
+ }
+ else {
+    get_col_explicit( 1, mediaTable, EGSgeo->start_Z,0 );
+    get_col_explicit( 2, mediaTable, EGSgeo->stop_Z,0 );
+    get_col_explicit( 3, mediaTable, EGSgeo->start_ring,0 );
+    get_col_explicit( 4, mediaTable, EGSgeo->stop_ring,0 );
 
- if ( EGSgeo->description_by.toLower() == "planes" ) {
-   get_col_explicit( 3, mediaTable, EGSgeo->start_ring,0 );
-   get_col_explicit( 4, mediaTable, EGSgeo->stop_ring,0 );
-
-   if ( EGSgeo->start_ring.size() != EGSgeo->stop_ring.size() )
-        EGSgeo->errors += "Wrong region assignment, start-stop ring region mismatch.<br>";
-        if (  EGSgeo->start_reg_slab.size() != EGSgeo->start_ring.size() )
-         EGSgeo->errors += "Same number of inputs for planes and rings needed. <br>";
  }
 
  //rearrange media and regions and eliminate NO MEDIUM regions and ZERO regions
  rearrange_media( EGSgeo, &medium );
-
-
- if (EGSgeo->start_reg_slab.size() != EGSgeo->stop_reg_slab.size() )
-     EGSgeo->errors += "Wrong region assignment, start-stop region mismatch. <br>";
-
- if (EGSgeo->start_reg_slab.size() > EGSgeo->mednum.size() )
-     EGSgeo->errors += "Wrong medium-region assignment. <br>";
+ if ( current_description_by.toLower() == "regions" ) {
+    //resize to avoid media without assigned regions, i.e., in sprrznrc
+    if ( EGSgeo->mednum.size() > EGSgeo->start_reg.size() )
+       EGSgeo->mednum.resize( EGSgeo->start_reg.size(), 0 );
+    if (EGSgeo->start_reg.size() != EGSgeo->stop_reg.size() )
+        EGSgeo->errors += "Wrong region assignment, start-stop region mismatch. <br>";
+    if (EGSgeo->start_reg.size() != EGSgeo->mednum.size() )
+       EGSgeo->errors += "Wrong medium-region assignment. <br> # of regions = "     +
+                         QString::number(EGSgeo->start_reg.size(),10) + "<br>" +
+                         QString("mednum size = ")+ QString::number(EGSgeo->mednum.size(),10) + "<br>";
+ }
+ else{
+    //resize to avoid media without assigned regions, i.e., in sprrznrc
+    if ( EGSgeo->mednum.size() > EGSgeo->start_Z.size() )
+       EGSgeo->mednum.resize( EGSgeo->start_Z.size(), 0 );
+    if ( EGSgeo->start_Z.size() != EGSgeo->stop_Z.size() )
+        EGSgeo->errors += "Wrong region assignment, start-stop ring region mismatch.<br>";
+    if ( EGSgeo->start_ring.size() != EGSgeo->stop_ring.size() )
+        EGSgeo->errors += "Wrong region assignment, start-stop ring region mismatch.<br>";
+    if (  EGSgeo->start_Z.size() != EGSgeo->start_ring.size() )
+        EGSgeo->errors += "Same number of inputs for planes and rings needed. <br>";
+    if (EGSgeo->start_Z.size() > EGSgeo->mednum.size() ||
+        EGSgeo->start_ring.size() > EGSgeo->mednum.size())
+       EGSgeo->errors += "Wrong medium-region assignment. <br> # of planes = "     +
+                         QString::number(EGSgeo->start_Z.size(),10) + "<br>" +
+                         QString("# of rings = ")+ QString::number(EGSgeo->start_ring.size(),10) + "<br>"+
+                         QString("mednum size = ")+ QString::number(EGSgeo->mednum.size(),10) + "<br>";
+ }
 
  if ( ! EGSgeo->errors.isEmpty() )
         EGSgeo->errors = "***  Error in GEOMETRY *** <br>" + EGSgeo->errors;
 
- //resize to avoid media without assigned regions, i.e., in sprrznrc
- if ( EGSgeo->mednum.size() > EGSgeo->start_reg_slab.size() )
-      EGSgeo->mednum.resize( EGSgeo->start_reg_slab.size(), 0 );
+ EGSgeo->mapRegions();
+ // Time to update this
+ EGSgeo->description_by = mediaComboBox->currentText();
+ current_description_by = EGSgeo->description_by;
 
  return EGSgeo;
 
 }
-
 
 //!  Obtains media list and sets medium number for regions or planes-cylinders
 /*!
@@ -288,51 +310,60 @@ v_string medium;
 //-----------------------------------------
 //        create media list
 //-----------------------------------------
+bool has_vacuum = false;
 for ( uint k = 0; k < tmpMed.size() ; k++){
   if ( tmpMed[k] != "NO MEDIUM")
        medium.push_back( tmpMed[k] );
+  if ( tmpMed[k] == "VACUUM") has_vacuum = true;
+  if ( tmpMed[k] == "vacuum") has_vacuum = true;
 }
+if (!has_vacuum) medium.insert( medium.begin(), "VACUUM");//<=== zero element in media list
 //remove duplicates
-geo->media  = strip_repetions( medium );
+geo->media  = strip_repetitions( medium );
 //---------------------------------------
 
-v_int tmpStart    = geo->start_reg_slab;
-v_int tmpStop     = geo->stop_reg_slab;
-v_int tmpStartCyl = geo->start_ring;
-v_int tmpStopCyl  = geo->stop_ring;
+v_int tmpStart, tmpStop, tmpStartCyl, tmpStopCyl;
+if ( current_description_by.toLower() == "regions" ) {
+   tmpStart = geo->start_reg; tmpStop = geo->stop_reg;
+   geo->start_reg.clear(); geo->stop_reg.clear();
+}
+else{
+   tmpStart = geo->start_Z; tmpStop = geo->stop_Z;
+   tmpStartCyl = geo->start_ring; tmpStopCyl = geo->stop_ring;
+   geo->start_Z.clear(); geo->stop_Z.clear();
+   geo->start_ring.clear(); geo->stop_ring.clear();
+}
 
 //-----------------------------------------
 // get map of regions and their medium
 //-----------------------------------------
 med->clear();
-geo->start_reg_slab.clear();
-geo->stop_reg_slab.clear();
-geo->start_ring.clear();
-geo->stop_ring.clear();
 
 for ( uint i = 0; i < tmpMed.size() ; i++){
-  if ( tmpMed[i] != "NO MEDIUM"){ //actual medium
-     if ( tmpStart[i] != 0 && tmpStop[i] != 0 ){ // non-zero start and stop reg/planes
-       if ( geo->description_by.toLower() != "planes" ) { // description by regions
+  if ( tmpMed[i] != "NO MEDIUM")
           med->push_back( tmpMed[i] );
-          geo->start_reg_slab.push_back( tmpStart[i] );
-          geo->stop_reg_slab.push_back( tmpStop[i] );
+}
+for ( uint i = 0; i < tmpStart.size() ; i++){
+     if ( tmpStart[i] != 0 && tmpStop[i] != 0 ){ // non-zero start and stop reg/planes
+       //if ( geo->description_by.toLower() == "regions" ) { // description by regions
+       if ( current_description_by.toLower() == "regions" ) { // description by regions
+          geo->start_reg.push_back( tmpStart[i] );
+          geo->stop_reg.push_back( tmpStop[i] );
        }
-       else if ( geo->description_by.toLower() == "planes" ) {
+       else{
         if ( tmpStartCyl[i] != 0 && tmpStopCyl[i] != 0 ){// non-zero start and stop cylinders
-             med->push_back( tmpMed[i] );
-             geo->start_reg_slab.push_back( tmpStart[i] );
-             geo->stop_reg_slab.push_back( tmpStop[i] );
+             geo->start_Z.push_back( tmpStart[i] );
+             geo->stop_Z.push_back( tmpStop[i] );
              geo->start_ring.push_back( tmpStartCyl[i] );
              geo->stop_ring.push_back( tmpStopCyl[i] );
         }
        }
      }
-  }
 }
-//-----------------------------------------
 
+//-----------------------------------------
 //get corresponding media numbers
+//-----------------------------------------
 geo->mednum = assign_medium_number( geo->media, *med );
 
 }
@@ -714,12 +745,6 @@ void inputRZImpl::update_caption( const QString& str )
 
 void inputRZImpl::save()
 {
-//EGSdir = GetUserCodeDir( usercodename );
-//#ifdef WIN32
-//#else
-// Saves only in $HOME/egsnrc/usercodename
-//EGSdir = GetUserCodeDir( usercodename );
-//#endif
 
     QFile f( EGSdir + EGSfileName );
     if ( !f.open( QIODevice::WriteOnly ) ) {
