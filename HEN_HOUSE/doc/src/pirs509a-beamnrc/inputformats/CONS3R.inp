@@ -1,0 +1,71 @@
+\begin{verbatim}
+   CARDS CM_$CONS3R (CONS3R: Rev 1.10)
+   **************
+  
+    -1 Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$CONS3R) (F10.0):  Outer radial boundary of CM (cm).
+   
+    1  TITLE_$CONS3R (60A1):  Title of CM.
+   
+    2  ZMIN_$CONS3R (F15.0):  Dist from front of cones to 
+                              reference plane (Z=0).
+          
+    3  ZTHICK_$CONS3R (F15.0): The thickness of cones (excludes front air).
+ 
+    4  NUM_NODE_$CONS3R (I5):  The # of points to be used <$NPOINT_CONS3R.
+ 
+    Repeat 5 for I=1,NUM_NODE_$CONS3R
+  
+    5  ZCORNER_$CONS3R(I), RCORNER_$CONS3R(I) (2F15.0):
+         Positions (Z, R) for node I.  First & last must match 
+         ZMIN_$CONS3R and ZMIN_$CONS3R+ZTHICK_$CONS3R.  Note also the
+         restriction Z(I+1) >= Z(I).
+ 
+    Repeat 6, 7 for inner (ie inside cons3r), then outer region
+ 
+    6  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, IREJCTIN  (2F15.0,3I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   If non-zero, dose in this zone is scored in this
+                       dose zone
+          IREGION_TO_BIT:   region to LATCH bit correspondence for particles
+                       interacting in this region
+          IREJCTIN:    If IREJCT_GLOBAL is on, then by setting IREJCT=-1
+                       here, range rejection is turned off in this region
+                       If left blank or zero, the global value is used.
+   
+    7  MED_IN (24A1):  Medium of region 
+                       used to set MED_INDEX.
+   
+   
+    Example
+    *******
+ 
+   The following input example describes a 1cm thick flat-top cone, having 
+   a radius at the top of 0.8cm and a radius at the bottom of 1.2cm 
+   sitting on a 0.3cm thick cylinder of radius 1.5cm which, in turn,
+   is sitting atop a flat-top cone of thickness 1.0cm with top radius
+   0.5cm and bottom radius=0.8cm.  The two cones and cylinder are
+   made of H2O--note that all of these structures MUST be of the same 
+   medium--and they are surrounded by AIR.  Dose in the surrounding
+   AIR is stored in dose zone 1, and dose in the cones/cylinder 
+   structure is stored in zone 2.
+ 
+   5.0 
+   example cons3r
+   0.0
+   2.3 
+   6
+   0.0, 0.8
+   1.0, 1.2
+   1.0, 1.5
+   1.3, 1.5
+   1.3, 0.5
+   2.3, 0.8
+   0.521, 0.01, 2, 0, 0
+   H2O 
+   0.521, 0.01, 1, 0 ,0 
+   AIR
+   
+\end{verbatim}

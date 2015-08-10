@@ -1,0 +1,57 @@
+\begin{verbatim}
+   Next record           DOSE COMPONENTS CALCULATION INPUT
+   ***********           *********************************
+      ITDOSE_ON 
+          ITDOSE_ON  = 0 (DEFAULT) only total dose is calculated 
+                     = 1 total dose and dose components may be calculated
+ 
+      There are 2 classes of components. First is selected as dose from
+      particles or descendents of particular charge as they cross a
+      specified boundary.  Second is based on bit selections in the
+      variable LATCH, either inclusive or exclusive sets - i.e. depends
+      on where particle has been or interacted.
+ 
+   Next record (if ITDOSE_ON=1)
+   ***********
+      ICM_CONTAM, IQ_CONTAM (2I5)
+           All particles of type IQ_CONTAM (0=photons, 1=charged
+           particles) are identified as contaminants when they enter 
+           the front of CM number ICM_CONTAM and their dose is scored as
+           contaminant dose in all dose zones.
+           If ICM_CONTAM = 0, no contaminant dose is scored.
+           LATCH_OPTION = 1 is not allowed with ICM_CONTAM non-zero
+ 
+   Next record (if ITDOSE_ON=1)
+   ***********
+      LNEXC (I5)
+            LNEXC: # of dose components scored which exclude dose from
+                   particles with certain LATCH bits set - i.e. which have
+                   not been in certain regions.
+                   LNEXC = 0 is allowed. LNEXC <= $MAXIT - 3
+  
+   Next records (if LNEXC > 0)
+   ************
+      (L_N_EXC(I,J), J=1, 31 ) (31I5) (repeat LNEXC times, line by line)
+            L_N_EXC(I,J): Bit #s in LATCH for dose component I
+                  (will exclude dose from component I if these bits set)
+ 
+   Next record (if ITDOSE_ON=1)
+   ***********
+      LNINC (I5)
+            LNINC: # of dose components scored for particles
+                   from specified regions (with designated bit settings
+                   in LATCH).  LNINC <= $MAXIT - LNEXC - 3
+ 
+   Next records (if LNINC > 0)
+   ************
+      (L_N_INC(I,J), J=1, 31 ) (31I5) (repeat LNINC times, line by line)
+            L_N_INC(I,J): Bit #s in LATCH for dose component I.
+                          These are in two groups/line, separated by a zero.
+                          Of the first group of bits, at least one must
+                          be set to be in this dose component.
+                          The second group need not be present, but if
+                          it is, none of these bits can be set to be in
+                          this dose component.
+ 
+ ---------------------------------------------------------------------------  
+\end{verbatim}

@@ -1,0 +1,92 @@
+\begin{verbatim}
+   CARDS CM_$MIRROR 
+   **************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$MIRROR) (F10.0): Half-width of CM boundary (cm).
+   
+    1  TITLE_$MIRROR (60A1): Title of CM.
+   
+    2  ZMIN_$MIRROR,ZTHICK_$MIRROR (2F15.0): 
+ 
+            ZMIN_$MIRROR:   Distance from front of CM(excluding air gap) to 
+                            ref plane(Z=0).
+            ZTHICK_$MIRROR: Z-direction span.
+                    
+    3  XFMIN_$MIRROR, XBMIN_$MIRROR (2F15.0): 
+ 
+            XFMIN_$MIRROR:  X value at which front face of mirror
+                            intersects ZMIN_$MIRROR.
+            XBMIN_$MIRROR:  X value at which front face of mirror
+                            intersects ZMIN_$MIRROR + ZTHICK_$MIRROR.
+       Note restriction:
+     5 degrees<ATAN(ZTHICK_$MIRROR/(XFMIN_$MIRROR-XBMIN_$MIRROR)<90 degrees
+ 
+    4  N_$MIRROR, (I10):    Number of layers         
+ 
+    Repeat 5 for I=1,N_$MIRROR
+            
+    5  DTHICK_$MIRROR(I) (F15.0): Thickness of layer I in mirror, 
+                                  in cm.  Layer 1 is the front face
+                                  of the mirror.
+ 
+    Repeat 6 and 7 for I=1,N_$MIRROR.
+ 
+    6  ECUT, PCUT,DOSE_ZONE, IREGION_TO_BIT (2F15.0, 2I5): for each layer 
+     
+           ECUT, PCUT:  Cutoff energies for electrons and photons in
+                        layer I.
+           DOSE_ZONE:   Dose scoring flag in layer I.
+      IREGION_TO_BIT:   bit to associate local region of layer I with
+   
+    7  MED_IN (24A1):  Medium of layer I, used to set MED_INDEX.
+   
+    8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region behind mirror 
+                                                        (2F15.0,2I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+     IREGION_TO_BIT:   bit to associate local region with
+ 
+    9  MED_IN (24A1):  Medium of local region behind the mirror,
+                       used to set MED_INDEX.
+   
+    10  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in region in front of
+                                              mirror(2F15.0,2I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to score dose deposited in it
+     IREGION_TO_BIT:   bit to associate local region with
+   
+    11  MED_IN (24A1): Medium of region in front of mirror,
+                       used to set MED_INDEX.
+   
+   
+    Example
+    *******
+ 
+    The following describes a mirror composed of 1 AL slab.
+    The front face of the mirror intersects the front of the 
+    CM (excluding any airgap) at X=3cm and the back of the CM at X=-3cm.
+    The mirror starts at 19.7cm and is 2cm in the z-direction.
+    The thickness of the AL slab is 0.00508cm.
+    Note that thickness is measured perpendicular to the 
+    face of the mirror.  AIR is both in front of and behind
+    the AL mirror.  No dose is scored in this example.
+   
+    10.00   RMAX_CM
+    MIRROR : z=19.5074 downstream, original, dif overlap
+    19.70, 2.0
+    3.0, -3.0
+    1
+    0.00508
+    0.0, 0.0, 0, 0
+    AL
+    0.0, 0.0, 0, 0
+    AIR
+    0.0, 0.0, 0, 0
+    AIR
+ 
+   
+\end{verbatim}

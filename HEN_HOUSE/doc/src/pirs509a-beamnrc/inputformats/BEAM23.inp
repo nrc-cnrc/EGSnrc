@@ -1,0 +1,28 @@
+\begin{verbatim}
+   ISOURC = 19   PARALLEL ELLIPTICAL BEAM FROM FRONT GAUSSIAN IN X AND Y 
+   ***********  
+   
+      IQIN,ISOURC,RBEAM,UINC,VINC,WINC,sigma_src19,RBEAMY
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  = 19 
+              RBEAM   sigma of the 2-D gaussian distribution (RBEAM > 0) 
+                      in the X-direction in cm
+                        or
+                      -FWHM of 2-D gaussian distribution (RBEAM < 0) in 
+                      the X-direction in cm
+                      Note: sigma of gaussian distribution is limited to
+                            <RMAX_CM(1) for circular CM 1 and
+                            <SQRT(2)*RMAX_CM(1) for square CM 1
+              UINC    incident x-axis direction cosine
+              VINC    incident y-axis direction cosine
+              WINC    incident z-axis direction cosine
+                      Note: (UINC,VINC,WINC) get automatically normalized
+                            defaults to (0.0,0.0,1.0)
+       sigma_src19    mean angular spread of particles about Z axis
+                      in degrees (none if set <=0).  Overrides incident
+                      direction cosines if set > 0, so that beam is assumed
+                      to be centred on Z axis.
+            RBEAMY    same as RBEAM but for Y-direction.  If set to 0,
+                      then RBEAMY=RBEAM for a circular beam.
+ ------------------------------------------------------------------------
+\end{verbatim}

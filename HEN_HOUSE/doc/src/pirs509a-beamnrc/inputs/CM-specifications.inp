@@ -1,0 +1,648 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc BEAMnrc manual
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Authors:         Dave Rogers, 1995
+%                   George Ding, 1995
+%                   Charlie Ma, 1995
+%                   Bruce Faddegon, 1995
+%
+%
+%  Contributors:    Blake Walters
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\index{Appendix!A: Specifications for \\ Component Modules}
+\Alph{section}
+\setcounter{section}{1}
+
+\begin{center}
+\begin{LARGE}
+Appendix A:\\
+{\sffamily \bfseries \Huge Specifications for Component Modules for BEAMnrc
+ \vspace{9mm}\\}
+~~~~\\
+\addcontentsline{toc}{section}{Appendix A: Specifications for Component Modules for BEAMnrc}
+\index{writing component modules}
+\index{component modules!writing}
+\end{LARGE}
+\begin{large}
+\setcounter{footnote}{0}
+D. W. O. Rogers, G.X. Ding, C.M. Ma and B.A. Faddegon\\
+Ionizing Radiation Standards\\
+National Research Council of Canada Ottawa\\
+~~~\\
+Printed: \today \\
+\end{large}
+\end{center}
+
+\begin{center}
+\begin{Large}
+{\bf Abstract}
+\end{Large}
+\end{center}
+This report is for BEAMnrc code developers and is not needed for those who
+just want to use the code. The report specifies what each component module
+must do, how it must
+do it, the tools available and the documentation to be followed.
+There is a separate report describing the QA to be done
+on a \verb+CM+ if it is modified\cite{WR95a}.  It is assumed that the
+reader is an experienced \verb+EGSnrc+ user.
+
+\newpage
+%\pagestyle{myheadings}
+\subsection{Overview}
+\label{appendixA}
+
+\htmladdnormallink{BEAMnrc}{http://www.physics.carleton.ca/~drogers/pubs/papers/Ro95.pdf)}
+is a general purpose code for doing Monte Carlo simulations of
+radiotherapy beams. One of its design features is that each part of the
+accelerator or source unit is considered to be a single component module
+which takes up an horizontal slab portion of the accelerator. These
+component modules are re-usable and are completely independent. They
+must communicate with the rest of the system in certain well specified
+ways. The purpose of this document is to list all the specifications of
+such a component module including  the documentation required for such a
+component module.  The quality assurance required for each
+\cm ~is described in an associated report by Walters and Rogers (QA for
+the BEAM System: Component Modules, Variance Reduction Options and Source
+Routines).
+
+
+Two \verb+MORTRAN+ source files make up each component module.  The
+\verb+MORTRAN+ macros specific to component module \verb+CMNAME+ are contained
+in \verb+CMNAME_macros.mortran+.  These macros are used by BEAMnrc proper and/or
+the EGS subroutines and/or the component module subroutines.  The set of
+subroutines specific to component module \verb+CMNAME+ are contained in
+\verb+CMNAME_cm.mortran+.
+
+\index{beam\_build}
+When you build an accelerator, {\tt beam\_build} ensures that within
+each \verb+CM+ the string \verb+$CMNAME+ is
+replaced by a user-supplied identifier everywhere it appears in the \verb+CMs+
+mortran source code.  The subroutine and macro names, \verb+COMMON+ name, and
+variable names specific to a given component module all either begin or end
+with \verb+$CMNAME+.  Every component module must have an unambiguous
+identifier.  This prevents duplication of any of these names when multiple
+component modules are used in a simulation. Using this convention, the same
+component module may appear many times in a BEAMnrc code.
+
+
+\noindent \verb+CMNAME_macros.mortran+\\
+\index{CMNAME\_macros.mortran}
+The file \verb+CMNAME_macros.mortran+ contains at least two \verb+MORTRAN+
+replacement macros used by the component module subroutines.  The macro
+\verb+COMIN/CM_$CMNAME/+ \index{COMIN/CM\_\$CMNAME macro}is the \verb+COMMON+ block replacement macro for
+component module \verb+CMNAME+.  The \verb+$CMNAME_CM_HOWNEAR+ \index{\$CMNAME\_CM\_HOWNEAR macro} macro is
+required by \verb+MORTRAN+ \verb+SUBROUTINE ELECTR+ when
+the \verb+HOWNEAR+ replacement macro of BEAMnrc proper is used.  This macro
+calculates the distance from the current location of the particle to the
+nearest boundary in the component module with identifier \verb+CMNAME+.  The
+macro is also usually used in subroutine \verb+HOWFAR_$CMNAME+ as well.
+Note that in most of the existing CMs, the \verb+$CMNAME_CM_HOWNEAR+
+macro is
+\index{HOWNEAR\_\$CMNAME subroutine}
+\index{\$CMNAME\_CM\_HOWNEAR macro}
+just a call to a {\tt HOWNEAR\_\$CMNAME} subroutine.  The subroutine is
+located in the file {\tt \$CMNAME\_cm.mortran} and performs the actual calculation of perpendicular distance to the nearest boundary.  The use of a
+subroutine {\tt HOWNEAR\_\$CMNAME} (with a call to it from
+the \verb+$CMNAME_CM_HOWNEAR+ macro) is recommended in EGSnrc because
+variables associated only with the calculation of {\tt HOWNEAR}
+need only be declared inside the subroutine.  Otherwise, these variables
+must be appended to the {\tt \$DEFINE-LOCAL-VARIABLES-ELECTR} macro
+in EGSnrc.
+
+\noindent \verb+CMNAME_cm.mortran+\\
+\index{CMNAME\_cm.mortran}
+The \verb+CMNAME_cm.mortran+ file contains the following subroutines written
+for each component module:
+ \begin{itemize}
+\item \verb+HOWFAR_$CMNAME+ \index{HOWFAR\_\$CMNAME subroutine}-- a standard
+EGSnrc \verb+SUBROUTINE HOWFAR+
+for a component module \verb+CMNAME+.  It is used during the
+simulation for defining the geometry via boundary checking and
+setting region-dependent parameters.
+\item {\tt HOWNEAR\_\$CMNAME} \index{HOWNEAR\_\$CMNAME subroutine}-- a
+subroutine for component module {\tt \$CMNAME} which calculates the
+perpendicular distance to the nearest boundary (ie not along the particle
+trajectory).  This is called from the macro {\tt \$CMNAME\_CM\_HOWNEAR}.
+See above for a more detailed description of the relationship between the
+{\tt HOWNEAR} subroutine and the {\tt HOWNEAR} macro.
+ \item \verb+WHERE_AM_I_$CMNAME+ \index{WHERE\_AM\_I\_\$CMNAME subroutine}-- used to
+ determine region of particle upon entry into component module \verb+CMNAME+.
+ \item
+ \verb+INPUT_$CMNAME+ \index{INPUT\_\$CMNAME subroutine}-- prompts for and digests input from the
+interactive user or the
+parameter-definition file (\ie~ \verb+file.egsinp+) for information related to
+component module \verb+CMNAME+.
+ \item \verb+ISUMRY_$CMNAME+ \index{ISUMRY\_\$CMNAME subroutine}-- writes summary of input for component module
+ \verb+CMNAME+ to listing.
+\end{itemize}
+
+
+\subsection{Writing Component Modules}
+
+Source for all \verb+CMs+ must be written in \verb+MORTRAN3+. See the \verb+EGS4+
+manual, SLAC265, for a specification of \verb+MORTRAN3+.
+
+Component module names are capitalized, from 1 to 8 characters long,
+and are unambiguous, for example, the component
+module SLABS is already in use and new component modules must not have this
+name.
+When writing component modules it is useful to adhere to the following
+established convention for code formats:
+\begin{itemize}
+\item \verb+MORTRAN3+ replacement macros specific to the component module are
+placed in\\ \verb+CMNAME_macros.mortran+ \index{CMNAME\_macros.mortran}where \verb+CMNAME+ is the name of the
+component module.
+
+\item Indent 3 spaces for all  \verb+MORTRAN3+ LOOPS, and
+\verb+FORTRAN+ \verb+DO+ and \verb+IF+ statements.
+
+\item Capitalize all \verb+MORTRAN3+ (this is essential)
+ and \verb+FORTRAN+ code. \
+
+\item Format for replacement macros should be as follows to allow the
+\verb+CMtoc+ utility to be used: \verb+REPLACE {text} WITH {<CR>+
+
+\item Incorporate extensive documentation at the start of each component module subroutine file, following the conventions established in
+\verb+SLABS_cm.mortran+.
+
+\end{itemize}
+
+\subsubsection{Tips}
+\begin{itemize}
+\item To prepare for writing a new component module or modifying an existing
+one, read the in-line documentation at the beginning of
+\verb+beamnrc.mortran+, \verb+beamnrc_user_macros.mortran+, and
+\verb+beamnrc_cm_macros.hdr+.
+\index{beamnrc.mortran} \index{beamnrc\_user\_macros.mortran}
+\index{beamnrc\_cm\_macros.hdr}
+ Next read all of \verb+SLABS_cm.mortran+ and\\
+\verb+SLABS_macros.mortran+.
+ Also look at the variables in \verb+COMMON/CMs/+,\index{COMMON/CMs/} which are of general use in
+writing component modules.
+
+\item Write \verb+SUBROUTINE HOWFAR_$CMNAME+ \index{HOWFAR\_\$CMNAME subroutine}in \verb+CMNAME_cm.mortran+ first,
+writing the\\
+\verb+COMIN/CM_$CMNAME+ \index{COMIN/CM\_\$CMNAME macro}macro, which defines all the variables
+needed, at the same time.  The outer boundary of the component module is
+checked in the \verb+HOWFAR+ subroutine in \verb+BEAMnrc+ proper, and need not be
+checked here.
+
+\item Next write the \verb+SUBROUTINE HOWNEAR_$CMNAME+ \index{HOWNEAR\_\$CMNAME
+subroutine} for component module
+\verb+CMNAME+\\
+ in \verb+CMNAME_cm.mortran+.  This macro returns
+the nearest distance to any boundary from the current particle position
+({\tt DNEAR} \index{DNEAR}).  Then, write a macro
+in {\tt \$CMNAME\_macros.mortran} called
+{\tt \$CMNAME\_CM\_HOWNEAR} \index{\$CMNAME\_CM\_HOWNEAR macro} which is
+just a call to subroutine {\tt HOWNEAR\_\$CMNAME}.  If your geometry is
+too complex to calculate the nearest perpendicular distance to a boundary,
+then just write the line:\\
+{\tt REPLACE \{\$CMNAME\_CM\_HOWNEAR(\#)\} WITH \{ \{P1\}=0; \}}\\
+in the {\tt \$CMNAME\_macros.mortran} file, and omit the subroutine
+{\tt HOWNEAR\_\$CMNAME} from \verb+CMNAME_cm.mortran+.
+
+\item Write the rest of the component module subroutines for \verb+CMNAME+ in
+the order:\\  \verb+WHERE_AM_I_$CMNAME+, \verb+SUBROUTINE INPUT_$CMNAME+ followed
+by \verb+ISUMRY_$CMNAME+.\index{WHERE\_AM\_I\_\$CMNAME subroutine}\index{INPUT\_\$CMNAME subroutine}\index{ISUMRY\_\$CMNAME subroutine}
+
+\item Use the macro and subroutine files from an established component module
+such as \verb+SLABS+ or \verb+CONESTAK+ as a
+template for the new component module.
+Much of the code can be used for the new component module with only minor
+modifications.  This does not generally apply to the \verb+SUBROUTINE HOWFAR_$CMNAME+, the most difficult of the component module subroutines to
+write.
+
+\item When the coding is completed, follow established quality assurance
+procedures closely.  The procedures contained in the QA \index{QA for CMs}document listed at the
+beginning of this report are the minimum.
+
+\item Your code will be read and modified by others, so ensure that it is
+clearly laid out, extensively documented, and conforms closely to the
+established conventions.
+
+\end{itemize}
+
+
+\subsection{Specifications--CMNAME\_macros.mortran}
+\index{CMNAME\_macros.mortran}
+
+For every component module, this file must be created.
+It contains at least the two macros specific to the particular \verb+CM+
+specified below,  but the user may write as many as convenient.
+
+Naming conventions in \verb+CMNAME_macros.mortran+:
+\begin{itemize}
+\item Use \verb+$CMNAME+ \index{\$CMNAME naming convention}throughout (\eg \verb+$SLABS+)
+except in those cases (usually output) where
+you want the original \verb+CM+ name to be used, usually to identify the type
+of \verb+CM+ for output purposes.
+
+\item The component module name (\verb+$CMNAME+) appears at the start of all
+\verb+MORTRAN3+ macro names (\eg \verb+$SLABS_CM_HOWNEAR+).
+
+
+\item The component module name (\verb+$CMNAME+) appends all local variable
+names (\eg \\ \verb+ICM_$SLABS+).
+
+\end{itemize}
+
+
+\subsubsection{COMIN/CM\_\$CMNAME macro}
+\index{COMIN/CM\_\$CMNAME macro}
+\label{CCCM}
+
+This macro defines the \verb+COMIN+ which contains
+the values associated with this specific \verb+CM+ and a few
+links to the rest of the simulation.
+Nothing is mandatory since only the writer of a given \verb+CM+ ever uses these
+variables.  Typically we find it useful to define at least the following
+variables:
+\begin{itemize}
+
+\item \verb+ICM_$CMNAME+: \index{ICM\_\$CMNAME}an index specifying which \verb+CM+ this is, starting from 1
+nearest the source. It is usually set in\\ \verb+SUBROUTINE INPUT_$CMNAME+.
+
+\item {\tt IR\_\$CMNAME}: \index{IR\_\$CMNAME} the local region number within
+the CM.  This is often used in the {\tt HOWFAR} and {\tt HOWNEAR}
+subroutines.
+
+\item \verb+IRSTART_$CMNAME+:\index{IRSTART\_\$CMNAME} first absolute region number for this \verb+CM+.
+It is usually set in\\
+\verb+SUBROUTINE INPUT_$CMNAME+ and equals \verb/IR_start_CM(ICM)/ from
+\verb+COMIN/CMs+.
+
+\item \verb+IREND_$CMNAME+: \index{IREND\_\$CMNAME}last absolute region number for this \verb+CM+.
+It is usually set in\\ \verb+SUBROUTINE INPUT_$CMNAME+
+and equals \verb/IR_start_CM(ICM+1)-1/ from
+\verb+COMIN/CMs+.
+
+\item \verb+TITLE_$CMNAME+: \index{TITLE\_\$CMNAME}title(60)  (character*1).
+It is usually set in\\ \verb+SUBROUTINE INPUT_$CMNAME+.
+\item \verb+N_GAP_$CMNAME+: \index{N\_GAP\_\$CMNAME}flag, = 0 if no air gap this \verb+CM+, = 1 if air gap at
+top of \verb+CM+. It is usually set in \verb+SUBROUTINE INPUT_$CMNAME+.
+\end{itemize}
+
+As well, all geometric parameters associated with this \verb+CM+ are defined
+in this \verb+COMIN+ and filled in \verb+SUBROUTINE INPUT_$CMNAME+ usually.  These
+MUST have the string \verb+_$CMNAME+ appended at the end of their name
+to ensure unique names if \verb+COMIN+s are defined more than once.
+
+\subsubsection{\$CMNAME\_CM\_HOWNEAR(\#) macro}
+\index{\$CMNAME\_CM\_HOWNEAR macro}
+\label{hownearmacsect}
+\index{HOWNEAR}
+
+This macro is usually just a call to {\tt SUBROUTINE HOWNEAR\_\$CMNAME}
+(See Section~\ref{hownearsubsect} below),
+which returns the perpendicular distance from the particle to the nearest
+boundary.  However, this macro is the only means by which the
+{\tt HOWNEAR} subroutine is called and is used in EGSnrc and
+sometimes in the \verb+SUBROUTINE HOWFAR_$CMNAME+.
+
+\subsection{Specifications--CMNAME\_cm.mortran}
+\index{CMNAME\_cm.mortran}
+
+Naming conventions in \verb+CMNAME_cm.mortran+:
+\index{\$CMNAME naming convention}
+\begin{itemize}
+\item Use \verb+$CMNAME+ throughout, that is, the name of the component module
+should not be directly written into the code.
+This permits a change of identifier simply by changing the \verb+.module+
+file.
+\item \verb+$CMNAME+ appends all subroutine names.
+\item \verb+$CMNAME+ appears at the start of all \verb+MORTRAN+ macro names.
+\item \verb+$CMNAME+ appends all local variable names.
+\end{itemize}
+
+\noindent General Requirements\\
+At the top of the source a set of comments on records starting
+with  \verb+"I>+ must define the geometry accurately and the inputs
+required from unit 5.  Use of the \verb+"I>+ comment ensures that
+we will be able to pick up the description of the input for the
+next edition of the users manual (\ie
+this is the primary documentation for input - make it clear).
+
+\subsubsection{SUBROUTINE INPUT\_\$CMNAME}
+\index{INPUT\_\$CMNAME subroutine}
+
+On being called, the following information is available to the routine
+(all via \verb+COMIN/CMs+ except \verb+NMED+ which is in
+\verb+COMIN/GEOM+):
+\begin{itemize}
+\index{ICM}
+\item \verb+ICM+: the number of this \verb+CM+, starting from 1 for smallest z.
+\index{IR\_start\_CM}
+\item \verb+IR_start_CM(ICM)+: the absolute region number this
+\verb+CM+ starts
+at.  It is set by previous CM's input routine and for the
+\verb+ICM+=1 case it is
+set in main (to 2 since region 1 is the exterior).
+\index{RMAX\_CM}
+\item \verb+RMAX_CM(ICM)+: outer boundary of this \verb+CM+, read in by main for
+each \verb+CM+. It is either the radius or 1/2 the side for a square boundary.
+\index{NMED}
+\item \verb+NMED+: The number of media {\em already} asked for in any given
+simulation.
+\index{MEDIA}
+\item \verb+MEDIA(24,I),I=1,NMED+: names of media already asked for.
+\end{itemize}
+
+
+The following variables  from \verb+COMIN/CMs+
+must all be set, not necessarily from user input (\ie ~the code may
+define them for the user).
+\begin{itemize}
+\index{RMAX\_CM\_FLAG}
+\item \verb+RMAX_CM_FLAG(ICM)+, flag for each CM which specifies what
+quantity \verb+RMAX_CM+ is for this CM (\verb+RMAX_CM+ is set by \verb+MAIN+).
+If flag = 0, not used; flag = 1,
+it is radius of outer boundary of \verb+CM+; flag = 2, it is distance
+to edge of square outer boundary of \verb+CM+ (1/2 of side).
+It is used in main \verb+SUBROUTINE HOWFAR+ to
+check the outer boundaries,
+after the individual \verb+HOWFAR_$CMNAME+ routine has done its work.
+One should avoid redundant calculations.
+\index{IERR\_GEOM}
+\item \verb+IERR_GEOM(ICM)+, flag which must be initialized to zero and set non-zero
+to flag input problem. Set $<100$, it specifies number of errors detected
+within \verb+CM+, $>$100 specifies that the \verb+CM+ overlaps the one above it.
+\verb+MAIN+ routine will exit before transport, but input is
+continued and checked.
+\index{Z\_min\_thick}
+\index{MED\_min\_thick}
+\item \verb+Z_min_thick(ICM,j)+ and \verb+MED_min_thick(ICM,j)+:
+minimum thickness in cm and
+medium number of up to j = 5 regions in  \verb+ICM+ for an electron going
+through \verb+CM+ \# \verb+ICM+.
+It is used for range rejection. It
+\index{range rejection}
+is set in each \verb+CM+ input routine. Region
+with j=1 is closest to the bottom plane. Often only one is needed or
+possible and this is given by the total thickness of the \verb+CM+ and medium
+is  air (\ie~ \verb+MEDIUM+ 1).
+\index{Z\_min\_CM}
+\item \verb/Z_min_CM(ICM+1)/ for next \verb+CM+ is set as the back of this
+\verb+CM+.
+\index{Z\_gap\_THICK}
+\item \verb+Z_gap_THICK(ICM)+,thickness of air gap at front of
+\verb+CM+,
+if it exists. If \\
+\verb+Z_gap_THICK(ICM)+= 0, then there is no air gap
+at the front of this \verb+CM+.
+\index{IR\_start\_CM}
+\item \verb/IR_start_CM(ICM+1)/: first absolute region for next
+\verb+CM+, set
+once the number of regions in the current \verb+CM+ is known.
+\end{itemize}
+
+We find it useful to set the variables in \verb+COMIN/CM_$CMNAME+
+listed in section~\ref{CCCM}.
+
+All variables required by the geometry for this \verb+CM+ (with \verb+_$CMNAME+
+at the end of the name) must be input and stored in
+\verb+COMIN/CM_$CMNAME+.
+
+
+The following \verb+EGSnrc+ variables must be set:
+\begin{itemize}
+\index{ECUT}
+\index{PCUT}
+\item \verb+ECUT(IRA) & PCUT(IRA)+ for all regions \verb+IRA+ in the \verb+CM+
+(including the air gap). If not set, the defaults are \verb+AE+ and \verb+AP+
+for the medium in each region.
+\index{MED}
+\item \verb+MED(IRA)+ the medium index for every region must be set
+\index{MEDIA}
+\item \verb+MEDIA(24,I)+ must be loaded for new \verb+MEDIA+ that are asked
+for.  Note the macro \verb+$MED_INPUT($CMNAME)+ handles this
+automatically. This macro requires \verb+NMED+ to contain the current number of
+different media that have already been read in and stored in \verb+MEDIA+.
+\index{RHOR}
+\item \verb+RHOR(IRA)+ the density in each region in $\mbox{g/cm}^3$. It
+need only be set by the user if it is different from the value included
+in the \verb+PEGS4+ data set.  After the call to \verb+HATCH+, it will
+include this latter value if left 0.0 prior to the HATCH call.
+\end{itemize}
+
+The following variables in \verb+COMIN/SCORE+ must be set.
+\begin{itemize}
+\index{DOSE\_ZONE}
+\item \verb+DOSE_ZONE(IRA)+ = 0 if no dose scored,
+otherwise =dose zone that dose from this region scored in. Note that one
+dose zone can include the dose deposited in many geometric regions.
+\item \verb+NDOSE_ZONE+, largest dose scoring zone number assigned so far.
+\index{IREGION\_to\_BIT}
+\item \verb+IREGION_to_BIT(IRA)+: mapping from absolute regions to
+\verb+LATCH+ bits
+\index{LATCH}
+(\ie ~which bit in variable \verb+LATCH+ is this region associated with).
+\index{MAX\_BIT}
+\item \verb+MAX_BIT+: current largest bit being set.
+\end{itemize}
+
+The following variable in \verb+COMIN/GEOM+ must be set:
+\index{NREG}
+\verb+NREG+: total number of regions in the geometry model up to and
+including this \verb+CM+
+(in \verb+COMIN/GEOM+). It should equal\\ \verb/IR_start_CM(ICM+1)-1/.
+
+
+\subsubsection{SUBROUTINE ISUMRY\_\$CMNAME}
+\index{ISUMRY\_\$CMNAME subroutine}
+This routine, which is called after \verb+HATCH+, must summarize all data
+related to the use of this \verb+CM+ in any given run.  Specifically, it
+must be possible to completely reconstruct the input file from
+the information in the output listing. Also the Revision No. of the CM must be
+echoed to the listing. Use already existing CMs as examples.
+
+All output MUST fit in 80 columns and allow \verb+FORTRAN+ carriage control to
+be used for printing purposes (\ie~ col 0 defines double spacing, new lines
+\etc).  However, for screen outputs it is better to just avoid these
+ \verb+FORTRAN+ controls.
+
+It must also increment  the mass of each scoring zone by the mass of
+each region in this \verb+CM+ which is in that zone.  Specifically, \\
+\index{AMASS}
+\verb/AMASS(IDD) = AMASS(IDD) + RHOR(IRA)*VOLUME(IRA)/
+\\
+where \verb+IDD+ is the scoring zone associated with region \verb+IRA+,
+\verb+(IDD = DOSE_ZONE(IRA))+
+
+\subsubsection{SUBROUTINE HOWFAR\_\$CMNAME}
+\index{HOWFAR\_\$CMNAME subroutine}
+This is a more or less standard \verb+EGSnrc+ \verb+SUBROUTINE HOWFAR+ which
+applies just to this \verb+CM+.  See examples from already
+coded \verb+CMs+.
+
+The routine does NOT consider the \verb+RMAX_CM+ boundaries since these
+are handled afterwards in the main \verb+SUBROUTINE HOWFAR+.
+
+As a particle leaves the \verb+CM+ to enter the \verb+CMs+ on either side, the\\
+\verb+SUBROUTINE WHERE_AM_I(IICM,IDIR)+ is useful.  This routine is called from\\
+\verb+SUBROUTINE HOWFAR_$CMNAME+ when a particle reaches the front (\verb+IDIR+
+= 1) or back (\verb+IDIR+ = -1) of a component module.  The index of the new
+component module, \verb+ICMNEW+ (passed in \verb+COMIN/CMs/+), is determined
+and the appropriate \verb+SUBROUTINE WHERE_AM_I_$CMNAME+ for the new
+\verb+CM+ is
+called to determine the new region number, \verb+IRNEW+.
+
+\subsubsection{SUBROUTINE WHERE\_AM\_I\_\$CMNAME}
+\index{WHERE\_AM\_I\_\$CMNAME subroutine}
+
+Subroutine \verb+WHERE_AM_I_$CMNAME + determines the new region number when a
+particle traverses the front or back boundary of a component module.  Whenever
+a particle is to be transported to a component module boundary in \verb+HOWFAR+,
+the subroutine \verb+WHERE_AM_I+ is called.  The current component module,
+\verb+ICM+,  and
+particle direction (\verb+IDIR+, backwards or forwards)
+are transferred to \verb+WHERE_AM_I+
+\verb+WHERE_AM_I+ determines which component
+module the particle is about to enter and calls the \verb+WHERE_AM_I_$CMNAME+
+subroutine for that component module, transferring the particle direction.  The
+region number that the particle is about to enter, \verb+IRNEW+,  is determined
+in \verb+WHERE_AM_I_$CMNAME+ from the knowledge of which surface the particle
+is entering through (front if \verb+IDIR+=1, back if \verb+IDIR+=-1) and the
+(X,Y) coordinates of the particle.
+
+\subsubsection{SUBROUTINE HOWNEAR\_\$CMNAME}
+\index{HOWNEAR\_\$CMNAME subroutine}
+\label{hownearsubsect}
+
+This subroutine calculates the perpendicular (minimum)
+distance from the particle position to the nearest region boundary
+(stored globally in the variable {\tt DNEAR} \index{DNEAR}).
+It is always called using the {\tt \$CMNAME\_CM\_HOWNEAR} macro
+(See Section~\ref{hownearmacsect} above)
+See already coded CMs for examples of how to code this subroutine.
+
+Note: this subroutine does NOT check against the \verb+RMAX_CM+ boundary
+(nor does the main \verb+CALL HOWNEAR+ macro in BEAMnrc).  This means that
+particles do not approach the outer boundary with lateral
+correlations turned off (if using the PRESTA-I boundary crossing algorithm)
+or in single-scattering mode (if using EXACT boundary crossing algorithm).
+It also means that the outer boundary is not used in range rejection.
+\index{range rejection} \index{RMAX\_CM}
+
+\subsection{Specifications--COMIN/CMs/}
+\index{COMIN/CMs/}
+\index{CMs}
+\label{COMINCMs}
+
+This \verb+COMIN+ contains the geometrical and range rejection information of interest
+to all component modules:
+%\begin{small}
+\index{COMIN/CMs/!variables} \index{E\_min\_out} \index{MAX\_CMs}
+\index{MED\_IN} \index{ICM} \index{ICMNEW} \index{ICM\_to\_SCORE}
+\index{IERR\_GEOM} \index{IR\_start\_CM} \index{IR\_to\_CM(IR)}
+\index{RMAX\_CM} \index{RMAX\_CM2} \index{RMAX\_CM\_FLAG}
+\index{Z\_min\_CM} \index{Z\_gap\_THICK} \index{Z\_min\_thick}
+\index{ITDOSE\_ON} \index{MED\_min\_thick(ICM,j)} \index{ICM\_CONTAM}
+\index{IQ\_CONTAM} \index{XTUBE\_EXISTS} \index{ANGLE} \index{CMTYPE}
+\index{CMLIST} \index{AIR\_INDEX}
+\begin{verbatim}
+E_min_out(ICM)    minimum energy of electron leaving a CM ICM which can
+                  reach the nearest downstream scoring region with energy
+                  greater than ECUT in the scoring region. For use in range
+                  rejection.  Set in MAIN because needs info from all CMs
+                  past the current one.
+MAX_CMs           number of CMs.
+MED_IN            24-character name of last medium input in INPUT_$CMNAME.
+ICM               CM index, incremented before call to INPUT_$CMNAME, set in
+                  SRCHST and in HOWFAR during particle transport.
+ICMNEW            Next CM, set in WHERE_AM_I, different than ICM (only?) if
+                  particle transported to CM boundary.
+ICM_to_SCORE(ICM) scoring plane associated with ICM, 0 => none. Set in
+                  main based on input IPLANE_to_CM values.
+IERR_GEOM(ICM)    geometry-checking flag for each CM, 0=>no errors detected,
+                  1-99 specifies number of errors detected within CM,
+                  >100 specifies that CM above overlaps
+IR_start_CM(ICM)  region number of first region in CM, set by previous CM,
+                  read in subroutine INPUT_$CMNAME.
+IR_to_CM(IR)      pointer used in HOWFAR which denotes the CM region IR
+                  is in.  It is set in MAIN.
+RMAX_CM(ICM)      outer boundary of treatment head, particles are discarded
+                  if they move outside of this boundary.  Read in at
+                  step 2 in MAIN.
+RMAX_CM2(ICM)     square of maximum radius.
+RMAX_CM_FLAG(ICM) flag for type of outer boundary of CM:
+                  0--bounds of CM are all set in HOWFAR_$CMNAME,
+                  1--CM is bounded by cylinder of radius RMAX_CM(ICM),
+                  2--CM is bounded by square box, walls at RMAX_CM(ICM) and
+                  -RMAX_CM(ICM).  Set in INPUT_$CMNAME.
+Z_min_CM(ICM)     minimum Z for each CM, set by previous CM in INPUT_$CMNAME
+                  (back of previous CM) usually following convention that
+                  downstream surface of source or accelerator exit window
+                  is at Z = 0.0. Last value (ICM = MAX_CMs + 1) is
+                  maximum Z of model.
+Z_gap_THICK(ICM)  thickness of air gap at front of CM to fill in space
+                  between Z_min_CM and front of CM, set in INPUT_$CMNAME
+Z_min_thick(ICM,j) minimum thickness in cm of up to j = 5 regions in
+                  ICM for an electron going through ICM. It is used for
+                  range rejection. It is set in each CMs input routine.
+                  j=1 is closest to the bottom plane. Often only
+                  one = total thickness (air).
+MED_min_thick(ICM,j)  medium values corresponding to min thicknesses.
+ITDOSE_ON         if dose components scored, this flag is 1, otherwise 0
+                  -dose components are from LATCH values or incident charge
+ICM_CONTAM        If ITDOSE_ON is 1, & ICM_CONTAM is >= 1
+                  then dose is broken into 2 components based on the charge
+                  entering the front of ICM ICM_CONTAM.
+IQ_CONTAM         charge of the particles considered to be the contaminant
+                  on entering ICM = ICM_CONTAM (identified via
+                  bit 30 in LATCH).
+XTUBE_EXISTS      flag is 0 unless first CM in accelerator is XTUBE, in
+                  which case it is 1.
+ANGLE             = angle between X-ray target surface and z-axis
+CMTYPE(ICM)       8 character ordered array with names of CM types
+CMLIST(ICM)       8 character ordered array with identifiers for CMs
+AIR_INDEX         index for the ``air'' region =1 unless 0 for vacuum
+
+
+\end{verbatim}
+%\end{small}
+
+\subsection{Useful Utilities}
+\index{utilities for writing CMs}
+If you are running under Unix/Linux, then the following scripts
+(found in {\tt \$OMEGA\_HOME/beamnrc/CMs}) are useful
+for developing CMs.
+\begin{description}
+\index{checkCM8}
+\item[checkCM8] checks that once \verb+$CMNAME+ is expanded to 8
+characters (as it is when changed to identifier names prior to
+\verb+MORTRAN3+ compilation), that all records are less than 80 columns,
+since that is all that \verb+MORTRAN3+ handles.
+\index{CMtoc}
+\item[CMtoc] CM ``table of contents'' script.  Produces a
+combined listing of \verb+$CMNAME_macros.mortran+ and
+\verb+$CMNAME_cm.mortran+, {\tt toc:\$CMNAME}, with line numbers,
+page headings and a table
+of contents at the top which is based on the strings {\tt "toc:} and
+{\tt \%E} in the source file and the locations of all
+\verb+REPLACE+ macros.
+\end{description}
+

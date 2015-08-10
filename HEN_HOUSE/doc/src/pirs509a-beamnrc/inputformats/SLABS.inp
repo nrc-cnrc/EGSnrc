@@ -1,0 +1,57 @@
+\begin{verbatim}
+   CARDS CM_$SLABS  (SLABS: Rev 1.6)
+   **************
+ 
+   -1  dummy line (filled with ****)  read in main
+ 
+    0  RMAX_CM(ICM_$SLABS)       outer boundary for CM - 1/2 side of 
+                                 square(read in main)
+   
+    1  TITLE_$SLABS (60A1):  Title of CM.
+   
+    2  N_$SLABS (I5):  Number of planar slabs in CM = # regions in CM,
+                       excludes any air gap needed.
+   
+    3  ZMIN_$SLABS (F15.0):  Distance from front of first slab to reference
+                             plane  (Z=0).
+   
+    4  Parameters of each slab from front to back (increasing Z).  One pair of
+       cards (4a and 4b) for each of the slabs.
+   
+       4a   ZTHICK_$SLABS, ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, ESAVEIN
+                            (3F15.0,2I5,F15.0):  
+   
+               ZTHICK_$SLABS:   slab thickness.
+               ECUT, PCUT:      Cutoff energies-defaults are ECUTIN,PCUTIN
+               DOSE_ZONE:       Dose zone to score dose - 0 if not scored
+               IREGION_TO_BIT:  map this region to this bit number in LATCH
+               ESAVEIN:         Value of ESAVE for this region if range
+                                rejection on. Default is ESAVE_GLOBAL.
+   
+       4b   MED_IN (24A1):  Medium of the planar slab, used to set MED_INDEX.
+   
+    Example
+    *******
+   
+   The following set of cards defines a 1 cm thick slab of air sandwiched
+   between two 0.1 cm thick slabs of tungsten.  The front slab is at  
+   Z=7.32 cm. Electrons will be followed in the slabs down to kinetic energies
+   of 10 keV (total energies of 0.521 MeV) and photons will be followed down 
+   to energies of 1 keV.  The dose deposited in the air will be scored and 
+   added to the dose from the other regions in dose zone 1, and the 
+   dose deposited in both tungsten slabs will be scored and added to the dose 
+   from the other regions in dose zone 2.  Particles interacting in
+   the first slab will be associated with BIT 1 in LATCH.  In all slabs,
+   ESAVEIN=0, thus ESAVE in each slab will default to ESAVE_GLOBAL.
+   
+   10.0,                         RMAX_CM
+   Multiple slabs: 0.1cm W-1cm air-0.1cm W, ECUT=0.521, PCUT=0.001
+   3,                            N_SLABS
+   7.32,                         ZMIN_SLABS
+   0.1, 0.521, 0.001, 2,1,0.0,   ZTHICK_SLABS etc
+   W521ICRU
+   1., 0.521, 0.001, 1,0,0.0
+   AIR521ICRU
+   0.1, 0.521, 0.001, 2,0,0.0
+   W521ICRU
+\end{verbatim}

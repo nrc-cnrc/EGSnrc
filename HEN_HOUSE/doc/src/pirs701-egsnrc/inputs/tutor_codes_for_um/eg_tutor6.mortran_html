@@ -1,0 +1,43 @@
+\clearpage
+\begin{figure}
+\caption{Examples from  {\tt tutor6.mortran} of the reading in of three of
+the many variables read in, specifically {\tt IEDGFL, IPHTER and IBCMP}.
+ \label{fig_tutor6_parts} }
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{figure}
+\begin{rawhtml}
+<pre>
+         from subroutine inputs with COMIN COMPTON-DATA and EDGE included
+
+"Relaxations switch, must be done before HATCH so that the necessary"
+"additional data can be read in in HATCH if the user requsted relaxations"
+LOOP [
+  OUTPUT; (/' Atomic relaxations on (1) or off (0)? ',$);
+  INPUT iedgfl(1); (I5);
+] UNTIL ( iedgfl(1) = 1 | iedgfl(1) = 0 );
+"Now set iedgfl for all regions to the value input by the user"
+DO i=2,$MXREG [ iedgfl(i) = iedgfl(1); ]
+
+"Photo-electron angular distribution switch. It does not need to be "
+"before HATCH, we do it here because this is the most logical place"
+LOOP [
+  OUTPUT; (/' Photo-electron angular distribution on (1) or off (0)? ',$);
+  INPUT iphter(1); (I5);
+] UNTIL ( iphter(1) = 1 | iphter(1) = 0 );
+"Now set iphter for all regions to the value input by the user"
+DO i=2,$MXREG [ iphter(i) = iphter(1); ]
+
+"Bound Compton scattering switch"
+"Must be done before HATCH in order to get the data for bound Compton"
+LOOP [
+  OUTPUT; (/' Binding effects for Compton scattering on (1) or off (0)?
+',$);
+  INPUT ibcmp(1); (I5);
+] UNTIL ( ibcmp(1) = 1 | ibcmp(1) = 0 );
+"Now set ibcmp for all regions to the value input by the user"
+DO i=2,$MXREG [ ibcmp(i) = ibcmp(1); ]
+
+</pre>
+\end{rawhtml}
+\clearpage
+

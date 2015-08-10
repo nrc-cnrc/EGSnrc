@@ -1,0 +1,86 @@
+\begin{figure}[hb]
+\begin{center}
+\caption{Portions of {\tt tutor3.mortran}\label{fig_tutor3}}
+\begin{boxedverbatim}
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+NCASE=5000;  "INITIATE THE SHOWER NCASE TIMES"
+
+DO I=1,NCASE [
+   EHIST = 0.0; "zero energy deposited in this history"
+   CALL SHOWER(IQIN,EIN,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WTIN);
+   "increment bin corresponding to  energy deposited in this history "
+   IBIN= MIN(IFIX(EHIST/BWIDTH + 0.999), $EBIN);
+   IF(IBIN ~= 0) [EBIN(IBIN)=EBIN(IBIN) + 1;]
+]
+"---------------------------------------------------------------------"
+"STEP 8   OUTPUT-OF-RESULTS                                           "
+"---------------------------------------------------------------------"
+"Pick up maximum bin for normalization                                "
+BINMAX=0.0; DO J = 1,$EBIN [BINMAX = MAX(BINMAX,EBIN(J));]
+OUTPUT EIN,ZBOUND;
+('0Response function'/' For a',F8.2,' MeV pencil beam of',
+' photons on a',F7.2,' cm thick slab of NaI'/
+T6,'Energy  Counts/incident photon');
+
+DO I=1,48 [LINE(I) = ' ';]  "blank entire output array"
+DO I=1,$EBIN [
+   ICOL=IFIX(EBIN(I)/BINMAX*48.0+0.999);
+   IF(ICOL = 0) ICOL=1;
+   LINE(ICOL)='*';  "load output array at desired location"
+   OUTPUT BWIDTH*I,EBIN(I)/FLOAT(NCASE),LINE;
+   (F10.2,F10.4,48A1);  LINE(ICOL)=' ';"reblank"
+]
+STOP;END;"end of tutor3 main routine"
+                                                cont...
+
+\end{boxedverbatim}
+\end{center}
+\end{figure}
+
+\clearpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\index{AUSGAB!example}
+\caption{Portions of {\tt tutor3.mortran} - continued}
+\begin{center}
+\begin{boxedverbatim}
+
+
+%E  "tutor3.mortran"
+"*********************************************************************"
+"                                                                     "
+SUBROUTINE AUSGAB(IARG);
+"                                                                     "
+" In this AUSGAB routine for TUTOR3, we score the energy deposited    "
+" in the detector region, region 2                                    "
+"                                                                     "
+"  For IARG=0, an electron or photon step is about to occur and we    "
+"  score the energy deposited, if any. Note that only electrons       "
+"  deposit energy during a step, and due to our geometry, electrons   "
+"  only take steps in region 2 - however there is no need to check    "
+"  this here                                                          "
+"  For IARG=1,2 and 4,particles have been discarded for falling below "
+"  various energy cutoffs and all their energy is deposited locally   "
+"  (in fact EDEP = particles kinetic energy). This only happens in    "
+"  region 2.  For IARG=3, we are discarding the particle since it is  "
+"   in region 1 or 3, so we do not score its energy                   "
+"                                                                     "
+"  EHIST keeps track of the total energy deposited during each        "
+"  history. In the main routine it is zeroed at the start of each     "
+"  history and binned at the end of each history.                     "
+"                                                                     "
+"*********************************************************************"
+
+COMIN/EPCONT,SCORE/; "we use EDEP from EPCONT and EHIST from SCORE    "
+
+IF(IARG <= 2 | IARG = 4) [EHIST=EHIST + EDEP;]
+
+RETURN;END;"end of ausgab"
+
+
+\end{boxedverbatim}
+\end{center}
+\end{figure}

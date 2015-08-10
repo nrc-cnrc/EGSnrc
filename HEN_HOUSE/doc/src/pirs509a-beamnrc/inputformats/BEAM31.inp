@@ -1,0 +1,47 @@
+\begin{verbatim}
+   ---------------------------------------------------------------------------
+ 
+           Bremsstrahlung Cross Section Enhancement (BCSE) Inputs
+           ******************************************************
+ 
+   Inputs for the BCSE variance reduction technique.
+ 
+   Inputs must appear between delimiters:
+   :Start BCSE:
+   :Stop BCSE:
+ 
+   Inputs are:
+ 
+       Use BCSE= Off, On (default is Off)
+               Set to On to use BCSE.
+               [USE_BCSE]
+       Media to enhance= A list of media in
+               which to enhance the bremsstrahlung cross-section.  If
+               none of the media is found in the accelerator, then no
+               BCSE is done. 
+               [is_bcse_medium]
+       Enhancement constant= Floating point factor by which bremsstrahlung 
+               cross-sections are enhanced. Typical values are in the range
+               20 (megavoltage accelerators) -- 500 (x-ray tubes in
+               mammography energy range). 
+               [BCSE_FACTOR_C]
+       Enhancement power= Floating point number that us used for an energy
+               dependent BCSE. If this input is <=0, then a constant 
+               BCSE factor is used that is given by BCSE_FACTOR_C. But if
+               this input is >0, then the BCSE factor is computed on-th-fly
+               using 1 + BCSE_FACTOR_C*(E(np)-rm)**BCSE_POWER_N.
+               Typical values for BCSE_POWER_N are 2...4. Note that 
+               BCSE_FACTOR_C must be adjusted accordingly so that the above
+               equations gives a factor of 20 (megavoltage accelerators) --
+               500 (low energy x-ray tubes) for the maximum energy of the
+               incident electron spectrum.
+               If in doubt, just set to <=0 because the gain from an 
+               energy dependent BCSE is modest (~20%).
+ 
+   Note that if BCSE is used in conjunction with uniform bremsstrahlung 
+   splitting (UBS) or selective bremsstrahlung splitting (SBS), then
+   Russian Roulette is automatically turned on (IRRLTT=2--see above).
+ 
+   BCSE is most efficient when used in conjunction with DBS or UBS 
+                  
+\end{verbatim}

@@ -1,0 +1,47 @@
+\begin{figure}
+\begin{center}
+\caption{Output from {\tt tutor2.mortran} excluding some input data related
+outputs that are the same as in {\tt tutor1}.
+\label{fig_tutor2_output}}
+\begin{boxedverbatim}
+79_irs45_group1>ex tutor2 "" tutor_data
+==========================================================================
+EGSnrc version 4 for i686-pc-linux-gnu           Tue Nov 11 11:46:59 2003
+==========================================================================
+configuration............................................g77
+user code................................................tutor2
+pegs file................................................tutor_data on
+HEN_HOUSE
+using host...............................................irs45
+output file(s)...........................................test
+==========================================================================
+ Start tutor2
+ CALL HATCH to get cross-section data
+                   |
+                   |
+ 20 880  7  0.05479 0.944E+02     0.008
+ 21 881  7  0.01370 0.221E+03     0.008
+...... Done.
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+ knock-on electrons can be created and any electron followed down to
+                                          0.189 MeV kinetic energy
+ bremsstrahlung photons can be created and any photon followed down to
+                                          0.010 MeV 
+
+ For   10000 incident particles
+ Fraction of energy reflected from plate=             1.230%
+ Fraction of energy deposited in plate=              12.956%
+ Fraction of energy transmitted through plate=       85.814%
+                                                 -----------
+ Total fraction of energy accounted for=            100.000%
+
+========================================================================
+Finished simulation
+  Elapsed time:            1.0 s (  0.000 h)
+  CPU time:                0.9 s (  0.000 h)
+  Ratio:                 1.011
+End of run                                     Tue Nov 11 11:46:59 2003
+========================================================================
+\end{boxedverbatim}
+\end{center}
+\end{figure}

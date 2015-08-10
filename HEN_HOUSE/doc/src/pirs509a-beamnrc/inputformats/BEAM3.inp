@@ -1,0 +1,25 @@
+\begin{verbatim}
+   
+                 SOURCE GEOMETRICAL CONFIGURATION INPUT
+                 **************************************
+   
+   Next Record  specifies charge and type of source of incident particles
+                The meaning of parameters depends on source type
+ 
+   ISOURC = 0   PARALLEL BEAM INCIDENT FROM THE FRONT (+VE Z-AXIS)
+   **********
+   
+      IQIN,ISOURC,RBEAM,UINC,VINC,WINC
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  0
+              RBEAM   radius of parallel beam in cm (defaults to max radius
+                      if RBEAM < 0 or > max radius 
+                      max radius =RMAX_CM(1) for circular CM boundary
+                                 =RMAX_CM(1)*SQRT(2) for square CM )
+              UINC    incident x-axis direction cosine
+              VINC    incident y-axis direction cosine
+              WINC    incident z-axis direction cosine
+                      Note: (UINC,VINC,WINC) get automatically normalized
+                            defaults to (0.0,0.0,1.0)
+ ------------------------------------------------------------------------
+\end{verbatim}

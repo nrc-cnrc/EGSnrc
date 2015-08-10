@@ -1,0 +1,81 @@
+\begin{verbatim}
+   ISOURC = 21   FULL PHASE-SPACE SOURCE
+   ***********   
+   
+      IQIN,ISOURC,INIT_ICM,NRCYCL,IPARALLEL,PARNUM,ISRC_DBS,RSRC_DBS,
+                                                   SSDSRC_DBS,ZSRC_DBS
+              IQIN       dummy NOT USED. Set = 9 for this source by BEAMnrc
+              ISOURC     = 21
+              INIT_ICM   particles start at front surface of this CM 
+                         (INIT_ICM is actually read as a real)
+              NRCYCL     Number of times to recycle each particle in a phase 
+                         space source.  Each particle in the phase space
+                         file is used a total of NRCYCL+1 times before
+                         going on to the next particle.
+                         If NRCYCL is set <=0 then NRCYCL is automatically
+                         calculated to use the entire phase space file with no
+                         restarts.  The calculated NRCYCL does not take into 
+                         account particles that are rejected because they 
+                         miss the geometry.
+                         If NRCYCL is set > 0, then the user-input value is 
+                         used.
+                         If NCASE > no. of particles in the phase space file,
+                         then use of NRCYCL is essential for accurate 
+                         statistics.  If you are unsure of how many times to 
+                         recycle, use the automatically-calculated value of 
+                         NRCYCL.  If this still results in many restarts 
+                         (because of multiple passers being rejected and/or
+                         photons rejected because they fall outside the DBS
+                         splitting radius--see below)
+                         then re-run the simulation with NRCYCL set manually
+                         to:
+                         NCASE/(NNPHSP-NNPHSP*(NPASS_ph_sp+NFAT_ph_sp)/
+                                     (NTOT_ph_sp+NPASS_ph_sp+NFAT_ph_sp) ) -1
+                         where NNPHSP is the no. of particles in the file,
+                         NTOT_ph_sp is total no. of particles used (not
+                         including recycling), NPASS_ph_sp is total no.
+                         of multiple passers ignored (not including 
+                         recycling), and NFAT_ph_sp is the no. of photons
+                         rejected (not including recycling because they fall 
+                         outside the DBS splitting radius at the SSD (only 
+                         if ISRC_DBS=1--see below)). These numbers are 
+                         available in the .egslst file.  Always round your 
+                         calculated value of NRCYCL up.
+             IPARALLEL   set >1 if you are distributing the job among 
+                         IPARALLEL machines.  IPARALLEL is used with PARNUM
+                         (see below) to partition a phase space source into
+                         IPARALLEL equal parts. 
+             PARNUM      For each of the IPARALLEL parallel jobs, PARNUM 
+                         should have a different integer value in the range
+                         1<=PARNUM<=IPARALLEL.  The partition of the phase
+                         space source that is used for a particular job is
+                         then given by:
+                            (PARNUM-1)*(NNPHSP/IPARALLEL)<INPHSP<=
+                                                 (PARNUM)*(NNPHSP/IPARALLEL)
+                         where NNPHSP is the total number of particles in the
+                         phsp source and INPHSP is the particle no. chosen.
+             ISRC_DBS    Set to 1 if you used directional bremsstrahlung
+                         splitting (DBS) in the BEAM simulation used to
+                         generate this phase space source and you wish to
+                         reject photons not aimed into the splitting
+                         field(which are fat).  These fat photons compromise 
+                         statistics.  Set to 0 otherwise.
+             RSRC_DBS    DBS splitting radius in BEAM simulation used to
+                         generate this source (cm).  Only used if ISRC_DBS=1.
+             SSDSRC_DBS  SSD at which RSRC_DBS was defined in the BEAM sim. 
+                         used to generate this source (cm). Only used if 
+                         ISRC_DBS=1.
+             ZSRC_DBS    Z where the phase space source was collected in
+                         the BEAM simulation used to generate this source(cm).
+                         Only used if ISRC_DBS=1.
+ 
+       Photons are projected from ZSRC_DBS to SSDSRC_DBS and if they will fall
+       outside of RSRC_DBS (based on their trajectory) then they will
+       be rejected.  This prevents fat photons from compromising statistics.
+   
+   Next record (If ISOURC=21)
+   ***********
+      SPCNAM        FILENAME (with EXT) contains phase space information
+                    (maximum of 80 characters)
+ ------------------------------------------------------------------------
+\end{verbatim}

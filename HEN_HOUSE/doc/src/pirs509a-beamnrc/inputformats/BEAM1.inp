@@ -1,0 +1,59 @@
+\begin{verbatim}
+   Next Record
+   ***********
+      IWATCH,ISTORE,IRESTART,IO_OPT,IDAT,LATCH_OPTION,IZLAST
+ 
+              IWATCH = 0 for normal output (the default)
+                     = 1 output for every discrete interaction
+                     = 2 output for every electron/photon step as well
+                     = 4 outputs file for graphics
+                     = -N set to 2 on history N, set to 0 on all other
+                          histories (for debugging purposes)
+              ISTORE = 0 store rn seeds for the 1st history of a batch
+                     = 1 store initial rn status (unit 2) for each history 
+                         being simulated
+                     =-1 start first history with rn status from file (unit 2)
+                         This is a debugging tool. If run quits, rerun with 
+                         ISTORE=1, then again ISTORE=-1 and IWATCH = 1/2
+                         and/or the debugger on.
+            IRESTART = 0 first run for this data set (the default)
+                     = 1 restart of a previous run
+                     = 2 just create the input file and exit
+                     = 3 read in the raw data from a previous run and do 
+                        the statistical analysis on dose etc.
+                     = 4 read in the .egsdat files from parallel jobs
+                         having the same base name as the input file but  
+                         with the extension _w#, where # 
+                         can be any positive integer.  These .egsdat files 
+                         will be summed and then the result analyzed similar 
+                         to IRESTART=3. 
+              IO_OPT = 0 phase-space output at each scoring plane(the default)
+                     = 1 no phase-space output when particles cross scoring
+                         plane
+                     = 2 no phase-space output but do data analysis for 
+                         simplified source models
+                     = 3 phase-space output up to 100 k particle histories
+                         then do analysis only for simplified source models
+                     = 4 output phase space in IAEA format
+              IDAT   = 0 store data arrays for re-use (takes time but safer)
+                     = 1 don't store them
+       LATCH_OPTION  = 0 defaults to 2
+                     = 1 LATCH for secondaries not inherited from primaries
+                         Bits 1-23 set for all regions particle is in
+                     = 2 LATCH bits set for all regions particle is in
+                         and inherited by secondaries
+                         also record bit regions where secondaries created
+                         and whether they were created by brem photons
+                     = 3 = option 2 but the region numbers are recorded
+                         for photons where they interact rather than where
+                         they pass through
+             IZLAST  = 0 do not score ZLAST etc. (the default)
+                     = 1 score the z-position of the last site of interaction
+                         for photons and creation of electrons by a photon.  
+                     = 2 score the xyz-position of the last site of  
+                         interaction in the file $.egs4gph to be used by
+                         EGS_WINDOWS. IWATCH=4 must not be used at same time.
+                         Note that for phase space inputs, ZLAST is passed
+                         through, but XLAST and YLAST are not.
+ ---------------------------------------------------------------------------- 
+\end{verbatim}

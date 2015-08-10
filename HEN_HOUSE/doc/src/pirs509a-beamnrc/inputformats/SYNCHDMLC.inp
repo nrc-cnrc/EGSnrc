@@ -1,0 +1,409 @@
+\begin{verbatim}
+   CARDS CM_$SYNCHDMLC
+   ********************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$SYNCHDMLC) (F10.5):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$SYNCHDMLC (60A1):  Title of CM.
+ 
+    2  ORIENT_$SYNCHDMLC, NGROUP_$SYNCHDMLC (2I5) 
+ 
+             ORIENT_$SYNCHDMLC = 0 for leaves parallel to Y direction 
+                             = 1 for leaves parallel to X direction
+             NGROUP_$SYNCHDMLC = number of groups of adjacent leaves where
+                               all leaves in a group are:
+                               1. FULL leaves
+                               2. HALF TARGET/ISOCENTER pairs with TARGET leaf
+                                  on the -X (ORIENT=0) or -Y (ORIENT=1) side
+                               3. QUARTER TARGET/ISOCENTER pairs
+                               NGROUP_$SYNCHDMLC defaults to 3 if set <=0 
+             MODE_$SYNCHCMLC = 0 for single setting of leaf openings (static
+                             field)
+                           = 1 for dynamic mlc delivery--simulated leaf
+                             movement while beam is on
+                           = 2 for step-and-shoot delivery--beam off while
+                             leaf positions change  
+   
+   
+    3  ZMIN_$SYNCHDMLC (F15.0): Z of top of MLC (excluding airgap)
+          
+    4  ZTHICK_$SYNCHDMLC (F15.0): Thickness of the leaves ( z-axis (cm))
+ 
+    5  LEAFWIDTH_$SYNCHDMLC(1), WTONGUE_$SYNCHDMLC(1), WGROOVE_$SYNCHDMLC(1), 
+       WTIP_$SYNCHDMLC(1), WRAILTOP_$SYNCHDMLC(1), WRAILBOT_$SYNCHDMLC(1), 
+       ZTIP_$SYNCHDMLC(1), ZLEAF_$SYNCHDMLC(1), ZTONGUE_$SYNCHDMLC(1),
+       ZGROOVE_$SYNCHDMLC(1), ZHOLETOP_$SYNCHDMLC(1), ZHOLEBOT_$SYNCHDMLC(1), 
+       HOLEPOS_FULL_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(1), ZRAILBOT_$SYNCHDMLC(1)
+          (15F15.0) 
+ 
+         For a FULL type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$SYNCHDMLC):
+ 
+            LEAFWIDTH_$SYNCHDMLC(1): Width of leaf (not including tongue)
+              WTONGUE_$SYNCHDMLC(1): Width of tongue
+              WGROOVE_$SYNCHDMLC(1): Width of groove
+                 WTIP_$SYNCHDMLC(1): Width of tip at top of leaf 
+             WRAILTOP_$SYNCHDMLC(1): Width of top of support rail 
+             WRAILBOT_$SYNCHDMLC(1): Width of bottom of support rail 
+                 ZTIP_$SYNCHDMLC(1): Z at which tip at top of leaf begins
+                ZLEAF_$SYNCHDMLC(1): Z of top of leaf
+              ZTONGUE_$SYNCHDMLC(1): Z of bottom of tongue 
+              ZGROOVE_$SYNCHDMLC(1): Z of bottom of groove
+             ZHOLETOP_$SYNCHDMLC(1): Z of top of driving screw hole
+             ZHOLEBOT_$SYNCHDMLC(1): Z of bottom of driving screw hole 
+            HOLEPOS_FULL_$SYNCHDMLC: Distance of hole from leaf tip 
+             ZRAILTOP_$SYNCHDMLC(1): Z of top of support rail
+             ZRAILBOT_$SYNCHDMLC(1): Z of bottom of support rail 
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+ 
+    6  LEAFWIDTH_$SYNCHDMLC(2), WTONGUE_$SYNCHDMLC(2), WGROOVE_$SYNCHDMLC(2), 
+       WTIP_$SYNCHDMLC(2), WRAILTOP_$SYNCHDMLC(2), WRAILBOT_$SYNCHDMLC(2), 
+       ZRAILTOP_$SYNCHDMLC(2), ZRAILBOT_$SYNCHDMLC(2), ZHOLETOP_$SYNCHDMLC(2),
+       ZHOLEBOT_$SYNCHDMLC(2), HOLEPOS_TAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(2), 
+       ZGROOVE_$SYNCHDMLC(2),ZLEAF_$SYNCHDMLC(2), ZTIP_$SYNCHDMLC(2) (15F15.0)
+ 
+         For a HALF TARGET type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$SYNCHDMLC):
+ 
+            LEAFWIDTH_$SYNCHDMLC(2): Width of leaf (not including tongue)
+              WTONGUE_$SYNCHDMLC(2): Width of tongue
+              WGROOVE_$SYNCHDMLC(2): Width of groove
+                 WTIP_$SYNCHDMLC(2): Width of tip at bottom of leaf 
+             WRAILTOP_$SYNCHDMLC(2): Width of top of support rail 
+             WRAILBOT_$SYNCHDMLC(2): Width of bottom of support rail 
+             ZRAILTOP_$SYNCHDMLC(2): Z of top of support rail
+             ZRAILBOT_$SYNCHDMLC(2): Z of bottom of support rail
+             ZHOLETOP_$SYNCHDMLC(2): Z of top of driving screw hole
+             ZHOLEBOT_$SYNCHDMLC(2): Z of bottom of driving screw hole
+             HOLEPOS_TAR_$SYNCHDMLC: Distance of hole from leaf tip
+              ZTONGUE_$SYNCHDMLC(2): Z of bottom of tongue
+              ZGROOVE_$SYNCHDMLC(2): Z of top of groove
+                ZLEAF_$SYNCHDMLC(2): Z of bottom of leaf
+                 ZTIP_$SYNCHDMLC(2): Z of bottom of tip at bottom of leaf
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+ 
+    7  LEAFWIDTH_$SYNCHDMLC(3), WTONGUE_$SYNCHDMLC(3), WGROOVE_$SYNCHDMLC(3), 
+       WTIP_$SYNCHDMLC(3), WRAILTOP_$SYNCHDMLC(3), WRAILBOT_$SYNCHDMLC(3), 
+       ZTIP_$SYNCHDMLC(3), ZLEAF_$SYNCHDMLC(3), ZTONGUE_$SYNCHDMLC(3),
+       ZGROOVE_$SYNCHDMLC(3), ZHOLETOP_$SYNCHDMLC(3), ZHOLEBOT_$SYNCHDMLC(3), 
+       HOLEPOS_ISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(3), ZRAILBOT_$SYNCHDMLC(3) 
+                   (15F15.0)
+ 
+         For a HALF ISOCENTER type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$SYNCHDMLC):
+ 
+            LEAFWIDTH_$SYNCHDMLC(3): Width of leaf (not including tongue)
+              WTONGUE_$SYNCHDMLC(3): Width of tongue
+              WGROOVE_$SYNCHDMLC(3): Width of groove
+                 WTIP_$SYNCHDMLC(3): Width of tip at top of leaf 
+             WRAILTOP_$SYNCHDMLC(3): Width of top of support rail 
+             WRAILBOT_$SYNCHDMLC(3): Width of bottom of support rail 
+                 ZTIP_$SYNCHDMLC(3): Z at which tip at top of leaf begins
+                ZLEAF_$SYNCHDMLC(3): Z of top of leaf
+              ZTONGUE_$SYNCHDMLC(3): Z of top of tongue
+              ZGROOVE_$SYNCHDMLC(3): Z of bottom of groove
+             ZHOLETOP_$SYNCHDMLC(3): Z of top of driving screw hole
+             ZHOLEBOT_$SYNCHDMLC(3): Z of bottom of driving screw hole
+             HOLEPOS_ISO_$SYNCHDMLC: Distance of hole from leaf tip
+             ZRAILTOP_$SYNCHDMLC(3): Z of top of support rail
+             ZRAILBOT_$SYNCHDMLC(3): Z of bottom of support rail 
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+         Note: 1. For TARGET and ISOCENTER leaves to fit together,
+                  ZTONGUE_$SYNCHDMLC(3)>=ZGROOVE_$SYNCHDMLC(2) and 
+                  ZTONGUE_$SYNCHDMLC(2)<=ZGROOVE_$SYNCHDMLC(3).
+               2. For TARGET and FULL leaves to fit together (FULL
+                  leaf on -X [ORIENT=0] or -Y [ORIENT=1] side of TARGET
+                  leaf only) ZTONGUE_$SYNCHDMLC(2)<=ZGROOVE_$SYNCHDMLC(1)
+               3. For ISOCENTER and FULL leaves to fit together (FULL
+                  leaf on +X [ORIENT=0] or +Y [ORIENT=1] side of ISOCENTER 
+                  leaf only) ZTONGUE_$SYNCHDMLC(1)<=ZGROOVE_$SYNCHDMLC(3)
+ 
+               
+    8  LEAFWIDTH_$SYNCHDMLC(4), WTONGUE_$SYNCHDMLC(4), WGROOVE_$SYNCHDMLC(4), 
+       WTIP_$SYNCHDMLC(4), WRAILTOP_$SYNCHDMLC(4), WRAILBOT_$SYNCHDMLC(4), 
+       ZRAILTOP_$SYNCHDMLC(4), ZRAILBOT_$SYNCHDMLC(4), ZHOLETOP_$SYNCHDMLC(4),
+       ZHOLEBOT_$SYNCHDMLC(4), HOLEPOS_QTAR_$SYNCHDMLC, ZTONGUE_$SYNCHDMLC(4),
+       ZGROOVE_$SYNCHDMLC(4), ZLEAF_$SYNCHDMLC(4),ZTIP_$SYNCHDMLC(4) (15F15.0)
+ 
+         For a QUARTER TARGET type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$SYNCHDMLC):
+ 
+            LEAFWIDTH_$SYNCHDMLC(4): Width of leaf (not including tongue)
+              WTONGUE_$SYNCHDMLC(4): Width of tongue
+              WGROOVE_$SYNCHDMLC(4): Width of groove
+                 WTIP_$SYNCHDMLC(4): Width of tip at bottom of leaf 
+             WRAILTOP_$SYNCHDMLC(4): Width of top of support rail 
+             WRAILBOT_$SYNCHDMLC(4): Width of bottom of support rail 
+             ZRAILTOP_$SYNCHDMLC(4): Z of top of support rail
+             ZRAILBOT_$SYNCHDMLC(4): Z of bottom of support rail
+             ZHOLETOP_$SYNCHDMLC(4): Z of top of driving screw hole
+             ZHOLEBOT_$SYNCHDMLC(4): Z of bottom of driving screw hole
+             HOLEPOS_QTAR_$SYNCHDMLC: Distance of hole from leaf tip
+              ZTONGUE_$SYNCHDMLC(4): Z of bottom of tongue
+              ZGROOVE_$SYNCHDMLC(4): Z of top of groove
+                ZLEAF_$SYNCHDMLC(4): Z of bottom of leaf
+                 ZTIP_$SYNCHDMLC(4): Z of bottom of tip at bottom of leaf
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$SYNCHDMLC(4)>=ZTIP_$SYNCHDMLC(4), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+ 
+    9  LEAFWIDTH_$SYNCHDMLC(5), WTONGUE_$SYNCHDMLC(5), WGROOVE_$SYNCHDMLC(5), 
+       WTIP_$SYNCHDMLC(5), WRAILTOP_$SYNCHDMLC(5), WRAILBOT_$SYNCHDMLC(5), 
+       ZTIP_$SYNCHDMLC(5), ZLEAF_$SYNCHDMLC(5), ZTONGUE_$SYNCHDMLC(5),
+       ZGROOVE_$SYNCHDMLC(5), ZHOLETOP_$SYNCHDMLC(5), ZHOLEBOT_$SYNCHDMLC(5), 
+       HOLEPOS_QISO_$SYNCHDMLC, ZRAILTOP_$SYNCHDMLC(5), ZRAILBOT_$SYNCHDMLC(5)
+                   (15F15.0)
+ 
+     For a QUARTER ISOCENTER type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$SYNCHDMLC):
+ 
+            LEAFWIDTH_$SYNCHDMLC(5): Width of leaf (not including tongue)
+              WTONGUE_$SYNCHDMLC(5): Width of tongue
+              WGROOVE_$SYNCHDMLC(5): Width of groove
+                 WTIP_$SYNCHDMLC(5): Width of tip at top of leaf 
+             WRAILTOP_$SYNCHDMLC(5): Width of top of support rail 
+             WRAILBOT_$SYNCHDMLC(5): Width of bottom of support rail 
+                 ZTIP_$SYNCHDMLC(5): Z at which tip at top of leaf begins
+                ZLEAF_$SYNCHDMLC(5): Z of top of leaf
+              ZTONGUE_$SYNCHDMLC(5): Z of top of tongue
+              ZGROOVE_$SYNCHDMLC(5): Z of bottom of groove
+             ZHOLETOP_$SYNCHDMLC(5): Z of top of driving screw hole
+             ZHOLEBOT_$SYNCHDMLC(5): Z of bottom of driving screw hole
+             HOLEPOS_QISO_$SYNCHDMLC: Distance of hole from leaf tip
+             ZRAILTOP_$SYNCHDMLC(5): Z of top of support rail
+             ZRAILBOT_$SYNCHDMLC(5): Z of bottom of support rail 
+ 
+    Repeat 10 NGROUP_$SYNCHDMLC times
+ 
+    10  NUM_LEAF_$SYNCHDMLC(I), LEAFTYPE  (2I5)
+           
+         NUM_LEAF_$SYNCHDMLC(I): Number of adjacent leaves in group I
+              LEAFTYPE: Type of leaf in group I.
+                        Set to: 1 for FULL leaves
+                                2 for HALF TARGET/ISOCENTER pair with
+                                  TARGET leaf on the -X (ORIENT=0) 
+                                  or -Y (ORIENT=1) side
+                                3 for QUARTER TARGET/ISOCENTER pair with
+                                  TARGET leaf on the -X (ORIENT=0) 
+                                  or -Y (ORIENT=1) side
+ 
+          Note: If LEAFTYPE is 2 or 3, then you must have an even number
+                of leaves in the group. 
+ 
+    9  START_$SYNCHDMLC (F15.0) : the start position (cm) wrt the CAX of 
+                        leaf 1 as projected to ZMIN_$SYNCHDMLC.
+ 
+   10  LEAFGAP_$SYNCHDMLC (F15.5) : The width of the interleaf air gap
+              at ZMIN_$SYNCHDMLC.
+ 
+             Note restriction: LEAFGAP_$SYNCHDMLC<=WTONGUE_$SYNCHDMLC(1,2,3),
+ 
+   11  ENDTYPE_$SYNCHDMLC (I5) : The  type of leaf end :
+              0 -- rounded leaf end and
+              1 -- focused divergent leaf end.
+ 
+   12  ZFOCUS_$SYNCHDMLC (F15.5) : Focal point on Z-axis of leaf ends 
+                      (i.e. imaginary lines drawn extending the slopes 
+                      of leaf ends will all intersect the Z-axis
+                      at this point) - chosen if ENDTYPE_$SYNCHDMLC = 1.
+ 
+         Note restriction: ZFOCUS_$SYNCHDMLC(1) < ZMIN_$SYNCHDMLC or
+                                      > ZMIN_$SYNCHDMLC + ZTHICK_$SYNCHDMLC
+ 
+       LEAFRADIUS_$SYNCHDMLC (F15.5) : Radius of the leaf end if
+                            ENDTYPE_$SYNCHDMLC = 0. This must be greater
+                            than or equal to half the leaf thickness.
+ 
+   13  ZFOCUS_$SYNCHDMLC(1) (F15.5): Focal point on Z-axis of leaf sides 
+                         imaginary lines drawn extending the slopes of
+                         the leaf sides will all intersect the Z-axis
+                         at this point)
+               
+         Note restriction: ZFOCUS_$SYNCHDMLC(1) < ZMIN_$SYNCHDMLC or
+                                > ZMIN_$SYNCHDMLC + ZTHICK_$SYNCHDMLC 
+ 
+                       For focused ends the leaf position is defined
+                       at ZMIN_$SYNCHDMLC; for rounded at ZMIN_$SYNCHDMLC +
+                      0.5*ZTHICK_$SYNCHDMLC (ie center of the leaf in z)
+ 
+    Repeat 14 until coordinates of all leaves are defined once.  Leaves
+    are numbered 1,2,...TOT_LEAF_$SYNCHDMLC, where numbering goes from leaf
+    1 to leaf TOT_LEAF_$SYNCHDMLC. Convention is lower to upper or
+    left to right depending on ORIENT_$SYNCHDMLC i.e from negative to 
+    positive.
+ 
+   14a  NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.5,I5) 
+ 
+     NEG_$SYNCHDMLC:   Min. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
+                    of front opening in leaf I (ie the opening at 
+                    ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
+                    of leaf I if ENDTYPE=0. 
+     POS_$SYNCHDMLC:   Max. Y (ORIENT_$SYNCHDMLC=0) or X (ORIENT_$SYNCHDMLC=1)
+                    of front opening in leaf I if ENDTYPE=1, or of
+                    rounded end of leaf I if ENDTYPE=0.
+     NUM_$SYNCHDMLC:   Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
+                    I,...,I+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
+                    Defaults to TOT_LEAF_$SYNCHDMLC-I+1 if set >
+                    TOT_LEAF_$SYNCHDMLC-I+1. 
+ 
+   If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
+ 
+   14b  mlc_file (A80)
+ 
+          mlc_file:  The full name of the file containing leaf opening
+                     data.  The format of the file contents is as follows:
+ 
+       MLC_TITLE (A80)
+       NFIELDS_$SYNCHDMLC (I10)
+       FOR I=1,NFIELDS_$SYNCHDMLC[
+        INDEX_$SYNCHDMLC(I) (F15.0)
+        NEG_$SYNCHDMLC, POS_$SYNCHDMLC, NUM_$SYNCHDMLC (2F15.0,I5) -- repeat 
+                                                                line until
+                                                                coordinates
+                                                                for all leaves
+                                                                have been
+                                                                defined for
+                                                                field I.
+       ]
+ 
+       where:
+ 
+              MLC_TITLE:  A title line
+       NFIELDS_$SYNCHDMLC:  Total number of fields
+      INDEX_$SYNCHDMLC(I):  Index of field I. 0 <=INDEX_$SYNCHDMLC(I) <= 1 and
+                          INDEX_$SYNCHDMLC(I) > INDEX_$SYNCHDMLC(I-1).  This
+                          number is compared to a random number on (0,1) at
+                          the start of each history; if the random number is
+                          <= INDEX_$SYNCHDMLC(I), then field I is used.
+           NEG_$SYNCHDMLC:  Min. Y (ORIENT_$SYNCHDMLC=0) or 
+ 			      X (ORIENT_$SYNCHDMLC=1)
+                          of front opening in leaf (ie the opening at
+                          ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
+                          of leaf if ENDTYPE=0 for leaf J in field I.
+           POS_$SYNCHDMLC:  Max. Y (ORIENT_$SYNCHDMLC=0) or 
+  			      X (ORIENT_$SYNCHDMLC=1)
+                          of front opening in leaf if ENDTYPE=1, or of
+                          rounded end of leaf if ENDTYPE=0 for leaf J in 
+                          field I.
+           NUM_$SYNCHDMLC:  Apply NEG_$SYNCHDMLC and POS_$SYNCHDMLC to leaves
+                          J,...,J+NUM_$SYNCHDMLC-1.  Defaults to 1 if set <=0.
+                          Defaults to TOT_LEAF_$SYNCHDMLC-J+1 if set >
+                          TOT_LEAF_$SYNCHDMLC-J+1.
+ 
+   Note that the inputs NEG_$SYNCHDMLC, POS_$SYNCHDMLC and NUM_$SYNCHDMLC have
+     the same meanings as in 14a (static field inputs) but that they must
+     now be repeated for every field I.
+ 
+   15   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and 
+                                              air gaps (2F15.5,2I5)
+   
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   16  MED_IN (24A1):  Medium in opening(s) and air gaps 
+                       used to set MED_INDEX.
+   
+   17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$SYNCHDMLC
+                                                          (2F15.0,3I5):
+   
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+         IGNOREGAPS:   If set to 1, ignore all air gaps and driving screw
+                       holes when doing range
+                       rejection in leaf material when the particle X position
+                       is < min X of all leaf openings (not including leaf
+                       ends) or > max X of leaf openings (not including ends)
+                       (ORIENT_$SYNCHDMLC=1) or if the particle Y position
+                       is < min Y of all leaf openings (not including leaf
+                       ends) or > max Y of leaf openings (not including ends)
+                       (ORIENT_$SYNCHDMLC=0). This approximation is designed
+                       to make range rejection more efficient deep in the
+                       leaves, while still preserving accurate transport
+                       in the leaf ends.  Note that if you have significant
+                       air gaps between leaves or are concerned with the
+                       effects of the driving screw holes it is recommended 
+                       that you not use this option (ie run with the default
+                       setting of 0).
+   
+   18  MED_IN (24A1):  Medium of leaves, 
+                       used to set MED_INDEX.
+ 
+   19  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in driving screw holes 
+                                                        (2F15.5,2I5):
+ 
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+ 
+   20  MED_IN (24A1):  Medium in driving screw holes,
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf tungsten collimator design 
+    based loosely on the TrueBeam high-definition mlc (HD120).
+    Actual parameters are DIFFERENT - this serves just as a template.
+    Do not attempt to use these parameters for a simulation of the real
+    machine.
+   
+    The collimator starts at Z=47.0 cm, is 7 cm thick and has 80 tungsten 
+    leaves opening in the X direction. Leaves 1-10 and 71-80 are FULL 
+    (type 1), leaves 11-24 and 57-70 are HALF TARGET/HALF ISOCENTER
+    pairs, and leaves 25-56 are QUARTER TARGET/QUARTER ISOCENTER pairs.
+    The Z focus of the leaf sides is at Z=0 cm which is the position of the 
+    source. The leaf ends are straight and also focused at Z=0 cm.
+    In this example, the mlc is being run in step-and-shoot mode
+    MODE=2 with the leaf opening coordinates read in from the file
+    specified 
+     
+  20.5, RMAX 
+  TrueBeam HDMLC
+  1, 5, 2, ORIENT, NGROUP, MODE
+  47.0, ZMIN
+  7.0, ZTHICK
+  0.5, 0.04, 0.04, 0.135, 0.325, 0.123, 47, 47.5, 49.5, 50.7, 51.0, 51.3, 
+    1.7, 52.5, 52.8, FULL leaf cross-section 
+  0.25, 0.04, 0.04, 0.093, 0.137, 0.137, 47, 47.4, 49.1, 49.4, 1.7, 50.5, 
+    50.5, 53.6, 53.7, HALF TARGET cross-section 
+  0.25, 0.04, 0.04, 0.075, 0.124, 0.123, 47.2, 47.4, 50.52, 50.521, 51.7, 
+    52.1, 1.7, 53.6, 53.8, HALF ISOCENTER cross-section
+  0.11, 0.04, 0.04, 0.044, 0.074, 0.088, 47.1, 47.3, 47.9, 48.1, 1.7, 50.5, 
+    50.5, 53.6, 53.7, QUARTER TARGET cross-section
+  0.11, 0.04, 0.04, 0.035, 0.08, 0.065, 47.2, 47.3, 50.55, 50.55, 52.9, 53.1,
+    1.7, 53.6, 53.9,  QUARTER ISOCENTER cross-section
+  10, 1, FULL leaves
+  14, 2, HALF TARGET/ISOCENTER pairs
+  32, 3, QUARTER TARGET/ISOCENTER pairs
+  14, 2, HALF TARGET/ISOCENTER pairs
+  10, 1, FULL leaves
+  -10.5, START
+  0.005, LEAFGAP
+  1, ENDTYPE
+  0.0, ZFOCUS or RADIUS of leaf ends
+  0.0, ZFOCUS of leaf sides
+  /home/bwalters/egsnrc_mp/BEAM_synchdmlc/sample_synchdmlc.sequence
+  0.7, 0.01, 1, 0,
+  AIR700ICRU
+  0.7, 0.01, 1, 0, 0,
+  W700ICRU
+  0.7, 0.01, 1, 0,
+  AIR700ICRU
+\end{verbatim}
