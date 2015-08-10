@@ -1,0 +1,117 @@
+\begin{verbatim}
+   CARDS CM_PYRAMIDS(Rev 1.5)
+   *****************
+   
+   -1  dummy line filled with ***  read in main
+ 
+    0  RMAX_CM(ICM_$PYRAMIDS):  Perpendicular distance from Z-axis
+                                to boundary surrounding component
+                                This component module has a square
+                                boundary.
+ 
+    1  TITLE_$PYRAMIDS (60A1):  Title of CM.
+   
+    2  ISCM_MAX_$PYRAMIDS, IFILL_$PYRAMIDS (2I5):
+ 
+         ISCM_MAX_$PYRAMIDS: Number of layers in CM.
+            IFILL_$PYRAMIDS: Set to 0 (default) if all central
+                             and outer regions contain air, or 1 
+                             if central and outer regions contain
+                             user-specified media.
+   
+    Repeat 3 for I=1,ISCM_MAX_$PYRAMIDS
+ 
+    3  ZMIN_$PYRAMIDS(I), ZMAX_$PYRAMIDS(I), XFP_$PYRAMIDS(I), 
+       XBP_$PYRAMIDS(I), XFN_$PYRAMIDS(I), XBN_$PYRAMIDS(I), 
+       YFP_$PYRAMIDS(I), YBP_$PYRAMIDS(I), YFN_$PYRAMIDS(I),
+       YBN_$PYRAMIDS(I),XMAX_$PYRAMIDS(I), YMAX_$PYRAMIDS(I) (12F15.0): 
+   
+         ZMIN_$PYRAMIDS(I): Distance from front of layer I to reference plane.
+         ZMAX_$PYRAMIDS(I): Distance from back of layer I to reference plane.
+ 
+         XFP_$PYRAMIDS(I):  positive x dimension of central region at front
+         XBP_$PYRAMIDS(I):  positive x dimension of central region at back
+         XFN_$PYRAMIDS(I):  negative x dimension of central region at front
+         XBN_$PYRAMIDS(I):  negative x dimension of central region at back
+ 
+         YFP_$PYRAMIDS(I):  positive y dimension of central region at front
+         YBP_$PYRAMIDS(I):  positive y dimension of central region at back
+         YFN_$PYRAMIDS(I):  negative y dimension of central region at front
+         YBN_$PYRAMIDS(I):  negative y dimension of central region at back
+ 
+         XMAX_$PYRAMIDS(I): outer x edge of layer (absolute value)
+         YMAX_$PYRAMIDS(I): outer y edge of layer (absolute value)
+ 
+         Note restriction to leave airgap between layers:
+              ZMIN_$PYRAMIDS(I+1)-ZMAX_$PYRAMIDS(I) >= AIRGAPMIN
+  
+    4   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5): for AIR
+                                         between layers, and,
+                                         if IFILL_$PYRAMIDS=0,
+                                         in all central and outer regions. 
+          ECUT, PCUT:   Cutoff energies for electrons and photons.
+           DOSE_ZONE:   Dose scoring zone of air.
+      IREGION_TO_BIT:   mapping of region to bit for LATCH
+ 
+    Repeat 7-8 (IFILL_$PYRAMIDS=0) or 5-8 (IFILL_$PYRAMIDS=1)
+    for I=1,ISCM_MAX_$PYRAMIDS
+ 
+    5 and 6 are required only if IFILL_$PYRAMIDS=1
+ 
+    5  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+          ECUT, PCUT:   Cutoff energies for electrons and photons
+                        in central region and outer region, layer I
+           DOSE_ZONE:   Dose scoring zone for central region and outer region
+      IREGION_TO_BIT:   mapping of central region and outer region to bit
+                        for LATCH
+ 
+    6  MED_IN (24A1):   Medium of central region and outer region in layer I,
+                        used to set MED_INDEX.
+ 
+    7   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5):
+          ECUT, PCUT:   Cutoff energies for electrons and photons
+                        in surrounding region, layer I 
+           DOSE_ZONE:   Dose scoring zone of surrounding region.
+      IREGION_TO_BIT:   mapping of surrounding region to bit for LATCH
+ 
+    8  MED_IN (24A1):   Medium of surrounding region in layer I, 
+                        used to set MED_INDEX.
+ 
+    Example
+    *******
+   The following input file describes two pyramidal openings,
+   both 0.3cm thick, and both filled with air (ie IFILL_$PYRAMIDS=0).
+   The first opening begins at Z=0.0 cm and is cut out of Pb.  Its positive
+   X face begins at XFP=0.8cm and angles back to XBP=1.2cm.  The negative X
+   face is a mirror image, beginning at XFN=-0.8cm and going to XBN=-1.2cm.
+   The outer x edge is at XMAX=5.0cm. The Y faces of the first opening are
+   perpendicular to the beam, with YFP=YBP=0.8cm and YFN=YBN=-0.8cm. The
+   outer y edge is at YMAX=4.6cm.
+   The second opening begins at Z=0.31 and is cut out of aluminum.  Its 
+   positive and negative X faces describe a parallelepiped, with XFP=1.2cm,
+   XBP=0.8cm, XFN=-0.8cm, XBN=-1.2cm.  
+   The positive Y face angles from YFP=2.0cm to
+   YBP=0.5cm and the negative Y face is a mirror image of this, going from
+   XFN=-2.0cm to XBN=-0.5cm. The outer x edge and y edge are at XMAX=5.1cm,
+   YMAX=5.2cm respectively. Note that an air gap >= AIRGAPMIN (=0.01cm) must
+   be left between pyramids and the top of the CM and the first pyramid.
+   In this particular input file, there is no gap at the top of the
+   CM, so Z_min_CM will be automatically reset to -0.01cm to
+   provide the required gap.
+ 
+   Dose in the air gaps and openings will be scored in dose zone 1.
+   Dose in the Pb will be scored in zone 2, and dose in the Al will be
+   scored in zone 3.  ECUT and PCUT in all regions are set to 0.521MeV and
+   0.01 MeV respectively.
+ 
+   10.0000, 
+   PYR 
+   2,0
+   0.0, 0.3, 0.8, 1.2, -0.8, -1.2, 0.8, 0.8, -0.8, -0.8, 5.0, 4.6
+   0.31, 0.61, 1.2, 0.8, -0.8, -1.2, 2.0, 0.5, -2.0, -0.5, 5.1, 5.2
+   0.521, 0.01, 1, 0
+   0.521, 0.01, 2, 0
+   PB521ICRU
+   0.521, 0.01, 3, 0
+   AL521ICRU
+\end{verbatim}

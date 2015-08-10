@@ -1,0 +1,28 @@
+\begin{verbatim}
+  ---------------------------------------------------------------------------
+ 
+                           Rejection Plane Inputs
+                           **********************
+  
+   Used to define a rejection plane for use in conjunction with directional
+   bremsstrahlung splitting (DBS, IBRSPL=2, see above).
+   Inputs can exist without IBRSPL=2, but they will not be used.
+ 
+   Inputs must appear between the delimiters:
+   :Start DBS rejection plane:
+   :Stop DBS rejection plane:
+ 
+   Inputs are:
+ 
+      Use a rejection plane= Off, On (default is Off)
+                            Set to On if you want to define a rejection
+                            plane.
+                            [USE_REJPLN]
+      Z(cm) from zero reference plane= Z position of reference plane.
+                            [Z_REJPLN]
+ 
+      Fat photons and electrons will be discarded if they are about
+      to interact at Z>=Z_REJPLN.  Used to prevent correlated particles
+      from being created close to a scoring plane, compromising
+      statistics. 
+\end{verbatim}

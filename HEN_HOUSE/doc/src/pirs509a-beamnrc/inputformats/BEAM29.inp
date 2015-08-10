@@ -1,0 +1,60 @@
+\begin{verbatim}
+        Electron impact ionization= Off, On, Casnati, Kolbenstvedt, Gryzinski
+                                    (Default is Off)
+                          Determines which, if any, theory is used to model
+                          electron impact ionization. If set to 'On' then the
+                          theory of Kawrakow is used.  Other settings use the
+                          theory associated with the name given.  See future
+                          editions of the EGSnrc Manual (PIRS-701) for more
+                          details.  This is only of interest in keV X-Ray
+                          simulations.  Otherwise, leave it Off.
+                          [ eii_flag ]
+        Photon cross sections= epdl,xcom,custom (Default is Storm-Israel
+                          cross-sections from PEGS4)
+                          The name of the cross-section data for photon 
+                          interactions.  This input line must be left out
+                          to access the default Storm-Israel cross-sections
+                          from PEGS4.  'edpl' uses cross-sections from the
+                          evaluated photon data library (EPDL) from Lawrence 
+                          Livermore.  'xcom' will use the XCOM cross-sections
+                          from Burger and Hubbell.  The user also has the
+                          option of using their own customized cross-section
+                          data.  See the BEAMnrc manual for more details.
+                          [ photon_xsections ]
+        Photon cross-sections output= Off (default) or On.  If On, then
+                         a file $EGS_HOME/user_code/inputfile.xsections is
+                         output containing photon cross-section data used.
+                         [ xsec_out ]
+ 
+        Atomic relaxations, Rayleigh scattering, Photoelectron angular
+        sampling and Bound Compton scattering can also be turned On/Off 
+        on a region-by-region basis. To do so, put e.g.
+        Atomic relaxations= On in Regions   or
+        Atomic relaxations= Off in regions
+                          in your input file. Then use the relevant one of:
+        Relaxations start region=
+        Relaxations stop region=
+                 or
+        Bound Compton start region=
+        Bound Compton stop region=
+                 or
+        Rayleigh start region=
+        Rayleigh stop region=
+                 or
+        PE sampling start region=
+        PE sampling stop region=
+ 
+              each followed by a list of one or more
+              start and stop regions separated by commas.
+         Example:
+         Atomic relaxations= On in Regions
+         Relaxations start region=  1, 40
+         Relaxations stop region=  10, 99
+                          will first turn off relaxations everywhere and
+                          then turn on in regions 1-10 and 40-99.
+                          Note that input is checked against min. and max.
+                          region number and ignored if
+                          start region < 1 or stop_region > $MXREG or
+                          start region > stop region.   
+ 
+\end{verbatim}

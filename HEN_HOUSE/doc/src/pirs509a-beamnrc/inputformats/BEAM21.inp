@@ -1,0 +1,32 @@
+\begin{verbatim}
+   ISOURC = 15   NRC SWEPT BEAM WITH BEAM DIVERGENCE AND RADIAL INTENSITY
+   ***********                                                DISTRIBUTION  
+   
+      IQIN,ISOURC,GAMMA,ZFOCUS,RTHETAIN,THETAIN
+              IQIN       charge of the incident beam (defaults to 0)
+              ISOURC     =  15
+              GAMMA      half angle of the cone swept by the beam (degrees)  
+              ZFOCUS     Z position of the apex of the cone (cm) 
+              RETHETAIN  radius at which THETAIN, the divergence angle of the
+                         beam, is specified (cm).  RTHETAIN must be > 0.
+              THETAIN    divergence angle of the beam (degrees).  If GAMMA
+                         is not 0, then THETAIN can be set to 0; otherwise
+                         it must be > 0. 
+ 
+       Note that particles are always incident at Z_min_CM(1), regardless of
+       the value of ZFOCUS
+ 
+   Next record (If ISOURC=15)
+   ***********
+       SPCNAM       FILENAME (with EXT) containing description of the radial 
+                    intensity distribution of the incident particles
+                                                (maximum 80 characters) 
+              _______________________________________________________
+              FILE FORMAT for SPCNAM:  
+                NRDIST 
+                (RDISTF(I),RPDF(I),I=1,NRDIST)
+                      NRDIST     # radial bins 
+                      RDISTF(I)  upper radius of bin I (cm) 
+                      RPDF(I)    probability of particle being in bin I. 
+ ------------------------------------------------------------------------
+\end{verbatim}

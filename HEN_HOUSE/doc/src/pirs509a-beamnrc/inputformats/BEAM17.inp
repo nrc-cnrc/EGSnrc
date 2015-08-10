@@ -1,0 +1,23 @@
+\begin{verbatim}
+   Next Record        Photon Forcing Controls
+   ***********        ***********************
+       IFORCE,NFMIN,NFMAX,NFCMIN,NFCMAX
+              IFORCE = 0 normal photon transport (the default)
+                     = 1 force photon interaction in the geometry
+              NFMIN  number of photon interaction/history at which to start
+                     photon-interaction-forcing (defaults to 1)--this
+                     option has been deleted and NFMIN is now always treated 
+                     as 1. 
+              NFMAX  number of photon interaction/history after which to
+                     stop forcing photon to interact (defaults to 1)
+              NFCMIN number of CM to start photon interaction forcing
+                     ( default to 1 )
+              NFCMAX number of last CM in which photons forced to interact 
+                     ( default to max_cms )
+                     If a particle passes thru NFCMIN to NFCMAX, it is
+                     forced to interact there for the first NFMAX 
+                     interactions. The WEIGHT
+                     of this photon is reduced and the remaining WEIGHT is
+                     carried by another photon which will be transported
+ ---------------------------------------------------------------------------- 
+\end{verbatim}

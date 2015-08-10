@@ -1,0 +1,93 @@
+\begin{verbatim}
+   DESCRIPTION OF INPUT FILE                            toc:
+   ========================= 
+   (Revision: 1.19  last edited Date: 2013/03/25 14:40:01 ) 
+
+  CT Record 1          ctformat (A60) 
+                         The format of the CT data.  Currently Pinnacle,
+                         CADPLAN and DICOM formats are handled for all
+                         architectures.
+                         AAPM format requires conversion to Pinnacle through
+                         the $OMEGA_HOME/progs/ctcreate/CT/AAPM/aapm2pinnacle
+                         code.
+
+  CT Record 2          CTFilename (up to 256 characters)
+                         For Pinnacle format:
+                          CTFilename is the full name of the .header file.
+                          Assumes that the binary CT data is stored in a file
+                          with the same prefix but with a .img extension. 
+                         For CADPLAN and DICOM formats:
+                          CTFilename is the full name of a file in which is
+                          stored the full names of the CADPLAN data files
+                          that make up the full CT image (one file/slice).
+                          Files must be in order of increasing Z.
+
+  CT Record 3          xctsubmin,xctsubmax,yctsubmin,yctsubmax,zctsubmin,
+                       zctsubmax (6F10.4) (ON ONE LINE)
+
+                       xctsubmin,xctsubmax: lower and upper x boundaries (cm)
+                                            of the subset of the CT
+                                            data to be considered for the 
+                                            dosxyznrc phantom.
+                       yctsubmin,yctsubmax: lower and upper y bounds (cm)
+                                            of the subset of the CT data
+                                            to be considered for the dosxyznrc
+                                            phantom.
+                       zctsubmin,zctsubmax: lower and upper z bounds (cm)
+                                            of the subset of the CT data
+                                            to be considered for the dosxyznrc
+                                            phantom.  
+
+                          If all are set to 0, then the entire CT volume
+                          is selected.  If, in any dimension, the lower
+                          bound is >= the upper bound, then the entire
+                          thickness in that dimension will be used.  Finally,
+                          note that the subvolume is always expanded to 
+                          include an integer number of CT voxels.
+
+  CT Record 4          xyz_xthickness,xyz_ythickness,xyz_zthickness (3F15.0);
+                       The x, y and z voxel dimensions (cm) to be used 
+                       for the dosxyznrc phantom.  Restrictions:
+                          (xctsubmax-xctsubmin)/$IMAX<=xyz_xthickness<=
+                                                      (xctsubmax-xctsubmin)
+                          (yctsubmax-yctsubmin)/$JMAX<=xyz_ythickness<=
+                                                      (yctsubmax-yctsubmin)
+                          (zctsubmax-zctsubmin)/$KMAX<=xyz_zthickness<=
+                                                      (zctsubmax-zctsubmin)
+
+                         Note that voxel dimensions are always increased to
+                         fit an integer number of dosxyznrc voxels on the CT 
+                         sub-volume selected. 
+
+  CT Record 5          num_material, material_ct_lower_bound (2I10)
+                       num_material: This is the number of materials and ramps
+                                     that are to be read from the file.
+                       material_ct_lower_bound: lower CT no. for the first
+                                                medium in the ramp.
+
+                       If this input is 0,0 then the default CT ramp is used.
+                       See subroutine CTToMedium for a description of the 
+                       default ramp.
+
+                       If the default ramp is not used then the format for 
+                       user input of the materials and ramps 
+                       is shown in CT Records 6.a and 6.b.  These line pairs
+                       are repeated num_material times.
+
+  Repeat 6.a and 6.b for i=1 to num_material (only used if num_material > 0).
+
+  CT Record 6.a        material_name (24A1) 
+                       The PEGS4 name of material i.
+
+  CT Record 6.b        material_ct_upper_bound(i), 
+                       material_density_lower_bound(i),
+                       material_density_upper_bound(i) (I5,2F15.0) 
+                       (all on one line)
+
+                       material_ct_upper_bound(i): max CT no. for material i
+                       material_density_lower_bound(i): min density for 
+                                                        material i (g/cm^3)
+                       material_density_upper_bound(i): max density for 
+                                                        material i (g/cm^3)
+
+\end{verbatim}

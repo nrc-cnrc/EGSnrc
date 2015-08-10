@@ -1,0 +1,943 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: mortran manual
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Iwan Kawrakow, 2003
+%
+%  Contributors:    Blake Walters
+%                   Ernesto Mainegra-Hing
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% The following will pick up edit date for this section only.
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2011/05/02 18:40:33 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2006/09/15 20:28:25 
+}}
+
+\section{EGS User Guide to MORTRAN3}
+\typeout{This is start of EGS User Guide to MORTRAN3}
+\label{UGM3}
+\index{Nelson, Ralph}
+\index{Mortran3}
+\index{Mortran3!C-style comments}
+\index{Mortran3!C preprocessor statements}
+\begin{verbatim}
+ 
+ 
+
+ 
+                        SLAC265 - APPENDIX 4
+ 
+ 
+                    EGS User Guide to Mortran3
+ 
+
+                              By
+
+                       Walter R. Nelson
+               Stanford Linear Accelerator Center
+                      Stanford University
+                   Stanford, CA 94305, U.S.A.
+
+                      David W. O. Rogers
+              National Research Council of Canada
+                    Ottawa K1A 0R6, Canada
+
+ 
+                        31 December 1985
+ 
+ 
+ [This EGS User Guide to Mortran3 was originally Appendix 4 of SLAC-265.
+ This guide was excerpted from SLAC Computation Research Group
+ Report CGTM No. 165 (June 1975): "A User's Guide to Mortran2" by
+ A. James Cook and L. J. Shustek and modified by the authors to 
+ represent Mortran3.]
+
+
+
+
+
+
+
+ With the EGSnrcMP environment, there have been a few changes to the
+MORTRAN3 processor.  In source code, C-style comments (viz /* comment */)
+are now allowed, and any line starting with a # is output directly without
+any processing (this is to allow C-preprocessor statements to be used.
+\end{verbatim} 
+\newpage \begin{verbatim}
+ 
+ 
+                            PREFACE
+ 
+ 
+ 
+      EGS is written in a structured language called Mortran3
+      which has been developed at SLAC by A. James Cook and L. J.
+      Shustek.  The Mortran3 precompiler is written in 1966 ANSI
+      standard FORTRAN IV and 1977 ANSI standard FORTRAN 77, and
+      both are included on the EGS4 distribution tape.  This guide,
+      which is also maintained on the EGS4 distribution tape, is
+      meant to be a brief introduction to Mortran3 to allow EGS4
+      users to use it.  For a complete description, the user is
+      referred to the "Mortran3 User's Guide" by A. J. Cook, SLAC
+      Computation Research Technical Memorandum CGTM-209 (1983).
+      
+      Although it is possible to write EGS User Codes entirely in
+      FORTRAN, we strongly urge you to use Mortran because of how easily
+      one can write readable (and therefore more likely correct) code,
+      because of its flexibility, and because of its ability to improve
+      execution time by allowing for in-line code generation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{verbatim} 
+
+\newpage
+ \subsection{Introduction} \index{Mortran3!introoduction}
+ \begin{verbatim}
+      The term Mortran, like FORTRAN, has several meanings,
+ depending upon the context in which the term is used.
+ Mortran has come to mean:
+
+      - A Structured Language.  - A Translator for that
+      language.  - A Macro-processor.
+
+ The structured language is implemented as a set of macros
+ which are used by the macro processor to translate
+ the language into FORTRAN.  The resulting FORTRAN
+ program is then run like any other FORTRAN program.
+ User-defined macros are easily added to the standard
+ (language-defining) set of macros so that the language is
+ "open-ended" in the sense that extensions to the language
+ may be made at any time by the user.  Extensions have
+ ranged from very simple ones like matrix multiplication,
+ to complex ones like those which define new data types.
+
+      Users need not concern themselves with the method of
+ implementation or the macro facility in order to take
+ advantage of the structured language which is provided
+ by the standard set of macros.  The features of this
+ language include:
+
+      - Free-field (column and card boundaries may be
+      ignored).  - Alphanumeric labels of arbitrary length.
+      - Comments inserted anywhere in the text.  - Nested
+      block structure.  - Conditional statements which
+      may be nested (IF, IF-ELSE,
+        and ELSEIF).
+      - Loops (repetitively executed blocks of statements)
+      which
+        test for termination at the beginning or end or
+        both or neither (WHILE, UNTIL, FOR-BY-TO, LOOP
+        and DO).
+      - EXIT (jump out of) any loop.  - NEXT (go to NEXT
+      iteration) of any loop.  - Multiple assignment
+      statements.  - Conditional (alternate) compilation.
+      - Program listing features include:
+          - Automatic printing of the nesting level.
+          - Automatic indentation (optional) according
+          to nesting
+            level.
+      - Abbreviations for simple I/O statements.  -
+      Interspersion of FORTRAN text with Mortran text.
+\end{verbatim} 
+
+\newpage \begin{verbatim}
+
+      The user may elect to override the standard set of macros
+ and write a set which defines another, perhaps "problem oriented",
+ language.
+ 
+      The Mortran3 processor is a FORTRAN program of approximately
+ 2000 statements.  The 1966 ANSI standard has been observed
+ throughout, so that transportability of the processor is assured.
+ 
+ \end{verbatim}
+ \subsection{Coding Rules}
+ \index{Mortran3!coding rules}
+ \begin{verbatim}
+ 
+      Mortran programs may be written without regard to column
+ or card boundaries.  Statements may begin anywhere on the input
+ line (card image), and may end anywhere on the same line or on
+ a succeeding line.  The end of a statement is determined by a
+ semicolon (;).  This feature permits "free-field" or "free-form"
+ programming.  Normally, only the first 72 columns of the input
+ line are intepreted as program text, but this can be changed
+ (see Section A4.6).
+ 
+      Character strings comprising Hollerith fields are enclosed
+ in apostrophes (as in 'THIS IS HOLLERITH DATA').  If an embedded
+ apostrophe is desired as a character within a quoted string,
+ use a pair of apostrophes to represent each such embedded apos-
+ trophe (as in 'DON''T').
+ 
+      Comments in Mortran are enclosed in quotation marks (as in
+ "COMMENT") and may be inserted anywhere in the program (except
+ in character strings or macros).
+ 
+      In Mortran, an alphanumeric label is a character sequence
+ of arbitrary length enclosed in colons (as in :TOMATOES:).  The
+ characters which comprise the sequence may be any combination of
+ letters and digits.  An alphanumeric label may be used anywhere
+ a FORTRAN statement label is allowed.
+ 
+      Multiple blanks (a sequence of two or more blanks) in a
+ Mortran program are equivalent to a single blank except in quoted
+ strings, where all blanks are preserved, and in macros (discussed
+ in Section A4.5).
+\end{verbatim} 
+\newpage \begin{verbatim}
+ Summary of coding rules:
+ 
+      - Terminate statements with a semicolon (;).
+ 
+      - Enclose comments in quotation marks (").
+ 
+      - Enclose labels in colons (:).
+ 
+      - Enclose character strings in apostrophes (').
+ 
+      - Blanks may be inserted freely except in labels, character
+        strings and user-defined macros.
+ 
+      It should be pointed out that any extensions provided by a
+ particular FORTRAN compiler may be used, provided that they do
+ not conflict with Mortran's coding conventions.  However, if
+ transportability of the programs being written in Mortran is
+ a consideration, the ANSI FORTRAN standard should be adhered to.
+ The standard set of macros which define the language described
+ in this Guide do not generate non-ANSI FORTRAN.
+ \end{verbatim}
+ \subsection{Structure}
+ \index{Mortran3!structure}
+ \subsubsection{Statements}
+ \index{Mortran3!statements}
+ \begin{verbatim} 
+      FORTRAN may be regarded as a subset of Mortran, since (with
+ the exception of multiple blanks in a Hollerith string) any valid
+ FORTRAN statement becomes a valid Mortran statement when
+ 
+      - it is terminated by a semicolon, and
+      - continuation marks (if any) are deleted.
+ 
+ \end{verbatim}
+ \subsubsection{Blocks}
+ \index{Mortran3!blocks}
+ \begin{verbatim}
+     A Mortran block is a sequence of Mortran statements enclosed
+ in the special characters [ and ], which we will call "brackets"
+ (or "square brackets").  The left bracket may be read "begin"
+ and the right bracket may be read "end".  Let
+ 
+                    S1; S2; S3;...Sk;...Sn;              (A4.3-1)
+ 
+ be a sequence of statements.  The sequence becomes a block when
+\end{verbatim} 
+\newpage \begin{verbatim}
+ it is enclosed in brackets
+ 
+                  [ S1; S2; S3;...Sk;...Sn; ]  .         (A4.3-2)
+ 
+ (Note: the ellipses (...) are meta-symbols indicating arbitrary
+ repetition.  The brackets are not meta-symbols; they are
+ delimiters in the Mortran language).
+ 
+      Blocks may be nested.  That is, any of the statements in
+ a block may be replaced by a block.  For example, in sequence
+ (A4.3-2) we could replace Sk by a block and write
+ 
+      [ S1; S2; S3;...[ T1; T2; T3;...Tm; ]...Sn; ]      (A4.3-3)
+ 
+ The block containing the sequence T1;...Tm; is completely
+ contained, or nested, within the block containing the sequence
+ S1;...Sn;.  We will frequently write an ellipsis enclosed in
+ brackets [...] to denote a block.
+ 
+      Example of a block:   [ X=Y; CALL SUB(A); B=1; ]   .
+ 
+ \end{verbatim}
+ \subsubsection{Conditional Statements}
+ \index{Mortran3!conditional statements}
+ \begin{verbatim}
+ 
+      The simplest form of a conditional statement in Mortran is
+ written
+                    IF e [...]                           (A4.3-4)
+ 
+ where e is an arbitrary logical expression, and the ellipsis
+ enclosed in brackets denotes a block as described above.  If e
+ is true then the statements in the block are executed.   If e
+ is false, control is transferred to the first statement following
+ the block.  For example:
+ 
+                    IF A.LT.B [ C=D; E=F; ] G=H;
+ 
+ If A is less than B then the statements C=D and E=F are executed
+ after which G=H is executed.  If A is not less than B control
+ is transferred directly to the statement G=H.
+ 
+      Next in complexity is the IF-ELSE statement, which is written
+ 
+                    IF e [...] ELSE [...]                (A4.3-5)
+ 
+ If e is true then the statements in the first block are executed
+ and control is transferred to the statement following the second
+ block.  If e is false then the statements in the second block
+ are executed and control is transferred to the statement following
+ the second block.  For example, consider
+ 
+                       IF A.LT.B [C=D; E=F;]
+                            ELSE   [G=H; I=J;]
+                       K=L;
+ 
+ If A is less than B the statements C=D and E=F are executed after
+ which control is transferred to the statement K=L. If A is not
+ less than B the statements G=H and I=J are executed after which
+ control is transferred to the statement K=L.
+ 
+ Consider
+                          IF A.EQ.B [ X=Y;]
+ 
+ Here the block to be executed, whenever A is equal to B, consists
+ of the single statement X=Y;.  An alternate form acceptable in
+ Mortran is the standard FORTRAN logical IF:
+ 
+                           IF (A.EQ.B) X=Y;
+ 
+      IF-ELSE statements may be nested to any depth.  Even so,
+ the IF-ELSE is not really adequate (in terms of clarity) for
+ some problems that arise.  For example, consider the following
+ "case  analysis"  problem.  Suppose that we have four logical
+ expressions
+ 
+                    p, q, r, and s,
+ 
+ and five blocks of statements
+ 
+                    A, B, C, D, and E.
+ 
+ Now suppose that p, q, r, and s are to be tested sequentially.
+ When the first TRUE expression is found we want to execute the
+ statements in the corresponding block (p corresponds to A,
+ q to B, etc.) and then transfer control to the statement
+ following block E.  If none of them is true we want to execute
+ block E.  Using nested IF-ELSE statements we could write
+ \end{verbatim}
+\newpage
+ \begin{verbatim}
+                   IF p [A]
+                   ELSE [ IF q [B]
+                          ELSE [ IF r [C]
+                                 ELSE [ IF s [D]
+                                        ELSE [E]
+                                      ]
+                               ]
+                        ]
+ While this does what we want, it is awkward because each ELSE
+ increases the level of nesting.  Mortran offers the ELSEIF
+ statement as an alternative:
+                         IF     p [A]
+                         ELSEIF q [B]
+                         ELSEIF r [C]                    (A4.3-6)
+                         ELSEIF s [D]
+                         ELSE     [E]
+ Using ELSEIF instead of ELSE allows all the tests to be written
+ at the same nest level.
+ 
+      In summary, an IF statement may be optionally followed by any
+ number of ELSEIF clauses which in turn may be optionally followed
+ by a single ELSE clause.
+ \end{verbatim}
+ \subsubsection{Iteration}
+ \index{Mortran3!iteration}
+ \index{Mortran3!WHILE}
+ \index{Mortran3!UNTIL}
+ \begin{verbatim}
+      A Mortran loop is a block which is preceded by, and
+ optionally followed by, a "control phrase".  One such phrase is
+ " WHILE e ".  One of the loops we may write with this phrase is
+ 
+                         WHILE e  [...]                  (A4.3-7)
+ 
+ The logical expression e is tested first.  If e is true the block
+ is executed and then control is returned to test e again.
+ When e becomes false, control is transferred to the first
+ statement following the block.
+ 
+      Another control phrase is " LOOP ".  If we wanted to test at
+ the end of the loop instead of the beginning, we could write
+ 
+                         LOOP [...] WHILE e ;            (A4.3-8)
+ 
+ In (A4.3-8) the block is executed first.  Then, if the logical
+ expression e is true, the block is executed again.  When e becomes
+ false control is transferred to the statement following the loop
+ (that is, the statement following the " WHILE e ;" ).
+ 
+      The logical converse of the WHILE loop is the UNTIL loop.
+                           UNTIL e  [...]                (A4.3-9)
+ 
+ The logical expression e is tested first.  If e is false the block
+ is executed and then control is returned to test e again.  When
+ the logical expression becomes true, control is transferred to
+ the first statement following the block.   Similarly, the logical
+ converse of (A4.3-8) may be written by replacing the WHILE in
+ (A4.3-8) by UNTIL.
+ 
+      Tests for loop termination may be made at both ends of a
+ loop.  For example, if e and f are logical expressions
+ 
+                        WHILE e [...] UNTIL f ;
+                        WHILE e [...] WHILE f ;
+ 
+                        UNTIL e [...] WHILE f ;
+                        UNTIL e [...] UNTIL f ;  ,
+ 
+ all test at both the beginning and the end.  The above list is by
+ no means exhaustive, but we must develop other "control phrases"
+ in order to complete the discussion.
+ 
+     The iteration control phrases discussed above do not involve
+ "control variables"; that is, variables whose values are
+ automatically changed for each execution of the loop.
+ The following loop involves a control variable:
+ 
+                  FOR  v = e  TO  f  BY  g  [...]        (A4.3-10)
+ 
+ where v is the control variable and e, f, and g are arbitrary
+ arithmetic expressions.  The control variable v must be of type
+ REAL or INTEGER, and may be an array element (subscripted
+ variable).  The value of any of the arithmetic expressions may
+ be positve or negative.  Moreover, the magnitudes as well as the
+ signs of f and g may change during the execution of the loop.
+ 
+      The control variable v is set to the value of e and the test
+ for loop termination (see below) is made.  If the test is passed
+ then the block is executed, after which v is incremented by the
+ value of g and control is returned to the test.  Note that the
+ block is never executed if the test fails the first time.
+ 
+      The "test" for the termination of a FOR-loop refers to the
+ logical expression
+                      g * (v-f) .GT. 0                   (A4.3-11)
+\end{verbatim} 
+\newpage \begin{verbatim}
+ If the value of (A4.3-11) is true, then the test is said to have
+ failed and control is transferred to the statement following the
+ loop.  Multiplication by g in (A4.3-11) assures that loops in
+ which the increment is (or becomes) negative will terminate
+ properly.
+ 
+      The "FOR-loop" (A4.3-10) has two alternate forms
+               FOR v = e  BY  g TO f  [...]              (A4.3-12)
+ and           FOR v = e  TO  f       [...]              (A4.3-13)
+ 
+ In (A4.3-13) no increment is given, so it is assumed to be one.
+ 
+      The iteration control phrase "DO I=J,K,N" also involves
+ a control variable.  In this case I,J,K, and N must all be of
+ type INTEGER and may not be array elements or expressions (these
+ are the standard FORTRAN rules for DO-loops).  The following
+ generates a standard FORTRAN DO-loop:
+ 
+                    DO I=J,K,N [...]                     (A4.3-14)
+ 
+      There is one exception to the rule that loops must be
+ preceded by control phrases; namely, the compact DO-loop notation
+ 
+                    [I=J,K,N;...]                        (A4.3-15)
+ 
+ which generates a standard FORTRAN DO-loop.  This form permits
+ compact notation for nests like
+ 
+           [I=1,N1; [J=1,N2; [K=1,N3; A(I,J,K)=exp; ]]].
+ 
+ (The use of the compact DO-loop notation is controversial;
+ some people feel that it obscures the loop control.  If desired,
+ it can be be removed from the language by deleting a single macro
+ from the standard set).
+ 
+      The Mortran FOR- and DO-loops apply only to blocks of
+ statements, not to I/O lists.  The usual FORTRAN implied DO
+ should be used within READ or WRITE statements.
+ 
+      There remains one more type of loop to be discussed.  This
+ loop is sometimes referred to as the "forever loop".  One writes
+ the forever loop in Mortran by preceding a block with the phrase
+ "LOOP":
+                     LOOP [...] REPEAT                   (A4.3-16)
+ or simply           LOOP [...]                          (A4.3-17)
+\end{verbatim} 
+\newpage \begin{verbatim}
+ 
+ 
+ The block is executed and control is transferred back to the
+ beginning of the loop.  The optional phrase "REPEAT" in (A4.3-16)
+ is sometimes useful as a visual aid in locating the ends of
+ deeply nested loops.
+ 
+      A reasonable question might be:  "How do you get out of a
+ forever loop?  Or, for that matter, any of the loops?".  One
+ rather obvious way is to write
+ 
+                            GO TO :CHICAGO: ;
+ 
+ where the label :CHICAGO: is on some statement (or block) outside
+ the loop.  If a convenient label doesn't already exist, creating
+ one for the sole purpose of jumping out of the loop can be
+ annoying and distracting.  For the case in which the jump is to
+ the statement following the loop, the GO TO may be replaced by
+ the Mortran "EXIT;" statement, which is written
+ 
+                           EXIT;                         (A4.3-18)
+ 
+ or, with a conditional statement
+ 
+                       IF (e) EXIT;                      (A4.3-19)
+ 
+ or                    IF  e  [...EXIT;]                 (A4.3-20)
+ 
+ In any Mortran loop, the occurrence of the statement "EXIT;"
+ causes a transfer of control to the first statement following
+ the loop in which it occurs.
+ 
+      A companion to the "EXIT;" statement is the "NEXT;"
+ statement, which is written
+ 
+                           NEXT;                         (A4.3-21)
+ 
+ or, with a conditional statement
+ 
+                       IF (e) NEXT;                      (A4.3-22)
+ 
+ or                    IF  e  [...NEXT;]                 (A4.3-23)
+\end{verbatim} 
+\newpage \begin{verbatim}
+ 
+ 
+ The occurrence of a "NEXT;" statement (which is short-hand for
+ "go to the next iteration of this loop") in any Mortran loop
+ causes a transfer of control to the beginning of the loop in which
+ it occurs, incrementing the control variable (if any) before mak-
+ ing the test for continuation in the loop.  In loops which test
+ at both ends of the loop, only the test at the beginning of the
+ loop is made; tests at the end of the loop are made only when the
+ end of the loop is reached.  The tests of control variables in
+ FOR- and DO-loops are considered to be at the beginning of the
+ loop.
+ 
+      Any Mortran loop may be optionally preceded by a label.  We
+ will call loops which are preceded by labels "labeled loops".
+ Any EXIT or NEXT statement may be optionally followed by a label.
+ Any labeled loop may contain one or more statements of the form
+ 
+                  EXIT :label: ;                         (A4.3-24)
+ 
+ which transfers control to the first statement following the
+ labeled loop.  For example EXIT :ALPHA:; would transfer control
+ to the statement following the loop which had been labeled :ALPHA:.
+ This transfer of control takes place regardless of nesting, and
+ thus provides a "multi-level" EXIT capability.   The statement
+ 
+                  NEXT :label: ;                         (A4.3-25)
+ 
+ transfers control in the manner described above for the NEXT;
+ statement.
+ 
+      Suppose we have a nest of loops which search some arrays.
+ The outer loop has been labeled :SEARCH:, and two of the inner
+ loops have been labeled :COLUMN: and :ROW:.  Now we may write
+ 
+   NEXT :ROW: ;    or    NEXT :COLUMN: ;   or    EXIT :SEARCH: ;
+ 
+ when the transfer involves more than one level of nesting, or
+ 
+                   NEXT;     or       EXIT;
+ 
+ when only one nest level is involved.  Of course, the form
+ 
+                       EXIT :label:;
+ 
+ may also be used to exit a single level if desired.
+\end{verbatim} 
+\newpage \begin{verbatim}
+ We can now summarize Mortran loops in the following chart:
+ 
+          | WHILE a          |
+          | UNTIL b          |    | NEXT;        |
+          | LOOP             |    | EXIT;        |      | WHILE c; |
+ |:label:|  FOR v=x BY y TO z [...| EXIT :label:;| ...] | UNTIL d; |
+          | FOR v=x TO y BY z|    | NEXT :label:;|      | REPEAT   |
+          | FOR v=x TO y     |
+          | DO i=j,k,n       |
+ 
+          where  a, b, c, and d are arbitrary logical expressions,
+                 x, y, and z are arbitrary arithmetic expressions,
+                 v is a subscripted or non-subscripted variable of
+                    type INTEGER or REAL,
+                 j, k, and n are non-subscripted INTEGER variables
+                    or INTEGER constants, and
+                 i is a non-subscripted INTEGER variable.
+ 
+          | |  indicates "choose one",
+          [ ]  indicates "optional", and
+          ...  indicates a (possibly null) sequence of statements.
+ 
+ \end{verbatim}
+ \subsection{Miscellaneous Features}
+ \subsubsection{Multiple Assignment}
+ \index{Mortran3!multiple assignment}
+ \begin{verbatim}
+ 
+      It is sometimes useful to be able to assign the value of some
+ expression or variable to several variables in a single statement.
+ In Mortran one writes
+ 
+                / p,q,r...,z / = e                       (A4.4-1)
+ 
+ where p,q,r,...,z are variables and e is an expression.  The
+ expression e assigned to each variable in turn.  For example,
+ 
+          / I, A(I,K), J / = SQRT(X/2.0);
+ 
+ produces the following FORTRAN statements:
+ 
+          I = SQRT(X/2.0)
+          A(I,K) = SQRT(X/2.0)
+          J = SQRT(X/2.0)
+ \end{verbatim}
+ \subsubsection{I/O Abbreviations}
+ \index{Mortran3!I/O abbreviations}
+ \begin{verbatim}
+      Another instance in which the creation of a label can be
+ annoying because it is used only once and contains no mnemonic
+ information is the following:
+ 
+  READ (5,:NONSENSE:) i/o list;  :NONSENSE: FORMAT(format list);
+ 
+ In Mortran one may write
+ 
+               INPUT i-o list; (format list);            (A4.4-2)
+ or            OUTPUT i-o list; (format list);           (A4.4-3)
+ 
+ whenever the input or output is to the standard FORTRAN input or
+ output units (5 and 6, respectively).  (If your FORTRAN compiler
+ is already "extended" to allow the keywords INPUT and OUTPUT or
+ if these keywords are already used in other contexts, the macros
+ defining these statements may be removed or modified to use other
+ keywords.  Similarly, the input and output units may be easily
+ changed to units other than 5 and 6.)
+ \end{verbatim}
+ \subsubsection{Operators}
+ \index{Mortran3!relational operators}
+ \index{Mortran3!operators}
+ \begin{verbatim}
+      Relational operators (e.g., .LT. etc. in FORTRAN notation) may
+ be denoted by:
+ 
+           <, <=, =<, =, ~=, =>, >=, and >.
+ 
+ Logical operators may be denoted by:
+ 
+           & (and), | (or), and ~ (not).
+ 
+ The usual FORTRAN notation is still valid, but one must NOT mix
+ modes within a single statement (i.e., (A>B.AND.C>D) will be
+ translated incorrectly.
+ \end{verbatim}
+ \subsection{User-Defined Macros}
+ \index{Mortran3!macros}
+ \index{Mortran3!user defined macros}
+ \subsubsection{String Replacement}
+ \index{Mortran3!string replacement}
+ \begin{verbatim}
+      Macro definitions are written in the following form:
+ 
+        REPLACE {pattern} WITH {replacement}             (A4.5-1)
+ 
+ Macro definitions are not statements and therefore need not be
+ terminated by semicolons (if you put one in it will be ignored).
+ Macro definitions are "free field" in the sense that you may
+ write more than one definition on one line, or extend one
+ definition to several lines.
+ 
+      The pattern and replacement parts of a macro definition are
+ character strings in the sense described in Section A4.2.  Since
+ embedded strings are permitted in macro definitions, the usual
+ rules regarding the doubling of apostrophes apply.
+ 
+      The simplest kind of macro is one which contains neither
+ parameters nor embedded strings.  For example, one could write
+ 
+       REPLACE {ARRAYSIZE} WITH {50}                     (A4.5-2)
+ 
+ after which all occurrences of the characters ARRAYSIZE in the
+ program text would be replaced by 50.  For example,
+ 
+          DIMENSION X(ARRAYSIZE); ... DO J=1,ARRAYSIZE [...]...
+ 
+ would produce the same FORTRAN program as if
+ 
+          DIMENSION X(50);...  DO J=1,50 [...]...
+ 
+ had been written.
+ 
+      Blanks are generally not significant when searching for
+ occurrences of the pattern in the program text.  For example,
+ the macro
+            REPLACE {SIGMA(1)} WITH {SIGMA1}
+ 
+ would match the program text
+                     SIGMA (1)
+ as well as
+                     SIGMA(1)
+      In some cases it is desirable to require that one or more
+ blanks be present in the program text in order that a match occur;
+ this can be done by writing a single blank in the pattern part of
+ the macro.  For example the macro
+ 
+       REPLACE {DUMP X;} WITH {OUTPUT X; (F10.2);}
+ would match
+                    DUMP X;
+ but not
+                    Y = DUMPX;
+ 
+      Normally, the text generated by a macro is itself elegible
+ for replacement by other macros, or even by the the same macro
+ that generated the text.
+ 
+ \end{verbatim}
+ \subsubsection{Parameters in Macros}
+ \index{Mortran3!parameters in macros}
+ \begin{verbatim}
+ 
+      The pattern part of a macro definition may contain up to
+ nine formal (or "dummy") parameters, each of which represents a
+ variable length character string.  The parameters are denoted by
+ the symbol #.  For example,
+ 
+              {EXAMPLE#PATTERN#DEFINITION}               (A4.5-3)
+ 
+ contains two formal parameters.  The formal parameters are
+ "positional".  That is, the first formal parameter is the
+ first # encountered (reading left to right), the second formal
+ parameter is the second # encountered and so on.  The corres-
+ ponding actual parameters are detected and saved during the
+ matching process.  For example, in the string
+ 
+       EXAMPLE OF A PATTERN IN A MACRO DEFINITION        (A4.5-4)
+ 
+ (assuming (A4.5-3) is the pattern to be matched), the first
+ actual parameter is the string "OF A", and the second actual
+ parameter is the string "IN A MACRO".  The parameters are saved
+ in a "holding buffer" until the match is completed.
+ 
+      After a macro is matched, it is "expanded".  The expansion
+ process consists of deleting the program text which matched the
+ pattern part of the macro and substituting for it the replacement
+ part of the macro.
+      The replacement part may contain an arbitrary number of
+ occurrences of formal parameters of the form {Pi} (i=1,2,...,9).
+ During expansion, each formal parameter {Pi} of the replacement
+ part is replaced by the i-th actual parameter.  A given formal
+ parameter may appear zero or more times in the replacement part.
+ For example, the pattern part of the macro definition
+ 
+       REPLACE {PLUS #;} WITH {{P1}={P1}+1;}             (A4.5-5)
+ 
+ would match the program text
+ 
+                   PLUS A(I,J,K);                        (A4.5-6)
+ 
+ During the matching process the actual parameter A(I,J,K) is
+ saved in the holding buffer.  Upon completion of the matching
+ process (that is when the semicolon in the program text matches
+ the semicolon in the pattern part), the "expansion" of the macro
+ takes place, during which the actual parameter A(I,J,K) replaces
+ all occurrences of the corresponding formal parameter, producing
+ 
+                A(I,J,K)=A(I,J,K)+1;                     (A4.5-7)
+ 
+ Note that the single formal parameter {P1} occurs twice in the
+ replacement part and therefore the single actual parameter
+ A(I,J,K) occurs twice in the resulting string.
+ 
+      The program text which may be substituted for the formal
+ (dummy) parameter is arbitrary except for the following
+ restrictions:
+ 
+      1. It may not be text containing an end-of-statement
+         semicolon.  This restriction prevents "run-away" macros
+         from consuming large parts of the program.
+ 
+      2. Parentheses and brackets must be correctly matched
+         (balanced). This facilitates the construction of macros
+         which treat expressions as indivisible units.
+ 
+      3. Quoted character strings are considered to be indivisible
+         units. If the opening apostrophe of a character string is
+         part of the actual parameter, then the entire string must
+         be within the actual parameter.
+ \end{verbatim}
+ \subsection{Control Cards}
+ \index{Mortran3!control cards}
+ \begin{verbatim}
+      More properly called "processor control directives",
+ Mortran3 control cards may appear anywhere within the program
+ and fall into two categories:
+               1. Column-one-restricted directives
+               2. Free-form directives
+ 
+ Column-one-restricted directives MUST begin in column one and
+ only one directive per line is recognized.  Free-form directives,
+ on the other hand, may appear anywhere on a line and are not
+ limited by number.  Some of both types have been found to be
+ useful with the EGS4 Code System and they will be presented next
+ [additional information is provided in A. J. Cook, "Mortran3
+ User's Guide", SLAC Computation Research Group Technical Memor-
+ andum CGTM-209 (1983)].
+ \end{verbatim}
+ \subsubsection{Column-One-Restricted Directives}
+ \index{Mortran3!column one restricted directives}
+ \begin{verbatim}
+      Each of these control cards begins with a "%" in column 1,
+ and should not contain embedded blanks or program text.
+ Column 1
+ |
+ V
+ %%   Signals end of Mortran input.  This is the ONLY control card
+      that is required.  All others are optional.  Unlike Mortran2,
+      %% signals the final end of input and must not be used to
+      signal end of input from this particular unit.
+ 
+ %F   Switch to FORTRAN mode (initial mode is Mortran).  While
+      in FORTRAN mode, cards are read and written without any
+      processing. This feature allows the interspersion of FORTRAN
+      and Mortran text.  If this feature is used, all FORTRAN
+      statement labels should be restricted to four digits
+      (or less) in order to avoid possible conflict with Mortran
+      generated statement labels, all of which are five digits
+      long (in the default mode).
+ 
+ %M   Switch back to Mortran mode (initial mode is Mortran).
+ 
+ %E   Eject (start new page) in Mortran listing.
+ 
+ %L   List (i.e., turn on Mortran listing (initally ON)).
+ 
+ %N   Nolist (i.e., turn off Mortran listing).
+ %In  Indent n places per nest level in Mortran listing, where
+      n=0,1,2,...,99 (initally 0). (Note: leading blanks are
+      automatically suppressed when n>0 so that "ragged" programs
+      will be "straightened" by Mortran).
+ 
+ %Cn  Set input line width to n, where n=10,11,...,80
+      (initially n=72).  Characters in columns n+1 thru 80 will
+      appear in the Mortran listing, but will be ignored by the
+      processor.
+ 
+ %An  Annotation mode switch.  Controls the generation of Mortran
+      source as comments in the generated FORTRAN as follows:
+ 
+      n=0 Suppress Mortran text in FORTRAN file (initially n=0).
+ 
+      n=1 Interleave Mortran text as comments in the FORTRAN
+          program starting in column 2 and extending through
+          column 80.  If column 80 of the Mortran source line is
+          not blank, a second comment line is generated containing
+          the 80th character.
+ 
+      n=2 Interleave the Mortran text as comments in the FORTRAN
+          program in columns 40 thru 80.  Each Mortran source line
+          will appear as two comment lines in the FORTRAN listing,
+          each of which contains one half of the Mortran source
+          line.
+ 
+ %Qn  Quote switch (initally n=0).  Controls Mortran comments as
+      follows:
+      n=0 Comments must be fully enclosed in quotation marks (").
+ 
+      n=1 All comments not closed at the end of each line will be
+          closed by Mortran.
+ 
+ %Un  Unit switch.  Causes Mortran to switch to FORTRAN input
+      unit n for further input, where n=1,2,3...99.  When an
+      end-of-file is read from unit n, input is switched back
+      again to the unit from which the %Un was read.  If another
+      %Un is read before an end-of-file, the current input unit
+      is stacked and the Mortran input unit is again switched.
+      This control statement provides a facility similar to that
+      implemented in other languages by "COPY" or "INCLUDE"
+      statements.   It is particularly convenient for introducing
+      standard declarations, common blocks, or macro definitions
+      from a predefined external file.
+ \end{verbatim}
+ \subsubsection{Free-Form Directives}
+ \index{Mortran3!free form directives}
+ \begin{verbatim}
+      Free-form directives begin with an exclamation point
+ ("bang!") and end with a semicolon.  The following are of
+ particular use with EGS4/PEGS4:
+ 
+ !ANNOTATE;    Interleave Mortran source in FORTRAN output.
+               Mortran statements become COMMENTs in FORTRAN
+               output. [!NOANNOTATE; means "Turn Off !ANNOTATE"].
+ 
+ !COMMENTS;    Print Mortran comments as FORTRAN comments.
+               Mortran comments are output to FORTRAN file with
+               'C' in column one.  [!NOCOMMENTS; means "Turn
+               Off !COMMENTS"].
+ 
+ !INDENT Mn;   Set automatic indentation of Mortran listing to
+               n columns per nesting level (same as %In above).
+ 
+ !INDENT Fn;   Set automatic indentation of FORTRAN source to
+               n columns per nesting level (like !INDENT Mn;).
+ 
+ !INDENT Cn;   Set automatic indentation of FORTRAN comments to
+               n columns per nesting level (but the 'C' remains
+               in column one).
+ 
+ !LIST;        Turn on Mortran listing.  Same as %L above.
+               [!NOLIST; means "Turn Off !LIST;"].
+ 
+ !LABELS n;    Reset FORTRAN statement label generator to n.
+\end{verbatim}

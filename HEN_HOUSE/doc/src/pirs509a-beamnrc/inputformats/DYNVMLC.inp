@@ -1,0 +1,349 @@
+\begin{verbatim}
+   CARDS CM_$DYNVMLC
+   ********************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$DYNVMLC) (F10.5):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$DYNVMLC (60A1):  Title of CM.
+ 
+    2  ORIENT_$DYNVMLC, NGROUP_$DYNVMLC, MODE_$DYNVMLC (3I5) 
+ 
+             ORIENT_$DYNVMLC = 0 for leaves parallel to Y direction 
+                             = 1 for leaves parallel to X direction
+             NGROUP_$DYNVMLC = number of groups of adjacent leaves where
+                               all leaves in a group are:
+                               1. FULL leaves
+                               2. TARGET/ISOCENTER pairs with TARGET leaf
+                                  on the -X (ORIENT=0) or -Y (ORIENT=1) side
+                               NGROUP_$DYNVMLC defaults to 3 if set <=0 
+             MODE_$DYNVMLC = 0 for single setting of leaf openings (static
+                             field)
+                           = 1 for dynamic mlc delivery--simulated leaf
+                             movement while beam is on
+                           = 2 for step-and-shoot delivery--beam off while
+                             leaf positions change  
+   
+    3  ZMIN_$DYNVMLC (F15.0): Z of top of MLC (excluding airgap)
+          
+    4  ZTHICK_$DYNVMLC (F15.0): Thickness of the leaves ( z-axis (cm))
+ 
+    5  LEAFWIDTH_$DYNVMLC(1), WTONGUE_$DYNVMLC(1), WGROOVE_$DYNVMLC(1), 
+       WTIP_$DYNVMLC(1), WRAILTOP_$DYNVMLC(1), WRAILBOT_$DYNVMLC(1), 
+       ZTIP_$DYNVMLC(1), ZLEAF_$DYNVMLC(1), ZTONGUE_$DYNVMLC(1),
+       ZGROOVE_$DYNVMLC(1), ZHOLETOP_$DYNVMLC(1), ZHOLEBOT_$DYNVMLC(1), 
+       HOLEPOS_FULL_$DYNVMLC, ZRAILTOP_$DYNVMLC(1), ZRAILBOT_$DYNVMLC(1) 
+          (15F15.0) 
+ 
+         For a FULL type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$DYNVMLC):
+ 
+            LEAFWIDTH_$DYNVMLC(1): Width of leaf (not including tongue)
+              WTONGUE_$DYNVMLC(1): Width of tongue
+              WGROOVE_$DYNVMLC(1): Width of groove
+                 WTIP_$DYNVMLC(1): Width of tip at top of leaf 
+             WRAILTOP_$DYNVMLC(1): Width of top of support rail 
+             WRAILBOT_$DYNVMLC(1): Width of bottom of support rail 
+                 ZTIP_$DYNVMLC(1): Z at which tip at top of leaf begins
+                ZLEAF_$DYNVMLC(1): Z of top of leaf
+              ZTONGUE_$DYNVMLC(1): Z of bottom of tongue 
+              ZGROOVE_$DYNVMLC(1): Z of bottom of groove
+             ZHOLETOP_$DYNVMLC(1): Z of top of driving screw hole
+             ZHOLEBOT_$DYNVMLC(1): Z of bottom of driving screw hole 
+            HOLEPOS_FULL_$DYNVMLC: Distance of hole from leaf tip 
+             ZRAILTOP_$DYNVMLC(1): Z of top of support rail
+             ZRAILBOT_$DYNVMLC(1): Z of bottom of support rail 
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$DYNVMLC(1)>=ZTIP_$DYNVMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+ 
+    6  LEAFWIDTH_$DYNVMLC(2), WTONGUE_$DYNVMLC(2), WGROOVE_$DYNVMLC(2), 
+       WTIP_$DYNVMLC(2), WRAILTOP_$DYNVMLC(2), WRAILBOT_$DYNVMLC(2), 
+       ZRAILTOP_$DYNVMLC(2), ZRAILBOT_$DYNVMLC(2), ZHOLETOP_$DYNVMLC(2), 
+       ZHOLEBOT_$DYNVMLC(2), HOLEPOS_TAR_$DYNVMLC, ZTONGUE_$DYNVMLC(2), 
+       ZGROOVE_$DYNVMLC(2), ZLEAF_$DYNVMLC(2), ZTIP_$DYNVMLC(2) (15F15.0)
+ 
+         For a TARGET type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$DYNVMLC):
+ 
+            LEAFWIDTH_$DYNVMLC(2): Width of leaf (not including tongue)
+              WTONGUE_$DYNVMLC(2): Width of tongue
+              WGROOVE_$DYNVMLC(2): Width of groove
+                 WTIP_$DYNVMLC(2): Width of tip at bottom of leaf 
+             WRAILTOP_$DYNVMLC(2): Width of top of support rail 
+             WRAILBOT_$DYNVMLC(2): Width of bottom of support rail 
+             ZRAILTOP_$DYNVMLC(2): Z of top of support rail
+             ZRAILBOT_$DYNVMLC(2): Z of bottom of support rail
+             ZHOLETOP_$DYNVMLC(2): Z of top of driving screw hole
+             ZHOLEBOT_$DYNVMLC(2): Z of bottom of driving screw hole
+             HOLEPOS_TAR_$DYNVMLC: Distance of hole from leaf tip
+              ZTONGUE_$DYNVMLC(2): Z of bottom of tongue
+              ZGROOVE_$DYNVMLC(2): Z of top of groove
+                ZLEAF_$DYNVMLC(2): Z of bottom of leaf
+                 ZTIP_$DYNVMLC(2): Z of bottom of tip at bottom of leaf
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$DYNVMLC(1)>=ZTIP_$DYNVMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+ 
+    7  LEAFWIDTH_$DYNVMLC(3), WTONGUE_$DYNVMLC(3), WGROOVE_$DYNVMLC(3), 
+       WTIP_$DYNVMLC(3), WRAILTOP_$DYNVMLC(3), WRAILBOT_$DYNVMLC(3), 
+       ZTIP_$DYNVMLC(3), ZLEAF_$DYNVMLC(3), ZTONGUE_$DYNVMLC(3),
+       ZGROOVE_$DYNVMLC(3), ZHOLETOP_$DYNVMLC(3), ZHOLEBOT_$DYNVMLC(3), 
+       HOLEPOS_ISO_$DYNVMLC, ZRAILTOP_$DYNVMLC(3), ZRAILBOT_$DYNVMLC(3) 
+                   (15F15.0)
+ 
+         For a ISOCENTER type leaf (all dimensions in cm--all widths are
+                               projected back to ZMIN_$DYNVMLC):
+ 
+            LEAFWIDTH_$DYNVMLC(3): Width of leaf (not including tongue)
+              WTONGUE_$DYNVMLC(3): Width of tongue
+              WGROOVE_$DYNVMLC(3): Width of groove
+                 WTIP_$DYNVMLC(3): Width of tip at top of leaf 
+             WRAILTOP_$DYNVMLC(3): Width of top of support rail 
+             WRAILBOT_$DYNVMLC(3): Width of bottom of support rail 
+                 ZTIP_$DYNVMLC(3): Z at which tip at top of leaf begins
+                ZLEAF_$DYNVMLC(3): Z of top of leaf
+              ZTONGUE_$DYNVMLC(3): Z of top of tongue
+              ZGROOVE_$DYNVMLC(3): Z of bottom of groove
+             ZHOLETOP_$DYNVMLC(3): Z of top of driving screw hole
+             ZHOLEBOT_$DYNVMLC(3): Z of bottom of driving screw hole
+             HOLEPOS_ISO_$DYNVMLC: Distance of hole from leaf tip
+             ZRAILTOP_$DYNVMLC(3): Z of top of support rail
+             ZRAILBOT_$DYNVMLC(3): Z of bottom of support rail 
+ 
+        Note: Z positions are input in order of increasing Z.  Thus
+              ZLEAF_$DYNVMLC(1)>=ZTIP_$DYNVMLC(1), etc.  See the BEAM
+              manual or GUI help for restrictions on widths.
+ 
+         Note: 1. For TARGET and ISOCENTER leaves to fit together,
+                  ZTONGUE_$DYNVMLC(3)>=ZGROOVE_$DYNVMLC(2) and 
+                  ZTONGUE_$DYNVMLC(2)<=ZGROOVE_$DYNVMLC(3).
+               2. For TARGET and FULL leaves to fit together (FULL
+                  leaf on -X [ORIENT=0] or -Y [ORIENT=1] side of TARGET
+                  leaf only) ZTONGUE_$DYNVMLC(2)<=ZGROOVE_$DYNVMLC(1)
+               3. For ISOCENTER and FULL leaves to fit together (FULL
+                  leaf on +X [ORIENT=0] or +Y [ORIENT=1] side of ISOCENTER 
+                  leaf only) ZTONGUE_$DYNVMLC(1)<=ZGROOVE_$DYNVMLC(3)
+ 
+               
+    Repeat 8 NGROUP_$DYNVMLC times
+ 
+    8  NUM_LEAF_$DYNVMLC(I), LEAFTYPE  (2I5)
+           
+         NUM_LEAF_$DYNVMLC(I): Number of adjacent leaves in group I
+                     LEAFTYPE: Type of leaf in group I.
+                               Set to: 1 for FULL leaves
+                                       2 for TARGET/ISOCENTER pair with
+                                         TARGET leaf on the -X (ORIENT=0) 
+                                         or -Y (ORIENT=1) side
+ 
+          Note: If LEAFTYPE is 2, then you must have an even number
+                of leaves in the group. 
+ 
+    9  START_$DYNVMLC (F15.0) : the start position (cm) wrt the CAX of 
+                        leaf 1 as projected to ZMIN_$DYNVMLC.
+ 
+   10  LEAFGAP_$DYNVMLC (F15.5) : The width of the interleaf air gap
+              at ZMIN_$DYNVMLC.
+ 
+             Note restriction: LEAFGAP_$DYNVMLC<=WTONGUE_$DYNVMLC(1,2,3),
+ 
+   11  ENDTYPE_$DYNVMLC (I5) : The  type of leaf end :
+              0 -- rounded leaf end and
+              1 -- focused divergent leaf end.
+ 
+   12  ZFOCUS_$DYNVMLC (F15.5) : Focal point on Z-axis of leaf ends 
+                      (i.e. imaginary lines drawn extending the slopes 
+                      of leaf ends will all intersect the Z-axis
+                      at this point) - chosen if ENDTYPE_$DYNVMLC = 1.
+ 
+         Note restriction: ZFOCUS_$DYNVMLC(1) < ZMIN_$DYNVMLC or
+                                      > ZMIN_$DYNVMLC + ZTHICK_$DYNVMLC
+ 
+       LEAFRADIUS_$DYNVMLC (F15.5) : Radius of the leaf end if
+                            ENDTYPE_$DYNVMLC = 0. This must be greater
+                            than or equal to half the leaf thickness.
+ 
+   13  ZFOCUS_$DYNVMLC(1) (F15.5): Focal point on Z-axis of leaf sides 
+                         imaginary lines drawn extending the slopes of
+                         the leaf sides will all intersect the Z-axis
+                         at this point)
+               
+         Note restriction: ZFOCUS_$DYNVMLC(1) < ZMIN_$DYNVMLC or
+                                > ZMIN_$DYNVMLC + ZTHICK_$DYNVMLC 
+ 
+                       For focused ends the leaf position is defined
+                       at ZMIN_$DYNVMLC; for rounded at ZMIN_$DYNVMLC +
+                      0.5*ZTHICK_$DYNVMLC (ie center of the leaf in z)
+ 
+       If MODE_$DYNVMLC=0 (static field):
+ 
+      Repeat 14a until opening coordinates of all leaves are defined once.  
+      Leaves are numbered 1,2,...TOT_LEAF_$DYNVMLC, where numbering goes from
+      leaf 1 to leaf TOT_LEAF_$DYNVMLC. Convention is lower to upper or
+      left to right depending on ORIENT_$DYNVMLC i.e from negative to 
+      positive.  Note that for dynamic or step-and-shoot simulations, these
+      are the default coordinates, used unless specified otherwise in the
+      file of leaf opening data input in line 14a (see below).
+ 
+   14a  NEG_$DYNVMLC, POS_$DYNVMLC, NUM_$DYNVMLC (2F15.5,I5) 
+ 
+      NEG_$DYNVMLC:  Min. Y (ORIENT_$DYNVMLC=0) or X (ORIENT_$DYNVMLC=1) 
+                     of front opening in leaf I (ie the opening at 
+                     ZMIN_$DYNVMLC) if ENDTYPE=1, or of rounded end
+                     of leaf I if ENDTYPE=0. 
+      POS_$DYNVMLC:  Max. Y (ORIENT_$DYNVMLC=0) or X (ORIENT_$DYNVMLC=1) 
+                     of front opening in leaf I if ENDTYPE=1, or of
+                     rounded end of leaf I if ENDTYPE=0.
+      NUM_$DYNVMLC:  Apply NEG_$DYNVMLC and POS_$DYNVMLC to leaves
+                     I,...,I+NUM_$DYNVMLC-1.  Defaults to 1 if set <=0.
+                     Defaults to TOT_LEAF_$DYNVMLC-I+1 if set >
+                     TOT_LEAF_$DYNVMLC-I+1. 
+ 
+   If MODE_$DYNVMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
+ 
+   14b  mlc_file (A80)
+ 
+          mlc_file:  The full name of the file containing leaf opening
+                     data.  The format of the file contents is as follows:
+ 
+       MLC_TITLE (A80)
+       NFIELDS_$DYNVMLC (I10)
+       FOR I=1,NFIELDS_$DYNVMLC[
+        INDEX_$DYNVMLC(I) (F15.0)
+        NEG_$DYNVMLC, POS_$DYNVMLC, NUM_$DYNVMLC (2F15.0,I5) -- repeat this
+                                                                line until
+                                                                coordinates
+                                                                for all leaves
+                                                                have been
+                                                                defined for
+                                                                field I.
+       ]
+ 
+       where:
+ 
+              MLC_TITLE:  A title line
+       NFIELDS_$DYNVMLC:  Total number of fields
+      INDEX_$DYNVMLC(I):  Index of field I. 0 <= INDEX_$DYNVMLC(I) <= 1 and
+                          INDEX_$DYNVMLC(I) > INDEX_$DYNVMLC(I-1).  This
+                          number is compared to a random number on (0,1) at
+                          the start of each history; if the random number is
+                          <= INDEX_$DYNVMLC(I), then field I is used.
+           NEG_$DYNVMLC:  Min. Y (ORIENT_$DYNVMLC=0) or X (ORIENT_$DYNVMLC=1)
+                          of front opening in leaf (ie the opening at
+                          ZMIN_$DYNVMLC) if ENDTYPE=1, or of rounded end
+                          of leaf if ENDTYPE=0 for leaf J in field I.
+           POS_$DYNVMLC:  Max. Y (ORIENT_$DYNVMLC=0) or X (ORIENT_$DYNVMLC=1)
+                          of front opening in leaf if ENDTYPE=1, or of
+                          rounded end of leaf if ENDTYPE=0 for leaf J in 
+                          field I.
+           NUM_$DYNVMLC:  Apply NEG_$DYNVMLC and POS_$DYNVMLC to leaves
+                          J,...,J+NUM_$DYNVMLC-1.  Defaults to 1 if set <=0.
+                          Defaults to TOT_LEAF_$DYNVMLC-J+1 if set >
+                          TOT_LEAF_$DYNVMLC-J+1.
+ 
+     Note that the inputs NEG_$DYNVMLC, POS_$DYNVMLC and NUM_$DYNVMLC have
+     the same meanings as in 14a (static field inputs) but that they must
+     now be repeated for every field I.
+    
+   15   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and 
+                                              air gaps (2F15.5,2I5)
+   
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   16  MED_IN (24A1):  Medium in opening(s) and air gaps 
+                       used to set MED_INDEX.
+   
+   17  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves, IGNOREGAPS_$DYNVMLC
+                                                          (2F15.0,3I5):
+   
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+         IGNOREGAPS:   If set to 1, ignore all air gaps and driving screw
+                       holes when doing range
+                       rejection in leaf material when the particle X position
+                       is < min X of all leaf openings (not including leaf
+                       ends) or > max X of leaf openings (not including ends)
+                       (ORIENT_$DYNVMLC=1) or if the particle Y position
+                       is < min Y of all leaf openings (not including leaf
+                       ends) or > max Y of leaf openings (not including ends)
+                       (ORIENT_$DYNVMLC=0). This approximation is designed
+                       to make range rejection more efficient deep in the
+                       leaves, while still preserving accurate transport
+                       in the leaf ends.  Note that if you have significant
+                       air gaps between leaves or are concerned with the
+                       effects of the driving screw holes it is recommended 
+                       that you not use this option (ie run with the default
+                       setting of 0).
+   
+   18  MED_IN (24A1):  Medium of leaves, 
+                       used to set MED_INDEX.
+ 
+   19  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in driving screw holes 
+                                                        (2F15.5,2I5):
+ 
+         ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+ 
+   20  MED_IN (24A1):  Medium in driving screw holes,
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf tungsten collimator design 
+    based loosely on that used with the Varian Millenium MLC.
+    Actual parameters are DIFFERENT - this serves just as a template.
+    Do not attempt to use these parameters for a simulation of the real
+    machine.
+   
+    The collimator starts at Z=48.25 cm and has 60 tungsten leaves opening 
+    in the X direction. Leaves 1-10 and 51-60 are FULL and leaves 11-50 are
+    TARGET/ISOCENTER pairs.  The Z focus of the leaf sides is at Z=0 cm 
+    which is the position of the source. The leaf ends are rounded with a 
+     radius of 8 cm. In this example, leaf opening coordinates are chosen to 
+    create a square of width ~ 2cm centred on the beam axis.
+     
+    Electrons and photons in both the collimator and the opening regions 
+    will be followed down to kinetic energies of 189 keV (ECUT=0.7,
+    PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+    in dose zone 2, and dose deposited in the opening will be stored
+    in dose zone 1.
+ 
+  20.5, RMAX
+  CL21X - Millenium MLC
+  1, 3, ORIENT, NGROUP
+  48.25, ZMIN
+  6.7, ZTHICK
+  0.5, 0.04, 0.04, 0.1354, 0.3252, 0.1227, 48.25, 48.533, 51.524, 51.732, 
+    52.98, 53.28, 2, 54.5474, 54.812, FULL leaf
+  0.25, 0.04, 0.04, 0.0929, 0.1371, 0.1371, 48.345, 48.6096, 49.5277, 
+    49.8277, 2, 51.625, 51.627, 54.7, 54.746, TARGET leaf
+  0.25, 0.04, 0.04, 0.0354, 0.1285, 0.1235, 48.412, 48.531, 51.631, 51.732,
+    53.3293, 53.6293, 2, 54.5474, 54.812, ISOCENTER leaf
+  10, 1, FULL leaves
+  40, 2, TARGET/ISOCENTER pairs
+  10, 1, FULL leaves
+  -10.2, START
+  0.006, LEAFGAP
+  0, ENDTYPE
+  8, ZFOCUS or RADIUS of leaf ends
+  0, ZFOCUS of leaf sides
+  0, 0, 26
+  -1.0, 1.0, 8
+  0,0,26
+  0.7, 0.01, 1, 0,
+  AIR521ICRU
+  0.7, 0.01, 2, 0, 0,
+  W521ICRU
+  0.7, 0.01, 3, 0,
+  AIR521ICRU
+\end{verbatim}

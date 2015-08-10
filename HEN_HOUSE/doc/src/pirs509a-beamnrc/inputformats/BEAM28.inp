@@ -1,0 +1,57 @@
+\begin{verbatim}
+        Pair angular sampling= Off, Simple or KM (Default is Simple) 
+                         If off, pairs are set in motion at an angle m/E
+                         relative to the photon direction (m is electron rest
+                         energy, E the photon energy). Simple turns on
+                         the leading term of the angular distribution
+                         (this is sufficient for most applications),
+                         KM (comes from Koch and Motz) turns on using 2BS
+                         from the article by Koch and Motz.
+                         Always use Simple or KM.
+                         [ IPRDST ]
+        Pair cross sections= BH (default) or NRC.  If set to BH, then use
+                         Bethe-Heitler pair production cross-sections.  If set
+                         to NRC, then use NRC pair production cross-sections
+                         (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
+                         of interest at low energies, where the NRC cross-
+                         sections take into account the assymmetry in the
+                         positron-electron energy distribution.
+                         [ pair_nrc ]
+        Photoelectron angular sampling= Off or On (Default is Off)
+                         If Off, photo-electrons get the direction of the
+                         `mother' photon, with On, Sauter's furmula is
+                         used (which is, striktly speaking, valid only for
+                         K-shell photo-absorption).
+                         If the user has a better approach, replace the macro
+                             $SELECT-PHOTOELECTRON-DIRECTION;
+                         The only application that
+                         Only situation encountered where this made a     
+                         small difference was a big ion chamber (cavity size
+                         comparable with electron range) with high-Z walls
+                         in a low energy photon beam.
+                         [ IPHTER ]
+        Rayleigh scattering= Off, On, custom
+                        If On, turned on coherent (Rayleigh) scattering.
+                         Default is Off. Should be turned on for low energy
+                         applications. Not set to On by default because
+                         On requires a special PEGS4 data set.  If set to
+                         custom, then media for which custom form factors
+                         are to be specified are listed in the input:
+                         ff media names=
+                         and the corresponding files containing custom data
+                         are listed in:
+                         ff file names=
+                         [ IRAYLR ]
+        Atomic relaxations= Off, On (Default is Off)
+                         The effect of using On is twofold:
+                         - In photo-electric absorption events, the element
+                           (if material is mixture) and the shell the photon
+                           is interacting with are sampled from the
+                           appropriate cross seections
+                         - Shell vacancies created in photo-absorption events
+                           are relaxed via emission of fluorescent X-Rays,
+                           Auger and Koster-Cronig electrons.
+                          Make sure to turn this option on for low energy
+                          applications.
+                          [ IEDGFL ]
+\end{verbatim}

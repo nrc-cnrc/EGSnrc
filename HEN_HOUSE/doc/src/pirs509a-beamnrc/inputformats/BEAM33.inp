@@ -1,0 +1,55 @@
+\begin{verbatim}
+   ISOURC = 23   BEAM SIMULATION SOURCE 
+   ***********
+ 
+      IQIN,ISOURC,INIT_ICM,ISRC_DBS,ALPHA24,BETA24,DIST24
+              IQIN       dummy NOT USED. Set = 9 for this source by BEAMnrc
+              ISOURC     = 23
+              INIT_ICM   particles start at front surface of this CM
+                         (INIT_ICM is actually read as a real)
+              ISRC_DBS   Set to 1 if you are using directional bremsstrahlung
+                         splitting (DBS) in the BEAM simulation source 
+                         and you wish to reject fat photons (not aimed into
+                         the splitting field).  These fat photons compromise
+                         statistics.  Set to 0 otherwise.
+               ALPHA24   Angle of rotation of source plane about X-axis
+                         in degrees.  Positive angle is clockwise rotation.
+                         (-90 < ALPHA24 < 90)
+                BETA24   Angle of rotation of source plane about Y-axis
+                         in degrees.  Positive angle is counter-clockwise 
+                         rotation. (-90 < ALPHA24 < 90)
+                DIST24   Distance of point of rotation above INIT_ICM.
+ 
+      Note restriction that if ALPHA24~=0 and/or BETA24 ~=0, then INIT_ICM
+      must be > 1.  This is because the rotation will result in some
+      particles incident within INIT_ICM-1.  Also, the following CMs
+      currently do not handle the general case of a forward-directed particle
+      incident from within them:
+      APPLICAT,ARCCHM,CHAMBER,CIRCAPP,CONESTAK,DYNJAWS,JAWS,MESH,PYRAMIDS,
+      SIDETUBE
+      Thus, if ALPHA24~=0 and/or BETA24 ~=0 and INIT_ICM or INIT_ICM-1 is
+      one of these, negative ustep errors may result. 
+ 
+   Next record (If ISOURC=23)
+   ***********
+ 
+      the_beam_code, the_pegs_file, the_input_file (3A80)
+ 
+        the_beam_code    The name of the BEAM code you are running as a
+                         source (ie BEAM_sourceaccelname).  This must have 
+                         been compiled as a shared library 
+                         (libBEAM_accelname.so or BEAM_accelname.dll) and 
+                         exist in EGS_HOME/bin/config.
+        the_pegs_file    The pegs data set used by the BEAM simulation source
+                         (no .pegs4dat extension).  This must be in
+                         HEN_HOUSE/pegs4/data or EGS_HOME/pegs4/data.
+        the_input_file   The input file used to run the BEAM simulation
+                         source (no .egsinp extension).  This must exist in 
+                         your EGS_HOME/BEAM_sourceaccelname directory.  It 
+                         must be a working input file and must be set up to 
+                         write a phase space file at a single scoring plane.
+                         This plane becomes where particles are sampled from
+                         for the second-stage BEAMnrc simulation (no phase 
+                         space file is scored, however).
+ ------------------------------------------------------------------------
+\end{verbatim}

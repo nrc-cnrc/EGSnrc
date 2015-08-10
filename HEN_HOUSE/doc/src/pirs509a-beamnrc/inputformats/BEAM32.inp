@@ -1,0 +1,34 @@
+\begin{verbatim}
+   ---------------------------------------------------------------------------
+ 
+                           CUSTOMIZED USER INPUTS     
+                           **********************
+ 
+   This section contains inputs that are unique to the user.  In general
+   the user must modify beamnrc.mortran to read these inputs from the
+   .egsinp file.  Also, the GUI will not give access to these inputs.
+   If no custom inputs are required, then this section can be omitted
+   entirely.
+ 
+   Custom user inputs must appear in the .egsinp file between the delimiters:
+        :Start user inputs:
+        :Stop user inputs:
+  
+   This section can appear either just before or just after the EGSnrc 
+   inputs (see above).
+  
+   Currently, the only custom user input hard-coded in beamnrc.mortran
+   is:
+ 
+    PHSP OUTPUT DIRECTORY= /full directory path to where phase space files
+                            are to be output, or blank
+              This allows the user to specify a directory other than
+              $EGS_HOME/BEAM_accelname in which to write phase space data.
+              Useful if phase space files are large and, due to disk space
+              limitations, must be written to a /temp area.  If left blank 
+              or omitted entirely, then phase space files are output to the 
+              default $EGS_HOME/BEAM_accelname directory. 
+              [ PHSP_OUTDIR ]
+ 
+ *****************************************************************************
+\end{verbatim}

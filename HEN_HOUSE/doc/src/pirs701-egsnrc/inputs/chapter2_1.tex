@@ -1,0 +1,177 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: radiation transport
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Iwan Kawrakow, 2003
+%
+%  Contributors:    Blake Walters
+%                   Ernesto Mainegra-Hing
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Radiation transport in EGSnrc}
+\label{section_2}
+
+%\subsection{General discussion}
+\subsection{Introduction}
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2011/05/02 18:40:33 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/05/02 18:32:38
+}}
+
+
+Photons interact with surrounding matter via four 
+basic processes: materialization into an electron/positron pair 
+in the electromagnetic field of the nuclei and surrounding 
+atomic electrons, incoherent (Compton) scattering with 
+atomic electrons, 
+photo-electric absorption and 
+coherent (Rayleigh) scattering with 
+the molecules (or atoms) of the medium. The first three 
+collision types transfer energy from the photon radiation 
+field to electrons\footnote{In this report, we often refer to
+both positrons and electrons as simply {\it electrons}.
+Distinguishing features will be brought out in the context.}, 
+one of them dominate depending on energy and the medium 
+in which the transport takes place. The pair production 
+process\footnote{Occasionally the materialization into an $e^+e^-$ pair 
+takes place with the participation of an atomic electron which, after 
+receiving sufficient energy, is set free. Such processes are known 
+as triplet production.} dominates at high energies. 
+At some intermediate energies incoherent scattering is the most 
+important process, at low energies the photo-electric process 
+dominates.
+
+Electrons, as they traverse matter, lose energy by two basic processes:
+inelastic collisions with atomic electrons and radiation. 
+Radiative energy loss, which occurs in form of bremsstrahlung and 
+positron annihilation, transfers energy back to photons 
+and leads to the coupling of the electron and photon 
+radiation fields. The bremsstrahlung process is the dominant 
+mechanism of electron energy loss at high energies, inelastic collisions  
+are more important at low energies. 
+In addition, electrons participate in elastic collisions with atomic 
+nuclei which occur at a high rate and lead to frequent changes 
+in the electron direction. 
+
+Inelastic electron collisions and photon interactions with atomic electrons 
+lead to excitations and ionizations of the atoms along the paths of 
+the particles. Highly excited atoms, with vacancies in inner shells, 
+relax via the emission of photons and electrons with 
+characteristic energies. 
+
+The coupled integro-differential equations 
+that describe the electromagnetic shower development are 
+prohibitively complicated to allow for an analytical treatment 
+except under severe approximations. The Monte Carlo (MC) technique 
+is the only known solution method that can be applied for 
+any energy range of interest. 
+
+Monte Carlo 
+simulations of particle transport processes are a faithful simulation
+of physical reality: particles are ``born" according to distributions
+describing the source, they travel certain distances, determined by a
+probability distribution depending on the total interaction
+cross section, to the site of a collision and scatter into
+another energy and/or direction according to the corresponding
+differential cross section, possibly producing new 
+particles that have to be transported as well. 
+This procedure is continued until all particles are 
+absorbed or leave the geometry under consideration.
+Quantities of interest can be calculated by averaging over a given set of
+MC particle ``histories" (also refereed to as ``showers'' or 
+``cases''). From mathematical points of view each particle 
+``history'' is one point in a $d$-dimensional space (the dimensionality 
+depends on the number of interactions) and the averaging procedure 
+corresponds to a $d$-dimensional Monte Carlo integration. 
+As such, the Monte Carlo estimate of quantities of interest 
+is subject to a 
+statistical uncertainty which depends on 
+$N$, the number of particle histories simulated,   
+and usually decreases as $N^{-1/2}$. Depending on the 
+problem under investigation and the desired statistical 
+accuracy, very long calculation times may be necessary. 
+
+An additional difficulty occurs in the case of the Monte Carlo 
+simulation of electron transport. In the process of slowing down, 
+a typical fast electron
+and the secondary particles it creates
+undergo hundreds of thousands of interactions with
+surrounding matter.  Because of this large number of collisions,
+an event-by-event simulation of electron transport is often
+not possible due to limitations in computing power.  To
+circumvent this difficulty, Berger \cite{Be63} developed the
+``condensed history" (CH) technique for the simulation 
+of charged particle transport. In this method, large numbers of
+subsequent transport and collision 
+processes are ``condensed" to a single ``step''
+The cumulative effect of the individual interactions is taken
+into account by sampling the change of the particle's energy, 
+direction of motion, and position, at the end of the step from appropriate
+multiple scattering distributions.
+The CH technique, motivated
+by the fact that single collisions with the atoms cause, in most cases,
+only minor changes in the particle's energy and direction of flight,
+made the MC simulation of charged particle transport possible but introduced
+an artificial parameter, the step-length. The dependence of the calculated
+result on the step-length has become known as a step-size artifact
+\cite{BR89}.
+
+EGSnrc is a general purpose package for the Monte Carlo 
+simulation of coupled electron and photon transport that 
+employs the CH technique. 
+It is based on the popular EGS4 system \cite{Ne85} 
+but includes a variety of enhancements in the CH implementation 
+and in some of the underlying cross sections. We recognize that many 
+of the modifications that we have made to the original 
+EGS4 implementation are not important for 
+high energy applications, initially EGS4' primary target.   
+On the other side, the energy range of application of the 
+EGS4 system has shifted over the years to lower and lower 
+energies. To facilitate this transition many enhancements 
+to the original EGS4 implementation has been developed, 
+{\em e.g.} the PRESTA algorithm \cite{BR87}, the 
+inclusion of angular distribution of bremsstrahlung 
+photons \cite{Bi89}, the low energy photon cross section 
+enhancements by the group at KEK/Japan \cite{Na98}, to 
+mention only some of them. The availability of these 
+improvements, recent advances in the theoretical understanding 
+of the condensed history technique \cite{KB97a,Ka99a} and 
+multiple elastic scattering \cite{KB97}, as well as 
+unpublished results of our recent research have 
+motivated us to undertake a major re-work of the EGS4 
+system the result of which is EGSnrc. 
+
+It is the purpose of this report to summarize the current stage of the 
+EGSnrc system. We have attempted a self-consistent presentation 
+and so, some of the material contained in this report is 
+not new. In particular, various parts come from the EGS4 manual, SLAC-265
+by Nelson et al\cite{Ne85}.
+\index{SLAC-265}
+\index{Nelson, Ralph} 
+
+This report does not attempt to provide a complete treatment of Monte 
+Carlo methods or probability and sampling theory. 
+Readers not familiar with the Monte Carlo technique are encouraged to   
+read one of the many excellent reviews available.  

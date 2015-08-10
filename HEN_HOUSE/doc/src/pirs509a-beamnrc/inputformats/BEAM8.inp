@@ -1,0 +1,14 @@
+\begin{verbatim}
+   ISOURC = 7   SCANNING BEAM SOURCE (sawtooth like Therac20)
+   **********
+ 
+      IQIN,ISOURC,FD_AT100, IRATIO_YXF, RBEAM
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  7
+              FD_AT100   length & width of scanning field at  SSD=100cm
+              IRATIO_YXF =  the number of Y scans per X scan
+                           (rounds 2*IRATIO_YXF up to nearest odd
+                           number--default IRATIO_YXF = 6.5)
+              RBEAM   radius of the beam at Z=0, defaults to 0.01cm
+ ----------------------------------------------------------------------
+\end{verbatim}

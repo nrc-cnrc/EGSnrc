@@ -1,0 +1,19 @@
+\begin{verbatim}
+   ISOURC = 10   PARALLEL CIRCULAR BEAM INCIDENT FROM THE SIDE 
+   ***********
+                 (NOTE: beam facing X-AXIS, I.E., UINC should be < 0.0   )
+                 (this source should only be used together with CM XTUBE )
+                 (for simulating the target of an X-ray tube.            )
+                 (XTUBE should always be the first CM in the geometry.   )
+   
+      IQIN,ISOURC,RBEAM,UINC,VINC,WINC
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  10
+              RBEAM   radius of parallel beam in cm (defaults to max radius)
+              UINC    incident X-axis direction cosine (UINC < 0.0)
+              VINC    incident Y-axis direction cosine
+              WINC    incident Z-axis direction cosine
+                      Note: (UINC,VINC,WINC) get automatically normalized
+                            defaults to (-1.0,0.0,0.0)
+ ---------------------------------------------------------------------
+\end{verbatim}

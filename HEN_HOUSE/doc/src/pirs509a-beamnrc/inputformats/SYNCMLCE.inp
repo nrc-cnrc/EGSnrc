@@ -1,0 +1,206 @@
+\begin{verbatim}
+   CARDS CM_$SYNCMLCE
+   **************
+   -1  Dummy line to indicate start of CM
+ 
+    0  RMAX_CM(ICM_$SYNCMLCE) (F10.0):  Half-width of CM boundary (cm).
+ 
+    1  TITLE_$SYNCMLCE (60A1):  Title of CM.
+ 
+    2  ORIENT_$SYNCMLCE, MODE_$SYNCMLCE (2I5)
+            
+         ORIENT_$SYNCMLCE = 0 for leaves parallel to Y direction
+                          = 1 for leaves parallel to X direction
+         MODE_$SYNCMLCE = 0 for static mode (same as MLCE)
+                        = 1 for dynamic mode
+                        = 2 for step-and-shoot mode
+   
+    3  NUM_LEAF_$SYNCMLCE: Number of leaves.  Note: this must be even.
+ 
+    4  ZMIN_$SYNCMLCE,ZMAX_$SYNCMLCE (2F15.0): upper and lower z coordinates
+         of leafbank (before tilt, see below)
+ 
+    5  ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE: Z-coordinates of left and right step
+         in central leaf (an imaginary, unrotated leaf on the Z axis).
+          
+    6  TGW_$SYNCMLCE (F15.0): X (ORIENT_$SYNCMLCE=0) or Y (ORIENT_$SYNCMLCE=1)
+         width of steps in central leaf (cm).
+ 
+    7  X3_$SYNCMLCE, X4_$SYNCMLCE (2F15.0): X (ORIENT_$SYNCMLCE=0) or Y
+          (ORIENT_$SYNCMLCE=1) coordinates of the upper right and
+          lower right corners of central leaf, ignoring steps defined above. 
+ 
+    8  SPACE_$SYNCMLCE, SSD_$SYNCMLCE (2F15.0)
+              
+          SPACE_$SYNCMLCE: distance between centres of adjacent leaves in X
+                       (ORIENT_$SYNCMLCE=0) or Y (ORIENT_$SYNCMLCE=1) direction
+                       as projected to SSD_$SYNCMLCE (cm).
+            SSD_$SYNCMLCE: distance from Z=0 at which SPACE_$SYNCMLCE is
+                       defined (cm).
+ 
+         Leaf numbers I= 1-NUM_LEAF_$SYNCMLCE/2 are created by rotating a
+         duplicate of the central leaf about the axis X=0 (if 
+         ORIENT_$SYNCMLCE=0) or Y=0 (if ORIENT_$SYNCMLCE=1),
+         Z=ZMIN_$SYNCMLCE by an angle:
+         ARCTAN(-(2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE)
+         and then translating it in the X (if ORIENT_$SYNCMLCE=0) or
+         or Y (ORIENT_$SYNCMLCE=1) direction by a distance
+         -(2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE
+ 
+     Leaf numbers I= NUM_LEAF_$SYNCMLCE/2+1 NUM_LEAF_$SYNCMLCE are created by
+     rotating a duplicate of the central leaf about the axis X=0 
+     (if ORIENT_$SYNCMLCE=0) or Y=0 (if ORIENT_$SYNCMLCE=1), Z=ZMIN_$SYNCMLCE by:
+     ARCTAN((2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE)
+     and then translating it in the X (if ORIENT_$SYNCMLCE=0) or
+     or Y (ORIENT_$SYNCMLCE=1) direction by a distance
+     (2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE
+ 
+    9  LBROT_$SYNCMLCE (F15.0): Leaf bank rototian angle (tilt) about
+     X=0 (ORIENT_$SYNCMLCE=0) or Y=0 (ORIENT_$SYNCMLCE=1) and Z=ZMIN_$SYNCMLCE
+     (radians).  This is applied to the leaves after they have been
+     translated/rotated according to SPACE_$SYNCMLCE, SSD_$SYNCMLCE above.
+ 
+   10  ENDTYPE_$SYNCMLCE (I5) : The  type of leaf end :
+              0 -- rounded (cylindrical) leaf end and
+              1 -- focused divergent leaf end.
+ 
+   IF ENDTYPE_$SYNCMLCE=0
+   11  LEAFRADIUS_$SYNCMLCE,CIL_$SYNCMLCE (2F15.0)
+ 
+           LEAFRADIUS_$SYNCMLCE:  Radius curvature leaf ends
+                  CIL_$SYNCMLCE:  Z position from which LEAFRADIUS_$SYNCMLCE 
+                                  is defined 
+ 
+   IF ENDTYPE_$SYNCMLCE=1
+   11  ZFOCUS_$SYNCMLCE (F15.0):  Z position of focal point of leaf ends
+ 
+    If MODE_$SYNCMLCE=0 (static field)
+ 
+    Repeat 12a until coordinates of all leaves are defined once.  Leaves
+    are numbered 1,2,...NUM_LEAF_$SYNCMLCE, where numbering goes from leaf
+    1 to leaf NUM_LEAF_$SYNCMLCE. Convention is lower to upper or
+    left to right depending on ORIENT_$SYNCMLCE i.e from negative to
+    positive.
+ 
+   12a  NEG_$SYNCMLCE, POS_$SYNCMLCE, NUM_$SYNCMLCE (2F15.0,I5)
+ 
+     NEG_$SYNCMLCE:   Min. Y (ORIENT_$SYNCMLCE=0) or X (ORIENT_$SYNCMLCE=1)
+                    of a) opening in leaf I at ZMIN_$SYNCMLCE (ENDTYPE=1)
+                    or b) of origin of cylindrical leaf end (ENDTYPE=0) 
+     POS_$SYNCMLCE:   Max. Y (ORIENT_$SYNCMLCE=0) or X (ORIENT_$SYNCMLCE=1)
+                    of a) opening in leaf I at ZMIN_$SYNCMLCE (ENDTYPE=1)
+                    or b) of origin of cylindrical leaf end (ENDTYPE=0)
+     NUM_$SYNCMLCE:   Apply NEG_$SYNCMLCE and POS_$SYNCMLCE to leaves
+                    I,...,I+NUM_$SYNCMLCE-1.  Defaults to 1 if set <=0.
+                    Defaults to NUM_LEAF_$SYNCMLCE-I+1 if set >
+                    NUM_LEAF_$SYNCMLCE-I+1.
+ 
+    If MODE_$SYNCMLCE=1 (dynamic delivery) or 2 (step-and-shoot delivery)
+ 
+   12b  mlc_file (A80): The full name of the file containing leaf opening
+                        data.  The format of the file contents is as follows:
+     
+       MLC_TITLE (A80)
+       NFIELDS_$SYNCMLCE (I10)
+       FOR I=1,NFIELDS_$SYNCMLCE[
+        MUINDEX_$SYNCMLCE(I) (F15.0)
+        NEG_$SYNCMLCE, POS_$SYNCMLCE, NUM_$SYNCMLCE (2F15.0,I5) -- repeat this
+                                                                line until
+                                                                coordinates
+                                                                for all leaves
+                                                                have been
+                                                                defined for
+                                                                field I.
+       ]
+ 
+       where:
+ 
+               MLC_TITLE:  A title line
+       NFIELDS_$SYNCMLCE:  Total number of fields
+    MUINDEX_$SYNCMLCE(I):  Fractional monitor unit index up to and including
+                           field I. 0 <= MUINDEX_$SYNCMLCE(I) <= 1 and
+                           MUINDEX_$SYNCMLCE(I) > MUINDEX_$SYNCMLCE(I-1).  
+                           This number is compared to a random number on 
+                           [0,1] at the start of each history; if the random 
+                           number is <= MUINDEX_$SYNCMLCE(I), then field I is
+                           used.
+           NEG_$SYNCMLCE:  Min. Y (ORIENT_$SYNCMLCE=0) or X (ORIENT_$SYNCMLCE=
+                           1) of front opening in leaf (ie the opening at
+                           ZMIN_$SYNCMLCE) if ENDTYPE=1, or of origin of 
+                           cylinder defining rounded end of leaf if ENDTYPE=0
+                           for leaf J in field I.
+           POS_$SYNCMLCE:  Max. Y (ORIENT_$SYNCMLCE=0) or X (ORIENT_$SYNCMLCE=
+                           1) of front opening in leaf if ENDTYPE=1, or of 9
+                           origin of cylinder defining rounded end of leaf if
+                           ENDTYPE=0 for leaf J in field I.
+           NUM_$SYNCMLCE:  Apply NEG_$SYNCMLCE and POS_$SYNCMLCE to leaves
+                           J,...,J+NUM_$SYNCMLCE-1.  Defaults to 1 if set <=0.
+                           Defaults to TOT_LEAF_$SYNCMLCE-J+1 if set >
+                           TOT_LEAF_$SYNCMLCE-J+1.
+ 
+     Note that the inputs NEG_$SYNCMLCE, POS_$SYNCMLCE and NUM_$SYNCMLCE have
+     the same meanings as in 12a (static field inputs) but that they must
+     now be repeated for every field I.
+ 
+ 
+   13   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in opening(s) and 
+                                              air gaps (2F15.0,I5)
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   14  MED_IN (24A1):  Medium in opening(s) and air gaps 
+                       used to set MED_INDEX.
+   
+   15  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT in leaves (2F15.0,I5):
+   
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+          DOSE_ZONE:   Dose scoring flag, 0 to note score dose
+     IREGION_TO_BIT:   Bit number associated with this region
+   
+   16  MED_IN (24A1):  Medium of leaves, 
+                       used to set MED_INDEX.
+   
+    Example
+    *******
+ 
+    The following example defines a multi-leaf collimator design based
+    loosely on that used with the Elekta SLiplus 40 leaf pair.
+    Actual parameters are DIFFERENT - this serves just as a template.
+    Do not attempt to use these parameters for a simulation of the real
+    machine.
+   
+    The collimator starts at Z=30 cm and has 40 tungsten leaves opening 
+    in the X direction.  The leaves are each ~0.4cm wide and 7.0 cm 
+    thick.  In this example, the leaf openings will form a barbel shape
+    with its long axis parallel to Y.  It will be slightly off-centre
+    due to the leaf bank rotation of -0.01 rads. 
+     
+    Electrons and photons in both the collimator and the opening regions 
+    will be followed down to kinetic energies of 10 keV (ECUT=0.521,
+    PCUT=0.01).  Dose deposited in the tungsten leaves will be stored
+    in dose zone 2, and dose deposited in the opening will be stored
+    in dose zone 1.
+ 
+    In this example, the MLC is being used in step-and-shoot mode, with
+    the leaf opening coordinates specified in a file.
+ 
+    26.0,           RMAX_CM
+    MLC based on mock 40 leaf pair Elekta SLiplus type of accelerator
+    1,2             Leaves open in X direction, step-and-shoot mode
+    40,             40 leaf paires
+    30.0,37.0,      ZMIN,ZMAX
+    34.0, 33.5,     ZSTEPL,ZSTEPR
+    0.04,           step width
+    0.17,0.2,       X3, X4 of central leaf 
+    1.2, 100.0,     leaf centres spaced 1.2 cm apart projected to SSD=100cm
+    -0.01,          leaf bank tilt angle (radians)
+    0,              ENDTYPE IS CURVED
+    15.0,33.5,      curvature radius, zposition cylinder axis curvature
+    /home/bwalters/HEN_HOUSE/omega/beamnrc/CMs/sample_syncmlce.sequence
+   0.5210,  0.010,  1,  0
+   AIR700ICRU
+   0.5210,  0.010,  2,  0
+   W700ICRU
+\end{verbatim}

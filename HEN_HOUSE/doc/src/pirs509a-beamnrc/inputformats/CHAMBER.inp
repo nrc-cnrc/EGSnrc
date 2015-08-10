@@ -1,0 +1,208 @@
+\begin{verbatim}
+   CARDS CM_$CHAMBER
+   ****************
+ 
+   -1  Dummy line to indicate start of CM.
+   
+    0  RMAX_CM(ICM_$CHAMBER):( F10.0):   Maximum radius of component module  
+   
+    1  TITLE_$CHAMBER (60A1):  Title of CM.
+   
+    2  ZMIN_$CHAMBER (F15.0): Distance from front surface of 1st cylinder to 
+                              reference plane (Z=0). Excludes any air gap.
+    
+    3  N_TOP_$CHAMBER, N_CHM_$CHAMBER, N_BOT_$CHAMBER (3I5)
+ 
+         N_TOP_$CHAMBER:   Number of layers in top part (>= 0).
+         N_CHM_$CHAMBER:   Number of layers in chamber itself (> 0 to input
+                           chamber layers individually or if ALL layers have
+                           the same thickness and medium; < 0 to 
+                           input -N_CHM_$CHAMBER groups of layers where 
+                           layers in each group have the same thickness and 
+                           ALL layers have the same MED).
+         N_BOT_$CHAMBER:   Number of layers in bottom part (>= 0).
+    ==========================================================================
+    4  Inputs for the top part (If N_TOP_$CHAMBER >0):
+    ==========================================================================
+      
+     If all layers in this part are identical, then in line (a) include
+     NFLAG=N_TOP_$CHAMBER, otherwise repeat (a) to (e) for each of the 
+     layers. 
+ 
+      a) ZTHICK, RCYS_$CHAMBER , NFLAG (2F15.0,I5)
+            ZTHICK (F15.0):        Thickness of each layer in top part
+            RCYS_$CHAMBER (F15.0): Radius of inner cylinders in each layer 
+            N_TOP_$CHAMBER (I5):   Number of layers in top part
+ 
+      b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for inner cylinders 
+                                            (2F15.0,2I5,1-line):
+          ECUT, PCUT: Cutoff energies for electrons and photons.
+          DOSE_ZONE:  Dose scoring region for this region, 0=>no dose scored.
+          IREGION_TO_BIT :  Bit # in LATCH designated to this region
+   
+      c) MED_IN (24A1):  Medium of inner cylinder (used for MED_INDEX)
+ 
+      d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli 
+                                            (2F15.0,2I5,1-line):
+   
+      e) MED_IN (24A1):  Medium for outer annuli (used for MED_INDEX)
+   
+    =========================================================================
+    5  Inputs for the chamber/phantom part:
+    =========================================================================
+     
+     The chamber/phantom part has a central part of potentially many layers
+     which may have different media and dimensions.  Outside this there
+     are 3 cylindrical shells, called the chamber wall, gap, and container 
+     wall.  Each is a single material running the entire Z-span of the
+     central part.
+     
+    5.1) RCYS_$CHAMBER(1,1), RCYS_$CHAMBER(1,2), RCYS_$CHAMBER(1,3) (3F15.0)
+           RCYS_$CHAMBER (1,1): Inner r of chamber wall=outer r central region
+           RCYS_$CHAMBER (1,2): Outer r of chamber wall=inner r of gap
+           RCYS_$CHAMBER (1,3): Inner r of container wall=outer r of gap
+    
+      
+    5.2) If N_CHM_$CHAMBER>0: If all layers in this part are identical, then
+            in line (a) include NFLAG=N_CHM_$CHAMBER and input (b) once for
+            all layers, otherwise repeat (a) to (c) for each of the layers.
+         If N_CHM_$CHAMBER<0: Repeat (a) once for each of the 
+            -N_CHM_$CHAMBER groups of layers of equal thickness. In this case,
+            NFLAG is the number of layers in the group.   Then input (b) once
+            for all layers.
+ 
+      a) ZTHICK, NFLAG  (F15.0,I5)
+            ZTHICK:    Thickness of each layer in chamber part 
+                       (N_CHM_$CHAMBER>0) or of each layer in this particular 
+                       group of layers (N_CHM_$CHAMBER<0)  
+            NFLAG:     Number of layers in chamber IF all same 
+                       (N_CHM_$CHAMBER>0) or number of layers in the group 
+                       (N_CHM_$CHAMBER<0) 
+ 
+      b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for chamber layers 
+                                                 (2F15.0,2I5,one line):
+            ECUT, PCUT: Cutoff energies for electrons and photons.
+            DOSE_ZONE:  if all layers are of equal thickness or there are
+                        groups of layers of equal thickness (ie
+                        NFLAG=N_CHM_$CHAMBER or N_CHM_$CHAMBER<0) then, if
+                        DOSE_ZONE>0 the dose is scored in regions
+                        DOSE_ZONE, DOSE_ZONE+1,.., DOSE_ZONE+N_CHM_$CHAMBER-1
+                        ie, a sequence of dose scoring zones are set up 
+                        automatically for all layers.
+                        For single region at a time
+                        Dose scoring region for this region,0=>no dose scored.
+            IREGION_TO_BIT :  Bit # in LATCH designated to this region
+   
+      c) MED_IN (24A1):  Medium of chamber layers (used to set MED_INDEX)
+ 
+     
+      5.3) Inputs for the chamber wall:
+      ---------------------------------
+ 
+      a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+            ECUT, PCUT: Cutoff energies for electrons and photons.
+            DOSE_ZONE:  Dose scoring region for this region,0=>no dose scored.
+            IREGION_TO_BIT:  Bit # in LATCH designated to this region
+   
+      b) MED_IN (24A1):  Medium of chamber wall (used to set MED_INDEX)
+   
+      5.4) Inputs for the gap between chamber wall and container wall:
+      ----------------------------------------------------------------
+ 
+      a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+   
+      b) MED_IN (24A1):  Medium of gap (used to set MED_INDEX)
+   
+   
+      5.5) Inputs for the container wall:
+      -------------------------------------------
+ 
+      a) ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT, (2F15.0,2I5):
+   
+      b) MED_IN (24A1):  Medium of container wall (used to set MED_INDEX)
+    =====================================================================
+    6  Inputs for the bottom part (If N_BOT_$CHAMBER >0):
+    =====================================================================
+      
+     5.6) If all layers in this part are identical, then in line (a) include
+          NFLAG=N_BOT_$CHAMBER, otherwise repeat (a) to (e) for each of the 
+          layers. 
+ 
+      a) ZTHICK, RCYS_$CHAMBER , NFLAG (2F15.0,I5)
+           ZTHICK:           Thickness of each layer in bottom part
+           RCYS_$CHAMBER:    Radius of inner cylinders in bottom part
+ 
+      b) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for inner cylinders 
+                                              (2F15.0,2I5,1-line):
+           ECUT, PCUT:  Cutoff energies for electrons and photons.
+           DOSE_ZONE:   Dose scoring flag, 0=>do not score dose. 
+           IREGION_TO_BIT :  Bit # in LATCH designated to this region
+   
+      c) MED_IN (24A1):  Medium of inner cylinders (used for MED_INDEX)
+ 
+      d) ECUT,PCUT,DOSE_ZONE,IREGION_TO_BIT for outer annuli 
+                                             (2F15.0,2I5,1-line):
+      e) MED_IN (24A1):  Medium of outer annuli (used for MED_INDEX)
+ 
+    ====================================================================  
+    7  Inputs for range rejection options:
+    ====================================================================
+ 
+        MRNGE (I5)         0 or 1
+   
+           MRNGE     : = 1 to estimate thickness of the CHAMBER for
+                         ECUTRR calculations in automated range rejection
+                         (IREJCT_GLOBAL=1) (crude approx for 5 layers)
+                       = 0 no ECUTRR calculation--range rejection will
+                         still be done on a region-by-region basis
+              
+             Note that MRNGE only has an effect if automated range
+             rejection is on (IREJCT_GLOBAL=1).
+ 
+    Example
+    *******
+   
+   The following set of cards defines a chamber with 2 top layers, 3 chamber 
+   layers, and 2 bottom layers. 
+   The chamber wall is AL & the chamber container is CU. The detecting 
+   material is air.
+   The air cavities are assigned as dose region 1 and the rest as region 2.
+ 
+   10.5; radius of CM
+   Chamber with 2 top layers, 3 chamber layers, 2 bottom layers
+   10.0; distance from front surface of the CM to the reference plane (z=0)
+   2,3,2;                   2 top layers, 3 chamber layers, 2 bottom layers
+   0.1,5.0,0;          first layer in the top part, 0.1cm thick, IR=5cm
+   0.521,0.010,2,2;  dose region # = 2
+   CU             ;  medium
+   0.521,0.010,2,2;  
+   CU
+   0.2,5.0,0;          second layer is 0.2 cm thick, radius = 5.0 cm
+   0.521,0.010,2,2;  for inner cylinder (dose region # = 2)
+   AL
+   0.521,0.010,2,2;  for outer annulus 
+   AL
+   5.0,5.2,10.0;     IR & OR of chamber wall, IR of container 
+   0.2;              thickness of the first layer (air) in chamber part
+   0.521,0.010,1,2;  dose region # = 1
+   AIR
+   0.1;              thickness of the second layer (AL) in chamber part
+   0.521,0.010,2,2;  dose region # = 2
+   AL
+   0.2;              thickness of the third layer (air) in chamber part
+   0.521,0.010,1,2;  dose region # = 1
+   AIR
+   0.521,0.010,2,2;  chamber wall (dose region # = 2)
+   AL
+   0.521,0.010,2,2;  air gap betweem chamber wall and container wall
+   AIR
+   0.521,0.010,2,2;  chamber container
+   CU
+   0.1,5.0,2;        2 layers in bot. part have = thickness, IR
+   0.521,0.010,2,2;  for inner cylinders 
+   AL
+   0.521,0.010,2,2;  for outer annuli 
+   AL
+   0;                do not calculate ECUTRR 
+  
+\end{verbatim}

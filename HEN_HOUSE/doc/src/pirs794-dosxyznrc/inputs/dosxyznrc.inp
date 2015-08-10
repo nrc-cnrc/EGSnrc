@@ -1,0 +1,1302 @@
+\begin{verbatim}
+*******************************************************************************
+
+            *********************************************      
+            *                                           *      
+            * dosxyznrc.mortran (Revision: 1.53 )       *      
+            * (last edited Date: 2013/05/08 18:58:44 )  *      
+            *                                           *      
+            *********************************************      
+
+   A general purpose EGSnrc user code to do cartesian coordinate dose
+   deposition studies. Every voxel (volume element) can have different
+   materials and/or varying densities (for use with CT data).
+
+   The geometry is a rectilinear volume with a right-handed coordinate system: 
+   the X-Y plane on the page, X to the right, Y down and the 
+   Z-axis into the page. Voxel dimensions are completely variable in
+   all three directions. For more detail on geometry see subroutine HOWFAR
+
+  Unit Assignments                                           
+  ================
+
+     Unit 1   Output summary and results
+     Unit 2   .egsrns file for storing random numbers
+     Unit 3   output .3ddose file containing dose arrays
+     Unit 4   Raw data output file for restarts
+     Unit 5   Input stream - file or terminal
+     Unit 6   prompts for and echoes input
+     Unit 8   echoes input cross-section data (usually assigned to a null file)
+     Unit 17  geometry output file for EGS_Windows
+     Unit 13  phase space output file for EGS_Windows
+     Unit 12  Input cross section file from PEGS4
+     Unit 15  Output of EGSnrc input error messages
+     Unit 16  Output for .pardose when IPARALLEL > 1
+     Unit 44  Full phase-space data set, such as output from BEAM
+     $CTUnitNumber (normally 45)  CT data set input 
+
+   DESCRIPTION OF INPUT FILE (on unit 5)                         
+   =========================
+
+  Record 1   TITLE     Up to 80 characters
+
+  Record 2   NMED      Number of media in problem - defaults to 1
+             If (NMED=0) then create dosxyznrc phantom from binary CT data 
+
+----------------------------------------------------------------------------
+----------if NMED > 0  => non-CT data input---------------------------------
+----------------------------------------------------------------------------
+
+  Record 3(NMED times) Media names, left justified. Note that
+                       entire volume is initially set to medium 1
+
+  Record 4  ECUTIN,PCUTIN,ESTEPM(i,i=1,NMED),SMAX
+                ECUTIN,PCUTIN: Electron (total) and photon global cutoff
+                      energies in MeV.  If ECUTIN > ECUT input in EGSnrc
+                      parameters (See below), then ECUTIN is used.  The
+                      same is true if PCUTIN > PCUT input in EGSnrc parameters.
+                      ECUT and PCUT default to AE and AP, respectively.
+                ESTEPM(i,i=1,NMED): Dummy input (used to be estepe, max. energy
+                      loss/electron step in each medium)
+                SMAX: Dummy input (used to be max. step length)
+   
+                ESTEPE and SMAX are now handled in EGSnrc inputs (See below),
+                but the dummy inputs are retained for compatibility with 
+                EGS4/DOSXYZ input files.
+
+  Record 5   IMAX,JMAX,KMAX,IPHANT (4i10)
+                IMAX,JMAX,KMAX: Number of voxels in the X,Y,Z directions
+                       If < 0, it means that (-n) sets of equally spaced
+                       boundaries will be input for that direction.
+                IPHANT: set to 1 to output a .egsphant file for displaying
+                       non-CT isodose contours using dosxyz_show 
+
+  Record 6 et seq,     repeated for x, y and z directions separately
+                       i.e. repeat the following replacing (i and x) by
+                       (j and y) and (k and z) respectively
+    if IMAX > 0
+               input, one per record, the IMAX+1 x boundaries
+
+    if IMAX < 0
+               input smallest x boundary, followed by  abs(IMAX) pairs
+               one pair/record: 
+               voxel width, # voxels with this width
+
+    For example, starting at record 5:
+              -1,-1,-1
+              0.0
+              1.0,16
+              0.0
+              1.0,16
+              0.0
+              1.0,16
+       defines a 16x16x16 cm cube of 1cm**3 voxels with a total of 4097 regions
+    Or:
+              -1,-1,2
+              0.0
+              1.0,16
+              0.0
+              1.0,16
+              0.0
+              5.0
+              10.0
+       defines a 16x16x10 cm cube with 1x1x5 cm voxels stacked 2 deep
+
+   Record 7 et seq
+             IL,IU, JL,JU, KL,KU, MEDIUM, DENSITY (7i10,f10.0)
+             This record is repeated until a blank record is found.
+             All regions default to medium 1 with its default density
+             unless changed here.
+             For all voxels with
+                       IL <= i <= IU
+                       JL <= j <= JU
+                       KL <= k <= KU
+             the medium and density are defined.
+             If DENSITY=0.0, the default value for that
+             MEDIUM is used (faster than entering default density here).
+             If IU and IL are non-zero, the rest default to all j,k
+
+   Record 8 et seq
+             IL,IU, JL,JU, KL,KU, ECUTL, PCUTL (6i10,2f10.0)
+             This record is repeated until a blank record is found.
+             As above but allowing a region by region local definition
+             of ECUT and PCUT.
+             All regions default to the global values defined in
+             record 4 unless changed here.
+             Note, this option disabled, but must enter blank record
+             for compatibility. Note old code is in place.
+
+   Record 9 et seq
+             IL,IU, JL,JU, KL,KU,IZSCAN,MAX20
+             This record is repeated until a blank record is found.
+             As above except these are the regions for which the
+             dose will be printed in .egslst - beware of a paper explosion!
+             The default is to print nothing unless asked for here.   
+             IZSCAN is non-zero to get a z-scan per page, otherwise
+             output is an x-scan per page.  If the input parameter
+             MAX20 is equal to 1 on any of these input lines, a
+             summary of the 20 highest doses is included in the output.
+
+
+----------------------------------------------------------------------------
+---------------if NMED = 0  input for a CT phantom ---------------------------
+----------------------------------------------------------------------------
+
+   Record 3  PhantFileName (A256)  : The full name of the file containing
+                                     the CT phantom as output by ctcreate
+                                     (should be a .egsphant file). 
+
+   Record 4  ECUTIN,PCUTIN,SMAX (3F15.0)
+                ECUTIN,PCUTIN: Electron (total) and photon global cutoff
+                       energies in MeV.  If ECUTIN > ECUT input in EGSnrc
+                       parameters (See below), then ECUTIN is used as the
+                       global ECUT.  The same is true if PCUTIN > PCUT input 
+                       in EGSnrc parameters.  ECUT and PCUT default to AE and
+                       AP, respectively.
+                SMAX: Dummy input (used to be max. step length)
+
+                SMAX is now handled in EGSnrc inputs (See below),
+                but the dummy input is retained for compatibility with
+                EGS4/DOSXYZ input files.
+
+   Record 5  zeroairdose,doseprint,MAX20 (3I5)
+
+             zeroairdose: = 1 to zero the dose in air (any
+                            material with density < 0.044 g/cm^3)
+                            in the .3ddose file
+                          = 0(default) to not zero the dose in air
+               doseprint: = 1 for output of all doses to
+                            .egslst file
+                          = 0(default) to suppress this output
+                   MAX20: = 1 to print out summary of 20 highest
+                            doses
+                          = 0(default) no summary of these doses
+
+----------------------------------------------------------------------------
+---------------From here on the two formats are identical.------------------
+----------------------------------------------------------------------------
+
+   Records 10--12 (6--8 if NMED=0) Refer to srcxyznrc.mortran
+*******************************************************************************
+
+                Input source parameters read by srcxyznrc.mortran       
+                ==============================================
+              (Revision: 1.35  last edited Date: 2013/05/14 19:09:27 )
+              (see section 4 of DOSXYZnrc User's Manual for details) 
+
+*******************************************************************************
+
+Record SC1-0  Parallel beam incident on the front with rectangular collimation
+                                        (front is the zbound(1) plane)
+
+       iqin,isource,xinl,xinu,yinl,yinu,thetax,thetay,thetaz
+
+               iqin       Charge of the incident beam (defaults to 0)
+               isource    = 0
+               xinl,xinu  Lower and upper x-bounds on source (in cm)
+               yinl,yinu  Lower and upper y-bounds on source (in cm)
+               thetax     Angle of the beam relative to the X-axis (degrees)
+               thetay     Angle of the beam relative to the Y-axis (degrees)
+               thetaz     Angle of the beam relative to the Z-axis (degrees)
+                          (incident angles default to 90,90,0)
+
+-------------------------------------------------------------------------------
+
+Record SC1-1  Parallel beam incident from any direction with rectangular
+            collimation
+
+       iqin,isource,xiso,yiso,ziso,theta,phi,xcol,ycol,phicol
+
+               iqin        Charge of the incident beam (defaults to 0)
+               isource     = 1
+               x|y|z|iso   x|y|z|-coordinates of the isocenter 
+               theta       angle between the +z direction and a line joining
+                           the center of the beam to the isocenter
+               phi         angle  between the +x direction and the
+                           projection of the line joining the center of the
+                           beam to the isocenter on the xy plane
+               x|y|col     total x- and y- widths of the beam on the plane 
+                           perpendicular to the beam direction, defined
+                           by the center of the beam and the isocenter
+               phicol      angle by which the collimator is rotated in the
+                           collimator plane perpendicular to the beam direction
+                           Phicol is determined for theta=0 or 180 and phi=0.
+                           The positive sense of rotation is counterclockwise
+                           as one sights down the beam direction.
+
+-------------------------------------------------------------------------------
+
+Record SC1-2  Full phase-space source file, particles incident on front face
+
+       iqin,isource,xiso,yiso,ziso,theta,phi,dsource,phicol,i_dbs,r_dbs,
+                                         ssd_dbs,z_dbs,e_split
+
+               iqin(iqphsp)= 0 only photons from ph-sp file will be used
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqphsp
+               isource     =  2
+               x|y|z|iso   x|y|z|-coordinates of the isocenter 
+               theta       angle between the +z direction and a line joining
+                           the origin in the phase space plane to the 
+                           isocenter.  theta=180 degrees for a beam down
+                           from the top.
+               phi         angle  between the +x direction and the
+                           projection of the line joining the origin in the
+                           phase space plane to the isocenter on the xy plane
+               dsource     For a BEAMnrc format phase space source: absolute 
+                           distance from the isocenter to the 
+                           source center, which is, by definition, the
+                           origin in the phase space plane.  For an IAEA
+                           format phase space source: the primary source to
+                           isocentre distance (SAD).
+               phicol      angle by which the collimator is rotated in the
+                           collimator plane perpendicular to beam direction.
+                           Phicol is determined for theta=0 or 180 and phi=0.
+                           The positive sense of rotation is counterclockwise
+                           as one sights down from the origin in the 
+                           phase space plane.  
+                           phicol = 180 to retain same x,y positions passing
+                           from BEAM to DOSXYZ  (because of coordinate
+                           transformation used).
+               i_dbs       set to 1 if you used directional bremsstrahlung 
+                           splitting (DBS) in the BEAM simulation used to 
+                           generate this phase space source AND you wish to 
+                           reject fat photons not aimed into the splitting 
+                           field.  These fat photons may compromise dose 
+                           statistics.  Set to 0 otherwise.  
+               r_dbs       DBS splitting radius used in BEAMnrc simulation(cm).
+                           Set to 0 to disable this option.  Only needed if
+                           i_dbs=1. 
+             ssd_dbs       SSD at which r_dbs is defined in the BEAM sim. (cm).
+                           Only needed if i_dbs=1.
+               z_dbs       Z in the BEAMnrc run where the phase space source 
+                           was scored (in cm).  Only needed if i_dbs=1.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1. 
+
+      For i_dbs=1, photons are projected from z_dbs to ssd_dbs and if they will
+      fall outside of r_dbs (based on their Z direction cosine) then they will
+      be rejected.  This prevents fat photons from compromising dose 
+      statistics.
+
+     Note: as currently set, multiple passers and all particles going
+           backwards in the phase space file are NOT used.
+
+-------------------------------------------------------------------------------
+
+Record SC1-3  Point source incident from the front (along the +ve z-axis)
+            employing rectangular collimation
+
+       iqin,isource,xinl,xinu,yinl,yinu,ssd
+
+               iqin       Charge of the incident beam (defaults to 0)
+               isource    = 3
+               xinl,xinu  Lower and upper x-bounds on source
+               yinl,yinu  Lower and upper y-bounds on source
+               ssd        Source-surface distance (ssd >0)
+
+-------------------------------------------------------------------------------
+
+Record SC1-4  Beam characterization model, particles incident on front face
+
+       iqin,isource,xiso,yiso,ziso,thetax,thetay,thetaz,phicol
+
+               iqin        = 0 only photons from ph-sp file will be simulated
+                           = 1 only positrons will be simulated
+                           =-1 only electrons will be simulated
+                           = 2 all the particles will be simulated
+               isource     =  4
+               x|y|z|iso   x|y|z|-coordinates of the isocenter 
+               theta       angle between the +z direction and a line joining
+                           the origin in the phase space plane to the isocenter
+               phi         angle  between the +x direction and the
+                           projection of the line joining the origin in the
+                           phase space plane to the isocenter on the xy plane
+               dsource     absolute distance from the isocenter to the
+                           source center, which is, by definition, the
+                           origin in the phase space plane
+               phicol      angle by which the collimator is rotated in the
+                           collimator plane perpendicular to the beam direction
+                           Phicol is determined for theta=0 or 180 and phi=0.
+                           The positive sense of rotation is counterclockwise
+                           as one sights down from the origin in the 
+                           phase space plane.
+
+-------------------------------------------------------------------------------
+
+Record SC1-6  Uniform isotropically radiating parallelepiped within DOSXYZ
+              phantom 
+
+     iqin,isource,xinl,xinu,yinl,yinu,zinl,zinu
+               iqin        charge of particles from source (defaults to 0)
+               isource     = 6 
+               xinl        min x of active volume (cm)
+               xinu        max x of active volume (cm)
+               yinl        min y of active volume (cm)
+               yinu        max y of active volume (cm)
+               zinl        min z of active volume (cm)
+               zinu        max z of active volume (cm)
+
+NOTE: The active volume must be completely contained within the phantom.
+
+------------------------------------------------------------------------------
+Record SC1-7  Parallel beam incident from multiple, user-selected angles. 
+
+       iqin,isource,xiso,yiso,ziso,nang,xcol,ycol,phicol
+
+               iqin        Charge of the incident beam (defaults to 0)
+               isource     = 7 
+               x|y|z|iso   x|y|z|-coordinates of the isocenter
+               nang        number of incident theta-phi pairs or, if -ve, 
+                           absolute value is the number of groups of theta-
+                           phi pairs.  Within a group:
+                              1. only theta or phi, but not both, can vary
+                              2. varying theta's or phi's are evenly
+                                 distributed
+                              3. theta-phi pairs have equal probability 
+               x|y|col     total x- and y- widths of the beam on the plane
+                           perpendicular to the beam direction, defined
+                           by the center of the beam and the isocenter
+               phicol      angle by which the collimator is rotated in the
+                           collimator plane perpendicular to the beam direction
+                           Phicol is determined for theta=0 or 180 and phi=0.
+                           The positive sense of rotation is counterclockwise
+                           as one sights down the beam direction.
+
+  Note that, similar to source 1, theta is defined as the angle between the +z
+  direction and a line joining the center of the beam to the isocenter, and
+  phi is defined as the angle between the +x direction and the projection of
+  the line joining the center of the beam to the isocenter on the xy plane.
+
+-------------------------------------------------------------------------------
+Record SC1-8  Full phase-space source, particles incident from multiple,
+              user-selected angles. 
+
+    iqin,isource,xiso,yiso,ziso,nang,dsource,phicol,i_dbs,r_dbs,ssd_dbs,
+             z_dbs,e_split
+
+               iqin(iqphsp)= 0 only photons from ph-sp file will be used
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqphsp
+               isource     =  8 
+               x|y|z|iso   x|y|z|-coordinates of the isocenter
+               nang        number of incident theta-phi pairs or, if -ve,
+                           absolute value is the number of groups of theta-
+                           phi pairs.  Within a group:
+                              1. only theta or phi, but not both, can vary
+                              2. varying theta's or phi's are evenly
+                                 distributed
+                              3. theta-phi pairs have equal probability
+               dsource     For an BEAMnrc format phase space source: the 
+                           absolute distance from the isocenter to the
+                           source center, which is, by definition, the
+                           origin in the phase space plane.  For an IAEA
+                           format source: the primary source-to-isocentre
+                           distance (SAD).
+               phicol      angle by which the collimator is rotated in the
+                           collimator plane perpendicular to beam direction.
+                           Phicol is determined for theta=0 or 180 and phi=0.
+                           The positive sense of rotation is counterclockwise
+                           as one sights down from the origin in the
+                           phase space plane.
+                           phicol = 180 to retain same x,y positions passing
+                           from BEAM to DOSXYZ  (because of coordinate
+                           transformation used).
+               i_dbs       set to 1 if you used directional bremsstrahlung 
+                           splitting (DBS) in the BEAM simulation used to 
+                           generate this phase space source AND you wish to 
+                           reject fat photons not aimed into the splitting 
+                           field.  These fat photons may compromise dose 
+                           statistics.  Set to 0 otherwise.  
+               r_dbs       DBS splitting radius used in BEAMnrc simulation(cm).
+                           Set to 0 to disable this option.  Only needed if
+                           i_dbs=1. 
+             ssd_dbs       SSD at which r_dbs is defined in the BEAM sim. (cm).
+                           Only needed if i_dbs=1.
+               z_dbs       Z in the BEAMnrc run where the phase space source 
+                           was scored (in cm).  Only needed if i_dbs=1.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1.
+
+      For i_dbs=1, photons are projected from z_dbs to ssd_dbs and if they will
+      fall outside of r_dbs (based on their Z direction cosine) then they will
+      be rejected.  This prevents fat photons from compromising dose 
+      statistics.
+
+     Note: as currently set, multiple passers and all particles going
+           backwards in the phase space file are NOT used.
+     Also note that, similar to source 2, theta is the angle between the +z
+     direction and a line joining the origin of the phase space plane to the
+     isocenter, and phi is the angle between the +x direction and the
+     projection of the line joining the origin of the phase space plane to
+     the isocenter in the xy plane.  
+
+-------------------------------------------------------------------------------
+
+Record SC1-9 BEAM treatment head simulation used as source, incident from
+             any angle
+
+  This source requires unix/Linux systems to have a working C/C++ compiler 
+  and requires the BEAM code, BEAM_accelname, to have been compiled as a 
+  shared library (libBEAM_accelname.so or BEAM_accelname.dll) that exists in 
+  your EGS_HOME/bin/config directory.  See the DOSXYZnrc Manual for more 
+  details.
+
+       iqin,isource,xiso,yiso,ziso,theta,phi,dsource,phicol,i_dbs,e_split
+
+               iqin(iqinc)= 0 only photons from BEAM simulation will be used 
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqinc
+               isource     = 9 
+               x|y|z|iso   x|y|z|-coordinates of the isocenter.
+               theta       angle between the +z direction and a vector 
+                           joining the isocentre to the origin of the source
+                           plane (the plane where the particles are sampled
+                           from the BEAM simulation--which is the
+                           scoring plane in a standard BEAM simulation).
+                           theta=180 degrees for a beam down from the top.
+               phi         angle between the +x direction and the
+                           projection of the vector joining the isocenter to
+                           the origin of the source plane. 
+               dsource     absolute distance from the isocenter to the
+                           origin of the source plane.
+               phicol      angle by which the source plane is rotated about
+                           the BEAM central axis.  Rotation is counter-
+                           clockwise for theta=0.  Set phicol=180 degrees
+                           to retain same x,y, positions passing 
+                           from BEAM to DOSXYZ when theta=180 (beam coming
+                           down from top).
+               i_dbs       set to 1 if you are using directional bremsstrahlung
+                           splitting (DBS) in the BEAM simulation 
+                           AND you wish to reject fat photons not aimed into 
+                           the splitting field.  These fat photons may 
+                           compromise dose statistics.  Set to 0 otherwise.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1.
+-------------------------------------------------------------------------------
+
+Record SC1-10 BEAM treatment head simulation used as source, incident from
+              multiple, user-defined angles. 
+
+  This source requires unix/Linux systems to have a working C/C++ compiler
+  and requires the BEAM code, BEAM_accelname, to have been compiled as a
+  shared library (libBEAM_accelname.so or BEAM_accelname.dll) that exists in
+  your EGS_HOME/bin/config directory.  See the DOSXYZnrc Manual for more
+  details.
+
+       iqin,isource,xiso,yiso,ziso,nang,dsource,phicol,i_dbs,e_split
+
+               iqin(iqinc)= 0 only photons from BEAM simulation will be used
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqinc
+               isource     = 10 
+               x|y|z|iso   x|y|z|-coordinates of the isocenter.
+               nang        number of incident theta-phi pairs or, if -ve,
+                           absolute value is the number of groups of theta-
+                           phi pairs.  Within a group:
+                              1. only theta or phi, but not both, can vary
+                              2. varying theta's or phi's are evenly
+                                 distributed
+                              3. theta-phi pairs have equal probability
+               dsource     absolute distance from the isocenter to the
+                           origin of the source plane.
+               phicol      angle by which the source plane is rotated about
+                           the BEAM central axis.  Rotation is counter-
+                           clockwise for theta=0.  Set phicol=180 degrees
+                           to retain same x,y, positions passing
+                           from BEAM to DOSXYZ when theta=180 (beam coming
+                           down from top).
+               i_dbs       set to 1 if you are using directional bremsstrahlung
+                           splitting (DBS) in the BEAM simulation
+                           AND you wish to reject fat photons not aimed into
+                           the splitting field.  These fat photons may
+                           compromise dose statistics.  Set to 0 otherwise.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1.
+
+      Note that this source requires Record SC1-10a, described below.
+
+-------------------------------------------------------------------------------
+Record SC1-20 Synchronized phase space source simulating continuous motion of
+              the source plane between user-defined control points.  Option
+              to run the source through a geometry (usually MLC) defined using
+              BEAM or a non-EGSnrc code compiled as a shared library 
+	       - added by Tony Popescu and Julio Lobo
+
+  This source requires unix/Linux systems to have a working C/C++ compiler 
+  and requires the BEAM code or non-EGSnrc code (e.g particleDmlc) to have 
+  been compiled as a shared library (libparticleDmlc.so) that exists in 
+  your EGS_HOME/bin/config directory.  
+  
+
+       iqin,isource,nset,i_dbs,r_dbs,ssd_dbs,z_dbs,e_split,i_muidx_out
+
+               iqin(iqinc) = 0 only photons from BEAM simulation will be used 
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqinc
+               isource     = 20
+               nset        number of settings (control points)
+               i_dbs       set to 1 if you are using directional bremsstrahlung
+                           splitting (DBS) in the BEAM simulation 
+                           AND you wish to reject fat photons not aimed into 
+                           the splitting field.  These fat photons may 
+                           compromise dose statistics.  Set to 0 otherwise.
+               r_dbs       DBS splitting radius used in BEAMnrc simulation(cm).
+                           Set to 0 to disable this option.  Only needed if
+                           i_dbs=1. 
+             ssd_dbs       SSD at which r_dbs is defined in the BEAM sim. (cm).
+                           Only needed if i_dbs=1.
+               z_dbs       Z in the BEAMnrc run where the phase space source 
+                           was scored (in cm).  Only needed if i_dbs=1.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1.
+            i_muidx_out    Set to 1 to include frMU_indx (the fractional
+                           monitor unit index) in phase space output if
+                           i_phsp_out=1 or 2.
+
+-------------------------------------------------------------------------------
+
+Record SC1-21 Synchronized BEAM treatment head simulation used as source
+              with continuous motion of the source plane between user-defined
+              control points.  Option to run the source through a geometry
+              (usually MLC) defined using a non-EGSnrc code compiled as a
+              shared library.
+	       - added by Tony Popescu and Julio Lobo
+
+  This source requires unix/Linux systems to have a working C/C++ compiler 
+  and requires the BEAM code being used as the source, BEAM_accelname, to have
+  been compiled as a shared library (libBEAM_accelname.so or 
+  BEAM_accelname.dll) that exists in your $EGS_HOME/bin/config directory.  See
+  the DOSXYZnrc Manual for more details.
+
+       iqin,isource,nset,i_dbs,e_split,i_muidx_out
+
+               iqin(iqinc) = 0 only photons from BEAM simulation will be used 
+                           = 1 only positrons will be used
+                           =-1 only electrons will be used
+                           = 2 all the particles will be used
+                           internally renamed as iqinc
+               isource     = 21 
+               nset        number of settings (control points)
+               i_dbs       set to 1 if you are using directional bremsstrahlung
+                           splitting (DBS) in the BEAM simulation 
+                           AND you wish to reject fat photons not aimed into 
+                           the splitting field.  These fat photons may 
+                           compromise dose statistics.  Set to 0 otherwise.
+             e_split       No. of times to split charged particles as soon
+                           as they enter the DOSXYZnrc geometry.  Used in
+                           conjunction with photon splitting (n_split) to
+                           prevent higher-weight charged particles from
+                           compromising dose statistics.  Recommended setting
+                           is e_split=n_split for optimum efficiency.  Not
+                           used if n_split<=1.
+            i_muidx_out    Set to 1 to include frMU_indx (the fractional
+                           monitor unit index) in phase space output if
+                           i_phsp_out=1 or 2.
+
+------------------------------------------------------------------------------
+Record SC1-7a, SC1-8a and SC1-10a (required for sources 7, 8 and 10 only)
+        if nang>0:
+         (theta(i),phi(i),pang(i),i=1,nang)
+
+               theta(i)    incident theta i
+               phi(i)      incident phi i.
+               pang(i)     probability of a particle being incident at
+                           theta(i)-phi(i) (probabilities are automatically 
+                           normalized to 1).
+
+        if nang<0:
+         (ivary(i),angfixed(i),angmin(i),angmax(i),ngang(i),pgang(i),i=1,-nang)
+
+               ivary(i)    =0 to vary phi in group i, 1 to vary theta in 
+                           group i
+               angfixed(i) =fixed theta (ivary=0) or phi (ivary=1) for group i
+               angmin(i)   min. value of varying phi (ivary=0) or theta 
+                           (ivary=1) in group i 
+               angmax(i)   max. value of varying phi or theta in group i 
+               ngang(i)    number of equally-spaced phi's or theta's 
+                           including angmin(i) and angmax(i) (Note: this
+                           means ngang(i) must be at least 2). 
+               pgang(i)    probability of a particle being incident in 
+                           group i (probabilities are automatically normalized
+                           to 1).
+
+-------------------------------------------------------------------------------
+Record SC1-20a and SC1-21a (required for sources 20 and 21)
+             
+  (|x|y|ziso(i),theta(i),phi(i),phicol(i),dsource(i),muIndex(i),i=1,nset)
+
+           |x|y|ziso(i)    x,y,z of isocentre for control point i
+               theta(i)    incident theta for control point i
+               phi(i)      incident phi for control point i
+               phicol(i)   incident phicol for control point i
+               dsource(i)  distance from isocentre to origin of BEAM
+                           scoring plane for control point i.  For source
+                           21 using an IAEA phase space file, this is
+                           the primary source to isocentre distance (SAD). 
+               muIndex(i)  fractional monitor unit index for control point
+                           i.  Restrictions: muIndex(i) is on [0,1],
+                           muIndex(i-1)<=muIndex(i), muIndex(1)=0.0,
+                           muIndex(nset)=1.0 
+
+   Note: theta, phi, phicol, and dsource have the same meaning as for
+   Source 2 (see above).
+
+-------------------------------------------------------------------------------
+
+ Record SC2
+       enflag,mode,medsur,dsurround(1),dflag,dsurround(2),dsurround(3),
+                                                              dsurround(4)
+
+            enflag    = 0 for monoenergetic beams
+                      = 1 for beams with an energy spectrum
+                      = 2 for ph-sp beam input or full BEAM sim.
+                      = 3 for ph-sp beam input or full BEAM sim. + dose 
+                          components calculations (use of LATCH filters)
+                      = 4 for ph-sp beam modelled with multiple-source 
+                          (use of LATCH filters)
+            mode      = 0 default file format for ph-sp data (enflag=2)
+                          (7 variables/record)
+                      = 2 special file format for ph-sp data with ZLAST  
+                          (8 variables/record)
+           medsur   :     medium number for the region outside the phantom
+                          (default = vacuum if medsur = 0) for enflag > 1
+           dsurround(1):  if dflag=0, the thickness of the region surrounding 
+                          the phantom on all sides (default=50cm)
+                          OR
+                          if dflag=1, the thickness of the region surrounding 
+                          the phantom in the x direction (default=0cm)
+             dflag    = 0 dsurround(1) applies to all sides of phantom 
+                      = 1 dsurround(1) applies to x direction must input
+                          dsurround(2) for y direction, dsurround(3) for +z
+                          direction (down), dsurround(4) for -z direction (up)
+          dsurround(2):   (only required if dflag=1) thickness of region 
+                           surrounding phantom in y direction (default=0cm)
+          dsurround(3):   (only required if dflag=1) thickness of region
+                           surrounding phantom in +z direction (default=0cm)
+          dsurround(4):   (only required if dflag=1) thickness of region
+                           surrounding phantom in -z direction (default=0cm)
+
+      Note:  Currently, medsur, dflag and dsurround(1...4) are only input
+             if enflag > 1. 
+
+------------------------------------------------------------------------------
+ Record SC3a   (if enflag = 0)
+            ein
+            ein       kinetic energy of the incident particles in MeV
+
+------------------------------------------------------------------------------
+ Record SC3b   (if enflag = 1, 2, 3, or 4, each with different inputs)
+             FILNAM  or     
+             the_beam_code, the_input_file, the_pegs_file or
+             the_shared_code,the_phsp_file,the_input_file (isource 20) or
+   the_beam_code,the_input_file,the_pegs_file,the_vcu_code,the_vcu_input_file
+                                                           (isource = 21)
+            FILNAM  Name of file containing energy spectrum   (enflag =1)
+
+                    name of file containing phase-space data  (enflag = 2,3
+                                                        and isource=2,8)
+
+                    name of file containing source parameters (enflag = 4)
+
+             or for isource = 9,10
+
+          the_beam_code    The name of the BEAM code you are running as a
+                           source (ie BEAM_accelname).  This must have been
+                           compiled as a shared library (libBEAM_accelname.so
+                           or BEAM_accelname.dll) and exist in
+                           EGS_HOME/bin/config.
+          the_input_file   The input file used to run the BEAM simulation
+                           (no .egsinp extension).  This must exist in your
+                           EGS_HOME/BEAM_accelname directory.  It must be
+                           a working input file and must be set up to write
+                           a phase space file at a single scoring plane.
+                           This plane becomes where particles are sampled from
+                           for the DOSXYZ simulation (no phase space file
+                           is scored, however).
+          the_pegs_file    The pegs data set used by the BEAM simulation
+                           (no .pegs4dat extension).  This must be in
+                           HEN_HOUSE/pegs4/data or EGS_HOME/pegs4/data.
+
+            or for isource = 20
+
+          the_shared_code  BEAM or non-EGSnrc code used to simulate a geometry
+                           interposed between phase space source and
+                           the phantom.  Must have been compiled as a shared
+                           library and exist in $EGS_HOME/bin/config 
+                           (isource = 20)
+          the_phsp_file    Name of file containing phase space data 
+                           (isource = 20)
+          the_input_file   Input file for the BEAM or non-EGSnrc code used
+                           to simulate a geometry interposed between the
+                           phase space source and the phantom.  In the
+                           case where you are using a BEAM accelerator, this
+                           must exist in the $EGS_HOME/BEAM_accelname
+                           directory and must specify a scoring plane at
+                           the bottom of the accelerator. (isource = 20)
+              
+           or for isource = 21
+
+          the_beam_code    Same as for isource=9, 10
+          the_input_file   Same as for isource=9, 10
+          the_pegs_file    Same as for isource=9, 10
+          the_vcu_code     (optional) Name of non-EGSnrc code used to simulate
+                           a geometry (usually MLC) interposed between the 
+                           treatment head source and the phantom.  Must have 
+                           been compiled as a shared library and exist in 
+                           $EGS_HOME/bin/config.
+	 the_vcu_input_file (optional) The full path to the input file for 
+                           the_vcu_code
+------------------------------------------------------------------------------
+ Record SC3c   (if enflag = 3)
+       I_BIT_FILTER, NBIT1, NBIT2
+
+            I_BIT_FILTER = 0 INclusive/EXclusive for bits: if any of the 1st
+                             set of NBIT1 bits are set and none of the 2nd set
+                             of NBIT2 bits are set, the particle is used.
+                         = 1 EXclusive for bits: if any of the set of NBIT1
+                             bits are set, the particle is not used.
+                         = 2 INclusive for regions: use secondary particles
+                             that originated in any of the specified NBIT1
+                             regions.
+                         = 3 EXclusive for regions: do not use secondary
+                             particles that originated in any of the NBIT1 
+                             specified regions. 
+
+                             Note: For I_BIT_FILTER=0,1 the actual bits
+                             specified below by LATBIT(i) are checked.
+                             For I_BIT_FILTER=2,3 the regions of origin
+                             (stored in bits 24 to 28 and specified by
+                             IREGION_TO_BIT) are checked against LATBIT(i) 
+                             values. 
+
+                      NBIT1: the number of bits or regions of origin to
+                             include (I_BIT_FILTER=0,2) or exclude
+                             (I_BIT_FILTER=1,3).
+                      NBIT2: the number of bits to exclude.  Only has meaning
+                             for I_BIT_FILTER=0, otherwise, it is
+                             automatically set to 0.
+
+              Restrictions: for I_BIT_FILTER=0:    0<=NBIT1+NBIT2<=29
+                            for I_BIT_FILTER=1:    0<=NBIT1<=29
+                            for I_BIT_FILTER=2,3:  0<=NBIT1<=24
+
+
+       (LATBIT(i),i=1,NBIT1)
+            (LATBIT(i),i=1,NBIT1): bits/IREGION_TO_BITs to
+                                   include (I_BIT_FILTER=0,2) or
+                                   exclude (I_BIT_FILTER=1,3) from the source.
+       
+       Next line required only if I_BIT_FILTER=0 and NBIT2>0.
+
+       (LATBIT(i),i=NBIT1+1,NBIT1+NBIT2)
+         (LATBIT(i),i=NBIT1+1,NBIT1+NBIT2): bits to exclude (I_BIT_FILTER=0).
+
+              Restrictions: bits should be >=0 and <=28
+                            IREGION_TO_BITs should be >=0 and <=23.  
+
+       Note: The check on particle charge is done independently before
+             these bit filters are applied.
+
+  end of inputs read by srcxyznrc.mortran
+------------------------------------------------------------------------------
+
+   Record 13 (9 if NMED=0)
+            NCASE, IWATCH, TIMMAX, INSEED1, INSEED2,
+       BEAM_SIZE, ISMOOTH,IRESTART,IDAT,IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,
+       PARNUM,n_split,ihowfarless,i_phsp_out
+
+            NCASE     Number of histories
+            IWATCH    0=>no tracking output, 1=>list every interaction
+                      2=>list every electron step 4=>EGS_Windows output
+                      IWATCH is for debugging/watching what is happening
+                      It MUST be ZERO for production runs
+            TIMMAX    Not used currently but prints warning: default 1 hour
+            INSEED1&2 Starting random number seeds (0 is ok)
+                      Note that, if using the RANLUX random no. 
+                      generator, INSEED1 is the luxury level and should
+                      have a value >0 and <=4.  Otherwise, a default
+                      luxury level of 1 will be used.
+            BEAM_SIZE Beam size for a square field for the dose calculation
+                      This parameter is only used by sources 2,3 and 4
+                      (default to 100 cm for a 100x100 cm square field) 
+            ISMOOTH   =1 re-distribute particles when re-start a ph-sp file
+                       and/or recycle an individual particle
+                      =0 re-use the ph-sp data once run out (no redistribution)
+            IRESTART  = 0 first run for this data set (the default)
+                      = 1 restart of a previous run
+                      = 2 just create the input file and exit
+                      = 3 just read in the raw data and do the statistical
+                          analysis
+                      = 4 recombine .pardose files from parallel runs
+            IDAT      = 0 output intermediate files for restarts
+                      = 1 do not output intermediate data files at all
+                      = 2 output the data file for restart at end only
+            IREJECT   = 0 (default) do not perform charged particle range 
+                          rejection.
+                      = 1 perform charged particle range rejection.  If 
+                          particle range to ECUTIN < distance to nearest voxel
+                          boundary then terminate history if E <ESAVE_GLOBAL.
+        ESAVE_GLOBAL  Energy (MeV) below which charged particle will be
+                      considered for range rejection. 
+            NRCYCL    Number of times to recycle each particle in a phase space
+                      source.  Each particle in the phase space
+                      file is used a total of NRCYCL+1 times (provided the 
+                      particle has the correct charge and latch value) before 
+                      going on to the next particle.  
+                      If NRCYCL is set <=0 then NRCYCL is automatically 
+                      calculated to use the entire phase space file with no 
+                      restarts, unless the incident charge is +1 (positron) or
+                      the user filters incident particles based on their LATCH
+                      values (enflag=3), in which case NRCYCL is set to 0.
+                      The calculated NRCYCL does not take into account
+                      particles that are rejected because they miss the
+                      geometry or because they are beyond the beam field
+                      being considered (defined by BEAM_SIZE)
+                      If NRCYCL is set > 0, then the user-input value is used.
+                      If NCASE > no. of particles in the phase space file, 
+                      then use of NRCYCL is essential for accurate statistics.
+                      If you are unsure of how many times to recycle, use
+                      the automatically-calculated value of NRCYCL.  If this
+                      still results in many restarts (because of many
+                      particles missing the geometry or beyond beam field),
+                      then re-run the simulation with NRCYCL set manually to:
+           NCASE/(NPHSP - NSMISS/NRCYCL_prev - NOUTSIDE - NRJCT - NDBSRJCT)-1
+                      where NPHSP is the no. of particles of interest in the
+                      the ph-sp file (ie total no. of particle, no. of photons,
+                      no. of electrons), NSMISS is the no. of particles that
+                      missed the geometry in the previous run, NRCYCL_prev is
+                      the value of NRCYCL used in the previous run,
+                      NOUTSIDE is the no. of particles rejected because they
+                      were beyond BEAM_SIZE in the previous run, NRJCT
+                      is the no. of particles rejected because they were
+                      multiple passers, and NDBSRJCT is the number of photons
+                      rejected because they fall outside the directional
+                      bremsstrahlung splitting (DBS) field radius at the SSD
+                      (see inputs for source 2,8 for more info on rejecting
+                      fat photons when DBS is used in BEAM to generate phase
+                      space files). All of the aforementioned values are 
+                      available in the .egslst file.  Always round your 
+                      calculated value of NRCYCL up.
+
+   Note: the following 2 inputs are only relevant if you are manually
+         creating/submitting your parallel jobs or if you are using the
+         unix pprocess script.  In the case of the pprocess script, these
+         inputs get set automatically.
+ 
+          IPARALLEL   set >1 if you are distributing the job among IPARALLEL 
+                      machines.  This will generate
+                      a binary .pardose file for each job which will contain 
+                      the doses in all voxels WITHOUT UNCERTAINTIES.  The 
+                      stand-alone code, combinedose, will average the .pardose 
+                      files and calculate the uncertainty and output the 
+                      result in .3ddose format.  IPARALLEL defaults to 0.
+            PARNUM    Only needs to be set if IPARALLEL>1 and you are using
+                      a single phase space source.  The partition of the phase 
+                      space source that will be used for this one of the 
+                      series of parallel input files (for the same total 
+                      simulation) is given by:
+                       (PARNUM-1)*(nshist/IPARALLEL)<nnphsp<=
+                                                (PARNUM)*(nshist/IPARALLEL)
+                      where nshist is the total number of particles in the
+                      phase space file and nnphsp is the number of the
+                      particle chosen for the simulation.  Thus, PARNUM
+                      should cover the range 1<=PARNUM<=IPARALLEL.  If you
+                      are using a separate phase space source for each
+                      parallel job (ie the phase space source exists in 
+                      IPARALLEL pieces) and, thus, do not wish to partition
+                      the phase space sources, PARNUM can be left at its
+                      default value of 0. 
+
+            n_split   If set > 1, then all photons will be split
+                      n_split times.  This option increases the efficiency of 
+                      dose caluclations more than photon forcing. 
+                      A rule of thumb for good efficiency is
+                         n_split >= No/(1-exp(-Lambda))
+                      where Lambda is the approx. number of photon MFP
+                      in the geometry of interest and No >= 5.
+                      Note that if you use the above, there will
+                      be on average approx. No primary interactions per
+                      incident photon => reduce the number of
+                      histories by this number.
+
+        The n_split algorithm works as follows:
+         * dpmfp_i = -log(1 - (eta+i)/n_split)
+           where dpmfp_i is MFP to the next interaction for the i-th sub-photon
+           eta is a random number (the same for all n_split sub-photons)
+         * Once at the interaction site, the i'th sub-photon produces
+           electrons and/or scattered photons. Scattered photons are
+           killed with probability 1/n_split, so that, if they survive,
+           they have the weight of the original photon. Electrons have the
+           weight of 1/n_split of original weight.
+         * In any radiative events (brems, annih, annih at rest), photons
+           are killed with probability 1/n_split => they have again the
+           weight of the photon that initiated the history, if they survive
+
+        ihowfarless   Set to 1 to use the 'HOWFARLESS' algorithm for
+                      transport in a homogeneous phantom.  When 'HOWFARLESS'
+                      is used, subroutines HOWFAR and HOWNEAR only consider
+                      the extreme outer boundaries of the phantom when 
+                      calculating the distance along the particle trajectory
+                      or nearest perpendicular distance to a region boundary.
+                      This removes the restriction that charged particle
+                      steps must stop at all voxel boundaries and, thus,
+                      speeds up the calculation considerably.  For the purpose
+                      of dose deposition in the voxels, the total curved
+                      charged particle step is approximated using 2 straight-
+                      line steps joined at a hinge point.  See the DOSXYZnrc
+                      manual for more details about the approximation.
+                      Restrictions on charged particle step length then become
+                      the EGSnrc input variables Smax (max. allowable charged 
+                      particle step length) and estepe (max. fractional energy
+                      loss/step).  Leaving Smax set to its default value
+                      of 5 cm should maximize efficiency of the 'HOWFARLESS'
+                      algorithm at most beam energies.  Efficiency improvement
+                      due to 'HOWFARLESS' depends on the incident beam type,
+                      DOSXYZnrc voxel size and the boundary crossing algorithm
+                      (BCA) used.  For incident photon beams from accelerators
+                      simulated with BEAMnrc (phase space or BEAMnrc sim.
+                      sources), the efficiency improves by ~30%
+                      when the PRESTA-I BCA is used, and by factors of
+                      2.5-3.5 when the more accurate (but slower) EXACT
+                      BCA is used.  In monoenergetic electron beams, 
+                      'HOWFARLESS' improves efficiency by a factor of up to
+                      ~4 with the PRESTA-I BCA and by a factor of up to
+                      ~15 with the EXACT BCA.  Recommended for all homogeneous
+                      phantom calculations, but it must NOT be used in 
+                      nonhomogeneous phantoms. 
+
+         i_phsp_out   For outputting IAEA format phase space data on exit
+                      from the phantom geometry.  If i_phsp_out=1, then data
+                      is output in DOSXYZnrc coordinates.  If i_phsp_out=2
+                      data is output in BEAMnrc coordinates.  This option is
+                      only available for phase space or BEAM simulation
+                      sources (which have a region surrounding the phantom).
+                      The default is i_phsp_out=0--no phase space
+                      output.  If you are using source 20 or source 21
+                      (synchronized sources) then you also have the option of
+                      storing frMU_indx in the file (see source inputs). 
+
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+                          EGSnrc INPUTS 
+                          *************
+    (modified from the description in $HEN_HOUSE/get_inputs.mortran)
+
+  All input associated with selection of EGSnrc transport parameter
+  is not crucial for the execution as there are default values set.
+  Therefore, if some of the input options in this section are
+  missing/misspelled, this will be ignored and defualt parameter assumed
+  As the transport parameter input routine uses get_inputs, a lot
+  of error/warning messages may be produced on UNIT 15, though.
+  If you don't have the intention of changing default settings,
+  simply ignore the error messages.
+
+  The delimeters are
+
+               :start mc transport parameter:
+               :stop mc transport parameter:
+
+  Currently, the following options are available (case does not matter and
+             the internal variables are shown in [ ] brackets):
+
+       Global ECUT=     Global (in all regions) electron transport cut
+                        off energy (in MeV). If this imput is missing,
+                        or is < ECUTIN from the main DOSXYZnrc inputs
+                        (See above) then ECUTIN is used for global ECUT.  
+                        ECUT defaults to AE(medium).
+                        [ ECUT ]
+       Global PCUT=     Global (in all regions) photon transport cut
+                        off energy (in MeV). If this imput is missing,
+                        or is < PCUTIN from the main DOSXYZnrc inputs
+                        (See above) then PCUTIN is used for global PCUT.
+                        PCUT defaults to AP(medium). 
+                        [ PCUT ]
+       Global SMAX=     Global (in all regions) maximum step-size
+                        restriction for electron transport (in cm).
+                        No SMAX restriction is necessary if the electron
+                        step algorithm is PRESTA-II and the EXACT boundary
+                        crossing algorithm is used.  In this case, SMAX
+                        will default to 1e10.  However, if either
+                         Electron-step algorithm= PRESTA-I
+                         or
+                         Boundary crossing algorithm= PRESTA-I (the default),
+                        then a step-size restriction is necessary, and
+                        SMAX will default to 5 cm.
+                        [ SMAXIR ]
+       ESTEPE=          Maximum fractional energy loss per step.
+                        Note that this is a global option only, no
+                        region-by-region setting is possible. If missing,
+                        the defualt is 0.25 (25%).
+                        [ ESTEPE ]
+       XImax=           Maximum first elastic scattering moment per step.
+                        Default is 0.5, NEVER use value greater than 1 as
+                        this is beyond the range of MS data available.
+                        [ XIMAX ]
+       Boundary crossing algorithm=
+                        There are two selections possible: EXACT and
+                        PRESTA-I.  PRESTA-I means that boundaries will
+                        be crossed a la PRESTA.  That is, with lateral
+                        correlations turned off at a distance given by
+                        `Skin depth for BCA' (see below) from the boundary
+                        and MS forced at the boundary.  EXACT means
+                        the algorithm will cross boundaries in a single
+                        scattering (SS) mode, the distance from a boundary
+                        at which the transition to SS mode is made is
+                        determined by `Skin depth for BCA' (see below).
+                        Default is PRESTA-I for efficiency reasons. This
+                        is known not to be exactly correct, and when charged
+                        particle equilibrium does not hold or when there is
+                        a large difference in size between dose voxels and
+                        voxels making up the rest of the phantom, can result
+                        in an overestimate of dose by up to 2.5%.  In such
+                        cases, swich to EXACT BCA. 
+                        [ bca_algorithm, exact_bca ]
+       Skin depth for BCA=
+                        If Boundary crossing algorithm= PRESTA-I (default)
+                        then this is the distance from the boundary (in
+                        elastic MFP) at which lateral correlations will be
+                        switched off.  The default in this case is to 
+                        calculate a value based on the scattering power at
+                        ECUT (same as PRESTA in EGS4).  If
+                        Boundary crossing algorithm= EXACT then this is
+                        the distance from the boundary (in elastic
+                        MFP) at which the algorithm will go into single
+                        scattering mode and defaults to 3 mfp.
+                        Note that if you choose EXACT boundary crossing and
+                        set Skin depth for BCA to a very large number (e.g.
+                        1e10), the entire calculation will be in SS mode.
+                        If you choose PRESTA-I boundary crossing and make
+                        Skin depth for BCA large, you will get default EGS4
+                        behaviour (no PRESTA).
+                        [ skindepth_for_bca ]
+
+            Note that the above defaults have been choosen as a compromise
+            between accuracy (EXACT BCA) and efficiency (PRESTA-I BCA)
+            since the PRESTA-I BCA algorithm has proven to generally
+            produce satisfactory results.  Note that the new transport
+            mechanics of EGSnrc are maintained away from boundaries and
+            that one always has the option of verifying the accuracy
+            by doing a long run with the EXACT BCA.
+
+       Electron-step algorithm=
+                        PRESTA-II (the default), the name is
+                        used for historical reasons
+                        or PRESTA-I
+                        Determines the algorithm used to take into account
+                        lateral and longitudinal correlations in a
+                        condensed history step.
+                        [ transport_algorithm ]
+       Spin effects=    Off, On, default is On
+                        Turns off/on spin effects for electron elastic
+                        scattering. Spin On is ABSOLUTELY necessary for
+                        good backscattering calculations. Will make a
+                        difference even in `well conditioned' situations
+                        (e.g. depth dose curves for RTP energy range
+                        electrons).
+                        [ spin_effects ]       
+       Brems angular sampling= Simple, KM, default is Simple 
+                        If Simple, use only the leading term of the Koch-Motz
+                        distribution to determine the emission angle of
+                        bremsstrahlung photons. If KM, complete
+                        modified Koch-Motz 2BS is used (modifications
+                        concern proper handling of kinematics at low 
+                        energies, makes 2BS almost the same as 2BN at low 
+                        energies).
+                        [ IBRDST ]
+       Brems cross sections= BH, NIST, NRC, default is BH
+                        If BH is selected, the Bethe-Heitler bremsstrahlung
+                        cross sections (Coulomb corrected above 50 MeV)
+                        will be used. If NIST is selected, the NIST brems
+                        cross section data base (which is the basis for
+                        the ICRU radiative stopping powers) will be employed.
+                        Differences are negligible for E > ,say, 10 MeV,
+                        but signifficant in the keV energy range.  If NRC is 
+                        selected, NIST data including corrections for 
+                        electron-electron brems will be used (typically only
+                        significant for low values of the atomic number Z
+                        and for k/T < 0.005).
+       Bound Compton scattering=  On, Off or Norej (Default is On)
+                        If Off, Compton scattering will be treated with
+                        Klein-Nishina, with On Compton scattering is
+                        treated in the Impulse approximation.
+                        Make sure to turn on for low energy applications,
+                        not necessary above, say, 1 MeV.  Option Norej
+                        uses full bound Compton cross section data
+                        supplied in input below and does not reject
+                        interactions.
+                        [ IBCMP ]
+       Compton cross sections= Bound Compton cross-section data.  User-
+                        supplied bound Compton cross-sections in the file
+                        $HEN_HOUSE/data/comp_xsections_compton.data, where
+                        comp_xsections is the name supplied for this input.
+                        This is only used if Bound Compton scattering= Simple
+                        and is not available on a region-by-region basis
+                        (see below).  The default file (ie in the absence
+                        of any user-supplied data) is compton_sigma.data.
+                        [ comp_xsections ]
+       Radiative Compton corrections= On or Off (default). If on, then
+                        include radiative corrections for Compton scattering.
+                        Equations are based on original Brown & Feynman
+                        equations (Phys. Rev. 85, p 231--1952).  Requires
+                        a change to the user codes Makefile to include
+                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
+                        SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+                        [ radc_flag ]
+       Pair angular sampling= Off, Simple or KM
+                        If off, pairs are set in motion at an angle m/E
+                        relative to the photon direction (m is electron rest
+                        energy, E the photon energy). Simple turns on
+                        the leading term of the angular distribution
+                        (this is sufficient for most applications),
+                        KM (comes from Koch and Motz) turns on using 2BS
+                        from the article by Koch and Motz.
+                        Default is Simple, make sure you always use
+                        Simple or KM
+                        [ IPRDST ]                     
+       Pair cross sections= BH (default) or NRC.  If set to BH, then use
+                        Bethe-Heitler pair production cross-sections.  If set
+                        to NRC, then use NRC pair production cross-sections
+                        (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
+                        of interest at low energies, where the NRC cross-
+                        sections take into account the assymmetry in the
+                        positron-electron energy distribution.
+                        [ pair_nrc ]
+       Photoelectron angular sampling= Off or On
+                        If Off, photo-electrons get the direction of the
+                        `mother' photon, with On, Sauter's furmula is
+                        used (which is, striktly speaking, valid only for
+                        K-shell photo-absorption).
+                        If the user has a better approach, replace the macro
+                            $SELECT-PHOTOELECTRON-DIRECTION
+                        The only application that
+                        I encountered until now where this option made a
+                        small difference was a big ion chamber (cavity size
+                        comparable with electron range) with high-Z walls
+                        in a low energy photon beam.
+                        Default is Off
+                        [ IPHTER ]
+       Rayleigh scattering= Off, On, custom
+                        If On, turned on coherent (Rayleigh) scattering.
+                        Default is Off. Should be turned on for low energy
+                        applications. Not set to On by default because
+                        On requires a special PEGS4 data set.  If set to
+                        custom, then media for which custom form factors
+                        are to be specified are listed in the input:
+                        ff media names=
+                        and the corresponding files containing custom data
+                        are listed in:
+                        ff file names=
+                        [ IRAYLR ]
+       Atomic relaxations= Off, On
+                        Default is Off. The effect of using On is twofold:
+                        - In photo-electric absorption events, the element
+                          (if material is mixture) and the shell the photon
+                          is interacting with are sampled from the 
+                          appropriate cross seections
+                        - Shell vacancies created in photo-absorption events
+                          are relaxed via emission of fluorescent X-Rays,
+                          Auger and Koster-Cronig electrons.
+                         Make sure to turn this option on for low energy
+                         applications.
+                         [ IEDGFL ]      
+       Electron impact ionization= Off, On, Casnati, Kolbenstvedt, Gryzinski
+                                   (Default is Off)
+                         Determines which, if any, theory is used to model
+                         electron impact ionization.  If set to 'On' then the
+                         theory of Kawrakow is used.  Other settings use the
+                         theory associated with the name given.  See future
+                         editions of the EGSnrc Manual (PIRS-701) for more
+                         details.  This is only of interest in keV X-Ray
+                         simulations.  Otherwise, leave it Off.
+                         [ eii_flag ]
+       Photon cross sections= epdl, xcom, customized (Default is Storm-Israel
+                         cross-sections from PEGS4)
+                         The name of the cross-section data for photon
+                         interactions.  This input line must be left out
+                         to access the default Storm-Israel cross-sections
+                         from PEGS4.  'edpl' uses cross-sections from the
+                         evaluated photon data library (EPDL) from Lawrence
+                         Livermore.  'xcom' will use the XCOM cross-sections
+                         from Burger and Hubbell.  The user also has the
+                         option of using their own customized cross-section
+                         data.  See the BEAMnrc manual for more details.
+                         [ photon_xsections ]   
+       Photon cross-sections output= Off (default) or On.  If On, then
+                        a file $EGS_HOME/user_code/inputfile.xsections is
+                        output containing photon cross-section data used.
+                        [ xsec_out ]      
+
+       Atomic relaxations, Rayleigh scattering,
+       Photoelectron angular sampling and Bound Compton scattering
+                         can also be turned On/Off on a region-by-region
+                         basis. To do so, put e.g.
+
+       Atomic relaxations= On in Regions   or
+       Atomic relaxations= Off in regions
+
+                         in your input file. Then use
+
+       Bound Compton start region=
+       Bound Compton stop region=
+                or
+       Rayleigh start region=
+       Rayleigh stop region=
+                or
+       Relaxations start region=
+       Relaxations stop region=
+                or
+       PE sampling start region=
+       PE sampling stop region=
+
+                         each followed by a lost of of one or more
+                         start and stop regions separated by commas.
+                         Example:
+        Atomic relaxations= On in Regions
+        Relaxations start region=  1, 40
+        Relaxations stop region=  10, 99
+                         will first turn off relaxations everywhere and
+                         then turn on in regions 1-10 and 40-99.
+                         Note that input is checked against min. and max.
+                         region number and ignored if
+                         start region < 1 or stop_region > $MXREG or
+                         start region > stop region.             
+
+
+*******************************************************************************
+\end{verbatim}

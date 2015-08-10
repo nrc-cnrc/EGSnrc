@@ -1,0 +1,150 @@
+\begin{figure}
+\begin{center}
+\caption{Output from {\tt tutor6.mortran} when run interactively using the
+same parameters as in the example file. 
+\vspace*{3mm}   \label{fig_tutor6_output_50} }
+\begin{boxedverbatim}
+ Starting non-debug interactive run with no input file 
+
+ Input name of medium   1:TA
+ Input minimum electron transport energy (total, MeV): 1.0
+ Input minimum photon transport energy (MeV): 0.01
+ Rayleigh scattering on (1) or off (0)? 0
+ Atomic relaxations on (1) or off (0)? 1
+ Photo-electron angular distribution on (1) or off (0)? 0
+ Binding effects for Compton scattering on (1) or off (0)? 1
+ Pair angular distribution: the following choices are available: 
+   0: fixed pair angle (EGS4 default) 
+   1: leading term of the distribution 
+   2: Koch and Motz 
+ your choice: 1
+ Bremsstrahlung angular distribution,
+    0: leading term of Koch and Motz distn
+    1: Koch and Motz 2BS(modified): 
+ your choice: 1
+ Bremsstrahlung differential photon cross section to sample,
+   0: use Bethe-Heitler distribution as in EGS4
+   1: use NIST/ICRU 37 distributions
+ your choice: 1
+ Spin effects on (1) or off (0)? 1
+ Input maximum fractional energy loss per step (estepe): 0.0
+ using default value:      0.250
+ Input maximum 1st elastic scattering moment per step: 0.0
+ using default, ximax =      0.500
+ Electron-step algorithm: EGSnrc default (0) or PRESTA (1)? 0
+ Boundary crossing algorithm: exact (0) or PRESTA (1)? 0
+ Skin-depth for BCA: 
+   this is the distance from a boundary 
+   (measured in elastic mean-free-paths) at which the 
+   simulation switches to single scattering mode 
+   Best choice for efficiency is 3. If you set this 
+   parameter to a very large number (e.g. 1e10), you 
+   can force single scattering simulation in the entire 
+   geometry (this is very slow) 
+ your choice: 3
+ Input random number luxury level (0-4) & seed (>0) (0 defaults OK): 1,1
+
+                                              continued...
+\end{boxedverbatim}
+\end{center}
+\end{figure}
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\begin{center}
+\caption{{\tt tutor6.mortran} output - continued}
+\begin{boxedverbatim}
+ ***************** RANLUX initialization ******************
+ luxury level:  1
+ initial seed:            1
+***********************************************************
+
+ Input slab thickness: 0.1
+ Use (1) or do not use (0) electron range rejection? 1
+ Input the maximum energy to apply range rejection: 5.0
+ How many bremsstrahlung photons to create per event (0=>just 1): 1
+ Russian Roulette all secondary charged particles(yes=1,no=0)?  0
+ Input incident charge (-1, 0, +1):  -1
+ Input incident kinetic energy (MeV): 5.0
+ Input incident angle (degrees): 0.
+ Input number of showers to be simulated: 1000
+
+  Start tutor6
+
+ CALL HATCH to get cross-section data
+ RAYLEIGH DATA AVAILABLE FOR MEDIUM  1 BUT OPTION NOT REQUESTED.
+
+  Reading screened Rutherford MS data ...............  done 
+  Initializing spin data for medium    1 ..................  done
+  Medium  1 sige =   1.79464114  1.78708148
+  Initializing tmxs for estepe =   0.25 and ximax =   0.5
+
+ Output from subroutine EDGSET:
+ ==============================
+  Atomic relaxations requested! 
+ Reading photo-absorption data ..... Done
+ Reading relaxation data ....  Done
+ Reading photo cross section data ....  Done
+
+ Bound Compton scattering requested, reading data ...... Done
+ Initializing Bound Compton scattering ......
+ Medium   1 has  21 shells: 
+  1 861  1  0.02740 0.141E+01    67.413
+  2 862  2  0.02740 0.503E+01    11.680
+  3 863  3  0.02740 0.247E+01    11.136
+  4 864  4  0.05479 0.271E+01     9.881
+  5 865  5  0.02740 0.111E+02     2.705
+  6 866  5  0.02740 0.652E+01     2.466
+
+                                              continued...
+\end{boxedverbatim}
+\end{center}
+\end{figure}
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\begin{center}
+\caption{{\tt tutor6.mortran} output - continued \vspace{3mm}}
+\begin{boxedverbatim}
+
+  7 867  5  0.05479 0.696E+01     2.191
+               |
+               |
+ 20 880  7  0.05479 0.944E+02     0.008
+ 21 881  7  0.01370 0.221E+03     0.008
+...... Done.
+
+  Using NIST brems cross sections!
+  Initializing brems data for medium  1...
+  Max. new cross sections per energy loss:   1.79542971  1.78786802
+
+ EGS SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+ knock-on electrons can be created and any electron followed down to
+                                          0.189 MeV kinetic energy
+ bremsstrahlung photons can be created and any photon followed down to      
+                                          0.010 MeV 
+ Starting shower simulation ...
+ Finished    10.0% of cases
+              |
+ Finished   100.0% of cases
+
+ Finished shower simulation with      1000 cases. 
+
+   Reflected energy fraction:   0.139521 +/-   0.007509
+   Deposited energy fraction:   0.716428 +/-   0.007973
+ Transmitted energy fraction:   0.144051 +/-   0.006239
+-------------------------------------------------------------
+                       total:   1.000000
+
+=======================================================================
+Finished simulation
+  Elapsed time:                    0.7 s (  0.000 h)
+  CPU time:                        0.7 s (  0.000 h)
+  Ratio:                      1.026
+End of run                                     Tue Nov 11 14:37:29 2003
+=======================================================================
+\end{boxedverbatim}
+\end{center}
+\end{figure}

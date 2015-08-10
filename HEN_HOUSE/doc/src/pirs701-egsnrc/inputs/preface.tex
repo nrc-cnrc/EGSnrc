@@ -1,0 +1,289 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: preface
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Iwan Kawrakow, 2003
+%
+%  Contributors:    Blake Walters
+%                   Frederic Tessier
+%                   Ernesto Mainegra-Hing
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newpage
+\mbox{ }\vspace*{-35mm}\\
+\section*{\begin{center}Preface\end{center}}
+\addcontentsline{toc}{section}{\numberline{}Preface}
+\index{preface}
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/01/04 15:08:41 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/05/02 18:36:27
+}}
+\mbox{ }\vspace*{-5mm}\\
+\noindent {\bfseries Sixth printing: May 2011}\\
+A long time has passed since the last update to this document. 
+Although no fundamental changes have been made to the system,
+there have been a number of important additions and improvements
+to the system since 2009. Numerous bugs have been corrected and
+a new user code for free-air chamber (FAC) correction calculations 
+was added to the distribution.
+\begin{itemize} 
+\item Use of arbitrary electron impact ionization (EII) 
+cross section compilations. Added a data base of EII 
+cross sections based on the DWBA/PWBA theory by 
+Bote and Salvat.
+\item For backward compatibility with previous calculations, users can 
+now request the use of PEGS4 photon data.
+\item Inclusion of C++ {\tt egs\_fac} application with example. 
+This user-code implements a self-consistent algorithm for the 
+fast calculation of FAC correction factors.
+\item EII cross sections printout for materials in
+  the simulation if user requests output of the photon cross-sections.
+\item Updated several GUI's to include most of the latest additions
+and corrected several bugs.
+\end{itemize} 
+% \vspace{3mm}\\
+\noindent {\bfseries Fifth printing: July 2009}\\
+There has been a huge number of changes in the system since 
+the last printing in November 2003 that have not been properly 
+added to the documentation. This printing is an attempt to update 
+this report to better reflect the state of EGSnrc, although it 
+is far from complete. The development of the EGSnrc C++ class 
+library, which includes a general purpose geometry package, and its 
+first public release in 2005 has been a major step forward. 
+The C++ class library is described in a separate report (PIRS--898). 
+Major changes and additions to the EGSnrc physics include: 
+option to simulate electron impact ionization, an improved 
+bremsstrahlung data base that includes an exact evaluation of 
+electron-electron bremsstrahlung in the first Born approximation, 
+an improved differential pair production cross section tabulation 
+based on exact PWA calculations that takes into account the asymmetry 
+of the energy distribution at energies close to the threshold, 
+the ability to explicitely 
+simulate triplet interactions (\ie, pair production in the electron field), 
+the ability to take into account radiative corrections for Compton 
+scattering in the one-loop approximation, the ability to use 
+user-supplied atomic and molecular form factors for Rayleigh scattering, 
+and the ability to use total photon cross sections from EPDL97, XCOM, or 
+any other user-supplied tabulation in addition to the default 
+Storm \& Israel tabulations. 
+New options added for Compton scattering called {\tt simple} and 
+{\tt norej}. When using {\tt simple} binding is taken
+into account via an incoherent scattering function 
+ignoring Doppler broadening. The incoherent scattering function 
+is still obtained from the impulse approximation. 
+The {\tt norej} option uses actual bound Compton cross section 
+when initializing the photon cross sections and rejections in 
+subroutine COMPT lead to re-sampling rather than rejecting the 
+entire interaction.
+An {\tt alias sampling} algorithm is now used to select the 
+photon angle after a Rayleigh scattering to avoid an undersampling
+at large angles observed in the original EGS4 implementation.
+Particle track scoring object added to the {\tt egspp} library
+allowing visualization of particle tracks with the C++ geometry
+viewer {\tt egs\_view}. See example input file tracks1.egsinp for 
+the tutor7pp C++ user-code.
+
+Finally, to better reflect their contributions 
+to the development and maintenence of the system, Ernesto Mainegra-Hing, 
+Blake Walters and Frederic Tessier have been added as co-authors. 
+\vspace{3mm}\\
+\noindent {\bfseries Fourth printing: November 2003}\\
+Added references to EGSnrcMP and Report PIRS-877. A few minor changes
+related to the major change in the operating system to make it Windows
+compliant. There is no associated change in the physics of the system.
+Table 7 re timing of random numbers has changed substantially.
+\vspace{3mm}\\
+\noindent {\bfseries Third printing: April 2002}\\
+Minor changes reflecting code changes. 
+%See section~\ref{fixed_bugs}.
+\vspace{3mm}\\
+\noindent {\bfseries Second printing: May 2001}\\
+The second printing contains a description of the use of {\tt RHOF}
+(section~\ref{RHOF_RHOR}, page~\pageref{RHOF_RHOR}) and {\tt \$SET-RHOF}
+(section~\ref{set_rhof}, page~\pageref{set_rhof}). There is a brief new
+discussion of {\tt combine\_egsnrc}, a script for automatic analysis of the
+many files created by {\t pprocess} in parallel runs
+((section~\ref{pprocess}, page~\pageref{pprocess})). There is a new section
+about terminating histories with WT=0.0 (section~\ref{termination},
+page~\pageref{termination}). 
+%Finally, a new section
+%has been added which documents the few minor changes made to EGSnrc since
+%its initial release ((section~\ref{fixed_bugs},
+%page~\pageref{fixed_bugs})). 
+\vspace{3mm}\\
+\noindent {\bfseries First printing: May 2000}\\
+In the decade and a half since the original version of EGS4 was released
+there have been well over 1000 papers published which cite the original
+SLAC-265 Report.  The code itself has been improved in many different ways
+by a large number of people.  For a detailed history of much of this up to
+1994, the reader is referred to a report titled  ``History, overview and
+recent improvements of EGS4'' by Bielajew et al.
+\index{Bielajew, Alex}
+
+In the last few years there have been significant advances in several
+aspects of electron transport.  For example, improvements in multiple scattering
+theory have been developed by Kawrakow and Bielajew\cite{KB97,Bi96,Ka96} 
+which get over most of
+the shortcomings of the Moliere theory used in EGS4. Perhaps more important
+has been the development by Kawrakow and Bielajew\cite{KB97a} of a new electron transport algorithm, sometimes
+called PRESTA-II, which makes a significant advance in the science of
+electron transport.  In addition to these advances, Kawrakow has implemented
+several other improvements in the electron transport algorithm of EGS
+which make it capable of accurately calculating ion chamber response at the
+0.1\% level (relative to its own cross sections)\cite{Ka99a,Ka99b}.  
+
+EGSnrc also has implemented a variety of additional features, many of
+which have previously been extensively developed as additions to EGS4
+by  Namito, Hirayama and Ban at KEK as well\cite{Na98,Na95a,Na94,Na93}.
+The EGSnrc approach differs from that of the KEK group, partially because
+once we were making fundamental changes to the code, we carried it through
+in a consistent manner. However, the KEK group have implemented several
+options which are not yet in EGSnrc (e.g.  polarized photon scattering
+and electron impact ionization).
+\index{Hirayama, Hideo} \index{Namito} \index{Ban}
+
+This report is meant to document the many changes that have occurred going
+from EGS4 to EGSnrc.  Although this report is written by two people,
+the EGS system is obviously the child of many parents who have made a
+wide variety of contributions over the years.  This goes right back to
+Richard Ford, then at SLAC, who was a major contributor to EGS3. Hideo
+Hirayama, S Ban  and Yosh Namito of KEK have made innumerable contributions
+to EGS, especially concerning the low energy photon physics. Alex
+Bielajew worked on EGS at NRC from the early 80's to late 90's and his
+name is linked to a huge number of important contributions to EGS,
+perhaps most importantly the PRESTA algorithms, but also many other
+specific improvements to the physics, the Unix based scripts and the NRC
+user codes. His name appears very extensively in the reference lists.
+The name of Walter Ralph Nelson is practically synonymous with EGS and
+all users of any version of the EGS system will forever be in Ralph's
+debt. It has been his enthusiasm and willingness to help others and share
+this resource so selflessly which has made it the great success it is.
+To all of these people who have contributed so extensively to the EGS
+system, and to the countless others who have played a variety of roles,
+we all owe a huge debt of gratitude.
+\index{Nelson, Ralph}
+
+
+It is worth noting that NRC and SLAC have drawn up a formal agreement which
+recognizes that both have rights associated with EGS4 and EGSnrc.  Thus, in
+this report there are sections which are taken verbatim from SLAC-265 (in
+particular the PEGS4 manual and the User's guide to Mortran3) and we wish
+to thank SLAC for permission to reproduce them.  We also draw attention to
+the copyright and licensing arrangements associated with EGSnrc which are
+similar to those for EGS4, but which are becoming more tightly controlled
+in this changing world we live in.  Neither EGS4 nor EGSnrc are public
+domain software. They are both copyright protected by NRC and/or SLAC. The
+formal license statement is more precise and part of the package, but the
+general meaning is that individuals are granted a without cost 
+license to use it for non-commercial purposes but that a license from NRC
+is needed for any commercial application, and by definition someone working
+for a for-profit organization or working on a contract for such an
+organization is working on a commercial application.
+\index{SLAC}
+
+
+\noindent{\em What is next?\\}
+In the section of the Preface to SLAC-265, there were 7 areas identified as
+needing more work.  The work on EGS is not  complete, and at least 2 of
+the 7 are still open, viz:
+\begin{itemize} 
+\vspace{-4mm}
+\item development of an efficient, general purpose geometry package
+tailored to the EGS structure
+\vspace{-3mm}
+\item implementation of a general purpose energy loss straggling algorithm
+which properly handles energy cutoffs
+\end{itemize} 
+
+\vspace{-5mm}
+There are other issues which are still undone within EGSnrc:
+\vspace{-5mm}
+\begin{itemize} 
+\item modeling of electron impact ionization
+\vspace{-3mm}
+\item some critical feature for your next application!!
+\end{itemize} 
+We encourage users to contribute their improvements to the code. We will
+happily add those which are of general interest and make available on the
+distribution site those additions which are of special interest. We will
+also appreciate receiving bug reports. Although we have done extensive QA
+on the system, there have been many changes and not all parts of the code
+are as carefully checked as we would like.  However, the pressure to release
+the code is forcing us to proceed at this point.
+
+We wish to thank our many colleagues at NRC who have helped with this work.
+In particular Michel Proulx for his excellent help keeping the computer
+systems going smoothly, Jan Seuntjens for his help with the user codes,
+Joanne Treurniet for her help with the most recent version of the
+EGS\_Windows system and Blake Walters for his work on QA of the system.
+
+\noindent I.K and D.W.O.R.  \hfill Feb 2000 \vspace{1mm}\\
+
+%\noindent {\bfseries Second printing: May 2001}\\
+%The second printing contains a description of the use of {\tt RHOF}
+%(section~\ref{RHOF_RHOR}, page~\pageref{RHOF_RHOR}) and {\tt \$SET-RHOF}
+%(section~\ref{set_rhof}, page~\pageref{set_rhof}). There is a brief new
+%discussion of {\tt combine\_egsnrc}, a script for automatic analysis of the
+%many files created by {\t pprocess} in parallel runs
+%((section~\ref{pprocess}, page~\pageref{pprocess})). There is a new section
+%about terminating histories with WT=0.0 (section~\ref{termination},
+%page~\pageref{termination}). Finally, a new section
+%has been added which documents the few minor changes made to EGSnrc since
+%its initial release ((section~\ref{fixed_bugs},
+%page~\pageref{fixed_bugs})). \vspace{3mm}  \\
+%\noindent {\bfseries Third printing: April 2002}\\
+%Minor changes reflecting code changes. See section~\ref{fixed_bugs}.
+%\vspace{3mm}\\
+%\noindent {\bfseries Fourth printing: November 2003}\\
+%Added references to EGSnrcMP and Report PIRS-877. A few minor changes
+%related to the major change in the operating system to make it Windows
+%compliant. There is no associated change in the physics of the system.
+%Table 7 re timing of random numbers has changed substantially.
+%\vspace{3mm}\\
+%\noindent {\bfseries Fifth printing: July 2009}\\
+%There has been a huge number of changes in the system since 
+%the last printing in November 2003 that have not been properly 
+%added to the documentation. This printing is an attempt to update 
+%this report to better reflect the state of EGSnrc, although it 
+%is far from complete. The development of the EGSnrc C++ class 
+%library, which includes a general purpose geometry package, and its 
+%first public release in 2005 has been a major step forward. 
+%The C++ class library is described in a separate report (PIRS--898). 
+%Major changes and additions to the EGSnrc physics include: 
+%option to simulate electron impact ionization, an improved 
+%bremsstrahlung data base that includes an exact evaluation of 
+%electron-electron bremsstrahlung in the first Born approximation, 
+%an improved differential pair production cross section tabulation 
+%based on exact PWA calculations that takes into account the asymmetry 
+%of the energy distribution at energies close to the threshold, the ability to explicitely 
+%simulate triplet interactions (\ie, pair production in the electron field), 
+%the ability to take into account radiative corrections for Compton 
+%scattering in the one-loop approximation, the ability to use 
+%user supplied atomic and molecular form factors for Rayleigh scattering, 
+%and the ability to use total photon cross sections from EPDL97, XCOM, or 
+%any other user-supplied tabulation in addition to the default 
+%Storm \& Israel tabulations. Finally, to better reflect their contributions 
+%to the development and maintenence of the system, Ernesto Mainegra-Hing, 
+%Blake Walters and Frederic Tessier have been added as co-authors. 

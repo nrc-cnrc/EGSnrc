@@ -1,0 +1,908 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc multiple source manual
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Authors:         Charlie Ma, 1995
+%                   Dave Rogers, 1995
+%
+%  Contributors:    Blake Walters
+%                   Frederic Tessier
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\documentclass[12pt,twoside]{article}
+\setlength{\textwidth}{6.5in}
+\setlength{\textheight}{9.25in}
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.0in}
+\setlength{\topmargin}{-0.6in}
+\setlength{\parindent}{1.5em}
+\setlength{\topsep}{0ex}
+\setlength{\itemsep}{0ex}
+
+\newcommand{\Co}{$^{60}$Co}
+\newcommand{\parsp}{~\hspace*{1.5em}}
+\setlength{\parskip}{0.1in}
+\setlength{\baselineskip}{0.4in}
+\newcommand{\head}[1]{\begin{center}\begin{Large}{\bf #1}
+                                              \end{Large}\end{center}}
+\newcommand{\cen}[1]{\begin{center} #1 \end{center}                   }
+\newcommand{\etal}{{\em et.al.}}
+\newcommand{\etc}{{\em etc}}
+\newcommand{\eg}{{\em e.g.}}
+\newcommand{\ie}{{\em i.e.}}
+\renewcommand{\refname}{}
+
+
+\usepackage{html}
+%\input{html.sty}
+
+%\input{epsf}
+\usepackage{epsf}
+
+\usepackage{fancyhdr}
+\renewcommand{\footrulewidth}{0.4pt}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\lhead[{\sffamily \thepage}]{{\sffamily Beam Characterization: a
+Multiple-source Model}}
+\rhead[{\sffamily NRCC Report PIRS-0509(D)rev}]{{\sffamily ~\thepage}}
+\rfoot[{\sffamily {\rightmark}}]{{\sffamily {\rightmark}}}
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2012/10/09 19:42:27 $
+}}
+\cfoot{}
+
+
+\begin{latexonly}
+\typeout{***Have turned off overfull and underfull messages****}
+\tolerance=10000        %suppress Overfull only
+\hbadness=10000         %suppress Overfull and Underfull for text (horizontal)
+\vbadness=10000         %suppress Overfull and Underfull for vertical "boxes"
+\end{latexonly}
+
+
+%\input{psfig}
+\usepackage{epsfig}
+
+\begin{document}
+
+\begin{htmlonly}
+For information about the authors and/or institutions involved with this
+work, use the links provided in the author list.\\
+\begin{rawhtml}
+<br><br>
+\end{rawhtml}
+\begin{rawhtml}
+<br><br>
+\end{rawhtml}
+Use the Up button to get back to this page from within the document.
+<BR> <HR> <P>
+&#169;
+Copyright 2015, National Research Council of Canada, Ottawa</A>
+<br>
+<BR> <HR> <P>
+\end{rawhtml}
+\end{htmlonly}
+
+\pagestyle{empty}
+
+%\markright{Beam Characterization: a Multiple-source Model~~~~~~last edited 04 Oct 1996
+%~~~~printed \today \hfill page~~}
+
+%\markboth{Beam Characterization: a Multiple-source Model}{NRCC Report PIRS-0509(D)}
+\title{Beam Characterization: a Multiple-source Model}
+\author{ C.-M. Ma and D.W.O. Rogers \\
+Ionizing Radiation Standards\\
+National Research Council of Canada,
+Ottawa\\
+}
+\date{Printed: \today}
+\maketitle
+
+
+\pagenumbering{arabic}
+\setlength{\parindent}{0em}
+
+\begin{center}
+\begin{Large}
+{\bf Abstract}
+\end{Large}
+\end{center}
+This report describes a multiple-source model for characterization of
+electron beams from clinical linear accelerators and presents many of
+the details of the models.  Special programs and
+{\tt MORTRAN} replacement macros have been written to analyze  the phase-space
+data of an electron beam either during or after the BEAM simulation.
+Special programs and {\tt MORTRAN} replacement macros are also written to
+re-construct the phase-space parameters of the modelled beams for
+subsequent dose calculations using either BEAM or other EGS4 user-codes
+such as DOSXYZ. The implementation of the multiple-source model in  the
+BEAM system and other EGS4 user-codes is also discussed.
+While the emphasis has been on electron beams, there are obvious
+extensions to photon beams. For detailed instructions on using the
+BEAMDP code to create a multiple-source model, see the BEAMDP Users
+Manual\cite{MR95a}.
+
+
+\newpage
+\mbox{}
+\newpage
+\setcounter{page}{1}
+\pagestyle{fancy}
+
+\tableofcontents
+\newpage
+%\pagestyle{myheadings}
+
+
+\section{Introduction}
+
+The precise prediction of the absorbed dose distributions in patients
+irradiated by clinical beams plays an important role in radiotherapy
+treatment. The OMEGA (Ottawa Madison Electron Gamma Algorithm) project is
+a collective effort aiming at improving electron beam radiotherapy
+treatment planning and dosimetry. Towards this ultimate goal the EGS4
+Monte Carlo system, which can accurately simulate the coupled transport of
+photons and electrons in matter, has been used to calculate ``realistic''
+beam data for various clinical linear accelerators and absorbed dose
+distributions both in homogeneous and inhomogeneous phantoms. These
+results plus the development in calculation methods and computer
+technology have provided the possibility  of direct simulation of absorbed
+dose distributions in patients from ``realistic'' clinical electron beams
+for radiotherapy treatment planning.
+
+
+There have been several Monte Carlo studies of electron beams in the
+literature and these investigations were limited by a priori assumptions
+about the correlation of the various phase-space parameters. The BEAM
+code\cite{Ro95}, developed for the OMEGA project,  writes a file which
+contains the full phase-space of all particles that emerge from the
+simulated treatment units, including the particle type, energy, position,
+direction, weight, and a tag called {\tt LATCH} \cite{Ro95b}.  This preserves
+the full 3-D aspect of the simulation as well as the full resolution of
+the simulation in particle energy and direction. This is one of the traits
+that sets BEAM apart from previous accelerator simulation codes.
+
+The phase-space output of BEAM is being used to determine the optimum way
+to {\em characterize} and then {\em represent} the beam. Accurate
+treatment planning from full phase-space information requires a record of
+tens of millions of particles consuming a gigabyte of storage.  This data
+is reduced to a more compact description of the clinical electron beam
+using several software tools (e.g., PAW, Btree, BEAMDP, etc.). These tools
+are being used to develop an optimum beam representation\cite{MR95a,MR95b}
+. The use of beam representation is not only a space-saving measure but
+makes use of averages over phase-space resulting in shorter simulation
+times to achieve the same level of precision \cite{Ma96}.
+
+
+\section{A Multiple-Source Model for Electron Beams}
+
+\subsection{General Description}
+
+It has been proved (c.f. \cite{Ma96}) that not only the energy, position
+and angular distributions on the phantom surface are important to the dose
+distributions in the phantom, the correlations between these distributions
+also play an important role in the accurate re-construction of the
+electron beam data for Monte Carlo radiotherapy treatment planning. In
+this work, the electron beams from a clinical linear accelerator have been
+modelled as particles (including electrons, photons and positrons) from
+simplified sub-sources. Each sub-source represents a particular component
+in the linear accelerator geometry; its geometrical dimensions are
+therefore determined by the component. Using a BEAM data processing
+program called BEAMDP\cite{MR95a}, the energy and ``field'' planar fluence
+distributions can be obtained for each of the sub-sources either during
+the BEAM simulation or by analyzing the full phase-space data of the
+electron beam simulated. The relative intensity of each sub-source is also
+obtained through this process. Special {\tt MORTRAN} replacement macros have
+been developed in order to implement this multiple-source model in BEAM
+and other EGS4 user-codes (such as DOSXYZ \cite{Ma95b}). During the beam
+re-construction, the particle's energy and position on the phantom surface
+are sampled from the known probability distributions while the angular
+distribution and its correlations with energy and position are naturally
+maintained due to the well-defined sub-source geometries.
+
+\subsection{Data Processing Scheme}
+
+\subsubsection{Classifications of Particle Origin}
+
+Based on the descriptions given in the previous section, particles scored
+on pre-determined planes are classified into different sub-sources (i.e.,
+accelerator components). Clearly, there is no definite line of demarcation
+between the particles coming from the individual components. For example,
+particles coming from a component (the last non-air component it has been
+to before it hits the scoring plane) may have gone through other
+components as well. Furthermore, particles coming from the same component
+may have very different characteristics; the effects of air scattering
+make the situation even more complicated for charged particles.
+
+According to the analysis of the full phase-space beam data, the following
+classifications have been proposed and implemented in the program
+BEAMDP\cite{MR95a} for sub-source data processing:
+
+%****************beginning of {itemize}***************************
+\setlength{\topsep}{0ex}   %from preceding text + parskip
+\setlength{\parskip}{0ex}
+\setlength{\itemsep}{0ex}  %between items
+\setlength{\parindent}{0em}
+\begin{itemize}
+\item
+For charged particles, the origin of a particle (electron or positron) is
+considered to be the last (non-air) component that it has been to before
+it hits the scoring plane.
+\item
+For bremsstrahlung photons, the origin of a particle is considered to be
+the component in which it is generated or last scattered.
+\end{itemize}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0.1in}
+%****************end of {itemize}***************************
+
+The reason for these classifications is that although a bremsstrahlung
+photon may have gone through many regions before reaching the scoring
+plane, its energy and direction are fixed when it is created or scattered.
+For a charged particle, due to multiple-scattering, its energy and
+direction are generally fixed when it leaves the last non-air component;
+the effect of air attenuation and scattering is later accounted for in the
+sampling procedure. Comparisons of the particle energy, position, and
+angular distributions between the full phase-space data and the
+re-constructed beam data based on the simplified sub-source model
+confirmed the above classifications.
+
+\subsubsection{Other Assumptions}
+There are other assumptions made in the implementation scheme of the above
+classifications due to the limitations of the scoring features in the BEAM
+code.
+
+The implementation of these classifications relies on a tag called {\tt
+LATCH}
+in the BEAM code (see the following section). A particular bit of {\tt
+LATCH}
+will be set from 0 to 1 when the particle has been to a region within a
+linear accelerator component which has been allocated to that bit.
+However, no information is available on the sequence of the regions it has
+passed through and the number of times it has been to a particular
+region.  An assumption has therefore been made that a charged particle is
+from the component which is the nearest to the scoring plane among the
+components that it has been to. This should be a reasonable assumption
+because very few electrons scattered from the nearest component to a
+component further away from the scoring plane can come back to the scoring
+plane again. This equally applies to the bremsstrahlung photons, i.e.,
+their are considered to be created/scattered in the nearest component.
+
+Furthermore, the effect of charged particle multiple-scattering in air is
+not considered in the classifications. The direction of an electron has
+changed when it reaches the scoring plane due to electron
+multiple-scattering. However, this effect is corrected for in the
+re-construction step later (see section below on re-construction sampling
+procedures).
+
+For bremsstrahlung photons created in the air path, they are either
+considered to be from a virtual point source or from a planar sub-source
+somewhere above the scoring plane (with an average SSD).
+
+\subsection{{\tt LATCH} and Its Applications}
+
+\subsubsection{What is {\tt LATCH}}
+
+During the Monte Carlo simulation one can ask questions about any aspect
+of the history of a particle, i.e. whether a particle has been in certain
+regions or whether it is created in a certain region. An additional
+parameter called {\tt LATCH} is introduced into the BEAM code to record this
+information.  The initial value of {\tt LATCH} is zero if it is not set by the
+user.  However, the user can also interrogate or change this tag under a
+variety of circumstances (e.g., before or after a particular type of
+interactions has occurred, energy has been deposited, or a boundary has
+been crossed). This flexible interface to the transport simulation makes
+it possible to obtain any information of a particle history with ease.
+
+\subsubsection{How is {\tt LATCH} Set in BEAM}
+
+In the BEAM code a {\tt LATCH} bit can be set using system function IBSET, or
+unset using system function IBCLR.  To determine which bit of {\tt
+LATCH} has
+been set, another system function BTEST should be used.
+
+Currently, we only allocate first 29 bits for {\tt LATCH} number setting while
+the rest are used for other purposes (to store other quantities in
+compressed full phase-space data file). Bit 0 of {\tt LATCH} is set when a
+bremsstrahlung event occurs. Because this information can be passed on to
+its descendants,  we know whether there is a bremsstrahlung photon
+involved in this particle history. Bits 1 - 23 of {\tt LATCH} are used to record
+where the particle has been to. Bits 24 - 28 stored a region number, which
+corresponds to the IREGION-TO-BIT region where a secondary has been
+created; if the region number is 0 the particle is a primary, i.e., it
+comes from the vacuum window.
+
+On input the user specifies each region so that it corresponds to a
+certain bit of {\tt LATCH}. Different regions can be assigned to the same bit.
+For example, there may be many layers of different materials in a
+CHAMBER component module. It is reasonable to assign them to the same bit
+because particles coming from these regions should have similar
+characteristics. Thus, we may have many regions in a linac geometry but we
+only need 23 bits to record whether a particle has been to these regions.
+
+In order to store the IREGION-TO-BIT region number where a secondary
+particle has been generated, the region number is shifted by 24 bits
+(i.e., multiply the region number by $2^{24}$ = 16777216) and then added
+to {\tt LATCH}. To recover this region number one can divide {\tt
+LATCH} by 16777216
+and take its integer form, i.e., INT(LATCH/16777216).
+
+\subsubsection{Options for {\tt LATCH} Setting}
+
+Currently, there are three options for {\tt LATCH} setting in the BEAM
+code\cite{Ro95b}:
+\begin{enumerate}
+\item  NON-INHERITED LATCH SETTING -- Secondaries do not inherit
+the {\tt LATCH} values from the primaries. This means that {\tt LATCH} only records
+the history of a secondary after it is created. This option only
+gives the information about where the particle has been. Although there
+will be no record on the history of its parent, useful information may be
+gained on the origin of the secondary (in most cases,  it is created in
+the region, which is the nearest to the source, among the regions it has
+been to).
+
+\item  COMPREHENSIVE LATCH SETTING -- The primaries' {\tt
+LATCH} values are inherited by the secondaries,
+there is a record on whether a bremsstrahlung photon is involved in this
+particle history (using bit 0 of {\tt LATCH}), and the origins of the
+secondaries are also recorded (using bits 24 - 28 bits of {\tt LATCH}).
+
+\item  COMPREHENSIVE LATCH SETTING -- This option is the same
+as option {\it 2} except that bits 1 - 23 of {\tt LATCH} are used to
+record where a photon has interacted rather than where it has been.
+Because its parents' histories are passed on to this photon, bits 1 - 23
+also contain the region numbers where its parents have been to (for
+charged particles) or interacted (for photons).
+
+\end{enumerate}
+
+For detailed descriptions of {\tt LATCH} and its usage, please refer to
+BEAM User's Manual\cite{Ro95b}.
+
+\subsubsection{{\tt LATCH} Setting for the Source Models}
+
+In order to obtain the beam data necessary for our simplified sub-source
+model the accelerator simulation should be done using  {\tt LATCH}
+setting option {\it 3}. One assigns a bit (of bits 1 - 23) of {\tt
+LATCH} to a
+region/component (or several regions/components) of the accelerator, which
+will be used as a sub-source later in the re-construction process. When a
+particle reaches the scoring plane, its {\tt LATCH} number has recorded the
+information about which components it  has been to (for charged
+particles), has interacted (for photons), and for a secondary, where it is
+generated. The origin of the particle is then identified according to the
+classifications discussed in the previous section.
+
+\subsection{Sampling Procedures}
+\subsubsection{Introduction}
+The full phase-space data of a ``realistic'' clinical electron beam can be re-constructed from a combination of simplified sub-source of various types of particles using the energy and planar fluence distributions derived from the original full phase-space data. The re-construction of the energy spectra and planar fluence on the phantom surface is accurate while the particle angular distributions and their correlations with energy and position are determined by the actual geometries of the sub-sources used and by the sampling methods. It has been intended throughout the source model implementation that the particles of a re-constructed beam have equal weight so that better statistics can be achieved in the subsequent absorbed dose calculations with the re-constructed beams. The sampling procedures for the re-construction of the energy, position and angular distributions are described in the following sections
+
+\subsubsection{Relative Source Intensity}
+The first step of the beam re-construction is to determine how many particles come from a particular sub-source for a given number of particle histories; a sub-source only radiates one type of particles, i.e., either electrons, photons, or positrons. This is done by sampling from the relative source intensity distribution derived from the beam phase-space data. The relative intensity for a particular sub-source is defined as the ratio of the number of particles from the sub-source to the total number of particles scored for all the sub-sources. In order to reduce the number of sub-sources used for the beam re-construction, sub-sources having relative source intensities smaller than 0.1\% are ignored.
+
+The sampling is done by a table-look-up method. All the sub-sources are in
+turn numbered from 1 to N. The relative source intensity, $\phi(1)$, for
+sub-source 1 is multiplied by a factor of 1000. The first
+INT(1000$\phi(i)$) values of a 1000-dimensional array are then assigned as
+1 (= the sub-source number). This is in turn done for the N sub-sources.
+During the re-construction, a random number $N_{ran}$ between 1 and 1000
+is picked up and the $N_{ran}$-th value of the array will be the
+sub-source number where the next particle will be irradiated.  The
+advantage of such table-look-up method is that the sampling is fast and
+its speed is not affected by the number of sub-sources used in the
+re-construction.
+
+
+\subsubsection{Energy}
+
+The second step is to sample the particle energy.  Each sub-source only
+radiates one type of particles and it has its own energy spectra
+(different spectra within and outside the treatment field). The minimum
+and maximum energies are set by the user and are generally equal to the
+energy cutoff (ECUT or PCUT) and the maximum incident energy during the
+beam simulation, respectively. The number of bins used for the spectrum is
+also set by the user. The particle energy is sampled using a subroutine
+similar to ENSRC, an NRC subroutine used in other EGS4 user-codes.
+These restrictions must obviously be generalized for the photon beam
+case.
+
+\subsubsection{Position}
+The third step is to sample the particle position on the phantom surface
+(= the scoring plane during the BEAM simulation).  It has been found that
+in general,  the energy spectra (number of particles per energy bin) vary
+from position to position in the treatment field by less than 10\% for a
+given sub-source. Thus, it is reasonable to sample the particle energy and
+position independently, i.e., the particle position is sampled from the
+particle planar fluence on the phantom surface regardless of the possible
+slight change in energy spectrum.
+
+The particle planar fluence for a sub-source is stored in two different
+ways. For a circular field, the particles from a sub-source are binned
+according to the radius of the particle position in the field.  For a
+square field, the particles are binned into square rings of different half
+width with equal area.  The number of bins used in both cases is set by
+the user and the maximum scoring field is usually much larger than the
+defined treatment field. During the beam re-construction, the selection of
+the spatial bin of the particle is sampled using the same method as that
+used for energy sampling.
+
+\subsubsection{Variation of Planar Fluence Within a Spatial Bin}
+It has been found that within the treatment field the planar fluence is
+generally better described by annular bins of small width, i.e., the
+planar fluence shows less variation within an annular spatial bin. Square
+rings are much simpler and more suitable for square treatment fields
+compared with annular bins because the latter also requires special coding
+to cover the planar fluence at the corners for a square field. For a
+square field described by square rings, however, the variation of planar
+fluence within a spatial bin may be large, especially for bremsstrahlung
+photons.  This section discusses how to analyze and re-construct the
+planar fluence variation within a spatial bin.
+
+Suppose that the variation of the planar fluence, $F(d)$, within a square ring (centered at the z-axis and the side bars are in parallel with x- or y-axis) can be approximated by
+\begin{eqnarray}
+F(d) & =& b - ad^2 \label{`eqF(d)ab'}
+\end{eqnarray}
+where $d$ is the distance to the x- or y-axis, whichever is smaller, and $a$ and $b$ are constants to be determined. Note here we have assumed that the square ring is thin enough so that the planar fluence does not change within the square ring for a given $d$ (or the effect of this change is negligible). Suppose the side (the outer dimension) of the square ring is $L$. If we divide the half-side ($d$ from 0 to $L/2$) into two regions, the mean planar fluence in region 1 ($d$ from 0 to $L/4$) will be
+\begin{eqnarray}
+\bar{F_1} & =& b - \frac{aL^2}{48}
+\end{eqnarray}
+and the mean planar fluence in region 2 ($d$ from $L/4$ to $L/2$) will be
+\begin{eqnarray}
+\bar{F_2} & =& b - \frac{7aL^2}{48}
+\end{eqnarray}
+Thus, we obtain
+\begin{eqnarray}
+a & =& \frac{8(\bar{F_1} -\bar{F_2})}{L^2}
+\end{eqnarray}
+and
+\begin{eqnarray}
+b & =& \frac{(7\bar{F_1} -\bar{F_2})}{6}
+\end{eqnarray}
+By substituting $a$ and $b$ into Eq. (\ref{`eqF(d)ab'}) we obtain
+\begin{eqnarray}
+F(0) & =& b = \frac{(7\bar{F_1} -\bar{F_2})}{6}
+\end{eqnarray}
+and
+\begin{eqnarray}
+F(L/2) & =& b - \frac{aL^2}{4} = 11\bar{F_2} -5\bar{F_1}
+\end{eqnarray}
+We then  normalize $F(d)$ to the maximum value in this square ring. If $F(0) > F(L/2)$,
+we have
+\begin{eqnarray}
+\frac{F(d)}{F(0)} & =& 1 - \frac{ad^2}{b} =  1 - \frac{48(\bar{F_1} -\bar{F_2})}{L^2(7\bar{F_1} -\bar{F_2})} d^2
+\end{eqnarray}
+If $F(L/2) > F(d)$,
+we have
+\begin{eqnarray}
+\frac{F(d)}{F(L/2)} & =& \frac{b - ad^2}{b - aL^2/4} =  \frac{7\bar{F_1} -\bar{F_2}}{11\bar{F_2} - 5\bar{F_1}} - \frac{48(\bar{F_1} - \bar{F_2})}{(11\bar{F_2} - 5\bar{F_1})L^2}d^2
+\end{eqnarray}
+Thus, suppose the normalized planar fluence is expressed by
+\begin{eqnarray}
+f(d) & =& B - Ad^2 \label{`eqF(d)AB'}
+\end{eqnarray}
+We have
+\begin{eqnarray}
+A & =&  \frac{48(\bar{F_1} -\bar{F_2})}{L^2(7\bar{F_1} -\bar{F_2})},~~~~B = 1~~~~~ for ~~f(0) > f(L/2)
+\end{eqnarray}
+and
+\begin{eqnarray}
+A & =& \frac{48(\bar{F_1} - \bar{F_2})}{(11\bar{F_2} - 5\bar{F_1})L^2}, ~~~B = \frac{7\bar{F_1} -\bar{F_2}}{11\bar{F_2} - 5\bar{F_1}} ~~~~~ for ~~f(L/2) > f(0)
+\end{eqnarray}
+
+BEAMDP analyzes the BEAM phase-space data and calculates $A$ and $B$ for
+every spatial bin. The data are stored in the source parameter file.
+During the beam re-construction, the planar fluence distribution is
+sampled using Eq. (\ref{`eqF(d)AB'}). For a random $d$ between $-L/2$ and
+$L/2$, a random number, $N_{ran}$ between 0 and 1 is sampled and $d$ is
+accepted if $N_{ran} < f(d)$. Otherwise, another $d$ will be sampled and
+the sampling procedure will go on until a proper $d$ has been chosen.
+
+\subsubsection{Angle}
+The next step is to determine the particle incident angle. After the
+particle position on the phantom surface is selected, a point on the
+sub-source (surface) is sampled.  A point is first sampled in an area
+defined by the outer dimensions of the sub-source on the (x,y) plane based
+on the probability distribution
+\begin{eqnarray} P_{scat} & =& \frac{1}{1 + \frac{r}{R_{scat}}} \end{eqnarray}
+where $r$ is the distance from the point to the already chosen particle
+position  on the same (x,y) plane, and $R_{scat}$ is the scatter radius
+which can be calculated from
+\begin{eqnarray} R_{scat} & =& \overline{\theta} Z_{min} \end{eqnarray}
+where $\overline{\theta}$ is the electron mean scattering angle and
+$Z_{min}$ is the distance from the mid-point of the thickness of the
+component to the phantom surface. If the point falls into the specified
+sub-source area, the point will be chosen. If the point falls into the
+opening (aperture) of the component, the point will be moved to the edge
+of the opening (aperture) either along the x- or y-axis depending on the
+result of another sampling based on the ``inverse-square'' relation. The
+direction (the incident angle) of the particle is then determined by the
+position on the phantom surface and the point on the sub-source surface.
+The directional cosines (UIN, VIN, WIN) are then calculated accordingly.
+
+\subsubsection{Electron Scattering in Air}
+The final step of the beam re-construction is to correct for the effect of the electron multiple-scattering in air; the direction of a charged particle from a sub-source will be changed due to this effect.
+
+By analyzing the simulated beam phase-space data, an angular spread,
+(i.e., the angle between the particle incident direction and the z-axis,
+$\theta$)
+can be obtained for the ``direct'' electrons within a circle of 1 cm radius
+. This angular spread is considered to be a good approximation of that for a pencil beam of electrons of the same energies going through an air slab of thickness equal to the $SSD_{direct}$ of the ``direct'' electrons. This angular
+distribution is subsequently used for sampling the angular fluctuation of charged particles around their already chosen incident directions. For a sub-source with $SSD_{sub}$ smaller than that of the ``direct'' electrons $SSD_{direct}$, the sampled scattering angle, $\theta$ (i.e., the angle between
+a new incident direction and the already chosen incident direction) for a charged particle from the sub-source is scaled down using a factor $f = SSD_{sub}/SSD_{direct}$. This is only a crude approximation of the variation of air scattering effect with source-surface distance, $SSD$.
+
+As described above, the polar angle $\theta$ is sampled from the analyzed angular spread and an azimuth angle $\phi$ will be uniformly sampled between 0 and 360 degrees. The direction cosines of the particle after the effect of air scattering is corrected for, $WIN', VIN'$ and $WIN'$, are re-calculated using the following equations:
+
+\begin{eqnarray}
+UIN'& =& \frac{UIN~ WIN sin(\theta) cos(\phi)}{\sqrt{UIN^2+VIN^2}} - \frac{VIN sin(\theta) sin(\phi)}{\sqrt{UIN^2+VIN^2}} + UIN cos(\theta)
+\end{eqnarray}
+
+\begin{eqnarray}
+VIN'& =& \frac{VIN~WIN sin(\theta) cos(\phi)}{\sqrt{UIN^2+VIN^2}} - \frac{UIN sin(\theta) sin(\phi)}{\sqrt{UIN^2+VIN^2}} + VIN cos(\theta)
+\end{eqnarray}
+and
+\begin{eqnarray}
+WIN'& =& WIN cos(\theta) - sin(\theta) cos(\phi)\sqrt{UIN^2+VIN^2}
+\end{eqnarray}
+
+
+\subsection{Types of Source Models}
+
+In the following sections, simplified source models  of electron beams
+from commonly used clinical linear accelerators are described; these
+models correspond to the individual components of a treatment machine such
+as scattering foil, mirror, monitor chamber, ring, cone, collimator and
+applicator. All the components are modelled as surfaces with the same
+dimensions as the components on the (x,y) plane but zero height except for
+the Philips SL75-20 tubular applicators (see below). Each sub-source has
+its own energy distribution and planar fluence distribution on the phantom
+surface.
+
+\subsubsection{Applicator}
+
+Applicators are modelled either as surfaces on the (x,y) plane or as tubular surfaces expanded in the z-direction. The former is a good approximation for the more recent applicator design (i.e., aperture-plate applicators) while the latter is necessary for the ``old'' versions such as that used in Philips SL75-20 (i.e., a
+tubular applicator).
+
+The dimensions of the applicator opening (ie., the aperture) should be
+exactly the same as that of the applicator being modelled. It is not
+necessary, however, that the applicator model has the same outer
+dimensions as that of the applicator. This is especially true for charged
+particles because only those that enter the applicator around the edges of
+the aperture opening and inner side-walls and do not go deeply enough in
+the walls can reach the phantom surface. The percentage dose near the
+phantom surface outside the beam is only a few percent due to the leakage
+of charged particles and bremsstrahlung photons.
+
+For aperture-plate applicators, the outer dimensions of the charged particle sub-sources can be considered to be equivalent to inner opening dimensions + a 0.5 - 2.0 cm margin. However, for the lowest applicator (also closest to the patient) the actual applicator dimensions should be used as electrons created by bremsstrahlung photons can also reach the phantom surface. For bremsstrahlung photons, the outer dimensions of the sub-sources should correspond to that of an area actually ``exposed'' to the electron beam; most of the electrons are stopped by the applicator but the x-rays created by them can reach the scoring plane (contaminant photons). In most cases, the actual outer dimensions can be used for the photon sources. The distance from the sub-source to the phantom surface can be calculated from the mid-point of the applicator thickness to the phantom surface.
+
+For tubular applicators, the particles are considered to be from the inner surface of the applicator walls with the actual height; the outer dimensions of the applicator are the same as the inner dimensions (equal to the actual dimensions). A tubular applicator can also be simulated using a series of stacked aperture applicators.
+
+\subsubsection{Collimator}
+
+Collimators are modelled as parallel-bars with zero height. The orientation of the collimator bars can be either along the x- or y-axis. The particles are considered to be from the surface non-uniformly, with more coming from the edges of the opening. The distance from the sub-source to the phantom surface can be calculated from the mid-point of the collimator thickness to the phantom surface. The dimensions of the sub-source are the same as that of the actual collimator.
+
+\subsubsection{Ring, Cone and Point Source}
+
+Primary collimators are usually ring- or cone-shaped; they are modelled as a ring with zero height. The particles are considered to be from the surface non-uniformly, with more coming from the edges of the opening. The dimensions of the sub-source are the same as that of the actual ring or cone and the distance from the sub-source to the phantom surface can be calculated from the mid-point of the ring/cone thickness to the phantom surface. When the radius of this sub-source is set to zero the sub-source becomes a point source. A dominant component of the electron central-axis depth-dose is contributed by the electrons coming through the scattering foils, the mirror and the monitoring chamber without hitting any of the beam confining components such as collimators or applicators and these electrons can best be modelled as from an electron virtual point source.
+
+
+In order to determine the source-surface distance
+for a virtual point source, SSD$_{VIR}$,  all the particles falling into a
+narrow ring (with inner radius $R_{object} - \delta$ and outer radius
+$R_{object} + \delta$; both  $R_{object}$ and $\delta$ are set by the
+user) in the treatment field will be further transported in a vacuum until
+they reach another plane (i.e., the image plane) which is $g_z$ cm away
+from the scoring plane (along z-axis). The particles on the image plane
+form an image of the ring on the scoring plane. Assuming that the
+particles on the image plane are peaked at $R_{image}$,  The virtual SSD
+of the sub-source can be estimated from the expression
+\begin{eqnarray} SSD_{vir} & =&  \frac{ R_{object}}{R_{image} -
+ R_{object}} g_z
+\end{eqnarray}
+
+In order to reduce the effect of the statistical fluctuation in
+determining $R_{image}$ after the beam simulation, the image distribution
+is processed using a ``smoothing'' technique. The uncertainty in the
+estimated SSD$_{vir}$ is therefore much reduced for a given number of
+particle histories simulated.
+
+
+\subsubsection{Scattering Foil, Mirror and Ion Chamber}
+
+Scattering foils, mirrors and monitoring ionization chambers are modelled as either rectangular or circular planar sources. The dimensions of the sub-source are the same as that of an area actually ``exposed'' to the electron beam but with zero thickness. The effect of air can also be modelled using a planar source. The distance from the sub-source to the phantom surface can be calculated from the mid-point of the component thickness to the phantom surface.
+
+Planar sub-sources are mainly used for bremsstrahlung photons as they are created directly in these components and their origins are well-defined. For charged particles, however, planar sub-sources can generally be replaced by a virtual point source. The effect of electron multiple-scattering in air can be simulated by introducing a small fluctuation in the particle direction around its original direction by sampling from a Monte Carlo calculated probability distribution (see discussion below).
+
+\section{BEAMDP - a BEAM Data Processor}
+
+BEAMDP (BEAM Data Processor) is an interactive program, written for the
+OMEGA project as an auxiliary program of the BEAM code. BEAMDP helps the
+EGS4/BEAM \cite{Ro95} users to analyze the electron beam data obtained by the
+Monte Carlo simulation of  a clinical linear accelerator and to derive the
+data required by the multiple-source model for re-construction of the
+electron beams for use in Monte Carlo radiotherapy treatment planning.
+
+The stand-alone BEAMDP consists of three components: (1) geometry inputs
+for simplified sub-source models (data can be either typed in through
+keyboard or read in from an existing input file), (2) BEAM data analysis
+(BEAM data stored in a full phase-space file created by BEAM), and (3)
+data outputs for the source models or for {\it xvgr} plots. A subroutine
+has also been written based on BEAMDP which can be used for BEAM data
+analysis during an actual accelerator simulation. The subroutine is
+included in a {\tt MORTRAN} file called {\tt beammodel\_routines.mortran}.
+The structure and function of this subroutine will be given in the next
+section. For more detailed descriptions of the stand-alone BEAMDP program,
+please see reports ``BEAMDP Users Manual"\cite{MR95a}, and ``BEAMDP - as a
+General-purpose Utility'' \cite{MR95b}.
+
+\section{Implementation of Beam Models}
+
+The multiple sub-source model has been implemented in the BEAM code and other EGS4 user-codes. For the BEAM code, the implementation consists of two procedures: (1) beam data analysis and (2) beam data re-construction. In the first procedure, the simulated full phase-space data is processed during the accelerator simulation and stored in a formatted data file which can be used later for beam re-construction. In the second procedure, the full phase-space beam data is re-constructed using the multiple-source model. For other EGS4 user-codes, only the second procedure is involved in the implementation.
+
+\subsection{Implementation in BEAM}
+\subsubsection{Beam Data Analysis}
+
+\subsubsection{Data Processing Procedure}
+In order to analyze the full phase-space beam data, the geometries of the
+simplified sub-sources must be set up first; the geometrical details of
+the source models are prepared by the user according to the actual
+geometries of the accelerator components (i.e., the geometrical inputs for
+the individual component modules for the simulation). For sub-sources of
+charged particles, the sub-source number is sequentially stored in an
+array according to the distance of the sub-source to the scoring plane
+(the source number increases with source-to-scoring-plane distance).
+The appropriate association of bits in {\tt LATCH} with geometrical
+components of the accelerator model is an essential element of creating
+a beam model.
+
+
+During the beam simulation, the {\tt LATCH} number of every particle reaching
+the scoring plane (excluding multiple-crossers) is checked. For
+bremsstrahlung photons, their origins are considered to be the components
+where they are generated or last scattered. For charged particles, the
+bits 1 - 23 of {\tt LATCH} are checked using system function BTEST, starting
+from the bit corresponding to the sub-source closest to the scoring plane.
+If the bit is set (= 1) the particle is considered to be from this
+sub-source, otherwise the bit corresponding to the sub-source next closest
+to the scoring plane will be checked. This will go on until either the
+origin of the particle has been found or all 23 bits have been
+checked. The latter occurs only when {\tt LATCH} number is wrongly set or a
+sub-source for a particular type of particles is not included in the
+sub-sources. For example, the same bit of {\tt LATCH} should correspond to three
+sub-sources: an electron source, a bremsstrahlung photon source, and a
+positron source. If a photon source is not included in the geometry input
+file, for instance, a photon created in the component corresponding to
+this sub-source will be considered to be from ``nowhere''.  All the
+particles coming from ``nowhere'' are counted and reported at the end of
+the beam simulation.
+
+\subsubsection{Subroutine BEAMDP1}
+
+Subroutine BEAMDP1 is a revised version of the program BEAMDP (see
+\cite{MR95a} for use with the BEAM code. It has been modified to include
+the following three functions, activated sequentially by a variable called
+{\tt MMODE}. The first function ({\tt MMODE} = 1) is to set up the geometries of the
+source models during BEAM input (through a geometry input file). The
+second function ({\tt MMODE} = 2) is to analyze the beam data during the
+accelerator simulation. The third function ({\tt MMODE} = 3) is to output the
+beam data for use with the multiple-source model during beam
+re-construction. BEAMDP1 is included in {\tt beammodel\_routines.mortran}.
+Another file required for implementing the multiple-source model in an
+EGS4 user-code is {\tt beammodel\_macros.mortran} (see discussions below).
+For detailed information about the subroutine BEAMDP1 the reader can refer
+to the ``BEAMDP Users Manual''\cite{MR95a}.
+
+\subsubsection{Variables Set on Input}
+
+On input, one should specify a BEAM input variable called {\tt IOOPTN}
+to either 2 or 3. The default value for {\tt IOOPTN} is 0 meaning
+``normal'' outputs (these include both averaged-scoring quantities, such
+as fluence and dose,  and particle phase-space data. {\tt IOOPTN} = 1 is for
+fluence and dose output only. For {\tt IOOPTN} = 2, the particle phase-space
+data is analyzed for simplified source models only but is not written to a
+phase-space data file. For {\tt IOOPTN} = 3, the particle phase-space data is
+written to a phase-space data file for the first $10^5$ histories only
+(for use in subsequent beam characterization with PAW or BEAMDP
+\cite{MR95b}) and the phase-space data is also processed for simplified
+source models.
+
+When {\tt IOOPTN} is set to 2 or 3 in a BEAM run, one should also include, in
+the BEAM input file {\tt filename.egs4inp}, the name of a file containing
+geometrical data for simplified source models. This file is read by the
+BEAM code after the ``PRESTA'' initialization. This file should contain
+the same geometrical data as that for running BEAMDP (see \cite{MR95a}).
+It is not required to put this file name in the  {\tt filename.egs4inp}
+file if {\tt IOOPTN} is set to 0 or 1; the ``original'' BEAM inputs and outputs
+are not affected by the implementation of the simplified source models.
+
+\subsubsection{Beam Re-construction} General descriptions of the
+simplified source models and sampling methods used for beam
+re-construction have been given in section 2. In this section, the
+implementation of these source models in the BEAM code is briefly
+described regarding the modifications in the respective subroutines and
+the variables to be set on input while running the code.
+\subsubsection{Modifications in the User-code}
+
+In order to implement the simplified source models for beam
+re-construction in the BEAM code, the main and the following subroutines
+have been modified: ISOURCE, SRCOTO, SRCOUT and SRCHST (for the
+implementation in other EGS4 user-codes, only the main and the source
+subroutine will be involved). {\tt MORTRAN} templates have been embedded
+in these parts of the code and replaced by macros stored in file {\tt
+beammodel\_macros.mortran}.
+
+{\noindent\it a.} ISOURCE reads in the source specifications. For beam
+re-construction using simplified source models, source type 31 is added
+and the name of a file containing the geometries of the source models and
+the energy and planar fluence distributions is also read in through this
+subroutine. The contents of the source model input file are read in later
+after the PRESTA initialization.
+
+{\noindent\it b.} SRCOTO calculates parameters required for the beam
+simulation. By default, all the particles from the sub-sources are
+incident on the front surface of the first component module and equal in
+weight. However, when needed re-constructed beams can be incident on the
+front surface of any component modules.
+
+{\noindent\it c.} SRCOUT writes the information about the sub-source model
+used for the beam re-construction to a listing file.
+
+{\noindent\it d.} SRCHST performs the actual beam re-construction. The
+details of the re-construction procedures and the sampling methods have
+been discussed in section 2.
+
+In other EGS4 user-codes the above four subroutines are included in one source subroutine and called separately through different entries.
+
+The changes required in the main code are minimum. In some EGS4  user-codes energies of incident charge particles have to be checked as for some sources (monoenergetic sources or sources with a spectrum) particle energy is input as kinetic while for the phase-space input the particle energy is total (kinetic plus rest mass). The multiple source model samples the particle kinetic energy from the simulated energy spectra in the source routine and then in the main code adds the rest mass energy to it to get the total energy for the charged particles.
+
+\subsubsection{Variables Set on Input}
+
+When running the BEAM code, one should specify the variables
+to define the source geometrical configuration. In order to use the
+multiple-source model to re-construct the beam data, one should set the
+variable ISOURC to 31. The variable next to {\tt ISOURC} is
+INIT\_ICM which is the number of the component module upon which the
+re-constructed phase-space particles are incident. INIT\_ICM defaults to
+1. Dummy values should be given for other variables. In the next line, the
+name of a file containing the multiple-source model information for beam
+re-construction should be given; this file is actually an output file of
+BEAMDP (see section 3). The energy inputs (i.e., MONOEN, EIN, etc.) on the
+following input card are not required for {\tt ISOURC} = 31.
+
+\subsection{Implementation in DOSXYZ}
+
+DOSXYZ is an EGS4 user-code for 3D absorbed dose calculations. Unlike
+other well-known EGS4 user-codes such as DOSRZ, FLURZ, etc., which use the
+same source subroutine for source configuration input, initialization,
+output and sampling, DOSXYZ has separate subroutines for each of the
+operations mentioned above.  Thus, similar to the implementation in BEAM
+the {\tt MORTRAN} replacement macros should be inserted into these
+routines. In the next two sections, the implementation of the
+multiple-source model in the DOSXYZ code is briefly described regarding
+the modifications in the respective subroutines and the variables to be
+set on input while running the code.
+
+\subsubsection{Modifications in the User-code}
+
+In order to implement the multiple-source model in DOSXYZ, the main and
+the following subroutines have been modified: {\tt srcinput},{\tt srcout }
+and {\tt srchst}. {\tt MORTRAN} templates have been embedded in these parts of
+the code and replaced by macros also stored in file {\tt
+beammodel\_macros.mortran}.
+
+{\noindent\it a.} {\tt srcinput} reads in the source specifications. Source type 4 is added for the multiple-source model.
+
+{\noindent\it c.} {\tt srcout } writes the information about the sub-source model used for the beam re-construction to a listing file.
+
+{\noindent\it d.} {\tt srchst} performs the actual beam re-construction.
+
+The changes required in the main code are minimum. These include the change from kinetic energy to total energy for charged particles and the modifications required for calculating the ratio of the total energy deposited in the geometry and the total energy of all the incident particles.
+
+\subsubsection{Variables Set on Input}
+
+When running DOSXYZ, one should assign the variable {\tt isource} to 4 for
+simplified source models. The other variables on the same input record
+have the same meanings as those for other source types except that the
+charge, IQ, for {\tt isource} = 4 is a dummy variable. In the next line,
+one should input 4 for {\tt enflag} for the multiple-source model and the
+file mode, MODE, can be either 0 (for MODE0 file with 7 variables per
+record) or 2 (for MODE2 file with 8 variables per record, the extra
+variable is ZLAST, BEAM User's Manual). The name of a file containing the
+multiple-source model information for beam re-construction should be given
+in the next line. This file is actually an output file of BEAMDP.
+
+
+\subsection{Requirements of Beam Characterization models}
+
+The requirements of the multiple-source model for beam re-construction are summarized as follows:
+%****************beginning of {itemize}*************************** \setlength{\topsep}{0ex}   %from preceding text + parskip
+\setlength{\parskip}{0ex}
+\setlength{\itemsep}{0ex}  %between items
+\setlength{\parindent}{0em}
+\begin{itemize}
+\item
+The Monte Carlo simulation of the electron beam should be performed using
+BEAM with proper {\tt LATCH} settings.
+\item
+The full phase-space data of the simulated electron beam should be
+analyzed using BEAMDP (or BEAMDP1) to derive the energy and planar fluence
+distributions for use with the simplified sub-source models; a geometry
+input file should be supplied by the user.
+\item
+The re-construction of an electron beam should be performed using the
+source models designed for the electron beam; the source model data
+file is the output of a BEAMDP run.
+\item
+Two files are required in order to implement the multiple-source model in
+BEAM and in DOSXYZ: {\tt beammodel\_macros.mortran} and {\tt
+beammodel\_routines.mortran}. Both files are stored in the directory
+``OMEGA\_HOME/progs/beamdp''. To implement in DOSXYZ, copy these two files
+to your local {\tt \$HOME/egs4/dosxyz} directory and then compile. To implement in
+BEAM copy the files to your local {\tt \$HOME/egs4/beam} directory and then
+compile. Default replacement macros have been included in \\
+{\tt beam\_user\_macros.mortran} and {\tt dosxyz\_user\_macros.mortran} in
+order to replace the {\tt MORTRAN} templates if the modelled source is not
+implemented.
+
+\end{itemize}
+\setlength{\parindent}{1.5em}
+\setlength{\parskip}{0.1in}
+%****************end of {itemize}***************************
+
+\section{Comparisons with Full Phase-Space Data}
+ The simplified sub-source models and their implementation in the BEAM code and other EGS4 user-codes have been verified/tested using various methods and the re-constructed beam data has been evaluated against the full phase-space data.
+The details of the comparisons can be found in  ref\cite{Ma96}.
+
+\section{Conclusions}
+The Monte Carlo simulation code BEAM has been used to investigate the
+characteristics of ``realistic'' electron beams commonly used in
+radiotherapy clinics. Simplified source models of these electron beams
+have been proposed for use in the Monte Carlo radiotherapy treatment
+planning and dosimetry calculations and implemented in the BEAM code and
+other EGS4 user-codes. An auxiliary program has been written for beam data
+analysis to derive energy and fluence distributions for  beam data
+re-construction with simplified source models. Good agreement has been
+achieved between the absorbed dose distributions calculated using
+re-constructed beam data and that using simulated full phase-space beam
+data. The overhead computing time required for the beam re-construction is
+negligible while the disk space requirement for the source models is
+considerably less compared with that required by the full  phase-space
+beam storage.
+It has also been found that the use of multiple-source models can
+significantly reduce the computing time required for the accelerator
+simulation\cite{Ma96}.
+
+
+
+\section{References}
+\renewcommand{\rightmark}{References}
+\typeout{****references start here}
+\setlength{\baselineskip}{0.5cm}
+\vspace*{-1cm}
+%\begin{thebibliography}{AB}
+\bibliography{/usr/local/share/bibliog/irs}
+\bibliographystyle{unsrt}
+
+
+\end{document}
+

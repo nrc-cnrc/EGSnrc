@@ -1,0 +1,54 @@
+\begin{figure}
+\index{AUSGAB!example}
+\index{uncertainties}
+\begin{center}
+\caption{Portions of {\tt tutor6.mortran} related to statistical analysis
+without batching.  \label{fig_tutor6_stats} \vspace*{3mm}}
+\begin{boxedverbatim}
+
+"STEP 8   OUTPUT-OF-RESULTS                                       "
+"-----------------------------------------------------------------"
+total = 0;
+anorm = 1/(ein+float(iqin)*rm); "for e+ add 2*rm to k.e.
+DO i=1,nzb+1 [
+    "first put non-scored energy portions into sc_array and sc_array2"
+    aux = sc_tmp(i); aux2 = aux*aux;
+    sc_array(i) = sc_array(i) + aux;
+    sc_array2(i) = sc_array2(i) + aux2;
+    aux = sc_array(i)/ncase;    aux2 = sc_array2(i)/ncase;
+    aux2 = (aux2 - aux*aux)/(ncase-1);
+    IF( aux2 > 0 ) aux2 = sqrt(aux2);
+    aux = aux*anorm;         aux2 = aux2*anorm;
+    sc_array(i) = aux;       sc_array2(i) = aux2;     total = total + aux;
+]
+OUTPUT sc_array(1),sc_array2(1);
+   ('   Reflected energy fraction: ',f10.6,' +/- ',f10.6);
+                     etc
+"*********************************************************************"
+subroutine ausgab(iarg);
+" For tutor6.mortran.  Provides an example of doing statistics        "
+" without batches using technique suggested by Francesc Salvat.       "
+" Copyright National Research Council of Canada 2000                  "
+"*********************************************************************"
+$IMPLICIT-NONE;            $INTEGER iarg,irl;          real*8   aux;
+;COMIN/SCORE,   "to get the scoring arrays and iscore"
+       EPCONT,  "to get EDEP"
+       STACK/;  "to get the region number"
+IF( iarg < 5 ) [ "energy is being deposited"
+    irl = ir(np);   
+    IF( icase = sc_last(irl) )["still the same shower that deposited energy"
+                                 "last time in this region"
+        sc_tmp(irl) = sc_tmp(irl) + edep*wt(np);
+    ]
+    ELSE [ "we have the next shower depositing energy into region irl"
+           " => put sc_tmp into  the scoring arrays and set sc_last"
+        aux = sc_tmp(irl);
+        sc_array(irl) = sc_array(irl) + aux;
+        sc_array2(irl) = sc_array2(irl) + aux*aux;
+        sc_tmp(irl) = edep*wt(np); sc_last(irl) = icase;
+    ]
+]
+return; end;         "end of subroutine ausgab for tutor6.mortran"
+\end{boxedverbatim}
+\end{center}
+\end{figure}
