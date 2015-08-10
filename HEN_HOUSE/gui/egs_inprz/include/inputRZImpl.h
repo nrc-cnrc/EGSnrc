@@ -365,14 +365,15 @@ private:
 
 // needed to update geometry and media tables properly
 
-    v_int globalStartR;
-    v_int globalStopR;
     v_int globalNSlab;
+    QString current_description_by;
 
     QString the_year;
 
     BeamSourceDlg* beamDlg;
     QLabel* beamLabel;
+
+    v_string getMediaFromTable();
 
 };
 
