@@ -43,26 +43,47 @@
 class MGEOInputs : public MInputBlock
 {
 public:
-	MGEOInputs();
-	~MGEOInputs();
-	QString   GetInputMethod() const { return inp_meth; }
-              QString   getErrors();
+    MGEOInputs();
+    ~MGEOInputs();
+    QString   GetInputMethod() const { return inp_meth; }
+    QString   getErrors();
 
-	QString inp_meth;
- 	QString zface;
- 	QString description_by;
+    int nslabs() const {
+     int n_slab = 0;
+     for (unsigned int j = 0; j < nslab.size(); j++) {
+          n_slab += nslab[j];
+      }
+      return n_slab;
+    };
+    int getR(const int& ir){
+      return (ir-2)/nslabs() + 1;
+    };
+    int getZ(const int& ir){
+      return (ir-1) - nslabs()*(getR(ir)-1);
+    };
+    int getIR(const int& z, const int& r){
+      return z + nslabs()*(r-1) + 1;
+    };
 
- 	v_string media;
+    void mapRegions();
 
- 	v_float slabs;
- 	v_float radii;
+    QString inp_meth;
+    QString zface;
+    QString description_by;
 
- 	v_int   nslab;
- 	v_int mednum;
- 	v_int start_reg_slab;
- 	v_int stop_reg_slab;
- 	v_int start_ring;
- 	v_int stop_ring;
+    v_string media;
+
+    v_float slabs;
+    v_float radii;
+
+    v_int   nslab;
+    v_int mednum;
+    v_int start_reg;
+    v_int stop_reg;
+    v_int start_Z;
+    v_int stop_Z;
+    v_int start_ring;// should be start_R
+    v_int stop_ring;
 };
 std::ifstream & operator >> ( std::ifstream & in, MGEOInputs * rGEO );
 //Q3TextStream   & operator << ( Q3TextStream &    t, MGEOInputs * rGEO );
