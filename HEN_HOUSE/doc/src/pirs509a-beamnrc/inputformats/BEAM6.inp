@@ -1,0 +1,13 @@
+\begin{verbatim}
+   ISOURC = 5   NRC SWEPT BEAM SOURCE
+   **********
+ 
+      IQIN,ISOURC,GAMMA,RBEAM
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  5
+              GAMMA   1/2 angle of cone in degrees  
+              RBEAM   radius of beam spot at Z = 0.0 (cm)
+                 
+      Note apex of cone is at x=y=0,z=Z_min_CM(1)
+ ---------------------------------------------------------------------
+\end{verbatim}

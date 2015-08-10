@@ -1,0 +1,289 @@
+% This is /usr/people/egsnrc/doc/pirs702/RCS/pirs702_table_sources.tex,v
+% Revision 1.12 last edited 2002-04-22 13:41:32-04
+% Last changed by dave and currently locked by 
+
+\begin{longtable}{lll}
+\caption[Description of source options for the RZ codes]
+{Description of the {\tt SOURCE OPTIONS=} inputs for the source 
+routines in the RZ codes.  Additional inputs are also indicated
+where required.  Delimeters are: {\tt :start source inputs:} 
+and {\tt :stop source inputs:}.}\\
+\hline\hline
+Source & Parameters & Description \\
+Number &&\\
+\hline
+\endfirsthead
+\hline
+\multicolumn{3}{r}{\small\slshape continued from previous page} \\
+\hline \hline
+Source & Parameters      & Description \\
+Number &&\\
+\hline
+\endhead
+\hline
+\multicolumn{3}{r}{\small\slshape continued on next page} \\ \hline
+\endfoot
+\hline \hline
+\endlastfoot
+0 & \multicolumn{2}{c}{\bf Parallel beam incident from front ($+$Z-axis)}\\
+  & \multicolumn{2}{c}{      RBEAM, UINC, VINC, WINC}\\
+  & RBEAM   & radius of parallel beam in cm       \\
+  &         & (defaults to the max radius of geometry)\\
+  & UINC,VINC,WINC    & incident x,y,z-axis direction cosines \\
+  %& VINC    & incident y-axis direction cosine\\
+  %& WINC    & incident z-axis direction cosine\\
+  &                & Note: (UINC,VINC,WINC) \\
+  &                & get automatically normalized \\
+  &                 &  defaults to (0.0,0.0,1.0) \\
+\hline
+1 & \multicolumn{2}{c}{\bf Point source on axis incident from front}\\
+  & \multicolumn{2}{c}{      DISTZ, RBEAM, 0, 0}\\
+  & DISTZ   & distance of the point source from the\\
+  &                & front of the target in cm (DEFAULT 100.)\\
+  & RBEAM   & radius of the beam at the front of the\\
+  &                & target in cm (defaults to MAX radius) \\
+\hline 
+2 & \multicolumn{2}{c}{\bf Broad parallel beam from front ($+$Z-axis)} \\
+  & \multicolumn{2}{c}{Basically a one dimensional calculation.} \\
+  & \multicolumn{2}{c}{      0, 0, 0, 0} \\
+ & & No input parameters needed.\\
+\hline
+3 & \multicolumn{2}{c}{\bf Internal uniform isotropically radiating disk of finite size}\\
+  & \multicolumn{2}{c}{      RMINBM, RBEAM, ZSMIN, ZSMAX}\\
+  & RMINBM  & inner radius of source region (inside\\
+  &         & overall geometry)\\
+  & RBEAM   & outer radius of source region (inside\\
+  &         & overall geometry)\\
+  & ZSMIN   & minimum z-coordinate of source \\
+  & ZSMAX   & maximum z-coordinate of source \\
+\hline
+4 & \multicolumn{2}{c}{\bf Central axis depth-dose vs. beam radius}\\
+  & \multicolumn{2}{c}{      RCAXIS, 0, 0, 0}\\
+  & RCAXIS  & radius of central axis scoring zone (cm) \\
+  &         & Radii of scoring zones will be treated as\\
+  &         & beam radii.\\
+\hline
+10& \multicolumn{2}{c}{\bf Parallel beam incident from the side (along $+$Y-axis)}\\
+  & \multicolumn{2}{c}{      XBEAM, ZBEAM, 0, 0}\\
+  & XBEAM   & half-width of the rectangular beam in cm\\
+  &                & (defaults to max radius)\\
+  & ZBEAM   & half-height of the rectangular beam in cm\\
+  &                & (defaults to max)\\
+\hline
+11&\multicolumn{2}{c}{\bf Point source incident from the side}\\
+  &\multicolumn{2}{c}{      DISTRH, XBEAM, ZBEAM, 0}\\
+  &DISTRH   & distance of the source from the middle\\
+  &                & of the target in cm (defaults to 100.)\\
+  &XBEAM    & half-width of the beam at the center of\\
+  &                & the target in cm (defaults to max radius)\\
+  &ZBEAM    & half-height of the beam at the center of\\
+  &                & the target in cm (defaults to max)\\
+\hline
+12&\multicolumn{2}{c}{\bf Point source off axis}\\
+  &\multicolumn{2}{c}{      DISTRH, DISTZ, 0, 0}\\
+  &DISTRH   & distance of the point source off the Z-axis\\
+  &DISTZ    & perpendicular distance of the point source\\
+  &                & from the front face\\
+  &          &if {\tt DISTZ}$>$0 \\
+  &                & point is located in front of front face\\
+  & & if 0 $>$ {\tt DISTZ} $>$ {\tt -(ZPLANE(NPLANE)-ZPLANE(1))}\\
+  &                & point located between front and rear face\\
+  & & {\tt DISTZ} $<$ {\tt -(ZPLANE(NPLANE)-ZPLANE(1))} \\
+  &                & point located rear of rear plane \\
+\hline
+13&\multicolumn{2}{c}{\bf Parallel beam from any angle}\\
+  &\multicolumn{2}{c}{      UINC, VINC, WINC, 0}\\
+  & UINC    & incident x-axis direction cosine\\
+  & VINC    & incident y-axis direction cosine\\
+  & WINC    & incident z-axis direction cosine\\
+  &         & Note: (UINC,VINC,WINC) get automatically\\
+  &         & normalized. Default is (0.0,0.0,1.0)\\
+\hline
+14&\multicolumn{2}{c}{\bf Point source on axis incident from the front}\\
+  &\multicolumn{2}{c}{\bf with all events inside RMINBM not followed} \\
+  &\multicolumn{2}{c}{DISTZ, RBEAM, RMINBM, 0}\\
+  & DISTZ   &  distance of the point source from the \\
+  &         &  front of the target in cm (defaults to 100.)\\
+  & RBEAM   &  radius of the beam at the front of the \\
+  &         &  target in cm (defaults to max radius)\\
+  & RMINBM  &  below this radius, all histories are terminated by\\
+  &         &  the source routines by giving them zero weight. \\
+  &         &  The HOWFAR routines must check for this.\\
+\hline
+15&\multicolumn{2}{c}{\bf Point source incident from any angle}\\
+  &\multicolumn{2}{c}{DIST, ANGLE, 0, 0}\\
+  & DIST    &  distance from the centre of the geometry to the\\
+  &         &  point source (cm)\\
+  & ANGLE   &  angle of rotation around the axis that is parallel \\
+  &         &  to the x axis and passes trough the centre of the \\
+  &         &  geometry (degrees).\\
+  &         &  0 degrees corresponds to source above front face\\
+  &         &  of geometry.\\
+  &         &  Note: The point source must be outside the\\
+  &         &  geometry.\\
+\hline
+16&\multicolumn{2}{c}{\bf Circular or rectangular isotropically-radiating source from any angle}\\
+  &\multicolumn{2}{c}{DIST, ANGLE, TMP1, TMP2}\\
+  & DIST    & distance from the centre of the geometry to the\\
+  &         & centre of the source plane (cm)\\
+  & ANGLE   & angle of rotation of source plane around the axis \\
+  &         & that is parallel to the x axis and passes trough \\
+  &         & the centre of the geometry (degrees). \\
+  &         & Zero degrees corresponds to the\\
+  &         & source incident on the front face of the\\
+  &         & geometry.\\
+  & TMP1    & if $>$ 0 and TMP2 $\leq$ 0: TMP1 = radius of\\
+  &         & ~~~ source (cm)\\
+  &         & if $\geq$ 0 and TMP2 $\geq$ 0: TMP1 = half-width\\
+  &         & ~~~ of source in x direction (cm)\\
+  & TMP2    & if $>$ 0 and TMP1 $\leq$ 0: TMP2 = radius of\\
+  &         & ~~~ source (cm)\\
+  &         & if $\geq$ 0 and TMP1 $\geq$ 0: TMP2 = half-width\\
+  &         & ~~~ of source in y direction (cm)\\
+  &         & Note: if TMP1 $\leq$ 0 and TMP2 $\leq$ 0, then this\\
+  &         & becomes a point source incident from any angle,\\
+  &         & identical to source 12 and 15.\\
+\hline
+17&\multicolumn{2}{c}{\bf Point source on-axis incident from the front (square collimation)}\\
+&\multicolumn{2}{c}{DISTZ, XBEAM, YBEAM, 0}\\
+& DISTZ & distance of source from front of geometry (cm).\\
+&& Defaults to 100 cm.\\
+& XBEAM & half-width in X-direction at front of geometry (cm).\\
+& YBEAM & half-width in Y-direction at front of geometry (cm).\\
+\hline
+20&\multicolumn{2}{c}{\bf Radial distribution input}\\
+  & \multicolumn{2}{c}{This source has no SOURCE PARAMETERS= inputs}\\
+  & \multicolumn{2}{l}{\bf \underline {Additional inputs:}}\\
+  & MODEIN= Local & if radial distribution is to be input\\
+  &               & as part of the .egsinp file\\
+  & MODEIN= External& if the distribution is to be input\\
+  &               & via an external file\\
+  &if MODEIN = Local &  \\
+  & NRDIST       & Number of radial bins in distribution histogram\\
+  & RDISTF       & top of radial bin should be NRDIST values \\
+  & RPDF         & Probability of initial particle being in this bin.\\
+  &              & Probability doesn't need to be normalized\\
+  &              & but it should be in units cm$^{-2}$ \\
+  &              & Should be values for 1 to NRDIST.\\
+  & RDIST IOUTSP= None & No distribution data in output summary\\
+  & ~~~~~~~~~~~~~~~~~~~~~ = Include & include distribution data output summary\\
+  &if MODEIN = External & RDIST FILENAME \\
+  & RDIST FILENAME     & filename(with ext) contains  distribution info\\
+  &                   & in the same format as described above.\\
+  & RDIST IOUTSP & See above\\
+\hline
+21&\multicolumn{2}{c}{\bf Full beam phase space data, incident on front face}\\
+  &\multicolumn{2}{c}{IMODE, NRCYCL, IPARALLEL, PARNUM}\\
+  & IMODE & set to 0 for 7 variables/record: X,Y,U,V,E,WT,LATCH \\
+  &  & set to 2 for 8 variables/record: the above + ZLAST \\
+  & NRCYCL  & no. of times to reuse each particle before\\
+  &         & moving on to the next one.  Thus, each\\
+  &         & particle is used a total of NRCYCL+1 times.\\
+  &         &  Use of NRCYCL is essential for accurate\\
+  &         & statistics when NCASE $>$ no. of particles\\
+  &         & in the phase space file.  If set $\leq$0,\\
+  &         & then NRCYCL is automatically calculated to\\
+  &         & use the entire phase space file with no\\
+  &         & restarts based on NCASE, incident particle\\
+  &         & type, and the number of particles with the\\
+  &         & appropriate charge in the phase\\
+  &         & space file.  Note that the automatic\\
+  &         & calculation of NRCYCL is not done if\\
+  &         & INCIDENT PARTICLE= positron.\\
+  &         & Also, the automatically-calculated value\\
+  &         & of NRCYCL does not take into account\\
+  &         & particles rejected because they miss the\\
+  &         & geometry or because they have crossed the\\
+  &         & phase space plane multiple times.\\
+  & IPARALLEL & set $>$1 if you are splitting the\\
+  &         & simulation into IPARALLEL jobs.  IPARALLEL\\
+  &         & is used with PARNUM (see below) to partition\\
+  &         & a phase space source into IPARALLEL equal\\
+  &         & parts.\\
+  & PARNUM  & For each of the IPARALLEL parallel jobs,\\
+  &         & PARNUM should have a different integer value\\
+  &         & in the range\\
+  &         & range 1$\geq$PARNUM$\leq$PARALLEL.  The\\
+  &         & partition of the phase space source that is\\
+  &         & used for a job is then given by:\\
+  & \multicolumn{2}{c}{(PARNUM-1)*(NCASE\_PHSP/IPARALLEL)$<$NPHSPN$\leq$}\\
+  & \multicolumn{2}{c}{~~~~(PARNUM)*(NCASE\_PHSP/IPARALLEL)}\\
+  &         &  where NCASE\_PHSP is the total number of\\
+  &         & particles in the phsp source and NPHSPN\\
+  &         & is the particle no. chosen.  Note that use of\\
+  &         & IPARALLEL and PARNUM is not necessary if you are\\
+  &         & using the built-in parallel processing functionality\\
+  &         & of these codes.\\
+  & \multicolumn{2}{l}{Note: IPARALLEL and PARNUM are not used with}\\
+  & \multicolumn{2}{l}{the built-in EGSnrc\_MP parallel processing}\\
+  & \multicolumn{2}{l}{functionality.}\\
+  & \multicolumn{2}{l}{\bf \underline {Additional inputs:}}\\
+  & FILSPC=  & Filename (with ext) containing the phase space\\
+  &         & info (max. 80 characters) assigned  to unit 42.\\
+\hline
+22&\multicolumn{2}{c}{\bf Full beam phase space data, incident from any angle/position}\\
+  &\multicolumn{2}{c}{IMODE, DIST, ANGLE, ZOFFSET, NRCYCL,}\\
+  &\multicolumn{2}{c}{IPARALLEL, PARNUM, XOFFSET, YOFFSET}\\
+  & IMODE & set to 0 for 7 variables/record: X,Y,U,V,E,WT,LATCH \\
+  &  & set to 2 for 8 variables/record: the above + ZLAST \\
+  & DIST & distance from source plane to the point\\
+  &      & (x,y,z)=(0,0,ZOFFSET) in cm.  Defined so that,\\
+  &      &  when ANGLE=0, DIST is in the -z direction.\\
+  & ANGLE & angle of rotation about the Z axis (degrees).  \\ 
+  &       &  ANGLE = 0 means particles are incident in the \\
+  &       & +ve z direction.\\
+  & ZOFFSET & defines the z offset of point from which DIST\\
+  &         &  is measured. If $|$ZOFFSET$|$ $>$ 1e4, then it\\
+  &         & defaults to the centre of the geometry.\\
+  & NRCYCL & See source 21 above.\\
+  & IPARALLEL & See source 21 above.\\
+  & PARNUM & See source 21 above.\\
+  & XOFFSET & X offset of source plane.\\
+  & YOFFSET & Y offset of source plane.  X and Y offsets are\\
+  &         & applied before any rotations by ANGLE.\\ 
+& \multicolumn{2}{l}{\bf \underline {Additional inputs:}}\\
+  & FILSPC=  & Filename (with ext) containing the phase space\\
+  &         & info (max. 80 characters) assigned  to unit 42.\\
+\hline
+23&\multicolumn{2}{c}{\bf Full BEAM simulation, incident from any angle/position}\\
+  &\multicolumn{2}{c}{DIST, ANGLE, ZOFFSET, XOFFSET, YOFFSET}\\
+  & DIST & See source 22 above.  Note that the source plane is\\
+  &      & the phase space scoring plane in the BEAM simulation\\
+  &      & being used as a source.  See below for more details.\\ 
+  & ANGLE & See source 22 above.\\
+  & ZOFFSET & See source 22 above.\\
+  & XOFFSET & See source 22 above.\\
+  & YOFFSET & See source 22 above.\\
+& \multicolumn{2}{l}{\bf \underline {Additional inputs:}}\\
+  & BEAM CODE= & The name of the BEAM accelerator code\\
+  &            & being used as a source, including the {\tt BEAM\_}\\
+  &            & prefix (i.e. {\tt BEAM\_accelname}).  This code must\\
+  &            & have been compiled as a shared library (see the BEAMnrc\\
+  &            & manual for information on how to do this) and exist\\
+  &            & as {\tt BEAM\_accelname.so} (for Linux/Unix) or\\
+  &            & {\tt libBEAM\_accelname.dll} (for Windows) in your\\
+  &            & {\tt \$EGS\_HOME/bin/config} directory.\\ 
+  & INPUT FILE= & The name of the input file used for the accelerator\\
+  &             & (no {\tt .egsinp} extension).  This file must exist\\
+  &             & in your {\tt \$EGS\_HOME/BEAM\_accelname} directory and\\
+  &             & must specify output of a phase space file at one scoring\\
+  &             & plane.  Instead of being written to a phase space file,\\
+  &             & particles are extracted and used as source particles upon\\
+  &             & crossing this plane.\\
+  & PEGS FILE= & The name of the pegs4 data set to be used in the BEAM\\
+  &            & simulation (no {\tt .pegs4dat} extension).  The pegs4 data\\
+  &            & must exist in {\tt \$HEN\_HOUSE/pegs4/data} or in your\\
+  &            & {\tt \$EGS\_HOME/pegs4/data} directory.\\
+  & WEIGHT WINDOW= & Set to MIN\_WEIGHT\_23, MAX\_WEIGHT\_23, where\\
+  &            & MIN\_WEIGHT\_23 = min. weight of source particles to use\\
+  &            & (defaults to -1E30) and MAX\_WEIGHT\_23 = max. weight of\\
+  &            & source particles to use (defaults to 1E30).\\
+  &&\\
+  & \multicolumn{2}{l}{Note that the Z-position of the scoring plane, where incident particle}\\
+  & \multicolumn{2}{l}{data is collected, in the BEAM simulation is not passed to the RZ code.}\\
+  & \multicolumn{2}{l}{Thus, similar to a phase space source, the incident position of the source}\\
+  & \multicolumn{2}{l}{plane, defined by {\tt DIST}, {\tt ANGLE}, {\tt ZOFFSET}, {\tt XOFFSET}}\\
+  & \multicolumn{2}{l}{and {\tt YOFFSET}, is independent of the BEAM coordinate system.}\\
+\hline
+\label{tab:srcrz}
+\end{longtable}

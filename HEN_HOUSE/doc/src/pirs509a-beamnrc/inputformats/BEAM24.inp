@@ -1,0 +1,27 @@
+\begin{verbatim}
+                           EGSnrc INPUTS 
+                           *************
+     (modified from the description in $HEN_HOUSE/src/get_inputs.mortran)
+ 
+   The input for parameters associated with EGSnrc follows a format
+   used by all the standard EGSnrc user codes.  The rest of the BEAMnrc
+   input has not been changed because the GUI's make the details of the
+   format irrelevant.
+ 
+   All input associated with selection of EGSnrc transport parameters
+   is not crucial for the execution as there are default values set.
+   Therefore, if some of the input options in this section are
+   missing/misspelled, this will be ignored and defualt parameter assumed
+   As the transport parameter input routine uses get_inputs, a lot
+   of error/warning messages may be produced on UNIT 15, though.
+   If you don't have the intention of changing default settings,
+   simply ignore the error messages.
+ 
+   The delimeters are
+                :start mc transport parameter:
+                :stop mc transport parameter:
+ 
+   Currently, the following options are available (case does not matter and
+              the internal variables are shown in [ ] brackets):
+ 
+\end{verbatim}

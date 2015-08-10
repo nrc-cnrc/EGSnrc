@@ -1,0 +1,31 @@
+\clearpage
+\begin{figure}
+\caption{Portions of output from {\tt tutor5.mortran} \label{fig_tutor5_output}}
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{figure}
+\begin{rawhtml}
+<pre>
+ Start tutor5
+                        |
+                        |
+                        |
+                        |
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ Knock-on electrons can be created and any electron followed down to
+                                          0.189 MeV kinetic energy
+ Brem photons can be created and any photon followed down to      
+                                          0.010 MeV 
+ For  50.0 keV photons incident on 0.5 cm OF H2O
+ with PCUT=0.010 MeV
+
+ Transmitted primaries=                   89.35%  ave energy=     0.050 MeV
+
+ Fraction rayleigh scattering=             0.84%  ave energy=     0.048 MeV
+
+ Fraction compton scattering only=         8.40%  ave energy=     0.046 MeV
+
+
+</pre>
+\end{rawhtml}
+\clearpage

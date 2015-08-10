@@ -1,0 +1,1741 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: changes from EGS4
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Iwan Kawrakow, 2003
+%
+%  Contributors:    Blake Walters
+%                   Frederic Tessier
+%                   Ernesto Mainegra-Hing
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\index{upgrading from EGS4}
+\index{EGS4}
+\index{changes from EGS4}
+
+
+\subsection{Introduction}
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2011/05/02 18:40:33 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/05/02 18:29:12
+}}
+
+Section~\ref{changes_summary} presents a brief summary of the major changes
+in EGS4 found in EGSnrc. More details are found in section~\ref{section_2}
+although not necessarily contrasted to EGS4.  These changes taken together
+represent a major change in the code system. Moreover, we strongly
+advise to use the newer multi-platform EGSnrc version, and to read the
+related user manual, PIRS-877.
+
+Nonetheless, we have tried to make EGSnrc as much as possible compatible 
+with existing EGS4 user codes. A full compatibility 
+could not be achieved because of the various 
+changes and enhancements in the modelling of the 
+underlying physical processes. In addition, we have 
+decided not to support what we now consider bad coding practices,
+especially 
+replacement of EGS internal (private) common blocks or 
+subroutine {\tt COMIN}'s. 
+This will increase the portability and insensitivity 
+of user codes to future changes and enhancements of 
+the system, once they are adapted to EGSnrc. 
+
+\index{incompatibilities!EGS4-EGSnrc}
+In general, the following main incompatibilities may occur 
+in the process of adaptation of user codes to EGSnrc:
+
+\begin{enumerate}
+
+\item
+Incompatibilities due to redefinitions in the user code of EGS internal
+common blocks (\verb+COMIN+s).
+
+\item
+Incompatibilities due to the lack of explicit data typing in any user
+replacement of macro templates used within EGSnrc since EGSnrc uses
+IMPLICIT NONE; everywhere.
+
+\item
+Incompatibilities in the scoring routines due to implicit or explicit 
+assumptions about what particles are in what order on the STACK after a
+given interaction.
+
+\item The lack of a {\tt HOWNEAR} routine if the user code did not use
+PRESTA-I, but otherwise HOWNEAR is used in a compatible manner.
+
+\item
+Incompatibilities (or possibly just lack of efficiency) for user codes
+which implemented their own versions of range rejection, bremsstrahlung
+splitting and/or Russian Roulette, especially range rejection.
+\end{enumerate}
+
+This section of the manual gives guidelines for the adaptation 
+of existing user codes. The next section  
+briefly summarises changes to EGS4 common blocks and 
+subroutines. Section \ref{append} discusses the use of 
+{\tt APPEND} {\em vs} {\tt REPLACE}. Section 
+\ref{implicit} is devoted to the use of explicit data typing. 
+Section \ref{scoring} deals with the resolution of 
+incompatibilities in the user scoring routine 
+{\tt AUSGAB}. Possible approaches for the 
+coding of {\tt HOWNEAR} and the options available 
+if this task is too complicated are given in Sec. \ref{hownear_change}. 
+Section \ref{range_change} deals with the use of electron range rejection, 
+Sec. \ref{parameter_input} with the input of transport options. 
+Section \ref{instructions} presents a ``cook book'' fashion guide 
+for the adaptation procedure. Finally, section 
+\ref{adapt_xyzdos} shows an example for the adaptation of the user 
+code {\tt XYZDOS}. 
+ 
+\subsection{Short description of changes}
+\label{changes}
+
+\subsubsection{The system}
+
+Most of the NRCC changes/additions to EGS4 over the years have been included 
+in the standard EGSnrc files, 
+\begin{flushleft}
+{\tt egsnrc.macros~} \quad \quad standard EGSnrc macros and replacements\\
+{\tt egsnrc.mortran} \quad \quad standard EGSnrc subroutines.
+\end{flushleft}
+The use of the {\tt nrcc4mac.mortran}, 
+{\tt presta.macros} and {\tt presta.mortran} files is therefore 
+not necessary any more. In addition, {\tt BLOCK DATA}, 
+previously in {\tt egs4blok.mortran}, is included in {\tt egsnrc.mortran}.
+
+\subsubsection{EGS4 COMMON blocks}
+
+\begin{itemize}
+\item
+{\tt COMIN/BREMPR/} was modified to provide 
+data for the new sampling techniques employed 
+in the routines {\tt BREMS} and {\tt PAIR}. 
+In addition, the material composition which 
+is needed for the bremsstrahlung and pair angular selection 
+macros (NRC extensions), is included now by default. 
+{\tt BREMPR} also holds flags that determine the 
+angular selection scheme ({\tt IBRDST} and {\tt IPRDST} 
+and the bremsstrahlung cross section employed, ({\tt ibr\_nist});
+\index{BREMPR} \index{IBRDST} \index{IPRDST} \index{ibr\_nist}
+
+\item
+{\tt COMIN/ELECIN/}: Unused variables were removed from the 
+definition of this COMIN. Additional variables that 
+hold information necessary for the modified implementation 
+of the fictitious cross section method, electron range 
+calculations and multiple elastic scattering are included 
+in {\tt COMIN/ELECIN/};
+\index{ELECIN}
+
+\item
+{\tt COMIN/EPCONT/}: {\tt BETA2} and {\tt TSCAT} were removed 
+(not needed), {\tt IAUSFL} was expanded to 28 elements in order 
+to define calls to the scoring routine after various 
+relaxation transitions;
+\index{relaxation} \index{EPCONT} \index{BETA2} \index{TSCAT}
+\index{IAUSFL}
+
+
+\item
+{\tt COMIN/MULTS/} and {\tt COMIN/PATHCM/} which were needed to implement
+\Mol's multiple scattering theory and path-length corrections, are not
+necessary in the new system and are therefore removed;
+\index{PATHCM} \index{MULTS}
+
+\item
+EGSnrc provides two random number generators:
+{\tt RANMAR}\cite{MZ91,Ma90a} and {\tt RANLUX}\cite{La94,Ja94}. 
+They are included
+via the configuration file, {\tt ranmar.macros}
+(macros) and {\tt ranmar.mortran} (initialisation routine)
+are needed in order to use {\tt RANMAR}, {\tt ranlux.macros}
+(macros) and {\tt ranlux.mortran} (initialisation and
+sampling routines) are needed for {\tt RANLUX}. The definition
+of {\tt COMIN/RANDOMM/} is removed from the main system and 
+included in the {\tt ranmar.macros} or {\tt ranlux.macros} 
+files. An additional consequence is that the random 
+number generator is no longer initialised in {\tt HATCH}, 
+the user must provide the initialisation in their user code (although
+RANLUX is self-initialising to a default luxury level of 1 and fixed
+initial random number seed). 
+\index{RANMAR} \index{RANLUX}
+
+
+\item
+The NRCC additions {\tt LATCH} and {\tt LATCHI}
+to {\tt COMIN/STACK/} are now included by default. In addition,
+a variable {\tt NPold}, which points to the location of the particle
+initiating a given discrete interaction, i.e. the top
+of the stack before the last interaction, is included in {\tt COMIN/STACK/}.
+\index{LATCH} \index{LATCHI} \index{NPold}
+
+\item
+{\tt COMIN/THRESH/}: removed {\tt ESCD2} (not needed);
+\index{THRESH} \index{ESCD2}
+
+\item
+{\tt COMIN/USEFUL/}: removed {\tt IBLOBE} which is not needed 
+with the new implementation of atomic relaxations;
+\index{USEFUL} \index{IBLOBE}
+
+\end{itemize}
+
+\subsubsection{NRC extensions to EGS4}
+
+\begin{itemize}
+\item
+{\tt COMMON/EDGE/} used for fluorescent X-ray emission 
+is now a standard EGSnrc common block which is included 
+in {\tt \$COMIN-PHOTO} and {\tt \$COMIN-BLOCK}. 
+It is completely different from the definition found 
+in {\tt nrcc4mac.mortran} as EGSnrc models K,L and M 
+fluorescence and Auger and Coster-Kronig relaxation transitions.
+\index{EDGE} \index{nrcc4mac.mortran}
+
+\item
+The common block {\tt /USERXT/IPHTER(\$MXREG)} which
+used to turn on photo-electron 
+angular sampling and was defined to be part of {\tt COMIN/USER-MISC/} 
+in {\tt nrcc4mac.mortran},  
+is now a part of a standard EGSnrc common block. The variable {\tt IPHTER}
+is included in {\tt COMMON/EDGE/} and should be discarded from definitions 
+and replacements in user codes;
+\index{IPHTER} \index{EDGE} \index{COMIN!EDGE}
+
+\item
+Electron transport parameters such as the maximum geometrical step-size 
+({\tt SMAX} or {\tt SMAXIR(\$MAXRG)}), the maximum energy loss per step 
+({\tt ESTEPR(\$MAXRG)}) etc., have been frequently included in 
+{\tt COMIN/USER/} in EGS4 user codes. Most electron transport 
+parameter are now included in {\tt COMIN/ET-Control/};
+\index{SMAX} \index{SMAXIR} \index{ESTEPR} \index{ET-Control}
+
+\end{itemize}
+
+\subsubsection{New EGSnrc COMMON blocks of interest}
+
+\begin{itemize}
+\item
+{\tt COMIN/NIST-BREMS/}: contains information necessary 
+to sample the energy of brem from the NIST 
+cross section data base, which is the basis for ICRU radiative 
+stopping powers;
+\index{COMIN!NIST-BREMS} \index{ICRU}
+
+\item
+{\tt COMIN/COMPTON-DATA/}: contains information necessary 
+for the modelling of binding effects and Doppler broadening in 
+incoherent photon scattering events;
+\index{COMIN!COMPTON-DATA}
+
+\item
+{\tt COMIN/ET-Control/}: combines all variables that determine 
+electron transport settings, such as maximum fractional 
+energy loss per step, maximum first elastic moment per step, 
+maximum geometrical step-size restriction, boundary crossing 
+algorithm, electron-step algorithm, etc;
+\index{COMIN!ET-Control}
+
+\item
+{\tt COMIN/MS-Data/}: contains information necessary for 
+the new multiple scattering theory based on the screened 
+Rutherford cross section;
+\index{COMIN!MS-Data}
+
+\item
+{\tt COMIN/Spin-Data/}: data for the additional rejection 
+loop in the multiple scattering routine that is necessary 
+to take into account spin effects;
+\index{COMIN!Spin-Data}
+
+\item
+{\tt EGS-VARIANCE-REDUCTION}: A few variance reduction 
+techniques that have proved to be very useful for applications 
+we are interested in at the National Research Council 
+have been implemented internally. The {\tt COMIN} 
+{\tt EGS-VARIANCE-REDUCTION} contains flags and 
+variables necessary for the operation of these variance 
+reduction techniques.
+\index{COMIN!EGS-VARIANCE-REDUCTION}
+\end{itemize}
+
+\subsubsection{Explicit data typing}
+
+\label{types}
+In all of the EGSnrc routines there is a macro {\tt \$IMPLICIT-NONE;}
+followed by a macro {\tt \$DEFINE-LOCAL-VARIABLES-XXXX;}, {\tt
+XXXX} denoting the subroutine name. The default replacement is
+{\tt implicit none} to allow for explicit data typing.  The {\tt
+\$DEFINE-LOCAL-VARIABLES-XXXX;} macros, to be found in {\tt
+egsnrc.macros}, define all of the local variables in the corresponding
+routines. See section~\ref{implicit} below about dealing with these features.
+\index{\$IMPLICIT-NONE} \index{\$DEFINE-LOCAL-VARIABLES-XXXX}
+\index{explicit data typing}
+
+\subsubsection{Changes in EGS4 subroutines}
+
+\index{EGS4!changes in subroutines}
+Details concerning the following changes are contained in
+section~\ref{section_2} of this manual.
+
+\begin{itemize}
+\item
+{\tt ANNIH}: Now implements radiative splitting internally, 
+the time consuming evaluation of a logarithm 
+was taken out of the main sampling loop.
+\index{ANNIH}
+
+\item
+{\tt BHABHA}: No changes compared to EGS4 version 3.0 
+(but note there was a sampling bug present in older 
+EGS4 distributions\cite{Bi96b})
+\index{BHABHA - subroutine}
+
+\item
+{\tt BLOCK DATA}: Numerous changes to provide initialisations for EGSnrc
+additions.  \index{BLOCK DATA}
+
+\item
+{\tt BREMS}: There is a bug in the EGS4 sampling algorithm which shows
+up only if the electron kinetic energy is not much larger than the
+bremsstrahlung production threshold {\tt AP}. The sampling algorithm
+was completely recoded to remove the bug and increase the efficiency.
+Radiative splitting is implemented internally, the bremsstrahlung angular
+selection macro (NRC extension) is modified to allow for the use of the
+leading term of the angular distribution, the EGS4 fixed angle selection
+scheme is removed.  The new {\tt BREMS} routine can also use the NIST
+bremsstrahlung cross section data base to sample photon energies if the
+flag {\tt ibr\_nist} is set to 1.
+\index{BREMS}
+
+
+\item
+{\tt COMPT}: Completely recoded to take into account binding 
+effects and Doppler broadening in incoherent scattering events.
+\index{COMPT}
+\index{ELECTR}
+\item
+{\tt ELECTR}: Completely recoded to include the 
+improvements in the implementation of the condensed history 
+technique some of which have become known as PRESTA-II. 
+\item
+{\tt HATCH}: Now calls several additional subroutines 
+which read in data and perform initialisations necessary 
+for the EGSnrc enhancements.
+\index{HATCH}
+
+\index{MOLLER}
+\item
+{\tt MOLLER}: No changes to the EGS4 version 3.0 
+(but note the M{\o}ller bug present in older 
+EGS4 distributions\cite{Bi96b}).
+
+\item
+{\tt MSCAT}: Completely recoded to implement the 
+new exact multiple scattering theory.
+\index{MSCAT}
+
+\index{PAIR}
+\item
+{\tt PAIR}: Sampling technique modified to make it 
+more efficient at photon energies below 20-30 MeV. 
+Pair production is now skipped if the electron Russian Roulette 
+flag is set and the pair electrons are selected to be ``killed'' 
+(for efficiency).
+
+\item
+{\tt PHOTO:} Completely recoded. When relaxation is being modelled, 
+in the case of mixtures, {\tt PHOTO}
+explicitely samples the atomic number of the element involved in the 
+interaction and explicitly selects the shell. 
+This prevents the local absorption of all sub-K-shell 
+photons typical for EGS4.
+\index{PHOTO}
+
+\index{EDGSET}
+\item
+{\tt EDGSET}: Completely recoded, reads in the data necessary 
+for the implementation of K,L,M shell atomic relaxations.
+
+
+\item
+{\tt PHOTON}: Only a minor change to reflect the fact that, 
+due to the internal implementation of variance reduction techniques, 
+after pair events the top particle is not necessarily an electron 
+or a positron.
+\index{PHOTON}
+
+\index{SHOWER}
+\item
+{\tt SHOWER}: No changes
+
+\index{UPHI} \index{sine evaluation}
+\item
+{\tt UPHI}: Modified to implement a more efficient azimuthal 
+angle sampling algorithm. The use of interpolation tables 
+for the evaluation of sines and cosines is disabled by default. 
+Note, however, that the calculation of a sine and a cosine is 
+necessary only after pair events in EGSnrc. It is planned 
+that the next release of EGSnrc will sample the pair angle cosines 
+directly so that the issue of trigonometric evaluations will become 
+entirely irrelevant.
+\end{itemize}
+
+\subsubsection{New EGSnrc subroutines}
+\index{new subroutines in EGSnrc}
+
+\begin{itemize}
+\item
+{\tt fix\_brems}: Re-calculates some quantities in 
+the common block {\tt BREMPR} for use with the 
+new {\tt BREMS} sampling algorithm.
+\item
+{\tt init\_compton}: Reads in data necessary for 
+the modelling of binding effects and Doppler broadening 
+in incoherent scattering events.
+\item
+{\tt mscati}: Performs various initialisations such as 
+the calculation of maximum step-size, the calculation 
+of the maximum electron/positron cross section per 
+unit energy loss (necessary for the modified implementation of 
+the fictitious cross section method) and calls the multiple scattering 
+initialisation routines.
+\item
+{\tt spin\_rejection}: A function that returns the 
+value of the rejection function due to spin effects for the 
+current step-length, material, energy, and scattering angle.
+\item
+{\tt sscat}: Samples an elastic scattering angle from the 
+single elastic scattering cross section.
+\item
+{\tt init\_ms\_SR}: Reads-in and initialises data necessary to sample 
+multiple scattering angles from the MS theory based on the 
+screened Rutherford cross section.
+\item
+{\tt init\_spin}: Reads in and initialises data necessary to 
+sample multiple scattering angles when spin effects are taken 
+into account.
+\item
+{\tt set\_spline}: An auxiliary subroutine which sets cubic 
+spline interpolation coefficients.
+\item
+{\tt spline}: An auxiliary function which performs 
+a cubic spline interpolation. The spline coefficients 
+must have been set with {\tt set\_spline}.
+\item
+{\tt msdist\_pII}: Performs a condensed history step 
+using the improved electron-step algorithm ({\em i.e.} 
+samples a multiple scattering angle and  the final 
+position, given a path-length and energy loss).
+\item
+{\tt msdist\_pI}: Performs a condensed history step 
+\`{a} la PRESTA.
+\item
+{\tt RELAX}: Performs the de-excitation cascade of K,L,M and 
+N shell vacancies.
+\item
+{\tt init\_nist\_brems}: Reads-in and initialises data necessary 
+for the sampling of brems energies from the NIST 
+cross section data base.
+\item
+{\tt prepare\_alias\_table}: Prepares an alias sampling 
+table using linear interpolation between data given 
+in the arrays {\tt xs\_array} (abscissas) and {\tt ys\_array} 
+(ordinates) which both have the dimension {\tt (0:nsbin)}. 
+\item
+{\tt alias\_sample1}: Employs a modified version of 
+the alias sampling technique to sample a random 
+quantity from an alias table previously initialised with 
+{\tt prepare\_alias\_table}. Used for sampling bremsstrahlung 
+energies from the NIST cross section data base.
+\item
+{\tt gauss\_legendre}: Calculate abscissas and 
+weights for a Gauss-Legendre quadrature.
+\item
+{\tt vmc\_electron}: Implements the VMC electron transport 
+algorithm (much faster but not so general). 
+Not distributed with the system for 
+commercial reasons regarding the clinical implementation 
+of Monte Carlo treatment planning. 
+\index{VMC}
+\end{itemize}
+
+\subsubsection{Changes since 2005 printing}
+
+In addition to the changes from EGS4 to EGSnrc outlined above, there
+have been further changes to the EGSnrc system since the 2005
+printing of this manual.  They are summarized in this section.
+
+\paragraph{Changes to existing COMMON blocks}
+\index{COMMON blocks!changes since 2005}
+
+\begin{itemize}
+
+\item
+\index{COMIN/COMPTON-DATA}\index{eno\_atbin\_array}
+\index{radc\_flag}
+{\tt COMIN/COMPTON-DATA}: Added an alias table, 
+{\tt eno\_atbin\_array}.  Allows the {\tt COMPT} subroutine to pick the 
+interacting shell instead of looking it up sequentially each time.  This
+makes simulating Compton interactions more efficient.  Also added the
+flag {\tt radc\_flag} for turning on radiative Compton corrections.
+
+\index{COMIN/ELECIN}
+\index{sig\_ismonotone}
+\item {\tt COMIN/ELECIN}: Added logical variable
+{\tt sig\_ismonotone} which is set to {\tt .true.} if the electron
+cross section is an increasing function of energy.  
+
+\item
+\index{COMIN/CH\_steps}
+\index{is\_ch\_step}
+{\tt COMIN/CH\_steps}: Added a boolian variable {\tt is\_ch\_step} which
+is set to {\tt .true.} if the current electron step is a condensed
+history ({\em i.e.} PRESTA-II) step.  Useful for some functions in
+user codes and for counting in general.
+
+\item 
+\index{COMIN/EPCONT}
+\index{x\_final}\index{y\_final}\index{z\_final}
+\index{u\_final}\index{v\_final}\index{w\_final}
+{\tt COMIN/EPCONT}: Added real variables {\tt x\_final}, {\tt y\_final}, {\tt z\_final},
+{\tt u\_final}, {\tt v\_final}, {\tt w\_final}, which store the final
+position and direction of an electron at the end of its step.  Of use 
+in codes that do sub-voxel dose scoring. 
+
+\item
+\index{COMIN/MEDIA}
+\index{eii\_xfile}\index{photon\_xsections}\index{comp\_xsections}
+\index{apx}\index{upx}
+{\tt COMIN/MEDIA}: Added character variables, {\tt eii\_xfile},
+{\tt photon\_xsections} and {\tt comp\_xsections} which store the names
+(or prefixes) of the data files for electron impact ionization, photon
+cross sections and Compton cross sections respectively.  Also added 
+real variables, {\tt apx}, {\tt upx} which store photon cross section
+thresholds.
+
+\end{itemize}
+
+\paragraph{Changes to existing subroutines}
+\index{subroutines!changes since 2005}
+
+\begin{itemize}
+
+\item
+\index{SUBROUTINE BREMS}\index{ibr\_nist}
+{\tt BREMS}: Added option for {\tt ibr\_nist}=2: includes effect of
+electron-electron bremsstrahlung.
+
+\item
+\index{SUBROUTINE COMPT}
+{\tt COMPT}: Changes to allow user to simulate radiative Compton corrections.
+Also, some speed improvements.
+
+\item
+\index{SUBROUTINE ELECTR}
+{\tt ELECTR}: In single-scattering mode, the sampling of the electron
+MFP has been changed to eliminate errors when {\tt lambda} $>$ {\tt lambda\_max}.  Also now calculates energy loss to {\tt AE} instead of 0 in case step
+is longer than range to {\tt AE}.
+
+\item
+\index{init\_compton}
+{\tt init\_compton}: Modifications for more efficient Compton sampling.
+
+\item
+\index{msdist\_PI}\index{msdist\_PII}
+{\tt msdist\_PI} and {\tt msdist\_PII}: Fixed a bug which occurred
+when particles were traveling exactly backwards ({\tt w(np)}=-1), the
+transport distance and direction was reversed.
+
+\item 
+\index{init\_nist\_brems}\index{ibr\_nist}
+{\tt init\_nist\_brems}: Modifications to allow reading in of
+bremsstrahlung cross section data that takes into account electron-electron
+bremsstrahlung ({\tt ibr\_nist}=2).
+
+\end{itemize} 
+ 
+
+\paragraph{New COMMON blocks of interest}
+\index{COMMON blocks!new since 2005}
+
+\begin{itemize}
+\index{COMIN/EII-DATA}
+\item
+{\tt COMIN/EII-DATA/}: Contains cross section 
+data necessary for modeling electron
+impact ionization.  Also, contains the variable {\tt eii\_flag} which
+is used to turn electron impact ionization on or off.
+
+\index{COMIN/RAYLEIGH\_INPUTS}
+\item
+{\tt COMIN/RAYLEIGH\_INPUTS/}: Contains arrays of medium names and
+file names for custom molecular form factor data when modeling
+Rayleigh scattering.
+
+\index{COMIN/RAYLEIGH\_SAMPLING}
+\item
+{\tt COMIN/RAYLEIGH\_SAMPLING/}: Arrays storing data required to
+simulate Rayleigh events.
+
+\index{COMIN/EGS-IO}
+\item
+{\tt COMIN/EGS-IO/}: Contains file names, unit numbers for I/O and
+data files used during an EGSnrc system.  Also contains variables used
+for parallel runs.  User codes commonly access these variables.
+
+\index{COMIN/RAD\_COMPTON}
+\item 
+{\tt COMIN/RAD\_COMPTON/}: Contains cross-section arrays necessary for
+the modeling of radiative Compton corrections
+({\em i.e.} if {\tt radc\_flag}=1) .  Note that this common
+\index{rad\_compton1.mortran}\index{radc\_flag}
+block is defined in a separate file, {\tt \$HEN\_HOUSE/src/rad\_compton1.mortran} which must be included in the {\tt SOURCES} list 
+(defined in {\tt Makefile} or {\tt user\_code.make}) of the user code if
+radiative Compton corrections are to be used. 
+
+\item
+{\tt \$COMIN-INIT-NIST-BREMS}: a macro to replace list of {\tt COMINS}
+at the top of subroutine {\tt init\_nist\_brems}.  Allows access to
+the variable {\tt ibr\_nist} through C++ codes.
+
+\end{itemize}
+
+\paragraph{New subroutines}
+\index{subroutines!added since 2005}
+
+\begin{itemize}
+
+\item 
+\index{ANNIH\_AT\_REST}
+{\tt ANNIH\_AT\_REST}: Used to be handled in the {\tt ELECTR} subroutine.
+Putting it on its own allows positron annihilation at rest to be initiated
+from within the {\tt AUSGAB} of a user code.
+
+\item
+\index{egs\_init\_user\_photon}
+{\tt egs\_init\_user\_photon}: Subroutine which opens the photon
+cross section data files, including user-supplied Compton cross sections,
+if applicable, and fills cross section arrays for each medium.  Previously
+this was done in {\tt HATCH}.  Now this subroutine is called by {\tt HATCH}.
+Implemented at the same time as the feature allowing the user to select
+different photon cross sections.
+
+\item
+\index{egsi\_get\_data}
+{\tt egsi\_get\_data}: Subroutine called by
+{\tt egs\_init\_user\_photon} which actually reads the photon
+cross section data from the applicable files.
+
+\item 
+\index{radc\_init}\index{sample\_double\_compton}
+\index{rad\_compton1.mortran}\index{init\_compton}
+{\tt radc\_init} and {\tt sample\_double\_compton}: Subroutines contained
+in the file\\ {\tt \$HEN\_HOUSE/src/rad\_compton1.mortran} used to apply
+radiative corrections to Compton events.  {\tt radc\_init} is called by
+the subroutine {\tt init\_compton} at the beginning of a run and reads
+in the radiative Compton data from {\tt \$HEN\_HOUSE/data/rad\_compton1.data}.
+{\tt sample\_double\_compton} is called by the subroutine {\tt COMPT} to
+simulate double Compton events if radiative corrections are turned
+on ({\tt radc\_flag}=1).
+
+\item 
+\index{egs\_scale\_photon\_xsection}
+{\tt egs\_scale\_photon\_xsection}: Subroutine to allow scaling of 
+photon cross sections by a given factor for a given medium.  Not sure if
+this is currently used.
+
+\item
+\index{eii\_init}
+{\tt eii\_init}: Subroutine to open data file used to calculate
+cross sections for electron impact ionization.  Called by subroutine
+{\tt HATCH}.
+
+\item 
+\index{egs\_init\_rayleigh}\index{egs\_rayleigh\_sigma}
+\index{egs\_rayleigh\_sampling}\index{prepare\_rayleigh\_data}
+{\tt egs\_init\_rayleigh}, {\tt egs\_rayleigh\_sigma},
+{\tt egs\_rayleigh\_sampling} and {\tt prepare\_rayleigh\_data}:
+Subroutines/functions for the new Rayleigh implementation. 
+{\tt egs\_init\_rayleigh} is called from {\tt egs\_init\_user\_photon}
+and is used to calculate Rayleigh cross sections from either user-supplied
+form factor data or from the default atomic form factors.
+{\tt egs\_rayleigh\_sigma} is a real function, called by
+{\tt egs\_init\_rayleigh} used to calculate the Rayleigh cross
+section in barns.  {\tt egs\_rayleigh\_sampling} is called by
+subroutine {\tt PHOTON} to simulate the Rayleigh interaction.
+{\tt prepare\_rayleigh\_data} is a subroutine called by
+{\tt egs\_init\_rayleigh} to put the Rayleigh data in a form
+suitable for run-time sampling. 
+
+\end{itemize}
+
+\paragraph{{\tt \$egs\_info}, {\tt \$egs\_fatal} and {\tt \$egs\_warning}}\hfill\\
+\index{\$egs\_info}\index{\$egs\_fatal}\index{\$egs\_warning}
+
+In addition, the current release of EGSnrc replaces outputs to
+STDOUT previously coded with {\tt write(6,*)} statements with 
+calls to new {\tt \$egs\_info} (for information or echoing of input),
+{\tt \$egs\_fatal} (for fatal error messages) and 
+{\tt \$egs\_warning} (for non-fatal warning messages).  This has made it
+easier to assign a unit number other than 6 to the {\tt .egslog} file, which
+is necessary in the case of, say, a BEAMnrc shared library source. 
+ 
+\subsection{{\tt REPLACE} {\it vs} {\tt APPEND}}
+\label{append}
+\index{REPLACE vs APPEND}
+\index{APPEND vs REPLACE}
+
+It seems to have been a common practise that in user codes, standard 
+EGS4 comin's and common's are replaced by user definitions. 
+A typical example is the inclusion of {\tt COMIN/GEOM/} in 
+{\tt \$COMIN-PHOTON} in order to implement photon interaction 
+forcing (this is accomplished by the appropriate replacement 
+of {\tt \$SELECT-PHOTON-MFP}). The replacement
+\begin{flushleft}
+{\tt
+REPLACE \{\$COMIN-PHOTON;\} WITH\\
+\{;COMIN/DEBUG,BOUNDS,GEOM,MEDIA,MISC,EPCONT,PHOTIN,STACK,THRESH,\\
+\quad \quad UPHIOT,USEFUL,USER,RANDOM/;\} }
+\end{flushleft}
+({\em e.g.} in {\tt CAVRZ}) has the obvious disadvantage that if 
+the default definition of {\tt \$COMIN-PHOTON} is changed 
+in a new EGS release 
+({\em e.g.} in order to include new common blocks necessary 
+to model photo-nuclear reactions), the user code will not work 
+properly with the updated system (because the new common blocks 
+are missing from  {\tt \$COMIN-PHOTON}). If we compare the 
+above replacement with the default definition of 
+{\tt \$COMIN-PHOTON} in {\tt egs4mac.mortran}, we see that the only 
+difference is the inclusion of {\tt COMIN/GEOM/}! This 
+task can be accomplished by the use of {\tt APPEND},
+\begin{flushleft}
+{\tt
+APPEND \{;COMIN/GEOM/;\} TO \{\$COMIN-PHOTON;\} }.
+\end{flushleft}
+This technique has the advantage of making the user code 
+independent of changes/updates in the EGS system. 
+We therefore strongly recommend the use of {\tt APPEND} 
+instead of {\tt REPLACE}, not only for the adaptation process but 
+also for the writing of new user codes. In fact, the 
+misuse of the mortran {\tt REPLACE} capability was one 
+of the main source for coding efforts necessary to adapt 
+NRC user codes to the EGSnrc system. 
+
+Note that when you {\tt APPEND} something to another macro, the other macro
+MUST BE DEFINED FIRST. In the above example, the {\tt APPEND} statement must
+occur after the definition of {\tt \$COMIN-PHOTON}.  
+
+\subsection{Use of explicit data typing}
+\label{implicit}
+\index{implicit data typing}
+\index{explicit data typing}
+
+The FORTRAN ``advantage'' of pre-defined data types for 
+variables frequently leads to programming errors that are 
+sometimes difficult to find (such as typos). 
+The EGS4 system is well benchmarked 
+and therefore one can be quite confident that there are no 
+such bugs in the EGS4 routines. However, the 
+redefinition of standard EGS macros such as 
+{\tt \$SELECT-PHOTON-MFP, \$SELECT-ELECTRON-MFP, 
+\$USER-RANGE-DISCARD,\$CALL-HOWNEAR,\\ \$PARTICLE-SELECTION-XXXX} 
+({\tt XXXX} stands for a subroutine name) introduces the possibility 
+that EGS internal variables are used and eventually changed in 
+these macros. The easiest way to avoid conflict of variables is 
+to always use separate routines to perform the tasks of the 
+above macros, {\em e.g.}
+\begin{flushleft}
+{\tt REPLACE \{\$SELECT-PHOTON-MFP;\} WITH \\
+\{dpmfp = select\_photon\_mfp(gle,x(np),y(np),z(np),u(np),v(np),w(np),ir(np));
+\} }\\
+\end{flushleft}
+
+\noindent
+(this will also make unnecessary the inclusion of 
+{\tt COMIN/GEOM/} into {\tt \$COMIN-PHOTON}). In terms of efficiency,  
+use of routine calls instead of macros is not crucial as 
+modern compilers will inline the routine if it is simple enough 
+(and if the routine is not inlined, then the overhead 
+due to a routine call is most likely to be negligible compared 
+to the time necessary to execute the routine).  
+
+Another way of preventing conflict of variables is to make 
+use of the explicit data typing introduced into the EGSnrc system 
+(see section \ref{types}). In order to do so, all macro variables 
+must be defined in the user code using the {\tt APPEND} statement, 
+{\em e.g.}
+\begin{flushleft}
+{\tt 
+APPEND \{;\\
+\$REAL real\_var1,real\_var2,...;\\
+\$INTEGER int\_var1,int\_var2,...; \}
+\tt TO\\
+\{\$DEFINE-LOCAL-VARIABLES-XXXX;\} }\\
+\end{flushleft}
+\index{\$DEFINE-LOCAL-VARIABLES-XXXX}
+
+\noindent
+Here {\tt \$REAL} and {\tt \$INTEGER} are macros defined in {\tt egsnrc.macros} 
+with the default replacement {\tt real*4} and {\tt integer*4} and 
+{\tt XXXX} stands for the name of the subroutine where the macro 
+is placed (if 
+double precision and logical variables are used as well, they of course 
+have to be defined too). If it happens that the macro uses EGSnrc internal 
+variables that are already defined in 
+{\tt \$DEFINE-LOCAL-VARIABLES-XXXX} or one of the common blocks, 
+a good FORTRAN compiler will 
+complain about multiple definition of variables\footnote{
+Note, however, that the warning/error messages can not 
+always be immediately attributed to the multiple definition of 
+a variable. The GNU g77 compiler, for instance, takes out 
+a variable, declared as a member of a common block and then re-declared,  
+out of the common block, and then prints warnings that the 
+common block has different lengths at different places of the 
+program!}  
+
+Note also that the use of explicit data typing together with the 
+{\tt \$REAL} macro allows for the easy switch to double precision,  
+if double precision turns out to be important for your 
+application ({\em e.g.} high energy applications are good 
+candidates for use of double precision). If you want your 
+application to produce the same history sequence on different 
+machines, double precision is a good idea, too). 
+\index{double precision}
+\index{explicit data typing}
+
+We strongly recommend the use of explicit data typing 
+in EGSnrc user codes. However,  if you are confident 
+that your macro replacements and main code do not 
+contain collisions with EGSnrc internal variables and 
+you are too lazy to declare all variables used, the 
+simplest approach  is to include the statement 
+\begin{flushleft}{\tt
+REPLACE \{\$IMPLICIT-NONE;\} WITH \{;\} }
+\end{flushleft}
+
+\noindent
+at the beginning of your user code.
+
+
+\subsection{The scoring routine}
+\label{scoring}
+
+It is impossible to predict all possible applications of a coupled
+electron photon Monte Carlo simulation package and therefore it is
+impossible to give guidelines for the adaptation of all user codes
+available. We believe, however, that the only problems that may arise
+in {\tt AUSGAB} are problems related to assumptions about the outcome
+of a particular interaction made in the coding of the scoring routine.
+
+As an example, consider 
+a call to {\tt AUSGAB} after Compton 
+events in order to flag scattered photons 
+(so that, for instance, dose due to scattered photons can 
+be scored separately).  A typical implementation is the 
+following piece of code in {\tt AUSGAB}:
+\begin{flushleft}{\tt
+IF(IARG = 18) [ "a Compton event just occurred"\\
+\quad IF(IQ(NP) = -1) [ LATCH(NP-1) = 1; "photon is at NP-1"] \\
+\quad ELSE [ LATCH(NP) = 1; "photon is at NP" ] \\
+] }
+\end{flushleft}
+
+\noindent
+If binding effects are turned on in EGSnrc, the 
+above may lead to unpredictable results because the 
+outcome of a Compton event may be any one of the 
+following:
+\begin{enumerate}
+\item
+The original photon, if the interaction was rejected 
+due to binding effects
+\item
+A scattered photon and a Compton electron, if the 
+interaction took place and no vacancy with a binding 
+energy above the specified transport threshold energies 
+({\tt ECUT} and {\tt PCUT}) was created 
+\item
+A scattered photon, a Compton electron and one or more 
+relaxation particles.
+\end{enumerate}
+If, for instance, the interaction was rejected and the photon 
+was the only particle on the stack ({\tt NP=1}), the 
+above code will override a portion of the memory 
+leading to an unpredictable outcome of the simulation. 
+Problems of that type can be resolved by including 
+a loop over all particles from {\tt NPold} (the stack pointer 
+before the last interaction) to {\tt NP} (the current stack 
+pointer). In the current EGSnrc version problems may arise 
+only after Compton scattering and photo-electric absorption. 
+However, to guarantee compatibility of your user code 
+to future EGSnrc releases, it is a good idea to 
+{\em always} use a loop over all particles created 
+and not assume a certain outcome of interactions. 
+The implementation of electron impact ionization, which 
+will affect the routines {\tt MOLLER} and {\tt BHABHA}, is scheduled 
+for the next EGSnrc release, 
+if we one day decide to explicitely simulate triplet 
+production and large energy transfer electron-electron bremsstrahlung, 
+the outcome of {\tt PAIR} and {\tt BREMS} will also become unpredictable. 
+
+The above piece of code is adapted to EGSnrc using
+\begin{flushleft}{\tt
+IF( iarg = 18 ) [ "A Compton event has occurred" \\
+\quad IF( NP > NPold ) [ "i.e. the interaction really took place" \\
+\quad \quad DO ip = NPold, NP [
+IF( iq(ip) = 0 ) latch(ip) = 1; ] ] ] } 
+\end{flushleft}
+Note that this coding defines fluorescent photons as scattered photons and
+only works if Russian Roulette is not being played (since if it were, all
+electrons might be gone and {\tt NP = NPold} even when the interaction took
+place). To
+explicitly  flag only the Compton scattered photons one could use:
+\begin{flushleft}{\tt
+IF( iarg = 18 ) [ "A Compton event has occurred" \\
+\quad IF( NP > NPold ) [ "i.e. the interaction really took place" \\
+\quad \quad IF( iq(NPold) = 0 ) latch(NPold) = 1; ] ]  }
+\end{flushleft}
+which makes use of the fact that the scattered photon is always at {\tt
+NPold} but also makes the assumption that Russian Roulette is not being
+played on the charged particles (see
+section~\ref{stack_status}, page~\pageref{stack_status} for more
+details -- the variable {\tt i\_survived\_RR} allows these cases to be
+distinguished).
+\index{Russian Roulette} 
+
+
+\subsection{\tt HOWNEAR}
+\label{hownear_change}
+
+\index{HOWNEAR}
+\index{PRESTA-I}
+In order to be able to use the improved 
+condensed history implementation, EGSnrc 
+requires the knowledge of the perpendicular distance 
+to the closest boundary at the beginning of each electron 
+step, as did PRESTA-I. The user is asked for this distance via the macro 
+\begin{flushleft}{\tt
+\$CALL-HOWNEAR(\#); }
+\end{flushleft}
+The default replacement of {\tt \$CALL-HOWNEAR(\#)} in 
+{\tt egsnrc.macros} prints a message to the standard output 
+that a user definition of this macro is required and aborts 
+the execution of the code. If your user code is not using 
+the PRESTA algorithm, the recommended 
+replacement is 
+\begin{flushleft}{\tt
+REPLACE \{\$CALL-HOWNEAR(\#);\} WITH \{ \\
+\quad call hownear(\{P1\},x(np),y(np),z(np),ir(np)); \} }
+\end{flushleft}
+together with the code for the subroutine {\tt hownear}. 
+If your user code is using the PRESTA algorithm, there must 
+be a definition of {\tt \$CALL-HOWNEAR} somewhere in 
+your user code. We recommend modifying the definition 
+to a subroutine call, but this is not a necessary 
+requirement. If you decide not to modify an existing 
+{\tt \$CALL-HOWNEAR} definition, you need to append 
+declarations of all variables that this macro uses 
+to {\tt \$DEFINE-LOCAL-VARIABLES-ELECTR}, or replace 
+{\tt IMPLICIT-NONE} with null at the beginning of 
+your user code (see section \ref{implicit}). 
+\index{\$DEFINE-LOCAL-VARIABLES-ELECT}
+
+If your geometry is too complex and you are not 
+able to code a {\tt hownear} routine (even some 
+second order surfaces require the solution of 
+a sixth order equation in order to determine the 
+minimum perpendicular distance), you should include the 
+following replacement in your user code:
+\begin{flushleft}{\tt
+REPLACE \{\$CALL-HOWNEAR(\#);\} WITH \{ \{P1\} = 0; \} }
+\end{flushleft}
+EGSnrc will then always assume that the particle is very 
+close to a boundary. The accuracy and speed of the simulation 
+will crucially 
+depend on the setting of the {\tt bca\_algorithm} variable 
+which is in {\tt COMIN/ET-Control/}:
+\index{bca\_algorithm}
+\begin{itemize}
+\item
+{\tt bca\_algorithm = 0}: The entire simulation will be 
+performed in single elastic scattering mode. This is 
+very accurate but extremely slow and probably not feasible 
+for most applications.
+\item
+{\tt bca\_algorithm = 1}: The entire simulation will 
+be performed without lateral deflections in the individual 
+electron steps taken into account. This is similar to the 
+original EGS4 condensed history implementation although 
+the path-length correction is more accurate. We recommend 
+to set the parameter {\tt ximax}, which is also in 
+{\tt COMIN/ET-Control/}, to not more than 0.05 for accurate 
+results. Reducing {\tt ximax} is better than reducing 
+{\tt ESTEPE} as it automatically takes into account 
+differences in the strength of elastic scattering 
+(and so, you don't need to use {\tt ESTEPE} of 3-4\% 
+for low-Z materials but {\tt ESTEPE} only 0.3\% for 
+high-Z materials). 
+\end{itemize}
+
+\subsection{Use of electron range rejection}
+\label{range_change}
+
+\index{range rejection}
+\index{\$USER-RANGE-DISCARD}
+
+Many user codes employ some form of electron range rejection technique 
+(which terminates electrons if their range is 
+less than the perpendicular distance to the closest boundary, 
+or to a region of interest). 
+To implement this technique, the 
+{\tt \$USER-RANGE-DISCARD} macro is replaced 
+with some code that estimates the CSDA range of electrons 
+and then compares it with the minimum perpendicular distance.  
+In EGSnrc the range is used (and therefore calculated) internally 
+to calculate energy loss to sub-threshold processes. 
+It is ABSOLUTELY ESSENTIAL for the correct operation of EGSnrc that 
+the variable {\tt range}, which holds the current electron CSDA 
+range, is NOT MODIFIED by a user estimate of the range in 
+the macro {\tt \$USER-RANGE-DISCARD}! You should 
+check your user code for a replacement of the macro 
+{\tt \$USER-RANGE-DISCARD} and rename the variable 
+used for the electron range if it is called {\tt range}! 
+(such a collision with the EGSnrc internal {\tt range} 
+variable would be automatically detected with the use 
+of implicit data typing, see section \ref{implicit}). If you fail 
+to do so, the most likely result will be an abort 
+of execution a short time after the begin of the simulation 
+and a message in the output file from the {\tt mscat} routine 
+which says that the maximum step-size in {\tt mscat} was exceeded. 
+
+Note that EGSnrc already implements electron range rejection 
+on a region-by-region basis internally. Therefore, 
+a user range rejection is not necessary, unless 
+it is more sophisticated and rejects electrons 
+that can not reach certain volume elements even if capable of 
+escaping the current region. 
+
+\subsection{Input of electron transport parameters 
+and cross section options}
+\label{parameter_input}
+
+If you don't make any changes to the electron transport 
+and cross section settings, EGSnrc will run in its 
+most accurate mode possible. If you want 
+to modify some of the transport parameter settings (default values 
+are set in the {\tt block data}), you may
+\begin{enumerate}
+\item
+Hard-code the values you want to use for the simulations. 
+In order to do so, you need to include the appropriate 
+{\tt COMIN}'s into the routine that sets 
+the desired values, {\em i.e.}
+\begin{flushleft}{\tt
+subroutine my\_routine; \\
+;COMIN/COMPTON-DATA/; \\
+...\\
+DO j=1,\$MXREG [ ibcmp(j) = 0; ] \\
+return; end; }
+\end{flushleft}
+will turn off bound Compton scattering.  The tutorial code, {\tt
+tutor6.mortran} contains examples of setting all the parameters we could
+think of for a simple calculation (section~\ref{tutor6},
+page~\pageref{tutor6}).
+\item
+Read desired transport settings from an input file. 
+The easiest way to do so is to include  the statement 
+\begin{flushleft} {\tt
+call get\_transport\_parameter(ounit); }
+\end{flushleft}
+in your user code anywhere before the call to {\tt HATCH}. 
+Here, {\tt ounit} is an integer variable that is 
+the unit number of the file to which the 
+{\tt get\_transport\_parameter} routine will print a summary of 
+the transport parameter settings (if {\tt ounit} is less 
+or equal to zero, no output will be produced). 
+If you decide to use {\tt get\_transport\_parameter}, you need 
+to include the files {\tt transportp.macros} and 
+{\tt get\_inputs.mortran} via the 
+configuration file. The syntax used by {\tt get\_transport\_parameter} 
+is described extensively in the user-code manual\cite{Ro00} and in the file 
+{\tt get\_inputs.mortran}, the tutorial code 
+{\tt tutor7.mortran} gives an example of the usage of 
+{\tt get\_transport\_parameter}. 
+The advantage of this approach is twofold:
+\begin{enumerate}
+\item
+Future changes of the system will be readily 
+available to your user code without changes.
+\item
+You don't need to specify {\em all} transport 
+parameters in the input file, just the ones 
+that you want to change. Missing transport 
+parameter input will cause the system 
+to use default values for the corresponding variables. 
+\end{enumerate}
+\end{enumerate}
+
+
+\clearpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Adapting user codes: cook book instructions}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\label{instructions}
+\index{adapting user codes}
+
+After the discussions of the previous sections, we are ready to give
+the steps that must be followed to adapt existing EGS4 user codes to
+EGSnrc in a ``cook book fashion''. If your user code is basically a minor
+modification of an NRC user code such as DOSRZ, it may be more efficient
+to adapt the corresponding EGSnrc user code. Note
+that this section assumes that you have the EGSnrc system running so,
+e.g. you have already redefined {\tt \$HEN\_HOUSE}  to point to the
+EGSnrc system and you have sourced {\tt Cshrc\_additions\_for\_egsnrc}
+which means you will pick up the new scripts using the old commands (so,
+e.g. the command {\tt mf} now picks up {\tt egs\_compile} instead of {\tt
+egs4\_compile}) and the naming convention for files is slightly different
+(e.g., {\tt .egsinp} instead of {\tt .egs4inp}, etc).  After ensuring the
+system is ready (see section~\ref{sys_consid}, page~\pageref{sys_consid}),
+do the following steps with your EGS4 user code.
+
+We also strongly advise to use the newer multi-platform EGSnrc version,
+and to read the related user manual, PIRS-877.
+
+\index{.egsinp}
+
+\begin{description}
+% \item[Step 1:]
+% Modify your configuration file. If your code does not 
+% have its own configuration file, it is using the 
+% default configuration and you don't need to take 
+% any actions. If your user code has a configuration file, 
+% it is best to start from the file {\tt standard.configuration}, 
+% found on the main EGSnrc installation area, and modify it 
+% to include the additional files needed by your user code. 
+% Note that none of the NRC extensions ({\tt nrcc4mac.mortran, 
+% presta.macros, presta.mortran}) is needed with EGSnrc.
+% \index{.configuration file}
+
+\item[Step 1:]
+Check whether your code defines the {\tt \$CALL-HOWNEAR} macro.
+If it is defined, decide whether it is simple enough to change 
+the definition to a subroutine call. If yes, do so (see section 
+\ref{hownear_change}). If not, append {\tt COMIN/GEOM/} (or whatever COMIN you
+need for your geometry routines) to 
+{\tt \$COMIN-ELECTR} (see section \ref{append}).
+If {\tt \$CALL-HOWNEAR} is not defined in your user code, try 
+to code a subroutine that calculates the minimum perpendicular 
+distance to the closest boundary for your 
+geometry and replace {\tt \$CALL-HOWNEAR} 
+with a call to this subroutine. If your geometry is too 
+complex, make {\tt \$CALL-HOWNEAR} return a {\tt tperp} value of zero 
+(see section \ref{hownear_change}). 
+For a complete discussion of HOWNEAR routines,
+see section~\ref{hownear}, page ~\pageref{hownear}).
+\index{\$CALL-HOWNEAR} \index{\$COMIN-ELECTR} 
+
+\item[Step 2:]
+\index{\$RANDOMSET} \index{RANDOM} \index{COMMON!RANDOM}
+If your user code redefines the {\tt \$RANDOMSET} macro and/or the {\tt
+COMIN/RANDOM}, consider whether you
+want to leave it redefined or use the RANLUX or RANMAR generators. Adjust
+any I/O related to the RNG's seeds.  If the user code uses the default RNG,
+make any adjustments to the fact that the default is now RANLUX.
+Check whether your code initialises the random number generator. 
+If not, provide initialisation by putting {\em e.g.} the 
+macro {\tt \$RNG-INITIALIZATION} somewhere in your user code 
+before the user code uses a random number or at least before
+the first call to {\tt SHOWER}. Note that you don't 
+need an initialisation if you use the {\tt RANLUX} generator (which is the
+default), but it is also not wrong to use it. Note that if you redefine
+{\tt COMIN/RANDOM}, it must include integer variable {\tt rng\_seed}.
+See sections~\ref{rng_init} 
+(page~\pageref{rng_init}) and ~\ref{rngs} (page~\pageref{rngs})
+for further details.
+\index{\$RNG-INITIALIZATION}
+\index{random number generators!initialisation}
+
+\item[Step 3:]
+Check your user code for replacements of {\tt COMIN/XXXX/} 
+where {\tt XXXX} stands for an EGS4 or EGSnrc COMIN block name other than 
+{\tt USER, USER-MISC}, etc. If you find such replacements, 
+compare them with the corresponding {\tt COMIN} definition 
+in {\tt egsnrc.macros}. If the definitions match, remove 
+the replacement from your user code. If not, put user variables 
+into a new common block that will later become a part of 
+{\tt COMIN/USER/} (see step 6) and remove this {\tt COMIN} 
+definition from your user code. A typical example of a user re-defined 
+{\tt COMIN} is {\tt COMIN/BREMPR/} with the inclusion of parameters 
+that control bremsstrahlung splitting. Such variables should be 
+in a user common block and passed to the EGSnrc routines via 
+{\tt COMIN/USER/}(see section~\ref{tab_commons}).
+\index{COMIN!USER}
+
+\item[Step 4:]
+Check your user code for replacements of {\tt \$COMIN-XXXX}, 
+{\tt XXXX} being a EGS4/EGSnrc subroutine name. If you find such 
+replacements, compare them to the corresponding definition 
+in {\tt egsnrc.macros}. If they match, remove the replacement 
+statement from your user code. If not, change the replacement 
+statement to {\tt APPEND} to include necessary comin's 
+with {\tt \$COMIN-XXXX} (see section \ref{append}). Don't forget 
+that some EGS4 comin's have been eliminated (see section \ref{changes}). 
+
+\index{USER}
+\index{USER-STEP-CONTROLS}
+\index{USER-VARIANCE-REDUCTION}
+\index{USER-MISC}
+\index{COMIN!USER}
+\index{COMIN!USER-STEP-CONTROLS}
+\index{COMIN!USER-VARIANCE-REDUCTION}
+\index{COMIN!USER-MISC}
+\item[Step 5:]
+If you are using the NRC extensions from {\tt nrcc4mac.mortran} 
+(check your configuration file), {\tt COMIN/USER/} is 
+replaced there by 
+\begin{flushleft}
+{\tt COMIN/USER-STEP-CONTROLS,USER-VARIANCE-REDUCTION,USER-MISC/}\\
+\end{flushleft}
+In the present release, most of the NRC extensions are included 
+in {\tt egsnrc.macros} and so the use of {\tt nrcc4mac.mortran} is 
+not necessary. However, we found that it is better to return 
+to the original EGS4 definition of {\tt COMIN/USER/} namely a null (;)
+and let the user define their own {\tt COMIN/USER/}. 
+Check therefore your user code for definitions of 
+{\tt USER-STEP-CONTROLS, USER-VARIANCE-REDUCTION} and 
+{\tt USER-MISC}. Combine all of these definitions to a  {\tt COMIN/USER/} 
+definition. Include also common blocks or variables needed to account for
+previous replacements of
+EGS4 / EGSnrc internal comin's (see step 4 above).
+
+\index{COMIN!USER}
+\index{COMIN!ET-Control}
+\index{COMIN!USERXT}
+\index{ESTEPE}
+
+\item[Step 6:]
+Check whether one or more of the common blocks  
+included in {\tt COMIN/USER/} are 
+not already defined in {\tt COMIN/EDGE/} ({\em e.g.} {\tt COMMON/USERXT/}) 
+or in {\tt COMIN/ET-Control/} (e.g. {\tt SMAXIR}) and discard them if so.
+Check also for appearances of {\tt ESTEP, ESTEPE}, etc. 
+If you intend to use the {\tt get\_transport\_parameter} routine 
+(see step 13 and section \ref{parameter_input}), remove all 
+of them. If not, make sure that {\tt COMIN/ET-Control/} is 
+available. 
+
+
+\index{\$SET-BREMS-ANGLE}
+\index{\$SET-PAIR-ANGLE}
+\index{\$RAYLEIGH-CORRECTION}
+\index{\$SELECT-PHOTOELECTRON-DIRECTION}
+\item[Step 7:]
+Check for definitions of {\tt \$SET-BREMS-ANGLE, \$SET-PAIR-ANGLE}, 
+\\{\tt \$RAYLEIGH-CORRECTION} and  {\tt \$SELECT-PHOTOELECTRON-DIRECTION} 
+in your user code. 
+Discard them unless you are using angle selection schemes 
+for bremsstrahlung, pair production or photo-electron production or 
+a treatment of Rayleigh scattering which differ from what are now the
+internal EGSnrc sampling routines.
+
+\item [Step 8:]
+Check for a definition of {\tt \$USER-RANGE-DISCARD}. 
+If you find one, make sure that it does not use 
+the variable {\tt range}. If your {\tt \$USER-RANGE-DISCARD} 
+macro performs only electron range rejection on a region-by-region 
+basis, you may consider using the internal EGSnrc range rejection 
+capability and deleting the definition of {\tt \$USER-RANGE-DISCARD} 
+from your user code. 
+
+\item[Step 9:]
+Decide whether you want to use implicit data types. 
+If no ({\em e.g.} in order to save work), insert in 
+your user code the statement
+{\tt REPLACE \{\$IMPLICIT-NONE;\} WITH \{;\} }\\
+If yes, perform the following steps:
+\begin{itemize}
+\item
+Include the {\tt \$IMPLICIT-NONE;} macro at the beginning 
+of the main routine, {\tt HOWFAR, HOWNEAR, AUSGAB} and 
+all other user-written routines.
+\item
+Declare all local variables used in these routines.
+\item
+Declare all variables in {\tt COMIN/USER/};
+\item
+Check for definitions of the following
+in your user code. If one or more of these macros is redefined,  
+declare all variables used by these macros using {\tt APPEND} 
+(see section ~\ref{append}) with the appropriate {\tt
+\$DEFINE-LOCAL-VARIABLES-XXXX;} (see section~\ref{implicit}).\\
+\begin{tabular}{ll}
+{\tt \$SELECT-ELECTRON-MFP}  &  used in {\tt ELECTR} \\
+{\tt \$USER-RANGE-DISCARD} & \\
+{\tt \$DE-FLUCTUATION} & \\
+{\tt \$PARTICLE-SELECTION-MOLLER} & \\
+{\tt \$PARTICLE-SELECTION-BHABHA} & \\
+{\tt \$PARTICLE-SELECTION-ANNIH} & \\
+{\tt \$PARTICLE-SELECTION-BREMS} & \\
+{\tt \$SELECT-PHOTON-MFP} & used in {\tt PHOTON}\\
+{\tt \$RAYLEIGH-CORRECTION} & \\
+{\tt \$RAYLEIGH-SCATTERING} & \\
+{\tt \$PARTICLE-SELECTION-PAIR} & \\
+{\tt \$PARTICLE-SELECTION-COMPT} & \\
+{\tt \$PARTICLE-SELECTION-PHOTO} & \\
+{\tt \$SET-BREMS-ANGLE} & used in {\tt BREMS} \\
+{\tt \$SET-PAIR-ANGLE} & used in {\tt PAIR} \\
+{\tt \$SELECT-PHOTOELECTRON-DIRECTION} & used in {\tt PHOTO} \\
+\end{tabular}
+\end{itemize}
+
+\item[Step 10:]
+Try to compile your user code. If you get error messages 
+check carefully steps 1-10 to confirm that you have performed all
+changes described above.
+
+\item[Step 11:]
+Check your scoring routine for 
+assumptions about the outcome of interactions 
+(see section~\ref{scoring} above and section~\ref{stack_status} on page
+~\pageref{stack_status}). If you find any, modify accordingly. 
+
+\item[Step 12:]
+Decide if you want to be able to modify transport parameter 
+settings. If yes, include a call to {\tt get\_transport\_parameter} 
+somewhere before the call to {\tt HATCH}, code your own input 
+routine or hard code the parameters you wish. 
+\index{get\_transport\_parameter}
+
+\item[Step 13:]
+\index{.environment file}
+Check your environment file. In addition to the unit 
+numbers already reserved in EGS4 for data files ({\em e.g.} unit 12 
+is connected to the PEGS4 data file), EGSnrc uses various 
+other units to read additional data required:
+\begin{itemize}
+\item
+{\tt unit 11}: Multiple scattering data (file {\tt msnew.data})
+\item
+{\tt unit 76}: NIST bremsstrahlung cross section data (file {\tt 
+nist\_brems.data})
+\item
+{\tt unit 77}: Relaxation data (file {\tt photo\_relax.data})
+\item
+{\tt unit 78}: Bound Compton data (file {\tt incoh.data})
+\item
+{\tt unit 79}: Photo-absorption cross section data (file {\tt 
+photo\_cs.data})
+\end{itemize}
+The above links are made directly in {\tt egs\_run}.
+If your user code uses any of the above units (via link 
+statements in the environment file), modify accordingly.
+
+\item[Step 14:]
+If your user code uses the PRESTA algorithm, the 
+input file has most likely a PRESTA associated 
+input (5 numbers on a line). If the PRESTA associated 
+input is not the last line in your input file, DELETE 
+IT before running the code. 
+\index{PRESTA}
+
+\item[Step 15:]
+Run test calculations. 
+If you encounter statistically significant differences to your 
+previous results in a way which differs from what has been discussed in the
+literature or the documentation, please send a message with a detailed description of 
+your results to one of the authors since we would like to 
+make a collection of situations where the use of the 
+new electron transport physics and various cross 
+section options is necessary.
+\end{description}
+
+\subsection{Example: adapting XYZDOSnrc}
+\label{adapt_xyzdos}
+
+The user code {\tt XYZDOS} has been used for timing studies of the
+EGS4 system\cite{BR92}. It is a relatively simple code that 
+provides a good example for the adaptation procedure.
+
+% \noindent
+% \underline{\bf Step 1} \hfill \\
+% Comparing the {\tt xyzdos.configuration} file with 
+% {\tt standard.configuration} on the main EGSnrc area 
+% shows that the only non-system files needed are 
+% {\tt nrcc4mac.mortran} and\\ {\tt prnter.mortran}. 
+% The former is not needed with EGSnrc, the latter 
+% is obsolete. The standard configuration file is 
+% thus sufficient for the compilation of {\tt XYZDOS} 
+% and so\\ {\tt xyzdos.configuration} is removed.
+
+\noindent
+\underline{\bf Step 1} \hfill \\
+There is no definition of the {\tt \$CALL-HOWNEAR} macro 
+in {\tt xyzdos.mortran} so include the recommended replacement 
+\begin{flushleft} {\tt
+REPLACE \{\$CALL-HOWNEAR(\#);\} WITH 
+\{call hownear(\{P1\},x(np),y(np),z(np),ir(np)); \}
+\\ } 
+\end{flushleft}
+near the beginning of {\tt xyzdos.mortran}. 
+The geometry information is contained in 
+the comin {\tt GEOM} which must be made available 
+to the {\tt hownear} routine. The code 
+for {\tt hownear}, which is added at the end of {\tt xyzdos.mortran}, 
+looks therefore as follows ( using explicit data typing): 
+\begin{flushleft} {\tt
+subroutine hownear(tperp,x,y,z,ir);\\
+~\\
+\$IMPLICIT-NONE;\\
+~\\
+COMIN/GEOM/;\\
+"Input/Output variables"\\
+\$REAL tperp,x,y,z;\\
+\$INTEGER ir;\\
+"Local variables"\\
+\$INTEGER irx,iry,irz;\\
+~\\
+\$DECODEIR(ir,irx,iry,irz); "xyzdos defined macro to decode region number"\\
+tperp = 1e10;\\
+tperp = min(tperp,xbound(irx+1)-x,x-xbound(irx));\\
+tperp = min(tperp,ybound(iry+1)-y,y-ybound(iry));\\
+tperp = min(tperp,zbound(irz+1)-z,z-zbound(irz));\\
+return;\\
+end;\\
+}
+\end{flushleft}
+
+
+\noindent
+\underline{\bf Step 2} \hfill \\
+The macro {\tt \$RNG-INITIALIZATION;} is added to the 
+main routine after the input is complete. 
+XYZDOS reads-in a variable 
+{\tt INSEED} which is used to initialise the old 
+EGS4 random number generator (which had just 
+one seed called {\tt IXX}). XYZDOSnrc, the EGSnrc version will not
+modify the initial seed(s) and therefore all 
+code associated with {\tt INSEED} and {\tt IXX} are removed. The default
+RNG for the system, viz RANLUX will be used with {\tt luxury\_level = 1}.
+
+
+\noindent
+\underline{\bf Step 3} \hfill \\
+There are no replacements of EGSnrc comin's.
+
+\noindent
+\underline{\bf Step 4} \hfill \\
+There are no replacements of {\tt \$COMIN-XXXX} macros.
+
+\noindent
+\underline{\bf Step 5} \hfill \\
+{\tt XYZDOS} uses the {\tt nrcc4mac.mortran} file but there are 
+no definitions of {\tt USER-STEP-CONTROLS, USER-VARIANCE-REDUCTION} and 
+{\tt USER-MISC}.
+
+\noindent
+\underline{\bf Step 6} \hfill \\
+The only relevant definition and use encountered is {\tt ESTEPE}. 
+It is declared as\\
+{\tt REAL ESTEPE(\$MXMED)} and used to input 
+maximum allowed fractional energy losses for each medium. 
+It is also passed to the {\tt FIXTMX} routine which initialises 
+step-lengths for the {\tt ESTEPE} selected. In EGSnrc this task 
+is performed internally by the {\tt mscati} routine. 
+Since the {\tt get\_transport\_parameter} routine will be used
+to parse transport parameter settings, all 
+appearances of {\tt ESTEPE} are removed. 
+
+
+\noindent
+\underline{\bf Step 7} \hfill \\
+There are no definitions of these macros.
+
+\noindent
+\underline{\bf Step 8} \hfill \\
+Range rejection is not used in {\tt XYZDOS}.
+
+\noindent
+\underline{\bf Step 9} \hfill \\
+Explicit data typing is being used. Therefore
+\begin{itemize}
+\item
+The statement {\tt \$IMPLICIT-NONE;} is included just before the line 
+\begin{flushleft}{\tt 
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,RANDOM,SCORE,STACK,THRESH/; }
+\end{flushleft}
+in the main program and also in {\tt HOWFAR} and {\tt AUSGAB}. 
+\item
+All variables used by the main program, in 
+the common blocks, and by 
+{\tt HOWFAR} and {\tt AUSGAB} are declared explicitly. Variable declaration for 
+{\tt HOWNEAR} was already performed in step 2.
+\item
+No declarations are needed for {\tt COMIN/USER/}
+\item
+None of the macros from step 9 of the instructions is used in 
+{\tt XYZDOS}
+\end{itemize}
+
+\noindent
+\underline{\bf Step 10} \hfill \\
+When trying to compile, there were a couple of error messages. 
+All of them are because of failure to declare some of the 
+variables used. Once declared the code compiles without problems.
+
+\noindent
+\underline{\bf Step 11} \hfill \\
+The scoring routine does not need adaptation. 
+However, it performs a check for stack overflow. 
+In EGSnrc this check is performed internally and 
+therefore the associated code is removed. 
+
+\noindent
+\underline{\bf Step 12} \hfill \\
+To be able to modify transport parameter settings, 
+a call to the {\tt get\_transport\_parameter} 
+routine is included just before the call to {\tt HATCH}.
+ 
+% When trying to compile, 
+% the linker complains about an undefined reference to this 
+% routine. To solve this problem, copy the \\
+% {\tt standard.configuration} 
+% file from the {\tt \$HEN\_HOUSE} to {\tt xyzdos.configuration} in\\
+% {\tt \$HOME/egsnrc/XYZDOS} and include the files 
+% {\tt transportp.macros} and {\tt get\_inputs.mortran}. 
+% The {\tt xyzdos.configuration file} looks then as follows:
+% \begin{flushleft}{\tt 
+% echo "Entering xyzdosnrc.configuration  " \\
+% echo "-------------------------------" \\
+% echo " " \\
+% echo " Using machine: \$my\_machine" \\
+% echo " " \\
+% ~\\
+% echo "\%L" $>$ .mort job.mortran  \# Mortran switch to turn listing on \\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/egsnrc.macros"  "egsnrc standard macros"\\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/lib/\$my\_machine/machine.mortran" "machine macros" \\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/ranlux.macros  "     "RNG macros" \\
+% \#\$HEN\_HOUSE/catecho "\$HEN\_HOUSE/ranmar.macros "     "RNG macros" \\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/transportp.macros" "transport parameter macros" \\
+% ~\\
+% if (\$?EGS\_PERT != 1) echo "--------------------------------------------" \\
+% \$HEN\_HOUSE/catecho "\$1.mortran                   "  "user-code  source" \\
+% 
+% if (\$?EGS\_PERT != 1) echo "--------------------------------------------" \\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/ranlux.mortran"      "RNG initialization" \\
+% \#\$HEN\_HOUSE/catecho "\$HEN\_HOUSE/ranmar.mortran"     "RNG initialization"\\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/get\_inputs.mortran"  "input routines" \\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/nrcaux.mortran    "  "NRC auxiliary subs"\\
+% \$HEN\_HOUSE/catecho "\$HEN\_HOUSE/egsnrc.mortran    "  "egsnrc subroutines"\\
+% ~\\
+% echo " "\\
+% echo "-------------------------------------------------------------"\\
+% echo "end of xyzdos.configuration. .mortan.mortjob created"\\
+% echo "-------------------------------------------------------------"\\
+% echo " "\\
+% }
+% \end{flushleft}
+% The compilation is now successful.Note that the {\tt ranmar} files
+% are commented out. To switch to the original
+% Zaman and Marsaglia random number generator, one needs to
+% uncomment the {\tt ranmar} files and comment out the {\tt ranlux}
+% files in {\tt xyzdos.configuration}.
+
+Up to this point the whole procedure took about 1.5 hours (including
+writing down what was done).
+
+\noindent
+\underline{\bf Step 13} \hfill \\
+The environment file does not use any of the fortran units 
+reserved for EGSnrc data input.
+
+\noindent
+\underline{\bf Step 14} \hfill \\
+{\tt XYZDOS} does not use the PRESTA algorithm. one can therefore 
+just take an example input file ({\em e.g.} {\tt benche.egs4inp} 
+which is the input file for the EGS4 timing benchmark) and 
+run {\tt XYZDOS}. However, let us modify the transport 
+parameter settings from their default values to the ones 
+that correspond as closely as possible to default EGS4. To do so, 
+copy {\tt benche.egs4inp} to {\tt test.egsinp} (the default 
+input file extension for EGSnrc is {\tt .egsinp} instead 
+of {\tt .egs4inp}) and include the {\tt MC Transport Parameter} 
+section from the {\tt test\_tutor7.egsinp} file found in 
+the {\tt tutor7} directory on the {\tt \$HEN\_HOUSE}. 
+\index{.egsinp}
+
+At this point it was noted that the 
+transport cut-off energies ({\tt ECUT,PCUT}) 
+are input in {\tt get\_transport\_parameter} 
+and also at the beginning of the main {\tt XYZDOS} routine. This 
+duplication renders one of the inputs unnecessary and so one should remove 
+the code associated with {\tt ECUT,PCUT} input in the 
+main {\tt XYZDOS} routine. Next modify the input file to 
+make transport parameter settings in EGSnrc match EGS4 
+as closely as possible (see section~\ref{mimic}. page~\pageref{mimic}). The 
+modified {\tt test.egsinp} file follows:
+\begin{flushleft}{\tt
+BENCHE:  20 MeV e- on 19cm**3 WATER Phantom - dual waters,rho=1.001 \\
+2 \\
+H2O \\
+H2O2 \\
+-3,-3,-3 \\
+0.0, \\
+1.0,9 \\
+0.25,4 \\
+1.0,9 \\
+0.0 \\
+1.0,9 \\
+0.25,4 \\
+1.0,9 \\
+0.0 \\
+1.0,6 \\
+0.25,4 \\
+1.0,12 \\
+1,22,1,22,1,22,1,1.001 \\
+1,22,1,22,2,2,2,1.001 \\
+1,22,1,22,4,4,2,1.001 \\
+1,22,1,22,6,6,2,1.001 \\
+1,22,1,22,8,8,2,1.001 \\
+1,22,1,22,10,10,2,1.001 \\
+1,22,1,22,12,12,2,1.001 \\
+1,22,1,22,14,14,2,1.001 \\
+1,22,1,22,16,16,2,1.001 \\
+1,22,1,22,18,18,2,1.001 \\
+1,22,1,22,20,20,2,1.001 \\
+1,22,1,22,22,22,2,1.001 \\
+0,0,0,0,0,0,0,0.0 \\
+10,13,10,13,1,20,1 \\
+1,20,1,20,1,1,0 \\
+1,20,1,20,8,8,0 \\
+0,0,0,0,0,0,0 \\
+4.5,14.5 \\
+4.5,14.5 \\
+0.0,90.0,90.0 \\
+20,-1,100000,0,11.89,0 \\
+~\\
+\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\# \\
+:Start MC Transport Parameter: \\
+~\\
+\begin{tabular}{lll}
+Global ECUT= & 1.060 & \#as in the benchmark \\
+Global PCUT= & 0.010 & \#as in the benchmark \\
+Global SMAX= & 1e10  & \#no geom step-size restriction \\
+Bound Compton scattering= & Off & \#use Klein-Nishina as in EGS4\\
+Rayleigh scattering=      & Off & \#Rayleigh scattering is off\\
+Atomic relaxations= & Off & \#No relaxations as in EGS4 \\
+Photoelectron angular sampling= & Off & \#No PE angular distribution \\
+Brems cross sections=  &   BH  & \#use Bethe-Heitler(like EGS4) \\
+Brems angular sampling= &  Simple & \#EGS4 fixed angle not available,\\
+                        & &         \#this is closest we can get \\
+Pair angular sampling=  & Off  & \#Fixed angle for pairs(as EGS4)\\
+ESTEPE=         & 0.04 & \#original benche value \\
+XIMAX=          & 0.5  & \#roughly corresponds to Bethe's \\
+& &                      \#restriction for Moli{\`e}re theory \\
+Skin depth for BCA= & 1e10 & \#together with inexact boundary \\
+& & \#crossing => CH a la EGS4 \\
+Boundary crossing algorithm= & PRESTA-I & \#i.e. don't use exact BCA \\
+Electron-step algorithm=     & PRESTA-I & \#this does not matter with \\
+& & \#inexact BCA \& large skin-depth  \\
+Spin effects= &  Off  & \#no have option to use Moli{\`e}re \\
+& &                     \#MS but at least can turn off \\
+& &                     \#spin to get closer to Moliere  \\
+\end{tabular}
+~\\
+:Stop MC Transport Parameter: \\
+\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\# }
+\end{flushleft}
+
+\noindent
+\underline{\bf Step 15} \hfill \\
+\index{timing vs EGS4}
+Running the adapted {\tt XYZDOS} code with this input file on NRC computers 
+(600 MHz PIII with SuSE Linux and egcs-2.91.66 compiler, -O2 optimization) 
+results in a CPU time of 93 seconds. This is quite 
+disappointing compared to the  
+69 seconds for the benchmark using standard EGS4 
+(in view of the fact that very similar 
+transport parameter settings were used). However, 
+different random number generators are used in the two codes 
+and the EGSnrc version needs to calculate the perpendicular 
+distance to the closest boundary at the beginning of each electron step, 
+information which is not used in the simulation mode mimicking 
+EGS4. To check the influence of these two differences
+\begin{itemize}
+\item
+Re-implement the simple multiplicative random number generator 
+used in the original {\tt XYZDOS} version. This is most easily 
+done by including 
+\begin{flushleft}{\tt
+REPLACE \{;COMIN/RANDOM/;\} WITH \{ \\
+\quad ;COMMON/RANDOMM/IXX; \\
+\quad \$INTEGER IXX; \\
+\} \\
+REPLACE \{\$RANDOMSET\#;\} WITH \{ \\
+\quad IXX=IXX*663608941; \\
+\quad \{P1\}=0.5 + IXX*0.23283064E-09; \\
+\} \\
+REPLACE \{\$RNG-INITIALIZATION;\} WITH \{IXX=987654321;\} }
+\end{flushleft}
+in the {\tt xyzdos.mortran} file (this overrides the 
+definitions from {\tt ranlux.mortran}). Running the code 
+with this random number generator reduces the CPU time to 
+85 seconds.
+
+\item
+Remove the calculation of the minimum perpendicular 
+distance by replacing the \\{\tt \$CALL-HOWNEAR} macro with 
+\begin{flushleft}{\tt
+REPLACE \{\$CALL-HOWNEAR(\#);\} WITH \{ \{P1\} = 0; \} }
+\end{flushleft}
+After that modification the CPU time becomes 79 seconds. 
+\end{itemize}
+The remaining 20\% CPU time difference must be due to 
+the various  modifications of the sampling and transport 
+techniques. However, all modified sampling routines 
+run faster, or at least as fast, compared to the original EGS4 
+implementation, if tested alone. The difference must be therefore 
+due to the more accurate evaluation of energy dependent 
+quantities in EGSnrc (such as CSDA energy loss, multiple 
+scattering related quantities, etc.). The very purpose  of 
+implementing more accurate techniques for energy dependent 
+quantities is to allow for longer electron steps and so, 
+the use of the 4\% maximum fractional energy loss per step 
+in EGSnrc is wasteful. On the other side, using an 
+EGS4-type algorithm for path-length corrections and 
+boundary crossing is not particularly accurate and 
+step-sizes should not be allowed to exceed certain 
+limits. This is best accomplished by reducing the 
+maximum allowed first elastic scattering moment per step 
+({\tt ximax}), i.e.  {\tt ESTEPE} is set to 0.25 and 
+{\tt ximax} to 0.1 in the input file. With this parameter 
+selection the EGSnrc version of {\tt XYZDOS} needs only 
+48 seconds for the benchmark, {\em i.e.} 1.5 times less 
+that the original EGS4 version. 
+
+\index{timing vs EGS4}
+

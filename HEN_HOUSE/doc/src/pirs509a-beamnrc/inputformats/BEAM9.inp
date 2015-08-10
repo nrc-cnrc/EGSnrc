@@ -1,0 +1,26 @@
+\begin{verbatim}
+   ISOURC = 8   SCANNING BEAM FOR MM50 (uniform circular beam from
+   *********                            a point on axis at Z=0)
+ 
+      IQIN,ISOURC,DISTZ,RBEAM
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  8
+              DISTZ   SSD (default to 100 cm)
+              RBEAM   radius of scanned beam at SSD.  If set <=0 or
+                      too large, then RBEAM gets reset to 
+                      RMAX_CM(1)*DISTZ/Z_min_CM(1) (circular CM 1) or
+                      SQRT(2)*RMAX_CM(1)*DISTZ/Z_min_CM(1) (square CM 1)
+                      so that particles strike the front of
+                      CM 1 within a circle of radius RMAX_CM(1)
+                      or SQRT(2)*RMAX_CM(1).
+              RBEAM0  Radius of beam spot at Z=0cm.  Defaults to 0
+                      if RBEAM0<0 and gets reset to 
+                      RMAX_CM(1)*DISTZ/Z_min_CM(1)-RBEAM (circular CM 1)
+                      or SQRT(2)*RMAX_CM(1)*DISTZ/Z_min_CM(1)-RBEAM
+                      (square CM 1) if RBEAM+RBEAM0 > 
+                      RMAX_CM(1)*DISTZ/Z_min_CM(1) or >
+                      SQRT(2)*RMAX_CM(1)*DISTZ/Z_min_CM(1).
+     For this source the particles start at Z_min_CM(1) and hence
+     Z_min_CM(1) must be >= 0.0
+ ----------------------------------------------------------------------
+\end{verbatim}

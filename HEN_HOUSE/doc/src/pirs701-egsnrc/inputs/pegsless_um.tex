@@ -1,0 +1,347 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: pegsless operation
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Blake Walters, 2013
+%
+%  Contributors:    
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Replace commented line for the one with fixed date when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:27 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/09/26 17:59:27 $
+}}
+
+
+\section{Pegsless Mode}
+\label{pegsless}
+
+As of 2013, EGSnrc user codes can be run in pegsless mode.  User codes run in this mode do not
+require the use of interaction cross sections calculated a-priori using the PEGS4 code
+({\em i.e.} no {\tt .pegs4dat} file).  Photon cross
+sections have been generated on-the-fly since 2006.  Thus, migration to a fully pegsless implementation
+is a logical next step.
+
+\subsection{User Code Inputs for Pegsless Mode}
+\label{pegslessinputsect}
+
+To run a user code in pegsless mode, the user must include parameters for calculating cross-sections, including
+specifications for all media used in the simulation, in their {\tt .egsinp} file between the
+delimiters, {\tt :start media definition:} and {\tt :stop media definition:}.  This is best illustrated
+with an example input:
+
+\begin{verbatim}
+:start media definition:
+
+AE=0.521
+UE=50.511
+AP=0.01
+UP=50.
+
+material data file=/home/username/HEN_HOUSE/pegs4/data/material.dat
+
+:start H2O521ICRU:
+  elements=H,O
+  number of atoms=2,1
+  rho=1.0
+  stopping powers=restricted total
+  bremsstrahlung correction=KM
+  density correction file=water_liquid
+  sterncid=H2O521ICRU
+:stop H2O521ICRU:
+
+:start AIR521ICRU:
+  elements=C,N,O,AR
+  mass fractions=1.24000E-04,7.55200E-01,2.31800E-01,1.28300E-02
+  rho=1.2048E-03
+  stopping powers=restricted total
+  bremsstrahlung correction=NRC
+  gas pressure = 1.0
+  density correction file= air_dry_nearsealevel  
+  sterncid=AIR521ICRU
+:stop AIR521ICRU:
+
+:stop media definition:
+\end{verbatim}
+where:
+\begin{description}
+\item {\tt AE,UE,AP,UP } are the kinetic energy limits for calculating photon ({\tt AP,UP}) and electron ({\tt AE,UE}) cross sections in
+\index{pegsless mode!AE}\index{pegsless mode!UE}\index{pegsless mode!AP}\index{pegsless mode!UP}
+MeV.  These energy limits are also mentioned in the context of the EGSnrc system in Section~\ref{common_blocks}. 
+If {\tt AE} is
+not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section~\ref{step_2}) specified
+in the simulation.  If
+{\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section~\ref{step_2})
+specified.  {\tt UE} and {\tt UP} default to 50.511 MeV and 50.0 MeV, respectively.
+
+\index{pegsless mode!material data file}
+\item {\tt material data file} is the name (including full directory path) of a file containing specifications for the media used
+in the simulation.  Provided with the EGSnrc distribution is the material data file {\tt \$HEN\_HOUSE/pegs4/data/material.dat} which
+contains specifications necessary to reproduce all of the cross-section data in {\tt 521icru.pegs4dat} and {\tt 700icru.pegs4dat}
+(provided that the appropriate values of {\tt AE, UE, AP and UP} are specified--see above).  Note that the format for
+media specifications in the material data file is similar to that used for specifying media directly in the
+{\tt .egsinp} file, described immediately below.  If a material data file is not specified, then all media used in the simulation
+must be specified directly in the {\tt .egsinp} file.
+
+\index{pegsless mode!defining media in .egsinp file}
+\item the {\tt :start MEDNAME:} and {\tt :stop MEDNAME:} delimiters are used to specify medium, {\tt MEDNAME}, directly in the
+{\tt .egsinp} file.  This method of specifying a medium is used if {\tt MEDNAME} is not included in the material data file or
+if you wish to override some or all of the specifications for {\tt MEDNAME} in the material data file.
+If no material data file is input, then all media in the simulation
+must be specified in this way.  The inputs between thse delimiters are described below.  Variables
+in square brackets are the analogous PEGS4 variables described in the PEGS4 Manual (Section~\ref{pegs4}) above.
+\begin{description}
+\index{pegsless mode!elements}
+\item {\tt elements} specifies the elements comprising the medium.  Elements are specified using chemical symbols separated by
+commas.  Case is unimportant.
+\index{pegsless mode!no. of atoms}
+\index{pegsless mode!mass fractions}
+\item {\tt number of atoms} $[${\tt PZ}$]$ or {\tt mass fractions} $[${\tt RHOZ}$]$.  For all {\tt elements}, specify either the
+number of atoms in a molecule of the medium ({\it i.e.} stoichiometric coefficients) or the mass fractions of the elements in the medium.
+Values are separated by commas and are input in the same order as their corresponding elements.  In the example above,
+the composition of {\tt H2O521ICRU} is
+defined using the number of atoms of each element, while that of {\tt AIR521ICRU} is defined using the mass fraction of each element.
+\index{pegsless mode!rho}
+\index{pegsless mode!bulk density}
+\item {\tt rho} specifies the bulk density of the medium in g/cm$^3$.
+\index{pegsless mode!stopping power type}
+\index{pegsless mode!IUNRST}
+\item {\tt stopping powers} $[${\tt IUNRST}$]$ specifies what electron stopping powers you would like to calculate.  Options are:
+\begin{itemize}
+\item {\tt restricted total} $[${\tt IUNRST}=0$]$ (the default): This will result in a normal simulation with interactions above {\tt AE} treated
+discretely.
+\item {\tt unrestricted collision} $[${\tt IUNRST}=1$]$: This will result in collision interactions (Moeller, Bhaba) being treated as CSDA ({\it i.e.} not
+as discrete events) and radiative events (bremsstrahlung, annihilation) not simulated at all.
+\item {\tt unrestricted collision and radiative} $[${\tt IUNRST}=2$]$: This will produce a CSDA simulation, where none of the
+interactions is treated discretely and all energy from interactions is deposited locally.
+\item {\tt unrestricted collision and restricted radiative} $[${\tt IUNRST}=3$]$: Only radiative events (bremsstrahlung, annihilation)
+are treated discretely.
+\item {\tt restricted collision and unrestricted radiative} $[${\tt IUNRST}=4$]$: Only collision events (Moeller, Bhaba) are
+treated discretely.
+\item {\tt unrestricted radiative} $[${\tt IUNRST}=5$]$: Radiative events are treated as CSDA and collision events are not simulated.
+\end{itemize}
+\index{pegsless mode!bremsstrahlung correction}
+\index{pegsless mode!IAPRIM}
+\item {\tt bremsstrahlung correction} $[${\tt IAPRIM}$]$ specifies the correction to apply to calculated bremsstrahlung cross-sections.
+Options are:
+\begin{itemize}
+\item {\tt KM} $[$IAPRIM=0$]$ (the default): Apply Koch and Motz\cite{KM59} empirical corrections.
+\item {\tt NRC} $[$IAPRIM=1$]$: Apply NRC corrections based on NIST/ICRU\cite{Ro89a}.  These corrections are read from the file
+{\tt \$HEN\_HOUSE/pegs4/aprime.data}.
+\item {\tt None} $[$IAPRIM=2$]$: No corrections applied.
+\end{itemize}
+\index{pegsless mode!gas pressure}
+\index{pegsless mode!GASP}
+\item {\tt gas pressure} $[${\tt GASP}$]$ is the pressure of the medium in atm.  This input is only necessary if the medium is a gas, otherwise it
+defaults to 0.
+\index{pegsless mode!density correction file}
+\index{pegsless mode!EPSTFL}
+\item {\tt density correction file} $[${\tt EPSTFL}$]$ is the name of a file containing density effects which, when applied to calculated collision
+stopping powers, results in agreement with collision stopping powers published in ICRU37\cite{ICRU37}.  Density correction files must exist
+in directory {\tt \$HEN\_HOUSE/pegs4/density\_corrections/elements} (for elements) or {\tt \$HEN\_HOUSE/pegs4/density\_corrections/compounds} (for mixtures or compounds).  Density correction file names are specified without the directory path and without the {\tt .density}
+extension (although this is understood to be part of the name).  Note that the density correction files for many elements, compounds
+and mixtures are supplied with
+the distribution.  Density correction files have a header portion from which it is possible to read the composition and bulk
+density of the medium.  If the composition and/or bulk density read from the file header are different than those explicitly input
+using {\tt elements=}, {\tt number of atoms=} or {\tt mass fractions=}, and {\tt rho=}, then {\tt HATCH} will ouput a warning
+message, and the values in the density correction file will be used.
+\index{pegsless mode!STERNCID}
+\item {\tt sterncid} $[${\tt STERNCID}$]$  is the Sternheimer-Berger ID for the medium. {\tt STERNCID} is compared to a lookup table and\
+if it is found, pre-calculated density effect parameters are applied to collision stopping powers.\
+Otherwise, a general Sternheimer-Peierls formula is used to calculate density effect parameters.  The default\
+STERNCID is the medium name.  Note that if a density correction file is specified, then density corrections read from the file
+supersede those determined based on {\tt STERNCID}.
+\end{description}
+\end{description}
+
+Inputs specifying media are case insensitive with the exception of the medium name ({\it e.g.} {\tt H2O521ICRU} is
+different than {\tt h2o521ICRU}).
+
+Note that, along with the medium name, the medium composition, specified by {\tt elements} and {\tt number of atoms} or {\tt mass fractions}, and its bulk density, specified by {\tt rho}, are
+sufficient to calculate cross-sections.  Thus, it is possible to completely define a medium
+using only these three inputs, with all other parameters reverting to their default values or remaining blank.
+Alternatively, since composition and bulk density can be read from the header of the density correction file, it is also possible to define a medium
+simply by specifying the name of the relevant density correction file.
+
+For more details on the inputs for specifying a medium, please refer to the PEGS4 Manual above (Section~\ref{pegs4}).
+
+\index{pegsless mode!running code}
+\subsection {Running User Codes in Pegsless Mode}
+
+EGSnrc user codes that read an input file can be run interactively in pegless mode using the command line input:
+\begin{verbatim}
+user_code -i inputfile
+\end{verbatim}
+where {\tt inputfile} is the name of the input file (with no
+{\tt .egsinp} extension).
+
+Pegsless batch runs use the command line syntax:
+\begin{verbatim}
+exb user_code inputfile pegsless [short|medium|long] [batch=batch_system] [p=N]
+\end{verbatim}
+This is identical to the syntax for a batch run with pegs data but
+with the word ``{\tt pegsless}'' in place of the name of the pegs data file.
+
+\index{.mederr file}
+When running in pegsless mode, EGSnrc outputs a file, {\tt inputfile.mederr}, which, for each medium used
+in the simulation, indicates where each specifying parameter has been read ({\it i.e.} from a material data
+file or directly from the {\tt .egsinp} file).  The file also includes warnings when {\tt AE}, {\tt UE},
+{\tt AP} or {\tt UP} have not been specified and have been set to their default values and when a material
+data file has not been specified.  For parallel runs in pegsless mode (parameter {\tt p} $>$ 1 in the batch
+command syntax above), the {\tt .mederr} file is only output by the first job.
+
+The actual values of the media specifications (including defaults) used to calculate cross-sections are
+output in the listing file, {\tt inputfile.egslst}, and to the screen for interactive runs or in the
+log file, {\tt inputfile.egslog}, for batch runs.
+
+\subsection{Implementation of Pegsless Code}
+\index{pegsless mode!implementation}
+
+To run an EGSnrc user code in pegsless mode, the following files, all located in
+{\tt \$HEN\_HOUSE/src}, must be included at compile time:
+
+\begin{description}
+\item {\tt pegs4\_macros.mortran}:
+\index{pegs4\_macros.mortran}
+\begin{itemize}
+\item Contains PEGS4 common block variables used to calculate electron cross sections by subroutines in {\tt pegs4\_routines.mortran}
+(see below).  In many cases these are modified versions of the common blocks used by {\tt pegs4.mortran} (the
+original PEGS4 code).
+\index{\$GET\_PEGSLESS\_XSECTIONS}
+\item Contains the macro {\tt \$GET\_PEGSLESS\_XSECTIONS}.  This is coding that is inserted at compile time into
+the subroutine {\tt HATCH} in {\tt egsnrc.mortran} and is executed when the code is run in pegsless mode.  First, this
+block of coding calls the subroutine {\tt get\_media\_inputs} (see below) to read the pegsless inputs.  The coding then
+loops over all media in the simulation and, for each medium:
+\begin{enumerate}
+\item copies media parameters stored in EGSnrc common block variables by\\
+ {\tt get\_media\_inputs} into the corresponding
+PEGS4 common block variables used by the cross section calculation subroutines
+\item calls the
+necessary subroutines in {\tt pegs4\_routines.mortran} for calculating electron cross sections
+\item copies cross section data back out from the PEGS4 common block variables into the corresponding EGSnrc common
+block variables for use in the simulation.
+\end{enumerate}
+Finally, {\tt show\_media\_parameters} is called (see below) to output the media specifications read in to standard
+output (the {\tt .egslog} file in the case of a batch run).
+\item Contains the macro {\tt \$DECLARE-PEGS4-COMMON-BLOCKS}, called at the beginning of {\tt HATCH} to declare the
+PEGS4 common block variables that {\tt HATCH} needs to have access to, so that they can be copied from/to their
+EGSnrc common block analogs.  This macro also declares some local and external types used by {\tt HATCH} in
+pegsless mode.
+\item Contains the macro {\tt \$INIT-PEGS4-VARIABLES} used to define some constants in the PEGS4 common blocks.
+\item Must be included after {\tt egsnrc.macros} and before the user source code.
+\end{itemize}
+\index{pegs4\_routines\_mortran}
+\item{\tt pegs4\_routines.mortran}:  This contains the subroutines necessary to calculate electron cross sections.  In most
+cases, these subroutines have been copied directly from {\tt pegs4.mortran} with some modifications to variable names, suppressed
+output, and the handling of density correction files.  Subroutines that appear directly in the {\tt \$GET\_PEGSLESS\_XSECTIONS}
+coding block (see above) are:
+\begin{itemize}
+\index{MIX}
+\item {\tt MIX}: This subroutine calculates multiple scattering parameters used to calculate electron cross sections. 
+\index{SPINIT}
+\item {\tt SPINIT}: This subroutine determines the density correction to apply to electron stopping powers.  It takes as
+an argument the name of the density correction file for the medium (if specified).  It then determines the appropriate
+density corrections as outlined in Subsection~\ref{pegslessinputsect} above.
+\index{PWLF1}
+\item {\tt PWLF1}: This subroutine performs a piece-wise linear fit of functions describing bremsstrahlung, Moeller, Bhaba
+and positron annihilation cross sections over the electron kinetic energy interval defined by $[${\tt AE, UE}$]$.  The subroutine 
+determines the number of sub-intervals required for the fits and returns a discrete point for each interaction type for
+each sub-interval.
+\end{itemize}
+\index{get\_media\_inputs.mortran} 
+\item {\tt get\_media\_inputs.mortran}: 
+\begin{itemize} 
+\index{get\_media\_inputs}
+\item Contains the {\tt get\_media\_inputs(ounit)} subroutine, which interprets 
+the pegsless inputs between the delimiters, {\tt :start media definition:} and {\tt :stop media definition:}
+in the {\tt .egsinp} file.  The subroutine is also responsible for assigning default values for input parameters
+that are out of range, omitted, or left blank.  Input values are then passed to the appropriate common block
+variables for use in calculating/modifying electron cross sections for the media in the simulation. The parameter, 
+{\tt ounit}, specifies the unit number to which media specifications, once read, will 
+be echoed.  Usually this is unit number 6 (standard output).  If {\tt ounit}$\leq$0, then the media specs are not
+echoed.  The subroutine also has an entry point, {\tt show\_media\_parameters(ounit)}, which can be called from
+the user code to echo the media specifications to any unit at any point after they have been read in.  Finally,
+this subroutine opens up and writes to the {\tt .mederr} file, containing information about the source of
+media specifications used ({\it i.e.} the material data file or the {\tt .egsinp} file).
+\index{GET\_INPUT\_PLUS}\index{GET\_INPUT}
+\item Contains the subroutine {\tt GET\_INPUT\_PLUS}, which is a modified version of {\tt GET\_INPUT} (in the
+file {\tt get\_inputs.mortran}).  Modifications include the ability to read a unit other than standard input
+(the {\tt .egsinp} file) and the ability to have different starting and ending delimiters within which to search
+for inputs.  {\tt GET\_INPUT\_PLUS} is used by {\tt get\_media\_inputs} to read and interpret the material data.
+file.
+\end{itemize}
+\end{description}
+
+\index{pegless mode!single precision}
+Apart from ease of bookkeeping, the main reason for separating the PEGS4 common block variables used to 
+calculate cross sections from their EGSnrc common block analogs is to allow calculation of cross sections
+with the same precision ({\tt REAL*4}) as {\tt pegs4.mortran}.  This conveniently allows comparisons between
+results in pegsless mode and those using PEGS4 data files (created with identical media specifications and over
+the same energy range).  Note, however, that there will still be differences within uncertainty between the two calculations.
+This is because the reading of cross section data from fixed-format PEGS4 data files necessarily results in a
+loss of precision compared to passing values internally from the PEGS4 common block variables to the EGSnrc
+variables.
+
+\index{pegless mode!double precision}
+To change electron cross section calculations to double precision, go into \\
+{\tt \$HEN\_HOUSE/src/pegs4\_macros.mortran}
+and change the macro, {\tt \$REAL4} from {\tt real*4} to {\tt real*8} and recompile your user code.
+
+\subsection{Changes to EGSnrc Source Codes}
+\index{pegsless mode!changes to EGSnrc codes}
+
+Implementation of pegsless mode necessitated the following changes to EGSnrc source coding:
+\begin{description}
+\item In {\tt \$HEN\_HOUSE/src/egsnrc.macros}:
+\index{egsnrc.macros}
+\begin{itemize}
+\index{\$GET-PEGSLESS-XSECTIONS}\index{\$INIT-PEGS4-VARIABLES}\index{\$DECLARE-PEGS4-COMMON-BLOCKS}
+\item Definition of empty macros {\tt \$GET-PEGSLESS-XSECTIONS}, {\tt \$INIT-PEGS4-VARIABLES} and {\tt \$DECLARE-PEGS4-COMMON-BLOCKS}
+which are used in place of their versions defined in {\tt \$HEN\_HOUSE/src/pegs4\_macros.mortran} when user codes are compiled
+without pegsless implementation.
+\index{pegsless mode!is\_pegsless variable}
+\index{is\_pegsless}
+\item Definition of a new logical variable, {\tt is\_pegsless}, in the {\tt EGS-IO} common block.  This variable is set to {\tt .true.}
+for pegsless runs (see below).
+\end{itemize}
+\index{egsnrc.mortran}
+\item In {\tt \$HEN\_HOUSE/src/egsnrc.mortran}:
+\begin{itemize}
+\item Introduction of {\tt \$INIT-PEGS4-VARIABLES} and {\tt \$DECLARE-PEGS4-COMMON-BLOCKS} macros at the beginning of
+subroutine {\tt HATCH}.
+\item Within {\tt HATCH}, the introduction of a new conditional statement where
+the {\tt .pegsdat} file is read if {\tt is\_pegsless=.false.} and the {\tt \$GET-PEGSLESS-XSECTIONS} macro
+is executed if {\tt is\_pegsless=.true.}
+\end{itemize}
+\index{egs\_utilities.mortran}
+\item In {\tt \$HEN\_HOUSE/src/egs\_utilities.mortran}
+\begin{itemize}
+\index{egs\_check\_arguments}
+\item Subroutine {\tt egs\_check\_arguments} sets {\tt is\_pegsless=.true.} if the
+``{\tt -p pegsfilename}'' argument is not supplied on the command line when running a user code.
+\index{egs\_init1}
+\item Subroutine {\tt egs\_init1} now only opens the PEGS4 data file if {\tt is\_pegsless=.false.}
+\end{itemize}
+\end{description} 

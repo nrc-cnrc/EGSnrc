@@ -1,0 +1,651 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  EGSnrc manual: tutorials
+%  Copyright (C) 2015 National Research Council Canada
+%
+%  This file is part of EGSnrc.
+%
+%  EGSnrc is free software: you can redistribute it and/or modify it under
+%  the terms of the GNU Affero General Public License as published by the
+%  Free Software Foundation, either version 3 of the License, or (at your
+%  option) any later version.
+%
+%  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+%  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+%  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+%  more details.
+%
+%  You should have received a copy of the GNU Affero General Public License
+%  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Author:          Iwan Kawrakow, 2003
+%
+%  Contributors:    Blake Walters
+%                   Frederic Tessier
+%                   Ernesto Mainegra-Hing
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\vspace*{-3mm}
+% Replace line with fixed date with the one below when commiting
+% Beware: Using the macro below conflicts between CVS and latex!!!
+% \lfoot[{\sffamily {\leftmark}}]{{\small Last edited $Date: 2013/01/04 14:38:47 $
+\lfoot[{\sffamily {\leftmark}}]{{\small Last edited 2011/03/09 19:35:20
+}}
+
+\label{tutorials}
+\index{tutorial programs}
+\index{examples!user codes}
+
+EGSnrc is a powerful system which has been used in order to produce some
+very complex Monte Carlo simulations.  In spite of this complexity the
+user's interface with the system is, in principle, very simple.  In the
+following series of tutorial programs we use various aspects of these
+user interfaces in what we refer to as EGSnrc User Codes.  In these
+User Codes we will introduce some of the basic scoring techniques and,
+at the same time, will demonstrate the power of the Mortran3 language.
+Formal documentation in the form of EGSnrc and PEGS4 User Manuals can be
+found in sections~\ref{ERM} and ~\ref{pegs4}, respectively.  An EGSnrc
+User Guide to Mortran3 can be found in section~\ref{UGM3} and an overview
+of the system considerations is given in section~\ref{sys_consid}. With
+the introduction of the EGSnrcMP environment, the user has a more
+flexible interface at the system level, but that is described fully in
+Report PIRS-877\cite{Ka03}.
+
+ 
+These tutorials are written on the assumption that the reader is
+generally familiar with the contents of the EGSnrc Reference Manual
+(section~\ref{ERM} of this manual, page~\pageref{ERM}), although a
+complete understanding is not required.  In fact, the purpose
+of these tutorials is to make these manuals more understandable.
+Although the programs presented here are very simple in construction,
+it should become clear that with various extentions to them, generally
+of a bookkeeping nature, a wide range of important problems can be
+studied.  In the following sections, sometimes only partial listings of
+User Codes are presented.  The complete source for each (and the
+corresponding Fortran 77 code) is found on the EGSnrc Distribution. 
+
+Note that we changed the default parameters in EGSnrc after this section of
+the manual was written so there will be some minor differences when you run
+the calculations (e.g. bound Compton scattering and atomic relaxations are 
+modelled by default, \$REAL now defaults to real*8).  Also, use of the MP
+system requires a Step 0: {\tt call egs\_init;} and a Step 9: {\tt call
+egs\_finish;} which are in the distributed versions but not updated here.
+\index{\$REAL}
+
+% To see the expected output, see 
+% {\tt \$HEN\_HOUSE/test\_distribution\_outputs/}.  
+
+\index{tutor\_data.pegs4dat}
+To run the tutorials, a special PEGS4 data set called {\tt
+tutor\_data.pegs4dat} is on the distribution at {\tt
+\$HEN\_HOUSE/pegs4/data}.  To execute the tutorials issue the
+command:
+\begin{verbatim}
+      ex tutor1 "" tutor_data    or      tutor1 -p tutor_data
+\end{verbatim} 
+where the {\tt ""} signifies that no input file is required (except for
+{\tt tutor6, tutor7}). Note that with the EGSnrcMP environment 
+there are two other alternatives described
+in PIRS-877\cite{Ka03} (\viz, the right hand form above or use the {\tt
+egs\_gui}).  To compile the tutor codes, copy any one to your
+own user-code area if it is not already there, eg:
+\vspace*{-3mm}
+\begin{verbatim}
+                cd $EGS_HOME/tutor1
+                cp $HEN_HOUSE/tutor1/tutor1.mortran .
+                mf tutor1     
+\end{verbatim}
+\vspace*{-3mm}
+As alternatives to the {\tt mf} command, when using the EGSnrcMP
+environment, one may use the {\tt egs\_gui} or simply issue the command
+{\tt make} from {\tt \$EGS\_HOME/tutor1}(see PIRS-877\cite{Ka03}).
+The meaning of the commands {\tt mf} and {\tt ex} are discussed in
+section~\ref{sys_consid} (page~\pageref{sys_consid}).
+
+\vspace*{-5mm}
+\subsection{tutor1.mortran: 20 MeV e$^-$ through 1~mm of Ta}
+\index{tutor1.mortran}
+\vspace*{-3mm}
+The geometry of all the tutorials is the same,  namely, a
+semi-infinite slab of material is placed in a vacuum and a pencil beam
+of photons or electrons is incident normal to the surface.  The slab
+is in the X-Y plane and the particles are incident at the origin
+travelling along the Z-axis.  In the first problem, a beam of 20 MeV
+electrons is incident on a 1 mm thick plate of tantalum.  In order to
+use EGSnrc to answer the question ``What comes out the far side of the
+plate?'', we have created the user code {\tt tutor1.mortran} shown below.
+ 
+\begin{latexonly}
+%\input{tutor_codes_for_um/tut1_nc.mortran}
+\input{inputs/tutor_codes_for_um/tut1MP_nc.mortran}
+\end{latexonly}
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tut1MP_nc.mortran_html}
+\clearpage
+\end{htmlonly}
+ 
+Needless to say, the above User Code listing is
+somewhat difficult to read, and therefore confusing, in
+spite of the fact that it is complete.  The following is
+a heavily commented version of the same code, where the structure and
+readability of the Mortran3 language clearly demonstrates itself.
+ 
+\newpage
+\begin{latexonly}
+%\input{tutor_codes_for_um/tutor1.mortran}
+\input{inputs/tutor_codes_for_um/tutor1_MP.mortran}
+\clearpage
+%\input{tutor_codes_for_um/tutor1_output_new}
+\input{inputs/tutor_codes_for_um/tutor1_output_MP}
+\clearpage
+\end{latexonly}
+ 
+\begin{htmlonly}
+\clearpage
+%\input{tutor_codes_for_um/tutor1.mortran_html}
+\input{inputs/tutor_codes_for_um/tutor1_MP.mortran_html}
+\clearpage
+%\input{tutor_codes_for_um/tutor1_output_new_html}
+\input{inputs/tutor_codes_for_um/tutor1_output_MP_html}
+\clearpage
+\end{htmlonly}
+ 
+By keeping track of many of these histories, we could answer a lot of
+questions about what comes out the far side of the plate, but it
+should be recognised that these are all bookkeeping extensions to the
+problem---the physics itself is already accomplished with EGSnrc and the
+relatively small amount of User Code listed above.  The scoring
+routine for this problem is the simplest possible; namely, it outputs
+on the terminal some of the parameters of the various particles
+leaving the plate.
+ 
+In addition, this User Code includes examples of the following items
+that are discussed further in the EGSnrc User Manual (section~\ref{ERM}). 
+\begin{itemize} 
+\item Defining simple macro replacements for templates
+(e.g. the character string {\tt \$MXMED}
+is replaced by 1 everywhere in the EGSnrc system).
+%
+\item The use of {\tt COMIN} statements (which is an EGSnrc macro to allow
+easy insertion of {\tt COMMONS}).
+
+\item The use of {\tt \$REAL, \$IMPLICIT-NONE, \$INTEGER}.
+\index{\$REAL} \index{\$INTEGER} \index{\$IMPLICIT-NONE}
+%
+\item The technique required in order to define the array {\tt MEDIA}
+
+\item The use of {\tt OUTPUT} statements (which are an easy way to output
+things to Fortran Unit 6).
+%
+\item The definition of calling parameters for the SHOWER routine.
+%
+\item A very simple AUSGAB routine.
+
+\item The replacement of {\tt \$CALL-HOWNEAR(\#)} with the recommended
+subroutine call.
+ 
+\item Simple HOWFAR and HOWNEAR subroutines. 
+
+\item Relational and logical operators such as
+{\tt >= (.GE.), \& (.AND.), $\sim$= (.NE.)} and\\ {\tt  | (.OR.)}.  The only
+warning is not to mix modes since this will generate errors (e.g.,
+don't use {\tt IF(A=B.AND.C=D))}. 
+\index{relational operators}
+\index{Mortran3!relational operators}
+\end{itemize} 
+
+
+\subsection{tutor2.mortran: energy transmitted, reflected, deposited}
+\index{tutor2.mortran}
+
+In this example we use the same geometry as above, but we want to score
+the fraction of the incident energy that is reflected from, transmitted
+through, and deposited in the plate using the default parameter settings.
+The coding is essentially the same as in {\tt tutor1.mortran} except that
+{\tt COMMON/SCORE/} and a new array {\tt ESCORE} are defined at Step 1.
+The latter is initialised to zero (Step 2) and subsequently printed
+out on the line printer (Step~8).  The AUSGAB routine is considerably
+different as shown below.
+
+\begin{latexonly}
+\input{inputs/tutor_codes_for_um/tutor2_ausgab.mortran}
+\end{latexonly}
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor2_ausgab.mortran_html}
+\clearpage
+\end{htmlonly}
+
+AUSGAB is still very simple since all we need to do is to keep track
+of the energy deposited in the three regions.  The variable {\tt EDEP}
+(available through {\tt COMMON/EPCONT/}) contains the energy deposited
+during a particular step for a variety of different {\tt IARG}-situations,
+as described in the comments in fig~\ref{fig_tutor2_ausgab} and further
+elaborated upon in section~\ref{ausgab}(page~\pageref{ausgab}).  In this
+example, but not always, we can sum {\tt EDEP} for any value of {\tt
+IARG} up to 4.  Figure~\ref{fig_tutor2_output} shows the output from
+{\tt tutor2.mortran}.
+
+\newpage 
+
+\begin{latexonly}
+%\input{tutor_codes_for_um/tutor2_output_new}
+\input{inputs/tutor_codes_for_um/tutor2_output_MP}
+\end{latexonly}
+\clearpage 
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor2_output_new_html}
+\clearpage
+\end{htmlonly}
+
+\subsection{tutor3.mortran: NaI response function} 
+\index{tutor3.mortran}
+\index{response function}
+\index{AUSGAB!response function}
+
+
+The geometry in  this  example is similar to the previous two but the
+problem is very different.  Here we investigate the energy response
+function for a 2.54 cm thick slab of NaI when a 5 MeV beam of photons
+is incident on it.  In  this case the final scoring and binning is
+done at the end of each history (\ie , after all the descendants
+from each initial photon have been tracked completely).
+Figure~\ref{fig_tutor3}
+shows the changes required (at Steps 7 and 8) and the new AUSGAB
+routine. Figure~\ref{fig_tutor3_output} shows the output from this code.
+For a detailed discussion of the use of EGS to calculate response functions
+see Rogers (1984)\cite{Ro82}.  The user code DOSRZnrc calculates response
+functions in any cylindrical geometry\cite{Ro00}.
+
+
+
+\begin{latexonly}
+\input{inputs/tutor_codes_for_um/tutor3.mortran}
+\newpage
+\input{inputs/tutor_codes_for_um/tutor3_output_new}
+\clearpage
+\end{latexonly}
+
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor3.mortran_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor3_output_new_html}
+\clearpage
+\end{htmlonly}
+
+\subsection{tutor4.mortran: use of SUBROUTINE WATCH}
+\label{tutor4}
+\index{tutor4.mortran}
+\index{SUBROUTINE WATCH}
+\index{WATCH}
+\index{IWATCH}
+
+
+The {\tt tutor4.mortran} user code is functionally identical to {\tt
+tutor2.mortran}, \ie~ it scores the total amount of energy reflected,
+deposited and transmitted when a 20 MeV beam of electrons is incident
+on a 1~mm slab of Ta.  However it has the added ability to use the
+auxiliary {\tt SUBROUTINE WATCH} which is part of the file {\tt
+\$HEN\_HOUSE/nrcaux.mortran}.  As set up, {\tt tutor4.mortran} outputs
+to the terminal, detailed information about each particle interaction
+which occurs during the simulation.
+
+Implementing the use of {\tt WATCH} consists of two mandatory calls and one
+optional call, which has been included in {\tt tutor4.mortran}.   These
+extra calls are shown in fig~\ref{fig_tutor4}. Figure~\ref{fig_watch} shows
+the header of {\tt SUBROUTINE WATCH} which is part of {\tt nrcaux.mortran}.
+This listing describes how to use {\tt SUBROUTINE WATCH}.
+
+Figure~\ref{fig_tutor4_output} shows portions of the output from {\tt
+tutor4}.  Note that the full output requires 132 columns and this figure
+has been edited slightly so the font size is still more or less visible!
+It is well worth studying this output carefully and being sure that you
+understand what is happening in the shower.
+
+
+\index{EGS\_Windows}
+\index{.egsgph}
+In {\tt tutor4} the value of {\tt IWATCH} has been set to 1 and hence the output
+lists every time an interaction occurs or a particle is discarded for some
+reason.  If one changes the value of {\tt IWATCH} to 2 the output includes
+information on every single electron step and hence explodes dramatically
+in quantity.  Finally, if one has installed the code {\tt EGS\_Windows} for
+doing a 3-D graphics display of EGS simulations, then {\tt IWATCH = 4} will
+write a files (to unit 13) which is the input for this code.  This
+site also presents a series of examples of the use of {\tt EGS\_Windows}.
+It should be noted that starting with Version 4 of the {\tt EGS\_Windows}
+system, it works on any X-windows based Unix/Linux system\cite{TR99a}.
+Figure~\ref{fig_tutor4_environment} presents an example of the environment
+file needed with {\tt tutor4} if it is to write a data file for display by
+the {\tt EGS\_Windows} system.  In this case the file is named {\tt
+tutor4.egsgph}.
+\index{examples!.environment file}
+\index{environment file}
+\index{.environment file}
+
+All users are strongly advised to build {\tt SUBROUTINE WATCH} into any
+user code that they write since it has proven absolutely invaluable for
+debugging programs.  When things don't work, being able to track a few
+histories inevitably helps to sort out the problem.
+
+Although not apparent in this example, WATCH also displays when
+bremsstrahlung photons are split, when relaxation particles are created
+(fluorescent photons, Auger electrons, Coster-Kronig electrons) or when
+particles are discarded by internal Russian Roulette.
+
+{\bfseries One major warning: when using WATCH you must only use it for a
+few histories at a time due to the large quantity of output!}
+
+
+
+\begin{latexonly}
+\input{inputs/tutor_codes_for_um/tutor4_new.mortran}
+\input{inputs/tutor_codes_for_um/watch_header.mortran}
+\input{inputs/tutor_codes_for_um/tutor4_output_54_new}
+\input{inputs/tutor_codes_for_um/tutor4.io}
+\clearpage
+\end{latexonly}
+
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor4_new.mortran_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/watch_header_new.mortran_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor4_output_54_new_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor4.io_html}
+\clearpage
+\end{htmlonly}
+
+
+
+
+\subsection{tutor5.mortran: using LATCH and Rayleigh scattering}
+\index{tutor5.mortran}
+%
+\index{LATCH}
+This tutorial program is an example that includes Rayleigh scattering
+and which makes use of the variable {\tt LATCH} (contained in
+{\tt COMMON/STACK/}).
+{\tt LATCH} can be set for any particle on the ``stack" of particles being
+transported, and it is passed on to all its progeny.  This provides a
+simple procedure for keeping track of the history of a particle.  In
+this case we make use of {\tt LATCH} to keep track of how often photons
+from an incident 50 keV beam are Compton or Rayleigh scattered while
+passing through a 0.5 cm slab of water.
+ 
+\index{IAUSFL}
+The program also demonstrates the use of the {\tt IAUSFL} array of
+flags (in {\tt COMMON /EPCONT/}).  By setting the appropriate flags,
+the user can cause the EGSnrc system to call the AUSGAB subroutine in
+any combination of 28 well specified situations (see section~\ref{ausgab},
+page~\pageref{ausgab}).
+By default, EGSnrc calls AUSGAB only for 5 out of the
+possible 28 situations.  Here, by setting {\tt IAUSFL(18)} and
+{\tt IAUSFL(24)} from 0 (default) to 1 in the main program, we cause EGSnrc
+to call AUSGAB with {\tt IARG=17} and {\tt IARG=23} (\ie, just before a
+Compton or a Rayleigh scattering event, respectively).  We make use of
+these calls to set some flags associated with each photon rather than
+for scoring any variables.  The AUSGAB routine also makes use of a few
+simple local macros in order to make the logic of the coding more
+transparent.  Perhaps the greatest strength of Mortran3 is this
+ability to create readable and hence more accurate coding.
+A complete listing of {\tt tutor5.mortran}, except for the HOWFAR/HOWNEAR
+routines
+which are similar to the other examples, is given below.
+\index{AUSGAB} \index{IARG}
+
+Note that the logic in {\tt tutor5.mortran} for EGSnrc 
+is the same as it was for EGS4.  This is only possible because in water
+there are no fluorescent photons above the 10 keV PCUT value in the
+problem.  If the material were changed to a higher Z material, e.g. lead,
+one would need to change the logic since the present logic allows
+fluorescent photons created via relaxation after a Compton interaction to
+be scored as a Compton scattered photon.
+ 
+\begin{latexonly}
+%\input{tutor_codes_for_um/tutor5.mortran}
+\input{inputs/tutor_codes_for_um/tutor5_MP.mortran}
+\input{inputs/tutor_codes_for_um/tutor5_output_54_new}
+%note under MP results identical
+\clearpage
+\end{latexonly}
+
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor5.mortran_html}
+\clearpage
+%following has been updated
+\input{inputs/tutor_codes_for_um/tutor5_output_50_html}
+\clearpage
+\end{htmlonly}
+
+
+\typeout{************start tutor6.mortran}
+\subsection{tutor6.mortran: modifying the transport options}
+\label{tutor6}
+\index{tutor6.mortran}
+\index{transport options}
+\index{changing transport options}
+
+\index{EGS4}
+\index{PRESTA}
+As seen from the previous tutorial programs, EGSnrc can be run in the
+default mode without making any selections regarding transport algorithms
+or about which features to include. In these cases it it uses default
+algorithms which apply in the vast majority of cases.  However, there are
+some options which are wasteful to model in many simulations, but
+critical for others.  For example, taking into account binding effects in
+Compton scattering can be important for low-energy calculations but has no
+effect for most cases above 1 MeV. The same is true for Rayleigh (coherent) 
+scattering of photons. In addition, there have been many changes made to the
+electron transport algorithm in EGS4/PRESTA and EGSnrc.  To our knowledge
+the default simulations with EGSnrc provide accurate electron transport but
+to allow us and others to understand the differences between EGSnrc and
+EGS4/PRESTA, we have left hooks in the EGSnrc code which allow various
+old transport options to still be used (see
+section~\ref{mimic},page~\pageref{mimic}). So, for example, EGSnrc can be run
+with the PRESTA-I electron transport algorithm turned on instead of the new
+PRESTA-II transport algorithm.  Also one can chose to vary the boundary
+crossing algorithm used in EGSnrc and mimic that used in EGS4/PRESTA.  This
+can be useful for investigations about the impact of the changes on a given
+user code.  More importantly, it allows some of the time consuming features
+of the simulation in the default EGSnrc to be ``turned off'' if it turns
+out that they do not affect the users problem.
+
+The {\tt tutor6.mortran} code does a simple calculation, very similar to
+those in the previous tutorial codes, but asks the user for a series of
+options to use.  In fact, this little code gives an example of how to
+change every EGSnrc transport option that we can think of.  The purpose is
+to show how easy it is. Basically you must assign a value to some flag or
+variable and
+ensure that the appropriate {\tt COMIN} is defined in the subroutine or
+main routine where the inputs are read.
+
+The variables which are set are summarised in Table~\ref{tab_tutor6} and
+figure~\ref{fig_tutor6_parts} shows one part of code which inputs two of
+these variables (please see the full version of the code on the
+distribution at {\tt \$HEN\_HOUSE/tutor6/tutor6.mortran}).
+
+{\tt tutor6.mortran} also exhibits two other interesting features. It
+initialises two variables, viz {\tt IREJECT} and {\tt ESAVE},  which
+allow EGSnrc's internal range rejection to be utilised by setting the
+arrays {\tt i\_do\_rr} and {e\_max\_rr}.  By setting {\tt IREJECT} to 1,
+EGSnrc terminates the history of any electron below the energy ESAVE
+if that particle is unable to reach the closest geometric boundary.
+See section~\ref{range_rejection} (page~\pageref{range_rejection})
+for more information.  {\tt tutor6.mortran} also does a statistical
+analysis of its results using a new procedure suggested by Francesc
+Salvat\cite{SB00} which doesn't use the common ``batch technique''
+but scores the statistics on an event by event basis in an efficient
+manner. This procedure is shown in figure~\ref{fig_tutor6_stats}.
+
+Note that if {\tt tutor6.mortran} is run with bremsstrahlung splitting
+turned on it will be seen that the total energy is not exactly 1.0. This
+is because of the lack of exact energy conservation as discussed in
+section~\ref{brem_splitting} (page~\pageref{brem_splitting}). As expected,
+as the number of histories increases, the energy conservation gets closer
+to unity.
+
+\begin{table}
+\index{ibr\_nist}
+\index{bca\_algorithm}
+\begin{center}
+\caption{The transport control variables set in {\tt tutor6.mortran} and
+the {\tt COMINs} they are contained in. These represent all user controllable
+transport variables. See the source code of
+{\tt tutor6.mortran} and 
+sections~\ref{common_blocks} and \ref{step_2}
+for more detailed descriptions of the meaning of each.\vspace{3mm} }
+\label{tab_tutor6}
+\begin{tabular}{ll}
+\hline
+&\\
+Variable & {\tt COMIN} \\
+&\\
+\hline
+&\\
+ECUT,PCUT   &  BOUNDS\\
+&\\
+IBRDST      & BREMPR\\
+IPRDST       & BREMPR\\
+ibr\_nist     & BREMPR \\
+&\\
+IBCMP        & COMPTON-DATA~~~~~~~~~\\
+&\\
+IEDGFL      & EDGE\\
+IPHTER      & EDGE\\
+&\\
+ESTEPE      & ET-CONTROL \\
+XIMAX			&ET-CONTROL \\
+SKINDEPTH\_FOR\_BCA	&ET-CONTROL \\
+TRANSPORT\_ALGORITHM~~~~~~~~~~~~~~	&ET-CONTROL \\
+BCA\_ALGORITHM		&ET-CONTROL \\
+EXACT\_BCA		&ET-CONTROL \\
+SPIN\_EFFECTS		&ET-CONTROL \\
+&\\
+IRAYLR   		&MISC\\
+&\\
+luxury\_level,iseed      & none \\
+&\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\caption{The intrinsic variance reduction parameters set in {\tt
+tutor6.mortran}. They are included in EGSnrc via {\tt
+COMIN/EGS-VARIANCE-REDUCTION}.}
+\begin{htmlonly}
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{htmlonly}
+\begin{tabular}{c}
+\hline
+\\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Variable~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  \\
+\\
+\hline
+\\
+nbr\_split \\
+i\_play\_RR	\\
+prob\_RR	\\
+i\_do\_rr	\\
+e\_max\_rr	\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+\clearpage
+
+%\input{tutor_codes_for_um/tutor6.mortran}
+\begin{latexonly}
+\input{inputs/tutor_codes_for_um/eg_tutor6.mortran}
+\input{inputs/tutor_codes_for_um/ausgab_tutor6.mortran}
+\clearpage
+\end{latexonly}
+
+\begin{htmlonly}
+\clearpage
+\input{inputs/tutor_codes_for_um/eg_tutor6.mortran_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/ausgab_tutor6.mortran_html}
+\clearpage
+\end{htmlonly}
+
+\index{examples!use of input file}
+\index{tutor6.mortran}
+\index{transport options}
+\index{changing transport options}
+
+{\tt tutor6.mortran} is designed to be run interactively, prompting for
+responses from the terminal.  This can become tedious and to shorten the
+process the scripts used to run EGSnrc allow the user to specify an input
+file which is read as if it were input from the terminal.
+Figure~\ref{fig_tutor6_input} shows an example of such an input file to be
+used with {\tt tutor6.mortran}.  The only trouble is that the prompts
+become rather garbled since the code was not written to handle this case.
+Figure~\ref{fig_tutor6_output_50} shows the terminal session when
+{\tt tutor6.mortran} is run interactively using the same inputs as in the
+sample input file.
+
+\begin{latexonly}
+\index{.egsinp}
+\input{inputs/tutor_codes_for_um/5mev_e_1mm_Ta.egsinp}
+\clearpage
+%\input{tutor_codes_for_um/tutor6_output_54_new}
+\input{inputs/tutor_codes_for_um/tutor6_output_54_MP}
+\clearpage
+\end{latexonly}
+
+\begin{htmlonly}
+\clearpage
+\index{.egsinp}
+\input{inputs/tutor_codes_for_um/5mev_e_1mm_Ta_html}
+\clearpage
+\input{inputs/tutor_codes_for_um/tutor6_output_54_new_html}
+\clearpage
+\end{htmlonly}
+ 
+\newpage
+%
+\par\noindent
+%
+\subsection{tutor7.mortran: using SUBROUTINE GET\_INPUTS}
+\index{GET\_INPUTS}
+\index{SUBROUTINE GET\_INPUTS}
+\index{tutor7.mortran}
+
+{\tt tutor7.mortran} is like the same as {\tt tutor6.mortran} but it
+uses {\tt SUBROUTINE GET\_INPUTS} to input the necessary inputs.  This is a
+powerful package which allows for a very descriptive input format which
+makes the creation of input files much simpler.  This example is given here
+to encourage people to learn about {\tt SUBROUTINE GET\_INPUTS} which is
+described in detail in another manual\cite{Ro00}.
+
+
+%\mylistfile{TUTOR7A.TEX}
+%
+\subsection{Sophisticated User Codes}
+\index{NRC User Codes}
+\index{FLURZnrc}
+\index{DOSRZnrc}
+The EGSnrc distribution includes a variety of NRC written general purpose user codes such as
+DOSRZnrc, FLURZnrc etc.  These are described in a separate manual ``NRC User Codes for EGSnrc''
+\cite{Ro00}. These provide many working examples of how to do more sophisticated operations such as
+handle cylindrical geometries, properly score fluence, use complex LATCH algorithms, handle
+statistical analysis etc.  The BEAM system is for
+modelling linear accelerators and doing dose calculations in a CT-based patient
+phantom\cite{Ro95,Ro98a,Ma01b}.
+

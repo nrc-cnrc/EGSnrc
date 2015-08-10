@@ -1,0 +1,86 @@
+\begin{verbatim}
+   CARDS CM_$SIDETUBE
+   ******************
+ 
+   -1  Dummy line to indicate start of CM.
+ 
+    0  RMAX_CM(ICM_$SIDETUBE) (F10.0): Half-width of outer boundary 
+                                       of CM (cm).
+   
+    1  TITLE_$SIDETUBE (60A1):  Title of CM.
+   
+    2  ZMIN_$SIDETUBE (F10.0):  Distance from front of CM to reference plane 
+                                (not including air gap) in cm.
+ 
+    3  ZTHICK_$SIDETUBE (F10.0): Thickness of the CM in the Z-direction
+                                 (not including airgap) in cm
+ 
+    4  ZCYL_$SIDETUBE (F10.0):  Z position of axis of coaxial cylinders (cm)
+ 
+    5  XMIN_$SIDETUBE,XMAX_$SIDETUBE (2F10.0):
+ 
+           XMIN_$SIDETUBE: Lower X edge of cylinders (cm).
+           XMAX_$SIDETUBE: Upper X edge of cylinders (cm).
+ 
+    6  N_$SIDETUBE (I5): Number of coaxial cylinders. 
+ 
+    Repeat 7 for I=1,N_$SIDETUBE all on one line in order of increasing
+    radius.
+ 
+    7  R_$SIDETUBE(I) (F15.0): Outer radius of cylinder I (cm).
+ 
+    Repeat 8-9 for I=1,N_$SIDETUBE+1.  When I=N_$SIDETUBE+1 you
+    are specifying parameters for the region containing the concentric
+    cylinders.
+ 
+    8  ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT  (2F15.0,2I5):
+   
+           ECUT, PCUT:  Cutoff energies for electrons and photons
+            DOSE_ZONE:  Dose scoring flag
+       IREGION_TO_BIT:  Bit setting for the region
+  
+    9  MED_IN (24A1):  Medium of region 
+                       used to set MED_INDEX.
+    Example
+    *******
+ 
+    The following example is a model of a cesium source parallel to
+    the X-axis.  The source has radius 0.9cm and is made of cesium 
+    chloride, CSCL700.  This source cylinder is contained within an 
+    aluminum (AL700ICRU) cylinder of outer radius 1.25cm.  The 
+    aluminum-cesium chloride assembly is contained in a stainless steel 
+    (STEEL700ICRU) cylinder of inner radius 2.25cm and outer radius 2.4cm.  
+    Note that the airgap between the aluminum and stainless steel is 
+    modelled as a cylinder of air having outside radius 2.25cm.  The 
+    cylindrical source assembly extends from X=-1.25cm to X=1.25cm.  The 
+    volume of air in which the source assembly is located starts at 
+    ZMIN=-2.4cm and has a thickness, ZTHICK=4.8cm, allowing it to just 
+    contain the source assembly in the Z-direction.  Setting ZMIN=-2.4cm 
+    allows the cylinders comprising the source assembly to be centered at 
+    the reference plane (ZCYL=0). 
+ 
+    In this example, ECUT, and PCUT in all regions are set to 0.7MeV
+    and 0.01MeV respectively.  The cesium source has dose zone 1; the
+    aluminum surrounding it has dose zone 2; the air between the aluminum
+    and the stainless steel outer tube has dose zone 3; and the stainless
+    steel tube has dose zone 4.
+ 
+    10.0,       Outer boundary
+    100Ci Cs source in holder + crude model of SS tube
+    -2.4,                ZMIN
+    4.8,                 ZTHICK  
+    0.,                  ZCYL
+    -1.125,1.125,        XMIN,XMAX
+    4,                   Number of cylinders 
+    0.9,1.25,2.25,2.4,   Radii of cylinders 
+    0.700,0.01,0,1,      ECUT, PCUT,...,MED of 1st cylinder
+    CSCL700
+    0.700,0.01,0,2,      ECUT, PCUT,...,MED of 2nd cylinder
+    AL700ICRU
+    0.700,0.01,0,3,      ECUT, PCUT,...,MED of 3rd cylinder
+    AIR700ICRU
+    0.700,0.01,0,4,      ECUT, PCUT,...,MED of 4th cylinder
+    STEEL700ICRU
+    0.700,0.01,0,0,      ECUT, PCUT,...,MED surrounding cylinders
+    AIR700ICRU
+\end{verbatim}

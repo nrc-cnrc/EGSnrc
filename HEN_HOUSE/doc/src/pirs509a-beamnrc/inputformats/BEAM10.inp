@@ -1,0 +1,28 @@
+\begin{verbatim}
+   ISOURC = 9   SCANNING BEAM FOR MM50 (discrete field coverage from
+   *********                            a point source at Z=0)
+ 
+      IQIN,ISOURC,DISTZ,NPTS_SRC9
+              IQIN    charge of the incident beam (defaults to 0)
+              ISOURC  =  9 
+              DISTZ   SSD (default to 100 cm)
+          NPTS_SRC9   the number of discrete points at the SSD 
+                      defaults to $MAXPTS_SRC9 if NPTS_SRC9 > $MAXPTS_SRC9
+                      or 1 if NPTS_SRC9 <= 0.
+ 
+   Next record (if ISOURC=9)
+   *************************
+ 
+      Repeat for I=1,NPTS_SRC9
+ 
+      X_SRC9(I),Y_SRC9(I),PROB_SRC9(I) (3F15.0)
+               X_SRC9(I)     X coordinate of point I at the SSD (cm)
+               Y_SRC9(I)     Y coordinate of point I at the SSD (cm)
+               PROB_SRC9(I)  probability of a particle being at point I
+ 
+      Note that PROB_SRC9(I) need not be normalized; they are
+      automatically normalized in the source routine.      
+     For this source the particles start at Z_min_CM(1) and hence
+     Z_min_CM(1) must be >= 0.0
+ ----------------------------------------------------------------------
+\end{verbatim}

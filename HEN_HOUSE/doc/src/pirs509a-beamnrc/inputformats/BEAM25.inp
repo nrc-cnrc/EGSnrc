@@ -1,0 +1,26 @@
+\begin{verbatim}
+        Global ECUT=     Global (in all regions) electron transport cut
+                         off energy (in MeV). If this imput is missing,
+                         or is < ECUTIN from the main BEAMnrc inputs
+                         (See above) then ECUTIN is used for Global ECUT.
+                         Global ECUT defaults to AE(medium).
+                         [ ECUT ]
+        Global PCUT=     Global (in all regions) photon transport cut
+                         off energy (in MeV). If this imput is missing,
+                         or is < PCUTIN from the main BEAMnrc inputs
+                         (See above) then PCUTIN is used for Global PCUT.
+                         Global PCUT defaults to AP(medium).
+                         [ PCUT ]
+        Global SMAX=     Global (in all regions) maximum step-size
+                         restriction for electron transport (in cm).
+                         No SMAX restriction is necessary if the electron
+                         step algorithm is PRESTA-II and the EXACT boundary
+                         crossing algorithm (the default) is used.  In this 
+                         case, SMAX will default to 1e10.  However, if either
+                          Electron-step algorithm= PRESTA-I
+                          or
+                          Boundary crossing algorithm= PRESTA-I,
+                         then a step-size restriction is necessary, and
+                         SMAX will default to 5 cm.
+                         [ SMAXIR ]
+\end{verbatim}

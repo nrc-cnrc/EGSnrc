@@ -1,0 +1,18 @@
+\begin{verbatim}
+   
+                      FORMAT OF PARAMETER-DEFINITION(input) FILE     
+                      ******************************************     
+                        GENERAL INPUT/OUTPUT PARAMETERS
+                        *******************************
+  
+   First record    TITLE   80A1
+   ************
+   
+   Next Record  MEDIUM for nominal air (as in pegs4dat file)
+   ***********
+                In many CMs, the region about the central-axis or at the
+                front or back of the CM, is assumed to be this medium.  
+                It is thought of and refered to as air, but can be anything.
+                Default is VACUUM. MEDIUM must exactly match name in pegs4dat
+ -----------------------------------------------------------------------------
+\end{verbatim}

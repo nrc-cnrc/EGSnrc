@@ -1,0 +1,109 @@
+\begin{verbatim}
+   CARDS CM_$DYNJAWS(JAWS: Rev 1.8)
+   **************
+   
+   -1  dummy line read in main used to separate input for CMs
+ 
+    0  RMAX_CM(ICM_JAWS) (F10.0): 
+                          Perpendicular distance from Z-axis to boundary 
+                          surrounding component module.  This component
+                          module has a square boundary.
+ 
+    1  TITLE_$DYNJAWS (60A1):  Title of CM.
+   
+    2  ISCM_MAX_$DYNJAWS, MODE_$DYNJAWS (2I5) 
+  
+            ISCM_MAX_$DYNJAWS = Number of paired bars or jaws in CM.
+                MODE_$DYNJAWS = 0 for static settings of jaw openings
+                             1 for dynamic settings with simulated
+                               jaw movement while beam is on
+                             2 for step-and-shoot jaw movement--beam
+                               off while jaw settings are changed 
+ 
+    Repeat 3 (if MODE_$DYNJAWS=1,2) or 3 and 4 (if MODE_$DYNJAWS=0)
+                for I=1,ISCM_MAX_$DYNJAWS
+ 
+    3  XY_CHOICE (A1):  indicate orientation of the paired bars/jaws
+                         X means bars/jaws perpendicular to x axis
+                        i.e. separation and movement is along x-axis
+ 
+    Next input is only required if MODE_$DYNJAWS=0 (static)
+   
+    4  ZMIN_$DYNJAWS(I), ZMAX_$DYNJAWS(I), (XFP_$DYNJAWS(I), XBP_$DYNJAWS(I), 
+       XFN_$DYNJAWS(I), XBN_$DYNJAWS(I)) (6F15.0)
+   
+         ZMIN_$DYNJAWS(I): Distance front of bars/jaws to reference plane.
+         ZMAX_$DYNJAWS(I): Distance back of bars/jaws to reference plane.
+         XFP_$DYNJAWS(I):  positive bar/jaw x or y coodinate at front.
+         XBP_$DYNJAWS(I):  positive bar/jaw x or y coodinate at back.
+         XFN_$DYNJAWS(I):  negative bar/jaw x or y coodinate at front.
+         XBN_$DYNJAWS(I):  negative bar/jaw x or y coodinate at back.
+ 
+    Next input is only required if MODE_$DYNJAWS=1 or 2
+ 
+    4a jaws_file (A80)
+ 
+         jaws_file: The full name of a file containing jaw opening data
+                    in the following format:
+ 
+       NFIELDS_$DYNJAWS (I10)
+       FOR J=1,NFIELDS_$DYNJAWS[
+        INDEX_$DYNJAWS(J) (F15.0)
+        (ZMIN_$DYNJAWS(I),ZMAX_$DYNJAWS(I),XFP_$DYNJAWS(I),XBP_$DYNJAWS(I),
+         XFN_$DYNJAWS(I),XBN_$DYNJAWS(I), I=1,ISCM_MAX_$DYNJAWS)
+       ]
+ 
+       where:
+ 
+       NFIELDS_$DYNJAWS:  Total number of jaw settings.
+       INDEX_$DYNJAWS(J):  Index of setting J. 0 <= INDEX_$DYNVMLC(J) <= 1 
+                          and INDEX_$DYNVMLC(J) > INDEX_$DYNVMLC(J-1).  This
+                          number is compared to a random number on [0,1] at
+                          the start of each history; if the random number is
+                          <= INDEX_$DYNVMLC(J), then, if MODE_$DYNJAWS=2,
+                          settings J are used.  If MODE_$DYNJAWS=1, then
+                          the settings used are a linear interpolation
+                          between fields J-1 and J based on the random
+                          number selected.  See manual for more details.
+       ZMIN_$DYNJAWS(I),ZMAX_$DYNJAWS(I),XFP_$DYNJAWS(I),XBP_$DYNJAWS(I),
+       XFN_$DYNJAWS(I),XBN_$DYNJAWS(I):
+                          See description of input 4.  These are defined
+                          for each field, J.
+ 
+    5   ECUT, PCUT, DOSE_ZONE, IREGION_to_BIT (2F15.0,2I5): for interior 
+                                                      (assumed to be AIR) 
+ 
+           ECUT, PCUT:     Cutoff energies for electrons and photons.
+           DOSE_ZONE:      Dose scoring zone of air surrounding bars.
+           IREGION_TO_BIT: This region associated with this bit in LATCH
+ 
+    Repeat 6 and 7 for I=1,ISCM_MAX_$DYNJAWS
+ 
+    6   ECUT, PCUT, DOSE_ZONE, IREGION_TO_BIT (2F15.0,2I5)
+ 
+           ECUT, PCUT:     Cutoff energies for electrons and photons in
+                           jaw I.
+           DOSE_ZONE:      Dose scoring zone for jaw I. 
+           IREGION_TO_BIT: Both bars of jaw I associated with this bit.
+ 
+    7   MED_IN (24A1):  Medium of jaw I, used to set MED_INDEX.
+   
+    Example
+    *******
+   
+   The following input defines a single tungsten jaw oriented in the Y
+   direction operating in step-and-shoot (MODE_$DYNJAWS=2) mode. 
+   The jaw settings (Z position, opening coordinates) are defined
+   in the file $OMEGA_HOME/beamnrc/CMs/dynjaw.opening.file
+   (included with the distribution).
+ 
+   40.0, RMAX
+   CM #7: jaws set for a 10x10cm field at SSD=100 cm
+   1,2, # PAIRED BARS OR JAWS, MODE
+   Y
+   $OMEGA_HOME/beamnrc/CMs/dynjaw.opening.file
+   0.7, 0.01, 0, 21,
+   0.7, 0.01, 0, 13,
+   W700ICRU
+  
+\end{verbatim}

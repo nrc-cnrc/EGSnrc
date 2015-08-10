@@ -1,0 +1,52 @@
+\begin{figure}
+\begin{center}
+\caption{Portions of {\tt tutor4.mortran} showing the calls to {\tt
+SUBROUTINE WATCH}. \label{fig_tutor4} }
+\begin{boxedverbatim}
+"---------------------------------------------------------------------"
+"STEP 5  INITIALIZATION-FOR-AUSGAB                                    "
+"---------------------------------------------------------------------"
+DO I=1,3[ESCORE(I)=0.0;]"zero scoring array before starting"
+
+IWATCH=1;     "This determines the type and amount of output"
+              "=1 => print info about each interaction"
+              "=2 => print info about same + each electron step"
+              "=4 => create a file to be displayed by EGS_Windows"
+              " Note that these files can be huge"
+              "IWATCH 1 and 2 outputs to unit 6, 4 to unit 13"
+
+CALL WATCH(-99,IWATCH);  "Initializes calls to AUSGAB for WATCH"
+                             |
+                             |
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+NCASE=10;  "INITIATE THE SHOWER NCASE TIMES"
+
+DO I=1,NCASE [
+    IF((IWATCH ~= 0) & (IWATCH ~= 4))[
+       OUTPUT 1,EI,IQIN,IRIN,XIN,YIN,ZIN,UIN,VIN,WIN,LATCHI,WTIN; 
+              (/' INITIAL SHOWER VALUES',T36,':',
+              I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
+    ]
+   CALL SHOWER(IQIN,EIN,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WTIN);
+   CALL WATCH(-1,IWATCH);  "print a message that this history is over"
+]
+                             |
+                             |
+SUBROUTINE AUSGAB(IARG);
+IMPLICIT NONE;
+INTEGER IARG,IRL;
+COMIN/EPCONT,SCORE,STACK/; "we use EDEP from EPCONT,IR(NP) from STACK"
+"                        ESCORE is passed in user defined COMIN SCORE"
+
+IF (IWATCH > 0 ) CALL WATCH(IARG,IWATCH); "handles printouts of data"
+                                          "IWATCH is passed in SCORE"
+IF(IARG <= 4) [
+   IRL = IR(NP);" pick up current region number"
+   ESCORE(IRL)=ESCORE(IRL)+EDEP;
+]
+RETURN;END;"end of ausgab"
+\end{boxedverbatim}
+\end{center}
+\end{figure}

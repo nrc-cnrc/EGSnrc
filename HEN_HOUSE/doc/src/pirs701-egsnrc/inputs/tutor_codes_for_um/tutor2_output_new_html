@@ -1,0 +1,75 @@
+\clearpage
+\begin{figure}
+
+\caption{Output from {\tt tutor2.mortran} excluding the output from the scripts.
+ \label{fig_tutor2_output}}
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{figure}
+\begin{rawhtml}
+<pre>
+ Start tutor2
+
+ CALL HATCH to get cross-section data
+
+ RAYLEIGH DATA AVAILABLE FOR MEDIUM  1 BUT OPTION NOT REQUESTED.
+
+  Reading screened Rutherford MS data ...............  done 
+  Initializing spin data for medium    1 .....................  done
+
+  Medium  1 sige =   1.79464114  1.78708148
+
+  Initializing tmxs for estepe =   0.25 and ximax =   0.5
+
+ Output from subroutine EDGSET:
+ ==============================
+
+  Atomic relaxations requested! 
+
+ Reading photo-absorption data ..... Done
+ Reading relaxation data ....  Done
+ Reading photo cross section data ....  Done
+ Bound Compton scattering requested, reading data ...... Done
+
+ Initializing Bound Compton scattering ......
+ Medium   1 has  21 shells: 
+  1 861  1  0.02740 0.141E+01    67.413
+  2 862  2  0.02740 0.503E+01    11.680
+  3 863  3  0.02740 0.247E+01    11.136
+  4 864  4  0.05479 0.271E+01     9.881
+  5 865  5  0.02740 0.111E+02     2.705
+  6 866  5  0.02740 0.652E+01     2.466
+  7 867  5  0.05479 0.696E+01     2.191
+  8 868  5  0.05479 0.452E+01     1.790
+  9 869  5  0.08219 0.462E+01     1.732
+ 10 870  6  0.02740 0.234E+02     0.563
+ 11 871  6  0.02740 0.148E+02     0.462
+ 12 872  6  0.05479 0.158E+02     0.402
+ 13 873  6  0.05479 0.121E+02     0.239
+ 14 874  6  0.08219 0.124E+02     0.227
+ 15 875  7  0.02740 0.607E+02     0.068
+ 16 876  7  0.02740 0.414E+02     0.042
+ 17 877  7  0.05479 0.444E+02     0.034
+ 18 878  6  0.08219 0.117E+02     0.025
+ 19 879  6  0.10959 0.118E+02     0.023
+ 20 880  7  0.05479 0.944E+02     0.008
+ 21 881  7  0.01370 0.221E+03     0.008
+...... Done.
+
+ EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
+
+ knock-on electrons can be created and any electron followed down to
+                                          0.189 MeV kinetic energy
+ brem photons can be created and any photon followed down to      
+                                          0.010 MeV 
+
+
+ For    1000 incident particles
+ Fraction of energy reflected from plate=             1.231%
+ Fraction of energy deposited in plate=              12.771%
+ Fraction of energy transmitted through plate=       85.998%
+                                                 -----------
+ Total fraction of energy accounted for=            100.000%
+</pre>
+\end{rawhtml}
+\clearpage
+

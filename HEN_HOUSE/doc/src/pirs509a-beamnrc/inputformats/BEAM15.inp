@@ -1,0 +1,42 @@
+\begin{verbatim}
+   
+   Next Record (IF ISOURC <21)     SOURCE ENERGY INPUT
+   ***********                     *******************  
+ 
+      MONOEN (I8)
+                       = 0 if monoenergetic beam (the default)
+                       = 1 if energy spectrum to be used
+                           Note: BEAMnrc sets MONOEN=2 for phase space inputs
+ 
+    Next Record (IF MONOEN = 0)
+    ***********
+      EIN (F15.0) 
+                   kinetic energy of the incident beam in MeV
+                   (defaults to 1.25), only for MONOEN=0
+ 
+    Next Record (IF MONOEN = 1)
+    ***********
+      FILNAM(80A1)  FILENAME(WITH EXT) contains spectrum information
+                    which must be in  NRC's ensrcV format.
+              _______________________________________________________
+              FILE FORMAT:  
+              SPEC_TITLE   (A80)
+                NENSRC,ENMIN,IMODE (I10,F15.0,I5)
+                (ENSRCD(IB),SRCPDF(IB),IB=1,NENSRC) (2F20.0)
+                      NENSRC  # Energy bins in spectrum histogram
+                      ENMIN   Lower energy of first bin
+                      IMODE   =0 assuming counts/bin, =1 counts/MeV
+                      ENSRCD(I),SRCPDF(I)  I=1,NENSRC
+                              Top of energy bin and probability of
+                              initial particle being in this bin.
+                              Probability does not need to be normalized
+              _______________________________________________________
+           
+    Next Record (IF MONOEN = 1)
+    ***********
+      IOUTSP (I5):        
+              = 0 no spectrum data in output summary
+              = 1 include spectrum data in output summary
+ 
+ ---------------------------------------------------------------------------  
+\end{verbatim}

@@ -1,0 +1,83 @@
+\begin{verbatim}
+   CARDS CM_$MESH  (MESH: Rev 1.4)
+   **************
+ 
+   -1  dummy line (filled with ****)  read in main
+ 
+    0  RMAX_CM       outer boundary for CM - 1/2 side of square(read in main)
+   
+    1  TITLE_$MESH (60A1):  Title of CM.
+   
+    2  ZMIN_$MESH (F10.0):  Z position of front of MESH (excluding airgap).
+   
+    3  X_AIR_WIDTH_$MESH, Y_AIR_WIDTH_$MESH, WIRE_WIDTH_$MESH,
+       WIRE_THICK_$MESH (4F15.0):
+ 
+           X_AIR_WIDTH_$MESH: X width of each air region in mesh (cm)
+           Y_AIR_WIDTH_$MESH: Y width of each air region in mesh (cm)
+                               Y_AIR_WIDTH_$MESH defaults to 
+                               X_AIR_WIDTH_$MESH if it is set to 0.
+           WIRE_WIDTH_$MESH:  Width of wire in the mesh (cm)
+           WIRE_THICK_$MESH:  Thickness of wire in the mesh (cm)
+ 
+         Note restrictions: X_AIR_WIDTH_$MESH,Y_AIR_WIDTH_$MESH,
+                            WIRE_WIDTH_$MESH must all be >= 0.0001 cm
+   
+    4  XTOTAL_$MESH, YTOTAL_$MESH (2F15.0):    
+ 
+           XTOTAL_$MESH: Half-width of outer X dimension of mesh (cm) 
+           YTOTAL_$MESH: Half-width of outer Y dimension of mesh (cm)
+ 
+         Note: XTOTAL_$MESH,YTOTAL_$MESH default to RMAX_CM if set to 0
+               Also, if they fall within mesh cells (individual air regions +
+                 1/2 of the wire surrounding them) they are pushed out
+                 to include those cells.
+   
+    5  ECUT,PCUT,DOSE_ZONE,IR_TO_BIT for air inside and 
+                                      surrounding mesh (2F15.0,2I5): 
+ 
+          ECUT, PCUT:  Cutoff energies for electrons and photons.
+           DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+      IREGION_TO_BIT:   Bit number associated with these regions
+   
+    6  ECUT,PCUT,DOSE_ZONE,IR_TO_BIT in local region 2 (wire region)
+                                      (2F15.0,2I5):
+ 
+          ECUT, PCUT:   Cutoff energies for electrons and photons.
+           DOSE_ZONE:   Dose scoring flag, 0 to not score dose
+      IREGION_TO_BIT:   Bit number associated with this region
+   
+    7  MED_IN (24A1):   medium of local region 2 (wire), used to set
+                        MED_INDEX
+  
+    Example
+    ******* 
+ 
+  The following input example describes a lead mesh placed at Z=100 cm
+  in a beam.  The mesh is 0.0299 cm thick, has square air regions 
+  with dimensions 0.2159x0.2159cm, and the lead wire separating the air  
+  regions is 0.0381cm wide.  Although the RMAX_CM is 10cm, the outer 
+  boundary of the mesh itself, as input, is a 6x6cm square.  MESH
+  automatically adjusts this boundary to 6.2421x6.2421cm to accommodate
+  exactly 49 mesh cells (air regions + half of the wire width 
+  surrounding them) in the X and Y directions plus the extra half-thickness
+  of wire surrounding the entire mesh and not belonging to any cell.
+ 
+  ECUT and PCUT in all regions are set to 0.521MeV and 0.01MeV
+  respectively.  Air regions (cell air + air surrounding mesh) will
+  have dose scored in zone 1 and is associated with bit # 1.  The 
+  lead wire has dose scored in zone 2 and is associated with bit # 2. 
+  
+  Note that MESH cannot be the first CM in a simulation, and the
+  example given here must be preceeded by at least an airgap modelled
+  by another type of CM.
+  
+  10.00000,                       Outer boundary
+  lead mesh: 0.0381cm with 0.2159cm air
+  100.0
+  0.2159,  0.0,  0.0381, 0.0299,  depth ensures equal mass as circle
+  6.0,  6.0,                      outer boundary fills entire beam
+  0.521,  0.01,  1,  1,              air is bit 1
+  0.521,  0.01,  2,  2,              wire is bit 2
+  PB700ICRU
+\end{verbatim}

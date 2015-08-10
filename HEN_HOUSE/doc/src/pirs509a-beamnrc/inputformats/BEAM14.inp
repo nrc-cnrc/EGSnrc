@@ -1,0 +1,14 @@
+\begin{verbatim}
+   ISOURC =  31     BEAM CHARACTERIZATION MODEL,
+   ************   
+      IQIN,ISOURC,CMSOU
+              IQIN    charge of incident beam (not used)
+              ISOURC  = 31
+              CMSOU   particles start at the front surface of this CM
+   
+   Next record (If ISOURC=31)
+   ***********
+      SPCNAM        FILENAME (with EXT) contains information on beam model
+                    (maximum of 80 characters)
+   --------------------------------------------------------------------------
+\end{verbatim}

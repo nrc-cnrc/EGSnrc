@@ -1,0 +1,36 @@
+\begin{verbatim}
+   ISOURC = 3  UNIFORM ISOTROPICALLY RADIATING SOURCE WITHIN CMs
+   **********        Circular: Vertical ring centred on Z-axis
+                        or     horizontal cylinder centred parallel to X-axis
+ 
+      IQIN,ISOURC,RMINBM,RBEAM,ZSMIN,ZSMAX
+              IQIN    charge of particles from source (defaults to 0)
+              ISOURC  =  3 
+              RMINBM  inner radius of vertical ring (RBEAM >= 0) (cm)
+                      or:
+                      Z position of centre of horizontal cylinder 
+                      (RBEAM < 0) (cm)
+              RBEAM   outer radius of vertical ring (RBEAM >= 0) (cm)
+                      or:
+                      -radius of horizontal cylinder (RBEAM < 0) (cm)
+              ZSMIN   Z of top of vertical ring (RBEAM >= 0) (cm)
+                      or:
+                      min. X of horizontal cylinder (RBEAM < 0) (cm)
+              ZSMAX   Z of bottom of vertical ring (RBEAM >= 0) (cm)
+                      or:
+                      max. X of horizontal cylinder (RBEAM < 0) (cm)
+ 
+          NOTE: The sign of RBEAM determines if the source will be a
+                       vertical ring a horizontal cylinder.
+                The Z-span of the source must be in the range 
+                       Z_min_CM(1)-Z_min_CM(MAX_CMs+1).
+                Currently, this source is limited to being placed within 
+                       CONESTAK, FLATFILT or SIDETUBE.
+ ------------------------------------------------------------------------
+   ISOURC = 3a  A cylindrical, isotropically radiating Co60 source within CMs
+   **********  using directional source biasing (DSB).       
+ 
+      IQIN,ISOURC,RMINBM,RBEAM,ZSMIN,ZSMAX,i_dsb,DSB_DELTA
+            (same is source 3)
+ ------------------------------------------------------------------------
+\end{verbatim}

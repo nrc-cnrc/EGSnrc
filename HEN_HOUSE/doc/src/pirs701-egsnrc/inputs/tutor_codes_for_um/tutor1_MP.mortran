@@ -1,0 +1,304 @@
+\begin{figure}
+\caption{Commented version of {\tt tutor1.mortran} \vspace*{3mm} }
+\begin{boxedverbatim}
+%L
+%E 
+" $Id  tutor1.mortran,v 1.2 2003/11/03 18:51:53 course Exp $ "
+!INDENT M 4;    "indent each mortran nesting level by 4"
+!INDENT F 2;    "indent each fortran nesting level by 2"
+
+"*********************************************************************"
+"                                                                     "
+"                     ******************                              "
+"                     *                *                              "
+"                     * tutor1.mortran *                              "
+"                     *                *                              "
+"                     ******************                              "
+"                                                                     "
+"  An EGSnrc user code. It lists the particles escaping from the back "
+"  of a 1 mm Ta plate when a pencil beam of  20 MeV electrons         "
+"  is incident on it normally.                                        "
+"                                                                     "
+"  For PIRS-701:  A simple example which 'scores' by listing particles"
+"      D.W.O.R.   JAN 1985 updated to EGSnrc Jan 2000                 "
+"                                                                     "
+"  The following units are used: unit 6 for (terminal) output         "
+"                                unit 12 is PEGS cross-section  file  "
+"                                                                     "
+"*********************************************************************"
+;Copyright NRC
+$IMPLICIT-NONE;                        "default is IMPLICIT NONE"
+$INTEGER I,IQIN,IRIN;                  "$INTEGER defaults to INTEGER*4"
+$REAL XIN,YIN,ZIN,EIN,WTIN,UIN,VIN,WIN;  "$REAL defaults to REAL*4"
+"---------------------------------------------------------------------"
+"STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
+"---------------------------------------------------------------------"
+REPLACE {$MXMED} WITH {1}   "only 1 medium in the problem(default 10)"
+REPLACE {$MXREG} WITH {3}   "only 3 geometric regions (default 2000)"
+REPLACE {$MXSTACK} WITH {15}"less than 15 particles on stack at once"
+
+"define a common to pass information to the geometry routine HOWFAR"
+REPLACE {;COMIN/GEOM/;} WITH {;COMMON/GEOM/ZBOUND;$REAL ZBOUND;}
+REPLACE {$CALL-HOWNEAR(#);} WITH {
+  ;CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);
+}
+
+                                                     cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+\addtocounter{figure}{-1}
+\begin{figure}
+\vspace*{-6mm}
+\caption{tutor1.mortran - continued}
+\begin{boxedverbatim}
+
+
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,THRESH/;"Note  ; before COMIN"
+"       The above expands into a series of COMMON statements"
+"       BOUNDS contains ECUT and PCUT"
+"       GEOM passes info to our HOWFAR routine"
+"       MEDIA contains the array MEDIA"
+"       MISC contains MED"
+"       THRESH contains AE and AP"
+"---------------------------------------------------------------------"
+"STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
+"---------------------------------------------------------------------"
+CHARACTER*4 MEDARR(24);
+DATA  MEDARR /$S'TA',22*' '/; "place medium name in an array"
+"                            $S is a MORTRAN macro to expand strings"
+
+" Step 0:  Initialize the EGSnrc system. "
+call egs_init;
+
+DO I=1,24[MEDIA(I,1)=MEDARR(I);]"this is to avoid a DATA STATEMENT for"
+"                                    a variable in COMMON"
+"NMED and DUNIT default to 1, i.e. one medium and we work in cm"
+
+/MED(1),MED(3)/=0;MED(2)=1;"vacuum in regions 1 and 3, Ta in region 2"
+
+ECUT(2)=1.5;"   terminate electron histories at 1.5 MeV in the plate"
+PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the plate"
+"               only needed for region 2 since no transport elsewhere"
+"               ECUT is total energy = 0.989   MeV kinetic energy"
+
+"---------------------------------------------------------------------"
+"STEP 3   HATCH-CALL                                                  "
+"---------------------------------------------------------------------"
+ 
+;OUTPUT;('\f  Start tutor1'//' CALL HATCH to get cross-section data'/);
+CALL HATCH;"    pick up cross section data for TA"
+"               data file must be assigned to unit 12"
+
+;OUTPUT AE(1)-0.511, AP(1);
+(/' knock-on electrons can be created and any electron followed down to'
+  /T40,F8.3,' MeV kinetic energy'/
+' brem photons can be created and any photon followed down to      ',
+  /T40,F8.3,' MeV ');
+"Compton events can create electrons and photons below these cutoffs"
+                                                     cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\caption{tutor1.mortran - continued}
+\begin{boxedverbatim}
+"---------------------------------------------------------------------"
+"STEP 4  INITIALIZATION-FOR-HOWFAR and HOWNEAR                        "
+"---------------------------------------------------------------------"
+ZBOUND=0.1;"     plate is 1 mm thick"
+
+"---------------------------------------------------------------------"
+"STEP 5  INITIALIZATION-FOR-AUSGAB                                    "
+"---------------------------------------------------------------------"
+"Print header for output - which is all AUSGAB does in this case"
+;OUTPUT;(/T19,'Kinetic Energy(MeV)',T40,'charge',T48,
+'angle w.r.t. Z axis-degrees');
+
+"---------------------------------------------------------------------"
+"STEP 6   DETERMINATION-OF-INICIDENT-PARTICLE-PARAMETERS              "
+"---------------------------------------------------------------------"
+"Define initial variables for 20 MeV beam of electrons incident"
+"perpendicular to the slab"
+
+IQIN=-1;"               incident charge - electrons"
+EIN=20.511;"            20 MeV kinetic energy"
+/XIN,YIN,ZIN/=0.0;"     incident at origin"
+/UIN,VIN/=0.0;WIN=1.0;" moving along Z axis"
+IRIN=2;"                starts in region 2, could be 1"
+WTIN=1.0;"              weight = 1 since no variance reduction used"
+"---------------------------------------------------------------------"
+"STEP 7   SHOWER-CALL                                                 "
+"---------------------------------------------------------------------"
+"initiate the shower 10 times"
+DO I=1,10[
+   OUTPUT I;(' Start history',I4);
+   CALL SHOWER(IQIN,EIN,XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WTIN);
+]
+"-----------------------------------------------------------------"
+"STEP 8   OUTPUT-OF-RESULTS                                       "
+"-----------------------------------------------------------------"
+"note output is at the end of each history in subroutine ausgab"
+
+"-----------------------------------------------------------------"
+"STEP 9   finish run                                              "
+"-----------------------------------------------------------------"
+call egs_finish;
+
+STOP;END;
+                                                     cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\index{AUSGAB!example}
+\index{HOWFAR!example}
+\caption{tutor1.mortran - continued}
+\begin{boxedverbatim}
+%E  "tutor1.mortran"
+"********************************************************************"
+"                                                                    "
+SUBROUTINE AUSGAB(IARG);
+"                                                                    "
+"  In general, AUSGAB is a routine which is called under a series    "
+"  of well defined conditions specified by the value of IARG (see the"
+"  EGSnrc manual for the list). This is a particularily simple AUSGAB"
+"  Whenever this routine is called with IARG=3 , a particle has      "
+"  been discarded by the user in HOWFAR                              "
+"  We get AUSGAB to print the required information at that point     "
+"                                                                    "
+"********************************************************************"
+$IMPLICIT-NONE;
+$INTEGER IARG;
+$REAL EKINE, ANGLE;
+COMIN/STACK/;
+
+IF(IARG = 3)[
+ANGLE=ACOS(W(NP))*180./3.14159;"angle w.r.t. Z axis in degrees"
+
+IF(IQ(NP) = 0)[EKINE=E(NP);] 
+ELSE          [EKINE=E(NP)-0.511;]"get kinetic energy"
+OUTPUT EKINE,IQ(NP),ANGLE;(T21,F10.3,T33,I10,T49,F10.1);]
+RETURN;END;"END OF AUSGAB"
+
+%E  "tutor1.mortran"
+"*********************************************************************"
+SUBROUTINE HOWFAR;
+"                                                                     "
+" The following is a general specification of HOWFAR                  "
+"   Given a particle at (X,Y,Z) in region IR and going in direction   "
+"   (U,V,W), this routine answers the question, can the particle go   "
+"   a distance USTEP without crossing a boundary?                     "
+"           If yes, it merely returns                                 "
+"           If no, it sets USTEP=distance to boundary in the current  "
+"           direction and sets IRNEW to the region number   on the    "
+"           far side of the boundary (this can be messy in general!)  "
+"                                                                     "
+"   The user can terminate a history by setting IDISC>0. Here we      "
+"   terminate all histories which enter region 3 or are going         "
+"   backwards in region 1                                             "
+                                                     cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\caption{tutor1.mortran - continued}
+\begin{boxedverbatim}
+"                   |               |                                 "
+"   REGION 1        |   REGION 2    |       REGION 3                  "
+"                   |               |                                 "
+"   e- =========>   |               | e- or photon ====>              "
+"                   |               |                                 "
+"   vacuum          |     Ta        |       vacuum                    "
+"                                                                     "
+"*********************************************************************"
+$IMPLICIT-NONE;
+$REAL TVAL;
+COMIN/STACK,EPCONT,GEOM/;
+"       COMMON STACK contains X,Y,Z,U,V,W,IR and NP(stack pointer)"
+"       COMMON EPCONT contains IRNEW, USTEP and IDISC"
+"       COMMON GEOM contains ZBOUND"
+IF(IR(NP) = 3) [
+   IDISC = 1;RETURN;"terminate this history: it is past the plate"
+]
+ELSEIF(IR(NP) = 2)["We are in the Ta plate - check the geometry"
+   IF(W(NP) > 0.0)[
+      "going forward - consider first since  most frequent"
+      TVAL= (ZBOUND - Z(NP))/W(NP);"TVAL is dist to boundary"
+      "                          in this direction"
+      IF(TVAL > USTEP)[RETURN;"can take currently requested step"]
+      ELSE[USTEP = TVAL; IRNEW=3; RETURN;]
+   ]"END OF W(NP)>0 CASE"
+   
+   ELSEIF(W(NP) < 0.0)["going back towards origin"
+      TVAL = -Z(NP)/W(NP); "distance to plane at origin"
+      IF(TVAL > USTEP)[RETURN;"can take currently requested step"]
+      ELSE[USTEP = TVAL; IRNEW = 1; RETURN;]
+   ]"END W(NP)<0 CASE"
+   ELSEIF(W(NP) = 0.0)["cannot hit boundary"RETURN;]
+]"end of region 2 case"
+
+ELSEIF(IR(NP) = 1)["in region with source"
+   IF(W(NP) >  0.0)["this must be a source particle on z=0 boundary"
+      USTEP = 0.0;IRNEW = 2;RETURN;
+   ]
+   ELSE[ "it must be a reflected particle-discard it" 
+      IDISC=1;RETURN;
+   ]
+]"end region 1 case"
+END;"END OF SUBROUTINE HOWFAR"
+                                                     cont...
+\end{boxedverbatim}
+\end{figure}
+
+\newpage
+
+\addtocounter{figure}{-1}
+\begin{figure}
+\index{HOWNEAR!example}
+\caption{tutor1.mortran - continued}
+\begin{boxedverbatim}
+
+%E  "tutor1.mortran"
+"*********************************************************************"
+"                                                                     "
+SUBROUTINE HOWNEAR(tperp, x, y, z, irl);
+"                                                                     "
+" The following is a general specification of HOWNEAR                 "
+"   Given a particle at (x,y,z) in region irl, HOWNEAR answers the    "
+"   question, What is the distance tperp to the closest boundary?     "
+"                                                                     "
+"  In general this can be a complex subroutine.                       "
+"                                                                     "
+"*********************************************************************"
+$IMPLICIT-NONE;
+$REAL tperp, x, y, z;
+$INTEGER irl;
+
+;COMIN/GEOM/;      "       COMMON GEOM contains ZBOUND"
+
+IF(irl = 3) [OUTPUT;('Called HOWNEAR in region 3'); RETURN;]
+
+ELSEIF(irl = 2)["We are in the Ta plate - check the geometry"
+    tperp = min(z,  (ZBOUND - z));
+]
+
+ELSEIF(irl = 1)[OUTPUT;('Called HOWNEAR in region 1'); RETURN;]
+
+END;"end of subroutine HOWNEAR"
+
+"============================end of tutor1.mortran================="
+
+
+\end{boxedverbatim}
+\end{figure}

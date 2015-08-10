@@ -1,0 +1,53 @@
+\clearpage
+\index{SUBROUTINE WATCH}
+\index{WATCH routine}
+\index{IWATCH}
+\begin{figure}
+\caption{Header of {\tt SUBROUTINE WATCH}. \label{fig_watch} }
+\rule[-0.0mm]{15cm}{0.1mm}
+\end{figure}
+\begin{rawhtml}
+<pre>
+%E   "start of nrcaux.mortran (SID 1.29 last edited 00/04/24)"
+"============================================================================="
+"                                                                             "
+"                        WATCH                                                "
+"                                                                             "
+SUBROUTINE WATCH(IARG,IWATCH);
+"                                                                             "
+"     A general purpose auxiliary routine for use with the EGSnrc system      "
+"                                                                             "
+"     It prints out information about the particle transport                  "
+"                                                                             "
+"       For IWATCH = 1 it prints information about each discrete interaction  "
+"       For IWATCH = 2 or 3 it prints information about each step as well     "
+"       For IWATCH = 4 it prints graphing data for use with EGS_Windows       "
+"                                                                             "
+"                                                                             "
+"    Routine is used via two mandatory and 1 optional call from the user's    "
+"          code                                                               "
+"                                                                             "
+"   1)The routine must be initialized by a call with IARG=-99 before the first"
+"          call to SHOWER. It should be after all inputs are in place.        "
+"   2)The routine must be called near the beginning of the AUSGAB subroutine  "
+"          IF (IWATCH > 0 ) CALL WATCH(IARG,IWATCH);                          "
+"   3)The routine may be called at the end of each history with IARG = - 1 so "
+"          a message will get printed stated history is complete              "
+"                                                                             "
+"    Since WATCH cannot output values related to the initial values in a      "
+"    shower call, it is useful to also put something like the following       "
+"    immediately prior to the CALL SHOWER stmt                                "
+"           IF((IWATCH ~= 0) & (IWATCH ~= 4))[                                "
+"              OUTPUT 1,EIN,IQI,IRI,XI,YI,ZI,UI,VI,WI,LATCHI,WTI;             "
+"               (/' INITIAL SHOWER VALUES',T36,':',                           "
+"               I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);                         "
+"           ]                                                                 "
+"    Note EIN is the kinetic energy of the incident particle                  "
+"                                                                             "
+"   The routine uses up to 132 columns for output.                            "
+"                                                                             "
+"*****************************************************************************"
+</pre>
+\end{rawhtml}
+\clearpage
+
