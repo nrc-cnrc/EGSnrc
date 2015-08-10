@@ -150,29 +150,27 @@ geoErrors    =  "";
 
   //Initialize table defining regions to list fluence
   InitializeTwoColumnTable( ListFluTable );
-  ListFluTable->setEnabled( false );//ListFluTable->installEventFilter(this);
+  ListFluTable->setEnabled( false );
 
   //Initialize table defining tops of output bins in MeV
   //qt3to4 -- BW
   //sloteFluTable->horizontalHeader()->setLabel(0,"bin top [MeV]");
   sloteFluTable->setHorizontalHeaderItem(0,new QTableWidgetItem("bin top [MeV]"));
-  //sloteFluTable->installEventFilter(this);
 
   //Initialize the stopping power output mode table
   InitializeTable( sproutTable, "start region", "stop region" );
   sproutTable->resizeColumnsToContents();
-  //sproutTable->installEventFilter(this);
 
   //Initialize the pulse height distribution table
   InitializeTable( phdTable, "sensitive region", "bin top [MeV]" );
-  //phdTable->installEventFilter(this);
   //Initialize media table
-  InitializeTable( mediaTable, "medium", "start region", "stop region" );
-  //mediaTable->installEventFilter(this);
+  QStringList smed; smed << "medium" << "start region" << "stop region";
+  v_float frmed; frmed.push_back(0.5); frmed.push_back(0.25); frmed.push_back(0.25);
+  //InitializeTable( mediaTable, "medium", "start region", "stop region" );
+  InitializeTable( mediaTable, smed, frmed);
 
   //Initialize the pegsless medium table
   InitializeTable( pz_or_rhozTable, "element", "no. of atoms" );
-  //pz_or_rhozTable->installEventFilter(this);
   //Initialize FF table
   //customFFTable->setValidator(false);
   QStringList sl; sl.append("medium");sl.append("FF file (full path)");
@@ -180,29 +178,24 @@ geoErrors    =  "";
   fra.push_back(0.20); fra.push_back(0.80);
   InitializeTable( customFFTable, sl, fra);
   customFFgroupBox->setEnabled( false );
-  //customFFTable->installEventFilter(this);
 
   //Initialize geometry tables
-    globalStartR.push_back(1);
-    globalStopR.push_back(1);
     globalNSlab.push_back(100);
 
   QStringList s; s.append( "# slabs" ); s.append("thickness [cm]");
   fra[0]=0.3;fra[1]=0.70;//fra[2]=0.35;
   InitializeTable( geometryTable, s, fra );
-  s.clear(); s.append( "radius [cm]" );//geometryTable->installEventFilter(this);
-  InitializeTable( cylTable,  s );          //cylTable->installEventFilter(this);
+  s.clear(); s.append( "radius [cm]" );
+  InitializeTable( cylTable,  s );
 
   //Initialize cavity iformation
   //qt3to4 -- BW
   //cavTable->horizontalHeader()->setLabel(0,"region #");
   cavTable->setHorizontalHeaderItem(0,new QTableWidgetItem("region #"));
-  //cavTable->installEventFilter(this);
 
   //Initialize source information
   InitializeTable( raddistTable, "Radial bin top", "Probability");
   phasespaceGroupBox->setToolTip(PHSP_FILE );
-  //raddistTable->installEventFilter(this);
  /**************************************/
   /* Initialize beam source information */
   /**************************************/
@@ -285,15 +278,6 @@ geoErrors    =  "";
   InitializeThreeColumnTable( PCUTTable, "PCUT");
   InitializeThreeColumnTable( ECUTTable, "ECUT");
   InitializeThreeColumnTable( SMAXTable, "SMAX");
-
-  //BoundComptonTable->installEventFilter(this);
-  //PEAngSamplingTable->installEventFilter(this);
-  //RayleighTable->installEventFilter(this);
-  //RelaxationsTable->installEventFilter(this);
-  //PCUTTable->installEventFilter(this);
-  //ECUTTable->installEventFilter(this);
-  //SMAXTable->installEventFilter(this);
-
 
 // Tool tips for General Tab
   //QToolTip::add(  UserCodeAreaButtonGroup, USER_CODE_AREA );
@@ -713,7 +697,6 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
 
   //Initialize the cross section enhancement table
   InitializeTwoColumnTable( CSEnhancementTable );
-  //CSEnhancementTable->installEventFilter(this);
 
   //qt3to4 -- BW -- below is redundant and results in zero width columns
   //int fullWidth  = CSEnhancementTable->visibleWidth();
@@ -728,13 +711,11 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
 
   //Initialize the plot regions table
   InitializeTable( PlotRegionsTable, "radial IX", "planar IZ" );
-  //PlotRegionsTable->installEventFilter(this);
 
   PlotRegionsTable->setWhatsThis(QString(RADIAL_PLOT) + "\n" +QString(PLANAR_PLOT) + QString(INDEPENDENT));
   PlotRegionsTable->setToolTip(QString(RADIAL_PLOT) + "\n" +QString(PLANAR_PLOT) + QString(INDEPENDENT));
   //Initialize the plot regions table
   InitializeTable( SpecPlotTable, "start", "stop" );
-  //SpecPlotTable->installEventFilter(this);
   //Some tool tips for Media Definition tab
   /*
   QToolTip::add( MDFEdit, MATERIAL_DATA_FILE);
@@ -1196,14 +1177,13 @@ void inputRZImpl::update_GEOInputs( const MGEOInputs* EGSgeo )
 	   // MEDIA DESCRIPTION
 	   QString error = QString(WARNING_MEDIA_DESCRIPTION);
 	   validate_combo( EGSgeo->description_by.toLatin1().data() , error, mediaComboBox );
+           current_description_by = EGSgeo->description_by;
 
 	   // MEDIA TABLE
 	   update_mediaTable( EGSgeo );
 	   //fill_media_table( EGSgeo );
 	}
-       else{
-                 set_cavity();
-      }
+       else set_cavity();
 
 }
 
@@ -1439,6 +1419,9 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
     gaspEdit->setText(EGSpgls->gasp[0]);
     DFEdit->setText(EGSpgls->dffile[0]);
     sterncidEdit->setText(EGSpgls->sterncid[0]);
+cout << "Should check PEGSlessRadioButton ..." << endl;
+    PEGSlessRadioButton->setChecked(true);
+    set_data_area();
   }
 
   medlst+="define new medium";
@@ -2382,7 +2365,6 @@ void inputRZImpl::getBeamSource()
     changeTextColor(beamLabel,"black");
 }
 
-
 /*
 Unassigned media are appended to the media table unless the
 medium is number 1, in which case it is inserted at the top,
@@ -2400,103 +2382,91 @@ time the corresponding region numbers (plane/cyl numbers).
 void inputRZImpl::fill_media_table( const MGEOInputs* EGSgeo )
 {
 
-	v_string medium;
-	v_int    mednum_i = EGSgeo->mednum;
-        v_string media_i  = EGSgeo->media;
+     v_string medium;
+     v_int    mednum_i = EGSgeo->mednum;
+     v_string media_i  = EGSgeo->media;
 
-	v_int vr[5];
-	vr[0] = EGSgeo->start_reg_slab;
-	vr[1] = EGSgeo->start_reg_slab;
-	vr[2] = EGSgeo->stop_reg_slab;
-        vr[3] = EGSgeo->start_ring;
-        vr[4] = EGSgeo->stop_ring;
+     v_int vr[3];
+     vr[1] = EGSgeo->start_reg; vr[2] = EGSgeo->stop_reg;
+     v_int vs[5];
+     vs[1] = EGSgeo->start_Z; vs[2] = EGSgeo->stop_Z;
+     vs[3] = EGSgeo->start_ring; vs[4] = EGSgeo->stop_ring;
 
 // create media name list "medium" from media number list "mednum"
 	for ( uint j = 0; j < mednum_i.size(); j++) {
-	   medium.push_back( media_i[ mednum_i[j] ] );
+	   if (mednum_i[j] < media_i.size()) medium.push_back( media_i[ mednum_i[j] ] );
 	}
 // Check that first medium is medium 1 since by default, all regions are medium 1
         if (medium[0] != media_i[1]){
            medium.insert( medium.begin(), media_i[1] );
-           int nplanes = 0;
-           for ( uint ipl = 0; ipl < EGSgeo->nslab.size();ipl++ )
-               nplanes += EGSgeo->nslab[ipl];
            if (EGSgeo->description_by.toLower() == "regions") {
                 vr[1].insert( vr[1].begin(), 2);
-                vr[2].insert( vr[2].begin(), EGSgeo->radii.size()*nplanes+1);
+                vr[2].insert( vr[2].begin(), EGSgeo->radii.size() * (EGSgeo->nslabs()) + 1);
            }
            else{
-                vr[1].insert( vr[1].begin(), 1);
-                vr[2].insert( vr[2].begin(), nplanes);
-                vr[3].insert( vr[3].begin(), 1);
-                vr[4].insert( vr[4].begin(), EGSgeo->radii.size());
+                vs[1].insert( vs[1].begin(), 1);
+                vs[2].insert( vs[2].begin(), EGSgeo->nslabs());
+                vs[3].insert( vs[3].begin(), 1);
+                vs[4].insert( vs[4].begin(), EGSgeo->radii.size());
            }
         }
         bool med_assigned;
 
 // check wether some media weren't assigned and add them to the table
 // Medium 1 was already taken care of above ...
-        for ( uint i = 0; i < media_i.size(); i++) {
-             med_assigned = false;
-             for ( uint j = 0; j < mednum_i.size(); j++) {
-                 if ( i == (uint) mednum_i[j]) { // medium asigned to regions ...
-                     med_assigned = true;
-                     break;
-                 }
+     for ( uint i = 0; i < media_i.size(); i++) {
+         med_assigned = false;
+         for ( uint j = 0; j < mednum_i.size(); j++) {
+             if ( i == (uint) mednum_i[j]) { // medium asigned to regions ...
+                 med_assigned = true;
+                 break;
              }
-             if (!med_assigned && i > 1){//include media not assigned to regions
-                medium.push_back( media_i[i] );
-             }
-	}
+         }
+         if (!med_assigned && i > 1){//include media not assigned to regions
+            medium.push_back( media_i[i] );
+         }
+     }
 
-	v_string vs[1];
-	vs[0] = medium;
-        //qt3to4 -- BW
-        vector<QString> vqs[1];
-        for(int j=0; j<vs[0].size(); j++) {
-           vqs[0].push_back(vs[0][j].c_str());
-        }
-	//update_table(vs, 0, 1, mediaTable);
-        update_table(vqs, 0, 1, mediaTable);
+    v_string vstr[1];
+    vstr[0] = medium;
+    //qt3to4 -- BW
+     vector<QString> vqs[1];
+     for(int j=0; j<vstr[0].size(); j++) {
+         vqs[0].push_back(vstr[0][j].c_str());
+     }
+     //update_table(vs, 0, 1, mediaTable);
+     update_table(vqs, 0, 1, mediaTable);
 
-
-	if (EGSgeo->description_by.toLower() == "regions")
-	            update_table(vr, 1, 3, mediaTable);
-	else      update_table(vr, 1, 5, mediaTable);
+     if (EGSgeo->description_by.toLower() == "regions")
+               update_table(vr, 1, 3, mediaTable);
+     else      update_table(vs, 1, 5, mediaTable);
 
 }
 
 void inputRZImpl::update_MediaInput()
 {
-	MGEOInputs* EGSgeo = new MGEOInputs;
+     MGEOInputs* EGSgeo = new MGEOInputs;
+     EGSgeo = GetGEO(); // get geometry and media info from form
+     update_mediaTable( EGSgeo );
+     zap(EGSgeo);
+}
 
-// if switching from planes to regions, save radii info in global variables
-              //qt3to4 -- BW
-              //if ( mediaTable->numCols() == 5 ){
-              if ( mediaTable->columnCount() == 5 ){
-                 get_col_content(3, mediaTable,globalStartR);
-                 get_col_content(4, mediaTable,globalStopR);
-	}
+// Gets media list from the table when loading a pegs4 file.
+v_string inputRZImpl::getMediaFromTable(){
 
-              EGSgeo = GetGEO(); // get geometry and media info from form
+  v_string tmpMed, medium;
 
-// if switching from  regions to planes, retrieve radii info from global variables
-              //qt3to4 -- BW
-              //if ( mediaTable->numCols() == 3 ){
-              if ( mediaTable->columnCount() == 3 ){
-                   EGSgeo->start_ring = globalStartR;
-                   EGSgeo->stop_ring = globalStopR;
-	}
-
-/*
-	if ( EGSgeo->description_by == "planes"){
-	   if ( EGSgeo->start_ring.size() == 0 ) EGSgeo->start_ring.push_back( 1 );
-	   if ( EGSgeo->stop_ring.size()  == 0 ) EGSgeo->stop_ring.push_back( 1 );
-	}
-*/
-              update_mediaTable( EGSgeo );
-
-              zap(EGSgeo);
+  //get media from table
+  get_col_explicit( 0, mediaTable, tmpMed, string("NO MEDIUM") );
+  //-----------------------------------------
+  //        create media list
+  //-----------------------------------------
+  for ( uint k = 0; k < tmpMed.size() ; k++){
+      if ( tmpMed[k] != "NO MEDIUM")
+         medium.push_back( tmpMed[k] );
+  }
+  //remove duplicates
+  return strip_repetitions( medium );
 }
 
 void inputRZImpl::update_mediaTable( const MGEOInputs* EGSgeo )
@@ -2508,15 +2478,10 @@ void inputRZImpl::update_mediaTable( const MGEOInputs* EGSgeo )
 
 	if ( EGSgeo->description_by == "regions"){
 
-          //qt3to4 -- BW
-	   //mediaTable->setNumCols(3);
            mediaTable->setColumnCount(3);
 
 	   int width = mediaTable->columnWidth(0);
 
-           //qt3to4 -- BW
-	   //mediaTable->horizontalHeader()->setLabel(1,"start region");
-	   //mediaTable->horizontalHeader()->setLabel(2,"stop region");
            mediaTable->setHorizontalHeaderItem(1,new QTableWidgetItem("start region"));
            mediaTable->setHorizontalHeaderItem(2,new QTableWidgetItem("stop region"));
 
@@ -2530,17 +2495,10 @@ void inputRZImpl::update_mediaTable( const MGEOInputs* EGSgeo )
 	}
 	else {
 
-           //qt3to4 -- BW
-	   //mediaTable->setNumCols(5);
            mediaTable->setColumnCount(5);
 
 	   int halfWidth = mediaTable->columnWidth(0)/2;
 
-           //qt3to4 -- BW
-	   //mediaTable->horizontalHeader()->setLabel(1,"start Z");
-	   //mediaTable->horizontalHeader()->setLabel(2,"stop Z");
-	   //mediaTable->horizontalHeader()->setLabel(3,"start R");
-	   //mediaTable->horizontalHeader()->setLabel(4,"stop R");
            mediaTable->setHorizontalHeaderItem(1,new QTableWidgetItem("start Z"));
            mediaTable->setHorizontalHeaderItem(2,new QTableWidgetItem("stop Z"));
            mediaTable->setHorizontalHeaderItem(3,new QTableWidgetItem("start R"));
@@ -2560,10 +2518,8 @@ void inputRZImpl::update_mediaTable( const MGEOInputs* EGSgeo )
 
 	}
 
-	if ( EGSgeo->mednum.size() > 0 && EGSgeo->media.size() > 0 )
-	{
-	   fill_media_table( EGSgeo );
-	}
+       if ( EGSgeo->mednum.size() > 0 && EGSgeo->media.size() > 0 )
+            fill_media_table( EGSgeo );
 
 }
 
@@ -2917,26 +2873,14 @@ void inputRZImpl::set_data_area()
    //char s = QDir::separator();
    char s = QDir::separator().toAscii();
 
-   if ( HOMEPegsRadioButton->isChecked() ){
-      tmpDir  = ironIt( EGS_HOME + s + "pegs4" + s + "data" + s);
-      is_pegsless=false;
-      TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(MDTab), false );
-      pegs4GroupBox->setEnabled(true);
-   }
+   if ( HOMEPegsRadioButton->isChecked() )
+       tmpDir  = ironIt( EGS_HOME + s + "pegs4" + s + "data" + s);
 
-   if ( HEN_HOUSEPegsRadioButton->isChecked() ){
+   if ( HEN_HOUSEPegsRadioButton->isChecked() )
       tmpDir  = ironIt( HEN_HOUSE + s + "pegs4" + s + "data" + s);
-      is_pegsless=false;
-      TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(MDTab), false );
-      pegs4GroupBox->setEnabled(true);
-   }
 
-   if ( OtherPegsAreaRadioButton->isChecked() ){
+   if ( OtherPegsAreaRadioButton->isChecked() )
       tmpDir  = The_Other_PEGS;
-      is_pegsless=false;
-      TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(MDTab), false );
-      pegs4GroupBox->setEnabled(true);
-   }
 
    if ( PEGSlessRadioButton->isChecked() ){
       is_pegsless=true;
@@ -2946,6 +2890,11 @@ void inputRZImpl::set_data_area()
       //see if any media are already defined
       listMedia = getPEGSLESSMedia();
       updateMediaLists();
+   }
+   else{
+      is_pegsless=false;
+      TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(MDTab), false );
+      pegs4GroupBox->setEnabled(true);
    }
 
    if ( PEGSdir != tmpDir ) {
