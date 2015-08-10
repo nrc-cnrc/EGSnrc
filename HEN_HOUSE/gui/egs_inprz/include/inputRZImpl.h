@@ -79,7 +79,7 @@ template <class X>
 void update_table( std::vector<X> *v, int ini, int count, QTableWidget* t );
 
 template <class X>
-std::vector<X> strip_repetions( std::vector<X> v );
+std::vector<X> strip_repetitions( std::vector<X> v );
 
 template <class X>
 std::vector<X> del_element( std::vector<X> v, X e );

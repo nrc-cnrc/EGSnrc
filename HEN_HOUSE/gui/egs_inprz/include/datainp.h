@@ -216,7 +216,7 @@ std::vector<X> del_element( std::vector<X> v, X e )
  }
 
 template <class X>
-std::vector<X> strip_repetions( std::vector<X> v )
+std::vector<X> strip_repetitions( std::vector<X> v )
 {
     std::vector<X> x = v;
     //std::vector<X>::iterator iter1(x.begin());
