@@ -321,7 +321,7 @@ QStringList find_programs_in_system( const QStringList & progs, const char & sep
 {
 QString pathvar = "PATH";
 QString pathval = getenv(pathvar.toLatin1().data());
-if ( pathval.at( pathval.length() ) != sep ) pathval.append(sep);
+if ( pathval.at( pathval.length()-1 ) != sep ) pathval.append(sep);
 
 //Extracting paths from environment variable PATH into a list
 QStringList dirs_in_path;
