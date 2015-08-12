@@ -5151,8 +5151,6 @@ call egs_fdate(iout);
                                                                        T80,'*'/
   ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
-  ' * For latest version: ',
-  'http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
   ' *',T80, '*'/
   ' *',  T53,' ',$);
 write(iout,111);

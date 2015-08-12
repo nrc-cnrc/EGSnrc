@@ -140,8 +140,7 @@ that until very recently users needed to especifically request the
 inclusion of Rayleigh cross sections in the PEGS4 data sets. Currently,
 Rayleigh cross sections are generated on the fly (see Rayleigh in PIRS-701).
 Default values may often only add time to your calculation. One can speed
-things up by turning them off. The user is referred to
-<a href=http://www.irs.inms.nrc.ca/EGSnrc/pirs702/node19.html>section 2.6</a>
+things up by turning them off. The user is referred to section 2.6
 of the PIRS-702 user-code manual for a detailed description
 of these parameters.
 

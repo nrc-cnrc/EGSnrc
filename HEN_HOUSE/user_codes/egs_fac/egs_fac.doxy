@@ -218,12 +218,6 @@ see PIRS-877 for more details on running EGSnrc user codes.
 #  The simulation is set to compute all correction factors as described
 #  in Mainegra-Hing, Reynaert and Kawrakow, Med.Phys. 35(8),2008 3650-3660.
 #
-#  Note that this input file will not work with any EGSnrc release up to
-#  V4-2-2-5 (Feb 2007) because the geometry definition uses recent additions
-#  such as input loops and the smart envelope geometry. You need to install
-#  the latest EGSnrc release or snapshot to be able to use this input file!
-#  (see http://www.irs.inms.nrc.ca/EGSnrc/snapshot.html)
-#
 #  See comments accompanying the various inputs for more details.
 #
 ##############################################################################
