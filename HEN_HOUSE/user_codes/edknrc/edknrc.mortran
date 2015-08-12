@@ -2827,8 +2827,6 @@ call egs_fdate(ounit);
                                                                        T80,'*'/
   ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
-  ' *    For latest version see:',T80,'*'/
-  ' *    http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
   ' *',T80, '*'/
   ' *',  T53,' ',$);
 write(ounit,111);

@@ -74,7 +74,6 @@ SUBROUTINE WATCH(IARG,IWATCH);
 "       For IWATCH = 1 it prints information about each discrete interaction  "
 "       For IWATCH = 2 or 3 it prints information about each step as well     "
 "       For IWATCH = 4 it prints graphing data for use with EGS_Windows       "
-"        see http://www.irs.inms.nrc.ca/inms/irs/EGS_Windows/distribution.html"
 "                                                                             "
 "                                                                             "
 "    Routine is used via two mandatory and 1 optional call from the user's    "

@@ -126,9 +126,7 @@ here</a>.
 /*! \page installation Installation
 
 The EGSnrc C++ class library is distributed with the rest of the
-EGSnrc system at the main EGSnrc
-<a href="http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/installation.html">
-distribution site</a>. Although in principle \c egspp can be used
+EGSnrc system. Although in principle \c egspp can be used
 standalone (\em i.e. without the rest of the EGSnrc system),
 it is distributed and set up under the assumptiom that it is part
 of a complete EGSnrc distribution and that the main

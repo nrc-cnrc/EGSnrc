@@ -52,11 +52,7 @@ The C++ user code \c cavity is an advanced EGSnrc application that
 calculates the dose to the cavity of an ionization chamber and/or
 the \f$A_{\rm wall}\f$ correction factor. It
 implements most of the functionality of the original CAVRZnrc mortran
-user code
-(see the <a href="http://www.irs.inms.nrc.ca/EGSnrc/pirs702/node79.html">CAVRZnrc</a>
-documentation in the user-codes manual
-<a href="http://www.irs.inms.nrc.ca/EGSnrc/pirs702/pirs702.html">PIRS-702</a>).
-Features available in CAVRZnrc but not provided
+user code. Features available in CAVRZnrc but not provided
 by \c cavity are
   - Calculation of stopping power ratios, which are more efficiently
     calculated using the SPRRZnrc code

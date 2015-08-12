@@ -4196,8 +4196,6 @@ write(iout,'(" *"/1X,79("*"))');
                                                                        T80,'*'/
   ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
-  ' * For latest version: ',
-  'http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
 
@@ -4222,8 +4220,6 @@ write(iout,'(" *"/1X,79("*"))');
 "                                                                      T80,'*'/
 " ' *            This is version '$VERSION' ',T80,'*'/
 " ' *             running on '$MACHINE' ',T80,'*'/
-" ' * For latest version: ',
-" 'http://www.irs.inms.nrc.ca/inms/irs/EGSnrc/EGSnrc.html',T80,'*'/
 " ' *',T80, '*'/
 " ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
 
