@@ -78,7 +78,7 @@ QString EGS_PrivateConfigReader::ironIt(const QString &v) {
     QString aux = "/+|"; aux += "\\\\"; aux += "+";
     QRegExp re(aux);
     //QStringList list = QStringList::split(re,v);
-    QStringList list = v.split(re);
+    QStringList list = v.split(re,QString::SkipEmptyParts);
     QString res; if( v.startsWith("/") ) res = "/";
     for(QStringList::iterator it=list.begin(); it != list.end(); it++) {
         //cout << "next: " << (*it).latin1() << endl;
