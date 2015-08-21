@@ -39,7 +39,8 @@
 
 include $(EGS_CONFIG)
 
-all: clean Makefile_$(my_machine)
+#all: clean Makefile_$(my_machine)
+all: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine)
 
 static: Makefile_static_$(my_machine)
