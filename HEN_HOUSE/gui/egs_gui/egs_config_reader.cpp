@@ -41,7 +41,11 @@
 #include <cstdlib>
 #include <string>
 
+#include <QTextStream>
+
 using namespace std;
+
+//#define CR_DEBUG
 
 #ifdef CR_DEBUG
 #include <fstream>
@@ -71,17 +75,21 @@ QString EGS_ConfigReader::getConfig() const {
 }
 
 QString EGS_PrivateConfigReader::ironIt(const QString &v) {
-    //cout << "ironIt: " << v.latin1() << endl;
     QString aux = "/+|"; aux += "\\\\"; aux += "+";
     QRegExp re(aux);
-    QStringList list = QStringList::split(re,v);
+    QStringList list = v.split(re,QString::SkipEmptyParts);
+#ifdef CR_DEBUG
+    cr_debug << "ironIt gets " << list.count() << " elements :" << list.join(",").toLatin1().data() << endl;
+#endif
     QString res; if( v.startsWith("/") ) res = "/";
     for(QStringList::iterator it=list.begin(); it != list.end(); it++) {
-        //cout << "next: " << (*it).latin1() << endl;
         if( it != list.begin() ) res += QDir::separator();
         res += *it;
     }
     if( v.endsWith("/") || v.endsWith("\\") ) res += QDir::separator();
+#ifdef CR_DEBUG
+    cr_debug << "ironIt returns: " << res.toLatin1().data() << endl;
+#endif
     return res;
 }
 
@@ -99,7 +107,7 @@ QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
     QRegExp re(junk);
     QString res; int pos = 0;
     while(1) {
-        int pos1 = re.search(value,pos);
+        int pos1 = re.indexIn(value,pos);
         if( pos1 < 0 ) { res += value.mid(pos); break; }
         res += value.mid(pos,pos1-pos);
         res += getVariable(re.cap(1),ironit);
@@ -117,11 +125,11 @@ QString EGS_PrivateConfigReader::getVariable(const QString &key, bool ironit) {
     QString res;
     if( map.contains(key) ) res = simplify(map[key],ironit);
     else {
-        char *var = getenv(key.latin1());
+        char *var = getenv(key.toLatin1().data());
         if( var ) res = ironIt(var);
     }
 #ifdef CR_DEBUG
-    cr_debug << "getVariable(" << key.latin1() << "): " << res.latin1() << endl;
+    cr_debug << "getVariable(" << key.toLatin1().data() << "): " << res.toLatin1().data() << endl;
 #endif
     return res;
 }
@@ -129,7 +137,7 @@ QString EGS_PrivateConfigReader::getVariable(const QString &key, bool ironit) {
 void EGS_PrivateConfigReader::setConfig(const QString &file) {
 #ifdef CR_DEBUG
     cr_debug << "EGS_PrivateConfigReader::setConfig: "
-        << file.latin1() << endl;
+        << file.toLatin1().data() << endl;
 #endif
     the_config = file; //map.clear();
     addFile(file);
@@ -137,16 +145,16 @@ void EGS_PrivateConfigReader::setConfig(const QString &file) {
 
 int EGS_PrivateConfigReader::checkConfigFile(const QString &file) {
     QFile f(file);
-    if( !f.open(IO_ReadOnly) ) return 1;
+    if( !f.open(QFile::ReadOnly) ) return 1;
     QTextStream ts(&f); QString the_line;
     int res = 0;
     while( !ts.atEnd() ) {
         QString line = ts.readLine();
         if( line.startsWith("include") ) {
 #ifdef WIN32
-            int pos = line.find("unix.spec");
+            int pos = line.indexOf("unix.spec");
 #else
-            int pos = line.find("windows.spec");
+            int pos = line.indexOf("windows.spec");
 #endif
             if( pos >= 0 ) { res = 2; break; }
         }
@@ -156,34 +164,34 @@ int EGS_PrivateConfigReader::checkConfigFile(const QString &file) {
 
 void EGS_PrivateConfigReader::addFile(const QString &file) {
 #ifdef CR_DEBUG
-    cr_debug << "EGS_PrivateConfigReader::addFile: " << file.latin1() << endl;
+    cr_debug << "EGS_PrivateConfigReader::addFile: " << file.toLatin1().data() << endl;
 #endif
     QFile f(file);
-    if( !f.open(IO_ReadOnly) ) return;
+    if( !f.open(QFile::ReadOnly) ) return;
     QTextStream ts(&f); QString the_line;
     while( !ts.atEnd() ) {
         QString line = ts.readLine();
         if( line.startsWith("#") ) continue;
-        QString line1 = line.simplifyWhiteSpace();
+        QString line1 = line.simplified();
         if( line1.isEmpty() ) continue;
         if( !line1.endsWith("\\\\") && line1.endsWith("\\") ) {
-            line1.at(line1.length()-1) = ' '; the_line += line1;
+            line1[line1.length()-1] = ' '; the_line += line1;
             continue;
         }
         the_line += line;
         if( the_line.startsWith("include") ) {
-            QStringList list = QStringList::split(" ",the_line);
+            QStringList list = the_line.split(" ");
             list.pop_front(); QString inc = list.join(" ");
             addFile(simplify(inc,true));
             the_line = "";
         }
         else {
             QRegExp rx("\\b(\\w+)\\s*=\\s*");
-            int pos = rx.search(the_line);
+            int pos = rx.indexIn(the_line);
             if( pos >=0 ) {
 #ifdef CR_DEBUG
-                cr_debug << "inserting <" << rx.cap(1).latin1()
-                    << "> <" << the_line.mid(pos+rx.matchedLength()).latin1()
+                cr_debug << "inserting <" << rx.cap(1).toLatin1().data()
+                    << "> <" << the_line.mid(pos+rx.matchedLength()).toLatin1().data()
                     << ">\n";
 #endif
 
@@ -191,7 +199,7 @@ void EGS_PrivateConfigReader::addFile(const QString &file) {
             }
             else {
                 QRegExp rx1("\\b(\\w+)\\s*:=\\s*");
-                int pos = rx1.search(the_line);
+                int pos = rx1.indexIn(the_line);
                 if( pos >=0 ) {
                     QString aux = the_line.mid(pos+rx1.matchedLength());
                     QString val;
@@ -201,7 +209,7 @@ void EGS_PrivateConfigReader::addFile(const QString &file) {
                     else val = simplify(aux,false);
 #ifdef CR_DEBUG
                     cr_debug << "inserting <" <<
-                        rx1.cap(1).latin1() << "> <" << val.latin1() << ">\n";
+                        rx1.cap(1).toLatin1().data() << "> <" << val.toLatin1().data() << ">\n";
 #endif
                     map.insert(rx1.cap(1),val);
                 }
@@ -236,7 +244,7 @@ QString EGS_ConfigReader::getVariable(const QString &key,bool ironit) {
     return p->getVariable(key,ironit);
 }
 
-EGS_ConfigReader::~EGS_ConfigReader() { delete p; }
+EGS_ConfigReader::~EGS_ConfigReader() { if (p){delete p;p=0;} }
 
 int EGS_ConfigReader::checkConfigFile(const QString &file) {
     return p->checkConfigFile(file);

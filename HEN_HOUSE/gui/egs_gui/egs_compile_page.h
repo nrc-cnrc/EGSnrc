@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -35,10 +35,12 @@
 #include "egs_gui_widget.h"
 
 #include <qstring.h>
+#include <qprocess.h>
 
 class QComboBox;
 class QLineEdit;
 class QButtonGroup;
+class QGroupBox;
 class QPushButton;
 class QIODevice;
 class QTextEdit;
@@ -51,9 +53,10 @@ class EGS_CompilePage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_CompilePage(QWidget *parent = 0, const char * name = 0, WFlags f = 0);
+  EGS_CompilePage(QWidget *parent = 0, const char * name = 0, Qt::WFlags f = 0);
   EGS_CompilePage(EGS_ConfigReader *,
-          QWidget *parent = 0, const char * name = 0, WFlags f = 0);
+          QWidget *parent = 0, const char * name = 0, Qt::WFlags f = 0);
+  ~EGS_CompilePage(){}
 
   void sendSignals();
 
@@ -65,7 +68,7 @@ public slots:
 
   void startCompilation();
   void stopCompilation();
-  void compilationFinished();
+  void compilationFinished(int exitCode, QProcess::ExitStatus exitStatus);
   void readProcessOut();
   void readProcessErr();
   //void showHideDetails();
@@ -80,7 +83,9 @@ private:
 
   void make();
 
-  QButtonGroup *c_option;
+  //QButtonGroup *c_option;
+  QButtonGroup *bg_coption;
+  QGroupBox *c_option;
   QLineEdit *extra_f_options;
   QLineEdit *extra_c_options;
 

@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -42,14 +42,15 @@
 #include <qdir.h>
 #include <qstringlist.h>
 #include <qtextedit.h>
-#include <qprocess.h>
 #include <qmessagebox.h>
-#include <qcstring.h>
+//#include <qcstring.h>
 
 #include <cstdlib>
 
 const QSizePolicy ignored(QSizePolicy::Ignored,QSizePolicy::Ignored);
 const QSizePolicy preferred(QSizePolicy::Preferred,QSizePolicy::Preferred);
+
+using namespace Qt;
 
 EGS_CompilePage::EGS_CompilePage(QWidget *parent, const char *name,
     WFlags f) : EGS_GUI_Widget(parent,name,f) { make(); }
@@ -63,17 +64,17 @@ void EGS_CompilePage::make() {
    QVBoxLayout *topl = new QVBoxLayout(this);
    topl->setSpacing(6); topl->setMargin(11);
 
-   c_option = new QButtonGroup("Target",this,"target group");
-   c_option->setOrientation(Qt::Vertical);
-   c_option->layout()->setSpacing(6); c_option->layout()->setMargin(11);
-   QVBoxLayout *bgl = new QVBoxLayout( c_option->layout() );
+   bg_coption = new QButtonGroup(this);
+   c_option = new QGroupBox("coption box",this);
+   QVBoxLayout *bgl = new QVBoxLayout(c_option);bgl->setSpacing(6); bgl->setMargin(11);
+   c_option->setTitle( tr("Target") );
 
-   QRadioButton *rb = new QRadioButton("opt",c_option,"opt");
-   rb->setChecked(true); bgl->addWidget(rb); the_target = 0;
-   rb = new QRadioButton("noopt",c_option,"noopt"); bgl->addWidget(rb);
-   rb = new QRadioButton("debug",c_option,"debug"); bgl->addWidget(rb);
-   rb = new QRadioButton("clean",c_option,"clean"); bgl->addWidget(rb);
-   connect(c_option,SIGNAL(clicked(int)),this,SLOT(changeTarget(int)));
+   QRadioButton *rb = new QRadioButton("opt",c_option);
+   rb->setChecked(true); bgl->addWidget(rb); the_target = 0;    bg_coption->addButton(rb);
+   rb = new QRadioButton("noopt",c_option); bgl->addWidget(rb); bg_coption->addButton(rb);
+   rb = new QRadioButton("debug",c_option); bgl->addWidget(rb); bg_coption->addButton(rb);
+   rb = new QRadioButton("clean",c_option); bgl->addWidget(rb); bg_coption->addButton(rb);
+   //connect(bg_coption,SIGNAL(clicked(int)),this,SLOT(changeTarget(int)));
 
    QHBoxLayout *hl1 = new QHBoxLayout;
    hl1->addWidget(c_option);
@@ -81,51 +82,40 @@ void EGS_CompilePage::make() {
    QVBoxLayout *vl1 = new QVBoxLayout;
 
    // Fortran options
-   QGroupBox *gb = new QGroupBox(this,"Extra F options");
-   gb->setColumnLayout(0, Qt::Vertical );
-   gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
-   gb->setTitle( tr("Extra Fortran options") );
-   QHBoxLayout *hbl = new QHBoxLayout(gb->layout());
-   hbl->setAlignment( Qt::AlignTop );
-   extra_f_options = new QLineEdit(gb,"extra fortran options");
+   QVBoxLayout *gbl = new QVBoxLayout();gbl->setSpacing(6); gbl->setMargin(11);
+   QGroupBox *gb = new QGroupBox(this); gb->setTitle( tr("Extra Fortran options") );
+   QHBoxLayout *hbl = new QHBoxLayout(gb);hbl->setAlignment( Qt::AlignCenter );
+   extra_f_options = new QLineEdit(gb);
    hbl->addWidget(extra_f_options);
    vl1->addWidget(gb);
    // C Options
-   gb = new QGroupBox(this,"Extra C options");
-   gb->setColumnLayout(0, Qt::Vertical );
-   gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
-   gb->setTitle( tr("Extra C options") );
-   hbl = new QHBoxLayout(gb->layout());
-   hbl->setAlignment( Qt::AlignTop );
-   extra_c_options = new QLineEdit(gb,"extra C options");
+   gb = new QGroupBox("Extra C options",this); gb->setTitle( tr("Extra C options") );
+   hbl = new QHBoxLayout(gb);hbl->setAlignment( Qt::AlignCenter );
+   extra_c_options = new QLineEdit(gb);
    hbl->addWidget(extra_c_options);
+
    vl1->addWidget(gb);
 
    hl1->addLayout(vl1);
    topl->addLayout(hl1,1);
 
    hl1 = new QHBoxLayout;
-   QPushButton *b = new QPushButton("&Go",this,"start compilation");
+   QPushButton *b = new QPushButton("&Go",this);
    connect(b,SIGNAL(clicked()),this,SLOT(startCompilation()));
    hl1->addWidget(b); is_running = false; start_c = b;
 
    QSpacerItem *spacer = new QSpacerItem(20,20,QSizePolicy::Expanding,
                                           QSizePolicy::Minimum);
    hl1->addItem(spacer);
-   b = new QPushButton("&Cancel",this,"cancel button");
+   //b = new QPushButton("&Cancel",this,"cancel button");
+   b = new QPushButton("&Cancel",this);
    connect(b,SIGNAL(clicked()),this,SLOT(stopCompilation()));
    b->setEnabled(false); hl1->addWidget(b); stop_c = b;
-   /*
-   spacer = new QSpacerItem(20,20,QSizePolicy::Expanding,QSizePolicy::Minimum);
-   hl1->addItem(spacer);
-   b = new QPushButton("&Details >>",this,"details button");
-   connect(b,SIGNAL(clicked()),this,SLOT(showHideDetails()));
-   hl1->addWidget(b); details_c = b;
-   */
 
    topl->addLayout(hl1,1);
 
-   c_text = new QTextEdit(this,"compilation output");
+   //c_text = new QTextEdit(this,"compilation output");
+   c_text = new QTextEdit(this);
    QFont ctext_font(  c_text->font() );
    ctext_font.setFamily( "Courier [Adobe]" );
    ctext_font.setPointSize( 9 );
@@ -136,9 +126,10 @@ void EGS_CompilePage::make() {
    topl->addWidget(c_text,100);
 
    c_process = new QProcess;
-   connect(c_process,SIGNAL(processExited()),this,SLOT(compilationFinished()));
-   connect(c_process,SIGNAL(readyReadStdout()),this,SLOT(readProcessOut()));
-   connect(c_process,SIGNAL(readyReadStderr()),this,SLOT(readProcessErr()));
+   connect(c_process,SIGNAL(readyReadStandardOutput()),this,SLOT(readProcessOut()));
+   connect(c_process,SIGNAL(readyReadStandardError()),this,SLOT(readProcessErr()));
+   connect(c_process,SIGNAL(finished(int, QProcess::ExitStatus)),
+           this,     SLOT(compilationFinished(int, QProcess::ExitStatus)));
 }
 
 bool EGS_CompilePage::checkExeDir() {
@@ -170,29 +161,31 @@ void EGS_CompilePage::startCompilation() {
   c_option->setEnabled(false);
 
   if( !checkExeDir() )
-    qFatal("Failed to create executable directory for %s",myMachine().latin1());
+    qFatal("Failed to create executable directory for %s",myMachine().toLatin1().data());
 
-  c_process->clearArguments();
-  c_process->addArgument(makeProgram());
+  QStringList args;
+  //c_process->clearArguments();
+  //c_process->addArgument(makeProgram());
 #ifdef IK_DEBUG
-  qDebug("user code: %s",the_user_code.latin1());
+  qDebug("user code: %s",the_user_code.toLatin1().data());
 #endif
   QString ucode = the_user_code;
   QString udir = egsHome() + ucode;
   QDir::setCurrent(udir);
 #ifdef IK_DEBUG
-  qDebug("udir: %s",udir.latin1());
+  qDebug("udir: %s",udir.toLatin1().data());
 #endif
-  QButton *b = c_option->selected();
-  QString bname = b->name();
+  //QButton *b = c_option->selected();
+  QAbstractButton *b = bg_coption->checkedButton();//c_option->selected();
+  QString bname = b->text();//b->name();
 #ifdef IK_DEBUG
-  qDebug("selected button: %s",bname.latin1());
+  qDebug("selected button: %s",bname.toLatin1().data());
 #endif
-  if( bname != "opt" ) c_process->addArgument(bname);
+  if( bname != "opt" ) args << bname;//c_process->addArgument(bname);
   QString conf = "EGS_CONFIG="; conf += egsConfiguration();
-  c_process->addArgument(conf);
+  args <<conf; //c_process->addArgument(conf);
   QString ehome = "EGS_HOME="; ehome += egsHome();
-  c_process->addArgument(ehome);
+  args << ehome; //c_process->addArgument(ehome);
   if( bname != "clean" ) {
     QString fopt = extra_f_options->text();
     if( !fopt.isEmpty() ) {
@@ -200,47 +193,49 @@ void EGS_CompilePage::startCompilation() {
       //aux += fFlags() + " " + fopt + "\"";
       QString aux="FCFLAGS=";
       aux += fFlags() + " " + fopt;
-      c_process->addArgument(aux);
+      args << aux; //c_process->addArgument(aux);
     }
     QString copt = extra_c_options->text();
     if( !copt.isEmpty() ) {
       QString aux="C_FLAGS=\"";
       aux += cFlags() + " " + copt + "\"";
-      c_process->addArgument(aux);
+      args << aux; //c_process->addArgument(aux);
     }
   }
 #ifdef IK_DEBUG
-  qDebug("Current directory: %s",QDir::currentDirPath().latin1());
+  qDebug("Current directory: %s",QDir::currentDirPath().toLatin1().data());
 #endif
-  QStringList list = c_process->arguments();
-  qWarning("Executing: <%s>",list.join(" ").latin1());
+  //qWarning("Executing: <%s>",args.join(" ").toLatin1().data());
   c_text->setText("");
 
-  c_process->start();
-
-  is_running = true;
+  //c_process->start();
+  c_process->start(makeProgram(),args);
+  if(c_process->error()==QProcess::FailedToStart) {
+    c_text->insertPlainText(tr("Failed to execute: ")+ makeProgram() + args.join(" ") + tr("!!!"));
+  }
+  else{
+   is_running = true; killed = false;
+  }
 }
 
 void EGS_CompilePage::stopCompilation() {
 #ifdef IK_DEBUG
   qDebug("In EGS_CompilePage::stopCompilation()\n");
 #endif
-  /*
-  start_c->setEnabled(true); stop_c->setEnabled(false);
-  c_option->setEnabled(true);
-  is_running = false;
-  */
-  c_process->tryTerminate();
+  //c_process->tryTerminate();
+  c_process->kill(); killed = true;
 }
 
 void EGS_CompilePage::readProcessOut() {
-  QByteArray a = c_process->readStdout();
-  c_text->insert(a); //c_text->append(a);
+  //QByteArray a = c_process->readStdout();
+  QByteArray a = c_process->readAllStandardOutput();
+  c_text->insertPlainText(a);//c_text->insert(a); //c_text->append(a);
 }
 
 void EGS_CompilePage::readProcessErr() {
-  QByteArray a = c_process->readStderr();
-  c_text->insert(a); //c_text->append(a);
+  //QByteArray a = c_process->readStderr();
+  QByteArray a = c_process->readAllStandardError();
+  c_text->insertPlainText(a);//c_text->insert(a); //c_text->append(a);
 }
 
 void EGS_CompilePage::setUserCode(const QString &new_user_code) {
@@ -251,19 +246,23 @@ void EGS_CompilePage::setUserCode(const QString &new_user_code) {
 }
 
 void EGS_CompilePage::sendSignals() {
-  QButton *b = c_option->selected();
-  QString bname = b->name();
+  //QButton *b = c_option->selected();
+  //QString bname = b->name();
+  QAbstractButton *b = bg_coption->checkedButton();
+  QString bname = b->text();
   emit targetChanged(bname);
 }
 
 void EGS_CompilePage::changeTarget(int id) {
   if( id == the_target ) return;
   the_target = id;
-  QButton *b = c_option->selected(); QString bname = b->name();
+  //QButton *b = c_option->selected(); QString bname = b->name();
+  QAbstractButton *b = bg_coption->checkedButton();
+  QString bname = b->text();
   emit targetChanged(bname);
 }
 
-void EGS_CompilePage::compilationFinished() {
+void EGS_CompilePage::compilationFinished(int exitCode, QProcess::ExitStatus exitStatus) {
 #ifdef IK_DEBUG
   qDebug("In EGS_CompilePage::compilationFinished()\n");
 #endif
@@ -271,14 +270,20 @@ void EGS_CompilePage::compilationFinished() {
   c_option->setEnabled(true);
   is_running = false;
 
-  QString bname = c_option->selected()->name();
-  if( bname != "clean" ) {
-  if( !c_process->normalExit() || c_process->exitStatus() )
-    //QMessageBox::critical(this,"Compilation Error","Compilation failed",
-    //   QMessageBox::Ok,QMessageBox::NoButton);
-    c_text->append(
-  "\n\n************************* failed *****************************\n\n");
-  else c_text->append(
-  "\n\n************************* success *****************************\n\n");
+  QString bname = bg_coption->checkedButton()->text();
+  QString exit_code = tr("ExitCode = ")  + QString::number(exitCode);
+  c_text->append(exit_code);
+  if( bname != QString("clean") ) {
+   if (killed)
+       c_text->append(
+       "\n\n************************* killed *****************************\n\n");
+   else{
+       if( exitStatus != QProcess::NormalExit)
+         c_text->append(
+         "\n\n************************* failed *****************************\n\n");
+       else
+         c_text->append(
+         "\n\n************************* finished *****************************\n\n");
+   }
   }
 }

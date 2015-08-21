@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -32,10 +32,15 @@
 #ifndef EGS_GUI_RUN_PAGE_
 #define EGS_GUI_RUN_PAGE_
 
+#include <QAbstractButton>
+
 #include "egs_gui_widget.h"
+#include <qprocess.h>
 
 class QLineEdit;
 class QButtonGroup;
+class QCheckBox;
+class QGroupBox;
 class QRadioButton;
 class QPushButton;
 class QSpinBox;
@@ -51,14 +56,15 @@ class EGS_RunPage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_RunPage(QWidget *parent=0, const char *name=0, WFlags f=0);
+  EGS_RunPage(QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
   EGS_RunPage(EGS_ConfigReader *cr,
-          QWidget *parent=0, const char *name=0, WFlags f=0);
-
+          QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+  ~EGS_RunPage(){}
 public slots:
 
   void selectPegsFile();
   void pegsAreaChanged(const QString &);
+  void go_pegsless(bool checked);
   void setUserCode(const QString &);
   void setTarget(const QString &);
   void selectInputFile();
@@ -68,7 +74,7 @@ public slots:
   void stopExecution();
   void readProcessOut();
   void readProcessErr();
-  void processFinished();
+  void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
   void getBatchOptions();
   void getBatchOptions(const QString &);
   void closeStdin();
@@ -77,20 +83,22 @@ private:
 
   void make();
   void checkExecutable();
-  bool addCommandArguments(QString &, QProcess *);
+  bool addCommandArguments(QStringList &);
   bool parseBatchOptions();
   bool getVariable(const QString &from, const QString &what, QString &var);
   QString getExecutable();
 
+  QCheckBox *pegsless;
+  QPushButton *pegsFileButton;
   QLineEdit *pegs_file;
   QLineEdit *input_file;
   QLineEdit *extra_args;
   QLineEdit *extra_batch_args;
 
-  QButtonGroup *run_options;
+  QGroupBox    *run_options;
+  QButtonGroup *bg_run_options;
   QRadioButton *i_button;
   QRadioButton *b_button;
-  //QRadioButton *p_button;
   QSpinBox     *njob;
   QComboBox    *queue_system;
   QComboBox    *queue;
@@ -99,7 +107,6 @@ private:
   QPushButton  *stop_b;
 
   QTextEdit    *r_text;
-  //QFileDialog  *pegs_dialog;
 
   QComboBox    *look_for_pegs;
 

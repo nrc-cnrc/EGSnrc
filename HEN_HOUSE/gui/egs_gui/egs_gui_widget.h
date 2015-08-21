@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -44,11 +44,11 @@ class EGS_GUI_Widget : public QWidget {
 
 public:
 
-  EGS_GUI_Widget(QWidget *parent=0, const char *name=0, WFlags f=0);
+  EGS_GUI_Widget(QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
   EGS_GUI_Widget(EGS_ConfigReader *, QWidget *parent=0,
-          const char *name=0, WFlags f=0);
+          const char *name=0, Qt::WFlags f=0);
 
-  virtual ~EGS_GUI_Widget();
+  virtual ~EGS_GUI_Widget(){}
 
 public:
 
@@ -60,6 +60,7 @@ public:
   QString fFlags();
   QString cFlags();
   QString makeProgram();
+  QString name(){return the_name;};
 
 public slots:
 
@@ -75,13 +76,16 @@ protected:
 
   EGS_ConfigReader *config_reader;
 
-  //virtual bool getVariable(QIODevice *, const QString &key, QString &value);
+  bool killed;
 
   virtual void setHenHouse(const QString &);
   virtual void setEgsHome(const QString &);
 
   virtual bool checkVars();
 
+private:
+
+  QString the_name;
 };
 
 #endif
