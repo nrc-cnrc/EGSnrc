@@ -36,9 +36,11 @@
 #include <qstring.h>
 #include <qpixmap.h>
 
-class QListBox;
-class QListBoxItem;
-class QWidgetStack;
+#include "pegs_page.h"
+class QListWidget;
+class QListWidgetItem;
+class QStackedWidget;
+
 class QComboBox;
 class QLineEdit;
 class EGS_CompilePage;
@@ -48,21 +50,22 @@ class EGS_PegsPage;
 class QWizard;
 class EGS_ConfigReader;
 class QLibrary;
-class aboutForm;
 
-
-class EGS_MainWidget : public QWidget {
+class EGS_MainWidget : public QWidget
+{
 
   Q_OBJECT
 
 public:
 
-  EGS_MainWidget(QWidget * parent = 0, const char * name = 0, WFlags f = 0);
-
+  EGS_MainWidget(QWidget * parent = 0, Qt::WFlags f = 0);
+  ~EGS_MainWidget(){}
 public slots:
 
   void exitGUI();
-  void changePage(QListBoxItem *);
+
+  void changePage(QListWidgetItem *,QListWidgetItem *);
+
   void changeEgsHome(const QString &);
   void changeHenHouse(const QString &);
   void changeUserCode(const QString &);
@@ -82,11 +85,12 @@ private:
   void addUserCodes(const QString &);
   void updateUserCodeList();
 
-  QListBox                *control;
-  QWidgetStack            *work_area;
+  QListWidget             *control;
+  QStackedWidget          *work_area;
+
   EGS_CompilePage         *compile_page;
-  EGS_RunPage             *run_page;
   EGS_PegsPage            *pegs_page;
+  EGS_RunPage             *run_page;
   EGS_ConfigurationPage   *conf_page;
   QWizard                 *wizard;
   QComboBox               *user_code;
@@ -96,9 +100,6 @@ private:
   QString  egs_home;
   QString  hen_house;
   QString  libpath;
-
-  QPixmap  my_icon;
-  aboutForm *about_gui;
 
 };
 

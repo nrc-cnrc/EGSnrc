@@ -47,10 +47,10 @@ class EGS_ConfigurationPage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_ConfigurationPage(QWidget *parent=0, const char *name=0, WFlags f=0);
+  EGS_ConfigurationPage(QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
   EGS_ConfigurationPage(EGS_ConfigReader *cr,
-          QWidget *parent=0, const char *name=0, WFlags f=0);
-
+          QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+  ~EGS_ConfigurationPage(){}
 public slots:
 
   void selectConfigurationFile();
@@ -66,22 +66,6 @@ private:
   QLineEdit  *le_egshome;
   QLineEdit  *le_henhouse;
   QLineEdit  *le_configuration;
-
-  /*
-  QLineEdit  *le_queue_command;
-  QLineEdit  *le_batch;
-  QLineEdit  *le_batch_options;
-  QButtonGroup *batch_type;
-  QGroupBox  *b_commands;
-
-  int     queue_type;
-  QString bc_last_nqs;
-  QString batch_last_nqs;
-  QString options_last_nqs;
-  QString bc_last_other;
-  QString batch_last_other;
-  QString options_last_other;
-  */
 
 };
 

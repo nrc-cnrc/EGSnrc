@@ -44,6 +44,8 @@
 #include <qlabel.h>
 #include <qmessagebox.h>
 
+using namespace Qt;
+
 EGS_ConfigurationPage::EGS_ConfigurationPage(QWidget *parent,
        const char *name, WFlags f) : EGS_GUI_Widget(parent,name,f) {
     make();
@@ -59,10 +61,8 @@ void EGS_ConfigurationPage::make() {
   topl->setSpacing(6); topl->setMargin(11);
 
   QLabel *rocket_egss = new QLabel(this);
-  //QPixmap *egg = new QPixmap(QPixmap::fromMimeSource("rocket_egg_tr_f1.jpg"));
-  //egg->resize(300,300);
-  //rocket_egss->setPixmap(*egg);
-  rocket_egss->setPixmap(QPixmap::fromMimeSource("rocket_egg_tr_f1_300.png"));
+  //rocket_egss->setPixmap(QPixmap(":/images/rocket_egg_tr_f1_300.png"));
+  rocket_egss->setPixmap(QPixmap("images/rocket_egg_tr_f1_300.png"));
   topl->addWidget(rocket_egss,0,Qt::AlignHCenter);
 
   QSpacerItem *spacer = new QSpacerItem(20,20,QSizePolicy::Fixed,
@@ -70,108 +70,51 @@ void EGS_ConfigurationPage::make() {
   topl->addItem(spacer);
 
   // configuration
-  QGroupBox *gb = new QGroupBox(this,"configuration group box");
-  gb->setColumnLayout(0,Qt::Horizontal);
-  gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
+  QGroupBox *gb = new QGroupBox("configuration group box",this);
+  QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
   gb->setTitle( tr("Configuration file") );
-  QHBoxLayout *hbl = new QHBoxLayout(gb->layout());
-  le_configuration = new QLineEdit(gb,"configuration line edit");
+  le_configuration = new QLineEdit("configuration line edit",gb);
   le_configuration->setText(egsConfiguration());
   le_configuration->setReadOnly(true);
-  hbl->addWidget(le_configuration);
+  gbl->addWidget(le_configuration);
   QPushButton *b = new QPushButton("...",gb);
   b->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
   connect(b,SIGNAL(clicked()),this,SLOT(selectConfigurationFile()));
-  hbl->addWidget(b);
+  gbl->addWidget(b);
 
   topl->addWidget(gb);
 
-  gb = new QGroupBox(this,"HEN_HOUSE group box");
-  gb->setColumnLayout(0,Qt::Horizontal);
-  gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
+  gb = new QGroupBox("HEN_HOUSE group box",this);
+  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
   gb->setTitle( tr("HEN_HOUSE directory") );
-  hbl = new QHBoxLayout(gb->layout());
-  le_henhouse = new QLineEdit(gb,"HEN_HOUSE line edit");
+  le_henhouse = new QLineEdit("HEN_HOUSE line edit",gb);
   le_henhouse->setText(henHouse());
   le_henhouse->setReadOnly(true);
-  hbl->addWidget(le_henhouse);
+  gbl->addWidget(le_henhouse);
   b = new QPushButton("...",gb);
   b->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
   connect(b,SIGNAL(clicked()),this,SLOT(selectHenHouse()));
-  hbl->addWidget(b);
+  gbl->addWidget(b);
 
   topl->addWidget(gb);
 
-  gb = new QGroupBox(this,"EGS_HOME group box");
-  gb->setColumnLayout(0,Qt::Horizontal);
-  gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
+  gb = new QGroupBox("EGS_HOME group box",this);
+  gbl = new QHBoxLayout(gb);gbl->setSpacing(6); gbl->setMargin(11);
   gb->setTitle( tr("EGS_HOME directory") );
-  hbl = new QHBoxLayout(gb->layout());
-  le_egshome = new QLineEdit(gb,"EGS_HOME line edit");
+  le_egshome = new QLineEdit("EGS_HOME line edit",gb);
   le_egshome->setReadOnly(true);
   le_egshome->setText(egsHome());
-  hbl->addWidget(le_egshome);
+  gbl->addWidget(le_egshome);
   b = new QPushButton("...",gb);
   b->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
   connect(b,SIGNAL(clicked()),this,SLOT(selectEgsHome()));
-  hbl->addWidget(b);
+  gbl->addWidget(b);
 
   topl->addWidget(gb);
 
   spacer = new QSpacerItem(20,20,QSizePolicy::Fixed,
                               QSizePolicy::Expanding);
   topl->addItem(spacer);
-
-  /*
-  gb = new QGroupBox(this,"Batch job submission");
-  gb->setColumnLayout(0,Qt::Horizontal);
-  gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
-  gb->setTitle( tr("Batch job submission") );
-  hbl = new QHBoxLayout(gb->layout());
-
-  QButtonGroup *bg = new QButtonGroup("Queue type",gb);
-  bg->setColumnLayout(0,Qt::Vertical);
-  bg->setExclusive(true);
-  QVBoxLayout *vbl = new QVBoxLayout(bg->layout());
-  QRadioButton *rb = new QRadioButton("NQS",bg,"nqs");
-  rb->setChecked(true); vbl->addWidget(rb);
-  queue_type = 0;
-  rb = new QRadioButton("Other",bg,"other");
-  vbl->addWidget(rb);
-  rb = new QRadioButton("None",bg,"none");
-  vbl->addWidget(rb);
-  hbl->addWidget(bg);
-  connect(bg,SIGNAL(clicked(int)),this,SLOT(queueTypeChanged(int)));
-
-  QGroupBox *gb1 = new QGroupBox(gb,"batch options");
-  gb1 ->setColumnLayout(0,Qt::Horizontal);
-  gb1->setTitle( tr("Batch commands") );
-  b_commands = gb1;
-  QHBoxLayout *hbl1 = new QHBoxLayout(gb1->layout());
-
-  QVBoxLayout *vbl1 = new QVBoxLayout;
-  QLabel *l = new QLabel("batch command",gb1);
-  vbl1->addWidget(l);
-  l = new QLabel("$batch",gb1); vbl1->addWidget(l);
-  l = new QLabel("$options",gb1); vbl1->addWidget(l);
-  hbl1->addLayout(vbl1);
-
-  vbl1 = new QVBoxLayout;
-  le_queue_command = new QLineEdit(gb1,"queue command");
-  le_queue_command->setText("$egs_command | $batch $options");
-  vbl1->addWidget(le_queue_command);
-  le_batch = new QLineEdit(gb1,"batch");
-  le_batch->setText("qsub");
-  vbl1->addWidget(le_batch);
-  le_batch_options = new QLineEdit(gb1,"batch options");
-  le_batch_options->setText("-me -eo -o ${input}.eo -r ${code}_${input} -x");
-  vbl1->addWidget(le_batch_options);
-  hbl1->addLayout(vbl1);
-
-  hbl->addWidget(gb1);
-
-  topl->addWidget(gb);
-  */
 
   connect(this,SIGNAL(henHouseChanged(const QString &)),this,
           SLOT(setHenHouseField(const QString &)));
@@ -223,17 +166,17 @@ void EGS_ConfigurationPage::selectConfigurationFile() {
   QString start_dir;
   if( le_configuration->text().isEmpty() ) {
     if( le_henhouse->text().isEmpty() )
-      start_dir = QDir::homeDirPath();
+      start_dir = QDir::homePath();
     else
       start_dir = le_henhouse->text() + QDir::separator() + "specs";
   }
   else {
     QFileInfo fi(le_configuration->text());
-    start_dir = fi.dirPath(true);
+    start_dir = fi.absolutePath();
   }
-  QString new_conf = QFileDialog::getOpenFileName(start_dir,
-    "EGS configuration files (*.conf);; All files (*)",
-    this,"configuration file dialog", "Select a configuration file");
+  QString new_conf = QFileDialog::getOpenFileName(this,tr("Select a configuration file"),
+                                                  start_dir,
+                                 tr("EGS configuration files (*.conf);; All files (*)"));
   QChar ss = QDir::separator(); QString sss = ss;
   new_conf.replace('/',sss); new_conf.replace('\\',sss);
   if( !new_conf.isEmpty() ) {
@@ -248,8 +191,8 @@ void EGS_ConfigurationPage::selectHenHouse() {
 #ifdef IK_DEBUG
   qDebug("In EGS_ConfiguirationPage::selectHenHouse()");
 #endif
-  QString s = QFileDialog::getExistingDirectory(QDir::homeDirPath(),
-    this,"hen house dialog","Select HEN_HOUSE directory");
+  QString s = QFileDialog::getExistingDirectory(this,tr("Select HEN_HOUSE directory"),
+                                                QDir::homePath(),QFileDialog::ShowDirsOnly);
   QChar ss = QDir::separator(); QString sss = ss;
   s.replace('/',sss); s.replace('\\',sss);
   if( !s.isEmpty() ) {
@@ -262,8 +205,8 @@ void EGS_ConfigurationPage::selectEgsHome() {
 #ifdef IK_DEBUG
   qDebug("In EGS_ConfiguirationPage::selectEgsHome()");
 #endif
-  QString s = QFileDialog::getExistingDirectory(QDir::homeDirPath(),
-    this,"egs home dialog","Select EGS_HOME directory");
+  QString s = QFileDialog::getExistingDirectory(this,tr("Select EGS_HOME directory"),
+                                                QDir::homePath(),QFileDialog::ShowDirsOnly);
   QChar ss = QDir::separator(); QString sss = ss;
   s.replace('/',sss); s.replace('\\',sss);
   if( !s.isEmpty() ) {
