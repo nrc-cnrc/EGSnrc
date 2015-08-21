@@ -35,15 +35,18 @@
 #include "egs_compile_page.h"
 #include "egs_run_page.h"
 #include "egs_configuration_page.h"
-#include "pegs_page.h"
 #include "egs_config_reader.h"
 
 #ifdef STATICGUI
 #include <egsnrcmp_setup.h>
 #endif
 
-#include <qlistbox.h>
-#include <qwidgetstack.h>
+#include <QListWidget>
+#include <QAbstractItemView>
+#include <QStackedWidget>
+#include <QTextStream>
+#include <QStyle>
+
 #include <qlayout.h>
 #include <qpushbutton.h>
 #include <qgroupbox.h>
@@ -56,40 +59,32 @@
 #include <qwizard.h>
 #include <qlibrary.h>
 
-#include "my_pixmap.h"
-#include "aboutform.h"
-
-
 bool configLibExists(const QString& lib );
+
+// #define MW_DEBUG
 
 using namespace std;
 
-EGS_MainWidget::EGS_MainWidget(QWidget *parent, const char *name,
-   WFlags f) : QWidget(parent,name,f) {
+EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
+                                          : QWidget(parent,f)
+{
 
-    wizard_lib = 0;
+   setWindowTitle("EGSnrcMP GUI, National Research Council of Canada");
+   setWindowIcon(QIcon(":/images/desktop_icon.png"));
+   //setWindowIcon(QIcon("images/desktop_icon.png"));
+   setWindowIconText("egs_gui");
+
+    wizard_lib = 0; wizard = 0;
     config_reader = new EGS_ConfigReader;
-
-    setCaption("EGSnrcMP GUI, National Research Council of Canada");
-    //my_icon = QPixmap::fromMimeSource( "egg_48_blue.png" );
-    //my_icon = QPixmap::fromMimeSource( "rocket_egg_300.jpeg" );
-    //my_icon.resize(32,32);
-    //my_icon = QPixmap::fromMimeSource( "desktop_icon_2.png" );
-    my_icon = QPixmap::fromMimeSource( "desktop_icon.png" );
-    setIcon(my_icon);
-    setIconText("egs_gui");
-
-    about_gui = new aboutForm(this);
-    //about_gui->setIcon(my_icon);
 
     // topl is the layout of the entire widget
     QVBoxLayout *topl = new QVBoxLayout(this);
     topl->setSpacing(6); topl->setMargin(11);
 
-    // wl is the layout responsible for the area accupied by the
+    // wl is the layout responsible for the area occupied by the
     // control area and work area
     QHBoxLayout *wl = new QHBoxLayout;
-    wl->setSpacing(6); topl->setMargin(11);
+    wl->setSpacing(6); wl->setMargin(11);
 
     // wbl is the layout for the control area and the user code combo box
     QVBoxLayout *wbl = new QVBoxLayout;
@@ -97,76 +92,75 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, const char *name,
 
     // The control area is a list with clickable items that change the
     // page in the widget stack below
-    control = new QListBox(this,"The control");
-    control->setSelectionMode(QListBox::Single);
-    double s = 1.4;
+    control = new QListWidget(this);
+    control->setSelectionMode(QAbstractItemView::SingleSelection);
+    control->setIconSize(QSize(48,48));
+    int height = 50;// width = 100; control->setMaximumWidth(width+300); control->setMinimumWidth(width);
 #ifdef IK_DEBUG
     qDebug("Creating Compile");
 #endif
-    EGS_MyPixmap *pix = new EGS_MyPixmap(
-            QPixmap::fromMimeSource( "make_kdevelop.png" ), tr( "Compile" ),s );
-    control->insertItem(pix);
+    QListWidgetItem *it = new QListWidgetItem(QIcon(":/images/make_kdevelop.png"), tr( "Compile" ), control);
+    //QListWidgetItem *it = new QListWidgetItem(QIcon("images/make_kdevelop.png"), tr( "Compile" ), control);
+    it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating Execute");
 #endif
-    pix = new EGS_MyPixmap(
-            QPixmap::fromMimeSource( "launch.png" ),tr( "Execute"),s );
-    control->insertItem(pix);
+    it = new QListWidgetItem(QIcon(":/images/launch.png"), tr( "Execute" ), control);
+    //it = new QListWidgetItem(QIcon("images/launch.png"), tr( "Execute" ), control);
+    it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating PEGS Data");
 #endif
-    pix = new EGS_MyPixmap(
-            QPixmap::fromMimeSource( "file-manager.png" ),tr( "PEGS Data" ),s );
-    control->insertItem(pix);
+    it = new QListWidgetItem(QIcon(":/images/file-manager.png"), tr( "PEGS Data" ), control);
+    //it = new QListWidgetItem(QIcon("images/file-manager.png"), tr( "PEGS Data" ), control);
+    it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating Settings");
 #endif
-    pix = new EGS_MyPixmap(
-            QPixmap::fromMimeSource( "configure.png" ),tr( "Settings" ),s );
-    control->insertItem(pix);
+    it = new QListWidgetItem(QIcon(":/images/configure.png"), tr( "Settings" ), control);
+    //it = new QListWidgetItem(QIcon("images/configure.png"), tr( "Settings" ), control);
+    it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating New config");
 #endif
-    pix = new EGS_MyPixmap(
-            QPixmap::fromMimeSource( "wizard-32.png" ),tr( "New config" ),s );
-    control->insertItem(pix);
+    it = new QListWidgetItem(QIcon(":/images/wizard-32.png"), tr( "New config" ), control);
+    //it = new QListWidgetItem(QIcon("images/wizard-32.png"), tr( "New config" ), control);
+    it->setSizeHint(QSize(it->sizeHint().width(), height));
 
-    control->setSelected(0,true);
-    connect(control,SIGNAL(selectionChanged(QListBoxItem *)),this,
-             SLOT(changePage(QListBoxItem *)));
+    control->setCurrentItem(control->item(0));
+    connect(control,SIGNAL(currentItemChanged(QListWidgetItem *,QListWidgetItem *)),this,
+             SLOT(changePage(QListWidgetItem *,QListWidgetItem *)));
 
     wbl->addWidget(control);
 
     // here gb is the group box for the user code combo box
-    QGroupBox *gb = new QGroupBox(this,"ucode box");
-    gb->setColumnLayout(0, Qt::Vertical );
-    gb->layout()->setSpacing( 6 ); gb->layout()->setMargin( 11 );
+    QGroupBox *gb = new QGroupBox(this);
     gb->setTitle( tr("User code") );
-    QHBoxLayout *h = new QHBoxLayout(gb->layout());
-    h->setAlignment( Qt::AlignTop );
-    user_code = new QComboBox(gb,"user code");
+    QHBoxLayout *h = new QHBoxLayout(gb); h->setAlignment(Qt::AlignCenter);
+    user_code = new QComboBox(gb); user_code->addItem("user code");
     h->addWidget(user_code);
+
     wbl->addWidget(gb);
 
     wl->addLayout(wbl,1);
 
-    work_area = new QWidgetStack(this,"The working area");
+    work_area = new QStackedWidget(this);
     wl->addWidget(work_area,10);
 
     topl->addLayout(wl);
 
     QHBoxLayout *bl = new QHBoxLayout;
     bl->setSpacing(6); topl->setMargin(11);
-    QButton *b = new QPushButton("&Help",this,"help_b");
+    QAbstractButton *b = new QPushButton("&Help",this);
     connect(b,SIGNAL(clicked()),this,SLOT(getHelp()));
     bl->addWidget(b);
-    b = new QPushButton("&About",this,"about_b");
+    b = new QPushButton("&About",this);
     connect(b,SIGNAL(clicked()),this,SLOT(aboutEGSGui()));
     bl->addWidget(b);
-    b = new QPushButton("About Q&t",this,"about_qt");
+    b = new QPushButton("About Q&t",this);
     connect(b,SIGNAL(clicked()),this,SLOT(aboutQt()));
     bl->addWidget(b);
-    b = new QPushButton("&Quit",this,"quit_b");
+    b = new QPushButton("&Quit",this);
     QSpacerItem *spacer = new QSpacerItem(20,20,QSizePolicy::Expanding,
                                           QSizePolicy::Minimum);
     bl->addItem(spacer);
@@ -191,13 +185,13 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, const char *name,
 // MOVED to slot changePage to avoid failure when statically built.
 //-----------------------------------------------------------------------------
 
-    libpath = QString::null;
+    libpath = QString();
 //     getConfigLib(); // Sets wizard <- FAILS WHEN STATICALLY
 //     work_area->addWidget(wizard);//     COMPILED !!!
 
 //-----------------------------------------------------------------------------
 
-    pegs_page = new EGS_PegsPage(this,"pegs page");
+    pegs_page = new EGS_PegsPage(this);
     pegs_page->setConfigReader(config_reader);
     work_area->addWidget(pegs_page);
 
@@ -225,8 +219,19 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, const char *name,
     compile_page->sendSignals();
 }
 
+#define ABOUT_TEXT "Graphical User Interface for EGSnrcMP"\
+                   "\n            egs_gui, version 2.0"\
+                   "\n\nAuthors: Iwan Kawrakow and Ernesto Mainegra"\
+                   "\nCopyright National Research Council of Canada"\
+                   "\n\nThis program is free software. It is distributed "\
+                   "\nunder the terms of the GNU Public License, version 2."\
+                   "\n See the file GPL_License in the licenses folder of the "\
+                   "\nEGSnrcMP distribution for details."\
+                   "\n\nThis program uses the Qt toolkit by Trolltech"
 void EGS_MainWidget::aboutEGSGui() {
-    about_gui->show();
+    //about_gui->show();
+    QMessageBox::about ( this, tr("About egs_gui"), QString(ABOUT_TEXT) );
+
 }
 
 void EGS_MainWidget::aboutQt() {
@@ -268,11 +273,11 @@ void EGS_MainWidget::updateUserCodeList() {
   if( !hen_house.isEmpty() )
     addUserCodes(hen_house + QDir::separator() + "user_codes");
   for(j=0; j<user_code->count(); j++) {
-    if( last_uc == user_code->text(j) ) {
-      user_code->setCurrentItem(j); return;
+    if( last_uc == user_code->itemText(j) ) {
+      user_code->setCurrentIndex(j); return;
     }
   }
-  user_code->setCurrentItem(0);
+  user_code->setCurrentIndex(0);
   emit userCodeChanged(user_code->currentText());
 }
 
@@ -290,9 +295,9 @@ void EGS_MainWidget::addUserCodes(const QString &from_dir) {
       if( f.exists() ) {
         bool is_there = false;
         for(int j=0; j<user_code->count(); j++) {
-          if( s == user_code->text(j) ) { is_there = true; break; }
+          if( s == user_code->itemText(j) ) { is_there = true; break; }
         }
-        if( !is_there ) user_code->insertItem(s);
+        if( !is_there ) user_code->addItem(s);
       }
     }
   }
@@ -302,17 +307,17 @@ void EGS_MainWidget::exitGUI() {
   emit quit();
 }
 
-void EGS_MainWidget::changePage(QListBoxItem *item) {
+void EGS_MainWidget::changePage(QListWidgetItem *item,QListWidgetItem * previous) {
 #ifdef IK_DEBUG
-  qDebug("Selection changet to: %s",item->text().latin1());
+  qDebug("Selection changed to: %s",item->text().toLatin1().data());
 #endif
-  if( item->text() == "Compile" ) work_area->raiseWidget(compile_page);
-  else if( item->text() == "Execute" ) work_area->raiseWidget(run_page);
-  else if( item->text() == "PEGS Data" ) work_area->raiseWidget(pegs_page);
-  else if( item->text() == "Settings" ) work_area->raiseWidget(conf_page);
-  else if( item->text() == "New config" ) {changeConfigLib();work_area->raiseWidget(wizard);}
+  if( item->text() == "Compile" ) work_area->setCurrentWidget(compile_page);
+  else if( item->text() == "Execute" ) work_area->setCurrentWidget(run_page);
+  else if( item->text() == "PEGS Data" ) work_area->setCurrentWidget(pegs_page);
+  else if( item->text() == "Settings" ) work_area->setCurrentWidget(conf_page);
+  else if( item->text() == "New config" ) {changeConfigLib();if (wizard)work_area->setCurrentWidget(wizard);}
 #ifdef IK_DEBUG
-  else qDebug("Unknow page %s",item->text().latin1());
+  else qDebug("Unknow page %s",item->text().toLatin1());
 #endif
 }
 
@@ -330,43 +335,66 @@ void EGS_MainWidget::getConfigLib()
 {
     QWizard* wiz;
     QString mhen_house = conf_page->henHouse();
-    char s = QDir::separator();
+    QChar s = QDir::separator();
     QString old_libpath   = libpath;
     libpath = mhen_house + s + (QString)"bin" + s + conf_page->myMachine() + s;
 
     if ( libpath == old_libpath ) return;
-
 #ifdef STATICGUI
     wiz = new EGSnrcMP_setup(this,config_reader->getConfig());
 #else
     if ( configLibExists( libpath ) ){
        typedef  QWizard* (*CreateEGS)( QWidget*, const QString& );
        QLibrary* lib = new QLibrary(  libpath + (QString)"egsconfig"  );
-       if( !lib->load() ) {
-          cout << " Failed to load library" << lib->library().latin1() << endl;
-          QMessageBox::critical( 0,  tr("Error"),
-	     tr("Failed to load library: \n"
-	     + lib->library()), tr("Quit") );
-              wiz = new QWizard(this,"The wizard");
+#ifdef MW_DEBUG
+  qDebug(" About to load %s", (libpath + tr("egsconfig")).toLatin1().data());
+#endif
+       if (!lib){
+#ifdef MW_DEBUG
+  qDebug(" Failed to create library %s",(libpath + tr("egsconfig")).toLatin1().data());
+#endif
+          QMessageBox::critical( 0,
+             tr("Error"),
+             tr("Failed to create library: \n") + libpath + tr("egsconfig"),
+             tr("Quit")
+          );
+          //wiz = new QWizard(this,"The wizard");
+          wiz = new QWizard(this);
+       }
+       else if( !lib->load() ) {
+#ifdef MW_DEBUG
+          qDebug(" Failed to load library %s",lib->fileName().toLatin1().data());
+#endif
+          QMessageBox::critical( 0,
+             tr("Error"),
+             tr("Failed to load library: \n") + lib->fileName(),
+             tr("Quit")
+          );
+          //wiz = new QWizard(this,"The wizard");
+          wiz = new QWizard(this);
        }
        else{
+#ifdef MW_DEBUG
+          qDebug(" Loaded library %s",lib->fileName().toLatin1().data());
+#endif
           CreateEGS create2 =(CreateEGS)  lib->resolve("create2");
           if ( create2 ) {
              wiz = create2( this, config_reader->getConfig() );
              wizard_lib = lib;
           }
           else {
-             wiz = new QWizard(this,"The wizard");
+             //wiz = new QWizard(this,"The wizard");
+             wiz = new QWizard((QWidget*)this);
           }
        }
     }
     else{
-        QString junk = "wizard lib = ";
-        QTextStream mist(&junk,IO_WriteOnly | IO_Append); mist << wizard_lib;
-        wiz = new QWizard(this,"The wizard");
+        cout << " Couldn't find library " << libpath.toLatin1().data() << "egsconfig" << endl;
+        wiz = new QWizard((QWidget*)this);
     }
 #endif
 
+    //cout << "Found and loaded library" << wizard_lib->fileName().toLatin1().data() << endl;
     wizard = wiz;
 }
 
@@ -377,7 +405,8 @@ void EGS_MainWidget::getConfigLib()
 void EGS_MainWidget::changeConfigLib()
 {
     getConfigLib(); // Sets wizard
-    work_area->addWidget(wizard);
+    if (wizard)
+     work_area->addWidget(wizard);
 }
 
 /*! Checks that a file containing "egsconfig" in the library location exists.
@@ -386,7 +415,7 @@ bool configLibExists(const QString& lib ){
 
     QDir dir( lib );
     if ( ! dir.exists() ) return false;
-    QStringList lst = dir.entryList( "*.*" );
+    QStringList lst = dir.entryList( QStringList("*.*") );
     for ( QStringList::Iterator it = lst.begin(); it != lst.end(); ++it ) {
             if ( ( *it ).contains( "egsconfig" ) )
                 return true;

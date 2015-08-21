@@ -23,24 +23,24 @@
 #
 #  Author:          Iwan Kawrakow, 2003
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
 
 
 #include "main_widget.h"
+#include <QtGui>
+#include <QMainWindow>
 
 #include <qapplication.h>
 
 int main(int argc, char **argv) {
 
    QApplication a(argc,argv);
-   EGS_MainWidget mw(0,"EGS Gui");
-   a.setMainWidget(&mw);
+   EGS_MainWidget mw(0);
    a.connect(&mw,SIGNAL(quit()),SLOT(quit()));
    mw.show();
-
    return a.exec();
 
 }

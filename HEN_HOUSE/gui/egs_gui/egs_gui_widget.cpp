@@ -40,37 +40,19 @@
 #include <string>
 
 using namespace std;
+using namespace Qt;
 
-EGS_GUI_Widget::EGS_GUI_Widget(QWidget *parent, const char *name,
-                               WFlags f) : QWidget(parent,name,f) {
-    config_reader = 0;
+EGS_GUI_Widget::EGS_GUI_Widget(QWidget *parent, const char *name,WFlags f) :
+                               QWidget(parent,f), the_name(name)
+{
+    config_reader = 0; killed = false;
 }
 
-EGS_GUI_Widget::EGS_GUI_Widget(EGS_ConfigReader *cr, QWidget *parent,
-                  const char *name, WFlags f) : QWidget(parent,name,f) {
-    config_reader = cr;
+EGS_GUI_Widget::EGS_GUI_Widget(EGS_ConfigReader *cr, QWidget *parent, const char *name, WFlags f) :
+                                                     QWidget(parent,f), the_name(name)
+{
+    config_reader = cr; killed = false;
 }
-
-/*
-bool EGS_GUI_Widget::getVariable(QIODevice *inp,
-                const QString &key, QString &value) {
-  inp->reset(); bool res = false;
-  char buf[1024];
-  while( !inp->atEnd() ) {
-    inp->readLine(buf,1023L); QString aux = buf;
-    int pos = aux.find(key);
-    if( pos >= 0 ) {
-        value   = aux.mid(pos+key.length()+1);
-         value  =    value.stripWhiteSpace().replace( (QString)"$(DSEP)" ,
-	              QString("%1").arg( QDir::separator() ) );
-         // the following is an ugly hack to make our win2k.conf file work.
-         value = value.replace((QString)"$(DRIVE)","r:/");
-        res = true; break;
-    }
-  }
-  return res;
-}
-*/
 
 void EGS_GUI_Widget::changeConfiguration(const QString &new_config) {
   if( new_config.isEmpty() ) {
@@ -129,9 +111,6 @@ void EGS_GUI_Widget::setEgsHome(const QString &new_eh) {
       config_reader->setVariable("EGS_HOME",new_eh);
       emit egsHomeChanged(new_eh);
   }
-}
-
-EGS_GUI_Widget::~EGS_GUI_Widget() {
 }
 
 QString EGS_GUI_Widget::egsConfiguration() {

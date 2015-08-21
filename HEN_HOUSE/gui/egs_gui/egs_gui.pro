@@ -29,24 +29,24 @@
 ###############################################################################
 
 
-SOURCES	+= main.cpp \
-	main_widget.cpp \
-	egs_compile_page.cpp \
-	egs_run_page.cpp \
-	egs_gui_widget.cpp \
-	egs_configuration_page.cpp \
-	my_pixmap.cpp \
-	element_item.cpp \
-	egs_config_reader.cpp
+SOURCES += main.cpp \
+        main_widget.cpp \
+        egs_compile_page.cpp \
+        egs_run_page.cpp \
+        pegs_page.cpp \
+        pegs_runoutput.cpp \
+        egs_gui_widget.cpp \
+        egs_configuration_page.cpp \
+        egs_config_reader.cpp
 
-HEADERS	+= main_widget.h \
-	egs_compile_page.h \
-	egs_run_page.h \
-	egs_gui_widget.h \
-	egs_configuration_page.h \
-	my_pixmap.h \
-	element_item.h \
-	egs_config_reader.h
+HEADERS += main_widget.h \
+        egs_compile_page.h \
+        egs_run_page.h \
+        pegs_page.h \
+        pegs_runoutput.h \
+        egs_gui_widget.h \
+        egs_configuration_page.h \
+        egs_config_reader.h
 
 MOC_DIR =       .moc/$$my_machine
 OBJECTS_DIR =   .obj/$$my_machine
@@ -59,7 +59,7 @@ win32 {
 }
 
 unix {
-    CONFIG  += qt thread warn_off release $$my_build
+    CONFIG  += qt thread warn_on debug_and_release $$my_build
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){
         message( "Static build ..." )
@@ -80,19 +80,9 @@ unix {
     }
 }
 
-FORMS	= pegs_page.ui \
-	pegs_runoutput.ui \
-	pegs_viewerrors.ui \
-	aboutform.ui
-IMAGES	= images/file-manager.png \
-	images/contents.png \
-	images/launch.png \
-	images/make_kdevelop.png \
-	images/wizard-32.png \
-	images/configure.png \
-	images/rocket_egg_tr_f1.png \
-        images/desktop_icon.png \
-        images/rocket_egg_tr_f1_300.png
+FORMS   = pegs_page.ui \
+          pegs_runoutput.ui
 
-TEMPLATE	=app
-LANGUAGE	= C++
+RESOURCES = egs_gui.qrc # resource collection file to store images in the application executable.
+TEMPLATE  = app
+LANGUAGE  = C++
