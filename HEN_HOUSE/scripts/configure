@@ -41,12 +41,12 @@
 my_version='1.0'
 
 # my name
-my_name=`echo "$0" |sed 's,.*[\\/],,'`
+my_name=$(echo "$0" |sed 's,.*[\\/],,')
 
 # echo stuff
 # shamelesly stolen from autoconf generated scripts.
 #
-case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
+case $(echo "testing\c"; echo 1,2,3),$(echo -n testing; echo 1,2,3) in
   *c*,-n*) ECHO_N= ECHO_C='
 ' ECHO_T='    ' ;;
   *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
@@ -106,10 +106,10 @@ read response
 
 echo
 echo $ECHO_N "Checking system type ... $ECHO_C" >&2
-canonical_system=`./config.guess`
-system_name=`uname -s | sed ":/:_:g"`
+canonical_system=$(./config.guess)
+system_name=$(uname -s | sed ":/:_:g")
 echo "$canonical_system" >&2
-is_x86_64=`echo $canonical_system | grep x86_64`
+is_x86_64=$(echo $canonical_system | grep x86_64)
 
 echo $ECHO_N "Checking for make ... $ECHO_C" >&2
 have_make=no
@@ -252,10 +252,10 @@ test_compile='$F77 -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&5'
 rm -f conftest.o conftest.obj
 test_objext=''
 if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-    for test_file in `(ls conftest.o conftest.obj; ls conftest.*) 2>/dev/null`; do
+    for test_file in $((ls conftest.o conftest.obj; ls conftest.*) 2>/dev/null); do
         case $test_file in
             *.$test_ext | *.xcoff | *.tds | *.d | *.pdb ) ;;
-            *) test_objext=`expr "$test_file" : '.*\.\(.*\)'`
+            *) test_objext=$(expr "$test_file" : '.*\.\(.*\)')
                break;;
         esac
     done
@@ -277,13 +277,13 @@ echo $ECHO_N "Testing if $F77 can create executables ... $ECHO_C" >&2
 test_compile='$F77 $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&5'
 test_exeext=''
 if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-    for test_file in `ls a.exe conftest.exe 2>/dev/null;
+    for test_file in $(ls a.exe conftest.exe 2>/dev/null;
                 ls a.out conftest 2>/dev/null;
-                ls a.* conftest.* 2>/dev/null`; do
+                ls a.* conftest.* 2>/dev/null); do
         case $test_file in
             *.$test_ext | *.o | *.obj | *.xcoff | *.tds | *.d | *.pdb ) ;;
             a.out ) break;;
-            *.* ) test_exeext=`expr "$test_file" : '[^.]*\(\..*\)'`
+            *.* ) test_exeext=$(expr "$test_file" : '[^.]*\(\..*\)')
                   break;;
             * ) break;;
         esac
@@ -316,14 +316,14 @@ dir_element=3
 need_fool_optimizer=no
 for test_arg in -v; do
 
-    f_test_output=`$F77 $test_arg -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&1 2>&1`
+    f_test_output=$($F77 $test_arg -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&1 2>&1)
     echo "test_arg = '$test_arg': " >&5
     echo $f_test_output >&5
     if test -s conftest.$test_objext; then
         if test "x$f_test_output" != x; then
-            junk=`echo $f_test_output | grep "GNU F77 version"`
+            junk=$(echo $f_test_output | grep "GNU F77 version")
             if test "x$junk" != x; then
-                junk=`echo $junk | sed 's/.*GNU F77 version//g' | awk '{print $1}'`
+                junk=$(echo $junk | sed 's/.*GNU F77 version//g' | awk '{print $1}')
                 f_version="GNU F77 version $junk"
                 #f_fflags="-fno-automatic -finit-local-zero"
                 # don't need this with new EGSnrc
@@ -334,9 +334,9 @@ for test_arg in -v; do
                 fi
                 break
             fi
-            junk=`echo $f_test_output | grep "GNU F95 version"`
+            junk=$(echo $f_test_output | grep "GNU F95 version")
             if test "x$junk" != x; then
-                junk=`echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}'`
+                junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
                 f_version="GNU F95 version $junk"
                 f_oflags="-O2"
                 f_dflags="-g"
@@ -345,7 +345,7 @@ for test_arg in -v; do
                 fi
                 break
             fi
-            junk=`echo $f_test_output | grep "decfort"`
+            junk=$(echo $f_test_output | grep "decfort")
             if test "x$junk" != x; then
                 f_version="DEC Fortran compiler"
                 #f_flags="-noautomatic"
@@ -354,7 +354,7 @@ for test_arg in -v; do
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "__sgi"`
+            junk=$(echo $f_test_output | grep "__sgi")
             if test "x$junk" != x; then
                 f_version="SGI Fortran compiler"
                 #f_fflags="-static"
@@ -362,7 +362,7 @@ for test_arg in -v; do
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "xlfentry"`
+            junk=$(echo $f_test_output | grep "xlfentry")
             if test "x$junk" != x; then
                 f_version="IBM XL Fortran compiler"
                 #f_fflags="-qsave"
@@ -370,14 +370,14 @@ for test_arg in -v; do
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "SUNWs"`
+            junk=$(echo $f_test_output | grep "SUNWs")
             if test "x$junk" != x; then
                 f_version="Sun Fortran compiler"
                 f_oflags="-fast"
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "LPATH is"`
+            junk=$(echo $f_test_output | grep "LPATH is")
             if test "x$junk" != x; then
                 f_version="HP Fortran compiler"
                 f_fflags="+E1 +E4 +U77 -K"
@@ -385,7 +385,7 @@ for test_arg in -v; do
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "PGFTN"`
+            junk=$(echo $f_test_output | grep "PGFTN")
             if test "x$junk" != x; then
                 dir_element=5
                 f_version="PGI Fortran compiler"
@@ -393,9 +393,9 @@ for test_arg in -v; do
                 f_dflags="-g -C"
                 break
             fi
-            junk=`echo $f_test_output | grep "D__INTEL_COMPILER"`
+            junk=$(echo $f_test_output | grep "D__INTEL_COMPILER")
             if test "x$junk" != x; then
-                junk=`echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}'`
+                junk=$(echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}')
                 f_version="Intel(R) Fortran Compiler Version $junk"
                 f_oflags="-O3"
                 f_dflags="-g -CB"
@@ -1024,7 +1024,7 @@ if test "x$have_hostnm" = xno; then
     echo "no" >&2
 else
     echo $ECHO_N "Testing if hostnm works ... $ECHO_C" >&2
-    test_run=`./conftest$test_exeext`
+    test_run=$(./conftest$test_exeext)
     if test "x$test_run" = "xdoes not work"; then
         echo "no" >&2
         have_hostnm='no'
@@ -1127,9 +1127,9 @@ for recl in 4 1; do
       end
 _ACEOF
   if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-    test_run=`./conftest$test_exeext`
+    test_run=$(./conftest$test_exeext)
     if test "x$test_run" = xyes; then
-      junk_size=`ls -al junk_file | awk '{print $5}'`
+      junk_size=$(ls -al junk_file | awk '{print $5}')
       if test "x$junk_size" = x4; then
         know_recl=yes
         recl_size=$recl
@@ -1172,7 +1172,7 @@ EOF
 _ACEOF
 
   if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-    test_run=`./conftest$test_exeext`
+    test_run=$(./conftest$test_exeext)
     if test "x$test_run" = x1234; then
       echo little endian >&2
       endianess=1234
@@ -1401,7 +1401,7 @@ _ACEOF
       echo "C compile OK" >&5
       if { (eval $test_link) 2>&5; test_status=$?; (exit $test_status); }; then
         echo "Link step OK" >&5
-        test_run=`./conftest$test_exeext`
+        test_run=$(./conftest$test_exeext)
         found_scheme=yes
         case $test_run in
           junkjunk_junk)
@@ -1482,10 +1482,10 @@ if test "x$HEN_HOUSE" = x; then
     done
 fi
 
-current_dir=`pwd`
-cd $HEN_HOUSE && HEN_HOUSE=`pwd`
+current_dir=$(pwd)
+cd $HEN_HOUSE && HEN_HOUSE=$(pwd)
 cd $current_dir
-junk_test=`echo $HEN_HOUSE | sed 's,.*[\\/],,'`
+junk_test=$(echo $HEN_HOUSE | sed 's,.*[\\/],,')
 if test "x$junk_test" != x; then
     HEN_HOUSE="$HEN_HOUSE"
 fi
@@ -1537,10 +1537,8 @@ _ACEOF
     fi
 
     conf_name=$(echo $response | sed "s/\.[^\.]*$//")
-    if $as_file $HEN_HOUSE/specs/$response
-        || $as_directory $HEN_HOUSE/bin/$conf_name
-        || $as_directory $HEN_HOUSE/lib/$conf_name; then
-        echo "This configuration file or related directories \$HEN_HOUSE/bin or \$HEN_HOUSE/lib in already exists!" >&2
+    if $as_file $HEN_HOUSE/specs/$response || $as_directory $HEN_HOUSE/bin/$conf_name || $as_directory $HEN_HOUSE/lib/$conf_name; then
+        echo "The configuration $response or related directories in \$HEN_HOUSE/bin or \$HEN_HOUSE/lib already exist!" >&2
         echo $ECHO_N "Do you want to overwrite ? (yes/no) $ECHO_C" >&2
         read yesno
         if test "x$yesno" = xyes; then
@@ -1549,7 +1547,6 @@ _ACEOF
      else
         break
      fi
-   fi
 done
 conf_file="$response"
 conf_name=$(echo $response | sed "s/\.[^\.]*$//")
@@ -1721,7 +1718,7 @@ SHLIB_FLAGS="-shared -Wl,-Bsymbolic"
 SHLIB_LIBS=""
 if test x$F77 = xg77 || test x$F77 = xgfortran; then
     if test x$CC = xgcc; then
-        is_darwin=`echo $canonical_system | grep -i darwin`
+        is_darwin=$(echo $canonical_system | grep -i darwin)
         if test ! x$is_darwin = x; then
             F77_LINK=$CC
             SHLIB_FLAGS="-bundle"
@@ -1742,8 +1739,8 @@ fi
 #    echo "Looking for static fortran library and/or a Darwin system" >&5
 #    echo "*********************************************************" >&5
 #    if test x$CC = xgcc; then
-#        is_darwin=`echo $canonical_system | grep -i darwin`
-#        is_linux=`echo $canonical_system | grep -i linux`
+#        is_darwin=$(echo $canonical_system | grep -i darwin)
+#        is_linux=$(echo $canonical_system | grep -i linux)
 #        echo "is_darwin='$is_darwin' is_linux='$is_linux'" >&5
 #        if test ! x$is_darwin = x; then
 #            F77_LINK=$CC
@@ -1795,7 +1792,7 @@ if test "x$F77" = xpgf77; then
 else
   fc_flags="\$(FOPT) \$(FCFLAGS)"
 fi
-current_date=`date`
+current_date=$(date)
 cat >$HEN_HOUSE/specs/$conf_file <<_ACEOF
 #*************************************************************************
 #
@@ -2491,9 +2488,9 @@ if test ! "x$CXX" = xnone; then
     echo >&2; echo "Calling configure_c++ script" >&2
     cd $HEN_HOUSE/scripts
     if { ./configure_c++ CXX=$CXX config=$HEN_HOUSE/specs/$conf_file from_configure; test_status=$?; (exit $test_status); }; then
-        lib_link1=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g"`
-        link2_prefix=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_prefix =" | sed "s/link2_prefix = //g"`
-        link2_suffix=`cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_suffix =" | sed "s/link2_suffix = //g"`
+        lib_link1=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g")
+        link2_prefix=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_prefix =" | sed "s/link2_prefix = //g")
+        link2_suffix=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "link2_suffix =" | sed "s/link2_suffix = //g")
         cxx_ok=yes
     fi
 fi
