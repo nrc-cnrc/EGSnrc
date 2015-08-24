@@ -63,10 +63,7 @@ case `echo "testing\c"; echo 1,2,3`,`echo -n tesssss; echo 1,2,3` in
   *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
 esac
 
-test_egs_home=
-if test ! -d $HOME/egsnrc; then
-  test_egs_home=$HOME/egsnrc
-fi
+test_egs_home=$HEN_HOUSE/../egs_home
 
 cpp_user_codes="tutor2pp tutor7pp cavity"
 
