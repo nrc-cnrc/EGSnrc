@@ -38,7 +38,7 @@
 "                                                                             "
 "  - include this file via the configuration file BEFORE your user code.      "
 "                                                                             "
-"  - Replace the macros in your user code with code words that you prefer.    "                                                                       "
+"  - Replace the macros in your user code with code words that you prefer.    "
 "                                                                             "
 "#############################################################################"
 

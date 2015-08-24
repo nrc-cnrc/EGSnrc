@@ -1,7 +1,7 @@
 %E
 "#############################################################################"
 "                                                                             "
-"  EGSnrc pegs4 routines                                                        "
+"  EGSnrc pegs4 routines                                                      "
 "  Copyright (C) 2015 National Research Council Canada                        "
 "                                                                             "
 "  This file is part of EGSnrc.                                               "
@@ -32,7 +32,7 @@
 "                                                                             "
 "  The content of this file was adapted from the original pegs4 source code   "
 "  to enable on-the-fly pegs data generation in EGSnrc. Please see the pegs4  "
-"  sources for more information on the authorship of the original code.       "                                                      "
+"  sources for more information on the authorship of the original code.       "
 "                                                                             "
 "#############################################################################"
 
