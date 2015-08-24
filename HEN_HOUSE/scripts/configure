@@ -107,7 +107,7 @@ read response
 echo
 echo $ECHO_N "Checking system type ... $ECHO_C" >&2
 canonical_system=`./config.guess`
-system_name=`uname -s`
+system_name=`uname -s | sed ":/:_:g"`
 echo "$canonical_system" >&2
 is_x86_64=`echo $canonical_system | grep x86_64`
 
@@ -1491,32 +1491,37 @@ if test "x$junk_test" != x; then
 fi
 
 # Get a file name to store this config file
+# Force configuration name to be the same as the configuration file base name
 #
-try_conf_file="$canonical_system-$F77.conf"
+try_conf_file="$system_name.conf"
 if test -f "$HEN_HOUSE/specs/$try_conf_name"; then
     try_conf_file=
 fi
-try_conf_name="$canonical_system-$F77"
+try_conf_name="$system_name"
 if test -d "$HEN_HOUSE/lib/$try_conf_name"; then
     try_conf_name=
 fi
+
 while true; do
+
+    # query configuration file name
     if test "x$try_conf_file" = x; then
-      echo $ECHO_N "Input a unique file name to save this config file: $ECHO_C" >&2
+        echo $ECHO_N "Input a file name for this configuration file: $ECHO_C" >&2
     else
-      echo $ECHO_N "Input a unique file name to save this config file [$try_conf_file]: $ECHO_C">&2
+        echo $ECHO_N "Input a file name for this configuration file [$try_conf_file]: $ECHO_C">&2
     fi
     read response
+
+    # parse response
     if test "x$response" = x; then
-      if test "x$try_conf_file" = x; then
-        echo "You must input a non-empty string!" >&2
-      else
-        response="$try_conf_file"
-        break
-      fi
+        if test "x$try_conf_file" = x; then
+            echo "You must input a non-empty string!" >&2
+        else
+            response="$try_conf_file"
+        fi
     else
-    if test "x$response" = xhelp; then
-        cat >&2 << _ACEOF
+        if test "x$response" = xhelp; then
+            cat >&2 << _ACEOF
 
 EGSnrc config files are stored in the 'specs' sub-directory in the
 EGSnrc installation directory. A config file specifies the compiler
@@ -1527,11 +1532,16 @@ on the command line when building EGSnrc user-codes or by defining the
 environment variable EGS_CONFIG to point to its file.
 
 _ACEOF
-       continue
+        continue
+        fi
     fi
-    if $as_file $HEN_HOUSE/specs/$response; then
-        echo "This config file already exists!" >&2
-        echo $ECHO_N "Do you want to overwrite it ? (yes/no) $ECHO_C" >&2
+
+    conf_name=$(echo $response | sed "s/\.[^\.]*$//")
+    if $as_file $HEN_HOUSE/specs/$response
+        || $as_directory $HEN_HOUSE/bin/$conf_name
+        || $as_directory $HEN_HOUSE/lib/$conf_name; then
+        echo "This configuration file or related directories \$HEN_HOUSE/bin or \$HEN_HOUSE/lib in already exists!" >&2
+        echo $ECHO_N "Do you want to overwrite ? (yes/no) $ECHO_C" >&2
         read yesno
         if test "x$yesno" = xyes; then
             break
@@ -1542,63 +1552,14 @@ _ACEOF
    fi
 done
 conf_file="$response"
+conf_name=$(echo $response | sed "s/\.[^\.]*$//")
 
-# A name for this config
-#
-while true; do
-    if test "x$try_conf_name" = x; then
-      echo $ECHO_N "Input a name for this config: $ECHO_C" >&2
-    else
-      echo $ECHO_N "Input a name for this config: [$try_conf_name]: $ECHO_C" >&2
-    fi
-    read response
-    if test "x$response" = x; then
-      if test "x$try_conf_name" = x; then
-        echo "You must input a non-empty string!" >&2
-      else
-        response="$try_conf_name"
-        break
-      fi
-    else
-    if test "x$response" = xhelp; then
-        cat >&2 << _ACEOF
 
-Each EGSnrc config has a name. This name is used to distinguish
-between executables build with different configs. For instance,
-if you name this config 'test', all EGSnrc executables (e.g. pegs4)
-will be placed in
-  \$HEN_HOUSE/bin/test
-Machine dependent macros (and possibly libraries) will be placed in
-  \$HEN_HOUSE/lib/test
-Compiled user-codes will be in
-  \$EGS_HOME/bin/test
-It is a good idea to use the canonical system name or the operating system
-name for this purposes, but it is not a requirement.
-Your canonical system name is: '$canonical_system'
-Your operating system name is: '$system_name'
 
-_ACEOF
-        continue
-    fi
-    if test -d $HEN_HOUSE/bin/$response \
-       || test -d $HEN_HOUSE/lib/$response; then
-        echo "A config with that name already exists." >&2
-        echo $ECHO_N "Do you want to replace it (yes/no) ? $ECHO_C" >&2
-        read yesno
-        if test "x$yesno" = xyes; then
-           break
-        fi
-    else
-        break
-    fi
-    fi
-done
-conf_name="$response"
-
-if test "x$canonical_system-$F77" = "x$conf_name"; then
-    the_config=$canonical_system
+if test "x$system_name" = "x$conf_name"; then
+    the_config=$system_name
 else
-    the_config="$canonical_system ($conf_name)"
+    the_config="$system_name ($conf_name)"
 fi
 
 echo >&2; echo >&2
@@ -1618,7 +1579,7 @@ machine_fortran="$machine_mortran_dir/machine.f"
 machine_macros="$machine_mortran_dir/machine.macros"
 if test ! -d $machine_mortran_dir; then
     echo $ECHO_N "Creating architecture dependent directory ... $ECHO_C" >&2
-    mkdir $machine_mortran_dir
+    mkdir -p $machine_mortran_dir
     if test ! -d $machine_mortran_dir; then
         echo "Failed!" >&2
         echo "Error was: could not create $machine_mortran_dir" >&2
@@ -1718,7 +1679,7 @@ _ACEOF
        echo "OK" >&2
        if test ! "x$EGS_HOME" = x && test -d "$EGS_HOME/bin" && test ! -d "$EGS_HOME/bin/$conf_name"; then
         echo $ECHO_N "Creating $EGS_HOME/bin/$conf_name ... $ECHO_C" >&2
-        mkdir $EGS_HOME/bin/$conf_name || { echo "failed" >&2; exit 1; }
+        mkdir -p $EGS_HOME/bin/$conf_name || { echo "failed" >&2; exit 1; }
         echo "OK" >&2
        fi
     fi
