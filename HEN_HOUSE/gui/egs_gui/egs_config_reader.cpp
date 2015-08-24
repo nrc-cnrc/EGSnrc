@@ -95,7 +95,7 @@ QString EGS_PrivateConfigReader::ironIt(const QString &v) {
 
 EGS_PrivateConfigReader::EGS_PrivateConfigReader() {
     char *egs_config = getenv("EGS_CONFIG");
-    if( egs_config ) setConfig(egs_config);
+    if( !QString(egs_config).isEmpty() ) setConfig(egs_config);
 }
 
 EGS_PrivateConfigReader::EGS_PrivateConfigReader(const QString &file) {
