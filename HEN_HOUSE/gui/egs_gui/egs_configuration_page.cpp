@@ -61,8 +61,8 @@ void EGS_ConfigurationPage::make() {
   topl->setSpacing(6); topl->setMargin(11);
 
   QLabel *rocket_egss = new QLabel(this);
-  //rocket_egss->setPixmap(QPixmap(":/images/rocket_egg_tr_f1_300.png"));
-  rocket_egss->setPixmap(QPixmap("images/rocket_egg_tr_f1_300.png"));
+  rocket_egss->setPixmap(QPixmap(":/images/rocket_egg_tr_f1_300.png"));
+  //rocket_egss->setPixmap(QPixmap("images/rocket_egg_tr_f1_300.png"));
   topl->addWidget(rocket_egss,0,Qt::AlignHCenter);
 
   QSpacerItem *spacer = new QSpacerItem(20,20,QSizePolicy::Fixed,
