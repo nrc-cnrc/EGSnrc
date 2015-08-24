@@ -1,6 +1,33 @@
-#*****************************************************
-#  $Id: egs_inprz.pro,v 1.18 2015/03/05 21:00:44 bwalters Exp $
-#*****************************************************
+
+###############################################################################
+#
+#  EGSnrc Qt project file for the egs_inprz graphical user interface
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2003
+#
+#  Contributors:    Iwan Kawrakow
+#                   Blake Walters
+#
+###############################################################################
+
 
 SOURCES	+= src/cavinputs.cpp \
 	src/comboboxtooltip.cpp \
@@ -80,7 +107,7 @@ UI_SOURCES_DIR = src/
 
 win32 {
       DEFINES += WIN32
-      CONFIG  += qt thread warn_off release stl
+      CONFIG  += qt thread warn_off release stl windows
       RC_FILE = egs_inprz.rc
 }
 
@@ -102,9 +129,8 @@ unix {
         QMAKE_POST_LINK = strip $(TARGET)
     }
 }
-TEMPLATE	=app
 FORMS	= ui/inputRZ.ui \
-	ui/executiondialog.ui \
+	ui/executiondialog.ui
 TEMPLATE	=app
 INCLUDEPATH	+= include ui ../egs_gui
 LANGUAGE	= C++
