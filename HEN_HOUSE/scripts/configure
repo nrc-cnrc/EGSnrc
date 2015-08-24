@@ -110,7 +110,7 @@ read response
 echo
 echo $ECHO_N "Checking system type ... $ECHO_C" >&2
 canonical_system=$(./config.guess)
-system_name=$(uname -s | sed ":/:_:g")
+system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
 echo "$canonical_system" >&2
 is_x86_64=$(echo $canonical_system | grep x86_64)
 
@@ -2524,6 +2524,9 @@ EOF
 fi
 echo "OK" >&2
 
+
+egs_config=$conf_file
+
 cat >&5 <<EOF
 
 ****************** config completed successfully ********************
@@ -2540,6 +2543,7 @@ else
     echo " make_prog  = $make_prog" >&3
 fi
 
+egs_config="$HEN_HOUSE/specs/$egs_config"
 
 cd $HEN_HOUSE/scripts
 cat >&2 <<_ACEOF
@@ -2563,6 +2567,7 @@ fi
 
 EGS_CONFIG="$egs_config"
 export EGS_CONFIG
+export HEN_HOUSE
 
 cat >&2 <<_ACEOF
 
@@ -2587,34 +2592,6 @@ read response
 fi
 
 if test "x$response" = xyes; then
-  ./finalize_egs_foruser
+    ./finalize_egs_foruser
 fi
 
-
-cat >&2 <<EOF
-
-
-Congratulations! You successfully configured the EGSnrc build system for
-this compiler/operating system combination. You can use this config
-for compiling EGSnrc user-codes by the following 3 methods:
-
-1.Set the environment variable EGS_CONFIG to point to the file
-  $HEN_HOUSE/specs/$conf_file,
-  i.e. for the Bourne(again) shell or the Korn shell, do
-  the following in .bashrc (bash) or .profile(Korn or Bourne?):
-  export EGS_CONFIG="$HEN_HOUSE/specs/$conf_file"
-
-or:for the C-shell or tcsh-shell do the following in your .cshrc file:
-  setenv EGS_CONFIG "$HEN_HOUSE/specs/$conf_file"
-  then use either the compilation script (scripts/compile_user_code) or
-  just go to a user-code directory and type 'make'.
-
-2.By running the compile script with an argument specifying to use this
-  config, e.g.
-  $HEN_HOUSE/scripts/compile_user_code tutor1 config=${conf_file}
-
-3.By invoking make with an argument specifying to use this config, e.g
-  make EGS_CONFIG=${conf_file}
-
-
-EOF
