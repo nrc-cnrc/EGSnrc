@@ -43,6 +43,9 @@ my_version='1.0'
 # my name
 my_name=$(echo "$0" |sed 's,.*[\\/],,')
 
+#define the two log files for creating a record of the installation
+exec 3>configure.status
+
 # echo stuff
 # shamelesly stolen from autoconf generated scripts.
 #
@@ -229,7 +232,7 @@ while true; do
     fi
 done
 
-exec 5>config.log
+exec 5>configure.log
 cat >&5 <<EOF
 This file containes any messages produced by the compiler while
 running compilation tests to check the availibility of various
@@ -2526,6 +2529,68 @@ cat >&5 <<EOF
 ****************** config completed successfully ********************
 EOF
 
+if test "x$conf_file" = x || test "x$make_prog" = x; then
+    echo "******************* error! *************************" >&2
+    echo "******************* error! *************************" >&3
+    echo "configure did not return result for egs_config or make_prog" >&2
+    echo "configure did not return result for egs_config or make_prog" >&3
+    exit 1
+else
+    echo " egs_config = $egs_config" >&3
+    echo " make_prog  = $make_prog" >&3
+fi
+
+
+cd $HEN_HOUSE/scripts
+cat >&2 <<_ACEOF
+******************************************************************************
+
+The EGSnrc basic installation is complete.
+
+Every user who wants to use the system must now run the script
+
+$HEN_HOUSE/scripts/finalize_egs_foruser
+
+This will specify the directory to keep EGSnrc user-codes and will
+set various useful environment variables and aliases.
+
+******************************************************************************
+_ACEOF
+
+if test "x$USER" = xroot; then
+    exit 0
+fi
+
+EGS_CONFIG="$egs_config"
+export EGS_CONFIG
+
+cat >&2 <<_ACEOF
+
+
+You are logged in as user $USER.
+Do you want this script to finalize the EGSnrc installation for you by running
+$HEN_HOUSE/scripts/finalize_egs_foruser
+_ACEOF
+echo $ECHO_N "script ? (yes/no): $ECHO_C" >&2
+read response
+  if test "x$response" = xhelp; then
+    cat >&2 <<_ACEOF
+If you are on a single user system, the answer is yes. On a multi-user
+system, if you are going to run EGSnrc from this account, answer yes, but
+if this is to be the repository of the system, answer no.
+
+Do you want this script to finalize the EGSnrc installation for you by running
+$HEN_HOUSE/scripts/finalize_egs_foruser
+_ACEOF
+echo $ECHO_N "script ? (yes/no): $ECHO_C" >&2
+read response
+fi
+
+if test "x$response" = xyes; then
+  ./finalize_egs_foruser
+fi
+
+
 cat >&2 <<EOF
 
 
@@ -2553,13 +2618,3 @@ or:for the C-shell or tcsh-shell do the following in your .cshrc file:
 
 
 EOF
-
-# test for an argument to see if I'm being run from install_egs
-# and if yes, echo the config file name and the make utility
-# name so that the install_egs script knows about them
-#
-if test "x$1" = "xfrom_install_egs"; then
-    echo "config=$conf_file make_prog=$make_prog"
-fi
-echo "About to exit from script scripts/configure"
-exit 0
