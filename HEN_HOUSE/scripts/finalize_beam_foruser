@@ -27,6 +27,9 @@
 #
 ###############################################################################
 #
+#  Short portions of this script are derived from configure scripts generated
+#  by GNU autoconf (http://www.gnu.org/software/autoconf/).
+#
 #  Finalizes the installation of BEAMnrc for the user executing the script.
 #  Output is stored in scripts/finalize_beam_$USER.log
 #
@@ -52,9 +55,7 @@ my_name=`echo "$0" |sed 's,.*[\\/],,'`
 # a timestamp
 timestamp='Mar 18 2002'
 
-# echo stuff
-# shamelesly stolen from autoconf generated scripts.
-#
+# echo stuff (from autoconf generated scripts)
 case `echo "testing\c"; echo 1,2,3`,`echo -n tesssss; echo 1,2,3` in
   *c*,-n*) ECHO_N= ECHO_C='
 ' ECHO_T='    ' ;;

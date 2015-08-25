@@ -27,13 +27,13 @@
 #
 ###############################################################################
 #
+#  Some portions of this script are derived from configure scripts generated
+#  by GNU autoconf (http://www.gnu.org/software/autoconf/).
+#
 #  Determines Fortran linking options which are required when linking is done
 #  by some other compiler
 #
 #  Usage: get_f77_libs compiler
-#
-#  Some portions of this script are derived from configure scripts generated
-#  by autoconf.
 #
 ###############################################################################
 

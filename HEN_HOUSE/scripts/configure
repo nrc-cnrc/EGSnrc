@@ -28,11 +28,14 @@
 #
 ###############################################################################
 #
-# Configures a Fortran compiler for use with EGSnrc. It writes compiler name,
-# compiler flags and libraries to a config file specified by the user. It
-# checks if the compiler supports language extensions such as date_and_time,
-# fdate, hostnm, etc., and generates wrapper functions that should be used by
-# EGSnrc user codes.
+#  Short portions of this script are derived from configure scripts generated
+#  by GNU autoconf (http://www.gnu.org/software/autoconf/).
+#
+#  Configures a Fortran compiler for use with EGSnrc. It writes compiler name,
+#  compiler flags and libraries to a config file specified by the user. It
+#  checks if the compiler supports language extensions such as date_and_time,
+#  fdate, hostnm, etc., and generates wrapper functions that should be used by
+#  EGSnrc user codes.
 #
 ###############################################################################
 
@@ -43,12 +46,10 @@ my_version='1.0'
 # my name
 my_name=$(echo "$0" |sed 's,.*[\\/],,')
 
-#define the two log files for creating a record of the installation
+# define the two log files for creating a record of the installation
 exec 3>configure.status
 
-# echo stuff
-# shamelesly stolen from autoconf generated scripts.
-#
+# echo stuff (from autoconf generated scripts)
 case $(echo "testing\c"; echo 1,2,3),$(echo -n testing; echo 1,2,3) in
   *c*,-n*) ECHO_N= ECHO_C='
 ' ECHO_T='    ' ;;
