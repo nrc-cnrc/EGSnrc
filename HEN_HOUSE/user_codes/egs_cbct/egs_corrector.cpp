@@ -55,7 +55,7 @@ EGS_Corrector::EGS_Corrector(EGS_Input* inp,
 warming(true), use_adaptive_grid(false),
 vx(v_x),vy(v_y),vz(v_z), step(1), updates(0),
 Vx(16), Vy(16), Vz(16),mv_size(0), mv_used_size(0), mv_current(0),
-Nscore(0), Ngeom(0), Xmin(0.5), Xmax(100), C(1),KaTot(1),KtTot(1),
+Nscore(0), Ngeom(0), Xmin(0.0), Xmax(100), C(1),KaTot(0),KtTot(0),KTotRel(0),
 fsplit(fsp), KaPrim(1), Cx(1), NTot(0)
 {
     /* get corrector geometry */
@@ -184,10 +184,23 @@ void EGS_Corrector::printStatus(){
         egsInformation("grid # %d : %d X %d X %d\n",
                        j,vx/mv_used[j],vy/mv_used[j],vz/mv_used[j]);
  }
-egsInformation("-> fsplit = %g C = %g Cx = %g\n",fsplit, C, Cx);
-egsInformation("-> mean splitting # without correction: %g \n",KaTot/NTot/KaPrim*fsplit);
-egsInformation("-> mean splitting # with C  correction: %g \n",KtTot/NTot/KaPrim*C*fsplit);
-egsInformation("-> mean splitting # with Cx correction: %g \n",KtTot/NTot/KaPrim*Cx*fsplit);
+ EGS_I64 Nscores = 0;
+ for (int i=0; i<Nv;i++){Nscores +=Nscore[i];}
+ egsInformation("-> fsplit = %g C = %g Cx = %g KaPrim = %g\n",fsplit, C, Cx, KaPrim);
+ egsInformation("-> KaTot= %g KtTot = %g <KaTot>= %g <KtTot> = %g Nscores = %d \n",KaTot,KtTot,KaTot/Nscores,KtTot/Nscores,Nscores);
+ egsInformation("-> <Nsplit>apriori    : %g \n",KaTot/Nscores/KaPrim*fsplit);
+ egsInformation("-> <Nsplit>aposteriori: %g \n",KtTot/Nscores/KaPrim*fsplit);
+ egsInformation("-> <sc>*fsplit/<Katt>    : %g \n",KTotRel/Nscores);
+
+ egsInformation("\n\n-> <KaTot>= %g <KtTot> = %g NTot = %g \n",KaTot/NTot,KtTot/NTot,NTot);
+ egsInformation("-> <Nsplit>apriori    : %g \n",KaTot/NTot/KaPrim*fsplit);
+ egsInformation("-> <Nsplit>aposteriori: %g \n",KtTot/NTot/KaPrim*fsplit);
+ egsInformation("-> <sc>*fsplit/<Katt>    : %g \n",KTotRel/NTot);
+
+
+ // egsInformation("-> mean splitting # without correction: %g \n",KaTot/NTot/KaPrim*fsplit);
+// egsInformation("-> mean splitting # with C  correction: %g \n",KtTot/NTot/KaPrim*C*fsplit);
+// egsInformation("-> mean splitting # with Cx correction: %g \n",KtTot/NTot/KaPrim*Cx*fsplit);
 
 }
 
@@ -204,7 +217,7 @@ void EGS_Corrector::printCorrections(const string& fname){
      for(int iy=0; iy<Vy; iy++){
        for(int iz=0; iz<Vz; iz++){
          int ir = ix + iy*Vx + iz*Vxy;
-         sprintf(buf," %-6d %-6d  %-6d %-10.2f %-13.3g %-13.3g\n",
+         sprintf(buf," %-6d %-6d  %-6d %-13.5g %-13.5g %-13.5g\n",
                 ix,iy,iz,X[ir],Kt[ir],Ka[ir]);
          str += buf;
        }

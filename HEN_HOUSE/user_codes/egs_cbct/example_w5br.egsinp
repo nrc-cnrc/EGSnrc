@@ -161,7 +161,7 @@
 :start cbct setup:
         orbit = 360.0
         step  = -45
-        z-rotation = 0
+        z-rotation = -90
 :stop cbct setup:
 
 :start scoring options:
@@ -183,7 +183,7 @@
               rotation = 0 1.570796326794896619 0
            :stop transformation:
             # Uses file provided in the distribution
-            muen file = $EGS_HOME/egs_fac/muen_air.data
+            muen file = /home/mainegra/egsnrc_mp/egs_fac/muen_air.data
         :stop planar scoring:
 
 :stop scoring options:
@@ -197,14 +197,14 @@
         ###############################################
         # Use the 2 lines below to produce a blank scan
         ###############################################
-        #scan file = $EGS_HOME/egs_cbct/blank_coll_64.scan
+        #scan file = /home/mainegra/egsnrc_mp/egs_cbct/blank_coll_64.scan
 	#scan type = blank
         ###############################################
         # Use the 3 lines below to produce real scans
         ###############################################
-        scan file = $EGS_HOME/egs_cbct/scan_w5br_coll_64.scan
-        blank scan = $EGS_HOME/egs_cbct/blank_coll_64.scan
-	scan type = all
+        scan file = /home/mainegra/egsnrc_mp/egs_cbct/scan_w5br_coll_64.scan
+        blank scan = /home/mainegra/egsnrc_mp/egs_cbct/blank_coll_64.scan
+	scan type = scatter
         ###############################################
     :stop scan output:
 :stop output options:
@@ -217,8 +217,8 @@
 :start variance reduction:
    #scoring type = track_length      # scores photons CROSSING scoring plane
    scoring type =  forced_detection  # scores photons AIMED at scoring plane (forced detection)
-   #mfp transform = 4.0
-   #delta transport medium = ICRPBONE521ICRU
+   #mfp transform = 40
+   delta transport medium = ICRPBONE521ICRU
 
    ####################################
    # FS # Could be used for measured scan
@@ -252,7 +252,7 @@
    ###########################################
    # PDIS # Uncomment lines below !          #
    ###########################################
-   #PDIS splitting = 0.8 30 # f_split Ns
+   PDIS splitting = 0.8 30 # f_split Ns
    #:start attenuation plane:
       :start transformation:
            translation = 21.21320343559642573 0 0
@@ -279,7 +279,7 @@
 
 :start run control:
 
-    ncase =  12800000 #2621440
+    ncase =  1280000 #2621440
     calculation = first
 
 :stop run control:

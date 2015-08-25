@@ -98,16 +98,16 @@ defined(false), swap(false)
     EGS_Input *setup = i->takeInputItem("cbct setup");
     if (setup){
         defined = true;
-        EGS_Float convert = Pi/180., ang, orb, stp, ipr;
+        EGS_Float convert = EGS_Float(Pi)/EGS_Float(180.), ang, orb, stp, ipr;
 
         int error = 0;error = setup->getInput("minimum angle",ang);
-        if (!error){amin=ang*convert;}
+        if (!error){amin=ang;}
             error = 0;error = setup->getInput("maximum angle",ang);
-        if (!error){amax=ang*convert;}
+        if (!error){amax=ang;}
             error = 0;error = setup->getInput("orbit",orb);
-        if (!error){orbit=orb*convert;}
+        if (!error){orbit=orb;}
         error = 0;error = setup->getInput("step",stp);
-        if (!error){step=stp*convert;}
+        if (!error){step=stp;}
         //************************************************
         // Input of amax,amin takes precedence over orbit
         //************************************************
@@ -152,33 +152,33 @@ defined(false), swap(false)
         if (!error && ipr >= 0){angle = amin + iproj*step;}
         else{
           error = 0;error = setup->getInput("angle",ang);
-          if (!error){angle=ang*convert;iproj=(angle-amin)/step;}
+          if (!error){angle=ang;iproj=(angle-amin)/step;}
         }
         vector<string> allowed_rotation;
         allowed_rotation.push_back("x");
         allowed_rotation.push_back("y");
         allowed_rotation.push_back("z");
         irot = setup->getInput("rotation axis",allowed_rotation,2);
-        if(      irot == 0 ) rm = EGS_RotationMatrix(angle,0,0);
-        else if( irot == 1 ) rm = EGS_RotationMatrix(0,angle,0);
-        else if( irot == 2 ) rm = EGS_RotationMatrix(0,0,angle);
-        else                 rm = EGS_RotationMatrix(0,0, angle);// defaults to z-rotation
+        if(      irot == 0 ) rm = EGS_RotationMatrix(angle*convert,0,0);
+        else if( irot == 1 ) rm = EGS_RotationMatrix(0,angle*convert,0);
+        else if( irot == 2 ) rm = EGS_RotationMatrix(0,0,angle*convert);
+        else                 rm = EGS_RotationMatrix(0,0, angle*convert);// defaults to z-rotation
 
         //**********************************************
         // input error above, check whether using old input format
         //**********************************************
         if (iproj < 0){
            error = 0;error = setup->getInput("x-rotation",ang);
-           if (!error){angle=ang*convert;rm = EGS_RotationMatrix(angle,0,0);irot=0;}
+           if (!error){angle=ang;rm = EGS_RotationMatrix(angle*convert,0,0);irot=0;}
            else{
               error = 0;error = setup->getInput("y-rotation",ang);
-              if (!error){angle=ang*convert;rm = EGS_RotationMatrix(0,angle,0);irot=1;}
+              if (!error){angle=ang;rm = EGS_RotationMatrix(0,angle*convert,0);irot=1;}
               else{
                 error = 0;error = setup->getInput("z-rotation",ang);
-                if (!error){angle=ang*convert;rm = EGS_RotationMatrix(0,0,angle);irot=2;}
+                if (!error){angle=ang;rm = EGS_RotationMatrix(0,0,angle*convert);irot=2;}
                 else{
                   error = 0;error = setup->getInput("any-rotation",ang);
-                  if (!error){angle=ang*convert;rm = EGS_RotationMatrix(0,0,angle);irot=2;}
+                  if (!error){angle=ang;rm = EGS_RotationMatrix(0,0,angle*convert);irot=2;}
                   else{// unit matrix, no rotation
                     angle=amin;
                     egsWarning("\n*** No rotation requested!\n"
@@ -189,6 +189,9 @@ defined(false), swap(false)
            }
            iproj=(angle-amin)/step;
         }
+
+        angle=angle*convert;amin=amin*convert; amax=amax*convert; orbit=orbit*convert; step=step*convert;
+
 
         //
         // ***** scan output mode
@@ -201,6 +204,8 @@ defined(false), swap(false)
     else{
      egsWarning("\n\n*** No CBCT setup input block found!!!!\n");
     }
+
+    //egsInformation("\n------------\n-----> iproj = %d \n------------\n",iproj);
 
     t = tra; R = rm;
     if( t.length2() > 0  ) has_t = true; else has_t = false;
@@ -228,7 +233,7 @@ void EGS_CBCTSetup::describeMe(){
     if (orbit != 0 && step != 0 ){
      EGS_Float convert = Pi/180.;
      egsInformation(
-     " \n\n***\nCone Beam CT simulation: projection # %d out of %d\n",((int)((angle-amin)/step)),steps());
+     " \n\n***\nCone Beam CT simulation: projection # %d out of %d\n",iproj,steps());
      egsInformation("rotation angle = %g degrees\n",angle/convert);
      egsInformation("orbit = %g degrees from %g degrees to %g degrees\n",
                     orbit/convert,amin/convert,amax/convert);
@@ -300,7 +305,7 @@ EGS_CBCT::~EGS_CBCT() {
    //if(hist) delete hist;
 }
 
-string EGS_CBCT::revision = "$Revision: 1.38 $";
+string EGS_CBCT::revision = "$Revision: 1.39 $";
 
 inline int EGS_CBCT::computeIntersections(int ireg, const EGS_Vector &x,
         const EGS_Vector &u) {
@@ -401,11 +406,11 @@ inline int EGS_CBCT::setSplitting(const int &ireg,
     //EGS_Float asplit = EGS_Float(iphat)*C_imp;
     //EGS_Float asplit = EGS_Float(iphat)*C_imp/C_imp_save;
     int nspl = 1;
-    //if( asplit >1 ){
+    if( asplit >1 ){
         nspl = (int) asplit; wt /= asplit;
         if( rndm->getUniform() < asplit - nspl ) ++nspl;
         wt *= nspl;
-    //}
+    }
     return nspl;
 }
 
@@ -458,6 +463,15 @@ inline int EGS_CBCT::setSplitting(const EGS_Vector &x, EGS_Float &wt, EGS_Float 
   the signal from the current particle position, attenuated
   along the particle's path to the detector. Path obtained
   computing the intersections.
+  *******
+  Beware:
+  *******
+  Currently used for particles not aimed at detector. For this
+  reason no corrections used here and not included in the estimation
+  of the corrections. If one desires to use this method for particles
+  aimed at detector using corrections remove commments in pertinent
+  lines.
+  **********************************************
 */
 //int Natt_min = 10000000;
 //int Natt_max = 0;
@@ -470,25 +484,24 @@ inline int EGS_CBCT::setSplitting(const int &ireg,
                                   EGS_Float &wt, EGS_Float gle)
 {
     int nsplit = -1;
-    EGS_Float Xi = c_att ? c_att->getCorrection(ireg) : 1;
-    //int nsec = computeIntersections(ireg,x,u,gsections);
+    //EGS_Float Xi = c_att ? c_att->getCorrection(ireg) : 1;
     int nsec = computeIntersections(ireg,x,u);
     patt_datt = gsections[nsec-1].t;
     EGS_Float w_att = 1, gmfp = 0;
     if( patt_datt > 0 )
         w_att = exp(-patt_datt*muatt->interpolate(gle));
     EGS_Float Katt = wt*w_att*muen->interpolateFast(gle);
-    EGS_Float asplit = f_split*Katt*Xi/patt_score;
+    EGS_Float asplit = f_split*Katt/patt_score;
+    //EGS_Float asplit = f_split*Katt*Xi/patt_score;
     nsplit = 1;
-/*    if( asplit < Nmin_a ) nsplit = Nmin_a;
-    else */
     if( asplit > 1 ){
       nsplit = (int) asplit; wt /= asplit;
       asplit -= nsplit;
       if( rndm->getUniform() < asplit ) ++nsplit;
       wt *= nsplit;
     }
-    the_extra_stack->katt[the_stack->np-1] = Katt/nsplit;
+    the_extra_stack->katt[the_stack->np-1] = -1;
+    //the_extra_stack->katt[the_stack->np-1] = Katt/nsplit;
 //if (nsplit < Natt_min) Natt_min = nsplit;
 //if (nsplit > Natt_max) Natt_max = nsplit;
 //if (nsplit>0){Natt_ave += nsplit;Natt_n++;}
@@ -524,7 +537,10 @@ inline int EGS_CBCT::setSplitting( EGS_Float &att_lambda,
     patt_datt = att_lambda;
     EGS_Float w_att = 1, gmfp = 0;
     if( patt_datt > 0 )
+         //w_att = exp(-patt_datt);
          w_att = exp(-patt_datt*muatt->interpolate(gle));
+/*    if( patt_datt > 0 )
+         w_att = patt_datt;*/
     EGS_Float aup = _aup > 0 ? _aup:1;
     EGS_Float Katt = wt/aup*w_att*muen->interpolateFast(gle);
     EGS_Float asplit = f_split*Katt*Xi/patt_score;
@@ -2407,7 +2423,7 @@ EGS_Float EGS_CBCT::aveErrorAatt(EGS_Float cut_off) {
 /* get average uncertainty in regions with values larger than
    a given fraction of the max. value. Given in percentage.
 */
-EGS_Float EGS_CBCT::aveError(EGS_ScoringArray &kerma,
+EGS_Float EGS_CBCT::aveError(const char * label, EGS_ScoringArray &kerma,
                              const EGS_Float &cut_off ) {
 
    EGS_Hist *err_hist;
@@ -2428,8 +2444,9 @@ EGS_Float EGS_CBCT::aveError(EGS_ScoringArray &kerma,
    else aveError = 0;
 
    if (verbose){
+      string suffix = label; suffix += ".egserr";
       EGS_Float mean=0.0, var = err_hist->currentHistVariance(mean);
-      err_hist->outputHist(constructIOFileName(".egserr",true));
+      err_hist->outputHist(constructIOFileName(suffix.c_str(),true));
       egsInformation("\n---> mean error = %g var = %g\n", mean, var);
       if (err_hist) delete err_hist;
    }
@@ -2481,8 +2498,9 @@ EGS_Float EGS_CBCT::getAveScatErrorSqr(){
 }
 
 /* Prints out a histogram of the errors */
-void EGS_CBCT::errorDistribution(EGS_ScoringArray &kerma )
+void EGS_CBCT::errorDistribution(const char * label, EGS_ScoringArray &kerma )
 {
+    string suffix = label;
     int hsize = 100;
     vector<int> hist(hsize); double min = 0.0, max=-1e30;
     for (int ih=0; ih < hist.size(); ih++){hist[ih]=0;};
@@ -2505,8 +2523,8 @@ void EGS_CBCT::errorDistribution(EGS_ScoringArray &kerma )
             else                        hist[0] +=1;
         }
     }
-
-    string fname = constructIOFileName(".egshist",true);
+    suffix += ".egserr";
+    string fname = constructIOFileName(suffix.c_str(),true);
     ofstream fout(fname.c_str());
     for (int ih=0; ih<hist.size(); ih++){
          fout << min + bw*(ih + 0.5) <<" "<< float(hist[ih])/float(n) << endl;
@@ -2592,11 +2610,11 @@ void EGS_CBCT::outputResults() {
      //EGS_Float aError = aveError(*kermaT, cut_off);
      EGS_Float attError = aveErrorAatt(cut_off);
      EGS_Float aError = aveError(*kermaA);
-     EGS_Float sError = aveError(*kermaS, cut_off);
+     EGS_Float sError = aveError(".scatter",*kermaS, cut_off);
      EGS_Float tError = aveError(*kermaT);
      EGS_Float cpuTime = run->getCPUTime();
 
-     if (verbose) errorDistribution(*kermaT);
+     if (verbose) errorDistribution(".total",*kermaT);
 
 
      egsInformation("==================================================\n\n");
@@ -3576,6 +3594,8 @@ if (isinf(v.x)||isinf(v.y)||isinf(v.z)){
 void EGS_CBCT::selectPhotonMFP(EGS_Float &dpmfp) {
    int np = the_stack->np-1;
    EGS_Float LambdaInt = 0, aup_int = 1.0;
+   //EGS_Float exp_Lambda = 1;
+
    if( the_stack->E[np] < the_bounds->pcut ) {
        --the_stack->np; dpmfp=-1; return;
    }
@@ -3724,6 +3744,7 @@ void EGS_CBCT::selectPhotonMFP(EGS_Float &dpmfp) {
        if( Lambda < 80 ) {
            EGS_Float _muen = muen->interpolateFast(gle);
            EGS_Float exp_Lambda = exp(-Lambda);
+           //exp_Lambda = exp(-Lambda);
            EGS_Float up = a*u;
            EGS_Float aup = fabs(up); if( aup < 0.08 ) aup = 0.08;aup_int=aup;
            double sc = the_stack->wt[np]/aup*exp_Lambda*_muen;
@@ -3757,6 +3778,7 @@ void EGS_CBCT::selectPhotonMFP(EGS_Float &dpmfp) {
 #endif
              if (the_stack->latch[np]){// scattered photon
                 /* PDIS */
+                //if (split_type ==PDIS){
 //                if (patt_have){
 //
 //                    if( sc*f_split/patt_score > 5 ) {// discard too large contributions
@@ -3769,7 +3791,7 @@ void EGS_CBCT::selectPhotonMFP(EGS_Float &dpmfp) {
 //                }
 
                 /* PDIS with corrector */
-                if (c_att)
+                if (c_att && the_extra_stack->katt[np] >= 0)
                    c_att->score(the_stack->ir[np]-2,sc,the_extra_stack->katt[np],the_stack->wt[np]);
 
                 /* RDIS */
@@ -3861,7 +3883,15 @@ void EGS_CBCT::selectPhotonMFP(EGS_Float &dpmfp) {
               if (patt_have)
                 nspl = setSplitting(xint,the_stack->wt[np],gle);
               else
-                nspl = setSplitting(LambdaInt,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
+              // nspl = setSplitting(LambdaInt,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
+              {
+                EGS_Float LambdaRest = gsections[nsec-1].t - LambdaInt;
+                //EGS_Float LambdaRest = Lambda - LambdaInt;
+                nspl = setSplitting(LambdaRest,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
+                //nspl = setSplitting(Lambda,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
+              }
+                //nspl = setSplitting(exp_Lambda,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
+                //nspl = setSplitting(gsections[nsec-1].t,the_stack->ir[np]-2,aup_int,the_stack->wt[np],gle);
            }
 
            if( !nspl ) { --the_stack->np; return;}
