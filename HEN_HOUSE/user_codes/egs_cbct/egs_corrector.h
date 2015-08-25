@@ -50,6 +50,7 @@ class  EGS_Corrector {
     EGS_Float C, Cx,//Normalization ensuring same average splitting
               KaTot,//Total estimated signal
               KtTot,//Total true signal
+              KTotRel,//Total ratio SUM[Kt[i]/Ka[i]]
               NTot, //Total number of scoring particles
               fsplit,// splitting factor
               KaPrim;// Primary Kerma attenuated through phantom
@@ -93,7 +94,7 @@ public:
     int  getGridNy(){return Vy;};
     int  getGridNz(){return Vz;};
     void getGrids(){};
-    EGS_Float currentC(){return KaTot/KtTot;};
+    EGS_Float currentC(){return KtTot!=0 ? KaTot/KtTot:1;};
 
     EGS_Float getCorrection(const int& ireg){
        return ireg >= 0 ? X[index[ireg]] : 1;
@@ -137,7 +138,7 @@ egsInformation("\nUpdating adaptive grid from %dX%dX%d ",Vx,Vx,Vx);
      for (int j=0; j<Ngeom; j++){index[j] = findVoxel(j);}
      /* Assign values to the new grid */
      int V1=Vx, V2=Vx_t;// V1 finer grid, V2 coarser grid
-     C = KaTot/KtTot;
+     C = KtTot!=0 ? KaTot/KtTot:1;
      for (int i=0; i<Nv;i++){
          int k = matchVoxel(i,V1,V2);
          Kt[i] = Kt_t[k]; Ka[i] = Ka_t[k];
@@ -160,7 +161,7 @@ egsInformation("to %dX%dX%d\n",Vx,Vx,Vx);
       updates++;
       if (updatedGrid()) return;
       /* Compute corrections */
-      C = KaTot/KtTot;
+      C = KtTot!=0 ? KaTot/KtTot:1;
       for( int i=0; i<Nv; i++){
          X[i] = 1;// resetting this
          if (!Nscore[i]) continue;
@@ -179,12 +180,13 @@ egsInformation("to %dX%dX%d\n",Vx,Vx,Vx);
       updates++;
       if (updatedGrid()) return;
       /* Compute corrections */
-      C = KaTot/KtTot;
-      KaPrim = KaP; Cx = NTot*KaP/KtTot;
+      C = KtTot!=0 ? KaTot/KtTot:1;
+      KaPrim = KaP; Cx = KtTot!=0 ? NTot*KaP/KtTot: 1;
       for( int i=0; i<Nv; i++){
          X[i] = 1;// resetting this
          if (!Nscore[i]) continue;
-         X[i] = Kt[i]/Ka[i]*Cx;
+         X[i] = Kt[i]/Ka[i]*C;
+         //X[i] = Kt[i]/Ka[i]*Cx;
          if (X[i]<Xmin) X[i]=Xmin;
          if (X[i]>Xmax) X[i]=Xmax;
       }
@@ -198,7 +200,7 @@ egsInformation("to %dX%dX%d\n",Vx,Vx,Vx);
        if (ireg>=0){
           int i = index[ireg]; NTot += _wt;
           Kt[i] +=sc; Ka[i] +=sa; Nscore[i]++;
-          KtTot +=sc; KaTot +=sa;
+          KtTot +=sc; KaTot +=sa; KTotRel += sc/sa;
        }
     };
 

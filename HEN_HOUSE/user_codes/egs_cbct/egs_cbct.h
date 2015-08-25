@@ -199,14 +199,17 @@ public:
      */
     int simulateSingleShower();
 
-    /*! Score Air-Kerma from path length to scoring plane    */
+    /*! Score Air-Kerma from path length from back of the geometry to scoring plane    */
     inline void scoreKerma( const EGS_Float & gle,
                             const EGS_Float & tstep,
                             const EGS_Float & up, int k);
-    inline void scoreInitialKerma( const EGS_Float & gle,
+    /*! Score Air-Kerma for particles missing geometry but hitting detector    */
+    inline void scoreDirectKerma( const EGS_Float & gle,
                                   const EGS_Float & weight,
                                   const EGS_Float & tstep,
                                   const EGS_Float & up, int k   );
+    /*! Ray-trace primaries and score air-kerma */
+    inline void RayTrace( const int & ir0);
     /*! Read results from a .egsdat file. */
     int readData();
 
@@ -257,10 +260,10 @@ protected:
 
 /* get average uncertainty in regions with values larger than
    a given fraction of the max. value. Given in percentage. */
-    EGS_Float aveError(EGS_ScoringArray &kerma,
+    EGS_Float aveError(const char * label, EGS_ScoringArray &kerma,
                        const EGS_Float &cut_off );
     EGS_Float aveError(EGS_ScoringArray &kerma );
-    void errorDistribution(EGS_ScoringArray &kerma );
+    void errorDistribution(const char * label, EGS_ScoringArray &kerma );
 
 /* get average uncertainty in regions with values larger than
    a given fraction of the max. value. Given ion percentage. */
@@ -379,6 +382,7 @@ private:
     bool             verbose;   // much more output files: egshist, egscorr, egsimp
     bool             egsdat;    // switch on/off storing data
                                 // after each batch. On by default.
+    bool             ray_tracing;// true if user requests ray-tracing mode
 
     bool             egsmap;    // switch on/off storing signal data
                                 // after each batch. Off by default.
