@@ -44,10 +44,11 @@
 my_version='1.0'
 
 # my name
-my_name=$(echo "$0" |sed 's,.*[\\/],,')
+my_dir=$(dirname $0)
+my_name=$(basename $0)
 
 # define the two log files for creating a record of the installation
-exec 3>configure.status
+exec 3>$my_dir/configure.status
 
 # echo stuff (from autoconf generated scripts)
 case $(echo "testing\c"; echo 1,2,3),$(echo -n testing; echo 1,2,3) in
@@ -110,7 +111,7 @@ read response
 
 echo
 echo $ECHO_N "Checking system type ... $ECHO_C" >&2
-canonical_system=$(./config.guess)
+canonical_system=$($my_dir/config.guess)
 system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
 echo "$canonical_system" >&2
 is_x86_64=$(echo $canonical_system | grep x86_64)
@@ -233,7 +234,7 @@ while true; do
     fi
 done
 
-exec 5>configure.log
+exec 5>$my_dir/configure.log
 cat >&5 <<EOF
 This file containes any messages produced by the compiler while
 running compilation tests to check the availibility of various
