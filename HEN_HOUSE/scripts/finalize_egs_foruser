@@ -51,7 +51,8 @@
 my_version='1.0'
 
 # my name
-my_name=`echo "$0" |sed 's,.*[\\/],,'`
+my_dir=$(dirname $0)
+my_name=$(basename $0)
 
 # a timestamp
 timestamp='Mar 18 2002'
@@ -68,7 +69,7 @@ test_egs_home=$(dirname $HEN_HOUSE)/egs_home
 
 cpp_user_codes="tutor2pp tutor7pp cavity"
 
-exec 3>finalize_$USER.log
+exec 3>$my_dir/finalize_$USER.log
 cat >&3 <<EOF
 *****************************************************************************
 EGSnrc configuration for the user $USER
@@ -296,7 +297,7 @@ echo "" >&2; echo "" >&2
 echo "Copying user codes to EGS_HOME area ..." >&2
 echo "Copying user codes to EGS_HOME area" >&3
 for uc in $copy_list; do
-    echo $ECHO_N "    $uc ... $ECHO_C" >&2
+    printf %-30s "    $uc ..." >&2
     cp -r $HEN_HOUSE/user_codes/$uc .
     echo "OK" >&2
 done
@@ -351,7 +352,7 @@ fi
 echo "Compilation list: $compile_list" >&3
 
 for uc in $compile_list; do
-    echo $ECHO_N "Compiling $uc ... $ECHO_C" >&2
+    printf %-30s "    $uc ..." >&2
     echo "*************** Compiling $uc ****************** " >&3
     do_it=yes
     if test $have_egspp_config = no; then
