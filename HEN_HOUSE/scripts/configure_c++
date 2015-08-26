@@ -48,7 +48,11 @@
 ###############################################################################
 
 
-my_name=`echo "$0" |sed 's,.*[\\/],,'`
+my_dir=$(dirname $0)
+my_name=$(basename $0)
+
+# printf format
+format="%-50s"
 
 egs_config=$EGS_CONFIG
 CXX=
@@ -128,21 +132,14 @@ if test $is_ok = no; then
     exit 1
 fi
 
-case `echo "testing\c"; echo 1,2,3`,`echo -n testing; echo 1,2,3` in
-      *c*,-n*) ECHO_N= ECHO_C='
-' ECHO_T='    ' ;;
-      *c*,*  ) ECHO_N=-n ECHO_C= ECHO_T= ;;
-      *)       ECHO_N= ECHO_C='\c' ECHO_T= ;;
-esac
-
 if test $from_configure = no; then
-    exec 5>config.log
+    exec 5>$my_dir/configure.log
     cat >&5 <<EOF
 This file contains output from the C++ compiler configuration process
 
 EOF
 else
-    exec 5>>config.log
+    exec 5>>$my_dir/configure.log
     cat >&5 <<EOF
 
 ***************************** begin of C++ configuration ***********************
@@ -156,9 +153,9 @@ while true; do
 create_config=yes
 if test -f $ofile; then
     echo "EGSnrc C++ configuration file $ofile" >&2
-    echo $ECHO_N "already exists. Overwrite? (y/n) $ECHO_C" >&2
+    printf $format "already exists. Overwrite? (yes/no) " >&2
     read yesno
-    if test "x$yesno" = xn; then
+    if test "x$yesno" = xyes; then
         echo "OK, using existing configuration" >&2
         create_config=no
     fi
@@ -254,7 +251,7 @@ esac
 # Try to determine fortran_libs
 #
 echo >&2
-echo $ECHO_N "Obtaining Fortran libraries needed when $CXX is the linker ...$ECHO_C" >&2
+printf $format "Determining Fortran libraries for $CXX linking ..." >&2
 fortran_libs=`$hen_house/scripts/get_f77_libs1 $F77 $CXX`
 if test $? -eq 0; then
     echo "OK" >&2
@@ -281,19 +278,19 @@ dynamic shared objects (DSO, a.k.a. shared library or DLL), where
 \$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
 EGSnrc DSO directory at compile/link time:
 
-1) $opt_options:                     $opt
-2) $pic_options:  $fpic
-3) $def_options:                     $defines
-4) $shared_options:       $shared
-5) $out_options:                    $extra
-6) $dso_path_options:       $lib_link1
-7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
-8) $flibs_options:   $f_libs
+1) $opt_options:                          $opt
+2) $pic_options:       $fpic
+3) $def_options:                          $defines
+4) $shared_options:            $shared
+5) $out_options:                         $extra
+6) $dso_path_options:            $lib_link1
+7) $link2_options:              ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:        $f_libs
 EOF
 num_options=8
 if test $is_osx = yes; then
     cat >&2 <<EOF
-9) $bundle_options:          $f_libs
+9) $bundle_options:               $f_libs
 EOF
     num_options=9
 fi
@@ -305,18 +302,18 @@ dynamic shared objects (DSO, a.k.a. shared library or DLL), where
 \$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
 EGSnrc DSO directory at compile/link time:
 
-1) $opt_options:                     $opt
-2) $pic_options:  $fpic
-3) $def_options:                     $defines
-4) $shared_options:       $shared
-5) $out_options:                    $extra
-6) $dso_path_options:       $lib_link1
-7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
-8) $flibs_options:   $f_libs
+1) $opt_options:                          $opt
+2) $pic_options:       $fpic
+3) $def_options:                          $defines
+4) $shared_options:            $shared
+5) $out_options:                         $extra
+6) $dso_path_options:            $lib_link1
+7) $link2_options:              ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:        $f_libs
 EOF
 if test $is_osx = yes; then
     cat >&5 <<EOF
-9) $bundle_options:          $shared_bundle
+9) $bundle_options:               $shared_bundle
 EOF
 fi
 
@@ -324,33 +321,34 @@ options_modified=no
 while true; do
 
     echo >&2
-    echo $ECHO_N "Input option to change, 0 to proceed without (further) changes: $ECHO_C" >&2
+    printf $format "Input option to change, 0 to proceed: " >&2
     read ans
+    if test x$ans = x; then continue; fi
     if test $ans -eq 0; then break; fi
     if test $ans -gt $num_options; then continue; fi
     options_modified=yes
     case $ans in
-        1)  echo $ECHO_N "Input $opt_options: $ECHO_C" >&2
+        1)  printf $format "Input $opt_options: " >&2
             read opt ;;
-        2)  echo $ECHO_N "Input $pic_options: $ECHO_C" >&2
+        2)  printf $format "Input $pic_options: " >&2
             read fpic ;;
-        3)  echo $ECHO_N "Input $def_options: $ECHO_C" >&2
+        3)  printf $format "Input $def_options: " >&2
             read defines ;;
-        4)  echo $ECHO_N "Input $shared_options: $ECHO_C" >&2
+        4)  printf $format "Input $shared_options: " >&2
             read shared ;;
-        5)  echo $ECHO_N "Input $out_options: $ECHO_C" >&2
+        5)  printf $format "Input $out_options: " >&2
             read extra ;;
-        6)  echo $ECHO_N "Input $dso_path_options: $ECHO_C" >&2
+        6)  printf $format "Input $dso_path_options: " >&2
             read lib_link1 ;;
         7)
-            echo $ECHO_N "Input link prefix: $ECHO_C" >&2
+            printf $format "Input link prefix: " >&2
             read link2_prefix
-            echo $ECHO_N "Input link suffix: $ECHO_C" >&2
+            printf $format "Input link suffix: " >&2
             read link2_suffix
         ;;
-        8)  echo $ECHO_N "Input $flibs_options: $ECHO_C" >&2
+        8)  printf $format "Input $flibs_options: " >&2
             read f_libs ;;
-        9)  echo $ECHO_N "Input $bundle_options: $ECHO_C" >&2
+        9)  printf $format "Input $bundle_options: " >&2
             read shared_bundle ;;
         *)
     esac
@@ -364,24 +362,24 @@ if test $options_modified = yes; then
 Using the following user modified compiler/linker switches for
 creating/linking against DSOs
 
-1) $opt_options:                     $opt
-2) $pic_options:  $fpic
-3) $def_options:                     $defines
-4) $shared_options:       $shared
-5) $out_options:                    $extra
-6) $dso_path_options:       $lib_link1
-7) $link2_options:         ${link2_prefix}some_lib${link2_suffix}
-8) $flibs_options:   $f_libs
+1) $opt_options:                          $opt
+2) $pic_options:       $fpic
+3) $def_options:                          $defines
+4) $shared_options:            $shared
+5) $out_options:                         $extra
+6) $dso_path_options:            $lib_link1
+7) $link2_options:              ${link2_prefix}some_lib${link2_suffix}
+8) $flibs_options:        $f_libs
 EOF
     if test $is_osx = yes; then
         cat >&5 <<EOF
-9) $bundle_options:          $shared_bundle
+9) $bundle_options:               $shared_bundle
 EOF
     fi
 fi
 
 echo >&2
-echo $ECHO_N "Creating C++ config file ............................. $ECHO_C" >&2
+printf $format "Creating C++ config file ..." >&2
 current_date=`date`
 cat >$ofile <<EOF
 #*************************************************************************
@@ -483,7 +481,7 @@ if test ! -d $hen_house/egs++/dso; then
     mkdir $hen_house/egs++/dso || echo "Failed to create DSO directory $hen_house/egs++/dso ?"
 fi
 
-echo $ECHO_N "Building the IAEA phase space library ................ $ECHO_C" >&2
+printf $format "Building the IAEA phase space library ..." >&2
 echo >&5; echo >&5;
 echo "****************** Building the IAEA phase space library *********************" >&5
 curdir=`pwd`
@@ -505,7 +503,7 @@ else
     iaea_ok=no
 fi
 
-echo $ECHO_N "Building the EGSnrc C++ class library (be patient) ... $ECHO_C" >&2
+printf $format "Building the EGSnrc C++ class library ... " >&2
 
 echo >&5; echo >&5
 echo "************************ Building the EGSnrc C++ class library ***************" >&5
@@ -533,9 +531,9 @@ These settings did not work out. You may edit the source code
 from the config.log file) and/or try different compiler/linker options.
 
 EOF
-    echo $ECHO_N "Do you want to retry? (y/n) $ECHO_C" >&2
+    printf $format "Do you want to retry? (yes/no) " >&2
     read ans
-    if test "x$ans" = xn; then break; fi
+    if test "x$ans" = xno; then break; fi
     rm -f $ofile
 fi
 
