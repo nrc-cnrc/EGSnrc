@@ -449,11 +449,13 @@
 "I>                         number is compared to a random number on (0,1) at
 "I>                         the start of each history; if the random number is
 "I>                         <= INDEX_$SYNCVMLC(I), then field I is used.
-"I>          NEG_$SYNCVMLC:  Min. Y (ORIENT_$SYNCVMLC=0) or X (ORIENT_$SYNCVMLC=1)
+"I>          NEG_$SYNCVMLC:  Min. Y (ORIENT_$SYNCVMLC=0)
+"I>                         or X (ORIENT_$SYNCVMLC=1)
 "I>                         of front opening in leaf (ie the opening at
 "I>                         ZMIN_$SYNCVMLC) if ENDTYPE=1, or of rounded end
 "I>                         of leaf if ENDTYPE=0 for leaf J in field I.
-"I>          POS_$SYNCVMLC:  Max. Y (ORIENT_$SYNCVMLC=0) or X (ORIENT_$SYNCVMLC=1)
+"I>          POS_$SYNCVMLC:  Max. Y (ORIENT_$SYNCVMLC=0)
+"I>                         or X (ORIENT_$SYNCVMLC=1)
 "I>                         of front opening in leaf if ENDTYPE=1, or of
 "I>                         rounded end of leaf if ENDTYPE=0 for leaf J in
 "I>                         field I.
@@ -1766,7 +1768,8 @@ IF(ABS(ZFOCUS_$SYNCVMLC(1)-ZMIN_$SYNCVMLC)<1.E-5) [
        ' ZFOCUS(1) reset to ',F15.5,' cm for now'//);
    IERR_GEOM(ICM_$SYNCVMLC)=IERR_GEOM(ICM_$SYNCVMLC)+1;
  ]
-ELSEIF(ZFOCUS_$SYNCVMLC(1)>ZMIN_$SYNCVMLC & ZFOCUS_$SYNCVMLC(1)<ZMAX_$SYNCVMLC) [
+ELSEIF(ZFOCUS_$SYNCVMLC(1)>ZMIN_$SYNCVMLC &
+    ZFOCUS_$SYNCVMLC(1)<ZMAX_$SYNCVMLC) [
    ZFOCUS_$SYNCVMLC(1)=ZMAX_$SYNCVMLC;
    OUTPUT ICM_$SYNCVMLC,ZFOCUS_$SYNCVMLC(1);
       (//' ***ERROR IN CM ',I4,' ($SYNCVMLC)'/
@@ -2000,9 +2003,11 @@ LOOP[
 IF(ENDTYPE_$SYNCVMLC=1)[
 DO I=1, TOT_LEAF_$SYNCVMLC [
 
-SURPARA2_B_$SYNCVMLC(I)=LEAFB_$SYNCVMLC(I)/(ZMIN_$SYNCVMLC-ZFOCUS_$SYNCVMLC(2) );
+SURPARA2_B_$SYNCVMLC(I)=
+    LEAFB_$SYNCVMLC(I)/(ZMIN_$SYNCVMLC-ZFOCUS_$SYNCVMLC(2) );
 
-SURPARA2_A_$SYNCVMLC(I)=LEAFA_$SYNCVMLC(I)/(ZMIN_$SYNCVMLC-ZFOCUS_$SYNCVMLC(2) );
+SURPARA2_A_$SYNCVMLC(I)=
+    LEAFA_$SYNCVMLC(I)/(ZMIN_$SYNCVMLC-ZFOCUS_$SYNCVMLC(2) );
 
                          ];
                     ];

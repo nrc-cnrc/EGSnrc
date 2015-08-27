@@ -157,7 +157,8 @@ REPLACE{;COMIN/CM_$SYNCVMLC/;} WITH {
       ZHOLEBOT_$SYNCVMLC,
       HOLEPOS_FULL_$SYNCVMLC,HOLEPOS_TAR_$SYNCVMLC,HOLEPOS_ISO_$SYNCVMLC,
       ZRAILTOP_$SYNCVMLC,ZRAILBOT_$SYNCVMLC,
-      ICM_$SYNCVMLC,IRSTART_$SYNCVMLC,IREND_$SYNCVMLC,N_$SYNCVMLC,N_GAP_$SYNCVMLC,
+      ICM_$SYNCVMLC,IRSTART_$SYNCVMLC,IREND_$SYNCVMLC,N_$SYNCVMLC,
+      N_GAP_$SYNCVMLC,
       IR_$SYNCVMLC,NUM_LEAF_$SYNCVMLC, ORIENT_$SYNCVMLC,
       SUBINDEX_$SYNCVMLC,NGROUP_$SYNCVMLC,
       LEAFTYPE_$SYNCVMLC,
@@ -180,7 +181,8 @@ REPLACE{;COMIN/CM_$SYNCVMLC/;} WITH {
       HOLEPOS_FULL_$SYNCVMLC,HOLEPOS_TAR_$SYNCVMLC,HOLEPOS_ISO_$SYNCVMLC,
       ZRAILTOP_$SYNCVMLC(3),ZRAILBOT_$SYNCVMLC(3);
   INTEGER
-      ICM_$SYNCVMLC,IRSTART_$SYNCVMLC,IREND_$SYNCVMLC,N_$SYNCVMLC,N_GAP_$SYNCVMLC,
+      ICM_$SYNCVMLC,IRSTART_$SYNCVMLC,IREND_$SYNCVMLC,N_$SYNCVMLC,
+      N_GAP_$SYNCVMLC,
       IR_$SYNCVMLC,NUM_LEAF_$SYNCVMLC($MAXLEAF), ORIENT_$SYNCVMLC,
       SUBINDEX_$SYNCVMLC($MAXLEAF,5,6,9),NGROUP_$SYNCVMLC,
       LEAFTYPE_$SYNCVMLC($MAXLEAF);
@@ -205,9 +207,9 @@ REPLACE{;COMIN/CM_$SYNCVMLC/;} WITH {
 "V>                     ZMIN_$SYNCVMLC if ENDTYPE_$SYNCVMLC = 1 or at
 "V>                     rounded leaf tip @ ZMIN_$SYNCVMLC+(ZTHICK_$SYNCVMLC)/2.
 "V>SURPARA2_B_$SYNCVMLC($MAXLEAF)the parameters to describe the leaf end
-"V>                               surface i.e. tangent along that end.
+"V>                     surface i.e. tangent along that end.
 "V>SURPARA2_A_$SYNCVMLC($MAXLEAF)the parameters to describe the leaf end
-"V>                               surface i.e. tangent along that end.
+"V>                     surface i.e. tangent along that end.
 "V>ZFOCUS_$SYNCVMLC(2) = the two focus point coordinates: 1. for leave side
 "V>                                                  2. for leave end.
 "V>ZMIN_$SYNCVMLC       = Front of SYNCVMLC
@@ -221,23 +223,23 @@ REPLACE{;COMIN/CM_$SYNCVMLC/;} WITH {
 "V>                    air gaps and driving screw holes will be ignored when
 "V>                    doing range rejection (IGNOREGAPS_$SYNCVMLC=1)
 "V>LEAFRADIUS_$SYNCVMLC = the radius of the leaf end if ENDTYPE_$SYNCVMLC = 0
-"V>LEAFNEG_$SYNCVMLC($MAXFIELDLEAF) = negative opening coordinates for all leaves
-"V>                                  for all fields.
-"V>                                  LEAFNEG_$SYNCVMLC(J+(I-1)*TOT_LEAF_$SYNCVMLC)
-"V>                                  defines coordinate for leaf J in field I
-"V>LEAFPOS_$SYNCVMLC($MAXFIELDLEAF) = positive opening coordinates for all leaves
-"V>                                  for all fields.
+"V>LEAFNEG_$SYNCVMLC($MAXFIELDLEAF) = negative opening coordinates for all
+"V>                     leaves for all fields.
+"V>                     LEAFNEG_$SYNCVMLC(J+(I-1)*TOT_LEAF_$SYNCVMLC)
+"V>                     defines coordinate for leaf J in field I
+"V>LEAFPOS_$SYNCVMLC($MAXFIELDLEAF) = positive opening coordinates for all
+"V>                     leaves for all fields.
 "V>INDEX_$SYNCVMLC($MAXFIELD) = index for field I.  If INDEX_$SYNCVMLC(I)>=
-"V>                            RNDM1_$SYNCVMLC then field I is used.
+"V>                     RNDM1_$SYNCVMLC then field I is used.
 "V>INDEX1_$SYNCVMLC,INDEX2_$SYNCVMLC = temporary variables to store
-"V>                                  INDEX_$SYNCVMLC(I) values so that
-"V>                                  leaf positions can be interpolated during
-"V>                                  dynamic simulations
+"V>                     INDEX_$SYNCVMLC(I) values so that
+"V>                     leaf positions can be interpolated during
+"V>                     dynamic simulations
 "V>POS1_$SYNCVMLC,POS2_$SYNCVMLC,NEG1_$SYNCVMLC,NEG2_$SYNCVMLC = temporary
-"V>                               variables to store LEAFNEG_$SYNCVMLC and
-"V>                               LEAFPOS_$SYNCVMLC to allow leaf positions
-"V>                               to be interpolated during dynamic field
-"V>                               simulations
+"V>                     variables to store LEAFNEG_$SYNCVMLC and
+"V>                     LEAFPOS_$SYNCVMLC to allow leaf positions
+"V>                     to be interpolated during dynamic field
+"V>                     simulations
 "V>RNDM1_$SYNCVMLC = random no. (0,1) selected before each history and compared
 "V>                 to INDEX_$SYNCVMLC(I) to determin what field to use
 "V>NFIELDS_$SYNCVMLC = no. of fields
@@ -265,12 +267,13 @@ LEAFPOS_$SYNCVMLC($MAXFIELDLEAF),INDEX_$SYNCVMLC($MAXFIELD_$SYNCVMLC),
 INDEX1_$SYNCVMLC,INDEX2_$SYNCVMLC,POS1_$SYNCVMLC,POS2_$SYNCVMLC,
 NEG1_$SYNCVMLC,NEG2_$SYNCVMLC,RNDM1_$SYNCVMLC,
 NFIELDS_$SYNCVMLC,MODE_$SYNCVMLC,
-J_$SYNCVMLC,I_$SYNCVMLC,TOT_LEAF_$SYNCVMLC,ENDTYPE_$SYNCVMLC,IGNOREGAPS_$SYNCVMLC,
+J_$SYNCVMLC,I_$SYNCVMLC,TOT_LEAF_$SYNCVMLC,ENDTYPE_$SYNCVMLC,
+       IGNOREGAPS_$SYNCVMLC,
 MININD_$SYNCVMLC,MAXIND_$SYNCVMLC;
 DOUBLE PRECISION LEAFA_$SYNCVMLC,LEAFB_$SYNCVMLC,
        SURPARA2_B_$SYNCVMLC,SURPARA2_A_$SYNCVMLC,ZMIN_$SYNCVMLC,
-       ZFOCUS_$SYNCVMLC,ZTHICK_$SYNCVMLC,MIN_PLANE_$SYNCVMLC,MAX_PLANE_$SYNCVMLC,
-       LEAFRADIUS_$SYNCVMLC;
+       ZFOCUS_$SYNCVMLC,ZTHICK_$SYNCVMLC,MIN_PLANE_$SYNCVMLC,
+       MAX_PLANE_$SYNCVMLC,LEAFRADIUS_$SYNCVMLC;
 $REAL LEAFNEG_$SYNCVMLC,LEAFPOS_$SYNCVMLC,INDEX_$SYNCVMLC,
       INDEX1_$SYNCVMLC,INDEX2_$SYNCVMLC,POS1_$SYNCVMLC,
       POS2_$SYNCVMLC,NEG1_$SYNCVMLC,NEG2_$SYNCVMLC,RNDM1_$SYNCVMLC;

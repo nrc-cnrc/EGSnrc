@@ -313,7 +313,8 @@ IF( (W(NP)>0. & ZFL>=ZMAX_$SYNCMLCE) | (W(NP)<0. & ZFL<=ZFRONT_$SYNCMLCE) )[
           OUTOFCMFLAG=1;
 "put in = signs to get this to exit stepping loop in HOWFAR"
 ]
-ELSEIF(ABS(XYFL(1))>RMAX_CM(ICM_$SYNCMLCE) | ABS(XYFL(2))>RMAX_CM(ICM_$SYNCMLCE))[
+ELSEIF(ABS(XYFL(1))>RMAX_CM(ICM_$SYNCMLCE) |
+    ABS(XYFL(2))>RMAX_CM(ICM_$SYNCMLCE))[
           OFFEDGECM=1;
 "added this for the case where a particle is taking huge steps parallel"
 "to the leaf direction until, eventually, the 1e-5 perturbation added"

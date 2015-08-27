@@ -220,7 +220,7 @@
 "I>
 "I>   Next input is only required if MODE_$SYNCJAWS=0 (static)
 "I>
-"I>   4  ZMIN_$SYNCJAWS(I), ZMAX_$SYNCJAWS(I), XFP_$SYNCJAWS(I), XBP_$SYNCJAWS(I),
+"I>   4  ZMIN_$SYNCJAWS(I),ZMAX_$SYNCJAWS(I),XFP_$SYNCJAWS(I),XBP_$SYNCJAWS(I),
 "I>      XFN_$SYNCJAWS(I), XBN_$SYNCJAWS(I) (6F15.0)
 "I>
 "I>        ZMIN_$SYNCJAWS(I): Distance front of bars/jaws to reference plane.
@@ -421,7 +421,8 @@ IF(IR_$SYNCJAWS = 3*ISCM_$SYNCJAWS-2) ["particle not in positive or negative bar
                  DIST=DIST1;
                ]
             ]
-            ELSEIF(XPLN_$SYNCJAWS < ANE_$SYNCJAWS(ISCM_$SYNCJAWS)*ZPLN_$SYNCJAWS +
+            ELSEIF(XPLN_$SYNCJAWS <
+                    ANE_$SYNCJAWS(ISCM_$SYNCJAWS)*ZPLN_$SYNCJAWS +
                 BNET_$SYNCJAWS(ISCM_$SYNCJAWS,IB_$SYNCJAWS))[
                ;$SYNCJAWS_TNEGATIVE;
                IF(DIST<DIST1)[
@@ -504,7 +505,8 @@ IF(IR_$SYNCJAWS = 3*ISCM_$SYNCJAWS-2) ["particle not in positive or negative bar
                BPOT_$SYNCJAWS(ISCM_$SYNCJAWS-1,IB_$SYNCJAWS))[
                IRNEW_$SYNCJAWS = IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 1;
             ]
-            ELSEIF(XPLN_$SYNCJAWS < ANE_$SYNCJAWS(ISCM_$SYNCJAWS-1)*ZPLN_$SYNCJAWS +
+            ELSEIF(XPLN_$SYNCJAWS <
+                    ANE_$SYNCJAWS(ISCM_$SYNCJAWS-1)*ZPLN_$SYNCJAWS +
                 BNET_$SYNCJAWS(ISCM_$SYNCJAWS-1,IB_$SYNCJAWS))[
                IRNEW_$SYNCJAWS = IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 2;
             ]
@@ -560,19 +562,23 @@ IF(IR_$SYNCJAWS = 3*ISCM_$SYNCJAWS-2) ["particle not in positive or negative bar
             ]
             ELSE[ "  ISCM_$SYNCJAWS > 1
                ;$SYNCJAWS_SET_XY_UV(ISCM_$SYNCJAWS-1);
-               DIST = (ZMAX_$SYNCJAWS(ISCM_$SYNCJAWS-1) - Z(NP) - $BDY_TOL)/W(NP);
+               DIST = (ZMAX_$SYNCJAWS(ISCM_$SYNCJAWS-1) - Z(NP)
+                    - $BDY_TOL)/W(NP);
                IF(DIST < 0)[ DIST = 0.0;]
                XPLN_$SYNCJAWS = XY_$SYNCJAWS + UV_$SYNCJAWS * DIST;
                ZPLN_$SYNCJAWS = Z(NP) + DIST*W(NP);
                IRNEW_$SYNCJAWS = IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2);
-               IF(XPLN_$SYNCJAWS > APO_$SYNCJAWS(ISCM_$SYNCJAWS-1)*ZPLN_$SYNCJAWS +
+               IF(XPLN_$SYNCJAWS >
+                  APO_$SYNCJAWS(ISCM_$SYNCJAWS-1)*ZPLN_$SYNCJAWS +
                   BPOT_$SYNCJAWS(ISCM_$SYNCJAWS-1,IB_$SYNCJAWS))[
-                  IRNEW_$SYNCJAWS = IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 1;
+                  IRNEW_$SYNCJAWS =
+                    IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 1;
                ]
                ELSEIF(XPLN_$SYNCJAWS <
                       ANE_$SYNCJAWS(ISCM_$SYNCJAWS-1)*ZPLN_$SYNCJAWS +
                       BNET_$SYNCJAWS(ISCM_$SYNCJAWS-1,IB_$SYNCJAWS))[
-                  IRNEW_$SYNCJAWS = IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 2;
+                  IRNEW_$SYNCJAWS =
+                    IRSTART_$SYNCJAWS + 3*(ISCM_$SYNCJAWS-2) + 2;
                ]
             ]
          ]
@@ -734,8 +740,8 @@ END; "End of subroutine HOWFAR_$SYNCJAWS"
 "
 " WHERE_AM_I routine for set of SYNCJAWS.
 "
-" WHERE_AM_I_$SYNCJAWS determines the new region number when a particle traverses
-" a component module boundary.  The scheme is as follows:
+" WHERE_AM_I_$SYNCJAWS determines the new region number when a particle
+" traverses a component module boundary.  The scheme is as follows:
 "
 "      Whenever a particle is to be transported to a component module
 "      boundary in HOWFAR, the subroutine WHERE_AM_I is called.  The
@@ -833,8 +839,8 @@ CHARACTER*80 jaws_file, "T>name of file containing dynamic jaw settings
 "  =====================
 "
 ICM_$SYNCJAWS = ICM;      "CM index for this component module
-IRSTART_$SYNCJAWS = IR_start_CM(ICM_$SYNCJAWS); "Index of first region in this CM
-                                      "set by previous CM or in MAIN if ICM=1
+IRSTART_$SYNCJAWS = IR_start_CM(ICM_$SYNCJAWS); "Index of first region in this
+                                    "CM set by previous CM or in MAIN if ICM=1
 IERR_GEOM(ICM_$SYNCJAWS) = 0; "Geometry-checking flag, 0 if no error detected
 AIRGAPMIN_$SYNCJAWS = 0.01; "Minimum 0.01 cm air gap at front and back of CM
 
