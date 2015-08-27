@@ -1667,38 +1667,30 @@ EOF
     else
         echo "Failed" >&2
     fi
-    ################################################################
-    # test for an argument to see if I'm being run from install_egs
-    # and if not, assume script used to create a new configuration.
-    # Create $EGS_HOME/bin/$my_machine and dosxyznrc_$my_machine.spec
-    ################################################################
-    if test "x$1" = x; then
-       printf $format "Creating read_write_pardose ... " >&2
-       echo "********** compile read_write_pardose **********" >&5
-       testc_compile='$CC $C_FLAGS -c -I. -o read_write_pardose.o ../../user_codes/dosxyznrc/read_write_pardose.c >&5'
-       if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-            echo "OK" >&2
-            pardose_object='$(EGS_LIBDIR)read_write_pardose.o'
-       else
-            echo "Failed" >&2
-       fi
-       # Now create dosxyznrc.spec
-       #
-       printf $format "Creating dosxyznrc_${conf_name}.spec ... " >&2
-       cat >${HEN_HOUSE}/specs/dosxyznrc_${conf_name}.spec <<_ACEOF
+
+    # create read_write_pardose
+    printf $format "Creating read_write_pardose ... " >&2
+    echo "********** compile read_write_pardose **********" >&5
+    testc_compile='$CC $C_FLAGS -c -I. -o read_write_pardose.o ../../user_codes/dosxyznrc/read_write_pardose.c >&5'
+    if { (eval $testc_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+        echo "OK" >&2
+        pardose_object='$(EGS_LIBDIR)read_write_pardose.o'
+    else
+        echo "Failed" >&2
+    fi
+
+    # Now create dosxyznrc.spec
+    printf $format "Creating dosxyznrc_${conf_name}.spec ... " >&2
+    cat >${HEN_HOUSE}/specs/dosxyznrc_${conf_name}.spec <<_ACEOF
 # This file specifies additional object files needed in the link
 # step of DOSXYZnrc.
 #
 PARDOSE_OBJECTS = $pardose_object
 VCULIB_OBJECTS  = $vculib_object
 _ACEOF
-       echo "OK" >&2
-       if test ! "x$EGS_HOME" = x && test -d "$EGS_HOME/bin" && test ! -d "$EGS_HOME/bin/$conf_name"; then
-        printf $format "Creating $EGS_HOME/bin/$conf_name ... " >&2
-        mkdir -p $EGS_HOME/bin/$conf_name || { echo "Failed" >&2; exit 1; }
-        echo "OK" >&2
-       fi
-    fi
+    echo "OK" >&2
+
+
     ################################################################
     is_ok=no; dlopen_flags=
     if test $have_loadbeamlib = yes; then
@@ -1729,9 +1721,8 @@ _ACEOF
    fi
 fi
 
-# g77 on Darwin sucks.
-# It can not produce library bundles => one must use the C compiler with
-# -bundle
+# g77 on Darwin can not produce library bundles, one must use the C compiler
+# with -bundle
 F77_LINK=$F77
 SHLIB_FLAGS="-shared -Wl,-Bsymbolic"
 SHLIB_LIBS=""
@@ -1746,8 +1737,8 @@ if test x$F77 = xg77 || test x$F77 = xgfortran; then
             else
                 SHLIB_LIBS="-lgfortran"
             fi
-            echo "A Darwin system with $F77 and $CC " >&2
-            echo "-> using $SHLIB_FLAGS and $SHLIB_LIBS when building shared libraries" >&2
+            printf $format "A Darwin system with $F77 and $CC ... " >&2
+            echo "using $SHLIB_FLAGS and $SHLIB_LIBS to build shared libraries" >&2
         fi
     fi
 fi
