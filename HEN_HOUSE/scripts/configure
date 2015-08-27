@@ -42,7 +42,7 @@
 
 
 # my version
-my_version='1.0'
+my_version='2.0'
 
 # my name
 my_dir=$(dirname $0)
@@ -119,12 +119,10 @@ To get help for some questions requiring input:     enter '?' as a response.
 You can exit this script at any time by typing Ctrl-C.
 
 Press enter to continue.
-
 _ACEOF
 
 read response
 
-echo
 printf $format "Checking system type ... " >&2
 canonical_system=$($my_dir/config.guess)
 system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
@@ -455,10 +453,10 @@ is '-fno-automatic -finit-local-zero', whereas for the IBM compiler
 you need '-qsave' and '-K' for the HP compiler. Many others require
 '-static'.  You may also want to turn off annoying warnings by using
 the appropriate compiler flag. If you intend to use EGSnrc with other
-languages (e.g. C), you may want to turn off function name decoration
+languages (e.g., C), you may want to turn off function name decoration
 (also known as mangling) that is used by default by many compilers. For
 GNU g77 you need '-fno-underscoring' for this. Some compiler may also
-require switches for date and time routines (e.g. the HP compiler needs
+require switches for date and time routines (e.g., the HP compiler needs
 '+E1 +U77').  Best is to check the documentation of your compiler and
 input the proper compiler flags here. For the various flags, if the script
 recognizes your compiler, it will put in the default appropriate for the NRC
@@ -487,7 +485,7 @@ read response
 if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 Typical optimization flags are '-O3', '-fast' or '-Ofast'. You may also want
-to turn on some CPU specific optimizations, e.g. '-march=i686 -mcpu=i686'
+to turn on some CPU specific optimizations, e.g., '-march=i686 -mcpu=i686'
 for the GNU compiler on Pentums/Athlons or '-mips2' for the SGI compiler and
 R4400 CPU. Best is to check your compiler documentation for supported
 optimization levels and options.
@@ -515,7 +513,7 @@ read response
 if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 Most compilers need the '-g' flag to output debugging information into the
-executables. Some compilers support different levels (e.g. -g0, -g1, etc.).
+executables. Some compilers support different levels (e.g., -g0, -g1, etc.).
 Some compilers also support the '-C' option, which turns on run time array
 bound checking. Best is to check your compiler documentation.
 
@@ -540,7 +538,7 @@ if test "x$response" = x$help; then
 Most modern compilers work without additional libraries being specified on the
 command line. Some compilers require libraries to be specified in the form
 '-lsome_lib' for language extensions such as date and time routines to become
-available (e.g. the Intel compiler needs '-lPEPCF90' and older versions of
+available (e.g., the Intel compiler needs '-lPEPCF90' and older versions of
 the SGI compiler need '-lF77 -lI77' for this). Best is to check your compiler
 documentation.
 
@@ -650,7 +648,7 @@ system is impossible (make may think that a mortran3 compilation has
 succeeded whereas it has failed or vice versa).
 
 Please report this problem, including
-  - Operating system (e.g. the output from 'Checking system type' above)
+  - Operating system (e.g., the output from 'Checking system type' above)
   - Compiler name and version
   - Compilation flags
 in your e-mail. You should also attach the file 'config.log' in the
@@ -1047,7 +1045,7 @@ else
         echo "no" >&2
         have_hostnm='no'
     else
-        echo "yes, returns $test_run" >&2
+        echo "yes  (returns $test_run)" >&2
     fi
 fi
 rm -f conftest.$test_ext conftest$test_exeext
@@ -1213,7 +1211,7 @@ if test "x$endianess" = xxxxx | test "x$endianess" = x3412; then
   else
     cat >&2 <<EOF
 Your machine is PDP endian. As we assumed that these days there are no
-PDP endian CPU's around, binary I/O for the spinms data is not supported
+PDP endian CPUs around, binary I/O for the spinms data is not supported
 for your CPU.
 EOF
   fi
@@ -1272,6 +1270,7 @@ else
 fi
 rm -f junk_file conftest.$test_ext conftest$test_exeext
 
+
 #*****************************************************************************
 #
 #                       Now check for a C compiler
@@ -1308,7 +1307,7 @@ A C compiler is not necessary for the core EGSnrc system but without it
 you will be not able to use extensions such as the parallel processing
 implementation provided with the system.
 If you have a C compiler with an unusual name (other than gcc cc xlc
-cl c89 icc), abort the configuration now and edit this script (configure)
+cl c89 icc), abort the configuration now and edit this script ($my_name)
 to look for your compiler.
 
 EOF
@@ -1545,12 +1544,12 @@ while true; do
             cat >&2 << _ACEOF
 
 EGSnrc config files are stored in the 'specs' sub-directory in the
-EGSnrc installation directory. A config file specifies the compiler
+EGSnrc 'HEN_HOUSE' directory. A config file specifies the compiler
 name, compiler option, etc., and is used by all Makefiles for compiling
 EGSnrc user codes. You may have as many different config files as
 you want.  A config file gets used by either specifying its file name
 on the command line when building EGSnrc user codes or by defining the
-environment variable EGS_CONFIG to point to its file.
+environment variable \$EGS_CONFIG to point to its file.
 
 _ACEOF
         continue
@@ -1632,7 +1631,7 @@ if test "x$have_c_compiler" = xyes; then
       cat >&2 <<EOF
 
 Failed to compile egs_c_utils.c. This may be due to a variety of reasons
-(e.g. non-standard include files, unsupported file lock operations, etc.
+(e.g., non-standard include files, unsupported file lock operations, etc.
 Will disable now the availability of a C compiler.
 If you want to try to make the new parallel processing implementation in
 cavrznrc and dosrznrc work,
@@ -1918,8 +1917,8 @@ fi
 cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
 # Use the following variable in EGSnrc user codes that
 # use a BEAMnrc user code compiled and linked as a DSO
-# (dynamic shared object, a.k.a DLL in the Windows world)
-# as a particle source.
+# (dynamic shared object, also known as DLLs) as a
+# particle source.
 _ACEOF
 if test "x$have_loadbeamlib" = xyes; then
 cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
@@ -2618,9 +2617,11 @@ cat >&2 <<_ACEOF
 
 ###############################################################################
 
-The EGSnrc basic installation is complete. Every user who wants to use the
-system must now run the following script to specify the directory to keep
-EGSnrc user codes and set various useful environment variables and aliases:
+The EGSnrc basic installation is complete.
+
+Every user who wants to use the system must now run the following script to
+specify the directory to keep EGSnrc user codes and set various useful
+environment variables and aliases:
 
 $HEN_HOUSE/scripts/finalize_egs_foruser
 
@@ -2637,9 +2638,10 @@ export HEN_HOUSE
 
 cat >&2 <<_ACEOF
 
-You are logged in as $USER. This script can run the script
-'finalize_egs_foruser' to proceed with the installation of
-the EGSnrc user area for $USER.
+You are logged in as $USER.
+
+This script can now launch 'finalize_egs_foruser' to proceed with the
+installation of the EGSnrc user area for $USER.
 
 _ACEOF
 printf $format "Do you want to finalize for $USER? (yes/no): " >&2

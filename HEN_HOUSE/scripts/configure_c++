@@ -84,7 +84,7 @@ Usage: $my_name CXX=C++_compiler_name [config=EGS_CONFIG] [from_configure]
 
 where EGS_CONFIG is an existing EGSnrc config file (including absolute path)
       needed when the environment variable EGS_CONFIG is not set
-      (e.g. when installing EGSnrc for the first time)
+      (e.g., when installing EGSnrc for the first time)
 
 EOF
     exit 1
@@ -139,7 +139,7 @@ This file contains output from the C++ compiler configuration process
 
 EOF
 else
-    exec 5>>$my_dir/configure.log
+    exec 5>$my_dir/configure_c++.log
     cat >&5 <<EOF
 
 ***************************** begin of C++ configuration ***********************
@@ -274,7 +274,7 @@ bundle_options="Creating library bundles on OSX"
 echo >&2
 cat >&2 <<EOF
 Using the following compiler/linker switches for creating/linking against
-dynamic shared objects (DSO, a.k.a. shared library or DLL), where
+dynamic shared objects (DSO, also known as shared library or DLL), where
 \$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
 EGSnrc DSO directory at compile/link time:
 
