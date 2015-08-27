@@ -1676,9 +1676,9 @@ $LONG_INT ihstry;
 "                     IT=3 -- local material with no stoppers
 "                     IT=4 -- second material with no stoppers
 "                     After analysis, SCEDPN(IZ,IX,1) is used to store the
-"                     stopping power ratio in voxel IZ,IX without stoppers and
+"                     stopping power ratio in voxel IZ,IX with stoppers and
 "                     SCEDPN(IZ,IX,3) stores the stopping power ratio in voxel
-"                     IZ,IX including stoppers
+"                     IZ,IX without stoppers
 "SCEDPN2(IZ,IX,IT)  = scores energy deposited squared in voxel IZ, IX with
 "                     IT same as SCEDPN.  Eventually holds uncertainty in
 "                     SCEDPN.  At the end, SCEDPN2(IZ,IX,1) holds
