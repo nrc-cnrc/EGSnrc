@@ -152,11 +152,11 @@ while true; do
 
 create_config=yes
 if test -f $ofile; then
-    echo "EGSnrc C++ configuration file $ofile" >&2
-    printf $format "already exists. Overwrite? (yes/no) " >&2
+    echo >&2
+    echo "The C++ configuration file $(basename $ofile) already exists!" >&2
+    printf $format "Do you want to overwrite? (yes/no) " >&2
     read yesno
     if test "x$yesno" = xyes; then
-        echo "OK, using existing configuration" >&2
         create_config=no
     fi
 fi
@@ -271,8 +271,8 @@ link2_options="Linking against library some_lib"
 flibs_options="Fortran libraries needed by C++ linker"
 bundle_options="Creating library bundles on OSX"
 
+echo >&2
 cat >&2 <<EOF
-
 Using the following compiler/linker switches for creating/linking against
 dynamic shared objects (DSO, a.k.a. shared library or DLL), where
 \$(abs_dso) or \$(ABS_DSO) below will be replaced with the absolute path to the
