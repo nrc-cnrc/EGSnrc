@@ -198,7 +198,7 @@ echo "OMEGA_HOME: $OMEGA_HOME" >&3
 
 echo >&2;
 if test ! -d "$EGS_HOME"; then
-    printf $format "Creating $EGS_HOME ... " >&2
+    printf $format "Creating $(basename $EGS_HOME) ... " >&2
     printf $format "Creating $EGS_HOME ... " >&3
     mkdir $EGS_HOME || { echo "failed" >&2; echo "failed" >&3; exit 1; }
     echo "OK" >&2;
