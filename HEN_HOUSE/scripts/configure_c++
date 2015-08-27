@@ -62,9 +62,9 @@ while test $# -gt 0; do
 
     case "$1" in
 
-        config=*) egs_config=`echo $1 | sed 's/config=//g'` ;;
-        CXX=*)    CXX=`echo $1 | sed 's/CXX=//g'` ;;
-        cxx=*)    CXX=`echo $1 | sed 's/cxx=//g'` ;;
+        config=*) egs_config=$( echo $1 | sed 's/config=//g' ) ;;
+        CXX=*)    CXX=$( echo $1 | sed 's/CXX=//g' ) ;;
+        cxx=*)    CXX=$( echo $1 | sed 's/cxx=//g' ) ;;
         from_configure) from_configure=yes ;;
         *) echo "${my_name}: unknown argument $1" >&2 ;;
 
@@ -99,12 +99,12 @@ EOF
     exit 1
 fi
 
-my_machine=`cat $egs_config | grep "my_machine =" | sed "s/my_machine = //g"`
-canonical_system=`cat $egs_config | grep "canonical_system =" | sed "s/canonical_system = //g"`
-make_prog=`cat $egs_config | grep "make_prog =" | sed "s/make_prog = //g"`
-hen_house=`cat $egs_config | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //g"`
-F77=`cat $egs_config | grep "F77 =" | sed "s/F77 = //g"`
-dlopen_lib=`cat $egs_config | grep "BEAMLIB_EXTRA_LIBS =" | sed 's/BEAMLIB_EXTRA_LIBS = //g' | sed 's/\$(IAEA_LIB)//g'`
+my_machine=$( cat $egs_config | grep "my_machine =" | sed "s/my_machine = //g" )
+canonical_system=$( cat $egs_config | grep "canonical_system =" | sed "s/canonical_system = //g" )
+make_prog=$( cat $egs_config | grep "make_prog =" | sed "s/make_prog = //g" )
+hen_house=$( cat $egs_config | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //g" )
+F77=$( cat $egs_config | grep "F77 =" | sed "s/F77 = //g" )
+dlopen_lib=$( cat $egs_config | grep "BEAMLIB_EXTRA_LIBS =" | sed 's/BEAMLIB_EXTRA_LIBS = //g' | sed 's/\$(IAEA_LIB)//g' )
 
 is_ok=yes
 if test "x$my_machine" = x; then
@@ -252,10 +252,10 @@ esac
 #
 echo >&2
 printf $format "Determining Fortran libraries for $CXX linking ..." >&2
-fortran_libs=`$hen_house/scripts/get_f77_libs1 $F77 $CXX`
+fortran_libs=$( $hen_house/scripts/get_f77_libs1 $F77 $CXX )
 if test $? -eq 0; then
     echo "OK" >&2
-    f_libs=`echo $fortran_libs | sed "s/fortran_libs = //g"`
+    f_libs=$( echo $fortran_libs | sed "s/fortran_libs = //g" )
 else
     echo "Failed" >&2
     f_libs=""
@@ -380,7 +380,7 @@ fi
 
 echo >&2
 printf $format "Creating C++ config file ..." >&2
-current_date=`date`
+current_date=$( date )
 cat >$ofile <<EOF
 #*************************************************************************
 #
@@ -484,7 +484,7 @@ fi
 printf $format "Building the IAEA phase space library ..." >&2
 echo >&5; echo >&5;
 echo "****************** Building the IAEA phase space library *********************" >&5
-curdir=`pwd`
+curdir=$( pwd )
 if test -d $hen_house/egs++/dso/$my_machine; then
     rm -rf $hen_house/egs++/dso/$my_machine/*
 else
