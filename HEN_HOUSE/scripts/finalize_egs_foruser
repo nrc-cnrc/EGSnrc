@@ -189,10 +189,12 @@ if test -f $HEN_HOUSE/specs/egspp_${my_machine}.conf; then
         have_egspp_config=yes
     fi
 fi
+OMEGA_HOME="$HEN_HOUSE/omega"
 
-export EGS_CONFIG HEN_HOUSE
+export EGS_CONFIG HEN_HOUSE OMEGA_HOME
 echo "$EGS_CONFIG" >&3
 echo "HEN_HOUSE: $HEN_HOUSE" >&3
+echo "OMEGA_HOME: $OMEGA_HOME" >&3
 
 echo >&2;
 if test ! -d "$EGS_HOME"; then
@@ -206,42 +208,25 @@ fi
 cd "$EGS_HOME" || { echo "Failed to cd to $EGS_HOME" >&2; exit 1; }
 export EGS_HOME
 
-first_time=yes
-for area in pegs4 pegs4/data pegs4/inputs pegs4/density; do
+for area in bin/$my_machine pegs4 pegs4/data pegs4/inputs pegs4/density beamnrc beamnrc/spec_modules; do
 
     if test ! -d $area; then
-
-      if test "x$first_time" = xyes; then
-        printf $format "Creating pegs4 area ... " >&2
-        printf $format "Creating pegs4 area ... " >&3
-        first_time=no
-      fi
-      mkdir $area || { echo "failed" >&2; echo "failed" >&3; exit 1; }
-
+        printf $format "Creating $area directory ... " >&2
+        printf $format "Creating $area directory ... " >&3
+        mkdir $area || { echo "Failed" >&2; echo "Failed" >&3; exit 1; }
+        echo "OK" >&2;
+        echo "OK" >&3
     fi
 
-done
-
-if test "x$first_time" = xno; then
-    echo "OK" >&2; echo "OK" >&3
-fi
-
-for area in bin "bin/$my_machine"; do
-    if test ! -d $area; then
-        printf $format "Creating $area area ... " >&2
-        mkdir $area || { echo "failed" >&2; echo "failed" >&3; exit 1; }
-        echo "OK" >&2; echo "OK" >&3
-    fi
 done
 
 # Copy all user codes to user area so that it is consistent with
 # the install GUI and also don't need to fix egs_gui, which does not
 # work if the user code is not on the user code area.
-#
-test_list=`ls $HEN_HOUSE/user_codes`
+test_list=$( ls $HEN_HOUSE/user_codes )
 copy_list=
 for uc in $test_list; do
-    if test -d $HEN_HOUSE/user_codes/$uc && test $uc != pegs4 && test $uc != CVS && test $uc != bin; then
+    if test -d $HEN_HOUSE/user_codes/$uc && test $uc != pegs4 && test $uc != bin; then
         copy_list="$copy_list $uc"
     fi
 done
@@ -251,6 +236,23 @@ echo "Copying user codes to EGS_HOME area" >&3
 for uc in $copy_list; do
     printf $format "    Copying $uc ..." >&2
     cp -r $HEN_HOUSE/user_codes/$uc .
+    echo "OK" >&2
+done
+
+# Copy BEAMnrc examples to user area
+test_list=$( ls $OMEGA_HOME/beamnrc/BEAMnrc_examples/ )
+copy_list=
+for uc in $test_list; do
+    if test -d $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc; then
+        copy_list="$copy_list $uc"
+    fi
+done
+echo >&2;
+echo "Copying BEAMnrc examples to EGS_HOME area ..." >&2
+echo "Copying BEAMnrc examples to EGS_HOME area ..." >&2
+for uc in $copy_list; do
+    printf $format "    Copying $uc ..." >&2
+    cp -r $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc .
     echo "OK" >&2
 done
 
@@ -342,12 +344,14 @@ if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
   echo "setenv EGS_HOME $EGS_HOME" >&2
   echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
+  echo "source ${HEN_HOUSE}scripts/beamnrcnrc_cshrc_additions" >&2
 elif test "x$test_shell" = xbash; then
   echo "Add the following 3 statements to your .bashrc file: " >&2
   echo >&2
   echo "export EGS_HOME=$EGS_HOME" >&2
   echo "export EGS_CONFIG=$EGS_CONFIG" >&2
   echo ". ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
+  echo ". ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 elif test "x$test_shell" = xksh || test "x$test_shell" = xsh; then
   echo "Add the following 4 statements to your .profile file: " >&2
   echo >&2
@@ -355,28 +359,32 @@ elif test "x$test_shell" = xksh || test "x$test_shell" = xsh; then
   echo "EGS_CONFIG=$EGS_CONFIG" >&2
   echo "export EGS_HOME EGS_CONFIG" >&2
   echo ". ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
+  echo ". ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 else
   cat >&2 <<EOF
 Could not determine your default shell type. To make use of the EGSnrc
 system it is advantegeous to define environment varibles and aliases in
 the file that is run each time you open a new shell. Depending on your
 shell type, this file may be .cshrc, .bashrc, .profile, .login, etc.,
-in your home directory.  Please ask your system administrator which file
-is the appropriate choice.  Then put the following two lines at the end
-of this file:
+in your home directory.  Please ask your system administrator which
+resource file appropriate.  Add the following lines at the end of this
+shell resource file:
+
+If your default shell is a C-shell or derivative, add:
 
 setenv EGS_HOME $EGS_HOME
 setenv EGS_CONFIG $EGS_CONFIG
 source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions
+source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions
 
-if your default shell is a C-shell or derivative, or
+if your default shell is a Bourne shell or derivative, add:
 
 EGS_HOME=$EGS_HOME
 EGS_CONFIG=$EGS_CONFIG
 export EGS_HOME EGS_CONFIG
 . ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
+. ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
 
-if your default shell is a Bourne shell or derivative.
 EOF
 fi
 cat >&2 <<EOF

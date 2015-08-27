@@ -1502,6 +1502,9 @@ if test -d "$HEN_HOUSE/lib/$try_conf_name"; then
     try_conf_name=
 fi
 
+# set OMEGA_HOME
+OMEGA_HOME="$HEN_HOUSE/omega"
+
 while true; do
 
     # query configuration file name
@@ -2399,7 +2402,7 @@ cat >&5 <<EOF
 EOF
 
 printf $format "Compiling beam_build ... " >&2
-if cd $HEN_HOUSE/omega/beamnrc/tools 2>&5; then
+if cd $OMEGA_HOME/beamnrc/tools 2>&5; then
     if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
         echo "OK" >&2
@@ -2409,9 +2412,9 @@ if cd $HEN_HOUSE/omega/beamnrc/tools 2>&5; then
     fi
 else
     echo "Failed" >&2
-    echo "The $HEN_HOUSE/omega/beamnrc/tools directory does not exist!" >&2
+    echo "The $OMEGA_HOME/beamnrc/tools directory does not exist!" >&2
     echo "Something is wrong with your EGSnrc installation." >&2
-    echo "Failed to change to $HEN_HOUSE/omega/beamnrc/tools" >&5
+    echo "Failed to change to $OMEGA_HOME/beamnrc/tools" >&5
     exit 1
 fi
 
@@ -2431,7 +2434,7 @@ for prog in beamdp ctcreate statdose readphsp dosxyz_show addphsp; do
         continue
     fi
 
-    if cd "$HEN_HOUSE/omega/progs/$prog" 2>&5; then
+    if cd "$OMEGA_HOME/progs/$prog" 2>&5; then
     if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
          test_status=$?; (exit $test_status); }; then
             echo "OK" >&2;
@@ -2440,9 +2443,9 @@ for prog in beamdp ctcreate statdose readphsp dosxyz_show addphsp; do
             echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
         fi
     else
-        echo "Failed to change directory to $HEN_HOUSE/omega/progs/$prog" >&2
+        echo "Failed to change directory to $OMEGA_HOME/progs/$prog" >&2
         echo "Something is wrong with your EGSnrc installation." >&2
-        echo "Failed to change to $HEN_HOUSE/omega/progs/$prog" >&5
+        echo "Failed to change to $OMEGA_HOME/progs/$prog" >&5
         exit 1
     fi
 done
