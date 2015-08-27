@@ -228,8 +228,8 @@
 "I>   4  ZMIN_$SYNCMLCE,ZMAX_$SYNCMLCE (2F15.0): upper and lower z coordinates
 "I>        of leafbank (before tilt, see below)
 "I>
-"I>   5  ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE: Z-coordinates of left and right step
-"I>        in central leaf (an imaginary, unrotated leaf on the Z axis).
+"I>   5  ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE: Z-coordinates of left and right
+"I>        step in central leaf (an imaginary, unrotated leaf on the Z axis).
 "I>
 "I>   6  TGW_$SYNCMLCE (F15.0): X (ORIENT_$SYNCMLCE=0) or Y (ORIENT_$SYNCMLCE=1)
 "I>        width of steps in central leaf (cm).
@@ -241,10 +241,10 @@
 "I>   8  SPACE_$SYNCMLCE, SSD_$SYNCMLCE (2F15.0)
 "I>
 "I>         SPACE_$SYNCMLCE: distance between centres of adjacent leaves in X
-"I>                      (ORIENT_$SYNCMLCE=0) or Y (ORIENT_$SYNCMLCE=1) direction
-"I>                      as projected to SSD_$SYNCMLCE (cm).
+"I>                  (ORIENT_$SYNCMLCE=0) or Y (ORIENT_$SYNCMLCE=1) direction
+"I>                  as projected to SSD_$SYNCMLCE (cm).
 "I>           SSD_$SYNCMLCE: distance from Z=0 at which SPACE_$SYNCMLCE is
-"I>                      defined (cm).
+"I>                  defined (cm).
 "I>
 "I>        Leaf numbers I= 1-NUM_LEAF_$SYNCMLCE/2 are created by rotating a
 "I>        duplicate of the central leaf about the axis X=0 (if
@@ -257,8 +257,8 @@
 "I>
 "I>    Leaf numbers I= NUM_LEAF_$SYNCMLCE/2+1 NUM_LEAF_$SYNCMLCE are created by
 "I>    rotating a duplicate of the central leaf about the axis X=0
-"I>    (if ORIENT_$SYNCMLCE=0) or Y=0 (if ORIENT_$SYNCMLCE=1), Z=ZMIN_$SYNCMLCE by:
-"I>    ARCTAN((2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE)
+"I>    (if ORIENT_$SYNCMLCE=0) or Y=0 (if ORIENT_$SYNCMLCE=1), Z=ZMIN_$SYNCMLCE
+"I>    by: ARCTAN((2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE)
 "I>    and then translating it in the X (if ORIENT_$SYNCMLCE=0) or
 "I>    or Y (ORIENT_$SYNCMLCE=1) direction by a distance
 "I>    (2I-1)*SPACE_$SYNCMLCE/2.*ZMIN_$SYNCMLCE/SSD_$SYNCMLCE
@@ -1202,11 +1202,11 @@ DO N=1,NUM_LEAF_$SYNCMLCE/2 [
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,1)=(Z_$SYNCMLCE(8)-Z_$SYNCMLCE(1))/
   (X_$SYNCMLCE(8)-X_$SYNCMLCE(1));
   D_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,1)=Z_$SYNCMLCE(1)-
-                           (X_$SYNCMLCE(1)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,1));
+           (X_$SYNCMLCE(1)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,1));
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,4)=(Z_$SYNCMLCE(5)-Z_$SYNCMLCE(4))/
   (X_$SYNCMLCE(5)-X_$SYNCMLCE(4));
   D_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,2)=Z_$SYNCMLCE(4)-
-                            (X_$SYNCMLCE(4)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,4));
+           (X_$SYNCMLCE(4)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,4));
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,2)=Z_$SYNCMLCE(7);
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+N,3)=Z_$SYNCMLCE(2);
 
@@ -1291,11 +1291,11 @@ DO N=1,NUM_LEAF_$SYNCMLCE/2 [
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,1)=(Z_$SYNCMLCE(8)-Z_$SYNCMLCE(1))/
   (X_$SYNCMLCE(8)-X_$SYNCMLCE(1));
   D_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,1)=Z_$SYNCMLCE(1)-
-                         (X_$SYNCMLCE(1)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,1));
+           (X_$SYNCMLCE(1)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,1));
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,4)=(Z_$SYNCMLCE(5)-Z_$SYNCMLCE(4))/
   (X_$SYNCMLCE(5)-X_$SYNCMLCE(4));
   D_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,2)=Z_$SYNCMLCE(4)-
-                         (X_$SYNCMLCE(4)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,4));
+           (X_$SYNCMLCE(4)*C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,4));
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,2)=Z_$SYNCMLCE(7);
   C_$SYNCMLCE(NUM_LEAF_$SYNCMLCE/2+1-N,3)=Z_$SYNCMLCE(2);
 ];
@@ -1670,7 +1670,8 @@ DO J = 1, NUM_LEAF_$SYNCMLCE [
       XINT_TOPA=LEAFA_$SYNCMLCE(J)-SQRT(LEAFRADIUS_$SYNCMLCE**2-
                                     (ZMIN_INPUT_$SYNCMLCE-CIL_$SYNCMLCE)**2);
       R=SQRT(LEAFRADIUS_$SYNCMLCE**2-
-   ((ZMAX_INPUT_$SYNCMLCE-ZMIN_INPUT_$SYNCMLCE)**2+(XINT_TOPB-XINT_BOTB)**2)/4.);
+   ((ZMAX_INPUT_$SYNCMLCE-ZMIN_INPUT_$SYNCMLCE)**2+
+                            (XINT_TOPB-XINT_BOTB)**2)/4.);
       CHORD=LEAFRADIUS_$SYNCMLCE**2*
               ACOS(R/LEAFRADIUS_$SYNCMLCE)-R*SQRT(LEAFRADIUS_$SYNCMLCE**2-R**2);
       IF(CHORD<0) CHORD=0.; "can happen for large LEAFRADIUS"
@@ -1723,7 +1724,8 @@ IF(N_GAP_$SYNCMLCE~=0)[
 IF(ORIENT_$SYNCMLCE~=0)["leaves parallel to X"
   IF(ENDTYPE_$SYNCMLCE=0) [
     WRITE(IOUTLIST,122)NUM_LEAF_$SYNCMLCE,'X',ZMIN_INPUT_$SYNCMLCE,
-                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE,'Y',
+                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE,
+                       ZSTEPR_$SYNCMLCE,'Y',
                        TGW_$SYNCMLCE,'Y',X3_$SYNCMLCE,'Y',X4_$SYNCMLCE,
                        SPACE_$SYNCMLCE, SSD_$SYNCMLCE, LBROT_$SYNCMLCE,
                        LEAFRADIUS_$SYNCMLCE,CIL_$SYNCMLCE,
@@ -1731,16 +1733,19 @@ IF(ORIENT_$SYNCMLCE~=0)["leaves parallel to X"
   ]
   ELSE                   [
     WRITE(IOUTLIST,123)NUM_LEAF_$SYNCMLCE,'X',ZMIN_INPUT_$SYNCMLCE,
-                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE,'Y',
+                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE,
+                       ZSTEPR_$SYNCMLCE,'Y',
                        TGW_$SYNCMLCE,'Y',X3_$SYNCMLCE,'Y',X4_$SYNCMLCE,
                        SPACE_$SYNCMLCE, SSD_$SYNCMLCE, LBROT_$SYNCMLCE,
-                       ZFOCUS_$SYNCMLCE,VOL_$SYNCMLCE(1),VOL_$SYNCMLCE(2),TOTALVOL;
+                       ZFOCUS_$SYNCMLCE,VOL_$SYNCMLCE(1),
+                       VOL_$SYNCMLCE(2),TOTALVOL;
   ]
 ]
 ELSE["leaves parallel to Y"
   IF(ENDTYPE_$SYNCMLCE=0) [
     WRITE(IOUTLIST,122)NUM_LEAF_$SYNCMLCE,'Y',ZMIN_INPUT_$SYNCMLCE,
-                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE,'X',
+                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE,
+                       ZSTEPR_$SYNCMLCE,'X',
                        TGW_$SYNCMLCE,'X',X3_$SYNCMLCE,'X',X4_$SYNCMLCE,
                        SPACE_$SYNCMLCE, SSD_$SYNCMLCE, LBROT_$SYNCMLCE,
                        LEAFRADIUS_$SYNCMLCE,CIL_$SYNCMLCE,
@@ -1748,10 +1753,12 @@ ELSE["leaves parallel to Y"
   ]
   ELSE                   [
     WRITE(IOUTLIST,123)NUM_LEAF_$SYNCMLCE,'Y',ZMIN_INPUT_$SYNCMLCE,
-                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE, ZSTEPR_$SYNCMLCE,'X',
+                       ZMAX_INPUT_$SYNCMLCE,ZSTEPL_$SYNCMLCE,
+                       ZSTEPR_$SYNCMLCE,'X',
                        TGW_$SYNCMLCE,'X',X3_$SYNCMLCE,'X',X4_$SYNCMLCE,
                        SPACE_$SYNCMLCE, SSD_$SYNCMLCE, LBROT_$SYNCMLCE,
-                       ZFOCUS_$SYNCMLCE,VOL_$SYNCMLCE(1),VOL_$SYNCMLCE(2),TOTALVOL;
+                       ZFOCUS_$SYNCMLCE,VOL_$SYNCMLCE(1),
+                       VOL_$SYNCMLCE(2),TOTALVOL;
   ]
 ];
 IF(ORIENT_$SYNCMLCE~=0)["leaves parallel to X"

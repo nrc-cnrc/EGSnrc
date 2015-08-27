@@ -32,7 +32,7 @@
 "  the user code because values are input to it.                              "
 "                                                                             "
 "  This code was stripped out of the user codes and out of srcrz.mortran,     "
-"  since having it defined twice could lead to errors.                        "                                                                             "
+"  since having it defined twice could lead to errors.                        "
 "                                                                             "
 "#############################################################################"
 

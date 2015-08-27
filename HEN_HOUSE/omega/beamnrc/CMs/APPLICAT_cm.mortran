@@ -180,7 +180,7 @@
 "I>
 "I>  -1  Dummy line to indicate start of CM.
 "I>
-"I>   0  RMAX_CM(ICM_$APPLICAT) (F10.0): Half-width of outer boundary of CM (cm).
+"I>   0  RMAX_CM(ICM_$APPLICAT) (F10.0): Half-width of outer boundary of CM (cm)
 "I>
 "I>   1  TITLE_$APPLICAT (60A1):  Title of CM.
 "I>
@@ -848,7 +848,7 @@ END; "End of subroutine HOWFAR_$APPLICAT"
 "T>
 ;
 INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
-IRNEW = IREND_$APPLICAT; "particle always enters air region surrounding scrapers"
+IRNEW = IREND_$APPLICAT; "particle always enters air region around scrapers"
 RETURN;
 END; "End of subroutine WHERE_AM_I_$APPLICAT"
 %E  "start of subroutine INPUT_$APPLICAT (Rev 1.6)"
@@ -1066,15 +1066,15 @@ DO IR_$APPLICAT=1,N_$APPLICAT [
      ]
      ELSEIF (ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1)>
         ZMIN_$APPLICAT(IR_$APPLICAT)-AIRGAPMIN_$APPLICAT)[
-            OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT, IR_$APPLICAT-1,
-            IR_$APPLICAT, IR_$APPLICAT,
-            ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1)+
-            AIRGAPMIN_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT);
-            (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
-               ' Less than min. airgap (',F8.5,' cm) between scraper ',
-               I4,' and scraper ',I4/
-               ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
-            WRITE(IOUTLIST,103)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,IR_$APPLICAT-1,
+          OUTPUT ICM_$APPLICAT, AIRGAPMIN_$APPLICAT, IR_$APPLICAT-1,
+          IR_$APPLICAT, IR_$APPLICAT,
+          ZMIN_$APPLICAT(IR_$APPLICAT-1)+ZTHICK_$APPLICAT(IR_$APPLICAT-1)+
+          AIRGAPMIN_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT);
+          (//' ***WARNING IN CM ',I4,' (APPLICAT):'/
+              ' Less than min. airgap (',F8.5,' cm) between scraper ',
+              I4,' and scraper ',I4/
+              ' ZMIN(',I4,') reset to ',F8.5,' cm from ',F8.5,' cm'//);
+          WRITE(IOUTLIST,103)ICM_$APPLICAT, AIRGAPMIN_$APPLICAT,IR_$APPLICAT-1,
        IR_$APPLICAT, IR_$APPLICAT,ZMIN_$APPLICAT(IR_$APPLICAT-1)+
        ZTHICK_$APPLICAT(IR_$APPLICAT-1)+AIRGAPMIN_$APPLICAT,
        ZMIN_$APPLICAT(IR_$APPLICAT);

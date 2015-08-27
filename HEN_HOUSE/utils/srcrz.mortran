@@ -113,7 +113,7 @@
 "  VERSION 24     B.W.      02/01    added sourc 22 starting from NPL         "
 "                                    work by David Shipley.                   "
 "  VERSION 25     I.K.      04/01    Added source 15 and 16, modified         "
-"                                         source 22 to work from any angle    "                                                                           "
+"                                         source 22 to work from any angle    "
 "                                                                             "
 "  modifield at Carleton by Guoming Xiong to remove bug in radial dose        "
 "  distributions in source 20                                                 "
