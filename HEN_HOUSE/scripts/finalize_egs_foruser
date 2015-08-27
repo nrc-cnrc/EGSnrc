@@ -194,19 +194,17 @@ export EGS_CONFIG HEN_HOUSE
 echo "$EGS_CONFIG" >&3
 echo "HEN_HOUSE: $HEN_HOUSE" >&3
 
-echo >&2; echo >&2
+echo >&2;
 if test ! -d "$EGS_HOME"; then
     printf $format "Creating $EGS_HOME ... " >&2
     printf $format "Creating $EGS_HOME ... " >&3
     mkdir $EGS_HOME || { echo "failed" >&2; echo "failed" >&3; exit 1; }
-    echo "OK" >&2; echo "OK" >&3
+    echo "OK" >&2;
+    echo "OK" >&3
 fi
 
 cd "$EGS_HOME" || { echo "Failed to cd to $EGS_HOME" >&2; exit 1; }
 export EGS_HOME
-
-echo "Now in $EGS_HOME" >&2
-echo "Now in $EGS_HOME" >&3
 
 first_time=yes
 for area in pegs4 pegs4/data pegs4/inputs pegs4/density; do
@@ -247,7 +245,7 @@ for uc in $test_list; do
         copy_list="$copy_list $uc"
     fi
 done
-echo "" >&2;
+echo >&2;
 echo "Copying user codes to EGS_HOME area ..." >&2
 echo "Copying user codes to EGS_HOME area" >&3
 for uc in $copy_list; do
