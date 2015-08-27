@@ -55,8 +55,8 @@ format="%-50s"
 none='--'
 help='?'
 
-# define the two log files for creating a record of the installation
-exec 3>$my_dir/configure.status
+# define the log file for creating a record of the installation
+exec 5>$my_dir/configure.log
 
 # testing for files
 as_executable="test -f"
@@ -246,7 +246,6 @@ while true; do
     fi
 done
 
-exec 5>$my_dir/configure.log
 cat >&5 <<EOF
 This file containes any messages produced by the compiler while
 running compilation tests to check the availibility of various
@@ -2601,13 +2600,13 @@ EOF
 
 if test "x$conf_file" = x || test "x$make_prog" = x; then
     echo "******************* error! *************************" >&2
-    echo "******************* error! *************************" >&3
+    echo "******************* error! *************************" >&5
     echo "configure did not return result for egs_config or make_prog" >&2
-    echo "configure did not return result for egs_config or make_prog" >&3
+    echo "configure did not return result for egs_config or make_prog" >&5
     exit 1
 else
-    echo " egs_config = $egs_config" >&3
-    echo " make_prog  = $make_prog" >&3
+    echo " egs_config = $egs_config" >&5
+    echo " make_prog  = $make_prog" >&5
 fi
 
 egs_config="$HEN_HOUSE/specs/$egs_config"
