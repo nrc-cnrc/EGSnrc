@@ -58,6 +58,10 @@ my_name=$(basename $0)
 # printf format
 format="%-50s"
 
+# "none" and "help" inputs
+none='--'
+help='?'
+
 # a timestamp
 timestamp='Aug 25 2015'
 
@@ -91,7 +95,7 @@ while true; do
            response=$test_egs_home
            break
        fi
-   elif test "x$response" = xhelp; then
+   elif test "x$response" = x$help; then
        cat >&2 <<_ACEOF
 
 This directory is referred to as EGS_HOME. All EGSnrc user codes (the
@@ -152,7 +156,7 @@ if test "x$need_configuration" = xyes; then
   while true; do
 
     read response
-    if test "x$response" = x || test "x$response" = xhelp; then
+    if test "x$response" = x || test "x$response" = x$help; then
       cat >&2 <<_ACEOF
 
 The EGSnrc config file is found in the \`specs' subdirectory of your
