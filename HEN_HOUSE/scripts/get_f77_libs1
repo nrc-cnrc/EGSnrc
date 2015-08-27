@@ -83,4 +83,5 @@ else
     done
 fi
 
+\rm junk_f77.log junk_cxx.log
 echo "fortran_libs = $final_libs"
