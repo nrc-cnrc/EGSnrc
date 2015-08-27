@@ -270,7 +270,6 @@ echo "$response" >&3
 
 if test "x$response" = x1; then
     test_list=`ls $HEN_HOUSE/user_codes`
-    #echo "$test_list" >&2
     compile_list=
     for uc in $test_list; do
         if test -d $HEN_HOUSE/user_codes/$uc; then
@@ -285,11 +284,11 @@ elif test "x$response" = x3; then
       junk_compile_list=
       for uc in $junk_list; do
           if test -d $HEN_HOUSE/user_codes/$uc; then
-              junk_compile_list="$junk_compile_list $uc"
+              junk_compile_list=$( printf "$junk_compile_list\n$uc" )
           fi
       done
       echo "Available user codes are: " >&2
-      echo "  $junk_list" >&2
+      echo "$junk_compile_list" | sed "/^ *$/d" | sed "s/^/    /" >&2
       printf $format "Input a list of user codes to compile " >&2
       read test_list
     fi
@@ -324,8 +323,8 @@ for uc in $compile_list; do
         echo "failed" >&2; echo "failed" >&3
     fi
     else
-        echo "skipping (no egspp installation)" >&2
-        echo "skipping (no egspp installation)" >&3
+        echo "Skipping (no egs++ installation)" >&2
+        echo "Skipping (no egs++ installation)" >&3
     fi
 done
 
@@ -339,21 +338,21 @@ EOF
 echo "Your default shell is $SHELL" >&2
 test_shell=`echo $SHELL | sed 's,.*[\\/],,'`
 if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
-  echo "Add the following 3 statements to your .cshrc file: " >&2
+  echo "Add the following statements to your .cshrc file: " >&2
   echo >&2
   echo "setenv EGS_HOME $EGS_HOME" >&2
   echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
   echo "source ${HEN_HOUSE}scripts/beamnrcnrc_cshrc_additions" >&2
 elif test "x$test_shell" = xbash; then
-  echo "Add the following 3 statements to your .bashrc file: " >&2
+  echo "Add the following statements to your .bashrc file: " >&2
   echo >&2
   echo "export EGS_HOME=$EGS_HOME" >&2
   echo "export EGS_CONFIG=$EGS_CONFIG" >&2
   echo ". ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
   echo ". ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 elif test "x$test_shell" = xksh || test "x$test_shell" = xsh; then
-  echo "Add the following 4 statements to your .profile file: " >&2
+  echo "Add the following statements to your .profile file: " >&2
   echo >&2
   echo "EGS_HOME=$EGS_HOME" >&2
   echo "EGS_CONFIG=$EGS_CONFIG" >&2
@@ -370,7 +369,7 @@ in your home directory.  Please ask your system administrator which
 resource file appropriate.  Add the following lines at the end of this
 shell resource file:
 
-If your default shell is a C-shell or derivative, add:
+If your default shell is a C shell or derivative, add:
 
 setenv EGS_HOME $EGS_HOME
 setenv EGS_CONFIG $EGS_CONFIG

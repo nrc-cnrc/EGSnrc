@@ -1331,7 +1331,7 @@ else
 
   default_cflags="-O2"
   if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC"; fi
-  printf $format "Input C-compiler flags to use [$default_cflags]: " >&2
+  printf $format "Input C compiler flags to use: " >&2
   printf "[$default_cflags] " >&2
   read response
   if test "x$response" = x; then
@@ -1705,7 +1705,7 @@ _ACEOF
        done
        rm -rf conftest.c conftest.o conftest.exe
        if test $is_ok = yes; then
-           echo "OK ($dlopen_flags)" >&2
+           echo "$dlopen_flags" >&2
        else
            echo "Failed"
        fi
