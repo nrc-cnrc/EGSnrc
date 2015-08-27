@@ -51,6 +51,10 @@ my_name=$(basename $0)
 # printf format
 format="%-50s"
 
+# "none" and "help" inputs
+none='--'
+help='?'
+
 # define the two log files for creating a record of the installation
 exec 3>$my_dir/configure.status
 
@@ -74,33 +78,48 @@ rm -f conftest.sh
 # Now explain to the user what this script is going to do.
 #
 cat >&2 <<_ACEOF
-*******************************************************************************
 
-EGSnrc $my_name version $my_version, $Date: 2014/10/15 15:14:32 $
+###############################################################################
+$my_name
+###############################################################################
 
-This script configures a Fortran compiler for use with the EGSnrc
-system.  The config options will be written to a file in the EGSnrc
-'specs' subdirectory. You can later use this config file by setting
-the environment variable EGS_CONFIG to point to this file. You can use
-this script to generate as many different configs as you wish (because,
-for instance, you may have many different compilers installed or you
-may have various Unix machines operating on the same file system).
+Copyright (C) 2015 National Research Council Canada
 
-To use this script, you must have write permission on the HEN_HOUSE and
-the script must be run from the HEN_HOUSE/scripts area.
+This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you
+are welcome to redistribute it under certain conditions. See LICENCE file for
+details or http://www.gnu.org/licenses/agpl.txt
 
-If the environment variable HEN_HOUSE is set for previous EGSnrc or EGS4
-installations, it should be unset prior to calling this script.
+###############################################################################
 
-In the following you will be asked a few questions about compiler name,
-compiler options and possibly installation directories (if the environment
-variable HEN_HOUSE is not set). For most question you can obtain help
-by typing 'help' as response. For any questions that do not require any
-input (e.g. empty compilation flags), you can just hit enter.
+EGSnrc configuration script.
 
-*******************************************************************************
+This script configures EGSnrc for use on your system.  The configuration
+options will be saved in a configuration file inside the \$HEN_HOUSE/specs
+directory. You can use this configuration by setting the environment variable
+\$EGS_CONFIG to the path of the configuration file.
 
-hit return to continue
+You can use this script to generate as many different configurations as you
+wish (for instance, you may have different compilers installed or various
+operating systems on the same file system). If the environment variable
+\$HEN_HOUSE is set for previous EGSnrc installations, it should probably be
+unset prior to calling this script.
+
+This script will ask you questions to configure EGSnrc.
+
+Any response you enter overrides the suggested default shown in brackets.
+This implies that if you want to *add* something to the default answer, you
+must re-type this default answer as part of your response.
+
+To accept the default answer shown in brackets:     just press enter.
+To submit an empty answer, overriding the default:  enter '--' as a response.
+To get help for some questions requiring input:     enter '?' as a response.
+
+###############################################################################
+
+You can exit this script at any time by typing Ctrl-C.
+
+Press enter to continue.
+
 _ACEOF
 
 read response
@@ -420,7 +439,7 @@ if test ! "x$f_fflags" = x; then
     printf "[$f_fflags] " >&2
 fi
 read response
-if test "x$response" = xhelp; then
+if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 
 Originally EGSnrc assumed that local variables have static storage.
@@ -447,7 +466,7 @@ user codes.  If not recognized, the default will be blank (which also may
 be the recommendation, eg for the g77 compiler).
 
 _ACEOF
-elif test "x$response" = xnone; then
+elif test "x$response" = x$none; then
     break
 elif test "x$response" = x; then
     FFLAGS="$FFLAGS $f_fflags"
@@ -465,7 +484,7 @@ if test ! "x$f_oflags" = x; then
     printf "[$f_oflags] " >&2
 fi
 read response
-if test "x$response" = xhelp; then
+if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 Typical optimization flags are '-O3', '-fast' or '-Ofast'. You may also want
 to turn on some CPU specific optimizations, e.g. '-march=i686 -mcpu=i686'
@@ -474,7 +493,7 @@ R4400 CPU. Best is to check your compiler documentation for supported
 optimization levels and options.
 
 _ACEOF
-elif test "x$response" = xnone; then
+elif test "x$response" = x$none; then
     FOPT=
     break
 elif test "x$response" = x; then
@@ -493,7 +512,7 @@ if test ! "x$f_dflags" = x; then
     printf "[$f_dflags] " >&2
 fi
 read response
-if test "x$response" = xhelp; then
+if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 Most compilers need the '-g' flag to output debugging information into the
 executables. Some compilers support different levels (e.g. -g0, -g1, etc.).
@@ -516,7 +535,7 @@ done
 
 printf $format "Input libraries that your compiler may need: " >&2
 read response
-if test "x$response" = xhelp; then
+if test "x$response" = x$help; then
     cat >&2 << _ACEOF
 Most modern compilers work without additional libraries being specified on the
 command line. Some compilers require libraries to be specified in the form
@@ -1307,8 +1326,8 @@ else
       read response
       if test "x$response" = x; then
         CC=$c_first
-      elif test "x$response" = xnone; then
-        CC=none
+      elif test "x$response" = x$none; then
+        CC=$none
         break
       else
         for cc_prog in $c_compilers; do
@@ -1324,10 +1343,10 @@ else
     done
   fi
 
-  if test "x$CC" = xnone; then
-  have_c_compiler=no
+  if test "x$CC" = x$none; then
+    have_c_compiler=no
   else
-  have_c_compiler=yes
+    have_c_compiler=yes
 
   default_cflags="-O2"
   if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC"; fi
@@ -1522,7 +1541,7 @@ while true; do
             response="$try_conf_file"
         fi
     else
-        if test "x$response" = xhelp; then
+        if test "x$response" = x$help; then
             cat >&2 << _ACEOF
 
 EGSnrc config files are stored in the 'specs' sub-directory in the
@@ -2492,11 +2511,11 @@ while true; do
         printf "[$cxx_first]: " >&2
     fi
     read CXX
-    if test "x$CXX" = xnone; then break; fi
+    if test "x$CXX" = x$none; then break; fi
     if test "x$CXX" = x; then
       if test "x$cxx_first" = x; then
           echo "You have to input a non-empty string here!" >&2
-          echo "(input \'none\' to skip C++ configuration)" >&2
+          echo "(input \'$none\' to skip C++ configuration)" >&2
       else
           CXX=$cxx_first
           break
@@ -2533,7 +2552,7 @@ while true; do
         echo "You must either give a full path name, or include the directory" >&2
         echo "where the compiler is installed in your search path, or" >&2
         echo "install a C++ compiler if you don't have one installed,"
-        echo "or input \'none\' when asked for a compiler name." >&2
+        echo "or input \'$none\' when asked for a compiler name." >&2
     else
         break
     fi
@@ -2541,7 +2560,7 @@ while true; do
 done
 
 cxx_ok=no
-if test ! "x$CXX" = xnone; then
+if test ! "x$CXX" = x$none; then
     cd $HEN_HOUSE/scripts
     if { ./configure_c++ CXX=$CXX config=$HEN_HOUSE/specs/$conf_file from_configure; test_status=$?; (exit $test_status); }; then
         lib_link1=$(cat $HEN_HOUSE/specs/egspp_${conf_name}.conf | grep "lib_link1 =" | sed "s/lib_link1 = //g")
@@ -2632,7 +2651,7 @@ _ACEOF
 printf $format "Do you want to finalize for $USER? (yes/no): " >&2
 while true; do
     read response
-    if test "x$response" = xhelp; then
+    if test "x$response" = x$help; then
         cat >&2 <<_ACEOF
 
 If you are on a single user system, the answer is yes. On a multi-user
