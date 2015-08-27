@@ -1563,9 +1563,9 @@ else
 fi
 
 echo >&2;
-echo "Using HEN_HOUSE           = $HEN_HOUSE" >&2
-echo "      configuration file  = $conf_file" >&2
-echo "      configuration name  = $conf_name" >&2
+echo "Using HEN_HOUSE           = $HEN_HOUSE"  >&2
+echo "      configuration file  = $conf_file"  >&2
+echo "      configuration name  = $conf_name"  >&2
 
 # Now create the config file
 
