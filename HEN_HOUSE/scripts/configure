@@ -2447,7 +2447,7 @@ for prog in beamdp ctcreate statdose readphsp dosxyz_show addphsp; do
 
     printf $format "Compiling $prog ... " >&2
 
-    if test $prog = dosxyz_show && test $have_c_compiler = no; then
+    if test $prog = dosxyz_show || test $prog = ctcreate && test $have_c_compiler = no; then
         echo "Skipping (no C compiler)" >&2;
         echo "Skipping (no C compiler)" >&5;
         continue
