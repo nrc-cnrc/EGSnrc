@@ -74,7 +74,7 @@ rm -f conftest.sh
 # Now explain to the user what this script is going to do.
 #
 cat >&2 <<_ACEOF
-**************************************************************************
+*******************************************************************************
 
 EGSnrc $my_name version $my_version, $Date: 2014/10/15 15:14:32 $
 
@@ -98,7 +98,7 @@ variable HEN_HOUSE is not set). For most question you can obtain help
 by typing 'help' as response. For any questions that do not require any
 input (e.g. empty compilation flags), you can just hit enter.
 
-***************************************************************************
+*******************************************************************************
 
 hit return to continue
 _ACEOF
@@ -179,10 +179,9 @@ else
 fi
 while true; do
     echo
-    if test "x$f_compilers" = x; then
-        printf $format "Input fortran compiler: " >&2
-    else
-        printf $format "Input fortran compiler [$f_first]: " >&2
+    printf $format "Input fortran compiler: " >&2
+    if test ! "x$f_compilers" = x; then
+        printf "[$f_first] " >&2
     fi
     read F77
     if test "x$F77" = x; then
@@ -190,7 +189,6 @@ while true; do
           echo "You have to input a non-empty string here!" >&2
       else
           F77=$f_first
-          echo "Using $F77" >&2
           break
       fi
     else
@@ -417,10 +415,9 @@ fi
 #
 echo >&2;
 while true; do
-if test "x$f_fflags" = x; then
-    printf $format "Input standard compilation flags: " >&2
-else
-    printf $format "Input standard compilation flags [$f_fflags]: " >&2
+printf $format "Input standard compilation flags: " >&2
+if test ! "x$f_fflags" = x; then
+    printf "[$f_fflags] " >&2
 fi
 read response
 if test "x$response" = xhelp; then
@@ -428,8 +425,8 @@ if test "x$response" = xhelp; then
 
 Originally EGSnrc assumed that local variables have static storage.
 However, with the current release, this assumption is no longer needed,
-nor is it needed for any of the EGSnrc user-codes distributed by NRC
-with the EGSnrc distribution.  However, other EGSnrc user-codes may
+nor is it needed for any of the EGSnrc user codes distributed by NRC
+with the EGSnrc distribution.  However, other EGSnrc user codes may
 assume that local variables have static storage.  While this was the
 default in early FORTRAN implementations, many modern compilers set by
 default local variables to automatic. To guarantee proper execution of
@@ -446,7 +443,7 @@ require switches for date and time routines (e.g. the HP compiler needs
 '+E1 +U77').  Best is to check the documentation of your compiler and
 input the proper compiler flags here. For the various flags, if the script
 recognizes your compiler, it will put in the default appropriate for the NRC
-user-codes.  If not recognized, the default will be blank (which also may
+user codes.  If not recognized, the default will be blank (which also may
 be the recommendation, eg for the g77 compiler).
 
 _ACEOF
@@ -463,10 +460,9 @@ done
 FFLAGS=$(echo "$FFLAGS" | sed "s/^ //")
 
 while true; do
-if test "x$f_oflags" = x; then
-    printf $format "Input optimization flags: " >&2
-else
-    printf $format "Input optimization flags [$f_oflags]: " >&2
+printf $format "Input optimization flags: " >&2
+if test ! "x$f_oflags" = x; then
+    printf "[$f_oflags] " >&2
 fi
 read response
 if test "x$response" = xhelp; then
@@ -491,10 +487,10 @@ fi
 done
 
 while true; do
-if test "x$f_dflags" = x; then
-    printf $format "Input flags for debugging [-g]: " >&2
-else
-    printf $format "Input flags for debugging [$f_dflags]: " >&2
+printf $format "Input flags for debugging: " >&2
+printf "[-g] " >&2
+if test ! "x$f_dflags" = x; then
+    printf "[$f_dflags] " >&2
 fi
 read response
 if test "x$response" = xhelp; then
@@ -1306,7 +1302,8 @@ else
     echo >&2
 
     while true; do
-      printf $format "Input the one you would like to use [$c_first]: " >&2
+      printf $format "Input the one you would like to use: " >&2
+      printf "[$c_first] " >&2
       read response
       if test "x$response" = x; then
         CC=$c_first
@@ -1335,6 +1332,7 @@ else
   default_cflags="-O2"
   if test ! "x$is_x86_64" = x; then default_cflags="-O2 -fPIC"; fi
   printf $format "Input C-compiler flags to use [$default_cflags]: " >&2
+  printf "[$default_cflags] " >&2
   read response
   if test "x$response" = x; then
     C_FLAGS="$default_cflags"
@@ -1470,7 +1468,8 @@ echo >&2;
 if test "x$HEN_HOUSE" = x; then
     while true; do
         EGSNRC=$(cd $my_dir/../..; pwd)
-        printf $format "Input EGSnrc installation directory [$EGSNRC]: " >&2
+        printf $format "Input EGSnrc installation directory: " >&2
+        printf "[$EGSNRC] " >&2
         read response
         if test ! "x$response" = x; then
             EGSNRC=$response
@@ -1506,10 +1505,9 @@ fi
 while true; do
 
     # query configuration file name
-    if test "x$try_conf_file" = x; then
-        printf $format "Input configuration file name: " >&2
-    else
-        printf $format "Input configuration file name [$try_conf_file]: ">&2
+    printf $format "Input configuration file name: " >&2
+    if test ! "x$try_conf_file" = x; then
+        printf "[$try_conf_file] ">&2
     fi
     read response
 
@@ -1527,9 +1525,9 @@ while true; do
 EGSnrc config files are stored in the 'specs' sub-directory in the
 EGSnrc installation directory. A config file specifies the compiler
 name, compiler option, etc., and is used by all Makefiles for compiling
-EGSnrc user-codes. You may have as many different config files as
+EGSnrc user codes. You may have as many different config files as
 you want.  A config file gets used by either specifying its file name
-on the command line when building EGSnrc user-codes or by defining the
+on the command line when building EGSnrc user codes or by defining the
 environment variable EGS_CONFIG to point to its file.
 
 _ACEOF
@@ -1539,6 +1537,7 @@ _ACEOF
 
     conf_name=$(echo $response | sed "s/\.[^\.]*$//")
     if $as_file $HEN_HOUSE/specs/$response || $as_directory $HEN_HOUSE/bin/$conf_name || $as_directory $HEN_HOUSE/lib/$conf_name; then
+        echo >&2
         echo "The configuration $response or related directories already exist!" >&2
         printf $format "Do you want to overwrite ? (yes/no) " >&2
         read yesno
@@ -1561,9 +1560,9 @@ else
 fi
 
 echo >&2;
-echo "Using HEN_HOUSE    = $HEN_HOUSE" >&2
-echo "      config file  = $conf_file" >&2
-echo "      config name  = $conf_name" >&2
+echo "Using HEN_HOUSE           = $HEN_HOUSE" >&2
+echo "      configuration file  = $conf_file" >&2
+echo "      configuration name  = $conf_name" >&2
 
 # Now create the config file
 
@@ -1575,7 +1574,7 @@ machine_mortran_dir="$HEN_HOUSE/lib/$conf_name"
 machine_fortran="$machine_mortran_dir/machine.f"
 machine_macros="$machine_mortran_dir/machine.macros"
 if test ! -d $machine_mortran_dir; then
-    printf $format "Creating lib/$conf_name ... " >&2
+    printf $format "Creating lib/$conf_name directory ... " >&2
     mkdir -p $machine_mortran_dir
     if test ! -d $machine_mortran_dir; then
         echo "Failed!" >&2
@@ -1936,7 +1935,7 @@ fi
 # ${HEN_HOUSE}cutils,
 cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
 # FC_FLAGS gets used for compiling the EGSnrc fortran routines and for
-# linking for EGSnrc user-codes written in C. We set FC_FLAGS by
+# linking for EGSnrc user codes written in C. We set FC_FLAGS by
 # default to be given by \$(FCFLAGS) \$(FOPT). This is OK for most
 # compilers. Unfortunately, some Fortran compilers insert a default
 # main function and then complain about multiply defined main
@@ -2430,10 +2429,9 @@ else
 fi
 while true; do
     echo
-    if test "x$cxx_compilers" = x; then
-        printf $format "Input C++ compiler: " >&2
-    else
-        printf $format "Input C++ compiler [$cxx_first]: " >&2
+    printf $format "Input C++ compiler: " >&2
+    if test ! "x$cxx_compilers" = x; then
+        printf "[$cxx_first]: " >&2
     fi
     read CXX
     if test "x$CXX" = xnone; then break; fi
@@ -2443,7 +2441,6 @@ while true; do
           echo "(input \'none\' to skip C++ configuration)" >&2
       else
           CXX=$cxx_first
-          echo "Using $CXX" >&2
           break
       fi
     else
@@ -2545,7 +2542,7 @@ egs_config="$HEN_HOUSE/specs/$egs_config"
 cd $HEN_HOUSE/scripts
 cat >&2 <<_ACEOF
 
-******************************************************************************
+*******************************************************************************
 
 The EGSnrc basic installation is complete.
 
@@ -2553,10 +2550,10 @@ Every user who wants to use the system must now run the script
 
 $HEN_HOUSE/scripts/finalize_egs_foruser
 
-This will specify the directory to keep EGSnrc user-codes and will
+This will specify the directory to keep EGSnrc user codes and will
 set various useful environment variables and aliases.
 
-******************************************************************************
+*******************************************************************************
 _ACEOF
 
 if test "x$USER" = xroot; then
@@ -2569,27 +2566,31 @@ export HEN_HOUSE
 
 cat >&2 <<_ACEOF
 
+You are logged in as $USER. This script can run the script
+'finalize_egs_foruser' to proceed with the installation of
+the EGSnrc user area for $USER.
 
-You are logged in as user $USER.
-Do you want this script to finalize the EGSnrc installation for you by running
-$HEN_HOUSE/scripts/finalize_egs_foruser
 _ACEOF
-printf $format "script ? (yes/no): " >&2
-read response
-  if test "x$response" = xhelp; then
-    cat >&2 <<_ACEOF
+printf $format "Do you want to finalize for $USER? (yes/no): " >&2
+while true; do
+    read response
+    if test "x$response" = xhelp; then
+        cat >&2 <<_ACEOF
+
 If you are on a single user system, the answer is yes. On a multi-user
 system, if you are going to run EGSnrc from this account, answer yes, but
 if this is to be the repository of the system, answer no.
 
-Do you want this script to finalize the EGSnrc installation for you by running
-$HEN_HOUSE/scripts/finalize_egs_foruser
 _ACEOF
-printf $format "script ? (yes/no): " >&2
-read response
-fi
-
-if test "x$response" = xyes; then
-    ./finalize_egs_foruser
-fi
+        printf $format "Do you want to finalize for $USER? (yes/no): " >&2
+    elif test "x$response" = xno; then
+        break
+    elif test "x$response" = xyes; then
+        echo >&2
+        ./finalize_egs_foruser
+        break
+    else
+        printf $format "Do you want to finalize for $USER? (yes/no): " >&2
+    fi
+done
 
