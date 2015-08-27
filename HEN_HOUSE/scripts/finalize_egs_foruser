@@ -208,7 +208,7 @@ fi
 cd "$EGS_HOME" || { echo "Failed to cd to $EGS_HOME" >&2; exit 1; }
 export EGS_HOME
 
-for area in bin/$my_machine pegs4 pegs4/data pegs4/inputs pegs4/density beamnrc beamnrc/spec_modules; do
+for area in bin bin/$my_machine pegs4 pegs4/data pegs4/inputs pegs4/density beamnrc beamnrc/spec_modules; do
 
     if test ! -d $area; then
         printf $format "Creating $area directory ... " >&2
@@ -239,20 +239,20 @@ for uc in $copy_list; do
     echo "OK" >&2
 done
 
-# Copy BEAMnrc examples to user area
+# Copy BEAMnrc examples .module files to user area
 test_list=$( ls $OMEGA_HOME/beamnrc/BEAMnrc_examples/ )
 copy_list=
 for uc in $test_list; do
-    if test -d $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc; then
+    if test -f $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module; then
         copy_list="$copy_list $uc"
     fi
 done
 echo >&2;
-echo "Copying BEAMnrc examples to EGS_HOME area ..." >&2
-echo "Copying BEAMnrc examples to EGS_HOME area ..." >&2
+echo "Copying BEAMnrc examples .module files ..." >&2
+echo "Copying BEAMnrc examples .module files ..." >&3
 for uc in $copy_list; do
-    printf $format "    Copying $uc ..." >&2
-    cp -r $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc .
+    printf $format "    Copying $uc.module ..." >&2
+    cp -r $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module ./beamnrc/spec_modules
     echo "OK" >&2
 done
 
