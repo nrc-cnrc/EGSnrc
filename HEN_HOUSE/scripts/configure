@@ -1486,20 +1486,20 @@ fi
 echo >&2;
 if test "x$HEN_HOUSE" = x; then
     while true; do
-        EGSNRC=$(cd $my_dir/../..; pwd)
-        printf $format "Input EGSnrc installation directory: " >&2
-        printf "[$EGSNRC] " >&2
+        HEN_HOUSE=$(cd $my_dir/../; pwd)
+        printf $format "Input location of EGSnrc HEN_HOUSE directory: " >&2
+        printf "[$HEN_HOUSE] " >&2
         read response
         if test ! "x$response" = x; then
-            EGSNRC=$response
+            HEN_HOUSE=$response
         fi
-        if test ! -f $EGSNRC/HEN_HOUSE/specs/unix.spec; then
-                echo "There seems to be no EGSnrc installation under $EGSNRC/HEN_HOUSE" >&2
+        if test ! -f $HEN_HOUSE/specs/unix.spec; then
+                echo "There seems to be no EGSnrc installation under $HEN_HOUSE" >&2
         else
             break
         fi
     done
-    HEN_HOUSE=$EGSNRC/HEN_HOUSE/
+    HEN_HOUSE=$HEN_HOUSE/
 fi
 current_dir=$(pwd)
 cd $HEN_HOUSE && HEN_HOUSE=$(pwd)
@@ -1508,6 +1508,9 @@ junk_test=$(echo $HEN_HOUSE | sed 's,.*[\\/],,')
 if test "x$junk_test" != x; then
     HEN_HOUSE="$HEN_HOUSE"
 fi
+
+# set OMEGA_HOME
+OMEGA_HOME="$HEN_HOUSE/omega"
 
 # Get a file name to store this config file
 # Force configuration name to be the same as the configuration file base name
@@ -1520,9 +1523,6 @@ try_conf_name="$system_name"
 if test -d "$HEN_HOUSE/lib/$try_conf_name"; then
     try_conf_name=
 fi
-
-# set OMEGA_HOME
-OMEGA_HOME="$HEN_HOUSE/omega"
 
 while true; do
 
@@ -1560,7 +1560,7 @@ _ACEOF
     conf_name=$(echo $response | sed "s/\.[^\.]*$//")
     if $as_file $HEN_HOUSE/specs/$response || $as_directory $HEN_HOUSE/bin/$conf_name || $as_directory $HEN_HOUSE/lib/$conf_name; then
         echo >&2
-        echo "The configuration $response or related directories already exist!" >&2
+        echo "The configuration $response or corresponding directories in bin/ or lib/ already exist!" >&2
         printf $format "Do you want to overwrite ? (yes/no) " >&2
         read yesno
         if test "x$yesno" = xyes; then
@@ -2515,7 +2515,7 @@ while true; do
     if test "x$CXX" = x; then
       if test "x$cxx_first" = x; then
           echo "You have to input a non-empty string here!" >&2
-          echo "(input \'$none\' to skip C++ configuration)" >&2
+          echo "(input '$none' to skip C++ configuration)" >&2
       else
           CXX=$cxx_first
           break
@@ -2552,7 +2552,7 @@ while true; do
         echo "You must either give a full path name, or include the directory" >&2
         echo "where the compiler is installed in your search path, or" >&2
         echo "install a C++ compiler if you don't have one installed,"
-        echo "or input \'$none\' when asked for a compiler name." >&2
+        echo "or input '$none' when asked for a compiler name." >&2
     else
         break
     fi
