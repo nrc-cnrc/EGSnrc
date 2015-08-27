@@ -106,7 +106,7 @@ can continue to use the old version in case you don't like this version.
 
 _ACEOF
    else
-       test_response=`echo $response | sed 's,[\\/].*,,'`
+       test_response=$( echo $response | sed 's,[\\/].*,,' )
        if test "x$test_response" = x; then
            if test -d "$response"; then
                echo "The directory $response already exists" >&2
@@ -125,7 +125,7 @@ _ACEOF
    printf $format "Input the directory where you want to keep your user codes: " >&2
 done
 
-test_response=`echo $response | sed 's,.*[\\/],,'`
+test_response=$( echo $response | sed 's,.*[\\/],,' )
 if test "x$test_response" = x; then
     EGS_HOME="$response"
 else
@@ -138,7 +138,7 @@ need_configuration=no
 if test "x$EGS_CONFIG" = x; then
     need_configuration=yes
 else
-    hen_house=`cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+    hen_house=$( cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //' )
     if test "x$hen_house" = x; then
         need_configuration=yes
     fi
@@ -166,7 +166,7 @@ _ACEOF
       if test ! -f $response; then
         echo "The file $response does not exist" >&2
       else
-        hen_house=`cat $response | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
+        hen_house=$( cat $response | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //' )
         if test "x$hen_house" = x; then
             echo "File $response is not a valid EGSnrc configuration file" >&2
         else
@@ -181,8 +181,8 @@ _ACEOF
   EGS_CONFIG="$response"
 fi
 
-HEN_HOUSE=`cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //'`
-my_machine=`cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //'`
+HEN_HOUSE=$( cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //' )
+my_machine=$( cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //' )
 have_egspp_config=no
 if test -f $HEN_HOUSE/specs/egspp_${my_machine}.conf; then
     if test -f $HEN_HOUSE/egs++/dso/$my_machine/libegspp.so; then
@@ -269,7 +269,7 @@ read response
 echo "$response" >&3
 
 if test "x$response" = x1; then
-    test_list=`ls $HEN_HOUSE/user_codes`
+    test_list=$( ls $HEN_HOUSE/user_codes )
     compile_list=
     for uc in $test_list; do
         if test -d $HEN_HOUSE/user_codes/$uc; then
@@ -280,7 +280,7 @@ elif test "x$response" = x3; then
     printf $format "Input a list of user codes to compile or <enter> for a list: "
     read test_list
     if test "x$test_list" = x; then
-      junk_list=`ls $HEN_HOUSE/user_codes`
+      junk_list=$( ls $HEN_HOUSE/user_codes )
       junk_compile_list=
       for uc in $junk_list; do
           if test -d $HEN_HOUSE/user_codes/$uc; then
@@ -336,7 +336,7 @@ The configuration was completed succesfully for user $USER.
 
 EOF
 echo "Your default shell is $SHELL" >&2
-test_shell=`echo $SHELL | sed 's,.*[\\/],,'`
+test_shell=$( echo $SHELL | sed 's,.*[\\/],,' )
 if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
   echo "Add the following statements to your .cshrc file: " >&2
   echo >&2
