@@ -97,7 +97,30 @@
  <depend>exitFun</depend>
  <description>Does "stop" function work properly? </description>
 </test>
-<test>
+<test>                                           <!-- Task 5 -->
+ <program name="egs_exit.c">
+#ifdef __cplusplus
+extern "C" {
+#endif
+void my_exit(int *status){
+   int s = *status;
+   exit(s);
+}
+void egs_exit(int *status)  {my_exit(status);}
+void egs_exit_(int *status) {my_exit(status);}
+void egs_exit__(int* status){my_exit(status);}
+void EGS_EXIT(int *status)  {my_exit(status);}
+void EGS_EXIT_(int *status) {my_exit(status);}
+void EGS_EXIT__(int *status){my_exit(status);}
+#ifdef __cplusplus
+}
+#endif
+ </program>
+ <opt>-c</opt>
+ <language>C</language>
+ <description> Compiling "egs_exit.c" since "exit" and "stop" failed ?</description>
+</test>
+<test>                                           <!-- Task 6 -->
  <program name="EGSExitFun.f">
       program EGSExitFun
       character*10 arg
@@ -238,7 +261,7 @@
 <test>                                           <!-- Task 12 -->
  <program name="SecndsFun.f">
       program SecndsFun
-      real t0,t1,SECNDSFUN
+      real t0,t1
       t1 = SECNDSFUN(t0)
       write(6,'(a)') ' SECNDSFUN'
       end
@@ -409,6 +432,36 @@
  <check>output</check>
  <description>Does "inquire" work properly? </description>
 </test>
+<test>                                           <!-- Task 20a -->
+ <program name="file_size.c">
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int fsize(const char* fname) {
+  FILE* fp;
+  long the_size;
+  if((fp=fopen(fname, "rb")) == NULL ){
+     printf("Error opening %s.\n", fname);
+  }
+  do {
+   getc(fp);
+  }while(!feof(fp));
+  the_size = ftell(fp);
+  fclose(fp);
+  /*printf("%i\n", the_size);*/
+  return the_size;
+}
+int file_size(  const char* fname, int len) {return fsize(fname);}
+int file_size_( const char* fname, int len) {return fsize(fname);}
+int file_size__(const char* fname, int len) {return fsize(fname);}
+int FILE_SIZE(  const char* fname, int len) {return fsize(fname);}
+int FILE_SIZE_( const char* fname, int len) {return fsize(fname);}
+int FILE_SIZE__(const char* fname, int len) {return fsize(fname);}
+ </program>
+ <opt>-c</opt>
+ <language>C</language>
+ <description> Compiling a C program to find out the file size ?</description>
+</test>
 <test>                                           <!-- Task 20 -->
  <program name="RecordLength.f">
       program RecordLength
@@ -500,6 +553,44 @@
  <arg>0</arg>
  <answer>Endianess</answer>
  <description>Can endianess of machine be determined?</description>
+</test>
+<test>                                           <!-- Task 24 -->
+ <program name="NameDecoration.c">
+#include &lt;stdio.h&gt;
+void junk() {
+   printf("lower case, ");
+}
+void junk_() {
+   printf("lower case, _ ");
+}
+void JUNK() {
+   printf("upper case, ");
+}
+void JUNK_() {
+   printf("upper case, _ ");
+}
+void junk_junk() {
+   printf("no underscores\n");
+}
+void junk_junk_() {
+   printf("and _\n");
+}
+void junk_junk__() {
+    printf("and __\n");
+}
+void JUNK_JUNK() {
+   printf("no underscores\n");
+}
+void JUNK_JUNK_() {
+    printf("and _\n");
+}
+void JUNK_JUNK__() {
+    printf("and __\n");
+}
+ </program>
+ <opt>-c</opt>
+ <language>C</language>
+ <description> Compiling a C program to find out the name mangling scheme ?</description>
 </test>
 <test>                                           <!-- Task 25 -->
  <program name="NameMangling.f">
