@@ -74,6 +74,16 @@ QString EGS_ConfigReader::getConfig() const {
     return p->the_config;
 }
 
+EGS_PrivateConfigReader::EGS_PrivateConfigReader() {
+    char *egs_config = getenv("EGS_CONFIG");
+    if( !QString(egs_config).isEmpty() ) setConfig(egs_config);
+    else the_config = QString();
+}
+
+EGS_PrivateConfigReader::EGS_PrivateConfigReader(const QString &file) {
+    setConfig(file);
+}
+
 QString EGS_PrivateConfigReader::ironIt(const QString &v) {
     QString aux = "/+|"; aux += "\\\\"; aux += "+";
     QRegExp re(aux);
@@ -91,15 +101,6 @@ QString EGS_PrivateConfigReader::ironIt(const QString &v) {
     cr_debug << "ironIt returns: " << res.toLatin1().data() << endl;
 #endif
     return res;
-}
-
-EGS_PrivateConfigReader::EGS_PrivateConfigReader() {
-    char *egs_config = getenv("EGS_CONFIG");
-    if( !QString(egs_config).isEmpty() ) setConfig(egs_config);
-}
-
-EGS_PrivateConfigReader::EGS_PrivateConfigReader(const QString &file) {
-    setConfig(file);
 }
 
 QString EGS_PrivateConfigReader::simplify(const QString &value,bool ironit) {
@@ -122,7 +123,7 @@ void EGS_ConfigReader::setVariable(const QString &key, const QString &v){
 }
 
 QString EGS_PrivateConfigReader::getVariable(const QString &key, bool ironit) {
-    QString res;
+    QString res = QString();
     if( map.contains(key) ) res = simplify(map[key],ironit);
     else {
         char *var = getenv(key.toLatin1().data());
@@ -139,8 +140,11 @@ void EGS_PrivateConfigReader::setConfig(const QString &file) {
     cr_debug << "EGS_PrivateConfigReader::setConfig: "
         << file.toLatin1().data() << endl;
 #endif
-    the_config = file; //map.clear();
-    addFile(file);
+    if (!checkConfigFile(file)){
+       the_config = file; //map.clear();
+       addFile(file);
+    }
+    else the_config = QString();
 }
 
 int EGS_PrivateConfigReader::checkConfigFile(const QString &file) {
@@ -214,15 +218,6 @@ void EGS_PrivateConfigReader::addFile(const QString &file) {
                     map.insert(rx1.cap(1),val);
                 }
             }
-            /*
-            QStringList list = QStringList::split("=",the_line);
-            if( list.count() >= 2 ) {
-                QString key = list.first().simplifyWhiteSpace();
-                list.pop_front();
-                QString value = list.join("=").simplifyWhiteSpace();
-                map.insert(key,value);
-            }
-            */
             the_line = "";
         }
     }
