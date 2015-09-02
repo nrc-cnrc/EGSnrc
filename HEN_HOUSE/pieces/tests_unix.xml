@@ -469,7 +469,7 @@ void EGS_EXIT__(int *status){my_exit(status);}
  <arg> 1</arg>
  <check>output</check>
  <reference>4</reference>
- <delete>no</delete>
+ <delete>yes</delete>
  <answer>recLen</answer>
  <answ_key>argument</answ_key>
  <description>Is record length known? </description>
@@ -580,6 +580,6 @@ void JUNK_JUNK__() {
  <obj>NameDecoration</obj>
  <arg>0</arg>
  <answer>Decoration</answer>
- <description>Is the name mangling schema known ?</description>
+ <description>Is the name mangling scheme known ?</description>
 </test>
 </FTEST>

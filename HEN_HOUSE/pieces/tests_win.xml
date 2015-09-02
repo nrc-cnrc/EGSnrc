@@ -608,6 +608,6 @@ void JUNK_JUNK__() {
  <obj>NameDecoration.obj</obj>
  <arg>0</arg>
  <answer>Decoration</answer>
- <description>Is the name mangling schema known ?</description>
+ <description>Is the name mangling scheme known ?</description>
 </test>
 </FTEST>
