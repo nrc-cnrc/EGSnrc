@@ -6,3 +6,5 @@ have been transferred to this repository, however the distribution is not
 yet functional, and consequently the open source release has not yet been
 officially announced. It is recommended that you wait until the official
 release before cloning or forking this repository.
+
+This is a fork of the official EGSnrc repository.
