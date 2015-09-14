@@ -1614,7 +1614,7 @@ if test "x$have_c_compiler" = xyes; then
     cat $HEN_HOUSE/pieces/egs_config1.h | sed "s/__f77_function1__/$f77_function1/g" | sed "s/__f77_function2__/$f77_function2/g" | sed "s/__config_name__/$conf_name/g" >egs_config1.h
     echo "OK" >&2
 
-    printf $format "Creating egs_c_utils.h,c ... " >&2
+    printf $format "Creating egs_c_utils.h and egs_c_utils.c ... " >&2
     cp -f $HEN_HOUSE/pieces/egs_c_utils.h egs_c_utils.h
     cp -f $HEN_HOUSE/pieces/egs_c_utils_unix.c egs_c_utils.c
     echo "OK" >&2
