@@ -133,16 +133,16 @@ if test $is_ok = no; then
 fi
 
 if test $from_configure = no; then
-    exec 5>$my_dir/configure.log
+    exec 5>$my_dir/configure_c++.log
     cat >&5 <<EOF
 This file contains output from the C++ compiler configuration process
 
 EOF
 else
-    exec 5>$my_dir/configure_c++.log
+    exec 5>>$my_dir/configure.log
     cat >&5 <<EOF
 
-***************************** begin of C++ configuration ***********************
+***************************** begin C++ configuration *************************
 EOF
 fi
 
@@ -528,7 +528,7 @@ else
 
 These settings did not work out. You may edit the source code
 (in case you can see where the problem is when building the C++ libraries
-from the config.log file) and/or try different compiler/linker options.
+from the configure.log file) and/or try different compiler/linker options.
 
 EOF
     printf $format "Do you want to retry? (yes/no) " >&2

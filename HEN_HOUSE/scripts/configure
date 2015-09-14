@@ -650,7 +650,7 @@ Please report this problem, including
   - Operating system (e.g., the output from 'Checking system type' above)
   - Compiler name and version
   - Compilation flags
-in your e-mail. You should also attach the file 'config.log' in the
+in your e-mail. You should also attach the file 'configure.log' in the
 HEN_HOUSE/scripts directory.
 
 EOF
@@ -2345,7 +2345,7 @@ if cd $HEN_HOUSE/mortran3 2>&5; then
         echo "OK" >&2
     else
         echo "Failed" >&2
-        echo "See config.log for the output of make" >&2
+        echo "See configure.log for the output of make" >&2
         echo "Failed program was '$make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file'" >&5
         exit 1
     fi
@@ -2372,7 +2372,7 @@ if cd $HEN_HOUSE/pegs4 2>&5; then
         echo "OK" >&2
     else
         echo "Failed" >&2
-        echo "See config.log for the output of make" >&2
+        echo "See configure.log for the output of make" >&2
         echo "Failed program was $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file" >&5
         exit 1
     fi
