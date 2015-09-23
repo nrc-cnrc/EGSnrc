@@ -260,10 +260,11 @@ done
 echo "" >&2
 echo "You may now compile user codes. Please select:" >&2
 echo "    1. Compile all" >&2
-echo "    2. Compile none" >&2
-echo "    3. Compile selected" >&2
+echo "    2. Compile selected" >&2
+echo "    3. Compile none (default)" >&2
 echo >&2
-printf $format "Choose 1, 2 or 3: " >&2
+printf $format "Choose 1 (all), 2 (some) or 3 (none): " >&2
+printf "[3] " >&2
 printf "Compilation selection: " >&3
 read response
 echo "$response" >&3
@@ -276,7 +277,7 @@ if test "x$response" = x1; then
             compile_list="$compile_list $uc"
         fi
     done
-elif test "x$response" = x3; then
+elif test "x$response" = x2; then
     printf $format "Input a list of user codes to compile or <enter> for a list: "
     read test_list
     if test "x$test_list" = x; then

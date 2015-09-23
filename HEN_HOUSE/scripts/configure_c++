@@ -321,10 +321,9 @@ options_modified=no
 while true; do
 
     echo >&2
-    printf $format "Input option to change, 0 to proceed: " >&2
+    printf $format "Input option to change, or enter to proceed: " >&2
     read ans
-    if test x$ans = x; then continue; fi
-    if test $ans -eq 0; then break; fi
+    if test x$ans = x; then break; fi
     if test $ans -gt $num_options; then continue; fi
     options_modified=yes
     case $ans in

@@ -1572,7 +1572,6 @@ conf_file="$response"
 conf_name=$(echo $response | sed "s/\.[^\.]*$//")
 
 
-
 if test "x$system_name" = "x$conf_name"; then
     the_config=$system_name
 else
@@ -1580,9 +1579,9 @@ else
 fi
 
 echo >&2;
-echo "Using HEN_HOUSE           = $HEN_HOUSE"  >&2
-echo "      configuration file  = $conf_file"  >&2
-echo "      configuration name  = $conf_name"  >&2
+echo "Using HEN_HOUSE          = $HEN_HOUSE"  >&2
+echo "      configuration file = $conf_file"  >&2
+echo "      configuration name = $conf_name"  >&2
 
 # Now create the config file
 
