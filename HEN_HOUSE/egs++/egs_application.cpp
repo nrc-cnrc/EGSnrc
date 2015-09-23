@@ -51,7 +51,6 @@
 #include <cstdlib>
 #include <vector>
 #include <fstream>
-#include <sys/statvfs.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -69,6 +68,7 @@ const char fs = 92;
 const char fs = '/';
 #include <unistd.h>
 #define EGS_ACCESS ::access
+#include <sys/statvfs.h>
 #endif
 
 static char __egs_app_msg1[] = "EGS_Application::EGS_Application(int,char**):";
@@ -733,10 +733,10 @@ int EGS_Application::finishSimulation() {
         if( err < 0 ) return err;
     }
 
+    outputResults();
     for(int j=0; j<a_objects_list.size(); ++j)
         a_objects_list[j]->reportResults();
 
-    outputResults();
     if( data_out ) {
         delete data_out; data_out = 0;
         /*
@@ -764,7 +764,7 @@ void EGS_Application::fillRandomArray(int n, EGS_Float *rarray) {
 }
 
 void EGS_Application::checkDeviceFull(FILE *stream) {
-
+#ifndef WIN32
     // quit if space left on disk is less than 1 MB to mitigate disk full problems
 
     // stat the stream
@@ -780,6 +780,7 @@ void EGS_Application::checkDeviceFull(FILE *stream) {
             exit(1);
         }
     }
+#endif
 }
 
 void EGS_Application::appInformation(const char *msg) {
