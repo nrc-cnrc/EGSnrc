@@ -268,7 +268,7 @@ test_compile='$F77 -c $FFLAGS $LDFLAGS conftest.$test_ext $LIBS >&5'
 rm -f conftest.o conftest.obj
 test_objext=''
 if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
-    for test_file in $((ls conftest.o conftest.obj; ls conftest.*) 2>/dev/null); do
+    for test_file in $(ls conftest.* 2>/dev/null); do
         case $test_file in
             *.$test_ext | *.xcoff | *.tds | *.d | *.pdb ) ;;
             *) test_objext=$(expr "$test_file" : '.*\.\(.*\)')
