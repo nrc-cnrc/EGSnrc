@@ -67,7 +67,7 @@ timestamp='Aug 25 2015'
 
 test_egs_home=$(dirname $HEN_HOUSE)/egs_home
 
-cpp_user_codes="tutor2pp tutor7pp cavity"
+cpp_user_codes="cavity egs_cbct egs_chamber egs_fac tutor2pp tutor7pp"
 
 exec 3>$my_dir/finalize_egs_$USER.log
 cat >&3 <<EOF
@@ -181,8 +181,10 @@ fi
 HEN_HOUSE=$( cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed 's/HEN_HOUSE = //' )
 my_machine=$( cat $EGS_CONFIG | grep "my_machine =" | sed 's/my_machine = //' )
 have_egspp_config=no
-if test -f $HEN_HOUSE/specs/egspp_${my_machine}.conf; then
-    if test -f $HEN_HOUSE/egs++/dso/$my_machine/libegspp.so; then
+egspp_conf=$HEN_HOUSE/specs/egspp_${my_machine}.conf
+if test -f $egspp_conf; then
+    libext=$( cat $egspp_conf | grep "libext =" | sed 's/libext = //' )
+    if test -f $HEN_HOUSE/egs++/dso/$my_machine/libegspp$libext; then
         have_egspp_config=yes
     fi
 fi
