@@ -24,6 +24,7 @@
 "  Author:          Alex Bielajew, 1987                                       "
 "                                                                             "
 "  Contributors:    Amir Keyvanloo                                            "
+"                   Ernesto Mainegra-Hing                                     "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -93,14 +94,16 @@ APPEND {;
 "                                                                             "
 "THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF DEFLECTION BY THE EM-FIELD.   "
 "                                                                             "
-REPLACE {$EMULMT} WITH {0.02}
+"Made it an input parameter which by default is set to 0.02, EMH, July 2015"
+REPLACE {$EMULMT} WITH {EMLMTIN}
 ;
 "                                                                             "
 "*****************************************************************************"
 "                                                                             "
 "THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF ENERGY LOSS IN THE EM-FIELD.  "
 "                                                                             "
-REPLACE {$EMELMT} WITH {0.02}
+"Made it an input parameter which by default is set to 0.02, EMH, July 2015"
+REPLACE {$EMELMT} WITH {EMLMTIN}
 ;
 "                                                                             "
 "*****************************************************************************"
@@ -108,7 +111,8 @@ REPLACE {$EMELMT} WITH {0.02}
 "THIS MACRO IS THE UPPER LIMIT ON THE AMOUNT OF CHANGE OF THE EM-FIELD OVER   "
 "THE TRANSPORT STEP.                                                          "
 "                                                                             "
-REPLACE {$EMFLMT} WITH {0.02}
+"Made it an input parameter which by default is set to 0.02, EMH, July 2015"
+REPLACE {$EMFLMT} WITH {EMLMTIN}
 ;
 "                                                                             "
 "*****************************************************************************"
@@ -384,6 +388,18 @@ REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;{P1}=0.0;};
 "End of example is for a constant B-field of 3 Tesla parallel to the z-axis"
 "**************************************************************************"
 
+"***********************************************"
+" This macro is for constant B- and E-fields    "
+" which can be defined by input, EMH, July 2015 "
+"***********************************************"
+REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
+fbtemp=-IQ(NP)/RM*10**6;
+{P1}X0=ExIN*fbtemp;{P1}Y0=EyIN*fbtemp;{P1}Z0=EzIN*fbtemp;
+fbtemp=3.0/0.511;
+{P2}X0=BxIN*fbtemp;{P2}Y0=ByIN*fbtemp;{P2}Z0=BzIN*fbtemp;
+}
+;
+"REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;}"
 "                                                                             "
 "*****************************************************************************"
 "*****************************************************************************"

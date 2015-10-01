@@ -902,6 +902,9 @@ photon_xsections = $XDATA-DEFAULT;"default photon xsection, see egsnrc.macros"
 comp_xsections = $COMP-XDATA-DEFAULT;
 "Ali:photonuc, 2 lines"
 photonuc_xsections = $PHOTONUC-XDATA-DEFAULT;
+"EMH:emf"
+ExIN=$ExDEF;EyIN=$EyDEF;EzIN=$EzDEF;
+BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
 "DO i=1,len(eii_xfile) [ eii_xfile(i:i) = ' '; ]"
 DO i=1,$MXMED [
     iraylm(i) = 0;   "Rayleigh data available?"

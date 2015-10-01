@@ -1172,6 +1172,7 @@ $INTEGER  ival,num_ecut,num_pcut,num_smax,num_incoh,num_radc,num_coh,num_relax,
           num_pair_ang,num_eii,num_eii_L,num_estepe,num_ximax,num_triplet,
           num_pxsec,num_pxsec_out, num_cxsec,
           num_photonuc, num_photonuc_xsec,"Ali:photonuc, 1 line"
+          num_efield, num_bfield, num_emlmt,"EMH: EM fields"
           num_spin,num_bca,num_alg,num_skin,itmp,iitmp,i,j,k,istart,iend,
           egs_open_file,lnblnk1;
 
@@ -1455,6 +1456,36 @@ values_sought(ival) = $COMPTON_XSECTIONS;
 nvalue(ival)        = 1;
 type(ival)          = 2;
 
+" E-Field "
+ival                = ival + 1;
+num_efield          = ival;                     "Set the variable pointer"
+values_sought(ival) = $E_FIELD;                 "The code word"
+nvalue(ival)        = 3;                        "3 inputs"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = -1e15;                    "Define the allowed range"
+value_max(ival)     =  1e15;
+default(ival)       =  0;
+
+" B-Field "
+ival                = ival + 1;
+num_bfield          = ival;                     "Set the variable pointer"
+values_sought(ival) = $B_FIELD;                 "The code word"
+nvalue(ival)        = 3;                        "3 inputs"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = -1e10;                    "Define the allowed range"
+value_max(ival)     =  1e10;
+default(ival)       =  0;
+
+" EM-field step and eloss restriction "
+ival                = ival + 1;
+num_emlmt           = ival;                     "Set the variable pointer"
+values_sought(ival) = $EM_LMT;                 "The code word"
+nvalue(ival)        = 1;                        "1 input"
+type(ival)          = 1;                        "A real number"
+value_min(ival)     = 0.0;                      "Define the allowed range"
+value_max(ival)     = 1.0;
+default(ival)       = 0.02;
+
 "Ali:photonuc, 2 blocks"
 " Photonuclear "
 ival                = ival + 1;
@@ -1555,6 +1586,22 @@ IF( error_flags(num_cxsec) = 0 ) [
 "Ali:photonuc, 3 lines"
 IF( error_flags(num_photonuc_xsec) = 0 ) [
     photonuc_xsections = char_value(num_photonuc_xsec,1);
+]
+IF( error_flags(num_efield) = 0 ) [
+    ExIN = value(num_efield,1);
+    EyIN = value(num_efield,2);
+    EzIN = value(num_efield,3);
+    IF( error_flags(num_emlmt) = 0 )[
+       EMLMTIN=value(num_emlmt,1);
+    ]
+]
+IF( error_flags(num_bfield) = 0 ) [
+    BxIN = value(num_bfield,1);
+    ByIN = value(num_bfield,2);
+    BzIN = value(num_bfield,3);
+    IF( error_flags(num_emlmt) = 0 )[
+       EMLMTIN=value(num_emlmt,1);
+    ]
 ]
 /***************************************************************/
 /* Get media for which to read custom ff and the ff file names */
@@ -1733,7 +1780,18 @@ write(ounit,'(a,22x,g9.4)')
  ' Skin-depth for boundary crossing (MFP)',skindepth_for_bca;
 write(ounit,'(a,37x,a10)')
  ' Electron-step algorithm',output_strings(8);
-
+IF( ExIN~=0 | EyIN~=0 | EzIN~=0 )[
+  write(ounit,'(a,38x,3f10.2)') ' Electric Field [V/cm]',
+                  ExIN,EyIN,EzIN;
+]
+IF( BxIN~=0 | ByIN~=0 | BzIN~=0 )[
+  write(ounit,'(a,41x,3f10.2)') ' Magnetic Field [T]',
+                  BxIN,ByIN,BzIN;
+]
+IF( ExIN~=0 | EyIN~=0 | EzIN~=0 |
+    BxIN~=0 | ByIN~=0 | BzIN~=0 )[
+  write(ounit,'(a,50x,f10.2)') ' EM ESTEPE',EMLMTIN;
+]
 write(ounit,*);
 write(ounit,'(a)') line;
 write(ounit,*);

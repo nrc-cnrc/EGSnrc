@@ -623,7 +623,15 @@ REPLACE {$COMIN-EII-INIT;} WITH {
     ;COMIN/BREMPR,EDGE,EGS-IO,EII-DATA,ELECIN,MEDIA,THRESH,USEFUL/;
 };
 
-
+REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
+    common/emf_inputs/ExIN,EyIN,EzIN, "E field"
+                     BxIN,ByIN,BzIN,  "B field"
+                     EMLMTIN;         "Ekin, u, E fractional maximum change"
+   $REAL    ExIN,EyIN,EzIN,
+            BxIN,ByIN,BzIN,
+            EMLMTIN;
+};
+;  "---------- BUFFER FLUSH SEMICOLON ----------"
 " The following common block is made available to the user so that  "
 " he/she knows which shell was being relaxed when the call to ausgab"
 " occured                                                           "
@@ -1084,7 +1092,7 @@ REPLACE {$COMIN-COMPT;} WITH {
 REPLACE {$COMIN-ELECTR;} WITH {
 ;COMIN/DEBUG,BOUNDS,ELECIN,EPCONT,MEDIA,MISC,STACK,THRESH,
 UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,CH-Steps,EGS-IO,
-          EGS-VARIANCE-REDUCTION/;}
+          EGS-VARIANCE-REDUCTION,EMF-INPUTS/;}
 REPLACE {$COMIN-HATCH;} WITH {
 ;COMIN/DEBUG,BOUNDS,BREMPR,ELECIN,MEDIA,MISC,PHOTIN,STACK,THRESH,
 UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,EGS-IO,
@@ -1115,7 +1123,8 @@ REPLACE {$COMIN-RELAX;} WITH {
 REPLACE {$COMIN-SET-DEFAULTS;} WITH {
   ;COMIN/BOUNDS,BREMPR,COMPTON-DATA,EDGE,ELECIN,EPCONT,CH-Steps,ET-Control,
        MEDIA,MISC,PHOTIN,RANDOM,STACK,THRESH, UPHIIN,UPHIOT,USEFUL,
-       EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs/;};
+       EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs,
+       EMF-INPUTS/;};
 REPLACE {$COMIN-INIT-COMPT;} WITH {
   ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,EGS-IO/;};
 REPLACE {$COMIN-MSCATI;} WITH {
@@ -1124,7 +1133,7 @@ REPLACE {$COMIN-INIT-TRIPLET;} WITH {
   ;COMIN/BREMPR,EGS-IO,MEDIA,TRIPLET-DATA,USEFUL/;};
 REPLACE {$COMIN-GET-TRANSPORTP;} WITH {
   ;COMIN/GetInput,BOUNDS,ET-Control,EDGE,COMPTON-DATA,MEDIA,MISC,
-         BREMPR,EII-DATA,EGS-IO,rayleigh_inputs/;};
+         BREMPR,EII-DATA,EGS-IO,rayleigh_inputs,EMF-INPUTS/;};
 "Ali:photonuc, 1 block"
 REPLACE {$COMIN-PHOTONUC;} WITH {;COMIN/STACK,EPCONT,USEFUL/;};
 
@@ -2219,6 +2228,21 @@ REPLACE {$COMP-XDATA-DEFAULT} WITH {'default'}
 REPLACE {$IPHOTONUCR-DEFAULT} WITH {0}
 ;
 REPLACE {$PHOTONUC-XDATA-DEFAULT} WITH {'default'}
+;
+"EMH:emf, 7 lines"
+REPLACE {$ExDEF} WITH {0}
+;
+REPLACE {$EyDEF} WITH {0}
+;
+REPLACE {$EzDEF} WITH {0}
+;
+REPLACE {$BxDEF} WITH {0}
+;
+REPLACE {$ByDEF} WITH {0}
+;
+REPLACE {$BzDEF} WITH {0}
+;
+REPLACE {$EMLMTDEF} WITH {0.02}
 ;
 
             "This macro sets the minimum step size for a condensed"

@@ -75,6 +75,9 @@ REPLACE {$SCALE_L_EII_XSECTIONS}  WITH {'scale L EII cross-sections'}
 "Cannot use $PHOTONUC; it clashes with other variables"
 REPLACE {$PHOTO_NUCLEAR}          WITH {'Photonuclear attenuation'}
 REPLACE {$PHOTONUC_XSECTIONS}     WITH {'Photonuclear cross sections'}
+REPLACE {$B_FIELD} WITH {'Magnetic Field'}
+REPLACE {$E_FIELD} WITH {'Electric Field'}
+REPLACE {$EM_LMT} WITH {'EM ESTEPE'}
 ;
 
 REPLACE {$TURN-ON/OFF-IN-REGIONS(#,#,#,#);} WITH

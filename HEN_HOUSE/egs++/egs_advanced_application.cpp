@@ -66,7 +66,7 @@ using namespace std;
     EGS_Application *a = EGS_Application::activeApplication();
 #endif
 
-string EGS_AdvancedApplication::base_revision = "$Revision: 1.38 $";
+string EGS_AdvancedApplication::base_revision = "$Revision: 1.39 $";
 
 /*
 extern __extc__ struct EGS_Stack F77_OBJ(stack,STACK);
@@ -224,6 +224,7 @@ class EGS_LOCAL EGS_TransportProperty {
     string name;
     vector<string> options;
     vector<string> *str_v;
+    vector<EGS_Float> *f_v;
     string     charinp;
     int        type;
     EGS_I32   *int_input;
@@ -245,6 +246,9 @@ public:
     /* Character string array input type = 4 */
     EGS_TransportProperty(const char *Name,int L,int N,vector<string> *str):
         name(Name), type(4), str_v(str), len(L), nitem(N) {};
+    /* Real array input type = 5 */
+    EGS_TransportProperty(const char *Name,int N,vector<EGS_Float> *f):
+        name(Name), type(5), f_v(f), nitem(N) {};
     /* Integer input with allowed values => type = 2 */
     void addOption(const char *opt) {
         options.push_back(opt); type = 2;
@@ -281,6 +285,17 @@ public:
               *str_v = str;
             }
         }
+        else if( type == 5 ) {
+            int err = input->getInput(name,*f_v);
+            if( !err ) {
+              vector<EGS_Float> fv = *f_v;f_v->clear();
+              int number = fv.size();
+              if(number>nitem){
+                fv.erase(fv.begin()+nitem,fv.end());number=nitem;
+              }
+              *f_v = fv;
+            }
+        }
         else {
             bool is_ok; EGS_I32 iaux = input->getInput(name,options,0,&is_ok);
             if( is_ok ) *int_input = iaux;
@@ -293,12 +308,18 @@ public:
         if( type == 0 ) egsInformation("%d\n",*int_input);
         else if( type == 1 ) egsInformation("%g\n",*float_input);
         else if( type == 3 ) egsInformation("%s\n",(string(char_input).substr(0,len)).c_str());
+        else if( type == 5 ) {
+            for (vector<EGS_Float>::iterator it = f_v->begin() ; it != f_v->end(); ++it)
+                egsInformation("%g ",*it);
+                egsInformation("\n");
+        }
         else egsInformation("%s\n",options[*int_input].c_str());
     };
     int size() {
         if( type == 1 )      return sizeof(EGS_Float);
         else if( type == 3 ) return len;
         else if( type == 4 ) return nitem;
+        else if( type == 5 ) return f_v->size();
         else                 return sizeof(EGS_I32);
     };
 
@@ -345,7 +366,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     }
 
     vector<string> ff_media, ff_names; string eii_xsect;
-
+    vector<EGS_Float> efield_v, bfield_v;
     //
     // The Intel compiler uses -1 for .true. => all logical
     // variables don't work!
@@ -357,6 +378,9 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     //
     // See if there are transport parameters set in the input file.
     //
+    EGS_TransportProperty efield("Electric Field",3,&efield_v);
+    EGS_TransportProperty bfield("Magnetic Field",3,&bfield_v);
+    EGS_TransportProperty estepem("EM ESTEPE",&the_emf->EMLMTIN);
     EGS_TransportProperty ecut("Global Ecut",&the_bounds->ecut);
     EGS_TransportProperty pcut("Global Pcut",&the_bounds->pcut);
     EGS_TransportProperty smax("Global Smax",&the_etcontrol->smaxir);
@@ -411,6 +435,9 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     bca.addOption("Exact"); bca.addOption("PRESTA-I");
 
     if( transportp ) {
+        efield.getInput(transportp);
+        bfield.getInput(transportp);
+        estepem.getInput(transportp);
         ecut.getInput(transportp);
         pcut.getInput(transportp);
         smax.getInput(transportp);
@@ -523,6 +550,17 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     ecut.info(nc); brem.info(nc); bang.info(nc); spin.info(nc);
     eii.info(nc); smax.info(nc); estep.info(nc); ximax.info(nc);
     bca.info(nc); skind.info(nc); tran.info(nc);
+    if(efield.size()==3){
+       efield.info(nc);
+       the_emf->ExIN=efield_v[0];the_emf->EyIN=efield_v[1];the_emf->EzIN=efield_v[2];
+    }
+    if(bfield.size()==3){
+       bfield.info(nc);
+       the_emf->BxIN=bfield_v[0];the_emf->ByIN=bfield_v[1];the_emf->BzIN=bfield_v[2];
+    }
+    if(efield.size()==3 || bfield.size()==3) estepem.info(nc);
+
+    egsInformation("==============================================\n\n");
 
     delete [] ind;
     return 0;

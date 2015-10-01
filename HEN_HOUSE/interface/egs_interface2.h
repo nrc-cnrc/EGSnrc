@@ -621,6 +621,15 @@ struct EGS_IO {
             is_pegsless;
 };
 
+/*! \brief A structure corresponding to the \c EMF_INPUTS common block.
+
+  The \c EMF_INPUTS common block contains variables that define static
+  electric and magnetic fields.
+ */
+struct EGS_emfInputs {
+    /*! Input values for static electric and magnetic fields */
+    EGS_Float ExIN, EyIN, EzIN, BxIN, ByIN, BzIN, EMLMTIN;
+};
 
 /*! \brief The address of the mortran \c STACK common block as a
     pointer to a C-structure of type EGS_Stack */
@@ -665,6 +674,10 @@ extern __extc__ struct EGS_VarianceReduction *the_egsvr;
 /*! \brief The address of the mortran rayleigh_inputs common block as a
   pointer to a C-structure of type EGS_Rayleigh */
 extern __extc__ struct EGS_Rayleigh *the_rayleigh;
+
+/*! \brief The address of the mortran EMF-INPUTS common block as a
+  pointer to a C-structure of type EGS_emfInputs */
+extern __extc__ struct EGS_emfInputs *the_emf;
 
 /* ******************* EGSnrc interface functions *************************/
 
