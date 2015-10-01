@@ -1802,6 +1802,7 @@ else
   fc_flags="\$(FOPT) \$(FCFLAGS)"
 fi
 current_date=$(date)
+FOUT="-o "
 cat >$HEN_HOUSE/specs/$conf_file <<_ACEOF
 ###############################################################################
 #
@@ -1841,7 +1842,7 @@ FCFLAGS = $FFLAGS
 FOPT = $FOPT
 FDEBUG = $FDEBUG
 FLIBS = $FLIBS
-FOUT = -o
+FOUT = $FOUT
 FOBJE = $test_objext
 
 _ACEOF
