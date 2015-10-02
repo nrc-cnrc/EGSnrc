@@ -1803,6 +1803,7 @@ else
 fi
 current_date=$(date)
 FOUT="-o "
+COUT="-o "
 cat >$HEN_HOUSE/specs/$conf_file <<_ACEOF
 ###############################################################################
 #
@@ -1853,7 +1854,7 @@ cat >>$HEN_HOUSE/specs/$conf_file <<_ACEOF
 #
 CC = $CC
 C_FLAGS = $C_FLAGS
-COUT = -o
+COUT = $COUT
 _ACEOF
 fi
 
