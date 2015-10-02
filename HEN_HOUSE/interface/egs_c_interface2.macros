@@ -439,7 +439,8 @@ REPLACE {$COMIN-SET-DEFAULTS;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
   ;COMIN/BOUNDS,BREMPR,COMPTON-DATA,EDGE,ELECIN,EPCONT,CH-Steps,ET-Control,
          MEDIA,MISC,PHOTIN,RANDOM,STACK,THRESH, UPHIIN,UPHIOT,USEFUL,
-         EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs/;
+         EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs,
+         EMF-INPUTS/;
 };
 REPLACE {$COMIN-INIT-COMPT;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
@@ -454,7 +455,7 @@ REPLACE {$COMIN-ELECTR;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
   ;COMIN/DEBUG,BOUNDS,ELECIN,EPCONT,MEDIA,MISC,STACK,THRESH,
          UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,CH-Steps,
-         EGS-VARIANCE-REDUCTION,EGS-IO/;
+         EGS-VARIANCE-REDUCTION,EGS-IO,EMF-INPUTS/;
 };
 REPLACE {$COMIN-MSCATI;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
