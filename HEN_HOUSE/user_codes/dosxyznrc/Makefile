@@ -74,7 +74,7 @@ SOURCES = $(EGS_SOURCEDIR)egsnrc.macros \
 
 include $(EGS_MAKEFILE)
 
-pardose: $(EGS_LIBDIR)read_write_pardose.o
+pardose: $(EGS_LIBDIR)read_write_pardose.$(FOBJE)
 
-$(EGS_LIBDIR)read_write_pardose.o: $(DOSXYZ_HOME)read_write_pardose.c
-	$(CC) $(C_FLAGS) -c -I. -I$(EGS_LIBDIR) $(COUT)$(EGS_LIBDIR)read_write_pardose.o $(DOSXYZ_HOME)read_write_pardose.c
+$(EGS_LIBDIR)read_write_pardose.$(FOBJE): $(DOSXYZ_HOME)read_write_pardose.c
+	$(CC) $(C_FLAGS) -c -I. -I$(EGS_LIBDIR) $(COUT)$(EGS_LIBDIR)read_write_pardose.$(FOBJE) $(DOSXYZ_HOME)read_write_pardose.c
