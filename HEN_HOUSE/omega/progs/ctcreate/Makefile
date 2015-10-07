@@ -42,7 +42,7 @@
 
 include $(EGS_CONFIG)
 
-OBJE = o
+OBJE = $(FOBJE)
 OBJD = .obj$(DSEP)$(my_machine)
 OBJDD = $(OBJD)$(DSEP)
 
