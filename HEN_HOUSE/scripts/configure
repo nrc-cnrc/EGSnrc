@@ -1967,22 +1967,30 @@ echo "OK" >&2
 printf $format "Creating machine.macros ... " >&2
 cd $machine_mortran_dir
 
+str_header="\
+\"#############################################################################
+\"
+\" EGSnrc machine dependent macro file for $the_config
+\"
+\" Created by $my_name version $my_version on $current_date
+\"
+\" You may add your own machine dependent macros to this file,
+\" but be carefull to not overwrite it if you re-run $my_name.
+\"
+\"#############################################################################
+"
+str_header=$(printf "$str_header" | while read line; do
+    printf "%-78s" "$line";
+    printf "\"\n"
+done)
+
 cat >$machine_macros <<_ACEOF
 %E
 %I4
 !INDENT F2;
 %C80
 %Q1
-"#############################################################################"
-"                                                                             "
-" EGSnrc machine dependent macro file for $the_config                         "
-"                                                                             "
-" Created by $my_name version $my_version on $current_date                    "
-"                                                                             "
-" You may add your own machine dependent macros to this file,                 "
-" but be carefull to not overwrite it if you re-run $my_name.                 "
-"                                                                             "
-"#############################################################################"
+$str_header
 
 REPLACE {\$MACHINE} WITH
   {,'$the_config',};
