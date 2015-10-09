@@ -1434,7 +1434,7 @@ DO i=1,NMED[
                ]
                IF(k>nne_tmp) df_if_elem_mismatch(i)=.true.;
                            "never found the element"
-               IF(df_if_elem_mismatch(i)) exit;
+               IF(df_if_elem_mismatch(i)) [exit;];
              ]
            ]
            IF(df_if_elem_mismatch(i))[
