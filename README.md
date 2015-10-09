@@ -62,21 +62,23 @@ revision control software, via the SSH clone URL
 `git@github.com:nrc-cnrc/EGSnrc.git`.
 
 Once you have downloaded the source code by either method, download the
-latest release of the precompiled EGSnrc graphical user interfaces for 
+latest release of the precompiled EGSnrc graphical user interfaces for
 your platform, from the [releases](https://github.com/nrc-cnrc/EGSnrc/releases)
 page.
 
-Finally, you must run the configuration GUI or script to set up and 
+Finally, you must run the configuration GUI or script to set up and
 compile EGSnrc software components for your computer. Please read the
-[INSTALL](INSTALL.md) instructions for more details on how to download 
+[INSTALL](INSTALL.md) instructions for more details on how to download
 and configure EGSnrc.
 
 
 ## Documentation
 
-Upon dowloading the EGSnrs software, all the user manuals for EGSnrc and
-associated software are located under the `EGSnrc/HEN_HOUSE/doc`
-directory, in PDF format.
+The EGSnrc user manuals in PDF format can be downloaded from the
+[releases](https://github.com/nrc-cnrc/EGSnrc/releases) page. Download
+the `EGSnrc-manuals.zip` archive, and unzip it. If you installed EGSnrc,
+you may want to move the extraced PDF files to the `EGSnrc/HEN_HOUSE/doc`
+directory for convenience.
 
 
 ## Issues
