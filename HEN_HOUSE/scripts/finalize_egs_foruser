@@ -351,7 +351,7 @@ if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
   echo "setenv EGS_HOME $EGS_HOME" >&2
   echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
-  echo "source ${HEN_HOUSE}scripts/beamnrcnrc_cshrc_additions" >&2
+  echo "source ${HEN_HOUSE}scripts/beamnrc_cshrc_additions" >&2
 elif test "x$test_shell" = xbash; then
   echo "Add the following statements to your .bashrc file: " >&2
   echo >&2
