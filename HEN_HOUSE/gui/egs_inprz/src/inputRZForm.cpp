@@ -139,7 +139,7 @@ geoErrors    =  "";
      confiname.remove(0, 1+ confiname.lastIndexOf( QDir::separator()) ) );
   }
 */
-  connect( CONFcomboBox, SIGNAL( textChanged(const QString&) ),
+  connect( CONFcomboBox, SIGNAL( editTextChanged(const QString&) ),
            this,         SLOT( checkConfigLib() ) );
 
   //checkCompilationAbility();
@@ -821,20 +821,20 @@ void inputRZImpl::UpDateInputRZForm( const MInputRZ* Input )
 	electrmatComboBox->addItems( StrListToQStrList( listMedia ) );
 
         if ( EGSfileName != InputFileComboBox->currentText() ) {
-             disconnect(InputFileComboBox,SIGNAL(textChanged(const QString&)),
+             disconnect(InputFileComboBox,SIGNAL(editTextChanged(const QString&)),
                         this, SLOT( EGSFileNameChanged(const QString&) ) );
              InputFileComboBox->setEditText ( EGSfileName );
 	     Add_New_Item( EGSfileName.toLatin1().data(), InputFileComboBox );
-             connect(InputFileComboBox,SIGNAL(textChanged(const QString&)),
+             connect(InputFileComboBox,SIGNAL(editTextChanged(const QString&)),
                      this, SLOT( EGSFileNameChanged(const QString&) ) );
 	}
 
 	if ( egs_dir_changed ) // add list of egsinp files
         {
-              disconnect(InputFileComboBox,SIGNAL(textChanged(const QString&) ),
+              disconnect(InputFileComboBox,SIGNAL(editTextChanged(const QString&) ),
                          this, SLOT( EGSFileNameChanged(const QString&) ) );
               update_files( EGSdir, InputFileComboBox, "*.egsinp" );
-              connect( InputFileComboBox, SIGNAL( textChanged(const QString&) ),
+              connect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ),
                        this, SLOT( EGSFileNameChanged(const QString&) ) );
          }
 
@@ -861,10 +861,10 @@ void inputRZImpl::UpDateInputRZForm( const MInputRZ* Input )
          update_files( RDISTdir, raddistfnameComboBox, "*.*" );
          update_files( PHSPdir, phasespaceComboBox, "*.egsphsp1 *.IAEAphsp" );
 
-         disconnect( CONFcomboBox, SIGNAL( textChanged(const QString&) ),
+         disconnect( CONFcomboBox, SIGNAL( editTextChanged(const QString&) ),
                      this, SLOT( checkConfigLib() ) );
          update_files( CONFdir, CONFcomboBox, "*.conf" );
-         connect( CONFcomboBox, SIGNAL( textChanged(const QString&) ),
+         connect( CONFcomboBox, SIGNAL( editTextChanged(const QString&) ),
                  this, SLOT( checkConfigLib() ) );
          //update_conf_files();
 
@@ -2857,10 +2857,10 @@ void inputRZImpl::set_working_area()
        egs_dir_changed = false;
 
    if ( egs_dir_changed ){
-        disconnect( InputFileComboBox, SIGNAL( textChanged(const QString&) ), this,
+        disconnect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ), this,
   	                                               SLOT( EGSFileNameChanged(const QString&) ) );
          update_files( EGSdir, InputFileComboBox, "*.egsinp" );
-         connect( InputFileComboBox, SIGNAL( textChanged(const QString&) ), this,
+         connect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ), this,
 		                              SLOT( EGSFileNameChanged(const QString&) ) );
   }
 
@@ -3228,9 +3228,8 @@ void inputRZImpl::activate_ff_table()
 void inputRZImpl::show_help()
 {
 #ifdef WIN32
-    QString ProgramFiles;
     QString ENVVAR = "ProgramFiles";
-    ProgramFiles      = getenv(ENVVAR.toLatin1());
+    QString ProgramFiles      = getenv(ENVVAR.toLatin1());
     QString p1 = ProgramFiles+"\\Internet Explorer\\Iexplore ";
                  p1 += GUI_HOME;
                  p1 += "html\\" + QString(PIRS801);
@@ -3238,12 +3237,12 @@ void inputRZImpl::show_help()
    // QProcess related code
     //qt3to4 -- BW
     //Q3Process* proc = new Q3Process( this );
-    QProcess* proc = new Q3Process( this );
+    QProcess* proc = new QProcess( this );
      // Set up the command and arguments.
     //qt3to4 -- BW
     //proc->setArguments ( QStringList::split( " ",p1,false ) );
     QStringList args = p1.split(" ");
-    QString prog = p1.first();
+    QString prog = args.first();
     args = args.mid(1);
     proc->start(prog, args);
     //qt3to4 -- BW
@@ -3251,11 +3250,10 @@ void inputRZImpl::show_help()
     if(proc->error()==QProcess::FailedToStart){
         // error handling
         QString errorM = p1;
-        QMessageBox::critical( 0,
+        QMessageBox::warning( this,
                 tr("Error"),
-	  tr("Could not start the command: \n"
-	     + errorM),
-                tr("Quit") );
+	            tr("Could not start the command: \n") + errorM,
+                1,0,0 );
     }
 #else
     QStringList browser;
