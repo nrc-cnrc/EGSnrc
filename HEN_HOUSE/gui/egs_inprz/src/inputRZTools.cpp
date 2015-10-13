@@ -33,24 +33,19 @@
 #include <cstdlib>
 #include <qlineedit.h>
 #include <qapplication.h>
-//#include <q3filedialog.h>
 #include <qlabel.h>
 #include <qmessagebox.h>
 #include <qcombobox.h>
 #include <qradiobutton.h>
 #include <qspinbox.h>
 #include <qcheckbox.h>
-//#include <q3groupbox.h>
 #include <iterator>
 #include <qpushbutton.h>
 #include <qdir.h>
-//#include <q3buttongroup.h>
 #include <qwidget.h>
 #include <qpainter.h>
-//#include <q3paintdevicemetrics.h>
 #include <qvalidator.h>
 #include <typeinfo>
-//#include <q3table.h>
 #include <egs_config_reader.h>
 
 //**********************************************
@@ -244,14 +239,12 @@ void inputRZImpl::updateConfiguration( const QString & conf ){
  if ( HEN_HOUSE.isEmpty()){
       confErrors +=
       (QString)"<br>Variable HEN_HOUSE not found in configuration file"
-      + EGS_CONFIG + (QString)"<br>nor in your environment settings" +
-      (QString)"<br>";
+      + EGS_CONFIG + (QString)"<br>";
  }
  if ( EGS_HOME.isEmpty()){
       confErrors +=
       (QString)"<br>Variable EGS_HOME not found in configuration file"
-      + EGS_CONFIG + (QString)"<br>nor in your environment settings" +
-      (QString)"<br>";
+      + EGS_CONFIG + (QString)"<br>";
  }
 
  // Update config file directory
@@ -287,14 +280,14 @@ void inputRZImpl::SetInitialDir()
  char SEP   = QDir::separator().toAscii();
 
  EGS_CONFIG = ironIt( getenv( "EGS_CONFIG" ) );
- HEN_HOUSE  = ironIt( getenv( "HEN_HOUSE" ) );
+ QString HHini  = ironIt( getenv( "HEN_HOUSE" ) );// get HEN_HOUSE from environment
 #ifdef WIN32
  if (!EGS_CONFIG.isEmpty())         // make drive letter upper case
       EGS_CONFIG.replace( 0, 1,     // to be consistent with Qt Widgets
       QString(EGS_CONFIG[0]).toUpper());
 #endif
 
- updateConfiguration(EGS_CONFIG);
+ updateConfiguration(EGS_CONFIG);// gets HEN_HOUSE from config file
 
  GUI_HOME = ironIt( HEN_HOUSE + SEP + (QString)"doc" + SEP +
                     (QString)"pirs801" + SEP );
@@ -335,18 +328,36 @@ void inputRZImpl::SetInitialDir()
  update_from_user_area();
  update_from_data_area();
 
- disconnect( InputFileComboBox, SIGNAL( textChanged(const QString&) ),
+ disconnect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ),
              this, SLOT( EGSFileNameChanged(const QString&) ) );
 
  update_files( EGSdir, InputFileComboBox, "*.egsinp" );
 
- connect( InputFileComboBox, SIGNAL( textChanged(const QString&) ),
+ connect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ),
           this, SLOT( EGSFileNameChanged(const QString&) ) );
 
  //this was not done before -- BW
  update_files( PEGSdir, pegs4ComboBox, "*.pegs4dat" );
- connect( pegs4ComboBox, SIGNAL( textChanged(const QString&) ),
+ connect( pegs4ComboBox, SIGNAL( editTextChanged(const QString&) ),
           this, SLOT( PEGSFileNameChanged(const QString&) ) );
+
+ if (HEN_HOUSE.isEmpty() && !HHini.isEmpty()){
+   HEN_HOUSE = HHini;
+   confErrors +=
+      (QString)"<br>Using variable HEN_HOUSE set in your environment to "
+      + HEN_HOUSE + (QString)"<br>";
+ }
+ else if (HEN_HOUSE.isEmpty() && HHini.isEmpty()){
+   confErrors +=
+      (QString)"<br>Unknown HEN_HOUSE environment variable. Have you configured EGSnrc?"
+      + (QString)"<br>";
+ }
+ else if (HEN_HOUSE != HHini){
+   confErrors +=
+      tr("<br>HEN_HOUSE environment variable (") + HHini +
+      tr(") differs from the one in your configuration (") + HEN_HOUSE +
+      tr("). Using the latter! <br>");
+ }
 
 }
 

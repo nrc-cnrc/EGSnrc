@@ -67,10 +67,10 @@ void inputRZImpl::UpDateInputRZFile()
   EGSdir = GetUserCodeDir( usercodename );
   if ( OtherAreaRadioButton->isChecked() ){
       update_from_user_area(); // reset radio buttons for user codes
-      disconnect( InputFileComboBox, SIGNAL( textChanged(const QString&) ), this,
+      disconnect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ), this,
                                      SLOT( EGSFileNameChanged(const QString&) ) );
       update_files( EGSdir, InputFileComboBox, "*.egsinp" );
-      connect( InputFileComboBox, SIGNAL( textChanged(const QString&) ), this,
+      connect( InputFileComboBox, SIGNAL( editTextChanged(const QString&) ), this,
                                   SLOT( EGSFileNameChanged(const QString&) ) );
   }
 

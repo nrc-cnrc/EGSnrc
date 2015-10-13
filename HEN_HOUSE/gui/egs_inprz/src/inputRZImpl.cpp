@@ -162,22 +162,22 @@ void inputRZImpl::run_userCode()
      QString the_user_code_area = ironIt( EGS_HOME+s+usercodename+s );
 
      if ( EGSdir != the_user_code_area  ){
-     QString exe_msg   =
+	 QString exe_msg   =
              "Do you want to copy the input file to your user code area?\n";
                  exe_msg+="Current input file location is: "+EGSdir;
                  exe_msg+="\nIf not, execution will abort !";
-    switch( QMessageBox::warning( this, "user code area :" +
+	switch( QMessageBox::warning( this, "user code area :" +
                 the_user_code_area,
                 exe_msg,
                 "Yes",  "No", 0, 0, 1 ) ){
-    case 0: // The user clicked the yes button or pressed Enter
-                      copy( EGSdir                         +EGSfileName,
-              the_user_code_area+EGSfileName);
-            break;
-    case 1: // The user clicked the no or pressed Escape
-            return;
-            break;
-    }
+	case 0: // The user clicked the yes button or pressed Enter
+	                  copy( EGSdir                         +EGSfileName,
+			  the_user_code_area+EGSfileName);
+		    break;
+	case 1: // The user clicked the no or pressed Escape
+		    return;
+		    break;
+	}
 
      }
 
@@ -211,10 +211,10 @@ void inputRZImpl::run_userCode()
 */
 
      QString exec_str = HEN_HOUSE    + " " +
-            usercodename + " " +
-            exe                       + " " +
-            inpf                      + " " +
-            datf;
+			usercodename + " " +
+			exe                       + " " +
+			inpf                      + " " +
+			datf;
      ExecutiondlgImpl* executionDialog = new ExecutiondlgImpl( this, exec_str.toLatin1(),
                                                                false, 0);
      executionDialog->inputFileLabel->setText(EGSfileName);
@@ -251,10 +251,10 @@ bool inputRZImpl::configLibExists(){
     if ( ! dir.exists() ) return false;
     QStringList lst = dir.entryList( "*.*" );
     for ( QStringList::Iterator it = lst.begin(); it != lst.end(); ++it ) {
-    if ( ( *it ).contains( "egsconfig" ) ){
+	if ( ( *it ).contains( "egsconfig" ) ){
                 confErrors = QString::null;
                 return true;
-    }
+	}
     }
     confErrors += (QString)"<br><b>Configuration library not found in</b> <i>" +
             lib + (QString)"</i> !!!<br>";*/
@@ -323,19 +323,19 @@ void inputRZImpl::configure()
                                    machine   + s + (QString)"egsconfig")  );
 
     if( !lib->load() ) {
-    confErrors = (QString)"<b>Failed to load library </b><i>" +
+	confErrors = (QString)"<b>Failed to load library </b><i>" +
                       lib->library().toLatin1() + (QString)"</i><br>";
         checkConfigLib();
-    return;
+	return;
     }
     CreateEGS create2 =(CreateEGS)  lib->resolve("create2");
     if ( create2 ) {
        QDialog *config = create2( this, EGS_CONFIG );
        if ( config->exec() == QDialog::Accepted )
-       update_conf_files();
+	   update_conf_files();
     }
     else{
-    confErrors = (QString)"Failed resolving \"create1\" !!!!<br>";
+	confErrors = (QString)"Failed resolving \"create1\" !!!!<br>";
         checkConfigLib();
     }*/
 
@@ -343,10 +343,10 @@ void inputRZImpl::configure()
 
 void inputRZImpl::update_conf_files(){
 
-    disconnect( CONFcomboBox, SIGNAL( textChanged(const QString&) ),
+    disconnect( CONFcomboBox, SIGNAL( editTextChanged(const QString&) ),
                 this, SLOT( checkConfigLib() ) );
     update_files( CONFdir, CONFcomboBox, "*.conf" );
-    connect( CONFcomboBox, SIGNAL( textChanged(const QString&) ),
+    connect( CONFcomboBox, SIGNAL( editTextChanged(const QString&) ),
              this, SLOT( checkConfigLib() ) );
 
  }
@@ -556,7 +556,7 @@ void inputRZImpl::SetInpfileName( QString inp_name )
        //cout << tmpDir << " vs. " << EGSdir << endl;
               EGSdir = tmpDir;
               usercodename = find_usercode_name( EGSdir );
-          update_from_user_area();
+   	      update_from_user_area();
               egs_dir_changed = true;
        }
        else egs_dir_changed = false;
@@ -599,7 +599,7 @@ void inputRZImpl::OpenEGSInpFile()
        if ( tmpDir != EGSdir) {
             EGSdir = tmpDir;
             usercodename = find_usercode_name( EGSdir );
-        update_from_user_area();
+   	    update_from_user_area();
             egs_dir_changed = true;
        }
        else egs_dir_changed = false;
@@ -1019,8 +1019,8 @@ void inputRZImpl::GetPEGSfile()
           The_Other_PEGS = tmpDir;
 
        if ( tmpDir != PEGSdir) {
-       PEGSdir = tmpDir;
-       pegs_dir_changed = true;
+	   PEGSdir = tmpDir;
+	   pegs_dir_changed = true;
        }
        else  pegs_dir_changed = false;
 
@@ -1032,7 +1032,7 @@ void inputRZImpl::GetPEGSfile()
          pegs4ComboBox->setEditText ( PEGSfileName );
          Add_New_Item( PEGSfileName.toLatin1().data(), pegs4ComboBox );
 
-          listMedia  = getPEGSMedia( PEGSdir + PEGSfileName );
+          listMedia	 = getPEGSMedia( PEGSdir + PEGSfileName );
 
           update_from_data_area();
 
@@ -1131,30 +1131,30 @@ void inputRZImpl::open()
 {// input values from a file. If a value is not found,
  // previous (default) defined value is used instead.
 
-    std::ifstream inp;
-    inp.open( (EGSdir + EGSfileName).toLatin1().data() );
-    if (false == inp.is_open()){
-        QString error = "<b>Input file </b><i>" + EGSdir +
+	std::ifstream inp;
+	inp.open( (EGSdir + EGSfileName).toLatin1().data() );
+	if (false == inp.is_open()){
+	    QString error = "<b>Input file </b><i>" + EGSdir +
                             EGSfileName  + "</i> not found.<br>";
                   openErrors = error;
-        QMessageBox::warning ( this, "Beware", error, 1, 0, 0 );
-        return;
-    }
+	    QMessageBox::warning ( this, "Beware", error, 1, 0, 0 );
+	    return;
+	}
 
-    openErrors = "";
-    geoErrors  = "";
+ 	openErrors = "";
+ 	geoErrors  = "";
 
-    usercode = GetUserCode();
+	usercode = GetUserCode();
 
-    MInputRZ* Input =  new MInputRZ;
-    Input->SetUserCode( usercode );
-    inp >> Input;
+	MInputRZ* Input =  new MInputRZ;
+	Input->SetUserCode( usercode );
+	inp >> Input;
 
-    //if ( !Input->errors.isEmpty() )
-    if ( Input->gotErrors() ) {
+	//if ( !Input->errors.isEmpty() )
+	if ( Input->gotErrors() ) {
          openErrors = QString(WARNING_DEFAULTS) + Input->getErrors() +
                       openErrors;
-    }
+	}
         geoErrors  = Input->getGEOErrors();
 
         UpDateInputRZForm( Input );
@@ -1229,12 +1229,12 @@ bool inputRZImpl::pegs_is_ok( QString fname )
        QString strmed = (*iter).c_str();
        QString strsought = "MEDIUM=" + strmed + " ";
        do {
-        t = ts.readLine();
-        int i = t.indexOf( strsought, 0, Qt::CaseSensitive );
-            if ( i > -1 ) {
-           found = true;
-           break;
-        }
+	    t = ts.readLine();
+	    int i = t.indexOf( strsought, 0, Qt::CaseSensitive );
+    	    if ( i > -1 ) {
+		   found = true;
+		   break;
+	    }
        //qt3to4 -- BW
        //} while ( !ts.eof() );
        } while ( !ts.atEnd() );
@@ -1292,8 +1292,8 @@ UserCodeType inputRZImpl::GetUserCode()
     }while ( i == -1 && !ts.atEnd() );
 
     if ( i == -1 ) {
-        //QString error = WARNING_USER;
-        //QMessageBox::warning ( this, "Attention!", error, 1, 0, 0 );
+	    //QString error = WARNING_USER;
+	    //QMessageBox::warning ( this, "Attention!", error, 1, 0, 0 );
       openErrors += "<b>Couldn't guess user code from </b><i>" +
                     EGSdir + EGSfileName + "<br>";
     //openErrors += "</i><br><b>using CAVRZNRC as default !!!</b><br>";
@@ -1323,7 +1323,7 @@ v_string inputRZImpl::getPEGSMedia( const QString& fname )
     do {
        t = ts.readLine();
        i = t.indexOf( "MEDIUM=", 0 );
-       if ( i > -1 ) { //found medium
+  	   if ( i > -1 ) { //found medium
           //cout << t.toStdString() << endl;
           //cout << "MEDIUM starts at " << i << endl;
           t.simplified();
@@ -1331,7 +1331,7 @@ v_string inputRZImpl::getPEGSMedia( const QString& fname )
           //cout << t << endl;
 
           i = t.indexOf( " ", 0 );
-          if ( i > -1 ) { //found medium
+  	      if ( i > -1 ) { //found medium
              //cout << "STERNCID starts at " << i << endl;
              t.truncate( i );
              t.trimmed();

@@ -65,7 +65,7 @@ ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool moda
   NumJobSpinBox->setToolTip(NUMBER_OF_JOBS );
 
   //Q3WhatsThis::add (  QueueComboBox, QUEUE_TYPE );//      since it is implementation dependent
-                                                                                          //     i.e., the batch submission system being used
+                                                    //     i.e., the batch submission system being used
     QueueComboBox->setWhatsThis(QUEUE_TYPE );
     QueueComboBox->setToolTip(QUEUE_TYPE );
 //  QToolTip::add(  StartJobSpinBox, START_JOB );
