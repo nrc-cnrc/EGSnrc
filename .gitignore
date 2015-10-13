@@ -5,6 +5,7 @@ mortjob.mortran
 *.mortlst
 *.density
 *.lst
+*.log
 
 ### compiled source
 *.dll
