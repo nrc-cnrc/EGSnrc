@@ -64,8 +64,7 @@ unix {
     contains( CONFIG, static ){
         message( "Static build ..." )
         DEFINES += STATICGUI
-        LIBS+=  ../../bin/$$my_machine/libegsconfig.a
-        INCLUDEPATH += ../egs_install/include ../egs_configure
+        INCLUDEPATH += ../egs_install/include
         DESTDIR = ../../pieces/linux
         UNAME = $$system(getconf LONG_BIT)
         contains( UNAME, 64 ){

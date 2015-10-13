@@ -47,9 +47,7 @@ class EGS_CompilePage;
 class EGS_RunPage;
 class EGS_ConfigurationPage;
 class EGS_PegsPage;
-class QWizard;
 class EGS_ConfigReader;
-class QLibrary;
 
 class EGS_MainWidget : public QWidget
 {
@@ -69,8 +67,6 @@ public slots:
   void changeEgsHome(const QString &);
   void changeHenHouse(const QString &);
   void changeUserCode(const QString &);
-  void getConfigLib();
-  void changeConfigLib();
   void aboutEGSGui();
   void aboutQt();
   void getHelp();
@@ -92,14 +88,11 @@ private:
   EGS_PegsPage            *pegs_page;
   EGS_RunPage             *run_page;
   EGS_ConfigurationPage   *conf_page;
-  QWizard                 *wizard;
   QComboBox               *user_code;
   EGS_ConfigReader        *config_reader;
-  QLibrary                *wizard_lib;
 
   QString  egs_home;
   QString  hen_house;
-  QString  libpath;
 
 };
 

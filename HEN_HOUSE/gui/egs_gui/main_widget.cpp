@@ -37,10 +37,6 @@
 #include "egs_configuration_page.h"
 #include "egs_config_reader.h"
 
-#ifdef STATICGUI
-#include <egsnrcmp_setup.h>
-#endif
-
 #include <QListWidget>
 #include <QAbstractItemView>
 #include <QStackedWidget>
@@ -56,7 +52,6 @@
 #include <qdir.h>
 #include <qfile.h>
 #include <qstringlist.h>
-#include <qwizard.h>
 #include <qlibrary.h>
 
 bool configLibExists(const QString& lib );
@@ -71,10 +66,8 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
 
    setWindowTitle("EGSnrcMP GUI, National Research Council of Canada");
    setWindowIcon(QIcon(":/images/desktop_icon.png"));
-   //setWindowIcon(QIcon("images/desktop_icon.png"));
    setWindowIconText("egs_gui");
 
-    wizard_lib = 0; wizard = 0;
     config_reader = new EGS_ConfigReader;
 
     // topl is the layout of the entire widget
@@ -100,32 +93,25 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
     qDebug("Creating Compile");
 #endif
     QListWidgetItem *it = new QListWidgetItem(QIcon(":/images/make_kdevelop.png"), tr( "Compile" ), control);
-    //QListWidgetItem *it = new QListWidgetItem(QIcon("images/make_kdevelop.png"), tr( "Compile" ), control);
     it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating Execute");
 #endif
     it = new QListWidgetItem(QIcon(":/images/launch.png"), tr( "Execute" ), control);
-    //it = new QListWidgetItem(QIcon("images/launch.png"), tr( "Execute" ), control);
     it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating PEGS Data");
 #endif
     it = new QListWidgetItem(QIcon(":/images/file-manager.png"), tr( "PEGS Data" ), control);
-    //it = new QListWidgetItem(QIcon("images/file-manager.png"), tr( "PEGS Data" ), control);
     it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating Settings");
 #endif
     it = new QListWidgetItem(QIcon(":/images/configure.png"), tr( "Settings" ), control);
-    //it = new QListWidgetItem(QIcon("images/configure.png"), tr( "Settings" ), control);
     it->setSizeHint(QSize(it->sizeHint().width(), height));
 #ifdef IK_DEBUG
     qDebug("Creating New config");
 #endif
-    it = new QListWidgetItem(QIcon(":/images/wizard-32.png"), tr( "New config" ), control);
-    //it = new QListWidgetItem(QIcon("images/wizard-32.png"), tr( "New config" ), control);
-    it->setSizeHint(QSize(it->sizeHint().width(), height));
 
     control->setCurrentItem(control->item(0));
     connect(control,SIGNAL(currentItemChanged(QListWidgetItem *,QListWidgetItem *)),this,
@@ -178,19 +164,6 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
             this,"configuration page");
     work_area->addWidget(conf_page);
 
-//-----------------------------------------------------------------------------
-//  ADDED EGS_CONFIGURE WIZARD, A REDUCED VERSION OF
-// EGS_INSTALL.
-//                                                 EMH
-// MOVED to slot changePage to avoid failure when statically built.
-//-----------------------------------------------------------------------------
-
-    libpath = QString();
-//     getConfigLib(); // Sets wizard <- FAILS WHEN STATICALLY
-//     work_area->addWidget(wizard);//     COMPILED !!!
-
-//-----------------------------------------------------------------------------
-
     pegs_page = new EGS_PegsPage(this);
     pegs_page->setConfigReader(config_reader);
     work_area->addWidget(pegs_page);
@@ -199,8 +172,6 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
              SLOT(changeEgsHome(const QString &)));
     connect(conf_page,SIGNAL(henHouseChanged(const QString &)),this,
              SLOT(changeHenHouse(const QString &)));
-    connect( conf_page,SIGNAL(henHouseChanged(const QString &)),this,
-             SLOT( changeConfigLib() ) );
     connect(user_code,SIGNAL(activated(const QString &)),this,
              SLOT(changeUserCode(const QString &)));
     connect(this,SIGNAL(userCodeChanged(const QString &)),compile_page,
@@ -224,12 +195,9 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
                    "\n\nAuthors: Iwan Kawrakow and Ernesto Mainegra"\
                    "\nCopyright National Research Council of Canada"\
                    "\n\nThis program is free software. It is distributed "\
-                   "\nunder the terms of the GNU Public License, version 2."\
-                   "\n See the file GPL_License in the licenses folder of the "\
-                   "\nEGSnrcMP distribution for details."\
+                   "\nunder the terms of the GNU Affero General Public License."\
                    "\n\nThis program uses the Qt toolkit by Trolltech"
 void EGS_MainWidget::aboutEGSGui() {
-    //about_gui->show();
     QMessageBox::about ( this, tr("About egs_gui"), QString(ABOUT_TEXT) );
 
 }
@@ -315,111 +283,8 @@ void EGS_MainWidget::changePage(QListWidgetItem *item,QListWidgetItem * previous
   else if( item->text() == "Execute" ) work_area->setCurrentWidget(run_page);
   else if( item->text() == "PEGS Data" ) work_area->setCurrentWidget(pegs_page);
   else if( item->text() == "Settings" ) work_area->setCurrentWidget(conf_page);
-  else if( item->text() == "New config" ) {changeConfigLib();if (wizard)work_area->setCurrentWidget(wizard);}
 #ifdef IK_DEBUG
   else qDebug("Unknow page %s",item->text().toLatin1());
 #endif
 }
 
-//-----------------------------------------------------------------------------
-//  FUNCTIONS RELATED TO CONFIGURATION WIZARD A REDUCED
-//  VERSION OF EGS_INSTALL.
-//                                                 EMH
-//-----------------------------------------------------------------------------
-/*! Loads configuration library from new location.
-      If library path changes, this functions attempts to load the configuration
-      wizard from the new location. In case of any failure, an empty wizard is
-      used instead.
- */
-void EGS_MainWidget::getConfigLib()
-{
-    QWizard* wiz;
-    QString mhen_house = conf_page->henHouse();
-    QChar s = QDir::separator();
-    QString old_libpath   = libpath;
-    libpath = mhen_house + s + (QString)"bin" + s + conf_page->myMachine() + s;
-
-    if ( libpath == old_libpath ) return;
-#ifdef STATICGUI
-    wiz = new EGSnrcMP_setup(this,config_reader->getConfig());
-#else
-    if ( configLibExists( libpath ) ){
-       typedef  QWizard* (*CreateEGS)( QWidget*, const QString& );
-       QLibrary* lib = new QLibrary(  libpath + (QString)"egsconfig"  );
-#ifdef MW_DEBUG
-  qDebug(" About to load %s", (libpath + tr("egsconfig")).toLatin1().data());
-#endif
-       if (!lib){
-#ifdef MW_DEBUG
-  qDebug(" Failed to create library %s",(libpath + tr("egsconfig")).toLatin1().data());
-#endif
-          QMessageBox::critical( 0,
-             tr("Error"),
-             tr("Failed to create library: \n") + libpath + tr("egsconfig"),
-             tr("Quit")
-          );
-          //wiz = new QWizard(this,"The wizard");
-          wiz = new QWizard(this);
-       }
-       else if( !lib->load() ) {
-#ifdef MW_DEBUG
-          qDebug(" Failed to load library %s",lib->fileName().toLatin1().data());
-#endif
-          QMessageBox::critical( 0,
-             tr("Error"),
-             tr("Failed to load library: \n") + lib->fileName(),
-             tr("Quit")
-          );
-          //wiz = new QWizard(this,"The wizard");
-          wiz = new QWizard(this);
-       }
-       else{
-#ifdef MW_DEBUG
-          qDebug(" Loaded library %s",lib->fileName().toLatin1().data());
-#endif
-          CreateEGS create2 =(CreateEGS)  lib->resolve("create2");
-          if ( create2 ) {
-             wiz = create2( this, config_reader->getConfig() );
-             wizard_lib = lib;
-          }
-          else {
-             //wiz = new QWizard(this,"The wizard");
-             wiz = new QWizard((QWidget*)this);
-          }
-       }
-    }
-    else{
-        cout << " Couldn't find library " << libpath.toLatin1().data() << "egsconfig" << endl;
-        wiz = new QWizard((QWidget*)this);
-    }
-#endif
-
-    //cout << "Found and loaded library" << wizard_lib->fileName().toLatin1().data() << endl;
-    wizard = wiz;
-}
-
-/*!
-    Calls function for loading configuration library form new location
-    and sets wizard on Configuration page.
-*/
-void EGS_MainWidget::changeConfigLib()
-{
-    getConfigLib(); // Sets wizard
-    if (wizard)
-     work_area->addWidget(wizard);
-}
-
-/*! Checks that a file containing "egsconfig" in the library location exists.
-*/
-bool configLibExists(const QString& lib ){
-
-    QDir dir( lib );
-    if ( ! dir.exists() ) return false;
-    QStringList lst = dir.entryList( QStringList("*.*") );
-    for ( QStringList::Iterator it = lst.begin(); it != lst.end(); ++it ) {
-            if ( ( *it ).contains( "egsconfig" ) )
-                return true;
-    }
-    return false;
-}
-//-----------------------------------------------------------------------------
