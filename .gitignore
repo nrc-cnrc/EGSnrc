@@ -6,6 +6,17 @@ mortjob.mortran
 *.density
 *.lst
 *.log
+HEN_HOUSE/bin/
+HEN_HOUSE/lib/
+HEN_HOUSE/omega/beamnrc/tools/beam_build_linux.f
+HEN_HOUSE/omega/progs/addphsp/addphsp_linux.f
+HEN_HOUSE/omega/progs/beamdp/beamdp_linux.f
+HEN_HOUSE/omega/progs/ctcreate/ctcreate_linux.F
+HEN_HOUSE/omega/progs/readphsp/readphsp_linux.f
+HEN_HOUSE/omega/progs/statdose/statdose_linux.f
+HEN_HOUSE/pegs4/density_corrections/split_del.f
+HEN_HOUSE/pegs4/density_corrections/time_stamp
+HEN_HOUSE/pegs4/pegs4_linux.f
 
 ### compiled source
 *.dll
@@ -14,9 +25,9 @@ mortjob.mortran
 *.so
 
 ### OS generated files
+._*
 .DS_Store
 .DS_Store?
-._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
