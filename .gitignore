@@ -8,6 +8,7 @@ mortjob.mortran
 *.log
 HEN_HOUSE/bin/
 HEN_HOUSE/lib/
+HEN_HOUSE/egs++/dso/
 HEN_HOUSE/omega/beamnrc/tools/beam_build_linux.f
 HEN_HOUSE/omega/progs/addphsp/addphsp_linux.f
 HEN_HOUSE/omega/progs/beamdp/beamdp_linux.f
