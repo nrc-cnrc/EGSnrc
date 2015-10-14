@@ -265,8 +265,8 @@ QString inputRZImpl::readVarFromConf( const QString& var )
 {
 //qt3to4 -- BW
 //char s = QDir::separator();
-char s = QDir::separator().toAscii();
-QString val = QString::null;
+QChar s = QDir::separator();
+QString val = QString();
 QString egsconf = ((CONFcomboBox->currentText()).lastIndexOf(QDir::separator())<0)?
    ironIt( HEN_HOUSE + s + (QString)"specs" + s + CONFcomboBox->currentText() ):
    CONFcomboBox->currentText();
@@ -398,7 +398,7 @@ void inputRZImpl::checkConfigLib(){
                    (QString)"specs"  + QDir::separator() +
                    CONFcomboBox->currentText() ):
                    CONFcomboBox->currentText();
- confErrors = QString::null;
+ confErrors = QString();
  if (fileExists(egsconf)){
     updateConfiguration( egsconf );
     checkExecutionAbility();
@@ -423,7 +423,7 @@ void inputRZImpl::checkCompilationAbility(){
   //char s = QDir::separator();
   char s = QDir::separator().toAscii();
 
-  QString missing_files = QString::null;
+  QString missing_files = QString();
 
   if (!check_file( HEN_HOUSE + s + "makefiles" + s + "standard_makefile" ) )
       missing_files += ironIt( HEN_HOUSE + s + "makefiles" + s + "standard_makefile<br>");
@@ -468,7 +468,7 @@ void inputRZImpl::checkExecutionAbility(){
 }
 
 void inputRZImpl::checkPreviewRZ(){
- previewErrors = QString::null;
+ previewErrors = QString();
  previewRZ_exists = fileExists( ironIt(HEN_HOUSE + "/previewRZ/previewRZ.tcl") );
  if ( ! previewRZ_exists )
   previewErrors += tr("<br><b>previewRZ</b> utility not found in the $HEN_HOUSE : ") +
@@ -1062,7 +1062,7 @@ void inputRZImpl::GetSPECfile()
 {
     //qt3to4 -- BW
     //Q3FileDialog* fd = new Q3FileDialog(SPECdir, QString::null, this);
-    QFileDialog* fd = new QFileDialog(this,"",SPECdir, QString::null);
+    QFileDialog* fd = new QFileDialog(this,"",SPECdir, QString());
     fd->setFilter( "SPEC files (*.spectrum *.ensrc)" );
     QString f;
     QStringList flst;
@@ -1090,7 +1090,7 @@ void inputRZImpl::GetSPECfile()
 void inputRZImpl::GetRDISTfile()
 {
     RDISTdir = GetCurrentDir( usercodename, EGS_HOME, HEN_HOUSE );
-    QString f = QFileDialog::getOpenFileName( this,"",RDISTdir, QString::null);
+    QString f = QFileDialog::getOpenFileName( this,"",RDISTdir, QString());
     if ( !f.isEmpty() ) {
        QString dist_file = f;
        QFileInfo fi( dist_file );

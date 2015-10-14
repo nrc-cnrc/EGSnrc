@@ -214,10 +214,10 @@ geoErrors    =  "";
         (*it).remove("lib",Qt::CaseSensitive);
         (*it).remove((*it).lastIndexOf("."),(*it).length()-(*it).lastIndexOf("."));
   }
-  QString inpDir = EGS_HOME + beamuc[0];
+  QString inpDir = !beamuc.isEmpty() ? EGS_HOME + beamuc[0] : EGS_HOME;
   beamuc.prepend(EGS_HOME);
   //give user access to pegs data files in EGS_HOME and HEN_HOUSE
-  char sep = QDir::separator().toAscii();
+  QChar sep = QDir::separator();
   QString PEGSdir1, PEGSdir2;
   PEGSdir1  = ironIt( EGS_HOME + sep + "pegs4" + sep + "data" + sep);
   PEGSdir2  = ironIt( HEN_HOUSE + sep + "pegs4" + sep + "data" + sep);
@@ -2827,7 +2827,7 @@ void inputRZImpl::set_working_area()
    QString tmpDir;
    //qt3to4 -- BW
    //char s = QDir::separator();
-   char s = QDir::separator().toAscii();
+   QChar s = QDir::separator();
 
    if ( HOMERadioButton->isChecked() ){
       tmpDir   = ironIt( EGS_HOME + s + usercodename + s);
@@ -2915,9 +2915,9 @@ void inputRZImpl::update_from_user_area()
     EGSdir   = ironIt( EGSdir );
     //qt3to4 -- BW
     //char s = QDir::separator();
-    char s =  QDir::separator().toAscii();
+    QChar s =  QDir::separator();
 
-    if ( EGSdir == ironIt( HEN_HOUSE + s + (QString)"user_codes" + usercodename + s ) )
+    if ( EGSdir == ironIt( HEN_HOUSE + s + QString("user_codes") + s + usercodename + s ) )
         HEN_HOUSERadioButton->setChecked( true );
     else if ( EGSdir == ironIt( EGS_HOME + s + usercodename + s ) )
         HOMERadioButton->setChecked( true );
@@ -2933,7 +2933,7 @@ void inputRZImpl::update_from_data_area()
 
     //qt3to4 -- BW
     //char s = QDir::separator();
-    char s = QDir::separator().toAscii();
+    QChar s = QDir::separator();
     if ( PEGSdir == ironIt( HEN_HOUSE+s+"pegs4"+s+"data"+s ) )
         HEN_HOUSEPegsRadioButton->setChecked( true );
     else if ( PEGSdir == ironIt( EGS_HOME+s+"pegs4"+s+"data"+s ) )
@@ -2969,14 +2969,12 @@ void inputRZImpl::update_files( const QString & rDirName, QComboBox* cb, const Q
 
     QString dirName = rDirName;
     QDir d( dirName );
-    //qt3to4 -- BW
-    //char s = QDir::separator();
-    char s = QDir::separator().toAscii();
-    QString homeDir           = ironIt( EGS_HOME + s + usercodename + s);
-    QString hen_houseDir = ironIt( HEN_HOUSE + s + usercodename + s);
+    QChar s = QDir::separator();
+    QString homeDir = EGS_HOME.endsWith(s) ? EGS_HOME + usercodename + s : EGS_HOME + s + usercodename + s;
+    QString hen_houseDir = HEN_HOUSE.endsWith(s) ? HEN_HOUSE + usercodename + s : HEN_HOUSE + s + usercodename + s;
 
     if ( !d.exists() ) {
-       if        ( dirName == homeDir )         dirName = hen_houseDir;
+       if      ( dirName == homeDir )      dirName = hen_houseDir;
        else if ( dirName == hen_houseDir ) dirName = homeDir;
 
        //qt3to4 -- BW

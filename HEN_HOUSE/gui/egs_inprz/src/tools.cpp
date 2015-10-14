@@ -75,13 +75,20 @@ QString stripRepetitions( const QString& str , const QString& expr ){
 /*takes a string (a file or directory name ) and simplifies any
    multiple ocurrence of the unix and windows separator.
    But if there is mixed entries, it does nothing about it.*/
-QString simplifySeparators( const QString& str ){
+/*QString simplifySeparators( const QString& str ){
  QString the_name = str;
  QString unix_sep = "/";
  QString winx_sep = "\\";
 
  the_name = stripRepetitions( stripRepetitions( the_name, winx_sep ), unix_sep);
-
+qDebug("Read: %s",the_name.toLatin1().data());
+ return the_name;
+}*/
+QString simplifySeparators( const QString& str ){
+ QString the_name = (str.split(QDir::separator(),QString::SkipEmptyParts)).join(QDir::separator());
+ if (str.startsWith(QDir::separator())) the_name.prepend(QDir::separator());
+ if (str.endsWith(QDir::separator())) the_name.append(QDir::separator());
+qDebug("Read: %s",the_name.toLatin1().data());
  return the_name;
 }
 

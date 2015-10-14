@@ -154,7 +154,7 @@ QString inputRZImpl::GetPEGSDir( const QString& rCodeName, const QString& rHome,
         f2.close();
         return rHenHouse;
     }
-    else return QString::null;
+    else return QString();
 
 }
 
@@ -224,6 +224,8 @@ void inputRZImpl::updateConfiguration( const QString & conf ){
 
  HEN_HOUSE  = readVarFromConf( "HEN_HOUSE" );
  EGS_HOME   = readVarFromConf( "EGS_HOME" );
+ if (!HEN_HOUSE.endsWith(QDir::separator())) HEN_HOUSE.append(QDir::separator());
+ if (!EGS_HOME.endsWith(QDir::separator()))  EGS_HOME.append(QDir::separator());
  EGS_CONFIG = f;
 
 #ifdef WIN32
@@ -248,8 +250,8 @@ void inputRZImpl::updateConfiguration( const QString & conf ){
  }
 
  // Update config file directory
- CONFdir = ironIt( HEN_HOUSE     + QDir::separator() +
-                   QString("specs") +QDir::separator());
+ CONFdir = ironIt( HEN_HOUSE        + QDir::separator() +
+                   QString("specs") + QDir::separator());
 
 }
 
@@ -277,7 +279,7 @@ void inputRZImpl::SetInitialDir()
 {
  //qt3to4 -- BW
  //char SEP   = QDir::separator();
- char SEP   = QDir::separator().toAscii();
+ QChar SEP   = QDir::separator();
 
  EGS_CONFIG = ironIt( getenv( "EGS_CONFIG" ) );
  QString HHini  = ironIt( getenv( "HEN_HOUSE" ) );// get HEN_HOUSE from environment
@@ -314,8 +316,9 @@ void inputRZImpl::SetInitialDir()
            ironIt( HEN_HOUSE + SEP + "pegs4" + SEP + "data" + SEP ),
            ironIt( EGS_HOME  + SEP + "pegs4" + SEP + "data" + SEP  ) );
  if ( PEGSdir.isEmpty() ){
-      PEGSdir  = ironIt( GetCurrentDir( (QString)"pegs4" + SEP +
-                        (QString)"data", HEN_HOUSE, EGS_HOME ) ) ;
+      PEGSdir  = ironIt( GetCurrentDir(
+                         (QString)"pegs4" + SEP + QString("data") + SEP,
+                         HEN_HOUSE, EGS_HOME ) ) ;
  }
  The_Other_PEGS = EGS_HOME;
  The_Other_Area = EGS_HOME;
