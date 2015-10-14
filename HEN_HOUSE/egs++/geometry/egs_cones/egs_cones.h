@@ -552,7 +552,7 @@ opening angles but different apexes)
 
 EGS_ParallelCones models a set of cones all having the same axis and
 opening angle but different cone apex position along the cone axis.
-\image html cones1.eps "Parallel cones"
+\image html cones1.png "Parallel cones"
 This type of geometry is useful, for instance, for modeling
 the tip of an ionization chamber. It is defined via the following set
 of keys
@@ -788,7 +788,7 @@ apexes.
 
 EGS_ConeSet models a set of cones with the same apex and axis
 but different opening angles.
-\image html cones2.eps "Set of cones"
+\image html cones2.png "Set of cones"
 It is defined via the following set
 of keys
 \verbatim
@@ -1044,7 +1044,7 @@ using std::vector;
 
 The EGS_ConeStack class models a series of layers divided into conical segments stacked together to
 form a potentially complex geometrical structure as shown in the following figure. \image html
-cones3.eps "A cone stack" Each layer may have a different set of arbitrary number of cones with
+cones3.png "A cone stack" Each layer may have a different set of arbitrary number of cones with
 different opening angles and apexes, including cylinders (which are just special cases of cones).
 There can be an arbitrary number of layers in a cone stack. The only restriction is that all cones
 in a stack must have the same axis. A cone stack is defined using the following set of keys:

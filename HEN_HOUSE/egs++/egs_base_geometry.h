@@ -735,7 +735,7 @@ struct EGS_GeometryIntersections {
     EGS_I32   imed;  //!< medium index
 };
 
-/*! \example EGS_Box
+/*! \example geometry/egs_box/egs_box.cpp
     \dontinclude geometry/egs_box/egs_box.h
 
     The following describes the implementation of a box geometry that
@@ -980,7 +980,7 @@ struct EGS_GeometryIntersections {
 
 */
 
-/*! \example geometry/example1/geometry_example1.cpp
+/* \example geometry/example1/geometry_example1.cpp
 
   Suppose that you frequently use the same complex geometry and you
   are tired of always having to include the long definition of this geometry
@@ -1122,7 +1122,7 @@ struct EGS_GeometryIntersections {
 
 */
 
-/*! \example geometry/example2/geometry_example2.cpp
+/* \example geometry/example2/geometry_example2.cpp
 
   This example illustrates how to create the same geometry as
   described in

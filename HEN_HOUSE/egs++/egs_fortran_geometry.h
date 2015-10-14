@@ -29,20 +29,18 @@
 */
 
 
-/*! \file     egs_fortran_geometry.h
+/* \file     egs_fortran_geometry.h
  *  \brief    A Fortran interface for using egspp geometries.
- *  \IK
- ***************************************************************************/
+*/
 
 #ifndef EGS_FORTRAN_GEOMETRY_
 #define EGS_FORTRAN_GEOMETRY_
 
 #include "egs_libconfig.h"
 
-/*! \brief A set of functions to use egspp geometries from Fortran (or C).
+/* \brief A set of functions to use egspp geometries from Fortran (or C).
 
   \ingroup Geometry
-  \ingroup egspp_main
 
 */
 

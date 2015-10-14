@@ -138,7 +138,7 @@ public:
 
     /*! \brief Desctructor.
 
-    Deallocates the #R and #R2 arrays
+    Deallocates the arrays
     */
     ~EGS_EllipticCylindersT() {
         if(nreg > 0) {

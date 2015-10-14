@@ -66,6 +66,22 @@ else
 fi
 
 
+### generate html with doxygen if there is a Doxyfile
+if [ -f Doxyfile ]
+then
+    dochtml=${doc%-*}-html
+    set -x
+    doxygen >doxygen.log
+    \mv html $dochtml
+    \zip -qr $dochtml.zip $dochtml
+    \rm -r $dochtml
+    \rm doxygen.log
+    \mv $dochtml.zip ..
+    { set +x; } 2>/dev/null
+    exit
+fi
+
+
 ### compile the tex file to generate a pdf
 if [ ! -f $doc.tex ]
 then
@@ -90,24 +106,25 @@ else
     pdflatex $doc.tex >/dev/null 2>&1
     pdflatex $doc.tex | grep Warning
     { set +x; } 2>/dev/null
-fi
 
+    ### remove tex auxiliary files
+    for extension in aux log lof lot toc idx ind ilg blg bbl biblio out; do
+        if [ -f $doc.$extension ]
+        then
+            set -x
+            \rm $doc.$extension
+            { set +x; } 2>/dev/null
+        fi
+    done
 
-### remove tex auxiliary files
-for extension in aux log lof lot toc idx ind ilg blg bbl biblio out; do
-    if [ -f $doc.$extension ]
+    ### move pdf to parent directory
+    if [ -f $doc.pdf ]
     then
         set -x
-        \rm $doc.$extension
+        \mv $doc.pdf ..
         { set +x; } 2>/dev/null
     fi
-done
-
-
-### move pdf to parent directory
-if [ -f $doc.pdf ]
-then
-    set -x
-    \mv $doc.pdf ..
-    { set +x; } 2>/dev/null
+    exit
 fi
+
+

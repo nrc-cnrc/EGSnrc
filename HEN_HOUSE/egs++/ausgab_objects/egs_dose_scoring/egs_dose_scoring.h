@@ -80,7 +80,7 @@
 */
 
 
-/*! \file egs_medium_dose_scoring.h
+/*! \file egs_dose_scoring.h
  *  \brief A dose scoring ausgab object
  *  \IK
  */

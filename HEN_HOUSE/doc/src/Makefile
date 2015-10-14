@@ -27,9 +27,12 @@
 #
 ###############################################################################
 
-
 docs = $(sort $(wildcard pirs*))
+
+.PHONY: pirs*
 
 all:
 	./makedoc.sh $(docs)
 
+pirs*:
+	./makedoc.sh $@
