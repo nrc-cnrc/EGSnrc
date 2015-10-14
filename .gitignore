@@ -1,6 +1,6 @@
-### EGSnrc generated files
-egs_home
-egsnrc_mp
+### ignore EGSnrc configuration generated files
+egs_home/
+egsnrc_mp/
 mortjob.mortran
 *.mortlst
 *.density
@@ -19,13 +19,23 @@ HEN_HOUSE/pegs4/density_corrections/split_del.f
 HEN_HOUSE/pegs4/density_corrections/time_stamp
 HEN_HOUSE/pegs4/pegs4_linux.f
 
-### compiled source
+### ignore generated documentation
+doc/*.pdf
+doc/src/*.pdf
+html
+
+### ignore binary archive files
+*.zip
+*.gz
+*.tar
+
+### ignore compiled source
 *.dll
 *.exe
 *.o
 *.so
 
-### OS generated files
+### ignore OS generated files
 ._*
 .DS_Store
 .DS_Store?
