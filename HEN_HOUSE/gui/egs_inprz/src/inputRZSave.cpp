@@ -541,6 +541,10 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
           Ppgls->spr[ind]=spComboBox->currentText();
           Ppgls->bc[ind]=bcComboBox->currentText();
           Ppgls->gasp[ind]=gaspEdit->text();
+          Ppgls->isgas[ind]=isGasCheckBox->isChecked();
+          if(Ppgls->isgas[ind] &&
+            (Ppgls->gasp[ind]=="" || Ppgls->gasp[ind].toFloat()<=0.0)) Ppgls->gasp[ind]="1.0";
+          gaspEdit->setText(Ppgls->gasp[ind]);
           Ppgls->dffile[ind]=DFEdit->text();
           Ppgls->sterncid[ind]=sterncidEdit->text();
         }
@@ -568,6 +572,7 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
               EGSpgls->spr[EGSpgls->ninpmedia]=Ppgls->spr[i];
               EGSpgls->bc[EGSpgls->ninpmedia]=Ppgls->bc[i];
               EGSpgls->gasp[EGSpgls->ninpmedia]=Ppgls->gasp[i];
+              EGSpgls->isgas[EGSpgls->ninpmedia]=Ppgls->isgas[i];
               EGSpgls->dffile[EGSpgls->ninpmedia]=Ppgls->dffile[i];
               EGSpgls->sterncid[EGSpgls->ninpmedia]=Ppgls->sterncid[i];
               EGSpgls->ninpmedia++; //ninpmedia starts at 0

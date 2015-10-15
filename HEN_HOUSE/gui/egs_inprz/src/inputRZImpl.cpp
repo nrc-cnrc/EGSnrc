@@ -979,6 +979,22 @@ void inputRZImpl::updateMediaLists()
 
         checkExecutionAbility(); //put this in here for now
 }
+
+void inputRZImpl::enable_gaspEdit()
+{
+//enable gaspEdit edit box if isGasCheckBox is checked
+//disable it if it is unchecked
+    if (isGasCheckBox->isChecked()){
+        gaspLabel->setEnabled( true );
+        gaspEdit->setEnabled( true );
+        gaspUnits->setEnabled( true );
+    }
+    else{
+        gaspLabel->setEnabled( false );
+        gaspEdit->setEnabled( false );
+        gaspUnits->setEnabled( false );
+    }
+}
 //end stuff for PEGSless implementation
 
 /*----------------------------------------------------------------------------

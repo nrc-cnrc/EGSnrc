@@ -308,6 +308,7 @@ public slots:
     virtual void GetDFfile();
     virtual void set_table_header_pbw();
     virtual void set_table_header_noa();
+    virtual void enable_gaspEdit();
     virtual void inpmediumChanged(const QString& str);
     virtual void inpmediumSave(const QString& str);
     virtual void GetPEGSfile();

@@ -142,6 +142,7 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
        rPEGSLESS->elements[tempint].push_back("");
        rPEGSLESS->pz_or_rhoz[tempint].push_back("");
        rPEGSLESS->spec_by_pz[tempint]=true;
+       rPEGSLESS->isgas[tempint]=false;
 
        rPEGSLESS->elements[tempint]=getThemAll( codes1[0] , rPEGSLESS->elements[tempint], rPEGSLESS->errors, p1 );
 
@@ -159,6 +160,7 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
        rPEGSLESS->spr[tempint]=getIt( codes1[4] , "restricted total", rPEGSLESS->errors, p1 );
        rPEGSLESS->bc[tempint]=getIt( codes1[5] , "KM", rPEGSLESS->errors, p1 );
        rPEGSLESS->gasp[tempint]=getIt( codes1[6] , "", rPEGSLESS->errors, p1 );
+       if(rPEGSLESS->gasp[tempint]!="" && rPEGSLESS->gasp[tempint].toFloat()>0.0) rPEGSLESS->isgas[tempint]=true;
        rPEGSLESS->dffile[tempint]=getIt( codes1[7] , "", rPEGSLESS->errors, p1 );
        rPEGSLESS->sterncid[tempint]=getIt( codes1[8] , "", rPEGSLESS->errors, p1 );
 
@@ -254,7 +256,7 @@ QTextStream & operator << ( QTextStream & t, PEGSLESSInputs * rPEGSLESS )
      if(rPEGSLESS->rho[i]!="") t << "rho= " << rPEGSLESS->rho[i] << "\n";
      if(rPEGSLESS->spr[i]!="") t << "stopping powers= " << rPEGSLESS->spr[i] << "\n";
      if(rPEGSLESS->bc[i]!="") t << "bremsstrahlung correction= " << rPEGSLESS->bc[i] << "\n";
-     if(rPEGSLESS->gasp[i]!="") t << "gas pressure= " << rPEGSLESS->gasp[i] << "\n";
+     if(rPEGSLESS->gasp[i]!="" && rPEGSLESS->gasp[i].toFloat()>0.0 && rPEGSLESS->isgas[i]) t << "gas pressure= " << rPEGSLESS->gasp[i] << "\n";
      if(rPEGSLESS->dffile[i]!="") t << "density correction file= " << rPEGSLESS->dffile[i] << "\n";
      if(rPEGSLESS->sterncid[i]!="") t << "sterncid= " << rPEGSLESS->sterncid[i] << "\n";
      t << ":stop " << rPEGSLESS->inpmedium[i] << ":\n\n";

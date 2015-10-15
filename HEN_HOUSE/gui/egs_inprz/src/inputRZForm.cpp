@@ -1365,6 +1365,8 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
  pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("no. of atoms"));
  validate_combo("restricted total","ERROR in stopping power ratio specs",spComboBox);
  validate_combo("KM","ERROR in bremsstrahlung correction specs",bcComboBox);
+ isGasCheckBox->setChecked(false);
+ enable_gaspEdit();
 
  //set public (adjustable) values equal to values passed
  Ppgls = new PEGSLESSInputs;
@@ -1384,6 +1386,7 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
    Ppgls->spr[i]=EGSpgls->spr[i];
    Ppgls->bc[i]=EGSpgls->bc[i];
    Ppgls->gasp[i]=EGSpgls->gasp[i];
+   Ppgls->isgas[i]=EGSpgls->isgas[i];
    Ppgls->dffile[i]=EGSpgls->dffile[i];
    Ppgls->sterncid[i]=EGSpgls->sterncid[i];
  }
@@ -1417,9 +1420,14 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
     validate_combo(EGSpgls->spr[0].toLatin1().data(),"ERROR in stopping power ratio specs",spComboBox);
     validate_combo(EGSpgls->bc[0].toLatin1().data(),"ERROR in bremsstrahlung correction specs",bcComboBox);
     gaspEdit->setText(EGSpgls->gasp[0]);
+    isGasCheckBox->setChecked(EGSpgls->isgas[0]);
+    enable_gaspEdit();
     DFEdit->setText(EGSpgls->dffile[0]);
     sterncidEdit->setText(EGSpgls->sterncid[0]);
-cout << "Should check PEGSlessRadioButton ..." << endl;
+  }
+
+  if(EGSpgls->ninpmedia>0 || EGSpgls->matdatafile!="" ) {
+   //assume the user wants to go PEGSless
     PEGSlessRadioButton->setChecked(true);
     set_data_area();
   }
@@ -1472,7 +1480,10 @@ void inputRZImpl::inpmediumSave( const QString& str)
     Ppgls->rho[ind]=rhoEdit->text();
     Ppgls->spr[ind]=spComboBox->currentText();
     Ppgls->bc[ind]=bcComboBox->currentText();
+    Ppgls->isgas[ind]=isGasCheckBox->isChecked();
     Ppgls->gasp[ind]=gaspEdit->text();
+    if(Ppgls->isgas[ind] && (Ppgls->gasp[ind]=="" || Ppgls->gasp[ind].toFloat()<=0.0)) Ppgls->gasp[ind]="1.0";
+    gaspEdit->setText(Ppgls->gasp[ind]);
     Ppgls->dffile[ind]=DFEdit->text();
     Ppgls->sterncid[ind]=sterncidEdit->text();
   }
@@ -1519,6 +1530,8 @@ void inputRZImpl::inpmediumChanged( const QString& str)
     validate_combo(Ppgls->spr[ind].toLatin1().data(),"ERROR in stopping power ratio specs",spComboBox);
     validate_combo(Ppgls->bc[ind].toLatin1().data(),"ERROR in bremsstrahlung correction specs",bcComboBox);
     gaspEdit->setText(Ppgls->gasp[ind]);
+    isGasCheckBox->setChecked(Ppgls->isgas[ind]);
+    enable_gaspEdit();
     DFEdit->setText(Ppgls->dffile[ind]);
     sterncidEdit->setText(Ppgls->sterncid[ind]);
   }
@@ -1538,6 +1551,8 @@ void inputRZImpl::inpmediumChanged( const QString& str)
     validate_combo("restricted total","ERROR in stopping power ratio specs",spComboBox);
     validate_combo("KM","ERROR in bremsstrahlung correction specs",bcComboBox);
     gaspEdit->setText("");
+    isGasCheckBox->setChecked(false);
+    enable_gaspEdit();
     DFEdit->setText("");
     sterncidEdit->setText("");
   }

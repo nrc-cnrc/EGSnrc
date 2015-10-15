@@ -72,6 +72,7 @@ class PEGSLESSInputs : public MInputBlock
         QString spr[MXMED];
         QString bc[MXMED];
         QString gasp[MXMED];
+        bool isgas[MXMED];
         QString dffile[MXMED];
         QString sterncid[MXMED];
 };
