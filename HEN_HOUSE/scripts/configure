@@ -2395,20 +2395,6 @@ fi
 
 cat >&5 <<EOF
 
-********************* Splitting .density files **************
-EOF
-
-printf $format "Generating .density files ... " >&2
-cd $HEN_HOUSE/pegs4/density_corrections || { echo "Failed to cd to density corrections directory!"; exit 1; }
-if { $make_prog EGS_CONFIG=$HEN_HOUSE/specs/$conf_file >&5 2>&5;
-     test_status=$?; (exit $test_status); }; then
-     echo "OK" >&2
-     echo "*************************** OK *********************** " >&5
-else
-     echo "Failed"
-     echo "*************************** Failed *********************** " >&5
-fi
-
 
 cat >&5 <<EOF
 

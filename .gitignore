@@ -3,7 +3,6 @@ egs_home/
 egsnrc_mp/
 mortjob.mortran
 *.mortlst
-*.density
 *.lst
 *.log
 HEN_HOUSE/bin/
