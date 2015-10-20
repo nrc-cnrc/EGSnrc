@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?> <!--
+<?xml version="1.0" encoding="UTF-8"?><ui version="4.0">
+<class>MExecutionDialog</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc user interface for egs_inprz execution dialog
@@ -27,8 +29,6 @@
 #
 ###############################################################################
 -->
-<ui version="4.0">
- <class>MExecutionDialog</class>
  <widget class="QDialog" name="MExecutionDialog">
   <property name="geometry">
    <rect>

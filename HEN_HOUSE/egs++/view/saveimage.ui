@@ -1,4 +1,6 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><!--
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
+<class>SaveImage</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc egs++ geometry viewer save image user interface
@@ -27,7 +29,6 @@
 #
 ###############################################################################
 -->
-<class>SaveImage</class>
 <widget class="QDialog">
     <property name="name">
         <cstring>SaveImage</cstring>

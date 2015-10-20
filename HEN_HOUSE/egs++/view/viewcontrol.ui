@@ -1,4 +1,6 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><!--
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
+<class>GeometryViewControl</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc egs++ geometry viewer view control user interface
@@ -28,7 +30,6 @@
 #
 ###############################################################################
 -->
-<class>GeometryViewControl</class>
 <widget class="QDialog">
     <property name="name">
         <cstring>GeometryViewControl</cstring>

@@ -1,4 +1,6 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><!--
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
+<class>ClippingPlanesWidget</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc egs++ geometry viewer clipping planes user interface
@@ -27,7 +29,6 @@
 #
 ###############################################################################
 -->
-<class>ClippingPlanesWidget</class>
 <widget class="QWidget">
     <property name="name">
         <cstring>ClippingPlanesWidget</cstring>

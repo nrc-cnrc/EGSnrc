@@ -1,4 +1,6 @@
-<!DOCTYPE UI><UI version="3.1" stdsetdef="1"> <!--
+<!DOCTYPE UI><UI version="3.1" stdsetdef="1">
+<class>EGSnrcMP_setup</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc user interface for egs_configure
@@ -27,7 +29,6 @@
 #
 ###############################################################################
 -->
-<class>EGSnrcMP_setup</class>
 <widget class="QWizard">
     <property name="name">
         <cstring>EGSnrcMP_setup</cstring>

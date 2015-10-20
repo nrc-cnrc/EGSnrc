@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><!--
+<?xml version="1.0" encoding="UTF-8"?><ui version="4.0">
+<class>EGS_PegsPage</class>
+<!--
 ###############################################################################
 #
 #  EGSnrc user interface for egs_gui pegs page
@@ -27,8 +29,6 @@
 #
 ###############################################################################
 -->
-<ui version="4.0">
- <class>EGS_PegsPage</class>
  <widget class="QWidget" name="EGS_PegsPage">
   <property name="enabled">
    <bool>true</bool>
