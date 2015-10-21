@@ -57,7 +57,6 @@
 ###############################################################################
 */
 
-
 #include <cstdlib>
 // We derive from EGS_AdvancedApplication => need the header file.
 #include "egs_advanced_application.h"
@@ -552,6 +551,40 @@ public:
     /*! Destructor.  */
     ~EGS_ChamberApplication() {
         if( dose )  delete dose;
+		
+		// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+		// destructors for all the variables defined for multiregion scoring
+		if (*multiFlag_Martinov)
+		{
+			if (doses_Martinov)
+			{
+				for (int i = 0; i < doses_Martinov->size(); i++)
+					if((*doses_Martinov)[i])
+						delete (*doses_Martinov)[i];
+				
+				doses_Martinov->clear();
+				delete doses_Martinov;
+			}
+			
+			if (masses_Martinov)
+			{
+				for (int i = 0; i < masses_Martinov->size(); i++)
+					if ((*masses_Martinov)[i])
+						delete (*masses_Martinov)[i];
+				
+				doses_Martinov->clear();
+				delete masses_Martinov;
+			}
+		}
+		
+		for (int i = 0; i < cavity_regions.size(); i++)
+			if(cavity_regions[i])
+				delete[] cavity_regions[i];
+		
+		if (multiFlag_Martinov)
+			delete multiFlag_Martinov;
+		// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
+	
         if( ngeom > 0 ) {
             delete [] geoms; delete [] mass; int j;
             for(j=0; j<ngeom; j++) if( transforms[j] ) delete transforms[j];
@@ -625,7 +658,7 @@ public:
     void selectPhotonMFP(EGS_Float &dpmfp);
 
     int rangeDiscard(EGS_Float tperp, EGS_Float range) const ;
-
+	
 protected:
 
     /*! Start a new shower.  */
@@ -654,6 +687,25 @@ private:
                                 // belongs to the cavity and false otherwise
     EGS_ScoringArray *dose;     // scoring array for dose scoring in each of
                                 // the calculation geometries.
+								
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	// variables required for multiregion scoring
+	
+	// we need to score dose per region, so we need an array of scorring arrays
+    vector <EGS_ScoringArray*> *doses_Martinov;
+	
+	// and we now need to store as many masses as there are regions for each geom
+	vector <vector <EGS_Float>* > *masses_Martinov;
+	
+	// formely temporary variables used when parsing the cavity regions section of
+	// scoring options, now they are used as an accompanying index to
+	// doses_Martinov
+	vector<int>  n_cavity_regions; // stores the size of cavity_regions int[]
+    vector<int*>  cavity_regions; // stores as many regions as doses_Martinov
+	                              // stores dose
+	bool *multiFlag_Martinov;
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
+	
     EGS_Float        *mass;     // mass of the material in the cavity.
 
     EGS_Float        fsplit;    // photon splitting number
@@ -791,7 +843,7 @@ void EGS_ChamberApplication::describeUserCode() const {
     egsInformation(
       "\n               *************************************************"
       "\n               *                                               *"
-      "\n               *               egs_chamber CSE)                *"
+      "\n               *               egs_chamber                     *"
       "\n               *                                               *"
       "\n               *************************************************"
       "\n\n");
@@ -824,7 +876,7 @@ void EGS_ChamberApplication::describeSimulation() {
         		egsInformation("	%i) %s -> %s\n", i+1, geoms[i]->getName().c_str(),  cgeoms[i]->getName().c_str() );
         }
         else {
-            if (cgeom)
+            if (cgeom) 
                 egsInformation("    rejection geometry is %s\n",
                 cgeom->getName().c_str());
             else
@@ -934,7 +986,7 @@ int EGS_ChamberApplication::initScoring() {
         if( !err && tmp > 1 &! do_cse &! do_TmpPhsp) {
             fsplit = tmp; fspliti = 1/tmp;
         }
-
+        
         //
         // ******** radiative event splitting
         //
@@ -943,7 +995,7 @@ int EGS_ChamberApplication::initScoring() {
             egsInformation("\n => initScoring: splitting radiative events %d times ...\n", csplit);
            the_egsvr->nbr_split = csplit;
         }
-
+        
         //
         // ******* range rejection
         //
@@ -1032,6 +1084,18 @@ int EGS_ChamberApplication::initScoring() {
 
         options->getInput("silent",silent);
 
+		// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+		// section picking up the option for multiregion scoring, ie,
+		//
+		// :start scoring options:
+		//     multiregion scoring = 1
+		//     etc...
+		
+        int tmp_multiFlag_Martinov=0;
+        options->getInput("multiregion scoring",tmp_multiFlag_Martinov);
+		multiFlag_Martinov = new bool(tmp_multiFlag_Martinov?true:false);
+		// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
+		
         //
         // *********** photon cross section scaling
         //
@@ -1095,8 +1159,14 @@ int EGS_ChamberApplication::initScoring() {
         // *********** calculation geometries
         //
         vector<EGS_BaseGeometry *> geometries;
-        vector<int *>  cavity_regions;
-        vector<int>  n_cavity_regions;
+		
+		// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //		
+		// old code commented out as these are defined globally earlier on, and are
+		// used to score dose in individual regions		
+        /*vector<int *>  cavity_regions;
+        vector<int>  n_cavity_regions;*/
+		// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
+	
         vector<int *>  enhance_regions;
         vector<int>  n_enhance_regions;
         vector<int *>  enhance_fac;
@@ -1158,15 +1228,64 @@ int EGS_ChamberApplication::initScoring() {
             }
 
             EGS_Float cmass;
-            int err2 = aux->getInput("cavity mass",cmass);
+			
+			// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			// here we kinda change up the cmass input
+			int err2;
+			if (!*multiFlag_Martinov) // if we don't have multiregion scoring
+			{ // then proceed as we did before
+				err2 = aux->getInput("cavity mass",cmass);
+				if( err2 )
+				{
+					egsWarning("initScoring: missing/wrong 'cavity mass' "
+							   "input\n"); cmass = -1;
+				}
+			}
+			else // if we do have multiregion scoring, then we need as many masses as
+			{    // scoring regions
+				// declare an array to hold a mass for each region
+				masses_Martinov = new vector <vector <EGS_Float>* >();
+				
+				// add an array for each geom to hold the masses
+				masses_Martinov->push_back(new vector <EGS_Float>);
+				// add the masses to said array
+				err2 = aux->getInput("cavity mass",*(*masses_Martinov)[masses_Martinov->size()-1]);
+				if( err2 ) // if there was an error
+				{
+					egsWarning("initScoring: missing/wrong 'cavity mass' "
+							   "input when multiregion scoring\n");
+				}
+				
+				// now we compute cmass by iterating through all the individual region
+				// masses and adding them up together
+				cmass = 0;
+				int j = masses_Martinov->size()-1;
+				int temp_iMax = (*masses_Martinov)[j]->size();
+				for (int i = 0; i < temp_iMax ; i++)
+					cmass += (*(*masses_Martinov)[j])[i];
+			}
+			// Martinov Stop ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			
+			// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			// Commented out because it was incorporated above
+			
+            //int err2 = aux->getInput("cavity mass",cmass);
+			// Martinov Stop ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			
             if( err ) egsWarning("initScoring: missing/wrong 'geometry name' "
                     "input\n");
             if( err1 ) egsWarning("initScoring: missing/wrong 'cavity regions' "
                     "input\n");
-            if( err2 ) {
-                egsWarning("initScoring: missing/wrong 'cavity mass' "
-                        "input\n"); cmass = -1;
-            }
+					
+			// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			// Commented out because it was incorporated above
+			
+            //if( err2 ) {
+            //    egsWarning("initScoring: missing/wrong 'cavity mass' "
+            //            "input\n"); cmass = -1;
+            //}
+			// Martinov Stop ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			
             if( err11 ) egsWarning("initScoring: missing/wrong 'enhance regions' "
                     "input\n");
             if( err12 ) egsWarning("initScoring: missing/wrong 'enhancement' "
@@ -1206,7 +1325,11 @@ int EGS_ChamberApplication::initScoring() {
                         egsWarning("initScoring: no cavity regions "
                                 "specified for geometry %s --> input ignored\n",
                                 gname.c_str());
-                        delete [] regs;
+								
+						// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+						// commented out line below because we require the region list later						
+                        //delete [] regs;
+						// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
                     }
                     else {
                         geometries.push_back(g);
@@ -1357,6 +1480,33 @@ int EGS_ChamberApplication::initScoring() {
         cs_enhance = new int* [ngeom];
         mass = new EGS_Float [ngeom];
         dose = new EGS_ScoringArray(ngeom);
+		
+		// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+		if (*multiFlag_Martinov)
+		{
+			// declare as many scoring arrays as there are scoring geometries
+			doses_Martinov = new vector <EGS_ScoringArray*>();
+			
+			// add a scoring array as big as the number of regions specified for the
+			// cavity for each scoring geom
+			for (int i = 0; i < n_cavity_regions.size(); i++)
+				doses_Martinov->push_back(new EGS_ScoringArray(n_cavity_regions[i]));
+			
+			// check to see is we have as many masses as we have regions for each geom
+			bool tempFlag_Martinov = false;
+			if (*multiFlag_Martinov)
+				for (int i = 0; i < n_cavity_regions.size(); i++)
+					if ((*doses_Martinov)[i]->regions() != (*masses_Martinov)[i]->size())
+						tempFlag_Martinov++;
+			
+			// if we have any discrepencies, spit out error
+			if (tempFlag_Martinov)
+				egsFatal("initScoring: Number of regions and masses "
+			             "for cavity region/mass do not match, which"
+						 " is required for multiregion scoring.\n");
+		}
+		// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
+		
         transforms = new EGS_AffineTransform* [ngeom];
         do_cse = false;
         has_sub = new bool [ngeom];
@@ -1429,7 +1579,12 @@ int EGS_ChamberApplication::initScoring() {
 			    rECUT[j] = ecut_val[j];
             }
 
-            delete [] cavity_regions[j];
+            
+			// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+			// commented out the line below because we can't delete cavity)regions, it
+			// points to our stored region numbers, which are still required
+			/*delete [] cavity_regions[j];*/
+			// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //  
             delete [] enhance_regions[j];
         }
 
@@ -1872,6 +2027,23 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                 EGS_Float aux = (the_stack->E[np]-the_useful->rm)*the_stack->wt[np];
                 if(aux > 0){
                     dose->score(ig,aux);
+					
+					// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+					if (*multiFlag_Martinov)
+					{
+						// get the cavity_regions index corresponding to ir so we know which index
+						// of doses_Martinov to score in
+						int temp_Martinov;
+						for (temp_Martinov = 0; temp_Martinov < n_cavity_regions[ig]; temp_Martinov++)
+							if(ir == cavity_regions[ig][temp_Martinov])
+								break; // basically break when temp_Martinov is at the cavity index
+							           // corresponding to ir
+						
+						// score to the proper region
+						(*doses_Martinov)[ig]->score(temp_Martinov,aux);
+					}
+					// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+					
                     if(check_for_subreg && nsubgeoms[ig] != 0){
                         save_dose += aux;	//get the current dose deposition
                     }
@@ -2029,6 +2201,23 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                     }
                     */
                     dose->score(ig,aux);
+					
+					// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+					if (*multiFlag_Martinov)
+					{
+						// get the cavity_regions index corresponding to ir so we know which index
+						// of doses_Martinov to score in
+						int temp_Martinov;
+						for (temp_Martinov = 0; temp_Martinov < n_cavity_regions[ig]; temp_Martinov++)
+							if(ir == cavity_regions[ig][temp_Martinov])
+								break; // basically break when temp_Martinov is at the cavity index
+							           // corresponding to ir
+						
+						// score to the proper region
+						(*doses_Martinov)[ig]->score(temp_Martinov,aux);
+					}
+					// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+					
                     if(check_for_subreg && nsubgeoms[ig] != 0){
                         save_dose += aux;	//get the current dose deposition
                     }
@@ -2046,6 +2235,23 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                         EGS_Float aux = the_epcont->edep*the_stack->wt[np];
                         if( aux > 0 ) {
                             dose->score(i,aux);
+							
+							// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+							if (*multiFlag_Martinov)
+							{
+								// get the cavity_regions index corresponding to ir so we know which index
+								// of doses_Martinov to score in
+								int temp_Martinov;
+								for (temp_Martinov = 0; temp_Martinov < n_cavity_regions[ig]; temp_Martinov++)
+									if(ir == cavity_regions[ig][temp_Martinov])
+										break; // basically break when temp_Martinov is at the cavity index
+											   // corresponding to ir
+								
+								// score to the proper region
+								(*doses_Martinov)[ig]->score(temp_Martinov,aux);
+							}
+							// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+					
                         }
                     }
                 }
@@ -2391,6 +2597,25 @@ int EGS_ChamberApplication::simulateSingleShower() {
                                         // dose may have been deposited by now
                                         if ( (ig != save_ig) && (save_dose > 0) )
                                             dose->score(ig,save_dose);
+										
+										
+										// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+										if ( (ig != save_ig) && (save_dose > 0) && *multiFlag_Martinov)
+										{
+											// get the cavity_regions index corresponding to ir so we know which index
+											// of doses_Martinov to score in
+											int temp_Martinov;
+											int ir_Martinov = geoms[ig]->isWhere(x);
+											for (temp_Martinov = 0; temp_Martinov < n_cavity_regions[ig]; temp_Martinov++)
+												if(ir_Martinov == cavity_regions[ig][temp_Martinov])
+													break; // basically break when temp_Martinov is at the cavity index
+														   // corresponding to ir
+											
+											// score to the proper region
+											(*doses_Martinov)[ig]->score(temp_Martinov,save_dose);
+										}
+										// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+										
                                         geometry = geoms[ig];
                                         while(container2->size() > 0){
                                             nsmall_step = 0;
@@ -2424,6 +2649,16 @@ int EGS_ChamberApplication::outputData() {
     int err = EGS_AdvancedApplication::outputData();
     if( err ) return err;
     if( !dose->storeState(*data_out) ) return 101;
+										
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// we need to save all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			if (!(*doses_Martinov)[i]->storeState(*data_out)) return 101;
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) {
             double aux = dose->thisHistoryScore(gind1[j])*
@@ -2470,6 +2705,16 @@ int EGS_ChamberApplication::readData() {
     int err = EGS_AdvancedApplication::readData();
     if( err ) return err;
     if( !dose->setState(*data_in) ) return 101;
+	
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// we need to load all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			if (!(*doses_Martinov)[i]->setState(*data_in)) return 101;
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) (*data_in) >> scg[j];
         if( !data_in->good() ) return 104;
@@ -2500,6 +2745,16 @@ int EGS_ChamberApplication::readData() {
 void EGS_ChamberApplication::resetCounter() {
     EGS_AdvancedApplication::resetCounter();
     dose->reset();
+	
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// we need to reset all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			(*doses_Martinov)[i]->reset();
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) scg[j] = 0;
     }
@@ -2526,6 +2781,20 @@ int EGS_ChamberApplication::addState(istream &data) {
     EGS_ScoringArray tmp(ngeom);
     if( !tmp.setState(data) ) return 101;
     (*dose) += tmp;
+	
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// we need to combine all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+		{
+			EGS_ScoringArray tmp_Martinov(n_cavity_regions[i]); // temp for error check
+			if( !tmp_Martinov.setState(data) ) return 101; // if we fail, throw 101
+			*((*doses_Martinov)[i]) += tmp_Martinov; // otherwise add temp
+		}
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) {
             double tmp; data >> tmp;
@@ -2670,6 +2939,47 @@ void EGS_ChamberApplication::outputResults() {
         }
 
     }
+	
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// banners are wonderful
+		egsInformation("-----------------------------------------------\n");
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		egsInformation("          Multiregion Scoring Results          \n");
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		
+		// iterate through each geom
+		for(int i = 0; i < n_cavity_regions.size(); i++)
+		{
+			// output geom name
+			egsInformation("\nFor %-25s\n", geoms[i]->getName().c_str());
+			
+			// iterate through every cavity region in geom
+			for (int j = 0; j < n_cavity_regions[i]; j++)
+			{
+				// grab dose and uncertainty for current geom and index
+				double r_Martinov, dr_Martinov; (*doses_Martinov)[i]->currentResult(j,r_Martinov,dr_Martinov);
+				
+				// if we have non-zero error, get a percentage
+				if (r_Martinov > 0) dr_Martinov = 100*dr_Martinov/r_Martinov;
+				else dr_Martinov = 100; // else give 100% error
+				
+				// normalize to Joule per history
+				EGS_Float norm_Martinov = 1.602e-10*current_case/source->getFluence();
+				
+				// normalize to Gy per history
+				norm_Martinov /= (*(*masses_Martinov)[i])[j];
+				
+				// output region number with dose and uncertainty, using the same
+				// precision as above
+				egsInformation("\tRegion %4d     %10.4le +/- %-7.3lf%c\n",cavity_regions[i][j],r_Martinov*norm_Martinov,dr_Martinov,c);
+			}
+		}
+		// banners are wonderful
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 };
 
 /*! Get the current simulation result.  */
@@ -2974,6 +3284,16 @@ int EGS_ChamberApplication::startNewShower() {
       }
       //*HB_end**************************
       dose->setHistory(current_case);
+	  
+	// Martinov Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	if (*multiFlag_Martinov)
+	{
+		// update our scoring arrays
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			(*doses_Martinov)[i]->setHistory(current_case);
+	}
+	// Martinov Stop  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
+	
       last_case = current_case;
   }
   return 0;
