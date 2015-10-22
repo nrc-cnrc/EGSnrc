@@ -64,13 +64,15 @@ EGS_RunControl::EGS_RunControl(EGS_Application *a) : app(a), input(0),
         egsWarning("EGS_RunControl::EGS_RunControl: no 'run control' "
                 "input\n"); return;
     }
-    int err = input->getInput("number of histories",ncase);
+    double ncase_double;
+    int err = input->getInput("number of histories", ncase_double);
     if( err ) {
-        err = input->getInput("ncase",ncase);
+        err = input->getInput("ncase", ncase_double);
         if( err )
             egsWarning("EGS_RunControl: missing/wrong 'ncase' or "
                  "'number of histories' input\n");
     }
+    ncase = EGS_I64(ncase_double);
     err = input->getInput("nbatch",nbatch);
     if( err ) nbatch = 10;
     err = input->getInput("max cpu hours allowed",maxt);
