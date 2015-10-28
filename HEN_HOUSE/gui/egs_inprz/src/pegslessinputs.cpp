@@ -65,14 +65,14 @@ PEGSLESSInputs::~PEGSLESSInputs()
 
 std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
 {
-  std::vector<string> codes;
+  std::vector<string> codes,med_delims;
   codes.push_back("AE");
   codes.push_back("UE");
   codes.push_back("AP");
   codes.push_back("UP");
   codes.push_back("material data file");
-  codes.push_back(":start");
-  codes.push_back(":stop");
+  med_delims.push_back(":start");
+  med_delims.push_back(":stop");
 
   //possible inputs for media in .egsinp file
   std::vector<string> codes1;
@@ -86,7 +86,7 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
   codes1.push_back("density correction file");
   codes1.push_back("sterncid");
 
-  DE_Parser *p = new DE_Parser(codes,0,"media definition", in, true);
+  DE_Parser *p = new DE_Parser(codes,0,"media definition", in, false);
 
   rPEGSLESS->AE         = getIt( codes[0] , "", rPEGSLESS->errors, p );
   rPEGSLESS->UE         = getIt( codes[1] , "", rPEGSLESS->errors, p );
@@ -95,6 +95,8 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
   rPEGSLESS->matdatafile         = getIt( codes[4] ,"", rPEGSLESS->errors, p );
 
   //now search for media defined in the .egsinp file
+  //set multiple entries to true to allow for multiple media defined
+  DE_Parser *p2 = new DE_Parser(med_delims,0,"media definition", in, true);
 
   bool loop=true;
   while (loop) {
@@ -102,8 +104,8 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
      //qt3to4 -- BW
      //string temp_start = getIt( codes[5] ,"", rPEGSLESS->errors, p );
      //string temp_stop = getIt( codes[6] ,"", rPEGSLESS->errors, p );
-      string temp_start = getIt( codes[5] ,"", rPEGSLESS->errors, p ).toStdString();
-     string temp_stop = getIt( codes[6] ,"", rPEGSLESS->errors, p ).toStdString();
+      string temp_start = getIt( med_delims[0] ,"", rPEGSLESS->errors, p2 ).toStdString();
+     string temp_stop = getIt( med_delims[1] ,"", rPEGSLESS->errors, p2 ).toStdString();
   //now strip trailing : off the strings and compare
 
      if(temp_start=="") break;
