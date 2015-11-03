@@ -32,7 +32,7 @@
 #  by GNU autoconf (http://www.gnu.org/software/autoconf/).
 #
 #  Finalizes the installation of EGSnrc for the user executing the script.
-#  Output is stored in scripts/finalize_$USER.log
+#  Output is stored in log/finalize_$USER.log
 #
 #  1. Asks for a directory where all user codes are to be stored (EGS_HOME)
 #     and creates it if needed.
@@ -52,7 +52,7 @@
 my_version='1.0'
 
 # my name
-my_dir=$(dirname $0)
+my_dir=$(pwd)/$(dirname $0)
 my_name=$(basename $0)
 
 # printf format
@@ -65,7 +65,12 @@ help='?'
 # a timestamp
 timestamp='Aug 25 2015'
 
-test_egs_home=$(dirname $HEN_HOUSE)/egs_home
+# guess egs home location
+if ! test "x$HEN_HOUSE" = x; then
+    test_egs_home=$(dirname $HEN_HOUSE)/egs_home
+else
+    test_egs_home=$(cd ../..; pwd)/egs_home
+fi
 
 cpp_user_codes="cavity egs_cbct egs_chamber egs_fac tutor2pp tutor7pp"
 
@@ -120,7 +125,7 @@ _ACEOF
            echo "I'm expecting an absolute path here" >&2
        fi
    fi
-   printf $format "Input the directory where you want to keep your user codes: " >&2
+   printf $format "Input the directory for your user codes: " >&2
 done
 
 test_response=$( echo $response | sed 's,.*[\\/],,' )
@@ -144,8 +149,7 @@ fi
 
 if test "x$need_configuration" = xyes; then
 
-  echo "Input the name of the EGSnrc config file created during" >&2
-  printf $format "the installation process (including absolute path): " >&2
+  printf $format "Input absolute path to EGSnrc configuration file: " >&2
 
   while true; do
 
@@ -171,7 +175,7 @@ _ACEOF
         fi
       fi
     fi
-    printf $format "Input your EGSnrc configuration file: " >&2
+    printf $format "Input absolute path to EGSnrc configuration file: " >&2
 
   done
 
@@ -331,6 +335,15 @@ for uc in $compile_list; do
     fi
 done
 
+# move configuration log to log directory
+if test -f $my_dir/finalize_egs_$USER.log && test -d $HEN_HOUSE/log; then
+    mv $my_dir/finalize_egs_$USER.log $HEN_HOUSE/log/
+    echo >&2
+    printf $format "EGSnrc user configuration log saved in:" >&2
+    echo >&2
+    echo "$my_dir/finalize_egs_$USER.log" >&2
+fi
+
 cat >&2 <<EOF
 
 ###############################################################################
@@ -394,6 +407,7 @@ export EGS_HOME EGS_CONFIG
 
 EOF
 fi
+
 cat >&2 <<EOF
 
 ###############################################################################
