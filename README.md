@@ -38,8 +38,10 @@ on any platform you need:
 - the Tcl/Tk interpreter and widget toolkit
 - the Grace plotting tool
 
-Please read the [INSTALL](INSTALL.md) instructions for more details about
-these software components.
+Please read the [installation
+instructions](https://github.com/nrc-cnrc/EGSnrc/wiki/EGSnrc-
+installation) in the wiki for more details about these software
+components.
 
 
 ## Installation
@@ -47,7 +49,7 @@ these software components.
 Installation involves downloading EGSnrc files, and then configuring
 EGSnrc for your computer. There are two ways to obtain the source code:
 
-1. *clone* the git repository on your computer using the git revision
+1. clone the git repository on your computer using the git revision
 control software, via the SSH clone URL
 `git@github.com:nrc-cnrc/EGSnrc.git`.
 
@@ -57,9 +59,10 @@ latest version of the code to your machine (and then unzip it);
 
 Once you have downloaded the source code by either method, you must run
 a configuration GUI or script to set up and compile EGSnrc software
-components for your computer. Please read the [installation
+components for your computer. Please read the full [installation
 instructions](https://github.com/nrc-cnrc/EGSnrc/wiki/EGSnrc-
-installation) for more details on how to download and configure EGSnrc.
+installation) in the wiki for more details on how to download and
+configure EGSnrc.
 
 
 ## Documentation
