@@ -10,13 +10,17 @@ HEN_HOUSE/lib/
 HEN_HOUSE/log/
 HEN_HOUSE/egs++/dso/
 HEN_HOUSE/mortran3/mortran3_*.f
-HEN_HOUSE/omega/beamnrc/tools/beam_build_linux.f
-HEN_HOUSE/omega/progs/addphsp/addphsp_linux.f
-HEN_HOUSE/omega/progs/beamdp/beamdp_linux.f
-HEN_HOUSE/omega/progs/ctcreate/ctcreate_linux.F
-HEN_HOUSE/omega/progs/readphsp/readphsp_linux.f
-HEN_HOUSE/omega/progs/statdose/statdose_linux.f
-HEN_HOUSE/pegs4/pegs4_linux.f
+HEN_HOUSE/omega/beamnrc/tools/beam_build_*.f
+HEN_HOUSE/omega/progs/addphsp/addphsp_*.f
+HEN_HOUSE/omega/progs/beamdp/beamdp_*.f
+HEN_HOUSE/omega/progs/ctcreate/ctcreate_*.F
+HEN_HOUSE/omega/progs/readphsp/readphsp_*.f
+HEN_HOUSE/omega/progs/statdose/statdose_*.f
+HEN_HOUSE/pegs4/pegs4_*.f
+HEN_HOUSE/pieces/linux/egs_gui_*
+HEN_HOUSE/pieces/linux/egs_inprz_*
+HEN_HOUSE/pieces/linux/egs_view_*
+
 
 ### ignore generated documentation
 doc/*.pdf
