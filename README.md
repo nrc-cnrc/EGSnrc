@@ -40,7 +40,7 @@ on any platform you need:
 - the Grace plotting tool
 
 Please read the [installation instructions]
-(https://github.com/nrc-cnrc/EGSnrc/wiki/EGSnrc-installation) in the
+(https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
 wiki for more details about these software components.
 
 ## Installation
@@ -60,7 +60,7 @@ Once you have downloaded the source code by either method, you must run
 a configuration GUI or script to set up and compile EGSnrc software
 components for your computer. Please read the full
 [installation instructions]
-(https://github.com/nrc-cnrc/EGSnrc/wiki/EGSnrc-installation) in the
+(https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
 wiki for more details on how to download and configure EGSnrc.
 
 
