@@ -340,14 +340,14 @@ Photon cross-sections output= Off # Off (default) or On.
                                   # is created with the photon cross-section
                                   # data used.
 
-Compton cross sections= compton_sigma.data # Bound Compton cross-section data.
-                                           # User-supplied bound Compton
-                                           # cross-sections in the file
-                                           # comp_xsections_compton.data in
-                                           # directory $HEN_HOUSE/data/, where
-                                           # comp_xsections is the name supplied
-                                           # for this input. Uses compton_sigma.data
-                                           # by default.
+#Compton cross sections= xcom     # Bound Compton cross-section data.
+                                  #Use-supplied bound Compton
+                                  # cross-sections in the file
+                                  # comp_xsections_compton.data in
+                                  # directory $HEN_HOUSE/data/, where
+                                  # comp_xsections is the name supplied
+                                  # for this input. Uses compton_sigma.data
+                                  # by default.
 
 Rayleigh scattering= Off            # Off (default),On, custom;
                                    # Off: no coherent scattering
