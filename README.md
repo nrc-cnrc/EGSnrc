@@ -2,13 +2,14 @@
 
 EGSnrc is a software toolkit to perform Monte Carlo simulation of
 ionizing radiation transport through matter. It models the propagation
-of photons, electrons and positrons with kinetic energies between 1 keV
-and 10 GeV, in homogeneous materials. EGSnrc is an extended and improved
-version of the Electron Gamma Shower (EGS) software package originally
-developed at the Stanford Linear Accelerator Center (SLAC) in the 1970s.
-Most notably, it incorporates significant refinements in charged
-particle transport, better low energy cross sections, and the egs++
-class library to model elaborate geometries and particle sources.
+of photons, electrons and positrons with kinetic energies between
+1&nbsp;keV and 10&nbsp;GeV, in homogeneous materials. EGSnrc is an
+extended and improved version of the Electron Gamma Shower (EGS)
+software package originally developed at the Stanford Linear Accelerator
+Center (SLAC) in the 1970s. Most notably, it incorporates significant
+refinements in charged particle transport, better low energy cross
+sections, and the egs++ class library to model elaborate geometries and
+particle sources.
 
 
 ## Licence
