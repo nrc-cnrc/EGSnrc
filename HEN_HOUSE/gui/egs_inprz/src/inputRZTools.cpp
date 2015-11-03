@@ -206,18 +206,15 @@ void inputRZImpl::updateConfiguration( const QString & conf ){
  QString confi = conf;
  // Get current config file directory
  if (!HEN_HOUSE.isEmpty()){
-  CONFdir = ironIt( HEN_HOUSE     + QDir::separator() +
-                    (QString)"specs" +QDir::separator());
-  // Here we remove any path to the config file.
-  // It is mandatory to have it in $HEN_HOUSE/specs !!!!
-  confi.remove(0, 1+ ironIt(confi).lastIndexOf( QDir::separator()) );
+    CONFdir = ironIt( HEN_HOUSE     + QDir::separator() +
+                   (QString)"specs" + QDir::separator());
+    // Here we remove any path to the config file.
+    // It is mandatory to have it in $HEN_HOUSE/specs !!!!
+    confi.remove(0, 1+ ironIt(confi).lastIndexOf( QDir::separator()) );
  }
 
-
- //Update config file combo box if needed
- CONFcomboBox->setEditText ( confi );
+ CONFcomboBox->setEditText( confi );
  Add_New_Item( confi.toLatin1().data(), CONFcomboBox );
-
 
  //QString f = conf;
  QString f=(conf.lastIndexOf(QDir::separator())<0)?ironIt(CONFdir+conf):conf;
@@ -253,6 +250,11 @@ void inputRZImpl::updateConfiguration( const QString & conf ){
  CONFdir = ironIt( HEN_HOUSE        + QDir::separator() +
                    QString("specs") + QDir::separator());
 
+//  //Update config file combo box if needed
+//  confi.remove(0, 1+ ironIt(confi).lastIndexOf( QDir::separator()) );
+//  CONFcomboBox->setEditText( confi );
+//  Add_New_Item( confi.toLatin1().data(), CONFcomboBox );
+
 }
 
 //!  Sets initial environment variables like $HOME and $HEN_HOUSE,
@@ -283,6 +285,7 @@ void inputRZImpl::SetInitialDir()
 
  EGS_CONFIG = ironIt( getenv( "EGS_CONFIG" ) );
  QString HHini  = ironIt( getenv( "HEN_HOUSE" ) );// get HEN_HOUSE from environment
+ if (!HHini.isEmpty()) HEN_HOUSE = HHini; // If available from environment, initialize it.
 #ifdef WIN32
  if (!EGS_CONFIG.isEmpty())         // make drive letter upper case
       EGS_CONFIG.replace( 0, 1,     // to be consistent with Qt Widgets
@@ -320,6 +323,7 @@ void inputRZImpl::SetInitialDir()
                          (QString)"pegs4" + SEP + QString("data") + SEP,
                          HEN_HOUSE, EGS_HOME ) ) ;
  }
+
  The_Other_PEGS = EGS_HOME;
  The_Other_Area = EGS_HOME;
 
@@ -344,6 +348,8 @@ void inputRZImpl::SetInitialDir()
  connect( pegs4ComboBox, SIGNAL( editTextChanged(const QString&) ),
           this, SLOT( PEGSFileNameChanged(const QString&) ) );
 
+ if (!HEN_HOUSE.endsWith(QDir::separator())) HEN_HOUSE += QDir::separator();
+ if (!HHini.endsWith(QDir::separator()))     HHini     += QDir::separator();
  if (HEN_HOUSE.isEmpty() && !HHini.isEmpty()){
    HEN_HOUSE = HHini;
    confErrors +=
