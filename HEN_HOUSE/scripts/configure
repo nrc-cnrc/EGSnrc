@@ -1525,7 +1525,7 @@ fi
 while true; do
 
     # query configuration file name
-    printf $format "Input configuration file name: " >&2
+    printf $format "Choose a configuration file name: " >&2
     if test ! "x$try_conf_file" = x; then
         printf "[$try_conf_file] ">&2
     fi
