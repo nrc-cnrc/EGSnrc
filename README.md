@@ -45,21 +45,17 @@ wiki for more details about these software components.
 
 ## Installation
 
-Installation involves downloading EGSnrc files, and then configuring
-EGSnrc for your computer. There are two ways to obtain the source code:
+Installation involves downloading the EGSnrc source code, and then
+configuring EGSnrc for your computer. The recommended way to obtain the
+source code is to clone the EGSnrc repository on your computer using the
+git revision control software, via the SSH clone URL:
+```bash
+git clone git@github.com:nrc-cnrc/EGSnrc.git
+```
 
-1. clone the git repository on your computer using the git revision
-control software, via the SSH clone URL
-`git@github.com:nrc-cnrc/EGSnrc.git`.
-
-2. click the `Download ZIP` button on the main project page
-https://github.com/nrc-cnrc/EGSnrc to download a zipped archive of the
-latest version of the code to your machine (and then unzip it);
-
-Once you have downloaded the source code by either method, you must run
-a configuration GUI or script to set up and compile EGSnrc software
-components for your computer. Please read the full
-[installation instructions]
+Once you have downloaded the source code, you must run a configuration
+GUI or script to set up and compile EGSnrc software components for your
+computer. Please read the full [installation instructions]
 (https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
 wiki for more details on how to download and configure EGSnrc.
 
