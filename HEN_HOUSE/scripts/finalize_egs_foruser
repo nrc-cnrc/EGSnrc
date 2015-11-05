@@ -394,6 +394,12 @@ your home directory, to ensure the EGSnrc environment is properly set up
 every time you log in.
 
 EOF
+
+# check if system is darwin
+canonical_system=$( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
+is_darwin=$(echo $canonical_system | grep -i darwin)
+
+# prescribe lines to add to shell resource file
 echo "Your default shell is $SHELL" >&2
 test_shell=$( echo $SHELL | sed 's,.*[\\/],,' )
 if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
@@ -403,19 +409,19 @@ if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
   echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
   echo "source ${HEN_HOUSE}scripts/beamnrc_cshrc_additions" >&2
-elif test "x$test_shell" = xbash; then
-  echo "Add the following statements to your .bashrc file: " >&2
-  echo >&2
-  echo "export EGS_HOME=$EGS_HOME" >&2
-  echo "export EGS_CONFIG=$EGS_CONFIG" >&2
-  echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-  echo "source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
-elif test "x$test_shell" = xksh || test "x$test_shell" = xsh; then
+elif test "x$test_shell" = xksh || test "x$test_shell" = xsh || test ! "x$is_darwin" = x; then
   echo "Add the following statements to your .profile file: " >&2
   echo >&2
   echo "EGS_HOME=$EGS_HOME" >&2
   echo "EGS_CONFIG=$EGS_CONFIG" >&2
   echo "export EGS_HOME EGS_CONFIG" >&2
+  echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
+  echo "source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
+elif test "x$test_shell" = xbash; then
+  echo "Add the following statements to your .bashrc file: " >&2
+  echo >&2
+  echo "export EGS_HOME=$EGS_HOME" >&2
+  echo "export EGS_CONFIG=$EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
   echo "source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 else
