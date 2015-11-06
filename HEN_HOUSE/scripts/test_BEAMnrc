@@ -68,7 +68,7 @@ if [ $OMEGA_HOME ]
         echo "OMEGA_HOME defined as $OMEGA_HOME"
 else
         echo "         OMEGA_HOME not defined !!!"
-        echo "You should:  source $HEN_HOUSE/scripts/beamnrc_cshrc_additions   in your .cshrc"
+        echo "You should:  source $HEN_HOUSE/scripts/egsnrc_cshrc_additions   in your .cshrc"
         exit
 fi
 

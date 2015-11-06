@@ -42,6 +42,7 @@
 #
 set my_machine = `cat $EGS_CONFIG | grep "my_machine =" | sed "s/my_machine = //"`
 setenv HEN_HOUSE `cat $EGS_CONFIG | grep "HEN_HOUSE =" | sed "s/HEN_HOUSE = //"`
+setenv OMEGA_HOME $HEN_HOUSE/omega
 
 # Path
 #
@@ -66,6 +67,12 @@ alias show_data '$HEN_HOUSE/pegs4/data/show_data'
 alias previewRZ '$HEN_HOUSE/previewRZ/previewRZ.tcl'
 alias clean_after_parallel '$HEN_HOUSE/scripts/clean_after_parallel'
 alias test_BEAMnrc '$HEN_HOUSE/scripts/test_BEAMnrc'
+alias beamnrc_gui '$OMEGA_HOME/progs/gui/beamnrc/beamnrc_gui.tcl'
+alias beam_gui '$OMEGA_HOME/progs/gui/beamnrc/beamnrc_gui.tcl'
+alias dosxyznrc_gui '$OMEGA_HOME/progs/gui/dosxyznrc/dosxyznrc_gui.tcl'
+alias dosxyz_gui '$OMEGA_HOME/progs/gui/dosxyznrc/dosxyznrc_gui.tcl'
+alias beamdp_gui '$OMEGA_HOME/progs/gui/beamdp/beamdp_gui.tcl'
+alias pprocess '$HEN_HOUSE/scripts/pprocess'
 
 # the following is for testing the distribution.
 alias test_distribution '$HEN_HOUSE/scripts/test_egsnrcmp_distribution'

@@ -408,7 +408,6 @@ if test "x$test_shell" = xtcsh || test "x$test_shell" = xcsh; then
   echo "setenv EGS_HOME $EGS_HOME" >&2
   echo "setenv EGS_CONFIG $EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions" >&2
-  echo "source ${HEN_HOUSE}scripts/beamnrc_cshrc_additions" >&2
 elif test "x$test_shell" = xksh || test "x$test_shell" = xsh || test ! "x$is_darwin" = x; then
   echo "Add the following statements to your .profile file: " >&2
   echo >&2
@@ -416,14 +415,12 @@ elif test "x$test_shell" = xksh || test "x$test_shell" = xsh || test ! "x$is_dar
   echo "EGS_CONFIG=$EGS_CONFIG" >&2
   echo "export EGS_HOME EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-  echo "source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 elif test "x$test_shell" = xbash; then
   echo "Add the following statements to your .bashrc file: " >&2
   echo >&2
   echo "export EGS_HOME=$EGS_HOME" >&2
   echo "export EGS_CONFIG=$EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
-  echo "source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions" >&2
 else
   cat >&2 <<EOF
 Could not determine your default shell type. To make use of the EGSnrc
@@ -439,15 +436,13 @@ If your default shell is a C shell or derivative, add:
 setenv EGS_HOME $EGS_HOME
 setenv EGS_CONFIG $EGS_CONFIG
 source ${HEN_HOUSE}scripts/egsnrc_cshrc_additions
-source ${HEN_HOUSE}scripts/beamnrc_bashrc_additions
 
 if your default shell is a Bourne shell or derivative, add:
 
 EGS_HOME=$EGS_HOME
 EGS_CONFIG=$EGS_CONFIG
 export EGS_HOME EGS_CONFIG
-. ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
-. ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
+source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions
 
 EOF
 fi

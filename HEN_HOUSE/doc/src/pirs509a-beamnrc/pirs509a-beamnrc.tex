@@ -500,8 +500,6 @@ instructions for installing BEAMnrc and the rest of
 the OMEGA/BEAM codes.
 
 \index{.cshrc}
-\index{beamnrc\_cshrc\_additions}
-\index{beamnrc\_bashrc\_additions}
 \index{egsnrc\_cshrc\_additions}
 \index{egsnrc\_bashrc\_additions}
 \index{.bashrc}
@@ -521,16 +519,13 @@ setenv EGS_CONFIG /full directory path to $HEN_HOUSE/specs/config.conf/
 source /full directory path to $HEN_HOUSE/scripts/egsnrc_cshrc_additions
 (or source /full directory path to $HEN_HOUSE/scripts/egsnrc_bashrc_additions
                                                               for .bashrc)
-source /full directory path to $HEN_HOUSE/scripts/beamnrc_cshrc_additions
-(or source /full directory path to $HEN_HOUSE/scripts/beamnrc_bashrc_additions
-                                                              for .bashrc)
 \end{verbatim}
 where {\tt config} is the name of the particular configuration
 (eg {\tt gcc}, {\tt pgf77}) that you have installed BEAMnrc on.  The
 first three statements are required for the
 EGSnrcMP system (see the EGSnrcMP Users Manual\cite{Ka03}), while
-{\tt \$HEN\_HOUSE/scripts/beamnrc\_cshrc\_additions}
-(or {\tt \$HEN\_HOUSE/scripts/beamnrc\_cshrc\_additions}) define aliases
+{\tt \$HEN\_HOUSE/scripts/egsnrc\_cshrc\_additions}
+(or {\tt \$HEN\_HOUSE/scripts/egsnrc\_cshrc\_additions}) define aliases
 for the OMEGA/BEAM system.  Once you have added these statements you
 must source the {\tt .cshrc}
 (or {\tt .bashrc}) file to bring them into effect.

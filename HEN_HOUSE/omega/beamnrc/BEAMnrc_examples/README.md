@@ -11,8 +11,8 @@ output files associated with running the job in batch mode. To try any example:
 
 3. copy the `xxxx.egsinp` file to `$EGS_HOME/BEAM_xxxx`
 
-4. if you are running on Linux make sure your `.bashrc` (or .cshrc) file sources `$HEN_HOUSE/scripts/beamnrc_bashrc_additions`
-   (or $HEN_HOUSE/scripts/beamnrc_cshrc_additions)
+4. if you are running on Linux make sure your `.bashrc` (or .cshrc) file sources `$HEN_HOUSE/scripts/egsnrc_bashrc_additions`
+   (or `$HEN_HOUSE/scripts/egsnrc_cshrc_additions`)
 
 5. start beamnrc_gui and follow the instructions.
 
