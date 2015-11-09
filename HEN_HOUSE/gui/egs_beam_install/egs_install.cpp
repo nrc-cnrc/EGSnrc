@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #include "egs_install.h"
 #include <fstream>
@@ -26,13 +41,13 @@
 #define SET_ENV
 #endif
 
-QInstallPage::QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f, 
-                                              MCompiler *a_c, MCompiler *a_cpp) 
-             : QWizardPage(parent), ft(0),ct(0), fc(a_f), cc(a_c), cpp(a_cpp), make(a_m), 
+QInstallPage::QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f,
+                                              MCompiler *a_c, MCompiler *a_cpp)
+             : QWizardPage(parent), ft(0),ct(0), fc(a_f), cc(a_c), cpp(a_cpp), make(a_m),
                config_file(0), procInstall(0), ntasks(0), n_config_steps(0), i_config_steps(0), n_beam_steps(0),
                egs_c_utils_ok(false), installing_beam(false), user_aborted(false), skip_config(false)
 {
-  
+
     setTitle("EGSnrc Installation Page");
     setSubTitle("Configuring EGSnrc core system");
 
@@ -43,11 +58,11 @@ QInstallPage::QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f,
      screen = new QTextEdit();screen->setReadOnly(true);screen->ensureCursorVisible();
      topl->addWidget(screen);
      installButton    = new QPushButton("&Install", this);
-     
+
      QHBoxLayout *hl = new QHBoxLayout;
-     
+
      QGridLayout *checksLayout = new QGridLayout;
-     
+
      envCheckBox      = new QCheckBox("&Set environment",this);
      envCheckBox->setToolTip(QString(SET_ENV));
      shortcutCheckBox = new QCheckBox("&Desktop shortcuts",this);
@@ -56,30 +71,30 @@ QInstallPage::QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f,
                             "BEWARE of overwriting previously modified user codes !!!");*/
 /*     beamCheckBox = new QCheckBox("&BEAMnrc install",this); beamCheckBox->setChecked(true);
      beamCheckBox->setToolTip("Configures and builds BEAMnrc system.");*/
-     
+
      checksLayout->addWidget( envCheckBox, 0, 0); checksLayout->addWidget( shortcutCheckBox, 0, 1);
      //checksLayout->addWidget( ucCheckBox,  0, 2); //checksLayout->addWidget( beamCheckBox,     1, 1);
-     
+
      hl->addLayout(checksLayout);
-     
+
      hl->addStretch(5);
      hl->addWidget(installButton);
-     
+
      topl->addLayout(hl);
 
 
      connect(installButton,SIGNAL(clicked()),this,SLOT(start()));
-     
+
     initializeConnections();
-    
-    procInstall = new QProcess(this); 
+
+    procInstall = new QProcess(this);
     procInstall->setProcessChannelMode(QProcess::MergedChannels);
-    connect( procInstall, SIGNAL(readyReadStandardOutput()), 
+    connect( procInstall, SIGNAL(readyReadStandardOutput()),
              this, SLOT(procProgress()) );
-    connect( procInstall, SIGNAL(finished(int , QProcess::ExitStatus)), 
+    connect( procInstall, SIGNAL(finished(int , QProcess::ExitStatus)),
              this, SLOT(procEnd(int , QProcess::ExitStatus)) );
-    
-    //----------------------------------------------------------------------    
+
+    //----------------------------------------------------------------------
     // Flags for the building process of the system
     // NUMBER_OF_STEPS is last element of the enum BuildSteps in egs_install.h
     //----------------------------------------------------------------------
@@ -87,31 +102,31 @@ QInstallPage::QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f,
     for ( ushort i2 = 0; i2 < NUMBER_OF_STEPS; i2++){
         buildOK[i2] = true;
     }
-    
+
     //skip_config = !needsTests(); Not working right now. mortran3 compilation uses test results. :-(
 
 }
 
 void QInstallPage::initializeConnections()
 {
-    /* MTest processes: Tests to find system specific functions */             
-    
-    connect( this, SIGNAL( egsCUtilsCreated() ),  
+    /* MTest processes: Tests to find system specific functions */
+
+    connect( this, SIGNAL( egsCUtilsCreated() ),
              this, SLOT( test_c_utils() ) ); n_config_steps += 25;
-    connect( this, SIGNAL( egsCUtilsTested() ),    
+    connect( this, SIGNAL( egsCUtilsTested() ),
              this, SLOT( test_load_beamlib() ) );
-    connect( this, SIGNAL( egsCUtilsEnded() ),    
+    connect( this, SIGNAL( egsCUtilsEnded() ),
              this, SLOT( createSystemFiles() ) );
-    connect( this, SIGNAL( egsCUtilsFailed() ),    
+    connect( this, SIGNAL( egsCUtilsFailed() ),
              this, SLOT( createSystemFiles() ) );
-    connect( this, SIGNAL( LoadBeamLibTested() ),    
+    connect( this, SIGNAL( LoadBeamLibTested() ),
              this, SLOT( createSystemFiles() ) );
-             
-    /* Make processes: Only need to go to folder and execute 'make' */             
-    
+
+    /* Make processes: Only need to go to folder and execute 'make' */
+
     connect( this, SIGNAL( systemCreated( ushort ) ),
              this, SLOT( buildEGSnrc( ushort ) ) );
-    connect( this, SIGNAL( nextBuildStep( ushort )),  
+    connect( this, SIGNAL( nextBuildStep( ushort )),
              this, SLOT( buildEGSnrc( ushort )) );
     connect( this, SIGNAL( cppSystemCreated( ushort ) ),
              this, SLOT( buildEGSnrc( ushort ) ) );
@@ -127,22 +142,22 @@ void QInstallPage::initializeConnections()
              this, SLOT( environmentSetUp() ) );
 
     connect( this, SIGNAL( environmentSet() ),
-             this, SIGNAL( AllDone() ) );    
-    
-    connect( this, SIGNAL( AllDone() ),    
+             this, SIGNAL( AllDone() ) );
+
+    connect( this, SIGNAL( AllDone() ),
              this, SLOT( resetPage() ) );
-    
+
 }
 
 void QInstallPage::initializePage()
 {
-  
+
     wizard()->button(QWizard::FinishButton)->setEnabled(false);
-    
+
     screen->clear(); progressBar->reset(); progressBar->hide();
 
     createDirs(); installButton->setEnabled(true);
-    
+
     createLogFile(installationDir);
 }
 
@@ -183,9 +198,9 @@ void QInstallPage::abort(){
 }
 
 void QInstallPage::switch2EGSnrc(){
-     disconnect( this, SIGNAL( nextBuildStep( ushort )),  
+     disconnect( this, SIGNAL( nextBuildStep( ushort )),
                  this, SLOT( buildBEAMnrc( ushort )) );
-        connect( this, SIGNAL( nextBuildStep( ushort )),  
+        connect( this, SIGNAL( nextBuildStep( ushort )),
                  this, SLOT( buildEGSnrc( ushort )) );
 }
 
@@ -217,24 +232,24 @@ void QInstallPage::updateProgress(){progressBar->setValue( ++istep);i_config_ste
 
 QString QInstallPage::henHouse(){
   QString the_hen = field("hen_house").toString();
-#ifndef WIN32    
+#ifndef WIN32
     if (!the_hen.startsWith(QDir::separator())) the_hen.prepend(QDir::separator());
-#endif      
+#endif
     if (!the_hen.endsWith(QDir::separator()))   the_hen.append(QDir::separator());
   return the_hen;
-}  
+}
 
 QString QInstallPage::egsHome(){
   QString the_home = field("egs_home").toString();
-#ifndef WIN32    
+#ifndef WIN32
     if (!the_home.startsWith(QDir::separator())) the_home.prepend(QDir::separator());
-#endif      
+#endif
     if (!the_home.endsWith(QDir::separator()))   the_home.append(QDir::separator());
   return the_home;
-}  
+}
 
 /*
- * Prints message to the log file and APPENDS message to the 
+ * Prints message to the log file and APPENDS message to the
  * QTextEdit object InstallationMonitor
 */
 void QInstallPage::printProgress( const QString& message, bool new_line )
@@ -252,14 +267,14 @@ void QInstallPage::printProgress( const QString& message, bool new_line )
   else{
      screen->insertPlainText(message);
   }
-  
+
   qApp->processEvents();
-     
+
   screen->ensureCursorVisible();
 }
 //************************************************************************
 
-/* Creates a log file to store useful information about 
+/* Creates a log file to store useful information about
  * the installation process.
    This log file is created in $HEN_HOUSE/install_status
 */
@@ -316,11 +331,11 @@ void QInstallPage::createDir( QString &dir, bool critical, const QString & def){
                                       tr("Fix this issue before proceeding with install!"));
           if (!def.isEmpty()) dir = def;
        }
-      
+
     }
 }
 
-QString QInstallPage::readFile2QString( const QString& fname, 
+QString QInstallPage::readFile2QString( const QString& fname,
                                           const QString& err ){
     QFile* the_file = new QFile( fname  );
     if ( ! the_file->open( QIODevice::ReadOnly  ) ){
@@ -335,7 +350,7 @@ QString QInstallPage::readFile2QString( const QString& fname,
     return the_string;
 }
 
-bool QInstallPage::writeQString2File( const QString& the_string, 
+bool QInstallPage::writeQString2File( const QString& the_string,
                                         const QString& fname ){
     QFile* the_file = new QFile( fname  );
     if ( ! the_file->open( QIODevice::WriteOnly ) ){

@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI headers
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #ifndef EGS_INSTALL_H
 #define EGS_INSTALL_H
@@ -29,15 +44,15 @@
 #include "egs_tools.h"
 #include "egs_archive.h"
 
-enum BuildSteps{ 
+enum BuildSteps{
     corespec,
-    mortran3, 
-    pegs4, 
-    density_corrections, 
+    mortran3,
+    pegs4,
+    density_corrections,
     egsppspec,
     iaea, egspp, cppDone,
-    sysDone, 
-    UserCode, 
+    sysDone,
+    UserCode,
     homeDone,
 // BEAMnrc steps
     beamBuild,
@@ -48,10 +63,10 @@ enum BuildSteps{
     statDose,
 #ifndef WIN32
     DOSxyzShow,
-#endif             
+#endif
     buildDOSXYZnrc,
     exampleModules,
-    NUMBER_OF_STEPS 
+    NUMBER_OF_STEPS
 };
 
 class QWizardPage;
@@ -64,15 +79,15 @@ class QInstallPage : public QWizardPage
 
 public:
 
-  QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f, 
+  QInstallPage(QWidget * parent, MCompiler *a_m, MCompiler *a_f,
                                   MCompiler *a_c, MCompiler *a_cpp);
   ~QInstallPage(){}
-  
+
 public slots:
 
   void initializePage();
   void cleanupPage();
-  void initializeConnections();  
+  void initializeConnections();
   void updateProgress();
   void start();
   void abort();
@@ -93,7 +108,7 @@ public slots:
   void restore_mortran3();
   void buildPegs4();
   void copy_user_codes();
-  
+
   /* C++ Library Configuration */
   void create_egspp_config();
   void buildIAEALib();
@@ -109,18 +124,18 @@ public slots:
   void setup_static_guis();
   void set_guis_dso();
   void update_unix_env();
-  void createWinShortcuts( const QString& where, 
+  void createWinShortcuts( const QString& where,
                            const QString& from,
-                               QStringList& link, 
+                               QStringList& link,
                                QStringList& dir,
                                QStringList& desc,
                                QStringList& icons,
                                QString& msg     );
-  void createKDEShortcuts( const QString& where, 
+  void createKDEShortcuts( const QString& where,
                            const QString& from,
-                               QStringList& link, 
-                               QStringList& icons, 
-                               QStringList& scripts, 
+                               QStringList& link,
+                               QStringList& icons,
+                               QStringList& scripts,
                                QStringList& dir,
                                QString& msg     );
   /* BEAMnrc Configuration */
@@ -160,18 +175,18 @@ public slots:
   void customEvent(QEvent * event);
   void processExtaction();
 signals:
-  
+
   void doFortranTests();
   void egsCUtilsCreated();
-  void egsCUtilsTested();    
-  void egsCUtilsEnded();    
-  void egsCUtilsFailed();    
-  void LoadBeamLibTested();    
-  void gotCompilerOptions();   
+  void egsCUtilsTested();
+  void egsCUtilsEnded();
+  void egsCUtilsFailed();
+  void LoadBeamLibTested();
+  void gotCompilerOptions();
   void systemCreated( ushort );
   void cppSystemCreated( ushort );
   void cppBuildFinalized();
-  void nextBuildStep( ushort );  
+  void nextBuildStep( ushort );
   void egsSysBuilt();
   void environmentSet();
   void userCodesCopied();
@@ -179,21 +194,21 @@ signals:
   void threadRunning();
 //BEAMnrc signals
   void progsBuilt();
-  void dosxyzBuilt();  
+  void dosxyzBuilt();
   void exampleModulesCopied();
   void beamDone();
   void skipBeam();
-  
+
 private:
 
   QString henHouse();
   QString egsHome();
-  QString confFile(){QString le_conf = field("egs_conf").toString(); return le_conf+".conf";}  
-  QString canonical(){return field("Canonical").toString();}  
-  QString my_machine(){return field("conf_name").toString();}  
-  bool needsUCs(){return field("copyUCs").toBool();}  
+  QString confFile(){QString le_conf = field("egs_conf").toString(); return le_conf+".conf";}
+  QString canonical(){return field("Canonical").toString();}
+  QString my_machine(){return field("conf_name").toString();}
+  bool needsUCs(){return field("copyUCs").toBool();}
   QString readFile2QString( const QString& fname, const QString& err );
-  bool writeQString2File( const QString& the_string, const QString& fname );  
+  bool writeQString2File( const QString& the_string, const QString& fname );
   bool appendQString2File( const QString& the_string, const QString& fname );
   void resetProgressBar(const int &nsteps);
   //void printProgress( const QString& message );
@@ -202,7 +217,7 @@ private:
 
 //************************************************************************
 
-/* Creates a log file to store useful information about 
+/* Creates a log file to store useful information about
  * the installation process.
    This log file is created in $HEN_HOUSE/install_status
 */
@@ -214,7 +229,7 @@ void createDir( QString &dir, bool critical, const QString & def);
 void createDir( QString dir, const QString & def){ createDir( dir, false, def );}
 void createDir( QString dir, bool critical){ createDir( dir, critical, QString() );}
 void createDir( QString dir){ createDir( dir, false, QString() );}
-  
+
   MTest        *ft, *ct; // Two needed since results from tests needed to create system
   MCompiler    *fc, *cc, *cpp, *make; // Compilers
   QProgressBar *progressBar;
@@ -226,14 +241,14 @@ void createDir( QString dir){ createDir( dir, false, QString() );}
   QProcess     *procInstall;
   EGSThread    *t;
   QTime         the_time;
-  QString       installationDir, 
-                egsBinDir, 
-                homeBinDir, 
+  QString       installationDir,
+                egsBinDir,
+                homeBinDir,
                 egsLibDir,
                 dsoDir,
-                specFile, 
-                specFileCPP, 
-                pegsDir, 
+                specFile,
+                specFileCPP,
+                pegsDir,
                 dlopen_flags; // Must be added to $extra in egspp*.conf file
   int           ntasks, istep, n_config_steps, i_config_steps, n_beam_steps;
   BuildSteps    buildFlag;

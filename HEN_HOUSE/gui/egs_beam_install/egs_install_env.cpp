@@ -1,18 +1,34 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI environment setup
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+
 #include "egs_install.h"
 
 #define EGS_VIEW_DSO "egsnrc64"
@@ -20,16 +36,16 @@
 void QInstallPage::environmentSetUp()
 {
    QChar s = QDir::separator();
-   
+
    resetProgressBar(100);
    setSubTitle("Setting up GUIs ...");
    updateProgress();
    qApp->processEvents();
-     
+
    /* Extract GUI binaries */
    if (itsAZip()) extract( QCoreApplication::applicationFilePath().toLatin1().data(), henHouse().toLatin1() );
    qApp->processEvents();
-   
+
 #if defined(Q_OS_WIN32) || defined(WIN32)
    QString piecesWindows = henHouse() + "pieces" + s + "windows" + s;
    printProgress("\n ===> Copying GUI executables  ...    ");
@@ -45,9 +61,9 @@ void QInstallPage::environmentSetUp()
 #elif defined(Q_OS_LINUX)
     /* make symbolic link to statically built GUIs  */
     setup_static_guis();
-    
+
     //**************************************************
-    // NOT NEEDED since egs_view will pick the egspp 
+    // NOT NEEDED since egs_view will pick the egspp
     // library from LD_LIBRARY_PATH
     //**************************************************
     /* make symbolic link linux32[64] to actual dso dir */
@@ -67,74 +83,74 @@ void QInstallPage::SaveAppSetting()
 {
 
   setSubTitle("Configuring EGSnrc environment");
-  
+
 #ifdef WIN32
-  
+
     QString smsg;
-    
+
     resetProgressBar(7);
-  
+
     /* Updating EGS_HOME related environment */
-    
+
     printProgress("\nUpdating environment variable EGS_HOME to " + egsHome() );
     replaceUserEnvironmentVariable( "EGS_HOME", egsHome(), &smsg);
-    
+
     // Update the user path variable with the EGS_HOME bin directory
     printProgress("\nSetting EGS_HOME bin directory in your path ....");
     update_path( homeBinDir );
     updateProgress();
-    
+
     /* Updating HEN_HOUSE related environment */
-    
+
     printProgress("\nUpdating environment variable HEN_HOUSE to " + henHouse() );
     replaceUserEnvironmentVariable( "HEN_HOUSE", henHouse(), &smsg);
 
-    bool path_cleaned = cleanPath();// cleans PATH from previous EGSnrcMP 
+    bool path_cleaned = cleanPath();// cleans PATH from previous EGSnrcMP
                                     // HEN_HOUSE entries
-    
+
     // Update the user path variable with the EGS bin directory
     printProgress("\nSetting EGSnrc bin directory in your path ....");
     update_path( egsBinDir );
     updateProgress();
-    
+
     // Update the user path variable with the previewRZ directory
     printProgress("\nSetting previewRZ directory in your path ....");
     update_path( henHouse() + QString("previewRZ") );
     updateProgress();
-    
+
     // Update the user path variable with the dso/win2k-cl directory
     printProgress("\nSetting win2k-cl DSO directory in your path ....");
-    update_path( henHouse() + QDir::separator() + "egs++" + 
-                              QDir::separator() + "dso"   + 
+    update_path( henHouse() + QDir::separator() + "egs++" +
+                              QDir::separator() + "dso"   +
                               QDir::separator() + "win2k-cl");
     updateProgress();
-    
+
     // Update the user path variable with the dso/$my_machine directory
     printProgress("\nSetting DSO directory in your path ....");
     update_path( dsoDir );
     updateProgress();
-    
+
     // Update the user path variable with the Fortran compiler directory
     // assuming the C and C++ copilers are in the same location.
     printProgress("\nSetting compiler directory in your path ....");
     update_path( fc->path() );
     updateProgress();
-    
+
     /* Updating EGS_CONFIG related environment */
      printProgress("\nUpdating environment variable EGS_CONFIG to " + specFile);
      replaceUserEnvironmentVariable( "EGS_CONFIG", specFile, &smsg);
-     updateProgress(); 
-     
+     updateProgress();
+
     /* Updating BEAMnrc related environment */
      QString omegahome = henHouse() + QString("omega") + QDir::separator();
      printProgress("\nUpdating environment variable OMEGA_HOME to " + omegahome + "\n");
      replaceUserEnvironmentVariable( "OMEGA_HOME", omegahome, &smsg);
      updateProgress();
- 
+
 #else
   /* Setup EGSnrc environment in shell resource file */
      update_unix_env();
-  
+
 #endif
 
 }
@@ -143,24 +159,24 @@ void QInstallPage::SaveAppSetting()
  *
  * PREPENDS the_dir to the PATH environment variable. If a location
  * is already set, then it is not duplicated.
- * 
+ *
  *---------------------------------------------------------------*/
 void QInstallPage::update_path( const QString& the_dir ){
   QString path = the_dir + ";"; QString smsg;
 
   if ( ! prepend2UserEnvironmentVariable( "PATH", path, &smsg) ){
-/*    config_log << "\n Directory " << the_dir 
+/*    config_log << "\n Directory " << the_dir
       << " was already set in the user's PATH. \n"
       << "===================================\n" << smsg << "\n\n";*/
     printProgress("\n Directory " + the_dir + " already set in the user's PATH. \n"
-                 + "===================================\n" 
+                 + "===================================\n"
                  + smsg + "\n\n"
     );
   }
   else{
-/*    config_log << "\n Directory " << the_dir 
+/*    config_log << "\n Directory " << the_dir
       << " successfully set in the user's PATH. \n";*/
-    printProgress( "\n Directory " + the_dir + " successfully set in the user's PATH. \n"); 
+    printProgress( "\n Directory " + the_dir + " successfully set in the user's PATH. \n");
   }
 }
 
@@ -180,7 +196,7 @@ bool QInstallPage::cleanPath(){
   QString path = getUserEnvironmentVariable( "PATH", &user_msg);
   //config_log << "Cleaning USER PATH = " << path << endl;
   printProgress("Cleaning USER PATH = " + path);
-  QStringList pathl = path.split(";"), 
+  QStringList pathl = path.split(";"),
               clean_path,
               henhouses;
 
@@ -222,23 +238,23 @@ bool QInstallPage::cleanPath(){
 }
 
 /*---------------------------------------------
-  CREATES SHORTCUTS TO THE EGSnrc GUI's  
-  ON USER'S REQUEST 
+  CREATES SHORTCUTS TO THE EGSnrc GUI's
+  ON USER'S REQUEST
 -----------------------------------------------*/
 void QInstallPage::createEGSFolders(){
 
     QStringList gui;
-    gui.append("egs_gui"); 
-    gui.append("egs_inprz"); 
-    gui.append("egs_view"); 
+    gui.append("egs_gui");
+    gui.append("egs_inprz");
+    gui.append("egs_view");
     QChar s =  QDir::separator();
     bool desk_exists = true;
     QString lnk; QString target;
 
-#ifdef WIN32    
+#ifdef WIN32
     QString home = getenv( "USERPROFILE");
     int res;
-    // User requests the folder on the desktop            
+    // User requests the folder on the desktop
     QString DESKTOP = home + s +(QString)"desktop" + s;
     QDir desk( DESKTOP );
     if ( ! desk.exists()) {
@@ -254,13 +270,13 @@ void QInstallPage::createEGSFolders(){
       for ( QStringList::Iterator it = gui.begin(); it != gui.end(); ++it ) {
           /* Temporarily needed until egs_view is ported to qt4 */
           QString desc, return_message, icon;
-          if( *it == "egs_inprz" ) 
+          if( *it == "egs_inprz" )
             desc = "EGSnrc GUI for the RZ user codes";
-          else if( *it == "egs_gui" ) 
+          else if( *it == "egs_gui" )
             desc = "EGSnrc GUI for all user codes";
           else desc = "EGSnrc GUI for egs++ geometries";
           lnk       = DESKTOP + *it + (QString)".lnk";
-          if( *it != "egs_view" ) 
+          if( *it != "egs_view" )
             target =  QDir::convertSeparators( egsBinDir  + s + *it + ".exe" );
           else{
             target =  QDir::convertSeparators( henHouse() + "egs++" + s + "dso" + s + "win2k-cl" + s + *it + ".exe");
@@ -270,11 +286,11 @@ void QInstallPage::createEGSFolders(){
              printProgress( target + " not found !" );
              continue;
           }
-          if( *it != "egs_view" ) 
-             res = createShortcut( target.toLatin1().data() , lnk.toLatin1().data(), 
+          if( *it != "egs_view" )
+             res = createShortcut( target.toLatin1().data() , lnk.toLatin1().data(),
                                      desc.toLatin1().data(), return_message );
-          else  
-             res = createShortcut( target.toLatin1() , lnk.toLatin1(), 
+          else
+             res = createShortcut( target.toLatin1() , lnk.toLatin1(),
                                     desc.toLatin1(),icon.toLatin1(),0, return_message );
 
           if ( res == 0 ) {
@@ -288,7 +304,7 @@ void QInstallPage::createEGSFolders(){
       }
     }
 #else
-    // User requests the folder on the desktop          
+    // User requests the folder on the desktop
       QStringList guiscript;QString scriptdummy(gui_script), script, scriptstr;
       guiscript.append("egui"); guiscript.append("rzgui"); guiscript.append("viewgui");
       QString lnkdummy(guilnk); QString lnkstr;
@@ -306,10 +322,10 @@ void QInstallPage::createEGSFolders(){
         QString icon; short igs=0;
         for ( QStringList::Iterator it = gui.begin(); it != gui.end(); ++it ) {
             target = egsBinDir + s + *it;
-            icon   = *it != "egs_view" ? 
-                     henHouse() + s + "gui" + s + 
+            icon   = *it != "egs_view" ?
+                     henHouse() + s + "gui" + s +
                      *it + s + "images"  + s + "desktop_icon.png" :
-                     henHouse() + s + "gui" + s + 
+                     henHouse() + s + "gui" + s +
                      "egs_inprz" + s + "images"  + s + "bianchi.png";
             if ( ! fileExists( target ) ) {
               printProgress( target + " not found !" );
@@ -326,9 +342,9 @@ void QInstallPage::createEGSFolders(){
               //**************************************
               // Hardcoding dso location for egs_view
               //**************************************
-              //scriptstr.replace( "the_dso", henHouse() + 
+              //scriptstr.replace( "the_dso", henHouse() +
                                  //"egs++" + s + "dso" + s + my_machine() );
-              scriptstr.replace( "the_dso", henHouse() + 
+              scriptstr.replace( "the_dso", henHouse() +
                                  "egs++" + s + "dso" + s + QString(EGS_VIEW_DSO) );
             }
             scriptstr.replace( "gui_exe",      target );
@@ -361,14 +377,14 @@ void QInstallPage::createEGSFolders(){
 }
 
 /*-----------------------------------------------------------------
-  CREATES A FOLDER ON THE DESKTOP ON USER'S REQUEST WITH SHORTCUTS 
+  CREATES A FOLDER ON THE DESKTOP ON USER'S REQUEST WITH SHORTCUTS
   TO THE EGSnrc GUI's.
 -------------------------------------------------------------------*/
 void QInstallPage::createBeamFolders(){
       QStringList gui;
-      gui.append("beamnrc_gui.tcl"); 
-      gui.append("dosxyznrc_gui.tcl"); 
-      gui.append("beamdp_gui.tcl"); 
+      gui.append("beamnrc_gui.tcl");
+      gui.append("dosxyznrc_gui.tcl");
+      gui.append("beamdp_gui.tcl");
       QChar s =  QDir::separator();
       QStringList gui_dir;// Dirs and executables names not the same :-(
       gui_dir.append("beamnrc");
@@ -380,16 +396,16 @@ void QInstallPage::createBeamFolders(){
       desc.append("TCL/TK GUI for BEAMDP");
       QString omega_gui = henHouse() + "omega/progs/gui/";
       QString msg, lnk, target, icon;
-#ifdef WIN32   
+#ifdef WIN32
       QStringList icons;// icon files <= Linux
       icons.append("beamnrc.ico");
       icons.append("dosxyznrc.ico");
       icons.append("beamdp.ico");
-      
+
       QString home = getenv( "USERPROFILE");
       QString os   = getenv( "OS");
-         
-      // User requests the folder on the desktop             
+
+      // User requests the folder on the desktop
       QString desktop = home + s + (QString)"desktop" + s;
       createWinShortcuts(desktop,omega_gui,gui,gui_dir,desc,icons,msg);
       printProgress( msg );
@@ -398,24 +414,24 @@ void QInstallPage::createBeamFolders(){
      icons.append("beamnrc.png");
      icons.append("dosxyznrc.png");
      icons.append("beamdp.png");
-     
+
      QStringList scripts;// icon files <= Linux
      scripts.append("beamgui");
      scripts.append("beamxyzgui");
      scripts.append("beamdpgui");
-     
+
      QString home = getenv( "HOME");
-     // User requests the folder on the desktop            
+     // User requests the folder on the desktop
      QString desktop = home + s + (QString)"Desktop" + s ;
      createKDEShortcuts( desktop, omega_gui, gui, icons, scripts, gui_dir, msg );
      printProgress( msg );
 #endif
-    
+
 }
 
-void QInstallPage::createWinShortcuts( const QString& where, 
+void QInstallPage::createWinShortcuts( const QString& where,
                                        const QString& from,
-                                             QStringList& link, 
+                                             QStringList& link,
                                              QStringList& dir,
                                              QStringList& desc,
                                              QStringList& icons,
@@ -426,7 +442,7 @@ void QInstallPage::createWinShortcuts( const QString& where,
       QChar s =  QDir::separator();
       int res, index = 0;
       //if ( make_dir(where) ) {
-      if (QDir().mkpath(where) ){   
+      if (QDir().mkpath(where) ){
           QStringList::Iterator itd = dir.begin();
           QStringList::Iterator ite = desc.begin();
           QStringList::Iterator iti = icons.begin();
@@ -447,9 +463,9 @@ void QInstallPage::createWinShortcuts( const QString& where,
               msg += icon + " not found !\n";
               continue;
            }
-     
+
            lnk = where + *it + QString(".lnk");
-           res = createShortcut( target.toLatin1() , lnk.toLatin1(), 
+           res = createShortcut( target.toLatin1() , lnk.toLatin1(),
                        descr.toLatin1(),icon.toLatin1(),0, return_message );
            if ( res == 0 ) {
             //msg += *it + (QString)" shortcut added to Desktop !\n";
@@ -463,12 +479,12 @@ void QInstallPage::createWinShortcuts( const QString& where,
           }
       }
 }
-     
-void QInstallPage::createKDEShortcuts( const QString& where, 
+
+void QInstallPage::createKDEShortcuts( const QString& where,
                                        const QString& from,
-                                             QStringList& link, 
-                                             QStringList& icons, 
-                                             QStringList& scripts, 
+                                             QStringList& link,
+                                             QStringList& icons,
+                                             QStringList& scripts,
                                              QStringList& dir,
                                              QString& msg     )
 {
@@ -477,9 +493,9 @@ void QInstallPage::createKDEShortcuts( const QString& where,
                scriptdummy(gui_script), script, scriptstr;
        QChar s =  QDir::separator();
        //if ( make_dir(where) ) {
-       if (QDir().mkpath(where) ){   
+       if (QDir().mkpath(where) ){
          QString henhouse  = henHouse(),
-                 egsconfig = henhouse + tr("specs") + QDir::separator() + confFile();                   
+                 egsconfig = henhouse + tr("specs") + QDir::separator() + confFile();
          QStringList::Iterator itd = dir.begin();
          QStringList::Iterator iti = icons.begin();
          QStringList::Iterator its = scripts.begin();
@@ -504,7 +520,7 @@ void QInstallPage::createKDEShortcuts( const QString& where,
                   scriptstr.replace( "ehBinDir", egsBinDir );
                scriptstr.replace( "gui_exe",      target );
                if ( ! writeQString2File( scriptstr, script ) ) {
-                   msg +=QString("\n Error: could not create file ") 
+                   msg +=QString("\n Error: could not create file ")
                                + script + QString("\n");
                    continue;
                }
@@ -512,7 +528,7 @@ void QInstallPage::createKDEShortcuts( const QString& where,
                  msg += script + QString(" successfully created!\n");
                  chmod( QString("u+x"), script );
                }
-               /* Create GUI desktop shortcuts and replace keys with values */    
+               /* Create GUI desktop shortcuts and replace keys with values */
                lnk    = where + *it + QString(".desktop");
                lnkstr = lnkdummy;//re-setting original template
                lnkstr.replace( "gui_script", script );
@@ -528,7 +544,7 @@ void QInstallPage::createKDEShortcuts( const QString& where,
                if (itd != dir.end())  itd++;
                if (iti != icons.end())iti++;
                if (its != scripts.end())its++;
-         }     
+         }
        }
 }
 
@@ -542,7 +558,7 @@ void QInstallPage::setup_static_guis(){
   QString piecesLinux = henHouse() + QString("pieces") + QDir::separator()+
                                      QString("linux") + QDir::separator();
   QStringList gui;  QChar s =  QDir::separator(); QString lnkname, target, syslink;
-  gui.append("egs_gui"); gui.append("egs_inprz"); gui.append("egs_view"); 
+  gui.append("egs_gui"); gui.append("egs_inprz"); gui.append("egs_view");
   for ( QStringList::Iterator it = gui.begin(); it != gui.end(); ++it ) {
       lnkname = egsBinDir + s + *it;
       target  = piecesLinux + *it + arch;
@@ -561,14 +577,14 @@ void QInstallPage::setup_static_guis(){
       else
         printProgress("\n-> " + lnkname + " seems to exist ... leaving as is!");
   }
-    
+
 }
-/************************************************************** 
- * NOT NEEDED. egs_view is not looking for the location below. 
+/**************************************************************
+ * NOT NEEDED. egs_view is not looking for the location below.
  * It will pick the egspp library defined by LD_LIBRARY_PATH
- * 
- * Since egs_view is built statically using my_machine = linux32 or linux64 one needs 
-   to establish a sys link to the actual dso/my_machine 
+ *
+ * Since egs_view is built statically using my_machine = linux32 or linux64 one needs
+   to establish a sys link to the actual dso/my_machine
  ***************************************************************/
 void QInstallPage::set_guis_dso(){
     QString dsoDirR = henHouse()     + QString("egs++") + QDir::separator()+
@@ -580,8 +596,8 @@ void QInstallPage::set_guis_dso(){
         dsoDirS += QString("linux64");
     else
         dsoDirS += QString("linux32");
-   /********************************************* 
-    * Create symbolic link to actual dso folder 
+   /*********************************************
+    * Create symbolic link to actual dso folder
     * if different from dsoDir.
     ********************************************/
     if (!QDir(dsoDirS).exists()){
@@ -595,8 +611,8 @@ void QInstallPage::set_guis_dso(){
        printProgress( tr("\nNo need to create symbolic link ") + dsoDirS );
 }
 
-/************************************************************** 
- * Fixing LD_LIBRARY_PATH to point to egsnrc64 which provides 
+/**************************************************************
+ * Fixing LD_LIBRARY_PATH to point to egsnrc64 which provides
  * precompiled egspp and all dso files needed by egs_view.
  **************************************************************/
 void QInstallPage::update_unix_env(){
@@ -605,7 +621,7 @@ void QInstallPage::update_unix_env(){
                                     //QString("dso")   + QDir::separator() + my_machine();
     QString home = getenv( "HOME");
     /* Get SHELL environment variable */
-    QString shell = getenv("SHELL"); 
+    QString shell = getenv("SHELL");
     /* Strip path information  */
     shell = shell.right(shell.length() - shell.lastIndexOf(QDir::separator()) - 1 );
     /* Shell resource file name  */
@@ -649,7 +665,7 @@ void QInstallPage::update_unix_env(){
     }
 }
 
-void QInstallPage::cleanUp()  
+void QInstallPage::cleanUp()
 {
   //qDebug("Cleaning up directory %s",QDir::currentPath().toLatin1().data());
   delete_file("junk1"); delete_file("junk4");
@@ -684,12 +700,12 @@ bool QInstallPage::copy_files( const QString& src, const QString& trgt,  const Q
            qApp->processEvents();
            if ( filist.at(i).isFile() ){
               if ( ! copy( source + filist.at(i).fileName(), target + filist.at(i).fileName() ) ){
-                 printProgress( "Failed copying " + source + filist.at(i).fileName() + " to " 
+                 printProgress( "Failed copying " + source + filist.at(i).fileName() + " to "
                                                   + target + filist.at(i).fileName() );
                  success = success && false;
               }
           }
-     } 
+     }
      return success;
 }
 
@@ -699,10 +715,10 @@ bool QInstallPage::copy_files( const QString& src, const QString& trgt,  const Q
 //----------------------------------------------------------------------
 int res = -1; QTimer *timer = 0;
 void QInstallPage::extract( const char* archive, const char* dir ){
-  
+
    printProgress("\n\n => Extracting GUIs ... \n");
-   
-   // create an archive object   
+
+   // create an archive object
 //    t = new EGSThread( this, archive , dir );
 //    t->start();
 //    emit threadRunning();
@@ -717,16 +733,16 @@ void QInstallPage::extract( const char* archive, const char* dir ){
 QMutex my_mutex;
 
 void QInstallPage::processExtaction(){
-  
+
 /*  while( !t->wait(20) ) {
     my_mutex.lock();
     qApp->processEvents();
     my_mutex.unlock();
   }
-  
+
   int res= t->getStatus();
   */
-  
+
   if ( res == 0 )
     printProgress( "\n Archive(s) successfully uncompressed ... \n");
   else if ( res == 8 )
@@ -735,7 +751,7 @@ void QInstallPage::processExtaction(){
         QString strm ="===== Debugging message ==========\n";
         strm += QString("Uncompressing return code = %1").arg(res);
         strm += QString("\n Could not uncompress archive(s), see ") +
-                config_file->fileName()                             + 
+                config_file->fileName()                             +
                 QString(" for details ... \nQuitting early! \n" );
         printProgress(strm);
         QMessageBox::critical(this,"Error uncompressing archive(s)",

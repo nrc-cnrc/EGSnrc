@@ -1,23 +1,34 @@
-/***************************************************************************
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI self-extracting archive
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Iwan Kawrakow, 2003
+#
+#  Contributors:    Ernesto Mainegra-Hing
+#
+###############################################################################
+*/
 
-                           egs_archive.cpp  -  description
-                          -------------------------------------------
-    copyright          : (C) 2003  National Research Council Canada
-    author               : Iwan Kawrakow
-    email                : iwan@irs.phy.nrc.ca
-    
-    modified for egs_install by: Ernesto Mainegra-Hing
-    
-$Id: egs_archive.cpp,v 1.13 2013/02/21 19:50:45 mainegra Exp $    
- ***************************************************************************/
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+
 #include "egs_archive.h"
 
 #include <iostream>
@@ -56,8 +67,8 @@ QMutex *the_mutex = 0;
 class PrivateArchive {
 public:
   PrivateArchive( QWidget* o, const int &totS );
-  ~PrivateArchive() { 
-    if( !zip_block ) delete [] zip_block; 
+  ~PrivateArchive() {
+    if( !zip_block ) delete [] zip_block;
     for(unsigned int j=0; j<outputs.size(); j++) {
       fstream *o = outputs[j]; o->close(); delete o;
     }
@@ -68,7 +79,7 @@ public:
   vector<fstream *> outputs;
   vector<string> output_files;
   string ziped_content;
-  
+
   void setIODevice( QTextEdit*  io_dev );
   void printProgress( const QString& s )const;
   void printProgress(const float & frac)const;
@@ -132,7 +143,7 @@ receiver(o)
 }
 
 EGS_Archive::~EGS_Archive() {
-  delete p; 
+  delete p;
 }
 
 void EGS_Archive::clearFiles() {
@@ -321,8 +332,8 @@ void EGS_Archive::setIODevice( QTextEdit*  io_dev ){
     p->setIODevice( io_dev );
 }
 
-void PrivateArchive::setIODevice( QTextEdit*  io_dev ){ 
-    monitor = io_dev; 
+void PrivateArchive::setIODevice( QTextEdit*  io_dev ){
+    monitor = io_dev;
 }
 
 //************************************************************
@@ -385,26 +396,26 @@ bool PrivateArchive::checkDir(const char *file_nam) const {
   QString fn(file_nam);
   fn = fn.replace((QRegExp)"\\","/");
   fn = fn.replace((QRegExp)"//","/");
-  QFileInfo fi(fn); 
+  QFileInfo fi(fn);
   QString dir = fi.absolutePath();
   QDir dd = fi.absoluteDir();
   int nup = 0;
-  
+
 QString d = dir;
-  while( !dd.exists() ) { 
+  while( !dd.exists() ) {
            d.truncate( d.lastIndexOf("/") );
            dd.setPath( d  );
            nup++;
   }
-  
+
   QStringList list = dir.split("/");
   QString tmp=dd.path(); tmp += "/";
   for(int j=list.count()-nup; j<list.count(); j++) {
       tmp += list[j]; tmp += "/";
-      if( !dd.mkdir(tmp) ) { 
-	  printProgress( (QString) "Making " + tmp + (QString)" failed\n"); 
-	  return false; 
-      } 
+      if( !dd.mkdir(tmp) ) {
+	  printProgress( (QString) "Making " + tmp + (QString)" failed\n");
+	  return false;
+      }
   }
   return true;
 }
@@ -413,7 +424,7 @@ void PrivateArchive::stop(){
   m_exit = true;
 }
 
-void EGS_Archive::stop(){ 
+void EGS_Archive::stop(){
     if ( p ) p->stop();
 }
 
@@ -442,7 +453,7 @@ int PrivateArchive::extract(const char *archive, const char *sdir) const {
   }
   if( !found_marker ) {
     //cout << "File " << archive << " seems to not contain an EGSnrc archive\n";
-    printProgress( (QString)"File " + (QString)archive + 
+    printProgress( (QString)"File " + (QString)archive +
 		     (QString)" seems to not contain an EGSnrc archive\n");
     return 2;
   }
@@ -472,7 +483,7 @@ int PrivateArchive::extract(const char *archive, const char *sdir) const {
     in.read((char *)&nsize, sizeof(int));
     if( !in.good() ) {
         printProgress(
-        (QString)"\nNon-zero return code 31 while uncompressing archive " + 
+        (QString)"\nNon-zero return code 31 while uncompressing archive " +
         (QString)archive);
         return 31;
     }
@@ -480,38 +491,38 @@ int PrivateArchive::extract(const char *archive, const char *sdir) const {
       swapBytes((unsigned char *)&osize);
       swapBytes((unsigned char *)&zsize);
       swapBytes((unsigned char *)&nsize);
-    } 
+    }
     nam = new char [nsize];
     in.read(nam, nsize);
     if( !in.good() || in.gcount() != nsize ) {
       printProgress(
-      (QString)"\nNon-zero return code 32 while uncompressing archive " + 
+      (QString)"\nNon-zero return code 32 while uncompressing archive " +
       (QString)archive);
       delete [] nam; return 32;
     }
-    
+
    QString fn(dir.c_str()); fn.append(nam);
    fn = fn.replace("\\","/");
    fn = fn.replace("//","/");
    string ofile = fn.toStdString();
 //    string ofile = dir + nam;
-    
-    QString progress = (QString)"Inflating "  + 
+
+    QString progress = (QString)"Inflating "  +
                        (QString)ofile.c_str() + (QString)"\n";
     printProgress( progress );
 
     if( !checkDir( ofile.c_str()) ) {
       //cout << "Failed to create " << ofile.c_str();
-      printProgress( (QString)"Failed to create " + 
-                     (QString)ofile.c_str()       + 
+      printProgress( (QString)"Failed to create " +
+                     (QString)ofile.c_str()       +
                      (QString)"\n" );
        return 5;
     }
     ofstream out(ofile.c_str(),ios::binary | ios::trunc);
     if( !out ) {
       //cout << "Failed to open " << ofile << " for writing\n";
-      printProgress( (QString)"Failed to open " + 
-                     (QString)ofile.c_str()     + 
+      printProgress( (QString)"Failed to open " +
+                     (QString)ofile.c_str()     +
                      (QString)" for writing\n" );
       return 4;
     }
@@ -519,10 +530,10 @@ int PrivateArchive::extract(const char *archive, const char *sdir) const {
     Bytef *zip_buf = new Bytef [zsize];
     in.read((char *)zip_buf,zsize);
     if( !in.good() || in.gcount() != zsize ) {
-      printProgress((QString)"\nNon-zero return code 33 while uncompressing archive " + 
+      printProgress((QString)"\nNon-zero return code 33 while uncompressing archive " +
                    (QString)archive + (QString)"...\n");
-      printProgress( (QString)"Error uncompressing " + 
-                     (QString)ofile.c_str()          + 
+      printProgress( (QString)"Error uncompressing " +
+                     (QString)ofile.c_str()          +
                      (QString)"\n" );
       delete [] zip_buf; return 33;
     }
@@ -538,14 +549,14 @@ int PrivateArchive::extract(const char *archive, const char *sdir) const {
   return 0;
 }
 
-EGSThread::EGSThread( const QString& archi, const QString& rdir ) 
+EGSThread::EGSThread( const QString& archi, const QString& rdir )
     : archive(archi),dir(rdir), status(0), receiver(0)
 {
     m_exit = false;
     ar = 0;
 }
 
-EGSThread::EGSThread( QWidget* o, const QString& archi, const QString& rdir ) 
+EGSThread::EGSThread( QWidget* o, const QString& archi, const QString& rdir )
     : archive(archi), dir(rdir), status(0), receiver(o)
 {
     m_exit = false;
@@ -560,16 +571,16 @@ EGSThread::EGSThread( )
     dir     ="";
     m_exit = false;
     ar = 0;
-}       
+}
 
 void EGSThread::run()
-{ 
+{
     status = extract(archive, dir );
     msleep(30);
 }
 
 int EGSThread::extract( const QString& archi, const QString& rdir ){
-//   create an archive object   
+//   create an archive object
     ar = new EGS_Archive(receiver);
     int res = ar->extract( archi.toLatin1(), rdir.toLatin1() );
     delete ar;

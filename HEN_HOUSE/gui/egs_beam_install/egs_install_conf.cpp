@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI utilities and tests
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #include "egs_install.h"
 #include <QCoreApplication>
@@ -27,11 +42,11 @@
 #endif
 
 void QInstallPage::run_tests(){
-  
+
      printProgress(fc->version());
-  
+
      QString xmlf = henHouse() + QString("pieces") + QDir::separator() + QString(TEST_XML);
-     QString msg;   
+     QString msg;
      if( ! QFile::exists( xmlf ) ){
         msg = QString("\n\n Test file ") + xmlf + QString(" does not exist !\n\n");
         printProgress( msg );
@@ -43,18 +58,18 @@ void QInstallPage::run_tests(){
         msg = QString("\n Using xml test file ") + xmlf + QString("\n");
      }
      printProgress( msg );
-    
+
     if( ft ) ft=0;
     ft    = new MTest( screen, xmlf, config_file );
-    connect( ft, SIGNAL( testsFinished() ), 
+    connect( ft, SIGNAL( testsFinished() ),
              this, SLOT( create_egs_c_utils() ) );
-    connect( ft, SIGNAL( taskFinished() ), 
+    connect( ft, SIGNAL( taskFinished() ),
              this, SLOT( updateProgress() ) );
- 
+
     ft->setCompilers( fc,  cc );
     resetProgressBar( ft->getTotalTasks() + n_config_steps );
     ft->reset();
-    
+
     QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
     environment.insert("PWD",QDir::currentPath());
     ft->copyEnvironment( environment );
@@ -86,13 +101,13 @@ void QInstallPage::run_tests(){
 //--------------------------------------------------------------------
 //  Updates template for egs_config1.h and copies to
 //  $HEN_HOUSE/lib/my_machine the sources for egs_config1.h, egs_c_utils
-//  and load_beamlib. 
-//  
+//  and load_beamlib.
+//
 //   Try to build C tools.
 //
 //--------------------------------------------------------------------
 void QInstallPage::create_egs_c_utils(){
-    
+
      printProgress( "\n===> Creating C Utilities for EGSnrc...\n\n");
 
      QString define  = "#define F77_OBJ(fname,FNAME) ",
@@ -101,7 +116,7 @@ void QInstallPage::create_egs_c_utils(){
      MTestAnswer &a = ft->getAnswers();
      QString f77_function1,
              f77_function2;
- 
+
      if( a["Decoration"] == "lower case, no underscores" ){
        f77_function1= define + (QString)"fname";
        f77_function2= define_ + (QString)"fname";
@@ -130,10 +145,10 @@ void QInstallPage::create_egs_c_utils(){
       f77_function1="FNAME";
       f77_function2="FNAME";
      }
- 
-     /************************************************************/  
-     /* C utils need egs_config1.h or else they won't be compiled*/ 
-     /************************************************************/  
+
+     /************************************************************/
+     /* C utils need egs_config1.h or else they won't be compiled*/
+     /************************************************************/
      QString s = readFile2QString( henHouse() + QString("pieces/egs_config1.h"),
                                    QString(NO_EGS_UTILS_C) );
      if ( s.isEmpty() ){
@@ -141,23 +156,23 @@ void QInstallPage::create_egs_c_utils(){
         emit egsCUtilsEnded();
         return;
      }
-    
+
      s.replace((QString)"__f77_function1__",  f77_function1 );
      s.replace((QString)"__f77_function2__",  f77_function2 );
      s.replace((QString)"__config_name__",  my_machine() );
-     
+
      if ( ! writeQString2File( s, egsLibDir + QString("egs_config1.h") )){
         printProgress(tr("\nCould not write egs_config1.h needed for the") +
                       tr("\nC interface. You won't be able to build the\n")+
-                      tr("\nC utilities nor to write C user-codes.\n")); 
+                      tr("\nC utilities nor to write C user-codes.\n"));
         // One needs to build egs_c_utils and load_beamlib and for that egs_config1.h is crucial !!!!!!
         printProgress(QString("\n\n") + QString(NO_EGS_UTILS_C));
         printProgress(QString("\n\n") + QString(NO_LOAD_BEAMLIB));
         emit egsCUtilsFailed();
         return;
      }
-     /************************************************************/  
-    
+     /************************************************************/
+
      QStringList task_f, task_q;
      task_f.append("egs_c_utils.c");
      task_q.append("Could egs_c_utils.c be compiled? ");
@@ -167,7 +182,7 @@ void QInstallPage::create_egs_c_utils(){
      task_q.append("Could load_vculib.c be compiled? ");
      task_f.append("read_write_pardose.c");
      task_q.append("Could read_write_pardose.c be compiled? ");
-     
+
      if(!cc->exists() ){
         egs_c_utils_ok = false;
         load_beamlib_ok = false;
@@ -176,14 +191,14 @@ void QInstallPage::create_egs_c_utils(){
          tr("WARNING:\n") + tr("========\n") +
          tr("No C compiler passed to the configuration process.\n") +
          tr("C utilities for parallel runs and BEAM source engine\n") +
-         tr("will not be available for this configuration!!!\n\n") 
+         tr("will not be available for this configuration!!!\n\n")
         );
         emit egsCUtilsFailed();
         return;
      }
-     
+
      //*************************************************
-     // Compile all or missing C utilites, including 
+     // Compile all or missing C utilites, including
      // read_write_pardose.c so DOSXYZnrc can be build.
      //*********************************************
      if (!copy( henHouse() + (QString)"cutils/egs_c_utils.h",
@@ -205,7 +220,7 @@ void QInstallPage::create_egs_c_utils(){
                       tr("\n- Use a BEAM simulation as a source\n") +
                       tr("\n- Compile DOSXYZnrc\n") );
      }
-     
+
      Tasks* task = new Tasks[task_f.size()];
      for (int itask=0; itask < task_f.size(); itask++){
          task[itask].setFName(egsLibDir + task_f[itask]);
@@ -222,13 +237,13 @@ void QInstallPage::create_egs_c_utils(){
 
       if ( ct ) ct=0;
       ct = new MTest( screen, task_f.size() , config_file );
-      connect( ct, SIGNAL( taskFinished() ), 
+      connect( ct, SIGNAL( taskFinished() ),
                this, SLOT( updateProgress() ) );
-      connect( ct, SIGNAL( testsFinished()    ), 
+      connect( ct, SIGNAL( testsFinished()    ),
                this, SLOT( check_egs_c_utils() ) );
-      connect( ct, SIGNAL( criticalError() ), 
+      connect( ct, SIGNAL( criticalError() ),
                this, SLOT( check_egs_c_utils() ) );
-      
+
       ct->setTitle( (QString)"\nBuilding the utilities object file ... " );
       ct->setEndStr( QString() );
       ct->setCompilers( fc,  cc );
@@ -241,8 +256,8 @@ void QInstallPage::create_egs_c_utils(){
 }
 
 void QInstallPage::check_egs_c_utils(){
-     /**********************************************/     
-     /* Check outcome from compiling egs_c_utils.c */     
+     /**********************************************/
+     /* Check outcome from compiling egs_c_utils.c */
      /**********************************************/
       bool all_ok=true;
       Tasks* task = ct->tasks(); int ntasks = ct->getTotalTasks();
@@ -264,7 +279,7 @@ void QInstallPage::check_egs_c_utils(){
           }
           else all_ok = false;
       }
-     
+
       if (!egs_c_utils_ok)
           printProgress((QString)NO_EGS_UTILS_C);
       if (!load_beamlib_ok)
@@ -276,7 +291,7 @@ void QInstallPage::check_egs_c_utils(){
                                 "\nThis is required to compile DOSXYZnrc!"));
       if (!all_ok)
           if(ct) ct->stop();
-     
+
       updateProgress();
       emit egsCUtilsCreated();
 }
@@ -284,7 +299,7 @@ void QInstallPage::check_egs_c_utils(){
 /*******************************************************
  * Here we check whehter the egs_c_util object file can
  * be linked to a Fortran file.
- *******************************************************/ 
+ *******************************************************/
 #define EGS_C_UTIL_VERSION "      program EGSCUTIL\n"\
 "      integer i\n"\
 "      call egs_create_control_file(\"test.lock\",i)\n"\
@@ -297,10 +312,10 @@ void QInstallPage::test_c_utils(){
         emit egsCUtilsTested();
         return;
      }
-    
+
     QString test_util( EGS_C_UTIL_VERSION );
     if ( ! writeQString2File( test_util, (QString)"test_c_utils.f" ) ) {
-        printProgress( (QString)"\n Critical error: could not create file " + 
+        printProgress( (QString)"\n Critical error: could not create file " +
                        (QString)"test_c_utils.f" );
         egs_c_utils_ok = false;
         printProgress(tr(NO_EGS_UTILS_C));
@@ -308,23 +323,23 @@ void QInstallPage::test_c_utils(){
         emit egsCUtilsEnded();
         return;
     }
-    
+
     if ( ct ) ct = 0;
     ct = new MTest( screen, 1, config_file );
-    connect( ct, SIGNAL( taskFinished() ), 
+    connect( ct, SIGNAL( taskFinished() ),
                this, SLOT( updateProgress() ) );
-    connect( ct, SIGNAL( testsFinished() ), 
+    connect( ct, SIGNAL( testsFinished() ),
              this, SLOT( get_test_c_utils_result()));
-    connect( ct, SIGNAL( criticalError() ), 
+    connect( ct, SIGNAL( criticalError() ),
              this, SLOT( get_test_c_utils_result()));
-     
+
     ct->setTitle( (QString)"\n\nTesting the C utilities object file ... " );
     ct->setEndStr( QString::null );
     ct->setCompilers( fc,  cc );
     ct->reset();
     Tasks* task = new Tasks();
     task->setFName( (QString)"test_c_utils.f" );
-#ifdef WIN32     
+#ifdef WIN32
     task->setObjects( egsLibDir + tr("egs_c_utils.obj") );
 #else
     task->setObjects( egsLibDir + tr("egs_c_utils.o") );
@@ -355,7 +370,7 @@ void QInstallPage::get_test_c_utils_result(){
 
 /****************************
  * Guessing link flag for DSO
- ****************************/ 
+ ****************************/
 #define LOAD_BEAMLIB_VERSION "#include <dlfcn.h>\n"\
 "int main() {\n"\
 "    void *h, *sym;\n"\
@@ -365,7 +380,7 @@ void QInstallPage::get_test_c_utils_result(){
 "}\n"
 void QInstallPage::test_load_beamlib(){
      if (!load_beamlib_ok){
-        dlopen_flags = QString(); 
+        dlopen_flags = QString();
         printProgress("\n\nTesting load_beamlib skipped due to previous errors...\n");
         updateProgress();
         emit LoadBeamLibTested();
@@ -373,20 +388,20 @@ void QInstallPage::test_load_beamlib(){
      }
      QString test_util( LOAD_BEAMLIB_VERSION );
      if ( ! writeQString2File( test_util, (QString)"test_load_beamlib.c" ) ) {
-        printProgress( (QString)"\n Critical error: could not create file " + 
+        printProgress( (QString)"\n Critical error: could not create file " +
                        (QString)"test_load_beamlib.c" );
         load_beamlib_ok = false;
-        dlopen_flags = QString(); 
+        dlopen_flags = QString();
         printProgress(tr("\nCouldn't guess link flag for an DSO object!!!")+
                       tr("\n ldopen_flag variable will be empty!\n"));
         updateProgress();
         emit LoadBeamLibTested();
         return;
      }
-     
+
 #ifdef WIN32
       load_beamlib_ok = true;
-      dlopen_flags = QString(); 
+      dlopen_flags = QString();
       printProgress(tr("\nAssuming there is no need to pass a flag")+
                     tr("\nto the compiler for opening a DSO on Windows\n") +
                     tr("\nusing Win API function LoadLibrary().\n"));
@@ -399,25 +414,25 @@ void QInstallPage::test_load_beamlib(){
      task[0].setLanguage( "C" );
      task[0].setDeleteFlag( false );
      task[0].setLibraries("-ldl");
-    
+
      task[1].setFName( (QString)"test_load_beamlib.c" );
      task[1].setTaskName( "Testing flag -lc ..." );
      task[1].setLanguage( "C" );
      task[1].setDeleteFlag( false );
      task[1].setLibraries("-lc");
-     
+
      task[2].setFName( (QString)"test_load_beamlib.c" );
      task[2].setTaskName( "Testing no flag ..." );
      task[2].setLanguage( "C" );
      task[2].setDeleteFlag( true );
-    
+
      if ( ct ) ct = 0;
      ct = new MTest( screen, 3, config_file );
      connect( ct, SIGNAL( taskFinished() ),  this, SLOT( updateProgress() ) );
      connect( ct, SIGNAL( testsFinished() ), this, SLOT( get_test_load_beamlib()));
      connect( ct, SIGNAL( criticalError() ), this, SLOT( get_test_load_beamlib()));
     /**********************************************************************/
-     
+
      ct->setTitle( (QString)"\n\nGuessing library needed for dlopen ... " );
      ct->setEndStr( QString::null );
      ct->setCompilers( fc,  cc );
@@ -430,19 +445,19 @@ void QInstallPage::test_load_beamlib(){
 void QInstallPage::get_test_load_beamlib(){
  if ( ct->successful_test((ushort)0) ) {
    load_beamlib_ok = true;
-   dlopen_flags = "-ldl"; 
+   dlopen_flags = "-ldl";
  }
  else if ( ct->successful_test((ushort)1) ) {
    load_beamlib_ok = true;
-   dlopen_flags = "-lc"; 
+   dlopen_flags = "-lc";
  }
  else if ( ct->successful_test((ushort)2) ) {
    load_beamlib_ok = true;
-   dlopen_flags = QString(); 
+   dlopen_flags = QString();
  }
  else{
    load_beamlib_ok = false;
-   dlopen_flags = QString(); 
+   dlopen_flags = QString();
    printProgress(tr("\nFailed guessing flag for using dlopen,\n")+
                  tr("make sure you find the proper flag!!!"));
    emit LoadBeamLibTested();
@@ -457,7 +472,7 @@ void QInstallPage::get_test_load_beamlib(){
 //
 //       SPECfile   <===   configuration file name
 //       CONFIGname <===   configuration name (taken form guessConfig)
-//       
+//
 //**************************************************************
 void QInstallPage::createSystemFiles(){
 
@@ -466,7 +481,7 @@ void QInstallPage::createSystemFiles(){
   MTestID id = ft->getIDs();          // map relating test name to task number
 
   printProgress( "\n===> Creating configuration file ...\n\n");
-  specFile = henHouse() + tr("specs") + QDir::separator() + confFile();                   
+  specFile = henHouse() + tr("specs") + QDir::separator() + confFile();
   QDate date = QDate::currentDate();
   QString today = date.toString ( Qt::TextDate );
   QString OS; QString stdfile;
@@ -477,20 +492,20 @@ void QInstallPage::createSystemFiles(){
   OS = "Unix";
   stdfile = "unix.spec";
 #endif
-  /*************************************************/     
+  /*************************************************/
   // checking result from egs_c_utils.c compilation
-  /*************************************************/     
+  /*************************************************/
   QString hasCComp, egs_c_obj = QString();
-  QString wouldbe_c_util = "$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)" + 
+  QString wouldbe_c_util = "$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)" +
     (QString)"egs_c_utils.o";
   QString machine_c_compiler = QString(MACHINE_HAS_C_COMPILER);
   if ( egs_c_utils_ok ) {
      hasCComp  = QString(HAS_C_COMPILER); wouldbe_c_util = QString();
      if ( fileExists( egsLibDir + QString("egs_c_utils.o") ) )
-         egs_c_obj = QString("$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") + 
+         egs_c_obj = QString("$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") +
                    QString("egs_c_utils.o");
-     else if ( fileExists( egsLibDir + (QString)"egs_c_utils.obj" ) ) 
-         egs_c_obj = QString("$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") + 
+     else if ( fileExists( egsLibDir + (QString)"egs_c_utils.obj" ) )
+         egs_c_obj = QString("$(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") +
                      QString("egs_c_utils.obj");
      else egs_c_obj = QString();
   }
@@ -498,9 +513,9 @@ void QInstallPage::createSystemFiles(){
      hasCComp = QString(HAS_NO_C_COMPILER); egs_c_obj = QString();
      machine_c_compiler = QString(MACHINE_HAS_NO_C_COMPILER);
   }
-  /*************************************************/     
+  /*************************************************/
   // checking result from load_beamlib.c compilation
-  /*************************************************/    
+  /*************************************************/
   QString beamlib_header(BEAMLIB_OBJECTS_HEADER1),
           beamlib_extra_header(BEAMLIB_EXTRA_LIBS_HEADER1),
           load_beamlib_obj("$(HEN_HOUSE)lib$(DSEP)$(my_machine)"
@@ -513,7 +528,7 @@ void QInstallPage::createSystemFiles(){
     load_beamlib_macro   = QString(HAVE_NOT_LOAD_DSO);
   }
 #ifdef WIN32
-  else if (!fileExists(egsLibDir+(QString)"/load_beamlib.o")&& 
+  else if (!fileExists(egsLibDir+(QString)"/load_beamlib.o")&&
             fileExists(egsLibDir+(QString)"/load_beamlib.obj")){
     load_beamlib_obj = QString("$(HEN_HOUSE)lib$(DSEP)$(my_machine)") +
                        QString("$(DSEP)load_beamlib.obj");
@@ -521,17 +536,17 @@ void QInstallPage::createSystemFiles(){
   else{
     load_beamlib_obj = QString();
   }
-#endif 
-  /***********************************************************/     
-  // check whether exit and stop failed and add egs_exit to the 
+#endif
+  /***********************************************************/
+  // check whether exit and stop failed and add egs_exit to the
   // EGS_EXTRA_OBJECTS variable
-  /***********************************************************/     
+  /***********************************************************/
   QString egs_exit;
   if (! ft->successful_test( id["exitFun"] ) &&
       ! ft->successful_test( id["stopFun"] ) &&
         ft->successful_test( id["egsExitFun"] )  ){
-#ifndef WIN32      
-    egs_exit = QString(" $(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") + 
+#ifndef WIN32
+    egs_exit = QString(" $(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)") +
                QString("egs_exit.o ");
     if ( fileExists( "egs_exit.o" ) ){
          move_file("egs_exit.o", egsLibDir + QString("egs_exit.o"));
@@ -540,7 +555,7 @@ void QInstallPage::createSystemFiles(){
       egs_exit = QString();
     }
 #else
-    egs_exit = (QString)" $(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)" + 
+    egs_exit = (QString)" $(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)" +
       (QString)"egs_exit.obj ";
 #endif
   }
@@ -561,7 +576,7 @@ void QInstallPage::createSystemFiles(){
 
   //QString the_sep = (QString)" := $(shell echo \\)";
   QString the_sep = QString(" := $(subst /,\\,/)");
-#else     
+#else
   QString the_sep = QString(" = /");
   if ( fc->name().toLower() == "pgf77" || fc->version().contains("PGI") )
     the_extra_flag = "-Mnomain";
@@ -576,11 +591,11 @@ void QInstallPage::createSystemFiles(){
   specfile.replace(QString("$OS"),  OS );
   specfile.replace(QString("$std.spec"),  stdfile );
   specfile.replace(QString("$F77"),  fc->name() );
-  
-  /* ************** IK: changes needed for new config version 
+
+  /* ************** IK: changes needed for new config version
                         required to accommodate Darwin
-                        once I'm at making changes, let's also 
-                        try to find libg2c.a and put it in 
+                        once I'm at making changes, let's also
+                        try to find libg2c.a and put it in
                         SHLIB_LIBS
   */
   bool is_generic = true;
@@ -591,10 +606,10 @@ void QInstallPage::createSystemFiles(){
           specfile.replace((QString)"$EGS_SHLIB_FLAGS",(QString)"-bundle");
           specfile.replace((QString)"$EGS_SHLIB_LIBS",(QString)"-lg2c");
       }
-      else if( canonical().contains("linux") || 
+      else if( canonical().contains("linux") ||
                canonical().contains("unix")) {
           is_generic = false;
-          QStringList plist; 
+          QStringList plist;
           plist += "/lib64/";
           plist += "/usr/lib64/";
           plist += "/usr/local/lib64/";
@@ -750,7 +765,7 @@ void QInstallPage::createSystemFiles(){
         + Machine_Macros );
     return;
   }
-  printProgress( (QString)"\n *** System file " + Machine_Macros + 
+  printProgress( (QString)"\n *** System file " + Machine_Macros +
       (QString)" successfully created ***\n\n");
 
   printProgress( "\n===> Creating machine.f ...\n\n");
@@ -760,17 +775,17 @@ void QInstallPage::createSystemFiles(){
   machinef.replace(QString("$my_version"), QString(MY_VERSION) );
   QString fun_chunk;
   if ( ft->successful_test( id["SystemFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         QString("pieces/egs_system_v1.f"),
         QString("Error copying egs_system_v1.f)") );
   }
   else if( ft->successful_test( id["SystemSub"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         QString("pieces/egs_system_v2.f"),
         QString("Error copying egs_system_v2.f") );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         QString("pieces/egs_system_v3.f"),
         QString("Error copying egs_system_v3.f") );
   }
@@ -803,108 +818,108 @@ void QInstallPage::createSystemFiles(){
      fun_chunk.replace( "__fdate__", a[ "fdateFun" ]  );
   }
   else if( ft->successful_test( id["DateAndTime"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_fdate_v2.f",
         (QString)"Error copying egs_fdate_v2.f" );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_fdate_v3.f",
         (QString)"Error copying egs_fdate_v3.f" );
   }
   machinef.append( fun_chunk );
 
   if ( ft->successful_test( id["DateAndTime"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_and_time_v1.f",
         (QString)"Error copying egs_date_and_time_v1.f" );
   }
   else if( ft->successful_test( id[ "fdateFun" ] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_and_time_v2.f",
         (QString)"Error copying egs_date_and_time_v1.f" );
     fun_chunk.replace( "__fdate__", a[ "fdateFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_and_time_stub.f",
         (QString)"Error copying egs_date_and_time_stub.f" );
   }
   machinef.append( fun_chunk );
 
   if ( ft->successful_test( id["fdateFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_v1.f",
         (QString)"Error copying egs_date_v1.f" );
     fun_chunk.replace( "__fdate__", a[ "fdateFun" ]  );
   }
   else if( ft->successful_test( id["DateAndTime"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_v2.f",
         (QString)"Error copying egs_date_v2.f" );
   }
   else if( ft->successful_test( id["dateFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_v3.f",
         (QString)"Error copying egs_date_v3.f" );
     fun_chunk.replace( "__date__", a[ "dateFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_stub.f",
         (QString)"Error copying egs_date_stub.f" );
   }
   machinef.append( fun_chunk );
 
   if ( ft->successful_test( id["fdateFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_time_v1.f",
         (QString)"Error copying egs_time_v1.f" );
     fun_chunk.replace( "__fdate__", a[ "fdateFun" ]  );
   }
   else if( ft->successful_test( id["DateAndTime"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_time_v2.f",
         (QString)"Error copying egs_time_v2.f" );
   }
   else if( ft->successful_test( id["timeFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_time_v3.f",
         (QString)"Error copying egs_time_v3.f" );
     fun_chunk.replace( "__time__", a[ "timeFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_date_stub.f",
         (QString)"Error copying egs_date_stub.f" );
   }
   machinef.append( fun_chunk );
 
   if ( ft->successful_test( id["DateAndTime"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_secnds_v1.f",
         (QString)"Error copying egs_secnds_v1.f" );
   }
   else if( ft->successful_test( id[ "fdateFun" ] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_secnds_v2.f",
         (QString)"Error copying egs_secnds_v2.f" );
     fun_chunk.replace( "__fdate__", a[ "fdateFun" ]  );
   }
   else if( ft->successful_test( id[ "secsFun" ] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_secnds_v3.f",
         (QString)"Error copying egs_secnds_v3.f" );
     fun_chunk.replace( "__secnds__", a[ "secsFun" ]  );
   }
   else if( ft->successful_test( id[ "timeFun" ] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_secnds_v4.f",
         (QString)"Error copying egs_secnds_v4.f" );
     fun_chunk.replace( "__time__", a[ "timeFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_secnds_stub.f",
         (QString)"Error copying egs_secnds_stub.f" );
   }
@@ -912,7 +927,7 @@ void QInstallPage::createSystemFiles(){
 
   if ( ft->successful_test( id["DateAndTime"] ) ||
       ft->successful_test( id[ "fdateFun" ] )  ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/time_stuff.f",
         (QString)"Error copying time_stuff.f" );
   }
@@ -920,38 +935,38 @@ void QInstallPage::createSystemFiles(){
 
 
   if ( ft->successful_test( id["etimeFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_etime.f",
         (QString)"Error copying egs_etime.f" );
     fun_chunk.replace( "__etime__", a[ "etimeFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_etime_stub.f",
         (QString)"Error copying egs_etime_stub.f" );
   }
   machinef.append( fun_chunk );
 
-  fun_chunk = readFile2QString( henHouse() + 
+  fun_chunk = readFile2QString( henHouse() +
       (QString)"pieces/egs_canonical_system.f",
       (QString)"Error copying egs_canonical_system.f" );
   fun_chunk.replace( "__canonical_system__", canonical()  );
   machinef.append( fun_chunk );
 
-  fun_chunk = readFile2QString( henHouse() + 
+  fun_chunk = readFile2QString( henHouse() +
       (QString)"pieces/egs_configuration_name.f",
       (QString)"Error copying egs_configuration_name.f" );
   fun_chunk.replace( "__configuration_name__", my_machine()  );
   machinef.append( fun_chunk );
 
   if ( ft->successful_test( id["hostFun"] ) ){
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_hostnm_v1.f",
         (QString)"Error copying egs_hostnm_v1.f" );
     fun_chunk.replace( "__hostnm__", a[ "hostFun" ]  );
   }
   else{
-    fun_chunk = readFile2QString( henHouse() + 
+    fun_chunk = readFile2QString( henHouse() +
         (QString)"pieces/egs_hostnm_v2.f",
         (QString)"Error copying egs_hostnm_v1.f" );
   }
@@ -962,7 +977,7 @@ void QInstallPage::createSystemFiles(){
   }
 
   if ( ! writeQString2File( machinef, Machine_F ) ) {
-   printProgress( tr("\n Critical error: could not create system file ") + 
+   printProgress( tr("\n Critical error: could not create system file ") +
                   Machine_F );
     return;
   }
@@ -975,18 +990,18 @@ void QInstallPage::createSystemFiles(){
   printProgress( "\n===> Creating machine.mortran ...\n\n");
   QString Machine_M  =  egsLibDir + QString("machine.mortran");
   QString machinem("%F\n");
-  fun_chunk = readFile2QString( Machine_F, QString("Error reading ") + 
+  fun_chunk = readFile2QString( Machine_F, QString("Error reading ") +
       Machine_F );
   machinem.append( fun_chunk );
   machinem.append( "%M\n" );
   if ( ! writeQString2File( machinem, Machine_M ) ) {
-    printProgress( tr("\n Critical error: could not create system file ")+ 
-        Machine_M                    + 
-        (QString)"\n ***************" + 
+    printProgress( tr("\n Critical error: could not create system file ")+
+        Machine_M                    +
+        (QString)"\n ***************" +
         (QString)"\n Stopping installation...");
     return;
   }
-  printProgress( (QString)"\n *** System file " + Machine_M + 
+  printProgress( (QString)"\n *** System file " + Machine_M +
       (QString)" successfully created ***\n\n");
 
   create_dosxyz_spec(read_write_pardose_ok);
@@ -1004,7 +1019,7 @@ void QInstallPage::createSystemFiles(){
 void QInstallPage::create_dosxyz_spec(bool rw_pardose_ok)
 {
   printProgress( "\n===> Creating dosxyznrc_" + my_machine() + ".spec ...", false);
-  if (rw_pardose_ok){  
+  if (rw_pardose_ok){
      QString dosxyz_spec = henHouse() + tr("specs") + QDir::separator() +
                            tr("dosxyznrc_") + my_machine() + tr(".spec");
      QString str("PARDOSE_OBJECTS = ");
@@ -1017,12 +1032,12 @@ void QInstallPage::create_dosxyz_spec(bool rw_pardose_ok)
      }
      else{
         printProgress(tr(" failed \n\n") +
-                      tr("Could not find read_write_pardose object file!")+ 
+                      tr("Could not find read_write_pardose object file!")+
                       tr("You will not be able to use ")+
                       tr("\nDOSXYZnrc for in-phantom dose calculations.\n"));
         return;
      }
-     
+
      bool wrote_pardose = writeQString2File( str, dosxyz_spec );
      if (!wrote_pardose){
       printProgress(tr(" failed \n\n") +
@@ -1038,7 +1053,7 @@ void QInstallPage::create_dosxyz_spec(bool rw_pardose_ok)
                     tr("Failed creating dosxyz_")+ my_machine() + tr(".spec") +
                     tr("\nfile. You will not be able to use ")+
                     tr("\nDOSXYZnrc for in-phantom dose calculations.\n"));
-    
+
   }
 }
 
@@ -1047,7 +1062,7 @@ void QInstallPage::create_dosxyz_spec(bool rw_pardose_ok)
 /***************************************************************/
 void QInstallPage::append_vculib_dosxyz_spec(bool load_vculib_ok){
 
-  printProgress( "\n===> Appending VCU library to dosxyznrc_" + 
+  printProgress( "\n===> Appending VCU library to dosxyznrc_" +
                  my_machine() + ".spec ...", false);
   if (load_vculib_ok){
      QString vcuobject = QString::null;
@@ -1059,31 +1074,31 @@ void QInstallPage::append_vculib_dosxyz_spec(bool load_vculib_ok){
      }
      else{
       printProgress(tr(" failed \n\n") +
-                    tr("Failed finding load_vculib ")+ 
+                    tr("Failed finding load_vculib ")+
                     tr("You will not be able to use ")+
                     tr("\nVCU source 20.\n"));
       return;
   }
-     QString dosxyz_spec = henHouse() + tr("specs") + QDir::separator() + 
+     QString dosxyz_spec = henHouse() + tr("specs") + QDir::separator() +
                            tr("dosxyznrc_") + my_machine() + tr(".spec");
      QString str = tr("\nVCULIB_OBJECTS = ") + vcuobject;
      bool wrote_vculib = appendQString2File( str, dosxyz_spec );
      if (!wrote_vculib){
       printProgress(tr(" failed \n\n") +
-                    tr("Failed adding VCULIB_OBJECTS to the ")+ 
+                    tr("Failed adding VCULIB_OBJECTS to the ")+
                     dosxyz_spec +
                     tr("\nfile. You will not be able to use ")+
                     tr("\nVCU source 20.\n"));
       return;
      }
-     
+
      printProgress(tr(" done \n\n"));
   }
 }
 
 //**************************************************************
 // Creates a C++ config file (egspp_$(my_machine).conf)
-// and updates the config file $(EGS_CONFIG) with 
+// and updates the config file $(EGS_CONFIG) with
 // Some info is already in the dso object but the user can
 // change some of these in the GUI. Hence, we take these from
 // the GUI directly.
@@ -1096,9 +1111,9 @@ void QInstallPage::create_egspp_config(){
         version = (QDate::currentDate()).toString("yyyy");
 
   printProgress( "\n===> Creating C++ configuration file ...\n\n");
-  
-  specFileCPP = henHouse() + tr("specs") + QDir::separator() + QString("egspp_") + confFile();                   
-                    
+
+  specFileCPP = henHouse() + tr("specs") + QDir::separator() + QString("egspp_") + confFile();
+
   QString egsppspecfile(egspp_spec_file);
   egsppspecfile.replace(QString("$my_name"),  the_name );
   egsppspecfile.replace(QString("$my_version"),  version ); // Was QString(EGS_VERSION)
@@ -1149,7 +1164,7 @@ void QInstallPage::buildEGSnrc( ushort code )
 {
 
   QString USER, usercodemsg;
-  
+
 #ifdef WIN32
   QString system_installed(WIN_EGS_INSTALLED);
   USER = getenv("USERNAME");
@@ -1157,7 +1172,7 @@ void QInstallPage::buildEGSnrc( ushort code )
   QString system_installed(UNIX_EGS_INSTALLED);
   USER = getenv( "USER" );
 #endif
-    
+
   switch( code ){
     case corespec:
          if (skip_config) emit systemCreated( mortran3 );
@@ -1176,10 +1191,10 @@ void QInstallPage::buildEGSnrc( ushort code )
     case density_corrections:
          updateProgress();
          qApp->processEvents();
-         printProgress( 
+         printProgress(
          "\n===> Creating density correction files for elements and compounds ...\n\n");
          buildFlag = sysDone;
-         buildEGSCode( henHouse() + (QString)"pegs4" + QDir::separator() + 
+         buildEGSCode( henHouse() + (QString)"pegs4" + QDir::separator() +
                                    (QString)"density_corrections"  );
          break;
     case sysDone:
@@ -1252,33 +1267,33 @@ void QInstallPage::buildEGSnrc( ushort code )
 /********************
  *
  * STEP #
- * 
+ *
  * Building mortran3
  *
- ********************/ 
+ ********************/
 void QInstallPage::buildMortran3(){
-    
+
  MTestAnswer &a = ft->getAnswers();//map relating test name to test result
  MTestID id = ft->getIDs();        // map relating test name to task number
-    
+
 //*********************   Creatng mortran3.f   ******************
  printProgress( "\n===> Compiling Mortran3 ...\n\n");
-    
+
  QDir d( henHouse() + "mortran3" + QDir::separator() );
  if ( !d.exists() ){
-    printProgress( 
+    printProgress(
            tr("\n There is no mortran3 subdirectory in your EGSnrc directory ")
            + henHouse() + (QString)"\n Installation stopped ! \n" );
     return;
  }
-    
+
  QString Mortran3_F = henHouse() + "mortran3/mortran3.f";
  delete_file( egsBinDir + "/mortran3.exe" );
  delete_file( egsBinDir + "/mortran3.dat" );
  copy( Mortran3_F, henHouse() + "/mortran3/mortran3.f.orig" );
- QString mortran3f = readFile2QString( Mortran3_F, (QString)"Error copying " + 
+ QString mortran3f = readFile2QString( Mortran3_F, (QString)"Error copying " +
                      Mortran3_F );
-    
+
  if ( ft->successful_test( id["exitFun"] ) ){
    mortran3f.replace("call exit" , (QString)"call " + a[ "exitFun" ]  );
  }
@@ -1291,12 +1306,12 @@ void QInstallPage::buildMortran3(){
     flush_it = (QString)"call " + a["flushFun"] + (QString)"(7)\n";
     flush_it += (QString)"call " + a["flushFun"] + (QString)"(8)\n";
   }
-  mortran3f.replace("call exit" , flush_it + (QString)"      call " + 
+  mortran3f.replace("call exit" , flush_it + (QString)"      call " +
                    a[ "egsExitFun" ]  );
  }
-    
+
  if ( ! writeQString2File( mortran3f, Mortran3_F ) ) {
-   printProgress( (QString)"\n Critical error: could not create mortran3.f " 
+   printProgress( (QString)"\n Critical error: could not create mortran3.f "
                    + Mortran3_F );
    return;
  }
@@ -1315,24 +1330,24 @@ void QInstallPage::buildMortran3(){
 /********************
  *
  * STEP #
- * 
+ *
  * Building pegs4
  *
- ********************/ 
+ ********************/
 void QInstallPage::buildPegs4(){
-    
+
  //*********************   Compiling Pegs4   ******************
  printProgress( "\n===> Compiling Pegs4 ...\n\n");
  QDir d( henHouse() + "/pegs4/" );
- 
+
  if ( ! d.exists() ){
     printProgress( tr("\n There is no pegs4 subdirectory ")+
-                   tr("in your EGSnrc directory ")         + 
-                   henHouse()                             + 
+                   tr("in your EGSnrc directory ")         +
+                   henHouse()                             +
                    (QString)"\n Installation stopped ! \n" );
     return;
  }
-    
+
  delete_file( egsBinDir + "/pegs4.exe" );
  delete_file( d.absolutePath() + "/pegs4_" + my_machine() + ".f" );
  procStop();
@@ -1353,7 +1368,7 @@ void QInstallPage::buildIAEALib(){
 
  if ( ! d.exists() ){
     printProgress( tr("\n There is no iaea_phsp subdirectory ")+
-                   tr("in your EGSnrc directory ")         + 
+                   tr("in your EGSnrc directory ")         +
                    henHouse() + tr("\n\n"));
     buildOK[ buildFlag - 1 ] = false;
     emit nextBuildStep( buildFlag );
@@ -1383,7 +1398,7 @@ void QInstallPage::buildEGSPPLib(){
 
  if ( ! d.exists() ){
     printProgress( tr("\n There is no egs++ subdirectory ")+
-                   tr("in your EGSnrc directory ")         + 
+                   tr("in your EGSnrc directory ")         +
                    henHouse() + tr("\n\n"));
     buildOK[ buildFlag - 1 ] = false;
     emit nextBuildStep( buildFlag );
@@ -1410,7 +1425,7 @@ void QInstallPage::buildEGSCode( const QString& workDir ){
   QDir d( workDir );
   if ( ! d.exists() ){
     printProgress( "\n There is no " + workDir +
-                   "directory ! \n" + 
+                   "directory ! \n" +
                    "\n Installation stopped ! \n" );
     return;
   }
@@ -1429,18 +1444,18 @@ void QInstallPage::buildEGSCode( const QString& workDir ){
 
 void QInstallPage::procProgress(){
     printProgress(QString(procInstall->readAllStandardOutput()));
-    if      ( buildFlag - 1 == egspp ) egspp_step++; 
-    else if ( buildFlag - 1 == iaea )  iaea_steps++; 
+    if      ( buildFlag - 1 == egspp ) egspp_step++;
+    else if ( buildFlag - 1 == iaea )  iaea_steps++;
     else                               build_steps++;
     if (!installing_beam) updateProgress();
 }
 
 void QInstallPage::procEnd(int exitCode, QProcess::ExitStatus exitStatus){
-  
+
     if ( buildFlag - 1 == mortran3 ) //move mortran3.f.orig back to mortran3.f
          restore_mortran3();
 
-   
+
     if ( exitStatus != QProcess::NormalExit || exitCode != 0 ){
         if (user_aborted){
             printProgress( "Compilation aborted!" );
@@ -1456,24 +1471,24 @@ void QInstallPage::procEnd(int exitCode, QProcess::ExitStatus exitStatus){
             return;
         }
     }
-    
+
     printProgress( "\nCompilation succeeded !\n" );
     buildOK[ buildFlag - 1 ] = true;
-    
+
     if ( buildFlag - 1 == egspp || buildFlag - 1 == iaea) {
        //qDebug("egs++ steps = %d iaea steps = %d",egspp_step, iaea_steps);
        progressBar->setValue( progressBar->maximum() );
        timeStamp();
     }
-    
+
     emit nextBuildStep( buildFlag );
 }
 
-void QInstallPage::restore_mortran3()  
+void QInstallPage::restore_mortran3()
 {
-    move_file( henHouse() + "/mortran3/mortran3.f", 
+    move_file( henHouse() + "/mortran3/mortran3.f",
                henHouse() + "/mortran3/mortran3_" + my_machine() + ".f" );
-    move_file( henHouse() + "/mortran3/mortran3.f.orig", 
+    move_file( henHouse() + "/mortran3/mortran3.f.orig",
                henHouse() + "/mortran3/mortran3.f" );
 }
 
@@ -1511,9 +1526,9 @@ void QInstallPage::timeStamp(){
    else
       printProgress(QString("*     Elapsed time: %1 min *").arg(t_elapsed/60.));
    printProgress("*********************************");
-#ifdef CONF_DEBUG   
+#ifdef CONF_DEBUG
    qDebug("Time elapsed: %g s", t_elapsed);
-#endif   
+#endif
    //the_time.restart();
 }
 
@@ -1527,7 +1542,7 @@ void QInstallPage::finalize_cpp(){
         the_iaea.replace(QString("$lib_link1"), cpp->dsoPath());
         the_iaea.replace((QString)"$link2_prefix_", cpp->LinkPrefix() );
         the_iaea.replace((QString)"$link2_suffix", cpp->LinkSuffix() );
-        the_iaea.replace(QString("$iaea_phsp_macros"), 
+        the_iaea.replace(QString("$iaea_phsp_macros"),
                          QString("$(EGS_UTILS)iaea_phsp_macros.mortran") );
      }
      else{
@@ -1585,7 +1600,7 @@ bool QInstallPage::copyRecursively(const QString &srcFilePath, const QString &tg
     return true;
 }
 
-/* Copies files matching nameFilter from any directory inside srcFilePath 
+/* Copies files matching nameFilter from any directory inside srcFilePath
  * into tgtFilePath which must already exist */
 bool QInstallPage::copyFilesRecursively(const QString &srcFilePath,
                                    const QString &tgtFilePath, const QString & nameFilter)
@@ -1606,10 +1621,10 @@ bool QInstallPage::copyFilesRecursively(const QString &srcFilePath,
                 return false;
         }
     } else {
-        if (!nameFilter.isEmpty()){ 
+        if (!nameFilter.isEmpty()){
           QRegExp rx(nameFilter); rx.setPatternSyntax(QRegExp::Wildcard);
           if (!rx.exactMatch(srcFilePath)) return true;
-        } 
+        }
         qApp->processEvents();
         QString tgtFile = tgtFilePath + QDir::separator() + QFileInfo(srcFilePath).fileName();
         if (QFile(tgtFile).exists()) QFile::remove(tgtFile);
@@ -1630,10 +1645,10 @@ void QInstallPage::copy_user_codes(){
        emit userCodesCopied();
        return;
     }
-    
+
      resetProgressBar( howManyFilesInDir(henHouse() + "user_codes") );
      setSubTitle("Copying user codes");
-     
+
      printProgress((QString)"\nCopying user codes to user area .... \n\n");
      QString eh = egsHome(); eh.chop(1);
      if ( ! copyRecursively( henHouse() + "user_codes", eh) ){
@@ -1642,7 +1657,7 @@ void QInstallPage::copy_user_codes(){
         printProgress( "Aborting user area setup early .... \n" );
         printProgress( "Check that the user codes exist in the $HEN_HOUSE\n" );
         printProgress( "and your write permissions in the $EGS_HOME area.\n" );
-        printProgress( tr("In any case you can copy the user codes manually ")+ 
+        printProgress( tr("In any case you can copy the user codes manually ")+
                        tr("and build them by runing make") );
         return;
      }

@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI location
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #ifndef EGS_LOCATION_H
 #define EGS_LOCATION_H
@@ -29,7 +44,7 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QFileInfo>
-#include <QButtonGroup> 
+#include <QButtonGroup>
 #include <QLabel>
 #include <QMessageBox>
 #include <QProcess>
@@ -48,7 +63,7 @@
  #define CANONICAL "unix"
 #elif defined(Q_OS_WIN32) || defined(WIN32)
  #define CANONICAL "win"
-#else 
+#else
  #define CANONICAL "otherOS"
 #endif
 
@@ -63,10 +78,10 @@ class QLocationPage : public QWizardPage
   Q_PROPERTY(QString confName READ getConfName WRITE setConfName)
   Q_PROPERTY(QString Canonical READ getCanonical WRITE setCanonical)
   Q_PROPERTY(bool copyUCs READ needsUCs WRITE setNeedsUCs)
-  
+
 public:
 
-  QLocationPage(QWidget * parent, EGS_ConfigReader *cr, 
+  QLocationPage(QWidget * parent, EGS_ConfigReader *cr,
                 MCompiler *a_m, MCompiler *a_f, MCompiler *a_c, MCompiler *a_cpp)
                 : QWizardPage(parent), fc(a_f), cc(a_c), cpp(a_cpp), make(a_m),
                   copyUCs(true), all_defaults_exist(true)
@@ -81,8 +96,8 @@ public:
        QVBoxLayout *topl = new QVBoxLayout(this);
        //topl->setSpacing(6); topl->setMargin(11);
 
-       QString arch = getArch(); canonical = QString(CANONICAL) + arch; 
-       
+       QString arch = getArch(); canonical = QString(CANONICAL) + arch;
+
        // configuration file: if exists, defines config and HEN_HOUSE
        QGroupBox *gb = new QGroupBox("configuration group box",this);
        QHBoxLayout *gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
@@ -95,10 +110,10 @@ public:
        else // defaults to current directory, use a guess for canonical
           confLineEdit->setText( canonical );
           //confLineEdit->setText( canonical + tr(".conf"));
-       
+
        /* Either canonical defines conf_name in pristine environment, or a configuration exists which defines canonical */
        conf_name = canonical;
-       
+
        gbl->addWidget(confLineEdit);
        //QPushButton *b = new QPushButton("...",gb);
        //b->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
@@ -106,8 +121,8 @@ public:
        //gbl->addWidget(b);
 
        topl->addWidget(gb);
-       
-       // System location (HEN_HOUSE): 
+
+       // System location (HEN_HOUSE):
        gb = new QGroupBox("HEN_HOUSE group box",this);
        gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
        gb->setTitle( tr("System location (a.k.a. HEN_HOUSE)") );
@@ -115,7 +130,7 @@ public:
        henLineEdit->setReadOnly(true);
        /* If empty, means either EGS_CONFIG not set, or not found in EGS_CONFIG. */
        henLineEdit->setText( hen_temp );
-       //henLineEdit->setText( hen_temp.isEmpty() ? QDir::toNativeSeparators(QCoreApplication::applicationDirPath()) : 
+       //henLineEdit->setText( hen_temp.isEmpty() ? QDir::toNativeSeparators(QCoreApplication::applicationDirPath()) :
        //                                           hen_temp);
        //henLineEdit->setText( hen_temp.isEmpty() ? QDir::currentPath() : hen_temp);
        gbl->addWidget(henLineEdit);
@@ -125,56 +140,56 @@ public:
        gbl->addWidget(b);
 
        topl->addWidget(gb);
-       
+
        // Work Area (EGS_HOME) taken from environment or defaults to $HOME/egs_home
        gb = new QGroupBox("EGS_HOME group box",this);
        gbl = new QHBoxLayout(gb);gbl->setSpacing(6); //gbl->setMargin(11);
        gb->setTitle( tr("Working area (a.k.a. EGS_HOME)") );
-       homeLineEdit = new QLineEdit("EGS_HOME line edit",gb); 
-/*       QString home_root = henLineEdit->text(); 
+       homeLineEdit = new QLineEdit("EGS_HOME line edit",gb);
+/*       QString home_root = henLineEdit->text();
        if (home_root.endsWith(QDir::separator())) home_root.chop(1);
        home_root.truncate(home_root.lastIndexOf(QDir::separator())+1);
        homeLineEdit->setText(home_root + tr("egs_home"));*/
        homeLineEdit->setText( egsHome() );
-       
+
        gbl->addWidget(homeLineEdit);
        b = new QPushButton("...",gb);
        b->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
        connect(b,SIGNAL(clicked()),this,SLOT(selectEgsHome()));
        gbl->addWidget(b);
-       
+
        topl->addWidget(gb);
 
        connect(this,SIGNAL(henHouseChanged(const QString &)),this,
                     SLOT(setHenHouseField(const QString &)));
-       
+
        // Define installation type: typical or custom
        //gb = new QGroupBox("Installation type group box",this);
        gbl = new QHBoxLayout();//gbl->setSpacing(6); gbl->setMargin(11);
        //gb->setTitle( tr("Installation type") );
        typical = new QRadioButton("&Typical"); custom = new QRadioButton("&Custom");
-       gbl->addWidget(typical); gbl->addWidget(custom); 
-       if ( defaultMakeExists() && defaultFortranExists() && 
+       gbl->addWidget(typical); gbl->addWidget(custom);
+       if ( defaultMakeExists() && defaultFortranExists() &&
             defaultCExists()    && defaultCPPExists() )
             typical->setChecked(true);
-    
+
        topl->addLayout(gbl);
-       
+
        registerField("hen_house",henLineEdit);
        registerField("egs_conf", confLineEdit);
        registerField("egs_home", homeLineEdit);
        registerField("conf_name", this, "confName");
        registerField("Canonical", this, "Canonical");
        registerField("copyUCs", this,"copyUCs");
-       
-       if (!defaultMakeExists() || !defaultFortranExists() || 
+
+       if (!defaultMakeExists() || !defaultFortranExists() ||
            !defaultCExists()    || !defaultCPPExists()     )
            all_defaults_exist = false;
 
   }
   ~QLocationPage(){}
 
-  int nextId() const 
+  int nextId() const
   {
     if ( typical->isChecked() )
          return EGS_Wizard::Page_Licence; // Page_Install
@@ -182,7 +197,7 @@ public:
   }
 
   QString getConfName(){
-    conf_name = confLineEdit->text(); 
+    conf_name = confLineEdit->text();
     //conf_name.truncate(conf_name.lastIndexOf("."));
     return conf_name;
   }
@@ -191,25 +206,25 @@ public:
   void    setCanonical(const QString & can){canonical = can;}
   void setNeedsUCs(bool need){copyUCs=need;}
   bool needsUCs(){return copyUCs;}
-  
+
 public slots:
   /* In case one of the compilers is missing, there is no other choice than custom */
   void initializePage()
   {
       if (!all_defaults_exist){
-          custom->setChecked(true); custom->hide(); typical->hide();          
+          custom->setChecked(true); custom->hide(); typical->hide();
       }
   }
-  
-  bool defaultMakeExists() {    
+
+  bool defaultMakeExists() {
     if ( make->exists() ) return true;
-#ifndef WIN32    
+#ifndef WIN32
     else if (MCompiler(GnuMake,"gmake").exists() ){
              MCompiler m(GnuMake,"gmake");
              *make = m;
              return true;
     }
-#else    
+#else
     else if ( MCompiler(GnuMake,"mingw32-make").exists() ){
               MCompiler m(GnuMake,"mingw32-make");
              *make = m;
@@ -221,33 +236,33 @@ public slots:
 
   bool defaultFortranExists() {
     if (fc->exists()) return true;
-#ifdef WIN32    
+#ifdef WIN32
     else if ( MCompiler(F,"mingw32-gfortran").exists() ){
               MCompiler f(F,"mingw32-gfortran");
              *fc = f;
               return true;
-      
+
     }
     else if ( MCompiler(F,"mingw32-g77" ).exists() ){
               MCompiler f(F,"mingw32-g77");
              *fc = f;
               return true;
-      
+
     }
 #else
     else if ( MCompiler(F,"g77").exists() ){
               MCompiler f(F,"g77");
              *fc = f;
               return true;
-      
+
     }
 #endif
     else return false;
   }
-  
+
   bool defaultCExists() {
     if ( cc->exists() ) return true;
-#ifdef WIN32    
+#ifdef WIN32
     else if ( MCompiler(C,"mingw32-gcc").exists() ){
               MCompiler c(C,"mingw32-gcc");
              *cc = c;
@@ -257,13 +272,13 @@ public slots:
               MCompiler c(C,"x86_64-w64-mingw32-gcc");
              *cc = c;
               return true;
-      
+
     }
     else if ( MCompiler(C,"i686-w64-mingw32-gcc").exists() ){
               MCompiler c(C,"i686-w64-mingw32-gcc");
              *cc = c;
               return true;
-      
+
     }
 #else
     else if (MCompiler(C,"c89").exists()) { MCompiler c(C,"c89");*cc = c; return true; }
@@ -272,10 +287,10 @@ public slots:
 #endif
     else return false;
   }
-  
+
   bool defaultCPPExists() {
     if (cpp->exists()) return true;
-#ifdef WIN32    
+#ifdef WIN32
     else if ( MCompiler(CPP,"mingw32-g++").exists() ){
               MCompiler c(CPP,"mingw32-g++");
              *cpp = c;
@@ -290,7 +305,7 @@ public slots:
               MCompiler c(CPP,"i686-w64-mingw32-g++");
              *cpp = c;
               return true;
-      
+
     }
 #endif
     else return false;
@@ -298,7 +313,7 @@ public slots:
 
   bool validatePage()
   {
-    /* Configuration file exists and seems to be the proper one for the current OS 
+    /* Configuration file exists and seems to be the proper one for the current OS
        checkConfigFile returns 0 if no unusual errors in config file detected.
      */
     if (!config_reader->checkConfigFile(henLineEdit->text() + "/specs/" + confLineEdit->text() + ".conf")){
@@ -313,13 +328,13 @@ public slots:
         if (msgBox.clickedButton() == noButton)
            return false;
     }
-    
+
     if (henLineEdit->text().isEmpty()){
         QMessageBox::critical(this, tr("Error!!!"),
                                tr("Please select a directory with an existing EGSnrc system!"));
         return false;
     }
-    
+
     // Allowing empty EGS_HOME in which case no user code is copied. Must check in environment settings
     // for an empty EGS_HOME!!!
     if (homeLineEdit->text().isEmpty()){
@@ -329,10 +344,10 @@ public slots:
                               tr("directories and copy user codes!"));
         return false;
     }
-    
+
     return dirOK(henLineEdit->text(),false) && dirOK(homeLineEdit->text(),true);
   }
-  
+
   bool dirOK(const QString & dir, const bool &create){
     if ( !QDir(dir).exists() ){
        if ( create ){ // directory can be created
@@ -349,13 +364,13 @@ public slots:
               }
             }
             else
-                return false;    
+                return false;
        }
        else{// directory must exist
           QMessageBox::critical(this, tr("System location error!"),
                                dir + tr(" does not exist!\n") +
                                tr("Make sure to select a directory with an existing EGSnrc system!"));
-         
+
       }
     }
     else{
@@ -363,8 +378,8 @@ public slots:
             return is_A_HenHouse(dir);
         else{
           QMessageBox msgBox(QMessageBox::Warning, tr("Warning!"),
-                       tr("Working area ") + dir + tr(" exists!\n") + 
-                       tr(" Do you want to overwrite it?\n") + 
+                       tr("Working area ") + dir + tr(" exists!\n") +
+                       tr(" Do you want to overwrite it?\n") +
                        tr("Choose No to configure an existing system!"), 0, this);
                    msgBox.addButton(tr("&Yes"), QMessageBox::AcceptRole);
                    QPushButton *noButton = msgBox.addButton(tr("&No"), QMessageBox::RejectRole);
@@ -375,9 +390,9 @@ public slots:
               copyUCs = true; // Although set to true by default, this is needed in case Back button pressed.
         }
     }
-    
+
     return true;
-    
+
   }
 
   bool is_A_HenHouse(const QString & h){
@@ -390,31 +405,31 @@ public slots:
     else return true;
   }
 
-  QString egsConfiguration() { 
+  QString egsConfiguration() {
       return config_reader ? config_reader->getConfig() : QString();
   }
 
   /* EGS_CONFIG is the only supplier of an existing HEN_HOUSE through config_reader. */
-  QString henHouse() { 
-      return config_reader ? config_reader->getVariable("HEN_HOUSE",true) : QString(); 
+  QString henHouse() {
+      return config_reader ? config_reader->getVariable("HEN_HOUSE",true) : QString();
   }
 
   /* EGS_HOME can only be taken from environment. */
-  QString egsHome() { 
-     return config_reader ? config_reader->getVariable("EGS_HOME",true) : QString(getenv("EGS_HOME")); 
+  QString egsHome() {
+     return config_reader ? config_reader->getVariable("EGS_HOME",true) : QString(getenv("EGS_HOME"));
   }
 
-/* Determines system and processor architecture. On Windows we are checking if 
+/* Determines system and processor architecture. On Windows we are checking if
    we are dealing with a 32 bit process on a 64 bit CPU.
  */
 QString getArch(){
-#ifndef WIN32  
+#ifndef WIN32
   QProcess arch;
   arch.start("getconf",QStringList() << "LONG_BIT");
   if (!arch.waitForStarted()) return QString();
   arch.closeWriteChannel();
   if (!arch.waitForFinished()) return QString();
-  QString answer = QString(arch.readAll()); 
+  QString answer = QString(arch.readAll());
   if (answer.endsWith("\n")) answer.chop(1);
   return answer;
 #else
@@ -431,7 +446,7 @@ void selectConfigurationFile() {
 #endif
   QString start_dir;
   if( confLineEdit->text().isEmpty() ) {
-    if( henLineEdit->text().isEmpty() ) 
+    if( henLineEdit->text().isEmpty() )
       start_dir = QDir::homePath();
     else
       start_dir = henLineEdit->text() + QDir::separator() + "specs";
@@ -440,14 +455,14 @@ void selectConfigurationFile() {
     QFileInfo fi(confLineEdit->text());
     start_dir = fi.absolutePath();
   }
-  
+
   QString new_conf = QFileDialog::getOpenFileName(this,tr("Select a configuration file"),
                                                   start_dir,
                                  tr("EGS configuration files (*.conf);; All files (*)"));
   QChar ss = QDir::separator(); QString sss = ss;
   new_conf.replace('/',sss); new_conf.replace('\\',sss);
   if( !new_conf.isEmpty() ) {
-      changeConfiguration(new_conf); 
+      changeConfiguration(new_conf);
       setConfigField(egsConfiguration());
   }
 }
@@ -503,7 +518,7 @@ void changeConfiguration(const QString &new_config) {
               QMessageBox::Ok,QMessageBox::Cancel,0);
              if( answer == QMessageBox::Ok ) use_it = true;
           }
-          else 
+          else
               QMessageBox::warning(this,"Error",
                 QString("Unknown error while reading %1").arg(new_config),
                 QMessageBox::Ok,0,0);
@@ -527,7 +542,7 @@ void setHenHouse(const QString &new_hh) {
   QDir tmp(new_hh);
   if( tmp.exists() ) {
       QString hh = tmp.canonicalPath(); QChar junk = QDir::separator();
-      if( !hh.endsWith("/") && !hh.endsWith(junk) ) 
+      if( !hh.endsWith("/") && !hh.endsWith(junk) )
           hh += QDir::separator();
       if( !config_reader ) config_reader = new EGS_ConfigReader;
       config_reader->setVariable("HEN_HOUSE",hh);
@@ -548,12 +563,12 @@ signals:
 
   void egsHomeChanged(const QString &);
   void henHouseChanged(const QString &);
-  
+
 private:
   EGS_ConfigReader *config_reader;
   MCompiler        *fc, *cc, *cpp, *make; // Compilers + make utility
-  QLineEdit        *henLineEdit, 
-                   *homeLineEdit, 
+  QLineEdit        *henLineEdit,
+                   *homeLineEdit,
                    *confLineEdit;
   QRadioButton     *typical, *custom;
   QString           canonical, conf_name;

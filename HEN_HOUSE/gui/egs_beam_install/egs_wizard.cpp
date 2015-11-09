@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI wizard
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #include <iostream>
 #include <QIcon>
@@ -30,8 +45,8 @@
 
 using namespace std;
 
-EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WFlags f) 
-                                          : QWizard(parent,f), 
+EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WFlags f)
+                                          : QWizard(parent,f),
                                           the_year("0000?"),version("0?"),
                                           custom(false)
 {
@@ -42,19 +57,19 @@ EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WFlags f)
    setWindowIcon(QIcon(":/images/rocket_egg_tr_f.png"));
    setWindowIconText("egs_wizard");
 #ifndef Q_OS_MAC
-   setWizardStyle(QWizard::ModernStyle); 
-#endif   
+   setWizardStyle(QWizard::ModernStyle);
+#endif
    setMinimumWidth(690); //setMaximumWidth(3000); setFixedHeight(420); //setMinimumHeight(420); setMaximumHeight(450);
-   setPixmap(QWizard::LogoPixmap, 
+   setPixmap(QWizard::LogoPixmap,
              QPixmap(":/images/nrc-badge.png").scaled(QSize(150,75),Qt::IgnoreAspectRatio,Qt::SmoothTransformation));
 
    config_reader = new EGS_ConfigReader;
-   
+
    /* Initializing compilers (defaults to GNU compiler suite). Path to executables must be set. */
    fc = new MCompiler(F); cc = new MCompiler(C); cpp = new MCompiler(CPP);
    /* Initializing make utility (as a compiler). Path to executables must be set. */
    make = new MCompiler(GnuMake,"make");
-   
+
    /* Welcome page definition */
    //addPage(createWelcomePage());
    setPage(Page_Intro, createWelcomePage());
@@ -75,14 +90,14 @@ EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WFlags f)
    setOption(QWizard::HaveCustomButton2, true);
    connect(this, SIGNAL(customButtonClicked(int)),
            this, SLOT(processCustomButtonClick(int)));
-   
+
    QList<QWizard::WizardButton> layout;
-   layout << QWizard::CustomButton1 << QWizard::CustomButton2 << QWizard::Stretch << 
+   layout << QWizard::CustomButton1 << QWizard::CustomButton2 << QWizard::Stretch <<
              QWizard::BackButton    << QWizard::NextButton    << QWizard::FinishButton;
    setButtonLayout(layout);
-   
+
    setStartId(Page_Intro);
-   
+
 }
 
 QWizardPage * EGS_Wizard::createWelcomePage(){
@@ -146,7 +161,7 @@ void EGS_Wizard::processCustomButtonClick(int id){
                    "\nunder the terms of the GNU Affero General Public License."\
                    "\n\nCopyright 2015 National Research Council of Canada"
 void EGS_Wizard::aboutEGSWizard() {
-    QMessageBox::about ( this, tr("About egs_configure"), 
+    QMessageBox::about ( this, tr("About egs_configure"),
            QString("<p>Graphical Configuration Interface for EGSnrc</p>"\
                    "<p>Authors: Ernesto Mainegra and Iwan Kawrakow</p>"\
                    "<p>This program is free software. It is distributed under<br>"\
@@ -159,11 +174,11 @@ void EGS_Wizard::aboutQt() {
 }
 
 void EGS_Wizard::getHelp() {
-  QString info = 
+  QString info =
     "Sorry, this version of the EGSnrc GUI does not provide\n";
-  info += 
+  info +=
     "online help. Perhaps the reports PIRS-701, PIRS-702 or\n";
-  info += 
+  info +=
     "PIRS-877 (provided with the distribution) can answer \n";
   info += "your question ?";
   QMessageBox::information(this,"Help",info,QMessageBox::Ok);

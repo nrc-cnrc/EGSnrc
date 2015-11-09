@@ -1,21 +1,34 @@
-/***************************************************************************
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI tools
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2003
+#
+#  Contributors:    Iwan Kawrkaow
+#
+###############################################################################
+*/
 
-                             egs_tools.cpp  -  description
-                          -------------------------------------------
-    copyright            : (C) 2015  National Research Council Canada
-    author               : Ernesto Mainegra Hing
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
-    
-    $Id$
- ***************************************************************************/
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
+
 #include <QFile>
 #include <QDir>
 
@@ -55,7 +68,7 @@ void delete_file( const QString& target ){
       qDebug("failed!");
   else
       qDebug("OK!");*/
-     
+
 }
 
 bool append2file(const char* source, const char* target)
@@ -76,7 +89,7 @@ bool copy(const QString& source, const QString& target)
 {
      //if file exists, remove it
      delete_file(target);
-    
+
      std::ifstream   in( source.toLatin1(), ios::in | ios::binary );
      std::ofstream out( target.toLatin1(), ios::out | ios::binary );
      if ( !in ) {
@@ -137,7 +150,7 @@ void delete_files( const QString& dir_str, const QString& filter )
 }
 /*  Determines Linux OS bitness or Windows OS or process bitness in case of WOW64 (32bit program on 64bit OS) */
 bool is_x86_64(){
-#ifndef WIN32  
+#ifndef WIN32
   QProcess arch;
   arch.start("getconf",QStringList() << "LONG_BIT");
   if (!arch.waitForStarted()) return false;
@@ -161,14 +174,14 @@ if ( system( p.toLatin1().data() ) )
     QMessageBox::warning ( 0, "chmod", "failed on " + file, 1, 0, 0 );
 }
 /*-------------------------------------------
-  
+
      WINDOWS API TOOLS
-     
+
 ---------------------------------------------*/
 
 /***************************************************************
  * Replaces the value of the environment variable var with value
- ***************************************************************/ 
+ ***************************************************************/
 bool replaceUserEnvironmentVariable( const QString& var, const QString& value, QString* msg)
 {
 bool res = false;
@@ -198,7 +211,7 @@ if( lRes == ERROR_SUCCESS ){
     }
 
     // Write the string to the registry.
-    lRes = RegSetValueExA(hKey, (const char*)var.toLocal8Bit(), 0, REG_EXPAND_SZ, 
+    lRes = RegSetValueExA(hKey, (const char*)var.toLocal8Bit(), 0, REG_EXPAND_SZ,
                                  (const uchar*) value.toLatin1().data(), value.length()+1 );
     if( lRes == ERROR_SUCCESS ){
         res = true && res;
@@ -209,9 +222,9 @@ if( lRes == ERROR_SUCCESS ){
         res = false;
         *msg += (QString)"Key creation failed! \n";
     }
-    
+
     RegCloseKey( hKey );
-    
+
     unsigned long lpdwResult;
     if ( ! SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
                                (LPARAM) "Environment", SMTO_ABORTIFHUNG,
@@ -219,22 +232,22 @@ if( lRes == ERROR_SUCCESS ){
         *msg += "Message broadcast failed! \n";
     else
         *msg += "Successful message broadcast ! \n";
-    
+
 }
 #endif
 return res;
 }
 
 /***************************************************************
- * PREPENDS value to the environment variable var if not set 
+ * PREPENDS value to the environment variable var if not set
  * already. Returns false if already set and warns about multiple
- * settings (>1). Using QString.lower() since Windows directories 
+ * settings (>1). Using QString.lower() since Windows directories
  * are case insensitive.
- ***************************************************************/ 
+ ***************************************************************/
 bool prepend2UserEnvironmentVariable( const QString& var, const QString& value, QString* msg)
 {
 bool res = false;
-        
+
 #ifdef WIN32
 LONG lRes;
 HKEY hkSub = NULL;
@@ -243,7 +256,7 @@ PHKEY phkResult;
 ulong neworused;// receives 1 if new key was created or 2 if an existing key was opened
 QString subkey = "Environment";
 
-unsigned char* lpData; 
+unsigned char* lpData;
 DWORD lpcbData = 2048;     // address of data buffer size
 lpData = new unsigned char[lpcbData];
 
@@ -280,25 +293,25 @@ if( lRes == ERROR_SUCCESS ){
     else {
         *msg +=  (QString)"neworused = " +  QString("%1").arg(neworused,0,10) + (QString)"\n";
     }
-    
-    
+
+
     // Append the string to the registry key value.
-    
+
     QString new_value = value + (QString)((char*)lpData);
     QString s;
     //int times = new_value.toLower().contains( value.toLower() );
     int times = new_value.toLower().count( value.toLower() );
-    
+
     if ( times > 1 ){
         if ( times > 2)
-            *msg += (QString)"***** Beware, multiple(" 
-                    + s.setNum(times-1,10) 
+            *msg += (QString)"***** Beware, multiple("
+                    + s.setNum(times-1,10)
             + (QString)") entries found in your environment variable  " + var
                     +  (QString)"   *****\n";
         return false;
     }
-    
-    lRes = RegSetValueExA(hKey, (const char*)var.toLocal8Bit(), 0, 
+
+    lRes = RegSetValueExA(hKey, (const char*)var.toLocal8Bit(), 0,
                           REG_EXPAND_SZ, (const unsigned char*) new_value.toLatin1().data(), new_value.length()+1 );
     if( lRes == ERROR_SUCCESS ){
         res = true && res;
@@ -308,9 +321,9 @@ if( lRes == ERROR_SUCCESS ){
     else{
         *msg += (QString)"Key creation failed! \n";
     }
-    
+
     RegCloseKey( hKey );
-    
+
     ulong lpdwResult;
     if ( ! SendMessageTimeoutA(HWND_BROADCAST, WM_SETTINGCHANGE, 0,
                                (LPARAM) "Environment", SMTO_ABORTIFHUNG,
@@ -318,17 +331,17 @@ if( lRes == ERROR_SUCCESS ){
         *msg += "Message broadcast failed! \n";
     else
         *msg += "Successful message broadcast ! \n";
-    
+
 }
 #endif
 return res;
 }
 
-/********************************************************************* 
- * Reads variable from user's environment. Useful for instance to get 
+/*********************************************************************
+ * Reads variable from user's environment. Useful for instance to get
  * the PATH just for the user without the system path to avoid a huge
  * PATH when updating the user's environment with EGS paths.
- ********************************************************************/ 
+ ********************************************************************/
 QString getUserEnvironmentVariable( const QString& var, QString* msg)
 {
 #ifdef WIN32
@@ -339,7 +352,7 @@ PHKEY phkResult;
 ulong neworused;// receives 1 if new key was created or 2 if an existing key was opened
 QString subkey = "Environment";
 
-unsigned char* lpData; 
+unsigned char* lpData;
 DWORD lpcbData = 2048;     // address of data buffer size
 lpData = new unsigned char[lpcbData];
 
@@ -381,14 +394,14 @@ return QString::null;
 
 /*-------------------------------------------------------------------------
    BEWARE : This function will fail when assuming UNICODE characters
-   Took me one day to figure that one out. The Win Qt3.2 installation 
+   Took me one day to figure that one out. The Win Qt3.2 installation
    adds the -DUNICODE switch by default.
    I should find a generic way of handling any case, perhaps UNICODE ? :-)
 ----------------------------------------------------------------------------  */
-int createShortcut( const char* target, const char* link, 
+int createShortcut( const char* target, const char* link,
         const char* desc, QString &return_message )
 {
-#ifdef WIN32    
+#ifdef WIN32
 IShellLink *psl;
 HRESULT hres;
 
@@ -400,7 +413,7 @@ if (!SUCCEEDED(hres)){
 }
 
 hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                        IID_IShellLink, (LPVOID *)&psl); 
+                        IID_IShellLink, (LPVOID *)&psl);
 if (!SUCCEEDED(hres)){
     printf("Error in CoCreateInstance API function\n");
     return 3;
@@ -451,35 +464,35 @@ return 0; // SUCCESS
 
 }
 
-int createShortcut( const char* target, const char* link, 
-                    const char* desc, const char* icon, 
+int createShortcut( const char* target, const char* link,
+                    const char* desc, const char* icon,
                     int index, QString &return_message )
 {
-#ifdef WIN32   
+#ifdef WIN32
    IShellLink *psl;
    HRESULT hres;
-   
+
    return_message="";
    hres = CoInitialize(NULL);
    if (!SUCCEEDED(hres)){
        printf("Could not open the COM library\n");
        return 2;
    }
-   
+
    hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                           IID_IShellLink, (LPVOID *)&psl); 
+                           IID_IShellLink, (LPVOID *)&psl);
    if (!SUCCEEDED(hres)){
        printf("Error in CoCreateInstance API function\n");
        return 3;
    }
-   
+
    IPersistFile *ppf;
    hres = psl->QueryInterface(IID_IPersistFile, (LPVOID *)&ppf);
    if (!SUCCEEDED(hres)){
        printf("Error in QueryInterface API function\n");
        return 4;
    }
-   
+
    // Set the path to the shortcut target.
    hres = psl->SetPath( target );
    if (! SUCCEEDED (hres)){
@@ -488,7 +501,7 @@ int createShortcut( const char* target, const char* link,
        return_message += target;
        return 5;
    }
-   
+
    // Set the description of the shortcut.
    hres = psl->SetDescription( (LPCTSTR) desc );
    if (! SUCCEEDED (hres)){
@@ -504,35 +517,35 @@ int createShortcut( const char* target, const char* link,
        return 7;
     }
    }
-   
+
    // Ensure that the string consists of ANSI characters.
    WORD wsz[MAX_PATH];
    MultiByteToWideChar(CP_ACP, 0, link, -1, wsz, MAX_PATH);
-   
+
    // Save the shortcut via the IPersistFile::Save member function.
    hres = ppf->Save ( wsz, TRUE );
    if (! SUCCEEDED (hres)){
        printf("Save failed!\n");
        return 8;
    }
-   
+
    // Release the pointer to IPersistFile.
    ppf->Release();
-   
+
    // Release the pointer to IShellLink.
    psl->Release();
 #endif
-   
+
    return 0; // SUCCESS
-   
+
 }
-  
+
 /*---------------------------------------------------------------
-     
+
      TASKS OBJECT IMPLEMENTATION
-        
+
 -----------------------------------------------------------------*/
-   
+
 //Tasks::Tasks( ushort rTasks )
 Tasks::Tasks( )
 {
@@ -554,19 +567,19 @@ Tasks::Tasks( )
     run_mode  = false;  // false => runs as many steps from a test until successful
                                 // true => runs all steps from a test
     critical_mode = false;
-    dependency = false;    
+    dependency = false;
     check = "exitstatus";
     answ_key = "output";
 #ifdef WIN32
     ename += ".exe";
-#endif	
-    
+#endif
+
 }
 
 void  Tasks::setFName( const QString& fnam )
 {
     if ( !fnam.isEmpty() ){
-	fname = fnam; 
+	fname = fnam;
     }
     else{
 	iMissing++;
@@ -577,23 +590,23 @@ void  Tasks::setFName( const QString& fnam )
     }
 }
 
-QString Tasks::exeName(){ 
+QString Tasks::exeName(){
     QString exe_name = fname; exe_name.truncate(exe_name.lastIndexOf("."));
 #ifdef WIN32
     exe_name += ".exe";
-#endif	
+#endif
     ename = exe_name;
-    return ename;  
+    return ename;
 }
 
-QString Tasks::objName(){ 
+QString Tasks::objName(){
     QString obj_name = fname; obj_name.truncate(obj_name.lastIndexOf("."));
 #ifdef WIN32
     obj_name += ".obj";
 #else
     obj_name += ".o";
-#endif	
-    return obj_name;  
+#endif
+    return obj_name;
 }
 
 //void Tasks::createFfile( ushort index )
@@ -601,9 +614,9 @@ void Tasks::createFfile( unsigned int iEle )
 {
     QString the_code = program;
     if ( program.isEmpty() ) return;
-    QString the_key;    
+    QString the_key;
     MSourceChunks::Iterator itsrc;
-    for ( itsrc = chunks.begin();  itsrc != chunks.end();  ++itsrc ) {    
+    for ( itsrc = chunks.begin();  itsrc != chunks.end();  ++itsrc ) {
 	the_key = itsrc.key();
 	unsigned int counter = 0;
 	for (QStringList::Iterator it = chunks[ the_key ].begin(); it != chunks[ the_key ].end(); it++ ){
@@ -614,22 +627,22 @@ void Tasks::createFfile( unsigned int iEle )
 	    else{ counter++; }
 	}
     }
-    
-    
+
+
     QFile f_file( fname );
     if (!f_file.open( QIODevice::WriteOnly  ) ){
 	cout << "Error creating file" << fname.toLatin1().data() << endl;
 	return;
     }
-    QTextStream to_disk( &f_file );	
+    QTextStream to_disk( &f_file );
     to_disk << the_code;
     f_file.flush();
     f_file.close();
-    
+
 }
 
-QString Tasks::compilerOptions(){ 
-    return options; 
+QString Tasks::compilerOptions(){
+    return options;
 }
 
 QString libPath(){
@@ -640,9 +653,9 @@ QString libPath(){
     OS = getenv("OS");
 #else
     OS = "Linux";
-#endif    
+#endif
     the_path += OS;
-    return the_path;	     
+    return the_path;
 }
 
 bool Tasks::hasReplacementKey(){
@@ -682,11 +695,11 @@ EGS_DSO::EGS_DSO(){
 }
 
 EGS_DSO::EGS_DSO(const QString &cpp_name){
-  
+
    init();
-   
+
 #if defined(WIN32) || defined(Q_OS_WIN32)
-   libpre=QString(); libext=".dll"; 
+   libpre=QString(); libext=".dll";
    defines="-DWIN32";
    if (cpp_name.contains("g++")){
       defines="-DWIN32";
@@ -700,7 +713,7 @@ EGS_DSO::EGS_DSO(const QString &cpp_name){
       link2_prefix="$(ABS_DSO)"; link2_suffix=".lib";
    }
 #elif defined(Q_OS_CYGWIN)
-   libpre=QString(); libext=".dll"; 
+   libpre=QString(); libext=".dll";
    if (cpp_name.contains("g++")){
       defines="-DCYGWIN";
       extra="-o $@ -Wl,--out-implib,$(@:.dll=.lib)";
@@ -711,10 +724,10 @@ EGS_DSO::EGS_DSO(const QString &cpp_name){
       eout="-Fe"; lib_link1=QString();
       link2_prefix="$(ABS_DSO)"; link2_suffix=".lib";
    }
-#elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)    
+#elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
    is_osx=true;
    libext=".dylib"; libext_bundle=".so";
-   defines="-DOSX"; lib_link1="-L$(abs_dso)"; 
+   defines="-DOSX"; lib_link1="-L$(abs_dso)";
    shared="-dynamiclib";
    if ( cpp_name == "g++") shared_bundle="-bundle" ;
    else                    shared_bundle="-qmkshrobj";
@@ -723,7 +736,7 @@ EGS_DSO::EGS_DSO(const QString &cpp_name){
    if ( cpp_name == "g++") fpic="-fPIC";
    else                    fpic="-KPIC"; shared="-G";
 #elif defined(Q_OS_AIX)
-   shared="-G -Wl,-brtl"; 
+   shared="-G -Wl,-brtl";
    lib_link1="-L$(abs_dso) -Wl,-brtl,-bexpall";
 #elif defined(Q_OS_LINUX) || defined(Q_OS_UNIX)
    fpic = is_x86_64() ? "-fPIC" : QString();
@@ -749,12 +762,12 @@ void MCompiler::init(){
     opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
     optimiz = "-O3 -ffast-math";
     deb = "-g";
-    eext = QString();     
+    eext = QString();
     oflag = "-o ";
-#ifdef WIN32    
-    oext = "obj";     
+#ifdef WIN32
+    oext = "obj";
 #else
-    oext = "o";     
+    oext = "o";
 #endif
     lflag = QString(); libs = QString();
     _exists = true;// determined below in method getVersion
@@ -788,14 +801,14 @@ void MCompiler::setLanguage(Language l){
 MCompiler::~MCompiler(){}
 
 // Create compiler "a_name" for language "l" (location should be set in PATH)
-MCompiler::MCompiler(Language l, const QString &a_name) 
+MCompiler::MCompiler(Language l, const QString &a_name)
           : dso(0)
 {
      _path = getPathOf(a_name);
      setUpCompiler( l, a_name );
 }
 
-// Create compiler "a_name" for language "l" located in a_path 
+// Create compiler "a_name" for language "l" located in a_path
 // (not necessarily in the PATH) as obtained from the user using a file dialog.
 // a_path should be added to the PATH at the end of the installation
 MCompiler::MCompiler(Language l, const QString &a_name, const QString &a_path)
@@ -813,12 +826,12 @@ MCompiler::MCompiler(const QString &a_name)
 }
 
 // Sets up Fortran compiler "a_name"
-void MCompiler::setUpCompiler( const QString& a_name ){ 
+void MCompiler::setUpCompiler( const QString& a_name ){
     setUpCompiler(F, a_name);
 }
 
 // Sets up compiler "n" for language "l"
-void MCompiler::setUpCompiler( Language l, const QString& a_name ){ 
+void MCompiler::setUpCompiler( Language l, const QString& a_name ){
      the_name = a_name;
     switch(l){
       case F:
@@ -844,7 +857,7 @@ void MCompiler::setUpGnuMake(){
 void MCompiler::setUpCCompiler(){
     optimiz  = "-O3"; oflag = "-o "; vopt = "--version";
     opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
-    
+
 #ifdef WIN32
   if (the_name.toLower()== "icc"){
     optimiz  = "-O3 -no-prec-div -fp-model fast=2 -DWIN32";
@@ -879,7 +892,7 @@ void MCompiler::setUpCPPCompiler(){
 #ifdef WIN32
   if ( the_name.toLower() == "cl.exe" ){//-Ox max. optimizations
     optimiz = "-Ox -DWIN32 -MD -nologo";//-MD link with MSVCRT.LIB
-    oflag   = "-Fo";                    //-Fo<name> obj file name    
+    oflag   = "-Fo";                    //-Fo<name> obj file name
     vopt = QString();
   }
   else if ( the_name.contains("g++") ){
@@ -898,17 +911,17 @@ void MCompiler::setUpCPPCompiler(){
   else{
     optimiz  = "-O2";
   }
-#endif  
+#endif
   _version = getVersion(); _version = _version.split("\n").takeFirst();
-  
+
   //get_dso();
   dso = new EGS_DSO(name());// Creates dso, sets flibs to -lgfortran literally
   /* Initially set for gfortran, on Windows set to "libgfortran.a" */
   dso->flibs = getFlibs2LinkCPP("gfortran",path());
-  
+
 }
 
-/****************************************************** 
+/******************************************************
  * finding Fortran libraries when linking done in C++ */
 /******************************************************/
 QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_path )
@@ -935,7 +948,7 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
   return flibs;
 }
 
-/****************************************************** 
+/******************************************************
  * finding Fortran libraries when linking done in C++ *
  * This version is meant to use script get_f77_libs1  *
  * in the HEN_HOUSE/scripts folder.                   *
@@ -959,7 +972,7 @@ void MCompiler::setUpFortranCompiler(){
     oext = "o"; lflag = "-l"; vopt = QString(); _version = "DUNO!";
     eext = QString(); libs = QString(); deb = "-g"; optimiz = "-O3";
     _exists = true;// determined below in method getVersion
-  
+
 #if defined(WIN32) || defined(Q_OS_WIN32)
     oext = "obj";
     if ( the_name.contains("gfortran") || // GNU Fortran
@@ -1008,7 +1021,7 @@ void MCompiler::setUpFortranCompiler(){
         deb = "-g";
     }
     _version = getVersion(); _version = _version.split("\r\n").takeFirst();
-#elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)    
+#elif defined(Q_OS_MAC) || defined(Q_OS_DARWIN)
     if ( the_name.contains("gfortran") || the_name == "g95" || the_name.contains("g77") ){ // GNU Fortran
         vopt = "-v --version";
         opt = is_x86_64() ? "-fPIC" : QString(); // Only for 64-bit GNU compilers
@@ -1051,26 +1064,26 @@ void MCompiler::setUpFortranCompiler(){
     }
     _version = getVersion(); _version = _version.split("\n").takeFirst();
 #endif
-  
+
 }
 
 /*  Determines OS bitness. Accounts for 32-bit process on 64-bit OS on Windows (WOW64) */
 bool MCompiler::OS_x86_64(){
-#ifndef WIN32  
+#ifndef WIN32
   QProcess arch;
   arch.start("getconf",QStringList() << "LONG_BIT");
   if (!arch.waitForStarted()) return false;
   arch.closeWriteChannel();
   if (!arch.waitForFinished()) return false;
-   
+
   return QString(arch.readAll()).contains("64") ? true : false;
 #else
   /* On Windows one can have 32 bit program (processes/software) on 64 bit OS (processor/hardware)
-   * 
+   *
                              32bit Native  64bit Native    WOW64
     PROCESSOR_ARCHITECTURE     x86          AMD64         x86
     PROCESSOR_ARCHITEW6432  undefined     undefined      AMD64
-    
+
   */
   bool archiSoft = QString(getenv("PROCESSOR_ARCHITECTURE")).contains("64")? true : false;// software
   bool archiOS   = QString(getenv("PROCESSOR_ARCHITEW6432")).contains("64")? true : false;// OS/hardware
@@ -1080,7 +1093,7 @@ bool MCompiler::OS_x86_64(){
 
 /*  Determines Linux OS bitness or Windows OS or process bitness in case of WOW64 (32bit program on 64bit OS) */
 bool MCompiler::is_x86_64(){
-#ifndef WIN32  
+#ifndef WIN32
   QProcess arch;
   arch.start("getconf",QStringList() << "LONG_BIT");
   if (!arch.waitForStarted()) return false;
@@ -1094,35 +1107,35 @@ bool MCompiler::is_x86_64(){
 }
 
 /*---------------------------------------------------------------
-  
+
      FORTRAN TEST OBJECT IMPLEMENTATION
-     
+
 -----------------------------------------------------------------*/
 
 MTest::MTest( QTextEdit*  io_dev, const QString& xmlf, QIODevice* file ){
     config_log_name = QString();
     config_log.setDevice( file );
-    ini();    
-    ioDevice  = io_dev;    
-    
+    ini();
+    ioDevice  = io_dev;
+
     if  ( ! QFile::exists(xmlf) ){
         QString msg = "\n Test file " + xmlf + " does not exist !";
         ioDevice->insertPlainText( msg );
         config_log << "\n Test file " << xmlf << " does not exist ! \n";
         return;
     }
-    
+
     XMLTestReader* xmlr = new XMLTestReader( xmlf );
     MTest* test                = xmlr->getTests( xmlf );
     t                               = test->tasks();
     title                           = test->getTitle();
     testLib                       = test->getTestLib();
     totalTasks                  = test->getTotalTasks();
-    
+
     if ( totalTasks > 0 ) setIDs();
-    
+
     if ( !testLib.isEmpty() ) lib = new QLibrary(testLib);
-    
+
 }
 
 void MTest::setIDs(){
@@ -1138,19 +1151,19 @@ void MTest::setIDs(){
             id[t[iTask].fortranName().remove((QString)".c")] = iTask;// Use test program name without extension
           }
           else{
-            id[t[iTask].fortranName().remove((QString)".f")] = iTask;       
+            id[t[iTask].fortranName().remove((QString)".f")] = iTask;
           }
        }
 // cout << "Task name = " << t[iTask].taskName().toLatin1().data() << " has " <<  t[iTask].getArg().count() << " arguments ..." << endl; EMH_DEBUG
      }
-    
+
 }
 
 MTest::MTest( QTextEdit*  io_dev, const QString& xmlf, const QString& log ){
     config_log_name = log;
-    ini();    
-    ioDevice                    = io_dev;    
-    
+    ini();
+    ioDevice                    = io_dev;
+
     XMLTestReader* xmlr = new XMLTestReader( xmlf );
     MTest* test                = xmlr->getTests( xmlf );
     t                               = test->tasks();
@@ -1158,49 +1171,49 @@ MTest::MTest( QTextEdit*  io_dev, const QString& xmlf, const QString& log ){
     testLib                       = test->getTestLib();
     totalTasks                  = test->getTotalTasks();
     if ( totalTasks > 0 ) setIDs();
-    
+
     if ( !testLib.isEmpty() ) lib = new QLibrary(testLib);
 }
-    
+
 MTest::MTest( QTextEdit*  io_dev, const QString& xmlf , const QString& tit, const QString& log  ){
     config_log_name = log;
-    ini();    
-    ioDevice                    = io_dev;    
-    
+    ini();
+    ioDevice                    = io_dev;
+
     title = tit;
     XMLTestReader* xmlr = new XMLTestReader( xmlf );
-    
+
     MTest* test                = xmlr->getTests( xmlf );
     t                               = test->tasks();
     testLib                       = test->getTestLib();
     totalTasks                  = test->getTotalTasks();
     if ( totalTasks > 0 ) setIDs();
     if ( !testLib.isEmpty() ) lib = new QLibrary(testLib);
-    
+
 }
 
 /*
-To be used in conjunction with setTest  
+To be used in conjunction with setTest
 */
 
 MTest::MTest( QTextEdit*  io_dev, ushort nTests, QIODevice* file ){
  config_log_name = QString();
  config_log.setDevice( file );
- ini();    
+ ini();
  t = new Tasks[nTests];// <=== create space for nTests tasks, needs to be set
  totalTasks = nTests;
- ioDevice  = io_dev;    
+ ioDevice  = io_dev;
  if ( totalTasks > 0 ) setIDs();
 }
 
 MTest::MTest( QTextEdit*  io_dev, Tasks* rtask ){
-    ini();    
+    ini();
     t = rtask;
-    ioDevice       = io_dev;    
+    ioDevice       = io_dev;
 }
 
 void MTest::ini(){
-    
+
     totalTasks    = 0;
     currentTask   = 0;
     succComp      = false;
@@ -1209,51 +1222,51 @@ void MTest::ini(){
     ObjDir        = QString();
     linkerOptions = QString();
     o_flag        = QString();
-    needs_minus_o_flag = false; 
-    
+    needs_minus_o_flag = false;
+
     NEle = 0;
     compileTimes = 0;
     m_exit = false;
-    
+
     fcompiler = new MCompiler(F);
     ccompiler = new MCompiler(C);
-    
+
     title = " ===> Performing tests .....";
     endStr = (QString) "\n\n************              Tests concluded !          *******\n";
     testLib = QString(); // defaults to nothing
-    
+
    if (!config_log_name.isEmpty()){
        config_file = new QFile( config_log_name );
        if (!config_file->open( QIODevice::WriteOnly  ) ){
             perror("Error was ");
-            qFatal("Error creating file config.log"); 	
+            qFatal("Error creating file config.log");
         }
         config_log.setDevice ( config_file );
     }
-    
+
     //connect( this, SIGNAL(taskFinished()), this, SLOT(compile()) );
     connect( this, SIGNAL(taskFinished()), this, SLOT(launch()) );
     connect( this, SIGNAL(compilationFinished()), this, SLOT(compile()) );
     connect( this, SIGNAL(stepFinished()), this, SLOT(compile()) );
     connect( this, SIGNAL(readyToExecute()), this, SLOT(execute()) );
     connect( this, SIGNAL(executionFinished()), this, SLOT(execute()) );
-    
+
     cProc     = new QProcess(this);
-/*    cProc->setCommunication(QProcess::Stdout | QProcess::Stderr | 
+/*    cProc->setCommunication(QProcess::Stdout | QProcess::Stderr |
                             QProcess::DupStderr);*/
     cProc->setProcessChannelMode(QProcess::MergedChannels);
-    connect( cProc, SIGNAL(readyReadStandardOutput()), 
+    connect( cProc, SIGNAL(readyReadStandardOutput()),
              this, SLOT(compilationProgress()) );
-    connect( cProc, SIGNAL(finished(int , QProcess::ExitStatus)), 
+    connect( cProc, SIGNAL(finished(int , QProcess::ExitStatus)),
              this, SLOT(errDetect(int , QProcess::ExitStatus)) );
-    
+
     exeProc     = new QProcess(this);
-/*    exeProc->setCommunication(QProcess::Stdout | QProcess::Stderr | 
+/*    exeProc->setCommunication(QProcess::Stdout | QProcess::Stderr |
                               QProcess::DupStderr);*/
     exeProc->setProcessChannelMode(QProcess::MergedChannels);
-    connect( exeProc, SIGNAL(readyReadStandardOutput()), 
+    connect( exeProc, SIGNAL(readyReadStandardOutput()),
              this, SLOT(executionProgress()) );
-    connect( exeProc, SIGNAL(finished(int , QProcess::ExitStatus)), 
+    connect( exeProc, SIGNAL(finished(int , QProcess::ExitStatus)),
              this, SLOT(executionStatus(int , QProcess::ExitStatus)) );
 }
 
@@ -1264,13 +1277,13 @@ MTest::~MTest(){
     if ( lib ) delete lib;
 }
 
-void MTest::setCompilers ( const QString& fc, const QString& fopt, 
+void MTest::setCompilers ( const QString& fc, const QString& fopt,
                            const QString& cc, const QString& copt ){
-   
+
     //fcompiler->setName( fc );
     fcompiler->setUpCompiler( F, fc );
     fcompiler->setOptions( fopt );
-    
+
     //ccompiler->setName( cc );
     ccompiler->setUpCompiler( C, cc );
     ccompiler->setOptions( copt );
@@ -1283,25 +1296,25 @@ void MTest::setCompilers ( MCompiler* fcomp, MCompiler* ccomp ){
 
 bool  MTest::needs2Bmade( QStringList nam  ){
     bool succ = false;
-    
+
     for (QStringList::Iterator it = nam.begin(); it != nam.end(); ++it) {
 	succ = succ || t[ id[*it]  ].get_result();
     }
-    
+
     return ! succ;
 }
 
 
 
 void MTest::launch(){
-    
+
  if ( m_exit ){
   ioDevice->insertPlainText( "\n\n**** TESTS CANCELLED BY USER ****\n\n");
    config_log << "\n\n**** TESTS CANCELLED BY USER ****\n\n" << endl;
    config_log.flush();
    return;
  }
-    
+
  QString lineStr = tr("\n--------------------------------------------")+
                    tr("--------------------------------------------------\n");
  QString lineBrk =(QString)"\n";
@@ -1311,11 +1324,11 @@ void MTest::launch(){
     config_log << title << endl;
     config_log.flush();
  }
- 
- if ( currentTask < totalTasks )  {  
+
+ if ( currentTask < totalTasks )  {
    compileTimes = 0;
    tcompileTimes = totalCompilation( &t[currentTask] );
-   exeOut = QString();    
+   exeOut = QString();
    if ( tcompileTimes == 0 ) tcompileTimes = 1;
    if ( t[currentTask].isDependent() && ! id.empty()){
     if ( ! needs2Bmade( t[currentTask].getDepName() ) ){
@@ -1332,7 +1345,7 @@ void MTest::launch(){
     config_log << endStr << endl;;
     config_log.flush();
    }
-	       
+
    emit testsFinished();
  }
 }
@@ -1343,13 +1356,13 @@ unsigned int MTest::totalCompilation( Tasks* tT ){
     unsigned int n_ele   =  0;
     NKeys = 0;
     NEle   =0;
-    for ( MSourceChunks::Iterator it = s.begin();  it != s.end();  ++it ) {    
+    for ( MSourceChunks::Iterator it = s.begin();  it != s.end();  ++it ) {
         NKeys++;
         the_key = it.key();
         n_ele = s[the_key].count();
         if ( n_ele > NEle ) NEle = n_ele; // take maximum number of elements
     }
-    
+
     return NEle;
 }
 
@@ -1362,41 +1375,41 @@ void MTest::setCurrentTask(){
 // 	p->addArgument( arg );
 // }
 
-void MTest::setObjDir( const QString& od ){ 
-     ObjDir = ( od.endsWith(QString("%1").arg(QDir::separator()))) ? 
+void MTest::setObjDir( const QString& od ){
+     ObjDir = ( od.endsWith(QString("%1").arg(QDir::separator()))) ?
                 od:od+QDir::separator();
 };
 
 
-QStringList setObjectFileExtensions( const QString& objnames, 
+QStringList setObjectFileExtensions( const QString& objnames,
                                      const QString& objdir ){
-    
+
     QStringList the_objects = objnames.split(" ", QString::SkipEmptyParts);
     QStringList the_real_objs;
-    
- 
-    for ( QStringList::Iterator ito = the_objects.begin(); 
+
+
+    for ( QStringList::Iterator ito = the_objects.begin();
           ito != the_objects.end(); ++ito ) {
-	
-// Object file names passed with extension	
-	if ( QFile::exists( objdir + *ito) && 
+
+// Object file names passed with extension
+	if ( QFile::exists( objdir + *ito) &&
            ( (*ito).endsWith(QString(".o"),Qt::CaseSensitive)||
              (*ito).endsWith(QString(".obj"), Qt::CaseSensitive) ) ){
 	       the_real_objs << objdir + *ito;
 	}
-// Object file names passed without extension	
-#ifdef WIN32	
+// Object file names passed without extension
+#ifdef WIN32
 	else if ( QFile::exists( objdir + *ito + QString(".obj") ) ){
 	    the_real_objs <<  objdir + *ito + QString(".obj") ;
 	}
-#endif	
+#endif
 	else if ( QFile::exists( objdir + *ito + QString(".o") ) ){
 	    the_real_objs <<  objdir + *ito + QString(".o") ;
 	}
     }
-	
+
     return the_real_objs;
-    
+
 }
 
 QStringList MTest::getCompilerArguments( Tasks* tT ){
@@ -1406,7 +1419,7 @@ QStringList MTest::getCompilerArguments( Tasks* tT ){
     QString option;
 #ifdef WIN32
     bool isGNU = false;
-#endif    
+#endif
     if ( tT->getLanguage().toLower() == "c"){
 	the_args.append( ccompiler->name() );
 	GUIoptions = ccompiler->options();
@@ -1417,10 +1430,10 @@ QStringList MTest::getCompilerArguments( Tasks* tT ){
 	GUIoptions = fcompiler->options();
 	compiler = fcompiler;
     }
-    
+
     if (compiler->name().isEmpty()){//no compiler, skip test
-     config_log << "\nBEWARE:\n-------\n -> empty " << 
-                  tT->getLanguage().toUpper() << " compiler ..." << 
+     config_log << "\nBEWARE:\n-------\n -> empty " <<
+                  tT->getLanguage().toUpper() << " compiler ..." <<
                   "\n Compilation process will fail!!!"<< endl;
     }
 
@@ -1429,42 +1442,42 @@ QStringList MTest::getCompilerArguments( Tasks* tT ){
 	option = task_option;
     else
 	option = GUIoptions;
-    
+
 #ifdef WIN32
-    o_flag = compiler->outflag();//taken from compiler 
+    o_flag = compiler->outflag();//taken from compiler
 
     if ( o_flag == "-o " || o_flag == "-o" ){ //up till now: GNU and PGI
-     QString the_o_flag = QString(" -o ");  
+     QString the_o_flag = QString(" -o ");
      if ( option.indexOf( "-c") < 0 ){
          option += the_o_flag + tT->exeName();
      }
      else{
          option += the_o_flag + tT->objName();
      }
-    }    
-#else    
+    }
+#else
     if ( option.indexOf( "-c") < 0 ){
        option += QString(" -o ") + tT->exeName();
     }
-#endif    
-    
+#endif
+
     QStringList the_options = option.split(" ", QString::SkipEmptyParts );
-    for ( QStringList::Iterator it = the_options.begin(); 
+    for ( QStringList::Iterator it = the_options.begin();
                                 it != the_options.end(); ++it ) {
         the_args << *it;
     }
-    
+
     the_args.append( tT->fortranName() );
-    
+
     QStringList the_objects = setObjectFileExtensions( tT->objects(), ObjDir );
-    for ( QStringList::Iterator ito = the_objects.begin(); 
+    for ( QStringList::Iterator ito = the_objects.begin();
                                 ito != the_objects.end(); ++ito ){
 	          the_args << *ito;
     }
-    
-    
+
+
     QStringList the_libs = tT->libraries().split( " ", QString::SkipEmptyParts);
-    for ( QStringList::Iterator itl = the_libs.begin(); 
+    for ( QStringList::Iterator itl = the_libs.begin();
                                 itl != the_libs.end(); ++itl ){
 #ifdef WIN32
           if ( isGNU ){
@@ -1479,39 +1492,39 @@ QStringList MTest::getCompilerArguments( Tasks* tT ){
           }
 #else
           the_args << compiler->linkflag() + *itl;
-#endif    
+#endif
     }
-    
+
     if ( ! linkerOptions.isEmpty() ){
        QStringList linker_options = linkerOptions.split( " ", QString::SkipEmptyParts);
-       for ( QStringList::Iterator lo = linker_options.begin(); 
+       for ( QStringList::Iterator lo = linker_options.begin();
                                    lo != linker_options.end(); ++lo )
             the_args << *lo;
     }
-    
+
     return the_args;
 }
 
 void MTest::compile(){
-    
+
  if ( compileTimes < tcompileTimes ){
-	
-  //****************************************************************************	
-  //   Checking whether KEYS in the test code are to be replaced by the results 
+
+  //****************************************************************************
+  //   Checking whether KEYS in the test code are to be replaced by the results
   //   from another test.
-  //   The connection is established through the QMap answer key and the QMap 
-  //   code chunks key to avoid dependence on the position of the test. 
+  //   The connection is established through the QMap answer key and the QMap
+  //   code chunks key to avoid dependence on the position of the test.
   //   Originally, answer[key] is set to a dummy argument NADA.
-  //****************************************************************************	
+  //****************************************************************************
   if ( t[ currentTask ].hasReplacementKey() ){
     MSourceChunks key_map( t[ currentTask ].getChunks() );
     MSourceChunks repl_map( t[ currentTask ].replacementMap() );
-    for ( MSourceChunks::Iterator itsrc = repl_map.begin(); 
+    for ( MSourceChunks::Iterator itsrc = repl_map.begin();
           itsrc != repl_map.end(); ++itsrc){
       QStringList strList = itsrc.value();
       QStringList replList;
       unsigned int index = 0;
-      for ( QStringList::Iterator strit = strList.begin(); 
+      for ( QStringList::Iterator strit = strList.begin();
             strit != strList.end(); ++strit ){
        replList.append( answer[ strList[ index ].toLatin1().data() ] );
        index++ ;
@@ -1520,20 +1533,20 @@ void MTest::compile(){
     }
     t[currentTask].setChunks( key_map );
   }
-	
-	
-	
- //****************************************************************************	
-	
+
+
+
+ //****************************************************************************
+
   t[ currentTask ].createFfile( compileTimes );
   QStringList the_args = getCompilerArguments( &t[ currentTask ]  );
-  QString command = the_args.takeFirst(); 
+  QString command = the_args.takeFirst();
 // cout << "Executing " << command.toLatin1().data() << " with " << the_args.count() << " args: " << the_args.join(" : ").toLatin1().data() << endl;//EMH_DEBUG
   succExe = true;
   if ( environment.isEmpty() ){
      cProc->start(command,the_args);
      if(cProc->error()==QProcess::FailedToStart){
-        QString errorExe = QString("\n Could not start ") + 
+        QString errorExe = QString("\n Could not start ") +
                            command + " " + the_args.join(" ");
         cout       << errorExe.toLatin1().data() << endl;
         config_log << errorExe.toLatin1().data() << endl;
@@ -1548,7 +1561,7 @@ void MTest::compile(){
      //cProc->setEnvironment(environment);
      cProc->start(command,the_args);
      if(cProc->error()==QProcess::FailedToStart){
-         QString errorExe = QString("\n Could not start ") + 
+         QString errorExe = QString("\n Could not start ") +
                             command + " " + the_args.join(" ");
                  errorExe += QString("\nEnvironment : ") + environment.toStringList().join("\n");
          cout       << errorExe.toLatin1().data() << endl;
@@ -1567,9 +1580,9 @@ void MTest::compile(){
   QString strObj = t[ currentTask ].fortranName();
    strObj.truncate(strObj.lastIndexOf("."));
 
-   if ( fileExists( strObj.toLatin1().data(), objext ) ) 
+   if ( fileExists( strObj.toLatin1().data(), objext ) )
       canCreateObj = true;
- } 
+ }
  else{
   QString msg = (QString) "\n" + t[ currentTask ].taskName() ;
   msg = msg.leftJustified(60,'.');
@@ -1580,7 +1593,7 @@ void MTest::compile(){
     msg += QString(" yes");
     if ( ! exeOut.isEmpty() ){
        if ( exeOut.endsWith("\n") ) exeOut.chop(1);
-        
+
        if (t[ currentTask ].getAnswKey() == "argument")
           t[ currentTask ].setAnswVal( t[currentTask].getCurrentArg() );
        else // default is output
@@ -1597,19 +1610,19 @@ void MTest::compile(){
   ioDevice->insertPlainText( msg ); ioDevice->ensureCursorVisible();
 
    //removing fortran file
-   if ( t[ currentTask ].removeSource() ){ 
+   if ( t[ currentTask ].removeSource() ){
       QFile f_file( t[ currentTask ].fortranName() );
       if ( f_file.open( QIODevice::ReadWrite ) )
-           f_file.remove();    
+           f_file.remove();
    }
    //removing exe file
    QFile exe_file( t[ currentTask ].exeName() );
    if ( exe_file.open( QIODevice::ReadWrite ) )
-        exe_file.remove();    
+        exe_file.remove();
    setCurrentTask(); // equivalent to currentTask++;
    emit taskFinished();
  }
-    
+
 }
 
 void MTest::compilationProgress(){
@@ -1618,15 +1631,15 @@ void MTest::compilationProgress(){
 }
 
 void MTest::errDetect(int exitCode, QProcess::ExitStatus exitStatus){
-    
+
     if ( exitStatus != QProcess::NormalExit ) {
         if ( m_exit  ){
             ioDevice->insertPlainText( QString("\n Task stopped by user. \n") );
-            config_log << "\n Task stopped by user with exit code: " << exitCode << endl; 
+            config_log << "\n Task stopped by user with exit code: " << exitCode << endl;
         }
         else{
             ioDevice->insertPlainText(QString("\n Task failed. \n") );
-            config_log << "\n Task failed with exit code: " << exitCode << endl; 
+            config_log << "\n Task failed with exit code: " << exitCode << endl;
         }
         config_log.flush();
         succComp = false;
@@ -1636,10 +1649,10 @@ void MTest::errDetect(int exitCode, QProcess::ExitStatus exitStatus){
        succComp = false;
     else
        succComp = true;
-    
+
     //clearing process arguments
     //cProc->clearArguments();
-    
+
     // Prepare stuff for execution
     exeTimes = 0;
     QStringList tArgs = t[ currentTask ].getArg();
@@ -1668,11 +1681,11 @@ void MTest::errDetect(int exitCode, QProcess::ExitStatus exitStatus){
 //         cout << "Compilation failed!" << endl;//EMH_DEBUG
 	emit compilationFinished();
     }
-    
+
 }
 
 void MTest::execute(){
-    
+
     if ( exeTimes < args.count() ){
         QStringList the_arg; the_arg << QString( args[exeTimes] );
         QString command = QString("./") + t[currentTask].exeName();
@@ -1680,7 +1693,7 @@ void MTest::execute(){
         if(exeProc->error()==QProcess::FailedToStart){
 	//if ( ! exeProc->start() ) {
 	    // error handling
-	    QString errorExe = QString("\n Could not execute ") + 
+	    QString errorExe = QString("\n Could not execute ") +
                                command + QString(" ") + the_arg.join(" ");
 	    cout << errorExe.toLatin1().data() << endl;
 	    ioDevice->insertPlainText( errorExe );
@@ -1691,9 +1704,9 @@ void MTest::execute(){
                config_log.flush();
     }
     else{
-	
-	if (  ( t[ currentTask ].getArg().count() <= 1 ||  
-               !t[ currentTask ].RunAllSteps() )       && 
+
+	if (  ( t[ currentTask ].getArg().count() <= 1 ||
+               !t[ currentTask ].RunAllSteps() )       &&
 	       succExe && compileTimes < tcompileTimes  ){
 	    compileTimes = tcompileTimes;
 	}
@@ -1714,11 +1727,11 @@ void MTest::executionStatus(int exitCode, QProcess::ExitStatus exitStatus){
   if ( exitStatus != QProcess::NormalExit ) {
     if ( m_exit  ){
       ioDevice->insertPlainText( QString("\n Task stopped by user. \n") );
-      config_log << "\n Task stopped by user. \n"; 
+      config_log << "\n Task stopped by user. \n";
     }
     else{
       ioDevice->insertPlainText( QString("\n Task failed. \n") );
-      config_log << "\n Task failed. \n"; 
+      config_log << "\n Task failed. \n";
     }
     config_log.flush();
     succExe = succExe && false;
@@ -1737,13 +1750,13 @@ void MTest::executionStatus(int exitCode, QProcess::ExitStatus exitStatus){
     reference = args[ exeTimes ];
   }
 
-  QString Exe = QString("\n Exit code is ") + 
+  QString Exe = QString("\n Exit code is ") +
                  QString("%1").arg(exitCode,0,10);
   Exe+= QString("\n Reference is ") + reference;
   config_log <<  Exe << endl;
   config_log.flush();
 
-  QString criterion = t[currentTask].checkMode();  
+  QString criterion = t[currentTask].checkMode();
   if ( criterion.toLower() == "exitstatus"){
     if ( QString("%1").arg( exitCode,0,10) != reference ){
       succExe = succExe && false;
@@ -1754,8 +1767,8 @@ void MTest::executionStatus(int exitCode, QProcess::ExitStatus exitStatus){
   }
   else if (  criterion.toLower() == "output"){
 
-    config_log << " output:" << exeOut << endl;      
-    config_log << " reference:" << reference << endl;      
+    config_log << " output:" << exeOut << endl;
+    config_log << " reference:" << reference << endl;
     config_log.flush();
 
     if ( exeOut != reference ){
@@ -1784,7 +1797,7 @@ bool MTest::fileExists( const char* rfile, const char** ext_name )
 	if ( fi.exists() && fi.isFile() ) {
 	    return true;
 	}
-	
+
 	i++;
     }
     return false;
@@ -1797,7 +1810,7 @@ void MTest::stop(){
          QTimer::singleShot( 20, cProc, SLOT( kill() ) );
          cProc->kill();
        }
-    
+
        if ( exeProc->state() == QProcess::Running ){
          exeProc->terminate();
          QTimer::singleShot( 20, exeProc, SLOT( kill() ) );
@@ -1805,7 +1818,7 @@ void MTest::stop(){
        }
 }
 
-void MTest::reset(){ 
+void MTest::reset(){
     currentTask = 0;
     m_exit = false;
     ObjDir = QString();
@@ -1816,9 +1829,9 @@ void MTest::reset(){
 
 
 /*---------------------------------------------------------------
-  
+
      XMLTestReader IMPLEMENTATION
-     
+
 -----------------------------------------------------------------*/
 
 
@@ -1874,9 +1887,9 @@ int XMLTestReader::countTags( const QString& xml_file){
 	return 0;
     }
     file.close();
-    
+
     int counter = 0;
-    
+
     QDomElement root = doc.documentElement();
     // get number of tests to run from root elemnt's attribute
     QDomAttr a = root.attributeNode( "number" );
@@ -1886,7 +1899,7 @@ int XMLTestReader::countTags( const QString& xml_file){
     else{
 	QDomNode node = root.firstChild();
 	while( !node.isNull() ) {
-	    if ( node.isElement() && node.nodeName() == "test" ) 
+	    if ( node.isElement() && node.nodeName() == "test" )
 		counter++;
 	    node = node.nextSibling();
 	}
@@ -1901,9 +1914,9 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
   MTest* the_test = new MTest();
   the_test->setTotalTasks( nTests );
 
-  //**********************************    
-  // PLAYING AROUND WITH DOM DOCS    
-  //**********************************    
+  //**********************************
+  // PLAYING AROUND WITH DOM DOCS
+  //**********************************
 
   QDomDocument doc( "testdoc" );
   //    QFile file( "tests.xml" );
@@ -1921,7 +1934,7 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
 
   MSourceChunks chunks;
   QString the_program;
-  QString OS;    
+  QString OS;
 #ifdef WIN32
   OS = "win32";
 #else
@@ -1956,7 +1969,7 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
           }
           else if ( parameter.nodeName() == "map" ){// map of keys and source code for each test step
             if ( parameter.hasAttributes() ){
-              QDomAttr aRep = e.attributeNode( "replace" ); 
+              QDomAttr aRep = e.attributeNode( "replace" );
               if ( !aRep.isNull() && aRep.value().toLower() == "yes")
                 the_tasks[cTask].setReplacementMap(getMap(e) );
             }
@@ -1967,7 +1980,7 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
           else if ( parameter.nodeName() == "replace" ){// any key in the test source will be replaced
             QDomAttr aRepl = e.attributeNode( "keyname" );//with answer from test given in this field
             the_tasks[cTask].replaceKey( aRepl.value() );
-            QDomText textRepl= parameter.firstChild().toText();      
+            QDomText textRepl= parameter.firstChild().toText();
             the_tasks[cTask].replaceAnsw( textRepl.nodeValue() );
           }
           else if ( parameter.nodeName() == "arg" ){            //execution arguments:if nArgs<nCompile
@@ -1978,7 +1991,7 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
             QDomText textDescription = parameter.firstChild().toText();
             the_tasks[cTask].setTaskName( textDescription.nodeValue() );
           }
-          else if ( parameter.nodeName() == "language" ){          // fortran or C 
+          else if ( parameter.nodeName() == "language" ){          // fortran or C
             QDomText textLang = parameter.firstChild().toText();
             the_tasks[cTask].setLanguage( textLang.nodeValue() );
           }
@@ -2016,45 +2029,45 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
               the_tasks[cTask].setDepMode( true );
             }
           }
-            else if ( parameter.nodeName() == "function" ){      //Function used after execution 
-              QDomText textFun = parameter.firstChild().toText();//of a test's step. Useful for 
+            else if ( parameter.nodeName() == "function" ){      //Function used after execution
+              QDomText textFun = parameter.firstChild().toText();//of a test's step. Useful for
               the_tasks[cTask].setToolFun( textFun.nodeValue() );//checking 'things' .
             }
             else if ( parameter.nodeName() == "answer" ){         //Name of variable receiving
               QDomText textAnsw = parameter.firstChild().toText();//the result of a test
-              the_tasks[cTask].setAnswVar( textAnsw.nodeValue() );  
+              the_tasks[cTask].setAnswVar( textAnsw.nodeValue() );
             }
-            else if ( parameter.nodeName() == "check" ){                          
-              QDomText textCheck = parameter.firstChild().toText();       
+            else if ( parameter.nodeName() == "check" ){
+              QDomText textCheck = parameter.firstChild().toText();
               if ( textCheck.nodeValue().toLower() == "output" )// by default this is set to exit status
-                the_tasks[cTask].setCheckMode( textCheck.nodeValue().toLower() );  
+                the_tasks[cTask].setCheckMode( textCheck.nodeValue().toLower() );
             }
             else if ( parameter.nodeName() == "answ_key" ){
-              QDomText textCheck = parameter.firstChild().toText();       
-              the_tasks[cTask].setAnswKey( textCheck.nodeValue().toLower() );  
+              QDomText textCheck = parameter.firstChild().toText();
+              the_tasks[cTask].setAnswKey( textCheck.nodeValue().toLower() );
             }
             else if ( parameter.nodeName() == "reference" ){
-              QDomText textCheck = parameter.firstChild().toText();       
-              the_tasks[cTask].setReference( textCheck.nodeValue() );  
+              QDomText textCheck = parameter.firstChild().toText();
+              the_tasks[cTask].setReference( textCheck.nodeValue() );
             }
             else if ( parameter.nodeName() == "obj" ){             //space separated object files
               QDomText textObj = parameter.firstChild().toText();//to be linked(with or without extens.)
               if ( parameter.hasAttributes() ){
-                QDomAttr aObj = e.attributeNode( "OS" ); 
+                QDomAttr aObj = e.attributeNode( "OS" );
                 if ( !aObj.isNull() ){
                   if ( ( aObj.value().toLower() == "win32" && OS.toLower() == "win32") ||
                       ( aObj.value().toLower() == "unix" && OS.toLower() == "unix")   )
-                    the_tasks[cTask].setObjects( textObj.nodeValue() );  
+                    the_tasks[cTask].setObjects( textObj.nodeValue() );
                 }
               }
               else{
-                the_tasks[cTask].setObjects( textObj.nodeValue() );  
+                the_tasks[cTask].setObjects( textObj.nodeValue() );
               }
             }
             else if ( parameter.nodeName() == "lib" ){             //space separated library names
-              QDomText textLib = parameter.firstChild().toText();//  to be linked 
+              QDomText textLib = parameter.firstChild().toText();//  to be linked
               if ( parameter.hasAttributes() ){
-                QDomAttr aLib = e.attributeNode( "OS" ); 
+                QDomAttr aLib = e.attributeNode( "OS" );
                 if ( !aLib.isNull() ){
                   if ( ( aLib.value().toLower() == "win32" && OS.toLower() == "win32") ||
                       ( aLib.value().toLower() == "unix" && OS.toLower() == "unix")   )
@@ -2064,9 +2077,9 @@ MTest* XMLTestReader::getTests( const QString& xml_name ){
               else{
                 the_tasks[cTask].setLibraries( textLib.nodeValue() );
               }
-            }                                                                                            
+            }
           }
-          parameter = parameter.nextSibling();      
+          parameter = parameter.nextSibling();
         }
 
         cTask++;

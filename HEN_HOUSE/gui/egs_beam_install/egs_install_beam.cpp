@@ -1,22 +1,37 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI beamnrc setup
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #include "egs_install.h"
 
-#ifdef WIN32 
+#ifdef WIN32
 #define PROGS_N 5
 #else
 #define PROGS_N 6
@@ -30,7 +45,7 @@ static const char* progs_dir[] = {
              "statdose"
 #ifndef WIN32
              ,"dosxyz_show"
-#endif             
+#endif
 };
 
 void QInstallPage::beamInstall()
@@ -42,15 +57,15 @@ void QInstallPage::beamInstall()
      resetProgressBar( NUMBER_OF_STEPS - beamBuild );
      setSubTitle("Configuring BEAMnrc");
 
-     disconnect( this, SIGNAL( nextBuildStep( ushort )),  
+     disconnect( this, SIGNAL( nextBuildStep( ushort )),
                  this, SLOT( buildEGSnrc( ushort )) );
-        connect( this, SIGNAL( nextBuildStep( ushort )),  
+        connect( this, SIGNAL( nextBuildStep( ushort )),
                  this, SLOT( buildBEAMnrc( ushort )) );
-        connect( this, SIGNAL( exampleModulesCopied() ),  
+        connect( this, SIGNAL( exampleModulesCopied() ),
                  this, SLOT( finalize_beam_setup() ) );
 
      installing_beam = true;
-  
+
      buildBEAMnrc( beamBuild );
 }
 
@@ -104,9 +119,9 @@ void QInstallPage::buildBEAMnrc( ushort code )
          updateProgress();
 #ifndef WIN32
          buildFlag = DOSxyzShow;
-#else         
+#else
          buildFlag = buildDOSXYZnrc;
-#endif             
+#endif
          printProgress(tr("\n\n => Compiling BEAMnrc tool ") +
                        QString(progs_dir[4])                 +
                        tr(" ...\n\n")
@@ -123,7 +138,7 @@ void QInstallPage::buildBEAMnrc( ushort code )
                  );
          buildEGSCode( henHouse() + tr("omega/progs/") + QString(progs_dir[5]) + QDir::separator() );
          break;
-#endif             
+#endif
     case buildDOSXYZnrc:
          updateProgress();
          buildFlag = exampleModules;
@@ -150,25 +165,25 @@ void QInstallPage::buildBEAMnrc( ushort code )
 *****************************************************************
 */
 void QInstallPage::copy_example_modules(){
- 
+
    printProgress(
    (QString)"\n => Copying example accelerators to user area ....\n\n");
- 
+
    QString eh = egsHome(); eh.chop(1);
    QString source = henHouse() + tr("omega/beamnrc/BEAMnrc_examples");
    if ( ! copyRecursively( source, eh ) ){
-     printProgress( tr("\nError copying example accelerator files from ")   + 
-                    henHouse() + tr("omega/beamnrc/BEAMnrc_examples/ to ") + 
+     printProgress( tr("\nError copying example accelerator files from ")   +
+                    henHouse() + tr("omega/beamnrc/BEAMnrc_examples/ to ") +
                     egsHome());
    }
-   
+
    // Copy the example modules to EGS_HOME/beamnrc/spec_modules
    createDir( egsHome() + tr("beamnrc") );
    createDir( egsHome() + tr("beamnrc/spec_modules") );
    QString target = egsHome() + tr("beamnrc/spec_modules");
    if ( ! copyFilesRecursively( source, target, QString("*.module") ) ){
-     printProgress( tr("\nError copying example accelerator modules from ")   + 
-                    henHouse() + tr("omega/beamnrc/BEAMnrc_examples to ") + 
+     printProgress( tr("\nError copying example accelerator modules from ")   +
+                    henHouse() + tr("omega/beamnrc/BEAMnrc_examples to ") +
                     egsHome() + tr("beamnrc/spec_modules\n") );
    }
 
@@ -176,7 +191,7 @@ void QInstallPage::copy_example_modules(){
            if (dirName.startsWith("EX"))
               QDir(egsHome() + dirName).rename(egsHome()+dirName, egsHome()+"BEAM_" + dirName);
    }
-  
+
 }
 
 /*
@@ -185,6 +200,6 @@ void QInstallPage::copy_example_modules(){
 ******************************************************************
 */
 void QInstallPage::finalize_beam_setup(){
-    
+
     emit beamDone();
 }

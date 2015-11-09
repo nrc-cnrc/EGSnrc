@@ -1,18 +1,33 @@
-/***************************************************************************
-    $Id$
-    begin                : August 2015
-    copyright            : (C) 2015 by Ernesto Mainegra-Hing and NRC
-    email                : ernesto.mainegra-hing@nrc-cnrc.gc.ca
- ***************************************************************************/
+/*
+###############################################################################
+#
+#  EGSnrc configuration GUI licence
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Ernesto Mainegra-Hing, 2015
+#
+#  Contributors:
+#
+###############################################################################
+*/
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #ifndef EGS_LICENCE_H
 #define EGS_LICENCE_H
@@ -33,10 +48,10 @@ class QLicencePage : public QWizardPage
 
 public:
 
-  QLicencePage(QWidget * parent, const QString & year, const QString & version) : 
+  QLicencePage(QWidget * parent, const QString & year, const QString & version) :
                QWizardPage(parent), the_year(year), the_version(version)
   {
-    
+
     setTitle("EGSnrc distributed under the terms of the AGPL Licence");
     setSubTitle("Press Next to proceed.");
     QHBoxLayout *hl = new QHBoxLayout(this);
@@ -58,10 +73,10 @@ public:
     "more details.<br></p>"
     );
     scroll->setWidget(lic);
-    
+
   }
   ~QLicencePage(){}
-  
+
 public slots:
 
 signals:
@@ -69,9 +84,9 @@ signals:
 private:
 
   QLabel *lic;
-  QString the_year, 
+  QString the_year,
           the_version;
-  
+
 };
 
 #endif
