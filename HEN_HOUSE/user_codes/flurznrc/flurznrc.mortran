@@ -2904,10 +2904,10 @@ rewind (i_errors);
      GOTO 9998;
 9999 CONTINUE;
 backspace(i_errors);
-" ******* IK: using wrapper subroutines for date and time.                                                                                                                      
-" Was:                                                                                                                                                                          
-" WRITE(15 , 400) DATEN,TIMEN;                                                                                                                                                  
-" WRITE(IOUT,400) DATEN,TIMEN;                                                                                                                                                  
+" ******* IK: using wrapper subroutines for date and time.
+" Was:
+" WRITE(15 , 400) DATEN,TIMEN;
+" WRITE(IOUT,400) DATEN,TIMEN;
 write(i_errors,400); call egs_fdate(i_errors); write(i_errors,*);
 write(iout,400);     call egs_fdate(iout);     write(iout,*);
 
