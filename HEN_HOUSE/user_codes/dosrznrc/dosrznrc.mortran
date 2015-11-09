@@ -3420,9 +3420,6 @@ OUTPUT; (//1x,79('*')/1x,79('*')/);
 IF (ERROR_FLAG=1) [
    OUTPUT ;(//' **********  ERRORS AND WARNING MESSAGES  ********** '//);
 ]
-" ********** EMH 2015: using backspace to avoid writing passed EOF and i_errors.
-"Used hard-coded unit 15 for *errors file and relied of non-standard compiler"
-"behaviour which allowed to write passed EOF mark before gfortran 4.6"
 rewind (i_errors);                                                                                                                                                              
 9998 CONTINUE;                                                                                                                                                                  
      READ (i_errors, END=9999, FMT='(A80)') TEXT;                                                                                                                               
