@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<!--  $Id$ -->
+<qresource>
+    <file>images/rocket_egg_tr_f.png</file>
+    <file>images/nrc-badge.png</file>
+    <file>images/the_guy_measures_flipped.png</file>
+</qresource>
+</RCC>
