@@ -2897,18 +2897,22 @@ IF (ERROR_FLAG=1) [
    OUTPUT ;(//' **********  ERRORS AND WARNING MESSAGES  ********** '//);
 ]
 
-REWIND (15);
+" ********** EMH 2015: using backspace to avoid writing beyond EOF, and i_errors.
+" Used hard-coded unit 15 for *errors file and relied of non-standard compiler" 
+" behaviour which allowed to write passed EOF mark before gfortran 4.6"
+rewind (i_errors);
 9998 CONTINUE;
-     READ (15, END=9999, FMT='(A80)') TEXT;
+     READ (i_errors, END=9999, FMT='(A80)') TEXT;
      WRITE (*,'(A79)') TEXT;
      GOTO 9998;
 9999 CONTINUE;
-" ******* IK: using wrapper subroutines for date and time.
-" Was:
-" WRITE(15 , 400) DATEN,TIMEN;
-" WRITE(IOUT,400) DATEN,TIMEN;
-write(15,400); call egs_fdate(15); write(15,*);
-write(iout,400); call egs_fdate(iout); write(iout,*);
+backspace(i_errors);
+" ******* IK: using wrapper subroutines for date and time.                                                                                                                      
+" Was:                                                                                                                                                                          
+" WRITE(15 , 400) DATEN,TIMEN;                                                                                                                                                  
+" WRITE(IOUT,400) DATEN,TIMEN;                                                                                                                                                  
+write(i_errors,400); call egs_fdate(i_errors); write(i_errors,*);
+write(iout,400);     call egs_fdate(iout);     write(iout,*);
 
 call egs_finish;
 
