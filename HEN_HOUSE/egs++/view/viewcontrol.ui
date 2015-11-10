@@ -1,6 +1,4 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
-<class>GeometryViewControl</class>
-<!--
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><comment>
 ###############################################################################
 #
 #  EGSnrc egs++ geometry viewer view control user interface
@@ -19,7 +17,7 @@
 #  more details.
 #
 #  You should have received a copy of the GNU Affero General Public License
-#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#  along with EGSnrc. If not, see http://www.gnu.org/licenses/.
 #
 ###############################################################################
 #
@@ -29,7 +27,8 @@
 #                   Frederic Tessier
 #
 ###############################################################################
--->
+</comment>
+<class>GeometryViewControl</class>
 <widget class="QDialog">
     <property name="name">
         <cstring>GeometryViewControl</cstring>

@@ -1,6 +1,4 @@
-<!DOCTYPE UI><UI version="3.2" stdsetdef="1">
-<class>SaveImage</class>
-<!--
+<!DOCTYPE UI><UI version="3.2" stdsetdef="1"><comment>
 ###############################################################################
 #
 #  EGSnrc egs++ geometry viewer save image user interface
@@ -19,7 +17,7 @@
 #  more details.
 #
 #  You should have received a copy of the GNU Affero General Public License
-#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#  along with EGSnrc. If not, see http://www.gnu.org/licenses/.
 #
 ###############################################################################
 #
@@ -28,7 +26,8 @@
 #  Contributors:    Frederic Tessier
 #
 ###############################################################################
--->
+</comment>
+<class>SaveImage</class>
 <widget class="QDialog">
     <property name="name">
         <cstring>SaveImage</cstring>
