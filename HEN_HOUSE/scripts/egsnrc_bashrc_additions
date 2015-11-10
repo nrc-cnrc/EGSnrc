@@ -48,6 +48,10 @@ export OMEGA_HOME=${HEN_HOUSE}omega
 #
 PATH="${HEN_HOUSE}bin/$my_machine:$PATH"
 
+# Set dynamic library path
+#
+export LD_LIBRARY_PATH="${HEN_HOUSE}egs++/dso/$my_machine:$LD_LIBRARY_PATH"
+
 # Now check for EGS_HOME.
 # If EGS_HOME is not empty and exists, check for $EGS_HOME/bin and
 # $EGS_HOME/bin/$my_machine and create them if they don't exist.
