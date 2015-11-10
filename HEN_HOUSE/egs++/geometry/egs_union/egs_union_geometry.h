@@ -35,8 +35,8 @@
  *  \IK
  */
 
-#ifndef EGS_ENVELOPE_GEOMETRY_
-#define EGS_ENVELOPE_GEOMETRY_
+#ifndef EGS_UNION_GEOMETRY_
+#define EGS_UNION_GEOMETRY_
 
 #ifdef WIN32
 
