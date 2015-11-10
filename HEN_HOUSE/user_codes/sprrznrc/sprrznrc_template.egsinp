@@ -294,7 +294,7 @@ Brems cross sections= BH           # BH (default),NIST;
                                    # BH: Bethe-Heitler cross-sections used
                                    # NIST: NIST cross-sections used
 
-Bound Compton scattering= Off      # Off (default),On, simple or norej;
+Bound Compton scattering= Off      # Off, On, simple or norej (default);
                                    # Off: Klein-Nishina used for Compton
                                    #     scattering
                                    # On: Impulse approximation used for

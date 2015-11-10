@@ -960,7 +960,7 @@ subroutine get_transport_parameter(ounit);
 "                        first Born approximation is used to sample triplet
 "                        events based on the triplet cross-section data.
 "                        [ itriplet ]
-"       Bound Compton scattering=  On (default), Off, Simple or norej
+"       Bound Compton scattering=  On, Off, Simple or norej (default)
 "                        If Off, Compton scattering will be treated with
 "                        Klein-Nishina, with On Compton scattering is
 "                        treated in the Impulse approximation.
