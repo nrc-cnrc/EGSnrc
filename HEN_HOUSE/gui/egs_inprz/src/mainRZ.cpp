@@ -35,7 +35,7 @@
 int main( int argc, char* argv[] )
 {
 
-  //QApplication::setStyle("windows");
+  QApplication::setStyle("windows");
 
   QApplication app( argc, argv);
 

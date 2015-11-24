@@ -45,7 +45,7 @@
 my_version='2.0'
 
 # my name
-my_dir=$(dirname $0)
+my_dir=$(pwd)/$(dirname $0)
 my_name=$(basename $0)
 
 # printf format
@@ -126,6 +126,9 @@ read response
 printf $format "Checking system type ... " >&2
 canonical_system=$($my_dir/config.guess)
 system_name=$(uname -s | sed ":/:_:g" | tr '[:upper:]' '[:lower:]')
+if test "x$system_name" = xdarwin; then
+    system_name="osx"
+fi
 echo "$canonical_system" >&2
 is_x86_64=$(echo $canonical_system | grep x86_64)
 
@@ -651,7 +654,7 @@ Please report this problem, including
   - Compiler name and version
   - Compilation flags
 in your e-mail. You should also attach the file 'configure.log' in the
-HEN_HOUSE/scripts directory.
+HEN_HOUSE/log directory.
 
 EOF
     exit 1
@@ -1485,7 +1488,7 @@ echo >&2;
 if test "x$HEN_HOUSE" = x; then
     while true; do
         HEN_HOUSE=$(cd $my_dir/../; pwd)
-        printf $format "Input location of EGSnrc HEN_HOUSE directory: " >&2
+        printf $format "Input path to EGSnrc HEN_HOUSE directory: " >&2
         printf "[$HEN_HOUSE] " >&2
         read response
         if test ! "x$response" = x; then
@@ -1525,7 +1528,7 @@ fi
 while true; do
 
     # query configuration file name
-    printf $format "Input configuration file name: " >&2
+    printf $format "Choose a configuration file name: " >&2
     if test ! "x$try_conf_file" = x; then
         printf "[$try_conf_file] ">&2
     fi
@@ -1736,7 +1739,7 @@ if test x$F77 = xg77 || test x$F77 = xgfortran; then
             else
                 SHLIB_LIBS="-lgfortran"
             fi
-            printf $format "A Darwin system with $F77 and $CC ... " >&2
+            printf $format "An OS X system with $F77 and $CC ... " >&2
             echo "using $SHLIB_FLAGS and $SHLIB_LIBS to build shared libraries" >&2
         fi
     fi
@@ -2330,6 +2333,18 @@ if test ! -d "$HEN_HOUSE/bin/$conf_name"; then
     fi
 fi
 
+# create log directory for log files
+#
+if test ! -d "$HEN_HOUSE/log"; then
+    printf $format "Creating log directory ... " >&2
+    if { mkdir "$HEN_HOUSE/log" 2>&5; mystatus=$?; (exit $mystatus); }; then
+        echo "OK" >&2
+    else
+        echo "Failed to create $HEN_HOUSE/log" >&2
+      echo "******* Failed to create $HEN_HOUSE/log ***** " >&5
+    fi
+fi
+
 # Now compile Mortran3 for this config
 #
 cat >&5 <<EOF
@@ -2597,7 +2612,16 @@ fi
 
 egs_config="$HEN_HOUSE/specs/$egs_config"
 
-cd $HEN_HOUSE/scripts
+# move configuration log to log directory
+if $as_file $my_dir/configure.log && $as_directory $HEN_HOUSE/log; then
+    mv $my_dir/configure.log $HEN_HOUSE/log/
+    echo >&2
+    printf $format "EGSnrc system configuration log saved in:" >&2
+    echo >&2
+    echo "$HEN_HOUSE/log/configure.log" >&2
+fi
+
+cd $my_dir
 cat >&2 <<_ACEOF
 
 ###############################################################################
@@ -2646,9 +2670,14 @@ _ACEOF
     elif test "x$response" = xyes; then
         echo >&2
         ./finalize_egs_foruser
-        break
+        exit 0
     else
         printf $format "Do you want to finalize for $USER? (yes/no): " >&2
     fi
 done
 
+cat >&2 <<_ACEOF
+
+###############################################################################
+
+_ACEOF

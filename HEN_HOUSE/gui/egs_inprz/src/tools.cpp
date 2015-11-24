@@ -88,7 +88,7 @@ QString simplifySeparators( const QString& str ){
  QString the_name = (str.split(QDir::separator(),QString::SkipEmptyParts)).join(QDir::separator());
  if (str.startsWith(QDir::separator())) the_name.prepend(QDir::separator());
  if (str.endsWith(QDir::separator())) the_name.append(QDir::separator());
-qDebug("Read: %s",the_name.toLatin1().data());
+//qDebug("Read: %s",the_name.toLatin1().data());
  return the_name;
 }
 

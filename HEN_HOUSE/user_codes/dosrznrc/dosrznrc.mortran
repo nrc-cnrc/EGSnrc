@@ -3420,14 +3420,15 @@ OUTPUT; (//1x,79('*')/1x,79('*')/);
 IF (ERROR_FLAG=1) [
    OUTPUT ;(//' **********  ERRORS AND WARNING MESSAGES  ********** '//);
 ]
-REWIND (15);
+rewind (i_errors);
 9998 CONTINUE;
-     READ (15, END=9999, FMT='(A80)') TEXT;
+     READ (i_errors, END=9999, FMT='(A80)') TEXT;
      WRITE (*,'(A79)') TEXT;
      GOTO 9998;
 9999 CONTINUE;
-write(15,'(/a,9x,a,$)') ' '; call egs_fdate(15); write(15,*);
-write(iout,'(/a,9x,a,$)') ' '; call egs_fdate(iout); write(iout,*);
+backspace(i_errors);
+write(i_errors,'(/a,9x,a,$)') ' '; call egs_fdate(i_errors); write(i_errors,*);
+write(iout,'(/a,9x,a,$)') ' ';     call egs_fdate(iout);     write(iout,*);
 
 " ********** IK: using wrapper for date and time routines.
 " Was:

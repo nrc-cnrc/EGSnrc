@@ -39,7 +39,7 @@
 
 \section{EGSnrc Reference Manual}
 \label{ERM}
- 
+
 \subsection{Introduction}
 
 This section is based on Appendix 2 of SLAC-265\cite{Ne85} but
@@ -72,8 +72,8 @@ in-line documentation.
 
       \item   EGS can be set-up and run by writing entirely in
             Fortran or some other language should the user so desire.
-\end{itemize} 
- 
+\end{itemize}
+
  We would encourage EGS users not to do the latter, however, for this
 would truly defeat the real purpose for using Mortran---namely, the
 macro facility.
@@ -147,23 +147,23 @@ ignore these features if so desired.
       In summary, the user communicates with EGS by means of:
 \begin{description}
 \item[Subroutines]\mbox{}
-\begin{itemize} 
+\begin{itemize}
 \item HATCH  --- to establish media data
- 
+
 \item SHOWER --- to initiate the cascade
- 
+
 \item HOWFAR\& HOWNEAR --- to specify the geometry
- 
+
 \item AUSGAB --- to score and output the results and to control variance
 reduction
- 
-\end{itemize} 
+
+\end{itemize}
 
 \item[COMMON blocks]  by changing values of variables
- 
+
 \item[Macro definitions] --- re-definition of pre-defined features.
 \end{description}
- 
+
 To reiterate, we shall refer to the MAIN/HOWFAR/AUSGAB combination
 (plus auxiliary subprograms and macros) as the User Code.  The following
 sections discuss these things in greater detail.
@@ -199,7 +199,7 @@ section~\ref{implicit_none}  for more info.
 
 \begin{center}
 \caption{Table describing the EGSnrc {\tt COMMON}s which are accessible to the
-User.    
+User.
 \label{tab_commons}
 }
 \begin{tabular}{ l l   p{105mm}l  |}
@@ -217,9 +217,9 @@ Block &&\\
 \hline
 &&\\
 \multicolumn{3}{l}{{\bfseries EGS-VARIANCE-REDUCTION}}\\
-	&e\_max\_rr &real array (\$MXREG) of maximum total energies at which 
+	&e\_max\_rr &real array (\$MXREG) of maximum total energies at which
                      to do range rejection if i\_do\_rr is set\\
-	&i\_do\_rr &integer array (\$MXREG) of flags for range rejection 
+	&i\_do\_rr &integer array (\$MXREG) of flags for range rejection
                     in each region. ~~~~0$\Rightarrow$ not done (default);
                       ~~~~1$\Rightarrow$ is done.\\
 &&\\
@@ -271,10 +271,10 @@ and the electron loses no energy.\\
 	& USTEP	& straight step length calculated from TUSTEP.\\
         & TVSTEP & Actual total (curved) step length to be transported.\\
 	& VSTEP	& actual straight step length after truncation by geometry.\\
-        & IDISC  & User discard request flag (to be set in {\tt HOWFAR}).  
-                   IDISC $>$ 0 means user requests immediate discard, 
-                   IDISC $<$ 0 means user requests discard after completion 
-                   of transport, and IDISC=0 (default) means no user 
+        & IDISC  & User discard request flag (to be set in {\tt HOWFAR}).
+                   IDISC $>$ 0 means user requests immediate discard,
+                   IDISC $<$ 0 means user requests discard after completion
+                   of transport, and IDISC=0 (default) means no user
                    discard requested. IDISC=99 or $-$99 means generate
 		   annihilation photons when positron is discarded.\\
          &IROLD  &Index of previous region.\\
@@ -294,7 +294,7 @@ and the electron loses no energy.\\
            & ELKE  & Natural logarithm of EKE (this is not available for
                      a step in vacuum).\\
            & GLE   & Natural logarithm of photon energy.\\
-           & E\_RANGE & For electron {\tt IARG}=0  steps, this is the range of the 
+           & E\_RANGE & For electron {\tt IARG}=0  steps, this is the range of the
 electron in the current units (see section~\ref{range_rejection}).\\
            & x[y][z]\_final & position at end of step \\
            & u[v][w]\_final & direction at end of step (only used for electrons)\\
@@ -308,7 +308,7 @@ electron in the current units (see section~\ref{range_rejection}).\\
 
 \clearpage
 
-  \begin{table}[htb] 
+  \begin{table}[htb]
    \index{ET-Control} \index{COMMON!ET-Control} \index{SMAXIR}
    \index{ESTEPE} \index{XIMAX} \index{SKINDEPTH\_FOR\_BCA}
    \index{TRANSPORT\_ALGORITHM} \index{SPIN\_EFFECTS} \index{EGS4}
@@ -329,34 +329,34 @@ electron in the current units (see section~\ref{range_rejection}).\\
     &&\\
 	&ESTEPE	&global energy loss constraint.(default=0.25).\\
     &&\\
-	&XIMAX	&max. first GS moment per step (roughly half the average 
+	&XIMAX	&max. first GS moment per step (roughly half the average
                 MS angle squared.(default 0.5).\\
     &&\\
 	&SKINDEPTH      & distance from a boundary (in elastic MFP) at which to\\
 	&  ~~~\_FOR\_BCA& switch to one of the boundary crossing
 		  algorithms(BCAs).(default 3).  If set 0 by the user
-                  initially and BCA\_ALGORITHM = 1, then the code assigns 
-                  a value consistent with 
+                  initially and BCA\_ALGORITHM = 1, then the code assigns
+                  a value consistent with
                   BLCMIN in PRESTA-I, otherwise it is 3.0.\\
     &&\\
 	&TRANSPORT& integer flag telling which transport algorithm to use.\\
- 	& \_ALGORITHM	& 0$\Rightarrow$ PRESTA-II; 1$\Rightarrow$ 
-                    PRESTA-I.(default 0).\\ 
+ 	& \_ALGORITHM	& 0$\Rightarrow$ PRESTA-II; 1$\Rightarrow$
+                    PRESTA-I.(default 0).\\
     &&\\
 	&BCA	&integer flag telling which BCA to use. \\
 	&\_ALGORITHM  & 0$\Rightarrow$ use exact(single scattering) algorithm
                          within SKINDEPTH\_FOR\_BCA of a boundary\\
-        
+
         &            &  1$\Rightarrow$ use multiple scattering but with
                   no lateral deflections within SKINDEPTH\_FOR\_BCA of a
                   boundary.  Default is  0.\\
     &&\\
       	&SPIN &logical variable, {\tt .true.}$\Rightarrow$ use single \&
                 multiple scattering\\
-	&\_EFFECTS	& theories which include relativistic spin 
+	&\_EFFECTS	& theories which include relativistic spin
                effects; {\tt .false.}
 		$\Rightarrow$ use single and multiple scattering theories
-                based on Rutherford scattering. (default {\tt .true.})\\ 
+                based on Rutherford scattering. (default {\tt .true.})\\
 %to be closer to EGS4).\\
 	&&\\
    \hline
@@ -371,7 +371,7 @@ electron in the current units (see section~\ref{range_rejection}).\\
     \index{RLDU} \index{RHO}
     \index{MISC} \index{COMMON!MISC} \index{MED} \index{DUNIT} \index{KMPI}
     \index{KMPO} \index{RHOR} \index{NOSCAT} \index{IRAYLR}
-    \index{RANDOM} \index{COMMON!RANDOM} \index{IXX} \index{JXX} 
+    \index{RANDOM} \index{COMMON!RANDOM} \index{IXX} \index{JXX}
     \index{random number generators!seeds} \index{RANMAR} \index{RANLUX}
 
 \typeout{****start Common MEDIA}
@@ -405,7 +405,7 @@ electron in the current units (see section~\ref{range_rejection}).\\
        && containing user-supplied Compton cross section data.\\
        &&  Full name of the file is\\
        && {\tt \$HEN\_HOUSE/data/comp\_xsections\_compton.data}.\\
-       && Only used if {\tt IBCMP}=2 (bound Compton, no doppler effect).\\ 
+       && Only used if {\tt IBCMP}=2 (bound Compton, no doppler effect).\\
 &&\\
 \hline
 &&\\
@@ -421,11 +421,11 @@ electron in the current units (see section~\ref{range_rejection}).\\
 	&KMPO	&Fortran unit number (default=8) on
                             which to ``echo" material data (e.g.,
                             printed output, ``dummy" output, etc.).\\
-	&RHOR	&Array(\$MXREG) containing the density for each region (g/cm**3).  
-		If this is different than the default density for the medium 
-		for that region, the cross sections and stopping powers (with 
+	&RHOR	&Array(\$MXREG) containing the density for each region (g/cm**3).
+		If this is different than the default density for the medium
+		for that region, the cross sections and stopping powers (with
 		the exception of the density effect) are scaled appropriately.\\
-	%&NOSCAT&Number of times multiple scattering has been bypassed in 
+	%&NOSCAT&Number of times multiple scattering has been bypassed in
         %       subroutine MSCAT (initialized to 0 in BLOCK DATA). This
 	%       applies only if PRESTA-I or EGS4 options being used since
         %       it is never turned off in default EGSnrc.\\
@@ -434,7 +434,7 @@ electron in the current units (see section~\ref{range_rejection}).\\
                             various regions (default=0$\Rightarrow$ off).\\
 &&\\
 \hline
-\multicolumn{3}{c}{$^*$ NOSCAT is no longer available since there is 
+\multicolumn{3}{c}{$^*$ NOSCAT is no longer available since there is
 scattering on all steps.}\\
 &&\\
 %this common block is now found in ranmar.macros and ranlux.macros and,
@@ -442,7 +442,7 @@ scattering on all steps.}\\
 %{\bfseries RANDOM}
 %	&IXX,JXX & When using the RANLUX random number generator, the user
 %does not pass anything via this {\tt COMIN}. When using RANMAR, IXX and JXX
-%are passed. Initially random number seeds, these 
+%are passed. Initially random number seeds, these
 %become pointers once the generator is initialized. 0$<$IXX$<=$31328 and 0$<$JXX$<=$30081.\\
 \hline
     \end{tabular}
@@ -490,8 +490,8 @@ scattering on all steps.}\\
 	&DNEAR	&A lower bound of distance from
                             (X,Y,Z) to nearest surface of
                             current region.\\
-	& WT	&Statistical weight of current particle(default=1.0).  To be 
-		used in conjunction with variance reduction techniques as 
+	& WT	&Statistical weight of current particle(default=1.0).  To be
+		used in conjunction with variance reduction techniques as
                 determined by user.\\
 	& IQ	&Integer charge of particle
                             (+1,0,-1).\\
@@ -541,7 +541,7 @@ scattering on all steps.}\\
 \begin{table}[htb]
    \index{UPHIOT} \index{COMMON!UPHIOT} \index{THETA} \index{SINTHE}
    \index{COSTHE} \index{SINPHI} \index{COSPHI} \index{PI} \index{TWOPI}
-   
+
    \index{USEFUL} \index{COMMON!USEFUL} \index{MEDIUM} \index{MEDOLD}
    \index{RM} \index{PRM} \index{PRMT2} \index{PZERO}
    \index{USER} \index{COMMON!USER}
@@ -606,7 +606,7 @@ user may require access to in order to control various options within
 but that would make compatibility with EGS4 user codes even more difficult
 to achieve.  We have adopted this compromise solution which changes as
 little as possible of what has grown up historically with EGS4.  So, for
-example the parameters {\tt IEDGFL}, {\tt IPHTER}, 
+example the parameters {\tt IEDGFL}, {\tt IPHTER},
 {\tt IBRDST} and {\tt IPRDST} have not been
 moved and the new parameters introduced with EGSnrc have similarly been
 placed in those {\tt COMIN}s associated with the physics being controlled.
@@ -668,12 +668,12 @@ on, the photoelectron acquires the entire energy of the incident photon
 (1$\Rightarrow$ yes (default),
 0$\Rightarrow$ no) .\\
 &&\\
-% do we want to list more from this common block here 
+% do we want to list more from this common block here
 \hline
 &&\\
-{\bfseries COMPTON-} &IBCMP &integer array (\$MXREG) specifying whether to 
+{\bfseries COMPTON-} &IBCMP &integer array (\$MXREG) specifying whether to
                     include \\
-{\bfseries ~~~~~~DATA} & & binding and Doppler broadening effects in Compton 
+{\bfseries ~~~~~~DATA} & & binding and Doppler broadening effects in Compton
             scattering events (1$\Rightarrow$ yes (default), 0$\Rightarrow$ no).\\
                   & radc\_flag & integer flag for radiative Compton corrections.\\
                  && 0$\Rightarrow$ off (default), 1$\Rightarrow$ on.\\
@@ -688,10 +688,10 @@ call to {\tt AUSGAB} to set the angle.\\
 
 & IPRDST &flag determining how the electron/positron angles are selected
 after pair production. 0$\Rightarrow$ use the fixed angle approximation of
-EGS4. 1$\Rightarrow$ sample the leading term in the angular distribution 
+EGS4. 1$\Rightarrow$ sample the leading term in the angular distribution
 (fast and good enough). 2$\Rightarrow$ sample the complete angular distribution.  Default is 1.\\
 
-& ibr\_nist& integer flag determining which differential photon cross section 
+& ibr\_nist& integer flag determining which differential photon cross section
 to sample when brem occurs.\\
 && 0$\Rightarrow$ use Bethe-Heitler as done in EGS4. This is the default.\\
 && 1$\Rightarrow$ use NIST data base from ICRU Report 37.\\
@@ -805,10 +805,10 @@ access these files as well.\\
 & {\tt xsec\_out} & =0 $\rightarrow$ do not output file {\tt user\_code.xsections} containing photon cross-section data (default).\\
 && =1 $\rightarrow$ output file containing photon cross-section data.\\
 & {\tt is\_batch} & logical variable set to {\tt .true.} if this is a batch
-job.\\ 
+job.\\
 &&\\
 \hline
-&&\\ 
+&&\\
 \end{tabular}
 \end{center}
 \end{table}
@@ -818,13 +818,13 @@ job.\\
 \index{sequence of operations}
 \index{steps}
 \index{steps!order}
- 
+
 The sequence of operations needed for the correct operation of EGS is
 shown below.
 
 \begin{description}
 \item[Step 0.]  {\tt call egs\_init} for file initialization (see
-PIRS-877 for details\cite{Ka03}). 
+PIRS-877 for details\cite{Ka03}).
 \item[Step 1.]  User Over Ride Of EGS Macros and Defaults (\ref{step_1})
 \item[Step 2.]  Pre-{\tt HATCH} Call Initialisation (\ref{step_2})
 \item[Step 3.]  {\tt HATCH} Call (\ref{step_3})
@@ -835,7 +835,7 @@ PIRS-877 for details\cite{Ka03}).
               (\ref{step_6})
 \item[Step 7.]  SHOWER Call (\ref{step_7})
 \item[Step 8.]  Output Of Results (\ref{step_8})
-\item[Step 9.] {\tt call egs\_finish} as the last executable statement. See 
+\item[Step 9.] {\tt call egs\_finish} as the last executable statement. See
 ref~\cite{Ka03} for details. Properly closes files and places them back on
 the user-code's directory.
 \end{description}
@@ -849,38 +849,38 @@ the user-code's directory.
 after Step 1 and possibly in Step 2.
 \item  Step 2 must precede Step 3.
 \item Steps 3 through 6 must precede Step 7.
-\item Step 7 may be repeated as often as desired, depending on whether 
-  information on single showers or many showers is desired (e.g., for shower 
+\item Step 7 may be repeated as often as desired, depending on whether
+  information on single showers or many showers is desired (e.g., for shower
   fluctuation or conversion efficiency calculations).
 \item At least one Step 7 must precede the first Step 8.
 \end{enumerate}
- 
+
 Details for the above steps are given in the following sub-sections.
 
 It is strongly advised that the user echo {\bfseries ALL} input parameters
 into the output listing file to ensure that the listing has a complete
 record of the run.  From extensive experience we have found that this is
 essential and very valuable.
- 
- 
+
+
  \subsubsection{User Over Ride Of EGS Macros and Defaults (Step 1)}
 \label{step_1}
 \index{Step 1: Override macros}
- 
+
 EGS macros which the user might want to over-ride include the following:
- 
+
 \paragraph{{\tt \$CALL-HOWNEAR(\#)}}
 \label{hownear_macro}
 \index{EGS4}
 \mbox{}\\
 For compatibility with  EGS4/PRESTA user-codes, the use of {\tt SUBROUTINE
-HOWNEAR} has been left as a macro call in EGSnrc.  
+HOWNEAR} has been left as a macro call in EGSnrc.
 There is no default definition of the macro but the following is suggested:
 \begin{verbatim}
 REPLACE {$CALL-HOWNEAR(#);} WITH {CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);}
 \end{verbatim}
 The user may choose to define an equivalent macro.
-The parameter that must be returned by the macro 
+The parameter that must be returned by the macro
 is the shortest distance to any
 boundary from the current position. See
 section~\ref{hownear}(page~\pageref{hownear}) which
@@ -919,7 +919,7 @@ and integer variables as well as using generic intrinsic functions such
 as MAX and MIN.  By default {\tt \$REAL} and {\tt \$INTEGER} are defined
 as {\tt REAL*8} and {\tt INTEGER*4}.  However, to make the entire code
 run in single precision, one can add the macro:
-\begin{verbatim} 
+\begin{verbatim}
                 REPLACE {$REAL} WITH {;REAL*4}
 \end{verbatim}
 However, this requires that all type declarations in the user code also use
@@ -930,20 +930,20 @@ machines, one might as well use the {\tt REAL*8} default.
 \index{\$MXMED}
 \index{\$MXREG}
 \index{\$MXSTACK}
-\begin{description} 
+\begin{description}
 \item[{\tt \$MXMED}]   Maximum number of media (default=10).
 \item[{\tt \$MXREG}]   Maximum number of regions (default=2000).
 \item[{\tt \$MXSTACK}]  Maximum number of particles on the {\tt STACK} at once
 (default = 40).
-\end{description} 
-For example, to extend the number of media to 25, include the following 
+\end{description}
+For example, to extend the number of media to 25, include the following
 statement in the User Code.
 \begin{verbatim}
-         REPLACE {$MXMED} with {25} 
+         REPLACE {$MXMED} with {25}
 \end{verbatim}
 Note that there are often array dimensions defined by the user for scoring
 arrays and these should be defined at this step as well.
- 
+
 \paragraph{Random Number Initialisation}
 \label{rng_init}
 
@@ -966,7 +966,7 @@ If you have selected the RANMAR random number generator (via the {\tt
 This can be accomplished by including the statement:
 \begin{verbatim}
         $RNG-INITIALIZATIION;
-\end{verbatim} 
+\end{verbatim}
 which initializes RANMAR using whatever the current values of {\tt IXX} and
 {\tt JXX} are and uses default values if they have not been set (they are
 passed in {\tt COMIN/RANDOM/;}. Alternatively, one can use:
@@ -984,7 +984,7 @@ For a complete discussion of these and other issues about the random number
 generators, see section~\ref{rngs} below (page~\pageref{rngs}).
 \index{random number generators!initialisation}
 
- 
+
 \paragraph{{\tt \$SET-RHOF}}
 
 \label{set_rhof}
@@ -1002,18 +1002,18 @@ you have a problem in which the density is varying within the region, this
 can be handled by replacing the default macro:
 \begin{verbatim}
          REPLACE {$SET-RHOF;} WITH {RHOF=RHOR(IRL)/RHO(MEDIUM);}
-\end{verbatim}  
+\end{verbatim}
 by whatever code you want to return the local density ratio. If, on the
 other hand you do not use density scaling at all in your code, you should
 replace the default with:
 \begin{verbatim}
          REPLACE {$SET-RHOF;} WITH {RHOF = 1.0;}
-\end{verbatim} 
+\end{verbatim}
 since this saves a division on every step.
 
 
 \paragraph{Sines and Cosines}
- 
+
 \index{sine}
 \index{cosine}
 \index{table lookup sines}
@@ -1029,20 +1029,20 @@ to direct function evaluations.  For slightly older machines, the table
 lookup feature saved as much as 40\% of the CPU time.  If you happen
 to be using one of these machines, it is worthwhile to use the table
 lookup method unless small angles are critical to you.  To re-implement
-it, define the following two macros in STEP 1.  
+it, define the following two macros in STEP 1.
 \begin{verbatim}
 REPLACE {$EVALUATE#USING SIN(#);} WITH {{P1}=SIN1(L{P2})*{P2}+SIN0(L{P2});}}
-REPLACE {$SET INTERVAL#,SINC;} WITH {L{P1} = SINC1*{P1} +SINC0;}}} 
+REPLACE {$SET INTERVAL#,SINC;} WITH {L{P1} = SINC1*{P1} +SINC0;}}}
 \end{verbatim}
 %\cen{{\tt REPLACE \{\$EVALUATE\#USING SIN(\#);\} WITH \{\\
       %~~~~~~~~\{P1\} = SIN1(L\{P2\})*\{P2\} + SIN0(L\{P2\}) ;\} }\\
 %{\rm and\\}
  %{\tt REPLACE \{\$SET INTERVAL\#,SINC;\} WITH \{L\{P1\} = SINC1*\{P1\}
-%+SINC0;\}}} 
+%+SINC0;\}}}
 The reader is referred to the Mortran3 User's Guide as an
 aid in understanding the macros (see section~\ref{UGM3}).
 
- 
+
 It should be pointed out that due to the precision involved in the table
 look-up method, the direction cosines can become slightly unnormalized.
 Depending on the problem at hand, this can lead to incorrect results---such
@@ -1050,7 +1050,7 @@ as when two direction cosines are simultaneously involved in an angular
 sort of particles.  The problem can generally be remedied by renormalizing
 the direction cosines prior to using them.
 
- 
+
 \paragraph{Charged Particle Transport}
 \index{charged particle transport}
 \index{electric fields}
@@ -1070,7 +1070,7 @@ ref\cite{Bi89a,Bi93}
 \subsubsection{Pre-HATCH Call Initialisation (Step 2)}
 \label{step_2}
 \index{Step 2: pre-hatch}
- 
+
 This step consists of setting EGS {\tt COMMON} variables that are used by {\tt
 HATCH}
 in its initialisation operations.  All of these variables are initialized
@@ -1078,7 +1078,7 @@ to some reasonable value in the BLOCK DATA subprogram.  Therefore, if
 different values are desired they should be set with executable code (as
 opposed to another BLOCK DATA).  Concurrently, the various {\tt COMMON} blocks
 (i.e., BOUNDS, MEDIA, MISC) will have to be included in the declaration
-section of the MAIN program of the User Code.  
+section of the MAIN program of the User Code.
 
 \index{get\_transport\_parameter}
 If the user code reads an input ({\tt .egsinp}) file for defining
@@ -1114,7 +1114,7 @@ appear between the delimiters:
 
 The general format of inputs for {\tt get\_transport\_parameter} is
 a text line followed by ``='' and then the value(s) that the user
-wants to assign to the particular parameter.  Note that 
+wants to assign to the particular parameter.  Note that
 these inputs are case insensitive.
 
 For some more information about {\tt get\_transport\_parameters} along
@@ -1123,12 +1123,12 @@ the code, see the PIRS-702 User Code Manual\cite{Ro03}.
 
 The {\tt COMMON} block variables which must be initialized before calling
 {\tt HATCH}, along with the method to set them if using the
-{\tt get\_transport\_parameter} subroutine (where applicable) are: 
+{\tt get\_transport\_parameter} subroutine (where applicable) are:
 \begin{description}
 \item[NMED]  This must be initialized to the number of media to be used in
 the shower generation (default=1).
 
- 
+
 \item[MEDIA] This array contains the names of the media required and
 is dimensioned\\{\tt MEDIA(24,\$MXMED)}, where {\tt \$MXMED} is an EGS
 macro that is currently defined to be 10 (default), and whose value is
@@ -1148,20 +1148,20 @@ temporary array is declared and initialized in MAIN by:
 and at Step 2 one puts
 \cen{ {\tt NMED=3;~~~~~"number of media used"\\
            ~~~~~~~~~~~~  DO J=1,NMED [DO I=1,24 [MEDIA(I,J)=TEMP(I,J);]]}}
- 
+
 \index{MED}
 \item[MED] This array, which is dimensioned {\tt MED(\$MXREG)}, contains the
 medium indices for each region (default values are 1 for all {\tt \$MXREG}).  A
 medium index of zero means a region is filled with a vacuum. For instance,
 if we consider the three media example above along with vacuum to define
-four regions, in Step 2 of the User Code we might have: 
+four regions, in Step 2 of the User Code we might have:
 \begin{verbatim}
              MED(1)=3;  "first region is air at NTP"
              MED(2)=1;  "second region is lead"
              MED(3)=0;  "third region is vacuum"
              MED(4)=2;  "fourth region is steel"
 \end{verbatim}
- 
+
 \index{ECUT}
 \index{PCUT}
 \index{AE}
@@ -1195,7 +1195,7 @@ and {\tt COMMON/MISC/}, the macro declaration might look like
                 COMIN/BOUNDS,MEDIA,MISC/;
 \end{verbatim}
 
-If using the {\tt get\_transport\_parameter} subroutine, then global 
+If using the {\tt get\_transport\_parameter} subroutine, then global
 values of {\tt ECUT} and {\tt PCUT} can be set using:
 \begin{verbatim}
 Global ECUT= ECUT
@@ -1207,7 +1207,7 @@ Global PCUT= PCUT
 the shower simulation (the default is cm if {\tt DUNIT=1.0}).  On input to {\tt
 HATCH},
 this parameter will be interpreted as follows:
-\begin{description} 
+\begin{description}
 \item[DUNIT $>$ 0] means that {\tt DUNIT} is the length of the distance unit
 expressed in centimeters.  For example, setting {\tt DUNIT}=2.54 would mean that
 the distance unit would be one inch.
@@ -1219,7 +1219,7 @@ equal to the radiation length of that medium in centimeters.  The obvious
 use of this feature is for the case of only one medium with {\tt DUNIT}=-1.  Then
 the shower is expressed entirely in radiation lengths of the first medium.
 
- 
+
 \index{distance unit}
 The distance unit used by PEGS is the radiation length.  After {\tt HATCH}
 interprets {\tt DUNIT}, it scales all distance- type data from PEGS in the proper
@@ -1227,13 +1227,13 @@ way, so that all subsequent operations in EGS will be correctly performed
 with all distances in units of {\tt DUNIT} (default value: 1.0 cm).
 \end{description}
 
- 
+
 \index{IRAYLR}
 \index{Rayleigh scattering!turning on}
 \item[IRAYLR] The elements of this integer array (dimensioned {\tt
 IRAYLR(\$MXREG)} and passed in\\ {\tt COMMON/MISC/)} are to be set to 1
 prior to calling {\tt HATCH} if coherent (Rayleigh) scattering is to be done
-in a particular region. The default values are 0. 
+in a particular region. The default values are 0.
 See section~\ref{rayleigh}(page~\pageref{rayleigh}).
 Execution is only terminated if set to 1, user wants to use photon data
 from PEGS4 file, and Rayleigh data are not included.
@@ -1242,7 +1242,7 @@ See section~\ref{new_rayleigh_sampling}(page~\pageref{new_rayleigh_sampling}).
 If using {\tt get\_transport\_parameter} routine, then {\tt IRAYLR} can
 be set to 0 in all regions using the input {\tt Rayleigh scattering= Off}
 or 1 in all regions using {\tt Rayleigh scattering= On}. If the user
-intends to supply custom form factor files, then 
+intends to supply custom form factor files, then
 {\tt Rayleigh scattering= custom} must be used and {\tt IRAYLR} will
 be set to 1.
 
@@ -1270,7 +1270,7 @@ form factor data for the media defined in {\tt iray\_ff\_media} (see above).
 Each medium specified must have an associated file.  Thus,
 {\tt iray\_ff\_file(i)} contains the form factor data for
 {\tt iray\_ff\_media(i)}.  Example files containing form factor data are
-in {\tt \$HEN\_HOUSE/data/molecular\_form\_factors}. See 
+in {\tt \$HEN\_HOUSE/data/molecular\_form\_factors}. See
 section~\ref{custom_ff_sect} (page~\pageref{custom_ff_sect}).
 
 With the {\tt get\_transport\_parameter} routine, {\tt iray\_ff\_file} can
@@ -1307,21 +1307,21 @@ IBCMP(\$MXREG)} and passed in\\ {\tt COMMON/COMPTON-DATA)} are to be set to
 0  prior to calling {\tt HATCH} if Klein-Nishina is to be modelled
 in a particular region, as opposed to using the default bound Compton formalism.
 Binding effects can be important for some simulations with photons below 1~MeV but
-above that is rarely important and only takes extra time.  The default
-value is 1 (i.e. uses bound Compton scattering). There is an option
+above that is rarely important and only takes extra time. There is an option
 to model bound Compton scattering without Doppler broadening
 ({\tt IBCMP}=2).  This option must be used used if the user
 is supplying their own Compton cross section data (see below).
-There is also an option similar to {\tt IBCMP=1}, but the 
-actual total bound Compton cross section is used and there are 
-no rejections at run time ({\tt IBCMP}=3).
+There is also an option similar to {\tt IBCMP=1}, but the
+actual total bound Compton cross section is used and there are
+no rejections at run time ({\tt IBCMP}=3). The default
+value is 3 (i.e. uses bound Compton scattering, with no rejection).
 See section~\ref{compton} (page~\pageref{compton}) for more details.
 \index{EGS4}
 
 If using {\tt get\_transport\_parameter}, then {\tt IBCMP} can be set to 0
-using the line {\tt Bound Compton scattering= Off}, 1 using 
-{\tt Bound Compton scattering= On}, 2 using 
-{\tt Bound Compton scattering= Simple} and 
+using the line {\tt Bound Compton scattering= Off}, 1 using
+{\tt Bound Compton scattering= On}, 2 using
+{\tt Bound Compton scattering= Simple} and
 3 using {\tt Bound Compton scattering= norej}.
 
 \index{comp\_xsections}
@@ -1331,13 +1331,13 @@ using the line {\tt Bound Compton scattering= Off}, 1 using
 Compton cross section data prior to calling {\tt HATCH} if the user does
 not want to use the default Compton cross sections.  This option can only
 be used if {\tt IBCMP}=4 (bound Compton without doppler broadening--see above).
-The cross section data must be contained in file 
+The cross section data must be contained in file
 {\tt \$HEN\_HOUSE/data/comp\_xsections\_compton.data}.  If the user does
 not supply a name for {\tt comp\_xsections}, then the default Compton
 data used with {\tt IBCMP}=2 is in {\tt \$HEN\_HOUSE/data/compton\_sigma.data}.
 See section~\ref{comp_xsect} (page~\pageref{comp_xsect}).
 
-If using {\tt get\_transport\_parameter}, then {\tt comp\_xsections} can be 
+If using {\tt get\_transport\_parameter}, then {\tt comp\_xsections} can be
 set using {\tt Compton cross sections= } followed by the user definition
 of {\tt comp\_xsections}.
 
@@ -1398,7 +1398,7 @@ if the user wants to use photon cross section data other than the default
 (Storm \& Israel\cite{SI70}) data.  Current possible settings of
 {\tt photon\_xsections} are: {\tt epdl} (the Evaluated Photon Data
 Library\cite{Cu90}), {\tt xcom} (XCOM from Berger \& Hubbell\cite{BH87}),
-{\tt si} (Storm \& Israel--also the default if not set), 
+{\tt si} (Storm \& Israel--also the default if not set),
 and {\tt pegs4} (to use PEGS4 photon data).
 The user can supply their own cross section data.  For a user-supplied data
 set, {\tt photon\_xsections}, the cross section data for photoelectric,
@@ -1407,12 +1407,12 @@ pair, triplet and Rayleigh interactions must exist in the files:
 {\tt photon\_xsections\_triplet.data} and\\
  {\tt photon\_xsections\_rayleigh.data}
 in directory {\tt \$HEN\_HOUSE/data}.  See section~\ref{photon_xsect}
-(page~\pageref{photon_xsect}). 
+(page~\pageref{photon_xsect}).
 
 The {\tt photon\_xsections} variable can be set if using
 {\tt get\_transport\_parameter} using the line
 {\tt Photon cross sections= } followed by the user-defined value
-({\em i.e.} {\tt xcom}, {\tt epdl}, {\tt si}, {\tt pegs4}, or 
+({\em i.e.} {\tt xcom}, {\tt epdl}, {\tt si}, {\tt pegs4}, or
 a custom value).
 
 \index{xsec\_out}
@@ -1438,8 +1438,8 @@ to 1 using {\tt Photon cross-sections output= On} and 0 using
 \item[SPIN\_EFFECTS] A logical variable passed in {\tt COMMON/ET-Control}
 which must be set false prior to calling {\tt HATCH} if one wants to exclude
 relativistic spin effects in multiple and single scattering of electrons.
-The default is {\tt .true.} for highest accuracy. For results 
-closer to EGS4 {\tt SPIN\_EFFECTS} should be set to {\tt .false.}, 
+The default is {\tt .true.} for highest accuracy. For results
+closer to EGS4 {\tt SPIN\_EFFECTS} should be set to {\tt .false.},
 then only Rutherford scattering will be used as the
 basis of multiple and single scattering.  See section~\ref{ms_spin1}
 (page~\pageref{ms_spin1}).
@@ -1462,7 +1462,7 @@ determines how the brem photon's energy is to be sampled.\\
 0$\Rightarrow$ the Bethe-Heitler cross sections used in EGS4 are sampled.
 This is the default;\\
 1$\Rightarrow$ sample from the NIST bremsstrahlung cross section data
-base\cite{SB85,SB86a}. 
+base\cite{SB85,SB86a}.
 2$\Rightarrow$ same as {\tt ibr\_nist}=1 but including electron-electron
 bremsstrahlung contributions.
 \\ See section~\ref{brems_x}
@@ -1478,7 +1478,7 @@ If using the {\tt get\_transport\_parameter} subroutine, then
 \index{electron impact ionization}
 \index{eii\_flag}
 \item[eii\_flag] is an integer flag defined in {\tt COMMON/EII\_DATA}
-which must be set to 1 prior to calling {\tt HATCH} 
+which must be set to 1 prior to calling {\tt HATCH}
 if electron impact ionization is to be included in the simulation.
 It is set to 0 by default.
 
@@ -1503,7 +1503,7 @@ Current possible settings of {\tt eii\_xfile} are: \\
 {\tt kolbenstvedt}$\Rightarrow$ derive cross sections using the theory of Kolbenstvedt\cite{Ko67};\\
 {\tt gryzinski}\hspace{6.7mm}$\Rightarrow$ derive cross sections using the theory of Gryzi\'{n}ski\cite{Gr65a,Gr65b,Gr65c};\\
 {\tt penelope}\hspace{9.1mm}$\Rightarrow$ derive cross sections using the theory of Bote and Salvat\cite{BS08}.\\
-Note: For backwards compatibility with older input files, if 
+Note: For backwards compatibility with older input files, if
 {\tt eii\_xfile} is set to On, {\tt eii\_ik.data} will be used.
 
 The user can supply their own EII cross section data.  For a user-supplied data
@@ -1515,7 +1515,7 @@ The {\tt eii\_xfile} variable can be set if using
 {\tt get\_transport\_parameter} with the line
 {\tt Electron Impact Ionization = }
 followed by the user-defined value
-({\em i.e.} {\tt Off}, {\tt On}, {\tt ik}, {\tt casnati}, 
+({\em i.e.} {\tt Off}, {\tt On}, {\tt ik}, {\tt casnati},
 {\tt kolbenstvedt}, {\tt gryzinski}, {\tt penelope}
 or a custom value).
 
@@ -1543,7 +1543,7 @@ or {\tt KM} ({\tt IBRDST}=1).
 what type of angular sampling is done when a pair production event occurs.\\
 0$\Rightarrow$ use a fixed angle wrt the photon's direction of $m/E_\gamma$
 which was the default in  EGS4;\\
-1$\Rightarrow$ use the leading term in the angular distribution\cite{Bi91}. 
+1$\Rightarrow$ use the leading term in the angular distribution\cite{Bi91}.
 This is the default.\\
 2$\Rightarrow$ use the angular distribution of Motz, Olsen and
 Koch\cite{Mo69} as implemented by Bielajew\cite{Bi91}. See
@@ -1559,7 +1559,7 @@ If using {\tt get\_transport\_parameter}, then the input
 \index{IPHTER}
 \index{photoelectric interactions!angular distribution}
 \item[IPHTER] The elements of this array (dimensioned {\tt IPHTER(\$MXREG)}
-and passed in\\ {\tt COMMON/EDGE)} are to be set to 0 if one does not 
+and passed in\\ {\tt COMMON/EDGE)} are to be set to 0 if one does not
 want the
 photo-electron's angular distribution to be modelled\cite{BR86a}. The
 default is to model this angular distribution.  This rarely, if ever,
@@ -1577,7 +1577,7 @@ If using {\tt get\_transport\_parameter}, {\tt IPHTER} can be set to
 \index{exact BCA}
 \index{PRESTA-I BCA}
 \item[BCA\_ALGORITHM] is an integer flag passed  in {\tt COMMON/ET-Control}
-which must be set prior to the call to {\tt HATCH} to specify which boundary 
+which must be set prior to the call to {\tt HATCH} to specify which boundary
 crossing algorithm (BCA) to use.\\
 0$\Rightarrow$ use the exact (single scattering) algorithm
 within a distance of {\tt SKINDEPTH\_FOR\_BCA} of any boundary.
@@ -1597,7 +1597,7 @@ set to 0 using the input line {\tt Boundary crossing algorithm= Exact} and
 \index{EGS4}
 \item[SKINDEPTH\_FOR\_BCA] is a real variable passed  in {\tt
 COMMON/ET-Control} which must only be set prior to the call to {\tt HATCH} to specify
-the distance from a boundary (in elastic mean free paths) at which to 
+the distance from a boundary (in elastic mean free paths) at which to
 switch to the boundary crossing
 algorithm. The value  is initialized to 3.0. If set to 0.0 by the user when
 the exact BCA is being used, it is reset to 3.0 since the value 0.0 means
@@ -1616,13 +1616,13 @@ pathlength correction is used). See section~\ref{BCA} (page~\pageref{BCA}).
 
 With the {\tt get\_transport\_parameter} subroutine, {\tt SKINDEPTH\_FOR\_BCA} can be set
 using the input line {\tt Skin depth for BCA=} followed by the value
-of {\tt SKINDEPTH\_FOR\_BCA} requested. 
+of {\tt SKINDEPTH\_FOR\_BCA} requested.
 
 \index{TRANSPORT\_ALGORITHM}
 \index{PRESTA-II transport}
 \index{PRESTA-I transport}
 \item[TRANSPORT\_ALGORITHM] is an integer flag passed  in {\tt
-COMMON/ET-Control} which must be set prior to the call to {\tt HATCH} to to 
+COMMON/ET-Control} which must be set prior to the call to {\tt HATCH} to to
 specify which electron transport algorithm to use.\\
 0$\Rightarrow$ use the PRESTA-II algorithm. This is the default.\\
 1$\Rightarrow$ PRESTA-I.\\
@@ -1635,9 +1635,9 @@ be set to 0 using {\tt Electron-step algorithm= PRESTA-II} or 1 using
 
 \index{ESTEPE}
 \index{electron step size}
-\item[ESTEPE] is a real variable passed  in {\tt 
+\item[ESTEPE] is a real variable passed  in {\tt
 COMMON/ET-Control} which must be set prior to the call to {\tt HATCH} to
-specify the global maximum fractional energy loss in an electron 
+specify the global maximum fractional energy loss in an electron
 step due to continuous energy loss. The default value, which is also the
 maximum allowed value, is 0.25 and should
 not be changed unless the PRESTA-I {\tt TRANSPORT\_ALGORITHM} is being used.
@@ -1662,7 +1662,7 @@ maximum electron step in this region in whatever units are defined via
 only needed using the PRESTA-I transport algorithm.
 
 If using the {\tt get\_transport\_parameter} subroutine, then a global value of
-{\tt SMAXIR} ({\em i.e.} applied to all regions) can be set using the input 
+{\tt SMAXIR} ({\em i.e.} applied to all regions) can be set using the input
 line {\tt Global SMAX=} followed by the global value of {\tt SMAXIR}.
 
 \index{XIMAX}
@@ -1690,7 +1690,7 @@ to be emulated. To achieve this set {\tt TRANSPORT\_ALGORITHM} to 1,
 IPRDST} to 0 {\tt IBRDST} to 0 and {\tt SPIN\_EFFECTS} to {\tt .false.}.
 There are other options and improvements which are different from EGS4. These should also be set to match
 EGS4 (e.g. modelling bound Compton scattering should be off, \ie,  the
-{\tt IBCMP} array should be set 0, atomic relaxation should be 
+{\tt IBCMP} array should be set 0, atomic relaxation should be
 off, \ie, the {\tt IEDGFL} array should be set 0,  and the differential
 bremsstrahlung cross sections used should be Bethe-Heitler, \ie set {\tt
 ibr\_nist} = 0).  Leave other values at their default and use {\tt ESTEPE}
@@ -1722,35 +1722,35 @@ above regarding emulation of EGS4.
 \index{Step 3: HATCH call}
 \index{HATCH call}
 
- 
-This step is very simple---{\tt HATCH} has no arguments, so all one has to do 
+
+This step is very simple---{\tt HATCH} has no arguments, so all one has to do
 is:
-\begin{verbatim} 
+\begin{verbatim}
    CALL HATCH;
 \end{verbatim}
- 
+
 The following is a typical output message when {\tt DUNIT} has not been changed
 (and Rayleigh data is included in the file):
-\begin{verbatim} 
+\begin{verbatim}
       RAYLEIGH DATA AVAILABLE FOR MEDIUM  1 BUT OPTION NOT REQUESTED.
       EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
 \end{verbatim}
 However, if the user has set {\tt DUNIT}=2.54 prior to calling {\tt HATCH}, the message
 will look like the following (two media, no Rayleigh data):
-\begin{verbatim} 
+\begin{verbatim}
       DUNIT REQUESTED&USED ARE:   2.54000E+00   2.54000E+00(CM.)
       EGS SUCCESSFULLY 'HATCHED' FOR     2 MEDIA.
 \end{verbatim}
 Failure to ``hatch", on the other hand, will result in the message:
-\begin{verbatim} 
+\begin{verbatim}
       END OF FILE ON UNIT 12
       PROGRAM STOPPED IN HATCH BECAUSE THE
       FOLLOWING NAMES WERE NOT RECOGNIZED:
                                            (list of names)
 \end{verbatim}
 followed by a STOP in {\tt HATCH}.  [Note: one cannot ask for the same medium twice].
- 
- 
+
+
 \subsubsection{Initialisation For HOWFAR and HOWNEAR (Step 4)}
 \label{step_4}
 \index{HOWFAR}
@@ -1760,10 +1760,10 @@ followed by a STOP in {\tt HATCH}.  [Note: one cannot ask for the same medium tw
 \index{HOWFAR!initialisation}
 \index{geometry}
 
- 
+
 As stated previously, HOWFAR and HOWNEAR are the routines that specify
 the geometry of
-the regions.  Although initialisation for items that are used in 
+the regions.  Although initialisation for items that are used in
 HOWFAR and HOWNEAR
 can be done at any step prior to calling SHOWER (Step 7), Step 4 allows a
 space in MAIN to consider if such initialisation need be performed.  For
@@ -1784,27 +1784,27 @@ some user-written {\tt COMMON} blocks.
 \index{Step 5: AUSGAB initialisation}
 \index{AUSGAB!initialisation}
 
- 
+
 This step is similar to Step 4 above in that it provides a specified
 location in the MAIN code where quantities used in {\tt AUSGAB} can be
 initialized.  For example, suppose that we wished to create an array, {\tt
 ESUM},
 to keep track of the total energy deposited in each of the regions.  We
-could declare 
-\begin{verbatim} 
+could declare
+\begin{verbatim}
       COMMON/TOTALS/ESUM($MXREG);
 \end{verbatim}
 in both the MAIN code and in {\tt AUSGAB}, and we could add
-\begin{verbatim} 
+\begin{verbatim}
       DO I=1,$MXREG [ESUM(I)=0.0;]
 \end{verbatim}
 to the MAIN code (at Step 5).  Then the statement
-\begin{verbatim} 
+\begin{verbatim}
       ESUM(IR(NP))=ESUM(IR(NP)) + EDEP;
 \end{verbatim}
 in {\tt AUSGAB} could keep a running total of the energy deposited in each region
 under consideration.
- 
+
 \index{EDEP}
 \index{double precision}
 Note that {\tt EDEP} is a double precision
@@ -1839,12 +1839,12 @@ variance reduction techniques as well.
 \label{step_6}
 \index{Step 6: incident particles}
 
- 
+
 \index{incident particles}
 This step is really self-explanatory---particularly when looked at in
 conjunction with Step 7 below.  A specific example of such coding might be
 useful and is given as follows:
-\begin{verbatim} 
+\begin{verbatim}
       IQI=-1;                   "incident particle is an electron"
       EI=1000.0;                "total energy (MeV)"
       XI=0.0; YI=0.0; ZI=0.0;   "particle coordinates"
@@ -1855,7 +1855,7 @@ useful and is given as follows:
       NCASES=10;                "number of histories to run"
       LATCHI=0;                 "variable for tracking history or marking"
                                 "a history""
-\end{verbatim} 
+\end{verbatim}
 
 \subsubsection{SHOWER Call (Step 7)}
 \label{step_7}
@@ -1863,7 +1863,7 @@ useful and is given as follows:
 
 \index{SHOWER call}
 The calling sequence for {\tt SHOWER} is:
-\begin{verbatim} 
+\begin{verbatim}
       CALL SHOWER(IQI,EI,XI,YI,ZI,UI,VI,WI,IRI,WTI);
 \end{verbatim}
 The types of the arguments are given by their starting letter in accordance
@@ -1876,7 +1876,7 @@ STACK} directly and for historical reasons is not symmetric with the other
 parameters.  Section~\ref{step_6} above might be of some aid in
 understanding the parameter list.  The subroutine may be called repeatedly
 by means of statements like
-\begin{verbatim} 
+\begin{verbatim}
       DO I=1,NCASES [CALL SHOWER(IQI,EI,XI,....,etc.);]   .
 \end{verbatim}
 The statistical weight, WTI, is generally taken as unity unless variance
@@ -1890,15 +1890,15 @@ energies and direction cosines appropriately obtained by sampling.
 \label{step_8}
 \index{Step 8: output results}
 
- 
+
 This step has been added for completeness and is self-explanatory.
- 
- 
+
+
  \subsection{Specifications for HOWFAR}
 \label{howfar}
 \index{HOWFAR}
 \index{HOWFAR!specifications}
- 
+
 
 \index{USTEP}
 \index{IDISC}
@@ -1909,34 +1909,34 @@ would like to transport the top particle on the stack by a straight line
 distance {\tt USTEP}.  All of the parameters of the particle are available to the
 user via {\tt COMMON/STACK/} as described earlier.  The user controls the
 transport by setting the following variables:
-\begin{verbatim} 
+\begin{verbatim}
       USTEP, IDISC, IRNEW, and DNEAR(NP).
 \end{verbatim}
- 
+
 Except for the last variable (which is in {\tt COMMON/STACK/)} , these are
 available to the user via {\tt COMMON/EPCONT/.}  The ways in which these
 may be changed, and the way EGS will interpret these changes, will now be
-discussed in detail.  
+discussed in detail.
 \begin{enumerate}
 \item  If the user decides that the current particle should be discarded,
 then {\tt IDISC} must be set non-zero (the usual convention is to set {\tt
 IDISC}=1).
-\begin{itemize} 
+\begin{itemize}
 \index{positron annihilation}
 \item A positive value for {\tt IDISC} will cause the particle to be discarded
-immediately.  The special value {\tt IDISC} = 99 is used to mark a positron for 
-immediate discard but {\bfseries WITH} positron annihilation occurring as 
+immediately.  The special value {\tt IDISC} = 99 is used to mark a positron for
+immediate discard but {\bfseries WITH} positron annihilation occurring as
 if at rest. For {\tt IDISC} = 1 a positron is discarded and no annihilation
 photons are created.
 \item A negative value for {\tt IDISC} will cause EGS to discard the particle
 when it completes the transport. Again, {\tt IDISC} = -99 marks that positron
 annihilation should take place.
 \index{positron annihilation}
-\end{itemize} 
+\end{itemize}
 EGS initializes {\tt IDISC} to zero, and if left zero no user requested discard
 will take place.  For example, the easiest way to define an infinite,
 homogeneous medium is with the {\tt HOWFAR} routine:
-\begin{verbatim} 
+\begin{verbatim}
           SUBROUTINE HOWFAR;
           RETURN;
           END;
@@ -1945,7 +1945,7 @@ In this case, particle transport will continue to take place until energy
 cutoffs are reached. However, a common procedure is to set {\tt IDISC}=1 whenever
 the particle reaches a discard region.
 
- 
+
 \item If immediate discard has not been requested, then the user should
 check to see whether transport by distance {\tt USTEP} will cause a region
 boundary to be crossed.  The presence of the region index for the current
@@ -1957,11 +1957,11 @@ position along the current direction, and {\tt IRNEW} should be set to the regio
 index of the region on the other side of the boundary.  For sophisticated
 geometries, this is the most complex part of the User Code.
 
- 
+
 \index{DNEAR}
 \item The setting of {\tt DNEAR(NP)} by the user is optional and is not required
 for EGSnrc since it is always calculated on each electron
-step using the routine {\tt HOWNEAR}. 
+step using the routine {\tt HOWNEAR}.
 
 Boundary checking in {\tt HOWFAR} takes time and should be avoided whenever possible. If
 EGSnrc had no way of knowing how far it was from a boundary, then it would
@@ -1977,16 +1977,16 @@ avoid this inefficiency, each particle has stored on the stack a variable
 called DNEAR, which is used by EGS to store a lower bound to the distance
 from the particle's current position to the nearest region boundary.  This
 variable is used by EGS in the following ways:
-\begin{itemize} 
+\begin{itemize}
 \item {\tt DNEAR} for the incident particle is initialized to zero by {\tt
 EGSnrc}.
- 
+
 \item Whenever a particle is actually moved (by a straight line distance
 VSTEP) the path length transported is deducted from the {\tt DNEAR} for the
 particle.
 \item Whenever a particle interacts, the {\tt DNEAR} values for the product
 particles are set from the {\tt DNEAR} value of the parent particle.
- 
+
 \item When EGSnrc has decided it would like to transport the current particle
 by a distance {\tt USTEP} (which will be the distance to the next interaction),
 subroutine {\tt HOWFAR} will be called to get the user's permission to go that
@@ -2001,11 +2001,11 @@ If the medium for a region is vacuum,
 the user need not bother computing DNEAR, as EGS will always transport to
 the next boundary in only one step in this case.
 
-\end{enumerate} 
+\end{enumerate}
 
 \subsubsection{An example of HOWFAR}
 \index{HOWFAR!example}
- 
+
 \begin{figure}[hrbt]
    \begin{center}
    \leavevmode
@@ -2023,7 +2023,7 @@ assume that the slab of thickness {\tt ZTHICK} is semi-infinite (x and
 y-directions), and that particles are immediately discarded whenever they
 go into Region 1 or Region 3.  The following {\tt HOWFAR} code is then
 applicable:
-\begin{verbatim} 
+\begin{verbatim}
      SUBROUTINE HOWFAR;
      COMIN/EPCONT,STACK/;      "common blocks needed in calculations"
      COMMON/GEOM/ZTHICK;       "slab thickness defined in main"
@@ -2039,7 +2039,7 @@ applicable:
      RETURN;  END;
 \end{verbatim}
 \index{HOWFAR!example}
- 
+
 \index{PLAN2P}
 \index{\$PLAN2P}
 A number of geometry subprograms and their macro equivalents are
@@ -2061,7 +2061,7 @@ Particle Transport''\cite{Bi95a}.
 
 
 As mentioned in section~\ref{hownear_macro}(page~\pageref{hownear_macro}),
-for compatibility with previous  EGS4/PRESTA user codes, 
+for compatibility with previous  EGS4/PRESTA user codes,
 EGSnrc formally requires a macro definition which defaults to:
 \begin{verbatim}
 REPLACE {$CALL-HOWNEAR(#);} WITH {CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);}
@@ -2084,7 +2084,7 @@ where \verb+x,y,z+ are the current positions of the particle and \verb+irl+
 is its current region.  The rest of the information about the geometry is
 passed in whatever {\tt COMMONs} contain the necessary information. In NRCC
 user codes and the tutorial codes this is {\tt COMMON/GEOM/;} but it can be
-called anything the user wants. 
+called anything the user wants.
 
 One simplification is that the routine does not have to handle regions
 outside the geometry (as {\tt SUBROUTINE HOWFAR} must in order to have them
@@ -2114,7 +2114,7 @@ See also section~\ref{hownear_change} (page~\pageref{hownear_change}).
 \subsection{Specifications for AUSGAB}
 \label{ausgab}
 \index{AUSGAB!specifications}
- 
+
 The subroutine {\tt AUSGAB} is called by EGS with the statement:
 \begin{verbatim}
       CALL AUSGAB(IARG);
@@ -2179,7 +2179,7 @@ both {\tt ECUT} and {\tt AE} (or {\tt PCUT} and {\tt AP}).\\
 (in {\tt HOWFAR} usually or by range rejection).  \\
 	&\\
 4	&The difference between the energy of the incident particle and
-         all of the final products is being deposited locally. This 
+         all of the final products is being deposited locally. This
          energy is  due to sub-threshold relaxation events.\\
 	&\\
 \hline
@@ -2233,7 +2233,7 @@ both {\tt ECUT} and {\tt AE} (or {\tt PCUT} and {\tt AP}).\\
              (assuming {\tt NP} is non-zero).\\
 &&\\
 21&22& Subroutine UPHI was just entered. Not entered in
-all cases now since the sampling is done more efficiently directly in some 
+all cases now since the sampling is done more efficiently directly in some
 subroutines.\\
 22&23& Subroutine UPHI was just exited.\\
 &&\\
@@ -2241,10 +2241,10 @@ subroutines.\\
 24&25& A coherent (Rayleigh) interaction has just occurred.\\
 &&\\
 25 &26& A fluorescent photon has just been created in RELAX.\\
-26 & 27& A Coster-Kronig electron has just been created in RELAX.\\   
-27 &28& An Auger electron has just been created in RELAX.\\   
+26 & 27& A Coster-Kronig electron has just been created in RELAX.\\
+27 &28& An Auger electron has just been created in RELAX.\\
 &&\\
-28 &29& A positron is about to annihilate at rest.\\   
+28 &29& A positron is about to annihilate at rest.\\
 \hline
 \end{tabular}
 \end{center}
@@ -2254,9 +2254,9 @@ As an example of how to write an {\tt AUSGAB} subprogram, consider the previous
 three region geometry (Fig. \ref{fig_3_region_ex}).  Suppose that we wish to
 score (i.e., output on the line printer) only photons that go from Region 2
 into Region 3.  The {\tt AUSGAB} subprogram that will accomplish this is given
-below.  In this example we print out the stack variables plus {\tt IARG}.  
+below.  In this example we print out the stack variables plus {\tt IARG}.
 \index{AUSGAB!example}
-\begin{verbatim} 
+\begin{verbatim}
     SUBROUTINE AUSGAB(IARG);
     COMIN/STACK/;
     "only output information for photons that are discarded"
@@ -2271,14 +2271,14 @@ section~\ref{tutorials}(page~\pageref{tutorials}) give examples of various
 types of {\tt AUSGAB} routines.
 
 \subsubsection{Checking for STACK overflow}
-\index{EGS4} \index{\$MXSTACK} 
-\index{STACK overflow} 
+\index{EGS4} \index{\$MXSTACK}
+\index{STACK overflow}
 Unlike  EGS4, EGSnrc prevents the user from placing
 too many particles on the {\tt STACK}. This is implemented via a macro
 called {\tt \$CHECK-STACK(\#,\#);} which will terminate the execution if the
 stack pointer exceeds {\tt \$MXSTACK}. This check takes some time (not much)
 but to optimize the speed of a calculation, one might want to redefine it
-as a null macro once one is moving to production runs.   
+as a null macro once one is moving to production runs.
 \begin{verbatim}
       REPLACE {$CHECK-STACK(#,#);} WITH {;}
 \end{verbatim}
@@ -2359,7 +2359,7 @@ rejection technique is used, the scattering may not occur. In this case,
 compton electron are in \verb^NPold^ and \verb^NPold+1^, as in the Klein-Nishina case. If
 there are any relaxation particles (i.e. \verb^NP > NPold+1^), they are found
 in \verb^NPold+2^ to \verb^NP^.  There is a slight complication if the internal Russian
-Roulette is being used (see section~\ref{rusrou}) 
+Roulette is being used (see section~\ref{rusrou})
 since, if all the electrons disappear because of Russian Roulette, then
 NPold=NP. To distinguish these two cases, the flag {\tt i\_survived\_RR}
 can be used. It has a value 0 for the case of an unbound interaction being
@@ -2483,7 +2483,7 @@ feature is that either generator can be initialized and guaranteed to
 produce a random number sequence which is independent from other sequences.
 This is very useful for doing runs in parallel on multiple machines.
 \index{parallel processing}
- 
+
 
 The default generator is defined in {\tt
 \$HEN\_HOUSE/specs/all\_common.spec} by the statement {\tt RANDOM =
@@ -2534,7 +2534,7 @@ For a standard production run of one of the NRC user codes (CAVRZnrc for
 $^{60}$Co photons incident on a thimble chamber with splitting of 130) we
 get the timing results shown in table~\ref{tab_ll_times}, although these
 values are revised from the pre-2003 printings and depend on the details of
-any simulation.  Given the iproblems encountered using luxury level 0, 
+any simulation.  Given the iproblems encountered using luxury level 0,
 luxury level 1 has been
 adopted as the default with EGSnrc. However, given a new coding of RANMAR
 to generate groups of random numbers using a function call, we find that
@@ -2613,9 +2613,9 @@ environment\cite{Ka03}.
 \index{cross section options}
 
 
-In many cases transport parameters and cross section options will be 
-controlled via an input file that uses a {\tt option = value} format 
-(\eg~all RZ user codes, all C++ codes). The following provides a summary 
+In many cases transport parameters and cross section options will be
+controlled via an input file that uses a {\tt option = value} format
+(\eg~all RZ user codes, all C++ codes). The following provides a summary
 of the options available along with possible settings.
 \input{inputs/transport_parameters.tex}
 
@@ -2670,7 +2670,7 @@ threshold which can be set for every region, viz {\tt e\_max\_rr}. By
 judicial choice of this value, the approximation can be made very accurate
 while still obtaining very significant gains in efficiency (see
 ref~\cite{Ro95} for a detailed discussion, where the parameter {\tt ESAVE}
-in that paper is equivalent to {\tt e\_max\_rr} here).  
+in that paper is equivalent to {\tt e\_max\_rr} here).
 
 Range rejection is implemented on a regional basis by setting the flags
 {\tt i\_do\_rr(irl)} to 1 for all regions {\tt irl} for which range
@@ -2737,7 +2737,7 @@ productive when Russian Roulette is not being played because second and
 higher order bremsstrahlung photons have much smaller weights. To overcome
 this problem, the user might want to use calls to {\tt AUSGAB} to reduce the
 value of {\tt nbr\_split} after each first generation bremsstrahlung
-interaction and then re-initialize it at the start of the next history. 
+interaction and then re-initialize it at the start of the next history.
 This is the technique used in the BEAM code\cite{Ro95,Ro98a}.
 \index{BEAM code}
 
@@ -2778,14 +2778,14 @@ by Russian Roulette on the previous interaction.
 \index{Russian Roulette}
 
 
- 
+
 \subsection{Complete Users Codes Examples}
 For several examples of complete EGSnrc user codes, see the TUTOR codes
 discussed in section~\ref{tutorials}. The EGSnrc distribution also comes
 with several NRC user codes which have examples of many features\cite{Ro00}
 but they have grown up over the years and have been patched so often that
 they are hard to follow.
- 
+
 \subsection{Some Utility codes}
 \subsubsection{SUBROUTINE WATCH}
 \index{WATCH}
@@ -2824,7 +2824,7 @@ different optimization levels.  This is because statements like
           IF ( A < C/D) ) GOTO n;
 \end{verbatim}
 may branch differently, depending on how many digits are stored in C/D on
-different machines or at different levels of optimization.  
+different machines or at different levels of optimization.
 
 \subsubsection{EXAMIN}
 \index{EXAMIN}
@@ -2845,9 +2845,9 @@ template for seeing how to access the data base.  Note that the data
 presented are those from PEGS4. Although EGSnrc can model bound Compton
 scattering, this is done using a rejection technique and this code does not
 allow access to the bound Compton cross sections, only the Klein Nishina
-cross sections. 
+cross sections.
 %  If you are using the {\tt xmgrace} package instead of the
-%  {\tt xmgr} package, {\tt xmgr} must be replaced by {\tt xmgrace} 
+%  {\tt xmgr} package, {\tt xmgr} must be replaced by {\tt xmgrace}
 %  in the source code for {\tt examin.mortran} in two obvious places.
 
 % \subsubsection{show\_settings}
@@ -2863,7 +2863,7 @@ cross sections.
 % \label{test_distribution}
 % \index{test\_distribution}
 % \index{test!distribution}
-% 
+%
 % This script is found on {\tt \$HEN\_HOUSE/scripts} after installation
 % and the command {\tt test\_distribution} is aliased to it in {\tt
 % egsnrc\_cshrc\_additions} and {\tt egsnrc\_bashrc\_additions}.
@@ -2874,8 +2874,8 @@ cross sections.
 % This script compiles all the user and tutorial codes and runs them with
 % short
 % test input files.  You must read the output file carefully since it will
-% continue even when some or all of the codes fail to compile or execute! 
-% Once you get this script to execute cleanly 
+% continue even when some or all of the codes fail to compile or execute!
+% Once you get this script to execute cleanly
 % your system is definitely in good shape. The results
 % for running this script on various systems are found on {\tt
 % \$HEN\_HOUSE/test\_distribution\_outputs}.

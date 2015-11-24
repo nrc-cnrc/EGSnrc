@@ -2509,14 +2509,16 @@ OUTPUT; (/' End of run',9X,' ',$); call egs_fdate(6); write(6,'(///)');
 IF (ERROR_FLAG=1) [
    OUTPUT ;(//' **********  ERRORS AND WARNING MESSAGES  ********** '//);
 ]
-REWIND (15);
+rewind (i_errors);
 9998 CONTINUE;
-     READ (15, END=9999, FMT='(A80)') TEXT;
+     READ (i_errors, END=9999, FMT='(A80)') TEXT;
      WRITE (*,'(A79)') TEXT;
      GOTO 9998;
 9999 CONTINUE;
-write(15,400) ' '; call egs_fdate(15); write(15,'(/"1")');
-write(iout,400) ' '; call egs_fdate(iout); write(iout,'(/"1")');
+backspace(i_errors);
+write(i_errors,400) ' '; call egs_fdate(i_errors); write(i_errors,'(/"1")');
+write(iout,400) ' ';     call egs_fdate(iout);     write(iout,'(/"1")');
+
 " **** IK: using wrapper routines for date and time functions."
 " Was:
 " WRITE(15 , 400) DATEN,TIMEN;

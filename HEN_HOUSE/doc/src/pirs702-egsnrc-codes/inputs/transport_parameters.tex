@@ -29,14 +29,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\index{ECUT} 
+\index{ECUT}
 \begin{verbatim}
        Global ECUT=     Global (in all regions) electron transport cut
                         off energy (in MeV). If this imput is missing,
                         AE(medium) will be used.
                         [ ECUT ]
 \end{verbatim}
-\index{PCUT} 
+\index{PCUT}
 \begin{verbatim}
        Global PCUT=     Global (in all regions) photon transport cut
                         off energy (in MeV). If this imput is missing,
@@ -63,7 +63,7 @@
                         the defualt is 0.25 (25%).
                         [ ESTEPE ]
 \end{verbatim}
-\index{XImax} 
+\index{XImax}
 \begin{verbatim}
        XImax=           Maximum first elastic scattering moment per step.
                         Default is 0.5, NEVER use value greater than 1 as
@@ -123,17 +123,17 @@
                         Turns off/on spin effects for electron elastic
                         scattering. Spin On is ABSOLUTELY necessary for
                         good backscattering calculations. Will make a
-                        difference even in `well conditioned' situations 
-                        (e.g. depth dose curves for RTP energy range 
+                        difference even in `well conditioned' situations
+                        (e.g. depth dose curves for RTP energy range
                         electrons).
                         [ spin_effects ]
 \end{verbatim}
 \index{brems angular sampling}
 \index{IBRDST}
 \begin{verbatim}
-       Brems angular sampling= Simple, KM, default is KM 
+       Brems angular sampling= Simple, KM, default is KM
                         If Simple, use only the leading term of the Koch-Motz
-                        distribution to determine the emission angle of 
+                        distribution to determine the emission angle of
                         bremsstrahlung photons. If On, complete
                         modified Koch-Motz 2BS is used (modifications
                         concern proper handling of kinematics at low energies,
@@ -147,7 +147,7 @@
                         If BH is selected, the Bethe-Heitler bremsstrahlung
                         cross sections (Coulomb corrected above 50 MeV)
                         will be used. If NIST is selected, the NIST brems
-                        cross section data base (which is the basis for 
+                        cross section data base (which is the basis for
                         the ICRU radiative stopping powers) will be employed.
                         Differences are negligible for E > ,say, 10 MeV,
                         but significant in the keV energy range. If NRC is
@@ -155,8 +155,8 @@
                         be used, which is a version of the NIST data base
                         with corrected electron-electron brems contributions
                         (corrections to the NIST data is typically only
-                        significant for low values of the atomic number Z 
-                        and for k/T < 0.005). 
+                        significant for low values of the atomic number Z
+                        and for k/T < 0.005).
                         [ ibr_nist ]
 \end{verbatim}
 \index{triplet production}
@@ -171,14 +171,14 @@
 \index{bound Compton scattering}
 \index{IBCMP}
 \begin{verbatim}
-       Bound Compton scattering=  On (default), Off, Simple or norej
+       Bound Compton scattering=  On, Off, Simple or norej (default)
                         If Off, Compton scattering will be treated with
                         Klein-Nishina, with On Compton scattering is
-                        treated in the Impulse approximation. 
-                        With Simple, the impulse approximation incoherent 
+                        treated in the Impulse approximation.
+                        With Simple, the impulse approximation incoherent
                         scattering function will be used (i.e., no Doppler
-                        broadenning). With norej the actual total bound 
-                        Compton cross section is used and there are no 
+                        broadenning). With norej the actual total bound
+                        Compton cross section is used and there are no
                         rejections at run time.
                         Make sure to turn on for low energy applications,
                         not necessary above, say, 1 MeV.
@@ -192,7 +192,7 @@
                         Equations are based on original Brown & Feynman
                         equations (Phys. Rev. 85, p 231--1952).  Requires
                         a change to the user codes Makefile to include
-                        $(EGS_SOURCEDIR)rad_compton1.mortran in the 
+                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
                         SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
                         [ radc_flag ]
 \end{verbatim}
@@ -201,13 +201,13 @@
 \index{eii\_xfile}
 \begin{verbatim}
        Electron Impact Ionization= Off (default), On, casnati, kolbenstvedt,
-                        gryzinski or penelope.  If set to On or ik, then 
+                        gryzinski or penelope.  If set to On or ik, then
                         use Kawrakow's theory to derive EII cross-sections.
-                        If set to casnati, then use the cross-sections of 
+                        If set to casnati, then use the cross-sections of
                         Casnati (from file ($HEN_HOUSE/data/eii_casnati.data).
-                        Similar for kolbenstvedt, gryzinski and penelope. 
+                        Similar for kolbenstvedt, gryzinski and penelope.
                         This is only of interest in kV X-ray calculations.
-                        Note that the user can supply their own EII 
+                        Note that the user can supply their own EII
                         cross-section data as well. The requirement is that
                         the file eii_suffix.data exists in the $HEN_HOUSE/data
                         directory, where suffix is the name specified.
@@ -225,7 +225,7 @@
                         (this is sufficient for most applications),
                         KM (comes from Koch and Motz) turns on using 2BS
                         from the article by Koch and Motz.  Uniform
-                        Default is Simple, make sure you always use 
+                        Default is Simple, make sure you always use
                         Simple or KM
                         [ IPRDST ]
 \end{verbatim}
@@ -238,22 +238,22 @@
                         (in file $HEN_HOUSE/data/pair_nrc1.data).  Only
                         of interest at low energies, where the NRC cross-
                         sections take into account the assymmetry in the
-                        positron-electron energy distribution. 
+                        positron-electron energy distribution.
                         [ pair_nrc ]
 \end{verbatim}
 \index{photon cross sections}
 \index{photon\_xsections}
 \begin{verbatim}
-       Photon cross sections= Photon cross-section data.  Current options are 
+       Photon cross sections= Photon cross-section data.  Current options are
                         si (Storm-Israel--the default), epdl (Evaluated Photon
                         Data Library), xcom, and pegs4.  Allows the use of photon
                         cross-sections other than from the PEGS4 file unless
-                        the pegs4 option is specified.  
+                        the pegs4 option is specified.
                         Note that the user can supply their own cross-section
-                        data as well.  The requirement is that the files 
-                        photon_xsections_photo.data, 
+                        data as well.  The requirement is that the files
+                        photon_xsections_photo.data,
                         photon_xsections_pair.data,
-                        photon_xsections_triplet.data, and 
+                        photon_xsections_triplet.data, and
                         photon_xsections_rayleigh.data exist in the
                         $HEN_HOUSE/data directory, where photon_xsections
                         is the name specified.
@@ -266,7 +266,7 @@
        Photon cross-sections output= Off (default) or On.  If On, then
                         a file $EGS_HOME/user_code/inputfile.xsections is
                         output containing photon cross-section data used.
-                        [ xsec_out ] 
+                        [ xsec_out ]
 \end{verbatim}
 \index{compton cross sections}
 \index{comp\_xsections}
@@ -288,7 +288,7 @@
        Rayleigh scattering= Off, On, custom
                         If On, turned on coherent (Rayleigh) scattering.
                         Default is Off. Should be turned on for low energy
-                        applications. If custom, user must provide media names 
+                        applications. If custom, user must provide media names
                         and form factor files for each desired medium. The
                         rest of the media use the default atomic form factors.
                         Not set to On by default for historical reasons since
@@ -297,7 +297,7 @@
 \end{verbatim}
 \index{iray\_ff\_media}
 \begin{verbatim}
-       ff media names = A list of media names (must match media found in 
+       ff media names = A list of media names (must match media found in
                         PEGS4 data file) for which the user is going to
                         provide custom Rayleigh form factor data.
                         [ iray_ff_media($MXMED) ]
@@ -306,12 +306,12 @@
 \begin{verbatim}
        ff file names = A list of names of files containing the Rayleigh
                        form factor data for the media specified by
-                       the ff media names = input above.  Full directory 
+                       the ff media names = input above.  Full directory
                        paths must be given for all files, and for each medium
-                       specified, iray_ff_media(i), there must be a 
+                       specified, iray_ff_media(i), there must be a
                        corresponding file name, iray_ff_file(i).  For
-                       example files, see the directory 
-                       $HEN_HOUSE/data/molecular_form_factors. 
+                       example files, see the directory
+                       $HEN_HOUSE/data/molecular_form_factors.
                        [ iray_ff_file($MXMED) ]
 \end{verbatim}
 \index{photoelectron angular sampling}
@@ -350,8 +350,8 @@
 \end{verbatim}
 
 \noindent
-Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling 
-and Bound Compton scattering can also be turned On/Off on a 
+Atomic relaxations, Rayleigh scattering, Photoelectron angular sampling
+and Bound Compton scattering can also be turned On/Off on a
 region-by-region basis. An example for Atomic relaxations on a region-
 by-region basis is:
 
@@ -375,7 +375,7 @@ Then define the regions in which you want the feature to be turned on:
        PE sampling start region=
        PE sampling stop region=
 \end{verbatim}
-each followed by a list of one or more start and stop regions 
+each followed by a list of one or more start and stop regions
 separated by commas. Example:
 \begin{verbatim}
         Atomic relaxations= On in Regions
@@ -389,14 +389,14 @@ region number and ignored if
 \verb+start region < 1+ or \verb+stop_region > $MXREG+ or
 \verb+start region > stop region+.
 
-\verb+ECUT+, \verb+PCUT+ and \verb+SMAX+ can also be set on a 
+\verb+ECUT+, \verb+PCUT+ and \verb+SMAX+ can also be set on a
 region-by-region basis. To do so, include in the input file
 \begin{verbatim}
          Set XXXX=              f_value1, f_value2, ...
          Set XXXX start region= i_value1, i_value2, ...
          Set XXXX stop region=  j_value1, j_value2, ...
 \end{verbatim}
-where \verb+XXXX+ is \verb+ECUT+, \verb+PCUT+ or \verb+SMAX+, 
-\verb+f_value1+, \verb+f_value2+,... 
-are the desired values for \verb+XXXX+ and \verb+i_value_i+ and 
+where \verb+XXXX+ is \verb+ECUT+, \verb+PCUT+ or \verb+SMAX+,
+\verb+f_value1+, \verb+f_value2+,...
+are the desired values for \verb+XXXX+ and \verb+i_value_i+ and
 \verb+j_value_i+ are the start and stop regions.

@@ -64,7 +64,7 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
                                           : QWidget(parent,f)
 {
 
-   setWindowTitle("EGSnrcMP GUI, National Research Council of Canada");
+   setWindowTitle("EGSnrc GUI, National Research Council of Canada");
    setWindowIcon(QIcon(":/images/desktop_icon.png"));
    setWindowIconText("egs_gui");
 
@@ -190,7 +190,7 @@ EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
     compile_page->sendSignals();
 }
 
-#define ABOUT_TEXT "Graphical User Interface for EGSnrcMP"\
+#define ABOUT_TEXT "Graphical User Interface for EGSnrc"\
                    "\n            egs_gui, version 2.0"\
                    "\n\nAuthors: Iwan Kawrakow and Ernesto Mainegra"\
                    "\nCopyright National Research Council of Canada"\

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?> <!--
+<?xml version="1.0" encoding="UTF-8"?><ui version="4.0"><comment>
 ###############################################################################
 #
 #  EGSnrc user interface for egs_inprz
@@ -17,7 +17,7 @@
 #  more details.
 #
 #  You should have received a copy of the GNU Affero General Public License
-#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#  along with EGSnrc. If not, see http://www.gnu.org/licenses/.
 #
 ###############################################################################
 #
@@ -27,9 +27,8 @@
 #                   Blake Walters
 #
 ###############################################################################
--->
-<ui version="4.0">
- <class>InputRZForm</class>
+</comment>
+<class>InputRZForm</class>
  <widget class="QWidget" name="InputRZForm">
   <property name="geometry">
    <rect>
@@ -154,7 +153,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>0</number>
      </property>
      <property name="iconSize">
       <size>
@@ -181,9 +180,9 @@
       <attribute name="title">
        <string>General</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_18">
+      <layout class="QVBoxLayout" name="verticalLayout_30">
        <item>
-        <layout class="QVBoxLayout">
+        <layout class="QVBoxLayout" name="verticalLayout_28">
          <item>
           <layout class="QGridLayout">
            <item row="1" column="0">
@@ -462,7 +461,7 @@
           </layout>
          </item>
          <item>
-          <layout class="QVBoxLayout">
+          <layout class="QVBoxLayout" name="verticalLayout_26">
            <item>
             <widget class="QGroupBox" name="InputFileGroupBox">
              <property name="toolTip">
@@ -474,9 +473,9 @@
              <property name="title">
               <string>EGSnrc input file name (*.egsinp)</string>
              </property>
-             <layout class="QHBoxLayout">
+             <layout class="QHBoxLayout" name="horizontalLayout_21">
               <item>
-               <layout class="QHBoxLayout">
+               <layout class="QHBoxLayout" name="horizontalLayout_18">
                 <item>
                  <widget class="QComboBox" name="InputFileComboBox">
                   <property name="sizePolicy">
@@ -487,8 +486,8 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>65</width>
-                    <height>0</height>
+                    <width>0</width>
+                    <height>28</height>
                    </size>
                   </property>
                   <property name="toolTip">
@@ -521,6 +520,12 @@
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>29</height>
+                   </size>
                   </property>
                   <property name="toolTip">
                    <string>load EGSnrc input file using an Open File Dialog.</string>
@@ -560,6 +565,12 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>28</height>
+                   </size>
+                  </property>
                   <property name="toolTip">
                    <string>select pegs4 file in current pegs data area.</string>
                   </property>
@@ -584,6 +595,12 @@
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>29</height>
+                   </size>
                   </property>
                   <property name="toolTip">
                    <string>load pegs4 file using an Open File Dialog.</string>
@@ -617,6 +634,12 @@
                     <verstretch>0</verstretch>
                    </sizepolicy>
                   </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>28</height>
+                   </size>
+                  </property>
                   <property name="editable">
                    <bool>true</bool>
                   </property>
@@ -638,6 +661,12 @@
                     <horstretch>1</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>29</height>
+                   </size>
                   </property>
                   <property name="text">
                    <string>...</string>

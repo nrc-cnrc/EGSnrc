@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  EGSnrc makefile to build the egs_configure graphical user interface
+#  EGSnrc makefile to build the configuration GUI
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -21,16 +21,16 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2003
+#  Author:          Ernesto Mainegra, 2015
 #
-#  Contributors:    Ernesto Mainegra-Hing
+#  Contributors:
 #
 ###############################################################################
 #
-#  A Makefile for building the egs_configure GUI. Once EGS_CONFIG is set, one
+#  A Makefile for building the configuration GUIs. Once EGS_CONFIG is set, one
 #  can just issue 'make' in this directory instead of using:
 #
-#  qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine)
+#  $(QTDIR)/bin/qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine)
 #  make -f Makefile_$(my_machine)
 #
 ###############################################################################
@@ -39,21 +39,12 @@
 include $(EGS_CONFIG)
 
 all: Makefile_$(my_machine)
-	$(gui_make) -f Makefile_$(my_machine)
+	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine)
 
-static: Makefile_static_$(my_machine)
-	$(gui_make) -f Makefile_static_$(my_machine) my_machine=$(my_machine)
-
-Makefile_$(my_machine): egs_configure.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) my_build=shared MAKEFILE=Makefile_$(my_machine)
-
-Makefile_static_$(my_machine): egs_configure.pro
-	$(QTDIR)/bin/qmake my_machine=$(my_machine) my_build=static MAKEFILE=Makefile_static_$(my_machine)
+Makefile_$(my_machine): egs_beam_install.pro
+	$(QTDIR)/bin/qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine) the_dir=.
 
 clean: Makefile_$(my_machine)
 	$(gui_make) -f Makefile_$(my_machine) my_machine=$(my_machine) clean
-
-realclean: clean
-	rm Makefile_*$(my_machine)
 
 .PHONY: all clean
