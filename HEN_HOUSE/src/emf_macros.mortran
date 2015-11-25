@@ -174,7 +174,8 @@ IF(EPERP2.NE.0.0)[EPERP=SQRT(EPERP2);TUSTEP=MIN(TUSTEP,$EMULMT/EPERP);]
 ;
 "                                                                             "
 REPLACE {$SET-TUSTEP-ENERGY-CHANGE-EM-FIELD;} WITH {;
-IF(EDOTU.NE.0.0) TUSTEP=MIN(TUSTEP,ABS($EMELMT*(1.+1./GAMMA0)/EDOTU));
+IF(EDOTU.NE.0.0) TUSTEP=MIN(TUSTEP,ABS($EMELMT/((1.+1./GAMMA0)*EDOTU)));
+"fixed, $EMELMT used to be multiplied by (1+1./GAMMA0)--BW"
 }
 ;
 "                                                                             "
@@ -373,6 +374,11 @@ REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
 REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;{P1}=0.0;};
 ;
 
+"potential in a constant E field--BW"
+REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;
+{P1}=-GAMMA0*BETA20*RM*(EX0*{P2}+EY0*{P3}+EZ0*{P4});
+}
+
 "3.0*3.0/0.511 explanation                                           "
 "nT = 3.0 (this example) = Magnetic field strength in Tesla V.s/m**2 "
 "3.0 = Speed of light, in m/s *10**8                                 "
@@ -393,7 +399,8 @@ REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;{P1}=0.0;};
 " which can be defined by input, EMH, July 2015 "
 "***********************************************"
 REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
-fbtemp=-IQ(NP)/RM*10**6;
+"fixed e-field normalization below--factor of 10^6 must be in denominator!--BW"
+fbtemp=-IQ(NP)/(RM*10**6);
 {P1}X0=ExIN*fbtemp;{P1}Y0=EyIN*fbtemp;{P1}Z0=EzIN*fbtemp;
 fbtemp=3.0/0.511;
 {P2}X0=BxIN*fbtemp;{P2}Y0=ByIN*fbtemp;{P2}Z0=BzIN*fbtemp;
