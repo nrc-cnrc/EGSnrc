@@ -256,6 +256,36 @@ form {
   padding: 20px;
 }
 
+
+/*******************************************************************************
+EGSnrc specific
+*******************************************************************************/
+div.clear {
+    clear:          both;
+    height:         2px;
+}
+
+div#doc {
+    float:              left;
+    width:              50%;
+}
+
+a.icon {
+    padding:            6px;
+    padding-left:       28px;
+    background-repeat:  no-repeat;
+    font-weight:        normal;
+}
+
+a.pdffile {
+    background-image:   url("../images/pdf.png");
+}
+
+a.htmlfile {
+    background-image:   url("../images/html.png");
+}
+
+
 /*******************************************************************************
 Full-Width Styles
 *******************************************************************************/
