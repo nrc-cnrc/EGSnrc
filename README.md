@@ -26,7 +26,7 @@ before downloading the software. In practice, this licence imposes no
 restriction on using EGSnrc. However, if you want to further convey
 verbatim or modified versions of the code, or any work based on any
 EGSnrc component (including any such work operated remotely over a
-network), you must do so under the same licence terms. [Contact NRC]
+network), you must do so under the same licence terms. Please [Contact NRC]
 (http://www.nrc-cnrc.gc.ca/eng/solutions/advisory/egsnrc_index.html)
 if you wish to licence EGSnrc under different terms.
 
