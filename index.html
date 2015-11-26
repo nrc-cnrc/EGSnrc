@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="EGSnrc : Toolkit for Monte Carlo simulation of ionizing radiation transport">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>EGSnrc</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/nrc-cnrc/EGSnrc">View on GitHub</a>
+
+          <h1 id="project_title">EGSnrc</h1>
+          <h2 id="project_tagline">Toolkit for Monte Carlo simulation of ionizing radiation transport</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/nrc-cnrc/EGSnrc/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/nrc-cnrc/EGSnrc/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Documentation</h2>
+
+<h2>
+<a id="what-is-egsnrc" class="anchor" href="#what-is-egsnrc" aria-hidden="true"><span class="octicon octicon-link"></span></a>What is EGSnrc?</h2>
+
+<p>EGSnrc is a software toolkit to perform Monte Carlo simulation of
+ionizing radiation transport through matter. It models the propagation
+of photons, electrons and positrons with kinetic energies between
+1 keV and 10 GeV, in homogeneous materials. EGSnrc is an
+extended and improved version of the Electron Gamma Shower (EGS)
+software package originally developed at the Stanford Linear Accelerator
+Center (SLAC) in the 1970s. Most notably, it incorporates significant
+refinements in charged particle transport, better low energy cross
+sections, and the egs++ class library to model elaborate geometries and
+particle sources.</p>
+
+<h2>
+<a id="licence" class="anchor" href="#licence" aria-hidden="true"><span class="octicon octicon-link"></span></a>Licence</h2>
+
+<p>EGSnrc is distributed as free software under the terms of the GNU Affero
+General Public Licence. Please review the <a href="LICENCE.md">LICENSE</a> document
+before downloading the software. In practice, this licence imposes no
+restriction on using EGSnrc. However, if you want to further convey
+verbatim or modified versions of the code, or any work based on any
+EGSnrc component (including any such work operated remotely over a
+network), you must do so under the same licence terms. <a href="http://www.nrc-cnrc.gc.ca/eng/solutions/advisory/egsnrc_index.html">Contact NRC</a>
+if you wish to licence EGSnrc under different terms.</p>
+
+<h2>
+<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<p>EGSnrc can be installed on computers running Linux, OS X or Windows
+operating systems. As a general-purpose Monte Carlo toolkit, EGSnrc
+provides source code and utilities to build and run your own
+radiation transport simulation applications. To use EGSnrc
+on any platform you need:</p>
+
+<ul>
+<li>a Fortran compiler</li>
+<li>a C compiler</li>
+<li>a C++ compiler</li>
+<li>the GNU <code>make</code> utility</li>
+<li>the Tcl/Tk interpreter and widget toolkit</li>
+<li>the Grace plotting tool</li>
+</ul>
+
+<p>Please read the <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview">installation instructions</a> in the
+wiki for more details about these software components.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>Installation involves downloading the EGSnrc source code, and then
+configuring EGSnrc for your computer. We recommend using the <code>git</code>
+revision control software to obtain the source code. The following shell
+command will clone the EGSnrc repository to your current working
+directory:</p>
+
+<div class="highlight highlight-source-shell"><pre>git clone https://github.com/nrc-cnrc/EGSnrc.git</pre></div>
+
+<p>Alternatively, you can download a <a href="https://github.com/nrc-cnrc/EGSnrc/archive/master.zip">zip archive</a> of the EGSnrc
+directory. Once you have downloaded the source code, you need to run a
+configuration GUI or script to set up and compile EGSnrc software
+components for your computer. Please read the full <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview">installation
+instructions</a> for more
+details on how to download and configure EGSnrc.</p>
+
+<h2>
+<a id="issues" class="anchor" href="#issues" aria-hidden="true"><span class="octicon octicon-link"></span></a>Issues</h2>
+
+<p>Use the <a href="https://github.com/nrc-cnrc/EGSnrc/issues">issue tracker</a> to
+report bugs, inaccuracies or even small typos in the EGSnrc project
+files. The tracker lets you browse and search all documented issues,
+comment on open issues, and track their progress. Note that the issue
+tracker is <strong>not meant for technical support;</strong> open an issue only if it
+pertains to an error condition which is precise and reproducible.</p>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>You can contribute to the EGSnrc project by implementing new features,
+creating new data sets, correcting errors, or improving documentation.
+Feel free to submit small corrections and contributions as issues in the
+<a href="https://github.com/nrc-cnrc/EGSnrc/issues">issue tracker</a>. For more
+extensive contributions, familiarize yourself with git and github,
+work on your own EGSnrc project fork and submit your changes via a pull
+request. Note that significant contributions will require a transfer of
+copyright to the National Research Council of Canada before they can be
+merged into the EGSnrc distribution.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">EGSnrc maintained by <a href="https://github.com/nrc-cnrc">nrc-cnrc</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-70777104-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+
+  </body>
+</html>
