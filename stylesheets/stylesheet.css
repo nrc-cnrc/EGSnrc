@@ -266,6 +266,7 @@ div.clear {
 }
 
 div#doc {
+    margin-top:        -12px;
     float:              left;
     width:              50%;
 }
@@ -283,6 +284,10 @@ a.pdffile {
 
 a.htmlfile {
     background-image:   url("../images/html.png");
+}
+
+a.download {
+    background-image:   url("../images/download.png");
 }
 
 
