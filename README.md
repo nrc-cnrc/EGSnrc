@@ -53,22 +53,29 @@ wiki for more details about these software components.
 
 ## Installation
 
-Installation involves downloading the EGSnrc source code, and then
-configuring EGSnrc for your computer. We recommend using the `git`
-revision control software to obtain the source code. The following shell
-command will clone the EGSnrc repository to your current working
-directory:
-```bash
-git clone https://github.com/nrc-cnrc/EGSnrc.git
-```
-Alternatively, you can download a [zip archive]
-(https://github.com/nrc-cnrc/EGSnrc/archive/master.zip) of the EGSnrc
-directory. Once you have downloaded the source code, you need to run a
-configuration GUI or script to set up and compile EGSnrc software
-components for your computer. Please read the full [installation
-instructions]
-(https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) for more
-details on how to download and configure EGSnrc.
+Please read the full [installation instructions]
+(https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview)
+for more details on how to download and properly configure EGSnrc on
+your computer. In brief, installation involves two steps:
+
+**1. Donwload the EGSnrc source code:**  We recommend using the git
+software to obtain the source code. Typing the following git command in 
+a shell will download EGSnrc to your current working directory:
+`git clone https://github.com/nrc-cnrc/EGSnrc.git`. Alternatively 
+you can download the EGSnrc directory as a 
+[zip archive]
+(https://github.com/nrc-cnrc/EGSnrc/archive/master.zip)
+or a [tar.gz archive]
+(https://github.com/nrc-cnrc/EGSnrc/archive/master.tar.gz)
+
+**2. Configure EGSnrc for your computer:** On a Linux system, you may
+configure the software with either the [Linux configuration utility]
+(https://github.com/nrc-cnrc/EGSnrc/releases/download/v2015/EGSnrc-configure-linux) 
+or a configuration shell script, as detailed in the instructions</a>. 
+On OS&nbsp;X you have to use the configuration shell script, as detailed 
+in the instructions. On Windows, you have to use the 
+[Windows configuration utility]
+(https://github.com/nrc-cnrc/EGSnrc/releases/download/v2015/EGSnrc-configure-windows.exe). 
 
 
 ## Issues
