@@ -61,8 +61,10 @@ your computer. In brief, installation involves two steps:
 **1. Donwload the EGSnrc source code:**  We recommend using the git
 software to obtain the source code. Typing the following git command in 
 a shell will download EGSnrc to your current working directory:
-`git clone https://github.com/nrc-cnrc/EGSnrc.git`. Alternatively 
-you can download the EGSnrc directory as a 
+```bash
+git clone https://github.com/nrc-cnrc/EGSnrc.git
+```
+Alternatively you can download the EGSnrc directory as a 
 [zip archive]
 (https://github.com/nrc-cnrc/EGSnrc/archive/master.zip)
 or a [tar.gz archive]
