@@ -265,6 +265,11 @@ div.clear {
     height:         2px;
 }
 
+div.space {
+    clear:          both;
+    height:         18px;
+}
+
 div#doc {
     margin-top:        -12px;
     float:              left;
