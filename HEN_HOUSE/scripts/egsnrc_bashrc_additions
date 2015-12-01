@@ -48,6 +48,10 @@ export OMEGA_HOME=${HEN_HOUSE}omega
 #
 PATH="${HEN_HOUSE}bin/$my_machine:$PATH"
 
+# Set dynamic library path
+#
+export LD_LIBRARY_PATH="${HEN_HOUSE}egs++/dso/$my_machine:$LD_LIBRARY_PATH"
+
 # Now check for EGS_HOME.
 # If EGS_HOME is not empty and exists, check for $EGS_HOME/bin and
 # $EGS_HOME/bin/$my_machine and create them if they don't exist.
@@ -85,6 +89,16 @@ alias dosxyz_gui='$OMEGA_HOME/progs/gui/dosxyznrc/dosxyznrc_gui.tcl'
 alias beamdp_gui='$OMEGA_HOME/progs/gui/beamdp/beamdp_gui.tcl'
 alias pprocess='$HEN_HOUSE/scripts/pprocess'
 
+# OS X specific settings
+canonical_system=$( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
+is_darwin=$(echo $canonical_system | grep -i darwin)
+if test ! "x$is_darwin" = x; then
+    export DYLD_LIBRARY_PATH="${HEN_HOUSE}egs++/dso/$my_machine:${DYLD_LIBRARY_PATH}"
+    launchctl setenv EGS_HOME $EGS_HOME
+    launchctl setenv EGS_CONFIG $EGS_CONFIG
+    alias egsgui='open -a egs_gui'
+    alias egsinprz='open -a egs_inprz'
+fi
 
 # the following is for testing the distribution.
 alias test_distribution='$HEN_HOUSE/scripts/test_egsnrcmp_distribution'

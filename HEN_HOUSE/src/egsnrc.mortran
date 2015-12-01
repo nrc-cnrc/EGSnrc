@@ -1552,7 +1552,10 @@ $start_new_particle;
 
             "Now done with multiple scattering,
             "update energy and see if below cut
+            "below subtracts only energy deposited"
             peie  = peie - edep;
+            "below subtracts energy deposited + work due to E field"
+            "peie = peie - de;" 
             eie   = peie;
             e(np) = peie;
 
