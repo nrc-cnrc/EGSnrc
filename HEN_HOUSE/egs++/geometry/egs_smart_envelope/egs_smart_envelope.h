@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -367,8 +368,21 @@ public:
         return geometries[j]->getRelativeRho(ireg-local_start[j]);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    void setBScaling(int start, int end, EGS_Float bf);
+    void setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        if (ireg < nbase) {
+            return g->getBScaling(ireg);
+        }
+        int i = ireg-nbase;
+        int j = reg_to_inscr[i];
+        return geometries[j]->getBScaling(ireg-local_start[j]);
+    };
 
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
 

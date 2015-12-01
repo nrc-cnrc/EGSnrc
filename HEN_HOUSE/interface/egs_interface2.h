@@ -631,7 +631,8 @@ struct EGS_IO {
  */
 struct EGS_emfInputs {
     /*! Input values for static electric and magnetic fields */
-    EGS_Float ExIN, EyIN, EzIN, BxIN, ByIN, BzIN, EMLMTIN;
+    EGS_Float ExIN, EyIN, EzIN, EMLMTIN,
+    BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
 };
 
 /*! \brief The address of the mortran \c STACK common block as a

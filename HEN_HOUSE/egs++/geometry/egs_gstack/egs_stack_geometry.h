@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -312,6 +313,16 @@ public:
     };
     void setRelativeRho(int start, int end, EGS_Float rho);
     void setRelativeRho(EGS_Input *);
+
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        int jg = ireg/nmax;
+        return g[jg]->getBScaling(ireg-jg*nmax);
+    };
+    void setBScaling(int start, int end, EGS_Float bf);
+    void setBScaling(EGS_Input *);
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 

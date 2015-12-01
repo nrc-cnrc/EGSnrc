@@ -303,6 +303,16 @@ public:
     void setRelativeRho(int start, int end, EGS_Float rho);
     void setRelativeRho(EGS_Input *);
 
+    void  setBScaling(int start, int end, EGS_Float rho);
+    void  setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        int jg = ireg/nmax;
+        return g[jg]->getBScaling(ireg-jg*nmax);
+    };
+
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:

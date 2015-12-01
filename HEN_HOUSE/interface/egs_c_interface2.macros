@@ -384,6 +384,7 @@ REPLACE {$start_new_particle;} WITH {
 REPLACE {$electron_region_change;} WITH {
   ir(np) = irnew; irl = irnew; rhor = rhor_new;
   medium = medium_new; ecut = ecut_new; smaxir = smax_new;
+  Bx=Bx_new;By=By_new;Bz=Bz_new;
 };
 
 REPLACE {$photon_region_change;} WITH {

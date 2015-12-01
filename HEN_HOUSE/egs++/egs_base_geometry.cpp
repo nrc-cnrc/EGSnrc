@@ -26,6 +26,8 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hugo Bouchard
 #
 ###############################################################################
 */
@@ -42,6 +44,7 @@
 #include "egs_functions.h"
 #include "egs_library.h"
 #include "egs_input.h"
+#include "egs_application.h"
 
 #include <algorithm>
 #include <vector>
@@ -70,14 +73,15 @@ public:
     static string libkey;
     static string create_key;
     string dso_path;
+    EGS_Application *app;
 
-    EGS_GeometryPrivate() : nnow(0), ntot(0), geoms(0) {
+    EGS_GeometryPrivate() : nnow(0), ntot(0), geoms(0), app(0) {
         //egsInformation("EGS_GeometryPrivate() at 0x%x\n",this);
         setUp();
     };
 
     EGS_GeometryPrivate(const EGS_GeometryPrivate &p) :
-        nnow(0), ntot(0), geoms(0) {
+        nnow(0), ntot(0), geoms(0), app(0) {
         //egsInformation("EGS_GeometryPrivate(0x%x) at 0x%x\n",&p,this);
         setUp();
     };
@@ -217,6 +221,24 @@ public:
             return 0;
         }
         return media[ind].c_str();
+    };
+
+    EGS_Float getMediumRho(int ind) const {
+        if (ind==-1) {
+            return -1;
+        }
+        else {
+            if (app) {
+                return app->getMediumRho(ind);
+            }
+            else {
+                return -1;
+            }
+        }
+    };
+
+    void setApplication(EGS_Application *App) {
+        app = App;
     };
 
     EGS_BaseGeometry *createSingleGeometry(EGS_Input *i);
@@ -387,7 +409,9 @@ extern "C" void __list_geometries() {
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
+    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0),
+    has_B_scaling(false), has_Ref_rho(false), bfactor(0), rhoRef(1.0),
+    bproperty(0), bp_array(0) {
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -408,6 +432,9 @@ EGS_BaseGeometry::~EGS_BaseGeometry() {
     }
     if (bp_array) {
         delete [] bp_array;
+    }
+    if (bfactor && has_B_scaling) {
+        delete [] bfactor;
     }
     //egsInformation("Deleting geometry at 0x%x, list=%d\n",this,active_glist);
     egs_geometries[active_glist].removeGeometry(this);
@@ -474,6 +501,14 @@ int EGS_BaseGeometry::nMedia() {
 
 const char *EGS_BaseGeometry::getMediumName(int ind) {
     return egs_geometries[active_glist].getMediumName(ind);
+}
+
+EGS_Float EGS_BaseGeometry::getMediumRho(int ind) const {
+    return egs_geometries[active_glist].getMediumRho(ind);
+}
+
+void EGS_BaseGeometry::setApplication(EGS_Application *App) {
+    return egs_geometries[active_glist].setApplication(App);
 }
 
 EGS_BaseGeometry *EGS_BaseGeometry::createSingleGeometry(EGS_Input *input) {
@@ -648,6 +683,9 @@ void EGS_BaseGeometry::printInfo() const {
     egsInformation(" type = %s\n",getType().c_str());
     egsInformation(" name = %s\n",getName().c_str());
     egsInformation(" number of regions = %d\n",nreg);
+    if (hasBScaling()) {
+        egsInformation("\nB scaling ON\n");
+    }
 }
 
 void EGS_BaseGeometry::describeGeometries() {
@@ -698,6 +736,7 @@ void EGS_BaseGeometry::setMedia(EGS_Input *inp) {
     if (delete_it) {
         delete input;
     }
+    setBScaling(input);
 }
 
 void EGS_BaseGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
@@ -772,6 +811,63 @@ void EGS_BaseGeometry::setRelativeRho(EGS_Input *input) {
         }
         delete i;
     }
+}
+
+void EGS_BaseGeometry::setBScaling(int start, int end, EGS_Float bf) {
+    if (start < 0) {
+        start = 0;
+    }
+    if (end >= nreg) {
+        end = nreg-1;
+    }
+    if (end >= start) {
+        int j;
+        if (!bfactor) {
+            bfactor = new EGS_Float [nreg];
+            for (j=0; j<nreg; j++) {
+                bfactor[j] = 1.0;
+            }
+        }
+        for (j=start; j<=end; j++) {
+            bfactor[j] = bf;
+        }
+        has_B_scaling = true;
+    }
+}
+
+void EGS_BaseGeometry::setBScaling(EGS_Input *input) {
+    EGS_Input *i;
+    /* Check whether scaling of the B field requested */
+    while ((i = input->takeInputItem("set B scaling"))) {
+        vector<EGS_Float> tmp;
+        int err = i->getInput("set B scaling",tmp);
+        if (!err) {
+            if (tmp.size() == 2) {
+                int start = (int)(tmp[0]+0.1);
+                int end = start;
+                setBScaling(start, end, tmp[1]);
+            }
+            else if (tmp.size() == 3) {
+                int start = (int)(tmp[0]+0.1);
+                int end = (int)(tmp[1]+0.1);
+                setBScaling(start, end, tmp[2]);
+            }
+            else {
+                egsWarning("EGS_BaseGeometry::setBScaling(): found %d "
+                           "inputs in a 'set B scaling' input.\n", tmp.size());
+                egsWarning("  2 or 3 are allowed => input ignored\n");
+            }
+        }
+        delete i;
+    }
+    /* Check whether mass density scaling of the B field requested */
+    EGS_Float refD;
+    int err0 = input->getInput("B scaling reference density", refD);
+    if (!err0) {
+        rhoRef = refD;
+        has_Ref_rho = true;
+    }
+
 }
 
 int EGS_BaseGeometry::computeIntersections(int ireg, int n, const EGS_Vector &X,
@@ -1029,5 +1125,3 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
 
     return 1;
 }
-
-

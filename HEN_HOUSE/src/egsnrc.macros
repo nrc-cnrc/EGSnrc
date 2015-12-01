@@ -629,11 +629,16 @@ REPLACE {$COMIN-EII-INIT;} WITH {
 
 REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
     common/emf_inputs/ExIN,EyIN,EzIN, "E field"
-                     BxIN,ByIN,BzIN,  "B field"
-                     EMLMTIN;         "Ekin, u, E fractional maximum change"
+                     EMLMTIN,         "Ekin, u, E fractional maximum change"
+                     BxIN, ByIN, BzIN,       "B field: initial region"
+                     Bx, By, Bz,             "B field: current region"
+                     Bx_new, By_new, Bz_new; "B field: in new region"
+
    $REAL    ExIN,EyIN,EzIN,
+            EMLMTIN,
             BxIN,ByIN,BzIN,
-            EMLMTIN;
+            Bx,By,Bz,
+            Bx_new,By_new,Bz_new;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 " The following common block is made available to the user so that  "

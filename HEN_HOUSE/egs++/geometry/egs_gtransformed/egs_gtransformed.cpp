@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -51,6 +52,16 @@ void EGS_TransformedGeometry::setRelativeRho(int start, int end, EGS_Float rho) 
 void EGS_TransformedGeometry::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_TransformedGeometry::setRelativeRho(): don't use this "
                "method. Use the \n setRelativeRho() methods of the underlying "
+               "geometry\n");
+}
+
+void EGS_TransformedGeometry::setBScaling(int start, int end, EGS_Float rho) {
+    setBScaling(0);
+}
+
+void EGS_TransformedGeometry::setBScaling(EGS_Input *) {
+    egsWarning("EGS_TransformedGeometry::setBScaling(): don't use this "
+               "method. Use the \n setBScaling() methods of the underlying "
                "geometry\n");
 }
 

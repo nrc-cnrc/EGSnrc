@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -60,6 +61,16 @@ void EGS_EnvelopeGeometry::setRelativeRho(EGS_Input *) {
                " this geometry\n");
 }
 
+void EGS_EnvelopeGeometry::setBScaling(int start, int end, EGS_Float bf) {
+    setBScaling(0);
+}
+
+void EGS_EnvelopeGeometry::setBScaling(EGS_Input *) {
+    egsWarning("EGS_EnvelopeGeometry::setBScaling(): don't use this method."
+               " Use the\n setBScaling methods of the geometry objects that make up"
+               " this geometry\n");
+}
+
 void EGS_FastEnvelope::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_FastEnvelope::setMedia: don't use this method. Use the\n"
                " setMedia() methods of the geometry objects that make up this geometry\n");
@@ -72,6 +83,16 @@ void EGS_FastEnvelope::setRelativeRho(int start, int end, EGS_Float rho) {
 void EGS_FastEnvelope::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_FastEnvelope::setRelativeRho(): don't use this method."
                " Use the\n setRelativeRho methods of the geometry objects that make up"
+               " this geometry\n");
+}
+
+void EGS_FastEnvelope::setBScaling(int start, int end, EGS_Float bf) {
+    setBScaling(0);
+}
+
+void EGS_FastEnvelope::setBScaling(EGS_Input *) {
+    egsWarning("EGS_FastEnvelope::setBScaling(): don't use this method."
+               " Use the\n setBScaling methods of the geometry objects that make up"
                " this geometry\n");
 }
 
@@ -115,6 +136,7 @@ EGS_EnvelopeGeometry::EGS_EnvelopeGeometry(EGS_BaseGeometry *G,
     }
     nreg = nbase + n_in*nmax;
     is_convex = g->isConvex();
+
     has_rho_scaling = g->hasRhoScaling();
     if (!has_rho_scaling) {
         for (int j=0; j<n_in; j++) {
@@ -124,6 +146,16 @@ EGS_EnvelopeGeometry::EGS_EnvelopeGeometry(EGS_BaseGeometry *G,
             }
         }
     }
+    has_B_scaling = g->hasBScaling();
+    if (!has_B_scaling) {
+        for (int j=0; j<n_in; j++) {
+            if (geometries[j]->hasBScaling()) {
+                has_B_scaling = true;
+                break;
+            }
+        }
+    }
+
     if (!n_in) {
         return;
     }
@@ -211,6 +243,17 @@ EGS_FastEnvelope::EGS_FastEnvelope(EGS_BaseGeometry *G,
             }
         }
     }
+
+    has_B_scaling = g->hasBScaling();
+    if (!has_B_scaling) {
+        for (int j=0; j<n_in; j++) {
+            if (geometries[j]->hasBScaling()) {
+                has_B_scaling = true;
+                break;
+            }
+        }
+    }
+
     delete [] iaux;
     if (newindexing) {
         new_indexing = true;
