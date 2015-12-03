@@ -375,11 +375,11 @@ done
 
 # move configuration log to log directory
 if test -f $my_dir/finalize_egs_$USER.log && test -d $HEN_HOUSE/log; then
-    mv $my_dir/finalize_egs_$USER.log $HEN_HOUSE/log/
+    mv $my_dir/finalize_egs_$USER.log $HEN_HOUSE/log/configure-$my_machine-$USER.log
     echo >&2
     printf $format "EGSnrc user configuration log saved in:" >&2
     echo >&2
-    echo "$my_dir/finalize_egs_$USER.log" >&2
+    echo "$HEN_HOUSE/log/configure-$my_machine-$USER.log" >&2
 fi
 
 cat >&2 <<EOF
