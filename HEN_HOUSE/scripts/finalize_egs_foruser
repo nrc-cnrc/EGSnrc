@@ -66,7 +66,9 @@ help='?'
 timestamp='Aug 25 2015'
 
 # guess egs home location
-if ! test "x$HEN_HOUSE" = x; then
+if ! test "x$EGS_HOME" = x; then
+    test_egs_home=$EGS_HOME
+elif ! test "x$HEN_HOUSE" = x; then
     test_egs_home=$(dirname $HEN_HOUSE)/egs_home
 else
     test_egs_home=$(cd $my_dir/../..; pwd)/egs_home
@@ -124,12 +126,7 @@ while true; do
             echo "You must input a non empty string here!" >&2
         else
             response=$test_egs_home
-            # directory already exists
-            if test -d "$response"; then
-                echo "The directory $response already exists" >&2
-            else
-                break
-            fi
+            break
         fi
 
     # help
@@ -149,12 +146,7 @@ _ACEOF
         # ensure this is an absolute path
         test_response=$( echo $response | sed 's,[\\/].*,,' )
         if test "x$test_response" = x; then
-            # directory already exists
-            if test -d "$response"; then
-                echo "The directory $response already exists" >&2
-            else
-                break
-            fi
+            break
         else
             echo "I'm expecting an absolute path here" >&2
         fi
@@ -241,12 +233,14 @@ echo "$OMEGA_HOME" >&3
 echo >&3
 
 echo >&2;
+new_egs_home="no"
 if test ! -d "$EGS_HOME"; then
     printf $format "Creating $(basename $EGS_HOME) ... " >&2
     printf $format "Creating $EGS_HOME ... " >&3
     mkdir $EGS_HOME || { echo "failed" >&2; echo "failed" >&3; exit 1; }
     echo "OK" >&2;
     echo "OK" >&3
+    new_egs_home="yes"
 fi
 
 cd "$EGS_HOME" || { echo "Failed to cd to $EGS_HOME" >&2; exit 1; }
@@ -267,38 +261,40 @@ done
 # Copy all user codes to user area so that it is consistent with
 # the install GUI and also don't need to fix egs_gui, which does not
 # work if the user code is not on the user code area.
-test_list=$( ls $HEN_HOUSE/user_codes )
-copy_list=
-for uc in $test_list; do
-    if test -d $HEN_HOUSE/user_codes/$uc && test $uc != pegs4 && test $uc != bin; then
-        copy_list="$copy_list $uc"
-    fi
-done
-echo >&2;
-echo "Copying user codes to EGS_HOME area ..." >&2
-echo "Copying user codes to EGS_HOME area" >&3
-for uc in $copy_list; do
-    printf $format "    Copying $uc ..." >&2
-    cp -r $HEN_HOUSE/user_codes/$uc .
-    echo "OK" >&2
-done
+if test "x$new_egs_home" = xyes; then
+    test_list=$( ls $HEN_HOUSE/user_codes )
+    copy_list=
+    for uc in $test_list; do
+        if test -d $HEN_HOUSE/user_codes/$uc && test $uc != pegs4 && test $uc != bin; then
+            copy_list="$copy_list $uc"
+        fi
+    done
+    echo >&2;
+    echo "Copying user codes to EGS_HOME area ..." >&2
+    echo "Copying user codes to EGS_HOME area" >&3
+    for uc in $copy_list; do
+        printf $format "    Copying $uc ..." >&2
+        cp -r $HEN_HOUSE/user_codes/$uc .
+        echo "OK" >&2
+    done
 
-# Copy BEAMnrc examples .module files to user area
-test_list=$( ls $OMEGA_HOME/beamnrc/BEAMnrc_examples/ )
-copy_list=
-for uc in $test_list; do
-    if test -f $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module; then
-        copy_list="$copy_list $uc"
-    fi
-done
-echo >&2;
-echo "Copying BEAMnrc examples .module files ..." >&2
-echo "Copying BEAMnrc examples .module files ..." >&3
-for uc in $copy_list; do
-    printf $format "    Copying $uc.module ..." >&2
-    cp -r $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module ./beamnrc/spec_modules
-    echo "OK" >&2
-done
+    # Copy BEAMnrc examples .module files to user area
+    test_list=$( ls $OMEGA_HOME/beamnrc/BEAMnrc_examples/ )
+    copy_list=
+    for uc in $test_list; do
+        if test -f $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module; then
+            copy_list="$copy_list $uc"
+        fi
+    done
+    echo >&2;
+    echo "Copying BEAMnrc examples .module files ..." >&2
+    echo "Copying BEAMnrc examples .module files ..." >&3
+    for uc in $copy_list; do
+        printf $format "    Copying $uc.module ..." >&2
+        cp -r $OMEGA_HOME/beamnrc/BEAMnrc_examples/$uc/$uc.module ./beamnrc/spec_modules
+        echo "OK" >&2
+    done
+fi
 
 
 echo "" >&2
@@ -317,7 +313,7 @@ if test "x$response" = x1; then
     test_list=$( ls $HEN_HOUSE/user_codes )
     compile_list=
     for uc in $test_list; do
-        if test -d $HEN_HOUSE/user_codes/$uc; then
+        if test -d $HEN_HOUSE/user_codes/$uc && test -d $EGS_HOME/$uc; then
             compile_list="$compile_list $uc"
         fi
     done
@@ -328,7 +324,7 @@ elif test "x$response" = x2; then
       junk_list=$( ls $HEN_HOUSE/user_codes )
       junk_compile_list=
       for uc in $junk_list; do
-          if test -d $HEN_HOUSE/user_codes/$uc; then
+          if test -d $HEN_HOUSE/user_codes/$uc && test -d $EGS_HOME/$uc; then
               junk_compile_list=$( printf "$junk_compile_list\n$uc" )
           fi
       done
@@ -339,7 +335,7 @@ elif test "x$response" = x2; then
     fi
     compile_list=
     for uc in $test_list; do
-        if test -d $HEN_HOUSE/user_codes/$uc; then
+        if test -d $HEN_HOUSE/user_codes/$uc && test -d $EGS_HOME/$uc; then
             compile_list="$compile_list $uc"
         fi
     done
