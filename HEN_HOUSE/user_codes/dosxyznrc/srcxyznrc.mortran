@@ -3982,7 +3982,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
  ]
 ]
 "----------------------------------------------------------------"
-ELSEIF( isource = 21) [ "Phase Space Incident from multiple settings"
+ELSEIF( isource = 21) [ "BEAM Sim. source Incident from multiple settings"
 			 "and through an MLC"
 "----------------------------------------------------------------"
 LOOP [;
@@ -4032,7 +4032,7 @@ LOOP [;
            nsrjct=nsrjct+1;
            goto :retry_sample_beam_vcu_source:;
         ]
-        ELSEIF(i_dbs=1 & iqin=0 & iphatsrc=1) [
+        ELSEIF(i_dbs=1 & iqin=0 & iphatsrc>1) [
            nsrjct=ndbsrjct+1;
            goto :retry_sample_beam_vcu_source:;
         ]

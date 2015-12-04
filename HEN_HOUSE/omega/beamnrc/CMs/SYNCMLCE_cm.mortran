@@ -461,14 +461,10 @@
 "V>$GEO_SHIFT_1_(#)
 "V>=============
 "V>{p1} the value to compare with ustep
-"V> if {p1}+1.0e-5 < ustep shift it, otherwise no shift
+"V> if {p1}+1.0e-5 < ustep shift it by 1.0e-5, otherwise use USTEP 
 ;
 REPLACE {$GEO_SHIFT_1_(#)} WITH {
-  ;IF({P1}~=0.00 ) [
-    IF({P1}+1.0E-5< USTEP) [{P1}={P1}+1.0E-5;]
-   ]
-   ELSE [{P1}={P1}+1.0E-5;];
-
+  ;{P1}=MIN(USTEP,{P1}+1.0e-5);
 }
 
 ;IMPLICIT NONE;
