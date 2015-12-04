@@ -1041,6 +1041,14 @@ void EGS_AdvancedApplication::startNewParticle() {
         the_emf->By_new = the_emf->By;
         the_emf->Bz_new = the_emf->Bz;
     }
+    else {
+        the_emf->Bx = the_emf->BxIN;
+        the_emf->By = the_emf->ByIN;
+        the_emf->Bz = the_emf->BzIN;
+        the_emf->Bx_new = the_emf->Bx;
+        the_emf->By_new = the_emf->By;
+        the_emf->Bz_new = the_emf->Bz;
+    }
 }
 
 void EGS_AdvancedApplication::enterNewRegion() {
@@ -1062,6 +1070,11 @@ void EGS_AdvancedApplication::enterNewRegion() {
             the_emf->By_new = bf*the_emf->ByIN;
             the_emf->Bz_new = bf*the_emf->BzIN;
         }
+    }
+    else {
+        the_emf->Bx_new = the_emf->BxIN;
+        the_emf->By_new = the_emf->ByIN;
+        the_emf->Bz_new = the_emf->BzIN;
     }
 }
 

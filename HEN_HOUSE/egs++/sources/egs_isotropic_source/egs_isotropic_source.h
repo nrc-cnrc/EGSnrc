@@ -25,6 +25,8 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hugo Bouchard
 #
 ###############################################################################
 */
@@ -89,8 +91,12 @@ It is defined most simply using the following input:
     charge = -1 or 0 or 1 for electrons or photons or positrons
     min theta = 80  [degree] (optional)
     max theta = 100 [degree] (optional)
-    min phi = 80  [degree] (optional)
-    max phi = 100 [degree] (optional)
+    min phi   = 80  [degree] (optional)
+    max phi   = 100 [degree] (optional)
+    :start Fano source:
+        max mass density = 1.2
+        geometry = some_name
+    :stop Fano source:
 :stop source:
 \endverbatim
 
@@ -252,39 +258,54 @@ public:
 
     void getPositionDirection(EGS_RandomGenerator *rndm,
                               EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
-        bool ok = true;
-        do {
-            x = shape->getRandomPoint(rndm);
-            if (geom) {
-                if (gc == IncludeAll) {
-                    ok = geom->isInside(x);
-                }
-                else if (gc == ExcludeAll) {
-                    ok = !geom->isInside(x);
-                }
-                else if (gc == IncludeSelected) {
-                    ok = false;
-                    int ireg = geom->isWhere(x);
-                    for (int j=0; j<nrs; ++j) {
-                        if (ireg == regions[j]) {
-                            ok = true;
-                            break;
-                        }
-                    }
-                }
-                else {
-                    ok = true;
-                    int ireg = geom->isWhere(x);
-                    for (int j=0; j<nrs; ++j) {
-                        if (ireg == regions[j]) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-            }
+        bool ok = true, okfano = true;
+        if (Fano_source) {
+            okfano = false;
         }
-        while (!ok);
+        do {
+            do {
+                x = shape->getRandomPoint(rndm);
+                if (geom) {
+                    if (gc == IncludeAll) {
+                        ok = geom->isInside(x);
+                    }
+                    else if (gc == ExcludeAll) {
+                        ok = !geom->isInside(x);
+                    }
+                    else if (gc == IncludeSelected) {
+                        ok = false;
+                        int ireg = geom->isWhere(x);
+                        for (int j=0; j<nrs; ++j) {
+                            if (ireg == regions[j]) {
+                                ok = true;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        ok = true;
+                        int ireg = geom->isWhere(x);
+                        for (int j=0; j<nrs; ++j) {
+                            if (ireg == regions[j]) {
+                                ok = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (Fano_source && ok) {
+                    if (rndm->getUniform()*max_mass_density > geom->getMediumRho(geom->medium(geom->isWhere(x)))) {
+                        okfano = false;
+                    }
+                    else {
+                        okfano = true;
+                    }
+                }
+
+            }
+            while (!ok);
+        }
+        while (!okfano);
 
         u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
 
@@ -335,6 +356,11 @@ protected:
     EGS_Float min_theta, max_theta;
     EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
+
+    bool Fano_source;
+    EGS_Float max_mass_density;
+    EGS_BaseGeometry *geomfano;
+
     int                 nrs;
     GeometryConfinement gc;
 };
