@@ -85,7 +85,7 @@ APPEND {;
             ufx,ufy,ufz,
             bdotub,bsqrd,
             ufxpar,ufypar,ufzpar,
-            ufxprp,ufyprp,ufzprp;
+            ufxprp,ufyprp,ufzprp,ustepold;
 } TO {$DEFINE-LOCAL-VARIABLES-ELECTR;};
 
 
@@ -285,10 +285,28 @@ REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 "THIS MACRO IS USED TO SET THE ANGLES AND PATHLENGTH CORRECTION IN VACUUM     "
 REPLACE {$VACUUM-TRANSPORT-EM-FIELD;} WITH {;
 IF(MEDIUM.EQ.0)[
-$SET-TVSTEP-EM-FIELD;
+"$SET-TVSTEP-EM-FIELD;--this is for higher order corrections"
+"do first order corrections for now--BW"
+IF(ExIN~=0.0 | EyIN~=0.0 | EzIN~=0.0 | BxIN~=0.0 | ByIN~=0.0 | BzIN~=0)[
+USTEPOLD=USTEP;
+IF(USTEP>smaxir(irl)) USTEP=smaxir(irl);
+TUSTEP=USTEP;
+$SET-TUSTEP-EM-FIELD;
+TVSTEP=TUSTEP;
+VSTEP=TVSTEP;
+USTEP=VSTEP;
+IF(USTEP<USTEPOLD) irnew=irl;
 DE=0.0;
 $ADD-WORK-EM-FIELD;
-PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;]
+PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;
+"done first order corrections"
+]
+ELSE[
+BPERP2=0.0;
+DPERP2=0.0;
+"so we do not change direction cosines to nonsense"
+]
+]
 }
 ;
 "                                                                             "
