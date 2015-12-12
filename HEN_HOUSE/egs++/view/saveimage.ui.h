@@ -45,7 +45,12 @@
 #include <qimage.h>
 #include <qstringlist.h>
 #include <qstring.h>
-#include <qfiledialog.h>
+#include <q3filedialog.h>
+#include <qimagewriter.h>
+
+#ifdef VIEW_DEBUG
+extern void (* egsWarning)(const char*, ...);
+#endif
 
 void SaveImage::saveImage() {
 
@@ -73,7 +78,7 @@ void SaveImage::selectFileName() {
         filter += "*."; filter += formatCB->text(j).lower(); filter += " ";
     }
     filter += ")";
-    QString s = QFileDialog::getSaveFileName(QString::null,filter,
+    QString s = Q3FileDialog::getSaveFileName(QString::null,filter,
                     this,
                     "save file dialog",
                     "Select a filename" );
@@ -88,7 +93,12 @@ void SaveImage::selectFileName() {
 
 
 void SaveImage::init() {
-    QStringList list = QImage::outputFormatList();
+    QList<QByteArray> blist = QImageWriter::supportedImageFormats();
+    // hacky code, please fix
+    QStringList list;
+    for (int i=0;i<blist.size();i++) {
+        list << QString(blist.at(i));
+    }
     formatCB->insertStringList(list);
     int ind = list.findIndex("PNG");
     if( ind >= 0 ) formatCB->setCurrentItem(ind);

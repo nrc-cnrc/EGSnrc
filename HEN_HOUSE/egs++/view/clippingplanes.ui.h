@@ -44,6 +44,10 @@
 
 #include <qstring.h>
 
+#ifdef VIEW_DEBUG
+extern void (* egsWarning)(const char*, ...);
+#endif
+
 void ClippingPlanesWidget::applyClicked() {
      emit clippingPlanesChanged();
 }

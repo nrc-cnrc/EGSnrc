@@ -27,7 +27,6 @@
 #
 ###############################################################################
 
-
 TEMPLATE	= app
 LANGUAGE	= C++
 
@@ -39,7 +38,8 @@ HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
 
 SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp
 
-FORMS	= viewcontrol.ui saveimage.ui clippingplanes.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3	= viewcontrol.ui saveimage.ui clippingplanes.ui
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
@@ -88,3 +88,8 @@ unix {
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
+#The following line was inserted by qt3to4
+QT +=  qt3support 
+#The following line was inserted by qt3to4
+CONFIG += uic3
+
