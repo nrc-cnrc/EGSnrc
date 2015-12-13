@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Manuel Stoeckl
 #
 ###############################################################################
 */
@@ -32,12 +33,14 @@
 #ifndef IMAGE_WINDOW_
 #define IMAGE_WINDOW_
 
+#include "viewcontrol.h"
+
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 
 #include <qdialog.h>
 #include <qtimer.h>
-//Added by qt3to4:
+
 #include <QResizeEvent>
 #include <QWheelEvent>
 #include <QMouseEvent>
@@ -47,19 +50,6 @@
 
 // #include "egs_functions.h"
 // #define VIEW_DEBUG
-
-// This class exists so that the ImageWindow can call functions of the
-// GeometryViewControl. Hacky -- probably should have ported UI files as well
-class PaintShim  {
-// details in viewcontrol.ui.h
-public:
-    PaintShim(QObject* o) : obj(o) {}
-    void doRepaint(bool resized);
-    void doRender();
-    void doRegionPick(int xMouse, int yMouse);
-private:
-    QObject* obj;
-};
 
 //class ImageWindow : public QDialog {
 class ImageWindow : public QWidget {
@@ -71,12 +61,17 @@ public:
 
     //ImageWindow(QWidget *parent = 0, const char *name = 0, bool modal = FALSE,
     //      WFlags f = 0 ) : QDialog(parent,name,modal,f), resizing(false) { };
-    ImageWindow(QWidget *parent=0, PaintShim* gvc=0, const char *name=0, Qt::WFlags f=0 ) : QWidget(parent,f), resizing(false) {
+    ImageWindow(QWidget *parent=0, GeometryViewControl* gvc=0,
+                const char *name=0) : 
+        QWidget(parent,Qt::Window), resizing(false) {
             setObjectName(name);
+
             navigationTimer = new QTimer(this);
+            navigationTimer->setSingleShot(true);
             connect (navigationTimer, SIGNAL(timeout()), parent, SLOT(endTransformation()));
+
             navigating=false;
-            paintShim = gvc;
+            gcontrol = gvc;
             setMouseTracking(true);
             rerenderRequested = false;
             regionPickRequested = false;
@@ -145,17 +140,17 @@ protected:
 
     void paintEvent (QPaintEvent *) {
         if (rerenderRequested && regionPickRequested) {
-            paintShim->doRegionPick(xMouse, yMouse);
-            paintShim->doRender();
+            gcontrol->regionPick(xMouse, yMouse);
+            gcontrol->renderImage();
             rerenderRequested = false;
             regionPickRequested = false;
             return;
         } else if (rerenderRequested) {
-            paintShim->doRender();
+            gcontrol->renderImage();
             rerenderRequested = false;
             return;
         } else if (regionPickRequested){
-            paintShim->doRegionPick(xMouse, yMouse);
+            gcontrol->regionPick(xMouse, yMouse);
             regionPickRequested = false;
             return;
         } else {
@@ -163,7 +158,7 @@ protected:
             egsWarning("In paintEvent(): size is %d %d resizing is %d\n", width(),height(),resizing);
 #endif
         
-            paintShim->doRepaint(false);
+            gcontrol->doRepaint(false);
             resizing = false;
         }
     };
@@ -233,7 +228,7 @@ protected:
     void wheelEvent (QWheelEvent *event) {
         #ifdef VIEW_DEBUG
         egsWarning("In wheelEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
-        egsWarning("  Buttons: %0x\n", event->key());
+        egsWarning("  Buttons: %0x\n", event->buttons());
         #endif
         emit startTransformation();
         emit cameraZooming(event->delta()/20);
@@ -249,7 +244,7 @@ protected:
         egsWarning("In keyPressEvent()\n");
         #endif
         if (event->key() == Qt::Key_Home) {
-            if (event->key() & Qt::AltModifier) {
+            if (event->modifiers() & Qt::AltModifier) {
                 emit cameraHomeDefining();
             }
             else {
@@ -285,7 +280,7 @@ private:
     bool    resizing;
     QTimer  *navigationTimer;
     bool    navigating;
-    PaintShim* paintShim;
+    GeometryViewControl* gcontrol;
 
 };
 

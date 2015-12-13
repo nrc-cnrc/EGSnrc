@@ -25,30 +25,21 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
-#
-###############################################################################
-#
-#  ui.h extension file, included from the uic-generated form implementation.
-#
-#  If you want to add, delete, or rename functions or slots, use Qt Designer
-#  to update this file, preserving your code.
-#
-#  You should not define a constructor or destructor in this file. Instead,
-#  write your code in functions called init() and destroy(). These will
-#  automatically be called by the form's constructor and destructor.
+#                   Manuel Stoeckl
 #
 ###############################################################################
 */
 
+#include "image_window.h"
+#include "saveimage.h"
+#include "clippingplanes.h"
+#include "viewcontrol.h"
 
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_base_geometry.h"
 #include "egs_visualizer.h"
 #include "egs_timer.h"
-#include "image_window.h"
-#include "saveimage.h"
-#include "clippingplanes.h"
 #include "egs_input.h"
 
 #include <qmessagebox.h>
@@ -107,21 +98,99 @@ static unsigned char standard_blue[] = {
 //       "very dark blue","nameless1","nameless2","lightgray","darkgray"};
 
 
-// PaintShim implementation
+GeometryViewControl::GeometryViewControl(QWidget* parent, const char* name)
+    : QDialog(parent) {
+    setObjectName(name);
+    setupUi(this);
 
-void PaintShim::doRepaint(bool resized) {
-    GeometryViewControl* gvc = (GeometryViewControl*) obj;
-    gvc->doRepaint(resized);
+#ifdef VIEW_DEBUG
+    egsWarning("In init()\n");
+#endif
+    g = 0;
+    theta = 0; c_theta = cos(theta); s_theta = sin(theta);
+    phi = 0; c_phi = cos(phi); s_phi = sin(phi);
+    a_light = 0.25;
+    int ilight = (int) (a_light*ambientLight->maximum());
+    ambientLight->setValue(ilight);
+    distance = 25;
+    //dCourse->setValue(0);
+//     dFine->setValue(25);
+	dfine = 250;
+    projection_scale = 1;
+    look_at = EGS_Vector(); setLookAtLineEdit();
+    projection_x = 15; projection_y = 15;
+    setProjectionLineEdit();
+    p_light = EGS_Vector(0,0,distance);
+    setLightLineEdit();
+    camera = p_light;
+    screen_xo = EGS_Vector();
+    screen_v1 = EGS_Vector(1,0,0);
+    screen_v2 = EGS_Vector(0,1,0);
+
+    // various state variables
+    regionsDisplayed=false;
+    showAxes = this->showAxesCheckbox->isChecked();
+    showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
+    showRegions = this->showRegionsCheckbox->isChecked();
+    showTracks = this->showTracksCheckbox->isChecked();
+    showPhotonTracks = this->showPhotonsCheckbox->isChecked();
+    showElectronTracks = this->showElectronsCheckbox->isChecked();
+    showPositronTracks = this->showPositronsCheckbox->isChecked();
+    showOtherTracks = this->showOthersCheckbox->isChecked();
+
+    // camera orientation vectors (same as the screen vectors)
+    camera_v1 = screen_v1;
+    camera_v2 = screen_v2;
+
+    // camera home position
+    camera_home = camera;
+    camera_home_v1 = camera_v1;
+    camera_home_v2 = camera_v2;
+    dfine_home = dfine;
+
+    m_colors = 0; nmed = 0;
+
+    vis = new EGS_GeometryVisualizer;
+
+    gview = new ImageWindow(this,this,"gview");
+    nx_last = 512; ny_last = 512;
+    gview->resize(nx_last,ny_last);
+    image = new EGS_Vector [nx_last*ny_last];
+
+    //connect(gview,SIGNAL(changedSize(int,int)),this, SLOT(changeImageSize(int,int)));
+
+	// connect signals and slots for mouse navigation
+	connect(gview, SIGNAL(startTransformation()), this, SLOT(startTransformation()));
+	connect(gview, SIGNAL(endTransformation()), this, SLOT(endTransformation()));
+	connect(gview, SIGNAL(cameraRotation(int, int)), this, SLOT(cameraRotate(int, int)));
+	connect(gview, SIGNAL(cameraZooming(int)), this, SLOT(cameraZoom(int)));
+    connect(gview, SIGNAL(cameraHoming()), this, SLOT(cameraHome()));
+    connect(gview, SIGNAL(cameraHomeDefining()), this, SLOT(cameraHomeDefine()));
+    connect(gview, SIGNAL(cameraTranslating(int, int)), this, SLOT(cameraTranslate(int, int)));
+    connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
+    connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
+    connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
+    connect(gview, SIGNAL(renderAndDebug()), this, SLOT(renderAndDebugImage()));
+
+    in_transformation = false; rendering = false;
+
+    render_time = 0;
+
+    save_image = new SaveImage(this,"save image");
+
+    cplanes = new ClippingPlanesWidget;
+    setExtension(cplanes);
+    connect(cplanes,SIGNAL(clippingPlanesChanged()),
+            this,SLOT(setClippingPlanes()));
+
+    // set the widget to show near the left-upper corner of the screen
+    move(QPoint(25,25));
+
 }
 
-void PaintShim::doRender() {
-    GeometryViewControl* gvc = (GeometryViewControl*) obj;
-    gvc->renderImage();
-}
 
-void PaintShim::doRegionPick(int xMouse, int yMouse) {
-    GeometryViewControl* gvc = (GeometryViewControl*) obj;
-    gvc->regionPick(xMouse, yMouse);
+GeometryViewControl::~GeometryViewControl() {
+
 }
        
 void GeometryViewControl::reloadInput () {
@@ -700,94 +769,6 @@ void GeometryViewControl::viewAllMaterials() {
 #ifdef VIEW_DEBUG
     egsWarning("In viewAllMaterials()\n");
 #endif
-}
-
-void GeometryViewControl::init() {
-#ifdef VIEW_DEBUG
-    egsWarning("In init()\n");
-#endif
-    g = 0;
-    theta = 0; c_theta = cos(theta); s_theta = sin(theta);
-    phi = 0; c_phi = cos(phi); s_phi = sin(phi);
-    a_light = 0.25;
-    int ilight = (int) (a_light*ambientLight->maximum());
-    ambientLight->setValue(ilight);
-    distance = 25;
-    //dCourse->setValue(0);
-//     dFine->setValue(25);
-	dfine = 250;
-    projection_scale = 1;
-    look_at = EGS_Vector(); setLookAtLineEdit();
-    projection_x = 15; projection_y = 15;
-    setProjectionLineEdit();
-    p_light = EGS_Vector(0,0,distance);
-    setLightLineEdit();
-    camera = p_light;
-    screen_xo = EGS_Vector();
-    screen_v1 = EGS_Vector(1,0,0);
-    screen_v2 = EGS_Vector(0,1,0);
-
-    // various state variables
-    regionsDisplayed=false;
-    showAxes = this->showAxesCheckbox->isChecked();
-    showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
-    showRegions = this->showRegionsCheckbox->isChecked();
-    showTracks = this->showTracksCheckbox->isChecked();
-    showPhotonTracks = this->showPhotonsCheckbox->isChecked();
-    showElectronTracks = this->showElectronsCheckbox->isChecked();
-    showPositronTracks = this->showPositronsCheckbox->isChecked();
-    showOtherTracks = this->showOthersCheckbox->isChecked();
-
-    // camera orientation vectors (same as the screen vectors)
-    camera_v1 = screen_v1;
-    camera_v2 = screen_v2;
-
-    // camera home position
-    camera_home = camera;
-    camera_home_v1 = camera_v1;
-    camera_home_v2 = camera_v2;
-    dfine_home = dfine;
-
-    m_colors = 0; nmed = 0;
-
-    vis = new EGS_GeometryVisualizer;
-
-    //gview = new ImageWindow(this,"gview");
-    PaintShim* paint_shim = new PaintShim(this); // < leaks
-    gview = new ImageWindow(this,paint_shim,"gview",Qt::Window);
-    nx_last = 512; ny_last = 512;
-    gview->resize(nx_last,ny_last);
-    image = new EGS_Vector [nx_last*ny_last];
-
-    //connect(gview,SIGNAL(changedSize(int,int)),this, SLOT(changeImageSize(int,int)));
-
-	// connect signals and slots for mouse navigation
-	connect(gview, SIGNAL(startTransformation()), this, SLOT(startTransformation()));
-	connect(gview, SIGNAL(endTransformation()), this, SLOT(endTransformation()));
-	connect(gview, SIGNAL(cameraRotation(int, int)), this, SLOT(cameraRotate(int, int)));
-	connect(gview, SIGNAL(cameraZooming(int)), this, SLOT(cameraZoom(int)));
-    connect(gview, SIGNAL(cameraHoming()), this, SLOT(cameraHome()));
-    connect(gview, SIGNAL(cameraHomeDefining()), this, SLOT(cameraHomeDefine()));
-    connect(gview, SIGNAL(cameraTranslating(int, int)), this, SLOT(cameraTranslate(int, int)));
-    connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
-    connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
-    connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
-    connect(gview, SIGNAL(renderAndDebug()), this, SLOT(renderAndDebugImage()));
-
-    in_transformation = false; rendering = false;
-
-    render_time = 0;
-
-    save_image = new SaveImage(this,"save image");
-
-    cplanes = new ClippingPlanesWidget;
-    setExtension(cplanes);
-    connect(cplanes,SIGNAL(clippingPlanesChanged()),
-            this,SLOT(setClippingPlanes()));
-
-    // set the widget to show near the left-upper corner of the screen
-    move(QPoint(25,25));
-
 }
 
 void GeometryViewControl::reportViewSettings(int x,int y) {

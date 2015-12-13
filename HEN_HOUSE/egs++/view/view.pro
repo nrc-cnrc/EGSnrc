@@ -33,13 +33,13 @@ LANGUAGE	= C++
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
-                 clippingplanes.ui.h viewcontrol.ui.h geometryview.ui.h \
-                 saveimage.ui.h egs_user_color.h egs_track_view.h
+                 clippingplanes.h viewcontrol.h geometryview.ui.h \
+                 saveimage.h egs_user_color.h egs_track_view.h
 
-SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp
+SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
+                 saveimage.cpp clippingplanes.cpp viewcontrol.cpp
 
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3	= viewcontrol.ui saveimage.ui clippingplanes.ui
+FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui 
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
@@ -88,8 +88,5 @@ unix {
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
-#The following line was inserted by qt3to4
-QT +=  qt3support 
-#The following line was inserted by qt3to4
-CONFIG += uic3
+
 
