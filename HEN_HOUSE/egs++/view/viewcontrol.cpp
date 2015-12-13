@@ -190,7 +190,8 @@ GeometryViewControl::GeometryViewControl(QWidget* parent, const char* name)
 
 
 GeometryViewControl::~GeometryViewControl() {
-
+    // Cleanup allocated objects
+    delete[] image;
 }
        
 void GeometryViewControl::reloadInput () {
@@ -296,7 +297,7 @@ void GeometryViewControl::regionPick(int x, int y) {
     // get regions and colors list
 #define N_REG_MAX 30
     int maxreg=N_REG_MAX;
-    int reg, regions[N_REG_MAX];
+    int regions[N_REG_MAX];
     EGS_Vector colors[N_REG_MAX];
     vis->getRegions(xp, g, regions, colors, maxreg);
 
@@ -307,8 +308,7 @@ void GeometryViewControl::regionPick(int x, int y) {
     int dy = 15;
     QString str;
     QPainter p(gview);
-    reg=0;
-    if (regions[reg]>=0) {
+    if (regions[0]>=0) {
         p.fillRect(0,0,64,h,QColor(0,0,0));
         p.setPen(QColor(255,255,255));
         p.drawText(x0-1,y0,"Regions");
@@ -345,7 +345,7 @@ void GeometryViewControl::regionPick(int x, int y) {
     }
 
     // draw regions
-    while (regions[reg]>=0 && reg<maxreg) {
+    for (int reg = 0; reg < maxreg && regions[reg] >= 0; reg++) {
         p.fillRect(x0, y0+reg*dy, s, s,
               QColor((int)(255*colors[reg].x), (int)(255*colors[reg].y),
                      (int)(255*colors[reg].z)));
@@ -353,9 +353,8 @@ void GeometryViewControl::regionPick(int x, int y) {
         p.drawRect(x0, y0+reg*dy, s, s);
         str.sprintf("%d", regions[reg]);
         p.drawText(x0+s+3,y0+reg*dy+s,str);
-        reg++;
-        if (reg==maxreg) {
-            p.drawText(x0,y0+reg*dy+s,"...");
+        if (reg+1 == maxreg) {
+            p.drawText(x0,y0+(reg+1)*dy+s,"...");
         }
     }
     p.end();
@@ -1204,7 +1203,7 @@ void GeometryViewControl::renderImage() {
     egsWarning(" rendering %dx%d image\n",nx,ny);
 #endif
     if( nx != nx_last || ny != ny_last ) {
-        delete image; image = new EGS_Vector [nx*ny];
+        delete[] image; image = new EGS_Vector [nx*ny];
         nx_last = nx; ny_last = ny;
     }
 
