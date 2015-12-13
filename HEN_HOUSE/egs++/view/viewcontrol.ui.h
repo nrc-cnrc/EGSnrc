@@ -1141,12 +1141,17 @@ void GeometryViewControl::doRepaint(bool resizing) {
     }
     else {
         QPainter p(gview);
-        for(int j=0; j<ny_last; j++) {
-            for(int i=0; i<nx_last; i++) {
-                EGS_Vector v = image[i+j*nx_last];
-                int r=(int) (v.x*255), g=(int) (v.y*255), b=(int) (v.z*255);
-                p.setPen(QColor(r,g,b)); p.drawPoint(i,ny_last-(j+1));
+        {
+            QImage img(nx_last,ny_last,QImage::Format_RGB32);
+            for(int j=0; j<ny_last; j++) {
+                uint *p = (uint *) img.scanLine(j);
+                for(int i=0; i<nx_last; i++) {
+                    EGS_Vector v = image[i+(ny_last-j-1)*nx_last];
+                    int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
+                    *(p+i) = qRgb(r,g,b);
+                }
             }
+            p.drawImage(QPoint(0,0),img);
         }
 
         // draw coordinate axes labels
@@ -1240,17 +1245,22 @@ void GeometryViewControl::renderImage() {
 
     // paint the image on screen
     QPainter p(gview);
-    for(int j=0; j<ny; j++) {
-        for(int i=0; i<nx; i++) {
-            EGS_Vector v = image[i+j*nx];
-            int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
-            if( !full_image ) {
-                p.fillRect(nxr*i,nyr*ny-nyr*(j+1),nxr,nyr,QColor(r,g,b));
+    
+    {
+        QImage img(nx,ny,QImage::Format_RGB32);
+        for(int j=0; j<ny; j++) {
+            uint *p = (uint *) img.scanLine(j);
+            for(int i=0; i<nx; i++) {
+                EGS_Vector v = image[i+(ny-j-1)*nx];
+                int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
+                *(p+i) = qRgb(r,g,b);
             }
-            else {
-                p.setPen(QColor(r,g,b));
-                p.drawPoint(i,ny-(j+1));
-            }
+        }
+
+        if (!full_image) {
+            p.drawImage(QPoint(0,0),img.scaled(nxr*nx,nyr*ny));
+        } else {
+            p.drawImage(QPoint(0,0),img);
         }
     }
 
