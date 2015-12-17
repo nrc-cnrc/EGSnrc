@@ -71,9 +71,8 @@ int main( int argc, char ** argv )
 {
 
     QApplication a( argc, argv );
-    QString input_file = argc >= 2 ? argv[1] :
-       QFileDialog::getOpenFileName(QString::null,QString::null,0,0,
-                    "Select geometry definition file");
+    QString input_file = argc >= 2 ? QString(argv[1]) :
+       QFileDialog::getOpenFileName(NULL,"Select geometry definition file");
     QString tracks_file = argc >= 3 ? argv[2] : "";
     //if( argc < 2 ) egsFatal("\nUsage: %s geometry_file\n\n",argv[0]);
     //QFile file(argv[1]);
@@ -96,7 +95,7 @@ int main( int argc, char ** argv )
 #endif
 
     //input.setContentFromFile(argv[1]);
-    input.setContentFromFile(input_file.latin1());
+    input.setContentFromFile(input_file.toUtf8().constData());
 #ifdef VDEBUG
     debug_output << "Finished parsing\n";
 #endif

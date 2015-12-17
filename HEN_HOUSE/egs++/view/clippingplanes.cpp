@@ -23,26 +23,29 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
-#
-###############################################################################
-#
-#  ui.h extension file, included from the uic-generated form implementation.
-#
-#  If you want to add, delete, or rename functions or slots, use Qt Designer
-#  to update this file, preserving your code.
-#
-#  You should not define a constructor or destructor in this file. Instead,
-#  write your code in functions called init() and destroy(). These will
-#  automatically be called by the form's constructor and destructor.
+#  Contributors:    Manuel Stoeckl
 #
 ###############################################################################
 */
 
+#include "clippingplanes.h"
 
 #include "egs_libconfig.h"
 
 #include <qstring.h>
+
+#ifdef VIEW_DEBUG
+extern void (* egsWarning)(const char*, ...);
+#endif
+
+ClippingPlanesWidget::ClippingPlanesWidget(QWidget* parent, const char* name)
+    : QWidget(parent) {
+    setObjectName(name);
+    setupUi(this);
+}
+
+ClippingPlanesWidget::~ClippingPlanesWidget() {
+}
 
 void ClippingPlanesWidget::applyClicked() {
      emit clippingPlanesChanged();
@@ -57,21 +60,29 @@ void ClippingPlanesWidget::helpClicked() {
 
 
 int ClippingPlanesWidget::numPlanes() {
-    return planeTable->numRows();
+    return planeTable->rowCount();
 }
 
 
 bool ClippingPlanesWidget::getPlane( int j, EGS_Vector &a, EGS_Float &d ) {
-    if( !planeTable->isRowSelected(j,true) ) return false;
-    QString tmp = planeTable->text(j,0);
-    if( tmp.isEmpty() ) return false;
-    bool ok; double aux = tmp.toDouble(&ok);
-    if( !ok ) return false; a.x = aux;
-    tmp = planeTable->text(j,1); if( tmp.isEmpty() ) return false;
-    aux = tmp.toDouble(&ok); if( !ok ) return false; a.y = aux;
-    tmp = planeTable->text(j,2); if( tmp.isEmpty() ) return false;
-    aux = tmp.toDouble(&ok); if( !ok ) return false; a.z = aux;
-    tmp = planeTable->text(j,3); if( tmp.isEmpty() ) return false;
-    aux = tmp.toDouble(&ok); if( !ok ) return false; d = aux;
+    // check if all row items exist and are selected.
+    QTableWidgetItem *itemAx = planeTable->item(j,0),
+                     *itemAy = planeTable->item(j,1),
+                     *itemAz = planeTable->item(j,2),
+                     *itemD = planeTable->item(j,3);
+    if (!itemAx || !itemAy || !itemAz  || !itemD) return false;
+    if (!itemAx->isSelected() || !itemAy->isSelected() || 
+        !itemAz->isSelected() || !itemD->isSelected()) return false;
+
+    // transfer values from table
+    bool ok;
+    double ax = itemAx->text().toDouble(&ok); if( !ok ) return false;
+    double ay = itemAy->text().toDouble(&ok); if( !ok ) return false;
+    double az = itemAz->text().toDouble(&ok); if( !ok ) return false;
+    double nd = itemD->text().toDouble(&ok); if( !ok ) return false;
+
+    // commit values only if all are valid
+    a.x = ax; a.y = ay; a.z = az; d = nd;
     return true;
 }
+ 

@@ -27,19 +27,19 @@
 #
 ###############################################################################
 
-
 TEMPLATE	= app
 LANGUAGE	= C++
 
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
-                 clippingplanes.ui.h viewcontrol.ui.h geometryview.ui.h \
-                 saveimage.ui.h egs_user_color.h egs_track_view.h
+                 clippingplanes.h viewcontrol.h geometryview.ui.h \
+                 saveimage.h egs_user_color.h egs_track_view.h
 
-SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp
+SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
+                 saveimage.cpp clippingplanes.cpp viewcontrol.cpp
 
-FORMS	= viewcontrol.ui saveimage.ui clippingplanes.ui
+FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui 
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
@@ -83,8 +83,13 @@ unix {
     }
 }
 
+# Debug options
 #DEFINES += VIEW_DEBUG
+#QMAKE_CXXFLAGS+="-fsanitize=address -fno-omit-frame-pointer"
+#QMAKE_LFLAGS+="-fsanitize=address"
 
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
+
+
