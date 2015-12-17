@@ -42,6 +42,7 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget* parent, const char* name)
     : QWidget(parent) {
     setObjectName(name);
     setupUi(this);
+    planeTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
 }
 
 ClippingPlanesWidget::~ClippingPlanesWidget() {
