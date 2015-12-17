@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Manuel Stoeckl
+#  Contributors:    Manuel Stoeckl, Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -72,7 +72,7 @@ bool ClippingPlanesWidget::getPlane( int j, EGS_Vector &a, EGS_Float &d ) {
                      *itemAz = planeTable->item(j,2),
                      *itemD = planeTable->item(j,3);
     if (!itemAx || !itemAy || !itemAz  || !itemD) return false;
-    if (!itemAx->isSelected() || !itemAy->isSelected() || 
+    if (!itemAx->isSelected() || !itemAy->isSelected() ||
         !itemAz->isSelected() || !itemD->isSelected()) return false;
 
     // transfer values from table
@@ -86,4 +86,4 @@ bool ClippingPlanesWidget::getPlane( int j, EGS_Vector &a, EGS_Float &d ) {
     a.x = ax; a.y = ay; a.z = az; d = nd;
     return true;
 }
- 
+
