@@ -33,7 +33,6 @@
 #ifndef IMAGE_WINDOW_
 #define IMAGE_WINDOW_
 
-#include "viewcontrol.h"
 #include "renderworker.h"
 
 #include "egs_libconfig.h"
@@ -41,6 +40,7 @@
 #include "egs_visualizer.h"
 
 #include <qpainter.h>
+#include <qwidget.h>
 
 class QTimer;
 class QThread;
@@ -57,33 +57,31 @@ public:
 
     struct RenderParameters pars;
 
-    ImageWindow(QWidget *parent=0, GeometryViewControl* gvc=0,
-                const char *name=0);
+    ImageWindow(QWidget *parent=0, const char *name=0);
     ~ImageWindow();
     
 public slots:
 
-    void rerender(EGS_BaseGeometry* geo);
+    void render(EGS_BaseGeometry* geo, bool transform);
     void loadTracks(QString name);
-    void requestRegionPick();
     void saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, QString ext);
+
     void stopWorker();
     void restartWorker();
 
+    void startTransformation();
+    void endTransformation();
+
 protected:
+
+    void rerender(EGS_BaseGeometry* geo);
 
     void resizeEvent(QResizeEvent *e);
     void paintEvent (QPaintEvent *);
 
     void mouseReleaseEvent (QMouseEvent *event);
-
-    //virtual void mousePressEvent ( QMouseEvent * e )
-    //virtual void mouseReleaseEvent ( QMouseEvent * e )
-
     void mouseMoveEvent (QMouseEvent *event);
-
     void wheelEvent (QWheelEvent *event);
-
     void keyPressEvent (QKeyEvent *event);
 
 protected slots:
@@ -99,11 +97,8 @@ signals:
     void cameraTranslating(int dx, int dy);
     void cameraHoming();
     void cameraHomeDefining();
-	void startTransformation();
-	void endTransformation();
     void putCameraOnAxis(char axis);
     void leftMouseClick(int x, int y);
-    void renderAndDebug();
 
     // for render thread
     void requestRender(EGS_BaseGeometry*,RenderParameters);
@@ -113,11 +108,9 @@ private:
     void paintBackground(QPainter& p);
 
     // Navigation/Control
-    bool    resizing;
     QTimer  *navigationTimer;
     bool    navigating;
     bool rerenderRequested;
-    bool regionPickRequested;
 
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer* vis;
@@ -126,20 +119,15 @@ private:
     QPoint lastMouse;
     int lastRegions[N_REG_MAX];
 
-    // Necessary hooks
-    GeometryViewControl* gcontrol;
-
     // Worker thread handling
     QThread* thread;
     RenderWorker* worker;
     RenderResults lastResult;
     RenderParameters lastRequest;
     enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
-    int requestNo;//purely for tracking
     EGS_BaseGeometry* lastRequestGeo;
 
     // Image saving
-    bool renderForImage;
     QString saveName;
     QString saveExtension;
     QProgressDialog* saveProgress;

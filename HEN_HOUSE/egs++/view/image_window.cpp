@@ -42,21 +42,17 @@
 #include <QTimer>
 #include <QElapsedTimer>
 
-ImageWindow::ImageWindow(QWidget *parent, GeometryViewControl* gvc,
-                const char *name) :
-    QWidget(parent,Qt::Window), resizing(false) {
+ImageWindow::ImageWindow(QWidget *parent, const char *name) :
+    QWidget(parent,Qt::Window) {
         setObjectName(name);
 
         navigationTimer = new QTimer(this);
         navigationTimer->setSingleShot(true);
-        connect (navigationTimer, SIGNAL(timeout()), parent, SLOT(endTransformation()));
+        connect(navigationTimer, SIGNAL(timeout()), this, SLOT(endTransformation()));
 
         navigating=false;
-        gcontrol = gvc;
         setMouseTracking(true);
         rerenderRequested = false;
-        regionPickRequested = false;
-        requestNo = 0;
 
         renderState = WorkerIdle;
         lastResult.elapsedTime = -1.;
@@ -67,7 +63,7 @@ ImageWindow::ImageWindow(QWidget *parent, GeometryViewControl* gvc,
 
         vis = new EGS_GeometryVisualizer;
 
-        // register types so they can be transferred accross thread
+        // register types so they can be transfered accross thread
         qRegisterMetaType<RenderParameters>("RenderParameters");
         qRegisterMetaType<RenderResults>("RenderResults");
 
@@ -111,14 +107,24 @@ ImageWindow::~ImageWindow() {
     };
     */
     
+void ImageWindow::render(EGS_BaseGeometry* geo, bool transform) {
+    if (transform) {
+        startTransformation();
+    }
+    if (navigating) {
+        pars.requestType = Transformation;
+    } else {
+        pars.requestType = FullDetail;
+    }
+    rerender(geo);
+}
+
 void ImageWindow::rerender(EGS_BaseGeometry* geo) {
     if (!thread) {
         // Don't bother if the thread has been disabled
         return;
     }
 
-    qDebug("In rerender! %d (sizeof = %d)", requestNo, sizeof(pars));
-    requestNo++;
     lastRequestGeo = geo;
 
     // Determine scaling depending on if the request is to
@@ -188,14 +194,6 @@ void ImageWindow::loadTracks(QString name) {
 }
 
 
-void ImageWindow::requestRegionPick() {
-    regionPickRequested = true;
-    this->update();
-    if (!this->isVisible()) {
-        this->show();
-    }
-}
-
 void ImageWindow::saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, QString ext) {
     saveName = name;
     saveExtension = ext;
@@ -223,13 +221,11 @@ void ImageWindow::stopWorker() {
         lastRequestGeo = NULL;
         worker = NULL;
         thread = NULL;
-        qDebug("Done!");
     }
 }
 
 
 void ImageWindow::restartWorker() {
-    qDebug("restarting!");
     worker = new RenderWorker();
     thread = new QThread();
     worker->moveToThread(thread);
@@ -241,6 +237,18 @@ void ImageWindow::restartWorker() {
     thread->start();
 }
 
+void ImageWindow::startTransformation() {
+    navigationTimer->stop();
+    navigationTimer->start(500);
+    navigating = true;
+}
+
+void ImageWindow::endTransformation() {
+    navigationTimer->stop();
+    navigating = false;
+    render(lastRequestGeo, false);
+}
+
 void ImageWindow::resizeEvent(QResizeEvent *e) {
 #ifdef VIEW_DEBUG
     egsWarning("In resizeEvent(): size is %d %d old size is: %d %d" " shown: %d\n",width(),height(),e->oldSize().width(), e->oldSize().height(),isVisible());
@@ -250,9 +258,8 @@ void ImageWindow::resizeEvent(QResizeEvent *e) {
 
     if (e->size() != e->oldSize()) {
         // treat this as a transformation, since more resizes tend to follow
-        navigationTimer->start(500);
-        emit startTransformation();
-        gcontrol->updateView();
+        startTransformation();
+        render(lastRequestGeo, false);
     }
 };
 
@@ -284,17 +291,18 @@ void ImageWindow::paintEvent (QPaintEvent *) {
     // only draw if there was already a request
     if (r.img.isNull() || lastRequestGeo == NULL) return;
 
-    if (rerenderRequested) {
-        rerenderRequested = false;
+    bool wasRerenderRequested = rerenderRequested;
+    rerenderRequested = false;
+    if (wasRerenderRequested) {
         QPainter p(this);
         paintBackground(p);
         p.end();
     }
 
-    if (regionPickRequested) {
-        regionPickRequested = false;
-        // Don't recalculate an identical point
-        if (xyMouse == lastMouse) {
+    if (!navigating) {
+        // Don't recalculate an identical point, unless
+        // the rerender wiped everything.
+        if (!wasRerenderRequested && xyMouse == lastMouse) {
             return;
         }
         lastMouse = xyMouse;
@@ -310,7 +318,7 @@ void ImageWindow::paintEvent (QPaintEvent *) {
         int regions[N_REG_MAX];
         EGS_Vector colors[N_REG_MAX];
         vis->getRegions(xp, lastRequestGeo, regions, colors, maxreg);
-        if (memcmp(regions, lastRegions, sizeof(lastRegions)) == 0) {
+        if (!wasRerenderRequested && memcmp(regions, lastRegions, sizeof(lastRegions)) == 0) {
             return;
         }
         memcpy(lastRegions, regions, sizeof(lastRegions));
@@ -391,7 +399,6 @@ void ImageWindow::mouseReleaseEvent (QMouseEvent *event) {
     // 500 msec before returning to full resolution (after button released)
     if (navigating) {
         navigationTimer->start(500);
-        requestRegionPick();
         navigating=false;
     }
     else if( event->button() == Qt::LeftButton ) {
@@ -400,9 +407,6 @@ void ImageWindow::mouseReleaseEvent (QMouseEvent *event) {
     }
 }
 
-    //virtual void mousePressEvent ( QMouseEvent * e )
-    //virtual void mouseReleaseEvent ( QMouseEvent * e )
-
 void ImageWindow::mouseMoveEvent (QMouseEvent *event) {
     int dx = event->x()-xyMouse.x();
     int dy = event->y()-xyMouse.y();
@@ -410,11 +414,9 @@ void ImageWindow::mouseMoveEvent (QMouseEvent *event) {
 
     // set up navigation
     if (event->buttons() & (Qt::LeftButton|Qt::MidButton)) {
-        if (!navigating) {
-            emit startTransformation();
-            navigationTimer->stop();
-            navigating=true;
-        }
+        // Keep the timer off so long holds with depressed button work
+        navigating  = true;
+        navigationTimer->stop();
     }
 
     // navigate
@@ -438,7 +440,7 @@ void ImageWindow::mouseMoveEvent (QMouseEvent *event) {
     }
     else {
         // picking
-        requestRegionPick();
+        this->update();
     }
 };
 
@@ -447,11 +449,8 @@ void ImageWindow::wheelEvent (QWheelEvent *event) {
     egsWarning("In wheelEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
     egsWarning("  Buttons: %0x\n", event->buttons());
     #endif
-    emit startTransformation();
+    startTransformation();
     emit cameraZooming(event->delta()/20);
-    // 500 msec before returning to full resolution (after wheel events)
-    navigationTimer->start(500);
-    requestRegionPick();
 };
 
 void ImageWindow::keyPressEvent (QKeyEvent *event) {
@@ -469,17 +468,15 @@ void ImageWindow::keyPressEvent (QKeyEvent *event) {
     else if (event->key() == Qt::Key_X) emit putCameraOnAxis('x');
     else if (event->key() == Qt::Key_Y) emit putCameraOnAxis('y');
     else if (event->key() == Qt::Key_Z) emit putCameraOnAxis('z');
-    else if (event->key() == Qt::Key_D) emit renderAndDebug();
+//    else if (event->key() == Qt::Key_D) emit renderAndDebug();
     else (event->ignore());
 };
 
 void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
-    qDebug("Got something! %f (%d) %d", r.elapsedTime, renderState, requestNo);
     lastResult = r;
     lastRequest = q;
 
-    // submit whatever the last requested image is.
-    // assume that the
+    // update the render thread status and queue next image if necessary
     switch (renderState) {
         case WorkerBackordered:
             renderState = WorkerIdle;
@@ -496,13 +493,11 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
     if (lastRequest.requestType == SavedImage) {
         if (saveProgress) {
             if (!saveProgress->wasCanceled()) {
-                qDebug("save %d %d %d",lastRequest.nx, lastRequest.ny, lastResult.img.isNull());
+                lastResult.img.save(saveName, saveExtension.toLatin1().constData());
             }
             delete saveProgress;
             saveProgress = NULL;
         }
-
-        lastResult.img.save(saveName, saveExtension.toLatin1().constData());
     } else {
         if (saveProgress) {
             saveProgress->setValue(1);

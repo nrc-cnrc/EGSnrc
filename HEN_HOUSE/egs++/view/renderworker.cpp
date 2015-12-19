@@ -148,13 +148,13 @@ void applyParameters(EGS_GeometryVisualizer* vis, const struct RenderParameters&
     for (size_t i=0;i<p.material_colors.size();i++) {
         vis->setMaterialColor(i,p.material_colors[i]);
     }
+    vis->setGlobalAmbientLight(p.global_ambient_light);
 }
 
 void RenderWorker::render(EGS_BaseGeometry* g, struct RenderParameters p) {
     // wall-clock time, not CPU time; to optimize response
-    qDebug("rendering! %x", g);
-
     QTime itime = QTime::currentTime();
+
     applyParameters(vis, p);
 
     // create image buffer, if new

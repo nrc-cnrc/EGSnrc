@@ -56,30 +56,28 @@ class GeometryViewControl : public QDialog, public Ui::GeometryViewControl {
 public:
 
     GeometryViewControl(QWidget* parent = 0, const char* name = 0);
-    ~GeometryViewControl();
+    virtual ~GeometryViewControl();
 
-    virtual void setFilename( QString str );
-    virtual void setTracksFilename( QString str );
+    virtual void setFilename(QString str);
+    virtual void setTracksFilename(QString str);
     virtual void setCameraPosition();
     virtual void setProjectionLineEdit();
     virtual void setLightLineEdit();
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
-    virtual void setMaterialColor( int j );
-    virtual int setGeometry( EGS_BaseGeometry * geom, const std::vector<EGS_UserColor> & ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading );
-    virtual void updateView();
-
+    virtual void setMaterialColor(int j);
+    virtual int setGeometry(EGS_BaseGeometry * geom, const std::vector<EGS_UserColor> & ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading);
+    virtual void updateView(bool transform = false);
 
 public slots:
 
     virtual void reloadInput();
-    virtual void checkboxAxes( bool toggle );
-    virtual void checkboxAxesLabels( bool toggle );
-    virtual void checkboxShowRegions( bool toggle );
-    virtual void checkboxShowTracks( bool toggle );
-    //virtual void regionPick( int x, int y );
+    virtual void checkboxAxes(bool toggle);
+    virtual void checkboxAxesLabels(bool toggle);
+    virtual void checkboxShowRegions(bool toggle);
+    virtual void checkboxShowTracks(bool toggle);
     virtual void cameraHome();
-    virtual void cameraOnAxis( char axis );
+    virtual void cameraOnAxis(char axis);
     virtual void camera_x();
     virtual void camera_y();
     virtual void camera_z();
@@ -87,54 +85,43 @@ public slots:
     virtual void camera_my();
     virtual void camera_mz();
     virtual void cameraHomeDefine();
-    virtual void cameraTranslate( int dx, int dy );
-    virtual void cameraRotate( int dx, int dy );
-    virtual void cameraRoll( int dx );
-    virtual void cameraZoom( int dy );
-    virtual void thetaRotation( int Theta );
-    virtual void phiRotation( int Phi );
-    virtual void startTransformation();
-    virtual void endTransformation();
-    virtual void changeDfine( int newdfine );
-    virtual void changeAmbientLight( int alight );
-    virtual void changeTransperancy( int t );
-    virtual void moveLightChanged( int toggle );
+    virtual void cameraTranslate(int dx, int dy);
+    virtual void cameraRotate(int dx, int dy);
+    virtual void cameraRoll(int dx);
+    virtual void cameraZoom(int dy);
+    virtual void thetaRotation(int Theta);
+    virtual void phiRotation(int Phi);
+    virtual void changeDfine(int newdfine);
+    virtual void changeAmbientLight(int alight);
+    virtual void changeTransparency(int t);
+    virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
     virtual void loadTracksDialog();
     virtual void setProjectionSize();
     virtual void viewAllMaterials();
-    virtual void reportViewSettings( int x, int y );
+    virtual void reportViewSettings(int x, int y);
     virtual void quitApplication();
-    virtual void updateColorLabel( int med );
+    virtual void updateColorLabel(int med);
     virtual void changeColor();
-    //virtual void doRepaint( bool resizing );
-    //virtual void renderImage();
-    //virtual void drawAxes( int nx, int ny );
     virtual void saveImage();
     virtual void showHideOptions();
     virtual void setClippingPlanes();
-    virtual void renderAndDebugImage();
-    virtual void showPhotonsCheckbox_toggled( bool toggle );
-    virtual void showElectronsCheckbox_toggled( bool toggle );
-    virtual void showPositronsCheckbox_toggled( bool toggle );
-    virtual void showOthersCheckbox_toggled( bool toggle );
+    virtual void showPhotonsCheckbox_toggled(bool toggle);
+    virtual void showElectronsCheckbox_toggled(bool toggle);
+    virtual void showPositronsCheckbox_toggled(bool toggle);
+    virtual void showOthersCheckbox_toggled(bool toggle);
+    virtual void startTransformation();
+    virtual void endTransformation();
 
-protected:
-    
+private:
+
+    ClippingPlanesWidget *cplanes;
+    ImageWindow *gview;
+    SaveImage *save_image;
+
     QString filename;
     QString filename_tracks;
-    ClippingPlanesWidget *cplanes;
-    SaveImage *save_image;
-    bool regionsDisplayed;
-    bool in_transformation;
-    EGS_Float render_time;
-    int ny_last;
-    int nx_last;
-    bool rendering;
-    EGS_Vector *image;
-    QLabel *gview_image;
-    ImageWindow *gview;
     int nmed;
     QRgb *m_colors;
     int dfine_home;
@@ -151,8 +138,6 @@ protected:
     EGS_Float projection_x;
     EGS_Float distance;
     EGS_Float size;
-    EGS_Vector axeslabels[4];
-    EGS_Vector axes[4];
     EGS_Vector axesmax;
     EGS_Vector center;
     EGS_Vector camera_home_v2;
