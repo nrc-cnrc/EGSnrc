@@ -206,6 +206,11 @@ void GeometryViewControl::reloadInput () {
     input.setContentFromFile(filename.toUtf8().constData());
 
     // clear the current geometry
+    gview->stopWorker();
+    // Don't accept any more reload requests during this reload
+    reloadButton->blockSignals(true);
+    qApp->processEvents();
+    // delete geometry
     if( g ) { delete g; g = 0; }
     EGS_BaseGeometry::clearGeometries();
 
@@ -244,7 +249,10 @@ void GeometryViewControl::reloadInput () {
         }
         delete vc;
     }
+    // Start loading process
+    gview->restartWorker();
     setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,1);
+    reloadButton->blockSignals(false);
 }
 
 void GeometryViewControl::setFilename (QString str) {

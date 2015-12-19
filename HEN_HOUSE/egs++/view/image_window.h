@@ -67,6 +67,8 @@ public slots:
     void loadTracks(QString name);
     void requestRegionPick();
     void saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, QString ext);
+    void stopWorker();
+    void restartWorker();
 
 protected:
 
@@ -120,12 +122,9 @@ private:
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer* vis;
     bool regionsDisplayed;
-    // TODO avoid duplicate work!
     QPoint xyMouse;
     QPoint lastMouse;
     int lastRegions[N_REG_MAX];
-
-
 
     // Necessary hooks
     GeometryViewControl* gcontrol;

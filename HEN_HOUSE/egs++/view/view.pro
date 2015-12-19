@@ -88,6 +88,7 @@ unix {
 # Debug options
 #DEFINES += VIEW_DEBUG
 #QMAKE_CXXFLAGS+="-fsanitize=address -fno-omit-frame-pointer"
+QMAKE_CXXFLAGS+="-ggdb3"
 #QMAKE_LFLAGS+="-fsanitize=address"
 
 UI_DIR = .ui/$$my_machine

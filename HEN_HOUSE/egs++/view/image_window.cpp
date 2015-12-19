@@ -72,15 +72,7 @@ ImageWindow::ImageWindow(QWidget *parent, GeometryViewControl* gvc,
         qRegisterMetaType<RenderResults>("RenderResults");
 
         // Initialize render worker and put it in a thread
-        worker = new RenderWorker();
-        thread = new QThread();
-        worker->moveToThread(thread);
-
-        connect(this, SIGNAL(requestRender(EGS_BaseGeometry*,RenderParameters)),
-                worker, SLOT(render(EGS_BaseGeometry*,RenderParameters)));
-        connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
-        connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
-        thread->start();
+        restartWorker();
 
         // disable Qt's background refill for the Widget, so we can paint
         // over our existing buffer when picking regions
@@ -88,13 +80,8 @@ ImageWindow::ImageWindow(QWidget *parent, GeometryViewControl* gvc,
 }
 
 ImageWindow::~ImageWindow() {
-   delete navigationTimer;
-   thread->quit();
-   // If it doesn't die in 100 ms something is hanging. Need a good way to
-   // shut it down, nevertheless.
-   thread->wait(100);
-   delete thread;
-   delete worker;
+    stopWorker();
+    delete navigationTimer;
 };
 
   /* no longer in Qt4. What was this supposed to do?
@@ -125,6 +112,11 @@ ImageWindow::~ImageWindow() {
     */
     
 void ImageWindow::rerender(EGS_BaseGeometry* geo) {
+    if (!thread) {
+        // Don't bother if the thread has been disabled
+        return;
+    }
+
     qDebug("In rerender! %d (sizeof = %d)", requestNo, sizeof(pars));
     requestNo++;
     lastRequestGeo = geo;
@@ -195,6 +187,7 @@ void ImageWindow::loadTracks(QString name) {
     emit requestLoadTracks(name);
 }
 
+
 void ImageWindow::requestRegionPick() {
     regionPickRequested = true;
     this->update();
@@ -221,6 +214,32 @@ void ImageWindow::saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, 
     saveProgress->setMinimumDuration(500);
 }
 
+void ImageWindow::stopWorker() {
+    if (thread) {
+        thread->quit();
+        thread->wait();
+        delete thread;
+        delete worker;
+        lastRequestGeo = NULL;
+        worker = NULL;
+        thread = NULL;
+        qDebug("Done!");
+    }
+}
+
+
+void ImageWindow::restartWorker() {
+    qDebug("restarting!");
+    worker = new RenderWorker();
+    thread = new QThread();
+    worker->moveToThread(thread);
+
+    connect(this, SIGNAL(requestRender(EGS_BaseGeometry*,RenderParameters)),
+            worker, SLOT(render(EGS_BaseGeometry*,RenderParameters)));
+    connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
+    connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
+    thread->start();
+}
 
 void ImageWindow::resizeEvent(QResizeEvent *e) {
 #ifdef VIEW_DEBUG
@@ -255,10 +274,15 @@ void ImageWindow::paintBackground(QPainter& p) {
 }
 
 void ImageWindow::paintEvent (QPaintEvent *) {
+    if (!thread) {
+        // in geometry change period
+        return;
+    }
+
     const RenderParameters& q = lastRequest;
     const RenderResults& r = lastResult;
     // only draw if there was already a request
-    if (r.img.isNull()) return;
+    if (r.img.isNull() || lastRequestGeo == NULL) return;
 
     if (rerenderRequested) {
         rerenderRequested = false;
