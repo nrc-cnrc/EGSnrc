@@ -150,8 +150,6 @@ GeometryViewControl::GeometryViewControl(QWidget* parent, const char* name)
 
     m_colors = 0; nmed = 0;
 
-    vis = new EGS_GeometryVisualizer;
-
     gview = new ImageWindow(this,this,"gview");
     nx_last = 512; ny_last = 512;
     gview->resize(nx_last,ny_last);
@@ -264,12 +262,12 @@ void GeometryViewControl::checkboxAxes(bool toggle) {
         showAxesLabels = false;
     else
         showAxesLabels = showAxesLabelsCheckbox->isChecked();
-    gview->requestRender();
+    updateView();
 }
 
 void GeometryViewControl::checkboxAxesLabels(bool toggle) {
     showAxesLabels = toggle;
-    gview->requestRender();
+    updateView();
 }
 
 void GeometryViewControl::checkboxShowRegions(bool toggle) {
@@ -278,10 +276,10 @@ void GeometryViewControl::checkboxShowRegions(bool toggle) {
 
 void GeometryViewControl::checkboxShowTracks(bool toggle) {
     showTracks = toggle;
-    gview->requestRender();
+    updateView();
 }
 
-
+/*
 void GeometryViewControl::regionPick(int x, int y) {
 
     if (!showRegions) return;
@@ -293,6 +291,10 @@ void GeometryViewControl::regionPick(int x, int y) {
     xscreen =  (x-w/2)*projection_x/w;
     yscreen = -(y-h/2)*projection_y/h;
     EGS_Vector xp(screen_xo + screen_v2*yscreen + screen_v1*xscreen);
+
+    // configure visualizer viewport
+    vis->setProjection(camera,screen_xo,screen_v1,screen_v2,projection_x,projection_y);
+
 
     // get regions and colors list
 #define N_REG_MAX 30
@@ -316,7 +318,7 @@ void GeometryViewControl::regionPick(int x, int y) {
         regionsDisplayed=true;
     }
     else if (regionsDisplayed){
-        doRepaint(false);
+        //doRepaint(false);
         regionsDisplayed=false;
     }
     if( regions[0] < 0 ) { p.end(); return; }
@@ -359,7 +361,7 @@ void GeometryViewControl::regionPick(int x, int y) {
     }
     p.end();
 }
-
+*/
 
 void GeometryViewControl::cameraHome() {
 
@@ -562,7 +564,7 @@ projection_y = projection_scale*dfine;
 #endif
 
 // render
-    gview->requestRender();
+    updateView();
 }
 
 // void GeometryViewControl::cameraZoom(int dy) {
@@ -621,7 +623,7 @@ void GeometryViewControl::setCameraPosition() {
         p_light = camera;
         setLightLineEdit();
     }
-    gview->requestRender();
+    updateView();
 }
 
 void GeometryViewControl::startTransformation() {
@@ -637,7 +639,7 @@ void GeometryViewControl::endTransformation() {
     egsWarning("In endTransformation()\n");
 #endif
     in_transformation = false;
-    gview->requestRender();
+    updateView();
     gview->requestRegionPick();
 }
 
@@ -651,7 +653,7 @@ void GeometryViewControl::changeDfine( int newdfine ) {
     projection_y = projection_scale*newdfine;
     dfine = newdfine;
     //egsWarning("dfine = %d projection_x = %g\n",projection_x,dfine);
-    gview->requestRender();
+    updateView();
     //distance = dfine + dCourse->value();
     //setCameraPosition();
 }
@@ -671,7 +673,7 @@ void GeometryViewControl::changeAmbientLight( int alight ) {
     egsWarning("In changeAmbientLight(%d)\n",alight);
 #endif
     a_light = alight;
-    gview->requestRender();
+    updateView();
 }
 
 
@@ -683,7 +685,7 @@ void GeometryViewControl::changeTransperancy( int t ) {
     egsWarning("In changeTransperancy(%d): set color to %d\n",t,m_colors[med]);
 #endif
     setMaterialColor(med);
-    gview->requestRender();
+    updateView();
 }
 
 
@@ -711,7 +713,7 @@ void GeometryViewControl::setLightPosition() {
     if( ok_z ) p_light.z = zz;
     else lightZ->setText(QString("%1").arg((double)p_light.z,0,'g',4));
     if( ok_x || ok_y || ok_z ) {
-        gview->requestRender();
+        updateView();
     }
 }
 
@@ -755,8 +757,10 @@ void GeometryViewControl::loadTracksDialog() {
                                         "Select geometry definition file");
     if ( filename_tracks.isNull() ) return;
     if (strcmp(filename_tracks.toUtf8().constData(), "")) {
-        vis->loadTracksData(filename_tracks.toUtf8().constData());
-        gview->requestRender();
+
+        gview->loadTracks(filename_tracks);
+//        vis->loadTracksData(filename_tracks.toUtf8().constData());
+//        updateView();
     }
 }
 
@@ -813,7 +817,7 @@ void GeometryViewControl::setMaterialColor(int j) {
     EGS_Float g = ((EGS_Float) qGreen(m_colors[j]))/255.;
     EGS_Float b = ((EGS_Float) qBlue(m_colors[j]))/255.;
     EGS_Float alpha = ((EGS_Float) qAlpha(m_colors[j]))/255.;
-    vis->setMaterialColor(j,EGS_Vector(r,g,b),alpha);
+//    vis->setMaterialColor(j,EGS_Vector(r,g,b),alpha);
 }
 
 int GeometryViewControl::setGeometry (
@@ -825,9 +829,8 @@ int GeometryViewControl::setGeometry (
     if( !geom ) { egsWarning("setGeometry(): got null geometry\n"); return 1; }
     g = geom;
 
-    // load the tracks data
-    if (strcmp(filename_tracks.toUtf8().constData(), "")) {
-        vis->loadTracksData(filename_tracks.toUtf8().constData());
+    if (!filename_tracks.isEmpty()) {
+        gview->loadTracks(filename_tracks);
     }
 
 #ifdef VIEW_DEBUG
@@ -1080,9 +1083,58 @@ int GeometryViewControl::setGeometry (
         dfine_home = dfine;
     }
 
-    gview->requestRender();
+    updateView();
 
     return 0;
+}
+
+void GeometryViewControl::updateView() {
+    // transfer
+    RenderParameters& rp = gview->pars;
+    rp.axesmax = axesmax;
+    rp.camera = camera;
+    rp.camera_v1 = camera_v1;
+    rp.camera_v2 = camera_v2;
+    //r.clipping_planes
+    rp.draw_axes = showAxes;
+    rp.draw_axeslabels = showAxesLabels;
+    rp.draw_tracks = showTracks;
+    float a = 0.01 * a_light;
+    rp.global_ambient_light = EGS_Vector(a,a,a);
+
+    rp.lights = vector<EGS_Light>();
+    rp.lights.push_back(EGS_Light(p_light, EGS_Vector(1,1,1)));
+
+    rp.material_colors = vector<EGS_MaterialColor>();
+    for (int j=0;j<nmed;j++) {
+        EGS_Float r = ((EGS_Float) qRed(m_colors[j]))/255.;
+        EGS_Float g = ((EGS_Float) qGreen(m_colors[j]))/255.;
+        EGS_Float b = ((EGS_Float) qBlue(m_colors[j]))/255.;
+        EGS_Float alpha = ((EGS_Float) qAlpha(m_colors[j]))/255.;
+        rp.material_colors.push_back(EGS_MaterialColor(EGS_Vector(r,g,b),alpha));
+    }
+
+    rp.clipping_planes = vector<EGS_ClippingPlane>();
+    for (int j=0;j<cplanes->numPlanes();j++) {
+        EGS_Vector a; EGS_Float d;
+        if (cplanes->getPlane(j,a,d)) {
+            rp.clipping_planes.push_back(EGS_ClippingPlane(a,d));
+        }
+    }
+
+    rp.projection_x = projection_x;
+    rp.projection_y = projection_y;
+    rp.screen_v1 = screen_v1;
+    rp.screen_v2 = screen_v2;
+    rp.screen_xo = screen_xo;
+    rp.show_electrons = showElectronTracks;
+    rp.show_other = showOtherTracks;
+    rp.show_photons = showPhotonTracks;
+    rp.show_positrons = showPositronTracks;
+    rp.size = size;
+    rp.requestType = in_transformation ? Transformation : FullDetail;
+
+    gview->rerender(g);
 }
 
 void GeometryViewControl::updateColorLabel(int med) {
@@ -1106,10 +1158,10 @@ void GeometryViewControl::changeColor() {
         materialCB->setItemIcon(med, pixmap);
         transperancy->setValue( qAlpha(newc) );
         setMaterialColor(med);
-        gview->requestRender();
+        updateView();
     }
 }
-
+/*
 void GeometryViewControl::doRepaint(bool resizing) {
 #ifdef VIEW_DEBUG
     egsWarning("In doRepaint(%d)\n",resizing);
@@ -1142,7 +1194,7 @@ void GeometryViewControl::doRepaint(bool resizing) {
             p.drawText((int)(axeslabels[3].x-3),ny_last-(int)(axeslabels[3].y-3),"z");
         }
     }
-}
+}*/
 
 // #ifdef VIEW_DEBUG
 // void GeometryViewControl::changeImageSize(int w, int h) {
@@ -1154,6 +1206,7 @@ void GeometryViewControl::doRepaint(bool resizing) {
 //     renderImage();
 // }
 
+/*
 void GeometryViewControl::renderImage() {
 #ifdef VIEW_DEBUG
     egsWarning("in renderImage(): image size is %d %d\n",gview->width(),
@@ -1268,7 +1321,7 @@ void GeometryViewControl::renderImage() {
         gview->move(gview_x,gview_y);
         point = gview->pos();
         egsWarning("position after show and move: %d %d\n",point.x(),point.y());
-        */
+        *//*
         gview->show();
     }
     if( full_image ) {
@@ -1279,7 +1332,9 @@ void GeometryViewControl::renderImage() {
         delete t;
     }
 }
+*/
 
+/*
 void GeometryViewControl::drawAxes(int nx, int ny) {
 
     #ifdef VIEW_DEBUG
@@ -1369,7 +1424,7 @@ void GeometryViewControl::drawAxes(int nx, int ny) {
         else if (i1>=0 && i1<nx && j1>=0 && j1<ny)  image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
     }
 }
-
+*/
 
 void GeometryViewControl::saveImage() {
     int res = save_image->exec();
@@ -1385,23 +1440,24 @@ void GeometryViewControl::saveImage() {
     egsWarning("\nAbout to save %dx%d image into file %s in format %s\n\n",
         nx,ny,fname.toUtf8().constData(),format.toUtf8().constData());
 #endif
-    EGS_Vector *cimage = image; bool delete_it = false;
-    if( nx != nx_last || ny != ny_last ) {
-        delete_it = true; cimage = new EGS_Vector [nx*ny];
-        vis->renderImage(g,nx,ny,cimage);
-    }
-    QImage im(nx,ny,QImage::Format_RGB32); int rgb = 0xff << 24;
-    for(int j=0; j<ny; j++) {
-        uint *p = (uint *) im.scanLine(j);
-        for(int i=0; i<nx; i++) {
-            //EGS_Vector v = cimage[i+j*nx];
-            EGS_Vector v = cimage[i+(ny-j-1)*nx];
-            int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
-            *(p+i) = (rgb | (r << 16) | (g << 8) | b);
-        }
-    }
-    im.save(fname,format.toLatin1().constData());
-    if( delete_it ) delete cimage;
+    gview->saveView(g,nx,ny,fname,format);
+//    EGS_Vector *cimage = image; bool delete_it = false;
+//    if( nx != nx_last || ny != ny_last ) {
+//        delete_it = true; cimage = new EGS_Vector [nx*ny];
+//        vis->renderImage(g,nx,ny,cimage);
+//    }
+//    QImage im(nx,ny,QImage::Format_RGB32); int rgb = 0xff << 24;
+//    for(int j=0; j<ny; j++) {
+//        uint *p = (uint *) im.scanLine(j);
+//        for(int i=0; i<nx; i++) {
+//            //EGS_Vector v = cimage[i+j*nx];
+//            EGS_Vector v = cimage[i+(ny-j-1)*nx];
+//            int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
+//            *(p+i) = (rgb | (r << 16) | (g << 8) | b);
+//        }
+//    }
+//    im.save(fname,format.toLatin1().constData());
+//    if( delete_it ) delete cimage;
 }
 
 
@@ -1423,47 +1479,47 @@ void GeometryViewControl::setClippingPlanes() {
 #ifdef VIEW_DEBUG
     egsWarning("In GeometryViewControl::setClippingPlanes():\n");
 #endif
-    vis->clearClippingPlanes();
+//    vis->clearClippingPlanes();
     for(int j=0; j<cplanes->numPlanes(); j++) {
         EGS_Vector a; EGS_Float d;
         if( cplanes->getPlane(j,a,d) ) {
 #ifdef VIEW_DEBUG
             egsWarning("  got plane (%g,%g,%g) %g\n",a.x,a.y,a.z,d);
 #endif
-            vis->addClippingPlane(a,d);
+//            vis->addClippingPlane(a,d);
         }
     }
-    gview->requestRender();
+    updateView();
 }
 
 void GeometryViewControl::renderAndDebugImage() {
     egsWarning("In renderAndDebugImage()\n");
-    vis->renderImage(g,gview->width(),gview->height(),0);
+//    vis->renderImage(g,gview->width(),gview->height(),0);
 }
 
 
 void GeometryViewControl::showPhotonsCheckbox_toggled( bool toggle )
 {
     showPhotonTracks = toggle;
-    gview->requestRender();
+    updateView();
 }
 
 void GeometryViewControl::showElectronsCheckbox_toggled( bool toggle )
 {
     showElectronTracks = toggle;
-    gview->requestRender();
+    updateView();
 }
 
 
 void GeometryViewControl::showPositronsCheckbox_toggled( bool toggle )
 {
     showPositronTracks = toggle;
-    gview->requestRender();
+    updateView();
 }
 
 
 void GeometryViewControl::showOthersCheckbox_toggled( bool toggle )
 {
     showOtherTracks = toggle;
-    gview->requestRender();
+    updateView();
 }

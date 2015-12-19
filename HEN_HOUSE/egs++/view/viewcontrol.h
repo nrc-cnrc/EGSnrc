@@ -67,6 +67,8 @@ public:
     virtual void updateLookAtLineEdit();
     virtual void setMaterialColor( int j );
     virtual int setGeometry( EGS_BaseGeometry * geom, const std::vector<EGS_UserColor> & ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading );
+    virtual void updateView();
+
 
 public slots:
 
@@ -75,7 +77,7 @@ public slots:
     virtual void checkboxAxesLabels( bool toggle );
     virtual void checkboxShowRegions( bool toggle );
     virtual void checkboxShowTracks( bool toggle );
-    virtual void regionPick( int x, int y );
+    //virtual void regionPick( int x, int y );
     virtual void cameraHome();
     virtual void cameraOnAxis( char axis );
     virtual void camera_x();
@@ -106,9 +108,9 @@ public slots:
     virtual void quitApplication();
     virtual void updateColorLabel( int med );
     virtual void changeColor();
-    virtual void doRepaint( bool resizing );
-    virtual void renderImage();
-    virtual void drawAxes( int nx, int ny );
+    //virtual void doRepaint( bool resizing );
+    //virtual void renderImage();
+    //virtual void drawAxes( int nx, int ny );
     virtual void saveImage();
     virtual void showHideOptions();
     virtual void setClippingPlanes();
@@ -165,7 +167,6 @@ protected:
     EGS_Vector p_light;
     EGS_Vector look_at_home;
     EGS_Vector look_at;
-    EGS_GeometryVisualizer *vis;
     EGS_BaseGeometry *g;
     bool showAxes;
     bool showAxesLabels;
