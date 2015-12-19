@@ -49,7 +49,8 @@ win32 {
     DEFINES += VDEBUG
     RC_FILE = egs_view.rc
     LIBS	+= ../dso/$$my_machine/egspp.lib
-    TARGET = ../dso/$$my_machine/egs_view
+    DESTDIR = ../../bin/$$my_machine
+    TARGET = egs_view
 }
 
 unix {
@@ -59,8 +60,6 @@ unix {
         TARGET = ../../bin/$$my_machine/egs_view
     }
     !macx {
-        #LIBS	+= -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp
-        LIBS	+= -L$$hhouse/egs++//dso/$$my_machine -legspp
         DESTDIR = ../../bin/$$my_machine/
        !contains( CONFIG, static ){
          message( "Dynamic build..." )
@@ -70,7 +69,8 @@ unix {
         contains( CONFIG, static ){
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
-            LIBS += -L$$hhouse/egs++//dso/$$my_machine -legspp
+            LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp   # Fixes path to library
+            #LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                                 # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)
             contains( UNAME, 64 ){
                message( "-> 64 bit ($$SNAME)" )

@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     //if( argc < 2 ) egsFatal("\nUsage: %s geometry_file\n\n",argv[0]);
     //QFile file(argv[1]);
 #ifdef VDEBUG
-    debug_output << "Using " << input_file.latin1() << "\n";
+    debug_output << "Using " << input_file.toLatin1().data() << "\n";
     egsSetInfoFunction(Information,my_info_function);
     egsSetInfoFunction(Warning,my_info_function);
     egsSetInfoFunction(Fatal,my_fatal_function);
