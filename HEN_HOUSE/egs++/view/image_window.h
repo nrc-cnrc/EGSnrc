@@ -87,6 +87,7 @@ protected:
 protected slots:
 
     void drawResults(RenderResults,RenderParameters);
+    void handleAbort();
 
 signals:
 
@@ -126,6 +127,7 @@ private:
     RenderParameters lastRequest;
     enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
     EGS_BaseGeometry* lastRequestGeo;
+    RenderRequestType activeRequestType;
 
     // Image saving
     QString saveName;

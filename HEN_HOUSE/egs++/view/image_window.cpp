@@ -78,6 +78,7 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
 ImageWindow::~ImageWindow() {
     stopWorker();
     delete navigationTimer;
+    delete vis;
 };
 
   /* no longer in Qt4. What was this supposed to do?
@@ -182,9 +183,15 @@ void ImageWindow::rerender(EGS_BaseGeometry* geo) {
     // old jobs IFF they are of lower priority than the current one
 
     if (renderState == WorkerIdle) {
+        activeRequestType = pars.requestType;
         emit requestRender(lastRequestGeo,pars);
         renderState = WorkerCalculating;
     } else if (renderState == WorkerCalculating) {
+        // abort only to interrupt a full-detail calculation by a transformation
+        // since the latter makes the former invalid.
+        if (activeRequestType == FullDetail && pars.requestType == Transformation) {
+            worker->abort_location = 1;
+        }
         renderState = WorkerBackordered;
     }
 }
@@ -214,6 +221,8 @@ void ImageWindow::saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, 
 
 void ImageWindow::stopWorker() {
     if (thread) {
+        // stop the present task
+        worker->abort_location = 1;
         thread->quit();
         thread->wait();
         delete thread;
@@ -229,11 +238,11 @@ void ImageWindow::restartWorker() {
     worker = new RenderWorker();
     thread = new QThread();
     worker->moveToThread(thread);
-
     connect(this, SIGNAL(requestRender(EGS_BaseGeometry*,RenderParameters)),
             worker, SLOT(render(EGS_BaseGeometry*,RenderParameters)));
     connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
     connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
+    connect(worker, SIGNAL(aborted()), this, SLOT(handleAbort()));
     thread->start();
 }
 
@@ -513,5 +522,17 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
         applyParameters(vis, lastRequest);
 
         repaint();
+    }
+}
+
+void ImageWindow::handleAbort() {
+    // Clear abort flag on worker.
+    if (worker) {
+        worker->abort_location = 0;
+        if (renderState == WorkerBackordered) {
+            // i.e., another task to run
+            renderState = WorkerIdle;
+            rerender(lastRequestGeo);
+        }
     }
 }

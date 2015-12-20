@@ -114,10 +114,10 @@ public:
     void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
 
     // render the entire image
-    bool renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image);
+    bool renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
 
     // render the particle tracks
-    bool renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image);
+    bool renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
 
     // pick region
     void regionPick(int x, int y);
@@ -205,10 +205,10 @@ void EGS_GeometryVisualizer::addClippingPlane(const EGS_Vector &A, EGS_Float D){
 }
 
 bool EGS_GeometryVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny,
-    EGS_Vector *image) { return p->renderImage(g,nx,ny,image); }
+    EGS_Vector *image, int* abort_location) { return p->renderImage(g,nx,ny,image,abort_location); }
 
 bool EGS_GeometryVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny,
-    EGS_Vector *image) { return p->renderTracks(g,nx,ny,image); }
+    EGS_Vector *image, int* abort_location) { return p->renderTracks(g,nx,ny,image,abort_location); }
 
 EGS_Vector EGS_GeometryVisualizer::getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float track_distance, const EGS_Float track_alpha, const bool track_clip) {
     return p->getColor(x,g,track_distance, track_alpha, track_clip);
@@ -484,7 +484,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor ( const EGS_Vector &x,
     return c;
 }
 
-bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image) {
+bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int* abort_location) {
 
     EGS_Float dx = sx/nx, dy = sx/ny;
     EGS_Float rmax=1, gmax=1, bmax=1;
@@ -497,6 +497,9 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
     for(int j=0; j<ny; j++) {
         EGS_Float yy = -sy/2 + dy*(j+0.5);
         EGS_Vector xy(x_screen + v2_screen*yy);
+        // Stop if abort condition is true
+        if (abort_location && *abort_location)
+            return false;
         for(int i=0; i<nx; i++) {
             EGS_Float xx = -sx/2 + dx*(i+0.5);
             EGS_Vector xp(xy + v1_screen*xx);
@@ -509,7 +512,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
                 // negative z means we have a track, at a distance ttrack = -z
                 if (image[idx].z<0) {
                     ttrack = -image[idx].z;
-                    if ((image[idx].x > 0) || (image[idx].y > 0) && m_tracks) {
+                    if (((image[idx].x > 0) || (image[idx].y > 0)) && m_tracks) {
                         track_alpha = 0.2+0.8*image[idx].y;
                         if (image[idx].x == 1.0) { bCol.x=1; bCol.y=1; bCol.z=0.0; }
                         if (image[idx].x == 2.0) { bCol.x=1.0; bCol.y=0.0; bCol.z=0; }
@@ -540,9 +543,9 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
     return true;
 }
 
-bool EGS_PrivateVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image) {
+bool EGS_PrivateVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int* abort_location) {
     if (m_tracks) {
-        m_tracks->renderTracks(nx, ny, image);
+        return m_tracks->renderTracks(nx, ny, image, abort_location);
     }
     return true;
 }

@@ -99,8 +99,8 @@ public:
                           EGS_Float Alpha=1);
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
-    bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image);
-    bool renderTracks(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image);
+    bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
+    bool renderTracks(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
     EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha, const bool track_clip);
     void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
 

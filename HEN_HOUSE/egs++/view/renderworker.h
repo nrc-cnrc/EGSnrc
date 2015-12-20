@@ -101,6 +101,9 @@ public:
     RenderWorker();
     virtual ~RenderWorker();
 
+    // Set this to a nonzero value to make all renders fail asap.
+    int abort_location;
+
 public slots:
 
     void loadTracks(QString fileName);
@@ -109,6 +112,7 @@ public slots:
 
 signals:
 
+    void aborted();
     void rendered(struct RenderResults, struct RenderParameters params);
 
 private:

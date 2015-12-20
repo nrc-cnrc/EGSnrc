@@ -48,7 +48,7 @@ public:
 
     ~EGS_TrackView();
 
-    void renderTracks(int nx, int ny, EGS_Vector *image);
+    bool renderTracks(int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
 
     void setProjection(EGS_Vector pxo, EGS_Vector px_screen, EGS_Vector pv1_screen,
         EGS_Vector pv2_screen, EGS_Float psx, EGS_Float psy);

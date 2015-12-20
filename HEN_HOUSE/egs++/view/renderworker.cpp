@@ -36,6 +36,7 @@ RenderWorker::RenderWorker() {
     image = NULL;
     nx_last = -1;
     ny_last = -1;
+    abort_location = 0;
 }
 RenderWorker::~RenderWorker() {
     delete vis;
@@ -175,13 +176,17 @@ void RenderWorker::render(EGS_BaseGeometry* g, struct RenderParameters p) {
         vis->setParticleVisibility(2,p.show_electrons);
         vis->setParticleVisibility(3,p.show_positrons);
         vis->setParticleVisibility(4,p.show_other);
-        vis->renderTracks(g,p.nx,p.ny,image);
+        if (!vis->renderTracks(g,p.nx,p.ny,image,&abort_location)) {
+            emit aborted();
+            return;
+        }
     }
     QTime posttracktime = QTime::currentTime();
 
     // render main geometry
-    if (!vis->renderImage(g,p.nx,p.ny,image)) {
-        egsWarning("Error while rendering image\n");
+    if (!vis->renderImage(g,p.nx,p.ny,image,&abort_location)) {
+        emit aborted();
+        return;
     }
 
     // transfer to image
