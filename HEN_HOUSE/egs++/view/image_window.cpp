@@ -40,7 +40,20 @@
 #include <QThread>
 #include <QProgressDialog>
 #include <QTimer>
-#include <QElapsedTimer>
+
+// The below shim exists to ensure that QThread by default
+// runs an event loop for older Qt versions.
+#if QT_VERSION < 0x040400
+class Thread : public QThread {
+public:
+	Thread() : QThread() {}
+	void run() {exec();}
+};
+#else
+typedef QThread Thread;
+#endif
+
+
 
 ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     QWidget(parent,Qt::Window) {
@@ -236,7 +249,7 @@ void ImageWindow::stopWorker() {
 
 void ImageWindow::restartWorker() {
     worker = new RenderWorker();
-    thread = new QThread();
+    thread = new Thread();
     worker->moveToThread(thread);
     connect(this, SIGNAL(requestRender(EGS_BaseGeometry*,RenderParameters)),
             worker, SLOT(render(EGS_BaseGeometry*,RenderParameters)));

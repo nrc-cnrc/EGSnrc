@@ -32,7 +32,8 @@
 #include "egs_visualizer.h"
 #include "egs_light.h"
 
-#include "qimage.h"
+#include <qobject.h>
+#include <qimage.h>
 
 #include <vector>
 
