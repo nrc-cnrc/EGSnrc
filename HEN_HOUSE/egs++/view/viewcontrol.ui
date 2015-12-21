@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <comment>
 ###############################################################################
@@ -243,7 +242,7 @@
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_2">
                <item>
-                <widget class="QSlider" name="transperancy">
+                <widget class="QSlider" name="transparency">
                  <property name="maximum">
                   <number>255</number>
                  </property>
@@ -1013,7 +1012,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>transperancy</sender>
+   <sender>transparancy</sender>
    <signal>sliderReleased()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>endTransformation()</slot>
@@ -1029,7 +1028,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>transperancy</sender>
+   <sender>transparency</sender>
    <signal>sliderPressed()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>startTransformation()</slot>
@@ -1045,10 +1044,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>transperancy</sender>
-   <signal>sliderMoved(int)</signal>
+   <sender>transparency</sender>
+   <signal>valueChanged(int)</signal>
    <receiver>GeometryViewControl</receiver>
-   <slot>changeTransperancy(int)</slot>
+   <slot>changeTransparency(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -1094,7 +1093,7 @@
   </connection>
   <connection>
    <sender>ambientLight</sender>
-   <signal>sliderMoved(int)</signal>
+   <signal>valueChanged(int)</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>changeAmbientLight(int)</slot>
    <hints>

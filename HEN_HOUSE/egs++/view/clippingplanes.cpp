@@ -33,6 +33,7 @@
 #include "egs_libconfig.h"
 
 #include <qstring.h>
+#include <qheaderview.h>
 
 #ifdef VIEW_DEBUG
 extern void (* egsWarning)(const char*, ...);

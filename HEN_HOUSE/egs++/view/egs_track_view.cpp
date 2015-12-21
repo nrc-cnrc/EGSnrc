@@ -57,13 +57,17 @@ EGS_TrackView::~EGS_TrackView() {
     // nothing to do -> pass execution to parent Destructor
 }
 
-void EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image) {
+bool EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image, int* abort_location) {
     EGS_Vector tmpv(0,0,0), tmpv2(0,0,0), tmpv3(0,0,0);
     int di, xxx1, xxx2, yyy1, yyy2;
     double e1, e2, dst1, dst2;
     double xx1, xx2, yy1, yy2, s1, s2, dx, dy, dd, de, cx, cy, gd, ge;
 
     for (int i = 0; i < m_nTracks; i++) {
+
+        if (abort_location && *abort_location) {
+            return false;
+        }
 
         // no reason to render the track if it has less than 2 vertices
         if (m_buffer[i]->getNumVertices() < 2) continue;
@@ -208,6 +212,7 @@ void EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image) {
             xxx1 = xxx2; yyy1 = yyy2; e1 = e2; dst1 = dst2;
         }
     }
+    return true;
 }
 
 void EGS_TrackView::setProjection(EGS_Vector pxo, EGS_Vector px_screen, EGS_Vector pv1_screen,
