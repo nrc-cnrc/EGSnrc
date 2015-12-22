@@ -176,6 +176,9 @@ void ImageWindow::rerender(EGS_BaseGeometry* geo) {
                         nx,ny,nnx,nny,nxr,nyr);
 #endif
                 nx = nnx; ny = nny;
+            } else {
+                nxr = 1;
+                nyr = 1;
             }
         } else {
             // First-time scale values.
@@ -268,17 +271,18 @@ void ImageWindow::startTransformation() {
 void ImageWindow::endTransformation() {
     navigationTimer->stop();
     navigating = false;
-    render(lastRequestGeo, false);
+    if (lastRequestGeo) {
+        render(lastRequestGeo, false);
+    }
 }
 
 void ImageWindow::resizeEvent(QResizeEvent *e) {
 #ifdef VIEW_DEBUG
     egsWarning("In resizeEvent(): size is %d %d old size is: %d %d" " shown: %d\n",width(),height(),e->oldSize().width(), e->oldSize().height(),isVisible());
 #endif
-    // TODO make resizing count as a transformation-event
     QWidget::resizeEvent(e);
 
-    if (e->size() != e->oldSize()) {
+    if (e->size() != e->oldSize() && lastRequestGeo) {
         // treat this as a transformation, since more resizes tend to follow
         startTransformation();
         render(lastRequestGeo, false);
