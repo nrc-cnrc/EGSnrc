@@ -845,7 +845,7 @@ int GeometryViewControl::setGeometry(
     materialCB->clear();
     m_colors = new QRgb [nmed];
     for (int j=0; j<nmed; j++) {
-        materialCB->insertItem(j,g->getMediumName(j));
+        materialCB->insertItem(j, g->getMediumName(j));
     }
     int nstandard = sizeof(standard_red)/sizeof(unsigned char);
     int js = 0;
