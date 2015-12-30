@@ -587,7 +587,7 @@ public:
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Float x,y; getPointInCircle(rndm,x,y);
         EGS_Float z = h*(rndm->getUniform()-0.5);
-        return EGS_Vector(x,y,z);
+        return EGS_Vector(x,y,z) + xo;
     };
 
     /*! Creates and returns a pointer to a cylinder shape from the information
