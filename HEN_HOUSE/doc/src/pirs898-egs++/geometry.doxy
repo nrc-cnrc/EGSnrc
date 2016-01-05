@@ -914,11 +914,11 @@ planes as a CD-geometry:
 
 This is a view of the resulting brachytherapy seed with
 the titanium and air media made semi-transparent:
-\image html i6702.png
+\image html I6702b.png
 and here is an alternative view with 2 clipping planes
 with normals along the z- and x-axis passing through the origin
 used to remove 3/4 of the geometry for better viewing the inside:
-\image html i6702a.png
+\image html I6702c.png
 
 This is the complete geometry definition file, which has
 been created by Ernesto Mainegra (Note the
