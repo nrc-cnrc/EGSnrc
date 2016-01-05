@@ -2853,9 +2853,9 @@ REPLACE {;COMIN/USER-CS-ENHANCEMENT/;} WITH {;
 REPLACE {;COMIN/USER-BCSE/;} WITH {;
     COMMON/BCSE/ BCSE_FACTOR_C,BCSE_POWER_N,BCSE_FACTOR,ENPOLD_ORGNL,
                  is_bcse_medium($MXMED),
-                 MED_BCSE,NBRSPL_ORGNL,USE_BCSE;
+                 MED_BCSE,NBRSPL_ORGNL,nmed_enhance,USE_BCSE;
     $LOGICAL     USE_BCSE,is_bcse_medium;
-    $INTEGER     MED_BCSE,NBRSPL_ORGNL;
+    $INTEGER     MED_BCSE,NBRSPL_ORGNL,nmed_enhance;
     $REAL        BCSE_FACTOR_C,BCSE_POWER_N,BCSE_FACTOR,ENPOLD_ORGNL;
 };
 
@@ -7610,7 +7610,7 @@ IF(IBRSPL =  1 | IBRSPL=2)[
       WRITE(IOUTLIST,101)$MAXBRSPLIT,NBRSPL;
    101 FORMAT(//' ***WARNING***'/
          ' NBRSPL > $MAXBRSPLIT '/
-         ' NBRSPL reduced to ',I10,' from ',I10//);
+         ' NBRSPL reduced to max = ',I10,' from ',I10//);
       NBRSPL=$MAXBRSPLIT;
     ]
     IF($MXSTACK<4*NBRSPL)[
@@ -8250,7 +8250,7 @@ $IMPLICIT-NONE;
 "T>****************************
 "T>
 ;INTEGER
-   I,I1,I2,I3,J,JJ, "T>DO loop indices
+   I,I1,I2,I3,J,JJ,kk, "T>DO loop indices
    I3MAX, "T>limit of number of media for listing
    IOUT,  "T>output unit number
    IRL,   "T>region number"
@@ -8344,6 +8344,30 @@ ELSEIF(IBRSPL = 2)[
       ]
     ]
 ]
+
+IF(USE_BCSE) [
+   WRITE(IOUTLIST,:new2:) nmed_enhance;
+   :new2: FORMAT(/T20,'Brem. cross section enhancement WILL be used'/
+   T20,' The following ',I2,' media will be enhanced:');
+   DO i=1,$MXMED [
+       IF( is_bcse_medium(i) ) [
+          WRITE(IOUTLIST,'(T20,24a1)') (media(kk,i),kk=1,24);
+       ]
+   ]
+   IF( BCSE_POWER_N > 0 ) [
+    WRITE(IOUTLIST,:new3:) BCSE_FACTOR_C,BCSE_POWER_N;
+    :new3: FORMAT(T20,' Enhancement factor will be 1 + C*E**N WITH C = ',
+               1PE14.6,' N = ',0PF9.2);
+   ]
+   ELSE [
+       WRITE(IOUTLIST,:new4:) BCSE_FACTOR_C;
+       :new4: FORMAT(T20,' Constant enhancement factor  =',F12.2);
+   ]
+]"end of using BCSE block"
+ELSE [ WRITE(IOUTLIST,:new1:);
+  :new1: FORMAT(T20,'Brem. cross section enhancement WILL NOT be used');
+]
+
 IF(IBRSPL=1)[
   IF(IRRLTT >=  1)[WRITE(IOUTLIST,2282);] ELSE [WRITE(IOUTLIST,2283);]
 ]
@@ -13500,7 +13524,7 @@ IF( error_flags(ival-1) = 0 & error_flags(ival) = 0 ) [
             IF( cs_enhance(i) > 1 ) [ use_cs_enhance = .true.; EXIT; ]
         ]
         IF( use_cs_enhance ) [
-            OUTPUT; (//'********** Cross section enhancement will be used',
+            OUTPUT; (//'********** Photon cross section enhancement will be used',
                     ' in the following CMs: ******');
             DO i=1,$MAX_CMs [
                 IF( cs_enhance(i) > 1 ) [
@@ -13513,7 +13537,7 @@ IF( error_flags(ival-1) = 0 & error_flags(ival) = 0 ) [
         ]
     ]
 ]
-OUTPUT; (//'************* Cross section enhancement will not be used'//);
+OUTPUT; (//'************* Photon cross section enhancement will not be used'//);
 
 return; end;
 
@@ -13616,7 +13640,7 @@ SUBROUTINE GET_BCSE_PARAMETERS;
 
 IMPLICIT NONE;
 
-;COMIN/MEDIA,ELECIN,GetInput,
+;COMIN/MEDIA,ELECIN,GetInput,IO_INFO,
        USER-BCSE,USER-SPLITTING,EGS-VARIANCE-REDUCTION,EGS-IO/;
 
 $REAL    EIL,
@@ -13626,7 +13650,7 @@ $REAL    EIL,
          SIGE_I,SIGE_II,SIGP_I,SIGP_II,EDEDX,PDEDX;
 $LOGICAL is_ok;
 
-$INTEGER I,k,MEDIUM,egs_add_medium,nmed_i,nmed_enhance,lnblnk1,nlen;
+$INTEGER I,k,MEDIUM,egs_add_medium,nmed_i,lnblnk1,nlen;
 
 DO I=1,$MXMED [ is_bcse_medium(i) = .false.; ]
 
