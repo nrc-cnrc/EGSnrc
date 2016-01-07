@@ -84,7 +84,7 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
     if( prob.size() < nsource ) nsource = prob.size();
     description = "Invalid source collection";
     if( isValid() ) {
-        p = new EGS_Float [nsource]; EGS_Float *dum = new EGS_Float [nsource];
+        p = new EGS_Float [nsource];
         sources = new EGS_BaseSource* [nsource];
         Emax = 0;
         for(int j=0; j<nsource; j++) {
@@ -93,16 +93,15 @@ void EGS_SourceCollection::setUp(const vector<EGS_BaseSource *> &S,
                 if( p[j] < 0 ) egsWarning("EGS_SourceCollection: input "
                      "probability p[%d]=%g is less than zero.\n",j,p[j]);
                 else egsWarning("EGS_SourceCollection: source %d is null\n",j);
-                delete [] p; delete [] dum;
+                delete [] p;
                 for(int i=0; i<j; j++) EGS_Object::deleteObject(sources[i]);
                 delete [] sources; nsource = 0; return;
             }
-            dum[j] = 1; sources[j]->ref();
+            sources[j]->ref();
             EGS_Float e = sources[j]->getEmax();
             if( e > Emax ) Emax = e;
         }
-        table = new EGS_AliasTable(nsource,dum,p,0);
-        delete [] dum;
+        table = new EGS_SimpleAliasTable(nsource,p);
         description = "Source collection";
         last_cases = new EGS_I64 [ nsource ];
         for(int i=0; i<nsource; i++) last_cases[i] = 0;
