@@ -94,22 +94,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_DOSE_SCORING_DLL
-#define EGS_DOSE_SCORING_EXPORT __declspec(dllexport)
-#else
-#define EGS_DOSE_SCORING_EXPORT __declspec(dllimport)
-#endif
-#define EGS_DOSE_SCORING_LOCAL
+    #ifdef BUILD_DOSE_SCORING_DLL
+        #define EGS_DOSE_SCORING_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_DOSE_SCORING_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_DOSE_SCORING_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_DOSE_SCORING_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_DOSE_SCORING_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_DOSE_SCORING_EXPORT
-#define EGS_DOSE_SCORING_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_DOSE_SCORING_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_DOSE_SCORING_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_DOSE_SCORING_EXPORT
+        #define EGS_DOSE_SCORING_LOCAL
+    #endif
 
 #endif
 
@@ -177,25 +177,31 @@ public:
         EGS_Float edep = app->getEdep();
 
         /**** energy deposition in a medium ***/
-        if( iarg <= 4 && imed >= 0 && edep > 0 && doseM) {
-          doseM->score(imed, edep*app->top_p.wt);
+        if (iarg <= 4 && imed >= 0 && edep > 0 && doseM) {
+            doseM->score(imed, edep*app->top_p.wt);
         }
 
         /*** Check if scoring in current region ***/
-        if (dose){
-           if (d_reg_index[ir]<0) return 0;
+        if (dose) {
+            if (d_reg_index[ir]<0) {
+                return 0;
+            }
         }
 
         /**** energy deposition in current region ***/
-        if( iarg <= 4 && ir >= 0 && edep > 0 && dose) {
-          dose->score(d_reg_index[ir], edep*app->top_p.wt);
+        if (iarg <= 4 && ir >= 0 && edep > 0 && dose) {
+            dose->score(d_reg_index[ir], edep*app->top_p.wt);
         }
         return 0;
     };
 
     bool needsCall(EGS_Application::AusgabCall iarg) const {
-         if( iarg <= 4 ) return true;
-         else            return false;
+        if (iarg <= 4) {
+            return true;
+        }
+        else {
+            return false;
+        }
     };
 
     void setApplication(EGS_Application *App);
@@ -203,24 +209,42 @@ public:
     void reportResults();
 
     void setCurrentCase(EGS_I64 ncase) {
-        if( ncase != m_lastCase ) {
+        if (ncase != m_lastCase) {
             m_lastCase = ncase;
-            if (dose)  dose->setHistory(ncase);
-            if (doseM) doseM->setHistory(ncase);
+            if (dose) {
+                dose->setHistory(ncase);
+            }
+            if (doseM) {
+                doseM->setHistory(ncase);
+            }
         }
     };
-    int getDigits(int i){
+    int getDigits(int i) {
         int imax = 10;
-        while(i>=imax){imax*=10;}
+        while (i>=imax) {
+            imax*=10;
+        }
         return (int)log10((float)imax);
     };
 
-    void setVol(const vector<EGS_Float> volin){vol_list=volin;};
-    void setVol(const EGS_Float volin){vol_list.push_back(volin);};
-    void setDoseRegions(const vector <int> d_reg){d_region=d_reg;};
-    void setMediumScoring(bool flag){score_medium_dose=flag;};
-    void setRegionScoring(bool flag){score_region_dose=flag;};
-    void setUserNorm(const EGS_Float & normi){norm_u=normi;};
+    void setVol(const vector<EGS_Float> volin) {
+        vol_list=volin;
+    };
+    void setVol(const EGS_Float volin) {
+        vol_list.push_back(volin);
+    };
+    void setDoseRegions(const vector <int> d_reg) {
+        d_region=d_reg;
+    };
+    void setMediumScoring(bool flag) {
+        score_medium_dose=flag;
+    };
+    void setRegionScoring(bool flag) {
+        score_region_dose=flag;
+    };
+    void setUserNorm(const EGS_Float &normi) {
+        norm_u=normi;
+    };
 
     bool storeState(ostream &data) const;
     bool setState(istream &data);
@@ -230,20 +254,20 @@ public:
 
 protected:
 
-  EGS_ScoringArray *dose;  //!< Scoring in each dose scoring region
-  EGS_ScoringArray *doseM;  //!< Scoring dose in each medium
-  vector <EGS_Float>  vol_list; // Input list of region volumes
-  vector <int> d_region;        // Input list of dose scoring regions  d_reg[i] = ir
-  vector <int> d_reg_index;     // list index for dose scoring regions d_reg_index[ir]= 0..d_reg.size()-1
-  vector <EGS_Float>  vol;      // geometrical region volumes
-  EGS_Float norm_u;
-  int nreg,     // number of regions in the geometry
-      nmedia;   // number of media in the input file
-  int max_dreg, // maximum dose region number
-      max_medl; // maximum medium name length
-  EGS_I64    m_lastCase;   //!< The event set via setCurrentCase()
-  bool score_medium_dose,
-       score_region_dose;
+    EGS_ScoringArray *dose;  //!< Scoring in each dose scoring region
+    EGS_ScoringArray *doseM;  //!< Scoring dose in each medium
+    vector <EGS_Float>  vol_list; // Input list of region volumes
+    vector <int> d_region;        // Input list of dose scoring regions  d_reg[i] = ir
+    vector <int> d_reg_index;     // list index for dose scoring regions d_reg_index[ir]= 0..d_reg.size()-1
+    vector <EGS_Float>  vol;      // geometrical region volumes
+    EGS_Float norm_u;
+    int nreg,     // number of regions in the geometry
+        nmedia;   // number of media in the input file
+    int max_dreg, // maximum dose region number
+        max_medl; // maximum medium name length
+    EGS_I64    m_lastCase;   //!< The event set via setCurrentCase()
+    bool score_medium_dose,
+         score_region_dose;
 };
 
 #endif

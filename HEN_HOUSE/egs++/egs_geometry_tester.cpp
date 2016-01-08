@@ -111,7 +111,7 @@ private:
     void setTest(EGS_Input *i, const char *delim, int &n, EGS_BaseShape **s);
 
     int beginTest(int n, const EGS_BaseShape *s, const char *func,
-            const char *name, const EGS_BaseGeometry *g);
+                  const char *name, const EGS_BaseGeometry *g);
 
 };
 #endif
@@ -120,9 +120,13 @@ EGS_GeometryTester::EGS_GeometryTester(EGS_Input *i) {
     p = new EGS_PrivateTester(this,i);
 }
 
-EGS_GeometryTester::~EGS_GeometryTester() { delete p; }
+EGS_GeometryTester::~EGS_GeometryTester() {
+    delete p;
+}
 
-void EGS_GeometryTester::testInside(EGS_BaseGeometry *g) { p->testInside(g); }
+void EGS_GeometryTester::testInside(EGS_BaseGeometry *g) {
+    p->testInside(g);
+}
 
 void EGS_GeometryTester::testInsideTime(EGS_BaseGeometry *g) {
     p->testInsideTime(g);
@@ -149,22 +153,36 @@ void EGS_GeometryTester::printPosition(const EGS_Vector &x) {
 };
 
 #ifndef SKIP_DOXYGEN
-EGS_PrivateTester::EGS_PrivateTester(EGS_GeometryTester *p, EGS_Input *input){
-    if( !p ) egsFatal("EGS_PrivateTester::EGS_PrivateTester:\n"
-          " attempt to construct a tester with a null parent\n");
-    parent = p; rndm = 0; n_inside = 0; n_inside_time = 0;
-    n_hownear = 0; n_hownear_time = 0; n_howfar = 0; n_howfar_time = 0;
-    inside_shape = 0; inside_time_shape = 0;
-    hownear_shape = 0; howfar_shape = 0;
+EGS_PrivateTester::EGS_PrivateTester(EGS_GeometryTester *p, EGS_Input *input) {
+    if (!p) egsFatal("EGS_PrivateTester::EGS_PrivateTester:\n"
+                         " attempt to construct a tester with a null parent\n");
+    parent = p;
+    rndm = 0;
+    n_inside = 0;
+    n_inside_time = 0;
+    n_hownear = 0;
+    n_hownear_time = 0;
+    n_howfar = 0;
+    n_howfar_time = 0;
+    inside_shape = 0;
+    inside_time_shape = 0;
+    hownear_shape = 0;
+    howfar_shape = 0;
     hownear_time_shape = 0;
-    howfar_time_shape = 0; hownear_shape = 0;
+    howfar_time_shape = 0;
+    hownear_shape = 0;
     store_steps = true;
     check_infinity = true;
-    fp_info = stdout; fp_warn = stderr;
-    fp_inside = stdout; fp_hownear = stdout; fp_howfar = stdout;
+    fp_info = stdout;
+    fp_warn = stderr;
+    fp_inside = stdout;
+    fp_hownear = stdout;
+    fp_howfar = stdout;
 
     rndm = EGS_RandomGenerator::createRNG(input);
-    if ( !rndm ) rndm = EGS_RandomGenerator::defaultRNG();
+    if (!rndm) {
+        rndm = EGS_RandomGenerator::defaultRNG();
+    }
 
     setTest(input,"inside test",n_inside,&inside_shape);
     fp_inside = fp_this_test;
@@ -184,47 +202,57 @@ EGS_PrivateTester::EGS_PrivateTester(EGS_GeometryTester *p, EGS_Input *input){
 }
 
 void EGS_PrivateTester::setTest(EGS_Input *input, const char *delim, int &n,
-        EGS_BaseShape **s) {
+                                EGS_BaseShape **s) {
     EGS_Input *i = input->takeInputItem(delim);
-    if( !i ) fprintf(fp_warn,"EGS_PrivateTester::EGS_setTest: \n"
-            "  no '%s' specification\n",delim);
+    if (!i) fprintf(fp_warn,"EGS_PrivateTester::EGS_setTest: \n"
+                        "  no '%s' specification\n",delim);
     else {
         string shape_name;
         int ierr = i->getInput("bounding shape name",shape_name);
         EGS_BaseShape *shape = 0;
-        if( !ierr ) shape = EGS_BaseShape::getShape(shape_name);
-        if( !shape ) {
+        if (!ierr) {
+            shape = EGS_BaseShape::getShape(shape_name);
+        }
+        if (!shape) {
             EGS_Input *ishape = i->takeInputItem("bounding shape");
-            if( !ishape ) fprintf(fp_warn,"EGS_PrivateTester::EGS_setTest: \n"
-                    "  no 'bounding shape' definition for %s\n",delim);
+            if (!ishape) fprintf(fp_warn,"EGS_PrivateTester::EGS_setTest: \n"
+                                     "  no 'bounding shape' definition for %s\n",delim);
             else {
                 shape = EGS_BaseShape::createShape(ishape);
                 delete ishape;
             }
         }
-        if( !shape ) fprintf(fp_warn,"EGS_PrivateTester::EGS_PrivateTester:"
-                    "\n  got null shape for %s\n",delim);
-        else { shape->ref(); *s = shape; }
+        if (!shape) fprintf(fp_warn,"EGS_PrivateTester::EGS_PrivateTester:"
+                                "\n  got null shape for %s\n",delim);
+        else {
+            shape->ref();
+            *s = shape;
+        }
         int err = i->getInput("ntest",n);
-        if( err ) fprintf(fp_warn,"EGS_PrivateTester::setTest: \n"
-                "  missing/wrong 'ntest' input for %s\n",delim);
-        string fname; fp_this_test = stdout;
+        if (err) fprintf(fp_warn,"EGS_PrivateTester::setTest: \n"
+                             "  missing/wrong 'ntest' input for %s\n",delim);
+        string fname;
+        fp_this_test = stdout;
         err = i->getInput("file name",fname);
-        if( !err && fname.size() > 0 ) {
+        if (!err && fname.size() > 0) {
             fp_this_test = fopen(fname.c_str(),"w");
-            if( !fp_this_test ) {
+            if (!fp_this_test) {
                 fprintf(fp_warn,"EGS_PrivateTester::setTest: \n"
-                  "  failed to open file %s from writing\n",fname.c_str());
+                        "  failed to open file %s from writing\n",fname.c_str());
                 fp_this_test = stdout;
             }
         }
-        int ci; err = i->getInput("check infinity",ci);
-        if( !err && ci == 0 ) check_infinity = false;
+        int ci;
+        err = i->getInput("check infinity",ci);
+        if (!err && ci == 0) {
+            check_infinity = false;
+        }
 
         string delimeter(delim);
-        if( delimeter == "howfar time test") {
-            string ss; i->getInput("store steps",ss);
-            if( ss == "no" || ss == "0" ) {
+        if (delimeter == "howfar time test") {
+            string ss;
+            i->getInput("store steps",ss);
+            if (ss == "no" || ss == "0") {
                 fprintf(fp_info,"will not store steps in howfar test\n");
                 store_steps = false;
             }
@@ -235,27 +263,36 @@ void EGS_PrivateTester::setTest(EGS_Input *input, const char *delim, int &n,
 }
 
 void EGS_PrivateTester::testInside(EGS_BaseGeometry *g) {
-    if( beginTest(n_inside,inside_shape,"testInside()","inside test",g) )
+    if (beginTest(n_inside,inside_shape,"testInside()","inside test",g)) {
         return;
-    int n_in = 0; fp_this_test = fp_inside;
-    for(int j=0; j<n_inside; j++) {
+    }
+    int n_in = 0;
+    fp_this_test = fp_inside;
+    for (int j=0; j<n_inside; j++) {
         EGS_Vector x = inside_shape->getRandomPoint(rndm);
         int ireg = g->inside(x);
-        if( ireg >= 0 ) { n_in++; parent->printPosition(x); }
+        if (ireg >= 0) {
+            n_in++;
+            parent->printPosition(x);
+        }
     }
     fprintf(fp_info,"finished inside test. Point inside: %d (%g)\n",
             n_in,((double) n_in)/((double) n_inside));
 }
 
 void EGS_PrivateTester::testInsideTime(EGS_BaseGeometry *g) {
-    if( beginTest(n_inside_time,inside_time_shape,"testInsideTime()",
-                "inside time test",g) ) return;
+    if (beginTest(n_inside_time,inside_time_shape,"testInsideTime()",
+                  "inside time test",g)) {
+        return;
+    }
     int n_in = 0;
     EGS_Timer t;
-    for(int j=0; j<n_inside_time; j++) {
+    for (int j=0; j<n_inside_time; j++) {
         EGS_Vector x = inside_time_shape->getRandomPoint(rndm);
         int ireg = g->inside(x);
-        if( ireg >= 0 ) n_in++;
+        if (ireg >= 0) {
+            n_in++;
+        }
     }
     EGS_Float cpu = t.time();
     fprintf(fp_info,"finished inside time test.\n");
@@ -265,26 +302,29 @@ void EGS_PrivateTester::testInsideTime(EGS_BaseGeometry *g) {
 }
 
 void EGS_PrivateTester::testHownear(int ntry, EGS_BaseGeometry *g) {
-    if( ntry < 1 ) {
+    if (ntry < 1) {
         fprintf(fp_warn,"EGS_GeometryTester::testHownear(): ntry must be >0\n");
         return;
     }
-    if( beginTest(n_hownear,hownear_shape,"testHownear()","hownear test",g) )
+    if (beginTest(n_hownear,hownear_shape,"testHownear()","hownear test",g)) {
         return;
+    }
     int n_fail = 0;
-    for(int j=0; j<n_hownear; j++) {
+    for (int j=0; j<n_hownear; j++) {
         EGS_Vector x = hownear_shape->getRandomPoint(rndm);
-        int ireg = g->inside(x); EGS_Float tperp = g->hownear(ireg,x);
-        for(int i=0; i<ntry; i++) {
+        int ireg = g->inside(x);
+        EGS_Float tperp = g->hownear(ireg,x);
+        for (int i=0; i<ntry; i++) {
             EGS_Float cost = 2*rndm->getUniform()-1;
             EGS_Float sint = tperp*sqrt(1-cost*cost);
-            EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+            EGS_Float cphi, sphi;
+            rndm->getAzimuth(cphi,sphi);
             EGS_Vector xi(x.x+sint*cphi,x.y+sint*sphi,x.z+tperp*cost);
             int ireg_i = g->inside(xi);
-            if( ireg_i != ireg ) {
+            if (ireg_i != ireg) {
                 n_fail++;
                 fprintf(fp_hownear," point (%g,%g,%g) with tperp=%g fails for "
-           "(%g,%g,%g): %d %d\n",x.x,x.y,x.z,tperp,xi.x,xi.y,xi.z,ireg,ireg_i);
+                        "(%g,%g,%g): %d %d\n",x.x,x.y,x.z,tperp,xi.x,xi.y,xi.z,ireg,ireg_i);
             }
         }
     }
@@ -293,11 +333,13 @@ void EGS_PrivateTester::testHownear(int ntry, EGS_BaseGeometry *g) {
 }
 
 void EGS_PrivateTester::testHownearTime(EGS_BaseGeometry *g) {
-    if( beginTest(n_hownear_time,hownear_time_shape,"testHownearTime()",
-                "hownear time test",g) ) return;
+    if (beginTest(n_hownear_time,hownear_time_shape,"testHownearTime()",
+                  "hownear time test",g)) {
+        return;
+    }
     double sum_tperp = 0;
     EGS_Timer t;
-    for(int j=0; j<n_hownear_time; j++) {
+    for (int j=0; j<n_hownear_time; j++) {
         EGS_Vector x = hownear_time_shape->getRandomPoint(rndm);
         int ireg = g->inside(x);
         sum_tperp += g->hownear(ireg,x);
@@ -314,13 +356,14 @@ void EGS_PrivateTester::testHownearTime(EGS_BaseGeometry *g) {
 void EGS_PrivateTester::testHowfar(EGS_BaseGeometry *g, bool time) {
     EGS_Vector positions[N_MAX_STEP];
     int regions[N_MAX_STEP];
-    int btest; int ncase;
+    int btest;
+    int ncase;
     EGS_BaseShape *hshape;
     bool ss;
-    if( time ) {
+    if (time) {
         ncase = n_howfar_time;
         btest = beginTest(n_howfar_time,howfar_time_shape,"testHowfarTime()",
-                  "howfar time test",g);
+                          "howfar time test",g);
         hshape = howfar_time_shape;
         ss = store_steps;
         fprintf(fp_info,"Store steps: %d\n",ss);
@@ -331,17 +374,21 @@ void EGS_PrivateTester::testHowfar(EGS_BaseGeometry *g, bool time) {
         hshape = howfar_shape;
         ss = true;
     }
-    if (btest) return;
+    if (btest) {
+        return;
+    }
     const EGS_AffineTransform *T = hshape->getTransform();
     egsWarning("has transofrmation: %d\n",(T != 0));
     //EGS_BaseGeometry::geometry_error = &__geometry_error;
-    EGS_Timer timer; fp_this_test = fp_howfar;
+    EGS_Timer timer;
+    fp_this_test = fp_howfar;
     double nstep = 0;
-    for(int j=0; j<ncase; j++) {
+    for (int j=0; j<ncase; j++) {
         EGS_Vector x = hshape->getRandomPoint(rndm);
         EGS_Float cost = 2*rndm->getUniform()-1;
         EGS_Float sint = sqrt(1-cost*cost);
-        EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+        EGS_Float cphi, sphi;
+        rndm->getAzimuth(cphi,sphi);
         EGS_Vector u(sint*cphi,sint*sphi,cost);
         EGS_Vector Xo(x);
         bool go_back = true;
@@ -350,23 +397,30 @@ retry:
         //if( !go_back ) egsWarning("Initial position: (%g,%g,%g) direction: "
         //      "(%g,%g,%g)\n",x.x,x.y,x.z,u.x,u.y,u.z);
         EGS_Float t_step = 1e15;
-        int ireg = g->inside(x); int ireg_first = ireg;
+        int ireg = g->inside(x);
+        int ireg_first = ireg;
         ireg = g->howfar(ireg,x,u,t_step);
-        if( ireg < 0 && ireg != ireg_first && !time ) {
+        if (ireg < 0 && ireg != ireg_first && !time) {
             EGS_Vector tmp(x + u*t_step);
             parent->printPosition(tmp);
         }
         //egsWarning("ireg: %d new_ireg: %d t = %g\n",ireg_first,ireg,t_step);
         int n_step = 0;
-        if( ireg >= 0 ) {
-           x += u*t_step;
-           if( ss ) { positions[n_step] = x; regions[n_step++] = ireg; }
-           if (!time ) parent->printPosition(x);
+        if (ireg >= 0) {
+            x += u*t_step;
+            if (ss) {
+                positions[n_step] = x;
+                regions[n_step++] = ireg;
+            }
+            if (!time) {
+                parent->printPosition(x);
+            }
         }
         //if( !go_back && ireg >= 0 ) egsWarning("Starting loop: ireg=%d "
         //       "x=(%g,%g,%g)\n",ireg,x.x,x.y,x.z);
-        while( ireg >= 0 ) {
-            t_step = 1e15; int ireg_new = g->howfar(ireg,x,u,t_step);
+        while (ireg >= 0) {
+            t_step = 1e15;
+            int ireg_new = g->howfar(ireg,x,u,t_step);
             //if( !go_back ) egsWarning("new region=%d step=%g x=(%g,%g,%g)\n",
             //        ireg_new,t_step,x.x,x.y,x.z);
             //if( __geometry_error ) {
@@ -376,52 +430,59 @@ retry:
             //        go_back = false; x = Xo; goto retry;
             //    }
             //}
-            if( ireg_new == ireg ) break;
-              // if the above condition is true,
-              // we assume to be in an anfinite geometry with a direction
-              // such that we never get out.
+            if (ireg_new == ireg) {
+                break;
+            }
+            // if the above condition is true,
+            // we assume to be in an anfinite geometry with a direction
+            // such that we never get out.
             ireg = ireg_new;
-            x += u*t_step; nstep += 1;
-            if( ss ) {
-                positions[n_step] = x; regions[n_step++] = ireg;
-                if( n_step >= N_MAX_STEP ) {
-                    if( go_back ) {
+            x += u*t_step;
+            nstep += 1;
+            if (ss) {
+                positions[n_step] = x;
+                regions[n_step++] = ireg;
+                if (n_step >= N_MAX_STEP) {
+                    if (go_back) {
                         egsWarning("testHowfar(): number of steps exceeded %d for"
-                                " case %d:\n",N_MAX_STEP,j+1);
+                                   " case %d:\n",N_MAX_STEP,j+1);
                         egsWarning("  direction = (%g,%g,%g)\n",u.x,u.y,u.z);
                         egsWarning("  initial position = (%g,%g,%g) region = %d\n",
-                                Xo.x,Xo.y,Xo.z,ireg_first);
-                        for(int j=0; j<N_MAX_STEP; j++)
+                                   Xo.x,Xo.y,Xo.z,ireg_first);
+                        for (int j=0; j<N_MAX_STEP; j++)
                             egsWarning("x = (%g,%g,%g) ireg = %d\n",positions[j].x,
-                                    positions[j].y,positions[j].z,regions[j]);
-                        go_back = false; g->setDebug(true); x = Xo; goto retry;
+                                       positions[j].y,positions[j].z,regions[j]);
+                        go_back = false;
+                        g->setDebug(true);
+                        x = Xo;
+                        goto retry;
                     }
                     egsFatal("\nQuiting now\n\n");
                 }
             }
-            if( !time ) {
-                if( check_infinity && x.length2() > 1e10 ) {
+            if (!time) {
+                if (check_infinity && x.length2() > 1e10) {
                     egsWarning("testHowfar(): x -> infinity for case %d?\n",
-                            j+1);
+                               j+1);
                     egsWarning("  direction = (%g,%g,%g)\n",u.x,u.y,u.z);
                     egsWarning("  initial position = (%g,%g,%g) region = %d\n",
-                            Xo.x,Xo.y,Xo.z,ireg_first);
-                    for(int j=0; j<n_step; j++) egsWarning("x = (%g,%g,%g) "
-                        "ireg = %d\n",positions[j].x,positions[j].y,
-                        positions[j].z,regions[j]);
+                               Xo.x,Xo.y,Xo.z,ireg_first);
+                    for (int j=0; j<n_step; j++) egsWarning("x = (%g,%g,%g) "
+                                                                "ireg = %d\n",positions[j].x,positions[j].y,
+                                                                positions[j].z,regions[j]);
                 }
-                if( ireg >= 0 ) {
+                if (ireg >= 0) {
                     int itest = g->inside(x);
-                    if( itest < 0 ) {
+                    if (itest < 0) {
                         egsWarning("testHowfar(): after howfar step ireg = %d"
-                             " but inside() returns %d\n",ireg,itest);
+                                   " but inside() returns %d\n",ireg,itest);
                         egsWarning("  position = (%g,%g,%g)\n",x.x,x.y,x.z);
                         egsWarning("  direction = (%g,%g,%g)\n",u.x,u.y,u.z);
                         egsWarning("  initial position = (%g,%g,%g) "
-                           "region = %d\n",Xo.x,Xo.y,Xo.z,ireg_first);
-                        for(int j=0; j<n_step; j++) egsWarning("x = (%g,%g,%g) "
-                          "ireg = %d\n",positions[j].x,positions[j].y,
-                          positions[j].z,regions[j]);
+                                   "region = %d\n",Xo.x,Xo.y,Xo.z,ireg_first);
+                        for (int j=0; j<n_step; j++) egsWarning("x = (%g,%g,%g) "
+                                                                    "ireg = %d\n",positions[j].x,positions[j].y,
+                                                                    positions[j].z,regions[j]);
                         break;
                     }
                 }
@@ -430,24 +491,28 @@ retry:
         }
     }
     EGS_Float cpu = timer.time();
-    if( time ) {
+    if (time) {
         fprintf(fp_info,"finished howfar time test, cpu time = %g seconds\n",
                 cpu);
         fprintf(fp_info,"  average number of steps: %g\n",nstep/ncase);
     }
-    else fprintf(fp_info,"finished howfar test.\n");
+    else {
+        fprintf(fp_info,"finished howfar test.\n");
+    }
 }
 
 
 int EGS_PrivateTester::beginTest(int n, const EGS_BaseShape *s,
-        const char *func, const char *name, const EGS_BaseGeometry *g) {
-    if( !s ) {
+                                 const char *func, const char *name, const EGS_BaseGeometry *g) {
+    if (!s) {
         fprintf(fp_warn,"EGS_GeometryTester::%s: no bounding shape defined\n",
-                func); return 1;
+                func);
+        return 1;
     }
-    if( n <= 0 ) {
+    if (n <= 0) {
         fprintf(fp_warn,"EGS_GeometryTester::%s: number of test cases to run "
-             "is less than 1 (%d)\n",func,n); return 2;
+                "is less than 1 (%d)\n",func,n);
+        return 2;
     }
     fprintf(fp_info,"\nEGS_GeometryTester::%s: starting %s\n",func,name);
     fprintf(fp_info,"   number of cases: %d\n",n);
@@ -463,10 +528,13 @@ int EGS_PrivateTester::beginTest(int n, const EGS_BaseShape *s,
 class EGS_LOCAL EGS_CylTester : public EGS_GeometryTester {
 public:
     EGS_CylTester(const EGS_Vector &A,EGS_Input *i) :
-        EGS_GeometryTester(i), a(A) { a.normalize(); };
+        EGS_GeometryTester(i), a(A) {
+        a.normalize();
+    };
     ~EGS_CylTester() {};
     void printPosition(const EGS_Vector &x) {
-        EGS_Float z = x*a; EGS_Float r = sqrt(x.length2()-z*z);
+        EGS_Float z = x*a;
+        EGS_Float r = sqrt(x.length2()-z*z);
         fprintf(p->fp_this_test,"%g %g\n",z,r);
     };
 private:
@@ -479,7 +547,8 @@ public:
         xo(Xo), EGS_GeometryTester(i) {};
     ~EGS_SphereTester() {};
     void printPosition(const EGS_Vector &x) {
-        EGS_Vector xp(x-xo); EGS_Float r2 = xp.length2();
+        EGS_Vector xp(x-xo);
+        EGS_Float r2 = xp.length2();
         fprintf(p->fp_this_test,"%g %g\n",xp.z,sqrt(r2-xp.z*xp.z));
     };
 private:
@@ -489,7 +558,7 @@ private:
 class EGS_LOCAL EGS_TransformedTester : public EGS_GeometryTester {
 public:
     EGS_TransformedTester(const EGS_AffineTransform &t, EGS_Input *i) :
-            T(t), EGS_GeometryTester(i) {};
+        T(t), EGS_GeometryTester(i) {};
     ~EGS_TransformedTester() {};
     void printPosition(const EGS_Vector &x) {
         EGS_Vector xp(x*T);
@@ -500,64 +569,80 @@ private:
 };
 #endif
 
-EGS_GeometryTester* EGS_GeometryTester::getGeometryTester(EGS_Input *input) {
-    if( !input ) { egsWarning("EGS_GeometryTester::getGeometryTester:\n"
-            "  input is null?\n"); return 0;
+EGS_GeometryTester *EGS_GeometryTester::getGeometryTester(EGS_Input *input) {
+    if (!input) {
+        egsWarning("EGS_GeometryTester::getGeometryTester:\n"
+                   "  input is null?\n");
+        return 0;
     }
-    bool delete_it = false; EGS_Input *i;
-    if( input->isA("geometry tester") ) i = input;
+    bool delete_it = false;
+    EGS_Input *i;
+    if (input->isA("geometry tester")) {
+        i = input;
+    }
     else {
         i = input->takeInputItem("geometry tester");
-        if( !i ) {
+        if (!i) {
             egsWarning("EGS_GeometryTester::getGeometryTester:\n"
-              "  no 'geometry tester' input\n"); return 0;
+                       "  no 'geometry tester' input\n");
+            return 0;
         }
         delete_it = true;
     }
     EGS_Input *ishape;
-    while( (ishape = i->takeInputItem("bounding shape")) ) {
+    while ((ishape = i->takeInputItem("bounding shape"))) {
         egsWarning("*** adding shape\n");
-        EGS_BaseShape::createShape(ishape); delete ishape;
+        EGS_BaseShape::createShape(ishape);
+        delete ishape;
     }
-    string type; EGS_GeometryTester *tester;
+    string type;
+    EGS_GeometryTester *tester;
     int err = i->getInput("output type",type);
-    if( err || i->compare(type,"normal") )
+    if (err || i->compare(type,"normal")) {
         tester = new EGS_GeometryTester(i);
-    else if( i->compare(type,"cylindrical") ) {
+    }
+    else if (i->compare(type,"cylindrical")) {
         vector<EGS_Float> axis;
         int err1 = i->getInput("axis",axis);
-        if( !err1 && axis.size() == 3 )
+        if (!err1 && axis.size() == 3) {
             tester = new EGS_CylTester(EGS_Vector(axis[0],axis[1],axis[2]),i);
+        }
         else {
             egsWarning("EGS_GeometryTester::getGeometryTester: no 'axis'"
-                  " input for cylindrical output type\n");
+                       " input for cylindrical output type\n");
             tester = new EGS_GeometryTester(i);
         }
     }
-    else if( i->compare(type,"spherical") ) {
+    else if (i->compare(type,"spherical")) {
         vector<EGS_Float> Xo;
         int err1 = i->getInput("midpoint",Xo);
-        if( !err1 && Xo.size() == 3 )
+        if (!err1 && Xo.size() == 3) {
             tester = new EGS_SphereTester(EGS_Vector(Xo[0],Xo[1],Xo[2]),i);
-        else
+        }
+        else {
             tester = new EGS_SphereTester(EGS_Vector(),i);
+        }
     }
-    else if( i->compare(type,"transformed") ) {
+    else if (i->compare(type,"transformed")) {
         EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(i);
-        if( !t ) {
+        if (!t) {
             egsWarning("EGS_GeometryTester::getGeometryTester: no "
-               "transformation defined for a transformed tester\n");
+                       "transformation defined for a transformed tester\n");
             tester = new EGS_GeometryTester(i);
-        } else {
-            tester = new EGS_TransformedTester(*t,i); delete t;
+        }
+        else {
+            tester = new EGS_TransformedTester(*t,i);
+            delete t;
         }
     }
     else {
         egsWarning("EGS_GeometryTester::getGeometryTester: unknown tester"
-                " type %s\n",type.c_str());
+                   " type %s\n",type.c_str());
         tester = new EGS_GeometryTester(i);
     }
-    if( delete_it ) delete i;
+    if (delete_it) {
+        delete i;
+    }
     return tester;
 }
 

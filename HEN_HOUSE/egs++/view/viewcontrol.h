@@ -55,7 +55,7 @@ class GeometryViewControl : public QDialog, public Ui::GeometryViewControl {
 
 public:
 
-    GeometryViewControl(QWidget* parent = 0, const char* name = 0);
+    GeometryViewControl(QWidget *parent = 0, const char *name = 0);
     virtual ~GeometryViewControl();
 
     virtual void setFilename(QString str);
@@ -66,7 +66,7 @@ public:
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
     virtual void setMaterialColor(int j);
-    virtual int setGeometry(EGS_BaseGeometry * geom, const std::vector<EGS_UserColor> & ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading);
+    virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading);
     virtual void updateView(bool transform = false);
 
 public slots:
@@ -163,9 +163,11 @@ private:
     bool showOtherTracks;
 
 protected slots:
-    
-    virtual void languageChange() {retranslateUi(this);}
 
-}; 
+    virtual void languageChange() {
+        retranslateUi(this);
+    }
+
+};
 
 #endif // GEOMETRYVIEWCONTROL_H

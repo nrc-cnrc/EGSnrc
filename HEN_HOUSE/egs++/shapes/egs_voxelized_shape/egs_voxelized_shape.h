@@ -44,22 +44,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_VOXELIZED_SHAPE_DLL
-#define EGS_VOXELIZED_SHAPE_EXPORT __declspec(dllexport)
-#else
-#define EGS_VOXELIZED_SHAPE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_VOXELIZED_SHAPE_LOCAL
+    #ifdef BUILD_VOXELIZED_SHAPE_DLL
+        #define EGS_VOXELIZED_SHAPE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_VOXELIZED_SHAPE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_VOXELIZED_SHAPE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_VOXELIZED_SHAPE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_VOXELIZED_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_VOXELIZED_SHAPE_EXPORT
-#define EGS_VOXELIZED_SHAPE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_VOXELIZED_SHAPE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_VOXELIZED_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_VOXELIZED_SHAPE_EXPORT
+        #define EGS_VOXELIZED_SHAPE_LOCAL
+    #endif
 
 #endif
 
@@ -104,14 +104,16 @@ public:
     \c fname
     */
     EGS_VoxelizedShape(int file_format, const char *fname,const string &Name="",
-            EGS_ObjectFactory *f=0);
+                       EGS_ObjectFactory *f=0);
     ~EGS_VoxelizedShape();
     void EGS_VoxelizedShapeFormat0(const char *fname,const string &Name="",
-            EGS_ObjectFactory *f=0);
+                                   EGS_ObjectFactory *f=0);
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         int bin = prob->sample(rndm);
         int voxel = type == 0 ? bin : map[bin];
-        int iz = voxel/nxy; voxel -= iz*nxy; int iy = voxel/nx;
+        int iz = voxel/nxy;
+        voxel -= iz*nxy;
+        int iy = voxel/nx;
         int ix = voxel - iy*nx;
         EGS_Float eta_x = rndm->getUniform(),
                   eta_y = rndm->getUniform(),
@@ -121,7 +123,9 @@ public:
                           zpos[iz]*(1-eta_z) + zpos[iz+1]*eta_z);
     };
 
-    bool isValid() const { return (type == 0 || type == 1); };
+    bool isValid() const {
+        return (type == 0 || type == 1);
+    };
 
 protected:
 

@@ -46,22 +46,22 @@ using std::vector;
 
 #ifdef WIN32
 
-#ifdef BUILD_PLANES_DLL
-#define EGS_PLANES_EXPORT __declspec(dllexport)
-#else
-#define EGS_PLANES_EXPORT __declspec(dllimport)
-#endif
-#define EGS_PLANES_LOCAL
+    #ifdef BUILD_PLANES_DLL
+        #define EGS_PLANES_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_PLANES_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_PLANES_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_PLANES_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_PLANES_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_PLANES_EXPORT
-#define EGS_PLANES_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_PLANES_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_PLANES_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_PLANES_EXPORT
+        #define EGS_PLANES_LOCAL
+    #endif
 
 #endif
 
@@ -135,63 +135,87 @@ protected:
     //int        last_ir, last_irnew;
 
     void       checkIfUniform() {
-                   is_uniform = true;
-                   if( nreg == 1 ) { dp = p_last - p[0]; return; }
-                   dp = p[1] - p[0];
-                   for(int j=1; j<nreg; j++) {
-                       EGS_Float dpj = p[j+1] - p[j];
-                       if( fabs(dpj/dp-1) > 2e-5 ) {
-                           is_uniform = false; break;
-                       }
-                   }
-               };
+        is_uniform = true;
+        if (nreg == 1) {
+            dp = p_last - p[0];
+            return;
+        }
+        dp = p[1] - p[0];
+        for (int j=1; j<nreg; j++) {
+            EGS_Float dpj = p[j+1] - p[j];
+            if (fabs(dpj/dp-1) > 2e-5) {
+                is_uniform = false;
+                break;
+            }
+        }
+    };
 
 public:
 
     /*! Destructor. */
     ~EGS_PlanesT() {
-        if( nreg ) delete [] p;
+        if (nreg) {
+            delete [] p;
+        }
     };
 
     /*! \brief Construct a parallel plane set with \a np planes at
       positions \a pos.
      */
     EGS_PlanesT(int np, const EGS_Float *pos, const string &Name,
-            const T &A) : EGS_BaseGeometry(Name), a(A) {
-        if( np > 0 ) {
+                const T &A) : EGS_BaseGeometry(Name), a(A) {
+        if (np > 0) {
             p = new EGS_Float [np];
-            for(int j=0; j<np; j++) {
+            for (int j=0; j<np; j++) {
                 p[j] = pos[j]/a.length();
-                if( j > 0 ) {
-                    if( p[j] < p[j-1] ) egsFatal("EGS_PlanesT::EGS_PlanesT: "
-                      " plane positions must be in increasing order\n");
+                if (j > 0) {
+                    if (p[j] < p[j-1]) egsFatal("EGS_PlanesT::EGS_PlanesT: "
+                                                    " plane positions must be in increasing order\n");
                 }
             }
-            if( np > 1 ) { nreg = np-1; p_last = p[nreg]; n_plane = np-1; }
-            else { nreg = 1; p_last = 1e15; n_plane = 0; }
-        } else egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct a "
-                "plane set with %d plane positions\n",np);
+            if (np > 1) {
+                nreg = np-1;
+                p_last = p[nreg];
+                n_plane = np-1;
+            }
+            else {
+                nreg = 1;
+                p_last = 1e15;
+                n_plane = 0;
+            }
+        }
+        else egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct a "
+                          "plane set with %d plane positions\n",np);
         checkIfUniform();
     };
     /*! \brief Construct a parallel plane set from the positions given by
                \a pos
      */
     EGS_PlanesT(const vector<EGS_Float> &pos, const string &Name, const T &A) :
-                         EGS_BaseGeometry(Name), a(A) {
+        EGS_BaseGeometry(Name), a(A) {
         int np = pos.size();
-        if( np > 0 ) {
+        if (np > 0) {
             p = new EGS_Float [np];
-            for(int j=0; j<np; j++) {
+            for (int j=0; j<np; j++) {
                 p[j] = pos[j]/a.length();
-                if( j > 0 ) {
-                    if( p[j] < p[j-1] ) egsFatal("EGS_PlanesT::EGS_PlanesT: "
-                      " plane positions must be in increasing order\n");
+                if (j > 0) {
+                    if (p[j] < p[j-1]) egsFatal("EGS_PlanesT::EGS_PlanesT: "
+                                                    " plane positions must be in increasing order\n");
                 }
             }
-            if( np > 1 ) { nreg = np-1; p_last = p[nreg]; n_plane = np-1; }
-            else { nreg = 1; p_last = 1e15; n_plane = 0; }
-        } else egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct a "
-                "plane set with %d plane positions\n",np);
+            if (np > 1) {
+                nreg = np-1;
+                p_last = p[nreg];
+                n_plane = np-1;
+            }
+            else {
+                nreg = 1;
+                p_last = 1e15;
+                n_plane = 0;
+            }
+        }
+        else egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct a "
+                          "plane set with %d plane positions\n",np);
         checkIfUniform();
     };
     /*! \brief Construct a parallel plane set starting at \a xo with
@@ -199,56 +223,81 @@ public:
      */
     EGS_PlanesT(EGS_Float xo, EGS_Float dx, int np, const string &Name,
                 const T &A) : EGS_BaseGeometry(Name), a(A) {
-        if( np < 1 ) egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct"
-            " a plane set with %d plane positions\n",np);
-        if( dx <= 0 ) egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct"
-            " a plane set with a non-positive slice thickness %g\n",dx);
-        p = new EGS_Float [np+1]; p[0] = xo;
-        for(int j=0; j<np; j++) p[j+1] = p[j] + dx;
-        nreg = np; p_last = p[nreg]; n_plane = np;
-        is_uniform = true; dp = dx;
+        if (np < 1) egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct"
+                                 " a plane set with %d plane positions\n",np);
+        if (dx <= 0) egsFatal("EGS_PlanesT::EGS_PlanesT: attempt to construct"
+                                  " a plane set with a non-positive slice thickness %g\n",dx);
+        p = new EGS_Float [np+1];
+        p[0] = xo;
+        for (int j=0; j<np; j++) {
+            p[j+1] = p[j] + dx;
+        }
+        nreg = np;
+        p_last = p[nreg];
+        n_plane = np;
+        is_uniform = true;
+        dp = dx;
     };
 
-    EGS_Float *getPositions() { return p; };
+    EGS_Float *getPositions() {
+        return p;
+    };
 
     /*! Implements the \c %isInside() method for a set of parallel planes
 
     */
     bool isInside(const EGS_Vector &x) {
         EGS_Float xp = a*x;
-        if( xp < p[0] || xp > p_last ) return false;
+        if (xp < p[0] || xp > p_last) {
+            return false;
+        }
         return true;
     };
 
     int isWhere(const EGS_Vector &x) {
         EGS_Float xp = a*x;
-        if( xp < p[0] || xp > p_last ) return -1;
-        if( nreg == 1 ) return 0;
+        if (xp < p[0] || xp > p_last) {
+            return -1;
+        }
+        if (nreg == 1) {
+            return 0;
+        }
         //if( is_uniform ) { int res = (int) ((xp-p[0])/dp); return res; }
         return findRegion(xp,nreg,p);
     };
 
-    int inside(const EGS_Vector &x) { return isWhere(x); };
+    int inside(const EGS_Vector &x) {
+        return isWhere(x);
+    };
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
-                  const EGS_Vector &u) {
-        if( ireg < 0 ) return 0;
+                              const EGS_Vector &u) {
+        if (ireg < 0) {
+            return 0;
+        }
         double xp = a*x, up = a*u;
         EGS_Float t = 1e30;
-        if( up > 0 ) t = (p_last-xp)/up;
-        else if( up < 0 ) t = (p[0]-xp)/up;
+        if (up > 0) {
+            t = (p_last-xp)/up;
+        }
+        else if (up < 0) {
+            t = (p[0]-xp)/up;
+        }
         return t;
     };
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-            EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
+               EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         //EGS_Float d = 1e30; int res=ireg;
         //EGS_Float xp = a*x, up = a*u;
-        double d = 1e35; int res=ireg;
+        double d = 1e35;
+        int res=ireg;
         double xp = a*x, up = a*u;
-        if( ireg >= 0 ) {
-            int dir = 0; bool warn=false; EGS_Float dist;
-            if( up > 0 && ireg < n_plane ) {
+        if (ireg >= 0) {
+            int dir = 0;
+            bool warn=false;
+            EGS_Float dist;
+            if (up > 0 && ireg < n_plane) {
                 d = (p[ireg+1]-xp)/up;
                 //if( xp <= p[ireg+1] ) d = (p[ireg+1]-xp)/up;
                 //else {
@@ -257,7 +306,7 @@ public:
                 //}
                 dir = 1;
             }
-            else if( up < 0 ) {
+            else if (up < 0) {
                 d = (p[ireg]-xp)/up;
                 //if( xp >= p[ireg] ) d = (p[ireg]-xp)/up;
                 //else {
@@ -276,73 +325,120 @@ public:
                         xp,up,ireg,dist);
             }
             */
-            if( d > t ) res = ireg;
+            if (d > t) {
+                res = ireg;
+            }
             else {
-                t = d; res = ireg + dir;
-                if( res >= nreg ) res = -1;
-                if( newmed ) {
-                    if( res >= 0 ) *newmed = medium(res); else *newmed=-1;
+                t = d;
+                res = ireg + dir;
+                if (res >= nreg) {
+                    res = -1;
                 }
-                if( normal ) { *normal = a.normal()*(-dir); }
+                if (newmed) {
+                    if (res >= 0) {
+                        *newmed = medium(res);
+                    }
+                    else {
+                        *newmed=-1;
+                    }
+                }
+                if (normal) {
+                    *normal = a.normal()*(-dir);
+                }
             }
             return res;
         }
-        if( xp <= p[0] && up > 0 ) { d = (p[0] - xp)/up; res = 0; }
-        else if( xp >= p_last && up < 0 ) {
-            d = (p_last - xp)/up; res = nreg-1;
+        if (xp <= p[0] && up > 0) {
+            d = (p[0] - xp)/up;
+            res = 0;
         }
-        else if( xp > p[0] && xp < p_last ) {
+        else if (xp >= p_last && up < 0) {
+            d = (p_last - xp)/up;
+            res = nreg-1;
+        }
+        else if (xp > p[0] && xp < p_last) {
             // we think we are outside but we are inside.
             // hopefully a truncation problem with a particle
             // backscattered at a boundary
-            if( xp-p[0] < 3e-5 && up > 0 ) { d = 0; res = 0; }
-            else if( p_last-xp < 3e-5 && up < 0 ) { d = 0; res = nreg-1; }
+            if (xp-p[0] < 3e-5 && up > 0) {
+                d = 0;
+                res = 0;
+            }
+            else if (p_last-xp < 3e-5 && up < 0) {
+                d = 0;
+                res = nreg-1;
+            }
         }
-        if( d <= t ) {
-            t = d; if( newmed ) *newmed = medium(res);
-            if( normal ) if( up > 0 ) *normal = a.normal()*(-1.);
-                         else         *normal = a.normal();
+        if (d <= t) {
+            t = d;
+            if (newmed) {
+                *newmed = medium(res);
+            }
+            if (normal) if (up > 0) {
+                    *normal = a.normal()*(-1.);
+                }
+                else {
+                    *normal = a.normal();
+                }
         }
-        else res = -1;
+        else {
+            res = -1;
+        }
         return res;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
         EGS_Float xp = a*x;
-        if( ireg >= 0 ) {
+        if (ireg >= 0) {
             EGS_Float t = xp - p[ireg];
-            if( ireg+1 <= n_plane ) {
+            if (ireg+1 <= n_plane) {
                 EGS_Float t2 = p[ireg+1] - xp;
-                if( t2 < t ) t = t2;
+                if (t2 < t) {
+                    t = t2;
+                }
             }
             return t;
         }
-        if( xp <= p[0] ) return p[0] - xp;
-        if( xp >= p_last ) return xp - p_last;
+        if (xp <= p[0]) {
+            return p[0] - xp;
+        }
+        if (xp >= p_last) {
+            return xp - p_last;
+        }
         return 0; // this should not happen.
     };
 
-    const string &getType() const { return a.getType(); };
+    const string &getType() const {
+        return a.getType();
+    };
 
     void printInfo() const {
         EGS_BaseGeometry::printInfo();
         a.printInfo();
-        if( is_uniform )
+        if (is_uniform)
             egsInformation(" first plane at %g, %d slices of %g thickness\n",
-                    p[0],nreg,dp);
+                           p[0],nreg,dp);
         else {
             egsInformation(" plane positions = ");
-            for(int j=0; j<nreg; j++) egsInformation("%g ",p[j]);
-            if( n_plane == nreg ) egsInformation("%g ",p[n_plane]);
+            for (int j=0; j<nreg; j++) {
+                egsInformation("%g ",p[j]);
+            }
+            if (n_plane == nreg) {
+                egsInformation("%g ",p[n_plane]);
+            }
             egsInformation("\n");
         }
         egsInformation(
-                "=======================================================\n");
+            "=======================================================\n");
     };
 
-    EGS_Float position(int j) const { return p[j]; };
+    EGS_Float position(int j) const {
+        return p[j];
+    };
 
-    EGS_Vector normal() const { return a.normal(); };
+    EGS_Vector normal() const {
+        return a.normal();
+    };
 
 };
 
@@ -396,67 +492,112 @@ protected:
 public:
 
     EGS_PlaneCollection(int Np, const EGS_Float *pos, const EGS_Vector *norm,
-            const string &Name = "");
+                        const string &Name = "");
     ~EGS_PlaneCollection();
     bool isInside(const EGS_Vector &x) {
         return (planes[0]->isInside(x) && !planes[np-1]->isInside(x));
     };
     int isWhere(const EGS_Vector &x) {
-        if( !planes[0]->isInside(x) ) return -1;
-        if( planes[np-1]->isInside(x) ) return -1;
-        for(int j=0; j<np-1; j++)
-            if( planes[j]->isInside(x) && !planes[j+1]->isInside(x) )
+        if (!planes[0]->isInside(x)) {
+            return -1;
+        }
+        if (planes[np-1]->isInside(x)) {
+            return -1;
+        }
+        for (int j=0; j<np-1; j++)
+            if (planes[j]->isInside(x) && !planes[j+1]->isInside(x)) {
                 return j;
+            }
         return -1; // this should not happen.
     };
-    int inside(const EGS_Vector &x) { return isInside(x); };
+    int inside(const EGS_Vector &x) {
+        return isInside(x);
+    };
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-            EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
-        if( ireg >= 0 ) {
-            int m1, m2; EGS_Vector n1, n2;
-            EGS_Float t1 = t; int i1=planes[ireg]->howfar(0,x,u,t1,&m1,&n1);
-            EGS_Float t2 = t; int i2=planes[ireg+1]->howfar(-1,x,u,t2,&m2,&n2);
+               EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
+        if (ireg >= 0) {
+            int m1, m2;
+            EGS_Vector n1, n2;
+            EGS_Float t1 = t;
+            int i1=planes[ireg]->howfar(0,x,u,t1,&m1,&n1);
+            EGS_Float t2 = t;
+            int i2=planes[ireg+1]->howfar(-1,x,u,t2,&m2,&n2);
             int res = ireg;
-            if( i1 == -1 && i2 == 0 ) {
-                if( t1 < t2 ) {
-                    t = t1; res = ireg-1; if( normal ) *normal = n1;
+            if (i1 == -1 && i2 == 0) {
+                if (t1 < t2) {
+                    t = t1;
+                    res = ireg-1;
+                    if (normal) {
+                        *normal = n1;
+                    }
                 }
                 else {
-                    t = t2; res = ireg+1; if(res > nreg-1) res = -1;
-                    if( normal ) *normal = n2;
+                    t = t2;
+                    res = ireg+1;
+                    if (res > nreg-1) {
+                        res = -1;
+                    }
+                    if (normal) {
+                        *normal = n2;
+                    }
                 }
             }
-            else if( i1 == -1 ) {
-                t = t1; res = ireg-1; if( normal ) *normal = n1;
+            else if (i1 == -1) {
+                t = t1;
+                res = ireg-1;
+                if (normal) {
+                    *normal = n1;
+                }
             }
-            else if( i2 == 0 ) {
-                t = t2; res=ireg+1; if(res > nreg-1) res = -1;
-                if( normal ) *normal = n2;
+            else if (i2 == 0) {
+                t = t2;
+                res=ireg+1;
+                if (res > nreg-1) {
+                    res = -1;
+                }
+                if (normal) {
+                    *normal = n2;
+                }
             }
-            if( newmed && res != ireg ) {
-                if(res >= 0) *newmed = medium(res); else *newmed = -1;
+            if (newmed && res != ireg) {
+                if (res >= 0) {
+                    *newmed = medium(res);
+                }
+                else {
+                    *newmed = -1;
+                }
             }
             return res;
         }
-        if( !planes[0]->isInside(x) ) {
+        if (!planes[0]->isInside(x)) {
             int iaux = planes[0]->howfar(-1,x,u,t,newmed,normal);
             return iaux;
         }
         int i1 = planes[nreg]->howfar(0,x,u,t,newmed,normal);
-        if( i1 < 0 ) return nreg-1;
+        if (i1 < 0) {
+            return nreg-1;
+        }
         return -1;
     };
     EGS_Float hownear(int ireg,const EGS_Vector &x) {
-        if( ireg >= 0 ) {
+        if (ireg >= 0) {
             EGS_Float t1 = planes[ireg]->hownear(0,x);
             EGS_Float t2 = planes[ireg+1]->hownear(-1,x);
-            if( t1 < t2 ) return t1; else return t2;
+            if (t1 < t2) {
+                return t1;
+            }
+            else {
+                return t2;
+            }
         }
-        if( !planes[0]->isInside(x) )
+        if (!planes[0]->isInside(x)) {
             return planes[0]->hownear(-1,x);
+        }
         return planes[np-1]->hownear(0,x);
     };
-    const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
     void printInfo() const;
 

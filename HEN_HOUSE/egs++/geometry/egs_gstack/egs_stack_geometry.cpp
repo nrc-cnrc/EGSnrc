@@ -42,39 +42,49 @@
 string EGS_StackGeometry::type = "EGS_StackGeometry";
 
 EGS_StackGeometry::EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms,
-    EGS_Float Tol, const string &Name) : EGS_BaseGeometry(Name), eps(Tol) {
-    if( geoms.size() < 2 ) egsFatal("EGS_StackGeometry::EGS_StackGeometry: "
-          " less than 2 geometries is not mermitted\n");
+                                     EGS_Float Tol, const string &Name) : EGS_BaseGeometry(Name), eps(Tol) {
+    if (geoms.size() < 2) egsFatal("EGS_StackGeometry::EGS_StackGeometry: "
+                                       " less than 2 geometries is not mermitted\n");
     ng = geoms.size();
-    g = new EGS_BaseGeometry* [ng]; nmax = 1;
+    g = new EGS_BaseGeometry* [ng];
+    nmax = 1;
     has_rho_scaling = false;
-    for(int j=0; j<ng; j++) {
-        g[j] = geoms[j]; g[j]->ref();
-        int n = g[j]->regions(); if( n > nmax ) nmax = n;
-        if( !has_rho_scaling ) has_rho_scaling = g[j]->hasRhoScaling();
+    for (int j=0; j<ng; j++) {
+        g[j] = geoms[j];
+        g[j]->ref();
+        int n = g[j]->regions();
+        if (n > nmax) {
+            nmax = n;
+        }
+        if (!has_rho_scaling) {
+            has_rho_scaling = g[j]->hasRhoScaling();
+        }
     }
-    nreg = ng*nmax; is_convex = false;
+    nreg = ng*nmax;
+    is_convex = false;
 }
 
 
 EGS_StackGeometry::~EGS_StackGeometry() {
-    for(int j=0; j<ng; j++)
-        if( !g[j]->deref() ) delete g[j];
+    for (int j=0; j<ng; j++)
+        if (!g[j]->deref()) {
+            delete g[j];
+        }
     delete [] g;
 }
 
 void EGS_StackGeometry::printInfo() const {
     EGS_BaseGeometry::printInfo();
     egsInformation(" geometries:\n");
-    for(int j=0; j<ng; j++) egsInformation("   %s (type %s)\n",
-            g[j]->getName().c_str(),g[j]->getType().c_str());
+    for (int j=0; j<ng; j++) egsInformation("   %s (type %s)\n",
+                                                g[j]->getName().c_str(),g[j]->getType().c_str());
     egsInformation(
-            "=======================================================\n");
+        "=======================================================\n");
 }
 
 void EGS_StackGeometry::setMedia(EGS_Input *,int,const int *) {
     egsWarning("EGS_StackGeometry::setMedia: don't use this method. Use the\n"
-   " setMedia() methods of the geometry objects that make up this geometry\n");
+               " setMedia() methods of the geometry objects that make up this geometry\n");
 }
 
 void EGS_StackGeometry::setRelativeRho(int start, int end, EGS_Float rho) {
@@ -83,59 +93,62 @@ void EGS_StackGeometry::setRelativeRho(int start, int end, EGS_Float rho) {
 
 void EGS_StackGeometry::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_StackGeometry::setRelativeRho(): don't use this method.\n"
-     " Use the setRelativeRho methods of the geometry objects that make up"
-     " this geometry\n");
+               " Use the setRelativeRho methods of the geometry objects that make up"
+               " this geometry\n");
 }
 
 extern "C" {
 
-EGS_STACKG_EXPORT EGS_BaseGeometry* createGeometry(EGS_Input *input) {
-    if( !input ) {
-        egsWarning("createGeometry(stack): null input?\n");
-        return 0;
-    }
-    vector<string> gnames; vector<EGS_BaseGeometry *> geoms;
-    int err = input->getInput("geometries",gnames);
-    if( err || gnames.size() < 2 ) {
-        egsWarning("createGeometry(stack): missing/wrong 'geometries' input\n");
-        return 0;
-    }
-    for(unsigned int j=0; j<gnames.size(); j++) {
-        EGS_BaseGeometry *gj = EGS_BaseGeometry::getGeometry(gnames[j]);
-        if( !gj ) egsWarning("createGeometry(stack): no geometry named %s "
-                " defined\n",gnames[j].c_str());
-        else geoms.push_back(gj);
-    }
-    if( geoms.size() < 2 ) {
-        egsWarning("createGeometry(stack): must have at least 2 geometries\n");
-        return 0;
-    }
-    EGS_Float tol = 1e-4;
-    err = input->getInput("tolerance",tol);
-    EGS_BaseGeometry *result = new EGS_StackGeometry(geoms,tol);
-    result->setName(input);
-    result->setLabels(input);
-    return result;
-}
-
-
-void EGS_StackGeometry::getLabelRegions (const string &str, vector<int> &regs) {
-
-    vector<int> local_regs;
-
-    // label defined in the stacked geometries
-    for (int i=0; i<ng; i++) {
-        local_regs.clear();
-        g[i]->getLabelRegions(str, local_regs);
-        for (int j=0; j<local_regs.size(); j++) {
-            regs.push_back(i*nmax + local_regs[j]);
+    EGS_STACKG_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
+        if (!input) {
+            egsWarning("createGeometry(stack): null input?\n");
+            return 0;
         }
+        vector<string> gnames;
+        vector<EGS_BaseGeometry *> geoms;
+        int err = input->getInput("geometries",gnames);
+        if (err || gnames.size() < 2) {
+            egsWarning("createGeometry(stack): missing/wrong 'geometries' input\n");
+            return 0;
+        }
+        for (unsigned int j=0; j<gnames.size(); j++) {
+            EGS_BaseGeometry *gj = EGS_BaseGeometry::getGeometry(gnames[j]);
+            if (!gj) egsWarning("createGeometry(stack): no geometry named %s "
+                                    " defined\n",gnames[j].c_str());
+            else {
+                geoms.push_back(gj);
+            }
+        }
+        if (geoms.size() < 2) {
+            egsWarning("createGeometry(stack): must have at least 2 geometries\n");
+            return 0;
+        }
+        EGS_Float tol = 1e-4;
+        err = input->getInput("tolerance",tol);
+        EGS_BaseGeometry *result = new EGS_StackGeometry(geoms,tol);
+        result->setName(input);
+        result->setLabels(input);
+        return result;
     }
 
-    // label defined in self (stack input block)
-    EGS_BaseGeometry::getLabelRegions(str, regs);
 
-}
+    void EGS_StackGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+
+        vector<int> local_regs;
+
+        // label defined in the stacked geometries
+        for (int i=0; i<ng; i++) {
+            local_regs.clear();
+            g[i]->getLabelRegions(str, local_regs);
+            for (int j=0; j<local_regs.size(); j++) {
+                regs.push_back(i*nmax + local_regs[j]);
+            }
+        }
+
+        // label defined in self (stack input block)
+        EGS_BaseGeometry::getLabelRegions(str, regs);
+
+    }
 
 
 }

@@ -49,31 +49,44 @@ static char EGS_BOX_LOCAL ebox_message1[] = "createGeometry(box): %s\n";
 static char EGS_BOX_LOCAL ebox_message2[] = "null input?";
 static char EGS_BOX_LOCAL ebox_message3[] = "wrong/missing 'box size' input?";
 static char EGS_BOX_LOCAL ebox_message4[] =
-  "expecting 1 or 3 float inputs for 'box size'";
+    "expecting 1 or 3 float inputs for 'box size'";
 static char EGS_BOX_LOCAL ebox_key1[] = "box size";
 
 extern "C" {
 
-EGS_BOX_EXPORT EGS_BaseGeometry* createGeometry(EGS_Input *input) {
-    if( !input ) { egsWarning(ebox_message1,ebox_message2); return 0; }
-    vector<EGS_Float> s;
-    int err = input->getInput(ebox_key1,s);
-    if( err ) {
-        egsWarning(ebox_message1,ebox_message3); return 0;
+    EGS_BOX_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
+        if (!input) {
+            egsWarning(ebox_message1,ebox_message2);
+            return 0;
+        }
+        vector<EGS_Float> s;
+        int err = input->getInput(ebox_key1,s);
+        if (err) {
+            egsWarning(ebox_message1,ebox_message3);
+            return 0;
+        }
+        EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(input);
+        EGS_Box *result;
+        if (s.size() == 1) {
+            result = new EGS_Box(s[0],t);
+        }
+        else if (s.size() == 3) {
+            result = new EGS_Box(s[0],s[1],s[2],t);
+        }
+        else {
+            egsWarning(ebox_message1,ebox_message4);
+            if (t) {
+                delete t;
+            }
+            return 0;
+        }
+        if (t) {
+            delete t;
+        }
+        result->setName(input);
+        result->setMedia(input);
+        result->setLabels(input);
+        return result;
     }
-    EGS_AffineTransform *t = EGS_AffineTransform::getTransformation(input);
-    EGS_Box *result;
-    if( s.size() == 1 ) result = new EGS_Box(s[0],t);
-    else if( s.size() == 3 ) result = new EGS_Box(s[0],s[1],s[2],t);
-    else {
-        egsWarning(ebox_message1,ebox_message4);
-        if( t ) delete t; return 0;
-    }
-    if( t ) delete t;
-    result->setName(input);
-    result->setMedia(input);
-    result->setLabels(input);
-    return result;
-}
 
 }

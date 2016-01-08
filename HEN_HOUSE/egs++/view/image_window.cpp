@@ -46,8 +46,10 @@
 #if QT_VERSION < 0x040400
 class Thread : public QThread {
 public:
-	Thread() : QThread() {}
-	void run() {exec();}
+    Thread() : QThread() {}
+    void run() {
+        exec();
+    }
 };
 #else
 typedef QThread Thread;
@@ -57,35 +59,35 @@ typedef QThread Thread;
 
 ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     QWidget(parent,Qt::Window) {
-        setObjectName(name);
+    setObjectName(name);
 
-        navigationTimer = new QTimer(this);
-        navigationTimer->setSingleShot(true);
-        connect(navigationTimer, SIGNAL(timeout()), this, SLOT(endTransformation()));
+    navigationTimer = new QTimer(this);
+    navigationTimer->setSingleShot(true);
+    connect(navigationTimer, SIGNAL(timeout()), this, SLOT(endTransformation()));
 
-        navigating=false;
-        setMouseTracking(true);
-        rerenderRequested = false;
+    navigating=false;
+    setMouseTracking(true);
+    rerenderRequested = false;
 
-        renderState = WorkerIdle;
-        lastResult.elapsedTime = -1.;
+    renderState = WorkerIdle;
+    lastResult.elapsedTime = -1.;
 
-        lastRequestGeo = NULL;
-        saveProgress = NULL;
-        regionsDisplayed = true;
+    lastRequestGeo = NULL;
+    saveProgress = NULL;
+    regionsDisplayed = true;
 
-        vis = new EGS_GeometryVisualizer;
+    vis = new EGS_GeometryVisualizer;
 
-        // register types so they can be transfered accross thread
-        qRegisterMetaType<RenderParameters>("RenderParameters");
-        qRegisterMetaType<RenderResults>("RenderResults");
+    // register types so they can be transfered accross thread
+    qRegisterMetaType<RenderParameters>("RenderParameters");
+    qRegisterMetaType<RenderResults>("RenderResults");
 
-        // Initialize render worker and put it in a thread
-        restartWorker();
+    // Initialize render worker and put it in a thread
+    restartWorker();
 
-        // disable Qt's background refill for the Widget, so we can paint
-        // over our existing buffer when picking regions
-        setAttribute(Qt::WA_OpaquePaintEvent);
+    // disable Qt's background refill for the Widget, so we can paint
+    // over our existing buffer when picking regions
+    setAttribute(Qt::WA_OpaquePaintEvent);
 }
 
 ImageWindow::~ImageWindow() {
@@ -94,46 +96,47 @@ ImageWindow::~ImageWindow() {
     delete vis;
 };
 
-  /* no longer in Qt4. What was this supposed to do?
-    void polish() {
-        //QDialog::polish();
-        QWidget::polish();
-        QWidget *topl = topLevelWidget();
-        //egsWarning("In polish: position: %d %d\n",pos().x(),pos().y());
-        //if( !topl ) egsWarning("Null top level widget!\n");
-        QWidget *parent = parentWidget();
-        if( !parent ) parent = topl;
-        //egsWarning("parent: %s\n",parent->name());
-        if( parent ) {
-            QPoint point = parent->mapToGlobal(QPoint(0,0));
-            //egsWarning("parent: %d %d\n",point.x(),point.y());
-            //QRect my_frame = frameGeometry();
-            //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-            //     my_frame.right(),my_frame.top(),my_frame.bottom());
-            int gview_x = point.x();
-            int gview_y = point.y() + parent->height();
-            //egsWarning("moving to %d %d\n",gview_x,gview_y);
-            move(gview_x,gview_y);
-            //my_frame = frameGeometry();
-            //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-            //     my_frame.right(),my_frame.top(),my_frame.bottom());
-        }
-    };
-    */
-    
-void ImageWindow::render(EGS_BaseGeometry* geo, bool transform) {
+/* no longer in Qt4. What was this supposed to do?
+  void polish() {
+      //QDialog::polish();
+      QWidget::polish();
+      QWidget *topl = topLevelWidget();
+      //egsWarning("In polish: position: %d %d\n",pos().x(),pos().y());
+      //if( !topl ) egsWarning("Null top level widget!\n");
+      QWidget *parent = parentWidget();
+      if( !parent ) parent = topl;
+      //egsWarning("parent: %s\n",parent->name());
+      if( parent ) {
+          QPoint point = parent->mapToGlobal(QPoint(0,0));
+          //egsWarning("parent: %d %d\n",point.x(),point.y());
+          //QRect my_frame = frameGeometry();
+          //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
+          //     my_frame.right(),my_frame.top(),my_frame.bottom());
+          int gview_x = point.x();
+          int gview_y = point.y() + parent->height();
+          //egsWarning("moving to %d %d\n",gview_x,gview_y);
+          move(gview_x,gview_y);
+          //my_frame = frameGeometry();
+          //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
+          //     my_frame.right(),my_frame.top(),my_frame.bottom());
+      }
+  };
+  */
+
+void ImageWindow::render(EGS_BaseGeometry *geo, bool transform) {
     if (transform) {
         startTransformation();
     }
     if (navigating) {
         pars.requestType = Transformation;
-    } else {
+    }
+    else {
         pars.requestType = FullDetail;
     }
     rerender(geo);
 }
 
-void ImageWindow::rerender(EGS_BaseGeometry* geo) {
+void ImageWindow::rerender(EGS_BaseGeometry *geo) {
     if (!thread) {
         // Don't bother if the thread has been disabled
         return;
@@ -149,7 +152,8 @@ void ImageWindow::rerender(EGS_BaseGeometry* geo) {
         pars.ny = this->height();
         pars.nxr = 1;
         pars.nyr = 1;
-    } else if (pars.requestType == Transformation) {
+    }
+    else if (pars.requestType == Transformation) {
         // Dynamically select a good render mode
         int nx=this->width(),ny=this->height();
         int nxr=nx,nyr=ny;
@@ -162,36 +166,67 @@ void ImageWindow::rerender(EGS_BaseGeometry* geo) {
             EGS_Float target = 30.0; // msecs per frame
             EGS_Float scale = nx*ny * timePerPixel / target;
 
-            if( scale > 1 ) {
+            if (scale > 1) {
                 scale = 1./sqrt(scale);
-                int nnx = (int) (scale*nx), nny = (int) (scale*ny);
-                if( nnx < 1 ) nnx = 1; if( nny < 1 ) nny = 1;
-                nxr = nx/nnx; if( nxr*nnx != nx ) nxr++;
-                nyr = ny/nny; if( nyr*nny != ny ) nyr++;
-                nnx = nx/nxr; nny = ny/nyr;
-                if( nnx*nxr < nx ) nnx++;
-                if( nny*nyr < ny ) nny++;
+                int nnx = (int)(scale*nx), nny = (int)(scale*ny);
+                if (nnx < 1) {
+                    nnx = 1;
+                }
+                if (nny < 1) {
+                    nny = 1;
+                }
+                nxr = nx/nnx;
+                if (nxr*nnx != nx) {
+                    nxr++;
+                }
+                nyr = ny/nny;
+                if (nyr*nny != ny) {
+                    nyr++;
+                }
+                nnx = nx/nxr;
+                nny = ny/nyr;
+                if (nnx*nxr < nx) {
+                    nnx++;
+                }
+                if (nny*nyr < ny) {
+                    nny++;
+                }
 #ifdef VIEW_DEBUG
                 egsWarning(" nx=%d ny=%d nnx=%d nny=%d nxr=%d nyr=%d\n",
-                        nx,ny,nnx,nny,nxr,nyr);
+                           nx,ny,nnx,nny,nxr,nyr);
 #endif
-                nx = nnx; ny = nny;
-            } else {
+                nx = nnx;
+                ny = nny;
+            }
+            else {
                 nxr = 1;
                 nyr = 1;
             }
-        } else {
+        }
+        else {
             // First-time scale values.
-            nxr = 4; nyr = 4;
+            nxr = 4;
+            nyr = 4;
             int nnx = nx/nxr, nny = ny/nyr;
-            if( nnx*nxr < nx ) nx = nnx+1; else nx = nnx;
-            if( nny*nyr < ny ) ny = nny+1; else ny = nny;
+            if (nnx*nxr < nx) {
+                nx = nnx+1;
+            }
+            else {
+                nx = nnx;
+            }
+            if (nny*nyr < ny) {
+                ny = nny+1;
+            }
+            else {
+                ny = nny;
+            }
         }
         pars.nx = nx;
         pars.ny = ny;
         pars.nxr = nxr;
         pars.nyr = nyr;
-    } else {
+    }
+    else {
         // sizes subject to external control.
     }
 
@@ -202,7 +237,8 @@ void ImageWindow::rerender(EGS_BaseGeometry* geo) {
         activeRequestType = pars.requestType;
         emit requestRender(lastRequestGeo,pars);
         renderState = WorkerCalculating;
-    } else if (renderState == WorkerCalculating) {
+    }
+    else if (renderState == WorkerCalculating) {
         // abort only to interrupt a full-detail calculation by a transformation
         // since the latter makes the former invalid.
         if (activeRequestType == FullDetail && pars.requestType == Transformation) {
@@ -217,7 +253,7 @@ void ImageWindow::loadTracks(QString name) {
 }
 
 
-void ImageWindow::saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, QString ext) {
+void ImageWindow::saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext) {
     saveName = name;
     saveExtension = ext;
     // Temporarily change parameters to render at new resolution
@@ -254,8 +290,8 @@ void ImageWindow::restartWorker() {
     worker = new RenderWorker();
     thread = new Thread();
     worker->moveToThread(thread);
-    connect(this, SIGNAL(requestRender(EGS_BaseGeometry*,RenderParameters)),
-            worker, SLOT(render(EGS_BaseGeometry*,RenderParameters)));
+    connect(this, SIGNAL(requestRender(EGS_BaseGeometry *,RenderParameters)),
+            worker, SLOT(render(EGS_BaseGeometry *,RenderParameters)));
     connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
     connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
     connect(worker, SIGNAL(aborted()), this, SLOT(handleAbort()));
@@ -289,12 +325,13 @@ void ImageWindow::resizeEvent(QResizeEvent *e) {
     }
 };
 
-void ImageWindow::paintBackground(QPainter& p) {
-    const RenderParameters& q = lastRequest;
-    const RenderResults& r = lastResult;
+void ImageWindow::paintBackground(QPainter &p) {
+    const RenderParameters &q = lastRequest;
+    const RenderResults &r = lastResult;
     if (q.nxr == 1 && q.nyr == 1) {
         p.drawImage(QPoint(0,0),r.img);
-    } else {
+    }
+    else {
         p.drawImage(QRect(0,0,q.nxr * q.nx, q.nyr * q.ny),r.img);
     }
 
@@ -306,16 +343,18 @@ void ImageWindow::paintBackground(QPainter& p) {
     }
 }
 
-void ImageWindow::paintEvent (QPaintEvent *) {
+void ImageWindow::paintEvent(QPaintEvent *) {
     if (!thread) {
         // in geometry change period
         return;
     }
 
-    const RenderParameters& q = lastRequest;
-    const RenderResults& r = lastResult;
+    const RenderParameters &q = lastRequest;
+    const RenderResults &r = lastResult;
     // only draw if there was already a request
-    if (r.img.isNull() || lastRequestGeo == NULL) return;
+    if (r.img.isNull() || lastRequestGeo == NULL) {
+        return;
+    }
 
     bool wasRerenderRequested = rerenderRequested;
     rerenderRequested = false;
@@ -336,7 +375,7 @@ void ImageWindow::paintEvent (QPaintEvent *) {
         int w = (q.nx*q.nxr);
         int h = (q.ny*q.nyr);
         EGS_Float xscreen, yscreen;
-        xscreen =  (xyMouse.x()-w/2)*q.projection_x/w;
+        xscreen = (xyMouse.x()-w/2)*q.projection_x/w;
         yscreen = -(xyMouse.y()-h/2)*q.projection_y/h;
         EGS_Vector xp(q.screen_xo + q.screen_v2*yscreen + q.screen_v1*xscreen);
 
@@ -364,13 +403,15 @@ void ImageWindow::paintEvent (QPaintEvent *) {
             p.drawText(x0-1,y0,"Regions");
             y0+=10;
             regionsDisplayed=true;
-        } else {
+        }
+        else {
             if (regionsDisplayed) {
                 regionsDisplayed=false;
                 // repaint just the eclipsed region (painter has clip)
                 paintBackground(p);
             }
-            p.end(); return;
+            p.end();
+            return;
         }
 
         QFont font(p.font());
@@ -381,17 +422,23 @@ void ImageWindow::paintEvent (QPaintEvent *) {
         // iterate on the longest string, since point sizes
         // shouldn't change that.
         int mxval = 0;
-        for (int j=0;j<maxreg;j++) {
-            if (regions[j] < 0) break;
-            if (regions[j] > mxval) mxval = regions[j];
+        for (int j=0; j<maxreg; j++) {
+            if (regions[j] < 0) {
+                break;
+            }
+            if (regions[j] > mxval) {
+                mxval = regions[j];
+            }
         }
         QString mxstring = QString::number(mxval);
 
-        while(1) {
+        while (1) {
             int wmax = p.fontMetrics().width(mxstring);
-            if( wmax < 41 ) break;
+            if (wmax < 41) {
+                break;
+            }
             int npix = font.pixelSize(), npoint = font.pointSize();
-            if( npix > 0 ) {
+            if (npix > 0) {
                 font.setPixelSize(npix-1);
                 //qWarning("Reducing font size to %d pixels",npix-1);
             }
@@ -404,8 +451,8 @@ void ImageWindow::paintEvent (QPaintEvent *) {
 
         for (int reg = 0; reg < maxreg && regions[reg] >= 0; reg++) {
             p.fillRect(x0, y0+reg*dy, s, s,
-                  QColor((int)(255*colors[reg].x), (int)(255*colors[reg].y),
-                         (int)(255*colors[reg].z)));
+                       QColor((int)(255*colors[reg].x), (int)(255*colors[reg].y),
+                              (int)(255*colors[reg].z)));
             p.setPen(QColor(255,255,255));
             p.drawRect(x0, y0+reg*dy, s, s);
             p.drawText(x0+s+3,y0+reg*dy+s,QString::number(regions[reg]));
@@ -417,7 +464,7 @@ void ImageWindow::paintEvent (QPaintEvent *) {
     }
 }
 
-void ImageWindow::mouseReleaseEvent (QMouseEvent *event) {
+void ImageWindow::mouseReleaseEvent(QMouseEvent *event) {
 #ifdef VIEW_DEBUG
     egsWarning("In mouseReleaseEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
     egsWarning("  Mouse buttons: %0x\n", event->button());
@@ -427,13 +474,13 @@ void ImageWindow::mouseReleaseEvent (QMouseEvent *event) {
         navigationTimer->start(500);
         navigating=false;
     }
-    else if( event->button() == Qt::LeftButton ) {
+    else if (event->button() == Qt::LeftButton) {
         egsWarning("release event at %d %d\n",event->x(),event->y());
         emit leftMouseClick(event->x(),event->y());
     }
 }
 
-void ImageWindow::mouseMoveEvent (QMouseEvent *event) {
+void ImageWindow::mouseMoveEvent(QMouseEvent *event) {
     int dx = event->x()-xyMouse.x();
     int dy = event->y()-xyMouse.y();
     xyMouse = event->pos();
@@ -470,32 +517,40 @@ void ImageWindow::mouseMoveEvent (QMouseEvent *event) {
     }
 };
 
-void ImageWindow::wheelEvent (QWheelEvent *event) {
-    #ifdef VIEW_DEBUG
+void ImageWindow::wheelEvent(QWheelEvent *event) {
+#ifdef VIEW_DEBUG
     egsWarning("In wheelEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
     egsWarning("  Buttons: %0x\n", event->buttons());
-    #endif
+#endif
     startTransformation();
     emit cameraZooming(event->delta()/20);
 };
 
-void ImageWindow::keyPressEvent (QKeyEvent *event) {
-    #ifdef VIEW_DEBUG
+void ImageWindow::keyPressEvent(QKeyEvent *event) {
+#ifdef VIEW_DEBUG
     egsWarning("In keyPressEvent()\n");
-    #endif
+#endif
     if (event->key() == Qt::Key_Home) {
         if (event->modifiers() & Qt::AltModifier) {
             emit cameraHomeDefining();
         }
         else {
-            emit (cameraHoming());
+            emit(cameraHoming());
         }
     }
-    else if (event->key() == Qt::Key_X) emit putCameraOnAxis('x');
-    else if (event->key() == Qt::Key_Y) emit putCameraOnAxis('y');
-    else if (event->key() == Qt::Key_Z) emit putCameraOnAxis('z');
+    else if (event->key() == Qt::Key_X) {
+        emit putCameraOnAxis('x');
+    }
+    else if (event->key() == Qt::Key_Y) {
+        emit putCameraOnAxis('y');
+    }
+    else if (event->key() == Qt::Key_Z) {
+        emit putCameraOnAxis('z');
+    }
 //    else if (event->key() == Qt::Key_D) emit renderAndDebug();
-    else (event->ignore());
+    else {
+        (event->ignore());
+    }
 };
 
 void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
@@ -504,16 +559,16 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
 
     // update the render thread status and queue next image if necessary
     switch (renderState) {
-        case WorkerBackordered:
-            renderState = WorkerIdle;
-            rerender(lastRequestGeo);
-            break;
-        case WorkerCalculating:
-            renderState = WorkerIdle;
-            break;
-        case WorkerIdle:
-            qCritical("Yikes! Unexpected request fulfillment.");
-            break;
+    case WorkerBackordered:
+        renderState = WorkerIdle;
+        rerender(lastRequestGeo);
+        break;
+    case WorkerCalculating:
+        renderState = WorkerIdle;
+        break;
+    case WorkerIdle:
+        qCritical("Yikes! Unexpected request fulfillment.");
+        break;
     }
 
     if (lastRequest.requestType == SavedImage) {
@@ -524,7 +579,8 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
             delete saveProgress;
             saveProgress = NULL;
         }
-    } else {
+    }
+    else {
         if (saveProgress) {
             saveProgress->setValue(1);
         }

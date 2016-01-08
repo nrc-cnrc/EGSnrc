@@ -36,24 +36,33 @@
 
 int main(int argc, char **argv) {
 
-    if( argc < 2 ) egsFatal("Usage: %s input_file\n",argv[0]);
+    if (argc < 2) {
+        egsFatal("Usage: %s input_file\n",argv[0]);
+    }
 
-    EGS_Input input; input.setContentFromFile(argv[1]);
+    EGS_Input input;
+    input.setContentFromFile(argv[1]);
     EGS_ObjectFactory *factory = new EGS_ObjectFactory("egs++/dso/gcc");
 
     EGS_Object *o = factory->createObjects(&input,"source input",
-            "source","main source","createSource");
+                                           "source","main source","createSource");
 
-    if( !o ) egsFatal("Got null object\n");
+    if (!o) {
+        egsFatal("Got null object\n");
+    }
 
     EGS_BaseSource *s = dynamic_cast<EGS_BaseSource *>(o);
-    if( !s ) egsFatal("This is not a source object\n");
+    if (!s) {
+        egsFatal("This is not a source object\n");
+    }
 
     egsInformation("Source description: %s\n",s->getSourceDescription());
 
     EGS_RandomGenerator *rndm = EGS_RandomGenerator::defaultRNG();
-    int q, latch; EGS_Float E, wt; EGS_Vector x,u;
-    for(int j=0; j<10000; j++) {
+    int q, latch;
+    EGS_Float E, wt;
+    EGS_Vector x,u;
+    for (int j=0; j<10000; j++) {
         s->getNextParticle(rndm,q,latch,E,wt,x,u);
         egsWarning("%g %g %g\n",x.x,x.y,x.z);
     }

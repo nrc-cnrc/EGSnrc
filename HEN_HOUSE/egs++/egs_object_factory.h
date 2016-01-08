@@ -101,13 +101,19 @@ public:
     virtual ~EGS_Object();
 
     /*! \brief Get the object name. */
-    const string &getObjectName() const { return name; };
+    const string &getObjectName() const {
+        return name;
+    };
 
     /*! \brief Set the object name to \a Name */
-    void setObjectName(const string &Name) { name = Name; };
+    void setObjectName(const string &Name) {
+        name = Name;
+    };
 
     /*! \brief Get the object type */
-    const string &getObjectType() const { return otype; };
+    const string &getObjectType() const {
+        return otype;
+    };
 
     /*! \brief Create an object from the infromation pointed to by \a inp
 
@@ -117,7 +123,9 @@ public:
       and to return a pointer to it. Otherwise the return value should be
       \a null (which is the default implementation)
     */
-    virtual EGS_Object* createObject(EGS_Input *inp) { return 0; };
+    virtual EGS_Object *createObject(EGS_Input *inp) {
+        return 0;
+    };
 
     /*! \brief Create and return a unique object name
 
@@ -138,9 +146,13 @@ public:
     void setName(EGS_Input *inp);
 
     /*! \brief Increase the reference count to this object */
-    inline int ref() { return ++nref; };
+    inline int ref() {
+        return ++nref;
+    };
     /*! \brief Decrease the reference count to this object */
-    inline int deref() { return --nref; };
+    inline int deref() {
+        return --nref;
+    };
     /*! \brief Set the factory to which the object belongs
 
       If the object already belongs to a different factory, it is first
@@ -154,8 +166,12 @@ public:
       deletes it, if the reference count is zero.
     */
     static void deleteObject(EGS_Object *o) {
-        if( !o ) return;
-        if( !o->deref() ) delete o;
+        if (!o) {
+            return;
+        }
+        if (!o->deref()) {
+            delete o;
+        }
     };
 
 protected:
@@ -221,8 +237,9 @@ public:
       when constructing objects with createSingleObject().
     */
     virtual void addKnownObject(EGS_Object *o) {
-        if( o ) {
-            o->ref(); known_objects.push_back(o);
+        if (o) {
+            o->ref();
+            known_objects.push_back(o);
         }
     };
 
@@ -249,7 +266,7 @@ public:
       to the newly created object. In all other cases \c null is returned.
     */
     virtual EGS_Object *createSingleObject(EGS_Input *inp,
-            const char *funcname = 0, bool unique = true);
+                                           const char *funcname = 0, bool unique = true);
 
     /*! \brief Create all objects specified by the information \a inp.
 
@@ -279,8 +296,8 @@ public:
       as in createSingleObject().
     */
     EGS_Object *createObjects(EGS_Input *inp, const string &section_delimeter,
-            const string &object_delimeter, const string &select_key,
-            const char *funcname = 0, bool unique = true);
+                              const string &object_delimeter, const string &select_key,
+                              const char *funcname = 0, bool unique = true);
 
     /*! \brief Does the factory own the object pointed to by \a o?
 
@@ -331,10 +348,14 @@ public:
     void addKnownTypeId(const char *typeid_name);
 
     /*! \brief Get the number of objects this factory has created so far */
-    int  nObjects() const { return objects.size(); };
+    int  nObjects() const {
+        return objects.size();
+    };
 
     /*! \brief Get the \a j'th object */
-    EGS_Object* getObject(int j) { return (j>=0 && j<objects.size()) ? objects[j] : 0; };
+    EGS_Object *getObject(int j) {
+        return (j>=0 && j<objects.size()) ? objects[j] : 0;
+    };
 
 protected:
 
@@ -362,49 +383,61 @@ class EGS_EXPORT EGS_TypedObjectFactory : public EGS_ObjectFactory {
 public:
 
     EGS_TypedObjectFactory(const string &dsoPath, const string &type,
-            int where=0) :
+                           int where=0) :
         EGS_ObjectFactory(dsoPath,where), otype(type) {};
     ~EGS_TypedObjectFactory() {};
 
     bool isKnownTypeId(EGS_Object *o) const {
-        for(int j=0; j<known_typeids.size(); j++) {
-            if( known_typeids[j] == typeid(*o).name() ) return true;
+        for (int j=0; j<known_typeids.size(); j++) {
+            if (known_typeids[j] == typeid(*o).name()) {
+                return true;
+            }
         }
         return false;
     };
 
     bool isMyObjectType(EGS_Object *o, const char *func) {
-        if( !o ) return false;
+        if (!o) {
+            return false;
+        }
         T *t = dynamic_cast<T *>(o);
         bool res;
-        if( t ) res = true;
-        else res = isKnownTypeId(o);
-        if( !res && func ) egsWarning("EGS_TypedObjectFactory::%s:\n"
-             "  dynamic_cast to %s fails for object of type %s\n"
-             "  This object's typeid is also not in the list of know typeids\n",
-             func,otype.c_str(),o->getObjectType().c_str());
+        if (t) {
+            res = true;
+        }
+        else {
+            res = isKnownTypeId(o);
+        }
+        if (!res && func) egsWarning("EGS_TypedObjectFactory::%s:\n"
+                                         "  dynamic_cast to %s fails for object of type %s\n"
+                                         "  This object's typeid is also not in the list of know typeids\n",
+                                         func,otype.c_str(),o->getObjectType().c_str());
         return res;
     };
 
     void addKnownObject(EGS_Object *o) {
-        if( isMyObjectType(o,"addKnownObject()") )
+        if (isMyObjectType(o,"addKnownObject()")) {
             EGS_ObjectFactory::addKnownObject(o);
+        }
         EGS_ObjectFactory::addKnownObject(o);
     };
 
     EGS_Object *createSingleObject(EGS_Input *i,
-                        const char *fname = 0, bool u = true) {
+                                   const char *fname = 0, bool u = true) {
         EGS_Object *o = EGS_ObjectFactory::createSingleObject(i,fname,u);
-        if( o ) {
-            if( !isMyObjectType(o,"createSingleObject()") ) {
-                delete o; o = 0;
+        if (o) {
+            if (!isMyObjectType(o,"createSingleObject()")) {
+                delete o;
+                o = 0;
             }
         }
         return o;
     };
 
     bool addObject(EGS_Object *o, bool unique = true) {
-        if( !isMyObjectType(o,"addObject()") ) return false;
+        if (!isMyObjectType(o,"addObject()")) {
+            return false;
+        }
         return EGS_ObjectFactory::addObject(o,unique);
     };
 

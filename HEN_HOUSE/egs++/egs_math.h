@@ -38,45 +38,45 @@
 #define EGS_MATH_
 
 #ifdef MISSING
-#include "missing.h"
+    #include "missing.h"
 #endif
 
 #ifdef NO_CMATH
-#include <math.h>
+    #include <math.h>
 #else
-#include <cmath>
+    #include <cmath>
 #endif
 
 // M_PI is not defined after including cmath for the MS visual studio compiler?
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+    #define M_PI 3.14159265358979323846
 #endif
 
 // Some C++ compilers don't have a proper implementation of abs() for
 // all types => use a macro instead.
 #ifdef DONT_HAVE_ABS
-#ifdef abs
-#undef abs
-#endif
-#define abs(a)     ((a) >= 0  ? (a) : -(a))
+    #ifdef abs
+        #undef abs
+    #endif
+    #define abs(a)     ((a) >= 0  ? (a) : -(a))
 #endif
 
 // Some C++ compilers don't know anything about min/max after including
 // cmath.
 #ifdef DONT_HAVE_MINMAX
-#ifdef min
-#undef min
-#endif
-#ifdef max
-#undef max
-#endif
-#define  max(a, b)  ((a) > (b) ? (a) :  (b))
-#define  min(a, b)  ((a) < (b) ? (a) :  (b))
+    #ifdef min
+        #undef min
+    #endif
+    #ifdef max
+        #undef max
+    #endif
+    #define  max(a, b)  ((a) > (b) ? (a) :  (b))
+    #define  min(a, b)  ((a) < (b) ? (a) :  (b))
 #endif
 
 // this one is needed for the SGI C++ compiler.
 #ifdef STD_SQRT
-#define sqrt(a) std::sqrt(a)
+    #define sqrt(a) std::sqrt(a)
 #endif
 
 #endif

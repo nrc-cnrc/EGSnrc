@@ -46,76 +46,81 @@
 
 extern "C" {
 
-EGS_ELLIPTIC_CYLINDERS_EXPORT
-EGS_BaseGeometry* createGeometry(EGS_Input *input) {
-  // check for valid input
-    if( !input ) {
-        egsWarning("createGeometry(elliptic cylinders): null input?\n");
-        return 0;
-    }
-    string type; int err = input->getInput("type",type);
-    if( err ) {
-        egsWarning("createGeometry(elliptic cylinders): missing type key\n");
-        return 0;
-    }
-
-    // point on cylinder axis
-    EGS_Vector xo; vector<EGS_Float> Xo;
-    err = input->getInput("midpoint",Xo);
-    if( !err && Xo.size() == 3 ) xo = EGS_Vector(Xo[0],Xo[1],Xo[2]);
-
-    // cylinder radii
-    vector<EGS_Float> x_radii, y_radii;
-    err = input->getInput("x-radii",x_radii);
-    if( err ) {
-        egsWarning("createGeometry(elliptic cylinders): wrong/missing "
-                "'x-radii' input\n");
-        return 0;
-    }
-    err = input->getInput("y-radii",y_radii);
-    if( err ) {
-        egsWarning("createGeometry(elliptic cylinders): wrong/missing "
-                "'y-radii' input\n");
-        return 0;
-    }
-    if( x_radii.size() != y_radii.size() ) {
-        egsWarning("createGeometry(elliptic cylinders): expecting the same "
-           "number of x- and y-radii, your input is %d %d\n",
-           x_radii.size(),y_radii.size());
-        return 0;
-    }
-
-    // select geometry
-    EGS_BaseGeometry *g;
-    if( type == "EGS_EllipticCylindersXY" )
-        g = new EGS_EllipticCylindersXY(x_radii,y_radii,xo,"",
-                EGS_XProjector("X"),EGS_YProjector("Y"));
-    else if( type == "EGS_EllipticCylindersXZ" )
-        g = new EGS_EllipticCylindersXZ(x_radii,y_radii,xo,"",
-                EGS_XProjector("X"),EGS_ZProjector("Z"));
-    else if( type == "EGS_EllipticCylindersYZ" )
-        g = new EGS_EllipticCylindersYZ(x_radii,y_radii,xo,"",
-                EGS_YProjector("Y"),EGS_ZProjector("Z"));
-    else {
-        vector<EGS_Float> ax, ay;
-        err = input->getInput("x-axis",ax);
-        if( err || ax.size() != 3 ) {
-            egsWarning("createGeometry(elliptic cylinders): missing/wrong "
-                    "'x-axis' input\n");
+    EGS_ELLIPTIC_CYLINDERS_EXPORT
+    EGS_BaseGeometry *createGeometry(EGS_Input *input) {
+        // check for valid input
+        if (!input) {
+            egsWarning("createGeometry(elliptic cylinders): null input?\n");
             return 0;
         }
-        err = input->getInput("y-axis",ay);
-        if( err || ay.size() != 3 ) {
-            egsWarning("createGeometry(elliptic cylinders): missing/wrong "
-                    "'y-axis' input\n");
+        string type;
+        int err = input->getInput("type",type);
+        if (err) {
+            egsWarning("createGeometry(elliptic cylinders): missing type key\n");
             return 0;
         }
-        g = new EGS_EllipticCylinders(x_radii,y_radii,xo,"",
-                EGS_Projector(EGS_Vector(ax[0],ax[1],ax[2]),"Any"),
-                EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
+
+        // point on cylinder axis
+        EGS_Vector xo;
+        vector<EGS_Float> Xo;
+        err = input->getInput("midpoint",Xo);
+        if (!err && Xo.size() == 3) {
+            xo = EGS_Vector(Xo[0],Xo[1],Xo[2]);
+        }
+
+        // cylinder radii
+        vector<EGS_Float> x_radii, y_radii;
+        err = input->getInput("x-radii",x_radii);
+        if (err) {
+            egsWarning("createGeometry(elliptic cylinders): wrong/missing "
+                       "'x-radii' input\n");
+            return 0;
+        }
+        err = input->getInput("y-radii",y_radii);
+        if (err) {
+            egsWarning("createGeometry(elliptic cylinders): wrong/missing "
+                       "'y-radii' input\n");
+            return 0;
+        }
+        if (x_radii.size() != y_radii.size()) {
+            egsWarning("createGeometry(elliptic cylinders): expecting the same "
+                       "number of x- and y-radii, your input is %d %d\n",
+                       x_radii.size(),y_radii.size());
+            return 0;
+        }
+
+        // select geometry
+        EGS_BaseGeometry *g;
+        if (type == "EGS_EllipticCylindersXY")
+            g = new EGS_EllipticCylindersXY(x_radii,y_radii,xo,"",
+                                            EGS_XProjector("X"),EGS_YProjector("Y"));
+        else if (type == "EGS_EllipticCylindersXZ")
+            g = new EGS_EllipticCylindersXZ(x_radii,y_radii,xo,"",
+                                            EGS_XProjector("X"),EGS_ZProjector("Z"));
+        else if (type == "EGS_EllipticCylindersYZ")
+            g = new EGS_EllipticCylindersYZ(x_radii,y_radii,xo,"",
+                                            EGS_YProjector("Y"),EGS_ZProjector("Z"));
+        else {
+            vector<EGS_Float> ax, ay;
+            err = input->getInput("x-axis",ax);
+            if (err || ax.size() != 3) {
+                egsWarning("createGeometry(elliptic cylinders): missing/wrong "
+                           "'x-axis' input\n");
+                return 0;
+            }
+            err = input->getInput("y-axis",ay);
+            if (err || ay.size() != 3) {
+                egsWarning("createGeometry(elliptic cylinders): missing/wrong "
+                           "'y-axis' input\n");
+                return 0;
+            }
+            g = new EGS_EllipticCylinders(x_radii,y_radii,xo,"",
+                                          EGS_Projector(EGS_Vector(ax[0],ax[1],ax[2]),"Any"),
+                                          EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
+        }
+        g->setName(input);
+        g->setMedia(input);
+        return g;
     }
-    g->setName(input); g->setMedia(input);
-    return g;
-}
 
 }

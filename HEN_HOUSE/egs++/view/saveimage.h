@@ -40,7 +40,7 @@ class SaveImage : public QDialog, public Ui::SaveImage {
 
 public:
 
-    SaveImage(QWidget* parent=0, const char* name=0);
+    SaveImage(QWidget *parent=0, const char *name=0);
     virtual ~SaveImage();
 
     virtual void getImageSize(int *, int *);
@@ -51,7 +51,7 @@ public slots:
 
     virtual void selectFileName();
     virtual void enableOkButton();
-    virtual void fnameTextChanged( const QString & );
+    virtual void fnameTextChanged(const QString &);
 
 signals:
 
@@ -59,7 +59,9 @@ signals:
 
 protected slots:
 
-    virtual void languageChange() {retranslateUi(this);}
+    virtual void languageChange() {
+        retranslateUi(this);
+    }
 };
 
 #endif // SAVEIMAGE_H

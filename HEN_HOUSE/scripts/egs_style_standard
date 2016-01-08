@@ -1,0 +1,12 @@
+### usage:
+### astyle --options=$HEN_HOUSE/scripts/egs_coding_standard "*.cpp" "*.h"
+
+--convert-tabs              # convert all tabs to spaces
+--indent=spaces=4           # indent is 4 spaces
+--style=attach              # attach opening bracket at end of line
+--unpad-paren               # remove extra space padding around parenthesis on the inside and outside
+--pad-header                # space padding between a header and the following parenthesis
+--align-pointer=name        # attach pointer or reference to variable name
+--break-closing-brackets    # breaks closing headers from their immediately preceding closing brackets
+--add-brackets              # add brackets to unbracketed one line conditional statements
+--indent-preproc-block      # indent preprocessor blocks

@@ -94,10 +94,14 @@ public:
      * Derived classes should re-implement this function to return \a true
      * for ausgab calls that are of interest to them.
      */
-    virtual bool needsCall(EGS_Application::AusgabCall iarg) const { return false; };
+    virtual bool needsCall(EGS_Application::AusgabCall iarg) const {
+        return false;
+    };
 
     /*! \brief Set the application this object belongs to */
-    virtual void setApplication(EGS_Application *App) { app = App; };
+    virtual void setApplication(EGS_Application *App) {
+        app = App;
+    };
 
     /*! \brief Set the current event */
     virtual void setCurrentCase(EGS_I64 ncase) {};
@@ -107,7 +111,9 @@ public:
      *   Derived classes should set #description to a short
      *   string describing the ausgab object.
      */
-    const char *getObjectDescription() const { return description.c_str(); };
+    const char *getObjectDescription() const {
+        return description.c_str();
+    };
 
     /*!  \brief Store the source state into the stream \a data_out.
      *
@@ -117,7 +123,9 @@ public:
      *   calculations. Should return \c true on success, \c false on failure.
      *   \sa setState(), addState(), resetCounter().
      */
-    virtual bool storeState(ostream &data_out) const { return true; };
+    virtual bool storeState(ostream &data_out) const {
+        return true;
+    };
 
     /*!  \brief Set the ausgab object state based on data from the stream \a data_in.
      *
@@ -128,7 +136,9 @@ public:
      *
      *   \sa addState(), storeState(), resetCounter()
      */
-    virtual bool setState(istream &data_in) { return true; };
+    virtual bool setState(istream &data_in) {
+        return true;
+    };
 
     /*! \brief Add data from the stream \a data_in to the ausgab object state.
      *
@@ -138,7 +148,9 @@ public:
      *
      *  \sa storeState(), setState(), resetCounter().
      */
-    virtual bool addState(istream &data_in) { return true; };
+    virtual bool addState(istream &data_in) {
+        return true;
+    };
 
     /*! \brief Reset the ausgab object state.
      *
@@ -159,7 +171,7 @@ public:
      * accumulated during the simulation.
      *
      */
-     virtual void reportResults() {};
+    virtual void reportResults() {};
 
     /*! \brief Create ausgab objects from the information pointed to by \a input.
      *
@@ -199,23 +211,23 @@ public:
      *  application can define its own ausgab objects (in addition to
      *  the ausgab objects provided by egspp) and use them.
      */
-     static void addKnownAusgabObject(EGS_AusgabObject *o);
+    static void addKnownAusgabObject(EGS_AusgabObject *o);
 
-     /*! \brief Add a known ausgab object typeid to the ausgab object factory.
-      *
-      *  For whatever reason dynamic_cast to EGS_AusgabObject* from EGS_Object*
-      *  fails when an application is made into a shared library and
-      *  dynamically loads an ausgab object DSO. I'm therefore adding this method
-      *  so that ausgab object classes can add their typeid to allow for an additional
-      *  check in such cases.
-      */
-     static void addKnownTypeId(const char *name);
+    /*! \brief Add a known ausgab object typeid to the ausgab object factory.
+     *
+     *  For whatever reason dynamic_cast to EGS_AusgabObject* from EGS_Object*
+     *  fails when an application is made into a shared library and
+     *  dynamically loads an ausgab object DSO. I'm therefore adding this method
+     *  so that ausgab object classes can add their typeid to allow for an additional
+     *  check in such cases.
+     */
+    static void addKnownTypeId(const char *name);
 
-     /*! \brief Returns the number of ausgab objects in the internal list */
-     static int nObjects();
+    /*! \brief Returns the number of ausgab objects in the internal list */
+    static int nObjects();
 
-     /*! \brief Returns the j'th ausgab object in the internal list */
-     static EGS_AusgabObject* getObject(int j);
+    /*! \brief Returns the j'th ausgab object in the internal list */
+    static EGS_AusgabObject *getObject(int j);
 
 protected:
 

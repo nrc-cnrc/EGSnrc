@@ -24,7 +24,7 @@
 #  Author:          Manuel Stoeckl, 2015
 #
 ###############################################################################
-*/ 
+*/
 
 #include "renderworker.h"
 #include "egs_visualizer.h"
@@ -40,7 +40,9 @@ RenderWorker::RenderWorker() {
 }
 RenderWorker::~RenderWorker() {
     delete vis;
-    if (image) delete[] image;
+    if (image) {
+        delete[] image;
+    }
 }
 
 void RenderWorker::loadTracks(QString fileName) {
@@ -116,43 +118,55 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
         int i1 = (int) axes[k].x;
         int j1 = (int) axes[k].y;
         int n = abs(i1-i0);
-        if (abs(j1-j0)>n) n = abs(j1-j0);
+        if (abs(j1-j0)>n) {
+            n = abs(j1-j0);
+        }
         // more than one axis pixel: loop over axis pixels
         if (n>0) {
             deltax = (i1-i0)/(float)n;
             deltay = (j1-j0)/(float)n;
             for (int t=0; t<=n; t++) {
-                i1 = (int) (i0+t*deltax);
-                j1 = (int) (j0+t*deltay);
-                if (k==1) taxis = EGS_Vector(EGS_Vector(t*p.axesmax.x/n,0,0) - p.camera).length();
-                if (k==2) taxis = EGS_Vector(EGS_Vector(0,t*p.axesmax.y/n,0) - p.camera).length();
-                if (k==3) taxis = EGS_Vector(EGS_Vector(0,0,t*p.axesmax.z/n) - p.camera).length();
-                if (i1>=0 && i1<nx && j1>=0 && j1<ny) image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
+                i1 = (int)(i0+t*deltax);
+                j1 = (int)(j0+t*deltay);
+                if (k==1) {
+                    taxis = EGS_Vector(EGS_Vector(t*p.axesmax.x/n,0,0) - p.camera).length();
+                }
+                if (k==2) {
+                    taxis = EGS_Vector(EGS_Vector(0,t*p.axesmax.y/n,0) - p.camera).length();
+                }
+                if (k==3) {
+                    taxis = EGS_Vector(EGS_Vector(0,0,t*p.axesmax.z/n) - p.camera).length();
+                }
+                if (i1>=0 && i1<nx && j1>=0 && j1<ny) {
+                    image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
+                }
             }
         }
         // just one axis pixel
-        else if (i1>=0 && i1<nx && j1>=0 && j1<ny)  image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
+        else if (i1>=0 && i1<nx && j1>=0 && j1<ny) {
+            image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
+        }
     }
 }
 
-void applyParameters(EGS_GeometryVisualizer* vis, const struct RenderParameters& p) {
+void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters &p) {
     vis->setProjection(p.camera,p.screen_xo,p.screen_v1,p.screen_v2,p.projection_x,p.projection_y);
     // set lights, planes, materials.
-    for (size_t i=0;i<p.lights.size();i++) {
+    for (size_t i=0; i<p.lights.size(); i++) {
         // all lights are white by default
         vis->setLight(i,new EGS_Light(p.lights[i]));
     }
     vis->clearClippingPlanes();
-    for (size_t i=0;i<p.clipping_planes.size();i++) {
+    for (size_t i=0; i<p.clipping_planes.size(); i++) {
         vis->addClippingPlane(new EGS_ClippingPlane(p.clipping_planes[i]));
     }
-    for (size_t i=0;i<p.material_colors.size();i++) {
+    for (size_t i=0; i<p.material_colors.size(); i++) {
         vis->setMaterialColor(i,p.material_colors[i]);
     }
     vis->setGlobalAmbientLight(p.global_ambient_light);
 }
 
-void RenderWorker::render(EGS_BaseGeometry* g, struct RenderParameters p) {
+void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {
     // wall-clock time, not CPU time; to optimize response
     QTime itime = QTime::currentTime();
 
@@ -160,8 +174,10 @@ void RenderWorker::render(EGS_BaseGeometry* g, struct RenderParameters p) {
 
     // create image buffer, if new
     if (p.nx != nx_last || p.ny != ny_last) {
-        delete[] image; image = new EGS_Vector[p.nx*p.ny];
-        nx_last = p.nx; ny_last = p.ny;
+        delete[] image;
+        image = new EGS_Vector[p.nx*p.ny];
+        nx_last = p.nx;
+        ny_last = p.ny;
     }
 
     // modifies image and sets axeslabels
@@ -191,11 +207,11 @@ void RenderWorker::render(EGS_BaseGeometry* g, struct RenderParameters p) {
 
     // transfer to image
     QImage img(p.nx, p.ny, QImage::Format_ARGB32);
-    for (int j=0;j<p.ny;j++) {
+    for (int j=0; j<p.ny; j++) {
         uint *sl = (uint *) img.scanLine(j);
-        for(int i=0; i<p.nx; i++) {
+        for (int i=0; i<p.nx; i++) {
             EGS_Vector v = image[i+(p.ny-j-1)*p.nx];
-            int r = (int) (v.x*255), g = (int) (v.y*255), b = (int) (v.z*255);
+            int r = (int)(v.x*255), g = (int)(v.y*255), b = (int)(v.z*255);
             *(sl+i) = qRgb(r,g,b);
         }
     }

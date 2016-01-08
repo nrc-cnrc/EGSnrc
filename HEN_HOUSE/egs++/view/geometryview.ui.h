@@ -49,21 +49,21 @@ void GeometryView::updateView() {
 }
 
 
-void GeometryView::xRotation( int rot ) {
+void GeometryView::xRotation(int rot) {
 #ifdef VIEW_DEBUG
     egsWarning("In GeometryView::xRotation(%d)\n",rot);
 #endif
 }
 
 
-void GeometryView::yRotation( int rot ) {
+void GeometryView::yRotation(int rot) {
 #ifdef VIEW_DEBUG
     egsWarning("In GeometryView::yRotation(%d)\n",rot);
 #endif
 }
 
 
-void GeometryView::zRotation( int rot ) {
+void GeometryView::zRotation(int rot) {
 #ifdef VIEW_DEBUG
     egsWarning("In GeometryView::zRotation(%d)\n",rot);
 #endif

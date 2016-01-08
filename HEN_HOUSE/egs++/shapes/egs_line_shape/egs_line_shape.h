@@ -43,22 +43,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_LINE_SHAPE_DLL
-#define EGS_LINE_SHAPE_EXPORT __declspec(dllexport)
-#else
-#define EGS_LINE_SHAPE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_LINE_SHAPE_LOCAL
+    #ifdef BUILD_LINE_SHAPE_DLL
+        #define EGS_LINE_SHAPE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_LINE_SHAPE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_LINE_SHAPE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_LINE_SHAPE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_LINE_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_LINE_SHAPE_EXPORT
-#define EGS_LINE_SHAPE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_LINE_SHAPE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_LINE_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_LINE_SHAPE_EXPORT
+        #define EGS_LINE_SHAPE_LOCAL
+    #endif
 
 #endif
 
@@ -85,15 +85,18 @@ class EGS_LINE_SHAPE_EXPORT EGS_LineShape : public EGS_BaseShape {
 public:
 
     EGS_LineShape(const vector<EGS_Float> &points, const string &Name="",
-            EGS_ObjectFactory *f=0);
+                  EGS_ObjectFactory *f=0);
     ~EGS_LineShape() {
-        if( n > 0 ) {
-            delete table; delete [] x; delete [] y;
+        if (n > 0) {
+            delete table;
+            delete [] x;
+            delete [] y;
         }
     };
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         int j = table->sampleBin(rndm);
-        EGS_Float eta = rndm->getUniform(); EGS_Float eta1 = 1 - eta;
+        EGS_Float eta = rndm->getUniform();
+        EGS_Float eta1 = 1 - eta;
         return EGS_Vector(x[j]*eta+x[j+1]*eta1,y[j]*eta+y[j+1]*eta1,0);
     };
 

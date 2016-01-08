@@ -36,10 +36,10 @@
 #include <qheaderview.h>
 
 #ifdef VIEW_DEBUG
-extern void (* egsWarning)(const char*, ...);
+    extern void (* egsWarning)(const char *, ...);
 #endif
 
-ClippingPlanesWidget::ClippingPlanesWidget(QWidget* parent, const char* name)
+ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     : QWidget(parent) {
     setObjectName(name);
     setupUi(this);
@@ -50,7 +50,7 @@ ClippingPlanesWidget::~ClippingPlanesWidget() {
 }
 
 void ClippingPlanesWidget::applyClicked() {
-     emit clippingPlanesChanged();
+    emit clippingPlanesChanged();
 }
 
 
@@ -66,25 +66,44 @@ int ClippingPlanesWidget::numPlanes() {
 }
 
 
-bool ClippingPlanesWidget::getPlane( int j, EGS_Vector &a, EGS_Float &d ) {
+bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     // check if all row items exist and are selected.
     QTableWidgetItem *itemAx = planeTable->item(j,0),
-                     *itemAy = planeTable->item(j,1),
-                     *itemAz = planeTable->item(j,2),
-                     *itemD = planeTable->item(j,3);
-    if (!itemAx || !itemAy || !itemAz  || !itemD) return false;
+                      *itemAy = planeTable->item(j,1),
+                       *itemAz = planeTable->item(j,2),
+                        *itemD = planeTable->item(j,3);
+    if (!itemAx || !itemAy || !itemAz  || !itemD) {
+        return false;
+    }
     if (!itemAx->isSelected() || !itemAy->isSelected() ||
-        !itemAz->isSelected() || !itemD->isSelected()) return false;
+            !itemAz->isSelected() || !itemD->isSelected()) {
+        return false;
+    }
 
     // transfer values from table
     bool ok;
-    double ax = itemAx->text().toDouble(&ok); if( !ok ) return false;
-    double ay = itemAy->text().toDouble(&ok); if( !ok ) return false;
-    double az = itemAz->text().toDouble(&ok); if( !ok ) return false;
-    double nd = itemD->text().toDouble(&ok); if( !ok ) return false;
+    double ax = itemAx->text().toDouble(&ok);
+    if (!ok) {
+        return false;
+    }
+    double ay = itemAy->text().toDouble(&ok);
+    if (!ok) {
+        return false;
+    }
+    double az = itemAz->text().toDouble(&ok);
+    if (!ok) {
+        return false;
+    }
+    double nd = itemD->text().toDouble(&ok);
+    if (!ok) {
+        return false;
+    }
 
     // commit values only if all are valid
-    a.x = ax; a.y = ay; a.z = az; d = nd;
+    a.x = ax;
+    a.y = ay;
+    a.z = az;
+    d = nd;
     return true;
 }
 

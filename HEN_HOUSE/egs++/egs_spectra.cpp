@@ -44,18 +44,19 @@
 #include "egs_math.h"
 #include <fstream>
 #ifndef NO_SSTREAM
-#include <sstream>
-#define S_STREAM std::istringstream
+    #include <sstream>
+    #define S_STREAM std::istringstream
 #else
-#include <strstream>
-#define S_STREAM std::istrstream
+    #include <strstream>
+    #define S_STREAM std::istrstream
 #endif
 
 using namespace std;
 
 void EGS_BaseSpectrum::reportAverageEnergy() const {
     egsInformation("expected average energy: %g\n",expectedAverage());
-    EGS_Float e=0,de=0; getSampledAverage(e,de);
+    EGS_Float e=0,de=0;
+    getSampledAverage(e,de);
     egsInformation("sampled  average energy: %g +/- %g\n",e,de);
 }
 
@@ -77,27 +78,41 @@ public:
 
     /*! \brief Construct a monoenergetic spectrum with energy \a energy. */
     EGS_MonoEnergy(EGS_Float energy) : EGS_BaseSpectrum(), E(energy) {
-        char buf[1024]; sprintf(buf,"monoenergetic %g MeV",E);
+        char buf[1024];
+        sprintf(buf,"monoenergetic %g MeV",E);
         type = buf;
     };
     ~EGS_MonoEnergy() {};
-    EGS_Float expectedAverage() const { return E; };
-    EGS_Float maxEnergy() const { return E; };
+    EGS_Float expectedAverage() const {
+        return E;
+    };
+    EGS_Float maxEnergy() const {
+        return E;
+    };
 
 protected:
 
-    EGS_Float sample(EGS_RandomGenerator *) { return E; };
+    EGS_Float sample(EGS_RandomGenerator *) {
+        return E;
+    };
 
     EGS_Float E; //!< The spectrum energy.
 
 };
 
 static inline EGS_Float getGaussianRN(EGS_RandomGenerator *rndm) {
-    static bool have_x = false; static EGS_Float the_x;
-    if( have_x ) { have_x = false; return the_x; }
+    static bool have_x = false;
+    static EGS_Float the_x;
+    if (have_x) {
+        have_x = false;
+        return the_x;
+    }
     EGS_Float r = sqrt(-2*log(1-rndm->getUniform()));
-    EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
-    the_x = r*sphi; have_x = true; return r*cphi;
+    EGS_Float cphi, sphi;
+    rndm->getAzimuth(cphi,sphi);
+    the_x = r*sphi;
+    have_x = true;
+    return r*cphi;
 };
 
 /*! \brief A Gaussian spectrum
@@ -128,24 +143,38 @@ public:
      */
     EGS_GaussianSpectrum(EGS_Float mean_energy, EGS_Float Sigma) :
         EGS_BaseSpectrum(), Eo(mean_energy), sigma(Sigma) {
-        if( Eo <= 0 ) egsFatal("EGS_GaussianSpectrum: attempt to construct "
-             "a spectrum with a negative mean energy (%g)\n",Eo);
-        if( sigma < 0 ) sigma = -sigma*0.4246609; // i.e. assume
-             // the user has specified FWHM
+        if (Eo <= 0) egsFatal("EGS_GaussianSpectrum: attempt to construct "
+                                  "a spectrum with a negative mean energy (%g)\n",Eo);
+        if (sigma < 0) {
+            sigma = -sigma*0.4246609;    // i.e. assume
+        }
+        // the user has specified FWHM
         char buf[1024];
         sprintf(buf,"Gaussian spectrum with Eo = %g and sigma = %g",Eo,sigma);
         type = buf;
-        if( Eo - 5*sigma > 0 ) Emax = Eo + 5*sigma; else Emax = 2*Eo;
+        if (Eo - 5*sigma > 0) {
+            Emax = Eo + 5*sigma;
+        }
+        else {
+            Emax = 2*Eo;
+        }
     };
     ~EGS_GaussianSpectrum() {};
-    EGS_Float expectedAverage() const { return Eo; };
-    EGS_Float maxEnergy() const { return Emax; };
+    EGS_Float expectedAverage() const {
+        return Eo;
+    };
+    EGS_Float maxEnergy() const {
+        return Emax;
+    };
 
 protected:
 
     EGS_Float sample(EGS_RandomGenerator *rndm) {
         EGS_Float E;
-        do { E = Eo + sigma*getGaussianRN(rndm); } while ( E <= 0 || E > Emax );
+        do {
+            E = Eo + sigma*getGaussianRN(rndm);
+        }
+        while (E <= 0 || E > Emax);
         return E;
     };
 
@@ -190,13 +219,17 @@ public:
      * \a mean_energy and widths \a sig_left and \a sig_right.
      */
     EGS_DoubleGaussianSpectrum(EGS_Float mean_energy, EGS_Float sig_left,
-            EGS_Float sig_right) : EGS_BaseSpectrum(), Eo(mean_energy),
-            sleft(sig_left), sright(sig_right) {
-        if( sleft < 0 ) sleft = -sleft*0.4246609;
-        if( sright< 0 ) sright= -sright*0.4246609;
+                               EGS_Float sig_right) : EGS_BaseSpectrum(), Eo(mean_energy),
+        sleft(sig_left), sright(sig_right) {
+        if (sleft < 0) {
+            sleft = -sleft*0.4246609;
+        }
+        if (sright< 0) {
+            sright= -sright*0.4246609;
+        }
         Emax = Eo + 4*sright;
-        if( Eo - 4*sleft < 0 ) egsWarning("EGS_DoubleGaussianSpectrum: "
-            "for Eo=%g, sigma=%g there will be negative energy sampled\n");
+        if (Eo - 4*sleft < 0) egsWarning("EGS_DoubleGaussianSpectrum: "
+                                             "for Eo=%g, sigma=%g there will be negative energy sampled\n");
         p = sleft/(sleft + sright);
         char buf[1024];
         sprintf(buf,"Double Gaussian spectrum with Eo = %g sig(left) = %g"
@@ -204,30 +237,38 @@ public:
         type = buf;
     };
     ~EGS_DoubleGaussianSpectrum() {};
-     EGS_Float maxEnergy() const { return Emax; };
-     EGS_Float expectedAverage() const {
-         return Eo + sqrt(2/M_PI)*(sright-sleft);
-     };
+    EGS_Float maxEnergy() const {
+        return Emax;
+    };
+    EGS_Float expectedAverage() const {
+        return Eo + sqrt(2/M_PI)*(sright-sleft);
+    };
 
 protected:
 
-     EGS_Float Eo;     //!< The mean energy
-     EGS_Float Emax;   //!< The maximum energy
-     EGS_Float sleft;  //!< The width of the spectrum left of Eo
-     EGS_Float sright; //!< The width of the spectrum right of Eo
-     EGS_Float p;      /*!< The probability for picking energies from the left
+    EGS_Float Eo;     //!< The mean energy
+    EGS_Float Emax;   //!< The maximum energy
+    EGS_Float sleft;  //!< The width of the spectrum left of Eo
+    EGS_Float sright; //!< The width of the spectrum right of Eo
+    EGS_Float p;      /*!< The probability for picking energies from the left
                            or right Gaussian */
 
-     EGS_Float sample(EGS_RandomGenerator *rndm) {
-         EGS_Float E;
-         if( rndm->getUniform() < p ) {
-             do { E = Eo-sleft*fabs(getGaussianRN(rndm)); } while ( E <= 0 );
-         }
-         else {
-             do { E = Eo+sright*fabs(getGaussianRN(rndm)); } while ( E > Emax );
-         }
-         return E;
-     };
+    EGS_Float sample(EGS_RandomGenerator *rndm) {
+        EGS_Float E;
+        if (rndm->getUniform() < p) {
+            do {
+                E = Eo-sleft*fabs(getGaussianRN(rndm));
+            }
+            while (E <= 0);
+        }
+        else {
+            do {
+                E = Eo+sright*fabs(getGaussianRN(rndm));
+            }
+            while (E > Emax);
+        }
+        return E;
+    };
 
 };
 
@@ -261,8 +302,12 @@ public:
         type = buf;
     };
     ~EGS_UniformSpectrum() {};
-    EGS_Float maxEnergy() const { return Emax; };
-    EGS_Float expectedAverage() const { return (Emin+Emax)/2; };
+    EGS_Float maxEnergy() const {
+        return Emax;
+    };
+    EGS_Float expectedAverage() const {
+        return (Emin+Emax)/2;
+    };
 
 protected:
 
@@ -346,11 +391,17 @@ public:
      * spectrum.
      */
     EGS_TabulatedSpectrum(int N, const EGS_Float *x, const EGS_Float *f,
-            int Type = 1, const char *fname = 0) : EGS_BaseSpectrum(),
-            table(new EGS_AliasTable(N,x,f,Type)) { setType(Type,fname); };
+                          int Type = 1, const char *fname = 0) : EGS_BaseSpectrum(),
+        table(new EGS_AliasTable(N,x,f,Type)) {
+        setType(Type,fname);
+    };
 
-    ~EGS_TabulatedSpectrum() { delete table; };
-    EGS_Float maxEnergy() const { return table->getMaximum(); };
+    ~EGS_TabulatedSpectrum() {
+        delete table;
+    };
+    EGS_Float maxEnergy() const {
+        return table->getMaximum();
+    };
     EGS_Float expectedAverage() const {
         return table->getAverage();
     };
@@ -359,11 +410,22 @@ protected:
 
     EGS_AliasTable *table; //!< The alias table object used to sample energies.
     void setType(int Type,const char *fname) {
-        if( Type == 0 ) type = "tabulated line spectrum";
-        else if( Type == 1 ) type = "tabulated histogram spectrum";
-        else type = "tabulated spectrum";
-        if( fname ) { type += " defined in "; type += fname; }
-        else type += " defined inline";
+        if (Type == 0) {
+            type = "tabulated line spectrum";
+        }
+        else if (Type == 1) {
+            type = "tabulated histogram spectrum";
+        }
+        else {
+            type = "tabulated spectrum";
+        }
+        if (fname) {
+            type += " defined in ";
+            type += fname;
+        }
+        else {
+            type += " defined inline";
+        }
     };
 
     EGS_Float sample(EGS_RandomGenerator *rndm) {
@@ -382,244 +444,334 @@ static char spec_msg1[] = "EGS_BaseSpectrum::createSpectrum:";
 //
 istream &skipsep(istream &in) {
     char c;
-    while(1) {
-        in.get(c); if( in.eof() || in.fail() || !in.good() ) break;
-        if( c == ',' ) break;
-        if( !isspace(c) ) { in.putback(c); break; }
+    while (1) {
+        in.get(c);
+        if (in.eof() || in.fail() || !in.good()) {
+            break;
+        }
+        if (c == ',') {
+            break;
+        }
+        if (!isspace(c)) {
+            in.putback(c);
+            break;
+        }
     }
     return in;
 }
 
 
-EGS_BaseSpectrum* EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
-    if( !input ) {
+EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
+    if (!input) {
         egsWarning("%s got null input?\n",spec_msg1);
         return 0;
     }
-    EGS_Input *inp = input; bool delete_it = false;
-    if( !input->isA("spectrum") ) {
+    EGS_Input *inp = input;
+    bool delete_it = false;
+    if (!input->isA("spectrum")) {
         inp = input->takeInputItem("spectrum");
-        if( !inp ) {
-            egsWarning("%s no 'spectrum' input!\n",spec_msg1); return 0;
+        if (!inp) {
+            egsWarning("%s no 'spectrum' input!\n",spec_msg1);
+            return 0;
         }
         delete_it = true;
     }
-    string stype; int err = inp->getInput("type",stype);
-    if( err ) {
+    string stype;
+    int err = inp->getInput("type",stype);
+    if (err) {
         egsWarning("%s wrong/missing 'type' input\n",spec_msg1);
-        if( delete_it ) delete inp; return 0;
+        if (delete_it) {
+            delete inp;
+        }
+        return 0;
     }
     EGS_BaseSpectrum *spec = 0;
-    if( inp->compare(stype,"monoenergetic") ) {
-        EGS_Float Eo; err = inp->getInput("energy",Eo);
-        if( err ) egsWarning("%s wrong/missing 'energy' input for a "
-                "monoenergetic spectrum\n",spec_msg1);
-        else spec = new EGS_MonoEnergy(Eo);
+    if (inp->compare(stype,"monoenergetic")) {
+        EGS_Float Eo;
+        err = inp->getInput("energy",Eo);
+        if (err) egsWarning("%s wrong/missing 'energy' input for a "
+                                "monoenergetic spectrum\n",spec_msg1);
+        else {
+            spec = new EGS_MonoEnergy(Eo);
+        }
     }
-    else if( inp->compare(stype,"Gaussian") ) {
+    else if (inp->compare(stype,"Gaussian")) {
         EGS_Float Eo, sig, fwhm;
         int err1 = inp->getInput("mean energy",Eo);
         int err2 = inp->getInput("sigma",sig);
         int err3 = inp->getInput("fwhm",fwhm);
-        if( err1 || (err2 && err3) ) {
-            if( err1 ) egsWarning("%s wrong/missing 'mean energy' input"
-               " for a Gaussian spectrum\n",spec_msg1);
+        if (err1 || (err2 && err3)) {
+            if (err1) egsWarning("%s wrong/missing 'mean energy' input"
+                                     " for a Gaussian spectrum\n",spec_msg1);
             else egsWarning("%s wrong/missing 'sigma' and 'FWHM' input for a "
-                 "Gaussian spectrum\n",spec_msg1);
+                                "Gaussian spectrum\n",spec_msg1);
 
-        } else {
-            if( Eo <= 0 ) egsWarning("%s mean energy must be positive but your"
-                  " input was %g\n",Eo);
+        }
+        else {
+            if (Eo <= 0) egsWarning("%s mean energy must be positive but your"
+                                        " input was %g\n",Eo);
             else {
-                if( !err2 ) {
-                    if( sig <= 0 ) egsWarning("%s sigma must be positive"
-                         " but your input was %g\n",spec_msg1,sig);
-                    else spec = new EGS_GaussianSpectrum(Eo,sig);
+                if (!err2) {
+                    if (sig <= 0) egsWarning("%s sigma must be positive"
+                                                 " but your input was %g\n",spec_msg1,sig);
+                    else {
+                        spec = new EGS_GaussianSpectrum(Eo,sig);
+                    }
                 }
                 else {
-                    if( fwhm <= 0 )  egsWarning("%s FWHM must be positive"
-                         " but your input was %g\n",spec_msg1,fwhm);
-                    else spec = new EGS_GaussianSpectrum(Eo,-fwhm);
+                    if (fwhm <= 0)  egsWarning("%s FWHM must be positive"
+                                                   " but your input was %g\n",spec_msg1,fwhm);
+                    else {
+                        spec = new EGS_GaussianSpectrum(Eo,-fwhm);
+                    }
                 }
             }
         }
     }
-    else if( inp->compare(stype,"Double Gaussian") ) {
-        EGS_Float Eo; vector<EGS_Float> sig, fwhm;
+    else if (inp->compare(stype,"Double Gaussian")) {
+        EGS_Float Eo;
+        vector<EGS_Float> sig, fwhm;
         int err1 = inp->getInput("mean energy",Eo);
         int err2 = inp->getInput("sigma",sig);
         int err3 = inp->getInput("fwhm",fwhm);
-        if( !err1 && Eo <= 0 ) err1 = 1;
-        if( !err2 && sig.size() != 2 ) err2 = 1;
-        if( !err2 && (sig[0] <= 0 || sig[1] <= 0) ) err2 = 1;
-        if( !err3 && fwhm.size() != 2 ) err3 = 1;
-        if( !err3 && (fwhm[0] <= 0 || fwhm[1] <= 0) ) err3 = 1;
-        if( err1 || (err2 && err3) ) {
-            if( err1 ) egsWarning("%s wrong/missing 'mean energy' input"
-                 " for a Double Gaussian spectrum\n",spec_msg1);
-            if( err2 && err3 ) egsWarning("%s wrong/missing 'sigma' and 'FWHM'"
-                 " input for a Double Gaussian spectrum\n",spec_msg1);
-        } else {
-            if( !err2 && !err3 ) egsWarning("%s found 'sigma' and 'FWHM' "
-                 "input, using 'sigma'\n",spec_msg1);
-            if( !err2 ) spec = new EGS_DoubleGaussianSpectrum(Eo,sig[0],sig[1]);
-            else spec = new EGS_DoubleGaussianSpectrum(Eo,-fwhm[0],-fwhm[1]);
+        if (!err1 && Eo <= 0) {
+            err1 = 1;
+        }
+        if (!err2 && sig.size() != 2) {
+            err2 = 1;
+        }
+        if (!err2 && (sig[0] <= 0 || sig[1] <= 0)) {
+            err2 = 1;
+        }
+        if (!err3 && fwhm.size() != 2) {
+            err3 = 1;
+        }
+        if (!err3 && (fwhm[0] <= 0 || fwhm[1] <= 0)) {
+            err3 = 1;
+        }
+        if (err1 || (err2 && err3)) {
+            if (err1) egsWarning("%s wrong/missing 'mean energy' input"
+                                     " for a Double Gaussian spectrum\n",spec_msg1);
+            if (err2 && err3) egsWarning("%s wrong/missing 'sigma' and 'FWHM'"
+                                             " input for a Double Gaussian spectrum\n",spec_msg1);
+        }
+        else {
+            if (!err2 && !err3) egsWarning("%s found 'sigma' and 'FWHM' "
+                                               "input, using 'sigma'\n",spec_msg1);
+            if (!err2) {
+                spec = new EGS_DoubleGaussianSpectrum(Eo,sig[0],sig[1]);
+            }
+            else {
+                spec = new EGS_DoubleGaussianSpectrum(Eo,-fwhm[0],-fwhm[1]);
+            }
         }
     }
-    else if( inp->compare(stype,"uniform") ) {
-        vector<EGS_Float> range; EGS_Float Emin, Emax;
+    else if (inp->compare(stype,"uniform")) {
+        vector<EGS_Float> range;
+        EGS_Float Emin, Emax;
         int err1 = inp->getInput("range",range);
         int err2 = inp->getInput("minimum energy",Emin);
         int err3 = inp->getInput("maximum energy",Emax);
-        if( !err2 && !err3 && Emin > Emax ) {
+        if (!err2 && !err3 && Emin > Emax) {
             egsWarning("%s Emin (%g) is greater than Emax (%g)?\n",
-                    spec_msg1,Emin,Emax);
-            err2 = 1; err3 = 1;
+                       spec_msg1,Emin,Emax);
+            err2 = 1;
+            err3 = 1;
         }
-        if( err1 && err2 && err3 ) egsWarning("%s wrong/missing 'range' and"
-             " 'minimum/maximum energy' input\n",spec_msg1);
+        if (err1 && err2 && err3) egsWarning("%s wrong/missing 'range' and"
+                                                 " 'minimum/maximum energy' input\n",spec_msg1);
         else {
-            if( !err2 && !err3 ) spec = new EGS_UniformSpectrum(Emin,Emax);
+            if (!err2 && !err3) {
+                spec = new EGS_UniformSpectrum(Emin,Emax);
+            }
             else {
-                if( range[0] < range[1] )
+                if (range[0] < range[1]) {
                     spec = new EGS_UniformSpectrum(range[0],range[1]);
-                else
+                }
+                else {
                     spec = new EGS_UniformSpectrum(range[1],range[0]);
+                }
             }
         }
     }
-    else if( inp->compare(stype,"tabulated spectrum") ) {
+    else if (inp->compare(stype,"tabulated spectrum")) {
         string spec_file;
         err = inp->getInput("spectrum file",spec_file);
-        if( !err ) {
+        if (!err) {
             ifstream sdata(spec_file.c_str());
-            if( !sdata ) egsWarning("%s failed to open spectrum file %s\n",
-                    spec_msg1,spec_file.c_str());
+            if (!sdata) egsWarning("%s failed to open spectrum file %s\n",
+                                       spec_msg1,spec_file.c_str());
             else {
                 char title[1024];
                 sdata.getline(title,1023);
-                if( sdata.eof() || sdata.fail() || !sdata.good() ) {
+                if (sdata.eof() || sdata.fail() || !sdata.good()) {
                     egsWarning("%s error while reading title of spectrum file"
-                          "%s\n",spec_msg1,spec_file.c_str());
-                    if( delete_it ) delete inp; return 0;
+                               "%s\n",spec_msg1,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
                 }
-                if( sdata.eof() || sdata.fail() || !sdata.good() ) {
+                if (sdata.eof() || sdata.fail() || !sdata.good()) {
                     egsWarning("%s error while reading spectrum type and "
-                          "number of bins in spectrum file %s\n",
-                          spec_msg1,spec_file.c_str());
-                    if( delete_it ) delete inp; return 0;
+                               "number of bins in spectrum file %s\n",
+                               spec_msg1,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
                 }
-                EGS_Float dum; int nbin, mode;
+                EGS_Float dum;
+                int nbin, mode;
                 sdata >> nbin >> skipsep >> dum >> skipsep >> mode;
-                if( sdata.eof() || sdata.fail() || !sdata.good() ) {
+                if (sdata.eof() || sdata.fail() || !sdata.good()) {
                     egsWarning("%s error while reading spectrum type and "
-                          "number of bins in spectrum file %s\n",
-                          spec_msg1,spec_file.c_str());
-                    if( delete_it ) delete inp; return 0;
+                               "number of bins in spectrum file %s\n",
+                               spec_msg1,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
                 }
-                if( nbin < 2 ) {
+                if (nbin < 2) {
                     egsWarning("%s nbin in a spectrum must be at least 2\n"
-                       "  you have %d in the spectrum file %s\n",
-                      spec_msg1,nbin,spec_file.c_str());
-                    if( delete_it ) delete inp; return 0;
+                               "  you have %d in the spectrum file %s\n",
+                               spec_msg1,nbin,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
                 }
-                if( mode < 0 || mode > 3 ) {
+                if (mode < 0 || mode > 3) {
                     egsWarning("%s unknown spectrum type %d in spectrum file"
-                         " %s\n",spec_msg1,mode,spec_file.c_str());
-                    if( delete_it ) delete inp; return 0;
+                               " %s\n",spec_msg1,mode,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
                 }
-                EGS_Float *en_array, *f_array; int ibin;
+                EGS_Float *en_array, *f_array;
+                int ibin;
                 f_array = new EGS_Float [nbin];
-                if( mode == 0 || mode == 1 ) {
+                if (mode == 0 || mode == 1) {
                     en_array = new EGS_Float [nbin+1];
-                    en_array[0] = dum; ibin=1;
+                    en_array[0] = dum;
+                    ibin=1;
                 }
                 else {
-                    en_array = new EGS_Float [nbin]; ibin=0;
+                    en_array = new EGS_Float [nbin];
+                    ibin=0;
                 }
-                for(int j=0; j<nbin; j++) {
+                for (int j=0; j<nbin; j++) {
                     sdata >> en_array[ibin++] >> skipsep >> f_array[j];
-                    if( sdata.eof() || sdata.fail() || !sdata.good() ) {
+                    if (sdata.eof() || sdata.fail() || !sdata.good()) {
                         egsWarning("%s error on line %d in spectrum file %s\n",
-                                spec_msg1,j+2,spec_file.c_str());
-                        if( delete_it ) delete inp;
-                        delete [] en_array; delete [] f_array;
+                                   spec_msg1,j+2,spec_file.c_str());
+                        if (delete_it) {
+                            delete inp;
+                        }
+                        delete [] en_array;
+                        delete [] f_array;
                         return 0;
                     }
-                    if( mode != 2 && ibin > 1 ) {
-                        if( en_array[ibin-1] <= en_array[ibin-2] ) {
+                    if (mode != 2 && ibin > 1) {
+                        if (en_array[ibin-1] <= en_array[ibin-2]) {
                             egsWarning("%s energies must be in increasing "
-                               "order.\n   This is not the case for input on "
-                               "lines %d,%d in spectrum file %s\n",
-                               spec_msg1,j+2,j+1,spec_file.c_str());
-                            if( delete_it ) delete inp; return 0;
+                                       "order.\n   This is not the case for input on "
+                                       "lines %d,%d in spectrum file %s\n",
+                                       spec_msg1,j+2,j+1,spec_file.c_str());
+                            if (delete_it) {
+                                delete inp;
+                            }
+                            return 0;
                         }
                     }
-                    if( mode == 0 )
-                            f_array[j]/=(en_array[ibin-1]-en_array[ibin-2]);
+                    if (mode == 0) {
+                        f_array[j]/=(en_array[ibin-1]-en_array[ibin-2]);
+                    }
                 }
                 int itype = 1;
-                if( mode == 2 ) itype = 0;
-                else if( mode == 3 ) itype = 2;
+                if (mode == 2) {
+                    itype = 0;
+                }
+                else if (mode == 3) {
+                    itype = 2;
+                }
                 int nb = itype == 1 ? nbin+1 : nbin;
                 spec = new EGS_TabulatedSpectrum(nb,en_array,f_array,itype,
-                             spec_file.c_str());
-                delete [] en_array; delete [] f_array;
+                                                 spec_file.c_str());
+                delete [] en_array;
+                delete [] f_array;
             }
         }
         else {
-            vector<EGS_Float> eners, probs; int itype=1;
+            vector<EGS_Float> eners, probs;
+            int itype=1;
             int err1 = inp->getInput("energies",eners);
             int err2 = inp->getInput("probabilities",probs);
             int err3 = inp->getInput("spectrum type",itype);
 
-            if( err1 || err2 ) {
-                if( err1 ) egsWarning("%s wrong/missing 'energies' input\n",
-                        spec_msg1);
-                if( err2 ) egsWarning("%s wrong/missing 'probabilities' "
-                        "input\n",spec_msg1);
+            if (err1 || err2) {
+                if (err1) egsWarning("%s wrong/missing 'energies' input\n",
+                                         spec_msg1);
+                if (err2) egsWarning("%s wrong/missing 'probabilities' "
+                                         "input\n",spec_msg1);
             }
             else {
-                if( itype == 1 && probs.size() != eners.size()-1 )
+                if (itype == 1 && probs.size() != eners.size()-1)
                     egsWarning("%s for spectrum type 1 the number of energies"
-                       " must be the number of probabilities + 1\n",
-                       spec_msg1);
-                else if( (itype == 0 || itype == 2) &&
-                        probs.size() != eners.size() )
+                               " must be the number of probabilities + 1\n",
+                               spec_msg1);
+                else if ((itype == 0 || itype == 2) &&
+                         probs.size() != eners.size())
                     egsWarning("%s for spectrum types 0 and 2 the number of "
-                     "energies must be equal to the number of probabilities\n",
-                     spec_msg1);
+                               "energies must be equal to the number of probabilities\n",
+                               spec_msg1);
                 else {
                     int nbin = eners.size();
                     int nbin1 = itype == 1 ? nbin-1 : nbin;
                     EGS_Float *x = new EGS_Float [nbin],
-                              *f = new EGS_Float [nbin1];
+                    *f = new EGS_Float [nbin1];
                     int ibin = 0;
-                    if( itype == 1 ) { ibin = 1; x[0] = eners[0]; }
+                    if (itype == 1) {
+                        ibin = 1;
+                        x[0] = eners[0];
+                    }
                     egsWarning("type = %d nbin = %d nbin1 = %d\n",itype,
-                            nbin,nbin1);
-                    for(int j=0; j<nbin1; j++) {
-                        x[ibin] = eners[ibin]; f[j] = probs[j]; ibin++;
+                               nbin,nbin1);
+                    for (int j=0; j<nbin1; j++) {
+                        x[ibin] = eners[ibin];
+                        f[j] = probs[j];
+                        ibin++;
                         egsWarning("%d %d %g\n",j,ibin,x[ibin-1]);
-                        if( itype != 0 && ibin > 1 ) {
-                            if( x[ibin-1] <= x[ibin-2] ) {
+                        if (itype != 0 && ibin > 1) {
+                            if (x[ibin-1] <= x[ibin-2]) {
                                 egsWarning("%s energies must be given in "
-                                   "increasing order\n  This is not the case"
-                                   " for inputs %d and %d (%g,%g) %d\n",
-                                   spec_msg1,ibin-2,ibin-1,x[ibin-2],x[ibin-1],
-                                   j);
-                                if( delete_it ) delete inp;
-                                delete [] x; delete [] f; return 0;
+                                           "increasing order\n  This is not the case"
+                                           " for inputs %d and %d (%g,%g) %d\n",
+                                           spec_msg1,ibin-2,ibin-1,x[ibin-2],x[ibin-1],
+                                           j);
+                                if (delete_it) {
+                                    delete inp;
+                                }
+                                delete [] x;
+                                delete [] f;
+                                return 0;
                             }
                         }
                     }
                     spec = new EGS_TabulatedSpectrum(nbin,x,f,itype,0);
-                    delete [] x; delete [] f;
+                    delete [] x;
+                    delete [] f;
                 }
             }
         }
     }
-    else egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
-    if( delete_it ) delete inp;
+    else {
+        egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
+    }
+    if (delete_it) {
+        delete inp;
+    }
     return spec;
 }

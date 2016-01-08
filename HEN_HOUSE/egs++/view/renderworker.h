@@ -24,7 +24,7 @@
 #  Author:          Manuel Stoeckl, 2015
 #
 ###############################################################################
-*/ 
+*/
 
 #ifndef RENDERWORKER_H
 #define RENDERWORKER_H
@@ -92,7 +92,7 @@ struct RenderResults {
     EGS_Float trackTime;
 };
 
-void applyParameters(EGS_GeometryVisualizer*, const struct RenderParameters&);
+void applyParameters(EGS_GeometryVisualizer *, const struct RenderParameters &);
 
 class RenderWorker : public QObject {
     Q_OBJECT
@@ -109,7 +109,7 @@ public slots:
 
     void loadTracks(QString fileName);
 
-    void render(EGS_BaseGeometry* g, struct RenderParameters params);
+    void render(EGS_BaseGeometry *g, struct RenderParameters params);
 
 signals:
 
@@ -117,10 +117,10 @@ signals:
     void rendered(struct RenderResults, struct RenderParameters params);
 
 private:
-    void drawAxes(const struct RenderParameters& );
+    void drawAxes(const struct RenderParameters &);
 
-    EGS_GeometryVisualizer* vis;
-    EGS_Vector* image;
+    EGS_GeometryVisualizer *vis;
+    EGS_Vector *image;
     EGS_Vector axeslabelsX;
     EGS_Vector axeslabelsY;
     EGS_Vector axeslabelsZ;

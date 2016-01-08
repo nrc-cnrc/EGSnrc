@@ -39,10 +39,10 @@
 
 
 #ifdef VIEW_DEBUG
-extern void (* egsWarning)(const char*, ...);
+    extern void (* egsWarning)(const char *, ...);
 #endif
 
-SaveImage::SaveImage(QWidget* parent, const char* name)
+SaveImage::SaveImage(QWidget *parent, const char *name)
     : QDialog(parent) {
     setObjectName(name);
     setModal(false);
@@ -50,13 +50,15 @@ SaveImage::SaveImage(QWidget* parent, const char* name)
 
     QList<QByteArray> blist = QImageWriter::supportedImageFormats();
     int ind = -1;
-    for (int i=0;i<blist.size();i++) {
+    for (int i=0; i<blist.size(); i++) {
         formatCB->addItem(blist[i]);
         if (QString(blist[i]).toUpper() == "PNG") {
             ind = i;
         }
     }
-    if( ind >= 0 ) formatCB->setCurrentIndex(ind);
+    if (ind >= 0) {
+        formatCB->setCurrentIndex(ind);
+    }
 }
 
 SaveImage::~SaveImage() {
@@ -64,7 +66,8 @@ SaveImage::~SaveImage() {
 }
 
 void SaveImage::getImageSize(int *nx, int *ny) {
-    *nx = xsizeSB->value(); *ny = ysizeSB->value();
+    *nx = xsizeSB->value();
+    *ny = ysizeSB->value();
 }
 
 QString SaveImage::getImageFormat() {
@@ -74,23 +77,28 @@ QString SaveImage::getImageFormat() {
 QString SaveImage::getImageFileName() {
     QString fname = fileName->text(), format = ".";
     format += formatCB->currentText();
-    if( !fname.endsWith(format,Qt::CaseInsensitive) ) fname += format.toLower();
+    if (!fname.endsWith(format,Qt::CaseInsensitive)) {
+        fname += format.toLower();
+    }
     return fname;
 }
 
 
 void SaveImage::selectFileName() {
     QString filter = "Images(";
-    for(int j=0; j<formatCB->count(); j++) {
-        filter += "*."; filter += formatCB->itemText(j).toLower(); filter += " ";
+    for (int j=0; j<formatCB->count(); j++) {
+        filter += "*.";
+        filter += formatCB->itemText(j).toLower();
+        filter += " ";
     }
     filter += ")";
     QString s = QFileDialog::getSaveFileName(this, "Select a filename", QString(), filter);
-    if( !s.isEmpty() ) {
+    if (!s.isEmpty()) {
         fileName->setText(s);
-        for(int j=0; j<formatCB->count(); j++) {
-            if( s.endsWith(formatCB->itemText(j),Qt::CaseInsensitive) )
+        for (int j=0; j<formatCB->count(); j++) {
+            if (s.endsWith(formatCB->itemText(j),Qt::CaseInsensitive)) {
                 formatCB->setCurrentIndex(j);
+            }
         }
     }
 }
@@ -99,14 +107,22 @@ void SaveImage::enableOkButton() {
 #ifdef VIEW_DEBUG
     egsWarning("In SaveImage::enableOkButton()\n");
 #endif
-    if( !fileName->text().isEmpty() ) okButton->setEnabled(true);
-    else okButton->setEnabled(false);
+    if (!fileName->text().isEmpty()) {
+        okButton->setEnabled(true);
+    }
+    else {
+        okButton->setEnabled(false);
+    }
 }
 
 void SaveImage::fnameTextChanged(const QString &text) {
 #ifdef VIEW_DEBUG
     egsWarning("SaveImage::fnameTextChanged(%s)\n",text.toUtf8().constData());
 #endif
-    if( text.isEmpty() ) okButton->setEnabled(false);
-    else okButton->setEnabled(true);
+    if (text.isEmpty()) {
+        okButton->setEnabled(false);
+    }
+    else {
+        okButton->setEnabled(true);
+    }
 }

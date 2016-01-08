@@ -47,22 +47,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_ISOTROPIC_SOURCE_DLL
-#define EGS_ISOTROPIC_SOURCE_EXPORT __declspec(dllexport)
-#else
-#define EGS_ISOTROPIC_SOURCE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_ISOTROPIC_SOURCE_LOCAL
+    #ifdef BUILD_ISOTROPIC_SOURCE_DLL
+        #define EGS_ISOTROPIC_SOURCE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_ISOTROPIC_SOURCE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_ISOTROPIC_SOURCE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_ISOTROPIC_SOURCE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_ISOTROPIC_SOURCE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_ISOTROPIC_SOURCE_EXPORT
-#define EGS_ISOTROPIC_SOURCE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_ISOTROPIC_SOURCE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_ISOTROPIC_SOURCE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_ISOTROPIC_SOURCE_EXPORT
+        #define EGS_ISOTROPIC_SOURCE_LOCAL
+    #endif
 
 #endif
 
@@ -95,7 +95,7 @@ the isotropic source from the EGSnrc C++ class library.
 */
 
 class EGS_ISOTROPIC_SOURCE_EXPORT EGS_IsotropicSource :
-          public EGS_BaseSimpleSource {
+    public EGS_BaseSimpleSource {
 
 public:
 
@@ -113,12 +113,14 @@ public:
     and emitting particles from the shape \a Shape
     */
     EGS_IsotropicSource(int Q, EGS_BaseSpectrum *Spec, EGS_BaseShape *Shape,
-            EGS_BaseGeometry *geometry,
-            const string &Name="", EGS_ObjectFactory *f=0) :
-            EGS_BaseSimpleSource(Q,Spec,Name,f), shape(Shape),
-            min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
-            buf_1(1), buf_2(-1),
-            geom(geometry), regions(0), nrs(0), gc(IncludeAll) { setUp(); };
+                        EGS_BaseGeometry *geometry,
+                        const string &Name="", EGS_ObjectFactory *f=0) :
+        EGS_BaseSimpleSource(Q,Spec,Name,f), shape(Shape),
+        min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
+        buf_1(1), buf_2(-1),
+        geom(geometry), regions(0), nrs(0), gc(IncludeAll) {
+        setUp();
+    };
 
     /*! \brief Constructor
 
@@ -128,57 +130,89 @@ public:
     ~EGS_IsotropicSource() {
         egsWarning("destructing point source\n");
         EGS_Object::deleteObject(shape);
-        if( geom ) {
-            if( !geom->deref() ) delete geom;
+        if (geom) {
+            if (!geom->deref()) {
+                delete geom;
+            }
         }
-        if( nrs > 0 && regions ) delete [] regions;
+        if (nrs > 0 && regions) {
+            delete [] regions;
+        }
     };
 
     void getPositionDirection(EGS_RandomGenerator *rndm,
-            EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
+                              EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
         bool ok = true;
         do {
             x = shape->getRandomPoint(rndm);
-            if( geom ) {
-                if( gc == IncludeAll ) ok = geom->isInside(x);
-                else if( gc == ExcludeAll ) ok = !geom->isInside(x);
-                else if( gc == IncludeSelected ) {
-                    ok = false; int ireg = geom->isWhere(x);
-                    for(int j=0; j<nrs; ++j) {
-                        if( ireg == regions[j] ) { ok = true; break; }
+            if (geom) {
+                if (gc == IncludeAll) {
+                    ok = geom->isInside(x);
+                }
+                else if (gc == ExcludeAll) {
+                    ok = !geom->isInside(x);
+                }
+                else if (gc == IncludeSelected) {
+                    ok = false;
+                    int ireg = geom->isWhere(x);
+                    for (int j=0; j<nrs; ++j) {
+                        if (ireg == regions[j]) {
+                            ok = true;
+                            break;
+                        }
                     }
                 }
                 else {
-                    ok = true; int ireg = geom->isWhere(x);
-                    for(int j=0; j<nrs; ++j) {
-                        if( ireg == regions[j] ) { ok = false; break; }
+                    ok = true;
+                    int ireg = geom->isWhere(x);
+                    for (int j=0; j<nrs; ++j) {
+                        if (ireg == regions[j]) {
+                            ok = false;
+                            break;
+                        }
                     }
                 }
             }
-        } while ( !ok );
+        }
+        while (!ok);
 
         u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
 
         //u.z = 2*rndm->getUniform()-1;
         EGS_Float sinz = 1-u.z*u.z;
-        if( sinz > 1e-15 ) {
-            sinz = sqrt(sinz); EGS_Float cphi, sphi;
+        if (sinz > 1e-15) {
+            sinz = sqrt(sinz);
+            EGS_Float cphi, sphi;
             //rndm->getAzimuth(cphi,sphi);
             // sample phi, slower than rndm->getAzimuth
             EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
-            cphi = cos(phi); sphi = sin(phi);
-            u.x = sinz*cphi; u.y = sinz*sphi;
-        } else { u.x = 0; u.y = 0; }
+            cphi = cos(phi);
+            sphi = sin(phi);
+            u.x = sinz*cphi;
+            u.y = sinz*sphi;
+        }
+        else {
+            u.x = 0;
+            u.y = 0;
+        }
         wt = 1;
     };
 
-    EGS_Float getFluence() const { return count; };
+    EGS_Float getFluence() const {
+        return count;
+    };
 
-    bool storeFluenceState(ostream &) const { return true; };
+    bool storeFluenceState(ostream &) const {
+        return true;
+    };
 
-    bool setFluenceState(istream &) { return true; };
+    bool setFluenceState(istream &) {
+        return true;
+    };
 
-    bool isValid() const { return (s != 0 && shape != 0); };
+    bool isValid() const {
+        return (s != 0 && shape != 0);
+    };
 
 protected:
 
@@ -189,7 +223,7 @@ protected:
     void setUp();
 
     EGS_Float min_theta, max_theta;
-    EGS_Float buf_1, buf_2;	//! avoid multi-calculating cos(min_theta) and cos(max_theta)
+    EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
     int                 nrs;
     GeometryConfinement gc;

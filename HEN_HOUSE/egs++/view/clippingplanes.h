@@ -40,11 +40,11 @@ class ClippingPlanesWidget : public QWidget, public Ui::ClippingPlanesWidget {
 
 public:
 
-    ClippingPlanesWidget(QWidget* parent = 0, const char* name = 0);
+    ClippingPlanesWidget(QWidget *parent = 0, const char *name = 0);
     ~ClippingPlanesWidget();
 
     virtual int numPlanes();
-    virtual bool getPlane( int j, EGS_Vector & a, EGS_Float & d );
+    virtual bool getPlane(int j, EGS_Vector &a, EGS_Float &d);
 
 public slots:
 
@@ -56,9 +56,11 @@ signals:
 
 protected slots:
 
-    virtual void languageChange() {retranslateUi(this);}
+    virtual void languageChange() {
+        retranslateUi(this);
+    }
     virtual void applyClicked();
 
-}; 
+};
 
 #endif // CLIPPINGPLANESWIDGET_H

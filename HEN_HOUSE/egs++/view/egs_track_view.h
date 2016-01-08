@@ -48,17 +48,21 @@ public:
 
     ~EGS_TrackView();
 
-    bool renderTracks(int nx, int ny, EGS_Vector *image, int* abort_location=NULL);
+    bool renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
 
     void setProjection(EGS_Vector pxo, EGS_Vector px_screen, EGS_Vector pv1_screen,
-        EGS_Vector pv2_screen, EGS_Float psx, EGS_Float psy);
+                       EGS_Vector pv2_screen, EGS_Float psx, EGS_Float psy);
 
     void setParticleVisibility(int p, bool vis) {
-        if (p < 1 || p > 4) return;
+        if (p < 1 || p > 4) {
+            return;
+        }
         m_vis_particle[p] = vis;
     }
 
-    EGS_Float getMaxE() { return m_maxE; }
+    EGS_Float getMaxE() {
+        return m_maxE;
+    }
 
 protected:
 

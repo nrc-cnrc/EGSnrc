@@ -43,22 +43,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_CIRCLE_DLL
-#define EGS_CIRCLE_EXPORT __declspec(dllexport)
-#else
-#define EGS_CIRCLE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_CIRCLE_LOCAL
+    #ifdef BUILD_CIRCLE_DLL
+        #define EGS_CIRCLE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_CIRCLE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_CIRCLE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_CIRCLE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_CIRCLE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_CIRCLE_EXPORT
-#define EGS_CIRCLE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_CIRCLE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_CIRCLE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_CIRCLE_EXPORT
+        #define EGS_CIRCLE_LOCAL
+    #endif
 
 #endif
 
@@ -91,16 +91,20 @@ public:
     /*! \brief Conctruct a circle with midpoint given by \a Xo and \a Yo,
     radius \a R and innder radius \a R_i */
     EGS_CircleShape(EGS_Float Xo, EGS_Float Yo, EGS_Float R, EGS_Float R_i = 0,
-            const string &Name="",EGS_ObjectFactory *f=0) :
+                    const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_SurfaceShape(Name,f), xo(Xo), yo(Yo), ro(R_i), dr(R-R_i) {
         otype = "circle";
-        if( dr < 0 ) { ro = R; dr = R_i - R; }
+        if (dr < 0) {
+            ro = R;
+            dr = R_i - R;
+        }
         A = M_PI*dr*(dr + 2*ro);
     };
     ~EGS_CircleShape() {};
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Float r = ro + dr*sqrt(rndm->getUniform());
-        EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+        EGS_Float cphi, sphi;
+        rndm->getAzimuth(cphi,sphi);
         return EGS_Vector(xo + r*cphi, yo + r*sphi, 0);
     };
 

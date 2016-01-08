@@ -103,11 +103,19 @@ public:
     EGS_SimpleAliasTable *table; //!< for sampling transitions
 
     EGS_ShellData() : ntrans(0), table(0) {};
-    ~EGS_ShellData() { deleteData(); }
+    ~EGS_ShellData() {
+        deleteData();
+    }
 
     void deleteData() {
-        if( ntrans > 0 ) { delete [] ttypes; ntrans = 0; }
-        if( table ) { delete table; table = 0; }
+        if (ntrans > 0) {
+            delete [] ttypes;
+            ntrans = 0;
+        }
+        if (table) {
+            delete table;
+            table = 0;
+        }
     };
 
     bool loadData(istream &data);
@@ -120,23 +128,32 @@ public:
 
 bool EGS_ShellData::loadData(istream &data) {
     deleteData();
-    char t; data.read((char *)&t,sizeof(char)); type = t;
+    char t;
+    data.read((char *)&t,sizeof(char));
+    type = t;
     data.read((char *)&ntrans,sizeof(short));
     data.read((char *)&be,sizeof(float));
     //egsInformation("shell is of type %d, has BE=%g and %d transitions\n",type,be,ntrans);
-    if( data.fail() || ntrans > 10000 ) {
-        ntrans = 0; return false;
+    if (data.fail() || ntrans > 10000) {
+        ntrans = 0;
+        return false;
     }
-    if( ntrans == 0 ) return true;
+    if (ntrans == 0) {
+        return true;
+    }
     ttypes = new unsigned short [ntrans];
-    EGS_Float *tmp = new EGS_Float [ntrans]; float aux;
-    for(int i=0; i<ntrans; ++i) {
+    EGS_Float *tmp = new EGS_Float [ntrans];
+    float aux;
+    for (int i=0; i<ntrans; ++i) {
         data.read((char *)&ttypes[i],sizeof(unsigned short));
-        data.read((char *)&aux,sizeof(float)); tmp[i] = aux;
+        data.read((char *)&aux,sizeof(float));
+        tmp[i] = aux;
         //egsInformation("got transition %d with p=%g\n",ttypes[i],aux);
     }
-    if( data.fail() ) {
-        delete [] tmp; deleteData(); return false;
+    if (data.fail()) {
+        delete [] tmp;
+        deleteData();
+        return false;
     }
     table = new EGS_SimpleAliasTable(ntrans,tmp);
     delete [] tmp;
@@ -149,7 +166,9 @@ public:
 
     EGS_ElementRelaxData() : Z(0), nshell(0), shells(0) {};
 
-    ~EGS_ElementRelaxData() { deleteData(); };
+    ~EGS_ElementRelaxData() {
+        deleteData();
+    };
 
     int loadData(int iZ, istream &data);
 
@@ -159,35 +178,45 @@ public:
     EGS_ShellData       *shells;     //!< shell data
 
     void deleteData() {
-        if( nshell > 0 ) delete [] shells;
-        Z = 0; nshell = 0; shells = 0;
+        if (nshell > 0) {
+            delete [] shells;
+        }
+        Z = 0;
+        nshell = 0;
+        shells = 0;
     };
 
 };
 
 int EGS_ElementRelaxData::loadData(int iZ, istream &data) {
-    if( iZ == Z ) return 0;
+    if (iZ == Z) {
+        return 0;
+    }
     deleteData();
     Z = iZ;
     int pos = 2 + (Z-1)*sizeof(int);
     data.seekg(pos,ios::beg);
     data.read((char *)&pos,sizeof(int));
-    if( data.fail() ) {
+    if (data.fail()) {
         egsWarning("Failed reading position for element %d\n",Z);
-        Z = 0; return 5;
+        Z = 0;
+        return 5;
     }
     data.seekg(pos,ios::beg);
     data.read((char *)&nshell,sizeof(nshell));
-    if( data.fail() || nshell < 1 || nshell > 63 ) {
+    if (data.fail() || nshell < 1 || nshell > 63) {
         egsWarning("Failed reading number of shells for Z=%d (got %d shells and fail()=%d\n",
-                Z,nshell,data.fail()); nshell = 0; return 6;
+                   Z,nshell,data.fail());
+        nshell = 0;
+        return 6;
     }
     //egsInformation("element %d has %d shells\n",Z,nshell);
     shells = new EGS_ShellData [nshell];
-    for(int j=0; j<nshell; ++j) {
-        if( !shells[j].loadData(data) ) {
+    for (int j=0; j<nshell; ++j) {
+        if (!shells[j].loadData(data)) {
             egsWarning("Failed loading data for shell %d of element %d\n",j+1,Z);
-            deleteData(); return 7;
+            deleteData();
+            return 7;
         }
     }
     return 0;
@@ -202,9 +231,11 @@ public:
     };
 
     ~EGS_RelaxImplementation() {
-        if( nz > 0 ) {
-            for(int j=0; j<nz; ++j) {
-                if( elements[j] ) delete elements[j];
+        if (nz > 0) {
+            for (int j=0; j<nz; ++j) {
+                if (elements[j]) {
+                    delete elements[j];
+                }
             }
             delete [] elements;
         }
@@ -219,20 +250,20 @@ public:
 
     void checkData(int Z, int shell) {
         static const char *func_name = "checkData";
-        if( !elements )
-            if( loadData(Z) ) egsFatal("%s: failed to load data for Z=%d\n",
-                    func_name,Z);
-        if( Z < 1 || Z > nz )
+        if (!elements)
+            if (loadData(Z)) egsFatal("%s: failed to load data for Z=%d\n",
+                                          func_name,Z);
+        if (Z < 1 || Z > nz)
             egsFatal("%s: Z=%d is outside of initialized range 1...%d\n",
-                    func_name,Z,nz);
-        if( shell < 0 || shell >= elements[Z-1]->nshell )
+                     func_name,Z,nz);
+        if (shell < 0 || shell >= elements[Z-1]->nshell)
             egsFatal("%s: element %d has %d shells but you are asking for "
-                "shell %d\n",func_name,Z,elements[Z-1]->nshell,shell);
+                     "shell %d\n",func_name,Z,elements[Z-1]->nshell,shell);
     };
 
     void relax(int Z, int sh, EGS_Float ecut, EGS_Float pcut,
-            EGS_RandomGenerator *rndm, double &edep,
-            EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+               EGS_RandomGenerator *rndm, double &edep,
+               EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
         checkData(Z,sh);
         EGS_Float minE = pcut < ecut ? pcut : ecut;
         relax(Z,sh,minE,ecut,pcut,rndm,edep,particles);
@@ -251,14 +282,18 @@ public:
     EGS_Float getMaxGammaEnergy(int Z, int shell) {
         checkData(Z,shell);
         int ntrans = elements[Z-1]->shells[shell].ntrans;
-        if( ntrans < 1 ) return 0;
+        if (ntrans < 1) {
+            return 0;
+        }
         EGS_Float E = elements[Z-1]->shells[shell].be;
         EGS_Float emax = 0;
-        for(int j=0; j<ntrans; ++j) {
+        for (int j=0; j<ntrans; ++j) {
             int transition = elements[Z-1]->shells[shell].ttypes[j];
-            if( transition < 64 ) {
+            if (transition < 64) {
                 EGS_Float Egamma = E - elements[Z-1]->shells[transition].be;
-                if( Egamma > emax ) emax = Egamma;
+                if (Egamma > emax) {
+                    emax = Egamma;
+                }
             }
         }
         return emax;
@@ -267,51 +302,62 @@ public:
     EGS_Float getMaxElectronEnergy(int Z, int shell) {
         checkData(Z,shell);
         int ntrans = elements[Z-1]->shells[shell].ntrans;
-        if( ntrans < 1 ) return 0;
+        if (ntrans < 1) {
+            return 0;
+        }
         EGS_Float E = elements[Z-1]->shells[shell].be;
         EGS_Float emax = 0;
-        for(int j=0; j<ntrans; ++j) {
+        for (int j=0; j<ntrans; ++j) {
             int transition = elements[Z-1]->shells[shell].ttypes[j];
-            if( transition >= 64 ) {
-                int sh1 = (transition >> 6); int sh2 = transition - (sh1 << 6);
+            if (transition >= 64) {
+                int sh1 = (transition >> 6);
+                int sh2 = transition - (sh1 << 6);
                 EGS_Float Eelec = E - (elements[Z-1]->shells[sh1].be +
                                        elements[Z-1]->shells[sh2].be);
-                if( Eelec > emax ) emax = Eelec;
+                if (Eelec > emax) {
+                    emax = Eelec;
+                }
             }
         }
         return emax;
     };
 
     void relax(int Z, int sh, EGS_Float minE, EGS_Float ecut, EGS_Float pcut,
-            EGS_RandomGenerator *rndm, double &edep,
-            EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+               EGS_RandomGenerator *rndm, double &edep,
+               EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
         EGS_Float E = elements[Z-1]->shells[sh].be;
         //egsInformation("relax(%d,%d): E=%g minE=%g\n",Z,sh,E,minE);
-        if( E <= minE || elements[Z-1]->shells[sh].ntrans < 1 ) {
+        if (E <= minE || elements[Z-1]->shells[sh].ntrans < 1) {
             //egsInformation("relax: terminating\n");
-            edep += E; return;
+            edep += E;
+            return;
         }
         int transition = elements[Z-1]->shells[sh].sample(rndm);
         //egsInformation("relax: got transition %d\n",transition);
-        if( transition < 64 ) {
+        if (transition < 64) {
             EGS_Float Egamma = E - elements[Z-1]->shells[transition].be;
             //egsInformation("->flourescence, Egamma=%g\n",Egamma);
-            if( Egamma > pcut ) {
+            if (Egamma > pcut) {
                 EGS_RelaxationParticle p(0,Egamma);
                 particles.add(p);
             }
-            else edep += Egamma;
+            else {
+                edep += Egamma;
+            }
             relax(Z,transition,minE,ecut,pcut,rndm,edep,particles);
         }
         else {
-            int sh1 = (transition >> 6); int sh2 = transition - (sh1 << 6);
+            int sh1 = (transition >> 6);
+            int sh2 = transition - (sh1 << 6);
             EGS_Float Eelec = E - elements[Z-1]->shells[sh1].be - elements[Z-1]->shells[sh2].be;
             //egsInformation("->Auger, sh1=%d sh2=%d E=%g\n",sh1,sh2,Eelec);
-            if( Eelec > ecut ) {
+            if (Eelec > ecut) {
                 EGS_RelaxationParticle p(-1,Eelec);
                 particles.add(p);
             }
-            else edep += Eelec;
+            else {
+                edep += Eelec;
+            }
             relax(Z,sh1,minE,ecut,pcut,rndm,edep,particles);
             relax(Z,sh2,minE,ecut,pcut,rndm,edep,particles);
         }
@@ -327,22 +373,31 @@ int EGS_RelaxImplementation::openDataFile(istream **the_data) {
     static const char *func_name = "EGS_RelaxImplementation::openDataFile()";
     *the_data = 0;
     ifstream *data = new ifstream(data_file.c_str(),ios::binary);
-    if( !(*data) ) {
+    if (!(*data)) {
         egsWarning("%s: failed to open data file %s\n",
-                func_name,data_file.c_str()); return 1;
+                   func_name,data_file.c_str());
+        return 1;
     }
-    short Nz; data->read((char *)&Nz,sizeof(short));
-    if( data->fail() || Nz < 1 || Nz > 200 ) {
+    short Nz;
+    data->read((char *)&Nz,sizeof(short));
+    if (data->fail() || Nz < 1 || Nz > 200) {
         egsWarning("%s: failed reading first record from %s\n",
-                func_name,data_file.c_str()); return 2;
+                   func_name,data_file.c_str());
+        return 2;
     }
-    if( Nz > nz ) {
+    if (Nz > nz) {
         EGS_ElementRelaxData **new_elements = new EGS_ElementRelaxData* [Nz];
-        if( nz > 0 ) {
-            for(int j=0; j<nz; ++j) new_elements[j] = elements[j];
+        if (nz > 0) {
+            for (int j=0; j<nz; ++j) {
+                new_elements[j] = elements[j];
+            }
             delete [] elements;
         }
-        else { for(int j=0; j<Nz; ++j) new_elements[j] = 0; }
+        else {
+            for (int j=0; j<Nz; ++j) {
+                new_elements[j] = 0;
+            }
+        }
         elements = new_elements;
         nz = Nz;
     }
@@ -353,17 +408,20 @@ int EGS_RelaxImplementation::openDataFile(istream **the_data) {
 
 int EGS_RelaxImplementation::loadData(int Z) {
     static const char *func_name = "EGS_RelaxImplementation::loadData()";
-    if( Z < 1 ) {
+    if (Z < 1) {
         egsWarning("%s: called with Z=%d?\n",func_name,Z);
         return 3;
     }
     istream *the_data;
     int res = openDataFile(&the_data);
-    if( res || !the_data ) return res;
+    if (res || !the_data) {
+        return res;
+    }
     istream &data = *the_data;
-    if( Z > nz ) {
+    if (Z > nz) {
         egsWarning("%s: called with Z=%d, but I only have data for Z<=%d.\n",
-                func_name,Z,nz); return 4;
+                   func_name,Z,nz);
+        return 4;
     }
     res = loadData(Z,data);
     delete the_data;
@@ -371,56 +429,80 @@ int EGS_RelaxImplementation::loadData(int Z) {
 }
 
 int EGS_RelaxImplementation::loadData(int Z, istream &data) {
-    if( elements[Z-1] ) return 0;
+    if (elements[Z-1]) {
+        return 0;
+    }
     elements[Z-1] = new EGS_ElementRelaxData;
     return elements[Z-1]->loadData(Z,data);
 }
 
 int EGS_RelaxImplementation::loadData(int Nz, const int *Zarray) {
-    istream *the_data; int res = openDataFile(&the_data);
-    if( res || !the_data ) return res;
-    istream &data = *the_data;
-    for(int j=0; j<Nz; ++j) {
-        res = loadData(Zarray[j],data);
-        if( res ) break;
+    istream *the_data;
+    int res = openDataFile(&the_data);
+    if (res || !the_data) {
+        return res;
     }
-    delete the_data; return res;
+    istream &data = *the_data;
+    for (int j=0; j<Nz; ++j) {
+        res = loadData(Zarray[j],data);
+        if (res) {
+            break;
+        }
+    }
+    delete the_data;
+    return res;
 }
 
 int EGS_RelaxImplementation::loadAllData() {
-    istream *the_data; int res = openDataFile(&the_data);
-    if( res || !the_data ) return res;
-    istream &data = *the_data;
-    for(int Z=1; Z<=nz; ++Z) {
-        res = loadData(Z,data);
-        if( res ) break;
+    istream *the_data;
+    int res = openDataFile(&the_data);
+    if (res || !the_data) {
+        return res;
     }
-    delete the_data; return res;
+    istream &data = *the_data;
+    for (int Z=1; Z<=nz; ++Z) {
+        res = loadData(Z,data);
+        if (res) {
+            break;
+        }
+    }
+    delete the_data;
+    return res;
 }
 
 EGS_AtomicRelaxations::EGS_AtomicRelaxations(const char *data_path) {
     string path;
-    if( !data_path ) {
+    if (!data_path) {
         EGS_Application *app = EGS_Application::activeApplication();
-        if( app )
+        if (app) {
             path = egsJoinPath(app->getHenHouse(),"data");
+        }
         else {
             char *hen_house = getenv("HEN_HOUSE");
-            if( !hen_house ) {
+            if (!hen_house) {
                 egsWarning("EGS_AtomicRelaxations::EGS_AtomicRelaxations: "
-                  "no active application and HEN_HOUSE not defined.\n"
-                  "  assuming local directory for relax data\n");
+                           "no active application and HEN_HOUSE not defined.\n"
+                           "  assuming local directory for relax data\n");
                 path = "./";
             }
-            else path = egsJoinPath(hen_house,"data");
+            else {
+                path = egsJoinPath(hen_house,"data");
+            }
         }
-    } else path = data_path;
+    }
+    else {
+        path = data_path;
+    }
     p = new EGS_RelaxImplementation(path.c_str());
 }
 
-EGS_AtomicRelaxations::~EGS_AtomicRelaxations() { delete p; }
+EGS_AtomicRelaxations::~EGS_AtomicRelaxations() {
+    delete p;
+}
 
-int EGS_AtomicRelaxations::loadData(int Z) { return p->loadData(Z); }
+int EGS_AtomicRelaxations::loadData(int Z) {
+    return p->loadData(Z);
+}
 
 int EGS_AtomicRelaxations::loadData(int nz, const int *Zarray) {
     return p->loadData(nz,Zarray);
@@ -431,8 +513,8 @@ int EGS_AtomicRelaxations::loadAllData() {
 }
 
 void EGS_AtomicRelaxations::relax(int Z, int sh, EGS_Float ecut, EGS_Float pcut,
-        EGS_RandomGenerator *rndm, double &edep,
-        EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+                                  EGS_RandomGenerator *rndm, double &edep,
+                                  EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
     p->relax(Z,sh,ecut,pcut,rndm,edep,particles);
 }
 

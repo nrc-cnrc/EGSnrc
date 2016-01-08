@@ -59,12 +59,12 @@ public:
 
     ImageWindow(QWidget *parent=0, const char *name=0);
     ~ImageWindow();
-    
+
 public slots:
 
-    void render(EGS_BaseGeometry* geo, bool transform);
+    void render(EGS_BaseGeometry *geo, bool transform);
     void loadTracks(QString name);
-    void saveView(EGS_BaseGeometry* geo, int nx, int ny, QString name, QString ext);
+    void saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext);
 
     void stopWorker();
     void restartWorker();
@@ -74,15 +74,15 @@ public slots:
 
 protected:
 
-    void rerender(EGS_BaseGeometry* geo);
+    void rerender(EGS_BaseGeometry *geo);
 
     void resizeEvent(QResizeEvent *e);
-    void paintEvent (QPaintEvent *);
+    void paintEvent(QPaintEvent *);
 
-    void mouseReleaseEvent (QMouseEvent *event);
-    void mouseMoveEvent (QMouseEvent *event);
-    void wheelEvent (QWheelEvent *event);
-    void keyPressEvent (QKeyEvent *event);
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
 protected slots:
 
@@ -92,8 +92,8 @@ protected slots:
 signals:
 
     void changedSize(int w, int h);
-	void cameraRotation(int dx, int dy);
-	void cameraZooming(int dy);
+    void cameraRotation(int dx, int dy);
+    void cameraZooming(int dy);
     void cameraRolling(int dx);
     void cameraTranslating(int dx, int dy);
     void cameraHoming();
@@ -102,11 +102,11 @@ signals:
     void leftMouseClick(int x, int y);
 
     // for render thread
-    void requestRender(EGS_BaseGeometry*,RenderParameters);
+    void requestRender(EGS_BaseGeometry *,RenderParameters);
     void requestLoadTracks(QString);
 
 private:
-    void paintBackground(QPainter& p);
+    void paintBackground(QPainter &p);
 
     // Navigation/Control
     QTimer  *navigationTimer;
@@ -114,25 +114,25 @@ private:
     bool rerenderRequested;
 
     // regionPicking synchronized with image on screen
-    EGS_GeometryVisualizer* vis;
+    EGS_GeometryVisualizer *vis;
     bool regionsDisplayed;
     QPoint xyMouse;
     QPoint lastMouse;
     int lastRegions[N_REG_MAX];
 
     // Worker thread handling
-    QThread* thread;
-    RenderWorker* worker;
+    QThread *thread;
+    RenderWorker *worker;
     RenderResults lastResult;
     RenderParameters lastRequest;
     enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
-    EGS_BaseGeometry* lastRequestGeo;
+    EGS_BaseGeometry *lastRequestGeo;
     RenderRequestType activeRequestType;
 
     // Image saving
     QString saveName;
     QString saveExtension;
-    QProgressDialog* saveProgress;
+    QProgressDialog *saveProgress;
 };
 
 #endif

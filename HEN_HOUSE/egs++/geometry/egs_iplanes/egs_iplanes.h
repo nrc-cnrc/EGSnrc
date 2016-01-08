@@ -42,22 +42,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_IPLANES_DLL
-#define EGS_IPLANES_EXPORT __declspec(dllexport)
-#else
-#define EGS_IPLANES_EXPORT __declspec(dllimport)
-#endif
-#define EGS_IPLANES_LOCAL
+    #ifdef BUILD_IPLANES_DLL
+        #define EGS_IPLANES_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_IPLANES_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_IPLANES_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_IPLANES_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_IPLANES_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_IPLANES_EXPORT
-#define EGS_IPLANES_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_IPLANES_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_IPLANES_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_IPLANES_EXPORT
+        #define EGS_IPLANES_LOCAL
+    #endif
 
 #endif
 
@@ -121,28 +121,40 @@ public:
     in radians.
     */
     EGS_IPlanes(const EGS_Vector &Xo, const EGS_Vector &A, int np,
-            EGS_Float first=0, const string &Name = "");
+                EGS_Float first=0, const string &Name = "");
 
     ~EGS_IPlanes();
 
-    bool isInside(const EGS_Vector &x) { return true; };
+    bool isInside(const EGS_Vector &x) {
+        return true;
+    };
     int isWhere(const EGS_Vector &x);
 
     int inside(const EGS_Vector &x);
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-            EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0);
+               EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0);
 
     EGS_Float hownear(int ireg, const EGS_Vector &x);
 
-    const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
     void printInfo() const;
 
-    EGS_Vector getAxisXo() const { return xo; };
-    EGS_Vector getAxisDirection() const { return axis; };
-    EGS_Vector getPlaneNormal(int j) const { return a[j]; };
-    EGS_Float  getPlanePosition(int j) const { return d[j]; };
+    EGS_Vector getAxisXo() const {
+        return xo;
+    };
+    EGS_Vector getAxisDirection() const {
+        return axis;
+    };
+    EGS_Vector getPlaneNormal(int j) const {
+        return a[j];
+    };
+    EGS_Float  getPlanePosition(int j) const {
+        return d[j];
+    };
 
 private:
 
@@ -218,11 +230,13 @@ class EGS_IPLANES_EXPORT EGS_RadialRepeater : public EGS_BaseGeometry {
 public:
 
     EGS_RadialRepeater(const EGS_Vector &Xo, const EGS_Vector &A, int np,
-            EGS_BaseGeometry *G, EGS_Float first=0, const string &Name = "");
+                       EGS_BaseGeometry *G, EGS_Float first=0, const string &Name = "");
 
     ~EGS_RadialRepeater();
 
-    bool isInside(const EGS_Vector &x) { return true; };
+    bool isInside(const EGS_Vector &x) {
+        return true;
+    };
 
     int isWhere(const EGS_Vector &x) {
         int ir = iplanes->isWhere(x);
@@ -233,45 +247,62 @@ public:
     };
 
     int medium(int ireg) const {
-        if( ireg < 0 || ireg >= nreg ) return -1;
-        if( ireg == nreg-1 ) return med;
-        int ir = ireg/ng; int il = ireg - ir*ng;
+        if (ireg < 0 || ireg >= nreg) {
+            return -1;
+        }
+        if (ireg == nreg-1) {
+            return med;
+        }
+        int ir = ireg/ng;
+        int il = ireg - ir*ng;
         return g->medium(il);
     };
 
-    int inside(const EGS_Vector &x) { return isWhere(x); };
+    int inside(const EGS_Vector &x) {
+        return isWhere(x);
+    };
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
-        if( ireg < 0 ) {
+        if (ireg < 0) {
             egsFatal("\nEGS_RadialRepeater::howfar: position can not"
-               " be outside\n"); return ireg;
+                     " be outside\n");
+            return ireg;
         }
         //egsWarning("\nhowfar(ir=%d x=(%g,%g,%g) u=(%g,%g,%g) t=%g)\n",
         //        ireg,x.x,x.y,x.z,u.x,u.y,u.z,t);
-        if( ireg < nreg-1 ) { // in the repeated geometry
-            int ir = ireg/ng; int il = ireg - ir*ng;
+        if (ireg < nreg-1) {  // in the repeated geometry
+            int ir = ireg/ng;
+            int il = ireg - ir*ng;
             //EGS_Vector xp = x*R[ir], up = u*R[ir];
             EGS_Vector xp = (x-xo)*R[ir], up = u*R[ir];
             //egsWarning("In repetition %d: xp=(%g,%g,%g) up=(%g,%g,%g)\n",
             //      ir,xp.x,xp.y,xp.z,up.x,up.y,up.z);
             int inew = g->howfar(il,xp,up,t,newmed,normal);
             //egsWarning("il=%d inew=%d t=%d\n",il,inew,t);
-            if( inew < 0 ) {
-                if( normal ) *normal = R[ir]*(*normal);
-                inew = nreg-1; if( newmed ) *newmed = med;
+            if (inew < 0) {
+                if (normal) {
+                    *normal = R[ir]*(*normal);
+                }
+                inew = nreg-1;
+                if (newmed) {
+                    *newmed = med;
+                }
             }
-            else inew += ir*ng;
+            else {
+                inew += ir*ng;
+            }
             return inew;
         }
         // outside of the replicas
         int ir = iplanes->isWhere(x);
         //egsWarning("outside repetions, ir=%d\n",ir);
-        EGS_Float t_left = t; EGS_Vector xtmp(x);
+        EGS_Float t_left = t;
+        EGS_Vector xtmp(x);
         EGS_Float ttot = 0;
         //EGS_Vector tmp_n;
         //EGS_Vector *norm = normal ? &tmp_n : 0;
-        while(1) {
+        while (1) {
             EGS_Float this_t = t_left;
             //EGS_Vector xp = xtmp*R[ir], up = u*R[ir];
             EGS_Vector xp = (xtmp-xo)*R[ir], up = u*R[ir];
@@ -279,27 +310,36 @@ public:
             //egsWarning("xp=(%g,%g,%g) up=(%g,%g,%g)\n",xp.x,xp.y,xp.z,up.x,up.y,up.z);
             int inew = g->howfar(-1,xp,up,this_t,newmed,normal);
             //egsWarning("inew=%d t=%g\n",inew,this_t);
-            if( inew >= 0 ) {
+            if (inew >= 0) {
                 t = ttot + this_t;
-                if( normal ) *normal = R[ir]*(*normal);
+                if (normal) {
+                    *normal = R[ir]*(*normal);
+                }
                 return ir*ng + inew;
             }
             int next_ir = iplanes->howfar(ir,xtmp,u,this_t,0,0);
             //egsWarning("next sector: %d t=%g\n",next_ir,this_t);
-            if( next_ir == ir ) return ireg;
-            ttot += this_t; t_left -= this_t; xtmp += u*this_t;
+            if (next_ir == ir) {
+                return ireg;
+            }
+            ttot += this_t;
+            t_left -= this_t;
+            xtmp += u*this_t;
             ir = next_ir;
         }
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        if( ireg < 0 ) {
+        if (ireg < 0) {
             egsFatal("EGS_RadialRepeater::hownear: position can not"
-                    " be outside\n"); return 0;
+                     " be outside\n");
+            return 0;
         }
-        if( ireg < nreg-1 ) { // in the repeated geometry
-            int ir = ireg/ng; int il = ireg - ir*ng;
-            EGS_Vector xp = x*R[ir]; return g->hownear(il,xp);
+        if (ireg < nreg-1) {  // in the repeated geometry
+            int ir = ireg/ng;
+            int il = ireg - ir*ng;
+            EGS_Vector xp = x*R[ir];
+            return g->hownear(il,xp);
         }
         // outside of the replicas
         int ir = iplanes->isWhere(x);
@@ -311,12 +351,14 @@ public:
         return nrep*(g->getMaxStep() + 1);
     };
 
-    const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
     void printInfo() const;
 
-    void setRLabels (EGS_Input *input);
-    virtual void getLabelRegions (const string &str, vector<int> &regs);
+    void setRLabels(EGS_Input *input);
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
 

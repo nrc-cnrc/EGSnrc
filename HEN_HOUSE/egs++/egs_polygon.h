@@ -71,14 +71,23 @@ public:
     ~EGS_2DPolygon();
 
     /*! \brief Get the number of points (vertices) in this polygon object */
-    int getN() const { return np-1; };
+    int getN() const {
+        return np-1;
+    };
 
     /*! \brief Is the polygon convex ? */
-    bool isConvex() const { return is_convex; };
+    bool isConvex() const {
+        return is_convex;
+    };
 
     /*! \brief Get a line normal to the \a j'th polygon edge. */
     EGS_2DVector getNormal(int j) const {
-        if( j >= 0 && j < np-1 ) return a[j]; else return EGS_2DVector();
+        if (j >= 0 && j < np-1) {
+            return a[j];
+        }
+        else {
+            return EGS_2DVector();
+        }
     };
 
     /*! \brief Get the nearest distance from \a x to the polygon.
@@ -87,50 +96,80 @@ public:
       inside the polygon, \a false otherwise.
     */
     EGS_Float hownear(bool in, const EGS_2DVector &x) const {
-        if( !open ) {
-            EGS_Float tperp = 1e30; bool do_it = true;
-            for(int j=0; j<np-1; j++) {
+        if (!open) {
+            EGS_Float tperp = 1e30;
+            bool do_it = true;
+            for (int j=0; j<np-1; j++) {
                 EGS_2DVector v(x - p[j]);
                 EGS_Float lam = uj[j]*v;
-                if( lam >= 0 && lam <= uj[j].length2() ) {
-                    do_it = false; EGS_Float t = fabs(d[j] - x*a[j]);
-                    if( t < tperp ) tperp = t;
+                if (lam >= 0 && lam <= uj[j].length2()) {
+                    do_it = false;
+                    EGS_Float t = fabs(d[j] - x*a[j]);
+                    if (t < tperp) {
+                        tperp = t;
+                    }
                 }
-                else if( lam < 0 && do_it ) {
-                    EGS_Float t = v.length(); if( t < tperp ) tperp = t;
+                else if (lam < 0 && do_it) {
+                    EGS_Float t = v.length();
+                    if (t < tperp) {
+                        tperp = t;
+                    }
                 }
-                else do_it = true;
+                else {
+                    do_it = true;
+                }
             }
             return tperp;
         }
-        EGS_2DVector v(x - p[0]); EGS_Float lam = uj[0]*v;
-        EGS_Float tperp; bool do_it;
-        if( lam <= uj[0].length2() ) {
-            do_it = false; tperp = fabs(d[0] - x*a[0]);
-        } else { do_it = true; tperp = 1e30; }
-        v = x - p[1]; lam = uj[1]*v;
-        if( lam >= 0 ) {
-            EGS_Float t = fabs(d[1] - x*a[1]);
-            if( t < tperp ) tperp = t;
+        EGS_2DVector v(x - p[0]);
+        EGS_Float lam = uj[0]*v;
+        EGS_Float tperp;
+        bool do_it;
+        if (lam <= uj[0].length2()) {
+            do_it = false;
+            tperp = fabs(d[0] - x*a[0]);
         }
-        else if( do_it ) {
-            EGS_Float t = v.length(); if( t < tperp ) tperp = t;
+        else {
+            do_it = true;
+            tperp = 1e30;
+        }
+        v = x - p[1];
+        lam = uj[1]*v;
+        if (lam >= 0) {
+            EGS_Float t = fabs(d[1] - x*a[1]);
+            if (t < tperp) {
+                tperp = t;
+            }
+        }
+        else if (do_it) {
+            EGS_Float t = v.length();
+            if (t < tperp) {
+                tperp = t;
+            }
         }
         return tperp;
     };
 
     /*! \brief Is the 2D point \a x inside the polygon ? */
     bool isInside(const EGS_2DVector &x) const {
-        if( !open &&
-            (x.x<xmin || x.x>xmax || x.y<ymin || x.y>ymax) ) return false;
-        if( is_convex ) {
+        if (!open &&
+                (x.x<xmin || x.x>xmax || x.y<ymin || x.y>ymax)) {
+            return false;
+        }
+        if (is_convex) {
             int nn = open ? np-2 : np-1;
-            for(int j=0; j<nn; j++)
-                if( !inside(j,x) ) return false;
+            for (int j=0; j<nn; j++)
+                if (!inside(j,x)) {
+                    return false;
+                }
             return true;
         }
-        if( !cpol->isInside(x) ) return false;
-        for(int j=0; j<ncut; j++) if( cut[j]->isInside(x) ) return false;
+        if (!cpol->isInside(x)) {
+            return false;
+        }
+        for (int j=0; j<ncut; j++) if (cut[j]->isInside(x)) {
+                return false;
+            }
         return true;
     };
 
@@ -147,73 +186,93 @@ public:
     */
     bool howfar(bool in, const EGS_2DVector &x, const EGS_2DVector &u,
                 EGS_Float &t, EGS_2DVector *normal = 0) {
-        EGS_Float xp, up; bool res = false;
+        EGS_Float xp, up;
+        bool res = false;
         int nn = open ? np-2 : np-1;
-        if( in ) {
+        if (in) {
             int jhit;
-            for(int j=0; j<nn; j++)  {
-                if( (up = u*a[j]) < 0 && (xp = x*a[j]) > d[j] ) {
+            for (int j=0; j<nn; j++)  {
+                if ((up = u*a[j]) < 0 && (xp = x*a[j]) > d[j]) {
                     EGS_Float tt = d[j] - xp;
-                    if( tt >= t*up ) {
+                    if (tt >= t*up) {
                         tt /= up;
                         bool ok = is_convex || pc[j];
-                        if( !ok ) {
+                        if (!ok) {
                             EGS_Float lam = uj[j]*(x-p[j]+u*tt);
-                            if( lam >= 0 && lam < uj[j].length2() ) ok = true;
+                            if (lam >= 0 && lam < uj[j].length2()) {
+                                ok = true;
+                            }
                         }
-                        if( ok ) {
-                            t = tt; res = true; jhit = j;
+                        if (ok) {
+                            t = tt;
+                            res = true;
+                            jhit = j;
                             //if( normal ) *normal = a[j];
                         }
                     }
                 }
             }
-            if( res && normal ) *normal = a[jhit];
+            if (res && normal) {
+                *normal = a[jhit];
+            }
         }
         else {
             int jhit;
-            if( open ) {
-                if( (up = u*a[0]) > 0 && (xp = x*a[0]) < d[0] ) {
+            if (open) {
+                if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]) {
                     EGS_Float tt = (d[0] - xp)/up;
-                    if( tt <= t ) {
+                    if (tt <= t) {
                         EGS_Float lam = uj[0]*(x-p[0]+u*tt);
-                        if( lam < uj[0].length2() ) {
-                            t = tt; res = true; jhit = 0;
+                        if (lam < uj[0].length2()) {
+                            t = tt;
+                            res = true;
+                            jhit = 0;
                         }
                     }
                 }
-                if( (up = u*a[1]) > 0 && (xp = x*a[1]) < d[1] ) {
+                if ((up = u*a[1]) > 0 && (xp = x*a[1]) < d[1]) {
                     EGS_Float tt = (d[1] - xp)/up;
-                    if( tt <= t ) {
+                    if (tt <= t) {
                         EGS_Float lam = uj[1]*(x-p[1]+u*tt);
-                        if( lam > 0 ) {
-                            t = tt; res = true; jhit = 1;
+                        if (lam > 0) {
+                            t = tt;
+                            res = true;
+                            jhit = 1;
                         }
                     }
                 }
             }
             else {
-                for(int j=0; j<nn; j++)  {
-                    if( (up = u*a[j]) > 0 && (xp = x*a[j]) < d[j] ) {
+                for (int j=0; j<nn; j++)  {
+                    if ((up = u*a[j]) > 0 && (xp = x*a[j]) < d[j]) {
                         EGS_Float tt = (d[j] - xp)/up;
-                        if( tt <= t ) {
+                        if (tt <= t) {
                             EGS_Float lam = uj[j]*(x-p[j]+u*tt);
-                            if( lam >= 0 && lam < uj[j].length2() ) {
-                                t = tt; res = true; jhit = j;
+                            if (lam >= 0 && lam < uj[j].length2()) {
+                                t = tt;
+                                res = true;
+                                jhit = j;
                                 //if( normal ) *normal = a[j]*(-1);
                             }
                         }
                     }
                 }
             }
-            if( res && normal ) *normal = a[jhit]*(-1);
+            if (res && normal) {
+                *normal = a[jhit]*(-1);
+            }
         }
         return res;
     };
 
     /*! \brief Get the \a j'th point of this polygon. */
     EGS_2DVector getPoint(int j) const {
-        if( j >= 0 && j < np ) return p[j]; else return EGS_2DVector();
+        if (j >= 0 && j < np) {
+            return p[j];
+        }
+        else {
+            return EGS_2DVector();
+        }
     };
 
 
@@ -241,7 +300,12 @@ private:
     static bool checkCCW(const vector<EGS_2DVector> &points);
     /*! \brief Is the point \a x inside the \a j'th edge ? */
     bool inside(int j, const EGS_2DVector &x) const {
-        if( x*a[j] >= d[j] ) return true; else return false;
+        if (x*a[j] >= d[j]) {
+            return true;
+        }
+        else {
+            return false;
+        }
     };
 
 };
@@ -272,16 +336,22 @@ public:
       EGS_2DPolygon::EGS_2DPolygon().
       */
     EGS_PolygonT(vector<EGS_2DVector> &points, const T &projector,
-         bool Open=false) : p(new EGS_2DPolygon(points,Open)), a(projector) {};
+                 bool Open=false) : p(new EGS_2DPolygon(points,Open)), a(projector) {};
 
     /*! \brief Destructor */
-    ~EGS_PolygonT() { delete p; };
+    ~EGS_PolygonT() {
+        delete p;
+    };
 
     /*! \brief Is this polygon convex ? */
-    inline bool isConvex() const { return p->isConvex(); };
+    inline bool isConvex() const {
+        return p->isConvex();
+    };
 
     /*! \brief Get the number of polygon points */
-    inline int getN() const { return p->getN(); };
+    inline int getN() const {
+        return p->getN();
+    };
 
     /*! \brief Get the \a j'th point */
     inline EGS_Vector getPoint(int j) const {
@@ -289,7 +359,9 @@ public:
     };
 
     /*! \brief Get the normal to the polygon plane */
-    inline EGS_Vector getNormal() const { return a.normal(); };
+    inline EGS_Vector getNormal() const {
+        return a.normal();
+    };
 
     /*! ? */
     inline EGS_Vector getNormal(const EGS_2DVector &x) const {
@@ -339,7 +411,9 @@ public:
     inline EGS_Float hownear(bool in, const EGS_Vector &x) const {
         EGS_2DVector pos(a.getProjection(x));
         EGS_Float t1 = fabs(a.distance(x));
-        if( p->isInside(pos) ) return t1;
+        if (p->isInside(pos)) {
+            return t1;
+        }
         EGS_Float t2 = p->hownear(true,pos);
         return sqrt(t1*t1+t2*t2);
     };
@@ -350,9 +424,11 @@ public:
       \sa EGS_2DPolygon::howfar()
       */
     inline bool howfar2D(bool in, const EGS_Vector &x, const EGS_Vector &u,
-                       EGS_Float &t, EGS_2DVector *normal = 0) const {
+                         EGS_Float &t, EGS_2DVector *normal = 0) const {
         EGS_2DVector dir(a.getProjection(u));
-        if( u.length2() < 1e-8 ) return false;
+        if (u.length2() < 1e-8) {
+            return false;
+        }
         return p->howfar(in,a.getProjection(x),dir,t,normal);
     };
 
@@ -365,17 +441,24 @@ public:
     inline bool howfar(bool in, const EGS_Vector &x, const EGS_Vector &u,
                        EGS_Float &t) const {
         EGS_Float up = a*u;
-        if( in && up >= 0  || !in && up <= 0 ) return false;
+        if (in && up >= 0  || !in && up <= 0) {
+            return false;
+        }
         EGS_Float tt = -a.distance(x)/up;
-        if( tt <= t ) {
+        if (tt <= t) {
             EGS_Vector xp(x + u*tt);
-            if( p->isInside(a.getProjection(xp)) ) { t = tt; return true; }
+            if (p->isInside(a.getProjection(xp))) {
+                t = tt;
+                return true;
+            }
         }
         return false;
     };
 
     /*! \brief Get the polygon type */
-    const string &getType() const { return a.getType(); };
+    const string &getType() const {
+        return a.getType();
+    };
 
 private:
 
@@ -394,6 +477,6 @@ typedef EGS_PolygonT<EGS_ZProjector> EGS_PolygonXY;
 typedef EGS_PolygonT<EGS_Projector>  EGS_Polygon;
 
 /*! \brief Make a polygon from the 3D points \a points */
-EGS_EXPORT EGS_Polygon* makePolygon(const vector<EGS_Vector> &points);
+EGS_EXPORT EGS_Polygon *makePolygon(const vector<EGS_Vector> &points);
 
 #endif

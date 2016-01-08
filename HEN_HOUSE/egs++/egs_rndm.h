@@ -90,7 +90,9 @@ public:
      *
      * Deallocates the memory pointed to by #rarray.
      */
-    virtual ~EGS_RandomGenerator() { delete [] rarray; };
+    virtual ~EGS_RandomGenerator() {
+        delete [] rarray;
+    };
 
     /*! \brief Returns a random number uniformly distributed between
      * zero (inclusive) and 1 (exclusive).
@@ -99,7 +101,10 @@ public:
      * if the pointer #ip points beyond the last element of #rarray.
      */
     inline EGS_Float getUniform() {
-        if( ip >= np ) { fillArray(np,rarray); ip = 0; }
+        if (ip >= np) {
+            fillArray(np,rarray);
+            ip = 0;
+        }
         return rarray[ip++];
     };
 
@@ -108,14 +113,18 @@ public:
      * This is useful for simulation diagnostics purposes.
      * \sa numbersUsed()
      */
-    EGS_I64 numbersGenerated() const { return count; };
+    EGS_I64 numbersGenerated() const {
+        return count;
+    };
 
     /*! \brief Returns the number of random numbers used so far.
      *
      * This is normally different than numbersGenerated() as some of the
      * numbers in the array #rarray may not have been used yet.
      */
-    EGS_I64 numbersUsed() const { return ip<np ? count - np + ip : count; };
+    EGS_I64 numbersUsed() const {
+        return ip<np ? count - np + ip : count;
+    };
 
     /*! \brief Sets \a cphi and \a sphi to the cosine and sine of a random
      * angle uniformely distributed between 0 and \f$2 \pi \f$.
@@ -130,15 +139,19 @@ public:
 #ifndef FAST_SINCOS
         register EGS_Float xphi,xphi2,yphi,yphi2,rhophi;
         do {
-            xphi = 2*getUniform() - 1; xphi2 = xphi*xphi;
-            yphi = getUniform(); yphi2 = yphi*yphi;
+            xphi = 2*getUniform() - 1;
+            xphi2 = xphi*xphi;
+            yphi = getUniform();
+            yphi2 = yphi*yphi;
             rhophi = xphi2 + yphi2;
-        } while ( rhophi > 1 );
+        }
+        while (rhophi > 1);
         cphi = (xphi2 - yphi2)/rhophi;
         sphi = 2*xphi*yphi/rhophi;
 #else
         EGS_Float phi = 2*M_PI*getUniform();
-        cphi = cos(phi); sphi = sin(phi);
+        cphi = cos(phi);
+        sphi = sin(phi);
 #endif
     };
 
@@ -146,10 +159,16 @@ public:
      * and standard deviation 1.
      */
     inline EGS_Float getGaussian() {
-        if( have_x ) { have_x = false; return the_x; }
+        if (have_x) {
+            have_x = false;
+            return the_x;
+        }
         EGS_Float r = sqrt(-2*log(1-getUniform()));
-        EGS_Float cphi, sphi; getAzimuth(cphi,sphi);
-        have_x = true; the_x = r*sphi; return r*cphi;
+        EGS_Float cphi, sphi;
+        getAzimuth(cphi,sphi);
+        have_x = true;
+        the_x = r*sphi;
+        return r*cphi;
     };
 
     /*! \brief Create a RNG object from the information pointed to by
@@ -166,7 +185,7 @@ public:
      * but this functionality is not there yet. For now, the only RNG
      * type available is a ranmar RNG.
      */
-    static EGS_RandomGenerator* createRNG(EGS_Input *inp, int sequence=0);
+    static EGS_RandomGenerator *createRNG(EGS_Input *inp, int sequence=0);
 
     /*! \brief Returns a pointer to the default egspp RNG.
      *
@@ -174,7 +193,7 @@ public:
      * by increasing the second ranmar default initial seed by
      * \a sequence.
      */
-    static EGS_RandomGenerator* defaultRNG(int sequence=0);
+    static EGS_RandomGenerator *defaultRNG(int sequence=0);
 
     /*! \brief Fill the array of \a n elements pointed to by \a array with
      * random numbers.
@@ -208,11 +227,13 @@ public:
     bool storeState(ostream &data);
     bool setState(istream &data);
     bool addState(istream &data);
-    void resetCounter() { count = 0; };
+    void resetCounter() {
+        count = 0;
+    };
     //@}
 
     /*! \brief Get a copy of the RNG */
-    virtual EGS_RandomGenerator* getCopy() = 0;
+    virtual EGS_RandomGenerator *getCopy() = 0;
 
     /*! \brief Set the state of the RNG from another RNG */
     virtual void setState(EGS_RandomGenerator *r) = 0;

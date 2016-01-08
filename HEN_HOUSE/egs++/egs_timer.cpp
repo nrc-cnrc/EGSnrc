@@ -42,12 +42,15 @@
 
 class EGS_PrivateTimer {
 public:
-  EGS_PrivateTimer() : mark(clock()) {};
-  unsigned long mark;
-  void start() { mark = clock(); };
-  EGS_Float time() {
-      EGS_Float cpu = clock(); return (cpu - mark)/CLOCKS_PER_SEC;
-  };
+    EGS_PrivateTimer() : mark(clock()) {};
+    unsigned long mark;
+    void start() {
+        mark = clock();
+    };
+    EGS_Float time() {
+        EGS_Float cpu = clock();
+        return (cpu - mark)/CLOCKS_PER_SEC;
+    };
 };
 
 #else
@@ -66,30 +69,41 @@ clock_t clps = 0;
 */
 class EGS_PrivateTimer {
 public:
-  tms tstart, tend;
-  EGS_PrivateTimer() {
-    if( !clps ) {
-      clps = sysconf(_SC_CLK_TCK);
-    }
-    times(&tstart);
-  };
-  void start() {
-    if( times(&tstart) < 0 ) egsWarning(" times returned < 0???\n");
-  };
-  EGS_Float time() {
-    times(&tend); EGS_Float cpu = tend.tms_utime;
-    return (cpu - tstart.tms_utime)/clps;
-  };
+    tms tstart, tend;
+    EGS_PrivateTimer() {
+        if (!clps) {
+            clps = sysconf(_SC_CLK_TCK);
+        }
+        times(&tstart);
+    };
+    void start() {
+        if (times(&tstart) < 0) {
+            egsWarning(" times returned < 0???\n");
+        }
+    };
+    EGS_Float time() {
+        times(&tend);
+        EGS_Float cpu = tend.tms_utime;
+        return (cpu - tstart.tms_utime)/clps;
+    };
 };
 #endif
 
 #endif
 
-EGS_Timer::EGS_Timer() { p = new EGS_PrivateTimer; }
+EGS_Timer::EGS_Timer() {
+    p = new EGS_PrivateTimer;
+}
 
-EGS_Timer::~EGS_Timer() { delete p; }
+EGS_Timer::~EGS_Timer() {
+    delete p;
+}
 
-void EGS_Timer::start() { p->start(); }
+void EGS_Timer::start() {
+    p->start();
+}
 
-EGS_Float EGS_Timer::time() { return p->time(); }
+EGS_Float EGS_Timer::time() {
+    return p->time();
+}
 

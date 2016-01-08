@@ -49,7 +49,7 @@
 
 using namespace std;
 
-typedef EGS_BaseGeometry* (*EGS_GeometryCreationFunction)(EGS_Input *);
+typedef EGS_BaseGeometry *(*EGS_GeometryCreationFunction)(EGS_Input *);
 
 #ifndef SKIP_DOXYGEN
 /*!  \brief This class implements functionality related to the dynamic
@@ -82,42 +82,60 @@ public:
 
     void setUp() {
         char *hhouse = getenv("HEN_HOUSE");
-        if( !hhouse )
+        if (!hhouse) {
             egsFatal("Environment variable HEN_HOUSE must be defined\n");
+        }
         dso_path = hhouse;
 #if defined WIN32 && !defined CYGWIN
         char c = '\\';
 #else
         char c = '/';
 #endif
-        if( dso_path[dso_path.size()-1] != c ) dso_path += c;
+        if (dso_path[dso_path.size()-1] != c) {
+            dso_path += c;
+        }
         //dso_path += "geometry"; dso_path += c;
-        dso_path += "egs++"; dso_path += c;
-        dso_path += "dso"; dso_path += c;
+        dso_path += "egs++";
+        dso_path += c;
+        dso_path += "dso";
+        dso_path += c;
         dso_path += CONFIG_NAME;
     };
 
     ~EGS_GeometryPrivate() {
         //egsInformation("Destructing EGS_GeometryPrivate at 0x%x, "
         //        "ntot=%d nnow=%d\n",this,ntot,nnow);
-        if( !ntot ) return;
+        if (!ntot) {
+            return;
+        }
         clearGeometries();
         delete [] geoms;
         //egsInformation("Deleting geometry libs\n");
-        { for(unsigned int j=0; j<glibs.size(); j++) delete glibs[j]; }
+        {
+            for (unsigned int j=0; j<glibs.size(); j++) {
+                delete glibs[j];
+            }
+        }
     };
 
     void clearGeometries() {
         media.clear();
-        if( !ntot ) return;
+        if (!ntot) {
+            return;
+        }
         int j = 0, iloop = 0;
-        while( nnow > 0 ) {
-            if( geoms[j]->deref() == -1 ) delete geoms[j];
-            else geoms[j++]->ref();
-            if( j >= nnow && nnow ) {
-                j = 0; ++iloop;
-                if( iloop > 20 ) egsWarning("~EGS_GeometryPrivate(): failed "
-                   "to delete all geometries after 20 loops!\n");
+        while (nnow > 0) {
+            if (geoms[j]->deref() == -1) {
+                delete geoms[j];
+            }
+            else {
+                geoms[j++]->ref();
+            }
+            if (j >= nnow && nnow) {
+                j = 0;
+                ++iloop;
+                if (iloop > 20) egsWarning("~EGS_GeometryPrivate(): failed "
+                                               "to delete all geometries after 20 loops!\n");
                 break;
             }
         }
@@ -126,49 +144,76 @@ public:
     void grow(int ngrow) {
         ntot += ngrow;
         EGS_BaseGeometry **tmp = new EGS_BaseGeometry* [ntot];
-        for(int j=0; j<nnow; j++) tmp[j] = geoms[j];
-        if( geoms ) delete [] geoms;
+        for (int j=0; j<nnow; j++) {
+            tmp[j] = geoms[j];
+        }
+        if (geoms) {
+            delete [] geoms;
+        }
         geoms = tmp;
     };
 
     int addGeometry(EGS_BaseGeometry *g) {
-        if( !g ) return -1;
-        for(int j=0; j<nnow; j++)
-            if( geoms[j]->getName() == g->getName() ) return -1;
-        if( nnow >= ntot ) grow(10);
-        geoms[nnow++] = g; return nnow-1;
+        if (!g) {
+            return -1;
+        }
+        for (int j=0; j<nnow; j++)
+            if (geoms[j]->getName() == g->getName()) {
+                return -1;
+            }
+        if (nnow >= ntot) {
+            grow(10);
+        }
+        geoms[nnow++] = g;
+        return nnow-1;
 
     };
 
     void removeGeometry(EGS_BaseGeometry *g) {
-        for(int j=0; j<nnow; j++) {
-            if( geoms[j] == g ) { geoms[j] = geoms[--nnow]; break; }
+        for (int j=0; j<nnow; j++) {
+            if (geoms[j] == g) {
+                geoms[j] = geoms[--nnow];
+                break;
+            }
         }
     };
 
     EGS_BaseGeometry *getGeometry(const string &name) {
-        for(int j=0; j<nnow; j++)
-            if( geoms[j]->getName() == name ) return geoms[j];
+        for (int j=0; j<nnow; j++)
+            if (geoms[j]->getName() == name) {
+                return geoms[j];
+            }
         return 0;
     };
 
     int addMedium(const string &Name) {
-        if( EGS_Input::compare(Name,"vacuum") ) return -1;
-        for(unsigned int j=0; j<media.size(); j++)
-            if( media[j] == Name ) return j;
-        media.push_back(Name); return media.size()-1;
+        if (EGS_Input::compare(Name,"vacuum")) {
+            return -1;
+        }
+        for (unsigned int j=0; j<media.size(); j++)
+            if (media[j] == Name) {
+                return j;
+            }
+        media.push_back(Name);
+        return media.size()-1;
     };
 
     int getMediumIndex(const string &Name) {
-        for(unsigned int j=0; j<media.size(); j++)
-            if( media[j] == Name ) return j;
+        for (unsigned int j=0; j<media.size(); j++)
+            if (media[j] == Name) {
+                return j;
+            }
         return -1;
     };
 
-    int nMedia() const { return media.size(); };
+    int nMedia() const {
+        return media.size();
+    };
 
     const char *getMediumName(int ind) const {
-        if( ind < 0 || ind > media.size()-1 ) return 0;
+        if (ind < 0 || ind > media.size()-1) {
+            return 0;
+        }
         return media[ind].c_str();
     };
 
@@ -183,23 +228,34 @@ public:
     };
     ~EGS_PrivateGeometryLists() {
         //egsInformation("Deleting geometry lists\n");
-        if( ntot > 0 ) {
-            for(int j=0; j<nnow; j++) {
+        if (ntot > 0) {
+            for (int j=0; j<nnow; j++) {
                 //egsInformation("Deleting list %d\n",j);
                 delete lists[j];
             }
             delete [] lists;
         }
     };
-    int size() const { return nnow; };
-    EGS_GeometryPrivate &operator[](int j) { return *lists[j]; };
+    int size() const {
+        return nnow;
+    };
+    EGS_GeometryPrivate &operator[](int j) {
+        return *lists[j];
+    };
     void addList(EGS_GeometryPrivate *l) {
-        if( !l ) return;
-        if( nnow >= ntot ) {
+        if (!l) {
+            return;
+        }
+        if (nnow >= ntot) {
             EGS_GeometryPrivate **tmp = new EGS_GeometryPrivate* [ntot+10];
-            for(int j=0; j<nnow; j++) tmp[j] = lists[j];
-            if( ntot > 0 ) delete [] lists;
-            lists = tmp; ntot += 10;
+            for (int j=0; j<nnow; j++) {
+                tmp[j] = lists[j];
+            }
+            if (ntot > 0) {
+                delete [] lists;
+            }
+            lists = tmp;
+            ntot += 10;
         }
         lists[nnow++] = l;
     };
@@ -219,59 +275,63 @@ static char buf_unique[32];
 int EGS_BaseGeometry::error_flag = 0;
 
 #ifdef SINGLE
-EGS_Float EGS_BaseGeometry::epsilon = 1e-5;
+    EGS_Float EGS_BaseGeometry::epsilon = 1e-5;
 #else
-EGS_Float EGS_BaseGeometry::epsilon = 1e-7;
+    EGS_Float EGS_BaseGeometry::epsilon = 1e-7;
 #endif
 
 #ifndef SKIP_DOXYGEN
 EGS_BaseGeometry *EGS_GeometryPrivate::createSingleGeometry(EGS_Input *i) {
     string libname;
-    if( !i ) {
+    if (!i) {
         egsWarning("createSingleGeometry: null input?\n");
         return 0;
     }
     int error = i->getInput(EGS_GeometryPrivate::libkey,libname);
-    if( error ) {
+    if (error) {
         egsWarning("createSingleGeometry: input item %s does not define the"
-                " geometry library\n",i->name());
+                   " geometry library\n",i->name());
         return 0;
     }
     EGS_Library *lib = 0;
-    for(unsigned int j=0; j<glibs.size(); j++) {
-        if( libname == glibs[j]->libraryName() ) {
-            lib = glibs[j]; break;
+    for (unsigned int j=0; j<glibs.size(); j++) {
+        if (libname == glibs[j]->libraryName()) {
+            lib = glibs[j];
+            break;
         }
     }
-    if( !lib ) {
-        lib = new EGS_Library(libname.c_str(),dso_path.c_str()); lib->load();
-        if( !lib->isLoaded() ) {
+    if (!lib) {
+        lib = new EGS_Library(libname.c_str(),dso_path.c_str());
+        lib->load();
+        if (!lib->isLoaded()) {
             egsWarning("createSingleGeometry: Failed to load library '%s' from"
-                    " %s\n",libname.c_str(),dso_path.c_str());
+                       " %s\n",libname.c_str(),dso_path.c_str());
             return 0;
         }
         glibs.push_back(lib);
     }
     EGS_GeometryCreationFunction gcreate = (EGS_GeometryCreationFunction)
-        lib->resolve(EGS_GeometryPrivate::create_key.c_str());
-    if( !gcreate ) {
+                                           lib->resolve(EGS_GeometryPrivate::create_key.c_str());
+    if (!gcreate) {
         egsWarning("createSingleGeometry: failed to resolve the %s function\n"
-                "  in geometry library %s\n",
-                EGS_GeometryPrivate::create_key.c_str(),lib->libraryName());
+                   "  in geometry library %s\n",
+                   EGS_GeometryPrivate::create_key.c_str(),lib->libraryName());
         return 0;
     }
     EGS_BaseGeometry *g = gcreate(i);
-    if( !g ) {
+    if (!g) {
         egsWarning("createSingleGeometry: got null geometry\n");
         egsWarning("  library: %s\n",lib->libraryName());
-        egsWarning("  input:\n"); i->print(4,cerr);
+        egsWarning("  input:\n");
+        i->print(4,cerr);
         return 0;
     }
-    if( !addGeometry(g) ) {
+    if (!addGeometry(g)) {
         egsWarning("createSingleGeometry: failed to add the geometry %s\n"
-                " to the list of geometries. This implies that a geometry with"
-                " this name already exists\n",g->getName().c_str());
-        delete g; return 0;
+                   " to the list of geometries. This implies that a geometry with"
+                   " this name already exists\n",g->getName().c_str());
+        delete g;
+        return 0;
     }
     return g;
 
@@ -283,12 +343,20 @@ static EGS_LOCAL EGS_PrivateGeometryLists egs_geometries;
 
 EGS_Float EGS_BaseGeometry::howfarToOutside(int ireg, const EGS_Vector &x,
         const EGS_Vector &u) {
-    if( ireg < 0 ) return 0;
-    EGS_Vector xx(x); EGS_Float ttot = 0;
-    while(1) {
-        EGS_Float t = 1e30; int inew = howfar(ireg,xx,u,t);
-        ttot += t; if( inew < 0 ) break;
-        xx += u*t; ireg = inew;
+    if (ireg < 0) {
+        return 0;
+    }
+    EGS_Vector xx(x);
+    EGS_Float ttot = 0;
+    while (1) {
+        EGS_Float t = 1e30;
+        int inew = howfar(ireg,xx,u,t);
+        ttot += t;
+        if (inew < 0) {
+            break;
+        }
+        xx += u*t;
+        ireg = inew;
     }
     return ttot;
 }
@@ -297,9 +365,11 @@ void EGS_BaseGeometry::setActiveGeometryList(int list) {
     int n = egs_geometries.size();
     //egsInformation("EGS_BaseGeometry::setActiveGeometryList: size=%d list=%d\n",
     //        n,list);
-    for(int j=n; j<=list; j++)
+    for (int j=n; j<=list; j++)
         //egs_geometries.push_back(EGS_GeometryPrivate());
+    {
         egs_geometries.addList(new EGS_GeometryPrivate);
+    }
     active_glist = list;
 }
 
@@ -318,18 +388,27 @@ extern "C" void __list_geometries() {
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     med(-1), region_media(0), nref(0), debug(false), is_convex(true),
     has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
-    if( !egs_geometries.size() )
+    if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
-    if( !name.size() ) name = getUniqueName();
-    if( egs_geometries[active_glist].addGeometry(this) < 0 )
+    }
+    if (!name.size()) {
+        name = getUniqueName();
+    }
+    if (egs_geometries[active_glist].addGeometry(this) < 0)
         egsFatal("EGS_BaseGeometry::EGS_BaseGeometry:\n"
-            "  a geometry with name %s alread exists\n",name.c_str());
+                 "  a geometry with name %s alread exists\n",name.c_str());
 }
 
 EGS_BaseGeometry::~EGS_BaseGeometry() {
-    if( region_media ) delete [] region_media;
-    if( rhor && has_rho_scaling ) delete [] rhor;
-    if( bp_array ) delete [] bp_array;
+    if (region_media) {
+        delete [] region_media;
+    }
+    if (rhor && has_rho_scaling) {
+        delete [] rhor;
+    }
+    if (bp_array) {
+        delete [] bp_array;
+    }
     //egsInformation("Deleting geometry at 0x%x, list=%d\n",this,active_glist);
     egs_geometries[active_glist].removeGeometry(this);
 }
@@ -344,8 +423,10 @@ EGS_BaseGeometry *EGS_BaseGeometry::getGeometry(const string &Name) {
 
 void EGS_BaseGeometry::setMedium(const string &Name) {
     med = egs_geometries[active_glist].addMedium(Name);
-    if( region_media )
-        for(int j=0; j<nreg; j++) region_media[j] = med;
+    if (region_media)
+        for (int j=0; j<nreg; j++) {
+            region_media[j] = med;
+        }
 }
 
 int EGS_BaseGeometry::addMedium(const string &medname) {
@@ -357,26 +438,41 @@ int EGS_BaseGeometry::getMediumIndex(const string &medname) {
 }
 
 void EGS_BaseGeometry::setMedium(int istart, int iend, const string &Name,
-        int delta) {
+                                 int delta) {
     int imed = egs_geometries[active_glist].addMedium(Name);
     setMedium(istart,iend,imed,delta);
 }
 
 void EGS_BaseGeometry::setMedium(int istart, int iend, int imed, int delta) {
-    if( nreg <= 1 ) { med = imed; return; }
-    if( delta <= 0 ) return;
-    if( istart < 0 ) istart = 0;
-    if( iend > nreg-1 ) iend = nreg-1;
-    if( !region_media ) {
-        region_media = new short [nreg];
-        for(int j=0; j<nreg; j++) region_media[j] = med;
+    if (nreg <= 1) {
+        med = imed;
+        return;
     }
-    for(int j=istart; j<=iend; j+=delta) region_media[j] = imed;
+    if (delta <= 0) {
+        return;
+    }
+    if (istart < 0) {
+        istart = 0;
+    }
+    if (iend > nreg-1) {
+        iend = nreg-1;
+    }
+    if (!region_media) {
+        region_media = new short [nreg];
+        for (int j=0; j<nreg; j++) {
+            region_media[j] = med;
+        }
+    }
+    for (int j=istart; j<=iend; j+=delta) {
+        region_media[j] = imed;
+    }
 }
 
-int EGS_BaseGeometry::nMedia() { return egs_geometries[active_glist].nMedia(); }
+int EGS_BaseGeometry::nMedia() {
+    return egs_geometries[active_glist].nMedia();
+}
 
-const char* EGS_BaseGeometry::getMediumName(int ind) {
+const char *EGS_BaseGeometry::getMediumName(int ind) {
     return egs_geometries[active_glist].getMediumName(ind);
 }
 
@@ -385,51 +481,63 @@ EGS_BaseGeometry *EGS_BaseGeometry::createSingleGeometry(EGS_Input *input) {
 }
 
 EGS_BaseGeometry *EGS_BaseGeometry::createGeometry(EGS_Input *input) {
-    EGS_Input *ginput = input; bool delete_it = false;
-    if( !input->isA(egs_geometries[active_glist].geom_delimeter) ) {
+    EGS_Input *ginput = input;
+    bool delete_it = false;
+    if (!input->isA(egs_geometries[active_glist].geom_delimeter)) {
         ginput = input->takeInputItem(egs_geometries[active_glist].geom_delimeter);
         delete_it = true;
     }
-    if( !ginput ) {
+    if (!ginput) {
         egsWarning("EGS_BaseGeometry::createGeometry: no geometry specification"
-                " in this input\n");
+                   " in this input\n");
         return 0;
     }
-    EGS_Input *ij; bool error = false;
-    while( (ij = ginput->takeInputItem("geometry")) != 0 ) {
+    EGS_Input *ij;
+    bool error = false;
+    while ((ij = ginput->takeInputItem("geometry")) != 0) {
         EGS_BaseGeometry *g = egs_geometries[active_glist].createSingleGeometry(ij);
-        if( !g ) error = true;
+        if (!g) {
+            error = true;
+        }
         delete ij;
     }
-    if( error ) {
+    if (error) {
         egsFatal("EGS_BaseGeometry::createGeometry: errors during geometry"
-                " definition\n"); return 0;
+                 " definition\n");
+        return 0;
     }
     string sim_geom;
     int err = ginput->getInput("simulation geometry",sim_geom);
-    if( err ) {
+    if (err) {
         egsWarning("EGS_BaseGeometry::createGeometry: missing/wrong keyword"
-                " 'simulation geometry'\n");
+                   " 'simulation geometry'\n");
         return 0;
     }
     EGS_BaseGeometry *g = egs_geometries[active_glist].getGeometry(sim_geom);
-    if( !g ) egsWarning("EGS_BaseGeometry::createGeometry: a geometry with "
-            "the name %s does not exist\n",sim_geom.c_str());
-    if( delete_it ) delete ginput;
+    if (!g) egsWarning("EGS_BaseGeometry::createGeometry: a geometry with "
+                           "the name %s does not exist\n",sim_geom.c_str());
+    if (delete_it) {
+        delete ginput;
+    }
     return g;
 }
 
 string EGS_BaseGeometry::getUniqueName() {
     sprintf(buf_unique,"geometry%d",egs_geometries[active_glist].nnow);
-    string result(buf_unique); return result;
+    string result(buf_unique);
+    return result;
 }
 
 void EGS_BaseGeometry::setName(EGS_Input *i) {
     int err = i->getInput("name",name);
-    if( err ) name = getUniqueName();
-    EGS_Input *inp; int irep=0;
-    while( (inp = i->takeInputItem("replica")) ) {
-        string typ; int ncopy;
+    if (err) {
+        name = getUniqueName();
+    }
+    EGS_Input *inp;
+    int irep=0;
+    while ((inp = i->takeInputItem("replica"))) {
+        string typ;
+        int ncopy;
         vector<EGS_Float> trans, trans_o;
         vector<EGS_Float> rot_axis;
         EGS_Float rot_angle, rot_angle_o;
@@ -440,55 +548,61 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
         int err4 = inp->getInput("rotation axis",rot_axis);
         int err5 = inp->getInput("rotation delta",rot_angle);
         int err5a = inp->getInput("first rotation",rot_angle_o);
-        bool do_it = true; int ttype;
-        if( err1 || err2 ) {
-            if( err1 ) egsWarning("geometry replication: 'type' not defined ->"
-                    " ignoring input\n");
-            if( err2 ) egsWarning("geometry replication: 'number of copies' "
-                    "not defined -> ignoring input\n");
+        bool do_it = true;
+        int ttype;
+        if (err1 || err2) {
+            if (err1) egsWarning("geometry replication: 'type' not defined ->"
+                                     " ignoring input\n");
+            if (err2) egsWarning("geometry replication: 'number of copies' "
+                                     "not defined -> ignoring input\n");
             do_it = false;
         }
         else {
-            if( ncopy < 1 ) {
+            if (ncopy < 1) {
                 egsWarning("geometry replication: %d copies?\n",ncopy);
                 do_it = false;
             }
-            if( typ == "line" ) {
-                if( trans.size() != 3 ) {
+            if (typ == "line") {
+                if (trans.size() != 3) {
                     egsWarning("geometry replication: got %d inputs for "
-                      "'translation', need 3\n",trans.size());
+                               "'translation', need 3\n",trans.size());
                     do_it = false;
                 }
                 else {
-                    if( err3a ) {
-                        trans_o.push_back(0); trans_o.push_back(0);
+                    if (err3a) {
+                        trans_o.push_back(0);
+                        trans_o.push_back(0);
                         trans_o.push_back(0);
                     }
                 }
                 ttype = 0;
             }
-            else if( typ == "rotation" ) {
-                if( rot_axis.size() != 3 ) {
+            else if (typ == "rotation") {
+                if (rot_axis.size() != 3) {
                     egsWarning("geometry replication: got %d inputs for "
-                      "'rotation axis', need 3\n",rot_axis.size());
+                               "'rotation axis', need 3\n",rot_axis.size());
                     do_it = false;
                 }
-                if( err4 ) {
+                if (err4) {
                     egsWarning("geometry replication: missing 'rotation delta'"
-                        " input\n");
+                               " input\n");
                     do_it = false;
                 }
-                if( err5a ) rot_angle_o = 0;
+                if (err5a) {
+                    rot_angle_o = 0;
+                }
                 ttype = 1;
             }
             else {
                 egsWarning("geometry replication: unknown replica type %s\n",
-                        typ.c_str()); do_it = false;
+                           typ.c_str());
+                do_it = false;
             }
         }
-        if( do_it ) {
-            ++irep; char buf[1024];
-            for(int icopy=1; icopy<=ncopy; icopy++) {
+        if (do_it) {
+            ++irep;
+            char buf[1024];
+            for (int icopy=1; icopy<=ncopy; icopy++) {
                 //string content(":start geometry:\n");
                 string content;
                 content += "    library = egs_gtransformed\n";
@@ -497,23 +611,24 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
                 sprintf(buf,"    my geometry = %s\n",name.c_str());
                 content += buf;
                 content += "    :start transformation:\n";
-                if( ttype == 0 )
+                if (ttype == 0)
                     sprintf(buf,"        translation = %g %g %g\n",
                             trans_o[0]+trans[0]*icopy,
                             trans_o[1]+trans[1]*icopy,
                             trans_o[2]+trans[2]*icopy);
                 else
                     sprintf(buf,"        rotation = %g %g %g  %g\n",
-                       rot_axis[0],rot_axis[1],rot_axis[2],
-                       rot_angle_o+rot_angle*icopy);
+                            rot_axis[0],rot_axis[1],rot_axis[2],
+                            rot_angle_o+rot_angle*icopy);
                 content += buf;
                 content += "    :stop transformation:\n";
                 //content += ":stop geometry:\n";
-                EGS_Input aux; aux.setContentFromString(content);
+                EGS_Input aux;
+                aux.setContentFromString(content);
                 EGS_BaseGeometry *g =
                     EGS_BaseGeometry::createSingleGeometry(&aux);
-                if( !g ) egsWarning("geometry replication: failed to create"
-                      " replica %d of %s\n",icopy,name.c_str());
+                if (!g) egsWarning("geometry replication: failed to create"
+                                       " replica %d of %s\n",icopy,name.c_str());
                 //else egsInformation("geometry replication: created replica"
                 //       " %s\n",g->getName().c_str());
             }
@@ -530,88 +645,121 @@ void EGS_BaseGeometry::printInfo() const {
 
 void EGS_BaseGeometry::describeGeometries() {
     egsInformation("\nThe following geometries are defined:\n\n");
-    for(int j=0; j<egs_geometries[active_glist].nnow; j++)
+    for (int j=0; j<egs_geometries[active_glist].nnow; j++) {
         egs_geometries[active_glist].geoms[j]->printInfo();
+    }
 }
 
 void EGS_BaseGeometry::setMedia(EGS_Input *inp) {
-    EGS_Input *input = inp; bool delete_it = false;
-    if( !input->isA("media input") ) {
+    EGS_Input *input = inp;
+    bool delete_it = false;
+    if (!input->isA("media input")) {
         input = inp->takeInputItem("media input");
-        if( !input ) return;
+        if (!input) {
+            return;
+        }
         // i.e., if there is no media related input for this geometry,
         // we don't warn as we assume that media will be set from the outside
         delete_it = true;
     }
     vector<string> media_names;
     int err = input->getInput("media",media_names);
-    int *med_ind = 0; int nmed = media_names.size();
-    if( !err && nmed > 0 ) {
+    int *med_ind = 0;
+    int nmed = media_names.size();
+    if (!err && nmed > 0) {
         med_ind = new int [nmed];
-        for(int j=0; j<nmed; j++)
+        for (int j=0; j<nmed; j++) {
             med_ind[j] = egs_geometries[active_glist].addMedium(media_names[j]);
+        }
     }
     else {
         nmed = nMedia();
-        if( nmed < 1 ) { if( delete_it ) delete input; return; }
+        if (nmed < 1) {
+            if (delete_it) {
+                delete input;
+            }
+            return;
+        }
         med_ind = new int [nmed];
-        for(int j=0; j<nmed; j++) med_ind[j] = j;
+        for (int j=0; j<nmed; j++) {
+            med_ind[j] = j;
+        }
     }
     setMedia(input,nmed,med_ind);
     setRelativeRho(input);
-    delete [] med_ind; if( delete_it ) delete input;
+    delete [] med_ind;
+    if (delete_it) {
+        delete input;
+    }
 }
 
 void EGS_BaseGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
-    EGS_Input *i; med = mind[0];
-    while( (i = input->takeInputItem("set medium")) ) {
+    EGS_Input *i;
+    med = mind[0];
+    while ((i = input->takeInputItem("set medium"))) {
         vector<int> inp;
         int err = i->getInput("set medium",inp);
         delete i;
-        if( !err ) {
+        if (!err) {
             //if( inp.size() == 2 ) setMedium(inp[0],inp[0]+1,mind[inp[1]]);
-            if( inp.size() == 2 ) setMedium(inp[0],inp[0],mind[inp[1]]);
-            else if( inp.size() == 3 ) setMedium(inp[0],inp[1],mind[inp[2]]);
-            else if( inp.size() == 4 ) setMedium(inp[0],inp[1],mind[inp[2]],inp[3]);
+            if (inp.size() == 2) {
+                setMedium(inp[0],inp[0],mind[inp[1]]);
+            }
+            else if (inp.size() == 3) {
+                setMedium(inp[0],inp[1],mind[inp[2]]);
+            }
+            else if (inp.size() == 4) {
+                setMedium(inp[0],inp[1],mind[inp[2]],inp[3]);
+            }
             else egsWarning("EGS_BaseGeometry::setMedia(): found %d inputs\n"
-                  "in a 'set medium' input. 2 or 3 are allowed\n",inp.size());
+                                "in a 'set medium' input. 2 or 3 are allowed\n",inp.size());
         }
         else egsWarning("EGS_BaseGeometry::setMedia(): wrong 'set medium'"
-              " input\n");
+                            " input\n");
     }
 }
 
 void EGS_BaseGeometry::setRelativeRho(int start, int end, EGS_Float rho) {
-    if( start < 0 ) start = 0;
-    if( end >= nreg ) end = nreg-1;
-    if( end >= start ) {
+    if (start < 0) {
+        start = 0;
+    }
+    if (end >= nreg) {
+        end = nreg-1;
+    }
+    if (end >= start) {
         int j;
-        if( !rhor ) {
+        if (!rhor) {
             rhor = new EGS_Float [nreg];
-            for(j=0; j<nreg; j++) rhor[j] = 1;
+            for (j=0; j<nreg; j++) {
+                rhor[j] = 1;
+            }
         }
-        for(j=start; j<=end; j++) rhor[j] = rho;
+        for (j=start; j<=end; j++) {
+            rhor[j] = rho;
+        }
         has_rho_scaling = true;
     }
 }
 
 void EGS_BaseGeometry::setRelativeRho(EGS_Input *input) {
     EGS_Input *i;
-    while( (i = input->takeInputItem("set relative density")) ) {
+    while ((i = input->takeInputItem("set relative density"))) {
         vector<EGS_Float> tmp;
         int err = i->getInput("set relative density",tmp);
-        if( !err ) {
-            if( tmp.size() == 2 ) {
-                int start = (int) (tmp[0]+0.1); int end = start;
+        if (!err) {
+            if (tmp.size() == 2) {
+                int start = (int)(tmp[0]+0.1);
+                int end = start;
                 setRelativeRho(start,end,tmp[1]);
             }
-            else if( tmp.size() == 3 ) {
-                int start = (int) (tmp[0]+0.1); int end = (int) (tmp[1]+0.1);
+            else if (tmp.size() == 3) {
+                int start = (int)(tmp[0]+0.1);
+                int end = (int)(tmp[1]+0.1);
                 setRelativeRho(start,end,tmp[2]);
             }
             else {
                 egsWarning("EGS_BaseGeometry::setRelativeRho(): found %d "
-                  "inputs in a 'set relative density' input.\n",tmp.size());
+                           "inputs in a 'set relative density' input.\n",tmp.size());
                 egsWarning("  2 or 3 are allowed => input ignored\n");
             }
         }
@@ -621,24 +769,44 @@ void EGS_BaseGeometry::setRelativeRho(EGS_Input *input) {
 
 int EGS_BaseGeometry::computeIntersections(int ireg, int n, const EGS_Vector &X,
         const EGS_Vector &u, EGS_GeometryIntersections *isections) {
-    if( n < 1 ) return -1;
-    int ifirst = 0; EGS_Float t, ttot = 0; EGS_Vector x(X); int imed;
-    if( ireg < 0 ) {
-        t = 1e30; ireg = howfar(ireg,x,u,t,&imed);
-        if( ireg < 0 ) return 0;
-        isections[0].t = t; isections[0].rhof = 1;
-        isections[0].ireg = -1; isections[0].imed = -1;
-        ttot = t; ++ifirst; x += u*t;
+    if (n < 1) {
+        return -1;
     }
-    else imed = medium(ireg);
+    int ifirst = 0;
+    EGS_Float t, ttot = 0;
+    EGS_Vector x(X);
+    int imed;
+    if (ireg < 0) {
+        t = 1e30;
+        ireg = howfar(ireg,x,u,t,&imed);
+        if (ireg < 0) {
+            return 0;
+        }
+        isections[0].t = t;
+        isections[0].rhof = 1;
+        isections[0].ireg = -1;
+        isections[0].imed = -1;
+        ttot = t;
+        ++ifirst;
+        x += u*t;
+    }
+    else {
+        imed = medium(ireg);
+    }
 
-    for(int j=ifirst; j<n; j++) {
-        isections[j].imed = imed; isections[j].rhof = getRelativeRho(ireg);
+    for (int j=ifirst; j<n; j++) {
+        isections[j].imed = imed;
+        isections[j].rhof = getRelativeRho(ireg);
         isections[j].ireg = ireg;
-        t = 1e30; int inew = howfar(ireg,x,u,t,&imed);
-        ttot += t; isections[j].t = ttot;
-        if( inew < 0 || inew == ireg ) return j+1;
-        ireg = inew; x += u*t;
+        t = 1e30;
+        int inew = howfar(ireg,x,u,t,&imed);
+        ttot += t;
+        isections[j].t = ttot;
+        if (inew < 0 || inew == ireg) {
+            return j+1;
+        }
+        ireg = inew;
+        x += u*t;
     }
 
     return ireg >= 0 ? -1 : n;
@@ -647,55 +815,82 @@ int EGS_BaseGeometry::computeIntersections(int ireg, int n, const EGS_Vector &X,
 
 void EGS_BaseGeometry::setBooleanProperty(EGS_BPType prop) {
     bproperty = prop;
-    if( bp_array ) { delete [] bp_array; bp_array = 0; }
+    if (bp_array) {
+        delete [] bp_array;
+        bp_array = 0;
+    }
 }
 
 void EGS_BaseGeometry::addBooleanProperty(int bit) {
-    if( bit < 0 || bit >= 8*sizeof(EGS_BPType) ) {
+    if (bit < 0 || bit >= 8*sizeof(EGS_BPType)) {
         egsWarning("EGS_BaseGeometry::addBooleanProperty: attempt to set the "
-             "%d'th bith!\n",bit); return;
+                   "%d'th bith!\n",bit);
+        return;
     }
     EGS_BPType prop = 1 << bit;
     bproperty |= prop;
-    if( bp_array ) {
-        for(int j=0; j<nreg; j++) bp_array[j] |= prop;
+    if (bp_array) {
+        for (int j=0; j<nreg; j++) {
+            bp_array[j] |= prop;
+        }
     }
 }
 
 void EGS_BaseGeometry::setBooleanProperty(EGS_BPType prop, int start, int end,
         int step) {
-    if( start < 0 ) start = 0;
-    if( end >= nreg ) end = nreg-1;
-    if( start == 0 && end == nreg-1 && step==1 ) setBooleanProperty(prop);
+    if (start < 0) {
+        start = 0;
+    }
+    if (end >= nreg) {
+        end = nreg-1;
+    }
+    if (start == 0 && end == nreg-1 && step==1) {
+        setBooleanProperty(prop);
+    }
     else {
-        if( !bp_array ) {
+        if (!bp_array) {
             bp_array = new EGS_BPType [nreg];
-            for(int j=0; j<nreg; j++) bp_array[j] = 0;
+            for (int j=0; j<nreg; j++) {
+                bp_array[j] = 0;
+            }
         }
-        for(int j=start; j<=end; j+=step) bp_array[j] = prop;
+        for (int j=start; j<=end; j+=step) {
+            bp_array[j] = prop;
+        }
     }
 }
 
 void EGS_BaseGeometry::addBooleanProperty(int bit, int start, int end,
         int step) {
-    if( bit < 0 || bit >= 8*sizeof(EGS_BPType) ) {
+    if (bit < 0 || bit >= 8*sizeof(EGS_BPType)) {
         egsWarning("EGS_BaseGeometry::addBooleanProperty: attempt to set the "
-             "%d'th bith!\n",bit); return;
+                   "%d'th bith!\n",bit);
+        return;
     }
-    if( start < 0 ) start = 0;
-    if( end >= nreg ) end = nreg-1;
-    if( start == 0 && end == nreg-1 && step==1 ) addBooleanProperty(bit);
+    if (start < 0) {
+        start = 0;
+    }
+    if (end >= nreg) {
+        end = nreg-1;
+    }
+    if (start == 0 && end == nreg-1 && step==1) {
+        addBooleanProperty(bit);
+    }
     else {
         EGS_BPType prop = 1 << bit;
-        if( !bp_array ) {
+        if (!bp_array) {
             bp_array = new EGS_BPType [nreg];
-            for(int j=0; j<nreg; j++) bp_array[j] = 0;
+            for (int j=0; j<nreg; j++) {
+                bp_array[j] = 0;
+            }
         }
-        for(int j=start; j<=end; j+=step) bp_array[j] |= prop;
+        for (int j=start; j<=end; j+=step) {
+            bp_array[j] |= prop;
+        }
     }
 }
 
-void EGS_BaseGeometry::getLabelRegions (const string &str, vector<int> &regs) {
+void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 
     // get all regions lists for this named label
     for (int i=0; i<labels.size(); i++) {
@@ -705,15 +900,15 @@ void EGS_BaseGeometry::getLabelRegions (const string &str, vector<int> &regs) {
     }
 
     // sort region list and remove duplicates
-    sort (regs.begin(), regs.end());
-    regs.erase ( unique (regs.begin(), regs.end() ), regs.end());
+    sort(regs.begin(), regs.end());
+    regs.erase(unique(regs.begin(), regs.end()), regs.end());
 }
 
 
 int EGS_BaseGeometry::setLabels(EGS_Input *input) {
     EGS_Input *i;
     int labelCount=0;
-    while( (i = input->takeInputItem("set label")) ) {
+    while ((i = input->takeInputItem("set label"))) {
 
         // get input string
         string inp;
@@ -747,8 +942,9 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
         while (*ptr != ' ' && *ptr) {
             ptr++;
         }
-        tokens.push_back (string (begin, ptr));
-    } while (*ptr++ != '\0');
+        tokens.push_back(string(begin, ptr));
+    }
+    while (*ptr++ != '\0');
 
     // bail out if there are no label tokens
     if (tokens.size() < 1) {
@@ -766,16 +962,18 @@ int EGS_BaseGeometry::setLabels(const string &inp) {
         }
         else {
             egsWarning("EGS_BaseGeometry::setLabels(): label \"%s\": region %d is beyond the number " \
-                        "of regions in this geometry\n", lab.name.c_str(), reg);
+                       "of regions in this geometry\n", lab.name.c_str(), reg);
         }
     }
 
     // continue if there is no region
-    if (lab.regions.size() <= 0) return 0;
+    if (lab.regions.size() <= 0) {
+        return 0;
+    }
 
     // sort region list and remove duplicates
-    sort (lab.regions.begin(), lab.regions.end());
-    lab.regions.erase ( unique (lab.regions.begin(), lab.regions.end() ), lab.regions.end());
+    sort(lab.regions.begin(), lab.regions.end());
+    lab.regions.erase(unique(lab.regions.begin(), lab.regions.end()), lab.regions.end());
 
     // push current label onto vector of labels
     labels.push_back(lab);
