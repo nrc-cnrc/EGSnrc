@@ -35,7 +35,7 @@
  */
 
 #ifndef EGS_ALIAS_TABLE_
-#define EGS_ALIAS_TABLE
+#define EGS_ALIAS_TABLE_
 
 #include "egs_libconfig.h"
 #include "egs_rndm.h"
