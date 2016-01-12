@@ -53,7 +53,7 @@ endif
 
 # Set dynamic library path
 #
-setenv LD_LIBRARY_PATH "${HEN_HOUSE}egs++/dso/$my_machine:$LD_LIBRARY_PATH"
+setenv LD_LIBRARY_PATH "${HEN_HOUSE}egs++/dso/${my_machine}:$LD_LIBRARY_PATH"
 
 #  Aliases
 #
