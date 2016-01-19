@@ -651,7 +651,6 @@
   <zorder>verticalSpacer_2</zorder>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <pixmapfunction>qPixmapFromMimeSource</pixmapfunction>
  <includes>
   <include location="local">egs_vector.h</include>
   <include location="local">egs_user_color.h</include>
