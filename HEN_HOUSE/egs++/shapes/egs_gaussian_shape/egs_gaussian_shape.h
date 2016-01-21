@@ -42,22 +42,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_GAUSSIAN_SHAPE_DLL
-#define EGS_GAUSSIAN_SHAPE_EXPORT __declspec(dllexport)
-#else
-#define EGS_GAUSSIAN_SHAPE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_GAUSSIAN_SHAPE_LOCAL
+    #ifdef BUILD_GAUSSIAN_SHAPE_DLL
+        #define EGS_GAUSSIAN_SHAPE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_GAUSSIAN_SHAPE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_GAUSSIAN_SHAPE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_GAUSSIAN_SHAPE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_GAUSSIAN_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_GAUSSIAN_SHAPE_EXPORT
-#define EGS_GAUSSIAN_SHAPE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_GAUSSIAN_SHAPE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_GAUSSIAN_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_GAUSSIAN_SHAPE_EXPORT
+        #define EGS_GAUSSIAN_SHAPE_LOCAL
+    #endif
 
 #endif
 
@@ -90,34 +90,56 @@ class EGS_GAUSSIAN_SHAPE_EXPORT EGS_GaussianShape : public EGS_BaseShape {
 public:
 
     EGS_GaussianShape(EGS_BaseShape *Shape, EGS_Float sx, EGS_Float sy,
-        EGS_Float sz, const string &Name="",EGS_ObjectFactory *f=0) :
+                      EGS_Float sz, const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_BaseShape(Name,f), shape(Shape), sig_x(sx), sig_y(sy), sig_z(sz) {
-        if( shape ) {
-            shape->ref(); otype = shape->getObjectType();
+        if (shape) {
+            shape->ref();
+            otype = shape->getObjectType();
             otype += "with Gaussian ditribution";
-            if( sig_x < 0 ) sig_x = -sig_x*0.4246609;
-            if( sig_y < 0 ) sig_y = -sig_y*0.4246609;
-            if( sig_z < 0 ) sig_z = -sig_z*0.4246609;
-        } else otype = "Invalid GaussianShape";
+            if (sig_x < 0) {
+                sig_x = -sig_x*0.4246609;
+            }
+            if (sig_y < 0) {
+                sig_y = -sig_y*0.4246609;
+            }
+            if (sig_z < 0) {
+                sig_z = -sig_z*0.4246609;
+            }
+        }
+        else {
+            otype = "Invalid GaussianShape";
+        }
     };
     ~EGS_GaussianShape() {
         EGS_Object::deleteObject(shape);
     };
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Vector v(shape->getPoint(rndm));
-        if( sig_x > 0 ) v.x += sig_x*rndm->getGaussian();
-        if( sig_y > 0 ) v.y += sig_y*rndm->getGaussian();
-        if( sig_z > 0 ) v.z += sig_z*rndm->getGaussian();
+        if (sig_x > 0) {
+            v.x += sig_x*rndm->getGaussian();
+        }
+        if (sig_y > 0) {
+            v.y += sig_y*rndm->getGaussian();
+        }
+        if (sig_z > 0) {
+            v.z += sig_z*rndm->getGaussian();
+        }
         return v;
     };
-    bool supportsDirectionMethod() const { return true; };
+    bool supportsDirectionMethod() const {
+        return true;
+    };
     void getPointSourceDirection(const EGS_Vector &Xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                 EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
         EGS_Vector x = getPoint(rndm);
-        u = x - xo; EGS_Float d2i = 1/u.length2(), di = sqrt(d2i);
-        u *= di; wt = 1; //wt = A*fabs(u.z)*d2i;
-        if( T ) T->rotate(u);
+        u = x - xo;
+        EGS_Float d2i = 1/u.length2(), di = sqrt(d2i);
+        u *= di;
+        wt = 1; //wt = A*fabs(u.z)*d2i;
+        if (T) {
+            T->rotate(u);
+        }
     };
 
 protected:

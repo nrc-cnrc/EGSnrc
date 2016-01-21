@@ -104,7 +104,9 @@ public:
      *  Derived source classes should set #description to a short
      *  string describing the source type.
      */
-    const char *getSourceDescription() const { return description.c_str(); };
+    const char *getSourceDescription() const {
+        return description.c_str();
+    };
 
     /*! \brief Sample the next source particle from the source probability
      *  distribution.
@@ -127,9 +129,9 @@ public:
      *  of systematic sampling of the beam area.
      */
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-            int &q, int &latch,                // charge and latch
-            EGS_Float &E, EGS_Float &wt,       // energy and weight
-            EGS_Vector &x, EGS_Vector &u) = 0; // position and direction
+                                    int &q, int &latch,                // charge and latch
+                                    EGS_Float &E, EGS_Float &wt,       // energy and weight
+                                    EGS_Vector &x, EGS_Vector &u) = 0; // position and direction
 
     /*! \brief Set the next simulation chunk to start at \a nstart and
       to consist of \a nrun particles.
@@ -178,7 +180,9 @@ public:
      *
      * \sa setState(), addState(), resetCounter().
      */
-    virtual bool storeState(ostream &data_out) const { return true; };
+    virtual bool storeState(ostream &data_out) const {
+        return true;
+    };
 
     /*!  \brief Set the source state based on data from the stream \a data_in.
      *
@@ -190,7 +194,9 @@ public:
      *
      * \sa addState(), storeState(), resetCounter()
      */
-    virtual bool setState(istream &data_in) { return true; };
+    virtual bool setState(istream &data_in) {
+        return true;
+    };
 
     /*! \brief Add data from the stream \a data_in to the source state.
      *
@@ -204,7 +210,9 @@ public:
      *
      * \sa storeState(), setState(), resetCounter().
      */
-    virtual bool addState(istream &data_in) { return true; };
+    virtual bool addState(istream &data_in) {
+        return true;
+    };
 
     /*! \brief Reset the source state.
      *
@@ -264,17 +272,17 @@ public:
      * application can define its own particle sources (in addition to
      * the sources provided by egspp) and use them.
      */
-     static void addKnownSource(EGS_BaseSource *o);
+    static void addKnownSource(EGS_BaseSource *o);
 
-     /*! \brief Add a known source object typeid to the source factory.
-      *
-      * For whatever reason dynamic_cast to EGS_BaseSource* from EGS_Object*
-      * fails when an application is made into a shared library and
-      * dynamically loads a source DSO. I'm therefore adding this method
-      * so that source classes can add their typeid to allow for an additional
-      * check in such cases.
-      */
-     static void addKnownTypeId(const char *name);
+    /*! \brief Add a known source object typeid to the source factory.
+     *
+     * For whatever reason dynamic_cast to EGS_BaseSource* from EGS_Object*
+     * fails when an application is made into a shared library and
+     * dynamically loads a source DSO. I'm therefore adding this method
+     * so that source classes can add their typeid to allow for an additional
+     * check in such cases.
+     */
+    static void addKnownTypeId(const char *name);
 
 protected:
 
@@ -324,7 +332,9 @@ public:
      * be set to a short string describing the type of the spectrum by
      * derived classes.
      */
-    const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
     /*! \brief Sample a particle energy.
      *
@@ -333,8 +343,11 @@ public:
      * It also updates the counters #count, #sum_E and #sum_E2.
      */
     inline EGS_Float sampleEnergy(EGS_RandomGenerator *rndm) {
-        EGS_Float e = sample(rndm); count++;
-        sum_E += e; sum_E2 += e*e; return e;
+        EGS_Float e = sample(rndm);
+        count++;
+        sum_E += e;
+        sum_E2 += e*e;
+        return e;
     };
 
     /*! \brief Get the maximum energy of this spectrum.
@@ -364,9 +377,13 @@ public:
      * parallel runs.
      */
     virtual bool storeState(ostream &data_out) const {
-        if( !egsStoreI64(data_out,count) ) return false;
+        if (!egsStoreI64(data_out,count)) {
+            return false;
+        }
         data_out << " " << sum_E << " " << sum_E2 << endl;
-        if( !data_out.good() || data_out.fail() ) return false;
+        if (!data_out.good() || data_out.fail()) {
+            return false;
+        }
         return true;
     };
 
@@ -384,9 +401,13 @@ public:
      * parallel runs.
      */
     virtual bool setState(istream &data_in) {
-        if( !egsGetI64(data_in,count) ) return false;
+        if (!egsGetI64(data_in,count)) {
+            return false;
+        }
         data_in >> sum_E >> sum_E2;
-        if( data_in.eof() || !data_in.good() || data_in.fail() ) return false;
+        if (data_in.eof() || !data_in.good() || data_in.fail()) {
+            return false;
+        }
         return true;
     };
 
@@ -405,8 +426,12 @@ public:
     virtual bool addState(istream &data_in) {
         EGS_I64 count_save = count;
         double sum_E_save = sum_E, sum_E2_save = sum_E2;
-        if( !setState(data_in) ) return false;
-        count += count_save; sum_E += sum_E_save; sum_E2 += sum_E2_save;
+        if (!setState(data_in)) {
+            return false;
+        }
+        count += count_save;
+        sum_E += sum_E_save;
+        sum_E2 += sum_E2_save;
         return true;
     };
 
@@ -422,7 +447,9 @@ public:
      * parallel runs.
      */
     virtual void resetCounter() {
-        count = 0; sum_E = 0; sum_E2 = 0;
+        count = 0;
+        sum_E = 0;
+        sum_E2 = 0;
     };
 
     /*! \brief Create and return a pointer to a spectrum object from the
@@ -446,9 +473,13 @@ public:
      * its statistical uncertainty to \a de.
      */
     void getSampledAverage(EGS_Float &e, EGS_Float &de) const {
-        if( count > 1 ) {
-            e = sum_E/count; de = sum_E2/count;
-            de -= e*e; if( de > 0 ) de = sqrt(de/(count-1));
+        if (count > 1) {
+            e = sum_E/count;
+            de = sum_E2/count;
+            de -= e*e;
+            if (de > 0) {
+                de = sqrt(de/(count-1));
+            }
         }
     };
 
@@ -515,7 +546,7 @@ public:
      * spectrum object and will delete it in the destructor.
      */
     EGS_BaseSimpleSource(int Q, EGS_BaseSpectrum *Spec,
-        const string &Name="", EGS_ObjectFactory *f=0) :
+                         const string &Name="", EGS_ObjectFactory *f=0) :
         EGS_BaseSource(Name,f), q(Q), s(Spec), count(0) { };
 
     /*! \brief Construct a 'simple' particle source from the information
@@ -534,7 +565,11 @@ public:
      *
      * Deletes the spectrum object of the 'simple' source.
      */
-    ~EGS_BaseSimpleSource() { if(s) delete s; };
+    ~EGS_BaseSimpleSource() {
+        if (s) {
+            delete s;
+        }
+    };
 
     /*! \brief Is this a valid source?
      *
@@ -546,7 +581,9 @@ public:
      * createSourceTemplate() to check if the input was sufficient to
      * construct the desired source.
      */
-    virtual bool isValid() const { return (s != 0); };
+    virtual bool isValid() const {
+        return (s != 0);
+    };
 
     /*! \brief Sample the next source particle from the source probability
      * distribution.
@@ -560,10 +597,12 @@ public:
      * Increments #count by one.
      */
     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-            int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
-            EGS_Vector &x, EGS_Vector &u) {
-        Q = q; E = s->sampleEnergy(rndm);
-        getPositionDirection(rndm,x,u,wt); setLatch(latch);
+                                    int &Q, int &latch, EGS_Float &E, EGS_Float &wt,
+                                    EGS_Vector &x, EGS_Vector &u) {
+        Q = q;
+        E = s->sampleEnergy(rndm);
+        getPositionDirection(rndm,x,u,wt);
+        setLatch(latch);
         return ++count;
     };
 
@@ -576,14 +615,16 @@ public:
      * of the particle. This function is needed by getNextParticle().
      */
     virtual void getPositionDirection(EGS_RandomGenerator *rndm,
-                   EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) = 0;
+                                      EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) = 0;
 
     /*! \brief Get the maximum energy of the source.
      *
      * Simply uses the \link EGS_BaseSpectrum::maxEnergy() maxEnergy() \endlink
      * method of the spectrum object.
      */
-    virtual EGS_Float getEmax() const { return s->maxEnergy(); };
+    virtual EGS_Float getEmax() const {
+        return s->maxEnergy();
+    };
 
     /*! \brief Store the fluence state of this source to the data stream
      * \a data_out.
@@ -595,7 +636,9 @@ public:
      * \sa EGS_BaseSource::storeState(), EGS_BaseSource::setState(),
      * EGS_BaseSource::addState() and EGS_BaseSource::resetCounter().
      */
-    virtual bool storeFluenceState(ostream &data_out) const { return true; };
+    virtual bool storeFluenceState(ostream &data_out) const {
+        return true;
+    };
 
     /*! \brief Store the source state to the data stream \a data_out.
      *
@@ -603,9 +646,15 @@ public:
      * of the spectrum object and the storeFluenceState() virtual function.
      */
     virtual bool storeState(ostream &data_out) const {
-        if( !egsStoreI64(data_out,count) ) return false;
-        if( !s->storeState(data_out) ) return false;
-        if( !storeFluenceState(data_out) ) return false;
+        if (!egsStoreI64(data_out,count)) {
+            return false;
+        }
+        if (!s->storeState(data_out)) {
+            return false;
+        }
+        if (!storeFluenceState(data_out)) {
+            return false;
+        }
         return true;
     };
 
@@ -617,10 +666,17 @@ public:
      */
     virtual bool addState(istream &data) {
         EGS_I64 count_save = count;
-        if( !egsGetI64(data,count) ) return false;
-        if( !s->addState(data) ) return false;
-        if( !addFluenceData(data) ) return false;
-        count += count_save; return true;
+        if (!egsGetI64(data,count)) {
+            return false;
+        }
+        if (!s->addState(data)) {
+            return false;
+        }
+        if (!addFluenceData(data)) {
+            return false;
+        }
+        count += count_save;
+        return true;
     };
 
     /*! \brief Reset the source to a state with zero sampled particles.
@@ -630,7 +686,9 @@ public:
      * resetFluenceCounter().
      */
     virtual void resetCounter() {
-        count = 0; s->resetCounter(); resetFluenceCounter();
+        count = 0;
+        s->resetCounter();
+        resetFluenceCounter();
     };
 
     /*! \brief Add fluence data from the stream \a data to the current state.
@@ -642,7 +700,9 @@ public:
      * \sa storeFluenceState(), setFluenceState(), resetFluenceCounter(),
      * setState(), storeState(), resetCounter() and addState().
      */
-    virtual bool addFluenceData(istream &data) { return true; }
+    virtual bool addFluenceData(istream &data) {
+        return true;
+    }
 
     /*! \brief Reset the data related to the sampling of positions and
      * directions to a state with zero sampled particles.
@@ -666,7 +726,9 @@ public:
      * \sa storeFluenceState(), addFluenceState(), addFluenceData(),
      * setState(), storeState(), resetCounter() and addState().
      */
-    virtual bool setFluenceState(istream &data) { return true; };
+    virtual bool setFluenceState(istream &data) {
+        return true;
+    };
 
     /*! \brief Set the source state according to the data in the stream \a data.
      *
@@ -675,9 +737,15 @@ public:
      * function.
      */
     virtual bool setState(istream &data) {
-        if( !egsGetI64(data,count) ) return false;
-        if( !s->setState(data) ) return false;
-        if( !setFluenceState(data) ) return false;
+        if (!egsGetI64(data,count)) {
+            return false;
+        }
+        if (!s->setState(data)) {
+            return false;
+        }
+        if (!setFluenceState(data)) {
+            return false;
+        }
         return true;
     };
 
@@ -689,7 +757,9 @@ protected:
      * set the particle latch according to some condition. The default
      * implementation sets the latch to zero.
      */
-    virtual void setLatch(int &latch) { latch = 0; };
+    virtual void setLatch(int &latch) {
+        latch = 0;
+    };
 
     /*! \brief The charge of this simple source */
     int              q;
@@ -716,16 +786,18 @@ protected:
  */
 template <class T>
 EGS_BaseSource *createSourceTemplate(EGS_Input *input,
-        EGS_ObjectFactory *f, const char *name) {
+                                     EGS_ObjectFactory *f, const char *name) {
     EGS_BaseSource::addKnownTypeId(typeid(T).name());
-    if( !input ) {
-        egsWarning("createSource(%s): null input?\n",name); return 0;
+    if (!input) {
+        egsWarning("createSource(%s): null input?\n",name);
+        return 0;
     }
     T *res = new T(input,f);
-    if( !res->isValid() )  {
+    if (!res->isValid())  {
         egsWarning("createSource(%s): the input is not "
-            "sufficient to create a valid source\n",name);
-        delete res; return 0;
+                   "sufficient to create a valid source\n",name);
+        delete res;
+        return 0;
     }
     return res;
 };

@@ -23,36 +23,51 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
-#
-###############################################################################
-#
-#  ui.h extension file, included from the uic-generated form implementation.
-#
-#  If you want to add, delete, or rename functions or slots, use Qt Designer
-#  to update this file, preserving your code.
-#
-#  You should not define a constructor or destructor in this file. Instead,
-#  write your code in functions called init() and destroy(). These will
-#  automatically be called by the form's constructor and destructor.
+#  Contributors:    Manuel Stoeckl
 #
 ###############################################################################
 */
 
-
 #include "egs_libconfig.h"
+#include "saveimage.h"
 
 #include <qimage.h>
 #include <qstringlist.h>
 #include <qstring.h>
 #include <qfiledialog.h>
+#include <qimagewriter.h>
 
-void SaveImage::saveImage() {
 
+#ifdef VIEW_DEBUG
+    extern void (* egsWarning)(const char *, ...);
+#endif
+
+SaveImage::SaveImage(QWidget *parent, const char *name)
+    : QDialog(parent) {
+    setObjectName(name);
+    setModal(false);
+    setupUi(this);
+
+    QList<QByteArray> blist = QImageWriter::supportedImageFormats();
+    int ind = -1;
+    for (int i=0; i<blist.size(); i++) {
+        formatCB->addItem(blist[i]);
+        if (QString(blist[i]).toUpper() == "PNG") {
+            ind = i;
+        }
+    }
+    if (ind >= 0) {
+        formatCB->setCurrentIndex(ind);
+    }
+}
+
+SaveImage::~SaveImage() {
+    // Qt handles child _widget_ deletion
 }
 
 void SaveImage::getImageSize(int *nx, int *ny) {
-    *nx = xsizeSB->value(); *ny = ysizeSB->value();
+    *nx = xsizeSB->value();
+    *ny = ysizeSB->value();
 }
 
 QString SaveImage::getImageFormat() {
@@ -62,50 +77,52 @@ QString SaveImage::getImageFormat() {
 QString SaveImage::getImageFileName() {
     QString fname = fileName->text(), format = ".";
     format += formatCB->currentText();
-    if( !fname.endsWith(format,false) ) fname += format.lower();
+    if (!fname.endsWith(format,Qt::CaseInsensitive)) {
+        fname += format.toLower();
+    }
     return fname;
 }
 
 
 void SaveImage::selectFileName() {
     QString filter = "Images(";
-    for(int j=0; j<formatCB->count(); j++) {
-        filter += "*."; filter += formatCB->text(j).lower(); filter += " ";
+    for (int j=0; j<formatCB->count(); j++) {
+        filter += "*.";
+        filter += formatCB->itemText(j).toLower();
+        filter += " ";
     }
     filter += ")";
-    QString s = QFileDialog::getSaveFileName(QString::null,filter,
-                    this,
-                    "save file dialog",
-                    "Select a filename" );
-    if( !s.isEmpty() ) {
+    QString s = QFileDialog::getSaveFileName(this, "Select a filename", QString(), filter);
+    if (!s.isEmpty()) {
         fileName->setText(s);
-        for(int j=0; j<formatCB->count(); j++) {
-            if( s.endsWith(formatCB->text(j),false) )
-                formatCB->setCurrentItem(j);
+        for (int j=0; j<formatCB->count(); j++) {
+            if (s.endsWith(formatCB->itemText(j),Qt::CaseInsensitive)) {
+                formatCB->setCurrentIndex(j);
+            }
         }
     }
-}
-
-
-void SaveImage::init() {
-    QStringList list = QImage::outputFormatList();
-    formatCB->insertStringList(list);
-    int ind = list.findIndex("PNG");
-    if( ind >= 0 ) formatCB->setCurrentItem(ind);
 }
 
 void SaveImage::enableOkButton() {
 #ifdef VIEW_DEBUG
     egsWarning("In SaveImage::enableOkButton()\n");
 #endif
-    if( !fileName->text().isEmpty() ) okButton->setEnabled(true);
-    else okButton->setEnabled(false);
+    if (!fileName->text().isEmpty()) {
+        okButton->setEnabled(true);
+    }
+    else {
+        okButton->setEnabled(false);
+    }
 }
 
 void SaveImage::fnameTextChanged(const QString &text) {
 #ifdef VIEW_DEBUG
-    egsWarning("SaveImage::fnameTextChanged(%s)\n",text.latin1());
+    egsWarning("SaveImage::fnameTextChanged(%s)\n",text.toUtf8().constData());
 #endif
-    if( text.isEmpty() ) okButton->setEnabled(false);
-    else okButton->setEnabled(true);
+    if (text.isEmpty()) {
+        okButton->setEnabled(false);
+    }
+    else {
+        okButton->setEnabled(true);
+    }
 }

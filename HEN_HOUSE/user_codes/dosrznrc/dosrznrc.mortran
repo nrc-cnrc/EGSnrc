@@ -6106,6 +6106,7 @@ $INTEGER maxbin;
 COMIN/IODAT2/;
 character*1 TITLE(80);
 character*60 xtitle,ytitle,subtitle,seriestitle,plottitle;
+character*80 graphtitle;
 
 $INTEGER  NHIST,IOUT,IB,j,ilev,ipk,iunit,icurvenum,iplttype,iaxistype;
 $REAL     HIST,sfac,eb,sum,uncert,binw,histmin;
@@ -6191,6 +6192,8 @@ close(iunit);
 "Now setup to create a proper xvgr plot of the spectrum on unit 22"
 iunit = egs_open_file(22,0,1,'.plotphd');
 
+DO J=1,80[graphtitle(j:j)=title(j);]
+
 xtitle='energy/MeV';
 ytitle='cts/MeV';
 subtitle='pulse height distribution from dosrznrc';
@@ -6200,7 +6203,7 @@ histmin=0.0;
 iaxistype = 0; "no logs"
 seriestitle=' ';
 call xvgrplot(xplot,yplot,errplot,MAXBIN,icurvenum,seriestitle,
-xtitle,ytitle,title,subtitle,iunit,iplttype,histmin,iaxistype);
+xtitle,ytitle,graphtitle,subtitle,iunit,iplttype,histmin,iaxistype);
       "iaxistype is not set, is this intended??? "
 close(iunit);
 
@@ -6334,6 +6337,7 @@ CHARACTER*103 FMT121;
 CHARACTER*4 CH_IX, CH_IZ;
 CHARACTER*1 a(3);
 CHARACTER*60 SERIESTITLE, XTITLE, YTITLE, SUBTITLE;
+CHARACTER*80 GRAPHTITLE;
 "CHARACTER*103 CMPRES,FMT;"
 CHARACTER CMPRES*103,FMT*103;
 $REAL XCOORD($PLTDIM), YCOORD($PLTDIM), UNCERT($PLTDIM);
@@ -6624,6 +6628,8 @@ IF(IPLTLP.EQ.1)[ "Do lineprinter plots"
 
 IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
 
+    DO I=1,80[GRAPHTITLE(I:I)=TITLE(I);]
+
     J=0; "J keeps track of which plot we are on"
     CURVENUM=0;  "counter for the curve # of the graph"
     IF(NPLOTR > 0) [ "there are depth-dose plots on plotter"
@@ -6669,7 +6675,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                 "plot XY-graph"
                 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                 CURVENUM=CURVENUM+1;
@@ -6689,7 +6695,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot XY-graph"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6713,7 +6719,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot XY-graph"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6759,7 +6765,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                 "plot histogram"
                 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                 CURVENUM=CURVENUM+1;
@@ -6778,7 +6784,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot histogram"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6802,7 +6808,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot histogram"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6860,7 +6866,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                 "plot XY-graph"
                 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                 CURVENUM=CURVENUM+1;
@@ -6879,7 +6885,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot kerma plot"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6902,7 +6908,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot dose/kerma graph"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6943,7 +6949,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                 "plot histogram"
                 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                 CURVENUM=CURVENUM+1;
@@ -6963,7 +6969,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot kerma histogram"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;
@@ -6989,7 +6995,7 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
                     "plot histogram"
                     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                     CURVENUM=CURVENUM+1;

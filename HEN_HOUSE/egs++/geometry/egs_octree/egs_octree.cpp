@@ -213,103 +213,125 @@ static char EGS_OCTREE_LOCAL eoctree_key6[] = "prune tree";
 
 extern "C" {
 
-EGS_OCTREE_EXPORT EGS_BaseGeometry *createGeometry (EGS_Input *input) {
+    EGS_OCTREE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
 
-    EGS_Input *i;
+        EGS_Input *i;
 
-    // check that we have an input
-    if (!input) { egsWarning(eoctree_message1,eoctree_message2); return 0; }
-
-    // read bounding boxes
-    vector<EGS_Octree_bbox> vBox;
-    while (i = input->takeInputItem(eoctree_key0)) {
-
-        // read the bounding box minimum
-        vector<EGS_Float> v;
-        int err = i->getInput(eoctree_key1, v);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message5); return 0;
-        }
-        if (v.size() != 3) {
-            egsWarning(eoctree_message1, eoctree_message6); return 0;
-        }
-        EGS_Vector bboxMin(v[0],v[1],v[2]);
-
-        // read the bounding box maximum
-        err = i->getInput(eoctree_key2, v);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message7); return 0;
-        }
-        if (v.size() != 3) {
-            egsWarning(eoctree_message1, eoctree_message8); return 0;
-        }
-        EGS_Vector bboxMax(v[0],v[1],v[2]);
-
-        // read the bounding box resolution
-        vector<int> bboxRes;
-        err = i->getInput(eoctree_key3, bboxRes);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message9); return 0;
-        }
-        if (bboxRes.size() != 3) {
-            egsWarning(eoctree_message1, eoctree_message10); return 0;
+        // check that we have an input
+        if (!input) {
+            egsWarning(eoctree_message1,eoctree_message2);
+            return 0;
         }
 
-        EGS_Octree_bbox box = EGS_Octree_bbox(bboxMin, bboxMax, bboxRes);
-        vBox.push_back(box);
+        // read bounding boxes
+        vector<EGS_Octree_bbox> vBox;
+        while (i = input->takeInputItem(eoctree_key0)) {
+
+            // read the bounding box minimum
+            vector<EGS_Float> v;
+            int err = i->getInput(eoctree_key1, v);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message5);
+                return 0;
+            }
+            if (v.size() != 3) {
+                egsWarning(eoctree_message1, eoctree_message6);
+                return 0;
+            }
+            EGS_Vector bboxMin(v[0],v[1],v[2]);
+
+            // read the bounding box maximum
+            err = i->getInput(eoctree_key2, v);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message7);
+                return 0;
+            }
+            if (v.size() != 3) {
+                egsWarning(eoctree_message1, eoctree_message8);
+                return 0;
+            }
+            EGS_Vector bboxMax(v[0],v[1],v[2]);
+
+            // read the bounding box resolution
+            vector<int> bboxRes;
+            err = i->getInput(eoctree_key3, bboxRes);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message9);
+                return 0;
+            }
+            if (bboxRes.size() != 3) {
+                egsWarning(eoctree_message1, eoctree_message10);
+                return 0;
+            }
+
+            EGS_Octree_bbox box = EGS_Octree_bbox(bboxMin, bboxMax, bboxRes);
+            vBox.push_back(box);
+        }
+        if (vBox.size() < 1) {
+            egsWarning(eoctree_message1, eoctree_message15);
+            return 0;
+        }
+
+        // read discard child option
+        bool discardChild = true;
+        string discard;
+        if (input->getInputItem(eoctree_key5)) {
+            int err = input->getInput(eoctree_key5, discard);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message11);
+                return 0;
+            }
+            if (discard.find("yes")==string::npos && discard.find("no")==string::npos) {
+                egsWarning(eoctree_message1, eoctree_message12);
+                return 0;
+            }
+            if (discard.find("no")!=string::npos) {
+                discardChild = false;
+            }
+        }
+
+        // read prune tree option
+        bool pruneTree = true;
+        string prune;
+        if (input->getInputItem(eoctree_key6)) {
+            int err = input->getInput(eoctree_key6, prune);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message16);
+                return 0;
+            }
+            if (prune.find("yes")==string::npos && prune.find("no")==string::npos) {
+                egsWarning(eoctree_message1, eoctree_message17);
+                return 0;
+            }
+            if (prune.find("no")!=string::npos) {
+                pruneTree = false;
+            }
+        }
+
+        // read and load the child geometry
+        string gname;
+        {
+            int err = input->getInput(eoctree_key4, gname);
+            if (err) {
+                egsWarning(eoctree_message1, eoctree_message13);
+                return 0;
+            }
+        }
+        EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
+        if (!g) {
+            egsWarning(eoctree_message1, eoctree_message14);
+            return 0;
+        }
+
+        // create the octree geometry
+        EGS_Octree *octree = new EGS_Octree(vBox, pruneTree, g);
+        octree->setName(input);
+        octree->setLabels(input);
+        octree->printInfo();
+
+        if (discardChild) {
+            delete g;
+        }
+        return octree;
     }
-    if (vBox.size() < 1) {
-        egsWarning(eoctree_message1, eoctree_message15); return 0;
-    }
-
-    // read discard child option
-    bool discardChild = true;
-    string discard;
-    if (input->getInputItem(eoctree_key5)) {
-        int err = input->getInput(eoctree_key5, discard);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message11); return 0;
-        }
-        if (discard.find("yes")==string::npos && discard.find("no")==string::npos) {
-            egsWarning(eoctree_message1, eoctree_message12); return 0;
-        }
-        if (discard.find("no")!=string::npos) discardChild = false;
-    }
-
-    // read prune tree option
-    bool pruneTree = true;
-    string prune;
-    if (input->getInputItem(eoctree_key6)) {
-        int err = input->getInput(eoctree_key6, prune);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message16); return 0;
-        }
-        if (prune.find("yes")==string::npos && prune.find("no")==string::npos) {
-            egsWarning(eoctree_message1, eoctree_message17); return 0;
-        }
-        if (prune.find("no")!=string::npos) pruneTree = false;
-    }
-
-    // read and load the child geometry
-    string gname;
-    {
-        int err = input->getInput(eoctree_key4, gname);
-        if (err) {
-            egsWarning(eoctree_message1, eoctree_message13); return 0;
-        }
-    }
-    EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
-    if (!g) {
-        egsWarning(eoctree_message1, eoctree_message14); return 0;
-    }
-
-    // create the octree geometry
-    EGS_Octree *octree = new EGS_Octree (vBox, pruneTree, g);
-    octree->setName(input);
-    octree->setLabels(input);
-    octree->printInfo();
-
-    if (discardChild) delete g;
-    return octree;
-}
 }

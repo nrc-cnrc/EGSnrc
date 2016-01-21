@@ -101,25 +101,43 @@ public:
     virtual ~EGS_RunControl();
 
     /*! \brief Set the number of particles to be simulated to \a n */
-    void setNcase(EGS_I64 n) { if( n > 0 ) ncase = n; };
+    void setNcase(EGS_I64 n) {
+        if (n > 0) {
+            ncase = n;
+        }
+    };
 
     /*! \brief Set the number of batches to \a n */
-    void setNbatch(int n) { if( n > 0 ) nbatch = n; };
+    void setNbatch(int n) {
+        if (n > 0) {
+            nbatch = n;
+        }
+    };
 
     /*! \brief Set the maximum CPU time for the simulation to \a t */
-    void setMaxTime(EGS_Float t) { maxt = t; };
+    void setMaxTime(EGS_Float t) {
+        maxt = t;
+    };
 
     /*! \brief Set the required statistical uncertainty to \a a */
-    void setRequiredUncertainty(EGS_Float a) { accu = a; };
+    void setRequiredUncertainty(EGS_Float a) {
+        accu = a;
+    };
 
     /*! \brief Returns the total number of particles to be simulated */
-    EGS_I64 getNcase() const { return ncase; };
+    EGS_I64 getNcase() const {
+        return ncase;
+    };
 
     /*! \brief Returns the number of batches per simulation chunk */
-    int     getNbatch() const { return nbatch; };
+    int     getNbatch() const {
+        return nbatch;
+    };
 
     /*! \brief Returns the number of simulation chunks */
-    int     getNchunk() const { return nchunk; };
+    int     getNchunk() const {
+        return nchunk;
+    };
 
     /*! \brief Starts the simulation.
 
@@ -139,7 +157,9 @@ public:
       are in such a chunk. This function is called from within the
       runSimulation() function of EGS_Application.
     */
-    virtual EGS_I64 getNextChunk() { return getNcase() - ndone; };
+    virtual EGS_I64 getNextChunk() {
+        return getNcase() - ndone;
+    };
 
     /*! Finish the simulation.
 
@@ -173,15 +193,24 @@ public:
     virtual bool    setState(istream &data);
     virtual bool    addState(istream &data);
     virtual void    resetCounter();
-    virtual bool    getCombinedResult(double &, double &) const
-                     { return false; };
+    virtual bool    getCombinedResult(double &, double &) const {
+        return false;
+    };
 
-    virtual EGS_I64 getNdone() const { return ndone; };
-    virtual void    setNdone(EGS_I64 Ndone) { ndone = Ndone; };
-    virtual void    incrementNdone() { ++ndone; };
-    virtual EGS_Float getCPUTime() const { return cpu_time+previous_cpu_time;};
+    virtual EGS_I64 getNdone() const {
+        return ndone;
+    };
+    virtual void    setNdone(EGS_I64 Ndone) {
+        ndone = Ndone;
+    };
+    virtual void    incrementNdone() {
+        ++ndone;
+    };
+    virtual EGS_Float getCPUTime() const {
+        return cpu_time+previous_cpu_time;
+    };
 
-    static EGS_RunControl* getRunControlObject(EGS_Application *);
+    static EGS_RunControl *getRunControlObject(EGS_Application *);
 
     int             geomErrorCount, geomErrorMax;
 
@@ -196,9 +225,9 @@ protected:
     EGS_Float       accu;   // statistical uncertainty sought.
     int             nbatch; // number of batches.
     int             restart;// =0 => fresh calculation
-                            // =1 => restart calculation
-                            // =2 => analyze results
-                            // =3 => combine parallel run
+    // =1 => restart calculation
+    // =2 => analyze results
+    // =3 => combine parallel run
     int             nchunk; // number of simulation "chunks"
 
     EGS_Timer       timer;
@@ -232,7 +261,11 @@ public:
 
     EGS_JCFControl(EGS_Application *, int Nbuf=1024);
     ~EGS_JCFControl();
-    void setNchunkForParallel(int n) { if( n > 0 ) nchunk = n; };
+    void setNchunkForParallel(int n) {
+        if (n > 0) {
+            nchunk = n;
+        }
+    };
     int  startSimulation();
     EGS_I64 getNextChunk();
     int  finishSimulation();

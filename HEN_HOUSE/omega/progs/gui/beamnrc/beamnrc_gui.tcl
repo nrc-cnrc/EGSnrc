@@ -451,13 +451,13 @@ set rooty  [expr ($height/2) - 300]
 wm geometry . +$rootx+$rooty
 
 font create myDefaultFont -family Helvetica -size 11 -weight bold
-option add *font myDefaultFont
+#option add *font myDefaultFont
 
 #define a main menubar
 
-frame .mbar -relief raised -bd 1
-menubutton .mbar.file -text "File" -menu .mbar.file.menu
-menu .mbar.file.menu
+frame .mbar -relief raised -bd 1 
+menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont 
+menu .mbar.file.menu -font myDefaultFont
 .mbar.file.menu add command -label "Load a previous accelerator" \
 	-command "load_old_module"
 .mbar.file.menu add command -label "Specify a new accelerator" \
@@ -475,26 +475,26 @@ menu .mbar.file.menu
 .mbar.file.menu add separator
 .mbar.file.menu add command -label "Exit" -command "exit_prompt"
 
-menubutton .mbar.preview -text "Preview" -menu .mbar.preview.menu
-menu .mbar.preview.menu
+menubutton .mbar.preview -text "Preview" -menu .mbar.preview.menu -font myDefaultFont
+menu .mbar.preview.menu -font myDefaultFont
 .mbar.preview.menu add command -label "Preview accelerator" -command "draw_accel"
 .mbar.preview.menu add command -label "Change colour scheme"\
         -command "change_color_scheme"
 
-menubutton .mbar.run -text "Execute" -menu .mbar.run.menu
-menu .mbar.run.menu
+menubutton .mbar.run -text "Execute" -menu .mbar.run.menu -font myDefaultFont
+menu .mbar.run.menu -font myDefaultFont
 .mbar.run.menu add command -label "Compile" -command "compile_accel"
 .mbar.run.menu add command -label "Run"\
 	-command "run"
 
-menubutton .mbar.about -text "About" -menu .mbar.about.menu
-menu .mbar.about.menu
+menubutton .mbar.about -text "About" -menu .mbar.about.menu -font myDefaultFont
+menu .mbar.about.menu -font myDefaultFont
 .mbar.about.menu add command -label "About BEAMnrc" -command "about_BEAM"
 .mbar.about.menu add command -label "About the BEAMnrc GUI" \
     -command "about_BEAM_GUI"
 
-menubutton .mbar.help -text "Help" -menu .mbar.help.menu
-menu .mbar.help.menu
+menubutton .mbar.help -text "Help" -menu .mbar.help.menu -font myDefaultFont
+menu .mbar.help.menu -font myDefaultFont
 #.mbar.help.menu add command -label "BEAMnrc Help"
 .mbar.help.menu add command -label "GUI Help" \
     -command {help_dialog .help "GUI Help" $GUI_help_text info 0 Close}

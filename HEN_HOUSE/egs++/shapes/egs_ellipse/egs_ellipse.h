@@ -43,22 +43,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_ELLIPSE_DLL
-#define EGS_ELLIPSE_EXPORT __declspec(dllexport)
-#else
-#define EGS_ELLIPSE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_ELLIPSE_LOCAL
+    #ifdef BUILD_ELLIPSE_DLL
+        #define EGS_ELLIPSE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_ELLIPSE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_ELLIPSE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_ELLIPSE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_ELLIPSE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_ELLIPSE_EXPORT
-#define EGS_ELLIPSE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_ELLIPSE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_ELLIPSE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_ELLIPSE_EXPORT
+        #define EGS_ELLIPSE_LOCAL
+    #endif
 
 #endif
 
@@ -90,14 +90,16 @@ public:
     /*! \brief Construct an ellipse with midpoint at \a Xo,\a Yo and
       half axis \a A and \a B. */
     EGS_EllipseShape(EGS_Float Xo, EGS_Float Yo, EGS_Float A, EGS_Float B,
-            const string &Name="",EGS_ObjectFactory *f=0) :
+                     const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_SurfaceShape(Name,f), xo(Xo), yo(Yo), a(A), b(B) {
-        otype = "ellipse"; A = M_PI*a*b;
+        otype = "ellipse";
+        A = M_PI*a*b;
     };
     ~EGS_EllipseShape() {};
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Float r = sqrt(rndm->getUniform());
-        EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+        EGS_Float cphi, sphi;
+        rndm->getAzimuth(cphi,sphi);
         return EGS_Vector(xo + r*a*cphi, yo + r*b*sphi, 0);
     };
 

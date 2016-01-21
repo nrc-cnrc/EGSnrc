@@ -72,5 +72,6 @@ SOURCES = \
 	$(EGS_UTILS)xvgrplot.mortran \
 	$(MACHINE_MORTRAN) \
 	$(EGS_SOURCEDIR)egs_utilities.mortran \
+        $(EGS_SOURCEDIR)egs_parallel.mortran \
         $(EGS_SOURCEDIR)pegs4_routines.mortran\
 	$(EGS_SOURCEDIR)egsnrc.mortran

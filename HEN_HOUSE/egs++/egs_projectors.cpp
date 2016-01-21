@@ -39,21 +39,31 @@
 
 EGS_Projector::EGS_Projector(const EGS_Vector &A, const string &Type) :
     a(A), xo(EGS_Vector()), d(0), type(Type) {
-    norm = a.length(); a.normalize();
-    if( a.x*a.x + a.y*a.y > 0 ) {
-        v1 = EGS_Vector(-a.y,a.x,0); v1.normalize();
+    norm = a.length();
+    a.normalize();
+    if (a.x*a.x + a.y*a.y > 0) {
+        v1 = EGS_Vector(-a.y,a.x,0);
+        v1.normalize();
     }
-    else v1 = EGS_Vector(1,0,0);
+    else {
+        v1 = EGS_Vector(1,0,0);
+    }
     v2 = a%v1;
 }
 
 EGS_Projector::EGS_Projector(const EGS_Vector &x1, const EGS_Vector &x2,
-                const EGS_Vector &x3, const string &T) : type(T) {
-    v1 = x2-x1; v2 = x3-x1; a = v1%v2; xo = x1;
-    if( a.length2() < 1e-10 ) egsFatal("EGS_Projector::EGS_Projector: "
-           " the vectors are co-linear\n");
-    a.normalize(); norm = 1;
-    v1.normalize(); v2 = a%v1; d = a*x1;
+                             const EGS_Vector &x3, const string &T) : type(T) {
+    v1 = x2-x1;
+    v2 = x3-x1;
+    a = v1%v2;
+    xo = x1;
+    if (a.length2() < 1e-10) egsFatal("EGS_Projector::EGS_Projector: "
+                                          " the vectors are co-linear\n");
+    a.normalize();
+    norm = 1;
+    v1.normalize();
+    v2 = a%v1;
+    d = a*x1;
 }
 
 void EGS_Projector::printInfo() const {

@@ -39,33 +39,38 @@
 #include "egs_math.h"
 
 EGS_AngularSpreadSource::EGS_AngularSpreadSource(EGS_Input *input,
-    EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), sigma(0) {
+        EGS_ObjectFactory *f) : EGS_BaseSource(input,f), source(0), sigma(0) {
     EGS_Input *isource = input->takeInputItem("source",false);
-    if( isource ) {
-        source = EGS_BaseSource::createSource(isource); delete isource;
+    if (isource) {
+        source = EGS_BaseSource::createSource(isource);
+        delete isource;
     }
-    if( !source ) {
-        string sname; int err = input->getInput("source name",sname);
-        if( err )
+    if (!source) {
+        string sname;
+        int err = input->getInput("source name",sname);
+        if (err)
             egsWarning("EGS_AngularSpreadSource: missing/wrong inline source "
-              "definition and missing wrong 'source name' input\n");
+                       "definition and missing wrong 'source name' input\n");
         else {
             source = EGS_BaseSource::getSource(sname);
-            if( !source ) egsWarning("EGS_AngularSpreadSource: a source named %s"
-                    " does not exist\n");
+            if (!source) egsWarning("EGS_AngularSpreadSource: a source named %s"
+                                        " does not exist\n");
         }
     }
     int err = input->getInput("sigma",sigma);
-    if( !err ) {
-        if( sigma < 0 ) sigma = -0.4246609001440095285*sigma;
-        sigma *= M_PI/180; sigma *= sigma;
+    if (!err) {
+        if (sigma < 0) {
+            sigma = -0.4246609001440095285*sigma;
+        }
+        sigma *= M_PI/180;
+        sigma *= sigma;
     }
     setUp();
 }
 
 void EGS_AngularSpreadSource::setUp() {
     otype = "EGS_AngularSpreadSource";
-    if( !isValid() ) {
+    if (!isValid()) {
         description = "Invalid angular spread source";
         return;
     }
@@ -76,9 +81,10 @@ void EGS_AngularSpreadSource::setUp() {
 
 extern "C" {
 
-EGS_ANGULAR_SPREAD_SOURCE_EXPORT EGS_BaseSource* createSource(EGS_Input *input,
-        EGS_ObjectFactory *f) { return
-    createSourceTemplate<EGS_AngularSpreadSource>(input,f,"angular spread source");
-}
+    EGS_ANGULAR_SPREAD_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input *input,
+            EGS_ObjectFactory *f) {
+        return
+            createSourceTemplate<EGS_AngularSpreadSource>(input,f,"angular spread source");
+    }
 
 }

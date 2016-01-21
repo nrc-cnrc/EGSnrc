@@ -48,12 +48,17 @@ using namespace std;
 
 int main(int argc, char **argv) {
 
-    if( argc < 2 ) egsFatal("Usage: %s input_file\n",argv[0]);
+    if (argc < 2) {
+        egsFatal("Usage: %s input_file\n",argv[0]);
+    }
 
-    EGS_Input input; input.setContentFromFile(argv[1]);
+    EGS_Input input;
+    input.setContentFromFile(argv[1]);
     //input.print(0,cout);
     EGS_BaseGeometry *g = EGS_BaseGeometry::createGeometry(&input);
-    if( !g ) egsFatal("\nGot a null geometry? Check your input file\n\n");
+    if (!g) {
+        egsFatal("\nGot a null geometry? Check your input file\n\n");
+    }
     EGS_BaseGeometry::describeGeometries();
 
     EGS_GeometryTester *tester = EGS_GeometryTester::getGeometryTester(&input);

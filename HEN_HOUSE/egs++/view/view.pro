@@ -27,19 +27,21 @@
 #
 ###############################################################################
 
-
 TEMPLATE	= app
 LANGUAGE	= C++
 
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
-                 clippingplanes.ui.h viewcontrol.ui.h geometryview.ui.h \
-                 saveimage.ui.h egs_user_color.h egs_track_view.h
+                 clippingplanes.h viewcontrol.h geometryview.ui.h \
+                 saveimage.h egs_user_color.h egs_track_view.h \
+                 renderworker.h
 
-SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp
+SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
+                 saveimage.cpp clippingplanes.cpp viewcontrol.cpp \
+                 renderworker.cpp image_window.cpp
 
-FORMS	= viewcontrol.ui saveimage.ui clippingplanes.ui
+FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui 
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread
@@ -47,7 +49,8 @@ win32 {
     DEFINES += VDEBUG
     RC_FILE = egs_view.rc
     LIBS	+= ../dso/$$my_machine/egspp.lib
-    TARGET = ../dso/$$my_machine/egs_view
+    DESTDIR = ../dso/$$my_machine
+    TARGET = egs_view
 }
 
 unix {
@@ -57,8 +60,6 @@ unix {
         TARGET = ../../bin/$$my_machine/egs_view
     }
     !macx {
-        #LIBS	+= -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp
-        LIBS	+= -L$$hhouse/egs++//dso/$$my_machine -legspp
         DESTDIR = ../../bin/$$my_machine/
        !contains( CONFIG, static ){
          message( "Dynamic build..." )
@@ -68,7 +69,8 @@ unix {
         contains( CONFIG, static ){
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
-            LIBS += -L$$hhouse/egs++//dso/$$my_machine -legspp
+            #LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp # Fixes path to library
+            LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                                 # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)
             contains( UNAME, 64 ){
                message( "-> 64 bit ($$SNAME)" )
@@ -83,8 +85,14 @@ unix {
     }
 }
 
+# Debug options
 #DEFINES += VIEW_DEBUG
+#QMAKE_CXXFLAGS+="-fsanitize=address -fno-omit-frame-pointer"
+#QMAKE_CXXFLAGS+="-ggdb3"
+#QMAKE_LFLAGS+="-fsanitize=address"
 
 UI_DIR = .ui/$$my_machine
 MOC_DIR = .moc/$$my_machine
 OBJECTS_DIR = .obj/$$my_machine
+
+

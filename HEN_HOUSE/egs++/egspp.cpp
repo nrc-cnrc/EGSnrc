@@ -43,12 +43,12 @@
 using namespace std;
 
 #ifdef WIN32
-const char fs = 92;
+    const char fs = 92;
 #else
-const char fs = '/';
+    const char fs = '/';
 #endif
 
-typedef EGS_Application* (*createAppFunction)(int argc, char **argv);
+typedef EGS_Application *(*createAppFunction)(int argc, char **argv);
 
 /*! \brief A main program for egspp applications.
 
@@ -58,30 +58,39 @@ typedef EGS_Application* (*createAppFunction)(int argc, char **argv);
 int main(int argc, char **argv) {
 
     string app_name;
-    if( !EGS_Application::getArgument(argc,argv,"-a","--application",app_name) )
+    if (!EGS_Application::getArgument(argc,argv,"-a","--application",app_name))
         egsFatal("\nUsage: %s -a application -p pegs_file [-i input_file] [-o output_file] "
-                "[-b] [-P number_of_parallel_jobs] [-j job_index]\n\n",argv[0]);
+                 "[-b] [-P number_of_parallel_jobs] [-j job_index]\n\n",argv[0]);
 
     string lib_dir;
     EGS_Application::checkEnvironmentVar(argc,argv,"-e","--egs-home","EGS_HOME",lib_dir);
-    lib_dir += "bin"; lib_dir += fs; lib_dir += CONFIG_NAME; lib_dir += fs;
+    lib_dir += "bin";
+    lib_dir += fs;
+    lib_dir += CONFIG_NAME;
+    lib_dir += fs;
 
     EGS_Library egs_lib(app_name.c_str(),lib_dir.c_str());
-    if( !egs_lib.load() ) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
-            argv[0],app_name.c_str(),lib_dir.c_str());
+    if (!egs_lib.load()) egsFatal("\n%s: Failed to load the %s application library from %s\n\n",
+                                      argv[0],app_name.c_str(),lib_dir.c_str());
 
 
     createAppFunction createApp = (createAppFunction) egs_lib.resolve("createApplication");
-    if( !createApp ) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
-            " in the application library %s\n\n",argv[0],egs_lib.libraryFile());
+    if (!createApp) egsFatal("\n%s: Failed to resolve the address of the 'createApplication' function"
+                                 " in the application library %s\n\n",argv[0],egs_lib.libraryFile());
 
     EGS_Application *app = createApp(argc,argv);
-    if( !app ) egsFatal("\n%s: Failed to construct the application %s\n\n",argv[0],app_name.c_str());
+    if (!app) {
+        egsFatal("\n%s: Failed to construct the application %s\n\n",argv[0],app_name.c_str());
+    }
 
     int err = app->initSimulation();
-    if( err ) return err;
+    if (err) {
+        return err;
+    }
     err = app->runSimulation();
-    if( err < 0 ) return err;
+    if (err < 0) {
+        return err;
+    }
     err = app->finishSimulation();
 
     delete app;

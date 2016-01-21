@@ -42,19 +42,25 @@ using std::string;
 
 EGS_ScoringArray::EGS_ScoringArray(int N) :
     current_ncase(0), current_ncase_65536(0), current_ncase_short(0) {
-    if( N <= 0 ) egsFatal("EGS_ScoringArray::EGS_ScoringArray:\n"
-         "   attempt to construct a scoring array with non-positive size\n");
-    result = new EGS_ScoringSingle [N]; nreg = N;
+    if (N <= 0) egsFatal("EGS_ScoringArray::EGS_ScoringArray:\n"
+                             "   attempt to construct a scoring array with non-positive size\n");
+    result = new EGS_ScoringSingle [N];
+    nreg = N;
 }
 
-EGS_ScoringArray::~EGS_ScoringArray() { delete [] result; }
+EGS_ScoringArray::~EGS_ScoringArray() {
+    delete [] result;
+}
 
 void EGS_ScoringArray::setHistory(EGS_I64 ncase) {
-    if( ncase != current_ncase ) {
-        current_ncase = ncase; EGS_I64 aux = ncase >> 16;
-        if( aux != current_ncase_65536 ) {
+    if (ncase != current_ncase) {
+        current_ncase = ncase;
+        EGS_I64 aux = ncase >> 16;
+        if (aux != current_ncase_65536) {
             current_ncase_65536 = aux;
-            for(int j=0; j<nreg; j++) result[j].finishCase(0,0);
+            for (int j=0; j<nreg; j++) {
+                result[j].finishCase(0,0);
+            }
         }
         aux = ncase - (aux << 16);
         unsigned short aux1 = (unsigned short) aux;
@@ -63,20 +69,26 @@ void EGS_ScoringArray::setHistory(EGS_I64 ncase) {
 }
 
 void EGS_ScoringArray::reportResults(double norm, const char *title,
-                bool relative_error, const char *format) {
-    if( title ) egsInformation("\n\n%s for %d particles:\n\n",title,
-            current_ncase);
-    if( current_ncase < 2 ) {
+                                     bool relative_error, const char *format) {
+    if (title) egsInformation("\n\n%s for %d particles:\n\n",title,
+                                  current_ncase);
+    if (current_ncase < 2) {
         egsWarning("EGS_ScoringArray::reportResults: you must run more than 2 "
-                "histories\n\n"); return;
+                   "histories\n\n");
+        return;
     }
     char c = (relative_error) ? '%' : ' ';
     string myformat = "  %d    %g  +/-  %g %c\n";
     const char *oformat = format ? format : myformat.c_str();
-    for(int j=0; j<nreg; j++) {
-        double r,dr; result[j].currentResult(current_ncase,r,dr);
-        if( relative_error ) dr = (r > 0) ? 100*dr/r : 100;
-        else dr *= norm;
+    for (int j=0; j<nreg; j++) {
+        double r,dr;
+        result[j].currentResult(current_ncase,r,dr);
+        if (relative_error) {
+            dr = (r > 0) ? 100*dr/r : 100;
+        }
+        else {
+            dr *= norm;
+        }
         egsInformation(oformat,j,r*norm,dr,c);
     }
 }

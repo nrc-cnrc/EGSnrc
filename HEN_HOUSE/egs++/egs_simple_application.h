@@ -95,13 +95,18 @@ public:
     /*! \brief See the EGSnrc \link EGS_BaseGeometry::howfar() howfar
       geometry specification \endlink */
     inline int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-            EGS_Float &t, int *newmed) { return g->howfar(ireg,x,u,t,newmed); };
+                      EGS_Float &t, int *newmed) {
+        return g->howfar(ireg,x,u,t,newmed);
+    };
     /*! \brief See the EGSnrc \link EGS_BaseGeometry::hownear() hownear
       geometry specification \endlink */
     inline EGS_Float hownear(int ireg,const EGS_Vector &x) {
-        return g->hownear(ireg,x); };
+        return g->hownear(ireg,x);
+    };
     /*! \brief Get the medium index in region \a ireg */
-    inline int getMedium(int ireg) { return g->medium(ireg); };
+    inline int getMedium(int ireg) {
+        return g->medium(ireg);
+    };
 
     //
     // ******************** ausgab ***************************************
@@ -113,7 +118,9 @@ public:
     ausgab() is called with a corresponding integer argument on various
     events during the simulation (see PIRS-701).
     */
-    virtual int ausgab(int) { return 0; };
+    virtual int ausgab(int) {
+        return 0;
+    };
 
     //
     // ********* finish the simulation
@@ -145,7 +152,9 @@ public:
     /*! \brief Set the number of times the shower loop in run() reports
       the progress of the simulation to \a nprog.
      */
-    void setNProgress(int nprog) { nreport = nprog; };
+    void setNProgress(int nprog) {
+        nreport = nprog;
+    };
 
     //
     // ********* functions to be executed before and after a shower.

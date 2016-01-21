@@ -44,22 +44,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_SOURCE_COLLECTION_DLL
-#define EGS_SOURCE_COLLECTION_EXPORT __declspec(dllexport)
-#else
-#define EGS_SOURCE_COLLECTION_EXPORT __declspec(dllimport)
-#endif
-#define EGS_SOURCE_COLLECTION_LOCAL
+    #ifdef BUILD_SOURCE_COLLECTION_DLL
+        #define EGS_SOURCE_COLLECTION_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_SOURCE_COLLECTION_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_SOURCE_COLLECTION_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_SOURCE_COLLECTION_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_SOURCE_COLLECTION_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_SOURCE_COLLECTION_EXPORT
-#define EGS_SOURCE_COLLECTION_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_SOURCE_COLLECTION_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_SOURCE_COLLECTION_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_SOURCE_COLLECTION_EXPORT
+        #define EGS_SOURCE_COLLECTION_LOCAL
+    #endif
 
 #endif
 
@@ -81,7 +81,7 @@ A source collection is defined using
 \endverbatim
 */
 class EGS_SOURCE_COLLECTION_EXPORT EGS_SourceCollection :
-          public EGS_BaseSource {
+    public EGS_BaseSource {
 
 public:
 
@@ -91,10 +91,11 @@ public:
       probabilities \a prob.
     */
     EGS_SourceCollection(const vector<EGS_BaseSource *> &S,
-            const vector<EGS_Float> &prob,
-            const string &Name="", EGS_ObjectFactory *f=0) :
-            EGS_BaseSource(Name,f), nsource(0), count(0) {
-            setUp(S,prob); };
+                         const vector<EGS_Float> &prob,
+                         const string &Name="", EGS_ObjectFactory *f=0) :
+        EGS_BaseSource(Name,f), nsource(0), count(0) {
+        setUp(S,prob);
+    };
 
     /*! \brief Constructor
 
@@ -102,43 +103,75 @@ public:
     */
     EGS_SourceCollection(EGS_Input *, EGS_ObjectFactory *f=0);
     ~EGS_SourceCollection() {
-        if( nsource > 0 ) {
-            for(int j=0; j<nsource; j++) EGS_Object::deleteObject(sources[j]);
-            delete [] sources; delete table; delete [] p;
+        if (nsource > 0) {
+            for (int j=0; j<nsource; j++) {
+                EGS_Object::deleteObject(sources[j]);
+            }
+            delete [] sources;
+            delete table;
+            delete [] p;
             delete [] last_cases;
         }
     };
 
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-            int &q, int &latch, EGS_Float &E, EGS_Float &wt,
-            EGS_Vector &x, EGS_Vector &u) {
+                            int &q, int &latch, EGS_Float &E, EGS_Float &wt,
+                            EGS_Vector &x, EGS_Vector &u) {
         int j = table->sampleBin(rndm);
         EGS_I64 this_case = sources[j]->getNextParticle(rndm,q,latch,E,wt,x,u);
         count += this_case - last_cases[j];
         last_cases[j] = this_case;
         return count;
     };
-    EGS_Float getEmax() const { return Emax; };
+    EGS_Float getEmax() const {
+        return Emax;
+    };
     EGS_Float getFluence() const {
         EGS_Float flu = 0;
-        for(int j=0; j<nsource; j++) flu += sources[j]->getFluence();
+        for (int j=0; j<nsource; j++) {
+            flu += sources[j]->getFluence();
+        }
         return flu;
     };
     bool storeState(ostream &data) const {
-        bool res = EGS_BaseSource::storeState(data); if( !res ) return res;
-        res = egsStoreI64(data,count); if( !res ) return res; data << " ";
-        for(int j=0; j<nsource; j++) {
-            res = egsStoreI64(data,last_cases[j]); if( !res ) return res; data << " ";
-            if( !sources[j]->storeState(data) ) return false;
+        bool res = EGS_BaseSource::storeState(data);
+        if (!res) {
+            return res;
+        }
+        res = egsStoreI64(data,count);
+        if (!res) {
+            return res;
+        }
+        data << " ";
+        for (int j=0; j<nsource; j++) {
+            res = egsStoreI64(data,last_cases[j]);
+            if (!res) {
+                return res;
+            }
+            data << " ";
+            if (!sources[j]->storeState(data)) {
+                return false;
+            }
         }
         return true;
     };
     bool setState(istream &data) {
-        bool res = EGS_BaseSource::setState(data); if( !res ) return res;
-        res = egsGetI64(data,count); if( !res ) return res;
-        for(int j=0; j<nsource; j++) {
-            res = egsGetI64(data,last_cases[j]); if( !res ) return res;
-            if( !sources[j]->setState(data) ) return false;
+        bool res = EGS_BaseSource::setState(data);
+        if (!res) {
+            return res;
+        }
+        res = egsGetI64(data,count);
+        if (!res) {
+            return res;
+        }
+        for (int j=0; j<nsource; j++) {
+            res = egsGetI64(data,last_cases[j]);
+            if (!res) {
+                return res;
+            }
+            if (!sources[j]->setState(data)) {
+                return false;
+            }
         }
         return true;
     }
@@ -146,22 +179,39 @@ public:
     void resetCounter() {
         EGS_BaseSource::resetCounter();
         count = 0;
-        for(int j=0; j<nsource; ++j) { last_cases[j] = 0; sources[j]->resetCounter(); }
+        for (int j=0; j<nsource; ++j) {
+            last_cases[j] = 0;
+            sources[j]->resetCounter();
+        }
     };
 
     virtual bool addState(istream &data_in) {
         EGS_I64 tmp;
-        bool res = EGS_BaseSource::addState(data_in); if( !res ) return res;
-        res = egsGetI64(data_in,tmp); if( !res ) return res; count += tmp;
-        for(int j=0; j<nsource; j++) {
-            res = egsGetI64(data_in,tmp); if( !res ) return res;
+        bool res = EGS_BaseSource::addState(data_in);
+        if (!res) {
+            return res;
+        }
+        res = egsGetI64(data_in,tmp);
+        if (!res) {
+            return res;
+        }
+        count += tmp;
+        for (int j=0; j<nsource; j++) {
+            res = egsGetI64(data_in,tmp);
+            if (!res) {
+                return res;
+            }
             last_cases[j] += tmp;
-            if( !sources[j]->addState(data_in) ) return false;
+            if (!sources[j]->addState(data_in)) {
+                return false;
+            }
         }
         return true;
     };
 
-    bool isValid() const { return (nsource > 0); };
+    bool isValid() const {
+        return (nsource > 0);
+    };
 
 protected:
 

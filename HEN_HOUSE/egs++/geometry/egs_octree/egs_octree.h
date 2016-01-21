@@ -179,22 +179,22 @@ criteria than bounding boxes?
 
 #ifdef WIN32
 
-#ifdef BUILD_OCTREE_DLL
-#define EGS_OCTREE_EXPORT __declspec(dllexport)
-#else
-#define EGS_OCTREE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_OCTREE_LOCAL
+    #ifdef BUILD_OCTREE_DLL
+        #define EGS_OCTREE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_OCTREE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_OCTREE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_OCTREE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_OCTREE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_OCTREE_EXPORT
-#define EGS_OCTREE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_OCTREE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_OCTREE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_OCTREE_EXPORT
+        #define EGS_OCTREE_LOCAL
+    #endif
 
 #endif
 
@@ -208,7 +208,7 @@ public:
     int         nx, ny, nz;
 
     // constructor
-    EGS_Octree_bbox (const EGS_Vector &boxMin, const EGS_Vector &boxMax, vector<int> &bboxRes) :
+    EGS_Octree_bbox(const EGS_Vector &boxMin, const EGS_Vector &boxMax, vector<int> &bboxRes) :
         vmin(boxMin), vmax(boxMax), nx(bboxRes[0]), ny(bboxRes[1]), nz(bboxRes[2]) {
         maxlevel = 0;
         ixmin = iymin = izmin = 0;
@@ -221,12 +221,24 @@ public:
         EGS_Octree_bbox b1(*this);
 
         // set the b1 box limits to enclose the two boxes
-        if (b2.vmin.x < b1.vmin.x) b1.vmin.x = b2.vmin.x;
-        if (b2.vmin.y < b1.vmin.y) b1.vmin.y = b2.vmin.y;
-        if (b2.vmin.z < b1.vmin.z) b1.vmin.z = b2.vmin.z;
-        if (b2.vmax.x > b1.vmax.x) b1.vmax.x = b2.vmax.x;
-        if (b2.vmax.y > b1.vmax.y) b1.vmax.y = b2.vmax.y;
-        if (b2.vmax.z > b1.vmax.z) b1.vmax.z = b2.vmax.z;
+        if (b2.vmin.x < b1.vmin.x) {
+            b1.vmin.x = b2.vmin.x;
+        }
+        if (b2.vmin.y < b1.vmin.y) {
+            b1.vmin.y = b2.vmin.y;
+        }
+        if (b2.vmin.z < b1.vmin.z) {
+            b1.vmin.z = b2.vmin.z;
+        }
+        if (b2.vmax.x > b1.vmax.x) {
+            b1.vmax.x = b2.vmax.x;
+        }
+        if (b2.vmax.y > b1.vmax.y) {
+            b1.vmax.y = b2.vmax.y;
+        }
+        if (b2.vmax.z > b1.vmax.z) {
+            b1.vmax.z = b2.vmax.z;
+        }
 
         // calculate voxel sizes for the two boxes
         EGS_Float dx1 = (b1.vmax.x-b1.vmin.x)/b1.nx;
@@ -237,9 +249,24 @@ public:
         EGS_Float dz2 = (b2.vmax.z-b2.vmin.z)/b2.nz;
 
         // calculate the number of voxels in the overall box b1 (using the highest resolution of b1 and b2)
-        if (dx2 < dx1) b1.nx = (int) ((b1.vmax.x - b1.vmin.x + 0.5*dx2) / dx2); else b1.nx = (int)((b1.vmax.x - b1.vmin.x +0.5*dx1) / dx1);
-        if (dy2 < dy1) b1.ny = (int) ((b1.vmax.y - b1.vmin.y + 0.5*dy2) / dy2); else b1.ny = (int)((b1.vmax.y - b1.vmin.y +0.5*dy1) / dy1);
-        if (dz2 < dz1) b1.nz = (int) ((b1.vmax.z - b1.vmin.z + 0.5*dz2) / dz2); else b1.nz = (int)((b1.vmax.z - b1.vmin.z +0.5*dz1) / dz1);
+        if (dx2 < dx1) {
+            b1.nx = (int)((b1.vmax.x - b1.vmin.x + 0.5*dx2) / dx2);
+        }
+        else {
+            b1.nx = (int)((b1.vmax.x - b1.vmin.x +0.5*dx1) / dx1);
+        }
+        if (dy2 < dy1) {
+            b1.ny = (int)((b1.vmax.y - b1.vmin.y + 0.5*dy2) / dy2);
+        }
+        else {
+            b1.ny = (int)((b1.vmax.y - b1.vmin.y +0.5*dy1) / dy1);
+        }
+        if (dz2 < dz1) {
+            b1.nz = (int)((b1.vmax.z - b1.vmin.z + 0.5*dz2) / dz2);
+        }
+        else {
+            b1.nz = (int)((b1.vmax.z - b1.vmin.z +0.5*dz1) / dz1);
+        }
 
         // return the overall box b1
         return b1;
@@ -248,12 +275,24 @@ public:
     EGS_Octree_bbox &operator+= (const EGS_Octree_bbox &b2) {
 
         // set the b1 box limits to enclose the two boxes
-        if (b2.vmin.x < vmin.x) vmin.x = b2.vmin.x;
-        if (b2.vmin.y < vmin.y) vmin.y = b2.vmin.y;
-        if (b2.vmin.z < vmin.z) vmin.z = b2.vmin.z;
-        if (b2.vmax.x > vmax.x) vmax.x = b2.vmax.x;
-        if (b2.vmax.y > vmax.y) vmax.y = b2.vmax.y;
-        if (b2.vmax.z > vmax.z) vmax.z = b2.vmax.z;
+        if (b2.vmin.x < vmin.x) {
+            vmin.x = b2.vmin.x;
+        }
+        if (b2.vmin.y < vmin.y) {
+            vmin.y = b2.vmin.y;
+        }
+        if (b2.vmin.z < vmin.z) {
+            vmin.z = b2.vmin.z;
+        }
+        if (b2.vmax.x > vmax.x) {
+            vmax.x = b2.vmax.x;
+        }
+        if (b2.vmax.y > vmax.y) {
+            vmax.y = b2.vmax.y;
+        }
+        if (b2.vmax.z > vmax.z) {
+            vmax.z = b2.vmax.z;
+        }
 
         // calculate voxel sizes for the two boxes
         EGS_Float dx1 = (vmax.x-vmin.x)/nx;
@@ -264,9 +303,24 @@ public:
         EGS_Float dz2 = (b2.vmax.z-b2.vmin.z)/b2.nz;
 
         // calculate the number of voxels in the overall box b1 (using the highest resolution of b1 and b2)
-        if (dx2 < dx1) nx = (int) ((vmax.x - vmin.x + 0.5*dx2) / dx2); else nx = (int)((vmax.x - vmin.x +0.5*dx1) / dx1);
-        if (dy2 < dy1) ny = (int) ((vmax.y - vmin.y + 0.5*dy2) / dy2); else ny = (int)((vmax.y - vmin.y +0.5*dy1) / dy1);
-        if (dz2 < dz1) nz = (int) ((vmax.z - vmin.z + 0.5*dz2) / dz2); else nz = (int)((vmax.z - vmin.z +0.5*dz1) / dz1);
+        if (dx2 < dx1) {
+            nx = (int)((vmax.x - vmin.x + 0.5*dx2) / dx2);
+        }
+        else {
+            nx = (int)((vmax.x - vmin.x +0.5*dx1) / dx1);
+        }
+        if (dy2 < dy1) {
+            ny = (int)((vmax.y - vmin.y + 0.5*dy2) / dy2);
+        }
+        else {
+            ny = (int)((vmax.y - vmin.y +0.5*dy1) / dy1);
+        }
+        if (dz2 < dz1) {
+            nz = (int)((vmax.z - vmin.z + 0.5*dz2) / dz2);
+        }
+        else {
+            nz = (int)((vmax.z - vmin.z +0.5*dz1) / dz1);
+        }
 
         // return the overall box
         return *this;
@@ -284,7 +338,7 @@ public:
     EGS_Octree_node *parent;                                    ///< pointer to the parent node (only root node can have parent set to NULL)
 
     // constructor
-    EGS_Octree_node () {
+    EGS_Octree_node() {
         medium = -1;                                            // set the medium to -1 by default
         region = -1;                                            // set region to -1 by default
         level  = 0;                                             // set level to 0 (root) by default
@@ -297,7 +351,9 @@ public:
     void createChildren() {                                     // create children to the this node
         if (!child) {                                           // ensure there are no children already
             child = new EGS_Octree_node [8];                    // allocate memory for 8 new children nodes
-            if (!child) egsFatal("EGS_Octree_node::createChildren(): Memory allocation error");
+            if (!child) {
+                egsFatal("EGS_Octree_node::createChildren(): Memory allocation error");
+            }
             for (int i=0; i<8; i++) {                           // loop over all 8 newly created children nodes
                 child[i].level = level+1;                       // increase level by 1 compared to current level
                 child[i].ix = (ix << 1) | (i>>0 & 0x1);         // shift up ix by one, and set new bit to that of the child index's bit 0 (x position)
@@ -309,20 +365,26 @@ public:
     }
 
     // delete children (recursively)
-    void deleteChildren () {                                    // delete children of this node
+    void deleteChildren() {                                     // delete children of this node
         if (child) {                                            // if this node has children, delete them
-            for (int i=0; i<8; i++) child[i].deleteChildren();  // recursive calls to delete all children branches
+            for (int i=0; i<8; i++) {
+                child[i].deleteChildren();    // recursive calls to delete all children branches
+            }
             delete [] child;                                    // free the memory allocated for the 8 children
             child = NULL;                                       // set children pointer to NULL to indicate that there are no children now
         }
     }
 
     // collapse node
-    int collapseChildren () {                                   // collapse children in this node if they are all the same medium
+    int collapseChildren() {                                    // collapse children in this node if they are all the same medium
         if (child) {                                            // check that we indeed have children
             for (int i=0; i<8; i++) {                           // loop over each of the 8 children of this node
-                if (child[i].child) return 0;                   // bail out if there are nodes below the children (this could be made recursive)
-                if (child[i].medium!=child[0].medium) return 0; // bail out as soon as one children has a different medium
+                if (child[i].child) {
+                    return 0;    // bail out if there are nodes below the children (this could be made recursive)
+                }
+                if (child[i].medium!=child[0].medium) {
+                    return 0;    // bail out as soon as one children has a different medium
+                }
             }
             medium = child[0].medium;                           // set the medium of this node to that of the children
             deleteChildren();                                   // delete the children of this node
@@ -332,35 +394,77 @@ public:
     }
 
     // insideBBox
-    bool insideBBox (EGS_Octree_bbox &bbox) {
+    bool insideBBox(EGS_Octree_bbox &bbox) {
         int shift = bbox.maxlevel - level;
         int ii;
-        ii = (ix<<shift);   if (ii < bbox.ixmin) return false;
-        ii = ~(~ix<<shift); if (ii > bbox.ixmax) return false;
-        ii = (iy<<shift);   if (ii < bbox.iymin) return false;
-        ii = ~(~iy<<shift); if (ii > bbox.iymax) return false;
-        ii = iz<<shift;     if (ii < bbox.izmin) return false;
-        ii = ~(~iz<<shift); if (ii > bbox.izmax) return false;
+        ii = (ix<<shift);
+        if (ii < bbox.ixmin) {
+            return false;
+        }
+        ii = ~(~ix<<shift);
+        if (ii > bbox.ixmax) {
+            return false;
+        }
+        ii = (iy<<shift);
+        if (ii < bbox.iymin) {
+            return false;
+        }
+        ii = ~(~iy<<shift);
+        if (ii > bbox.iymax) {
+            return false;
+        }
+        ii = iz<<shift;
+        if (ii < bbox.izmin) {
+            return false;
+        }
+        ii = ~(~iz<<shift);
+        if (ii > bbox.izmax) {
+            return false;
+        }
         return true;
     }
 
     // instersectBBox
-    bool intersectBBox (EGS_Octree_bbox &bbox) {
+    bool intersectBBox(EGS_Octree_bbox &bbox) {
 
         int shift = bbox.maxlevel - level;
         int iimin, iimax;
 
-        iimin = (ix<<shift);   if (bbox.ixmin > iimin) iimin = bbox.ixmin;
-        iimax = ~(~ix<<shift); if (bbox.ixmax < iimax) iimax = bbox.ixmax;
-        if (iimax < iimin) return false;
+        iimin = (ix<<shift);
+        if (bbox.ixmin > iimin) {
+            iimin = bbox.ixmin;
+        }
+        iimax = ~(~ix<<shift);
+        if (bbox.ixmax < iimax) {
+            iimax = bbox.ixmax;
+        }
+        if (iimax < iimin) {
+            return false;
+        }
 
-        iimin = (iy<<shift);   if (bbox.iymin > iimin) iimin = bbox.iymin;
-        iimax = ~(~iy<<shift); if (bbox.iymax < iimax) iimax = bbox.iymax;
-        if (iimax < iimin) return false;
+        iimin = (iy<<shift);
+        if (bbox.iymin > iimin) {
+            iimin = bbox.iymin;
+        }
+        iimax = ~(~iy<<shift);
+        if (bbox.iymax < iimax) {
+            iimax = bbox.iymax;
+        }
+        if (iimax < iimin) {
+            return false;
+        }
 
-        iimin = (iz<<shift);   if (bbox.izmin > iimin) iimin = bbox.izmin;
-        iimax = ~(~iz<<shift); if (bbox.izmax < iimax) iimax = bbox.izmax;
-        if (iimax < iimin) return false;
+        iimin = (iz<<shift);
+        if (bbox.izmin > iimin) {
+            iimin = bbox.izmin;
+        }
+        iimax = ~(~iz<<shift);
+        if (bbox.izmax < iimax) {
+            iimax = bbox.izmax;
+        }
+        if (iimax < iimin) {
+            return false;
+        }
 
         return true;
     }
@@ -431,11 +535,13 @@ class EGS_OCTREE_EXPORT EGS_Octree : public EGS_BaseGeometry {
 
 public:
 
-    EGS_Octree (vector<EGS_Octree_bbox> &vBox, bool pruneTree, EGS_BaseGeometry *g) : EGS_BaseGeometry(""), geom(g) {
+    EGS_Octree(vector<EGS_Octree_bbox> &vBox, bool pruneTree, EGS_BaseGeometry *g) : EGS_BaseGeometry(""), geom(g) {
 
         // combine bounding boxes to get the overall bounding box
         EGS_Octree_bbox bbox(vBox[0]);
-        for (int i=1; i<vBox.size(); i++) bbox += vBox[i];
+        for (int i=1; i<vBox.size(); i++) {
+            bbox += vBox[i];
+        }
         vBox.push_back(bbox);
 
         // save overall resolution
@@ -455,8 +561,12 @@ public:
 
         // set octree depth (maxlevel)
         int res = nx;
-        if (ny > res) res = ny;
-        if (nz > res) res = nz;
+        if (ny > res) {
+            res = ny;
+        }
+        if (nz > res) {
+            res = nz;
+        }
         maxlevel = (int) ceil(log((EGS_Float)res)/0.6931471805599452862);
 
         // set octree cell count at maxlevel;
@@ -471,24 +581,41 @@ public:
         zmax = bbox.vmin.z + dz*n;
 
         // set cell indices range for each box;
-        {for (int i=0; i<vBox.size(); i++) {
-            EGS_Octree_bbox *box = &vBox[i];
-            box->ixmin = (int) ((box->vmin.x - xmin + 0.5*dx) * dxi);
-            box->iymin = (int) ((box->vmin.y - ymin + 0.5*dy) * dyi);
-            box->izmin = (int) ((box->vmin.z - zmin + 0.5*dz) * dzi);
-            box->nx    = (int) ((box->vmax.x - box->vmin.x + 0.5*dx) * dxi);
-            box->ny    = (int) ((box->vmax.y - box->vmin.y + 0.5*dy) * dyi);
-            box->nz    = (int) ((box->vmax.z - box->vmin.z + 0.5*dz) * dzi);
-            box->ixmax = box->ixmin + box->nx - 1;
-            box->iymax = box->iymin + box->ny - 1;
-            box->izmax = box->izmin + box->nz - 1;
-            if (box->ixmin<0) box->ixmin = 0; if (box->ixmax>=n) box->ixmax = n-1;
-            if (box->iymin<0) box->iymin = 0; if (box->iymax>=n) box->iymax = n-1;
-            if (box->izmin<0) box->izmin = 0; if (box->izmax>=n) box->izmax = n-1;
-            box->nx = box->ixmax - box->ixmin + 1;
-            box->ny = box->iymax - box->iymin + 1;
-            box->nz = box->izmax - box->izmin + 1;
-        }}
+        {
+            for (int i=0; i<vBox.size(); i++) {
+                EGS_Octree_bbox *box = &vBox[i];
+                box->ixmin = (int)((box->vmin.x - xmin + 0.5*dx) * dxi);
+                box->iymin = (int)((box->vmin.y - ymin + 0.5*dy) * dyi);
+                box->izmin = (int)((box->vmin.z - zmin + 0.5*dz) * dzi);
+                box->nx    = (int)((box->vmax.x - box->vmin.x + 0.5*dx) * dxi);
+                box->ny    = (int)((box->vmax.y - box->vmin.y + 0.5*dy) * dyi);
+                box->nz    = (int)((box->vmax.z - box->vmin.z + 0.5*dz) * dzi);
+                box->ixmax = box->ixmin + box->nx - 1;
+                box->iymax = box->iymin + box->ny - 1;
+                box->izmax = box->izmin + box->nz - 1;
+                if (box->ixmin<0) {
+                    box->ixmin = 0;
+                }
+                if (box->ixmax>=n) {
+                    box->ixmax = n-1;
+                }
+                if (box->iymin<0) {
+                    box->iymin = 0;
+                }
+                if (box->iymax>=n) {
+                    box->iymax = n-1;
+                }
+                if (box->izmin<0) {
+                    box->izmin = 0;
+                }
+                if (box->izmax>=n) {
+                    box->izmax = n-1;
+                }
+                box->nx = box->ixmax - box->ixmin + 1;
+                box->ny = box->iymax - box->iymin + 1;
+                box->nz = box->izmax - box->izmin + 1;
+            }
+        }
 
 
         // determine maxlevel in each defined bounding box
@@ -504,21 +631,31 @@ public:
 
         // avoid indirections for overall bounding box parameters
         EGS_Octree_bbox *box = &(vBox.back());
-        bbxmin = box->vmin.x; bbxmax = box->vmax.x;
-        bbymin = box->vmin.y; bbymax = box->vmax.y;
-        bbzmin = box->vmin.z; bbzmax = box->vmax.z;
-        ixmin  = box->ixmin; ixmax  = box->ixmax;
-        iymin  = box->iymin; iymax  = box->iymax;
-        izmin  = box->izmin; izmax  = box->izmax;
+        bbxmin = box->vmin.x;
+        bbxmax = box->vmax.x;
+        bbymin = box->vmin.y;
+        bbymax = box->vmax.y;
+        bbzmin = box->vmin.z;
+        bbzmax = box->vmax.z;
+        ixmin  = box->ixmin;
+        ixmax  = box->ixmax;
+        iymin  = box->iymin;
+        iymax  = box->iymax;
+        izmin  = box->izmin;
+        izmax  = box->izmax;
 
         // build octree
-        root = new EGS_Octree_node ();
-        growOctree (root, vBox, pruneTree);
+        root = new EGS_Octree_node();
+        growOctree(root, vBox, pruneTree);
 
         // allocate memory to hold the region-indexed node pointers in a simple array, and free up the tmp vector
         nreg = tmp.size();
         nodeReg = new EGS_Octree_node* [nreg];
-        {for (int i=0; i<nreg; i++) nodeReg[i] = tmp[i];}
+        {
+            for (int i=0; i<nreg; i++) {
+                nodeReg[i] = tmp[i];
+            }
+        }
         tmp.erase(tmp.begin(),tmp.end());
 
         // calculate leaf node statistics
@@ -529,7 +666,7 @@ public:
 
 
     // destructor
-    ~EGS_Octree () {
+    ~EGS_Octree() {
         if (root) {
             root->deleteChildren();
             delete root;
@@ -539,9 +676,11 @@ public:
 
 
     // statOctree
-    void statOctree (EGS_Octree_node *node, vector<EGS_Octree_bbox> &vBox) {
+    void statOctree(EGS_Octree_node *node, vector<EGS_Octree_bbox> &vBox) {
         if (node->child) {
-            for (int i=0; i<8; i++) statOctree(node->child+i, vBox);
+            for (int i=0; i<8; i++) {
+                statOctree(node->child+i, vBox);
+            }
         }
         else if (node->insideBBox(vBox[vBox.size()-1]) && node->medium>=0) {
             int shift = maxlevel - node->level;
@@ -552,7 +691,7 @@ public:
 
 
     // growOctree (recursive)
-    void growOctree (EGS_Octree_node *node, vector<EGS_Octree_bbox> &vBox, bool prune) {
+    void growOctree(EGS_Octree_node *node, vector<EGS_Octree_bbox> &vBox, bool prune) {
 
         // assume node needs no refinement
         bool refineNode = false;
@@ -562,21 +701,31 @@ public:
 
             // check all bounding boxes to determine local refinement level (priority to boxes defined later)
             int level = 0;
-            {for (int i=0; i<vBox.size()-1; i++) {
-                int boxlevel = vBox[i].level;
-                if (node->insideBBox(vBox[i])) level = boxlevel;
-            }}
+            {
+                for (int i=0; i<vBox.size()-1; i++) {
+                    int boxlevel = vBox[i].level;
+                    if (node->insideBBox(vBox[i])) {
+                        level = boxlevel;
+                    }
+                }
+            }
 
             // node may still need refinement if it intersects a higher resolution bounding box
-            {for (int i=0; i<vBox.size()-1; i++) {
-                int boxlevel = vBox[i].level;
-                if (!node->insideBBox(vBox[i]) && node->intersectBBox(vBox[i])) {
-                    if (boxlevel > level) level = boxlevel;
+            {
+                for (int i=0; i<vBox.size()-1; i++) {
+                    int boxlevel = vBox[i].level;
+                    if (!node->insideBBox(vBox[i]) && node->intersectBBox(vBox[i])) {
+                        if (boxlevel > level) {
+                            level = boxlevel;
+                        }
+                    }
                 }
-            }}
+            }
 
             // if the level of this node is not sufficient, set it for refinement
-            if (node->level < level) refineNode = true;
+            if (node->level < level) {
+                refineNode = true;
+            }
         }
 
         // if this node needs refinement, grow children branches (recursively), and then try to collapse children
@@ -612,7 +761,9 @@ public:
                 float yy = ymin+(iy+0.5)*dy;
                 float zz = zmin+(iz+0.5)*dz;
                 int ireg = geom->isWhere(EGS_Vector(xmin+(ix+0.5)*dx, ymin+(iy+0.5)*dy, zmin+(iz+0.5)*dz));
-                if (ireg>=0) node->medium = geom->medium(ireg);
+                if (ireg>=0) {
+                    node->medium = geom->medium(ireg);
+                }
             }
             node->region = tmp.size();
             tmp.push_back(node);
@@ -621,17 +772,27 @@ public:
 
 
     // getNeighborNodeX
-    EGS_Octree_node *getNeighborNodeX (EGS_Octree_node *node, int ixn, int iyn, int izn) {
+    EGS_Octree_node *getNeighborNodeX(EGS_Octree_node *node, int ixn, int iyn, int izn) {
 
         // check if neighbor index is in range
-        if (ixn < ixmin || ixn > ixmax) return NULL;
+        if (ixn < ixmin || ixn > ixmax) {
+            return NULL;
+        }
 
         // constrain neighbor indices in y and z
         int shift = maxlevel - node->level;
-        if      (iyn < node->iy<<shift)      iyn = node->iy<<shift;
-        else if (iyn > ~(~node->iy<<shift))  iyn = ~(~node->iy<<shift);
-        if      (izn < node->iz<<shift)      izn = node->iz<<shift;
-        else if (izn > ~(~node->iz<<shift))  izn = ~(~node->iz<<shift);
+        if (iyn < node->iy<<shift) {
+            iyn = node->iy<<shift;
+        }
+        else if (iyn > ~(~node->iy<<shift)) {
+            iyn = ~(~node->iy<<shift);
+        }
+        if (izn < node->iz<<shift) {
+            izn = node->iz<<shift;
+        }
+        else if (izn > ~(~node->iz<<shift)) {
+            izn = ~(~node->iz<<shift);
+        }
 
         // walk up and down the octree to new cell
         int diff  = node->ix ^ (ixn>>shift);
@@ -656,17 +817,27 @@ public:
 
 
     // getNeighborNodeY
-    EGS_Octree_node *getNeighborNodeY (EGS_Octree_node * node, int ixn, int iyn, int izn) {
+    EGS_Octree_node *getNeighborNodeY(EGS_Octree_node *node, int ixn, int iyn, int izn) {
 
         // check if neighbor index is in range
-        if (iyn < iymin || iyn > iymax) return NULL;
+        if (iyn < iymin || iyn > iymax) {
+            return NULL;
+        }
 
         // constrain neighbor indices in x and z
         int shift = maxlevel - node->level;
-        if      (ixn < node->ix<<shift)      ixn = node->ix<<shift;
-        else if (ixn > ~(~node->ix<<shift))  ixn = ~(~node->ix<<shift);
-        if      (izn < node->iz<<shift)      izn = node->iz<<shift;
-        else if (izn > ~(~node->iz<<shift))  izn = ~(~node->iz<<shift);
+        if (ixn < node->ix<<shift) {
+            ixn = node->ix<<shift;
+        }
+        else if (ixn > ~(~node->ix<<shift)) {
+            ixn = ~(~node->ix<<shift);
+        }
+        if (izn < node->iz<<shift) {
+            izn = node->iz<<shift;
+        }
+        else if (izn > ~(~node->iz<<shift)) {
+            izn = ~(~node->iz<<shift);
+        }
 
         // walk up and down the octree to new cell
         int diff  = node->iy ^ (iyn>>shift);
@@ -689,17 +860,27 @@ public:
 
 
     // getNeighborNodeZ
-    EGS_Octree_node *getNeighborNodeZ (EGS_Octree_node * node, int ixn, int iyn, int izn) {
+    EGS_Octree_node *getNeighborNodeZ(EGS_Octree_node *node, int ixn, int iyn, int izn) {
 
         // check if neighbor index is in range
-        if (izn < izmin || izn > izmax) return NULL;
+        if (izn < izmin || izn > izmax) {
+            return NULL;
+        }
 
         // constrain neighbor indices in x and y
         int shift = maxlevel - node->level;
-        if      (ixn < node->ix<<shift)      ixn = node->ix<<shift;
-        else if (ixn > ~(~node->ix<<shift))  ixn = ~(~node->ix<<shift);
-        if      (iyn < node->iy<<shift)      iyn = node->iy<<shift;
-        else if (iyn > ~(~node->iy<<shift))  iyn = ~(~node->iy<<shift);
+        if (ixn < node->ix<<shift) {
+            ixn = node->ix<<shift;
+        }
+        else if (ixn > ~(~node->ix<<shift)) {
+            ixn = ~(~node->ix<<shift);
+        }
+        if (iyn < node->iy<<shift) {
+            iyn = node->iy<<shift;
+        }
+        else if (iyn > ~(~node->iy<<shift)) {
+            iyn = ~(~node->iy<<shift);
+        }
 
         // walk up and down the octree to new cell
         int diff  = node->iz ^ (izn>>shift);
@@ -722,8 +903,10 @@ public:
 
 
     // getNode
-    EGS_Octree_node *getNode (int ix, int iy, int iz) {
-        if ((ix<ixmin) || (ix>ixmax) || (iy<iymin) || (iy>iymax) || (iz<izmin) || (iz>izmax)) return NULL;
+    EGS_Octree_node *getNode(int ix, int iy, int iz) {
+        if ((ix<ixmin) || (ix>ixmax) || (iy<iymin) || (iy>iymax) || (iz<izmin) || (iz>izmax)) {
+            return NULL;
+        }
         EGS_Octree_node *node = root;
         int shift = maxlevel;
         while (node->child) {
@@ -739,28 +922,47 @@ public:
 
 
     // setIndices
-    void setIndices (const EGS_Vector &r, int &ix, int &iy, int &iz) {
-        ix = (int) ((r.x-xmin)*dxi);
-        iy = (int) ((r.y-ymin)*dyi);
-        iz = (int) ((r.z-zmin)*dzi);
-        if (ix<ixmin) ix=ixmin; if (ix>ixmax) ix=ixmax;
-        if (iy<iymin) iy=iymin; if (iy>iymax) iy=iymax;
-        if (iz<izmin) iz=izmin; if (iz>izmax) iz=izmax;
+    void setIndices(const EGS_Vector &r, int &ix, int &iy, int &iz) {
+        ix = (int)((r.x-xmin)*dxi);
+        iy = (int)((r.y-ymin)*dyi);
+        iz = (int)((r.z-zmin)*dzi);
+        if (ix<ixmin) {
+            ix=ixmin;
+        }
+        if (ix>ixmax) {
+            ix=ixmax;
+        }
+        if (iy<iymin) {
+            iy=iymin;
+        }
+        if (iy>iymax) {
+            iy=iymax;
+        }
+        if (iz<izmin) {
+            iz=izmin;
+        }
+        if (iz>izmax) {
+            iz=izmax;
+        }
     }
 
 
     // isInside
-    bool isInside (const EGS_Vector &r) {
+    bool isInside(const EGS_Vector &r) {
         if (r.x >= bbxmin && r.x <= bbxmax &&
-            r.y >= bbymin && r.y <= bbymax &&
-            r.z >= bbzmin && r.z <= bbzmax ) return true;
+                r.y >= bbymin && r.y <= bbymax &&
+                r.z >= bbzmin && r.z <= bbzmax) {
+            return true;
+        }
         return false;
     }
 
 
     // isWhere
-    int isWhere (const EGS_Vector &r) {
-        if (!isInside(r)) return -1;
+    int isWhere(const EGS_Vector &r) {
+        if (!isInside(r)) {
+            return -1;
+        }
         int ix, iy, iz;
         setIndices(r,ix,iy,iz);
         return getNode(ix,iy,iz)->region;
@@ -768,14 +970,16 @@ public:
 
 
     // inside (deprecated)
-    int inside (const EGS_Vector &r) {
+    int inside(const EGS_Vector &r) {
         return isWhere(r);
     }
 
 
     // isWhereFast
-    int isWhereFast (const EGS_Vector &r) {
-        if (!isInside(r)) return -1;
+    int isWhereFast(const EGS_Vector &r) {
+        if (!isInside(r)) {
+            return -1;
+        }
         int ix, iy, iz;
         setIndices(r, ix, iy, iz);
         return getNode(ix,iy,iz)->region;
@@ -783,18 +987,20 @@ public:
 
 
     // medium
-    int medium (int ireg) const {
+    int medium(int ireg) const {
         return nodeReg[ireg]->medium;
     }
 
 
     // howfarIn
-    int howfarIn (EGS_Octree_node *node, const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, EGS_Vector *normal=0) {
+    int howfarIn(EGS_Octree_node *node, const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, EGS_Vector *normal=0) {
 
         int ix, iy, iz, tmp;
         int crossed = -1;
 
-        if (!node) return -1;
+        if (!node) {
+            return -1;
+        }
 
         // set shift and local cell indices
         int shift = maxlevel - node->level;                     // how many levels missing between current level and full depth
@@ -806,27 +1012,39 @@ public:
         if (u.x > 0) {
             ix = ~(~ix<<shift);                                 // fill lower level bits with 1's to always consider +x below current node
             EGS_Float xBound;
-            if (ix>=ixmax) xBound = bbxmax;
-            else xBound = xmin + (ix+1)*dx;
+            if (ix>=ixmax) {
+                xBound = bbxmax;
+            }
+            else {
+                xBound = xmin + (ix+1)*dx;
+            }
             EGS_Float d = (xBound-r.x) / u.x;
             if (d <= t) {
                 t = d;
                 crossed = 0;
                 ix++;
-                if (normal) *normal = EGS_Vector(-1,0,0);
+                if (normal) {
+                    *normal = EGS_Vector(-1,0,0);
+                }
             }
         }
         else if (u.x < 0) {
             ix = ix<<shift;                                     // fill lower level bits with 0's to always consider -x below current node
             EGS_Float xBound;
-            if (ix<=ixmin) xBound = bbxmin;
-            else xBound = xmin + ix*dx;
+            if (ix<=ixmin) {
+                xBound = bbxmin;
+            }
+            else {
+                xBound = xmin + ix*dx;
+            }
             EGS_Float d = (xBound-r.x) / u.x;
             if (d <= t) {
                 t = d;
                 crossed = 0;
                 ix--;
-                if (normal) *normal = EGS_Vector(1,0,0);
+                if (normal) {
+                    *normal = EGS_Vector(1,0,0);
+                }
             }
         }
 
@@ -835,27 +1053,39 @@ public:
         if (u.y > 0) {
             iy = ~(~iy<<shift);                                 // fill lower level bits with 1's to always consider +y below current node
             EGS_Float yBound;
-            if (iy>=iymax) yBound = bbymax;
-            else yBound = ymin + (iy+1)*dy;
+            if (iy>=iymax) {
+                yBound = bbymax;
+            }
+            else {
+                yBound = ymin + (iy+1)*dy;
+            }
             EGS_Float d = (yBound - r.y) / u.y;
             if (d <= t) {
                 t = d;
                 crossed = 1;
                 iy++;
-                if (normal) *normal = EGS_Vector(0,-1,0);
+                if (normal) {
+                    *normal = EGS_Vector(0,-1,0);
+                }
             }
         }
         else if (u.y < 0) {
             iy = iy<<shift;                                     // fill lower level bits with 0's to always consider -y below current node
             EGS_Float yBound;
-            if (iy<=iymin) yBound = bbymin;
-            else yBound = ymin + iy*dy;
+            if (iy<=iymin) {
+                yBound = bbymin;
+            }
+            else {
+                yBound = ymin + iy*dy;
+            }
             EGS_Float d = (yBound-r.y) / u.y;
             if (d <= t) {
                 t = d;
                 crossed = 1;
                 iy--;
-                if (normal) *normal = EGS_Vector (0,1,0);
+                if (normal) {
+                    *normal = EGS_Vector(0,1,0);
+                }
             }
         }
 
@@ -863,27 +1093,39 @@ public:
         if (u.z > 0) {
             iz = ~(~iz<<shift);                                 // fill lower level bits with 1's to always consider +z below current node
             EGS_Float zBound;
-            if (iz>=izmax) zBound = bbzmax;
-            else zBound = zmin + (iz+1)*dz;
+            if (iz>=izmax) {
+                zBound = bbzmax;
+            }
+            else {
+                zBound = zmin + (iz+1)*dz;
+            }
             EGS_Float d = (zBound-r.z) / u.z;
             if (d <= t) {
                 t = d;
                 crossed = 2;
                 iz++;
-                if (normal) *normal = EGS_Vector(0,0,-1);
+                if (normal) {
+                    *normal = EGS_Vector(0,0,-1);
+                }
             }
         }
         else if (u.z < 0) {
             iz = iz<<shift;                                     // fill lower level bits with 0's to always consider -z below current node
             EGS_Float zBound;
-            if (iz<=izmin) zBound = bbzmin;
-            else zBound = zmin + iz*dz;
+            if (iz<=izmin) {
+                zBound = bbzmin;
+            }
+            else {
+                zBound = zmin + iz*dz;
+            }
             EGS_Float d = (zBound-r.z) / u.z;
             if (d <= t) {
                 t = d;
                 crossed = 2;
                 iz--;
-                if (normal) *normal = EGS_Vector(0,0,1);
+                if (normal) {
+                    *normal = EGS_Vector(0,0,1);
+                }
             }
         }
 
@@ -892,28 +1134,32 @@ public:
         // 2) get the indices for the neighbor cell at maximum depth, corresponding to that position
         // 3) call an axis specific function to get the neighbor node
         if (crossed==0) {
-            EGS_Vector ryz (r.x, r.y+t*u.y, r.z+t*u.z);
+            EGS_Vector ryz(r.x, r.y+t*u.y, r.z+t*u.z);
             setIndices(ryz, tmp, iy, iz);
-            node = getNeighborNodeX (node, ix, iy, iz);
+            node = getNeighborNodeX(node, ix, iy, iz);
         }
         else if (crossed==1) {
-            EGS_Vector rxz (r.x+t*u.x, r.y, r.z+t*u.z);
+            EGS_Vector rxz(r.x+t*u.x, r.y, r.z+t*u.z);
             setIndices(rxz, ix, tmp, iz);
-            node = getNeighborNodeY (node, ix, iy, iz);
+            node = getNeighborNodeY(node, ix, iy, iz);
         }
         else if (crossed==2) {
-            EGS_Vector rxy (r.x+t*u.x, r.y+t*u.y, r.z);
+            EGS_Vector rxy(r.x+t*u.x, r.y+t*u.y, r.z);
             setIndices(rxy, ix, iy, tmp);
-            node = getNeighborNodeZ (node, ix, iy, iz);
+            node = getNeighborNodeZ(node, ix, iy, iz);
         }
 
-        if (node) return node->region;
-        else return -1;
+        if (node) {
+            return node->region;
+        }
+        else {
+            return -1;
+        }
     }
 
 
     // howfarOut
-    int howfarOut (const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, EGS_Vector *normal=0) {
+    int howfarOut(const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, EGS_Vector *normal=0) {
 
         int inew = -1, tmp;
         int ix, iy, iz;
@@ -925,11 +1171,13 @@ public:
             ix = ixmin;
             d = (bbxmin-r.x) / u.x;
         }
-        else if (r.x >= bbxmax && u.x < 0 ) {
+        else if (r.x >= bbxmax && u.x < 0) {
             ix = ixmax;
             d = (bbxmax-r.x) / u.x;
         }
-        else d = tlong;
+        else {
+            d = tlong;
+        }
         if (d <= t) {
             EGS_Float yy = r.y + u.y*d;
             EGS_Float zz = r.z + u.z*d;
@@ -937,22 +1185,26 @@ public:
                 EGS_Vector rr(0,yy,zz);
                 setIndices(rr, tmp, iy, iz);
                 t = d;
-                if (normal) *normal = (ix == ixmin) ? EGS_Vector(-1,0,0) : EGS_Vector(1,0,0);
+                if (normal) {
+                    *normal = (ix == ixmin) ? EGS_Vector(-1,0,0) : EGS_Vector(1,0,0);
+                }
                 node = getNode(ix,iy,iz);
                 return node->region;
             }
         }
 
         // y axis
-        if (r.y <= bbymin && u.y > 0 ) {
+        if (r.y <= bbymin && u.y > 0) {
             iy = iymin;
             d = (bbymin-r.y) / u.y;
         }
-        else if (r.y >= bbymax && u.y < 0 ) {
+        else if (r.y >= bbymax && u.y < 0) {
             iy = iymax;
             d = (bbymax-r.y) / u.y;
         }
-        else d = tlong;
+        else {
+            d = tlong;
+        }
         if (d <= t) {
             EGS_Float xx = r.x + u.x*d;
             EGS_Float zz = r.z + u.z*d;
@@ -960,22 +1212,26 @@ public:
                 EGS_Vector rr(xx,0,zz);
                 setIndices(rr, ix, tmp, iz);
                 t = d;
-                if (normal) *normal = (iy == iymin) ? EGS_Vector(0,-1,0) : EGS_Vector(0,1,0);
+                if (normal) {
+                    *normal = (iy == iymin) ? EGS_Vector(0,-1,0) : EGS_Vector(0,1,0);
+                }
                 node = getNode(ix,iy,iz);
                 return node->region;
             }
-         }
+        }
 
         // z axis
         if (r.z <= bbzmin && u.z > 0) {
             iz = izmin;
             d = (bbzmin-r.z) / u.z;
         }
-        else if (r.z >= bbzmax && u.z < 0 ) {
+        else if (r.z >= bbzmax && u.z < 0) {
             iz = izmax;
             d = (bbzmax-r.z) / u.z;
         }
-        else d = tlong;
+        else {
+            d = tlong;
+        }
         if (d <= t) {
             EGS_Float xx = r.x + u.x*d;
             EGS_Float yy = r.y + u.y*d;
@@ -983,7 +1239,9 @@ public:
                 EGS_Vector rr(xx,yy,0);
                 setIndices(rr, ix, iy, tmp);
                 t = d;
-                if (normal) *normal = (iz == izmin) ? EGS_Vector(0,0,-1) : EGS_Vector(0,0,1);
+                if (normal) {
+                    *normal = (iz == izmin) ? EGS_Vector(0,0,-1) : EGS_Vector(0,0,1);
+                }
                 node = getNode(ix,iy,iz);
                 return node->region;
             }
@@ -994,24 +1252,28 @@ public:
 
 
     // howfar
-    int howfar (int ireg, const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, int *newmed, EGS_Vector *normal=0) {
+    int howfar(int ireg, const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, int *newmed, EGS_Vector *normal=0) {
 
         int inew = ireg;
 
         // get new region number
-        if (ireg==-1)
-            inew = howfarOut (r, u, t, normal);
-        else
-            inew = howfarIn (nodeReg[ireg], r, u, t, normal);
+        if (ireg==-1) {
+            inew = howfarOut(r, u, t, normal);
+        }
+        else {
+            inew = howfarIn(nodeReg[ireg], r, u, t, normal);
+        }
 
         // set new medium
-        if (inew>=0 && newmed) *newmed = nodeReg[inew]->medium;
+        if (inew>=0 && newmed) {
+            *newmed = nodeReg[inew]->medium;
+        }
         return inew;
     }
 
 
     // hownearIn
-    EGS_Float hownearIn (int ireg, const EGS_Vector &r) {
+    EGS_Float hownearIn(int ireg, const EGS_Vector &r) {
         EGS_Octree_node *node = nodeReg[ireg];
         int shift = maxlevel - node->level;
         EGS_Float t1, t2, tx, ty, tz;
@@ -1020,38 +1282,52 @@ public:
         // x
         imin = node->ix << shift;
         imax = ~(~node->ix << shift);
-        t1 = (r.x-xmin)-dx*imin; t2 = dx*(imax-imin+1)-t1; tx = t1 < t2 ? t1 : t2;
+        t1 = (r.x-xmin)-dx*imin;
+        t2 = dx*(imax-imin+1)-t1;
+        tx = t1 < t2 ? t1 : t2;
 
         // y
         imin = node->iy << shift;
         imax = ~(~node->iy << shift);
-        t1 = (r.y-ymin)-dy*imin; t2 = dy*(imax-imin+1)-t1; ty = t1 < t2 ? t1 : t2;
+        t1 = (r.y-ymin)-dy*imin;
+        t2 = dy*(imax-imin+1)-t1;
+        ty = t1 < t2 ? t1 : t2;
 
         // z
         imin = node->iz << shift;
         imax = ~(~node->iz << shift);
-        t1 = (r.z-zmin)-dz*imin; t2 = dz*(imax-imin+1)-t1; tz = t1 < t2 ? t1 : t2;
+        t1 = (r.z-zmin)-dz*imin;
+        t2 = dz*(imax-imin+1)-t1;
+        tz = t1 < t2 ? t1 : t2;
 
         return tx<ty && tx<tz ? tx : ty<tz ? ty : tz;
     }
 
 
     // hownear
-    EGS_Float hownear (int ireg, const EGS_Vector &r) {
-        if (ireg>=0) return hownearIn(ireg, r);
+    EGS_Float hownear(int ireg, const EGS_Vector &r) {
+        if (ireg>=0) {
+            return hownearIn(ireg, r);
+        }
         int nc=0;
         EGS_Float s1=0, s2=0;
         if (r.x < bbxmin || r.x > bbxmax) {
             EGS_Float t = r.x < bbxmin ? bbxmin-r.x : r.x-bbxmax;
-            nc++; s1 += t; s2 += t*t;
+            nc++;
+            s1 += t;
+            s2 += t*t;
         }
         if (r.y < bbymin || r.y > bbymax) {
             EGS_Float t = r.y < bbymin ? bbymin-r.y : r.y-bbymax;
-            nc++; s1 += t; s2 += t*t;
+            nc++;
+            s1 += t;
+            s2 += t*t;
         }
         if (r.z < bbzmin || r.z > bbzmax) {
             EGS_Float t = r.z < bbzmin ? bbzmin-r.z : r.z-bbzmax;
-            nc++; s1 += t; s2 += t*t;
+            nc++;
+            s1 += t;
+            s2 += t*t;
         }
         return nc == 1 ? s1 : sqrt(s2);
     }

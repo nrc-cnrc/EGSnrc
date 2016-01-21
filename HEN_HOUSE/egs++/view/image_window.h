@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Manuel Stoeckl
 #
 ###############################################################################
 */
@@ -32,193 +33,106 @@
 #ifndef IMAGE_WINDOW_
 #define IMAGE_WINDOW_
 
+#include "renderworker.h"
+
 #include "egs_libconfig.h"
 #include "egs_functions.h"
+#include "egs_visualizer.h"
 
-#include <qdialog.h>
-#include <qtimer.h>
+#include <qpainter.h>
+#include <qwidget.h>
 
-// #include "egs_functions.h"
-// #define VIEW_DEBUG
+class QTimer;
+class QThread;
+class QProgressDialog;
 
-//class ImageWindow : public QDialog {
+// Maximum number of regions displayed
+#define N_REG_MAX 30
+
 class ImageWindow : public QWidget {
 
     Q_OBJECT
 
-
 public:
 
-    //ImageWindow(QWidget *parent = 0, const char *name = 0, bool modal = FALSE,
-    //      WFlags f = 0 ) : QDialog(parent,name,modal,f), resizing(false) { };
-    ImageWindow(QWidget *parent=0, const char *name=0, WFlags f=0 ) : QWidget(parent,name,f), resizing(false) {
-            navigationTimer = new QTimer(this);
-            connect (navigationTimer, SIGNAL(timeout()), parent, SLOT(endTransformation()));
-            navigating=false;
-            setMouseTracking(true);}
-    ~ImageWindow() {};
-    void polish() {
-        //QDialog::polish();
-        QWidget::polish();
-        QWidget *topl = topLevelWidget();
-        //egsWarning("In polish: position: %d %d\n",pos().x(),pos().y());
-        //if( !topl ) egsWarning("Null top level widget!\n");
-        QWidget *parent = parentWidget();
-        if( !parent ) parent = topl;
-        //egsWarning("parent: %s\n",parent->name());
-        if( parent ) {
-            QPoint point = parent->mapToGlobal(QPoint(0,0));
-            //egsWarning("parent: %d %d\n",point.x(),point.y());
-            //QRect my_frame = frameGeometry();
-            //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-            //     my_frame.right(),my_frame.top(),my_frame.bottom());
-            int gview_x = point.x();
-            int gview_y = point.y() + parent->height();
-            //egsWarning("moving to %d %d\n",gview_x,gview_y);
-            move(gview_x,gview_y);
-            //my_frame = frameGeometry();
-            //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-            //     my_frame.right(),my_frame.top(),my_frame.bottom());
-        }
-    };
+    struct RenderParameters pars;
 
-    int xMouse, yMouse;
+    ImageWindow(QWidget *parent=0, const char *name=0);
+    ~ImageWindow();
+
+public slots:
+
+    void render(EGS_BaseGeometry *geo, bool transform);
+    void loadTracks(QString name);
+    void saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext);
+
+    void stopWorker();
+    void restartWorker();
+
+    void startTransformation();
+    void endTransformation();
 
 protected:
 
-    void resizeEvent(QResizeEvent *e) {
-#ifdef VIEW_DEBUG
-        egsWarning("In resizeEvent(): size is %d %d old size is: %d %d" " shown: %d\n",width(),height(),e->oldSize().width(), e->oldSize().height(),isShown());
-#endif
-        resizing = isShown();
-        //QDialog::resizeEvent(e);
-        QWidget::resizeEvent(e);
-    };
+    void rerender(EGS_BaseGeometry *geo);
 
-    void paintEvent (QPaintEvent *) {
-		#ifdef VIEW_DEBUG
-        egsWarning("In paintEvent(): size is %d %d resizing is %d\n", width(),height(),resizing);
-		#endif
-        emit needRepaint(false);
-        resizing = false;
-    };
+    void resizeEvent(QResizeEvent *e);
+    void paintEvent(QPaintEvent *);
 
-    void mouseReleaseEvent (QMouseEvent *event) {
-#ifdef VIEW_DEBUG
-        egsWarning("In mouseReleaseEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
-        egsWarning("  Mouse buttons: %0x\n", event->button());
-#endif
-        // 500 msec before returning to full resolution (after button released)
-        if (navigating) {
-            navigationTimer->start(500, TRUE);
-            emit regionPicking(xMouse, yMouse);
-            navigating=false;
-        }
-        else if( event->button() == Qt::LeftButton ) {
-            egsWarning("release event at %d %d\n",event->x(),event->y());
-            emit leftMouseClick(event->x(),event->y());
-        }
-    }
+    void mouseReleaseEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
 
-    //virtual void mousePressEvent ( QMouseEvent * e )
-    //virtual void mouseReleaseEvent ( QMouseEvent * e )
+protected slots:
 
-    void mouseMoveEvent (QMouseEvent *event) {
-        int dx = event->x()-xMouse;
-        int dy = event->y()-yMouse;
-        xMouse = event->x();
-        yMouse = event->y();
-
-        // set up navigation
-        if (event->state() & (Qt::LeftButton|Qt::MidButton)) {
-            if (!navigating) {
-                emit startTransformation();
-                navigationTimer->stop();
-                navigating=true;
-            }
-        }
-
-        // navigate
-        if (event->state() & Qt::LeftButton) {
-            // camera roll
-            if (event->state() & Qt::ShiftButton) {
-                emit cameraRolling(dx);
-            }
-            // camera translate
-            else if (event->state() & Qt::ControlButton) {
-                emit cameraTranslating(dx, dy);
-            }
-            // camera rotate
-            else {
-                emit cameraRotation(dx, dy);
-            }
-        }
-		else if (event->state() & Qt::MidButton) {
-            // camera zoom
-            emit cameraZooming(-dy);
-        }
-        else {
-            // picking
-            emit regionPicking(xMouse, yMouse);
-        }
-    };
-
-    void wheelEvent (QWheelEvent *event) {
-        #ifdef VIEW_DEBUG
-        egsWarning("In wheelEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
-        egsWarning("  Buttons: %0x\n", event->state());
-        #endif
-        emit startTransformation();
-        emit cameraZooming(event->delta()/20);
-        // 500 msec before returning to full resolution (after wheel events)
-        navigationTimer->start(500, TRUE);
-        emit regionPicking(xMouse, yMouse);
-    };
-
-    void keyPressEvent (QKeyEvent *event) {
-        #ifdef VIEW_DEBUG
-        egsWarning("In keyPressEvent()\n");
-        #endif
-        if (event->key() == Qt::Key_Home) {
-            if (event->state() & Qt::AltButton) {
-                emit cameraHomeDefining();
-            }
-            else {
-                emit (cameraHoming());
-            }
-        }
-        else if (event->key() == Qt::Key_X) emit putCameraOnAxis('x');
-        else if (event->key() == Qt::Key_Y) emit putCameraOnAxis('y');
-        else if (event->key() == Qt::Key_Z) emit putCameraOnAxis('z');
-        else if (event->key() == Qt::Key_D) emit renderAndDebug();
-        else (event->ignore());
-    };
-
+    void drawResults(RenderResults,RenderParameters);
+    void handleAbort();
 
 signals:
 
     void changedSize(int w, int h);
-    void needRepaint(bool);
-	void cameraRotation(int dx, int dy);
-	void cameraZooming(int dy);
+    void cameraRotation(int dx, int dy);
+    void cameraZooming(int dy);
     void cameraRolling(int dx);
     void cameraTranslating(int dx, int dy);
     void cameraHoming();
     void cameraHomeDefining();
-	void startTransformation();
-	void endTransformation();
     void putCameraOnAxis(char axis);
-    void regionPicking(int x, int y);
     void leftMouseClick(int x, int y);
-    void renderAndDebug();
 
+    // for render thread
+    void requestRender(EGS_BaseGeometry *,RenderParameters);
+    void requestLoadTracks(QString);
 
 private:
+    void paintBackground(QPainter &p);
 
-    bool    resizing;
+    // Navigation/Control
     QTimer  *navigationTimer;
     bool    navigating;
+    bool rerenderRequested;
 
+    // regionPicking synchronized with image on screen
+    EGS_GeometryVisualizer *vis;
+    bool regionsDisplayed;
+    QPoint xyMouse;
+    QPoint lastMouse;
+    int lastRegions[N_REG_MAX];
+
+    // Worker thread handling
+    QThread *thread;
+    RenderWorker *worker;
+    RenderResults lastResult;
+    RenderParameters lastRequest;
+    enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
+    EGS_BaseGeometry *lastRequestGeo;
+    RenderRequestType activeRequestType;
+
+    // Image saving
+    QString saveName;
+    QString saveExtension;
+    QProgressDialog *saveProgress;
 };
 
 #endif

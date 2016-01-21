@@ -120,7 +120,7 @@ enum EGS_InfoType { Information, Warning, Fatal };
  * used function for messages of that type.
  */
 extern EGS_InfoFunction EGS_EXPORT
-         egsSetInfoFunction(EGS_InfoType t, EGS_InfoFunction func);
+egsSetInfoFunction(EGS_InfoType t, EGS_InfoFunction func);
 
 /*! \brief Reset I/O functions to their defaults
  *

@@ -76,8 +76,12 @@ public:
       is started.
      */
     inline void score(unsigned short ncase, EGS_Float f) {
-        if( ncase == current_ncase ) tmp += f;
-        else finishCase(ncase,f);
+        if (ncase == current_ncase) {
+            tmp += f;
+        }
+        else {
+            finishCase(ncase,f);
+        }
     };
 
     /*! \brief Finish the current 'case' (event) and start a new event
@@ -85,21 +89,29 @@ public:
     */
     inline void finishCase(unsigned short new_case, EGS_Float new_result) {
         current_ncase = new_case;
-        sum += tmp; sum2 += tmp*tmp; tmp = new_result;
+        sum += tmp;
+        sum2 += tmp*tmp;
+        tmp = new_result;
     };
 
     /*! \brief Returns the score of the current event. */
-    EGS_Float currentScore() const { return tmp; };
+    EGS_Float currentScore() const {
+        return tmp;
+    };
 
     /*! \brief Sets \a s to the score of the current event and \a ncase
       to the index of the current event. */
     void      currentScore(EGS_Float &s, unsigned short &ncase) const {
-                  s = tmp; ncase = current_ncase;
+        s = tmp;
+        ncase = current_ncase;
     };
 
     /*! \brief Sets \a s to the sum of scores collected so far
       and \a s2 to the sum of scores squared */
-    void      currentScore(double &s, double &s2) { s=sum; s2=sum2; };
+    void      currentScore(double &s, double &s2) {
+        s=sum;
+        s2=sum2;
+    };
 
     /*! \brief Sets \a r to the current result and \a dr to its statistical
       uncertainty assuming \a ncase statistically independent events.
@@ -108,9 +120,14 @@ public:
       so far and \a ncase and \a dr to the statistical uncertainty of \a r.
      */
     void      currentResult(EGS_I64 ncase, double &r, double &dr) {
-                  r = sum + tmp; dr = sum2 + tmp*tmp;
-                  r /= ncase; dr /= ncase; dr -= r*r;
-                  if( dr > 0 ) dr = sqrt(dr/(ncase-1));
+        r = sum + tmp;
+        dr = sum2 + tmp*tmp;
+        r /= ncase;
+        dr /= ncase;
+        dr -= r*r;
+        if (dr > 0) {
+            dr = sqrt(dr/(ncase-1));
+        }
     };
 
     /*! \brief Stores the state of the scoring object into the data stream
@@ -127,7 +144,7 @@ public:
     bool storeState(ostream &data) {
         //sum += tmp; sum2 += tmp*tmp; tmp = 0;
         //data << current_ncase << "  " << sum << "  " << sum2 << endl;
-        data << current_ncase << "  " << sum+tmp << "  " << sum2+tmp*tmp
+        data << current_ncase << "  " << sum+tmp << "  " << sum2+tmp *tmp
              << endl;
         return data.good();
     };
@@ -142,14 +159,20 @@ public:
       \sa storeState()
      */
     bool setState(istream &data) {
-        data >> current_ncase >> sum >> sum2; tmp = 0;
+        data >> current_ncase >> sum >> sum2;
+        tmp = 0;
         return data.good();
     };
 
     /*! \brief Reset the scoring object to a pristine state (\em i.e. all
       counters set to zero).
      */
-    void reset() { current_ncase = 0; tmp = 0; sum = 0; sum2 = 0; };
+    void reset() {
+        current_ncase = 0;
+        tmp = 0;
+        sum = 0;
+        sum2 = 0;
+    };
 
     /*! \brief Combine the results of two scoring objects.
 
@@ -161,7 +184,8 @@ public:
     EGS_ScoringSingle &operator+=(const EGS_ScoringSingle &x) {
         sum += tmp + x.sum + x.tmp;
         sum2 += tmp*tmp + x.sum2 + x.tmp*x.tmp;
-        current_ncase = 0; tmp = 0;
+        current_ncase = 0;
+        tmp = 0;
         return *this;
     };
 
@@ -233,7 +257,8 @@ public:
 
     /*! \brief Returns the score in \a ireg in the current event. */
     EGS_Float thisHistoryScore(int ireg) const {
-        EGS_Float res; unsigned short nc;
+        EGS_Float res;
+        unsigned short nc;
         result[ireg].currentScore(res,nc);
         return nc == current_ncase_short ? res : 0;
     };
@@ -275,7 +300,7 @@ public:
     pointer to a format string with \a format.
     */
     void reportResults(double norm, const char *title, bool relative_error,
-            const char *format = 0);
+                       const char *format = 0);
 
     /*! \brief Stores the state of the scoring array object into the data
       stream \a data.
@@ -290,11 +315,17 @@ public:
     */
     bool storeState(ostream &data) {
         data << nreg << "  " << current_ncase_short << endl;
-        if( !egsStoreI64(data,current_ncase) ) return false;
-        if( !egsStoreI64(data,current_ncase_65536) ) return false;
+        if (!egsStoreI64(data,current_ncase)) {
+            return false;
+        }
+        if (!egsStoreI64(data,current_ncase_65536)) {
+            return false;
+        }
         data << endl;
-        for(int j=0; j<nreg; j++) {
-            if( !result[j].storeState(data) ) return false;
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].storeState(data)) {
+                return false;
+            }
         }
         return true;
     };
@@ -307,24 +338,40 @@ public:
       restarted simulations.
     */
     bool setState(istream &data) {
-        int nreg1; data >> nreg1 >> current_ncase_short;
-        if( !data.good() || nreg1 < 1 ) return false;
-        if( !egsGetI64(data,current_ncase) ) return false;
-        if( !egsGetI64(data,current_ncase_65536) ) return false;
-        if( nreg1 != nreg ) {
-            if( nreg > 0 ) delete [] result;
-            nreg = nreg1; result = new EGS_ScoringSingle [nreg];
+        int nreg1;
+        data >> nreg1 >> current_ncase_short;
+        if (!data.good() || nreg1 < 1) {
+            return false;
         }
-        for(int j=0; j<nreg; j++) {
-            if( !result[j].setState(data) ) return false;
+        if (!egsGetI64(data,current_ncase)) {
+            return false;
+        }
+        if (!egsGetI64(data,current_ncase_65536)) {
+            return false;
+        }
+        if (nreg1 != nreg) {
+            if (nreg > 0) {
+                delete [] result;
+            }
+            nreg = nreg1;
+            result = new EGS_ScoringSingle [nreg];
+        }
+        for (int j=0; j<nreg; j++) {
+            if (!result[j].setState(data)) {
+                return false;
+            }
         }
         return true;
     };
 
     /*! \brief Reset the scoring array to a pristine state. */
     void reset() {
-        current_ncase = 0; current_ncase_65536 = 0; current_ncase_short = 0;
-        for(int j=0; j<nreg; j++) result[j].reset();
+        current_ncase = 0;
+        current_ncase_65536 = 0;
+        current_ncase_short = 0;
+        for (int j=0; j<nreg; j++) {
+            result[j].reset();
+        }
     };
 
     /*! \brief Add the results of \a x to the rtesults of the invoking
@@ -338,7 +385,9 @@ public:
         current_ncase_65536 = current_ncase >> 16;
         EGS_I64 aux = current_ncase - (current_ncase_65536 << 16);
         current_ncase_short = (unsigned short) aux;
-        for(int j=0; j<nreg; j++) result[j] += x.result[j];
+        for (int j=0; j<nreg; j++) {
+            result[j] += x.result[j];
+        }
         return *this;
     };
 
@@ -346,13 +395,17 @@ public:
       most appropriate term depending on the way the scorring array is being
       used).
     */
-    int bins() const { return nreg; };
+    int bins() const {
+        return nreg;
+    };
 
     /*! \brief Returns the number of regions (or elements or bins, the
       most appropriate term depending on the way the scorring array is being
       used).
     */
-    int regions() const { return nreg; };
+    int regions() const {
+        return nreg;
+    };
 
 protected:
 

@@ -40,35 +40,45 @@
 
 extern "C" {
 
-EGS_ELLIPSE_EXPORT EGS_BaseShape* createShape(EGS_Input *input,
-        EGS_ObjectFactory *f) {
-    if( !input ) {
-        egsWarning("createShape(ellipse): null input?\n"); return 0;
-    }
-    vector<EGS_Float> axis;
-    int err = input->getInput("halfaxis",axis);
-    if( err ) {
-        egsWarning("createShape(ellipse): no 'halfaxis' input\n"); return 0;
-    }
-    if( axis.size() != 2 ) {
-        egsWarning("createShape(ellipse): 2 instead of %d inputs expected"
-                " for keyword 'halfaxis'.\n",axis.size()); return 0;
-    }
-    vector<EGS_Float> pos;
-    err = input->getInput("midpoint",pos);
-    if( err ) { pos.clear(); pos.push_back(0); pos.push_back(0); }
-    else {
-        if( pos.size() != 2 ) {
-            egsWarning("createShape(ellipse): 2 instead of %d inputs expected"
-                 " for keyword 'midpoint'. Reseting midpoint to (0,0)\n",
-                 pos.size());
-            pos.clear(); pos.push_back(0); pos.push_back(0);
+    EGS_ELLIPSE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
+            EGS_ObjectFactory *f) {
+        if (!input) {
+            egsWarning("createShape(ellipse): null input?\n");
+            return 0;
         }
+        vector<EGS_Float> axis;
+        int err = input->getInput("halfaxis",axis);
+        if (err) {
+            egsWarning("createShape(ellipse): no 'halfaxis' input\n");
+            return 0;
+        }
+        if (axis.size() != 2) {
+            egsWarning("createShape(ellipse): 2 instead of %d inputs expected"
+                       " for keyword 'halfaxis'.\n",axis.size());
+            return 0;
+        }
+        vector<EGS_Float> pos;
+        err = input->getInput("midpoint",pos);
+        if (err) {
+            pos.clear();
+            pos.push_back(0);
+            pos.push_back(0);
+        }
+        else {
+            if (pos.size() != 2) {
+                egsWarning("createShape(ellipse): 2 instead of %d inputs expected"
+                           " for keyword 'midpoint'. Reseting midpoint to (0,0)\n",
+                           pos.size());
+                pos.clear();
+                pos.push_back(0);
+                pos.push_back(0);
+            }
+        }
+        EGS_EllipseShape *shape = new EGS_EllipseShape(pos[0],pos[1],
+                axis[0],axis[1],"",f);
+        shape->setName(input);
+        shape->setTransformation(input);
+        return shape;
     }
-    EGS_EllipseShape *shape = new EGS_EllipseShape(pos[0],pos[1],
-            axis[0],axis[1],"",f);
-    shape->setName(input); shape->setTransformation(input);
-    return shape;
-}
 
 }

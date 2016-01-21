@@ -45,8 +45,9 @@ public:
     // the color d.
     EGS_Vector getColor(const EGS_Vector &x, const EGS_Vector &n,
                         const EGS_Vector &d_color) {
-        EGS_Vector L(xl-x); EGS_Float Lxn = L*n;
-        if( Lxn > 0 ) {
+        EGS_Vector L(xl-x);
+        EGS_Float Lxn = L*n;
+        if (Lxn > 0) {
             Lxn /= L.length();
             return diffuse_c.getScaled(d_color)*Lxn;
         }
@@ -72,7 +73,7 @@ public:
         d(d_color), alpha(Alpha) {};
 
     EGS_Vector d;        // material color as a r,g,b triplet, should be
-                         // clamped between 0 and 1.
+    // clamped between 0 and 1.
     EGS_Float  alpha;
 
 };

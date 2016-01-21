@@ -42,22 +42,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_GTRANSFORMED_DLL
-#define EGS_GTRANSFORMED_EXPORT __declspec(dllexport)
-#else
-#define EGS_GTRANSFORMED_EXPORT __declspec(dllimport)
-#endif
-#define EGS_GTRANSFORMED_LOCAL
+    #ifdef BUILD_GTRANSFORMED_DLL
+        #define EGS_GTRANSFORMED_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_GTRANSFORMED_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_GTRANSFORMED_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_GTRANSFORMED_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_GTRANSFORMED_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_GTRANSFORMED_EXPORT
-#define EGS_GTRANSFORMED_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_GTRANSFORMED_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_GTRANSFORMED_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_GTRANSFORMED_EXPORT
+        #define EGS_GTRANSFORMED_LOCAL
+    #endif
 
 #endif
 
@@ -99,7 +99,7 @@ Transformed geometries are used in the
 
 */
 class EGS_GTRANSFORMED_EXPORT EGS_TransformedGeometry :
-            public EGS_BaseGeometry {
+    public EGS_BaseGeometry {
 
 protected:
 
@@ -113,20 +113,29 @@ public:
     transformed by \a t
     */
     EGS_TransformedGeometry(EGS_BaseGeometry *G, const EGS_AffineTransform &t,
-            const string &Name = "") : EGS_BaseGeometry(Name), g(G), T(t) {
-        type = g->getType(); type += "T"; nreg = g->regions();
+                            const string &Name = "") : EGS_BaseGeometry(Name), g(G), T(t) {
+        type = g->getType();
+        type += "T";
+        nreg = g->regions();
         is_convex = g->isConvex();
         has_rho_scaling = g->hasRhoScaling();
     };
 
-    ~EGS_TransformedGeometry() { if( !g->deref() ) delete g; };
+    ~EGS_TransformedGeometry() {
+        if (!g->deref()) {
+            delete g;
+        }
+    };
 
-    void setTransformation(const EGS_AffineTransform &t) { T = t; };
+    void setTransformation(const EGS_AffineTransform &t) {
+        T = t;
+    };
 
     int computeIntersections(int ireg, int n, const EGS_Vector &x,
-            const EGS_Vector &u, EGS_GeometryIntersections *isections) {
+                             const EGS_Vector &u, EGS_GeometryIntersections *isections) {
         EGS_Vector xt(x), ut(u);
-        T.inverseTransform(xt); T.rotateInverse(ut);
+        T.inverseTransform(xt);
+        T.rotateInverse(ut);
         return g->computeIntersections(ireg,n,xt,ut,isections);
         //return g->computeIntersections(ireg,n,x*T,u*T.getRotation(),isections);
     };
@@ -134,41 +143,52 @@ public:
         return g->isRealRegion(ireg);
     };
     bool isInside(const EGS_Vector &x) {
-        EGS_Vector xt(x); T.inverseTransform(xt);
+        EGS_Vector xt(x);
+        T.inverseTransform(xt);
         return g->isInside(xt);
         //return g->isInside(x*T);
     };
     int isWhere(const EGS_Vector &x) {
-        EGS_Vector xt(x); T.inverseTransform(xt);
+        EGS_Vector xt(x);
+        T.inverseTransform(xt);
         return g->isWhere(xt);
         //return g->isWhere(x*T);
     };
-    int inside(const EGS_Vector &x) { return isWhere(x); };
+    int inside(const EGS_Vector &x) {
+        return isWhere(x);
+    };
 
-    int medium(int ireg) const { return g->medium(ireg); };
+    int medium(int ireg) const {
+        return g->medium(ireg);
+    };
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
-            const EGS_Vector &u) {
+                              const EGS_Vector &u) {
         return ireg >= 0 ? g->howfarToOutside(ireg,x*T,u*T.getRotation()) : 0;
     };
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-           EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
+               EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
         EGS_Vector xt(x), ut(u);
-        T.inverseTransform(xt); T.rotateInverse(ut);
+        T.inverseTransform(xt);
+        T.rotateInverse(ut);
         int inew = g->howfar(ireg,xt,ut,t,newmed,normal);
         //int inew = g->howfar(ireg,x*T,u*T.getRotation(),t,newmed,normal);
-        if( inew != ireg && normal )
+        if (inew != ireg && normal) {
             *normal = T.getRotation()*(*normal);
+        }
         return inew;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Vector xt(x); T.inverseTransform(xt);
+        EGS_Vector xt(x);
+        T.inverseTransform(xt);
         return g->hownear(ireg,xt);
         //return g->hownear(ireg,x*T);
     };
 
-    int getMaxStep() const { return g->getMaxStep(); };
+    int getMaxStep() const {
+        return g->getMaxStep();
+    };
 
     // Not sure about the following.
     // If I leave the implementation that way, all transformed copies of a
@@ -192,7 +212,9 @@ public:
         g->addBooleanProperty(bit,start,end,step);
     };
 
-    const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
     EGS_Float getRelativeRho(int ireg) const {
         return g->getRelativeRho(ireg);
@@ -201,7 +223,7 @@ public:
 
     void setRelativeRho(EGS_Input *);
 
-    virtual void getLabelRegions (const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
 

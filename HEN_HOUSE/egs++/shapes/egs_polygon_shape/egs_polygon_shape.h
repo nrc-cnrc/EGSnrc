@@ -43,22 +43,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_POLYGON_SHAPE_DLL
-#define EGS_POLYGON_SHAPE_EXPORT __declspec(dllexport)
-#else
-#define EGS_POLYGON_SHAPE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_POLYGON_SHAPE_LOCAL
+    #ifdef BUILD_POLYGON_SHAPE_DLL
+        #define EGS_POLYGON_SHAPE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_POLYGON_SHAPE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_POLYGON_SHAPE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_POLYGON_SHAPE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_POLYGON_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_POLYGON_SHAPE_EXPORT
-#define EGS_POLYGON_SHAPE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_POLYGON_SHAPE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_POLYGON_SHAPE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_POLYGON_SHAPE_EXPORT
+        #define EGS_POLYGON_SHAPE_LOCAL
+    #endif
 
 #endif
 
@@ -75,13 +75,14 @@ class EGS_POLYGON_SHAPE_EXPORT EGS_TriangleShape : public EGS_SurfaceShape {
 public:
 
     EGS_TriangleShape(const vector<EGS_Float> &points, const string &Name="",
-            EGS_ObjectFactory *f=0);
+                      EGS_ObjectFactory *f=0);
     EGS_TriangleShape(const EGS_Float *points, const string &Name="",
-            EGS_ObjectFactory *f=0);
+                      EGS_ObjectFactory *f=0);
     ~EGS_TriangleShape() {};
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Float eta_a = sqrt(rndm->getUniform());
-        EGS_Float eta_b = eta_a*rndm->getUniform(); eta_a = 1 - eta_a;
+        EGS_Float eta_b = eta_a*rndm->getUniform();
+        eta_a = 1 - eta_a;
         return EGS_Vector(xo + ax*eta_a + bx*eta_b,
                           yo + ay*eta_a + by*eta_b,
                           0);
@@ -118,10 +119,12 @@ class EGS_POLYGON_SHAPE_EXPORT EGS_PolygonShape : public EGS_SurfaceShape {
 public:
 
     EGS_PolygonShape(const vector<EGS_Float> &points, const string &Name="",
-            EGS_ObjectFactory *f=0);
+                     EGS_ObjectFactory *f=0);
     ~EGS_PolygonShape() {
-        if( n > 0 ) {
-            for(int j=0; j<n; j++) delete triangle[j];
+        if (n > 0) {
+            for (int j=0; j<n; j++) {
+                delete triangle[j];
+            }
             delete [] triangle;
             delete table;
         }

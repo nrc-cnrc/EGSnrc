@@ -35,29 +35,41 @@ void EGS_ParticleTrack::grow() {
     // calculate the new size of the vertex array
     int new_size = m_size > 0 ? m_size*2 : 16;
     // not enough ?? then allocate more
-    if (m_nVertices > new_size) new_size = m_nVertices;
+    if (m_nVertices > new_size) {
+        new_size = m_nVertices;
+    }
     Vertex **tmp = new Vertex* [new_size];
     if (m_track) {
         for (int i = 0; i < m_nVertices; ++i) {
             tmp[i] = m_track[i];
         }
-        delete [] m_track; m_track = NULL;
+        delete [] m_track;
+        m_track = NULL;
     }
-    m_track = tmp; m_size = new_size;
+    m_track = tmp;
+    m_size = new_size;
 }
 
 void EGS_ParticleTrack::clearTrack() {
-    if (m_pInfo) delete m_pInfo; m_pInfo = NULL;
+    if (m_pInfo) {
+        delete m_pInfo;
+    }
+    m_pInfo = NULL;
     if (m_track)
         for (int i = 0; i < m_nVertices; i++) {
-            if (m_track[i]) delete m_track[i]; m_track[i] = NULL;
+            if (m_track[i]) {
+                delete m_track[i];
+            }
+            m_track[i] = NULL;
         }
     m_nVertices = 0;
 }
 
 int EGS_ParticleTrack::writeTrack(ofstream *trsp) {
     // no need to write the track if it has less than 2 vertices ...
-    if (m_nVertices < 2) return 1;
+    if (m_nVertices < 2) {
+        return 1;
+    }
     trsp->write((char *)&m_nVertices, sizeof(int));
     trsp->write((char *)m_pInfo, sizeof(ParticleInfo));
     for (int i = 0; i < m_nVertices; i++) {
@@ -66,8 +78,10 @@ int EGS_ParticleTrack::writeTrack(ofstream *trsp) {
     return 0;
 }
 
-EGS_ParticleTrack::Vertex* EGS_ParticleTrack::getVertex(int v) {
-    if ((v < 0) || (v >= m_nVertices)) return NULL;
+EGS_ParticleTrack::Vertex *EGS_ParticleTrack::getVertex(int v) {
+    if ((v < 0) || (v >= m_nVertices)) {
+        return NULL;
+    }
     return (m_track[v]);
 }
 
@@ -75,14 +89,18 @@ void EGS_ParticleTrack::addVertex(Vertex *x) {
     m_track[m_nVertices] = x;
     m_nVertices++;
     // resize the vertex array if necessary
-    if (m_nVertices >= m_size) grow();
+    if (m_nVertices >= m_size) {
+        grow();
+    }
 }
 
 ///////////////////////// EGS_ParticleTrackContainer ////////////////////////
 
 void EGS_ParticleTrackContainer::startNewTrack() {
     // buffer full ? flush it
-    if (m_nTracks >= m_bufferSize) flushBuffer();
+    if (m_nTracks >= m_bufferSize) {
+        flushBuffer();
+    }
     m_nTracks++;
 
     // mark the track as being scored
@@ -90,7 +108,9 @@ void EGS_ParticleTrackContainer::startNewTrack() {
 }
 
 void EGS_ParticleTrackContainer::startNewTrack(int stackIndex) {
-    if (m_nTracks >= m_bufferSize) flushBuffer();
+    if (m_nTracks >= m_bufferSize) {
+        flushBuffer();
+    }
     m_nTracks++;
 
     // map the track on the stack
@@ -99,7 +119,9 @@ void EGS_ParticleTrackContainer::startNewTrack(int stackIndex) {
 }
 
 void EGS_ParticleTrackContainer::startNewTrack(EGS_ParticleTrack::ParticleInfo *p) {
-    if (m_nTracks >= m_bufferSize) flushBuffer();
+    if (m_nTracks >= m_bufferSize) {
+        flushBuffer();
+    }
     m_nTracks++;
     m_isScoring[m_nTracks-1] = true;
     m_buffer[m_nTracks-1]->setParticleInfo(p);
@@ -107,14 +129,17 @@ void EGS_ParticleTrackContainer::startNewTrack(EGS_ParticleTrack::ParticleInfo *
 
 void EGS_ParticleTrackContainer::flushBuffer() {
     int save = 0;
-    if ( m_trspFile ) {
+    if (m_trspFile) {
         for (int i = 0; i < m_nTracks; i++) {
             // if the particle is not being scored anymore
             if (!m_isScoring[i]) {
                 // output it to the file and free memory
-                if (!m_buffer[i]->writeTrack(m_trspFile)) m_totalTracks++;
+                if (!m_buffer[i]->writeTrack(m_trspFile)) {
+                    m_totalTracks++;
+                }
                 m_buffer[i]->clearTrack();
-            } else {
+            }
+            else {
                 // still scoring it -> save the particle
                 m_buffer[save] = m_buffer[i];
                 m_isScoring[i] = false;
@@ -142,18 +167,24 @@ void EGS_ParticleTrackContainer::updateHeader() {
     }
 }
 
-EGS_ParticleTrack::Vertex* EGS_ParticleTrackContainer::getTrackVertex(int tr, int v) {
-    if ((tr < 0) || (tr >= m_nTracks)) return NULL;
+EGS_ParticleTrack::Vertex *EGS_ParticleTrackContainer::getTrackVertex(int tr, int v) {
+    if ((tr < 0) || (tr >= m_nTracks)) {
+        return NULL;
+    }
     return (m_buffer[tr]->getVertex(v));
 }
 
 void EGS_ParticleTrackContainer::addVertex(EGS_ParticleTrack::Vertex *x) {
-    if ( !m_isScoring[m_nTracks-1] ) return;
+    if (!m_isScoring[m_nTracks-1]) {
+        return;
+    }
     m_buffer[m_nTracks-1]->addVertex(x);
 }
 
 void EGS_ParticleTrackContainer::addVertex(int stackIndex, EGS_ParticleTrack::Vertex *x) {
-    if ( !m_isScoring[m_stackMap[stackIndex]] ) return;
+    if (!m_isScoring[m_stackMap[stackIndex]]) {
+        return;
+    }
     m_buffer[m_stackMap[stackIndex]]->addVertex(x);
 }
 
@@ -162,7 +193,7 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
     ifstream *data = new ifstream(filename, ios::binary);
     if (!data || data->fail() || !data->good()) {
         egsWarning("%s: Unable to open track space file '%s'! No tracks loaded\n",
-                    func_name, filename);
+                   func_name, filename);
         return -1;
     }
     data->read((char *)&m_totalTracks, sizeof(int));
@@ -184,7 +215,7 @@ int EGS_ParticleTrackContainer::readDataFile(const char *filename) {
         data->read((char *)pinfo,sizeof(EGS_ParticleTrack::ParticleInfo));
         startNewTrack(pinfo);
         for (int j = 0; j < nvertices; j++) {
-            EGS_ParticleTrack::Vertex* v = new EGS_ParticleTrack::Vertex();
+            EGS_ParticleTrack::Vertex *v = new EGS_ParticleTrack::Vertex();
             data->read((char *)v,sizeof(EGS_ParticleTrack::Vertex));
             addVertex(v);
         }
@@ -203,11 +234,13 @@ void EGS_ParticleTrackContainer::reportResults(bool with_header) {
     if (m_isScoring) {
         scoring = 0;
         for (int i = 0; i < m_bufferSize; i++) {
-            if (m_isScoring[i]) scoring++;
+            if (m_isScoring[i]) {
+                scoring++;
+            }
         }
     }
 
-    if( with_header ) {
+    if (with_header) {
         egsInformation("\nParticle track scoring results:\n");
         egsInformation("=================================\n");
         egsInformation("   Total events scored:     %d\n", m_nEvents);
@@ -216,7 +249,8 @@ void EGS_ParticleTrackContainer::reportResults(bool with_header) {
     egsInformation("   Still being scored:      ");
     if (scoring == -1) {
         egsInformation("Unknown!?\n");
-    } else {
+    }
+    else {
         egsInformation("%d\n", scoring);
         if (scoring > 0) {
             egsWarning("   *** There are particles still being tracked. This"

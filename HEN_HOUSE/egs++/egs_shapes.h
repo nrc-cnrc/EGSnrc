@@ -115,9 +115,15 @@ public:
 
     /*! \brief Construct a shape named \a Name */
     EGS_BaseShape(const string &Name="",EGS_ObjectFactory *f=0) :
-        EGS_Object(Name,f), T(0) { otype = "base_shape"; };
+        EGS_Object(Name,f), T(0) {
+        otype = "base_shape";
+    };
     /*! \brief Destructor. Deletes #T if it is not \c null. */
-    virtual ~EGS_BaseShape() { if(T) delete T; };
+    virtual ~EGS_BaseShape() {
+        if (T) {
+            delete T;
+        }
+    };
 
     /*! \brief Returns a random 3D vector.
      *
@@ -126,8 +132,12 @@ public:
      * returning it.
      */
     virtual EGS_Vector getRandomPoint(EGS_RandomGenerator *rndm) {
-        if( T ) return (*T)*getPoint(rndm);
-        else return getPoint(rndm);
+        if (T) {
+            return (*T)*getPoint(rndm);
+        }
+        else {
+            return getPoint(rndm);
+        }
     };
 
     /*! \brief Sample and return a random 3D vector.
@@ -157,13 +167,17 @@ public:
      * The shape makes a copy of the transformation pointed to by \a t.
      */
     void setTransformation(EGS_AffineTransform *t) {
-        if( T ) delete T;
+        if (T) {
+            delete T;
+        }
         T = new EGS_AffineTransform(*t);
     };
 
     /*! \brief Get a pointer to the affine transformation attached to this
      * shape. */
-    const EGS_AffineTransform *getTransform() const { return T; };
+    const EGS_AffineTransform *getTransform() const {
+        return T;
+    };
 
     /*! \brief Create a shape from the information pointed to by \a inp.
      *
@@ -172,7 +186,7 @@ public:
      * shape or \c null, if the information pointed to by \a inp was not
      * sufficient to create a shape.
      */
-    static EGS_BaseShape* createShape(EGS_Input *inp);
+    static EGS_BaseShape *createShape(EGS_Input *inp);
 
     /*! \brief Get a pointer to the shape named \a Name.
      *
@@ -180,14 +194,16 @@ public:
      * If a shape with name \a Name exists in this list, a pointer to
      * this shape is returned. Otherwise the return value is \c null.
      */
-    static EGS_BaseShape* getShape(const string &Name);
+    static EGS_BaseShape *getShape(const string &Name);
 
     /*! Does this shape implement the getPointSourceDirection() method?
      *
      * This virtual function should be re-implemented in derived classes
      * if the shape supports the getPointSourceDirection() method.
      */
-    virtual bool supportsDirectionMethod() const { return false; };
+    virtual bool supportsDirectionMethod() const {
+        return false;
+    };
 
     /*! Get a random direction given a source position \a xo.
      *
@@ -202,9 +218,9 @@ public:
      * probability distribution results.
      */
     virtual void getPointSourceDirection(const EGS_Vector &xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                         EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         egsFatal("getPointSourceDirection: you have to implement this "
-            "method for the %s shape if you want to use it\n",otype.c_str());
+                 "method for the %s shape if you want to use it\n",otype.c_str());
     };
 
     /*! Get the area of this shape.
@@ -213,7 +229,9 @@ public:
      * their area. It is used by some of the particle sources to define
      * fluence as the number of particles per unit area.
      */
-    virtual EGS_Float area() const { return 1; };
+    virtual EGS_Float area() const {
+        return 1;
+    };
 
 protected:
 
@@ -243,20 +261,28 @@ public:
     /*! \brief Always returns true. Shapes derived from this class \em must
      * implement the getPoint() method to return points on a given surface.
      */
-    bool supportsDirectionMethod() const { return true; };
+    bool supportsDirectionMethod() const {
+        return true;
+    };
     /*! \brief Returns the area of this surface shape */
-    EGS_Float area() const { return A; };
+    EGS_Float area() const {
+        return A;
+    };
     /*! \brief Get a random direction given a source position \a Xo.
      *
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
     void getPointSourceDirection(const EGS_Vector &Xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                 EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
         EGS_Vector x = getPoint(rndm);
-        u = x - xo; EGS_Float d2i = 1/u.length2(), di = sqrt(d2i);
-        u *= di; wt = A*fabs(u.z)*d2i;
-        if( T ) T->rotate(u);
+        u = x - xo;
+        EGS_Float d2i = 1/u.length2(), di = sqrt(d2i);
+        u *= di;
+        wt = A*fabs(u.z)*d2i;
+        if (T) {
+            T->rotate(u);
+        }
     };
 
 protected:
@@ -291,15 +317,19 @@ public:
 
     /*! \brief Construct a point shape located at \a Xo.*/
     EGS_PointShape(const EGS_Vector &Xo = EGS_Vector(),
-        const string &Name="",EGS_ObjectFactory *f=0 ) :
-        EGS_BaseShape(Name,f), xo(Xo) { otype = "point"; };
+                   const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), xo(Xo) {
+        otype = "point";
+    };
     ~EGS_PointShape() { };
     /*! \brief Returns a fixed point */
-    EGS_Vector getPoint(EGS_RandomGenerator *) { return xo; };
+    EGS_Vector getPoint(EGS_RandomGenerator *) {
+        return xo;
+    };
     /*! \brief Creates a point shape from the input \a inp and returns
      * a pointer to it.
      */
-    EGS_Object* createObject(EGS_Input *inp);
+    EGS_Object *createObject(EGS_Input *inp);
 
 protected:
 
@@ -338,17 +368,21 @@ public:
     };
     /*! \brief Create a cube with size \a A. */
     EGS_BoxShape(EGS_Float A, const EGS_AffineTransform *t = 0,
-            const string &Name="",EGS_ObjectFactory *f=0) :
-            EGS_BaseShape(Name,f), ax(A), ay(A), az(A) {
-        if( t ) T = new EGS_AffineTransform(*t);
+                 const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), ax(A), ay(A), az(A) {
+        if (t) {
+            T = new EGS_AffineTransform(*t);
+        }
         otype="box";
     };
     /*! \brief Create a box shape with size Ax,Ay,Az. */
     EGS_BoxShape(EGS_Float Ax, EGS_Float Ay, EGS_Float Az,
-            const EGS_AffineTransform *t = 0,
-            const string &Name="",EGS_ObjectFactory *f=0) :
-            EGS_BaseShape(Name,f), ax(Ax), ay(Ay), az(Az) {
-        if( t ) T = new EGS_AffineTransform(*t);
+                 const EGS_AffineTransform *t = 0,
+                 const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), ax(Ax), ay(Ay), az(Az) {
+        if (t) {
+            T = new EGS_AffineTransform(*t);
+        }
         otype="box";
     };
     /*! \brief Destructor. Does nothing */
@@ -365,46 +399,72 @@ public:
     /*! \brief Create a box shape from the information pointed to by \a inp and
      * return a pointer to it.
      */
-    EGS_Object* createObject(EGS_Input *);
+    EGS_Object *createObject(EGS_Input *);
 
     /*! \brief Returns \c true. (It is easy to implement the
      * getPointSourceDirection() method for a box.)
      */
-    bool supportsDirectionMethod() const { return true; };
+    bool supportsDirectionMethod() const {
+        return true;
+    };
 
     /*! \brief Sets the direction \a u by picking a random point uniformely the
      * on the box surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
     void getPointSourceDirection(const EGS_Vector &Xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                 EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
         EGS_Float eta = rndm->getUniform()*area();
-        if( eta < 2*ax*ay ) {
+        if (eta < 2*ax*ay) {
             u.x = ax*(rndm->getUniform()-0.5);
             u.y = ay*(rndm->getUniform()-0.5);
-            if( eta < ax*ay ) { u.z = az/2; wt = u.z - xo.z; }
-            else { u.z = -az/2; wt = xo.z - u.z; }
+            if (eta < ax*ay) {
+                u.z = az/2;
+                wt = u.z - xo.z;
+            }
+            else {
+                u.z = -az/2;
+                wt = xo.z - u.z;
+            }
         }
-        else if( eta < 2*(ax*ay + ax*az) ) {
+        else if (eta < 2*(ax*ay + ax*az)) {
             u.x = ax*(rndm->getUniform()-0.5);
             u.z = az*(rndm->getUniform()-0.5);
-            if( eta < 2*ax*ay + ax*az ) { u.y = ay/2; wt = u.y - xo.y; }
-            else { u.y = -ay/2; wt = xo.y - u.y; }
+            if (eta < 2*ax*ay + ax*az) {
+                u.y = ay/2;
+                wt = u.y - xo.y;
+            }
+            else {
+                u.y = -ay/2;
+                wt = xo.y - u.y;
+            }
         }
         else {
             eta -= 2*(ax*ay + ax*az);
             u.y = ay*(rndm->getUniform()-0.5);
             u.z = az*(rndm->getUniform()-0.5);
-            if( eta < ay*az ) { u.x = ax/2; wt = u.x - xo.x; }
-            else { u.x = -ax/2; wt = xo.x - u.x; }
+            if (eta < ay*az) {
+                u.x = ax/2;
+                wt = u.x - xo.x;
+            }
+            else {
+                u.x = -ax/2;
+                wt = xo.x - u.x;
+            }
         }
-        u -= xo; EGS_Float d2 = u.length2(), d = sqrt(d2);
-        u *= (1/d); wt *= (area()/(d2*d));
-        if( T ) T->rotate(u);
+        u -= xo;
+        EGS_Float d2 = u.length2(), d = sqrt(d2);
+        u *= (1/d);
+        wt *= (area()/(d2*d));
+        if (T) {
+            T->rotate(u);
+        }
     };
     /*! \brief Returns the box surface area.*/
-    EGS_Float area() const { return 2*(ax*ay + ax*az + ay*az); };
+    EGS_Float area() const {
+        return 2*(ax*ay + ax*az + ay*az);
+    };
 
 };
 
@@ -436,57 +496,78 @@ public:
 
     /*! \brief Construct a sphere of unit radius about the origin. */
     EGS_SphereShape(const string &Name="",EGS_ObjectFactory *f=0) :
-        EGS_BaseShape(Name,f), R(1), xo() { otype="sphere"; };
+        EGS_BaseShape(Name,f), R(1), xo() {
+        otype="sphere";
+    };
     /*! \brief Construct a sphere of radius \a r with midpoint \a Xo */
     EGS_SphereShape(EGS_Float r, const EGS_Vector &Xo = EGS_Vector(0,0,0),
-        const string &Name="",EGS_ObjectFactory *f=0) :
-        EGS_BaseShape(Name,f), R(r), xo(Xo) { otype = "sphere"; };
+                    const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), R(r), xo(Xo) {
+        otype = "sphere";
+    };
     /*! Destructor. Does nothing. */
     ~EGS_SphereShape() {};
 
     /*! \brief Returns a random point within the sphere. */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         EGS_Float r = rndm->getUniform(), r1 = rndm->getUniform(),
-                 r2 = rndm->getUniform();
-        if( r1 > r ) r = r1;
-        if( r2 > r ) r = r2;
+                  r2 = rndm->getUniform();
+        if (r1 > r) {
+            r = r1;
+        }
+        if (r2 > r) {
+            r = r2;
+        }
         EGS_Float cost = 2*rndm->getUniform()-1;
-        EGS_Float sint = sqrt(1-cost*cost); r1 = R*r*sint;
-        EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+        EGS_Float sint = sqrt(1-cost*cost);
+        r1 = R*r*sint;
+        EGS_Float cphi, sphi;
+        rndm->getAzimuth(cphi,sphi);
         return xo + EGS_Vector(r1*cphi,r1*sphi,R*r*cost);
     };
 
     /*! Create a sphere shape from the information pointed to by \a inp, or null
      * if the information is insufficient.
      */
-    EGS_Object* createObject(EGS_Input *inp);
+    EGS_Object *createObject(EGS_Input *inp);
 
     /*! \brief Returns \c true. (It is easy to implement the
      * getPointSourceDirection() method for a sphere.)
      */
-    bool supportsDirectionMethod() const { return true; };
+    bool supportsDirectionMethod() const {
+        return true;
+    };
 
     /*! \brief Sets the direction \a u by picking a random point uniformely
      * on the sphere surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
     void getPointSourceDirection(const EGS_Vector &Xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                 EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
         EGS_Float cost = 2*rndm->getUniform()-1;
         EGS_Float sint = 1-cost*cost;
         EGS_Vector x;
-        if( sint > 1e-10 ) {
-            EGS_Float cphi, sphi; rndm->getAzimuth(cphi,sphi);
+        if (sint > 1e-10) {
+            EGS_Float cphi, sphi;
+            rndm->getAzimuth(cphi,sphi);
             sint = R*sqrt(sint);
-            x.x = sint*cphi; x.y = sint*sphi; x.z = R*cost;
+            x.x = sint*cphi;
+            x.y = sint*sphi;
+            x.z = R*cost;
         }
-        else x.z = R*cost;
-        u = (x + this->xo) - xo; EGS_Float di = 1/u.length();  u *= di;
+        else {
+            x.z = R*cost;
+        }
+        u = (x + this->xo) - xo;
+        EGS_Float di = 1/u.length();
+        u *= di;
         wt = u*x*4*M_PI*R*di*di;
     };
     /*! \brief Returns the sphere surface area.*/
-    EGS_Float area() const { return 4*M_PI*R*R; };
+    EGS_Float area() const {
+        return 4*M_PI*R*R;
+    };
 };
 
 /*! \brief A cylinder shape.
@@ -526,17 +607,22 @@ protected:
 
     /*! \brief Get a point uniformly distributed within a circle */
     inline void getPointInCircle(EGS_RandomGenerator *rndm, EGS_Float &x,
-            EGS_Float &y) {
-        if( !has_phi ) {
-            do { x = 2*rndm->getUniform()-1; y = 2*rndm->getUniform()-1; }
-            while( x*x + y*y > 1);
-            x *= R; y *= R;
+                                 EGS_Float &y) {
+        if (!has_phi) {
+            do {
+                x = 2*rndm->getUniform()-1;
+                y = 2*rndm->getUniform()-1;
+            }
+            while (x*x + y*y > 1);
+            x *= R;
+            y *= R;
         }
         else {
             EGS_Float r = R*sqrt(rndm->getUniform());
             EGS_Float eta = rndm->getUniform();
             EGS_Float phi = phi_min*(1-eta) + phi_max*eta;
-            x = r*cos(phi); y = r*sin(phi);
+            x = r*cos(phi);
+            y = r*sin(phi);
         }
     };
 
@@ -548,26 +634,31 @@ public:
      */
     EGS_CylinderShape(const string &Name="",EGS_ObjectFactory *f=0) :
         EGS_BaseShape(), R(1), h(1), xo(), a(0,0,1),
-        phi_min(0), phi_max(2*M_PI), has_phi(false) { otype="cylinder";};
+        phi_min(0), phi_max(2*M_PI), has_phi(false) {
+        otype="cylinder";
+    };
     EGS_CylinderShape(EGS_Float r, EGS_Float H,
-            const EGS_Vector &Xo = EGS_Vector(0,0,0),
-            const EGS_Vector &A = EGS_Vector(0,0,1),
-            const string &Name="",EGS_ObjectFactory *f=0) :
-            EGS_BaseShape(Name,f), R(r), h(H), xo(Xo), a(A),
-            phi_min(0), phi_max(2*M_PI), has_phi(false) {
+                      const EGS_Vector &Xo = EGS_Vector(0,0,0),
+                      const EGS_Vector &A = EGS_Vector(0,0,1),
+                      const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), R(r), h(H), xo(Xo), a(A),
+        phi_min(0), phi_max(2*M_PI), has_phi(false) {
         EGS_RotationMatrix rmat(a);
-        if( xo.length2() > 1e-10 || !rmat.isI() )
+        if (xo.length2() > 1e-10 || !rmat.isI()) {
             T = new EGS_AffineTransform(rmat.inverse(),xo);
+        }
         otype="cylinder";
     };
     /*! Construct a cylinder shape with radius \a r and height \a H centered
      * about the origin with axis along the z-axis.
      */
     EGS_CylinderShape(EGS_Float r, EGS_Float H, const EGS_AffineTransform *t,
-            const string &Name="",EGS_ObjectFactory *f=0) :
-         EGS_BaseShape(Name,f), R(r), h(H),
-         phi_min(0), phi_max(2*M_PI), has_phi(false) {
-        if( t ) T = new EGS_AffineTransform(*t);
+                      const string &Name="",EGS_ObjectFactory *f=0) :
+        EGS_BaseShape(Name,f), R(r), h(H),
+        phi_min(0), phi_max(2*M_PI), has_phi(false) {
+        if (t) {
+            T = new EGS_AffineTransform(*t);
+        }
         otype="cylinder";
     };
     /*! Destructor. Does nothing. */
@@ -575,65 +666,96 @@ public:
 
     /*! Set a restriction on the azimuthal angular range */
     void setPhiRange(EGS_Float Phi_min, EGS_Float Phi_max) {
-        if( Phi_min < Phi_max ) { phi_min = Phi_min; phi_max = Phi_max; }
-        else                    { phi_min = Phi_max; phi_max = Phi_min; }
-        if( phi_max - phi_min < 1.99999*M_PI ) has_phi = true;
-        else has_phi = false;
+        if (Phi_min < Phi_max) {
+            phi_min = Phi_min;
+            phi_max = Phi_max;
+        }
+        else                    {
+            phi_min = Phi_max;
+            phi_max = Phi_min;
+        }
+        if (phi_max - phi_min < 1.99999*M_PI) {
+            has_phi = true;
+        }
+        else {
+            has_phi = false;
+        }
     };
 
     /*! \brief Samples and returns a point uniformly distributed within the
      * cylinder.
      */
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
-        EGS_Float x,y; getPointInCircle(rndm,x,y);
+        EGS_Float x,y;
+        getPointInCircle(rndm,x,y);
         EGS_Float z = h*(rndm->getUniform()-0.5);
-        return EGS_Vector(x,y,z);
+        return EGS_Vector(x,y,z) + xo;
     };
 
     /*! Creates and returns a pointer to a cylinder shape from the information
      * pointed to by \a inp, or \c null if the information is insufficient.
      */
-    EGS_Object* createObject(EGS_Input *);
+    EGS_Object *createObject(EGS_Input *);
 
     /*! Get the cylinder radius */
-    EGS_Float getRadius() const { return R; };
+    EGS_Float getRadius() const {
+        return R;
+    };
     /*! Get the cylinder height */
-    EGS_Float getHeight() const { return h; };
+    EGS_Float getHeight() const {
+        return h;
+    };
 
     /*! \brief Returns \c true. (It is easy to implement the
      * getPointSourceDirection() method for a cylinder.)
      */
-    bool supportsDirectionMethod() const { return true; };
+    bool supportsDirectionMethod() const {
+        return true;
+    };
 
     /*! \brief Sets the direction \a u by picking a random point uniformly
      * on the cylinder surface.
      * \sa EGS_BaseShape::getPointSourceDirection()
      */
     void getPointSourceDirection(const EGS_Vector &Xo,
-            EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
+                                 EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
         EGS_Float eta = rndm->getUniform()*(R+h);
         EGS_Vector x;                               // point on cylinder with respect to midpoint
         EGS_Vector n;                               // normal to cylinder at point x
-        if( eta < R ) {
+        if (eta < R) {
             getPointInCircle(rndm,x.x,x.y);
-            if( 2*eta < R ) { x.z = h/2; n.z = 1; } // top face: normal is up
-            else { x.z = -h/2; n.z = -1; }          // bottom face: normal is down
+            if (2*eta < R) {
+                x.z = h/2;    // top face: normal is up
+                n.z = 1;
+            }
+            else {
+                x.z = -h/2;    // bottom face: normal is down
+                n.z = -1;
+            }
         }
         else {
-            EGS_Float cphi,sphi; rndm->getAzimuth(cphi,sphi);
-            x.x = R*cphi; x.y = R*sphi; x.z = h*(rndm->getUniform()-0.5);
-            n.x = x.x; n.y = x.y;                   // side face: normal is (x,y)
+            EGS_Float cphi,sphi;
+            rndm->getAzimuth(cphi,sphi);
+            x.x = R*cphi;
+            x.y = R*sphi;
+            x.z = h*(rndm->getUniform()-0.5);
+            n.x = x.x;
+            n.y = x.y;                   // side face: normal is (x,y)
         }
         u = (x+this->xo) - xo;                      // direction vector from origin to cylinder point
         EGS_Float d2 = u.length2(), d = sqrt(d2);
         u *= (1/d);                                 // normalize direction vectors
         n.normalize();                              // normalize normal
         wt = u*n*area()/d2;
-        if( T ) T->rotate(u);
+        if (T) {
+            T->rotate(u);
+        }
     };
     /*! \brief Returns the cylinder surface area. */
-    EGS_Float area() const { return 2*M_PI*R*(R+h); };
+    EGS_Float area() const {
+        return 2*M_PI*R*(R+h);
+    };
 };
 
 #endif

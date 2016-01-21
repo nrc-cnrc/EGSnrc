@@ -40,38 +40,44 @@
 
 extern "C" {
 
-EGS_EXTENDED_SHAPE_EXPORT EGS_BaseShape* createShape(EGS_Input *input,
-        EGS_ObjectFactory *f) {
-    if( !input ) {
-        egsWarning("createShape(extended shape): null input?\n"); return 0;
-    }
-    vector<EGS_Float> h;
-    int err = input->getInput("extension",h);
-    if( err || h.size() != 2 ) {
-        egsWarning("createShape(extended shape): wrong/missing "
-                "'extension' input\n"); return 0;
-    }
-    EGS_Input *ishape = input->takeInputItem("shape",false);
-    EGS_BaseShape *shape;
-    if( ishape ) {
-        shape = EGS_BaseShape::createShape(ishape); delete ishape;
-    }
-    if( !shape ) {
-        string shape_name; int err = input->getInput("shape name",shape_name);
-        if( err ) {
-            egsWarning("createShape(extended shape): no inline shape definition"
-                  " and no 'shape name' keyword\n"); return 0;
-        }
-        shape = EGS_BaseShape::getShape(shape_name);
-        if( !shape ) {
-            egsWarning("createShape(extended shape): no shape named %s "
-                    "exists\n",shape_name.c_str());
+    EGS_EXTENDED_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
+            EGS_ObjectFactory *f) {
+        if (!input) {
+            egsWarning("createShape(extended shape): null input?\n");
             return 0;
         }
+        vector<EGS_Float> h;
+        int err = input->getInput("extension",h);
+        if (err || h.size() != 2) {
+            egsWarning("createShape(extended shape): wrong/missing "
+                       "'extension' input\n");
+            return 0;
+        }
+        EGS_Input *ishape = input->takeInputItem("shape",false);
+        EGS_BaseShape *shape;
+        if (ishape) {
+            shape = EGS_BaseShape::createShape(ishape);
+            delete ishape;
+        }
+        if (!shape) {
+            string shape_name;
+            int err = input->getInput("shape name",shape_name);
+            if (err) {
+                egsWarning("createShape(extended shape): no inline shape definition"
+                           " and no 'shape name' keyword\n");
+                return 0;
+            }
+            shape = EGS_BaseShape::getShape(shape_name);
+            if (!shape) {
+                egsWarning("createShape(extended shape): no shape named %s "
+                           "exists\n",shape_name.c_str());
+                return 0;
+            }
+        }
+        EGS_ExtendedShape *s = new EGS_ExtendedShape(shape,h[0],h[1],"",f);
+        s->setName(input);
+        s->setTransformation(input);
+        return s;
     }
-    EGS_ExtendedShape *s = new EGS_ExtendedShape(shape,h[0],h[1],"",f);
-    s->setName(input); s->setTransformation(input);
-    return s;
-}
 
 }

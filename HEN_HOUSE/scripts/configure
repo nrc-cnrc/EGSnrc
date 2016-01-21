@@ -653,8 +653,6 @@ Please report this problem, including
   - Operating system (e.g., the output from 'Checking system type' above)
   - Compiler name and version
   - Compilation flags
-in your e-mail. You should also attach the file 'configure.log' in the
-HEN_HOUSE/log directory.
 
 EOF
     exit 1
@@ -2614,11 +2612,11 @@ egs_config="$HEN_HOUSE/specs/$egs_config"
 
 # move configuration log to log directory
 if $as_file $my_dir/configure.log && $as_directory $HEN_HOUSE/log; then
-    mv $my_dir/configure.log $HEN_HOUSE/log/
+    mv $my_dir/configure.log $HEN_HOUSE/log/configure-$conf_name.log
     echo >&2
     printf $format "EGSnrc system configuration log saved in:" >&2
     echo >&2
-    echo "$HEN_HOUSE/log/configure.log" >&2
+    echo "$HEN_HOUSE/log/configure-$conf_name.log" >&2
 fi
 
 cd $my_dir

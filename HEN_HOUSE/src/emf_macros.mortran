@@ -23,8 +23,10 @@
 "                                                                             "
 "  Author:          Alex Bielajew, 1987                                       "
 "                                                                             "
-"  Contributors:    Amir Keyvanloo                                            "
+"  Contributors:    Iwan Kawrakow                                             "
+"                   Amir Keyvanloo                                            "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Blake Walters                                             "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -85,7 +87,7 @@ APPEND {;
             ufx,ufy,ufz,
             bdotub,bsqrd,
             ufxpar,ufypar,ufzpar,
-            ufxprp,ufyprp,ufzprp;
+            ufxprp,ufyprp,ufzprp,ustepold;
 } TO {$DEFINE-LOCAL-VARIABLES-ELECTR;};
 
 
@@ -285,10 +287,28 @@ REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 "THIS MACRO IS USED TO SET THE ANGLES AND PATHLENGTH CORRECTION IN VACUUM     "
 REPLACE {$VACUUM-TRANSPORT-EM-FIELD;} WITH {;
 IF(MEDIUM.EQ.0)[
-$SET-TVSTEP-EM-FIELD;
+"$SET-TVSTEP-EM-FIELD;--this is for higher order corrections"
+"do first order corrections for now--BW"
+IF(ExIN~=0.0 | EyIN~=0.0 | EzIN~=0.0 | BxIN~=0.0 | ByIN~=0.0 | BzIN~=0)[
+USTEPOLD=USTEP;
+IF(USTEP>smaxir(irl)) USTEP=smaxir(irl);
+TUSTEP=USTEP;
+$SET-TUSTEP-EM-FIELD;
+TVSTEP=TUSTEP;
+VSTEP=TVSTEP;
+USTEP=VSTEP;
+IF(USTEP<USTEPOLD) irnew=irl;
 DE=0.0;
 $ADD-WORK-EM-FIELD;
-PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;]
+PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;
+"done first order corrections"
+]
+ELSE[
+BPERP2=0.0;
+DPERP2=0.0;
+"so we do not change direction cosines to nonsense"
+]
+]
 }
 ;
 "                                                                             "
@@ -400,10 +420,10 @@ REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;
 "***********************************************"
 REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
 "fixed e-field normalization below--factor of 10^6 must be in denominator!--BW"
-fbtemp=-IQ(NP)/(RM*10**6);
+fbtemp=  1.0/(RM*10**6);
 {P1}X0=ExIN*fbtemp;{P1}Y0=EyIN*fbtemp;{P1}Z0=EzIN*fbtemp;
-fbtemp=3.0/0.511;
-{P2}X0=BxIN*fbtemp;{P2}Y0=ByIN*fbtemp;{P2}Z0=BzIN*fbtemp;
+fbtemp=3.0/RM;
+{P2}X0=Bx*fbtemp;{P2}Y0=By*fbtemp;{P2}Z0=Bz*fbtemp;
 }
 ;
 "REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;}"

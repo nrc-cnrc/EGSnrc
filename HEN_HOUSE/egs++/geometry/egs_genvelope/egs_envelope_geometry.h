@@ -40,22 +40,22 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_ENVELOPEG_DLL
-#define EGS_ENVELOPEG_EXPORT __declspec(dllexport)
-#else
-#define EGS_ENVELOPEG_EXPORT __declspec(dllimport)
-#endif
-#define EGS_ENVELOPEG_LOCAL
+    #ifdef BUILD_ENVELOPEG_DLL
+        #define EGS_ENVELOPEG_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_ENVELOPEG_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_ENVELOPEG_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_ENVELOPEG_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_ENVELOPEG_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_ENVELOPEG_EXPORT
-#define EGS_ENVELOPEG_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_ENVELOPEG_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_ENVELOPEG_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_ENVELOPEG_EXPORT
+        #define EGS_ENVELOPEG_LOCAL
+    #endif
 
 #endif
 
@@ -180,302 +180,378 @@ class EGS_ENVELOPEG_EXPORT EGS_EnvelopeGeometry : public EGS_BaseGeometry {
 
 public:
 
-      EGS_EnvelopeGeometry(EGS_BaseGeometry *G,
-              const vector<EGS_BaseGeometry *> &geoms, const string &Name = "",
-              bool newindexing=false);
+    EGS_EnvelopeGeometry(EGS_BaseGeometry *G,
+                         const vector<EGS_BaseGeometry *> &geoms, const string &Name = "",
+                         bool newindexing=false);
 
-      ~EGS_EnvelopeGeometry();
+    ~EGS_EnvelopeGeometry();
 
-      bool isRealRegion(int ireg) const {
-          if( ireg < 0 || ireg >= nreg ) return false;
-          if( ireg < nbase ) return g->isRealRegion(ireg);
-          int jg, ilocal;
-          if( new_indexing ) {
-              jg = reg_to_inscr[ireg-nbase]; ilocal = ireg - local_start[jg];
-          }
-          else {
-              jg = (ireg - nbase)/nmax; ilocal = ireg - nbase - jg*nmax;
-          }
-          return geometries[jg]->isRealRegion(ilocal);
-      };
+    bool isRealRegion(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return false;
+        }
+        if (ireg < nbase) {
+            return g->isRealRegion(ireg);
+        }
+        int jg, ilocal;
+        if (new_indexing) {
+            jg = reg_to_inscr[ireg-nbase];
+            ilocal = ireg - local_start[jg];
+        }
+        else {
+            jg = (ireg - nbase)/nmax;
+            ilocal = ireg - nbase - jg*nmax;
+        }
+        return geometries[jg]->isRealRegion(ilocal);
+    };
 
-      bool isInside(const EGS_Vector &x) {
-          return g->isInside(x);
-      };
+    bool isInside(const EGS_Vector &x) {
+        return g->isInside(x);
+    };
 
-      int isWhere(const EGS_Vector &x) {
-          int ireg = g->isWhere(x);
-          if( ireg < 0 ) return ireg;
-          for(int j=0; j<n_in; j++) {
-              int i = geometries[j]->isWhere(x);
-              if( i >= 0 ) return new_indexing ? local_start[j] + i :
-                                                 nbase + nmax*j + i;
-          }
-          return ireg;
-      };
+    int isWhere(const EGS_Vector &x) {
+        int ireg = g->isWhere(x);
+        if (ireg < 0) {
+            return ireg;
+        }
+        for (int j=0; j<n_in; j++) {
+            int i = geometries[j]->isWhere(x);
+            if (i >= 0) return new_indexing ? local_start[j] + i :
+                                   nbase + nmax*j + i;
+        }
+        return ireg;
+    };
 
-      int inside(const EGS_Vector &x) { return isWhere(x); };
+    int inside(const EGS_Vector &x) {
+        return isWhere(x);
+    };
 
-      int medium(int ireg) const {
-          if( ireg < nbase ) return g->medium(ireg);
-          int jg, ilocal;
-          if( new_indexing ) {
-              jg = reg_to_inscr[ireg-nbase]; ilocal = ireg - local_start[jg];
-          }
-          else {
-              jg = (ireg - nbase)/nmax; ilocal = ireg - nbase - jg*nmax;
-          }
-          return geometries[jg]->medium(ilocal);
-      };
+    int medium(int ireg) const {
+        if (ireg < nbase) {
+            return g->medium(ireg);
+        }
+        int jg, ilocal;
+        if (new_indexing) {
+            jg = reg_to_inscr[ireg-nbase];
+            ilocal = ireg - local_start[jg];
+        }
+        else {
+            jg = (ireg - nbase)/nmax;
+            ilocal = ireg - nbase - jg*nmax;
+        }
+        return geometries[jg]->medium(ilocal);
+    };
 
-      int computeIntersections(int ireg, int n, const EGS_Vector &X,
-              const EGS_Vector &u, EGS_GeometryIntersections *isections) {
-          if( n < 1 ) return -1;
-          int ifirst = 0; EGS_Float t, ttot = 0; EGS_Vector x(X); int imed;
-          if( ireg < 0 ) {
-              t = 1e30; ireg = howfar(ireg,x,u,t,&imed);
-              if( ireg < 0 ) return 0;
-              isections[0].t = t; isections[0].rhof = 1;
-              isections[0].ireg = -1; isections[0].imed = -1;
-              ttot = t; ++ifirst; x += u*t;
-          }
-          else imed = medium(ireg);
+    int computeIntersections(int ireg, int n, const EGS_Vector &X,
+                             const EGS_Vector &u, EGS_GeometryIntersections *isections) {
+        if (n < 1) {
+            return -1;
+        }
+        int ifirst = 0;
+        EGS_Float t, ttot = 0;
+        EGS_Vector x(X);
+        int imed;
+        if (ireg < 0) {
+            t = 1e30;
+            ireg = howfar(ireg,x,u,t,&imed);
+            if (ireg < 0) {
+                return 0;
+            }
+            isections[0].t = t;
+            isections[0].rhof = 1;
+            isections[0].ireg = -1;
+            isections[0].imed = -1;
+            ttot = t;
+            ++ifirst;
+            x += u*t;
+        }
+        else {
+            imed = medium(ireg);
+        }
 
 
-          int j = ifirst; int ij = -1, ig;
-          while(1) {
-              if( ireg >= nbase ) {
-                  if( new_indexing ) {
-                      ig = reg_to_inscr[ireg-nbase];
-                      ij = ireg - local_start[ig];
-                  }
-                  else {
-                      ig = (ireg - nbase)/nmax; ij = ireg - nbase - ig*nmax;
-                  }
-              }
-              isections[j].imed = imed; isections[j].ireg = ireg;
-              isections[j].rhof = getRelativeRho(ireg);
-              if( ireg < nbase ) {// in one of the regions of the base geometry
-                  t = 1e30;
-                  int ibase = g->howfar(ireg,x,u,t,&imed);
-                  ij = -1, ig;
-                  for(int i=0; i<n_in; i++) {
-                      int ireg_i = geometries[i]->howfar(-1,x,u,t,&imed);
-                      if( ireg_i >= 0 ) {
-                          ij = ireg_i; ig = i;
-                      }
-                  }
-                  ttot += t; isections[j++].t = ttot;
-                  if( ij < 0 ) ireg = ibase;
-                  else ireg = new_indexing ? local_start[ig] + ij :
-                                             nbase + ig*nmax + ij;
-                  if( ireg < 0 ) return j;
-                  if( j >= n ) return -1;
-                  x += u*t;
-              }
-              else {
-                  int iadd = new_indexing ? local_start[ig] : nbase + ig*nmax;
-                  int nsec = geometries[ig]->computeIntersections(ij,n-j,
-                          x,u,&isections[j]);
-                  int nm = nsec >= 0 ? nsec+j : n;
-                  for(int i=j; i<nm; i++) {
-                      isections[i].ireg += iadd;
-                      isections[i].t += ttot;
-                  }
-                  if( nsec < 0 ) return nsec;
-                  j += nsec;
-                  if( j >= n ) return -1;
-                  t = isections[j-1].t - ttot;
-                  x += u*t; ttot = isections[j-1].t;
-                  ireg = g->isWhere(x);
-                  if( ireg < 0 ) return j;
-                  imed = g->medium(ireg);
-              }
-          }
-          return -1;
-      }
+        int j = ifirst;
+        int ij = -1, ig;
+        while (1) {
+            if (ireg >= nbase) {
+                if (new_indexing) {
+                    ig = reg_to_inscr[ireg-nbase];
+                    ij = ireg - local_start[ig];
+                }
+                else {
+                    ig = (ireg - nbase)/nmax;
+                    ij = ireg - nbase - ig*nmax;
+                }
+            }
+            isections[j].imed = imed;
+            isections[j].ireg = ireg;
+            isections[j].rhof = getRelativeRho(ireg);
+            if (ireg < nbase) { // in one of the regions of the base geometry
+                t = 1e30;
+                int ibase = g->howfar(ireg,x,u,t,&imed);
+                ij = -1, ig;
+                for (int i=0; i<n_in; i++) {
+                    int ireg_i = geometries[i]->howfar(-1,x,u,t,&imed);
+                    if (ireg_i >= 0) {
+                        ij = ireg_i;
+                        ig = i;
+                    }
+                }
+                ttot += t;
+                isections[j++].t = ttot;
+                if (ij < 0) {
+                    ireg = ibase;
+                }
+                else ireg = new_indexing ? local_start[ig] + ij :
+                                nbase + ig*nmax + ij;
+                if (ireg < 0) {
+                    return j;
+                }
+                if (j >= n) {
+                    return -1;
+                }
+                x += u*t;
+            }
+            else {
+                int iadd = new_indexing ? local_start[ig] : nbase + ig*nmax;
+                int nsec = geometries[ig]->computeIntersections(ij,n-j,
+                           x,u,&isections[j]);
+                int nm = nsec >= 0 ? nsec+j : n;
+                for (int i=j; i<nm; i++) {
+                    isections[i].ireg += iadd;
+                    isections[i].t += ttot;
+                }
+                if (nsec < 0) {
+                    return nsec;
+                }
+                j += nsec;
+                if (j >= n) {
+                    return -1;
+                }
+                t = isections[j-1].t - ttot;
+                x += u*t;
+                ttot = isections[j-1].t;
+                ireg = g->isWhere(x);
+                if (ireg < 0) {
+                    return j;
+                }
+                imed = g->medium(ireg);
+            }
+        }
+        return -1;
+    }
 
-      EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
-                      const EGS_Vector &u) {
-          if( ireg < 0 ) return 0;
-          EGS_Float d;
-          if( ireg < nbase ) d = g->howfarToOutside(ireg,x,u);
-          else if( g->regions() == 1 ) d = g->howfarToOutside(0,x,u);
-          else {
-              int ir = g->isWhere(x);
-              d = g->howfarToOutside(ir,x,u);
-          }
-          return d;
-      };
+    EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
+                              const EGS_Vector &u) {
+        if (ireg < 0) {
+            return 0;
+        }
+        EGS_Float d;
+        if (ireg < nbase) {
+            d = g->howfarToOutside(ireg,x,u);
+        }
+        else if (g->regions() == 1) {
+            d = g->howfarToOutside(0,x,u);
+        }
+        else {
+            int ir = g->isWhere(x);
+            d = g->howfarToOutside(ir,x,u);
+        }
+        return d;
+    };
 
-      int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-                 EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
-          if( ireg >= 0 ) {
-              // inside.
-              if( ireg < nbase ) {
-                  // in one of the regions of the base geometry
-                  // check if we hit a boundary in the base geometry.
-                  // if we do, newmed and normal get set accordingly.
-                  int ibase = g->howfar(ireg,x,u,t,newmed,normal);
-                  int ij = -1, jg;
-                  // check if we will enter any of the inscribed geometries
-                  // before entering a new region in the base geometry.
-                  for(int j=0; j<n_in; j++) {
-                      int ireg_j =
-                          geometries[j]->howfar(-1,x,u,t,newmed,normal);
-                      if( ireg_j >= 0 ) {
-                          // we do. remember the inscribed geometry index
-                          // and local region
-                          ij = ireg_j; jg = j;
-                      }
-                  }
-                  if( ij < 0 ) return ibase;
-                    // ij<0 implies that we have not hit any of the
-                    // inscribed geometries => return the base geometry index.
-                    // ij>=0 implies that we entered inscribed geometry
-                    // jg in its local region ij.
-                  return new_indexing ? local_start[jg] + ij :
-                                        nbase + jg*nmax + ij;
-              }
-              // if here, we are in an inscribed geometry.
-              // calculate its index (jg) and its local region (ilocal).
-              int jg, ilocal;
-              if( new_indexing ) {
-                  jg = reg_to_inscr[ireg-nbase]; ilocal = ireg-local_start[jg];
-              }
-              else {
-                  jg = (ireg - nbase)/nmax; ilocal = ireg - nbase - jg*nmax;
-              }
-              // and then check if we will hit a boundary in this geometry.
-              int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-              if( inew >= 0 ) return new_indexing ? local_start[jg] + inew :
-                                                    nbase + jg*nmax + inew;
-                // inew >= 0 implies that we either stay in the same
-                // region (inew=ilocal) or we entered a new region
-                // (inew!=ilocal), which is still inside the inscribed geometry
-                // inew<0 implies that we have exited the inscribed geometry
-                // => check to see in which base geometry region we are.
-              inew = g->isWhere(x+u*t);
-              if( inew >= 0 && newmed ) *newmed = g->medium(inew);
-              return inew;
-          }
-          // if here, we are outside the base geometry.
-          // check to see if we will enter.
-          int ienter = g->howfar(ireg,x,u,t,newmed,normal);
-          if( ienter >= 0 ) {
-              // yes, we do. see if we are already inside of one of the
-              // inscribed geometries.
-              for(int j=0; j<n_in; j++) {
-                  int i = geometries[j]->isWhere(x+u*t);
-                  if( i >= 0 ) {
-                      // yes, we are.
-                      if( newmed ) *newmed = geometries[j]->medium(i);
-                      return new_indexing ? local_start[j] + i :
-                                            nbase + nmax*j + i;
-                  }
-              }
-          }
-          return ienter;
-      };
+    int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+               EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+        if (ireg >= 0) {
+            // inside.
+            if (ireg < nbase) {
+                // in one of the regions of the base geometry
+                // check if we hit a boundary in the base geometry.
+                // if we do, newmed and normal get set accordingly.
+                int ibase = g->howfar(ireg,x,u,t,newmed,normal);
+                int ij = -1, jg;
+                // check if we will enter any of the inscribed geometries
+                // before entering a new region in the base geometry.
+                for (int j=0; j<n_in; j++) {
+                    int ireg_j =
+                        geometries[j]->howfar(-1,x,u,t,newmed,normal);
+                    if (ireg_j >= 0) {
+                        // we do. remember the inscribed geometry index
+                        // and local region
+                        ij = ireg_j;
+                        jg = j;
+                    }
+                }
+                if (ij < 0) {
+                    return ibase;
+                }
+                // ij<0 implies that we have not hit any of the
+                // inscribed geometries => return the base geometry index.
+                // ij>=0 implies that we entered inscribed geometry
+                // jg in its local region ij.
+                return new_indexing ? local_start[jg] + ij :
+                       nbase + jg*nmax + ij;
+            }
+            // if here, we are in an inscribed geometry.
+            // calculate its index (jg) and its local region (ilocal).
+            int jg, ilocal;
+            if (new_indexing) {
+                jg = reg_to_inscr[ireg-nbase];
+                ilocal = ireg-local_start[jg];
+            }
+            else {
+                jg = (ireg - nbase)/nmax;
+                ilocal = ireg - nbase - jg*nmax;
+            }
+            // and then check if we will hit a boundary in this geometry.
+            int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
+            if (inew >= 0) return new_indexing ? local_start[jg] + inew :
+                                      nbase + jg*nmax + inew;
+            // inew >= 0 implies that we either stay in the same
+            // region (inew=ilocal) or we entered a new region
+            // (inew!=ilocal), which is still inside the inscribed geometry
+            // inew<0 implies that we have exited the inscribed geometry
+            // => check to see in which base geometry region we are.
+            inew = g->isWhere(x+u*t);
+            if (inew >= 0 && newmed) {
+                *newmed = g->medium(inew);
+            }
+            return inew;
+        }
+        // if here, we are outside the base geometry.
+        // check to see if we will enter.
+        int ienter = g->howfar(ireg,x,u,t,newmed,normal);
+        if (ienter >= 0) {
+            // yes, we do. see if we are already inside of one of the
+            // inscribed geometries.
+            for (int j=0; j<n_in; j++) {
+                int i = geometries[j]->isWhere(x+u*t);
+                if (i >= 0) {
+                    // yes, we are.
+                    if (newmed) {
+                        *newmed = geometries[j]->medium(i);
+                    }
+                    return new_indexing ? local_start[j] + i :
+                           nbase + nmax*j + i;
+                }
+            }
+        }
+        return ienter;
+    };
 
-      EGS_Float hownear(int ireg, const EGS_Vector &x) {
-          if( ireg >= 0 ) {
-              EGS_Float tmin;
-              if( ireg < nbase ) { // in one of the regions of the base geom.
-                  tmin = g->hownear(ireg,x);
-                  for(int j=0; j<n_in; j++) {
-                      EGS_Float tj = geometries[j]->hownear(-1,x);
-                      if( tj < tmin ) {
-                          tmin = tj;
-                          if( tmin <= 0 ) return tmin;
-                      }
-                  }
-                  return tmin;
-              }
-              int jg, ilocal;
-              if( new_indexing ) {
-                  jg = reg_to_inscr[ireg-nbase]; ilocal = ireg-local_start[jg];
-              }
-              else {
-                  jg = (ireg - nbase)/nmax; ilocal = ireg - nbase - jg*nmax;
-              }
-              return geometries[jg]->hownear(ilocal,x);
-          }
-          return g->hownear(ireg,x);
-      };
+    EGS_Float hownear(int ireg, const EGS_Vector &x) {
+        if (ireg >= 0) {
+            EGS_Float tmin;
+            if (ireg < nbase) {  // in one of the regions of the base geom.
+                tmin = g->hownear(ireg,x);
+                for (int j=0; j<n_in; j++) {
+                    EGS_Float tj = geometries[j]->hownear(-1,x);
+                    if (tj < tmin) {
+                        tmin = tj;
+                        if (tmin <= 0) {
+                            return tmin;
+                        }
+                    }
+                }
+                return tmin;
+            }
+            int jg, ilocal;
+            if (new_indexing) {
+                jg = reg_to_inscr[ireg-nbase];
+                ilocal = ireg-local_start[jg];
+            }
+            else {
+                jg = (ireg - nbase)/nmax;
+                ilocal = ireg - nbase - jg*nmax;
+            }
+            return geometries[jg]->hownear(ilocal,x);
+        }
+        return g->hownear(ireg,x);
+    };
 
-      int getMaxStep() const {
-          int nstep = g->getMaxStep();
-          for(int j=0; j<n_in; ++j) nstep += geometries[j]->getMaxStep();
-          return nstep+n_in;
-      };
+    int getMaxStep() const {
+        int nstep = g->getMaxStep();
+        for (int j=0; j<n_in; ++j) {
+            nstep += geometries[j]->getMaxStep();
+        }
+        return nstep+n_in;
+    };
 
-      bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
-          if( ireg >= 0 && ireg < nreg ) {
-              if( ireg < nbase ) return g->hasBooleanProperty(ireg,prop);
-              int jg = (ireg - nbase)/nmax; int ilocal = ireg - nbase - jg*nmax;
-              return geometries[jg]->hasBooleanProperty(ilocal,prop);
-          }
-          return false;
-      };
-      void setBooleanProperty(EGS_BPType) {
-          setPropertyError("setBooleanProperty()");
-      };
-      void addBooleanProperty(int) {
-          setPropertyError("addBooleanProperty()");
-      };
-      void setBooleanProperty(EGS_BPType,int,int,int step=1) {
-          setPropertyError("setBooleanProperty()");
-      };
-      void addBooleanProperty(int,int,int,int step=1) {
-          setPropertyError("addBooleanProperty()");
-      };
+    bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
+        if (ireg >= 0 && ireg < nreg) {
+            if (ireg < nbase) {
+                return g->hasBooleanProperty(ireg,prop);
+            }
+            int jg = (ireg - nbase)/nmax;
+            int ilocal = ireg - nbase - jg*nmax;
+            return geometries[jg]->hasBooleanProperty(ilocal,prop);
+        }
+        return false;
+    };
+    void setBooleanProperty(EGS_BPType) {
+        setPropertyError("setBooleanProperty()");
+    };
+    void addBooleanProperty(int) {
+        setPropertyError("addBooleanProperty()");
+    };
+    void setBooleanProperty(EGS_BPType,int,int,int step=1) {
+        setPropertyError("setBooleanProperty()");
+    };
+    void addBooleanProperty(int,int,int,int step=1) {
+        setPropertyError("addBooleanProperty()");
+    };
 
-      const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
-      void printInfo() const;
+    void printInfo() const;
 
-      void setRelativeRho(int start, int end, EGS_Float rho);
-      void setRelativeRho(EGS_Input *);
-      EGS_Float getRelativeRho(int ireg) const {
-          if( ireg < 0 || ireg >= nreg ) return 1;
-          if( ireg < nbase ) return g->getRelativeRho(ireg);
-          int jg = (ireg - nbase)/nmax;
-          return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
-      };
+    void setRelativeRho(int start, int end, EGS_Float rho);
+    void setRelativeRho(EGS_Input *);
+    EGS_Float getRelativeRho(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        if (ireg < nbase) {
+            return g->getRelativeRho(ireg);
+        }
+        int jg = (ireg - nbase)/nmax;
+        return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
+    };
 
-      virtual void getLabelRegions (const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 
 protected:
 
-      EGS_BaseGeometry *g;           //!< The envelope geometry
-      EGS_BaseGeometry **geometries; //!< The inscribed geometries
-      int              n_in;         //!< Number of inscribed geometries
-      int              nbase,   //!< Number of regions in the base geometry
-                       nmax;    /*!< Max. number of regions in any inscribed
+    EGS_BaseGeometry *g;           //!< The envelope geometry
+    EGS_BaseGeometry **geometries; //!< The inscribed geometries
+    int              n_in;         //!< Number of inscribed geometries
+    int              nbase,   //!< Number of regions in the base geometry
+                     nmax;    /*!< Max. number of regions in any inscribed
                                      geometry */
-      static string    type;    //!< Geometry type
+    static string    type;    //!< Geometry type
 
-      bool new_indexing;        //!< If true, use new indexing style
-      int* reg_to_inscr;        //!< Region to inscribed geometry conversion
-      int* local_start;         //!< First region for each inscribed geometry
+    bool new_indexing;        //!< If true, use new indexing style
+    int *reg_to_inscr;        //!< Region to inscribed geometry conversion
+    int *local_start;         //!< First region for each inscribed geometry
 
-      /*! \brief Don't set media for an envelope geometry
+    /*! \brief Don't set media for an envelope geometry
 
-      This function is re-implemented to warn the user to not set media
-      in the envelope geometry. Instead, media should be set for the envelope
-      and in the inscribed geometries.
-      */
-      void setMedia(EGS_Input *,int,const int *);
+    This function is re-implemented to warn the user to not set media
+    in the envelope geometry. Instead, media should be set for the envelope
+    and in the inscribed geometries.
+    */
+    void setMedia(EGS_Input *,int,const int *);
 
 private:
 
-      void setPropertyError(const char *funcname) {
-          egsFatal("EGS_EnvelopeGeometry::%s: don't use this method\n  Define "
-                  "properties in the constituent geometries instead\n",
-                  funcname);
-      };
+    void setPropertyError(const char *funcname) {
+        egsFatal("EGS_EnvelopeGeometry::%s: don't use this method\n  Define "
+                 "properties in the constituent geometries instead\n",
+                 funcname);
+    };
 
 };
 
@@ -494,295 +570,376 @@ class EGS_ENVELOPEG_EXPORT EGS_FastEnvelope : public EGS_BaseGeometry {
 
 public:
 
-      EGS_FastEnvelope(EGS_BaseGeometry *G,
-              const vector<EnvelopeAux *> &fgeoms, const string &Name = "",
-              int newindexing=false);
+    EGS_FastEnvelope(EGS_BaseGeometry *G,
+                     const vector<EnvelopeAux *> &fgeoms, const string &Name = "",
+                     int newindexing=false);
 
-      ~EGS_FastEnvelope();
+    ~EGS_FastEnvelope();
 
-      bool isRealRegion(int ireg) const {
-          if( ireg < 0 || ireg >= nreg ) return false;
-          if( ireg < nbase ) return g->isRealRegion(ireg);
-          int jg, ilocal;
-          if( new_indexing ) {
-              jg = reg_to_inscr[ireg-nbase]; ilocal = ireg - local_start[jg];
-          }
-          else {
-              jg = (ireg - nbase)/nmax; ilocal = ireg - nbase - jg*nmax;
-          }
-          return geometries[jg]->isRealRegion(ilocal);
-      };
+    bool isRealRegion(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return false;
+        }
+        if (ireg < nbase) {
+            return g->isRealRegion(ireg);
+        }
+        int jg, ilocal;
+        if (new_indexing) {
+            jg = reg_to_inscr[ireg-nbase];
+            ilocal = ireg - local_start[jg];
+        }
+        else {
+            jg = (ireg - nbase)/nmax;
+            ilocal = ireg - nbase - jg*nmax;
+        }
+        return geometries[jg]->isRealRegion(ilocal);
+    };
 
-      bool isInside(const EGS_Vector &x) {
-          return g->isInside(x);
-      };
+    bool isInside(const EGS_Vector &x) {
+        return g->isInside(x);
+    };
 
-      int isWhere(const EGS_Vector &x) {
-          int ireg = g->isWhere(x);
-          if( ireg < 0 || n_start[ireg] < 0 ) return ireg;
-          for(int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
-              int j = glist[jj];
-              int i = geometries[j]->isWhere(x);
-              if( i >= 0 ) return nbase + nmax*j + i;
-          }
-          return ireg;
-      };
+    int isWhere(const EGS_Vector &x) {
+        int ireg = g->isWhere(x);
+        if (ireg < 0 || n_start[ireg] < 0) {
+            return ireg;
+        }
+        for (int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
+            int j = glist[jj];
+            int i = geometries[j]->isWhere(x);
+            if (i >= 0) {
+                return nbase + nmax*j + i;
+            }
+        }
+        return ireg;
+    };
 
-      int inside(const EGS_Vector &x) { return isWhere(x); };
+    int inside(const EGS_Vector &x) {
+        return isWhere(x);
+    };
 
-      int medium(int ireg) const {
-          if( ireg < nbase ) return g->medium(ireg);
-          int jg = (ireg - nbase)/nmax; int ilocal = ireg - nbase - jg*nmax;
-          return geometries[jg]->medium(ilocal);
-      };
+    int medium(int ireg) const {
+        if (ireg < nbase) {
+            return g->medium(ireg);
+        }
+        int jg = (ireg - nbase)/nmax;
+        int ilocal = ireg - nbase - jg*nmax;
+        return geometries[jg]->medium(ilocal);
+    };
 
-      int computeIntersections(int ireg, int n, const EGS_Vector &X,
-              const EGS_Vector &u, EGS_GeometryIntersections *isections) {
-          if( n < 1 ) return -1;
-          int ifirst = 0; EGS_Float t, ttot = 0; EGS_Vector x(X); int imed;
-          //egsInformation("computeIntersections: ireg=%d x=(%g,%g,%g) "
-          //     "u=(%g,%g,%g)\n",ireg,x.x,x.y,x.z,u.x,u.y,u.z);
-          if( ireg < 0 ) {
-              t = 1e30; ireg = howfar(ireg,x,u,t,&imed);
-              if( ireg < 0 ) return 0;
-              isections[0].t = t; isections[0].rhof = 1;
-              isections[0].ireg = -1; isections[0].imed = -1;
-              ttot = t; ++ifirst; x += u*t;
-              //egsInformation("entered after t=%g in ireg=%d at x=(%g,%g,%g)\n",
-              //        t,ireg,x.x,x.y,x.z);
-          }
-          else imed = medium(ireg);
+    int computeIntersections(int ireg, int n, const EGS_Vector &X,
+                             const EGS_Vector &u, EGS_GeometryIntersections *isections) {
+        if (n < 1) {
+            return -1;
+        }
+        int ifirst = 0;
+        EGS_Float t, ttot = 0;
+        EGS_Vector x(X);
+        int imed;
+        //egsInformation("computeIntersections: ireg=%d x=(%g,%g,%g) "
+        //     "u=(%g,%g,%g)\n",ireg,x.x,x.y,x.z,u.x,u.y,u.z);
+        if (ireg < 0) {
+            t = 1e30;
+            ireg = howfar(ireg,x,u,t,&imed);
+            if (ireg < 0) {
+                return 0;
+            }
+            isections[0].t = t;
+            isections[0].rhof = 1;
+            isections[0].ireg = -1;
+            isections[0].imed = -1;
+            ttot = t;
+            ++ifirst;
+            x += u*t;
+            //egsInformation("entered after t=%g in ireg=%d at x=(%g,%g,%g)\n",
+            //        t,ireg,x.x,x.y,x.z);
+        }
+        else {
+            imed = medium(ireg);
+        }
 
 
-          int j = ifirst; int ij = -1, ig;
-          while(1) {
-              //egsInformation("in loop: j=%d ireg=%d imed=%d x=(%g,%g,%g)\n",
-              //        j,ireg,imed,x.x,x.y,x.z);
-              if( ireg >= nbase ) {
-                  ig = (ireg - nbase)/nmax; ij = ireg - nbase - ig*nmax;
-              }
-              isections[j].imed = imed; isections[j].ireg = ireg;
-              isections[j].rhof = getRelativeRho(ireg);
-              if( ireg < nbase ) {// in one of the regions of the base geometry
-                  t = 1e30;
-                  int ibase = g->howfar(ireg,x,u,t,&imed);
-                  //egsInformation("In base geometry: t=%g inew=%d\n",t,ibase);
-                  ij = -1, ig;
-                  for(int ii=n_start[ireg]; ii<n_start[ireg+1]; ii++) {
-                      int i = glist[ii];
-                      int ireg_i = geometries[i]->howfar(-1,x,u,t,&imed);
-                      if( ireg_i >= 0 ) {
-                          ij = ireg_i; ig = i;
-                      }
-                  }
-                  ttot += t; isections[j++].t = ttot;
-                  //egsInformation("after inscribed loop: t=%g ij=%d ig=%d"
-                  //      " ttot=%g\n",t,ij,ig,ttot);
-                  if( ij < 0 ) ireg = ibase;
-                  else ireg = nbase + ig*nmax + ij;
-                  if( ireg < 0 ) return j;
-                  if( j >= n ) return -1;
-                  x += u*t;
-              }
-              else {
-                  int iadd = nbase + ig*nmax;
-                  int nsec = geometries[ig]->computeIntersections(ij,n-j,
-                          x,u,&isections[j]);
-                  //egsInformation("In inscribed %d: got %d intersections\n",ig,
-                  //        nsec);
-                  int nm = nsec >= 0 ? nsec+j : n;
-                  for(int i=j; i<nm; i++) {
-                      isections[i].ireg += iadd;
-                      isections[i].t += ttot;
-                  }
-                  //egsInformation("last intersection: %g\n",isections[nm-1].t);
-                  if( nsec < 0 ) return nsec;
-                  j += nsec;
-                  if( j >= n ) return -1;
-                  t = isections[j-1].t - ttot;
-                  x += u*t; ttot = isections[j-1].t;
-                  ireg = g->isWhere(x);
-                  //egsInformation("new region: %d\n",ireg);
-                  if( ireg < 0 ) return j;
-                  imed = g->medium(ireg);
-              }
-          }
-          return -1;
-      }
+        int j = ifirst;
+        int ij = -1, ig;
+        while (1) {
+            //egsInformation("in loop: j=%d ireg=%d imed=%d x=(%g,%g,%g)\n",
+            //        j,ireg,imed,x.x,x.y,x.z);
+            if (ireg >= nbase) {
+                ig = (ireg - nbase)/nmax;
+                ij = ireg - nbase - ig*nmax;
+            }
+            isections[j].imed = imed;
+            isections[j].ireg = ireg;
+            isections[j].rhof = getRelativeRho(ireg);
+            if (ireg < nbase) { // in one of the regions of the base geometry
+                t = 1e30;
+                int ibase = g->howfar(ireg,x,u,t,&imed);
+                //egsInformation("In base geometry: t=%g inew=%d\n",t,ibase);
+                ij = -1, ig;
+                for (int ii=n_start[ireg]; ii<n_start[ireg+1]; ii++) {
+                    int i = glist[ii];
+                    int ireg_i = geometries[i]->howfar(-1,x,u,t,&imed);
+                    if (ireg_i >= 0) {
+                        ij = ireg_i;
+                        ig = i;
+                    }
+                }
+                ttot += t;
+                isections[j++].t = ttot;
+                //egsInformation("after inscribed loop: t=%g ij=%d ig=%d"
+                //      " ttot=%g\n",t,ij,ig,ttot);
+                if (ij < 0) {
+                    ireg = ibase;
+                }
+                else {
+                    ireg = nbase + ig*nmax + ij;
+                }
+                if (ireg < 0) {
+                    return j;
+                }
+                if (j >= n) {
+                    return -1;
+                }
+                x += u*t;
+            }
+            else {
+                int iadd = nbase + ig*nmax;
+                int nsec = geometries[ig]->computeIntersections(ij,n-j,
+                           x,u,&isections[j]);
+                //egsInformation("In inscribed %d: got %d intersections\n",ig,
+                //        nsec);
+                int nm = nsec >= 0 ? nsec+j : n;
+                for (int i=j; i<nm; i++) {
+                    isections[i].ireg += iadd;
+                    isections[i].t += ttot;
+                }
+                //egsInformation("last intersection: %g\n",isections[nm-1].t);
+                if (nsec < 0) {
+                    return nsec;
+                }
+                j += nsec;
+                if (j >= n) {
+                    return -1;
+                }
+                t = isections[j-1].t - ttot;
+                x += u*t;
+                ttot = isections[j-1].t;
+                ireg = g->isWhere(x);
+                //egsInformation("new region: %d\n",ireg);
+                if (ireg < 0) {
+                    return j;
+                }
+                imed = g->medium(ireg);
+            }
+        }
+        return -1;
+    }
 
-      EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
-                      const EGS_Vector &u) {
-          if( ireg < 0 ) return 0;
-          EGS_Float d;
-          if( ireg < nbase ) d = g->howfarToOutside(ireg,x,u);
-          else if( g->regions() == 1 ) d = g->howfarToOutside(0,x,u);
-          else {
-              int ir = g->isWhere(x);
-              d = g->howfarToOutside(ir,x,u);
-          }
-          return d;
-      };
+    EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
+                              const EGS_Vector &u) {
+        if (ireg < 0) {
+            return 0;
+        }
+        EGS_Float d;
+        if (ireg < nbase) {
+            d = g->howfarToOutside(ireg,x,u);
+        }
+        else if (g->regions() == 1) {
+            d = g->howfarToOutside(0,x,u);
+        }
+        else {
+            int ir = g->isWhere(x);
+            d = g->howfarToOutside(ir,x,u);
+        }
+        return d;
+    };
 
-      int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
-                 EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
-          if( ireg >= 0 ) {
-              // inside.
-              if( ireg < nbase ) {
-                  // in one of the regions of the base geometry
-                  // check if we hit a boundary in the base geometry.
-                  // if we do, newmed and normal get set accordingly.
-                  int ibase = g->howfar(ireg,x,u,t,newmed,normal);
-                  int ij = -1, jg;
-                  // check if we will enter any of the inscribed geometries
-                  // before entering a new region in the base geometry.
-                  for(int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
-                      int j = glist[jj];
-                      int ireg_j =
-                          geometries[j]->howfar(-1,x,u,t,newmed,normal);
-                      if( ireg_j >= 0 ) {
-                          // we do. remember the inscribed geometry index
-                          // and local region
-                          ij = ireg_j; jg = j;
-                      }
-                  }
-                  if( ij < 0 ) return ibase;
-                    // ij<0 implies that we have not hit any of the
-                    // inscribed geometries => return the base geometry index.
-                    // ij>=0 implies that we entered inscribed geometry
-                    // jg in its local region ij.
-                  return nbase + jg*nmax + ij;
-              }
-              // if here, we are in an inscribed geometry.
-              // calculate its index (jg) and its local region (ilocal).
-              int jg = (ireg - nbase)/nmax; int ilocal = ireg - nbase - jg*nmax;
-              // and then check if we will hit a boundary in this geometry.
-              int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
-              if( inew >= 0 ) return nbase + jg*nmax + inew;
-                // inew >= 0 implies that we either stay in the same
-                // region (inew=ilocal) or we entered a new region
-                // (inew!=ilocal), which is still inside the inscribed geometry
-                // inew<0 implies that we have exited the inscribed geometry
-                // => check to see in which base geometry region we are.
-              inew = g->isWhere(x+u*t);
-              if( inew >= 0 && newmed ) *newmed = g->medium(inew);
-              return inew;
-          }
-          // if here, we are outside the base geometry.
-          // check to see if we will enter.
-          int ienter = g->howfar(ireg,x,u,t,newmed,normal);
-          if( ienter >= 0 ) {
-              // yes, we do. see if we are already inside of one of the
-              // inscribed geometries.
-              //if( n_start[ienter] < 0 ) return ienter;
-              for(int jj=n_start[ienter]; jj<n_start[ienter+1]; jj++) {
-                  int j = glist[jj];
-                  int i = geometries[j]->isWhere(x+u*t);
-                  if( i >= 0 ) {
-                      // yes, we are.
-                      if( newmed ) *newmed = geometries[j]->medium(i);
-                      return nbase + nmax*j + i;
-                  }
-              }
-          }
-          return ienter;
-      };
+    int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
+               EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
+        if (ireg >= 0) {
+            // inside.
+            if (ireg < nbase) {
+                // in one of the regions of the base geometry
+                // check if we hit a boundary in the base geometry.
+                // if we do, newmed and normal get set accordingly.
+                int ibase = g->howfar(ireg,x,u,t,newmed,normal);
+                int ij = -1, jg;
+                // check if we will enter any of the inscribed geometries
+                // before entering a new region in the base geometry.
+                for (int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
+                    int j = glist[jj];
+                    int ireg_j =
+                        geometries[j]->howfar(-1,x,u,t,newmed,normal);
+                    if (ireg_j >= 0) {
+                        // we do. remember the inscribed geometry index
+                        // and local region
+                        ij = ireg_j;
+                        jg = j;
+                    }
+                }
+                if (ij < 0) {
+                    return ibase;
+                }
+                // ij<0 implies that we have not hit any of the
+                // inscribed geometries => return the base geometry index.
+                // ij>=0 implies that we entered inscribed geometry
+                // jg in its local region ij.
+                return nbase + jg*nmax + ij;
+            }
+            // if here, we are in an inscribed geometry.
+            // calculate its index (jg) and its local region (ilocal).
+            int jg = (ireg - nbase)/nmax;
+            int ilocal = ireg - nbase - jg*nmax;
+            // and then check if we will hit a boundary in this geometry.
+            int inew = geometries[jg]->howfar(ilocal,x,u,t,newmed,normal);
+            if (inew >= 0) {
+                return nbase + jg*nmax + inew;
+            }
+            // inew >= 0 implies that we either stay in the same
+            // region (inew=ilocal) or we entered a new region
+            // (inew!=ilocal), which is still inside the inscribed geometry
+            // inew<0 implies that we have exited the inscribed geometry
+            // => check to see in which base geometry region we are.
+            inew = g->isWhere(x+u*t);
+            if (inew >= 0 && newmed) {
+                *newmed = g->medium(inew);
+            }
+            return inew;
+        }
+        // if here, we are outside the base geometry.
+        // check to see if we will enter.
+        int ienter = g->howfar(ireg,x,u,t,newmed,normal);
+        if (ienter >= 0) {
+            // yes, we do. see if we are already inside of one of the
+            // inscribed geometries.
+            //if( n_start[ienter] < 0 ) return ienter;
+            for (int jj=n_start[ienter]; jj<n_start[ienter+1]; jj++) {
+                int j = glist[jj];
+                int i = geometries[j]->isWhere(x+u*t);
+                if (i >= 0) {
+                    // yes, we are.
+                    if (newmed) {
+                        *newmed = geometries[j]->medium(i);
+                    }
+                    return nbase + nmax*j + i;
+                }
+            }
+        }
+        return ienter;
+    };
 
-      EGS_Float hownear(int ireg, const EGS_Vector &x) {
-          if( ireg >= 0 ) {
-              EGS_Float tmin;
-              if( ireg < nbase ) { // in one of the regions of the base geom.
-                  tmin = g->hownear(ireg,x);
-                  if( tmin <= 0 ) return tmin;
-                  for(int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
-                      int j = glist[jj];
-                      EGS_Float tj = geometries[j]->hownear(-1,x);
-                      if( tj < tmin ) {
-                          tmin = tj;
-                          if( tmin <= 0 ) return tmin;
-                      }
-                  }
-                  return tmin;
-              }
-              int jg = (ireg - nbase)/nmax; int ilocal = ireg - nbase - jg*nmax;
-              return geometries[jg]->hownear(ilocal,x);
-          }
-          return g->hownear(ireg,x);
-      };
+    EGS_Float hownear(int ireg, const EGS_Vector &x) {
+        if (ireg >= 0) {
+            EGS_Float tmin;
+            if (ireg < nbase) {  // in one of the regions of the base geom.
+                tmin = g->hownear(ireg,x);
+                if (tmin <= 0) {
+                    return tmin;
+                }
+                for (int jj=n_start[ireg]; jj<n_start[ireg+1]; jj++) {
+                    int j = glist[jj];
+                    EGS_Float tj = geometries[j]->hownear(-1,x);
+                    if (tj < tmin) {
+                        tmin = tj;
+                        if (tmin <= 0) {
+                            return tmin;
+                        }
+                    }
+                }
+                return tmin;
+            }
+            int jg = (ireg - nbase)/nmax;
+            int ilocal = ireg - nbase - jg*nmax;
+            return geometries[jg]->hownear(ilocal,x);
+        }
+        return g->hownear(ireg,x);
+    };
 
-      bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
-          if( ireg >= 0 && ireg < nreg ) {
-              if( ireg < nbase ) return g->hasBooleanProperty(ireg,prop);
-              int jg = (ireg - nbase)/nmax; int ilocal = ireg - nbase - jg*nmax;
-              return geometries[jg]->hasBooleanProperty(ilocal,prop);
-          }
-          return false;
-      };
-      void setBooleanProperty(EGS_BPType) {
-          setPropertyError("setBooleanProperty()");
-      };
-      void addBooleanProperty(int) {
-          setPropertyError("addBooleanProperty()");
-      };
-      void setBooleanProperty(EGS_BPType,int,int,int step=1) {
-          setPropertyError("setBooleanProperty()");
-      };
-      void addBooleanProperty(int,int,int,int step=1) {
-          setPropertyError("addBooleanProperty()");
-      };
+    bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
+        if (ireg >= 0 && ireg < nreg) {
+            if (ireg < nbase) {
+                return g->hasBooleanProperty(ireg,prop);
+            }
+            int jg = (ireg - nbase)/nmax;
+            int ilocal = ireg - nbase - jg*nmax;
+            return geometries[jg]->hasBooleanProperty(ilocal,prop);
+        }
+        return false;
+    };
+    void setBooleanProperty(EGS_BPType) {
+        setPropertyError("setBooleanProperty()");
+    };
+    void addBooleanProperty(int) {
+        setPropertyError("addBooleanProperty()");
+    };
+    void setBooleanProperty(EGS_BPType,int,int,int step=1) {
+        setPropertyError("setBooleanProperty()");
+    };
+    void addBooleanProperty(int,int,int,int step=1) {
+        setPropertyError("addBooleanProperty()");
+    };
 
-      int getMaxStep() const {
-          int nstep = g->getMaxStep();
-          for(int j=0; j<n_in; ++j) nstep += geometries[j]->getMaxStep();
-          return nstep+n_in;
-      };
+    int getMaxStep() const {
+        int nstep = g->getMaxStep();
+        for (int j=0; j<n_in; ++j) {
+            nstep += geometries[j]->getMaxStep();
+        }
+        return nstep+n_in;
+    };
 
-      const string &getType() const { return type; };
+    const string &getType() const {
+        return type;
+    };
 
-      void printInfo() const;
+    void printInfo() const;
 
-      void setRelativeRho(int start, int end, EGS_Float rho);
-      void setRelativeRho(EGS_Input *);
-      EGS_Float getRelativeRho(int ireg) const {
-          if( ireg < 0 || ireg >= nreg ) return 1;
-          if( ireg < nbase ) return g->getRelativeRho(ireg);
-          int jg = (ireg - nbase)/nmax;
-          return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
-      };
+    void setRelativeRho(int start, int end, EGS_Float rho);
+    void setRelativeRho(EGS_Input *);
+    EGS_Float getRelativeRho(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        if (ireg < nbase) {
+            return g->getRelativeRho(ireg);
+        }
+        int jg = (ireg - nbase)/nmax;
+        return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
+    };
 
-      virtual void getLabelRegions (const string &str, vector<int> &regs);
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 
 protected:
 
-      EGS_BaseGeometry *g;           //!< The envelope geometry
-      EGS_BaseGeometry **geometries; //!< The inscribed geometries
-      int              n_in;         //!< Number of inscribed geometries
-      int              nbase,   //!< Number of regions in the base geometry
-                       nmax;    /*!< Max. number of regions in any inscribed
+    EGS_BaseGeometry *g;           //!< The envelope geometry
+    EGS_BaseGeometry **geometries; //!< The inscribed geometries
+    int              n_in;         //!< Number of inscribed geometries
+    int              nbase,   //!< Number of regions in the base geometry
+                     nmax;    /*!< Max. number of regions in any inscribed
                                      geometry */
-      int              *glist;
-      int              *n_start;
-      static string    type;    //!< Geometry type
+    int              *glist;
+    int              *n_start;
+    static string    type;    //!< Geometry type
 
-      bool new_indexing;        //!< If true, use new indexing style
-      int* reg_to_inscr;        //!< Region to inscribed geometry conversion
-      int* local_start;         //!< First region for each inscribed geometry
+    bool new_indexing;        //!< If true, use new indexing style
+    int *reg_to_inscr;        //!< Region to inscribed geometry conversion
+    int *local_start;         //!< First region for each inscribed geometry
 
-      /*! \brief Don't set media for an envelope geometry
+    /*! \brief Don't set media for an envelope geometry
 
-      This function is re-implemented to warn the user to not set media
-      in the envelope geometry. Instead, media should be set for the envelope
-      and in the inscribed geometries.
-      */
-      void setMedia(EGS_Input *,int,const int *);
+    This function is re-implemented to warn the user to not set media
+    in the envelope geometry. Instead, media should be set for the envelope
+    and in the inscribed geometries.
+    */
+    void setMedia(EGS_Input *,int,const int *);
 
 private:
 
-      void setPropertyError(const char *funcname) {
-          egsFatal("EGS_FastEnvelope::%s: don't use this method\n  Define "
-                  "properties in the constituent geometries instead\n",
-                  funcname);
-      };
+    void setPropertyError(const char *funcname) {
+        egsFatal("EGS_FastEnvelope::%s: don't use this method\n  Define "
+                 "properties in the constituent geometries instead\n",
+                 funcname);
+    };
 
 
 };

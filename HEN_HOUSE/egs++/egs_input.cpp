@@ -39,11 +39,11 @@
 #include "egs_functions.h"
 
 #ifdef NO_SSTREAM
-#include <strstream>
-#define S_STREAM std::istrstream
+    #include <strstream>
+    #define S_STREAM std::istrstream
 #else
-#include <sstream>
-#define S_STREAM std::istringstream
+    #include <sstream>
+    #define S_STREAM std::istringstream
 #endif
 
 #include <algorithm>
@@ -72,12 +72,13 @@ public:
 
     EGS_InputPrivate() : nref(0) {};
     EGS_InputPrivate(const string &Key, const string &Val = "") : key(Key),
-      value(Val), children(), nref(0) { };
+        value(Val), children(), nref(0) { };
     EGS_InputPrivate(const EGS_InputPrivate &p, bool deep=false) :
         key(p.key), value(p.value), nref(0), children() {
-        for(unsigned int j=0; j<p.children.size(); j++) {
-            if( deep )
+        for (unsigned int j=0; j<p.children.size(); j++) {
+            if (deep) {
                 children.push_back(new EGS_InputPrivate(*p.children[j],deep));
+            }
             else {
                 children.push_back(p.children[j]);
                 children[j]->nref++;
@@ -86,8 +87,9 @@ public:
     }
 
     ~EGS_InputPrivate() {
-        for(unsigned int j=0; j<children.size(); j++)
+        for (unsigned int j=0; j<children.size(); j++) {
             deleteItem(children[j]);
+        }
     };
 
     int replace(const string &replace_what, const string &replace_with);
@@ -103,16 +105,20 @@ public:
     void processInputLoop(EGS_InputPrivate *p);
 
     void addItem(EGS_InputPrivate *p) {
-        p->nref++; children.push_back(p);
+        p->nref++;
+        children.push_back(p);
     };
 
     EGS_InputPrivate *takeInputItem(const string &key, bool self=true) {
-        if( self && isA(key) ) return this;
-        for(vector<EGS_InputPrivate *>::iterator it=children.begin();
+        if (self && isA(key)) {
+            return this;
+        }
+        for (vector<EGS_InputPrivate *>::iterator it=children.begin();
                 it != children.end(); it++) {
-            if( compareKeys((*it)->key,key) ) {
+            if (compareKeys((*it)->key,key)) {
                 EGS_InputPrivate *res = *it;
-                children.erase(it); return res;
+                children.erase(it);
+                return res;
             }
             //if( (*it)->key == key ) {
             //    EGS_InputPrivate *res = *it;
@@ -123,9 +129,13 @@ public:
     };
 
     EGS_InputPrivate *getInputItem(const string &Key) {
-        if( isA(Key) ) return this;
-        for(unsigned int j=0; j<children.size(); j++)
-            if( compareKeys(children[j]->key,Key) ) return children[j];
+        if (isA(Key)) {
+            return this;
+        }
+        for (unsigned int j=0; j<children.size(); j++)
+            if (compareKeys(children[j]->key,Key)) {
+                return children[j];
+            }
         return 0;
     };
 
@@ -134,13 +144,13 @@ public:
     };
 
     static void removeComment(const string &start, const string &end,
-            string &input, bool newline);
+                              string &input, bool newline);
 
     static int findStart(int start, int stop,
-                  const string &start_key, const string &end_key,
-                  const string &input, string &what, int &end);
+                         const string &start_key, const string &end_key,
+                         const string &input, string &what, int &end);
     static int findStop(int start, const string &start_string,
-                 const string &end_string, const string &input, int &ie);
+                        const string &end_string, const string &input, int &ie);
 
     static bool compareKeys(const string &s1, const string &s2);
 
@@ -149,109 +159,169 @@ public:
     void removeEmptyLines(string &input);
 
     static void deleteItem(EGS_InputPrivate *p) {
-        if( p ) {
-            if( !p->nref ) delete p; else p->nref--;
+        if (p) {
+            if (!p->nref) {
+                delete p;
+            }
+            else {
+                p->nref--;
+            }
         }
     };
 
 };
 #endif
 
-EGS_Input::EGS_Input() { p = 0; }
+EGS_Input::EGS_Input() {
+    p = 0;
+}
 
 EGS_Input::EGS_Input(const EGS_Input &input) {
-    if( input.p ) { p = input.p; p->nref++; }
-    else p = 0;
+    if (input.p) {
+        p = input.p;
+        p->nref++;
+    }
+    else {
+        p = 0;
+    }
 }
 
 EGS_Input::EGS_Input(const string &name, const string &value) {
     p = new EGS_InputPrivate(name,value);
 }
 
-EGS_Input::~EGS_Input() { EGS_InputPrivate::deleteItem(p); }
+EGS_Input::~EGS_Input() {
+    EGS_InputPrivate::deleteItem(p);
+}
 
 int EGS_Input::setContentFromFile(const char *fname) {
     EGS_InputPrivate::deleteItem(p);
-    p = new EGS_InputPrivate; return p->setContentFromFile(fname);
+    p = new EGS_InputPrivate;
+    return p->setContentFromFile(fname);
 }
 
 int EGS_Input::setContentFromString(string &input) {
     EGS_InputPrivate::deleteItem(p);
-    p = new EGS_InputPrivate; return p->setContentFromString(input);
+    p = new EGS_InputPrivate;
+    return p->setContentFromString(input);
 }
 
 int EGS_Input::addContentFromFile(const char *fname) {
-    if( !p ) p = new EGS_InputPrivate;
+    if (!p) {
+        p = new EGS_InputPrivate;
+    }
     return p->addContentFromFile(fname);
 }
 
 int EGS_Input::addContentFromString(string &input) {
-    if( !p ) p = new EGS_InputPrivate;
+    if (!p) {
+        p = new EGS_InputPrivate;
+    }
     return p->addContentFromString(input);
 }
 
 EGS_Input *EGS_Input::takeInputItem(const string &key, bool self) {
-    if( !p ) return 0;
+    if (!p) {
+        return 0;
+    }
     EGS_InputPrivate *item = p->takeInputItem(key,self);
-    if( !item ) return 0;
-    if( item == p && !self ) return 0;
-    EGS_Input *result = new EGS_Input; result->p = item;
-    if( item == p ) p = 0;
+    if (!item) {
+        return 0;
+    }
+    if (item == p && !self) {
+        return 0;
+    }
+    EGS_Input *result = new EGS_Input;
+    result->p = item;
+    if (item == p) {
+        p = 0;
+    }
     return result;
 }
 
 EGS_Input *EGS_Input::getInputItem(const string &key) const {
-    if( !p ) return 0;
+    if (!p) {
+        return 0;
+    }
     EGS_InputPrivate *item = p->getInputItem(key);
-    if( !item ) return 0;
-    item->nref++; EGS_Input *result = new EGS_Input; result->p = item;
+    if (!item) {
+        return 0;
+    }
+    item->nref++;
+    EGS_Input *result = new EGS_Input;
+    result->p = item;
     return result;
 }
 
 void EGS_Input::addInputItem(const EGS_Input &input) {
-    if( !input.p ) return;
-    if( !p ) p = new EGS_InputPrivate(*input.p);
-    else p->addItem(input.p);
+    if (!input.p) {
+        return;
+    }
+    if (!p) {
+        p = new EGS_InputPrivate(*input.p);
+    }
+    else {
+        p->addItem(input.p);
+    }
 }
 
 const char *EGS_Input::name() const {
-    if( !p ) return 0;
+    if (!p) {
+        return 0;
+    }
     return p->key.c_str();
 }
 
 bool EGS_Input::isA(const string &key) const {
-    if( !p ) return false;
+    if (!p) {
+        return false;
+    }
     return p->isA(key);
 }
 
 template <class T> int EGS_LOCAL
 get_input(const EGS_InputPrivate *p, const string &key, vector<T> &values) {
-    if( !p ) return -1;
+    if (!p) {
+        return -1;
+    }
     const EGS_InputPrivate *p1;
-    if( !p->children.size() ) {
-        if( !p->isA(key) ) return -1;
+    if (!p->children.size()) {
+        if (!p->isA(key)) {
+            return -1;
+        }
         p1 = p;
     }
     else {
-        for(unsigned int j=0; j<p->children.size(); j++) {
+        for (unsigned int j=0; j<p->children.size(); j++) {
             p1 = p->children[j];
-            if( p1->isA(key) ) break;
+            if (p1->isA(key)) {
+                break;
+            }
             p1 = 0;
         }
-        if( !p1 ) return -1;
+        if (!p1) {
+            return -1;
+        }
     }
     values.erase(values.begin(),values.end());
     S_STREAM in(p1->value.c_str());
     int error = 0;
-    while ( 1 ) {
-        T tmp; in >> tmp;
-        if( !in.fail() ) values.push_back(tmp);
-        if( in.eof() ) {
-            if( values.size() <= 0) error = 1;
+    while (1) {
+        T tmp;
+        in >> tmp;
+        if (!in.fail()) {
+            values.push_back(tmp);
+        }
+        if (in.eof()) {
+            if (values.size() <= 0) {
+                error = 1;
+            }
             break;
         }
-        if( !in.good() ) {
-            if( values.size() <= 0) error = 2;
+        if (!in.good()) {
+            if (values.size() <= 0) {
+                error = 2;
+            }
             break;
         }
     }
@@ -272,23 +342,35 @@ int EGS_Input::getInput(const string &key, vector<int> &values) const {
 
 template <class T> int EGS_LOCAL
 get_input(const EGS_InputPrivate *p, const string &key, T &value) {
-    if( !p ) return -1;
+    if (!p) {
+        return -1;
+    }
     const EGS_InputPrivate *p1;
-    if( !p->children.size() ) {
-        if( !p->isA(key) ) return -1;
+    if (!p->children.size()) {
+        if (!p->isA(key)) {
+            return -1;
+        }
         p1 = p;
     }
     else {
-        for(unsigned int j=0; j<p->children.size(); j++) {
+        for (unsigned int j=0; j<p->children.size(); j++) {
             p1 = p->children[j];
-            if( p1->isA(key) ) break;
+            if (p1->isA(key)) {
+                break;
+            }
             p1 = 0;
         }
-        if( !p1 ) return -1;
+        if (!p1) {
+            return -1;
+        }
     }
     S_STREAM in(p1->value.c_str());
-    T tmp; in >> tmp;
-    if( !in.fail() ) { value = tmp; return 0; }
+    T tmp;
+    in >> tmp;
+    if (!in.fail()) {
+        value = tmp;
+        return 0;
+    }
     return 1;
 }
 
@@ -296,10 +378,13 @@ int EGS_Input::getInput(const string &key, string &value) const {
     vector<string> v;
     //int err = get_input(p,key,v);
     int err = getInput(key,v);
-    if( err ) return err;
+    if (err) {
+        return err;
+    }
     value = v[0];
-    for(unsigned int j=1; j<v.size(); j++) {
-        value += " "; value += v[j];
+    for (unsigned int j=1; j<v.size(); j++) {
+        value += " ";
+        value += v[j];
     }
     return 0;
 }
@@ -326,44 +411,76 @@ int EGS_Input::getInput(const string &key, int &value) const {
 // simple-minded, but it should do for now).
 int EGS_Input::getInput(const string &key, EGS_I64 &value) const {
     vector<string> aux;
-    int err = getInput(key,aux); if( err ) return err;
-    if( aux.size() > 1 ) return 1;
-    if( aux[0].size() < 10 ) {
+    int err = getInput(key,aux);
+    if (err) {
+        return err;
+    }
+    if (aux.size() > 1) {
+        return 1;
+    }
+    if (aux[0].size() < 10) {
         // if it is less than 10 chars long, it is guaranteed to be
         // less then 1e9 => will fit into a 32 bit integer.
-        int n; err = getInput(key,n); if( err ) return err;
-        value = n; return 0;
+        int n;
+        err = getInput(key,n);
+        if (err) {
+            return err;
+        }
+        value = n;
+        return 0;
     }
-    int nfirst = 0; bool neg = false;
-    if( aux[0][0] == '+' ) nfirst = 1;
-    else if( aux[0][0] == '-' ) { nfirst = 1; neg = true; };
+    int nfirst = 0;
+    bool neg = false;
+    if (aux[0][0] == '+') {
+        nfirst = 1;
+    }
+    else if (aux[0][0] == '-') {
+        nfirst = 1;
+        neg = true;
+    };
     EGS_I64 fac=1, res = 0;
-    for(int j=aux[0].size()-1; j>=nfirst; j--) {
-        if( !isdigit(aux[0][j]) ) return 2;
-        EGS_I64 c = aux[0][j]-48; res += c*fac; fac *= 10;
+    for (int j=aux[0].size()-1; j>=nfirst; j--) {
+        if (!isdigit(aux[0][j])) {
+            return 2;
+        }
+        EGS_I64 c = aux[0][j]-48;
+        res += c*fac;
+        fac *= 10;
     }
-    if( neg ) res *= (-1); value = res; return 0;
+    if (neg) {
+        res *= (-1);
+    }
+    value = res;
+    return 0;
 }
 
 
 int EGS_Input::getInput(const string &key, const vector<string> &allowed,
-        int def, bool *found) const {
-    string res; int err = getInput(key,res);
-    if( !err ) {
-        for(unsigned int j=0; j<allowed.size(); j++) {
-            if( EGS_InputPrivate::compareKeys(res,allowed[j]) ) {
-                if( found ) *found = true; return j;
+                        int def, bool *found) const {
+    string res;
+    int err = getInput(key,res);
+    if (!err) {
+        for (unsigned int j=0; j<allowed.size(); j++) {
+            if (EGS_InputPrivate::compareKeys(res,allowed[j])) {
+                if (found) {
+                    *found = true;
+                }
+                return j;
             }
         }
     }
-    if( found ) *found = false;
+    if (found) {
+        *found = false;
+    }
     return def;
 }
 
 #ifndef SKIP_DOXYGEN
 int EGS_InputPrivate::setContentFromFile(const char *fname) {
     ifstream in(fname);
-    if( !in ) return -1;
+    if (!in) {
+        return -1;
+    }
     return setContent(in);
 }
 
@@ -372,9 +489,13 @@ int EGS_InputPrivate::addContentFromFile(const char *fname) {
     // which may come from the file name being defined in an "include file"
     // key-value pair
     const char *s = fname;
-    while( isspace(*s) && (*s) ) ++s;
+    while (isspace(*s) && (*s)) {
+        ++s;
+    }
     ifstream in(s);
-    if( !in ) return -1;
+    if (!in) {
+        return -1;
+    }
     return addContent(in);
 }
 
@@ -389,51 +510,69 @@ int EGS_InputPrivate::addContentFromString(string &input) {
 }
 
 void EGS_InputPrivate::removeComment(const string &start, const string &end,
-        string &input, bool newline) {
+                                     string &input, bool newline) {
     string::size_type spos=0, epos=0;
-    while( (epos = input.find(end,spos)) < input.size() ) {
+    while ((epos = input.find(end,spos)) < input.size()) {
         spos = input.find(start,spos);
-        if( spos < epos ) {
+        if (spos < epos) {
             string::size_type len = epos - spos;
-            if( !newline ) len += end.size();
+            if (!newline) {
+                len += end.size();
+            }
             input.erase(spos,len);
-            if( newline ) spos += end.size();
-        } else spos = epos+1;
+            if (newline) {
+                spos += end.size();
+            }
+        }
+        else {
+            spos = epos+1;
+        }
     }
 }
 
 int EGS_InputPrivate::setContent(istream &in) {
-    for(unsigned int j=0; j<children.size(); j++) delete children[j];
+    for (unsigned int j=0; j<children.size(); j++) {
+        delete children[j];
+    }
     children.erase(children.begin(),children.end());
     return addContent(in);
 }
 
 bool EGS_InputPrivate::compareKeys(const string &s1, const string &s2) {
-    string t1, t2; unsigned int j;
-    for(j=0; j<s1.size(); j++)
-        if( !isspace(s1[j]) ) t1 += ::toupper(s1[j]);
-    for(j=0; j<s2.size(); j++)
-        if( !isspace(s2[j]) ) t2 += ::toupper(s2[j]);
-    return ( t1 == t2 );
+    string t1, t2;
+    unsigned int j;
+    for (j=0; j<s1.size(); j++)
+        if (!isspace(s1[j])) {
+            t1 += ::toupper(s1[j]);
+        }
+    for (j=0; j<s2.size(); j++)
+        if (!isspace(s2[j])) {
+            t2 += ::toupper(s2[j]);
+        }
+    return (t1 == t2);
 
 }
 
 #ifdef INPUT_DEBUG
-#include <iostream>
+    #include <iostream>
 #endif
 
 int EGS_InputPrivate::replace(const string &replace_what,
-        const string &replace_with) {
-    string::size_type pos = 0; int nr = 0;
-    while( (pos = key.find(replace_what,pos)) < key.size() ) {
-        key.replace(pos,replace_what.size(),replace_with); ++nr;
+                              const string &replace_with) {
+    string::size_type pos = 0;
+    int nr = 0;
+    while ((pos = key.find(replace_what,pos)) < key.size()) {
+        key.replace(pos,replace_what.size(),replace_with);
+        ++nr;
     }
     pos = 0;
-    while( (pos = value.find(replace_what,pos)) < value.size() ) {
-        value.replace(pos,replace_what.size(),replace_with); ++nr;
+    while ((pos = value.find(replace_what,pos)) < value.size()) {
+        value.replace(pos,replace_what.size(),replace_with);
+        ++nr;
     }
-    for(int j=0; j<children.size(); j++)
+    for (int j=0; j<children.size(); j++) {
         nr += children[j]->replace(replace_what,replace_with);
+    }
     return nr;
 }
 #endif
@@ -526,11 +665,17 @@ public:
            vr;   //!< Loop variable replacement string.
     char buf[128];
     EGS_InputLoopVariable(const string &var) : vname(var), is_list(false) {
-        vr = "$("; vr += vname; vr += ")";
+        vr = "$(";
+        vr += vname;
+        vr += ")";
     };
     virtual ~EGS_InputLoopVariable() {};
-    const char* getVarNameReplacement() const { return vr.c_str(); };
-    const char* getVarReplacement() const { return buf; };
+    const char *getVarNameReplacement() const {
+        return vr.c_str();
+    };
+    const char *getVarReplacement() const {
+        return buf;
+    };
     virtual void setVarReplacement(int) = 0;
     static EGS_InputLoopVariable *getInputLoopVariable(const char *input);
 };
@@ -569,60 +714,83 @@ class EGS_LOCAL EGS_ListInputLoopVariable : public EGS_InputLoopVariable {
 public:
     vector<string> list;
     EGS_ListInputLoopVariable(vector<string> List, const string &var) :
-        EGS_InputLoopVariable(var), list(List) {is_list = true;};
+        EGS_InputLoopVariable(var), list(List) {
+        is_list = true;
+    };
     void setVarReplacement(int i) {
         string str = list[i];
         sprintf(buf,"%s",str.c_str());
     };
-    int list_size(){return list.size();}
-};
-EGS_InputLoopVariable* EGS_InputLoopVariable::getInputLoopVariable(
-        const char *input) {
-    if( !input ) return 0;
-    S_STREAM in(input);
-    string name; int type; in >> type >> name;
-    if( in.fail() || !in.good() ) {
-        egsWarning("Failed reading type and name from %s\n",input); return 0;
+    int list_size() {
+        return list.size();
     }
-    if( type < 0 || type > 2 ) {
+};
+EGS_InputLoopVariable *EGS_InputLoopVariable::getInputLoopVariable(
+    const char *input) {
+    if (!input) {
+        return 0;
+    }
+    S_STREAM in(input);
+    string name;
+    int type;
+    in >> type >> name;
+    if (in.fail() || !in.good()) {
+        egsWarning("Failed reading type and name from %s\n",input);
+        return 0;
+    }
+    if (type < 0 || type > 2) {
         egsFatal("Invalid loop type in input: %s\n"
                  "Only integer [0], float [1] and list [2] are valid types!\n",
                  input);
     }
     EGS_InputLoopVariable *result;
-    if( type == 0 ) {
-        int vmin, vdelta; in >> vmin >> vdelta;
+    if (type == 0) {
+        int vmin, vdelta;
+        in >> vmin >> vdelta;
         result = new EGS_IntegerInputLoopVariable(vmin,vdelta,name);
     }
-    else if( type == 1 ){
-        double vmin, vdelta; in >> vmin >> vdelta;
-        string format; in >> format;
+    else if (type == 1) {
+        double vmin, vdelta;
+        in >> vmin >> vdelta;
+        string format;
+        in >> format;
         if (format.empty()) {
             format = "%lg";
-            if (in.fail()) in.clear();
+            if (in.fail()) {
+                in.clear();
+            }
         }
         result = new EGS_FloatInputLoopVariable(vmin,vdelta,name,format);
     }
-    else if( type == 2 ){
-        vector<string> vstr; string str, s_tmp;
-        while(!in.eof()){in >> s_tmp; if (!in.fail()) vstr.push_back(s_tmp);}
-        result = new EGS_ListInputLoopVariable(vstr,name);
-        if( in.fail() && in.eof() ) {// possibly white spaces at end of line
-          if (!vstr.size()){// end-of-line reached and no list-item found
-            delete result; result = 0;
-            egsFatal("No list-items found reading loop-input: %s\n",input);
-          }
-          //Found white spaces at the end of loop-input list which is ok.
-          return result;
+    else if (type == 2) {
+        vector<string> vstr;
+        string str, s_tmp;
+        while (!in.eof()) {
+            in >> s_tmp;
+            if (!in.fail()) {
+                vstr.push_back(s_tmp);
+            }
         }
-        if( in.bad() ) {
-          delete result; result = 0;
-          egsFatal("Fatal error reading loop input list from %s\n",input);
+        result = new EGS_ListInputLoopVariable(vstr,name);
+        if (in.fail() && in.eof()) { // possibly white spaces at end of line
+            if (!vstr.size()) { // end-of-line reached and no list-item found
+                delete result;
+                result = 0;
+                egsFatal("No list-items found reading loop-input: %s\n",input);
+            }
+            //Found white spaces at the end of loop-input list which is ok.
+            return result;
+        }
+        if (in.bad()) {
+            delete result;
+            result = 0;
+            egsFatal("Fatal error reading loop input list from %s\n",input);
         }
     }
-    if( in.fail() ) {
+    if (in.fail()) {
         egsWarning("Failed reading vmin vdelta from %s\n",input);
-        delete result; result = 0;
+        delete result;
+        result = 0;
     }
     return result;
 }
@@ -631,35 +799,43 @@ EGS_InputLoopVariable* EGS_InputLoopVariable::getInputLoopVariable(
 void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
     egsWarning("Processing input loop\n");
     EGS_InputPrivate *ic = p->takeInputItem("loop count");
-    if( !ic ) {
-        egsWarning("processInputLoop: no 'loop count' input\n"); return;
+    if (!ic) {
+        egsWarning("processInputLoop: no 'loop count' input\n");
+        return;
     }
-    int nloop = -1; int err = get_input(ic,"loop count",nloop);
+    int nloop = -1;
+    int err = get_input(ic,"loop count",nloop);
     delete ic;
-    if( err || nloop < 1 ) {
+    if (err || nloop < 1) {
         egsWarning("processInputLoop: got %d for loop count, expecting 1 or "
-                "more\n",nloop); return;
+                   "more\n",nloop);
+        return;
     }
-    EGS_InputPrivate *iv; vector<EGS_InputLoopVariable *> ivars;
-    while( (iv = p->takeInputItem("loop variable")) != 0 ) {
+    EGS_InputPrivate *iv;
+    vector<EGS_InputLoopVariable *> ivars;
+    while ((iv = p->takeInputItem("loop variable")) != 0) {
         EGS_InputLoopVariable *v =
             EGS_InputLoopVariable::getInputLoopVariable(iv->value.c_str());
-        if (v->is_list){
-           if (((EGS_ListInputLoopVariable*)v)->list_size()<nloop){
-            egsFatal("procesInputLoop: loop size (%d) larger than list size (%d)!\n"
-                     "This will cause a segmentation fault error, aborting ....\n",
-            nloop, ((EGS_ListInputLoopVariable*)v)->list_size());
-           }
+        if (v->is_list) {
+            if (((EGS_ListInputLoopVariable *)v)->list_size()<nloop) {
+                egsFatal("procesInputLoop: loop size (%d) larger than list size (%d)!\n"
+                         "This will cause a segmentation fault error, aborting ....\n",
+                         nloop, ((EGS_ListInputLoopVariable *)v)->list_size());
+            }
         }
-        if( !v ) egsWarning("processInputLoop: failed to create loop variable"
-              " based on the input %s\n",iv->value.c_str());
-        else ivars.push_back(v);
+        if (!v) egsWarning("processInputLoop: failed to create loop variable"
+                               " based on the input %s\n",iv->value.c_str());
+        else {
+            ivars.push_back(v);
+        }
         delete iv;
     }
-    if( !ivars.size() ) {
-        egsWarning("processInputLoop: no loop variables\n"); return;
+    if (!ivars.size()) {
+        egsWarning("processInputLoop: no loop variables\n");
+        return;
     }
-    int nvar = ivars.size(); int j;
+    int nvar = ivars.size();
+    int j;
     /*
     for(j=0; j<p->children.size(); j++) {
         for(int iloop=0; iloop<nloop; iloop++) {
@@ -673,10 +849,10 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
         }
     }
     */
-    for(int iloop=0; iloop<nloop; iloop++) {
-        for(j=0; j<p->children.size(); j++) {
+    for (int iloop=0; iloop<nloop; iloop++) {
+        for (j=0; j<p->children.size(); j++) {
             EGS_InputPrivate *pnew = new EGS_InputPrivate(*p->children[j],true);
-            for(int ivar=0; ivar<nvar; ivar++) {
+            for (int ivar=0; ivar<nvar; ivar++) {
                 ivars[ivar]->setVarReplacement(iloop);
                 pnew->replace(ivars[ivar]->getVarNameReplacement(),
                               ivars[ivar]->getVarReplacement());
@@ -685,20 +861,33 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
         }
     }
 
-    for(j=0; j<ivars.size(); j++) delete ivars[j];
+    for (j=0; j<ivars.size(); j++) {
+        delete ivars[j];
+    }
 }
 
 int EGS_InputPrivate::addContent(istream &in) {
     string input;
     bool last_was_space = false;
-    while( 1 ) {
-        char c; in.get(c); if( in.eof() || !in.good() ) break;
+    while (1) {
+        char c;
+        in.get(c);
+        if (in.eof() || !in.good()) {
+            break;
+        }
         bool take_it = true;
-        if( isspace(c) ) {
-            if( last_was_space && c != '\n' ) take_it = false;
+        if (isspace(c)) {
+            if (last_was_space && c != '\n') {
+                take_it = false;
+            }
             last_was_space = true;
-        } else last_was_space = false;
-        if( take_it ) input += c;
+        }
+        else {
+            last_was_space = false;
+        }
+        if (take_it) {
+            input += c;
+        }
     }
     removeComment("#","\n",input,true);
     removeComment("!","\n",input,true);
@@ -707,55 +896,72 @@ int EGS_InputPrivate::addContent(istream &in) {
     removeEmptyLines(input);
     int res = 0;
     vector<string> start_keys, stop_keys;
-    int p = 0; int ep = input.size(); string what; int ie;
-    while( (p=findStart(p,ep,start_key_begin,start_key_end,input,what,ie))>=0 ){
-        string the_start = start_key_begin; string the_end = stop_key_begin;
-        for(int j=0; j<what.size(); j++) {
+    int p = 0;
+    int ep = input.size();
+    string what;
+    int ie;
+    while ((p=findStart(p,ep,start_key_begin,start_key_end,input,what,ie))>=0) {
+        string the_start = start_key_begin;
+        string the_end = stop_key_begin;
+        for (int j=0; j<what.size(); j++) {
             char c = ::toupper(what[j]);
-            if( !isspace(c) ) { the_start += c; the_end += c; }
+            if (!isspace(c)) {
+                the_start += c;
+                the_end += c;
+            }
         }
-        the_start += start_key_end; the_end += stop_key_end;
+        the_start += start_key_end;
+        the_end += stop_key_end;
         int p1;
         int ep = findStop(ie+1,the_start,the_end,input,p1);
-        if( ep > ie+1 ) {
+        if (ep > ie+1) {
             EGS_InputPrivate *ip = new EGS_InputPrivate(what);
             string content;
             content.assign(input,ie+1,p1-ie-1);
             input.erase(p,ep-p);
             ip->setContentFromString(content);
-            if( ip->isA("input loop") ) {
-                processInputLoop(ip); delete ip;
+            if (ip->isA("input loop")) {
+                processInputLoop(ip);
+                delete ip;
             }
-            else children.push_back(ip);
+            else {
+                children.push_back(ip);
+            }
         }
         else {
             egsWarning("No matching stop delimeter for %s\n",what.c_str());
             return -1;
         }
     }
-    p = 0; string::size_type p1;
-    while( (p1=input.find('\n',p)) < input.size() ) {
+    p = 0;
+    string::size_type p1;
+    while ((p1=input.find('\n',p)) < input.size()) {
         int j=p1;
-        while( --j > p && isspace(input[j]) );
-        if( j > p ) {
-            if( input[j] == ',' || input[j] == '\\' ) {
-                input[p1] = ' '; input[j] = ' ';
+        while (--j > p && isspace(input[j]));
+        if (j > p) {
+            if (input[j] == ',' || input[j] == '\\') {
+                input[p1] = ' ';
+                input[j] = ' ';
             }
         }
         p = p1+1;
     }
     p=0;
-    while( (p1=input.find('\n',p)) < input.size() ) {
+    while ((p1=input.find('\n',p)) < input.size()) {
         string::size_type p2 = input.find('=',p);
-        if( p2 < p1 ) {
-            string what; what.assign(input,p,p2-p);
-            string value; value.assign(input,p2+1,p1-p2-1);
-            for(int j=0; j<value.size(); j++)
-                if( value[j] == ',' ) value[j] = ' ';
-            if( compareKeys(what,"includefile") ) {
+        if (p2 < p1) {
+            string what;
+            what.assign(input,p,p2-p);
+            string value;
+            value.assign(input,p2+1,p1-p2-1);
+            for (int j=0; j<value.size(); j++)
+                if (value[j] == ',') {
+                    value[j] = ' ';
+                }
+            if (compareKeys(what,"includefile")) {
                 int res = addContentFromFile(value.c_str());
-                if( res ) egsWarning("EGS_Input: failed to add content from "
-                   "include file %s\n",value.c_str());
+                if (res) egsWarning("EGS_Input: failed to add content from "
+                                        "include file %s\n",value.c_str());
             }
             else {
                 EGS_InputPrivate *ip = new EGS_InputPrivate(what,value);
@@ -776,28 +982,44 @@ int EGS_InputPrivate::addContent(istream &in) {
 int EGS_InputPrivate::findStop(int start, const string &the_start,
                                const string &the_end, const string &input,
                                int &ie) {
-    int ns=0, ne=0; int have_start=1, have_end=0;
+    int ns=0, ne=0;
+    int have_start=1, have_end=0;
     int end_started = start;
-    for(int j=start; j<input.size(); j++) {
-        if( !isspace(input[j]) ) {
+    for (int j=start; j<input.size(); j++) {
+        if (!isspace(input[j])) {
             char c = ::toupper(input[j]);
-            if( the_start[ns] == c ) ns++;
-            else { ns=0; if( the_start[ns] == c ) ns++; }
-            if( ns == the_start.size() ) {
-                ns=0; have_start++;
+            if (the_start[ns] == c) {
+                ns++;
             }
-            if( !ne ) end_started = j;
-            if( the_end[ne] == c ) ne++;
             else {
-                ne=0;
-                if ( the_end[ne] == c ) {
-                    end_started = j; ne++;
+                ns=0;
+                if (the_start[ns] == c) {
+                    ns++;
                 }
             }
-            if( ne == the_end.size() ) {
-                ne = 0; have_end++;
-                if( have_end == have_start ) {
-                    ie = end_started; return j;
+            if (ns == the_start.size()) {
+                ns=0;
+                have_start++;
+            }
+            if (!ne) {
+                end_started = j;
+            }
+            if (the_end[ne] == c) {
+                ne++;
+            }
+            else {
+                ne=0;
+                if (the_end[ne] == c) {
+                    end_started = j;
+                    ne++;
+                }
+            }
+            if (ne == the_end.size()) {
+                ne = 0;
+                have_end++;
+                if (have_end == have_start) {
+                    ie = end_started;
+                    return j;
                 }
                 end_started = j+1;
             }
@@ -809,18 +1031,28 @@ int EGS_InputPrivate::findStop(int start, const string &the_start,
 int EGS_InputPrivate::findStart(int start, int stop, const string &start_key,
                                 const string &end_key, const string &input,
                                 string &what, int &end) {
-    string::size_type pos = start; unsigned int ns=0;
-    while(1) {
-        if( pos >= stop ) return -1;
-        char c = ::toupper(input[pos++]);
-        if( start_key[ns] == c ) ns++;
-        else {
-            ns=0; if( start_key[ns] == c ) ns++;
+    string::size_type pos = start;
+    unsigned int ns=0;
+    while (1) {
+        if (pos >= stop) {
+            return -1;
         }
-        if( ns == start_key.size() ) break;
+        char c = ::toupper(input[pos++]);
+        if (start_key[ns] == c) {
+            ns++;
+        }
+        else {
+            ns=0;
+            if (start_key[ns] == c) {
+                ns++;
+            }
+        }
+        if (ns == start_key.size()) {
+            break;
+        }
     }
     string::size_type epos = input.find(end_key,pos);
-    if( epos < stop ) {
+    if (epos < stop) {
         what.assign(input,pos,epos-pos);
         end = epos + end_key.size();
         return pos-start_key.size();
@@ -829,37 +1061,53 @@ int EGS_InputPrivate::findStart(int start, int stop, const string &start_key,
 }
 
 void EGS_InputPrivate::print(int indent, ostream &out) const {
-    if( children.size() > 0 ) {
-        if( key.size() > 0 ) {
-            for(int j=0; j<indent; j++) out << indent_space;
+    if (children.size() > 0) {
+        if (key.size() > 0) {
+            for (int j=0; j<indent; j++) {
+                out << indent_space;
+            }
             out << start_key_begin << " " << key << start_key_end << endl;
         }
         indent += 1;
-        for(int i=0; i<children.size(); i++) children[i]->print(indent,out);
+        for (int i=0; i<children.size(); i++) {
+            children[i]->print(indent,out);
+        }
         indent -= 1;
-        if( key.size() > 0 ) {
-            for(int j=0; j<indent; j++) out << indent_space;
+        if (key.size() > 0) {
+            for (int j=0; j<indent; j++) {
+                out << indent_space;
+            }
             out << stop_key_begin << " " << key << stop_key_end << endl;
         }
-    } else {
-        for(int j=0; j<indent; j++) out << indent_space;
+    }
+    else {
+        for (int j=0; j<indent; j++) {
+            out << indent_space;
+        }
         out << key << " = " << value << endl;
     }
 }
 
 void EGS_InputPrivate::removeEmptyLines(string &input) {
     int pos=0, pos1;
-    while( (pos1=input.find('\n',pos)) < input.size() ) {
-        if( pos1 == pos ) input.erase(pos,1);
+    while ((pos1=input.find('\n',pos)) < input.size()) {
+        if (pos1 == pos) {
+            input.erase(pos,1);
+        }
         else {
             bool is_only_space = true;
-            for(int j=pos; j<pos1; j++) {
-                if( !isspace(input[j]) ) {
-                    is_only_space = false; break;
+            for (int j=pos; j<pos1; j++) {
+                if (!isspace(input[j])) {
+                    is_only_space = false;
+                    break;
                 }
             }
-            if( is_only_space ) input.erase(pos,pos1+1-pos);
-            else pos = pos1+1;
+            if (is_only_space) {
+                input.erase(pos,pos1+1-pos);
+            }
+            else {
+                pos = pos1+1;
+            }
         }
     }
 }
@@ -870,7 +1118,9 @@ bool EGS_Input::compare(const string &s1, const string &s2) {
 }
 
 void EGS_Input::print(int nind,ostream &out) {
-    if( p ) p->print(nind,out);
+    if (p) {
+        p->print(nind,out);
+    }
 }
 
 #ifdef TEST
@@ -883,8 +1133,9 @@ void EGS_Input::print(int nind,ostream &out) {
 #include <cctype>
 
 void egs_warning(const char *msg,...) {
-    va_list ap; va_start( ap, msg );
-    vfprintf( stderr, msg, ap );
+    va_list ap;
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
     va_end(ap);
 }
 

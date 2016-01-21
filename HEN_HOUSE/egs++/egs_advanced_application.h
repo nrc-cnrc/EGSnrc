@@ -190,14 +190,14 @@ public:
      Set media and corresponding ff file names for
      custom Rayleigh data.
     */
-    void setRayleighData( const vector<string> &str_medium,
-                          const vector<string> &str_file );
+    void setRayleighData(const vector<string> &str_medium,
+                         const vector<string> &str_file);
     /*! \brief Set EII flag and xsection file name.
 
-   The EII input is of a mixed type, i.e., one should be able to turn
-   this option on/off, but there is also the possibility of using an
-   arbitrary EII xsection compilation, including the available EII
-   xsections with EGSnrc.
+    The EII input is of a mixed type, i.e., one should be able to turn
+    this option on/off, but there is also the possibility of using an
+    arbitrary EII xsection compilation, including the available EII
+    xsections with EGSnrc.
 
     */
     void setEIIData(EGS_I32 len);

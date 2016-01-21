@@ -48,22 +48,22 @@ using namespace std;
 
 #ifdef WIN32
 
-#ifdef BUILD_BEAM_SOURCE_DLL
-#define EGS_BEAM_SOURCE_EXPORT __declspec(dllexport)
-#else
-#define EGS_BEAM_SOURCE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_BEAM_SOURCE_LOCAL
+    #ifdef BUILD_BEAM_SOURCE_DLL
+        #define EGS_BEAM_SOURCE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_BEAM_SOURCE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_BEAM_SOURCE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_BEAM_SOURCE_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_BEAM_SOURCE_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define EGS_BEAM_SOURCE_EXPORT
-#define EGS_BEAM_SOURCE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_BEAM_SOURCE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_BEAM_SOURCE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_BEAM_SOURCE_EXPORT
+        #define EGS_BEAM_SOURCE_LOCAL
+    #endif
 
 #endif
 
@@ -73,8 +73,8 @@ typedef void (*InitFunction)(const int *, const int *,
                              const char *, const char *, int,int,int,int,int);
 typedef void (*FinishFunction)();
 typedef void (*SampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
-          EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
-          EGS_I32 *, EGS_I32 *, EGS_I64 *, EGS_I32 *);
+                               EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
+                               EGS_I32 *, EGS_I32 *, EGS_I64 *, EGS_I32 *);
 typedef void (*MaxEnergyFunction)(EGS_Float *);
 
 /*! \brief A BEAM simulation source
@@ -120,10 +120,14 @@ public:
     ~EGS_BeamSource();
 
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-            int &q, int &latch, EGS_Float &E, EGS_Float &wt,
-            EGS_Vector &x, EGS_Vector &u);
-    EGS_Float getEmax() const { return Emax; };
-    EGS_Float getFluence() const { return count; };
+                            int &q, int &latch, EGS_Float &E, EGS_Float &wt,
+                            EGS_Vector &x, EGS_Vector &u);
+    EGS_Float getEmax() const {
+        return Emax;
+    };
+    EGS_Float getFluence() const {
+        return count;
+    };
     bool storeState(ostream &data) const {
         return egsStoreI64(data,count);
     };
@@ -132,15 +136,24 @@ public:
     };
     bool addState(istream &data) {
         EGS_I64 tmp;
-        bool res = egsGetI64(data,tmp); count += tmp; return res;
+        bool res = egsGetI64(data,tmp);
+        count += tmp;
+        return res;
     };
-    void resetCounter() { count = 0; };
+    void resetCounter() {
+        count = 0;
+    };
 
-    bool isValid() const { return is_valid; };
+    bool isValid() const {
+        return is_valid;
+    };
 
     void setCutout(EGS_Float xmin, EGS_Float xmax, EGS_Float ymin,
-            EGS_Float ymax) {
-        Xmin = xmin; Xmax = xmax; Ymin = ymin; Ymax = ymax;
+                   EGS_Float ymax) {
+        Xmin = xmin;
+        Xmax = xmax;
+        Ymin = ymin;
+        Ymax = ymax;
     };
 
 protected:

@@ -417,12 +417,12 @@ wm geometry . +$rootx+$rooty
 #define a main menubar
 
 font create myDefaultFont -family Helvetica -size 11 -weight bold
-option add *font myDefaultFont
+#option add *font myDefaultFont
 
 frame .mbar -relief raised -bd 1
 
-menubutton .mbar.file -text "File" -menu .mbar.file.menu
-menu .mbar.file.menu
+menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont
+menu .mbar.file.menu -font myDefaultFont
 .mbar.file.menu add command -label "Start a new input file" \
 	-command "reset_parameters; edit_parameters"
 .mbar.file.menu add command -label "Load a previous input file" \
@@ -439,20 +439,20 @@ menu .mbar.file.menu
 .mbar.file.menu add separator
 .mbar.file.menu add command -label "Exit" -command "exit_prompt"
 
-menubutton .mbar.about -text "About" -menu .mbar.about.menu
-menu .mbar.about.menu
+menubutton .mbar.about -text "About" -menu .mbar.about.menu -font myDefaultFont
+menu .mbar.about.menu -font myDefaultFont
 .mbar.about.menu add command -label "About DOSXYZnrc" -command "about_XYZ"
 .mbar.about.menu add command -label "About the DOSXYZnrc GUI" \
     -command "about_XYZ_GUI"
 
-menubutton .mbar.run -text "Run" -menu .mbar.run.menu
-menu .mbar.run.menu
+menubutton .mbar.run -text "Run" -menu .mbar.run.menu -font myDefaultFont
+menu .mbar.run.menu -font myDefaultFont
 .mbar.run.menu add command -label "Compile" -command "compile_accel"
 .mbar.run.menu add command -label "Run"\
 	-command "run"
 
-menubutton .mbar.help -text "Help" -menu .mbar.help.menu
-menu .mbar.help.menu
+menubutton .mbar.help -text "Help" -menu .mbar.help.menu -font myDefaultFont
+menu .mbar.help.menu -font myDefaultFont
 #.mbar.help.menu add command -label "DOSXYZnrc Help"
 .mbar.help.menu add command -label "GUI Help" \
     -command {help_dialog .help "GUI Help" $GUI_help_text info 0 Close}

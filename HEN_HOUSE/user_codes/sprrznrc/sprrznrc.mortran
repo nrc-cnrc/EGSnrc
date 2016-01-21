@@ -257,6 +257,8 @@ REPLACE {$VERSION} WITH {
 "                           analysis
 "        = start-RNS   (4)  read starting random numbers from a file (E.G. for
 "                           output to a graphics package)
+"        = parallel    (5)  read in .egsdat files from parallel run and
+"                           analyze
 "  STORE DATA ARRAYS
 "        = yes         (0)  store data arrays for re-use
 "        = no          (1)  don't store them
@@ -1577,7 +1579,7 @@ IDAT,IRESTART,IQIN,IVAL,ISPRREG,ISPR($MXREG);
 $LONG_INT NCASE,NCASEO,NCASET;
 $REAL AMASS,TMCPUO,TIMMAX,STATLM,EIN;
 $INTEGER IDAT,IRESTART,IQIN,IVAL,ISPR,
-ISPRREG;
+ISPRREG,DATCOUNT;
 }
 "AMASS(IZ,IX)  MASS OF ZONE WITH COORDINATES (IZ,IX)
 "TMCPUO        CPU TIME USED IN PREVIOUS SESSIONS
@@ -1592,11 +1594,13 @@ ISPRREG;
 "              = 1 => RESTARTED RUN
 "              = 3 => DATA ANALYSIS ONLY
 "              = 4 => READ STARTING RANDOM NUMBERS FROM A FILE
+"              = 5 => ANALYZE .egsdat FILES FROM PARALLEL RUN
 "IQIN          CHARGE OF THE EXTERNAL BEAM
 "ISPR          = 0 TO OUTPUT SPR's BY REGION
 "              = 1 TO OUTPUT SPR's BY CYLINDER AND/OR SLAB
 "ISPRREG(J)    = 1 IF THE USER IS OUTPUTTING SPR IN REGION J OR CYLINDER J OR
 "                SLAB J-NR
+"DATCOUNT      = no. of files used for analysis of parallel run (IRESTART=5) 
 ;
 
 REPLACE {;COMIN/USER/;} WITH {;COMIN/USER-VARIANCE-REDUCTION/;}
@@ -1803,7 +1807,8 @@ REAL*4
 COMIN/
     BOUNDS,CHARS,ELECIN,EPCONT,GEOM,IODAT1,IODAT2,CH-Steps,
     PRINTC,MEDIA,MISC,PHOTIN,RUSROU,SCORE,SOURCE,SPECTR,
-    STACK,THRESH,UPHIOT,USEFUL,USER,RANDOM,EGS-VARIANCE-REDUCTION,RWPHSP/;
+    STACK,THRESH,UPHIOT,USEFUL,USER,RANDOM,EGS-VARIANCE-REDUCTION,RWPHSP,
+    EGS-IO/;
 $LONG_INT ITEMP,JCASE;
 $INTEGER I,J,NBATCH,IZ,IX,MEDNUM,LGLE,IBATCH,IBTCH,NOSCAT,INOCAV,
          NOSCT2,INOMED,IRL,IT,ICASE,IRIN,NRCFLG,
@@ -1820,6 +1825,21 @@ $INTEGER egs_open_file, egs_open_datfile, rng_unit, data_unit;
 
 "character*256 junk_string;
 "$INTEGER lnblnk1;
+
+external combine_results;
+$HAVE_C_COMPILER(#);
+
+#ifdef HAVE_C_COMPILER;
+
+$REAL   part_spr, part2_spr, current_result, current_uncertainty;
+$LONG_INT n_run,n_tot,n_last;
+$INTEGER  n_job;
+$LOGICAL first_time;
+
+#endif;
+
+$LOGICAL is_finished;
+
 "                       START OF EXECUTABLE CODE
 "                       ************************
 
@@ -1867,6 +1887,16 @@ ELSE IF( irestart = 4 ) [ "We well read RN's from a file"
 "ELSEIF(IRESTART = 4)[ " "RN'S READ FROM A FILE"
 "    OPEN(UNIT=2,STATUS='OLD');
 "]
+
+IF(IRESTART=5)["post-processing for parallel run"
+
+    call egs_combine_runs(combine_results,'.egsdat');
+
+    NBATCH=0;      "DON'T WANT IT TO RUN ANY HISTORIES"
+    NCASET=NCASEO; "To prevent a wrong normalization if some of the "
+                   "parallel runs not available, IK, Jan 21 1999"
+] "end of IRESTART = 5, PARALLEL POST-PROCESSING"
+
 
 MXNP=0; "RESET THE MAXIMUM STACK INDICATOR"
 IHSTRY=NCASEO; "RESET THE NUMBER OF HISTORIES COUNTER"
@@ -2032,6 +2062,7 @@ ELSEIF(IRESTART = 1)[
 
 ELSEIF(IRESTART = 3)[WRITE(6,204);WRITE(IOUT,204);GO TO :STATS-ANAL:;]
 ELSEIF(IRESTART = 4)[WRITE(6,205);WRITE(IOUT,205);]
+ELSEIF(IRESTART = 5)[WRITE(6,206);WRITE(IOUT,206); GO TO :STATS-ANAL:;]
 
 "INITIALIZE IWATCH ROUTINE"
 IF(IWATCH.NE.0) CALL WATCH(-99,IWATCH);
@@ -2054,6 +2085,41 @@ NETADJ=0;
 "     a negative error code and it is up to the user to deal with the error."
 "
 IF( idat = 0 ) data_unit = egs_open_file(4,0,1,'.egsdat');
+
+"begin parallel processing implementation if there is a working C compiler
+#ifdef HAVE_C_COMPILER;
+;
+/part_spr,part2_spr/ = 0;  n_tot = ncaseo;
+first_time = .true.; is_finished = .false.;
+"Not sure what quantity to put in job control file, so just use"
+"0 for now."
+
+:start_parallel_loop:;
+
+IF( n_parallel > 0 ) [  "Job is part of a parallel run "
+
+    call egs_pjob_control(ncase,n_run,n_left,n_tot,part_spr,part2_spr,
+                          current_result, current_uncertainty);
+    IF( n_run = 0 ) [
+        write(6,'(//a,a//)') '****** No histories left in job control file',
+                      '       => end simulation';
+        goto :END-SIM:;
+    ]
+    jcase = n_run/$NBATCH;
+    IF( jcase < 1 ) [ jcase = 1; n_run = jcase*$NBATCH; ]
+    IF( first_time ) [
+        first_time = .false.; n_last = n_run;
+        write(6,'(//a,i12,a//)') '****** Running ',n_run,' histories';
+    ]
+    ELSE [
+        write(6,'(//a,i12,a)') '***** Finished ',n_last,' histories';
+        write(6,'(/a/,20x,1pe11.4,a,0pf5.2,a/,a,i12,a//)')
+  '      current result including previous runs and other parallel jobs: ',
+         current_result, ' +/- ',current_uncertainty,' %',
+  '      will run another ',n_run,' histories';
+    ]
+]
+#endif;
 
 "OUTPUT BATCHES. EXECUTION STOPS IF THERE IS NOT ENOUGH TIME TO DO ANOTHER
 "BATCH.
@@ -2242,6 +2308,12 @@ TIMCPU=$CONVERSION_TO_SECONDS*(CPUT2-CPUT1)+TMCPUO;
           "CLOSE(UNIT=4,DISP='KEEP');"
         ]
 ] " END  OF IBATCH LOOP  I.E.  END OF SIMULATIONS"
+
+#ifdef HAVE_C_COMPILER;
+;
+IF( n_parallel > 0 ) [ goto :start_parallel_loop:; ]
+
+#endif;
 
 :END-SIM:;
 
@@ -2526,6 +2598,20 @@ write(iout,400) ' ';     call egs_fdate(iout);     write(iout,'(/"1")');
 
 call egs_finish;
 
+#ifdef HAVE_C_COMPILER;
+;
+IF( n_parallel > 0 & ~is_finished ) [
+    call egs_pjob_finish(n_job);
+    IF( n_job = 0 ) [
+        is_finished = .true.;
+        call egs_combine_runs(combine_results,'.egsdat');
+        NCASET=NCASEO;  IHSTRY=NCASET;
+        CALL SRCOTO(WEIGHT);
+        goto :STATS-ANAL:;
+    ]
+]
+#endif;
+
 call SRCEND;
 
 $CALL_EXIT(0);
@@ -2549,6 +2635,7 @@ $CALL_EXIT(0);
              ' ',20X,'NEW RN SEEDS=',2(1X,I12)/);
 204  FORMAT(/' ********* DATA ANALYSIS ONLY *********'/);
 205  FORMAT(/' ********* RANDOM NUMBERS READ FROM FILE *********'/);
+206  FORMAT(/' ********* POST-PROCESSING PARALLEL RUNS **********'/);
 210  FORMAT(/' ********* NOT ENOUGH TIME TO FINISH WITHIN',
        ' LIMIT OF',F8.2,' HOURS',I5,' BATCHES USED********'/
        ' ',I12,' HISTORIES RUN, ',I12,' HISTORIES ANALYZED'//);
@@ -3570,6 +3657,7 @@ ALLOWED_INPUTS(IVAL,0)='FIRST';
 ALLOWED_INPUTS(IVAL,1)='RESTART';
 ALLOWED_INPUTS(IVAL,3)='ANALYZE';
 ALLOWED_INPUTS(IVAL,4)='START-RNS';
+ALLOWED_INPUTS(IVAL,5)='PARALLEL';
 
 IVAL=IVAL+1;
 NUM_STORE=IVAL;
@@ -3591,7 +3679,7 @@ IDAT=VALUE(NUM_STORE,1);
 OUTPUT IWATCH,ISTORE,IRESTART,IDAT;
     (/' DO NOT TRACK(0) OR TRACK(>0) EVERY INTERACTION:',T60,I12/
     ' DO NOT STORE(0) OR STORE(1,2,3) INITIAL RANDOM #:',T60,I12/
-    ' FIRST RUN(0),RESTARTED(1),ANALYZE(3),START RNS(4):',
+    ' FIRST RUN(0),RESTART(1),ANALYZE(3),START RNS(4),PARALLEL(5):',
     T60,I12/ ' STORE RAW DATA(0) OR NOT(1):',T60,I12);
 IF(IDAT.EQ.1)[INEXT=0;]ELSE[INEXT=1;]
 IF(IRESTART = 4) [
@@ -4057,7 +4145,7 @@ IF (ERROR_FLAG=1) [GOTO :FINISHED:;]
 NCASEO=0;NCASET=0;TMCPUO=0; "SET PREVIOUS RUN COUNTERS"
 
 SCSTP_TMP=0;
-IF(IRESTART = 0)[ "FRESH START, SET EVERYTHING TO ZERO"
+IF(IRESTART = 0 | IRESTART=5)[ "FRESH START, SET EVERYTHING TO ZERO"
     NNREAD=0; SCSTP=0.; SCSTP2=0.; SCSTP_LAST=0; PIISTP=0.;
     DO IX=1,NR[
       DO IZ=1,NZ[
@@ -4436,6 +4524,7 @@ $REAL XCOORD(300), YCOORD(300), UNCERT(300);
 INTEGER NPTS, TYPE, AXISTYPE, UNITNUM, CURVENUM, int, CHECK;
 INTEGER IPLTUNX, SPRRZ_COUNT, BIN_CUT, ICOUNT;
 CHARACTER*60 SERIESTITLE, XTITLE, YTITLE, SUBTITLE;
+CHARACTER*80 GRAPHTITLE;
 CHARACTER*4 CH_IZ, CH_IX;
 CHARACTER*1 a(3);
 $INTEGER egs_open_file;
@@ -4468,6 +4557,8 @@ ELSE[
 "Implemented by Aaron Merovitz, Feb. 1998"
 "For complete summary of the following variables see"
 "XVGRPLOT.MORTRAN"
+
+DO I=1,80[GRAPHTITLE(I:I)=TITLE(I);]
 
 IF(ISPRREG=1)["create the .plotdat file"
 
@@ -4503,7 +4594,7 @@ IF(ISPRREG=1)["create the .plotdat file"
    "plot XY-graph"
     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                   NPTS, CURVENUM, SERIESTITLE,
-                  XTITLE, YTITLE, TITLE, SUBTITLE,
+                  XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                   UNITNUM, TYPE, HISTXMIN, AXISTYPE);
     SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
     ICOUNT=ICOUNT+1;
@@ -4527,7 +4618,7 @@ IF(ISPRREG=1)["create the .plotdat file"
    "plot XY-graph"
     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                    NPTS, CURVENUM, SERIESTITLE,
-                   XTITLE, YTITLE, TITLE, SUBTITLE,
+                   XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                    UNITNUM, TYPE, HISTXMIN, AXISTYPE);
     SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
     ICOUNT=ICOUNT+1;
@@ -4562,7 +4653,7 @@ IF(ISPRREG=1)["create the .plotdat file"
    "plot XY-graph"
     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                   NPTS, CURVENUM, SERIESTITLE,
-                  XTITLE, YTITLE, TITLE, SUBTITLE,
+                  XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                   UNITNUM, TYPE, HISTXMIN, AXISTYPE);
     SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
     ICOUNT=ICOUNT+1;
@@ -4588,7 +4679,7 @@ IF(ISPRREG=1)["create the .plotdat file"
     "plot XY-graph"
     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                    NPTS, CURVENUM, SERIESTITLE,
-                   XTITLE, YTITLE, TITLE, SUBTITLE,
+                   XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
                    UNITNUM, TYPE, HISTXMIN, AXISTYPE);
     SPRRZ_COUNT=SPRRZ_COUNT+1; "DEFINE A NEW PLOT"
     ICOUNT=ICOUNT+1;
@@ -4725,6 +4816,120 @@ RETURN;
 360  FORMAT(' NZ,NR=',I3,',',I3,F8.2,' -',F8.2,2X,2(F7.3,' (+/- ',F6.3,' )'));
 %I4
 END; "end of subroutine osumry"
+
+"****************************************************************************
+
+subroutine combine_results(file_name);
+
+"****************************************************************************
+implicit none;
+character*(*) file_name;
+
+;COMIN/SCORE,RANDOM,IODAT2,GEOM,SOURCE/;
+
+real*8 TSCEDPN($MAXZREG,$MAXRADII,$MAXIT),TSCEDPN2($MAXZREG,$MAXRADII,$MAXIT),
+       TSCDOSE($MAXZREG,$MAXRADII,$MAXDOS),TSCDOSE2($MAXZREG,$MAXRADII,$MAXDOS),
+       TSCDOSE_COV($MAXZREG,$MAXRADII,2),TSCSPR_COV($MAXZREG,$MAXRADII,2),
+       TMPPIISTP,TSCSTP,TSCSTP2; 
+$REAL TMPTMCPU;
+$LONG_INT TMPNCASE,TMPNNREAD;
+$INTEGER TMPICROSS,TMPITRACKE,iorstrt;
+
+$INTEGER my_unit,egs_get_unit,iout,iz,ix,it,lnblnk1,irl;
+$LOGICAL first_time;
+data first_time/.true./, iout/1/;
+save first_time,iout;
+
+IF( first_time ) [
+
+      OUTPUT ;(/1X,'Summing the following .egsdat files');
+      OUTPUT ; (1X,'------------------------------------'/);
+      WRITE(IOUT,'(/1X,''Summing the following .egsdat files'')');
+      WRITE(IOUT,'(1X,''------------------------------------''/)');
+
+      datcount=0;
+      /TMCPUO,NCASEO,PIISTP,NNREAD/               =0;
+      /ICROSS,ITRACKE/               =0;
+      DO iz=1,nz [ DO ix=1,nr [
+          DO it=1,$MAXIT [
+                  /SCEDPN(IZ,IX,IT),SCEDPN2(IZ,IX,IT)/=0;
+          ]
+          DO it=1,$MAXDOS[
+                 /SCDOSE(IZ,IX,IT),SCDOSE2(IZ,IX,IT)/=0;
+          ]
+          DO it=1,2 [ /SCDOSE_COV(IZ,IX,IT),SCSPR_COV(IZ,IX,IT)/ = 0; ]
+      ] ]
+
+      first_time = .false.;
+]
+
+IORSTRT=egs_get_unit(4); "SET UNIT 4 FOR THE FILES TO BE READ"
+WRITE(IOUT,'(A)') $cstring(file_name);
+WRITE(6,'(A)') $cstring(file_name);
+open(IORSTRT,file=file_name,status='old',err=:EOF_RS1:);
+
+READ(IORSTRT,*,END=:EOFC:) TSCSTP,TSCSTP2;
+DO IZ=1,NZ[
+      DO IX=1,NR[
+          DO IT=1,$MAXIT[
+             READ(iorstrt,*,END=:EOFC:)TSCEDPN(IZ,IX,IT),TSCEDPN2(IZ,IX,IT);
+          ]
+          DO IT=1,$MAXDOS[
+             READ(iorstrt,*,END=:EOFC:)TSCDOSE(IZ,IX,IT),TSCDOSE2(IZ,IX,IT);
+          ]
+          READ(iorstrt,*,END=:EOFC:)TSCDOSE_COV(IZ,IX,1),TSCDOSE_COV(IZ,IX,2);
+          READ(iorstrt,*,END=:EOFC:)TSCSPR_COV(IZ,IX,1),TSCSPR_COV(IZ,IX,2);
+      ]
+]
+$RETRIEVE RNG STATE FROM UNIT iorstrt;
+READ(iorstrt,*,END=:EOFC:) TMPNCASE,TMPTMCPU,TMPNNREAD,TMPPIISTP;
+READ(iorstrt,*,END=:EOFC:)TMPICROSS,TMPITRACKE;
+
+"now add data"
+"add separately in case we need to skip over a .egsdat file due to a"
+"read error"
+
+DATCOUNT=DATCOUNT+1;
+
+SCSTP=SCSTP+TSCSTP;SCSTP2=SCSTP2+TSCSTP2;
+DO IZ=1,NZ[
+      DO IX=1,NR[
+          DO IT=1,$MAXIT[
+             SCEDPN(IZ,IX,IT)=SCEDPN(IZ,IX,IT)+TSCEDPN(IZ,IX,IT);
+             SCEDPN2(IZ,IX,IT)=SCEDPN2(IZ,IX,IT)+TSCEDPN2(IZ,IX,IT);
+          ]
+          DO IT=1,$MAXDOS[
+             SCDOSE(IZ,IX,IT)=SCDOSE(IZ,IX,IT)+TSCDOSE(IZ,IX,IT);
+             SCDOSE2(IZ,IX,IT)=SCDOSE2(IZ,IX,IT)+TSCDOSE2(IZ,IX,IT);
+          ]
+          SCDOSE_COV(IZ,IX,1)=SCDOSE_COV(IZ,IX,1)+TSCDOSE_COV(IZ,IX,1);
+          SCDOSE_COV(IZ,IX,2)=SCDOSE_COV(IZ,IX,2)+TSCDOSE_COV(IZ,IX,2);
+          SCSPR_COV(IZ,IX,1)=SCSPR_COV(IZ,IX,1)+TSCSPR_COV(IZ,IX,1);
+          SCSPR_COV(IZ,IX,2)=SCSPR_COV(IZ,IX,2)+TSCSPR_COV(IZ,IX,2);
+      ]
+]
+TMCPUO=TMCPUO+TMPTMCPU;
+NCASEO=NCASEO+TMPNCASE;
+PIISTP=PIISTP+TMPPIISTP;
+NNREAD=NNREAD+TMPNNREAD;
+ICROSS=ICROSS+TMPICROSS;
+ITRACKE=ITRACKE+TMPITRACKE;
+write(6,*) '  ncase = ',TMPNCASE,' cpu = ',TMPTMCPU,' total cpu = ',
+  TMCPUO;
+write(iout,*) '  ncase = ',TMPNCASE,' cpu = ',TMPTMCPU,' total cpu = ',
+  TMCPUO;
+
+CLOSE(UNIT=iorstrt);
+return;
+
+:EOFC:;
+WRITE(6,*) 'Error reading data from file',$cstring(file_name);
+CLOSE(UNIT=iorstrt);
+return;
+:EOF_RS1:;
+WRITE(6,*) 'Error opening file', $cstring(file_name);
+return; end;
+
 ;
 "end of sprrznrc.mortran (Rev 1.49)"
 ;

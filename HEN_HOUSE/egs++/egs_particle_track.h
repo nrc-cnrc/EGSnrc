@@ -67,16 +67,26 @@ public:
 
         Vertex() : x(0,0,0), e(0) {};
         Vertex(EGS_Float px, EGS_Float py, EGS_Float pz) {
-                x.x = px; x.y = py; x.z = pz; e = 1;};
+            x.x = px;
+            x.y = py;
+            x.z = pz;
+            e = 1;
+        };
         Vertex(EGS_Float px, EGS_Float py, EGS_Float pz, EGS_Float pe) {
-                x.x = px; x.y = py; x.z = pz; e = pe;};
+            x.x = px;
+            x.y = py;
+            x.z = pz;
+            e = pe;
+        };
         Vertex(const EGS_Vector &px, EGS_Float pe) : x(px), e(pe) {};
     };
 
     /*! \brief Structure describing the particle being tracked. */
     struct ParticleInfo {
         EGS_I32 q;      //!< particle charge
-        ParticleInfo(EGS_I32 pq) { q = pq; };
+        ParticleInfo(EGS_I32 pq) {
+            q = pq;
+        };
         ~ParticleInfo() { };
     };
 
@@ -88,7 +98,10 @@ public:
     /*! \brief The destructor. Deallocate all memory. */
     ~EGS_ParticleTrack() {
         clearTrack();
-        if (m_track) delete [] m_track; m_track = NULL;
+        if (m_track) {
+            delete [] m_track;
+        }
+        m_track = NULL;
     };
 
     /*! \brief Deallocate particle information and vertex data.
@@ -113,16 +126,22 @@ public:
         If \a v is less than 0 or greater than m_nVertices - 1 the return
         value is \c NULL .
     */
-    Vertex* getVertex(int v);
+    Vertex *getVertex(int v);
 
     /*! \brief Get number of vertices currently in the track. */
-    int getNumVertices() { return m_nVertices; };
+    int getNumVertices() {
+        return m_nVertices;
+    };
 
     /*! \brief Define the type of the particle being tracked. */
-    void setParticleInfo(ParticleInfo *p) { m_pInfo = p; };
+    void setParticleInfo(ParticleInfo *p) {
+        m_pInfo = p;
+    };
 
     /*! \brief Get the type of the particle being tracked. */
-    ParticleInfo* getParticleInfo() { return m_pInfo; };
+    ParticleInfo *getParticleInfo() {
+        return m_pInfo;
+    };
 
 protected:
 
@@ -152,8 +171,8 @@ public:
 
     /*! \brief Basic Constructor. Initializes all variables. */
     EGS_ParticleTrackContainer() : m_nEvents(0), m_nTracks(0),
-    m_totalTracks(0), m_stackMap(NULL), m_isScoring(NULL), m_bufferSize(0),
-    m_buffer(NULL), m_trspFile(NULL) {};
+        m_totalTracks(0), m_stackMap(NULL), m_isScoring(NULL), m_bufferSize(0),
+        m_buffer(NULL), m_trspFile(NULL) {};
 
     /*! \brief Constructor.
 
@@ -162,9 +181,9 @@ public:
       \a buf_size which defines how many tracks the container will store
       before flushing them to the output file.
     */
-    EGS_ParticleTrackContainer(const char* fname, int buf_size) : m_nEvents(0),
-    m_nTracks(0), m_totalTracks(0), m_isScoring(NULL), m_bufferSize(0), m_buffer(0),
-    m_trspFile(NULL) {
+    EGS_ParticleTrackContainer(const char *fname, int buf_size) : m_nEvents(0),
+        m_nTracks(0), m_totalTracks(0), m_isScoring(NULL), m_bufferSize(0), m_buffer(0),
+        m_trspFile(NULL) {
         m_bufferSize = buf_size;
 
         // initialize the arrays
@@ -188,25 +207,41 @@ public:
     /*! \brief The Destructor. Deallocate all allocated memory. */
     ~EGS_ParticleTrackContainer() {
         // if any particles are left in memory -> flush them to the file
-        if (m_nTracks > 0) flushBuffer();
+        if (m_nTracks > 0) {
+            flushBuffer();
+        }
 
         if (m_buffer) {
             for (int i = 0; i < m_bufferSize; i++) {
-                if (m_buffer[i])
-                    delete m_buffer[i]; m_buffer[i] = NULL;
+                if (m_buffer[i]) {
+                    delete m_buffer[i];
+                }
+                m_buffer[i] = NULL;
             }
-            delete [] m_buffer; m_buffer = NULL;
+            delete [] m_buffer;
+            m_buffer = NULL;
         }
-        if (m_stackMap) delete [] m_stackMap;
-        if (m_isScoring) delete [] m_isScoring;
-        if (m_trspFile) delete m_trspFile; m_trspFile = NULL;
+        if (m_stackMap) {
+            delete [] m_stackMap;
+        }
+        if (m_isScoring) {
+            delete [] m_isScoring;
+        }
+        if (m_trspFile) {
+            delete m_trspFile;
+        }
+        m_trspFile = NULL;
     };
 
     /*! \brief Save the number of events (for example, decays) tracked so far. */
-    void setEvents(int e) { m_nEvents = e; }
+    void setEvents(int e) {
+        m_nEvents = e;
+    }
 
     /*! \brief Get the number of events tracked so far. */
-    int getEvents() { return m_nEvents; }
+    int getEvents() {
+        return m_nEvents;
+    }
 
     /*! \brief Get the number of vertices in the track currently being scorred */
     int getCurrentNumVertices() {
@@ -227,10 +262,12 @@ public:
     /*! \brief Get the \a v vertex from the \a tr track.
         \todo Have to test this method.
     */
-    EGS_ParticleTrack::Vertex* getTrackVertex(int tr, int v);
+    EGS_ParticleTrack::Vertex *getTrackVertex(int tr, int v);
 
     /*! \brief Are we still scoring the current particle? */
-    bool isScoringParticle() { return m_isScoring[m_nTracks-1]; }
+    bool isScoringParticle() {
+        return m_isScoring[m_nTracks-1];
+    }
 
     /*! \brief Are we still scoring the particle mapped by the stack? */
     bool isScoringParticle(int stackIndex) {
@@ -238,7 +275,9 @@ public:
     }
 
     /*! \brief Stop scoring the current particle. */
-    void stopScoringParticle() { m_isScoring[m_nTracks-1] = false; }
+    void stopScoringParticle() {
+        m_isScoring[m_nTracks-1] = false;
+    }
 
     /*! \brief Stop scoring the particle mapped by the stack. */
     void stopScoringParticle(int stackIndex) {

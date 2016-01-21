@@ -53,7 +53,7 @@
    If an error occures, \a igeom is set to a negative error code.
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_init_geometry,EGSPP_INIT_GEOMETRY)(
-        EGS_I32 *igeom, const char *file_name, int flength);
+    EGS_I32 *igeom, const char *file_name, int flength);
 
 /* \brief The howfar function.
 
@@ -65,10 +65,10 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_init_geometry,EGSPP_INIT_GEOMETRY
    distance to the intersection. Else, \a inew is set to \a ireg.
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_howfar,EGSPP_HOWFAR)(
-        const EGS_I32 *igeom, const EGS_I32 *ireg,
-        const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
-        const EGS_Float *u, const EGS_Float *v, const EGS_Float *w,
-        EGS_I32 *inew, EGS_I32 *newmed, EGS_Float *ustep);
+    const EGS_I32 *igeom, const EGS_I32 *ireg,
+    const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
+    const EGS_Float *u, const EGS_Float *v, const EGS_Float *w,
+    EGS_I32 *inew, EGS_I32 *newmed, EGS_Float *ustep);
 
 /* \brief The hownear function.
 
@@ -77,9 +77,9 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_howfar,EGSPP_HOWFAR)(
    distance to a boundary for the geometry with index \a igeom.
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_hownear,EGSPP_HOWNEAR)(
-        const EGS_I32 *igeom, const EGS_I32 *ireg,
-        const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
-        EGS_Float *tperp);
+    const EGS_I32 *igeom, const EGS_I32 *ireg,
+    const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
+    EGS_Float *tperp);
 
 /* \brief The is_where function.
 
@@ -87,9 +87,9 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_hownear,EGSPP_HOWNEAR)(
    to the region number in geometry \a igeom (or -1 if outside).
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_is_where,EGSPP_IS_WHERE)(
-        const EGS_I32 *igeom,
-        const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
-        EGS_I32 *ireg);
+    const EGS_I32 *igeom,
+    const EGS_Float *x, const EGS_Float *y, const EGS_Float *z,
+    EGS_I32 *ireg);
 
 
 /* \brief Get the number of regions in a geometry.
@@ -98,7 +98,7 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_is_where,EGSPP_IS_WHERE)(
    \a igeom.
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_n_regions,EGSPP_N_REGIONS)(
-        const EGS_I32 *igeom, EGS_I32 *nreg);
+    const EGS_I32 *igeom, EGS_I32 *nreg);
 
 /* \brief Get a description of a geometry.
 
@@ -106,7 +106,7 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_n_regions,EGSPP_N_REGIONS)(
    \a igeom using egsInformation().
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_describe_geometry,EGSPP_DESCRIBE_GEOMETRY)(
-        const EGS_I32 *igeom);
+    const EGS_I32 *igeom);
 
 /* \brief Get the number of media defined in all egspp geometries
 
@@ -122,6 +122,6 @@ extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_n_media,EGSPP_N_MEDIA)(EGS_I32 *n
   used, i.e., first medium is 1 instead of 0.
 */
 extern __extc__ void EGS_EXPORT F77_OBJ_(egspp_get_medium_name,EGSPP_GET_MEDIUM_NAME)(
-        const EGS_I32 *imed, char *medname, int mlength);
+    const EGS_I32 *imed, char *medname, int mlength);
 
 #endif

@@ -40,7 +40,7 @@
 #include "egs_libconfig.h"
 #include "egs_rndm.h"
 
-typedef EGS_Float (*EGS_AtFunction)(EGS_Float,void*);
+typedef EGS_Float(*EGS_AtFunction)(EGS_Float,void *);
 
 /*! \brief A class for sampling random values from a given probability
   distribution using the alias table technique.
@@ -71,7 +71,9 @@ public:
     EGS_AliasTable() : n(0) {};
 
     /*! \brief Copy constructor. Performs a deep copy */
-    EGS_AliasTable(const EGS_AliasTable &t) : n(0) { copy(t); };
+    EGS_AliasTable(const EGS_AliasTable &t) : n(0) {
+        copy(t);
+    };
 
     /*! \brief Construct an alias table from the tabulated distribution
       with \a N bins with probabilities \a f at the bins \a x.
@@ -88,7 +90,9 @@ public:
       \f$x_{i+1},f_{i+1}\f$.
      */
     EGS_AliasTable(int N, const EGS_Float *x, const EGS_Float *f,
-            int Type = 1) : n(0) { initialize(N,x,f,Type); };
+                   int Type = 1) : n(0) {
+        initialize(N,x,f,Type);
+    };
 
 
     /*! \brief Construct an alias table for sampling values in the interval
@@ -102,7 +106,7 @@ public:
       Internally the alias table will be set to be of type 2.
      */
     EGS_AliasTable(EGS_Float xmin, EGS_Float xmax, EGS_Float accu, int nmax,
-                  EGS_AtFunction func, void *data) : n(0) {
+                   EGS_AtFunction func, void *data) : n(0) {
         initialize(xmin,xmax,accu,nmax,func,data);
     };
 
@@ -111,7 +115,7 @@ public:
     See \link EGS_AliasTable::EGS_AliasTable(int,const EGS_Float*,const EGS_Float*,int=1) the constructor \endlink with corresponding arguments.
     */
     void initialize(int N, const EGS_Float *x, const EGS_Float *f,
-            int Type = 1);
+                    int Type = 1);
 
     /*! \brief Initialize the alias table
 
@@ -133,10 +137,14 @@ public:
 
     /*! \brief Get the average of the probability distribution represented
       by this alias table object. */
-    EGS_Float getAverage() const { return average; };
+    EGS_Float getAverage() const {
+        return average;
+    };
 
     /*! \brief Get the maximum abscissa of this alias table object. */
-    EGS_Float getMaximum() const { return xi[n-1]; };
+    EGS_Float getMaximum() const {
+        return xi[n-1];
+    };
 
 private:
 
@@ -189,7 +197,7 @@ public:
     Returns a random bin according to the bin probabilities for this alias table
     */
     int sample(EGS_RandomGenerator *rndm) const {
-        int bin = (int) (rndm->getUniform()*n);
+        int bin = (int)(rndm->getUniform()*n);
         return rndm->getUniform() < wi[bin] ? bin : bins[bin];
     };
 

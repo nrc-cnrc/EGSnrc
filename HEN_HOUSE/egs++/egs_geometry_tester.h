@@ -245,7 +245,7 @@ public:
         the file.
 
      */
-    static EGS_GeometryTester* getGeometryTester(EGS_Input *i);
+    static EGS_GeometryTester *getGeometryTester(EGS_Input *i);
 
 protected:
 

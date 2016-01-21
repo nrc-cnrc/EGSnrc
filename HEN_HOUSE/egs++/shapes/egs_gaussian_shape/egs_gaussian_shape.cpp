@@ -40,43 +40,52 @@
 
 extern "C" {
 
-EGS_GAUSSIAN_SHAPE_EXPORT EGS_BaseShape* createShape(EGS_Input *input,
-        EGS_ObjectFactory *f) {
-    if( !input ) {
-        egsWarning("createShape(circle): null input?\n"); return 0;
-    }
-    vector<EGS_Float> sigma;
-    int err = input->getInput("sigma",sigma);
-    if( err ) {
-        egsWarning("createShape(gaussian shape): no 'sigma' input\n"); return 0;
-    }
-    EGS_Input *ishape = input->takeInputItem("shape",false);
-    EGS_BaseShape *shape = 0;
-    if( ishape ) {
-        shape = EGS_BaseShape::createShape(ishape); delete ishape;
-    }
-    if( !shape ) {
-        string shape_name; int err = input->getInput("shape name",shape_name);
-        if( err ) {
-            egsWarning("createShape(gaussian shape): no inline shape definition"
-                  " and no 'shape name' keyword\n"); return 0;
-        }
-        shape = EGS_BaseShape::getShape(shape_name);
-        if( !shape ) {
-            egsWarning("createShape(gaussian shape): no shape named %s "
-                    "exists\n",shape_name.c_str());
+    EGS_GAUSSIAN_SHAPE_EXPORT EGS_BaseShape *createShape(EGS_Input *input,
+            EGS_ObjectFactory *f) {
+        if (!input) {
+            egsWarning("createShape(circle): null input?\n");
             return 0;
         }
+        vector<EGS_Float> sigma;
+        int err = input->getInput("sigma",sigma);
+        if (err) {
+            egsWarning("createShape(gaussian shape): no 'sigma' input\n");
+            return 0;
+        }
+        EGS_Input *ishape = input->takeInputItem("shape",false);
+        EGS_BaseShape *shape = 0;
+        if (ishape) {
+            shape = EGS_BaseShape::createShape(ishape);
+            delete ishape;
+        }
+        if (!shape) {
+            string shape_name;
+            int err = input->getInput("shape name",shape_name);
+            if (err) {
+                egsWarning("createShape(gaussian shape): no inline shape definition"
+                           " and no 'shape name' keyword\n");
+                return 0;
+            }
+            shape = EGS_BaseShape::getShape(shape_name);
+            if (!shape) {
+                egsWarning("createShape(gaussian shape): no shape named %s "
+                           "exists\n",shape_name.c_str());
+                return 0;
+            }
+        }
+        EGS_GaussianShape *s;
+        if (sigma.size() == 1) {
+            s = new EGS_GaussianShape(shape,sigma[0],0,0,"",f);
+        }
+        else if (sigma.size() == 2) {
+            s = new EGS_GaussianShape(shape,sigma[0],sigma[1],0,"",f);
+        }
+        else {
+            s = new EGS_GaussianShape(shape,sigma[0],sigma[1],sigma[2],"",f);
+        }
+        s->setName(input);
+        s->setTransformation(input);
+        return s;
     }
-    EGS_GaussianShape *s;
-    if( sigma.size() == 1 )
-        s = new EGS_GaussianShape(shape,sigma[0],0,0,"",f);
-    else if( sigma.size() == 2 )
-        s = new EGS_GaussianShape(shape,sigma[0],sigma[1],0,"",f);
-    else
-        s = new EGS_GaussianShape(shape,sigma[0],sigma[1],sigma[2],"",f);
-    s->setName(input); s->setTransformation(input);
-    return s;
-}
 
 }

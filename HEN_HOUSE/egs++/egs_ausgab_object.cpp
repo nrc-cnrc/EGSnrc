@@ -45,23 +45,27 @@ ausgab_object_creator(string("egs++/dso/")+CONFIG_NAME,"EGS_AusgabObject");
 
 void EGS_AusgabObject::createAusgabObjects(EGS_Input *i) {
     ausgab_object_creator.createObjects(i,"ausgab object definition",
-            "ausgab object","__no__key__","createAusgabObject",true);
+                                        "ausgab object","__no__key__","createAusgabObject",true);
 }
 
-EGS_AusgabObject* EGS_AusgabObject::getAusgabObject(const string &Name) {
+EGS_AusgabObject *EGS_AusgabObject::getAusgabObject(const string &Name) {
     EGS_Object *o = ausgab_object_creator.getObject(Name);
-    if( !o ) return 0;
+    if (!o) {
+        return 0;
+    }
     EGS_AusgabObject *s = dynamic_cast<EGS_AusgabObject *>(o);
-    if( s ) return s;
+    if (s) {
+        return s;
+    }
     egsWarning("EGS_AusgabObject::getAusgabObject(): dynamic cast failed?\n"
-         "  Object named %s is of type %s. Trying simple cast\n",
-         Name.c_str(),o->getObjectType().c_str());
+               "  Object named %s is of type %s. Trying simple cast\n",
+               Name.c_str(),o->getObjectType().c_str());
     return (EGS_AusgabObject *)o;
 }
 
 void EGS_AusgabObject::addKnownAusgabObject(EGS_AusgabObject *o) {
-    if(o) egsInformation("Adding known ausgab object of type %s\n",
-            o->getObjectType().c_str());
+    if (o) egsInformation("Adding known ausgab object of type %s\n",
+                              o->getObjectType().c_str());
     ausgab_object_creator.addKnownObject(o);
 }
 
@@ -69,7 +73,10 @@ void EGS_AusgabObject::addKnownTypeId(const char *tid) {
     ausgab_object_creator.addKnownTypeId(tid);
 }
 
-int EGS_AusgabObject::nObjects() { return ausgab_object_creator.nObjects(); }
+int EGS_AusgabObject::nObjects() {
+    return ausgab_object_creator.nObjects();
+}
 
-EGS_AusgabObject* EGS_AusgabObject::getObject(int j) {
-    return (EGS_AusgabObject*) ausgab_object_creator.getObject(j); }
+EGS_AusgabObject *EGS_AusgabObject::getObject(int j) {
+    return (EGS_AusgabObject *) ausgab_object_creator.getObject(j);
+}

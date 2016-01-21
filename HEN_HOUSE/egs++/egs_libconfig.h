@@ -48,7 +48,7 @@
 */
 
 #ifdef MISSING
-#include "missing.h"
+    #include "missing.h"
 #endif
 
 #include "egs_config1.h"
@@ -60,37 +60,37 @@
 
 #ifdef WIN32
 
-#ifdef BUILD_APP_LIB
-#define APP_EXPORT __declspec(dllexport)
-#else
-#define APP_EXPORT
-#endif
+    #ifdef BUILD_APP_LIB
+        #define APP_EXPORT __declspec(dllexport)
+    #else
+        #define APP_EXPORT
+    #endif
 
-#ifdef BUILD_DLL
-#define EGS_EXPORT __declspec(dllexport)
-#else
-#define EGS_EXPORT __declspec(dllimport)
-#endif
-#define EGS_LOCAL
-#define APP_LOCAL
+    #ifdef BUILD_DLL
+        #define EGS_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_LOCAL
+    #define APP_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#ifdef BUILD_APP_LIB
-#define APP_EXPORT __attribute__ ((visibility ("default")))
-#else
-#define APP_EXPORT
-#endif
-#define EGS_EXPORT __attribute__ ((visibility ("default")))
-#define EGS_LOCAL  __attribute__ ((visibility ("hidden")))
-#define APP_LOCAL  __attribute__ ((visibility ("hidden")))
-#else
-#define APP_EXPORT
-#define EGS_EXPORT
-#define EGS_LOCAL
-#define APP_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #ifdef BUILD_APP_LIB
+            #define APP_EXPORT __attribute__ ((visibility ("default")))
+        #else
+            #define APP_EXPORT
+        #endif
+        #define EGS_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_LOCAL  __attribute__ ((visibility ("hidden")))
+        #define APP_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define APP_EXPORT
+        #define EGS_EXPORT
+        #define EGS_LOCAL
+        #define APP_LOCAL
+    #endif
 
 #endif
 

@@ -56,93 +56,116 @@ class EGS_EXPORT EGS_Vector {
 
 public:
 
-  EGS_Float x; //!< x-component
-  EGS_Float y; //!< y-component
-  EGS_Float z; //!< z-component
+    EGS_Float x; //!< x-component
+    EGS_Float y; //!< y-component
+    EGS_Float z; //!< z-component
 
-  EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {};
-  EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {};
-  EGS_Vector() : x(0), y(0), z(0) {};
+    EGS_Vector(EGS_Float xx, EGS_Float yy, EGS_Float zz) : x(xx), y(yy), z(zz) {};
+    EGS_Vector(const EGS_Vector &v) : x(v.x), y(v.y), z(v.z) {};
+    EGS_Vector() : x(0), y(0), z(0) {};
 
-  EGS_Vector &operator=(const EGS_Vector &v) {
-    x = v.x; y = v.y; z = v.z;
-    return *this;
-  };
+    EGS_Vector &operator=(const EGS_Vector &v) {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+        return *this;
+    };
 
-  // EGS_Vector additions
-  //
-  EGS_Vector operator+(const EGS_Vector &v) const {
-      return EGS_Vector(x+v.x, y+v.y, z+v.z);
-  };
-  EGS_Vector &operator+=(const EGS_Vector &v) {
-    x += v.x; y += v.y; z += v.z; return *this;
-  };
+    // EGS_Vector additions
+    //
+    EGS_Vector operator+(const EGS_Vector &v) const {
+        return EGS_Vector(x+v.x, y+v.y, z+v.z);
+    };
+    EGS_Vector &operator+=(const EGS_Vector &v) {
+        x += v.x;
+        y += v.y;
+        z += v.z;
+        return *this;
+    };
 
-  // EGS_Vector substractions
-  //
-  EGS_Vector operator-(const EGS_Vector &v) const {
-    return EGS_Vector(x-v.x,y-v.y,z-v.z);
-  }
-  EGS_Vector &operator-=(const EGS_Vector &v) {
-    x -= v.x; y -= v.y; z -= v.z; return *this;
-  };
-
-  // EGS_Vector multiplications
-  //
-  EGS_Vector operator*(const EGS_Float f) const {
-      return EGS_Vector(x*f,y*f,z*f);
-  };
-  EGS_Vector &operator*=(const EGS_Float f) {
-    x *= f; y *= f; z *= f; return *this;
-  };
-  friend EGS_Vector operator*(EGS_Float f, EGS_Vector &v) {
-    return v*f;
-  };
-  EGS_Float operator*(const EGS_Vector &v) const {
-    return x*v.x + y*v.y + z*v.z;
-  };
-
-  // vector product
-  EGS_Vector times(const EGS_Vector &v) const {
-      return EGS_Vector(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x);
-  };
-  EGS_Vector operator%(const EGS_Vector &v) const {
-      return EGS_Vector(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x);
-  };
-
-  // scale
-  EGS_Vector getScaled(const EGS_Vector &s) const {
-      return EGS_Vector(x*s.x,y*s.y,z*s.z);
-  };
-  void scale(const EGS_Vector &s) {
-      x *= s.x; y *= s.y; z *= s.z;
-  };
-
-  // Some other useful methods.
-  EGS_Float length() const { return sqrt(x*x+y*y+z*z); };
-  EGS_Float length2() const { return x*x+y*y+z*z; };
-  void normalize() {
-      EGS_Float tmp = 1./length(); x *= tmp; y *= tmp; z *= tmp;
-  };
-
-  void rotate(EGS_Float cos_t, EGS_Float sin_t,
-              EGS_Float c_phi, EGS_Float s_phi) {
-    EGS_Float sin_z = x*x + y*y;
-    if( sin_z > 1e-10 ) {
-      sin_z = sqrt(sin_z);
-      EGS_Float temp = sin_t/sin_z;
-      EGS_Float temp_phi = z*c_phi;
-      EGS_Float temp_x = x*cos_t; register EGS_Float temp_y = y*cos_t;
-      EGS_Float temp_x1 = temp_phi*x-y*s_phi;
-      EGS_Float temp_y1 = temp_phi*y+x*s_phi;
-      x = temp*temp_x1+temp_x;
-      y = temp*temp_y1+temp_y;
-      z = z*cos_t-sin_z*sin_t*c_phi;
+    // EGS_Vector substractions
+    //
+    EGS_Vector operator-(const EGS_Vector &v) const {
+        return EGS_Vector(x-v.x,y-v.y,z-v.z);
     }
-    else {
-      x = sin_t*c_phi; y = sin_t*s_phi; z *= cos_t;
-    }
-  };
+    EGS_Vector &operator-=(const EGS_Vector &v) {
+        x -= v.x;
+        y -= v.y;
+        z -= v.z;
+        return *this;
+    };
+
+    // EGS_Vector multiplications
+    //
+    EGS_Vector operator*(const EGS_Float f) const {
+        return EGS_Vector(x*f,y*f,z*f);
+    };
+    EGS_Vector &operator*=(const EGS_Float f) {
+        x *= f;
+        y *= f;
+        z *= f;
+        return *this;
+    };
+    friend EGS_Vector operator*(EGS_Float f, EGS_Vector &v) {
+        return v*f;
+    };
+    EGS_Float operator*(const EGS_Vector &v) const {
+        return x*v.x + y*v.y + z*v.z;
+    };
+
+    // vector product
+    EGS_Vector times(const EGS_Vector &v) const {
+        return EGS_Vector(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x);
+    };
+    EGS_Vector operator%(const EGS_Vector &v) const {
+        return EGS_Vector(y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x);
+    };
+
+    // scale
+    EGS_Vector getScaled(const EGS_Vector &s) const {
+        return EGS_Vector(x*s.x,y*s.y,z*s.z);
+    };
+    void scale(const EGS_Vector &s) {
+        x *= s.x;
+        y *= s.y;
+        z *= s.z;
+    };
+
+    // Some other useful methods.
+    EGS_Float length() const {
+        return sqrt(x*x+y*y+z*z);
+    };
+    EGS_Float length2() const {
+        return x*x+y*y+z*z;
+    };
+    void normalize() {
+        EGS_Float tmp = 1./length();
+        x *= tmp;
+        y *= tmp;
+        z *= tmp;
+    };
+
+    void rotate(EGS_Float cos_t, EGS_Float sin_t,
+                EGS_Float c_phi, EGS_Float s_phi) {
+        EGS_Float sin_z = x*x + y*y;
+        if (sin_z > 1e-10) {
+            sin_z = sqrt(sin_z);
+            EGS_Float temp = sin_t/sin_z;
+            EGS_Float temp_phi = z*c_phi;
+            EGS_Float temp_x = x*cos_t;
+            register EGS_Float temp_y = y*cos_t;
+            EGS_Float temp_x1 = temp_phi*x-y*s_phi;
+            EGS_Float temp_y1 = temp_phi*y+x*s_phi;
+            x = temp*temp_x1+temp_x;
+            y = temp*temp_y1+temp_y;
+            z = z*cos_t-sin_z*sin_t*c_phi;
+        }
+        else {
+            x = sin_t*c_phi;
+            y = sin_t*s_phi;
+            z *= cos_t;
+        }
+    };
 
 };
 
