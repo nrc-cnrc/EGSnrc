@@ -13524,7 +13524,7 @@ IF( error_flags(ival-1) = 0 & error_flags(ival) = 0 ) [
             IF( cs_enhance(i) > 1 ) [ use_cs_enhance = .true.; EXIT; ]
         ]
         IF( use_cs_enhance ) [
-            OUTPUT; (//'********** Photon cross section enhancement will be used',
+          OUTPUT; (//'********** Photon cross section enhancement will be used',
                     ' in the following CMs: ******');
             DO i=1,$MAX_CMs [
                 IF( cs_enhance(i) > 1 ) [
