@@ -1087,12 +1087,12 @@ extern __extc__ void egsHowfar() {
         return;
     }
     int newmed;
-    EGS_Float tsave = the_epcont->ustep;
     int inew = app->howfar(ireg,
                            EGS_Vector(the_stack->x[np],the_stack->y[np],the_stack->z[np]),
                            EGS_Vector(the_stack->u[np],the_stack->v[np],the_stack->w[np]),
                            the_epcont->ustep,&newmed);
 #ifdef GDEBUG
+    EGS_Float tsave = the_epcont->ustep;
     if (steps_n < MAX_STEP) {
         steps_x[steps_n] =
             EGS_Vector(the_stack->x[np],the_stack->y[np],the_stack->z[np]);
