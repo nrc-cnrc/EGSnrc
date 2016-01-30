@@ -262,13 +262,13 @@ public:
         name(Name), type(1), float_input(val) {};
     /* Character string input type = 3 */
     EGS_TransportProperty(const char *Name, int L, char *val) :
-        name(Name), type(3), char_input(val), len(L) {};
+        name(Name), type(3), len(L), char_input(val)  {};
     /* Character string array input type = 4 */
     EGS_TransportProperty(const char *Name,int L,int N,vector<string> *str):
-        name(Name), type(4), str_v(str), len(L), nitem(N) {};
+        name(Name), str_v(str), type(4), len(L), nitem(N) {};
     /* Real array input type = 5 */
     EGS_TransportProperty(const char *Name,int N,vector<EGS_Float> *f):
-        name(Name), type(5), f_v(f), nitem(N) {};
+        name(Name), f_v(f), type(5), nitem(N) {};
     /* Integer input with allowed values => type = 2 */
     void addOption(const char *opt) {
         options.push_back(opt);
@@ -394,7 +394,7 @@ public:
 #endif
 
 EGS_AdvancedApplication::EGS_AdvancedApplication(int argc, char **argv) :
-    EGS_Application(argc,argv), n_rng_buffer(0), final_job(false), nmed(0), io_flag(0) { }
+    EGS_Application(argc,argv), nmed(0), n_rng_buffer(0), final_job(false), io_flag(0) { }
 
 EGS_AdvancedApplication::~EGS_AdvancedApplication() {
     if (n_rng_buffer > 0) {
