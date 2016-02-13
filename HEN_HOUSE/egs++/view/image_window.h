@@ -72,6 +72,8 @@ public slots:
     void startTransformation();
     void endTransformation();
 
+    void showRegions(bool show);
+
 protected:
 
     void rerender(EGS_BaseGeometry *geo);
@@ -117,6 +119,7 @@ private:
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer *vis;
     bool regionsDisplayed;
+    bool regionsWanted;
     QPoint xyMouse;
     QPoint lastMouse;
     int lastRegions[N_REG_MAX];

@@ -141,7 +141,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // various state variables
     showAxes = this->showAxesCheckbox->isChecked();
     showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
-    showRegions = this->showRegionsCheckbox->isChecked();
     showTracks = this->showTracksCheckbox->isChecked();
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
@@ -163,6 +162,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     gview = new ImageWindow(this,"gview");
     gview->resize(512,512);
+    gview->showRegions(this->showRegionsCheckbox->isChecked());
 
     // connect signals and slots for mouse navigation
     connect(gview, SIGNAL(cameraRotation(int, int)), this, SLOT(cameraRotate(int, int)));
@@ -308,7 +308,7 @@ void GeometryViewControl::checkboxAxesLabels(bool toggle) {
 }
 
 void GeometryViewControl::checkboxShowRegions(bool toggle) {
-    showRegions = toggle;
+    gview->showRegions(toggle);
 }
 
 void GeometryViewControl::checkboxShowTracks(bool toggle) {

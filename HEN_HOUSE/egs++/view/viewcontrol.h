@@ -157,7 +157,6 @@ private:
     EGS_BaseGeometry *g;
     bool showAxes;
     bool showAxesLabels;
-    bool showRegions;
     bool showTracks;
     bool showPhotonTracks;
     bool showElectronTracks;

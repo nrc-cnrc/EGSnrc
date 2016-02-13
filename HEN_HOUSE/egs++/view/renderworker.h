@@ -40,7 +40,7 @@
 using std::vector;
 
 typedef enum {
-    Transformation, FullDetail, SavedImage
+    ForScreen, SavedImage
 } RenderRequestType;
 
 // This struct is designed to be passed by value.
@@ -77,7 +77,7 @@ struct RenderParameters {
     bool draw_axeslabels;
     EGS_Vector axesmax;
     EGS_Float size;
-    // passthrough: request type. Does this belong in the struct?
+    // Purpose of request
     RenderRequestType requestType;
 };
 

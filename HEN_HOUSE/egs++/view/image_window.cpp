@@ -78,6 +78,7 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     regionsDisplayed = true;
 
     isSaving = false;
+    regionsWanted = false;
 
     vis = new EGS_GeometryVisualizer;
 
@@ -185,6 +186,7 @@ void ImageWindow::rerender(EGS_BaseGeometry *geo) {
 #endif
 
     renderState = WorkerCalculating;
+    pars.requestType = ForScreen;
     emit requestRender(lastRequestGeo, pars);
 }
 
@@ -262,6 +264,14 @@ void ImageWindow::endTransformation() {
     }
 }
 
+void ImageWindow::showRegions(bool show) {
+    regionsWanted = show;
+    if (regionsWanted) {
+        rerenderRequested = true;
+    }
+    update();
+}
+
 void ImageWindow::resizeEvent(QResizeEvent *e) {
 #ifdef VIEW_DEBUG
     egsWarning("In resizeEvent(): size is %d %d old size is: %d %d" " shown: %d\n",width(),height(),e->oldSize().width(), e->oldSize().height(),isVisible());
@@ -295,7 +305,14 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         p.end();
     }
 
-    if (!navigating) {
+    if (regionsDisplayed && !regionsWanted) {
+        QPainter p(this);
+        // repaint just the eclipsed region (painter has clip)
+        p.drawImage(QPoint(0,0),r.img);
+        p.end();
+    }
+
+    if (!navigating && regionsWanted) {
         // Don't recalculate an identical point, unless
         // the rerender wiped everything.
         if (!wasRerenderRequested && xyMouse == lastMouse) {
