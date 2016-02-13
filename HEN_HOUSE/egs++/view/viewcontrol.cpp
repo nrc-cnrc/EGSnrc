@@ -173,6 +173,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
+    // Connect signal to enable saveImage button after image saved
+    connect(gview, SIGNAL(saveComplete()), this, SLOT(reenableSave()));
 
     save_image = new SaveImage(this,"save image");
 
@@ -1229,9 +1231,14 @@ void GeometryViewControl::saveImage() {
     egsWarning("\nAbout to save %dx%d image into file %s in format %s\n\n",
                nx,ny,fname.toUtf8().constData(),format.toUtf8().constData());
 #endif
+    // Disable save button until image save complete
+    this->pushButton5->setEnabled(false);
     gview->saveView(g,nx,ny,fname,format);
 }
 
+void GeometryViewControl::reenableSave() {
+    this->pushButton5->setEnabled(true);
+}
 
 void GeometryViewControl::showHideOptions() {
 #ifdef VIEW_DEBUG

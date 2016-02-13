@@ -100,6 +100,7 @@ signals:
     void cameraHomeDefining();
     void putCameraOnAxis(char axis);
     void leftMouseClick(int x, int y);
+    void saveComplete();
 
     // for render thread
     void requestRender(EGS_BaseGeometry *,RenderParameters);
@@ -127,12 +128,12 @@ private:
     RenderParameters lastRequest;
     enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
     EGS_BaseGeometry *lastRequestGeo;
-    RenderRequestType activeRequestType;
+    bool wasLastRequestSlow;
 
     // Image saving
     QString saveName;
     QString saveExtension;
-    QProgressDialog *saveProgress;
+    bool isSaving;
 };
 
 #endif

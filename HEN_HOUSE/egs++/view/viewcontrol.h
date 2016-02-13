@@ -106,6 +106,7 @@ public slots:
     virtual void updateColorLabel(int med);
     virtual void changeColor();
     virtual void saveImage();
+    virtual void reenableSave();
     virtual void showHideOptions();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
