@@ -83,7 +83,7 @@ public:
         return *this;
     };
 
-    // EGS_Vector substractions
+    // EGS_Vector subtractions
     //
     EGS_Vector operator-(const EGS_Vector &v) const {
         return EGS_Vector(x-v.x,y-v.y,z-v.z);
@@ -106,7 +106,7 @@ public:
         z *= f;
         return *this;
     };
-    friend EGS_Vector operator*(EGS_Float f, EGS_Vector &v) {
+    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {
         return v*f;
     };
     EGS_Float operator*(const EGS_Vector &v) const {

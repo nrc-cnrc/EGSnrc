@@ -34,7 +34,7 @@
 
 #include "egs_vector.h"
 #include "egs_math.h"
-#include "egs_track_view.h"
+#include "stddef.h"
 
 class EGS_Light;
 class EGS_MaterialColor;
@@ -44,9 +44,11 @@ class EGS_PrivateVisualizer;
 
 // Clipping plane class
 class EGS_ClippingPlane {
+public:
     EGS_Vector a;
     EGS_Float  d;
-public:
+
+    EGS_ClippingPlane() : a(0.,0.,0.), d(0.) {}
     EGS_ClippingPlane(const EGS_Vector &A, EGS_Float D) : a(A), d(D) {
         EGS_Float norm = 1/a.length();
         d *= norm;
