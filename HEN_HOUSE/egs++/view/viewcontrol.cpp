@@ -190,13 +190,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 GeometryViewControl::~GeometryViewControl() {
 }
 
-void GeometryViewControl::reloadInput() {
-
+bool GeometryViewControl::loadInput(bool reloading) {
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
         egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
-        return;
+        return false;
     }
 
     // read the input file again
@@ -271,8 +270,14 @@ void GeometryViewControl::reloadInput() {
     }
     // Start loading process
     gview->restartWorker();
-    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,1);
+    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
     reloadButton->blockSignals(false);
+    // check that the file (still) exists
+    return true;
+}
+
+void GeometryViewControl::reloadInput() {
+    loadInput(true);
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -797,7 +802,7 @@ int GeometryViewControl::setGeometry(
     EGS_BaseGeometry *geom,
     const std::vector<EGS_UserColor> &ucolors,
     EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax,
-    EGS_Float zmin, EGS_Float zmax, int justReloading) {
+    EGS_Float zmin, EGS_Float zmax, bool justReloading) {
     if (!geom) {
         egsWarning("setGeometry(): got null geometry\n");
         return 1;
@@ -845,7 +850,7 @@ int GeometryViewControl::setGeometry(
     materialCB->clear();
     m_colors = new QRgb [nmed];
     for (int j=0; j<nmed; j++) {
-        materialCB->insertItem(j, g->getMediumName(j));
+        materialCB->insertItem(j,g->getMediumName(j));
     }
     int nstandard = sizeof(standard_red)/sizeof(unsigned char);
     int js = 0;
