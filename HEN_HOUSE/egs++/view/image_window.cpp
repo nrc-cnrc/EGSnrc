@@ -297,7 +297,7 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         return;
     }
 
-    bool wasRerenderRequested = rerenderRequested;
+    bool wasRerenderRequested = true;
     rerenderRequested = false;
     if (wasRerenderRequested) {
         QPainter p(this);
