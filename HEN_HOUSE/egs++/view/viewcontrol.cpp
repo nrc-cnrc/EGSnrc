@@ -141,7 +141,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // various state variables
     showAxes = this->showAxesCheckbox->isChecked();
     showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
-    showRegions = this->showRegionsCheckbox->isChecked();
     showTracks = this->showTracksCheckbox->isChecked();
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
@@ -163,6 +162,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     gview = new ImageWindow(this,"gview");
     gview->resize(512,512);
+    gview->showRegions(this->showRegionsCheckbox->isChecked());
 
     // connect signals and slots for mouse navigation
     connect(gview, SIGNAL(cameraRotation(int, int)), this, SLOT(cameraRotate(int, int)));
@@ -173,6 +173,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
+    // Connect signal to enable saveImage button after image saved
+    connect(gview, SIGNAL(saveComplete()), this, SLOT(reenableSave()));
 
     save_image = new SaveImage(this,"save image");
 
@@ -190,13 +192,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 GeometryViewControl::~GeometryViewControl() {
 }
 
-void GeometryViewControl::reloadInput() {
-
+bool GeometryViewControl::loadInput(bool reloading) {
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
         egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
-        return;
+        return false;
     }
 
     // read the input file again
@@ -271,8 +272,14 @@ void GeometryViewControl::reloadInput() {
     }
     // Start loading process
     gview->restartWorker();
-    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,1);
+    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
     reloadButton->blockSignals(false);
+    // check that the file (still) exists
+    return true;
+}
+
+void GeometryViewControl::reloadInput() {
+    loadInput(true);
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -301,7 +308,7 @@ void GeometryViewControl::checkboxAxesLabels(bool toggle) {
 }
 
 void GeometryViewControl::checkboxShowRegions(bool toggle) {
-    showRegions = toggle;
+    gview->showRegions(toggle);
 }
 
 void GeometryViewControl::checkboxShowTracks(bool toggle) {
@@ -797,7 +804,7 @@ int GeometryViewControl::setGeometry(
     EGS_BaseGeometry *geom,
     const std::vector<EGS_UserColor> &ucolors,
     EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax,
-    EGS_Float zmin, EGS_Float zmax, int justReloading) {
+    EGS_Float zmin, EGS_Float zmax, bool justReloading) {
     if (!geom) {
         egsWarning("setGeometry(): got null geometry\n");
         return 1;
@@ -845,7 +852,7 @@ int GeometryViewControl::setGeometry(
     materialCB->clear();
     m_colors = new QRgb [nmed];
     for (int j=0; j<nmed; j++) {
-        materialCB->insertItem(j, g->getMediumName(j));
+        materialCB->insertItem(j,g->getMediumName(j));
     }
     int nstandard = sizeof(standard_red)/sizeof(unsigned char);
     int js = 0;
@@ -1224,9 +1231,14 @@ void GeometryViewControl::saveImage() {
     egsWarning("\nAbout to save %dx%d image into file %s in format %s\n\n",
                nx,ny,fname.toUtf8().constData(),format.toUtf8().constData());
 #endif
+    // Disable save button until image save complete
+    this->pushButton5->setEnabled(false);
     gview->saveView(g,nx,ny,fname,format);
 }
 
+void GeometryViewControl::reenableSave() {
+    this->pushButton5->setEnabled(true);
+}
 
 void GeometryViewControl::showHideOptions() {
 #ifdef VIEW_DEBUG

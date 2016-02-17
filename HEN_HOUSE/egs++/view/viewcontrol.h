@@ -66,8 +66,9 @@ public:
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
     virtual void setMaterialColor(int j);
-    virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading);
+    virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
+    virtual bool loadInput(bool first_time);
 
 public slots:
 
@@ -105,6 +106,7 @@ public slots:
     virtual void updateColorLabel(int med);
     virtual void changeColor();
     virtual void saveImage();
+    virtual void reenableSave();
     virtual void showHideOptions();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
@@ -155,7 +157,6 @@ private:
     EGS_BaseGeometry *g;
     bool showAxes;
     bool showAxesLabels;
-    bool showRegions;
     bool showTracks;
     bool showPhotonTracks;
     bool showElectronTracks;

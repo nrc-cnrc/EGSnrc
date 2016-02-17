@@ -40,7 +40,7 @@
 using std::vector;
 
 typedef enum {
-    Transformation, FullDetail, SavedImage
+    ForScreen, SavedImage
 } RenderRequestType;
 
 // This struct is designed to be passed by value.
@@ -77,19 +77,15 @@ struct RenderParameters {
     bool draw_axeslabels;
     EGS_Vector axesmax;
     EGS_Float size;
-    // passthrough: request type. Does this belong in the struct?
+    // Purpose of request
     RenderRequestType requestType;
 };
 
 struct RenderResults {
     QImage img;
-    // scaling rules
-    EGS_Vector axeslabelsX;
-    EGS_Vector axeslabelsY;
-    EGS_Vector axeslabelsZ;
     // misc info
-    EGS_Float elapsedTime;
-    EGS_Float trackTime;
+    EGS_Float elapsedTime; // Total render time
+    EGS_Float timePerPixel; // Pixel-dependent time / num pixels before scaling
 };
 
 void applyParameters(EGS_GeometryVisualizer *, const struct RenderParameters &);
@@ -105,10 +101,13 @@ public:
     // Set this to a nonzero value to make all renders fail asap.
     int abort_location;
 
+    // Synchronous rendering (blocks and returns results)
+    struct RenderResults renderSync(EGS_BaseGeometry *g, struct RenderParameters params);
+
 public slots:
 
     void loadTracks(QString fileName);
-
+    // Asynchronous rendering (values returned via signals)
     void render(EGS_BaseGeometry *g, struct RenderParameters params);
 
 signals:
@@ -121,11 +120,11 @@ private:
 
     EGS_GeometryVisualizer *vis;
     EGS_Vector *image;
+    QRgb *buffer;
     EGS_Vector axeslabelsX;
     EGS_Vector axeslabelsY;
     EGS_Vector axeslabelsZ;
-    int nx_last;
-    int ny_last;
+    int last_bufsize;
 };
 
 #endif // RENDERWORKER_H

@@ -39,6 +39,12 @@ html
 *.o
 *.so
 
+### ignore QT build folders
+
+.obj/
+.moc/
+.ui/
+
 ### ignore OS generated files
 *~
 ._*

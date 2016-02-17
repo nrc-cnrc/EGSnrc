@@ -40,6 +40,7 @@
 #include <QThread>
 #include <QProgressDialog>
 #include <QTimer>
+#include <QDateTime>
 
 // The below shim exists to ensure that QThread by default
 // runs an event loop for older Qt versions.
@@ -73,8 +74,11 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     lastResult.elapsedTime = -1.;
 
     lastRequestGeo = NULL;
-    saveProgress = NULL;
+    wasLastRequestSlow = false;
     regionsDisplayed = true;
+
+    isSaving = false;
+    regionsWanted = false;
 
     vis = new EGS_GeometryVisualizer;
 
@@ -94,166 +98,106 @@ ImageWindow::~ImageWindow() {
     stopWorker();
     delete navigationTimer;
     delete vis;
-};
-
-/* no longer in Qt4. What was this supposed to do?
-  void polish() {
-      //QDialog::polish();
-      QWidget::polish();
-      QWidget *topl = topLevelWidget();
-      //egsWarning("In polish: position: %d %d\n",pos().x(),pos().y());
-      //if( !topl ) egsWarning("Null top level widget!\n");
-      QWidget *parent = parentWidget();
-      if( !parent ) parent = topl;
-      //egsWarning("parent: %s\n",parent->name());
-      if( parent ) {
-          QPoint point = parent->mapToGlobal(QPoint(0,0));
-          //egsWarning("parent: %d %d\n",point.x(),point.y());
-          //QRect my_frame = frameGeometry();
-          //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-          //     my_frame.right(),my_frame.top(),my_frame.bottom());
-          int gview_x = point.x();
-          int gview_y = point.y() + parent->height();
-          //egsWarning("moving to %d %d\n",gview_x,gview_y);
-          move(gview_x,gview_y);
-          //my_frame = frameGeometry();
-          //egsWarning("my geometry: %d %d %d %d\n",my_frame.left(),
-          //     my_frame.right(),my_frame.top(),my_frame.bottom());
-      }
-  };
-  */
+}
 
 void ImageWindow::render(EGS_BaseGeometry *geo, bool transform) {
     if (transform) {
         startTransformation();
-    }
-    if (navigating) {
-        pars.requestType = Transformation;
-    }
-    else {
-        pars.requestType = FullDetail;
     }
     rerender(geo);
 }
 
 void ImageWindow::rerender(EGS_BaseGeometry *geo) {
     if (!thread) {
-        // Don't bother if the thread has been disabled
+        // Don't bother if the thread has been disabled.
         return;
     }
 
     lastRequestGeo = geo;
 
-    // Determine scaling depending on if the request is to
-    // draw at full detail or to be interactive. This flag _should_ be local
-
-    if (pars.requestType == FullDetail) {
-        pars.nx = this->width();
-        pars.ny = this->height();
-        pars.nxr = 1;
-        pars.nyr = 1;
+    if (renderState == WorkerCalculating || renderState == WorkerBackordered) {
+        // Abort slow full detail renders when fast response is needed
+        if (navigating && wasLastRequestSlow && !isSaving) {
+            worker->abort_location = 1;
+        }
+        // Busy, will call once current task is complete
+        renderState = WorkerBackordered;
+        return;
     }
-    else if (pars.requestType == Transformation) {
-        // Dynamically select a good render mode
-        int nx=this->width(),ny=this->height();
-        int nxr=nx,nyr=ny;
-        if (lastResult.elapsedTime > 0) {
-            // Cut out the track time because that is a fixed overhead.
-            // Otherwise, when you have a few hundred megabytes of tracks,
-            // the view decays to a single pixel and you _still_ get lag.
-            // The proper fix is some sort of track level-of-detail mechanism.
-            EGS_Float timePerPixel = (lastResult.elapsedTime - lastResult.trackTime) / (lastRequest.nx * lastRequest.ny);
-            EGS_Float target = 30.0; // msecs per frame
-            EGS_Float scale = nx*ny * timePerPixel / target;
+    // It should be the case that renderState == WorkerIdle.
 
-            if (scale > 1) {
-                scale = 1./sqrt(scale);
-                int nnx = (int)(scale*nx), nny = (int)(scale*ny);
-                if (nnx < 1) {
-                    nnx = 1;
-                }
-                if (nny < 1) {
-                    nny = 1;
-                }
-                nxr = nx/nnx;
-                if (nxr*nnx != nx) {
-                    nxr++;
-                }
-                nyr = ny/nny;
-                if (nyr*nny != ny) {
-                    nyr++;
-                }
-                nnx = nx/nxr;
-                nny = ny/nyr;
-                if (nnx*nxr < nx) {
-                    nnx++;
-                }
-                if (nny*nyr < ny) {
-                    nny++;
-                }
-#ifdef VIEW_DEBUG
-                egsWarning(" nx=%d ny=%d nnx=%d nny=%d nxr=%d nyr=%d\n",
-                           nx,ny,nnx,nny,nxr,nyr);
-#endif
-                nx = nnx;
-                ny = nny;
+    // Draw at full scale only if we are not currently in a transformation
+    int nx=this->width(),ny=this->height();
+    int nxr=1,nyr=1;
+    wasLastRequestSlow = false;
+    if (!navigating) {
+        // Full detail, keep defaults. May be slow.
+        wasLastRequestSlow = true;
+    }
+    else if (lastResult.elapsedTime <= 0) {
+        // No previous measurements, so guess
+        nxr = 4;
+        nyr = 4;
+    }
+    else {
+        // Dynamic scaling. Ignore the fixed costs of rendering, and tune
+        // the pixel-dependent costs to take a specific amount of time.
+        EGS_Float target = 30.0; // msecs per frame
+        EGS_Float timePerPixel = lastResult.timePerPixel;
+        EGS_Float scale = nx*ny * timePerPixel / target;
+        if (scale > 1) {
+            int sc = (int)sqrt(scale);
+            nxr = sc;
+            nyr = sc;
+            if (nxr * nyr < scale) {
+                nxr++;
             }
-            else {
-                nxr = 1;
-                nyr = 1;
+            if (nxr * nyr < scale) {
+                nyr++;
+            }
+            // prefer divisors
+            if (nx % nxr != 0 && nx % (nxr+1) == 0) {
+                nxr++;
+            }
+            if (ny % nyr != 0 && ny % (nyr+1) == 0) {
+                nyr++;
             }
         }
         else {
-            // First-time scale values.
-            nxr = 4;
-            nyr = 4;
-            int nnx = nx/nxr, nny = ny/nyr;
-            if (nnx*nxr < nx) {
-                nx = nnx+1;
-            }
-            else {
-                nx = nnx;
-            }
-            if (nny*nyr < ny) {
-                ny = nny+1;
-            }
-            else {
-                ny = nny;
-            }
+            // Fast enough that preemption isn't necessary
         }
-        pars.nx = nx;
-        pars.ny = ny;
-        pars.nxr = nxr;
-        pars.nyr = nyr;
     }
-    else {
-        // sizes subject to external control.
+    // Determine # of pixels needed
+    int nnx = nx/nxr;
+    int nny = ny/nyr;
+    if (nnx*nxr < nx) {
+        nnx++;
     }
+    if (nny*nyr < ny) {
+        nny++;
+    }
+    pars.nx = nnx;
+    pars.ny = nny;
+    pars.nxr = nxr;
+    pars.nyr = nyr;
+#ifdef VIEW_DEBUG
+    egsWarning(" nx=%d ny=%d nnx=%d nny=%d nxr=%d nyr=%d\n",
+               nx,ny,nnx,nny,nxr,nyr);
+#endif
 
-    // TODO: need some fast-abort method for the worker, to cancel
-    // old jobs IFF they are of lower priority than the current one
-
-    if (renderState == WorkerIdle) {
-        activeRequestType = pars.requestType;
-        emit requestRender(lastRequestGeo,pars);
-        renderState = WorkerCalculating;
-    }
-    else if (renderState == WorkerCalculating) {
-        // abort only to interrupt a full-detail calculation by a transformation
-        // since the latter makes the former invalid.
-        if (activeRequestType == FullDetail && pars.requestType == Transformation) {
-            worker->abort_location = 1;
-        }
-        renderState = WorkerBackordered;
-    }
+    renderState = WorkerCalculating;
+    pars.requestType = ForScreen;
+    emit requestRender(lastRequestGeo, pars);
 }
-
-void ImageWindow::loadTracks(QString name) {
-    emit requestLoadTracks(name);
-}
-
 
 void ImageWindow::saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, QString ext) {
+    if (isSaving) {
+        // Ignore new image request, as the old hasn't completed
+        return;
+    }
+
+    lastRequestGeo = geo;
+
     saveName = name;
     saveExtension = ext;
     // Temporarily change parameters to render at new resolution
@@ -263,12 +207,19 @@ void ImageWindow::saveView(EGS_BaseGeometry *geo, int nx, int ny, QString name, 
     pars.nx = nx;
     pars.ny = ny;
     pars.requestType = SavedImage;
-    rerender(geo);
+    // Queue directly to maintain correct state
+    emit requestRender(lastRequestGeo, pars);
+
     pars.nx = oldnx;
     pars.ny = oldny;
     pars.requestType = oldrq;
-    saveProgress = new QProgressDialog("Saving image", "&Cancel", 0, 2, this);
-    saveProgress->setMinimumDuration(500);
+
+    isSaving = true;
+}
+
+
+void ImageWindow::loadTracks(QString name) {
+    emit requestLoadTracks(name);
 }
 
 void ImageWindow::stopWorker() {
@@ -296,6 +247,7 @@ void ImageWindow::restartWorker() {
     connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
     connect(worker, SIGNAL(aborted()), this, SLOT(handleAbort()));
     thread->start();
+    renderState = WorkerIdle;
 }
 
 void ImageWindow::startTransformation() {
@@ -312,6 +264,14 @@ void ImageWindow::endTransformation() {
     }
 }
 
+void ImageWindow::showRegions(bool show) {
+    regionsWanted = show;
+    if (regionsWanted) {
+        rerenderRequested = true;
+    }
+    update();
+}
+
 void ImageWindow::resizeEvent(QResizeEvent *e) {
 #ifdef VIEW_DEBUG
     egsWarning("In resizeEvent(): size is %d %d old size is: %d %d" " shown: %d\n",width(),height(),e->oldSize().width(), e->oldSize().height(),isVisible());
@@ -320,26 +280,7 @@ void ImageWindow::resizeEvent(QResizeEvent *e) {
 
     if (e->size() != e->oldSize() && lastRequestGeo) {
         // treat this as a transformation, since more resizes tend to follow
-        startTransformation();
-        render(lastRequestGeo, false);
-    }
-};
-
-void ImageWindow::paintBackground(QPainter &p) {
-    const RenderParameters &q = lastRequest;
-    const RenderResults &r = lastResult;
-    if (q.nxr == 1 && q.nyr == 1) {
-        p.drawImage(QPoint(0,0),r.img);
-    }
-    else {
-        p.drawImage(QRect(0,0,q.nxr * q.nx, q.nyr * q.ny),r.img);
-    }
-
-    if (q.draw_axeslabels) {
-        p.setPen(QColor(255,255,255));
-        p.drawText((int)(q.nxr*r.axeslabelsX.x-3),q.nyr*q.ny-(int)(q.nyr*r.axeslabelsX.y-3),"x");
-        p.drawText((int)(q.nxr*r.axeslabelsY.x-3),q.nyr*q.ny-(int)(q.nyr*r.axeslabelsY.y-3),"y");
-        p.drawText((int)(q.nxr*r.axeslabelsZ.x-3),q.nyr*q.ny-(int)(q.nyr*r.axeslabelsZ.y-3),"z");
+        render(lastRequestGeo, true);
     }
 }
 
@@ -360,11 +301,18 @@ void ImageWindow::paintEvent(QPaintEvent *) {
     rerenderRequested = false;
     if (wasRerenderRequested) {
         QPainter p(this);
-        paintBackground(p);
+        p.drawImage(QPoint(0,0),r.img);
         p.end();
     }
 
-    if (!navigating) {
+    if (regionsDisplayed && !regionsWanted) {
+        QPainter p(this);
+        // repaint just the eclipsed region (painter has clip)
+        p.drawImage(QPoint(0,0),r.img);
+        p.end();
+    }
+
+    if (!navigating && regionsWanted) {
         // Don't recalculate an identical point, unless
         // the rerender wiped everything.
         if (!wasRerenderRequested && xyMouse == lastMouse) {
@@ -408,7 +356,7 @@ void ImageWindow::paintEvent(QPaintEvent *) {
             if (regionsDisplayed) {
                 regionsDisplayed=false;
                 // repaint just the eclipsed region (painter has clip)
-                paintBackground(p);
+                p.drawImage(QPoint(0,0),r.img);
             }
             p.end();
             return;
@@ -515,7 +463,7 @@ void ImageWindow::mouseMoveEvent(QMouseEvent *event) {
         // picking
         this->update();
     }
-};
+}
 
 void ImageWindow::wheelEvent(QWheelEvent *event) {
 #ifdef VIEW_DEBUG
@@ -524,7 +472,7 @@ void ImageWindow::wheelEvent(QWheelEvent *event) {
 #endif
     startTransformation();
     emit cameraZooming(event->delta()/20);
-};
+}
 
 void ImageWindow::keyPressEvent(QKeyEvent *event) {
 #ifdef VIEW_DEBUG
@@ -551,12 +499,19 @@ void ImageWindow::keyPressEvent(QKeyEvent *event) {
     else {
         (event->ignore());
     }
-};
+}
 
 void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
+    if (q.requestType == SavedImage) {
+        // Short circuit images (they don't show up)
+        r.img.save(saveName, saveExtension.toLatin1().constData());
+        isSaving = false;
+        emit saveComplete();
+        return;
+    }
+
     lastResult = r;
     lastRequest = q;
-
     // update the render thread status and queue next image if necessary
     switch (renderState) {
     case WorkerBackordered:
@@ -571,31 +526,17 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
         break;
     }
 
-    if (lastRequest.requestType == SavedImage) {
-        if (saveProgress) {
-            if (!saveProgress->wasCanceled()) {
-                lastResult.img.save(saveName, saveExtension.toLatin1().constData());
-            }
-            delete saveProgress;
-            saveProgress = NULL;
-        }
+    rerenderRequested = true;
+
+    if (!this->isVisible()) {
+        this->show();
     }
-    else {
-        if (saveProgress) {
-            saveProgress->setValue(1);
-        }
 
-        rerenderRequested = true;
-        if (!this->isVisible()) {
-            this->show();
-        }
+    // Synchronize the local visualizer precisely with
+    // what is currently on screen.
+    applyParameters(vis, lastRequest);
 
-        // Synchronize the local visualizer precisely with
-        // what is currently on screen.
-        applyParameters(vis, lastRequest);
-
-        repaint();
-    }
+    repaint();
 }
 
 void ImageWindow::handleAbort() {
@@ -606,6 +547,9 @@ void ImageWindow::handleAbort() {
             // i.e., another task to run
             renderState = WorkerIdle;
             rerender(lastRequestGeo);
+        }
+        else if (renderState == WorkerCalculating) {
+            renderState = WorkerIdle;
         }
     }
 }
