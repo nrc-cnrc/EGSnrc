@@ -35,7 +35,7 @@
 # The name of the command used to submit jobs to the queue
 batch_command=sbatch
 
-generic_bo="-n 1"
+generic_bo="-n1"
 
 # Flag to specify where the output from this job should go.
 # If it is not empty, the job output will be send to input_file.eo
