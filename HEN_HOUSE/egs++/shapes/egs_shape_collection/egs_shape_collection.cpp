@@ -48,15 +48,13 @@ EGS_ShapeCollection::EGS_ShapeCollection(const vector<EGS_BaseShape *> &Shapes,
     }
     nshape = n1;
     shapes = new EGS_BaseShape* [nshape];
-    EGS_Float *dum = new EGS_Float [nshape], *p = new EGS_Float [nshape];
+    EGS_Float *p = new EGS_Float [nshape];
     for (int j=0; j<nshape; j++) {
         shapes[j] = Shapes[j];
         shapes[j]->ref();
         p[j] = Probs[j];
-        dum[j] = 1;
     }
-    table = new EGS_AliasTable(nshape,dum,p,0);
-    delete [] dum;
+    table = new EGS_SimpleAliasTable(nshape,p);
     delete [] p;
 }
 
