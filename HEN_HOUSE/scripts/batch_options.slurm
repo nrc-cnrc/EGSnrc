@@ -27,7 +27,7 @@
 #
 #  Various definitions for job sumbission using Slurm. This file gets sourced
 #  from $HEN_HOUSE/scripts/run_user_code_batch if the environment variable
-#  EGS_BATCH_OPTIONS is set to pbs or 'batch=pbs' is passed as argument.
+#  EGS_BATCH_OPTIONS is set to slurm or 'batch=slurm' is passed as argument.
 #
 ###############################################################################
 
@@ -72,7 +72,7 @@ batch_sleep_time=1
 #
 batch_mnl=100
 
-# The 3 PBS queues that we have here at NRC.
+# Set the Slurm partition names used in your cluster.
 # Change these if you have defined different queues.
 #
 short_queue="-p short"
