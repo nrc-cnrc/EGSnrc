@@ -1,4 +1,4 @@
-#!/usr/bin/wish
+#!/bin/sh
 ###############################################################################
 #
 #  EGSnrc previewRZ rz geometry viewer for windows
@@ -41,7 +41,8 @@
 #  be used with EGS4 user codes which use the GET_INPUT subroutine to input
 #  the standard NRC RZ geometry by changing egsinp to egs4inp at 2 locations.
 #
-###############################################################################
+###############################################################################\
+exec wish "$0" "$@"
 
 
 set debug 0
