@@ -689,7 +689,7 @@ public:
         EGS_Float x,y;
         getPointInCircle(rndm,x,y);
         EGS_Float z = h*(rndm->getUniform()-0.5);
-        return EGS_Vector(x,y,z) + xo;
+        return EGS_Vector(x,y,z);
     };
 
     /*! Creates and returns a pointer to a cylinder shape from the information
