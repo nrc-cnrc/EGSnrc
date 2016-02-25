@@ -110,7 +110,7 @@ public:
     };
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
         int j = table->sampleBin(rndm);
-        return shapes[j]->getPoint(rndm);
+        return shapes[j]->getRandomPoint(rndm);
     };
 
     bool supportsDirectionMethod() const {
