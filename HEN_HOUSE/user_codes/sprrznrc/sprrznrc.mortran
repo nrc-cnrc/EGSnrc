@@ -3745,7 +3745,7 @@ VALUES_SOUGHT(IVAL)='NUMBER OF HISTORIES';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=0;
 VALUE_MIN(IVAL)=1;
-VALUE_MAX(IVAL)=999999999;
+VALUE_MAX(IVAL)=4.611686e18;
 DEFAULT(IVAL)=20000;
 
 IVAL=IVAL+1;
@@ -4616,6 +4616,7 @@ IF(ISPRREG=1)["create the .plotdat file"
     TYPE=1;                 "histogram=1, XY-plot=0"
     HISTXMIN=ZPLANE(1);     "value of lower X-bin (histograms only)"
    "plot XY-graph"
+    write(*,*)' dose now ';
     CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                    NPTS, CURVENUM, SERIESTITLE,
                    XTITLE, YTITLE, GRAPHTITLE, SUBTITLE,
