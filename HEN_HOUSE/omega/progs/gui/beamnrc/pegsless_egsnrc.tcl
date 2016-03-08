@@ -859,7 +859,8 @@ Use `showrgb' for a list of colours available on your system." -font $helvfont -
 }
 
 proc init_pegsless_variables {} {
-global is_pegsless matfilename nmatmed ninpmed warnnum1 warnnum2
+global is_pegsless matfilename nmatmed ninpmed warnnum2 
+global pegsless_on_inp ae ue ap up
 #just initialize a couple of required global variables
 
    set is_pegsless 0
@@ -872,7 +873,6 @@ global is_pegsless matfilename nmatmed ninpmed warnnum1 warnnum2
    set ninpmed 0
    set matfilename {}
 
-   set warnnum1 0
    set warnnum2 0
 
 }
