@@ -101,7 +101,7 @@ extern "C" {
         }
         if (shapes.size() < 2) {
             egsWarning("createShape(shape collection): at least 2 shapes are "
-                       "needed for a shape collection, you defined %s\n",shapes.size());
+                       "needed for a shape collection, you defined %d\n",shapes.size());
             ok = false;
         }
         if (shapes.size() != probs.size()) {
