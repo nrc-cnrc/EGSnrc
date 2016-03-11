@@ -40,7 +40,7 @@
 
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), geom(0),
-    regions(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
+    regions(0), nrs(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
     gc(IncludeAll) {
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
