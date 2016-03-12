@@ -23,8 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Ernesto Mainegra-Hing
-#                   Hugo Bouchard
+#  Contributors:
 #
 ###############################################################################
 */
@@ -33,18 +32,16 @@
 /*! \file egs_isotropic_source.cpp
  *  \brief An isotropic source
  *  \IK
- *  The Fano option allows have uniform particles per unit mass
  */
 
 #include "egs_isotropic_source.h"
 #include "egs_input.h"
 #include "egs_math.h"
-#include <sstream>
 
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), geom(0),
-    regions(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
-    gc(IncludeAll), Fano_source(false) {
+    regions(0), nrs(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
+    gc(IncludeAll) {
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
     if (ishape) {
@@ -91,26 +88,8 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
                     regions[j] = regs[j];
                 }
             }
-            /*********************************************************************
-             * Check whether this is a Fano source requiring the maximum density
-             *
-             * The assumption is that if this is requested the whole geometry will
-             * be used ...
-             *
-             *********************************************************************/
-            max_mass_density = 0.0;
-            int errF = input->getInput("max mass density", max_mass_density);
-            if (!errF) {
-                if (gc != IncludeAll)
-                    egsFatal("EGS_IsotropicSource: A Fano source does not require a region selection input.\n"
-                             "Remove it or set it to IncludeAll!\n");
-                else {
-                    Fano_source = true; //real_count = 0.0;
-                }
-            }
         }
     }
-
     EGS_Float tmp_theta;
     err = input->getInput("min theta", tmp_theta);
     if (!err) {
@@ -144,13 +123,7 @@ void EGS_IsotropicSource::setUp() {
         description = "Invalid isotropic source";
     }
     else {
-
-        if (Fano_source) {
-            description = "Isotropic Fano source from a shape of type ";
-        }
-        else {
-            description = "Isotropic source from a shape of type ";
-        }
+        description = "Isotropic source from a shape of type ";
         description += shape->getObjectType();
         description += " with ";
         description += s->getType();
@@ -165,12 +138,6 @@ void EGS_IsotropicSource::setUp() {
         }
         else {
             description += ", unknown particle type";
-        }
-        if (Fano_source) {
-            ostringstream str_density;
-            str_density << scientific << max_mass_density;
-            description += "\n maximum density = " + str_density.str() + "  g/cm3";
-            description += "\n Fano geometry   = " + geom->getName();
         }
 
         if (geom) {
