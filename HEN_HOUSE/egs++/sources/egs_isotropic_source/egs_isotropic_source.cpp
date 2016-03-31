@@ -45,7 +45,6 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
     if (ishape) {
-        egsWarning("EGS_IsotropicSource: trying to construct the shape\n");
         shape = EGS_BaseShape::createShape(ishape);
         delete ishape;
     }
