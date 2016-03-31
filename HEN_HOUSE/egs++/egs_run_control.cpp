@@ -418,6 +418,7 @@ public:
 EGS_JCFControl::EGS_JCFControl(EGS_Application *a, int Nbuf) :
     EGS_RunControl(a), p(new EGS_FileLocking),
     npar(app->getNparallel()), ipar(app->getIparallel()),
+    ifirst(app->getFirstParallel()),
     first_time(true), nbuf(Nbuf), njob(0), tsum(0), tsum2(0), tcount(0),
     norm(1), last_sum(0), last_sum2(0), last_count(0), removed_jcf(false) {
     if (input) {
@@ -562,7 +563,7 @@ int EGS_JCFControl::startSimulation() {
     if (res) {
         return res;
     }
-    bool ok = (ipar == 1) ? createControlFile() : openControlFile();
+    bool ok = (ipar == ifirst) ? createControlFile() : openControlFile();
     if (ok) {
         egsInformation("    Parallel run with %d jobs and %d chunks per "
                        "job\n\n\n",npar,nchunk);

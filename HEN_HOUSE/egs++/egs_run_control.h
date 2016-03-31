@@ -280,6 +280,7 @@ protected:
     int    njob;
     int    npar;
     int    ipar;
+    int    ifirst;
     bool   first_time;
     bool   removed_jcf;
     int    nbuf;

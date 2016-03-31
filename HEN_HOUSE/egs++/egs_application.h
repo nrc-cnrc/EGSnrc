@@ -582,6 +582,16 @@ public:
         return i_parallel;
     };
 
+    /*! \brief Returns the first job number in a parallel run.
+
+     The first job number is specified on the command line using
+     <code>-f n</code> or <code>--first-job n</code> and requires that the number of parallel
+     jobs was also specified using <code>-P n</code>.
+    */
+    int getFirstParallel () const {
+        return first_parallel;
+    };
+
     /*! \brief Calculates distance to a boundary along the current direction.
 
      This function implements the EGSnrc howfar geometry specification
@@ -992,7 +1002,8 @@ protected:
     string  abs_pegs_file;      //!< The pegs file name including absolute path
 
     int     n_parallel,  //!< Number of parallel jobs
-            i_parallel;  //!< Job index in parallel runs
+            i_parallel,  //!< Job index in parallel runs
+            first_parallel; //!< first parallel job number
     bool    batch_run;   //!< Interactive or batch run.
     bool    simple_run;  //!< Use a simple run control even for parallel runs
     bool    is_pegsless; //!< set to true if a pegsless run
