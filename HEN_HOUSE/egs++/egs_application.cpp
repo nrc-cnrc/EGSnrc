@@ -326,13 +326,24 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     //
     // *** see if parallel run.
     //
-    string npar, ipar;
+    string npar, ipar, ifirst;
     n_parallel = i_parallel = 0;
+    first_parallel = 1;
     bool have_np = getArgument(argc,argv,"-P","--parallel",npar);
     bool have_ip = getArgument(argc,argv,"-j","--job",ipar);
+    bool have_first = getArgument(argc,argv,"-f","--first-job",ifirst);
     if (have_np && have_ip) {
         n_parallel = ::strtol(npar.c_str(),0,10);
         i_parallel = ::strtol(ipar.c_str(),0,10);
+        if(have_first) {
+            first_parallel = ::strtol(ifirst.c_str(),0,10);
+            if(first_parallel < 0) {
+                egsWarning("%s\n  invalid -f argument %d\n",__egs_app_msg1,
+                       n_parallel);
+                 n_parallel = 0;
+                 i_parallel = 0;
+            }
+        }
         if (n_parallel < 0) {
             egsWarning("%s\n  invalid -P argument %d\n",__egs_app_msg1,
                        n_parallel);
@@ -344,10 +355,10 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
             i_parallel = 0;
             n_parallel = 0;
         }
-        if (i_parallel > n_parallel) {
+        if (i_parallel > n_parallel + first_parallel -1) {
             egsWarning("%s\n  job number (%d) can not be larger than number"
                        " of parallel jobs(%d). Turning off parallel option\n",
-                       __egs_app_msg1,i_parallel,n_parallel);
+                       __egs_app_msg1,i_parallel,n_parallel+ first_parallel -1);
             n_parallel = 0;
             i_parallel = 0;
         }
