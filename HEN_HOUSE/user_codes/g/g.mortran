@@ -646,7 +646,7 @@ $GET_INPUT(IVAL);
 ncase = value(ival,1);
 
 ival                   = ival + 1;
-values_sought(ival)    = 'TURN OFF BREMS AGLES';
+values_sought(ival)    = 'TURN OFF BREMS ANGLES';
 type(ival)             = 3;
 nvalue(ival)           = 1;
 allowed_inputs(ival,0) = 'NO';
