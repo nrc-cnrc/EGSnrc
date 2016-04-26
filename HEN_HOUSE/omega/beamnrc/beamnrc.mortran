@@ -10120,15 +10120,6 @@ ELSEIF(ISOURC = 21 | ISOURC=24)[
            OUTPUT;
         (/' Fractional MU index will be read from the phase space data.');
         ]
-        IF(IZSCORE=1 & CMTYPE(INIT_ICM)~='SLABS' &
-           CMTYPE(INIT_ICM)~='FLATFILT' & CMTYPE(INIT_ICM)~='SIDETUBE')[
-           OUTPUT;(/' Warning in source 21: Z for each particle will be read'/
-                    ' from the IAEA phase space data, but INIT_ICM is not set'/
-                    ' to a CM that can handle particles incident within it'/
-                    ' (SLABS, FLATFILT or SIDETUBE).  Depending on the Z'/
-                    ' of incident particles, this may result in the'/
-                    ' simulation stopping mid-run.'/);
-        ]
     ]
     ELSE[
         $OPEN_PHSP_FOR_READ(IZLAST,IINSRC,SPCNAM,MODE_RW,NNPHSP,NPHOTSRC,
@@ -10880,6 +10871,18 @@ ELSEIF(ISOURC = 6) ["Frontal parallel rectangular beam along z-axis"
           ' YBEAM REDUCED TO ',F8.3,'cm.');
     ]
     IFPB=0;"Set flag- FRONTAL PARALLEL BEAM"
+]
+
+ELSEIF(ISOURC=21) ["phsp source"
+     IF(i_iaea_in=1 & IZSCORE=1 & CMTYPE(INIT_ICM)~='SLABS' &
+           CMTYPE(INIT_ICM)~='FLATFILT' & CMTYPE(INIT_ICM)~='SIDETUBE')[
+           OUTPUT;(/' Warning in source 21: Z for each particle will be read'/
+                    ' from the IAEA phase space data, but INIT_ICM is not set'/
+                    ' to a CM that can handle particles incident within it'/
+                    ' (SLABS, FLATFILT or SIDETUBE).  Depending on the Z'/
+                    ' of incident particles, this may result in the'/
+                    ' simulation stopping mid-run.'/);
+        ]
 ]
 
 ELSEIF(ISOURC = 22) ["Frontal parallel rectangular beam along z-axis"
