@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -174,6 +175,54 @@ inscribed geometries = list of names of previously defined geometries
 The above should be self explanatory. Example geometry files making
 use of an envelope geometry are <code>car.geom, chambers_in_box.geom,
 rz1.geom, seeds_in_xyz.geom</code> and \c seeds_in_xyz1.geom.
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = g1
+        library     = egs_spheres
+        midpoint = 0 0 1
+        radii = 0.3
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = g2
+        library     = egs_spheres
+        midpoint = 0 0 -1
+        radii = 0.3
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_envelope
+        library     = egs_genvelope
+        base geometry = my_box
+
+        # Inscribed geometries must be strictly inside the envelope
+        # No touching of surfaces!
+        inscribed geometries = g1 g2
+    :stop geometry:
+
+    simulation geometry = my_envelope
+
+:stop geometry definition:
+\endverbatim
+\image html egs_genvelope.png "A simple example"
 
 */
 class EGS_ENVELOPEG_EXPORT EGS_EnvelopeGeometry : public EGS_BaseGeometry {

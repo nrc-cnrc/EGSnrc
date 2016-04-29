@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -117,6 +117,48 @@ Parallel planes are used in almost all of the
 \ref example_geometries "example geometries" provided
 with the distribution.
 
+A simple example:
+\verbatim
+:start geometry definition:
+
+    # The base geometry, this will be the Chopping Device (CD)
+    # The base geometry can be any geometry, even a composite one
+    :start geometry:
+        name        = my_cd_planes
+        library     = egs_planes
+        type        = EGS_Zplanes
+        positions   = -3 3
+        # No media required
+    :stop geometry:
+
+    :start geometry:
+        name        = my_cd_cylinder
+        library     = egs_cylinders
+        type        = EGS_ZCylinders
+        radii       = 1.6 2
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    # The composite geometry
+    :start geometry:
+        name            = my_cd
+        library         = egs_cdgeometry
+        base geometry   = my_cd_planes
+        # set geometry = 1 geom means:
+        # "in region 1 of the basegeometry, use geometry "geom"
+        set geometry   = 0 my_cd_cylinder
+        # The final region numbers are attributed by the cd geometry object;
+        # Use the viewer to determine region numbers
+    :stop geometry:
+
+    simulation geometry = my_cd
+
+:stop geometry definition:
+\endverbatim
+\image html egs_planes.png "A simple example"
 */
 
 template <class T>
@@ -480,6 +522,51 @@ a collection with \f$N\f$ planes defining \f$N-1\f$ regions.
 An example of the use of a plane collection is found in
 the \ref linac_geom "photon_linac.geom" example geometry file. See also
 \ref example_geometries
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_plane_collection
+        library     = egs_planes
+        type        = EGS_PlaneCollection
+        normals     = 0,0,1  0.1,-0.1,1  -0.1,-0.3,1  0,0,1
+        positions   = -5 -2 2 12
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        library = egs_spheres
+        name    = sphere
+        midpoint = 0 0 0
+        radii = 5
+    :stop geometry:
+
+    # Now the actual geometry made from the
+    # planes and the above sphere.
+    :start geometry:
+        library = egs_ndgeometry
+        name = collection
+        dimensions = sphere my_plane_collection
+        hownear method = 1
+        :start media input:
+            media = water air
+            set medium = 0 0
+            set medium = 1 1
+            set medium = 2 0
+            set medium = 3 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = collection
+
+:stop geometry definition:
+\endverbatim
+\image html egs_planecollection.png "A simple example"
 */
 class EGS_PLANES_EXPORT EGS_PlaneCollection : public EGS_BaseGeometry {
 

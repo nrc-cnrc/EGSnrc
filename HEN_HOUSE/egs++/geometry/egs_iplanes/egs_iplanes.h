@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -86,6 +87,65 @@ Also note that angles must be given in increasing order and that they
 must be between 0 and 180 degrees.
 
 An example demonstrating the use of I-planes is found in rz_phi.geom.
+
+A simple example:
+\verbatim
+:start geometry definition:
+
+    # The cylinder
+    :start geometry:
+        library = egs_cylinders
+        type    = EGS_ZCylinders
+        name    = rho_coordinates
+        radii   = 2
+    :stop geometry:
+
+    # The planes
+    :start geometry:
+        library   = egs_planes
+        type      = EGS_Zplanes
+        positions = -2 2
+        name      = z_coordinates
+     :stop geometry:
+
+    # The I-planes
+     :start geometry:
+        library   = egs_iplanes
+        axis      = 0 0 0   0 0 1
+        angles    = 0 30 60 90 120 150
+           # above angles are in degrees, you can use
+           # 'angles in radian' to define angles in radians
+        name      = phi_coordinates
+     :stop geometry:
+
+     # The final geometry is a N-dimensional geometry
+     # made from the cylinder, the planes and the I-planes
+     :start geometry:
+        library   = egs_ndgeometry
+        name      = rho_z_phi
+        dimensions = rho_coordinates z_coordinates phi_coordinates
+        :start media input:
+            media = carbon air water
+            set medium =  0  0
+            set medium =  1  1
+            set medium =  2  2
+            set medium =  3  0
+            set medium =  4  1
+            set medium =  5  2
+            set medium =  6  0
+            set medium =  7  1
+            set medium =  8  2
+            set medium =  9  0
+            set medium = 10 1
+            set medium = 11 2
+         :stop media input:
+     :stop geometry:
+
+    simulation geometry = rho_z_phi
+
+:stop geometry definition:
+\endverbatim
+\image html egs_iplanes.png "A simple example"
 */
 class EGS_IPLANES_EXPORT EGS_IPlanes : public EGS_BaseGeometry {
 
@@ -223,6 +283,59 @@ geometry to be replicated).
 Examples of the use of an EGS_RadialRepeater geometry can be found
 in <code>radial_repetitions.geom, radial_repetitions1.geom</code> and
 <code>gear.geom</code> example input files.
+
+A simple example:
+\verbatim
+:start geometry definition:
+
+    # An EGS_RadialRepeater geometry takes the entire space. Thus, in
+    # order to be able to view it, we need to limit its size. Here we
+    # use a big box filled with vacuum and will later inscribe the
+    # radial repetitions into this box using a CD geometry logic.
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 4
+    :stop geometry:
+
+    # The geometry that will be repeated
+    :start geometry:
+        name        = my_sphere
+        library     = egs_spheres
+        midpoint = 1 0 0
+        radii = 0.2
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name            = my_radial_repeater
+        library         = egs_iplanes
+        type            = EGS_RadialRepeater
+        medium          = vacuum
+
+        repeated geometry = my_sphere
+
+        # Axis position, direction
+        axis = 0 0 1  0 0 1
+
+        number of repetitions = 8
+
+    :stop geometry:
+
+    :start geometry:
+        name        = my_repetition_box
+        library     = egs_cdgeometry
+        base geometry = my_box
+        set geometry = 0 my_radial_repeater
+    :stop geometry:
+
+    simulation geometry = my_repetition_box
+
+:stop geometry definition:
+\endverbatim
+\image html egs_radial_repeater.png "A simple example"
 */
 
 class EGS_IPLANES_EXPORT EGS_RadialRepeater : public EGS_BaseGeometry {

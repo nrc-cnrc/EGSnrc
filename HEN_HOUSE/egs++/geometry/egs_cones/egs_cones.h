@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -97,6 +98,27 @@ height = cone height in cm
 The \c height key is optional and results in a cone extending
 to infinity, if missing.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_simple_cone
+        library     = egs_cones
+        type        = EGS_SimpleCone
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        height      = 4
+        opening angle = 30 # deg
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_simple_cone
+
+:stop geometry definition:
+\endverbatim
+\image html egs_simplecone.png "A simple example"
 */
 
 class EGS_CONES_EXPORT EGS_SimpleCone : public EGS_BaseGeometry {
@@ -669,6 +691,49 @@ apex distances          = list of distances from the apex
 
 \endverbatim
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_parallel_cones
+        library     = egs_cones
+        type        = EGS_ParallelCones
+        apex        = 0 0 6
+        axis        = 0 0 -1
+        apex distances  = 1 2 3
+        opening angle   = 30 # deg
+    :stop geometry:
+
+    # This sphere will be used to limit
+    # the size of the conical regions by a rounded end
+    :start geometry:
+        library = egs_spheres
+        name    = sphere
+        midpoint = 0 0 0
+        radii = 5
+    :stop geometry:
+
+    # Now the actual geometry made from the
+    # parallel cones and the above sphere.
+    :start geometry:
+        library = egs_ndgeometry
+        name = cones
+        dimensions = sphere my_parallel_cones
+        hownear method = 1
+        :start media input:
+            media = water air
+            set medium = 0 0
+            set medium = 1 1
+            set medium = 2 0
+            set medium = 3 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = cones
+
+:stop geometry definition:
+\endverbatim
+\image html egs_parallelcones.png "A simple example"
 */
 class EGS_ParallelCones : public EGS_BaseGeometry {
 
@@ -967,6 +1032,28 @@ of the cone with the largest opening angle having index \f$N\f$.
 An example for the use of an EGS_ConeSet is found in the
 cones.geom example geometry file.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_coneset
+        library     = egs_cones
+        type        = EGS_ConeSet
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        opening angles = 10 20 30
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_coneset
+
+:stop geometry definition:
+\endverbatim
+\image html egs_coneset.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_ConeSet : public EGS_BaseGeometry {
 
@@ -1331,6 +1418,44 @@ A cone stack is useful, for instance, for defining the upper portion of the trea
 medical linear accelerators. Examples can be found in \c photon_linac.geom, \c car.geom and \c
 rz1.geom example geometry files.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = my_conestack
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = water
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = water air water
+        :stop layer:
+    :stop geometry:
+
+    simulation geometry = my_conestack
+
+:stop geometry definition:
+\endverbatim
+\image html egs_conestack.png "A simple example with clipping plane 0,0,1,0"
 */
 class EGS_ConeStack : public EGS_BaseGeometry {
 
