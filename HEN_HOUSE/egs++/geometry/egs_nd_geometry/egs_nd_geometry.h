@@ -26,6 +26,7 @@
 #  Contributors:    Blake Walters
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -242,6 +243,61 @@ can always be used, it will just underestimate \f$t_\perp\f$ for orthogonal
 geometries and make the simulation run somewhat slower.
 
 N-dimensional geometries are used in many of the example geometry files.
+
+A simple example:
+\verbatim
+:start geometry definition:
+
+    # First dimension
+    :start geometry:
+        name        = my_nd_iplanes
+        library     = egs_iplanes
+        axis        = 0 0 0  0 0 1
+        angles      = 0 45 90 135
+        # No media required
+    :stop geometry:
+
+    # Second dimension
+    :start geometry:
+        name        = my_nd_cylinders
+        library     = egs_cylinders
+        type        = EGS_ZCylinders
+        radii       = 4 5
+        # No medium required
+    :stop geometry:
+
+    # Third dimension
+    :start geometry:
+        name        = my_sphere
+        library     = egs_spheres
+        midpoint    = 0 0 0
+        radii       = 10
+    :stop geometry:
+
+    # nd geometry
+    :start geometry:
+        name            = my_nd
+        library         = egs_ndgeometry
+        dimensions      = my_nd_iplanes my_nd_cylinders  my_sphere
+        hownear method  = 1
+        :start media input:
+            media = water air water
+            set medium = 0 0
+            set medium = 1 1
+            set medium = 2 0
+            set medium = 3 1
+            set medium = 4 0
+            set medium = 5 1
+            set medium = 6 0
+            set medium = 7 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_nd
+
+:stop geometry definition:
+\endverbatim
+\image html egs_ndgeometry.png "A simple example"
 */
 class EGS_NDG_EXPORT EGS_NDGeometry : public EGS_BaseGeometry {
 
@@ -597,7 +653,42 @@ The other new possibility to define a XYZ geometry is
     z-slabs = Zo  Dz  Nz
 :stop geometry:
 \endverbatim
-wich should be self explanatory.
+which should be self explanatory.
+
+A simple example:
+\verbatim
+:start geometry definition:
+
+    :start geometry:
+        name            = my_xyz
+        library         = egs_ndgeometry
+        type            = EGS_XYZGeometry
+        x-planes        = -3 -1 1 3
+        y-planes        = -3 -1 1 3
+        z-planes        = -3 -1 1 3
+        :start media input:
+            media = water air
+            set medium = 1 1
+            set medium = 3 1
+            set medium = 5 1
+            set medium = 7 1
+            set medium = 9 1
+            set medium = 11 1
+            set medium = 13 1
+            set medium = 15 1
+            set medium = 17 1
+            set medium = 19 1
+            set medium = 21 1
+            set medium = 23 1
+            set medium = 25 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_xyz
+
+:stop geometry definition:
+\endverbatim
+\image html egs_xyzgeometry.png "A simple example"
 
 */
 
@@ -1502,6 +1593,39 @@ the origin, where \f$\Delta x\f$=<code>(xmax-xmin)/Nx</code>, etc.
 
 See \c repeated_geometry.geom geometry file for an example of
 EGS_XYZRepeater use.
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_sphere
+        library     = egs_spheres
+        midpoint = 0
+        radii = 0.5
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name            = my_xyz_repeater
+        library         = egs_ndgeometry
+        type            = EGS_XYZRepeater
+        medium          = air
+
+        repeated geometry = my_sphere
+
+        # Format is: min, max, N
+        repeat x = -1 4 3
+        repeat y = -1 4 3
+        repeat z = -1 4 3
+    :stop geometry:
+
+    simulation geometry = my_xyz_repeater
+
+:stop geometry definition:
+\endverbatim
+\image html egs_xyzrepeater.png "A simple example"
 */
 class EGS_NDG_EXPORT EGS_XYZRepeater : public EGS_BaseGeometry {
 

@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2006
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 #
@@ -110,6 +110,29 @@ need to be normalized to unity.
 Examples of the usage of cylinder sets can be found in
 \c I6702.inp, \c rounded_ionchamber.geom, \c rz.geom and \c rz_phi.geom
 example geometry files.
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_cylinders
+        library     = egs_elliptic_cylinders
+        type        = EGS_EllipticCylindersXZ
+        midpoint    = 0
+        x-radii     = 1 2 3
+        y-radii     = 1 4 7
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_cylinders
+
+:stop geometry definition:
+\endverbatim
+\image html egs_elliptic_cylinders.png "A simple example with clipping plane 0,1,0,0"
 
 \todo Get rid off the local projector classes, use the egspp classes
 instead.

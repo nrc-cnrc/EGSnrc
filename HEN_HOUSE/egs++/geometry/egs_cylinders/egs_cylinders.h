@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -104,6 +105,30 @@ need to be normalized to unity.
 Examples of the usage of cylinder sets can be found in
 \c I6702.inp, \c rounded_ionchamber.geom, \c rz.geom and \c rz_phi.geom
 example geometry files.
+
+A simple example:
+\verbatim
+# Notice this creates infinite length cylinders along x
+# Use egs_cdgeometry to cut the cylinders to size
+:start geometry definition:
+    :start geometry:
+        name        = my_cylinders
+        library     = egs_cylinders
+        type        = EGS_XCylinders
+        radii       = 1 2 3
+        midpoint    = 0
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_cylinders
+
+:stop geometry definition:
+\endverbatim
+\image html egs_cylinders.png "A simple example with clipping plane 1,0,0,0"
 
 \todo Get rid off the local projector classes, use the egspp classes
 instead.

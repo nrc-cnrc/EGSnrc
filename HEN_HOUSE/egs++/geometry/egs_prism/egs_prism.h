@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -100,6 +100,25 @@ Note that at least 3 different 2D or 3D positions are required for the
 last point of the polygon is not the same as the first point, the polygon
 is automatically closed.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_prism
+        library     = egs_prism
+        type        = EGS_PrismZ
+        points      = 1 1  -1 1  -1 -1  4 -1
+        closed      = 1 4
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_prism
+
+:stop geometry definition:
+\endverbatim
+\image html egs_prism.png "A simple example"
 */
 template <class T>
 class EGS_PRISM_EXPORT EGS_PrismT : public EGS_BaseGeometry {

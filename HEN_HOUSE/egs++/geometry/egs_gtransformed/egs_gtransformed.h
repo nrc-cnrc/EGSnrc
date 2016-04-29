@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -97,6 +98,34 @@ Transformed geometries are used in the
 <code>car.geom, chambers_in_box.geom, seeds_in_xyz.geom</code> and
 \c seeds_in_xyz1.geom example geometry files.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_transform
+        library     = egs_gtransformed
+        my geometry = my_box
+        :start transformation:
+            translation = 0 0.5 0
+            rotation    = 0.5 0 -1
+            ## rotation is first!
+        :stop transformation:
+    :stop geometry:
+
+    simulation geometry = my_transform
+
+:stop geometry definition:
+\endverbatim
+\image html egs_gtransformed.png "A simple example"
 */
 class EGS_GTRANSFORMED_EXPORT EGS_TransformedGeometry :
     public EGS_BaseGeometry {
