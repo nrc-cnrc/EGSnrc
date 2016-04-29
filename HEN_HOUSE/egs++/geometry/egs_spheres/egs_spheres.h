@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -85,6 +85,26 @@ Examples of the usage of sets of spheres can be found in the
 \c cones.geom, \c hemisphere.geom, \c mushroom.geom, \c rounded_ionchamber.geom
 and \c I6702.inp example geometry files.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_spheres
+        library     = egs_spheres
+        midpoint = 0 0 0
+        radii = 1 2 3
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_spheres
+
+:stop geometry definition:
+\endverbatim
+\image html egs_spheres.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_SPHERES_EXPORT EGS_cSpheres : public EGS_BaseGeometry {
 

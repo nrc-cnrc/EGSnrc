@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -204,7 +205,60 @@ efficiently modeled with the help of a CD geometry. This can
 be seen in the \c photon_linac.geom example geometry file.
 Many of the other examples also employ a CD-geometry.
 
+A simple example:
+\verbatim
+:start geometry definition:
 
+    # The base geometry, this will be the Chopping Device (CD)
+    # The base geometry can be any geometry, even a composite one
+    :start geometry:
+        name        = my_cd_planes
+        library     = egs_planes
+        type        = EGS_Zplanes
+        positions   = -3 3 5
+        # No media required
+    :stop geometry:
+
+    :start geometry:
+        name        = my_cd_cylinder
+        library     = egs_cylinders
+        type        = EGS_ZCylinders
+        radii       = 1.6 2
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_cd_sphere
+        library     = egs_spheres
+        midpoint = 0 0 3
+        radii = 1.6 2
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    # The composite geometry
+    :start geometry:
+        name            = my_cd
+        library         = egs_cdgeometry
+        base geometry   = my_cd_planes
+        # set geometry = 1 geom means:
+        # "in region 1 of the basegeometry, use geometry "geom"
+        set geometry   = 0 my_cd_cylinder
+        set geometry   = 1 my_cd_sphere
+        # The final region numbers are attributed by the cd geometry object;
+        # Use the viewer to determine region numbers
+    :stop geometry:
+
+    simulation geometry = my_cd
+
+:stop geometry definition:
+\endverbatim
+\image html egs_cd_geometry.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_CDGEOMETRY_EXPORT EGS_CDGeometry : public EGS_BaseGeometry {
 

@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -84,6 +84,22 @@ Note that a box at any location (not just about the origin) and/or
 a rotated box can be obtained using a \link EGS_TransformedGeometry
 transformed geometry. \endlink
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_box
+
+:stop geometry definition:
+\endverbatim
 */
 class EGS_BOX_EXPORT EGS_Box : public EGS_BaseGeometry {
 

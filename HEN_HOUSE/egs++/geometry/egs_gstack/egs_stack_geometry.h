@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -110,6 +111,62 @@ entered the next geometry in the stack and therefore being discarded.
  
 The \f$\tolerance\f$ key duplicates the functionality of the
 \f$\boundary tolerance\f$ key for backwards compatibility.
+
+A simple example:
+\verbatim
+:start geometry definition:
+
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = my_conestack
+        axis = 0 0 2.6 0 0 -1
+        :start layer:
+            thickness = 0.05
+            top radii = 0.
+            bottom radii = 0.0858
+            media = water
+        :stop layer:
+        :start layer:
+            thickness = 0.1
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 0.2
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 2
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = water air water
+        :stop layer:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 3 3 .5
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name            = my_stack
+        library         = egs_gstack
+        geometries      = my_conestack my_box
+        tolerance       = 1e-4
+    :stop geometry:
+
+    simulation geometry = my_stack
+
+:stop geometry definition:
+\endverbatim
+\image html egs_gstack.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_StackGeometry : public EGS_BaseGeometry {
 
