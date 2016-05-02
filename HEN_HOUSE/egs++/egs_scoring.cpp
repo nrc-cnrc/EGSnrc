@@ -70,7 +70,7 @@ void EGS_ScoringArray::setHistory(EGS_I64 ncase) {
 
 void EGS_ScoringArray::reportResults(double norm, const char *title,
                                      bool relative_error, const char *format) {
-    if (title) egsInformation("\n\n%s for %d particles:\n\n",title,
+    if (title) egsInformation("\n\n%s for %lli particles:\n\n",title,
                                   current_ncase);
     if (current_ncase < 2) {
         egsWarning("EGS_ScoringArray::reportResults: you must run more than 2 "
