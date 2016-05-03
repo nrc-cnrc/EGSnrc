@@ -614,7 +614,7 @@ int Tutor7_Application::startNewShower() {
                 int ireg = ph_regions[j];
                 EGS_Float edep = score->currentScore(ireg);
                 if( edep > 0 ) {
-                    int ibin = (int) (edep/(current_weight*ph_de[j]));
+                    int ibin = min( (int)(edep/(current_weight*ph_de[j])), pheight[j]->bins()-1 );
                     if( ibin >= 0 && ibin < pheight[j]->bins() )
                         pheight[j]->score(ibin,1);
 
