@@ -705,7 +705,7 @@ IF( ex ) [
         IF( input_line(1:1) = '#' ) NEXT;
         "The DEC and SGI compilers fail at the following statement!"
         "read(input_line,*,err=:end_of_iofile:,end=:end_of_iofile:) u,arg;"
-        read(input_line,*,err=:end_of_iofile:,end=:end_of_iofile:) u;
+        read(input_line,*,err=:end_of_ioline:,end=:end_of_ioline:) u;
         istart = 1;
         DO i=lnblnk1(input_line),1,-1 [
             IF( input_line(i:i) = ' ' ) [ istart = i+1; EXIT; ]
@@ -742,6 +742,7 @@ IF( ex ) [
             $egs_debug('(a,a,a,i3)','connected ',$cstring(tmp1_string),
               ' to unit ',u);
         ]
+        :end_of_ioline:
     ]
     :end_of_iofile:
     close(i_iofile);
