@@ -3429,16 +3429,17 @@ REPLACE {$PLAYRUSSIANROULETTEWITHELECTRONSFROM#;} WITH {;
 "  and this would be wasteful if the effect turns out to be small     "
 "*********************************************************************"
 
-REPLACE {$RADC_HATCH;} WITH {;}
 REPLACE {$RADC_CHECK;} WITH {;}
 REPLACE {$RADC_REJECTION;} WITH {;}
 REPLACE {$RADC_WARNING;} WITH {;
     IF( radc_flag = 1 ) [
         $egs_warning(*,'You are trying to use radiative Compton corrections');
-        $egs_info(*,'without having included rad_compton.mortran');
+        $egs_info(*,'without having included rad_compton1.mortran');
+        $egs_info('(a//)','Turning radiative Compton corrections OFF ...');
         radc_flag = 0;
     ]
 };
+REPLACE {$RADC_HATCH;} WITH {$RADC_WARNING;}
 REPLACE {$COMIN-RADC-INIT;} WITH {
         ;COMIN/RAD_COMPTON,EGS-IO,COMPTON-DATA,MEDIA,PHOTIN/;
 };
