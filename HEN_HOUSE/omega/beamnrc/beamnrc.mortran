@@ -1280,7 +1280,8 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "I>                        a change to the user codes Makefile to include
 "I>                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"I>                        SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+"I>                        SOURCES (just before
+"I>                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "I>                        [ radc_flag ]
 "%A27
 "I>       Pair angular sampling= Off, Simple or KM (Default is Simple)

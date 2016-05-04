@@ -978,7 +978,8 @@ subroutine get_transport_parameter(ounit);
 "                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "                        a change to the user codes Makefile to include
 "                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"                        SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+"                        SOURCES (just before 
+"                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "                        [ radc_flag ]
 "       Electron Impact Ionization= Off (default), On, casnati, kolbenstvedt,
 "                        gryzinski, penelope.  If set to On or ik, then use
