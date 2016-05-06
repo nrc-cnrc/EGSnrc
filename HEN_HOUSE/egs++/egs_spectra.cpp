@@ -712,7 +712,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             int err3 = inp->getInput("spectrum mode",mode);      // according to EGSnrc convention
             if (err3) err3 = inp->getInput("spectrum type",mode);// deprecated
             if (err3){
-                egsWarning("%s wrong/missing 'type' input\n",spec_msg1);
+                egsWarning("%s wrong/missing 'mode' input\n",spec_msg1);
                 if (delete_it) {
                     delete inp;
                 }
@@ -720,7 +720,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             }
             else{
                 if (mode < 0 || mode > 3) {
-                    egsWarning("%s unknown spectrum type %d in spectrum file"
+                    egsWarning("%s unknown spectrum 'mode' %d"
                                " %s\n",spec_msg1,mode,spec_file.c_str());
                     if (delete_it) {
                         delete inp;
@@ -765,7 +765,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                     for (int j=0; j<nbin1; j++) {
                         x[ibin] = eners[ibin++];// ibin++;
                         f[j] = mode == 0 ? probs[j]/(eners[ibin-1]-eners[ibin-2]) : probs[j];
-                        //egsWarning("%d %d %g\n",j,ibin,x[ibin-1]);
+                        //egsWarning("%d %d %g %g %g\n",j,ibin,x[ibin-1],probs[j],f[j]);
                         if (itype != 0 && ibin > 1) {
                             if (x[ibin-1] <= x[ibin-2]) {
                                 egsWarning("%s energies must be given in "
