@@ -876,6 +876,15 @@ ELSE[
    up_tmp=50.;
 ]
 
+IF(ue_tmp<=ae_tmp)[
+   $WRITE_MEDERR(' Error: UE <= AE.  Adjust value(s) and try again.');
+   $egs_fatal('(a)',' Error: UE <= AE.  Adjust value(s) and try again.');
+]
+IF(up_tmp<=ap_tmp)[
+   $WRITE_MEDERR(' Error: UP <= AP.  Adjust value(s) and try again.');
+   $egs_fatal('(a)',' Error: UP <= AP.  Adjust value(s) and try again.');
+]
+
 "now check for individual media inputs in file"
 "if not there, get data from material data file"
 
@@ -1110,7 +1119,7 @@ DO i=1,NMED[
         eindex=index(text_string,'=');
         IF(mindex>0 & eindex>mindex)[
          "remove everything up to ="
-         text_string=text_string(eindex+1:);
+         text_string=text_save(eindex+1:);
          text_string=$cstring(text_string);
          $SKIP LEADING BLANKS IN text_string;
          IF(text_string=medium_name)[
