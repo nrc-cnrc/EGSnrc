@@ -60,12 +60,14 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
 
     EGS_Vector v2_screen = p.camera_v2;
     EGS_Vector v1_screen = p.camera_v1;
-    EGS_Float sx = p.projection_x;
-    EGS_Float sy = p.projection_y;
     int nx = p.nx;
     int ny = p.ny;
+    EGS_Float mx = p.nx * p.nxr;
+    EGS_Float my = p.ny * p.nyr;
+    EGS_Float sx = mx > my ? p.projection_m * mx / my : p.projection_m;
+    EGS_Float sy = my > mx ? p.projection_m * my / mx : p.projection_m;
     EGS_Float dx = sx/p.nx;
-    EGS_Float dy = sx/p.ny;
+    EGS_Float dy = sy/p.ny;
     EGS_Vector v0 = (p.screen_xo-p.camera);
     EGS_Float  r  = v0.length();
     EGS_Float taxis=0;
@@ -167,7 +169,32 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
 }
 
 void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters &p) {
-    vis->setProjection(p.camera,p.screen_xo,p.screen_v1,p.screen_v2,p.projection_x,p.projection_y);
+    EGS_Float mx = p.nx*p.nxr;
+    EGS_Float my = p.ny*p.nyr;
+
+    EGS_Float xscale, yscale, xdelta,ydelta;
+    EGS_Vector center;
+    if (mx > my) {
+        xscale = p.projection_m*mx/my;
+        yscale = p.projection_m;
+        xdelta = (mx - my) / my;
+        ydelta = 0.0;
+    }
+    else {
+        xscale = p.projection_m;
+        yscale = p.projection_m*my/mx;
+        xdelta = 0.0;
+        ydelta = (my - mx) / mx;
+    }
+
+    center = p.screen_xo -
+             p.screen_v1 * (p.projection_m-xscale)*0.5 -
+             p.screen_v2 * (p.projection_m-yscale)*0.5 -
+             p.screen_v1 * (p.projection_m*xdelta)*0.5 -
+             p.screen_v2 * (p.projection_m*ydelta)*0.5;
+
+    vis->setProjection(p.camera,center,p.screen_v1,p.screen_v2,xscale,yscale);
+
     // set lights, planes, materials.
     for (size_t i=0; i<p.lights.size(); i++) {
         // all lights are white by default
