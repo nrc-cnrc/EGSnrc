@@ -1334,65 +1334,51 @@ DO i=1,NMED[
               $WRITE_MEDERR(' cannot be found.');
        ]
     ]
-    ELSE[
+    ELSE [
        density_file=$cstring(density_file)//'.density';
+       "first look in $EGS_HOME/pegs4/density_corrections"
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'elements' //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // 'compounds' //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       "now look in $EGS_HOME/pegs4/density in case directory still there"
        tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density' // $file_sep // density_file;
        inquire(file=tmp_string,exist=ex);
-       IF (~ex) [
-            IF (elements_specified)[
-                "know which directory to look in based on no. of elements"
-                IF (nne_tmp=1) [
-                    tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
-                        'density_corrections' // $file_sep // 'elements' //
-                        $file_sep // density_file;
-                    inquire(file=tmp_string,exist=ex);
-                    IF (~ex) [
-                        $WRITE_MEDERR(' Error: Density correction file',
-                                        density_file);
-                        $WRITE_MEDERR(
-        ' does not exist in $HEN_HOUSE/pegs4/density_corrections/elements',
-        ' or in $EGS_HOME/pegs4/density');
-                    ]
-                ]
-                ELSE [
-                    tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
-                        'density_corrections' // $file_sep // 'compounds' //
-                        $file_sep // density_file;
-                    inquire(file=tmp_string,exist=ex);
-                    IF (~ex) [
-                        $WRITE_MEDERR(' Error: Density correction file',
-                                        density_file);
-                        $WRITE_MEDERR(
-        ' does not exist in $HEN_HOUSE/pegs4/density_corrections/compounds',
-        ' or in $EGS_HOME/pegs4/density');
-                    ]
-                ]
-            ]
-            ELSE [                      "we have to look in both directories"
-                                        "first, look in elements"
-                tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+       IF(ex) goto :density_file_found:;
+       "now look through $HEN_HOUSE/pegs4/density_corrections"
+       tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
                     'density_corrections' // $file_sep // 'elements' //
                     $file_sep // density_file;
-                inquire(file=tmp_string,exist=ex);
-                IF (~ex) [              "second, look in compounds"
-                    tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
-                        'density_corrections' // $file_sep // 'compounds' //
-                        $file_sep // density_file;
-                    inquire(file=tmp_string,exist=ex);
-                ]
-                IF (~ex) [
-                    $WRITE_MEDERR(' Error: Density correction file',
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                    'density_corrections' // $file_sep // 'compounds' //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       $WRITE_MEDERR(' Error: Density correction file',
                         density_file);
-                    $WRITE_MEDERR(' does not exist in')
-                    $WRITE_MEDERR(
+       $WRITE_MEDERR(' does not exist in');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections/elements, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections/compounds, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density, ');
+       $WRITE_MEDERR(
         ' $HEN_HOUSE/pegs4/density_corrections/elements or ');
-                    $WRITE_MEDERR(
-        ' $HEN_HOUSE/pegs4/density_corrections/compounds or ');
-                    $WRITE_MEDERR(
-        ' $EGS_HOME/pegs4/density.');
-                ]
-            ]
+       $WRITE_MEDERR(
+        ' $HEN_HOUSE/pegs4/density_corrections/compounds.');
+       :density_file_found:
         ]
      ]
 
@@ -1499,8 +1485,6 @@ DO i=1,NMED[
          "close the density file"
          close(i_density);
        ]
-    ]
-
 
    "okay, now commit this to the media library"
    IF(elements_specified & rho_specified)[

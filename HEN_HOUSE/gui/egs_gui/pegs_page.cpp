@@ -48,6 +48,7 @@
 #include "egs_gui_widget.h"
 #include "egs_config_reader.h"
 #include "pegs_runoutput.h"
+#include <iostream>
 
 // #define PP_DEBUG
 
@@ -181,7 +182,7 @@ void EGS_PegsPage::init()
   connect(cancel_button,SIGNAL(clicked()),this,SLOT(stopPegs()));
 
   new_data_file->setChecked(true); cancel_button->setEnabled(false);
-
+  frt_err=false;
   pegs_process = new QProcess;
   connect(pegs_process,SIGNAL(readyReadStandardOutput()),this,SLOT(readPegsStdout()));
   connect(pegs_process,SIGNAL(readyReadStandardError()),this,SLOT(readPegsStderr()));
@@ -297,7 +298,8 @@ void EGS_PegsPage::getDensityFile() {
     composition_table->setItem(j,0,new QTableWidgetItem(QString::fromStdString(element_data[iz-1].symbol)));
     composition_table->setItem(j,1,new QTableWidgetItem(QString("%1").arg(frac)));
   }
-  dc_file->setText(fi.completeBaseName());// same as baseName(true) in Qt3 -- EMH
+  //dc_file->setText(fi.completeBaseName());// same as baseName(true) in Qt3 -- EMH
+   dc_file->setText(fi.absoluteFilePath());
 }
 
 void EGS_PegsPage::newDataFileChecked(bool b) {
@@ -368,8 +370,17 @@ void EGS_PegsPage::startPegs() {
   if( append_to_datafile->isChecked() )
     args << "-a";//pegs_process->addArgument("-a");
   if( dc_icru_check->isChecked() ) {
+    QFileInfo dfi(dc_file->text());
+    if( !dfi.exists() ) {
+      QMessageBox::critical(this,"Error",
+              QString("Density correction file %1 does not exist ?").arg(dc_file->text()),QMessageBox::Ok,0);
+      return;
+    }
     args << "-d";//pegs_process->addArgument("-d");
-    args << dc_file->text();//pegs_process->addArgument();
+    if(dc_file->text().endsWith(".density")) 
+    args << dc_file->text().remove(dc_file->text().lastIndexOf(".density"),8);//pegs_process->addArgument();
+    else 
+    args << dc_file->text();
   }
   //QStringList list = pegs_process->arguments();
 #ifdef PP_DEBUG
@@ -465,6 +476,7 @@ void EGS_PegsPage::readPegsStderr() {
   qDebug("In EGS_PegsPage::readPegsStderr()");
 #endif
   QString tmp = pegs_process->readAllStandardError();
+  frt_err=tmp.contains(QString("Fortran runtime error"));
   run_output->insertText(tmp);
 }
 
@@ -472,7 +484,11 @@ void EGS_PegsPage::pegsFinished() {
 #ifdef PP_DEBUG
   qDebug("In EGS_PegsPage::pegsFinished()");
 #endif
-  if( pegs_process->exitStatus() == 0 ) // QProcess::NormalExit = 0
+  if(frt_err)
+    QMessageBox::critical(this,"Error",
+     QString("PEGS failed with runtime error."),
+      QMessageBox::Ok,0);
+  else if( pegs_process->exitStatus() == 0 ) // QProcess::NormalExit = 0
     QMessageBox::information(this,"PEGS finished","PEGS finished successfuly",
        QMessageBox::Ok);
   else                                  // QProcess::CrashExit = 1

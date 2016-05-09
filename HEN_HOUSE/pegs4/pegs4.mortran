@@ -5647,18 +5647,6 @@ DO i=1,narg-1 [
            open(20,file=fn,status='old'); have_arg = .true.;
            goto :found_density_file:;
        ]
-       fn = $HEN-HOUSE // 'pegs4/density_corrections/elements/' // arg;
-       inquire(file=fn,exist=is_there);
-       IF( is_there ) [
-           open(20,file=fn,status='old'); have_arg = .true.;
-           goto :found_density_file:;
-       ]
-       fn = $HEN-HOUSE // 'pegs4/density_corrections/compounds/' // arg;
-       inquire(file=fn,exist=is_there);
-       IF( is_there ) [
-           open(20,file=fn,status='old'); have_arg = .true.;
-           goto :found_density_file:;
-       ]
        fn = $EGS_HOME // 'pegs4/density_corrections/' // arg;
        inquire(file=fn,exist=is_there);
        IF( is_there ) [
@@ -5672,6 +5660,18 @@ DO i=1,narg-1 [
            goto :found_density_file:;
        ]
        fn = $EGS_HOME // 'pegs4/density_corrections/compounds/' // arg;
+       inquire(file=fn,exist=is_there);
+       IF( is_there ) [
+           open(20,file=fn,status='old'); have_arg = .true.;
+           goto :found_density_file:;
+       ]
+       fn = $HEN-HOUSE // 'pegs4/density_corrections/elements/' // arg;
+       inquire(file=fn,exist=is_there);
+       IF( is_there ) [
+           open(20,file=fn,status='old'); have_arg = .true.;
+           goto :found_density_file:;
+       ]
+       fn = $HEN-HOUSE // 'pegs4/density_corrections/compounds/' // arg;
        inquire(file=fn,exist=is_there);
        IF( is_there ) [
            open(20,file=fn,status='old'); have_arg = .true.;
