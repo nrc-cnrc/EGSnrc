@@ -323,8 +323,10 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         int w = (q.nx*q.nxr);
         int h = (q.ny*q.nyr);
         EGS_Float xscreen, yscreen;
-        xscreen = (xyMouse.x()-w/2)*q.projection_x/w;
-        yscreen = -(xyMouse.y()-h/2)*q.projection_y/h;
+        EGS_Float xscale = w > h ? q.projection_m * w / h : q.projection_m;
+        EGS_Float yscale = h > w ? q.projection_m * h / w : q.projection_m;
+        xscreen = (xyMouse.x()-w/2)*xscale/w;
+        yscreen = -(xyMouse.y()-h/2)*yscale/h;
         EGS_Vector xp(q.screen_xo + q.screen_v2*yscreen + q.screen_v1*xscreen);
 
         int maxreg=N_REG_MAX;

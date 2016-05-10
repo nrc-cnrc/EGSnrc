@@ -136,8 +136,7 @@ private:
     EGS_Float c_theta;
     EGS_Float theta;
     EGS_Float projection_scale;
-    EGS_Float projection_y;
-    EGS_Float projection_x;
+    EGS_Float projection_m;
     EGS_Float distance;
     EGS_Float size;
     EGS_Vector axesmax;
