@@ -568,7 +568,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
 
 bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location) {
 
-    EGS_Float dx = sx/nx, dy = sx/ny;
+    EGS_Float dx = sx/nx, dy = sy/ny;
     EGS_Float rmax=1, gmax=1, bmax=1;
     EGS_Float ttrack=0, track_alpha = 1;
 

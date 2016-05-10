@@ -70,8 +70,7 @@ struct RenderParameters {
     EGS_Vector screen_xo;
     EGS_Vector screen_v1;
     EGS_Vector screen_v2;
-    EGS_Float projection_x;
-    EGS_Float projection_y;
+    EGS_Float projection_m;
     // drawing axes (labels are offthread)
     bool draw_axes;
     bool draw_axeslabels;
