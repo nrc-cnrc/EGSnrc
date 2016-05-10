@@ -50,7 +50,7 @@
 #include "pegs_runoutput.h"
 #include <iostream>
 
-// #define PP_DEBUG
+//#define PP_DEBUG
 
 QStringList *elements = 0;
 
@@ -183,6 +183,7 @@ void EGS_PegsPage::init()
 
   new_data_file->setChecked(true); cancel_button->setEnabled(false);
   frt_err=false;
+  gasp_err=false;
   pegs_process = new QProcess;
   connect(pegs_process,SIGNAL(readyReadStandardOutput()),this,SLOT(readPegsStdout()));
   connect(pegs_process,SIGNAL(readyReadStandardError()),this,SLOT(readPegsStderr()));
@@ -468,6 +469,7 @@ void EGS_PegsPage::readPegsStdout() {
   qDebug("In EGS_PegsPage::readPegsStdout()");
 #endif
   QString tmp = pegs_process->readAllStandardOutput();
+  gasp_err=tmp.contains(QString("YOU MUST DEFINE GASP"));
   run_output->insertText(tmp);
 }
 
@@ -487,6 +489,10 @@ void EGS_PegsPage::pegsFinished() {
   if(frt_err)
     QMessageBox::critical(this,"Error",
      QString("PEGS failed with runtime error."),
+      QMessageBox::Ok,0);
+  else if(gasp_err)
+    QMessageBox::critical(this,"Error",
+     QString("PEGS failed: Define medium as gas."),
       QMessageBox::Ok,0);
   else if( pegs_process->exitStatus() == 0 ) // QProcess::NormalExit = 0
     QMessageBox::information(this,"PEGS finished","PEGS finished successfuly",
@@ -521,6 +527,8 @@ bool EGS_PegsPage::checkFields() {
     }
     nelem=0;
     for(int j=0; j<20; j++) {
+      if( !composition_table->item(j,0) ||
+          !composition_table->item(j,1) ) break;
       if( composition_table->item(j,0)->text().isEmpty() ||
           composition_table->item(j,1)->text().isEmpty() ) break;
       nelem = j+1;
