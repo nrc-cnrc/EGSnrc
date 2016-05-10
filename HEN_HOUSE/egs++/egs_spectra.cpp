@@ -710,15 +710,17 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             int err1 = inp->getInput("energies",eners);
             int err2 = inp->getInput("probabilities",probs);
             int err3 = inp->getInput("spectrum mode",mode);      // according to EGSnrc convention
-            if (err3) err3 = inp->getInput("spectrum type",mode);// deprecated
-            if (err3){
+            if (err3) {
+                err3 = inp->getInput("spectrum type",mode);    // deprecated
+            }
+            if (err3) {
                 egsWarning("%s wrong/missing 'mode' input\n",spec_msg1);
                 if (delete_it) {
                     delete inp;
                 }
                 return 0;
             }
-            else{
+            else {
                 if (mode < 0 || mode > 3) {
                     egsWarning("%s unknown spectrum 'mode' %d"
                                " %s\n",spec_msg1,mode,spec_file.c_str());
