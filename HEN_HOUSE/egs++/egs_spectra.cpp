@@ -762,11 +762,9 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                         ibin = 1;
                         x[0] = eners[0];
                     }
-                    //egsWarning("type = %d nbin = %d nbin1 = %d\n",itype,nbin,nbin1);
                     for (int j=0; j<nbin1; j++) {
                         x[ibin] = eners[ibin++];
                         f[j] = mode == 0 ? probs[j]/(eners[ibin-1]-eners[ibin-2]) : probs[j];
-                        //egsWarning("%d %d %g %g %g\n",j,ibin,x[ibin-1],probs[j],f[j]);
                         if (itype != 0 && ibin > 1) {
                             if (x[ibin-1] <= x[ibin-2]) {
                                 egsWarning("%s energies must be given in "
