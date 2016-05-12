@@ -92,14 +92,12 @@ public slots:
     virtual void cameraZoom(int dy);
     virtual void thetaRotation(int Theta);
     virtual void phiRotation(int Phi);
-    virtual void changeDfine(int newdfine);
     virtual void changeAmbientLight(int alight);
     virtual void changeTransparency(int t);
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
     virtual void loadTracksDialog();
-    virtual void setProjectionSize();
     virtual void viewAllMaterials();
     virtual void reportViewSettings(int x, int y);
     virtual void quitApplication();
@@ -126,8 +124,8 @@ private:
     QString filename_tracks;
     int nmed;
     QRgb *m_colors;
-    int dfine_home;
-    int dfine;
+    int zoomlevel_home;
+    int zoomlevel;
     EGS_Float a_light;
     EGS_Float s_phi;
     EGS_Float c_phi;
@@ -135,8 +133,6 @@ private:
     EGS_Float s_theta;
     EGS_Float c_theta;
     EGS_Float theta;
-    EGS_Float projection_scale;
-    EGS_Float projection_m;
     EGS_Float distance;
     EGS_Float size;
     EGS_Vector axesmax;
