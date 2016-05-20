@@ -872,7 +872,7 @@ public:
 
     // hownear
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc;
+        EGS_Float tc = 1E30;
         if (ireg < 0 || ireg < nc-1) {
             EGS_Vector xp;
             if (ireg < 0) {
@@ -1213,7 +1213,7 @@ public:
     }
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc;
+        EGS_Float tc = 1E30;
         EGS_Vector xp(x-xo);
         EGS_Float aa = xp*a, r2 = xp.length2(), ag;
         //egsWarning("hownear: ireg = %d x = (%g,%g,%g) aa = %g r2 = %g\n",
@@ -1336,8 +1336,8 @@ public:
 
     // constructor (empty cone stack)
     EGS_ConeStack(const EGS_Vector &Xo, const EGS_Vector &A, const string &Name)
-        : xo(Xo), a(A), nl(0), nltot(0), nmax(0), same_Rout(true), Rout(0), Rout2(0),
-          EGS_BaseGeometry(Name) {
+        : EGS_BaseGeometry(Name), xo(Xo), a(A), nl(0), nltot(0), nmax(0), same_Rout(true), Rout(0),
+          Rout2(0) {
         a.normalize();
     }
 
@@ -1667,6 +1667,7 @@ public:
                 // we think we are outside but we just found we are inside.
                 // Hopefully a roundoff problem.
                 EGS_Float tp = 1e30;
+
                 if (up > 0) {
                     dir = 1;
                     tp = (pos[il+1] - xp)/up;
@@ -1674,6 +1675,11 @@ public:
                 else if (up < 0) {
                     dir = -1;
                     tp = (pos[il] - xp)/up;
+                }else{
+                    // prevent compiler from complaining about use of
+                    // uninitialized value of dir (even though tp will
+                    // always be greater than epsilon in this case).
+                    dir = 0;
                 }
                 if (tp < epsilon) {
                     il += dir;
@@ -1815,7 +1821,7 @@ public:
 
     // shiftLabels
     void shiftLabelRegions(const int i, const int index) {
-        for (int k=0; k<labels[i].regions.size(); k++) {
+        for (size_t k=0; k<labels[i].regions.size(); k++) {
             labels[i].regions[k] += index*nmax;
         }
     }
