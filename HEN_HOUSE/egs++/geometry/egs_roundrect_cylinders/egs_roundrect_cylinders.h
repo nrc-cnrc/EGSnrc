@@ -287,8 +287,8 @@ public:
         // Modify dist to take into account unprojected component...
         dist *= sqrt(u.length2() / (qx*qx + qy*qy));
         if (dist <= t) {
-            // Add a tiny amount (1 fm) to counteract backward rounding drift
-            t = dist + 1e-10;
+            // Add a tiny amount to counteract backward rounding drift
+            t = dist + 0.25 * epsilon;
             if (newmed) {
                 *newmed = inew < 0 ? -1 : medium(inew);
             }
@@ -434,15 +434,15 @@ private:
         }
         else {
             // Flip again, so that both ix, iy are in the positive region
-            EGS_Float ix = px + qx * (ay[ring] - py) / qy;
-            EGS_Float iy = py + qy * (ax[ring] - px) / qx;
+            EGS_Float ix = px + (qx / qy) * (ay[ring] - py);
+            EGS_Float iy = py + (qy / qx) * (ax[ring] - px);
 
             // Now, casework:
             bool topface = fabs(ix) <= ax[ring] - ar[ring];
             bool sideface = fabs(iy) <= ay[ring] - ar[ring];
 
-            if (fabs(ix) > ax[ring] && fabs(iy) > ay[ring]) {
-                // fast case, way out
+            if (fabs(ix) > ax[ring] + epsilon && fabs(iy) > ay[ring] + epsilon) {
+                // fast case: definite miss
                 return false;
             }
 
