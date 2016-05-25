@@ -135,6 +135,7 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         Rout2 = Rout*Rout;
         if (fabs(rtop[this_nr-1]-Rout) > 1e-5) {
             same_Rout = false;
+            is_convex = false;
         }
     }
 
@@ -151,9 +152,11 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         if (ir == this_nr-1) {
             if (fabs(rbottom[this_nr-1]-Rout) > 1e-5) {
                 same_Rout = false;
+                is_convex = false;
             }
             if (fabs(Rtop-Rout) > 1e-5) {
                 same_Rout = false;
+                is_convex = false;
             }
         }
     }
