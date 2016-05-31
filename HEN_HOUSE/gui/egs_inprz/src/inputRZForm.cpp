@@ -1114,6 +1114,8 @@ void inputRZImpl::update_MCInputs( const MMCInputs* EGSmc )
       else {
          openErrors += QString(WARNING_KERMA) + "\n";
       }
+      if ( (ifullComboBox->currentText()).toLower() == "pulse height distribution")
+               phdGroupBox->setEnabled( true );
    }
    else if ( usercode != flurznrc ) {// PHOTON REGENERATION
       if ( EGSmc->photreg.toLower() == "yes" ){
@@ -1360,6 +1362,7 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
 
  //set some defaults in the input window for material specified in .egsinp file
  pzRadioButton->setChecked(true);
+ df_egs_homeRadioButton->setChecked(true);
  //qt3to4 -- BW
  //pz_or_rhozTable->horizontalHeader()->setLabel(1,"no. of atoms");
  pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("no. of atoms"));
@@ -1441,6 +1444,7 @@ void inputRZImpl::inpmediumSave( const QString& str)
 {
 
   int ind=inpmediumComboBox->currentIndex();
+  Ppgls->inpmedind=ind;
   if(inpmediumComboBox->currentText()!="define new medium"){
     //note: above allows blanks in medium name...probably not a good idea
     if(ind==Ppgls->ninpmedia) {
@@ -2675,9 +2679,6 @@ void inputRZImpl::update_usercode()
        outoptComboBox->addItem( tr( "long" ) );
 
        outputTip->setTips( out_dos, sizeof out_dos / sizeof(char *));
-
-       if ( (ifullComboBox->currentText()).toLower() == "pulse height distribution")
-	       phdGroupBox->setEnabled( true );
 
        //Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_DOSRZNRC  );
        CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_DOSRZNRC  );
