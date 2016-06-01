@@ -119,10 +119,10 @@ void QInstallPage::SaveAppSetting()
     updateProgress();
 
     // Update the user path variable with the dso/win2k-cl directory
-    printProgress("\nSetting win2k-cl DSO directory in your path ....");
+    printProgress("\nSetting win-static DSO directory in your path ....");
     update_path( henHouse() + QDir::separator() + "egs++" +
                               QDir::separator() + "dso"   +
-                              QDir::separator() + "win2k-cl");
+                              QDir::separator() + "win-static");
     updateProgress();
 
     // Update the user path variable with the dso/$my_machine directory
@@ -279,7 +279,7 @@ void QInstallPage::createEGSFolders(){
           if( *it != "egs_view" )
             target =  QDir::convertSeparators( egsBinDir  + s + *it + ".exe" );
           else{
-            target =  QDir::convertSeparators( henHouse() + "egs++" + s + "dso" + s + "win2k-cl" + s + *it + ".exe");
+            target =  QDir::convertSeparators( henHouse() + "egs++" + s + "dso" + s + "win-static" + s + *it + ".exe");
             icon   = henHouse() + "egs++" + s + "view" + s + *it + ".ico";
           }
           if ( ! fileExists( target ) ) {
