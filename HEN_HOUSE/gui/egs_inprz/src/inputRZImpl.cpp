@@ -777,7 +777,8 @@ void inputRZImpl::GetDFfile()
    tmpDir = ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s);
    else
    tmpDir = ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s);
-   QDir d(tmpDir);
+   if (!QDir(tmpDir).exists()) tmpDir.chop(20);
+   QDir d(tmpDir); 
    //qt3to4 -- BW
    //QString f = Q3FileDialog::getOpenFileName( this,"",tmpDir, "density correction file (*.density);; all files (*)");
    QString f = QFileDialog::getOpenFileName( this, "",tmpDir, "density correction file (*.density);; all files (*)");
