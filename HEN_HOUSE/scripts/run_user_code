@@ -212,10 +212,16 @@ if test ! -x $executable; then
     fi
 fi
 
-if test "x$input_file" = x; then
-    $executable -p $pegs_file
+if test $pegs_file = "pegsless"; then
+    command="$executable"
 else
-    $executable -p $pegs_file -i $input_file
+    command="$executable -p $pegs_file"
+fi
+
+if test "x$input_file" = x; then
+    $command
+else
+    $command -i $input_file
 fi
 
 exit 0
