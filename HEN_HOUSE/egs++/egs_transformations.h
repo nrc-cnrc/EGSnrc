@@ -159,6 +159,11 @@ public:
             register EGS_Float sint = -sinz/norm;
             *this = rotY(cost,sint)*rotZ(cphi,sphi);
         }
+        else if (v.z < 0.) {
+            // v along negative z is degenerate: a rotation of pi around any axis in the
+            // xy plane satisfies the condition; we pick the x axis
+            *this = rotX(M_PI);
+        }
         else { // v is along the z-axis => matrix is the unit transformation
             rxx = 1;
             rxy = 0;
