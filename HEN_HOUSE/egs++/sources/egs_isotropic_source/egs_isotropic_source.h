@@ -283,27 +283,14 @@ public:
                             break;
                         }
                     }
-                    else if (gc == ExcludeAll) {
-                        ok = !geom->isInside(x);
-                    }
-                    else if (gc == IncludeSelected) {
-                        ok = false;
-                        int ireg = geom->isWhere(x);
-                        for (int j=0; j<nrs; ++j) {
-                            if (ireg == regions[j]) {
-                                ok = true;
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        ok = true;
-                        int ireg = geom->isWhere(x);
-                        for (int j=0; j<nrs; ++j) {
-                            if (ireg == regions[j]) {
-                                ok = false;
-                                break;
-                            }
+                }
+                else {
+                    ok = true;
+                    int ireg = geom->isWhere(x);
+                    for (int j=0; j<nrs; ++j) {
+                        if (ireg == regions[j]) {
+                            ok = false;
+                            break;
                         }
                     }
                 }
