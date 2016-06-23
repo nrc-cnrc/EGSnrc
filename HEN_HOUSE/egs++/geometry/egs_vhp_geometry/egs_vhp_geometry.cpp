@@ -714,6 +714,7 @@ extern "C" {
                     tb_med,bm_med,micro_data.c_str());
             result->setName(input);
             result->setLabels(input);
+            result->setBoundaryTolerance(input);
             return result;
         }
         string phantom, media;
@@ -743,6 +744,7 @@ extern "C" {
         result->setName(input);
         result->setMicros(input);
         result->setLabels(input);
+        result->setBoundaryTolerance(input);
         return result;
     }
 

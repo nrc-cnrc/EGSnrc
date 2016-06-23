@@ -315,6 +315,7 @@ extern "C" {
             }
             result->setRLabels(input);
             result->setLabels(input);
+            result->setBoundaryTolerance(input);
             return result;
         }
 
@@ -370,6 +371,7 @@ extern "C" {
         g->setName(input);
         g->setMedia(input);
         g->setLabels(input);
+        g->setBoundaryTolerance(input);
         return g;
     }
 

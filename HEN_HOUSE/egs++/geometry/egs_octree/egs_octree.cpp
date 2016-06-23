@@ -327,6 +327,7 @@ extern "C" {
         EGS_Octree *octree = new EGS_Octree(vBox, pruneTree, g);
         octree->setName(input);
         octree->setLabels(input);
+        octree->setBoundaryTolerance(input);
         octree->printInfo();
 
         if (discardChild) {

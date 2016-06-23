@@ -101,6 +101,7 @@ extern "C" {
         }
         result->setName(input);
         result->setLabels(input);
+        result->setBoundaryTolerance(input);
         return result;
 
     }

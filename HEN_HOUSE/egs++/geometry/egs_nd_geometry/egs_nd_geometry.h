@@ -1112,9 +1112,9 @@ protected:
                 iz = zp->isWhere(tmp);
                 if (iz >= 0) {
                     int inew =  ix + iy*nx + iz*nxy;
-                    if (t1 < epsilon) {
+                    if (t1 < boundaryTolerance) {
                         int itest = howfar(inew, tmp, u, t1);
-                        if (itest == -1 && t1 < epsilon) {
+                        if (itest == -1 && t1 < boundaryTolerance) {
                             return -1;
                         }
                     }
@@ -1143,9 +1143,9 @@ protected:
                 iz = zp->isWhere(tmp);
                 if (iz >= 0) {
                     int inew =  ix + iy*nx + iz*nxy;
-                    if (t1 < epsilon) {
+                    if (t1 < boundaryTolerance) {
                         int itest = howfar(inew, tmp, u, t1);
-                        if (itest == -1 && t1 < epsilon) {
+                        if (itest == -1 && t1 < boundaryTolerance) {
                             return -1;
                         }
                     }
@@ -1174,9 +1174,9 @@ protected:
                 iy = yp->isWhere(tmp);
                 if (iy >= 0) {
                     int inew =  ix + iy*nx + iz*nxy;
-                    if (t1 < epsilon) {
+                    if (t1 < boundaryTolerance) {
                         int itest = howfar(inew, tmp, u, t1);
-                        if (itest == -1 && t1 < epsilon) {
+                        if (itest == -1 && t1 < boundaryTolerance) {
                             return -1;
                         }
                     }

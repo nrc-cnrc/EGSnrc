@@ -387,7 +387,7 @@ extern "C" void __list_geometries() {
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
+    boundaryTolerance(1e-10), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -634,6 +634,15 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
             }
         }
     }
+}
+
+void EGS_BaseGeometry::setBoundaryTolerance(EGS_Input *i) {
+    int err = i->getInput("boundary tolerance", boundaryTolerance);
+    delete i;
+    if (err) {
+        egsWarning("EGS_BaseGeometry::setBoundaryTolerance(): error while reading 'boundary tolerance' input\n");
+    }
+
 }
 
 void EGS_BaseGeometry::printInfo() const {

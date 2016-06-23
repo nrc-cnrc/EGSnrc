@@ -86,6 +86,7 @@ extern "C" {
         result->setName(input);
         result->setMedia(input);
         result->setLabels(input);
+        result->setBoundaryTolerance(input);
         return result;
     }
 

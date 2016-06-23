@@ -128,6 +128,7 @@ extern "C" {
         EGS_BaseGeometry *result = new EGS_StackGeometry(geoms,tol);
         result->setName(input);
         result->setLabels(input);
+        result->setBoundaryTolerance(input);
         return result;
     }
 
