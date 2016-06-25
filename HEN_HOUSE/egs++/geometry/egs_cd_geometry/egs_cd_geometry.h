@@ -508,7 +508,7 @@ public:
                 }
 				// Skip for concave geometries: particles can reenter the CD geometry after leaving.
 				// Check 2. below will catch these cases.
-                else if ((ixnew < 0 && tb <= epsilon) && (bg->isConvex() && g[ibase]->isConvex())) {                         // (a) is true
+                else if ((ixnew < 0 && tb <= epsilon) && (bg->isConvex() && (g[ibase] && g[ibase]->isConvex()))) {                         // (a) is true
                     return ixnew;
                 }
 				// If a particle approaching the geometry sits on a boundary, we look back to see
