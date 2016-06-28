@@ -32,7 +32,7 @@
 #include "pegs_runoutput.h"
 #include <QTextEdit>
 
-#define RO_DEBUG
+//#define RO_DEBUG
 
 void PEGS_RunOutput::hideWindow()
 {
