@@ -314,8 +314,8 @@ extern "C" {
             }
 
             g->setName(input);
-            g->setLabels(input);
             g->setBoundaryTolerance(input);
+            g->setLabels(input);
             return g;
         }
 

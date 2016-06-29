@@ -274,12 +274,6 @@ static char buf_unique[32];
 
 int EGS_BaseGeometry::error_flag = 0;
 
-#ifdef SINGLE
-    EGS_Float EGS_BaseGeometry::epsilon = 1e-5;
-#else
-    EGS_Float EGS_BaseGeometry::epsilon = 1e-7;
-#endif
-
 #ifndef SKIP_DOXYGEN
 EGS_BaseGeometry *EGS_GeometryPrivate::createSingleGeometry(EGS_Input *i) {
     string libname;
@@ -638,11 +632,9 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
 
 void EGS_BaseGeometry::setBoundaryTolerance(EGS_Input *i) {
     int err = i->getInput("boundary tolerance", boundaryTolerance);
-    delete i;
-    if (err) {
+    if (err > 0) {
         egsWarning("EGS_BaseGeometry::setBoundaryTolerance(): error while reading 'boundary tolerance' input\n");
     }
-
 }
 
 void EGS_BaseGeometry::printInfo() const {

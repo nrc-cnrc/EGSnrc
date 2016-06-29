@@ -119,8 +119,8 @@ extern "C" {
                                           EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
         }
         g->setName(input);
-        g->setMedia(input);
         g->setBoundaryTolerance(input);
+        g->setMedia(input);
         return g;
     }
 
