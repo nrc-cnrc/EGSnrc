@@ -529,6 +529,12 @@ public:
      the geometry creation function.
      */
     void    setBoundaryTolerance(EGS_Input *inp);
+
+    /*! \brief Set the value of the boundary tolerance from argument.
+     */
+    void    setBoundaryTolerance(EGS_Float tol) {
+        boundaryTolerance = tol;
+    }
     
     /*! \brief Is the boolean property \a prop set for region \a ireg ?
      */
