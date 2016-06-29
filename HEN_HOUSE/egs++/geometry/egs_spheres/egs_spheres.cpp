@@ -341,9 +341,9 @@ extern "C" {
         }
         EGS_BaseGeometry *result = new EGS_cSpheres(radii.size(),r,xo);
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setMedia(input);
         result->setLabels(input);
-        result->setBoundaryTolerance(input);
         return result;
     }
 

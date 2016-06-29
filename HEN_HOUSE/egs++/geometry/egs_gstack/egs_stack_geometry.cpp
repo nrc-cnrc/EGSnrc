@@ -125,8 +125,8 @@ extern "C" {
         }
         EGS_BaseGeometry *result = new EGS_StackGeometry(geoms);
         result->setName(input);
-        result->setLabels(input);
         result->setBoundaryTolerance(input);
+        result->setLabels(input);
         EGS_Float tol = 1e-10;
         err = input->getInput("tolerance",tol);
         if (!err) {

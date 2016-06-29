@@ -84,9 +84,9 @@ extern "C" {
             delete t;
         }
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setMedia(input);
         result->setLabels(input);
-        result->setBoundaryTolerance(input);
         return result;
     }
 

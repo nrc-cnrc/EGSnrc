@@ -716,7 +716,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             result->setMedium(j,j,imed[i]);
             if (rho_def[i] > 0) {
                 EGS_Float rrho = rho[j]/rho_def[i];
-                if (fabs(rrho-1) > boundaryTolerance) {
+                if (fabs(rrho-1) > 1e-10) {
                     result->setRelativeRho(j,j,rrho);
                 }
             }
@@ -1086,12 +1086,12 @@ extern "C" {
             EGS_XYZRepeater *result =
                 new EGS_XYZRepeater(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,g);
             result->setName(input);
+            result->setBoundaryTolerance(input);
             if (!err5) {
                 result->setMedium(medium);
             }
             result->setXYZLabels(input);
             result->setLabels(input);
-            result->setBoundaryTolerance(input);
             return result;
         }
         else if (!is_xyz && input->compare("EGS_XYZGeometry",type)) {
@@ -1311,9 +1311,9 @@ extern "C" {
             result = new EGS_NDGeometry(dims);
         }
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setMedia(input);
         result->setLabels(input);
-        result->setBoundaryTolerance(input);
         return result;
     }
 

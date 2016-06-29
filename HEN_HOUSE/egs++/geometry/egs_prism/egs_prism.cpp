@@ -125,7 +125,7 @@ extern "C" {
                 points.push_back(EGS_Vector(p[3*j],p[3*j+1],p[3*j+2]));
             }
             EGS_Vector aux(points[np-1]-points[0]);
-            if (aux.length2() > boundaryTolerance) {
+            if (aux.length2() > 1e-10) {
                 points.push_back(points[0]);
             }
             np = points.size();
@@ -135,7 +135,7 @@ extern "C" {
                 for (int j=0; j<np; j++) {
                     p2.push_back(pro.getProjection(points[j]));
                     EGS_Float d = pro.distance(points[j]);
-                    if (fabs(d) > boundaryTolerance) {
+                    if (fabs(d) > 1e-10) {
                         egsWarning("createGeometry(prism): "
                                    "points are not on a plane\n");
                         return 0;
@@ -150,9 +150,9 @@ extern "C" {
             }
         }
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         g->setLabels(input);
-        g->setBoundaryTolerance(input);
         return g;
     }
 
