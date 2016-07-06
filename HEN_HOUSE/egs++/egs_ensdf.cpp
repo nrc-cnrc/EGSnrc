@@ -438,6 +438,26 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     // Get X-ray and auger emissions from comments
     getEmissionsFromComments();
     
+    // Search through the gamma records for any with unknown levels
+    for(vector<GammaRecord* >::iterator it = myGammaRecords.begin(); 
+            it!=myGammaRecords.end(); it++) {
+        
+        // Some gamma may be emitted but the energy level is not known
+        // This is reported in the lnhb data as decays from the -1 level
+        // Since we cannot correlate the emission with a change of energy
+        // states of the daughter, we will treat this gamma as an xray
+        // The halflife will be ignored
+        if(!(*it)->getLevelRecord()) {
+            printf("EGS_Ensdf::parseEnsdf: Switching gamma with unknown "
+                "level to X-Ray for non-correlated sampling\n");
+            xrayEnergies.push_back((*it)->getDecayEnergy());
+            xrayIntensities.push_back((*it)->getTransitionIntensity());
+            
+            // Erase the gamma record object
+            myGammaRecords.erase(it);
+        }
+    }
+    
     for(unsigned int i=0; i < xrayEnergies.size(); ++i) {
         printf("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n", 
             xrayEnergies[i], xrayIntensities[i]);
@@ -1224,7 +1244,7 @@ void GammaRecord::processEnsdf() {
     }
     
     printf("GammaRecord::processEnsdf: %f %f %f\n", decayEnergy, 
-        transitionIntensity, halfLife);
+    transitionIntensity, halfLife);
 }
 
 double GammaRecord::getDecayEnergy() const {
