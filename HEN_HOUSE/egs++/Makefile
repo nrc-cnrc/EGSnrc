@@ -41,7 +41,8 @@ egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_projectors egs_alias_table egs_object_factory egs_spectra \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
-             egs_ausgab_object egs_particle_track egs_fortran_geometry
+             egs_ausgab_object egs_particle_track egs_fortran_geometry \
+             egs_ensdf
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
@@ -54,7 +55,8 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
-              egs_beam_source egs_phsp_source egs_angular_spread iaea_phsp_source
+              egs_beam_source egs_phsp_source egs_angular_spread \
+              iaea_phsp_source egs_radionuclide_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
