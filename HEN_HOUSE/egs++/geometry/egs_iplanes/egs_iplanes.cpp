@@ -308,6 +308,7 @@ extern "C" {
             }
             EGS_RadialRepeater *result = new EGS_RadialRepeater(xo,a,np,g,phi_o);
             result->setName(input);
+            result->setBoundaryTolerance(input);
             string medium;
             err = input->getInput("medium",medium);
             if (!err) {
@@ -368,6 +369,7 @@ extern "C" {
         EGS_BaseGeometry *g = new EGS_IPlanes(xo,a,angles.size(),ang,"",is_degree);
         delete [] ang;
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         g->setLabels(input);
         return g;

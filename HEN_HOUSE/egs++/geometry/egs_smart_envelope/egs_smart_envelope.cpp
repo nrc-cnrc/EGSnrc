@@ -307,6 +307,7 @@ extern "C" {
         }
         EGS_BaseGeometry *result = new EGS_SmartEnvelope(g,fgeoms,"");
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setLabels(input);
         for (int j=0; j<fgeoms.size(); j++) {
             delete fgeoms[j];

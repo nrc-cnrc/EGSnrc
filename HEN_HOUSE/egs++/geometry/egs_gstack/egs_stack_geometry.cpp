@@ -42,7 +42,7 @@
 string EGS_StackGeometry::type = "EGS_StackGeometry";
 
 EGS_StackGeometry::EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms,
-                                     EGS_Float Tol, const string &Name) : EGS_BaseGeometry(Name), eps(Tol) {
+                                     const string &Name) : EGS_BaseGeometry(Name) {
     if (geoms.size() < 2) egsFatal("EGS_StackGeometry::EGS_StackGeometry: "
                                        " less than 2 geometries is not mermitted\n");
     ng = geoms.size();
@@ -123,11 +123,15 @@ extern "C" {
             egsWarning("createGeometry(stack): must have at least 2 geometries\n");
             return 0;
         }
-        EGS_Float tol = 1e-4;
-        err = input->getInput("tolerance",tol);
-        EGS_BaseGeometry *result = new EGS_StackGeometry(geoms,tol);
+        EGS_BaseGeometry *result = new EGS_StackGeometry(geoms);
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setLabels(input);
+        EGS_Float tol = 1e-10;
+        err = input->getInput("tolerance",tol);
+        if (!err) {
+            result->setBoundaryTolerance(tol);
+        }
         return result;
     }
 

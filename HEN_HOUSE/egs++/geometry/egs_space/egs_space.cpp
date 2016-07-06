@@ -44,6 +44,7 @@ extern "C" {
     EGS_SPACE_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
         EGS_Space *g = new EGS_Space("");
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         g->setLabels(input);
         return g;
