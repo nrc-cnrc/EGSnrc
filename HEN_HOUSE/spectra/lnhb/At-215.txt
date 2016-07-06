@@ -1,0 +1,39 @@
+211BI    215AT A DECAY (0.10 MS)
+211BI  H TYP=Full$AUT=V.P. Chechev$CUT=15-DEC-2010$
+211BI C  Evaluation history: Type=Full;Author=V.P. Chechev;Cutoff date=15-DEC-2010
+211BI C  References: 1951Me10, 1966Gr07, 1982Bo04, 1991Ry01, 2003Au03, 2004Br45, 
+211BI2C  2008Ki07
+211BI T  Auger electrons and ^X ray energies and emission intensities:
+211BI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+211BI T
+211BI T        74.8157           0.0012  5       XKA2
+211BI T        77.1088           0.0020  9       XKA1
+211BI T   
+211BI T        86.835         |]                  XKB3
+211BI T        87.344         |]  0.00069  28     XKB1
+211BI T        87.862         |]                  XKB5II
+211BI T   
+211BI T        89.732         |]                  XKB2
+211BI T        90.074         |]  0.00021  9      XKB4
+211BI T        90.421         |]                  XKO23
+211BI T   
+211BI T        9.4207-15.7084    0.0017  4       XL (total)
+211BI T        9.4207            0.000042  13    XLL
+211BI T        10.7308-10.8387   0.00078  22     XLA
+211BI T        11.7127           0.000013  5     XLC
+211BI T        12.4814-13.8066   0.00073  18     XLB
+211BI T        14.7735-15.7084   0.00014  4      XLG
+211BI T   
+211BI T        57.491-63.419  |]                  KLL AUGER
+211BI T        70.025-77.105  |]  0.00015  7      ^KLX AUGER
+211BI T        82.53-90.52    |]                  KXY AUGER
+211BI T        5.42-16.34        0.0027  5       L AUGER
+215AT  P 0.0         9/2-              0.10 MS   2              8178      4
+211BI  N 1.0         1.0       1         1.0
+211BI  L 0           9/2-              2.15 M    2
+211BI  A 8026      4 99.95   2 2.8
+211BI  L 404.854   9 7/2-              0.317 NS  11
+211BI  A 7628      4 0.05    2 390
+211BI  G 404.853   9 0.045   18M1+E2     -1.1    1     0.122  8
+211BI2 G KC=0.095   7$LC=0.0206  8$MC=0.00498 17
+ 

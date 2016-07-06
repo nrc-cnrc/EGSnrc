@@ -1,0 +1,37 @@
+203TL    203HG B- DECAY (46.594 D)
+203TL T  Auger electrons and ^X ray energies and emission intensities:
+203TL T       {U Energy (keV)}     {U Intensity }      {U Line  }
+203TL T
+203TL T        70.8325           3.75  4         XKA2
+203TL T        72.8725           6.33  6         XKA1
+203TL T   
+203TL T        82.118         |]                  XKB3
+203TL T        82.577         |]  2.15  4         XKB1
+203TL T        83.115         |]                  XKB5II
+203TL T   
+203TL T        84.838         |]                  XKB2
+203TL T        85.134         |]  0.639  16       XKB4
+203TL T        85.444         |]                  XKO23
+203TL T   
+203TL T        8.953-14.738      5.43  9         XL (total)
+203TL T        8.953             0.126  4        XLL
+203TL T        10.172-10.268     2.43  7         XLA
+203TL T        10.994            0.0457  12      XLC
+203TL T        11.812-12.643     2.37  7         XLB
+203TL T        14.291-14.738     0.435  11       XLG
+203TL T   
+203TL T        54.587-59.954  |]                  KLL AUGER
+203TL T        66.37-72.86    |]  0.49  6         ^KLX AUGER
+203TL T        78.12-85.5     |]                  KXY AUGER
+203TL T        5.18-15.31        10.1  1         L AUGER
+203HG  P 0.0         5/2-              46.594 D  12             491.8     12
+203TL  N 1.0         1.0       1         1.0
+203TL  L 0           1/2+                STABLE   
+203TL  B 491.8     120.01    1           11.6                                3U
+203TLS B EAV=154.4 4
+203TL  L 279.1969  123/2+                         
+203TL  B 212.6     1299.99   1           6.455                               1U
+203TLS B EAV=57.8 4
+203TL  G 279.1952  1081.48   8 M1+E2     1.73    50    0.2271 12
+203TL2 G KC=0.1640  1$LC=0.0476  2$MC=0.0155  2
+ 

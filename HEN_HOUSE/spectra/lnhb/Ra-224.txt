@@ -1,0 +1,58 @@
+220RN    224RA A DECAY (3.631 D)
+220RN  H TYP=Update$AUT=A.L. Nichols$CUT=30-APR-2010$
+220RN2 H TYP=Full$AUT=A.L. Nichols$CUT=30-DEC-2003$
+220RN C  Evaluation history: Type=Update;Author=A.L. Nichols;Cutoff date=30-APR-2010
+220RN2C  Type=Full;Author=A.L. Nichols;Cutoff date=30-DEC-2003
+220RN C  References: 1953As31, 1962Wa28, 1962Ll02, 1969Pe17, 1971Gr07, 1971So15, 
+220RN2C  1971Jo14, 1972DaZA, 1972Da38, 1977La19, 1977Ku15, 1982Sa36, 1983Va22, 
+220RN3C  1983Sc13, 1984Ge07, 1984Bo15, 1985Pr01, 1991Ry01, 1991Ho15, 1992Li05, 
+220RN4C  1993Ba72, 1995Ar33, 1996Sc06, 1997Ar04, 1997Tr17, 1998ScZM, 1999ScZX, 
+220RN5C  2002Ba85, 2002Ra45, 2003Au03, 2004Sc04, 2007St23, 2008Ki07
+220RN T  Auger electrons and ^X ray energies and emission intensities:
+220RN T       {U Energy (keV)}     {U Intensity }      {U Line  }
+220RN T
+220RN T        81.07             0.130  3        XKA2
+220RN T        83.78             0.214  4        XKA1
+220RN T   
+220RN T        94.247         |]                  XKB3
+220RN T        94.868         |]  0.0743  18      XKB1
+220RN T        95.449         |]                  XKB5II
+220RN T   
+220RN T        97.48          |]                  XKB2
+220RN T        97.853         |]  0.0238  7       XKB4
+220RN T        98.357         |]                  XKO23
+220RN T   
+220RN T        10.137-17.28      0.373  16       XL (total)
+220RN T        10.137            0.00774  20     XLL
+220RN T        11.598-11.726     0.138  4        XLA
+220RN T        12.855            0.00413  11     XLC
+220RN T        13.52-14.565      0.191  5        XLB
+220RN T        16.77-17.28       0.0424  9       XLG
+220RN T   
+220RN T        62.017-68.885  |]                  KLL AUGER
+220RN T        75.744-83.785  |]  0.0151  19      ^KLX AUGER
+220RN T        89.45-98.39    |]                  KXY AUGER
+220RN T        5.58-11.48        0.498  16       L AUGER
+224RA  P 0.0         0+                3.631 D   2              5788.85   15
+220RN  N 1.0         1.0       1         1.0
+220RN  L 0           0+                55.8 S    3
+220RN  A 5685.48   1594.73   5 1
+220RN  L 240.986   6 2+                0.15 NS    
+220RN  A 5448.80   155.25    5 1.04
+220RN  G 240.986   6 4.12    4 E2                      0.276  4
+220RN2 G KC=0.1109  16$LC=0.1220  17$MC=0.0324  5
+220RN  L 533.69    104+                           
+220RN  A 5161.32   180.0072  8 17.9
+220RN  G 292.7     1 0.0063  7 E2                      0.1487 21
+220RN2 G KC=0.0727  11$LC=0.0564  8$MC=0.01484 21
+220RN  L 645.44    9 1-                           
+220RN  A 5051.56   170.0076  103.7
+220RN  G 404.45    9 0.0022  5 E1                      0.0171724
+220RN2 G KC=0.01401 20$LC=0.00241 4$MC=5.68E-4 8
+220RN  G 645.44    9 0.0054  9 E1                      0.0066310
+220RN2 G KC=0.00546 8$LC=8.94E-4 13$MC=2.10E-4 3
+220RN  L 663.03    10(3)-                         
+220RN  A 5034.29   180.0030  5 6.4
+220RN  G 422.04    100.0030  5 [E1]                    0.0156722
+220RN2 G KC=0.01280 18$LC=0.00219 3$MC=5.16E-4 8
+ 

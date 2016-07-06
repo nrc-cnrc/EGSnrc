@@ -1,0 +1,57 @@
+215BI    219AT A DECAY (56 S)
+215BI  H TYP=Full$AUT=A.L. Nichols$CUT=15-SEP-2010$
+215BI C  Evaluation history: Type=Full;Author=A.L. Nichols;Cutoff date=15-SEP-2010
+215BI C  References: 1953Hy83, 1989Bu09, 1998Ak04, 2001Br31, 2003Au03, 2009AuZZ
+215BI T  Auger electrons and ^X ray energies and emission intensities:
+215BI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+215BI T
+215BI T        74.8157                           XKA2
+215BI T        77.1088                           XKA1
+215BI T   
+215BI T        86.835         |]                  XKB3
+215BI T        87.344         |]                  XKB1
+215BI T        87.862         |]                  XKB5II
+215BI T   
+215BI T        89.732         |]                  XKB2
+215BI T        90.074         |]                  XKB4
+215BI T        90.421         |]                  XKO23
+215BI T   
+215BI T   
+215BI T        57.491-63.419  |]                  KLL AUGER
+215BI T        70.025-77.105  |]                  ^KLX AUGER
+215BI T        82.53-90.52    |]                  KXY AUGER
+215BI T        0.21-16.3366                      L AUGER
+219AT  P 0.0         (7/2)-            56 S      4              6324      15
+215BI  N 1.031E0     1.031E0   0.97      1.031E0
+215BI  L 0           (9/2)-            7.6 M     2
+215BI  A 6208      15100       1.07
+ 
+219RN    219AT B- DECAY (56 S)
+219RN  H TYP=Full$AUT=A.L. Nichols$CUT=15-SEP-2010$
+219RN C  Evaluation history: Type=Full;Author=A.L. Nichols;Cutoff date=15-SEP-2010
+219RN C  References: 1953Hy83, 1989Bu09, 1998Ak04, 2001Br31, 2003Au03, 2009AuZZ
+219RN T  Auger electrons and ^X ray energies and emission intensities:
+219RN T       {U Energy (keV)}     {U Intensity }      {U Line  }
+219RN T
+219RN T        81.07                             XKA2
+219RN T        83.78                             XKA1
+219RN T   
+219RN T        94.247         |]                  XKB3
+219RN T        94.868         |]                  XKB1
+219RN T        95.449         |]                  XKB5II
+219RN T   
+219RN T        97.48          |]                  XKB2
+219RN T        97.853         |]                  XKB4
+219RN T        98.357         |]                  XKO23
+219RN T   
+219RN T   
+219RN T        62.017-68.885  |]                  KLL AUGER
+219RN T        75.744-83.785  |]                  ^KLX AUGER
+219RN T        89.45-98.39    |]                  KXY AUGER
+219RN T        0.2-17.957                        L AUGER
+219AT  P 0.0         (7/2)-            56 S      4              1566      3
+219RN  N 3.333E1     3.333E1   0.03      3.333E1
+219RN  L 0           5/2+              3.98 S    3
+219RN  B 1566      3 3                   6.2                                 1U
+219RNS B EAV=547 2
+ 

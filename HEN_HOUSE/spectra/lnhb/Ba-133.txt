@@ -1,0 +1,77 @@
+133CS    133BA EC DECAY (10.539 Y)
+133CS  H TYP=UPD$AUT=V.P. Chechev. N.K. Kuzmenko$CUT=01-MAY-2015$
+133CS2 H TYP=UPD$AUT=V.P. Chechev. N.K. Kuzmenko$CUT=01-JUL-2014$
+133CS3 H TYP=UPD$AUT=V.P. Chechev. N.K. Kuzmenko$CUT=01-JAN-2004$
+133CS4 H TYP=UPD$AUT=V.P. Chechev. N.K. Kuzmenko$CUT=01-APR-2000$
+133CS5 H TYP=FUL$AUT=V.P. Chechev. N.K. Kuzmenko$CUT=01-MAY-1999$
+133CS C  References: 1961Wy01, 1967Bl15, 1967Be65, 1968Do10, 1968Re04, 1968Al16, 
+133CS2C  1968Na16, 1968No01, 1968La10, 1968BO04, 1969Gu15, 1970Wa19, 1972Em01, 
+133CS3C  1972Sc08, 1973In06, 1973Le**, 1973Ll01, 1973Mc18, 1974Da09, 1975Ni07, 
+133CS4C  1977Ge12, 1977Sc31, 1978Vy**, 1978He21, 1979HaYC, 1980Ch**, 1980Ho17, 
+133CS5C  1980Ro22, 1980RuZY, 1982HoZJ, 1983Si22, 1983Si17, 1983Ch11, 1983Ki08, 
+133CS6C  1983Wa26, 1983Yo03, 1987La**, 1988BeYQ, 1989Ma60, 1989Eg**, 1989DA11, 
+133CS7C  1990Da11, 1990Fi03, 1990Bh01, 1990Me15, 1991We08, 1992Sa28, 1992Un01, 
+133CS8C  1992Ch**, 1993Ni**, 1995Ra12, 1996Mi26, 1996Sc06, 1997Ma75, 1998Hw07, 
+133CS9C  2000He14, 2002Un02, 2004Sc04, 2004BeZQ, 2008Ki07, 2010Sc08, 2011Kh02, 
+133CS10C 2012Wa38, 2012Fi12, 2014Ma**, 2014Un01
+133CS T  Auger electrons and X ray energies and emission intensities:
+133CS T       {U Energy (keV)}   {U Intensity}  {U Line}
+133CS T
+133CS T        30.6254            33.8    4      XKA2
+133CS T        30.9731            62.4    7      XKA1
+133CS T   
+133CS T        34.9197        |]                 XKB3
+133CS T        34.9873        |]  18.24   29     XKB1
+133CS T        35.252         |]                 XKB5II
+133CS T   
+133CS T        35.822         |]                 XKB2
+133CS T        35.907         |]  4.45    12     XKB4
+133CS T        35.972         |]                 XKO23
+133CS T   
+133CS T        3.7946-5.5525      15.87   26     XL (total)
+133CS T        3.7946             0.293   8      XLL
+133CS T        4.2729-4.2866      7.63    18     XLA
+133CS T        4.1418             0.1117  30     XLC
+133CS T        4.62-4.9333        6.76    12     XLB
+133CS T        5.1308-5.5525      1.086   20     XLG
+133CS T   
+133CS T        24.411-25.804  |]                 KLL AUGER
+133CS T        28.991-30.961  |]  14.1    6      KLX AUGER
+133CS T        33.55-35.96    |]                 KXY AUGER
+133CS T        2.5777-5.559       136.8   8      L AUGER
+133BA  P 0.0         1/2+              10.539 Y  6              517.3     10
+133CS  N 1.0         1.0       1         1.0
+133CS  L 0           7/2+                STABLE   
+133CS  E                       0.0005  LT13.9    GT                            
+133CS2 E EAV=   $CK=0.77  $CL=0.18  $CM=0.05  $CN=   $CO=   
+133CS  L 80.9979   115/2+              6.283 NS  14
+133CS  E                       0.7     LT10.9    GT                            
+133CS2 E EAV=   $CK=0.84  $CL=0.13  $CM=0.037  $CN=   $CO=   
+133CS  G 80.9979   1133.31   30M1+E2     0.158   5     1.703  24
+133CS2 G KC=1.431   20$LC=0.216   4$MC=0.0447  8
+133CS  L 160.6121  165/2+              172 PS    4
+133CS  E                       0.3     LT10.6    GT                            
+133CS2 E EAV=   $CK=0.83  $CL=0.13  $CM=0.037  $CN=   $CO=   
+133CS  G 79.6142   192.63    19M1+E2     0.124   15    1.77   3
+133CS2 G KC=1.495   22$LC=0.217   6$MC=0.0447  13
+133CS  G 160.6121  160.638   6 M1+E2     0.96    5     0.294  6
+133CS2 G KC=0.234   4$LC=0.0471  13$MC=0.0099  3
+133CS  L 383.8491  123/2+              44 PS     11
+133CS  E                       14.46   518.03                                2
+133CS2 E EAV=   $CK=0.7727 9$CL=0.1755 7$CM=0.05174 23$CN=   $CO=   
+133CS  G 223.2368  130.450   5 M1+E2     0.114   14    0.0975 14
+133CS2 G KC=0.0836  12$LC=0.01103 16$MC=0.00226 4
+133CS  G 302.8508  5 18.31   11M1+E2     0.022   20    0.0434 6
+133CS2 G KC=0.0373  6$LC=0.00484 7$MC=9.88E-4 14
+133CS  G 383.8485  128.94    6 E2                      0.0202 3
+133CS2 G KC=0.01684 24$LC=0.00270 4$MC=5.60E-4 8
+133CS  L 437.0113  131/2+              150 PS     
+133CS  E                       85.41   536.63                                  
+133CS2 E EAV=   $CK=0.671 5$CL=0.251 4$CM=0.0777 11$CN=   $CO=   
+133CS  G 53.1622   182.14    6 M1+E2     0.08    3     5.66   11
+133CS2 G KC=4.78    7$LC=0.70    5$MC=0.144   12
+133CS  G 276.3989  127.13    6 E2                      0.0566 8
+133CS2 G KC=0.0460  7$LC=0.00842 12$MC=1763E-6 25
+133CS  G 356.0129  7 62.05   19E2                      0.0254 4
+133CS2 G KC=0.0211  3$LC=0.00346 5$MC=7.21E-4 10
+ 

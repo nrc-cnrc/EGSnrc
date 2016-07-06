@@ -1,0 +1,84 @@
+138BA    138LA EC DECAY (103.6E9 Y)
+138BA  H TYP=Upd$AUT=X. Mougeot$CUT=01-MAY-2016$
+138BA2 H TYP=Full$AUT=M.M. Bé$CUT=01-NOV-2013$
+138BA C  Evaluation history: Type=Upd;Author=X. Mougeot;Cutoff date=01-MAY-2016
+138BA2C  Type=Full;Author=M.M. Bé;Cutoff date=01-NOV-2013
+138BA C  References: 1956Tu17, 1957Gl20, 1966De04, 1972Ma31, 1972El02, 1979Ta21, 
+138BA2C  1981Sa42, 1983No02, 1984Ma46, 1997Ni12, 2002Ba85, 2005Be73, 2008Ki07, 
+138BA3C  2012Qu02, 2012Wa38, 2016Qu01
+138BA T  Auger electrons and X ray energies and emission intensities:
+138BA T       {U Energy (keV)}   {U Intensity}  {U Line}
+138BA T
+138BA T        31.8174            10.63   15     XKA2
+138BA T        32.1939            19.58   26     XKA1
+138BA T   
+138BA T        36.3045        |]                 XKB3
+138BA T        36.3786        |]  5.76    10     XKB1
+138BA T        36.654         |]                 XKB5II
+138BA T   
+138BA T        37.258         |]                 XKB2
+138BA T        37.312         |]  1.45    4      XKB4
+138BA T        37.425         |]                 XKO23
+138BA T   
+138BA T        3.9544-5.8104      6.03    10     XL (total)
+138BA T        3.9544             0.1201  30     XLL
+138BA T        4.4515-4.4666      3.11    8      XLA
+138BA T        4.3307             0.0367  10     XLC
+138BA T        4.8278-5.207       2.39    5      XLB
+138BA T        5.3715-5.8104      0.380   8      XLG
+138BA T   
+138BA T        25.314-26.786  |]                 KLL AUGER
+138BA T        30.095-32.179  |]  4.16    18     KLX AUGER
+138BA T        34.86-37.41    |]                 KXY AUGER
+138BA T        2.66-5.81          48.8    4      L AUGER
+138LA  P 0.0         5+                103.6E9 Y 20             1740.0    34
+138BA  N 1.534E0     1.534E0   0.652   6 1.534E0
+138BA  L 0           0+                  STABLE   
+138BA  L 1435.816  102+                           
+138BA  E                       65.2    6 17.2                                2U
+138BA2 E EAV=   $CK=0.637 5$CL=0.275 3$CM=0.0880 11$CN=   $CO=   
+138BA  G 1435.795  1065.1    6 E2                      9.17E-413
+138BA2 G KC=7.42E-4 11$LC=9.37E-5 14$MC=1.92E-5 3
+ 
+138CE    138LA B- DECAY (103.6E9 Y)
+138CE  H TYP=Upd$AUT=X. Mougeot$CUT=01-MAY-2016$
+138CE2 H TYP=Full$AUT=M.M. Bé$CUT=01-NOV-2013$
+138CE C  Evaluation history: Type=Upd;Author=X. Mougeot;Cutoff date=01-MAY-2016
+138CE2C  Type=Full;Author=M.M. Bé;Cutoff date=01-NOV-2013
+138CE C  References: 1956Tu17, 1957Gl20, 1966De04, 1972Ma31, 1972El02, 1979Ta21, 
+138CE2C  1981Sa42, 1983No02, 1984Ma46, 1997Ni12, 2002Ba85, 2005Be73, 2008Ki07, 
+138CE3C  2012Qu02, 2012Wa38, 2016Qu01
+138CE T  Auger electrons and X ray energies and emission intensities:
+138CE T       {U Energy (keV)}   {U Intensity}  {U Line}
+138CE T
+138CE T        34.2793            0.0261  6      XKA2
+138CE T        34.72              0.0478  11     XKA1
+138CE T   
+138CE T        39.1705        |]                 XKB3
+138CE T        39.2578        |]  0.0144  4      XKB1
+138CE T        39.549         |]                 XKB5II
+138CE T   
+138CE T        40.233         |]                 XKB2
+138CE T        40.337         |]  0.00365 12     XKB4
+138CE T        40.423         |]                 XKO23
+138CE T   
+138CE T        4.2868-6.3412      0.01301 29     XL (total)
+138CE T        4.2868             2.52E-4 9      XLL
+138CE T        4.822-4.8411       0.00642 20     XLA
+138CE T        4.7274             9.54E-5 29     XLC
+138CE T        5.2625-5.665       0.00538 12     XLB
+138CE T        5.8755-6.3412      0.00085 2      XLG
+138CE T   
+138CE T        27.19-28.828   |]                 KLL AUGER
+138CE T        32.392-34.7    |]  0.0091  5      KLX AUGER
+138CE T        37.57-40.4     |]                 KXY AUGER
+138CE T        2.85-6.51          0.0895  7      L AUGER
+138LA  P 0.0         5+                103.6E9 Y 20             1051.8    21
+138CE  N 2.874E0     2.874E0   0.348   6 2.874E0
+138CE  L 0           0+                  STABLE   
+138CE  L 788.744   8 2+                           
+138CE  B 263.1     2134.8    6           18.7                                2U
+138CES B EAV=91.1 11
+138CE  G 788.742   8 34.7    6 E2                      0.003425
+138CE2 G KC=0.00291 4$LC=4.06E-4 6$MC=8.52E-5 12
+ 

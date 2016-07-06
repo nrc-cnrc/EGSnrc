@@ -1,0 +1,74 @@
+ 95NB     95NB IT DECAY (3.61 D)
+ 95NB  H TYP=Full$AUT=M.M.Bé. R.G.Helmer$CUT= -- $
+ 95NB C  Evaluation history: Type=Full;Author=M.M.Bé. R.G.Helmer;Cutoff date= -- 
+ 95NB T  Auger electrons and ^X ray energies and emission intensities:
+ 95NB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 95NB T
+ 95NB T        16.521            12.5  6         XKA2
+ 95NB T        16.615            23.9  10        XKA1
+ 95NB T   
+ 95NB T        18.607         |]                  XKB3
+ 95NB T        18.623         |]  6.19  27        XKB1
+ 95NB T        18.78          |]                  XKB5II
+ 95NB T   
+ 95NB T        18.952         |]                  XKB2
+ 95NB T        18.982         |]  0.93  5         XKB4
+ 95NB T   
+ 95NB T        1.9-2.66          0.0251  11      XL (total)
+ 95NB T        1.9                               XLL
+ 95NB T         -2.66                            XLG
+ 95NB T   
+ 95NB T        13.49-14.14    |]                  KLL AUGER
+ 95NB T        15.79-16.58    |]  14.5  7         ^KLX AUGER
+ 95NB T        18.02-18.91    |]                  KXY AUGER
+ 95NB T        1.4-2.6           69.9  25        L AUGER
+ 95NB  P 235.69    2 1/2-              3.61 D    3
+ 95NB  N 1.026E0     1.026E0   0.975     1.026E0
+ 95NB  L 0           9/2+              34.991 D  6
+ 95NB  L 235.69    5 1/2-              3.61 D    3
+ 95NB  G 235.69    2 25.1    3 M4                      2.88   9
+ 95NB2 G KC=2.31    8$LC=0.468   14$MC=0.10000 0
+ 
+ 95MO     95NB B- DECAY (3.61 D)
+ 95MO  H TYP=Full$AUT=M.M.Bé. R.G.Helmer$CUT= -- $
+ 95MO C  Evaluation history: Type=Full;Author=M.M.Bé. R.G.Helmer;Cutoff date= -- 
+ 95MO T  Auger electrons and ^X ray energies and emission intensities:
+ 95MO T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 95MO T
+ 95MO T        17.374                            XKA2
+ 95MO T        17.479                            XKA1
+ 95MO T   
+ 95MO T        17.59          |]                  XKB3
+ 95MO T        19.608         |]                  XKB1
+ 95MO T        19.771         |]                  XKB5II
+ 95MO T   
+ 95MO T        19.965         |]                  XKB2
+ 95MO T        19.997         |]                  XKB4
+ 95MO T   
+ 95MO T   
+ 95MO T        14.268-14.96   |]                  KLL AUGER
+ 95MO T        16.628-17.476  |]                  ^KLX AUGER
+ 95MO T        18.99-19.99    |]                  KXY AUGER
+ 95MO T        1.86-2.86                         L AUGER
+ 95NB  P 235.69    2 1/2-              3.61 D    3              925.6     5
+ 95MO  N 4.00E1      4.00E1    0.025     4.00E1
+ 95MO  L 0           5/2+                STABLE   
+ 95MO  L 204.118     3/2+              0.751 NS   
+ 95MO  B 957.2     5 2.4     1           8.3                                 1U
+ 95MOS B EAV=345 1
+ 95MO  G 204.117   2 2.28    10M1+E2                   0.0515 22
+ 95MO2 G KC=0.045   3$LC=0.0058  4$MC=
+ 95MO  L 786.19      1/2+                         
+ 95MO  B 375.1     5 0.016               9.1                                   
+ 95MOS B EAV=123 1
+ 95MO  G 786.19    1 0.016   1 E2                      0.001315
+ 95MO2 G KC=$LC=$MC=
+ 95MO  L 820.61      3/2+                         
+ 95MO  B 340.7     5 0.00038             10.6                                1U
+ 95MOS B EAV=123 1
+ 95MO  G 820.61    1 3800E-7 0 M1+E2                   
+ 95MO  L 1039.25     1/2+                         
+ 95MO  B 122.0     5 25000E-925          10.2                                  
+ 95MOS B EAV=44.0 5
+ 95MO  G 835.13    1 2500E-8 0                         
+ 

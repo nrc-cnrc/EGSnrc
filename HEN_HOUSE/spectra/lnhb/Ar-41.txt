@@ -1,0 +1,34 @@
+ 41K      41AR B- DECAY (1.8268 H)
+ 41K   H TYP=Full$AUT=v. chisté$CUT=28-FEB-2010$
+ 41K 2 H TYP=update$AUT=v. chisté$CUT= -- $
+ 41K  C  Evaluation history: Type=Full;Author=v. chisté;Cutoff date=28-FEB-2010
+ 41K 2C  Type=update;Author=v. chisté;Cutoff date= -- 
+ 41K  C  References: 1936Sn01, 1946Bl28, 1950Br29, 1951Ha78, 1956Sc91, 1961Ka19, 
+ 41K 2C  1962En05, 1964Pa03, 1965Pr05, 1969Bo11, 1971Ju04, 1978Eg01, 1978En23, 
+ 41K 3C  1986Ru09, 1990En08, 1990Ab06, 1996Sc06, 2001Ca59, 2002Ba85, 2003Au03, 
+ 41K 4C  2008Ki07
+ 41K  T  Auger electrons and ^X ray energies and emission intensities:
+ 41K  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 41K  T
+ 41K  T        3.3111            0.000270  9     XKA2
+ 41K  T        3.3138            0.000533  17    XKA1
+ 41K  T   
+ 41K  T        3.5896         |]  0.000098  4     XKB1
+ 41K  T        3.6028         |]                  XKB5II
+ 41K  T   
+ 41K  T   
+ 41AR  P 0.0         7/2-              1.8268 H  6              2491.6    4
+ 41K   N 1.0         1.0       1         1.0
+ 41K   L 0           3/2+                STABLE   
+ 41K   B 2491.6    4 0.784   19          9.72                                3U
+ 41K S B EAV=1076.6 2
+ 41K   L 1293.64   4 7/2-              6.7 NS    5
+ 41K   B 1197.96   4099.165  20          5.05                                  
+ 41K S B EAV=459.18 18
+ 41K   G 1293.64   4 99.157  20M2+E3     0.118   12    7.44E-511
+ 41K 2 G KC=6.36E-5 9$LC=5.34E-6 8$MC=5.80E-7 9
+ 41K   L 1677.0    3 7/2+                         
+ 41K   B 814.6     4 0.0515  49          7.68                                  
+ 41K S B EAV=293.9 2
+ 41K   G 1677.0    3 0.0515  49                        
+ 

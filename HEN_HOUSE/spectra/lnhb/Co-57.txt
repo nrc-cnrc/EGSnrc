@@ -1,0 +1,57 @@
+ 57FE     57CO EC DECAY (271.80 D)
+ 57FE C  References: 1977La19
+ 57FE T  Auger electrons and ^X ray energies and emission intensities:
+ 57FE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 57FE T
+ 57FE T        6.39091           16.8  3         XKA2
+ 57FE T        6.40391           33.2  5         XKA1
+ 57FE T   
+ 57FE T        7.05804        |]  7.1  2          XKB1
+ 57FE T        7.1083         |]                  XKB5II
+ 57FE T   
+ 57FE T   
+ 57FE T        0.61-0.79         1.55  13        XL (total)
+ 57FE T        0.61                              XLL
+ 57FE T         -0.79                            XLB
+ 57FE T   
+ 57FE T        5.37-5.64      |]                  KLL AUGER
+ 57FE T        6.16-6.4       |]  105.2  13       ^KLX AUGER
+ 57FE T        6.91-7.1       |]                  KXY AUGER
+ 57FE T        0.6-0.7           252  3          L AUGER
+ 57CO  P 0.0         7/2-              271.80 D  5              836.0     4
+ 57FE  N 1.0         1.0       1         1.0
+ 57FE  L 0           1/2-                STABLE   
+ 57FE  E                       0.00035   12.9                                  
+ 57FE2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
+ 57FE  L 14.41295  313/2-              98.0 NS   3
+ 57FE  E                       0.003     11.1                                  
+ 57FE2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
+ 57FE  G 14.41295  319.15    17M1+E2                   8.58   18
+ 57FE2 G KC=7.69    16$LC=0.782   16$MC=0.113   3
+ 57FE  L 136.47374 295/2-              8.8 NS    5
+ 57FE  E                       99.82   206.45                                2
+ 57FE2 E EAV=   $CK=0.8875 16$CL=0.0963 13$CM=0.0154 5$CN=   $CO=   
+ 57FE  G 122.06065 1285.51   6 M1+E2                   0.0236 5
+ 57FE2 G KC=0.0212  5$LC=0.00208 5$MC=3.03E-4 7
+ 57FE  G 136.47356 2910.71   15E2                      0.148  3
+ 57FE2 G KC=0.133   3$LC=0.0136  3$MC=0.00196 4
+ 57FE  L 366.74    3 3/2-                         
+ 57FE  E                       0.002     10.8                                  
+ 57FE2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
+ 57FE  G 230.27    3 0.0004  4 M1+E2                   0.004159
+ 57FE2 G KC=0.00374 8$LC=3.56E-4 8$MC=5.24E-5 11
+ 57FE  G 352.34    2 0.0032  4 M1+E2                   0.001503
+ 57FE2 G KC=0.00135 3$LC=1.29E-4 3$MC=1.88E-5 4
+ 57FE  G 366.74    3 0.0013  4 M1+E2                   0.001786
+ 57FE2 G KC=0.00160 5$LC=1.53E-4 5$MC=2.23E-5 7
+ 57FE  L 706.42    2 5/2-                         
+ 57FE  E                       0.183   7 7.69                                2
+ 57FE2 E EAV=   $CK=0.8789 17$CL=0.1035 14$CM=0.0168 6$CN=   $CO=   
+ 57FE  G 339.67    3 0.0038  4 M1+E2                   0.001654
+ 57FE2 G KC=0.00149 3$LC=1.42E-4 3$MC=2.08E-5 5
+ 57FE  G 569.94    4 0.015   2 M1+E2                   5.08E-412
+ 57FE2 G KC=4.58E-4 10$LC=4.34E-5 9$MC=6.31E-6 14
+ 57FE  G 692.01    2 0.159   6 M1+E2                   3.64E-412
+ 57FE2 G KC=3.28E-4 10$LC=3.1E-5  1$MC=4.52E-6 14
+ 57FE  G 706.42    2 0.0050  5 (E2)                    
+ 

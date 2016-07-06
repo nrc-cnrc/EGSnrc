@@ -1,0 +1,38 @@
+ 47TI     47SC B- DECAY (3.3485 D)
+ 47TI  H TYP=Full$AUT=X.Mougeot$CUT=30-NOV-2013$
+ 47TI C  Evaluation history: Type=Full;Author=X.Mougeot;Cutoff date=30-NOV-2013
+ 47TI C  References: 1945HI04, 1949KR12, 1953MA64, 1953CH16, 1953CO44, 1953DU22, 
+ 47TI2C  1955LY34, 1955NI15, 1956LI38, 1956GR12, 1959PO64, 1963HO17, 1964MI07, 
+ 47TI3C  1967KO01, 1968BA33, 1968ME07, 1969WO02, 1969RA16, 1972GEZG, 1980MO26, 
+ 47TI4C  1986RE12, 1996SC06, 2007BU08, 2008KI07, 2012WA38
+ 47TI T  Auger electrons and ^X ray energies and emission intensities:
+ 47TI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 47TI T
+ 47TI T        4.50491           0.0256  9       XKA2
+ 47TI T        4.5109            0.0505  16      XKA1
+ 47TI T   
+ 47TI T        4.93186        |]  0.0101  4       XKB1
+ 47TI T        4.9623         |]                  XKB5II
+ 47TI T   
+ 47TI T   
+ 47TI T        0.3967                            XLL
+ 47TI T        0.4556-                           XLA
+ 47TI T        0.403                             XLC
+ 47TI T        0.46072-0.5614                    XLB
+ 47TI T        0.46703-0.46703                   XLG
+ 47TI T   
+ 47TI T        3.79-4.01      |]                  KLL AUGER
+ 47TI T        4.33-4.48      |]  0.295  7        ^KLX AUGER
+ 47TI T        4.83-4.9       |]                  KXY AUGER
+ 47TI T        0.3-0.5           0.0349  8       L AUGER
+ 47SC  P 0.0         7/2-              3.3485 D  9              600.8     19
+ 47TI  N 1.0         1.0       1         1.0
+ 47TI  L 0           5/2-                STABLE   
+ 47TI  B 600.8     1931.5    5           6.1                                 2
+ 47TIS B EAV=204.2 8
+ 47TI  L 159.373   127/2-              210 PS    6
+ 47TI  B 441.4     1968.5    5           5.3                                   
+ 47TIS B EAV=142.8 7
+ 47TI  G 159.373   1268.1    5 M1+()E2   -0.099  9     0.0061813
+ 47TI2 G KC=0.00560 12$LC=5.12E-4 11$MC=6.54E-5 14
+ 

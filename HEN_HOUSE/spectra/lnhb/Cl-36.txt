@@ -1,0 +1,55 @@
+ 36S      36CL EC DECAY (302E3 Y)
+ 36S   H TYP=Update$AUT=M.M. Bé$CUT=15-JAN-2012$
+ 36S 2 H TYP=Full$AUT=V.P. Chechev$CUT=30-APR-1998$
+ 36S  C  Evaluation history: Type=Update;Author=M.M. Bé;Cutoff date=15-JAN-2012
+ 36S 2C  Type=Full;Author=V.P. Chechev;Cutoff date=30-APR-1998
+ 36S  C  References: 1949Wu15, 1955Dr35, 1955Ba93, 1957Wr37, 1962Do07, 1962Be29, 
+ 36S 2C  1963Ba38, 1965To05, 1966Go07, 1967Pi04, 1976Lj03, 1977La19, 2012Mo**
+ 36S  T  Auger electrons and ^X ray energies and emission intensities:
+ 36S  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 36S  T
+ 36S  T        2.3066            0.044  3        XKA2
+ 36S  T        2.3078            0.086  5        XKA1
+ 36S  T   
+ 36S  T        2.457          |]                  XKB3
+ 36S  T                       |]  0.008  1        XKB1
+ 36S  T   
+ 36S  T   
+ 36S  T   
+ 36S  T        1.98-2.12      |]                  KLL AUGER
+ 36S  T        2.22-2.3       |]  1.58  9         ^KLX AUGER
+ 36S  T        2.44-2.46      |]                  KXY AUGER
+ 36S  T         -                0.163  12       L AUGER
+ 36CL  P 0.0         2+                302E3 Y   4              1142.14   19
+ 36S   N 5.263E1     5.263E1   0.019   1 5.263E1
+ 36S   L 0           0+                  STABLE   
+ 36S   E             0.00157 301.9     1 13.5                                2
+ 36S 2 E EAV=54 4$CK=0.904 5$CL=0.086 4$CM=0.010 1$CN=   $CO=   
+ 
+ 36AR     36CL B- DECAY (302E3 Y)
+ 36AR  H TYP=Update$AUT=M.M. Bé$CUT=15-JAN-2012$
+ 36AR2 H TYP=Full$AUT=V.P. Chechev$CUT=30-APR-1998$
+ 36AR C  Evaluation history: Type=Update;Author=M.M. Bé;Cutoff date=15-JAN-2012
+ 36AR2C  Type=Full;Author=V.P. Chechev;Cutoff date=30-APR-1998
+ 36AR C  References: 1949Wu15, 1955Dr35, 1955Ba93, 1957Wr37, 1962Do07, 1962Be29, 
+ 36AR2C  1963Ba38, 1965To05, 1966Go07, 1967Pi04, 1976Lj03, 1977La19, 2012Mo**
+ 36AR T  Auger electrons and ^X ray energies and emission intensities:
+ 36AR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 36AR T
+ 36AR T        2.9553            0.0062  10      XKA2
+ 36AR T        2.9577            0.0123  19      XKA1
+ 36AR T   
+ 36AR T        3.1905         |]                  XKB3
+ 36AR T                       |]  0.0020  3       XKB1
+ 36AR T   
+ 36AR T   
+ 36AR T   
+ 36AR T        2.511-2.669    |]                  KLL AUGER
+ 36AR T        2.831-2.942    |]  0.13  2         ^KLX AUGER
+ 36AR T        3.149-3.174    |]                  KXY AUGER
+ 36CL  P 0.0         2+                302E3 Y   4              709.55    5
+ 36AR  N 1.019E0     1.019E0   0.981   1 1.019E0
+ 36AR  L 0           0+                  STABLE   
+ 36AR  B 709.53    5 98.1    1           13.3                                2
+ 36ARS B EAV=316 16
+ 

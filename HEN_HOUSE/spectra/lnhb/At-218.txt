@@ -1,0 +1,25 @@
+214BI    218AT A DECAY (1.4 S)
+214BI  H TYP=Full$AUT=V.Chisté$CUT= -- $
+214BI C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date= -- 
+214BI C  References: 1948Wa20, 1949Wa05, 1958Wa16, 1963Wa29, 1964Hy02, 1979Ry03, 
+214BI2C  1987El12, 1989Bu09, 1991Ry01, 1995El08, 1995El07, 2003Au03, 2006Ja03
+218AT  P 0.0         -                 1.4 S     2              6874      3
+214BI  N 1.001E0     1.001E0   0.999     1.001E0
+214BI  L 0           1-                19.8 M    1
+214BI  A 6756      5 3.6     1 150
+214BI  L 62.7      10 +                           
+214BI  A 6694      3 90.09   103.9
+214BI  L 103       6  +                           
+214BI  A 6653      5 6.41    1038
+ 
+218RN    218AT B- DECAY (1.4 S)
+218RN  H TYP=Full$AUT=V.Chisté$CUT= -- $
+218RN C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date= -- 
+218RN C  References: 1948Wa20, 1949Wa05, 1958Wa16, 1963Wa29, 1964Hy02, 1979Ry03, 
+218RN2C  1987El12, 1989Bu09, 1991Ry01, 1995El08, 1995El07, 2003Au03, 2006Ja03
+218AT  P 0.0         -                 1.4 S     2              2881      12
+218RN  N 1.000E3     1.000E3   0.001     1.000E3
+218RN  L 0           0+                36.0 MS   19
+218RN  B 2881      120.1     1                                                 
+218RNS B EAV=1095 12
+ 

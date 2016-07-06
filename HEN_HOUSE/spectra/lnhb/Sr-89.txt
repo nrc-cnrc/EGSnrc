@@ -1,0 +1,26 @@
+ 89Y      89SR B- DECAY (50.57 D)
+ 89Y  C  References: 1977La19
+ 89Y  T  Auger electrons and ^X ray energies and emission intensities:
+ 89Y  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 89Y  T
+ 89Y  T        14.8829                           XKA2
+ 89Y  T        14.9585           0.086  7        XKA1
+ 89Y  T   
+ 89Y  T        16.7259        |]                  XKB3
+ 89Y  T        16.7381        |]                  XKB1
+ 89Y  T        16.88          |]                  XKB5II
+ 89Y  T   
+ 89Y  T        17.0156        |]                  XKB2
+ 89Y  T        17.0362        |]                  XKB4
+ 89Y  T   
+ 89SR  P 0.0         5/2+              50.57 D   3              1495.1    22
+ 89Y   N 1.0         1.0       1         1.0
+ 89Y   L 0           1/2-                STABLE   
+ 89Y   B 1495.1    2299990E-34           9.4                                 3U
+ 89Y S B EAV=584.6 10
+ 89Y   L 909         9/2+              16.05 S   4
+ 89Y   B 586.1     220.00964 6           11.1                                  
+ 89Y S B EAV=189.1 9
+ 89Y   G 909.0     1 0.00956 6 (M4)                    0.0085026
+ 89Y 2 G KC=0.00746 23$LC=0.00091 3$MC=
+ 

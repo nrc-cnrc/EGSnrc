@@ -1,0 +1,50 @@
+238U     242PU A DECAY (3.73E5 Y)
+238U   H TYP=Update$AUT=V.P. Chechev$CUT= -- $
+238U  C  Evaluation history: Type=Update;Author=V.P. Chechev;Cutoff date= -- 
+238U  C  References: 1956Bu64, 1956Bu92, 1956Hu96, 1956Ko67, 1956Me37, 1961Dr04, 
+238U 2C  1963Ma50, 1967Be65, 1968Ba25, 1969Be06, 1970Du02, 1972Sc01, 1976Bu23, 
+238U 3C  1976Os05, 1978MeZL, 1979Ag03, 1980Kh05, 1986LoZT, 1986Va33, 1988SeZY, 
+238U 4C  1990Po14, 1991Ry01, 1994Le37, 1996Sc06, 2000Ho27, 2002Ch52, 2003Au03, 
+238U 5C  2004BeZQ, 2005ChZU, 2008Ki07
+238U  T  Auger electrons and ^X ray energies and emission intensities:
+238U  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+238U  T
+238U  T        94.666            0.0000180  13   XKA2
+238U  T        98.44             0.0000288  21   XKA1
+238U  T   
+238U  T        110.421        |]                  XKB3
+238U  T        111.298        |]  0.0000104  8    XKB1
+238U  T        111.964        |]                  XKB5II
+238U  T   
+238U  T        114.407        |]                  XKB2
+238U  T        115.012        |]  0.00000355  27  XKB4
+238U  T        115.377        |]                  XKO23
+238U  T   
+238U  T        11.62-21.73       8.71  21        XL (total)
+238U  T        11.62             0.191  7        XLL
+238U  T        13.44-13.62       3.07  10        XLA
+238U  T        15.4              0.098  4        XLC
+238U  T        15.73-18.21       4.33  13        XLB
+238U  T        19.51-21.73       1.021  30       XLG
+238U  T   
+238U  T        71.78-80.95    |]                  KLL AUGER
+238U  T        88.15-98.43    |]  0.00000188  29  ^KLX AUGER
+238U  T        104.51-115.59  |]                  KXY AUGER
+238U  T        5.9-21.6          8.40  19        L AUGER
+242PU  P 0.0         0+                3.73E5 Y  3              4984.5    10
+238U   N 1.0         1.0       1         1.0
+238U   L 0           0+                4.468E9 Y 5
+238U   A 4902.3    1076.53   171
+238U   L 44.915    132+                206 PS    3
+238U   A 4858.2    1023.44   171.62
+238U   G 44.915    130.0384  8 E2                      610    12
+238U 2 G KC=$LC=445     9$MC=122.8   25
+238U   L 148.39    3 4+                           
+238U   A 4756.2    100.0304  13238
+238U   G 103.50    4 0.00253 12E2                      11.36  23
+238U 2 G KC=$LC=8.27    17$MC=2.29    5
+238U   L 307.19    8 6+                           
+238U   A 4600.1    100.00084 6 609
+238U   G 158.80    8 2.98E-4 20E2                      1.83   4
+238U 2 G KC=0.210   4$LC=1.180   24$MC=0.326   7
+ 

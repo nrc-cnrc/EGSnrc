@@ -1,0 +1,14 @@
+ 14N      14C  B- DECAY (5700 Y)
+ 14N   H TYP=Update$AUT=M.M. Bé$CUT=01-JAN-2012$
+ 14N 2 H TYP=Full$AUT=V.P. Chechev$CUT=01-JAN-1998$
+ 14N  C  Evaluation history: Type=Update;Author=M.M. Bé;Cutoff date=01-JAN-2012
+ 14N 2C  Type=Full;Author=V.P. Chechev;Cutoff date=01-JAN-1998
+ 14N  C  References: 1952Je11, 1961Wa16, 1961Ma32, 1962Ol04, 1964Hu09, 1968Be47, 
+ 14N 2C  1968Re22, 1972Em01, 1975Sm02, 1990Ho18, 1991Su09, 1995Wi20, 2000Ku25, 
+ 14N 3C  2003Au03, 2012Au06, 2012Mo**
+ 14C   P 0.0         0+                5700 Y    30             156.476   4
+ 14N   N 1.0         1.0       1         1.0
+ 14N   L 0           1+                  STABLE   
+ 14N   B 156.476   4 100                 9.04                                  
+ 14N S B EAV=49.16 1
+ 

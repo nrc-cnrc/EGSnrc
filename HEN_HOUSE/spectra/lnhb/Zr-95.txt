@@ -1,0 +1,44 @@
+ 95NB     95ZR B- DECAY (64.032 D)
+ 95NB  H TYP=update$AUT=M.M. Bé$CUT= -- $
+ 95NB2 H TYP=Full$AUT=R.G.Helmer$CUT= -- $
+ 95NB C  Evaluation history: Type=update;Author=M.M. Bé;Cutoff date= -- 
+ 95NB2C  Type=Full;Author=R.G.Helmer;Cutoff date= -- 
+ 95NB T  Auger electrons and ^X ray energies and emission intensities:
+ 95NB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 95NB T
+ 95NB T        16.5213           0.167  11       XKA2
+ 95NB T        16.6152           0.319  20       XKA1
+ 95NB T   
+ 95NB T        18.6065        |]                  XKB3
+ 95NB T        18.6227        |]  0.082  6        XKB1
+ 95NB T        18.78          |]                  XKB5II
+ 95NB T   
+ 95NB T        18.953         |]                  XKB2
+ 95NB T        18.981         |]  0.0124  9       XKB4
+ 95NB T   
+ 95NB T   
+ 95NB T        13.49-14.14    |]                  KLL AUGER
+ 95NB T        15.79-16.58    |]  0.192  13       ^KLX AUGER
+ 95NB T        18.02-18.91    |]                  KXY AUGER
+ 95NB T        1.4-2.6           0.92  5         L AUGER
+ 95ZR  P 0.0         5/2+              64.032 D  6              1124.8    19
+ 95NB  N 1.0         1.0       1         1.0
+ 95NB  L 0           9/2+              34.991 D  6
+ 95NB  B 1124.8    190.10    3           11.22                                 
+ 95NBS B EAV=406.0 8
+ 95NB  L 235.69    2 1/2-              3.61 D    3
+ 95NB  B 889.1     191.08    7           10.28                               3U
+ 95NBS B EAV=327.6 8
+ 95NB  G 235.69    2 0.27    2 M4                      2.88   9
+ 95NB2 G KC=2.31    8$LC=0.468   14$MC=0.10000 0
+ 95NB  L 724.195   4 7/2+                         
+ 95NB  B 400.6     1944.34   22          6.98                                2
+ 95NBS B EAV=120.9 7
+ 95NB  G 724.193   3 44.27   22M1+E2                   0.001575
+ 95NB2 G KC=0.00132 4$LC=1.47E-4 4$MC=
+ 95NB  L 756.732   127/2+                         
+ 95NB  B 368.1     1954.46   22          6.77                                2
+ 95NBS B EAV=109.7 7
+ 95NB  G 756.729   1254.38   22M1+E2                   0.001424
+ 95NB2 G KC=0.00120 4$LC=1.33E-4 4$MC=
+ 

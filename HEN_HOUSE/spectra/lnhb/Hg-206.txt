@@ -1,0 +1,55 @@
+206TL    206HG B- DECAY (8.32 M)
+206TL  H TYP=Full$AUT=F. Kondev$CUT=31-DEC-2010$
+206TL C  Evaluation history: Type=Full;Author=F. Kondev;Cutoff date=31-DEC-2010
+206TL C  References: 1961Nu01, 1968Wo08, 1969La18, 1970As05, 1969La18, 1976TuZY, 
+206TL2C  1977La19, 1992Ra08, 1994Ka08, 1996Sc06, 1998Si17, 1998ScZM, 1999ScZX, 
+206TL3C  1999Br39, 2000Sc47, 2002Ba85, 2003Au03, 2003De44, 2004Ma11, 2008Ki07, 
+206TL4C  2008Ko21, 2008DuZX
+206TL T  Auger electrons and ^X ray energies and emission intensities:
+206TL T       {U Energy (keV)}     {U Intensity }      {U Line  }
+206TL T
+206TL T        70.8325           2.3  5          XKA2
+206TL T        72.8725           3.9  8          XKA1
+206TL T   
+206TL T        82.118         |]                  XKB3
+206TL T        82.577         |]  1.32  25        XKB1
+206TL T        83.115         |]                  XKB5II
+206TL T   
+206TL T        84.838         |]                  XKB2
+206TL T        85.134         |]  0.39  8         XKB4
+206TL T        85.444         |]                  XKO23
+206TL T   
+206TL T        8.9531-14.7362    2.9  4          XL (total)
+206TL T        8.9531            0.072  11       XLL
+206TL T        10.1718-10.2679   1.39  19        XLA
+206TL T        10.9942           0.022  4        XLC
+206TL T        11.8117-12.9566   1.23  15        XLB
+206TL T        13.8528-14.7362   0.23  3         XLG
+206TL T   
+206TL T        54.587-59.954  |]                  KLL AUGER
+206TL T        66.37-72.86    |]  0.30  7         ^KLX AUGER
+206TL T        78.12-85.5     |]                  KXY AUGER
+206TL T        5.25-15.32        5.1  4          L AUGER
+206HG  P 0.0         0+                8.32 M    7              1308      20
+206TL  N 1.0         1.0       1         1.0
+206TL  L 0         0 0-                  STABLE   
+206TL  B 1308      2062      7           5.67                                  
+206TLS B EAV=450 8
+206TL  L 265.832   5 2-                2.29 NS   14
+206TL  G 265.832   5 0.012   6 E2                      0.1603 23
+206TL2 G KC=0.0855  12$LC=0.0561  8$MC=0.01440 21
+206TL  L 304.896   6 1-                4.2 PS    14
+206TL  B 1003      2035      7           5.24                                1
+206TLS B EAV=330 8
+206TL  G 304.896   6 26      5 M1                      0.375  6
+206TL2 G KC=0.308   5$LC=0.0519  8$MC=0.01211 17
+206TL  L 649.42    4 1-                           
+206TL  B 659       203.0     4           5.41                                1
+206TLS B EAV=203 7
+206TL  G 344.52    170.55    11M1                      0.269  4
+206TL2 G KC=0.221   4$LC=0.0371  6$MC=0.00866 13
+206TL  G 383.59    6 0.012   6 M1(+E2)                 0.13   8
+206TL2 G KC=0.10    7$LC=0.021   7$MC=0.0050  15
+206TL  G 649.42    5 2.2     3 M1                      0.0501 7
+206TL2 G KC=0.0412  6$LC=0.00681 10$MC=1585E-6 23
+ 

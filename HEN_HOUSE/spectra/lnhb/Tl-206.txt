@@ -1,0 +1,46 @@
+206PB    206TL B- DECAY (4.202 M)
+206PB  H TYP=Full$AUT=F. Kondev$CUT=01-OCT-2006$
+206PB C  Evaluation history: Type=Full;Author=F. Kondev;Cutoff date=01-OCT-2006
+206PB C  References: 1977La19, 2002Ba85, 2003Au03, 2005KiZW
+206PB T  Auger electrons and ^X ray energies and emission intensities:
+206PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+206PB T
+206PB T        72.8049           0.026  3        XKA2
+206PB T        74.97             0.044  5        XKA1
+206PB T   
+206PB T        84.451         |]                  XKB3
+206PB T        84.937         |]  0.0150  17      XKB1
+206PB T        85.47          |]                  XKB5II
+206PB T   
+206PB T        87.238         |]                  XKB2
+206PB T        87.58          |]  0.0045  6       XKB4
+206PB T        87.911         |]                  XKO23
+206PB T   
+206PB T        9.19-15.217       0.035  4        XL (total)
+206PB T        9.19                              XLL
+206PB T        10.449-10.551                     XLA
+206PB T        11.349                            XLC
+206PB T        12.144-12.795                     XLB
+206PB T        14.308-15.217                     XLG
+206PB T   
+206PB T        56.028-61.669  |]                  KLL AUGER
+206PB T        68.181-74.969  |]  0.0034  6       ^KLX AUGER
+206PB T        80.3-88        |]                  KXY AUGER
+206PB T        5.2-15.7                          L AUGER
+206TL  P 0.0         0-                4.202 M   11             1532.4    6
+206PB  N 1.0         1.0       1         1.0
+206PB  L 0           0+                  STABLE   
+206PB  B 1532.4    6 99.885  14          5.2                                   
+206PBS B EAV=538.86 25
+206PB  L 803.06    3 2+                8.14 PS   8
+206PB  B 729.3     6 0.0051  3           8.6                                 1U
+206PBS B EAV=232.39 21
+206PB  G 803.06    3 0.0050  3 E2                      0.0103031
+206PB2 G KC=0.00801 24$LC=0.00174 5$MC=4.19E-4 13
+206PB  L 1166.4    5 0+                0.75 NS   4
+206PB  B 366.0     8 0.110   14          6                                     
+206PBS B EAV=104.52 25
+206PB  G 363.3     5 0.00014 14E2                      0.0663 20
+206PB2 G KC=0.0414  12$LC=0.0187  6$MC=0.00476 14
+206PB  G 1165      2                                   
+ 

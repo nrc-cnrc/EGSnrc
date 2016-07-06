@@ -1,0 +1,47 @@
+ 46TI     46SC B- DECAY (83.787 D)
+ 46TI  H TYP=UPD$AUT=N.K. Kuzmenko$CUT=23-JUN-2014$
+ 46TI2 H TYP=FUL$AUT=R.G. Helmer$CUT=01-FEB-2001$
+ 46TI C  Evaluation history: Type=UPD;Author=N.K. Kuzmenko;Cutoff date=23-JUN-2014
+ 46TI2C  Type=FUL;Author=R.G. Helmer;Cutoff date=01-FEB-2001
+ 46TI C  References: 1940Wa01, 1950So57, 1950Mo62, 1954Ke04, 1956Wo09, 1956Sc87, 
+ 46TI2C  1957Ge07, 1957Wr37, 1963Ho17, 1965An07, 1967Wa29, 1972BaWG, 1974Cr05, 
+ 46TI3C  1977MeZP, 1979Sc31, 1980Ho17, 1980Ol03, 1980Fu07, 1980RuZY, 1982HoZJ, 
+ 46TI4C  1982RuZV, 1983Wa26, 1986Al19, 1992Un01, 1998Si17, 2000He14, 2000Wu08, 
+ 46TI5C  2002Ba85, 2004BeZR, 2008Ki07, 2012Fi12, 2012Wa38, 2014Un01
+ 46TI T  Auger electrons and ^X ray energies and emission intensities:
+ 46TI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 46TI T
+ 46TI T        4.50491           0.00155  4      XKA2
+ 46TI T        4.5109            0.00306  8      XKA1
+ 46TI T   
+ 46TI T        4.93186        |]  0.000612  18    XKB1
+ 46TI T        4.9623         |]                  XKB5II
+ 46TI T   
+ 46TI T   
+ 46TI T        0.3967-0.5614     0.00012  3      XL (total)
+ 46TI T        0.3967                            XLL
+ 46TI T        0.4556-                           XLA
+ 46TI T        0.403                             XLC
+ 46TI T        0.46072-0.5614                    XLB
+ 46TI T        0.46703-0.46703                   XLG
+ 46TI T   
+ 46TI T        3.796-4.014    |]                  KLL AUGER
+ 46TI T        4.328-4.507    |]  0.01791  22     ^KLX AUGER
+ 46TI T        4.846-4.959    |]                  KXY AUGER
+ 46TI T        0.3349-0.5596     0.002072  22    L AUGER
+ 46SC  P 0.0         4+                83.787 D  16             2366.5    7
+ 46TI  N 1.0         1.0       1         1.0
+ 46TI  L 0           0+                  STABLE   
+ 46TI  L 889.280   2 2+                5.32 PS   15
+ 46TI  B 1477.2    7 0.02    2           12.2                                2
+ 46TIS B EAV=580.7 3
+ 46TI  G 889.271   2 99.9837 2 E2                      1625E-723
+ 46TI2 G KC=1475E-7 21$LC=1322E-8 19$MC=1690E-9 24
+ 46TI  L 2009.832  4 4+                1.62 PS   10
+ 46TI  B 356.7     7 99.98   2           6.2                                   
+ 46TIS B EAV=111.7 3
+ 46TI  G 1120.537  3 99.97   2 E2                      9.41E-514
+ 46TI2 G KC=8.39E-5 12$LC=7.50E-6 11$MC=9.59E-7 14
+ 46TI  G 2009.785  4 1.3E-5  10E4                      6.97E-510
+ 46TI2 G KC=6.32E-5 9$LC=5.67E-6 8$MC=7.25E-7 11
+ 

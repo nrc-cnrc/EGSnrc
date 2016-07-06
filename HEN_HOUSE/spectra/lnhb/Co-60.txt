@@ -1,0 +1,50 @@
+ 60NI     60CO B- DECAY (5.2711 Y)
+ 60NI  H TYP=Update$AUT=M.-M.Bé$CUT=16-JAN-2006$
+ 60NI2 H TYP=Full$AUT=R.G.Helmer$CUT=01-JAN-1998$
+ 60NI C  Evaluation history: Type=Update;Author=M.-M.Bé;Cutoff date=16-JAN-2006
+ 60NI2C  Type=Full;Author=R.G.Helmer;Cutoff date=01-JAN-1998
+ 60NI C  References: 2002Ba85
+ 60NI T  Auger electrons and ^X ray energies and emission intensities:
+ 60NI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 60NI T
+ 60NI T        7.46097           0.00334  12     XKA2
+ 60NI T        7.47824           0.0065  3       XKA1
+ 60NI T   
+ 60NI T        8.2647         |]                  XKB3
+ 60NI T                       |]  0.00136  5      XKB1
+ 60NI T        8.3287         |]                  XKB5II
+ 60NI T   
+ 60NI T   
+ 60NI T        0.74-0.94         0.0002          XL (total)
+ 60NI T        0.74                              XLL
+ 60NI T         -0.94                            XLG
+ 60NI T   
+ 60NI T        6.26-6.54      |]                  KLL AUGER
+ 60NI T        7.2-7.47       |]  0.0154  5       ^KLX AUGER
+ 60NI T        8.1-8.32       |]                  KXY AUGER
+ 60NI T        0.7-0.9           0.0392  12      L AUGER
+ 60CO  P 0.0         5+                5.2711 Y  8              2823.07   21
+ 60NI  N 1.0         1.0       1         1.0
+ 60NI  L 0           0+                  STABLE   
+ 60NI  L 1332.508  4 2+                0.713 PS  11
+ 60NI  B 1490.56   210.12    3           14.7                                2U
+ 60NIS B EAV=625.6 1
+ 60NI  G 1332.492  4 99.9826 6 E2                      1.28E-45
+ 60NI2 G KC=1.15E-4 5$LC=1.13E-5 3$MC=
+ 60NI  L 2158.61   3 2+                0.59 PS   17
+ 60NI  B 664.46    210.002                                                   2U
+ 60NIS B EAV=274.8 1
+ 60NI  G 826.10    3 0.0076  8 M1+E2     0.9     3     0.000344
+ 60NI2 G KC=0.00030 4$LC=2.91E-5 17$MC=
+ 60NI  G 2158.57   3 0.0012  2 E2                      4.95E-515
+ 60NI2 G KC=4.45E-5 14$LC=4.3E-6  2$MC=
+ 60NI  L 2505.748  5 4+                0.30 PS   9
+ 60NI  B 317.32    2199.88   3           7.51                                  
+ 60NIS B EAV=95.6 1
+ 60NI  G 347.14    7 0.0075  4 [E2]                    0.0055717
+ 60NI2 G KC=0.00499 15$LC=5.03E-4 15$MC=
+ 60NI  G 1173.228  3 99.85   3 E2(+M3)                 1.68E-44
+ 60NI2 G KC=1.51E-4 7$LC=1.48E-5 4$MC=
+ 60NI  G 2505.692  5 2.0E-6  4 E4                      8.6E-5 3
+ 60NI2 G KC=7.80E-5 3$LC=7.6E-6  3$MC=
+ 

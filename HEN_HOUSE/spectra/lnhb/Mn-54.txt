@@ -1,0 +1,46 @@
+ 54CR     54MN EC DECAY (312.19 D)
+ 54CR  H TYP=Update$AUT=V.Chechev$CUT=31-MAR-2014$
+ 54CR2 H TYP=ERR$AUT=M.-M.Bé$CUT= -- $
+ 54CR3 H TYP=FUL$AUT=R.G.Helmer and E.Schönfeld$CUT=28-FEB-2001$
+ 54CR C  Evaluation history: Type=Update;Author=V.Chechev;Cutoff date=31-MAR-2014
+ 54CR2C  Type=ERR;Author=M.-M.Bé;Cutoff date= -- 
+ 54CR3C  Type=FUL;Author=R.G.Helmer and E.Schönfeld;Cutoff date=28-FEB-2001
+ 54CR C  References: 1955Ba10, 1956Ka33, 1956Sc87, 1961Wy01, 1963Ta19, 1964Be26, 
+ 54CR2C  1964Ma14, 1965Sa09, 1965An07, 1965Le21, 1967PeZZ, 1967Ba50, 1968Zi01, 
+ 54CR3C  1968Ha47, 1968La10, 1968Be01, 1969BoZX, 1973MeYE, 1973Vi13, 1973Mu**, 
+ 54CR4C  1973Ko**, 1974Cr05, 1978Ma06, 1979MeZY, 1980Co22, 1980RuZV, 1982RyZX, 
+ 54CR5C  1982HoZJ, 1982RuZV, 1989Su08, 1992Un01, 1993Da20, 1996Du15, 1997Ma75, 
+ 54CR6C  1998Si17, 2000Hu20, 2002Ba85, 2002Un02, 2004BeZR, 2006Hu08, 2006Da20, 
+ 54CR7C  2008Ki07, 2010Va13, 2012Wa38, 2012Fi12, 2014Un01
+ 54CR T  Auger electrons and ^X ray energies and emission intensities:
+ 54CR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 54CR T
+ 54CR T        5.40557           7.65  14        XKA2
+ 54CR T        5.41479           15.02  27       XKA1
+ 54CR T   
+ 54CR T        5.94677        |]  3.05  7         XKB1
+ 54CR T        5.987          |]                  XKB5II
+ 54CR T   
+ 54CR T   
+ 54CR T        0.5003-0.69748    0.65  13        XL (total)
+ 54CR T        0.5003                            XLL
+ 54CR T        0.5729-0.57695                    XLA
+ 54CR T        0.5102                            XLC
+ 54CR T        0.57515-0.69748                   XLB
+ 54CR T        0.58496-0.58496                   XLG
+ 54CR T   
+ 54CR T        4.554-4.794    |]                  KLL AUGER
+ 54CR T        5.206-5.412    |]  63.3  5         ^KLX AUGER
+ 54CR T        5.841-5.985    |]                  KXY AUGER
+ 54CR T        0.4-0.7           143.0  6        L AUGER
+ 54MN  P 0.0         3+                312.19 D  3              1377.2    10
+ 54CR  N 1.0         1.0       1         1.0
+ 54CR  L 0           0+                  STABLE   
+ 54CR  E             5.7E-7    0.0003  3 13.9                                2U
+ 54CR2 E EAV=182  $CK=0.8908 16$CL=0.0938 13$CM=0.0148 6$CN=0.0005 2$CO=0 0
+ 54CR  L 834.855   3 2+                0.0079 NS 3
+ 54CR  E                       99.9997 3 6.17                                  
+ 54CR2 E EAV=   $CK=0.8896 17$CL=0.0948 14$CM=0.0150 6$CN=0.0005 2$CO=0 0
+ 54CR  G 834.848   3 99.9752 5 E2                      2.45E-44
+ 54CR2 G KC=2.22E-4 4$LC=2.06E-5 3$MC=2.71E-6 4
+ 

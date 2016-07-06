@@ -1,0 +1,21 @@
+ 79BR     79SE B- DECAY (3.56E5 Y)
+ 79BR  H TYP=Full$AUT=M.-M. Bé$CUT=30-JAN-2006$
+ 79BR C  Evaluation history: Type=Full;Author=M.-M. Bé;Cutoff date=30-JAN-2006
+ 79BR T  Auger electrons and ^X ray energies and emission intensities:
+ 79BR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 79BR T
+ 79BR T        11.8778                           XKA2
+ 79BR T        11.9244                           XKA1
+ 79BR T   
+ 79BR T        13.2847        |]                  XKB3
+ 79BR T        13.2916        |]                  XKB1
+ 79BR T        13.396         |]                  XKB5II
+ 79BR T   
+ 79BR T        13.4696        |]                  XKB2
+ 79BR T   
+ 79SE  P 0.0         7/2+              3.56E5 Y  40             150.9     17
+ 79BR  N 1.0         1.0       1         1.0
+ 79BR  L 0           3/2-                STABLE   
+ 79BR  B 150.9     17100                 10.81                               3U
+ 79BRS B EAV=52.9 6
+ 

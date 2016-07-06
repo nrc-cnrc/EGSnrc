@@ -1,0 +1,56 @@
+ 58FE     58CO EC DECAY (70.85 D)
+ 58FE  H TYP=Full$AUT=M.M. Bé$CUT=31-AUG-2013$
+ 58FE2 H TYP=Full$AUT=M.M. Bé$CUT=30-NOV-1998$
+ 58FE C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=31-AUG-2013
+ 58FE2C  Type=Full;Author=M.M. Bé;Cutoff date=30-NOV-1998
+ 58FE C  References: 1946Go01, 1946Go01, 1952Ch31, 1956Fr17, 1956Sc87, 1956Gr**, 
+ 58FE2C  1956Co70, 1956Gr**, 1956Sc87, 1956Co70, 1956Fr17, 1958Ko64, 1958Da03, 
+ 58FE3C  1958Da03, 1958Ko64, 1961Ra13, 1961Ra13, 1962Ma33, 1962Ma33, 1962Fr13, 
+ 58FE4C  1963Mo12, 1964Ma09, 1964Ma09, 1965Hi12, 1965Hi12, 1966Ra22, 1966Ra22, 
+ 58FE5C  1966Bi13, 1966Bi13, 1968Ri03, 1968Ba49, 1968De08, 1968Ri03, 1968Ba49, 
+ 58FE6C  1968De08, 1969GuZV, 1969Fa05, 1969Si13, 1969Sc11, 1969Si13, 1969Fa05, 
+ 58FE7C  1969Sc11, 1969GuZV, 1970Wi14, 1970Wi14, 1971GoYM, 1971Si15, 1971GoYM, 
+ 58FE8C  1971Si15, 1972We17, 1972DyZV, 1972Fo05, 1972DyZV, 1972Cr02, 1972Cr02, 
+ 58FE9C  1972We17, 1972Fo05, 1973ArZI, 1973Ba67, 1973Ba67, 1973ArZI, 1975La16, 
+ 58FE10C 1975La16, 1976Va30, 1976Va30, 1974HeYW, 1974HeYW, 1979Gr01, 1980Ho17, 
+ 58FE11C 1980Ho17, 1982Gr10, 1982HoZJ, 1982HoZJ, 1982Gr10, 1992Sy**, 1992So04, 
+ 58FE12C 1992Sy**, 1992So04, 1996Sc06, 1996Sc06, 2000He14, 2000He14, 2002Ba85, 
+ 58FE13C 2002Ba85, 2003Au03, 2003Au03, 2008Ki07, 2008Ki07, 2010Ne01, 2010Ne01, 
+ 58FE14C 2012Wa38, 2012Fi12, 2012Wa38, 2012Fi12
+ 58FE T  Auger electrons and ^X ray energies and emission intensities:
+ 58FE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 58FE T
+ 58FE T        6.39091           7.98  11        XKA2
+ 58FE T        6.40391           15.63  19       XKA1
+ 58FE T   
+ 58FE T        7.0581         |]  3.23  5         XKB1
+ 58FE T        7.1083         |]                  XKB5II
+ 58FE T   
+ 58FE T   
+ 58FE T        0.617-0.8454      0.609  18       XL (total)
+ 58FE T        0.617             0.0309  13      XLL
+ 58FE T        0.7075-0.7084     0.327  12       XLA
+ 58FE T        0.6306            0.0197  9       XLC
+ 58FE T        0.7148-0.8454     0.229  10       XLB
+ 58FE T        0.7284-0.7284     0.00172  19     XLG
+ 58FE T   
+ 58FE T        5.37-5.65      |]                  KLL AUGER
+ 58FE T        6.16-6.4       |]  48.8  4         ^KLX AUGER
+ 58FE T        6.93-7.11      |]                  KXY AUGER
+ 58FE T        0.52-0.84         116.9  7        L AUGER
+ 58CO  P 0.0         2+                70.85 D   3              2307.9    11
+ 58FE  N 1.0         1.0       1         1.0
+ 58FE  L 0           0+                  STABLE   
+ 58FE  L 810.7662  202+                6.54 PS   19
+ 58FE  E             14.94   1683.83   166.6                                   
+ 58FE2 E EAV=201.3 5$CK=0.8885 16$CL=0.0955 13$CM=0.0153 5$CN=0.0007 2$CO=   
+ 58FE  G 810.7602  2099.44   2 E2                      3.32E-45
+ 58FE2 G KC=2.99E-4 5$LC=2.87E-5 4$MC=
+ 58FE  L 1674.731  6 2+                1.6 PS    4
+ 58FE  E                       1.228   357.7                                   
+ 58FE2 E EAV=   $CK=0.8873 16$CL=0.0965 13$CM=0.0155 5$CN=0.0007 2$CO=   
+ 58FE  G 863.958   6 0.700   22M1+E2     0.643   41    2.31E-44
+ 58FE2 G KC=2.08E-4 4$LC=1.99E-5 4$MC=
+ 58FE  G 1674.705  6 0.528   13E2                      2.25E-44
+ 58FE2 G KC=5.77E-5 8$LC=5.47E-6 8$MC=
+ 

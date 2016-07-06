@@ -82,23 +82,34 @@ radionuclide isotope and can be a mix of beta decays, X-radiations, etc.
 It is defined using the following input
 \verbatim
 :start source:
-    library = egs_radionuclide_source
-    name = some_name
+    name                = my_mixture
+    library             = egs_radionuclide_source
+    activity            = total activity of mixture, assumed constant
+    charge              = list including at least one of -1, 0, 1 to 
+include electrons, photons and positrons
+    geometry            = my_geometry # see egs_isotropic_source
+    region selection    = geometry confinement option, one of IncludeAll, 
+ExcludeAll, IncludeSelected, ExcludeSelected
+    selected regions    = regions to apply geometry confinement
     :start shape:
         definition of the shape
     :stop shape:
     :start spectrum:
-        definition of the spectrum (use the radionuclide type)
+        type            = radionuclide
+        isotope         = name of the isotope (e.g. Sr-90), used to look up the 
+ensdf file in $HEN_HOUSE/spectra/lnhb if ensdf file not provided
+        ensdf file = [optional] path to a spectrum file in ensdf format
+        weight          = [optional] the relative activity (sampling 
+probability) for this isotope in a mixture
     :stop spectrum:
-    charge = list including at least one of -1, 0, 1 for electrons, photons and 
-positrons
-    min theta = 80  (degree)
-    max theta = 100 (degree)
+    :start spectrum:
+        type            = radionuclide
+        isotope         = name of next isotope in mixture (e.g. Y-90)
+        weight          = ...
+    :stop spectrum:
 :stop source:
 \endverbatim
-It is worth noting that the functionality of source 3 in the RZ series
-of user codes or source 6 in DOSXYZnrc can be reproduced with
-the radionuclide source from the EGSnrc C++ class library.
+
 */
 
 class EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_RadionuclideSource :

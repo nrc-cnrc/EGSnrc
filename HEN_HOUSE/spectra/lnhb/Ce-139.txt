@@ -1,0 +1,39 @@
+139LA    139CE EC DECAY (137.641 D)
+139LA C  References: 1968Va08, 1968Ad08, 1975Mo12, 1975Da08, 1977Sc38, 1978SeZS, 
+139LA2C  1987BeYL, 1988KoZM, 1998Si17, 2001Sc08, 2003Au03, 2005KiZW
+139LA T  Auger electrons and ^X ray energies and emission intensities:
+139LA T       {U Energy (keV)}     {U Intensity }      {U Line  }
+139LA T
+139LA T        33.0344           22.80  24       XKA2
+139LA T        33.4421           41.9  4         XKA1
+139LA T   
+139LA T        37.7206        |]                  XKB3
+139LA T        37.8015        |]  12.47  18       XKB1
+139LA T        38.084         |]                  XKB5II
+139LA T   
+139LA T        38.7303        |]                  XKB2
+139LA T        38.828         |]  3.16  8         XKB4
+139LA T        38.91          |]                  XKO23
+139LA T   
+139LA T        4.117-6.072       12.19  18       XL (total)
+139LA T        4.117             0.222  6        XLL
+139LA T        4.634-4.65        5.70  13        XLA
+139LA T        4.525             0.0842  21      XLC
+139LA T        5.041-5.381       5.27  9         XLB
+139LA T        5.62-6.072        0.903  16       XLG
+139LA T   
+139LA T        26.24-27.795   |]                  KLL AUGER
+139LA T        31.231-33.428  |]  8.4  4          ^KLX AUGER
+139LA T        36.2-38.9      |]                  KXY AUGER
+139LA T        2.7-6.2           90.1  6         L AUGER
+139CE  P 0.0         3/2+              137.641 D 20             270       3
+139LA  N 1.0         1.0       1         1.0
+139LA  L 0           7/2+                STABLE   
+139LA  E                       0.008     10.6                                  
+139LA2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
+139LA  L 165.8576  115/2+              1.499 NS  19
+139LA  E                       99.9973 275.42                                2
+139LA2 E EAV=   $CK=0.716 7$CL=0.217 5$CM=0.0669 18$CN=   $CO=   
+139LA  G 165.8575  1179.90   4 M1                      0.2516 7
+139LA2 G KC=0.2146  10$LC=0.0288  6$MC=0.0060  2
+ 

@@ -1,0 +1,46 @@
+ 99RU     99TC B- DECAY (211.5E3 Y)
+ 99RU  H TYP=Full$AUT=X. Mougeot$CUT=15-MAR-2010$
+ 99RU2 H TYP=update$AUT=MMBé$CUT= -- $
+ 99RU C  Evaluation history: Type=Full;Author=X. Mougeot;Cutoff date=15-MAR-2010
+ 99RU2C  Type=update;Author=MMBé;Cutoff date= -- 
+ 99RU C  References: 1947MO15, 1950KE02, 1951TA05, 1951FR05, 1952FE16, 1954GO69, 
+ 99RU2C  1960BO08, 1961RO33, 1964KI01, 1964BO28, 1965KI01, 1965MA27, 1966GO10, 
+ 99RU3C  1966SN02, 1966KI02, 1967MO20, 1967ST36, 1968HA52, 1971GO40, 1971LE20, 
+ 99RU4C  1970AN12, 1972GU01, 1972WA32, 1973BE72, 1973LE10, 1974RE11, 1974EN02, 
+ 99RU5C  1974HA12, 1976KI02, 1977IS05, 1980LA02, 1984CO30, 1986MU09, 1990GA13, 
+ 99RU6C  1996SC06, 2003AU03, 2008KI07
+ 99RU T  Auger electrons and ^X ray energies and emission intensities:
+ 99RU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 99RU T
+ 99RU T        19.1506           0.000155  30    XKA2
+ 99RU T        19.2794           0.00029  6      XKA1
+ 99RU T   
+ 99RU T        21.6349        |]                  XKB3
+ 99RU T        21.6565        |]  0.000079  15    XKB1
+ 99RU T        21.832         |]                  XKB5II
+ 99RU T   
+ 99RU T        22.074         |]                  XKB2
+ 99RU T        22.104         |]  0.0000128  25   XKB4
+ 99RU T   
+ 99RU T        2.2538-3.1825     0.000039  4     XL (total)
+ 99RU T        2.2538            0.00000086  12  XLL
+ 99RU T        2.5542-2.5591     0.0000234  29   XLA
+ 99RU T        2.3826            0.00000032  6   XLC
+ 99RU T        2.6831-2.9436     0.0000132  18   XLB
+ 99RU T        2.8959-3.1825     0.00000091  12  XLG
+ 99RU T   
+ 99RU T        15.565-16.329  |]                  KLL AUGER
+ 99RU T        18.267-19.277  |]  0.000139  27    ^KLX AUGER
+ 99RU T        20.947-22.113  |]                  KXY AUGER
+ 99RU T        1.75-3.12         0.00080  4      L AUGER
+ 99TC  P 0.0         9/2+              211.5E3 Y 11             293.8     14
+ 99RU  N 1.0         1.0       1         1.0
+ 99RU  L 0           5/2+                STABLE   
+ 99RU  B 293.8     1499999E-330          12.3                                  
+ 99RUS B EAV=94.6 17
+ 99RU  L 89.52     153/2+              20.36 NS  25
+ 99RU  B 204.3     140.00145 30          15.8                                  
+ 99RUS B EAV=   
+ 99RU  G 89.52     150.00058 11M1+()E2   -1.56   2     1.495  25
+ 99RU2 G KC=1.173   19$LC=0.265   5$MC=0.0497  9
+ 

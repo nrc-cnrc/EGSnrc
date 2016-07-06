@@ -1,0 +1,11 @@
+ 11B      11C  EC DECAY (20.361 M)
+ 11B   H TYP=Update$AUT=V. Chisté$CUT=01-NOV-2011$
+ 11B 2 H TYP=Full$AUT=V. Chisté$CUT=30-MAR-2002$
+ 11B  C  Evaluation history: Type=Update;Author=V. Chisté;Cutoff date=01-NOV-2011
+ 11B 2C  Type=Full;Author=V. Chisté;Cutoff date=30-MAR-2002
+ 11C   P 0.0         3/2-              20.361 M  23             1982.5    9
+ 11B   N 1.0         1.0       1         1.0
+ 11B   L 0           3/2-                STABLE   
+ 11B   E             99.750  130.250   13                                      
+ 11B 2 E EAV=385.7 4$CK=0.9174 91$CL=0.0826 91$CM=   $CN=   $CO=0 0
+ 

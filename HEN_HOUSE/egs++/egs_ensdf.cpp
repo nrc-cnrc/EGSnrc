@@ -516,7 +516,7 @@ void EGS_Ensdf::buildRecords() {
                     AlphaRecord(recordStack[i], LastParent, 
                     LastNormalization, LastLevel));
             } else if(i==11) {
-                printf("EGS_Ensdf::buildRecords: ERROR: Delayed particle not "
+                printf("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
                     "supported! Further development required.\n");
             } else if(i==12) {
                 myGammaRecords.push_back(new 
@@ -1244,7 +1244,7 @@ void GammaRecord::processEnsdf() {
     }
     
     printf("GammaRecord::processEnsdf: %f %f %f\n", decayEnergy, 
-    transitionIntensity, halfLife);
+        transitionIntensity, halfLife);
 }
 
 double GammaRecord::getDecayEnergy() const {

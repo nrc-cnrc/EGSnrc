@@ -1,0 +1,49 @@
+109AG    109CD EC DECAY (461.9 D)
+109AG  H TYP=Full$AUT=M.M. Bé$CUT=31-OCT-2014$
+109AG2 H TYP=update$AUT=M.M.Bé$CUT= -- $
+109AG C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=31-OCT-2014
+109AG2C  Type=update;Author=M.M.Bé;Cutoff date= -- 
+109AG C  References: 1940Al01, 1941He01, 1945Wi11, 1947Br05, 1950Gu54, 1951Wo15, 
+109AG2C  1953br73, 1953De26, 1954Be41, 1957Wa05, 1964Bo12, 1965Le06, 1965Se08, 
+109AG3C  1965Mo06, 1967Mi11, 1966ja01, 1966Fr12, 1966Du01, 1967Pi05, 1967Sc22, 
+109AG4C  1967Li10, 1967Ab07, 1968Go25, 1968GoZY, 1968Ea01, 1968Re04, 1968Fo03, 
+109AG5C  1968Fu05, 1969Pl08, 1969HeZY, 1970Gr13, 1970Ra37, 1970ba37, 1970Go39, 
+109AG6C  1972Ca16, 1972Br02, 1973Co10, 1973Le29, 1975Ma32, 1976Dr07, 1977Va05, 
+109AG7C  1978Pr**, 1978Mo22, 1978Sh08, 1979Pl04, 1979Va04, 1980Da03, 1981Va11, 
+109AG8C  1982HoZJ, 1982La25, 1984Ma**, 1985Ho06, 1988Ba60, 1988Il01, 1989Hi01, 
+109AG9C  1989Eg**, 1989Ne**, 1992ScZZ, 1994Ra37, 1996Sc06, 1997Ma75, 2000He14, 
+109AG10C 2000Yo07, 2000Sc47, 2002Ba85, 2004Sc04, 2006Bl02, 2006Ko27, 2008Ki07, 
+109AG11C 2011va02, 2012Fi12, 2012Wa38, 2014Un01
+109AG T  Auger electrons and ^X ray energies and emission intensities:
+109AG T       {U Energy (keV)}     {U Intensity }      {U Line  }
+109AG T
+109AG T        21.9906           29.21  30       XKA2
+109AG T        22.16317          55.1  5         XKA1
+109AG T   
+109AG T        24.9118        |]                  XKB3
+109AG T        24.9427        |]  15.25  20       XKB1
+109AG T        25.146         |]                  XKB5II
+109AG T   
+109AG T        25.4567        |]                  XKB2
+109AG T        25.512         |]  2.65  10        XKB4
+109AG T   
+109AG T        2.634-3.748       10.37  27       XL (total)
+109AG T        2.634             0.221  9        XLL
+109AG T        2.977-2.985       5.93  21        XLA
+109AG T        2.807             0.0849  20      XLC
+109AG T        3.151-3.438       3.76  10        XLB
+109AG T        3.431-3.748       0.366  8        XLG
+109AG T   
+109AG T        17.79-18.69    |]                  KLL AUGER
+109AG T        20.945-22.16   |]  20.8  6         ^KLX AUGER
+109AG T        24.079-25.507  |]                  KXY AUGER
+109AG T        1.8-3.8           167.3  8        L AUGER
+109CD  P 0.0         5/2+              461.9 D   4              215.5     18
+109AG  N 1.0         1.0       1         1.0
+109AG  L 0           1/2-                STABLE   
+109AG  L 88.0341     7/2+              39.7 S    2
+109AG  E                       100       6                                   2
+109AG2 E EAV=   $CK=0.812 3$CL=0.150 3$CM=0.0321 9$CN=0.0064 4$CO=   
+109AG  G 88.0336   103.66    5 E3                      26.3   4
+109AG2 G KC=11.41   16$LC=12.06   17$MC=2.47    4
+ 

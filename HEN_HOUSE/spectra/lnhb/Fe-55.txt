@@ -1,0 +1,36 @@
+ 55MN     55FE EC DECAY (2.747 Y)
+ 55MN  H TYP=Updated$AUT=MMBé$CUT=20-DEC-2005$
+ 55MN2 H TYP=Full$AUT=MMBé$CUT=01-APR-1998$
+ 55MN C  Evaluation history: Type=Updated;Author=MMBé;Cutoff date=20-DEC-2005
+ 55MN2C  Type=Full;Author=MMBé;Cutoff date=01-APR-1998
+ 55MN C  References: 1977La19
+ 55MN T  Auger electrons and ^X ray energies and emission intensities:
+ 55MN T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 55MN T
+ 55MN T        5.88765           8.45  14        XKA2
+ 55MN T        5.89875           16.57  27       XKA1
+ 55MN T   
+ 55MN T        6.49045        |]                  XKB3
+ 55MN T                       |]  3.40  7         XKB1
+ 55MN T        6.5352         |]                  XKB5II
+ 55MN T   
+ 55MN T   
+ 55MN T        0.556-0.721       0.524  21       XL (total)
+ 55MN T        0.556             0.309  17       XLL
+ 55MN T        0.567             0.204  13       XLC
+ 55MN T        0.649-0.721       0.0104  5       XLB
+ 55MN T   
+ 55MN T        4.953-5.21     |]                  KLL AUGER
+ 55MN T        5.671-5.895    |]  60.1  5         ^KLX AUGER
+ 55MN T        6.37-6.532     |]                  KXY AUGER
+ 55MN T        0.47-0.67         140.2  8        L AUGER
+ 55FE  P 0.0         3/2-              2.747 Y   8              231.21    18
+ 55MN  N 1.0         1.0       1         1.0
+ 55MN  L 0           5/2-                STABLE   
+ 55MN  E                       100       6                                   2
+ 55MN2 E EAV=   $CK=0.8853 16$CL=0.0983 13$CM=0.0163 8$CN=   $CO=   
+ 55MN  L 125.949   107/2-                         
+ 55MN  E                       13000E-11 14.2                                  
+ 55MN2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
+ 55MN  G 125.949   101.3E-7  1 M1+(E2)                 
+ 

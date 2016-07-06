@@ -1,0 +1,195 @@
+236U     236NP EC DECAY (1.55E5 Y)
+236U   H TYP=update$AUT=mmbe$CUT= -- $
+236U 2 H TYP=update$AUT=mmbe$CUT= -- $
+236U 3 H TYP=update$AUT=mmbe$CUT= -- $
+236U 4 H TYP=update$AUT=mmbe$CUT= -- $
+236U 5 H TYP=update$AUT=mmbe$CUT= -- $
+236U 6 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236U 7 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236U 8 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236U 9 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236U A H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236U  C  Evaluation history: Type=update;Author=mmbe;Cutoff date= -- 
+236U 2C  Type=update;Author=mmbe;Cutoff date= -- 
+236U 3C  Type=update;Author=mmbe;Cutoff date= -- 
+236U 4C  Type=update;Author=mmbe;Cutoff date= -- 
+236U 5C  Type=update;Author=mmbe;Cutoff date= -- 
+236U 6C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236U 7C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236U 8C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236U 9C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236U AC  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236U  C  References: 1969Le05, 1971Dr11, 1971GuZY, 1972Dzh., 1972El21, 1972En06, 
+236U 2C  1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1980Sc26, 1981Li30, 1983Ah02, 
+236U 3C  1991Sc08, 1996FiZX, 2003Au03, 2006Br20, 2008Ki07
+236U  T  Auger electrons and ^X ray energies and emission intensities:
+236U  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+236U  T
+236U  T        94.666            20.2  3         XKA2
+236U  T        98.44             32.4  5         XKA1
+236U  T   
+236U  T        110.421        |]                  XKB3
+236U  T        111.298        |]  11.69  25       XKB1
+236U  T        111.964        |]                  XKB5II
+236U  T   
+236U  T        114.407        |]                  XKB2
+236U  T        115.012        |]  4.00  11        XKB4
+236U  T        115.377        |]                  XKO23
+236U  T   
+236U  T        11.619-20.714     117.5  30       XL (total)
+236U  T        11.619            2.63  7         XLL
+236U  T        13.438-13.615     42.3  11        XLA
+236U  T        15.399            1.24  4         XLC
+236U  T        15.727-18.206     57.7  13        XLB
+236U  T        19.507-20.714     13.6  3         XLG
+236U  T   
+236U  T        71.78-80.95    |]                  KLL AUGER
+236U  T        88.15-98.43    |]  2.1  3          ^KLX AUGER
+236U  T        104.51-115.59  |]                  KXY AUGER
+236U  T        6.07-21.68        128.8  19       L AUGER
+236NP  P 0.0         6-                1.55E5 Y  8              930       50
+236U   N 1.139E0     1.139E0   0.878     1.139E0
+236U   L 0           0+                23.43E6 Y 6
+236U   L 45.244    2 2+                234 PS    6
+236U   G 45.244    2 0.149   3 E2                      589    12
+236U 2 G KC=$LC=429     9$MC=118.6   24
+236U   L 149.477   6 4+                124 PS    7
+236U   E                       4.4       15.9                                1U
+236U 2 E EAV=   $CK=0.74  $CL=0.19  $CM=0.07  $CN=0.0001  $CO=   
+236U   G 104.234   6 7.32    13E2                      10.99  22
+236U 2 G KC=$LC=8.00    16$MC=2.22    5
+236U   L 309.785   7 6+                58 PS     3
+236U   E                       87.8    4314.1                                  
+236U 2 E EAV=   $CK=0.726 8$CL=0.201 5$CM=0.073 2$CN=0.0001  $CO=   
+236U   G 160.307   3 31.8    15E2                      1.76   4
+236U 2 G KC=0.208   4$LC=1.13    2$MC=0.313   7
+236U   L 687.59    4 1-                3.78 NS   9
+236U   G 538.1     1 7000E-7 0 E3                      0.143  3
+236U 2 G KC=0.0622  13$LC=0.0587  12$MC=0.0160  3
+236U   G 642.34    5 5900E-5 0 E1+(M2+E3)              0.15   2
+236U 2 G KC=0.112   10$LC=$MC=
+236U   G 687.60    5 1600E-5 0 E1+(M2+E3)              0.31   2
+236U 2 G KC=0.219   12$LC=0.068   6$MC=
+236U   L 744.18    7 3-                0.1 NS     
+236U   G 56.6      5 4000E-7 0 (E2)                    199    10
+236U 2 G KC=$LC=145     7$MC=40.1    19
+236U   G 594.5     3 8000E-6 0                         
+236U   L 848.1     8 5-                           
+236U   E                       0.096     14.6                                  
+236U 2 E EAV=   $CK=   $CL=0.6  $CM=0.4  $CN=   $CO=   
+236U   G 104.1     108000E-6 0 E2                      11.1   6
+236U 2 G KC=$LC=8.1     4$MC=2.23    11
+ 
+232PA    236NP A DECAY (1.55E5 Y)
+232PA  H TYP=update$AUT=mmbe$CUT= -- $
+232PA2 H TYP=update$AUT=mmbe$CUT= -- $
+232PA3 H TYP=update$AUT=mmbe$CUT= -- $
+232PA4 H TYP=update$AUT=mmbe$CUT= -- $
+232PA5 H TYP=update$AUT=mmbe$CUT= -- $
+232PA6 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+232PA7 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+232PA8 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+232PA9 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+232PAA H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+232PA C  Evaluation history: Type=update;Author=mmbe;Cutoff date= -- 
+232PA2C  Type=update;Author=mmbe;Cutoff date= -- 
+232PA3C  Type=update;Author=mmbe;Cutoff date= -- 
+232PA4C  Type=update;Author=mmbe;Cutoff date= -- 
+232PA5C  Type=update;Author=mmbe;Cutoff date= -- 
+232PA6C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+232PA7C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+232PA8C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+232PA9C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+232PAAC  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+232PA C  References: 1969Le05, 1971Dr11, 1971GuZY, 1972Dzh., 1972El21, 1972En06, 
+232PA2C  1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1980Sc26, 1981Li30, 1983Ah02, 
+232PA3C  1991Sc08, 1996FiZX, 2003Au03, 2006Br20, 2008Ki07
+232PA T  Auger electrons and ^X ray energies and emission intensities:
+232PA T       {U Energy (keV)}     {U Intensity }      {U Line  }
+232PA T
+232PA T        92.288                            XKA2
+232PA T        95.869                            XKA1
+232PA T   
+232PA T        107.595        |]                  XKB3
+232PA T        108.422        |]                  XKB1
+232PA T        109.072        |]                  XKB5II
+232PA T   
+232PA T        111.405        |]                  XKB2
+232PA T        111.87         |]                  XKB4
+232PA T        112.38         |]                  XKO23
+232PA T   
+232PA T   
+232PA T        70.081-78.822  |]                  KLL AUGER
+232PA T        85.989-95.858  |]                  ^KLX AUGER
+232PA T        101.87-112.59  |]                  KXY AUGER
+232PA T        6.011-21.0077                     L AUGER
+236NP  P 0.0         6-                1.55E5 Y  8              5010      50
+232PA  N 6.25E2      6.25E2    0.0016    6.25E2
+232PA  L 0            -                1.31 D    2
+ 
+236PU    236NP B- DECAY (1.55E5 Y)
+236PU  H TYP=update$AUT=mmbe$CUT= -- $
+236PU2 H TYP=update$AUT=mmbe$CUT= -- $
+236PU3 H TYP=update$AUT=mmbe$CUT= -- $
+236PU4 H TYP=update$AUT=mmbe$CUT= -- $
+236PU5 H TYP=update$AUT=mmbe$CUT= -- $
+236PU6 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236PU7 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236PU8 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236PU9 H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236PUA H TYP=Full$AUT=V.P. Chechev$CUT=27-JUN-2006$
+236PU C  Evaluation history: Type=update;Author=mmbe;Cutoff date= -- 
+236PU2C  Type=update;Author=mmbe;Cutoff date= -- 
+236PU3C  Type=update;Author=mmbe;Cutoff date= -- 
+236PU4C  Type=update;Author=mmbe;Cutoff date= -- 
+236PU5C  Type=update;Author=mmbe;Cutoff date= -- 
+236PU6C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236PU7C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236PU8C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236PU9C  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236PUAC  Type=Full;Author=V.P. Chechev;Cutoff date=27-JUN-2006
+236PU C  References: 1969Le05, 1971Dr11, 1971GuZY, 1972Dzh., 1972El21, 1972En06, 
+236PU2C  1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1980Sc26, 1981Li30, 1983Ah02, 
+236PU3C  1991Sc08, 1996FiZX, 2003Au03, 2006Br20, 2008Ki07
+236PU T  Auger electrons and ^X ray energies and emission intensities:
+236PU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+236PU T
+236PU T        99.525            0.212  23       XKA2
+236PU T        103.734           0.33  4         XKA1
+236PU T   
+236PU T        116.244        |]                  XKB3
+236PU T        117.228        |]  0.123  14       XKB1
+236PU T        117.918        |]                  XKB5II
+236PU T   
+236PU T        120.54         |]                  XKB2
+236PU T        120.969        |]  0.043  5        XKB4
+236PU T        121.543        |]                  XKO23
+236PU T   
+236PU T        12.1246-21.984    12.1  4         XL (total)
+236PU T        12.1246           0.276  11       XLL
+236PU T        14.083-14.279     4.30  16        XLA
+236PU T        16.334            0.133  7        XLC
+236PU T        16.499-18.543     5.92  24        XLB
+236PU T        20.708-21.984     1.42  6         XLG
+236PU T   
+236PU T        75.26-85.36    |]                  KLL AUGER
+236PU T        92.61-103.73   |]  0.021  4        ^KLX AUGER
+236PU T        109.93-121.78  |]                  KXY AUGER
+236PU T        6.19-23.1         10.7  3         L AUGER
+236NP  P 0.0         6-                1.55E5 Y  8              480       50
+236PU  N 8.333E0     8.333E0   0.12      8.333E0
+236PU  L 0           0+                2.87 Y    1
+236PU  L 44.63     102+                           
+236PU  G 44.63     100.0161  9 E2                      741    15
+236PU2 G KC=$LC=538     11$MC=150     3
+236PU  L 147.45    104+                           
+236PU  B 333       501.6                 16                                  1U
+236PUS B EAV=92 16
+236PU  G 102.82    2 0.81    6 E2                      13.87  28
+236PU2 G KC=$LC=10.06   20$MC=2.82    6
+236PU  L 305.80    116+                           
+236PU  B 174       5011.8    12          14.5                                  
+236PUS B EAV=46 15
+236PU  G 158.35    3 3.8     4 E2                      2.14   4
+236PU2 G KC=0.193   4$LC=1.41    3$MC=0.394   8
+ 

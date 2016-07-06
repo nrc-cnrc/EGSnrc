@@ -1,0 +1,98 @@
+244PU    244AM EC DECAY (26 M)
+244PU C  References: 1950St61, 1954Gh24, 1955Fi36, 1962Va08, 1964Va04, 1976Ga31, 
+244PU2C  1977La19, 1984Vo07, 1984Ho02, 1996Sc06, 1998ScZM, 1999SzZX, 2002Ra45, 
+244PU3C  2002Ba85, 2003Ak04, 2003Au03, 2008Ki07
+244PU T  Auger electrons and X ray energies and emission intensities:
+244PU T       {U Energy (keV)}   {U Intensity}  {U Line}
+244PU T
+244PU T        99.525                            XKA2
+244PU T        103.734                           XKA1
+244PU T   
+244PU T        116.244        |]                 XKB3
+244PU T        117.228        |]                 XKB1
+244PU T        117.918        |]                 XKB5II
+244PU T   
+244PU T        120.54         |]                 XKB2
+244PU T        120.969        |]                 XKB4
+244PU T        121.543        |]                 XKO23
+244PU T   
+244PU T   
+244PU T        75.263-85.357  |]                 KLL AUGER
+244PU T        92.607-103.729 |]  2.53E-4 45     KLX AUGER
+244PU T        109.93-121.78  |]                 KXY AUGER
+244PU T        6.19-22.99         0.0124  11     L AUGER
+244AM  P 89        2 0+                26 M      3              75        9
+244PU  N 2.778E3     2.778E3   0.00036   2.778E3
+244PU  L 0           0+                  STABLE   
+244PU  E                       0.036   1 6.37                                  
+244PU2 E EAV=   $CK=0.24 5$CL=0.53 4$CM=0.168 12$CN=0.050 4$CO=   
+ 
+244CM    244AM B- DECAY (26 M)
+244CM C  References: 1950St61, 1954Gh24, 1955Fi36, 1962Va08, 1964Va04, 1976Ga31, 
+244CM2C  1977La19, 1984Vo07, 1984Ho02, 1996Sc06, 1998ScZM, 1999SzZX, 2002Ra45, 
+244CM3C  2002Ba85, 2003Ak04, 2003Au03, 2008Ki07
+244CM T  Auger electrons and X ray energies and emission intensities:
+244CM T       {U Energy (keV)}   {U Intensity}  {U Line}
+244CM T
+244CM T        104.59             0.013   4      XKA2
+244CM T        109.271            0.020   6      XKA1
+244CM T   
+244CM T        122.304        |]                 XKB3
+244CM T        123.403        |]  0.0076  21     XKB1
+244CM T        124.124        |]                 XKB5II
+244CM T   
+244CM T        126.889        |]                 XKB2
+244CM T        127.352        |]  0.0027  8      XKB4
+244CM T        127.97         |]                 XKO23
+244CM T   
+244CM T        12.633-23.527      12.3    27     XL (total)
+244CM T        12.633             0.31    8      XLL
+244CM T        14.746-14.961      4.6     11     XLA
+244CM T        17.314             0.13    4      XLC
+244CM T        17.286-19.688      6.0     14     XLB
+244CM T        22.735-23.527      1.4     4      XLG
+244CM T   
+244CM T        78.858-89.973  |]                 KLL AUGER
+244CM T        97.226-109.267 |]  0.00125 27     KLX AUGER
+244CM T        115.57-128.23  |]                 KXY AUGER
+244CM T        6.19-14.46         10.6    23     L AUGER
+244AM  P 89        2 0+                26 M      3              1427.0    36
+244CM  N 1.00E0      1.00E0    0.99964   1.00E0
+244CM  L 0           0+                  STABLE   
+244CM  B 1516      3 67      9           6.45                                  
+244CMS B EAV=512.3 9
+244CM  L 42.965    102+                           
+244CM  B 1473      3 31      9           6.74                                2
+244CMS B EAV=495.8 9
+244CM  G 42.965    100.030   9 E2                      1050   15
+244CM2 G KC=$LC=760     11$MC=214     3
+244CM  L 142.348   114+                           
+244CM  L 296.211   116+                           
+244CM  L 501.786   128+                           
+244CM  L 970       4 (2+, 3-)+                    
+244CM  L 984.914   210+                           
+244CM  B 531.1     301.36    16          6.58                                  
+244CMS B EAV=155.7 7
+244CM  G 941.95    3 0.35    12E2                      0.0154722
+244CM2 G KC=0.01120 16$LC=0.00318 5$MC=8.07E-4 12
+244CM  G 984.91    2                                   
+244CM  L 1020.76   3 (2)+                         
+244CM  B 496       3 0.08    2           7.7                                 2
+244CMS B EAV=144.0 7
+244CM  G 977.80    4           (+M1+E2)                
+244CM  L 1038      6 (2+, 3-)+                    
+244CM  L 1040.188  126+                           
+244CM  L 1084.181  141, 2+                        
+244CM  B 432       3 0.56    13          6.67                                  
+244CMS B EAV=123.7 7
+244CM  G 1041.22   3 0.19    6 (M1+E2)                 
+244CM  G 1084.181  140.36    12(E2)                    0.041  11
+244CM2 G KC=0.030   8$LC=0.008   2$MC=0.0020  1
+244CM  L 1105.91   2 (1, 2)-                      
+244CM  B 410       3 0.35    9           6.8                                 1
+244CMS B EAV=116.9 7
+244CM  G 1062.95   3 0.27    8 E1                      0.11   3
+244CM2 G KC=0.09    3$LC=0.015   4$MC=0.0032  1
+244CM  G 1105.91   2 0.04    2 (E1)                    0.17   4
+244CM2 G KC=0.14    3$LC=0.024   6$MC=0.0058  1
+ 

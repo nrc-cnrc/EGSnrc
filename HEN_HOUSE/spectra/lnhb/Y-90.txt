@@ -1,0 +1,52 @@
+ 90ZR     90Y  B- DECAY (2.6684 D)
+ 90ZR  H TYP=Update$AUT=M.M. Bé$CUT= -- $
+ 90ZR2 H TYP=Update$AUT=M.M.Bé$CUT= -- $
+ 90ZR3 H TYP=Full$AUT=V Chiste$CUT= -- $
+ 90ZR C  Evaluation history: Type=Update;Author=M.M. Bé;Cutoff date= -- 
+ 90ZR2C  Type=Update;Author=M.M.Bé;Cutoff date= -- 
+ 90ZR3C  Type=Full;Author=V Chiste;Cutoff date= -- 
+ 90ZR C  References: 1937Po04, 1937St01, 1938Sa**, 1940Sa08, 1946Bo09, 1954Ch05, 
+ 90ZR2C  1955Sa13, 1955Vo03, 1956He77, 1957Pe09, 1958Jo33, 1961He09, 1961La07, 
+ 90ZR3C  1961Ni02, 1962Ne02, 1963Vo02, 1964La13, 1964Da16, 1964An12, 1966Ri01, 
+ 90ZR4C  1967Bi02, 1968La10, 1969Gr38, 1971Na09, 1972Le**, 1976Gr16, 1983Ha35, 
+ 90ZR5C  1990Zh20, 1993Gr17, 1996Sc06, 1997Br34, 2002Ba85, 2004Ko18, 2007Se01, 
+ 90ZR6C  2007St**, 2008Ki07, 2012Wa38
+ 90ZR T  Auger electrons and ^X ray energies and emission intensities:
+ 90ZR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 90ZR T
+ 90ZR T        15.6906                           XKA2
+ 90ZR T        15.7749                           XKA1
+ 90ZR T   
+ 90ZR T        17.6541        |]                  XKB3
+ 90ZR T        17.6674        |]                  XKB1
+ 90ZR T        17.8152        |]                  XKB5II
+ 90ZR T        17.818         |]                  XKB5I
+ 90ZR T   
+ 90ZR T        17.9691        |]                  XKB2
+ 90ZR T        18.0001        |]                  XKB4
+ 90ZR T   
+ 90ZR T        1.7932                            XLL
+ 90ZR T        2.0403-2.0431                     XLA
+ 90ZR T        1.8774                            XLC
+ 90ZR T        2.1246-2.2252                     XLB
+ 90ZR T        2.2579-2.5044                     XLG
+ 90ZR T   
+ 90ZR T        12.843-13.455  |]                  KLL AUGER
+ 90ZR T        15-15.772      |]                  ^KLX AUGER
+ 90ZR T        17.137-17.992  |]                  KXY AUGER
+ 90ZR T        0.04-2.5256                       L AUGER
+ 90Y   P 0.0         2-                2.6684 D  13             2278.7    16
+ 90ZR  N 1.0         1.0       1         1.0
+ 90ZR  L 0           0+                  STABLE   
+ 90ZR  B 2278.7    1699.983  7           8.05                                1U
+ 90ZRS B EAV=926.7 8
+ 90ZR  L 1760.72   200+                           
+ 90ZR  B 518.0     160.017   7           9.4                                 1U
+ 90ZRS B EAV=163.7 6
+ 90ZR  G 1760.7    2                                   
+ 90ZR  L 2186.282  102+                           
+ 90ZR  B 92.4      1614000E-13           11.1                                  
+ 90ZRS B EAV=24.5 5
+ 90ZR  G 2186.254  101.4E-6  3 E2                      5.36E-48
+ 90ZR2 G KC=$LC=$MC=
+ 

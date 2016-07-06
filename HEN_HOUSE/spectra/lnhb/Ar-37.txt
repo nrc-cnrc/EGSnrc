@@ -1,0 +1,29 @@
+ 37CL     37AR EC DECAY (35.01 D)
+ 37CL  H TYP=Full$AUT=V.P. Chechev$CUT=30-MAR-2012$
+ 37CL C  Evaluation history: Type=Full;Author=V.P. Chechev;Cutoff date=30-MAR-2012
+ 37CL C  References: 1944We**, 1952Mi**, 1959Ki41, 1965St09, 1972Dz09, 1973Co26, 
+ 37CL2C  1975Ki10, 1986BrZQ, 1996Sc06, 1998Bo30, 1998Sc28, 1998En04, 2000Sc47, 
+ 37CL3C  2001Re01, 2003Au03, 2011Ch65, 2012Au06
+ 37CL T  Auger electrons and ^X ray energies and emission intensities:
+ 37CL T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 37CL T
+ 37CL T        2.6208            2.76  7         XKA2
+ 37CL T        2.62241           5.46  14        XKA1
+ 37CL T   
+ 37CL T        2.8156         |]  0.71  4         XKB1
+ 37CL T   
+ 37CL T   
+ 37CL T        0.1833-0.2681     0.20  4         XL (total)
+ 37CL T        0.1833                            XLL
+ 37CL T         -0.2681                          XLB
+ 37CL T   
+ 37CL T        2.241-2.384    |]                  KLL AUGER
+ 37CL T        2.535-2.616    |]  81.3  3         ^KLX AUGER
+ 37CL T        2.787-2.809    |]                  KXY AUGER
+ 37CL T        0.165-0.257       166.49  21      L AUGER
+ 37AR  P 0.0         3/2+              35.01 D   2              813.87    20
+ 37CL  N 1.0         1.0       1         1.0
+ 37CL  L 0         0 3/2+                STABLE   
+ 37CL  E                       100       5.1                                   
+ 37CL2 E EAV=   $CK=0.9021 24$CL=0.0872 20$CM=0.0106 7$CN=0  $CO=0  
+ 

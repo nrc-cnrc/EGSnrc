@@ -1,0 +1,119 @@
+209TL    213BI A DECAY (45.59 M)
+209TL  H TYP=Full$AUT=X. Huang$CUT=30-JAN-2006$
+209TL C  Evaluation history: Type=Full;Author=X. Huang;Cutoff date=30-JAN-2006
+209TL T  Auger electrons and ^X ray energies and emission intensities:
+209TL T       {U Energy (keV)}     {U Intensity }      {U Line  }
+209TL T
+209TL T        70.8325           0.0058  7       XKA2
+209TL T        72.8725           0.0098  12      XKA1
+209TL T   
+209TL T        82.118         |]                  XKB3
+209TL T        82.577         |]  0.0033  5       XKB1
+209TL T        83.115         |]                  XKB5II
+209TL T   
+209TL T        84.838         |]                  XKB2
+209TL T        85.134         |]  0.00098  14     XKB4
+209TL T        85.444         |]                  XKO23
+209TL T   
+209TL T        8.9531-14.7362    0.0062  8       XL (total)
+209TL T        8.9531                            XLL
+209TL T        10.1718-10.2679                   XLA
+209TL T        10.9942                           XLC
+209TL T        11.8117-12.9566                   XLB
+209TL T        13.8528-14.7362                   XLG
+209TL T   
+209TL T        54.587-59.954  |]                  KLL AUGER
+209TL T        66.37-72.86    |]  0.00076  9      ^KLX AUGER
+209TL T        78.12-85.5     |]                  KXY AUGER
+209TL T        5.18-10.13        0.0107  13      L AUGER
+213BI  P 0.0         9/2-              45.59 M   6              5983      6
+209TL  N 4.785E1     4.785E1   0.0209  3 4.785E1
+209TL  L 0           1/2+              2.161 M   7
+209TL  A 5869      1090.9    19319
+209TL  L 323.70    2 3/2+                         
+209TL  A 5549      108.90    24103
+209TL  G 323.70    2 0.1584  24M1+E2     1.26    16    0.178  15
+209TL2 G KC=0.134   14$LC=0.0333  13$MC=0.0081  3
+ 
+213PO    213BI B- DECAY (45.59 M)
+213PO  H TYP=Full$AUT=X. Huang$CUT=30-JAN-2006$
+213PO C  Evaluation history: Type=Full;Author=X. Huang;Cutoff date=30-JAN-2006
+213PO T  Auger electrons and ^X ray energies and emission intensities:
+213PO T       {U Energy (keV)}     {U Intensity }      {U Line  }
+213PO T
+213PO T        76.864            1.103  29       XKA2
+213PO T        79.293            1.84  5         XKA1
+213PO T   
+213PO T        89.256         |]                  XKB3
+213PO T        89.807         |]  0.633  19       XKB1
+213PO T        90.363         |]                  XKB5II
+213PO T   
+213PO T        92.263         |]                  XKB2
+213PO T        92.618         |]  0.197  7        XKB4
+213PO T        92.983         |]                  XKO23
+213PO T   
+213PO T        9.6576-16.2129    1.54  4         XL (total)
+213PO T        9.6576            0.0387  13      XLL
+213PO T        11.0161-11.1303   0.710  21       XLA
+213PO T        12.0847           0.0116  4       XLC
+213PO T        12.8239-14.2476   0.653  16       XLB
+213PO T        15.251-16.2129    0.128  4        XLG
+213PO T   
+213PO T        58.978-65.205  |]                  KLL AUGER
+213PO T        71.902-79.289  |]  0.137  16       ^KLX AUGER
+213PO T        84.8-93.1      |]                  KXY AUGER
+213PO T        5.43-16.86        2.31  4         L AUGER
+213BI  P 0.0         9/2-              45.59 M   6              1423      5
+213PO  N 1.021E0     1.021E0   0.9791  3 1.021E0
+213PO  L 0           9/2+              3.70 US   5
+213PO  B 1423      5 66.2    4           6.316                                 
+213POS B EAV=492.2 20
+213PO  L 292.796   8 11/2+             78 PS     14
+213PO  B 1130      5 0.21    9           8.45                                1U
+213POS B EAV=376.8 20
+213PO  G 292.80    1 0.421   7 M1+E2     1.2     8     0.30   18
+213PO2 G KC=0.22    17$LC=0.06    2$MC=1.5E-5  3
+213PO  L 440.439   9 7/2+              93 PS     3
+213PO  B 983       5 30.8    4           6.07                                1U
+213POS B EAV=320.4 19
+213PO  G 147.70    4 0.0128  8 E2                      1.453  21
+213PO2 G KC=0.307   4$LC=0.85    1$MC=2.26E-4 3
+213PO  G 440.44    1 26.1    3 M1                      0.179  3
+213PO2 G KC=0.146   2$LC=0.0250  4$MC=0.00594 8
+213PO  L 600.8     3 (5/2)+                       
+213PO  B 822       5 0.0025  19          9.9                                 3U
+213POS B EAV=260.8 19
+213PO  G 600.9     2 0.0026  19                        
+213PO  L 867.961   2013/2+                        
+213PO  B 555       5 0.0129  6           8.597                               3U
+213POS B EAV=166.4 17
+213PO  G 574.9     3 0.00068 16                        
+213PO  G 867.96    2 0.0122  6                         
+213PO  L 1003.593  17(9/2)+                       
+213PO  B 419       5 0.0648  23          7.494                                 
+213POS B EAV=121.4 17
+213PO  G 402.8     3 0.00010 4                         
+213PO  G 710.82    3 0.0112  6                         
+213PO  G 1003.58   2 0.0535  22                        
+213PO  L 1045.62   8 (2/9,11/2)+                  
+213PO  B 377       5 0.020   4           7.85                                  
+213POS B EAV=107.9 16
+213PO  G 604.93    170.0014  5                         
+213PO  G 1045.67   8 0.019   4                         
+213PO  L 1100.168  8 7/2,9/2,11/2-                
+213PO  B 323       5 0.595   17          6.16                                2
+213POS B EAV=90.8 16
+213PO  G 659.75    2 0.043   6                         
+213PO  G 807.37    1 0.287   14                        
+213PO  G 1100.16   1 0.265   6                         
+213PO  L 1119.36   4 7/2,9/2,11/2+                
+213PO  B 304       5 0.0608  20          7.07                                1U
+213POS B EAV=84.9 16
+213PO  G 826.55    4 0.0065  4                         
+213PO  G 1119.42   8 0.0543  20                        
+213PO  L 1328.2    3 (7/2,9/2,11/2)-              
+213PO  B 95        5 0.0014  2           7.68                                2
+213POS B EAV=24.6 14
+213PO  G 886.66    140.00102 19                        
+213PO  G 1328.2    3 0.00039 13                        
+ 

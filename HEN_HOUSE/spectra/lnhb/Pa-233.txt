@@ -1,0 +1,161 @@
+233U     233PA B- DECAY (26.98 D)
+233U   H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 2 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 3 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 4 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 5 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 6 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 7 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 8 H TYP=Corrected$AUT=Chechev$CUT= -- $
+233U 9 H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U A H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U B H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U C H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U D H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U E H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U F H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U G H TYP=Corrected$AUT=mmbe$CUT= -- $
+233U H H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U I H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U J H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U K H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U L H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U M H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U N H TYP=Full$AUT=Chechev$CUT=01-JAN-2005$
+233U  C  Evaluation history: Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 2C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 3C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 4C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 5C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 6C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 7C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 8C  Type=Corrected;Author=Chechev;Cutoff date= -- 
+233U 9C  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U AC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U BC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U CC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U DC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U EC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U FC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U GC  Type=Corrected;Author=mmbe;Cutoff date= -- 
+233U HC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U IC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U JC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U KC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U LC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U MC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U NC  Type=Full;Author=Chechev;Cutoff date=01-JAN-2005
+233U  C  References: 1941Gr03, 1952Br84, 1954Br37, 1955On05, 1956Mc60, 1957Wr37, 
+233U 2C  1960Un01, 1961Al19, 1962Sc03, 1963Bj03, 1963Bi03, 1966Ze02, 1967Br20, 
+233U 3C  1968Ma13, 1971Vo02, 1972De67, 1973Va33, 1979Ge08, 1984Va27, 1985DeZR, 
+233U 4C  1986Kr10, 1986Jo07, 1988Wo01, 1989Br24, 1990Ak02, 1990Ko41, 1990Pe16, 
+233U 5C  1992Ra08, 2000Us01, 2000Wo01, 2000Ch01, 2000Sc04, 2000Lu01, 2002Lu01, 
+233U 6C  2003Au03, 2004Sh07, 2005Hu06, 2005Si15, 2006Ch39, 2006Ha53, 2008Ki07, 
+233U 7C  2008De10
+233U  T  Auger electrons and ^X ray energies and emission intensities:
+233U  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+233U  T
+233U  T        94.666            9.10  26        XKA2
+233U  T        98.44             14.6  4         XKA1
+233U  T   
+233U  T        110.421        |]                  XKB3
+233U  T        111.298        |]  5.25  18        XKB1
+233U  T        111.964        |]                  XKB5II
+233U  T   
+233U  T        114.407        |]                  XKB2
+233U  T        115.012        |]  1.80  7         XKB4
+233U  T        115.377        |]                  XKO23
+233U  T   
+233U  T        11.619-20.714     40.6  11        XL (total)
+233U  T        11.619            1.05  4         XLL
+233U  T        13.438-13.615     16.9  6         XLA
+233U  T        15.399            0.272  16       XLC
+233U  T        15.727-18.206     18.1  6         XLB
+233U  T        19.507-20.714     4.23  14        XLG
+233U  T   
+233U  T        71.78-80.95    |]                  KLL AUGER
+233U  T        88.15-98.34    |]  0.95  13        ^KLX AUGER
+233U  T        104.42-115.4   |]                  KXY AUGER
+233U  T        5.9-21.6          42.2  13        L AUGER
+233PA  P 0.0         3/2-              26.98 D   2              570.1     20
+233U   N 1.0         1.0       1         1.0
+233U   L 0           5/2+              159.1E3 Y 2
+233U   B 570.1     206.3     23          9.1                                 1U
+233U S B EAV=169.6 6
+233U   L 40.350    4 7/2+              0.11 NS   8
+233U   B 529.8     200.3     19          10.2                                3U
+233U S B EAV=156.1 6
+233U   G 40.349    5 0.024   2 M1+E2     1.08    12    580    60
+233U 2 G KC=$LC=430     50$MC=117     12
+233U   L 92.16     4 9/2+                         
+233U   G 51.81     4 5000E-7 0 [M1+E2]   0.62          108.0000
+233U 2 G KC=$LC=79.0000 0$MC=21.0000 0
+233U   G 92.16     4 2400E-6 0 [E2]                    19.50000
+233U 2 G KC=$LC=14.2000 0$MC=3.95000 0
+233U   L 298.810   4 5/2-                         
+233U   B 271.3     200.12    5           9.8                                 2
+233U S B EAV=74.6 6
+233U   G 258.45    2 0.0274  6 [E1]                    0.0547 11
+233U 2 G KC=0.0433  9$LC=0.00857 17$MC=0.00207 4
+233U   G 298.81    2 0.12    5 [E1]                    0.0396 8
+233U 2 G KC=0.0315  6$LC=0.00609 12$MC=0.00147 3
+233U   L 301.94    9 5/2-                         
+233U   B 268.1     200.010   2           11.8                                2
+233U S B EAV=73.7 6
+233U   G 301.99    100.010   2                         
+233U   L 311.904   4 3/2+              0.120 NS  15
+233U   B 258.2     2026.6    32          7.3                                   
+233U S B EAV=70.8 6
+233U   G 271.555   100.323   3 E2                      0.258  5
+233U 2 G KC=0.0904  18$LC=0.1226  25$MC=0.0334  7
+233U   G 311.904   5 38.3    5 M1+E2     0.10    1     0.80   2
+233U 2 G KC=0.64    2$LC=0.126   4$MC=0.031   1
+233U   L 320.83    4 7/2-                         
+233U   B 249.4     200.020   5           10.4                                  
+233U S B EAV=68.2 6
+233U   G 228.57    5 0.0042  7                         
+233U   G 280.61    5 0.011   2                         
+233U   G 320.73    100.0051  4                         
+233U   L 340.477   4 5/2+              52 PS     10
+233U   B 229.6     2025.9    32          7.2                                 1U
+233U S B EAV=62.4 6
+233U   G 28.559    100.071   8 M1+E2     0.158   10    313    18
+233U 2 G KC=$LC=233     13$MC=60      4
+233U   G 41.663    100.014   3 [E1]                    1.253  25
+233U 2 G KC=$LC=0.939   19$MC=0.235   5
+233U   G 248.38    4 0.0609  11[E2]                    0.346  7
+233U 2 G KC=0.1065  21$LC=0.175   4$MC=0.0479  10
+233U   G 300.129   5 6.60    21M1+E2     0.08    3     0.87   2
+233U 2 G KC=0.70    2$LC=0.133   4$MC=0.031   1
+233U   G 340.476   5 4.47    3 M1+E2     0.23    5     0.62   2
+233U 2 G KC=0.50    2$LC=0.103   3$MC=0.022   1
+233U   L 380.43    8 7/2+                         
+233U   B 189.8     200.020   3           9.4                                 3U
+233U S B EAV=50.9 6
+233U   G 288.42    100.016   3                         
+233U   G 380.28    100.0037  9                         
+233U   L 398.496   4 1/2+              55 PS     20
+233U   B 171.5     2015.4    8           7                                   1U
+233U S B EAV=45.7 5
+233U   G 86.595    5 1.99    10M1+E2     0.056   5     7.08   14
+233U 2 G KC=$LC=5.33    11$MC=1.29    3
+233U   G 398.492   5 1.408   14E2                      0.0835 17
+233U 2 G KC=0.0439  9$LC=0.0291  6$MC=0.00777 16
+233U   L 415.758   4 3/2+              30 PS      
+233U   B 154.3     2025.4    16          6.7                                   
+233U S B EAV=40.9 5
+233U   G 17.262    6 4100E-6 0 M1+E2                   503.0000
+233U 2 G KC=$LC=$MC=374.000 0
+233U   G 75.269    101.30    3 M1+E2     0.15    8     11.4   12
+233U 2 G KC=$LC=8.6     9$MC=2.11    24
+233U   G 103.86    1 0.853   6 M1+(E2)   0.1     1     4.21   21
+233U 2 G KC=$LC=3.17    15$MC=0.77    5
+233U   G 375.404   5 0.684   7 E2                      0.0981 20
+233U 2 G KC=0.0491  10$LC=0.0360  7$MC=0.00962 19
+233U   G 415.764   5 1.747   7 M1+E2     2.2     9     0.13   8
+233U 2 G KC=0.09    6$LC=0.032   9$MC=0.0081  21
+233U   L 456.114   6 5/2+                         
+233U   B 114.1     200.0011  2           10.6                                1U
+233U S B EAV=29.8 5
+233U   G 455.96    100.0011  2                         
+ 

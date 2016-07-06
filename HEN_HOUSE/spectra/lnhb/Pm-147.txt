@@ -1,0 +1,61 @@
+147SM    147PM B- DECAY (2.6234 Y)
+147SM  H TYP=Full$AUT=V. Chisté$CUT=30-MAY-2011$
+147SM2 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM3 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM4 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM5 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM6 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM7 H TYP=update$AUT=V. Chisté$CUT= -- $
+147SM C  Evaluation history: Type=Full;Author=V. Chisté;Cutoff date=30-MAY-2011
+147SM2C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM3C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM4C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM5C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM6C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM7C  Type=update;Author=V. Chisté;Cutoff date= -- 
+147SM C  References: 1934Li03, 1936Ho**, 1946Cu**, 1949Pi**, 1954Be69, 1955Me52, 
+147SM2C  1956La17, 1956Le55, 1956Sc87, 1957Me47, 1957St05, 1958Be78, 1958An36, 
+147SM3C  1959Ca12, 1960Ka23, 1960Ka**, 1961Wy01, 1961Wr02, 1961Ma05, 1962Sc09, 
+147SM4C  1963Ro20, 1962Al19, 1964Do01, 1965Va16, 1965Fl02, 1965Ei04, 1965An07, 
+147SM5C  1965Wh04, 1966Go26, 1966Av02, 1967Jo07, 1968Re04, 1969Ba33, 1970Mo02, 
+147SM6C  1970Gu14, 1970Va38, 1971Be53, 1971Mc09, 1973HaXY, 1987Al28, 1989Ad10, 
+147SM7C  1990Sc08, 1992Ma56, 1996Sc06, 2001Be81, 2003Au03, 2003Ki26, 2008Ki07, 
+147SM8C  2009Ko15, 2009Ni02
+147SM T  Auger electrons and ^X ray energies and emission intensities:
+147SM T       {U Energy (keV)}     {U Intensity }      {U Line  }
+147SM T
+147SM T        39.5229           0.000583  16    XKA2
+147SM T        40.1186           0.001055  29    XKA1
+147SM T   
+147SM T        45.289         |]                  XKB3
+147SM T        45.413         |]  0.00033  1      XKB1
+147SM T        45.731         |]                  XKB5II
+147SM T   
+147SM T        46.575         |]                  XKB2
+147SM T        46.705         |]  0.0000851  30   XKB4
+147SM T        46.813         |]                  XKO23
+147SM T   
+147SM T        4.991-7.487       0.000369  8     XL (total)
+147SM T        4.991             0.00000720  24  XLL
+147SM T        5.609-5.638       0.000177  6     XLA
+147SM T        5.586             0.00000281  9   XLC
+147SM T        6.193-6.656       0.000156  4     XLB
+147SM T        6.964-7.487       0.0000254  7    XLG
+147PM  P 0.0         7/2+              2.6234 Y  4              224.1     3
+147SM  N 1.0         1.0       1         1.0
+147SM  L 0           7/2-              107.9E9 Y 12
+147SM  B 224.1     3 99995E-313          7.4                                   
+147SMS B EAV=61.8 1
+147SM  L 121.223   125/2-              0.798 NS  17
+147SM  B 102.9     3 0.00542 13          10.6                                1U
+147SMS B EAV=26.9 1
+147SM  G 121.223   120.00272 6 M1+E2     -0.317  19000 0.994  14
+147SM2 G KC=0.815   12$LC=0.141   4$MC=0.0308  8
+147SM  L 197.298   113/2-              1.25 NS   3
+147SM  B 26.8      3 40000E-17           12.1                                3U
+147SMS B EAV=6.9 1
+147SM  G 76.073    101.1E-8  2 M1+E2     0.655   34    4.53   9
+147SM2 G KC=2.91    5$LC=1.26    7$MC=0.288   15
+147SM  G 197.298   113.3E-7  5 E2                      0.218  3
+147SM2 G KC=0.1565  22$LC=0.0482  7$MC=0.01092 16
+ 

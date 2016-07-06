@@ -1,0 +1,43 @@
+216PO    220RN A DECAY (55.8 S)
+216PO  H TYP=Update$AUT=A.L. Nichols$CUT=30-APR-2010$
+216PO2 H TYP=Full$AUT=A.L. Nichols$CUT=30-APR-2003$
+216PO C  Evaluation history: Type=Update;Author=A.L. Nichols;Cutoff date=30-APR-2010
+216PO2C  Type=Full;Author=A.L. Nichols;Cutoff date=30-APR-2003
+216PO C  References: 1955Sc81, 1956Ma28, 1961Ro14, 1962Wa28, 1963Gi17, 1966Hu20, 
+216PO2C  1972DaZA, 1973Da38, 1977La19, 1977Ku15, 1984Ge07, 1996Sc06, 1997Ar04, 
+216PO3C  1998ScZM, 1999ScZX, 2002Ba85, 2002Ra45, 2003Au03, 2007St23, 2007Wu02, 
+216PO4C  2008Ki07
+216PO T  Auger electrons and ^X ray energies and emission intensities:
+216PO T       {U Energy (keV)}     {U Intensity }      {U Line  }
+216PO T
+216PO T        76.864            0.00059  8      XKA2
+216PO T        79.293            0.00099  13     XKA1
+216PO T   
+216PO T        89.256         |]                  XKB3
+216PO T        89.807         |]  0.00034  5      XKB1
+216PO T        90.363         |]                  XKB5II
+216PO T   
+216PO T        92.263         |]                  XKB2
+216PO T        92.618         |]  0.000106  15    XKB4
+216PO T        92.983         |]                  XKO23
+216PO T   
+216PO T        9.658-16.213      0.00094  8      XL (total)
+216PO T        9.658             0.0000222  22   XLL
+216PO T        11.016-11.13      0.00041  4      XLA
+216PO T        12.085            0.0000081  9    XLC
+216PO T        12.823-13.778     0.00042  4      XLB
+216PO T        15.742-16.213     0.000086  7     XLG
+216PO T   
+216PO T        58.978-65.205  |]                  KLL AUGER
+216PO T        71.902-79.289  |]  0.000074  13    ^KLX AUGER
+216PO T        84.8-93.1      |]                  KXY AUGER
+216PO T        5.434-10.934      0.00140  11     L AUGER
+220RN  P 0.0         0+                55.8 S    3              6404.67   10
+216PO  N 1.0         1.0       1         1.0
+216PO  L 0           0+                0.148 S   4
+216PO  A 6288.22   1099.882  151
+216PO  L 549.76    4 2+                           
+216PO  A 5748.46   110.118   153.1
+216PO  G 549.76    4 0.115   15E2                      0.0257 4
+216PO2 G KC=0.0183  3$LC=0.00561 8$MC=1399E-6 20
+ 

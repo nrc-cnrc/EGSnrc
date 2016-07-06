@@ -1,0 +1,13 @@
+  3HE      3H  B- DECAY (12.312 Y)
+  3HE  H TYP=Full$AUT=V. Chechev$CUT=01-JUN-1998$
+  3HE2 H TYP=Update$AUT=V. Chechev$CUT=01-MAY-1998$
+  3HE C  Evaluation history: Type=Full;Author=V. Chechev;Cutoff date=01-JUN-1998
+  3HE2C  Type=Update;Author=V. Chechev;Cutoff date=01-MAY-1998
+  3HE C  References: 2000Lu17, 2002Bo31, 2003Lo10, 2003Au03, 2004Ak16, 2005Ak04, 
+  3HE2C  2005Kr03
+  3H   P 0.0         1/2+              12.312 Y  25             18.591    1
+  3HE  N 1.0         1.0       1         1.0
+  3HE  L 0           1/2+                STABLE   
+  3HE  B 18.564    2 100                 3.05                                  
+  3HES B EAV=5.68 1
+ 
