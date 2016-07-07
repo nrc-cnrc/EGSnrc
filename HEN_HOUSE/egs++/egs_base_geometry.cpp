@@ -732,11 +732,11 @@ void EGS_BaseGeometry::setMedia(EGS_Input *inp) {
     }
     setMedia(input,nmed,med_ind);
     setRelativeRho(input);
+    setBScaling(input);
     delete [] med_ind;
     if (delete_it) {
         delete input;
     }
-    setBScaling(input);
 }
 
 void EGS_BaseGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
