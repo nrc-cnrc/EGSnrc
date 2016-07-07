@@ -23,7 +23,7 @@
 #
 #  Author:          Reid Townson, 2016
 #
-#  Contributors:    
+#  Contributors:
 #
 ###############################################################################
 */
@@ -49,24 +49,24 @@
 
 #ifdef WIN32
 
-    #ifdef BUILD_RADIONUCLIDE_SOURCE_DLL
-        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllexport)
-    #else
-        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllimport)
-    #endif
-    #define EGS_RADIONUCLIDE_SOURCE_LOCAL
+#ifdef BUILD_RADIONUCLIDE_SOURCE_DLL
+    #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllexport)
+#else
+    #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllimport)
+#endif
+#define EGS_RADIONUCLIDE_SOURCE_LOCAL
 
 #else
 
-    #ifdef HAVE_VISIBILITY
-        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __attribute__ ((visibility 
+#ifdef HAVE_VISIBILITY
+#define EGS_RADIONUCLIDE_SOURCE_EXPORT __attribute__ ((visibility
 ("default")))
-        #define EGS_RADIONUCLIDE_SOURCE_LOCAL  __attribute__ ((visibility 
+#define EGS_RADIONUCLIDE_SOURCE_LOCAL  __attribute__ ((visibility
 ("hidden")))
-    #else
-        #define EGS_RADIONUCLIDE_SOURCE_EXPORT
-        #define EGS_RADIONUCLIDE_SOURCE_LOCAL
-    #endif
+#else
+#define EGS_RADIONUCLIDE_SOURCE_EXPORT
+#define EGS_RADIONUCLIDE_SOURCE_LOCAL
+#endif
 
 #endif
 
@@ -76,8 +76,8 @@
 
 A radionuclide source is a source that delivers particles with
 directions uniformly distributed in \f$4 \pi\f$ emitted from
-\link EGS_BaseShape any shape. Emissions are based on decays from the 
-radionuclide isotope and can be a mix of beta decays, X-radiations, etc. 
+\link EGS_BaseShape any shape. Emissions are based on decays from the
+radionuclide isotope and can be a mix of beta decays, X-radiations, etc.
 \endlink
 It is defined using the following input
 \verbatim
@@ -85,10 +85,10 @@ It is defined using the following input
     name                = my_mixture
     library             = egs_radionuclide_source
     activity            = total activity of mixture, assumed constant
-    charge              = list including at least one of -1, 0, 1 to 
+    charge              = list including at least one of -1, 0, 1 to
 include electrons, photons and positrons
     geometry            = my_geometry # see egs_isotropic_source
-    region selection    = geometry confinement option, one of IncludeAll, 
+    region selection    = geometry confinement option, one of IncludeAll,
 ExcludeAll, IncludeSelected, ExcludeSelected
     selected regions    = regions to apply geometry confinement
     :start shape:
@@ -96,10 +96,10 @@ ExcludeAll, IncludeSelected, ExcludeSelected
     :stop shape:
     :start spectrum:
         type            = radionuclide
-        isotope         = name of the isotope (e.g. Sr-90), used to look up the 
+        isotope         = name of the isotope (e.g. Sr-90), used to look up the
 ensdf file in $HEN_HOUSE/spectra/lnhb if ensdf file not provided
         ensdf file = [optional] path to a spectrum file in ensdf format
-        weight          = [optional] the relative activity (sampling 
+        weight          = [optional] the relative activity (sampling
 probability) for this isotope in a mixture
     :stop spectrum:
     :start spectrum:
@@ -130,14 +130,14 @@ public:
     Construct a radionuclide source with charge array \a Q, spectra array
     \a Decays and emitting particles from the shape \a Shape
     */
-    EGS_RadionuclideSource(vector<int> Q_allowed, vector<EGS_BaseSpectrum*> 
-            Decays, EGS_Float Activity, EGS_BaseShape *Shape, EGS_BaseGeometry 
-            *geometry, const string &Name="", EGS_ObjectFactory *f=0) :
-            EGS_BaseSource(Name,f), shape(Shape),
-            min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
-            buf_1(1), buf_2(-1),
-            geom(geometry), regions(0), nrs(0), gc(IncludeAll),
-            q_allowed(Q_allowed), decays(Decays), activity(Activity) {
+    EGS_RadionuclideSource(vector<int> Q_allowed, vector<EGS_BaseSpectrum *>
+                           Decays, EGS_Float Activity, EGS_BaseShape *Shape, EGS_BaseGeometry
+                           *geometry, const string &Name="", EGS_ObjectFactory *f=0) :
+        EGS_BaseSource(Name,f), shape(Shape),
+        min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
+        buf_1(1), buf_2(-1),
+        geom(geometry), regions(0), nrs(0), gc(IncludeAll),
+        q_allowed(Q_allowed), decays(Decays), activity(Activity) {
         setUp();
     };
 
@@ -157,34 +157,34 @@ public:
             delete [] regions;
         }
     };
-    
+
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u);
-    
+
 //     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
 //                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
 //                             EGS_Vector &x, EGS_Vector &u, EGS_I64 &ishower,
 //                             EGS_Float &time);
-    
+
     EGS_Float getEmax() const {
         return Emax;
     };
-    
+
     EGS_Float getFluence() const {
         return count;
     };
-    
+
     double getTime() const {
         return time;
     };
-    
+
     EGS_I64 getShowerIndex() const {
         return ishower;
     };
-    
+
     void printSampledEmissions() {
-        for(unsigned int i=0; i<decays.size(); ++i) {
+        for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->printSampledEmissions();
         }
     }
@@ -255,7 +255,7 @@ public:
     bool isValid() const {
         return (decays.size() != 0 && shape != 0);
     };
-    
+
     /*! \brief Store the source state to the data stream \a data_out.
      *
      * Uses the \link EGS_BaseSpectrum::storeState() storeState() \endlink
@@ -265,7 +265,7 @@ public:
         if (!egsStoreI64(data_out,count)) {
             return false;
         }
-        for(unsigned int i=0; i<decays.size(); ++i) {
+        for (unsigned int i=0; i<decays.size(); ++i) {
             if (!decays[i]->storeState(data_out)) {
                 return false;
             }
@@ -287,7 +287,7 @@ public:
         if (!egsGetI64(data,count)) {
             return false;
         }
-        for(unsigned int i=0; i<decays.size(); ++i) {
+        for (unsigned int i=0; i<decays.size(); ++i) {
             if (!decays[i]->addState(data)) {
                 return false;
             }
@@ -307,7 +307,7 @@ public:
      */
     void resetCounter() {
         count = 0;
-        for(unsigned int i=0; i<decays.size(); ++i) {
+        for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->resetCounter();
         }
         resetFluenceCounter();
@@ -341,7 +341,7 @@ public:
         if (!egsGetI64(data,count)) {
             return false;
         }
-        for(unsigned int i=0; i<decays.size(); ++i) {
+        for (unsigned int i=0; i<decays.size(); ++i) {
             if (!decays[i]->setState(data)) {
                 return false;
             }
@@ -357,20 +357,20 @@ protected:
     EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
     EGS_BaseGeometry    *geom;
     int                 *regions;
-    
+
     EGS_I64             count;
     EGS_Float           Emax;
 
     void setUp();
 
     EGS_Float min_theta, max_theta;
-    EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and 
-                            // cos(max_theta)
+    EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and
+    // cos(max_theta)
     EGS_Float min_phi, max_phi;
     int       nrs;
     GeometryConfinement gc;
-    
-    vector<EGS_BaseSpectrum*> decays; //!< The radionuclide decay structure
+
+    vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
     vector<int>         q_allowed;
     EGS_Float           activity;
     double              time;

@@ -442,7 +442,7 @@ protected:
  *
  * \ingroup egspp_main
  *
- 
+
 
 
  */
@@ -452,17 +452,17 @@ public:
 
     /*! \brief Construct a radionuclide spectrum.
      */
-    EGS_RadionuclideSpectrum(const string isotope, const string ensdf_file, 
-const EGS_Float weight) : 
-                    EGS_BaseSpectrum() {
-       
+    EGS_RadionuclideSpectrum(const string isotope, const string ensdf_file,
+                             const EGS_Float weight) :
+        EGS_BaseSpectrum() {
+
         // Read in the data file for the isotope
         // and build the decay structure
         decays = new EGS_Ensdf(isotope, ensdf_file);
-        
+
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
-        
+
         // Get the particle records from the decay scheme
         myBetas = decays->getBetaRecords();
         myAlphas = decays->getAlphaRecords();
@@ -472,54 +472,54 @@ const EGS_Float weight) :
         xrayEnergies = decays->getXRayEnergies();
         augerIntensities = decays->getAugerIntensities();
         augerEnergies = decays->getAugerEnergies();
-       
+
         // Initialization
         currentLevel = 0;
         Emax = 0;
         currentTime = 0;
         ishower = -1; // Start with ishower -1 so first shower has index 0
-        
+
         // Get the maximum energy for emissions
-        for(vector<BetaRecordLeaf *>::iterator beta = myBetas.begin(); 
+        for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
-            
+
             double energy = (*beta)->getFinalEnergy();
-            if(Emax < energy) {
+            if (Emax < energy) {
                 Emax = energy;
             }
         }
-        for(vector<AlphaRecord *>::iterator alpha = myAlphas.begin(); 
+        for (vector<AlphaRecord *>::iterator alpha = myAlphas.begin();
                 alpha != myAlphas.end(); alpha++) {
-            
+
             double energy = (*alpha)->getFinalEnergy();
-            if(Emax < energy) {
+            if (Emax < energy) {
                 Emax = energy;
             }
         }
-        for(vector<GammaRecord *>::iterator gamma = myGammas.begin(); 
+        for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                 gamma != myGammas.end(); gamma++) {
-           
+
             double energy = (*gamma)->getDecayEnergy();
-            if(Emax < energy) {
+            if (Emax < energy) {
                 Emax = energy;
             }
         }
-        for(unsigned int i=0; i < xrayEnergies.size(); ++i) {
+        for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
             numSampledXRay.push_back(0);
-            if(Emax < xrayEnergies[i]) {
+            if (Emax < xrayEnergies[i]) {
                 Emax = xrayEnergies[i];
             }
         }
-        for(unsigned int i=0; i < augerEnergies.size(); ++i) {
+        for (unsigned int i=0; i < augerEnergies.size(); ++i) {
             numSampledAuger.push_back(0);
-            if(Emax < augerEnergies[i]) {
+            if (Emax < augerEnergies[i]) {
                 Emax = augerEnergies[i];
             }
         }
-        
+
         // Set the weight of the spectrum
         spectrumWeight = weight;
-        
+
         printf("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
         printf("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
     };
@@ -527,199 +527,200 @@ const EGS_Float weight) :
     ~EGS_RadionuclideSpectrum() {
         delete decays;
     };
-    
+
     int getCharge() const {
         return currentQ;
     }
-    
+
     double getTime() const {
         return currentTime;
     }
-    
+
     void setMaximumTime(double maxTime) {
         Tmax = maxTime;
     }
-    
+
     EGS_I64 getShowerIndex() const {
         return ishower;
     }
-    
+
     EGS_Float getSpectrumWeight() const {
         return spectrumWeight;
     }
-    
+
     void setSpectrumWeight(EGS_Float newWeight) {
         spectrumWeight = newWeight;
     }
-    
+
     void printSampledEmissions() {
         printf("\nSampled %s emissions:\n", decays->radionuclide.c_str());
         printf("========================\n");
         printf("Energy | Intensity per 100 emissions\n");
-        if(myBetas.size() > 0) {
+        if (myBetas.size() > 0) {
             printf("Beta records:\n");
         }
-        for(vector<BetaRecordLeaf *>::iterator beta = myBetas.begin(); 
+        for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
-            
-            printf("%f %f\n", (*beta)->getFinalEnergy(), 
-                ((EGS_Float)(*beta)->getNumSampled()/ishower)*100);
+
+            printf("%f %f\n", (*beta)->getFinalEnergy(),
+                   ((EGS_Float)(*beta)->getNumSampled()/ishower)*100);
         }
-        if(myAlphas.size() > 0) {
+        if (myAlphas.size() > 0) {
             printf("Alpha records:\n");
         }
-        for(vector<AlphaRecord *>::iterator alpha = myAlphas.begin(); 
+        for (vector<AlphaRecord *>::iterator alpha = myAlphas.begin();
                 alpha != myAlphas.end(); alpha++) {
-            
-            printf("%f %f\n", (*alpha)->getFinalEnergy(), 
-                ((EGS_Float)(*alpha)->getNumSampled()/ishower)*100);
+
+            printf("%f %f\n", (*alpha)->getFinalEnergy(),
+                   ((EGS_Float)(*alpha)->getNumSampled()/ishower)*100);
         }
-        if(myGammas.size() > 0) {
+        if (myGammas.size() > 0) {
             printf("Gamma records:\n");
         }
-        for(vector<GammaRecord *>::iterator gamma = myGammas.begin(); 
+        for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                 gamma != myGammas.end(); gamma++) {
-           
-            printf("%f %f\n", (*gamma)->getDecayEnergy(), 
-                ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
+
+            printf("%f %f\n", (*gamma)->getDecayEnergy(),
+                   ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
         }
-        if(xrayEnergies.size() > 0) {
+        if (xrayEnergies.size() > 0) {
             printf("X-Ray records:\n");
         }
-        for(unsigned int i=0; i < xrayEnergies.size(); ++i) {
-            printf("%f %f\n", xrayEnergies[i], 
-                ((EGS_Float)numSampledXRay[i]/ishower)*100);
+        for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
+            printf("%f %f\n", xrayEnergies[i],
+                   ((EGS_Float)numSampledXRay[i]/ishower)*100);
         }
-        if(augerEnergies.size() > 0) {
+        if (augerEnergies.size() > 0) {
             printf("Auger records:\n");
         }
-        for(unsigned int i=0; i < augerEnergies.size(); ++i) {
-            printf("%f %f\n", augerEnergies[i], 
-                ((EGS_Float)numSampledAuger[i]/ishower)*100);
+        for (unsigned int i=0; i < augerEnergies.size(); ++i) {
+            printf("%f %f\n", augerEnergies[i],
+                   ((EGS_Float)numSampledAuger[i]/ishower)*100);
         }
         printf("\n");
     }
-    
+
 protected:
     EGS_Float sample(EGS_RandomGenerator *rndm) {
-        
+
         // Sample a uniform random number
         EGS_Float u = rndm->getUniform();
-        
+
         // The energy of the sampled particle
         EGS_Float E;
-        
+
         // If the daughter is in an excited state
         // Check for transitions
-        if(currentLevel && currentLevel->getEnergy() > 0) {
+        if (currentLevel && currentLevel->getEnergy() > 0) {
 //             printf("EGS_RadionuclideSpectrum:sample: excited daughter "
 //                 "%f\n",currentLevel->getEnergy());
-            
-            for(vector<GammaRecord *>::iterator gamma = myGammas.begin(); 
+
+            for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                     gamma != myGammas.end(); gamma++) {
-               
-                if((*gamma)->getLevelRecord() == currentLevel) {
-                    
-                    if(u < (*gamma)->getTransitionIntensity()) {
-                        
+
+                if ((*gamma)->getLevelRecord() == currentLevel) {
+
+                    if (u < (*gamma)->getTransitionIntensity()) {
+
                         (*gamma)->incrNumSampled();
                         currentQ = (*gamma)->getCharge();
-                        
-                        currentTime += currentLevel->getHalfLife() / 
-0.693147180559945309417232121458176568075500134360255254120680009493393
-                                        * log(rndm->getUniform());
-                        
+
+                        currentTime += currentLevel->getHalfLife() /
+                                       0.693147180559945309417232121458176568075500134360255254120680009493393
+                                       * log(rndm->getUniform());
+
                         currentLevel = (*gamma)->getFinalLevel();
-                        
-                        
-                        
+
+
+
                         E = (*gamma)->getDecayEnergy();
                         return E;
                     }
                 }
             }
-        } else {
+        }
+        else {
             // Incremember the shower number
             ishower++;
-            
+
             // Uniformly distribute decays over the experiment time
             currentTime = rndm->getUniform() * Tmax;
-            
+
             // Sample which decay occurs
             // Betas
-            for(vector<BetaRecordLeaf *>::iterator beta = myBetas.begin(); 
+            for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                     beta != myBetas.end(); beta++) {
-                if(u < (*beta)->getBetaIntensity()) {
-                    
+                if (u < (*beta)->getBetaIntensity()) {
+
                     (*beta)->incrNumSampled();
                     currentQ = (*beta)->getCharge();
                     //printf("EGS_RadionuclideSpectrum: q: %d\n",currentQ);
-                   
+
                     // Set the energy level of the daughter
                     currentLevel = (*beta)->getLevelRecord();
-                    
+
                     // TODO: Generate beta- spectrum
                     // TODO: Need to implement electron capture
-                    
+
                     // For now just uniform up to max!
                     E = u * (*beta)->getFinalEnergy();
                     //printf("\nEGS_RadionuclideSpectrum: E: %f\n",E);
                     return E;
                 }
             }
-            
+
             // Alphas
-            for(vector<AlphaRecord *>::iterator alpha = myAlphas.begin(); 
+            for (vector<AlphaRecord *>::iterator alpha = myAlphas.begin();
                     alpha != myAlphas.end(); alpha++) {
-                if(u < (*alpha)->getAlphaIntensity()) {
-                    
+                if (u < (*alpha)->getAlphaIntensity()) {
+
                     (*alpha)->incrNumSampled();
                     currentQ = (*alpha)->getCharge();
-                    
+
                     // Set the energy level of the daughter
                     currentLevel = (*alpha)->getLevelRecord();
-                    
-                    // For alphas we simulate a disintegration but the 
+
+                    // For alphas we simulate a disintegration but the
                     // transport will not be performed
                     return 0;
                 }
             }
-            
+
             // XRays
-            for(unsigned int i=0; i < xrayIntensities.size(); ++i) {
-                if(u < xrayIntensities[i]) {
-                    
+            for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
+                if (u < xrayIntensities[i]) {
+
                     numSampledXRay[i]++;
                     currentQ = 0;
-                    
+
                     E = xrayEnergies[i];
-                    
+
                     return E;
                 }
             }
-            
+
             // Auger electrons
-            for(unsigned int i=0; i < augerIntensities.size(); ++i) {
-                if(u < augerIntensities[i]) {
-                    
+            for (unsigned int i=0; i < augerIntensities.size(); ++i) {
+                if (u < augerIntensities[i]) {
+
                     numSampledAuger[i]++;
                     currentQ = -1;
-                    
+
                     E = augerEnergies[i];
-                    
+
                     return E;
                 }
             }
         }
-        
+
         // Shouldn't get here
         return 0;
     };
-    
+
     EGS_Float maxEnergy() const {
         return Emax;
     };
-    
+
     EGS_Float expectedAverage() const {
         return 0;
     };
@@ -732,16 +733,16 @@ private:
     vector<GammaRecord *>       myGammas;
     vector<LevelRecord *>       myLevels;
     vector<double>              xrayIntensities,
-                                xrayEnergies,
-                                augerIntensities,
-                                augerEnergies;
+           xrayEnergies,
+           augerIntensities,
+           augerEnergies;
     vector<EGS_I64>             numSampledXRay,
-                                numSampledAuger;
+           numSampledAuger;
     const LevelRecord           *currentLevel;
     int                         currentQ;
-    EGS_Float                   currentTime, 
-                                Emax, 
-                                Tmax, 
+    EGS_Float                   currentTime,
+                                Emax,
+                                Tmax,
                                 spectrumWeight;
     EGS_I64                     ishower;
 };
@@ -1103,24 +1104,25 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                 }
             }
         }
-    } else if (inp->compare(stype,"radionuclide")) {
+    }
+    else if (inp->compare(stype,"radionuclide")) {
         string isotope;
         err = inp->getInput("isotope",isotope);
-        if(err) {
+        if (err) {
             egsWarning("%s wrong/missing 'isotope' input\n",spec_msg1);
             return 0;
         }
-        
+
         EGS_Float weight;
         err = inp->getInput("weight",weight);
-        if(err) {
+        if (err) {
             weight = 1;
         }
-        
+
         // For ensdf input, first check for the input argument
         string ensdf_file;
         err = inp->getInput("ensdf file",ensdf_file);
-        
+
         // If not passed as input, find the ensdf file in the
         // directory $HEN_HOUSE/spectra/lnhb
         if (err) {
@@ -1129,15 +1131,17 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             if (app) {
                 ensdf_file = egsJoinPath(app->getHenHouse(),"spectra");
                 ensdf_file = egsJoinPath(ensdf_file.c_str(),"lnhb");
-            } else {
+            }
+            else {
                 char *hen_house = getenv("HEN_HOUSE");
                 if (!hen_house) {
-                    
+
                     egsWarning("EGS_BaseSpectrum::createSpectrum: "
-                        "No active application and HEN_HOUSE not defined.\n"
-                        "Assuming local directory for spectra\n");
+                               "No active application and HEN_HOUSE not defined.\n"
+                               "Assuming local directory for spectra\n");
                     ensdf_file = "./";
-                } else {
+                }
+                else {
                     ensdf_file = egsJoinPath(hen_house,"spectra");
                     ensdf_file = egsJoinPath(ensdf_file.c_str(),"lnhb");
                 }
@@ -1145,7 +1149,8 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             ensdf_file = egsJoinPath(ensdf_file.c_str(),isotope.append(".txt"));
         }
         spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, weight);
-    } else {
+    }
+    else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
     }
     if (delete_it) {

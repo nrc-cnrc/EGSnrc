@@ -138,8 +138,8 @@ public:
 //             EGS_Float &E, EGS_Float &wt,    // energy and weight
 //             EGS_Vector &x, EGS_Vector &u,   // position and direction
 //             EGS_I64 &ishower, EGS_Float &time
-//             ) {}; 
-                                    
+//             ) {};
+
     /*! \brief Set the next simulation chunk to start at \a nstart and
       to consist of \a nrun particles.
 
@@ -175,21 +175,21 @@ public:
      * simulation source).
      */
     virtual EGS_Float getFluence() const = 0;
-    
+
     /*! \brief Get the time of emission for the most recently sampled particle
      *
-     * This method is only reimplemented by EGS_RadionuclideSource. It 
+     * This method is only reimplemented by EGS_RadionuclideSource. It
      * returns the emission time of the particle that was most recently sampled.
      */
     virtual double getTime() const {};
-    
+
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSource. It
      * gets the index of the most recent shower.
      */
     virtual EGS_I64 getShowerIndex() const {};
-    
+
     /*! \brief Prints out the sampled emissions for radionuclide spectra
      *
      * This method is only reimplemented by EGS_RadionuclideSource. It
@@ -379,23 +379,23 @@ public:
         sum_E2 += e*e;
         return e;
     };
-    
+
     /*! \brief Get the charge for the most recently sampled particle
      *
-     * This method is only reimplemented by EGS_RadionuclideSpectrum. It 
-     * returns the charge of the particle that was most recently sampled 
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * returns the charge of the particle that was most recently sampled
      * using sampleEnergy().
      */
     virtual int getCharge() const {};
-    
+
     /*! \brief Get the time of emission for the most recently sampled particle
      *
-     * This method is only reimplemented by EGS_RadionuclideSpectrum. It 
-     * returns the emission time of the particle that was most recently sampled 
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * returns the emission time of the particle that was most recently sampled
      * using sampleEnergy().
      */
     virtual double getTime() const {};
-    
+
     /*! \brief Set the maximum time of emission
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
@@ -403,14 +403,14 @@ public:
      * simulations using the time variable.
      */
     virtual void setMaximumTime(double maxTime) {};
-    
+
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
      * gets the index of the most recent shower produced using sampleEnergy().
      */
     virtual EGS_I64 getShowerIndex() const {};
-    
+
     /*! \brief Get the spectrum weight for radionuclide spectra
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
@@ -418,7 +418,7 @@ public:
      * spectra.
      */
     virtual EGS_Float getSpectrumWeight() const {};
-    
+
     /*! \brief Set the spectrum weight for radionuclide spectra
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
@@ -426,7 +426,7 @@ public:
      * spectra. This allows a source to normalize the spectrum weights.
      */
     virtual void setSpectrumWeight(EGS_Float newWeight) {};
-    
+
     /*! \brief Prints out the sampled emissions for radionuclide spectra
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It

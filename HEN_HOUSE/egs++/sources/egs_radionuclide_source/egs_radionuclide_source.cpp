@@ -40,66 +40,66 @@
 #include "egs_application.h"
 
 EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
-        EGS_ObjectFactory *f) : EGS_BaseSource(input,f), shape(0), 
-        geom(0), regions(0), nrs(0), min_theta(0), max_theta(M_PI), 
-        min_phi(0), max_phi(2*M_PI), gc(IncludeAll), q_allowed(0), decays(0),
-        activity(0) {
-    
+        EGS_ObjectFactory *f) : EGS_BaseSource(input,f), shape(0),
+    geom(0), regions(0), nrs(0), min_theta(0), max_theta(M_PI),
+    min_phi(0), max_phi(2*M_PI), gc(IncludeAll), q_allowed(0), decays(0),
+    activity(0) {
+
     int err;
-    
+
     // TODO: Make use of q_allowed to reject particles?
     vector<int> tmp_q;
     err = input->getInput("charge", tmp_q);
     if (!err) {
         q_allowed = tmp_q;
     }
-    
+
     // Create the decay spectra
     count = 0;
     Emax = 0;
     unsigned int i = 0;
     EGS_Float spectrumWeightTotal = 0;
-    while(input->getInputItem("spectrum")) {
-        
+    while (input->getInputItem("spectrum")) {
+
         decays.push_back(EGS_BaseSpectrum::createSpectrum(input));
         if (!decays[i]) {
             break;
         }
-        
+
         EGS_Float spectrumMaxE = decays[i]->maxEnergy();
-        if(spectrumMaxE > Emax) {
+        if (spectrumMaxE > Emax) {
             Emax = spectrumMaxE;
         }
-        
+
         spectrumWeightTotal += decays[i]->getSpectrumWeight();
-        
+
         ++i;
     }
-    if(decays.size() < 1) {
+    if (decays.size() < 1) {
         egsWarning("EGS_RadionuclideSource: no spectrum was defined\n");
     }
-    
+
     // Normalize the spectrum weights
-    for(i=0; i<decays.size(); ++i) {
+    for (i=0; i<decays.size(); ++i) {
         decays[i]->setSpectrumWeight(
             decays[i]->getSpectrumWeight() / spectrumWeightTotal);
-        
-        if(i > 0) {
+
+        if (i > 0) {
             decays[i]->setSpectrumWeight(
-                decays[i]->getSpectrumWeight() + 
+                decays[i]->getSpectrumWeight() +
                 decays[i-1]->getSpectrumWeight());
         }
     }
-    
+
     // Get the activity
     EGS_Float tmp_A;
     err = input->getInput("activity", tmp_A);
     if (!err) {
         activity = tmp_A;
     }
-    egsWarning("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n", 
-        activity);
-    
+    egsWarning("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
+               activity);
+
     // Calculate the duration of the experiment
     // Based on ncase and activity
     EGS_Application *app = EGS_Application::activeApplication();
@@ -108,33 +108,34 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     double ncase_double = 0;
     if (inp) {
         irc = inp->getInputItem("run control");
-        
+
         EGS_Input *icontrol = irc->getInputItem("run control");
-        if(!icontrol) {
+        if (!icontrol) {
             egsWarning("EGS_RadionuclideSource: no 'run control' "
                        "input to determine 'ncase'\n");
         }
-        
+
         err = icontrol->getInput("number of histories", ncase_double);
-        if(err) {
+        if (err) {
             err = icontrol->getInput("ncase", ncase_double);
-            if(err) {
+            if (err) {
                 egsWarning("EGS_RadionuclideSource: missing/wrong 'ncase' or "
-                        "'number of histories' input\n");
+                           "'number of histories' input\n");
             }
         }
-    } else {
+    }
+    else {
         egsWarning("EGS_RadionuclideSource: no 'run control' "
                    "input to determine 'ncase'\n");
     }
-    
+
     double Tmax = ncase_double / activity;
-    egsWarning("EGS_RadionuclideSource: Duration of experiment [s]: %e\n", 
-        Tmax);
-    for(i=0; i<decays.size(); ++i) {
+    egsWarning("EGS_RadionuclideSource: Duration of experiment [s]: %e\n",
+               Tmax);
+    for (i=0; i<decays.size(); ++i) {
         decays[i]->setMaximumTime(Tmax);
     }
-    
+
     // Create the shape for source emissions
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
@@ -151,7 +152,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         else {
             shape = EGS_BaseShape::getShape(sname);
             if (!shape) egsWarning("EGS_RadionuclideSource: a shape named %s"
-                                   " does not exist\n");
+                                       " does not exist\n");
         }
     }
     string geom_name;
@@ -167,14 +168,14 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
             reg_options.push_back("IncludeSelected");
             reg_options.push_back("ExcludeSelected");
             gc = (GeometryConfinement) input->getInput("region "
-                "selection",reg_options,0);
+                    "selection",reg_options,0);
             if (gc == IncludeSelected || gc == ExcludeSelected) {
                 vector<int> regs;
                 err = input->getInput("selected regions",regs);
                 if (err || regs.size() < 1) {
                     egsWarning("EGS_RadionuclideSource: region selection %d "
-                                "used  but no 'selected regions' input "
-                                "found\n",gc);
+                               "used  but no 'selected regions' input "
+                               "found\n",gc);
                     gc = gc == IncludeSelected ? IncludeAll : ExcludeAll;
                     egsWarning(" using %d\n",gc);
                 }
@@ -213,48 +214,48 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     setUp();
 }
 
-EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int 
-        &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector 
+EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
+        &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector
         &u) {
-   
+
     // Sample a uniform random number
     EGS_Float uRand = rndm->getUniform();
-    
+
     // Sample which spectrum to use
     unsigned int i;
-    for(i=0; i<decays.size(); ++i) {
-        if(uRand < decays[i]->getSpectrumWeight()) {
+    for (i=0; i<decays.size(); ++i) {
+        if (uRand < decays[i]->getSpectrumWeight()) {
             break;
         }
     }
-    
+
     E = decays[i]->sampleEnergy(rndm);
     q = decays[i]->getCharge();
     time = decays[i]->getTime();
     ishower = decays[i]->getShowerIndex();
-    
+
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
-    
-//     egsWarning("EGS_RadionuclideSource::getNextParticle: E: %f\n", 
+
+//     egsWarning("EGS_RadionuclideSource::getNextParticle: E: %f\n",
 //         E);
-//     
-//     egsWarning("EGS_RadionuclideSource::getNextParticle: q: %d\n", 
+//
+//     egsWarning("EGS_RadionuclideSource::getNextParticle: q: %d\n",
 //         q);
-    
+
     return ++count;
 }
 
-// EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int 
-//         &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector 
+// EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
+//         &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector
 //         &u, EGS_I64 &ishower, EGS_Float &time) {
-//     
+//
 //     ishower = count;
-//     
+//
 //     getNextParticle(rndm, q, latch, E, wt, x, u);
-//     
+//
 //     time = decays->getTime();
-//     
+//
 //     return count;
 // }
 
@@ -267,16 +268,14 @@ void EGS_RadionuclideSource::setUp() {
         description = "Radionuclide source from a shape of type ";
         description += shape->getObjectType();
         description += " with:";
-        if (std::find(q_allowed.begin(), q_allowed.end(), -1) != 
+        if (std::find(q_allowed.begin(), q_allowed.end(), -1) !=
                 q_allowed.end()) {
             description += " electrons";
         }
-        if (std::find(q_allowed.begin(), q_allowed.end(), 0) != q_allowed.end()) 
-        {
+        if (std::find(q_allowed.begin(), q_allowed.end(), 0) != q_allowed.end()) {
             description += " photons";
         }
-        if (std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) 
-        {
+        if (std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) {
             description += " positrons";
         }
 
@@ -288,11 +287,11 @@ void EGS_RadionuclideSource::setUp() {
 
 extern "C" {
 
-    EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input 
+    EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_BaseSource *createSource(EGS_Input
             *input, EGS_ObjectFactory *f) {
         return
             createSourceTemplate<EGS_RadionuclideSource>(input,f,"radionuclide "
-                "source");
+                    "source");
     }
 
 }
