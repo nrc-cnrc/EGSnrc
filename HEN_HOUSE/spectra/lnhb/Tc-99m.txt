@@ -1,69 +1,69 @@
  99TC     99TC IT DECAY (6.0067 H)
- 99TC T  Auger electrons and ^X ray energies and emission intensities:
- 99TC T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 99TC T  Auger electrons and X ray energies and emission intensities:
+ 99TC T       {U Energy (keV)}   {U Intensity}  {U Line}
  99TC T
- 99TC T        18.251            2.22  7         XKA2
- 99TC T        18.3672           4.21  12        XKA1
+ 99TC T        18.251             2.22     7     XKA2
+ 99TC T        18.3672            4.21    12     XKA1
  99TC T   
- 99TC T        20.599         |]                  XKB3
- 99TC T        20.619         |]  1.12  4         XKB1
- 99TC T        20.789         |]                  XKB5II
+ 99TC T        20.599         |]                 XKB3
+ 99TC T        20.619         |]  1.12     4     XKB1
+ 99TC T        20.789         |]                 XKB5II
  99TC T   
- 99TC T        21.005         |]                  XKB2
- 99TC T        21.042         |]  0.177  8        XKB4
+ 99TC T        21.005         |]                 XKB2
+ 99TC T        21.042         |]  0.177    8     XKB4
  99TC T   
- 99TC T        2.134-3.002       0.482  12       XL (total)
- 99TC T        2.134             0.0110  4       XLL
- 99TC T        2.42-2.425        0.298  10       XLA
- 99TC T        2.25              0.00395  15     XLC
- 99TC T        2.456-2.788       0.159  5        XLB
- 99TC T        2.726-3.002       0.00984  26     XLG
+ 99TC T        2.134-3.002        0.482   12     XL (total)
+ 99TC T        2.134              0.0110   4     XLL
+ 99TC T        2.42-2.425         0.298   10     XLA
+ 99TC T        2.25               0.00395 15     XLC
+ 99TC T        2.456-2.788        0.159    5     XLB
+ 99TC T        2.726-3.002        0.00984 26     XLG
  99TC T   
- 99TC T        14.86-15.58    |]                  KLL AUGER
- 99TC T        17.43-18.33    |]  2.15  8         ^KLX AUGER
- 99TC T        19.93-21       |]                  KXY AUGER
- 99TC T        1.6-2.9           10.89  9        L AUGER
+ 99TC T        14.86-15.58    |]                 KLL AUGER
+ 99TC T        17.43-18.33    |]  2.15     8     KLX AUGER
+ 99TC T        19.93-21       |]                 KXY AUGER
+ 99TC T        1.6-2.9            10.89    9     L AUGER
  99TC  P 142.683   1 1/2-              6.0067 H  10
  99TC  N 1.0         1.0       1         1.0
  99TC  L 0           9/2+              211.5E3 Y 11
  99TC  L 140.5108  107/2+              0.221 NS  20
- 99TC  G 140.511   1 88.5    2 M1+E2                   0.119  3
- 99TC2 G KC=0.104   3$LC=0.01290 39$MC=0.00236 7
+ 99TC  G 140.511   1 88.5     2M1+E2                   0.119   3
+ 99TC2 G KC=0.104    3$LC=0.01290 39$MC=0.00236  7
  99TC  L 142.6833  111/2-              6.0067 H  10
- 99TC  G 2.1726    4 7.4E-9  2 E3                      135E8  4
- 99TC2 G KC=$LC=$MC=119E8   3
- 99TC  G 142.683   1 0.023   2 M4                      40.9   8
- 99TC2 G KC=29.3    6$LC=9.35    20$MC=1.86    6
+ 99TC  G 2.1726    4 7.4E-9   2E3                      135E8   4
+ 99TC2 G MC=119E8    3
+ 99TC  G 142.6830  100.023    2M4                      40.9    8
+ 99TC2 G KC=29.3     6$LC=9.35    20$MC=1.86     6
  
  99RU     99TC B- DECAY (6.0067 H)
- 99RU T  Auger electrons and ^X ray energies and emission intensities:
- 99RU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 99RU T  Auger electrons and X ray energies and emission intensities:
+ 99RU T       {U Energy (keV)}   {U Intensity}  {U Line}
  99RU T
  99RU T        19.1506                           XKA2
  99RU T        19.2794                           XKA1
  99RU T   
- 99RU T        21.6349        |]                  XKB3
- 99RU T        21.6565        |]                  XKB1
- 99RU T        21.832         |]                  XKB5II
+ 99RU T        21.6349        |]                 XKB3
+ 99RU T        21.6565        |]                 XKB1
+ 99RU T        21.832         |]                 XKB5II
  99RU T   
- 99RU T        22.074         |]                  XKB2
- 99RU T        22.104         |]                  XKB4
+ 99RU T        22.074         |]                 XKB2
+ 99RU T        22.104         |]                 XKB4
  99RU T   
  99TC  P 142.683   1 1/2-              6.0067 H  10             293.52    20
  99RU  N 2.50E4      2.50E4    0.00004   2.50E4
  99RU  L 0           5/2+                STABLE   
- 99RU  B 436.3     2 0.0010  3           9.4                                 3U
+ 99RU  B 436.3     2 0.0010   3          9.4                                 1U
  99RUS B EAV=152.3 5
  99RU  L 89.68     5 3/2+              20.5 NS   1
- 99RU  B 346.7     2 0.0026  5           8.7                                 1U
+ 99RU  B 346.7     2 0.0026   5          8.7                                 1
  99RUS B EAV=102.1 5
- 99RU  G 89.6      3 0.00104 20M1+E2                   1.49   5
- 99RU2 G KC=1.17    4$LC=0.27    1$MC=
+ 99RU  G 89.6      3 0.00104 20M1+E2                   1.49    5
+ 99RU2 G KC=1.17     4$LC=0.27     1
  99RU  L 322.38    6 (3/2)+                       
- 99RU  B 113.9     2 10600E-86           8.5                                 1U
+ 99RU  B 113.9     2 0.000106 6          8.5                                 1
  99RUS B EAV=37.8 6
- 99RU  G 232.7     2 8.4E-6  15                        0.048  2
- 99RU2 G KC=0.0412  15$LC=$MC=
- 99RU  G 322.4     1 9.6E-5  6                         0.0175 5
- 99RU2 G KC=0.0152  5$LC=$MC=
+ 99RU  G 232.7     2 8.4E-6  15                        0.048   2
+ 99RU2 G KC=0.0412  15
+ 99RU  G 322.4     1 0.000096 6                        0.0175  5
+ 99RU2 G KC=0.0152   5
  

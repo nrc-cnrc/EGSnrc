@@ -1,34 +1,34 @@
 129XE    129I  B- DECAY (16.1E6 Y)
-129XE T  Auger electrons and ^X ray energies and emission intensities:
-129XE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+129XE T  Auger electrons and X ray energies and emission intensities:
+129XE T       {U Energy (keV)}   {U Intensity}  {U Line}
 129XE T
-129XE T        29.459            20.1  3         XKA2
-129XE T        29.779            37.2  6         XKA1
+129XE T        29.459             20.1     3     XKA2
+129XE T        29.779             37.2     6     XKA1
 129XE T   
-129XE T        33.562         |]                  XKB3
-129XE T        33.625         |]  10.3  4         XKB1
-129XE T        33.881         |]                  XKB5II
+129XE T        33.562         |]                 XKB3
+129XE T        33.625         |]  10.3     4     XKB1
+129XE T        33.881         |]                 XKB5II
 129XE T   
-129XE T        34.415         |]                  XKB2
-129XE T        34.496         |]  2.30  13        XKB4
-129XE T        34.552         |]                  XKO23
+129XE T        34.415         |]                 XKB2
+129XE T        34.496         |]  2.30    13     XKB4
+129XE T        34.552         |]                 XKO23
 129XE T   
-129XE T        3.6-5.4           7.9  4          XL (total)
+129XE T        3.6-5.4            7.9      4     XL (total)
 129XE T        3.6                               XLL
 129XE T         -5.4                             XLG
 129XE T   
-129XE T        23.512-24.842  |]                  KLL AUGER
-129XE T        27.897-29.77   |]  8.8  4          ^KLX AUGER
-129XE T        32.27-34.54    |]                  KXY AUGER
-129XE T        2.4-5.4           73.9  12        L AUGER
+129XE T        23.512-24.842  |]                 KLL AUGER
+129XE T        27.897-29.77   |]  8.8      4     KLX AUGER
+129XE T        32.27-34.54    |]                 KXY AUGER
+129XE T        2.4-5.4            73.9    12     L AUGER
 129I   P 0.0         7/2+              16.1E6 Y  7              190.8     11
 129XE  N 1.0         1.0       1         1.0
 129XE  L 0           1/2+                STABLE   
-129XE  B 190.8     110.5     5           14.9                                  
+129XE  B 190.8     110.5      5          14.9                                2U
 129XES B EAV=   
 129XE  L 39.578    4 3/2+              1 NS       
-129XE  B 151.2     1199.5    5           13.49                                 
+129XE  B 151.2     1199.5     5          13.49                               2
 129XES B EAV=37 1
-129XE  G 39.578    4 7.42    8 M1+E2                   12.41  13
-129XE2 G KC=10.59   11$LC=1.45    5$MC=0.296   10
+129XE  G 39.578    4 7.42     8M1+E2                   12.41  13
+129XE2 G KC=10.59   11$LC=1.45     5$MC=0.296   10
  

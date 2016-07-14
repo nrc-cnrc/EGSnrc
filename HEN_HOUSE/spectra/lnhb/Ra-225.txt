@@ -2,34 +2,34 @@
 225AC  H TYP=full$AUT=X. Huang$CUT=30-MAY-2007$
 225AC C  Evaluation history: Type=full;Author=X. Huang;Cutoff date=30-MAY-2007
 225AC C  References: 2008Ki07
-225AC T  Auger electrons and ^X ray energies and emission intensities:
-225AC T       {U Energy (keV)}     {U Intensity }      {U Line  }
+225AC T  Auger electrons and X ray energies and emission intensities:
+225AC T       {U Energy (keV)}   {U Intensity}  {U Line}
 225AC T
 225AC T   
 225AC T   
 225AC T   
-225AC T        10.8701-18.9228   13.6  6         XL (total)
+225AC T        10.8701-18.9228    13.6     6     XL (total)
 225AC T        10.8701                           XLL
 225AC T        12.5002-12.6505                   XLA
 225AC T        14.0807                           XLC
 225AC T        14.6024-16.6263                   XLB
 225AC T        17.813-18.9228                    XLG
 225AC T   
-225AC T        5.87-19.69        15.7  7         L AUGER
+225AC T        5.87-19.69         15.7     7     L AUGER
 225RA  P 0.0         1/2+              14.82 D   19             356       5
 225AC  N 1.0         1.0       1         1.0
 225AC  L 0           3/2-              10.0 D    1
-225AC  B 356       5 31.2    20          7.38                                1U
+225AC  B 356       5 31.2    20          7.38                                1
 225ACS B EAV=100.7 16
 225AC  L 40.09     5 3/2+              0.72 NS   3
-225AC  B 316       5 68.8    20          6.87                                2
+225AC  B 316       5 68.8    20          6.87                                  
 225ACS B EAV=88.3 16
-225AC  G 40.09     5 30.0    7 E1                      1.293  19
-225AC2 G KC=$LC=0.974   14$MC=0.24    4
+225AC  G 40.09     5 30.0     7E1                      1.293  19
+225AC2 G LC=0.974   14$MC=0.24     4
 225AC  L 120.8       5/2-                         
-225AC  B 235       5 0.01                9.9                                 3U
+225AC  B 235       5 0.01                9.9                                 1U
 225ACS B EAV=70.5 16
 225AC  L 155.6       5/2+                         
-225AC  B 200       5 0.01                10.1                                  
+225AC  B 200       5 0.01                10.1                                2
 225ACS B EAV=54.0 15
  

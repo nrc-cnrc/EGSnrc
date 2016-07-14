@@ -4,41 +4,41 @@
  52MN C  References: 1948Mi12, 1956Ar33, 1959Ju40, 1960Ka20, 1967Pa22, 1971Go40, 
  52MN2C  1971Sa21, 1972McYW, 1974Ro18, 1977Ya08, 1996Sc06, 1998Sc28, 2000Sc47, 
  52MN3C  2007Hu08, 2008Ki07, 2012Wa38
- 52MN T  Auger electrons and ^X ray energies and emission intensities:
- 52MN T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 52MN T  Auger electrons and X ray energies and emission intensities:
+ 52MN T       {U Energy (keV)}   {U Intensity}  {U Line}
  52MN T
- 52MN T        5.88772           3.70  17        XKA2
- 52MN T        5.89881           7.3  4          XKA1
+ 52MN T        5.88772            3.70    17     XKA2
+ 52MN T        5.89881            7.3      4     XKA1
  52MN T   
- 52MN T        6.49051        |]  1.49  7         XKB1
- 52MN T        6.5354         |]                  XKB5II
+ 52MN T        6.49051        |]  1.49     7     XKB1
+ 52MN T        6.5354         |]                 XKB5II
  52MN T   
  52MN T   
- 52MN T        0.5576-0.7694     0.213  10       XL (total)
- 52MN T        0.5576            0.124  8        XLL
- 52MN T        0.6394-0.6404     0  0            XLA
- 52MN T        0.5695            0.085  6        XLC
- 52MN T        0.64636-0.7694    0.00315  18     XLB
- 52MN T        0.65826-0.65826   0  0            XLG
+ 52MN T        0.5576-0.7694      0.213   10     XL (total)
+ 52MN T        0.5576             0.124    8     XLL
+ 52MN T        0.6394-0.6404                     XLA
+ 52MN T        0.5695             0.085    6     XLC
+ 52MN T        0.64636-0.7694     0.00315 18     XLB
+ 52MN T        0.65826-0.65826                   XLG
  52MN T   
- 52MN T        4.953-5.21     |]                  KLL AUGER
- 52MN T        5.671-5.895    |]  26.3  11        ^KLX AUGER
- 52MN T        6.37-6.532     |]                  KXY AUGER
- 52MN T        0.4725-0.7653     57.1  15        L AUGER
+ 52MN T        4.953-5.21     |]                 KLL AUGER
+ 52MN T        5.671-5.895    |]  26.3    11     KLX AUGER
+ 52MN T        6.37-6.532     |]                 KXY AUGER
+ 52MN T        0.4725-0.7653      57.1    15     L AUGER
  52FE  P 0.0         0+                8.273 H   8              2375      6
  52MN  N 1.0         1.0       1         1.0
  52MN  L 0           6+                5.591 D   3
  52MN  L 377.749   5 2+                21.1 M    2
- 52MN  G 377.749   5 1.64    4 E4                      0.0399 6
- 52MN2 G KC=0.0356  5$LC=0.00382 6$MC=5.15E-4 8
+ 52MN  G 377.749   5 1.64     4E4                      0.0399  6
+ 52MN2 G KC=0.0356   5$LC=0.00382  6$MC=5.15E-4  8
  52MN  L 546.438   6 1+                           
- 52MN  E             56.1    7 43.8    134.7                                   
- 52MN2 E EAV=339 6$CK=0.8898 16$CL=0.0946 13$CM=0.0150 5$CN=0.0006 2$CO=   
+ 52MN  E             56.1     743.8    134.7                                   
+ 52MN2 E EAV=339 6$CK=0.8898 16$CL=0.0946 13$CM=0.0150 5$CN=0.0006 2
  52MN  G 168.689   8 99.1    15M1                      0.0078311
  52MN2 G KC=0.00705 10$LC=6.79E-4 10$MC=9.22E-5 13
  52MN  L 1417.688  18 +                           
- 52MN  E                       0.095   4 5.8                                   
- 52MN2 E EAV=   $CK=0.8892 16$CL=0.0950 13$CM=0.0151 5$CN=0.0006 2$CO=   
- 52MN  G 1039.939  190.095   4 M1+E2                   1.43E-416
+ 52MN  E                       0.095    45.8                                   
+ 52MN2 E CK=0.8892 16$CL=0.0950 13$CM=0.0151 5$CN=0.0006 2
+ 52MN  G 1039.939  190.095    4M1+E2                   1.43E-416
  52MN2 G KC=1.30E-4 15$LC=1.22E-5 14$MC=1.65E-6 19
  

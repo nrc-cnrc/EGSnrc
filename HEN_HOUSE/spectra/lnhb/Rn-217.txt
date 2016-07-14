@@ -1,8 +1,8 @@
 213PO    217RN A DECAY (0.54 MS)
 213PO  H TYP=Full$AUT=Huang Xiaolong$CUT=31-DEC-2007$
 213PO C  Evaluation history: Type=Full;Author=Huang Xiaolong;Cutoff date=31-DEC-2007
-213PO T  Auger electrons and ^X ray energies and emission intensities:
-213PO T       {U Energy (keV)}     {U Intensity }      {U Line  }
+213PO T  Auger electrons and X ray energies and emission intensities:
+213PO T       {U Energy (keV)}   {U Intensity}  {U Line}
 213PO T
 213PO T   
 213PO T   

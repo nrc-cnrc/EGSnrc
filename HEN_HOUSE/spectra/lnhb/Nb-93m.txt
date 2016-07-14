@@ -8,34 +8,34 @@
  93NB3C  1980Va**, 1981Ll01, 1982Re09, 1982Al**, 1983Va25, 1985Ge**, 1987La**, 
  93NB4C  1990Co17, 1991BaZS, 1996Sc06, 1997Ba13, 1999ScZX, 1999ZhZY, 2000Sc47, 
  93NB5C  2008Ki07
- 93NB T  Auger electrons and ^X ray energies and emission intensities:
- 93NB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 93NB T  Auger electrons and X ray energies and emission intensities:
+ 93NB T       {U Energy (keV)}   {U Intensity}  {U Line}
  93NB T
- 93NB T        16.5213           3.32  8         XKA2
- 93NB T        16.6152           6.34  15        XKA1
+ 93NB T        16.5213            3.32     8     XKA2
+ 93NB T        16.6152            6.34    15     XKA1
  93NB T   
- 93NB T        18.607         |]                  XKB3
- 93NB T        18.623         |]  1.64  4         XKB1
- 93NB T        18.78          |]                  XKB5II
+ 93NB T        18.607         |]                 XKB3
+ 93NB T        18.623         |]  1.64     4     XKB1
+ 93NB T        18.78          |]                 XKB5II
  93NB T   
- 93NB T        18.952         |]                  XKB2
- 93NB T        18.982         |]  0.246  11       XKB4
+ 93NB T        18.952         |]                 XKB2
+ 93NB T        18.982         |]  0.246   11     XKB4
  93NB T   
- 93NB T        1.9-2.67          2.88  6         XL (total)
- 93NB T        1.9               0.0870  23      XLL
- 93NB T        2.16-2.17         2.32  6         XLA
- 93NB T        2                 0.00877  24     XLC
- 93NB T        2.26-2.37         0.446  11       XLB
- 93NB T        2.41-2.67         0.0236  4       XLG
+ 93NB T        1.9-2.67           2.88     6     XL (total)
+ 93NB T        1.9                0.0870  23     XLL
+ 93NB T        2.16-2.17          2.32     6     XLA
+ 93NB T        2                  0.00877 24     XLC
+ 93NB T        2.26-2.37          0.446   11     XLB
+ 93NB T        2.41-2.67          0.0236   4     XLG
  93NB T   
- 93NB T        13.49-14.14    |]                  KLL AUGER
- 93NB T        15.79-16.58    |]  3.83  11        ^KLX AUGER
- 93NB T        18.02-18.91    |]                  KXY AUGER
- 93NB T        1.4-2.7           81.25  28       L AUGER
+ 93NB T        13.49-14.14    |]                 KLL AUGER
+ 93NB T        15.79-16.58    |]  3.83    11     KLX AUGER
+ 93NB T        18.02-18.91    |]                 KXY AUGER
+ 93NB T        1.4-2.7            81.25   28     L AUGER
  93NB  P 30.77     2 1/2-              16.12 Y   15
  93NB  N 1.0         1.0       1         1.0
  93NB  L 0           9/2+                STABLE   
  93NB  L 30.77     2 1/2-              16.12 Y   15
- 93NB  G 30.77     2 5.91E-4 9 M4                      1.693E525
- 93NB2 G KC=2.60E4  4$LC=1.151E5 17$MC=2.49E4  4
+ 93NB  G 30.77     2 0.000591 9M4                      1.693E525
+ 93NB2 G KC=2.60E4   4$LC=1.151E5 17$MC=2.49E4   4
  

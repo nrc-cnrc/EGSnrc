@@ -4,30 +4,30 @@
  59CO C  References: 1981MUZQ, 1949PO04, 1951BR05, 1951WI14, 1956SA32, 1976BE02, 
  59CO2C  1981NI08, 1988BO30, 1991NO08, 1991JA02, 1994RU19, 1996SC06, 2002BA19, 
  59CO3C  2004RA23, 2007WA00, 2009AUZZ
- 59CO T  Auger electrons and ^X ray energies and emission intensities:
- 59CO T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 59CO T  Auger electrons and X ray energies and emission intensities:
+ 59CO T       {U Energy (keV)}   {U Intensity}  {U Line}
  59CO T
- 59CO T        6.91538           10.24  12       XKA2
- 59CO T        6.9304            20.02  22       XKA1
+ 59CO T        6.91538            10.24   12     XKA2
+ 59CO T        6.9304             20.02   22     XKA1
  59CO T   
- 59CO T        7.6495         |]  4.15  6         XKB1
- 59CO T        7.706          |]                  XKB5II
+ 59CO T        7.6495         |]  4.15     6     XKB1
+ 59CO T        7.706          |]                 XKB5II
  59CO T   
  59CO T   
- 59CO T        0.6793-0.9251     0.98  7         XL (total)
- 59CO T        0.6793            0.0400  13      XLL
- 59CO T        0.7787-0.7795     0.508  15       XLA
- 59CO T        0.6949            0.0247  9       XLC
- 59CO T        0.78642-0.9251    0.346  12       XLB
- 59CO T        0.80198-0.80198   0.00210  23     XLG
+ 59CO T        0.6793-0.9251      0.98     7     XL (total)
+ 59CO T        0.6793             0.0400  13     XLL
+ 59CO T        0.7787-0.7795      0.508   15     XLA
+ 59CO T        0.6949             0.0247   9     XLC
+ 59CO T        0.78642-0.9251     0.346   12     XLB
+ 59CO T        0.80198-0.80198    0.00210 23     XLG
  59CO T   
- 59CO T        5.806-6.099    |]                  KLL AUGER
- 59CO T        6.667-6.927    |]  54.3  4         ^KLX AUGER
- 59CO T        7.508-7.703    |]                  KXY AUGER
- 59CO T        0.68-0.83         134.5  8        L AUGER
+ 59CO T        5.806-6.099    |]                 KLL AUGER
+ 59CO T        6.667-6.927    |]  54.3     4     KLX AUGER
+ 59CO T        7.508-7.703    |]                 KXY AUGER
+ 59CO T        0.68-0.83          134.5    8     L AUGER
  59NI  P 0.0         3/2-              76E3 Y    5              1072.76   19
  59CO  N 1.0         1.0       1         1.0
  59CO  L 0         0 7/2-                STABLE   
- 59CO  E             3.7E-5  1210000E-21 11.89                                 
- 59CO2 E EAV=24.81 9$CK=0.8870 16$CL=0.0966 13$CM=0.0156 5$CN=0.0008 2$CO=   
+ 59CO  E             0.0000371299.99996 111.89                               2
+ 59CO2 E EAV=24.81 9$CK=0.8870 16$CL=0.0966 13$CM=0.0156 5$CN=0.0008 2
  

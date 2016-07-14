@@ -3,23 +3,23 @@
 106RH C  Evaluation history: Type=Full;Author=A.Arinc;Cutoff date=31-DEC-2012
 106RH C  References: 1950Ag01, 1956Sc87, 1957Me47, 1960Ea02, 1961Wy01, 1965Fl02, 
 106RH2C  1980Ho17, 1983Wa26, 2004Sc04, 2012Wa38
-106RH T  Auger electrons and ^X ray energies and emission intensities:
-106RH T       {U Energy (keV)}     {U Intensity }      {U Line  }
+106RH T  Auger electrons and X ray energies and emission intensities:
+106RH T       {U Energy (keV)}   {U Intensity}  {U Line}
 106RH T
 106RH T        20.0739                           XKA2
 106RH T        20.2163                           XKA1
 106RH T   
-106RH T        22.6991        |]                  XKB3
-106RH T        22.7238        |]                  XKB1
-106RH T        22.914         |]                  XKB5II
+106RH T        22.6991        |]                 XKB3
+106RH T        22.7238        |]                 XKB1
+106RH T        22.914         |]                 XKB5II
 106RH T   
-106RH T        23.173         |]                  XKB2
-106RH T        23.217         |]                  XKB4
+106RH T        23.173         |]                 XKB2
+106RH T        23.217         |]                 XKB4
 106RH T   
 106RH T   
-106RH T        16.289-17.097  |]                  KLL AUGER
-106RH T        19.138-20.214  |]                  ^KLX AUGER
-106RH T        21.966-23.215  |]                  KXY AUGER
+106RH T        16.289-17.097  |]                 KLL AUGER
+106RH T        19.138-20.214  |]                 KLX AUGER
+106RH T        21.966-23.215  |]                 KXY AUGER
 106RH T        1.7496-3.4069                     L AUGER
 106RU  P 0.0         0+                371.5 D   21             39.40     21
 106RH  N 1.0         1.0       1         1.0

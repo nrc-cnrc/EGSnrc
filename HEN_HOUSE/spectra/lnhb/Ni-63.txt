@@ -3,24 +3,24 @@
  63CU C  Evaluation history: Type=Full;Author=K.B. Lee;Cutoff date=28-SEP-2009
  63CU C  References: 1966Hs01, 1971Ba89, 1987He14, 1992Ka29, 1993Oh02, 1996Co25, 
  63CU2C  1996Sc33, 1999Ho09, 2003Au03
- 63CU T  Auger electrons and ^X ray energies and emission intensities:
- 63CU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 63CU T  Auger electrons and X ray energies and emission intensities:
+ 63CU T       {U Energy (keV)}   {U Intensity}  {U Line}
  63CU T
  63CU T        8.02792                           XKA2
  63CU T        8.04787                           XKA1
  63CU T   
- 63CU T        8.90539        |]                  XKB1
- 63CU T        8.9771         |]                  XKB5II
+ 63CU T        8.90539        |]                 XKB1
+ 63CU T        8.9771         |]                 XKB5II
  63CU T   
  63CU T   
  63CU T   
- 63CU T        6.731-7.059    |]                  KLL AUGER
- 63CU T        7.746-8.064    |]                  ^KLX AUGER
- 63CU T        8.739-8.982    |]                  KXY AUGER
+ 63CU T        6.731-7.059    |]                 KLL AUGER
+ 63CU T        7.746-8.064    |]                 KLX AUGER
+ 63CU T        8.739-8.982    |]                 KXY AUGER
  63CU T        0.03-1.09                         L AUGER
  63NI  P 0.0         1/2-              98.7 Y    24             66.980    15
  63CU  N 1.0         1.0       1         1.0
  63CU  L 0           3/2-                STABLE   
- 63CU  B 66.980    15100                 6.7                                 2
+ 63CU  B 66.980    15100                 6.7                                   
  63CUS B EAV=17.434 4
  

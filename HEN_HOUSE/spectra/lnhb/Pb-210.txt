@@ -7,19 +7,19 @@
 206HG4C  1969Gr33, 1971Ge11, 1981He15, 1983De11, 1987Me17, 1990He18, 1990Sc08, 
 206HG5C  1990Hi03, 1996Sc06, 1999Br38, 2000He14, 2002Re18, 2002Ba85, 2003Br13, 
 206HG6C  2003Au03
-206HG T  Auger electrons and ^X ray energies and emission intensities:
-206HG T       {U Energy (keV)}     {U Intensity }      {U Line  }
+206HG T  Auger electrons and X ray energies and emission intensities:
+206HG T       {U Energy (keV)}   {U Intensity}  {U Line}
 206HG T
 206HG T        68.895                            XKA2
 206HG T        70.82                             XKA1
 206HG T   
-206HG T        79.823         |]                  XKB3
-206HG T        80.254         |]                  XKB1
-206HG T        80.762         |]                  XKB5II
+206HG T        79.823         |]                 XKB3
+206HG T        80.254         |]                 XKB1
+206HG T        80.762         |]                 XKB5II
 206HG T   
-206HG T        82.435         |]                  XKB2
-206HG T        82.776         |]                  XKB4
-206HG T        83.028         |]                  XKO23
+206HG T        82.435         |]                 XKB2
+206HG T        82.776         |]                 XKB4
+206HG T        83.028         |]                 XKO23
 206HG T   
 210PB  P 0.0         0+                22.23 Y   12             3792      20
 206HG  N 5.263E7     5.263E7   1.9E-08   5.263E7
@@ -35,28 +35,28 @@
 210BI4C  1969Gr33, 1971Ge11, 1981He15, 1983De11, 1987Me17, 1990He18, 1990Sc08, 
 210BI5C  1990Hi03, 1996Sc06, 1999Br38, 2000He14, 2002Re18, 2002Ba85, 2003Br13, 
 210BI6C  2003Au03
-210BI T  Auger electrons and ^X ray energies and emission intensities:
-210BI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+210BI T  Auger electrons and X ray energies and emission intensities:
+210BI T       {U Energy (keV)}   {U Intensity}  {U Line}
 210BI T
 210BI T        74.8157                           XKA2
 210BI T        77.1088                           XKA1
 210BI T   
-210BI T        86.835         |]                  XKB3
-210BI T        87.344         |]                  XKB1
-210BI T        87.862         |]                  XKB5II
+210BI T        86.835         |]                 XKB3
+210BI T        87.344         |]                 XKB1
+210BI T        87.862         |]                 XKB5II
 210BI T   
-210BI T        89.732         |]                  XKB2
-210BI T        90.074         |]                  XKB4
-210BI T        90.421         |]                  XKO23
+210BI T        89.732         |]                 XKB2
+210BI T        90.074         |]                 XKB4
+210BI T        90.421         |]                 XKO23
 210BI T   
-210BI T        9.4207-15.7084    22.0  5         XL (total)
-210BI T        9.4207            0.552  17       XLL
-210BI T        10.7308-10.8387   10.30  29       XLA
-210BI T        11.7127           0.0745  21      XLC
-210BI T        12.4814-13.8066   9.05  13        XLB
-210BI T        14.7735-15.7084   1.968  28       XLG
+210BI T        9.4207-15.7084     22.0     5     XL (total)
+210BI T        9.4207             0.552   17     XLL
+210BI T        10.7308-10.8387    10.30   29     XLA
+210BI T        11.7127            0.0745  21     XLC
+210BI T        12.4814-13.8066    9.05    13     XLB
+210BI T        14.7735-15.7084    1.968   28     XLG
 210BI T   
-210BI T        5.3-10.7          36.0  9         L AUGER
+210BI T        5.3-10.7           36.0     9     L AUGER
 210PB  P 0.0         0+                22.23 Y   12             63.5      5
 210BI  N 1.0         1.0       1         1.0
 210BI  L 0           1-                5.012 D   5
@@ -66,5 +66,5 @@
 210BI  B 17.0      5 80.2    13          5.5                                   
 210BIS B EAV=4.3 1
 210BI  G 46.539    1 4.252   40M1                      17.86  25
-210BI2 G KC=$LC=13.64   19$MC=3.21    5
+210BI2 G LC=13.64   19$MC=3.21     5
  

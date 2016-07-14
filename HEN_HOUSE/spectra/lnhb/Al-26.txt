@@ -1,30 +1,30 @@
  26MG     26AL EC DECAY (717E3 Y)
- 26MG T  Auger electrons and ^X ray energies and emission intensities:
- 26MG T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 26MG T  Auger electrons and X ray energies and emission intensities:
+ 26MG T       {U Energy (keV)}   {U Intensity}  {U Line}
  26MG T
- 26MG T        1.2536            0.160  6        XKA2
- 26MG T        1.2536            0.318  11       XKA1
+ 26MG T        1.2536             0.160    6     XKA2
+ 26MG T        1.2536             0.318   11     XKA1
  26MG T   
  26MG T   
  26MG T   
  26MG T   
- 26MG T        1.102-1.182    |]                  KLL AUGER
- 26MG T        1.214-1.252    |]  16.22  22       ^KLX AUGER
- 26MG T        1.301-1.301    |]                  KXY AUGER
- 26MG T        0.0359-0.0359     0.0000022  18   L AUGER
+ 26MG T        1.102-1.182    |]                 KLL AUGER
+ 26MG T        1.214-1.252    |]  16.22   22     KLX AUGER
+ 26MG T        1.301-1.301    |]                 KXY AUGER
+ 26MG T        0.0359-0.0359      2.2E-6  18     L AUGER
  26AL  P 0.0         5+                717E3 Y   24             4004.19   6
  26MG  N 1.0         1.0       1         1.0
  26MG  L 0           0+                  STABLE   
  26MG  L 1808.72   7 2+                476 FS    12
  26MG  E             81.73   2115.51   1315.7                                2U
- 26MG2 E EAV=543.29 4$CK=0.915 4$CL=0.079 4$CM=0.0059 12$CN=   $CO=   
- 26MG  G 1808.65   7 99.76   4 E2                      6330E-90
- 26MG2 G KC=5890E-9 0$LC=352E-9  0$MC=
+ 26MG2 E EAV=543.29 4$CK=0.915 4$CL=0.079 4$CM=0.0059 12
+ 26MG  G 1808.65   7 99.76    4E2                      6.33E-6
+ 26MG2 G KC=5.89E-6 $LC=3.52E-7 
  26MG  L 2938.41   132+                141 FS    8
- 26MG  E             5.4E-7  4 2.74    2014.6                                2U
- 26MG2 E EAV=24.78 8$CK=0.915 4$CL=0.079 4$CM=0.0059 12$CN=   $CO=   
- 26MG  G 1129.67   102.5     2 M1+E2     -0.12   2     1250E-80
- 26MG2 G KC=1150E-8 0$LC=754E-9  0$MC=
- 26MG  G 2938      1 0.24    4 E2                      2350E-90
- 26MG2 G KC=2160E-9 0$LC=149E-9  0$MC=
+ 26MG  E             5.4E-7   42.74    2014.6                                2U
+ 26MG2 E EAV=24.78 8$CK=0.915 4$CL=0.079 4$CM=0.0059 12
+ 26MG  G 1129.67   102.5      2M1+E2     -0.12   2     1.25E-5
+ 26MG2 G KC=1.15E-5 $LC=7.54E-7 
+ 26MG  G 2938      1 0.24     4E2                      2.35E-6
+ 26MG2 G KC=2.16E-6 $LC=1.49E-7 
  

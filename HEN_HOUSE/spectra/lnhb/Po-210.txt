@@ -10,37 +10,37 @@
 206PB5C  1961Be13, 1962Br22, 1964EiZZ, 1972KA30, 1972MA63, 1973Go39, 1977DR08, 
 206PB6C  1989MA05, 1990He18, 1991Ry01, 1996RA16, 1996Sc06, 1999Br39, 2002Ba85, 
 206PB7C  2003Au03, 2008KI07, 2008Ko21, 2012Wa38
-206PB T  Auger electrons and ^X ray energies and emission intensities:
-206PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+206PB T  Auger electrons and X ray energies and emission intensities:
+206PB T       {U Energy (keV)}   {U Intensity}  {U Line}
 206PB T
-206PB T        72.805            0.00000277  11  XKA2
-206PB T        74.97             0.00000466  17  XKA1
+206PB T        72.805             2.77E-6 11     XKA2
+206PB T        74.97              4.66E-6 17     XKA1
 206PB T   
-206PB T        84.451         |]                  XKB3
-206PB T        84.937         |]  0.00000159  7   XKB1
-206PB T        85.47          |]                  XKB5II
+206PB T        84.451         |]                 XKB3
+206PB T        84.937         |]  1.59E-6  7     XKB1
+206PB T        85.47          |]                 XKB5II
 206PB T   
-206PB T        87.238         |]                  XKB2
-206PB T        87.58          |]  0.000000481  21 XKB4
-206PB T        87.911         |]                  XKO23
+206PB T        87.238         |]                 XKB2
+206PB T        87.58          |]  4.81E-7 21     XKB4
+206PB T        87.911         |]                 XKO23
 206PB T   
-206PB T        9.186-15.217      0.00000384  10  XL (total)
-206PB T        9.186             0.000000093  4  XLL
-206PB T        10.449-10.551     0.00000175  6   XLA
-206PB T        11.349            0.0000000306  12XLC
-206PB T        12.144-13.377     0.00000165  5   XLB
-206PB T        14.308-15.217     0.000000318  10 XLG
+206PB T        9.186-15.217       3.84E-6 10     XL (total)
+206PB T        9.186              9.3E-8   4     XLL
+206PB T        10.449-10.551      1.75E-6  6     XLA
+206PB T        11.349             3.06E-8 12     XLC
+206PB T        12.144-13.377      1.65E-6  5     XLB
+206PB T        14.308-15.217      3.18E-7 10     XLG
 206PB T   
-206PB T        56.028-61.669  |]                  KLL AUGER
-206PB T        68.181-74.969  |]  0.00000037  5   ^KLX AUGER
-206PB T        80.3-88        |]                  KXY AUGER
-206PB T        5.3338-15.8198    0.00000631  11  L AUGER
+206PB T        56.028-61.669  |]                 KLL AUGER
+206PB T        68.181-74.969  |]  3.7E-7   5     KLX AUGER
+206PB T        80.3-88        |]                 KXY AUGER
+206PB T        5.3338-15.8198     6.31E-6 11     L AUGER
 210PO  P 0.0         0+                138.3763 D17             5407.45   7
 206PB  N 1.0         1.0       1         1.0
 206PB  L 0           0+                  STABLE   
 206PB  A 5304.33   7 99999E-34 1
 206PB  L 803.052   242+                8.30 PS   25
 206PB  A 4516.70   9 0.00124 4 1.46
-206PB  G 803.052   240.00123 4 E2                      0.0103215
-206PB2 G KC=0.00803 12$LC=1742E-6 25$MC=4.19E-4 6
+206PB  G 803.052   240.00123  4E2                      0.0103215
+206PB2 G KC=0.00803 12$LC=1742E-6 25$MC=4.19E-4  6
  

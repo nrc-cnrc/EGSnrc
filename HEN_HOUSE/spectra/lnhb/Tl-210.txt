@@ -3,19 +3,19 @@
 210PB C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date=31-AUG-2007
 210PB C  References: 1931Cu01, 1957Ko42, 1961St20, 1964We06, 1981Ha54, 1996Sc06, 
 210PB2C  2002Ba85, 2003Au03, 2003Br13
-210PB T  Auger electrons and ^X ray energies and emission intensities:
-210PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+210PB T  Auger electrons and X ray energies and emission intensities:
+210PB T       {U Energy (keV)}   {U Intensity}  {U Line}
 210PB T
-210PB T        72.805            7  4            XKA2
-210PB T        74.97             11  6           XKA1
+210PB T        72.805             7        4     XKA2
+210PB T        74.97              11       6     XKA1
 210PB T   
-210PB T        84.451         |]                  XKB3
-210PB T        84.937         |]  3.8  19         XKB1
-210PB T        85.47          |]                  XKB5II
+210PB T        84.451         |]                 XKB3
+210PB T        84.937         |]  3.8     19     XKB1
+210PB T        85.47          |]                 XKB5II
 210PB T   
-210PB T        87.238         |]                  XKB2
-210PB T        87.58          |]  1.1  6          XKB4
-210PB T        87.911         |]                  XKO23
+210PB T        87.238         |]                 XKB2
+210PB T        87.58          |]  1.1      6     XKB4
+210PB T        87.911         |]                 XKO23
 210PB T   
 210PB T        9.186                             XLL
 210PB T        10.449-10.551                     XLA
@@ -24,32 +24,32 @@
 210PB T        14.308-15.217                     XLG
 210TL  P 0.0         (5)+              1.30 M    3              5482      12
 210PB  N 1.0         1.0       1         1.0
-210PB  G 83        301.98    40[E2]                    14.00000
-210PB  G 356       104       2 [M1]                    0.270  22
-210PB  G 382       103       2 [M1]                    0.223  17
-210PB  G 670       202       1                         
-210PB  G 910       303       2                         
-210PB  G 1490      202       1                         
-210PB  G 1540      302       1                         
-210PB  G 1650      302       1                         
+210PB  G 83        301.98    40[E2]                    14     
+210PB  G 356       104        2[M1]                    0.270  22
+210PB  G 382       103        2[M1]                    0.223  17
+210PB  G 670       202        1                        
+210PB  G 910       303        2                        
+210PB  G 1490      202        1                        
+210PB  G 1540      302        1                        
+210PB  G 1650      302        1                        
 210PB  G 2090      304.9     20                        
 210PB  L 0           0+                22.23 Y   12
 210PB  L 799.6     3 2+                17 PS     5
 210PB  G 799.6     3 98.969  30E2                      0.0104231
-210PB2 G KC=0.00811 24$LC=0.00176 5$MC=4.25E-4 13
+210PB2 G KC=0.00811 24$LC=0.00176  5$MC=4.25E-4 13
 210PB  L 1096      3 4+                0.6 NS    1
 210PB  B 4386      1213                  7.3                                   
 210PBS B EAV=1763 5
-210PB  G 296       3 79      10E2                      0.120  5
-210PB2 G KC=0.0671  19$LC=0.0399  17$MC=0.0103  5
+210PB  G 296       3 79      10E2                      0.120   5
+210PB2 G KC=0.0671  19$LC=0.0399  17$MC=0.0103   5
 210PB  L 1192      246+                49 NS     6
 210PB  B 4290      1231                  6.9                                   
 210PBS B EAV=1721 11
-210PB  G 97        304       2 M1+E2     1             9.000000
-210PB2 G KC=4.00000 0$LC=3.00000 0$MC=0.80000 0
+210PB  G 97        304        2M1+E2     1             9      
+210PB2 G KC=4       $LC=3       $MC=0.8     
 210PB  L 1869      103-                           
-210PB  G 1070      2011.9    49[E1]                    0.002227
-210PB2 G KC=0.00185 6$LC=2.81E-4 8$MC=6.5E-5  2
+210PB  G 1070      2011.9    49[E1]                    0.00222 7
+210PB2 G KC=0.00185  6$LC=2.81E-4  8$MC=6.5E-5   2
 210PB  L 2208      13(2)+                         
 210PB  G 1110      206.9     20                        
 210PB  G 1410      204.9     20                        
@@ -59,11 +59,11 @@
 210PB  B 2413      1210                  6.4                                 2U
 210PBS B EAV=907 7
 210PB  G 860       306.9     20                        
-210PB  G 2280      123       2                         
+210PB  G 2280      123        2                        
 210PB  L 3458      22(4)+                         
 210PB  B 2024      1210                  6.1                                   
 210PBS B EAV=743 10
-210PB  G 1590      302       1                         
+210PB  G 1590      302        1                        
 210PB  G 2360      307.9     30                        
 210PB  L 3622      21 +                           
 210PB  B 1860      1224                  5.6                                   
@@ -77,5 +77,5 @@
 210PB  L 4102      29 +                           
 210PB  B 1380      122                   6.2                                   
 210PBS B EAV=477 13
-210PB  G 480       362       1                         
+210PB  G 480       362        1                        
  

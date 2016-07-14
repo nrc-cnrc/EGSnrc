@@ -6,8 +6,8 @@
  35CL C  References: 1940Le**, 1941Ka01, 1943He**, 1949Ma76, 1952Ru23, 1958Se49, 
  35CL2C  1959Co56, 1959Ca12, 1961Oz01, 1961Wy01, 1965Fl02, 1968Wo06, 1969La34, 
  35CL3C  1999Pa18, 2012Au06
- 35CL T  Auger electrons and ^X ray energies and emission intensities:
- 35CL T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 35CL T  Auger electrons and X ray energies and emission intensities:
+ 35CL T       {U Energy (keV)}   {U Intensity}  {U Line}
  35CL T
  35CL T   
  35CL T   

@@ -43,6 +43,9 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename) {
     }
 
     radionuclide = isotope.substr(0, isotope.find_last_of("."));
+    
+    // The parent element
+    //string element = radionuclide.substr(0, radionuclide.find("-"));
 
     printf("EGS_Ensdf::EGS_Ensdf: Isotope: "
            "%s\n",isotope.c_str());
@@ -65,13 +68,9 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename) {
     if (ensdf_file.is_open()) {
         ensdf_file.close();
     }
-
-    // Get the isotope
-    if (!createIsotope(ensdf)) {
-        egsWarning("EGS_Ensdf::EGS_Ensdf: error reading ensdf isotope data\n");
-        return;
-    }
-
+    
+    // Parse the ensdf data
+    parseEnsdf(ensdf);
 }
 
 EGS_Ensdf::~EGS_Ensdf() {
@@ -147,166 +146,6 @@ string egsTrimString(string myString) {
     while (myString[++start]==' ');
     while (myString[--end]==' ');
     return myString.substr(start,end-start+1);
-}
-
-bool EGS_Ensdf::createIsotope(vector<string> ensdf) {
-
-    // The daughter isotope name
-    string id = ensdf.front().substr(0,5);
-    string daughter = egsRemoveWhite(id);
-
-    // The parent element
-    string element = radionuclide.substr(0, radionuclide.find("-"));
-
-    // The atomic weight
-    A = findAtomicWeight(element);
-    if (A == 0) {
-        egsWarning("EGS_Ensdf::createIsotope: element does not exist in our "
-                   "data (%s)\n", element.c_str());
-        return false;
-    }
-
-    // Parse the ensdf data
-    parseEnsdf(ensdf);
-
-    return true;
-}
-
-map<string, unsigned short int> EGS_Ensdf::getElementMap() {
-    map<string, unsigned short int> elementTable;
-    elementTable["H"] = 1;
-    elementTable["HE"] = 2;
-    elementTable["LI"] = 3;
-    elementTable["BE"] = 4;
-    elementTable["B"] = 5;
-    elementTable["C"] = 6;
-    elementTable["N"] = 7;
-    elementTable["O"] = 8;
-    elementTable["F"] = 9;
-    elementTable["NE"] = 10;
-    elementTable["NA"] = 11;
-    elementTable["MG"] = 12;
-    elementTable["AL"] = 13;
-    elementTable["SI"] = 14;
-    elementTable["P"] = 15;
-    elementTable["S"] = 16;
-    elementTable["CL"] = 17;
-    elementTable["AR"] = 18;
-    elementTable["K"] = 19;
-    elementTable["CA"] = 20;
-    elementTable["SC"] = 21;
-    elementTable["TI"] = 22;
-    elementTable["V"] = 23;
-    elementTable["CR"] = 24;
-    elementTable["MN"] = 25;
-    elementTable["FE"] = 26;
-    elementTable["CO"] = 27;
-    elementTable["NI"] = 28;
-    elementTable["CU"] = 29;
-    elementTable["ZN"] = 30;
-    elementTable["GA"] = 31;
-    elementTable["GE"] = 32;
-    elementTable["AS"] = 33;
-    elementTable["SE"] = 34;
-    elementTable["BR"] = 35;
-    elementTable["KR"] = 36;
-    elementTable["RB"] = 37;
-    elementTable["SR"] = 38;
-    elementTable["Y"] = 39;
-    elementTable["ZR"] = 40;
-    elementTable["NB"] = 41;
-    elementTable["MO"] = 42;
-    elementTable["TC"] = 43;
-    elementTable["RU"] = 44;
-    elementTable["RH"] = 45;
-    elementTable["PD"] = 46;
-    elementTable["AG"] = 47;
-    elementTable["CD"] = 48;
-    elementTable["IN"] = 49;
-    elementTable["SN"] = 50;
-    elementTable["SB"] = 51;
-    elementTable["TE"] = 52;
-    elementTable["I"] = 53;
-    elementTable["XE"] = 54;
-    elementTable["CS"] = 55;
-    elementTable["BA"] = 56;
-    elementTable["LA"] = 57;
-    elementTable["CE"] = 58;
-    elementTable["PR"] = 59;
-    elementTable["ND"] = 60;
-    elementTable["PM"] = 61;
-    elementTable["SM"] = 62;
-    elementTable["EU"] = 63;
-    elementTable["GD"] = 64;
-    elementTable["TB"] = 65;
-    elementTable["DY"] = 66;
-    elementTable["HO"] = 67;
-    elementTable["ER"] = 68;
-    elementTable["TM"] = 69;
-    elementTable["YB"] = 70;
-    elementTable["LU"] = 71;
-    elementTable["HF"] = 72;
-    elementTable["TA"] = 73;
-    elementTable["W"] = 74;
-    elementTable["RE"] = 75;
-    elementTable["OS"] = 76;
-    elementTable["IR"] = 77;
-    elementTable["PT"] = 78;
-    elementTable["AU"] = 79;
-    elementTable["HG"] = 80;
-    elementTable["TL"] = 81;
-    elementTable["PB"] = 82;
-    elementTable["BI"] = 83;
-    elementTable["PO"] = 84;
-    elementTable["AT"] = 85;
-    elementTable["RN"] = 86;
-    elementTable["FR"] = 87;
-    elementTable["RA"] = 88;
-    elementTable["AC"] = 89;
-    elementTable["TH"] = 90;
-    elementTable["PA"] = 91;
-    elementTable["U"] = 92;
-    elementTable["NP"] = 93;
-    elementTable["PU"] = 94;
-    elementTable["AM"] = 95;
-    elementTable["CM"] = 96;
-    elementTable["BK"] = 97;
-    elementTable["CF"] = 98;
-    elementTable["ES"] = 99;
-    elementTable["FM"] = 100;
-    elementTable["MD"] = 101;
-    elementTable["NO"] = 102;
-    elementTable["LR"] = 103;
-    elementTable["RF"] = 104;
-    elementTable["DB"] = 105;
-    elementTable["SG"] = 106;
-    elementTable["BH"] = 107;
-    elementTable["HS"] = 108;
-    elementTable["MT"] = 109;
-    elementTable["DS"] = 110;
-    elementTable["RG"] = 111;
-    elementTable["CN"] = 112;
-    elementTable["UUT"] = 113;
-    elementTable["UUQ"] = 114;
-    elementTable["UUP"] = 115;
-    elementTable["UUH"] = 116;
-    elementTable["UUS"] = 117;
-    elementTable["UUO"] = 118;
-
-    return elementTable;
-}
-
-unsigned short int EGS_Ensdf::findAtomicWeight(string element) {
-    transform(element.begin(), element.end(), element.begin(), ::toupper);
-
-    map<string, unsigned short int> elementMap = getElementMap();
-
-    if (elementMap.find(element) != elementMap.end()) {
-        return elementMap[element];
-    }
-    else {
-        return 0;
-    }
 }
 
 // Parse an ensdf file to create a decay structure
@@ -1064,6 +903,162 @@ double Record::parseHalfLife(int startPos, int endPos) {
     return hl;
 }
 
+unsigned short int Record::setZ(string id) {
+    
+    string element;
+    for (unsigned int i=0; i < id.length(); ++i) {
+        if (!isdigit(id[i])) {
+            element.push_back(id[i]);
+        }
+    }
+
+    unsigned short int Z = findZ(element);
+    if (Z == 0) {
+        egsWarning("EGS_Ensdf::createIsotope: element does not exist in our "
+                   "data (%s)\n", element.c_str());
+    }
+
+    return Z;
+}
+
+map<string, unsigned short int> Record::getElementMap() {
+    map<string, unsigned short int> elementTable;
+    elementTable["H"] = 1;
+    elementTable["HE"] = 2;
+    elementTable["LI"] = 3;
+    elementTable["BE"] = 4;
+    elementTable["B"] = 5;
+    elementTable["C"] = 6;
+    elementTable["N"] = 7;
+    elementTable["O"] = 8;
+    elementTable["F"] = 9;
+    elementTable["NE"] = 10;
+    elementTable["NA"] = 11;
+    elementTable["MG"] = 12;
+    elementTable["AL"] = 13;
+    elementTable["SI"] = 14;
+    elementTable["P"] = 15;
+    elementTable["S"] = 16;
+    elementTable["CL"] = 17;
+    elementTable["AR"] = 18;
+    elementTable["K"] = 19;
+    elementTable["CA"] = 20;
+    elementTable["SC"] = 21;
+    elementTable["TI"] = 22;
+    elementTable["V"] = 23;
+    elementTable["CR"] = 24;
+    elementTable["MN"] = 25;
+    elementTable["FE"] = 26;
+    elementTable["CO"] = 27;
+    elementTable["NI"] = 28;
+    elementTable["CU"] = 29;
+    elementTable["ZN"] = 30;
+    elementTable["GA"] = 31;
+    elementTable["GE"] = 32;
+    elementTable["AS"] = 33;
+    elementTable["SE"] = 34;
+    elementTable["BR"] = 35;
+    elementTable["KR"] = 36;
+    elementTable["RB"] = 37;
+    elementTable["SR"] = 38;
+    elementTable["Y"] = 39;
+    elementTable["ZR"] = 40;
+    elementTable["NB"] = 41;
+    elementTable["MO"] = 42;
+    elementTable["TC"] = 43;
+    elementTable["RU"] = 44;
+    elementTable["RH"] = 45;
+    elementTable["PD"] = 46;
+    elementTable["AG"] = 47;
+    elementTable["CD"] = 48;
+    elementTable["IN"] = 49;
+    elementTable["SN"] = 50;
+    elementTable["SB"] = 51;
+    elementTable["TE"] = 52;
+    elementTable["I"] = 53;
+    elementTable["XE"] = 54;
+    elementTable["CS"] = 55;
+    elementTable["BA"] = 56;
+    elementTable["LA"] = 57;
+    elementTable["CE"] = 58;
+    elementTable["PR"] = 59;
+    elementTable["ND"] = 60;
+    elementTable["PM"] = 61;
+    elementTable["SM"] = 62;
+    elementTable["EU"] = 63;
+    elementTable["GD"] = 64;
+    elementTable["TB"] = 65;
+    elementTable["DY"] = 66;
+    elementTable["HO"] = 67;
+    elementTable["ER"] = 68;
+    elementTable["TM"] = 69;
+    elementTable["YB"] = 70;
+    elementTable["LU"] = 71;
+    elementTable["HF"] = 72;
+    elementTable["TA"] = 73;
+    elementTable["W"] = 74;
+    elementTable["RE"] = 75;
+    elementTable["OS"] = 76;
+    elementTable["IR"] = 77;
+    elementTable["PT"] = 78;
+    elementTable["AU"] = 79;
+    elementTable["HG"] = 80;
+    elementTable["TL"] = 81;
+    elementTable["PB"] = 82;
+    elementTable["BI"] = 83;
+    elementTable["PO"] = 84;
+    elementTable["AT"] = 85;
+    elementTable["RN"] = 86;
+    elementTable["FR"] = 87;
+    elementTable["RA"] = 88;
+    elementTable["AC"] = 89;
+    elementTable["TH"] = 90;
+    elementTable["PA"] = 91;
+    elementTable["U"] = 92;
+    elementTable["NP"] = 93;
+    elementTable["PU"] = 94;
+    elementTable["AM"] = 95;
+    elementTable["CM"] = 96;
+    elementTable["BK"] = 97;
+    elementTable["CF"] = 98;
+    elementTable["ES"] = 99;
+    elementTable["FM"] = 100;
+    elementTable["MD"] = 101;
+    elementTable["NO"] = 102;
+    elementTable["LR"] = 103;
+    elementTable["RF"] = 104;
+    elementTable["DB"] = 105;
+    elementTable["SG"] = 106;
+    elementTable["BH"] = 107;
+    elementTable["HS"] = 108;
+    elementTable["MT"] = 109;
+    elementTable["DS"] = 110;
+    elementTable["RG"] = 111;
+    elementTable["CN"] = 112;
+    elementTable["UUT"] = 113;
+    elementTable["UUQ"] = 114;
+    elementTable["UUP"] = 115;
+    elementTable["UUH"] = 116;
+    elementTable["UUS"] = 117;
+    elementTable["UUO"] = 118;
+
+    return elementTable;
+}
+
+unsigned short int Record::findZ(string element) {
+    
+    transform(element.begin(), element.end(), element.begin(), ::toupper);
+
+    map<string, unsigned short int> elementMap = getElementMap();
+
+    if (elementMap.find(element) != elementMap.end()) {
+        return elementMap[element];
+    }
+    else {
+        return 0;
+    }
+}
+
 // Comment Record
 CommentRecord::CommentRecord(vector<string> ensdf):Record(ensdf) {
     processEnsdf();
@@ -1191,7 +1186,27 @@ BetaRecordLeaf::BetaRecordLeaf(vector<string> ensdf,
     NormalizationRecordLeaf(myNormalization),
     LevelRecordLeaf(myLevel),
     Record(ensdf) {
+        
     numSampled = 0;
+    
+    // Set the Z and atomic weight for the daughter of this decay
+    string id = egsRemoveWhite(lines.front().substr(0,5));
+    Z = setZ(id);
+   
+    string atomicWeight;
+    for (unsigned int i=0; i < id.length(); ++i) {
+        if (!isdigit(id[i])) {
+            break;
+        } else {
+            atomicWeight.push_back(id[i]);
+        }
+    }
+    A = atoi(atomicWeight.c_str());
+    
+    // Get the forbiddenness
+    string lambda;
+    lambda.push_back(lines.front().at(77));
+    forbidden = atoi(lambda.c_str());
 }
 int BetaRecordLeaf::getCharge() const {
     return q;
@@ -1203,6 +1218,26 @@ void BetaRecordLeaf::incrNumSampled() {
 
 EGS_I64 BetaRecordLeaf::getNumSampled() const {
     return numSampled;
+}
+
+unsigned short int BetaRecordLeaf::getZ() const {
+    return Z;
+}
+
+unsigned short int BetaRecordLeaf::getAtomicWeight() const {
+    return A;
+}
+
+unsigned short int BetaRecordLeaf::getForbidden() const {
+    return forbidden;
+}
+
+void BetaRecordLeaf::setSpectrum(EGS_AliasTable *bspec) {
+    spectrum = bspec;
+}
+
+EGS_AliasTable* BetaRecordLeaf::getSpectrum() const {
+    return spectrum;
 }
 
 // Beta- Record

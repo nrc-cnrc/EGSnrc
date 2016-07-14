@@ -4,39 +4,39 @@
 211PB C  References: 1942Wa04, 1950Av61, 1961Vo06, 1962Wa18, 1965Va10, 1968Br17, 
 211PB2C  1970Da09, 1971Gr17, 1971Er02, 1977Ma29, 1991Ry01, 1998Li53, 2003Au03, 
 211PB3C  2004Br45, 2008Ki07
-211PB T  Auger electrons and ^X ray energies and emission intensities:
-211PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+211PB T  Auger electrons and X ray energies and emission intensities:
+211PB T       {U Energy (keV)}   {U Intensity}  {U Line}
 211PB T
-211PB T        72.8049           0.00045  15     XKA2
-211PB T        74.97             0.00075  25     XKA1
+211PB T        72.8049            0.00045 15     XKA2
+211PB T        74.97              0.00075 25     XKA1
 211PB T   
-211PB T        84.451         |]                  XKB3
-211PB T        84.937         |]  0.00026  9      XKB1
-211PB T        85.47          |]                  XKB5II
+211PB T        84.451         |]                 XKB3
+211PB T        84.937         |]  0.00026  9     XKB1
+211PB T        85.47          |]                 XKB5II
 211PB T   
-211PB T        87.238         |]                  XKB2
-211PB T        87.58          |]  0.000078  26    XKB4
-211PB T        87.911         |]                  XKO23
+211PB T        87.238         |]                 XKB2
+211PB T        87.58          |]  0.00007826     XKB4
+211PB T        87.911         |]                 XKO23
 211PB T   
-211PB T        9.186-15.2169     0.00071  12     XL (total)
-211PB T        9.186             0.000016  4     XLL
-211PB T        10.4495-10.5512   0.00031  7      XLA
-211PB T        11.3495           0.0000063  15   XLC
-211PB T        12.1443-13.3763   0.00032  6      XLB
-211PB T        14.3078-15.2169   0.000063  12    XLG
+211PB T        9.186-15.2169      0.00071 12     XL (total)
+211PB T        9.186              0.000016 4     XLL
+211PB T        10.4495-10.5512    0.00031  7     XLA
+211PB T        11.3495            6.3E-6  15     XLC
+211PB T        12.1443-13.3763    0.00032  6     XLB
+211PB T        14.3078-15.2169    0.00006312     XLG
 211PB T   
-211PB T        56.028-61.669  |]                  KLL AUGER
-211PB T        68.181-74.969  |]  0.000059  21    ^KLX AUGER
-211PB T        80.3-88        |]                  KXY AUGER
-211PB T        5.33-15.82        0.00115  14     L AUGER
+211PB T        56.028-61.669  |]                 KLL AUGER
+211PB T        68.181-74.969  |]  0.00005921     KLX AUGER
+211PB T        80.3-88        |]                 KXY AUGER
+211PB T        5.33-15.82         0.00115 14     L AUGER
 215PO  P 0.0         9/2+              1.781 MS  4              7526.3    8
 211PB  N 1.00E0      1.00E0    0.999997  1.00E0
 211PB  L 0           9/2+              36.1 M    2
 211PB  A 7386.1    8 99.934  201.34
 211PB  L 438.9     2 (7/2)+                       
 211PB  A 6955.4    8 0.06    2 82
-211PB  G 438.9     2 0.058   19E2                      0.0405 6
-211PB2 G KC=0.0275  4$LC=0.00984 14$MC=0.00247 4
+211PB  G 438.9     2 0.058   19E2                      0.0405  6
+211PB2 G KC=0.0275   4$LC=0.00984 14$MC=0.00247  4
 211PB  L 584       3  +                           
 211PB  A 6813      3 0.0004  2 3800
 211PB  G 584       3                                   
@@ -46,7 +46,7 @@
 211PB  L 643       3 11/2+                        
 211PB  A 6755      3 0.0008  3 1170
 211PB  G 643       3           (M1+E2)                 0.036  20
-211PB2 G KC=0.029   17$LC=0.0054  23$MC=0.0013  6
+211PB2 G KC=0.029   17$LC=0.0054  23$MC=0.0013   6
 211PB  L 733       3 (13/2)+                      
 211PB  A 6667      3 0.0008  3 550
 211PB  G 733       3                                   
@@ -64,24 +64,24 @@
 215AT C  References: 1942Wa04, 1950Av61, 1961Vo06, 1962Wa18, 1965Va10, 1968Br17, 
 215AT2C  1970Da09, 1971Gr17, 1971Er02, 1977Ma29, 1991Ry01, 1998Li53, 2003Au03, 
 215AT3C  2004Br45, 2008Ki07
-215AT T  Auger electrons and ^X ray energies and emission intensities:
-215AT T       {U Energy (keV)}     {U Intensity }      {U Line  }
+215AT T  Auger electrons and X ray energies and emission intensities:
+215AT T       {U Energy (keV)}   {U Intensity}  {U Line}
 215AT T
 215AT T        78.94                             XKA2
 215AT T        81.51                             XKA1
 215AT T   
-215AT T        91.73          |]                  XKB3
-215AT T        92.315         |]                  XKB1
-215AT T        92.883         |]                  XKB5II
+215AT T        91.73          |]                 XKB3
+215AT T        92.315         |]                 XKB1
+215AT T        92.883         |]                 XKB5II
 215AT T   
-215AT T        94.846         |]                  XKB2
-215AT T        95.211         |]                  XKB4
-215AT T        95.595         |]                  XKO23
+215AT T        94.846         |]                 XKB2
+215AT T        95.211         |]                 XKB4
+215AT T        95.595         |]                 XKO23
 215AT T   
 215AT T   
-215AT T        60.489-67.031  |]                  KLL AUGER
-215AT T        73.811-81.516  |]                  ^KLX AUGER
-215AT T        87.1-95.72     |]                  KXY AUGER
+215AT T        60.489-67.031  |]                 KLL AUGER
+215AT T        73.811-81.516  |]                 KLX AUGER
+215AT T        87.1-95.72     |]                 KXY AUGER
 215AT T        5.58-17.41                        L AUGER
 215PO  P 0.0         9/2+              1.781 MS  4              715       7
 215AT  N 4.348E5     4.348E5   0.000002  4.348E5

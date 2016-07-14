@@ -6,35 +6,35 @@
 131XE C  References: 1952Be55, 1954Be36, 1962Ge01, 1964An08, 1966Kn09, 1969fr04, 
 131XE2C  1972Em09, 1973Be06, 1974Me21, 1975Ho12, 1976Au08, 1990Ta02, 1994Se07, 
 131XE3C  1996Sc33, 2002Ba85, 2008Ki07, 2012Wa38, 2012Fi12
-131XE T  Auger electrons and ^X ray energies and emission intensities:
-131XE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+131XE T  Auger electrons and X ray energies and emission intensities:
+131XE T       {U Energy (keV)}   {U Intensity}  {U Line}
 131XE T
-131XE T        29.459            15.5  4         XKA2
-131XE T        29.779            28.7  7         XKA1
+131XE T        29.459             15.5     4     XKA2
+131XE T        29.779             28.7     7     XKA1
 131XE T   
-131XE T        33.562         |]                  XKB3
-131XE T        33.625         |]  8.31  22        XKB1
-131XE T        33.881         |]                  XKB5II
+131XE T        33.562         |]                 XKB3
+131XE T        33.625         |]  8.31    22     XKB1
+131XE T        33.881         |]                 XKB5II
 131XE T   
-131XE T        34.415         |]                  XKB2
-131XE T        34.496         |]  1.96  7         XKB4
-131XE T        34.552         |]                  XKO23
+131XE T        34.415         |]                 XKB2
+131XE T        34.496         |]  1.96     7     XKB4
+131XE T        34.552         |]                 XKO23
 131XE T   
-131XE T        3.64-5.3          8.12  16        XL (total)
-131XE T        3.64              0.160  5        XLL
-131XE T        4.1-4.11          4.20  11        XLA
-131XE T        3.96              0.0537  17      XLC
-131XE T        4.42-4.78         3.22  7         XLB
-131XE T        4.89-5.3          0.479  10       XLG
+131XE T        3.64-5.3           8.12    16     XL (total)
+131XE T        3.64               0.160    5     XLL
+131XE T        4.1-4.11           4.20    11     XLA
+131XE T        3.96               0.0537  17     XLC
+131XE T        4.42-4.78          3.22     7     XLB
+131XE T        4.89-5.3           0.479   10     XLG
 131XE T   
-131XE T        23.512-24.842  |]                  KLL AUGER
-131XE T        27.897-29.77   |]  6.9  4          ^KLX AUGER
-131XE T        32.27-34.54    |]                  KXY AUGER
-131XE T        2.5-5.43          75.8  5         L AUGER
+131XE T        23.512-24.842  |]                 KLL AUGER
+131XE T        27.897-29.77   |]  6.9      4     KLX AUGER
+131XE T        32.27-34.54    |]                 KXY AUGER
+131XE T        2.5-5.43           75.8     5     L AUGER
 131XE  P 163.930   8 11/2-             11.962 D  20
 131XE  N 1.0         1.0       1         1.0
 131XE  L 0           3/2+                STABLE   
 131XE  L 163.930   8 11/2-             11.962 D  20
-131XE  G 163.930   8 1.942   26M4                      50.5   7
-131XE2 G KC=31.6    5$LC=14.75   21$MC=3.38    5
+131XE  G 163.930   8 1.942   26M4                      50.5    7
+131XE2 G KC=31.6     5$LC=14.75   21$MC=3.38     5
  

@@ -1,19 +1,19 @@
  90Y      90SR B- DECAY (28.80 Y)
  90Y   H TYP=Full$AUT=Chisté$CUT= -- $
  90Y  C  Evaluation history: Type=Full;Author=Chisté;Cutoff date= -- 
- 90Y  T  Auger electrons and ^X ray energies and emission intensities:
- 90Y  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 90Y  T  Auger electrons and X ray energies and emission intensities:
+ 90Y  T       {U Energy (keV)}   {U Intensity}  {U Line}
  90Y  T
  90Y  T        14.883                            XKA2
  90Y  T        14.9581                           XKA1
  90Y  T   
- 90Y  T        16.7268        |]                  XKB3
- 90Y  T        16.7384        |]                  XKB1
- 90Y  T        16.8792        |]                  XKB5II
- 90Y  T        16.8814        |]                  XKB5I
+ 90Y  T        16.7268        |]                 XKB3
+ 90Y  T        16.7384        |]                 XKB1
+ 90Y  T        16.8792        |]                 XKB5II
+ 90Y  T        16.8814        |]                 XKB5I
  90Y  T   
- 90Y  T        17.0137        |]                  XKB2
- 90Y  T        17.0409        |]                  XKB4
+ 90Y  T        17.0137        |]                 XKB2
+ 90Y  T        17.0409        |]                 XKB4
  90Y  T   
  90Y  T        1.6865                            XLL
  90Y  T        1.9211-1.9233                     XLA
@@ -21,9 +21,9 @@
  90Y  T        1.9962-2.0713                     XLB
  90Y  T        2.1118-2.3482                     XLG
  90Y  T   
- 90Y  T        12.205-12.784  |]                  KLL AUGER
- 90Y  T        14.238-14.956  |]                  ^KLX AUGER
- 90Y  T        16.251-17.034  |]                  KXY AUGER
+ 90Y  T        12.205-12.784  |]                 KLL AUGER
+ 90Y  T        14.238-14.956  |]                 KLX AUGER
+ 90Y  T        16.251-17.034  |]                 KXY AUGER
  90Y  T        0.06-2.3677                       L AUGER
  90SR  P 0.0         0+                28.80 Y   7              545.9     14
  90Y   N 1.0         1.0       1         1.0

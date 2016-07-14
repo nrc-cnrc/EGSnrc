@@ -4,36 +4,36 @@
 210PB C  References: 1942Wa04, 1950Vo02, 1953Ba60, 1960Og01, 1961Ry02, 1961Do02, 
 210PB2C  1969Pe17, 1971Gr17, 1971Er02, 1976Ku08, 1990Ho28, 1992Br01, 1993Zh30, 
 210PB3C  1991Ry01, 1995El07, 1996Sc06, 1998Ak04, 2002Ba85, 2003Au03, 2003Br13
-210PB T  Auger electrons and ^X ray energies and emission intensities:
-210PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+210PB T  Auger electrons and X ray energies and emission intensities:
+210PB T       {U Energy (keV)}   {U Intensity}  {U Line}
 210PB T
-210PB T        72.8049           0.0000246  15   XKA2
-210PB T        74.97             0.0000414  25   XKA1
+210PB T        72.8049            2.46E-5 15     XKA2
+210PB T        74.97              4.14E-5 25     XKA1
 210PB T   
-210PB T        84.451         |]                  XKB3
-210PB T        84.937         |]  0.0000141  9    XKB1
-210PB T        85.47          |]                  XKB5II
+210PB T        84.451         |]                 XKB3
+210PB T        84.937         |]  1.41E-5  9     XKB1
+210PB T        85.47          |]                 XKB5II
 210PB T   
-210PB T        87.238         |]                  XKB2
-210PB T        87.58          |]  0.00000427  27  XKB4
-210PB T        87.911         |]                  XKO23
+210PB T        87.238         |]                 XKB2
+210PB T        87.58          |]  4.27E-6 27     XKB4
+210PB T        87.911         |]                 XKO23
 210PB T   
-210PB T        9.19-15.22        0.0000347  13   XL (total)
-210PB T        9.19              0.00000083  5   XLL
-210PB T        10.4495-10.5512   0.0000157  8    XLA
-210PB T        11.3495           0.000000279  16 XLC
-210PB T        12.1443-12.7953   0.0000150  6    XLB
-210PB T        14.3078-15.22     0.00000289  12  XLG
+210PB T        9.19-15.22         3.47E-5 13     XL (total)
+210PB T        9.19               8.3E-7   5     XLL
+210PB T        10.4495-10.5512    1.57E-5  8     XLA
+210PB T        11.3495            2.79E-7 16     XLC
+210PB T        12.1443-12.7953    1.50E-5  6     XLB
+210PB T        14.3078-15.22      2.89E-6 12     XLG
 214PO  P 0.0         0+                162.3 US  12             7833.46   6
 210PB  N 1.0         1.0       1         1.0
 210PB  L 0           0+                22.23 Y   12
 210PB  A 7686.82   6 99.9895 7 1
 210PB  L 799.7     2 2+                17 PS     5
 210PB  A 6902.6    3 0.0105  7 27
-210PB  G 799.7     1 0.0104  6 E2                      0.0104215
-210PB2 G KC=0.00810 12$LC=1763E-6 25$MC=4.25E-4 6
+210PB  G 799.7     1 0.0104   6E2                      0.0104215
+210PB2 G KC=0.00810 12$LC=1763E-6 25$MC=4.25E-4  6
 210PB  L 1097.7    104+                0.6 NS    1
 210PB  A 6610.1    1058000E-92 400
-210PB  G 298       1 5.2E-5  18E2                      0.1180 21
-210PB2 G KC=0.0661  11$LC=0.0389  8$MC=0.00999 20
+210PB  G 298       1 0.00005218E2                      0.1180 21
+210PB2 G KC=0.0661  11$LC=0.0389   8$MC=0.00999 20
  

@@ -8,39 +8,39 @@
 141PR3C  1975Le09, 1976Va30, 1977La19, 1979Ha09, 1979Ha21, 1980Sc07, 1980RuZY, 
 141PR4C  1983Wa26, 1992Sc24, 1992Un01, 1996Sc06, 2000He14, 2000Sc47, 2001Tu01, 
 141PR5C  2002Ba85, 2002Un02, 2008Ki07, 2012Au06
-141PR T  Auger electrons and ^X ray energies and emission intensities:
-141PR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+141PR T  Auger electrons and X ray energies and emission intensities:
+141PR T       {U Energy (keV)}   {U Intensity}  {U Line}
 141PR T
-141PR T        35.5506           4.80  9         XKA2
-141PR T        36.0267           8.76  15        XKA1
+141PR T        35.5506            4.80     9     XKA2
+141PR T        36.0267            8.76    15     XKA1
 141PR T   
-141PR T        40.6533        |]                  XKB3
-141PR T        40.7487        |]  2.67  6         XKB1
-141PR T        41.05          |]                  XKB5II
+141PR T        40.6533        |]                 XKB3
+141PR T        40.7487        |]  2.67     6     XKB1
+141PR T        41.05          |]                 XKB5II
 141PR T   
-141PR T        41.774         |]                  XKB2
-141PR T        41.877         |]  0.682  20       XKB4
-141PR T        41.968         |]                  XKO23
+141PR T        41.774         |]                 XKB2
+141PR T        41.877         |]  0.682   20     XKB4
+141PR T        41.968         |]                 XKO23
 141PR T   
-141PR T        4.458-6.617       2.52  5         XL (total)
-141PR T        4.458             0.0485  15      XLL
-141PR T        5.0129-5.0343     1.23  4         XLA
-141PR T        4.9337            0.0187  6       XLC
-141PR T        5.4887-5.9032     1.054  23       XLB
-141PR T        6.1375-6.617      0.169  4        XLG
+141PR T        4.458-6.617        2.52     5     XL (total)
+141PR T        4.458              0.0485  15     XLL
+141PR T        5.0129-5.0343      1.23     4     XLA
+141PR T        4.9337             0.0187   6     XLC
+141PR T        5.4887-5.9032      1.054   23     XLB
+141PR T        6.1375-6.617       0.169    4     XLG
 141PR T   
-141PR T        28.162-29.89   |]                  KLL AUGER
-141PR T        33.576-36.004  |]  1.59  8         ^KLX AUGER
-141PR T        38.97-41.95    |]                  KXY AUGER
-141PR T        2.94-6.79         16.15  11       L AUGER
+141PR T        28.162-29.89   |]                 KLL AUGER
+141PR T        33.576-36.004  |]  1.59     8     KLX AUGER
+141PR T        38.97-41.95    |]                 KXY AUGER
+141PR T        2.94-6.79          16.15   11     L AUGER
 141CE  P 0.0         7/2-              32.503 D  11             580.4     11
 141PR  N 1.0         1.0       1         1.0
 141PR  L 0         0 5/2+                STABLE   
-141PR  B 580.4     1130.03   44          7.76                                1U
+141PR  B 580.4     1130.03   44          7.76                                1
 141PRS B EAV=180.8 6
 141PR  L 145.4434  147/2+                         
 141PR  B 435.0     1169.97   44          6.97                                  
 141PRS B EAV=129.7 5
-141PR  G 145.4433  1448.29   19M1+E2     0.068   5     0.449  7
-141PR2 G KC=0.383   6$LC=0.0529  8$MC=0.01116 16
+141PR  G 145.4433  1448.29   19M1+E2     0.068   5     0.449   7
+141PR2 G KC=0.383    6$LC=0.0529   8$MC=0.01116 16
  

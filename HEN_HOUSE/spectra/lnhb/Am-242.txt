@@ -5,41 +5,41 @@
 242PU2C  1961Ma27, 1969Al20, 1969Ga17, 1972Ga35, 1977La19, 1980VyZZ, 1982Wi05, 
 242PU3C  1996Sc06, 1998ScZM, 1999ScZX, 2002Ak06, 2002Ba85, 2002Ra45, 2003Au03, 
 242PU4C  2008Ki07
-242PU T  Auger electrons and ^X ray energies and emission intensities:
-242PU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+242PU T  Auger electrons and X ray energies and emission intensities:
+242PU T       {U Energy (keV)}   {U Intensity}  {U Line}
 242PU T
-242PU T        99.525            3.55  17        XKA2
-242PU T        103.734           5.6  3          XKA1
+242PU T        99.525             3.55    17     XKA2
+242PU T        103.734            5.6      3     XKA1
 242PU T   
-242PU T        116.244        |]                  XKB3
-242PU T        117.228        |]  2.06  11        XKB1
-242PU T        117.918        |]                  XKB5II
+242PU T        116.244        |]                 XKB3
+242PU T        117.228        |]  2.06    11     XKB1
+242PU T        117.918        |]                 XKB5II
 242PU T   
-242PU T        120.54         |]                  XKB2
-242PU T        120.969        |]  0.72  4         XKB4
-242PU T        121.543        |]                  XKO23
+242PU T        120.54         |]                 XKB2
+242PU T        120.969        |]  0.72     4     XKB4
+242PU T        121.543        |]                 XKO23
 242PU T   
-242PU T        12.124-22.153     10.8  5         XL (total)
-242PU T        12.124            0.293  11       XLL
-242PU T        14.087-14.282     4.56  16        XLA
-242PU T        16.333            0.084  4        XLC
-242PU T        16.498-18.541     4.64  15        XLB
-242PU T        21.42-22.153      1.03  4         XLG
+242PU T        12.124-22.153      10.8     5     XL (total)
+242PU T        12.124             0.293   11     XLL
+242PU T        14.087-14.282      4.56    16     XLA
+242PU T        16.333             0.084    4     XLC
+242PU T        16.498-18.541      4.64    15     XLB
+242PU T        21.42-22.153       1.03     4     XLG
 242PU T   
-242PU T        75.263-85.357  |]                  KLL AUGER
-242PU T        92.607-103.729 |]  0.36  4         ^KLX AUGER
-242PU T        109.93-121.78  |]                  KXY AUGER
-242PU T        6.19-22.99        9.9  5          L AUGER
+242PU T        75.263-85.357  |]                 KLL AUGER
+242PU T        92.607-103.729 |]  0.36     4     KLX AUGER
+242PU T        109.93-121.78  |]                 KXY AUGER
+242PU T        6.19-22.99         9.9      5     L AUGER
 242AM  P 0.0         1-                16.01 H   2              751.3     7
 242PU  N 5.917E0     5.917E0   0.169     5.917E0
 242PU  L 0         0 0+                3.73E5 Y  3
-242PU  E                       6.3     6 7.55                                1
-242PU2 E EAV=   $CK=0.7303 22$CL=0.1987 15$CM=0.0522 10$CN=   $CO=   
+242PU  E                       6.3      67.55                                1
+242PU2 E CK=0.7303 22$CL=0.1987 15$CM=0.0522 10
 242PU  L 44.54     2 2+                           
-242PU  E                       10.6    5 7.26                                1
-242PU2 E EAV=   $CK=0.7261 23$CL=0.2016 15$CM=0.0532 10$CN=0.0152 7$CO=   
-242PU  G 44.54     2 0.014   1 E2                      748    11
-242PU2 G KC=$LC=543     8$MC=151.6   22
+242PU  E                       10.6     57.26                                1
+242PU2 E CK=0.7261 23$CL=0.2016 15$CM=0.0532 10$CN=0.0152 7
+242PU  G 44.54     2 0.014    1E2                      748    11
+242PU2 G LC=543      8$MC=151.6   22
  
 242CM    242AM B- DECAY (16.01 H)
 242CM  H TYP=Full$AUT=A.L. Nichols$CUT=30-SEP-2008$
@@ -48,28 +48,28 @@
 242CM2C  1961Ma27, 1969Al20, 1969Ga17, 1972Ga35, 1977La19, 1980VyZZ, 1982Wi05, 
 242CM3C  1996Sc06, 1998ScZM, 1999ScZX, 2002Ak06, 2002Ba85, 2002Ra45, 2003Au03, 
 242CM4C  2008Ki07
-242CM T  Auger electrons and ^X ray energies and emission intensities:
-242CM T       {U Energy (keV)}     {U Intensity }      {U Line  }
+242CM T  Auger electrons and X ray energies and emission intensities:
+242CM T       {U Energy (keV)}   {U Intensity}  {U Line}
 242CM T
 242CM T        104.59                            XKA2
 242CM T        109.271                           XKA1
 242CM T   
-242CM T        122.304        |]                  XKB3
-242CM T        123.403        |]                  XKB1
-242CM T        124.124        |]                  XKB5II
+242CM T        122.304        |]                 XKB3
+242CM T        123.403        |]                 XKB1
+242CM T        124.124        |]                 XKB5II
 242CM T   
-242CM T        126.889        |]                  XKB2
-242CM T        127.352        |]                  XKB4
-242CM T        127.97         |]                  XKO23
+242CM T        126.889        |]                 XKB2
+242CM T        127.352        |]                 XKB4
+242CM T        127.97         |]                 XKO23
 242CM T   
-242CM T        12.633-23.527     18.0  11        XL (total)
-242CM T        12.633            0.451  22       XLL
-242CM T        14.746-14.961     6.8  3          XLA
-242CM T        17.314            0.194  11       XLC
-242CM T        17.286-19.688     8.7  4          XLB
-242CM T        22.735-23.527     2.09  10        XLG
+242CM T        12.633-23.527      18.0    11     XL (total)
+242CM T        12.633             0.451   22     XLL
+242CM T        14.746-14.961      6.8      3     XLA
+242CM T        17.314             0.194   11     XLC
+242CM T        17.286-19.688      8.7      4     XLB
+242CM T        22.735-23.527      2.09    10     XLG
 242CM T   
-242CM T        6.19-14.46        15.4  10        L AUGER
+242CM T        6.19-14.46         15.4    10     L AUGER
 242AM  P 0.0         1-                16.01 H   2              664.5     4
 242CM  N 1.203E0     1.203E0   0.831     1.203E0
 242CM  L 0           0+                162.86 D  8
@@ -78,6 +78,6 @@
 242CM  L 42.13     5 2+                           
 242CM  B 622.4     4 45.8    23          6.84                                1
 242CMS B EAV=185.92 14
-242CM  G 42.13     5 0.040   2 E2                      1155   17
-242CM2 G KC=$LC=836     13$MC=235     4
+242CM  G 42.13     5 0.040    2E2                      1155   17
+242CM2 G LC=836     13$MC=235      4
  

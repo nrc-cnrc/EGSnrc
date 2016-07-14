@@ -9,25 +9,25 @@
  22NE4C  1979SC31, 1980HO17, 1982RUZV, 1983BA41, 1985HAZA, 1990KU11, 1991BAZS, 
  22NE5C  1995SCZY, 1996SC06, 1999BeZS, 1999BeZQ, 2000HE14, 2002UN02, 2002BA85, 
  22NE6C  2004MU26, 2009NA08, 2008MU05
- 22NE T  Auger electrons and ^X ray energies and emission intensities:
- 22NE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 22NE T  Auger electrons and X ray energies and emission intensities:
+ 22NE T       {U Energy (keV)}   {U Intensity}  {U Line}
  22NE T
- 22NE T        0.8486            0.0453  25      XKA2
- 22NE T        0.8486            0.090  5        XKA1
+ 22NE T        0.8486             0.0453  25     XKA2
+ 22NE T        0.8486             0.090    5     XKA1
  22NE T   
  22NE T   
  22NE T   
  22NE T   
- 22NE T        0.75-0.81      |]                  KLL AUGER
- 22NE T         -             |]  8.8  1          ^KLX AUGER
+ 22NE T        0.75-0.81      |]                 KLL AUGER
+ 22NE T         -             |]  8.8      1     KLX AUGER
  22NA  P 0.0         3+                2.6029 Y  8              2843.02   21
  22NE  N 1.0         1.0       1         1.0
  22NE  L 0           0+                  STABLE   
  22NE  E             0.055   140.00098 2514.91                               2U
- 22NE2 E EAV=835.04 19$CK=   $CL=   $CM=   $CN=   $CO=   
+ 22NE2 E EAV=835.04 19
  22NE  L 1274.577  7 2+                0.00524 NS7
- 22NE  E             90.30   9 9.64    9 7.41                                  
- 22NE2 E EAV=215.62 17$CK=0.923 4$CL=0.077 4$CM=   $CN=   $CO=   
- 22NE  G 1274.537  7 99.94   13E2                      6.71E-69
- 22NE2 G KC=6.36E-6 9$LC=$MC=
+ 22NE  E             90.30    99.64     97.41                                  
+ 22NE2 E EAV=215.62 17$CK=0.923 4$CL=0.077 4
+ 22NE  G 1274.537  7 99.94   13E2                      6.71E-6 9
+ 22NE2 G KC=6.36E-6  9
  

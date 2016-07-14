@@ -41,6 +41,7 @@
 #include "egs_libconfig.h"
 #include "egs_functions.h"
 #include "egs_math.h"
+#include "egs_alias_table.h"
 
 #include <iostream>
 #include <fstream>
@@ -160,6 +161,9 @@ public:
 protected:
     double recordToDouble(int startPos, int endPos);
     double parseHalfLife(int startPos, int endPos);
+    unsigned short int setZ(string id);
+    map<string, unsigned short int> getElementMap();
+    unsigned short int findZ(string element);
 
     // All the lines corresponding to this record type
     vector<string> lines;
@@ -255,12 +259,21 @@ public:
     int getCharge() const;
     void incrNumSampled();
     EGS_I64 getNumSampled() const;
+    unsigned short int getZ() const;
+    unsigned short int getAtomicWeight() const;
+    unsigned short int getForbidden() const;
+    void setSpectrum(EGS_AliasTable *bspec);
+    EGS_AliasTable* getSpectrum() const;
 
 protected:
     EGS_I64 numSampled;
     double finalEnergy;
     double betaIntensity;
     int q;
+    unsigned short int Z;
+    unsigned short int A;
+    unsigned short int forbidden;
+    EGS_AliasTable *spectrum;
 };
 
 // Beta- record
@@ -379,6 +392,7 @@ public:
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
     vector<double > getAugerEnergies() const;
+    
     string radionuclide;
 
     void normalizeIntensities();

@@ -5,37 +5,37 @@
 144PR2C  1974Be09, 1976CoZX, 1976Ra22, 1977La19, 1979Pr11, 1979Gr01, 1985Da16, 
 144PR3C  1994Ro13, 1996Sc06, 1998Hi09, 1998ScZM, 1999ScZX, 2000Sc47, 2000He14, 
 144PR4C  2001So16, 2002Ra45, 2002Ba85, 2008Ki07, 2012Wa38
-144PR T  Auger electrons and ^X ray energies and emission intensities:
-144PR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+144PR T  Auger electrons and X ray energies and emission intensities:
+144PR T       {U Energy (keV)}   {U Intensity}  {U Line}
 144PR T
-144PR T        33.5506           8.66  19        XKA2
-144PR T        36.0267           15.8  4         XKA1
+144PR T        33.5506            8.66    19     XKA2
+144PR T        36.0267            15.8     4     XKA1
 144PR T   
-144PR T        40.6533        |]                  XKB3
-144PR T        40.7487        |]  4.81  12        XKB1
-144PR T        41.05          |]                  XKB5II
+144PR T        40.6533        |]                 XKB3
+144PR T        40.7487        |]  4.81    12     XKB1
+144PR T        41.05          |]                 XKB5II
 144PR T   
-144PR T        41.774         |]                  XKB2
-144PR T        41.877         |]  1.23  4         XKB4
-144PR T        41.968         |]                  XKO23
+144PR T        41.774         |]                 XKB2
+144PR T        41.877         |]  1.23     4     XKB4
+144PR T        41.968         |]                 XKO23
 144PR T   
-144PR T        4.453-6.617       10.5  5         XL (total)
-144PR T        4.453             0.227  7        XLL
-144PR T        5.013-5.033       5.74  16        XLA
-144PR T        4.929             0.0498  15      XLC
-144PR T        5.489-5.851       3.89  7         XLB
-144PR T        6.327-6.617       0.625  13       XLG
+144PR T        4.453-6.617        10.5     5     XL (total)
+144PR T        4.453              0.227    7     XLL
+144PR T        5.013-5.033        5.74    16     XLA
+144PR T        4.929              0.0498  15     XLC
+144PR T        5.489-5.851        3.89     7     XLB
+144PR T        6.327-6.617        0.625   13     XLG
 144PR T   
-144PR T        28.162-29.89   |]                  KLL AUGER
-144PR T        33.576-36.004  |]  2.87  15        ^KLX AUGER
-144PR T        38.97-41.95    |]                  KXY AUGER
-144PR T        2.9-4.91          69  10          L AUGER
+144PR T        28.162-29.89   |]                 KLL AUGER
+144PR T        33.576-36.004  |]  2.87    15     KLX AUGER
+144PR T        38.97-41.95    |]                 KXY AUGER
+144PR T        2.9-4.91           69      10     L AUGER
 144PR  P 59.03     3 3-                7.2 M     2
 144PR  N 1.001E0     1.001E0   0.9994  2 1.001E0
 144PR  L 0         0 0-                17.29 M   4
 144PR  L 59.03     3 3-                7.2 M     2
 144PR  G 59.03     3 0.0818  12M3                      1221   18
-144PR2 G KC=408     6$LC=618     9$MC=155.0   23
+144PR2 G KC=408      6$LC=618      9$MC=155.0   23
  
 144ND    144PR B- DECAY (7.2 M)
 144ND  H TYP=FUL$AUT=A.L. Nichols$CUT=01-APR-2014$
@@ -44,54 +44,54 @@
 144ND2C  1974Be09, 1976CoZX, 1976Ra22, 1977La19, 1979Pr11, 1979Gr01, 1985Da16, 
 144ND3C  1994Ro13, 1996Sc06, 1998Hi09, 1998ScZM, 1999ScZX, 2000Sc47, 2000He14, 
 144ND4C  2001So16, 2002Ra45, 2002Ba85, 2008Ki07, 2012Wa38
-144ND T  Auger electrons and ^X ray energies and emission intensities:
-144ND T       {U Energy (keV)}     {U Intensity }      {U Line  }
+144ND T  Auger electrons and X ray energies and emission intensities:
+144ND T       {U Energy (keV)}   {U Intensity}  {U Line}
 144ND T
-144ND T        36.8478           0.000119  23    XKA2
-144ND T        37.3614           0.00022  5      XKA1
+144ND T        36.8478            0.00011923     XKA2
+144ND T        37.3614            0.00022  5     XKA1
 144ND T   
-144ND T        42.167         |]                  XKB3
-144ND T        42.2717        |]  0.000067  13    XKB1
-144ND T        42.58          |]                  XKB5II
+144ND T        42.167         |]                 XKB3
+144ND T        42.2717        |]  0.00006713     XKB1
+144ND T        42.58          |]                 XKB5II
 144ND T   
-144ND T        43.335         |]                  XKB2
-144ND T        43.451         |]  0.000017  4     XKB4
-144ND T        43.548         |]                  XKO23
+144ND T        43.335         |]                 XKB2
+144ND T        43.451         |]  0.000017 4     XKB4
+144ND T        43.548         |]                 XKO23
 144ND T   
 144ND T   
-144ND T        29.154-30.978  |]                  KLL AUGER
-144ND T        34.798-37.34   |]  0.000038  8     ^KLX AUGER
-144ND T        40.42-43.53    |]                  KXY AUGER
-144ND T        3.01-5.1          0.00040  5      L AUGER
+144ND T        29.154-30.978  |]                 KLL AUGER
+144ND T        34.798-37.34   |]  0.000038 8     KLX AUGER
+144ND T        40.42-43.53    |]                 KXY AUGER
+144ND T        3.01-5.1           0.00040  5     L AUGER
 144PR  P 59.03     3 3-                7.2 M     2              2997.4    24
 144ND  N 1.667E3     1.667E3   0.0006  2 1.667E3
 144ND  L 0         0 0+                2.3E15 Y  3
 144ND  L 696.561   102+                           
-144ND  G 696.505   4 0.06    2 E2                      0.005077
-144ND2 G KC=0.00427 6$LC=6.31E-4 9$MC=1348E-7 19
+144ND  G 696.505   4 0.06     2E2                      0.00507 7
+144ND2 G KC=0.00427  6$LC=6.31E-4  9$MC=1348E-7 19
 144ND  L 1314.669  134+                7.4 PS    9
-144ND  G 618.107   160.030   3 E2                      0.0067910
-144ND2 G KC=0.00568 8$LC=8.69E-4 13$MC=1.86E-4 3
+144ND  G 618.107   160.030    3E2                      0.0067910
+144ND2 G KC=0.00568  8$LC=8.69E-4 13$MC=1.86E-4  3
 144ND  L 1510.871  213-                0.56 PS   7
-144ND  B 1545.5    240.02    1           8.7                                   
+144ND  B 1545.5    240.02     1          8.7                                   
 144NDS B EAV=570.0 11
-144ND  G 814.308   230.02    1 E1                      1391E-620
-144ND2 G KC=1198E-6 17$LC=1528E-7 22$MC=3.21E-5 5
+144ND  G 814.308   230.02     1E1                      1391E-620
+144ND2 G KC=1198E-6 17$LC=1528E-7 22$MC=3.21E-5  5
 144ND  L 1560.920  132+                           
 144ND  L 2072.91   3 2+                59 FS     10
 144ND  L 2084.68   3 0+                0.12 PS   5
 144ND  L 2185.75   3 1-                15 FS     2
 144ND  L 2368.82   4 2+                39 FS     14
 144ND  L 2582.32   6 (3)+                         
-144ND  B 474.1     240.010   3           7.15                                  
+144ND  B 474.1     240.010    3          7.15                                  
 144NDS B EAV=143.0 8
-144ND  G 1885.75   6 0.010   3 M1+E2     0.13    5     1052E-615
-144ND2 G KC=6.86E-4 10$LC=8.78E-5 13$MC=1.85E-5 3
+144ND  G 1885.75   6 0.010    3M1+E2     0.13    5     1052E-615
+144ND2 G KC=6.86E-4 10$LC=8.78E-5 13$MC=1.85E-5  3
 144ND  L 2655.54   3 1+                9.9 FS    2
 144ND  L 2675.61   8 0+                0.2 PS    1
 144ND  L 2742.99   7 0+                64 FS     40
 144ND  L 2946.04   10(2,3,4)-                     
-144ND  B 110.4     240.030   3           4.65                                  
+144ND  B 110.4     240.030    3          4.65                                  
 144NDS B EAV=29.0 7
-144ND  G 1631.36   100.030   3                         
+144ND  G 1631.36   100.030    3                        
  

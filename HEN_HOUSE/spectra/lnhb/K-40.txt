@@ -7,34 +7,34 @@
  40AR2C  1956MC20, 1957WE43, 1959KE26, 1959Ti20, 1960SA31, 1961GL07, 1962FL05, 
  40AR3C  1962EN01, 1965BR25, 1965LE15, 1966FE09, 1967KI10, 1970JA15, 1977CE04, 
  40AR4C  1979HE13, 1990EN08, 2001BE81, 2003AU03, 2004KO09, 2008KI07
- 40AR T  Auger electrons and ^X ray energies and emission intensities:
- 40AR T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 40AR T  Auger electrons and X ray energies and emission intensities:
+ 40AR T       {U Energy (keV)}   {U Intensity}  {U Line}
  40AR T
- 40AR T        2.95566           0.299  9        XKA2
- 40AR T        2.95774           0.592  17       XKA1
+ 40AR T        2.95566            0.299    9     XKA2
+ 40AR T        2.95774            0.592   17     XKA1
  40AR T   
- 40AR T        3.1905         |]  0.096  4        XKB1
+ 40AR T        3.1905         |]  0.096    4     XKB1
  40AR T   
  40AR T   
- 40AR T        0.2195-0.3114     0.003  1        XL (total)
+ 40AR T        0.2195-0.3114      0.003    1     XL (total)
  40AR T        0.2195                            XLL
  40AR T        0.2215                            XLC
  40AR T        0.3112-0.3114                     XLB
  40AR T   
- 40AR T        2.511-2.669    |]                  KLL AUGER
- 40AR T        2.831-2.942    |]  7.24  11        ^KLX AUGER
- 40AR T        3.149-3.174    |]                  KXY AUGER
- 40AR T        0.17-0.31         2.22  2         L AUGER
+ 40AR T        2.511-2.669    |]                 KLL AUGER
+ 40AR T        2.831-2.942    |]  7.24    11     KLX AUGER
+ 40AR T        3.149-3.174    |]                 KXY AUGER
+ 40AR T        0.17-0.31          2.22     2     L AUGER
  40K   P 0.0         4-                1.2504E9 Y30             1504.69   19
- 40AR  N 9.302E0     9.302E0   0.1075  179.302E0
+ 40AR  N 9.302E0     9.302E0   0.1075    9.302E0
  40AR  L 0           0+                  STABLE   
- 40AR  E             0.00100 120.2     1 21.35                               3U
- 40AR2 E EAV=   $CK=0.88  $CL=0.086  $CM=0.013  $CN=   $CO=   
+ 40AR  E             0.00100 120.2      121.35                               3U
+ 40AR2 E CK=0.88  $CL=0.086  $CM=0.013  
  40AR  L 1460.851  6 2+                0.00161 NS6
  40AR  E                       10.55   1111.55                               1U
- 40AR2 E EAV=   $CK=0.763  $CL=0.209  $CM=0.027  $CN=   $CO=   
+ 40AR2 E CK=0.763  $CL=0.209  $CM=0.027  
  40AR  G 1460.822  6 10.55   11E2                      1028E-715
- 40AR2 G KC=2.63E-5 4$LC=2.15E-6 3$MC=2.10E-7 3
+ 40AR2 G KC=2.63E-5  4$LC=2.15E-6  3$MC=2.10E-7  3
  
  40CA     40K  B- DECAY (1.2504E9 Y)
  40CA  H TYP=Upadte$AUT=M.M. Bé$CUT= -- $
@@ -45,22 +45,22 @@
  40CA2C  1956MC20, 1957WE43, 1959KE26, 1959Ti20, 1960SA31, 1961GL07, 1962FL05, 
  40CA3C  1962EN01, 1965BR25, 1965LE15, 1966FE09, 1967KI10, 1970JA15, 1977CE04, 
  40CA4C  1979HE13, 1990EN08, 2001BE81, 2003AU03, 2004KO09, 2008KI07
- 40CA T  Auger electrons and ^X ray energies and emission intensities:
- 40CA T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 40CA T  Auger electrons and X ray energies and emission intensities:
+ 40CA T       {U Energy (keV)}   {U Intensity}  {U Line}
  40CA T
  40CA T        3.68813                           XKA2
  40CA T        3.69172                           XKA1
  40CA T   
- 40CA T        4.0128         |]                  XKB1
- 40CA T        4.0325         |]                  XKB5II
+ 40CA T        4.0128         |]                 XKB1
+ 40CA T        4.0325         |]                 XKB5II
  40CA T   
  40CA T   
  40CA T   
- 40CA T        3.123-3.307    |]                  KLL AUGER
- 40CA T        3.543-3.666    |]                  ^KLX AUGER
- 40CA T        3.951-3.987    |]                  KXY AUGER
+ 40CA T        3.123-3.307    |]                 KLL AUGER
+ 40CA T        3.543-3.666    |]                 KLX AUGER
+ 40CA T        3.951-3.987    |]                 KXY AUGER
  40K   P 0.0         4-                1.2504E9 Y30             1311.07   11
- 40CA  N 1.12E0      1.12E0    0.8925  171.12E0
+ 40CA  N 1.12E0      1.12E0    0.8925    1.12E0
  40CA  L 0           0+                  STABLE   
  40CA  B 1311.07   1189.25   17          20.58                               3U
  40CAS B EAV=508.32 6

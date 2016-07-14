@@ -7,38 +7,38 @@
  64NI3C  Type=Full;Author=R.G.Helmer;Cutoff date=31-JAN-2002
  64NI C  References: 1976Ba63, 1989Ab22, 1996Sc06, 2002WE02, 2003Au03, 2007Qa02, 
  64NI2C  2007Si04
- 64NI T  Auger electrons and ^X ray energies and emission intensities:
- 64NI T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 64NI T  Auger electrons and X ray energies and emission intensities:
+ 64NI T       {U Energy (keV)}   {U Intensity}  {U Line}
  64NI T
- 64NI T        7.46093           4.90  6         XKA2
- 64NI T        7.47819           9.56  11        XKA1
+ 64NI T        7.46093            4.90     6     XKA2
+ 64NI T        7.47819            9.56    11     XKA1
  64NI T   
- 64NI T        8.2647         |]                  XKB3
- 64NI T                       |]  1.99  3         XKB1
- 64NI T        8.3287         |]                  XKB5II
+ 64NI T        8.2647         |]                 XKB3
+ 64NI T                       |]  1.99     3     XKB1
+ 64NI T        8.3287         |]                 XKB5II
  64NI T   
  64NI T   
- 64NI T        0.7445-1.0083     0.493  10       XL (total)
- 64NI T        0.7445            0.0186  6       XLL
- 64NI T        0.8532-0.8539     0.276  7        XLA
- 64NI T        0.7622            0.0114  4       XLC
- 64NI T        0.86123-1.0083    0.187  6        XLB
- 64NI T        0.87898-0.87898   0.0009  1       XLG
+ 64NI T        0.7445-1.0083      0.493   10     XL (total)
+ 64NI T        0.7445             0.0186   6     XLL
+ 64NI T        0.8532-0.8539      0.276    7     XLA
+ 64NI T        0.7622             0.0114   4     XLC
+ 64NI T        0.86123-1.0083     0.187    6     XLB
+ 64NI T        0.87898-0.87898    0.0009   1     XLG
  64NI T   
- 64NI T        6.262-6.567    |]                  KLL AUGER
- 64NI T        7.196-7.475    |]  22.62  21       ^KLX AUGER
- 64NI T        8.109-8.326    |]                  KXY AUGER
- 64NI T        0.6-0.9           57.9  4         L AUGER
+ 64NI T        6.262-6.567    |]                 KLL AUGER
+ 64NI T        7.196-7.475    |]  22.62   21     KLX AUGER
+ 64NI T        8.109-8.326    |]                 KXY AUGER
+ 64NI T        0.6-0.9            57.9     4     L AUGER
  64CU  P 0.0         1+                12.7004 H 20             1675.03   20
  64NI  N 1.625E0     1.625E0   0.6152  261.625E0
  64NI  L 0           0+                  STABLE   
  64NI  E             17.52   1543.53   204.97                                  
- 64NI2 E EAV=278.21 9$CK=0.888 3$CL=0.095 2$CM=0.0155 5$CN=   $CO=   
+ 64NI2 E EAV=278.21 9$CK=0.888 3$CL=0.095 2$CM=0.0155 5
  64NI  L 1345.75   5 2+                1.088 PS  35
  64NI  E                       0.4744  335.51                                  
- 64NI2 E EAV=   $CK=0.884 3$CL=0.099 2$CM=0.0162 5$CN=   $CO=   
- 64NI  G 1345.77   6 0.4748  34E2                      1.24E-42
- 64NI2 G KC=1112E-7 2$LC=1.09E-5 2$MC=
+ 64NI2 E CK=0.884 3$CL=0.099 2$CM=0.0162 5
+ 64NI  G 1345.77   6 0.4748  34E2                      1.24E-4 2
+ 64NI2 G KC=1112E-7  2$LC=1.09E-5  2
  
  64ZN     64CU B- DECAY (12.7004 H)
  64ZN  H TYP=update$AUT=M.-M.Bé$CUT=30-JUN-2011$

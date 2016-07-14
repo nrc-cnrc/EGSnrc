@@ -42,6 +42,9 @@
 #include "egs_ensdf.h"
 #include "egs_application.h"
 
+#include <complex>
+#include <gsl/gsl_sf_gamma.h>
+
 #include <cstdio>
 #include "egs_math.h"
 #include <fstream>
@@ -53,6 +56,7 @@
     #define S_STREAM std::istrstream
 #endif
 
+#include <limits>
 
 
 using namespace std;
@@ -438,6 +442,332 @@ protected:
 
 };
 
+
+/*! \brief Beta spectrum generation for radionuclide spectra
+ *
+ * \ingroup egspp_main
+ *
+ *
+ *  L. VanderZwan
+ *  March 7,1985.
+ *  Oct. 14,1994  Converted to Microsoft Fortran v5.1
+ *  PRBS, August 2002. Convert to subroutine for sampling spectrum.
+ *  PRBS, SEPT 2003. Make double precision. replace (ln)gamma calls with
+ *              cernlib calls
+ *  PRBS 7 Oct, 2014 - port to C++ !
+*/
+class EGS_EXPORT EGS_RadionuclideBetaSpectrum {
+
+public:
+    /*! \brief Construct beta spectra for a radionuclide
+     */
+    EGS_RadionuclideBetaSpectrum(EGS_Ensdf *decays) {
+
+        vector<BetaRecordLeaf *> myBetas = decays->getBetaRecords();
+
+        for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
+                beta != myBetas.end(); beta++) {
+
+            printf("EGS_RadionuclideBetaSpectrum: Energy, Z, A, forbidden: %f "
+                   "%d %d %d\n",
+                   (*beta)->getFinalEnergy(), (*beta)->getZ(),
+                   (*beta)->getAtomicWeight(), (*beta)->getForbidden()
+                  );
+
+            const int nbin=1000;
+            EGS_Float *e = new EGS_Float [nbin];
+            EGS_Float *spec = new EGS_Float [nbin];
+            EGS_Float *spec_y = new EGS_Float [nbin];
+            EGS_Float *spec_sr = new EGS_Float [nbin];
+
+            double de, s_y, s_sr, factor, e1, e2, se_y, se_sr;
+            int isrc;
+
+            ncomps=1;    // if we increase this, then we must fill the remainder
+            area[0]=1.0;
+            rel[0]=1.0;
+
+            emax = (*beta)->getFinalEnergy();
+            zzz[0] = (double)(*beta)->getZ();
+            rmass = (*beta)->getAtomicWeight();
+            lamda[0] = (*beta)->getForbidden();
+
+            etop[0]=emax;
+
+            // prbs july 9, 2007 moved here from before src loop.
+            // also, now tabulate based on
+            // endpoint, using roughly nbin bins across spectrum. Do this by
+            // rounding
+            // endpoint E0 up to nearest 100 keV, and dividing by NBIN to get
+            // binwidth.
+
+            e1=0.001;         // may be too low for some spectra (e.g. Tl-204)
+            de=((int)(etop[0]*10.0+1)/10.)/nbin; // round up to nearest 100kev;
+            // /=     NBIN
+//             cout << "Binwidth " << de << endl;
+
+            for (int ib=0; ib<nbin; ib++) {
+                e[ib]=de+ib*de;
+//                 printf("%.12f, %.12f\n", e[ib], etop[0]);
+            }
+
+            s_y=0.0;
+            se_y=0.0;
+            for (int ib=0; ib<nbin; ib++) {
+
+                if (e[ib]<=emax) {
+                    sp(e[ib],spec_y[ib],factor);
+                }
+                else {
+                    spec_y[ib]=0.0;
+                }
+
+                s_y=s_y+spec_y[ib];
+                se_y=se_y+spec_y[ib]*e[ib];
+            }
+
+            for (int ib=0; ib<nbin; ib++) {
+                spec[ib]=1/de*(spec_y[ib]/s_y);
+//                 cout << e[ib] << " " << spec[ib] << endl;
+            }
+
+            EGS_AliasTable *bspec = new EGS_AliasTable(nbin,e,spec,1);
+            (*beta)->setSpectrum(bspec);
+        }
+    }
+
+protected:
+
+    // Complex gamma function approximation
+    complex<double> cgamma(complex<double> z) {
+
+        static const int g=7;
+        static const double pi = 3.1415926535897932384626433832795028841972;
+        static const double p[g+2] = {0.99999999999980993, 676.5203681218851,
+                                      -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+                                      12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+                                      1.5056327351493116e-7
+                                     };
+
+        if (real(z)<0.5) {
+            return pi / (sin(pi*z)*cgamma(1.0-z));
+        }
+
+        z -= 1.0;
+        complex<double> x=p[0];
+        for (int i=1; i<g+2; i++) {
+            x += p[i]/(z+complex<double>(i,0));
+        }
+        complex<double> t = z + (g + 0.5);
+        return sqrt(2*pi) * pow(t,z+0.5) * exp(-t) * x;
+    }
+
+    void slfact(double p, double z, double radf, double xl[4]) {
+
+        double ff[4];
+        double dfac[4]= {1.0, 3.0, 15.0, 105.0};
+        double pi,c137,az,g1,w,rad,pr,y,x1,gk,bb,cc,dd,x2;
+
+        complex<double> aa;
+
+        pi=acos(-1.0);
+        c137=137.036; // 1/ fine structure constant
+        az=z/c137;
+        g1=sqrt(1.0-az*az);
+        w =sqrt(p*p+1.0);
+        rad=radf/386.159;
+        pr=p*rad;
+        y =az*w/p;
+
+        for (int k=1; k<=4; k++) {
+
+            gk=sqrt(k*k-az*az);
+            x1=pow((pow(p,k-1)/dfac[k-1]) ,2);
+            
+            // Fortran original was:
+            //  aa=complex(gk,y)
+            //  aa=clgama(aa)        !   (using CERNLIB's log gamma function)
+            //                       !   for complex arguments
+            // Now use gnu scientific library's function:
+            // int gsl_sf_lngamma_complex_e (double zr, double zi,
+            //                gsl_sf_result * lnr, gsl_sf_result * arg)
+            // returned pars are lnr = \log|\Gamma(z)|
+            //                   arg = \arg(\Gamma(z)) in (-\pi,\pi].
+            // If we assume the Gamma function has complex form  Rexp(i*phi)
+            // then log(Gamma) is just log(R) + i*phi. The former is purely real 
+            // and the latter purely imaginary, hence the last two arguments 
+            // return the real and the imaginary parts of ln(gamma(aa)), and it 
+            // is only the former which is used below.
+            // Note that gsl_sf_result is a structure with elements val and err.
+
+            gsl_sf_result gr_aa_real, gr_aa_imag;
+            gsl_sf_lngamma_complex_e(gk, y, &gr_aa_real, &gr_aa_imag);
+            double aa_real=gr_aa_real.val;
+
+            // Now use cmath's lgamma function
+            bb=lgamma((double)k);
+            cc=lgamma(2.0*k +1.0);
+            dd=lgamma(2.0*gk+1.0);
+
+            ff[k-1] =
+                pow(2.0*pr, 2.0*(gk-k)) *
+                exp(pi*y+2.0*(aa_real+cc-bb-dd)) *
+                (k+gk)/(2.0*k);
+
+            x2 =
+                1.0 -
+                az*pr*(2.0*w*(2.0*k+1.0)/(p*k*(2.0*gk+1.0)) -
+                       2.0*p*gk/(w*k*(2.0*gk+1.0))) -
+                2.0*k*pr*pr/((2.0*k+1.0)*(k+gk));
+            xl[k-1] = x1*ff[k-1]/ff[0]*x2;
+        }
+
+        return;
+    }
+
+    void bsp(double e, double &bspec, double &factor) {
+
+        // *****************************************************************
+        //     Calculates n(e) (unnormalized) for one spectral component,
+        //     specified by:zz,emax,lamda, where
+        //
+        //     lamda = 1  first  forbidden
+        //     lamda = 2  second forbidden
+        //     lamda = 3  third  forbidden
+        //     lamda = 0  otherwise
+        //     lamda = 4  for a few nuclides whose experimental shape don't
+        //                fit theory. fudge factors are applied to the allowed
+        //                shape.
+        //     zz         charge of the daughter nucleus
+        //     emax       maximum beta energy in mev.
+        //     w and tsq   in mc**2 units
+        //     e and emax  in mev   units.
+        //     v is the screening correction for atomi// electrons
+        //     for the thomas-fermi model of the atom
+        //     v = 1.13 * (alpha)**2  * z**(4/3)
+        //
+        //
+
+        double pi,c137,zab,v,z,x,w,psq,p,y,qsq,g,cab,f,radf;
+
+        double xl[4];
+        complex<double>  c,a;
+
+        bspec=0.0;
+        if (e>emax) {
+            return;
+        }
+
+        pi=acos(-1.);
+        c137=137.036;           // 1/ fine structure constant
+
+        zab=abs(zz);
+        v=1.13*pow(zab,1.333)/pow(c137,2); // Screening correction
+        v=copysign(v,zz);
+        z=zab/c137;
+        x=sqrt(1.0-z*z);        // s parameter
+        w=1.0+(e/0.51097)-v;    // Total energy of b particle
+        if (w<1.00001) {
+            w=1.00001;
+        }
+        psq= w*w-1.0;
+        p  =sqrt(psq);          // Momemtum of beta particle
+        y = z*w/p;              // eta = alpha * z * e / p
+        y =copysign(y,zz);
+        qsq=3.83*pow(emax-e,2);
+
+        if (e <= 1.0e-5) {
+            g=0.0;              // Low energy approximation
+            if (zz>=0.0) {
+                g = qsq*2.0*pi*pow(z,(2.0*x-1.0));
+            }
+        }
+        else {
+            a=complex<double>(x,y);
+            c=cgamma(a);
+            cab=abs(c);
+            f=pow(psq,x-1.0)*exp(pi*y)*pow(cab,2);
+            g=f*p*w*qsq;
+        }
+
+        factor=1.0; // Necessary to calculate kurie plot (not done)
+        bspec=g;
+        if (lam == 0) {
+            return;
+        }
+
+        radf=1.2*pow(rmass,0.333); // Nuclear radius
+        slfact(p,zz,radf,xl);
+
+        if (lam==1) {
+            bspec=g*(qsq*xl[0]+9.0*xl[1]);
+            return;
+        }
+        else if (lam==2) {
+            bspec=g*(pow(qsq,2)*xl[0]+30.0*qsq*xl[1]+225.0*xl[2]);
+            return;
+        }
+        else if (lam==3) {
+            bspec=g*(pow(qsq,3.0)*xl[0]+63.0*pow(qsq,2)*xl[1]+
+                     1575.0*qsq*xl[2] + 11025.0*xl[3]);
+            return;
+        }
+        else { // lam==4
+
+            // Fudge factors for nuclides whose experimental spectra don't
+            // seem to fit theory.
+
+            //     for cl36 (ref: nuc. phys. 99a,  625,(67))
+            if (zab == 18.0) {
+                bspec=bspec*(qsq*xl[0]+20.07*xl[1]);
+            }
+
+            //     for i129 (ref: phys. rev. 95, 458, 54))
+            if (zab == 54.) {
+                bspec=bspec*(psq+10.0*qsq);
+            }
+
+            //     for cs-ba137 (ref: nuc. phys. 112a, 156, (68))
+            if (zab == 56.) {
+                bspec=bspec*(qsq*xl[0]+0.045*xl[1]);
+            }
+
+            //     for tl204 (ref: can. j. phys., 45, 2621, (67))
+            if (zab == 82.) {
+                bspec=bspec*(1.0-1.677*e+ 2.77*e*e);
+            }
+
+            //     for bi210 (ref: nuc. phys., 31, 293, (62))
+            if (zab == 84.) {
+                bspec=bspec*(1.78-2.35*e+e*e);
+            }
+
+            return;
+        }
+    }
+    
+    // Sums weighted, normalized spectral components to give total spectrum
+    void sp(double e, double &spec, double &factor) {
+
+        double bspec;
+
+        spec=0.0;
+        for (int icomp=0; icomp<ncomps; icomp++) {
+            zz=zzz[icomp];
+            emax=etop[icomp];
+            lam=lamda[icomp];
+            bsp(e,bspec,factor);
+            spec=spec+bspec*rel[icomp]/area[icomp];
+        }
+    }
+
+private:
+    double zz,emax,rmass;
+    double zzz[9],etop[9],rel[9],area[9],lamda[9];
+    int lam, ncomps;
+};
+
+
 /*! \brief A radionuclide spectrum.
  *
  * \ingroup egspp_main
@@ -462,6 +792,9 @@ public:
 
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
+
+        // Get the beta energy spectra
+        betaSpectra = new EGS_RadionuclideBetaSpectrum(decays);
 
         // Get the particle records from the decay scheme
         myBetas = decays->getBetaRecords();
@@ -551,7 +884,7 @@ public:
     void setSpectrumWeight(EGS_Float newWeight) {
         spectrumWeight = newWeight;
     }
-
+    
     void printSampledEmissions() {
         printf("\nSampled %s emissions:\n", decays->radionuclide.c_str());
         printf("========================\n");
@@ -631,9 +964,8 @@ protected:
 
                         currentLevel = (*gamma)->getFinalLevel();
 
-
-
                         E = (*gamma)->getDecayEnergy();
+
                         return E;
                     }
                 }
@@ -654,17 +986,17 @@ protected:
 
                     (*beta)->incrNumSampled();
                     currentQ = (*beta)->getCharge();
-                    //printf("EGS_RadionuclideSpectrum: q: %d\n",currentQ);
 
                     // Set the energy level of the daughter
                     currentLevel = (*beta)->getLevelRecord();
 
-                    // TODO: Generate beta- spectrum
                     // TODO: Need to implement electron capture
 
                     // For now just uniform up to max!
-                    E = u * (*beta)->getFinalEnergy();
+                    //E = u * (*beta)->getFinalEnergy();
+                    E = (*beta)->getSpectrum()->sample(rndm);
                     //printf("\nEGS_RadionuclideSpectrum: E: %f\n",E);
+
                     return E;
                 }
             }
@@ -745,6 +1077,8 @@ private:
                                 Tmax,
                                 spectrumWeight;
     EGS_I64                     ishower;
+
+    EGS_RadionuclideBetaSpectrum *betaSpectra;
 };
 
 //

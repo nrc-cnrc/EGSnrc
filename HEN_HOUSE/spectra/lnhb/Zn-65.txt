@@ -6,40 +6,40 @@
  65CU5C  1984ScZP, 1985HaZA, 1990Sc08, 1990Ku11, 1992Un01, 1993Bh04, 1995ScZY, 
  65CU6C  1996Sc06, 2000He14, 2002Un02, 2002Ba85, 2003Lu06, 2003Au03, 2004Sc04, 
  65CU7C  2004Va02, 2005BeZX, 2006Be34
- 65CU T  Auger electrons and ^X ray energies and emission intensities:
- 65CU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 65CU T  Auger electrons and X ray energies and emission intensities:
+ 65CU T       {U Energy (keV)}   {U Intensity}  {U Line}
  65CU T
- 65CU T        8.02792           11.76  13       XKA2
- 65CU T        8.04787           22.91  22       XKA1
+ 65CU T        8.02792            11.76   13     XKA2
+ 65CU T        8.04787            22.91   22     XKA1
  65CU T   
- 65CU T        8.90539        |]  4.82  7         XKB1
- 65CU T        8.9771         |]                  XKB5II
+ 65CU T        8.90539        |]  4.82     7     XKB1
+ 65CU T        8.9771         |]                 XKB5II
  65CU T   
  65CU T   
- 65CU T        0.811-1.022       1.305  21       XL (total)
- 65CU T        0.811             0.0424  11      XLL
- 65CU T        0.929-0.93        0.745  16       XLA
- 65CU T        0.831             0.0253  7       XLC
- 65CU T        0.932-1.022       0.491  13       XLB
- 65CU T        0.952-0.952       0.00070  11     XLG
+ 65CU T        0.811-1.022        1.305   21     XL (total)
+ 65CU T        0.811              0.0424  11     XLL
+ 65CU T        0.929-0.93         0.745   16     XLA
+ 65CU T        0.831              0.0253   7     XLC
+ 65CU T        0.932-1.022        0.491   13     XLB
+ 65CU T        0.952-0.952        0.00070 11     XLG
  65CU T   
- 65CU T        6.76-7.12      |]                  KLL AUGER
- 65CU T        7.76-8.05      |]  47.5  4         ^KLX AUGER
- 65CU T        8.73-8.9       |]                  KXY AUGER
- 65CU T        0.7-1             126.6  7        L AUGER
+ 65CU T        6.76-7.12      |]                 KLL AUGER
+ 65CU T        7.76-8.05      |]  47.5     4     KLX AUGER
+ 65CU T        8.73-8.9       |]                 KXY AUGER
+ 65CU T        0.7-1              126.6    7     L AUGER
  65ZN  P 0.0         5/2-              244.01 D  9              1352.1    3
  65CU  N 1.0         1.0       1         1.0
  65CU  L 0           3/2-                STABLE   
- 65CU  E             1.421   7 48.35   117.46                                2
- 65CU2 E EAV=143.1 1$CK=0.8853 16$CL=0.0977 15$CM=0.017  $CN=   $CO=   
+ 65CU  E             1.421    748.35   117.46                                  
+ 65CU2 E EAV=143.1 1$CK=0.8853 16$CL=0.0977 15$CM=0.017  
  65CU  L 770.64    9 1/2-              0.099 PS  5
  65CU  G 770.64    9 0.00269 22M1+E2     0.096   7     3.84E-412
- 65CU2 G KC=3.45E-4 10$LC=3.43E-5 10$MC=
+ 65CU2 G KC=3.45E-4 10$LC=3.43E-5 10
  65CU  L 1115.556  4 5/2-              0.285 PS  9
  65CU  E                       50.23   115.89                                  
- 65CU2 E EAV=   $CK=0.8794 17$CL=0.1027 16$CM=0.0179  $CN=   $CO=   
+ 65CU2 E CK=0.8794 17$CL=0.1027 16$CM=0.0179  
  65CU  G 344.95    200.00254 18[E2]                    0.0062019
- 65CU2 G KC=0.00555 17$LC=5.69E-4 19$MC=
- 65CU  G 1115.539  2 50.22   11M1+E2     -0.437  15    1.84E-47
- 65CU2 G KC=1.66E-4 6$LC=1.62E-5 5$MC=
+ 65CU2 G KC=0.00555 17$LC=5.69E-4 19
+ 65CU  G 1115.539  2 50.22   11M1+E2     -0.437  15    1.84E-4 7
+ 65CU2 G KC=1.66E-4  6$LC=1.62E-5  5
  

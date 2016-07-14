@@ -5,29 +5,29 @@
  41K 2C  1973MY03, 1973ZO03, 1974MA30, 1987HO16, 1988JA11, 1990FI13, 1991PA10, 
  41K 3C  1991KL06, 1992KA05, 1996SC06, 2001CA59, 2006MUZX, 2008MO18, 2011AUZZ, 
  41K 4C  2011BE53, 2012JO04
- 41K  T  Auger electrons and ^X ray energies and emission intensities:
- 41K  T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 41K  T  Auger electrons and X ray energies and emission intensities:
+ 41K  T       {U Energy (keV)}   {U Intensity}  {U Line}
  41K  T
- 41K  T        3.3111            3.82  12        XKA2
- 41K  T        3.3138            7.56  23        XKA1
+ 41K  T        3.3111             3.82    12     XKA2
+ 41K  T        3.3138             7.56    23     XKA1
  41K  T   
- 41K  T        3.5896         |]  1.40  5         XKB1
- 41K  T        3.6028         |]                  XKB5II
+ 41K  T        3.5896         |]  1.40     5     XKB1
+ 41K  T        3.6028         |]                 XKB5II
  41K  T   
  41K  T   
- 41K  T        0.2604-0.3618     0.27  6         XL (total)
- 41K  T        0.2604            0.27  6         XLL
+ 41K  T        0.2604-0.3618      0.27     6     XL (total)
+ 41K  T        0.2604             0.27     6     XLL
  41K  T        0.263                             XLC
  41K  T        0.29654-0.3618                    XLB
  41K  T        0.29917-0.29917                   XLG
  41K  T   
- 41K  T        2.615-2.985    |]                  KLL AUGER
- 41K  T        3.183-3.296    |]  76.6  9         ^KLX AUGER
- 41K  T        3.54-3.572     |]                  KXY AUGER
- 41K  T        0.226-0.342       156.76  11      L AUGER
+ 41K  T        2.615-2.985    |]                 KLL AUGER
+ 41K  T        3.183-3.296    |]  76.6     9     KLX AUGER
+ 41K  T        3.54-3.572     |]                 KXY AUGER
+ 41K  T        0.226-0.342        156.76  11     L AUGER
  41CA  P 0.0         7/2-              1.002E5 Y 17             421.63    14
  41K   N 1.0         1.0       1         1.0
  41K   L 0           3/2+                STABLE   
- 41K   E                       100       10.53                               3U
- 41K 2 E EAV=   $CK=0.894 9$CL=0.0916 9$CM=0.01482 15$CN=   $CO=   
+ 41K   E                       100       10.53                               1U
+ 41K 2 E CK=0.894 9$CL=0.0916 9$CM=0.01482 15
  

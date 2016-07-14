@@ -1,35 +1,35 @@
  44SC     44TI EC DECAY (60.0 Y)
- 44SC T  Auger electrons and ^X ray energies and emission intensities:
- 44SC T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 44SC T  Auger electrons and X ray energies and emission intensities:
+ 44SC T       {U Energy (keV)}   {U Intensity}  {U Line}
  44SC T
- 44SC T        4.0862            5.76  18        XKA2
- 44SC T        4.0906            11.4  4         XKA1
+ 44SC T        4.0862             5.76    18     XKA2
+ 44SC T        4.0906             11.4     4     XKA1
  44SC T   
- 44SC T        4.4604         |]  2.26  8         XKB1
- 44SC T        4.4866         |]                  XKB5II
+ 44SC T        4.4604         |]  2.26     8     XKB1
+ 44SC T        4.4866         |]                 XKB5II
  44SC T   
  44SC T   
- 44SC T        0.348-0.468       0.45  9         XL (total)
+ 44SC T        0.348-0.468        0.45     9     XL (total)
  44SC T        0.348                             XLL
  44SC T         -0.468                           XLG
  44SC T   
- 44SC T        3.45-3.65      |]                  KLL AUGER
- 44SC T        3.93-4.08      |]  79.5  21        ^KLX AUGER
- 44SC T        4.38-4.48      |]                  KXY AUGER
- 44SC T        0.3-0.5           167.5  24       L AUGER
+ 44SC T        3.45-3.65      |]                 KLL AUGER
+ 44SC T        3.93-4.08      |]  79.5    21     KLX AUGER
+ 44SC T        4.38-4.48      |]                 KXY AUGER
+ 44SC T        0.3-0.5            167.5   24     L AUGER
  44TI  P 0.0         0+                60.0 Y    11             267.5     19
  44SC  N 1.0         1.0       1         1.0
  44SC  L 0           2+                3.97 H    4
  44SC  L 67.8680   141-                154.2 NS  8
  44SC  E                       0.4     119.3                                 1
- 44SC2 E EAV=   $CK=0.8917 19$CL=0.0938 16$CM=0.0145 7$CN=   $CO=   
+ 44SC2 E CK=0.8917 19$CL=0.0938 16$CM=0.0145 7
  44SC  G 67.8679   1493.0    15E1                      0.0845 25
- 44SC2 G KC=0.0766  23$LC=6650E-6 0$MC=1250E-6 0
+ 44SC2 G KC=0.0766  23$LC=0.00665 $MC=0.00125 
  44SC  L 146.22    3 0-                50.4 US   7
  44SC  E                       99.6    116.5                                   
- 44SC2 E EAV=   $CK=0.8891 20$CL=0.0960 16$CM=0.0149 7$CN=   $CO=   
- 44SC  G 78.36     3 96.4    11M1                      0.032  1
- 44SC2 G KC=0.0273  8$LC=2440E-6 0$MC=4600E-7 0
- 44SC  G 146.22    3 0.092   3 [M2]                    0.046  1
- 44SC2 G KC=0.0414  12$LC=3850E-6 0$MC=7500E-7 0
+ 44SC2 E CK=0.8891 20$CL=0.0960 16$CM=0.0149 7
+ 44SC  G 78.36     3 96.4    11M1                      0.032   1
+ 44SC2 G KC=0.0273   8$LC=0.00244 $MC=0.00046 
+ 44SC  G 146.22    3 0.092    3[M2]                    0.046   1
+ 44SC2 G KC=0.0414  12$LC=0.00385 $MC=0.00075 
  

@@ -1,58 +1,56 @@
  85RB     85SR EC DECAY (64.850 D)
  85RB C  References: 1977La19
- 85RB T  Auger electrons and ^X ray energies and emission intensities:
- 85RB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+ 85RB T  Auger electrons and X ray energies and emission intensities:
+ 85RB T       {U Energy (keV)}   {U Intensity}  {U Line}
  85RB T
- 85RB T        13.3359           17.16  17       XKA2
- 85RB T        13.3955           33.04  29       XKA1
+ 85RB T        13.3359            17.16   17     XKA2
+ 85RB T        13.3955            33.04   29     XKA1
  85RB T   
- 85RB T        14.9519        |]                  XKB3
- 85RB T        14.9614        |]  8.04  10        XKB1
- 85RB T        15.085         |]                  XKB5II
+ 85RB T        14.9519        |]                 XKB3
+ 85RB T        14.9614        |]  8.04    10     XKB1
+ 85RB T        15.085         |]                 XKB5II
  85RB T   
- 85RB T        15.1856        |]                  XKB2
- 85RB T        15.205         |]  0.93  4         XKB4
+ 85RB T        15.1856        |]                 XKB2
+ 85RB T        15.205         |]  0.93     4     XKB4
  85RB T   
- 85RB T        1.48-2.05         2.30  5         XL (total)
- 85RB T        1.48              0.0559  16      XLL
- 85RB T         -                1.41  4         XLA
- 85RB T                          0.0264  7       XLC
- 85RB T         -                0.800  21       XLB
- 85RB T         -2.05            0.00801  18     XLG
+ 85RB T        1.48-2.05          2.30     5     XL (total)
+ 85RB T        1.48               0.0559  16     XLL
+ 85RB T         -                 1.41     4     XLA
+ 85RB T                           0.0264   7     XLC
+ 85RB T         -                 0.800   21     XLB
+ 85RB T         -2.05             0.00801 18     XLG
  85RB T   
- 85RB T        10.987-11.503  |]                  KLL AUGER
- 85RB T        12.782-13.381  |]  28.6  4         ^KLX AUGER
- 85RB T        14.556-15.172  |]                  KXY AUGER
- 85RB T        1.1-2             96.5  4         L AUGER
+ 85RB T        10.987-11.503  |]                 KLL AUGER
+ 85RB T        12.782-13.381  |]  28.6     4     KLX AUGER
+ 85RB T        14.556-15.172  |]                 KXY AUGER
+ 85RB T        1.1-2              96.5     4     L AUGER
  85SR  P 0.0         9/2+              64.850 D  7              1065      3
  85RB  N 1.0         1.0       1         1.0
  85RB  L 0           5/2-                STABLE   
- 85RB  E                       0.8     4 9.3                                 3U
- 85RB2 E EAV=   $CK=0.85 3$CL=0.12 3$CM=0.03 1$CN=   $CO=   
+ 85RB  E                       0.8      49.3                                 1U
+ 85RB2 E CK=0.85 3$CL=0.12 3$CM=0.03 1
  85RB  L 151.161     3/2-              0.71 NS   5
- 85RB  E                       0.0005    11.5                                  
- 85RB2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
- 85RB  G 151.160   6 0.0012  9 M1+E2                   0.0488 15
+ 85RB  E                       0.0005    11.5                                3
+ 85RB  G 151.160   6 0.0012   9M1+E2                   0.0488 15
  85RB2 G KC=0.0430  13$LC=0.00485 15$MC=8.17E-4 25
  85RB  L 280.986     1/2-              40 PS     3
- 85RB  E                       0.0005    11.8                                  
- 85RB2 E EAV=   $CK=   $CL=   $CM=   $CN=   $CO=   
- 85RB  G 129.826   105000E-7 0 (M1)                    0.0721 22
+ 85RB  E                       0.0005    11.8                                3U
+ 85RB  G 129.826   100.0005    (M1)                    0.0721 22
  85RB2 G KC=0.0635  19$LC=0.00717 21$MC=1208E-6 36
  85RB  L 514.007     9/2+              1.015 US  1
- 85RB  E                       99.2    4 6.2                                   
- 85RB2 E EAV=   $CK=0.8718 15$CL=0.1059 12$CM=0.0195 4$CN=   $CO=   
- 85RB  G 362.847   6 0.0014  3 (E3)                    0.0339 10
- 85RB2 G KC=0.0292  9$LC=0.00397 12$MC=0.00067 2
- 85RB  G 514.0048  2298.5    4 M2                      0.0072122
+ 85RB  E                       99.2     46.2                                   
+ 85RB2 E CK=0.8718 15$CL=0.1059 12$CM=0.0195 4
+ 85RB  G 362.847   6 0.0014   3(E3)                    0.0339 10
+ 85RB2 G KC=0.0292   9$LC=0.00397 12$MC=0.00067  2
+ 85RB  G 514.0048  2298.5     4M2                      0.0072122
  85RB2 G KC=0.00635 19$LC=7.22E-4 22$MC=1219E-7 37
  85RB  L 868.98      7/2-              2.5 PS    3
- 85RB  E                       0.0129  4 9.1                                 1U
- 85RB2 E EAV=   $CK=0.8610 16$CL=0.1146 13$CM=0.0214 4$CN=   $CO=   
- 85RB  G 354.97    5 0.0005  2 (E1)                    0.002538
- 85RB2 G KC=0.00225 7$LC=2.42E-4 7$MC=4.05E-5 12
- 85RB  G 717.81    5 0.00032 3 (E2)                    0.001244
- 85RB2 G KC=0.00109 3$LC=1.20E-4 4$MC=2.02E-5 6
- 85RB  G 868.98    5 0.0121  4 M1+E2                   0.000733
- 85RB2 G KC=0.00065 2$LC=7.0E-5  2$MC=1176E-8 35
+ 85RB  E                       0.0129   49.1                                 1
+ 85RB2 E CK=0.8610 16$CL=0.1146 13$CM=0.0214 4
+ 85RB  G 354.97    5 0.0005   2(E1)                    0.00253 8
+ 85RB2 G KC=0.00225  7$LC=2.42E-4  7$MC=4.05E-5 12
+ 85RB  G 717.81    5 0.00032  3(E2)                    0.00124 4
+ 85RB2 G KC=0.00109  3$LC=1.20E-4  4$MC=2.02E-5  6
+ 85RB  G 868.98    5 0.0121   4M1+E2                   0.00073 3
+ 85RB2 G KC=0.00065  2$LC=7.0E-5   2$MC=1176E-8 35
  

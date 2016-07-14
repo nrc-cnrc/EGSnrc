@@ -2,41 +2,41 @@
 123TE C  References: 1955Fa40, 1955Go21, 1964Ch18, 1964Ch08, 1964Al28, 1966Ha03, 
 123TE2C  1966Gu02, 1969To02, 1968Ka20, 1970EmZY, 1972Ra07, 1973Ra32, 1973RaZO, 
 123TE3C  1977Kr13, 1992Ja15, 1992Co11, 1996Sc06, 2002Ba85
-123TE T  Auger electrons and ^X ray energies and emission intensities:
-123TE T       {U Energy (keV)}     {U Intensity }      {U Line  }
+123TE T  Auger electrons and X ray energies and emission intensities:
+123TE T       {U Energy (keV)}   {U Intensity}  {U Line}
 123TE T
-123TE T        27.202            13.9  5         XKA2
-123TE T        27.4726           26.0  9         XKA1
+123TE T        27.202             13.9     5     XKA2
+123TE T        27.4726            26.0     9     XKA1
 123TE T   
-123TE T        30.9446        |]                  XKB3
-123TE T        30.996         |]  7.43  26        XKB1
-123TE T        31.236         |]                  XKB5II
-123TE T        31.241         |]                  XKB5I
+123TE T        30.9446        |]                 XKB3
+123TE T        30.996         |]  7.43    26     XKB1
+123TE T        31.236         |]                 XKB5II
+123TE T        31.241         |]                 XKB5I
 123TE T   
-123TE T        31.7008        |]                  XKB2
-123TE T        31.774         |]  1.61  7         XKB4
-123TE T        31.812         |]                  XKO23
+123TE T        31.7008        |]                 XKB2
+123TE T        31.774         |]  1.61     7     XKB4
+123TE T        31.812         |]                 XKO23
 123TE T   
-123TE T        3.336-4.82        8.25  21        XL (total)
-123TE T        3.336             0.174  7        XLL
-123TE T        3.76-3.77         4.60  15        XLA
-123TE T        3.606             0.0469  18      XLC
-123TE T        4.02-4.37         3.02  7         XLB
-123TE T        4.44-4.82         0.411  11       XLG
+123TE T        3.336-4.82         8.25    21     XL (total)
+123TE T        3.336              0.174    7     XLL
+123TE T        3.76-3.77          4.60    15     XLA
+123TE T        3.606              0.0469  18     XLC
+123TE T        4.02-4.37          3.02     7     XLB
+123TE T        4.44-4.82          0.411   11     XLG
 123TE T   
-123TE T        21.804-22.989  |]                  KLL AUGER
-123TE T        25.814-27.47   |]  7.0  4          ^KLX AUGER
-123TE T        29.8-31.81     |]                  KXY AUGER
-123TE T        2.3-4.8           89.7  7         L AUGER
+123TE T        21.804-22.989  |]                 KLL AUGER
+123TE T        25.814-27.47   |]  7.0      4     KLX AUGER
+123TE T        29.8-31.81     |]                 KXY AUGER
+123TE T        2.3-4.8            89.7     7     L AUGER
 123TE  P 247.4     2 11/2-             119.3 D   1
 123TE  N 1.0         1.0       1         1.0
 123TE  L 0           1/2+              12E12 Y    
 123TE  L 158.99      3/2+              196 PS    9
-123TE  G 158.97    5 83.99   8 M1+E2     0.0111        0.1918 19
+123TE  G 158.97    5 83.99    8M1+E2     0.0111        0.1918 19
 123TE2 G KC=0.1648  16$LC=0.02160 22$MC=0.00433 13
 123TE  L 247.4       11/2-             119.5 D   1
 123TE  G 88.46     7 0.0909  27M4                      1099   33
 123TE2 G KC=463     14$LC=493     15$MC=118.0   35
-123TE  G 247.4     2 3.44E-4 34E5                      7.75   30
-123TE2 G KC=3.0     1$LC=3.75    21$MC=0.84    3
+123TE  G 247.4     2 0.00034434E5                      7.75   30
+123TE2 G KC=3.0      1$LC=3.75    21$MC=0.84     3
  

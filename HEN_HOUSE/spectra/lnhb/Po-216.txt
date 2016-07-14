@@ -6,37 +6,37 @@
 212PB C  References: 1911Mo11, 1942Wa04, 1962Wa28, 1963Di05, 1977Ku15, 1977La19, 
 212PB2C  1996Sc06, 1998ScZM, 1998Ak04, 1999ScZX, 2002Ba85, 2002Ra45, 2003Au03, 
 212PB3C  2003Da24, 2005Br03, 2007Wu02, 2007St23, 2008Ki07
-212PB T  Auger electrons and ^X ray energies and emission intensities:
-212PB T       {U Energy (keV)}     {U Intensity }      {U Line  }
+212PB T  Auger electrons and X ray energies and emission intensities:
+212PB T       {U Energy (keV)}   {U Intensity}  {U Line}
 212PB T
-212PB T        72.8049           0.0000043  7    XKA2
-212PB T        74.97             0.0000072  12   XKA1
+212PB T        72.8049            4.3E-6   7     XKA2
+212PB T        74.97              7.2E-6  12     XKA1
 212PB T   
-212PB T        84.451         |]                  XKB3
-212PB T        84.937         |]  0.0000024  4    XKB1
-212PB T        85.47          |]                  XKB5II
+212PB T        84.451         |]                 XKB3
+212PB T        84.937         |]  2.4E-6   4     XKB1
+212PB T        85.47          |]                 XKB5II
 212PB T   
-212PB T        87.238         |]                  XKB2
-212PB T        87.58          |]  0.00000074  12  XKB4
-212PB T        87.911         |]                  XKO23
+212PB T        87.238         |]                 XKB2
+212PB T        87.58          |]  7.4E-7  12     XKB4
+212PB T        87.911         |]                 XKO23
 212PB T   
-212PB T        9.184-15.216      0.0000059  6    XL (total)
-212PB T        9.184             0.000000142  18 XLL
-212PB T        10.45-10.551      0.0000027  3    XLA
-212PB T        11.349            0.000000047  7  XLC
-212PB T        12.142-13.015     0.00000253  24  XLB
-212PB T        14.765-15.216     0.00000049  5   XLG
+212PB T        9.184-15.216       5.9E-6   6     XL (total)
+212PB T        9.184              1.42E-7 18     XLL
+212PB T        10.45-10.551       2.7E-6   3     XLA
+212PB T        11.349             4.7E-8   7     XLC
+212PB T        12.142-13.015      2.53E-6 24     XLB
+212PB T        14.765-15.216      4.9E-7   5     XLG
 212PB T   
-212PB T        56.03-61.67    |]                  KLL AUGER
-212PB T        68.18-74.97    |]  0.00000056  11  ^KLX AUGER
-212PB T        80.3-88        |]                  KXY AUGER
-212PB T        5.26-10.4         0.0000097  10   L AUGER
+212PB T        56.03-61.67    |]                 KLL AUGER
+212PB T        68.18-74.97    |]  5.6E-7  11     KLX AUGER
+212PB T        80.3-88        |]                 KXY AUGER
+212PB T        5.26-10.4          9.7E-6  10     L AUGER
 216PO  P 0.0         0+                0.148 S   4              6906.3    5
 212PB  N 1.0         1.0       1         1.0
 212PB  L 0           0+                10.64 H   1
 212PB  A 6778.4    5 99.9981 3 1
 212PB  L 804.9     5 (2)+                         
 212PB  A 5988.4    7 0.0019  3 35
-212PB  G 804.9     5 0.0019  3 [E2]                    0.0102715
-212PB2 G KC=0.00799 12$LC=1732E-6 25$MC=4.17E-4 6
+212PB  G 804.9     5 0.0019   3[E2]                    0.0102715
+212PB2 G KC=0.00799 12$LC=1732E-6 25$MC=4.17E-4  6
  

@@ -6,46 +6,46 @@
 248CM3C  1976Mo30, 1982La25, 1983Al**, 1984Di08, 1984SmZV, 1985Wi14, 1985Ax**, 
 248CM4C  1986Ry04, 1987Sh**, 1988Ke**, 1990Po24, 1991Ry01, 1992Sh33, 1993Pa29, 
 248CM5C  1994KhZW, 1996Sc33, 1999Ak02, 1999Ba03, 2003Au03, 2005KiZW
-248CM T  Auger electrons and ^X ray energies and emission intensities:
-248CM T       {U Energy (keV)}     {U Intensity }      {U Line  }
+248CM T  Auger electrons and X ray energies and emission intensities:
+248CM T       {U Energy (keV)}   {U Intensity}  {U Line}
 248CM T
-248CM T        104.59            0.0000257  7    XKA2
-248CM T        109.271           0.0000402  11   XKA1
+248CM T        104.59             2.57E-5  7     XKA2
+248CM T        109.271            4.02E-5 11     XKA1
 248CM T   
-248CM T        122.304        |]                  XKB3
-248CM T        123.403        |]  0.0000151  5    XKB1
-248CM T        124.124        |]                  XKB5II
+248CM T        122.304        |]                 XKB3
+248CM T        123.403        |]  1.51E-5  5     XKB1
+248CM T        124.124        |]                 XKB5II
 248CM T   
-248CM T        126.889        |]                  XKB2
-248CM T        127.352        |]  0.00000530  19  XKB4
-248CM T        127.97         |]                  XKO23
+248CM T        126.889        |]                 XKB2
+248CM T        127.352        |]  5.30E-6 19     XKB4
+248CM T        127.97         |]                 XKO23
 248CM T   
-248CM T        12.634-23.319     6.07  14        XL (total)
-248CM T        12.634            0.146  5        XLL
-248CM T        14.744-14.96      2.25  7         XLA
-248CM T        17.315            0.0644  24      XLC
-248CM T        17.288-20.515     2.90  9         XLB
-248CM T        21.969-23.319     0.702  21       XLG
+248CM T        12.634-23.319      6.07    14     XL (total)
+248CM T        12.634             0.146    5     XLL
+248CM T        14.744-14.96       2.25     7     XLA
+248CM T        17.315             0.0644  24     XLC
+248CM T        17.288-20.515      2.90     9     XLB
+248CM T        21.969-23.319      0.702   21     XLG
 248CM T   
-248CM T        78.858-89.973  |]                  KLL AUGER
-248CM T        97.226-109.267 |]  0.0000025  4    ^KLX AUGER
-248CM T        115.57-128.23  |]                  KXY AUGER
-248CM T        6.3-24.5          5.02  13        L AUGER
+248CM T        78.858-89.973  |]                 KLL AUGER
+248CM T        97.226-109.267 |]  2.5E-6   4     KLX AUGER
+248CM T        115.57-128.23  |]                 KXY AUGER
+248CM T        6.3-24.5           5.02    13     L AUGER
 252CF  P 0.0         0+                2.6470 Y  26             6216.87   4
 248CM  N 1.032E0     1.032E0   0.96914   1.032E0
 248CM  L 0           0+                348E3 Y   6
 248CM  A 6118.1    1 84.30   311
 248CM  L 43.40     3 2+                124 PS    5
 248CM  A 6075.64   1115.58   313.2
-248CM  G 43.399    250.0152  4 E2                      1000   15
-248CM2 G KC=$LC=724     11$MC=204     3
+248CM  G 43.399    250.0152   4E2                      1000   15
+248CM2 G LC=724     11$MC=204      3
 248CM  L 143.6     4 4+                78 PS     22
 248CM  A 5976.6      0.237   4165
-248CM  G 100.2     4 0.0119  20E2                      18.5   5
-248CM2 G KC=$LC=13.4    4$MC=3.79    9
+248CM  G 100.2     4 0.0119  20E2                      18.5    5
+248CM2 G LC=13.4     4$MC=3.79     9
 248CM  L 298.1     5 6+                33 PS     8
 248CM  A 5826.3      19605E-7  1200
-248CM  G 154.5     6 5100E-7 0 E2                      2.76   6
-248CM2 G KC=0.1741  25$LC=1.87    5$MC=0.526   12
+248CM  G 154.5     6 0.00051   E2                      2.76    6
+248CM2 G KC=0.1741  25$LC=1.87     5$MC=0.526   12
 248CM  L 505.0     5 8+                           
  

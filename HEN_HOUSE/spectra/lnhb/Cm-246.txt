@@ -2,41 +2,41 @@
 242PU  H TYP=Full$AUT=F.Kondev$CUT=31-OCT-2006$
 242PU C  Evaluation history: Type=Full;Author=F.Kondev;Cutoff date=31-OCT-2006
 242PU C  References: 1977La19
-242PU T  Auger electrons and ^X ray energies and emission intensities:
-242PU T       {U Energy (keV)}     {U Intensity }      {U Line  }
+242PU T  Auger electrons and X ray energies and emission intensities:
+242PU T       {U Energy (keV)}   {U Intensity}  {U Line}
 242PU T
 242PU T        99.525                            XKA2
 242PU T        103.734                           XKA1
 242PU T   
-242PU T        116.244        |]                  XKB3
-242PU T        117.228        |]                  XKB1
-242PU T        117.918        |]                  XKB5II
+242PU T        116.244        |]                 XKB3
+242PU T        117.228        |]                 XKB1
+242PU T        117.918        |]                 XKB5II
 242PU T   
-242PU T        120.54         |]                  XKB2
-242PU T        120.969        |]                  XKB4
-242PU T        121.543        |]                  XKO23
+242PU T        120.54         |]                 XKB2
+242PU T        120.969        |]                 XKB4
+242PU T        121.543        |]                 XKO23
 242PU T   
-242PU T        12.125-21.984     7.95  24        XL (total)
-242PU T        12.125            0.195  8        XLL
-242PU T        14.083-14.279     3.03  11        XLA
-242PU T        16.334            0.082  4        XLC
-242PU T        16.499-19.331     3.76  14        XLB
-242PU T        20.708-21.984     0.87  4         XLG
+242PU T        12.125-21.984      7.95    24     XL (total)
+242PU T        12.125             0.195    8     XLL
+242PU T        14.083-14.279      3.03    11     XLA
+242PU T        16.334             0.082    4     XLC
+242PU T        16.499-19.331      3.76    14     XLB
+242PU T        20.708-21.984      0.87     4     XLG
 242PU T   
-242PU T        75.263-85.357  |]                  KLL AUGER
-242PU T        92.607-103.729 |]                  ^KLX AUGER
-242PU T        109.93-121.78  |]                  KXY AUGER
-242PU T        6.19-22.99        7.20  21        L AUGER
+242PU T        75.263-85.357  |]                 KLL AUGER
+242PU T        92.607-103.729 |]                 KLX AUGER
+242PU T        109.93-121.78  |]                 KXY AUGER
+242PU T        6.19-22.99         7.20    21     L AUGER
 246CM  P 0.0         0+                4723 Y    27             5476.7    9
 242PU  N 1.00E0      1.00E0    0.999738  1.00E0
 242PU  L 0           0+                3.73E5 Y  3
 242PU  A 5387.5    9 79.19   221
 242PU  L 44.545    9 2+                           
 242PU  A 5343.7    9 20.82   222.05
-242PU  G 44.545    9 0.0279  8 E2                      746    22
-242PU2 G KC=$LC=542     16$MC=151.4   45
+242PU  G 44.545    9 0.0279   8E2                      746    22
+242PU2 G LC=542     16$MC=151.4   45
 242PU  L 147.35    104+                           
 242PU  A 5242.5    100.020   2 500
 242PU  G 102.8     1 0.00134 14E2                      13.86  42
-242PU2 G KC=$LC=10.06   30$MC=2.82    8
+242PU2 G LC=10.06   30$MC=2.82     8
  
