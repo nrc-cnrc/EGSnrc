@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -467,7 +468,13 @@ public:
 
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
-
+            
+            // Skip electron capture records since they don't emit a particle
+            if((*beta)->getCharge() == 1 &&
+                    (*beta)->getPositronIntensity() == 0) {
+                continue;
+            }
+            
             printf("EGS_RadionuclideBetaSpectrum: Energy, Z, A, forbidden: %f "
                    "%d %d %d\n",
                    (*beta)->getFinalEnergy(), (*beta)->getZ(),
@@ -483,7 +490,7 @@ public:
             double de, s_y, s_sr, factor, e1, e2, se_y, se_sr;
             int isrc;
 
-            ncomps=1;    // if we increase this, then we must fill the remainder
+            ncomps=1; // if we increase this, then we must fill the remainder
             area[0]=1.0;
             rel[0]=1.0;
 
@@ -942,6 +949,9 @@ protected:
         // The energy of the sampled particle
         EGS_Float E;
 
+        //TODO: Maybe need to adjust particle weights?? to account for 
+        // intensities that give >1 particle per decay?
+        
         // If the daughter is in an excited state
         // Check for transitions
         if (currentLevel && currentLevel->getEnergy() > 0) {
@@ -957,7 +967,10 @@ protected:
 
                         (*gamma)->incrNumSampled();
                         currentQ = (*gamma)->getCharge();
-
+                        
+                        // Update the current time by sampling how long
+                        // it took for this transition to occur
+                        // time += halflife / ln(2) * log(u)
                         currentTime += currentLevel->getHalfLife() /
                                        0.693147180559945309417232121458176568075500134360255254120680009493393
                                        * log(rndm->getUniform());
@@ -978,23 +991,40 @@ protected:
             // Uniformly distribute decays over the experiment time
             currentTime = rndm->getUniform() * Tmax;
 
+            // ============================
             // Sample which decay occurs
-            // Betas
+            // ============================
+            
+            // Beta-, beta+ and electron capture
             for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                     beta != myBetas.end(); beta++) {
                 if (u < (*beta)->getBetaIntensity()) {
 
                     (*beta)->incrNumSampled();
                     currentQ = (*beta)->getCharge();
-
+                    
                     // Set the energy level of the daughter
                     currentLevel = (*beta)->getLevelRecord();
-
-                    // TODO: Need to implement electron capture
-
-                    // For now just uniform up to max!
-                    //E = u * (*beta)->getFinalEnergy();
+                    
+                    // For beta+ records we decide between
+                    // branches for beta+ or electron capture
+                    if(currentQ == 1) {
+                        // For positron emission, continue as usual
+                        if(rndm->getUniform() < 
+                                (*beta)->getPositronIntensity()) {
+                        
+                            
+                        // For electron capture, there is no emitted particle
+                        // (only a neutrino)
+                        // so we return a 0 energy particle
+                        } else {
+                            return 0;
+                        }
+                    }
+                    
+                    // Sample the energy from the spectrum alias table
                     E = (*beta)->getSpectrum()->sample(rndm);
+                    
                     //printf("\nEGS_RadionuclideSpectrum: E: %f\n",E);
 
                     return E;

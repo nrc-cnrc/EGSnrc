@@ -185,9 +185,11 @@ class ParentRecord : public Record, public Branch<Leaf<ParentRecord> > {
 public:
     ParentRecord(vector<string> ensdf);
     double getHalfLife() const;
+    double getQ() const;
 
 protected:
-    double halfLife;
+    double  halfLife,
+            Q;
 
 private:
     void processEnsdf();
@@ -255,6 +257,8 @@ public:
 
     virtual double getFinalEnergy() const = 0;
     virtual double getBetaIntensity() const = 0;
+    virtual double getPositronIntensity() const {};
+    virtual double getECIntensity() const {};
     virtual void setBetaIntensity(double newIntensity)  = 0;
     int getCharge() const;
     void incrNumSampled();
@@ -298,12 +302,14 @@ public:
 
     double getFinalEnergy() const;
     double getBetaIntensity() const;
+    double getPositronIntensity() const;
     double getECIntensity() const;
     void setBetaIntensity(double newIntensity);
     void setECIntensity(double newIntensity);
 
 protected:
-    double ecIntensity;
+    double  ecIntensity,
+            positronIntensity;
 
 private:
     void processEnsdf();
@@ -367,7 +373,12 @@ private:
 
   \ingroup egspp_main
 
-  ... add description here
+  Reads in a decay spectrum file in ensdf format, and builds the decays into an 
+  object oriented tree structure. This decay structure is useful for 
+  \ref EGS_RadionuclideSpectrum.
+  
+  Uncertainties on values are ignored! The energies and intensities for various 
+  emissions are taken as is.
 
 */
 class EGS_EXPORT EGS_Ensdf {

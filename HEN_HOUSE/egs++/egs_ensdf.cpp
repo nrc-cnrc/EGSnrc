@@ -1082,11 +1082,22 @@ ParentRecord::ParentRecord(vector<string> ensdf):Record(ensdf) {
 
 void ParentRecord::processEnsdf() {
     halfLife = parseHalfLife(40, 49);
-    printf("ParentRecord::processEnsdf: %f\n", halfLife);
+    
+    // Ground state Q-value in keV
+    // (total energy available for g.s. -> g.s. transition
+    // It will always be a positive number
+    // We convert to MeV
+    Q = recordToDouble(65, 74) / 1000;
+    
+    printf("ParentRecord::processEnsdf: %f %f\n", halfLife, Q);
 }
 
 double ParentRecord::getHalfLife() const {
     return halfLife;
+}
+
+double ParentRecord::getQ() const {
+    return Q;
 }
 
 const ParentRecord *ParentRecordLeaf::getParentRecord() const {
@@ -1283,14 +1294,32 @@ BetaPlusRecord::BetaPlusRecord(vector<string> ensdf,
 
 void BetaPlusRecord::processEnsdf() {
     finalEnergy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
-    betaIntensity = recordToDouble(22, 29);
+    positronIntensity = recordToDouble(22, 29);
     ecIntensity = recordToDouble(32, 39);
     if (getNormalizationRecord()) {
-        betaIntensity *= getNormalizationRecord()->getBetaMultiplier() *
+        positronIntensity *= getNormalizationRecord()->getBetaMultiplier() *
+                         getNormalizationRecord()->getBranchMultiplier();
+        ecIntensity *= getNormalizationRecord()->getBetaMultiplier() *
                          getNormalizationRecord()->getBranchMultiplier();
     }
+    
+    // The total intensity for this decay branch
+    // A decay down this branch will then be split between positron or EC
+    betaIntensity = positronIntensity + ecIntensity;
+    
+    // Re-normalize the intensities to make it easier to sample which occurs
+    positronIntensity = positronIntensity / betaIntensity;
+    ecIntensity = positronIntensity + ecIntensity / betaIntensity;
+    
+    // For positrons we may need to calculate the emission energy
+    // E = Q - level_energy - 2*mc^2
+    if(finalEnergy == 0 && positronIntensity > 0) {
+        finalEnergy = getParentRecord()->getQ()
+                - getLevelRecord()->getEnergy() - 1.022;
+    }
+    
     printf("BetaPlusRecord::processEnsdf: %f %f %f\n", finalEnergy,
-           betaIntensity, ecIntensity);
+           positronIntensity, ecIntensity);
 }
 
 double BetaPlusRecord::getFinalEnergy() const {
@@ -1299,6 +1328,10 @@ double BetaPlusRecord::getFinalEnergy() const {
 
 double BetaPlusRecord::getBetaIntensity() const {
     return betaIntensity;
+}
+
+double BetaPlusRecord::getPositronIntensity() const {
+    return positronIntensity;
 }
 
 double BetaPlusRecord::getECIntensity() const {
