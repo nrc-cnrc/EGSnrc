@@ -390,7 +390,9 @@ public:
                             if (normal) {
                                 *normal = a*(-1);
                             }
-                            t = tt;
+                            // avoid negative distances to the exit plane,
+                            // which may lead to endless loops in CD geometries
+                            t = tt < 0 ? 0 : tt;
                             return -1;
                         }
                     }
