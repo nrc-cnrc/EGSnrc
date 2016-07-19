@@ -40,7 +40,7 @@
 //qt3to4 -- BW
 #include <QTextStream>
 
-#include <qmessagebox>
+#include <QMessageBox>
 
 PEGSLESSInputs::PEGSLESSInputs()
 {

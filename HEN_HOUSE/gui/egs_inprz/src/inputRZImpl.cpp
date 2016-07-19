@@ -781,7 +781,9 @@ void inputRZImpl::GetDFfile()
    QDir d(tmpDir); 
    //qt3to4 -- BW
    //QString f = Q3FileDialog::getOpenFileName( this,"",tmpDir, "density correction file (*.density);; all files (*)");
-   QString f = QFileDialog::getOpenFileName( this, "",tmpDir, "density correction file (*.density);; all files (*)");
+   QString f = QFileDialog::getOpenFileName(
+               this, "",tmpDir,
+               "density correction file (*.density);; all files (*)");
    if ( !f.isEmpty() ) {
       //check if the user has selected a .density file from the HEN_HOUSE/pegs4/data/elements or
       //HEN_HOUSE/pegs4/data/compounds directories
