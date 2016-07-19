@@ -101,7 +101,7 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         egsWarning("  --> ignoring layer\n");
         return;
     }
-    if (med_names.size() != this_nr) {
+    if ((int)med_names.size() != this_nr) {
         egsWarning("EGS_ConeStack::addLayer: number of cone radii (%d) is"
                    " different from number of media (%d)\n",this_nr,med_names.size());
         egsWarning("  --> ignoting layer\n");
@@ -309,7 +309,7 @@ extern "C" {
 
             // adjust lable region numbering in each layer
             int count=0;
-            for (int i=0; i<layerLabels.size(); i++) {
+            for (size_t i=0; i<layerLabels.size(); i++) {
                 for (int j=0; j<layerLabels[i]; j++) {
                     g->shiftLabelRegions(count,i);
                     count++;
@@ -439,7 +439,7 @@ extern "C" {
                 int nc=1;
                 if (!err && d.size() > 0) {
                     dist = new EGS_Float [d.size()];
-                    for (int j=0; j<d.size(); j++) {
+                    for (size_t j=0; j<d.size(); j++) {
                         dist[j] = d[j];
                     }
                     nc = 1 + d.size();
