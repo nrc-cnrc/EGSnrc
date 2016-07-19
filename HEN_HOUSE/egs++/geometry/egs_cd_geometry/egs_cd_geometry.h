@@ -522,7 +522,7 @@ public:
                     // We then check if it will enter the base geometry.
                     EGS_Vector xtmp(x + u*t1);
                     tb = t-t1;
-                    ibase_n = bg->howfar(ibase_n,xtmp,u,tb,pmednew,pn);
+                    ibase = bg->howfar(ibase_n,xtmp,u,tb,pmednew,pn);
                     if (ibase_n < 0) {
                         return ibase_n;    // no, so just return.
                     }
