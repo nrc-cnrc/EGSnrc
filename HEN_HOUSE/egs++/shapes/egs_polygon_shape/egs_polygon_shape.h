@@ -122,7 +122,7 @@ public:
                      EGS_ObjectFactory *f=0);
     ~EGS_PolygonShape() {
         if (n > 0) {
-            for (int j=0; j<n; j++) {
+            for (int j=0; j<n-2; j++) {
                 delete triangle[j];
             }
             delete [] triangle;
