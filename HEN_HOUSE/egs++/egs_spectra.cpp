@@ -43,9 +43,6 @@
 #include "egs_ensdf.h"
 #include "egs_application.h"
 
-#include <complex>
-#include <gsl/gsl_sf_gamma.h>
-
 #include <cstdio>
 #include "egs_math.h"
 #include <fstream>
@@ -57,7 +54,9 @@
     #define S_STREAM std::istrstream
 #endif
 
+#include <complex>
 #include <limits>
+//#include <gsl/gsl_sf_gamma.h>
 
 
 using namespace std;
@@ -448,14 +447,11 @@ protected:
  *
  * \ingroup egspp_main
  *
+ *  Based on code by L. VanderZwan March 7, 1985
  *
- *  L. VanderZwan
- *  March 7,1985.
- *  Oct. 14,1994  Converted to Microsoft Fortran v5.1
- *  PRBS, August 2002. Convert to subroutine for sampling spectrum.
- *  PRBS, SEPT 2003. Make double precision. replace (ln)gamma calls with
- *              cernlib calls
- *  PRBS 7 Oct, 2014 - port to C++ !
+ *  Patrick Saull improved the code and ported from fortran to c++ in 2014
+ *
+ *  Reid Townson integrated spectrum generation into egs++ in 2016
 */
 class EGS_EXPORT EGS_RadionuclideBetaSpectrum {
 
@@ -468,18 +464,18 @@ public:
 
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
-            
+
             // Skip electron capture records since they don't emit a particle
-            if((*beta)->getCharge() == 1 &&
+            if ((*beta)->getCharge() == 1 &&
                     (*beta)->getPositronIntensity() == 0) {
                 continue;
             }
-            
-            printf("EGS_RadionuclideBetaSpectrum: Energy, Z, A, forbidden: %f "
-                   "%d %d %d\n",
-                   (*beta)->getFinalEnergy(), (*beta)->getZ(),
-                   (*beta)->getAtomicWeight(), (*beta)->getForbidden()
-                  );
+
+            egsInformation("EGS_RadionuclideBetaSpectrum: "
+                           "Energy, Z, A, forbidden: %f %d %d %d\n",
+                           (*beta)->getFinalEnergy(), (*beta)->getZ(),
+                           (*beta)->getAtomicWeight(), (*beta)->getForbidden()
+                          );
 
             const int nbin=1000;
             EGS_Float *e = new EGS_Float [nbin];
@@ -499,6 +495,12 @@ public:
             rmass = (*beta)->getAtomicWeight();
             lamda[0] = (*beta)->getForbidden();
 
+            // For positrons from zzz negative (just how the spectrum code
+            // was designed)
+            if ((*beta)->getCharge() == 1) {
+                zzz[0] *= -1;
+            }
+
             etop[0]=emax;
 
             // prbs july 9, 2007 moved here from before src loop.
@@ -511,11 +513,11 @@ public:
             e1=0.001;         // may be too low for some spectra (e.g. Tl-204)
             de=((int)(etop[0]*10.0+1)/10.)/nbin; // round up to nearest 100kev;
             // /=     NBIN
-//             cout << "Binwidth " << de << endl;
+            //cout << "Binwidth " << de << endl;
 
             for (int ib=0; ib<nbin; ib++) {
                 e[ib]=de+ib*de;
-//                 printf("%.12f, %.12f\n", e[ib], etop[0]);
+//                 egsInformation("%.12f, %.12f\n", e[ib], etop[0]);
             }
 
             s_y=0.0;
@@ -540,24 +542,41 @@ public:
 
             EGS_AliasTable *bspec = new EGS_AliasTable(nbin,e,spec,1);
             (*beta)->setSpectrum(bspec);
+
+            // Write the spectrum to a file
+            // This is just intended to be temporary to test the
+            // spectrum generation code
+            ostringstream ostr;
+            ostr << decays->radionuclide << "_d_" << emax << ".spec";
+
+            ofstream specStream;
+            specStream.open(ostr.str().c_str());
+            for (int ib=0; ib<nbin; ib++) {
+                spec[ib]=1/de*(spec_y[ib]/s_y);
+                specStream << e[ib] << " " << spec[ib] << endl;
+            }
+            specStream.close();
         }
     }
 
 protected:
 
-    // Complex gamma function approximation
     complex<double> cgamma(complex<double> z) {
 
         static const int g=7;
         static const double pi = 3.1415926535897932384626433832795028841972;
         static const double p[g+2] = {0.99999999999980993, 676.5203681218851,
-                                      -1259.1392167224028, 771.32342877765313, -176.61502916214059,
-                                      12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+                                      -1259.1392167224028,
+                                      771.32342877765313,
+                                      -176.61502916214059,
+                                      12.507343278686905,
+                                      -0.13857109526572012,
+                                      9.9843695780195716e-6,
                                       1.5056327351493116e-7
                                      };
 
         if (real(z)<0.5) {
-            return pi / (sin(pi*z)*cgamma(1.0-z));
+            return pi / (sin(pi*z)*cgamma(double(1.0)-z));
         }
 
         z -= 1.0;
@@ -565,8 +584,91 @@ protected:
         for (int i=1; i<g+2; i++) {
             x += p[i]/(z+complex<double>(i,0));
         }
-        complex<double> t = z + (g + 0.5);
-        return sqrt(2*pi) * pow(t,z+0.5) * exp(-t) * x;
+        complex<double> t = z + (g + double(0.5));
+
+        return double(sqrt(2.*pi)) * pow(t,z+double(0.5)) * exp(-t) * x;
+    }
+
+    complex<double> clgamma(complex<double> z) {
+        complex<double> u, v, h, p, r;
+
+        static const double pi = 3.1415926535897932384626433832795028841972;
+        static const double c1 = 9.189385332046727e-1;
+        static const double c2 = 1.144729885849400;
+        static const double c[10] = {8.333333333333333e-2,
+                                     -2.777777777777777e-3,
+                                     7.936507936507936e-4,
+                                     -5.952380952380952e-4,
+                                     8.417508417508417e-4,
+                                     -1.917526917526917e-3,
+                                     6.410256410256410e-3,
+                                     -2.955065359477124e-2,
+                                     1.796443723688305e-1,
+                                     -1.392432216905901
+                                    };
+
+        static const double hf = 0.5;
+
+        double x = real(z);
+        double y = imag(z);
+        h = 0;
+
+        if (y == 0 && -abs(x) == int(x)) {
+            return 0;
+        }
+        else {
+            double ya = abs(y);
+            if (x < 0) {
+                u = double(1.) - complex<double>(x, ya);
+            }
+            else {
+                u = complex<double>(x, ya);
+            }
+
+            h = 0;
+            double ur = real(u);
+            double ui, a;
+            if (ur < 7.) {
+                ui = imag(u);
+                a = atan2(ui,ur);
+                h = u;
+                for (int i=1; i<=6-int(ur); i++) {
+                    ur = ur + 1;
+                    u = complex<double>(ur, ui);
+                    h = h * u;
+                    a = a + atan2(ui, ur);
+                }
+                h = complex<double>(hf * log(pow(real(h),2) + pow(imag(h),2)),
+                                    a);
+
+                u = double(1.) + u;
+            }
+
+            r = double(1.) / pow(u,2);
+            p = r * c[9];
+
+            for (int i=8; i>=1; i--) {
+                p = r * (c[i] + p);
+            }
+
+            h = c1 + (u-hf)*log(u) - u + (c[0]+p) / u - h;
+
+            if (x < 0.) {
+                ur = double(int(x)) - 1.;
+                ui = pi * (x-ur);
+                x = pi * ya;
+                double t = exp(-x-x);
+                a = sin(ui);
+                t = x + hf * log(t*pow(a,2)+pow(hf*(1.-t),2));
+                a = atan2(cos(ui)*tanh(x),a) - ur*pi;
+                h = c2 - complex<double>(t,a) - h;
+            }
+            if (y < 0) {
+                h = conj(h);
+            }
+        }
+
+        return h;
     }
 
     void slfact(double p, double z, double radf, double xl[4]) {
@@ -577,41 +679,23 @@ protected:
 
         complex<double> aa;
 
-        pi=acos(-1.0);
-        c137=137.036; // 1/ fine structure constant
-        az=z/c137;
-        g1=sqrt(1.0-az*az);
-        w =sqrt(p*p+1.0);
-        rad=radf/386.159;
-        pr=p*rad;
-        y =az*w/p;
+        pi  = acos(-1.0);
+        c137= 137.036; // 1/ fine structure constant
+        az  = z/c137;
+        g1  = sqrt(1.0-az*az);
+        w   = sqrt(p*p+1.0);
+        rad = radf/386.159;
+        pr  = p*rad;
+        y   = az*w/p;
 
         for (int k=1; k<=4; k++) {
 
-            gk=sqrt(k*k-az*az);
-            x1=pow((pow(p,k-1)/dfac[k-1]) ,2);
-            
-            // Fortran original was:
-            //  aa=complex(gk,y)
-            //  aa=clgama(aa)        !   (using CERNLIB's log gamma function)
-            //                       !   for complex arguments
-            // Now use gnu scientific library's function:
-            // int gsl_sf_lngamma_complex_e (double zr, double zi,
-            //                gsl_sf_result * lnr, gsl_sf_result * arg)
-            // returned pars are lnr = \log|\Gamma(z)|
-            //                   arg = \arg(\Gamma(z)) in (-\pi,\pi].
-            // If we assume the Gamma function has complex form  Rexp(i*phi)
-            // then log(Gamma) is just log(R) + i*phi. The former is purely real 
-            // and the latter purely imaginary, hence the last two arguments 
-            // return the real and the imaginary parts of ln(gamma(aa)), and it 
-            // is only the former which is used below.
-            // Note that gsl_sf_result is a structure with elements val and err.
+            gk = sqrt(k*k-az*az);
+            x1 = pow((pow(p,k-1)/dfac[k-1]) ,2);
 
-            gsl_sf_result gr_aa_real, gr_aa_imag;
-            gsl_sf_lngamma_complex_e(gk, y, &gr_aa_real, &gr_aa_imag);
-            double aa_real=gr_aa_real.val;
+            aa = clgamma(complex<double>(gk,y));
+            double aa_real = real(aa);
 
-            // Now use cmath's lgamma function
             bb=lgamma((double)k);
             cc=lgamma(2.0*k +1.0);
             dd=lgamma(2.0*gk+1.0);
@@ -658,30 +742,33 @@ protected:
         double pi,c137,zab,v,z,x,w,psq,p,y,qsq,g,cab,f,radf;
 
         double xl[4];
-        complex<double>  c,a;
+        complex<double> c;
+        complex<double> a;
 
         bspec=0.0;
         if (e>emax) {
             return;
         }
 
-        pi=acos(-1.);
+        pi  =acos(-1.);
         c137=137.036;           // 1/ fine structure constant
 
-        zab=abs(zz);
-        v=1.13*pow(zab,1.333)/pow(c137,2); // Screening correction
-        v=copysign(v,zz);
-        z=zab/c137;
-        x=sqrt(1.0-z*z);        // s parameter
-        w=1.0+(e/0.51097)-v;    // Total energy of b particle
-        if (w<1.00001) {
-            w=1.00001;
+        zab = abs(zz);
+        v   = 1.13*pow(zab,1.333)/pow(c137,2); // Screening correction
+        v   = copysign(v,zz);
+        z   = zab/c137;
+        x   = sqrt(1.0-z*z);        // s parameter
+        w   = 1.0+(e/0.51097)-v;    // Total energy of b particle
+        if (w<1.0000001) {
+            bspec = 0.;
+            return;
         }
-        psq= w*w-1.0;
-        p  =sqrt(psq);          // Momemtum of beta particle
-        y = z*w/p;              // eta = alpha * z * e / p
-        y =copysign(y,zz);
-        qsq=3.83*pow(emax-e,2);
+        //if(w<1.00001) w=1.00001;
+        psq = w*w-double(1.0);
+        p   = sqrt(psq);          // Momemtum of beta particle
+        y   = z*w/p;              // eta = alpha * z * e / p
+        y   = copysign(y,zz);
+        qsq = 3.83*pow(emax-e,2);
 
         if (e <= 1.0e-5) {
             g=0.0;              // Low energy approximation
@@ -690,69 +777,71 @@ protected:
             }
         }
         else {
-            a=complex<double>(x,y);
-            c=cgamma(a);
-            cab=abs(c);
-            f=pow(psq,x-1.0)*exp(pi*y)*pow(cab,2);
-            g=f*p*w*qsq;
+            a   = complex<double>(x,y);
+            c   = cgamma(a);
+            cab = abs(c);
+            f   = pow(psq,x-1.0)*exp(pi*y)*pow(cab,2);
+            g   = f*p*w*qsq;
         }
 
-        factor=1.0; // Necessary to calculate kurie plot (not done)
-        bspec=g;
+        factor  = 1.0; // Necessary to calculate kurie plot (not done)
+        bspec   = g;
         if (lam == 0) {
             return;
         }
 
-        radf=1.2*pow(rmass,0.333); // Nuclear radius
+        radf = 1.2*pow(rmass,0.333); // Nuclear radius
         slfact(p,zz,radf,xl);
 
         if (lam==1) {
-            bspec=g*(qsq*xl[0]+9.0*xl[1]);
+            bspec = g*(qsq*xl[0]+9.0*xl[1]);
             return;
         }
         else if (lam==2) {
-            bspec=g*(pow(qsq,2)*xl[0]+30.0*qsq*xl[1]+225.0*xl[2]);
+            bspec = g*(pow(qsq,2)*xl[0]+30.0*qsq*xl[1]+225.0*xl[2]);
             return;
         }
         else if (lam==3) {
-            bspec=g*(pow(qsq,3.0)*xl[0]+63.0*pow(qsq,2)*xl[1]+
-                     1575.0*qsq*xl[2] + 11025.0*xl[3]);
+            bspec = g*(pow(qsq,3.0)*xl[0]+63.0*pow(qsq,2)*xl[1]+
+                       1575.0*qsq*xl[2] + 11025.0*xl[3]);
             return;
         }
         else { // lam==4
+
+            //TODO: Currently no isotopes will get here
 
             // Fudge factors for nuclides whose experimental spectra don't
             // seem to fit theory.
 
             //     for cl36 (ref: nuc. phys. 99a,  625,(67))
             if (zab == 18.0) {
-                bspec=bspec*(qsq*xl[0]+20.07*xl[1]);
+                bspec = bspec*(qsq*xl[0]+20.07*xl[1]);
             }
 
             //     for i129 (ref: phys. rev. 95, 458, 54))
             if (zab == 54.) {
-                bspec=bspec*(psq+10.0*qsq);
+                bspec = bspec*(psq+10.0*qsq);
             }
 
             //     for cs-ba137 (ref: nuc. phys. 112a, 156, (68))
             if (zab == 56.) {
-                bspec=bspec*(qsq*xl[0]+0.045*xl[1]);
+                bspec = bspec*(qsq*xl[0]+0.045*xl[1]);
             }
 
             //     for tl204 (ref: can. j. phys., 45, 2621, (67))
             if (zab == 82.) {
-                bspec=bspec*(1.0-1.677*e+ 2.77*e*e);
+                bspec = bspec*(1.0-1.677*e+ 2.77*e*e);
             }
 
             //     for bi210 (ref: nuc. phys., 31, 293, (62))
             if (zab == 84.) {
-                bspec=bspec*(1.78-2.35*e+e*e);
+                bspec = bspec*(1.78-2.35*e+e*e);
             }
 
             return;
         }
     }
-    
+
     // Sums weighted, normalized spectral components to give total spectrum
     void sp(double e, double &spec, double &factor) {
 
@@ -760,11 +849,11 @@ protected:
 
         spec=0.0;
         for (int icomp=0; icomp<ncomps; icomp++) {
-            zz=zzz[icomp];
-            emax=etop[icomp];
-            lam=lamda[icomp];
+            zz  = zzz[icomp];
+            emax= etop[icomp];
+            lam = lamda[icomp];
             bsp(e,bspec,factor);
-            spec=spec+bspec*rel[icomp]/area[icomp];
+            spec= spec+bspec*rel[icomp]/area[icomp];
         }
     }
 
@@ -860,8 +949,8 @@ public:
         // Set the weight of the spectrum
         spectrumWeight = weight;
 
-        printf("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
-        printf("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
+        egsInformation("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
+        egsInformation("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
     };
 
     ~EGS_RadionuclideSpectrum() {
@@ -891,53 +980,53 @@ public:
     void setSpectrumWeight(EGS_Float newWeight) {
         spectrumWeight = newWeight;
     }
-    
+
     void printSampledEmissions() {
-        printf("\nSampled %s emissions:\n", decays->radionuclide.c_str());
-        printf("========================\n");
-        printf("Energy | Intensity per 100 emissions\n");
+        egsInformation("\nSampled %s emissions:\n", decays->radionuclide.c_str());
+        egsInformation("========================\n");
+        egsInformation("Energy | Intensity per 100 emissions\n");
         if (myBetas.size() > 0) {
-            printf("Beta records:\n");
+            egsInformation("Beta records:\n");
         }
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
 
-            printf("%f %f\n", (*beta)->getFinalEnergy(),
-                   ((EGS_Float)(*beta)->getNumSampled()/ishower)*100);
+            egsInformation("%f %f\n", (*beta)->getFinalEnergy(),
+                           ((EGS_Float)(*beta)->getNumSampled()/ishower)*100);
         }
         if (myAlphas.size() > 0) {
-            printf("Alpha records:\n");
+            egsInformation("Alpha records:\n");
         }
         for (vector<AlphaRecord *>::iterator alpha = myAlphas.begin();
                 alpha != myAlphas.end(); alpha++) {
 
-            printf("%f %f\n", (*alpha)->getFinalEnergy(),
-                   ((EGS_Float)(*alpha)->getNumSampled()/ishower)*100);
+            egsInformation("%f %f\n", (*alpha)->getFinalEnergy(),
+                           ((EGS_Float)(*alpha)->getNumSampled()/ishower)*100);
         }
         if (myGammas.size() > 0) {
-            printf("Gamma records:\n");
+            egsInformation("Gamma records:\n");
         }
         for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                 gamma != myGammas.end(); gamma++) {
 
-            printf("%f %f\n", (*gamma)->getDecayEnergy(),
-                   ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
+            egsInformation("%f %f\n", (*gamma)->getDecayEnergy(),
+                           ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
         }
         if (xrayEnergies.size() > 0) {
-            printf("X-Ray records:\n");
+            egsInformation("X-Ray records:\n");
         }
         for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
-            printf("%f %f\n", xrayEnergies[i],
-                   ((EGS_Float)numSampledXRay[i]/ishower)*100);
+            egsInformation("%f %f\n", xrayEnergies[i],
+                           ((EGS_Float)numSampledXRay[i]/ishower)*100);
         }
         if (augerEnergies.size() > 0) {
-            printf("Auger records:\n");
+            egsInformation("Auger records:\n");
         }
         for (unsigned int i=0; i < augerEnergies.size(); ++i) {
-            printf("%f %f\n", augerEnergies[i],
-                   ((EGS_Float)numSampledAuger[i]/ishower)*100);
+            egsInformation("%f %f\n", augerEnergies[i],
+                           ((EGS_Float)numSampledAuger[i]/ishower)*100);
         }
-        printf("\n");
+        egsInformation("\n");
     }
 
 protected:
@@ -949,13 +1038,13 @@ protected:
         // The energy of the sampled particle
         EGS_Float E;
 
-        //TODO: Maybe need to adjust particle weights?? to account for 
+        //TODO: Maybe need to adjust particle weights?? to account for
         // intensities that give >1 particle per decay?
-        
+
         // If the daughter is in an excited state
         // Check for transitions
         if (currentLevel && currentLevel->getEnergy() > 0) {
-//             printf("EGS_RadionuclideSpectrum:sample: excited daughter "
+//             egsInformation("EGS_RadionuclideSpectrum:sample: excited daughter "
 //                 "%f\n",currentLevel->getEnergy());
 
             for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
@@ -967,7 +1056,7 @@ protected:
 
                         (*gamma)->incrNumSampled();
                         currentQ = (*gamma)->getCharge();
-                        
+
                         // Update the current time by sampling how long
                         // it took for this transition to occur
                         // time += halflife / ln(2) * log(u)
@@ -994,7 +1083,7 @@ protected:
             // ============================
             // Sample which decay occurs
             // ============================
-            
+
             // Beta-, beta+ and electron capture
             for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                     beta != myBetas.end(); beta++) {
@@ -1002,30 +1091,31 @@ protected:
 
                     (*beta)->incrNumSampled();
                     currentQ = (*beta)->getCharge();
-                    
+
                     // Set the energy level of the daughter
                     currentLevel = (*beta)->getLevelRecord();
-                    
+
                     // For beta+ records we decide between
                     // branches for beta+ or electron capture
-                    if(currentQ == 1) {
+                    if (currentQ == 1) {
                         // For positron emission, continue as usual
-                        if(rndm->getUniform() < 
+                        if (rndm->getUniform() <
                                 (*beta)->getPositronIntensity()) {
-                        
-                            
-                        // For electron capture, there is no emitted particle
-                        // (only a neutrino)
-                        // so we return a 0 energy particle
-                        } else {
+
+
+                            // For electron capture, there is no emitted particle
+                            // (only a neutrino)
+                            // so we return a 0 energy particle
+                        }
+                        else {
                             return 0;
                         }
                     }
-                    
+
                     // Sample the energy from the spectrum alias table
                     E = (*beta)->getSpectrum()->sample(rndm);
-                    
-                    //printf("\nEGS_RadionuclideSpectrum: E: %f\n",E);
+
+                    //egsInformation("\nEGS_RadionuclideSpectrum: E: %f\n",E);
 
                     return E;
                 }
