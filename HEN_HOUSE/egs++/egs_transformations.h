@@ -294,9 +294,9 @@ public:
     with \a cphi, \a sphi = \f$ \cos(\phi), \sin(\phi)\f$.
     */
     static EGS_RotationMatrix rotY(EGS_Float cphi,EGS_Float sphi) {
-        return EGS_RotationMatrix(cphi, (EGS_Float)0,         sphi,
+        return EGS_RotationMatrix(cphi, (EGS_Float)0,         -sphi,
                                   (EGS_Float)0, (EGS_Float)1, (EGS_Float)0,
-                                  -sphi, (EGS_Float)0,         cphi);
+                                   sphi, (EGS_Float)0,         cphi);
     };
 
     /*! \brief Returns a rotation around the z-axis by the angle \f$\phi\f$
