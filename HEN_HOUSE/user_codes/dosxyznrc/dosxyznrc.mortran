@@ -1150,20 +1150,22 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
 }
 
 REPLACE {;COMIN/SCORE/;} WITH {
-    ;common/score/IWATCH,mxnp,i_phsp_out,i_muidx_out,i_unit_out,
-    endep($MAXDOSE), endep2($MAXDOSE), temp2, planarefe,
-    planarefp,planarfe,planarfp,nestep,endep_tmp($MAXDOSE),
+    ;common/score/endep($MAXDOSE), endep2($MAXDOSE), temp2, planarefe,
+    planarefp,planarfe,planarfp,
+    nestep,
+    endep_tmp($MAXDOSE),
+    i_phsp_out,i_muidx_out,i_unit_out,IWATCH,mxnp,
     endep_last($MAXDOSE);
+    REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
+    $LONG_INT nestep;
+    real endep_tmp;
     integer i_phsp_out, "set to 1 or 2 to output phsp data to IAEA format"
                         "phase space file"
             i_muidx_out, "set to 1 to include frMU_indx (fractional MU index)"
                         "in phase space data (phsp or BEAM simulation source"
                         "only)"
             i_unit_out, "unit no. for IAEA phsp output"
-    IWATCH, mxnp;
-    real endep_tmp;
-    REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
-    $LONG_INT nestep;
+            IWATCH,mxnp;
     $SHORT_INT endep_last;
 }
 "V> endep(I) I=1,IMAX*JMAX*KMAX + 1,  +1 is for surrounding region
