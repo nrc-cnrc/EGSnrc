@@ -2397,8 +2397,6 @@ $REAL weight,
       cosphi,sinphi;
 $INTEGER i;
 
-$INIT_PHSP_COUNTERS;
-
 OUTPUT61;(' ');
 
 "------------------------------------------------------------------------"
@@ -3231,15 +3229,14 @@ ELSEIF(isource=20)  [
        t10,' Shared library simulation: ',a/
        t10,' Shared library input file: ',a/);
     OUTPUT61;
-(t10,'   setting      xiso      yiso           ziso        theta',
-				'       phi          phicol         ',
-				'SAD         MU Index'/
- t10,'   num           (cm)          (cm)           (cm)         (deg.)',
- 			'     (deg.)             (deg.)          (cm)');
+(t14,'setting',t28,'xiso',t39,'yiso',t50,'ziso',t60,'theta',t74,'phi',
+t84,'phicol',t96,'SAD',t105,'MU Index'/
+t16,'no.',t28,'(cm)',t39,'(cm)',t50,'(cm)',t60,'(deg.)',t72,'(deg.)',
+t84,'(deg.)',t96,'(cm)');
     DO I=1,nset[
        OUTPUT61 I,xtemp(I),ytemp(I),ztemp(I),thetatemp(I),phitemp(I),
 		 phicoltemp(I),dsourcetemp(I),muIndex(I);
-	 (t10,i7,f15.4,f11.4,f15.4,f12.4,f13.4,f11.4,f11.4,f10.4);
+	 (t10,i7,f15.4,f11.4,f11.4,f12.4,f13.4,f11.4,f11.4,f10.4);
 	 ]
 
    ]
@@ -3279,17 +3276,15 @@ ELSEIF(isource=21)  [
        t10,' VCU simulation: ',a/
        t10,' VCU input file: ',a/);
     OUTPUT61;
-(t10,'   setting      xiso      yiso           ziso        theta',
-				'       phi          phicol         ',
-				'SAD         MU Index'/
- t10,'   num           (cm)          (cm)           (cm)         (deg.)',
- 			'     (deg.)             (deg.)          (cm)');
+(t14,'setting',t28,'xiso',t39,'yiso',t50,'ziso',t60,'theta',t74,'phi',
+t84,'phicol',t96,'SAD',t105,'MU Index'/
+t16,'no.',t28,'(cm)',t39,'(cm)',t50,'(cm)',t60,'(deg.)',t72,'(deg.)',
+t84,'(deg.)',t96,'(cm)');
     DO I=1,nset[
        OUTPUT61 I,xtemp(I),ytemp(I),ztemp(I),thetatemp(I),phitemp(I),
-		 phicoltemp(I),dsourcetemp(I),muIndex(I);
-	 (t10,i7,f15.4,f11.4,f15.4,f12.4,f13.4,f11.4,f11.4,f10.4);
-	 ]
-
+                 phicoltemp(I),dsourcetemp(I),muIndex(I);
+         (t10,i7,f15.4,f11.4,f11.4,f12.4,f13.4,f11.4,f11.4,f10.4);
+    ]
    ]
 
   OUTPUT61;(' ');
@@ -4181,7 +4176,7 @@ cosphi   = cos(phi(1)*3.141593/180.); sinphi   = sin(phi(1)*3.141593/180.);
    xsrcp = r_11(1)*xsrc + r_12(1)*ysrc + r_13(1)*zsrc + xiso;
    ysrcp = r_21(1)*xsrc + r_22(1)*ysrc + r_23(1)*zsrc + yiso;
    zsrcp = r_31(1)*xsrc + r_32(1)*ysrc + r_33(1)*zsrc + ziso;
-
+  
 ]
 ELSE[ "choose an incident angle from the distribution"
   $RANDOMSET RNNO1;
