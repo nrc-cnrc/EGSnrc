@@ -133,13 +133,6 @@ public:
                                     EGS_Float &E, EGS_Float &wt,       // energy and weight
                                     EGS_Vector &x, EGS_Vector &u) = 0; // position and direction
 
-//     virtual EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-//             int &q, int &latch,             // charge and latch
-//             EGS_Float &E, EGS_Float &wt,    // energy and weight
-//             EGS_Vector &x, EGS_Vector &u,   // position and direction
-//             EGS_I64 &ishower, EGS_Float &time
-//             ) {};
-
     /*! \brief Set the next simulation chunk to start at \a nstart and
       to consist of \a nrun particles.
 

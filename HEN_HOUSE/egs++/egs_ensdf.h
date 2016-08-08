@@ -109,51 +109,52 @@ protected:
 template <class T> class Leaf {
 public:
 
-    Leaf(T *existingTree) {
-        tree = existingTree;
-        if (tree) {
-            tree->addLeaf(this);
+    Leaf(T *existingBranch) {
+        branch = existingBranch;
+        if (branch) {
+            branch->addLeaf(this);
         }
     }
 
     ~Leaf() {
-        if (tree) {
-            tree->removeLeaf(this);
+        if (branch) {
+            branch->removeLeaf(this);
         }
-        tree = 0;
+        branch = 0;
     }
 
     virtual T *getBranch() const {
-        return tree;
+        return branch;
     }
 
     void removeBranch() {
-        tree = 0;
+        branch = 0;
     }
 
     // A new == operator for this class
     bool operator== (const T &rhs) const {
-        if (tree==0 && rhs.tree==0) {
+        if (branch==0 && rhs.branch==0) {
             return true;
         }
-        else if ((tree==0) && rhs.tree!=0) {
+        else if ((branch==0) && rhs.branch!=0) {
             return false;
         }
-        else if ((tree!=0) && rhs.tree==0) {
+        else if ((branch!=0) && rhs.branch==0) {
             return false;
         }
-        else if (tree!=0 && rhs.tree!=0) {
-            return *tree == *(rhs.tree);
+        else if (branch!=0 && rhs.branch!=0) {
+            return *branch == *(rhs.branch);
         }
     }
 
 private:
-    T *tree;
+    T *branch;
 };
 
 // The Record class
 class Record {
 public:
+    Record();
     Record(vector<string> ensdf);
     virtual ~Record();
     vector<string> getRecords() const;
@@ -230,6 +231,7 @@ public:
 // Level Record
 class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
+    LevelRecord();
     LevelRecord(vector<string> ensdf);
     double getEnergy() const;
     double getHalfLife() const;
@@ -267,7 +269,7 @@ public:
     unsigned short int getAtomicWeight() const;
     unsigned short int getForbidden() const;
     void setSpectrum(EGS_AliasTable *bspec);
-    EGS_AliasTable* getSpectrum() const;
+    EGS_AliasTable *getSpectrum() const;
 
 protected:
     EGS_I64 numSampled;
@@ -371,11 +373,11 @@ private:
 
   \ingroup egspp_main
 
-  Reads in a decay spectrum file in ensdf format, and builds the decays into an 
-  object oriented tree structure. This decay structure is useful for 
+  Reads in a decay spectrum file in ensdf format, and builds the decays into an
+  object oriented tree structure. This decay structure is useful for
   \ref EGS_RadionuclideSpectrum.
-  
-  Uncertainties on values are ignored! The energies and intensities for various 
+
+  Uncertainties on values are ignored! The energies and intensities for various
   emissions are taken as is.
 
 */
@@ -401,7 +403,7 @@ public:
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
     vector<double > getAugerEnergies() const;
-    
+
     string radionuclide;
 
     void normalizeIntensities();
@@ -438,6 +440,7 @@ private:
            xrayIntensities,
            augerEnergies,
            augerIntensities;
+    ParentRecord *previousParent;
 };
 
 
