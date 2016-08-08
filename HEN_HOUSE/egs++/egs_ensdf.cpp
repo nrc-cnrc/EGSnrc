@@ -47,9 +47,9 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename) {
     // The parent element
     //string element = radionuclide.substr(0, radionuclide.find("-"));
 
-    printf("EGS_Ensdf::EGS_Ensdf: Isotope: "
+    egsInformation("EGS_Ensdf::EGS_Ensdf: Isotope: "
            "%s\n",isotope.c_str());
-    printf("EGS_Ensdf::EGS_Ensdf: Now loading ensdf file: "
+    egsInformation("EGS_Ensdf::EGS_Ensdf: Now loading ensdf file: "
            "\"%s\"\n",ensdf_filename.c_str());
 
     ensdf_file.open(ensdf_filename.c_str(),ios::in);
@@ -177,7 +177,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     for (vector<string>::iterator it = ensdf.begin(); it!=ensdf.end(); it++) {
 
         string line = *it;
-        printf("ENSDF::parseEnsdf: %s\n", line.c_str());
+        egsInformation("ENSDF::parseEnsdf: %s\n", line.c_str());
         // Identification
         if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
 
@@ -300,7 +300,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         // states of the daughter, we will treat this gamma as an xray
         // The halflife will be ignored
         if (!(*it)->getLevelRecord()) {
-            printf("EGS_Ensdf::parseEnsdf: Switching gamma with unknown "
+            egsInformation("EGS_Ensdf::parseEnsdf: Switching gamma with unknown "
                    "level to X-Ray for non-correlated sampling\n");
             xrayEnergies.push_back((*it)->getDecayEnergy());
             xrayIntensities.push_back((*it)->getTransitionIntensity());
@@ -311,11 +311,11 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
-        printf("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n",
                xrayEnergies[i], xrayIntensities[i]);
     }
     for (unsigned int i=0; i < augerEnergies.size(); ++i) {
-        printf("EGS_Ensdf::parseEnsdf: Auger (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::parseEnsdf: Auger (E,I): %f %f\n",
                augerEnergies[i], augerIntensities[i]);
     }
 }
@@ -336,7 +336,7 @@ void EGS_Ensdf::buildRecords() {
     }
 
     for (int i = 0; i < recordStack.size(); i++) {
-//         printf("EGS_Ensdf::buildRecords:test %d\n",i);
+//         egsInformation("EGS_Ensdf::buildRecords:test %d\n",i);
         if (!recordStack[i].empty()) {
             if (i==0) {
 
@@ -379,7 +379,7 @@ void EGS_Ensdf::buildRecords() {
                                                      LastNormalization, LastLevel));
             }
             else if (i==11) {
-                printf("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
+                egsInformation("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
                        "supported! Further development required.\n");
             }
             else if (i==12) {
@@ -401,7 +401,7 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
             beta != myBetaRecords.end(); beta++) {
 
-        printf("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
                (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
 
         totalDecayIntensity += (*beta)->getBetaIntensity();
@@ -409,25 +409,25 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
             alpha != myAlphaRecords.end(); alpha++) {
 
-        printf("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
                (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
 
         totalDecayIntensity += (*alpha)->getAlphaIntensity();
     }
     for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
-        printf("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
                xrayEnergies[i], xrayIntensities[i]);
 
         totalDecayIntensity += xrayIntensities[i];
     }
     for (unsigned int i=0; i < augerIntensities.size(); ++i) {
-        printf("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
                augerEnergies[i], augerIntensities[i]);
 
         totalDecayIntensity += augerIntensities[i];
     }
 
-    printf("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
+    egsInformation("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
            "%f\n",totalDecayIntensity);
 
     // Normalize beta emission intensities
@@ -443,7 +443,7 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*beta)->getBetaIntensity();
 
-        printf("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
+        egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
                (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
     }
 
@@ -506,7 +506,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
             if ((*gamma)->getLevelRecord() == (*it)) {
                 totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-                printf("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
+                egsInformation("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
                        (*gamma)->getTransitionIntensity(),
                        totalLevelIntensity[j]);
             }
@@ -525,9 +525,11 @@ void EGS_Ensdf::normalizeIntensities() {
 
             if ((*gamma)->getLevelRecord() == (*it)) {
 
-                (*gamma)->setTransitionIntensity(
-                    (*gamma)->getTransitionIntensity() /
-                    totalLevelIntensity[j]);
+                if(totalLevelIntensity[j] > 0.) {
+                    (*gamma)->setTransitionIntensity(
+                        (*gamma)->getTransitionIntensity() /
+                        totalLevelIntensity[j]);
+                }
 
                 if (i > 0) {
                     (*gamma)->setTransitionIntensity(
@@ -536,7 +538,7 @@ void EGS_Ensdf::normalizeIntensities() {
                 }
                 ++i;
 
-                printf("EGS_Ensdf::normalizeIntensities: Gamma intensities: "
+                egsInformation("EGS_Ensdf::normalizeIntensities: Gamma intensities: "
                        "%f\n",(*gamma)->getTransitionIntensity());
             }
         }
@@ -549,11 +551,13 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
             gamma != myGammaRecords.end(); gamma++) {
 
+        egsInformation("test0\n");
         double energy = (*gamma)->getDecayEnergy();
+        egsInformation("test1\n");
         double guessedLevelEnergy =
             ((*gamma)->getLevelRecord()->getEnergy() - energy);
 
-        printf("EGS_Ensdf::normalizeIntensities: Gamma (LE,E,GE): "
+        egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (LE,E,GE): "
                "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
                energy, guessedLevelEnergy);
 
@@ -572,7 +576,7 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
         if (bestMatch == 1E10) {
-            printf("EGS_Ensdf::normalizeIntensities: Warning: Could not find a "
+            egsInformation("EGS_Ensdf::normalizeIntensities: Warning: Could not find a "
                    "level with energy matching decay of gamma with energy E=%f, "
                    "assuming ground state\n",energy);
             (*gamma)->setFinalLevel(myLevelRecords.front());
@@ -581,7 +585,7 @@ void EGS_Ensdf::normalizeIntensities() {
             (*gamma)->setFinalLevel(level);
         }
 
-        printf("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
+        egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
                "%f\n",level->getEnergy());
     }
 }
@@ -671,7 +675,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
                 continue;
             }
 
-//             printf("EGS_Ensdf::getEmissionsFromComments: %s\n",
+//             egsInformation("EGS_Ensdf::getEmissionsFromComments: %s\n",
 //                 emissionLine.c_str());
 
             string eStr = egsTrimString(line.substr(13, 15));
@@ -734,7 +738,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
                 }
             }
 
-//             printf("EGS_Ensdf::getEmissionsFromComments: (E,I) %f %f\n",
+//             egsInformation("EGS_Ensdf::getEmissionsFromComments: (E,I) %f %f\n",
 //                 energy, intensity);
         }
     }
@@ -792,25 +796,33 @@ vector<string> Record::getRecords() const {
 
 double Record::recordToDouble(int startPos, int endPos) {
     if (!lines.empty()) {
+        if(lines.front().length() < startPos) {
+            egsWarning("Record::recordToDouble: Warning: Record too short to "
+                       "contain desired quantity\n");
+            return -1;
+        }
         string record = lines.front().substr(startPos-1,
                                              endPos-startPos+1);
         return atof(record.c_str());
     }
     else {
-        printf("Record::recordToDouble: Error: Record is empty\n");
+        egsWarning("Record::recordToDouble: Error: Record is empty\n");
         return -1;
     }
 }
 
+// Parse a halflife from a record
+// Converts the units to seconds
+// Returns the halflife, or a negative number upon failure
 double Record::parseHalfLife(int startPos, int endPos) {
     if (lines.empty()) {
-        printf("Record::parseHalfLife: Error: Record is empty\n");
+        egsWarning("Record::parseHalfLife: Error: Record is empty\n");
         return -5;
     }
 
     string halfLifeStr = egsTrimString(lines.front().substr(startPos-1,
                                        endPos-startPos+1));
-    printf("Record::parseHalfLife: %s\n", halfLifeStr.c_str());
+    egsInformation("Record::parseHalfLife: %s\n", halfLifeStr.c_str());
 
     // Return -1 for stable
     if (halfLifeStr.substr(0,5).compare("STABLE") == 0) {
@@ -1082,14 +1094,21 @@ ParentRecord::ParentRecord(vector<string> ensdf):Record(ensdf) {
 
 void ParentRecord::processEnsdf() {
     halfLife = parseHalfLife(40, 49);
-    
+
     // Ground state Q-value in keV
     // (total energy available for g.s. -> g.s. transition
     // It will always be a positive number
     // We convert to MeV
-    Q = recordToDouble(65, 74) / 1000;
+    Q = recordToDouble(65, 74) / 1000.;
     
-    printf("ParentRecord::processEnsdf: %f %f\n", halfLife, Q);
+    // If the Q was not contained in the record it returned -1
+    if(Q == -0.001) {
+        egsWarning("ParentRecord::processEnsdf: Warning: No Q-value given, any "
+                   "positron records will give errors\n");
+        Q = 0.;
+    }
+    
+    egsInformation("ParentRecord::processEnsdf: %f %f\n", halfLife, Q);
 }
 
 double ParentRecord::getHalfLife() const {
@@ -1120,7 +1139,7 @@ void NormalizationRecord::processEnsdf() {
     normalizeTransition = recordToDouble(22, 29);
     normalizeBranch = recordToDouble(32, 39);
     normalizeBeta = recordToDouble(42, 49);
-    printf("NormalizationRecord::processEnsdf: %f %f %f %f\n",
+    egsInformation("NormalizationRecord::processEnsdf: %f %f %f %f\n",
            normalizeRelative, normalizeTransition, normalizeBranch, normalizeBeta);
 }
 
@@ -1167,9 +1186,9 @@ LevelRecord::LevelRecord(vector<string> ensdf):Record(ensdf) {
 }
 
 void LevelRecord::processEnsdf() {
-    energy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
+    energy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     halfLife = recordToDouble(40, 49);
-    printf("LevelRecord::processEnsdf: %f %f\n", energy, halfLife);
+    egsInformation("LevelRecord::processEnsdf: %f %f\n", energy, halfLife);
 }
 
 double LevelRecord::getEnergy() const {
@@ -1261,13 +1280,13 @@ BetaMinusRecord::BetaMinusRecord(vector<string> ensdf,
 }
 
 void BetaMinusRecord::processEnsdf() {
-    finalEnergy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
+    finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     betaIntensity = recordToDouble(22, 29);
     if (getNormalizationRecord()) {
         betaIntensity *= getNormalizationRecord()->getBetaMultiplier() *
                          getNormalizationRecord()->getBranchMultiplier();
     }
-    printf("BetaMinusRecord::processEnsdf: %f %f\n", finalEnergy,
+    egsInformation("BetaMinusRecord::processEnsdf: %f %f\n", finalEnergy,
            betaIntensity);
 }
 
@@ -1293,7 +1312,7 @@ BetaPlusRecord::BetaPlusRecord(vector<string> ensdf,
 }
 
 void BetaPlusRecord::processEnsdf() {
-    finalEnergy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
+    finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     positronIntensity = recordToDouble(22, 29);
     ecIntensity = recordToDouble(32, 39);
     if (getNormalizationRecord()) {
@@ -1316,9 +1335,16 @@ void BetaPlusRecord::processEnsdf() {
     if(finalEnergy == 0 && positronIntensity > 0) {
         finalEnergy = getParentRecord()->getQ()
                 - getLevelRecord()->getEnergy() - 1.022;
+        
+        if(finalEnergy < 0.) {
+            egsWarning("BetaPlusRecord::processEnsdf: Error: Final energy of "
+                "positron could not be calculated. Setting energy to zero!\n"
+            );
+            finalEnergy = 0.;
+        }
     }
     
-    printf("BetaPlusRecord::processEnsdf: %f %f %f\n", finalEnergy,
+    egsInformation("BetaPlusRecord::processEnsdf: %f %f %f\n", finalEnergy,
            positronIntensity, ecIntensity);
 }
 
@@ -1356,9 +1382,8 @@ GammaRecord::GammaRecord(vector<string> ensdf, NormalizationRecord
 }
 
 void GammaRecord::processEnsdf() {
-    decayEnergy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
+    decayEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     transitionIntensity = recordToDouble(22, 29);
-    halfLife = parseHalfLife(40, 49);
 
     if (getNormalizationRecord()) {
         transitionIntensity *=
@@ -1366,8 +1391,8 @@ void GammaRecord::processEnsdf() {
             getNormalizationRecord()->getBranchMultiplier();
     }
 
-    printf("GammaRecord::processEnsdf: %f %f %f\n", decayEnergy,
-           transitionIntensity, halfLife);
+    egsInformation("GammaRecord::processEnsdf: %f %f %f\n", decayEnergy,
+           transitionIntensity);
 }
 
 double GammaRecord::getDecayEnergy() const {
@@ -1418,9 +1443,9 @@ AlphaRecord::AlphaRecord(vector<string> ensdf,
 }
 
 void AlphaRecord::processEnsdf() {
-    finalEnergy = recordToDouble(10, 19) / 1000; // Convert keV to MeV
+    finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     alphaIntensity = recordToDouble(22, 29);
-    printf("AlphaRecord::processEnsdf: %f %f\n", finalEnergy,
+    egsInformation("AlphaRecord::processEnsdf: %f %f\n", finalEnergy,
            alphaIntensity);
 }
 

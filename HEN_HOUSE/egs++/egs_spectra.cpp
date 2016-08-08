@@ -1060,9 +1060,12 @@ protected:
                         // Update the current time by sampling how long
                         // it took for this transition to occur
                         // time += halflife / ln(2) * log(u)
-                        currentTime += currentLevel->getHalfLife() /
-                                       0.693147180559945309417232121458176568075500134360255254120680009493393
-                                       * log(rndm->getUniform());
+                        double hl = currentLevel->getHalfLife();
+                        if(hl > 0.) {
+                            currentTime += currentLevel->getHalfLife() /
+                                        0.693147180559945309417232121458176568075500134360255254120680009493393
+                                        * log(rndm->getUniform());
+                        }
 
                         currentLevel = (*gamma)->getFinalLevel();
 
@@ -1102,12 +1105,11 @@ protected:
                         if (rndm->getUniform() <
                                 (*beta)->getPositronIntensity()) {
 
-
+                        }
+                        else {
                             // For electron capture, there is no emitted particle
                             // (only a neutrino)
                             // so we return a 0 energy particle
-                        }
-                        else {
                             return 0;
                         }
                     }
@@ -1165,7 +1167,7 @@ protected:
             }
         }
 
-        // Shouldn't get here
+        // Shouldn't get here if intensities are normalized correctly
         return 0;
     };
 

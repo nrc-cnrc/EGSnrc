@@ -328,7 +328,6 @@ public:
     int getCharge() const;
     LevelRecord *getFinalLevel() const;
     void setFinalLevel(LevelRecord *newLevel);
-    double getHalfLife() const;
     void incrNumSampled();
     EGS_I64 getNumSampled() const;
 
@@ -336,7 +335,6 @@ protected:
     EGS_I64 numSampled;
     double decayEnergy;
     double transitionIntensity;
-    double halfLife;
     int q;
     LevelRecord *finalLevel;
 
