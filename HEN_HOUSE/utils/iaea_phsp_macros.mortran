@@ -253,7 +253,7 @@ ELSE[
 "we assume this is the first float after zlast, if zlast is scored,"
 "and has generic user type = 0"
 iaea_i_muidx=MAX(1,iaea_i_zlast+1);
-IF(iaea_n_extra_floats=0 | iaea_extra_float_types(iaea_i_muidx)~=0) [
+IF(iaea_i_muidx>iaea_n_extra_floats | iaea_extra_float_types(iaea_i_muidx)~=0) [
   iaea_i_muidx=-99;"reset this to no scoring"
   {P8}=0;
 ]
