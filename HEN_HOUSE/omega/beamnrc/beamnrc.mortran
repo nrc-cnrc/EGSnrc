@@ -5345,17 +5345,8 @@ IF(IWATCH=4 | IZLAST=2 )[
     close(IOUTGEOM);
 ]
 IF(ISTORE = -1)[ CLOSE(IOUTRN); ]
-IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4) [
-      "phase-space output"
-  DO I=1,NSC_PLANES [
-     IF(IO_OPT=4)[
-        $IAEA_DESTROY_PHSP_FILE(IOUTFLU(I));
-     ]
-     ELSE[
-        CLOSE(IOUTFLU(I));
-     ]
-  ]
-]
+
+$BEAM_CLOSE_PHSP;
 
 CALL DATETIME(1);
 OUTPUT DATEN,TIMEN;(/' END OF RUN',10X,$DATEN_FORMAT,1X,$TIMEN_FORMAT//);

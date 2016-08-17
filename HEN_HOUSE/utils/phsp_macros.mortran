@@ -1268,6 +1268,20 @@ REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
     ]"end of loop over planes"
 };
 
+REPLACE {$BEAM_CLOSE_PHSP;} WITH {;
+IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4) [
+      "phase-space output"
+  DO I=1,NSC_PLANES [
+     IF(IO_OPT=4)[
+        $IAEA_DESTROY_PHSP_FILE(IOUTFLU(I));
+     ]
+     ELSE[
+        CLOSE(IOUTFLU(I));
+     ]
+  ]
+]
+};
+
 REPLACE {$DOSXYZ_OPEN_PHSP_FOR_WRITE;} WITH {;
     "Added by T. popescu and J.Lobo to write phsps in dosxyz."
     "only done for IAEAphsps."
