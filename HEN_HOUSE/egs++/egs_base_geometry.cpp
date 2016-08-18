@@ -890,16 +890,58 @@ void EGS_BaseGeometry::addBooleanProperty(int bit, int start, int end,
     }
 }
 
-void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+// Gets region numbers from a string
+// Pushes the regions onto the array regs
+void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
+    
+    if(!str.empty()) {
+        
+        // Tokenize the input string
+        vector<string> tokens;
+        const char *ptr = str.c_str();
+        do {
+            const char *begin = ptr;
+            while (*ptr != ' ' && *ptr) {
+                ptr++;
+            }
+            tokens.push_back(string(begin, ptr));
+        }
+        while (*ptr++ != '\0');
 
-    // get all regions lists for this named label
-    for (int i=0; i<labels.size(); i++) {
-        if (labels[i].name.compare(str) == 0) {
-            regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+        for (int i=0; i<tokens.size(); i++) {
+            // Search for tokens that are numbers, not strings
+            // Push the region numbers onto the regions array
+            if(tokens[i].find_first_not_of(" -0123456789") == std::string::npos) {
+                regs.push_back(atoi(tokens[i].c_str()));
+            }
+        }
+    }
+}
+
+void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
+    
+    // Tokenize the input string - this allows for multiple labels
+    vector<string> tokens;
+    const char *ptr = str.c_str();
+    do {
+        const char *begin = ptr;
+        while (*ptr != ' ' && *ptr) {
+            ptr++;
+        }
+        tokens.push_back(string(begin, ptr));
+    }
+    while (*ptr++ != '\0');
+    
+    // Get all regions lists for this named label
+    for (int j=0; j<tokens.size(); j++) {
+        for (int i=0; i<labels.size(); i++) {
+            if (labels[i].name.compare(tokens[j]) == 0) {
+                regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+            }
         }
     }
 
-    // sort region list and remove duplicates
+    // Sort region list and remove duplicates
     sort(regs.begin(), regs.end());
     regs.erase(unique(regs.begin(), regs.end()), regs.end());
 }
