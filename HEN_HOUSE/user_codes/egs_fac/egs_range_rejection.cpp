@@ -67,7 +67,7 @@ EGS_RangeRejection* EGS_RangeRejection::getRangeRejection(EGS_Input *input,
             if( !result->cgeom ) egsWarning("\n\n********** no geometry named"
                        " %s exists => using region-by-region rejection only\n");
         }
-        if( result->Esave <= 0.511 && result->type == RangeDiscard ) {
+        if( result->Esave <= 0.510998946131 && result->type == RangeDiscard ) {
             egsWarning("\n\n********* rr_flag = 1 but Esave = 0 =>"
                          " not using range rejection\n\n");
             delete result; result = 0;

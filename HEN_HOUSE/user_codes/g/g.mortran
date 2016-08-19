@@ -234,7 +234,7 @@ CALL HATCH;
 
 ;OUTPUT;('\f Start g value calculation: Version 1.14 '//);
 OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
-;OUTPUT AE(1)-0.511, AP(1);
+;OUTPUT AE(1)-0.510998946131, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
 /T40,F8.3,' MeV kinetic energy'/
 '   brem photons can be created and any photon followed down to      ',

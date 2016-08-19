@@ -2140,7 +2140,7 @@ REPLACE {$RE-EVALUATE-DEDX(#);} WITH
   lelktmp = max(1,lelktmp);
   IF(lelec < 0)[$EVALUATE dedxmid USING ededx(elktmp);]
   ELSE         [$EVALUATE dedxmid USING pdedx(elktmp);]
-  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+0.5110034))**2);
+  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+0.510998946131))**2);
                    "0.17408298 is 2/3*m**2"
   {P1} = 2*{P1};
 }

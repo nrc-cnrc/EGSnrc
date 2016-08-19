@@ -396,7 +396,7 @@ void EGS_PhspSource::readParticle() {
     }
     first = false;
     if (p.q) {
-        p.E -= 0.5110034;
+        p.E -= 0.510998946131;
         Nreuse = Nreuse_e;
     }
     else {

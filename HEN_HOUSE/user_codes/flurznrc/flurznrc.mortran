@@ -2794,7 +2794,7 @@ IF(IFLDIF = 1)[
 ]
 
 IF(SLOTE > 0.0)["EQUAL BIN WIDTHS"
-   /EBINW(1,1),EBINW(1,3)/ = SLOTE - (ECUTMX-0.5110034);
+   /EBINW(1,1),EBINW(1,3)/ = SLOTE - (ECUTMX-0.510998946131);
    IF(EBINW(1,1) <= 0.0)[/EBINW(1,1),EBINW(1,3)/=1.E10;]
    "above in case large ECUT means electron bins don't exist"
    EBINW(1,2) = SLOTE - PCUTMX;
@@ -2805,7 +2805,7 @@ IF(SLOTE > 0.0)["EQUAL BIN WIDTHS"
 ]
 
 ELSE ["SLOTE=0.0 and SLOTE<0 CASE"
-   /EBINW(1,1),EBINW(1,3)/ = BINTOP(1) - (ECUTMX-0.5110034);
+   /EBINW(1,1),EBINW(1,3)/ = BINTOP(1) - (ECUTMX-0.510998946131);
    EBINW(1,2) = BINTOP(1) - PCUTMX;
    DO IB = 2,MAXIB[DO IQL=1,3[
       EBINW(IB,IQL) = BINTOP(IB)-BINTOP(IB-1) ;
@@ -3178,7 +3178,9 @@ IF(IARG = 0)["transport step about to happen"
         "IBDOWN is the actual bin being considered, IBTOP to 1                 "
         IBDOWN = IBTOP - IB +1;
 
-        IF(IBDOWN=1)[BINBOT=ECUT(IRL)-0.5110034;] ELSE[BINBOT=BINTOP(IBDOWN-1);]
+        IF(IBDOWN=1)[
+          BINBOT=ECUT(IRL)-0.510998946131;
+        ] ELSE[BINBOT=BINTOP(IBDOWN-1);]
 
         IF(IB=1)["bin with initial energy" BINFR(IB)=(EKIN-BINBOT)/EDEP;]
         ELSE [ BINFR(IB) = (BINTOP(IBDOWN) - BINBOT)/EDEP;]
@@ -3189,7 +3191,7 @@ IF(IARG = 0)["transport step about to happen"
         "    bin, but it will be reduced to the correct value below         "
 
         IF( (BINFR(IB) >= 1.0 - FRSUM)  |  IBDOWN=1 |
-            (BINBOT<=ECUT(IRL)-0.5110034) )[
+            (BINBOT<=ECUT(IRL)-0.510998946131) )[
            "this must be the last bin - "
            "first condition is true if the final energy in the  "
            "step is greater than BINBOT, second condition means there"
@@ -3198,7 +3200,7 @@ IF(IARG = 0)["transport step about to happen"
            "in first and last cases, we must correct BINFR            "
 
            IF((BINFR(IB) >= 1.0-FRSUM) |
-              (BINBOT<=ECUT(IRL)-0.5110034 & IBDOWN>1))[
+              (BINBOT<=ECUT(IRL)-0.510998946131 & IBDOWN>1))[
                  "final energy is in this bin"
                 BINFR(IB) = 1.0 - FRSUM; ]
 
@@ -3967,14 +3969,15 @@ ELSEIF (SLOTE = -999) ["set up linear/log bins for SPR calcns"
                        "10% of bins cover top 10% of spectrum"
                        "rest are equal logarithmic"
    LINBIN = int(float($EBIN)/10. + 0.5); "no of bins to cover 10%"
-   DELLIN = (EIN - (ECUTIN-0.5110034))*0.10/dble(LINBIN);
+   DELLIN = (EIN - (ECUTIN-0.510998946131))*0.10/dble(LINBIN);
    OUTPUT LINBIN,DELLIN;(/' ***SLOTE=-999***', I4,' BINS OF',F10.4,' MEV'/);
    MAXIB = $EBIN; BINTOP(MAXIB) = EIN;
    DO I =1,linbin[
      BINTOP(MAXIB-I) = EIN-(dble(I)*DELLIN);]
    "now set up logarithmic bins"
-    RATIO=(BINTOP(MAXIB-LINBIN)/(ECUTIN-0.5110034))**(1./dble(MAXIB-LINBIN));
-    BINTOP(1) = (ECUTIN - 0.5110034)*RATIO;
+    RATIO=(BINTOP(MAXIB-LINBIN)/
+      (ECUTIN-0.510998946131))**(1./dble(MAXIB-LINBIN));
+    BINTOP(1) = (ECUTIN - 0.510998946131)*RATIO;
     DO IB = 2,MAXIB-LINBIN[
       BINTOP(IB) = BINTOP(IB-1)*RATIO;]
     OUTPUT MAXIB,ECUTIN,(BINTOP(IB),IB=1,MAXIB);(/I4,' SPR ENERGY ',
@@ -3986,8 +3989,8 @@ ELSEIF (SLOTE < 0.0) [ "SET UP -SLOTE EQUAL LOGARITHMIC BINS"
              ' ASKED FOR REDUCED TO MAX OF ', I4,' ****');]
     "  maximum energy in problem is EIN, and we use electron lowest"
     "  energy to set the bins equally from ECUTIN to EIN"
-    RATIO = (EIN /(ECUTIN-0.5110034))**(1./dble(MAXIB));
-    BINTOP(1) = (ECUTIN-0.5110034)*RATIO;
+    RATIO = (EIN /(ECUTIN-0.510998946131))**(1./dble(MAXIB));
+    BINTOP(1) = (ECUTIN-0.510998946131)*RATIO;
     DO IB=2,MAXIB-1 [
            BINTOP(IB) = RATIO * BINTOP(IB-1);]
     BINTOP(MAXIB) = EIN; "TO AVOID ROUND-OFF ERRORS"
@@ -4063,10 +4066,10 @@ VALUES_SOUGHT(IVAL)='ESAVEIN';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=1;
 VALUE_MIN(IVAL)=0.;
-VALUE_MAX(IVAL)=EIN+0.511;  "EIN is max k.e. of particles set in srcrz for"
-                         "ISOURC 21,22 and ine ensrc for the others"
-DEFAULT(IVAL)=EIN+0.511;  "defaults to max energy in case too high a value"
-                          " is input, => still do range rej"
+VALUE_MAX(IVAL)=EIN+0.510998946131;  "EIN is max k.e. of particles set in srcrz"
+                         "for ISOURC 21,22 and ine ensrc for the others"
+DEFAULT(IVAL)=EIN+0.510998946131;  "defaults to max energy in case too high "
+                          " a value is input, => still do range rej"
 
 DELIMETER='VARIANCE REDUCTION';
 $GET_INPUTS(NUM_BREMSPLIT,NUM_ESAVEIN);
@@ -5197,7 +5200,7 @@ DO IQ=1,4 [ "Q=4 is for electrons and positrons"
                       XCOORD(IB) = (BINTOP(IB) + PCUT(2))/2.
                    ]
                    ELSE ["a charged particle"
-                      XCOORD(IB) = (BINTOP(IB) + (ECUT(2)-0.5110034))/2.
+                      XCOORD(IB) = (BINTOP(IB) + (ECUT(2)-0.510998946131))/2.
                    ]
                ]"end of IB=1 block"
                ELSE [
@@ -5255,7 +5258,7 @@ DO IQ=1,4 [ "Q=4 is for electrons and positrons"
             "We now assume that the cutoffs in region 2 are the same"
             "everywhere"
             "Had to add comin BOUNDS to PLOTSN to get ECUT/PCUT"
-            IF(IQ=2)[BIN_CUT=PCUT(2);] ELSE [BIN_CUT=ECUT(2)-0.5110034;]
+            IF(IQ=2)[BIN_CUT=PCUT(2);] ELSE [BIN_CUT=ECUT(2)-0.510998946131;]
 
              "Convert regional number(IRL) to a character string"
              IRLR=IRL; $CONVERT_INT(IRLR)_TO_CHAR(CH_IRL);

@@ -4946,8 +4946,8 @@ IF(IFULL=2)["for pulse height distribution"
 
     "Set up energy bins for peak efficiency calculation"
     "This only makes sense if beam is monoenergetic"
-    DFEN(1,2)=EPHTOP-DELTAE;DFEN(2,2)=DFEN(1,2)-0.511;
-    DFEN(3,2)=DFEN(1,2)-1.022;DFEN(4,2)=0.511-DELTAE;
+    DFEN(1,2)=EPHTOP-DELTAE;DFEN(2,2)=DFEN(1,2)-0.510998946131;
+    DFEN(3,2)=DFEN(1,2)-1.022;DFEN(4,2)=0.510998946131-DELTAE;
     "I.E. WE SET LOWER ENERGIES FOR FULL ENERGY, SINGLE ESCAPE, DOUBLE"
     "ESCAPE AND THE 511 KEV LINE"
     DO IPK = 1,4 [
@@ -5010,10 +5010,10 @@ VALUES_SOUGHT(IVAL)='ESAVEIN';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=1;
 VALUE_MIN(IVAL)=0.;
-VALUE_MAX(IVAL)=EIN+0.511;  "EIN is max k.e. of particles set in srcrz for"
-                         "ISOURC 21,22 and ine ensrc for the others"
-DEFAULT(IVAL) =EIN+0.511;  "This means that if a too high number is input,"
-                            "it is reduced to the max needed."
+VALUE_MAX(IVAL)=EIN+0.510998946131;  "EIN is max k.e. of particles set in "
+                         "srcrz for ISOURC 21,22 and ine ensrc for the others"
+DEFAULT(IVAL) =EIN+0.510998946131;  "This means that if a too high number "
+                            "is input, it is reduced to the max needed."
 
 "********************************************************************"
 DELIMETER='VARIANCE REDUCTION';

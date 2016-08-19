@@ -2125,7 +2125,7 @@ integer lnblnk1;
          ]
 
       IF(IQ ~= 0)[ "We need kinetic energy only"
-         EI=EI-0.5110034;
+         EI=EI-0.510998946131;
          ]
 
       "processing the ph-sp data"
@@ -4835,14 +4835,14 @@ LOOP["read phase-space data from the data file"
         ]
 
     IF(IQ = -1)[ "We need kinetic energy only"
-        EI=EI-0.5110034;
+        EI=EI-0.510998946131;
         N_ph_sp_e = N_ph_sp_e + 1; E_ph_sp_e = E_ph_sp_e+EI;
         ]
     ELSEIF(IQ = 0)[
         N_ph_sp_g = N_ph_sp_g + 1; E_ph_sp_g = E_ph_sp_g+EI;
         ]
     ELSEIF(IQ = +1)[
-        EI=EI-0.5110034;
+        EI=EI-0.510998946131;
         N_ph_sp_p = N_ph_sp_p + 1; E_ph_sp_p = E_ph_sp_p+EI;
         ]
     ELSE[

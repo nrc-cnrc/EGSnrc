@@ -103,7 +103,7 @@ PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the detector"
 CALL HATCH;"    pick up cross section data for TA"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.511, AP(1);
+;OUTPUT AE(1)-0.510998946131, AP(1);
 (/' knock-on electrons can be created and any electron followed down to'
   /T40,F8.3,' MeV kinetic energy'/
 ' brem photons can be created and any photon followed down to      ',
