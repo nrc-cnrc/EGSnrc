@@ -1910,7 +1910,7 @@ ELSE[
 
 "set initial energy - used only for enflag=0 (mono-energetic source)"
 "                     reset for other sources elsewhere"
-IF(iqin = 0)[etotin = ein;] ELSE [etotin = ein + 0.511;]
+IF(iqin = 0)[etotin = ein;] ELSE [etotin = ein + 0.510998946131;]
 
 OUTPUT61 NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,
 IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out;
@@ -2656,17 +2656,17 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
                       "electrons and photons in the total incident E"
            IF(iqin =1)[ esrc = esrc +  weight*1.0220068;
             "we include 2 0.511 MeV photons from e+ - e- annihilation"]
-           IF(iqin ~= 0)[ etotin = esrc_sp + 0.5110034;"particle total E"]
+           IF(iqin ~= 0)[ etotin = esrc_sp + 0.510998946131;"particle total E"]
            ELSE[etotin = esrc_sp;]
         ]
         "-----------------------------------------------------------------"
         ELSEIF(enflag = 2 | enflag = 3)["phase-space input or BEAM sim."
         "-----------------------------------------------------------------"
            etotin = einsrc;   "einsrc is the total energy of the particle"
-           IF(iqin = -1)   [esrc = esrc + weight*(etotin - 0.5110034);
+           IF(iqin = -1)   [esrc = esrc + weight*(etotin - 0.510998946131);
                             "remove e- rest mass"]
            ELSEIF(iqin = 0)[esrc = esrc + weight*etotin; ]
-           ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + 0.5110034);
+           ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + 0.510998946131);
                       "add 0.511 for the positron but was - till June 97"
            ]
         ]
@@ -2686,7 +2686,7 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
         IF(xin*xin+yin*yin<0.31831)[
            IF(iqin ~= 0)[
               planarfe=planarfe+weight;
-              planarefe=planarefe+(etotin-0.5110034)*weight;
+              planarefe=planarefe+(etotin-0.510998946131)*weight;
            ]
            ELSE["photons"
               planarfp=planarfp+weight;
@@ -4635,7 +4635,7 @@ $REAL rm,eil,ei,p2,beta2,chi_a2,elke,eke,dedx0,estepx,si,sip1,tmxs_orig,
       mindel;
 $INTEGER medium,i,neke,leil,lelke;
 
-rm = 0.5110034;
+rm = 0.510998946131;
 DO medium = 1,nmed [
 
     neke = meke(medium);

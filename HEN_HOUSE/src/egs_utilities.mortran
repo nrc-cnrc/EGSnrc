@@ -938,7 +938,7 @@ nmed = $default_nmed;
 kmpi = 12; kmpo = 8; dunit = 1;
 rng_seed = 999999;
 latchi = 0;
-rm = 0.5110034; rmt2 = 2*rm; rmsq = rm*rm;
+rm = 0.510998946131; rmt2 = 2*rm; rmsq = rm*rm;
 pi = 4*datan(1d0); twopi = 2*pi; pi5d2 = 2.5*pi;
 nbr_split = 1;
 i_play_RR = 0; i_survived_RR = 0; prob_RR = -1; n_RR_warning = 0;

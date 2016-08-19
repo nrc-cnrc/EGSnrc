@@ -836,7 +836,7 @@ nvalue(ival)        = 1;                        "1 input"
 type(ival)          = 1;
 value_min(ival)     = 0;
 value_max(ival)     = 999.;
-default(ival)       = 50.511;
+default(ival)       = 50.510998946131;
 
 ival                = ival + 1;
 ival_up = ival;
@@ -867,8 +867,9 @@ IF(error_flags(ival_ue)=0)[
    ue_tmp=value(ival_ue,1);
 ]
 ELSE[
-   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 50.511 MeV');
-   ue_tmp=50.511;
+   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 
+     50.510998946131 MeV');
+   ue_tmp=50.510998946131;
 ]
 IF(error_flags(ival_up)=0)[
    up_tmp=value(ival_up,1);
@@ -1648,14 +1649,18 @@ DO i=1,nmed[
     DO j=1,8[
      DO k=1,16[
        EKE=ETAB(k)*10.**(j-4);
-       IF(EKE <= AE(1)-0.511) [
-           IF(IFLAG1 = 0) [ IFLAG1=1; EKE=AE(1)-0.511; ] ELSE [ EKE=0.0; ]
+       IF(EKE <= AE(1)-0.510998946131) [
+           IF(IFLAG1 = 0) [ 
+             IFLAG1=1; EKE=AE(1)-0.510998946131; 
+           ] ELSE [ EKE=0.0; ]
        ]
 
-       IF(EKE > UE(1)-0.511) [
-           IF(IFLAG2 = 0) [ IFLAG2=1; EKE=UE(1)-0.511; ] ELSE [ EKE=1.E30; ]
+       IF(EKE > UE(1)-0.510998946131) [
+           IF(IFLAG2 = 0) [ 
+             IFLAG2=1; EKE=UE(1)-0.510998946131; 
+           ] ELSE [ EKE=1.E30; ]
        ]
-       EIE=EKE+0.511;       TMXSO=0.0;        DEDXE=0.0;
+       EIE=EKE+0.510998946131;       TMXSO=0.0;        DEDXE=0.0;
        DEDXP=0.0;           EFRACT=0.0;
        IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
            ELKE=LOG(EKE);

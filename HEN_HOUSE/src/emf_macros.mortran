@@ -386,7 +386,7 @@ ELSE[
 
 REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
 {P1}X0=0.0;{P1}Y0=0.0;{P1}Z0=0.0;
-{P2}X0=0.0;{P2}Y0=0.0;{P2}Z0=3.0*3.0/0.511;
+{P2}X0=0.0;{P2}Y0=0.0;{P2}Z0=3.0*3.0/0.510998946131;
 }
 ;
 
@@ -399,16 +399,16 @@ REPLACE {$GET-POTENTIAL(#,#,#,#);} WITH {;
 {P1}=-GAMMA0*BETA20*RM*(EX0*{P2}+EY0*{P3}+EZ0*{P4});
 }
 
-"3.0*3.0/0.511 explanation                                           "
+"3.0*3.0/0.510998946131 explanation                                  "
 "nT = 3.0 (this example) = Magnetic field strength in Tesla V.s/m**2 "
 "3.0 = Speed of light, in m/s *10**8                                 "
-"0.511 = rest mass energy of the electron in units eV*10**6          "
+"0.510998946131 = rest mass energy of the electron in units eV*10**6 "
 "                                                                    "
-" (nT)[V.s/m**2](3*10**8[m/s])*(e)/0.511*10**6[e.V]                  "
+" (nT)[V.s/m**2](3*10**8[m/s])*(e)/0.510998946131*10**6[e.V]         "
 " =                                                                  "
-" (nT)*3*100/0.511[1/m]                                              "
+" (nT)*3*100/0.510998946131[1/m]                                     "
 " =                                                                  "
-" (nT)*3.0/0.511[1/cm]                                               "
+" (nT)*3.0/0.510998946131[1/cm]                                      "
 
 "**************************************************************************"
 "End of example is for a constant B-field of 3 Tesla parallel to the z-axis"

@@ -56,7 +56,7 @@ QStringList *elements = 0;
 
 TableEventHandler *tfilter = 0;
 
-const double rm=0.5110034;
+const double rm=0.510998946131;
 
 Element element_data[] = {
     {1,"H",1.0079,19.2,8.3748e-05},

@@ -98,7 +98,7 @@ IRAYLR(2)=1;"     turn on Rayleigh scattering in the slab "
 CALL HATCH;"    pick up cross section data for H2O"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.511, AP(1);
+;OUTPUT AE(1)-0.510998946131, AP(1);
 (/' Knock-on electrons can be created and any electron followed down to'
   /T40,F8.3,' MeV kinetic energy'/
 ' Brem photons can be created and any photon followed down to      '
