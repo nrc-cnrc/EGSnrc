@@ -4014,9 +4014,9 @@ VALUES_SOUGHT(IVAL)='ESAVEIN';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=1;
 VALUE_MIN(IVAL)=0.;
-VALUE_MAX(IVAL)=EIN+0.510998946131;  "EIN is max k.e. of particles set in "
+VALUE_MAX(IVAL)=EIN+PRM;  "EIN is max k.e. of particles set in "
                          "srcrz for ISOURC 21,22 and ine ensrc for the others"
-DEFAULT(IVAL) =EIN+0.510998946131;  "This means that if a too high number is "
+DEFAULT(IVAL) =EIN+PRM;  "This means that if a too high number is "
                             "input, it is reduced to the max needed."
 
 DELIMETER='VARIANCE REDUCTION';

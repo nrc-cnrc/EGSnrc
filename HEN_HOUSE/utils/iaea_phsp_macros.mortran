@@ -161,7 +161,7 @@ IF({P2}=0)["do not output if NPASS=1"
     IHSTRY_PHSP({P3})={P4}; "reset ihstry"
     "JWU: IAEA phsp uses kinetic energy!"
     IF( ({P6}=1) | ({P6}=-1) )[
-          ESHORT = ESHORT - 0.510998946131;
+          ESHORT = ESHORT - PRM;
     ]
     $IAEA_PARSE_FOR_WRITE({P8});
     IF(i_iaea_open_for_write=1)[
@@ -334,7 +334,7 @@ ELSEIF(iaea_n_stat>=0)[
   {P5}=iaea_typ_q(iaea_q_index);
   "JWU: IAEA phsp uses kinetic energy!"
   IF( ({P5}=1) | ({P5}=-1) )[
-      ESHORT = ESHORT + 0.510998946131;
+      ESHORT = ESHORT + PRM;
   ]
   {P6}=ESHORT;
   IF(iaea_i_zlast=-99)[

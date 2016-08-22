@@ -2413,9 +2413,8 @@ implicit none;
 
 $COMIN-INIT-COMPT;
 
-$INTEGER i,j,iz,medium,nsh,j_l,j_h;
-$REAL    aux,pztot,rm,atav;
-parameter (rm=0.510998946131);
+$INTEGER i,j,iz,nsh,j_l,j_h;
+$REAL    aux,pztot,atav;
 $REAL    aux_erf,erf1;  "using erf1, provided with EGSnrc, because some"
                         "compiler don't have an intrinsic error function"
 $LOGICAL getd;
@@ -2436,7 +2435,7 @@ DO j=1,$MXTOTSH [
     read($INCOHUNIT,*) iz_array(j),shn_array(j),ne_array(j),
                        Jo_array(j),be_array(j);
     Jo_array(j) = Jo_array(j)*137.;
-    be_array(j) = be_array(j)*1e-6/rm;
+    be_array(j) = be_array(j)*1e-6/PRM;
     aux_erf = 0.70710678119*(1+0.3*Jo_array(j));
     erfJo_array(j) = 0.82436063535*(erf1(aux_erf)-1);
                     "0.82436063535 is exp(0.5)/2"
@@ -2472,7 +2471,7 @@ DO medium = 1,nmed [
         eno_array(i,medium) = eno_array(i,medium)/pztot;
         $egs_info('(i3,i4,i3,f9.5,e10.3,f10.3)',
                   i,j,shn_array(j),eno_array(i,medium),
-                  Jo_array(j),be_array(j)*rm*1000.);
+                  Jo_array(j),be_array(j)*PRM*1000.);
         eno_array(i,medium) = -eno_array(i,medium);
         eno_atbin_array(i,medium) = i;
     ]
@@ -2682,9 +2681,9 @@ subroutine mscati;
 implicit none;
 
 $REAL ededx,ei,eil,eip1,eip1l,si,sip1,eke,elke,aux,ecutmn,tstbm,tstbmn;
-$REAL p2,beta2,rm,dedx0,ekef,elkef,estepx,ektmp,elktmp,chi_a2;
+$REAL p2,beta2,dedx0,ekef,elkef,estepx,ektmp,elktmp,chi_a2;
 $INTEGER
-    i,leil,leip1l,medium,neke,lelke,lelkef,lelktmp;
+    i,leil,leip1l,neke,lelke,lelkef,lelktmp;
 $LOGICAL  ise_monoton, isp_monoton;
 
 $declare_write_buffer;
@@ -2719,7 +2718,7 @@ IF( skindepth_for_bca <= 1e-4 ) [
         $egs_info(*,'     minimum ECUT found: ',ecutmn);
         tstbmn = 1e30;
         DO medium = 1,nmed [
-            tstbm = (ecutmn-0.510998946131)*(ecutmn+0.510998946131)/ecutmn**2;
+            tstbm = (ecutmn-prm)*(ecutmn+prm)/ecutmn**2;
             tstbm = blcc(medium)*tstbm*(ecutmn/xcc(medium))**2;
             aux = Log(tstbm);
             IF( aux > 300 ) $egs_info(*,'aux > 300 ? ',aux);
@@ -2799,7 +2798,6 @@ $egs_info(*,' Initializing tmxs for estepe = ',estepe,' and ximax = ',ximax);
 $egs_info(*,' ');
 
 "Determine upper limit in step size for multiple scattering
-rm = 0.510998946131;
 DO medium = 1,nmed
 [
     " Calculate range array first "
@@ -3242,7 +3240,7 @@ subroutine init_spin;
 
 implicit none;
 $declare_max_medium;
-COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,EGS-IO/;
+COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,USEFUL,EGS-IO/;
                             "BREMPR is needed for the elemental composition"
 
 $REAL         eta_array(0:1,$0-MAXE_SPI1),
@@ -3260,7 +3258,7 @@ real*4        dum1,dum2,dum3,aux_o; " These must be 32 bit floats!!!!!"
 real*4        fmax_array(0:$MAXQ_SPIN);
 integer*2     i2_array(512),ii2;
 
-$INTEGER      medium,iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
+$INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,ii4,irec;
 
 character     spin_file*256;
@@ -3325,7 +3323,7 @@ dbeta2 = (b2spin_max - b2spin_min)/n_ener;
 beta2 = b2spin_min; earray(n_ener+1) = espin_max;
 DO i=n_ener+2,2*n_ener+1 [
     beta2 = beta2 + dbeta2;
-    IF( beta2 < 0.999 ) [ earray(i) = 510.998946131*(1/sqrt(1-beta2)-1); ]
+    IF( beta2 < 0.999 ) [ earray(i) = prm*1000.0*(1/sqrt(1-beta2)-1); ]
     ELSE [ earray(i) = 50585.1; ]
     $FOOL-INTEL-OPTIMIZER(25) i,earray(i);
 ]
@@ -3384,7 +3382,7 @@ DO medium = 1,NMED [
                   tmp_4 = aux_o; call egs_swap_4(c_4); aux_o = tmp_4;
                 ]
                 eta_array(iq,i)=eta_array(iq,i)+tmp*Log(Z23*aux_o);
-                tau = earray(i)/510.998946131;  "energy in the file is in keV"
+                tau = earray(i)/prm/1000.0;  "energy in the file is in keV"
                 beta2 = tau*(tau+2)/(tau+1)**2;
                 eta = Z23/(fine*TF_constant)**2*aux_o/4/tau/(tau+2);
                 c_array(iq,i)=c_array(iq,i)+
@@ -3427,7 +3425,7 @@ DO medium = 1,NMED [
     " Process eta_array, c_array and g_array to their final form "
     $FOOL-INTEL-OPTIMIZER(25) 'Spin corrections as read in from file';
     DO i=0,$MAXE_SPI1 [
-        tau = earray(i)/510.998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+        tau = earray(i)/prm/1000.0; beta2 = tau*(tau+2)/(tau+1)**2;
         DO iq=0,1 [
             aux_o = Exp(eta_array(iq,i)/sum_Z2)/(fine*TF_constant)**2;
             eta_array(iq,i) = 0.26112447*aux_o*blcc(medium)/xcc(medium);
@@ -3452,7 +3450,7 @@ DO medium = 1,NMED [
             aae = (eil-espml)*dleneri; je = aae; aae = aae - je;
         ]
         ELSE [
-            tau = e/0.510998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+            tau = e/prm; beta2 = tau*(tau+2)/(tau+1)**2;
             aae = (beta2 - b2spin_min)*dbeta2i;
             je = aae; aae = aae - je; je = je + $MAXE_SPIN + 1;
         ]
@@ -3471,7 +3469,7 @@ DO medium = 1,NMED [
                 aae = (eil-espml)*dleneri; je = aae; aae = aae - je;
             ]
             ELSE [
-                tau = e/0.510998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+                tau = e/prm; beta2 = tau*(tau+2)/(tau+1)**2;
                 aae = (beta2 - b2spin_min)*dbeta2i;
                 je = aae; aae = aae - je; je = je + $MAXE_SPIN + 1;
             ]
@@ -3583,11 +3581,11 @@ DO medium = 1,NMED [
 
     "Now substract scattering power that is already taken into account in"
     "discrete Moller/Bhabha events"
-    tauc = te(medium)/0.510998946131;
+    tauc = te(medium)/prm;
     si1e = 1;
     DO i=1,neke-1 [
         eil = (i+1 - eke0(medium))/eke1(medium);
-        e = Exp(eil); leil=i+1; tau=e/0.510998946131;
+        e = Exp(eil); leil=i+1; tau=e/prm;
         IF( tau > 2*tauc ) [
             $EVALUATE sig USING esig(eil);
             $EVALUATE dedx USING ededx(eil);
@@ -3646,7 +3644,7 @@ subroutine init_spin_old;
 
 implicit none;
 $declare_max_medium;
-COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,EGS-IO/;
+COMIN/Spin-Data,ELECIN,MEDIA,BREMPR,THRESH,USEFUL,EGS-IO/;
                             "BREMPR is needed for the elemental composition"
 
 $REAL         eta_array(0:1,$0-MAXE_SPI1),
@@ -3659,7 +3657,7 @@ $REAL         eta_array(0:1,$0-MAXE_SPI1),
               af($0-MAXE_SPI1),bf($0-MAXE_SPI1),cf($0-MAXE_SPI1),
               df($0-MAXE_SPI1),spline;
 
-$INTEGER      medium,iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
+$INTEGER      iq,i,j,k,i_ele,iii,iZ,iiZ,n_ener,n_q,n_point,je,neke,
               ndata,leil,length,want_spin_unit,spin_unit,egs_get_unit;
 
 character     spin_file*256;
@@ -3729,7 +3727,7 @@ DO medium = 1,NMED [
                 read(spin_unit,'(a,g14.6)') string,earray(i);
                 read(spin_unit,*) dum1,dum2,dum3,aux_o;
                 eta_array(iq,i)=eta_array(iq,i)+tmp*Log(Z23*aux_o);
-                tau = earray(i)/510.998946131;  "energy in the file is in keV"
+                tau = earray(i)/prm/1000.0;  "energy in the file is in keV"
                 beta2 = tau*(tau+2)/(tau+1)**2;
                 eta = Z23/(fine*TF_constant)**2*aux_o/4/tau/(tau+2);
                 c_array(iq,i)=c_array(iq,i)+
@@ -3766,7 +3764,7 @@ DO medium = 1,NMED [
 
     " Process eta_array, c_array and g_array to their final form "
     DO i=0,$MAXE_SPI1 [
-        tau = earray(i)/510.998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+        tau = earray(i)/prm/1000.0; beta2 = tau*(tau+2)/(tau+1)**2;
         DO iq=0,1 [
             aux_o = Exp(eta_array(iq,i)/sum_Z2)/(fine*TF_constant)**2;
             eta_array(iq,i) = 0.26112447*aux_o*blcc(medium)/xcc(medium);
@@ -3796,7 +3794,7 @@ DO medium = 1,NMED [
             aae = (eil-espml)*dleneri; je = aae; aae = aae - je;
         ]
         ELSE [
-            tau = e/0.510998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+            tau = e/prm; beta2 = tau*(tau+2)/(tau+1)**2;
             aae = (beta2 - b2spin_min)*dbeta2i;
             je = aae; aae = aae - je; je = je + $MAXE_SPIN + 1;
         ]
@@ -3814,7 +3812,7 @@ DO medium = 1,NMED [
                 aae = (eil-espml)*dleneri; je = aae; aae = aae - je;
             ]
             ELSE [
-                tau = e/0.510998946131; beta2 = tau*(tau+2)/(tau+1)**2;
+                tau = e/prm; beta2 = tau*(tau+2)/(tau+1)**2;
                 aae = (beta2 - b2spin_min)*dbeta2i;
                 je = aae; aae = aae - je; je = je + $MAXE_SPIN + 1;
             ]
@@ -3907,11 +3905,11 @@ DO medium = 1,NMED [
 
     "Now substract scattering power that is already taken into account in"
     "discrete Moller/Bhabha events"
-    tauc = te(medium)/0.510998946131;
+    tauc = te(medium)/prm;
     si1e = 1;
     DO i=1,neke-1 [
         eil = (i+1 - eke0(medium))/eke1(medium);
-        e = Exp(eil); leil=i+1; tau=e/0.510998946131;
+        e = Exp(eil); leil=i+1; tau=e/prm;
         IF( tau > 2*tauc ) [
             $EVALUATE sig USING esig(eil);
             $EVALUATE dedx USING ededx(eil);
@@ -3972,7 +3970,7 @@ end;
 "                                                                      "
 subroutine msdist_pII
 (
-    e0,eloss,tustep,rhof,medium,qel,spin_effects,u0,v0,w0,x0,y0,z0, "Inputs
+    e0,eloss,tustep,rhof,med,qel,spin_effects,u0,v0,w0,x0,y0,z0, "Inputs
     us,vs,ws,xf,yf,zf,ustep                                         "Outputs
 );
 
@@ -3993,7 +3991,7 @@ $REAL
     z0      "initial z-position
 ;
 $INTEGER
-    medium,"medium number
+    med,"medium number
     qel    "=0 for e-, =1 for e+, needed for spin effects
 ;
 $LOGICAL
@@ -4079,7 +4077,9 @@ $INTEGER
    lelke
 ;
 $declare_max_medium;
-;COMIN/ELECIN,THRESH,UPHIOT,RANDOM,CH-Steps/;
+;COMIN/ELECIN,THRESH,UPHIOT,RANDOM,CH-Steps,USEFUL/;
+
+medium  = med;
 
 count_pII_steps = count_pII_steps + 1;
 blccc   = blcc(medium);
@@ -4087,7 +4087,7 @@ xcccc   = xcc(medium);
 
 "Commonly used factors
 e       = e0 - 0.5*eloss;
-tau     = e/0.510998946131;
+tau     = e/prm;
 tau2    = tau*tau;
 epsilon = eloss/e0;
 epsilonp= eloss/e;
@@ -8133,6 +8133,7 @@ real*8 sum0,a,b,x1,x2,pow_x1,pow_x2,dle,e,xmax,
        anorm,anorm1,anorm2,w,dw,xold,t,aux;
 $INTEGER i,j,k,ibin;
 
+;COMIN/USEFUL/;
 
 write(*,'(a$)') '      preparing data for Rayleigh sampling ... ';
 
@@ -8162,7 +8163,7 @@ DO i=1,ndat-1 [
  **************************************************************/
 dle = log(emax/emin)/(ne-1); i = 1;
 DO j=1,ne [
-    e = emin*exp(dle*(j-1)); xmax = 20.607544d0*2*e/0.510998946131d0;
+    e = emin*exp(dle*(j-1)); xmax = 20.607544d0*2*e/prm;
     DO k=i,ndat-1 [
         IF( xmax >= x(k) & xmax < x(k+1) ) EXIT;
     ]
@@ -8237,11 +8238,12 @@ $REAL function egs_KN_sigma0(e);
 "=========================================================================="
 implicit none;
 $REAL    e;
-$REAL    rm,con,ko,c1,c2,c3,eps1,eps2;
-data     rm/0.510998946131/,con/0.1274783851/;
-ko = e/rm;
+$REAL    con,ko,c1,c2,c3,eps1,eps2;
+data     con/0.1274783851/;
+;COMIN/USEFUL/;
+ko = e/prm;
 IF( ko < 0.01 ) [
-    egs_KN_sigma0 = 8.*con/3.*(1-ko*(2-ko*(5.2-13.3*ko)))/rm;
+    egs_KN_sigma0 = 8.*con/3.*(1-ko*(2-ko*(5.2-13.3*ko)))/prm;
     return;
 ]
 c1 = 1./(ko*ko); c2 = 1. - 2*(1+ko)*c1; c3 = (1+2*ko)*c1;
@@ -8255,9 +8257,10 @@ $REAL function egs_KN_sigma1(e);
 "=========================================================================="
 implicit none;
 $REAL    e;
-$REAL    rm,con,ko,c1,c2,c3,eps1,eps2;
-data     rm/0.510998946131/,con/0.1274783851/;
-ko = e/rm; c1 = 1./(ko*ko); c2 = 1. - 2*(1+ko)*c1; c3 = (1+2*ko)*c1;
+$REAL    con,ko,c1,c2,c3,eps1,eps2;
+data     con/0.1274783851/;
+;COMIN/USEFUL/;
+ko = e/prm; c1 = 1./(ko*ko); c2 = 1. - 2*(1+ko)*c1; c3 = (1+2*ko)*c1;
 eps2 = 1; eps1 = 1./(1+2*ko);
 egs_KN_sigma1 = c1*(1./eps1-1./eps2);
 egs_KN_sigma1 = egs_KN_sigma1 + log(eps2/eps1)*(c2 - c1) - c2*(eps2-eps1);
@@ -8272,13 +8275,14 @@ subroutine egsi_get_data(flag,iunit,n,ne,zsorted,pz_sorted,ge1,ge0,data);
 "=========================================================================="
 implicit none;
 COMIN/EGS-IO/;
-$REAL    rm,eth;
+$REAL    eth;
 $INTEGER flag,iunit,n,ne;
 $REAL    ge1,ge0,zsorted(*),pz_sorted(*),data(*);
 $REAL    etmp($MXINPUT),ftmp($MXINPUT);
 $REAL    gle,sig,p,e;
 $INTEGER i,j,k,kk,iz,iz_old,ndat,iiz;
-data     rm/0.510998946131/;
+
+;COMIN/USEFUL/;
 
 "Ali:photonuc. The whole routine is commented out and re-written
 "to accommodate reading photonuclear cross sections. A copy of the
