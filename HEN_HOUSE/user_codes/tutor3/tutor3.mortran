@@ -63,7 +63,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
   ;COMMON/SCORE/EHIST,EBIN($EBIN);
   $REAL EHIST,EBIN;}
 
-;COMIN/BOUNDS,GEOM,MEDIA,MISC,SCORE, THRESH/;"Note  ; before COMIN"
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,SCORE,THRESH,USEFUL/;"Note  ; before COMIN"
 "       The above expands into a series of COMMON statements"
 "       BOUNDS contains ECUT and PCUT"
 "       GEOM passes info to our HOWFAR routine"
@@ -71,6 +71,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
 "       MISC contains MED"
 "       SCORE contains the scoring variables EHIST and EBIN"
 "       THRESH contains various thresholds"
+"       USEFUL contains PRM"
 
 "---------------------------------------------------------------------"
 "STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
@@ -103,7 +104,7 @@ PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the detector"
 CALL HATCH;"    pick up cross section data for TA"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.510998946131, AP(1);
+;OUTPUT AE(1)-PRM, AP(1);
 (/' knock-on electrons can be created and any electron followed down to'
   /T40,F8.3,' MeV kinetic energy'/
 ' brem photons can be created and any photon followed down to      ',

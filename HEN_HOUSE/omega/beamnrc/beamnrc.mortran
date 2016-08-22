@@ -5716,7 +5716,7 @@ IF (IARG =  5) ["Particle step just taken"
     IF(W(NP)>0)["electron going forward, split it"
      count_esplit=count_esplit+1;
      IF(IWATCH=1|IWATCH=2)[
-       OUTPUT NP,E(NP)-0.510998946131,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+       OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
               U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (' Electron',T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
        OUTPUT NBRSPL;(' about to be split ',I10, ' times (DBS).');
@@ -5731,7 +5731,7 @@ IF (IARG =  5) ["Particle step just taken"
         ANG_DBS=2.*3.1415926/FLOAT(NBRSPL);
      ]
      IF(IWATCH=1|IWATCH=2)[
-        OUTPUT NP,E(NP)-0.510998946131,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+        OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
               U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
      ]
@@ -5750,7 +5750,7 @@ IF (IARG =  5) ["Particle step just taken"
              U(NP)=U(NP-1);V(NP)=V(NP-1);
         ]
         IF(IWATCH=1|IWATCH=2)[
-           OUTPUT NP,E(NP)-0.510998946131,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+           OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
               U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
         ]
@@ -5874,8 +5874,7 @@ IF (IARG =  5) ["Particle step just taken"
 
          "Energy fluence:"
          SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)+
-                                          WEIGHT*(E(NP)-0.510998946131*
-                                          ABS(IQ(NP)))/
+                                          WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
          "Angle:"
          "change to degrees on output"
@@ -5895,8 +5894,7 @@ IF (IARG =  5) ["Particle step just taken"
          SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)=SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)+
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)*
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+2);
-         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-0.510998946131
-                                          *ABS(IQ(NP)))/
+         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
 
          "Angle: also score angle*no. (weighted) now for covariance"
@@ -5960,12 +5958,12 @@ IF (IARG =  5) ["Particle step just taken"
    IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4)[
                                  "phase-space output"
      NPPHSP(ISCORE)=NPPHSP(ISCORE)+1;"increment # of particles in file"
-     IF((E(NP)-0.510998946131*ABS(IQ(NP)))>EKMAXPHSP(ISCORE))[
-            EKMAXPHSP(ISCORE)=E(NP)-0.510998946131*ABS(IQ(NP));
+     IF((E(NP)-PRM*ABS(IQ(NP)))>EKMAXPHSP(ISCORE))[
+            EKMAXPHSP(ISCORE)=E(NP)-PRM*ABS(IQ(NP));
      ]
      IF(IQ(NP)=-1)[
-        IF((E(NP)-0.510998946131)<EKMINPHSPE(ISCORE))[
-              EKMINPHSPE(ISCORE)=E(NP)-0.510998946131;
+        IF((E(NP)-PRM)<EKMINPHSPE(ISCORE))[
+              EKMINPHSPE(ISCORE)=E(NP)-PRM;
         ]
      ]
      ELSEIF(IQ(NP)=0)[
@@ -6022,7 +6020,7 @@ IF (IARG =  5) ["Particle step just taken"
           OUTPUT NSPLIT_ELEC;
 (' SPLITTING ELECTRON INTO ',I4,' ELECTRONS EACH WITH THE',
  ' FOLLOWING PROPERTIES:');
-          OUTPUT NP,NP+NSPLIT_ELEC-1,E(NP)-0.510998946131,IQ(NP),IR(NP),
+          OUTPUT NP,NP+NSPLIT_ELEC-1,E(NP)-PRM,IQ(NP),IR(NP),
                  X(NP),Y(NP),Z(NP),U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
           (' RESULTING ELECTRONS',T29,':',I5,' -',I5,F9.3,2I4,3F8.3,3F7.3,
                                         I10,1PE10.3);
@@ -11321,7 +11319,7 @@ END;    "End of subroutine SRCOUT
 $IMPLICIT-NONE;
 ;COMIN/
 CMs,EPCONT,GEOM,IO_INFO,MEDIA,MISC,SCORE,SOURCE,STACK,UPHIOT,USER,
-    RANDOM,RWPHSP,EGS-IO/;
+    RANDOM,RWPHSP,USEFUL,EGS-IO/;
 
 
 "T>****************************

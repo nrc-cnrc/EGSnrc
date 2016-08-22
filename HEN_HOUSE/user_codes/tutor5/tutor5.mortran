@@ -65,7 +65,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
 REPLACE {$CALL-HOWNEAR(#);} WITH {
    ;CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IRL);}
 
-;COMIN/BOUNDS,EPCONT,GEOM,MEDIA,MISC,SCORE,STACK,THRESH/;
+;COMIN/BOUNDS,EPCONT,GEOM,MEDIA,MISC,SCORE,STACK,THRESH,USEFUL/;
 "       the above expands into a series of COMMON statements"
 
 %E   "tutor5.mortran"
@@ -98,7 +98,7 @@ IRAYLR(2)=1;"     turn on Rayleigh scattering in the slab "
 CALL HATCH;"    pick up cross section data for H2O"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.510998946131, AP(1);
+;OUTPUT AE(1)-PRM, AP(1);
 (/' Knock-on electrons can be created and any electron followed down to'
   /T40,F8.3,' MeV kinetic energy'/
 ' Brem photons can be created and any photon followed down to      '

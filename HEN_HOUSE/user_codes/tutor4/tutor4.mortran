@@ -65,7 +65,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
    ;COMMON/SCORE/ESCORE(3),IWATCH; $INTEGER IWATCH; REAL*8 ESCORE;
 }
 
-;COMIN/BOUNDS,GEOM,MEDIA,MISC,SCORE,STACK,THRESH/;"NOTE ; BEFORE COMIN"
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,SCORE,STACK,THRESH,USEFUL/;"NOTE ; BEFORE COMIN"
 "       The above expands into a series of COMMON statements"
 "       BOUNDS contains ECUT and PCUT"
 "       GEOM passes info to our HOWFAR routine"
@@ -74,6 +74,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
 "       SCORE contains the scoring array ESCORE and IWATCH"
 "       STACK to provide LATCHI"
 "       THRESH contains various thresholds"
+"       USEFUL contains PRM"
 
 "---------------------------------------------------------------------"
 "STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
@@ -106,7 +107,7 @@ PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the plate"
 CALL HATCH;"    pick up cross section data for TA"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.510998946131, AP(1);
+;OUTPUT AE(1)-PRM, AP(1);
 (/' knock-on electrons can be created and any electron followed down to'
    /T40,F8.3,' MeV kinetic energy'/
    ' brem photons can be created and any photon followed down to      ',
@@ -139,7 +140,7 @@ CALL WATCH(-99,IWATCH);  "Initializes calls to AUSGAB for WATCH"
 "perpendicular to the slab"
 
 IQIN=-1;"               incident charge - electrons"
-EIN=20.510998946131;EI=20.0;"    20 MeV kinetic energy"
+EIN=20 + PRM;EI=20.0;"    20 MeV kinetic energy"
 /XIN,YIN,ZIN/=0.0;"     incident at origin"
 /UIN,VIN/=0.0;WIN=1.0;" moving along Z axis"
 IRIN=2;"                starts in region 2, could be 1"
@@ -163,7 +164,7 @@ DO I=1,NCASE [
 "---------------------------------------------------------------------"
 "STEP 8   OUTPUT-OF-RESULTS                                           "
 "---------------------------------------------------------------------"
-ANORM = 100./((EIN+FLOAT(IQIN)*0.510998946131)*FLOAT(NCASE));
+ANORM = 100./((EIN+FLOAT(IQIN)*PRM)*FLOAT(NCASE));
  "normalize to % of total input energy"
 TOTAL=0.0;  DO I=1,3[TOTAL=TOTAL+ESCORE(I);]
 OUTPUT (ESCORE(I)*ANORM, I=1,3),TOTAL*ANORM;

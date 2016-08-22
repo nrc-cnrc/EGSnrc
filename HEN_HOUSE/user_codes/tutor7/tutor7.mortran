@@ -156,7 +156,7 @@ $RNG-INITIALIZATION;
 
 ;OUTPUT;('\f  Start tutor7'//' CALL HATCH to get cross-section data'/);
 CALL HATCH;
-;OUTPUT AE(1)-0.510998946131, AP(1);
+;OUTPUT AE(1)-PRM, AP(1);
 (/' knock-on electrons can be created and any electron followed down to'
 /T40,F8.3,' MeV kinetic energy'/
 '   brem photons can be created and any photon followed down to      ',

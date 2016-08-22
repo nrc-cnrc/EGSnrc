@@ -318,7 +318,7 @@
      call egs_fdate(nunit);
      write(nunit,:LAB1a:);
      :LAB1a:format(/' ',79('='));
-     WRITE(NUNIT,:LABL2:) AE(1)-0.510998946131,UE(1)-0.510998946131,AP(1),UP(1);
+     WRITE(NUNIT,:LABL2:) AE(1)-PRM,UE(1)-PRM,AP(1),UP(1);
      :LABL2:FORMAT(/' Electron kinetic energy range:',T35,2F12.3,' MeV'/
               ' Photon energy range:          ',T35,2F12.3,' MeV');
      WRITE(NUNIT,:LABL3:) RLC(MEDIUM),RHO(MEDIUM);
@@ -490,7 +490,7 @@
      write(nunit,:lab2a:);
      :lab2a:format(/' ',79('='));
      WRITE(NUNIT,:LABL13:)
-         AE(1)-0.510998946131,UE(1)-0.510998946131,AP(1),UP(1);
+         AE(1)-PRM,UE(1)-PRM,AP(1),UP(1);
      :LABL13:FORMAT(/' Electron kinetic energy range:',T35,2F12.3,' MeV'/
                ' Photon energy range:'          ,T35,2F12.3,' MeV');
      WRITE(NUNIT,:LABL14:) RLC(MEDIUM),RHO(MEDIUM),200.*TEFF0(1);
@@ -553,27 +553,27 @@
            OUTPUT;(' Electron kinetic energy( MeV): ',$);
            READ(5,'(F12.0)',ERR=:label2:,END= :ELECTRON:) EKE;
 
-           IF (EKE > UE(1)-0.510998946131 | EKE < AE(1)-0.510998946131) [
-             OUTPUT AE(1)-0.510998946131,UE(1)-0.510998946131;
+           IF (EKE > UE(1)-PRM | EKE < AE(1)-PRM) [
+             OUTPUT AE(1)-PRM,UE(1)-PRM;
              (T20,'   must be in range',2(1Pe10.3));
            ]
            IF (EKE = 0.0) [STOP; ]
          ]
          ELSE [ EKE=ETAB(I2)*10.**(I1-4); ]
 
-         IF(EKE <= AE(1)-0.510998946131) [
+         IF(EKE <= AE(1)-PRM) [
            IF(IFLAG1 = 0) [
-             IFLAG1=1; EKE=AE(1)-0.510998946131; 
+             IFLAG1=1; EKE=AE(1)-PRM; 
            ] ELSE [ EKE=0.0; ]
          ]
 
-         IF(EKE > UE(1)-0.510998946131) [
+         IF(EKE > UE(1)-PRM) [
            IF(IFLAG2 = 0) [ 
-             IFLAG2=1; EKE=UE(1)-0.510998946131; 
+             IFLAG2=1; EKE=UE(1)-PRM; 
            ] ELSE [ EKE=1.E30; ]
          ]
 
-         EIE=EKE+0.510998946131;       TMXS=0.0;        DEDXE=0.0;
+         EIE=EKE+PRM;       TMXS=0.0;        DEDXE=0.0;
          DEDXP=0.0;           EFRACT=0.0;
 
          IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
