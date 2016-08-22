@@ -40,6 +40,7 @@
 #include "egs_functions.h"
 #include "egs_library.h"
 #include "egs_application.h"
+#include "egs_interface2.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -201,7 +202,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         //    " x=(%g,%g,%g) latch=%d count=%lld\n",te,tq,twt,tx,ty,tz,
         //    tlatch,count);
         if (tq) {
-            te -= 0.510998946131;
+            te -= the_useful->rm;
         }
         ok = true;
         if (te > Emax) {
