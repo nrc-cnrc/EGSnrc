@@ -37,6 +37,7 @@
 #include "commandManager.h"
 #include "executiondlgImpl.h"
 #include "eventfilter.h"
+#include "pegslessinputs.h"
 #include <qevent.h>
 #include <qlineedit.h>
 #include <qapplication.h>
@@ -69,7 +70,6 @@
 //#include <qsettings.h>
 //#include <qlibrary.h>
 
-//qt3to4 -- BW
 #include <QProcess>
 
 #define PIRS801 "pirs801.html"
@@ -153,8 +153,6 @@ geoErrors    =  "";
   ListFluTable->setEnabled( false );
 
   //Initialize table defining tops of output bins in MeV
-  //qt3to4 -- BW
-  //sloteFluTable->horizontalHeader()->setLabel(0,"bin top [MeV]");
   sloteFluTable->setHorizontalHeaderItem(0,new QTableWidgetItem("bin top [MeV]"));
 
   //Initialize the stopping power output mode table
@@ -170,7 +168,7 @@ geoErrors    =  "";
   InitializeTable( mediaTable, smed, frmed);
 
   //Initialize the pegsless medium table
-  InitializeTable( pz_or_rhozTable, "element", "no. of atoms" );
+  InitializeTable( pz_or_rhozTable, "Element", "Fraction by weight" );
   //Initialize FF table
   //customFFTable->setValidator(false);
   QStringList sl; sl.append("medium");sl.append("FF file (full path)");
@@ -189,8 +187,6 @@ geoErrors    =  "";
   InitializeTable( cylTable,  s );
 
   //Initialize cavity iformation
-  //qt3to4 -- BW
-  //cavTable->horizontalHeader()->setLabel(0,"region #");
   cavTable->setHorizontalHeaderItem(0,new QTableWidgetItem("region #"));
 
   //Initialize source information
@@ -225,7 +221,6 @@ geoErrors    =  "";
                           list_items(PEGSdir1,"*.pegs4dat")+list_items(PEGSdir2,"*.pegs4dat"),".pegs4dat");
   //get rid of duplicates
   pegsfiles.removeDuplicates();
-  //pegsfiles.prepend(PEGSdir);
   QStringList inpfiles = strip_extension( list_items(inpDir,"*.egsinp" ),
                          ".egsinp" );
   beamDlg = new BeamSourceDlg(this,"beam_source",&beamuc,&inpfiles,&pegsfiles);
@@ -244,18 +239,6 @@ geoErrors    =  "";
               "for info on building a source library)"));
 
   changeTextColor(beamLabel,"red");
-  /*
-  QToolTip::add( beamDlg->get_beam(), BEAM_CODE  );
-  QToolTip::add( beamDlg->get_inp(),  BEAM_INP  );
-  QToolTip::add( beamDlg->get_pegs(), BEAM_PEGS  );
-  QToolTip::add( beamDlg->get_min(), BEAM_MIN_WEIGHT  );
-  QToolTip::add( beamDlg->get_max(), BEAM_MAX_WEIGHT  );
-  QToolTip::add( beamDlg->get_dist(), BEAM_DIST  );
-  QToolTip::add( beamDlg->get_angle(), BEAM_ANGLE  );
-  QToolTip::add( beamDlg->get_zoffset(), BEAM_ZOFFSET  );
-  QToolTip::add( beamDlg->get_xoffset(), BEAM_XOFFSET  );
-  QToolTip::add( beamDlg->get_yoffset(), BEAM_YOFFSET  );
-  */
   beamDlg->get_beam()->setToolTip(BEAM_CODE  );
   beamDlg->get_inp()->setToolTip(BEAM_INP  );
   beamDlg->get_pegs()->setToolTip(BEAM_PEGS  );
@@ -280,38 +263,28 @@ geoErrors    =  "";
   InitializeThreeColumnTable( SMAXTable, "SMAX");
 
 // Tool tips for General Tab
-  //QToolTip::add(  UserCodeAreaButtonGroup, USER_CODE_AREA );
-  //qt3to4 -- BW
-  //Q3WhatsThis::add ( UserCodeAreaButtonGroup, USER_CODE_AREA );
   UserCodeAreaButtonGroup->setWhatsThis(USER_CODE_AREA );
   UserCodeAreaButtonGroup->setToolTip(USER_CODE_AREA );
 
-  //Q3WhatsThis::add ( PEGSDataAreaButtonGroup, PEGS4_AREA );
   PEGSDataAreaButtonGroup->setWhatsThis(PEGS4_AREA );
   PEGSDataAreaButtonGroup->setToolTip(PEGS4_AREA );
 
 
-  //Q3WhatsThis::add(  OpenFileButton, OPEN_INPUT_FILE );
-  //Q3WhatsThis::add(  Pegs4FileButton, OPEN_PEGS_FILE );
   OpenFileButton->setWhatsThis(OPEN_INPUT_FILE );
   Pegs4FileButton->setWhatsThis(OPEN_PEGS_FILE );
   OpenFileButton->setToolTip(OPEN_INPUT_FILE );
   Pegs4FileButton->setToolTip(OPEN_PEGS_FILE );
 
  // Tool tips for I/O Tab
- //Q3WhatsThis::add( DoseRegGroupBox , DOSE_REGIONS );
  DoseRegGroupBox->setWhatsThis(DOSE_REGIONS );
  DoseRegGroupBox->setToolTip(DOSE_REGIONS );
 
- //Q3WhatsThis::add( sloteFluEdit , SLOTE_FLU );
  sloteFluEdit->setWhatsThis(SLOTE_FLU );
  sloteFluEdit->setToolTip(SLOTE_FLU );
 
- //Q3WhatsThis::add( sloteFluLabel , SLOTE_FLU );
  sloteFluLabel->setWhatsThis(SLOTE_FLU );
  sloteFluLabel->setToolTip(SLOTE_FLU );
 
- //Q3WhatsThis::add( sloteFluTable, TOP_BIN_FLU );
  sloteFluTable->setWhatsThis(TOP_BIN_FLU );
  sloteFluTable->setToolTip(TOP_BIN_FLU );
 
@@ -332,105 +305,52 @@ iwatchTip = new ComboBoxToolTip( iwatchComboBox, 0, iwatch,
 
 ifullTip = new ComboBoxToolTip( ifullComboBox, 0, ifull_dos,
                                 sizeof ifull_dos / sizeof(char *) );
-/*
-QToolTip::add( maxCPUEdit, CPU_TIME  );
-QToolTip::add( maxCPULabel, CPU_TIME  );
-
-QToolTip::add( statEdit, ACCURACY  );
-QToolTip::add( statLabel, ACCURACY  );
-
-QToolTip::add( randGroupBox, RND_GEN  );
-
-QToolTip::add( rand1SpinBox, RND_1  );
-QToolTip::add( rand1Label, RND_1  );
-
-QToolTip::add( rand2SpinBox, RND_2  );
-QToolTip::add( rand2Label, RND_2  );
-
-QToolTip::add( SLOTEEdit, SLOTE  );
-QToolTip::add( SLOTELabel, SLOTE  );
-
-QToolTip::add( DELTAEEdit, DELTAE  );
-QToolTip::add( DELTAELabel, DELTAE  );
-
-QToolTip::add( phdTable, QString(SENSITIVE_VOL) + "\n" + QString(BIN_TOP)  +
-               QString(INDEPENDENT));
-
-QToolTip::add( kermaCheckBox, KERMA  );
-
-QToolTip::add( photregCheckBox, REGENERATION );
-*/
-//Q3WhatsThis::add( maxCPUEdit, CPU_TIME  );
-//Q3WhatsThis::add( maxCPULabel, CPU_TIME  );
 maxCPUEdit->setWhatsThis(CPU_TIME  );
  maxCPULabel->setWhatsThis(CPU_TIME  );
 
 maxCPUEdit->setToolTip(CPU_TIME  );
  maxCPULabel->setToolTip(CPU_TIME  );
 
-//Q3WhatsThis::add( statEdit, ACCURACY  );
-//Q3WhatsThis::add( statLabel, ACCURACY  );
 statEdit->setWhatsThis(ACCURACY  );
 statLabel->setWhatsThis(ACCURACY  );
 statEdit->setToolTip(ACCURACY  );
 statLabel->setToolTip(ACCURACY  );
 
-//Q3WhatsThis::add( randGroupBox, RND_GEN  );
 randGroupBox->setWhatsThis(RND_GEN  );
 randGroupBox->setToolTip(RND_GEN  );
 
-//Q3WhatsThis::add( rand1SpinBox, RND_1  );
-//Q3WhatsThis::add( rand1Label, RND_1  );
 rand1SpinBox->setWhatsThis(RND_1  );
 rand1Label->setWhatsThis( RND_1  );
 rand1SpinBox->setToolTip(RND_1  );
 rand1Label->setToolTip( RND_1  );
 
-//Q3WhatsThis::add( rand2SpinBox, RND_2  );
-//Q3WhatsThis::add( rand2Label, RND_2  );
 rand2SpinBox->setWhatsThis(RND_2  );
 rand2Label->setWhatsThis(RND_2  );
 rand2SpinBox->setToolTip(RND_2  );
 rand2Label->setToolTip(RND_2  );
 
-//Q3WhatsThis::add( SLOTEEdit, SLOTE  );
-//Q3WhatsThis::add( SLOTELabel, SLOTE  );
 SLOTEEdit->setWhatsThis(SLOTE  );
 SLOTELabel->setWhatsThis(SLOTE  );
 SLOTEEdit->setToolTip(SLOTE  );
 SLOTELabel->setToolTip(SLOTE  );
 
-//Q3WhatsThis::add( DELTAEEdit, DELTAE  );
-//Q3WhatsThis::add( DELTAELabel, DELTAE  );
 DELTAEEdit->setWhatsThis(DELTAE  );
 DELTAELabel->setWhatsThis( DELTAE  );
 DELTAEEdit->setToolTip(DELTAE  );
 DELTAELabel->setToolTip( DELTAE  );
 
-//Q3WhatsThis::add( phdTable, QString(SENSITIVE_VOL) + "\n" + QString(BIN_TOP)  +
-//                 QString(INDEPENDENT));
 phdTable->setWhatsThis(QString(SENSITIVE_VOL) + "\n" + QString(BIN_TOP)  +
                  QString(INDEPENDENT));
 phdTable->setToolTip(QString(SENSITIVE_VOL) + "\n" + QString(BIN_TOP)  +
                  QString(INDEPENDENT));
 
-//Q3WhatsThis::add( kermaCheckBox, KERMA  );
 kermaCheckBox->setWhatsThis(KERMA  );
 kermaCheckBox->setToolTip(KERMA  );
 
-//Q3WhatsThis::add( photregCheckBox, KERMA  );
 photregCheckBox->setWhatsThis(KERMA  );
 photregCheckBox->setToolTip(KERMA  );
 
  // Tool tips for geometry input Tab
-/*
-QToolTip::add( groupRadioButton, GROUPS  );
-QToolTip::add( individualRadioButton, INDIVIDUAL  );
-QToolTip::add( cavityRadioButton, CAVITY  );
-*/
-//Q3WhatsThis::add( groupRadioButton, GROUPS  );
-//Q3WhatsThis::add( individualRadioButton, INDIVIDUAL  );
-//Q3WhatsThis::add( cavityRadioButton, CAVITY  );
 groupRadioButton->setWhatsThis(GROUPS  );
 individualRadioButton->setWhatsThis(INDIVIDUAL  );
 cavityRadioButton->setWhatsThis(CAVITY  );
@@ -458,70 +378,15 @@ imodeComboBox->hide();
 imodeTip = new ComboBoxToolTip( imodeComboBox, 0,
            imode, sizeof imode / sizeof(char *) );
 
-/*
-QToolTip::add( localRadioButton, RAD_DIS_LOCAL);
-QToolTip::add( externalRadioButton, RAD_DIS_EXTERNAL);
-*/
-
-//Q3WhatsThis::add( localRadioButton, RAD_DIS_LOCAL);
-//Q3WhatsThis::add( externalRadioButton, RAD_DIS_EXTERNAL);
 localRadioButton->setWhatsThis( RAD_DIS_LOCAL);
 externalRadioButton->setWhatsThis(RAD_DIS_EXTERNAL);
 localRadioButton->setToolTip( RAD_DIS_LOCAL);
 externalRadioButton->setToolTip(RAD_DIS_EXTERNAL);
 
-//Q3WhatsThis::add( phasespaceGroupBox, PHSP_FILE );
 phasespaceGroupBox->setWhatsThis(PHSP_FILE );
 phasespaceGroupBox->setToolTip(PHSP_FILE );
 
   // Tool tips for Transport Parameters Tab
-  /*
-  QToolTip::add(  GPCUTGroupBox, GLOBAL_PCUT );
-  QToolTip::add(  GECUTGroupBox, GLOBAL_ECUT );
-  QToolTip::add(  GSMAXGroupBox, GLOBAL_SMAX );
-  QToolTip::add(  ESTEPELabel, ESTEPE_TIP );
-  QToolTip::add(  ESTEPEEdit, ESTEPE_TIP );
-  QToolTip::add(  XImaxEdit, XIMAX_TIP );
-  QToolTip::add(  XImaxLabel, XIMAX_TIP );
-  QToolTip::add(  SkinDepthEdit, SKINDEPTH_TIP );
-  QToolTip::add(  SkinDepthLabel, SKINDEPTH_TIP );
-  QToolTip::add(  SpinCheckBox, SPIN_EFFECTS );
-  QToolTip::add(  BCAGroupBox, BCA_TIP );
-  QToolTip::add(  PairAngSamplingGroupBox, PAIR_ANG_SAMPLING );
-  QToolTip::add(  BremsAngSamplingGroupBox, BREMS_ANG_SAMPLING );
-  QToolTip::add(  BoundComptongroupBox, BOUND_COMPTON );
-  QToolTip::add(  PEgroupBox, PE_ANG_SAMPLING );
-  QToolTip::add(  RayleighgroupBox, RAYLEIGH_SCAT );
-  QToolTip::add(  RelaxationgroupBox, RELAXATION_TIP );
-  QToolTip::add(  estep_algorithmGroupBox, ESTEPE_ALGORITHM );
-  QToolTip::add(  BremsXSectionGroupBox, BREMS_XSECTION );
-  QToolTip::add(  photonXSectiongroupBox, PHOTON_XSECTION );
-  QToolTip::add(  EIIgroupBox, EII_XSECTION );
-  */
-
-  /*
-  Q3WhatsThis::add(  GPCUTGroupBox, GLOBAL_PCUT );
-  Q3WhatsThis::add(  GECUTGroupBox, GLOBAL_ECUT );
-  Q3WhatsThis::add(  GSMAXGroupBox, GLOBAL_SMAX );
-  Q3WhatsThis::add(  ESTEPELabel, ESTEPE_TIP );
-  Q3WhatsThis::add(  ESTEPEEdit, ESTEPE_TIP );
-  Q3WhatsThis::add(  XImaxEdit, XIMAX_TIP );
-  Q3WhatsThis::add(  XImaxLabel, XIMAX_TIP );
-  Q3WhatsThis::add(  SkinDepthEdit, SKINDEPTH_TIP );
-  Q3WhatsThis::add(  SkinDepthLabel, SKINDEPTH_TIP );
-  Q3WhatsThis::add(  SpinCheckBox, SPIN_EFFECTS );
-  Q3WhatsThis::add(  BCAGroupBox, BCA_TIP );
-  Q3WhatsThis::add(  PairAngSamplingGroupBox, PAIR_ANG_SAMPLING );
-  Q3WhatsThis::add(  BremsAngSamplingGroupBox, BREMS_ANG_SAMPLING );
-  Q3WhatsThis::add(  BoundComptongroupBox, BOUND_COMPTON );
-  Q3WhatsThis::add(  PEgroupBox, PE_ANG_SAMPLING );
-  Q3WhatsThis::add(  RayleighgroupBox, RAYLEIGH_SCAT );
-  Q3WhatsThis::add(  RelaxationgroupBox, RELAXATION_TIP );
-  Q3WhatsThis::add(  estep_algorithmGroupBox, ESTEPE_ALGORITHM );
-  Q3WhatsThis::add(  BremsXSectionGroupBox, BREMS_XSECTION );
-  Q3WhatsThis::add(  photonXSectiongroupBox, PHOTON_XSECTION );
-  Q3WhatsThis::add(  EIIgroupBox, EII_XSECTION );
-  */
 
   GPCUTGroupBox->setWhatsThis(GLOBAL_PCUT );
   GECUTGroupBox->setWhatsThis(GLOBAL_ECUT );
@@ -576,53 +441,6 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
  RelaxationsGroupBox->setWindowTitle( RelaxationsGroupBox->title() );
   //Initialize Variance Reduction
 
-  /*
-  QToolTip::add(  eRangeRejCheckBox, RANGE_REJECTION );
-  QToolTip::add(  ESAVEINEdit, RR_ESAVEIN );
-  QToolTip::add(  ESAVEINLabel, RR_ESAVEIN );
-
-  QToolTip::add(  PhotonForcingCheckBox,  PHOTON_FORCING );
-  QToolTip::add(  StartForcingLabel, START_PHOTON_FORCING );
-  QToolTip::add(  StopForcingLabel, STOP_PHOTON_FORCING );
-  QToolTip::add(  StartForcingSpinBox, START_PHOTON_FORCING );
-  QToolTip::add(  StopForcingSpinBox, STOP_PHOTON_FORCING );
-
-  QToolTip::add(  ExpTrafoCLabel, EXPONENTIAL_TRANSPORT );
-  QToolTip::add(  ExpTrafoCEdit, EXPONENTIAL_TRANSPORT );
-
-  QToolTip::add( photonSplitSpinBox, PHOTON_SPLITTING );
-  QToolTip::add( photonSplitLabel, PHOTON_SPLITTING );
-
-  QToolTip::add(  RRDepthLabel, RUSSIAN_ROULETTE_DEPTH );
-  QToolTip::add(  RRDepthEdit, RUSSIAN_ROULETTE_DEPTH );
-  QToolTip::add(  RRFractionLabel, RUSSIAN_ROULETTE_FRACTION );
-  QToolTip::add(  RRFractionEdit, RUSSIAN_ROULETTE_FRACTION );
-  */
-//  QToolTip::add(  RRGroupBox, RUSSIAN_ROULETTE );
-
-  /*
-  Q3WhatsThis::add(  eRangeRejCheckBox, RANGE_REJECTION );
-  Q3WhatsThis::add(  ESAVEINEdit, RR_ESAVEIN );
-  Q3WhatsThis::add(  ESAVEINLabel, RR_ESAVEIN );
-
-  Q3WhatsThis::add(  PhotonForcingCheckBox,  PHOTON_FORCING );
-  Q3WhatsThis::add(  StartForcingLabel, START_PHOTON_FORCING );
-  Q3WhatsThis::add(  StopForcingLabel, STOP_PHOTON_FORCING );
-  Q3WhatsThis::add(  StartForcingSpinBox, START_PHOTON_FORCING );
-  Q3WhatsThis::add(  StopForcingSpinBox, STOP_PHOTON_FORCING );
-
-  Q3WhatsThis::add(  ExpTrafoCLabel, EXPONENTIAL_TRANSPORT );
-  Q3WhatsThis::add(  ExpTrafoCEdit, EXPONENTIAL_TRANSPORT );
-
-  Q3WhatsThis::add( photonSplitSpinBox, PHOTON_SPLITTING );
-  Q3WhatsThis::add( photonSplitLabel, PHOTON_SPLITTING );
-
-  Q3WhatsThis::add(  RRDepthLabel, RUSSIAN_ROULETTE_DEPTH );
-  Q3WhatsThis::add(  RRDepthEdit, RUSSIAN_ROULETTE_DEPTH );
-  Q3WhatsThis::add(  RRFractionLabel, RUSSIAN_ROULETTE_FRACTION );
-  Q3WhatsThis::add(  RRFractionEdit, RUSSIAN_ROULETTE_FRACTION );
-  */
-
   eRangeRejCheckBox->setWhatsThis(RANGE_REJECTION );
   ESAVEINEdit->setWhatsThis(RR_ESAVEIN );
   ESAVEINLabel->setWhatsThis(RR_ESAVEIN );
@@ -656,27 +474,6 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
   RRDepthEdit->setToolTip(RUSSIAN_ROULETTE_DEPTH );
   RRFractionLabel->setToolTip(RUSSIAN_ROULETTE_FRACTION );
   RRFractionEdit->setToolTip(RUSSIAN_ROULETTE_FRACTION );
-
-  /*
-  QToolTip::add( CSEnhancementGroupBox, CS_ENHANCEMENT_CAVRZNRC  );
-  QToolTip::add( CSEnhancementSpinBox, CS_ENHANCEMENT_FACTOR  );
-
-  QToolTip::add( BremsSplitCheckBox,  BREMS_SPLITTING );
-  QToolTip::add( BremsSplitSpinBox,  BREMS_SPLITTING_FACTOR );
-  QToolTip::add( BremsSplitTextLabel,  BREMS_SPLITTING_FACTOR );
-  QToolTip::add( ChargedPartRRCheckBox, CHARGED_PARTICLE_RR );
-  */
-
-
-  /*
-  Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_CAVRZNRC  );
-  Q3WhatsThis::add( CSEnhancementSpinBox, CS_ENHANCEMENT_FACTOR  );
-
-  Q3WhatsThis::add( BremsSplitCheckBox,  BREMS_SPLITTING );
-  Q3WhatsThis::add( BremsSplitSpinBox,  BREMS_SPLITTING_FACTOR );
-  Q3WhatsThis::add( BremsSplitTextLabel,  BREMS_SPLITTING_FACTOR );
-  Q3WhatsThis::add( ChargedPartRRCheckBox, CHARGED_PARTICLE_RR );
-  */
 
   CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_CAVRZNRC  );
   CSEnhancementSpinBox->setWhatsThis(CS_ENHANCEMENT_FACTOR  );
@@ -717,19 +514,10 @@ phasespaceGroupBox->setToolTip(PHSP_FILE );
   //Initialize the plot regions table
   InitializeTable( SpecPlotTable, "start", "stop" );
   //Some tool tips for Media Definition tab
-  /*
-  QToolTip::add( MDFEdit, MATERIAL_DATA_FILE);
-  QToolTip::add( inpmediaGroupBox, INPMEDIA_DEF);
-  QToolTip::add( inpmediumComboBox, MEDIUM_NAME);
-  QToolTip::add( DFEdit, DENSITY_FILE);
-  QToolTip::add( sterncidEdit, STERNCID);
-  */
 
   MDFEdit->setToolTip(MATERIAL_DATA_FILE);
   inpmediaGroupBox->setToolTip(INPMEDIA_DEF);
   inpmediumComboBox->setToolTip(MEDIUM_NAME);
-  DFEdit->setToolTip(DENSITY_FILE);
-  sterncidEdit->setToolTip(STERNCID);
 
   //event handler for inpmediumComboBox
   im_events = new ComboEvents(inpmediumComboBox,0);
@@ -1361,15 +1149,13 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
  MDFEdit->setText(EGSpgls->matdatafile);
 
  //set some defaults in the input window for material specified in .egsinp file
- pzRadioButton->setChecked(true);
- df_egs_homeRadioButton->setChecked(true);
- //qt3to4 -- BW
- //pz_or_rhozTable->horizontalHeader()->setLabel(1,"no. of atoms");
- pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("no. of atoms"));
- validate_combo("restricted total","ERROR in stopping power ratio specs",spComboBox);
- validate_combo("KM","ERROR in bremsstrahlung correction specs",bcComboBox);
  isGasCheckBox->setChecked(false);
  enable_gaspEdit();
+ medTypeChanged("Element");
+ DCcheckBox->setChecked(false);
+ enableDCfileInput(false);
+ ICRUradCheckBox->setChecked(false);
+ DFEdit->setText("");
 
  //set public (adjustable) values equal to values passed
  Ppgls = new PEGSLESSInputs;
@@ -1386,47 +1172,54 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
      Ppgls->pz_or_rhoz[i].push_back(EGSpgls->pz_or_rhoz[i][j]);
    }
    Ppgls->rho[i]=EGSpgls->rho[i];
+   Ppgls->rho_scale[i]=EGSpgls->rho_scale[i];
    Ppgls->spr[i]=EGSpgls->spr[i];
    Ppgls->bc[i]=EGSpgls->bc[i];
    Ppgls->gasp[i]=EGSpgls->gasp[i];
    Ppgls->isgas[i]=EGSpgls->isgas[i];
    Ppgls->dffile[i]=EGSpgls->dffile[i];
+   Ppgls->use_dcfile[i]=EGSpgls->use_dcfile[i]; 
    Ppgls->sterncid[i]=EGSpgls->sterncid[i];
  }
+
 
  if(EGSpgls->ninpmedia>0) {
     Ppgls->inpmedind=0; //set input medium index
     inpmediumComboBox->setEditText(EGSpgls->inpmedium[0]);
-    if(!EGSpgls->spec_by_pz[0]) {
-      rhozRadioButton->setChecked(true);
-      //qt3to4 -- BW
-      //pz_or_rhozTable->horizontalHeader()->setLabel(1,"mass fractions");
-      pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("mass fractions"));
-    }
+    if(!GetMedFromDCfile(Ppgls->dffile[0])) {
+       if(Ppgls->use_dcfile[0]) {
+           QString errStr = "Could not read composition from specified density correction file for medium "  + EGSpgls->inpmedium[0];
+           QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
+       }
+       DCcheckBox->setChecked(false);
+       enableDCfileInput(false);
+    //fill the table based on previous info
+       if(Ppgls->nelements[0]==1) medTypeChanged("Element");
+       else if(Ppgls->spec_by_pz[0]) medTypeChanged("Compound");
+       else medTypeChanged("Mixture");
 
-    //now populate the table
-    for (int i=0; i<EGSpgls->nelements[0]; i++) {
-      //QString item1 = EGSpgls->elements[0][i];
-      //QString item2 =  EGSpgls->pz_or_rhoz[0][i];
-      //qt3to4 -- BW
-      QString item1 = QString::fromStdString(EGSpgls->elements[0][i]);
-      QString item2 =  QString::fromStdString(EGSpgls->pz_or_rhoz[0][i]);
-      //qt3to4 -- BW
-      //pz_or_rhozTable->setItem(i,0,new Q3TableItem(pz_or_rhozTable,Q3TableItem::OnTyping,item1));
-      //pz_or_rhozTable->setItem(i,1,new Q3TableItem(pz_or_rhozTable,Q3TableItem::OnTyping,item2));
-      pz_or_rhozTable->setItem(i,0,new QTableWidgetItem(item1));
-      pz_or_rhozTable->setItem(i,1,new QTableWidgetItem(item2));
-    }
+    //now populate the element table
+      for (int i=0; i<EGSpgls->nelements[0]; i++) {
+        QString item1 = QString::fromStdString(EGSpgls->elements[0][i]);
+        QString item2 =  QString::fromStdString(EGSpgls->pz_or_rhoz[0][i]);
+        pz_or_rhozTable->setItem(i,0,new QTableWidgetItem(item1));
+        pz_or_rhozTable->setItem(i,1,new QTableWidgetItem(item2));
+      }
 
-    //get the other values
-    rhoEdit->setText(EGSpgls->rho[0]);
-    validate_combo(EGSpgls->spr[0].toLatin1().data(),"ERROR in stopping power ratio specs",spComboBox);
-    validate_combo(EGSpgls->bc[0].toLatin1().data(),"ERROR in bremsstrahlung correction specs",bcComboBox);
+      //get the other values
+      rhoEdit->setText(EGSpgls->rho[0]);
+      DFEdit->setText(EGSpgls->dffile[0]);
+    }
+    else {
+      DCcheckBox->setChecked(true);
+      enableDCfileInput(true);
+    }
+    //get parameters that do not depend on density correction file specified
     gaspEdit->setText(EGSpgls->gasp[0]);
     isGasCheckBox->setChecked(EGSpgls->isgas[0]);
     enable_gaspEdit();
-    DFEdit->setText(EGSpgls->dffile[0]);
-    sterncidEdit->setText(EGSpgls->sterncid[0]);
+    if(EGSpgls->bc[0]=="NRC") ICRUradCheckBox->setChecked(true);
+    else ICRUradCheckBox->setChecked(false);
   }
 
   if(EGSpgls->ninpmedia>0 || EGSpgls->matdatafile!="" ) {
@@ -1455,8 +1248,14 @@ void inputRZImpl::inpmediumSave( const QString& str)
     }
     //save data for current medium
     Ppgls->inpmedium[ind]=inpmediumComboBox->currentText();
-    Ppgls->spec_by_pz[ind]=true;
-    if(rhozRadioButton->isChecked()) Ppgls->spec_by_pz[ind]=false;
+    if(ICRUradCheckBox->isChecked()) Ppgls->bc[ind]="NRC";
+    else Ppgls->bc[ind]="KM";
+    Ppgls->isgas[ind]=isGasCheckBox->isChecked();
+    Ppgls->gasp[ind]=gaspEdit->text();
+    if(Ppgls->isgas[ind] && (Ppgls->gasp[ind]=="" || Ppgls->gasp[ind].toFloat()<=0.0)) Ppgls->gasp[ind]="1.0";
+    gaspEdit->setText(Ppgls->gasp[ind]);
+    Ppgls->spec_by_pz[ind]=false;
+    if(medTypeComboBox->currentText()=="Compound") Ppgls->spec_by_pz[ind]=true;
     //see if any elements are present in the table
     int nrow=0;
     int nelements=0;
@@ -1466,35 +1265,102 @@ void inputRZImpl::inpmediumSave( const QString& str)
          Ppgls->elements[ind].clear();
          Ppgls->pz_or_rhoz[ind].clear();
        }
-       //qt3to4 -- BW
-       //Ppgls->elements[ind].push_back(pz_or_rhozTable->text(nrow,0));
-       //Ppgls->pz_or_rhoz[ind].push_back(pz_or_rhozTable->text(nrow,1));
-       //qt3to4 -- BW
        if(pz_or_rhozTable->item(nrow,0))
             Ppgls->elements[ind].push_back(pz_or_rhozTable->item(nrow,0)->text().toStdString());
        if(pz_or_rhozTable->item(nrow,1))
             Ppgls->pz_or_rhoz[ind].push_back(pz_or_rhozTable->item(nrow,1)->text().toStdString());
-       //Ppgls->elements[ind].push_back(pz_or_rhozTable->text(nrow,0).toStdString());
-       //Ppgls->pz_or_rhoz[ind].push_back(pz_or_rhozTable->text(nrow,1).toStdString());
        nelements++;
        nrow++;
     }
     Ppgls->nelements[ind]=nelements;
     //now save other data
     Ppgls->rho[ind]=rhoEdit->text();
-    Ppgls->spr[ind]=spComboBox->currentText();
-    Ppgls->bc[ind]=bcComboBox->currentText();
-    Ppgls->isgas[ind]=isGasCheckBox->isChecked();
-    Ppgls->gasp[ind]=gaspEdit->text();
-    if(Ppgls->isgas[ind] && (Ppgls->gasp[ind]=="" || Ppgls->gasp[ind].toFloat()<=0.0)) Ppgls->gasp[ind]="1.0";
-    gaspEdit->setText(Ppgls->gasp[ind]);
+    Ppgls->rho_scale[ind]=1.;
+    if(rhoScaleComboBox->currentIndex()==1) Ppgls->rho_scale[ind]=0.001;
     Ppgls->dffile[ind]=DFEdit->text();
-    Ppgls->sterncid[ind]=sterncidEdit->text();
+    if(DCcheckBox->isChecked())  Ppgls->use_dcfile[ind]=true;
+    else Ppgls->use_dcfile[ind]=false;
   }
   //update list of available media
   listMedia = getPEGSLESSMedia();
   updateMediaLists();
 }
+
+void inputRZImpl::GetDFfileReturn()
+{
+//slot actuated when return pressed in DC file entry box
+   if(!GetMedFromDCfile(DFEdit->text())){
+      QString errStr = "Could not open density correction file "  + DFEdit->text();
+               errStr += "\nPlease select another file and try again!";
+        QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
+   }
+}
+
+bool inputRZImpl::GetMedFromDCfile(QString f)
+{
+   if ( !f.isEmpty() ) {
+      QString fname=f;
+      QChar s = QDir::separator();
+      //if the file separator character is in the name, assume
+      //full path specified along with .density extension
+      if(!QFile(fname).exists()) {
+        //start looking following same priority as in 
+        //get_media_inputs
+        //assume .density ext not included
+        fname=ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s + f + ".density");
+        if(!QFile(fname).exists()) {
+          //look in subdirectories
+          fname=ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s + "elements" + s + f + ".density");
+          if(!QFile(fname).exists()) {
+             fname=ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s + "compounds" + s + f + ".density");
+             if(!QFile(fname).exists()) {
+             //look in density subdirectory in case still there
+               fname=ironIt(EGS_HOME + s + "pegs4" + s + "density" + s + f + ".density");
+               if(!QFile(fname).exists()) {
+                //look in HEN_HOUSE
+                fname=ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s + "elements" + s + f + ".density");
+                if(!QFile(fname).exists()) {
+                  fname=ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s + "compounds" + s + f + ".density");
+                  if(!QFile(fname).exists()) return false;
+                }
+               }
+             }
+           }
+          }
+      }
+      //now open the file if possible and read the composition of
+      //the medium
+      QFile df(fname);
+      QFileInfo fi(fname);
+      if(!df.open(QFile::ReadOnly)) return false;
+      char buf[256]; df.readLine(buf,255);//ignore first line
+      QTextStream data(&df);
+      int ndat, nelem; double Iev, rho;
+      data >> ndat >> Iev >> rho >> nelem;
+      if(nelem==1) {
+        medTypeChanged("Element");
+      }
+      else {
+        medTypeChanged("Mixture");
+      }
+      //modify elements of medium def. tab
+      rhoEdit->setText(QString("%1").arg(rho));
+      rhoScaleComboBox->setCurrentIndex(0);
+      //first clear the element table
+      for( int j=0; j< pz_or_rhozTable->rowCount(); j++) {
+         pz_or_rhozTable->setItem(j,0,0); pz_or_rhozTable->setItem(j,1,0);
+      }
+      //now put the elements of this medium in
+      for(int j=0; j<nelem; j++) {
+         int iz; double frac; data >> iz >> frac;
+         pz_or_rhozTable->setItem(j,0,new QTableWidgetItem(QString::fromStdString(element_data[iz-1].symbol)));
+         pz_or_rhozTable->setItem(j,1,new QTableWidgetItem(QString("%1").arg(frac)));
+      }
+      DFEdit->setText(fi.absoluteFilePath());
+      return true;
+    }
+    return false;
+};
 
 void inputRZImpl::inpmediumChanged( const QString& str)
 {
@@ -1504,69 +1370,75 @@ void inputRZImpl::inpmediumChanged( const QString& str)
   Ppgls->inpmedind=ind;
 
   if(ind<Ppgls->ninpmedia) {
-    if(Ppgls->spec_by_pz[ind]) pzRadioButton->setChecked(true);
-    if(!Ppgls->spec_by_pz[ind]) rhozRadioButton->setChecked(true);
 
-    //now populate the table
+    //first, fill the table based on previous info
+    if(Ppgls->nelements[ind]==1) medTypeChanged("Element");
+    else if(Ppgls->spec_by_pz[ind]) medTypeChanged("Compound");
+    else medTypeChanged("Mixture");
+
+       //now populate the element table
     for (int i=0; i<Ppgls->nelements[ind]; i++) {
-      //qt3to4 -- BW
-      //QString item1 = Ppgls->elements[ind][i];
-      //QString item2 =  Ppgls->pz_or_rhoz[ind][i];
-       QString item1 = QString::fromStdString(Ppgls->elements[ind][i]);
-       QString item2 = QString::fromStdString(Ppgls->pz_or_rhoz[ind][i]);
-      //qt3to4 -- BW
-      //pz_or_rhozTable->setItem(i,0,new Q3TableItem(pz_or_rhozTable,Q3TableItem::OnTyping,item1));
-      //pz_or_rhozTable->setItem(i,1,new Q3TableItem(pz_or_rhozTable,Q3TableItem::OnTyping,item2));
-      pz_or_rhozTable->setItem(i,0,new QTableWidgetItem(item1));
-      pz_or_rhozTable->setItem(i,1,new QTableWidgetItem(item2));
+         QString item1 = QString::fromStdString(Ppgls->elements[ind][i]);
+         QString item2 = QString::fromStdString(Ppgls->pz_or_rhoz[ind][i]);
+         pz_or_rhozTable->setItem(i,0,new QTableWidgetItem(item1));
+         pz_or_rhozTable->setItem(i,1,new QTableWidgetItem(item2));
     }
-    //clear any other items in there
-    //qt3to4 -- BW
-    //for (int i=Ppgls->nelements[ind]; i<pz_or_rhozTable->numRows(); i++) {
+       //clear any other items in there
     for (int i=Ppgls->nelements[ind]; i<pz_or_rhozTable->rowCount(); i++) {
-        //pz_or_rhozTable->clearCell(i,0);
-        //pz_or_rhozTable->clearCell(i,1);
-        pz_or_rhozTable->setItem(i,0,0);
-        pz_or_rhozTable->setItem(i,1,0);
+         pz_or_rhozTable->setItem(i,0,0);
+         pz_or_rhozTable->setItem(i,1,0);
     }
     //get the other values
     rhoEdit->setText(Ppgls->rho[ind]);
-    validate_combo(Ppgls->spr[ind].toLatin1().data(),"ERROR in stopping power ratio specs",spComboBox);
-    validate_combo(Ppgls->bc[ind].toLatin1().data(),"ERROR in bremsstrahlung correction specs",bcComboBox);
+    if(Ppgls->rho_scale[ind]<1.) rhoScaleComboBox->setCurrentIndex(1);
+    else rhoScaleComboBox->setCurrentIndex(0);
+    DFEdit->setText(Ppgls->dffile[ind]);
     gaspEdit->setText(Ppgls->gasp[ind]);
     isGasCheckBox->setChecked(Ppgls->isgas[ind]);
     enable_gaspEdit();
-    DFEdit->setText(Ppgls->dffile[ind]);
-    sterncidEdit->setText(Ppgls->sterncid[ind]);
+    if(Ppgls->bc[ind]=="NRC") ICRUradCheckBox->setChecked(true);
+    else ICRUradCheckBox->setChecked(false);
+    DCcheckBox->setChecked(false);
+    enableDCfileInput(false);
+
+    //if the user wants to use a dc file, then attempt to read in
+    //medium comp. from it
+    if(Ppgls->use_dcfile[ind]) {
+       if(!GetMedFromDCfile(Ppgls->dffile[ind])) {
+           QString errStr = "Could not read composition from specified density correction file for medium "  + Ppgls->inpmedium[ind];
+           QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
+           Ppgls->use_dcfile[ind]=false;
+           DCcheckBox->setChecked(false);
+           enableDCfileInput(false);
+       }
+       else {
+           DCcheckBox->setChecked(true);
+           enableDCfileInput(true);
+       }
+    }
   }
   else if(ind==Ppgls->ninpmedia) {
     //prepare to add a new medium
     //clear the table and set defaults
-    pzRadioButton->setChecked(true);
-    //qt3to4 -- BW
-    //for (int i=0; i<pz_or_rhozTable->numRows(); i++) {
+    //default to Element: we could quibble with this
+    medTypeChanged("Element");
+    //clear the element table
     for (int i=0; i<pz_or_rhozTable->rowCount(); i++) {
-        //pz_or_rhozTable->clearCell(i,0);
-        //pz_or_rhozTable->clearCell(i,1);
         pz_or_rhozTable->setItem(i,0,0);
         pz_or_rhozTable->setItem(i,1,0);
     }
     rhoEdit->setText("");
-    validate_combo("restricted total","ERROR in stopping power ratio specs",spComboBox);
-    validate_combo("KM","ERROR in bremsstrahlung correction specs",bcComboBox);
+    rhoScaleComboBox->setCurrentIndex(0);
     gaspEdit->setText("");
     isGasCheckBox->setChecked(false);
     enable_gaspEdit();
     DFEdit->setText("");
-    sterncidEdit->setText("");
+    enableDCfileInput(false);
+    DCcheckBox->setChecked(false);
+    ICRUradCheckBox->setChecked(false);
   }
   //now update the list of media
   QStringList medlst;
-  /* old way
-  for(int i=0; i<Ppgls->ninpmedia; i++) {
-     medlst+=Ppgls->inpmedium[i];
-  }
-  */
   //at this point, delete media that are blank or have blank as first character
   int k=0;
   for(int i=0; i<Ppgls->ninpmedia; i++) {
@@ -1586,10 +1458,12 @@ void inputRZImpl::inpmediumChanged( const QString& str)
              Ppgls->pz_or_rhoz[k].push_back(temppz_or_rhoz[j]);
           }
           Ppgls->rho[k]=Ppgls->rho[i];
+          Ppgls->rho_scale[k]=Ppgls->rho_scale[i];
           Ppgls->spr[k]=Ppgls->spr[i];
           Ppgls->bc[k]=Ppgls->bc[i];
           Ppgls->gasp[k]=Ppgls->gasp[i];
           Ppgls->dffile[k]=Ppgls->dffile[i];
+          Ppgls->use_dcfile[k]=Ppgls->use_dcfile[i];
           Ppgls->sterncid[k]=Ppgls->sterncid[i];
           medlst+=Ppgls->inpmedium[k];
           k++;
@@ -1603,6 +1477,94 @@ void inputRZImpl::inpmediumChanged( const QString& str)
   inpmediumComboBox->setCurrentIndex(ind);
 }
 
+void inputRZImpl::pz_or_rhozTable_clicked(int row, int col) {
+   if(col == 0) {
+     QString str;
+     if(pz_or_rhozTable->item(row,col)) str = pz_or_rhozTable->item(row,col)->text();
+     //if elements has not bee initialized yet, do so
+    //these global variables are defined in peglessinputs.h
+     if(element_list.size()==0) {
+     //copy element symbols into elements
+        for(int j=0; j<n_element; j++) element_list << QString::fromStdString(element_data[j].symbol);
+     }
+     QComboBox *e = new QComboBox;
+     e->addItems(element_list);
+     if(!str.isNull()) {//see if it's already in the media list
+         bool found=false;
+         for(int i=0; i<e->count(); i++) {
+              if(str == e->itemText(i)){
+                found=true;
+                e->setCurrentIndex(i);
+                break;
+              }
+         }
+         if(!found) {
+              e->insertItem(0,str);
+              e->setCurrentIndex(0);
+         }
+     }
+     pz_or_rhozTable->setCellWidget(row,col,e);
+   }
+}
+     
+void inputRZImpl::pz_or_rhozTable_singleclicked( int row, int col) {
+   if(col == 0) {
+     QWidget *editor = pz_or_rhozTable->cellWidget( row, col );
+     if(!editor) {//protect any text already there
+       QTableWidgetItem* w =  pz_or_rhozTable->item(row,col);
+       if(w) {
+          QString str = w->text();
+          pz_or_rhozTable->setItem(row,col,new QTableWidgetItem(str));
+       }
+     }
+   }
+//if we click away from a comboBox, freeze it and just display the text
+   for(int irow =0; irow <pz_or_rhozTable->rowCount(); irow++) {
+     if(row != irow || col !=0) {
+       QWidget *editor = pz_or_rhozTable->cellWidget( irow, 0 );
+       if(editor) {
+        if(string(editor->metaObject()->className())=="QComboBox"){
+          QComboBox* cb = (QComboBox*)editor;
+          QString str = cb->currentText();
+          pz_or_rhozTable->removeCellWidget(irow,0);
+          pz_or_rhozTable->setItem(irow,0,new QTableWidgetItem(str));
+        }
+      }
+     }
+   }
+}
+
+void inputRZImpl::enableDCfileInput(bool is_checked) {
+   pz_or_rhozTable->setEnabled (!is_checked);
+   DFgroupBox->setEnabled(is_checked);
+   rhoGroupBox->setEnabled(!is_checked);
+   medTypeGroupBox->setEnabled(!is_checked);
+}
+
+enum MedIndex {Elem, Comp, Mixt};
+
+void inputRZImpl::medTypeChanged( const QString &s) {
+
+  if( s == "Compound" ) {
+     pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("Stoichiometric index"));
+     medTypeComboBox->setCurrentIndex(Comp);
+  }
+  else if(s== "Mixture") {
+     pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("Fraction by weight"));
+     medTypeComboBox->setCurrentIndex(Mixt);
+  }
+  else if(s=="Element") {
+     pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("Fraction by weight"));
+     medTypeComboBox->setCurrentIndex(Elem);
+  }
+  bool ro = s == "Element";
+  for(int j=0; j < pz_or_rhozTable->rowCount(); j++) {
+    if( ro && j>0 ) {
+      pz_or_rhozTable->setItem(j,0,0); pz_or_rhozTable->setItem(j,1,0);
+    }
+  }
+}
+     
 //end of PEGSLESS routines
 
 void inputRZImpl::update_MCTParam( const MMCPInputs*  EGSmcp )
@@ -2448,7 +2410,6 @@ void inputRZImpl::fill_media_table( const MGEOInputs* EGSgeo )
 
     v_string vstr[1];
     vstr[0] = medium;
-    //qt3to4 -- BW
      vector<QString> vqs[1];
      for(int j=0; j<vstr[0].size(); j++) {
          vqs[0].push_back(vstr[0][j].c_str());
@@ -2546,8 +2507,6 @@ void inputRZImpl::update_mediaTable( const MGEOInputs* EGSgeo )
 //the medium data is changed
 void inputRZImpl::reset_mediaTable ()
 {
-    //qt3to4 -- BW
-    //for(int row=0; row<mediaTable->numRows(); row++) {
     for(int row=0; row<mediaTable->rowCount(); row++) {
        QWidget *editor = mediaTable->cellWidget( row, 0 );
        if(editor) {
@@ -2993,18 +2952,12 @@ void inputRZImpl::update_files( const QString & rDirName, QComboBox* cb, const Q
        if      ( dirName == homeDir )      dirName = hen_houseDir;
        else if ( dirName == hen_houseDir ) dirName = homeDir;
 
-       //qt3to4 -- BW
-       //if ( !d.cd( dirName, true ) ) {
          if ( !d.cd( dirName)) {
-          //dirName = EGS_HOME;
-          //if ( !d.cd( dirName, true ) ) {
              QString information = (QString)"<b>Directory</b> " +
                                                    dirName      +
                                    (QString)" used in your input file does not exist !<br>";
              openErrors += information;
-             //QMessageBox::warning ( this, "Attention", information, 1, 0, 0 );
              return;
-          //}
        }
        if ( dirName == homeDir || dirName == hen_houseDir )
           update_EGSdir( dirName );
@@ -3014,12 +2967,8 @@ void inputRZImpl::update_files( const QString & rDirName, QComboBox* cb, const Q
     d.setNameFilters( QStringList(rFilter) );
     d.setSorting( QDir::Name | QDir::IgnoreCase );
 
-    //qt3to4 -- BW
-    //const QFileInfoList *list = d.entryInfoList();
     const QFileInfoList list = d.entryInfoList();
-    //QFileInfoListIterator it( list );      // create list iterator
     QFileInfoList::const_iterator it;
-    //QFileInfo *fi;                          // pointer for traversing
     QFileInfo fi;
 
     QString tmpText;

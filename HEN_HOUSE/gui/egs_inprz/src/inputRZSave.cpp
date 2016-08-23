@@ -514,20 +514,30 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
         if(ind<Ppgls->ninpmedia) {
           //only save if we are not at define new medium
           Ppgls->inpmedium[ind]=inpmediumComboBox->currentText();
-          Ppgls->spec_by_pz[ind]=true;
-          if(rhozRadioButton->isChecked()) Ppgls->spec_by_pz[ind]=false;
+          //if the user wants to use a DC file, read the composition from
+          //that and update the current form
+          Ppgls->use_dcfile[ind]=false;
+          if(DCcheckBox->isChecked()) {
+             if(!GetMedFromDCfile(DFEdit->text())) {
+                QString errStr = "Could not read composition from specified density correction file for medium "  + Ppgls->inpmedium[ind] + "\n Will save composition specified in table";
+                QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
+                DCcheckBox->setChecked(false);
+                enableDCfileInput(false);
+             }
+             else Ppgls->use_dcfile[ind]=true;
+          }
+                 
+          Ppgls->spec_by_pz[ind]=false;
+          if(medTypeComboBox->currentText()=="Compound") Ppgls->spec_by_pz[ind]=true;
           //see if any elements are present in the table
           int nrow=0;
           int nelements=0;
-          while(pz_or_rhozTable->item(nrow,0)!=0 && nrow < 12) {
+          while(pz_or_rhozTable->item(nrow,0)!=0 && nrow < pz_or_rhozTable->rowCount()) {
              if(nrow==0) {
              //clear existing list of elements
                Ppgls->elements[ind].clear();
                Ppgls->pz_or_rhoz[ind].clear();
              }
-             //qt3to4 -- BW
-             //Ppgls->elements[ind].push_back(pz_or_rhozTable->text(nrow,0));
-             //Ppgls->pz_or_rhoz[ind].push_back(pz_or_rhozTable->text(nrow,1));
            if(pz_or_rhozTable->item(nrow,0))
              Ppgls->elements[ind].push_back(pz_or_rhozTable->item(nrow,0)->text().toStdString());
            if(pz_or_rhozTable->item(nrow,1))
@@ -538,15 +548,16 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
           Ppgls->nelements[ind]=nelements;
           //now save other data
           Ppgls->rho[ind]=rhoEdit->text();
-          Ppgls->spr[ind]=spComboBox->currentText();
-          Ppgls->bc[ind]=bcComboBox->currentText();
+          Ppgls->rho_scale[ind]=1.0;
+          if(rhoScaleComboBox->currentIndex()==1) Ppgls->rho_scale[ind]=0.001;
+          if(ICRUradCheckBox->isChecked()) Ppgls->bc[ind]="NRC";
+          else Ppgls->bc[ind]="KM";
           Ppgls->gasp[ind]=gaspEdit->text();
           Ppgls->isgas[ind]=isGasCheckBox->isChecked();
           if(Ppgls->isgas[ind] &&
             (Ppgls->gasp[ind]=="" || Ppgls->gasp[ind].toFloat()<=0.0)) Ppgls->gasp[ind]="1.0";
           gaspEdit->setText(Ppgls->gasp[ind]);
           Ppgls->dffile[ind]=DFEdit->text();
-          Ppgls->sterncid[ind]=sterncidEdit->text();
         }
 
         PEGSLESSInputs* EGSpgls = new PEGSLESSInputs;
@@ -569,12 +580,14 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
                 EGSpgls->pz_or_rhoz[EGSpgls->ninpmedia].push_back(Ppgls->pz_or_rhoz[i][j]);
               }
               EGSpgls->rho[EGSpgls->ninpmedia]=Ppgls->rho[i];
+              EGSpgls->rho_scale[EGSpgls->ninpmedia]=Ppgls->rho_scale[i];
               EGSpgls->spr[EGSpgls->ninpmedia]=Ppgls->spr[i];
               EGSpgls->bc[EGSpgls->ninpmedia]=Ppgls->bc[i];
               EGSpgls->gasp[EGSpgls->ninpmedia]=Ppgls->gasp[i];
               EGSpgls->isgas[EGSpgls->ninpmedia]=Ppgls->isgas[i];
               EGSpgls->dffile[EGSpgls->ninpmedia]=Ppgls->dffile[i];
               EGSpgls->sterncid[EGSpgls->ninpmedia]=Ppgls->sterncid[i];
+              EGSpgls->use_dcfile[EGSpgls->ninpmedia]=Ppgls->use_dcfile[i];
               EGSpgls->ninpmedia++; //ninpmedia starts at 0
            }
         }
