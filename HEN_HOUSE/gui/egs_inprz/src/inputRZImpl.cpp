@@ -37,37 +37,25 @@
 #include "executiondlgImpl.h"
 #include <qlineedit.h>
 #include <qapplication.h>
-//#include <q3filedialog.h>
 #include <qlabel.h>
 #include <qmessagebox.h>
 #include <qcombobox.h>
 #include <qradiobutton.h>
 #include <qspinbox.h>
 #include <qcheckbox.h>
-//#include <q3groupbox.h>
-//#include <q3table.h>
-//Added by qt3to4:
-//#include <Q3TextStream>
 #include <iterator>
 #include <qtabwidget.h>
 #include <qpushbutton.h>
 #include <qdir.h>
-//#include <q3progressdialog.h>
-//#include <q3buttongroup.h>
 #include <qwidget.h>
 #include <qpainter.h>
-//#include <q3paintdevicemetrics.h>
 #include <qprinter.h>
 #include <qvalidator.h>
 #include <typeinfo>
-//#include <q3whatsthis.h>
-//#include <q3process.h>
 #include <qsettings.h>
-//#include <q3dockwindow.h>
 #include <qlibrary.h>
 #include <egs_config_reader.h>
 
-//qt3to4 -- BW
 #include <QTextStream>
 #include <iostream>
 #include <QFileDialog>
@@ -78,12 +66,9 @@ using namespace std;
 
 inputRZImpl::inputRZImpl( QWidget* parent, const char* name,
              bool modal, Qt::WFlags f )
-//qt3to4 -- BW
-//           : InputRZForm( parent, name, f )
              : QWidget(parent)
 {
 
-    //qt3to4 -- BW
     setupUi(this);
     Initialize();
     SetValidator( );
@@ -442,7 +427,6 @@ void inputRZImpl::checkCompilationAbility(){
       "<br><b>Compilation disabled since following files missing:</b><br>" +
                       missing_files;
       confErrors += missing_files;
-      //QMessageBox::warning ( this, "Warning", missing_files, 1, 0, 0 );
   }
 
   caught_errors();
@@ -716,14 +700,11 @@ void inputRZImpl::customFFTable_singleclicked( int row, int col) {
    if(col == 0) {
      QWidget *editor = customFFTable->cellWidget( row, col );
      if(!editor) {//protect any text already there
-       //qt3to4 -- BW
        QTableWidgetItem* w =  customFFTable->item(row,col);
        if(w) {
           QString str = w->text();
           customFFTable->setItem(row,col,new QTableWidgetItem(str));
        }
-       //QString str = customFFTable->text(row,col);
-       //customFFTable->setItem(row,col,new Q3TableItem(customFFTable,Q3TableItem::Never,str));
      }
    }
 
@@ -748,14 +729,10 @@ void inputRZImpl::customFFTable_singleclicked( int row, int col) {
 void inputRZImpl::GetMDfile()
 {
    QString tmpDir;
-   //qt3to4 -- BW
-   //char s = QDir::separator();
    char s = QDir::separator().toAscii();
    //try EGS_HOME/pegs4/data, then HEN_HOUSE/pegs4/data then $HOME/pegs4/data
    tmpDir = GetCurrentDir( "pegs4/data", EGS_HOME, HEN_HOUSE );
    QDir d(tmpDir);
-   //qt3to4 -- BW
-   //QString f = Q3FileDialog::getOpenFileName( tmpDir, "material data file (*)", this );
    QString f = QFileDialog::getOpenFileName( this,"",tmpDir, "material data file (*)" );
    if ( !f.isEmpty() ) {
       Ppgls->matdatafile = f;
@@ -768,50 +745,36 @@ void inputRZImpl::GetMDfile()
 
 void inputRZImpl::GetDFfile()
 {
-   QString tmpDir;
-   //qt3to4 -- BW
-   //char s = QDir::separator();
+   QString start_dir;
    char s = QDir::separator().toAscii();
-   //browse from HEN_HOUSE/pegs4/density_corrections
-   if(df_hen_houseRadioButton->isChecked())
-   tmpDir = ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s);
-   else
-   tmpDir = ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s);
-   if (!QDir(tmpDir).exists()) tmpDir.chop(20);
-   QDir d(tmpDir); 
-   //qt3to4 -- BW
-   //QString f = Q3FileDialog::getOpenFileName( this,"",tmpDir, "density correction file (*.density);; all files (*)");
+   if(DFSearchComboBox->currentText() == "HEN_HOUSE")
+     start_dir = ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s);
+   else start_dir = ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s);
+   if (!QDir(start_dir).exists()) start_dir.chop(20);
    QString f = QFileDialog::getOpenFileName(
-               this, "",tmpDir,
-               "density correction file (*.density);; all files (*)");
-   if ( !f.isEmpty() ) {
-      //check if the user has selected a .density file from the HEN_HOUSE/pegs4/data/elements or
-      //HEN_HOUSE/pegs4/data/compounds directories
-      if ( (f.indexOf(tmpDir + "elements",0) >=0  || f.indexOf(tmpDir + "compounds",0) >=0 ) &&
-           f.indexOf(".density",1)>=0) {
-         //keep entire filename
-         //remove directory name
-         //f.remove( 0, f.lastIndexOf(s,-1)+1);
-         //remove ".density" extension
-         //f.remove(f.indexOf(".density",1),8);
-      }
-      int ind=inpmediumComboBox->currentIndex();
-      Ppgls->inpmedind=ind;
-      Ppgls->dffile[Ppgls->inpmedind] = f;
-      DFEdit->setText(Ppgls->dffile[Ppgls->inpmedind]);
+               this, tr("Select a density correction file"),start_dir,
+               tr("density correction file (*.density)"));
+
+   //populate the media table
+   if(!GetMedFromDCfile(f)){
+      QString errStr = "Could not open density correction file "  + f;
+               errStr += "\nPlease select another file and try again!";
+        QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
    }
+      
+   //set strings to output to .egsinp file 
+   int ind=inpmediumComboBox->currentIndex();
+   Ppgls->inpmedind=ind;
+   Ppgls->dffile[Ppgls->inpmedind] = f;
 }
 
 void inputRZImpl::set_table_header_noa()
 {
-   //qt3to4 -- BW
    pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("no. of atoms"));
 }
 
 void inputRZImpl::set_table_header_pbw()
 {
-   //qt3to4 -- BW
-   //pz_or_rhozTable->horizontalHeader()->setLabel(1,"mass fractions");
    pz_or_rhozTable->setHorizontalHeaderItem(1,new QTableWidgetItem("mass fractions"));
 }
 
@@ -827,8 +790,6 @@ v_string inputRZImpl::getPEGSLESSMedia( )
        QFile f( fname );
        if ( f.open( QIODevice::ReadOnly ) ) {
 
-          //qt3to4 -- BW
-          //Q3TextStream ts( &f );
           QTextStream ts( &f );
           QString     t;
           int         i;
@@ -842,8 +803,6 @@ v_string inputRZImpl::getPEGSLESSMedia( )
                t.trimmed();
                lmed2.push_back( t.toStdString() );
             }
-          //qt3to4 -- BW
-          //} while ( !ts.eof() );
           } while ( !ts.atEnd() );
 
           f.close();
@@ -857,13 +816,9 @@ v_string inputRZImpl::getPEGSLESSMedia( )
     for (int i=0; i<Ppgls->ninpmedia; i++) {
        k=0;
        for (int j=0; j<lmed2.size(); j++) {
-         //qt3to4 -- BW
-         // if(Ppgls->inpmedium[i]==lmed2[j]) break;
           if(Ppgls->inpmedium[i]==QString::fromStdString(lmed2[j])) break;
           k++;
        }
-       //qt3to4 -- BW
-       //if(k==lmed2.size()) lmed2.push_back(Ppgls->inpmedium[i]);
        if(k==lmed2.size()) lmed2.push_back(Ppgls->inpmedium[i].toStdString());
     }
 
@@ -880,10 +835,7 @@ bool inputRZImpl::pegsless_is_ok()
     if (!cavityRadioButton->isChecked())
         med = getMediaFromTable();
     else {
-        //MCAVInputs* EGScav = GetCAV();
         med.push_back(wallmaterialComboBox->currentText().toStdString());
-       //qt3to4 -- BW
-       //if (EGScav->electr_rad > 0.0)
        if (electradEdit->text().toFloat() > 0.0)
            med.push_back(electrmatComboBox->currentText().toStdString());
     }
@@ -901,8 +853,6 @@ bool inputRZImpl::pegsless_is_ok()
                       "</i><br>";
         return false;
     }
-    //qt3to4 -- BW
-    //Q3TextStream ts( &f1 );
     QTextStream ts( &f1 );
 
     std::vector<string>::iterator iter(med.begin());
@@ -920,8 +870,6 @@ bool inputRZImpl::pegsless_is_ok()
                    found = true;
                    break;
             }
-       //qt3to4 -- BW
-       //} while ( !ts.eof() );
        } while ( !ts.atEnd() );
 
        if (!found) {//check media defined in input file
