@@ -368,29 +368,58 @@ private:
     void processEnsdf();
 };
 
+/*! \brief The ensdf class for reading ensdf format data files
 
-/*! \brief The ensdf class
+\ingroup egspp_main
 
-  \ingroup egspp_main
+Reads in a decay spectrum file in ensdf format, and builds the decays into an
+object oriented tree structure. This decay structure is useful for
+\ref EGS_RadionuclideSpectrum used by \ref EGS_RadionuclideSource.
 
-  Reads in a decay spectrum file in ensdf format, and builds the decays into an
-  object oriented tree structure. This decay structure is useful for
-  \ref EGS_RadionuclideSpectrum.
+Uncertainties on values are ignored! The energies and intensities for various
+emissions are taken as is. Very low intensities are not discarded, all
+data is used.
 
-  Uncertainties on values are ignored! The energies and intensities for various
-  emissions are taken as is.
+When processing an ensdf file, only the following records are considered:
+Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.
+
+X-Rays and Auger emissions are obtained from Comment records. The data is
+processed in the same way as Lara files on nucleide.org. If a single
+intensity is present for a combination of lines (but a single energy is not
+provided), then the average energy of the lines is used. For example, in the
+case below a single line of energy 97.4527 keV would be used. 
+\verbatim
+221FR T        96.815         |]                 XKB3
+221FR T        97.474         |]  0.57     5     XKB1
+221FR T        98.069         |]                 XKB5II
+\endverbatim
+If an energy and intensity are given for the total of several lines, it is
+used instead of those lines. For example, in the case below a single line
+of energy 14.0895 keV would be used.
+\verbatim
+221FR T        10.38-17.799       18.7     9     XL (total)
+221FR T        10.38                             XLL
+221FR T        11.89-12.03                       XLA
+221FR T        13.254                            XLC
+221FR T        13.877-15.639                     XLB
+221FR T        16.752-17.799                     XLG
+\endverbatim
+
+The ensdf class has been tested on radionuclide data from 
+http://www.nucleide.org/DDEP_WG/DDEPdata.htm
 
 */
+
 class EGS_EXPORT EGS_Ensdf {
 
 public:
 
-    /*! \brief Construct an ensdf object
+    /*! \brief Construct an ensdf object.
      *
      */
     EGS_Ensdf(const string isotope, const string ensdf_filename="");
 
-    /*! \brief Destructor. Deallocates all allocated memory */
+    /*! \brief Destructor. */
     ~EGS_Ensdf();
 
     vector<Record * > getRecords() const;

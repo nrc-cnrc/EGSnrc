@@ -31,7 +31,7 @@
 
 /*! \file egs_radionuclide_source.h
  *  \brief A radionuclide source
- *  \IK
+ *  \RT
  */
 
 #ifndef EGS_RADIONUCLIDE_SOURCE_
@@ -70,15 +70,17 @@
 
 #endif
 
-/*! \brief A radionuclide source
+/*! \brief A radionuclide source.
 
-  \ingroup Sources
+\ingroup Sources
 
 A radionuclide source is a source that delivers particles with
 directions uniformly distributed in \f$4 \pi\f$ emitted from
-\link EGS_BaseShape any shape. Emissions are based on decays from the
-radionuclide isotope and can be a mix of beta decays, X-radiations, etc.
-\endlink
+\link EGS_BaseShape any shape. \endlink
+
+Emissions are based on decays from the radionuclide isotope and can be a mix of 
+beta decays, X-radiations, etc.
+
 It is defined using the following input
 \verbatim
 :start source:
@@ -86,10 +88,10 @@ It is defined using the following input
     library             = egs_radionuclide_source
     activity            = total activity of mixture, assumed constant
     charge              = list including at least one of -1, 0, 1 to
-include electrons, photons and positrons
+                          include electrons, photons and positrons
     geometry            = my_geometry # see egs_isotropic_source
     region selection    = geometry confinement option, one of IncludeAll,
-ExcludeAll, IncludeSelected, ExcludeSelected
+                          ExcludeAll, IncludeSelected, ExcludeSelected
     selected regions    = regions to apply geometry confinement
     :start shape:
         definition of the shape
@@ -97,10 +99,12 @@ ExcludeAll, IncludeSelected, ExcludeSelected
     :start spectrum:
         type            = radionuclide
         isotope         = name of the isotope (e.g. Sr-90), used to look up the
-ensdf file in $HEN_HOUSE/spectra/lnhb if ensdf file not provided
-        ensdf file = [optional] path to a spectrum file in ensdf format
+                          ensdf file as $HEN_HOUSE/spectra/lnhb/{isotope}.ensdf
+                          if ensdf file not provided below
+        ensdf file      = [optional] path to a spectrum file in ensdf format,
+                          including extension
         weight          = [optional] the relative activity (sampling
-probability) for this isotope in a mixture
+                          probability) for this isotope in a mixture
     :stop spectrum:
     :start spectrum:
         type            = radionuclide
@@ -109,6 +113,11 @@ probability) for this isotope in a mixture
     :stop spectrum:
 :stop source:
 \endverbatim
+
+The emission spectrum generation is described in \ref EGS_RadionuclideSpectrum.
+
+Proceed with caution - \ref EGS_RadionuclideSource is in the development stages
+and has not been thoroughly tested. 
 
 */
 

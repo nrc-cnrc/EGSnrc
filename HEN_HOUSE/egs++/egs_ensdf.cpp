@@ -153,7 +153,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     /* IDs of recordStack
      * 0 Identification (not used)
      * 1 History (not used)
-     * 2 Q-value
+     * 2 Q-value(not used)
      * 3 Cross-Reference (not used)
      * 4 Comment
      * 5 Parent
@@ -162,7 +162,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
      * 8 Beta-
      * 9 EC + Beta+
      * 10 Alpha
-     * 11 Delayed Particle
+     * 11 Delayed Particle (not used)
      * 12 Gamma
      * 13 Reference (not used)
      * */
@@ -611,6 +611,11 @@ void EGS_Ensdf::getEmissionsFromComments() {
 
         string line = (*comment)->getComment();
 
+        //TODO: Maybe we should sample one of the energies instead of using
+        // an average, using equal probability. Then the emissions have a
+        // sensible energy rather than a non-physical one. But the way
+        // we currently do it is the same as the Lara data files
+    
         // Check for the end of multi-line records
         // and average them together
         if (line.length() < 48 ||
