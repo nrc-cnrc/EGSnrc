@@ -667,7 +667,8 @@ You can use bits 1 to 23 for these filters.  For more information, \
 	    # get number of particles, iq.
 	    set w5 $w.opt11
 	    frame $w5
-	    textfield $w5.f1 "Number of particles to be listed (default 100)" fpar(1)
+            textfield $w5.f0 "Start at particle no. (defaults to 1)" fpar(0)
+	    textfield $w5.f1 "End at particle no. (default 100)" fpar(1)
 	    set text1(1) "Particle type"
 
 	    frame $w5.inp1
@@ -1447,13 +1448,14 @@ proc create_script {} {
 	}
 	if $ichoice==11 {
 	    # Put numberp,charge
+            if { [catch {expr $fpar(0)}]==1 } { set fpar(0) 1 }
 	    if { [catch {expr $fpar(1)}]==1 } { set fpar(1) 100 }
 	    if $charge==100 {
 		tk_dialog .failed "Failed" "The charge is not \
 			specified.  Specify and try again." error 0 OK
 		return 0
 	    }
-	    puts $id "$fpar(1), $charge"
+	    puts $id "$fpar(0), $fpar(1), $charge"
 	}
 
 	if { $ichoice>0 && $ichoice<10 || $ichoice==11} {
