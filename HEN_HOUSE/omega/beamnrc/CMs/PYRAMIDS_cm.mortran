@@ -301,7 +301,7 @@
 " so evaluate DIST, distance to region boundary along current trajectory.  USTEP
 " must not exceed DIST.
 "
-"   There are 4xISCM local regions see above graph:
+"   There are 3xISCM local regions see above graph:
 "
 "      local                    absolute                   description
 "   ------------  ------------------------------------   ---------------
