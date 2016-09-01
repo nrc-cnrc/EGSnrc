@@ -314,10 +314,10 @@ REPLACE {;$BEAMMODEL-SOURCE4-OUTPUT} WITH {
 }
 ;
 REPLACE{$BEAMMODEL-SOURCE4-ENERGY} WITH {
-    ;IF(iqin ~= 0)[etotin = einsrc +0.510998946131;]
+    ;IF(iqin ~= 0)[etotin = einsrc +0.5109989461;]
     ELSE[etotin = einsrc;]
     esrc = esrc + einsrc;
-    IF(iqin =1)[esrc = esrc + 0.510998946131;]
+    IF(iqin =1)[esrc = esrc + 0.5109989461;]
 }
 ;
 REPLACE {$BEAMMODEL_SOURCE_OUTPUT} WITH
