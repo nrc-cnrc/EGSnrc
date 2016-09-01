@@ -50,7 +50,7 @@ EGS_CollimatedSource::EGS_CollimatedSource(EGS_Input *input,
         int err = input->getInput("source shape name",sname);
         if (err)
             egsWarning("EGS_CollimatedSource: missing/wrong inline source "
-                       "shape definition and missing wrong 'source shape name' input\n");
+                       "shape definition and missing/wrong 'source shape name' input\n");
         else {
             source_shape = EGS_BaseShape::getShape(sname);
             if (!source_shape)
@@ -68,10 +68,10 @@ EGS_CollimatedSource::EGS_CollimatedSource(EGS_Input *input,
         int err = input->getInput("target shape name",sname);
         if (err)
             egsWarning("EGS_CollimatedSource: missing/wrong inline target"
-                       "shape definition and missing wrong 'target shape name' input\n");
+                       "shape definition and missing/wrong 'target shape name' input\n");
         else {
             target_shape = EGS_BaseShape::getShape(sname);
-            if (!source_shape)
+            if (!target_shape)
                 egsWarning("EGS_CollimatedSource: a shape named %s"
                            " does not exist\n",sname.c_str());
         }
