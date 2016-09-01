@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -81,6 +82,9 @@ A phase-space file source is defined as follows:
     phase space file = name of the phase space file
     particle type = one of photons, electrons, positrons, all, or charged
     cutout = x1 x2 y1 y2  (optional)
+    weight window = wmin wmax, the min and max particle weights to use. If the particle weight is not in this range, it is rejected. (optional)
+    reuse photons = number of times to reuse each photon (optional)
+    reuse electrons = number of times to reuse each electron (optional)
 :stop source:
 \endverbatim
 The optional \c cutout key permits to set a rectangular cutout
@@ -99,9 +103,26 @@ together with a transformation, the phase-space source
 can reproduce the functionality of any phase-space file based source
 in the RZ series of user codes and in DOSXYZnrc.
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        name        = my_source
+        library     = egs_phsp_source
+        phase space file = ../BEAM_EX16MVp/EX16MVp.egsphsp1
+        particle type = all
+        cutout      = -1 1 -2 2
+        reuse photons = 10
+        reuse electrons = 10
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_phsp_source.png "A simple example"
+
 \todo Fully implement latch filters
-\todo Add weight window filter
-\todo Add particle recycling (\em i.e. same particle returned Nrecycle times)
 */
 class EGS_PHSP_SOURCE_EXPORT EGS_PhspSource : public EGS_BaseSource {
 

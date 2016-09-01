@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -95,6 +95,32 @@ from the RZ series of user codes and sources 0 and 1
 in DOSXYZnrc can be reproduced with
 the parallel beam source from the EGSnrc C++ class library.
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_parallel_beam
+        name = my_source
+        :start shape:
+            type = cylinder
+            radius   = 1
+            height   = 2
+            axis     = 0 0 1
+            midpoint = 0
+        :stop shape:
+        direction = 0 0 1
+        charge = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 6
+        :stop spectrum:
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_parallel_beam.png "A simple example"
 */
 class EGS_PARALLEL_BEAM_EXPORT EGS_ParallelBeam :
     public EGS_BaseSimpleSource {
