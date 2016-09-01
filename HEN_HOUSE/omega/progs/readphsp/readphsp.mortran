@@ -633,7 +633,7 @@ LOOP[ "read and write one particle at a time
         ELSE[" PAW FORMAT"
             "For this output only,  we need to recover the original"
             "phase space values, not the compressed values"
-            IF( abs(IQ) = 1) [ ESHORT=ESHORT-0.510998946131; ]
+            IF( abs(IQ) = 1) [ ESHORT=ESHORT-0.5109989461; ]
             "until Feb 1995, this was if(iq = -1) => e+ had total energy"
   "RWN          XTUPLE(1) = ESHORT; XTUPLE(2) = X; XTUPLE(3) = Y; XTUPLE(4) = U;
   "RWN          XTUPLE(5) = V;

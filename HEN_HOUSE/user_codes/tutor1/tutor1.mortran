@@ -130,7 +130,7 @@ ZBOUND=0.1;"     plate is 1 mm thick"
 "perpendicular to the slab"
 
 IQIN=-1;"               incident charge - electrons"
-EIN=20.510998946131;"            20 MeV kinetic energy"
+EIN=20.5109989461;"            20 MeV kinetic energy"
 /XIN,YIN,ZIN/=0.0;"     incident at origin"
 /UIN,VIN/=0.0;WIN=1.0;" moving along Z axis"
 IRIN=2;"                starts in region 2, could be 1"

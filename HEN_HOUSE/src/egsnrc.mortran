@@ -3382,7 +3382,7 @@ DO medium = 1,NMED [
                   tmp_4 = aux_o; call egs_swap_4(c_4); aux_o = tmp_4;
                 ]
                 eta_array(iq,i)=eta_array(iq,i)+tmp*Log(Z23*aux_o);
-                tau = earray(i)/prm/1000.0;  "energy in the file is in keV"
+                tau = earray(i)/prm*0.001;  "energy in the file is in keV"
                 beta2 = tau*(tau+2)/(tau+1)**2;
                 eta = Z23/(fine*TF_constant)**2*aux_o/4/tau/(tau+2);
                 c_array(iq,i)=c_array(iq,i)+
@@ -3425,7 +3425,7 @@ DO medium = 1,NMED [
     " Process eta_array, c_array and g_array to their final form "
     $FOOL-INTEL-OPTIMIZER(25) 'Spin corrections as read in from file';
     DO i=0,$MAXE_SPI1 [
-        tau = earray(i)/prm/1000.0; beta2 = tau*(tau+2)/(tau+1)**2;
+        tau = earray(i)/prm*0.001; beta2 = tau*(tau+2)/(tau+1)**2;
         DO iq=0,1 [
             aux_o = Exp(eta_array(iq,i)/sum_Z2)/(fine*TF_constant)**2;
             eta_array(iq,i) = 0.26112447*aux_o*blcc(medium)/xcc(medium);
@@ -3727,7 +3727,7 @@ DO medium = 1,NMED [
                 read(spin_unit,'(a,g14.6)') string,earray(i);
                 read(spin_unit,*) dum1,dum2,dum3,aux_o;
                 eta_array(iq,i)=eta_array(iq,i)+tmp*Log(Z23*aux_o);
-                tau = earray(i)/prm/1000.0;  "energy in the file is in keV"
+                tau = earray(i)/prm*0.001;  "energy in the file is in keV"
                 beta2 = tau*(tau+2)/(tau+1)**2;
                 eta = Z23/(fine*TF_constant)**2*aux_o/4/tau/(tau+2);
                 c_array(iq,i)=c_array(iq,i)+
@@ -3764,7 +3764,7 @@ DO medium = 1,NMED [
 
     " Process eta_array, c_array and g_array to their final form "
     DO i=0,$MAXE_SPI1 [
-        tau = earray(i)/prm/1000.0; beta2 = tau*(tau+2)/(tau+1)**2;
+        tau = earray(i)/prm*0.001; beta2 = tau*(tau+2)/(tau+1)**2;
         DO iq=0,1 [
             aux_o = Exp(eta_array(iq,i)/sum_Z2)/(fine*TF_constant)**2;
             eta_array(iq,i) = 0.26112447*aux_o*blcc(medium)/xcc(medium);

@@ -868,7 +868,7 @@ IF(error_flags(ival_ue)=0)[
 ]
 ELSE[
    $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 
-     50.510998946131 MeV');
+     50.5109989461 MeV');
    ue_tmp=50 + prm;
 ]
 IF(error_flags(ival_up)=0)[
