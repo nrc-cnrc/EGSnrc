@@ -399,6 +399,7 @@ if test $egs_batch_system = "pbsdsh"; then
     fi
 
     # submit the following stdin script to qsub, which will invoke the run_pbsdsh_task script
+    cd $egs_home/$user_code
     $batch_command $batch_options $queue $other_args <<EOF
 #!/bin/sh
 #PBS -l procs=$n_parallel
