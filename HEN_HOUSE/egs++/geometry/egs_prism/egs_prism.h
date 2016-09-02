@@ -209,11 +209,13 @@ public:
         if (!ireg) {  // inside
             EGS_Float tt = 1e30;
             int inew = ireg;
-            if (up > 0) {
+            if (up > boundaryTolerance) {
                 tt = (d2 - d)/up;
             }
-            else {
+            else if(up < -boundaryTolerance) {
                 tt = (d1 - d)/up;
+            } else {
+                tt = 0;
             }
             if (tt <= t) {
                 t = tt;
@@ -239,10 +241,10 @@ public:
         }
         if (d < d1 || d > d2) {
             EGS_Float tt = 1e30;
-            if (d < d1 && up > 0) {
+            if (d < d1 && up > boundaryTolerance) {
                 tt = (d1 - d)/up;
             }
-            else if (d > d2 && up < 0) {
+            else if (d > d2 && up < -boundaryTolerance) {
                 tt = (d2 - d)/up;
             }
             if (tt < t) {
