@@ -153,7 +153,7 @@ public:
     /*! \brief Is the 2D point \a x inside the polygon ? */
     bool isInside(const EGS_2DVector &x) const {
         if (!open &&
-                (x.x<xmin || x.x>xmax || x.y<ymin || x.y>ymax)) {
+                (x.x<xmin+1e-7 || x.x+1e-7>xmax || x.y<ymin+1e-7 || x.y+1e-7>ymax)) {
             return false;
         }
         if (is_convex) {
@@ -192,9 +192,9 @@ public:
         if (in) {
             int jhit;
             for (int j=0; j<nn; j++)  {
-                if ((up = u*a[j]) < 0 && (xp = x*a[j]) > d[j]) {
+                if ((up = u*a[j]) < 0 && (xp = x*a[j])+1e-7 > d[j]) {
                     EGS_Float tt = d[j] - xp;
-                    if (tt >= t*up) {
+                    if (tt+1e-7 >= t*up) {
                         tt /= up;
                         bool ok = is_convex || pc[j];
                         if (!ok) {
@@ -219,9 +219,9 @@ public:
         else {
             int jhit;
             if (open) {
-                if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]) {
+                if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]+1e-7) {
                     EGS_Float tt = (d[0] - xp)/up;
-                    if (tt <= t) {
+                    if (tt <= t+1e-7) {
                         EGS_Float lam = uj[0]*(x-p[0]+u*tt);
                         if (lam < uj[0].length2()) {
                             t = tt;
@@ -230,9 +230,9 @@ public:
                         }
                     }
                 }
-                if ((up = u*a[1]) > 0 && (xp = x*a[1]) < d[1]) {
+                if ((up = u*a[1]) > 0 && (xp = x*a[1]) < d[1]+1e-7) {
                     EGS_Float tt = (d[1] - xp)/up;
-                    if (tt <= t) {
+                    if (tt <= t+1e-7) {
                         EGS_Float lam = uj[1]*(x-p[1]+u*tt);
                         if (lam > 0) {
                             t = tt;
@@ -244,9 +244,9 @@ public:
             }
             else {
                 for (int j=0; j<nn; j++)  {
-                    if ((up = u*a[j]) > 0 && (xp = x*a[j]) < d[j]) {
+                    if ((up = u*a[j]) > 0 && (xp = x*a[j]) < d[j]+1e-7) {
                         EGS_Float tt = (d[j] - xp)/up;
-                        if (tt <= t) {
+                        if (tt <= t+1e-7) {
                             EGS_Float lam = uj[j]*(x-p[j]+u*tt);
                             if (lam >= 0 && lam < uj[j].length2()) {
                                 t = tt;
@@ -300,7 +300,7 @@ private:
     static bool checkCCW(const vector<EGS_2DVector> &points);
     /*! \brief Is the point \a x inside the \a j'th edge ? */
     bool inside(int j, const EGS_2DVector &x) const {
-        if (x*a[j] >= d[j]) {
+        if (x*a[j]+1e-7 >= d[j]) {
             return true;
         }
         else {
@@ -445,7 +445,7 @@ public:
             return false;
         }
         EGS_Float tt = -a.distance(x)/up;
-        if (tt <= t) {
+        if (tt <= t+1e-7) {
             EGS_Vector xp(x + u*tt);
             if (p->isInside(a.getProjection(xp))) {
                 t = tt;
