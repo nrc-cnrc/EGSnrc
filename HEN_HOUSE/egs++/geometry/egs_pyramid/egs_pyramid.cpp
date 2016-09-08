@@ -163,7 +163,7 @@ extern "C" {
                 points.push_back(EGS_Vector(p[3*j],p[3*j+1],p[3*j+2]));
             }
             EGS_Vector aux(points[np-1]-points[0]);
-            if (aux.length2() > 1e-10) {
+            if (aux.length2() > epsilon) {
                 points.push_back(points[0]);
             }
             np = points.size();
@@ -173,7 +173,7 @@ extern "C" {
                 for (int j=0; j<np; j++) {
                     p2.push_back(pro.getProjection(points[j]));
                     EGS_Float d = pro.distance(points[j]);
-                    if (fabs(d) > 1e-10) {
+                    if (fabs(d) > epsilon) {
                         egsWarning("createGeometry(pyramid): "
                                    "points are not on a plane\n");
                         return 0;

@@ -180,7 +180,7 @@ int EGS_cSpheres::howfar(int ireg, const EGS_Vector &x,
                     tmp = sqrt(tmp);
                 }
                 else {
-                    if (tmp < -1e-2) {
+                    if (tmp < -boundaryTolerance) {
                         egsWarning("EGS_cSpheres::howfar: something is wrong\n");
                         egsWarning("  we think we are in region %d, but R2b2=%g",
                                    ireg,R2b2);

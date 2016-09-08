@@ -196,7 +196,7 @@ public:
             EGS_Float up = u*s[j]->getNormal(), xp = s[j]->distance(x);
             if (up > 0 && xp < 0) {
                 EGS_Float tt = -xp/up;
-                if (tt <= t+epsilon && s[j]->isInside2D(x+u*tt)) {
+                if (tt <= t+boundaryTolerance && s[j]->isInside2D(x+u*tt)) {
                     t = tt;
                     jhit = j;
                 }
@@ -206,7 +206,7 @@ public:
             EGS_Float up = u*p->getNormal(), xp = p->distance(x);
             if (up > 0 && xp < 0) {
                 EGS_Float tt = -xp/up;
-                if (tt <= t+epsilon && p->isInside2D(x+u*tt)) {
+                if (tt <= t+boundaryTolerance && p->isInside2D(x+u*tt)) {
                     t = tt;
                     jhit = n;
                 }

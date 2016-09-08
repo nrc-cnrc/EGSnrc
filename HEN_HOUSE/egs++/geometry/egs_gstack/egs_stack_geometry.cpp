@@ -127,7 +127,7 @@ extern "C" {
         result->setName(input);
         result->setBoundaryTolerance(input);
         result->setLabels(input);
-        EGS_Float tol = 1e-10;
+        EGS_Float tol = epsilon;
         err = input->getInput("tolerance",tol);
         if (!err) {
             result->setBoundaryTolerance(tol);

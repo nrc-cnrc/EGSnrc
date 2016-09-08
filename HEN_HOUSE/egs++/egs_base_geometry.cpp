@@ -381,7 +381,7 @@ extern "C" void __list_geometries() {
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    boundaryTolerance(1e-10), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
+    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }

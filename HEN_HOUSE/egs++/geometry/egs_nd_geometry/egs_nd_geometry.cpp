@@ -716,7 +716,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             result->setMedium(j,j,imed[i]);
             if (rho_def[i] > 0) {
                 EGS_Float rrho = rho[j]/rho_def[i];
-                if (fabs(rrho-1) > 1e-10) {
+                if (fabs(rrho-1) > epsilon) {
                     result->setRelativeRho(j,j,rrho);
                 }
             }

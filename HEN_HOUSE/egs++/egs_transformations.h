@@ -127,7 +127,7 @@ public:
     bool isRotation() const {
         EGS_Float d = det() - 1;
         EGS_RotationMatrix t((*this)*inverse());
-        if (fabs(d) > 1e-4 || !t.isI()) {
+        if (fabs(d) > epsilon || !t.isI()) {
             return false;
         }
         return true;
@@ -148,10 +148,10 @@ public:
     EGS_RotationMatrix(const EGS_Vector &v) {
         EGS_Float sinz = v.x*v.x + v.y*v.y;
         EGS_Float norm = sinz + v.z*v.z;
-        if (norm < 1e-15) egsFatal("EGS_RotationMatrix::EGS_RotationMatrix: \n"
+        if (norm < epsilon) egsFatal("EGS_RotationMatrix::EGS_RotationMatrix: \n"
                                        "  no construction from a zero vector possible!\n");
         norm = sqrt(norm);
-        if (sinz > 1e-15) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi = v.x/sinz;
             register EGS_Float sphi = v.y/sinz;
