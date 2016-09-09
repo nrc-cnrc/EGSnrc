@@ -45,3 +45,9 @@ addphsp_$(my_machine).f: $(SOURCES)
 	@echo "Mortran compiling addphsp sources ..."
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
 	    -o8 addphsp_$(my_machine).mortlst
+
+clean:
+	$(REMOVE) mortjob.mortran addphsp_$(my_machine).f addphsp_$(my_machine).mortlst
+	$(REMOVE) $(EGS_BINDIR)addphsp$(EXE)
+
+.PHONY: clean
