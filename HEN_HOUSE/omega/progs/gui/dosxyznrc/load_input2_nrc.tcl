@@ -518,7 +518,7 @@ proc read_input {} {
 
       set data [get_val $data arr 0]
       set imuphspout $arr(0)
-      if {$imuphspout>1 || $imusphspout<0} { set imuphspout 0 }
+      if {$imuphspout>1 || $imuphspout<0} { set imuphspout 0 }
  	  #now get the actual settings
       for {set i 1} {$i<=$numsets} {incr i} {
 	  gets $fileid data

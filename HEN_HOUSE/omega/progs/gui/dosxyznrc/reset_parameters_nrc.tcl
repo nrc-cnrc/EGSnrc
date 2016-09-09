@@ -177,6 +177,7 @@ proc reset_parameters { } {
     set the_beam_code {}
     set the_input_file {}
     set the_pegs_file {}
+    set the_vcu_code {}
 
     set values(21) {}
     set nbit1 {}
