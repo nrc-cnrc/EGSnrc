@@ -474,12 +474,7 @@ ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-1)["particle in second air region"
          ]
          IF(DIST <= USTEP ) ["particle to be moved to region boundary
             USTEP = DIST;
-            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
-               CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
-            ]
-            ELSE ["still in CM
-               IRNEW = IRNEW_$PYRAMIDS; "new region number"
-            ]
+            IRNEW = IRNEW_$PYRAMIDS; "new region number"
          ]
       ] " end of w < 0"
       ELSE[ " w =0"
@@ -568,12 +563,7 @@ ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-1)["particle in second air region"
          ]
          IF(DIST <= USTEP ) ["particle to be moved to region boundary
             USTEP = DIST;
-            IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
-               CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
-            ]
-            ELSE ["still in CM
-               IRNEW = IRNEW_$PYRAMIDS; "new region number"
-            ]
+            IRNEW = IRNEW_$PYRAMIDS; "new region number"
          ]
       ] " end of w < 0"
       ELSE [    "w=0.0"
@@ -647,12 +637,7 @@ ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS) ["particle in bar region"
       ]
       IF(DIST <= USTEP ) ["particle to be moved to region boundary
          USTEP = DIST;
-         IF (IRNEW_$PYRAMIDS=1) ["leaving CM through front"
-            CALL WHERE_AM_I(ICM_$PYRAMIDS,-1);
-         ]
-         ELSE ["still in CM
-            IRNEW = IRNEW_$PYRAMIDS; "new region number"
-         ]
+         IRNEW = IRNEW_$PYRAMIDS; "new region number"
       ]
    ] " end of w < 0"
    ELSE[ " w =0"
