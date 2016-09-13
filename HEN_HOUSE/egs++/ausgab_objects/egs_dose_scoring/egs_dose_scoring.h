@@ -205,6 +205,10 @@ public:
     };
 
     void setApplication(EGS_Application *App);
+    
+    void getNumberRegions(const string &str, vector<int> &regs);
+    
+    void getLabelRegions(const string &str, vector<int> &regs);
 
     void reportResults();
 
@@ -236,6 +240,9 @@ public:
     void setDoseRegions(const vector <int> d_reg) {
         d_region=d_reg;
     };
+    void setDoseRegions(const string d_reg) {
+        d_regionString=d_reg;
+    };
     void setMediumScoring(bool flag) {
         score_medium_dose=flag;
     };
@@ -258,6 +265,7 @@ protected:
     EGS_ScoringArray *doseM;  //!< Scoring dose in each medium
     vector <EGS_Float>  vol_list; // Input list of region volumes
     vector <int> d_region;        // Input list of dose scoring regions  d_reg[i] = ir
+    string d_regionString;
     vector <int> d_reg_index;     // list index for dose scoring regions d_reg_index[ir]= 0..d_reg.size()-1
     vector <EGS_Float>  vol;      // geometrical region volumes
     EGS_Float norm_u;
