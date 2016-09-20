@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#  EGSnrc DOSXYZnrc graphical user interface: pegsless functions
+#  EGSnrc BEAMnrc graphical user interface: pegsless functions
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -56,6 +56,127 @@
 #  of the directional bremsstrahlung splitting variance reduction technique.
 #
 ###############################################################################
+
+
+array set element_names {
+  1  H
+  2  He
+  3  Li
+   4 Be
+  5  B
+  6  C
+  7  N
+  8  O
+  9  F
+  10  Ne
+  11  Na
+  12  Mg
+  13  Al
+  14  Si
+  15  P
+  16  S
+  17  Cl
+  18  Ar
+  19  K
+  20  Ca
+  21  Sc
+  22  Ti
+  23  V
+  24  Cr
+  25  Mn
+   26 Fe
+   27 Co
+   28 Ni
+   29 Cu
+   30 Zn
+   31 Ga
+   32 Ge
+   33 As
+   34 Se
+   35 Br
+   36 Kr
+   37 Rb
+   38 Sr
+   39 Y
+   40 Zr
+   41 Nb
+   42 Mo
+   43 Tc
+   44 Ru
+   45 Rh
+   46 Pd
+   47 Ag
+   48 Cd
+   49 In
+   50 Sn
+   51 Sb
+   52 Te
+   53 I
+   54 Xe
+   55 Cs
+   56 Ba
+   57 La
+   58 Ce
+   59 Pr
+   60 Nd
+   61 Pm
+   62 Sm
+   63 Eu
+   64 Gd
+   65 Tb
+   66 Dy
+   67 Ho
+   68 Er
+   69 Tm
+   70 Yb
+   71 Lu
+   72 Hf
+   73 Ta
+   74 W
+   75 Re
+    76 Os
+  77  Ir
+  78  Pt
+  79  Au
+  80  Hg
+  81  Tl
+  82  Pb
+  83  Bi
+  84  Po
+  85  At
+  86  Rn
+  87  Fr
+  88  Ra
+  89  Ac
+  90  Th
+  91  Pa
+  92  U
+  93  Np
+  94  Pu
+  95  Am
+  96  Cm
+  97  Bk
+  98  Cf
+  99  Es
+  100  Fm
+}
+
+set med_type(0) "Compound"
+set med_type(1) "Mixture"
+set med_type(2) "Element"
+
+set rho_units(0) "g/cm^3" 
+set rho_units(1) "kg/m^3"
+
+set df_searchopt(0) "EGS_HOME"
+set df_searchopt(1) "HEN_HOUSE"
+
+set label_pz_or_rhoz(0) "Stoichiometric index"
+set label_pz_or_rhoz(1) "Fraction by weight"
+set label_pz_or_rhoz(2) ""
+
+#below only used by pegsless stuff--probably should be used elsewhere
+set med_per_column 40
 
 proc define_pegsless_media { } {
     global matfilename helvfont env egs_home media ae ap ue up ninpmed
@@ -119,7 +240,7 @@ proc define_pegsless_media { } {
     pack .pegsless.sep2 -fill x
 
     frame .pegsless.def
-    label .pegsless.def.text -text "Add/Modify media" -font $helvfont
+    label .pegsless.def.text -text "Add/Modify media in .egsinp file" -font $helvfont
     pack .pegsless.def.text
     frame .pegsless.def.grid -bd 4
     label .pegsless.def.grid.l0 -text "medium name:"
@@ -215,7 +336,6 @@ proc read_matfile {} {
             close $file
             set nmed [expr $i-1]
             set nmatmed $nmed
-#            destroy .pegslessmessage
         }
 }
 
@@ -278,6 +398,7 @@ global medium nmed matfilename helvfont pegs
 proc add_modify_med {} {
 
 global inpmedium ninpmed elements ipz pz_or_rhoz iaprim iunrst density_file rho gasp nelem
+global rho_scale is_gas dcf_specified element_names
 
    set w .pegsless.def.grid
 
@@ -290,8 +411,11 @@ global inpmedium ninpmed elements ipz pz_or_rhoz iaprim iunrst density_file rho 
    set density_file($ninpmed) {}
    set rho($ninpmed) {}
    set nelem($ninpmed) 1
-   set elements($ninpmed,1) {}
+   set elements($ninpmed,1) $element_names(1) 
    set ipz($ninpmed) 0
+   set rho_scale($ninpmed) 0
+   set is_gas($ninpmed) 0
+   set dcf_specified($ninpmed) 0
 
    entry $w.name$ninpmed -textvariable inpmedium($ninpmed)
    button $w.edit$ninpmed -text "Edit" -command "edit_medium $ninpmed"
@@ -317,41 +441,52 @@ global ninpmed nmed
 proc edit_medium { mednum } {
 
    global elements ipz pz_or_rhoz iaprim iunrst density_file rho gasp nelem
-   global hen_house envi dfile_temp inpmedium sterncid
+   global hen_house envi dfile_temp inpmedium sterncid element_names 
+   global med_per_column med_type is_gas rho_scale dcf_specified
+   global df_searchopt label_pz_or_rhoz rho_units egs_home
+   global df_area
 
    toplevel .define$mednum -bd 5
    wm title .define$mednum "Define $inpmedium($mednum)"
 
+   label .define$mednum.title -text "Define $inpmedium($mednum)"
+
+   pack .define$mednum.title
+
    frame .define$mednum.u
 
    frame .define$mednum.u.l
+
+   label .define$mednum.u.l.title -text "Medium composition:" -pady 5
+   pack .define$mednum.u.l.title -anchor w
+
    frame .define$mednum.u.l.grid
 
-   label .define$mednum.u.l.grid.l0 -text "Elements"
-
-   set label_pz_or_rhoz(0) "No. of atoms"
-   set label_pz_or_rhoz(1) "Mass fractions"
+   label .define$mednum.u.l.grid.l1 -text "Elements"
 
    #first set up the column headers
 
-   menubutton .define$mednum.u.l.grid.l1 -text $label_pz_or_rhoz($ipz($mednum)) -menu .define$mednum.u.l.grid.l1.m \
-    -bd 1 -relief raised -indicatoron 1
-   menu .define$mednum.u.l.grid.l1.m
-   for {set i 0} {$i<2} {incr i} {
-      .define$mednum.u.l.grid.l1.m add command -label $label_pz_or_rhoz($i) -command\
-       "set ipz($mednum) $i; .define$mednum.u.l.grid.l1 configure -text {$label_pz_or_rhoz($i)}"
-   }
+   label .define$mednum.u.l.grid.l2 -text $label_pz_or_rhoz($ipz($mednum)) 
 
-   grid configure .define$mednum.u.l.grid.l0 -row 0 -column 0
    grid configure .define$mednum.u.l.grid.l1 -row 0 -column 1
+   grid configure .define$mednum.u.l.grid.l2 -row 0 -column 2
 
 
    for {set i 1} {$i<=$nelem($mednum)} {incr i} {
-      entry .define$mednum.u.l.grid.elem$i -textvariable elements($mednum,$i)
+
+      label .define$mednum.u.l.grid.ind$i -text $i
+
+      menubutton .define$mednum.u.l.grid.elem$i -text $elements($mednum,$i) -menu\
+                 .define$mednum.u.l.grid.elem$i.m -bd 1 -relief raised -indicatoron 1 -width 10
+      menu .define$mednum.u.l.grid.elem$i.m -tearoff no
+      for {set j 1} {$j <= [array size element_names]} {incr j} {
+          .define$mednum.u.l.grid.elem$i.m add command -label $element_names($j) -columnbreak [expr $j % $med_per_column == 0] -command ".define$mednum.u.l.grid.elem$i configure -text $element_names($j); set elements($mednum,$i) $element_names($j)"
+      }
       entry .define$mednum.u.l.grid.pzorrhoz$i -textvariable pz_or_rhoz($mednum,$i)
 
-      grid configure .define$mednum.u.l.grid.elem$i -row $i -column 0
-      grid configure .define$mednum.u.l.grid.pzorrhoz$i -row $i -column 1
+      grid configure .define$mednum.u.l.grid.ind$i -row $i -column 0 
+      grid configure .define$mednum.u.l.grid.elem$i -row $i -column 1
+      grid configure .define$mednum.u.l.grid.pzorrhoz$i -row $i -column 2
    }
 
    pack .define$mednum.u.l.grid
@@ -363,140 +498,464 @@ proc edit_medium { mednum } {
    pack .define$mednum.u.l.b.adelem .define$mednum.u.l.b.delelem -side left
 
    pack .define$mednum.u.l.b
-
+  
    #now set up a right frame with the other media options
 
    frame .define$mednum.u.r
 
-   #rho
-   frame .define$mednum.u.r.rho -bd 4
-   button .define$mednum.u.r.rho.help -text "?" -command "help rho"
-   label .define$mednum.u.r.rho.lab -text "rho (g/cm^3)"
-   entry .define$mednum.u.r.rho.val -textvariable rho($mednum)
-   pack .define$mednum.u.r.rho.help .define$mednum.u.r.rho.lab .define$mednum.u.r.rho.val -side left
+   # medium type and rho
+   frame .define$mednum.u.r.top
 
-   #iunrst
-   set label_sp(0) "restricted total"
-   set label_sp(1) "unrestricted collision"
-   set label_sp(2) "unrestricted collision and radiative"
-   set label_sp(3) "unrestricted collision and restricted radiative"
-   set label_sp(4) "restricted collision and unrestricted radiative"
-   set label_sp(5) "unrestricted radiative"
-
-   frame .define$mednum.u.r.sp -bd 4
-   button .define$mednum.u.r.sp.help -text "?" -command "help iunrst"
-   label .define$mednum.u.r.sp.lab -text "stopping power type:"
-   menubutton .define$mednum.u.r.sp.opt -text $label_sp($iunrst($mednum)) -menu .define$mednum.u.r.sp.opt.m \
-     -bd 1 -relief raised -indicatoron 1
-   menu .define$mednum.u.r.sp.opt.m
-   for {set i 0} {$i<6} {incr i} {
-      .define$mednum.u.r.sp.opt.m add command -label $label_sp($i) -command\
-       "set iunrst($mednum) $i; .define$mednum.u.r.sp.opt configure -text {$label_sp($i)}"
+   #medium type menu
+   frame .define$mednum.u.r.top.type
+   frame .define$mednum.u.r.top.type.top
+   label .define$mednum.u.r.top.type.top.title -text "Medium type:"
+   button .define$mednum.u.r.top.type.top.help -text "?" -command "help med_type"
+   pack .define$mednum.u.r.top.type.top.help .define$mednum.u.r.top.type.top.title -side left -anchor w
+   frame .define$mednum.u.r.top.type.bot
+   menubutton .define$mednum.u.r.top.type.bot.mb -text $med_type($ipz($mednum))\
+     -menu .define$mednum.u.r.top.type.bot.mb.m -bd 1 -relief raised -indicatoron 1
+   menu .define$mednum.u.r.top.type.bot.mb.m -tearoff no
+   for {set j 0} {$j < 3} {incr j} {
+          .define$mednum.u.r.top.type.bot.mb.m add command -label $med_type($j) -command "set_medium_type $mednum $j"
    }
-   pack .define$mednum.u.r.sp.help .define$mednum.u.r.sp.lab .define$mednum.u.r.sp.opt -side left
+   pack .define$mednum.u.r.top.type.bot.mb
+   pack .define$mednum.u.r.top.type.top .define$mednum.u.r.top.type.bot -side top -anchor w 
+
+   #rho
+   frame .define$mednum.u.r.top.rho
+   frame .define$mednum.u.r.top.rho.top
+   label .define$mednum.u.r.top.rho.top.title -text "Mass density:"
+   button .define$mednum.u.r.top.rho.top.help -text "?" -command "help rho"
+   pack .define$mednum.u.r.top.rho.top.help .define$mednum.u.r.top.rho.top.title -side left -anchor w
+   frame .define$mednum.u.r.top.rho.bot
+   entry .define$mednum.u.r.top.rho.bot.val -textvariable rho($mednum)
+   menubutton .define$mednum.u.r.top.rho.bot.scale -text $rho_units($rho_scale($mednum))\
+      -menu .define$mednum.u.r.top.rho.bot.scale.m -relief raised -indicatoron 1
+   menu .define$mednum.u.r.top.rho.bot.scale.m -tearoff no
+   for {set j 0} {$j < 2} {incr j} {
+      .define$mednum.u.r.top.rho.bot.scale.m add command -label $rho_units($j)\
+         -command "set rho_scale($mednum) $j; .define$mednum.u.r.top.rho.bot.scale configure -text $rho_units($j)"
+   }
+   pack .define$mednum.u.r.top.rho.bot.val .define$mednum.u.r.top.rho.bot.scale -side left -anchor w
+   pack .define$mednum.u.r.top.rho.top .define$mednum.u.r.top.rho.bot -side top -anchor w
+
+   pack .define$mednum.u.r.top.type .define$mednum.u.r.top.rho -side left -padx 5
+
+   #other medium options
+   frame .define$mednum.u.r.bot
+   label .define$mednum.u.r.bot.title -text "Options:"
+   pack .define$mednum.u.r.bot.title -pady 5 -anchor w
+
+   #option to input density correction file
+   frame .define$mednum.u.r.bot.dcf
+   button .define$mednum.u.r.bot.dcf.help -text "?" -command "help icru_density"
+   checkbutton .define$mednum.u.r.bot.dcf.chk -variable dcf_specified($mednum) -command " use_dcf $mednum"
+   label .define$mednum.u.r.bot.dcf.lab -text "ICRU density correction"
+   pack .define$mednum.u.r.bot.dcf.help .define$mednum.u.r.bot.dcf.chk .define$mednum.u.r.bot.dcf.lab -side left -anchor w
 
    #iaprim
-   set label_iaprim(0) "KM"
-   set label_iaprim(1) "NRC"
-   set label_iaprim(2) "none"
-
-   frame .define$mednum.u.r.iaprim -bd 4
-   button .define$mednum.u.r.iaprim.help -text "?" -command "help iaprim"
-   label .define$mednum.u.r.iaprim.lab -text "bremsstrahlung correction:"
-   menubutton .define$mednum.u.r.iaprim.opt -text $label_iaprim($iaprim($mednum)) -menu .define$mednum.u.r.iaprim.opt.m \
-     -bd 1 -relief raised -indicatoron 1
-   menu .define$mednum.u.r.iaprim.opt.m
-   for {set i 0} {$i<3} {incr i} {
-      .define$mednum.u.r.iaprim.opt.m add command -label $label_iaprim($i) -command\
-       "set iaprim($mednum) $i; .define$mednum.u.r.iaprim.opt configure -text {$label_iaprim($i)}"
-   }
-   pack .define$mednum.u.r.iaprim.help .define$mednum.u.r.iaprim.lab .define$mednum.u.r.iaprim.opt -side left
+   frame .define$mednum.u.r.bot.iaprim
+   button .define$mednum.u.r.bot.iaprim.help -text "?" -command "help iaprim"
+   checkbutton .define$mednum.u.r.bot.iaprim.chk -variable iaprim($mednum)
+   label .define$mednum.u.r.bot.iaprim.lab -text "ICRU radiative stopping power"
+   pack .define$mednum.u.r.bot.iaprim.help .define$mednum.u.r.bot.iaprim.chk .define$mednum.u.r.bot.iaprim.lab -side left -anchor w
 
    #gasp
-   frame .define$mednum.u.r.gasp -bd 4
-   button .define$mednum.u.r.gasp.help -text "?" -command "help gasp"
-   label .define$mednum.u.r.gasp.lab -text "gas pressure (atm.)"
-   entry .define$mednum.u.r.gasp.val -textvariable gasp($mednum)
-   pack .define$mednum.u.r.gasp.help .define$mednum.u.r.gasp.lab .define$mednum.u.r.gasp.val -side left
+   frame .define$mednum.u.r.bot.gasp 
+   frame .define$mednum.u.r.bot.gasp.l
+   button .define$mednum.u.r.bot.gasp.l.help -text "?" -command "help gasp"
+   checkbutton .define$mednum.u.r.bot.gasp.l.chk -variable is_gas($mednum) \
+     -command "enable_disable_gasp_input $mednum"
+   label .define$mednum.u.r.bot.gasp.l.lab -text "Medium is a gas"
+   pack .define$mednum.u.r.bot.gasp.l.help .define$mednum.u.r.bot.gasp.l.chk .define$mednum.u.r.bot.gasp.l.lab -side left
+   frame .define$mednum.u.r.bot.gasp.r
+   label .define$mednum.u.r.bot.gasp.r.lab -text "    gas pressure (atm.)"
+   entry .define$mednum.u.r.bot.gasp.r.val -textvariable gasp($mednum)
+   pack .define$mednum.u.r.bot.gasp.r.lab .define$mednum.u.r.bot.gasp.r.val -side left
+   pack .define$mednum.u.r.bot.gasp.l .define$mednum.u.r.bot.gasp.r -side left -anchor w
 
-   #density correction file
-   set df_area [file join $hen_house pegs4 density_corrections]
-   frame .define$mednum.u.r.df -bd 4
+   pack .define$mednum.u.r.bot.dcf .define$mednum.u.r.bot.iaprim .define$mednum.u.r.bot.gasp -side top -anchor w
 
-   label .define$mednum.u.r.df.title -text "Density correction file:"
+   #okay, now pack the upper part of this window
+   pack .define$mednum.u.r.top .define$mednum.u.r.bot -side top -pady 5 -anchor w
+   pack .define$mednum.u.l .define$mednum.u.r -side left -padx 5 -anchor w 
 
-   frame  .define$mednum.u.r.df.select
-   button .define$mednum.u.r.df.select.help -text "?" -command "help density_file"
-   entry .define$mednum.u.r.df.select.fname -textvariable density_file($mednum)
-   button .define$mednum.u.r.df.select.browse -text "Browse" -command\
-     "query_filename set_dfname $df_area * $mednum"
-   pack .define$mednum.u.r.df.select.help .define$mednum.u.r.df.select.fname .define$mednum.u.r.df.select.browse -side left
-   pack .define$mednum.u.r.df.title .define$mednum.u.r.df.select -side top
+   #density correction file input
+   set_df_area 0
+   frame .define$mednum.b
+   frame .define$mednum.b.top
+   label .define$mednum.b.top.title -text "Density correction file:"
+   button .define$mednum.b.top.help -text "?" -command "help density_file"
+   pack .define$mednum.b.top.help .define$mednum.b.top.title -side left -anchor w -pady 5
+   frame .define$mednum.b.bot
+   label .define$mednum.b.bot.lab -text "Look in"
+   menubutton .define$mednum.b.bot.searchdir -text $df_searchopt(0)\
+      -menu .define$mednum.b.bot.searchdir.m -relief raised -indicatoron 1
+   menu .define$mednum.b.bot.searchdir.m -tearoff no 
+   for {set j 0} {$j < 2} {incr j} {
+      .define$mednum.b.bot.searchdir.m add command -label $df_searchopt($j)\
+         -command "set_df_area $j; .define$mednum.b.bot.searchdir configure -text $df_searchopt($j)"
+   }
+   #default to users pegs4 area
+   entry .define$mednum.b.bot.fname -textvariable density_file($mednum) -width 25
+   bind .define$mednum.b.bot.fname <Return> "read_dcf $mednum 0"
+   button .define$mednum.b.bot.browse -text "Browse" -command\
+     "call_query_filename $mednum"
+   pack .define$mednum.b.bot.lab .define$mednum.b.bot.searchdir .define$mednum.b.bot.fname .define$mednum.b.bot.browse -side left
+   pack .define$mednum.b.top .define$mednum.b.bot -side top -anchor w
 
-   #sterncid
-   frame .define$mednum.u.r.sterncid -bd 4
-   label .define$mednum.u.r.sterncid.lab -text "sterncid"
-   button .define$mednum.u.r.sterncid.help -text "?" -command "help sterncid"
-   entry .define$mednum.u.r.sterncid.val -textvariable sterncid($mednum)
-   pack .define$mednum.u.r.sterncid.help .define$mednum.u.r.sterncid.lab .define$mednum.u.r.sterncid.val -side left
-
-   pack .define$mednum.u.r.rho .define$mednum.u.r.sp .define$mednum.u.r.iaprim .define$mednum.u.r.gasp .define$mednum.u.r.df .define$mednum.u.r.sterncid -side top -anchor w
-
-   pack .define$mednum.u.l .define$mednum.u.r -side left
+   pack .define$mednum.u .define$mednum.b -side top 
 
    #an okay button
 
-   button .define$mednum.okb -text "Done" -command "destroy .define$mednum"
-   pack .define$mednum.u .define$mednum.okb -side top
+   button .define$mednum.okb -text "Done" -command "dcf_final_check $mednum; destroy .define$mednum"
+   pack .define$mednum.okb -side top
+
+   #now update configuration based on paramters read in
+
+   #density correction file
+   if {$dcf_specified($mednum)==1} {
+     #attempt to read medium comp. and rho from dcf
+     set dcf_specified($mednum) [read_dcf $mednum 1]
+   }
+   use_dcf $mednum
+
+   #gas pressure
+   enable_disable_gasp_input $mednum 
+
 }
 
+proc set_df_area { searchind } {
+   global df_area egs_home hen_house
+
+   if {$searchind==0} {
+      set df_area [file join $egs_home pegs4 density_corrections]
+   } else {
+      set df_area [file join $hen_house pegs4 density_corrections]
+   }
+
+}
+
+proc dcf_final_check { mednum } {
+   global dcf_specified
+
+   if {$dcf_specified($mednum)==1} {
+      set dcf_specified($mednum) [read_dcf $mednum 2]
+   }
+}
+
+proc set_medium_type { mednum type } {
+   global arr label_pz_or_rhoz nelem med_type ipz
+
+   #actually set the global medium type
+   set ipz($mednum) $type
+
+   #the rest is all about configuring the display
+   #update the text on the menu button
+   .define$mednum.u.r.top.type.bot.mb configure -text $med_type($type)
+
+   #update column header in medium comp. table 
+   .define$mednum.u.l.grid.l2 configure -text $label_pz_or_rhoz($type)
+   
+   #if the user has chosen an element, delete all but the first row
+   #and disable the add and delete element button s
+   if {$ipz($mednum)==2} {
+     #first find out how many elements are in the med. comp. table
+     set data [grid size .define$mednum.u.l.grid]
+     for {set i 0} {$i<2} {incr i} {
+       set data [get_val $data arr $i]
+     }
+     set nrows $arr(1)
+     for {set i 2} {$i<=$nrows} {incr i} {
+        destroy .define$mednum.u.l.grid.ind$i 
+        destroy .define$mednum.u.l.grid.elem$i
+        destroy .define$mednum.u.l.grid.pzorrhoz$i
+     }
+     .define$mednum.u.l.b.delelem configure -state disabled 
+     .define$mednum.u.l.b.adelem configure -state disabled 
+     #also disable entry window for stoichiometric index/mass fraction
+     .define$mednum.u.l.grid.pzorrhoz1 configure -state disabled
+     #and set the no. of elements to one
+     set nelem($mednum) 1
+   } else {
+     #enable add element button and entry window for first element
+     .define$mednum.u.l.b.adelem configure -state normal
+     .define$mednum.u.l.grid.pzorrhoz1 configure -state normal
+   }
+}
+
+proc use_dcf { mednum } {
+   #enable or disable medium composition table, medium type, rho inputs
+   #density file input
+   global nelem arr dcf_specified ipz
+
+   #first find out how many elements are in the med. comp. table
+   set data [grid size .define$mednum.u.l.grid]
+   for {set i 0} {$i<2} {incr i} {
+       set data [get_val $data arr $i]
+   }
+   set nrows $arr(1)
+
+   if {$dcf_specified($mednum)==0} {
+    #not using a density correction file
+    .define$mednum.u.l.grid.l1 configure -state normal
+    .define$mednum.u.l.grid.l2 configure -state normal
+    for {set i 1} {$i<$nrows} {incr i} {
+      .define$mednum.u.l.grid.ind$i configure -state normal
+      .define$mednum.u.l.grid.elem$i configure -state normal
+      .define$mednum.u.l.grid.pzorrhoz$i configure -state normal
+    }
+    .define$mednum.u.l.b.delelem configure -state normal
+    .define$mednum.u.l.b.adelem configure -state normal
+    .define$mednum.u.r.top.type.bot.mb configure -state normal
+    .define$mednum.u.r.top.rho.bot.val configure -state normal 
+    .define$mednum.u.r.top.rho.bot.scale configure -state normal
+    .define$mednum.b.bot.lab configure -state disabled 
+    .define$mednum.b.bot.searchdir configure -state disabled 
+    .define$mednum.b.bot.fname configure -state disabled
+    .define$mednum.b.bot.browse configure -state disabled
+    #disable delete element button if there is only one element
+    if {$nelem($mednum)==1} {
+       .define$mednum.u.l.b.delelem configure -state disabled
+       if {$ipz($mednum)==2} {
+         .define$mednum.u.l.grid.pzorrhoz1 configure -state disabled
+         .define$mednum.u.l.b.adelem configure -state disabled
+       }
+    }
+   } elseif {$dcf_specified($mednum)==1} {
+    .define$mednum.u.l.grid.l1 configure -state disabled 
+    .define$mednum.u.l.grid.l2 configure -state disabled 
+    for {set i 1} {$i<$nrows} {incr i} {
+      .define$mednum.u.l.grid.ind$i configure -state disabled 
+      .define$mednum.u.l.grid.elem$i configure -state disabled 
+      .define$mednum.u.l.grid.pzorrhoz$i configure -state disabled 
+    }
+    .define$mednum.u.l.b.delelem configure -state disabled 
+    .define$mednum.u.l.b.adelem configure -state disabled 
+    .define$mednum.u.r.top.type.bot.mb configure -state disabled 
+    .define$mednum.u.r.top.rho.bot.val configure -state disabled 
+    .define$mednum.u.r.top.rho.bot.scale configure -state disabled 
+    .define$mednum.b.bot.lab configure -state normal 
+    .define$mednum.b.bot.searchdir configure -state normal 
+    .define$mednum.b.bot.fname configure -state normal 
+    .define$mednum.b.bot.browse configure -state normal 
+   }
+}
+
+proc enable_disable_gasp_input { mednum } {
+   #enable/disable gas pressure input
+   global is_gas
+  
+   if {$is_gas($mednum)==0} {
+    .define$mednum.u.r.bot.gasp.r.lab configure -state disabled
+    .define$mednum.u.r.bot.gasp.r.val configure -state disabled
+   } elseif {$is_gas($mednum)==1} {
+    .define$mednum.u.r.bot.gasp.r.lab configure -state normal
+    .define$mednum.u.r.bot.gasp.r.val configure -state normal 
+   }
+}
+    
 proc add_element { w mednum }  {
-   global nelem elements pz_or_rhoz
+   global nelem elements pz_or_rhoz element_names med_per_column
 
    incr nelem($mednum)
 
-   entry $w.elem$nelem($mednum) -textvariable elements($mednum,$nelem($mednum))
+   #default to H for now
+   set elements($mednum,$nelem($mednum)) $element_names(1)
+
+   label $w.ind$nelem($mednum) -text $nelem($mednum)
+
+   menubutton $w.elem$nelem($mednum) -text $element_names(1) -menu\
+                 $w.elem$nelem($mednum).m -bd 1 -relief raised -indicatoron 1\
+                 -width 10
+    menu $w.elem$nelem($mednum).m -tearoff no
+      for {set j 1} {$j <= [array size element_names]} {incr j} {
+          $w.elem$nelem($mednum).m add command -label $element_names($j) -columnbreak [expr $j % $med_per_column == 0] -command "$w.elem$nelem($mednum) configure -text $element_names($j); set elements($mednum,$nelem($mednum)) $element_names($j)"
+      }
    entry $w.pzorrhoz$nelem($mednum) -textvariable pz_or_rhoz($mednum,$nelem($mednum))
 
-   grid configure $w.elem$nelem($mednum) -row $nelem($mednum) -column 0
-   grid configure $w.pzorrhoz$nelem($mednum) -row $nelem($mednum) -column 1
+   grid configure $w.ind$nelem($mednum) -row $nelem($mednum) -column 0
+   grid configure $w.elem$nelem($mednum) -row $nelem($mednum) -column 1
+   grid configure $w.pzorrhoz$nelem($mednum) -row $nelem($mednum) -column 2
+
+   .define$mednum.u.l.b.delelem configure -state normal
 
 }
 
 proc subtract_element { w mednum } {
    global nelem
 
+   destroy $w.ind$nelem($mednum) 
    destroy $w.elem$nelem($mednum)
    destroy $w.pzorrhoz$nelem($mednum)
 
    incr nelem($mednum) -1
+
+   if {$nelem($mednum)==1} {
+      .define$mednum.u.l.b.delelem configure -state disabled
+   }
 }
 
+proc call_query_filename { mednum } {
+# just a procedure to call query_filename so we can use different
+# search trees
+    global density_file df_area
+   
+    query_filename set_dfname $df_area * $mednum
+} 
+
 proc set_dfname { tree filename mednum } {
-    global density_file hen_house
-    set tempdf [file join $tree $filename]
-    if [file exists $tempdf]==0 {
+    global density_file
+    #always use full directory path to dcf
+    set density_file($mednum) [file join $tree $filename]
+    if [file exists $density_file($mednum)]==0 {
         tk_dialog .error "Error" "$tempdf doesn't exist!  Please try\
                 again." error 0 OK
         return
     }
-
-    #if the user has selected a file outside of the $HEN_HOUSE/density_corrections/compounds or
-    #$HEN_HOUSE/density_corrections/elements directories, then keep the entire name
-    set dfdir1 [file join $hen_house pegs4 density_corrections compounds]
-    set dfdir2 [file join $hen_house pegs4 density_corrections elements]
-    if { [string first $dfdir1 $tempdf]<=-1 && [string first $dfdir2 $tempdf]<=-1 } {
-       set density_file($mednum) $tempdf
-    } else {
-       set sindex [string last ".density" $filename]
-       set density_file($mednum) [string range $filename 0 [expr $sindex-1]]
-    }
+    #now open and read the medium composition and rho from the dcf
+    read_dcf $mednum 0
 }
+
+proc read_dcf { mednum mode } {
+    #opens the dcf for mednum and reads the composition and density
+    #supposed to be used to return value of dcf_specified
+    global density_file nelem rho elements pz_or_rhoz ipz 
+    global arr element_names rho_units egs_home hen_house med_type
+
+    #first check to see if the file exists
+    if {[file exists $density_file($mednum)]==0} {
+       #if the file name does not include a directory separator
+       #assume the .density extension is also not included and begin
+       #searching for the file
+       set sep [file separator]
+       if {[string first sep $density_file($mednum)] < 0} {
+           set density_file($mednum) "$density_file($mednum).density"
+           #first look in EGS_HOME/pegs4/density_corrections
+           set tmp_str [file join $egs_home pegs4 density_corrections $density_file($mednum)]
+           if {[file exists $tmp_str]==0} {
+             set tmp_str [file join $egs_home pegs4 density_corrections elements $density_file($mednum)]
+               if {[file exists $tmp_str]==0} {
+                  set tmp_str [file join $egs_home pegs4 density_corrections compounds $density_file($mednum)]
+                  if {[file exists $tmp_str]==0} {
+                     #check in old density subdirectory if still there
+                      set tmp_str [file join $egs_home pegs4 density $density_file($mednum)]
+                    if {[file exists $tmp_str]==0} {
+                       #now look through HEN_HOUSE/pegs4/density_corrections
+                       set tmp_str [file join $hen_house pegs4 density_corrections elements $density_file($mednum)]
+                       if {[file exists $tmp_str]==0} {
+                          set tmp_str [file join $hen_house pegs4 density_corrections compounds $density_file($mednum)]
+                          if {[file exists $tmp_str]==0} {
+                             tk_dialog .error "Error" "The density correction file specified for this medium, $density_file($mednum), cannot be found and will not be included in media specs unless it is changed." error 0 OK
+                             return 0
+                          }
+                       }
+                    }
+                 }
+               }
+           }
+           set density_file($mednum) $tmp_str
+        }
+    }
+
+    if {[file readable $density_file($mednum)]} {
+      set dcf_id [open $density_file($mednum) "r"]
+      #now read the composition and density 
+      #get title line
+      gets $dcf_id data
+      gets $dcf_id data
+      for {set i 0} {$i < 4} {incr i} {
+        set data [get_val $data arr $i]
+      }
+      set rho($mednum) $arr(2)
+      set nelem($mednum) $arr(3)
+      gets $dcf_id data
+      for {set i 1} {$i<=$nelem($mednum)} {incr i} {
+        set data [get_val $data arr 0]
+        set data [get_val $data arr 1]
+        set elements($mednum,$i) $element_names($arr(0))
+        set pz_or_rhoz($mednum,$i) $arr(1)
+      }
+      if {$nelem($mednum)>1} {
+        set ipz($mednum) 1
+        #mixture
+      } else {
+        set ipz($mednum) 2
+        #element
+      }
+      #rho entry gets updated on its own but need to update scaling menu
+      .define$mednum.u.r.top.rho.bot.scale configure -text $rho_units(0)
+      #and now...update the composition table (even though it's disabled)
+      update_comp_table $mednum
+      #and medium type
+      .define$mednum.u.r.top.type.bot.mb configure -text $med_type($ipz($mednum))
+    } else {
+      if {$mode==0 || $mode==1} {
+     #output a warning and let user keep trying
+        tk_dialog .error "Error" "$density_file($mednum) is not readable.  Please try another file or define medium using the table." error 0 OK
+      } elseif {$mode==2} {
+        tk_dialog .error "Error" "The density correction file specified for this medium, $density_file($mednum), is not readable and will not be included in media specs unless it is changed." error 0 OK
+      }
+      return 0 
+    }
+    return 1
+} 
+
+proc update_comp_table { mednum } {
+#procedure to update the contents of the composition table
+#assumes grid has already been defined and will be "packed" after call
+#to this
+    global label_pz_or_rhoz ipz nelem elements pz_or_rhoz arr 
+    global med_per_column element_names
+
+    #title of column 2
+    .define$mednum.u.l.grid.l2 configure -text $label_pz_or_rhoz($ipz($mednum)) 
+
+    #delete current elements in table
+    #do fiddly bit below to find out current no. of rows in grid
+    set data [grid size .define$mednum.u.l.grid]
+    for {set i 0} {$i<2} {incr i} {
+       set data [get_val $data arr $i]
+    }
+    set nrows $arr(1) 
+    #do not delete first row
+    for {set i 1} {$i<$nrows} {incr i} {
+      destroy .define$mednum.u.l.grid.ind$i
+      destroy .define$mednum.u.l.grid.elem$i
+      destroy .define$mednum.u.l.grid.pzorrhoz$i 
+    }
+ 
+    #now go through and display elements and quantities of each
+    for {set i 1} {$i<=$nelem($mednum)} {incr i} {
+
+      label .define$mednum.u.l.grid.ind$i -text $i
+
+      menubutton .define$mednum.u.l.grid.elem$i -text $elements($mednum,$i) -menu\
+                 .define$mednum.u.l.grid.elem$i.m -bd 1 -relief raised -indicatoron 1 -width 10
+      menu .define$mednum.u.l.grid.elem$i.m -tearoff no
+      for {set j 1} {$j <= [array size element_names]} {incr j} {
+          .define$mednum.u.l.grid.elem$i.m add command -label $element_names($j) -columnbreak [expr $j % $med_per_column == 0] -command ".define$mednum.u.l.grid.elem$i configure -text $element_names($j); set elements($mednum,$i) $element_names($j)"
+      }
+      entry .define$mednum.u.l.grid.pzorrhoz$i -textvariable pz_or_rhoz($mednum,$i)
+
+      grid configure .define$mednum.u.l.grid.ind$i -row $i -column 0
+      grid configure .define$mednum.u.l.grid.elem$i -row $i -column 1
+      grid configure .define$mednum.u.l.grid.pzorrhoz$i -row $i -column 2
+
+      #and disable these
+      .define$mednum.u.l.grid.ind$i configure -state disabled 
+      .define$mednum.u.l.grid.elem$i configure -state disabled 
+      .define$mednum.u.l.grid.pzorrhoz$i configure -state disabled 
+   }
+}
+       
 
 proc write_pegsless_data { fileid } {
 #called from new_create_file_nrc
     global pegsless_on_inp is_pegsless matfilename ae ap ue up ninpmed inpmedium
     global nelem elements pz_or_rhoz ipz rho iunrst iaprim gasp density_file sterncid
+    global is_gas dcf_specified rho_units rho_scale
 
     #don't output anything if the user is not calling for pegsless run and
     #no pegsless data was read in
@@ -515,6 +974,11 @@ proc write_pegsless_data { fileid } {
          for {set i 1} {$i<=$ninpmed} {incr i} {
              puts $fileid " "
              puts $fileid " :start $inpmedium($i):"
+             if {$dcf_specified($i)==1 && $density_file($i)!=""} {
+                #composition and rho specified by density file
+                puts $fileid " density correction file= $density_file($i)"
+             } else {
+               #specify composition and rho explicitly
              if {$nelem($i)>0} {
                set str " elements="
                for {set j 1} {$j<=$nelem($i)} {incr j} {
@@ -522,6 +986,7 @@ proc write_pegsless_data { fileid } {
                   if {$j<$nelem($i)} { set str "$str," }
                }
                puts $fileid $str
+               if {$ipz($i)!=2} {
                if {$ipz($i)==0} {
                  set str " number of atoms="
                } elseif {$ipz($i)==1} {
@@ -532,42 +997,28 @@ proc write_pegsless_data { fileid } {
                   if {$j<$nelem($i)} { set str "$str," }
                }
                puts $fileid $str
+               }
              }
              if {$rho($i)!=""} {
-               puts $fileid " rho= $rho($i)"
+               set rho_mult 1
+               if { $rho_scale($i)==1} { set rho_mult 0.001 }
+               puts $fileid " rho= [expr $rho_mult*$rho($i)]"
              }
-             if {$iunrst($i)!=""} {
-               if {$iunrst($i)==0} {
-                 puts $fileid " stopping powers= restricted total"
-               } elseif {$iunrst($i)==1} {
-                 puts $fileid " stopping powers= unrestricted collision"
-               } elseif {$iunrst($i)==2} {
-                 puts $fileid " stopping powers= unrestricted collision and radiative"
-               } elseif {$iunrst($i)==3} {
-                 puts $fileid " stopping powers= unrestricted collision and restricted radiative"
-               } elseif {$iunrst($i)==4} {
-                 puts $fileid " stopping powers= restricted collision and unrestricted radiative"
-               } elseif {$iunrst($i)==5} {
-                 puts $fileid " stopping powers= unrestricted radiative"
-               }
              }
              if {$iaprim($i)!=""} {
                if {$iaprim($i)==0} {
                  puts $fileid " bremsstrahlung correction= KM"
                } elseif {$iaprim($i)==1} {
                  puts $fileid " bremsstrahlung correction= NRC"
-               } elseif {$iaprim($i)==2} {
-                 puts $fileid " bremsstrahlung correction= none"
-               }
+               } 
              }
-             if {$gasp($i)!=""} {
-               puts $fileid " gas pressure= $gasp($i)"
-             }
-             if {$density_file($i)!=""} {
-               puts $fileid " density correction file= $density_file($i)"
-             }
-             if {$sterncid($i)!=""} {
-               puts $fileid " sterncid= $sterncid($i)"
+             if {$is_gas($i)==1} {
+                if {$gasp($i)>0.0} {
+                   puts $fileid " gas pressure= $gasp($i)"
+                } else {
+                   #default to 1 atm
+                   puts $fileid " gas pressure= 1.0"
+                }
              }
              puts $fileid " :stop $inpmedium($i):"
          }
@@ -582,7 +1033,7 @@ proc get_pegsless_inputs { fileid } {
 
 global pegsless_on_inp ae ue ap up matfilename ninpmed inpmedium nelem elements
 global ipz pz_or_rhoz rho iunrst iaprim gasp density_file
-global inp_file arr is_pegsless sterncid
+global inp_file arr is_pegsless sterncid is_gas rho_scale dcf_specified
 
     #start from the top of the file
     catch {close $fileid}
@@ -668,6 +1119,9 @@ global inp_file arr is_pegsless sterncid
                   set sterncid($ninpmed) {}
                   set nelem($ninpmed) 0
                   set ipz($ninpmed) 0
+                  set rho_scale($ninpmed) 0
+                  set is_gas($ninpmed) 0
+                  set dcf_specified($ninpmed) 0
                   #find medium name
                   set data [string range $data [expr $mindex+6] [expr [string last ":" $data]-1]]
                   set data [string trimleft $data]
@@ -691,16 +1145,16 @@ global inp_file arr is_pegsless sterncid
                                set data [string trimright $data]
                                if {$j==0} {
                                 #elements
-                                set nelem($ninpmed) 0
                                 while {$nelem($ninpmed) <= $max_elem} {
                                    incr nelem($ninpmed)
                                    set data [get_str_arr $data arr 0]
                                    set elements($ninpmed,$nelem($ninpmed)) $arr(0)
                                    if {$data==""} break
                                 }
+                                if {$nelem($ninpmed)==1} { set ipz($ninpmed) 2}
                                } elseif {$j==1} {
                                 #no of atoms
-                                set ipz($ninpmed) 0
+                                if {$nelem($ninpmed)>1} {set ipz($ninpmed) 0}
                                 set k 0
                                 while {$k <= $max_elem} {
                                    incr k
@@ -710,7 +1164,7 @@ global inp_file arr is_pegsless sterncid
                                 }
                                } elseif {$j==2} {
                                 #rhoz
-                                set ipz($ninpmed) 1
+                                if {$nelem($ninpmed)>1} { set ipz($ninpmed) 1}
                                 set k 0
                                 while {$k <= $max_elem} {
                                    incr k
@@ -745,14 +1199,19 @@ global inp_file arr is_pegsless sterncid
                                 } elseif {[string first "nrc" $data]>-1} {
                                    set iaprim($ninpmed) 1
                                 } elseif {[string first "none" $data]>-1} {
-                                   set iaprim($ninpmed) 2
+                                   #gui will treat this as km 
+                                   set iaprim($ninpmed) 0
                                 }
                                } elseif {$j==6} {
                                 #gasp
                                 set gasp($ninpmed) $data
+                                if {$gasp($ninpmed)>0} { set is_gas($ninpmed) 1}
                                } elseif {$j==7} {
                                 #density correction file
                                 set density_file($ninpmed) $data
+                                if { $density_file($ninpmed) != ""} {
+                                   set dcf_specified($ninpmed) 1
+                                }
                                } elseif {$j==8} {
                                 #sterncid
                                 set sterncid($ninpmed) $data
@@ -783,23 +1242,18 @@ global inp_file arr is_pegsless sterncid
 }
 
 proc add_inp_media {} {
-global ninpmed inpmedium nmatmed medium nmed pegs nelem
+global ninpmed inpmedium nmatmed medium nmed pegs
 
-# not sure what below did
-#  set nmed_save $nmed
-#  for {set i 1} {$i<= [expr $nmatmed+$ninpmed-$nmed_save]} {incr i} {
-#     incr nmed
-#     set pegs($nmed) $inpmedium($ninpmed)
-#  }
-
-   for {set i 1} {$i<=$ninpmed} {incr i} {
+  for {set i 1} {$i<=$ninpmed} {incr i} {
      incr nmed
      set pegs($nmed) $inpmedium($i)
   }
+
 }
 
 proc init_pegsless_variables {} {
-global is_pegsless matfilename nmatmed ninpmed pegsless_on_inp ae ue ap up
+global is_pegsless matfilename nmatmed ninpmed
+global pegsless_on_inp ae ue ap up
 #just initialize a couple of required global variables
 
    set is_pegsless 0
@@ -859,10 +1313,26 @@ Note that the browser button starts in your $EGS_HOME/pegs4/data directory.  It 
 your own material data file, then it will be stored there.
 }
 
+set help_text(med_type) {
+Use this menu to select how the medium will be specified.  If the medium is specified\
+using the stoichiometric coefficient of each constituent element, select 'Compound.'\
+To specify the medium using the fraction by weight of each element, select 'Mixture.'\
+The 'Element' setting allows specification of a medium consisting of a single element.\
+If you switch to the 'Element' setting after 'Mixture' or 'Compound,' any\
+(disabled) stoichiometric coefficient or fraction by weight associated with the\
+first element becomes meaningless.
+
+Note that if a valid ICRU density correction file is used, the medium composition\
+is read from the file, and the option to specify medium type is disabled.  It will,\
+however, indicate whether the medium read in from a density correction file is an\
+element or a mixture (density correction files do not specify composition by\
+stoichiometric coefficient, so 'Compound' will never be indicated in this case).
+} 
+
 set help_text(rho) {
-RHO is the density of the medium in g/cm^3.  It is essential for specification of a medium, and if it is not\
-found in the .egsinp file or in the material data file, then it will be read from the density correction\
-file, if specified.
+This is the density of the medium in g/cm^3 or kg/m^3.  If a valid density correction\
+file is used, then this entry box will be disabled and display the density as\
+read from the density correction file.
 }
 
 set help_text(iunrst) {
@@ -886,35 +1356,48 @@ and collision events are not simulated.
 }
 
 set help_text(iaprim) {
-IAPRIM
-
-The user can select which type of correction to apply to calculated bremsstrahlung cross-sections:
-1. Koch and Motz (KM) empirical corrections (IAPRIM=0, the default).
-2. NRC corrections based on NIST/ICRU (IAPRIM=1).  These corrections are read from the file\
-$HEN_HOUSE/pegs4/aprime.data
-3. None (IAPRIM=2)
+Check this box to apply NRC corrections (based on NIST/ICRU) to calculated\
+bremsstrahlung cross-sections.  Otherwise, Koch and Motz (KM) empirical\
+corrections are applied.
 }
 
 set help_text(gasp) {
-GASP
-
-This is the gas pressure (in atm.) of the media.  Only used if the medium is a gas, otherwise it defaults to 0.0.
+Check this box if the medium is a gas.  This will enable you to specify\
+a gas pressure for the medium (atm.).  If this is selected and the gas pressure\
+specified is blank or <=0, then a default gas pressure of 1 atm. is used.
 }
 
 set help_text(density_file) {
-The user has the option of entering the name of a density correction file containing density effects which,\
-when applied to the calculated collision stopping powers, result in agreement with the collision stopping\
+This panel is enabled if you have selected the 'ICRU density correction' checkbox.\
+You then have the option of entering the name of a density correction file containing density effects which,\
+when applied to the calculated collision stopping powers, results in agreement with the collision stopping\
 powers published in ICRU37.  This is recommended for precise dosimetry work.
 
-If neither the directory path nor the the ".density" extension is specified, then it is assumed that\
-the density correction file exists in either the $HEN_HOUSE/pegs4/density_corrections/compounds directory\
-or the $HEN_HOUSE/pegs4/density_corrections/elements directory.
-Note that the browser starts in the directory $HEN_HOUSE/pegs4/density_corrections, from\
-which you can enter either the "elements" or "compounds" directory to search the density correction files\
-supplied with the distribution.
+You have the option of browsing for the density correction file in either your\
+$EGS_HOME/pegs4/density_corrections directory (default) or in the $HEN_HOUSE/pegs4/density_corrections directory\
+or explicitly entering the density correction file (with full path name).
 
-If you have not specified the essential composition of your medium (elements, fraction of each element, and
-medium density), then it can be inferred from the density correction file, if supplied.
+Once a valid density correction file has been entered, the medium composition\
+and density will be read from this file.  Composition and density will be displayed\
+in the disabled 'Medium composition' grid and 'Mass density' entry box.
+
+If a medium is saved with an invalid density correction file (i.e. one that cannot\
+be read) then a warning will be issued and, unless another, valid density correction\
+file is specified, the 'ICRU density correction' option will be unchecked and\
+whatever you have entered in the 'Medium composition' table and 'Mass density' entry box\
+will be used to specify medium composition and density.
+
+}
+
+set help_text(icru_density) {
+Check this box if you want to enable the option to enter the name of a file containing\
+density correction effects which, when applied to the calculated collision stopping powers,\
+results in agreement with the collision stopping powers published in ICRU37.\
+This is recommended for precise dosimetry work. 
+
+Checking this box will disable the 'Medium composition' table and 'Mass density'\
+entry box since the medium composition will be read from the specified density\
+correction file (see below).
 }
 
 set help_text(sterncid) {
