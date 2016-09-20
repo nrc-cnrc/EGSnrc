@@ -122,10 +122,13 @@ proc get_val { data varname i} {
     # procedure to get a number, with a way to deal with a comment with no comma
     global $varname
 
+    set data [string trimright $data]
+    set data [string trimleft $data]
+
     set indx [string first , $data]
     if { $indx<0 } {
-	# There was no comma found.  Trim whitespace off the end of the line.
-	set data [string trimright $data]
+	# There was no comma found.  Trim whitespace off the ends of the line.
+        
 	# Now see if there's a space anywhere in the remaining string.
 	if [string first " " $data]>0 {
 	    # A space was found.  Set indx to that position.
@@ -202,11 +205,14 @@ proc read_input {} {
     global thphidef angfixed ang1 ang2 pang ivary numthphi nang
     global numsets nset iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
     global iphant imuphspout
+    global alpha beta
     global level ibcmp_min ibcmp_max iphter_min iphter_max
     global iraylr_min iraylr_max iedgfl_min iedgfl_max got_egsnrc_input
     global i_dbs r_dbs ssd_dbs z_dbs the_beam_code the_input_file the_pegs_file
     global the_vcu_code the_phsp_file the_vcu_input_file i_MLC
     global esplit
+    global nfile phsp_fn nrcycl22 i22_dbs z22_dbs ssd22_dbs r22_dbs
+    global narc gangmin gangmax cang parc ifile
 
     # read an input file
 
@@ -522,7 +528,7 @@ proc read_input {} {
  	  #now get the actual settings
       for {set i 1} {$i<=$numsets} {incr i} {
 	  gets $fileid data
-	  for {set j 0} {$j < 8} {incr j} {
+	  for {set j 0} {$j < 10} {incr j} {
               set data [get_val $data arr $j]
 	  }
 	  set iso1($i) $arr(0)
@@ -533,6 +539,8 @@ proc read_input {} {
 	  set ang3($i) $arr(5)
 	  set dsource($i) $arr(6)
 	  set muI($i) $arr(7)
+          set alpha($i) $arr(8)
+          set beta($i) $arr(9)
       }
     } elseif {$isource==21} {
 	#first get number of settings
@@ -555,7 +563,7 @@ proc read_input {} {
 	#now get the actual settings
       for {set i 1} {$i<=$numsets} {incr i} {
 	  gets $fileid data
-	  for {set j 0} {$j < 8} {incr j} {
+	  for {set j 0} {$j < 10} {incr j} {
               set data [get_val $data arr $j]
 	  }
 	  set iso1($i) $arr(0)
@@ -566,7 +574,44 @@ proc read_input {} {
 	  set ang3($i) $arr(5)
 	  set dsource($i) $arr(6)
 	  set muI($i) $arr(7)
+          set alpha($i) $arr(8)
+          set beta($i) $arr(9)
       }
+    } elseif {$isource==22} {
+      for {set i 0} {$i<4} {incr i} {
+        set data [get_val $data srcopts $i]
+      }
+      #now get other inputs 
+      for {set i 0} {$i<3} {incr i} {
+        set data [get_val $data arr $i]
+      }
+      set narc $arr(0)
+      set nfile $arr(1)
+      set esplit $arr(2)
+      #get phsp source details
+      for {set i 1} {$i<=$nfile} {incr i} {
+        gets $fileid spec_file
+        for {set j 0} {$j<6} {incr j} {
+          set spec_file [get_str_arr $spec_file arr $j]
+        }
+        set phsp_fn($i) $arr(0)
+        set nrcycl22($i) $arr(1)
+        set i22_dbs($i) $arr(2)
+        set r22_dbs($i) $arr(3)
+        set ssd22_dbs($i) $arr(4)
+        set z22_dbs($i) $arr(5)
+      }
+      for {set i 1} {$i<=$narc} {incr i} {
+        gets $fileid data
+        for {set j 0} {$j<5} {incr j} {
+          set data [get_val $data arr $j]
+        }
+        set gangmin($i) $arr(0)
+        set gangmax($i) $arr(1)
+        set cang($i) $arr(2)
+        set parc($i) $arr(3)
+        set ifile($i) $arr(4)
+      } 
     }
 
     # read enflag, mode(values(20)), medsur,dsurround, dflag
@@ -588,7 +633,7 @@ proc read_input {} {
 	set data [get_val $data arr 0]
 	set Ein $arr(0)
 	if $Ein==0 { set Ein "" }
-    } else {
+    } elseif {$isource!=22} {
 	gets $fileid spec_file
         if {$isource==9 || $isource==10} {
           for {set i 0} {$i<=2} {incr i} {
