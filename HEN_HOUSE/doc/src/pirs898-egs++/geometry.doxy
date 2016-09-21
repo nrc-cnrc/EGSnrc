@@ -42,13 +42,14 @@
 
   \anchor geometry_anchor
 
-\ref geometry_general <br>
-\ref geometry_design <br>
-\ref geometry_common <br>
-\ref geometry_media <br>
-\ref geometry_implementing <br>
-\ref geometry_view <br>
-\ref geometry_examples <br>
+\ref geometry_general<br>
+\ref geometry_design<br>
+\ref geometry_common<br>
+\ref geometry_media<br>
+\ref geometry_implementing<br>
+\ref volume_calculation<br>
+\ref geometry_view<br>
+\ref geometry_examples<br>
 
 \section geometry_general General discussion
 
@@ -329,14 +330,14 @@ The user may also specify regions to calculate the volume in using labels.
 After setting labels in geometries of interest, list the labels under
 the \c labels input. For each label, the sum of the region volumes is output.
 
-To turn on <tt>volume calculation</tt>, include a new control block in your input
-file:
+To turn on <tt>volume calculation</tt>, include a new control block in your
+input file:
 \verbatim
 :start volume calculation:
     passes = the number of recursion passes to create the octree
     samples = the number samples to perform per node per pass
-    box min = 0 0 0
-    box max = 100 100 100
+    box min = minX minY minZ
+    box max = maxX maxY maxZ
     labels = labels you have added to your geometry using `set label`
 :stop volume calculation:
 \endverbatim
@@ -346,21 +347,22 @@ For example:
 :start volume calculation:
     passes = 20
     samples = 1e7
-    box min = 0 0 0
+    box min = -100 -100 -100
     box max = 100 100 100
     labels = detector
 :stop volume calculation:
 \endverbatim
 
 For the volume calculation, the sampling box is divided into progressively
-smaller voxels as the geometry is analyzed.
-Voxels are created in an \em octree, to provide higher sampling resolution in
-areas with a greater density of geometry regions.
+smaller voxels as the geometry is analyzed on each pass. The algorithm follows
+the creation of an \em octree. Areas with a greater density of geometry
+regions end up with a higher density of voxels and thus are sampled more often
+in the volume calculation.
 
-As the volume calculation progresses, the number of samplings in each region is
-adjusted according to the uncertainty on its volume. On each pass, regions
-with a higher uncertainty are sampled more often, while regions with lower
-uncertainty are sampled less often.
+As the volume calculation progresses, the number of samplings in each octree
+node is also adjusted. On each pass, regions with a higher uncertainty
+on the volume are sampled more often, while regions with lower uncertainty
+are sampled less often.
 
 \section geometry_view The geometry viewer: egs_view
 
