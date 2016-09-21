@@ -181,7 +181,7 @@ public:
     };
 
     EGS_Float getFluence() const {
-        return count;
+        return ishower;
     };
 
     double getTime() const {

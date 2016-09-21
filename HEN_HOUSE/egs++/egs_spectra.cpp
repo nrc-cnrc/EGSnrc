@@ -1093,9 +1093,6 @@ Auger events emit an electron from a sampled energy line.
         // The energy of the sampled particle
         EGS_Float E;
 
-        //TODO: Maybe need to adjust particle weights?? to account for
-        // intensities that give >1 particle per decay?
-
         // If the daughter is in an excited state
         // Check for transitions
         if (currentLevel && currentLevel->getEnergy() > 0) {
@@ -1134,8 +1131,6 @@ Auger events emit an electron from a sampled energy line.
             }
         }
         else {
-            // Incremember the shower number
-            ishower++;
 
             // Uniformly distribute decays over the experiment time
             currentTime = rndm->getUniform() * Tmax;
@@ -1148,6 +1143,9 @@ Auger events emit an electron from a sampled energy line.
             for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                     beta != myBetas.end(); beta++) {
                 if (u < (*beta)->getBetaIntensity()) {
+                    
+                    // Incremember the shower number
+                    ishower++;
 
                     (*beta)->incrNumSampled();
                     currentQ = (*beta)->getCharge();
@@ -1184,6 +1182,9 @@ Auger events emit an electron from a sampled energy line.
             for (vector<AlphaRecord *>::iterator alpha = myAlphas.begin();
                     alpha != myAlphas.end(); alpha++) {
                 if (u < (*alpha)->getAlphaIntensity()) {
+                    
+                    // Incremember the shower number
+                    ishower++;
 
                     (*alpha)->incrNumSampled();
                     currentQ = (*alpha)->getCharge();
