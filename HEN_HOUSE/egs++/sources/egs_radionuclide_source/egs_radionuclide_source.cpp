@@ -97,7 +97,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     if (!err) {
         activity = tmp_A;
     }
-    egsWarning("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
+    egsInformation("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
                activity);
 
     // Calculate the duration of the experiment
@@ -130,7 +130,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     }
 
     double Tmax = ncase_double / activity;
-    egsWarning("EGS_RadionuclideSource: Duration of experiment [s]: %e\n",
+    egsInformation("EGS_RadionuclideSource: Duration of experiment [s]: %e\n",
                Tmax);
     for (i=0; i<decays.size(); ++i) {
         decays[i]->setMaximumTime(Tmax);
