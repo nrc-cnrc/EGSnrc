@@ -731,9 +731,16 @@ public:
 
     /*! \brief Set the labels from an input string */
     int setLabels(const string &inp);
-    
-    /*! \brief Calculate the volumes of regions in the geometry */
+
+    /*! \brief Calculate and print the volumes of regions in the geometry */
     void printVolumes(EGS_Input *input, EGS_RandomGenerator *rndm);
+
+    /*! \brief Calculate the volumes of regions in the geometry */
+    int getVolumes(EGS_I64 &npass, EGS_I64 &nsample, vector<EGS_Float> &min,
+                   vector<EGS_Float> &max, unsigned int &nreg,
+                   vector<double> &sigma, vector<double> &volume,
+                   vector<EGS_I64> &nhit, vector<EGS_I64> &ntry, EGS_I64 &ntot,
+                   EGS_RandomGenerator *rndm, bool verbose);
 
 protected:
 
@@ -1347,7 +1354,8 @@ public:
     EGS_RandomGenerator *rng;
 
     // constructor
-    Volume_Info(EGS_Vector &bbmin, EGS_Vector &bbmax, EGS_BaseGeometry *geom, EGS_RandomGenerator *generator) {
+    Volume_Info(EGS_Vector &bbmin, EGS_Vector &bbmax, EGS_BaseGeometry *geom,
+                EGS_RandomGenerator *generator) {
         min  = bbmin;
         max  = bbmax;
         g    = geom;
@@ -1357,13 +1365,13 @@ public:
 
 class Volume_Node {
 public:
-    double          ntry;
-    vector <double> nhit;
-    int             ix, iy, iz;             ///< octree indices, representing the binary location code of the node in x, y, z;
-    int             region;                 ///< region number of the node
-    unsigned short  level;                  ///< depth of the node (root node is level 0)
-    Volume_Node     *parent;                ///< pointer to the parent node (only root node can have parent set to NULL)
-    Volume_Node     **child;                ///< pointer to children nodes, NULL is there are no children
+    EGS_I64          ntry;
+    vector <EGS_I64> nhit;
+    int             ix, iy, iz;     //!< octree indices, representing the binary location code of the node in x, y, z
+    int             region;         //!< region number of the node
+    unsigned short  level;          //!< depth of the node (root node is level 0)
+    Volume_Node     *parent;        //!< pointer to the parent node (only root node can have parent set to NULL)
+    Volume_Node     **child;        //!< pointer to children nodes, NULL if there are no children
 
     // constructor
     Volume_Node(Volume_Info *v, Volume_Node *p, int index) {
@@ -1373,7 +1381,9 @@ public:
 
         // set parent
         parent = NULL;
-        if (p != NULL) parent = p;
+        if (p != NULL) {
+            parent = p;
+        }
 
         // set level
         if (parent != NULL) {
@@ -1397,13 +1407,13 @@ public:
         }
         ntry = 0;
     }
-    
+
     ~Volume_Node() {
         deleteChildren();
     }
 
     // setRegion
-    void setRegion (Volume_Info *v) {
+    void setRegion(Volume_Info *v) {
         EGS_Vector d  = (v->max - v->min) * (1.0/(double)(1<<level));
         EGS_Vector r0 = v->min;
         r0.x += (ix+0.5)*d.x;
@@ -1413,9 +1423,11 @@ public:
     }
 
     // create children nodes
-    void createChildren(Volume_Info *v) {                     // create children to the this node
-        if (!child) {                                           // ensure there are no children already
-            child = new Volume_Node* [8];                       // allocate memory for 8 new children nodes
+    void createChildren(Volume_Info *v) { // create children to the this node
+        // ensure there are no children already
+        if (!child) {
+            // allocate memory for 8 new children nodes
+            child = new Volume_Node* [8];
             for (int i=0; i<8; i++) {
                 child[i] = new Volume_Node(v, this, i);
             }
@@ -1423,14 +1435,18 @@ public:
     }
 
     // delete children (recursively)
-    void deleteChildren() {                                     // delete children of this node
-        if (child) {                                            // if this node has children, delete them
+    void deleteChildren() { // delete children of this node
+        // if this node has children, delete them
+        if (child) {
             for (int i=0; i<8; i++) {
-                child[i]->deleteChildren();                     // recursive calls to delete all children branches
+                // recursive calls to delete all children branches
+                child[i]->deleteChildren();
                 delete child[i];
             }
-            delete [] child;                                    // free the memory allocated for the 8 children
-            child = NULL;                                       // set children pointer to NULL to indicate that there are no children anymore
+            // free the memory allocated for the 8 children
+            delete [] child;
+            // set children pointer to NULL to indicate that there are no children anymore
+            child = NULL;
         }
     }
 
@@ -1472,19 +1488,18 @@ public:
             double minz = v->min.z + iz*d.z;
             int nreg = v->g->regions();
             int nsampleAdjusted;
-            if(avgSigma > 0) {
+            if (avgSigma > 0) {
                 // Adjust the number sampled by this leaf using the
                 // deviation of the uncertainty from the average
                 // This increases the number of samples in regions with
                 // higher uncertainty
                 // The efficiency improvement is a factor of about 3.8
                 nsampleAdjusted = int(double(nsample) * sigma[region]*sigma[region] / (avgSigma*avgSigma));
-                //nsampleAdjusted = int(double(nsample) * sigma[region] / avgSigma);
-                //nsampleAdjusted = nsample;
-            } else {
+            }
+            else {
                 nsampleAdjusted = nsample;
             }
-            
+
             for (long long i=0; i<nsampleAdjusted; i++) {
                 EGS_Vector r;
                 double rx = v->rng->getUniform();
@@ -1507,10 +1522,13 @@ public:
     }
 
     // calculate region volumes
-    void calculateVolumes(Volume_Info *v, vector<double> &volume, vector<double> &sigma, int nreg, double &ntot, vector<double> &regionHits, vector<double> &regionTrys) {
+    void calculateVolumes(Volume_Info *v, vector<double> &volume,
+                          vector<double> &sigma, unsigned int nreg,
+                          EGS_I64 &ntot, vector<EGS_I64> &regionHits,
+                          vector<EGS_I64> &regionTrys) {
 
         if (child) {
-            for (int i=0; i<8; i++) {
+            for (unsigned int i=0; i<8; i++) {
                 child[i]->calculateVolumes(v, volume, sigma, nreg, ntot, regionHits, regionTrys);
             }
         }
@@ -1523,7 +1541,7 @@ public:
                 regionTrys[region] += ntry;
             }
             else if (ntry > 0) {
-                for (int i=0; i<nreg; i++) {
+                for (unsigned int i=0; i<nreg; i++) {
                     double ave = nhit[i]/ntry;
                     double var = (ave-ave*ave)/ntry;
                     volume[i] += ave*vol;
