@@ -46,12 +46,24 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     activity(0) {
 
     int err;
-
-    // TODO: Make use of q_allowed to reject particles?
     vector<int> tmp_q;
     err = input->getInput("charge", tmp_q);
     if (!err) {
+        if (std::find(q_allowed.begin(), q_allowed.end(), -1) != q_allowed.end()
+                && std::find(q_allowed.begin(), q_allowed.end(), 0) != q_allowed.end()
+                && std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) {
+            q_allowAll = true;
+        }
+        else {
+            q_allowAll = false;
+        }
         q_allowed = tmp_q;
+    }
+    else {
+        q_allowAll = true;
+        q_allowed.push_back(-1);
+        q_allowed.push_back(1);
+        q_allowed.push_back(0);
     }
 
     // Create the decay spectra
@@ -62,8 +74,11 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     while (input->getInputItem("spectrum")) {
 
         decays.push_back(EGS_BaseSpectrum::createSpectrum(input));
+
+        // If spectrum creation failed skip to the next spectrum block
         if (!decays[i]) {
-            break;
+            decays.pop_back();
+            continue;
         }
 
         EGS_Float spectrumMaxE = decays[i]->maxEnergy();
@@ -76,7 +91,8 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         ++i;
     }
     if (decays.size() < 1) {
-        egsWarning("EGS_RadionuclideSource: no spectrum was defined\n");
+        egsWarning("EGS_RadionuclideSource: Error: No spectrum was defined\n");
+        return;
     }
 
     // Normalize the spectrum weights
@@ -97,8 +113,11 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     if (!err) {
         activity = tmp_A;
     }
+    else {
+        activity = 1;
+    }
     egsInformation("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
-               activity);
+                   activity);
 
     // Calculate the duration of the experiment
     // Based on ncase and activity
@@ -131,7 +150,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
 
     double Tmax = ncase_double / activity;
     egsInformation("EGS_RadionuclideSource: Duration of experiment [s]: %e\n",
-               Tmax);
+                   Tmax);
     for (i=0; i<decays.size(); ++i) {
         decays[i]->setMaximumTime(Tmax);
     }
@@ -218,19 +237,38 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector
         &u) {
 
-    // Sample a uniform random number
-    EGS_Float uRand = rndm->getUniform();
+    unsigned int i = 0;
+    if (decays.size() > 1) {
+        // Sample a uniform random number
+        EGS_Float uRand = rndm->getUniform();
 
-    // Sample which spectrum to use
-    unsigned int i;
-    for (i=0; i<decays.size(); ++i) {
-        if (uRand < decays[i]->getSpectrumWeight()) {
+        // Sample which spectrum to use
+        for (i=0; i<decays.size(); ++i) {
+            if (uRand < decays[i]->getSpectrumWeight()) {
+                break;
+            }
+        }
+    }
+
+    for (EGS_I64 j=0; j<1e6; ++j) {
+
+        E = decays[i]->sampleEnergy(rndm);
+
+        if (E < 1e-10) {
+            continue;
+        }
+
+        q = decays[i]->getCharge();
+
+        // Check if the charge is allowed
+        // If so, break out of the loop and keep the particle
+        // Otherwise the loop will continue generating particles until
+        // one matches the q_allowed criteria
+        if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
             break;
         }
     }
 
-    E = decays[i]->sampleEnergy(rndm);
-    q = decays[i]->getCharge();
     time = decays[i]->getTime();
     ishower = decays[i]->getShowerIndex();
 

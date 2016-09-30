@@ -233,12 +233,15 @@ class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
     LevelRecord();
     LevelRecord(vector<string> ensdf);
+    void setLevelCanDecay(bool canDecay);
+    bool levelCanDecay() const;
     double getEnergy() const;
     double getHalfLife() const;
 
 protected:
     double energy;
     double halfLife;
+    bool canDecay;
 
 private:
     void processEnsdf();
@@ -387,7 +390,7 @@ X-Rays and Auger emissions are obtained from Comment records. The data is
 processed in the same way as Lara files on nucleide.org. If a single
 intensity is present for a combination of lines (but a single energy is not
 provided), then the average energy of the lines is used. For example, in the
-case below a single line of energy 97.4527 keV would be used. 
+case below a single line of energy 97.4527 keV would be used.
 \verbatim
 221FR T        96.815         |]                 XKB3
 221FR T        97.474         |]  0.57     5     XKB1
@@ -405,7 +408,7 @@ of energy 14.0895 keV would be used.
 221FR T        16.752-17.799                     XLG
 \endverbatim
 
-The ensdf class has been tested on radionuclide data from 
+The ensdf class has been tested on radionuclide data from
 http://www.nucleide.org/DDEP_WG/DDEPdata.htm
 
 */

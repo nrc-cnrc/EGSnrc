@@ -78,7 +78,7 @@ A radionuclide source is a source that delivers particles with
 directions uniformly distributed in \f$4 \pi\f$ emitted from
 \link EGS_BaseShape any shape. \endlink
 
-Emissions are based on decays from the radionuclide isotope and can be a mix of 
+Emissions are based on decays from the radionuclide isotope and can be a mix of
 beta decays, X-radiations, etc.
 
 It is defined using the following input
@@ -117,7 +117,7 @@ It is defined using the following input
 The emission spectrum generation is described in \ref EGS_RadionuclideSpectrum.
 
 Proceed with caution - \ref EGS_RadionuclideSource is in the development stages
-and has not been thoroughly tested. 
+and has not been thoroughly tested.
 
 */
 
@@ -181,7 +181,7 @@ public:
     };
 
     EGS_Float getFluence() const {
-        return ishower;
+        return ishower+1;
     };
 
     double getTime() const {
@@ -381,6 +381,7 @@ protected:
 
     vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
     vector<int>         q_allowed;
+    bool                q_allowAll;
     EGS_Float           activity;
     double              time;
     EGS_I64             ishower;
