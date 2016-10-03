@@ -11977,10 +11977,8 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
      VIN=VINOLD;
      WIN=WINOLD;
      WEIGHT=WEIGHTOLD;
-     IF((ISOURC=24 & (ALPHA24~=0 | BETA24~=0)) | IZSCORE=1)[
-       ICM=INIT_ICMOLD;
-       ZIN=ZINOLD;
-     ]
+     ICM=INIT_ICMOLD;
+     ZIN=ZINOLD;
      IF(I_MUPHSP_IN~=0)[
        "make sure any synchronized CMs do not change BEAM_MU_INDEX by setting"
        "BEAM_MU_INDEX_OLD to something different than BEAM_MU_INDEX"
@@ -12141,10 +12139,8 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
       CYCLNUM=1;
       XINOLD=XIN;
       YINOLD=YIN;
-      IF((ISOURC=24 & (ALPHA24~=0 | BETA24 ~=0))| IZSCORE=1)[
-         ZINOLD=ZIN;
-         INIT_ICMOLD=ICM;
-      ]
+      ZINOLD=ZIN;
+      INIT_ICMOLD=ICM;
       UINOLD=UIN;
       VINOLD=VIN;
       WINOLD=WIN;
