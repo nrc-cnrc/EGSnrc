@@ -380,11 +380,11 @@ protected:
     GeometryConfinement gc;
 
     vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
-    vector<int>         q_allowed;
-    bool                q_allowAll;
-    EGS_Float           activity;
-    double              time;
-    EGS_I64             ishower;
+    vector<int>         q_allowed; //!< A list of allowed charges
+    bool                q_allowAll; //!< Whether or not to allow all charges
+    EGS_Float           activity; //!< The activity of the source
+    double              time; //!< The time of emission of the most recently generated particle
+    EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
 };
 
 #endif

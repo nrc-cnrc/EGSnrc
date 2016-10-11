@@ -28,6 +28,7 @@
 ###############################################################################
 */
 
+
 /*! \file egs_ensdf.cpp
  *  \brief The ensdf implementation
  *  \RT
@@ -178,90 +179,91 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         string line = *it;
         egsInformation("ENSDF::parseEnsdf: %s\n", line.c_str());
-        // Identification
-        if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
 
-            // History
+        if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
+            // Identification
+
         }
         else if (line[6]==' ' && line[7]=='H' && line[8]==' ') {
+            // History
 
-            // Q-value
         }
         else if (line[6]== ' ' && line[7]=='Q' && line[8]==' ') {
+            // Q-value
 
-            // Cross-Reference
         }
         else if (line[6]==' ' && line[7]=='X') {
+            // Cross-Reference
 
-            // Comment
         }
         else if ((line[6]=='C' || line[6]=='D' || line[6]=='T' ||
                   line[6]=='c' || line[6]=='d' || line[6]=='t')) {
+            // Comment
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[4].push_back(line);
 
-            //Parent
         }
         else if (line[6]==' ' && line[7]=='P') {
+            //Parent
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[5].push_back(line);
 
-            // Normalization
         }
         else if (line[6]==' ' && line[7]=='N') {
+            // Normalization
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[6].push_back(line);
 
-            // Level
         }
         if (line[6]==' ' && line[7]=='L' && line[8]== ' ') {
+            // Level
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[7].push_back(line);
 
-            // Beta-
         }
         else if (line[6]==' ' && line[7]=='B' && line[8]==' ') {
+            // Beta-
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[8].push_back(line);
 
-            // Beta+ and Electron Capture
         }
         else if (line[6]==' ' && line[7]=='E' && line[8]==' ') {
+            // Beta+ and Electron Capture
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[9].push_back(line);
 
-            // Alpha
         }
         else if (line[6]==' ' && line[7]=='A' && line[8]==' ') {
+            // Alpha
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[10].push_back(line);
 
-            // Delayed Particle
         }
         else if (line[6]==' ' && (line[7]=='D' || line[7]==' ') &&
                  (line[8]=='N' || line[8]=='P' || line[8]=='A')) {
+            // Delayed Particle
             if (line[5]==' ') {
                 buildRecords();
             }
             recordStack[11].push_back(line);
 
-            // Gamma
         }
         else if (line[6]==' ' && line[7]=='G' && line[8]==' ') {
+            // Gamma
             if (line[5]==' ') {
                 buildRecords();
             }
@@ -289,14 +291,29 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
     // Get X-ray and auger emissions from comments
     getEmissionsFromComments();
+    
+    // Get rid of very low emission probability particles
+    double minimumIntensity = 1e-6;
+    for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
+            beta != myBetaRecords.end(); beta++) {
+        if((*beta)->getBetaIntensity() <= minimumIntensity) {
+            myBetaRecords.erase(beta);
+        }
+    }
+    for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
+            alpha != myAlphaRecords.end(); alpha++) {
+        if((*alpha)->getAlphaIntensity() <= minimumIntensity) {
+            myAlphaRecords.erase(alpha);
+        }
+    }
 
     // Search through the gamma records for any with unknown levels
-    // or with zero emission probability
+    // or with low emission probability
     for (vector<GammaRecord * >::iterator it = myGammaRecords.begin();
             it!=myGammaRecords.end();) {
 
-        if ((*it)->getTransitionIntensity() <= 0.) {
-            // Throw away gammas with zero probability
+        if ((*it)->getTransitionIntensity() <= minimumIntensity) {
+            // Throw away gammas with low probability
             // Erase the gamma record object
             myGammaRecords.erase(it);
 
@@ -499,6 +516,9 @@ void EGS_Ensdf::normalizeIntensities() {
             xrayIntensities[i] += xrayIntensities[i-1];
         }
         lastIntensity = xrayIntensities[i];
+
+        egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
+                       xrayEnergies[i], xrayIntensities[i]);
     }
 
     // Normalize auger emission intensities
@@ -512,6 +532,9 @@ void EGS_Ensdf::normalizeIntensities() {
             augerIntensities[i] += augerIntensities[i-1];
         }
         lastIntensity = augerIntensities[i];
+
+        egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
+                       augerEnergies[i], augerIntensities[i]);
     }
 
     // Get the gamma transition intensities
@@ -522,15 +545,21 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
             it!=myLevelRecords.end(); it++) {
 
-        totalLevelIntensity[j] = 0;
-        for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                gamma != myGammaRecords.end(); gamma++) {
+        double disintIntensity = (*it)->getDisintegrationIntensity();
+        if (disintIntensity > 1e-10) {
+            totalLevelIntensity[j] = disintIntensity;
+        }
+        else {
+            totalLevelIntensity[j] = 0;
+            for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                    gamma != myGammaRecords.end(); gamma++) {
 
-            if ((*gamma)->getLevelRecord() == (*it)) {
-                totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-                egsInformation("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
-                               (*gamma)->getTransitionIntensity(),
-                               totalLevelIntensity[j]);
+                if ((*gamma)->getLevelRecord() == (*it)) {
+                    totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
+                    egsInformation("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
+                                   (*gamma)->getTransitionIntensity(),
+                                   totalLevelIntensity[j]);
+                }
             }
         }
         ++j;
@@ -710,9 +739,6 @@ void EGS_Ensdf::getEmissionsFromComments() {
                 continue;
             }
 
-//             egsInformation("EGS_Ensdf::getEmissionsFromComments: %s\n",
-//                 emissionLine.c_str());
-
             string eStr = egsTrimString(line.substr(13, 15));
 
             // If we have a range in energy (e.g. 0.1-0.3)
@@ -772,9 +798,6 @@ void EGS_Ensdf::getEmissionsFromComments() {
                     augerIntensities.push_back(intensity);
                 }
             }
-
-//             egsInformation("EGS_Ensdf::getEmissionsFromComments: (E,I) %f %f\n",
-//                 energy, intensity);
         }
     }
 }
@@ -1176,7 +1199,8 @@ void NormalizationRecord::processEnsdf() {
     normalizeBranch = recordToDouble(32, 39);
     normalizeBeta = recordToDouble(42, 49);
     egsInformation("NormalizationRecord::processEnsdf: %f %f %f %f\n",
-                   normalizeRelative, normalizeTransition, normalizeBranch, normalizeBeta);
+                   normalizeRelative, normalizeTransition, normalizeBranch,
+                   normalizeBeta);
 }
 
 // Multiplier for converting relative photon intensity to photons per 100
@@ -1220,10 +1244,12 @@ NormalizationRecordLeaf::NormalizationRecordLeaf(NormalizationRecord
 LevelRecord::LevelRecord() {
     energy = 0;
     halfLife = 0;
+    disintegrationIntensity = 0;
 }
 LevelRecord::LevelRecord(vector<string> ensdf):
     Record(ensdf) {
     processEnsdf();
+    disintegrationIntensity = 0;
 }
 
 void LevelRecord::processEnsdf() {
@@ -1238,6 +1264,14 @@ void LevelRecord::setLevelCanDecay(bool canDecayTmp) {
 
 bool LevelRecord::levelCanDecay() const {
     return canDecay;
+}
+
+void LevelRecord::cumulDisintegrationIntensity(double disintIntensity) {
+    disintegrationIntensity += disintIntensity;
+}
+
+double LevelRecord::getDisintegrationIntensity() const {
+    return disintegrationIntensity;
 }
 
 double LevelRecord::getEnergy() const {
@@ -1259,7 +1293,8 @@ LevelRecordLeaf::LevelRecordLeaf(LevelRecord
 
 // Beta Record
 BetaRecordLeaf::BetaRecordLeaf(vector<string> ensdf,
-                               ParentRecord *myParent, NormalizationRecord *myNormalization,
+                               ParentRecord *myParent,
+                               NormalizationRecord *myNormalization,
                                LevelRecord *myLevel):
     ParentRecordLeaf(myParent),
     NormalizationRecordLeaf(myNormalization),
@@ -1322,20 +1357,22 @@ EGS_AliasTable *BetaRecordLeaf::getSpectrum() const {
 
 // Beta- Record
 BetaMinusRecord::BetaMinusRecord(vector<string> ensdf,
-                                 ParentRecord *myParent, NormalizationRecord *myNormalization,
-                                 LevelRecord *myLevel):BetaRecordLeaf(ensdf, myParent,
-                                             myNormalization, myLevel) {
+                                 ParentRecord *myParent,
+                                 NormalizationRecord *myNormalization,
+                                 LevelRecord *myLevel):
+    BetaRecordLeaf(ensdf, myParent,
+                   myNormalization, myLevel) {
     processEnsdf();
     q = -1;
+    myLevel->cumulDisintegrationIntensity(betaIntensity);
 }
 
 void BetaMinusRecord::processEnsdf() {
     finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     betaIntensity = recordToDouble(22, 29);
     if (getNormalizationRecord()) {
-//         betaIntensity *= getNormalizationRecord()->getBetaMultiplier() *
-//                          getNormalizationRecord()->getBranchMultiplier();
-        betaIntensity *= getNormalizationRecord()->getBetaMultiplier();
+        betaIntensity *= getNormalizationRecord()->getBetaMultiplier() *
+                         getNormalizationRecord()->getBranchMultiplier();
     }
     egsInformation("BetaMinusRecord::processEnsdf: %f %f\n", finalEnergy,
                    betaIntensity);
@@ -1355,11 +1392,14 @@ void BetaMinusRecord::setBetaIntensity(double newIntensity) {
 
 // Beta+ Record (and Electron Capture)
 BetaPlusRecord::BetaPlusRecord(vector<string> ensdf,
-                               ParentRecord *myParent, NormalizationRecord *myNormalization,
-                               LevelRecord *myLevel):BetaRecordLeaf(ensdf, myParent,
-                                           myNormalization, myLevel) {
+                               ParentRecord *myParent,
+                               NormalizationRecord *myNormalization,
+                               LevelRecord *myLevel):
+    BetaRecordLeaf(ensdf, myParent,
+                   myNormalization, myLevel) {
     processEnsdf();
     q = 1;
+    myLevel->cumulDisintegrationIntensity(betaIntensity);
 }
 
 void BetaPlusRecord::processEnsdf() {
@@ -1367,12 +1407,10 @@ void BetaPlusRecord::processEnsdf() {
     positronIntensity = recordToDouble(22, 29);
     ecIntensity = recordToDouble(32, 39);
     if (getNormalizationRecord()) {
-//         positronIntensity *= getNormalizationRecord()->getBetaMultiplier() *
-//                              getNormalizationRecord()->getBranchMultiplier();
-//         ecIntensity *= getNormalizationRecord()->getBetaMultiplier() *
-//                        getNormalizationRecord()->getBranchMultiplier();
-        positronIntensity *= getNormalizationRecord()->getBetaMultiplier();
-        ecIntensity *= getNormalizationRecord()->getBetaMultiplier();
+        positronIntensity *= getNormalizationRecord()->getBetaMultiplier() *
+                             getNormalizationRecord()->getBranchMultiplier();
+        ecIntensity *= getNormalizationRecord()->getBetaMultiplier() *
+                       getNormalizationRecord()->getBranchMultiplier();
     }
 
     // The total intensity for this decay branch
@@ -1427,8 +1465,10 @@ void BetaPlusRecord::setECIntensity(double newIntensity) {
 
 // Gamma Record
 GammaRecord::GammaRecord(vector<string> ensdf, NormalizationRecord
-                         *myNormalization, LevelRecord *myLevel):Record(ensdf),
-    NormalizationRecordLeaf(myNormalization), LevelRecordLeaf(myLevel) {
+                         *myNormalization, LevelRecord *myLevel):
+    Record(ensdf),
+    NormalizationRecordLeaf(myNormalization),
+    LevelRecordLeaf(myLevel) {
     processEnsdf();
     q = 0;
     numSampled = 0;
@@ -1439,10 +1479,9 @@ void GammaRecord::processEnsdf() {
     transitionIntensity = recordToDouble(22, 29);
 
     if (getNormalizationRecord()) {
-//         transitionIntensity *=
-//             getNormalizationRecord()->getRelativeMultiplier() *
-//             getNormalizationRecord()->getBranchMultiplier();
-        transitionIntensity *= getNormalizationRecord()->getRelativeMultiplier();
+        transitionIntensity *=
+            getNormalizationRecord()->getRelativeMultiplier() *
+            getNormalizationRecord()->getBranchMultiplier();
     }
 
     egsInformation("GammaRecord::processEnsdf: %f %f\n", decayEnergy,
@@ -1483,13 +1522,17 @@ void GammaRecord::setFinalLevel(LevelRecord *newLevel) {
 
 // Alpha Record
 AlphaRecord::AlphaRecord(vector<string> ensdf,
-                         ParentRecord *myParent, NormalizationRecord *myNormalization,
-                         LevelRecord *myLevel):Record(ensdf),
+                         ParentRecord *myParent,
+                         NormalizationRecord *myNormalization,
+                         LevelRecord *myLevel):
+    Record(ensdf),
     ParentRecordLeaf(myParent), NormalizationRecordLeaf(myNormalization),
     LevelRecordLeaf(myLevel) {
+
     processEnsdf();
     q = 2;
     numSampled = 0;
+    myLevel->cumulDisintegrationIntensity(alphaIntensity);
 }
 
 void AlphaRecord::processEnsdf() {

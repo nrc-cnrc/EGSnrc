@@ -51,7 +51,9 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     if (!err) {
         if (std::find(q_allowed.begin(), q_allowed.end(), -1) != q_allowed.end()
                 && std::find(q_allowed.begin(), q_allowed.end(), 0) != q_allowed.end()
-                && std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) {
+                && std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()
+                && std::find(q_allowed.begin(), q_allowed.end(), 2) != q_allowed.end()
+           ) {
             q_allowAll = true;
         }
         else {
@@ -64,6 +66,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         q_allowed.push_back(-1);
         q_allowed.push_back(1);
         q_allowed.push_back(0);
+        q_allowed.push_back(2);
     }
 
     // Create the decay spectra
@@ -275,27 +278,8 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
 
-//     egsWarning("EGS_RadionuclideSource::getNextParticle: E: %f\n",
-//         E);
-//
-//     egsWarning("EGS_RadionuclideSource::getNextParticle: q: %d\n",
-//         q);
-
     return ++count;
 }
-
-// EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
-//         &q, int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector
-//         &u, EGS_I64 &ishower, EGS_Float &time) {
-//
-//     ishower = count;
-//
-//     getNextParticle(rndm, q, latch, E, wt, x, u);
-//
-//     time = decays->getTime();
-//
-//     return count;
-// }
 
 void EGS_RadionuclideSource::setUp() {
     otype = "EGS_RadionuclideSource";
@@ -315,6 +299,9 @@ void EGS_RadionuclideSource::setUp() {
         }
         if (std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) {
             description += " positrons";
+        }
+        if (std::find(q_allowed.begin(), q_allowed.end(), 1) != q_allowed.end()) {
+            description += " alphas";
         }
 
         if (geom) {

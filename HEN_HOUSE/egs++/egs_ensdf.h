@@ -233,12 +233,15 @@ class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
     LevelRecord();
     LevelRecord(vector<string> ensdf);
+    void cumulDisintegrationIntensity(double disintIntensity);
+    double getDisintegrationIntensity() const;
     void setLevelCanDecay(bool canDecay);
     bool levelCanDecay() const;
     double getEnergy() const;
     double getHalfLife() const;
 
 protected:
+    double disintegrationIntensity;
     double energy;
     double halfLife;
     bool canDecay;
