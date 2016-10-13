@@ -1269,6 +1269,9 @@ REPLACE {$BEAM_READ_PHSP_FOR_RESTART;} WITH {;
 };
 
 REPLACE {$BEAM_CLOSE_PHSP;} WITH {;
+IF(n_parallel=0 | ~is_finished) [
+"do not close phsp files that have already been closed"
+"after individual parallel jobs have ended"
 IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4) [
       "phase-space output"
   DO I=1,NSC_PLANES [
@@ -1279,6 +1282,7 @@ IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4) [
         CLOSE(IOUTFLU(I));
      ]
   ]
+]
 ]
 };
 
