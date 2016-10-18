@@ -199,7 +199,7 @@ private:
 class ParentRecordLeaf : public Leaf<ParentRecord> {
 public:
     ParentRecordLeaf(ParentRecord *myRecord);
-    virtual const ParentRecord *getParentRecord() const;
+    virtual ParentRecord *getParentRecord() const;
 };
 
 // Normalization Record
@@ -225,7 +225,7 @@ private:
 class NormalizationRecordLeaf : public Leaf<NormalizationRecord> {
 public:
     NormalizationRecordLeaf(NormalizationRecord *myRecord);
-    virtual const NormalizationRecord *getNormalizationRecord() const;
+    virtual NormalizationRecord *getNormalizationRecord() const;
 };
 
 // Level Record
@@ -253,7 +253,7 @@ private:
 class LevelRecordLeaf : public Leaf<LevelRecord> {
 public:
     LevelRecordLeaf(LevelRecord *myRecord);
-    virtual const LevelRecord *getLevelRecord() const;
+    virtual LevelRecord *getLevelRecord() const;
 };
 
 // Generic beta record
@@ -324,11 +324,13 @@ private:
 };
 
 // Gamma record
-class GammaRecord : public Record, public NormalizationRecordLeaf, public
-    LevelRecordLeaf {
+class GammaRecord : public Record, public ParentRecordLeaf,
+    public NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
-    GammaRecord(vector<string> ensdf, NormalizationRecord *myNormalization,
+    GammaRecord(vector<string> ensdf, ParentRecord *myParent,
+                NormalizationRecord *myNormalization,
                 LevelRecord *myLevel);
+    GammaRecord(GammaRecord *gamma);
 
     double getDecayEnergy() const;
     double getTransitionIntensity() const;
@@ -434,6 +436,7 @@ public:
     vector<LevelRecord * > getLevelRecords() const;
     vector<AlphaRecord * > getAlphaRecords() const;
     vector<GammaRecord * > getGammaRecords() const;
+    vector<GammaRecord * > getMetastableGammaRecords() const;
     vector<double > getXRayIntensities() const;
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
@@ -466,6 +469,7 @@ protected:
     vector<BetaPlusRecord * > myBetaPlusRecords;
     vector<AlphaRecord * > myAlphaRecords;
     vector<GammaRecord * > myGammaRecords;
+    vector<GammaRecord * > myMetastableGammaRecords;
 
 private:
 
