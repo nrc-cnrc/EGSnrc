@@ -306,6 +306,16 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
                 break;
             }
         }
+        if(!gotDisint) {
+            for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
+                    alpha != myAlphaRecords.end(); alpha++) {
+
+                if ((*alpha)->getParentRecord() == *parent) {
+                    gotDisint = true;
+                    break;
+                }
+            }
+        }
 
         if (!gotDisint) {
             for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
@@ -453,7 +463,7 @@ void EGS_Ensdf::buildRecords() {
     }
 
     for (int i = 0; i < recordStack.size(); i++) {
-        if (!recordStack[i].empty()) {
+        if (!recordStack[i].empty() && recordStack[i].front().length() > 5) {
             if (i==0) {
 
             }
