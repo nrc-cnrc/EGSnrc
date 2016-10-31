@@ -271,7 +271,7 @@ public:
      * of the spectrum object and the storeFluenceState() virtual function.
      */
     bool storeState(ostream &data_out) const {
-        if (!egsStoreI64(data_out,count)) {
+        if (!egsStoreI64(data_out,ishower)) {
             return false;
         }
         for (unsigned int i=0; i<decays.size(); ++i) {
@@ -292,8 +292,8 @@ public:
      * of the spectrum object and the addFluenceData() virtual function.
      */
     bool addState(istream &data) {
-        EGS_I64 count_save = count;
-        if (!egsGetI64(data,count)) {
+        EGS_I64 count_save = ishower;
+        if (!egsGetI64(data,ishower)) {
             return false;
         }
         for (unsigned int i=0; i<decays.size(); ++i) {
@@ -304,7 +304,7 @@ public:
         if (!addFluenceData(data)) {
             return false;
         }
-        count += count_save;
+        ishower += count_save;
         return true;
     };
 
@@ -315,7 +315,7 @@ public:
      * resetFluenceCounter().
      */
     void resetCounter() {
-        count = 0;
+        ishower = 0;
         for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->resetCounter();
         }
@@ -347,7 +347,7 @@ public:
      * function.
      */
     bool setState(istream &data) {
-        if (!egsGetI64(data,count)) {
+        if (!egsGetI64(data,ishower)) {
             return false;
         }
         for (unsigned int i=0; i<decays.size(); ++i) {
