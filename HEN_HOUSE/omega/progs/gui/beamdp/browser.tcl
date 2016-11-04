@@ -155,6 +155,9 @@ proc browse { dir next_proc_name flag labeltext } {
 			if [string match "*egs4phsp*" $i]==1 {
 			    .query.f1.list insert end $i
 			}
+                        if [string match "*IAEAphsp*" $i]==1 {
+                            .query.f1.list insert end $i
+                        }
 		    }
 		}
 	    }
