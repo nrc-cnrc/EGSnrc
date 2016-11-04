@@ -226,7 +226,7 @@ a wide range of geometries:
 An N-dimensional geometry is defined using the following keys:
 \verbatim
 library = egs_ndgeometry
-dimesions = list of names of previously defined geometries
+dimensions = list of names of previously defined geometries
 hownear method = 0 or 1
 \endverbatim
 All constituent geometries of the N-dimensional geometry must have
