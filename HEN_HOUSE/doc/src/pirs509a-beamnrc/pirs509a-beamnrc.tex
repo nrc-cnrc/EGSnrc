@@ -5900,7 +5900,7 @@ If set to {\tt Off} (the default) no corrections are done.
 Note that if set to {\tt On} then the variable {\tt SOURCES} in
 the {\tt sources.make} file for the accelerator (See Section~\ref{mortjobsect} above)
 must be modified to include {\tt \$(EGS\_SOURCEDIR)rad\_compton1.mortran} just
-before {\tt \$(EGS\_SOURCEDIR)get_inputs.mortran}.
+before {\tt \$(EGS\_SOURCEDIR)get\_inputs.mortran}.
 
 \subsection{ {\tt Pair angular sampling} ({\tt IPRDST})}
 \index{pair angular sampling}
@@ -8938,47 +8938,47 @@ UP=50.
 material data file=/home/username/HEN_HOUSE/pegs4/data/material.dat
 
 :start H2O521ICRU:
-  elements=H,O
-  number of atoms=2,1
-  rho=1.0
-  stopping powers=restricted total
-  bremsstrahlung correction=KM
-  density correction file=water_liquid
-  sterncid=H2O521ICRU
+  elements = H, O
+  number of atoms = 2,1
+  rho = 1.0
+  bremsstrahlung correction = KM
 :stop H2O521ICRU:
 
 :start AIR521ICRU:
-  elements=C,N,O,AR
-  mass fractions=1.24000E-04,7.55200E-01,2.31800E-01,1.28300E-02
-  rho=1.2048E-03
-  stopping powers=restricted total
-  bremsstrahlung correction=NRC
+  elements = C,N,O,AR
+  mass fractions = 1.24000E-04, 7.55200E-01, 2.31800E-01, 1.28300E-02
+  rho = 1.2048E-03
+  bremsstrahlung correction = NRC
   gas pressure = 1.0
-  density correction file= air_dry_nearsealevel
-  sterncid=AIR521ICRU
 :stop AIR521ICRU:
+
+:start PMMA521ICRU:
+  bremsstrahlung correction = NRC
+  density correction file = /home/uname/EGSnrc/HEN_HOUSE/pegs4/density_corrections/
+compounds/polymethylmethacrylate__lucite___perspex___plexiglas_.density
+:stop PMMA521ICRU:
 
 :stop media definition:
 \end{verbatim}
 where:
 \begin{description}
-\item {\tt AE,UE,AP,UP } are the kinetic energy limits for calculating photon ({\tt AP,UP}) and electron ({\tt AE,UE}) cross-sections in
+\item {\tt AE,UE,AP,UP } are the kinetic energy limits for calculating photon ({\tt AP,UP}) and electron ({\tt AE,UE}) cross sections in
 \index{pegsless mode!AE}\index{pegsless mode!UE}\index{pegsless mode!AP}\index{pegsless mode!UP}
-MeV.  For a
-more detailed description of {\tt AE} and {\tt AP}, see subsection~\ref{AE} above.  If {\tt AE} is
-not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section~\ref{ECUTIN}) specified
+MeV.  These energy limits are also mentioned in the context of the EGSnrc system in Section~\ref{common_blocks}. 
+If {\tt AE} is
+not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section~\ref{step_2}) specified
 in the simulation.  If
-{\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section~\ref{PCUTIN})
+{\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section~\ref{step_2})
 specified.  {\tt UE} and {\tt UP} default to 50.511 MeV and 50.0 MeV, respectively.
 
 \index{pegsless mode!material data file}
 \item {\tt material data file} is the name (including full directory path) of a file containing specifications for the media used
-in the simulation.  Provided with the distribution is the material data file {\tt \$HEN\_HOUSE/pegs4/data/material.dat} which
+in the simulation.  Provided with the EGSnrc distribution is the material data file {\tt \$HEN\_HOUSE/pegs4/data/material.dat} which
 contains specifications necessary to reproduce all of the cross-section data in {\tt 521icru.pegs4dat} and {\tt 700icru.pegs4dat}
 (provided that the appropriate values of {\tt AE, UE, AP and UP} are specified--see above).  Note that the format for
 media specifications in the material data file is similar to that used for specifying media directly in the
-{\tt .egsinp} file, described immediately below.  If a material data file is not specified, then all media used in the simulation
-must be specified directly in the {\tt .egsinp} file.
+{\tt .egsinp} file, described immediately below.  In the case of the material data file, however, there is some redundancy in the specification to allow the
+user to see the composition and density of the media.
 
 \index{pegsless mode!defining media in .egsinp file}
 \item the {\tt :start MEDNAME:} and {\tt :stop MEDNAME:} delimiters are used to specify medium, {\tt MEDNAME}, directly in the
@@ -8986,41 +8986,28 @@ must be specified directly in the {\tt .egsinp} file.
 if you wish to override some or all of the specifications for {\tt MEDNAME} in the material data file.
 If no material data file is input, then all media in the simulation
 must be specified in this way.  The inputs between these delimiters are described below.  Variables
-in square brackets are the analogous PEGS4 variables.
-
+in square brackets are the analogous PEGS4 variables described in the PEGS4 Manual (Section~\ref{pegs4}) above.
 \begin{description}
 \index{pegsless mode!elements}
 \item {\tt elements} specifies the elements comprising the medium.  Elements are specified using chemical symbols separated by
 commas.  Case is unimportant.
 \index{pegsless mode!no. of atoms}
 \index{pegsless mode!mass fractions}
-\item {\tt number of atoms} $[${\tt PZ}$]$ or {\tt mass fractions} $[${\tt RHOZ}$]$.  For all {\tt elements}, specify either the
-number of atoms in a molecule of the medium ({\it i.e.} stoichiometric coefficients) or the mass fractions of the elements in the medium.
+\item {\tt number of atoms} $[${\tt PZ}$]$ or {\tt mass fractions} $[${\tt RHOZ}$]$.  For each of the {\tt elements}, specify either the number of atoms in a molecule of the medium ({\it i.e.} stoichiometric coefficients), if the 
+medium is a compound, or the mass fractions of the elements in the medium,
+if the medium is a mixture.
 Values are separated by commas and are input in the same order as their corresponding elements.  In the example above,
 the composition of {\tt H2O521ICRU} is
-defined using the number of atoms of each element, while that of {\tt AIR521ICRU} is defined using the mass fraction of each element.
+defined using the number of atoms of each element, while that of {\tt AIR521ICRU} is defined using the mass fraction of each element.  Note that this input
+is omitted if the medium is an element.
 \index{pegsless mode!rho}
 \index{pegsless mode!bulk density}
 \item {\tt rho} specifies the bulk density of the medium in g/cm$^3$.
 \index{pegsless mode!stopping power type}
-\index{pegsless mode!IUNRST}
-\item {\tt stopping powers} $[${\tt IUNRST}$]$ specifies what electron stopping powers you would like to calculate.  Options are:
-\begin{itemize}
-\item {\tt restricted total} $[${\tt IUNRST}=0$]$ (the default): This will result in a normal simulation with interactions above {\tt AE} treated
-discretely.
-\item {\tt unrestricted collision} $[${\tt IUNRST}=1$]$: This will result in collision interactions (Moeller, Bhaba) being treated as CSDA ({\it i.e.} not
-as discrete events) and radiative events (bremsstrahlung, annihilation) not simulated at all.
-\item {\tt unrestricted collision and radiative} $[${\tt IUNRST}=2$]$: This will produce a CSDA simulation, where none of the
-interactions is treated discretely and all energy from interactions is deposited locally.
-\item {\tt unrestricted collision and restricted radiative} $[${\tt IUNRST}=3$]$: Only radiative events (bremsstrahlung, annihilation)
-are treated discretely.
-\item {\tt restricted collision and unrestricted radiative} $[${\tt IUNRST}=4$]$: Only collision events (Moeller, Bhaba) are
-treated discretely.
-\item {\tt unrestricted radiative} $[${\tt IUNRST}=5$]$: Radiative events are treated as CSDA and collision events are not simulated.
-\end{itemize}
 \index{pegsless mode!bremsstrahlung correction}
 \index{pegsless mode!IAPRIM}
-\item {\tt bremsstrahlung correction} $[${\tt IAPRIM}$]$ specifies the correction to apply to calculated bremsstrahlung cross-sections.
+\item {\tt bremsstrahlung correction} $[${\tt IAPRIM}$]$ specifies the 
+correction to apply to calculated bremsstrahlung cross-sections.
 Options are:
 \begin{itemize}
 \item {\tt KM} $[$IAPRIM=0$]$ (the default): Apply Koch and Motz\cite{KM59} empirical corrections.
@@ -9028,27 +9015,33 @@ Options are:
 {\tt \$HEN\_HOUSE/pegs4/aprime.data}.
 \item {\tt None} $[$IAPRIM=2$]$: No corrections applied.
 \end{itemize}
-\index{pegsless mode!gas pressure}
-\index{pegsless mode!GASP}
-\item {\tt gas pressure} $[${\tt GASP}$]$ is the pressure of the medium in atm.  This input is only necessary if the medium is a gas, otherwise it
-defaults to 0.
 \index{pegsless mode!density correction file}
 \index{pegsless mode!EPSTFL}
 \item {\tt density correction file} $[${\tt EPSTFL}$]$ is the name of a file containing density effects which, when applied to calculated collision
-stopping powers, results in agreement with collision stopping powers published in ICRU37\cite{ICRU37}.  Density correction files must exist
-in directory {\tt \$HEN\_HOUSE/pegs4/density\_corrections/elements} (for elements) or {\tt \$HEN\_HOUSE/pegs4/density\_corrections/compounds} (for mixtures or compounds).  Density correction file names are specified without the directory path and without the {\tt .density}
-extension (although this is understood to be part of the name).  Note that the density correction files for many elements, compounds
+stopping powers, results in agreement with collision stopping powers published in ICRU37\cite{ICRU37}.  In general, density correction files are specified including their full directory path and {\tt .density} file extension.  However,
+the file can be specified by its prefix only if it
+exists in, in order of search priority:
+\begin{enumerate}
+\item {\tt \$EGS\_HOME/pegs4/density\_corrections}
+\item {\tt \$EGS\_HOME/pegs4/density\_corrections/elements}
+\item {\tt \$EGS\_HOME/pegs4/density\_corrections/compounds}
+\item {\tt \$EGS\_HOME/pegs4/density}
+\item {\tt \$HEN\_HOUSE/pegs4/density\_corrections/elements}
+\item {\tt \$HEN\_HOUSE/pegs4/density\_corrections/compounds}
+\end{enumerate}
+Note that the density correction files for many elements, compounds
 and mixtures are supplied with
-the distribution.  Density correction files have a header portion from which it is possible to read the composition and bulk
-density of the medium.  If the composition and/or bulk density read from the file header are different than those explicitly input
-using {\tt elements=}, {\tt number of atoms=} or {\tt mass fractions=}, and {\tt rho=}, then {\tt HATCH} will ouput a warning
-message, and the values in the density correction file will be used.
-\index{pegsless mode!STERNCID}
-\item {\tt sterncid} $[${\tt STERNCID}$]$  is the Sternheimer-Berger ID for the medium. {\tt STERNCID} is compared to a lookup table and\
-if it is found, pre-calculated density effect parameters are applied to collision stopping powers.\
-Otherwise, a general Sternheimer-Peierls formula is used to calculate density effect parameters.  The default\
-STERNCID is the medium name.  Note that if a density correction file is specified, then density corrections read from the file
-supersede those determined based on {\tt STERNCID}.
+the distribution.  Density correction files have a header portion from which the composition and bulk density of the medium are read.  These values override 
+any user inputs for {\tt elements=}, {\tt number of atoms=} or {\tt mass fractions=}, and {\tt rho=}.  Thus, as in the case of 
+{\tt PMMA521ICRU} in the example above, it is possible to specify the composition
+of a medium simply by specifying a density correction file.
+\index{pegsless mode!gas pressure}
+\index{pegsless mode!GASP}
+\item {\tt gas pressure} $[${\tt GASP}$]$ is the pressure of the medium in atm
+if the medium is a gas.  This input is only relevant (and necessary
+for a gas) if
+a density correction file is not used, in which case {\tt gas pressure} is used to modify the calculated density effect parameters.
+{\tt gas pressure} defaults to 0 ({\em i.e.} the medium is not a gas). 
 \end{description}
 \end{description}
 
