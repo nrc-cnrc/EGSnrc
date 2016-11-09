@@ -1482,6 +1482,17 @@ DO i=1,NMED[
            rho_specified=.true.;
            $WRITE_MEDERR(' Rho specified in density correction file');
          ]
+
+         IF(gasp_specified)[
+           "any value of gasp other than 1 atm is incompatible with"
+           "use of dcf and, since gasp is only used to scale rho when"
+           "dcf is used, this input is now unecessary at best"
+           $WRITE_MEDERR(' Warning: gas pressure input not required',
+              ' when using density correction file.  Will set GASP=0.');
+           gasp_specified=.false.;
+           gasp_tmp=0.;
+         ]
+
          "close the density file"
          close(i_density);
        ]
