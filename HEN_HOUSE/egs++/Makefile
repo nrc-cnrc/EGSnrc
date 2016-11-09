@@ -53,7 +53,7 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
-              egs_beam_source egs_phsp_source egs_angular_spread
+              egs_beam_source egs_phsp_source egs_angular_spread iaea_phsp_source
 
 shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
