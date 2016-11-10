@@ -681,6 +681,8 @@ $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           df_if_rho_mismatch($MXMED);
 $LOGICAL  ex;
 
+$INTEGER CURSOR,Kconvert;
+
 "maybe we do not need to keep ZTBL REAL4, since it is only used here"
 $REAL4 ZTBL;
 
@@ -931,7 +933,10 @@ DO i=1,NMED[
    nmin=ival_elements;nmax=ival_elements;
    CALL GET_INPUT;
    IF(error_flags(ival_elements)=0)[
-   "now get fraction of each element"
+    DO j=1,nvalue(ival_elements)[
+        $CONVERT char_value(ival_elements,j) TO UPPER CASE;
+    ]
+    "now get fraction of each element"
     ival=ival+1;
     ival_pz=ival;
     nne_tmp=nvalue(ival_elements);
