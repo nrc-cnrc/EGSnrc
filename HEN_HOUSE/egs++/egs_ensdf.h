@@ -385,8 +385,7 @@ object oriented tree structure. This decay structure is useful for
 \ref EGS_RadionuclideSpectrum used by \ref EGS_RadionuclideSource.
 
 Uncertainties on values are ignored! The energies and intensities for various
-emissions are taken as is. Very low intensities are not discarded, all
-data is used.
+emissions are taken as is. Very low intensities are discarded.
 
 When processing an ensdf file, only the following records are considered:
 Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.

@@ -281,6 +281,62 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     return ++count;
 }
 
+void EGS_RadionuclideSource::getPositionDirection(EGS_RandomGenerator *rndm,
+        EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
+
+    bool ok = true;
+    do {
+        x = shape->getRandomPoint(rndm);
+        if (geom) {
+            if (gc == IncludeAll) {
+                ok = geom->isInside(x);
+            }
+            else if (gc == ExcludeAll) {
+                ok = !geom->isInside(x);
+            }
+            else if (gc == IncludeSelected) {
+                ok = false;
+                int ireg = geom->isWhere(x);
+                for (int j=0; j<nrs; ++j) {
+                    if (ireg == regions[j]) {
+                        ok = true;
+                        break;
+                    }
+                }
+            }
+            else {
+                ok = true;
+                int ireg = geom->isWhere(x);
+                for (int j=0; j<nrs; ++j) {
+                    if (ireg == regions[j]) {
+                        ok = false;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    while (!ok);
+
+    u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
+
+    EGS_Float sinz = 1-u.z*u.z;
+    if (sinz > 1e-15) {
+        sinz = sqrt(sinz);
+        EGS_Float cphi, sphi;
+        EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
+        cphi = cos(phi);
+        sphi = sin(phi);
+        u.x = sinz*cphi;
+        u.y = sinz*sphi;
+    }
+    else {
+        u.x = 0;
+        u.y = 0;
+    }
+    wt = 1;
+}
+
 void EGS_RadionuclideSource::setUp() {
     otype = "EGS_RadionuclideSource";
     if (!isValid()) {
@@ -308,6 +364,61 @@ void EGS_RadionuclideSource::setUp() {
             geom->ref();
         }
     }
+}
+
+bool EGS_RadionuclideSource::storeState(ostream &data_out) const {
+    if (!egsStoreI64(data_out,ishower)) {
+        return false;
+    }
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        if (!decays[i]->storeState(data_out)) {
+            return false;
+        }
+    }
+    if (!storeFluenceState(data_out)) {
+        return false;
+    }
+    return true;
+}
+
+bool EGS_RadionuclideSource::addState(istream &data) {
+    EGS_I64 count_save = ishower;
+    if (!egsGetI64(data,ishower)) {
+        return false;
+    }
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        if (!decays[i]->addState(data)) {
+            return false;
+        }
+    }
+    if (!addFluenceData(data)) {
+        return false;
+    }
+    ishower += count_save;
+    return true;
+}
+
+void EGS_RadionuclideSource::resetCounter() {
+    ishower = 0;
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        decays[i]->resetCounter();
+    }
+    resetFluenceCounter();
+}
+
+bool EGS_RadionuclideSource::setState(istream &data) {
+    if (!egsGetI64(data,ishower)) {
+        return false;
+    }
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        if (!decays[i]->setState(data)) {
+            return false;
+        }
+    }
+    if (!setFluenceState(data)) {
+        return false;
+    }
+    return true;
 }
 
 extern "C" {

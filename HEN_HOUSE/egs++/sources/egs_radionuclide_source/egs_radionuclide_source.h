@@ -171,11 +171,6 @@ public:
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u);
 
-//     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
-//                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
-//                             EGS_Vector &x, EGS_Vector &u, EGS_I64 &ishower,
-//                             EGS_Float &time);
-
     EGS_Float getEmax() const {
         return Emax;
     };
@@ -199,59 +194,7 @@ public:
     }
 
     void getPositionDirection(EGS_RandomGenerator *rndm,
-                              EGS_Vector &x, EGS_Vector &u, EGS_Float &wt) {
-        bool ok = true;
-        do {
-            x = shape->getRandomPoint(rndm);
-            if (geom) {
-                if (gc == IncludeAll) {
-                    ok = geom->isInside(x);
-                }
-                else if (gc == ExcludeAll) {
-                    ok = !geom->isInside(x);
-                }
-                else if (gc == IncludeSelected) {
-                    ok = false;
-                    int ireg = geom->isWhere(x);
-                    for (int j=0; j<nrs; ++j) {
-                        if (ireg == regions[j]) {
-                            ok = true;
-                            break;
-                        }
-                    }
-                }
-                else {
-                    ok = true;
-                    int ireg = geom->isWhere(x);
-                    for (int j=0; j<nrs; ++j) {
-                        if (ireg == regions[j]) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        while (!ok);
-
-        u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
-
-        EGS_Float sinz = 1-u.z*u.z;
-        if (sinz > 1e-15) {
-            sinz = sqrt(sinz);
-            EGS_Float cphi, sphi;
-            EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
-            cphi = cos(phi);
-            sphi = sin(phi);
-            u.x = sinz*cphi;
-            u.y = sinz*sphi;
-        }
-        else {
-            u.x = 0;
-            u.y = 0;
-        }
-        wt = 1;
-    };
+                              EGS_Vector &x, EGS_Vector &u, EGS_Float &wt);
 
     bool storeFluenceState(ostream &data) const {
         return true;
@@ -270,20 +213,7 @@ public:
      * Uses the \link EGS_BaseSpectrum::storeState() storeState() \endlink
      * of the spectrum object and the storeFluenceState() virtual function.
      */
-    bool storeState(ostream &data_out) const {
-        if (!egsStoreI64(data_out,ishower)) {
-            return false;
-        }
-        for (unsigned int i=0; i<decays.size(); ++i) {
-            if (!decays[i]->storeState(data_out)) {
-                return false;
-            }
-        }
-        if (!storeFluenceState(data_out)) {
-            return false;
-        }
-        return true;
-    };
+    bool storeState(ostream &data_out) const;
 
     /*! \brief Add the source state from the stream \a data to the
      * current state.
@@ -291,22 +221,7 @@ public:
      * Uses the \link EGS_BaseSpectrum::addState() addState() \endlink
      * of the spectrum object and the addFluenceData() virtual function.
      */
-    bool addState(istream &data) {
-        EGS_I64 count_save = ishower;
-        if (!egsGetI64(data,ishower)) {
-            return false;
-        }
-        for (unsigned int i=0; i<decays.size(); ++i) {
-            if (!decays[i]->addState(data)) {
-                return false;
-            }
-        }
-        if (!addFluenceData(data)) {
-            return false;
-        }
-        ishower += count_save;
-        return true;
-    };
+    bool addState(istream &data);
 
     /*! \brief Reset the source to a state with zero sampled particles.
      *
@@ -314,13 +229,7 @@ public:
      * function of the spectrum object and the virtual function
      * resetFluenceCounter().
      */
-    void resetCounter() {
-        ishower = 0;
-        for (unsigned int i=0; i<decays.size(); ++i) {
-            decays[i]->resetCounter();
-        }
-        resetFluenceCounter();
-    };
+    void resetCounter();
 
     /*! \brief Add fluence data from the stream \a data to the current state.
      *
@@ -346,20 +255,7 @@ public:
      * method of the spectrum object and the setFluenceState() virtual
      * function.
      */
-    bool setState(istream &data) {
-        if (!egsGetI64(data,ishower)) {
-            return false;
-        }
-        for (unsigned int i=0; i<decays.size(); ++i) {
-            if (!decays[i]->setState(data)) {
-                return false;
-            }
-        }
-        if (!setFluenceState(data)) {
-            return false;
-        }
-        return true;
-    };
+    bool setState(istream &data);
 
 protected:
 
