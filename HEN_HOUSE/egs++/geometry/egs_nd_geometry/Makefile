@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Randle Taylor
 #
 ###############################################################################
 
@@ -32,15 +32,26 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_NDG_DLL -DEXPLICIT_XYZ
+GZSTREAM =
+GZSTREAM_DEF =
+GZSTREAM_H =
+GZSTREAM_LIB =
+ifneq ("$(wildcard gzstream.cpp)","")
+GZSTREAM = gzstream
+GZSTREAM_DEF = -DBUILD_GZSTREAM -DHAS_GZSTREAM
+GZSTREAM_H = gzstream.h
+GZSTREAM_LIB = z
+endif
+
+DEFS = $(DEF1) -DBUILD_NDG_DLL -DEXPLICIT_XYZ $(GZSTREAM_DEF)
 
 library = egs_ndgeometry
-lib_files = egs_nd_geometry
+lib_files = egs_nd_geometry $(GZSTREAM)
 
-link2_libs = egspp egs_planes
+link2_libs = egspp egs_planes $(GZSTREAM_LIB)
 
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
 
-$(DSO2)egs_nd_geometry.$(obje): ..$(DSEP)egs_planes$(DSEP)egs_planes.h
+$(DSO2)egs_nd_geometry.$(obje): ..$(DSEP)egs_planes$(DSEP)egs_planes.h $(GZSTREAM_H)
