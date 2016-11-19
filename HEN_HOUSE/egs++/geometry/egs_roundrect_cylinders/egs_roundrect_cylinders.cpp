@@ -21,7 +21,7 @@
 #
 ###############################################################################
 #
-#  Author:
+#  Author:       Manuel Stoeckl
 #
 #  Contributors:
 #
@@ -33,7 +33,7 @@
 */
 
 
-/*! \file egs_cylinders.cpp
+/*! \file egs_roundrect_cylinders.cpp
  *  \brief A set of concentric rounded rectangular cylinders: implementation
  *  \author Manuel Stoeckl
  */
@@ -163,6 +163,7 @@ extern "C" {
                     EGS_Projector(EGS_Vector(ay[0],ay[1],ay[2]),""));
         }
         g->setName(input);
+        g->setLabels(input);
         g->setMedia(input);
         return g;
     }

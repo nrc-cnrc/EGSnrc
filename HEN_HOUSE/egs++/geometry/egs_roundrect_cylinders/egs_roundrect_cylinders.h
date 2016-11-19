@@ -21,7 +21,7 @@
 #
 ###############################################################################
 #
-#  Author:
+#  Author:       Manuel Stoeckl
 #
 #  Contributors:
 #
@@ -33,7 +33,7 @@
 */
 
 
-/*! \file egs_cylinders.h
+/*! \file egs_roundrect_cylinders.h
  *  \brief A set of concentric rounded rectangular cylinders: header
  *  \author Manuel Stoeckl
  */
@@ -105,7 +105,7 @@ midpoint = px, py, pz
 \endverbatim
 The \c x-axis and \c y-axis keys are only needed for an object of type
 EGS_RoundRectCylinders (and in fact are ignored for xz-, yz- or xz-cylinders).
-The components of the axis vectors don't need to be normalized to unity.
+The axis vectors don't need to be normalized to unity.
 
 Radii and half-widths need to be given in increasing order. Different rounded
 rectangles may not intersect.
@@ -303,8 +303,6 @@ public:
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &src) {
-        // Thankfully, not signed...
-        // Wait -- hownear is symmetric?
         EGS_Float x = fabs(Ax*(src-xo));
         EGS_Float y = fabs(Ay*(src-xo));
 
@@ -383,7 +381,6 @@ private:
     bool findLineIntersection(int ring,
                               EGS_Float px, EGS_Float py, EGS_Float qx, EGS_Float qy,
                               EGS_Float &norm_x, EGS_Float &norm_y, EGS_Float &ux, EGS_Float &uy) {
-        // in which direction should one err on rounding error?
         if (qx == 0.0) {
             // Straight horiz.
             if (px <= ax[ring] - ar[ring]) {
