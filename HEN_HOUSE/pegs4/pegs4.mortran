@@ -31,6 +31,7 @@
 "  Contributors:    Alex Bielajew                                             "
 "                   Iwan Kawrakow                                             "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "  
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -2025,7 +2026,7 @@ ZP = ZB/ZA;
 ZV = (ZB-ZF)/ZT;
 ZU = (ZB-ZF)/ZA;
 EDEN=AN*RHO/WM*ZC;
-RLC = 1./( (AN*RHO/WM)*4.0*FSC*R0**2*(ZAB-ZF) );
+RLC = 1./( (ZAB-ZF)*(AN*RHO/WM)*4.0*FSC*R0**2 );
 OUTPUT WM,ZC,ZT,ZA,ZB,ZAB,ZF,ZG,ZP,ZV,ZU,ZS,ZE,ZX,RLC,
  (I,XSI(I),ZZX(I),FZC(I),FCOUL(I),ZZ(I),I=1,NE);
 ('0Z VARIABLES--WM,ZC,ZT,ZA,ZB,ZAB'/1P,6E14.6/
