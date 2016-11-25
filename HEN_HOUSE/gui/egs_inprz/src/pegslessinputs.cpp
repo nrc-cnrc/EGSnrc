@@ -40,6 +40,8 @@
 //qt3to4 -- BW
 #include <QTextStream>
 
+#include <QMessageBox>
+
 PEGSLESSInputs::PEGSLESSInputs()
 {
 
@@ -142,7 +144,6 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
        //define defaults
 
        rPEGSLESS->elements[tempint].push_back("");
-       rPEGSLESS->pz_or_rhoz[tempint].push_back("");
        rPEGSLESS->spec_by_pz[tempint]=true;
        rPEGSLESS->isgas[tempint]=false;
 
@@ -151,13 +152,15 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
        if(rPEGSLESS->elements[tempint][0]!="") {
         //see if composition defined
          rPEGSLESS->nelements[tempint]=rPEGSLESS->elements[tempint].size();
+         //initialize composition with blanks
+         for(int i=0; i<rPEGSLESS->nelements[tempint]; i++) rPEGSLESS->pz_or_rhoz[tempint].push_back("");
          rPEGSLESS->pz_or_rhoz[tempint]=getThemAll( codes1[1] , rPEGSLESS->pz_or_rhoz[tempint], rPEGSLESS->errors, p1 );
          if(rPEGSLESS->pz_or_rhoz[tempint][0]=="") {
            rPEGSLESS->pz_or_rhoz[tempint]=getThemAll( codes1[2] , rPEGSLESS->pz_or_rhoz[tempint], rPEGSLESS->errors, p1 );
            if(rPEGSLESS->pz_or_rhoz[tempint][0]!="") rPEGSLESS->spec_by_pz[tempint]=false;
          }
        }
-
+    
        rPEGSLESS->rho[tempint]=getIt( codes1[3] , "", rPEGSLESS->errors, p1 );
        rPEGSLESS->spr[tempint]=getIt( codes1[4] , "restricted total", rPEGSLESS->errors, p1 );
        rPEGSLESS->bc[tempint]=getIt( codes1[5] , "KM", rPEGSLESS->errors, p1 );
@@ -251,7 +254,20 @@ QTextStream & operator << ( QTextStream & t, PEGSLESSInputs * rPEGSLESS )
         if(!rPEGSLESS->spec_by_pz[i]) t << "mass fractions= ";
         else t << "no. of atoms= ";
        }
-       t << rPEGSLESS->pz_or_rhoz[i][j];
+       QString qs_pz_or_rhoz=QString::fromStdString(rPEGSLESS->pz_or_rhoz[i][j]);
+       float fl_pz_or_rhoz=qs_pz_or_rhoz.toFloat();
+       int i_pz_or_rhoz=(int)fl_pz_or_rhoz;
+       if(rPEGSLESS->spec_by_pz[i]){
+           if (fl_pz_or_rhoz-i_pz_or_rhoz>0) {
+             QString error = "Composition of med " + QString::number(i+1) +
+                             " specified by no. of atoms but" +
+                             " non-integer no. input.  Number will" +
+                             " be truncated in .egsinp file.";
+             QMessageBox::warning(0,"Warning",error,1,0,0);
+          }
+          t << i_pz_or_rhoz;
+       }
+       else t << fl_pz_or_rhoz; 
        if(j<rPEGSLESS->nelements[i]-1) t << ",";
        else t << "\n";
      }

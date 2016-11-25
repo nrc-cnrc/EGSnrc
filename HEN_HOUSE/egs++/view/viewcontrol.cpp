@@ -128,8 +128,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     projection_scale = 1;
     look_at = EGS_Vector();
     setLookAtLineEdit();
-    projection_x = 15;
-    projection_y = 15;
+    projection_m = 15;
     setProjectionLineEdit();
     p_light = EGS_Vector(0,0,distance);
     setLightLineEdit();
@@ -141,7 +140,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // various state variables
     showAxes = this->showAxesCheckbox->isChecked();
     showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
-    showRegions = this->showRegionsCheckbox->isChecked();
     showTracks = this->showTracksCheckbox->isChecked();
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
@@ -163,6 +161,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     gview = new ImageWindow(this,"gview");
     gview->resize(512,512);
+    gview->showRegions(this->showRegionsCheckbox->isChecked());
 
     // connect signals and slots for mouse navigation
     connect(gview, SIGNAL(cameraRotation(int, int)), this, SLOT(cameraRotate(int, int)));
@@ -173,6 +172,8 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
+    // Connect signal to enable saveImage button after image saved
+    connect(gview, SIGNAL(saveComplete()), this, SLOT(reenableSave()));
 
     save_image = new SaveImage(this,"save image");
 
@@ -190,13 +191,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 GeometryViewControl::~GeometryViewControl() {
 }
 
-void GeometryViewControl::reloadInput() {
-
+bool GeometryViewControl::loadInput(bool reloading) {
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
         egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
-        return;
+        return false;
     }
 
     // read the input file again
@@ -271,8 +271,14 @@ void GeometryViewControl::reloadInput() {
     }
     // Start loading process
     gview->restartWorker();
-    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,1);
+    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
     reloadButton->blockSignals(false);
+    // check that the file (still) exists
+    return true;
+}
+
+void GeometryViewControl::reloadInput() {
+    loadInput(true);
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -301,7 +307,7 @@ void GeometryViewControl::checkboxAxesLabels(bool toggle) {
 }
 
 void GeometryViewControl::checkboxShowRegions(bool toggle) {
-    showRegions = toggle;
+    gview->showRegions(toggle);
 }
 
 void GeometryViewControl::checkboxShowTracks(bool toggle) {
@@ -323,8 +329,7 @@ void GeometryViewControl::cameraHome() {
 
     // reset zoom level
     dfine = dfine_home;
-    projection_x = projection_scale*dfine;
-    projection_y = projection_scale*dfine;
+    projection_m = projection_scale*dfine;
 
     // debug information
 #ifdef VIEW_DEBUG
@@ -497,7 +502,7 @@ void GeometryViewControl::cameraZoom(int dy) {
         a_scale.push_back(projection_scale);
         a_size.push_back(size);
         dfine = dfine_max;
-        size = projection_x;
+        size = projection_m;
         projection_scale = size/EGS_Float(dfine);
     }
 //Last step zooming out for current scale
@@ -505,7 +510,7 @@ void GeometryViewControl::cameraZoom(int dy) {
         if (a_scale.size()) {
             projection_scale = a_scale.back();
             size = a_size.back();
-            dfine = int(projection_x/projection_scale);
+            dfine = int(projection_m/projection_scale);
             a_scale.pop_back();
             a_size.pop_back();
         }
@@ -515,14 +520,13 @@ void GeometryViewControl::cameraZoom(int dy) {
 // 1 pixel mouse motion in y = 1 unit change in dfine
         dfine += dy;
     }
-    projection_x = projection_scale*dfine;
-    projection_y = projection_scale*dfine;
+    projection_m = projection_scale*dfine;
 
 // debug information
 #ifdef VIEW_DEBUG
     egsWarning("In cameraZoom(%d)\n", dy);
     egsWarning(" new dfine = %d\n", dfine);
-    egsWarning(" size = %g projection_x = %g projection_scale = %g\n", size,projection_x,projection_scale);
+    egsWarning(" size = %g projection_m = %g projection_scale = %g\n", size,projection_m,projection_scale);
 #endif
 
 // render
@@ -535,17 +539,16 @@ void GeometryViewControl::cameraZoom(int dy) {
 //  dfine += dy;
 //  if (dfine<0)   dfine = 0;
 //  if (dfine>1000) dfine = 1000;
-//  projection_x = projection_scale*dfine;
-//  projection_y = projection_scale*dfine;
+//  projection_m = projection_scale*dfine;
 // //   dFine->setValue((int)dfine);
 //
 // // debug information
 // #ifdef VIEW_DEBUG
 //     egsWarning("In cameraZoom(%d)\n", dy);
 //     egsWarning(" new dfine = %d\n", dfine);
-//     egsWarning(" size = %g projection_x = %g projection_scale = %g\n", size, projection_scale*dfine,projection_scale);
+//     egsWarning(" size = %g projection_m = %g projection_scale = %g\n", size, projection_scale*dfine,projection_scale);
 // #endif
-//     cout << " size = " << size << "projection_x = " << projection_x << " projection_scale = " << projection_scale << endl;
+//     cout << " size = " << size << "projection_m = " << projection_m << " projection_scale = " << projection_scale << endl;
 //   // render
 //   renderImage();
 // }
@@ -594,11 +597,10 @@ void GeometryViewControl::changeDfine(int newdfine) {
 #ifdef VIEW_DEBUG
     egsWarning("In changeDfine(%d)\n",newdfine);
 #endif
-    //projection_x = dfine; projection_y = dfine;
-    projection_x = projection_scale*newdfine;
-    projection_y = projection_scale*newdfine;
+    //projection_m = dfine;
+    projection_m = projection_scale*newdfine;
     dfine = newdfine;
-    //egsWarning("dfine = %d projection_x = %g\n",projection_x,dfine);
+    //egsWarning("dfine = %d projection_m = %g\n",projection_m,dfine);
     updateView();
     //distance = dfine + dCourse->value();
     //setCameraPosition();
@@ -750,8 +752,10 @@ void GeometryViewControl::reportViewSettings(int x,int y) {
     int w=gview->width();
     int h=gview->height();
     EGS_Float xscreen, yscreen;
-    xscreen = (x-w/2)*projection_x/w;
-    yscreen = -(y-h/2)*projection_y/h;
+    EGS_Float xscale = w > h ? projection_m * w / h : projection_m;
+    EGS_Float yscale = h > w ? projection_m * h / w : projection_m;
+    xscreen = (x-w/2)*xscale/w;
+    yscreen = -(y-h/2)*yscale/h;
     EGS_Vector xp(screen_xo + screen_v2*yscreen + screen_v1*xscreen);
     egsWarning("In reportViewSettings(%d,%d): xp=(%g,%g,%g)\n",x,y,xp.x,xp.y,xp.z);
     EGS_Vector u(xp-camera);
@@ -797,7 +801,7 @@ int GeometryViewControl::setGeometry(
     EGS_BaseGeometry *geom,
     const std::vector<EGS_UserColor> &ucolors,
     EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax,
-    EGS_Float zmin, EGS_Float zmax, int justReloading) {
+    EGS_Float zmin, EGS_Float zmax, bool justReloading) {
     if (!geom) {
         egsWarning("setGeometry(): got null geometry\n");
         return 1;
@@ -845,7 +849,7 @@ int GeometryViewControl::setGeometry(
     materialCB->clear();
     m_colors = new QRgb [nmed];
     for (int j=0; j<nmed; j++) {
-        materialCB->insertItem(j, g->getMediumName(j));
+        materialCB->insertItem(j,g->getMediumName(j));
     }
     int nstandard = sizeof(standard_red)/sizeof(unsigned char);
     int js = 0;
@@ -1090,24 +1094,22 @@ int GeometryViewControl::setGeometry(
         if (distance > 60000) {
             egsWarning("too big: %g\n",size);
             distance = 9999;
-            projection_x = 100;
-            projection_y = 100;
+            projection_m = 100;
         }
         else {
-            //projection_x = 7*size; projection_y = 7*size;
-            projection_x = 5*size;
-            projection_y = 5*size;
-            EGS_Float proj_max = 2*projection_x;
+            //projection_m = 7*size;
+            projection_m = 5*size;
+            EGS_Float proj_max = 2*projection_m;
 #ifdef VIEW_DEBUG
-            egsWarning(" projection: %d max. projection: %d\n",(int) projection_x,
+            egsWarning(" projection: %d max. projection: %d\n",(int) projection_m,
                        (int) proj_max+1);
 #endif
             int dfine_max = 1000;//dFine->maxValue();
             //dFine->setMaxValue((int) proj_max+1);
-            //dFine->setValue((int) projection_x);
+            //dFine->setValue((int) projection_m);
             projection_scale = proj_max/dfine_max;
-            //dFine->setValue((int) (projection_x/projection_scale));
-            dfine = (int)(projection_x/projection_scale);
+            //dFine->setValue((int) (projection_m/projection_scale));
+            dfine = (int)(projection_m/projection_scale);
         }
         setProjectionLineEdit();
         //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
@@ -1169,8 +1171,7 @@ void GeometryViewControl::updateView(bool transform) {
         }
     }
 
-    rp.projection_x = projection_x;
-    rp.projection_y = projection_y;
+    rp.projection_m = projection_m;
     rp.screen_v1 = screen_v1;
     rp.screen_v2 = screen_v2;
     rp.screen_xo = screen_xo;
@@ -1224,9 +1225,14 @@ void GeometryViewControl::saveImage() {
     egsWarning("\nAbout to save %dx%d image into file %s in format %s\n\n",
                nx,ny,fname.toUtf8().constData(),format.toUtf8().constData());
 #endif
+    // Disable save button until image save complete
+    this->pushButton5->setEnabled(false);
     gview->saveView(g,nx,ny,fname,format);
 }
 
+void GeometryViewControl::reenableSave() {
+    this->pushButton5->setEnabled(true);
+}
 
 void GeometryViewControl::showHideOptions() {
 #ifdef VIEW_DEBUG

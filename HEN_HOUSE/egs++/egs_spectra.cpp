@@ -706,11 +706,36 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         }
         else {
             vector<EGS_Float> eners, probs;
-            int itype=1;
+            int itype=1, mode;
             int err1 = inp->getInput("energies",eners);
             int err2 = inp->getInput("probabilities",probs);
-            int err3 = inp->getInput("spectrum type",itype);
-
+            int err3 = inp->getInput("spectrum mode",mode);      // according to EGSnrc convention
+            if (err3) {
+                err3 = inp->getInput("spectrum type",mode);      // deprecated
+            }
+            if (err3) {
+                egsWarning("%s wrong/missing 'spectrum mode' input\n",spec_msg1);
+                if (delete_it) {
+                    delete inp;
+                }
+                return 0;
+            }
+            else {
+                if (mode < 0 || mode > 3) {
+                    egsWarning("%s unknown spectrum 'mode' %d"
+                               " %s\n",spec_msg1,mode,spec_file.c_str());
+                    if (delete_it) {
+                        delete inp;
+                    }
+                    return 0;
+                }
+                if (mode == 2) {
+                    itype = 0;
+                }
+                else if (mode == 3) {
+                    itype = 2;
+                }
+            }
             if (err1 || err2) {
                 if (err1) egsWarning("%s wrong/missing 'energies' input\n",
                                          spec_msg1);
@@ -737,13 +762,9 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                         ibin = 1;
                         x[0] = eners[0];
                     }
-                    egsWarning("type = %d nbin = %d nbin1 = %d\n",itype,
-                               nbin,nbin1);
                     for (int j=0; j<nbin1; j++) {
-                        x[ibin] = eners[ibin];
-                        f[j] = probs[j];
-                        ibin++;
-                        egsWarning("%d %d %g\n",j,ibin,x[ibin-1]);
+                        x[ibin] = eners[ibin++];
+                        f[j] = mode == 0 ? probs[j]/(eners[ibin-1]-eners[ibin-2]) : probs[j];
                         if (itype != 0 && ibin > 1) {
                             if (x[ibin-1] <= x[ibin-2]) {
                                 egsWarning("%s energies must be given in "

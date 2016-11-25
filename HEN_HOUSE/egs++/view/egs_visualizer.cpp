@@ -33,6 +33,7 @@
 #include "egs_light.h"
 #include "egs_base_geometry.h"
 #include "egs_functions.h"
+#include "egs_track_view.h"
 #include <stdlib.h>
 
 class EGS_PrivateVisualizer {
@@ -567,7 +568,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
 
 bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location) {
 
-    EGS_Float dx = sx/nx, dy = sx/ny;
+    EGS_Float dx = sx/nx, dy = sy/ny;
     EGS_Float rmax=1, gmax=1, bmax=1;
     EGS_Float ttrack=0, track_alpha = 1;
 
@@ -661,7 +662,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
 
 bool EGS_PrivateVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location) {
     if (m_tracks) {
-        return m_tracks->renderTracks(nx, ny, image, abort_location);
+        return m_tracks->renderTracks(nx, ny, image, clip, nclip, abort_location);
     }
     return true;
 }
@@ -709,6 +710,9 @@ EGS_PrivateVisualizer::~EGS_PrivateVisualizer() {
             delete clip[j];
         }
         delete [] clip;
+    }
+    if (m_tracks) {
+        delete m_tracks;
     }
 }
 

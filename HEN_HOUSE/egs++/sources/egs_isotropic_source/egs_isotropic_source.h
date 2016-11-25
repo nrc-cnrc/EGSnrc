@@ -128,7 +128,6 @@ public:
     */
     EGS_IsotropicSource(EGS_Input *, EGS_ObjectFactory *f=0);
     ~EGS_IsotropicSource() {
-        egsWarning("destructing point source\n");
         EGS_Object::deleteObject(shape);
         if (geom) {
             if (!geom->deref()) {

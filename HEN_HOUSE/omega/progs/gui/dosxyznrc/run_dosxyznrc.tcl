@@ -115,8 +115,9 @@ proc compile_accel {} {
 	set waitvar 0
 	set errtest 0
        set arg "$optlevel"
-       .bot.frm.dialg insert end "\n Executing make $arg \n"
-       set pipe [open "|make $arg" "r"]
+       set make_prog [get_config_value "make_prog"]
+       .bot.frm.dialg insert end "\n Executing $make_prog $arg \n"
+       set pipe [open "|$make_prog $arg" "r"]
        fconfigure $pipe -blocking 0
        fileevent $pipe readable [list My_Reader $pipe]
        set compile_pid [pid $pipe]

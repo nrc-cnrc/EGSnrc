@@ -36,7 +36,7 @@
 "  To include radiative corrections for Compton scattering:                   "
 "                                                                             "
 "  - add this file to the list of files needed to build EGSnrc just before    "
-"    $(EGS_SOURCEDIR)egsnrc.mortran                                           "
+"    $(EGS_SOURCEDIR)get_inputs.mortran                                       "
 "                                                                             "
 "  - turn the feature on by setting radc_flag in COMIN/RAD_COMPTON/ to 1 or   "
 "    by including Radiative Compton corrections= On in the transport          "

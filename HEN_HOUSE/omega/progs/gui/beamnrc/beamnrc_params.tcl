@@ -1526,7 +1526,7 @@ Equations are based on original Brown & Feynman\
 equations (Phys. Rev. 85, p 231--1952).  Requires\
 a change to the user codes Makefile to include\
 $(EGS_SOURCEDIR)rad_compton1.mortran in the\
-SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+SOURCES (just before $(EGS_SOURCEDIR)get_inputs.mortran).
 }
 set numopts(radc_flag) 2
 set options(radc_flag,0) "Off"

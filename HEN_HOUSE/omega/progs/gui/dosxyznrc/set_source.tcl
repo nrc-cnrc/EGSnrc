@@ -1402,12 +1402,16 @@ proc define_setting { } {
     # procedure to define a combination setting in source 10, 11, and 12
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
 
-    toplevel .main_w.srcopt.sett
-    set top .main_w.srcopt.sett
+    # 20 set points at a time
+
+    for {set j 1} {$j<=[expr ($numsets-1)/20+1]} {incr j} {
+    
+    toplevel .main_w.srcopt.sett$j
+    set top .main_w.srcopt.sett$j
 
     frame $top.grid -bd 4
     #do each setting
-      wm title $top "Define settings"
+      wm title $top "Define settings ($j)"
       label $top.grid.xisolab -text "xiso (cm)"
       label $top.grid.yisolab -text "yiso (cm)"
       label $top.grid.zisolab -text "ziso (cm)"
@@ -1424,25 +1428,27 @@ proc define_setting { } {
       grid configure $top.grid.collab -row 0 -column 6
       grid configure $top.grid.dsourcelab -row 0 -column 7
       grid configure $top.grid.muilab -row 0 -column 8
-      for {set i 1} {$i<=$numsets} {incr i} {
-         label $top.grid.l$i -text "Setting $i"
-         grid configure $top.grid.l$i -row $i -column 0 -padx 5
-         entry $top.grid.e1$i -textvariable iso1($i) -width 8
-         grid configure $top.grid.e1$i -row $i -column 1
-         entry $top.grid.e2$i -textvariable iso2($i) -width 8
-         grid configure $top.grid.e2$i -row $i -column 2
-         entry $top.grid.e3$i -textvariable iso3($i) -width 8
-         grid configure $top.grid.e3$i -row $i -column 3
-         entry $top.grid.e4$i -textvariable ang1($i) -width 8
-         grid configure $top.grid.e4$i -row $i -column 4
-         entry $top.grid.e5$i -textvariable ang2($i) -width 8
-         grid configure $top.grid.e5$i -row $i -column 5
-         entry $top.grid.e6$i -textvariable ang3($i) -width 8
-         grid configure $top.grid.e6$i -row $i -column 6
-	 entry $top.grid.e7$i -textvariable dsource($i) -width 8
-         grid configure $top.grid.e7$i -row $i -column 7
-	 entry $top.grid.e8$i -textvariable muI($i) -width 8
-         grid configure $top.grid.e8$i -row $i -column 8
+      set k 0
+      for {set i [expr ($j-1)*20+1]} {$i<=[expr min($j*20,$numsets)]} {incr i} {
+         incr k
+         label $top.grid.l$k -text "Setting $i"
+         grid configure $top.grid.l$k -row $k -column 0 -padx 5
+         entry $top.grid.e1$k -textvariable iso1($i) -width 8
+         grid configure $top.grid.e1$k -row $k -column 1
+         entry $top.grid.e2$k -textvariable iso2($i) -width 8
+         grid configure $top.grid.e2$k -row $k -column 2
+         entry $top.grid.e3$k -textvariable iso3($i) -width 8
+         grid configure $top.grid.e3$k -row $k -column 3
+         entry $top.grid.e4$k -textvariable ang1($i) -width 8
+         grid configure $top.grid.e4$k -row $k -column 4
+         entry $top.grid.e5$k -textvariable ang2($i) -width 8
+         grid configure $top.grid.e5$k -row $k -column 5
+         entry $top.grid.e6$k -textvariable ang3($i) -width 8
+         grid configure $top.grid.e6$k -row $k -column 6
+	 entry $top.grid.e7$k -textvariable dsource($i) -width 8
+         grid configure $top.grid.e7$k -row $k -column 7
+	 entry $top.grid.e8$k -textvariable muI($i) -width 8
+         grid configure $top.grid.e8$k -row $k -column 8
       }
 
     pack $top.grid -side top
@@ -1455,41 +1461,133 @@ proc define_setting { } {
 	-command "del_setting" -relief groove -bd 8
 
     button $top.b.okb -text "OK"\
-	-command "destroy $top" -relief groove -bd 8
+	-command "destroy_set_win $j" -relief groove -bd 8
     pack $top.b.addb $top.b.delb $top.b.okb -side left -padx 10
     pack $top.b -pady 10
+ 
+    #disable buttons in all windows but the last one
+    if {$j<[expr ($numsets-1)/20+1]} {
+          $top.b.addb configure -state disabled
+          $top.b.delb configure -state disabled
+          $top.b.okb configure -state disabled
+    }
 
     if {$numsets==0} {
           $top.b.delb configure -state disabled
     }
+
+    }
+    # end loop over groups of 20
 
 }
 proc add_setting { } {
 # procedure for adding a setting (source 10, 11, and 12)
     global  numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
 
-    set w .main_w.srcopt.sett
+    #note below is window for numsets+1 in anticipation of adding
+    #a point
+    set cur [expr $numsets/20+1]
+    if {$cur > 1} {
+      for {set j 2} {$j<=$cur} {incr j} {
+    if {[winfo exists .main_w.srcopt.sett$j]==0} {
+      #(re)create entry window
+      toplevel .main_w.srcopt.sett$j
+      set top .main_w.srcopt.sett$j
+      frame $top.grid -bd 4
+      wm title $top "Define settings ($j)"
+      label $top.grid.xisolab -text "xiso (cm)"
+      label $top.grid.yisolab -text "yiso (cm)"
+      label $top.grid.zisolab -text "ziso (cm)"
+      label $top.grid.thlab -text "theta (degrees)"
+      label $top.grid.philab -text "phi (degrees)"
+      label $top.grid.collab -text "phicol (degrees)"
+      label $top.grid.dsourcelab -text "dsource (cm)"
+      label $top.grid.muilab -text "MU Index (0-1)"
+      grid configure $top.grid.xisolab -row 0 -column 1
+      grid configure $top.grid.yisolab -row 0 -column 2
+      grid configure $top.grid.zisolab -row 0 -column 3
+      grid configure $top.grid.thlab -row 0 -column 4
+      grid configure $top.grid.philab -row 0 -column 5
+      grid configure $top.grid.collab -row 0 -column 6
+      grid configure $top.grid.dsourcelab -row 0 -column 7
+      grid configure $top.grid.muilab -row 0 -column 8 
+      set k 0
+      #now fill in any existing points that need to be displayed in
+      #this window
+      for {set i [expr ($j-1)*20+1]} {$i<=[expr min($j*20,$numsets)]} {incr i} {
+         incr k
+         label $top.grid.l$k -text "Setting $i"
+         grid configure $top.grid.l$k -row $k -column 0 -padx 5
+         entry $top.grid.e1$k -textvariable iso1($i) -width 8
+         grid configure $top.grid.e1$k -row $k -column 1
+         entry $top.grid.e2$k -textvariable iso2($i) -width 8
+         grid configure $top.grid.e2$k -row $k -column 2
+         entry $top.grid.e3$k -textvariable iso3($i) -width 8
+         grid configure $top.grid.e3$k -row $k -column 3
+         entry $top.grid.e4$k -textvariable ang1($i) -width 8
+         grid configure $top.grid.e4$k -row $k -column 4
+         entry $top.grid.e5$k -textvariable ang2($i) -width 8
+         grid configure $top.grid.e5$k -row $k -column 5
+         entry $top.grid.e6$k -textvariable ang3($i) -width 8
+         grid configure $top.grid.e6$k -row $k -column 6
+         entry $top.grid.e7$k -textvariable dsource($i) -width 8
+         grid configure $top.grid.e7$k -row $k -column 7
+         entry $top.grid.e8$k -textvariable muI($i) -width 8
+         grid configure $top.grid.e8$k -row $k -column 8
+      }
+
+      pack $top.grid -side top
+
+      frame $top.b
+
+      button $top.b.addb -text "Add setting" -command "add_setting"\
+        -relief groove -bd 8
+      button $top.b.delb -text "Delete last setting"\
+        -command "del_setting" -relief groove -bd 8
+
+      button $top.b.okb -text "OK"\
+        -command "destroy_set_win $j" -relief groove -bd 8
+      pack $top.b.addb $top.b.delb $top.b.okb -side left -padx 10
+      pack $top.b -pady 10
+    
+      } 
+    }
+    }
+
+    #disable buttons on all but top window
+    for {set k 1} {$k < $cur} {incr k} {
+      set w .main_w.srcopt.sett$k
+      if {[winfo exists $w]==1} {
+      $w.b.addb configure -state disabled
+      $w.b.delb configure -state disabled
+      $w.b.okb configure -state disabled
+       }
+    }
+
+    set w .main_w.srcopt.sett$cur
 
     set i [incr numsets]
+    set k [expr $numsets-($cur-1)*20] 
 
-    label $w.grid.l$i -text "Setting $i"
-    grid configure $w.grid.l$i -row $i -column 0 -padx 5
-    entry $w.grid.e1$i -textvariable iso1($i) -width 8
-    grid configure $w.grid.e1$i -row $i -column 1
-    entry $w.grid.e2$i -textvariable iso2($i) -width 8
-    grid configure $w.grid.e2$i -row $i -column 2
-    entry $w.grid.e3$i -textvariable iso3($i) -width 8
-    grid configure $w.grid.e3$i -row $i -column 3
-    entry $w.grid.e4$i -textvariable ang1($i) -width 8
-    grid configure $w.grid.e4$i -row $i -column 4
-    entry $w.grid.e5$i -textvariable ang2($i) -width 8
-    grid configure $w.grid.e5$i -row $i -column 5
-    entry $w.grid.e6$i -textvariable ang3($i) -width 8
-    grid configure $w.grid.e6$i -row $i -column 6
-    entry $w.grid.e7$i -textvariable dsource($i) -width 8
-    grid configure $w.grid.e7$i -row $i -column 7
-    entry $w.grid.e8$i -textvariable muI($i) -width 8
-    grid configure $w.grid.e8$i -row $i -column 8
+    #add a row for the new value
+    label $w.grid.l$k -text "Setting $i"
+    grid configure $w.grid.l$k -row $k -column 0 -padx 5
+    entry $w.grid.e1$k -textvariable iso1($i) -width 8
+    grid configure $w.grid.e1$k -row $k -column 1
+    entry $w.grid.e2$k -textvariable iso2($i) -width 8
+    grid configure $w.grid.e2$k -row $k -column 2
+    entry $w.grid.e3$k -textvariable iso3($i) -width 8
+    grid configure $w.grid.e3$k -row $k -column 3
+    entry $w.grid.e4$k -textvariable ang1($i) -width 8
+    grid configure $w.grid.e4$k -row $k -column 4
+    entry $w.grid.e5$k -textvariable ang2($i) -width 8
+    grid configure $w.grid.e5$k -row $k -column 5
+    entry $w.grid.e6$k -textvariable ang3($i) -width 8
+    grid configure $w.grid.e6$k -row $k -column 6
+    entry $w.grid.e7$k -textvariable dsource($i) -width 8
+    grid configure $w.grid.e7$k -row $k -column 7
+    entry $w.grid.e8$k -textvariable muI($i) -width 8
+    grid configure $w.grid.e8$k -row $k -column 8
 
     if {$numsets==1} {
          #re-enable the delete last pair/group button
@@ -1501,15 +1599,122 @@ proc del_setting { } {
 #procedure for deleting the last theta-phi pair or group
     global numsets
 
-    set w .main_w.srcopt.sett
+    set prev [expr ($numsets-1)/20+1]
+    set cur [expr ($numsets -2)/20+1]
 
-    destroy $w.grid.l$numsets
-    for {set i 1} {$i<=8} {incr i} {
-	destroy $w.grid.e$i$numsets
+    if {$cur > 1} {
+    for {set j 2} {$j<=$cur} {incr j} {
+    if {[winfo exists .main_w.srcopt.sett$j]==0} {
+      #recreate input window we are actually deleting from
+      toplevel .main_w.srcopt.sett$j
+      set top .main_w.srcopt.sett$j
+      frame $top.grid -bd 4
+      wm title $top "Define settings ($j)"
+      label $top.grid.xisolab -text "xiso (cm)"
+      label $top.grid.yisolab -text "yiso (cm)"
+      label $top.grid.zisolab -text "ziso (cm)"
+      label $top.grid.thlab -text "theta (degrees)"
+      label $top.grid.philab -text "phi (degrees)"
+      label $top.grid.collab -text "phicol (degrees)"
+      label $top.grid.dsourcelab -text "dsource (cm)"
+      label $top.grid.muilab -text "MU Index (0-1)"
+      grid configure $top.grid.xisolab -row 0 -column 1
+      grid configure $top.grid.yisolab -row 0 -column 2
+      grid configure $top.grid.zisolab -row 0 -column 3
+      grid configure $top.grid.thlab -row 0 -column 4
+      grid configure $top.grid.philab -row 0 -column 5
+      grid configure $top.grid.collab -row 0 -column 6
+      grid configure $top.grid.dsourcelab -row 0 -column 7
+      grid configure $top.grid.muilab -row 0 -column 8
+      set k 0
+      #now fill in any existing points that need to be displayed in
+      #this window
+      for {set i [expr ($j-1)*20+1]} {$i<=[expr min($j*20,$numsets-1)]} {incr i} {
+         incr k
+         label $top.grid.l$k -text "Setting $i"
+         grid configure $top.grid.l$k -row $k -column 0 -padx 5
+         entry $top.grid.e1$k -textvariable iso1($i) -width 8
+         grid configure $top.grid.e1$k -row $k -column 1
+         entry $top.grid.e2$k -textvariable iso2($i) -width 8
+         grid configure $top.grid.e2$k -row $k -column 2
+         entry $top.grid.e3$k -textvariable iso3($i) -width 8
+         grid configure $top.grid.e3$k -row $k -column 3
+         entry $top.grid.e4$k -textvariable ang1($i) -width 8
+         grid configure $top.grid.e4$k -row $k -column 4
+         entry $top.grid.e5$k -textvariable ang2($i) -width 8
+         grid configure $top.grid.e5$k -row $k -column 5
+         entry $top.grid.e6$k -textvariable ang3($i) -width 8
+         grid configure $top.grid.e6$k -row $k -column 6
+         entry $top.grid.e7$k -textvariable dsource($i) -width 8
+         grid configure $top.grid.e7$k -row $k -column 7
+         entry $top.grid.e8$k -textvariable muI($i) -width 8
+         grid configure $top.grid.e8$k -row $k -column 8
+      }
+
+      pack $top.grid -side top
+
+      frame $top.b
+
+      button $top.b.addb -text "Add setting" -command "add_setting"\
+        -relief groove -bd 8
+      button $top.b.delb -text "Delete last setting"\
+        -command "del_setting" -relief groove -bd 8
+
+      button $top.b.okb -text "OK"\
+        -command "destroy_set_win $j" -relief groove -bd 8
+      pack $top.b.addb $top.b.delb $top.b.okb -side left -padx 10
+      pack $top.b -pady 10
+      }
+      }
+      }
+
+      #disable buttons on all but top window
+    for {set k 1} {$k < $cur} {incr k} {
+      set w .main_w.srcopt.sett$k
+      if {[winfo exists $w]==1} {
+      $w.b.addb configure -state disabled
+      $w.b.delb configure -state disabled
+      $w.b.okb configure -state disabled
+       }
+    }
+
+    if {$cur<$prev && $prev>1} { 
+      #just destroy the window and enable buttons on current top level 
+      destroy .main_w.srcopt.sett$prev
+      set  w .main_w.srcopt.sett$cur
+      $w.b.addb configure -state normal 
+      $w.b.delb configure -state normal 
+      $w.b.okb configure -state normal 
+    } else {
+      set  w .main_w.srcopt.sett$prev
+      set k [expr $numsets-($prev-1)*20]
+      destroy $w.grid.l$k
+      for {set i 1} {$i<=8} {incr i} {
+	destroy $w.grid.e$i$k
+      }
     }
     incr numsets -1
 
     if {$numsets==0} {
+          set w .main_w.srcopt.sett$prev
           $w.b.delb configure -state disabled
     }
 }
+
+proc destroy_set_win { j } {
+
+    destroy .main_w.srcopt.sett$j
+
+    #enable buttons in top level window visible
+
+    for {set k [expr $j -1]} { $k>=1} {incr k-1} {
+       set w .main_w.srcopt.sett$k
+       if {[winfo exists $w]==1} {
+        $w.b.addb configure -state normal
+        $w.b.delb configure -state normal
+        $w.b.okb configure -state normal
+        break
+       }    
+    }
+}
+     
