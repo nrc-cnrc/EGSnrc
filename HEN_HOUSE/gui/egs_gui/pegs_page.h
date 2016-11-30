@@ -115,6 +115,7 @@ public slots:
     void outputClosed();
     void launchReturned();
     void setConfigReader(EGS_ConfigReader *r);
+    void enable_gaspEdit();
 
 protected:
     void init();

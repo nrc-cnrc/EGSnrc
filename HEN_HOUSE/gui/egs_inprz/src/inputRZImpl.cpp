@@ -941,7 +941,7 @@ void inputRZImpl::enable_gaspEdit()
 {
 //enable gaspEdit edit box if isGasCheckBox is checked
 //disable it if it is unchecked
-    if (isGasCheckBox->isChecked()){
+    if (isGasCheckBox->isChecked() && !DCcheckBox->isChecked()){
         gaspLabel->setEnabled( true );
         gaspEdit->setEnabled( true );
         gaspUnits->setEnabled( true );
