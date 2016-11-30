@@ -334,13 +334,13 @@ QTextStream & operator << ( QTextStream & t, PEGSLESSInputs * rPEGSLESS )
        else t << "\n";
      }
      if(rPEGSLESS->rho[i]!="") t << "rho= " << rPEGSLESS->rho_scale[i]*rPEGSLESS->rho[i].toFloat() << "\n";
+     if(rPEGSLESS->gasp[i]!="" && rPEGSLESS->gasp[i].toFloat()>0.0 && rPEGSLESS->isgas[i]) t << "gas pressure= " << rPEGSLESS->gasp[i] << "\n";
    }
    //NB: Certain parameters below are either redundant/unnecessary
    //will be commented out but coding kept just in case
    //  if(rPEGSLESS->spr[i]!="") t << "stopping powers= " << rPEGSLESS->spr[i] << "\n";
    
      if(rPEGSLESS->bc[i]!="") t << "bremsstrahlung correction= " << rPEGSLESS->bc[i] << "\n";
-     if(rPEGSLESS->gasp[i]!="" && rPEGSLESS->gasp[i].toFloat()>0.0 && rPEGSLESS->isgas[i]) t << "gas pressure= " << rPEGSLESS->gasp[i] << "\n";
 
      //if(rPEGSLESS->sterncid[i]!="") t << "sterncid= " << rPEGSLESS->sterncid[i] << "\n";
      t << ":stop " << rPEGSLESS->inpmedium[i] << ":\n\n";

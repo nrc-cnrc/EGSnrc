@@ -1539,6 +1539,8 @@ void inputRZImpl::enableDCfileInput(bool is_checked) {
    DFgroupBox->setEnabled(is_checked);
    rhoGroupBox->setEnabled(!is_checked);
    medTypeGroupBox->setEnabled(!is_checked);
+   isGasCheckBox->setEnabled(!is_checked);
+   enable_gaspEdit();
 }
 
 enum MedIndex {Elem, Comp, Mixt};

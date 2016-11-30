@@ -224,6 +224,22 @@ void EGS_PegsPage::densityIcruChanged( bool is_on) {
   dc_group->setEnabled( is_on );
   rho_group->setEnabled( !is_on );
   medtype_cbox->setEnabled( !is_on );
+  is_gas->setEnabled( !is_on );
+  enable_gaspEdit();
+}
+
+void EGS_PegsPage::enable_gaspEdit()
+{
+   if(is_gas->isChecked() && !dc_icru_check->isChecked()) {
+    gaspLabel->setEnabled(true);
+    gaspEdit->setEnabled(true);
+    gaspUnits->setEnabled(true);
+   }
+   else {
+    gaspLabel->setEnabled(false);
+    gaspEdit->setEnabled(false);
+    gaspUnits->setEnabled(false);
+   }
 }
 
 void EGS_PegsPage::medtypeChanged( const QString &s )
@@ -422,7 +438,7 @@ void EGS_PegsPage::startPegs() {
   }
   if( comboBox2->currentText() == "kg/m**3" ) rho *= 0.001;//convert to g/cm**3
   ts << rho;
-  if( is_gas->isChecked() ) ts << ",GASP=1.0";
+  if( is_gas->isChecked() && !dc_icru_check->isChecked() && gaspEdit->text().toFloat()>0.0) ts << ",GASP= " << gaspEdit->text();
   ts << ",EPSTFL=" << dc_icru_check->isChecked() << ",IAPRIM="
      << rad_icru_check->isChecked() << ",IRAYL=" << rayleigh_check->isChecked()
      << " &END\n";
