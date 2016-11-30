@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><ui version="4.0"><comment>
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <comment>
 ###############################################################################
 #
 #  EGSnrc user interface for egs_gui pegs page
@@ -27,7 +29,7 @@
 #
 ###############################################################################
 </comment>
-<class>EGS_PegsPage</class>
+ <class>EGS_PegsPage</class>
  <widget class="QWidget" name="EGS_PegsPage">
   <property name="enabled">
    <bool>true</bool>
@@ -36,212 +38,261 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>645</width>
-    <height>618</height>
+    <width>1886</width>
+    <height>710</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form1</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QGroupBox" name="groupBox6">
-     <property name="minimumSize">
-      <size>
-       <width>261</width>
-       <height>281</height>
-      </size>
-     </property>
-     <property name="title">
-      <string>Medium composition</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QTableWidget" name="composition_table">
-        <property name="rowCount">
-         <number>20</number>
-        </property>
-        <property name="columnCount">
-         <number>2</number>
-        </property>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <row/>
-        <column>
-         <property name="text">
-          <string>Element</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Fraction by weight</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="1">
-    <layout class="QVBoxLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_5">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QGroupBox" name="groupBox11">
-       <property name="title">
-        <string>Medium name</string>
+      <widget class="QGroupBox" name="groupBox6">
+       <property name="minimumSize">
+        <size>
+         <width>261</width>
+         <height>281</height>
+        </size>
        </property>
-       <layout class="QHBoxLayout">
+       <property name="title">
+        <string>Medium composition</string>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLineEdit" name="medname_le"/>
+         <widget class="QTableWidget" name="composition_table">
+          <property name="rowCount">
+           <number>20</number>
+          </property>
+          <property name="columnCount">
+           <number>2</number>
+          </property>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <column>
+           <property name="text">
+            <string>Element</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Fraction by weight</string>
+           </property>
+          </column>
+         </widget>
         </item>
        </layout>
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QGroupBox" name="groupBox8">
+        <widget class="QGroupBox" name="groupBox11">
          <property name="title">
-          <string>Medium type</string>
+          <string>Medium name</string>
          </property>
          <layout class="QHBoxLayout">
           <item>
-           <widget class="QComboBox" name="medtype_cbox">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <item>
-             <property name="text">
-              <string>Element</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Compound</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>Mixture</string>
-             </property>
-            </item>
-           </widget>
+           <widget class="QLineEdit" name="medname_le"/>
           </item>
          </layout>
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="rho_group">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
+        <layout class="QHBoxLayout">
+         <item>
+          <widget class="QGroupBox" name="groupBox8">
+           <property name="title">
+            <string>Medium type</string>
+           </property>
+           <layout class="QHBoxLayout">
+            <item>
+             <widget class="QComboBox" name="medtype_cbox">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <item>
+               <property name="text">
+                <string>Element</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Compound</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Mixture</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="rho_group">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="title">
+            <string>Mass density</string>
+           </property>
+           <layout class="QHBoxLayout">
+            <item>
+             <widget class="QLineEdit" name="rho_le"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="comboBox2">
+              <item>
+               <property name="text">
+                <string>g/cm**3</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>kg/m**3</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="groupBox3">
          <property name="title">
-          <string>Mass density</string>
+          <string>Options</string>
          </property>
-         <layout class="QHBoxLayout">
+         <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QLineEdit" name="rho_le"/>
-          </item>
-          <item>
-           <widget class="QComboBox" name="comboBox2">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
             <item>
-             <property name="text">
-              <string>g/cm**3</string>
-             </property>
+             <widget class="QCheckBox" name="dc_icru_check">
+              <property name="text">
+               <string>ICRU density correction</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
             <item>
-             <property name="text">
-              <string>kg/m**3</string>
-             </property>
+             <widget class="QCheckBox" name="rad_icru_check">
+              <property name="text">
+               <string>ICRU radiative stopping power</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
-           </widget>
+            <item>
+             <widget class="QCheckBox" name="rayleigh_check">
+              <property name="text">
+               <string>Include Rayleigh data</string>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <widget class="QCheckBox" name="is_gas">
+                <property name="text">
+                 <string>Medium is a gas</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>9</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QLabel" name="gaspLabel">
+                <property name="text">
+                 <string>gas pressure</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="gaspEdit">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="gaspUnits">
+                <property name="text">
+                 <string>atm</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
+       </item>
+       <item>
+        <spacer name="spacer5">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Expanding</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>30</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox3">
-       <property name="title">
-        <string>Options</string>
-       </property>
-       <layout class="QVBoxLayout">
-        <item>
-         <widget class="QCheckBox" name="dc_icru_check">
-          <property name="text">
-           <string>ICRU density correction</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="rad_icru_check">
-          <property name="text">
-           <string>ICRU radiative stopping power</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="rayleigh_check">
-          <property name="text">
-           <string>Include Rayleigh data</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="is_gas">
-          <property name="text">
-           <string>Medium is a gas</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <spacer name="spacer5">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Expanding</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>20</width>
-         <height>30</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
     </layout>
    </item>
-   <item row="1" column="0" colspan="2">
+   <item>
     <widget class="QGroupBox" name="dc_group">
      <property name="title">
       <string>Density correction file</string>
@@ -284,7 +335,7 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0" colspan="2">
+   <item>
     <widget class="QGroupBox" name="groupBox5">
      <property name="title">
       <string>Energy range</string>
@@ -427,7 +478,7 @@
      </layout>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
+   <item>
     <widget class="QGroupBox" name="groupBox10">
      <property name="title">
       <string>PEGS Output</string>
@@ -510,7 +561,7 @@
      </layout>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
+   <item>
     <layout class="QHBoxLayout">
      <item>
       <spacer name="spacer4">
@@ -617,6 +668,22 @@
     <hint type="destinationlabel">
      <x>20</x>
      <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>is_gas</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>EGS_PegsPage</receiver>
+   <slot>enable_gaspEdit()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1032</x>
+     <y>297</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>942</x>
+     <y>388</y>
     </hint>
    </hints>
   </connection>
