@@ -151,8 +151,10 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
                    "input to determine 'ncase'\n");
     }
 
+    //TODO: Currently the Tmax is incorrect, because it is based on
+    // ncase, which is NOT the number of disintegrations
     double Tmax = ncase_double / activity;
-    egsInformation("EGS_RadionuclideSource: Duration of experiment [s]: %e\n",
+    egsInformation("EGS_RadionuclideSource: Duration of experiment (CURRENTLY INCORRECT) [s]: %e\n",
                    Tmax);
     for (i=0; i<decays.size(); ++i) {
         decays[i]->setMaximumTime(Tmax);

@@ -37,7 +37,11 @@
 
 #include "egs_ensdf.h"
 
-EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename) {
+EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename, 
+                     const string useFluor, int verbosity) {
+    
+    verbose = verbosity;
+    useFluorescence = useFluor;
 
     if (ensdf_file.is_open()) {
         ensdf_file.close();
@@ -49,9 +53,9 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename) {
     //string element = radionuclide.substr(0, radionuclide.find("-"));
 
     egsInformation("EGS_Ensdf::EGS_Ensdf: Isotope: "
-                   "%s\n",isotope.c_str());
+                "%s\n",isotope.c_str());
     egsInformation("EGS_Ensdf::EGS_Ensdf: Now loading ensdf file: "
-                   "\"%s\"\n",ensdf_filename.c_str());
+                "\"%s\"\n",ensdf_filename.c_str());
 
     ensdf_file.open(ensdf_filename.c_str(),ios::in);
     if (!ensdf_file.is_open()) {
@@ -178,7 +182,14 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     for (vector<string>::iterator it = ensdf.begin(); it!=ensdf.end(); it++) {
 
         string line = *it;
-        egsInformation("ENSDF::parseEnsdf: %s\n", line.c_str());
+        
+        if(line.length() < 3) {
+            continue;
+        }
+        
+        if(verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: %s\n", line.c_str());
+        }
 
         if (line[6]==' ' && line[7]==' ' && line[8]==' ') {
             // Identification
@@ -294,6 +305,9 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     // If no disintegrations exist for the parent, but we do have internal
     // transition (IT) gammas, then we must have a metastable radionuclide
     // In this case, add the gammas to the myMetastableGammaRecords vector
+    if(verbose) {
+        egsInformation("EGS_Ensdf::parseEnsdf: Checking for metastable radionuclides...\n");
+    }
     for (vector<ParentRecord * >::iterator parent = myParentRecords.begin();
             parent!=myParentRecords.end(); parent++) {
 
@@ -319,18 +333,33 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         if (!gotDisint) {
             for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                    gamma != myGammaRecords.end(); gamma++) {
+                    gamma < myGammaRecords.end(); gamma++) {
 
                 if ((*gamma)->getParentRecord() == *parent) {
                     myMetastableGammaRecords.push_back(*gamma);
                     myGammaRecords.erase(gamma);
                 }
             }
+            
+            if(verbose && myMetastableGammaRecords.size() > 0) {
+                egsInformation("EGS_Ensdf::parseEnsdf: Metastable isotope "
+                               "detected.\n");
+            }
         }
+    }
+    if(verbose && myMetastableGammaRecords.size() < 1) {
+        egsInformation("EGS_Ensdf::parseEnsdf: No metastable isotopes "
+                        "detected.\n");
     }
 
     // Get X-ray and auger emissions from comments
-    getEmissionsFromComments();
+    if(useFluorescence == "yes") {
+        if(verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: Checking for x-rays and Auger...\n");
+        }
+    
+        getEmissionsFromComments();
+    }
 
     // Get rid of very low emission probability particles
     double minimumIntensity = 1e-6;
@@ -365,10 +394,15 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             // states of the daughter, we will treat this gamma as an xray
             // The halflife will be ignored
 
-            egsInformation("EGS_Ensdf::parseEnsdf: Switching gamma with unknown "
-                           "level to X-Ray for non-correlated sampling\n");
+            egsInformation("EGS_Ensdf::parseEnsdf: Warning: Switching gamma "
+                           "with unknown decay level to X-Ray (for "
+                           "non-correlated sampling)\n");
+            
             xrayEnergies.push_back((*it)->getDecayEnergy());
             xrayIntensities.push_back((*it)->getTransitionIntensity());
+            
+            egsInformation("EGS_Ensdf::parseEnsdf: X-Ray added (E,I): %f %f\n",
+                           xrayEnergies.back(), xrayIntensities.back());
 
             // Erase the gamma record object
             myGammaRecords.erase(it);
@@ -399,9 +433,6 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
             if ((*gamma)->getLevelRecord() == (*it)) {
                 totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-                egsInformation("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
-                               (*gamma)->getTransitionIntensity(),
-                               totalLevelIntensity[j]);
             }
         }
 
@@ -430,12 +461,16 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
-        egsInformation("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n",
-                       xrayEnergies[i], xrayIntensities[i]);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n",
+                        xrayEnergies[i], xrayIntensities[i]);
+        }
     }
     for (unsigned int i=0; i < augerEnergies.size(); ++i) {
-        egsInformation("EGS_Ensdf::parseEnsdf: Auger (E,I): %f %f\n",
-                       augerEnergies[i], augerIntensities[i]);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: Auger (E,I): %f %f\n",
+                        augerEnergies[i], augerIntensities[i]);
+        }
     }
 }
 
@@ -522,6 +557,11 @@ void EGS_Ensdf::buildRecords() {
 
 // Normalize intensities for alpha, beta, gamma objects
 void EGS_Ensdf::normalizeIntensities() {
+    if(verbose) {
+        egsInformation("EGS_Ensdf::normalizeIntensities: Normalizing the "
+                       "emission intensities to allow for spectrum sampling "
+                       "routines.\n");
+    }
 
     // Add up the beta, alpha, xray and auger decay intensities
     double totalDecayIntensity = 0;
@@ -529,16 +569,20 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
             beta != myBetaRecords.end(); beta++) {
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
-                       (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+        if(verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
+                        (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+        }
 
         totalDecayIntensity += (*beta)->getBetaIntensity();
     }
     for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
             alpha != myAlphaRecords.end(); alpha++) {
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
-                       (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+        if(verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
+                        (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+        }
 
         totalDecayIntensity += (*alpha)->getAlphaIntensity();
     }
@@ -546,9 +590,11 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<GammaRecord *>::iterator gamma = myMetastableGammaRecords.begin();
             gamma != myMetastableGammaRecords.end(); gamma++) {
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                       (*gamma)->getDecayEnergy(),
-                       (*gamma)->getTransitionIntensity());
+        if(verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
+                        (*gamma)->getDecayEnergy(),
+                        (*gamma)->getTransitionIntensity());
+        }
 
         totalMetastableGammaIntensity += (*gamma)->getTransitionIntensity();
         totalDecayIntensity += (*gamma)->getTransitionIntensity();
@@ -557,7 +603,9 @@ void EGS_Ensdf::normalizeIntensities() {
         double metastableFailIntensity = 100. - totalMetastableGammaIntensity;
         totalDecayIntensity += metastableFailIntensity;
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma adds to less than 100\%. Fail chance: %f\n", metastableFailIntensity);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma adds to less than 100%%. Fail chance (per 100 disintegrations): %f\n", metastableFailIntensity);
+        }
 
         // Push a copy of the last metastable gamma onto the vector
         myMetastableGammaRecords.push_back(new GammaRecord(myMetastableGammaRecords.back()));
@@ -567,20 +615,28 @@ void EGS_Ensdf::normalizeIntensities() {
         myMetastableGammaRecords.back()->setTransitionIntensity(metastableFailIntensity);
     }
     for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
-        egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
-                       xrayEnergies[i], xrayIntensities[i]);
+        if(verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
+                        xrayEnergies[i], xrayIntensities[i]);
+        }
 
         totalDecayIntensity += xrayIntensities[i];
     }
     for (unsigned int i=0; i < augerIntensities.size(); ++i) {
-        egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
-                       augerEnergies[i], augerIntensities[i]);
+        if(verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
+                        augerEnergies[i], augerIntensities[i]);
+        }
 
         totalDecayIntensity += augerIntensities[i];
     }
 
-    egsInformation("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
-                   "%f\n",totalDecayIntensity);
+    if(verbose) {
+        egsInformation("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
+                    "%f\n",totalDecayIntensity);
+        egsInformation("EGS_Ensdf::normalizeIntensities: "
+                    "Calculating renormalized intensities...\n");
+    }
 
     // Normalize beta emission intensities
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
@@ -595,8 +651,10 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*beta)->getBetaIntensity();
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
-                       (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
+                        (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+        }
     }
 
     // Normalize alpha emission intensities
@@ -617,8 +675,10 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*alpha)->getAlphaIntensity();
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
-                       (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
+                        (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+        }
     }
 
     // Normalize metastable gamma transition intensities
@@ -639,8 +699,10 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*gamma)->getTransitionIntensity();
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                       (*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
+                        (*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+        }
     }
 
     // Normalize XRay emission intensities
@@ -655,8 +717,10 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = xrayIntensities[i];
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
-                       xrayEnergies[i], xrayIntensities[i]);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
+                        xrayEnergies[i], xrayIntensities[i]);
+        }
     }
 
     // Normalize auger emission intensities
@@ -671,8 +735,10 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = augerIntensities[i];
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
-                       augerEnergies[i], augerIntensities[i]);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
+                        augerEnergies[i], augerIntensities[i]);
+        }
     }
 
     // Determine the final level that the gammas decay towards
@@ -685,9 +751,12 @@ void EGS_Ensdf::normalizeIntensities() {
         double guessedLevelEnergy =
             ((*gamma)->getLevelRecord()->getEnergy() - energy);
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (LE,E,GE): "
-                       "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
-                       energy, guessedLevelEnergy);
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma "
+                        "(LevelE,E,GuessedE): "
+                        "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
+                        energy, guessedLevelEnergy);
+        }
 
         double bestMatch = 1E10;
         LevelRecord *level;
@@ -704,17 +773,20 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
         if (bestMatch == 1E10) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: Warning: Could not find a "
-                           "level with energy matching decay of gamma with energy E=%f, "
-                           "assuming ground state\n",energy);
+            egsWarning("EGS_Ensdf::normalizeIntensities: Warning: Could "
+                           "not find a level with energy matching decay "
+                           "of gamma with energy E=%f; "
+                           "assuming final level is ground state\n",energy);
             (*gamma)->setFinalLevel(myLevelRecords.front());
         }
         else {
             (*gamma)->setFinalLevel(level);
         }
 
-        egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
-                       "%f\n",level->getEnergy());
+        if(verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
+                        "%f\n",level->getEnergy());
+        }
 
         (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
     }
@@ -735,15 +807,15 @@ void EGS_Ensdf::normalizeIntensities() {
 
             if ((*gamma)->getLevelRecord() == (*it)) {
                 totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-                egsInformation("EGS_Ensdf::normalizeIntensities: %d %f %f\n", j,
-                               (*gamma)->getTransitionIntensity(),
-                               totalLevelIntensity[j]);
             }
         }
 
         if (disintIntensity > 1e-10 && totalLevelIntensity[j] < disintIntensity + 1e-10) {
             totalLevelIntensity[j] = disintIntensity;
-            egsInformation("EGS_Ensdf::normalizeIntensities: disintegrationIntensity %f\n", totalLevelIntensity[j]);
+            if(verbose > 1) {
+                egsInformation("EGS_Ensdf::normalizeIntensities: "
+                    "disintegrationIntensity: %f\n", totalLevelIntensity[j]);
+            }
         }
         ++j;
     }
@@ -774,8 +846,12 @@ void EGS_Ensdf::normalizeIntensities() {
                 }
                 ++i;
 
-                egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (L,E,I): "
-                               "%d %f %f\n",j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+                if(verbose > 1) {
+                    egsInformation("EGS_Ensdf::normalizeIntensities: "
+                                "Gamma (level,E,I): "
+                                "%d %f %f\n",
+                                j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+                }
             }
         }
 
@@ -791,6 +867,10 @@ void EGS_Ensdf::normalizeIntensities() {
 }
 
 void EGS_Ensdf::getEmissionsFromComments() {
+    if(verbose) {
+        egsInformation("EGS_Ensdf::getEmissionsFromComments: Attempting to obtain x-ray and Auger emissions from the ENSDF comments. This assumes a particular comment format...\n");
+    }
+    
     bool xrayContinues = false;
     bool augerContinues = false;
     bool gotTotal = false;
@@ -1092,7 +1172,6 @@ double Record::parseHalfLife(int startPos, int endPos) {
 
     string halfLifeStr = egsTrimString(lines.front().substr(startPos-1,
                                        endPos-startPos+1));
-    egsInformation("Record::parseHalfLife: %s\n", halfLifeStr.c_str());
 
     // Return -1 for stable
     if (halfLifeStr.substr(0,5).compare("STABLE") == 0) {
@@ -1196,8 +1275,8 @@ unsigned short int Record::setZ(string id) {
 
     unsigned short int Z = findZ(element);
     if (Z == 0) {
-        egsWarning("EGS_Ensdf::createIsotope: element does not exist in our "
-                   "data (%s)\n", element.c_str());
+        egsWarning("EGS_Ensdf::createIsotope: Warning: Element does not exist "
+                   "in our data (%s)\n", element.c_str());
     }
 
     return Z;
@@ -1377,8 +1456,6 @@ void ParentRecord::processEnsdf() {
                    "positron records will give errors\n");
         Q = 0.;
     }
-
-    egsInformation("ParentRecord::processEnsdf: %f %f\n", halfLife, Q);
 }
 
 double ParentRecord::getHalfLife() const {
@@ -1409,9 +1486,6 @@ void NormalizationRecord::processEnsdf() {
     normalizeTransition = recordToDouble(22, 29);
     normalizeBranch = recordToDouble(32, 39);
     normalizeBeta = recordToDouble(42, 49);
-    egsInformation("NormalizationRecord::processEnsdf: %f %f %f %f\n",
-                   normalizeRelative, normalizeTransition, normalizeBranch,
-                   normalizeBeta);
 }
 
 // Multiplier for converting relative photon intensity to photons per 100
@@ -1466,7 +1540,6 @@ LevelRecord::LevelRecord(vector<string> ensdf):
 void LevelRecord::processEnsdf() {
     energy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     halfLife = recordToDouble(40, 49);
-    egsInformation("LevelRecord::processEnsdf: %f %f\n", energy, halfLife);
 }
 
 void LevelRecord::setLevelCanDecay(bool canDecayTmp) {
@@ -1585,8 +1658,6 @@ void BetaMinusRecord::processEnsdf() {
         betaIntensity *= getNormalizationRecord()->getBetaMultiplier() *
                          getNormalizationRecord()->getBranchMultiplier();
     }
-    egsInformation("BetaMinusRecord::processEnsdf: %f %f\n", finalEnergy,
-                   betaIntensity);
 }
 
 double BetaMinusRecord::getFinalEnergy() const {
@@ -1645,9 +1716,6 @@ void BetaPlusRecord::processEnsdf() {
             finalEnergy = 0.;
         }
     }
-
-    egsInformation("BetaPlusRecord::processEnsdf: %f %f %f\n", finalEnergy,
-                   positronIntensity, ecIntensity);
 }
 
 double BetaPlusRecord::getFinalEnergy() const {
@@ -1709,9 +1777,6 @@ void GammaRecord::processEnsdf() {
             getNormalizationRecord()->getRelativeMultiplier() *
             getNormalizationRecord()->getBranchMultiplier();
     }
-
-    egsInformation("GammaRecord::processEnsdf: %f %f\n", decayEnergy,
-                   transitionIntensity);
 }
 
 double GammaRecord::getDecayEnergy() const {
@@ -1764,8 +1829,6 @@ AlphaRecord::AlphaRecord(vector<string> ensdf,
 void AlphaRecord::processEnsdf() {
     finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     alphaIntensity = recordToDouble(22, 29);
-    egsInformation("AlphaRecord::processEnsdf: %f %f\n", finalEnergy,
-                   alphaIntensity);
 }
 
 double AlphaRecord::getFinalEnergy() const {

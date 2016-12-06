@@ -400,9 +400,10 @@ case below a single line of energy 97.4527 keV would be used.
 221FR T        97.474         |]  0.57     5     XKB1
 221FR T        98.069         |]                 XKB5II
 \endverbatim
-If an energy and intensity are given for the total of several lines, it is
-used instead of those lines. For example, in the case below a single line
-of energy 14.0895 keV would be used.
+If an energy and intensity are given for the "total" of several lines, it is
+only used if the intensities of the individual lines are not provided. 
+For example, in the case below a single line of energy 14.0895 keV 
+would be used.
 \verbatim
 221FR T        10.38-17.799       18.7     9     XL (total)
 221FR T        10.38                             XLL
@@ -415,6 +416,9 @@ of energy 14.0895 keV would be used.
 The ensdf class has been tested on radionuclide data from
 http://www.nucleide.org/DDEP_WG/DDEPdata.htm
 
+ENSDF files from other sources may contain x-ray and Auger emissions formatted
+differently. In this case, the x-ray and Auger lines will not be modeled. 
+
 */
 
 class EGS_EXPORT EGS_Ensdf {
@@ -424,7 +428,8 @@ public:
     /*! \brief Construct an ensdf object.
      *
      */
-    EGS_Ensdf(const string isotope, const string ensdf_filename="");
+    EGS_Ensdf(const string isotope, const string ensdf_filename="", 
+              const string useFluor="yes", int verbosity=1);
 
     /*! \brief Destructor. */
     ~EGS_Ensdf();
@@ -442,6 +447,8 @@ public:
     vector<double > getAugerEnergies() const;
 
     string radionuclide;
+    int verbose;
+    string useFluorescence;
 
     void normalizeIntensities();
 

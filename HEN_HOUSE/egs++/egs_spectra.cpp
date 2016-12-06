@@ -885,6 +885,9 @@ It is defined using the following input
                         including extension
     weight          = [optional] the relative activity (sampling
                         probability) for this isotope in a mixture
+    use fluorescence and auger = [optional, default=yes] yes or no
+                                 whether or not to model the x-ray and Auger
+                                 emissions provided in the ensdf file
 :stop spectrum:
 :start spectrum:
     type            = radionuclide
@@ -901,12 +904,18 @@ public:
     /*! \brief Construct a radionuclide spectrum.
      */
     EGS_RadionuclideSpectrum(const string isotope, const string ensdf_file,
-                             const EGS_Float weight) :
+                             const EGS_Float weight, const string useFluorescence) :
         EGS_BaseSpectrum() {
 
+        // For now, hard-code verbose mode
+        // 0 - minimal output
+        // 1 - some output of ensdf data and normalized intensities
+        // 2 - verbose output
+        int verbose = 1;
+        
         // Read in the data file for the isotope
         // and build the decay structure
-        decays = new EGS_Ensdf(isotope, ensdf_file);
+        decays = new EGS_Ensdf(isotope, ensdf_file, useFluorescence, verbose);
 
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
@@ -981,8 +990,10 @@ public:
         // Set the weight of the spectrum
         spectrumWeight = weight;
 
-        egsInformation("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
-        egsInformation("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
+        if(verbose) {
+            egsInformation("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
+            egsInformation("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
+        }
     };
 
     ~EGS_RadionuclideSpectrum() {
@@ -1708,6 +1719,22 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         if (err) {
             weight = 1;
         }
+        
+        // Determine whether to sample X-Rays and Auger electrons
+        // using the ensdf data (options: yes or no)
+        string tmp_useFl, useFluorescence;
+        err = inp->getInput("use fluorescence and auger", tmp_useFl);
+        if (!err) {
+            useFluorescence = tmp_useFl;
+        }
+        else {
+            useFluorescence = "yes";
+        }
+        if(useFluorescence == "yes") {
+            egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be used.\n");
+        } else {
+            egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored.\n");
+        }
 
         // For ensdf input, first check for the input argument
         string ensdf_file;
@@ -1750,7 +1777,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, weight);
+        spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, weight, useFluorescence);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
