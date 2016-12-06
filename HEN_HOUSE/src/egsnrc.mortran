@@ -2543,7 +2543,7 @@ $COMIN-MOLLER;   "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
 $DEFINE-LOCAL-VARIABLES-MOLLER;
 
 $REAL sigm,pbrem,rsh,Uj,sig_j;
-$INTEGER lelke,iele,ish,nsh,ifirst,i,jj,iZ;
+$INTEGER lelke,iele,ish,nsh,ifirst,i,jj,iZ,iarg;
 
 "IRCODE=1;  appears to be unused, IK Oct 97"
 NPold = NP;      "Set the old stack counter"
@@ -2574,7 +2574,9 @@ IF( eii_flag > 0 & eii_nsh(medium) > 0 ) [
                     sig_j = sig_j*pz(medium,iele)*eii_cons(medium);
                     rsh = rsh - sig_j;
                     IF( rsh < 0 ) [
+                        $AUSCALL($EIIB);
                         call eii_sample(ish,iZ,Uj);
+                        $AUSCALL($EIIA);
                         return;
                     ]
                 ]
@@ -5637,6 +5639,7 @@ LOOP [
      ]
     ]
     Ex = Evac - Ef;
+    edep_local = 0;
     IF( Ex > Ecc ) [
         np += 1; $CHECK-RELAX-STACK(np,'new_relax');
         "$egs_info('(a,i9,a,f7.3)','-> np=',np,' iq=',iqf);"
@@ -5657,7 +5660,17 @@ LOOP [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
         ]
         "$egs_info('(a,i2,a,f7.3,a)','-> iq=',iqf,' E=',Ex*1000.,' keV');"
-    ] ELSE [ edep += Ex; ]
+    ] ELSE [
+        edep += Ex;
+        
+        IF( iqf = 0 ) [
+            edep_local = Ex;
+            $AUSCALL($FLUORTRA);
+        ] ELSE [
+            edep_local = Ex;
+            $AUSCALL($AUGERTRA);
+        ]
+    ]
     :VACANCY:;
     IF( Nvac = 0 ) EXIT;
     vac = vacs(Nvac); Evac = shell_be(vac); Nvac -= 1;
@@ -7294,6 +7307,7 @@ sinthe = dsqrt(1-dcosth); costhe = dsqrt(dcosth);
 call uphi(2,1);
 
 pese2 = wx - Uj + prm;
+edep_local = 0;
 IF( pese2 > ae(medium) ) [
     $CHECK-STACK(np+1,'eii_sample');
     np = np+1; e(np) = pese2;
@@ -7301,7 +7315,11 @@ IF( pese2 > ae(medium) ) [
     sinthe = -dsqrt(1-dcosth); costhe = dsqrt(dcosth);
     iq(np) = -1; call uphi(3,2);
     edep = 0;
-] ELSE [ edep = wx - Uj; ]
+] ELSE [
+    edep = wx - Uj;
+    edep_local = edep;
+    $AUSCALL($AUGERTRA);
+]
 
 call relax(Uj,ish,iZ);
 
