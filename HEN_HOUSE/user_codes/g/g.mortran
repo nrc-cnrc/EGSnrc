@@ -132,12 +132,13 @@ REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;
 "Define a common for scoring"
 REPLACE {;COMIN/SCORE/;} WITH {;
   common/score/ e_tot,e_tot2,e_brem,e_brem2,e_bremc,e_rad,e_rad2,e_radc,
-                etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type;
+                etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type,
+                before_photo,before_eii;
                 "It is always a good idea to score in double precision!"
   real*8        e_tot,e_tot2,e_brem,e_brem2,e_rad,e_rad2,
                 etot_tmp,ebrem_tmp,erad_tmp,e_radc,e_bremc;
   $REAL         my_gle,accu;
-  $INTEGER      ncase,calc_type;
+  $INTEGER      ncase,calc_type,before_photo,before_eii;
 };
 
 REPLACE {$MXENE} WITH {200};
@@ -622,6 +623,7 @@ dunit = 1;  "i.e. we work in cm"
 "automatically zeroed"
 
 /e_tot,e_tot2,e_rad,e_rad2,e_brem,e_brem2,e_bremc,e_radc/ = 0;
+/before_photo,before_eii/ = 0;
 
 ival                   = ival + 1;
 values_sought(ival)    = 'INITIAL RANDOM NO. SEEDS';
@@ -692,15 +694,20 @@ ELSE                 [ error_flag = 0; ]
 
 call source;
 
-DO j=1,25 [ iausfl(j) = 0; ]
+DO j=1,33 [ iausfl(j) = 0; ]
 iausfl( 5) = 1; "in order to score sub-threshold energy after relaxations"
 iausfl( 8) = 1; "after brems"
 iausfl(14) = 1; "after annih"
 iausfl(15) = 1; "after annih at rest"
 iausfl(17) = 1; "after pair"
 iausfl(19) = 1; "after compt"
+iausfl(20) = 1; "before photo"
 iausfl(21) = 1; "after photo"
 iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
+iausfl(26) = 1; "after fluorescence"
+iausfl(28) = 1; "after Auger"
+iausfl(32) = 1; "before eii"
+iausfl(33) = 1; "after eii"
 
 return;
 end;    "of subroutine inputs"
@@ -734,10 +741,55 @@ $INTEGER isplit,ip;
        USEFUL
       /;
 
-IF( iarg = 4 ) [ "depositing sub-threshold energy"
-    IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]
-    etot_tmp = etot_tmp + edep; return;
+IF( iarg = 19) [
+    before_photo = 1;
+    return;
 ]
+IF( iarg = 20) [
+    before_photo = 0;
+    return;
+]
+IF( iarg = 31 ) [
+    before_eii = 1;
+    return;
+]
+IF( iarg = 32 ) [
+    before_eii = 0;
+    return;
+]
+      
+"depositing sub-threshold energy for compton"
+IF( iarg = 4 & before_eii = 0 & before_photo = 0 ) [
+    IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]
+    etot_tmp = etot_tmp + edep;
+    return;
+]
+
+"depositing sub-threshold energy for photo-electric"
+"Auger only"
+IF( iarg = 27 ) [
+    IF( before_photo = 1 ) [
+        IF( $DEBUGIT ) [ write(19,*) ' Depositing photo iarg 27 ',edep_local; ]
+        etot_tmp = etot_tmp + edep_local;
+        return;
+    ] ELSE [
+        return;
+    ]
+]
+
+"depositing sub-threshold energy for eii"
+"fluorescence only"
+IF( iarg = 25 & before_eii = 1 ) [
+    IF( $DEBUGIT ) [ write(19,*) ' Depositing eii iarg 25 ',edep_local; ]
+    etot_tmp = etot_tmp + edep_local;
+    return;
+]
+
+"skip the remaining iarg=4 calls"
+IF( iarg = 4 &  ( before_eii = 1 | before_photo = 1 ) ) [
+    return;
+]
+
 IF( iarg = 16 | iarg = 18 | iarg = 20 ) ["after a photon interaction"
     IF( $DEBUGIT ) [ write(18,*) ' iarg = ',iarg,' np = ',np; ]
 
