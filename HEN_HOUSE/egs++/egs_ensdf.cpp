@@ -37,9 +37,9 @@
 
 #include "egs_ensdf.h"
 
-EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename, 
+EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
                      const string useFluor, int verbosity) {
-    
+
     verbose = verbosity;
     useFluorescence = useFluor;
 
@@ -53,9 +53,9 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
     //string element = radionuclide.substr(0, radionuclide.find("-"));
 
     egsInformation("EGS_Ensdf::EGS_Ensdf: Isotope: "
-                "%s\n",isotope.c_str());
+                   "%s\n",isotope.c_str());
     egsInformation("EGS_Ensdf::EGS_Ensdf: Now loading ensdf file: "
-                "\"%s\"\n",ensdf_filename.c_str());
+                   "\"%s\"\n",ensdf_filename.c_str());
 
     ensdf_file.open(ensdf_filename.c_str(),ios::in);
     if (!ensdf_file.is_open()) {
@@ -182,12 +182,12 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     for (vector<string>::iterator it = ensdf.begin(); it!=ensdf.end(); it++) {
 
         string line = *it;
-        
-        if(line.length() < 3) {
+
+        if (line.length() < 3) {
             continue;
         }
-        
-        if(verbose) {
+
+        if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: %s\n", line.c_str());
         }
 
@@ -305,7 +305,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     // If no disintegrations exist for the parent, but we do have internal
     // transition (IT) gammas, then we must have a metastable radionuclide
     // In this case, add the gammas to the myMetastableGammaRecords vector
-    if(verbose) {
+    if (verbose) {
         egsInformation("EGS_Ensdf::parseEnsdf: Checking for metastable radionuclides...\n");
     }
     for (vector<ParentRecord * >::iterator parent = myParentRecords.begin();
@@ -320,7 +320,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
                 break;
             }
         }
-        if(!gotDisint) {
+        if (!gotDisint) {
             for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
                     alpha != myAlphaRecords.end(); alpha++) {
 
@@ -333,46 +333,65 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         if (!gotDisint) {
             for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                    gamma < myGammaRecords.end(); gamma++) {
+                    gamma < myGammaRecords.end();) {
 
                 if ((*gamma)->getParentRecord() == *parent) {
                     myMetastableGammaRecords.push_back(*gamma);
                     myGammaRecords.erase(gamma);
                 }
+                else {
+                    gamma++;
+                }
             }
-            
-            if(verbose && myMetastableGammaRecords.size() > 0) {
+
+            if (verbose && myMetastableGammaRecords.size() > 0) {
                 egsInformation("EGS_Ensdf::parseEnsdf: Metastable isotope "
                                "detected.\n");
             }
         }
     }
-    if(verbose && myMetastableGammaRecords.size() < 1) {
+    if (verbose && myMetastableGammaRecords.size() < 1) {
         egsInformation("EGS_Ensdf::parseEnsdf: No metastable isotopes "
-                        "detected.\n");
+                       "detected.\n");
     }
 
     // Get X-ray and auger emissions from comments
-    if(useFluorescence == "yes") {
-        if(verbose) {
+    if (useFluorescence == "yes") {
+        if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: Checking for x-rays and Auger...\n");
         }
-    
+
         getEmissionsFromComments();
+
+        if (verbose > 1) {
+            egsInformation("EGS_Ensdf::parseEnsdf: Done checking for x-rays and Auger.\n");
+        }
     }
 
     // Get rid of very low emission probability particles
     double minimumIntensity = 1e-6;
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
-            beta != myBetaRecords.end(); beta++) {
+            beta != myBetaRecords.end();) {
         if ((*beta)->getBetaIntensity() <= minimumIntensity) {
+            if (verbose) {
+                egsInformation("EGS_Ensdf::parseEnsdf: Removing beta due to small intensity (%.1e < %.1e)\n",(*beta)->getBetaIntensity(),minimumIntensity);
+            }
             myBetaRecords.erase(beta);
+        }
+        else {
+            beta++;
         }
     }
     for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
-            alpha != myAlphaRecords.end(); alpha++) {
+            alpha != myAlphaRecords.end();) {
         if ((*alpha)->getAlphaIntensity() <= minimumIntensity) {
+            if (verbose) {
+                egsInformation("EGS_Ensdf::parseEnsdf: Removing alpha due to small intensity (%.1e < %.1e)\n",(*alpha)->getAlphaIntensity(),minimumIntensity);
+            }
             myAlphaRecords.erase(alpha);
+        }
+        else {
+            alpha++;
         }
     }
 
@@ -382,6 +401,9 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             it!=myGammaRecords.end();) {
 
         if ((*it)->getTransitionIntensity() <= minimumIntensity) {
+            if (verbose) {
+                egsInformation("EGS_Ensdf::parseEnsdf: Removing gamma due to small intensity (%.1e < %.1e)\n",(*it)->getTransitionIntensity(),minimumIntensity);
+            }
             // Throw away gammas with low probability
             // Erase the gamma record object
             myGammaRecords.erase(it);
@@ -394,15 +416,12 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             // states of the daughter, we will treat this gamma as an xray
             // The halflife will be ignored
 
-            egsInformation("EGS_Ensdf::parseEnsdf: Warning: Switching gamma "
-                           "with unknown decay level to X-Ray (for "
-                           "non-correlated sampling)\n");
-            
+            egsWarning("EGS_Ensdf::parseEnsdf: Warning: Switching gamma with unknown decay level to X-Ray (these emissions will still occur, but uncorrelated with disintegrations).\n");
+
             xrayEnergies.push_back((*it)->getDecayEnergy());
             xrayIntensities.push_back((*it)->getTransitionIntensity());
-            
-            egsInformation("EGS_Ensdf::parseEnsdf: X-Ray added (E,I): %f %f\n",
-                           xrayEnergies.back(), xrayIntensities.back());
+
+            egsInformation("EGS_Ensdf::parseEnsdf: Gamma converted to X-Ray (E,I): %f %f\n", xrayEnergies.back(), xrayIntensities.back());
 
             // Erase the gamma record object
             myGammaRecords.erase(it);
@@ -419,6 +438,9 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     // uncorrelated with the disintegrations.
     // To account for this, we convert a fraction of those gamma transitions
     // into X-Rays.
+    if (verbose) {
+        egsInformation("EGS_Ensdf::parseEnsdf: Comparing the cumulative disintegration intensity of each level with the gamma transition intensities... \n");
+    }
     unsigned int j = 0;
     vector<double> totalLevelIntensity;
     totalLevelIntensity.resize(myLevelRecords.size());
@@ -461,15 +483,15 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: XRays (E,I): %f %f\n",
-                        xrayEnergies[i], xrayIntensities[i]);
+                           xrayEnergies[i], xrayIntensities[i]);
         }
     }
     for (unsigned int i=0; i < augerEnergies.size(); ++i) {
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: Auger (E,I): %f %f\n",
-                        augerEnergies[i], augerIntensities[i]);
+                           augerEnergies[i], augerIntensities[i]);
         }
     }
 }
@@ -541,8 +563,8 @@ void EGS_Ensdf::buildRecords() {
                                                      lastNormalization, lastLevel));
             }
             else if (i==11) {
-                egsInformation("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
-                               "supported! Further development required.\n");
+                egsWarning("EGS_Ensdf::buildRecords: Warning: Delayed particle not "
+                           "supported! Further development required.\n");
             }
             else if (i==12) {
                 myGammaRecords.push_back(new
@@ -557,7 +579,7 @@ void EGS_Ensdf::buildRecords() {
 
 // Normalize intensities for alpha, beta, gamma objects
 void EGS_Ensdf::normalizeIntensities() {
-    if(verbose) {
+    if (verbose) {
         egsInformation("EGS_Ensdf::normalizeIntensities: Normalizing the "
                        "emission intensities to allow for spectrum sampling "
                        "routines.\n");
@@ -569,9 +591,9 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
             beta != myBetaRecords.end(); beta++) {
 
-        if(verbose > 1) {
+        if (verbose > 1) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
-                        (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+                           (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
         }
 
         totalDecayIntensity += (*beta)->getBetaIntensity();
@@ -579,9 +601,9 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
             alpha != myAlphaRecords.end(); alpha++) {
 
-        if(verbose > 1) {
+        if (verbose > 1) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
-                        (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+                           (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
         }
 
         totalDecayIntensity += (*alpha)->getAlphaIntensity();
@@ -590,10 +612,10 @@ void EGS_Ensdf::normalizeIntensities() {
     for (vector<GammaRecord *>::iterator gamma = myMetastableGammaRecords.begin();
             gamma != myMetastableGammaRecords.end(); gamma++) {
 
-        if(verbose > 1) {
+        if (verbose > 1) {
             egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                        (*gamma)->getDecayEnergy(),
-                        (*gamma)->getTransitionIntensity());
+                           (*gamma)->getDecayEnergy(),
+                           (*gamma)->getTransitionIntensity());
         }
 
         totalMetastableGammaIntensity += (*gamma)->getTransitionIntensity();
@@ -603,7 +625,7 @@ void EGS_Ensdf::normalizeIntensities() {
         double metastableFailIntensity = 100. - totalMetastableGammaIntensity;
         totalDecayIntensity += metastableFailIntensity;
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma adds to less than 100%%. Fail chance (per 100 disintegrations): %f\n", metastableFailIntensity);
         }
 
@@ -615,27 +637,27 @@ void EGS_Ensdf::normalizeIntensities() {
         myMetastableGammaRecords.back()->setTransitionIntensity(metastableFailIntensity);
     }
     for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
-        if(verbose > 1) {
+        if (verbose > 1) {
             egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
-                        xrayEnergies[i], xrayIntensities[i]);
+                           xrayEnergies[i], xrayIntensities[i]);
         }
 
         totalDecayIntensity += xrayIntensities[i];
     }
     for (unsigned int i=0; i < augerIntensities.size(); ++i) {
-        if(verbose > 1) {
+        if (verbose > 1) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
-                        augerEnergies[i], augerIntensities[i]);
+                           augerEnergies[i], augerIntensities[i]);
         }
 
         totalDecayIntensity += augerIntensities[i];
     }
 
-    if(verbose) {
+    if (verbose) {
         egsInformation("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
-                    "%f\n",totalDecayIntensity);
+                       "%f\n",totalDecayIntensity);
         egsInformation("EGS_Ensdf::normalizeIntensities: "
-                    "Calculating renormalized intensities...\n");
+                       "Calculating renormalized intensities...\n");
     }
 
     // Normalize beta emission intensities
@@ -651,9 +673,9 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*beta)->getBetaIntensity();
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Beta (E,I): %f %f\n",
-                        (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+                           (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
         }
     }
 
@@ -675,9 +697,9 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*alpha)->getAlphaIntensity();
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Alpha (E,I): %f %f\n",
-                        (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+                           (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
         }
     }
 
@@ -699,9 +721,9 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = (*gamma)->getTransitionIntensity();
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                        (*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+                           (*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
         }
     }
 
@@ -717,9 +739,9 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = xrayIntensities[i];
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: XRay (E,I): %f %f\n",
-                        xrayEnergies[i], xrayIntensities[i]);
+                           xrayEnergies[i], xrayIntensities[i]);
         }
     }
 
@@ -735,9 +757,9 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         lastIntensity = augerIntensities[i];
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Auger (E,I): %f %f\n",
-                        augerEnergies[i], augerIntensities[i]);
+                           augerEnergies[i], augerIntensities[i]);
         }
     }
 
@@ -751,11 +773,11 @@ void EGS_Ensdf::normalizeIntensities() {
         double guessedLevelEnergy =
             ((*gamma)->getLevelRecord()->getEnergy() - energy);
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Gamma "
-                        "(LevelE,E,GuessedE): "
-                        "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
-                        energy, guessedLevelEnergy);
+                           "(LevelE,E,GuessedE): "
+                           "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
+                           energy, guessedLevelEnergy);
         }
 
         double bestMatch = 1E10;
@@ -774,18 +796,18 @@ void EGS_Ensdf::normalizeIntensities() {
         }
         if (bestMatch == 1E10) {
             egsWarning("EGS_Ensdf::normalizeIntensities: Warning: Could "
-                           "not find a level with energy matching decay "
-                           "of gamma with energy E=%f; "
-                           "assuming final level is ground state\n",energy);
+                       "not find a level with energy matching decay "
+                       "of gamma with energy E=%f; "
+                       "assuming final level is ground state\n",energy);
             (*gamma)->setFinalLevel(myLevelRecords.front());
         }
         else {
             (*gamma)->setFinalLevel(level);
         }
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
-                        "%f\n",level->getEnergy());
+                           "%f\n",level->getEnergy());
         }
 
         (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
@@ -812,9 +834,9 @@ void EGS_Ensdf::normalizeIntensities() {
 
         if (disintIntensity > 1e-10 && totalLevelIntensity[j] < disintIntensity + 1e-10) {
             totalLevelIntensity[j] = disintIntensity;
-            if(verbose > 1) {
+            if (verbose > 1) {
                 egsInformation("EGS_Ensdf::normalizeIntensities: "
-                    "disintegrationIntensity: %f\n", totalLevelIntensity[j]);
+                               "disintegrationIntensity: %f\n", totalLevelIntensity[j]);
             }
         }
         ++j;
@@ -846,11 +868,11 @@ void EGS_Ensdf::normalizeIntensities() {
                 }
                 ++i;
 
-                if(verbose > 1) {
+                if (verbose > 1) {
                     egsInformation("EGS_Ensdf::normalizeIntensities: "
-                                "Gamma (level,E,I): "
-                                "%d %f %f\n",
-                                j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+                                   "Gamma (level,E,I): "
+                                   "%d %f %f\n",
+                                   j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
                 }
             }
         }
@@ -867,10 +889,10 @@ void EGS_Ensdf::normalizeIntensities() {
 }
 
 void EGS_Ensdf::getEmissionsFromComments() {
-    if(verbose) {
+    if (verbose) {
         egsInformation("EGS_Ensdf::getEmissionsFromComments: Attempting to obtain x-ray and Auger emissions from the ENSDF comments. This assumes a particular comment format...\n");
     }
-    
+
     bool xrayContinues = false;
     bool augerContinues = false;
     bool gotTotal = false;
@@ -885,13 +907,6 @@ void EGS_Ensdf::getEmissionsFromComments() {
 
         string line = (*comment)->getComment();
 
-        //TODO: Maybe we should sample energies instead of using averages.
-        // Then we would avoid emissions with a non-physical energy.
-        // For multiple energy lines given a single intensity, we could
-        // split the intensity evenly between the lines.
-        // For energy ranges given for a single line, we could sample a Gaussian 
-        // distributed energy within the range.
-
         // Check for the end of multi-line records
         // and average them together
         if (line.length() < 48 ||
@@ -901,48 +916,49 @@ void EGS_Ensdf::getEmissionsFromComments() {
             // lines that started with a "total" line at the top
             // then we'll check to make sure they have intensities assigned
             if (gotTotal) {
-                
+
                 // In the event that a zero intensity is in one of the lines
                 // following the "total" line, ALL of those following
                 // lines are assigned an equal fraction of the total
                 // intensity. This is an imperfect work-around for insufficient
                 // data. Using this method, the correct energies are used,
                 // rather than assigning a single averaged "total" energy line.
-                if(countNumAfterTotal > 0) {
+                if (countNumAfterTotal > 0) {
                     // X-rays
-                    if(lineTotalType == 0) {
+                    if (lineTotalType == 0) {
                         bool containsZeroIntensity = false;
                         for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
-                            if(*it < 1e-10) {
+                            if (*it < 1e-10) {
                                 containsZeroIntensity = true;
                                 break;
                             }
                         }
-                        
-                        if(containsZeroIntensity) {
+
+                        if (containsZeroIntensity) {
                             for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
                                 *it = lineTotalIntensity / countNumAfterTotal;
                             }
                         }
-                        
-                    // Auger
-                    } else if(lineTotalType == -1) {
+
+                        // Auger
+                    }
+                    else if (lineTotalType == -1) {
                         bool containsZeroIntensity = false;
                         for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
-                            if(*it < 1e-10) {
+                            if (*it < 1e-10) {
                                 containsZeroIntensity = true;
                                 break;
                             }
                         }
-                        
-                        if(containsZeroIntensity) {
+
+                        if (containsZeroIntensity) {
                             for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
                                 *it = lineTotalIntensity / countNumAfterTotal;
                             }
                         }
                     }
                 }
-                
+
                 gotTotal = false;
                 countNumAfterTotal = 0;
                 lineTotalIntensity = 0.;
@@ -1032,15 +1048,15 @@ void EGS_Ensdf::getEmissionsFromComments() {
             // Get the intensity
             string iStr = egsTrimString(line.substr(32, 9));
             double intensity = atof(iStr.c_str());
-            
+
             // If this is a line coming after a "total" line,
             // increment a counter. This will be used in the
             // event that the lines following the "total"
             // have zero intensity assigned
-            if(gotTotal && energy > 1e-10) {
+            if (gotTotal && energy > 1e-10) {
                 countNumAfterTotal++;
             }
-            
+
             // If this line is the total of the next lines, we will
             // skip this line and use the individual ones
             // However, record the total intensity in case we need it
@@ -1049,7 +1065,8 @@ void EGS_Ensdf::getEmissionsFromComments() {
                 lineTotalIntensity = intensity;
                 if (emissionLine.find("AUGER") != std::string::npos) {
                     lineTotalType = -1;
-                } else {
+                }
+                else {
                     lineTotalType = 0;
                 }
                 continue;
@@ -1071,15 +1088,15 @@ void EGS_Ensdf::getEmissionsFromComments() {
             }
             else {
                 if (emissionLine.at(0) == 'X') {
-                    if ((energy > 1e-10 && intensity > 1e-10) || 
-                        (gotTotal && energy > 1e-10)) {
+                    if ((energy > 1e-10 && intensity > 1e-10) ||
+                            (gotTotal && energy > 1e-10)) {
                         xrayEnergies.push_back(energy);
                         xrayIntensities.push_back(intensity);
                     }
                 }
                 else if (emissionLine.find("AUGER") != std::string::npos) {
-                    if ((energy > 1e-10 && intensity > 1e-10) || 
-                        (gotTotal && energy > 1e-10)) {
+                    if ((energy > 1e-10 && intensity > 1e-10) ||
+                            (gotTotal && energy > 1e-10)) {
                         augerEnergies.push_back(energy);
                         augerIntensities.push_back(intensity);
                     }

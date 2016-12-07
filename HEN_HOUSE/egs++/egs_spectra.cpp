@@ -912,7 +912,7 @@ public:
         // 1 - some output of ensdf data and normalized intensities
         // 2 - verbose output
         int verbose = 1;
-        
+
         // Read in the data file for the isotope
         // and build the decay structure
         decays = new EGS_Ensdf(isotope, ensdf_file, useFluorescence, verbose);
@@ -990,7 +990,7 @@ public:
         // Set the weight of the spectrum
         spectrumWeight = weight;
 
-        if(verbose) {
+        if (verbose) {
             egsInformation("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
             egsInformation("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
         }
@@ -1719,7 +1719,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         if (err) {
             weight = 1;
         }
-        
+
         // Determine whether to sample X-Rays and Auger electrons
         // using the ensdf data (options: yes or no)
         string tmp_useFl, useFluorescence;
@@ -1730,9 +1730,10 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         else {
             useFluorescence = "yes";
         }
-        if(useFluorescence == "yes") {
+        if (useFluorescence == "yes") {
             egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be used.\n");
-        } else {
+        }
+        else {
             egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored.\n");
         }
 
