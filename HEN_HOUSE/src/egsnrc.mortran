@@ -5600,7 +5600,10 @@ rfu_E0 = Evac;
 vac = shell; Nvac = 0; np_save = np;
 LOOP [
     IF( Evac < min_E | relax_ntran(vac) < 1 ) [
-       edep += Evac; go to :VACANCY:;
+        edep += Evac;
+        edep_local = Evac;
+        $AUSCALL($AUGERTRA);
+        go to :VACANCY:;
     ]
     new_state = sample_alias_histogram(relax_ntran(vac),
                   relax_prob(relax_first(vac)),
