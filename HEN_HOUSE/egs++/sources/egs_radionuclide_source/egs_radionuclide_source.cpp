@@ -74,7 +74,11 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     Emax = 0;
     unsigned int i = 0;
     EGS_Float spectrumWeightTotal = 0;
+    disintegrationOccurred = true;
+    ishower = 0;
     while (input->getInputItem("spectrum")) {
+
+        egsInformation("**********************************************\n");
 
         decays.push_back(EGS_BaseSpectrum::createSpectrum(input));
 
@@ -243,7 +247,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         &u) {
 
     unsigned int i = 0;
-    if (decays.size() > 1) {
+    if (decays.size() > 1 && disintegrationOccurred) {
         // Sample a uniform random number
         EGS_Float uRand = rndm->getUniform();
 
@@ -255,10 +259,11 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         }
     }
 
-    for (EGS_I64 j=0; j<1e6; ++j) {
+    for (EGS_I64 j=0; j<=1e6; ++j) {
 
         E = decays[i]->sampleEnergy(rndm);
 
+        // Skip zero energy particles
         if (E < 1e-10) {
             continue;
         }
@@ -272,10 +277,22 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
             break;
         }
+
+        if (j == 1e6) {
+            egsWarning("EGS_RadionuclideSource::getNextParticle: Error: Could not generate a particle after 1e6 tries. Spectrum will be wrong.\n");
+            E = 0;
+        }
     }
 
     time = decays[i]->getTime();
-    ishower = decays[i]->getShowerIndex();
+    EGS_I64 ishowerNew = decays[i]->getShowerIndex();
+    if (ishowerNew > ishower) {
+        disintegrationOccurred = true;
+        ishower = ishowerNew;
+    }
+    else {
+        disintegrationOccurred = false;
+    }
 
     getPositionDirection(rndm,x,u,wt);
     latch = 0;

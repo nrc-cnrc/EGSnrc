@@ -176,7 +176,11 @@ public:
     };
 
     EGS_Float getFluence() const {
-        return ishower+1;
+        EGS_Float fluence = 0;
+        for (unsigned int i=0; i<decays.size(); ++i) {
+            fluence += decays[i]->getShowerIndex() + 1;
+        }
+        return fluence;
     };
 
     double getTime() const {
@@ -278,6 +282,7 @@ protected:
     vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
     vector<int>         q_allowed; //!< A list of allowed charges
     bool                q_allowAll; //!< Whether or not to allow all charges
+    bool disintegrationOccurred;
     EGS_Float           activity; //!< The activity of the source
     double              time; //!< The time of emission of the most recently generated particle
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle

@@ -588,6 +588,7 @@ void EGS_Ensdf::normalizeIntensities() {
     // Add up the beta, alpha, xray and auger decay intensities
     double totalDecayIntensity = 0;
     double lastIntensity = 0;
+
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
             beta != myBetaRecords.end(); beta++) {
 
@@ -729,6 +730,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
     // Normalize XRay emission intensities
     for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
+
         xrayIntensities[i] /= totalDecayIntensity;
 
         if (i==0 && lastIntensity > 1e-10) {
@@ -747,6 +749,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
     // Normalize auger emission intensities
     for (unsigned int i=0; i < augerIntensities.size(); ++i) {
+
         augerIntensities[i] /= totalDecayIntensity;
 
         if (i==0 && lastIntensity > 1e-10) {

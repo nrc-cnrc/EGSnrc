@@ -883,16 +883,16 @@ It is defined using the following input
                         if ensdf file not provided below
     ensdf file      = [optional] path to a spectrum file in ensdf format,
                         including extension
-    weight          = [optional] the relative activity (sampling
+    relative activity = [optional] the relative activity (sampling
                         probability) for this isotope in a mixture
     use fluorescence and auger = [optional, default=yes] yes or no
                                  whether or not to model the x-ray and Auger
                                  emissions provided in the ensdf file
 :stop spectrum:
 :start spectrum:
-    type            = radionuclide
-    isotope         = name of next isotope in mixture (e.g. Y-90)
-    weight          = ...
+    type                = radionuclide
+    isotope             = name of next isotope in mixture (e.g. Y-90)
+    relative activity   = ...
 :stop spectrum:
 \endverbatim
 
@@ -904,7 +904,7 @@ public:
     /*! \brief Construct a radionuclide spectrum.
      */
     EGS_RadionuclideSpectrum(const string isotope, const string ensdf_file,
-                             const EGS_Float weight, const string useFluorescence) :
+                             const EGS_Float relativeActivity, const string useFluorescence) :
         EGS_BaseSpectrum() {
 
         // For now, hard-code verbose mode
@@ -988,11 +988,11 @@ public:
         }
 
         // Set the weight of the spectrum
-        spectrumWeight = weight;
+        spectrumWeight = relativeActivity;
 
         if (verbose) {
             egsInformation("EGS_RadionuclideSpectrum: Emax: %f\n",Emax);
-            egsInformation("EGS_RadionuclideSpectrum: Weight: %f\n",weight);
+            egsInformation("EGS_RadionuclideSpectrum: Relative activity: %f\n",relativeActivity);
         }
     };
 
@@ -1027,8 +1027,15 @@ public:
     /*! \brief Print the sampled emission intensities.
      */
     void printSampledEmissions() {
+
         egsInformation("\nSampled %s emissions:\n", decays->radionuclide.c_str());
         egsInformation("========================\n");
+
+        if (ishower < 1) {
+            egsWarning("EGS_RadionuclideSpectrum::printSampledEmissions: Warning: The number of disintegrations (tracked by `ishower`) is less than 1.\n");
+            return;
+        }
+
         egsInformation("Energy | Intensity per 100 emissions\n");
         if (myBetas.size() > 0) {
             egsInformation("Beta records:\n");
@@ -1060,8 +1067,13 @@ public:
                            ((EGS_Float)(*gamma)->getNumSampled()/ishower)*100);
         }
         if (myGammas.size() > 0) {
-            egsInformation("Average gamma energy: %f\n",
-                           totalGammaEnergy / totalNumSampled);
+            if (totalNumSampled > 0) {
+                egsInformation("Average gamma energy: %f\n",
+                               totalGammaEnergy / totalNumSampled);
+            }
+            else {
+                egsInformation("Zero gamma transitions occurred.\n");
+            }
         }
         if (myMetastableGammas.size() > 0) {
             egsInformation("Metastable Gamma records:\n");
@@ -1714,10 +1726,10 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             return 0;
         }
 
-        EGS_Float weight;
-        err = inp->getInput("weight",weight);
+        EGS_Float relativeActivity;
+        err = inp->getInput("relative activity",relativeActivity);
         if (err) {
-            weight = 1;
+            relativeActivity = 1;
         }
 
         // Determine whether to sample X-Rays and Auger electrons
@@ -1778,7 +1790,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, weight, useFluorescence);
+        spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, relativeActivity, useFluorescence);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
