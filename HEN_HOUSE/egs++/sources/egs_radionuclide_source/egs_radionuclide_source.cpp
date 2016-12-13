@@ -259,6 +259,8 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         }
     }
 
+    EGS_I64 ishowerOld = decays[i]->getShowerIndex();
+
     for (EGS_I64 j=0; j<=1e6; ++j) {
 
         E = decays[i]->sampleEnergy(rndm);
@@ -286,9 +288,9 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
 
     time = decays[i]->getTime();
     EGS_I64 ishowerNew = decays[i]->getShowerIndex();
-    if (ishowerNew > ishower) {
+    if (ishowerNew > ishowerOld) {
         disintegrationOccurred = true;
-        ishower = ishowerNew;
+        ishower++;
     }
     else {
         disintegrationOccurred = false;
@@ -386,56 +388,37 @@ void EGS_RadionuclideSource::setUp() {
 }
 
 bool EGS_RadionuclideSource::storeState(ostream &data_out) const {
-    if (!egsStoreI64(data_out,ishower)) {
-        return false;
-    }
     for (unsigned int i=0; i<decays.size(); ++i) {
         if (!decays[i]->storeState(data_out)) {
             return false;
         }
     }
-    if (!storeFluenceState(data_out)) {
-        return false;
-    }
     return true;
 }
 
 bool EGS_RadionuclideSource::addState(istream &data) {
-    EGS_I64 count_save = ishower;
-    if (!egsGetI64(data,ishower)) {
-        return false;
-    }
-    for (unsigned int i=0; i<decays.size(); ++i) {
-        if (!decays[i]->addState(data)) {
-            return false;
-        }
-    }
-    if (!addFluenceData(data)) {
-        return false;
-    }
-    ishower += count_save;
-    return true;
-}
-
-void EGS_RadionuclideSource::resetCounter() {
-    ishower = 0;
-    for (unsigned int i=0; i<decays.size(); ++i) {
-        decays[i]->resetCounter();
-    }
-    resetFluenceCounter();
-}
-
-bool EGS_RadionuclideSource::setState(istream &data) {
-    if (!egsGetI64(data,ishower)) {
-        return false;
-    }
     for (unsigned int i=0; i<decays.size(); ++i) {
         if (!decays[i]->setState(data)) {
             return false;
         }
+        ishower += decays[i]->getShowerIndex();
     }
-    if (!setFluenceState(data)) {
-        return false;
+    return true;
+}
+
+void EGS_RadionuclideSource::resetCounter() {
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        decays[i]->resetCounter();
+    }
+    ishower = 0;
+    count = 0;
+}
+
+bool EGS_RadionuclideSource::setState(istream &data) {
+    for (unsigned int i=0; i<decays.size(); ++i) {
+        if (!decays[i]->setState(data)) {
+            return false;
+        }
     }
     return true;
 }

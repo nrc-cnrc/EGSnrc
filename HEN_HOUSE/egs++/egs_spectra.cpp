@@ -1103,6 +1103,21 @@ public:
         egsInformation("\n");
     }
 
+    bool storeState(ostream &data) const {
+        return egsStoreI64(data,ishower);
+    }
+
+    bool setState(istream &data) {
+        return egsGetI64(data,ishower);
+    }
+
+    void resetCounter() {
+        currentLevel = 0;
+        currentTime = 0;
+        ishower = -1;
+        totalGammaEnergy = 0;
+    }
+
 protected:
     /*! \brief Sample an event from the spectrum.
 

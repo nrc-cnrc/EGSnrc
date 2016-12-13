@@ -176,11 +176,7 @@ public:
     };
 
     EGS_Float getFluence() const {
-        EGS_Float fluence = 0;
-        for (unsigned int i=0; i<decays.size(); ++i) {
-            fluence += decays[i]->getShowerIndex() + 1;
-        }
-        return fluence;
+        return ishower+1;
     };
 
     double getTime() const {
@@ -199,14 +195,6 @@ public:
 
     void getPositionDirection(EGS_RandomGenerator *rndm,
                               EGS_Vector &x, EGS_Vector &u, EGS_Float &wt);
-
-    bool storeFluenceState(ostream &data) const {
-        return true;
-    };
-
-    bool setFluenceState(istream &data) {
-        return true;
-    };
 
     bool isValid() const {
         return (decays.size() != 0 && shape != 0);
@@ -234,24 +222,6 @@ public:
      * resetFluenceCounter().
      */
     void resetCounter();
-
-    /*! \brief Add fluence data from the stream \a data to the current state.
-     *
-     *
-     * \sa storeFluenceState(), setFluenceState(), resetFluenceCounter(),
-     * setState(), storeState(), resetCounter() and addState().
-     */
-    bool addFluenceData(istream &data) {
-        return true;
-    }
-
-    /*! \brief Reset the data related to the sampling of positions and
-     * directions to a state with zero sampled particles.
-     *
-     * \sa storeFluenceState(), setFluenceState(), addFluenceData(),
-     * setState(), storeState(), resetCounter() and addState().
-     */
-    void resetFluenceCounter() { };
 
     /*! \brief Set the source state according to the data in the stream \a data.
      *
