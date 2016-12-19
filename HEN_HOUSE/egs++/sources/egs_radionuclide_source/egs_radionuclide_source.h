@@ -103,13 +103,13 @@ It is defined using the following input
                           if ensdf file not provided below
         ensdf file      = [optional] path to a spectrum file in ensdf format,
                           including extension
-        weight          = [optional] the relative activity (sampling
-                          probability) for this isotope in a mixture
+        relative activity = [optional] the relative activity for this
+                            isotope in a mixture
     :stop spectrum:
     :start spectrum:
         type            = radionuclide
         isotope         = name of next isotope in mixture (e.g. Y-90)
-        weight          = ...
+        relative activity = ...
     :stop spectrum:
 :stop source:
 \endverbatim
@@ -252,9 +252,9 @@ protected:
     vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
     vector<int>         q_allowed; //!< A list of allowed charges
     bool                q_allowAll; //!< Whether or not to allow all charges
-    bool disintegrationOccurred;
-    EGS_Float           activity; //!< The activity of the source
-    double              time; //!< The time of emission of the most recently generated particle
+    bool                disintegrationOccurred; //!< Whether or not a disintegration occurred while generating the most recent source particle
+    EGS_Float           activity, //!< The activity of the source
+                        time; //!< The time of emission of the most recently generated particle
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
 };
 

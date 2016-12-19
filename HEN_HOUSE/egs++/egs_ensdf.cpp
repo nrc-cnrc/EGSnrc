@@ -1559,7 +1559,7 @@ LevelRecord::LevelRecord(vector<string> ensdf):
 
 void LevelRecord::processEnsdf() {
     energy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
-    halfLife = recordToDouble(40, 49);
+    halfLife = parseHalfLife(40, 49);
 }
 
 void LevelRecord::setLevelCanDecay(bool canDecayTmp) {

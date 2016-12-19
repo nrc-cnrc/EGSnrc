@@ -1008,10 +1008,6 @@ public:
         return currentTime;
     }
 
-    void setMaximumTime(double maxTime) {
-        Tmax = maxTime;
-    }
-
     EGS_I64 getShowerIndex() const {
         return ishower;
     }
@@ -1152,14 +1148,14 @@ protected:
     In such a case, the daughter level is set to zero and a zero energy
     particle is returned.
 
-    Note about emission times: the time of emission of a particle is modeled
-    by uniformly distributing disintegrations over the total experiment time
-    determined by the activity provided by the user. The time of emission of
+    Note about emission times: The time of emission of
     a transition photon is determined by sampling the delay that occurs after
-    disintegration (according to the transition half life). X-Rays and
-    Auger electrons are assumed to occur at the same time as the disintegration
-    and will have both time and ishower corresponding to the most recent
-    disintegration.
+    disintegration (according to the transition half life).
+    The time of disintegration is calculated similarly based on the
+    total activity of the mixture in \ref EGS_RadionuclideSource.
+    X-Rays and Auger electrons are assumed to occur at the same time
+    as the disintegration and will have both time and ishower corresponding
+    to the most recent disintegration.
 
     Currently, it is possible for an X-Ray or Auger to be emitted before a
     disintegration has taken place. They are assigned currentTime=0 and
@@ -1189,10 +1185,9 @@ protected:
                         // it took for this transition to occur
                         // time += halflife / ln(2) * log(u)
                         double hl = currentLevel->getHalfLife();
-                        if (hl > 1e-10) {
-                            currentTime += currentLevel->getHalfLife() /
-                                           0.693147180559945309417232121458176568075500134360255254120680009493393
-                                           * log(rndm->getUniform());
+                        if (hl > 0) {
+                            currentTime = -hl * log(1.-rndm->getUniform()) /
+                                          0.693147180559945309417232121458176568075500134360255254120680009493393;
                         }
 
                         (*gamma)->incrNumSampled();
@@ -1215,6 +1210,7 @@ protected:
         // ============================
         // Sample which decay occurs
         // ============================
+        currentTime = 0;
 
         // Beta-, beta+ and electron capture
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
@@ -1223,9 +1219,6 @@ protected:
 
                 // Increment the shower number
                 ishower++;
-
-                // Uniformly distribute decays over the experiment time
-                currentTime = rndm->getUniform() * Tmax;
 
                 // Increment the counter of betas and get the charge
                 (*beta)->incrNumSampled();
@@ -1264,9 +1257,6 @@ protected:
                 // Increment the shower number
                 ishower++;
 
-                // Uniformly distribute decays over the experiment time
-                currentTime = rndm->getUniform() * Tmax;
-
                 // Increment the counter of alphas and get the charge
                 (*alpha)->incrNumSampled();
                 currentQ = (*alpha)->getCharge();
@@ -1289,9 +1279,6 @@ protected:
                 // Yes, these internal transition gammas are counted as
                 // disintegrations! This is due to the metastable state.
                 ishower++;
-
-                // Uniformly distribute decays over the experiment time
-                currentTime = rndm->getUniform() * Tmax;
 
                 // Increment the counter of gammas and get the charge
                 (*gamma)->incrNumSampled();
@@ -1367,7 +1354,6 @@ private:
     int                         currentQ;
     EGS_Float                   currentTime,
                                 Emax,
-                                Tmax,
                                 spectrumWeight,
                                 totalGammaEnergy;
     EGS_I64                     ishower;

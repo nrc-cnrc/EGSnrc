@@ -75,7 +75,8 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     unsigned int i = 0;
     EGS_Float spectrumWeightTotal = 0;
     disintegrationOccurred = true;
-    ishower = 0;
+    ishower = -1;
+    time = 0;
     while (input->getInputItem("spectrum")) {
 
         egsInformation("**********************************************\n");
@@ -123,6 +124,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     else {
         activity = 1;
     }
+
     egsInformation("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
                    activity);
 
@@ -153,15 +155,6 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     else {
         egsWarning("EGS_RadionuclideSource: no 'run control' "
                    "input to determine 'ncase'\n");
-    }
-
-    //TODO: Currently the Tmax is incorrect, because it is based on
-    // ncase, which is NOT the number of disintegrations
-    double Tmax = ncase_double / activity;
-    egsInformation("EGS_RadionuclideSource: Duration of experiment (CURRENTLY INCORRECT) [s]: %e\n",
-                   Tmax);
-    for (i=0; i<decays.size(); ++i) {
-        decays[i]->setMaximumTime(Tmax);
     }
 
     // Create the shape for source emissions
@@ -286,14 +279,16 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         }
     }
 
-    time = decays[i]->getTime();
     EGS_I64 ishowerNew = decays[i]->getShowerIndex();
     if (ishowerNew > ishowerOld) {
         disintegrationOccurred = true;
-        ishower++;
+
+        time += -log(1.-rndm->getUniform()) / activity;
+        ++ishower;
     }
     else {
         disintegrationOccurred = false;
+        time += decays[i]->getTime();
     }
 
     getPositionDirection(rndm,x,u,wt);
