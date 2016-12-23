@@ -780,7 +780,7 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
         call relax(Uj,shn_array(j),iz_array(j));
           "relax will put all particles with energies above ecut,pcut on the "
           "stack, the remaining energy will be scored in edep and deposited  "
-          "localy (via the call to ausgab below)                             "
+          "locally (via the call to ausgab below)                            "
     ]
     ELSE [ edep = Uj; ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]

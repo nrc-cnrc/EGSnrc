@@ -70,6 +70,8 @@
 " Version 1.2  D. Rogers, June 2002 (get mu_tr and mu_en )            "
 " Version 1.3  D. Rogers, Aug 2002 (account for fluorescent phtons in "
 "                                  g and mu_tr correctly )            "
+" Version 1.4  R. Townson, December 2016 (updated for EII             "
+"                           compatibility in iarg=4 contributions)    "
 "                                                                     "
 "*********************************************************************"
 
@@ -227,7 +229,7 @@ pcut_ask = pcut(1);
 OUTPUT; (' CALL HATCH to get cross-section data'/);
 CALL HATCH;
 
-;OUTPUT;('\f Start g value calculation: Version 1.13 '//);
+;OUTPUT;('\f Start g value calculation: Version 1.14 '//);
 OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
 ;OUTPUT AE(1)-0.511, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
@@ -700,6 +702,7 @@ iausfl( 8) = 1; "after brems"
 iausfl(14) = 1; "after annih"
 iausfl(15) = 1; "after annih at rest"
 iausfl(17) = 1; "after pair"
+iausfl(18) = 1; "before compt"
 iausfl(19) = 1; "after compt"
 iausfl(20) = 1; "before photo"
 iausfl(21) = 1; "after photo"
@@ -741,13 +744,12 @@ $INTEGER isplit,ip;
        USEFUL
       /;
 
-IF( iarg = 19) [
+IF( iarg = 19 | iarg = 17 ) [
     before_photo = 1;
     return;
 ]
-IF( iarg = 20) [
+IF( iarg = 20 | iarg = 18 ) [
     before_photo = 0;
-    return;
 ]
 IF( iarg = 31 ) [
     before_eii = 1;
@@ -758,14 +760,14 @@ IF( iarg = 32 ) [
     return;
 ]
       
-"depositing sub-threshold energy for everything but eii and PE"
+"depositing sub-threshold energy for everything but eii and PE/Compton"
 IF( iarg = 4 & before_eii = 0 & before_photo = 0 ) [
     IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]
     etot_tmp = etot_tmp + edep;
     return;
 ]
 
-"depositing sub-threshold energy for PE"
+"depositing sub-threshold energy for PE/Compton"
 "Auger only"
 IF( iarg = 27 ) [
     IF( before_photo = 1 ) [
