@@ -284,7 +284,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         disintegrationOccurred = true;
 
         time += -log(1.-rndm->getUniform()) / activity;
-        ++ishower;
+        ishower += (ishowerNew - ishowerOld);
     }
     else {
         disintegrationOccurred = false;

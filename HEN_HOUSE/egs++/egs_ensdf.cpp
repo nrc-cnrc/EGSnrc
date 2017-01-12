@@ -809,8 +809,8 @@ void EGS_Ensdf::normalizeIntensities() {
         }
 
         if (verbose) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E): "
-                           "%f\n",level->getEnergy());
+            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E, I): "
+                           "%f %f\n",level->getEnergy(), (*gamma)->getTransitionIntensity());
         }
 
         (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
