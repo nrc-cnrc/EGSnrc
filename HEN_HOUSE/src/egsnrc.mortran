@@ -5206,6 +5206,9 @@ IF( energy <= e_cut ) [
     edep = edep + energy;  "We assume that edep is zeroed "
                            "(or set to the appropriate value in the routine "
                            "calling RELAX "
+                           
+    edep_local = energy;
+    $AUSCALL($AUGERTRA);
     return;
 ]
 
@@ -5218,13 +5221,17 @@ e_check = 0; e_array(n_vac) = energy;
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
     IF( Ei <= e_cut ) [  " Below cut-off -> local absorption "
         edep = edep + Ei;
+        
+        edep_local = Ei;
+        $AUSCALL($AUGERTRA);
+        
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
     "Set the relax_user common block variables, IK March 22 2004"
     ish_relax = shell; u_relax = Ei;
     IF( shell = $MXSHELL ) [ "This is N-shell vacancy -> just produce Auger"
-        IF( Ei > e_cut ) [
+        IF( Ei > ekcut ) [
             np = np + 1;
             $CHECK-STACK(np,'RELAX');
             e(np) = Ei + prm; iq(np) = -1;
@@ -5239,7 +5246,12 @@ e_check = 0; e_array(n_vac) = energy;
             ELSE [ u(np) = 0; v(np) = 0; w(np) = 1; ]
             $AUSCALL($AUGERTRA);
         ]
-        ELSE             [ edep = edep + Ei; ]
+        ELSE             [
+            edep = edep + Ei;
+            
+            edep_local = Ei;
+            $AUSCALL($AUGERTRA);
+        ]
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
@@ -5278,6 +5290,15 @@ e_check = 0; e_array(n_vac) = energy;
     ]
     IF( Ex <= elcut ) [ "Below cut-off"
         edep = edep + Ex;
+        
+        IF( finala <  10 ) [
+            edep_local = Ex;
+            $AUSCALL($FLUORTRA);
+        ]
+        ELSE [
+            edep_local = Ex;
+            $AUSCALL($AUGERTRA);
+        ]
     ]
     ELSE [
         np = np + 1;
