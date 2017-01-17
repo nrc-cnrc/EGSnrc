@@ -784,7 +784,7 @@ IF( iarg = 27 ) [
 IF( iarg = 25 ) [
     IF( before_eii = 1 ) [
         IF( $DEBUGIT ) [ write(19,*) ' Depositing eii iarg 25 ',edep_local; ]
-        etot_tmp = etot_tmp + edep_local;
+        erad_tmp = erad_tmp + edep_local;
         return;
     ] ELSE [
         return;
