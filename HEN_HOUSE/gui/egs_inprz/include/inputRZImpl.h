@@ -35,7 +35,6 @@
 
 #include "pegslessinputs.h"
 
-//qt3to4 -- BW
 #include "ui_inputRZ.h"
 
 #include "datainp.h"
@@ -43,39 +42,22 @@
 #include "eventfilter.h"
 #include "comboboxtooltip.h"
 #include "beamsrcdlg.h"
-//#include <q3table.h>
-//#include <q3header.h>
 #include <qtooltip.h>
-//#include <q3listbox.h>
 #include <qdialog.h>
 #include <qpushbutton.h>
 #include <qlayout.h>
-//#include <q3buttongroup.h>
-//Added by qt3to4:
-//qt3to4 -- BW
-//#include <Q3TextStream>
 #include <QLabel>
 
-//qt3to4 -- BW
 #include <QTextStream>
 
-//qt3to4 -- BW
-//class MTable;
-//class Q3Table;
 std::ifstream & operator >> ( std::ifstream & in, MInputRZ * r );
 template <class X>
-//qt3to4 -- BW
-//void get_col_content( const int &col, Q3Table* t, std::vector<X> &result );
 void get_col_content( const int &col, QTableWidget* t, std::vector<X> &result );
 
 template <class X>
-//qt3to4 -- BW
-//void get_col_explicit( const int &col, Q3Table* t, std::vector<X> &result, X def);
 void get_col_explicit( const int &col, QTableWidget* t, std::vector<X> &result, X def);
 
 template <class X>
-//qt3to4 -- BW
-//void update_table( std::vector<X> *v, int ini, int count, Q3Table* t );
 void update_table( std::vector<X> *v, int ini, int count, QTableWidget* t );
 
 template <class X>
@@ -94,8 +76,6 @@ std::vector<X> del_element( std::vector<X> v, X e );
   input blocks for the EGSnrc user codes: DOSRZnrc, CAVRZnrc,
   SPRRZnrc and FLURZnrc.
 */
-//qt3to4 -- BW
-//class inputRZImpl : public InputRZForm
 class inputRZImpl : public QWidget, public Ui::InputRZForm
 {
   Q_OBJECT
@@ -187,9 +167,6 @@ void update_PlotControl( const MPLOTInputs* EGSplot );
 
 void updateConfiguration( const QString & conf );
 
-//qt3to4 -- BW
-//void clear_table( Q3Table* t );
-//void clear_col( Q3Table* t, int col);
 void clear_table( QTableWidget* t );
 void clear_col( QTableWidget* t, int col);
 int  Add_New_Item( const char* ItemName, QComboBox* cb );
@@ -219,20 +196,8 @@ int TotalTextLines( const QString& fname);
 
 void update_mediaTable( const MGEOInputs* EGSgeo );
 void fill_media_table( const MGEOInputs* EGSgeo );
-//qt3to4 -- BW
-//void print_delimeter( const char* boundary , const char* section, Q3TextStream &t );
 void print_delimeter( const char* boundary , const char* section, QTextStream &t );
 void SetInitialDir();
-//qt3to4 -- BW
-/*
-void DeactivateTable( Q3Table* table );
-void InitializeTwoColumnTable( Q3Table* table );
-void InitializeThreeColumnTable( Q3Table* table, const QString& rvalue );
-void InitializeTable( Q3Table* t, const QStringList& s );
-void InitializeTable( Q3Table* t, const QStringList& s, v_float frac );
-void InitializeTable( Q3Table* t, const QString& s0, const QString& s1 );
-void InitializeTable( Q3Table* t, const QString& s0, const QString& s1, const QString& s2 );
-*/
 void DeactivateTable( QTableWidget* table );
 void InitializeTwoColumnTable( QTableWidget* table);
 void InitializeThreeColumnTable( QTableWidget* table, const QString& rvalue);
@@ -270,10 +235,6 @@ void     update_caption( const QString& str );
 
 bool pegs_is_ok( QString fname );
 bool pegsless_is_ok();
-//qt3to4 -- BW
-//bool IsByRegionsEnabled( QComboBox* cb, Q3Table* table );
-//bool IsByRegionsEnabled( QCheckBox* chk, Q3Table* table );
-//bool IsByRegionsEnabled( QRadioButton* rbOn, QRadioButton* rbOff, Q3Table* table );
 bool IsByRegionsEnabled( QComboBox* cb, QTableWidget* table );
 bool IsByRegionsEnabled( QCheckBox* chk, QTableWidget* table );
 bool IsByRegionsEnabled( QRadioButton* rbOn, QRadioButton* rbOff, QTableWidget* table );
@@ -283,13 +244,13 @@ void update_conf_files();
 
 void reset_mediaTable();
 void reset_customFFTable();
+bool GetMedFromDCfile(QString f);
 
 public slots:
     virtual void activate_fluence_table();
     virtual void activate_ff_table();
     virtual void update_source_type();
     virtual void update_usercode();
-//    virtual void update_run_mode();
     virtual void set_cavity();
     virtual void set_group();
     virtual void set_individual();
@@ -299,6 +260,10 @@ public slots:
     virtual void update_MediaInput();
     virtual void mediaTable_clicked(int row, int col);
     virtual void mediaTable_singleclicked(int row, int col);
+    virtual void enableDCfileInput(bool enable);
+    virtual void medTypeChanged(const QString& str);
+    virtual void pz_or_rhozTable_clicked(int row, int col);
+    virtual void pz_or_rhozTable_singleclicked(int row, int col);
     virtual void customFFTable_clicked(int row, int col);
     virtual void customFFTable_singleclicked(int row, int col);
     virtual void UpDateInputRZFile();
@@ -306,6 +271,7 @@ public slots:
     virtual void OpenEGSInpFile();
     virtual void GetMDfile();
     virtual void GetDFfile();
+    virtual void GetDFfileReturn();
     virtual void set_table_header_pbw();
     virtual void set_table_header_noa();
     virtual void enable_gaspEdit();
