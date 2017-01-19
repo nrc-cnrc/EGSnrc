@@ -2908,9 +2908,9 @@ ELSEIF((enflag=1)|(enflag=2)|(enflag=3)|(enflag=4))[ ;OUTPUT61 etot/esrc;
 
 "Calculate incident fluence
 IF(isource = 0 | isource = 1 | isource = 3 | isource = 7)[
-   temp2=dble(IHSTRY+ncaseold-nsmiss-nmissm);
-   IF(beamarea = 0)[ ainflu=dble(IHSTRY+ncaseold-nsmiss-nmissm);]
-   ELSE[             ainflu=dble(IHSTRY+ncaseold-nsmiss-nmissm)/beamarea;]
+   temp2=dble(IHSTRY+ncaseold+nsmiss+nmissm);
+   IF(beamarea = 0)[ ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm);]
+   ELSE[             ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm)/beamarea;]
 ]
 ELSEIF(isource = 2 | isource = 8 )[
    ainflu=dble(IHSTRY+ncaseold+nsmiss+
