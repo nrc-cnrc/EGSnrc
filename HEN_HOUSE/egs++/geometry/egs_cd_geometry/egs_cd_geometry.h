@@ -495,8 +495,8 @@ public:
                 tb = 1e30;
                 int ixnew = howfar(ixold,x,u,tb,0,pn);
                 // Enters geometry and at a boundary or very close to one.
-                //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= epsilon && tb_pos <= epsilon) {
-                if (ixnew >= 0 && tb <= epsilon) {                             // (b) is true
+                //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= boundaryTolerance && tb_pos <= boundaryTolerance) {
+                if (ixnew >= 0 && tb <= boundaryTolerance) {                             // (b) is true
                     t = 0;
                     if (newmed) *newmed = g[ibase] ? g[ibase]->medium(icd) :
                                               bg->medium(ibase);
@@ -508,7 +508,7 @@ public:
                 }
                 // Skip for concave geometries: particles can reenter the CD geometry after leaving.
                 // Check 2. below will catch these cases.
-                else if ((ixnew < 0 && tb <= epsilon) && (bg->isConvex()  &&
+                else if ((ixnew < 0 && tb <= boundaryTolerance) && (bg->isConvex()  &&
                                        (g[ibase] && g[ibase]->isConvex()) ))
                 {                                                                // (a) is true
                     return ixnew;
@@ -536,7 +536,7 @@ public:
                 EGS_Float t1=1e30, t2 = 1e30;
                 int ibase_n, ic_n=0;
                 ibase_n = bg->howfar(ibase,x,u,t1);
-                if (ibase_n < 0 && t1 < 1e-4) {
+                if (ibase_n < 0 && t1 < boundaryTolerance) {
                     // Yes we do => we assume that it was a roundoff problem
                     // and in reality the particle was outside the base geometry.
                     // We then check if it will enter the base geometry.
@@ -559,7 +559,7 @@ public:
                 // distance.
                 if (g[ibase]) {
                     ic_n = g[ibase]->howfar(icd,x,u,t2);
-                    if (ic_n < 0 && t2 < 1e-4) {
+                    if (ic_n < 0 && t2 < boundaryTolerance) {
                         // Yes we do => we assume that it was a roundoff problem
                         // and in reality the particle was outside the inscribed geometry.
                         // We move to the boundary and check again the base geometry.
@@ -582,7 +582,7 @@ public:
                         goto do_checks;
                     }
                 }
-                if (t1 < 1e-4 && ibase_n >= 0 && g[ibase_n]) {
+                if (t1 < boundaryTolerance && ibase_n >= 0 && g[ibase_n]) {
                     // last resort.
                     EGS_Vector xtmp(x + u*t1);
                     int icdx = g[ibase_n]->isWhere(xtmp);
@@ -594,7 +594,7 @@ public:
                         goto do_checks;
                     }
                 }
-                if (t1 > 1e-3 && t2 > 1e-3) {
+                if (t1 > boundaryTolerance && t2 > boundaryTolerance) {
                     error_flag = 1;
                     egsWarning("EGS_CDGeometry::howfar: ireg<0, but position appears inside\n");
                     egsWarning(" name=%s base name=%s inscribed name=%s\n",name.c_str(),
@@ -697,8 +697,8 @@ do_checks:
             }
             // OK, we are in a new base geometry now, adjust
             // position and path-length so-far and retry.
-            if (tnew < 1e-6) {
-                tnew = 1e-6;
+            if (tnew < boundaryTolerance) {
+                tnew = boundaryTolerance;
             }
             tmp += u*tnew;
             ttot += tnew;

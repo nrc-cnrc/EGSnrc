@@ -267,7 +267,8 @@ public:
 
     /*! \brief Get the 2D projection of the vector \a x onto the plane */
     EGS_2DVector getProjection(const EGS_Vector &x) const {
-        return EGS_2DVector((x-xo)*v1,(x-xo)*v2);
+        EGS_Vector proj = x-distance(x)*normal();
+        return EGS_2DVector(proj.x, proj.y);
     };
 
     /*! \brief Get the distance from \a x to the plane (positive, negative or

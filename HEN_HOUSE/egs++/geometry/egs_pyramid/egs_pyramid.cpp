@@ -53,7 +53,7 @@ EGS_PyramidT<T>::EGS_PyramidT(T *P, const EGS_Vector &Xo, bool O,
     nreg = 1;
     d = p->distance(xo);
     xop = p->getProjection(xo);
-    if (fabs(d) < 1e-7) egsFatal("%s: the tip is too close to"
+    if (fabs(d) < boundaryTolerance) egsFatal("%s: the tip is too close to"
                                      " the base (%g)\n",getType().c_str(),fabs(d));
     if (d < 0) {
         a *= (-1);
@@ -163,7 +163,7 @@ extern "C" {
                 points.push_back(EGS_Vector(p[3*j],p[3*j+1],p[3*j+2]));
             }
             EGS_Vector aux(points[np-1]-points[0]);
-            if (aux.length2() > 1e-6) {
+            if (aux.length2() > epsilon) {
                 points.push_back(points[0]);
             }
             np = points.size();
@@ -173,7 +173,7 @@ extern "C" {
                 for (int j=0; j<np; j++) {
                     p2.push_back(pro.getProjection(points[j]));
                     EGS_Float d = pro.distance(points[j]);
-                    if (fabs(d) > 1e-6) {
+                    if (fabs(d) > epsilon) {
                         egsWarning("createGeometry(pyramid): "
                                    "points are not on a plane\n");
                         return 0;
@@ -184,6 +184,7 @@ extern "C" {
                                 EGS_Vector(tip[0],tip[1],tip[2]),o);
         }
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         g->setLabels(input);
         return g;

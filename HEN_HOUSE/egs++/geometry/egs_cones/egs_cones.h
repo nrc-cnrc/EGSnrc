@@ -149,7 +149,7 @@ public:
         a.normalize();
 
         // avoid round-off problems.
-        if (fabs(Rtop - Rbottom) < 2e-5) {          // flag cylinders to avoid round-off problems
+        if (fabs(Rtop - Rbottom) < boundaryTolerance) {          // flag cylinders to avoid round-off problems
             is_cyl = true;
             xo = Xo;
             Ro = Rtop;
@@ -411,7 +411,7 @@ public:
         EGS_Float tt  = 1e30;
         EGS_Float lam = -1;
 
-        if (fabs(A) < 1e-6) {
+        if (fabs(A) < boundaryTolerance) {
             // moving parallel to the cone surface (A=0, within hard-coded tolerance):
             // solution: t = -C/(2*B), if t>0
 
@@ -470,8 +470,8 @@ public:
             }
 
             lam = aa+b*ttt;                         // (x+t*u)*a >= 0: on "positive" cone
-            if (ttt >= -2e-5 && lam >= 0) {
-                tt = ttt;    // why the hard-coded -2e-5 bound??
+            if (ttt >= -boundaryTolerance && lam >= 0) {
+                tt = ttt;
             }
         }
 
@@ -792,7 +792,7 @@ public:
             EGS_Float lam = -1;
 
             // moving parallel to cone surface
-            if (fabs(A) < 1e-6) {                   // guarding against /0 in general solution
+            if (fabs(A) < boundaryTolerance) {                   // guarding against /0 in general solution
                 EGS_Float ttt = -C/(2*B);           // distance to hit
                 lam = aa+b*ttt;                     // axial position of hit
                 if (ttt >= 0 && lam >= 0) {
@@ -835,7 +835,7 @@ public:
         EGS_Float aa = xp*a, b = u*a, r2 = xp.length2(), c = u*xp;
         EGS_Float A = 1 - b*b*g12, B = c - aa*b*g12, C = r2 - aa*aa*g12;
         EGS_Float to = 1e30, lamo = -1;
-        if (fabs(A) < 1e-6) {  // moving parallel to the cone surface.
+        if (fabs(A) < boundaryTolerance) {  // moving parallel to the cone surface.
             // for the outer cone we only have a solution if a*u < 0.
             // i.e. if we are moving towards the apex.
             if (b < 0) {
@@ -1111,7 +1111,7 @@ public:
             //        "C = %g\n",gam12,A,B,C);
             EGS_Float tt = -1, lam;
             bool hit = false;
-            if (fabs(A) < 1e-6) {
+            if (fabs(A) < boundaryTolerance) {
                 if ((ireg < nc && b > 0) || (ireg >= nc && b < 0)) {
                     tt = -C/(2*B);
                 }
@@ -1168,7 +1168,7 @@ public:
         EGS_Float gam12 = ireg < nc ? g12[ireg] : g12[2*nc-ireg];
         EGS_Float A=1-b*b*gam12, B=c-aa*b*gam12, C=r2-aa*aa*gam12;
         EGS_Float tt=-1;
-        if (fabs(A) < 1e-6) {
+        if (fabs(A) < boundaryTolerance) {
             if ((ireg < nc && b < 0) || (ireg > nc && b > 0)) {
                 tt = -C/(2*B);
             }
@@ -1531,11 +1531,11 @@ public:
                 // this isWhere call is using the tmp position and the LOCAL ir region number in
                 // layer 0 of the ConeStack, so it is not inconsistent if x is outside and ir>=0.
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
-                // check if a subsequent call to howfar(ir,tmp,...) takes us outside within epsilon.
+                // check if a subsequent call to howfar(ir,tmp,...) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
                 EGS_Float tb = 1e30;
                 int inew_g = howfar(ir,tmp,u,tb,0,normal);
-                if (inew_g < 0 && tb <= epsilon) {
+                if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
                 }
                 //***************************************************************
@@ -1574,11 +1574,11 @@ public:
                 // this isWhere call is using the tmp position and the LOCAL ir region number in
                 // layer il of the ConeStack, so it is not inconsistent if x is outside and ir>=0.
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
-                // check if a subsequent call to howfar(il*nmax+ir) takes us outside within epsilon.
+                // check if a subsequent call to howfar(il*nmax+ir) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
                 EGS_Float tb = 1e30;
                 int inew_g = howfar(il*nmax+ir,tmp,u,tb,0,normal);
-                if (inew_g < 0 && tb <= epsilon) {
+                if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
                 }
                 //***************************************************************
@@ -1622,14 +1622,14 @@ public:
                 // the howfar call above does not work because it uses irnow for the call to
                 // SimpleCone->howfar: SimpleCone regions can only be 0 (inside) or -1 (outside).
                 // If we find the inconsistent condition irnow >= 0 (inside, but call from outside),
-                // then we are on a boundary. We see if howfar takes us out within epsilon.
+                // then we are on a boundary. We see if howfar takes us out within boundaryTolerance.
                 // If so, then we are not really entering the geometry.
 
                 // fp inconsistency: irnow >= 0 (inside) but called with ireg = -1 (outside)
                 if (irnow >= 0) {
                     EGS_Float tb = 1e30;
                     int inew_g = howfar(irnow,x,u,tb,0,&tmp_normal);
-                    if (inew_g < 0 && tb <= epsilon) {
+                    if (inew_g < 0 && tb <= boundaryTolerance) {
                         return ireg;    // exits geometry
                     }
                 }
@@ -1683,7 +1683,7 @@ public:
                     // always be greater than epsilon in this case).
                     dir = 0;
                 }
-                if (tp < epsilon) {
+                if (tp < boundaryTolerance) {
                     il += dir;
                     if (il < 0 || il >= nl) {
                         return ireg;
@@ -1694,7 +1694,7 @@ public:
                 if (isc) {
                     EGS_Float tc = 1e30;
                     int isc_new = cones[il][nr[il]-1]->howfar(0,x,u,tc);
-                    if (!(isc_new < 0 && tc < epsilon)) {
+                    if (!(isc_new < 0 && tc < boundaryTolerance)) {
                         egsWarning("EGS_ConeStack::howfar: called from the outside"
                                    " but I find x=(%g,%g,%g) to be inside\n", x.x,x.y,x.z);
                         egsWarning("layer=%d distance to planes=%g\n",il,tp);
