@@ -637,6 +637,37 @@ public:
     int  isWhere(EGS_Vector &r) {
         return geometry->isWhere(r);
     }
+    
+    /*! \brief Gets numbers out of \a str and pushes them onto \a regs
+    
+      Finds integer numbers in \a str and pushes them onto the vector \a regs.
+      For an input string containing a mixture of labels and region numbers,
+      this extracts the region numbers.
+      
+      Usually you will do something like:
+      \verbatim
+      string regionString;
+      vector<int> regionVector;
+      int err1 = input->getInput("cavity regions",regionString);
+      geom->getNumberRegions(regionString, regionVector);
+      geom->getLabelRegions(regionString, regionVector);
+      \endverbatim
+     */
+    void getNumberRegions(const string &str, vector<int> &regs) {
+        geometry->getNumberRegions(str, regs);
+    }
+    
+    /*! \brief Gets the regions for the labels in \a str and pushes onto \a regs
+      
+      This function is used after \a getNumberRegions. It looks for labels
+      in \a str, finds the corresponding local region numbers, and pushes those
+      region numbers onto the region number vector \a regs.
+      
+      The \a regs vector is sorted by this function, and duplicates are removed!
+     */
+    void getLabelRegions(const string &str, vector<int> &regs) {
+        geometry->getLabelRegions(str, regs);
+    }
 
     /*! \brief User scoring function for accumulation of results and VRT implementation
 
