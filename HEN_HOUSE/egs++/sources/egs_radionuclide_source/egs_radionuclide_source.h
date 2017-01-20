@@ -78,47 +78,124 @@ A radionuclide source is a source that delivers particles with
 directions uniformly distributed in \f$4 \pi\f$ emitted from
 \link EGS_BaseShape any shape. \endlink
 
-Emissions are based on decays from the radionuclide isotope and can be a mix of
-beta decays, X-radiations, etc.
+Note that \ref EGS_RadionuclideSource is an experimental source and only a 
+subset of the available radionuclides have been tested against measurement.
 
-It is defined using the following input
+Emissions are based on decays from the radionuclide isotope and can be a mix of
+beta, positron and alpha decays. Internal transition gamma emissions are 
+modeled and assigned a shower index <b> \c ishower </b> and <b> \c time </b>
+to allow for coincidence counting. 
+Auger and fluorescence radiations are also modeled as a part of the
+source, if the corresponding data is provided in the ENSDF format spectrum
+files for the radionuclide. Metastable isotopes are supported. For more
+information, see \ref EGS_RadionuclideSpectrum.
+
+A radionuclide source is defined using the following input. Notice that the
+format is similar to \ref EGS_IsotropicSource.
 \verbatim
 :start source:
     name                = my_mixture
     library             = egs_radionuclide_source
     activity            = total activity of mixture, assumed constant
-    charge              = list including at least one of -1, 0, 1 to
-                          include electrons, photons and positrons
-    geometry            = my_geometry # see egs_isotropic_source
-    region selection    = geometry confinement option, one of IncludeAll,
-                          ExcludeAll, IncludeSelected, ExcludeSelected
-    selected regions    = regions to apply geometry confinement
+    charge              = [optional] list including at least one of -1, 0, 1, 2 
+                          to include electrons, photons, positrons and alphas
+    geometry            = [optional] my_geometry # see egs_isotropic_source
+    region selection    = [optional] geometry confinement option 
+                          one of IncludeAll, ExcludeAll, 
+                          IncludeSelected, ExcludeSelected
+    selected regions    = [required for IncludeSelected, ExcludeSelected]
+                          regions to apply geometry confinement
     :start shape:
         definition of the shape
     :stop shape:
     :start spectrum:
-        type            = radionuclide
-        isotope         = name of the isotope (e.g. Sr-90), used to look up the
-                          ensdf file as $HEN_HOUSE/spectra/lnhb/{isotope}.ensdf
-                          if ensdf file not provided below
-        ensdf file      = [optional] path to a spectrum file in ensdf format,
-                          including extension
-        relative activity = [optional] the relative activity for this
-                            isotope in a mixture
-    :stop spectrum:
-    :start spectrum:
-        type            = radionuclide
-        isotope         = name of next isotope in mixture (e.g. Y-90)
-        relative activity = ...
+        definition of an EGS_RadionuclideSpectrum (see link below)
     :stop spectrum:
 :stop source:
 \endverbatim
 
 The emission spectrum generation is described in \ref EGS_RadionuclideSpectrum.
 
-Proceed with caution - \ref EGS_RadionuclideSource is in the development stages
-and has not been thoroughly tested.
+<em>Note about emission times: </em>
 
+The <b> \c time </b> of disintegration is sampled based on the
+total activity of the <b> \c mixture </b> in \ref EGS_RadionuclideSource. 
+For uniform random number <b><code>u</code></b>,
+
+<code>time += -log(1-u) / activity;</code>
+
+The time of emission of a transition photon is determined by sampling 
+the delay that occurs after disintegration, according to the transition 
+<b> \c halflife </b>.
+
+<code>time += -halflife * log(1-u) / ln(2);</code>
+
+It is possible for an X-Ray or Auger to be emitted before a
+disintegration has taken place. They are assigned 
+<b><code>currentTime = 0</code></b> and
+<b><code>ishower = -1</code></b>.
+
+<em>A simple example:</em>
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media   = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = sphere1
+        library     = egs_spheres
+        midpoint    = 0 0 1
+        radii       = 0.3
+        :start media input:
+            media   = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = sphere2
+        library     = egs_spheres
+        midpoint    = 0 0 -1
+        radii       = 0.3
+        :start media input:
+            media   = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = my_envelope
+        library     = egs_genvelope
+        base geometry           = my_box
+        inscribed geometries    = sphere1 sphere2
+    :stop geometry:
+    simulation geometry = my_envelope
+:stop geometry definition:
+:start source definition:
+    :start source:
+        name                = my_source
+        library             = egs_radionuclide_source
+        activity            = 28e6
+        geometry            = my_envelope
+        region selection    = IncludeSelected
+        selected regions    = 1 2
+        :start shape:
+            type        = box
+            box size    = 1 2 3
+            :start media input:
+                media   = H2O521ICRU
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type        = radionuclide
+            isotope     = Ir-192
+        :stop spectrum:
+    :stop source:
+    simulation source = my_source
+:stop source definition:
+\endverbatim
+\image html egs_radionuclide_source.png "An (unrealistic) example of two spheres emitting Ir-192 radiations"
 */
 
 class EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_RadionuclideSource :
@@ -167,35 +244,43 @@ public:
         }
     };
 
+    /*! \brief Gets the next particle from the radionuclide spectra */
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u);
 
+    /*! \brief Returns the maximum energy out of all the spectra */
     EGS_Float getEmax() const {
         return Emax;
     };
 
+    /*! \brief Returns the current fluence (number of disintegrations) */
     EGS_Float getFluence() const {
         return ishower+1;
     };
 
+    /*! \brief Returns the emission time of the most recent particle */
     double getTime() const {
         return time;
     };
 
+    /*! \brief Returns the shower index of the most recent particle */
     EGS_I64 getShowerIndex() const {
         return ishower;
     };
 
+    /*! \brief Outputs the emission stats of the spectra */
     void printSampledEmissions() {
         for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->printSampledEmissions();
         }
     }
 
+    /*! \brief Calculates the position and direction of a new source particle */
     void getPositionDirection(EGS_RandomGenerator *rndm,
                               EGS_Vector &x, EGS_Vector &u, EGS_Float &wt);
 
+    /*! \brief Checks the validity of the source */
     bool isValid() const {
         return (decays.size() != 0 && shape != 0);
     };
@@ -243,8 +328,7 @@ protected:
     void setUp();
 
     EGS_Float min_theta, max_theta;
-    EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and
-    // cos(max_theta)
+    EGS_Float buf_1, buf_2;
     EGS_Float min_phi, max_phi;
     int       nrs;
     GeometryConfinement gc;

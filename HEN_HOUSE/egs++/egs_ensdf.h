@@ -385,15 +385,15 @@ object oriented tree structure. This decay structure is useful for
 \ref EGS_RadionuclideSpectrum used by \ref EGS_RadionuclideSource.
 
 Uncertainties on values are ignored! The energies and intensities for various
-emissions are taken as is. Very low intensities are discarded.
+emissions are taken as is. Very low probability emissions are discarded.
 
 When processing an ensdf file, only the following records are considered:
 Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.
 
-X-Rays and Auger emissions are obtained from Comment records. The data is
-processed in the same way as Lara files on nucleide.org. If a single
-intensity is present for a combination of lines (but a single energy is not
-provided), then the average energy of the lines is used. For example, in the
+X-Ray fluorescence and Auger emissions are obtained from Comment records. 
+If a single intensity is present for a combination of lines (but a single 
+energy is not provided), then the average energy of the lines is used. 
+For example, in the
 case below a single line of energy 97.4527 keV would be used.
 \verbatim
 221FR T        96.815         |]                 XKB3
