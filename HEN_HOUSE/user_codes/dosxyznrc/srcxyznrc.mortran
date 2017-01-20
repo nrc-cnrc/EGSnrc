@@ -2397,8 +2397,6 @@ $REAL weight,
       cosphi,sinphi;
 $INTEGER i;
 
-$INIT_PHSP_COUNTERS;
-
 OUTPUT61;(' ');
 
 "------------------------------------------------------------------------"

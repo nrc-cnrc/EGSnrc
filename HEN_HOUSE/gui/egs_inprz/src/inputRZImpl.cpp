@@ -773,21 +773,30 @@ void inputRZImpl::GetDFfile()
    //char s = QDir::separator();
    char s = QDir::separator().toAscii();
    //browse from HEN_HOUSE/pegs4/density_corrections
+   if(df_hen_houseRadioButton->isChecked())
    tmpDir = ironIt(HEN_HOUSE + s + "pegs4" + s + "density_corrections" + s);
-   QDir d(tmpDir);
+   else
+   tmpDir = ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s);
+   if (!QDir(tmpDir).exists()) tmpDir.chop(20);
+   QDir d(tmpDir); 
    //qt3to4 -- BW
    //QString f = Q3FileDialog::getOpenFileName( this,"",tmpDir, "density correction file (*.density);; all files (*)");
-   QString f = QFileDialog::getOpenFileName( this, "",tmpDir, "density correction file (*.density);; all files (*)");
+   QString f = QFileDialog::getOpenFileName(
+               this, "",tmpDir,
+               "density correction file (*.density);; all files (*)");
    if ( !f.isEmpty() ) {
       //check if the user has selected a .density file from the HEN_HOUSE/pegs4/data/elements or
       //HEN_HOUSE/pegs4/data/compounds directories
       if ( (f.indexOf(tmpDir + "elements",0) >=0  || f.indexOf(tmpDir + "compounds",0) >=0 ) &&
            f.indexOf(".density",1)>=0) {
+         //keep entire filename
          //remove directory name
-         f.remove( 0, f.lastIndexOf(s,-1)+1);
+         //f.remove( 0, f.lastIndexOf(s,-1)+1);
          //remove ".density" extension
-         f.remove(f.indexOf(".density",1),8);
+         //f.remove(f.indexOf(".density",1),8);
       }
+      int ind=inpmediumComboBox->currentIndex();
+      Ppgls->inpmedind=ind;
       Ppgls->dffile[Ppgls->inpmedind] = f;
       DFEdit->setText(Ppgls->dffile[Ppgls->inpmedind]);
    }

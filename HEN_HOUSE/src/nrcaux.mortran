@@ -209,7 +209,7 @@ ELSEIF(IARG = 9)[
      DO IP=NPold,NP[
         KE = E(IP) - ABS(IQ(NP))*RM;
         IF(IP=NPold)[$CNTOUT(IP);(T11,'Resulting electrons',T36,':');]
-        ELSE[$CNTOUT(IP);(T36,':');]
+        ELSEIF(IQ(IP)=-1)[$CNTOUT(IP);(T36,':');]
      ]
   ]
 ]

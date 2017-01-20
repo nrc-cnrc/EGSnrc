@@ -87,7 +87,7 @@ EGS_PolygonShape::EGS_PolygonShape(const vector<EGS_Float> &points,
     }
     EGS_2DPolygon pol(p1);
     int ntr = 0;
-    triangle = new EGS_TriangleShape* [n-3];
+    triangle = new EGS_TriangleShape* [n-2];
     np = n;
     EGS_Float p_tmp[6];
     while (np > 3) {

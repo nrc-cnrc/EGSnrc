@@ -159,6 +159,11 @@ public:
             register EGS_Float sint = -sinz/norm;
             *this = rotY(cost,sint)*rotZ(cphi,sphi);
         }
+        else if (v.z < 0.) {
+            // v along negative z is degenerate: a rotation of pi around any axis in the
+            // xy plane satisfies the condition; we pick the x axis
+            *this = rotX(M_PI);
+        }
         else { // v is along the z-axis => matrix is the unit transformation
             rxx = 1;
             rxy = 0;
@@ -289,9 +294,9 @@ public:
     with \a cphi, \a sphi = \f$ \cos(\phi), \sin(\phi)\f$.
     */
     static EGS_RotationMatrix rotY(EGS_Float cphi,EGS_Float sphi) {
-        return EGS_RotationMatrix(cphi, (EGS_Float)0,         sphi,
+        return EGS_RotationMatrix(cphi, (EGS_Float)0,         -sphi,
                                   (EGS_Float)0, (EGS_Float)1, (EGS_Float)0,
-                                  -sphi, (EGS_Float)0,         cphi);
+                                   sphi, (EGS_Float)0,         cphi);
     };
 
     /*! \brief Returns a rotation around the z-axis by the angle \f$\phi\f$

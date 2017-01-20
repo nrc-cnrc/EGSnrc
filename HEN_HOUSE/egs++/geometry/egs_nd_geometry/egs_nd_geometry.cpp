@@ -117,7 +117,7 @@ void EGS_NDGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
             else if (inp.size() == 4) setMedium(inp[0],inp[1],mind[inp[2]],
                                                     inp[3]);
             else if (inp.size() == 2*N+1) {
-                setM(0,0,inp,inp[2*N]);
+                setM(0,0,inp,mind[inp[2*N]]);
             }
             else egsWarning("EGS_NDGeometry::setMedia(): found %dinputs\n"
                                 "in a 'set medium' input. 2, 3, 4, or %d are allowed\n",2*N+1);
@@ -133,18 +133,15 @@ void EGS_NDGeometry::setM(int ibase, int idim,
     if (istart < 0) {
         istart = 0;
     }
-    int ndim = n[idim+1];
-    for (int i=0; i<=idim; i++) {
-        ndim /= n[i];
-    }
+    int ndim = n[idim+1] / n[idim];
     if (iend > ndim) {
         iend = ndim;
     }
-    if (idim < N-1) for (int j=istart; j<iend; j++) {
+    if (idim < N-1) for (int j=istart; j<=iend; j++) {
             setM(ibase+j*n[idim],idim+1,ranges,medium);
         }
-    else for (int j=istart; j<iend; j++) {
-            setMedium(ibase+j*n[idim],ibase+j*n[idim]+1,medium);
+    else for (int j=istart; j<=iend; j++) {
+            setMedium(ibase+j*n[idim],ibase+j*n[idim],medium);
         }
 }
 

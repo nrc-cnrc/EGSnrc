@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     QString tracks_file = argc >= 3 ? argv[2] : "";
 
 #ifdef VDEBUG
-    debug_output << "Using " << input_file.latin1() << "\n";
+    debug_output << "Using " << input_file.toLatin1().data() << "\n";
     egsSetInfoFunction(Information,my_info_function);
     egsSetInfoFunction(Warning,my_info_function);
     egsSetInfoFunction(Fatal,my_fatal_function);
