@@ -283,7 +283,7 @@ public:
                     Dsq = sqrt(Dsq);
                 }
                 else {
-                    if (Dsq < -1e-2) egsWarning("\nEGS_CylindersT::howfar(): "
+                    if (Dsq < -boundaryTolerance) egsWarning("\nEGS_CylindersT::howfar(): "
                                                     "the particle may not be in the region\n   we think it "
                                                     "is as Dsq = %g\n",Dsq);
                     Dsq = 0;
@@ -291,7 +291,7 @@ public:
                 //d=-B+sqrt(B*B-A*C);
                 d = B > 0 ? -C/(Dsq + B) : (Dsq - B)/A;
                 if (d < 0) {
-                    if (C > 1e-2) {
+                    if (C > boundaryTolerance) {
                         egsWarning("\nEGS_CylindersT::howfar(): the particle "
                                    "may not be in the region\n   we think it is as "
                                    "Cout = %g\n",C);
@@ -309,7 +309,7 @@ public:
                         egsWarning("t=%g d=%g\n",last_t,last_d);
 #endif
                     }
-                    d = 1e-16;
+                    d = boundaryTolerance;
                 }
             }
 
@@ -335,7 +335,7 @@ public:
                         D_sq = sqrt(D_sq);
                     }
                     else {
-                        if (D_sq < -1e-2)
+                        if (D_sq < -boundaryTolerance)
                             egsWarning("\nEGS_CylindersT::howfar(): the "
                                        "particle may not be in the region\n   we think "
                                        "it is as D_sq = %g\n",D_sq);
@@ -350,10 +350,10 @@ public:
                     //d=-B-sqrt(D_sq);
                     d = C/(sqrt(D_sq) - B);
                     if (d < 0) {
-                        if (C < -1e-2) egsWarning("EGS_CylindersT::howfar(): "
+                        if (C < -boundaryTolerance) egsWarning("EGS_CylindersT::howfar(): "
                                                       "the particle may not be in the region we think it "
                                                       "is as Cin = %g\n",C);
-                        d = 1e-16;
+                        d = boundaryTolerance;
                     }
                 }
             }
@@ -370,14 +370,14 @@ public:
                     //d=-B-sqrt(D_sq);
                     d = C/(sqrt(D_sq) - B);
                     if (d < 0) {
-                        if (C < -1e-2) {
+                        if (C < -boundaryTolerance) {
                             egsWarning("EGS_CylindersT::howfar(): "
                                        "we think that the particle is outside, but C=%g\n",C);
                             egsWarning("  d=%g B=%g D_sq=%g\n",d,B,D_sq);
                             egsWarning("  ireg=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",
                                        ireg,x.x,x.y,x.z,u.x,u.y,u.z);
                         }
-                        d = 1e-16;
+                        d = boundaryTolerance;
                     }
                 }
             }

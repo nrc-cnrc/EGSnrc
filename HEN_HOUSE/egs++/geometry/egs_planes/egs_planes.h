@@ -143,7 +143,7 @@ protected:
         dp = p[1] - p[0];
         for (int j=1; j<nreg; j++) {
             EGS_Float dpj = p[j+1] - p[j];
-            if (fabs(dpj/dp-1) > 2e-5) {
+            if (fabs(dpj/dp-1) > boundaryTolerance) {
                 is_uniform = false;
                 break;
             }
@@ -360,11 +360,11 @@ public:
             // we think we are outside but we are inside.
             // hopefully a truncation problem with a particle
             // backscattered at a boundary
-            if (xp-p[0] < 3e-5 && up > 0) {
+            if (xp-p[0] < boundaryTolerance && up > 0) {
                 d = 0;
                 res = 0;
             }
-            else if (p_last-xp < 3e-5 && up < 0) {
+            else if (p_last-xp < boundaryTolerance && up < 0) {
                 d = 0;
                 res = nreg-1;
             }

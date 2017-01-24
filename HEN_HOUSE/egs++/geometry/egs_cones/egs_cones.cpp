@@ -133,7 +133,7 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         pos[nl] = xo*a;
         Rout = rbottom[this_nr-1];
         Rout2 = Rout*Rout;
-        if (fabs(rtop[this_nr-1]-Rout) > 1e-5) {
+        if (fabs(rtop[this_nr-1]-Rout) > boundaryTolerance) {
             same_Rout = false;
             is_convex = false;
         }
@@ -150,11 +150,11 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         cones[nl][ir]->setMedium(med_names[ir]);
         cones[nl][ir]->ref();
         if (ir == this_nr-1) {
-            if (fabs(rbottom[this_nr-1]-Rout) > 1e-5) {
+            if (fabs(rbottom[this_nr-1]-Rout) > boundaryTolerance) {
                 same_Rout = false;
                 is_convex = false;
             }
-            if (fabs(Rtop-Rout) > 1e-5) {
+            if (fabs(Rtop-Rout) > boundaryTolerance) {
                 same_Rout = false;
                 is_convex = false;
             }
@@ -317,6 +317,7 @@ extern "C" {
             }
 
             g->setName(input);
+            g->setBoundaryTolerance(input);
             g->setLabels(input);
             return g;
         }

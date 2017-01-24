@@ -38,6 +38,7 @@
 #ifndef EGS_VECTOR_
 #define EGS_VECTOR_
 
+#include "egs_functions.h"
 #include "egs_libconfig.h"
 
 #include "egs_math.h"
@@ -148,7 +149,7 @@ public:
     void rotate(EGS_Float cos_t, EGS_Float sin_t,
                 EGS_Float c_phi, EGS_Float s_phi) {
         EGS_Float sin_z = x*x + y*y;
-        if (sin_z > 1e-10) {
+        if (sin_z > epsilon) {
             sin_z = sqrt(sin_z);
             EGS_Float temp = sin_t/sin_z;
             EGS_Float temp_phi = z*c_phi;

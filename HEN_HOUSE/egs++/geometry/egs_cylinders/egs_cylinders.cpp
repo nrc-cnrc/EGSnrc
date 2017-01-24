@@ -102,6 +102,7 @@ extern "C" {
                                   Projector(EGS_Vector(a[0],a[1],a[2])));
         }
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         g->setLabels(input);
         return g;

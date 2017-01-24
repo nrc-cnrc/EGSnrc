@@ -179,7 +179,7 @@ public:
                 ay[i]=y_rad[i];
                 ayi[i] = 1/ay[i];
                 EGS_Float z = ay[i]/ax[i];
-                if (fabs(z-1) > 1e-4) {
+                if (fabs(z-1) > boundaryTolerance) {
                     sx[i] = 1/(z*z-1)/ax[i];
                     sy[i] = z*sx[i];
                     is_cyl[i] = false;
@@ -214,7 +214,7 @@ public:
                 ay[i]=y_rad[i];
                 ayi[i] = 1/ay[i];
                 EGS_Float z = ay[i]/ax[i];
-                if (fabs(z-1) > 1e-4) {
+                if (fabs(z-1) > boundaryTolerance) {
                     sx[i] = 1/(z*z-1)/ax[i];
                     sy[i] = z*sx[i];
                     is_cyl[i] = false;
@@ -400,7 +400,7 @@ private:
             }
             double vox = vo*x1, uox = uo + x1, xm1 = 1 - x1*x1;
             double f = vox*vox - uox*uox*xm1;
-            if (fabs(f) < 1e-7) {
+            if (fabs(f) < boundaryTolerance) {
                 break;
             }
             double fs = 2*(vox*vo + uox*(x1*uox-xm1));

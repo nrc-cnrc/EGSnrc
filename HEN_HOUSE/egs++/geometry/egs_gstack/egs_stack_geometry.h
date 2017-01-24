@@ -102,11 +102,14 @@ library = egs_gstack
 geometries = list of names of previously defined geometries
 tolerance = small floating number
 \endverbatim
-The tolerance key defines a small floating point number \f$\epsilon\f$.
+The tolerance key defines a small floating point number \f$\boundaryTolerance\f$.
 Each time a particle exits a geometry, its position is moved by
-\f$\epsilon\f$ along its direction of motion. This is needed to avoid
+\f$\boundaryTolerance\f$ along its direction of motion. This is needed to avoid
 numericall roundoff problems that may result in the particle not having
 entered the next geometry in the stack and therefore being discarded.
+ 
+The \f$\tolerance\f$ key duplicates the functionality of the
+\f$\boundary tolerance\f$ key for backwards compatibility.
 */
 class EGS_StackGeometry : public EGS_BaseGeometry {
 
@@ -115,8 +118,7 @@ public:
     /*! \brief Construct a geometry stack from the vector of geometries
     \a geom.
     */
-    EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms,
-                      EGS_Float Tol=1e-4, const string &Name = "");
+    EGS_StackGeometry(const vector<EGS_BaseGeometry *> &geoms, const string &Name = "");
 
     ~EGS_StackGeometry();
 
@@ -171,9 +173,9 @@ public:
                 return jg*nmax + inew;
             }
             // inew < 0 implies that we have exited jg.
-            // to prevent roundoff problems, we add eps to the path-length
+            // to prevent roundoff problems, we add boundaryTolerance to the path-length
             // to the boundary of jg.
-            t += eps;
+            t += boundaryTolerance;
             if (jg > 0) {
                 // check if we enter the jg-1'th geometry in the stack.
                 inew = g[jg-1]->howfar(-1,x,u,t,newmed,normal);
@@ -190,7 +192,7 @@ public:
             }
             // if here, we don't enter either of the "stack neighbours"
             // => we exit the geometry.
-            t -= eps;
+            t -= boundaryTolerance;
             return -1;
         }
         int i1 = g[0]->howfar(-1,x,u,t,newmed,normal);
@@ -260,7 +262,6 @@ protected:
     int ng;
     int nmax;
     EGS_BaseGeometry **g;
-    EGS_Float  eps;
     static string    type;
 
     void setMedia(EGS_Input *,int,const int *);

@@ -131,6 +131,7 @@ extern "C" {
         }
 
         g->setName(input);
+        g->setBoundaryTolerance(input);
         g->setMedia(input);
         return g;
     }

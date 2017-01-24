@@ -179,7 +179,7 @@ public:
 
         //u.z = 2*rndm->getUniform()-1;
         EGS_Float sinz = 1-u.z*u.z;
-        if (sinz > 1e-15) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
             //rndm->getAzimuth(cphi,sphi);

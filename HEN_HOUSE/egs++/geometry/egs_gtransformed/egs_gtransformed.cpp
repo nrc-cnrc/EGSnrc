@@ -100,6 +100,7 @@ extern "C" {
             delete t;
         }
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setLabels(input);
         return result;
 

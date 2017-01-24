@@ -57,7 +57,7 @@ EGS_Projector::EGS_Projector(const EGS_Vector &x1, const EGS_Vector &x2,
     v2 = x3-x1;
     a = v1%v2;
     xo = x1;
-    if (a.length2() < 1e-10) egsFatal("EGS_Projector::EGS_Projector: "
+    if (a.length2() < epsilon) egsFatal("EGS_Projector::EGS_Projector: "
                                           " the vectors are co-linear\n");
     a.normalize();
     norm = 1;
