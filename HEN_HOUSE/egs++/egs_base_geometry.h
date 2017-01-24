@@ -636,6 +636,9 @@ public:
     EGS_Float getBoundaryTolerance() {
         return boundaryTolerance;
     };
+    
+    /*! \brief Get a list of all the regions labeled with a number */
+    virtual void getNumberRegions(const string &str, vector<int> &regs);
 
     /*! \brief Get the list of all regions labeled with \a str */
     virtual void getLabelRegions(const string &str, vector<int> &regs);
