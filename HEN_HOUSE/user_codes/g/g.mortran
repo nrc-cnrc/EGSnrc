@@ -25,6 +25,7 @@
 "                                                                             "
 "  Contributors:    Dave Rogers                                               "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -70,6 +71,10 @@
 " Version 1.2  D. Rogers, June 2002 (get mu_tr and mu_en )            "
 " Version 1.3  D. Rogers, Aug 2002 (account for fluorescent phtons in "
 "                                  g and mu_tr correctly )            "
+" Version 1.4  R. Townson, December 2016                              "
+"  Energy depositions for kerma calculations below the cut-off are    "
+"  now sorted out using AUSGAB to include only Auger from relaxations,"
+"  not fluorescence.                                                  "
 "                                                                     "
 "*********************************************************************"
 
@@ -132,12 +137,13 @@ REPLACE {$CALL-HOWFAR-IN-PHOTON;} WITH {;
 "Define a common for scoring"
 REPLACE {;COMIN/SCORE/;} WITH {;
   common/score/ e_tot,e_tot2,e_brem,e_brem2,e_bremc,e_rad,e_rad2,e_radc,
-                etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type;
+                etot_tmp,ebrem_tmp,erad_tmp,my_gle,accu,ncase,calc_type,
+                before_photo,before_eii;
                 "It is always a good idea to score in double precision!"
   real*8        e_tot,e_tot2,e_brem,e_brem2,e_rad,e_rad2,
                 etot_tmp,ebrem_tmp,erad_tmp,e_radc,e_bremc;
   $REAL         my_gle,accu;
-  $INTEGER      ncase,calc_type;
+  $INTEGER      ncase,calc_type,before_photo,before_eii;
 };
 
 REPLACE {$MXENE} WITH {200};
@@ -226,7 +232,7 @@ pcut_ask = pcut(1);
 OUTPUT; (' CALL HATCH to get cross-section data'/);
 CALL HATCH;
 
-;OUTPUT;('\f Start g value calculation: Version 1.13 '//);
+;OUTPUT;('\f Start g value calculation: Version 1.14 '//);
 OUTPUT (media(j,1),j=1,24);(/'          MEDIUM is: ',24A1/);
 ;OUTPUT AE(1)-0.511, AP(1);
 (' knock-on electrons can be created and any electron followed down to'
@@ -622,6 +628,7 @@ dunit = 1;  "i.e. we work in cm"
 "automatically zeroed"
 
 /e_tot,e_tot2,e_rad,e_rad2,e_brem,e_brem2,e_bremc,e_radc/ = 0;
+/before_photo,before_eii/ = 0;
 
 ival                   = ival + 1;
 values_sought(ival)    = 'INITIAL RANDOM NO. SEEDS';
@@ -692,15 +699,21 @@ ELSE                 [ error_flag = 0; ]
 
 call source;
 
-DO j=1,25 [ iausfl(j) = 0; ]
+DO j=1,33 [ iausfl(j) = 0; ]
 iausfl( 5) = 1; "in order to score sub-threshold energy after relaxations"
 iausfl( 8) = 1; "after brems"
 iausfl(14) = 1; "after annih"
 iausfl(15) = 1; "after annih at rest"
 iausfl(17) = 1; "after pair"
+iausfl(18) = 1; "before compt"
 iausfl(19) = 1; "after compt"
+iausfl(20) = 1; "before photo"
 iausfl(21) = 1; "after photo"
 iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
+iausfl(26) = 1; "after fluorescence"
+iausfl(28) = 1; "after Auger"
+iausfl(32) = 1; "before eii"
+iausfl(33) = 1; "after eii"
 
 return;
 end;    "of subroutine inputs"
@@ -734,10 +747,58 @@ $INTEGER isplit,ip;
        USEFUL
       /;
 
-IF( iarg = 4 ) [ "depositing sub-threshold energy"
-    IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]
-    etot_tmp = etot_tmp + edep; return;
+IF( iarg = 19 | iarg = 17 ) [
+    before_photo = 1;
+    return;
 ]
+IF( iarg = 20 | iarg = 18 ) [
+    before_photo = 0;
+]
+IF( iarg = 31 ) [
+    before_eii = 1;
+    return;
+]
+IF( iarg = 32 ) [
+    before_eii = 0;
+    return;
+]
+      
+"depositing sub-threshold energy for everything but eii and PE/Compton"
+IF( iarg = 4 & before_eii = 0 & before_photo = 0 ) [
+    IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]
+    etot_tmp = etot_tmp + edep;
+    return;
+]
+
+"depositing sub-threshold energy for PE/Compton"
+"Auger only"
+IF( iarg = 27 ) [
+    IF( before_photo = 1 ) [
+        IF( $DEBUGIT ) [ write(19,*) ' Depositing photo iarg 27 ',edep_local; ]
+        etot_tmp = etot_tmp + edep_local;
+        return;
+    ] ELSE [
+        return;
+    ]
+]
+
+"depositing sub-threshold energy for eii"
+"fluorescence only"
+IF( iarg = 25 ) [
+    IF( before_eii = 1 ) [
+        IF( $DEBUGIT ) [ write(19,*) ' Depositing eii iarg 25 ',edep_local; ]
+        erad_tmp = erad_tmp + edep_local;
+        return;
+    ] ELSE [
+        return;
+    ]
+]
+
+"skip the remaining iarg=4 calls"
+IF( iarg = 4 &  ( before_eii = 1 | before_photo = 1 ) ) [
+    return;
+]
+
 IF( iarg = 16 | iarg = 18 | iarg = 20 ) ["after a photon interaction"
     IF( $DEBUGIT ) [ write(18,*) ' iarg = ',iarg,' np = ',np; ]
 
@@ -792,6 +853,7 @@ IF( iarg = 9 ) [ "after moller"
 ]
 
 OUTPUT;('We should not get here!!!!');
+write(6,*) 'IARG = ',iarg;
 return;
 end;
 

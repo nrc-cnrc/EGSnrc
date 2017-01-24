@@ -30,6 +30,7 @@
 "                   Iwan Kawrakow                                             "
 "                   Blake Walters                                             "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -90,6 +91,11 @@
 "  in the kerma. Also fixed a minor bug in the plotting of the D/K ratio vs   "
 "  depth (bins were offset). Added lots of comments as I tried to relearn the "
 "  code and made many comments in lower case to make them more readable.      "
+"                                                                             "
+"  Reid Townson, 2017:                                                        "
+"                                                                             "
+"  Energy depositions for kerma calculations below the cut-off are now sorted "
+"  out using AUSGAB to include only Auger from relaxations, not fluorescence. "
 "                                                                             "
 "#############################################################################"
 
@@ -2078,7 +2084,7 @@ SCKERMA_TMP($MAXZREG,$MAXRADII,$MAXIT),
 SCKERMA_TMPOLD($MAXZREG,$MAXRADII,$MAXIT),
 SCSTP_TMP,SCDSTP_TMP,
 MXNP,IFULL,ISTORE,IKERMA, IWATCH,IOOPTN,IOUTSP,
-IPHR($MXREG),MAXBIN,NCOMPT;
+IPHR($MXREG),MAXBIN,NCOMPT,BEFORE_PHOTO,BEFORE_EII;
 real*8 SCDOSE,SCDOSE2,SCKERMA,SCKERMA2,SCDOSEtoKERMA2,SCPDST,SCPDST2,
        SCPCUM,SCPCUM2,SCPTOT,SCPTOT2,SCPHEN,SCPHEN2,
        SCDFBK,SCDFBK2,SCDFEP,SCDFEP2,SCDFDIFF,SCDFDIFF2,
@@ -2089,7 +2095,7 @@ $REAL DFEN, PHENER,WT1OLD,BINTOP,SLOTE,DELTAE,
       SCDOSE_TMP,SCKERMA_TMP,SCKERMA_TMPOLD,SCSTP_TMP,SCDSTP_TMP;
 $INTEGER MXNP,IFULL,ISTORE,IKERMA,
           IWATCH,IOOPTN,IOUTSP,
-          IPHR,MAXBIN,NCOMPT;
+          IPHR,MAXBIN,NCOMPT,BEFORE_PHOTO,BEFORE_EII;
 }
 "
 "SCDOSE(2)       accumulates energy deposited (energy deposited^2),
@@ -2547,15 +2553,22 @@ DO IZ=1,NZ[
 
 ;
 "SET UP AUSGAB CALLS"
-DO J=1,5[IAUSFL(J)=1;]DO J=6,25[IAUSFL(J)=0;] "NORMAL EXECUTION"
+DO J=1,5[IAUSFL(J)=1;]DO J=6,33[IAUSFL(J)=0;] "NORMAL EXECUTION"
 
 IF(IFULL = 1 | IFULL = 3 | IKERMA = 1) [
    "need to call ausgab to set flag after photon interactions"
    "IKERMA=1 means scoring KERMA"
-   /IAUSFL(6),IAUSFL(17),IAUSFL(19),IAUSFL(21)/=1;
-   "17 => call after pair, 19=>call after compton, 21=>call after photoelectric"
-   "6 => after each step"
    "for KERMA, rayleigh scatter has no effect"
+    iausfl(6) = 1; "after each step"
+    iausfl(17) = 1; "after pair"
+    iausfl(18) = 1; "before compt"
+    iausfl(19) = 1; "after compt"
+    iausfl(20) = 1; "before photo"
+    iausfl(21) = 1; "after photo"
+    iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
+    iausfl(28) = 1; "after Auger"
+    iausfl(32) = 1; "before eii"
+    iausfl(33) = 1; "after eii"
 ]
 
 IF(IFULL = 4) [
@@ -3774,8 +3787,28 @@ ELSEIF(IFULL = 3)["score scattered dose separately"
 IF (IKERMA = 1) ["want to score KERMA"
    "we score kerma for scattered component too if ifull=3"
    "the kerma is part of scattered kerma if latch of initial photon is not zero"
-
-   IF (IARG = 4 & ~BTEST(LATCH(NP),8))["local energy deposition"
+   
+    "Here we keep track of whether we are currently inside a PE/Compton"
+    "event, or EII. This lets us use edep_local to account for kerma"
+    "contributions below threshold energies depending on the interaction type."
+    IF( iarg = 19 | iarg = 17 ) [
+        before_photo = 1;
+        return;
+    ]
+    IF( iarg = 20 | iarg = 18 ) [
+        before_photo = 0;
+    ]
+    IF( iarg = 31 ) [
+        before_eii = 1;
+        return;
+    ]
+    IF( iarg = 32 ) [
+        before_eii = 0;
+        return;
+    ]
+   
+   IF (IARG = 4 & ~BTEST(LATCH(NP),8) & before_eii = 0 & before_photo = 0)[
+      "local energy deposition"
       "include deposited energy as kerma"
       " I am not sure why the BTEST was there??? Currently bit 8 is"
       "not set, but was there some reason for it to be there??  DR"
@@ -3784,6 +3817,21 @@ IF (IKERMA = 1) ["want to score KERMA"
          $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*EDEP);
       ]
    ]
+   
+    "depositing sub-threshold energy for PE & Compton"
+    "Auger only"
+    IF( iarg = 27 ) [
+        IF( before_photo = 1 ) [
+            $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*edep_local);
+            IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[
+                $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*edep_local);
+            ]
+            return;
+        ] ELSE [
+            return;
+        ]
+    ]
+   
    IF (IARG = 16)["pair event just occured"
       IF(NP>NPold | i_survived_rr > 0)[
          "i_survived_rr, 0=> all particles survive RR,"
@@ -4669,6 +4717,8 @@ TIMMAX=VALUE(NUM_MXTIME,1);
 IFULL=VALUE(NUM_IFULL,1);
 STATLM=VALUE(NUM_STATLM,1);
 IKERMA=VALUE(NUM_SCKERMA,1);
+BEFORE_PHOTO=0;
+BEFORE_EII=0;
 
 IF(IWATCH=0 & NCASE < $NCASEMIN)[NCASE=$NCASEMIN;]
 
