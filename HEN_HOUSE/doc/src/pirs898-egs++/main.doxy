@@ -46,17 +46,17 @@
   \image html cover1a.png
 
   <br>
-  \ref introduction<br>
-  \ref installation<br>
-  \ref design<br>
-  \ref egspp_main<br>
-  \ref Geometry "The geometry module"<br>
-  \ref Sources "Particle sources"<br>
+  \ref introduction <br>
+  \ref installation <br>
+  \ref design <br>
+  \ref egspp_main <br>
+  \ref Geometry "The geometry module" <br>
+  \ref Sources "Particle sources" <br>
   <a href="tutor2pp_8cpp-example.html">Developing a simple EGSnrc C++
   application</a><br>
   <a href="tutor7pp_8cpp-example.html">Developing an advanced EGSnrc C++
   application</a><br>
-  \ref geometry_implementing "Extending the geometry package"<br>
+  \ref geometry_implementing "Extending the geometry package" <br>
   <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
   Implementing a new source</a><br><br>
   <b>EGSnrc C++ user codes</b>

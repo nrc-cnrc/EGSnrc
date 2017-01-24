@@ -42,13 +42,13 @@
 
   \anchor geometry_anchor
 
-\ref geometry_general<br>
-\ref geometry_design<br>
-\ref geometry_common<br>
-\ref geometry_media<br>
-\ref geometry_implementing<br>
-\ref geometry_view<br>
-\ref geometry_examples<br>
+\ref geometry_general <br>
+\ref geometry_design <br>
+\ref geometry_common <br>
+\ref geometry_media <br>
+\ref geometry_implementing <br>
+\ref geometry_view <br>
+\ref geometry_examples <br>
 
 \section geometry_general General discussion
 
@@ -529,21 +529,21 @@ in the distribution and found in
 <code>\$HEN_HOUSE/egs++/geometry/examples</code>.
 
 
-\ref hemisphere_geom<br>
-\ref pyramid_geom<br>
-\ref rz_geom<br>
-\ref rz1_geom<br>
-\ref cones_geom<br>
-\ref rz_phi_geom<br>
-\ref xyz_geom<br>
-\ref mushroom_geom<br>
-\ref I6702_inp<br>
-\ref rounded_ionchamber_geom<br>
-\ref chambers_in_box_geom<br>
-\ref seeds_in_xyz_geom<br>
-\ref seeds_in_xyz1_geom<br>
-\ref car_geom<br>
-\ref linac_geom<br>
+\ref hemisphere_geom <br>
+\ref pyramid_geom <br>
+\ref rz_geom <br>
+\ref rz1_geom <br>
+\ref cones_geom <br>
+\ref rz_phi_geom <br>
+\ref xyz_geom <br>
+\ref mushroom_geom <br>
+\ref I6702_inp <br>
+\ref rounded_ionchamber_geom <br>
+\ref chambers_in_box_geom <br>
+\ref seeds_in_xyz_geom <br>
+\ref seeds_in_xyz1_geom <br>
+\ref car_geom <br>
+\ref linac_geom <br>
 
 \section hemisphere_geom A hemisphere
 
