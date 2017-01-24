@@ -27,6 +27,7 @@
 "  Contributors:    Ernesto Mainegra-Hing                                     "
 "                   Blake Walters                                             "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -780,7 +781,7 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
         call relax(Uj,shn_array(j),iz_array(j));
           "relax will put all particles with energies above ecut,pcut on the "
           "stack, the remaining energy will be scored in edep and deposited  "
-          "localy (via the call to ausgab below)                             "
+          "locally (via the call to ausgab below)                            "
     ]
     ELSE [ edep = Uj; ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]
@@ -2543,7 +2544,7 @@ $COMIN-MOLLER;   "DEFAULT REPLACEMENT PRODUCES THE FOLLOWING:
 $DEFINE-LOCAL-VARIABLES-MOLLER;
 
 $REAL sigm,pbrem,rsh,Uj,sig_j;
-$INTEGER lelke,iele,ish,nsh,ifirst,i,jj,iZ;
+$INTEGER lelke,iele,ish,nsh,ifirst,i,jj,iZ,iarg;
 
 "IRCODE=1;  appears to be unused, IK Oct 97"
 NPold = NP;      "Set the old stack counter"
@@ -2574,7 +2575,9 @@ IF( eii_flag > 0 & eii_nsh(medium) > 0 ) [
                     sig_j = sig_j*pz(medium,iele)*eii_cons(medium);
                     rsh = rsh - sig_j;
                     IF( rsh < 0 ) [
+                        $AUSCALL($EIIB);
                         call eii_sample(ish,iZ,Uj);
+                        $AUSCALL($EIIA);
                         return;
                     ]
                 ]
@@ -5204,6 +5207,9 @@ IF( energy <= e_cut ) [
     edep = edep + energy;  "We assume that edep is zeroed "
                            "(or set to the appropriate value in the routine "
                            "calling RELAX "
+                           
+    edep_local = energy;
+    $AUSCALL($AUGERTRA);
     return;
 ]
 
@@ -5216,13 +5222,17 @@ e_check = 0; e_array(n_vac) = energy;
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
     IF( Ei <= e_cut ) [  " Below cut-off -> local absorption "
         edep = edep + Ei;
+        
+        edep_local = Ei;
+        $AUSCALL($AUGERTRA);
+        
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
     "Set the relax_user common block variables, IK March 22 2004"
     ish_relax = shell; u_relax = Ei;
     IF( shell = $MXSHELL ) [ "This is N-shell vacancy -> just produce Auger"
-        IF( Ei > e_cut ) [
+        IF( Ei > ekcut ) [
             np = np + 1;
             $CHECK-STACK(np,'RELAX');
             e(np) = Ei + prm; iq(np) = -1;
@@ -5237,7 +5247,12 @@ e_check = 0; e_array(n_vac) = energy;
             ELSE [ u(np) = 0; v(np) = 0; w(np) = 1; ]
             $AUSCALL($AUGERTRA);
         ]
-        ELSE             [ edep = edep + Ei; ]
+        ELSE             [
+            edep = edep + Ei;
+            
+            edep_local = Ei;
+            $AUSCALL($AUGERTRA);
+        ]
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
@@ -5276,6 +5291,15 @@ e_check = 0; e_array(n_vac) = energy;
     ]
     IF( Ex <= elcut ) [ "Below cut-off"
         edep = edep + Ex;
+        
+        IF( finala <  10 ) [
+            edep_local = Ex;
+            $AUSCALL($FLUORTRA);
+        ]
+        ELSE [
+            edep_local = Ex;
+            $AUSCALL($AUGERTRA);
+        ]
     ]
     ELSE [
         np = np + 1;
@@ -5598,7 +5622,10 @@ rfu_E0 = Evac;
 vac = shell; Nvac = 0; np_save = np;
 LOOP [
     IF( Evac < min_E | relax_ntran(vac) < 1 ) [
-       edep += Evac; go to :VACANCY:;
+        edep += Evac;
+        edep_local = Evac;
+        $AUSCALL($AUGERTRA);
+        go to :VACANCY:;
     ]
     new_state = sample_alias_histogram(relax_ntran(vac),
                   relax_prob(relax_first(vac)),
@@ -5637,6 +5664,7 @@ LOOP [
      ]
     ]
     Ex = Evac - Ef;
+    edep_local = 0;
     IF( Ex > Ecc ) [
         np += 1; $CHECK-RELAX-STACK(np,'new_relax');
         "$egs_info('(a,i9,a,f7.3)','-> np=',np,' iq=',iqf);"
@@ -5657,7 +5685,17 @@ LOOP [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
         ]
         "$egs_info('(a,i2,a,f7.3,a)','-> iq=',iqf,' E=',Ex*1000.,' keV');"
-    ] ELSE [ edep += Ex; ]
+    ] ELSE [
+        edep += Ex;
+        
+        IF( iqf = 0 ) [
+            edep_local = Ex;
+            $AUSCALL($FLUORTRA);
+        ] ELSE [
+            edep_local = Ex;
+            $AUSCALL($AUGERTRA);
+        ]
+    ]
     :VACANCY:;
     IF( Nvac = 0 ) EXIT;
     vac = vacs(Nvac); Evac = shell_be(vac); Nvac -= 1;
@@ -7294,6 +7332,7 @@ sinthe = dsqrt(1-dcosth); costhe = dsqrt(dcosth);
 call uphi(2,1);
 
 pese2 = wx - Uj + prm;
+edep_local = 0;
 IF( pese2 > ae(medium) ) [
     $CHECK-STACK(np+1,'eii_sample');
     np = np+1; e(np) = pese2;
@@ -7301,7 +7340,11 @@ IF( pese2 > ae(medium) ) [
     sinthe = -dsqrt(1-dcosth); costhe = dsqrt(dcosth);
     iq(np) = -1; call uphi(3,2);
     edep = 0;
-] ELSE [ edep = wx - Uj; ]
+] ELSE [
+    edep = wx - Uj;
+    edep_local = edep;
+    $AUSCALL($AUGERTRA);
+]
 
 call relax(Uj,ish,iZ);
 
