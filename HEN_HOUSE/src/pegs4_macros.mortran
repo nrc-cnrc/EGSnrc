@@ -23,7 +23,7 @@
 "                                                                             "
 "  Authors:         Blake Walters, 2013                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -400,7 +400,6 @@ REPLACE {$INIT-PEGS4-VARIABLES;} WITH {
 "     AN       AVOGADRO'S NUMBER                                       "
 PIP=3.1415926536;
 C=2.997925E+10;
-RME=9.1091E-28;
 HBAR=1.05450E-27;
 ECGS=4.80298E-10;
 EMKS=1.60210E-19;
@@ -415,9 +414,10 @@ RADDEG=180./PIP;
 FSC = ECGS**2/(HBAR*C);
 "     1.E+7 IS THE NUMBER OF ERGS PER JOULE                            "
 ERGMEV = (1.E+6)*(EMKS*1.E+7);
+RME = PRM/C**2*ERGMEV;
+"We are using RMP instead of PRM because single precision is required"
+RMP = PRM;
 R0 = (ECGS**2)/(RME*C**2);
-RMP = RME*C**2/ERGMEV;
-RMPT2 = RMP*2.0;
 RMPSQ = RMP*RMP;
 A22P9 = RADDEG*SQRT(4.*PIP*AN)*ECGS**2/ERGMEV;
 A6680 = 4.0*PIP*AN*(HBAR/(RME*C))**2*(0.885**2/(1.167*1.13));

@@ -27,6 +27,7 @@
 "  Contributors:    Blake Walters                                             "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1128,9 +1129,9 @@ REPLACE {$COMIN-SET-DEFAULTS;} WITH {
        EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs,
        EMF-INPUTS/;};
 REPLACE {$COMIN-INIT-COMPT;} WITH {
-  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,EGS-IO/;};
+  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,USEFUL,EGS-IO/;};
 REPLACE {$COMIN-MSCATI;} WITH {
-  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,EGS-IO/;};
+  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,USEFUL,EGS-IO/;};
 REPLACE {$COMIN-INIT-TRIPLET;} WITH {
   ;COMIN/BREMPR,EGS-IO,MEDIA,TRIPLET-DATA,USEFUL/;};
 REPLACE {$COMIN-GET-TRANSPORTP;} WITH {
@@ -2140,7 +2141,7 @@ REPLACE {$RE-EVALUATE-DEDX(#);} WITH
   lelktmp = max(1,lelktmp);
   IF(lelec < 0)[$EVALUATE dedxmid USING ededx(elktmp);]
   ELSE         [$EVALUATE dedxmid USING pdedx(elktmp);]
-  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+0.5110034))**2);
+  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+PRM))**2);
                    "0.17408298 is 2/3*m**2"
   {P1} = 2*{P1};
 }
@@ -3443,7 +3444,7 @@ REPLACE {$RADC_WARNING;} WITH {;
 };
 REPLACE {$RADC_HATCH;} WITH {$RADC_WARNING;}
 REPLACE {$COMIN-RADC-INIT;} WITH {
-        ;COMIN/RAD_COMPTON,EGS-IO,COMPTON-DATA,MEDIA,PHOTIN/;
+        ;COMIN/RAD_COMPTON,EGS-IO,COMPTON-DATA,MEDIA,PHOTIN,USEFUL/;
 };
 REPLACE {$COMIN-RADC-SAMPLE;} WITH {
         ;COMIN/RAD_COMPTON,RANDOM,STACK,USEFUL,EGS-IO/;

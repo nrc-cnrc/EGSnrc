@@ -1,7 +1,7 @@
-
+/*
 ###############################################################################
 #
-#  EGSnrc egs++ makefile to build phase-space source
+#  EGSnrc egs++ egs_chamber application array sizes headers
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -21,27 +21,27 @@
 #
 ###############################################################################
 #
-#  Author:          Iwan Kawrakow, 2005
+#  Author:          Reid Townson, 2016
 #
 #  Contributors:
 #
 ###############################################################################
+#
+#  Defines he maximum number of media (MXMED) and the maximum number of
+#  particles on the stack (MXSTACK). This file gets included by the egsnrc
+#  fortran subroutines (egsnrc_$my_machine.F), the base application
+#  (egs_simple_application.cpp or egs_advanced_application.cpp in
+#  $HEN_HOUSE/egs++), and possibly the user code, if it uses the particle
+#  stack or one of the structures that depends on the maximum number of media.
+#
+###############################################################################
+*/
 
 
-include $(EGS_CONFIG)
-include $(SPEC_DIR)egspp.spec
-include $(SPEC_DIR)egspp_$(my_machine).conf
+#ifndef ARRAY_SIZES_
+#define ARRAY_SIZES_
 
-DEFS = $(DEF1) -DBUILD_PHSP_SOURCE_DLL
+#define MXMED   0
+#define MXSTACK 0
 
-library = egs_phsp_source
-lib_files = egs_phsp_source
-my_deps = $(common_source_deps)
-extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
-
-#redefined from egspp.spec
-INC2 = -I$(IEGS2) -I..$(DSEP).. -I$(HEN_HOUSE)interface -I.$(DSEP)
-
-include $(SPEC_DIR)egspp_libs.spec
-
-$(make_depend)
+#endif

@@ -23,7 +23,7 @@
 "                                                                             "
 "  Authors:         Blake Walters, 2013                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 
@@ -663,7 +663,7 @@ $INTEGER ounit;
 $declare_max_medium;
 
 $COMIN-GET-TRANSPORTP;
-COMIN/MEDINP,ELECIN,THRESH,ELEMTB/;
+COMIN/MEDINP,ELECIN,THRESH,ELEMTB,USEFUL/;
 
 $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_rho,ival_elements,ival_rhoz,ival_iunrst,ival_iaprim,ival_gasp,
@@ -692,7 +692,7 @@ $REAL4 ZTBL;
 $REAL EKE,ELKE,TMXSO,DEDXE,DEDXP,EFRACT,SIGE,SIGP,BREME,BREMP,ETAB(16),
       EIE,PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),PLOTEEN($MAXPOINTS),
       PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS);
-$INTEGER IPLOTE,IFLAG1,IFLAG2,MEDIUM,LELKE;
+$INTEGER IPLOTE,IFLAG1,IFLAG2,LELKE;
 CHARACTER*60 GRAPHTITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,
               SUBTITLE,SERIES;
 DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
@@ -836,7 +836,7 @@ nvalue(ival)        = 1;                        "1 input"
 type(ival)          = 1;
 value_min(ival)     = 0;
 value_max(ival)     = 999.;
-default(ival)       = 50.511;
+default(ival)       = 50 + prm;
 
 ival                = ival + 1;
 ival_up = ival;
@@ -867,8 +867,9 @@ IF(error_flags(ival_ue)=0)[
    ue_tmp=value(ival_ue,1);
 ]
 ELSE[
-   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 50.511 MeV');
-   ue_tmp=50.511;
+   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 
+     50.5109989461 MeV');
+   ue_tmp=50 + prm;
 ]
 IF(error_flags(ival_up)=0)[
    up_tmp=value(ival_up,1);
@@ -1648,14 +1649,18 @@ DO i=1,nmed[
     DO j=1,8[
      DO k=1,16[
        EKE=ETAB(k)*10.**(j-4);
-       IF(EKE <= AE(1)-0.511) [
-           IF(IFLAG1 = 0) [ IFLAG1=1; EKE=AE(1)-0.511; ] ELSE [ EKE=0.0; ]
+       IF(EKE <= AE(1)-PRM) [
+           IF(IFLAG1 = 0) [ 
+             IFLAG1=1; EKE=AE(1)-PRM; 
+           ] ELSE [ EKE=0.0; ]
        ]
 
-       IF(EKE > UE(1)-0.511) [
-           IF(IFLAG2 = 0) [ IFLAG2=1; EKE=UE(1)-0.511; ] ELSE [ EKE=1.E30; ]
+       IF(EKE > UE(1)-PRM) [
+           IF(IFLAG2 = 0) [ 
+             IFLAG2=1; EKE=UE(1)-PRM; 
+           ] ELSE [ EKE=1.E30; ]
        ]
-       EIE=EKE+0.511;       TMXSO=0.0;        DEDXE=0.0;
+       EIE=EKE+PRM;       TMXSO=0.0;        DEDXE=0.0;
        DEDXP=0.0;           EFRACT=0.0;
        IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
            ELKE=LOG(EKE);

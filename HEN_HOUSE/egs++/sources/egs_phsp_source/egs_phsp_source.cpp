@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -38,6 +39,7 @@
 #include "egs_phsp_source.h"
 #include "egs_input.h"
 #include "egs_functions.h"
+#include "egs_interface2.h"
 
 EGS_PhspSource::EGS_PhspSource(const string &phsp_file,
                                const string &Name, EGS_ObjectFactory *f) : EGS_BaseSource(Name,f) {
@@ -396,7 +398,7 @@ void EGS_PhspSource::readParticle() {
     }
     first = false;
     if (p.q) {
-        p.E -= 0.5110034;
+        p.E -= the_useful->rm;
         Nreuse = Nreuse_e;
     }
     else {

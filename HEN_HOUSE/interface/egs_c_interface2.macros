@@ -25,6 +25,7 @@
 "                                                                             "
 "  Contributors:    Ernesto Mainegra-Hing                                     "
 "                   Blake Walters                                             "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -444,7 +445,7 @@ REPLACE {$COMIN-SET-DEFAULTS;} WITH {;
 };
 REPLACE {$COMIN-INIT-COMPT;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
-  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,EGS-IO/;
+  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,USEFUL,EGS-IO/;
 };
 REPLACE {$COMIN-COMPT;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
@@ -459,7 +460,7 @@ REPLACE {$COMIN-ELECTR;} WITH {;
 };
 REPLACE {$COMIN-MSCATI;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
-  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,EGS-IO/;
+  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,USEFUL,EGS-IO/;
 };
 REPLACE {$COMIN-MOLLER;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);

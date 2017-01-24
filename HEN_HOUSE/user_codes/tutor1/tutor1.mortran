@@ -25,6 +25,7 @@
 "                                                                             "
 "  Contributors:    Iwan Kawrakow                                             "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -62,13 +63,14 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
 }
 
 
-;COMIN/BOUNDS,GEOM,MEDIA,MISC,THRESH/;"Note  ; before COMIN"
+;COMIN/BOUNDS,GEOM,MEDIA,MISC,THRESH,USEFUL/;"Note  ; before COMIN"
 "       The above expands into a series of COMMON statements"
 "       BOUNDS contains ECUT and PCUT"
 "       GEOM passes info to our HOWFAR routine"
 "       MEDIA contains the array MEDIA"
 "       MISC contains MED"
 "       THRESH contains AE and AP"
+"       USEFUL contains PRM"
 
 "---------------------------------------------------------------------"
 "STEP 2 PRE-HATCH-CALL-INITIALIZATION                                 "
@@ -103,7 +105,7 @@ PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the plate"
 CALL HATCH;"    pick up cross section data for TA"
 "               data file must be assigned to unit 12"
 
-;OUTPUT AE(1)-0.511, AP(1);
+;OUTPUT AE(1)-PRM, AP(1);
 (/' knock-on electrons can be created and any electron followed down to'
   /T40,F8.3,' MeV kinetic energy'/
 ' brem photons can be created and any photon followed down to      ',
@@ -129,7 +131,7 @@ ZBOUND=0.1;"     plate is 1 mm thick"
 "perpendicular to the slab"
 
 IQIN=-1;"               incident charge - electrons"
-EIN=20.511;"            20 MeV kinetic energy"
+EIN=20.5109989461;"            20 MeV kinetic energy"
 /XIN,YIN,ZIN/=0.0;"     incident at origin"
 /UIN,VIN/=0.0;WIN=1.0;" moving along Z axis"
 IRIN=2;"                starts in region 2, could be 1"
@@ -178,7 +180,7 @@ IF(IARG = 3)[
 ANGLE=ACOS(W(NP))*180./3.14159;"angle w.r.t. Z axis in degrees"
 
 IF(IQ(NP) = 0)[EKINE=E(NP);]
-ELSE          [EKINE=E(NP)-0.511;]"get kinetic energy"
+ELSE          [EKINE=E(NP)-0.510998946131;]"get kinetic energy"
 OUTPUT EKINE,IQ(NP),ANGLE;(T21,F10.3,T33,I10,T49,F10.1);]
 RETURN;END;"END OF AUSGAB"
 

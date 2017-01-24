@@ -29,6 +29,7 @@
 "                   Aaron Merovitz                                            "
 "                   Iwan Kawrakow                                             "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -4014,10 +4015,10 @@ VALUES_SOUGHT(IVAL)='ESAVEIN';
 NVALUE(IVAL)=1;
 TYPE(IVAL)=1;
 VALUE_MIN(IVAL)=0.;
-VALUE_MAX(IVAL)=EIN+0.511;  "EIN is max k.e. of particles set in srcrz for"
-                         "ISOURC 21,22 and ine ensrc for the others"
-DEFAULT(IVAL) =EIN+0.511;  "This means that if a too high number is input,"
-                            "it is reduced to the max needed."
+VALUE_MAX(IVAL)=EIN+PRM;  "EIN is max k.e. of particles set in "
+                         "srcrz for ISOURC 21,22 and ine ensrc for the others"
+DEFAULT(IVAL) =EIN+PRM;  "This means that if a too high number is "
+                            "input, it is reduced to the max needed."
 
 DELIMETER='VARIANCE REDUCTION';
 $GET_INPUTS(NUM_FORCE,NUM_ESAVEIN);
