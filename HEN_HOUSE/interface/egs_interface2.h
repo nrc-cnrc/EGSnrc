@@ -584,7 +584,7 @@ struct EGS_VarianceReduction {
 
     /*! If Roussian Roulette of electrons created in photon interactions is
       on (#i_play_RR is 1), i_survived_RR is set to the number of electrons
-      surviving the RR game.
+      killed in the RR game.
     */
     EGS_I32   i_survived_RR;
 
