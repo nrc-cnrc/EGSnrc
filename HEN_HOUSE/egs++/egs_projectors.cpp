@@ -30,7 +30,7 @@
 
 
 /*! \file egs_projectors.cpp
- *  \brief Implementation of projector constructors
+ *  \brief EGS_Projector implementation
  *  \IK
  */
 

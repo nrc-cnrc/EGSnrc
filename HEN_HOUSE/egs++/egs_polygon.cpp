@@ -30,7 +30,7 @@
 
 
 /*! \file egs_polygon.cpp
- *  \brief Polygons implementation
+ *  \brief EGS_2DPolygon implementation
  *  \IK
  */
 

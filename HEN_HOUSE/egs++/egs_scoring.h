@@ -30,7 +30,7 @@
 
 
 /*! \file egs_scoring.h
- *  \brief Scoring classes
+ *  \brief EGS_ScoringSingle and EGS_ScoringArray class header file
  *  \IK
  */
 

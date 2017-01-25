@@ -31,7 +31,7 @@
 
 
 /*! \file     egs_base_geometry.h
- *  \brief    Base geometry class header file
+ *  \brief    EGS_BaseGeometry class header file
  *  \IK
  ***************************************************************************/
 
@@ -59,6 +59,12 @@ struct EGS_GeometryIntersections;
     typedef unsigned char EGS_BPType;
 #endif
 
+class label {
+public:
+    string      name;
+    vector<int> regions;
+};
+
 /*! \brief Base geometry class. Every geometry class must be derived from
   EGS_BaseGeometry.
 
@@ -77,13 +83,6 @@ struct EGS_GeometryIntersections;
   calculate the volume in each of their regions analytically.
 
 */
-
-class label {
-public:
-    string      name;
-    vector<int> regions;
-};
-
 
 class EGS_EXPORT EGS_BaseGeometry {
 

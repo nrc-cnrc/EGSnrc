@@ -42,7 +42,7 @@ PROJECT_NAME           = "EGSnrc C++ class library"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         =
+PROJECT_NUMBER         = 2017
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -790,12 +790,12 @@ RECURSIVE              = YES
 EXCLUDE                = ../../../egs++/view \
                          ../../../egs++/missing.h \
                          ../../../egs++/dso \
-                         ../../../geometry/egs_conez \
-                         ../../../test_source.cpp \
-                         ../../../test_spectrum.cpp \
-                         ../../../geometry/egs_elliptic_cylinders \
-                         ../../../egs_fortran_geometry.cpp \
-                         ../../../egs_fortran_geometry.h
+                         ../../../egs++/geometry/egs_conez \
+                         ../../../egs++/test_source.cpp \
+                         ../../../egs++/test_spectrum.cpp \
+                         ../../../egs++/geometry/egs_elliptic_cylinders \
+                         ../../../egs++/egs_fortran_geometry.cpp \
+                         ../../../egs++/egs_fortran_geometry.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

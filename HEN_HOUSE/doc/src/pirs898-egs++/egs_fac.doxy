@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file egs_fac.doxy
+ *  \brief Documents the egs_fac application
+ *  \EM
+ */
 
 /*! \page egs_fac egs_fac: Free Air Chamber (FAC) correction factors calculations
 

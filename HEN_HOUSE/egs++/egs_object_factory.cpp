@@ -30,7 +30,7 @@
 
 
 /*! \file egs_object_factory.cpp
- *  \brief Implements objects and object factories
+ *  \brief EGS_Object and EGS_ObjectFactory implementations
  *  \IK
 */
 

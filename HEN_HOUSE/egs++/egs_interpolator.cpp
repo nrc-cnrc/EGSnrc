@@ -30,7 +30,7 @@
 
 
 /*! \file egs_interpolator.cpp
- *  \brief Implementation of the run-time interpolator
+ *  \brief EGS_Interpolator implementation
  *  \IK
  */
 

@@ -160,7 +160,7 @@ In the meantime, if your simulation problem requires a source not
 available with the current version of \c egspp, you will need to
 create your own particle source DSO.
 This is not very hard as demonstrated by
-<a href="sources_2egs__point__source_2egs__point__source_8cpp-example.html">
+<a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
 this example</a>.
 
 \todo Add a general simulation source, \em i.e. a source that takes

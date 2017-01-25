@@ -30,7 +30,7 @@
 
 
 /*! \file egs_run_control.h
- *  \brief Header file for run control objects
+ *  \brief EGS_RunControl and EGS_JCFControl class header file
  *  \IK
  */
 

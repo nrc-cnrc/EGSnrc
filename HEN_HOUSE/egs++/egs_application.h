@@ -32,7 +32,7 @@
 
 
 /*! \file egs_application.h
- *  \brief EGS_Application header file
+ *  \brief EGS_Application class header file
  *  \IK
  */
 

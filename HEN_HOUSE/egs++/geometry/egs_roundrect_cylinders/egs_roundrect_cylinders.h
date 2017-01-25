@@ -123,7 +123,7 @@ A simple example:
         y-widths  = 0.5 1
         radii     = 0.1 0.5
         :start media input:
-            media = red green blue cyan pink
+            media = red green
             set medium = 1 1
         :stop media input:
     :stop geometry:
@@ -149,6 +149,7 @@ A simple example:
 
 :stop geometry definition:
 \endverbatim
+\image html egs_roundrect_cylinders.png "A simple rounded rectangle cylinders example"
 
 A more complex example of the usage of rounded rectangle cylinder sets can be
 found in the \c roundedrect_cylinders.geom sample geometry input file.

@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file egs_chamber.doxy
+ *  \brief Documents the egs_chamber application
+ *  \EM
+ */
 
 /*! \page egs_chamber egs_chamber: In-phantom ion chamber simulations
 <center> contributions from J. Wulff and H. Bouchard </center>

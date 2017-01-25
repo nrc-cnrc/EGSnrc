@@ -30,7 +30,7 @@
 
 
 /*! \file egs_simple_application.h
- *  \brief Header file for developing simple applications
+ *  \brief EGS_SimpleApplication class header file
  *  \IK
  */
 

@@ -30,7 +30,7 @@
 
 
 /*! \file egs_particle_track.h
- *  \brief Particle track scoring classes
+ *  \brief EGS_ParticleTrack class header file
  *  \GG
  */
 

@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file egs_cbct.doxy
+ *  \brief Documents the egs_cbct application
+ *  \EM
+ */
 
 /*! \page egs_cbct egs_cbct: CBCT/CT scanner simulations
 

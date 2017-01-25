@@ -30,7 +30,7 @@
 
 
 /*! \file egs_scoring.cpp
- *  \brief Scoring classes implementation
+ *  \brief EGS_ScoringSingle and EGS_ScoringArray implementation
  *  \IK
  */
 

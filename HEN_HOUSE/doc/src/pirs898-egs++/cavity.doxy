@@ -28,8 +28,12 @@
 ###############################################################################
 */
 
+/*! \file cavity.doxy
+ *  \brief Documents the cavity application
+ *  \IK
+ */
 
-/*! \page cavity cavity, a fully featured EGSnrc C++ user code for ion chamber simulations
+/*! \page cavity cavity: a fully featured EGSnrc C++ user code for ion chamber simulations
 
 <ul>
 <li> \ref cavity_intro </li>

@@ -30,7 +30,7 @@
 
 
 /*! \file egs_polygon.h
- *  \brief Polygons header file
+ *  \brief EGS_2DPolygon and EGS_PolygonT class header file
  *  \IK
  */
 

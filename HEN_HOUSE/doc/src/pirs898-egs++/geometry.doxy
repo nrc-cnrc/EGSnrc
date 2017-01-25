@@ -298,19 +298,10 @@ The implementation of a new geometry class may become necessary
 for various reasons, \em e.g.
 -# The geometrical structure of interest can not be constructed using the
    classes supplied with the egspp distribution.
-   <a href="EGS__Box-example.html">This page</a> provides a detailed
+   <a href="geometry_2egs_box_2egs_box_8cpp-example.html">This page</a> 
+   provides a detailed
    description of the implementation of the EGS_Box class that can
    serve as a guide for developing a new geometry class.
--# The user wants to avoid repeating the definition of the same geometry
-   in many input files specifying simulations that involve the same,
-   potentially complex geometry.
-   <a href="geometry_2example1_2geometry__example1_8cpp-example.html">
-   This page</a> shows how to implement a geometry DSO using
-   existing geometry classes for the sake of reducing or eliminating
-   input required to define a geometry. An alternative implementation
-   is found
-   <a href="geometry_2example2_2geometry__example2_8cpp-example.html">
-   here.</a>
 -# The user may want to re-implement some method of an existing
    geometry class such as \em e.g. \link EGS_BaseGeometry::setMedia(EGS_Input*)
    setMedia() \endlink to make the definition of media easier

@@ -30,7 +30,7 @@
 
 
 /*! \file main.doxy
- *  \brief An egspp documentation file
+ *  \brief An overview of the egspp documentation
  *  \IK
  */
 
@@ -39,34 +39,56 @@
   <center>
   <h1>The EGSnrc C++ class library</h1>
   <h2>Report PIRS-898</h2>
-  <h3>Iwan Kawrakow, Ernesto Mainegra-Hing, Frederic Tessier and Blake Walters</h3>
+  <h3>Iwan Kawrakow, Ernesto Mainegra-Hing, Frederic Tessier, Blake Walters 
+  and Reid Townson</h3>
   </center>
   <br>
 
   \image html cover1a.png
 
-  <br>
-  \ref introduction <br>
-  \ref installation <br>
-  \ref design <br>
-  \ref egspp_main <br>
-  \ref Geometry "The geometry module" <br>
-  \ref Sources "Particle sources" <br>
-  <a href="tutor2pp_8cpp-example.html">Developing a simple EGSnrc C++
-  application</a><br>
-  <a href="tutor7pp_8cpp-example.html">Developing an advanced EGSnrc C++
-  application</a><br>
-  \ref geometry_implementing "Extending the geometry package" <br>
-  <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
-  Implementing a new source</a><br><br>
-  <b>EGSnrc C++ user codes</b>
-    - \ref cavity
-    - \ref egs_chamber
-    - \ref egs_fac
-    - \ref egs_cbct
+  <center>
+  <table cellspacing="0" cellpadding="0" style='border:0;margin:20px 0;'>
+    
+    <tr style='background:#ccd1d1'><td style='width:800px;padding-left:20px'> <h3>Getting started</h3> </td></tr>
+    <tr><td style='padding-left:40px'> \ref introduction </td></tr>
+    <tr><td style='padding-left:40px'> \ref installation </td></tr>
 
-  <br><br><b>Note</b> If you use the EGSnrc C++ class library (or any code that uses it),
-  please cite this report as <em>I. Kawrakow, E. Mainegra-Hing, F. Tessier and B.R.B. Walters,
+    <tr style='background:#ccd1d1'><td style='padding-left:20px'> <h3>Class library documentation</h3> </td></tr>
+    <tr style='font-style:italic;background:#f2f4f4'><td style='padding-left:20px'>When writing input files for egs++ applications, you may wish to consult the documentation below.</td></tr>
+    <tr><td style='padding-left:40px'> \ref Geometry "Geometries"</td></tr>
+    <tr><td style='padding-left:40px'> \ref Sources "Particle sources"</td></tr>
+    <tr><td style='padding-left:40px'> \ref egspp_main "Main library"</td></tr>
+
+    <tr style='background:#ccd1d1'><td style='padding-left:20px'> <h3>Applications for egs++</h3> </td></tr>
+    <tr style='font-style:italic;background:#f2f4f4'><td style='padding-left:20px'>A number of applications based on egs++ are distributed with EGSnrc.</td></tr>
+    <tr><td style='padding-left:40px'> \ref cavity "cavity" <em>A fully featured application for ion chamber simulations</em></td></tr>
+    <tr><td style='padding-left:40px'> \ref egs_chamber "egs_chamber" <em>An application for in-phantom ion chamber simulations</em></td></tr>
+    <tr><td style='padding-left:40px'> \ref egs_fac "egs_fac" <em>Calculated free air chamber (FAC) correction factors</em></td></tr>
+    <tr><td style='padding-left:40px'> \ref egs_cbct "egs_cbct" <em>An application for CBCT/CT scanner simulations</em></td></tr>
+    
+    <tr style='background:#ccd1d1'><td style='padding-left:20px'> <h3>How to write an egs++ application</h3> </td></tr>
+    <tr style='font-style:italic;background:#f2f4f4'><td style='padding-left:20px'>Most users will never need to write code to use egs++. However, we provide some examples below to help new developers get started.</td></tr>
+    <tr><td style='padding-left:40px'> \ref design "Design overview"</td></tr>
+    <tr><td style='padding-left:40px'> 
+        <a href="tutor2pp_8cpp-example.html" style='font-weight:bold;'>Developing a simple egs++ application</a> 
+    </td></tr>
+    <tr><td style='padding-left:40px'> 
+        <a href="tutor7pp_8cpp-example.html" style='font-weight:bold;'>Developing an advanced egs++ application</a>
+    </td></tr>
+    <tr><td style='padding-left:40px'> 
+        \ref geometry_implementing "Developing a new geometry"
+    </td></tr>
+    <tr><td style='padding-left:40px'> 
+        <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html" style='font-weight:bold;'>Developing a new source</a> 
+    </td></tr>
+
+  </table>
+  </center>
+
+  <br><br><b>Note</b> If you use the EGSnrc C++ class library 
+  (or any code that uses it), please cite this report as:
+  
+  <br><em>I. Kawrakow, E. Mainegra-Hing, F. Tessier and B.R.B. Walters,
   The EGSnrc C++ class library, NRC Report PIRS-898 (rev A), Ottawa, Canada, 2009. The \c egs_chamber
   documentation was prepared based on J. Wulff's user-manual (unpublished) and the section about
   positioning-induced dose uncertainties and the corresponding input example were

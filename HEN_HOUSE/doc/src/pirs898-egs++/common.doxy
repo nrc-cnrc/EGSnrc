@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file common.doxy
+ *  \brief Documents some common input blocks
+ *  \EM
+ */
 
 /*! \page common Common input blocks for the EGSnrc C++ user codes
 

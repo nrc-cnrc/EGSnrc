@@ -30,7 +30,7 @@
 
 
 /*! \file egs_ausgab_object.cpp
- *  \brief Base ausgab object implementation
+ *  \brief EGS_AusgabObject base ausgab object implementation
  *  \IK
  *
  *  Also constructs a static typed object factory used to manage ausgab objects

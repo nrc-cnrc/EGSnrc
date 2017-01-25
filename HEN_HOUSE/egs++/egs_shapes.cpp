@@ -30,7 +30,7 @@
 
 
 /*! \file egs_shapes.cpp
- *  \brief Shapes implementation
+ *  \brief EGS_BaseShape and shape classes implementation
  *  \IK
  *
  *  Also provides a static shapes factory

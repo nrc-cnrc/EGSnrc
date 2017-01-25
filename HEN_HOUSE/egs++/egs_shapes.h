@@ -30,7 +30,7 @@
 
 
 /*! \file egs_shapes.h
- *  \brief Shapes header file
+ *  \brief EGS_BaseShape and shape classes header file
  *  \IK
  */
 
