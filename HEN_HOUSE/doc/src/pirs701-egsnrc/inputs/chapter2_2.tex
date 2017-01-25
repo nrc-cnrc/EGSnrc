@@ -1172,14 +1172,40 @@ awaits a future version of this report.
 
 In order to turn on radiative corrections, the input variable
 \index{radc\_flag}
-{\tt radc\_flag} (in the common block
-{\tt COMIN/COMPTON-DATA}) must be set to 1.
-Note that if radiative 
-Compton corrections
-are to be used then the {\tt Makefile} of the user code must
-be modified to include the file {\tt \$(EGS\_SOURCEDIR)rad\_compton1.mortran}
-in the {\tt SOURCES} list, just before\\
- {\tt \$(EGS\_SOURCEDIR)get\_inputs.mortran}.
+\texttt{radc\_flag} (in the common block \texttt{COMIN/COMPTON-DATA}) must be set to 1.
+This option can be enabled in applications which can read the \texttt{MC transport parameter}
+input block from an input file (\texttt{*.egsinp}) via the input key:
+\begin{verbatim}
+   Radiative Compton corrections = on
+\end{verbatim}
+Moreover, one must include the file \texttt{\$(EGS\_SOURCEDIR)rad\_compton1.mortran} to the
+list of MORTRAN sources to be built just before \texttt{\$(EGS\_SOURCEDIR)get\_inputs.mortran}.
+Depending on the application type this is accomplished in different ways:
+
+\begin{itemize}
+ \item
+  For all C++ applications one must edit the file \texttt{\$HEN\_HOUSE/specs/egspp1.spec}
+  and include the above file in the definition of the \texttt{C\_ADVANCED\_SOURCES}
+  variable if the application is derived from the \texttt{EGS\_AdvancedApplication} class or the
+  \texttt{C\_SIMPLE\_SOURCES} variable for any application derived from the \texttt{EGS\_SimpleApplication} class.
+ \item
+  For a specific C++ application one could define the variable \texttt{CPP\_SOURCES} in the application's
+  \texttt{Makefile} in the same manner as done above for the \texttt{C\_ADVANCED\_SOURCES}.
+ \item
+  For a \texttt{BEAMnrc} application one must edit the file \texttt{sources.make} located in the application's
+  folder and include the above file in the definition of the \texttt{SOURCES} variable
+  or the \texttt{LIB\_SOURCES} variable if this \texttt{BEAMnrc} application will be used as a particle source for
+  another application.
+ \item
+  For a MORTRAN application named for instance \texttt{app} one must edit the corresponding file app.make located
+  in the application's folder \texttt{\$EGS\_HOME/app} and include the above file
+  in the definition of the \texttt{SOURCES} variable.
+\end{itemize}
+
+% Note that if radiative Compton corrections are to be used then the \texttt{Makefile} of
+% the user code must be modified to include the file \texttt{\$(EGS\_SOURCEDIR)rad\_compton1.mortran}
+% in the \texttt{SOURCES} list, just before\\
+% \texttt{\$(EGS\_SOURCEDIR)get\_inputs.mortran}.
 
 \paragraph{Total Compton cross sections}\hfill
 \label{comp_xsect}
