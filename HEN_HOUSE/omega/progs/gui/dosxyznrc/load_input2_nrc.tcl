@@ -204,7 +204,7 @@ proc read_input {} {
     global arr phspout phspoutopt
     global thphidef angfixed ang1 ang2 pang ivary numthphi nang
     global numsets nset iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
-    global iphant imuphspout
+    global iphant imuphspout calflag
     global alpha beta
     global level ibcmp_min ibcmp_max iphter_min iphter_max
     global iraylr_min iraylr_max iedgfl_min iedgfl_max got_egsnrc_input
@@ -526,6 +526,12 @@ proc read_input {} {
       set imuphspout $arr(0)
       if {$imuphspout>1 || $imuphspout<0} { set imuphspout 0 }
  	  #now get the actual settings
+
+      #get calflag
+      set data [get_val $data arr 0]
+      set calflag $arr(0)
+      if {$calflag>1 || $calflag<0} { set calflag 0 }    
+
       for {set i 1} {$i<=$numsets} {incr i} {
 	  gets $fileid data
 	  for {set j 0} {$j < 10} {incr j} {
