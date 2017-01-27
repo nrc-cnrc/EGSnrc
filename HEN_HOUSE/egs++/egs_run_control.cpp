@@ -48,9 +48,9 @@ using namespace std;
 vector<EGS_Library *> rc_libs;
 static int n_run_controls = 0;
 
-EGS_RunControl::EGS_RunControl(EGS_Application *a) : app(a), input(0),
-    ncase(0), ndone(0), nbatch(10), maxt(-1), accu(-1), restart(0), nchunk(1),
-    cpu_time(0), previous_cpu_time(0), geomErrorCount(0), geomErrorMax(0) {
+EGS_RunControl::EGS_RunControl(EGS_Application *a) : geomErrorCount(0),
+    geomErrorMax(0), app(a), input(0), ncase(0), ndone(0), maxt(-1), accu(-1),
+    nbatch(10), restart(0), nchunk(1), cpu_time(0), previous_cpu_time(0) {
     n_run_controls++;
     if (!app) egsFatal("EGS_RunControl::EGS_RunControl: it is not allowed\n"
                            " to construct a run control object on a NULL application\n");
@@ -416,11 +416,10 @@ public:
 #endif
 
 EGS_JCFControl::EGS_JCFControl(EGS_Application *a, int Nbuf) :
-    EGS_RunControl(a), p(new EGS_FileLocking),
-    npar(app->getNparallel()), ipar(app->getIparallel()),
-    ifirst(app->getFirstParallel()),
-    first_time(true), nbuf(Nbuf), njob(0), tsum(0), tsum2(0), tcount(0),
-    norm(1), last_sum(0), last_sum2(0), last_count(0), removed_jcf(false) {
+    EGS_RunControl(a), tsum(0), tsum2(0), tcount(0), norm(1), last_sum(0),
+    last_sum2(0), last_count(0), njob(0), npar(app->getNparallel()),
+    ipar(app->getIparallel()), ifirst(app->getFirstParallel()),
+    first_time(true), removed_jcf(false), nbuf(Nbuf), p(new EGS_FileLocking) {
     if (input) {
         int err = input->getInput("nchunk",nchunk);
         if (err) {

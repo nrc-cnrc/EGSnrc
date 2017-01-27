@@ -227,9 +227,9 @@ public:
                         EGS_BaseGeometry *geometry,
                         const string &Name="", EGS_ObjectFactory *f=0) :
         EGS_BaseSimpleSource(Q,Spec,Name,f), shape(Shape),
-        min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
-        buf_1(1), buf_2(-1),
-        geom(geometry), regions(0), nrs(0), gc(IncludeAll) {
+        geom(geometry), regions(0), min_theta(85.), max_theta(95.),
+         buf_1(1), buf_2(-1), min_phi(0), max_phi(2*M_PI),
+        nrs(0), gc(IncludeAll) {
         setUp();
     };
 

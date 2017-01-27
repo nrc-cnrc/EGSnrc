@@ -544,7 +544,7 @@ private:
 class EGS_LOCAL EGS_SphereTester : public EGS_GeometryTester {
 public:
     EGS_SphereTester(const EGS_Vector &Xo, EGS_Input *i) :
-        xo(Xo), EGS_GeometryTester(i) {};
+        EGS_GeometryTester(i), xo(Xo) {};
     ~EGS_SphereTester() {};
     void printPosition(const EGS_Vector &x) {
         EGS_Vector xp(x-xo);
@@ -558,7 +558,7 @@ private:
 class EGS_LOCAL EGS_TransformedTester : public EGS_GeometryTester {
 public:
     EGS_TransformedTester(const EGS_AffineTransform &t, EGS_Input *i) :
-        T(t), EGS_GeometryTester(i) {};
+        EGS_GeometryTester(i), T(t) {};
     ~EGS_TransformedTester() {};
     void printPosition(const EGS_Vector &x) {
         EGS_Vector xp(x*T);

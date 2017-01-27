@@ -172,7 +172,7 @@ public:
     */
     EGS_CylindersT(int nc, const EGS_Float *radius,
                    const EGS_Vector &position, const string &Name,
-                   const T &A) : EGS_BaseGeometry(Name), a(A), xo(position) {
+                   const T &A) : EGS_BaseGeometry(Name), xo(position), a(A) {
         if (nc>0) {
             R=new EGS_Float [nc];
             R2=new EGS_Float [nc];

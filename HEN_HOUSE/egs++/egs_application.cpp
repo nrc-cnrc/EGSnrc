@@ -208,8 +208,8 @@ void EGS_Application::storeGeometryStep(int ireg, int inew,
 }
 
 EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
-    source(0), rndm(0), run(0), last_case(0), current_case(0),
-    data_out(0), data_in(0), simple_run(false), a_objects(0),
+    source(0), rndm(0), run(0), simple_run(false), current_case(0),
+    last_case(0), data_out(0), data_in(0), a_objects(0),
     ghistory(new EGS_GeometryHistory) {
 
     app_index = n_apps++;

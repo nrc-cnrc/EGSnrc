@@ -82,7 +82,7 @@ public:
 
     EGS_ConezT(int nc, const EGS_Float *angle,
                const EGS_Vector &position, const string &Name,
-               const T &A) : EGS_BaseGeometry(Name), a(A), xo(position) {
+               const T &A) : EGS_BaseGeometry(Name), xo(position), a(A) {
         if (nc>0) {
             theta=new EGS_Float [nc];
             cos_t=new EGS_Float [nc];

@@ -169,7 +169,7 @@ public:
                          EGS_BaseShape *sshape, EGS_BaseShape *tshape,
                          const string &Name="", EGS_ObjectFactory *f=0) :
         EGS_BaseSimpleSource(Q,Spec,Name,f), source_shape(sshape),
-        target_shape(tshape), dist(1), ctry(0) {
+	target_shape(tshape), ctry(0), dist(1) {
         setUp();
     };
 

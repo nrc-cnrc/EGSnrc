@@ -95,9 +95,9 @@
 
 EGS_DoseScoring::EGS_DoseScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
-    EGS_AusgabObject(Name,f), nreg(0), m_lastCase(-1), nmedia(0),
-    dose(0), doseM(0), max_dreg(-1), max_medl(0),
-    score_medium_dose(false), score_region_dose(false), norm_u(1.0) {
+    EGS_AusgabObject(Name,f), dose(0), doseM(0),
+    norm_u(1.0), nreg(0), nmedia(0), max_dreg(-1), max_medl(0),
+    m_lastCase(-1),score_medium_dose(false), score_region_dose(false) {
     otype = "EGS_DoseScoring";
 }
 
