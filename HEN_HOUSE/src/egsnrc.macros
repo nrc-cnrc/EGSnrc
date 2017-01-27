@@ -842,7 +842,7 @@ REPLACE {;COMIN/EPCONT/;} WITH
                 u_final,v_final,w_final,
                 IDISC,IROLD,IRNEW,IAUSFL($MXAUS);
     $ENERGY PRECISION EDEP,   "energy deposition in MeV"
-                      EDEP_LOCAL "local energy deposition in MeV"
+                      EDEP_LOCAL; "local energy deposition in MeV"
     $REAL             TSTEP,  "distance to a discrete interaction"
                       TUSTEP, "intended step length, befor check with geometry"
                       USTEP,  "transport distance calculated from TUSTEP"
