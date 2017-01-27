@@ -444,6 +444,8 @@ public:
             xtmp += u*this_t;
             ir = next_ir;
         }
+
+        return ireg;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {

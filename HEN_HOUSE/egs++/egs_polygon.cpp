@@ -164,7 +164,6 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     }
 
     // find a point that is part of the convex hull of this polygon
-    int jstart;
     for (j=0; j<np-1; j++) {
         bool is_ok = true;
         for (int i=0; i<np; i++) {
@@ -174,7 +173,6 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
                 }
         }
         if (is_ok) {  // found the point
-            jstart = j;
             pp = new EGS_2DVector [np];
             int jj=0;
             int i;

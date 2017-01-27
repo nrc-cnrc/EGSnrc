@@ -128,7 +128,6 @@ EGS_SmartEnvelope::EGS_SmartEnvelope(EGS_BaseGeometry *G,
     for (j=0; j<fgeoms.size(); j++) {
         itype[j] = 0;
     }
-    int nlist = 0;
     int nreg_inscribed = 0;
     bool ok = true;
     for (j=0; j<fgeoms.size(); j++) {
@@ -244,14 +243,14 @@ static char EGS_SMART_ENVELOPE_LOCAL eeg_message5[] =
     "missing/incorrect 'base geometry' input";
 static char EGS_SMART_ENVELOPE_LOCAL eeg_message6[] =
     "createGeometry(smart envelope): no geometry with name %s defined\n";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_message7[] =
-    "no inscirebed geometries defined?. I hope you know what you are doing";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_message8[] =
-    "an error occured while constructing inscibed geometries";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_message7[] =
+//"no inscirebed geometries defined?. I hope you know what you are doing";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_message8[] =
+//"an error occured while constructing inscibed geometries";
 
 static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword1[] = "base geometry";
 static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword2[] = "geometry";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword3[] = "inscribed geometries";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword3[] = "inscribed geometries";
 
 extern "C" {
 
@@ -343,7 +342,6 @@ extern "C" {
 
         // label defined in the inscribed geometries
         vector<int> gregs;
-        int shift=0;
         for (int i=0; i<n_in; i++) {
 
             // add regions from set geometries

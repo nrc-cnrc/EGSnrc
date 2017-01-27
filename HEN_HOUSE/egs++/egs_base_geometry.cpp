@@ -28,6 +28,7 @@
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -408,10 +409,10 @@ extern "C" void __list_geometries() {
 */
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
-    med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0),
+    region_media(0), med(-1), has_rho_scaling(false), rhor(0),
     has_B_scaling(false), has_Ref_rho(false), bfactor(0), rhoRef(1.0),
-    bproperty(0), bp_array(0) {
+    nref(0), debug(false), is_convex(true), bproperty(0), bp_array(0),
+    boundaryTolerance(epsilon) {
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -579,10 +580,10 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
         int err1 = inp->getInput("type",typ);
         int err2 = inp->getInput("number of copies",ncopy);
         int err3 = inp->getInput("translation delta",trans);
-        int err3a = inp->getInput("first translation",trans_o);
-        int err4 = inp->getInput("rotation axis",rot_axis);
-        int err5 = inp->getInput("rotation delta",rot_angle);
-        int err5a = inp->getInput("first rotation",rot_angle_o);
+        int err4 = inp->getInput("first translation",trans_o);
+        int err5 = inp->getInput("rotation axis",rot_axis);
+        int err6 = inp->getInput("rotation delta",rot_angle);
+        int err7 = inp->getInput("first rotation",rot_angle_o);
         bool do_it = true;
         int ttype;
         if (err1 || err2) {
@@ -598,13 +599,13 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
                 do_it = false;
             }
             if (typ == "line") {
-                if (trans.size() != 3) {
+                if (err3 || trans.size() != 3) {
                     egsWarning("geometry replication: got %d inputs for "
                                "'translation', need 3\n",trans.size());
                     do_it = false;
                 }
                 else {
-                    if (err3a) {
+                    if (err4) {
                         trans_o.push_back(0);
                         trans_o.push_back(0);
                         trans_o.push_back(0);
@@ -613,17 +614,17 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
                 ttype = 0;
             }
             else if (typ == "rotation") {
-                if (rot_axis.size() != 3) {
+                if (err5 || rot_axis.size() != 3) {
                     egsWarning("geometry replication: got %d inputs for "
                                "'rotation axis', need 3\n",rot_axis.size());
                     do_it = false;
                 }
-                if (err4) {
+                if (err6) {
                     egsWarning("geometry replication: missing 'rotation delta'"
                                " input\n");
                     do_it = false;
                 }
-                if (err5a) {
+                if (err7) {
                     rot_angle_o = 0;
                 }
                 ttype = 1;

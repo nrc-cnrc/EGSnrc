@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hubert Ho
 #
 ###############################################################################
 */
@@ -142,7 +142,7 @@ public:
      * initial seeds.
      */
     EGS_Ranmar(int ixx=1802, int jxx=9373, int n=128) :
-        EGS_RandomGenerator(n), copy(0), high_res(false) {
+        EGS_RandomGenerator(n), high_res(false), copy(0) {
         setState(ixx,jxx);
     };
 

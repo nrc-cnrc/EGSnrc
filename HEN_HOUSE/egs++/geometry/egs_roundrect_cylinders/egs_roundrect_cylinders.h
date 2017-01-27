@@ -24,6 +24,7 @@
 #  Author:          Manuel Stoeckl, 2016
 #
 #  Contributors:    Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 #
@@ -199,7 +200,7 @@ public:
                             const vector<EGS_Float> &rad,
                             const EGS_Vector &position, const string &Name,
                             const Tx &A_x, const Ty &A_y) : EGS_BaseGeometry(Name),
-        Ax(A_x), Ay(A_y), xo(position) {
+        xo(position), Ax(A_x), Ay(A_y) {
         int nc = rad.size();
         if (nc>0) {
             ax = new EGS_Float [nc];

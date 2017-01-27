@@ -114,7 +114,7 @@ extern "C" {
                        " of 4\n");
             return 0;
         }
-        EGS_BaseShape *shape;
+        EGS_BaseShape *shape=0;
         vector<EGS_Float> posi;
         err = input->getInput("inner rectangle",posi);
         if (!err && posi.size() == 4) {

@@ -650,6 +650,7 @@ public:
 };
 
 
+/*
 // A set of cones having the same axis and opening angle and
 // apexes along the cone axis:
 //
@@ -664,7 +665,7 @@ public:
 //
 // That sort of geometry is useful for modelling e.g. the tip of
 // many ionization chambers.
-//
+*/
 
 /*! \brief A set of "parallel cones" (\em i.e. cones with the same axis and
 opening angles but different apexes)

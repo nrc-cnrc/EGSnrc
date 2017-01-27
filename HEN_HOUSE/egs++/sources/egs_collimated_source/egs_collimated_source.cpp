@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Hubert Ho
 #
 ###############################################################################
 */
@@ -39,7 +39,7 @@
 
 EGS_CollimatedSource::EGS_CollimatedSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f),
-    source_shape(0), target_shape(0), dist(1), ctry(0) {
+    source_shape(0), target_shape(0), ctry(0), dist(1) {
     EGS_Input *ishape = input->takeInputItem("source shape");
     if (ishape) {
         source_shape = EGS_BaseShape::createShape(ishape);
