@@ -62,7 +62,7 @@
 
 \section egs_cbct_intro Introduction
 
-The C++ user code \c egs_cbct is an advanced EGSnrc application whose
+The C++ application \c egs_cbct is an advanced EGSnrc application whose
 main goal is the fast estimation of the scatter contribution to
 an ideal detector in a cone-beam CT (CBCT) setup by means of sophisticated
 Variance Reduction Techniques (VRTs) and a smoothing algorithm. It can
@@ -552,7 +552,7 @@ to be relatively insensitive to their exact values.
 
 \section egs_cbct_usage Usage
 
-As any other EGSnrc user code, \c egs_cbct can be started from the command line
+As any other EGSnrc application, \c egs_cbct can be started from the command line
 using
 \verbatim
 egs_cbct -i input_file -p pegs_file [-o output_file] [-b] [-s] [-P N -j i]
@@ -571,7 +571,7 @@ exb egs_cbct input_file pegs_file [p=N] [batch=pbs]
 \endverbatim
 where the \c batch option specifies the queuing system to be used.
 The EGSnrc GUI can of course be also used, see
-see PIRS-877 for more details on running EGSnrc user codes.
+see PIRS-877 for more details on running EGSnrc applications.
 
 
 \section egs_cbct_example An input example: 0 deg CBCT scan of a water cube with 5 bone rods

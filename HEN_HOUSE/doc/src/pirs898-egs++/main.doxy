@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
+#                   Frederic Tessier
 #
 ###############################################################################
 */
@@ -49,11 +51,11 @@
         <td> \ref installation </td>
     </tr>
     <tr>
-        <td><a href="http://nrc-cnrc.github.io/EGSnrc/">Documentation (all EGSnrc codes)</a></td>
+        <td><a href="http://nrc-cnrc.github.io/EGSnrc/">EGSnrc documentation</a></td>
     </tr>
     <tr>
         <td>
-            <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/FAQ#how-do-i-cite-the-egsnrc-software">How to cite</a>
+            <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/FAQ#how-do-i-cite-the-egsnrc-software">How to cite EGSnrc</a>
         </td>
     </tr>
     <tr>
@@ -69,19 +71,19 @@
         <td>When writing input files for egs++ applications, you may wish to consult the documentation below.</td>
     </tr>
     <tr>
+        <td> \ref common "Common input syntax"</td>
+    </tr>
+    <tr>
         <td> \ref Geometry "Geometries"</td>
     </tr>
     <tr>
-        <td style='padding:0 0 4px 60px;'>- \ref example_geometries "Additional examples"</td>
+        <td> \ref example_geometries "Geometry examples"</td>
     </tr>
     <tr>
         <td> \ref Sources "Particle sources"</td>
     </tr>
     <tr>
         <td> \ref egspp_main "Main library"</td>
-    </tr>
-    <tr>
-        <td style='padding:0 0 4px 60px;'>- \ref common "Common input blocks"</td>
     </tr>
 
     <tr class='egsRowTitle'>
@@ -113,23 +115,23 @@
         <td> \ref design "Design overview"</td>
     </tr>
     <tr>
-        <td> 
-            <a href="tutor2pp_8cpp-example.html">Developing a simple egs++ application</a> 
+        <td>
+            <a href="tutor2pp_8cpp-example.html">Developing a simple egs++ application</a>
         </td>
     </tr>
     <tr>
-        <td> 
+        <td>
             <a href="tutor7pp_8cpp-example.html">Developing an advanced egs++ application</a>
         </td>
     </tr>
     <tr>
-        <td> 
+        <td>
             \ref geometry_implementing "Developing a new geometry"
         </td>
     </tr>
     <tr>
-        <td> 
-            <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">Developing a new source</a> 
+        <td>
+            <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">Developing a new source</a>
         </td>
     </tr>
 

@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs++ common input block documentation
+#  EGSnrc egs++ common input syntax documentation
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -23,7 +23,7 @@
 #
 #  Author:          Ernesto Mainegra-Hing, 2009
 #
-#  Contributors:
+#  Contributors:    Frederic Tessier
 #
 ###############################################################################
 */
@@ -33,7 +33,7 @@
  *  \EM
  */
 
-/*! \page common Common input blocks for the EGSnrc C++ user codes
+/*! \page common Common input syntax for EGSnrc C++ applications
 
 <ul>
 <li> \ref common_intro </li>
@@ -42,10 +42,10 @@
 </ul>
 
 \section common_intro Introduction
-All C++ user codes distributed with EGSnrc use the same syntax
+All C++ applications distributed with EGSnrc use the same syntax
 for inputing information regarding geometry, source, run control
-and MC transport parameters. Only the input blocks for scoring
-and variance reduction techniques vary in these codes.
+and Monte Carlo transport parameters. Only the input blocks for scoring
+and variance reduction techniques vary between applications.
 
 \section common_geom_source_rco Geometry, particle source and run control
 
@@ -106,34 +106,34 @@ in the input file.
 
 \section  common_mc Monte Carlo transport parameter control
 
-Monte Carlo transport parameters are common to all EGSnrc user codes.
+Monte Carlo transport parameters are common to all EGSnrc applications.
 The input block to enter/modify transport parameters is shown below:
 
 \verbatim
 #  Modify here parameters that should be different from their defaults.
 :start MC transport parameter:
- Global ECUT =                 0.521  #Global electron transport cutoff
- Global PCUT =                 0.001  #Global photon transport cutoff
- Global SMAX =                  1e10  #Global maximum step-size restriction for e- transport
- ESTEPE =                       0.25  # Default is 0.25
- XIMAX =                         0.5  # Default is 0.5, max. value is 1.
- Boundary crossing algorithm = exact  #exact (default), PRESTA-I
- Skin depth for BCA =              3  # Default value is 3 for exact boundary crossing
- Electron-step algorithm = PRESTA-II  #PRESTA-II (default),PRESTA-I
- Spin effects =                   On  #On (default),Off
- Brems angular sampling =         KM  #Simple,KM (default)
- Brems cross sections =           BH  #BH (default),NIST
- Pair angular sampling =      Simple  #Off, Simple (default),KM
- Triplet production =            Off  #On or Off (default)
- Electron Impact Ionization =    Off  #On, Off (default), casnati, kolbenstvedt, gryzinski
- Bound Compton scattering =    norej  #On, Off, norej (default)
- Radiative Compton corrections = Off  #On,  Off (default)
- Rayleigh scattering =            Off #On ,Off (default), custom
- Photoelectron angular sampling = On  #On (default),Off
- Atomic relaxations =             On  #On (default),Off
- Photon cross sections =        xcom  #si, epdl, xcom (default) or user-supplied
- Photon cross-sections output =  Off  #Off (default) or On
- Compton cross sections = comp_xsections # user-supplied
+    Global ECUT                    = 0.521          # Global electron transport cutoff
+    Global PCUT                    = 0.001          # Global photon transport cutoff
+    Global SMAX                    = 1e10           # Global maximum step-size restriction for e- transport
+    ESTEPE                         = 0.25           # Default is 0.25
+    XIMAX                          = 0.5            # Default is 0.5, max. value is 1.
+    Boundary crossing algorithm    = exact          # exact (default), PRESTA-I
+    Skin depth for BCA             = 3              # Default value is 3 for exact boundary crossing
+    Electron-step algorithm        = PRESTA-II      # PRESTA-II (default),PRESTA-I
+    Spin effects                   = On             # On (default),Off
+    Brems angular sampling         = KM             # Simple,KM (default)
+    Brems cross sections           = BH             # BH (default),NIST
+    Pair angular sampling          = Simple         # Off, Simple (default),KM
+    Triplet production             = Off            # On or Off (default)
+    Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski
+    Bound Compton scattering       = norej          # On, Off, norej (default)
+    Radiative Compton corrections  = Off            # On,  Off (default)
+    Rayleigh scattering            = Off            # On ,Off (default), custom
+    Photoelectron angular sampling = On             # On (default),Off
+    Atomic relaxations             = On             # On (default),Off
+    Photon cross sections          = xcom           # si, epdl, xcom (default) or user-supplied
+    Photon cross-sections output   = Off            # Off (default) or On
+    Compton cross sections         = comp_xsections # user-supplied
 :stop MC transport parameter:
 \endverbatim
 
@@ -145,7 +145,7 @@ inclusion of Rayleigh cross sections in the PEGS4 data sets. Currently,
 Rayleigh cross sections are generated on the fly (see Rayleigh in PIRS-701).
 Default values may often only add time to your calculation. One can speed
 things up by turning them off. The user is referred to section 2.6
-of the PIRS-702 user-code manual for a detailed description
+of the PIRS-702 manual for a detailed description
 of these parameters.
 
 */

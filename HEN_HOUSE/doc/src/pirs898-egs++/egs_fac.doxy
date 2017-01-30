@@ -47,7 +47,7 @@
 
 \section egs_fac_intro Introduction
 
-The C++ user code \c egs_fac is an advanced EGSnrc application designed
+The C++ application \c egs_fac is an advanced EGSnrc application designed
 for the purpose of calculating free air chamber (FAC) correction factors.
 A self-consistent approach for the calculation of such correction factors,
 recently defined in
@@ -129,11 +129,11 @@ expects the name of three geometries, the realistic FAC geometry
 (<b><code>sim_no_tube</code></b>), plus the two geometries mentioned above.
 The names used here for these geometries constitute only examples.
 Any other experimental procedure used to determine \f$A_{att}\f$ based
-on the ratio of two cavity doses can be simulated with this user code.
+on the ratio of two cavity doses can be simulated with this application.
 
 The correction for backscatter in air when no FAC is present, \f$A_{b}\f$,
 needs an extra calculation of the air-kerma at the POM. In the initial
-implementation this calculation was done separately with the user-code
+implementation this calculation was done separately with the application
 \ref cavity "cavity". Now it can be done in the same calculation with
 \c egs_fac . To this end, one must define a geometry without the FAC
 geometry and allow the scoring of the contribution from scattered photons
@@ -183,7 +183,7 @@ in \ref cavity_vr "cavity".
 
 \section egs_fac_usage Usage
 
-As any other EGSnrc user code, \c egs_fac can be started from the command line
+As any other EGSnrc application, \c egs_fac can be started from the command line
 using
 \verbatim
 egs_fac -i input_file -p pegs_file [-o output_file] [-b] [-s] [-P N -j i]
@@ -202,7 +202,7 @@ exb egs_fac input_file pegs_file [p=N] [batch=pbs]
 \endverbatim
 where the \c batch option specifies the queuing system to be used.
 The EGSnrc GUI can of course be also used, see
-see PIRS-877 for more details on running EGSnrc user codes.
+see PIRS-877 for more details on running EGSnrc applications.
 
 
 \section egs_fac_example An input example: NRC MEES FAC corrections.
@@ -210,7 +210,7 @@ see PIRS-877 for more details on running EGSnrc user codes.
 \verbatim
 ############################################################################
 #
-#  This is an example input file for the egs_fac EGSnrc user code.
+#  This is an example input file for the egs_fac EGSnrc application.
 #
 #  The incident beam is a full BEAMnrc simulation source that models the
 #  NRC MXR-320 x-ray tube.

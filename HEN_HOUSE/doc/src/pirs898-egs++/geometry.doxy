@@ -298,7 +298,7 @@ The implementation of a new geometry class may become necessary
 for various reasons, \em e.g.
 -# The geometrical structure of interest can not be constructed using the
    classes supplied with the egspp distribution.
-   <a href="geometry_2egs_box_2egs_box_8cpp-example.html">This page</a> 
+   <a href="geometry_2egs_box_2egs_box_8cpp-example.html">This page</a>
    provides a detailed
    description of the implementation of the EGS_Box class that can
    serve as a guide for developing a new geometry class.
@@ -411,7 +411,7 @@ description of the examples and screen shots for some of them:
   \link EGS_CylindersT set of cylinders\endlink and a
   \link EGS_PlanesT set of planes\endlink. The geometry
   defined is the same as in the \c cavrznrc_template.egsinp
-  file for the CAVRZnrc user code (a simple pancake ionization
+  file for the CAVRZnrc application (a simple pancake ionization
   chamber with graphite walls and air cavity).
 - The file \c rz1.geom defines the same geometry as \c rz.geom but
   now using an \link EGS_EnvelopeGeometry envelope geometry\endlink
@@ -566,7 +566,7 @@ Here is a view of this geometry
 and this is the complete geometry definition:
 \include hemisphere.geom
 
-\section pyramid_geom A phyramid
+\section pyramid_geom A pyramid
 
 file: <code>pyramid.geom</code><br><br>
 \dontinclude pyramid.geom
@@ -607,7 +607,7 @@ EGS_NDGeometry N-dimensional geometry\endlink made of a
 \link EGS_CylindersT set of cylinders\endlink and a
 \link EGS_PlanesT set of planes\endlink. The geometry
 defined is the same as in the \c cavrznrc_template.egsinp
-file for the CAVRZnrc user code (a simple pancake ionization
+file for the CAVRZnrc application (a simple pancake ionization
 chamber with graphite walls and air cavity).
 
 We start by defining the 2 dimensions of the geometry: first s set

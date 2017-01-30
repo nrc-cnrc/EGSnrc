@@ -56,26 +56,26 @@ The EGS series of electron/photon simulation packages, on the other side,
 only provide item 3 from the above list. It is the responsibility of
 the user to program the particle source, geometry and scoring for the
 task at hand. The advantage of this approach is that, due to the lightweight
-of EGS, one can very quickly put together EGS "user codes" for the
+of EGS, one can very quickly put together EGS applications for the
 simulation of a variety of problems. However, if the geometry and/or the
-particle source are complex, the creation of a corresponding user code
+particle source are complex, the creation of a corresponding application
 may turn into a lengthy and tedious exercise. This drawback is somewhat
 alleviated by the fact that the EGSnrc package provides a series of
-user codes for a variety of tasks. Nevertheless, the availability of
+applications for a variety of tasks. Nevertheless, the availability of
 flexible and general geometry and particle source packages would greatly
 reduce the amount of work needed to perform simulations that can not
-be done with the standard set of user codes.
+be done with the standard set of applications.
 
 The EGSnrc C++ class library \c egspp provides
 - A general purpose \ref Geometry "geometry package" that can be used to model
 a wide range of geometrical structures
 - A set of \ref Sources "particle sources" that can be used to simulate
-  all sources available with the RZ series of user codes and DOSXYZnrc.
+  all sources available with the RZ series of applications and DOSXYZnrc.
 - A set of basic \link EGS_ScoringArray scoring classes \endlink
 - Base application classes for developing \link EGS_SimpleApplication
   simple \endlink and \link EGS_AdvancedApplication advanced \endlink
   applications. By deriving from these class it
-  is much easier to create a new C++ user code for EGSnrc
+  is much easier to create a new C++ application for EGSnrc
 - Miscellaneous other utility classes such as a \link EGS_RandomGenerator
   random number generator\endlink, \link EGS_AliasTable alias table\endlink,
   \link EGS_Input class \endlink for parsing an input file, an
@@ -122,15 +122,15 @@ here</a>.
 /*! \page installation Installation
 
 The EGSnrc C++ class library is distributed with the rest of the
-EGSnrc system. Follow the installation instructions on the 
+EGSnrc system. Follow the installation instructions on the
 <a href="https://github.com/nrc-cnrc/EGSnrc/wiki">EGSnrc wiki</a>.
 
-Download the latest release (i.e. clone the master branch) from the 
+Download the latest release (i.e. clone the master branch) from the
 <a href="https://github.com/nrc-cnrc/EGSnrc">github repository</a>.
-An experimental branch (called "develop") is also available for 
+An experimental branch (called "develop") is also available for
 testing cutting-edge developments.
 
-For more documentation on EGSnrc and related codes, see the 
+For more documentation on EGSnrc and related codes, see the
 <a href="http://nrc-cnrc.github.io/EGSnrc/">EGSnrc homepage</a>.
 
 */
@@ -142,7 +142,7 @@ The EGSnrc C++ class library is organized as a main library file
 and \c libegspp.dylib for Mac OSX) and
 a series of small dynamic shared objects (DSO, also known as DLL in
 the Windows world), one
-for each geometry and source type. EGSnrc user codes written in C++
+for each geometry and source type. EGSnrc applications written in C++
 link against the main library. Geometry and source DSOs are loaded
 dynamically as needed at run time using
 the EGS_Library class. In order this to work,
@@ -182,10 +182,10 @@ There are several motivations behind this design:
 - The user can easily extend the geometry and/or particle source packages
   by adding a geometry or source derived from the base geometry or base
   source classes. Such additional classes become immediately available
-  for use in any EGSnrc user code written in C++ when compiled into
-  DSOs, without the need to recreate the main library and or the user code.
+  for use in any EGSnrc application written in C++ when compiled into
+  DSOs, without the need to recreate the main library and or the application.
 - Geometries and sources can be dynamically loaded by other applications,
-  not just EGSnrc C++ user codes. For instance, there is a geometry tester
+  not just EGSnrc C++ applications. For instance, there is a geometry tester
   provided with the distribution, which uses the just described
   mechanism to dynamically construct a geometry object from the definition
   in an input file and can then perform a number of tests (this is
