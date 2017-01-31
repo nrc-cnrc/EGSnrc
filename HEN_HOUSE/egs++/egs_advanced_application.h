@@ -208,6 +208,8 @@ public:
     //************************************************************
     EGS_Float getMediumRho(int ind);
     EGS_Float getEdep();
+    /* Needed by some sources */
+    EGS_Float getRM();
 
 protected:
 

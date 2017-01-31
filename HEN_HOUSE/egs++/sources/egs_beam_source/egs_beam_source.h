@@ -112,7 +112,7 @@ sure that the <code>RESTART</code> calculation option is defined in
 both, the source and the application input files.
 
 A simple example. Note that you must build the required shared library for
-the accelerator (i.e. use the command 'make library' in the BEAM_EX10MeVe 
+the accelerator (i.e. use the command 'make library' in the BEAM_EX10MeVe
 directory).
 \verbatim
 :start source definition:

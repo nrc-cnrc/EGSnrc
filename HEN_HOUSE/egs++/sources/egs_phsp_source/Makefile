@@ -39,9 +39,6 @@ lib_files = egs_phsp_source
 my_deps = $(common_source_deps)
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
-#redefined from egspp.spec
-INC2 = -I$(IEGS2) -I..$(DSEP).. -I$(HEN_HOUSE)interface -I.$(DSEP)
-
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
