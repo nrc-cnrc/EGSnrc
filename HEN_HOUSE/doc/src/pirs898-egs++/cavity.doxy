@@ -28,8 +28,12 @@
 ###############################################################################
 */
 
+/*! \file cavity.doxy
+ *  \brief Documents the cavity application
+ *  \IK
+ */
 
-/*! \page cavity cavity, a fully featured EGSnrc C++ user code for ion chamber simulations
+/*! \page cavity cavity: a fully featured EGSnrc C++ application for ion chamber simulations
 
 <ul>
 <li> \ref cavity_intro </li>
@@ -48,11 +52,11 @@
 
 \section cavity_intro Introduction
 
-The C++ user code \c cavity is an advanced EGSnrc application that
+The C++ application \c cavity is an advanced EGSnrc application that
 calculates the dose to the cavity of an ionization chamber and/or
 the \f$A_{\rm wall}\f$ correction factor. It
 implements most of the functionality of the original CAVRZnrc mortran
-user code. Features available in CAVRZnrc but not provided
+application. Features available in CAVRZnrc but not provided
 by \c cavity are
   - Calculation of stopping power ratios, which are more efficiently
     calculated using the SPRRZnrc code
@@ -67,7 +71,7 @@ by \c cavity are
     better to not implement this option into \c cavity.
 
 Unlike CAVRZnrc, \c cavity is not restricted to cylindrically symmetric
-geometries. Practically \b any chamber can be modeled with this user code
+geometries. Practically \b any chamber can be modeled with this application
 by using the extensive capabilities of the general purpose
 \ref Geometry "geometry package".
 In addition to the above mentioned functionality, \c cavity has been
@@ -189,7 +193,7 @@ sections \ref cavity_fac and \ref cavity_hvl.
 
 The dose to the cavity (and \f$A_{\rm wall}\f$) can be calculated
 for several geometries at once. This option is not available in
-the CAVRZnrc user code but has been implemented here primarily
+the CAVRZnrc application but has been implemented here primarily
 for the sake of computing the dose to the cavity of an ionization
 chamber placed at different locations within a water phantom or free
 in air and subjected to a beam from a \link
@@ -242,7 +246,7 @@ Corrections for attenuation \f$A_{att}\f$, scatter \f$A_{scat}\f$,
 electron loss \f$A_{eloss}\f$, aperture leakage \f$A_{ap}\f$ and
 beam geometry \f$A_{g}\f$ are directly calculated in \c cavity.
 A complete and more efficient calculation of FAC correction factors can
-be done with another C++ user-code, \ref egs_fac "egs_fac", which includes
+be done with another C++ application, \ref egs_fac "egs_fac", which includes
 the calculation of a CPE correction \f$A_{CPE}\f$ and a correction
 for the inconsistency between measured and MC calculated attenuation
 correction factors \f$A_{x}\f$.
@@ -283,7 +287,7 @@ circular surface on this plane by using
 the product \f$E\times\left(\frac{\mu_{en}}{\rho}\right)_{air}\f$
 provided in an ASCII file as a function of energy \f$E\f$ using a logarithmic scale.
 Values of \f$\left(\frac{\mu_{en}}{\rho}\right)_{air}\f$ can be calculated
-using the EGSnrc user-code \c g.mortran which now offers the possibility
+using the EGSnrc application \c g.mortran which now offers the possibility
 to run a calculation for a whole range of energies using either a linear or
 logarithmic scale.
 \note The cavity  mass in the case of a FAC is the mass contained in
@@ -516,7 +520,7 @@ provided by \c cavity.
 
 \section cavity_usage Usage
 
-As any other EGSnrc user code, \c cavity can be started from the command line
+As any other EGSnrc application, \c cavity can be started from the command line
 using
 \verbatim
 cavity -i input_file -p pegs_file [-o output_file] [-b] [-s] [-P N -j i]
@@ -537,7 +541,7 @@ exb cavity input_file pegs_file [p=N] [batch=pbs]
 \endverbatim
 where the <b>\c batch</b> option specifies the queuing system to be used.
 The EGSnrc GUI can of course be also used, see
-see PIRS-877 for more details on running EGSnrc user codes.
+see PIRS-877 for more details on running EGSnrc applications.
 
 \section cavity_example A simple example input file.
 

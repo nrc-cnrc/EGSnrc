@@ -39,7 +39,7 @@
 using namespace std;
 
 /*! \file egs_functions.h
- *  \brief Global egspp functions.
+ *  \brief Global egspp functions header file
  *  \IK
  */
 

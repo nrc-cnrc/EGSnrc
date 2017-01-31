@@ -30,7 +30,7 @@
 
 
 /*! \file egs_run_control.cpp
- *  \brief Implementation of run control objects
+ *  \brief EGS_RunControl and EGS_JCFControl implementation
  *  \IK
  */
 

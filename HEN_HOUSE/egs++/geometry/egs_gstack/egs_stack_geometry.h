@@ -103,14 +103,14 @@ library = egs_gstack
 geometries = list of names of previously defined geometries
 tolerance = small floating number
 \endverbatim
-The tolerance key defines a small floating point number \f$\boundaryTolerance\f$.
+The tolerance key defines a small floating point number \f$boundaryTolerance\f$.
 Each time a particle exits a geometry, its position is moved by
-\f$\boundaryTolerance\f$ along its direction of motion. This is needed to avoid
+\f$boundaryTolerance\f$ along its direction of motion. This is needed to avoid
 numericall roundoff problems that may result in the particle not having
 entered the next geometry in the stack and therefore being discarded.
- 
-The \f$\tolerance\f$ key duplicates the functionality of the
-\f$\boundary tolerance\f$ key for backwards compatibility.
+
+The \f$tolerance\f$ key duplicates the functionality of the
+\f$boundary tolerance\f$ key for backwards compatibility.
 
 A simple example:
 \verbatim

@@ -30,7 +30,7 @@
 
 
 /*! \file     egs_transformations.h
- *  \brief    Rotations and affine transformations header
+ *  \brief    EGS_AffineTransform and EGS_RotationMatrix class header file
  *  \IK
  ***************************************************************************/
 

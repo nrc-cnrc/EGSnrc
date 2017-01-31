@@ -28,10 +28,10 @@
 ###############################################################################
 */
 
-
-/* \file     egs_fortran_geometry.cpp
- *  \brief    A Fortran interface for using egspp geometries (implementation).
-*/
+/*! \file     egs_fortran_geometry.cpp
+ *  \brief    F77_OBJ_ fortran interface implementation
+ *  \IK
+ ***************************************************************************/
 
 #include "egs_fortran_geometry.h"
 #include "egs_base_geometry.h"

@@ -30,7 +30,7 @@
 
 
 /*! \file egs_base_geometry.cpp
- *  \brief Base geometry implementation
+ *  \brief EGS_BaseGeometry implementation
  *  \IK
  *
  *  Also provides a static geometry factory used to manage all constructed

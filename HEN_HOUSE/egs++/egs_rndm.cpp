@@ -30,7 +30,7 @@
 
 
 /*! \file egs_rndm.cpp
- *  \brief RNG implementation
+ *  \brief EGS_RandomGenerator implementation
  *  \IK
  *
  *  Also provides implementation of RANMAR and should offer

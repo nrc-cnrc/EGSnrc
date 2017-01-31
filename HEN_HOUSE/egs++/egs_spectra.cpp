@@ -30,7 +30,7 @@
 
 
 /*! \file egs_spectra.cpp
- *  \brief Implements the spectra base class and several concrete spectra
+ *  \brief EGS_BaseSpectrum implementation and several concrete spectra
  *  \IK
  */
 

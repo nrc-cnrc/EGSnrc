@@ -30,7 +30,7 @@
 
 
 /*! \file egs_timer.h
- *  \brief EGS_Timer header file
+ *  \brief EGS_Timer class header file
  *  \IK
  */
 

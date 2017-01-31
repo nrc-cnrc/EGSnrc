@@ -30,7 +30,7 @@
 
 
 /*! \file egs_vector.h
- *  \brief Provides methods for the manipulation of 3D vectors in
+ *  \brief EGS_Vector methods for the manipulation of 3D vectors in
  *  cartesian co-ordinates.
  *  \IK
  */

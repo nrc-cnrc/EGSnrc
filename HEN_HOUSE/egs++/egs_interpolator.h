@@ -30,7 +30,7 @@
 
 
 /*! \file egs_interpolator.h
- *  \brief A class for run-time interpolations
+ *  \brief EGS_Interpolator class header file
  *  \IK
  */
 

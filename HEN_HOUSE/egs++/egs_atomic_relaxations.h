@@ -30,7 +30,7 @@
 
 
 /*! \file     egs_atomic_relaxations.h
- *  \brief    A header file for atomic relaxations
+ *  \brief    EGS_AtomicRelaxations class header file
  *  \IK
  ***************************************************************************/
 

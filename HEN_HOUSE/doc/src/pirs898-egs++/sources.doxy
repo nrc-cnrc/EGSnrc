@@ -58,7 +58,7 @@ function, which takes a random number generator object as input and
 returns the parameters of a single particle.
 
 Apart from a phase-space file particle source, all other sources provided
-in the RZ series of EGSnrc user codes, in DOSXYZnrc and in BEAMnrc,
+in the RZ series of EGSnrc applications, in DOSXYZnrc and in BEAMnrc,
 are sources which consist of two independent objects: the first object
 determines the particle energy, the other object the particle position,
 direction and statistical weight. Because of this, there is a
@@ -76,7 +76,7 @@ or "primitive" sources in analogy to the elementary geometries
 there are two "composite" sources, where the \c getNextParticle method
 is implemented using the \c getNextParticle methods of their
 constituents. It is worth noting that, unlike the sources used
-in the RZ series of EGSnrc user codes, DOSXYZnrc and BEAMnrc, all
+in the RZ series of EGSnrc applications, DOSXYZnrc and BEAMnrc, all
 particle sources in the EGSnrc C++ class library are completely
 decoupled from the geometry. During the simulation
 particles are taken from the source and it is checked if the particle
@@ -89,7 +89,7 @@ the geometry (determined using the
 called with an outside region index), the particle is put on the
 EGSnrc particle stack with the just determined region index and
 its transport through the geometry is simulated. This approach
-permits any source to be used with any geometry in any user code
+permits any source to be used with any geometry in any application
 using the EGSnrc C++ class library.
 
 \section sources_design Design of the egspp particle sources package
@@ -160,7 +160,7 @@ In the meantime, if your simulation problem requires a source not
 available with the current version of \c egspp, you will need to
 create your own particle source DSO.
 This is not very hard as demonstrated by
-<a href="sources_2egs__point__source_2egs__point__source_8cpp-example.html">
+<a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
 this example</a>.
 
 \todo Add a general simulation source, \em i.e. a source that takes

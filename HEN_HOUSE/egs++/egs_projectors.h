@@ -30,7 +30,7 @@
 
 
 /*! \file egs_projectors.h
- *  \brief Header file for 2D vectors and projectors
+ *  \brief EGS_Projector and EGS_2DVector class header file
  *  \IK
  */
 

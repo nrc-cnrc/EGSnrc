@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file egs_chamber.doxy
+ *  \brief Documents the egs_chamber application
+ *  \EM
+ */
 
 /*! \page egs_chamber egs_chamber: In-phantom ion chamber simulations
 <center> contributions from J. Wulff and H. Bouchard </center>
@@ -46,8 +50,8 @@
 
 \section egs_chamber_intro Introduction
 
-The C++ user code \c egs_chamber is an advanced EGSnrc application
-derived from the \ref cavity "cavity" user code.
+The C++ application \c egs_chamber is an advanced EGSnrc application
+derived from the \ref cavity "cavity" application.
 It calculates the dose to the cavity of an ionization chamber
 and the dose ratios of two correlated geometries, i.e., which
 can be used for the computation of perturbation factors.
@@ -62,7 +66,7 @@ Motivation for this development was the fact that a Monte Carlo
 calculation of ion chamber ionization proﬁles inside a phantom
 irradiated by a large ﬁelds was
 still prohibitively long with existing tools such as the \c cavity
-user code. Despite the improved efficiency achieved with the VRTs
+application. Despite the improved efficiency achieved with the VRTs
 available in \c cavity, the calculation of perturbation factors
 and the calculation of ion chamber dose at more than one position
 inside a phantom was still extremely time consuming.
@@ -341,7 +345,7 @@ of the relevant geometries in the following way:
 
 \section egs_chamber_usage Usage
 
-As any other EGSnrc user code, \c egs_chamber can be started from the
+As any other EGSnrc application, \c egs_chamber can be started from the
 command line using
 \verbatim
 egs_chamber -i input_file -p pegs_file [-o output_file] [-b] [-s] [-P N -j i]
@@ -363,7 +367,7 @@ exb egs_chamber input_file pegs_file [p=N] [batch=pbs]
 \endverbatim
 where the <b>\c batch</b> option specifies the queuing system to be used.
 The EGSnrc GUI can of course be also used, see
-see PIRS-877 for more details on running EGSnrc user codes.
+see PIRS-877 for more details on running EGSnrc applications.
 
 \section egs_chamber_example An input example: Farmer chamber in phantom.
 
