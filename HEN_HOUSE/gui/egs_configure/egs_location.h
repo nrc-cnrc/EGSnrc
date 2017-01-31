@@ -334,6 +334,11 @@ public slots:
                                tr("Please select a directory with an existing EGSnrc system!"));
         return false;
     }
+//     else{
+//         cpp->setTheHen(henLineEdit->text());// C++ compiler needs this on Linux
+//                                             // when get_f77_libs1 used to guess
+//                                             // libraries to link Fortran with C++
+//     }
 
     // Allowing empty EGS_HOME in which case no user code is copied. Must check in environment settings
     // for an empty EGS_HOME!!!
