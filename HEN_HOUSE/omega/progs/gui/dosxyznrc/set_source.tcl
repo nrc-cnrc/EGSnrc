@@ -1418,9 +1418,10 @@ proc define_setting { } {
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
 
     # 20 set points at a time
+   
 
-    for {set j 1} {$j<=[expr ($numsets-1)/20+1]} {incr j} {
-    
+    for {set j 1} {$j<=[expr max(1,($numsets-1)/20+1)]} {incr j} {
+
     toplevel .main_w.srcopt.sett$j
     set top .main_w.srcopt.sett$j
 
@@ -1504,7 +1505,7 @@ proc add_setting { } {
     #a point
     set cur [expr $numsets/20+1]
     if {$cur > 1} {
-      for {set j 2} {$j<=$cur} {incr j} {
+      for {set j 1} {$j<=$cur} {incr j} {
     if {[winfo exists .main_w.srcopt.sett$j]==0} {
       #(re)create entry window
       toplevel .main_w.srcopt.sett$j
@@ -1619,7 +1620,7 @@ proc del_setting { } {
     set cur [expr ($numsets -2)/20+1]
 
     if {$cur > 1} {
-    for {set j 2} {$j<=$cur} {incr j} {
+    for {set j 1} {$j<=$cur} {incr j} {
     if {[winfo exists .main_w.srcopt.sett$j]==0} {
       #recreate input window we are actually deleting from
       toplevel .main_w.srcopt.sett$j
