@@ -1077,6 +1077,10 @@ EGS_Float EGS_AdvancedApplication::getEdep() {
     return the_epcont->edep;
 }
 //************************************************************
+// Returns rest mass
+EGS_Float EGS_AdvancedApplication::getRM() {
+    return the_useful->rm;
+}
 
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
