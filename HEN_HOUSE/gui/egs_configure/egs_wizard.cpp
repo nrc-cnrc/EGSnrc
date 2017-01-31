@@ -155,7 +155,7 @@ void EGS_Wizard::processCustomButtonClick(int id){
   }
 }
 #define ABOUT_TEXT "Graphical Configuration Interface for EGSnrc"\
-                   "\n            egs_configure, version 1.0"\
+                   "\n            egs_configure, version 1.1"\
                    "\n\nAuthors: Ernesto Mainegra and Iwan Kawrakow"\
                    "\n\nThis program is free software. It is distributed "\
                    "\nunder the terms of the GNU Affero General Public License."\
@@ -166,7 +166,7 @@ void EGS_Wizard::aboutEGSWizard() {
                    "<p>Authors: Ernesto Mainegra and Iwan Kawrakow</p>"\
                    "<p>This program is free software. It is distributed under<br>"\
                    "the <a href=\"http://www.gnu.org/licenses/agpl.html\">GNU Affero General Public License</a>.</p>"\
-                   "<p>Copyright (C) 2015 National Research Council of Canada</p>") );
+                   "<p>Copyright (C) "+the_year+" National Research Council of Canada</p>") );
 }
 
 void EGS_Wizard::aboutQt() {

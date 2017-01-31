@@ -54,6 +54,17 @@
 #include <initguid.h>  //   needed by the shortcut creation function
 #endif
 
+#ifdef WIN32
+static const char* objext[2]={
+    "obj",
+    "o"
+};
+#else
+static const char* objext[1]={
+    "o"
+};
+#endif
+
 using namespace std;
 
 typedef int (*SomeFunc)();
@@ -234,6 +245,9 @@ if( lRes == ERROR_SUCCESS ){
         *msg += "Successful message broadcast ! \n";
 
 }
+#else
+  /* Dummy statement to avoid warnings on Linux*/
+  *msg = var + value;
 #endif
 return res;
 }
@@ -333,6 +347,9 @@ if( lRes == ERROR_SUCCESS ){
         *msg += "Successful message broadcast ! \n";
 
 }
+#else
+  /* Dummy statement to avoid warnings on Linux*/
+  *msg = var + value;
 #endif
 return res;
 }
@@ -388,6 +405,8 @@ if( lRes == ERROR_SUCCESS ){
 }
 return (QString)((char*)lpData);
 #else
+  /* Dummy statement to avoid warnings on Linux*/
+  *msg = var;
 return QString::null;
 #endif
 }
@@ -458,6 +477,9 @@ ppf->Release();
 
 // Release the pointer to IShellLink.
 psl->Release();
+#else
+  /* Dummy statement to avoid warnings on Linux*/
+  return_message = QString(target) + QString("->") + QString(link) + QString(" => ") + QString(desc); 
 #endif
 
 return 0; // SUCCESS
@@ -534,6 +556,12 @@ int createShortcut( const char* target, const char* link,
 
    // Release the pointer to IShellLink.
    psl->Release();
+#else
+  /* Dummy statement to avoid warnings on Linux*/
+  return_message = QString(target) + QString(icon) + QString("->") + 
+                   QString(link) + QString(" => ") + 
+                   QString(desc); 
+  index = 0;
 #endif
 
    return 0; // SUCCESS
@@ -771,6 +799,9 @@ void MCompiler::init(){
 #endif
     lflag = QString(); libs = QString();
     _exists = true;// determined below in method getVersion
+    
+    the_hen = QString(); // nothing known about this initially
+                         // set later on the location page
 }
 
 // Set options for GCC compilers
@@ -808,6 +839,17 @@ MCompiler::MCompiler(Language l, const QString &a_name)
      setUpCompiler( l, a_name );
 }
 
+// Create C++ compiler "cpp_name" (location should be set in PATH)
+MCompiler::MCompiler(const QString &cpp_name, 
+                     const QString &f_name, 
+                     const QString &le_hen)
+          : dso(0)
+{
+     _path = getPathOf(cpp_name);
+     setTheHen(le_hen);
+     setUpCompiler( CPP, cpp_name, f_name );
+}
+
 // Create compiler "a_name" for language "l" located in a_path
 // (not necessarily in the PATH) as obtained from the user using a file dialog.
 // a_path should be added to the PATH at the end of the installation
@@ -831,7 +873,9 @@ void MCompiler::setUpCompiler( const QString& a_name ){
 }
 
 // Sets up compiler "n" for language "l"
-void MCompiler::setUpCompiler( Language l, const QString& a_name ){
+void MCompiler::setUpCompiler( Language l, const QString& a_name, 
+                                           const QString& link_to_name )
+{
      the_name = a_name;
     switch(l){
       case F:
@@ -841,7 +885,7 @@ void MCompiler::setUpCompiler( Language l, const QString& a_name ){
         setUpCCompiler();
         break;
       case CPP:
-        setUpCPPCompiler();
+        setUpCPPCompiler(link_to_name);
         break;
       case GnuMake:
         setUpGnuMake();
@@ -887,7 +931,7 @@ void MCompiler::setUpCCompiler(){
   _version = getVersion(); _version = _version.split("\n").takeFirst();
 }
 
-void MCompiler::setUpCPPCompiler(){
+void MCompiler::setUpCPPCompiler(const QString& link_to_name){
     optimiz  = "-O2"; oflag = "-o "; vopt = "--version";
 #ifdef WIN32
   if ( the_name.toLower() == "cl.exe" ){//-Ox max. optimizations
@@ -917,7 +961,7 @@ void MCompiler::setUpCPPCompiler(){
   //get_dso();
   dso = new EGS_DSO(name());// Creates dso, sets flibs to -lgfortran literally
   /* Initially set for gfortran, on Windows set to "libgfortran.a" */
-  dso->flibs = getFlibs2LinkCPP("gfortran",path());
+  dso->flibs = getFlibs2LinkCPP(link_to_name,path());
 
 }
 
@@ -933,6 +977,8 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
         flibs= QString("-lg2c");
     else if ( f_name.contains("gfortran") && name().contains("g++"))
         flibs= QString("-lgfortran");
+    else if ( f_name.contains("ifort") && name().contains("icpc"))
+        flibs= QString("-lifport -lifcore");
     else{// using any other C++/Fortran compiler combination
         if (!path.isEmpty()) path = path.replace( "bin", "lib" );
         if ( f_name.contains("gfortran") )// MS C++ compiler
@@ -942,8 +988,17 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
     }
 #else
   // Setting an initial guess
-  if ( f_name.contains("gfortran") ) flibs="-lgfortran";
-  else if ( f_name.contains("g77") ) flibs="-lg2c";
+  if      ( f_name.contains("gfortran") && name().contains("g++") ) 
+          flibs="-lgfortran";
+  else if ( f_name.contains("g77") ) 
+          flibs="-lg2c";
+  else if ( f_name.contains("ifort") && name().contains("icpc"))
+          flibs= QString("-lifport -lifcore");
+  else if (!getTheHen().isEmpty()){
+          flibs= getFlibs2LinkCPPFromScript(f_name, 
+                 getTheHen() + QString("scripts/get_f77_libs1"));
+  }
+  
 #endif
   return flibs;
 }
@@ -959,12 +1014,12 @@ QString MCompiler::getFlibs2LinkCPPFromScript( const QString &f_name, const QStr
 #ifndef WIN32
       QProcess vp;
       vp.start(the_script, QStringList() << f_name << name() );
-      if (!vp.waitForStarted()) return QString();
+      if (!vp.waitForStarted()) return QString("FailedToStart!");
       vp.closeWriteChannel();
-      if (!vp.waitForFinished(-1)){ _exists = false; return QString();}
+      if (!vp.waitForFinished(-1)){ _exists = false; return QString("FailedToFinish");}
       answer = QString(vp.readAll());
 #endif
-      return answer;
+      return answer.remove("fortran_libs = ");
 }
 void MCompiler::setUpFortranCompiler(){
     // Setting some defaults

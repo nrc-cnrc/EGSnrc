@@ -191,7 +191,8 @@ public:
        QVBoxLayout *gbvl = new QVBoxLayout;
        QHBoxLayout *gbl = new QHBoxLayout;
        gb->setTitle( tr("Make utility") );
-       makeCB = new QComboBox(gb); makeCB->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
+       makeCB = new QComboBox(gb); 
+       makeCB->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
        gbl->addWidget(makeCB);
        QPushButton *b = new QPushButton(tr("..."),gb); b->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Preferred);
        connect(b,SIGNAL(clicked()),this,SLOT(selectMake()));
@@ -268,10 +269,14 @@ public:
 
        setUpCompilerBoxes();
 
-       connect(makeCB,SIGNAL(currentIndexChanged(const QString &)),this,SLOT(switchMake(const QString &)));
-       connect(fcCB,  SIGNAL(currentIndexChanged(const QString &)),this,SLOT(switchFC(const QString &)));
-       connect(ccCB,  SIGNAL(currentIndexChanged(const QString &)),this,SLOT(switchCC(const QString &)));
-       connect(cppCB, SIGNAL(currentIndexChanged(const QString &)),this,SLOT(switchCPP(const QString &)));
+       connect(makeCB,SIGNAL(currentIndexChanged(const QString &)),
+               this,SLOT(switchMake(const QString &)));
+       connect(fcCB,  SIGNAL(currentIndexChanged(const QString &)),
+               this,SLOT(switchFC(const QString &)));
+       connect(ccCB,  SIGNAL(currentIndexChanged(const QString &)),
+               this,SLOT(switchCC(const QString &)));
+       connect(cppCB, SIGNAL(currentIndexChanged(const QString &)),
+               this,SLOT(switchCPP(const QString &)));
   }
   ~QCompilerPage(){}
 
@@ -402,13 +407,14 @@ public slots:
   void switchFC(const QString &name){
     MCompiler c(F,name);
     if (c.exists()) *fc = c;
+    switchCPP(cpp->name());
   }
   void switchCC(const QString &name){
     MCompiler c(C,name);
     if (c.exists()) *cc = c;
   }
   void switchCPP(const QString &name){
-    MCompiler c(CPP,name);
+    MCompiler c(name,fc->name(),henHouse());
     if (c.exists()) *cpp = c;
   }
   void switchMake(const QString &name){
@@ -525,6 +531,7 @@ private:
 
     ccompiler << "mingw32-gcc"  // GNU C
               <<"gcc"           // GNU C
+              <<"icc"           // Intel C compiler
               <<"cl"            // MS C/C++ compiler
               <<"pgcc"          // Portland Group C compiler
               <<"fcc";           // Fujitsu C compiler
@@ -532,6 +539,7 @@ private:
     cppcompiler << "g++"
                 << "g++4"
                 << "mingw32-g++"
+                <<"icpc"         // Intel C compiler
                 << "cl" << "pgc++";
 
     const char* sep = ";";
@@ -582,6 +590,15 @@ private:
     if (!cppcompiler.isEmpty()) cppCB->addItems(cppcompiler);
 
   }
+
+  QString henHouse(){
+    QString the_hen = field("hen_house").toString();
+#ifndef WIN32
+    if (!the_hen.startsWith(QDir::separator())) the_hen.prepend(QDir::separator());
+#endif
+    if (!the_hen.endsWith(QDir::separator()))   the_hen.append(QDir::separator());
+    return the_hen;
+}
 
 
   MCompilerSettings *settings;

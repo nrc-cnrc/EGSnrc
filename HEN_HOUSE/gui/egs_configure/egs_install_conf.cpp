@@ -564,8 +564,6 @@ void QInstallPage::createSystemFiles(){
   specfile.replace(QString("$my_name"),  the_name );
   specfile.replace(QString("$my_version"),  QString(MY_VERSION) );
 
-  QChar s = QDir::separator();
-
   QString the_extra_flag = QString();
   QString the_hen = henHouse();
 #ifdef WIN32
@@ -1380,9 +1378,9 @@ void QInstallPage::buildIAEALib(){
  resetProgressBar(5); iaea_steps = 0;
  procStop();
  procInstall->setWorkingDirectory ( d.absolutePath() );
-  procInstall->start( make->name(), QStringList() << "EGS_CONFIG="+specFile);
+  procInstall->start( make->name(), QStringList() << "-j" << "EGS_CONFIG="+specFile);
  if(procInstall->error()==QProcess::FailedToStart){
-     printProgress( "Error executing " + make->name() + "EGS_CONFIG="+specFile );
+     printProgress( "Error executing " + make->name() + "-j" + "EGS_CONFIG="+specFile );
      buildOK[ buildFlag - 1 ] = false;
     emit nextBuildStep( buildFlag );
  }
@@ -1410,9 +1408,9 @@ void QInstallPage::buildEGSPPLib(){
  resetProgressBar(196); egspp_step = 0;
  procStop();
  procInstall->setWorkingDirectory ( d.absolutePath() );
- procInstall->start( make->name(), QStringList() << "EGS_CONFIG="+specFile);
+ procInstall->start( make->name(), QStringList() << "-j" << "EGS_CONFIG="+specFile);
  if(procInstall->error()==QProcess::FailedToStart){
-     printProgress( "Error executing " + make->name() + "EGS_CONFIG="+specFile );
+     printProgress( "Error executing " + make->name() + " -j" + " EGS_CONFIG="+specFile );
      buildOK[ buildFlag - 1 ] = false;
     emit nextBuildStep( buildFlag );
  }
@@ -1512,6 +1510,7 @@ QString QInstallPage::replaceExit4Stop( const QString& code, const QString& stop
 }
 
 void QInstallPage::finalize_egs_config( const QString &the_readme ){
+   QString dummyStr = the_readme;
    updateProgress();
    //qDebug("System config steps = %d",build_steps);
    timeStamp();

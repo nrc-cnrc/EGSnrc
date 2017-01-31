@@ -78,23 +78,6 @@ class QProcess;
 class MTest;
 class EGS_DSO;
 
-#ifdef WIN32
-static const char* objext[2]={
-    "obj",
-    "o"
-};
-/*static const char* exeext[1]={
-    "exe"
-};*/
-#else
-static const char* objext[1]={
-    "o"
-};
-/*static const char* exeext[1]={
-    "out"
-};*/
-#endif
-
 bool        copy( const QString& source, const QString& target );
 bool   move_file( const QString& source, const QString& target );
 bool append2file( const char* source, const char* target);
@@ -317,12 +300,15 @@ class MCompiler{
 
     public:
     MCompiler();
-   ~MCompiler();
-    //MCompiler(const MCompiler &mc);
     MCompiler(Language l);
     MCompiler(const QString &a_name);
     MCompiler(Language l, const QString &a_name);
-    MCompiler(Language l, const QString &a_name, const QString &a_path);
+    MCompiler(const QString &cpp_name, 
+              const QString &f_name, 
+              const QString &le_hen);
+    MCompiler(Language l, const QString &a_name, 
+                          const QString &a_path);
+   ~MCompiler();
 
     void init();
 
@@ -338,6 +324,7 @@ class MCompiler{
     QString outflag() const { return oflag;};
     QString version() const {return _version;};
     QString getVersionFlag() const {return vopt;};
+    QString getTheHen(){ return the_hen;};
     bool    exists() const {return _exists;};
 
     QString defines(){
@@ -399,10 +386,11 @@ class MCompiler{
 
     void setLanguage(Language l);
     void setUpCompiler( const QString& a_name );
-    void setUpCompiler( Language l, const QString& a_name );
+    void setUpCompiler( Language l, const QString& a_name, 
+                                    const QString& link_to_name = "gfortran" );
     void setUpFortranCompiler();
     void setUpCCompiler();
-    void setUpCPPCompiler();
+    void setUpCPPCompiler(const QString& link_to_name);
     void setUpGnuMake();
     void setPath( const QString& p ){ _path = p;};
     void setVersion( const QString& n ){ _version = n;};
@@ -414,6 +402,18 @@ class MCompiler{
     void setLinkFlag( const QString& n ){ lflag = n;};
     void setLibs( const QString& n ){ libs = n;};
     void setoutflag( const QString& n ){ oflag = n;};
+   /********************************************************* 
+    * Needed by the C++ compiler when automatically finding Fortran 
+    * libraries to link with C++ apps using a script. Class 
+    * QLocationPage passes HEN_HOUSE to the C++ compiler via 
+    * the method validatePage() before switching to the next page.
+    *********************************************************/
+    void setTheHen(const QString& hh){ 
+         the_hen = hh;
+         if (!the_hen.endsWith(QDir::separator()))   
+            the_hen.append(QDir::separator());
+    };
+    /*********************************************************/
 
     void setDefines(const QString &s){
       if (dso) dso->defines = s;
@@ -499,6 +499,7 @@ class MCompiler{
       return false;
     }
     QString the_name, _path;
+    QString the_hen;
     QString vopt;
     QString opt;    // things like automatic and static variables
     QString optimiz;
