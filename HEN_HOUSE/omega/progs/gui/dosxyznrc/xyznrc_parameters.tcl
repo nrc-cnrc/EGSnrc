@@ -1930,3 +1930,21 @@ in the BEAMnrc simulation that\
 is being used as a shared library source (21) or was used to generate the phase space source (20)\
 then the fractional MU associated with a particle is passed to DOSXYZnrc from BEAMnrc.
 }
+
+set help_text(calflag) {
+Check if you want to omit the calibration run through a BEAM library geometry\
+interposed between the source plane and the phantom.
+
+The calibration run is performed by default at the beginning of a simulation\
+using source 20 with a BEAM library geometry.  It generates the ratio of the number of particles emerging from the bottom of the geometry to the number of\
+incident particles (survival ratio).\
+This ratio is then used to modify the number of times to recycle source particles\
+before moving on to the next one, NRCYCL, to prevent rewinding of the phase space\
+source and potential underestimation of uncertainties.
+
+Calibration runs use 1x10^6 incident histories and, therefore, may consume\
+significant CPU time at the beginning of a simulation. 
+
+Omitting the calibration run is recommended only if there are sufficient\
+particles in the phase space source that rewinding is not an issue.
+}

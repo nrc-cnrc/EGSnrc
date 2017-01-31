@@ -30,6 +30,7 @@
 "                   Blake Walters                                             "
 "                   Iwan Kawrakow                                             "
 "                   Frederic Tessier                                          "
+"                   Marc-Andre Renaud                                         "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -181,6 +182,7 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     iqinc,   "Particle type (-1 => electrons, 0 => photons, 1 => positrons)    "
              "2 => particles of any charge (for isource = 9 only)	       "
     SHLflag, "1 => send particle shared lib, 0 => no shared lib (isource=20)   "
+    calflag, "0 => perform calibration run, 1 => no calib run (isource=20)     "
     MLCflag, "1 => send particles through MLC, 0 => no MLC   (isource=20,21)   "
     ixinl,   "Index of lower x-boundary of beam                  (isource=0,6) "
     ixinu,   "Index of upper x-boundary of beam                  (isource=0,6) "
@@ -244,7 +246,7 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     ein, eksrcm, esrc_sp, SSD, NINCSRC,
     r_dbs, ssd_dbs,z_dbs,survival_ratio,einsrcold;
     $INTEGER isource, iqin, iqphsp, iqinc,latchold,iqinold,MLCflag,SHLflag,
-    ixinl, ixinu, jyinl, jyinu, kzinl, kzinu,
+    calflag, ixinl, ixinu, jyinl, jyinu, kzinl, kzinu,
     klowx, khix, klowy, khiy, klowz, khiz,
     nsmiss, nsblocked, nsrjct,nsoutside, nmissm,enflag,
     dflag, ismode, IPRIMARY, OLDSRC,npassi,nang,ivary,ngang,numang,dose_stat,
