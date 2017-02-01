@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2004
 #
 #  Contributors:    Frederic Tessier
+#                   Blake Walters
 #
 ###############################################################################
 

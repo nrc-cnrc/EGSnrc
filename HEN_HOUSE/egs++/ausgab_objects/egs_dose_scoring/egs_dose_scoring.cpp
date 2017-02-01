@@ -24,6 +24,7 @@
 #  Author:          Ernesto Mainegra-Hing, 2012
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 #

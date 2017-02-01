@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 #
