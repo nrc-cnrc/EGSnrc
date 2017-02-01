@@ -115,12 +115,12 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     if (!app) {
         return;
     }
-    
-    if(d_regionString.length() > 0 && d_region.size() < 1) {
+
+    if (d_regionString.length() > 0 && d_region.size() < 1) {
         getNumberRegions(d_regionString, d_region);
         getLabelRegions(d_regionString, d_region);
     }
-    
+
     // Get the number of regions in the geometry.
     nreg = app->getnRegions();
     // Get the number of media in the input file
@@ -305,11 +305,11 @@ void EGS_DoseScoring::reportResults() {
         vector<EGS_Float> massM(nmedia,0);
         int imed = 0;
         for (int ir=0; ir<nreg; ir++) {
-          if(app->isRealRegion(ir)) {
-            imed = app->getMedium(ir);
-            EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
-            massM[imed] += app->getMediumRho(imed)*volume;
-          }
+            if (app->isRealRegion(ir)) {
+                imed = app->getMedium(ir);
+                EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
+                massM[imed] += app->getMediumRho(imed)*volume;
+            }
         }
         if (normE==1) {
             egsInformation("\n\n==> Summary of media dosimetry (per particle)\n");
@@ -514,9 +514,10 @@ extern "C" {
             result->setVol(1.0);    // default value if no entry
         }
         if (!using_all_regions) {
-            if(d_regions.size() > 0) {
+            if (d_regions.size() > 0) {
                 result->setDoseRegions(d_regions);
-            } else {
+            }
+            else {
                 result->setDoseRegions(d_regionsString);
             }
         }

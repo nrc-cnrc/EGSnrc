@@ -205,9 +205,9 @@ public:
     };
 
     void setApplication(EGS_Application *App);
-    
+
     void getNumberRegions(const string &str, vector<int> &regs);
-    
+
     void getLabelRegions(const string &str, vector<int> &regs);
 
     void reportResults();

@@ -54,7 +54,7 @@ EGS_PyramidT<T>::EGS_PyramidT(T *P, const EGS_Vector &Xo, bool O,
     d = p->distance(xo);
     xop = p->getProjection(xo);
     if (fabs(d) < boundaryTolerance) egsFatal("%s: the tip is too close to"
-                                     " the base (%g)\n",getType().c_str(),fabs(d));
+                " the base (%g)\n",getType().c_str(),fabs(d));
     if (d < 0) {
         a *= (-1);
         d *= (-1);

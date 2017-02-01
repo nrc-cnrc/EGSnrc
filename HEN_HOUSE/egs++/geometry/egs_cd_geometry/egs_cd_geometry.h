@@ -563,8 +563,8 @@ public:
                 // Skip for concave geometries: particles can reenter the CD geometry after leaving.
                 // Check 2. below will catch these cases.
                 else if ((ixnew < 0 && tb <= boundaryTolerance) && (bg->isConvex()  &&
-                                       (g[ibase] && g[ibase]->isConvex()) ))
-                {                                                                // (a) is true
+                         (g[ibase] && g[ibase]->isConvex()))) {
+                    // (a) is true
                     return ixnew;
                 }
                 // If a particle approaching the geometry sits on a boundary, we look back to see
@@ -572,15 +572,14 @@ public:
                 EGS_Float tb_neg = 1e30;
                 int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
                 if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
-                   t = 0;
-                   if (newmed)
-                   {
-                      *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
-                   }
-                   if( normal ) {
-                      *normal = (*pn)*(-1);
-                   }
-                   return ixold;
+                    t = 0;
+                    if (newmed) {
+                        *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
+                    }
+                    if (normal) {
+                        *normal = (*pn)*(-1);
+                    }
+                    return ixold;
                 }
 
                 //***********************************************************************

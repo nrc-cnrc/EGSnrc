@@ -149,7 +149,7 @@ public:
         EGS_Float sinz = v.x*v.x + v.y*v.y;
         EGS_Float norm = sinz + v.z*v.z;
         if (norm < epsilon) egsFatal("EGS_RotationMatrix::EGS_RotationMatrix: \n"
-                                       "  no construction from a zero vector possible!\n");
+                                         "  no construction from a zero vector possible!\n");
         norm = sqrt(norm);
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
@@ -296,7 +296,7 @@ public:
     static EGS_RotationMatrix rotY(EGS_Float cphi,EGS_Float sphi) {
         return EGS_RotationMatrix(cphi, (EGS_Float)0,         -sphi,
                                   (EGS_Float)0, (EGS_Float)1, (EGS_Float)0,
-                                   sphi, (EGS_Float)0,         cphi);
+                                  sphi, (EGS_Float)0,         cphi);
     };
 
     /*! \brief Returns a rotation around the z-axis by the angle \f$\phi\f$

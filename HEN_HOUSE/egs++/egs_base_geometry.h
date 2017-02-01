@@ -522,7 +522,7 @@ public:
     void   setName(EGS_Input *inp);
 
     /*! \brief Set the value of the boundary tolerance from the input \a inp.
-     
+
      This method looks for a key <code>tolerance</code> in the input
      pointed to by \a inp and sets the boundary tolerance of the geometry
      to the value of the <code>tolerance</code> key. Derived geometry classes should
@@ -536,7 +536,7 @@ public:
     void    setBoundaryTolerance(EGS_Float tol) {
         boundaryTolerance = tol;
     }
-    
+
     /*! \brief Is the boolean property \a prop set for region \a ireg ?
      */
     virtual bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
@@ -637,7 +637,7 @@ public:
     EGS_Float getBoundaryTolerance() {
         return boundaryTolerance;
     };
-    
+
     /*! \brief Get a list of all the regions labeled with a number */
     virtual void getNumberRegions(const string &str, vector<int> &regs);
 

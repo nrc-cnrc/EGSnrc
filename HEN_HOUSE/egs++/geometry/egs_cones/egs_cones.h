@@ -1802,7 +1802,8 @@ public:
                 else if (up < 0) {
                     dir = -1;
                     tp = (pos[il] - xp)/up;
-                }else{
+                }
+                else {
                     // prevent compiler from complaining about use of
                     // uninitialized value of dir (even though tp will
                     // always be greater than epsilon in this case).

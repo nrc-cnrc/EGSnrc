@@ -100,7 +100,7 @@ A simple example:
         :stop spectrum:
         charge      = 0
     :stop source:
-    
+
     simulation source = my_source
 
 :stop source definition:

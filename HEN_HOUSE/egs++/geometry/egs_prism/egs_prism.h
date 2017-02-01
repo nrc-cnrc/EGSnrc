@@ -212,9 +212,10 @@ public:
             if (up > boundaryTolerance) {
                 tt = (d2 - d)/up;
             }
-            else if(up < -boundaryTolerance) {
+            else if (up < -boundaryTolerance) {
                 tt = (d1 - d)/up;
-            } else {
+            }
+            else {
                 tt = 0;
             }
             if (tt <= t) {

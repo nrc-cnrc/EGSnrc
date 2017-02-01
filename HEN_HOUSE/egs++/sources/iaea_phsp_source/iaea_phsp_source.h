@@ -119,7 +119,7 @@ A simple example:
         reuse photons = 10
         reuse electrons = 10
     :stop source:
-    
+
     simulation source = my_source
 
 :stop source definition:

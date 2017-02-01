@@ -589,7 +589,7 @@ public:
      <code>-f n</code> or <code>--first-job n</code> and requires that the number of parallel
      jobs was also specified using <code>-P n</code>.
     */
-    int getFirstParallel () const {
+    int getFirstParallel() const {
         return first_parallel;
     };
 

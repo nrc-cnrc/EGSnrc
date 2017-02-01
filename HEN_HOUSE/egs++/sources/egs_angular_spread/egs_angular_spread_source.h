@@ -101,7 +101,7 @@ A simple example:
             energy = 1.0
         :stop spectrum:
     :stop source:
-    
+
     :start source:
         library = egs_angular_spread_source
         name = my_source

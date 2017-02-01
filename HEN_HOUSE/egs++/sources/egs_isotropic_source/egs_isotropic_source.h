@@ -74,7 +74,7 @@
 An isotropic source is a source that delivers particles of a given
 \c charge with directions uniformly distributed in \f$4 \pi\f$ emitted from
 \link EGS_BaseShape any shape \endlink with \link EGS_BaseSpectrum any spectrum.
-\endlink 
+\endlink
 It is defined most simply using the following input:
 \verbatim
 :start source:
@@ -98,8 +98,8 @@ It is also possible to generate source particles from a more complex shape
 by including or excluding geometry regions. This is done by providing
 the \c geometry name to operate on, a <tt>region selection</tt> mode, and
 <tt>selected regions</tt> for the region selection operation. The <tt>selected
-regions</tt> tag is necessary and used only for \c IncludeSelected and 
-\c ExcludeSelected modes. 
+regions</tt> tag is necessary and used only for \c IncludeSelected and
+\c ExcludeSelected modes.
 
 The available region selection modes are described below. A particle is
 generated within the defined shape uniformly, and kept only if it meets the
@@ -107,9 +107,9 @@ corresponding condition:
 
 \li <tt>IncludeAll</tt> - particle is inside \c geometry
 \li <tt>ExcludeAll</tt> - particle is NOT inside \c geometry
-\li <tt>IncludeSelected</tt> - particle is inside \c geometry AND in one of 
+\li <tt>IncludeSelected</tt> - particle is inside \c geometry AND in one of
 <tt>selected regions</tt>
-\li <tt>ExcludeSelected</tt> - particle is not inside \c geometry OR not in 
+\li <tt>ExcludeSelected</tt> - particle is not inside \c geometry OR not in
 one of <tt>selected regions</tt>
 
 \verbatim
