@@ -31,54 +31,19 @@ network), you must do so under the same licence terms. Please [Contact NRC]
 if you wish to licence EGSnrc under different terms.
 
 
-## Prerequisites
-
-EGSnrc can be installed on computers running Linux, OS X or Windows
-operating systems. As a general-purpose Monte Carlo toolkit, EGSnrc
-provides source code and utilities to build and run your own
-radiation transport simulation applications. To use EGSnrc
-on any platform you need:
-
-- a Fortran compiler
-- a C compiler
-- a C++ compiler
-- the GNU `make` utility
-- the Tcl/Tk interpreter and widget toolkit
-- the Grace plotting tool
-
-Please read the [installation instructions]
-(https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview) in the
-wiki for more details about these software components.
-
-
 ## Installation
 
 Please read the full [installation instructions]
 (https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview)
-for more details on how to download and properly configure EGSnrc on
-your computer. In brief, installation involves two steps:
-
-**1. Donwload the EGSnrc source code:**  We recommend using the git
-software to obtain the source code. Typing the following git command in 
-a shell will download EGSnrc to your current working directory:
-`git clone https://github.com/nrc-cnrc/EGSnrc.git`. Alternatively 
-you can download the EGSnrc directory as a 
-[zip archive]
-(https://github.com/nrc-cnrc/EGSnrc/archive/master.zip)
-or a [tar.gz archive]
-(https://github.com/nrc-cnrc/EGSnrc/archive/master.tar.gz)
-
-**2. Configure EGSnrc for your computer:** On a Linux system, you may
-configure the software with either the [Linux configuration utility]
-(https://github.com/nrc-cnrc/EGSnrc/releases/download/v2015/EGSnrc-configure-linux) 
-or a configuration shell script, as detailed in the instructions</a>. 
-On OS&nbsp;X you have to use the configuration shell script, as detailed 
-in the instructions. On Windows, you have to use the 
-[Windows configuration utility]
-(https://github.com/nrc-cnrc/EGSnrc/releases/download/v2015/EGSnrc-configure-windows.exe). 
+for details on how to download and properly configure EGSnrc on
+Linux, macOS or Windows.
 
 
 ## Issues
+
+For technical support and general questions, consider the
+[EGSnrc Google+ community]
+(https://plus.google.com/communities/106437507294474212197).
 
 Use the [issue tracker](https://github.com/nrc-cnrc/EGSnrc/issues) to
 report bugs, inaccuracies or even small typos in the EGSnrc project
