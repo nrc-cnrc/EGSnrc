@@ -25,6 +25,8 @@
 #
 #  Contributors:    Blake Walters
 #                   Frederic Tessier
+#                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -201,7 +203,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
         //    " x=(%g,%g,%g) latch=%d count=%lld\n",te,tq,twt,tx,ty,tz,
         //    tlatch,count);
         if (tq) {
-            te -= 0.5110034;
+            te -= EGS_Application::activeApplication()->getRM();
         }
         ok = true;
         if (te > Emax) {

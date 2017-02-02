@@ -30,7 +30,7 @@
 
 
 /*! \file egs_base_source.h
- *  \brief Base particle source header file
+ *  \brief EGS_BaseSource class header file
  *  \IK
  *
  *  Also declares the base spectrum class and the simple source class,

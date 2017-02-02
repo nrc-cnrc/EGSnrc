@@ -25,6 +25,7 @@
 "                   Dave Rogers, 2000                                         "
 "                                                                             "
 "  Contributors:    Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -156,7 +157,7 @@ IF((IWATCH = 4) & (IARG >= 0) & (IARG ~= 5)) [ "GRAPHICS OUTPUT"
 IF(IARG = 5  |  IARG < 0) RETURN;
 IF(IWATCH = 4) RETURN; "NONE OF THE REST NEEDED FOR GRAPHICS OUTPUT"
 
-KE=E(NP);IF(IQ(NP).NE.0)[KE=E(NP)-0.511;]
+KE=E(NP);IF(IQ(NP).NE.0)[KE=E(NP)-PRM;]
 
 IF(IARG = 0 & IWATCH = 2)[
   $CNTOUT(NP);(T11,'STEP ABOUT TO OCCUR', T36,':');
@@ -209,7 +210,7 @@ ELSEIF(IARG = 9)[
      DO IP=NPold,NP[
         KE = E(IP) - ABS(IQ(NP))*RM;
         IF(IP=NPold)[$CNTOUT(IP);(T11,'Resulting electrons',T36,':');]
-        ELSE[$CNTOUT(IP);(T36,':');]
+        ELSEIF(IQ(IP)=-1)[$CNTOUT(IP);(T36,':');]
      ]
   ]
 ]

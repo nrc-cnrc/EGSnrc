@@ -25,13 +25,15 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Blake Walters
+#                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
 
 
 /*! \file     egs_base_geometry.h
- *  \brief    Base geometry class header file
+ *  \brief    EGS_BaseGeometry class header file
  *  \IK
  ***************************************************************************/
 
@@ -59,6 +61,12 @@ struct EGS_GeometryIntersections;
     typedef unsigned char EGS_BPType;
 #endif
 
+class label {
+public:
+    string      name;
+    vector<int> regions;
+};
+
 /*! \brief Base geometry class. Every geometry class must be derived from
   EGS_BaseGeometry.
 
@@ -77,13 +85,6 @@ struct EGS_GeometryIntersections;
   calculate the volume in each of their regions analytically.
 
 */
-
-class label {
-public:
-    string      name;
-    vector<int> regions;
-};
-
 
 class EGS_EXPORT EGS_BaseGeometry {
 
@@ -520,6 +521,22 @@ public:
      */
     void   setName(EGS_Input *inp);
 
+    /*! \brief Set the value of the boundary tolerance from the input \a inp.
+
+     This method looks for a key <code>tolerance</code> in the input
+     pointed to by \a inp and sets the boundary tolerance of the geometry
+     to the value of the <code>tolerance</code> key. Derived geometry classes should
+     call this function to set their boundary tolerance from the input provided to
+     the geometry creation function.
+     */
+    void    setBoundaryTolerance(EGS_Input *inp);
+
+    /*! \brief Set the value of the boundary tolerance from argument.
+     */
+    void    setBoundaryTolerance(EGS_Float tol) {
+        boundaryTolerance = tol;
+    }
+
     /*! \brief Is the boolean property \a prop set for region \a ireg ?
      */
     virtual bool hasBooleanProperty(int ireg, EGS_BPType prop) const {
@@ -616,13 +633,13 @@ public:
         error_flag = 0;
     };
 
-    static void setBoundaryTolerance(EGS_Float btol) {
-        epsilon = btol;
+    /*! \brief Get the value of the boundary tolerance */
+    EGS_Float getBoundaryTolerance() {
+        return boundaryTolerance;
     };
 
-    static EGS_Float getBoundaryTolerance() {
-        return epsilon;
-    };
+    /*! \brief Get a list of all the regions labeled with a number */
+    virtual void getNumberRegions(const string &str, vector<int> &regs);
 
     /*! \brief Get the list of all regions labeled with \a str */
     virtual void getLabelRegions(const string &str, vector<int> &regs);
@@ -732,7 +749,7 @@ protected:
     EGS_BPType   *bp_array;
 
     /*! \brief Boundary tolerance for geometries that need it */
-    static EGS_Float epsilon;
+    EGS_Float boundaryTolerance;
 
     /*! \brief Set to non-zero status if a geometry problem is encountered */
     static int       error_flag;

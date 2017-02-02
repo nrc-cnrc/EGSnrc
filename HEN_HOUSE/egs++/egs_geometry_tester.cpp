@@ -30,7 +30,7 @@
 
 
 /*! \file egs_geometry_tester.cpp
- *  \brief Implementation of the geometry testing classes.
+ *  \brief EGS_GeometryTester implementation
  *  \IK
  */
 #include "egs_geometry_tester.h"

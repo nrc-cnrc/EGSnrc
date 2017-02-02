@@ -30,7 +30,7 @@
 
 
 /*! \file egs_shapes.h
- *  \brief Shapes header file
+ *  \brief EGS_BaseShape and shape classes header file
  *  \IK
  */
 
@@ -548,7 +548,7 @@ public:
         EGS_Float cost = 2*rndm->getUniform()-1;
         EGS_Float sint = 1-cost*cost;
         EGS_Vector x;
-        if (sint > 1e-10) {
+        if (sint > epsilon) {
             EGS_Float cphi, sphi;
             rndm->getAzimuth(cphi,sphi);
             sint = R*sqrt(sint);
@@ -644,7 +644,7 @@ public:
         EGS_BaseShape(Name,f), R(r), h(H), xo(Xo), a(A),
         phi_min(0), phi_max(2*M_PI), has_phi(false) {
         EGS_RotationMatrix rmat(a);
-        if (xo.length2() > 1e-10 || !rmat.isI()) {
+        if (xo.length2() > epsilon || !rmat.isI()) {
             T = new EGS_AffineTransform(rmat.inverse(),xo);
         }
         otype="cylinder";

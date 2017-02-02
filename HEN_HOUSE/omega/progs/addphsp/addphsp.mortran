@@ -204,7 +204,12 @@ ELSE[
 
 append=.false.;
 "first, see if the output file already exists"
-inquire(file=outfile,exist=ex);
+IF(i_iaea_in=1)[
+   inquire(file=$cstring(outfile)//'.IAEAphsp',exist=ex);
+]
+ELSE[
+   inquire(file=outfile,exist=ex);
+]
 IF(ex)[
    OUTPUT $cstring(outfile);
     (/' Output file ',A,' exists.'/

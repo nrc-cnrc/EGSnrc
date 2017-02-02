@@ -1,6 +1,7 @@
 ## BEAMnrc examples
 
-These examples were authored by Blake Walters in 2004.
+These examples were originally authored by D. W. O. Rogers, D. Sheikh-Bagheri,
+B. Walters and G. Zhang, in 1995.
 
 Each subdirectory contains the spec_module file, the input file and all the
 output files associated with running the job in batch mode. To try any example:

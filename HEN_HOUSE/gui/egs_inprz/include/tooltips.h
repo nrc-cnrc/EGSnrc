@@ -568,10 +568,11 @@ static const char* sources[] = {
                     "\n be deleted from the list."
 
 #define DENSITY_FILE "specify a density correction file which, when applied to calculated cross-sections,"\
-                     "\nresults in agreement with stopping powers published in ICRU37.  The browser"\
-                     "\nstarts in the $HEN_HOUSE/pegs4/density_corrections parent directory and allows"\
-                     "\nyou to enter either the 'compounds' or 'elements' subdirectory."\
-                     "\nOmit the directory path and '.density' extension from the filename."
+                     "\nresults in agreement with stopping powers published in ICRU37.  You can start"\
+                     "\nthe browser in $EGS_HOME/pegs4/density_corrections (the default) or in"\
+                     "\n$HEN_HOUSE/pegs4/density_corrections from either of which you can"\
+                     "\nenter either the 'compounds' or 'elements' subdirectory."\
+                     "\nNote that the file name includes the full directory path."
 
 #define STERNCID "The Sternheimer-Seltzer-Berger ID for the medium.  If this matches the ID in"\
                  "\nan internal lookup table, pre-calculated density effect parameters are applied"\

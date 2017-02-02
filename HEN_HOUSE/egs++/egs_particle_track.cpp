@@ -28,6 +28,11 @@
 ###############################################################################
 */
 
+/*! \file egs_particle_track.cpp
+ *  \brief EGS_ParticleTrack implementation
+ *  \GG
+ */
+
 
 #include "egs_particle_track.h"
 

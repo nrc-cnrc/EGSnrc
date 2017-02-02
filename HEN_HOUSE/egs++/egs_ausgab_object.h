@@ -30,7 +30,7 @@
 
 
 /*! \file egs_ausgab_object.h
- *  \brief An interface class for ausgab objects
+ *  \brief EGS_AusgabObject interface class header file
  *  \IK
  */
 

@@ -30,7 +30,7 @@
 
 
 /*! \file egs_base_source.cpp
- *  \brief Base source implementation
+ *  \brief EGS_BaseSource implementation
  *  \IK
  *
  *  Also constructs a static typed object factory used to manage particle

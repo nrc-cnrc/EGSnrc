@@ -101,7 +101,7 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         egsWarning("  --> ignoring layer\n");
         return;
     }
-    if (med_names.size() != this_nr) {
+    if ((int)med_names.size() != this_nr) {
         egsWarning("EGS_ConeStack::addLayer: number of cone radii (%d) is"
                    " different from number of media (%d)\n",this_nr,med_names.size());
         egsWarning("  --> ignoting layer\n");
@@ -133,8 +133,9 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         pos[nl] = xo*a;
         Rout = rbottom[this_nr-1];
         Rout2 = Rout*Rout;
-        if (fabs(rtop[this_nr-1]-Rout) > 1e-5) {
+        if (fabs(rtop[this_nr-1]-Rout) > boundaryTolerance) {
             same_Rout = false;
+            is_convex = false;
         }
     }
 
@@ -149,11 +150,13 @@ void EGS_ConeStack::addLayer(EGS_Float thick, const vector<EGS_Float> &rtop,
         cones[nl][ir]->setMedium(med_names[ir]);
         cones[nl][ir]->ref();
         if (ir == this_nr-1) {
-            if (fabs(rbottom[this_nr-1]-Rout) > 1e-5) {
+            if (fabs(rbottom[this_nr-1]-Rout) > boundaryTolerance) {
                 same_Rout = false;
+                is_convex = false;
             }
-            if (fabs(Rtop-Rout) > 1e-5) {
+            if (fabs(Rtop-Rout) > boundaryTolerance) {
                 same_Rout = false;
+                is_convex = false;
             }
         }
     }
@@ -306,7 +309,7 @@ extern "C" {
 
             // adjust lable region numbering in each layer
             int count=0;
-            for (int i=0; i<layerLabels.size(); i++) {
+            for (size_t i=0; i<layerLabels.size(); i++) {
                 for (int j=0; j<layerLabels[i]; j++) {
                     g->shiftLabelRegions(count,i);
                     count++;
@@ -314,6 +317,7 @@ extern "C" {
             }
 
             g->setName(input);
+            g->setBoundaryTolerance(input);
             g->setLabels(input);
             return g;
         }
@@ -436,7 +440,7 @@ extern "C" {
                 int nc=1;
                 if (!err && d.size() > 0) {
                     dist = new EGS_Float [d.size()];
-                    for (int j=0; j<d.size(); j++) {
+                    for (size_t j=0; j<d.size(); j++) {
                         dist[j] = d[j];
                     }
                     nc = 1 + d.size();

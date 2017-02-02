@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -75,7 +75,7 @@ and the rotation \f$R\f$ of \f$T\f$ to the direction.
 A transformed source is defined as follows:
 \verbatim
 :start source:
-    library = egs_transformed source
+    library = egs_transformed_source
     name = some_name
     source name = the name of a previously defined source
     :start transformation:
@@ -86,6 +86,37 @@ A transformed source is defined as follows:
 See EGS_AffineTransform::getTransformation() for details
 on the definition of an affine transformation.
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_parallel_beam
+        name = my_parallel_source
+        :start shape:
+            library = egs_rectangle
+            rectangle = -.1 -.1 .1 .1
+        :stop shape:
+        direction = 0 -1 0
+        charge = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 1.0
+        :stop spectrum:
+    :stop source:
+    :start source:
+        library = egs_transformed_source
+        name = my_source
+        source name = my_parallel_source
+        :start transformation:
+            rotation vector = 0 -1 1
+        :stop transformation:
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_transformed_source.png "A simple example"
 */
 class EGS_TRANSFORMED_SOURCE_EXPORT EGS_TransformedSource :
     public EGS_BaseSource {

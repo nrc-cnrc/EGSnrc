@@ -28,67 +28,43 @@ rem #
 rem ###############################################################################
 
 
-echo Checking if object files need to be deleted
-echo Argument %1
-echo .
-echo Deleting objects
-     del *.obj
-echo .
-echo .
 echo Checking if GUIs need to be cleaned
 echo .
 cd ..\..\egs++\view
 echo Working in egs++\view...
-     if exist Makefile_win2k-cl (
-         echo Running nmake clean
-         nmake -nologo -f Makefile_win2k-cl clean
+     if exist Makefile_win-static (
+         echo Running make clean
+         mingw32-make -f Makefile_win-static clean
      )
-     echo Deleting Makefile_win2k-cl
-     del Makefile_win2k-cl
+     echo Deleting Makefile_win-static
+     del Makefile_win-static*
 
 cd ..\..\gui\egs_configure
 echo Working in egs_configure...
-    if exist Makefile_win2k (
-        echo Running nmake clean
-        nmake -nologo -f Makefile_win2k clean
+    if exist Makefile_win-static (
+        echo Running mingw32-make clean
+        mingw32-make -f Makefile_win-static clean
     )
-    echo Deleting Makefile_win2k
-    del Makefile_win2k
+    echo Deleting Makefile_win-static
+    del Makefile_win-static*
 
 cd ..\egs_gui
 echo Working in egs_gui...
-    if exist Makefile_win2k (
-        echo Running nmake clean
-        nmake -nologo -f Makefile_win2k clean
+    if exist Makefile_win-static (
+        echo Running mingw32-make clean
+        mingw32-make -f Makefile_win-static clean
     )
-    echo Deleting Makefile_win2k
-    del Makefile_win2k
+    echo Deleting Makefile_win-static
+    del Makefile_win-static*
 
 cd ..\egs_inprz
 echo Working in egs_inprz...
-    if exist Makefile_win2k (
-        echo Running nmake clean
-        nmake -nologo -f Makefile_win2k clean
+    if exist Makefile_win-static (
+        echo Running mingw32-make clean
+        mingw32-make -f Makefile_win-static clean
     )
-    echo Deleting Makefile_win2k
-    del Makefile_win2k
-
-cd ..\egs_install\static
-echo Working in egs_install...
-    if exist Makefile_win2k (
-        echo Running nmake clean
-        nmake -nologo -f Makefile_win2k clean
-    )
-    echo Deleting Makefile_win2k
-    del Makefile_win2k
-
-cd ..\..\beam_install
-echo Working in beam_install...
-    if exist Makefile_win2k (
-        echo Running nmake clean
-        nmake -nologo -f Makefile_win2k clean
-    )
-    echo Deleting Makefile_win2k
-    del Makefile_win2k
+    echo Deleting Makefile_win-static
+    del Makefile_win-static*
 
 cd ..\..\pieces\windows
+del *.exe

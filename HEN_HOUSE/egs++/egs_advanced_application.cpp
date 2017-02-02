@@ -26,6 +26,8 @@
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #                   Blake Walters
+#                   Randle Taylor
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -649,7 +651,7 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         egsInformation("%3d  %-24s AE=%7.4f AP=%7.4f %d\n",j,
                        geometry->getMediumName(j),the_thresh->ae[imed],
                        the_thresh->ap[imed],imed);
-        if (Emax > the_thresh->ue[imed]-0.511 ||
+        if (Emax > the_thresh->ue[imed]-the_useful->rm ||
                 Emax > the_thresh->up[imed]) {
             egsInformation("  upper limits (UE=%g UP=%g) not enough for "
                            "maximum source energy (%g)\n",the_thresh->ue[imed],
@@ -1077,6 +1079,10 @@ EGS_Float EGS_AdvancedApplication::getEdep() {
     return the_epcont->edep;
 }
 //************************************************************
+// Returns rest mass
+EGS_Float EGS_AdvancedApplication::getRM() {
+    return the_useful->rm;
+}
 
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");

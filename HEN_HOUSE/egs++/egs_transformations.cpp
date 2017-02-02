@@ -30,7 +30,7 @@
 
 
 /*! \file egs_transformations.cpp
- *  \brief Implements EGS_AffineTransform::getTransformation
+ *  \brief EGS_AffineTransform::getTransformation implementation
  *  \IK
  */
 

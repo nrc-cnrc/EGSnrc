@@ -27,6 +27,7 @@
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -1117,12 +1118,15 @@ int EGS_ChamberApplication::initScoring() {
         while( (aux = options->takeInputItem("calculation geometry")) ) {
             string gname;
             int err = aux->getInput("geometry name",gname);
+            
+            string cavString;
             vector<int> cav;
-            int err1 = aux->getInput("cavity regions",cav);
-
+            int err1 = aux->getInput("cavity regions",cavString);
+            
+            string ecut_rString;
             vector<int> ecut_r;
             EGS_Float ecut_v;
-            int err5 = aux->getInput("ECUT regions",ecut_r);	// jwu
+            int err5 = aux->getInput("ECUT regions",ecut_rString);	// jwu
             int err6 = aux->getInput("ECUT",ecut_v);
 
             string cav_gname;
@@ -1133,29 +1137,14 @@ int EGS_ChamberApplication::initScoring() {
                 do_mcav = false;
             }
             int err11, err12;
+            string cs_regString;
             vector<int> cs_reg;
             vector<int> cs_fac;
             if( do_cse ) {
-                err11 = aux->getInput("enhance regions",cs_reg);
+                err11 = aux->getInput("enhance regions",cs_regString);
                 err12 = aux->getInput("enhancement",cs_fac);
             }
             else{ err11 = 1; err12 = 1; }
-
-            if (do_cse && cs_reg[0]<0 && cs_reg[1]<0 && cs_reg.size()==2) {
-                int start = -cs_reg[0];
-                int end   = -cs_reg[1];
-                cs_reg.clear();
-                for (int i=start; i<=end; i++) {
-                    cs_reg.push_back(i);
-                }
-            }
-            if (do_cse && cs_fac[0]<0 && cs_fac.size()==1) {
-                int tmp = -cs_fac[0];
-                cs_fac.clear();
-                for (int i=0; i<cs_reg.size(); i++) {
-                    cs_fac.push_back(tmp);
-                }
-            }
 
             EGS_Float cmass;
             int err2 = aux->getInput("cavity mass",cmass);
@@ -1172,10 +1161,7 @@ int EGS_ChamberApplication::initScoring() {
             if( err12 ) egsWarning("initScoring: missing/wrong 'enhancement' "
                     "input\n");
             int err13 = 0;
-            if( !err11 && !err12 && (cs_reg.size() != cs_fac.size() )){
-                egsWarning("initScoring: number of 'enhance regions' must match 'enhancement'\n");
-                err13 = 1;
-            }
+            
             if( err || err1 ) egsWarning("  --> input ignored\n");
             else {
                 EGS_BaseGeometry::setActiveGeometryList(app_index);
@@ -1186,12 +1172,42 @@ int EGS_ChamberApplication::initScoring() {
                             " input ignored\n",cav_gname.c_str());
                     cg = 0;
                 }
-
+                
                 EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
-                if( !g ) egsWarning("initScoring: no geometry named %s -->"
+                if( !g ) {
+                    egsWarning("initScoring: no geometry named %s -->"
                         " input ignored\n",gname.c_str());
+                } else {
+                    g->getNumberRegions(cavString, cav);
+                    g->getLabelRegions(cavString, cav);
+                    g->getNumberRegions(cs_regString, cs_reg);
+                    g->getLabelRegions(cs_regString, cs_reg);
+                    g->getNumberRegions(ecut_rString, ecut_r);
+                    g->getLabelRegions(ecut_rString, ecut_r);
+                }
+                
+                if (do_cse && cs_reg[0]<0 && cs_reg[1]<0 && cs_reg.size()==2) {
+                    int start = -cs_reg[0];
+                    int end   = -cs_reg[1];
+                    cs_reg.clear();
+                    for (int i=start; i<=end; i++) {
+                        cs_reg.push_back(i);
+                    }
+                }
+                if (do_cse && cs_fac[0]<0 && cs_fac.size()==1) {
+                    int tmp = -cs_fac[0];
+                    cs_fac.clear();
+                    for (int i=0; i<cs_reg.size(); i++) {
+                        cs_fac.push_back(tmp);
+                    }
+                }
+                if( !err11 && !err12 && (cs_reg.size() != cs_fac.size() )){
+                    egsWarning("initScoring: number of 'enhance regions' must match 'enhancement'\n");
+                    err13 = 1;
+                }
 
-                else {
+                if( g ) {
+                    
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
                     int ncav = 0;
@@ -1277,8 +1293,11 @@ int EGS_ChamberApplication::initScoring() {
                     if ( do_TmpPhsp ){
                         vector<string> subgeom_name;
                         int err777 = aux->getInput("sub geometries",subgeom_name);
+                        string subgeom_regsString;
                         vector<int> subgeom_regs;
-                        int err888 = aux->getInput("subgeom regions",subgeom_regs);
+                        int err888 = aux->getInput("subgeom regions",subgeom_regsString);
+                        cg->getNumberRegions(subgeom_regsString, subgeom_regs);
+                        cg->getLabelRegions(subgeom_regsString, subgeom_regs);
                         if( err777 ){
                             egsWarning("initScoring: missing/wrong 'sub geometries' "
                                     " for geometry '%s'\n", gname.c_str());

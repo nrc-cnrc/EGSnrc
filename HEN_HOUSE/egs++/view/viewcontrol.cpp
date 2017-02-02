@@ -122,13 +122,11 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     ambientLight->setValue(ilight);
     ambientLight->blockSignals(false);
     distance = 25;
-    //dCourse->setValue(0);
-//     dFine->setValue(25);
-    dfine = 250;
-    projection_scale = 1;
+
+    zoomlevel = -112;
+    size = 1;
     look_at = EGS_Vector();
     setLookAtLineEdit();
-    projection_m = 15;
     setProjectionLineEdit();
     p_light = EGS_Vector(0,0,distance);
     setLightLineEdit();
@@ -154,7 +152,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     camera_home = camera;
     camera_home_v1 = camera_v1;
     camera_home_v2 = camera_v2;
-    dfine_home = dfine;
+    zoomlevel_home = zoomlevel;
 
     m_colors = 0;
     nmed = 0;
@@ -328,8 +326,7 @@ void GeometryViewControl::cameraHome() {
     updateLookAtLineEdit();
 
     // reset zoom level
-    dfine = dfine_home;
-    projection_m = projection_scale*dfine;
+    zoomlevel = zoomlevel_home;
 
     // debug information
 #ifdef VIEW_DEBUG
@@ -417,7 +414,7 @@ void GeometryViewControl::cameraHomeDefine() {
     camera_home_v1 = camera_v1;
     camera_home_v2 = camera_v2;
     look_at_home = look_at;
-    dfine_home = dfine;
+    zoomlevel_home = zoomlevel;
 
     // debug information
 #ifdef VIEW_DEBUG
@@ -494,64 +491,20 @@ void GeometryViewControl::cameraRoll(int dx) {
 }
 
 void GeometryViewControl::cameraZoom(int dy) {
-    static vector<EGS_Float> a_scale;
-    static vector<EGS_Float> a_size;
-    int dfine_max = 1000;
-//Last step zooming in for current scale
-    if (dfine+dy <= 1) {// negative dy
-        a_scale.push_back(projection_scale);
-        a_size.push_back(size);
-        dfine = dfine_max;
-        size = projection_m;
-        projection_scale = size/EGS_Float(dfine);
+    zoomlevel -= dy;
+    if (zoomlevel < -400) {
+        zoomlevel = -400;
     }
-//Last step zooming out for current scale
-    else if (dfine > dfine_max - dy) {
-        if (a_scale.size()) {
-            projection_scale = a_scale.back();
-            size = a_size.back();
-            dfine = int(projection_m/projection_scale);
-            a_scale.pop_back();
-            a_size.pop_back();
-        }
-        else {} //do nothing ...
-    }
-    else {
-// 1 pixel mouse motion in y = 1 unit change in dfine
-        dfine += dy;
-    }
-    projection_m = projection_scale*dfine;
-
 // debug information
 #ifdef VIEW_DEBUG
     egsWarning("In cameraZoom(%d)\n", dy);
-    egsWarning(" new dfine = %d\n", dfine);
-    egsWarning(" size = %g projection_m = %g projection_scale = %g\n", size,projection_m,projection_scale);
+    egsWarning(" new zoomlevel = %d\n", zoomlevel);
+    egsWarning(" size = %g\n", size);
 #endif
 
 // render
     updateView();
 }
-
-// void GeometryViewControl::cameraZoom(int dy) {
-//
-//  // 1 pixel mouse motion in y = 1 unit change in dfine
-//  dfine += dy;
-//  if (dfine<0)   dfine = 0;
-//  if (dfine>1000) dfine = 1000;
-//  projection_m = projection_scale*dfine;
-// //   dFine->setValue((int)dfine);
-//
-// // debug information
-// #ifdef VIEW_DEBUG
-//     egsWarning("In cameraZoom(%d)\n", dy);
-//     egsWarning(" new dfine = %d\n", dfine);
-//     egsWarning(" size = %g projection_m = %g projection_scale = %g\n", size, projection_scale*dfine,projection_scale);
-// #endif
-//     cout << " size = " << size << "projection_m = " << projection_m << " projection_scale = " << projection_scale << endl;
-//   // render
-//   renderImage();
-// }
 
 void GeometryViewControl::thetaRotation(int Theta) {
 #ifdef VIEW_DEBUG
@@ -592,29 +545,6 @@ void GeometryViewControl::setCameraPosition() {
     }
     updateView();
 }
-
-void GeometryViewControl::changeDfine(int newdfine) {
-#ifdef VIEW_DEBUG
-    egsWarning("In changeDfine(%d)\n",newdfine);
-#endif
-    //projection_m = dfine;
-    projection_m = projection_scale*newdfine;
-    dfine = newdfine;
-    //egsWarning("dfine = %d projection_m = %g\n",projection_m,dfine);
-    updateView();
-    //distance = dfine + dCourse->value();
-    //setCameraPosition();
-}
-
-
-// void GeometryViewControl::changeDcourse( int dcourse ) {
-// #ifdef VIEW_DEBUG
-//     egsWarning("In changeDcourse(%d)\n",dcourse);
-// #endif
-//     distance = dcourse + dFine->value();
-//     setCameraPosition();
-// }
-
 
 void GeometryViewControl::changeAmbientLight(int alight) {
 #ifdef VIEW_DEBUG
@@ -737,10 +667,6 @@ void GeometryViewControl::loadTracksDialog() {
     gview->loadTracks(filename_tracks);
 }
 
-void GeometryViewControl::setProjectionSize() {
-}
-
-
 void GeometryViewControl::viewAllMaterials() {
 #ifdef VIEW_DEBUG
     egsWarning("In viewAllMaterials()\n");
@@ -752,6 +678,7 @@ void GeometryViewControl::reportViewSettings(int x,int y) {
     int w=gview->width();
     int h=gview->height();
     EGS_Float xscreen, yscreen;
+    EGS_Float projection_m = size * pow(0.5, zoomlevel / 48.);
     EGS_Float xscale = w > h ? projection_m * w / h : projection_m;
     EGS_Float yscale = h > w ? projection_m * h / w : projection_m;
     xscreen = (x-w/2)*xscale/w;
@@ -1094,22 +1021,9 @@ int GeometryViewControl::setGeometry(
         if (distance > 60000) {
             egsWarning("too big: %g\n",size);
             distance = 9999;
-            projection_m = 100;
         }
         else {
-            //projection_m = 7*size;
-            projection_m = 5*size;
-            EGS_Float proj_max = 2*projection_m;
-#ifdef VIEW_DEBUG
-            egsWarning(" projection: %d max. projection: %d\n",(int) projection_m,
-                       (int) proj_max+1);
-#endif
-            int dfine_max = 1000;//dFine->maxValue();
-            //dFine->setMaxValue((int) proj_max+1);
-            //dFine->setValue((int) projection_m);
-            projection_scale = proj_max/dfine_max;
-            //dFine->setValue((int) (projection_m/projection_scale));
-            dfine = (int)(projection_m/projection_scale);
+            zoomlevel = -112;
         }
         setProjectionLineEdit();
         //p_light = look_at+EGS_Vector(s_theta*s_phi,s_theta*s_phi,c_theta)*distance;
@@ -1128,7 +1042,7 @@ int GeometryViewControl::setGeometry(
         camera_home = camera;
         camera_home_v1 = camera_v1;
         camera_home_v2 = camera_v2;
-        dfine_home = dfine;
+        zoomlevel_home = zoomlevel;
     }
 
     updateView();
@@ -1171,7 +1085,7 @@ void GeometryViewControl::updateView(bool transform) {
         }
     }
 
-    rp.projection_m = projection_m;
+    rp.projection_m = size * pow(0.5, zoomlevel / 48.);
     rp.screen_v1 = screen_v1;
     rp.screen_v2 = screen_v2;
     rp.screen_xo = screen_xo;

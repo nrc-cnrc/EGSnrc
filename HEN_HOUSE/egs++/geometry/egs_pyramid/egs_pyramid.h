@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Blake Walters
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -101,6 +102,27 @@ pyramid base is defined.
 
 The \c pyramid.geom example geometry file demonstrate the use
 of a pyramid object.
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_pyramid
+        library     = egs_pyramid
+        type        = EGS_PyramidZ
+        points      = 1 1  -1 1  -1 -1  4 -1
+        tip         = 0 0 2
+        closed      = 1
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_pyramid
+
+:stop geometry definition:
+\endverbatim
+\image html egs_pyramid.png "A simple example"
 
 */
 template <class T>
@@ -196,7 +218,7 @@ public:
             EGS_Float up = u*s[j]->getNormal(), xp = s[j]->distance(x);
             if (up > 0 && xp < 0) {
                 EGS_Float tt = -xp/up;
-                if (tt <= t && s[j]->isInside2D(x+u*tt)) {
+                if (tt <= t+boundaryTolerance && s[j]->isInside2D(x+u*tt)) {
                     t = tt;
                     jhit = j;
                 }
@@ -206,7 +228,7 @@ public:
             EGS_Float up = u*p->getNormal(), xp = p->distance(x);
             if (up > 0 && xp < 0) {
                 EGS_Float tt = -xp/up;
-                if (tt <= t && p->isInside2D(x+u*tt)) {
+                if (tt <= t+boundaryTolerance && p->isInside2D(x+u*tt)) {
                     t = tt;
                     jhit = n;
                 }

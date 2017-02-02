@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Marc Chamberland
 #
 ###############################################################################
 */
@@ -108,8 +108,9 @@ public:
             delete table;
         }
     };
+
     EGS_Vector getPoint(EGS_RandomGenerator *rndm) {
-        int j = table->sampleBin(rndm);
+        int j = table->sample(rndm);
         return shapes[j]->getRandomPoint(rndm);
     };
 
@@ -133,7 +134,7 @@ public:
     void getPointSourceDirection(const EGS_Vector &Xo,
                                  EGS_RandomGenerator *rndm, EGS_Vector &u, EGS_Float &wt) {
         EGS_Vector xo = T ? Xo*(*T) : Xo;
-        int j = table->sampleBin(rndm);
+        int j = table->sample(rndm);
         shapes[j]->getPointSourceDirection(xo,rndm,u,wt);
         if (T) {
             T->rotate(u);
@@ -144,7 +145,7 @@ protected:
 
     int            nshape;
     EGS_BaseShape  **shapes;
-    EGS_AliasTable *table;
+    EGS_SimpleAliasTable *table;
 
 };
 

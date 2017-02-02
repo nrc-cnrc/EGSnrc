@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
+#                   Marc Chamberland
 #
 ###############################################################################
 */
@@ -79,6 +80,42 @@ A source collection is defined using
     weights = list of weights for the sources
 :stop source:
 \endverbatim
+
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library     = egs_point_source
+        name        = p1
+        position    = -2 0 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 1
+        :stop spectrum:
+        charge      = 0
+    :stop source:
+    :start source:
+        library     = egs_point_source
+        name        = p2
+        position    = 2 0 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 1
+        :stop spectrum:
+        charge      = 0
+    :stop source:
+    :start source:
+        library = egs_source_collection
+        name = my_source
+        source names = p1 p2
+        weights = 0.1 0.9
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_source_collection.png "A simple example"
 */
 class EGS_SOURCE_COLLECTION_EXPORT EGS_SourceCollection :
     public EGS_BaseSource {
@@ -117,7 +154,7 @@ public:
     EGS_I64 getNextParticle(EGS_RandomGenerator *rndm,
                             int &q, int &latch, EGS_Float &E, EGS_Float &wt,
                             EGS_Vector &x, EGS_Vector &u) {
-        int j = table->sampleBin(rndm);
+        int j = table->sample(rndm);
         EGS_I64 this_case = sources[j]->getNextParticle(rndm,q,latch,E,wt,x,u);
         count += this_case - last_cases[j];
         last_cases[j] = this_case;
@@ -217,7 +254,7 @@ protected:
 
     int nsource;
     EGS_BaseSource **sources;  //!< The sources in the collection
-    EGS_AliasTable *table;     //!< Alias table for randomly picking a source
+    EGS_SimpleAliasTable *table;     //!< Alias table for randomly picking a source
     EGS_I64        *last_cases;//!< Last case returned from each source
     EGS_Float      *p;         //!< The probabilities
     EGS_Float Emax;            //!< Maximum energy (max of s[j]->getEmax()).

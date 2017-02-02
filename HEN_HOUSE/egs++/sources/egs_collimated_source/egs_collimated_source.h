@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -97,6 +98,13 @@ as a target shape in a collimated source are
 \link EGS_PolygonShape polygons \endlink and
 \link EGS_TriangleShape triangles \endlink.
 
+The fluence calculated by getFluence() is determined as \f$N/d^2\f$,
+where \c N is the number of source particles and \c d is provided by
+the user as \c distance, the minimum distance between the source and target
+shapes. This accounts for the solid angle within which particles are generated.
+If \c distance is not provided, it defaults to 1, which will likely be
+an incorrect normalization.
+
 A collimated source is defined as follows:
 \verbatim
 :start source:
@@ -111,6 +119,7 @@ A collimated source is defined as follows:
     :start spectrum:
         definition of the spectrum
     :stop spectrum:
+    distance = source-target shape min. distance
     charge = -1 or 0 or 1 for electrons or photons or positrons
 :stop source:
 \endverbatim
@@ -118,6 +127,33 @@ It is worth noting that the functionality of sources 1, 11, 12, 14, 15 and 16
 from the RZ series of user codes and source 3 in DOSXYZnrc can be
 reproduced with the collimated source from the EGSnrc C++ class library.
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_collimated_source
+        name = my_source
+        :start source shape:
+            type = point
+            position = 0 0 5
+        :stop source shape:
+        :start target shape:
+            library   = egs_rectangle
+            rectangle = -1 -1 1 1
+        :stop target shape:
+        distance = 5
+        charge = -1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20
+        :stop spectrum:
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_collimated_source.png "A simple example"
 */
 class EGS_COLLIMATED_SOURCE_EXPORT EGS_CollimatedSource :
     public EGS_BaseSimpleSource {

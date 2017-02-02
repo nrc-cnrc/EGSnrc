@@ -34,6 +34,7 @@
 "                   Iwan Kawrakow                                             "
 "                   Frederic Tessier                                          "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1150,20 +1151,22 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
 }
 
 REPLACE {;COMIN/SCORE/;} WITH {
-    ;common/score/IWATCH,mxnp,i_phsp_out,i_muidx_out,i_unit_out,
-    endep($MAXDOSE), endep2($MAXDOSE), temp2, planarefe,
-    planarefp,planarfe,planarfp,nestep,endep_tmp($MAXDOSE),
+    ;common/score/endep($MAXDOSE), endep2($MAXDOSE), temp2, planarefe,
+    planarefp,planarfe,planarfp,
+    nestep,
+    endep_tmp($MAXDOSE),
+    i_phsp_out,i_muidx_out,i_unit_out,IWATCH,mxnp,
     endep_last($MAXDOSE);
+    REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
+    $LONG_INT nestep;
+    real endep_tmp;
     integer i_phsp_out, "set to 1 or 2 to output phsp data to IAEA format"
                         "phase space file"
             i_muidx_out, "set to 1 to include frMU_indx (fractional MU index)"
                         "in phase space data (phsp or BEAM simulation source"
                         "only)"
             i_unit_out, "unit no. for IAEA phsp output"
-    IWATCH, mxnp;
-    real endep_tmp;
-    REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
-    $LONG_INT nestep;
+            IWATCH,mxnp;
     $SHORT_INT endep_last;
 }
 "V> endep(I) I=1,IMAX*JMAX*KMAX + 1,  +1 is for surrounding region
@@ -1908,7 +1911,7 @@ ELSE[
 
 "set initial energy - used only for enflag=0 (mono-energetic source)"
 "                     reset for other sources elsewhere"
-IF(iqin = 0)[etotin = ein;] ELSE [etotin = ein + 0.511;]
+IF(iqin = 0)[etotin = ein;] ELSE [etotin = ein + prm;]
 
 OUTPUT61 NCASE,IWATCH,TIMMAX,IXXIN,JXXIN,BEAM_SIZE,ISMOOTH,IRESTART,IDAT,
 IREJECT,ESAVE_GLOBAL,NRCYCL,IPARALLEL,PARNUM,n_split,ihowfarless,i_phsp_out;
@@ -2654,17 +2657,17 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
                       "electrons and photons in the total incident E"
            IF(iqin =1)[ esrc = esrc +  weight*1.0220068;
             "we include 2 0.511 MeV photons from e+ - e- annihilation"]
-           IF(iqin ~= 0)[ etotin = esrc_sp + 0.5110034;"particle total E"]
+           IF(iqin ~= 0)[ etotin = esrc_sp + prm;"particle total E"]
            ELSE[etotin = esrc_sp;]
         ]
         "-----------------------------------------------------------------"
         ELSEIF(enflag = 2 | enflag = 3)["phase-space input or BEAM sim."
         "-----------------------------------------------------------------"
            etotin = einsrc;   "einsrc is the total energy of the particle"
-           IF(iqin = -1)   [esrc = esrc + weight*(etotin - 0.5110034);
+           IF(iqin = -1)   [esrc = esrc + weight*(etotin - prm);
                             "remove e- rest mass"]
            ELSEIF(iqin = 0)[esrc = esrc + weight*etotin; ]
-           ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + 0.5110034);
+           ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + prm);
                       "add 0.511 for the positron but was - till June 97"
            ]
         ]
@@ -2684,7 +2687,7 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
         IF(xin*xin+yin*yin<0.31831)[
            IF(iqin ~= 0)[
               planarfe=planarfe+weight;
-              planarefe=planarefe+(etotin-0.5110034)*weight;
+              planarefe=planarefe+(etotin-prm)*weight;
            ]
            ELSE["photons"
               planarfp=planarfp+weight;
@@ -2906,9 +2909,9 @@ ELSEIF((enflag=1)|(enflag=2)|(enflag=3)|(enflag=4))[ ;OUTPUT61 etot/esrc;
 
 "Calculate incident fluence
 IF(isource = 0 | isource = 1 | isource = 3 | isource = 7)[
-   temp2=dble(IHSTRY+ncaseold-nsmiss-nmissm);
-   IF(beamarea = 0)[ ainflu=dble(IHSTRY+ncaseold-nsmiss-nmissm);]
-   ELSE[             ainflu=dble(IHSTRY+ncaseold-nsmiss-nmissm)/beamarea;]
+   temp2=dble(IHSTRY+ncaseold+nsmiss+nmissm);
+   IF(beamarea = 0)[ ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm);]
+   ELSE[             ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm)/beamarea;]
 ]
 ELSEIF(isource = 2 | isource = 8 )[
    ainflu=dble(IHSTRY+ncaseold+nsmiss+
@@ -4628,12 +4631,11 @@ end;
 
 subroutine modify_tmxs(mindel);
 implicit none;
-;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control/;
-$REAL rm,eil,ei,p2,beta2,chi_a2,elke,eke,dedx0,estepx,si,sip1,tmxs_orig,
+;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,USEFUL/;
+$REAL eil,ei,p2,beta2,chi_a2,elke,eke,dedx0,estepx,si,sip1,tmxs_orig,
       mindel;
-$INTEGER medium,i,neke,leil,lelke;
+$INTEGER i,neke,leil,lelke;
 
-rm = 0.5110034;
 DO medium = 1,nmed [
 
     neke = meke(medium);

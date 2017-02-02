@@ -30,7 +30,7 @@
 
 
 /*! \file egs_library.cpp
- *  \brief EGS_Librarymplementation
+ *  \brief EGS_Library implementation
  *  \IK
  */
 

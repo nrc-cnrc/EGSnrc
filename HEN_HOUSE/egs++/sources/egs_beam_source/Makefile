@@ -42,3 +42,4 @@ extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 include $(SPEC_DIR)egspp_libs.spec
 
 $(make_depend)
+

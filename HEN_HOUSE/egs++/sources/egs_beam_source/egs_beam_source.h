@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -110,6 +111,25 @@ reject "phat" particles from a simulation using DBS.
 sure that the <code>RESTART</code> calculation option is defined in
 both, the source and the application input files.
 
+A simple example. Note that you must build the required shared library for
+the accelerator (i.e. use the command 'make library' in the BEAM_EX10MeVe
+directory).
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_beam_source
+        name    = my_source
+        beam code = BEAM_EX10MeVe
+        pegs file = 521icru
+        input file = EX10MeVe
+        particle type = all
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_beam_source.png "A simple example"
 */
 class EGS_BEAM_SOURCE_EXPORT EGS_BeamSource : public EGS_BaseSource {
 

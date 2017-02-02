@@ -3054,22 +3054,33 @@ deflection due to the electromagnetic field, which, to first order, can be obtai
 
 \begin{equation}
 \label{uchange_emf}
-    \Delta\vec{u}_{em} = \frac{q \cdot s}{m_0 \gamma v^2_0} \left[\vec{E}_0 - \vec{u}_0(\vec{u}_0\cdot \vec{E}_0) + \vec{v}_0 \times \vec{B}_0\right]
+    \Delta\vec{u}_{em} = \frac{q \cdot s}{m_0 \gamma v^2_0} \left[\vec{E}_0 - \vec{u}_0(\vec{u}_0\cdot \vec{E}_0) + \vec{v}_0 \times \vec{B}_0\right].
 \end{equation}
-
 
 The final position can be obtained using
 
 \begin{equation}
-    \vec{x}_f = \vec{x}_0 + \vec{u}_0 s + \frac{s}{2} \left(\Delta\vec{u}_{ms,ret} + \Delta\vec{u}_{em}\right)
+    \vec{x}_f = \vec{x}_0 + \vec{u}_0 s + \frac{s}{2} \left(\Delta\vec{u}_{ms,ret} + \Delta\vec{u}_{em}\right).
 \end{equation}
-however, in the current implementation, lateral displacement due to the Lorentz force is ignored, and only a condensed history (CH) step s is taken along $\vec{u}_0$ using EGSnrc's electron transport algorithm. This simplification relies on the assumption that accounting only for the change in direction due to the Lorentz force is accurate enough when using very small steps.
 
-There are several criteria to restrict the step size based on energy loss, change in the electromagnetic field and change in particle direction. For instance, in the case of a static $\vec{B}$ field ($\vec{E}$ = 0, $\vec{B}$ = $\vec{B}_0$) only the restriction of small changes in the particle direction is relevant. According to Eq.(\ref{uchange_emf}) $\Delta\vec{u}_{em}$ should only be allowed to take a value $\delta \ll 1$ from where the restricted step size follows as
+In the current implementation, lateral displacement due to the Lorentz force is ignored,
+and only a condensed history (CH) step $s$ is taken along $\vec{u}_0$ using EGSnrc's electron
+transport algorithm. This simplification relies on the assumption that accounting only for
+the change in direction due to the Lorentz force is accurate enough when using very small steps.
+
+There are several criteria to restrict the step size based on energy loss, change
+in the electromagnetic field and change in particle direction. In the case of a static
+$\vec{B}$ field ($\vec{E}$ = 0, $\vec{B}$ = $\vec{B}_0$) only the restriction of small changes
+in the particle direction is relevant. According to Eq.(\ref{uchange_emf}), $|\Delta\vec{u}_{em}|$
+should only be allowed to take a value $\delta \ll 1$ from where the restricted step size follows as
 \begin{equation}
 \label{uchange_restriction}
-  s = \delta \cdot \frac{E_o \gamma_0 \beta^2}{q\left(\vec{v}_0 \times \vec{B}_0\right)} = \delta \cdot r_g
+  s = \delta \cdot \frac{E_o \gamma_0 \beta^2}{q\left|\vec{v}_0 \times \vec{B}_0\right|} = \delta \cdot r_g
 \end{equation}
-the quantity $r_g$ is the well known radius of gyration of the particle's trajectory. A value of $\delta$ = 0.02 has been recommended by Bielajew for accurately reproducing the analytical trajectory of electrons in vacuum. For more details on the implementation of this algorithm the reader is encouraged to read the very detailed chapter on this topic by Bielajew\cite{Bi89a}. For instructions on how to enable transport under electromagnetic fields please refer to section \ref{EMF_macros_implementation}.
+the quantity $r_g$ is the well known gyroradius of the particle's trajectory. A value of $\delta$ = 0.02
+was used to reproduce the analytical trajectory of electrons in vacuum in reference \cite{Bi89a}.
+For more details on the implementation of this algorithm the reader is encouraged to read the very detailed
+chapter on this topic by Bielajew\cite{Bi89a}. For instructions on how to enable transport under electromagnetic
+fields please refer to section \ref{EMF_macros_implementation}.
 
 \newpage

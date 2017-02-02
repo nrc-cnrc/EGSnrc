@@ -39,9 +39,19 @@
 using namespace std;
 
 /*! \file egs_functions.h
- *  \brief Global egspp functions.
+ *  \brief Global egspp functions header file
  *  \IK
  */
+
+/*! \brief The epsilon constant for floating point comparisons
+ *
+ * \ingroup egspp_main
+ *
+ * The epsilon constant is a small number that can be used
+ * when comparing two floating point numbers that may be close
+ * in value.
+ */
+const EGS_Float epsilon = 1e-10;
 
 /*! \brief Writes the 64 bit integer \a n to the output stream data
  * and returns \c true on success, \c false on failure.

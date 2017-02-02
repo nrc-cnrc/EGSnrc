@@ -40,7 +40,7 @@ my_deps = $(common_ausgab_deps)
 extra_dep = $(addprefix $(DSOLIBS), $(my_deps))
 
 #redefined from egspp.spec
-INC2 = -I$(IEGS2) -I..$(DSEP).. -I$(HEN_HOUSE)/user_codes/beampp -I$(HEN_HOUSE)interface
+INC2 = -I$(IEGS2) -I..$(DSEP).. -I$(HEN_HOUSE)interface
 
 include $(SPEC_DIR)egspp_libs.spec
 

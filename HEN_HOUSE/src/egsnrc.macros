@@ -27,6 +27,7 @@
 "  Contributors:    Blake Walters                                             "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -203,10 +204,8 @@ PARAMETER $MXSINC=1002;   "ANGLE INTERVALS IN (0,5*PI/2) FOR SINE"
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
 "THE FOLLOWING ARE PARAMETERS FOR AUSGAB CALLS:"
-"Ali:photonuc, 2 lines (used to be 29 and 24, now 30, 27"
-"EMH: Should actually be 31 and 26"
-PARAMETER $MXAUS=31;       "CHANGE IF MORE AUSGAB CALLS ARE ADDED"
-PARAMETER $MXAUSM5=26;     "SET THIS TO $MXAUS VALUE LESS 5"
+PARAMETER $MXAUS=33;       "CHANGE IF MORE AUSGAB CALLS ARE ADDED"
+PARAMETER $MXAUSM5=28;     "SET THIS TO $MXAUS VALUE LESS 5"
 
 "FIRST FIVE AUSGAB CALLS BELOW TURNED ON IN BLOCK DATA (DEFAULT)"
 PARAMETER $TRANAUSB=0;    "BEFORE TRANSPORT"
@@ -244,6 +243,9 @@ PARAMETER $AUGERTRA=27;   "An Auger transition just occured"
 " note that 28 is already used for positron annih at rest - see above"
 PARAMETER $PHOTONUCAUSB=29; "BEFORE PHOTONUCLEAR EVENT"
 PARAMETER $PHOTONUCAUSA=30; "AFTER PHOTONUCLEAR EVENT"
+PARAMETER $EIIB=31;   "Before EII"
+PARAMETER $EIIA=32;   "After EII"
+
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
 REPLACE {$AUSCALL(#);} WITH
@@ -671,7 +673,7 @@ REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
 " and L-shell characteristic x-rays, it needs more testing  "
 " before it can be made the default in EGSnrc.              "
 "============================================================"
-REPLACE {$EADL_RELAX} WITH {.false.}
+REPLACE {$EADL_RELAX} WITH {.true.}
 "============================================================"
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
@@ -834,12 +836,13 @@ REPLACE {COMIN/CH-Steps/;} WITH
 "------------------------------------------------------------------"
 REPLACE {;COMIN/EPCONT/;} WITH
 {;
-  COMMON/EPCONT/EDEP,TSTEP,TUSTEP,USTEP,TVSTEP,VSTEP,
+  COMMON/EPCONT/EDEP,EDEP_LOCAL,TSTEP,TUSTEP,USTEP,TVSTEP,VSTEP,
                 RHOF,EOLD,ENEW,EKE,ELKE,GLE,E_RANGE,
                 x_final,y_final,z_final,
                 u_final,v_final,w_final,
                 IDISC,IROLD,IRNEW,IAUSFL($MXAUS);
-    $ENERGY PRECISION EDEP;   "energy deposition in MeV"
+    $ENERGY PRECISION EDEP,   "energy deposition in MeV"
+                      EDEP_LOCAL; "local energy deposition in MeV"
     $REAL             TSTEP,  "distance to a discrete interaction"
                       TUSTEP, "intended step length, befor check with geometry"
                       USTEP,  "transport distance calculated from TUSTEP"
@@ -1126,9 +1129,9 @@ REPLACE {$COMIN-SET-DEFAULTS;} WITH {
        EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs,
        EMF-INPUTS/;};
 REPLACE {$COMIN-INIT-COMPT;} WITH {
-  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,EGS-IO/;};
+  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,USEFUL,EGS-IO/;};
 REPLACE {$COMIN-MSCATI;} WITH {
-  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,EGS-IO/;};
+  ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,USEFUL,EGS-IO/;};
 REPLACE {$COMIN-INIT-TRIPLET;} WITH {
   ;COMIN/BREMPR,EGS-IO,MEDIA,TRIPLET-DATA,USEFUL/;};
 REPLACE {$COMIN-GET-TRANSPORTP;} WITH {
@@ -2138,7 +2141,7 @@ REPLACE {$RE-EVALUATE-DEDX(#);} WITH
   lelktmp = max(1,lelktmp);
   IF(lelec < 0)[$EVALUATE dedxmid USING ededx(elktmp);]
   ELSE         [$EVALUATE dedxmid USING pdedx(elktmp);]
-  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+0.5110034))**2);
+  dedx = rhof*dedxmid*(1+0.17408298*({P1}/(1-{P1})/(eke+PRM))**2);
                    "0.17408298 is 2/3*m**2"
   {P1} = 2*{P1};
 }
@@ -3441,7 +3444,7 @@ REPLACE {$RADC_WARNING;} WITH {;
 };
 REPLACE {$RADC_HATCH;} WITH {$RADC_WARNING;}
 REPLACE {$COMIN-RADC-INIT;} WITH {
-        ;COMIN/RAD_COMPTON,EGS-IO,COMPTON-DATA,MEDIA,PHOTIN/;
+        ;COMIN/RAD_COMPTON,EGS-IO,COMPTON-DATA,MEDIA,PHOTIN,USEFUL/;
 };
 REPLACE {$COMIN-RADC-SAMPLE;} WITH {
         ;COMIN/RAD_COMPTON,RANDOM,STACK,USEFUL,EGS-IO/;

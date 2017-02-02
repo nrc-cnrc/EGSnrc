@@ -30,7 +30,7 @@
 
 
 /*! \file egs_library.h
- *  \brief EGS_Library header file
+ *  \brief EGS_Library class header file
  *  \IK
  */
 

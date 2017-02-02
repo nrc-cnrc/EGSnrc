@@ -24,6 +24,7 @@
 #  Author:          Ernesto Mainegra-Hing, 2012
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -114,6 +115,12 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     if (!app) {
         return;
     }
+
+    if (d_regionString.length() > 0 && d_region.size() < 1) {
+        getNumberRegions(d_regionString, d_region);
+        getLabelRegions(d_regionString, d_region);
+    }
+
     // Get the number of regions in the geometry.
     nreg = app->getnRegions();
     // Get the number of media in the input file
@@ -234,6 +241,14 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     }
 }
 
+void EGS_DoseScoring::getNumberRegions(const string &str, vector<int> &regs) {
+    app->getNumberRegions(str, regs);
+}
+
+void EGS_DoseScoring::getLabelRegions(const string &str, vector<int> &regs) {
+    app->getLabelRegions(str, regs);
+}
+
 void EGS_DoseScoring::reportResults() {
     egsInformation("\n======================================================\n");
     egsInformation("Dose Scoring Object(%s)\n",name.c_str());
@@ -290,11 +305,11 @@ void EGS_DoseScoring::reportResults() {
         vector<EGS_Float> massM(nmedia,0);
         int imed = 0;
         for (int ir=0; ir<nreg; ir++) {
-          if(app->isRealRegion(ir)) {
-            imed = app->getMedium(ir);
-            EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
-            massM[imed] += app->getMediumRho(imed)*volume;
-          }
+            if (app->isRealRegion(ir)) {
+                imed = app->getMedium(ir);
+                EGS_Float volume = vol.size() > 1 ? vol[ir]:vol[0];
+                massM[imed] += app->getMediumRho(imed)*volume;
+            }
         }
         if (normE==1) {
             egsInformation("\n\n==> Summary of media dosimetry (per particle)\n");
@@ -438,10 +453,11 @@ extern "C" {
         int d_in_region = input->getInput("region dose",allowed_mode,1);
 
         /* get dose regions */
+        string d_regionsString;
         vector <int> d_regions;
         bool using_all_regions=true;
         vector <int> d_start, d_stop;
-        if (!input->getInput("dose regions",d_regions)&& d_regions.size()>0) {
+        if (!input->getInput("dose regions",d_regionsString)&& d_regionsString.length()>0) {
             using_all_regions = false;    // individual regions
         }
         else {
@@ -498,7 +514,12 @@ extern "C" {
             result->setVol(1.0);    // default value if no entry
         }
         if (!using_all_regions) {
-            result->setDoseRegions(d_regions);
+            if (d_regions.size() > 0) {
+                result->setDoseRegions(d_regions);
+            }
+            else {
+                result->setDoseRegions(d_regionsString);
+            }
         }
         if (d_in_medium) {
             result->setMediumScoring(true);

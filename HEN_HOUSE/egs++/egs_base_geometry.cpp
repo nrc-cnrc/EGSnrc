@@ -24,13 +24,15 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Marc Chamberland
+#                   Reid Townson
 #
 ###############################################################################
 */
 
 
 /*! \file egs_base_geometry.cpp
- *  \brief Base geometry implementation
+ *  \brief EGS_BaseGeometry implementation
  *  \IK
  *
  *  Also provides a static geometry factory used to manage all constructed
@@ -274,12 +276,6 @@ static char buf_unique[32];
 
 int EGS_BaseGeometry::error_flag = 0;
 
-#ifdef SINGLE
-    EGS_Float EGS_BaseGeometry::epsilon = 1e-5;
-#else
-    EGS_Float EGS_BaseGeometry::epsilon = 1e-7;
-#endif
-
 #ifndef SKIP_DOXYGEN
 EGS_BaseGeometry *EGS_GeometryPrivate::createSingleGeometry(EGS_Input *i) {
     string libname;
@@ -387,7 +383,7 @@ extern "C" void __list_geometries() {
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
+    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -633,6 +629,13 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
                 //       " %s\n",g->getName().c_str());
             }
         }
+    }
+}
+
+void EGS_BaseGeometry::setBoundaryTolerance(EGS_Input *i) {
+    int err = i->getInput("boundary tolerance", boundaryTolerance);
+    if (err > 0) {
+        egsWarning("EGS_BaseGeometry::setBoundaryTolerance(): error while reading 'boundary tolerance' input\n");
     }
 }
 
@@ -890,16 +893,58 @@ void EGS_BaseGeometry::addBooleanProperty(int bit, int start, int end,
     }
 }
 
+// Gets region numbers from a string
+// Pushes the regions onto the array regs
+void EGS_BaseGeometry::getNumberRegions(const string &str, vector<int> &regs) {
+
+    if (!str.empty()) {
+
+        // Tokenize the input string
+        vector<string> tokens;
+        const char *ptr = str.c_str();
+        do {
+            const char *begin = ptr;
+            while (*ptr != ' ' && *ptr) {
+                ptr++;
+            }
+            tokens.push_back(string(begin, ptr));
+        }
+        while (*ptr++ != '\0');
+
+        for (int i=0; i<tokens.size(); i++) {
+            // Search for tokens that are numbers, not strings
+            // Push the region numbers onto the regions array
+            if (tokens[i].find_first_not_of(" -0123456789") == std::string::npos) {
+                regs.push_back(atoi(tokens[i].c_str()));
+            }
+        }
+    }
+}
+
 void EGS_BaseGeometry::getLabelRegions(const string &str, vector<int> &regs) {
 
-    // get all regions lists for this named label
-    for (int i=0; i<labels.size(); i++) {
-        if (labels[i].name.compare(str) == 0) {
-            regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+    // Tokenize the input string - this allows for multiple labels
+    vector<string> tokens;
+    const char *ptr = str.c_str();
+    do {
+        const char *begin = ptr;
+        while (*ptr != ' ' && *ptr) {
+            ptr++;
+        }
+        tokens.push_back(string(begin, ptr));
+    }
+    while (*ptr++ != '\0');
+
+    // Get all regions lists for this named label
+    for (int j=0; j<tokens.size(); j++) {
+        for (int i=0; i<labels.size(); i++) {
+            if (labels[i].name.compare(tokens[j]) == 0) {
+                regs.insert(regs.end(), labels[i].regions.begin(), labels[i].regions.end());
+            }
         }
     }
 
-    // sort region list and remove duplicates
+    // Sort region list and remove duplicates
     sort(regs.begin(), regs.end());
     regs.erase(unique(regs.begin(), regs.end()), regs.end());
 }

@@ -49,7 +49,7 @@ EGS_ParallelBeam::EGS_ParallelBeam(EGS_Input *input,
             uo.y = dir[1];
             uo.z = dir[2];
             EGS_Float norm = uo.length();
-            if (norm < 1e-6) {
+            if (norm < epsilon) {
                 egsWarning("EGS_ParallelBeam: the length of the direction"
                            " vector can not be zero => ignoring your input\n");
                 uo.x = 0;
