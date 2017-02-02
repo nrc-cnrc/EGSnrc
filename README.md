@@ -39,14 +39,11 @@ for more details on how to download and properly configure EGSnrc on
 Linux, macOS or Windows.
 
 
-## Support
+## Issues
 
 For technical support and general questions, consider the
 [EGSnrc Google+ community]
 (https://plus.google.com/communities/106437507294474212197).
-
-
-## Issues
 
 Use the [issue tracker](https://github.com/nrc-cnrc/EGSnrc/issues) to
 report bugs, inaccuracies or even small typos in the EGSnrc project
