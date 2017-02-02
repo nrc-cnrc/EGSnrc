@@ -35,7 +35,7 @@ if you wish to licence EGSnrc under different terms.
 
 Please read the full [installation instructions]
 (https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview)
-for more details on how to download and properly configure EGSnrc on
+for details on how to download and properly configure EGSnrc on
 Linux, macOS or Windows.
 
 
