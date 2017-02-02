@@ -31,11 +31,10 @@
 
 #include "egs_install.h"
 
-#define EGS_VIEW_DSO "egsnrc64"
+#define EGS_VIEW_DSO "linux-static"
 
 void QInstallPage::environmentSetUp()
 {
-   QChar s = QDir::separator();
 
    resetProgressBar(100);
    setSubTitle("Setting up GUIs ...");
@@ -47,6 +46,7 @@ void QInstallPage::environmentSetUp()
    qApp->processEvents();
 
 #if defined(Q_OS_WIN32) || defined(WIN32)
+   QChar s = QDir::separator();
    QString piecesWindows = henHouse() + "pieces" + s + "windows" + s;
    printProgress("\n ===> Copying GUI executables  ...    ");
    qApp->processEvents();
@@ -342,10 +342,11 @@ void QInstallPage::createEGSFolders(){
               //**************************************
               // Hardcoding dso location for egs_view
               //**************************************
-              //scriptstr.replace( "the_dso", henHouse() +
-                                 //"egs++" + s + "dso" + s + my_machine() );
               scriptstr.replace( "the_dso", henHouse() +
                                  "egs++" + s + "dso" + s + QString(EGS_VIEW_DSO) );
+              //scriptstr.replace( "the_dso", dsoDir );
+              /* Needed in Gnome based systems such as Ubuntu 16.04 */
+              //target += " -style fusion";
             }
             scriptstr.replace( "gui_exe",      target );
             if ( ! writeQString2File( scriptstr, script ) ) {
@@ -616,9 +617,9 @@ void QInstallPage::set_guis_dso(){
  * precompiled egspp and all dso files needed by egs_view.
  **************************************************************/
 void QInstallPage::update_unix_env(){
-    QString dsoDirS = henHouse()  + "egs++" + QDir::separator() +
-                                    "dso"   + QDir::separator() + QString(EGS_VIEW_DSO);
-                                    //QString("dso")   + QDir::separator() + my_machine();
+    //QString dsoDirS = henHouse()  + "egs++" + QDir::separator() +
+    //                                "dso"   + QDir::separator() + QString(EGS_VIEW_DSO);
+    //QString dsoDirS = dsoDir;
     QString home = getenv( "HOME");
     /* Get SHELL environment variable */
     QString shell = getenv("SHELL");
@@ -631,7 +632,7 @@ void QInstallPage::update_unix_env(){
                      QString("\n###############################")+
                QString("\nexport EGS_CONFIG=")+ specFile +
                QString("\nexport EGS_HOME=")  + egsHome() +
-               QString("\nexport LD_LIBRARY_PATH=")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
+               //QString("\nexport LD_LIBRARY_PATH=")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
                QString("\n. ") + henHouse() + QString("scripts")      +
                QDir::separator() + QString("egsnrc_bashrc_additions");
                //QString("\n. ") + henHouse() + QString("scripts")      +  //Fred moved most of this to
@@ -644,7 +645,7 @@ void QInstallPage::update_unix_env(){
       egsenv = QString("#\n# EGSnrc environment settings\n#")+
                QString("\nsetenv EGS_CONFIG ")+ specFile +
                QString("\nsetenv EGS_HOME ")  + egsHome() +
-               QString("\nsetenv LD_LIBRARY_PATH ")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
+               //QString("\nsetenv LD_LIBRARY_PATH ")  + dsoDirS + QString(":$LD_LIBRARY_PATH") +
                QString("\nsource ") + henHouse() + QString("scripts") +
                QDir::separator() + QString("egsnrc_cshrc_additions");
                //QString("\nsource ") + henHouse() + QString("scripts") + //Fred moved most of this to
@@ -663,6 +664,30 @@ void QInstallPage::update_unix_env(){
       printProgress( tr("\n->Appending EGSnrc environment to shell resource file ") + rcfile );
       append2file(egsenv.toLatin1(),rcfile.toLatin1());
     }
+
+    /*
+     * Use a local resource file to add EGS_VIEW_DSO to LD_LIBRARY_PATH
+     *
+     * Needed now (Feb 2017) because $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+     * is using $my_machine rather than EGS_VIEW_DSO for the geometry shared objects
+     * compiled with the same compiler version as the pre-compiled egs_view GUI.
+     * Once this is properly defined in $HEN_HOUSE/scripts/egsnrc_bashrc_additions
+     * this step can be removed.
+     */
+//      QString the_local_additions(egsnrc_bashrc_additions),
+//              the_additions_file = home + QDir::separator() + ".egsnrc_bashrc_additions";
+//      the_local_additions.replace( "static_machine",  QString(EGS_VIEW_DSO) );
+//
+//     if (!QFile(the_additions_file).exists()){
+//       printProgress(tr("\n->Creating local resource file ") + the_additions_file + tr(" for egs_view.\n") );
+//       if ( ! writeQString2File(the_local_additions,the_additions_file) ) {
+//           printProgress( tr("\n Could not create ") + tr("local resource file ") + the_additions_file );
+//       }
+//     }
+//     else{
+//       printProgress( tr("\n->Updating LD_LIBRARY_PATH in local resource file ") + the_additions_file );
+//       append2file(the_local_additions.toLatin1(),the_additions_file.toLatin1());
+//     }
 }
 
 void QInstallPage::cleanUp()
