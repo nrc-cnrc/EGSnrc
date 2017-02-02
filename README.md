@@ -35,8 +35,15 @@ if you wish to licence EGSnrc under different terms.
 
 Please read the full [installation instructions]
 (https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview)
-for more details on how to download and properly configure EGSnrc on 
-Linux, OS X or Windows.
+for more details on how to download and properly configure EGSnrc on
+Linux, macOS or Windows.
+
+
+## Support
+
+For technical support and general questions, consider the
+[EGSnrc Google+ community]
+(https://plus.google.com/communities/106437507294474212197).
 
 
 ## Issues
@@ -47,10 +54,6 @@ files. The tracker lets you browse and search all documented issues,
 comment on open issues, and track their progress. Note that the issue
 tracker is **not meant for technical support;** open an issue only if it
 pertains to an error condition which is precise and reproducible.
-
-For technical support and more general questions, consider the 
-[EGSnrc google+ community]
-(https://plus.google.com/communities/106437507294474212197).
 
 
 ## Contributing
