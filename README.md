@@ -41,26 +41,23 @@ how to download and properly configure EGSnrc on your operating system.
 
 ## Issues
 
-For technical support and general questions, consider the [EGSnrc Google+
-community] (https://plus.google.com/communities/106437507294474212197), or
-[contact NRC]
+For technical support and questions, consider the [EGSnrc Google+ community]
+(https://plus.google.com/communities/106437507294474212197), or [contact NRC]
 (http://www.nrc-cnrc.gc.ca/eng/solutions/advisory/egsnrc_index.html). To report
-genuine bugs, defects or even small typos in the EGSnrc project files please
-[submit an issue](https://github.com/nrc-cnrc/EGSnrc/issues). The issue tracker
-lets you browse and search all documented issues, comment on open issues, and
-track their progress. Note that the issue tracker is **not meant for technical
-support.**
+genuine bugs, defects or even small typos in the EGSnrc project please [submit
+an issue](https://github.com/nrc-cnrc/EGSnrc/issues). The issue tracker lets you
+browse and search all documented issues, comment on open issues, and track their
+progress. Note that the issue tracker is **not meant for technical support.**
 
 
 ## Contributing
 
-You can contribute to the EGSnrc project by implementing new features,
-creating new data sets, correcting errors, or improving documentation.
-Feel free to submit small corrections and contributions as issues in the
-[issue tracker](https://github.com/nrc-cnrc/EGSnrc/issues). For more
-extensive contributions, familiarize yourself with git and github,
-work on your own EGSnrc project fork and submit improvements via a
-[pull request](https://github.com/nrc-cnrc/EGSnrc/issues). Note that
-significant contributions will require a transfer of copyright to the
-National Research Council of Canada before they can be merged into the
-EGSnrc distribution.
+You can contribute to the EGSnrc project by implementing new features, creating
+new data sets, correcting errors, or improving documentation. For small
+corrections and improvements, feel free to [submit an
+issue](https://github.com/nrc-cnrc/EGSnrc/issues). For more extensive
+contributions, familiarize yourself with git and github, work on your own EGSnrc
+project fork and open a [pull
+request](https://github.com/nrc-cnrc/EGSnrc/issues). Note that significant
+contributions will require a transfer of copyright to the National Research
+Council of Canada before they can be merged into the EGSnrc distribution.
