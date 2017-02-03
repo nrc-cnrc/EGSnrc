@@ -43,3 +43,9 @@ statdose_$(my_machine).f: $(SOURCES)
 	@echo "Mortran compiling statdose sources ..."
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
 	      -o8 statdose_$(my_machine).mortlst
+
+clean:
+	$(REMOVE) mortjob.mortran statdose_$(my_machine).f statdose_$(my_machine).mortlst
+	$(REMOVE) $(EGS_BINDIR)statdose$(EXE)
+
+.PHONY: clean

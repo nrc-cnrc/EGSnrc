@@ -30,7 +30,7 @@
 
 
 /*! \file egs_polygon.cpp
- *  \brief Polygons implementation
+ *  \brief EGS_2DPolygon implementation
  *  \IK
  */
 
@@ -68,7 +68,7 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     int n = points.size();
     open = Open;
     EGS_2DVector test(points[0]-points[n-1]);
-    if (test.length2() > 1e-8) {
+    if (test.length2() > epsilon) {
         points.push_back(points[0]);
         n++;
     }
@@ -80,7 +80,7 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     int j;
     for (j=1; j<n; j++) {
         EGS_2DVector aux(points[j]-pp[jj-1]);
-        if (aux.length2() > 1e-8) {
+        if (aux.length2() > epsilon) {
             pp[jj++] = points[j];
         }
     }
@@ -88,7 +88,7 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     // now check for points on a line
     for (j=0; j<n-2; j++) {
         EGS_2DVector aa(pp[j+1]-pp[j]), bb(pp[j+2]-pp[j]);
-        if (fabs(aa%bb) < 1e-6) {
+        if (fabs(aa%bb) < epsilon) {
             pp[j+1] = pp[j+2];
             for (int i=j+2; i<n; i++) {
                 pp[i] = pp[i+1];

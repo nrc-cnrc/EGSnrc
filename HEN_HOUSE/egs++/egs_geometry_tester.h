@@ -30,7 +30,7 @@
 
 
 /*! \file egs_geometry_tester.h
- *  \brief Header file for of a geometry testing class.
+ *  \brief EGS_GeometryTester class header file
  *  \IK
  */
 

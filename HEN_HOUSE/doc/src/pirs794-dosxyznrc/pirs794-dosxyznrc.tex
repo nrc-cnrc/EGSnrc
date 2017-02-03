@@ -1870,6 +1870,13 @@ If {\tt MU} is included in the phase space output, then phase space data has a t
 Scoring of {\tt MU} allows synchronization between the DOSXYZnrc simulation generating the file and any
 downstream simulations--such as BEAMnrc simulations with synchronized component modules--using the file as
 a source. See Section~\ref{phspoutsect} for a description of DOSXYZnrc phase space output.
+\item [~~~~{\tt calflag}]
+\indexm{calflag}
+\indexm{NRCYCL}
+Set to 1 to skip the calibration run through a BEAM shared library geometry between the source plane and
+the phantom. The number of times to recycle each source particle before proceeding to the next one,
+{\tt NRCYCL}, will then not take into account the ratio of the number of particles emerging from the  
+library geometry to the number of incident particles (survival ratio).  The default is to do the calibration run if a BEAM shared library geometry is present.
 \end{description}
 
 For i=1,2,...,{\tt nset} (the no. of control points), the following parameters are entered:
@@ -2075,9 +2082,17 @@ the number of particles in the phase space source, the number of histories reque
 requested.  However, interactions in the shared library geometry will change the number of particles reaching
 the DOSXYZnrc phantom per particle incident from the phase space source.  Thus, the original estimate of
 {\tt NRCYCL} is incorrect.  To overcome this when a BEAM shared library is used, an initial calibration comprising
-1x10$^6$ particles run through the BEAM geometry only is used to determine the survival ratio of particles
-between the phase space source and the BEAM scoring plane.
-{\tt NRCYCL} is then recalculated by multiplying the original estimate by 1/(survival ratio).  If a
+1x10$^6$ particles run through the BEAM geometry only is used to determine the ratio of the number of particles
+emerging from the the bottom of the BEAM library geometry to the number of incident particles (survival ratio).
+{\tt NRCYCL} is then recalculated by multiplying the original estimate by 1/(survival ratio).  
+
+\indexm{calflag}
+Depending on the shared library geometry, the calibration run can consume
+significant CPU time at the beginning of the simulation.  Therefore, if there is a sufficient number of particles in
+the phase space source that the user is confident rewinding the source is not an issue, the calibration run can
+be skipped by setting the input, {\tt calflag}, to 1.
+
+If a
 non-EGSnrc shared library
 is used, then the user must provide a routine to estimate the survival ratio of particles passing through the
 geometry.  This will be covered in more detail below.
@@ -3853,7 +3868,7 @@ If set to {\tt Off} (the default) no corrections are done.
 Note that if set to {\tt On} then the variable {\tt SOURCES} in
 {\tt \$EGS\_HOME/dosxyznrc/Makefile} (See Section~\ref{filesect} above)
 must be modified to include {\tt \$(EGS\_SOURCEDIR)rad\_compton1.mortran} just
-before {\tt \$(EGS\_SOURCEDIR)egsnrc.mortran}.
+before {\tt \$(EGS\_SOURCEDIR)get\_inputs.mortran}.
 
 \subsection{{\tt Pair angular sampling} ({\tt IPRDST})}
 \index{pair angular sampling}

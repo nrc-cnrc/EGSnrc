@@ -30,7 +30,7 @@
 
 
 /*! \file egs_projectors.cpp
- *  \brief Implementation of projector constructors
+ *  \brief EGS_Projector implementation
  *  \IK
  */
 
@@ -57,8 +57,8 @@ EGS_Projector::EGS_Projector(const EGS_Vector &x1, const EGS_Vector &x2,
     v2 = x3-x1;
     a = v1%v2;
     xo = x1;
-    if (a.length2() < 1e-10) egsFatal("EGS_Projector::EGS_Projector: "
-                                          " the vectors are co-linear\n");
+    if (a.length2() < epsilon) egsFatal("EGS_Projector::EGS_Projector: "
+                                            " the vectors are co-linear\n");
     a.normalize();
     norm = 1;
     v1.normalize();

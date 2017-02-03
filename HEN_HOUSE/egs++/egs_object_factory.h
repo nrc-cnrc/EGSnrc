@@ -30,7 +30,7 @@
 
 
 /*! \file egs_object_factory.h
- *  \brief Defines objects and object factories
+ *  \brief EGS_Object and EGS_ObjectFactory class header file
  *  \IK
  */
 

@@ -713,6 +713,7 @@ extern "C" {
             EGS_TestMicro *result = new EGS_TestMicro(vs[0],vs[1],vs[2],bsc_t,
                     tb_med,bm_med,micro_data.c_str());
             result->setName(input);
+            result->setBoundaryTolerance(input);
             result->setLabels(input);
             return result;
         }
@@ -741,6 +742,7 @@ extern "C" {
             return 0;
         }
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setMicros(input);
         result->setLabels(input);
         return result;

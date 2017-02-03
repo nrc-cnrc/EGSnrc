@@ -36,6 +36,7 @@
 "                   Iwan Kawrakow                                             "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1280,7 +1281,8 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "I>                        a change to the user codes Makefile to include
 "I>                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"I>                        SOURCES (just before $(EGS_SOURCEDIR)egsnrc.mortran).
+"I>                        SOURCES (just before
+"I>                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "I>                        [ radc_flag ]
 "%A27
 "I>       Pair angular sampling= Off, Simple or KM (Default is Simple)
@@ -5344,17 +5346,8 @@ IF(IWATCH=4 | IZLAST=2 )[
     close(IOUTGEOM);
 ]
 IF(ISTORE = -1)[ CLOSE(IOUTRN); ]
-IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4) [
-      "phase-space output"
-  DO I=1,NSC_PLANES [
-     IF(IO_OPT=4)[
-        $IAEA_DESTROY_PHSP_FILE(IOUTFLU(I));
-     ]
-     ELSE[
-        CLOSE(IOUTFLU(I));
-     ]
-  ]
-]
+
+$BEAM_CLOSE_PHSP;
 
 CALL DATETIME(1);
 OUTPUT DATEN,TIMEN;(/' END OF RUN',10X,$DATEN_FORMAT,1X,$TIMEN_FORMAT//);
@@ -5724,8 +5717,8 @@ IF (IARG =  5) ["Particle step just taken"
     IF(W(NP)>0)["electron going forward, split it"
      count_esplit=count_esplit+1;
      IF(IWATCH=1|IWATCH=2)[
-       OUTPUT NP,E(NP)-0.511,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),U(NP),V(NP),
-              W(NP),LATCH(NP),WT(NP);
+       OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+              U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (' Electron',T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
        OUTPUT NBRSPL;(' about to be split ',I10, ' times (DBS).');
        IF(IRAD_DBS=1)[
@@ -5739,8 +5732,8 @@ IF (IARG =  5) ["Particle step just taken"
         ANG_DBS=2.*3.1415926/FLOAT(NBRSPL);
      ]
      IF(IWATCH=1|IWATCH=2)[
-        OUTPUT NP,E(NP)-0.511,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),U(NP),V(NP),
-              W(NP),LATCH(NP),WT(NP);
+        OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+              U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
      ]
      DO I=1,NBRSPL-1[
@@ -5758,8 +5751,8 @@ IF (IARG =  5) ["Particle step just taken"
              U(NP)=U(NP-1);V(NP)=V(NP-1);
         ]
         IF(IWATCH=1|IWATCH=2)[
-           OUTPUT NP,E(NP)-0.511,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),U(NP),V(NP),
-              W(NP),LATCH(NP),WT(NP);
+           OUTPUT NP,E(NP)-PRM,IQ(NP),IR(NP),X(NP),Y(NP),Z(NP),
+              U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
              (T36,':',I5,F9.3,2I4,3F8.3,3F7.3,I10,1PE10.3);
         ]
      ]
@@ -5882,7 +5875,7 @@ IF (IARG =  5) ["Particle step just taken"
 
          "Energy fluence:"
          SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)+
-                                          WEIGHT*(E(NP)-0.511*ABS(IQ(NP)))/
+                                          WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
          "Angle:"
          "change to degrees on output"
@@ -5902,7 +5895,7 @@ IF (IARG =  5) ["Particle step just taken"
          SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)=SCFLU_COV(IQL,ISCORE,ISZ,IPAR/2+1)+
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)*
                                           SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+2);
-         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-0.511*ABS(IQ(NP)))/
+         SCFLU_TMP(IQL,ISCORE,ISZ,IPAR+3)=WEIGHT*(E(NP)-PRM*ABS(IQ(NP)))/
                                           MAX(0.08716,ABS(WL));
 
          "Angle: also score angle*no. (weighted) now for covariance"
@@ -5966,12 +5959,12 @@ IF (IARG =  5) ["Particle step just taken"
    IF (IO_OPT =  0)|((IO_OPT =  3)&(IHSTRY <= 100000))|(IO_OPT=4)[
                                  "phase-space output"
      NPPHSP(ISCORE)=NPPHSP(ISCORE)+1;"increment # of particles in file"
-     IF((E(NP)-0.511*ABS(IQ(NP)))>EKMAXPHSP(ISCORE))[
-            EKMAXPHSP(ISCORE)=E(NP)-0.511*ABS(IQ(NP));
+     IF((E(NP)-PRM*ABS(IQ(NP)))>EKMAXPHSP(ISCORE))[
+            EKMAXPHSP(ISCORE)=E(NP)-PRM*ABS(IQ(NP));
      ]
      IF(IQ(NP)=-1)[
-        IF((E(NP)-0.511)<EKMINPHSPE(ISCORE))[
-              EKMINPHSPE(ISCORE)=E(NP)-0.511;
+        IF((E(NP)-PRM)<EKMINPHSPE(ISCORE))[
+              EKMINPHSPE(ISCORE)=E(NP)-PRM;
         ]
      ]
      ELSEIF(IQ(NP)=0)[
@@ -6028,8 +6021,8 @@ IF (IARG =  5) ["Particle step just taken"
           OUTPUT NSPLIT_ELEC;
 (' SPLITTING ELECTRON INTO ',I4,' ELECTRONS EACH WITH THE',
  ' FOLLOWING PROPERTIES:');
-          OUTPUT NP,NP+NSPLIT_ELEC-1,E(NP)-0.511,IQ(NP),IR(NP),X(NP),Y(NP),
-                 Z(NP),U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
+          OUTPUT NP,NP+NSPLIT_ELEC-1,E(NP)-PRM,IQ(NP),IR(NP),
+                 X(NP),Y(NP),Z(NP),U(NP),V(NP),W(NP),LATCH(NP),WT(NP);
           (' RESULTING ELECTRONS',T29,':',I5,' -',I5,F9.3,2I4,3F8.3,3F7.3,
                                         I10,1PE10.3);
         ]
@@ -10120,15 +10113,6 @@ ELSEIF(ISOURC = 21 | ISOURC=24)[
            OUTPUT;
         (/' Fractional MU index will be read from the phase space data.');
         ]
-        IF(IZSCORE=1 & CMTYPE(INIT_ICM)~='SLABS' &
-           CMTYPE(INIT_ICM)~='FLATFILT' & CMTYPE(INIT_ICM)~='SIDETUBE')[
-           OUTPUT;(/' Warning in source 21: Z for each particle will be read'/
-                    ' from the IAEA phase space data, but INIT_ICM is not set'/
-                    ' to a CM that can handle particles incident within it'/
-                    ' (SLABS, FLATFILT or SIDETUBE).  Depending on the Z'/
-                    ' of incident particles, this may result in the'/
-                    ' simulation stopping mid-run.'/);
-        ]
     ]
     ELSE[
         $OPEN_PHSP_FOR_READ(IZLAST,IINSRC,SPCNAM,MODE_RW,NNPHSP,NPHOTSRC,
@@ -10882,6 +10866,18 @@ ELSEIF(ISOURC = 6) ["Frontal parallel rectangular beam along z-axis"
     IFPB=0;"Set flag- FRONTAL PARALLEL BEAM"
 ]
 
+ELSEIF(ISOURC=21) ["phsp source"
+     IF(i_iaea_in=1 & IZSCORE=1 & CMTYPE(INIT_ICM)~='SLABS' &
+           CMTYPE(INIT_ICM)~='FLATFILT' & CMTYPE(INIT_ICM)~='SIDETUBE')[
+           OUTPUT;(/' Warning in source 21: Z for each particle will be read'/
+                    ' from the IAEA phase space data, but INIT_ICM is not set'/
+                    ' to a CM that can handle particles incident within it'/
+                    ' (SLABS, FLATFILT or SIDETUBE).  Depending on the Z'/
+                    ' of incident particles, this may result in the'/
+                    ' simulation stopping mid-run.'/);
+        ]
+]
+
 ELSEIF(ISOURC = 22) ["Frontal parallel rectangular beam along z-axis"
     RBEAM=SQRT(XBEAM**2+YBEAM**2);
     "THERE IS A BUG HERE - This assumes first CM is circular outer boundary"
@@ -11324,7 +11320,7 @@ END;    "End of subroutine SRCOUT
 $IMPLICIT-NONE;
 ;COMIN/
 CMs,EPCONT,GEOM,IO_INFO,MEDIA,MISC,SCORE,SOURCE,STACK,UPHIOT,USER,
-    RANDOM,RWPHSP,EGS-IO/;
+    RANDOM,RWPHSP,USEFUL,EGS-IO/;
 
 
 "T>****************************
@@ -11982,10 +11978,8 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
      VIN=VINOLD;
      WIN=WINOLD;
      WEIGHT=WEIGHTOLD;
-     IF((ISOURC=24 & (ALPHA24~=0 | BETA24~=0)) | IZSCORE=1)[
-       ICM=INIT_ICMOLD;
-       ZIN=ZINOLD;
-     ]
+     ICM=INIT_ICMOLD;
+     ZIN=ZINOLD;
      IF(I_MUPHSP_IN~=0)[
        "make sure any synchronized CMs do not change BEAM_MU_INDEX by setting"
        "BEAM_MU_INDEX_OLD to something different than BEAM_MU_INDEX"
@@ -12146,10 +12140,8 @@ ELSEIF(ISOURC = 21 | ISOURC=24)["Full phase space for each particle"
       CYCLNUM=1;
       XINOLD=XIN;
       YINOLD=YIN;
-      IF((ISOURC=24 & (ALPHA24~=0 | BETA24 ~=0))| IZSCORE=1)[
-         ZINOLD=ZIN;
-         INIT_ICMOLD=ICM;
-      ]
+      ZINOLD=ZIN;
+      INIT_ICMOLD=ICM;
       UINOLD=UIN;
       VINOLD=VIN;
       WINOLD=WIN;

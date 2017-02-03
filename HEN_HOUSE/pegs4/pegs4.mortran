@@ -31,6 +31,7 @@
 "  Contributors:    Alex Bielajew                                             "
 "                   Iwan Kawrakow                                             "
 "                   Ernesto Mainegra-Hing                                     "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -2025,7 +2026,7 @@ ZP = ZB/ZA;
 ZV = (ZB-ZF)/ZT;
 ZU = (ZB-ZF)/ZA;
 EDEN=AN*RHO/WM*ZC;
-RLC = 1./( (AN*RHO/WM)*4.0*FSC*R0**2*(ZAB-ZF) );
+RLC = 1./( (ZAB-ZF)*(AN*RHO/WM)*4.0*FSC*R0**2 );
 OUTPUT WM,ZC,ZT,ZA,ZB,ZAB,ZF,ZG,ZP,ZV,ZU,ZS,ZE,ZX,RLC,
  (I,XSI(I),ZZX(I),FZC(I),FCOUL(I),ZZ(I),I=1,NE);
 ('0Z VARIABLES--WM,ZC,ZT,ZA,ZB,ZAB'/1P,6E14.6/
@@ -2688,7 +2689,7 @@ IF( AFACT.EQ.0.0  .OR. CBAR.LE.0.0  .OR. SK.EQ.0.0  .OR. X0.EQ.0.0
 OUTPUT;(//'0*****USER ERROR -NOT ALL DENSITY EFFECT PARAMTERS INPUT',
 '   CODE STOPPED IN SPINIT****'//);  $CALL_EXIT(21);]
 IMEV=IEV*1.E-6;  "EV TO MEV"
-VPLASM=SQRT(EDEN*R0*C**2/PI);
+VPLASM=SQRT(EDEN/PI*R0*C**2);
 IM=-1; "USED AS A FLAG BELOW"
 ]
 
@@ -2714,7 +2715,7 @@ $CALL_EXIT(21);
 AFACT=STDATA(1,IM); SK=STDATA(2,IM); X0=STDATA(3,IM);
 X1=STDATA(4,IM); IEV=STDATA(5,IM); CBAR=STDATA(6,IM);
 IMEV=IEV*1.0E-6; "EV TO MEV"
-VPLASM=SQRT(EDEN*R0*C**2/PI);
+VPLASM=SQRT(EDEN/PI*R0*C**2);
 GO TO :SSB-PARAMETERS-DEFINED:;]
 
 "STERNHEIMER-PEIERLS (S-P) GENERAL FORMULA SECTION:"
@@ -2757,7 +2758,7 @@ IF (GASP.EQ.0.0) [EDENL=EDEN;]
 ELSE ["VPLASM MUST BE FOR NTP FOR A GAS, AND EDEN HAS"
 "      BEEN DEFINED IN MIX FOR THE ACTUAL PRESSURE"
        EDENL=EDEN/GASP;]
-VPLASM = SQRT(EDENL*R0*C**2/PI);
+VPLASM = SQRT(EDENL/PI*R0*C**2);
 "ABOVE PATCHED JAN 9,1989 TO REFLECT ERROR POINTED OUT BY"
 "PROF KAMAE, TOKYO UNIVERSITY, VIA HIDEO HIRAYAMA"
 
@@ -5647,18 +5648,6 @@ DO i=1,narg-1 [
            open(20,file=fn,status='old'); have_arg = .true.;
            goto :found_density_file:;
        ]
-       fn = $HEN-HOUSE // 'pegs4/density_corrections/elements/' // arg;
-       inquire(file=fn,exist=is_there);
-       IF( is_there ) [
-           open(20,file=fn,status='old'); have_arg = .true.;
-           goto :found_density_file:;
-       ]
-       fn = $HEN-HOUSE // 'pegs4/density_corrections/compounds/' // arg;
-       inquire(file=fn,exist=is_there);
-       IF( is_there ) [
-           open(20,file=fn,status='old'); have_arg = .true.;
-           goto :found_density_file:;
-       ]
        fn = $EGS_HOME // 'pegs4/density_corrections/' // arg;
        inquire(file=fn,exist=is_there);
        IF( is_there ) [
@@ -5672,6 +5661,18 @@ DO i=1,narg-1 [
            goto :found_density_file:;
        ]
        fn = $EGS_HOME // 'pegs4/density_corrections/compounds/' // arg;
+       inquire(file=fn,exist=is_there);
+       IF( is_there ) [
+           open(20,file=fn,status='old'); have_arg = .true.;
+           goto :found_density_file:;
+       ]
+       fn = $HEN-HOUSE // 'pegs4/density_corrections/elements/' // arg;
+       inquire(file=fn,exist=is_there);
+       IF( is_there ) [
+           open(20,file=fn,status='old'); have_arg = .true.;
+           goto :found_density_file:;
+       ]
+       fn = $HEN-HOUSE // 'pegs4/density_corrections/compounds/' // arg;
        inquire(file=fn,exist=is_there);
        IF( is_there ) [
            open(20,file=fn,status='old'); have_arg = .true.;

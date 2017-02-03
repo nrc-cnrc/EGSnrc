@@ -335,13 +335,13 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     if (have_np && have_ip) {
         n_parallel = ::strtol(npar.c_str(),0,10);
         i_parallel = ::strtol(ipar.c_str(),0,10);
-        if(have_first) {
+        if (have_first) {
             first_parallel = ::strtol(ifirst.c_str(),0,10);
-            if(first_parallel < 0) {
+            if (first_parallel < 0) {
                 egsWarning("%s\n  invalid -f argument %d\n",__egs_app_msg1,
-                       n_parallel);
-                 n_parallel = 0;
-                 i_parallel = 0;
+                           n_parallel);
+                n_parallel = 0;
+                i_parallel = 0;
             }
         }
         if (n_parallel < 0) {

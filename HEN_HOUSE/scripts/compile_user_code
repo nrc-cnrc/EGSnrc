@@ -40,18 +40,14 @@ if test $# -lt 1; then
     cat >&2 <<EOF
 Usage: $my_name m|f|mf user_code [a] [opt|noopt|debug] [config=xxx]
 
-$my_name compiles the EGSnrc user code 'user_code'.
-The arguments `f' and `mf' are equivalent, `m' results in a
-mortan compilation only.
-The argument 'a' is here for historical reasons to provide
-compatibility with the typical invocation of EGS compilations in
-previous versions (e.g. 'mf user_code a opt2'). It is ignored if present.
-The optional argumens 'opt' or 'noopt' or 'debug' set optimization
-or no optimization or debug compilation flags for the Fortran compiler.
-'opt' is the default. The 'config=xxx' option lets you overwrite
-the EGSnrc configuration to be used, which is otherwise specified by
-the EGS_CONFIG environment variable. Note that 'xxx' MUST
-be an absolute path to a EGSnrc configuration file.
+$my_name compiles the EGSnrc user code 'user_code'. The arguments 'f' and 'mf'
+are equivalent: 'm' results in a mortan compilation only. The argument 'a' is
+here for historical reasons and is now ignored. The optional arguments 'opt' or
+'noopt' or 'debug' respectively sets optimization, turns off optimization or
+sets the debug compilation flags for the Fortran compiler ('opt' is the
+default). The 'config=xxx' option lets you overwrite the EGSnrc configuration
+to be used, which is otherwise specified by the EGS_CONFIG environment variable.
+Note that 'xxx' MUST be an absolute path to a EGSnrc configuration file.
 
 EOF
     exit 1

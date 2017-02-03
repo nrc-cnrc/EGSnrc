@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2009
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -84,6 +84,37 @@ The \c sigma input can be positive or negative.
 If it is positive, it is considered to be the sigma of the Gaussian distribution
 in degrees, if negative, the FWHM of the distribution.
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_parallel_beam
+        name = my_parallel_source
+        :start shape:
+            library = egs_rectangle
+            rectangle = -.1 -.1 .1 .1
+        :stop shape:
+        direction = 0 -1 0
+        charge = 0
+        :start spectrum:
+            type = monoenergetic
+            energy = 1.0
+        :stop spectrum:
+    :stop source:
+
+    :start source:
+        library = egs_angular_spread_source
+        name = my_source
+        sigma = 10
+        source name = my_parallel_source
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_angular_spread_source_s0.png "A simple example with sigma=0"
+\image html egs_angular_spread_source_s10.png "A simple example with sigma=10"
 */
 class EGS_ANGULAR_SPREAD_SOURCE_EXPORT EGS_AngularSpreadSource :
     public EGS_BaseSource {

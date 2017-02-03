@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Blake Walters
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -228,8 +229,10 @@ struct EGS_Thresh {
     for user scoring and for interacting with the user geometry
  */
 struct EGS_Epcont {
-  /*! Energy being deposited locally */
+  /*! Energy being deposited locally (may be several depositions) */
   double    edep;
+  /*! A single sub-threshold energy deposition */
+  double    edep_local;
   /*! Step length to an interaction */
   EGS_Float tstep;
   /*! Step length after step-size restrictions */
@@ -584,7 +587,7 @@ struct EGS_VarianceReduction {
 
     /*! If Roussian Roulette of electrons created in photon interactions is
       on (#i_play_RR is 1), i_survived_RR is set to the number of electrons
-      surviving the RR game.
+      killed in the RR game.
     */
     EGS_I32   i_survived_RR;
 

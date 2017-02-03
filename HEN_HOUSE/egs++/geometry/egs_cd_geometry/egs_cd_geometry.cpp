@@ -238,6 +238,7 @@ extern "C" {
         EGS_BaseGeometry *result = new EGS_CDGeometry(g,G,"",indexing);
         delete [] G;
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setLabels(input);
         return result;
 

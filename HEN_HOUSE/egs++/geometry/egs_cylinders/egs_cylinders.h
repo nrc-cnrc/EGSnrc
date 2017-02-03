@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -104,6 +105,30 @@ need to be normalized to unity.
 Examples of the usage of cylinder sets can be found in
 \c I6702.inp, \c rounded_ionchamber.geom, \c rz.geom and \c rz_phi.geom
 example geometry files.
+
+A simple example:
+\verbatim
+# Notice this creates infinite length cylinders along x
+# Use egs_cdgeometry to cut the cylinders to size
+:start geometry definition:
+    :start geometry:
+        name        = my_cylinders
+        library     = egs_cylinders
+        type        = EGS_XCylinders
+        radii       = 1 2 3
+        midpoint    = 0
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_cylinders
+
+:stop geometry definition:
+\endverbatim
+\image html egs_cylinders.png "A simple example with clipping plane 1,0,0,0"
 
 \todo Get rid off the local projector classes, use the egspp classes
 instead.
@@ -283,15 +308,15 @@ public:
                     Dsq = sqrt(Dsq);
                 }
                 else {
-                    if (Dsq < -1e-2) egsWarning("\nEGS_CylindersT::howfar(): "
-                                                    "the particle may not be in the region\n   we think it "
-                                                    "is as Dsq = %g\n",Dsq);
+                    if (Dsq < -boundaryTolerance) egsWarning("\nEGS_CylindersT::howfar(): "
+                                "the particle may not be in the region\n   we think it "
+                                "is as Dsq = %g\n",Dsq);
                     Dsq = 0;
                 }
                 //d=-B+sqrt(B*B-A*C);
                 d = B > 0 ? -C/(Dsq + B) : (Dsq - B)/A;
                 if (d < 0) {
-                    if (C > 1e-2) {
+                    if (C > boundaryTolerance) {
                         egsWarning("\nEGS_CylindersT::howfar(): the particle "
                                    "may not be in the region\n   we think it is as "
                                    "Cout = %g\n",C);
@@ -309,7 +334,7 @@ public:
                         egsWarning("t=%g d=%g\n",last_t,last_d);
 #endif
                     }
-                    d = 1e-16;
+                    d = boundaryTolerance;
                 }
             }
 
@@ -335,7 +360,7 @@ public:
                         D_sq = sqrt(D_sq);
                     }
                     else {
-                        if (D_sq < -1e-2)
+                        if (D_sq < -boundaryTolerance)
                             egsWarning("\nEGS_CylindersT::howfar(): the "
                                        "particle may not be in the region\n   we think "
                                        "it is as D_sq = %g\n",D_sq);
@@ -350,10 +375,10 @@ public:
                     //d=-B-sqrt(D_sq);
                     d = C/(sqrt(D_sq) - B);
                     if (d < 0) {
-                        if (C < -1e-2) egsWarning("EGS_CylindersT::howfar(): "
-                                                      "the particle may not be in the region we think it "
-                                                      "is as Cin = %g\n",C);
-                        d = 1e-16;
+                        if (C < -boundaryTolerance) egsWarning("EGS_CylindersT::howfar(): "
+                                                                   "the particle may not be in the region we think it "
+                                                                   "is as Cin = %g\n",C);
+                        d = boundaryTolerance;
                     }
                 }
             }
@@ -370,14 +395,14 @@ public:
                     //d=-B-sqrt(D_sq);
                     d = C/(sqrt(D_sq) - B);
                     if (d < 0) {
-                        if (C < -1e-2) {
+                        if (C < -boundaryTolerance) {
                             egsWarning("EGS_CylindersT::howfar(): "
                                        "we think that the particle is outside, but C=%g\n",C);
                             egsWarning("  d=%g B=%g D_sq=%g\n",d,B,D_sq);
                             egsWarning("  ireg=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",
                                        ireg,x.x,x.y,x.z,u.x,u.y,u.z);
                         }
-                        d = 1e-16;
+                        d = boundaryTolerance;
                     }
                 }
             }

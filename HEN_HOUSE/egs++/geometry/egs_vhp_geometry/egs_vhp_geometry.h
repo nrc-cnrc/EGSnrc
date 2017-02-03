@@ -1381,14 +1381,14 @@ public:
             // in macro matrix
             int inew = vg->howfar(ireg,x,u,t,normal);
             if (t < 0) {
-                if (t < -1e-5) {
+                if (t < -boundaryTolerance) {
                     egsWarning("negative step %g in macro voxel\n",t);
                     egsWarning("x=(%g,%g,%g) u=(%g,%g,%g)\n",x.x,x.y,x.z,
                                u.x,u.y,u.z);
                     egsWarning("ix=%d iy=%d iz=%d\n",vg->ix,vg->iy,vg->iz);
                     egsFatal("quitting\n");
                 }
-                t = 1e-15;
+                t = boundaryTolerance;
             }
             if (inew < 0 || inew == ireg) {
                 return inew;
@@ -1457,7 +1457,7 @@ public:
             EGS_Vector x1(x - EGS_Vector(vg->dx*lax,vg->dy*lay,vg->dz*laz));
             int inew = micro->vg->howfarIn(ilocal,ix,iy,iz,x1,u,t,normal);
             if (t < 0) {
-                if (t < -1e-5) {
+                if (t < -boundaryTolerance) {
                     egsWarning("negative step %g in micro matrix\n",t);
                     egsWarning("x=(%g,%g,%g) u=(%g,%g,%g)\n",x.x,x.y,x.z,
                                u.x,u.y,u.z);

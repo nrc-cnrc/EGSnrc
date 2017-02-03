@@ -728,4 +728,15 @@ static const char gui_script[]={
 "gui_exe"
 };
 
+static const char egsnrc_bashrc_additions[]={
+"\n"\
+"###############################################################################\n"
+"#                                                                              \n"
+"# Set dynamic library path for the pre-compiled egs_view GUI                   \n"
+"#                                                                              \n"
+"###############################################################################\n"
+"                                                                               \n"
+"export LD_LIBRARY_PATH=${HEN_HOUSE}egs++/dso/static_machine:$LD_LIBRARY_PATH     "
+};
+
 #endif

@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2004
 #
-#  Contributors:
+#  Contributors:    Blake Walters
 #
 ###############################################################################
 #
@@ -60,3 +60,8 @@ defines =
 
 $(executable): dosxyz_show.c
 	$(CC) -O2 $(defines) $(X11_include) $(Motif_include) -o $@ $(X11_libdir) $(Motif_libdir) dosxyz_show.c $(libs)
+
+clean:
+	$(REMOVE) $(executable)
+
+.PHONY: clean

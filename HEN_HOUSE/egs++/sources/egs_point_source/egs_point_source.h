@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -86,6 +87,25 @@ of an isotropic source:
 :stop source:
 \endverbatim
 
+A simple example:
+\verbatim
+:start source definition:
+    :start source:
+        library     = egs_point_source
+        name        = my_source
+        position    = 0 0 0
+        :start spectrum:
+            type    = monoenergetic
+            energy  = 1
+        :stop spectrum:
+        charge      = 0
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_point_source.png "A simple example"
 */
 class EGS_POINT_SOURCE_EXPORT EGS_PointSource : public EGS_BaseSimpleSource {
 
@@ -117,7 +137,7 @@ public:
         x = xo;
         u.z = 2*rndm->getUniform()-1;
         EGS_Float sinz = 1-u.z*u.z;
-        if (sinz > 1e-15) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
             rndm->getAzimuth(cphi,sphi);

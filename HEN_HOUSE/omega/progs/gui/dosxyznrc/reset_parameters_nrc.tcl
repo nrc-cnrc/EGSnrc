@@ -65,7 +65,7 @@ proc reset_parameters { } {
     global spec_file ecutin pcutin estepm smax imax ivox gvox dsurround
     global inc exc names mvox izvox PhantFileName latbit nbit1 nbit2
     global grouping nrow izrow enflag numsrcopts izopts maxvals
-    global dflag dflagopt iphspout imuphspout
+    global dflag dflagopt iphspout imuphspout calflag
     global numthphi angfixed ang1 ang2 nang pang ivary thphidef
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
     global iphant level the_beam_code the_input_file the_pegs_file
@@ -171,12 +171,14 @@ proc reset_parameters { } {
     set dflag $dflagopt(0)
     set iphspout 0
     set imuphspout 0
+    set calflag 0
 
     set Ein {}
     set spec_file {}
     set the_beam_code {}
     set the_input_file {}
     set the_pegs_file {}
+    set the_vcu_code {}
 
     set values(21) {}
     set nbit1 {}

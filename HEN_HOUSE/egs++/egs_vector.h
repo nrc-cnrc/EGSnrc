@@ -30,7 +30,7 @@
 
 
 /*! \file egs_vector.h
- *  \brief Provides methods for the manipulation of 3D vectors in
+ *  \brief EGS_Vector methods for the manipulation of 3D vectors in
  *  cartesian co-ordinates.
  *  \IK
  */
@@ -38,6 +38,7 @@
 #ifndef EGS_VECTOR_
 #define EGS_VECTOR_
 
+#include "egs_functions.h"
 #include "egs_libconfig.h"
 
 #include "egs_math.h"
@@ -83,7 +84,7 @@ public:
         return *this;
     };
 
-    // EGS_Vector substractions
+    // EGS_Vector subtractions
     //
     EGS_Vector operator-(const EGS_Vector &v) const {
         return EGS_Vector(x-v.x,y-v.y,z-v.z);
@@ -106,7 +107,7 @@ public:
         z *= f;
         return *this;
     };
-    friend EGS_Vector operator*(EGS_Float f, EGS_Vector &v) {
+    friend EGS_Vector operator*(EGS_Float f, const EGS_Vector &v) {
         return v*f;
     };
     EGS_Float operator*(const EGS_Vector &v) const {
@@ -148,7 +149,7 @@ public:
     void rotate(EGS_Float cos_t, EGS_Float sin_t,
                 EGS_Float c_phi, EGS_Float s_phi) {
         EGS_Float sin_z = x*x + y*y;
-        if (sin_z > 1e-10) {
+        if (sin_z > epsilon) {
             sin_z = sqrt(sin_z);
             EGS_Float temp = sin_t/sin_z;
             EGS_Float temp_phi = z*c_phi;

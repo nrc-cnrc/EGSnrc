@@ -30,7 +30,7 @@
 
 
 /*! \file egs_run_control.cpp
- *  \brief Implementation of run control objects
+ *  \brief EGS_RunControl and EGS_JCFControl implementation
  *  \IK
  */
 
@@ -668,7 +668,7 @@ int EGS_RunControl::finishSimulation() {
     //egsInformation("Total cpu time for this run: %g seconds (%g hours)\n\n",
     //        cpu_time, cpu_time/3600);
     if (previous_cpu_time > 0)
-        egsInformation("%-40s%.2f (sec.) %.4f(hours)\n",
+        egsInformation("%-40s%.2f (sec.) %.4f (hours)\n",
                        "CPU time including previous runs:",cpu_time+previous_cpu_time,
                        (cpu_time+previous_cpu_time)/3600);
     egsInformation("%-40s%-14g\n","Histories per hour:",3600.*ndone/

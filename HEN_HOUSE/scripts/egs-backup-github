@@ -1,0 +1,95 @@
+#!/bin/bash
+###############################################################################
+#
+#  Downloads EGSnrc github data and create backups
+#  Copyright (C) 2015 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2016
+#
+#  Contributors:
+#
+###############################################################################
+#
+#  Script to download data from the EGSnrc github account and create backups
+#  in the specified directory, filed by date.
+#
+#  - use curl to grab the issues and pull requests in json format
+#  - clone EGSnrc.git (keeping one previous copy)
+#  - clone EGSnrc.wiki.git (keeping one previous copy)
+#
+###############################################################################
+
+
+# parse command-line
+if [ -z "$1" ]
+then
+    echo "Usage:"
+    echo "$0 {backups-directory}"
+    echo ""
+    echo "Example:"
+    echo "$0 ~/backups"
+    exit 1
+fi
+backups_dir=$1
+
+# create backups directory if needed
+if [ ! -d "$backups_dir" ]; then
+    mkdir $backups_dir
+fi
+
+
+###############################################################################
+# Get the pulls and issues
+###############################################################################
+DATE=$( date +%Y-%m-%d )
+new_dir="$backups_dir/$DATE"
+if [ ! -d "$new_dir" ]; then
+    mkdir $new_dir
+fi
+
+curl -i https://api.github.com/repos/nrc-cnrc/EGSnrc/pulls > "$new_dir/pulls.json"
+curl -i https://api.github.com/repos/nrc-cnrc/EGSnrc/issues > "$new_dir/issues.json"
+
+
+###############################################################################
+# Get the EGSnrc.git repository
+###############################################################################
+cd $backups_dir
+if [ -d "$backups_dir/EGSnrc.git" ]; then
+    if [ -d "$backups_dir/EGSnrc.save" ]; then
+        rm -rf EGSnrc.save
+    fi
+    mv "$backups_dir/EGSnrc.git" "$backups_dir/EGSnrc.save"
+fi
+
+git clone --bare https://github.com/nrc-cnrc/EGSnrc.git
+
+
+###############################################################################
+# Get the EGSnrc.wiki.git repository
+###############################################################################
+if [ -d "$backups_dir/EGSnrc.wiki.git" ]; then
+    if [ -d "$backups_dir/EGSnrc.wiki.save" ]; then
+        rm -rf EGSnrc.wiki.save
+    fi
+    mv "$backups_dir/EGSnrc.wiki.git" "$backups_dir/EGSnrc.wiki.save"
+fi
+
+git clone --bare https://github.com/nrc-cnrc/EGSnrc.wiki.git

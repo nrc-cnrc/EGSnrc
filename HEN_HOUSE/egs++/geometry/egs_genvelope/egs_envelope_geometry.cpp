@@ -387,6 +387,7 @@ extern "C" {
         if (fgeoms.size() > 0) {
             EGS_BaseGeometry *result = new EGS_FastEnvelope(g,fgeoms,"",indexing);
             result->setName(input);
+            result->setBoundaryTolerance(input);
             for (int j=0; j<fgeoms.size(); j++) {
                 delete fgeoms[j];
             }

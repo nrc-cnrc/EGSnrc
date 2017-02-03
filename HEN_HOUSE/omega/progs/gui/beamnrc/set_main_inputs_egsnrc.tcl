@@ -908,6 +908,7 @@ proc set_bcse { } {
    pack $top.inp.constpowrr.pow.lab $top.inp.constpowrr.pow.inp -side top
    frame $top.inp.constpowrr.rr
    label $top.inp.constpowrr.rr.lab -text "Russian Roulette:"
+   if {$values(14)==$options(14,2)} { set bcse_rr $options(16,0) }
    menubutton $top.inp.constpowrr.rr.inp -text $bcse_rr\
              -menu $top.inp.constpowrr.rr.inp.m -bd 1 \
             -relief raised -indicatoron 1 -width 10
@@ -921,7 +922,7 @@ proc set_bcse { } {
                      coordinate_rr bcse
                 }"
    }
-   if {$values(14)==$options(14,3)} {
+   if {$values(14)==$options(14,2)} {
         $top.inp.constpowrr.rr.lab configure -fg grey
         $top.inp.constpowrr.rr.inp configure -state disabled
    } else {

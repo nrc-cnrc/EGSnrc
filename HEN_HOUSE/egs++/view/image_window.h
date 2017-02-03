@@ -72,6 +72,8 @@ public slots:
     void startTransformation();
     void endTransformation();
 
+    void showRegions(bool show);
+
 protected:
 
     void rerender(EGS_BaseGeometry *geo);
@@ -100,6 +102,7 @@ signals:
     void cameraHomeDefining();
     void putCameraOnAxis(char axis);
     void leftMouseClick(int x, int y);
+    void saveComplete();
 
     // for render thread
     void requestRender(EGS_BaseGeometry *,RenderParameters);
@@ -116,6 +119,7 @@ private:
     // regionPicking synchronized with image on screen
     EGS_GeometryVisualizer *vis;
     bool regionsDisplayed;
+    bool regionsWanted;
     QPoint xyMouse;
     QPoint lastMouse;
     int lastRegions[N_REG_MAX];
@@ -127,12 +131,12 @@ private:
     RenderParameters lastRequest;
     enum {WorkerIdle, WorkerCalculating, WorkerBackordered} renderState;
     EGS_BaseGeometry *lastRequestGeo;
-    RenderRequestType activeRequestType;
+    bool wasLastRequestSlow;
 
     // Image saving
     QString saveName;
     QString saveExtension;
-    QProgressDialog *saveProgress;
+    bool isSaving;
 };
 
 #endif

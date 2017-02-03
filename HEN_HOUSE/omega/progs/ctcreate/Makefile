@@ -72,3 +72,8 @@ ctcreate_$(my_machine).F: $(SOURCES)
 ReadCT_DICOM.$(OBJE): ReadCT_DICOM.c tags_ct.h
 	$(CC) -c $(CFLAGS) $(COUT)$@ ReadCT_DICOM.c
 
+clean:
+	$(REMOVE) mortjob.mortran ctcreate_$(my_machine).F ctcreate_$(my_machine).mortlst
+	$(REMOVE) ReadCT_DICOM.$(OBJE) $(EGS_BINDIR)ctcreate$(EXE)
+
+.PHONY: clean

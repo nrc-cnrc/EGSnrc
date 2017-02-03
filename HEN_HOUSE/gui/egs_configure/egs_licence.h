@@ -58,11 +58,12 @@ public:
     QScrollArea *scroll = new QScrollArea(this);
     scroll->setBackgroundRole(QPalette::Base);
     hl->addWidget(scroll);
-    lic = new QLabel(); lic->setOpenExternalLinks(true); lic->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    lic = new QLabel();
+    lic->setOpenExternalLinks(true); lic->setTextInteractionFlags(Qt::TextBrowserInteraction);
     //lic->setText(QString(EGS_LICENCE).replace("the_year",year).replace("the_version",version));
     //lic->setText(QString(EGS_LICENCE).replace("the_year",year));
     lic->setText(
-    "<p>    Copyright (C) 2015 National Research Council Canada</p>"\
+    "<p>    Copyright (C) "+the_year+" National Research Council Canada</p>"\
     "<p>EGSnrc is free software: you can redistribute it and/or modify it under<br>"\
     "the terms of the GNU Affero General Public License as published by the<br>"\
     "Free Software Foundation, either version 3 of the License, or (at your<br>"\

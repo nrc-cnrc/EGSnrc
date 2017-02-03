@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -97,6 +98,27 @@ height = cone height in cm
 The \c height key is optional and results in a cone extending
 to infinity, if missing.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_simple_cone
+        library     = egs_cones
+        type        = EGS_SimpleCone
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        height      = 4
+        opening angle = 30 # deg
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_simple_cone
+
+:stop geometry definition:
+\endverbatim
+\image html egs_simplecone.png "A simple example"
 */
 
 class EGS_CONES_EXPORT EGS_SimpleCone : public EGS_BaseGeometry {
@@ -149,7 +171,7 @@ public:
         a.normalize();
 
         // avoid round-off problems.
-        if (fabs(Rtop - Rbottom) < 2e-5) {          // flag cylinders to avoid round-off problems
+        if (fabs(Rtop - Rbottom) < boundaryTolerance) {          // flag cylinders to avoid round-off problems
             is_cyl = true;
             xo = Xo;
             Ro = Rtop;
@@ -390,7 +412,9 @@ public:
                             if (normal) {
                                 *normal = a*(-1);
                             }
-                            t = tt;
+                            // avoid negative distances to the exit plane,
+                            // which may lead to endless loops in CD geometries
+                            t = tt < 0 ? 0 : tt;
                             return -1;
                         }
                     }
@@ -409,7 +433,7 @@ public:
         EGS_Float tt  = 1e30;
         EGS_Float lam = -1;
 
-        if (fabs(A) < 1e-6) {
+        if (fabs(A) < boundaryTolerance) {
             // moving parallel to the cone surface (A=0, within hard-coded tolerance):
             // solution: t = -C/(2*B), if t>0
 
@@ -468,8 +492,8 @@ public:
             }
 
             lam = aa+b*ttt;                         // (x+t*u)*a >= 0: on "positive" cone
-            if (ttt >= -2e-5 && lam >= 0) {
-                tt = ttt;    // why the hard-coded -2e-5 bound??
+            if (ttt >= -boundaryTolerance && lam >= 0) {
+                tt = ttt;
             }
         }
 
@@ -667,6 +691,49 @@ apex distances          = list of distances from the apex
 
 \endverbatim
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_parallel_cones
+        library     = egs_cones
+        type        = EGS_ParallelCones
+        apex        = 0 0 6
+        axis        = 0 0 -1
+        apex distances  = 1 2 3
+        opening angle   = 30 # deg
+    :stop geometry:
+
+    # This sphere will be used to limit
+    # the size of the conical regions by a rounded end
+    :start geometry:
+        library = egs_spheres
+        name    = sphere
+        midpoint = 0 0 0
+        radii = 5
+    :stop geometry:
+
+    # Now the actual geometry made from the
+    # parallel cones and the above sphere.
+    :start geometry:
+        library = egs_ndgeometry
+        name = cones
+        dimensions = sphere my_parallel_cones
+        hownear method = 1
+        :start media input:
+            media = water air
+            set medium = 0 0
+            set medium = 1 1
+            set medium = 2 0
+            set medium = 3 1
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = cones
+
+:stop geometry definition:
+\endverbatim
+\image html egs_parallelcones.png "A simple example"
 */
 class EGS_ParallelCones : public EGS_BaseGeometry {
 
@@ -790,7 +857,7 @@ public:
             EGS_Float lam = -1;
 
             // moving parallel to cone surface
-            if (fabs(A) < 1e-6) {                   // guarding against /0 in general solution
+            if (fabs(A) < boundaryTolerance) {                   // guarding against /0 in general solution
                 EGS_Float ttt = -C/(2*B);           // distance to hit
                 lam = aa+b*ttt;                     // axial position of hit
                 if (ttt >= 0 && lam >= 0) {
@@ -833,7 +900,7 @@ public:
         EGS_Float aa = xp*a, b = u*a, r2 = xp.length2(), c = u*xp;
         EGS_Float A = 1 - b*b*g12, B = c - aa*b*g12, C = r2 - aa*aa*g12;
         EGS_Float to = 1e30, lamo = -1;
-        if (fabs(A) < 1e-6) {  // moving parallel to the cone surface.
+        if (fabs(A) < boundaryTolerance) {  // moving parallel to the cone surface.
             // for the outer cone we only have a solution if a*u < 0.
             // i.e. if we are moving towards the apex.
             if (b < 0) {
@@ -872,7 +939,7 @@ public:
 
     // hownear
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc;
+        EGS_Float tc = 1E30;
         if (ireg < 0 || ireg < nc-1) {
             EGS_Vector xp;
             if (ireg < 0) {
@@ -965,6 +1032,28 @@ of the cone with the largest opening angle having index \f$N\f$.
 An example for the use of an EGS_ConeSet is found in the
 cones.geom example geometry file.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_coneset
+        library     = egs_cones
+        type        = EGS_ConeSet
+        apex        = 0 0 3
+        axis        = 0 0 -1
+        opening angles = 10 20 30
+        :start media input:
+            media = water air water
+            set medium = 1 1
+            set medium = 2 2
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_coneset
+
+:stop geometry definition:
+\endverbatim
+\image html egs_coneset.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_ConeSet : public EGS_BaseGeometry {
 
@@ -1109,7 +1198,7 @@ public:
             //        "C = %g\n",gam12,A,B,C);
             EGS_Float tt = -1, lam;
             bool hit = false;
-            if (fabs(A) < 1e-6) {
+            if (fabs(A) < boundaryTolerance) {
                 if ((ireg < nc && b > 0) || (ireg >= nc && b < 0)) {
                     tt = -C/(2*B);
                 }
@@ -1166,7 +1255,7 @@ public:
         EGS_Float gam12 = ireg < nc ? g12[ireg] : g12[2*nc-ireg];
         EGS_Float A=1-b*b*gam12, B=c-aa*b*gam12, C=r2-aa*aa*gam12;
         EGS_Float tt=-1;
-        if (fabs(A) < 1e-6) {
+        if (fabs(A) < boundaryTolerance) {
             if ((ireg < nc && b < 0) || (ireg > nc && b > 0)) {
                 tt = -C/(2*B);
             }
@@ -1213,7 +1302,7 @@ public:
     }
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc;
+        EGS_Float tc = 1E30;
         EGS_Vector xp(x-xo);
         EGS_Float aa = xp*a, r2 = xp.length2(), ag;
         //egsWarning("hownear: ireg = %d x = (%g,%g,%g) aa = %g r2 = %g\n",
@@ -1329,6 +1418,44 @@ A cone stack is useful, for instance, for defining the upper portion of the trea
 medical linear accelerators. Examples can be found in \c photon_linac.geom, \c car.geom and \c
 rz1.geom example geometry files.
 
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        library = egs_cones
+        type = EGS_ConeStack
+        name = my_conestack
+        axis = 1.2417 0 0 -1 0 0
+        :start layer:
+            thickness = 0.0417
+            top radii = 0.
+            bottom radii = 0.0858
+            media = water
+        :stop layer:
+        :start layer:
+            thickness = 0.1283
+            top radii = 0. 0.0858
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 0.2217
+            bottom radii = 0.3125 0.35
+            media = air water
+        :stop layer:
+        :start layer:
+            thickness = 2.05
+            top radii = 0.050 0.3125 0.35
+            bottom radii = 0.050 0.3125 0.35
+            media = water air water
+        :stop layer:
+    :stop geometry:
+
+    simulation geometry = my_conestack
+
+:stop geometry definition:
+\endverbatim
+\image html egs_conestack.png "A simple example with clipping plane 0,0,1,0"
 */
 class EGS_ConeStack : public EGS_BaseGeometry {
 
@@ -1336,8 +1463,8 @@ public:
 
     // constructor (empty cone stack)
     EGS_ConeStack(const EGS_Vector &Xo, const EGS_Vector &A, const string &Name)
-        : xo(Xo), a(A), nl(0), nltot(0), nmax(0), same_Rout(true), Rout(0), Rout2(0),
-          EGS_BaseGeometry(Name) {
+        : EGS_BaseGeometry(Name), xo(Xo), a(A), nl(0), nltot(0), nmax(0), same_Rout(true), Rout(0),
+          Rout2(0) {
         a.normalize();
     }
 
@@ -1529,11 +1656,11 @@ public:
                 // this isWhere call is using the tmp position and the LOCAL ir region number in
                 // layer 0 of the ConeStack, so it is not inconsistent if x is outside and ir>=0.
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
-                // check if a subsequent call to howfar(ir,tmp,...) takes us outside within epsilon.
+                // check if a subsequent call to howfar(ir,tmp,...) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
                 EGS_Float tb = 1e30;
                 int inew_g = howfar(ir,tmp,u,tb,0,normal);
-                if (inew_g < 0 && tb <= epsilon) {
+                if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
                 }
                 //***************************************************************
@@ -1572,11 +1699,11 @@ public:
                 // this isWhere call is using the tmp position and the LOCAL ir region number in
                 // layer il of the ConeStack, so it is not inconsistent if x is outside and ir>=0.
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
-                // check if a subsequent call to howfar(il*nmax+ir) takes us outside within epsilon.
+                // check if a subsequent call to howfar(il*nmax+ir) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
                 EGS_Float tb = 1e30;
                 int inew_g = howfar(il*nmax+ir,tmp,u,tb,0,normal);
-                if (inew_g < 0 && tb <= epsilon) {
+                if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
                 }
                 //***************************************************************
@@ -1620,14 +1747,14 @@ public:
                 // the howfar call above does not work because it uses irnow for the call to
                 // SimpleCone->howfar: SimpleCone regions can only be 0 (inside) or -1 (outside).
                 // If we find the inconsistent condition irnow >= 0 (inside, but call from outside),
-                // then we are on a boundary. We see if howfar takes us out within epsilon.
+                // then we are on a boundary. We see if howfar takes us out within boundaryTolerance.
                 // If so, then we are not really entering the geometry.
 
                 // fp inconsistency: irnow >= 0 (inside) but called with ireg = -1 (outside)
                 if (irnow >= 0) {
                     EGS_Float tb = 1e30;
                     int inew_g = howfar(irnow,x,u,tb,0,&tmp_normal);
-                    if (inew_g < 0 && tb <= epsilon) {
+                    if (inew_g < 0 && tb <= boundaryTolerance) {
                         return ireg;    // exits geometry
                     }
                 }
@@ -1667,6 +1794,7 @@ public:
                 // we think we are outside but we just found we are inside.
                 // Hopefully a roundoff problem.
                 EGS_Float tp = 1e30;
+
                 if (up > 0) {
                     dir = 1;
                     tp = (pos[il+1] - xp)/up;
@@ -1675,7 +1803,13 @@ public:
                     dir = -1;
                     tp = (pos[il] - xp)/up;
                 }
-                if (tp < epsilon) {
+                else {
+                    // prevent compiler from complaining about use of
+                    // uninitialized value of dir (even though tp will
+                    // always be greater than epsilon in this case).
+                    dir = 0;
+                }
+                if (tp < boundaryTolerance) {
                     il += dir;
                     if (il < 0 || il >= nl) {
                         return ireg;
@@ -1686,7 +1820,7 @@ public:
                 if (isc) {
                     EGS_Float tc = 1e30;
                     int isc_new = cones[il][nr[il]-1]->howfar(0,x,u,tc);
-                    if (!(isc_new < 0 && tc < epsilon)) {
+                    if (!(isc_new < 0 && tc < boundaryTolerance)) {
                         egsWarning("EGS_ConeStack::howfar: called from the outside"
                                    " but I find x=(%g,%g,%g) to be inside\n", x.x,x.y,x.z);
                         egsWarning("layer=%d distance to planes=%g\n",il,tp);
@@ -1815,7 +1949,7 @@ public:
 
     // shiftLabels
     void shiftLabelRegions(const int i, const int index) {
-        for (int k=0; k<labels[i].regions.size(); k++) {
+        for (size_t k=0; k<labels[i].regions.size(); k++) {
             labels[i].regions[k] += index*nmax;
         }
     }

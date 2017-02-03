@@ -27,21 +27,27 @@
 */
 
 #include "renderworker.h"
+
 #include "egs_visualizer.h"
 
-#include "qdatetime.h"
+#include <QDateTime>
+#include <QPainter>
+#include <QColor>
 
 RenderWorker::RenderWorker() {
     vis =  new EGS_GeometryVisualizer;
     image = NULL;
-    nx_last = -1;
-    ny_last = -1;
+    buffer = NULL;
+    last_bufsize = -1;
     abort_location = 0;
 }
 RenderWorker::~RenderWorker() {
     delete vis;
     if (image) {
         delete[] image;
+    }
+    if (buffer) {
+        delete[] buffer;
     }
 }
 
@@ -54,12 +60,14 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
 
     EGS_Vector v2_screen = p.camera_v2;
     EGS_Vector v1_screen = p.camera_v1;
-    EGS_Float sx = p.projection_x;
-    EGS_Float sy = p.projection_y;
     int nx = p.nx;
     int ny = p.ny;
+    EGS_Float mx = p.nx * p.nxr;
+    EGS_Float my = p.ny * p.nyr;
+    EGS_Float sx = mx > my ? p.projection_m * mx / my : p.projection_m;
+    EGS_Float sy = my > mx ? p.projection_m * my / mx : p.projection_m;
     EGS_Float dx = sx/p.nx;
-    EGS_Float dy = sx/p.ny;
+    EGS_Float dy = sy/p.ny;
     EGS_Vector v0 = (p.screen_xo-p.camera);
     EGS_Float  r  = v0.length();
     EGS_Float taxis=0;
@@ -115,16 +123,31 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
     EGS_Float deltax, deltay;
     // loop over axes
     for (int k=1; k<=3; k++) {
+        // note: float->int casts overflow at high zoom levels.
         int i1 = (int) axes[k].x;
         int j1 = (int) axes[k].y;
-        int n = abs(i1-i0);
-        if (abs(j1-j0)>n) {
-            n = abs(j1-j0);
+        int di = i1 - i0;
+        int dj = j1 - j0;
+        // just one axis pixel; don't bother looping
+        if (j1 == j0 && i1 == i0) {
+            if (i1>=0 && i1<nx && j1>=0 && j1<ny) {
+                image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
+            }
         }
-        // more than one axis pixel: loop over axis pixels
-        if (n>0) {
-            deltax = (i1-i0)/(float)n;
-            deltay = (j1-j0)/(float)n;
+        else {
+            int n;
+            if (abs(di) < abs(dj)) {
+                int sign = j1 > j0 ? 1 : -1;
+                deltax = sign*(float)(di) / (float)(dj);
+                deltay = sign;
+                n = abs(dj) > ny ? ny : abs(dj);
+            }
+            else {
+                int sign = i1 > i0 ? 1 : -1;
+                deltax = sign;
+                deltay = sign*(float)(dj) / (float)(di);
+                n = abs(di) > nx ? nx : abs(di);
+            }
             for (int t=0; t<=n; t++) {
                 i1 = (int)(i0+t*deltax);
                 j1 = (int)(j0+t*deltay);
@@ -142,15 +165,36 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
                 }
             }
         }
-        // just one axis pixel
-        else if (i1>=0 && i1<nx && j1>=0 && j1<ny) {
-            image[i1+j1*nx] = EGS_Vector(100,1.0,-taxis);
-        }
     }
 }
 
 void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters &p) {
-    vis->setProjection(p.camera,p.screen_xo,p.screen_v1,p.screen_v2,p.projection_x,p.projection_y);
+    EGS_Float mx = p.nx*p.nxr;
+    EGS_Float my = p.ny*p.nyr;
+
+    EGS_Float xscale, yscale, xdelta,ydelta;
+    EGS_Vector center;
+    if (mx > my) {
+        xscale = p.projection_m*mx/my;
+        yscale = p.projection_m;
+        xdelta = (mx - my) / my;
+        ydelta = 0.0;
+    }
+    else {
+        xscale = p.projection_m;
+        yscale = p.projection_m*my/mx;
+        xdelta = 0.0;
+        ydelta = (my - mx) / mx;
+    }
+
+    center = p.screen_xo -
+             p.screen_v1 * (p.projection_m-xscale)*0.5 -
+             p.screen_v2 * (p.projection_m-yscale)*0.5 -
+             p.screen_v1 * (p.projection_m*xdelta)*0.5 -
+             p.screen_v2 * (p.projection_m*ydelta)*0.5;
+
+    vis->setProjection(p.camera,center,p.screen_v1,p.screen_v2,xscale,yscale);
+
     // set lights, planes, materials.
     for (size_t i=0; i<p.lights.size(); i++) {
         // all lights are white by default
@@ -167,17 +211,38 @@ void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters 
 }
 
 void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {
+    const struct RenderResults &r = renderSync(g, p);
+    if (r.img.isNull()) {
+        emit aborted();
+        return;
+    }
+    emit rendered(r, p);
+}
+
+struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct RenderParameters p) {
+    struct RenderResults r;
+    r.img = QImage();
+    r.elapsedTime = -1;
+    r.timePerPixel = -1;
+
     // wall-clock time, not CPU time; to optimize response
-    QTime itime = QTime::currentTime();
+    QTime time_i1 = QTime::currentTime();
 
     applyParameters(vis, p);
 
-    // create image buffer, if new
-    if (p.nx != nx_last || p.ny != ny_last) {
-        delete[] image;
-        image = new EGS_Vector[p.nx*p.ny];
-        nx_last = p.nx;
-        ny_last = p.ny;
+    // create image buffer if new size is far enough away from previous size
+    // it overallocates slightly (~16%) if `buffer` is not used.
+    int new_bufsize = p.nx * p.ny;
+    if (new_bufsize > last_bufsize || last_bufsize > 3*new_bufsize) {
+        if (image) {
+            delete[] image;
+        }
+        if (buffer) {
+            delete[] buffer;
+        }
+        image = new EGS_Vector[new_bufsize];
+        buffer = new QRgb[new_bufsize];
+        last_bufsize = new_bufsize;
     }
 
     // modifies image and sets axeslabels
@@ -185,7 +250,6 @@ void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {
         drawAxes(p);
     }
 
-    QTime pretracktime = QTime::currentTime();
     // render tracks
     if (p.draw_tracks) {
         vis->setParticleVisibility(1,p.show_photons);
@@ -193,38 +257,80 @@ void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {
         vis->setParticleVisibility(3,p.show_positrons);
         vis->setParticleVisibility(4,p.show_other);
         if (!vis->renderTracks(g,p.nx,p.ny,image,&abort_location)) {
-            emit aborted();
-            return;
+            // Undo track drawing and rezero image
+            memset(image, 0, sizeof(EGS_Vector));
+            return r;
         }
     }
-    QTime posttracktime = QTime::currentTime();
 
     // render main geometry
+    QTime time_r1 = QTime::currentTime();
     if (!vis->renderImage(g,p.nx,p.ny,image,&abort_location)) {
-        emit aborted();
-        return;
+        return r;
     }
+    QTime time_r2 = QTime::currentTime();
 
-    // transfer to image
-    QImage img(p.nx, p.ny, QImage::Format_ARGB32);
-    for (int j=0; j<p.ny; j++) {
-        uint *sl = (uint *) img.scanLine(j);
-        for (int i=0; i<p.nx; i++) {
-            EGS_Vector v = image[i+(p.ny-j-1)*p.nx];
-            int r = (int)(v.x*255), g = (int)(v.y*255), b = (int)(v.z*255);
-            *(sl+i) = qRgb(r,g,b);
+    // RGB32 saves 1+ image traversals over other formats w/ Qt4.7-8 & X11
+    QImage img(p.nx*p.nxr, p.ny*p.nyr, QImage::Format_RGB32);
+    if (p.nxr == 1 && p.nyr == 1) {
+        // special case, straight to image
+        for (int j=0; j<p.ny; j++) {
+            QRgb *sl = (QRgb *) img.scanLine(j);
+            for (int i=0; i<p.nx; i++) {
+                EGS_Vector v = image[i+(p.ny-j-1)*p.nx];
+                quint8 r = (quint8)(v.x*255), g = (quint8)(v.y*255), b = (quint8)(v.z*255);
+                sl[i] = qRgb(r,g,b);
+            }
+        }
+    }
+    else {
+        // Copy image into buffer
+        for (int j=0; j<p.ny; j++) {
+            // flip the image vertically in this phase (it shouldn't matter where)
+            int topd = (p.ny-j-1)*p.nx;
+            int botu = j*p.nx;
+            for (int i=0; i<p.nx; i++) {
+                EGS_Vector v = image[i+topd];
+                quint8 r = (quint8)(v.x*255), g = (quint8)(v.y*255), b = (quint8)(v.z*255);
+                buffer[botu+i] = qRgb(r,g,b);
+            }
+        }
+        // Fast image scaling routine.
+        int line_len = sizeof(QRgb)*p.nx*p.nxr;
+        for (int j=0; j<p.ny; j++) {
+            int start_row = j*p.nyr;
+            QRgb *base = (QRgb *) img.scanLine(start_row);
+            QRgb *al = buffer + j*p.nx;
+            // Create a single image line
+            for (int i=0,ib=0,mx=p.nxr; i<p.nx; i++,mx+=p.nxr) {
+                QRgb v = al[i];
+                for (; ib<mx; ib++) {
+                    base[ib] = v;
+                }
+            }
+            // Duplicate that line (p.nyr-1) times
+            for (int i=1; i<p.nyr; i++) {
+                memcpy(img.scanLine(start_row+i),base,line_len);
+            }
+        }
+    }
+    // Since we already have the image at full scale, draw the axes labels on it.
+    {
+        QPainter q(&img);
+        if (p.draw_axeslabels) {
+            q.setPen(QColor(255,255,255));
+            q.drawText((int)(p.nxr*axeslabelsX.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsX.y-3),"x");
+            q.drawText((int)(p.nxr*axeslabelsY.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsY.y-3),"y");
+            q.drawText((int)(p.nxr*axeslabelsZ.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsZ.y-3),"z");
         }
     }
 
-    QTime ftime = QTime::currentTime();
+    QTime time_i2 = QTime::currentTime();
 
-    struct RenderResults r;
     r.img = img;
-    r.elapsedTime = itime.msecsTo(ftime);
-    r.trackTime = pretracktime.msecsTo(posttracktime);
-    r.axeslabelsX = axeslabelsX;
-    r.axeslabelsY = axeslabelsY;
-    r.axeslabelsZ = axeslabelsZ;
-    emit rendered(r, p);
+    r.elapsedTime = time_i1.msecsTo(time_i2);
+    r.timePerPixel = ((EGS_Float)time_r1.msecsTo(time_r2)) / (p.nx * p.ny);
+
+    return r;
 }
 

@@ -117,7 +117,7 @@ void EGS_NDGeometry::setMedia(EGS_Input *input, int nmed, const int *mind) {
             else if (inp.size() == 4) setMedium(inp[0],inp[1],mind[inp[2]],
                                                     inp[3]);
             else if (inp.size() == 2*N+1) {
-                setM(0,0,inp,inp[2*N]);
+                setM(0,0,inp,mind[inp[2*N]]);
             }
             else egsWarning("EGS_NDGeometry::setMedia(): found %dinputs\n"
                                 "in a 'set medium' input. 2, 3, 4, or %d are allowed\n",2*N+1);
@@ -133,18 +133,15 @@ void EGS_NDGeometry::setM(int ibase, int idim,
     if (istart < 0) {
         istart = 0;
     }
-    int ndim = n[idim+1];
-    for (int i=0; i<=idim; i++) {
-        ndim /= n[i];
-    }
+    int ndim = n[idim+1] / n[idim];
     if (iend > ndim) {
         iend = ndim;
     }
-    if (idim < N-1) for (int j=istart; j<iend; j++) {
+    if (idim < N-1) for (int j=istart; j<=iend; j++) {
             setM(ibase+j*n[idim],idim+1,ranges,medium);
         }
-    else for (int j=istart; j<iend; j++) {
-            setMedium(ibase+j*n[idim],ibase+j*n[idim]+1,medium);
+    else for (int j=istart; j<=iend; j++) {
+            setMedium(ibase+j*n[idim],ibase+j*n[idim],medium);
         }
 }
 
@@ -716,7 +713,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             result->setMedium(j,j,imed[i]);
             if (rho_def[i] > 0) {
                 EGS_Float rrho = rho[j]/rho_def[i];
-                if (fabs(rrho-1) > 1e-4) {
+                if (fabs(rrho-1) > epsilon) {
                     result->setRelativeRho(j,j,rrho);
                 }
             }
@@ -1086,6 +1083,7 @@ extern "C" {
             EGS_XYZRepeater *result =
                 new EGS_XYZRepeater(xmin,xmax,ymin,ymax,zmin,zmax,nx,ny,nz,g);
             result->setName(input);
+            result->setBoundaryTolerance(input);
             if (!err5) {
                 result->setMedium(medium);
             }
@@ -1123,6 +1121,7 @@ extern "C" {
                 EGS_XYZGeometry *result =
                     EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
                 result->setName(input);
+                result->setBoundaryTolerance(input);
                 return result;
             }
             vector<EGS_Float> xpos, ypos, zpos, xslab, yslab, zslab;
@@ -1223,6 +1222,7 @@ extern "C" {
                 egsWarning("**********************************************\n");
                 EGS_BaseGeometry *g = result;
                 result->setName(input);
+                result->setBoundaryTolerance(input);
                 g->setMedia(input);
                 result->voxelizeGeometry(input);
 
@@ -1308,6 +1308,7 @@ extern "C" {
             result = new EGS_NDGeometry(dims);
         }
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setMedia(input);
         result->setLabels(input);
         return result;

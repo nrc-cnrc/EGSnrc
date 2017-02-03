@@ -66,8 +66,9 @@ public:
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
     virtual void setMaterialColor(int j);
-    virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, int justReloading);
+    virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
+    virtual bool loadInput(bool first_time);
 
 public slots:
 
@@ -91,20 +92,19 @@ public slots:
     virtual void cameraZoom(int dy);
     virtual void thetaRotation(int Theta);
     virtual void phiRotation(int Phi);
-    virtual void changeDfine(int newdfine);
     virtual void changeAmbientLight(int alight);
     virtual void changeTransparency(int t);
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
     virtual void loadTracksDialog();
-    virtual void setProjectionSize();
     virtual void viewAllMaterials();
     virtual void reportViewSettings(int x, int y);
     virtual void quitApplication();
     virtual void updateColorLabel(int med);
     virtual void changeColor();
     virtual void saveImage();
+    virtual void reenableSave();
     virtual void showHideOptions();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
@@ -124,8 +124,8 @@ private:
     QString filename_tracks;
     int nmed;
     QRgb *m_colors;
-    int dfine_home;
-    int dfine;
+    int zoomlevel_home;
+    int zoomlevel;
     EGS_Float a_light;
     EGS_Float s_phi;
     EGS_Float c_phi;
@@ -133,9 +133,6 @@ private:
     EGS_Float s_theta;
     EGS_Float c_theta;
     EGS_Float theta;
-    EGS_Float projection_scale;
-    EGS_Float projection_y;
-    EGS_Float projection_x;
     EGS_Float distance;
     EGS_Float size;
     EGS_Vector axesmax;
@@ -155,7 +152,6 @@ private:
     EGS_BaseGeometry *g;
     bool showAxes;
     bool showAxesLabels;
-    bool showRegions;
     bool showTracks;
     bool showPhotonTracks;
     bool showElectronTracks;

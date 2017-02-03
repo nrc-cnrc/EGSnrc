@@ -30,7 +30,7 @@
 
 
 /*! \file egs_input.h
- *  \brief EGS_Input header file
+ *  \brief EGS_Input class header file
  *  \IK
  */
 

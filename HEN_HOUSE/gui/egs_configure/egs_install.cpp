@@ -221,6 +221,8 @@ void QInstallPage::resetPage(){
      //connect(installButton,SIGNAL(clicked()),this,SLOT(start()));
      //qDebug("Total steps = %d",i_config_steps);
      timeStamp();
+     printProgress(QDateTime(QDate::currentDate(),
+                             QTime::currentTime()).toString("ddd MMMM d yyyy hh:mm:ss"));
 }
 
 void QInstallPage::resetProgressBar(const int &nsteps){

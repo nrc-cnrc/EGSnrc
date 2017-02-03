@@ -30,7 +30,7 @@
 
 
 /*! \file egs_rndm.h
- *  \brief Base random number generator
+ *  \brief EGS_RandomGenerator class header file
  *  \IK
  */
 

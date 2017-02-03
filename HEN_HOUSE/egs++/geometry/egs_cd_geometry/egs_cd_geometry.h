@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -204,7 +205,60 @@ efficiently modeled with the help of a CD geometry. This can
 be seen in the \c photon_linac.geom example geometry file.
 Many of the other examples also employ a CD-geometry.
 
+A simple example:
+\verbatim
+:start geometry definition:
 
+    # The base geometry, this will be the Chopping Device (CD)
+    # The base geometry can be any geometry, even a composite one
+    :start geometry:
+        name        = my_cd_planes
+        library     = egs_planes
+        type        = EGS_Zplanes
+        positions   = -3 3 5
+        # No media required
+    :stop geometry:
+
+    :start geometry:
+        name        = my_cd_cylinder
+        library     = egs_cylinders
+        type        = EGS_ZCylinders
+        radii       = 1.6 2
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_cd_sphere
+        library     = egs_spheres
+        midpoint = 0 0 3
+        radii = 1.6 2
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    # The composite geometry
+    :start geometry:
+        name            = my_cd
+        library         = egs_cdgeometry
+        base geometry   = my_cd_planes
+        # set geometry = 1 geom means:
+        # "in region 1 of the basegeometry, use geometry "geom"
+        set geometry   = 0 my_cd_cylinder
+        set geometry   = 1 my_cd_sphere
+        # The final region numbers are attributed by the cd geometry object;
+        # Use the viewer to determine region numbers
+    :stop geometry:
+
+    simulation geometry = my_cd
+
+:stop geometry definition:
+\endverbatim
+\image html egs_cd_geometry.png "A simple example with clipping plane 1,0,0,0"
 */
 class EGS_CDGEOMETRY_EXPORT EGS_CDGeometry : public EGS_BaseGeometry {
 
@@ -495,8 +549,8 @@ public:
                 tb = 1e30;
                 int ixnew = howfar(ixold,x,u,tb,0,pn);
                 // Enters geometry and at a boundary or very close to one.
-                //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= epsilon && tb_pos <= epsilon) {
-                if (ixnew >= 0 && tb <= epsilon) {                             // (b) is true
+                //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= boundaryTolerance && tb_pos <= boundaryTolerance) {
+                if (ixnew >= 0 && tb <= boundaryTolerance) {                             // (b) is true
                     t = 0;
                     if (newmed) *newmed = g[ibase] ? g[ibase]->medium(icd) :
                                               bg->medium(ibase);
@@ -506,9 +560,28 @@ public:
                     }
                     return ixold;
                 }
-                else if (ixnew < 0 && tb <= epsilon) {                         // (a) is true
+                // Skip for concave geometries: particles can reenter the CD geometry after leaving.
+                // Check 2. below will catch these cases.
+                else if ((ixnew < 0 && tb <= boundaryTolerance) && (bg->isConvex()  &&
+                         (g[ibase] && g[ibase]->isConvex()))) {
+                    // (a) is true
                     return ixnew;
                 }
+                // If a particle approaching the geometry sits on a boundary, we look back to see
+                // if we just entered the geometry (the previous checks fail to catch this case).
+                EGS_Float tb_neg = 1e30;
+                int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
+                if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
+                    t = 0;
+                    if (newmed) {
+                        *newmed = g[ibase] ? g[ibase]->medium(icd) : bg->medium(ibase);
+                    }
+                    if (normal) {
+                        *normal = (*pn)*(-1);
+                    }
+                    return ixold;
+                }
+
                 //***********************************************************************
 
                 // 1. Check if we exit the base geometry after a sufficiently small
@@ -516,13 +589,13 @@ public:
                 EGS_Float t1=1e30, t2 = 1e30;
                 int ibase_n, ic_n=0;
                 ibase_n = bg->howfar(ibase,x,u,t1);
-                if (ibase_n < 0 && t1 < 1e-4) {
+                if (ibase_n < 0 && t1 < boundaryTolerance) {
                     // Yes we do => we assume that it was a roundoff problem
                     // and in reality the particle was outside the base geometry.
                     // We then check if it will enter the base geometry.
                     EGS_Vector xtmp(x + u*t1);
                     tb = t-t1;
-                    ibase = bg->howfar(ibase_n,xtmp,u,tb,pmednew,pn);
+                    ibase_n = bg->howfar(ibase_n,xtmp,u,tb,pmednew,pn);
                     if (ibase_n < 0) {
                         return ibase_n;    // no, so just return.
                     }
@@ -539,7 +612,7 @@ public:
                 // distance.
                 if (g[ibase]) {
                     ic_n = g[ibase]->howfar(icd,x,u,t2);
-                    if (ic_n < 0 && t2 < 1e-4) {
+                    if (ic_n < 0 && t2 < boundaryTolerance) {
                         // Yes we do => we assume that it was a roundoff problem
                         // and in reality the particle was outside the inscribed geometry.
                         // We move to the boundary and check again the base geometry.
@@ -562,7 +635,7 @@ public:
                         goto do_checks;
                     }
                 }
-                if (t1 < 1e-4 && ibase_n >= 0 && g[ibase_n]) {
+                if (t1 < boundaryTolerance && ibase_n >= 0 && g[ibase_n]) {
                     // last resort.
                     EGS_Vector xtmp(x + u*t1);
                     int icdx = g[ibase_n]->isWhere(xtmp);
@@ -574,7 +647,7 @@ public:
                         goto do_checks;
                     }
                 }
-                if (t1 > 1e-3 && t2 > 1e-3) {
+                if (t1 > boundaryTolerance && t2 > boundaryTolerance) {
                     error_flag = 1;
                     egsWarning("EGS_CDGeometry::howfar: ireg<0, but position appears inside\n");
                     egsWarning(" name=%s base name=%s inscribed name=%s\n",name.c_str(),
@@ -677,8 +750,8 @@ do_checks:
             }
             // OK, we are in a new base geometry now, adjust
             // position and path-length so-far and retry.
-            if (tnew < 1e-6) {
-                tnew = 1e-6;
+            if (tnew < boundaryTolerance) {
+                tnew = boundaryTolerance;
             }
             tmp += u*tnew;
             ttot += tnew;

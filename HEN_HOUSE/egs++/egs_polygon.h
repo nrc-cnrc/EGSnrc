@@ -24,13 +24,14 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Blake Walters
+#                   Reid Townson
 #
 ###############################################################################
 */
 
 
 /*! \file egs_polygon.h
- *  \brief Polygons header file
+ *  \brief EGS_2DPolygon and EGS_PolygonT class header file
  *  \IK
  */
 
@@ -40,6 +41,7 @@
 #include "egs_vector.h"
 #include "egs_projectors.h"
 #include "egs_math.h"
+#include "egs_functions.h"
 
 #include <vector>
 
@@ -153,7 +155,7 @@ public:
     /*! \brief Is the 2D point \a x inside the polygon ? */
     bool isInside(const EGS_2DVector &x) const {
         if (!open &&
-                (x.x<xmin || x.x>xmax || x.y<ymin || x.y>ymax)) {
+                (x.x<xmin+epsilon || x.x+epsilon>xmax || x.y<ymin+epsilon || x.y+epsilon>ymax)) {
             return false;
         }
         if (is_convex) {
@@ -192,9 +194,9 @@ public:
         if (in) {
             int jhit;
             for (int j=0; j<nn; j++)  {
-                if ((up = u*a[j]) < 0 && (xp = x*a[j]) > d[j]) {
+                if ((up = u*a[j]) < 0 && (xp = x*a[j])+epsilon > d[j]) {
                     EGS_Float tt = d[j] - xp;
-                    if (tt >= t*up) {
+                    if (tt+epsilon >= t*up) {
                         tt /= up;
                         bool ok = is_convex || pc[j];
                         if (!ok) {
@@ -219,9 +221,9 @@ public:
         else {
             int jhit;
             if (open) {
-                if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]) {
+                if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]+epsilon) {
                     EGS_Float tt = (d[0] - xp)/up;
-                    if (tt <= t) {
+                    if (tt <= t+epsilon) {
                         EGS_Float lam = uj[0]*(x-p[0]+u*tt);
                         if (lam < uj[0].length2()) {
                             t = tt;
@@ -230,9 +232,9 @@ public:
                         }
                     }
                 }
-                if ((up = u*a[1]) > 0 && (xp = x*a[1]) < d[1]) {
+                if ((up = u*a[1]) > 0 && (xp = x*a[1]) < d[1]+epsilon) {
                     EGS_Float tt = (d[1] - xp)/up;
-                    if (tt <= t) {
+                    if (tt <= t+epsilon) {
                         EGS_Float lam = uj[1]*(x-p[1]+u*tt);
                         if (lam > 0) {
                             t = tt;
@@ -244,9 +246,9 @@ public:
             }
             else {
                 for (int j=0; j<nn; j++)  {
-                    if ((up = u*a[j]) > 0 && (xp = x*a[j]) < d[j]) {
+                    if ((up = u*a[j]) > 0 && (xp = x*a[j]) < d[j]+epsilon) {
                         EGS_Float tt = (d[j] - xp)/up;
-                        if (tt <= t) {
+                        if (tt <= t+epsilon) {
                             EGS_Float lam = uj[j]*(x-p[j]+u*tt);
                             if (lam >= 0 && lam < uj[j].length2()) {
                                 t = tt;
@@ -300,7 +302,7 @@ private:
     static bool checkCCW(const vector<EGS_2DVector> &points);
     /*! \brief Is the point \a x inside the \a j'th edge ? */
     bool inside(int j, const EGS_2DVector &x) const {
-        if (x*a[j] >= d[j]) {
+        if (x*a[j]+epsilon >= d[j]) {
             return true;
         }
         else {
@@ -426,7 +428,7 @@ public:
     inline bool howfar2D(bool in, const EGS_Vector &x, const EGS_Vector &u,
                          EGS_Float &t, EGS_2DVector *normal = 0) const {
         EGS_2DVector dir(a.getProjection(u));
-        if (u.length2() < 1e-8) {
+        if (u.length2() < epsilon) {
             return false;
         }
         return p->howfar(in,a.getProjection(x),dir,t,normal);
@@ -445,7 +447,7 @@ public:
             return false;
         }
         EGS_Float tt = -a.distance(x)/up;
-        if (tt <= t) {
+        if (tt <= t+epsilon) {
             EGS_Vector xp(x + u*tt);
             if (p->isInside(a.getProjection(xp))) {
                 t = tt;

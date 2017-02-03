@@ -30,6 +30,7 @@
 "                   Zdenko Sego                                               "
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1190,16 +1191,21 @@ IF(CHOICE1=11)[
     IF ~EGSPERT[ CALL HELP_MESSAGE(19); ]
     :LB2:
     OUTPUT;
-    (/' Number(default=100), IQ(-1,0,1,2,3) =?'/' ',$);
+    (/' From particle no. (default=1), to particle no. (default=100),'
+      ' IQ(-1,0,1,2,3) =?'/' ',$);
     READ(5,'(3I12)',ERR=:LB1:)NUMBERST,NUMBERP,IQSMFP(1);
     GOTO :LB3:;
     :LB1:
       CALL HELP_MESSAGE(19);
       GOTO :LB2:;
     :LB3:
+    IF (NUMBERST<1)[
+        NUMBERST=1;
+        OUTPUT;(/' First particle no. defaults to 1!'); 
+        ]
     IF (NUMBERP<1)[
         NUMBERP=100;
-        OUTPUT;(/' Number defaults to 100!');
+        OUTPUT;(/' Last particle no. defaults to 100!');
         ]
     IF(IQSMFP(1)<-1)|(IQSMFP(1)>3)[
         IQSMFP(1)=2;"defaults to all the particles"
@@ -2120,7 +2126,7 @@ integer lnblnk1;
          ]
 
       IF(IQ ~= 0)[ "We need kinetic energy only"
-         EI=EI-0.5110034;
+         EI=EI-0.5109989461;
          ]
 
       "processing the ph-sp data"
@@ -4830,14 +4836,14 @@ LOOP["read phase-space data from the data file"
         ]
 
     IF(IQ = -1)[ "We need kinetic energy only"
-        EI=EI-0.5110034;
+        EI=EI-0.5109989461;
         N_ph_sp_e = N_ph_sp_e + 1; E_ph_sp_e = E_ph_sp_e+EI;
         ]
     ELSEIF(IQ = 0)[
         N_ph_sp_g = N_ph_sp_g + 1; E_ph_sp_g = E_ph_sp_g+EI;
         ]
     ELSEIF(IQ = +1)[
-        EI=EI-0.5110034;
+        EI=EI-0.5109989461;
         N_ph_sp_p = N_ph_sp_p + 1; E_ph_sp_p = E_ph_sp_p+EI;
         ]
     ELSE[
@@ -5250,6 +5256,7 @@ IF(i_iaea_in=1)[
   IF(IMUIDX1~=0)[
     OUTPUT;(' Fractional MU index also scored in phase space data. '/);
   ]
+  NINC=LPARANINC;
 ]
 ELSE[
 

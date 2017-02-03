@@ -30,7 +30,7 @@
 
 
 /*! \file egs_functions.cpp
- *  \brief Global egspp functions
+ *  \brief Global egspp functions implementation
  *  \IK
  */
 

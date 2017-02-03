@@ -24,51 +24,122 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
+#                   Frederic Tessier
 #
 ###############################################################################
 */
 
 
 /*! \file main.doxy
- *  \brief An egspp documentation file
+ *  \brief An overview of the egspp documentation
  *  \IK
  */
 
 /*! \mainpage notitle
 
-  <center>
-  <h1>The EGSnrc C++ class library</h1>
-  <h2>Report PIRS-898</h2>
-  <h3>Iwan Kawrakow, Ernesto Mainegra-Hing, Frederic Tessier and Blake Walters</h3>
-  </center>
-  <br>
+    <center>
+    <table class='egsTable' cellspacing="0" cellpadding="0">
 
-  \image html cover1a.png
+    <tr class='egsRowTitle'>
+        <td> <h3>Getting started</h3> </td>
+    </tr>
+    <tr>
+        <td> \ref introduction </td>
+    </tr>
+    <tr>
+        <td> \ref installation </td>
+    </tr>
+    <tr>
+        <td><a href="http://nrc-cnrc.github.io/EGSnrc/">EGSnrc documentation</a></td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/FAQ#how-do-i-cite-the-egsnrc-software">How to cite EGSnrc</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="https://github.com/nrc-cnrc/EGSnrc/wiki/Release-notes">Release notes</a>
+        </td>
+    </tr>
 
-  <br>
-  \ref introduction<br>
-  \ref installation<br>
-  \ref design<br>
-  \ref egspp_main<br>
-  \ref Geometry "The geometry module"<br>
-  \ref Sources "Particle sources"<br>
-  <a href="tutor2pp_8cpp-example.html">Developing a simple EGSnrc C++
-  application</a><br>
-  <a href="tutor7pp_8cpp-example.html">Developing an advanced EGSnrc C++
-  application</a><br>
-  \ref geometry_implementing "Extending the geometry package"<br>
-  <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">
-  Implementing a new source</a><br><br>
-  <b>EGSnrc C++ user codes</b>
-    - \ref cavity
-    - \ref egs_chamber
-    - \ref egs_fac
-    - \ref egs_cbct
+    <tr class='egsRowTitle'>
+        <td> <h3>Class library for egs++</h3> </td>
+    </tr>
+    <tr class='egsRowSubtitle'>
+        <td>When writing input files for egs++ applications, you may wish to consult the documentation below.</td>
+    </tr>
+    <tr>
+        <td> \ref common "Common input syntax"</td>
+    </tr>
+    <tr>
+        <td> \ref Geometry "Geometries"</td>
+    </tr>
+    <tr>
+        <td> \ref example_geometries "Geometry examples"</td>
+    </tr>
+    <tr>
+        <td> \ref Sources "Particle sources"</td>
+    </tr>
+    <tr>
+        <td> \ref egspp_main "Main library"</td>
+    </tr>
 
-  <br><br><b>Note</b> If you use the EGSnrc C++ class library (or any code that uses it),
-  please cite this report as <em>I. Kawrakow, E. Mainegra-Hing, F. Tessier and B.R.B. Walters,
-  The EGSnrc C++ class library, NRC Report PIRS-898 (rev A), Ottawa, Canada, 2009. The \c egs_chamber
-  documentation was prepared based on J. Wulff's user-manual (unpublished) and the section about
-  positioning-induced dose uncertainties and the corresponding input example were
-  graciously contributed by H. Bouchard</em>.
+    <tr class='egsRowTitle'>
+        <td> <h3>Applications for egs++</h3> </td>
+    </tr>
+    <tr class='egsRowSubtitle'>
+        <td>A number of applications based on egs+ are distributed with EGSnrc.</td>
+    </tr>
+    <tr>
+        <td> \ref cavity "cavity" <em>A fully featured application for ion chamber simulations</em></td>
+    </tr>
+    <tr>
+        <td> \ref egs_chamber "egs_chamber" <em>An application for in-phantom ion chamber simulations</em></td>
+    </tr>
+    <tr>
+        <td> \ref egs_fac "egs_fac" <em>Calculates free air chamber (FAC) correction factors</em></td>
+    </tr>
+    <tr>
+        <td> \ref egs_cbct "egs_cbct" <em>An application for CBCT/CT scanner simulations</em></td>
+    </tr>
+
+    <tr class='egsRowTitle'>
+        <td> <h3>How to write an egs++ application</h3> </td>
+    </tr>
+    <tr class='egsRowSubtitle'>
+        <td>Most users will never need to write code to use egs++. However, we provide some examples below to help new developers get started.</td>
+    </tr>
+    <tr>
+        <td> \ref design "Design overview"</td>
+    </tr>
+    <tr>
+        <td>
+            <a href="tutor2pp_8cpp-example.html">Developing a simple egs++ application</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="tutor7pp_8cpp-example.html">Developing an advanced egs++ application</a>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            \ref geometry_implementing "Developing a new geometry"
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <a href="sources_2egs_point_source_2egs_point_source_8cpp-example.html">Developing a new source</a>
+        </td>
+    </tr>
+
+    </table>
+    
+    <br />
+    </center>
+    
+    <div id='egsImageScroller'></div>
+
 */

@@ -1,4 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><ui version="4.0"><comment>
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <comment>
 ###############################################################################
 #
 #  EGSnrc user interface for egs_inprz
@@ -28,7 +30,7 @@
 #
 ###############################################################################
 </comment>
-<class>InputRZForm</class>
+ <class>InputRZForm</class>
  <widget class="QWidget" name="InputRZForm">
   <property name="geometry">
    <rect>
@@ -92,6 +94,9 @@
        <height>88</height>
       </size>
      </property>
+     <property name="toolTip">
+      <string/>
+     </property>
      <property name="frameShape">
       <enum>QFrame::Box</enum>
      </property>
@@ -111,6 +116,219 @@
       <bool>false</bool>
      </property>
     </widget>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_17">
+     <item>
+      <widget class="QGroupBox" name="ButtonGroup4">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_15">
+          <item>
+           <widget class="QPushButton" name="ExecuteButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="toolTip">
+             <string>Only enabled if user code compiled, no input errors found and proper pegs data used.</string>
+            </property>
+            <property name="whatsThis">
+             <string>Only enabled if user code compiled, no input errors found and proper pegs data used.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Execute</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+E</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="PreviewRZButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>preview geometry of an existing input file</string>
+            </property>
+            <property name="whatsThis">
+             <string>preview geometry of an existing input file</string>
+            </property>
+            <property name="text">
+             <string>Pre&amp;viewRZ</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+V</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="PrintButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="toolTip">
+             <string>print input file</string>
+            </property>
+            <property name="whatsThis">
+             <string>print input file</string>
+            </property>
+            <property name="text">
+             <string>&amp;Print</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+P</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="compileButton">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="toolTip">
+             <string>Compile user code</string>
+            </property>
+            <property name="whatsThis">
+             <string>Compile user code</string>
+            </property>
+            <property name="text">
+             <string>&amp;Compile</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+C</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="ConfirmButtonGroup">
+       <property name="title">
+        <string/>
+       </property>
+       <layout class="QVBoxLayout" name="verticalLayout_31">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_16">
+          <item>
+           <widget class="QPushButton" name="ApplyButton">
+            <property name="toolTip">
+             <string>save to/modify file !</string>
+            </property>
+            <property name="whatsThis">
+             <string>save to/modify file !</string>
+            </property>
+            <property name="text">
+             <string>&amp;Save</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+S</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="CancelButton">
+            <property name="toolTip">
+             <string>close application without saving.</string>
+            </property>
+            <property name="whatsThis">
+             <string>close application without saving.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Exit</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+E</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="HelpButton">
+            <property name="toolTip">
+             <string>shows the user manual with Netscape or Konqueror</string>
+            </property>
+            <property name="whatsThis">
+             <string>shows the user manual with Netscape or Konqueror</string>
+            </property>
+            <property name="text">
+             <string>&amp;Help</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+H</string>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="AboutButton">
+            <property name="text">
+             <string>&amp;About</string>
+            </property>
+            <property name="shortcut">
+             <string>Alt+A</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item row="1" column="0">
     <widget class="QTabWidget" name="TabWidgetRZ">
@@ -153,7 +371,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>5</number>
      </property>
      <property name="iconSize">
       <size>
@@ -5656,397 +5874,148 @@
       <attribute name="title">
        <string>Media Definition</string>
       </attribute>
-      <widget class="QGroupBox" name="inpmediaGroupBox">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>160</y>
-         <width>880</width>
-         <height>398</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string>media defined in .egsinp file</string>
-       </property>
-       <widget class="QWidget" name="layoutWidget11">
-        <property name="geometry">
-         <rect>
-          <x>16</x>
-          <y>34</y>
-          <width>848</width>
-          <height>348</height>
-         </rect>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_19">
+      <layout class="QVBoxLayout" name="verticalLayout_52">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_51">
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_9">
+          <layout class="QHBoxLayout" name="horizontalLayout_28">
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_9">
-             <item>
-              <widget class="QLabel" name="inpmediumLabel">
-               <property name="text">
-                <string>medium name</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="inpmediumComboBox">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="editable">
-                <bool>true</bool>
-               </property>
-               <property name="insertPolicy">
-                <enum>QComboBox::InsertAtCurrent</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <widget class="QGroupBox" name="compositionGroupBox">
+            <widget class="QGroupBox" name="ELGroupBox">
              <property name="toolTip">
-              <string>specify medium composition</string>
+              <string>Specify upper and lower energy limits for all PEGSless data</string>
              </property>
              <property name="title">
-              <string>composition</string>
+              <string>energy limits (MeV)</string>
              </property>
-             <layout class="QVBoxLayout" name="verticalLayout_8">
+             <layout class="QVBoxLayout" name="verticalLayout_47">
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_8">
+               <layout class="QHBoxLayout" name="horizontalLayout_7">
                 <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
+                 <layout class="QVBoxLayout">
+                  <item>
+                   <layout class="QHBoxLayout">
+                    <item>
+                     <widget class="QLabel" name="AELabel">
+                      <property name="text">
+                       <string>AE</string>
+                      </property>
+                      <property name="wordWrap">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="AEEdit">
+                      <property name="toolTip">
+                       <string>minimum total e- energy for cross-sections</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout">
+                    <item>
+                     <widget class="QLabel" name="APLabel">
+                      <property name="text">
+                       <string>AP</string>
+                      </property>
+                      <property name="wordWrap">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="APEdit">
+                      <property name="toolTip">
+                       <string>minimum photon energy for cross-sections</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </item>
                 <item>
-                 <widget class="QLabel" name="pz_or_rhozLabel">
-                  <property name="acceptDrops">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>specify by</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="pz_or_rhozButtonGroup">
-                  <property name="title">
-                   <string/>
-                  </property>
-                  <layout class="QVBoxLayout">
-                   <item>
-                    <widget class="QRadioButton" name="pzRadioButton">
-                     <property name="text">
-                      <string>stoichiometric coefficients</string>
-                     </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QRadioButton" name="rhozRadioButton">
-                     <property name="text">
-                      <string>fraction of total weight</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
+                 <layout class="QVBoxLayout">
+                  <item>
+                   <layout class="QHBoxLayout">
+                    <item>
+                     <widget class="QLabel" name="UELabel">
+                      <property name="text">
+                       <string>UE</string>
+                      </property>
+                      <property name="wordWrap">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="UEEdit">
+                      <property name="toolTip">
+                       <string>maximum e- kinetic energy for cross-sections</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout">
+                    <item>
+                     <widget class="QLabel" name="UPLabel">
+                      <property name="text">
+                       <string>UP</string>
+                      </property>
+                      <property name="wordWrap">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QLineEdit" name="UPEdit">
+                      <property name="toolTip">
+                       <string>maximum photon energy for cross-sections</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="MDGroupBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Use this if PEGSless media specified in a material data file. Additional media can be specified in the .egsinp file (see below).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="title">
+              <string>material data file name</string>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_48">
               <item>
-               <widget class="QTableWidget" name="pz_or_rhozTable">
-                <property name="toolTip">
-                 <string>elements must be specified by their chemical symbol all uppercase.</string>
-                </property>
-                <property name="rowCount">
-                 <number>50</number>
-                </property>
-                <property name="columnCount">
-                 <number>2</number>
-                </property>
-                <row>
-                 <property name="text">
-                  <string>1</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>2</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>3</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>4</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>5</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>6</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>7</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>8</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>9</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>10</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>11</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>12</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>13</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>14</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>15</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>16</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>17</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>18</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>19</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>20</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>21</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>22</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>23</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>24</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>25</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>26</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>27</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>28</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>29</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>30</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>31</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>32</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>33</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>34</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>35</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>36</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>37</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>38</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>39</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>40</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>41</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>42</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>43</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>44</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>45</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>46</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>47</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>48</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>49</string>
-                 </property>
-                </row>
-                <row>
-                 <property name="text">
-                  <string>50</string>
-                 </property>
-                </row>
-                <column>
-                 <property name="text">
-                  <string>element</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
-                  <string>no. of atoms</string>
-                 </property>
-                </column>
-               </widget>
+               <layout class="QHBoxLayout">
+                <item>
+                 <widget class="QLineEdit" name="MDFEdit"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="MDFileButton">
+                  <property name="toolTip">
+                   <string>Browse to select a material data file.
+Browsing starts in your $EGS_HOME/pegs4/data directory.</string>
+                  </property>
+                  <property name="text">
+                   <string>...</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>
@@ -6054,453 +6023,578 @@
           </layout>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_10">
-           <item>
-            <spacer name="verticalSpacer_6">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>448</width>
-               <height>32</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <layout class="QHBoxLayout">
-             <item>
-              <widget class="QLabel" name="rhoLabel">
-               <property name="text">
-                <string>rho</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="rhoEdit">
-               <property name="toolTip">
-                <string>medium density in g/cm^3</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="rhoUnits">
-               <property name="text">
-                <string>g/cm^3</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout">
-             <item>
-              <widget class="QLabel" name="spLabel">
-               <property name="text">
-                <string>stopping powers</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="spComboBox">
-               <property name="maximumSize">
-                <size>
-                 <width>370</width>
-                 <height>32767</height>
-                </size>
-               </property>
-               <property name="font">
-                <font/>
-               </property>
-               <property name="toolTip">
-                <string>choose which type of e- stopping power to calculate/use in the simulation</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>restricted total</string>
+          <widget class="QGroupBox" name="inpmediaGroupBox">
+           <property name="title">
+            <string>media defined in .egsinp file</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_50">
+            <item>
+             <layout class="QVBoxLayout" name="verticalLayout_49">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_24">
+                <item>
+                 <widget class="QGroupBox" name="compositionGroupBox">
+                  <property name="toolTip">
+                   <string>specify medium composition</string>
+                  </property>
+                  <property name="title">
+                   <string>Medium composition</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_8">
+                   <item>
+                    <widget class="QTableWidget" name="pz_or_rhozTable">
+                     <property name="toolTip">
+                      <string>Elements must be specified by their chemical symbol all uppercase.
+For mixtures, composition is specified by fraction by weight of each element.
+For compounds, composition is specified by stoichiometric index of each element.</string>
+                     </property>
+                     <property name="rowCount">
+                      <number>50</number>
+                     </property>
+                     <property name="columnCount">
+                      <number>2</number>
+                     </property>
+                     <row>
+                      <property name="text">
+                       <string>1</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>2</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>3</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>4</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>5</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>6</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>7</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>8</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>9</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>10</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>11</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>12</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>13</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>14</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>15</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>16</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>17</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>18</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>19</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>20</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>21</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>22</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>23</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>24</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>25</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>26</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>27</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>28</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>29</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>30</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>31</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>32</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>33</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>34</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>35</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>36</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>37</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>38</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>39</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>40</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>41</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>42</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>43</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>44</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>45</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>46</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>47</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>48</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>49</string>
+                      </property>
+                     </row>
+                     <row>
+                      <property name="text">
+                       <string>50</string>
+                      </property>
+                     </row>
+                     <column>
+                      <property name="text">
+                       <string>Element</string>
+                      </property>
+                     </column>
+                     <column>
+                      <property name="text">
+                       <string>Fraction by weight</string>
+                      </property>
+                     </column>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_46">
+                  <item>
+                   <widget class="QGroupBox" name="medNameGroupBox">
+                    <property name="title">
+                     <string>Medium name</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_9">
+                     <item>
+                      <widget class="QComboBox" name="inpmediumComboBox">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="toolTip">
+                        <string/>
+                       </property>
+                       <property name="editable">
+                        <bool>true</bool>
+                       </property>
+                       <property name="insertPolicy">
+                        <enum>QComboBox::InsertAtCurrent</enum>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_19">
+                    <item>
+                     <widget class="QGroupBox" name="medTypeGroupBox">
+                      <property name="title">
+                       <string>Medium type</string>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_37">
+                       <item>
+                        <widget class="QComboBox" name="medTypeComboBox">
+                         <property name="toolTip">
+                          <string>Select 'Mixture' to specify composition by fraction by weight,
+'Compound' to specify by stoichiometric index</string>
+                         </property>
+                         <property name="editable">
+                          <bool>false</bool>
+                         </property>
+                         <property name="maxVisibleItems">
+                          <number>3</number>
+                         </property>
+                         <item>
+                          <property name="text">
+                           <string>Element</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Compound</string>
+                          </property>
+                         </item>
+                         <item>
+                          <property name="text">
+                           <string>Mixture</string>
+                          </property>
+                         </item>
+                        </widget>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QGroupBox" name="rhoGroupBox">
+                      <property name="title">
+                       <string>Mass density</string>
+                      </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_44">
+                       <item>
+                        <layout class="QHBoxLayout" name="horizontalLayout_8">
+                         <item>
+                          <widget class="QLineEdit" name="rhoEdit">
+                           <property name="toolTip">
+                            <string>medium density in g/cm^3 or kg/cm^3</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QComboBox" name="rhoScaleComboBox">
+                           <item>
+                            <property name="text">
+                             <string>g/cm^3</string>
+                            </property>
+                           </item>
+                           <item>
+                            <property name="text">
+                             <string>kg/cm^3</string>
+                            </property>
+                           </item>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="medOptionsGroupBox">
+                    <property name="title">
+                     <string>Options</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_45">
+                     <item>
+                      <layout class="QVBoxLayout" name="verticalLayout_35">
+                       <item>
+                        <widget class="QCheckBox" name="DCcheckBox">
+                         <property name="toolTip">
+                          <string>Select to specify an ICRU density correction file (see below).</string>
+                         </property>
+                         <property name="text">
+                          <string>ICRU density correction</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="ICRUradCheckBox">
+                         <property name="toolTip">
+                          <string>Select to use ICRU corrections to brems cross-sections.
+Otherwise, Koch-Motz (KM) corrections will be used. </string>
+                         </property>
+                         <property name="text">
+                          <string>ICRU radiative stopping power</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <layout class="QHBoxLayout" name="horizontalLayout_10">
+                         <item>
+                          <widget class="QCheckBox" name="isGasCheckBox">
+                           <property name="toolTip">
+                            <string>Check this if the medium is a gas.
+This will enable you to input the gas pressure of the medium.</string>
+                           </property>
+                           <property name="text">
+                            <string>medium is a gas</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <spacer name="horizontalSpacer_5">
+                           <property name="orientation">
+                            <enum>Qt::Horizontal</enum>
+                           </property>
+                           <property name="sizeHint" stdset="0">
+                            <size>
+                             <width>40</width>
+                             <height>20</height>
+                            </size>
+                           </property>
+                          </spacer>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="gaspLabel">
+                           <property name="text">
+                            <string>gas pressure</string>
+                           </property>
+                           <property name="wordWrap">
+                            <bool>false</bool>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLineEdit" name="gaspEdit">
+                           <property name="toolTip">
+                            <string>If the medium is a gas, specify gas pressure (atm) here.
+Defaults to 1 atm. if left blank or zero.</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLabel" name="gaspUnits">
+                           <property name="text">
+                            <string>atm</string>
+                           </property>
+                           <property name="wordWrap">
+                            <bool>false</bool>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="DFgroupBox">
+                <property name="toolTip">
+                 <string>Specify a density correction file which, when applied to calculated cross-sections,
+results in agreement with stopping powers published in ICRU37.  Note that medium
+composition and density as specified in the density correction file are used.</string>
                 </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>unrestricted collision</string>
+                <property name="title">
+                 <string>Density correction file</string>
                 </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>unrestricted collision and radiative</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>unrestricted collision and restricted radiative</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>restricted collision and unrestricted radiative</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>unrestricted radiative</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout">
-             <item>
-              <widget class="QLabel" name="bcLabel">
-               <property name="text">
-                <string>bremsstrahlung correction</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="bcComboBox">
-               <property name="toolTip">
-                <string>choose which type of correction to apply to brem cross-sections.  The default is KM (Koch and Motz).</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>KM</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>NRC</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>none</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QVBoxLayout">
-             <item>
-              <widget class="QLabel" name="DFLabel">
-               <property name="text">
-                <string>density correction file:</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout">
-               <item>
-                <widget class="QLineEdit" name="DFEdit"/>
-               </item>
-               <item>
-                <layout class="QHBoxLayout">
+                <layout class="QVBoxLayout" name="verticalLayout_10">
                  <item>
-                  <widget class="QPushButton" name="MDBrowse">
-                   <property name="text">
-                    <string>...</string>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayout_9">
+                   <item>
+                    <widget class="QLabel" name="DFSearchLabel">
+                     <property name="text">
+                      <string>Look in</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QComboBox" name="DFSearchComboBox">
+                     <property name="toolTip">
+                      <string>Select in which directory to begin browsing for the density correction file.  
+Will start in /pegs4/density_corrections/ subdirectory off the directory selected here.</string>
+                     </property>
+                     <item>
+                      <property name="text">
+                       <string>EGS_HOME</string>
+                      </property>
+                     </item>
+                     <item>
+                      <property name="text">
+                       <string>HEN_HOUSE</string>
+                      </property>
+                     </item>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout">
+                     <item>
+                      <widget class="QLineEdit" name="DFEdit">
+                       <property name="toolTip">
+                        <string>Full name of density correction file.</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <layout class="QHBoxLayout">
+                       <item>
+                        <widget class="QPushButton" name="DFBrowse">
+                         <property name="toolTip">
+                          <string>Browse for density correction file.</string>
+                         </property>
+                         <property name="text">
+                          <string>...</string>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_10">
-             <item>
-              <widget class="QCheckBox" name="isGasCheckBox">
-               <property name="toolTip">
-                <string>Check this if the medium is a gas.  This will enable you to input the gas pressure of the medium.</string>
-               </property>
-               <property name="text">
-                <string>medium is a gas</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout">
-               <item>
-                <spacer name="horizontalSpacer_5">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QLabel" name="gaspLabel">
-                 <property name="text">
-                  <string>gas pressure</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="gaspEdit">
-                 <property name="toolTip">
-                  <string>If the medium is a gas, specify gas pressure (atm) here.  Defaults to 1 atm.</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="gaspUnits">
-                 <property name="text">
-                  <string>atm</string>
-                 </property>
-                 <property name="wordWrap">
-                  <bool>false</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout">
-             <item>
-              <widget class="QLabel" name="sterncidLabel">
-               <property name="text">
-                <string>sterncid</string>
-               </property>
-               <property name="wordWrap">
-                <bool>false</bool>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="sterncidEdit"/>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <spacer name="spacer55">
-             <property name="orientation">
-              <enum>Qt::Vertical</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Expanding</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>448</width>
-               <height>52</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="layoutWidget1">
-       <property name="geometry">
-        <rect>
-         <x>9</x>
-         <y>1</y>
-         <width>881</width>
-         <height>161</height>
-        </rect>
-       </property>
-       <layout class="QHBoxLayout">
-        <item>
-         <widget class="QGroupBox" name="ELGroupBox">
-          <property name="title">
-           <string>energy limits (MeV)</string>
-          </property>
-          <widget class="QWidget" name="layoutWidget2">
-           <property name="geometry">
-            <rect>
-             <x>15</x>
-             <y>33</y>
-             <width>358</width>
-             <height>68</height>
-            </rect>
-           </property>
-           <layout class="QHBoxLayout" name="horizontalLayout_7">
-            <item>
-             <layout class="QVBoxLayout">
-              <item>
-               <layout class="QHBoxLayout">
-                <item>
-                 <widget class="QLabel" name="AELabel">
-                  <property name="text">
-                   <string>AE</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="AEEdit">
-                  <property name="toolTip">
-                   <string>minimum total e- energy for cross-sections</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout">
-                <item>
-                 <widget class="QLabel" name="APLabel">
-                  <property name="text">
-                   <string>AP</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="APEdit">
-                  <property name="toolTip">
-                   <string>minimum photon energy for cross-sections</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QVBoxLayout">
-              <item>
-               <layout class="QHBoxLayout">
-                <item>
-                 <widget class="QLabel" name="UELabel">
-                  <property name="text">
-                   <string>UE</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="UEEdit">
-                  <property name="toolTip">
-                   <string>maximum e- kinetic energy for cross-sections</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout">
-                <item>
-                 <widget class="QLabel" name="UPLabel">
-                  <property name="text">
-                   <string>UP</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLineEdit" name="UPEdit">
-                  <property name="toolTip">
-                   <string>maximum photon energy for cross-sections</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="MDGroupBox">
-          <property name="title">
-           <string>material data file name</string>
-          </property>
-          <widget class="QWidget" name="layout156">
-           <property name="geometry">
-            <rect>
-             <x>10</x>
-             <y>25</y>
-             <width>420</width>
-             <height>65</height>
-            </rect>
-           </property>
-           <layout class="QVBoxLayout">
-            <item>
-             <spacer name="spacer56_2">
-              <property name="orientation">
-               <enum>Qt::Vertical</enum>
-              </property>
-              <property name="sizeType">
-               <enum>QSizePolicy::Expanding</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <layout class="QHBoxLayout">
-              <item>
-               <widget class="QLineEdit" name="MDFEdit"/>
-              </item>
-              <item>
-               <widget class="QPushButton" name="MDFileButton">
-                <property name="toolTip">
-                 <string>load EGSnrc input file using an Open File Dialog.</string>
-                </property>
-                <property name="text">
-                 <string>...</string>
-                </property>
-                <property name="autoDefault">
-                 <bool>false</bool>
-                </property>
                </widget>
               </item>
              </layout>
             </item>
            </layout>
           </widget>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
      </widget>
      <widget class="QWidget" name="SItab">
       <attribute name="title">
@@ -11246,219 +11340,6 @@
      </widget>
     </widget>
    </item>
-   <item row="2" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_17">
-     <item>
-      <widget class="QGroupBox" name="ButtonGroup4">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="title">
-        <string/>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_15">
-          <item>
-           <widget class="QPushButton" name="ExecuteButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="toolTip">
-             <string>Only enabled if user code compiled, no input errors found and proper pegs data used.</string>
-            </property>
-            <property name="whatsThis">
-             <string>Only enabled if user code compiled, no input errors found and proper pegs data used.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Execute</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+E</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PreviewRZButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>preview geometry of an existing input file</string>
-            </property>
-            <property name="whatsThis">
-             <string>preview geometry of an existing input file</string>
-            </property>
-            <property name="text">
-             <string>Pre&amp;viewRZ</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+V</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PrintButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="toolTip">
-             <string>print input file</string>
-            </property>
-            <property name="whatsThis">
-             <string>print input file</string>
-            </property>
-            <property name="text">
-             <string>&amp;Print</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+P</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="compileButton">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="toolTip">
-             <string>Compile user code</string>
-            </property>
-            <property name="whatsThis">
-             <string>Compile user code</string>
-            </property>
-            <property name="text">
-             <string>&amp;Compile</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+C</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="ConfirmButtonGroup">
-       <property name="title">
-        <string/>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_31">
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_16">
-          <item>
-           <widget class="QPushButton" name="ApplyButton">
-            <property name="toolTip">
-             <string>save to/modify file !</string>
-            </property>
-            <property name="whatsThis">
-             <string>save to/modify file !</string>
-            </property>
-            <property name="text">
-             <string>&amp;Save</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+S</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="CancelButton">
-            <property name="toolTip">
-             <string>close application without saving.</string>
-            </property>
-            <property name="whatsThis">
-             <string>close application without saving.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Exit</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+E</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="HelpButton">
-            <property name="toolTip">
-             <string>shows the user manual with Netscape or Konqueror</string>
-            </property>
-            <property name="whatsThis">
-             <string>shows the user manual with Netscape or Konqueror</string>
-            </property>
-            <property name="text">
-             <string>&amp;Help</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+H</string>
-            </property>
-            <property name="autoDefault">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="AboutButton">
-            <property name="text">
-             <string>&amp;About</string>
-            </property>
-            <property name="shortcut">
-             <string>Alt+A</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </widget>
-     </item>
-    </layout>
-   </item>
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
@@ -12588,74 +12469,10 @@
    </hints>
   </connection>
   <connection>
-   <sender>inpmediumComboBox</sender>
-   <signal>highlighted(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>inpmediumSave(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>inpmediumComboBox</sender>
-   <signal>activated(QString)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>inpmediumChanged(QString)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>MDBrowse</sender>
+   <sender>DFBrowse</sender>
    <signal>clicked()</signal>
    <receiver>InputRZForm</receiver>
    <slot>GetDFfile()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>pzRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_table_header_noa()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>rhozRadioButton</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>InputRZForm</receiver>
-   <slot>set_table_header_pbw()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -12836,6 +12653,118 @@
     <hint type="sourcelabel">
      <x>500</x>
      <y>559</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pz_or_rhozTable</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>pz_or_rhozTable_clicked(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>235</x>
+     <y>563</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pz_or_rhozTable</sender>
+   <signal>cellClicked(int,int)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>pz_or_rhozTable_singleclicked(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>235</x>
+     <y>563</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>inpmediumComboBox</sender>
+   <signal>highlighted(QString)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>inpmediumSave(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>inpmediumComboBox</sender>
+   <signal>activated(QString)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>inpmediumChanged(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>DCcheckBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>enableDCfileInput(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>641</x>
+     <y>514</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>medTypeComboBox</sender>
+   <signal>activated(QString)</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>medTypeChanged(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>470</x>
+     <y>441</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>511</x>
+     <y>389</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>DFEdit</sender>
+   <signal>returnPressed()</signal>
+   <receiver>InputRZForm</receiver>
+   <slot>GetDFfileReturn()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>527</x>
+     <y>647</y>
     </hint>
     <hint type="destinationlabel">
      <x>511</x>

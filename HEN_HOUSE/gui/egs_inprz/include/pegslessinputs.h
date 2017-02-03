@@ -40,12 +40,21 @@
 #define MXEL 14
 
 #include "inputblock.h"
-//Added by qt3to4:
-//qt3to4 -- BW
-//#include <Q3TextStream>
-
-//qt3to4 -- BW
 #include <QTextStream>
+
+struct Element {
+  int   Z;
+  std::string symbol;
+ float  aw;
+ float  Iev;
+ float  rho;
+};
+
+extern QStringList element_list;
+
+extern int n_element;
+
+extern Element element_data[];
 
 class PEGSLESSInputs : public MInputBlock
 {
@@ -73,11 +82,11 @@ class PEGSLESSInputs : public MInputBlock
         QString bc[MXMED];
         QString gasp[MXMED];
         bool isgas[MXMED];
+        bool use_dcfile[MXMED];
         QString dffile[MXMED];
         QString sterncid[MXMED];
+        float rho_scale[MXMED];
 };
 std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs * rPEGSLESS );
-//Q3TextStream   & operator << ( Q3TextStream &    t, PEGSLESSInputs * rPEGSLESS );
-//qt3to4 -- BW
 QTextStream   & operator << ( QTextStream &    t, PEGSLESSInputs * rPEGSLESS );
 #endif

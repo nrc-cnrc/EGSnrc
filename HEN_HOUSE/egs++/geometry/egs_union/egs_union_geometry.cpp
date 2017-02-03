@@ -181,6 +181,7 @@ extern "C" {
         }
         EGS_BaseGeometry *result = new EGS_UnionGeometry(geoms,p);
         result->setName(input);
+        result->setBoundaryTolerance(input);
         result->setLabels(input);
         if (p) {
             delete [] p;

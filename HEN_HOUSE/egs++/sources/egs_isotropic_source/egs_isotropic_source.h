@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -70,10 +71,11 @@
 
   \ingroup Sources
 
-An isotropic source is a source that delivers particles with
-directions uniformly distributed in \f$4 \pi\f$ emitted from
-\link EGS_BaseShape any shape. \endlink
-It is defined using the following input
+An isotropic source is a source that delivers particles of a given
+\c charge with directions uniformly distributed in \f$4 \pi\f$ emitted from
+\link EGS_BaseShape any shape \endlink with \link EGS_BaseSpectrum any spectrum.
+\endlink
+It is defined most simply using the following input:
 \verbatim
 :start source:
     library = egs_isotropic_source
@@ -85,13 +87,122 @@ It is defined using the following input
         definition of the spectrum
     :stop spectrum:
     charge = -1 or 0 or 1 for electrons or photons or positrons
-    min theta = 80  (degree)
-    max theta = 100 (degree)
+    min theta = 80  [degree] (optional)
+    max theta = 100 [degree] (optional)
+    min phi = 80  [degree] (optional)
+    max phi = 100 [degree] (optional)
 :stop source:
 \endverbatim
+
+It is also possible to generate source particles from a more complex shape
+by including or excluding geometry regions. This is done by providing
+the \c geometry name to operate on, a <tt>region selection</tt> mode, and
+<tt>selected regions</tt> for the region selection operation. The <tt>selected
+regions</tt> tag is necessary and used only for \c IncludeSelected and
+\c ExcludeSelected modes.
+
+The available region selection modes are described below. A particle is
+generated within the defined shape uniformly, and kept only if it meets the
+corresponding condition:
+
+\li <tt>IncludeAll</tt> - particle is inside \c geometry
+\li <tt>ExcludeAll</tt> - particle is NOT inside \c geometry
+\li <tt>IncludeSelected</tt> - particle is inside \c geometry AND in one of
+<tt>selected regions</tt>
+\li <tt>ExcludeSelected</tt> - particle is not inside \c geometry OR not in
+one of <tt>selected regions</tt>
+
+\verbatim
+:start source:
+    library = egs_isotropic_source
+    name = some_name
+    geometry = a geometry to modify particle generation (optional)
+    region selection = IncludeAll or ExcludeAll or IncludeSelected or ExcludeSelected (optional)
+    selected regions = regions to use (only for IncludeSelected or ExcludeSelected)
+    :start shape:
+        definition of the shape to generate particles within
+    :stop shape:
+    :start spectrum:
+        definition of the spectrum
+    :stop spectrum:
+    charge = -1 or 0 or 1 for electrons or photons or positrons
+    min theta = 80  [degree] (optional)
+    max theta = 100 [degree] (optional)
+    min phi = 80  [degree] (optional)
+    max phi = 100 [degree] (optional)
+:stop source:
+\endverbatim
+
 It is worth noting that the functionality of source 3 in the RZ series
 of user codes or source 6 in DOSXYZnrc can be reproduced with
 the isotropic source from the EGSnrc C++ class library.
+
+Here is an example of two spheres in a box emitting isotropic photons. Only
+the geometry and source blocks are provided:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = H2O521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = sphere1
+        library     = egs_spheres
+        midpoint = 0 0 1
+        radii = 0.3
+        :start media input:
+            media = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = sphere2
+        library     = egs_spheres
+        midpoint = 0 0 -1
+        radii = 0.3
+        :start media input:
+            media = AIR521ICRU
+        :stop media input:
+    :stop geometry:
+    :start geometry:
+        name        = my_envelope
+        library     = egs_genvelope
+        base geometry = my_box
+        inscribed geometries = sphere1 sphere2
+    :stop geometry:
+
+    simulation geometry = my_envelope
+
+:stop geometry definition:
+:start source definition:
+    :start source:
+        name                = my_source
+        library             = egs_isotropic_source
+        charge              = 0
+        geometry            = my_envelope
+        region selection    = IncludeSelected
+        selected regions    = 1 2
+        :start shape:
+            type     = box
+            box size    = 1 2 3
+            :start media input:
+                media = H2O521ICRU
+            :stop media input:
+        :stop shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1
+        :stop spectrum:
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+\image html egs_isotropic_source.png "An example of two spheres emitting isotropic photons"
 */
 
 class EGS_ISOTROPIC_SOURCE_EXPORT EGS_IsotropicSource :
@@ -128,7 +239,6 @@ public:
     */
     EGS_IsotropicSource(EGS_Input *, EGS_ObjectFactory *f=0);
     ~EGS_IsotropicSource() {
-        egsWarning("destructing point source\n");
         EGS_Object::deleteObject(shape);
         if (geom) {
             if (!geom->deref()) {
@@ -180,7 +290,7 @@ public:
 
         //u.z = 2*rndm->getUniform()-1;
         EGS_Float sinz = 1-u.z*u.z;
-        if (sinz > 1e-15) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
             //rndm->getAzimuth(cphi,sphi);

@@ -1,49 +1,63 @@
-#**************************************************************************
+
+###############################################################################
 #
-# $Id: xtube.tcl,v 1.4 2008/02/08 22:32:45 bwalters Exp $
+#  EGSnrc BEAMnrc graphical user interface: XTUBE
+#  Copyright (C) 2015 National Research Council Canada
 #
-# Started from Revision 1.5 of
-#      /usr/people/omega/progs/gui/beamnrc/RCS/xtube.tcl,v
-# last edited 2002-09-27 11:08:34-04
+#  This file is part of EGSnrc.
 #
-#*************************************************************************
-#                                                                        #
-#         Copyright 1999 by the National Research Council                #
-#         of Canada, all rights reserved.  This code is part             #
-#         of the BEAM code system for Monte carlo simulation             #
-#         of radiotherapy treatment units. It was developed              #
-#         at the National Research Council of Canada as part             #
-#         of the OMEGA collaborative project with the University         #
-#         of Wisconsin.  The system is described in:                     #
-#           BEAM: A Monte Carlo code to simulate radiotherapy            #
-#           treatment units                                              #
-#           D.W.O. Rogers, B.A. Faddegon, G.X. Ding, C.-M. Ma,           #
-#           J. Wei and T.R.Mackie                                        #
-#           Medical Physics 22 (1995) 503 -- 524.                        #
-#         in the                                                         #
-#           BEAM Users Manual                                   #
-#           D.W.O. Rogers, C.-M. Ma, B. Walters, G.X. Ding,              #
-#                                 D.  Sheikh-Bagheri and G. Zhang        #
-#           NRC Report PIRS-509A (rev D)                                 #
-#         and in the many other NRC reports cited in the Users Manual    #
-#                                                                        #
-#         As well as the authors of the above paper and report           #
-#         Joanne Treurniet of NRC made significant contributions to the  #
-#         code system, in particular the GUIs and EGS_Windows            #
-#         Mark Holmes, Brian Geiser and Paul Reckwerdt of Wiscosin       #
-#         were important parts of the overall OMEGA project within which #
-#         the BEAM code system was developed.                            #
-#         The BEAM code system (excluding the EGS4 portions of it)       #
-#         is copyright and subject to the BEAM General License           #
-#         which is included in the distribution.                         #
-#         The BEAM code system is provided as is without any warranty or #
-#         guarantee of any kind, either expressed or implied,            #
-#         as to its accuracy or ability to perform particular            #
-#         calculations.                                                  #
-#   Copyright National Research Council of Canada, Ottawa,
-#   BEAM Code System 1999, all rights reserved
-#   This code is covered by the BEAM General License
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
 #
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Joanne Treurniet, 1998
+#
+#  Contributors:    Blake Walters
+#                   Iwan Kawrakow
+#
+###############################################################################
+#
+#  The contributors named above are only those who could be identified from
+#  this file's revision history.
+#
+#  This code is part of the BEAMnrc code system for Monte Carlo simulation of
+#  radiotherapy treatments units. BEAM was originally developed at the
+#  National Research Council of Canada as part of the OMEGA collaborative
+#  research project with the University of Wisconsin, and was originally
+#  described in:
+#
+#  BEAM: A Monte Carlo code to simulate radiotherapy treatment units,
+#  DWO Rogers, BA Faddegon, GX Ding, C-M Ma, J Wei and TR Mackie,
+#  Medical Physics 22, 503-524 (1995).
+#
+#  BEAM User Manual
+#  DWO Rogers, C-M Ma, B Walters, GX Ding, D Sheikh-Bagheri and G Zhang,
+#  NRC Report PIRS-509A (rev D)
+#
+#  As well as the authors of this paper and report, Joanne Treurniet of NRC
+#  made significant contributions to the code system, in particular the GUIs
+#  and EGS_Windows. Mark Holmes, Brian Geiser and Paul Reckwerdt of Wisconsin
+#  played important roles in the overall OMEGA project within which the BEAM
+#  code system was developed.
+#
+#  There have been major upgrades in the BEAM code starting in 2000 which
+#  have been heavily supported by Iwan Kawrakow, most notably: the port to
+#  EGSnrc, the inclusion of history-by-history statistics and the development
+#  of the directional bremsstrahlung splitting variance reduction technique.
+#
+###############################################################################
+
 
 proc init_XTUBE { id } {
     global cmval

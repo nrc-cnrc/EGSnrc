@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -42,13 +42,13 @@
 
   \anchor geometry_anchor
 
-\ref geometry_general<br>
-\ref geometry_design<br>
-\ref geometry_common<br>
-\ref geometry_media<br>
-\ref geometry_implementing<br>
-\ref geometry_view<br>
-\ref geometry_examples<br>
+\ref geometry_general <br>
+\ref geometry_design <br>
+\ref geometry_common <br>
+\ref geometry_media <br>
+\ref geometry_implementing <br>
+\ref geometry_view <br>
+\ref geometry_examples <br>
 
 \section geometry_general General discussion
 
@@ -298,19 +298,10 @@ The implementation of a new geometry class may become necessary
 for various reasons, \em e.g.
 -# The geometrical structure of interest can not be constructed using the
    classes supplied with the egspp distribution.
-   <a href="EGS__Box-example.html">This page</a> provides a detailed
+   <a href="geometry_2egs_box_2egs_box_8cpp-example.html">This page</a>
+   provides a detailed
    description of the implementation of the EGS_Box class that can
    serve as a guide for developing a new geometry class.
--# The user wants to avoid repeating the definition of the same geometry
-   in many input files specifying simulations that involve the same,
-   potentially complex geometry.
-   <a href="geometry_2example1_2geometry__example1_8cpp-example.html">
-   This page</a> shows how to implement a geometry DSO using
-   existing geometry classes for the sake of reducing or eliminating
-   input required to define a geometry. An alternative implementation
-   is found
-   <a href="geometry_2example2_2geometry__example2_8cpp-example.html">
-   here.</a>
 -# The user may want to re-implement some method of an existing
    geometry class such as \em e.g. \link EGS_BaseGeometry::setMedia(EGS_Input*)
    setMedia() \endlink to make the definition of media easier
@@ -420,7 +411,7 @@ description of the examples and screen shots for some of them:
   \link EGS_CylindersT set of cylinders\endlink and a
   \link EGS_PlanesT set of planes\endlink. The geometry
   defined is the same as in the \c cavrznrc_template.egsinp
-  file for the CAVRZnrc user code (a simple pancake ionization
+  file for the CAVRZnrc application (a simple pancake ionization
   chamber with graphite walls and air cavity).
 - The file \c rz1.geom defines the same geometry as \c rz.geom but
   now using an \link EGS_EnvelopeGeometry envelope geometry\endlink
@@ -529,21 +520,21 @@ in the distribution and found in
 <code>\$HEN_HOUSE/egs++/geometry/examples</code>.
 
 
-\ref hemisphere_geom<br>
-\ref pyramid_geom<br>
-\ref rz_geom<br>
-\ref rz1_geom<br>
-\ref cones_geom<br>
-\ref rz_phi_geom<br>
-\ref xyz_geom<br>
-\ref mushroom_geom<br>
-\ref I6702_inp<br>
-\ref rounded_ionchamber_geom<br>
-\ref chambers_in_box_geom<br>
-\ref seeds_in_xyz_geom<br>
-\ref seeds_in_xyz1_geom<br>
-\ref car_geom<br>
-\ref linac_geom<br>
+\ref hemisphere_geom <br>
+\ref pyramid_geom <br>
+\ref rz_geom <br>
+\ref rz1_geom <br>
+\ref cones_geom <br>
+\ref rz_phi_geom <br>
+\ref xyz_geom <br>
+\ref mushroom_geom <br>
+\ref I6702_inp <br>
+\ref rounded_ionchamber_geom <br>
+\ref chambers_in_box_geom <br>
+\ref seeds_in_xyz_geom <br>
+\ref seeds_in_xyz1_geom <br>
+\ref car_geom <br>
+\ref linac_geom <br>
 
 \section hemisphere_geom A hemisphere
 
@@ -575,7 +566,7 @@ Here is a view of this geometry
 and this is the complete geometry definition:
 \include hemisphere.geom
 
-\section pyramid_geom A phyramid
+\section pyramid_geom A pyramid
 
 file: <code>pyramid.geom</code><br><br>
 \dontinclude pyramid.geom
@@ -616,7 +607,7 @@ EGS_NDGeometry N-dimensional geometry\endlink made of a
 \link EGS_CylindersT set of cylinders\endlink and a
 \link EGS_PlanesT set of planes\endlink. The geometry
 defined is the same as in the \c cavrznrc_template.egsinp
-file for the CAVRZnrc user code (a simple pancake ionization
+file for the CAVRZnrc application (a simple pancake ionization
 chamber with graphite walls and air cavity).
 
 We start by defining the 2 dimensions of the geometry: first s set

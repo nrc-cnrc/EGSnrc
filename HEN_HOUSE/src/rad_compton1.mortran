@@ -23,7 +23,7 @@
 "                                                                             "
 "  Author:          Iwan Kawrakow, 2005                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -36,7 +36,7 @@
 "  To include radiative corrections for Compton scattering:                   "
 "                                                                             "
 "  - add this file to the list of files needed to build EGSnrc just before    "
-"    $(EGS_SOURCEDIR)egsnrc.mortran                                           "
+"    $(EGS_SOURCEDIR)get_inputs.mortran                                       "
 "                                                                             "
 "  - turn the feature on by setting radc_flag in COMIN/RAD_COMPTON/ to 1 or   "
 "    by including Radiative Compton corrections= On in the transport          "
@@ -229,7 +229,7 @@ DO i=0,ne [
 close(radc_unit);
 $egs_info(*,' OK');
 
-radc_le1 = -log(radc_emin*0.5110034)*radc_dlei;
+radc_le1 = -log(radc_emin*prm)*radc_dlei;
 
 "Change the cross section and branching ratios"
 $egs_info('(a,$)','    Modifying cross sections and branching ratios ...');
@@ -240,7 +240,7 @@ DO medium=1,nmed [
         $EVALUATE gmfp USING gmfp(gle);
         $EVALUATE gbr1 USING gbr1(gle);
         $EVALUATE gbr2 USING gbr2(gle);
-        IF( exp(gle) > radc_emin*0.5110034 ) [
+        IF( exp(gle) > radc_emin*prm ) [
             acheck = radc_dlei*gle + radc_le1;
             icheck = acheck; acheck = acheck - icheck; acheck1 = 1 - acheck;
             frad = (radc_sigs(icheck)+radc_sigd(icheck))*acheck1 +

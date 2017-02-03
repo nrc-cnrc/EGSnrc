@@ -23,7 +23,7 @@
 "                                                                             "
 "  Authors:         Blake Walters, 2013                                       "
 "                                                                             "
-"  Contributors:                                                              "
+"  Contributors:    Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 
@@ -663,7 +663,7 @@ $INTEGER ounit;
 $declare_max_medium;
 
 $COMIN-GET-TRANSPORTP;
-COMIN/MEDINP,ELECIN,THRESH,ELEMTB/;
+COMIN/MEDINP,ELECIN,THRESH,ELEMTB,USEFUL/;
 
 $INTEGER  ival,ival_media,ival_medfile,i,j,k,ival_ae,ival_ue,ival_ap,ival_up,
           ival_rho,ival_elements,ival_rhoz,ival_iunrst,ival_iaprim,ival_gasp,
@@ -681,6 +681,8 @@ $LOGICAL  iunrst_specified,stern_specified,iaprim_specified,
           df_if_rho_mismatch($MXMED);
 $LOGICAL  ex;
 
+$INTEGER CURSOR,Kconvert;
+
 "maybe we do not need to keep ZTBL REAL4, since it is only used here"
 $REAL4 ZTBL;
 
@@ -690,7 +692,7 @@ $REAL4 ZTBL;
 $REAL EKE,ELKE,TMXSO,DEDXE,DEDXP,EFRACT,SIGE,SIGP,BREME,BREMP,ETAB(16),
       EIE,PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),PLOTEEN($MAXPOINTS),
       PLOTEMP($MAXPOINTS), PLOTEMS($MAXPOINTS);
-$INTEGER IPLOTE,IFLAG1,IFLAG2,MEDIUM,LELKE;
+$INTEGER IPLOTE,IFLAG1,IFLAG2,LELKE;
 CHARACTER*60 GRAPHTITLE,XAXIS,YAXISPcom,YAXISPmfp,YAXISE,YAXISEmfp,
               SUBTITLE,SERIES;
 DATA ETAB/1.,1.25,1.5,1.75,2.,2.5,3.,3.5,4.,4.5,5.,5.5,6.,7.,8.,9./;
@@ -834,7 +836,7 @@ nvalue(ival)        = 1;                        "1 input"
 type(ival)          = 1;
 value_min(ival)     = 0;
 value_max(ival)     = 999.;
-default(ival)       = 50.511;
+default(ival)       = 50 + prm;
 
 ival                = ival + 1;
 ival_up = ival;
@@ -865,8 +867,9 @@ IF(error_flags(ival_ue)=0)[
    ue_tmp=value(ival_ue,1);
 ]
 ELSE[
-   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 50.511 MeV');
-   ue_tmp=50.511;
+   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 
+     50.5109989461 MeV');
+   ue_tmp=50 + prm;
 ]
 IF(error_flags(ival_up)=0)[
    up_tmp=value(ival_up,1);
@@ -874,6 +877,15 @@ IF(error_flags(ival_up)=0)[
 ELSE[
    $WRITE_MEDERR(' Warning: UP for media not supplied.  Will use 50.0 MeV');
    up_tmp=50.;
+]
+
+IF(ue_tmp<=ae_tmp)[
+   $WRITE_MEDERR(' Error: UE <= AE.  Adjust value(s) and try again.');
+   $egs_fatal('(a)',' Error: UE <= AE.  Adjust value(s) and try again.');
+]
+IF(up_tmp<=ap_tmp)[
+   $WRITE_MEDERR(' Error: UP <= AP.  Adjust value(s) and try again.');
+   $egs_fatal('(a)',' Error: UP <= AP.  Adjust value(s) and try again.');
 ]
 
 "now check for individual media inputs in file"
@@ -922,7 +934,10 @@ DO i=1,NMED[
    nmin=ival_elements;nmax=ival_elements;
    CALL GET_INPUT;
    IF(error_flags(ival_elements)=0)[
-   "now get fraction of each element"
+    DO j=1,nvalue(ival_elements)[
+        $CONVERT char_value(ival_elements,j) TO UPPER CASE;
+    ]
+    "now get fraction of each element"
     ival=ival+1;
     ival_pz=ival;
     nne_tmp=nvalue(ival_elements);
@@ -1110,7 +1125,7 @@ DO i=1,NMED[
         eindex=index(text_string,'=');
         IF(mindex>0 & eindex>mindex)[
          "remove everything up to ="
-         text_string=text_string(eindex+1:);
+         text_string=text_save(eindex+1:);
          text_string=$cstring(text_string);
          $SKIP LEADING BLANKS IN text_string;
          IF(text_string=medium_name)[
@@ -1323,63 +1338,54 @@ DO i=1,NMED[
        IF(~ex)[
               $WRITE_MEDERR(' Error: Density correction file ',tmp_string);
               $WRITE_MEDERR(' cannot be found.');
-              $WRITE_MEDERR(' Will not use density corrections.');
-              densityfile_specified=.false.;
        ]
     ]
-    ELSE[
+    ELSE [
        density_file=$cstring(density_file)//'.density';
-       IF (elements_specified)[
-         "know which directory to look in based on no. of elements"
-         IF(nne_tmp=1)[
-            tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+       "first look in $EGS_HOME/pegs4/density_corrections"
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
+                  'density_corrections' // $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density_corrections' // $file_sep // 'elements' //
-                   $file_sep // density_file;
-            inquire(file=tmp_string,exist=ex);
-            IF(~ex)[
-              $WRITE_MEDERR(' Error: Density correction file ',density_file);
-              $WRITE_MEDERR(
-      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/elements');
-              $WRITE_MEDERR('   Will not use density corrections.');
-              densityfile_specified=.false.;
-            ]
-         ]
-         ELSE[
-            tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
                   'density_corrections' // $file_sep // 'compounds' //
-                   $file_sep // density_file;
-            inquire(file=tmp_string,exist=ex);
-            IF(~ex)[
-              $WRITE_MEDERR(' Error: Density correction file ',density_file);
-              $WRITE_MEDERR(
-      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/compounds');
-              $WRITE_MEDERR('   Will not use density corrections.');
-              densityfile_specified=.false.;
-            ]
-         ]
-       ]
-       ELSE["we have to look in both directories"
-       "first, look in elements"
-         tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
-                  'density_corrections' // $file_sep // 'elements' //
-                   $file_sep // density_file;
-         inquire(file=tmp_string,exist=ex);
-         IF(~ex)[
-             tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
-                  'density_corrections' // $file_sep // 'compounds' //
-                   $file_sep // density_file;
-             inquire(file=tmp_string,exist=ex);
-         ]
-         IF(~ex)[
-             $WRITE_MEDERR(' Error: Density correction file ',density_file);
-             $WRITE_MEDERR(
-      ' does not exist in $HEN_HOUSE/pegs4/density_corrections/elements or ');
-             $WRITE_MEDERR(
-                      ' $HEN_HOUSE/pegs4/density_corrections/compounds.',
-                      '   Will not use density corrections.');
-             densityfile_specified=.false.;
-         ]
-       ]
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       "now look in $EGS_HOME/pegs4/density in case directory still there"
+       tmp_string=$cstring(egs_home) // 'pegs4' // $file_sep //
+                  'density' // $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       "now look through $HEN_HOUSE/pegs4/density_corrections"
+       tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                    'density_corrections' // $file_sep // 'elements' //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       tmp_string=$cstring(hen_house) // 'pegs4' // $file_sep //
+                    'density_corrections' // $file_sep // 'compounds' //
+                    $file_sep // density_file;
+       inquire(file=tmp_string,exist=ex);
+       IF(ex) goto :density_file_found:;
+       $WRITE_MEDERR(' Error: Density correction file',
+                        density_file);
+       $WRITE_MEDERR(' does not exist in');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections/elements, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density_corrections/compounds, ');
+       $WRITE_MEDERR(' $EGS_HOME/pegs4/density, ');
+       $WRITE_MEDERR(
+        ' $HEN_HOUSE/pegs4/density_corrections/elements or ');
+       $WRITE_MEDERR(
+        ' $HEN_HOUSE/pegs4/density_corrections/compounds.');
+       :density_file_found:
+        ]
      ]
 
        IF(densityfile_specified)[
@@ -1482,11 +1488,20 @@ DO i=1,NMED[
            rho_specified=.true.;
            $WRITE_MEDERR(' Rho specified in density correction file');
          ]
+
+         IF(gasp_specified)[
+           "any value of gasp other than 1 atm is incompatible with"
+           "use of dcf and, since gasp is only used to scale rho when"
+           "dcf is used, this input is now unecessary at best"
+           $WRITE_MEDERR(' Warning: gas pressure input not required',
+              ' when using density correction file.  Will set GASP=0.');
+           gasp_specified=.false.;
+           gasp_tmp=0.;
+         ]
+
          "close the density file"
          close(i_density);
        ]
-    ]
-
 
    "okay, now commit this to the media library"
    IF(elements_specified & rho_specified)[
@@ -1634,14 +1649,18 @@ DO i=1,nmed[
     DO j=1,8[
      DO k=1,16[
        EKE=ETAB(k)*10.**(j-4);
-       IF(EKE <= AE(1)-0.511) [
-           IF(IFLAG1 = 0) [ IFLAG1=1; EKE=AE(1)-0.511; ] ELSE [ EKE=0.0; ]
+       IF(EKE <= AE(1)-PRM) [
+           IF(IFLAG1 = 0) [ 
+             IFLAG1=1; EKE=AE(1)-PRM; 
+           ] ELSE [ EKE=0.0; ]
        ]
 
-       IF(EKE > UE(1)-0.511) [
-           IF(IFLAG2 = 0) [ IFLAG2=1; EKE=UE(1)-0.511; ] ELSE [ EKE=1.E30; ]
+       IF(EKE > UE(1)-PRM) [
+           IF(IFLAG2 = 0) [ 
+             IFLAG2=1; EKE=UE(1)-PRM; 
+           ] ELSE [ EKE=1.E30; ]
        ]
-       EIE=EKE+0.511;       TMXSO=0.0;        DEDXE=0.0;
+       EIE=EKE+PRM;       TMXSO=0.0;        DEDXE=0.0;
        DEDXP=0.0;           EFRACT=0.0;
        IF(EIE >= AE(1)-0.0001 & EIE <= UE(1)+0.001) [
            ELKE=LOG(EKE);
@@ -1714,7 +1733,8 @@ return;
 $egs_fatal('(a)','Error: Cannot open material data file',material_file);
 return;
 :no_density_file:
-$egs_fatal('(a)','Error: Cannot open density correction file',tmp_string);
+$egs_fatal('(a)','Error: Cannot open density correction file: ',
+$cstring(density_file));
 return;
 end;
 ;

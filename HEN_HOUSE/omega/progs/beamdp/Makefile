@@ -44,3 +44,9 @@ beamdp_$(my_machine).f: $(SOURCES)
 	@echo "Mortran compiling beamdp sources ..."
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
 	      -o8 beamdp_$(my_machine).mortlst
+
+clean:
+	$(REMOVE) mortjob.mortran beamdp_$(my_machine).f beamdp_$(my_machine).mortlst
+	$(REMOVE) $(EGS_BINDIR)beamdp$(EXE)
+
+.PHONY: clean

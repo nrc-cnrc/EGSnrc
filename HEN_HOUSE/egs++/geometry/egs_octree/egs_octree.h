@@ -471,9 +471,8 @@ public:
 };
 
 
-/*!
+/*! \brief An octree geometry
 
-\brief An octree geometry
 \ingroup Geometry
 
 The EGS_Octree class implements an octree geometry. An octree is a partitioning

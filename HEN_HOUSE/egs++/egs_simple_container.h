@@ -35,7 +35,7 @@
 #include "egs_functions.h"
 
 /*! \file   egs_simple_container.h
-    \brief  A template for a simple container class.
+    \brief  EGS_SimpleContainer template class
     \IK
 */
 

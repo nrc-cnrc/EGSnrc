@@ -68,7 +68,7 @@ proc create_file { file } {
     global grouping nrow izrow enflag numsrcopts izopts ncpu dflag parnum
     global numthphi angfixed ang1 ang2 nang pang ivary thphidef
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
-    global iphant iphspout imuphspout
+    global iphant iphspout imuphspout calflag
     global level ibcmp_min ibcmp_max iphter_min iphter_max
     global iraylr_min iraylr_max iedgfl_min iedgfl_max
     global i_dbs r_dbs ssd_dbs z_dbs the_beam_code the_input_file the_pegs_file
@@ -298,7 +298,7 @@ set str "$ivary($i), $angfixed($i), $ang1($i), $ang2($i), $nang($i), $pang($i)"
 	#for {set j 0} {$j<1} {incr j} {
 	#    set str "$str$srcopts($j), "
 	#}
-	set str "$str$i_dbs, $r_dbs, $ssd_dbs, $z_dbs, $esplit, $imuphspout"
+	set str "$str$i_dbs, $r_dbs, $ssd_dbs, $z_dbs, $esplit, $imuphspout, $calflag"
       puts $file $str
 	#set str "$str$i_dbs, $esplit"
 	#puts $file $str

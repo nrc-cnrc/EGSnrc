@@ -27,6 +27,7 @@
 "                   Ernesto Mainegra-Hing                                     "
 "                   Blake Walters                                             "
 "                   Frederic Tessier                                          "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -705,7 +706,7 @@ IF( ex ) [
         IF( input_line(1:1) = '#' ) NEXT;
         "The DEC and SGI compilers fail at the following statement!"
         "read(input_line,*,err=:end_of_iofile:,end=:end_of_iofile:) u,arg;"
-        read(input_line,*,err=:end_of_iofile:,end=:end_of_iofile:) u;
+        read(input_line,*,err=:end_of_ioline:,end=:end_of_ioline:) u;
         istart = 1;
         DO i=lnblnk1(input_line),1,-1 [
             IF( input_line(i:i) = ' ' ) [ istart = i+1; EXIT; ]
@@ -742,6 +743,7 @@ IF( ex ) [
             $egs_debug('(a,a,a,i3)','connected ',$cstring(tmp1_string),
               ' to unit ',u);
         ]
+        :end_of_ioline:
     ]
     :end_of_iofile:
     close(i_iofile);
@@ -937,7 +939,12 @@ nmed = $default_nmed;
 kmpi = 12; kmpo = 8; dunit = 1;
 rng_seed = 999999;
 latchi = 0;
-rm = 0.5110034; rmt2 = 2*rm; rmsq = rm*rm;
+
+" The rest mass value is as recommended by CODATA 2014
+" http://physics.nist.gov/cgi-bin/cuu/Value?mec2mev
+rm = 0.5109989461;
+rmt2 = 2*rm; rmsq = rm*rm;
+
 pi = 4*datan(1d0); twopi = 2*pi; pi5d2 = 2.5*pi;
 nbr_split = 1;
 i_play_RR = 0; i_survived_RR = 0; prob_RR = -1; n_RR_warning = 0;

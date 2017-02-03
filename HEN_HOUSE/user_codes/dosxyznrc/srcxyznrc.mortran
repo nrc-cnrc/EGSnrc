@@ -31,6 +31,7 @@
 "                   Blake Walters                                             "
 "                   Iwan Kawrakow                                             "
 "                   Frederic Tessier                                          "
+"                   Marc-Andre Renaud                                         "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -476,7 +477,7 @@
 "  your EGS_HOME/bin/config directory.
 "
 "
-"       iqin,isource,nset,i_dbs,r_dbs,ssd_dbs,z_dbs,e_split,i_muidx_out
+"       iqin,isource,nset,i_dbs,r_dbs,ssd_dbs,z_dbs,e_split,i_muidx_out, calflag
 "
 "               iqin(iqinc) = 0 only photons from BEAM simulation will be used
 "                           = 1 only positrons will be used
@@ -507,6 +508,11 @@
 "            i_muidx_out    Set to 1 to include frMU_indx (the fractional
 "                           monitor unit index) in phase space output if
 "                           i_phsp_out=1 or 2.
+"               calflag     set to 1 to skip the calibration run performed to
+"                           refine the estimate of NRCYCL needed to avoid
+"                           rewinding the phsp. Only do this if certain that
+"                           your phsp has enough particles compared to the no.
+"                           of histories you are running.
 ;
 "-------------------------------------------------------------------------------
 "
@@ -788,6 +794,7 @@ $REAL einm,xinm,yinm,uinm,vinm,wtm,zlastm,Z_SOURCE;
 
 enflag = 0; "Default flag: Source energy same for each source particle
 i_muidx_out = 0; "default not to output frMU_indx if writing phsp data"
+calflag = 0; "default to running the calibration run (isource = 20)"
 
 OUTPUT; ( / / ' Source configuration'/);
 OUTPUT; (
@@ -989,7 +996,9 @@ OUTPUT; (
     '             in original BEAM simulation, '/
     '          No. of times to split charged particles,'/
     '          i_muidx_out: Set to 1 to include fractional MU index'/
-    '             in output phase space (i_phsp_out=1 or 2)'/);
+    '             in output phase space (i_phsp_out=1 or 2)'/
+    '          calflag: Set to 1 to skip the calibration run performed'/
+    '             to refine the estimate of NRCYCL.'/);
 OUTPUT; (
     '  or  (21) BEAM simulation of treatment head will multiple settings' /
     '		optionally through a MLC'/
@@ -1540,7 +1549,7 @@ ELSEIF(isource = 20)[ "Phase Space Incident from multiple settings and "
 "------------------------------------------------------------------------"
     nset   = temp(1);	  iqinc=iqin;
     i_dbs=temp(2); r_dbs=temp(3); ssd_dbs=temp(4); z_dbs=temp(5);
-    e_split=temp(6); i_muidx_out=temp(7);
+    e_split=temp(6); i_muidx_out=temp(7); calflag=temp(8);
     "The following IF statement is used to preserve compatibility with old"
     "input files and keep the e_split value (JL)"
     IF(ssd_dbs=0 & z_dbs=0 & r_dbs>0)[
@@ -1599,6 +1608,14 @@ ELSEIF(isource = 20)[ "Phase Space Incident from multiple settings and "
          OUTPUT;
        (' If writing phase space data on exit from phantom (i_phsp_out=1 or 2)'/
         ' frMU_indx (fractional monitor unit index) will be included.');
+     ]
+
+     IF(calflag < 0 | calflag > 1) calflag = 0; "Default to running calib run"
+     IF(calflag = 1)[
+         OUTPUT;
+         (' Skipping calibration run. Make sure that your phase space file has'/
+          ' enough particles to avoid rewinding, otherwise uncertainty values'/
+          ' will be inaccurate.');
      ]
 
       DO I=1,nset["get each setting"
@@ -2397,8 +2414,6 @@ $REAL weight,
       cosphi,sinphi;
 $INTEGER i;
 
-$INIT_PHSP_COUNTERS;
-
 OUTPUT61;(' ');
 
 "------------------------------------------------------------------------"
@@ -2684,9 +2699,17 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
                          hen_house,egs_home,the_shared_lib,
                          pegs_file,the_input_file);
      ]
+
+     IF(calflag = 0)[
        call calibration_run(survival_ratio);
        OUTPUT61 survival_ratio;
        ('Survival Ratio is: ', F12.10);
+     ]
+     ELSE[
+       survival_ratio = 1;  "We skipped the calibration run"
+       OUTPUT61;
+       (/'Calibration run skipped!'/);
+     ]
    ]
    ELSE[
 	OUTPUT61;

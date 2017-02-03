@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2004
 #
 #  Contributors:    Frederic Tessier
+#                   Blake Walters
 #
 ###############################################################################
 
@@ -55,3 +56,9 @@ readphsp_$(my_machine).f: $(SOURCES)
 	@echo "Mortran compiling readphsp sources ..."
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(SOURCES) -o7 $@ \
 	      -o8 readphsp_$(my_machine).mortlst
+
+clean:
+	$(REMOVE) mortjob.mortran readphsp_$(my_machine).f readphsp_$(my_machine).mortlst
+	$(REMOVE) $(EGS_BINDIR)readphsp$(EXE)
+
+.PHONY: clean

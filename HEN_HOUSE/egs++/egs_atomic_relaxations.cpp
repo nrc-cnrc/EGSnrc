@@ -28,6 +28,10 @@
 ###############################################################################
 */
 
+/*! \file     egs_atomic_relaxations.cpp
+ *  \brief    EGS_AtomicRelaxations implementation
+ *  \IK
+ ***************************************************************************/
 
 #include "egs_atomic_relaxations.h"
 #include "egs_rndm.h"

@@ -30,7 +30,7 @@
 
 
 /*! \file     egs_transformations.h
- *  \brief    Rotations and affine transformations header
+ *  \brief    EGS_AffineTransform and EGS_RotationMatrix class header file
  *  \IK
  ***************************************************************************/
 
@@ -127,7 +127,7 @@ public:
     bool isRotation() const {
         EGS_Float d = det() - 1;
         EGS_RotationMatrix t((*this)*inverse());
-        if (fabs(d) > 1e-4 || !t.isI()) {
+        if (fabs(d) > epsilon || !t.isI()) {
             return false;
         }
         return true;
@@ -148,16 +148,21 @@ public:
     EGS_RotationMatrix(const EGS_Vector &v) {
         EGS_Float sinz = v.x*v.x + v.y*v.y;
         EGS_Float norm = sinz + v.z*v.z;
-        if (norm < 1e-15) egsFatal("EGS_RotationMatrix::EGS_RotationMatrix: \n"
-                                       "  no construction from a zero vector possible!\n");
+        if (norm < epsilon) egsFatal("EGS_RotationMatrix::EGS_RotationMatrix: \n"
+                                         "  no construction from a zero vector possible!\n");
         norm = sqrt(norm);
-        if (sinz > 1e-15) {
+        if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi = v.x/sinz;
             register EGS_Float sphi = v.y/sinz;
             EGS_Float cost = v.z/norm;
             register EGS_Float sint = -sinz/norm;
             *this = rotY(cost,sint)*rotZ(cphi,sphi);
+        }
+        else if (v.z < 0.) {
+            // v along negative z is degenerate: a rotation of pi around any axis in the
+            // xy plane satisfies the condition; we pick the x axis
+            *this = rotX(M_PI);
         }
         else { // v is along the z-axis => matrix is the unit transformation
             rxx = 1;
@@ -289,9 +294,9 @@ public:
     with \a cphi, \a sphi = \f$ \cos(\phi), \sin(\phi)\f$.
     */
     static EGS_RotationMatrix rotY(EGS_Float cphi,EGS_Float sphi) {
-        return EGS_RotationMatrix(cphi, (EGS_Float)0,         sphi,
+        return EGS_RotationMatrix(cphi, (EGS_Float)0,         -sphi,
                                   (EGS_Float)0, (EGS_Float)1, (EGS_Float)0,
-                                  -sphi, (EGS_Float)0,         cphi);
+                                  sphi, (EGS_Float)0,         cphi);
     };
 
     /*! \brief Returns a rotation around the z-axis by the angle \f$\phi\f$

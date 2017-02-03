@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -92,6 +93,41 @@ the \c priorities key and \f$G_i\f$ and \f$G_j\f$ have the same priority
 defined, \f$G_i\f$ is still considered to have a higher priority if
 \f$i < j\f$. A geometry union is used in the \c car.geom example
 geometry file.
+
+A simple example:
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_sphere
+        library     = egs_spheres
+        midpoint = 0
+        radii = 1
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    :start geometry:
+        name        = my_union
+        library     = egs_gunion
+        # Geometry priority follows order in list
+        geometries = my_box my_sphere
+    :stop geometry:
+
+    simulation geometry = my_union
+
+:stop geometry definition:
+\endverbatim
+\image html egs_gunion.png "A simple example"
 
 */
 class EGS_UNIONG_EXPORT EGS_UnionGeometry : public EGS_BaseGeometry {
