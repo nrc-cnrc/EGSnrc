@@ -145,7 +145,11 @@ void EGS_Interpolator::initialize(EGS_Float Xmin, EGS_Float Xmax,
     for (j=0; j<nnow; j++) {
         tmp[j] = func(Xmin + ddx*j, data);
     }
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_Interpolator::initialize: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return;
+        }
         EGS_Float *tmp1 = new EGS_Float [nnow-1];
         for (j=0; j<nnow-1; j++) {
             tmp1[j] = func(Xmin + ddx*(0.5+j),data);

@@ -195,7 +195,11 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     int nc=2;
     j=2;
     bool doing_chull=true;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_2DPolygon::EGS_2DPolygon: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return;
+        }
         EGS_2DVector s(pp[j]-chull[nc-1]);
         EGS_2DVector sperp(-s.y,s.x);
         if (!ccw) {

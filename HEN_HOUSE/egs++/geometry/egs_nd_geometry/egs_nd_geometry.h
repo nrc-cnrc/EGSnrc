@@ -429,7 +429,11 @@ public:
                 EGS_Float tleft = t;
                 int ii = g[j]->isWhere(x);
                 EGS_Float ttot = 0;
-                while (1) {
+                for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+                    if (loopCount == loopMax) {
+                        egsFatal("EGS_NDGeometry::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                        return -1;
+                    }
                     EGS_Float tt = tleft;
                     int inew = g[j]->howfar(ii,tmp,u,tt);
                     if (inew == ii) {
@@ -1728,7 +1732,11 @@ public:
         EGS_Float t_left = t;
         EGS_Vector xtmp(x);
         EGS_Float ttot = 0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_XYZRepeater::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             EGS_Float this_t = t_left;
             EGS_Vector xp(xtmp - translation[cell]);
             int inew = g->howfar(-1,xp,u,this_t,newmed,normal);
