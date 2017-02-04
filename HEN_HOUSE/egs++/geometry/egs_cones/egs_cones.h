@@ -1833,7 +1833,11 @@ public:
         }
 
         // traverse layers until we hit a cone, or else move beyond conestack boundary planes
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_ConeStack::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
 
             // calculate distance to next plane boundary
             if (up > 0) {                           // moving along conestack axis a

@@ -321,7 +321,11 @@ public:
 
         int j = ifirst;
         int ij = -1, ig;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_EnvelopeGeometry::computeIntersections: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             if (ireg >= nbase) {
                 if (new_indexing) {
                     ig = reg_to_inscr[ireg-nbase];
@@ -710,7 +714,11 @@ public:
 
         int j = ifirst;
         int ij = -1, ig;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_FastEnvelope::computeIntersections: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             //egsInformation("in loop: j=%d ireg=%d imed=%d x=(%g,%g,%g)\n",
             //        j,ireg,imed,x.x,x.y,x.z);
             if (ireg >= nbase) {

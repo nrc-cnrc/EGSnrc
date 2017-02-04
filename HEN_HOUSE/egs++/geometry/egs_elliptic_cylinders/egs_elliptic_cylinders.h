@@ -415,7 +415,11 @@ private:
                     uo*(uo*uo-4*(vo*vo+3))/(16*(1+vo*vo)) :
                     1 - 0.5*vo*vo/(vo*vo+(uo+1)*(uo+1));
         int ntry=0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_EllipticCylindersT::hownear: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             if (++ntry > 50) {
                 if (++nwarn < 20) egsWarning("EGS_EllipticCylindersT::"
                                                  "hownear: failed to find solution\n");

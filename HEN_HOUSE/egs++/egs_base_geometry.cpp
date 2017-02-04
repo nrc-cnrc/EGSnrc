@@ -344,7 +344,11 @@ EGS_Float EGS_BaseGeometry::howfarToOutside(int ireg, const EGS_Vector &x,
     }
     EGS_Vector xx(x);
     EGS_Float ttot = 0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_BaseGeometry::howfarToOutside: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return 0;
+        }
         EGS_Float t = 1e30;
         int inew = howfar(ireg,xx,u,t);
         ttot += t;

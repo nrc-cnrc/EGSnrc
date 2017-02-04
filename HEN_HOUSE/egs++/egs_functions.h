@@ -53,6 +53,24 @@ using namespace std;
  */
 const EGS_Float epsilon = 1e-10;
 
+/*! \brief The maximum number of iterations for near-infinite loops
+ *
+ * \ingroup egspp_main
+ *
+ * The loopMax constant can be used to replace while(1){} loops
+ * so that the code returns after some large number of iterations.
+ */
+const EGS_I64 loopMax = 1e10;
+
+/*! \brief A very large float
+ *
+ * \ingroup egspp_main
+ *
+ * The veryLargeFloat constant is simply a very large float. It is usually
+ * used as an initial value for geometry bounds.
+ */
+const EGS_Float veryLargeFloat = 1e30;
+
 /*! \brief Writes the 64 bit integer \a n to the output stream data
  * and returns \c true on success, \c false on failure.
  *

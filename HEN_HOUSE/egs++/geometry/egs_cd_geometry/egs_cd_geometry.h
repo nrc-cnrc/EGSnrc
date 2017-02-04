@@ -681,7 +681,11 @@ public:
 do_checks:
         EGS_Vector tmp(x + u*tb);  // position at which we are inside
         // the base geometry
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_CDGeometry::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             if (!g[ibase]) { // no inscribed geometry in this base geometry region
                 t = ttot;
                 if (newmed) {
