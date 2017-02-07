@@ -28,7 +28,8 @@
 ###############################################################################
 
 
-machine=$(shell echo linux`getconf LONG_BIT`)
+#machine=$(shell echo linux-static`getconf LONG_BIT`)
+machine=linux-static
 egs_config=$(HEN_HOUSE)/specs/$(machine).conf
 
 ######################################################################
