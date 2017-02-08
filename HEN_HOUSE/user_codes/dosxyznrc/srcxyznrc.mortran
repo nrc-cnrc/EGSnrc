@@ -485,7 +485,7 @@
 "                           = 2 all the particles will be used
 "                           internally renamed as iqinc
 "               isource     = 20
-"               nset        number of settings (control points)
+"               nset        number of settings (control points) (>=2)
 "               i_dbs       set to 1 if you are using directional bremsstrahlung
 "                           splitting (DBS) in the BEAM simulation
 "                           AND you wish to reject fat photons not aimed into
@@ -537,7 +537,7 @@
 "                           = 2 all the particles will be used
 "                           internally renamed as iqinc
 "               isource     = 21
-"               nset        number of settings (control points)
+"               nset        number of settings (control points) (>=2)
 "               i_dbs       set to 1 if you are using directional bremsstrahlung
 "                           splitting (DBS) in the BEAM simulation
 "                           AND you wish to reject fat photons not aimed into
@@ -1556,7 +1556,7 @@ ELSEIF(isource = 20)[ "Phase Space Incident from multiple settings and "
         r_dbs = 0;
         e_split = temp(3);
     ]
-    IF(nset>0)[
+    IF(nset>1)[
     OUTPUT nset,e_split;
     ( / ' Phase Space source though dynamic library with multiple variable'/
         ' geometry settings'/
@@ -1629,11 +1629,11 @@ ELSEIF(isource = 20)[ "Phase Space Incident from multiple settings and "
       ]
       dsource=dsourcetemp(1);"set to first one arbitrarily since its done"
 				     "later on the fly"
-    ]"if nset is greater than 0
-    ELSEIF(nset<0) [
+    ]"if nset is greater than 1
+    ELSEIF(nset<2) [
 	  OUTPUT61 nset;
 	  (//' ***ERROR in source 20***'/
-	  'nset (',I8,') must be positive'//);
+	  'nset (',I8,') must be >= 2'//);
 	  STOP;
     ]
     OUTPUT;(' ');
@@ -1647,7 +1647,7 @@ ELSEIF(isource = 21)[ "BEAM simulation with multiple settings and through"
     e_split=temp(3);
     i_muidx_out=temp(4);
     iqinc=iqin;
-    IF(nset>0)[
+    IF(nset>1)[
         OUTPUT nset,e_split;
         ( / ' Full BEAM Sim. incident from multiple settings'/
             ' Number of settings:',t55,i10/
@@ -1692,10 +1692,10 @@ ELSEIF(isource = 21)[ "BEAM simulation with multiple settings and through"
       dsource=dsourcetemp(1);"set to first one arbitrarily since its done"
 				     "later on the fly"
   ]
-  ELSEIF(nset<0) [
+  ELSEIF(nset<2) [
 	  OUTPUT61 nset;
 	  (//' ***ERROR in source 21***'/
-	  'nset (',I8,') must be positive'//);
+	  'nset (',I8,') must be >= 2'//);
 	  STOP;
 	  ]
 	  OUTPUT;(' ');
@@ -3243,7 +3243,7 @@ ELSEIF(isource=10)[
    ]
 ]
 ELSEIF(isource=20)  [
-  IF(nset>0) [
+  IF(nset>1) [
     OUTPUT61 nset,dsource,nshist,$cstring(the_shared_lib),
        $cstring(the_input_file);
    ( t15,'Phase Space Incident from multiple settings through a BEAM/MLC '//
@@ -3287,7 +3287,7 @@ ELSEIF(isource=20)  [
    ]
 ]
 ELSEIF(isource=21)  [
-  IF(nset>0) [
+  IF(nset>1) [
     OUTPUT61 nset,dsource,
        $cstring(the_beam_code),$cstring(the_input_file),
        $cstring(the_pegs_file),$cstring(the_vcu_code),
