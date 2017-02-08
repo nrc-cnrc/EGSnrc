@@ -1166,7 +1166,7 @@ protected:
 
         // If the daughter is in an excited state
         // check for transitions
-        if (currentLevel && currentLevel->levelCanDecay() && currentLevel->getEnergy() > 1e-10) {
+        if (currentLevel && currentLevel->levelCanDecay() && currentLevel->getEnergy() > epsilon) {
 
             for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                     gamma != myGammas.end(); gamma++) {
@@ -1225,7 +1225,7 @@ protected:
                 // branches for beta+ or electron capture
                 if (currentQ == 1) {
                     // For positron emission, continue as usual
-                    if ((*beta)->getPositronIntensity() > 1e-10 && rndm->getUniform() < (*beta)->getPositronIntensity()) {
+                    if ((*beta)->getPositronIntensity() > epsilon && rndm->getUniform() < (*beta)->getPositronIntensity()) {
 
                     }
                     else {

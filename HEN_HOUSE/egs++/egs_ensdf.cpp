@@ -409,7 +409,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
             myGammaRecords.erase(it);
 
         }
-        else if ((*it)->getLevelRecord()->getEnergy() < 1e-10) {
+        else if ((*it)->getLevelRecord()->getEnergy() < epsilon) {
             // Some gamma may be emitted but the energy level is not known
             // This is reported in the lnhb data as decays from the -1 level
             // Since we cannot correlate the emission with a change of energy
@@ -622,7 +622,7 @@ void EGS_Ensdf::normalizeIntensities() {
         totalMetastableGammaIntensity += (*gamma)->getTransitionIntensity();
         totalDecayIntensity += (*gamma)->getTransitionIntensity();
     }
-    if (totalMetastableGammaIntensity > 0 && totalMetastableGammaIntensity < 100. - 1e-10) {
+    if (totalMetastableGammaIntensity > 0 && totalMetastableGammaIntensity < 100. - epsilon) {
         double metastableFailIntensity = 100. - totalMetastableGammaIntensity;
         totalDecayIntensity += metastableFailIntensity;
 
@@ -687,7 +687,7 @@ void EGS_Ensdf::normalizeIntensities() {
         (*alpha)->setAlphaIntensity(
             (*alpha)->getAlphaIntensity() / totalDecayIntensity);
 
-        if ((alpha - myAlphaRecords.begin()) == 0 && lastIntensity > 1e-10) {
+        if ((alpha - myAlphaRecords.begin()) == 0 && lastIntensity > epsilon) {
             (*alpha)->setAlphaIntensity(
                 (*alpha)->getAlphaIntensity() + lastIntensity);
         }
@@ -711,7 +711,7 @@ void EGS_Ensdf::normalizeIntensities() {
         (*gamma)->setTransitionIntensity(
             (*gamma)->getTransitionIntensity() / totalDecayIntensity);
 
-        if ((gamma - myMetastableGammaRecords.begin()) == 0 && lastIntensity > 1e-10) {
+        if ((gamma - myMetastableGammaRecords.begin()) == 0 && lastIntensity > epsilon) {
             (*gamma)->setTransitionIntensity(
                 (*gamma)->getTransitionIntensity() + lastIntensity);
         }
@@ -733,7 +733,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
         xrayIntensities[i] /= totalDecayIntensity;
 
-        if (i==0 && lastIntensity > 1e-10) {
+        if (i==0 && lastIntensity > epsilon) {
             xrayIntensities[i] += lastIntensity;
         }
         else if (i > 0) {
@@ -752,7 +752,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
         augerIntensities[i] /= totalDecayIntensity;
 
-        if (i==0 && lastIntensity > 1e-10) {
+        if (i==0 && lastIntensity > epsilon) {
             augerIntensities[i] += lastIntensity;
         }
         else if (i > 0) {
@@ -835,7 +835,7 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
 
-        if (disintIntensity > 1e-10 && totalLevelIntensity[j] < disintIntensity + 1e-10) {
+        if (disintIntensity > epsilon && totalLevelIntensity[j] < disintIntensity + epsilon) {
             totalLevelIntensity[j] = disintIntensity;
             if (verbose > 1) {
                 egsInformation("EGS_Ensdf::normalizeIntensities: "
@@ -858,7 +858,7 @@ void EGS_Ensdf::normalizeIntensities() {
             if ((*gamma)->getLevelRecord() == (*it)) {
                 levelCanDecay = true;
 
-                if (totalLevelIntensity[j] > 1e-10) {
+                if (totalLevelIntensity[j] > epsilon) {
                     (*gamma)->setTransitionIntensity(
                         (*gamma)->getTransitionIntensity() /
                         totalLevelIntensity[j]);
@@ -931,7 +931,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
                     if (lineTotalType == 0) {
                         bool containsZeroIntensity = false;
                         for (std::vector<double>::iterator it = xrayIntensities.end()-countNumAfterTotal; it != xrayIntensities.end(); ++it) {
-                            if (*it < 1e-10) {
+                            if (*it < epsilon) {
                                 containsZeroIntensity = true;
                                 break;
                             }
@@ -948,7 +948,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
                     else if (lineTotalType == -1) {
                         bool containsZeroIntensity = false;
                         for (std::vector<double>::iterator it = augerIntensities.end()-countNumAfterTotal; it != augerIntensities.end(); ++it) {
-                            if (*it < 1e-10) {
+                            if (*it < epsilon) {
                                 containsZeroIntensity = true;
                                 break;
                             }
@@ -981,7 +981,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
                     }
                 }
                 for (unsigned int i=0; i < multilineIntensities.size(); ++i) {
-                    if (multilineIntensities[i] > 1e-10) {
+                    if (multilineIntensities[i] > epsilon) {
                         intensitySum += multilineIntensities[i];
                         numNonzeroI++;
                     }
@@ -1056,7 +1056,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
             // increment a counter. This will be used in the
             // event that the lines following the "total"
             // have zero intensity assigned
-            if (gotTotal && energy > 1e-10) {
+            if (gotTotal && energy > epsilon) {
                 countNumAfterTotal++;
             }
 
@@ -1091,15 +1091,15 @@ void EGS_Ensdf::getEmissionsFromComments() {
             }
             else {
                 if (emissionLine.at(0) == 'X') {
-                    if ((energy > 1e-10 && intensity > 1e-10) ||
-                            (gotTotal && energy > 1e-10)) {
+                    if ((energy > epsilon && intensity > epsilon) ||
+                            (gotTotal && energy > epsilon)) {
                         xrayEnergies.push_back(energy);
                         xrayIntensities.push_back(intensity);
                     }
                 }
                 else if (emissionLine.find("AUGER") != std::string::npos) {
-                    if ((energy > 1e-10 && intensity > 1e-10) ||
-                            (gotTotal && energy > 1e-10)) {
+                    if ((energy > epsilon && intensity > epsilon) ||
+                            (gotTotal && energy > epsilon)) {
                         augerEnergies.push_back(energy);
                         augerIntensities.push_back(intensity);
                     }
@@ -1725,7 +1725,7 @@ void BetaPlusRecord::processEnsdf() {
 
     // For positrons we may need to calculate the emission energy
     // E = Q - level_energy - 2*mc^2
-    if (finalEnergy == 0 && positronIntensity > 1e-10) {
+    if (finalEnergy == 0 && positronIntensity > epsilon) {
         finalEnergy = getParentRecord()->getQ()
                       - getLevelRecord()->getEnergy() - 1.022;
 

@@ -259,7 +259,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         E = decays[i]->sampleEnergy(rndm);
 
         // Skip zero energy particles
-        if (E < 1e-10) {
+        if (E < epsilon) {
             continue;
         }
 
@@ -337,7 +337,7 @@ void EGS_RadionuclideSource::getPositionDirection(EGS_RandomGenerator *rndm,
     u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
 
     EGS_Float sinz = 1-u.z*u.z;
-    if (sinz > 1e-15) {
+    if (sinz > epsilon) {
         sinz = sqrt(sinz);
         EGS_Float cphi, sphi;
         EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
