@@ -119,6 +119,7 @@ public slots:
 
 protected:
     void init();
+    void readDensityFile(QString dfile);
 private:
     bool output_is_active;
     PEGS_RunOutput *run_output;

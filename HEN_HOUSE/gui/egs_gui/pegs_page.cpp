@@ -227,6 +227,22 @@ void EGS_PegsPage::densityIcruChanged( bool is_on) {
   medtype_cbox->setEnabled( !is_on );
   is_gas->setEnabled( !is_on );
   enable_gaspEdit();
+  if(is_on) {
+    //see if a file has already been specified
+    if(!dc_file->text().isEmpty()) {
+    //now check to see if this points to a file that exists
+     QFileInfo dfi(dc_file->text());
+     if( !dfi.exists() ) {
+      QMessageBox::critical(this,"Warning",
+              QString("Density correction file %1 does not exist ?").arg(dc_file->text()),QMessageBox::Ok,0);
+      return;
+     }
+     else{
+      //read contents
+      readDensityFile(dc_file->text());
+     }
+   }
+  }
 }
 
 void EGS_PegsPage::enable_gaspEdit()
@@ -280,6 +296,13 @@ void EGS_PegsPage::getDensityFile() {
 #endif
   if( dfile.isEmpty() ) return;
   QFileInfo fi(dfile);
+  readDensityFile(dfile);
+  dc_file->setText(fi.absoluteFilePath());
+}
+
+void EGS_PegsPage::readDensityFile(QString dfile) {
+//open and read contents of dc file (dfile) & update medium
+//composition table & medium type
   QFile f(dfile);
   if( !f.open(QFile::ReadOnly) ) return;
   char buf[256]; f.readLine(buf,255); // ignore first line
@@ -303,21 +326,16 @@ void EGS_PegsPage::getDensityFile() {
     medtype_cbox->setCurrentIndex(Mixt);
     medtypeChanged("Mixture");
   }
-  //composition_table->horizontalHeader()->setLabel(1," Fraction by weight ");
   rho_le->setText(QString("%1").arg(rho));
   int j;
   for(j=0; j < composition_table->rowCount(); j++) {
     composition_table->setItem(j,0,0); composition_table->setItem(j,1,0);
-    //composition_table->setText(j,0,"");
-    //composition_table->setText(j,1,"");
   }
   for(j=0; j<nelem; j++) {
     int iz; double frac; data >> iz >> frac;
     composition_table->setItem(j,0,new QTableWidgetItem(QString::fromStdString(element_data[iz-1].symbol)));
     composition_table->setItem(j,1,new QTableWidgetItem(QString("%1").arg(frac)));
   }
-  //dc_file->setText(fi.completeBaseName());// same as baseName(true) in Qt3 -- EMH
-   dc_file->setText(fi.absoluteFilePath());
 }
 
 void EGS_PegsPage::newDataFileChecked(bool b) {
