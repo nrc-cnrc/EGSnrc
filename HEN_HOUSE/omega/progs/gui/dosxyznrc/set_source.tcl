@@ -147,6 +147,8 @@ proc set_src_options { isource } {
     }
     if {$isource==20 || $isource==21} {
 	#get settings
+        #min. of 2 set points
+        set numsets [expr max($numsets,2)] 
 	frame $w.setdef -bd 4
 	button $w.setdef.but -text "define settings"\
                                  -command {define_setting}
@@ -1488,7 +1490,8 @@ proc define_setting { } {
           $top.b.okb configure -state disabled
     }
 
-    if {$numsets==0} {
+    #must have at least 2 set points
+    if {$numsets==2} {
           $top.b.delb configure -state disabled
     }
 
@@ -1606,7 +1609,8 @@ proc add_setting { } {
     entry $w.grid.e8$k -textvariable muI($i) -width 8
     grid configure $w.grid.e8$k -row $k -column 8
 
-    if {$numsets==1} {
+    #min. of 2 set points
+    if {$numsets==3} {
          #re-enable the delete last pair/group button
          $w.b.delb configure -state normal -command "del_setting"
     }
@@ -1712,7 +1716,8 @@ proc del_setting { } {
     }
     incr numsets -1
 
-    if {$numsets==0} {
+    #min no. of pts=2
+    if {$numsets==2} {
           set w .main_w.srcopt.sett$prev
           $w.b.delb configure -state disabled
     }
