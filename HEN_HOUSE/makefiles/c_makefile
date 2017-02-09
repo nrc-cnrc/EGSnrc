@@ -7,34 +7,34 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2003
-#  
+#
 #  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
-#  This is a default Makefile for a EGSnrc user code written in C. It gets 
-#  included from the Makefile in the user code directory, which must define 
-#  C_OBJECTS to be the list of object files that must be linked together to 
+#  This is a default Makefile for a EGSnrc user code written in C. It gets
+#  included from the Makefile in the user code directory, which must define
+#  C_OBJECTS to be the list of object files that must be linked together to
 #  make the executable. In addition, the variable FC_FLAGS must be defined.
-#  FC_FLAGS will be normally $(FCFLAGS), but some Fortran compilers require 
-#  special options in order to not link a default MAIN function. (e.g. the 
-#  PGI compiler needs -Mnomain). 
-#  
+#  FC_FLAGS will be normally $(FCFLAGS), but some Fortran compilers require
+#  special options in order to not link a default MAIN function. (e.g. the
+#  PGI compiler needs -Mnomain).
+#
 #  This Makefile will most likely only work with GNU make.
 #
 ###############################################################################
