@@ -37,6 +37,7 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QtWidgets>
 
 #include <qstringlist.h>
 #include <qfiledialog.h>
