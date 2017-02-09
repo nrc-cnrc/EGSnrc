@@ -8,7 +8,7 @@
  Equidistant bins on a logarithmic grid.
  Kolbenstvedt's revised theory used to calculate the data.
  Equivalent to the KEK EGS4 EII data base.
- Format is: max. energy, number of points 
+ Format is: max. energy, number of points
  For each element: Z, number of shells with U > 1 keV
  For each such shell: global cross section maximum
                 N data points sigma/sigma_max
