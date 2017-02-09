@@ -7,7 +7,7 @@ Note that the text on the right are not a necessary part of the file but
 are effectively comments.}
 \label{fig_tutor6_input}
 \begin{boxedverbatim}
-                                                          . 
+                                                          .
 5mev_e_1mm_Ta.egsinp
 TA
 1.0                   ,ECUT

@@ -56,7 +56,7 @@ the introduction of the EGSnrcMP environment, the user has a more
 flexible interface at the system level, but that is described fully in
 Report PIRS-877\cite{Ka03}.
 
- 
+
 These tutorials are written on the assumption that the reader is
 generally familiar with the contents of the EGSnrc Reference Manual
 (section~\ref{ERM} of this manual, page~\pageref{ERM}), although a
@@ -67,18 +67,18 @@ it should become clear that with various extentions to them, generally
 of a bookkeeping nature, a wide range of important problems can be
 studied.  In the following sections, sometimes only partial listings of
 User Codes are presented.  The complete source for each (and the
-corresponding Fortran 77 code) is found on the EGSnrc Distribution. 
+corresponding Fortran 77 code) is found on the EGSnrc Distribution.
 
 Note that we changed the default parameters in EGSnrc after this section of
 the manual was written so there will be some minor differences when you run
-the calculations (e.g. bound Compton scattering and atomic relaxations are 
+the calculations (e.g. bound Compton scattering and atomic relaxations are
 modelled by default, \$REAL now defaults to real*8).  Also, use of the MP
 system requires a Step 0: {\tt call egs\_init;} and a Step 9: {\tt call
 egs\_finish;} which are in the distributed versions but not updated here.
 \index{\$REAL}
 
-% To see the expected output, see 
-% {\tt \$HEN\_HOUSE/test\_distribution\_outputs/}.  
+% To see the expected output, see
+% {\tt \$HEN\_HOUSE/test\_distribution\_outputs/}.
 
 \index{tutor\_data.pegs4dat}
 To run the tutorials, a special PEGS4 data set called {\tt
@@ -87,9 +87,9 @@ tutor\_data.pegs4dat} is on the distribution at {\tt
 command:
 \begin{verbatim}
       ex tutor1 "" tutor_data    or      tutor1 -p tutor_data
-\end{verbatim} 
+\end{verbatim}
 where the {\tt ""} signifies that no input file is required (except for
-{\tt tutor6, tutor7}). Note that with the EGSnrcMP environment 
+{\tt tutor6, tutor7}). Note that with the EGSnrcMP environment
 there are two other alternatives described
 in PIRS-877\cite{Ka03} (\viz, the right hand form above or use the {\tt
 egs\_gui}).  To compile the tutor codes, copy any one to your
@@ -98,7 +98,7 @@ own user-code area if it is not already there, eg:
 \begin{verbatim}
                 cd $EGS_HOME/tutor1
                 cp $HEN_HOUSE/tutor1/tutor1.mortran .
-                mf tutor1     
+                mf tutor1
 \end{verbatim}
 \vspace*{-3mm}
 As alternatives to the {\tt mf} command, when using the EGSnrcMP
@@ -119,7 +119,7 @@ travelling along the Z-axis.  In the first problem, a beam of 20 MeV
 electrons is incident on a 1 mm thick plate of tantalum.  In order to
 use EGSnrc to answer the question ``What comes out the far side of the
 plate?'', we have created the user code {\tt tutor1.mortran} shown below.
- 
+
 \begin{latexonly}
 %\input{tutor_codes_for_um/tut1_nc.mortran}
 \input{inputs/tutor_codes_for_um/tut1MP_nc.mortran}
@@ -129,13 +129,13 @@ plate?'', we have created the user code {\tt tutor1.mortran} shown below.
 \input{inputs/tutor_codes_for_um/tut1MP_nc.mortran_html}
 \clearpage
 \end{htmlonly}
- 
+
 Needless to say, the above User Code listing is
 somewhat difficult to read, and therefore confusing, in
 spite of the fact that it is complete.  The following is
 a heavily commented version of the same code, where the structure and
 readability of the Mortran3 language clearly demonstrates itself.
- 
+
 \newpage
 \begin{latexonly}
 %\input{tutor_codes_for_um/tutor1.mortran}
@@ -145,7 +145,7 @@ readability of the Mortran3 language clearly demonstrates itself.
 \input{inputs/tutor_codes_for_um/tutor1_output_MP}
 \clearpage
 \end{latexonly}
- 
+
 \begin{htmlonly}
 \clearpage
 %\input{tutor_codes_for_um/tutor1.mortran_html}
@@ -155,7 +155,7 @@ readability of the Mortran3 language clearly demonstrates itself.
 \input{inputs/tutor_codes_for_um/tutor1_output_MP_html}
 \clearpage
 \end{htmlonly}
- 
+
 By keeping track of many of these histories, we could answer a lot of
 questions about what comes out the far side of the plate, but it
 should be recognised that these are all bookkeeping extensions to the
@@ -164,10 +164,10 @@ relatively small amount of User Code listed above.  The scoring
 routine for this problem is the simplest possible; namely, it outputs
 on the terminal some of the parameters of the various particles
 leaving the plate.
- 
+
 In addition, this User Code includes examples of the following items
-that are discussed further in the EGSnrc User Manual (section~\ref{ERM}). 
-\begin{itemize} 
+that are discussed further in the EGSnrc User Manual (section~\ref{ERM}).
+\begin{itemize}
 \item Defining simple macro replacements for templates
 (e.g. the character string {\tt \$MXMED}
 is replaced by 1 everywhere in the EGSnrc system).
@@ -189,16 +189,16 @@ things to Fortran Unit 6).
 
 \item The replacement of {\tt \$CALL-HOWNEAR(\#)} with the recommended
 subroutine call.
- 
-\item Simple HOWFAR and HOWNEAR subroutines. 
+
+\item Simple HOWFAR and HOWNEAR subroutines.
 
 \item Relational and logical operators such as
 {\tt >= (.GE.), \& (.AND.), $\sim$= (.NE.)} and\\ {\tt  | (.OR.)}.  The only
 warning is not to mix modes since this will generate errors (e.g.,
-don't use {\tt IF(A=B.AND.C=D))}. 
+don't use {\tt IF(A=B.AND.C=D))}.
 \index{relational operators}
 \index{Mortran3!relational operators}
-\end{itemize} 
+\end{itemize}
 
 
 \subsection{tutor2.mortran: energy transmitted, reflected, deposited}
@@ -232,20 +232,20 @@ example, but not always, we can sum {\tt EDEP} for any value of {\tt
 IARG} up to 4.  Figure~\ref{fig_tutor2_output} shows the output from
 {\tt tutor2.mortran}.
 
-\newpage 
+\newpage
 
 \begin{latexonly}
 %\input{tutor_codes_for_um/tutor2_output_new}
 \input{inputs/tutor_codes_for_um/tutor2_output_MP}
 \end{latexonly}
-\clearpage 
+\clearpage
 \begin{htmlonly}
 \clearpage
 \input{inputs/tutor_codes_for_um/tutor2_output_new_html}
 \clearpage
 \end{htmlonly}
 
-\subsection{tutor3.mortran: NaI response function} 
+\subsection{tutor3.mortran: NaI response function}
 \index{tutor3.mortran}
 \index{response function}
 \index{AUSGAB!response function}
@@ -382,7 +382,7 @@ simple procedure for keeping track of the history of a particle.  In
 this case we make use of {\tt LATCH} to keep track of how often photons
 from an incident 50 keV beam are Compton or Rayleigh scattered while
 passing through a 0.5 cm slab of water.
- 
+
 \index{IAUSFL}
 The program also demonstrates the use of the {\tt IAUSFL} array of
 flags (in {\tt COMMON /EPCONT/}).  By setting the appropriate flags,
@@ -404,14 +404,14 @@ routines
 which are similar to the other examples, is given below.
 \index{AUSGAB} \index{IARG}
 
-Note that the logic in {\tt tutor5.mortran} for EGSnrc 
+Note that the logic in {\tt tutor5.mortran} for EGSnrc
 is the same as it was for EGS4.  This is only possible because in water
 there are no fluorescent photons above the 10 keV PCUT value in the
 problem.  If the material were changed to a higher Z material, e.g. lead,
 one would need to change the logic since the present logic allows
 fluorescent photons created via relaxation after a Compton interaction to
 be scored as a Compton scattered photon.
- 
+
 \begin{latexonly}
 %\input{tutor_codes_for_um/tutor5.mortran}
 \input{inputs/tutor_codes_for_um/tutor5_MP.mortran}
@@ -446,7 +446,7 @@ algorithms which apply in the vast majority of cases.  However, there are
 some options which are wasteful to model in many simulations, but
 critical for others.  For example, taking into account binding effects in
 Compton scattering can be important for low-energy calculations but has no
-effect for most cases above 1 MeV. The same is true for Rayleigh (coherent) 
+effect for most cases above 1 MeV. The same is true for Rayleigh (coherent)
 scattering of photons. In addition, there have been many changes made to the
 electron transport algorithm in EGS4/PRESTA and EGSnrc.  To our knowledge
 the default simulations with EGSnrc provide accurate electron transport but
@@ -503,7 +503,7 @@ to unity.
 \caption{The transport control variables set in {\tt tutor6.mortran} and
 the {\tt COMINs} they are contained in. These represent all user controllable
 transport variables. See the source code of
-{\tt tutor6.mortran} and 
+{\tt tutor6.mortran} and
 sections~\ref{common_blocks} and \ref{step_2}
 for more detailed descriptions of the meaning of each.\vspace{3mm} }
 \label{tab_tutor6}
@@ -617,7 +617,7 @@ sample input file.
 \input{inputs/tutor_codes_for_um/tutor6_output_54_new_html}
 \clearpage
 \end{htmlonly}
- 
+
 \newpage
 %
 \par\noindent

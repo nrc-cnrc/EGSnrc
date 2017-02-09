@@ -1,7 +1,7 @@
 \begin{verbatim}
    ISOURC = 6   RECTANGULAR BEAM INCIDENT FROM THE FRONT
    **********
- 
+
       IQIN,ISOURC,XBEAM0,YBEAM0,XBEAM,YBEAM
               IQIN    charge of the incident beam (defaults to 0)
               ISOURC  = 6

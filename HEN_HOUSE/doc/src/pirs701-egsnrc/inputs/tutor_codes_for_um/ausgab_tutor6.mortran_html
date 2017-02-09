@@ -39,7 +39,7 @@ $IMPLICIT-NONE;            $INTEGER iarg,irl;          real*8   aux;
        EPCONT,  "to get EDEP"
        STACK/;  "to get the region number"
 IF( iarg < 5 ) [ "energy is being deposited"
-    irl = ir(np);   
+    irl = ir(np);
     IF( icase = sc_last(irl) ) [ "still the same shower that deposited energy"
                                  "last time in this region"
         sc_tmp(irl) = sc_tmp(irl) + edep*wt(np);

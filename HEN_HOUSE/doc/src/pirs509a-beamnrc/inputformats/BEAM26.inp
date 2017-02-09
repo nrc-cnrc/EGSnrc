@@ -22,7 +22,7 @@
                          Default is EXACT since PRESTA-I may result in
                          significant dose overestimates when CHAMBER is
                          used as a phantom, and EXACT will not significantly
-                         increase CPU time in most accelerators. 
+                         increase CPU time in most accelerators.
                          [ bca_algorithm, exact_bca ]
         Skin depth for BCA=
                          If Boundary crossing algorithm= PRESTA-I
@@ -31,7 +31,7 @@
                          switched off.  The default in this case is to
                          calculate a value based on the scattering power at
                          ECUT (same as PRESTA with EGS4).  If
-                         Boundary crossing algorithm= EXACT (default) then 
+                         Boundary crossing algorithm= EXACT (default) then
                          this is the distance from the boundary (in elastic
                          MFP) at which the algorithm will go into single
                          scattering mode and defaults to 3 mfp.
@@ -42,7 +42,7 @@
                          Skin depth for BCA large, you will get default EGS4
                          behaviour (no PRESTA).
                          [ skindepth_for_bca ]
- 
-             The new transport mechanics of EGSnrc are maintained away from 
+
+             The new transport mechanics of EGSnrc are maintained away from
              boundaries.
 \end{verbatim}

@@ -47,8 +47,8 @@ space). \label{fig_tutor4_output}}
 
  knock-on electrons can be created and any electron followed down to
                                           0.189 MeV kinetic energy
- brem photons can be created and any photon followed down to      
-                                          0.010 MeV 
+ brem photons can be created and any photon followed down to
+                                          0.010 MeV
 
                                        NP   ENERGY  Q REGION    X       Y    Z      U      V      W   LATCH  WEIGHT
 
@@ -65,7 +65,7 @@ TEST < E         Resulting photon          :    2    0.076   0   2   0.003   0.0
  Discard  AE,AP< E< ECUT           :    2    0.076   0   2   0.003   0.007 0.049  0.330  0.268  0.905   0 1.000E+00
          Now on top of stack       :    1   18.120  -1   2   0.003   0.007 0.049  0.329  0.264  0.907   0 1.000E+00
  Discard -user request             :    1   17.185  -1   3   0.009   0.026 0.100 -0.073  0.401  0.913   0 1.000E+00
- END OF HISTORY       1   **************************************** 
+ END OF HISTORY       1   ****************************************
 
  INITIAL SHOWER VALUES             :    1   20.000  -1   2   0.000   0.000 0.000  0.000  0.000  1.000   0 1.000E+00
  bremsstrahlung  about to occur    :    1   19.016  -1   2  -0.007  -0.001 0.058 -0.158 -0.188  0.969   0 1.000E+00
@@ -89,7 +89,7 @@ TEST < E         Resulting photon          :    2    0.076   0   2   0.003   0.0
  Discard -user request             :    2    5.167   0   3  -0.017  -0.013 0.100 -0.261 -0.216  0.941   0 1.000E+00
          Now on top of stack       :    1   12.065  -1   2  -0.012  -0.009 0.081 -0.278 -0.252  0.927   0 1.000E+00
  Discard -user request             :    1   11.720  -1   3  -0.018  -0.015 0.100 -0.311 -0.280  0.908   0 1.000E+00
- END OF HISTORY       2   **************************************** 
+ END OF HISTORY       2   ****************************************
 
  INITIAL SHOWER VALUES             :    1   20.000  -1   2   0.000   0.000 0.000  0.000  0.000  1.000   0 1.000E+00
  bremsstrahlung  about to occur    :    1   19.308  -1   2   0.003   0.001 0.041 -0.039  0.106  0.994   0 1.000E+00
