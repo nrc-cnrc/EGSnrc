@@ -7,15 +7,15 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
@@ -29,7 +29,7 @@
 #
 ###############################################################################
 #
-#  Functions to load a VCU library and to resolve the init, sample 
+#  Functions to load a VCU library and to resolve the init, sample
 #  and finish functions.
 #
 ###############################################################################
@@ -38,7 +38,7 @@
 #include "egs_config1.h"
 
 /*
- To be able to provide pre-compiled object files for 
+ To be able to provide pre-compiled object files for
  Windows, we use the following.
 */
 
@@ -57,7 +57,7 @@
 #define MYF77OBJ_(fname,FNAME) F77_OBJ_(fname,FNAME)
 #endif
 
-#ifdef WIN32  
+#ifdef WIN32
 #include <windows.h>
 #define DLL_HANDLE HMODULE
 #define GET_PROC_ADDRESS GetProcAddress
@@ -82,7 +82,7 @@ static char bindir[] = "bin";
 #include <stdio.h>
 
 /*
- The following set of macros is for automatically creating the 
+ The following set of macros is for automatically creating the
  appropriate function name
 */
 
@@ -125,9 +125,9 @@ DLL_HANDLE handleVCU = 0;
 //these functions are called from dynamic library (compiled in VCU code)
 typedef void (*InitFunction)(const char *, float *);
 typedef void (*FinishFunction)();
-typedef void (*SampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *, 
-		     EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, 
-		     EGS_Float *, EGS_I32 *, EGS_I32 *, EGS_I64 *, 
+typedef void (*SampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
+		     EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
+		     EGS_Float *, EGS_I32 *, EGS_I32 *, EGS_I64 *,
 		     EGS_I32 *, EGS_Float *);
 
 InitFunction   VCUinit = 0;
@@ -135,7 +135,7 @@ SampleFunction VCUsample = 0;
 FinishFunction VCUfinish = 0;
 
 void unload_VCUlibrary() {
-    if( handleVCU ) 
+    if( handleVCU )
 #ifdef WIN32
         FreeLibrary(handleVCU);
 #else
@@ -145,7 +145,7 @@ void unload_VCUlibrary() {
     VCUinit = 0; VCUsample = 0; VCUfinish = 0;
 }
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -222,12 +222,12 @@ int MYF77OBJ_(init_vcusource,INIT_VCUSOURCE)(
         float *survival_ratio,const char *config_name,
 	const char *hhouse,const char *ehome,const char *vcu_code,
 	const char* ifile,int ncn,int nhh,int neh,int nvc,int nif) {
-    
+
     int i, lcn, lhh, leh, lvc, lif;
     int len, in_len;
     char *libname;
     char *input_file;
-    
+
     EGS_Float e,x,y,z,u,v,w,wt;
     EGS_I32   iq,latch,iphat;
     EGS_I64   nhist;
@@ -238,12 +238,12 @@ int MYF77OBJ_(init_vcusource,INIT_VCUSOURCE)(
     for(lvc=nvc; lvc>0; lvc--) if( !isspace(vcu_code[lvc-1]) ) break;
     for(lif=nif; lif>0; lif--) if( !isspace(ifile[lif-1]) ) break;
 
-    // remove blanks from the end of the input file name 
+    // remove blanks from the end of the input file name
     input_file = (char*) malloc(lif+1);
     for (i=0; i<lif; i++) input_file[i] = ifile[i];
     input_file[lif] = 0;
     // printf("\nifile:%s\ninput_file:%s\n",ifile,input_file);
- 
+
     // get the name of the library (libparticleDmlc.so)
     len = leh + 1 + lcn + 1 + strlen(lib_pre) + lvc + strlen(lib_ext) + 5;
     libname = (char *) malloc(len);
@@ -260,7 +260,7 @@ int MYF77OBJ_(init_vcusource,INIT_VCUSOURCE)(
     for(i=0; i<lcn; i++) libname[len++] = config_name[i];
     libname[len] = 0;
     len = strlen(libname);
-    libname[len++] = fs; 
+    libname[len++] = fs;
     libname[len] = 0;
     strcat(libname,lib_pre); len = strlen(libname);
     for(i=0; i<lvc; i++) libname[len++] = vcu_code[i];
@@ -386,7 +386,7 @@ int C_CONVENTION INIT_VCUSOURCE__(
 }
 #endif
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 
