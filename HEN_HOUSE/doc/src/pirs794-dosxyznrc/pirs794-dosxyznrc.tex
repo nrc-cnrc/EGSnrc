@@ -1839,8 +1839,8 @@ Charge of the incident beam (-1: electron, 0: photon, 1: positron, 2: all partic
 \indexm{nset}
 \indexm{\$MXANG}
 The number of control points.  Control points define the beginning and end points of ranges of incident direction angles, SSD's and isocentre coordinates over which continuous motion of the source is simulated
-(see below).  The maximum value of {\tt nset} is defined by the parameter {\tt \$MXANG} in
-the file {\tt \$EGS\_HOME/dosxyznrc/dosxyznrc\_user\_macros.mortran}.
+(see below).  {\tt nset} must be in the range 2 $\leq$ {\tt nset} $\leq$ {\tt \$MXANG}, where {\tt \$MXANG} is defined in
+the file\\ {\tt \$EGS\_HOME/dosxyznrc/dosxyznrc\_user\_macros.mortran}.
 \item [~~~~{\tt i\_dbs}]
 \indexm{i\_dbs}
 Set to 1 if the phase space source was generated using directional bremsstrahlung splitting (DBS) in BEAM and you wish
@@ -1879,7 +1879,7 @@ the phantom. The number of times to recycle each source particle before proceedi
 library geometry to the number of incident particles (survival ratio).  The default is to do the calibration run if a BEAM shared library geometry is present.
 \end{description}
 
-For i=1,2,...,{\tt nset} (the no. of control points), the following parameters are entered:
+For i=2,...,{\tt nset} (the no. of control points), the following parameters are entered:
 \begin{description}
 \item[~~~~{\tt xiso(i)/yiso(i)/ziso(i)}]
 \indexm{xiso,yiso,ziso}
@@ -2244,7 +2244,8 @@ Charge of the incident beam (-1: electron, 0: photon, 1: positron, 2: all partic
 \indexm{nset}
 \indexm{\$MXANG}
 The number of control points defining ranges of continuous source motion.  Same as for source 20 (see above).
-The maximum value of {\tt nset} is defined by the parameter {\tt \$MXANG} in
+{\tt nset} must be in the range 2 $\leq$ {\tt nset} $\leq$ {\tt \$MXANG}, where
+{\tt \$MXANG} is defined in
 the file {\tt \$EGS\_HOME/dosxyznrc/dosxyznrc\_user\_macros.mortran}.
 \item [~~~~{\tt i\_dbs}]
 \indexm{i\_dbs}
@@ -2291,7 +2292,7 @@ delivered up to control point i.  This is slightly different from source 20, whe
 of incident particles up to control point i.  Thus, for source 21, {\tt muIndex(i)} is actually related to the fractional
 monitor units delivered by the BEAM simulation.
 Note that {\tt muIndex(i)} $\geq$ {\tt muIndex(i-1)}. Also note that for correct selection of the range
-of incident source parameters, {\tt muIndex(i)=0.0} and {\tt muIndex(nset)=1.0}.
+of incident source parameters, {\tt muIndex(1)=0.0} and {\tt muIndex(nset)=1.0}.
 \end{description}
 This is the end of inputs required for each control point.
 
