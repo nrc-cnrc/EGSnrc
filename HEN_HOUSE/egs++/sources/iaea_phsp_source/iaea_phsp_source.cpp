@@ -23,7 +23,7 @@
 #
 #  Author:          Blake Walters, 2013
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -47,10 +47,10 @@ IAEA_PhspSource::IAEA_PhspSource(const string &phsp_file,
 
 void IAEA_PhspSource::init() {
     otype = "IAEA_PhspSource";
-    Xmin = -1e30;
-    Xmax = 1e30;
-    Ymin = -1e30;
-    Ymax = 1e30;
+    Xmin = -veryFar;
+    Xmax = veryFar;
+    Ymin = -veryFar;
+    Ymax = veryFar;
     is_valid = false;
     mode2 = false;
     swap_bytes = false;
@@ -63,8 +63,8 @@ void IAEA_PhspSource::init() {
     Nrecycle = 0;
     Npos = 0;
     Nlast = 0;
-    wmin = -1e30;
-    wmax = 1e30;
+    wmin = -veryFar;
+    wmax = veryFar;
     Nreuse_g = 1;
     Nreuse_e = 1;
     Nreuse = 1;

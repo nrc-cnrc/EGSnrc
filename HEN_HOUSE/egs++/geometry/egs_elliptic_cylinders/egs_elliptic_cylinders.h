@@ -322,7 +322,7 @@ public:
                 EGS_Float xx = Ax*xp*axi[ireg], xy = Ay*xp*ayi[ireg];
                 EGS_Float xu = xx*ux + xy*uy;
                 EGS_Float r2 = xx*xx + xy*xy - 1;
-                EGS_Float d = 1e30;
+                EGS_Float d = veryFar;
                 if (r2 >= 0) {
                     // we think we are inside but the math shows we are
                     // outside. Hopefully a truncation problem.
@@ -371,7 +371,7 @@ public:
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
         EGS_Float xx = fabs(Ax*x), xy = fabs(Ay*x);
-        EGS_Float tperp = ireg >= 0 ? hownear(ireg,xx,xy) : 1e30;
+        EGS_Float tperp = ireg >= 0 ? hownear(ireg,xx,xy) : veryFar;
         if (ireg && tperp > 0) {
             int n = ireg < 0 ? nreg-1 : ireg-1;
             EGS_Float t1 = hownear(n,xx,xy);

@@ -158,7 +158,7 @@ public:
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
                               const EGS_Vector &u) {
-        EGS_Float t = 1e30;
+        EGS_Float t = veryFar;
         howfar(ireg,x,u,t);
         return t;
     };
@@ -171,7 +171,7 @@ public:
             up = u*T->getRotation();
         }
         if (ireg == 0) {
-            EGS_Float t1 = 1e30;
+            EGS_Float t1 = veryFar;
             int inew = 0;
             EGS_Vector n;
             if (up.x > 0) {
@@ -186,7 +186,7 @@ public:
                 t = t1;
                 inew = -1;
             }
-            t1 = 1e30;
+            t1 = veryFar;
             if (up.y > 0) {
                 t1 = (ay - 2*xp.y)/(2*up.y);
             }
@@ -199,7 +199,7 @@ public:
                 t = t1;
                 inew = -1;
             }
-            t1 = 1e30;
+            t1 = veryFar;
             if (up.z > 0) {
                 t1 = (az - 2*xp.z)/(2*up.z);
             }
@@ -227,7 +227,7 @@ public:
             }
             return inew;
         }
-        EGS_Float t1 = 1e30;
+        EGS_Float t1 = veryFar;
         if (2*xp.x + ax < 0 && up.x > 0) {
             t1 = -(2*xp.x + ax)/(2*up.x);
         }
@@ -264,7 +264,7 @@ public:
                 return 0;
             }
         }
-        t1 = 1e30;
+        t1 = veryFar;
         if (2*xp.y + ay < 0 && up.y > 0) {
             t1 = -(2*xp.y + ay)/(2*up.y);
         }
@@ -301,7 +301,7 @@ public:
                 return 0;
             }
         }
-        t1 = 1e30;
+        t1 = veryFar;
         if (2*xp.z + az < 0 && up.z > 0) {
             t1 = -(2*xp.z + az)/(2*up.z);
         }

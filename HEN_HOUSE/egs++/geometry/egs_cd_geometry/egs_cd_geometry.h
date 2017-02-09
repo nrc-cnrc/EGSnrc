@@ -546,7 +546,7 @@ public:
                 // Call to CD geometry howfar with updated region ixold. If it is aimed away from
                 // geometry, it will return ixnew = -1 and assumption a) was correct. If it is
                 // aimed into geometry, it will return ixnew >=0 and assumption b) was correct.
-                tb = 1e30;
+                tb = veryFar;
                 int ixnew = howfar(ixold,x,u,tb,0,pn);
                 // Enters geometry and at a boundary or very close to one.
                 //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= boundaryTolerance && tb_pos <= boundaryTolerance) {
@@ -569,7 +569,7 @@ public:
                 }
                 // If a particle approaching the geometry sits on a boundary, we look back to see
                 // if we just entered the geometry (the previous checks fail to catch this case).
-                EGS_Float tb_neg = 1e30;
+                EGS_Float tb_neg = veryFar;
                 int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
                 if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
                     t = 0;
@@ -586,7 +586,7 @@ public:
 
                 // 1. Check if we exit the base geometry after a sufficiently small
                 // distance.
-                EGS_Float t1=1e30, t2 = 1e30;
+                EGS_Float t1=veryFar, t2 = veryFar;
                 int ibase_n, ic_n=0;
                 ibase_n = bg->howfar(ibase,x,u,t1);
                 if (ibase_n < 0 && t1 < boundaryTolerance) {
