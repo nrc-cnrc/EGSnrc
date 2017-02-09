@@ -2,7 +2,7 @@ CCCCCCCCC.1....v....2....v....3....v....4....v....5....v....6....v....7...
 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$_(,.=-+/*)abcdefghijklmnopqrstuvwxyz?
 .v....8....v....9....v....0....v....1....v....2C USER F77 11JUN85
 [;:'#@"!]{}<>|&~ \`%^?????C|r[]bdep<>@#??????
- 
+
      (D1) (LOCATIONS REGAINED BY RECOVERY)
      (D2) (LOCATIONS REMAINING)
      (D3) (PERCENT RULE CAPACITY REMAINING)
@@ -53,11 +53,11 @@ CCCCCCCCC.1....v....2....v....3....v....4....v....5....v....6....v....7...
      (G2) (LABEL NOT USED)            (G6) (NO MORTRAN ERRORS DETECTED)
      (G3) (UNCLOSED BLOCKS)                 (G7) (MORTRAN ERROR(S))
      (G4) (UNCLOSED COMMENT)
- 
- 
- 
- 
- 
+
+
+
+
+
   (!HOLLERITH;) 4(1@SH=;)            (!NOHOLLERITH;)4(0@SH=;)
   (!STRINGS;)   4(1@SS=;)            (!NOSTRINGS;)  4(0@SS=;)
   (!LOCAL;)     4(@SYC@SZ=;)         (!ENDLOCAL;)   4(@K;0@SZ=)
@@ -72,9 +72,9 @@ CCCCCCCCC.1....v....2....v....3....v....4....v....5....v....6....v....7...
   (!INDENTF#;)   4(#1@SI=;)
   (!INDENTM#;) 4(#1@SR1=;)        ;
   (!BLACK;)4(1@SX=;);  (!GREEN;)4(0@SX=;) ;
- 
+
 (DAMMIT)4((@JL@@0@JK@@0@JL@@0@JK)4(@@O))DAMMIT; !STRINGS;
- 
+
 (SPECIFY @0 AS @0;)4(@JL#1@JK3@JL{3#2}@JK ;);
 (MRF[#])3({B(100+#1)});
      SPECIFY |        AS   MRF[1];
@@ -102,7 +102,7 @@ CCCCCCCCC.1....v....2....v....3....v....4....v....5....v....6....v....7...
  ({MCUR-})               1(@@SN2C0 )
  ({MCURX})               1(@@SN2C1 )
  ({EOL})                 1(@@SI2C )
- 
+
      ({ARB})      2(@JT0)          ({ARB;})      2(@JT1)
      ({(ARB)})    2(@JT4)          ({(ARB;)})    2(@JT5)
      ({[ARB]})    2(@JT2)          ({[ARB;]})    2(@JT3)
@@ -195,7 +195,7 @@ DFN{;{4SYS}{9SYS}}     AS{{EMIT;#1CONTINUE};#2}
   DFN{DO(#=#,#)}     AS {{EMITDO @LC01} #1=#2,#3;@MRW;}
   DFN{do(#=#,#)}     AS {{EMITdo } #1=#2,#3;@MRR;}
 !BLACK;
- 
+
  DFN{V@@} AS {{EMIT @LC02GO TO} SYSNAME,(@LC01SYSLIST@LC09);
               "END {REDUCE SYSNAME} LOCAL PROCEDURE";
               {EMIT @LC03CONTINUE};
@@ -254,14 +254,14 @@ SPECIFY <*> AS ['*'|''];
 DFN {%'{ARB}'={<*>}'{ARB}'}
   AS {[IF] {EXIST 2} [APPEND'{P3}'TO'{P1}']
             [ELSE] [REPLACE{{P1}}WITH{{P3}}]} ;
- 
+
  DFN {''} AS {{EMIT'}} ;
 REPLACE{!NEWCONDITIONAL;}WITH{1@SJ2=};
 SPECIFY GENSWITCH AS ['GENERATE'|'NOGENERATE'|'ENDGENERATE'];
 SPECIFY GENAME    AS ['<'(1,12)[(1)[LETTER|letter|DIGIT|'_']]'>'];
 REPLACE {SET{GENAME}={GENSWITCH};}  WITH
         {!DEFAULT 0;REPLACE{#1}WITH{#2}!DEFAULT 4;REPLACE{#1}WITH{#2};}
- 
+
 DFN{GENERATE}AS{@CG};DFN{NOGENERATE}AS{@CN};DFN{ENDGENERATE}AS{@CE};
  !DEFAULT 0;
 DFN{GENERATE}AS{@CG};DFN{NOGENERATE}AS{@CN};DFN{ENDGENERATE}AS{@CE};
