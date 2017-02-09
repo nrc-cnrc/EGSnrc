@@ -303,10 +303,10 @@ class MCompiler{
     MCompiler(Language l);
     MCompiler(const QString &a_name);
     MCompiler(Language l, const QString &a_name);
-    MCompiler(const QString &cpp_name, 
-              const QString &f_name, 
+    MCompiler(const QString &cpp_name,
+              const QString &f_name,
               const QString &le_hen);
-    MCompiler(Language l, const QString &a_name, 
+    MCompiler(Language l, const QString &a_name,
                           const QString &a_path);
    ~MCompiler();
 
@@ -386,7 +386,7 @@ class MCompiler{
 
     void setLanguage(Language l);
     void setUpCompiler( const QString& a_name );
-    void setUpCompiler( Language l, const QString& a_name, 
+    void setUpCompiler( Language l, const QString& a_name,
                                     const QString& link_to_name = "gfortran" );
     void setUpFortranCompiler();
     void setUpCCompiler();
@@ -402,15 +402,15 @@ class MCompiler{
     void setLinkFlag( const QString& n ){ lflag = n;};
     void setLibs( const QString& n ){ libs = n;};
     void setoutflag( const QString& n ){ oflag = n;};
-   /********************************************************* 
-    * Needed by the C++ compiler when automatically finding Fortran 
-    * libraries to link with C++ apps using a script. Class 
-    * QLocationPage passes HEN_HOUSE to the C++ compiler via 
+   /*********************************************************
+    * Needed by the C++ compiler when automatically finding Fortran
+    * libraries to link with C++ apps using a script. Class
+    * QLocationPage passes HEN_HOUSE to the C++ compiler via
     * the method validatePage() before switching to the next page.
     *********************************************************/
-    void setTheHen(const QString& hh){ 
+    void setTheHen(const QString& hh){
          the_hen = hh;
-         if (!the_hen.endsWith(QDir::separator()))   
+         if (!the_hen.endsWith(QDir::separator()))
             the_hen.append(QDir::separator());
     };
     /*********************************************************/

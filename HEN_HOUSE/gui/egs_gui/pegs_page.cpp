@@ -413,9 +413,9 @@ void EGS_PegsPage::startPegs() {
       return;
     }
     args << "-d";//pegs_process->addArgument("-d");
-    if(dc_file->text().endsWith(".density")) 
+    if(dc_file->text().endsWith(".density"))
     args << dc_file->text().remove(dc_file->text().lastIndexOf(".density"),8);//pegs_process->addArgument();
-    else 
+    else
     args << dc_file->text();
   }
   //QStringList list = pegs_process->arguments();

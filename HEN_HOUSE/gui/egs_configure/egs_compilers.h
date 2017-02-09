@@ -191,7 +191,7 @@ public:
        QVBoxLayout *gbvl = new QVBoxLayout;
        QHBoxLayout *gbl = new QHBoxLayout;
        gb->setTitle( tr("Make utility") );
-       makeCB = new QComboBox(gb); 
+       makeCB = new QComboBox(gb);
        makeCB->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Preferred);
        gbl->addWidget(makeCB);
        QPushButton *b = new QPushButton(tr("..."),gb); b->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Preferred);

@@ -3,7 +3,7 @@
 # $Id: Makefile,v 1.7 2013/03/20 21:47:16 mainegra Exp $
 #
 # A Makefile for building this GUI
-# Once EGS_CONFIG is set, one can just type make in this 
+# Once EGS_CONFIG is set, one can just type make in this
 # directory instead of using
 #   qmake my_machine=$(my_machine) MAKEFILE=Makefile_$(my_machine)
 #   make -f Makefile_$(my_machine)

@@ -1178,7 +1178,7 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
    Ppgls->gasp[i]=EGSpgls->gasp[i];
    Ppgls->isgas[i]=EGSpgls->isgas[i];
    Ppgls->dffile[i]=EGSpgls->dffile[i];
-   Ppgls->use_dcfile[i]=EGSpgls->use_dcfile[i]; 
+   Ppgls->use_dcfile[i]=EGSpgls->use_dcfile[i];
    Ppgls->sterncid[i]=EGSpgls->sterncid[i];
  }
 
@@ -1304,7 +1304,7 @@ bool inputRZImpl::GetMedFromDCfile(QString f)
       //if the file separator character is in the name, assume
       //full path specified along with .density extension
       if(!QFile(fname).exists()) {
-        //start looking following same priority as in 
+        //start looking following same priority as in
         //get_media_inputs
         //assume .density ext not included
         fname=ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s + f + ".density");
@@ -1506,7 +1506,7 @@ void inputRZImpl::pz_or_rhozTable_clicked(int row, int col) {
      pz_or_rhozTable->setCellWidget(row,col,e);
    }
 }
-     
+
 void inputRZImpl::pz_or_rhozTable_singleclicked( int row, int col) {
    if(col == 0) {
      QWidget *editor = pz_or_rhozTable->cellWidget( row, col );
@@ -1566,7 +1566,7 @@ void inputRZImpl::medTypeChanged( const QString &s) {
     }
   }
 }
-     
+
 //end of PEGSLESS routines
 
 void inputRZImpl::update_MCTParam( const MMCPInputs*  EGSmcp )
