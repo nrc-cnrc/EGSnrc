@@ -1280,6 +1280,9 @@ $start_new_particle;
                         domultiple = .false.; "Do not do multiple scattering
                         "Sample the distance to a single scattering event
                         $RANDOMSET rnnoss;
+                        IF( rnnoss < 1.e-30 ) [
+                            rnnoss = 1.e-30;
+                        ]
                         lambda = - Log(1 - rnnoss);
                         lambda_max = 0.5*blccl*rm/dedx*(eke/rm+1)**3;
                         IF( lambda >= 0 & lambda_max > 0 ) [
