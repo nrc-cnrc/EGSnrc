@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -107,7 +107,8 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     d = new EGS_Float [np-1];
     uj = new EGS_2DVector [np-1];
     pc = new bool [np-1];
-    xmin = 1e30, xmax = -1e30, ymin = 1e30, ymax = -1e30;
+    xmin = veryFar, xmax = -veryFar;
+    ymin = veryFar, ymax = -veryFar;
     for (j=0; j<np-1; j++) {
         pc[j] = true;
         if (p[j].x < xmin) {

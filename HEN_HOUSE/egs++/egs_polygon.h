@@ -99,7 +99,7 @@ public:
     */
     EGS_Float hownear(bool in, const EGS_2DVector &x) const {
         if (!open) {
-            EGS_Float tperp = 1e30;
+            EGS_Float tperp = veryFar;
             bool do_it = true;
             for (int j=0; j<np-1; j++) {
                 EGS_2DVector v(x - p[j]);
@@ -133,7 +133,7 @@ public:
         }
         else {
             do_it = true;
-            tperp = 1e30;
+            tperp = veryFar;
         }
         v = x - p[1];
         lam = uj[1]*v;

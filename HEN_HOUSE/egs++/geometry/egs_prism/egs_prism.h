@@ -207,7 +207,7 @@ public:
         }
         EGS_Float up = a*u, d = p->distance(x);
         if (!ireg) {  // inside
-            EGS_Float tt = 1e30;
+            EGS_Float tt = veryFar;
             int inew = ireg;
             if (up > boundaryTolerance) {
                 tt = (d2 - d)/up;
@@ -241,7 +241,7 @@ public:
             return -1;
         }
         if (d < d1 || d > d2) {
-            EGS_Float tt = 1e30;
+            EGS_Float tt = veryFar;
             if (d < d1 && up > boundaryTolerance) {
                 tt = (d1 - d)/up;
             }

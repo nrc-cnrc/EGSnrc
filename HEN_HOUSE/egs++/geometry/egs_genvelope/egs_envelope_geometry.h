@@ -301,7 +301,7 @@ public:
         EGS_Vector x(X);
         int imed;
         if (ireg < 0) {
-            t = 1e30;
+            t = veryFar;
             ireg = howfar(ireg,x,u,t,&imed);
             if (ireg < 0) {
                 return 0;
@@ -340,7 +340,7 @@ public:
             isections[j].ireg = ireg;
             isections[j].rhof = getRelativeRho(ireg);
             if (ireg < nbase) { // in one of the regions of the base geometry
-                t = 1e30;
+                t = veryFar;
                 int ibase = g->howfar(ireg,x,u,t,&imed);
                 ij = -1, ig;
                 for (int i=0; i<n_in; i++) {
@@ -692,7 +692,7 @@ public:
         //egsInformation("computeIntersections: ireg=%d x=(%g,%g,%g) "
         //     "u=(%g,%g,%g)\n",ireg,x.x,x.y,x.z,u.x,u.y,u.z);
         if (ireg < 0) {
-            t = 1e30;
+            t = veryFar;
             ireg = howfar(ireg,x,u,t,&imed);
             if (ireg < 0) {
                 return 0;
@@ -729,7 +729,7 @@ public:
             isections[j].ireg = ireg;
             isections[j].rhof = getRelativeRho(ireg);
             if (ireg < nbase) { // in one of the regions of the base geometry
-                t = 1e30;
+                t = veryFar;
                 int ibase = g->howfar(ireg,x,u,t,&imed);
                 //egsInformation("In base geometry: t=%g inew=%d\n",t,ibase);
                 ij = -1, ig;

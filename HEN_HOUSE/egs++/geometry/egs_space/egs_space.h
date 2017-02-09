@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -106,7 +106,7 @@ public:
 
     EGS_Float howfarToOutside(int ireg, const EGS_Vector &x,
                               const EGS_Vector &u) {
-        return 1e30;
+        return veryFar;
     };
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
@@ -115,7 +115,7 @@ public:
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        return 1e30;
+        return veryFar;
     };
 
     const string &getType() const {

@@ -50,10 +50,10 @@ EGS_PhspSource::EGS_PhspSource(const string &phsp_file,
 void EGS_PhspSource::init() {
     otype = "EGS_PhspSource";
     recl = 0;
-    Xmin = -1e30;
-    Xmax = 1e30;
-    Ymin = -1e30;
-    Ymax = 1e30;
+    Xmin = -veryFar;
+    Xmax = veryFar;
+    Ymin = -veryFar;
+    Ymax = veryFar;
     is_valid = false;
     record = 0;
     mode2 = false;
@@ -67,8 +67,8 @@ void EGS_PhspSource::init() {
     Nrecycle = 0;
     Npos = 0;
     Nlast = 0;
-    wmin = -1e30;
-    wmax = 1e30;
+    wmin = -veryFar;
+    wmax = veryFar;
     Nreuse_g = 1;
     Nreuse_e = 1;
     Nreuse = 1;

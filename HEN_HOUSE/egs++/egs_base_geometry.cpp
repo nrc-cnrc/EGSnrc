@@ -349,7 +349,7 @@ EGS_Float EGS_BaseGeometry::howfarToOutside(int ireg, const EGS_Vector &x,
             egsFatal("EGS_BaseGeometry::howfarToOutside: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
             return 0;
         }
-        EGS_Float t = 1e30;
+        EGS_Float t = veryFar;
         int inew = howfar(ireg,xx,u,t);
         ttot += t;
         if (inew < 0) {
@@ -784,7 +784,7 @@ int EGS_BaseGeometry::computeIntersections(int ireg, int n, const EGS_Vector &X,
     EGS_Vector x(X);
     int imed;
     if (ireg < 0) {
-        t = 1e30;
+        t = veryFar;
         ireg = howfar(ireg,x,u,t,&imed);
         if (ireg < 0) {
             return 0;
@@ -805,7 +805,7 @@ int EGS_BaseGeometry::computeIntersections(int ireg, int n, const EGS_Vector &X,
         isections[j].imed = imed;
         isections[j].rhof = getRelativeRho(ireg);
         isections[j].ireg = ireg;
-        t = 1e30;
+        t = veryFar;
         int inew = howfar(ireg,x,u,t,&imed);
         ttot += t;
         isections[j].t = ttot;

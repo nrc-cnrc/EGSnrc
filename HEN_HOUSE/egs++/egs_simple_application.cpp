@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -303,7 +303,7 @@ int EGS_SimpleApplication::run() {
         sum_w2 += wt*wt;
         int ireg = g->isWhere(x);
         if (ireg < 0) {
-            EGS_Float t = 1e30;
+            EGS_Float t = veryFar;
             ireg = g->howfar(ireg,x,u,t);
             if (ireg >= 0) {
                 x += u*t;

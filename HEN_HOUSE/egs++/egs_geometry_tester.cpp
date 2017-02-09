@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -396,7 +396,7 @@ void EGS_PrivateTester::testHowfar(EGS_BaseGeometry *g, bool time) {
 retry:
         //if( !go_back ) egsWarning("Initial position: (%g,%g,%g) direction: "
         //      "(%g,%g,%g)\n",x.x,x.y,x.z,u.x,u.y,u.z);
-        EGS_Float t_step = 1e15;
+        EGS_Float t_step = veryFar;
         int ireg = g->inside(x);
         int ireg_first = ireg;
         ireg = g->howfar(ireg,x,u,t_step);
@@ -419,7 +419,7 @@ retry:
         //if( !go_back && ireg >= 0 ) egsWarning("Starting loop: ireg=%d "
         //       "x=(%g,%g,%g)\n",ireg,x.x,x.y,x.z);
         while (ireg >= 0) {
-            t_step = 1e15;
+            t_step = veryFar;
             int ireg_new = g->howfar(ireg,x,u,t_step);
             //if( !go_back ) egsWarning("new region=%d step=%g x=(%g,%g,%g)\n",
             //        ireg_new,t_step,x.x,x.y,x.z);

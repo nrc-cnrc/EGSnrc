@@ -66,10 +66,10 @@ const EGS_I64 loopMax = 1e10;
  *
  * \ingroup egspp_main
  *
- * The veryLargeFloat constant is simply a very large float. It is usually
- * used as an initial value for geometry bounds.
+ * The veryFar constant is simply a very large float used as a large ditance
+ * It is often used as an initial large value for geometry bounds.
  */
-const EGS_Float veryLargeFloat = 1e30;
+const EGS_Float veryFar = 1e30;
 
 /*! \brief Writes the 64 bit integer \a n to the output stream data
  * and returns \c true on success, \c false on failure.

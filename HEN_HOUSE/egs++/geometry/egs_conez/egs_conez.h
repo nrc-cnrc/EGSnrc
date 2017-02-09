@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -210,7 +210,7 @@ public:
         EGS_Float up=a*u;
         EGS_Float rcp=a*rc;
         EGS_Vector rcp_vec=a*rcp;
-        EGS_Float d=1e30;
+        EGS_Float d=veryFar;
         int new_region=-1;
 
         egsInformation("howfar: %2d %12.9f %12.9f\n",
