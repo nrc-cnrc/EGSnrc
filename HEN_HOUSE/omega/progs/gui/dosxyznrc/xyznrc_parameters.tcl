@@ -1943,7 +1943,7 @@ before moving on to the next one, NRCYCL, to prevent rewinding of the phase spac
 source and potential underestimation of uncertainties.
 
 Calibration runs use 1x10^6 incident histories and, therefore, may consume\
-significant CPU time at the beginning of a simulation. 
+significant CPU time at the beginning of a simulation.
 
 Omitting the calibration run is recommended only if there are sufficient\
 particles in the phase space source that rewinding is not an issue.

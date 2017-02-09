@@ -1201,7 +1201,7 @@ IF(CHOICE1=11)[
     :LB3:
     IF (NUMBERST<1)[
         NUMBERST=1;
-        OUTPUT;(/' First particle no. defaults to 1!'); 
+        OUTPUT;(/' First particle no. defaults to 1!');
         ]
     IF (NUMBERP<1)[
         NUMBERP=100;

@@ -455,8 +455,8 @@ font create myDefaultFont -family Helvetica -size 11 -weight bold
 
 #define a main menubar
 
-frame .mbar -relief raised -bd 1 
-menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont 
+frame .mbar -relief raised -bd 1
+menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont
 menu .mbar.file.menu -font myDefaultFont
 .mbar.file.menu add command -label "Load a previous accelerator" \
 	-command "load_old_module"

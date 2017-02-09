@@ -1,4 +1,4 @@
-@g0 type xy 
+@g0 type xy
 @    title "Dose Simulation Using BEAMnrc"
 @    subtitle "EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of ta"
 @    legend on

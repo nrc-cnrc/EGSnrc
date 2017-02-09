@@ -6,7 +6,7 @@
 
 
 
-EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field  
+EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            10:00:38 Sep 13 2004
@@ -35,7 +35,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
                    ---------------------           ----
                                        1             7
                    Phase space files will be output at EVERY scoring plane
-                   Range rejection switch                  ON 
+                   Range rejection switch                  ON
                    Range rejection in  52 regions
                    Automatic ECUTRR used starting from          0.700 MeV
  Range rejection based on medium of region particle is traversing
@@ -61,7 +61,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
             LATCH_OPTION = 3: Latch values inherited, origin of
                               secondary particles recorded.  For
                               photons, region no. are recorded
-                              where they interact, not where 
+                              where they interact, not where
                               they just pass through.
 
 ================================================================================
@@ -72,22 +72,22 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Bound Compton scattering                                    OFF           
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          OFF           
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    OFF
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          OFF
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
- Maxium electron step in cm (SMAX)                                5.000    
+ Maxium electron step in cm (SMAX)                                5.000
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      49.84    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      49.84
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -196,7 +196,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
   Component module  1 is one or more planar slabs  (SLABS Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: Tungsten Target                                             
+    Title: Tungsten Target
 
  TARGET geometry parameters:
  -----------------------------
@@ -204,8 +204,8 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  Half-width of outer boundary of CM =         2.50000 cm
 
  slab #    Z front    thickness
-            face               
-            (cm)        (cm)   
+            face
+            (cm)        (cm)
     1       0.000      0.500
 
  TARGET region parameters:
@@ -213,7 +213,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  local  slab #  location  electron  photon  range-rejection  dose  bit  medium
  region                    cutoff   cutoff   level     max   zone  set
                             (MeV)    (MeV)   (MeV)    (MeV)
-   1      1        slab     0.700    0.010   1.023    1.000    1    1  W700ICRU 
+   1      1        slab     0.700    0.010   1.023    1.000    1    1  W700ICRU
 
 
 
@@ -221,7 +221,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
   Component module  2 - stacked truncated cones (3 regions CONS3R Rev 1.10)
  -------------------------------------------------------------------------------
 
-    Title: Primary Collimator                                          
+    Title: Primary Collimator
 
  PRIMCOLL geometry parameters:
  --------------------------
@@ -248,7 +248,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  Component module  3 is FLATFILT (Rev 1.6)
   --------------------------------------
 
-    Title: Flattening Filter                                           
+    Title: Flattening Filter
 
  FLATTENF geometry parameters:
  -----------------------------
@@ -275,27 +275,27 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
                      outer
                   cone and
                    RMAX_CM
-                          
+
    3      2     1     cone   0.700    0.010  1.003     3.000    3   3  FE700ICRU
    4      2    NA  between   0.700    0.010  1.003     3.000   23  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
-   5      3     1     cone   0.700    0.010  1.003     3.000    4   4  W700ICRU 
+
+   5      3     1     cone   0.700    0.010  1.003     3.000    4   4  W700ICRU
    6      3     2     cone   0.700    0.010  1.003     3.000    3   3  FE700ICRU
    7      3    NA  between   0.700    0.010  1.003     3.000   23  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
-   8      4     1     cone   0.700    0.010  1.003     3.000    4   4  W700ICRU 
+
+   8      4     1     cone   0.700    0.010  1.003     3.000    4   4  W700ICRU
    9      4     2     cone   0.700    0.010  1.003     3.000    3   3  FE700ICRU
   10      4    NA  between   0.700    0.010  1.003     3.000   23  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   11     NA    NA   airgap   0.700    0.010  1.003     3.000    0  23  AIR700ICR
                     at top
 
@@ -374,10 +374,10 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
 
  -------------------------------------------------------------------------------
-  Component module  5 is a flat inclined mirror MIRROR (Rev 1.5) 
+  Component module  5 is a flat inclined mirror MIRROR (Rev 1.5)
  -------------------------------------------------------------------------------
 
- Title: Aluminized lucite mirror                                    
+ Title: Aluminized lucite mirror
 
  MIRROR geometry parameters:
  -----------------------------
@@ -438,15 +438,15 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
    1      1     airgap     0.700    0.010   0.865    3.000    23   23  AIR700ICR
                above &
                 centre
-   2      1    +ve jaw     0.700    0.010   0.865    3.000    10   10  W700ICRU 
-   3      1    -ve jaw     0.700    0.010   0.865    3.000    10   10  W700ICRU 
-                      
+   2      1    +ve jaw     0.700    0.010   0.865    3.000    10   10  W700ICRU
+   3      1    -ve jaw     0.700    0.010   0.865    3.000    10   10  W700ICRU
+
    4      2     airgap     0.700    0.010   0.865    3.000    23   23  AIR700ICR
                above &
                 centre
-   5      2    +ve jaw     0.700    0.010   0.865    3.000    11   11  W700ICRU 
-   6      2    -ve jaw     0.700    0.010   0.865    3.000    11   11  W700ICRU 
-                      
+   5      2    +ve jaw     0.700    0.010   0.865    3.000    11   11  W700ICRU
+   6      2    -ve jaw     0.700    0.010   0.865    3.000    11   11  W700ICRU
+
 
 
 
@@ -454,7 +454,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
   Component module  7 is one or more planar slabs  (SLABS Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: PMMA light field reticle + AIR to the patient               
+    Title: PMMA light field reticle + AIR to the patient
 
  AIRSLAB geometry parameters:
  -----------------------------
@@ -462,8 +462,8 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  Half-width of outer boundary of CM =        30.00000 cm
 
  slab #    Z front    thickness
-            face               
-            (cm)        (cm)   
+            face
+            (cm)        (cm)
  airgap    47.300      3.700
     1      51.000      0.030
     2      51.030     48.970
@@ -482,7 +482,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
 
 
-EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field  
+EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            10:00:38 Sep 13 2004
@@ -496,10 +496,10 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   22  55
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =      39.0      33.3s (=   0.01HR)   1.17
  CPUTIME per history =   0.00222 sec. Number of histories per hour =    1619288.
-   On i686-pc-1-gnu using gcc 3.3     
+   On i686-pc-1-gnu using gcc 3.3
 
  FINAL BREMSSTRAHLUNG EVENTS CREATE  20 PHOTONS
 
@@ -600,7 +600,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
               TOTAL DOSE PER INCIDENT PARTICLE
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    2.412E+02   7.669E-12+/- 0.3%   1.850E-12+/- 0.3%
@@ -629,7 +629,7 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
 
          CONTAMINANT DOSE/INCIDENT PARTICLE FOR CM  4
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    2.412E+02   0.000E+00+/-99.9%   0.000E+00+/-99.9%
@@ -666,16 +666,16 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
  COMPONENT  FILTER                      BIT
     #        TYPE                        #s
 
-    1       EXCLUDE    2    3    4    5    6    7    8    9   10 
-    2       EXCLUDE    3    4    5    6    7    8    9   10 
-    3       EXCLUDE    2    4    5    6    7    8    9   10 
-    4       EXCLUDE    2    3    5    6    7    8    9   10 
-    5       EXCLUDE    2    3    4    6    7    8    9   10 
-    6       INCLUDE    1    2 
-    7       INCLUDE    1    3 
+    1       EXCLUDE    2    3    4    5    6    7    8    9   10
+    2       EXCLUDE    3    4    5    6    7    8    9   10
+    3       EXCLUDE    2    4    5    6    7    8    9   10
+    4       EXCLUDE    2    3    5    6    7    8    9   10
+    5       EXCLUDE    2    3    4    6    7    8    9   10
+    6       INCLUDE    1    2
+    7       INCLUDE    1    3
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3
 
    1  7.669E-12+/- 0.3%  7.651E-12+/- 0.3%  7.668E-12+/- 0.3%  7.651E-12+/- 0.3%
    2  4.624E-14+/- 0.6%  2.674E-19+/-50.0%  4.607E-14+/- 0.6%  2.674E-19+/-50.0%
@@ -702,8 +702,8 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
   23  4.194E-16+/- 2.8%  1.285E-16+/- 5.3%  2.391E-16+/- 3.6%  1.426E-16+/- 5.0%
 
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5         COMPONENT: 6  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5         COMPONENT: 6
 
    1  7.669E-12+/- 0.3%  7.651E-12+/- 0.3%  7.651E-12+/- 0.3%  7.669E-12+/- 0.3%
    2  4.624E-14+/- 0.6%  2.674E-19+/-50.0%  2.674E-19+/-50.0%  4.624E-14+/- 0.6%
@@ -730,8 +730,8 @@ EX16MVp.egs4inp, 16 MV photons,SSD=100 from front face of target, 10x10 field
   23  4.194E-16+/- 2.8%  1.288E-16+/- 5.3%  1.520E-16+/- 4.7%  4.194E-16+/- 2.8%
 
 
- DOSE      DOSE              DOSE     
- ZONE      TOTAL          COMPONENT: 7  
+ DOSE      DOSE              DOSE
+ ZONE      TOTAL          COMPONENT: 7
 
    1  7.669E-12+/- 0.3%  7.669E-12+/- 0.3%
    2  4.624E-14+/- 0.6%  4.624E-14+/- 0.6%
