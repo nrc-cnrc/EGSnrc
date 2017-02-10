@@ -51,7 +51,7 @@
     #include "missing.h"
 #endif
 
-#include "egs_config1.h"
+#include <egs_config1.h>
 
 /*
      Macro to mark classes and functions as exports/imports

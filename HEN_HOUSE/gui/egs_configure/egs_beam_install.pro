@@ -91,3 +91,4 @@ RESOURCES = egs_beam_install.qrc # resource collection file to store images in t
 TEMPLATE  = app
 LANGUAGE  = C++
 QT += xml
+QT += widgets
