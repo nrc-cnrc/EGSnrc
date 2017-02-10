@@ -135,3 +135,4 @@ TEMPLATE	=app
 INCLUDEPATH	+= include ui ../egs_gui
 LANGUAGE	= C++
 
+QT += widgets

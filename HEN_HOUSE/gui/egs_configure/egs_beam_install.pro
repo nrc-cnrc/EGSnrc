@@ -66,7 +66,7 @@ win32 {
 
 unix {
     CONFIG  += qt thread warn_on debug_and_release $$my_build
-    #LIBS    += -lz  #Needed if not using Qt own zlib
+    LIBS    += -lz  #Needed if not using Qt own zlib
     #message("CONFIG = $$CONFIG")
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){
