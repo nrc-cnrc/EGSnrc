@@ -1475,10 +1475,8 @@ tr.heading h2 {
 
 /* EGSnrc specific */
 #egsImageScroller {
-    margin-bottom: -7px;
-    width: 100%;
-    height: 400px;
-    background: #000000 url('egs_isotropic_source.png') top center no-repeat;
+    width: 105px;
+    background: #000000 url('egs_isotropic_source.png') center/contain no-repeat;
 }
 
 table.egsTable {
