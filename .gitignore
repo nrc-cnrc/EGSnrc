@@ -46,8 +46,10 @@ html
 
 ### ignore qmake produced make files
 
-HEN_HOUSE/egs++/view/make*
-HEN_HOUSE/gui/*/make*
+HEN_HOUSE/egs++/view/Make*
+HEN_HOUSE/gui/egs_configure/Make*
+HEN_HOUSE/gui/egs_gui/Make*
+HEN_HOUSE/gui/egs_inprz/Make*
 
 ### ignore OS generated files
 *~
