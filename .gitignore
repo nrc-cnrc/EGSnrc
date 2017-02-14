@@ -22,7 +22,6 @@ HEN_HOUSE/pieces/linux/egs_gui_*
 HEN_HOUSE/pieces/linux/egs_inprz_*
 HEN_HOUSE/pieces/linux/egs_view_*
 
-
 ### ignore generated documentation
 doc/*.pdf
 doc/src/*.pdf
@@ -44,6 +43,13 @@ html
 .obj/
 .moc/
 .ui/
+
+### ignore qmake produced make files
+
+HEN_HOUSE/egs++/view/Make*
+HEN_HOUSE/gui/egs_configure/Make*
+HEN_HOUSE/gui/egs_gui/Make*
+HEN_HOUSE/gui/egs_inprz/Make*
 
 ### ignore OS generated files
 *~
