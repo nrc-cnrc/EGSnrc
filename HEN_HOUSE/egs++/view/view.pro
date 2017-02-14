@@ -30,16 +30,14 @@
 TEMPLATE	= app
 LANGUAGE	= C++
 
-INCLUDEPATH	+= . .. ../../lib/$(my_machine)
+INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
 QT += widgets
 
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \
                  saveimage.h egs_user_color.h egs_track_view.h \
-                 renderworker.h 
-
-
+                 renderworker.h
 
 SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
                  saveimage.cpp clippingplanes.cpp viewcontrol.cpp \
