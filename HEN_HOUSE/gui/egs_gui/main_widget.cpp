@@ -60,7 +60,7 @@ bool configLibExists(const QString& lib );
 
 using namespace std;
 
-EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WFlags f)
+EGS_MainWidget::EGS_MainWidget(QWidget *parent, Qt::WindowFlags f)
                                           : QWidget(parent,f)
 {
 

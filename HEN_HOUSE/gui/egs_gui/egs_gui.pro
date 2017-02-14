@@ -48,6 +48,8 @@ HEADERS += main_widget.h \
         egs_configuration_page.h \
         egs_config_reader.h
 
+QT	+= widgets
+
 MOC_DIR =       .moc/$$my_machine
 OBJECTS_DIR =   .obj/$$my_machine
 DESTDIR  = ../../bin/$$my_machine

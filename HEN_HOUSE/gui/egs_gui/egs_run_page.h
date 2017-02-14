@@ -56,9 +56,9 @@ class EGS_RunPage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_RunPage(QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+  EGS_RunPage(QWidget *parent=0, const char *name=0, Qt::WindowFlags f=0);
   EGS_RunPage(EGS_ConfigReader *cr,
-          QWidget *parent=0, const char *name=0, Qt::WFlags f=0);
+          QWidget *parent=0, const char *name=0, Qt::WindowFlags f=0);
   ~EGS_RunPage(){}
 public slots:
 

@@ -39,7 +39,7 @@ int main( int argc, char* argv[] )
 
   QApplication app( argc, argv);
 
-  inputRZImpl* inputRZ = new inputRZImpl(0,"egs_inprz",FALSE,0);
+  inputRZImpl* inputRZ = new inputRZImpl(0,"egs_inprz",false,0);
 
   inputRZ->show();
 

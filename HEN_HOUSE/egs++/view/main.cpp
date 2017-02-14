@@ -29,7 +29,8 @@
 */
 
 
-#include <qapplication.h>
+#include <QApplication>
+#include <QtWidgets>
 #include <qfile.h>
 #include <qstring.h>
 #include <qfiledialog.h>

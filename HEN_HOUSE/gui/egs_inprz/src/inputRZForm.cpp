@@ -584,19 +584,19 @@ void inputRZImpl::UpDateInputRZForm( const MInputRZ* Input )
 
    	switch ( usercode ) {
      	case cavrznrc:
-                cavrzRadioButton->setChecked( TRUE );
+                cavrzRadioButton->setChecked( true );
                 usercodename   = "cavrznrc";
 	      	break;
      	case dosrznrc:
-       	        dosrzRadioButton->setChecked( TRUE );
+       	        dosrzRadioButton->setChecked( true );
 	        usercodename   = "dosrznrc";
        	        break;
      	case sprrznrc:
-	        sprrzRadioButton->setChecked( TRUE );
+	        sprrzRadioButton->setChecked( true );
 	        usercodename   = "sprrznrc";
 	        break;
      	case flurznrc:
-	        flurzRadioButton->setChecked( TRUE );
+	        flurzRadioButton->setChecked( true );
 	        usercodename   = "flurznrc";
 	        break;
 	}
@@ -2848,7 +2848,7 @@ void inputRZImpl::set_data_area()
   QString tmpDir;
    //qt3to4 -- BW
    //char s = QDir::separator();
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
 
    if ( HOMEPegsRadioButton->isChecked() )
        tmpDir  = ironIt( EGS_HOME + s + "pegs4" + s + "data" + s);
@@ -3346,7 +3346,7 @@ QString inputRZImpl::getExecutable()
 
     //qt3to4 -- BW
     //char s = QDir::separator();
-   char s = QDir::separator().toAscii();
+   char s = QDir::separator().toLatin1();
 
    QString executable = usercodename;
    if ( DebugradioButton->isChecked() )
@@ -3690,7 +3690,7 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s)
     t->setHorizontalHeaderLabels(s);
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     t->installEventFilter(this);}
 
 //qt3to4 -- BW
@@ -3731,7 +3731,7 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0, const QSt
     t->setHorizontalHeaderItem(1,new QTableWidgetItem(s1));
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     t->installEventFilter(this);
 }
@@ -3749,7 +3749,7 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0,
     t->setHorizontalHeaderItem(2, new QTableWidgetItem(s2) );
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     t->installEventFilter(this);
 }
@@ -3765,7 +3765,7 @@ void inputRZImpl::InitializeTwoColumnTable( QTableWidget* table)
     table->setHorizontalHeaderItem(1, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     table->installEventFilter(this);
 }
@@ -3781,7 +3781,7 @@ void inputRZImpl::InitializeThreeColumnTable( QTableWidget* table, const QString
     table->setHorizontalHeaderItem(2, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     table->installEventFilter(this);
 }
@@ -3961,8 +3961,8 @@ bool inputRZImpl::eventFilter(QObject *o, QEvent *e){
             return true;
          }
      }
-     return to->eventFilter(o, e) ;
-     //return false;
+     //return to->eventFilter(o, e) ;
+     return false;
    }
    else{
      return false;

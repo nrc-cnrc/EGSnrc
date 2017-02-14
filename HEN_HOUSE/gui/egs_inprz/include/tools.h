@@ -33,7 +33,7 @@
 #define TOOLS_H
 
 #include <qfile.h>
-#include <qlabel.h>
+#include <QLabel>
 #include <qstringlist.h>
 #include <fstream>
 //qt3to4 -- BW
