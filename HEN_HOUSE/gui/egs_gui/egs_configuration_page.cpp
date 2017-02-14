@@ -45,12 +45,12 @@
 using namespace Qt;
 
 EGS_ConfigurationPage::EGS_ConfigurationPage(QWidget *parent,
-       const char *name, WFlags f) : EGS_GUI_Widget(parent,name,f) {
+       const char *name, WindowFlags f) : EGS_GUI_Widget(parent,name,f) {
     make();
 }
 
 EGS_ConfigurationPage::EGS_ConfigurationPage(EGS_ConfigReader *cr,
-        QWidget *parent, const char *name, WFlags f) :
+        QWidget *parent, const char *name, WindowFlags f) :
     EGS_GUI_Widget(cr,parent,name,f) { make(); }
 
 void EGS_ConfigurationPage::make() {

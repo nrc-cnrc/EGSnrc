@@ -83,7 +83,7 @@ class inputRZImpl : public QWidget, public Ui::InputRZForm
 public:
 
 inputRZImpl( QWidget* parent, const char* name,
-             bool modal, Qt::WFlags f );
+             bool modal, Qt::WindowFlags f );
 
 ~inputRZImpl();
 

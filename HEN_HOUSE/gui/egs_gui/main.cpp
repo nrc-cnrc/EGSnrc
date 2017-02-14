@@ -30,7 +30,7 @@
 
 
 #include "main_widget.h"
-#include <QtGui>
+#include <QtWidgets>
 #include <QMainWindow>
 
 #include <qapplication.h>

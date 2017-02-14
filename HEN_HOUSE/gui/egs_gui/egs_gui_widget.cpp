@@ -42,13 +42,13 @@
 using namespace std;
 using namespace Qt;
 
-EGS_GUI_Widget::EGS_GUI_Widget(QWidget *parent, const char *name,WFlags f) :
+EGS_GUI_Widget::EGS_GUI_Widget(QWidget *parent, const char *name,WindowFlags f) :
                                QWidget(parent,f), the_name(name)
 {
     config_reader = 0; killed = false;
 }
 
-EGS_GUI_Widget::EGS_GUI_Widget(EGS_ConfigReader *cr, QWidget *parent, const char *name, WFlags f) :
+EGS_GUI_Widget::EGS_GUI_Widget(EGS_ConfigReader *cr, QWidget *parent, const char *name, WindowFlags f) :
                                                      QWidget(parent,f), the_name(name)
 {
     config_reader = cr; killed = false;

@@ -37,6 +37,7 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QTextStream>
+#include <QtWidgets>
 
 #include <qstringlist.h>
 #include <qfiledialog.h>
@@ -837,7 +838,7 @@ bool TableEventHandler::eventFilter(QObject *o, QEvent *e) {
        return true;
     }
     else
-        to->eventFilter(o, e);
+        return false;
   }
   return false;
 }
