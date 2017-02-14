@@ -66,7 +66,7 @@ win32 {
 
 unix {
     CONFIG  += qt thread warn_on debug_and_release $$my_build
-    #LIBS    += -lz  #Needed if not using Qt own zlib
+    LIBS    += -lz  #Needed if not using Qt own zlib
     #message("CONFIG = $$CONFIG")
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){
@@ -91,3 +91,4 @@ RESOURCES = egs_beam_install.qrc # resource collection file to store images in t
 TEMPLATE  = app
 LANGUAGE  = C++
 QT += xml
+QT += widgets

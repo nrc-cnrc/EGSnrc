@@ -28,8 +28,8 @@
 ###############################################################################
 */
 
-
-#include <qapplication.h>
+#include <QtWidgets>
+#include <QApplication>
 #include <qfile.h>
 #include <qstring.h>
 #include <qfiledialog.h>
