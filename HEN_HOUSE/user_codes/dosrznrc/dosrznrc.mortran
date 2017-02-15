@@ -2566,7 +2566,7 @@ IF(IFULL = 1 | IFULL = 3 | IKERMA = 1) [
     iausfl(20) = 1; "before photo"
     iausfl(21) = 1; "after photo"
     iausfl(10) = 1; "after Moller (to count radiative losses due to EII)"
-    iausfl(28) = 1; "after Auger"
+    iausfl(35) = 1; "after sub-threshold Auger"
     iausfl(32) = 1; "before eii"
     iausfl(33) = 1; "after eii"
 ]
@@ -3820,7 +3820,7 @@ IF (IKERMA = 1) ["want to score KERMA"
    
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
-    IF( iarg = 27 ) [
+    IF( iarg = 34 ) [
         IF( before_photo = 1 ) [
             $SCOREDK(SCKERMA,(IZD,IXD,1):WT(NP)*edep_local);
             IF(IFULL=3 & (BTEST(LATCH(NP),6) | BTEST(LATCH(NP),7)))[

@@ -5212,7 +5212,7 @@ IF( energy <= e_cut ) [
                            "calling RELAX "
                            
     edep_local = energy;
-    $AUSCALL($AUGERTRA);
+    $AUSCALL($SAUGERTRA);
     return;
 ]
 
@@ -5227,7 +5227,7 @@ e_check = 0; e_array(n_vac) = energy;
         edep = edep + Ei;
         
         edep_local = Ei;
-        $AUSCALL($AUGERTRA);
+        $AUSCALL($SAUGERTRA);
         
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
@@ -5254,7 +5254,7 @@ e_check = 0; e_array(n_vac) = energy;
             edep = edep + Ei;
             
             edep_local = Ei;
-            $AUSCALL($AUGERTRA);
+            $AUSCALL($SAUGERTRA);
         ]
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
@@ -5297,11 +5297,11 @@ e_check = 0; e_array(n_vac) = energy;
         
         IF( finala <  10 ) [
             edep_local = Ex;
-            $AUSCALL($FLUORTRA);
+            $AUSCALL($SFLUORTRA);
         ]
         ELSE [
             edep_local = Ex;
-            $AUSCALL($AUGERTRA);
+            $AUSCALL($SAUGERTRA);
         ]
     ]
     ELSE [
@@ -5627,7 +5627,7 @@ LOOP [
     IF( Evac < min_E | relax_ntran(vac) < 1 ) [
         edep += Evac;
         edep_local = Evac;
-        $AUSCALL($AUGERTRA);
+        $AUSCALL($SAUGERTRA);
         go to :VACANCY:;
     ]
     new_state = sample_alias_histogram(relax_ntran(vac),
@@ -5693,10 +5693,10 @@ LOOP [
         
         IF( iqf = 0 ) [
             edep_local = Ex;
-            $AUSCALL($FLUORTRA);
+            $AUSCALL($SFLUORTRA);
         ] ELSE [
             edep_local = Ex;
-            $AUSCALL($AUGERTRA);
+            $AUSCALL($SAUGERTRA);
         ]
     ]
     :VACANCY:;
@@ -7346,7 +7346,7 @@ IF( pese2 > ae(medium) ) [
 ] ELSE [
     edep = wx - Uj;
     edep_local = edep;
-    $AUSCALL($AUGERTRA);
+    $AUSCALL($SAUGERTRA);
 ]
 
 call relax(Uj,ish,iZ);
