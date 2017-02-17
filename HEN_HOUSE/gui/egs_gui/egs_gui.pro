@@ -85,3 +85,4 @@ FORMS   = pegs_page.ui \
 RESOURCES = egs_gui.qrc # resource collection file to store images in the application executable.
 TEMPLATE  = app
 LANGUAGE  = C++
+QT += widgets

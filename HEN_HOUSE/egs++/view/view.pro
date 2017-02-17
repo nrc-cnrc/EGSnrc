@@ -32,6 +32,8 @@ LANGUAGE	= C++
 
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
+QT += widgets
+
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \
                  saveimage.h egs_user_color.h egs_track_view.h \
