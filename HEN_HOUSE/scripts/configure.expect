@@ -1,0 +1,50 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+
+# configuration filename
+set confname "expect.conf"
+if {$argc > 0} {
+    set confname [lindex $argv 0]
+}
+
+# clear environment variables
+set env(HEN_HOUSE)  ""
+set env(EGS_CONFIG) ""
+set env(EGS_HOME)   ""
+
+# spawn EGSnrc configuration script
+spawn HEN_HOUSE/scripts/configure
+
+# Information
+expect "Press enter to continue."                       { send "\n" }
+
+# Fortran compiler
+expect "Input fortran compiler:"                        { send "\n" }
+expect "Input standard compilation flags:"              { send "\n" }
+expect "Input optimization flags:"                      { send "\n" }
+expect "Input flags for debugging:"                     { send "\n" }
+expect "Input libraries that your compiler may need:"   { send "\n" }
+
+# C compiler
+expect "Input the one you would like to use:"           { send "\n" }
+expect "Input C compiler flags to use:"                 { send "\n" }
+
+# Configuration
+expect "Input path to EGSnrc HEN_HOUSE directory:"      { send "\n" }
+expect "Choose a configuration file name:"              { send "$confname\n" }
+set timeout 1
+expect "Do you want to overwrite ?"                     { puts "no\n"; exit }
+set timeout -1
+
+# C++ compiler
+expect "Input C++ compiler:"                            { send "\n" }
+expect "Input option to change, or enter to proceed:"   { send "\n" }
+
+# Finalize for user
+expect "Do you want to finalize"                        { send "yes\n" }
+expect "Press enter to continue."                       { send "\n" }
+
+expect "Choose a directory for your user codes:"        { send "\n" }
+expect "Choose 1 (all), 2 (some) or 3 (none):"          { send "1\n" }
+expect "EOF"
