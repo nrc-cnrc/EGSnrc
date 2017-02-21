@@ -163,7 +163,7 @@ character     radc_file*256;
 integer*4     lnblnk1,egs_get_unit;
 $INTEGER      radc_unit, want_radc_unit;
 $INTEGER      nskip,i,j,ne,nu,ny1,ny2,nw,jh,jl;
-$INTEGER      medium,lgle,icheck;
+$INTEGER      lgle,icheck;
 real*8        aux1,gmfp,gmfp_old,gbr1,gbr1_old,gbr2,gbr2_old,gle,frad,
               acheck,acheck1,sum,aux;
 $INTEGER      nx,nbox,ixtot,ibtot;
