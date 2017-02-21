@@ -30,9 +30,9 @@
 
 \begin{longtable}{lll}
 \caption[Description of source options for the RZ codes]
-{Description of the {\tt SOURCE OPTIONS=} inputs for the source 
+{Description of the {\tt SOURCE OPTIONS=} inputs for the source
 routines in the RZ codes.  Additional inputs are also indicated
-where required.  Delimeters are: {\tt :start source inputs:} 
+where required.  Delimeters are: {\tt :start source inputs:}
 and {\tt :stop source inputs:}.}\\
 \hline\hline
 Source & Parameters & Description \\
@@ -68,7 +68,7 @@ Number &&\\
   &                & front of the target in cm (DEFAULT 100.)\\
   & RBEAM   & radius of the beam at the front of the\\
   &                & target in cm (defaults to MAX radius) \\
-\hline 
+\hline
 2 & \multicolumn{2}{c}{\bf Broad parallel beam from front ($+$Z-axis)} \\
   & \multicolumn{2}{c}{Basically a one dimensional calculation.} \\
   & \multicolumn{2}{c}{      0, 0, 0, 0} \\
@@ -255,7 +255,7 @@ Number &&\\
   & DIST & distance from source plane to the point\\
   &      & (x,y,z)=(0,0,ZOFFSET) in cm.  Defined so that,\\
   &      &  when ANGLE=0, DIST is in the -z direction.\\
-  & ANGLE & angle of rotation about the Z axis (degrees).  \\ 
+  & ANGLE & angle of rotation about the Z axis (degrees).  \\
   &       &  ANGLE = 0 means particles are incident in the \\
   &       & +ve z direction.\\
   & ZOFFSET & defines the z offset of point from which DIST\\
@@ -266,7 +266,7 @@ Number &&\\
   & PARNUM & See source 21 above.\\
   & XOFFSET & X offset of source plane.\\
   & YOFFSET & Y offset of source plane.  X and Y offsets are\\
-  &         & applied before any rotations by ANGLE.\\ 
+  &         & applied before any rotations by ANGLE.\\
 & \multicolumn{2}{l}{\bf \underline {Additional inputs:}}\\
   & FILSPC=  & Filename (with ext) containing the phase space\\
   &         & info (max. 80 characters) assigned  to unit 42.\\
@@ -275,7 +275,7 @@ Number &&\\
   &\multicolumn{2}{c}{DIST, ANGLE, ZOFFSET, XOFFSET, YOFFSET}\\
   & DIST & See source 22 above.  Note that the source plane is\\
   &      & the phase space scoring plane in the BEAM simulation\\
-  &      & being used as a source.  See below for more details.\\ 
+  &      & being used as a source.  See below for more details.\\
   & ANGLE & See source 22 above.\\
   & ZOFFSET & See source 22 above.\\
   & XOFFSET & See source 22 above.\\
@@ -288,7 +288,7 @@ Number &&\\
   &            & manual for information on how to do this) and exist\\
   &            & as {\tt BEAM\_accelname.so} (for Linux/Unix) or\\
   &            & {\tt libBEAM\_accelname.dll} (for Windows) in your\\
-  &            & {\tt \$EGS\_HOME/bin/config} directory.\\ 
+  &            & {\tt \$EGS\_HOME/bin/config} directory.\\
   & INPUT FILE= & The name of the input file used for the accelerator\\
   &             & (no {\tt .egsinp} extension).  This file must exist\\
   &             & in your {\tt \$EGS\_HOME/BEAM\_accelname} directory and\\

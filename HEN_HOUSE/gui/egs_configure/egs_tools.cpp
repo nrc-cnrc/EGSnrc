@@ -479,7 +479,7 @@ ppf->Release();
 psl->Release();
 #else
   /* Dummy statement to avoid warnings on Linux*/
-  return_message = QString(target) + QString("->") + QString(link) + QString(" => ") + QString(desc); 
+  return_message = QString(target) + QString("->") + QString(link) + QString(" => ") + QString(desc);
 #endif
 
 return 0; // SUCCESS
@@ -558,9 +558,9 @@ int createShortcut( const char* target, const char* link,
    psl->Release();
 #else
   /* Dummy statement to avoid warnings on Linux*/
-  return_message = QString(target) + QString(icon) + QString("->") + 
-                   QString(link) + QString(" => ") + 
-                   QString(desc); 
+  return_message = QString(target) + QString(icon) + QString("->") +
+                   QString(link) + QString(" => ") +
+                   QString(desc);
   index = 0;
 #endif
 
@@ -799,7 +799,7 @@ void MCompiler::init(){
 #endif
     lflag = QString(); libs = QString();
     _exists = true;// determined below in method getVersion
-    
+
     the_hen = QString(); // nothing known about this initially
                          // set later on the location page
 }
@@ -840,8 +840,8 @@ MCompiler::MCompiler(Language l, const QString &a_name)
 }
 
 // Create C++ compiler "cpp_name" (location should be set in PATH)
-MCompiler::MCompiler(const QString &cpp_name, 
-                     const QString &f_name, 
+MCompiler::MCompiler(const QString &cpp_name,
+                     const QString &f_name,
                      const QString &le_hen)
           : dso(0)
 {
@@ -873,7 +873,7 @@ void MCompiler::setUpCompiler( const QString& a_name ){
 }
 
 // Sets up compiler "n" for language "l"
-void MCompiler::setUpCompiler( Language l, const QString& a_name, 
+void MCompiler::setUpCompiler( Language l, const QString& a_name,
                                            const QString& link_to_name )
 {
      the_name = a_name;
@@ -988,17 +988,17 @@ QString MCompiler::getFlibs2LinkCPP( const QString &f_name, const QString &a_pat
     }
 #else
   // Setting an initial guess
-  if      ( f_name.contains("gfortran") && name().contains("g++") ) 
+  if      ( f_name.contains("gfortran") && name().contains("g++") )
           flibs="-lgfortran";
-  else if ( f_name.contains("g77") ) 
+  else if ( f_name.contains("g77") )
           flibs="-lg2c";
   else if ( f_name.contains("ifort") && name().contains("icpc"))
           flibs= QString("-lifport -lifcore");
   else if (!getTheHen().isEmpty()){
-          flibs= getFlibs2LinkCPPFromScript(f_name, 
+          flibs= getFlibs2LinkCPPFromScript(f_name,
                  getTheHen() + QString("scripts/get_f77_libs1"));
   }
-  
+
 #endif
   return flibs;
 }

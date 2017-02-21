@@ -1,9 +1,9 @@
 medium=AG521ICRU
 rho= 10.5
-elements= AG 
+elements= AG
 number of atoms=1
 bremsstrahlung correction=NRC
-density correction file= silver 
+density correction file= silver
 
 medium=AIR521ICRU
 rho=1.2048E-03
@@ -282,10 +282,10 @@ mass fractions=8.09000E-02,6.72200E-01,2.40000E-02,1.98400E-01,2.32000E-02,1.300
 
 medium=AG700ICRU
 rho= 10.5
-elements= AG 
+elements= AG
 number of atoms=1
 bremsstrahlung correction=NRC
-density correction file= silver 
+density correction file= silver
 
 medium=AIR700ICRU
 rho=1.2048E-03

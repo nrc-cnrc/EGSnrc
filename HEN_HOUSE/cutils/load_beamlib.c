@@ -7,29 +7,29 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2004
-#  
+#
 #  Contributors:    Blake Walters
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
 #
 ###############################################################################
 #
-#  Functions to load a BEAMnrc library and to resolve the init, sample 
+#  Functions to load a BEAMnrc library and to resolve the init, sample
 #  and finish functions.
 #
 ###############################################################################
@@ -39,7 +39,7 @@
 #include "egs_config1.h"
 
 /*
- To be able to provide pre-compiled object files for 
+ To be able to provide pre-compiled object files for
  Windows, we use the following.
 */
 
@@ -62,7 +62,7 @@
 #include "egs_config1.h"
 */
 
-#ifdef WIN32  
+#ifdef WIN32
 #include <windows.h>
 #define DLL_HANDLE HMODULE
 #define GET_PROC_ADDRESS GetProcAddress
@@ -87,7 +87,7 @@ static char bindir[] = "bin";
 #include <stdio.h>
 
 /*
- The following set of macros is for automatically creating the 
+ The following set of macros is for automatically creating the
  appropriate function name
 */
 
@@ -165,9 +165,9 @@ typedef void (*MotionSampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
            EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
            EGS_I32 *, EGS_I32 *, EGS_I64 *, EGS_I32 *,EGS_Float *);
 /*JL: added to give phsp particles to BEAM and allow motion*/
-typedef void (*PhspMotionSampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *, 
-		     EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, 
-		     EGS_Float *, EGS_I32 *, EGS_I32 *, EGS_I64 *, 
+typedef void (*PhspMotionSampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
+		     EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
+		     EGS_Float *, EGS_I32 *, EGS_I32 *, EGS_I64 *,
 		     EGS_I32 *,EGS_I32 *, EGS_Float *);
 typedef void (*MaxEnergyFunction)(EGS_Float *);
 
@@ -181,7 +181,7 @@ FinishFunction libfinish = 0;
 MaxEnergyFunction libmaxenergy = 0;
 
 void unload_library() {
-    if( handle ) 
+    if( handle )
 #ifdef WIN32
         FreeLibrary(handle);
 #else
@@ -191,7 +191,7 @@ void unload_library() {
     libinit = 0; libsample = 0; libmotionsample=0; libfinish = 0;
 }
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -286,7 +286,7 @@ void C_CONVENTION MOTIONSAMPLE_BEAMSOURCE__(
 void MYF77OBJ_(phspmotionsample_beamsource,PHSPMOTIONSAMPLE_BEAMSOURCE)(
         EGS_Float *e, EGS_Float *x, EGS_Float *y, EGS_Float *z,
         EGS_Float *u, EGS_Float *v, EGS_Float *w, EGS_Float *wt,
-        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat, 
+        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat,
 	EGS_I32 *still_in_container, EGS_Float *muindex) {
     if( !handle || !libphspmotionsample ) {
         printf("You have to load and initialize the library first\n");
@@ -306,28 +306,28 @@ void C_CONVENTION phspmotionsample_beamsource_(
 void C_CONVENTION phspmotionsample_beamsource__(
         EGS_Float *e, EGS_Float *x, EGS_Float *y, EGS_Float *z,
         EGS_Float *u, EGS_Float *v, EGS_Float *w, EGS_Float *wt,
-        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat, 
+        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat,
 	EGS_I32 *still_in_container, EGS_Float *muindex) {
     phspmotionsample_beamsource(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat,still_in_container,muindex);
 }
 void C_CONVENTION PHSPMOTIONSAMPLE_BEAMSOURCE(
         EGS_Float *e, EGS_Float *x, EGS_Float *y, EGS_Float *z,
         EGS_Float *u, EGS_Float *v, EGS_Float *w, EGS_Float *wt,
-        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat, 
+        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat,
 	EGS_I32 *still_in_container, EGS_Float *muindex) {
     phspmotionsample_beamsource(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat,still_in_container,muindex);
 }
 void C_CONVENTION PHSPMOTIONSAMPLE_BEAMSOURCE_(
         EGS_Float *e, EGS_Float *x, EGS_Float *y, EGS_Float *z,
         EGS_Float *u, EGS_Float *v, EGS_Float *w, EGS_Float *wt,
-        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat, 
+        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat,
 	EGS_I32 *still_in_container, EGS_Float *muindex) {
     phspmotionsample_beamsource(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat,still_in_container,muindex);
 }
 void C_CONVENTION PHSPMOTIONSAMPLE_BEAMSOURCE__(
         EGS_Float *e, EGS_Float *x, EGS_Float *y, EGS_Float *z,
         EGS_Float *u, EGS_Float *v, EGS_Float *w, EGS_Float *wt,
-        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat, 
+        EGS_I32 *iq, EGS_I32 *latch, EGS_I64 *nhist, EGS_I32 *iphat,
 	EGS_I32 *still_in_container, EGS_Float *muindex) {
     phspmotionsample_beamsource(e,x,y,z,u,v,w,wt,iq,latch,nhist,iphat,still_in_container,muindex);
 }
@@ -337,15 +337,15 @@ void MYF77OBJ_(maxenergy_beamsource,MAXENERGY_BEAMSOURCE)(EGS_Float *E) {
     if( libmaxenergy ) libmaxenergy(E);
 }
 #ifdef MAKE_WIN_DISTRIBUTION
-void C_CONVENTION maxenergy_beamsource_(EGS_Float *E) 
+void C_CONVENTION maxenergy_beamsource_(EGS_Float *E)
        { maxenergy_beamsource(E); }
-void C_CONVENTION maxenergy_beamsource__(EGS_Float *E) 
+void C_CONVENTION maxenergy_beamsource__(EGS_Float *E)
        { maxenergy_beamsource(E); }
-void C_CONVENTION MAXENERGY_BEAMSOURCE(EGS_Float *E) 
+void C_CONVENTION MAXENERGY_BEAMSOURCE(EGS_Float *E)
        { maxenergy_beamsource(E); }
-void C_CONVENTION MAXENERGY_BEAMSOURCE_(EGS_Float *E) 
+void C_CONVENTION MAXENERGY_BEAMSOURCE_(EGS_Float *E)
        { maxenergy_beamsource(E); }
-void C_CONVENTION MAXENERGY_BEAMSOURCE__(EGS_Float *E) 
+void C_CONVENTION MAXENERGY_BEAMSOURCE__(EGS_Float *E)
        { maxenergy_beamsource(E); }
 #endif
 
@@ -363,9 +363,9 @@ void C_CONVENTION FINISH_BEAMSOURCE__() { finish_beamsource(); }
 #endif
 
 int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
-        const int *i_par, const int *i_logunit, const char *config_name, 
+        const int *i_par, const int *i_logunit, const char *config_name,
         const char *hhouse, const char *ehome, const char *beam_code,
-        const char *pfile, const char *ifile, 
+        const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
     int i, lcn, lhh, leh, lbc, lpf, lif;
     int len;
@@ -386,14 +386,14 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
     for(lpf=npf; lpf>0; lpf--) if( !isspace(pfile[lpf-1]) ) break;
     for(lif=nif; lif>0; lif--) if( !isspace(ifile[lif-1]) ) break;
 
-    len = leh + 1 + lcn + 1 + strlen(lib_pre) + 
+    len = leh + 1 + lcn + 1 + strlen(lib_pre) +
         lbc + strlen(lib_ext) + 5;
     libname = (char *) malloc(len);
     for(i=0; i<leh; i++) libname[i] = ehome[i];
     len = leh;
     if( libname[len-1] != fs ) libname[len++] = fs;
     for(i=0; i<strlen(bindir); i++) libname[len+i] = bindir[i];
-    len += strlen(bindir); libname[len++] = fs; 
+    len += strlen(bindir); libname[len++] = fs;
     for(i=0; i<lcn; i++) libname[len++] = config_name[i];
     /*
     libname[len] = 0;
@@ -410,7 +410,7 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
     unload_library();
 #ifdef WIN32
     handle = LoadLibrary(libname);
-#else 
+#else
     handle = dlopen(libname,RTLD_LAZY);
 #endif
     if( !handle ) {
@@ -432,7 +432,7 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
         GET_PROC_ADDRESS(handle,beamlib_phspmotionsample_name);
     libfinish = (FinishFunction)
         GET_PROC_ADDRESS(handle,beamlib_finish_name);
-    libmaxenergy = (MaxEnergyFunction) 
+    libmaxenergy = (MaxEnergyFunction)
         GET_PROC_ADDRESS(handle,beamlib_maxenergy_name);
 #else
     libinit = (InitFunction)
@@ -442,7 +442,7 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
     libmotionsample = (MotionSampleFunction)
         GET_PROC_ADDRESS(handle,F77_NAME_(beamlib_motionsample,BEAMLIB_MOTIONSAMPLE));
     libphspmotionsample = (PhspMotionSampleFunction)
-        GET_PROC_ADDRESS(handle,F77_NAME_(beamlib_phspmotionsample,BEAMLIB_PHSPMOTIONSAMPLE)); 
+        GET_PROC_ADDRESS(handle,F77_NAME_(beamlib_phspmotionsample,BEAMLIB_PHSPMOTIONSAMPLE));
     libfinish = (FinishFunction)
         GET_PROC_ADDRESS(handle,F77_NAME_(beamlib_finish,BEAMLIB_FINISH));
     libmaxenergy = (MaxEnergyFunction)
@@ -451,18 +451,18 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
 
 /*
 #ifdef WIN32
-    libinit = (InitFunction) 
+    libinit = (InitFunction)
         GetProcAddress(handle,F77_NAME_(beamlib_init,BEAMLIB_INIT));
-    libsample = (SampleFunction) 
+    libsample = (SampleFunction)
         GetProcAddress(handle,F77_NAME_(beamlib_sample,BEAMLIB_SAMPLE));
-    libfinish = (FinishFunction) 
+    libfinish = (FinishFunction)
         GetProcAddress(handle,F77_NAME_(beamlib_finish,BEAMLIB_FINISH));
 #else
-    libinit = (InitFunction) 
+    libinit = (InitFunction)
         dlsym(handle,F77_NAME_(beamlib_init,BEAMLIB_INIT));
-    libsample = (SampleFunction) 
+    libsample = (SampleFunction)
         dlsym(handle,F77_NAME_(beamlib_sample,BEAMLIB_SAMPLE));
-    libfinish = (FinishFunction) 
+    libfinish = (FinishFunction)
         dlsym(handle,F77_NAME_(beamlib_finish,BEAMLIB_FINISH));
 #endif
 */
@@ -494,9 +494,9 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
     return 0;
 }
 #ifdef MAKE_WIN_DISTRIBUTION
-int C_CONVENTION init_beamsource_(const int *i_par, const int *i_logunit, 
-        const char *config_name, const char *hhouse, const char *ehome, 
-        const char *beam_code, const char *pfile, const char *ifile, 
+int C_CONVENTION init_beamsource_(const int *i_par, const int *i_logunit,
+        const char *config_name, const char *hhouse, const char *ehome,
+        const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
   beamlib_init_name = beamlib_init_name2;
   beamlib_finish_name = beamlib_finish_name2;
@@ -508,60 +508,60 @@ int C_CONVENTION init_beamsource_(const int *i_par, const int *i_logunit,
           ncn,nhh,neh,nbc,npf,nif);
 }
 int C_CONVENTION init_beamsource__(const int *i_par, const int *i_logunit,
-        const char *config_name, const char *hhouse, const char *ehome, 
-        const char *beam_code, const char *pfile, const char *ifile, 
+        const char *config_name, const char *hhouse, const char *ehome,
+        const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
   beamlib_init_name = beamlib_init_name3;
   beamlib_finish_name = beamlib_finish_name3;
   beamlib_sample_name = beamlib_sample_name3;
   beamlib_motionsample_name = beamlib_motionsample_name3;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name3;
-  beamlib_maxenergy_name = beamlib_maxenergy_name3;  
+  beamlib_maxenergy_name = beamlib_maxenergy_name3;
   return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
 int C_CONVENTION INIT_BEAMSOURCE(const int *i_par, const int *i_logunit,
-        const char *config_name, const char *hhouse, const char *ehome, 
-        const char *beam_code, const char *pfile, const char *ifile, 
+        const char *config_name, const char *hhouse, const char *ehome,
+        const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
   beamlib_init_name = beamlib_init_name4;
   beamlib_finish_name = beamlib_finish_name4;
   beamlib_sample_name = beamlib_sample_name4;
   beamlib_motionsample_name = beamlib_motionsample_name4;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name4;
-  beamlib_maxenergy_name = beamlib_maxenergy_name4;  
+  beamlib_maxenergy_name = beamlib_maxenergy_name4;
   return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
 int C_CONVENTION INIT_BEAMSOURCE_(const int *i_par, const int *i_logunit,
-        const char *config_name, const char *hhouse, const char *ehome, 
-        const char *beam_code, const char *pfile, const char *ifile, 
+        const char *config_name, const char *hhouse, const char *ehome,
+        const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
   beamlib_init_name = beamlib_init_name5;
   beamlib_finish_name = beamlib_finish_name5;
   beamlib_sample_name = beamlib_sample_name5;
   beamlib_motionsample_name = beamlib_motionsample_name5;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name5;
-  beamlib_maxenergy_name = beamlib_maxenergy_name5;  
+  beamlib_maxenergy_name = beamlib_maxenergy_name5;
   return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
 int C_CONVENTION INIT_BEAMSOURCE__(const int *i_par, const int *i_logunit,
-        const char *config_name, const char *hhouse, const char *ehome, 
-        const char *beam_code, const char *pfile, const char *ifile, 
+        const char *config_name, const char *hhouse, const char *ehome,
+        const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
   beamlib_init_name = beamlib_init_name6;
   beamlib_finish_name = beamlib_finish_name6;
   beamlib_sample_name = beamlib_sample_name6;
   beamlib_motionsample_name = beamlib_motionsample_name6;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name6;
-  beamlib_maxenergy_name = beamlib_maxenergy_name6;  
+  beamlib_maxenergy_name = beamlib_maxenergy_name6;
   return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
 #endif
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

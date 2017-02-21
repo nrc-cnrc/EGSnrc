@@ -1118,11 +1118,11 @@ int EGS_ChamberApplication::initScoring() {
         while( (aux = options->takeInputItem("calculation geometry")) ) {
             string gname;
             int err = aux->getInput("geometry name",gname);
-            
+
             string cavString;
             vector<int> cav;
             int err1 = aux->getInput("cavity regions",cavString);
-            
+
             string ecut_rString;
             vector<int> ecut_r;
             EGS_Float ecut_v;
@@ -1161,7 +1161,7 @@ int EGS_ChamberApplication::initScoring() {
             if( err12 ) egsWarning("initScoring: missing/wrong 'enhancement' "
                     "input\n");
             int err13 = 0;
-            
+
             if( err || err1 ) egsWarning("  --> input ignored\n");
             else {
                 EGS_BaseGeometry::setActiveGeometryList(app_index);
@@ -1172,7 +1172,7 @@ int EGS_ChamberApplication::initScoring() {
                             " input ignored\n",cav_gname.c_str());
                     cg = 0;
                 }
-                
+
                 EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
                 if( !g ) {
                     egsWarning("initScoring: no geometry named %s -->"
@@ -1185,7 +1185,7 @@ int EGS_ChamberApplication::initScoring() {
                     g->getNumberRegions(ecut_rString, ecut_r);
                     g->getLabelRegions(ecut_rString, ecut_r);
                 }
-                
+
                 if (do_cse && cs_reg[0]<0 && cs_reg[1]<0 && cs_reg.size()==2) {
                     int start = -cs_reg[0];
                     int end   = -cs_reg[1];
@@ -1207,7 +1207,7 @@ int EGS_ChamberApplication::initScoring() {
                 }
 
                 if( g ) {
-                    
+
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
                     int ncav = 0;

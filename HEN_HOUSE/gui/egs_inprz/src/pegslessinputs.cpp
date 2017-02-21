@@ -261,7 +261,7 @@ std::ifstream & operator >> ( std::ifstream & in, PEGSLESSInputs*  rPEGSLESS )
            if(rPEGSLESS->pz_or_rhoz[tempint][0]!="") rPEGSLESS->spec_by_pz[tempint]=false;
          }
        }
-    
+
        rPEGSLESS->rho[tempint]=getIt( codes1[3] , "", rPEGSLESS->errors, p1 );
        rPEGSLESS->spr[tempint]=getIt( codes1[4] , "restricted total", rPEGSLESS->errors, p1 );
        rPEGSLESS->bc[tempint]=getIt( codes1[5] , "KM", rPEGSLESS->errors, p1 );
@@ -329,7 +329,7 @@ QTextStream & operator << ( QTextStream & t, PEGSLESSInputs * rPEGSLESS )
           }
           t << i_pz_or_rhoz;
        }
-       else t << fl_pz_or_rhoz; 
+       else t << fl_pz_or_rhoz;
        if(j<rPEGSLESS->nelements[i]-1) t << ",";
        else t << "\n";
      }
@@ -339,7 +339,7 @@ QTextStream & operator << ( QTextStream & t, PEGSLESSInputs * rPEGSLESS )
    //NB: Certain parameters below are either redundant/unnecessary
    //will be commented out but coding kept just in case
    //  if(rPEGSLESS->spr[i]!="") t << "stopping powers= " << rPEGSLESS->spr[i] << "\n";
-   
+
      if(rPEGSLESS->bc[i]!="") t << "bremsstrahlung correction= " << rPEGSLESS->bc[i] << "\n";
 
      //if(rPEGSLESS->sterncid[i]!="") t << "sterncid= " << rPEGSLESS->sterncid[i] << "\n";

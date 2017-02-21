@@ -15,7 +15,7 @@
                          restriction for electron transport (in cm).
                          No SMAX restriction is necessary if the electron
                          step algorithm is PRESTA-II and the EXACT boundary
-                         crossing algorithm (the default) is used.  In this 
+                         crossing algorithm (the default) is used.  In this
                          case, SMAX will default to 1e10.  However, if either
                           Electron-step algorithm= PRESTA-I
                           or

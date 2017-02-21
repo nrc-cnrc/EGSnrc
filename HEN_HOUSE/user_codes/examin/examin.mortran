@@ -564,13 +564,13 @@
 
          IF(EKE <= AE(1)-PRM) [
            IF(IFLAG1 = 0) [
-             IFLAG1=1; EKE=AE(1)-PRM; 
+             IFLAG1=1; EKE=AE(1)-PRM;
            ] ELSE [ EKE=0.0; ]
          ]
 
          IF(EKE > UE(1)-PRM) [
-           IF(IFLAG2 = 0) [ 
-             IFLAG2=1; EKE=UE(1)-PRM; 
+           IF(IFLAG2 = 0) [
+             IFLAG2=1; EKE=UE(1)-PRM;
            ] ELSE [ EKE=1.E30; ]
          ]
 

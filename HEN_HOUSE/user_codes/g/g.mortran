@@ -762,7 +762,7 @@ IF( iarg = 32 ) [
     before_eii = 0;
     return;
 ]
-      
+
 "depositing sub-threshold energy for everything but eii and PE/Compton"
 IF( iarg = 4 & before_eii = 0 & before_photo = 0 ) [
     IF( $DEBUGIT ) [ write(19,*) ' Depositing iarg 4 ',edep; ]

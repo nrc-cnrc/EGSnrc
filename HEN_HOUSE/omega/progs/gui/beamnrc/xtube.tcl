@@ -98,7 +98,7 @@ proc read_XTUBE { fileid id } {
 
     # read a trash line
     gets $fileid data
-    # if $data doesn't start with *, it's not a BEAM comment line and there's 
+    # if $data doesn't start with *, it's not a BEAM comment line and there's
     # something wrong with the file.  Later, let it search for a line
     # beginning with * and start reading again from there.
     set data [string trimleft $data]
@@ -187,7 +187,7 @@ proc edit_XTUBE { id zmax } {
 
     frame $top.title
     label $top.title.lab -text "X-ray tube" -font $helvfont
-    pack $top.title.lab 
+    pack $top.title.lab
     pack $top.title -pady 5
 
     #XTUBE_macros.mortran:REPLACE {$MAX_N_$XTUBE} WITH {10}
@@ -228,20 +228,20 @@ proc edit_XTUBE { id zmax } {
     frame $top.bottom -bd 5
     frame $top.bottom.left
     frame $top.bottom.right
-    
+
     label $top.bottom.left.lab -text "Region in front of target"\
 	    -font $helvfont
-    pack $top.bottom.left.lab -side top 
+    pack $top.bottom.left.lab -side top
 
     add_ecut $top.bottom.left.f1 $id,8,0
     add_pcut $top.bottom.left.f2 $id,8,1
     add_dose $top.bottom.left.f3 $id,8,2
     add_latch $top.bottom.left.f4 $id,8,3
     add_material $top.bottom.left.f5 $id,11
-	    
+
     label $top.bottom.right.lab -text "Region behind target (target holder)"\
 	    -font $helvfont
-    pack $top.bottom.right.lab -side top 
+    pack $top.bottom.right.lab -side top
 
     add_ecut $top.bottom.right.f1 $id,9,0
     add_pcut $top.bottom.right.f2 $id,9,1
@@ -280,7 +280,7 @@ proc define_xtube { id } {
 	catch { destroy .xtube$id.baby$i }
 	toplevel .xtube$id.baby$i
 	set w .xtube$id.baby$i
-	wm title $w "Define xtube, window $i"	
+	wm title $w "Define xtube, window $i"
 	frame $w.mainfrm
 	set top $w.mainfrm
 	for {set ii 1} {$ii<=4} {incr ii} {
@@ -292,7 +292,7 @@ proc define_xtube { id } {
               set top $top.l1
               frame $top
             }
- 
+
             frame $top.f$i-$ii -bd 4
 
 	    # define the 6 values that go with each tube; but on a groove frame
@@ -316,9 +316,9 @@ proc define_xtube { id } {
 	    frame $top.f$i-$ii.f0
 	    set w $top.f$i-$ii.f0
 	    label $w.lab -text "Layer thickness (cm)"
-	    pack $w.lab -anchor w -side left 
+	    pack $w.lab -anchor w -side left
 	    entry $w.ent -textvariable cmval($id,5,$index) -width 10
-	    pack $w.ent -anchor e -side right -fill x -expand true 
+	    pack $w.ent -anchor e -side right -fill x -expand true
 	    pack $top.f$i-$ii.f0 -side top -fill x
 
 	    add_ecut $top.f$i-$ii.f1 $id,6,0,$index
@@ -326,7 +326,7 @@ proc define_xtube { id } {
 	    add_dose $top.f$i-$ii.f3 $id,6,2,$index
 	    add_latch $top.f$i-$ii.f4 $id,6,3,$index
 	    add_material $top.f$i-$ii.f5 $id,7,$index
-	    
+
             if {$index==$ntube} {
               #add option to have extra central region in outermost layer
               frame $top.f$i-$ii-2 -bd 4
@@ -355,7 +355,7 @@ proc define_xtube { id } {
               add_dose $top.f$i-$ii-2.f3 $id,9,2,$index
               add_latch $top.f$i-$ii-2.f4 $id,9,3,$index
               add_material $top.f$i-$ii-2.f5 $id,10,$index
-          
+
               pack $top.f$i-$ii $top.f$i-$ii-2 -side left -anchor s
               pack $top -side top
 
@@ -365,8 +365,8 @@ proc define_xtube { id } {
             } else {
               pack $top.f$i-$ii -side top
             }
-        
-	    frame $top.sep$i-$ii -bd 4 -width 100 -height 2 -relief groove 
+
+	    frame $top.sep$i-$ii -bd 4 -width 100 -height 2 -relief groove
 	    pack $top.sep$i-$ii -side top -fill x -pady 5
 	}
 	button .xtube$id.baby$i.okb -text "OK" -command "destroy .xtube$id.baby$i"\
@@ -384,7 +384,7 @@ proc write_XTUBE {fileid id} {
     puts $fileid "$cmval($id,2,0), $cmval($id,2,1), ZMIN, ZTHICK"
     puts $fileid "$cmval($id,3), ANGLE"
     puts $fileid "$cmval($id,4), # LAYERS"
-    
+
     for {set i $cmval($id,4)} {$i>=1} {set i [expr $i-1]} {
         set str {}
         set str "$str$cmval($id,5,$i), "
@@ -403,7 +403,7 @@ proc write_XTUBE {fileid id} {
     set i $cmval($id,4)
     if {$cmval($id,5,$i,1)==1} {
         set j $cmval($id,4)
-        set str {}  
+        set str {}
         set str "$str$cmval($id,8,0,$j), "
         set str "$str$cmval($id,8,1,$j), "
         puts $fileid $str
@@ -414,7 +414,7 @@ proc write_XTUBE {fileid id} {
         set str "$str$cmval($id,9,3,$j), "
         puts $fileid $str
         puts $fileid $cmval($id,10,$j)
-    } 
+    }
     set str {}
     set str "$str$cmval($id,8,0), "
     set str "$str$cmval($id,8,1), "
@@ -434,18 +434,18 @@ proc write_XTUBE {fileid id} {
 
 proc show_XTUBE { id } {
     global cmval xrange zrange cm_ticks
-    
+
     catch { destroy .xtube$id.show }
     toplevel .xtube$id.show
     wm title .xtube$id.show "Preview"
-    
+
     set cm_ticks($id,x) 6
     set cm_ticks($id,z) 10
 
     # have to make an initial xrange, zrange:
     catch {
-	set xrange(0) -$cmval($id,0) 
-	set xrange(1) $cmval($id,0) 
+	set xrange(0) -$cmval($id,0)
+	set xrange(1) $cmval($id,0)
 	set zrange(0) [get_zmax [expr $id-1]]
 	set zrange(1) [get_zmax $id]
     }
@@ -469,7 +469,7 @@ proc show_XTUBE { id } {
 	    .xtube$id.show.buts.done -side left -padx 10
     pack .xtube$id.show.buts -side bottom -anchor s -pady 15
 }
-    
+
 proc draw_XTUBE { id } {
     global cmval zrange xrange xscale zscale helvfont l m cm_ticks
 
@@ -480,7 +480,7 @@ proc draw_XTUBE { id } {
     set width 450
     canvas .xtube$id.show.can -width [expr $ncan*($width+150)]\
 	    -height [expr $ncan*($width+150)]
-    
+
     set xscale [expr $width/abs($xrange(1)-$xrange(0))]
     set zscale [expr $width/abs($zrange(1)-$zrange(0))]
     set l 100.0
@@ -523,27 +523,27 @@ proc add_XTUBE {id xscale zscale xmin zmin l m parent_w} {
 
     # assign numbers to the holder, layers and air
     for {set i 1} {$i<=$cmval($id,4)} {incr i} {
-	set med($i) $colornum 
+	set med($i) $colornum
 	for {set j 0} {$j<=$nmed} {incr j} {
 	    if [string compare $cmval($id,7,$i) $medium($j)]==0 {
-		set med($i) [min_nrc $j $colornum] 
+		set med($i) [min_nrc $j $colornum]
 		set meds_used($j) 1
 		break
 	    }
 	}
     }
-    set med(holder) $colornum 
+    set med(holder) $colornum
     for {set j 0} {$j<=$nmed} {incr j} {
 	if [string compare $cmval($id,10) $medium($j)]==0 {
-	    set med(holder) [min_nrc $j $colornum] 
+	    set med(holder) [min_nrc $j $colornum]
 	    set meds_used($j) 1
 	    break
 	}
     }
-    set med(front) $colornum 
+    set med(front) $colornum
     for {set j 0} {$j<=$nmed} {incr j} {
 	if { [string compare $cmval($id,11) $medium($j)]==0 } {
-	    set med(front) [min_nrc $j $colornum] 
+	    set med(front) [min_nrc $j $colornum]
 	    set meds_used($j) 1
 	    break
 	}
@@ -636,27 +636,27 @@ proc add_XTUBE_yz {id xscale zscale xmin zmin l m parent_w} {
 
     # assign numbers to the holder, layers and air
     for {set i 1} {$i<=$cmval($id,4)} {incr i} {
-	set med($i) $colornum 
+	set med($i) $colornum
 	for {set j 0} {$j<=$nmed} {incr j} {
 	    if [string compare $cmval($id,7,$i) $medium($j)]==0 {
-		set med($i) [min_nrc $j $colornum] 
+		set med($i) [min_nrc $j $colornum]
 		set meds_used($j) 1
 		break
 	    }
 	}
     }
-    set med(holder) $colornum 
+    set med(holder) $colornum
     for {set j 0} {$j<=$nmed} {incr j} {
 	if [string compare $cmval($id,10) $medium($j)]==0 {
-	    set med(holder) [min_nrc $j $colornum] 
+	    set med(holder) [min_nrc $j $colornum]
 	    set meds_used($j) 1
 	    break
 	}
     }
-    set med(front) $colornum 
+    set med(front) $colornum
     for {set j 0} {$j<=$nmed} {incr j} {
 	if [string compare $cmval($id,11) $medium($j)]==0 {
-	    set med(front) [min_nrc $j $colornum] 
+	    set med(front) [min_nrc $j $colornum]
 	    set meds_used($j) 1
 	    break
 	}
@@ -709,7 +709,7 @@ proc add_XTUBE_yz {id xscale zscale xmin zmin l m parent_w} {
     # put in a rectangle for each layer
     # create an array of the z-coordinates starting after the holder
     set temp $x0
-    set zstart(0) $z0 
+    set zstart(0) $z0
     for {set i 1} {$i<=$cmval($id,4)} {incr i} {
 	set zstart($i) [expr ($temp+$xi($i))/tan($alpha)]
 	set temp [expr $temp+$xi($i)]
@@ -741,7 +741,7 @@ global cmval
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.lab configure -fg black
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.ent configure -state normal
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.lab configure -fg black
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.ent configure -state normal 
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.ent configure -state normal
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.lab configure -fg black
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.ent configure -state normal
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f2.lab configure -fg black
@@ -753,19 +753,19 @@ global cmval
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.lab configure -fg black
    .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.ent configure -state normal
  } else {
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f2.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f2.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f3.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f3.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f4.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f4.ent configure -state disabled 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.lab configure -fg grey 
-   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.ent configure -state disabled 
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.w.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.wh.h.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f1.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f2.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f2.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f3.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f3.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f4.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f4.ent configure -state disabled
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.lab configure -fg grey
+   .xtube$id.baby$i.mainfrm.l1.f$i-$ii-2.f5.ent configure -state disabled
  }
 }

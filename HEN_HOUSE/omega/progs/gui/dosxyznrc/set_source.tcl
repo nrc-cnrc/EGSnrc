@@ -148,12 +148,12 @@ proc set_src_options { isource } {
     if {$isource==20 || $isource==21} {
 	#get settings
         #min. of 2 set points
-        set numsets [expr max($numsets,2)] 
+        set numsets [expr max($numsets,2)]
 	frame $w.setdef -bd 4
 	button $w.setdef.but -text "define settings"\
                                  -command {define_setting}
 	pack $w.setdef.but -side top -anchor w
-        pack $w.setdef -side top 
+        pack $w.setdef -side top
     }
     if {$isource==2 || $isource==8 ||$isource==20} {
         #put in option to exclude fat photons from source if DBS was
@@ -630,7 +630,7 @@ proc set_src_options { isource } {
 
 		$w.vcusimbrowse configure -state disabled
 		$w.inpfilevcubrowse configure -state disabled
-  
+
                 $ww.calflag.but configure -state disabled
 
 	    }
@@ -868,7 +868,7 @@ proc config_MLC { w } {
            $w.vcusimbrowse configure -state normal
 	   $w.inpfilevcubrowse configure -state normal
 
-           .main_w.srcopt.optfrm.src2.calflag.but configure -state normal 
+           .main_w.srcopt.optfrm.src2.calflag.but configure -state normal
 
     }
 }
@@ -1420,7 +1420,7 @@ proc define_setting { } {
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
 
     # 20 set points at a time
-   
+
 
     for {set j 1} {$j<=[expr max(1,($numsets-1)/20+1)]} {incr j} {
 
@@ -1482,7 +1482,7 @@ proc define_setting { } {
 	-command "destroy_set_win $j" -relief groove -bd 8
     pack $top.b.addb $top.b.delb $top.b.okb -side left -padx 10
     pack $top.b -pady 10
- 
+
     #disable buttons in all windows but the last one
     if {$j<[expr ($numsets-1)/20+1]} {
           $top.b.addb configure -state disabled
@@ -1530,7 +1530,7 @@ proc add_setting { } {
       grid configure $top.grid.philab -row 0 -column 5
       grid configure $top.grid.collab -row 0 -column 6
       grid configure $top.grid.dsourcelab -row 0 -column 7
-      grid configure $top.grid.muilab -row 0 -column 8 
+      grid configure $top.grid.muilab -row 0 -column 8
       set k 0
       #now fill in any existing points that need to be displayed in
       #this window
@@ -1569,8 +1569,8 @@ proc add_setting { } {
         -command "destroy_set_win $j" -relief groove -bd 8
       pack $top.b.addb $top.b.delb $top.b.okb -side left -padx 10
       pack $top.b -pady 10
-    
-      } 
+
+      }
     }
     }
 
@@ -1587,7 +1587,7 @@ proc add_setting { } {
     set w .main_w.srcopt.sett$cur
 
     set i [incr numsets]
-    set k [expr $numsets-($cur-1)*20] 
+    set k [expr $numsets-($cur-1)*20]
 
     #add a row for the new value
     label $w.grid.l$k -text "Setting $i"
@@ -1699,13 +1699,13 @@ proc del_setting { } {
        }
     }
 
-    if {$cur<$prev && $prev>1} { 
-      #just destroy the window and enable buttons on current top level 
+    if {$cur<$prev && $prev>1} {
+      #just destroy the window and enable buttons on current top level
       destroy .main_w.srcopt.sett$prev
       set  w .main_w.srcopt.sett$cur
-      $w.b.addb configure -state normal 
-      $w.b.delb configure -state normal 
-      $w.b.okb configure -state normal 
+      $w.b.addb configure -state normal
+      $w.b.delb configure -state normal
+      $w.b.okb configure -state normal
     } else {
       set  w .main_w.srcopt.sett$prev
       set k [expr $numsets-($prev-1)*20]
@@ -1736,7 +1736,7 @@ proc destroy_set_win { j } {
         $w.b.delb configure -state normal
         $w.b.okb configure -state normal
         break
-       }    
+       }
     }
 }
-     
+

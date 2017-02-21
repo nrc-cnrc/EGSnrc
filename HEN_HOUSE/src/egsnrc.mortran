@@ -1559,7 +1559,7 @@ $start_new_particle;
             "below subtracts only energy deposited"
             peie  = peie - edep;
             "below subtracts energy deposited + work due to E field"
-            "peie = peie - de;" 
+            "peie = peie - de;"
             eie   = peie;
             e(np) = peie;
 
@@ -5210,7 +5210,7 @@ IF( energy <= e_cut ) [
     edep = edep + energy;  "We assume that edep is zeroed "
                            "(or set to the appropriate value in the routine "
                            "calling RELAX "
-                           
+
     edep_local = energy;
     $AUSCALL($SAUGERTRA);
     return;
@@ -5225,10 +5225,10 @@ e_check = 0; e_array(n_vac) = energy;
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
     IF( Ei <= e_cut ) [  " Below cut-off -> local absorption "
         edep = edep + Ei;
-        
+
         edep_local = Ei;
         $AUSCALL($SAUGERTRA);
-        
+
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
@@ -5252,7 +5252,7 @@ e_check = 0; e_array(n_vac) = energy;
         ]
         ELSE             [
             edep = edep + Ei;
-            
+
             edep_local = Ei;
             $AUSCALL($SAUGERTRA);
         ]
@@ -5294,7 +5294,7 @@ e_check = 0; e_array(n_vac) = energy;
     ]
     IF( Ex <= elcut ) [ "Below cut-off"
         edep = edep + Ex;
-        
+
         IF( finala <  10 ) [
             edep_local = Ex;
             $AUSCALL($SFLUORTRA);
@@ -5690,7 +5690,7 @@ LOOP [
         "$egs_info('(a,i2,a,f7.3,a)','-> iq=',iqf,' E=',Ex*1000.,' keV');"
     ] ELSE [
         edep += Ex;
-        
+
         IF( iqf = 0 ) [
             edep_local = Ex;
             $AUSCALL($SFLUORTRA);

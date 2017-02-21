@@ -13,7 +13,7 @@
 
  RAYLEIGH DATA AVAILABLE FOR MEDIUM  1 BUT OPTION NOT REQUESTED.
 
-  Reading screened Rutherford MS data ...............  done 
+  Reading screened Rutherford MS data ...............  done
   Initializing spin data for medium    1 .....................  done
 
   Medium  1 sige =   1.79464114  1.78708148
@@ -23,7 +23,7 @@
  Output from subroutine EDGSET:
  ==============================
 
-  Atomic relaxations requested! 
+  Atomic relaxations requested!
 
  Reading photo-absorption data ..... Done
  Reading relaxation data ....  Done
@@ -31,7 +31,7 @@
  Bound Compton scattering requested, reading data ...... Done
 
  Initializing Bound Compton scattering ......
- Medium   1 has  21 shells: 
+ Medium   1 has  21 shells:
   1 861  1  0.02740 0.141E+01    67.413
   2 862  2  0.02740 0.503E+01    11.680
   3 863  3  0.02740 0.247E+01    11.136
@@ -59,8 +59,8 @@
 
  knock-on electrons can be created and any electron followed down to
                                           0.189 MeV kinetic energy
- brem photons can be created and any photon followed down to      
-                                          0.010 MeV 
+ brem photons can be created and any photon followed down to
+                                          0.010 MeV
 
 
  For    1000 incident particles

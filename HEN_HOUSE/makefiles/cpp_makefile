@@ -7,29 +7,29 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2005
-#  
+#
 #  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
 #  Skeleton makefile for building C++ user codes based on EGS_SimpleInterface.
-#  Include this file in your Makefile. It is assumed that there is a single 
-#  .cpp file needed to build your C++ user code, so you must add additional 
+#  Include this file in your Makefile. It is assumed that there is a single
+#  .cpp file needed to build your C++ user code, so you must add additional
 #  rules and dependencies if needed.
 #
 ###############################################################################
