@@ -111,10 +111,14 @@ export HEN_HOUSE PATH
 
 # Now check for local system wide sh additions
 #
-test -f $HEN_HOUSE/scripts/local_bashrc_additions && \. $HEN_HOUSE/scripts/local_bashrc_additions
+if test -f $HEN_HOUSE/scripts/local_bashrc_additions; then
+    source $HEN_HOUSE/scripts/local_bashrc_additions
+fi
 
 # Every individual user may customize their settings by creating a
 # .egsnrc_bashrc_additions file in their HOME directory.
 # Source this file if available
 #
-test -f $HOME/.egsnrc_bashrc_additions && \. $HOME/.egsnrc_bashrc_additions
+if test -f $HOME/.egsnrc_bashrc_additions; then
+    source $HOME/.egsnrc_bashrc_additions
+fi
