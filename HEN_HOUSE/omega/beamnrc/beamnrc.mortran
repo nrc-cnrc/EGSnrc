@@ -6111,7 +6111,7 @@ IF(IBRSPL=1 & IRRLTT=0)["uniform bremsstrahlung splitting without Russ. Roul."
 
 ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
 
-   IF( iarg > 5 & z(np) > ssd ) [ nbr_split = 1; return; ]
+   IF( iarg > 5 & z(np) > ssd ) [ nbr_split = 1; GOTO :ZLAST_AND_LATCH:; ]
 
 
    IF(i_dsb=1 & z(np)<Z_min_CM(splitcm_dsb) & dsb_nbin>1)[do_dsb=1;]
@@ -6450,7 +6450,7 @@ IF(IARG=6) NUM_BREM=NUM_BREM+nbr_split;
 
 "macro below sets prob_RR, the probability that a charged particle will"
 "survive Russian Roulette, when seletive bremsstrahlung is on"
-
+:ZLAST_AND_LATCH:;
 "******************************************************************************
 "
 "         LAST INTERACTION SITE SCORING (FOR PHOTONS AND ELECTRONS) ""toc:
