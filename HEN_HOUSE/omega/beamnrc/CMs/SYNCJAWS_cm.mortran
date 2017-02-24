@@ -1053,6 +1053,14 @@ IF(MODE_$SYNCJAWS=1 | MODE_$SYNCJAWS=2)[
   open(jaws_unit,file=jaws_file,status='old',err=:no-jaws-data-file:);
   read(jaws_unit,'(A80)') JAWS_TITLE;
   read(jaws_unit,'(I10)') NFIELDS_$SYNCJAWS;
+
+  IF(NFIELDS_$SYNCJAWS>$MAXFIELD_$SYNCJAWS) [
+   OUTPUT $MAXFIELD_$SYNCJAWS;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCJAWS: ',I10, /
+        ' Increase $MAXFIELD_$SYNCJAWS in SYNCJAWS_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCJAWS[
   "read in jaw positions for each field"
      read(jaws_unit,'(F15.0)')INDEX_$SYNCJAWS(I);

@@ -2421,6 +2421,14 @@ IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
   read(mlc_unit,'(A80)') MLC_TITLE;
   read(mlc_unit,'(I10)') NFIELDS_$SYNCHDMLC;
   OUTPUT NFIELDS_$SYNCHDMLC; (I10);
+
+  IF(NFIELDS_$SYNCHDMLC>$MAXFIELD_$SYNCHDMLC) [
+   OUTPUT $MAXFIELD_$SYNCHDMLC;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCHDMLC: ',I10, /
+        ' Increase $MAXFIELD_$SYNCHDMLC in SYNCHDMLC_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCHDMLC[
   "read in non-default leaf positions for each field"
      read(mlc_unit,'(F15.0)')INDEX_$SYNCHDMLC(I);
