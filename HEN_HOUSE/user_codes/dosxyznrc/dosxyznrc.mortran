@@ -1455,6 +1455,8 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     read(5,'(A256)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
 
+    call replace_env(PhantFileName);
+
     Open($CTUnitNumber,file=PhantFileName,status='old',access='sequential',
           iostat=ios);
     IF(ios~=0)[
@@ -4677,4 +4679,3 @@ DO medium = 1,nmed [
 ]
 
 return; end;
-

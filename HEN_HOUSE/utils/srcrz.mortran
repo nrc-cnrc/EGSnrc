@@ -819,7 +819,7 @@ save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM,IBNSOK,MODEIN,
 "
 "  FILSPC                        (C)   filename (with ext) contains
 "                                      phase space information
-"                                      (maximum of 80 characters)
+"                                      (maximum of 256 characters)
 "                                      (assigned to unit 42)
 "
 ;
@@ -912,7 +912,7 @@ save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM,IBNSOK,MODEIN,
 "
 "  FILSPC                        (C)   filename (with ext) contains
 "                                      phase space information
-"                                      (maximum of 80 characters)
+"                                      (maximum of 256 characters)
 "                                      (assigned to unit 42)
 "
 "-------------------------------------------------------------------------------
@@ -1276,7 +1276,7 @@ IF (ISOURC=20) [
 ]
 
 IF ((ISOURC = 21) | (ISOURC = 22)) [
-   READ (CHAR_VALUE(NUM_FILSPC,1),FMT='(80A1)') FILSPC;
+   READ (CHAR_VALUE(NUM_FILSPC,1),FMT='(256A1)') FILSPC;
 ]
 
 OUTPUT IQIN,ISOURC,TEMP1,TEMP2,TEMP3,TEMP4;(T10,'SRCRZ read:', 2I5,4F12.5);
@@ -1556,6 +1556,7 @@ ELSEIF(ISOURC = 20)["Radial distribution"
         (' Input name of file with spectrum (up to 80 char with .ext): '/);
         "READ(5,600,END=:EOF_SRCRZ:)FILNAM;"
         OUTPUT FILNAM;(/' Read input radial distribution from: '/80A1);
+        call replace_env(FILNAM);
         OPEN(UNIT=9,file=filnam,STATUS='OLD');
         READ(9,*)NRDIST;
         IF((NRDIST.LT.1).OR.(NRDIST.GT.100))[
@@ -1678,7 +1679,8 @@ ELSEIF((ISOURC = 21) | (ISOURC = 22))["full phase space for each particle"
     (/' MODE',I2,' Phase-space file to be read from unit 42...'/
       ' Input name of file with phase space data (1 - 80 CHARS,',
       'with .EXT): ');
-    OUTPUT FILSPC;(/' Reading phase space information from: '/10x,80A1);
+    OUTPUT FILSPC;(/' Reading phase space information from: '/10x,256A1);
+    call replace_env(SPCNAM);
     i_iaea_in=0; "assume not IAEA format"
     ilen=lnblnk1(SPCNAM);
     IF(SPCNAM(ilen-8:ilen)='.IAEAphsp')[
@@ -2847,7 +2849,7 @@ return;
 630   FORMAT(/' *******WARNING******'/T20,'SOME OF NORMALIZED BIN',
      1' PROBABILITIES SO SMALL BINS MAY BE MISSED'/)
 640   FORMAT(T20,'Full phase space input for each incident particle. '/
-     1T5,' Source data file: ',80A1/
+     1T5,' Source data file: ',256A1/
      2T25,' Source incident on front face, Z =',F14.4,' cm.'/
      3T25,' # of particles read from ph-sp file =', 1PE13.3,'.')
 642   FORMAT(T20,'Full phase space input for each incident particle. '/
@@ -2859,7 +2861,7 @@ return;
 660   FORMAT(40A1/22A1/80A1/I10,3X,3F6.0/)
 670   FORMAT(40A1/22A1/80A1/I10,3X,3F6.0//)
 677   FORMAT(T20,'Full phase space input for each incident particle. '/
-     &T5,' Source data file: ',80A1/
+     &T5,' Source data file: ',256A1/
      &T25,' Source incident on plane ',F14.4,
      & ' cm from the point of rotation'/
      &T25,' Angle with respect to z-axis ',F14.4,' degrees.'/

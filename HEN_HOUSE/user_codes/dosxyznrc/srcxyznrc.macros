@@ -229,10 +229,9 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     the_input_file, "input file for BEAM treatmen head sim.     (isource=9,20)"
     the_vcu_input_file,		       "input file for VCU sim.(isource=21)"
     the_pegs_file,  "pegs data for BEAM treatmen head sim.     (isource=9)"
-    the_phsp_file,  "name of phase space file (above MLC)	  (isource=20)"
     the_shared_lib, "name of the shared library			  (isource=21)"
-    the_vcu_code;    "name of vcu code (particleDmlc)	      (isource=21)"
-
+    the_vcu_code,    "name of vcu code (particleDmlc)	      (isource=21)"
+    the_phsp_file;  "name of phase space file (above MLC)         (isource=20)"
     "Explicit declarations for compatibility with implicit none"
     real*8    esrc,muIndex;
     $LONG_INT nhist, nnread,nshist,nphist,nnphsp;
@@ -254,7 +253,8 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     num_field,more_in_cont,nset,k_field;
     $SHORT_INT nhist_last;
     character*80 the_beam_code, the_vcu_code, the_input_file,the_pegs_file,
-		 the_shared_lib,the_vcu_input_file,the_phsp_file;
+		 the_shared_lib,the_vcu_input_file;
+    character*256 the_phsp_file;
 }
 ;
 "    macros related to energy spectra input"
