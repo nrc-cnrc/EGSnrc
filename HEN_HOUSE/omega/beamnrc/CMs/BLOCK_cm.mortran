@@ -362,7 +362,7 @@
 "T>**********************************
 "T>
 INTEGER
-   I,J,K,II,JJ,  "T>DO loop indeces
+   I,J,K,II,JJ,  "T>DO loop indices
    IHIT,         "T>index 1 hit; 0 not hit
    ICHECK,       "T>index of whether particle inside opening or not
    IPLANE,       "T>index of block face with minimum intersection distance
@@ -524,7 +524,7 @@ ELSEIF(IR_$BLOCK = 2)["particle in center air and outside air region"
 "the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
                ;$BLOCK_IN_HIT;
             ]
-            IF( IPLANE>0 & DIST<TEMPDIST & ISHARE_PLANE_$BLOCK(IPLANE,J)>0 ) [
+            IF( IPLANE>0 & ISHARE_PLANE_$BLOCK(IPLANE,J)>0 ) [
                "found closer intersection and plane is shared"
                DIST = TEMPDIST; "reset DIST for next subregion"
                ISUBR_$BLOCK = ISHARE_PLANE_$BLOCK(IPLANE,J);
@@ -1005,11 +1005,11 @@ IF (ISUB_MAX_$BLOCK > 1) [ "need to check for shared edges"
                      ]
                   ]
                   ELSE [
-                  K=NSUB_$BLOCK(JJ);
+                     K=NSUB_$BLOCK(JJ);
                      IF(XHI_POINT_$BLOCK(1,J)=XHI_POINT_$BLOCK(K,JJ) &
                         YHI_POINT_$BLOCK(1,J)=YHI_POINT_$BLOCK(K,JJ) ) [
                         ISHARE_PLANE_$BLOCK(I,J) = JJ;
-                        ISHARE_PLANE_$BLOCK(II,JJ) = J;
+                        ISHARE_PLANE_$BLOCK(K,JJ) = J;
                      ]
                   ]
                ]
