@@ -78,13 +78,13 @@ A radionuclide source is a source that delivers particles with
 directions uniformly distributed in \f$4 \pi\f$ emitted from
 \link EGS_BaseShape any shape. \endlink
 
-Note that \ref EGS_RadionuclideSource is an experimental source and only a 
+Note that \ref EGS_RadionuclideSource is an experimental source and only a
 subset of the available radionuclides have been tested against measurement.
 
 Emissions are based on decays from the radionuclide isotope and can be a mix of
-beta, positron and alpha decays. Internal transition gamma emissions are 
+beta, positron and alpha decays. Internal transition gamma emissions are
 modeled and assigned a shower index <b> \c ishower </b> and <b> \c time </b>
-to allow for coincidence counting. 
+to allow for coincidence counting.
 Auger and fluorescence radiations are also modeled as a part of the
 source, if the corresponding data is provided in the ENSDF format spectrum
 files for the radionuclide. Metastable isotopes are supported. For more
@@ -97,11 +97,11 @@ format is similar to \ref EGS_IsotropicSource.
     name                = my_mixture
     library             = egs_radionuclide_source
     activity            = total activity of mixture, assumed constant
-    charge              = [optional] list including at least one of -1, 0, 1, 2 
+    charge              = [optional] list including at least one of -1, 0, 1, 2
                           to include electrons, photons, positrons and alphas
     geometry            = [optional] my_geometry # see egs_isotropic_source
-    region selection    = [optional] geometry confinement option 
-                          one of IncludeAll, ExcludeAll, 
+    region selection    = [optional] geometry confinement option
+                          one of IncludeAll, ExcludeAll,
                           IncludeSelected, ExcludeSelected
     selected regions    = [required for IncludeSelected, ExcludeSelected]
                           regions to apply geometry confinement
@@ -119,19 +119,19 @@ The emission spectrum generation is described in \ref EGS_RadionuclideSpectrum.
 <em>Note about emission times: </em>
 
 The <b> \c time </b> of disintegration is sampled based on the
-total activity of the <b> \c mixture </b> in \ref EGS_RadionuclideSource. 
+total activity of the <b> \c mixture </b> in \ref EGS_RadionuclideSource.
 For uniform random number <b><code>u</code></b>,
 
 <code>time += -log(1-u) / activity;</code>
 
-The time of emission of a transition photon is determined by sampling 
-the delay that occurs after disintegration, according to the transition 
+The time of emission of a transition photon is determined by sampling
+the delay that occurs after disintegration, according to the transition
 <b> \c halflife </b>.
 
 <code>time += -halflife * log(1-u) / ln(2);</code>
 
 It is possible for an X-Ray or Auger to be emitted before a
-disintegration has taken place. They are assigned 
+disintegration has taken place. They are assigned
 <b><code>currentTime = 0</code></b> and
 <b><code>ishower = -1</code></b>.
 

@@ -390,9 +390,9 @@ emissions are taken as is. Very low probability emissions are discarded.
 When processing an ensdf file, only the following records are considered:
 Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.
 
-X-Ray fluorescence and Auger emissions are obtained from Comment records. 
-If a single intensity is present for a combination of lines (but a single 
-energy is not provided), then the average energy of the lines is used. 
+X-Ray fluorescence and Auger emissions are obtained from Comment records.
+If a single intensity is present for a combination of lines (but a single
+energy is not provided), then the average energy of the lines is used.
 For example, in the
 case below a single line of energy 97.4527 keV would be used.
 \verbatim
