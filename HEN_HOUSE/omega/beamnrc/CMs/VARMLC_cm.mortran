@@ -2089,7 +2089,7 @@ IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
            /T2,'Width of leaves in the ',A1,' direction:',
            /T2,'  Group    No. of leaves    width (cm)',
            /T2,'  -----    -------------    ----------',
-           $MAXLEAF(/T2,I5,I16,F15.5,$));
+           $MAXLEAF(/T2,I5,I16,F15.5));
 123 FORMAT( T2,'Type of Leaf end (0-Rounded and 1-Focused) = ',T51,I5,
            /T2,'Z focus of leaf side surfaces = ',T51,F15.5,' cm',
            /T2,'Parameter for leaf end surfaces = ',T51,F15.5,' cm',
@@ -2235,7 +2235,8 @@ ELSE [
   ]
   ELSE[
     DO I = 1,7 [
-      IF( (ZREG_$VARMLC(I)<=Z(NP)) & (Z(NP)<=ZREG_$VARMLC(I+1)) ) [NZ=I; EXIT;]
+      IF( (ZREG_$VARMLC(I)<=Z(NP)) & (Z(NP)<=ZREG_$VARMLC(I+1)) ) [
+              NZ=I; EXIT;]
     ];
   ]
   LEAFIS=0;
