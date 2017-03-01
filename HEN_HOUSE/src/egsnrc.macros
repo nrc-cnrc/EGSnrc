@@ -1067,6 +1067,9 @@ REPLACE {;COMIN/USEFUL/;} WITH
    $REAL             RM;      "electron mass in MeV"
    $INTEGER          MEDIUM,  "medium index of current region"
                      MEDOLD;  "medium index of previous region"
+   " The rest mass value is as recommended by CODATA 2014"
+   " http://physics.nist.gov/cgi-bin/cuu/Value?mec2mev"
+   DATA RM,PRM,PRMT2,PZERO/0.5109989461,0.5109989461,1.0219978922,0.D0/;
 }
 
 "------------------------------------------------------------------"
