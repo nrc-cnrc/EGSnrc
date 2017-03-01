@@ -940,9 +940,6 @@ kmpi = 12; kmpo = 8; dunit = 1;
 rng_seed = 999999;
 latchi = 0;
 
-" The rest mass value is as recommended by CODATA 2014
-" http://physics.nist.gov/cgi-bin/cuu/Value?mec2mev
-rm = 0.5109989461;
 rmt2 = 2*rm; rmsq = rm*rm;
 
 pi = 4*datan(1d0); twopi = 2*pi; pi5d2 = 2.5*pi;
