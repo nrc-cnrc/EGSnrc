@@ -83,11 +83,11 @@ REPLACE {$MAX_N_$XTUBE} WITH {10}
 "V>BMIN_$XTUBE       = b in X = a*Z + b
 "V>HXTRA_$XTUBE,WXTRA_$XTUBE = Z and Y dimension of extra central region
 "V>                            in outermost target layer
-"V>XFMIN_XTRA_$XTUBE,XFMAX_XTRA_$XTUBE,XBMIN_XTRA_$XTUBE,XBMAX_XTRA_$XTUBE =
-"V>                            min, max X values at front and back of extra
-"V>                            central region
-"V>XFMINT_XTRA_$XTUBE,XFMAXT_XTRA_$XTUBE,XBMINT_XTRA_$XTUBE,XBMAXT_XTRA_$XTUBE=
-"V>                            same as above but with BDYTOL added to them
+"V>XFMIN_XTRA_$XTUBE,XFMAX_XTRA_$XTUBE,XBMIN_XTRA_$XTUBE,
+"V>XBMAX_XTRA_$XTUBE = min, max X values at front and back of extra
+"V>                    central region
+"V>XFMINT_XTRA_$XTUBE,XFMAXT_XTRA_$XTUBE,XBMINT_XTRA_$XTUBE,
+"V>XBMAXT_XTRA_$XTUBE= same as above but with BDYTOL added to them
 "V>ANGLEI           = angle between target surface and z-axis
 "V>IR_$XTUBE        = local region number
 "V>I_XTRA_$XTUBE    = 1 if there is an extra central region in the outermost
