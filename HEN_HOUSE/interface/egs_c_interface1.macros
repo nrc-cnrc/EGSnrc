@@ -202,6 +202,7 @@ REPLACE {;COMIN/USEFUL/;} WITH {
   real*8         pzero, prm, prmt2;
   $REAL          rm, rhor, rhor_new;
   $INTEGER       medium, medium_new, medold;
+  data rm,prm,prmt2,pzero/0.5109989461,0.5109989461,1.0219978922,0.D0/;
 };
 
 " And now the cross section options common                             "
