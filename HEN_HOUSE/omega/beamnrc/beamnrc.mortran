@@ -4597,7 +4597,6 @@ implicit none;
 INTEGER
    I,I1,I2,I3,I4,IT, "T>DO loop indices
    TOT_BATCH,    "T>Total number of batches processed
-   ICASE,        "T>
    IRIN,         "T>
    ITMAX,        "T>Number of dose components
    RESETWATCH,   "T>used to reset IWATCH to 0 when IWATCH<0
@@ -4606,6 +4605,7 @@ INTEGER
    lnblnk1;      "T> built-in lnblnk function
 
 $LONG_INT
+   ICASE,
    NHSTRY_OLD;   "T>used to store previous version of NHSTRY before call
                  "  to SRCHST"
 $DECLARE_TIMING_VARIABLES;   "timing_variables CPUT0/1/2 TZERO ETIME UTIME_"
