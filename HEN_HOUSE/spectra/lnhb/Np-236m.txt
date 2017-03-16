@@ -1,97 +1,97 @@
-236U     236NP EC DECAY (22.5 H)
-236U   H TYP=Full$AUT=V.P.Chechev$CUT=18-JUN-2006$
-236U  C  Evaluation history: Type=Full;Author=V.P.Chechev;Cutoff date=18-JUN-2006
-236U  C  References: 1949Ja01, 1956Gr11, 1959Gi58, 1967Be65, 1969Le05, 1971GuZY, 
-236U 2C  1971Dr11, 1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1977La19, 1984Gr33, 
-236U 3C  1987Lag., 1991Sc08, 1996Sc06, 1996FiZX, 2003Au03
-236U  T  Auger electrons and X ray energies and emission intensities:
-236U  T       {U Energy (keV)}   {U Intensity}  {U Line}
-236U  T
-236U  T        94.666             9.9     10     XKA2
-236U  T        98.44              15.8    15     XKA1
-236U  T   
-236U  T        110.421        |]                 XKB3
-236U  T        111.298        |]  5.7      6     XKB1
-236U  T        111.964        |]                 XKB5II
-236U  T   
-236U  T        114.407        |]                 XKB2
-236U  T        115.012        |]  1.95    15     XKB4
-236U  T        115.377        |]                 XKO23
-236U  T   
-236U  T        11.618-20.714      21.3    18     XL (total)
-236U  T        11.618             0.57     5     XLL
-236U  T        13.438-13.614      9.1      8     XLA
-236U  T        15.399             0.166   17     XLC
-236U  T        15.726-18.206      9.4      6     XLB
-236U  T        19.507-20.714      2.07    15     XLG
-236U  T   
-236U  T        71.776-80.954  |]                 KLL AUGER
-236U  T        88.153-98.429  |]  1.03    17     KLX AUGER
-236U  T        104.51-115.59  |]                 KXY AUGER
-236U  T        6.4-21.6           21.7    15     L AUGER
-236NP  P 60        501+                22.5 H    4              930       50
-236U   N 1.887E0     1.887E0   0.53      1.887E0
-236U   L 0           0+                23.43E6 Y 6
-236U   E                       43.1    327.1                                   
-236U 2 E CK=0.753 1$CL=0.182 1$CM=0.0646 1
-236U   L 45.242    3 2+                234 PS     
-236U   E                       8.3     307.8                                   
-236U 2 E CK=0.751 1$CL=0.184 1$CM=0.0652 1
-236U   G 45.242    3 0.016    5E2                      589    12
-236U 2 G LC=429      9$MC=118.6   24
-236U   L 149.476   154+                124 PS     
-236U   G 104.234   6 0.00119 14E2                      11.0    2
-236U 2 G LC=8.00    16$MC=2.22     5
-236U   L 309.783     6+                58 PS      
-236U   L 687.60    5 1-                3.8 NS     
-236U   E                       1.64     97.3                                   
-236U 2 E CK=0.621 10$CL=0.274 7$CM=0.105 3
-236U   G 538.11    100.0125  15E3                      0.143   3
-236U 2 G KC=0.0622  13$LC=0.0587  12$MC=0.0160   4
-236U   G 642.35    9 1.08     6E1+(M2+E3)              0.15    2
-236U 2 G KC=0.112   10$LC=0.031    3$MC=0.0080   8
-236U   G 687.60    5 0.292   21E1                      0.31    2
-236U 2 G KC=0.219   12$LC=0.068    6$MC=0.018    2
- 
-236PU    236NP B- DECAY (22.5 H)
-236PU  H TYP=Full$AUT=V.P.Chechev$CUT=18-JUN-2006$
-236PU C  Evaluation history: Type=Full;Author=V.P.Chechev;Cutoff date=18-JUN-2006
-236PU C  References: 1949Ja01, 1956Gr11, 1959Gi58, 1967Be65, 1969Le05, 1971GuZY, 
-236PU2C  1971Dr11, 1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1977La19, 1984Gr33, 
-236PU3C  1987Lag., 1991Sc08, 1996Sc06, 1996FiZX, 2003Au03
-236PU T  Auger electrons and X ray energies and emission intensities:
-236PU T       {U Energy (keV)}   {U Intensity}  {U Line}
-236PU T
-236PU T        99.525                            XKA2
-236PU T        103.734                           XKA1
-236PU T   
-236PU T        116.244        |]                 XKB3
-236PU T        117.228        |]                 XKB1
-236PU T        117.918        |]                 XKB5II
-236PU T   
-236PU T        120.54         |]                 XKB2
-236PU T        120.969        |]                 XKB4
-236PU T        121.543        |]                 XKO23
-236PU T   
-236PU T        12.124-21.984      4.2     16     XL (total)
-236PU T        12.124             0.10     4     XLL
-236PU T        14.083-14.279      1.5      6     XLA
-236PU T        16.334             0.046   17     XLC
-236PU T        16.498-19.331      2.1      8     XLB
-236PU T        20.708-21.984      0.49    18     XLG
-236PU T   
-236PU T        75.263-85.357  |]                 KLL AUGER
-236PU T        92.607-103.729 |]                 KLX AUGER
-236PU T        109.93-121.78  |]                 KXY AUGER
-236PU T        6.19-22.99         3.8     14     L AUGER
-236NP  P 60        501+                22.5 H    4              480       50
-236PU  N 2.128E0     2.128E0   0.47      2.128E0
-236PU  L 0           0+                2.87 Y    1
-236PU  B 537       8 36       4          6.8                                   
-236PUS B EAV=158 3
-236PU  L 44.63     102+                           
-236PU  B 492       8 11       4          7.2                                   
-236PUS B EAV=143 3
-236PU  G 44.63     100.015    5E2                      743    15
-236PU2 G LC=540     11$MC=151      3
- 
+236U     236NP EC DECAY (22.5 H)                                                
+236U   H TYP=FUL$AUT=V.P.CHECHEV$CUT=18-JUN-2006$                               
+236U  C  References:1949Ja01, 1956Gr11, 1959Gi58, 1967Be65, 1969Le05, 1971GuZY, 
+236U 2C  1971Dr11, 1972Dz09, 1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1977La19,  
+236U 3C  1984Gr33, 1987La**, 1991Sc08, 1996Sc06, 1996FiZX, 1999Sc**, 2003Au03,  
+236U 4C  2004BeZQ                                                               
+236U  T  Auger electrons and X ray energies and emission intensities:           
+236U  T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+236U  T                                                                         
+236U  T        94.666             9.9     10     XKA2                           
+236U  T        98.44              15.8    15     XKA1                           
+236U  T                                                                         
+236U  T        110.421        |]                 XKB3                           
+236U  T        111.298        |]  5.7      6     XKB1                           
+236U  T        111.964        |]                 XKB5II                         
+236U  T                                                                         
+236U  T        114.407        |]                 XKB2                           
+236U  T        115.012        |]  1.95    15     XKB4                           
+236U  T        115.377        |]                 XKO23                          
+236U  T                                                                         
+236U  T        11.618-20.714      21.3    18     XL (total)                     
+236U  T        11.618             0.57     5     XLL                            
+236U  T        13.438-13.614      9.1      8     XLA                            
+236U  T        15.399             0.166   17     XLC                            
+236U  T        15.726-18.206      9.4      6     XLB                            
+236U  T        19.507-20.714      2.07    15     XLG                            
+236U  T                                                                         
+236U  T        71.776-80.954  |]                 KLL AUGER                      
+236U  T        88.153-98.429  |]  1.03    17     KLX AUGER                      
+236U  T        104.51-115.59  |]                 KXY AUGER                      
+236U  T        6.4-21.6           21.7    15     L AUGER                        
+236NP  P 60        501+                22.5 H    4              930       50    
+236U   N 1.887E0     1.887E0   0.53      1.887E0                                
+236U   L 0           0+                23.43E6 Y 6                              
+236U   E                       43.1    327.1                                    
+236U 2 E CK=0.753     1$CL=0.182     1$CM=0.0646    1                           
+236U   L 45.242    3 2+                234 PS                                   
+236U   E                       8.3     307.8                                    
+236U 2 E CK=0.751     1$CL=0.184     1$CM=0.0652    1                           
+236U   G 45.242    3 0.016    5E2                      589    12                
+236U 2 G LC=429       9$MC=118.6    24                                          
+236U   L 149.476   154+                124 PS                                   
+236U   G 104.234   6 0.00119 14E2                      11.0    2                
+236U 2 G LC=8.00     16$MC=2.22      5                                          
+236U   L 309.783     6+                58 PS                                    
+236U   L 687.60    5 1-                3.8 NS                                   
+236U   E                       1.64     97.3                                    
+236U 2 E CK=0.621    10$CL=0.274     7$CM=0.105     3                           
+236U   G 538.11    100.0125  15E3                      0.143   3                
+236U 2 G KC=0.0622   13$LC=0.0587   12$MC=0.0160    4                           
+236U   G 642.35    9 1.08     6E1+(M2+E3)              0.15    2                
+236U 2 G KC=0.112    10$LC=0.031     3$MC=0.0080    8                           
+236U   G 687.60    5 0.292   21E1                      0.31    2                
+236U 2 G KC=0.219    12$LC=0.068     6$MC=0.018     2                           
+                                                                                
+236PU    236NP B- DECAY (22.5 H)                                                
+236PU  H TYP=FUL$AUT=V.P.CHECHEV$CUT=18-JUN-2006$                               
+236PU C  References:1949Ja01, 1956Gr11, 1959Gi58, 1967Be65, 1969Le05, 1971GuZY, 
+236PU2C  1971Dr11, 1972Dz09, 1975Dr05, 1975OtZX, 1976GuZN, 1977Po05, 1977La19,  
+236PU3C  1984Gr33, 1987La**, 1991Sc08, 1996Sc06, 1996FiZX, 1999Sc**, 2003Au03,  
+236PU4C  2004BeZQ                                                               
+236PU T  Auger electrons and X ray energies and emission intensities:           
+236PU T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+236PU T                                                                         
+236PU T        99.525                            XKA2                           
+236PU T        103.734                           XKA1                           
+236PU T                                                                         
+236PU T        116.244        |]                 XKB3                           
+236PU T        117.228        |]                 XKB1                           
+236PU T        117.918        |]                 XKB5II                         
+236PU T                                                                         
+236PU T        120.54         |]                 XKB2                           
+236PU T        120.969        |]                 XKB4                           
+236PU T        121.543        |]                 XKO23                          
+236PU T                                                                         
+236PU T        12.124-21.984      4.2     16     XL (total)                     
+236PU T        12.124             0.10     4     XLL                            
+236PU T        14.083-14.279      1.5      6     XLA                            
+236PU T        16.334             0.046   17     XLC                            
+236PU T        16.498-19.331      2.1      8     XLB                            
+236PU T        20.708-21.984      0.49    18     XLG                            
+236PU T                                                                         
+236PU T        75.263-85.357  |]                 KLL AUGER                      
+236PU T        92.607-103.729 |]                 KLX AUGER                      
+236PU T        109.93-121.78  |]                 KXY AUGER                      
+236PU T        6.19-22.99         3.8     14     L AUGER                        
+236NP  P 60        501+                22.5 H    4              480       50    
+236PU  N 2.128E0     2.128E0   0.47      2.128E0                                
+236PU  L 0           0+                2.87 Y    1                              
+236PU  B 537       8 36       4          6.8                                    
+236PUS B EAV=158 3                                                              
+236PU  L 44.63     102+                                                         
+236PU  B 492       8 11       4          7.2                                    
+236PUS B EAV=143 3                                                              
+236PU  G 44.63     100.015    5E2                      743    15                
+236PU2 G LC=540      11$MC=151       3                                          
+                                                                                

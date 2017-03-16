@@ -1,30 +1,27 @@
- 18O      18F  EC DECAY (1.82890 H)
- 18O   H TYP=UPD$AUT=N.K. Kuzmenko$CUT=01-JUN-2014$
- 18O 2 H TYP=UPD$AUT=V. Chisté. M.-M. Bé$CUT=01-JUN-2006$
- 18O 3 H TYP=FUL$AUT=V. Chisté. M.-M. Bé$CUT=01-OCT-2002$
- 18O  C  Evaluation history: Type=UPD;Author=N.K. Kuzmenko;Cutoff date=01-JUN-2014
- 18O 2C  Type=UPD;Author=V. Chisté. M.-M. Bé;Cutoff date=01-JUN-2006
- 18O 3C  Type=FUL;Author=V. Chisté. M.-M. Bé;Cutoff date=01-OCT-2002
- 18O  C  References: 1938Br01, 1943Hu02, 1949Bl26, 1951Ru24, 1956Dr38, 1958Be74, 
- 18O 2C  1958Ma68, 1959Aj76, 1959Ca01, 1960Yu02, 1961Ra06, 1962Ma48, 1963Be47, 
- 18O 3C  1964Ho28, 1964Ho09, 1964Ma12, 1965Eb01, 1965Bo42, 1970Al11, 1972Aj02, 
- 18O 4C  1973Ho43, 1977Ba48, 1978Aj03, 1980RuZY, 1987Aj02, 1989Sc17, 2002Un02, 
- 18O 5C  2004BeZQ, 2004Sc04, 2010Ga04, 2012Ha35, 2012Wa38, 2014Un01
- 18O  T  Auger electrons and X ray energies and emission intensities:
- 18O  T       {U Energy (keV)}   {U Intensity}  {U Line}
- 18O  T
- 18O  T        0.525              0.007    2     XKA2
- 18O  T        0.525              0.013    4     XKA1
- 18O  T   
- 18O  T   
- 18O  T   
- 18O  T   
- 18O  T        0.456-0.502    |]                 KLL AUGER
- 18O  T         -             |]  2.89    18     KLX AUGER
- 18O  T         -0.0143           0.229   21     L AUGER
- 18F   P 0.0         1+                1.82890 H 23             1655.9    5
- 18O   N 1.0         1.0       1         1.0
- 18O   L 0           0+                  STABLE   
- 18O   E             96.86   193.14    193.57                                  
- 18O 2 E EAV=249.5 3$CK=0.927 5$CL=0.073 5
- 
+ 18O     18F EC DECAY (1.82890 H)                                               
+ 18O   H TYP=UPD$AUT=N.K.KUZMENKO$CUT=01-JUN-2014$                              
+ 18O 2 H TYP=UPD$AUT=V.CHISTE, M.-M.BE$CUT=01-JUN-2006$                         
+ 18O 3 H TYP=FUL$AUT=V.CHISTE, M.-M.BE$CUT=01-OCT-2002$                         
+ 18O  C  References:1938Br01, 1943Hu02, 1949Bl26, 1951Ru24, 1956Dr38, 1958Be74, 
+ 18O 2C  1958Ma68, 1959Aj76, 1959Ca01, 1960Yu02, 1961Ra06, 1962Ma48, 1963Be47,  
+ 18O 3C  1964Ho28, 1964Ho09, 1964Ma12, 1965Eb01, 1965Bo42, 1970Al11, 1972Aj02,  
+ 18O 4C  1973Ho43, 1977Ba48, 1978Aj03, 1980RuZY, 1987Aj02, 1989Sc17, 2002Un02,  
+ 18O 5C  2004BeZQ, 2004Sc04, 2010Ga04, 2012Ha35, 2012Wa38, 2014Un01             
+ 18O  T  Auger electrons and X ray energies and emission intensities:           
+ 18O  T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 18O  T                                                                         
+ 18O  T        0.525              0.007    2     XKA2                           
+ 18O  T        0.525              0.013    4     XKA1                           
+ 18O  T                                                                         
+ 18O  T                                                                         
+ 18O  T                                                                         
+ 18O  T                                                                         
+ 18O  T        0.456-0.502    |]                 KLL AUGER                      
+ 18O  T         -             |]  2.89    18     KLX AUGER                      
+ 18O  T         -0.0143           0.229   21     L AUGER                        
+ 18F   P 0.0         1+                1.82890 H 23             1655.9    5     
+ 18O   N 1.0         1.0       1         1.0                                    
+ 18O   L 0           0+                 STABLE                                  
+ 18O   E             96.86   193.14    193.57                                   
+ 18O 2 E EAV=249.5     3$CK=0.02911  16$CL=0.00229  16                          
+                                                                                

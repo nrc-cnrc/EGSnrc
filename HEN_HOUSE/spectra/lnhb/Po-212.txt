@@ -1,18 +1,16 @@
-208PB    212PO A DECAY (300 NS)
-208PB  H TYP=Update$AUT=A.L. Nichols$CUT=30-MAY-2010$
-208PB2 H TYP=Full$AUT=A.L. Nichols$CUT=30-DEC-2003$
-208PB C  Evaluation history: Type=Update;Author=A.L. Nichols;Cutoff date=30-MAY-2010
-208PB2C  Type=Full;Author=A.L. Nichols;Cutoff date=30-DEC-2003
-208PB C  References: 1949Bu09, 1962Fl03, 1963As02, 1972Mc29, 1975Sa06, 1981Bo29, 
-208PB2C  2003Au03, 2005Br03
-208PB T  Auger electrons and X ray energies and emission intensities:
-208PB T       {U Energy (keV)}   {U Intensity}  {U Line}
-208PB T
-208PB T   
-208PB T   
-208PB T   
-212PO  P 0.0         0+                300 NS    2              8954.12   11
-208PB  N 1.0         1.0       1         1.0
-208PB  L 0           0+                  STABLE   
-208PB  A 8785.17   11100       1
- 
+208PB    212PO A DECAY (300 NS)                                                 
+208PB  H TYP=UPD$AUT=A.L.NICHOLS$CUT=30-MAY-2010$                               
+208PB2 H TYP=FUL$AUT=A.L.NICHOLS$CUT=30-DEC-2003$                               
+208PB C  References:1949Bu09, 1962Fl03, 1963As02, 1972Mc29, 1975Sa06, 1981Bo29, 
+208PB2C  2003Au03, 2005Br03                                                     
+208PB T  Auger electrons and X ray energies and emission intensities:           
+208PB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+208PB T                                                                         
+208PB T                                                                         
+208PB T                                                                         
+208PB T                                                                         
+212PO  P 0.0         0+                300 NS    2              8954.12   11    
+208PB  N 1.0         1.0       1                                                
+208PB  L 0           0+                 STABLE                                  
+208PB  A 8785.17   11100       1                                                
+                                                                                

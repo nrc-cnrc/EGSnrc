@@ -1,20 +1,18 @@
- 35CL     35S  B- DECAY (87.25 D)
- 35CL  H TYP=Full$AUT=M.M. Bé$CUT=15-JAN-2011$
- 35CL2 H TYP=Full$AUT=V.P.Chechev$CUT=30-SEP-1998$
- 35CL C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=15-JAN-2011
- 35CL2C  Type=Full;Author=V.P.Chechev;Cutoff date=30-SEP-1998
- 35CL C  References: 1940Le**, 1941Ka01, 1943He**, 1949Ma76, 1952Ru23, 1958Se49, 
- 35CL2C  1959Co56, 1959Ca12, 1961Oz01, 1961Wy01, 1965Fl02, 1968Wo06, 1969La34, 
- 35CL3C  1999Pa18, 2012Au06
- 35CL T  Auger electrons and X ray energies and emission intensities:
- 35CL T       {U Energy (keV)}   {U Intensity}  {U Line}
- 35CL T
- 35CL T   
- 35CL T   
- 35CL T   
- 35S   P 0.0         3/2+              87.25 D   15             167.33    3
- 35CL  N 1.0         1.0       1         1.0
- 35CL  L 0           3/2+                STABLE   
- 35CL  B 167.33    3 100                 5.01                                  
- 35CLS B EAV=48.79 1
- 
+ 35CL    35S B- DECAY (87.25 D)                                                 
+ 35CL  H TYP=FUL$AUT=M.-M.BE$CUT=15-JAN-2011$                                   
+ 35CL2 H TYP=FUL$AUT=V.P.CHECHEV$CUT=30-SEP-1998$                               
+ 35CL C  References:1940Le**, 1941Ka01, 1943He**, 1949Ma76, 1952Ru23, 1958Se49, 
+ 35CL2C  1959Co56, 1959Ca12, 1961Oz01, 1961Wy01, 1965Fl02, 1968Wo06, 1969La34,  
+ 35CL3C  1999Pa18, 2012Au06                                                     
+ 35CL T  Auger electrons and X ray energies and emission intensities:           
+ 35CL T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 35CL T                                                                         
+ 35CL T                                                                         
+ 35CL T                                                                         
+ 35CL T                                                                         
+ 35S   P 0.0         3/2+              87.25 D   15             167.33    3     
+ 35CL  N 1.0         1.0       1         1.0                                    
+ 35CL  L 0           3/2+               STABLE                                  
+ 35CL  B 167.33    3 100                 5.01                                   
+ 35CLS B EAV=48.79 1                                                            
+                                                                                

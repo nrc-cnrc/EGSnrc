@@ -1,53 +1,53 @@
-204HG    204TL EC DECAY (3.788 Y)
-204HG T  Auger electrons and X ray energies and emission intensities:
-204HG T       {U Energy (keV)}   {U Intensity}  {U Line}
-204HG T
-204HG T        68.895             0.474   20     XKA2
-204HG T        70.82              0.812   34     XKA1
-204HG T   
-204HG T        79.823         |]                 XKB3
-204HG T        80.254         |]  0.273   10     XKB1
-204HG T        80.762         |]                 XKB5II
-204HG T   
-204HG T        82.435         |]                 XKB2
-204HG T        82.776         |]  0.081    3     XKB4
-204HG T        83.028         |]                 XKO23
-204HG T   
-204HG T        8.721-14.847       0.787   20     XL (total)
-204HG T        8.721              0.0202   8     XLL
-204HG T        9.898-9.989        0.395   14     XLA
-204HG T        10.647             0.00488 22     XLC
-204HG T        11.924-11.822      0.315    9     XLB
-204HG T         -14.847           0.0574  18     XLG
-204HG T   
-204HG T        53.17-58.28    |]                 KLL AUGER
-204HG T        64.59-70.81    |]  0.065    8     KLX AUGER
-204HG T        75.92-83.08    |]                 KXY AUGER
-204HG T        5.1-14.8           1.48     3     L AUGER
-204TL  P 0.0         2-                3.788 Y   15             345.0     13
-204HG  N 3.425E1     3.425E1   0.0292    3.425E1
-204HG  L 0           0+                  STABLE   
-204HG  E                       2.92    139.6                                 1U
-204HG2 E CK=0.5843 14$CL=0.3024 10$CM=0.1133 5
- 
-204PB    204TL B- DECAY (3.788 Y)
-204PB T  Auger electrons and X ray energies and emission intensities:
-204PB T       {U Energy (keV)}   {U Intensity}  {U Line}
-204PB T
-204PB T        72.8049            0.0044   3     XKA2
-204PB T        74.97              0.0061   3     XKA1
-204PB T   
-204PB T        84.451         |]                 XKB3
-204PB T        84.937         |]  0.0027   2     XKB1
-204PB T        85.47          |]                 XKB5II
-204PB T   
-204PB T        87.238         |]                 XKB2
-204PB T        87.58          |]  0.00073  2     XKB4
-204PB T        87.911         |]                 XKO23
-204PB T   
-204TL  P 0.0         2-                3.788 Y   15             763.72    18
-204PB  N 1.03E0      1.03E0    0.9708    1.03E0
-204PB  L 0           0+                  STABLE   
-204PB  B 763.7     2 97.08   13          10.1                                1U
-204PBS B EAV=243.9 1
- 
+204HG    204TL EC DECAY (3.788 Y)                                               
+204HG T  Auger electrons and X ray energies and emission intensities:           
+204HG T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+204HG T                                                                         
+204HG T        68.895             0.474   20     XKA2                           
+204HG T        70.82              0.812   34     XKA1                           
+204HG T                                                                         
+204HG T        79.823         |]                 XKB3                           
+204HG T        80.254         |]  0.273   10     XKB1                           
+204HG T        80.762         |]                 XKB5II                         
+204HG T                                                                         
+204HG T        82.435         |]                 XKB2                           
+204HG T        82.776         |]  0.081    3     XKB4                           
+204HG T        83.028         |]                 XKO23                          
+204HG T                                                                         
+204HG T        8.721-14.847       0.787   20     XL (total)                     
+204HG T        8.721              0.0202   8     XLL                            
+204HG T        9.898-9.989        0.395   14     XLA                            
+204HG T        10.647             0.00488 22     XLC                            
+204HG T        11.924-11.822      0.315    9     XLB                            
+204HG T         -14.847           0.0574  18     XLG                            
+204HG T                                                                         
+204HG T        53.17-58.28    |]                 KLL AUGER                      
+204HG T        64.59-70.81    |]  0.065    8     KLX AUGER                      
+204HG T        75.92-83.08    |]                 KXY AUGER                      
+204HG T        5.1-14.8           1.48     3     L AUGER                        
+204TL  P 0.0         2-                3.788 Y   15             345.0     13    
+204HG  N 3.425E1     3.425E1   0.0292    3.425E1                                
+204HG  L 0           0+                 STABLE                                  
+204HG  E                       2.92    139.6                                 1U 
+204HG2 E CK=0.5843   14$CL=0.3024   10$CM=0.1133    5                           
+                                                                                
+204PB    204TL B- DECAY (3.788 Y)                                               
+204PB T  Auger electrons and X ray energies and emission intensities:           
+204PB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+204PB T                                                                         
+204PB T        72.8049            0.0044   3     XKA2                           
+204PB T        74.97              0.0061   3     XKA1                           
+204PB T                                                                         
+204PB T        84.451         |]                 XKB3                           
+204PB T        84.937         |]  0.0027   2     XKB1                           
+204PB T        85.47          |]                 XKB5II                         
+204PB T                                                                         
+204PB T        87.238         |]                 XKB2                           
+204PB T        87.58          |]  0.00073  2     XKB4                           
+204PB T        87.911         |]                 XKO23                          
+204PB T                                                                         
+204TL  P 0.0         2-                3.788 Y   15             763.72    18    
+204PB  N 1.03E0      1.03E0    0.9708    1.03E0                                 
+204PB  L 0           0+                 STABLE                                  
+204PB  B 763.7     2 97.08   13          10.1                                1U 
+204PBS B EAV=243.9 1                                                            
+                                                                                

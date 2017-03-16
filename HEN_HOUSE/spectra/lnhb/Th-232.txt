@@ -1,45 +1,46 @@
-228RA    232TH A DECAY (14.02E9 Y)
-228RA  H TYP=Full$AUT=A. Arinc$CUT=30-APR-2009$
-228RA C  Evaluation history: Type=Full;Author=A. Arinc;Cutoff date=30-APR-2009
-228RA C  References: 1938Ko01, 1952Du12, 1956Ma43, 1956Al30, 1956Pi42, 1956Se17, 
-228RA2C  1957Ha08, 1959Ko58, 1960Be25, 1960Fa07, 1961Ko11, 1962Ko12, 1963Le21, 
-228RA3C  1973Ta25, 1982Sa36, 1983Mi30, 1983Ro23, 1989Sa01, 1990Ho28, 1991Ry01, 
-228RA4C  1995Bo18, 1996Sc06, 1997Ar08, 2002Ba85, 2003Au03, 2005KiWZ
-228RA T  Auger electrons and X ray energies and emission intensities:
-228RA T       {U Energy (keV)}   {U Intensity}  {U Line}
-228RA T
-228RA T        85.43              0.0017   5     XKA2
-228RA T        88.47              0.0028   8     XKA1
-228RA T   
-228RA T        99.432         |]                 XKB3
-228RA T        100.13         |]  0.00097 28     XKB1
-228RA T        100.738        |]                 XKB5II
-228RA T   
-228RA T        102.89         |]                 XKB2
-228RA T        103.295        |]  0.00032 10     XKB4
-228RA T        103.74         |]                 XKO23
-228RA T   
-228RA T        10.6241-18.3539    7.2      3     XL (total)
-228RA T        10.6241            0.141    8     XLL
-228RA T        12.1957-12.3381    2.43    13     XLA
-228RA T        13.6624            0.084    6     XLC
-228RA T        14.2373-16.1261    3.66    20     XLB
-228RA T        17.2756-18.3539    0.84     5     XLG
-228RA T   
-228RA T        65.149-72.729  |]                 KLL AUGER
-228RA T        79.721-88.466  |]  0.00019  6     KLX AUGER
-228RA T        94.27-103.91   |]                 KXY AUGER
-228RA T        5.71-19.09         8.18    29     L AUGER
-232TH  P 0.0         0+                14.02E9 Y 6              4081.6    14
-228RA  N 1.0         1.0       1         1.0
-228RA  L 0           0+                5.75 Y    3
-228RA  A 4011.2    1478.9    131
-228RA  L 63.823    202+                0.55 NS   4
-228RA  A 3948.5    1421.0    131.02
-228RA  G 63.811    100.259   15E2                      80.4   12
-228RA2 G LC=59.1     9$MC=16.05   23
-228RA  L 204.68    3 4+                           
-228RA  A 3810.0    140.068   2016
-228RA  G 140.88    1 0.021    6E2                      2.26    4
-228RA2 G KC=0.283    4$LC=1.450   21$MC=0.394    6
- 
+228RA    232TH A DECAY (14.02E9 Y)                                              
+228RA  H TYP=FUL$AUT=A.ARINC$CUT=30-APR-2009$                                   
+228RA C  References:1938Ko01, 1952Du12, 1954Ph**, 1956Ma43, 1956Al30, 1956Pi42, 
+228RA2C  1956Se17, 1957Ha08, 1959Ko58, 1960Be25, 1960Fa07, 1961Ko11, 1962Ko12,  
+228RA3C  1963Le21, 1973Ta25, 1982Sa36, 1983Mi30, 1983Ro23, 1989Sa01, 1990Ho28,  
+228RA4C  1991Ry01, 1995Bo18, 1996Sc06, 1997Ar08, 2002Ba85, 2003Au03, 2005KiWZ   
+228RA T  Auger electrons and X ray energies and emission intensities:           
+228RA T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+228RA T                                                                         
+228RA T        85.43              0.0017   5     XKA2                           
+228RA T        88.47              0.0028   8     XKA1                           
+228RA T                                                                         
+228RA T        99.432         |]                 XKB3                           
+228RA T        100.13         |]  0.00097 28     XKB1                           
+228RA T        100.738        |]                 XKB5II                         
+228RA T                                                                         
+228RA T        102.89         |]                 XKB2                           
+228RA T        103.295        |]  0.00032 10     XKB4                           
+228RA T        103.74         |]                 XKO23                          
+228RA T                                                                         
+228RA T        10.6241-18.3539    7.2      3     XL (total)                     
+228RA T        10.6241            0.141    8     XLL                            
+228RA T        12.1957-12.3381    2.43    13     XLA                            
+228RA T        13.6624            0.084    6     XLC                            
+228RA T        14.2373-16.1261    3.66    20     XLB                            
+228RA T        17.2756-18.3539    0.84     5     XLG                            
+228RA T                                                                         
+228RA T        65.149-72.729  |]                 KLL AUGER                      
+228RA T        79.721-88.466  |]  0.00019  6     KLX AUGER                      
+228RA T        94.27-103.91   |]                 KXY AUGER                      
+228RA T        5.71-19.09         8.18    29     L AUGER                        
+232TH  P 0.0         0+                14.02E9 Y 6              4081.6    14    
+228RA  N 1.0         1.0       1                                                
+228RA  L 0           0+                5.75 Y    3                              
+228RA  A 4011.2    1478.9    131                                                
+228RA  L 63.823    202+                0.55 NS   4                              
+228RA  A 3948.5    1421.0    131.02                                             
+228RA  G 63.811    100.259   15E2                      80.4   12                
+228RA2 G LC=59.1      9$MC=16.05    23$NC=4.23      6                           
+228RA3 G OC=0.898    13                                                         
+228RA  L 204.68    3 4+                                                         
+228RA  A 3810.0    140.068   2016                                               
+228RA  G 140.88    1 0.021    6E2                      2.26    4                
+228RA2 G KC=0.283     4$LC=1.450    21$MC=0.394     6$NC=0.1041   15            
+228RA3 G OC=0.0222    4                                                         
+                                                                                

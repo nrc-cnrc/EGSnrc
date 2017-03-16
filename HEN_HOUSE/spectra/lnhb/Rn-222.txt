@@ -1,37 +1,38 @@
-218PO    222RN A DECAY (3.8232 D)
-218PO  H TYP=Full$AUT=V.Chisté$CUT= -- $
-218PO C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date= -- 
-218PO C  References: 1951To25, 1956Ma28, 1956Ma64, 1956Ro31, 1958Sh69, 1958Wa16, 
-218PO2C  1971Gr17, 1972Bu33, 1979Ry03, 1987El12, 1990Ho28, 1991Ry01, 1995El08, 
-218PO3C  1996El01, 1996Sc06, 2002Ba85, 2003Au03, 2004Sc04, 2006Ja03, 2007BeZP
-218PO T  Auger electrons and X ray energies and emission intensities:
-218PO T       {U Energy (keV)}   {U Intensity}  {U Line}
-218PO T
-218PO T        76.864             0.00046910     XKA2
-218PO T        79.293             0.00078116     XKA1
-218PO T   
-218PO T        89.256         |]                 XKB3
-218PO T        89.807         |]  0.000269 7     XKB1
-218PO T        90.363         |]                 XKB5II
-218PO T   
-218PO T        92.263         |]                 XKB2
-218PO T        92.618         |]  8.37E-5 25     XKB4
-218PO T        92.983         |]                 XKO23
-218PO T   
-218PO T        9.66-16.21         0.00076615     XL (total)
-218PO T        9.66               1.78E-5  5     XLL
-218PO T        11.0161-11.1303    0.000326 9     XLA
-218PO T        12.0847            6.65E-6 19     XLC
-218PO T        12.8239-14.2476    0.000345 8     XLB
-218PO T        15.251-16.21       7.02E-5 16     XLG
-222RN  P 0.0         0+                3.8232 D  8              5590.3    3
-218PO  N 1.0         1.0       1         1.0
-218PO  L 0           0+                3.071 M   22
-218PO  A 5489.48   3099.92   1 1
-218PO  L 511       2 2+                           
-218PO  A 4987      1 0.078     1.9
-218PO  G 510       2 0.076     [E2]                    0.0306  6
-218PO2 G KC=0.0213   4$LC=0.00704 13$MC=0.00177  4
-218PO  L 675       5  +                           
-218PO  A 4827      4 0.0005    30
- 
+218PO    222RN A DECAY (3.8232 D)                                               
+218PO  H TYP=FUL$AUT=V.CHISTE$CUT=31-JAN-2007$                                  
+218PO C  References:1923Bo**, 1924Cu**, 1951To25, 1956Ma28, 1956Ma64, 1956Ro31, 
+218PO2C  1958Sh69, 1958Wa16, 1971Gr17, 1972Bu33, 1979Ry03, 1987El12, 1990Ho28,  
+218PO3C  1991Ry01, 1995Co**, 1995El08, 1996El01, 1996Sc06, 2002Ba85, 2003Au03,  
+218PO4C  2004Sc04, 2006Ja03, 2007BeZP                                           
+218PO T  Auger electrons and X ray energies and emission intensities:           
+218PO T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+218PO T                                                                         
+218PO T        76.864             0.00046910     XKA2                           
+218PO T        79.293             0.00078116     XKA1                           
+218PO T                                                                         
+218PO T        89.256         |]                 XKB3                           
+218PO T        89.807         |]  0.000269 7     XKB1                           
+218PO T        90.363         |]                 XKB5II                         
+218PO T                                                                         
+218PO T        92.263         |]                 XKB2                           
+218PO T        92.618         |]  8.37E-5 25     XKB4                           
+218PO T        92.983         |]                 XKO23                          
+218PO T                                                                         
+218PO T        9.66-16.21         0.00076615     XL (total)                     
+218PO T        9.66               1.78E-5  5     XLL                            
+218PO T        11.0161-11.1303    0.000326 9     XLA                            
+218PO T        12.0847            6.65E-6 19     XLC                            
+218PO T        12.8239-14.2476    0.000345 8     XLB                            
+218PO T        15.251-16.21       7.02E-5 16     XLG                            
+222RN  P 0.0         0+                3.8232 D  8              5590.3    3     
+218PO  N 1.0         1.0       1                                                
+218PO  L 0           0+                3.071 M   22                             
+218PO  A 5489.48   3099.92    11                                                
+218PO  L 511       2 2+                                                         
+218PO  A 4987      1 0.078     1.9                                              
+218PO  G 510       2 0.076     [E2]                    0.0306  6                
+218PO2 G KC=0.0213    4$LC=0.00704  13$MC=0.00177   4$NC=0.000453  9            
+218PO3 G OC=9.06E-5  17                                                         
+218PO  L 675       5                                                            
+218PO  A 4827      4 0.0005    30                                               
+                                                                                

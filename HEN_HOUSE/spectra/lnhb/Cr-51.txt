@@ -1,47 +1,44 @@
- 51V      51CR EC DECAY (27.704 D)
- 51V   H TYP=UPD$AUT=V.P.Chechev and N.K.Kuzmenko$CUT=31-MAR-2014$
- 51V 2 H TYP=ERR$AUT=M.-M.Be$CUT=28-FEB-2001$
- 51V 3 H TYP=FULL$AUT=R.G.Helmer and E.Schonfeld$CUT=28-FEB-2001$
- 51V  C  Evaluation history: Type=UPD;Author=V.P.Chechev and N.K.Kuzmenko;Cutoff date=31-MAR-2014
- 51V 2C  Type=ERR;Author=M.-M.Be;Cutoff date=28-FEB-2001
- 51V 3C  Type=FULL;Author=R.G.Helmer and E.Schonfeld;Cutoff date=28-FEB-2001
- 51V  C  References: 1940Wa02, 1948Mi12, 1948Ho04, 1952Ly17, 1955Co56, 1956Ka33, 
- 51V 2C  1956Sc87, 1957Ka65, 1957Wr37, 1960AD01, 1962RI09, 1963Ho17, 1963MeZZ, 
- 51V 3C  1964Ma56, 1965Dh01, 1965Le24, 1965Sa09, 1967LaZZ, 1968Bo25, 1969MeZV, 
- 51V 4C  1970MeZQ, 1970Wa**, 1971DaZM, 1972Em01, 1973De60, 1973ArZI, 1973La**, 
- 51V 5C  1973Vi13, 1974Ts01, 1975La16, 1980Sc07, 1980Ho17, 1982HoZJ, 1982DeYX, 
- 51V 6C  1982ChZF, 1983Wa26, 1984Fi10, 1991Ba11, 1992Un01, 1994Ko34, 1999Ka65, 
- 51V 7C  2002Un02, 2002Ba85, 2004BeZR, 2005Ya01, 2006Hu10, 2008Ki07, 2010Mo01, 
- 51V 8C  2012Wa38, 2012Fi12, 2014Un01
- 51V  T  Auger electrons and X ray energies and emission intensities:
- 51V  T       {U Energy (keV)}   {U Intensity}  {U Line}
- 51V  T
- 51V  T        4.9447             6.79    14     XKA2
- 51V  T        4.95224            13.36   27     XKA1
- 51V  T   
- 51V  T        5.42735        |]  2.69     7     XKB1
- 51V  T        5.463          |]                 XKB5II
- 51V  T   
- 51V  T   
- 51V  T        0.4475-0.6268      0.56    12     XL (total)
- 51V  T        0.4475                            XLL
- 51V  T        0.5135-                           XLA
- 51V  T        0.4557                            XLC
- 51V  T        0.51938-0.6268                    XLB
- 51V  T        0.52758-0.52758                   XLG
- 51V  T   
- 51V  T        4.164-4.395    |]                 KLL AUGER
- 51V  T        4.755-4.95     |]  66.4     5     KLX AUGER
- 51V  T        5.332-5.461    |]                 KXY AUGER
- 51V  T        0.3799-0.6257      146.0    6     L AUGER
- 51CR  P 0.0         7/2-              27.704 D  4              752.62    24
- 51V   N 1.0         1.0       1         1.0
- 51V   L 0           7/2-                STABLE   
- 51V   E                       90.09    25.39                                  
- 51V 2 E CK=0.8919 17$CL=0.0927 14$CM=0.0154 6
- 51V   L 320.0835  4 5/2-              184 PS    6
- 51V   E                       9.91     25.86                                  
- 51V 2 E CK=0.8910 17$CL=0.0935 14$CM=0.0156 6
- 51V   G 320.0835  4 9.89     2M1+E2     0.465   20    0.00181 5
- 51V 2 G KC=0.00164  5$LC=1.51E-4  4$MC=1.98E-5  6
- 
+ 51V     51CR EC DECAY (27.704 D)                                               
+ 51V   H TYP=UPD$AUT=V.P.CHECHEV, N.K.KUZMENKO$CUT=31-MAR-2014$                 
+ 51V 2 H TYP=ERR$AUT=M.-M.BE$DAT=13-FEB-2004$COM=See DDEP website$              
+ 51V 3 H TYP=FUL$AUT=R.G.HELMER, E.SCHONFELD$CUT=28-FEB-2001$                   
+ 51V  C  References:1940Wa02, 1948Mi12, 1948Ho04, 1952Ly17, 1955Co56, 1956Ka33, 
+ 51V 2C  1956Sc87, 1957Ka65, 1957Wr37, 1960AD01, 1962RI09, 1963Ho17, 1963MeZZ,  
+ 51V 3C  1964Ma56, 1965Dh01, 1965Le24, 1965Sa09, 1967LaZZ, 1968Bo25, 1969MeZV,  
+ 51V 4C  1970MeZQ, 1970Wa**, 1971DaZM, 1972Em01, 1973De60, 1973ArZI, 1973La**,  
+ 51V 5C  1973Vi13, 1974Ts01, 1975La16, 1980Sc07, 1980Ho17, 1982HoZJ, 1982DeYX,  
+ 51V 6C  1982ChZF, 1983Wa26, 1984Fi10, 1991Ba11, 1992Un01, 1994Ko34, 1999Ka65,  
+ 51V 7C  2002Un02, 2002Ba85, 2004BeZR, 2005Ya01, 2006Hu10, 2008Ki07, 2010Mo01,  
+ 51V 8C  2012Wa38, 2012Fi12, 2014Un01                                           
+ 51V  T  Auger electrons and X ray energies and emission intensities:           
+ 51V  T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 51V  T                                                                         
+ 51V  T        4.9447             6.79    14     XKA2                           
+ 51V  T        4.95224            13.36   27     XKA1                           
+ 51V  T                                                                         
+ 51V  T        5.42735        |]  2.69     7     XKB1                           
+ 51V  T        5.463          |]                 XKB5II                         
+ 51V  T                                                                         
+ 51V  T                                                                         
+ 51V  T        0.4475-0.6268      0.56    12     XL (total)                     
+ 51V  T        0.4475                            XLL                            
+ 51V  T        0.5135-                           XLA                            
+ 51V  T        0.4557                            XLC                            
+ 51V  T        0.51938-0.6268                    XLB                            
+ 51V  T        0.52758-0.52758                   XLG                            
+ 51V  T                                                                         
+ 51V  T        4.164-4.395    |]                 KLL AUGER                      
+ 51V  T        4.755-4.95     |]  66.4     5     KLX AUGER                      
+ 51V  T        5.332-5.461    |]                 KXY AUGER                      
+ 51V  T        0.3799-0.6257      146.0    6     L AUGER                        
+ 51CR  P 0.0         7/2-              27.704 D  4              752.62    24    
+ 51V   N 1.0         1.0       1         1.0                                    
+ 51V   L 0           7/2-               STABLE                                  
+ 51V   E                       90.09    25.39                                   
+ 51V 2 E CK=0.8919   17$CL=0.0927   14$CM=0.0154    6                           
+ 51V   L 320.0835  4 5/2-              184 PS    6                              
+ 51V   E                       9.91     25.86                                   
+ 51V 2 E CK=0.8910   17$CL=0.0935   14$CM=0.0156    6                           
+ 51V   G 320.0835  4 9.89     2M1+E2     0.465   20    0.00181 5                
+ 51V 2 G KC=0.00164   5$LC=0.000151  4$MC=1.98E-5   6$NC=1.01E-6   3            
+                                                                                

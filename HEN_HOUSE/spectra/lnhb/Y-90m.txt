@@ -1,76 +1,78 @@
- 90Y      90Y  IT DECAY (3.19 H)
- 90Y   H TYP=FULL$AUT=V Chisté$CUT= -- $
- 90Y  C  Evaluation history: Type=FULL;Author=V Chisté;Cutoff date= -- 
- 90Y  T  Auger electrons and X ray energies and emission intensities:
- 90Y  T       {U Energy (keV)}   {U Intensity}  {U Line}
- 90Y  T
- 90Y  T        14.8829            2.02     6     XKA2
- 90Y  T        14.9585            3.88    10     XKA1
- 90Y  T   
- 90Y  T        16.7259        |]                 XKB3
- 90Y  T        16.7381        |]  0.973   27     XKB1
- 90Y  T        16.88          |]                 XKB5II
- 90Y  T   
- 90Y  T        17.0156        |]                 XKB2
- 90Y  T        17.0362        |]  0.134    6     XKB4
- 90Y  T   
- 90Y  T        1.6865-2.3482      0.343    8     XL (total)
- 90Y  T        1.6865             0.00823 27     XLL
- 90Y  T        1.9211-1.9233      0.215    7     XLA
- 90Y  T        1.7617             0.00343 12     XLC
- 90Y  T        1.9962-2.0713      0.114    4     XLB
- 90Y  T        2.1118-2.3482      0.00191  4     XLG
- 90Y  T   
- 90Y  T        12.205-12.784  |]                 KLL AUGER
- 90Y  T        14.238-14.956  |]  2.78     8     KLX AUGER
- 90Y  T        16.251-17.034  |]                 KXY AUGER
- 90Y  T        1.2-2.3            11.56   10     L AUGER
- 90Y   P 682.04    0 7+                3.19 H    6
- 90Y   N 1.00E0      1.00E0    0.999981  1.00E0
- 90Y   L 0           2-                2.6684 D  13
- 90Y   L 202.53    3 3+                250 PS    7
- 90Y   G 202.53    3 97.1    14M1+E2     -0.04   4     0.0272  8
- 90Y 2 G KC=0.0240   7$LC=0.00272  8$MC=4.65E-4 14
- 90Y   L 682.04    6 7+                3.18 H    5
- 90Y   G 479.51    7 90.97   24M4(+E5)                 0.0957 29
- 90Y 2 G KC=0.0818  25$LC=0.01157 35$MC=0.00202  6
- 90Y   G 682.04    6 0.322   22E5                      0.0225  7
- 90Y 2 G KC=0.0190   6$LC=0.00292  9$MC=5.07E-4 15
- 
- 90ZR     90Y  B- DECAY (3.19 H)
- 90ZR  H TYP=FULL$AUT=V Chisté$CUT= -- $
- 90ZR C  Evaluation history: Type=FULL;Author=V Chisté;Cutoff date= -- 
- 90ZR T  Auger electrons and X ray energies and emission intensities:
- 90ZR T       {U Energy (keV)}   {U Intensity}  {U Line}
- 90ZR T
- 90ZR T        15.6906            1.81E-7 19     XKA2
- 90ZR T        15.7749            3.5E-7   4     XKA1
- 90ZR T   
- 90ZR T        17.6541        |]                 XKB3
- 90ZR T        17.6674        |]  8.8E-8   9     XKB1
- 90ZR T        17.8152        |]                 XKB5II
- 90ZR T        17.818         |]                 XKB5I
- 90ZR T   
- 90ZR T        17.9691        |]                 XKB2
- 90ZR T        18.0001        |]  1.29E-8 14     XKB4
- 90ZR T   
- 90ZR T        1.7932-2.5044      3.15E-8 19     XL (total)
- 90ZR T        1.7932             75E-11   6     XLL
- 90ZR T        2.0403-2.0431      1.99E-8 15     XLA
- 90ZR T        1.8774             292E-12 29     XLC
- 90ZR T        2.1246-2.2252      1.03E-8  9     XLB
- 90ZR T        2.2579-2.5044      320E-12 17     XLG
- 90ZR T   
- 90ZR T        12.843-13.455  |]                 KLL AUGER
- 90ZR T        15-15.772      |]  2.28E-7 23     KLX AUGER
- 90ZR T        17.137-17.992  |]                 KXY AUGER
- 90ZR T        1.4-2.1            9.76E-7 27     L AUGER
- 90Y   P 682.04    0 7+                3.19 H    6              2279.8    17
- 90ZR  N 5.263E4     5.263E4   0.000019  5.263E4
- 90ZR  L 0           0+                  STABLE   
- 90ZR  L 2318.99   2 5-                809.2 MS  20
- 90ZR  B 642.9     170.0019   2          9.6                                 1U
- 90ZRS B EAV=231.9 7
- 90ZR  G 2318.958  200.0019   2E5                      4.63E-414
- 90ZR2 G KC=4.08E-4 12$LC=4.63E-5 14$MC=8.04E-6 24
- 
+ 90Y     90Y IT DECAY (3.19 H)                                                  
+ 90Y   H TYP=FUL$AUT=V.CHISTE$CUT=09-NOV-2005$                                  
+ 90Y  T  Auger electrons and X ray energies and emission intensities:           
+ 90Y  T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 90Y  T                                                                         
+ 90Y  T        14.8829            2.02     6     XKA2                           
+ 90Y  T        14.9585            3.88    10     XKA1                           
+ 90Y  T                                                                         
+ 90Y  T        16.7259        |]                 XKB3                           
+ 90Y  T        16.7381        |]  0.973   27     XKB1                           
+ 90Y  T        16.88          |]                 XKB5II                         
+ 90Y  T                                                                         
+ 90Y  T        17.0156        |]                 XKB2                           
+ 90Y  T        17.0362        |]  0.134    6     XKB4                           
+ 90Y  T                                                                         
+ 90Y  T        1.6865-2.3482      0.343    8     XL (total)                     
+ 90Y  T        1.6865             0.00823 27     XLL                            
+ 90Y  T        1.9211-1.9233      0.215    7     XLA                            
+ 90Y  T        1.7617             0.00343 12     XLC                            
+ 90Y  T        1.9962-2.0713      0.114    4     XLB                            
+ 90Y  T        2.1118-2.3482      0.00191  4     XLG                            
+ 90Y  T                                                                         
+ 90Y  T        12.205-12.784  |]                 KLL AUGER                      
+ 90Y  T        14.238-14.956  |]  2.78     8     KLX AUGER                      
+ 90Y  T        16.251-17.034  |]                 KXY AUGER                      
+ 90Y  T        1.2-2.3            11.56   10     L AUGER                        
+ 90Y   P 682.04    6 7+                3.19 H    6                              
+ 90Y   N 1.00E0      1.00E0    0.999981                                         
+ 90Y   L 0           2-                2.6684 D  13                             
+ 90Y   L 202.53    3 3+                250 PS    7                              
+ 90Y   G 202.53    3 97.1    14M1+E2     -0.04   4     0.0272  8                
+ 90Y 2 G KC=0.0240    7$LC=0.00272   8$MC=0.000465 14$NC=6.25E-5  19            
+ 90Y 3 G OC=4.30E-6  13                                                         
+ 90Y   L 682.04    6 7+                3.18 H    5                              
+ 90Y   G 479.51    7 90.97   24M4(+E5)                 0.0957 29                
+ 90Y 2 G KC=0.0818   25$LC=0.01157  35$MC=0.00202   6$NC=0.000266  8            
+ 90Y 3 G OC=1.643E-5 49                                                         
+ 90Y   G 682.04    6 0.322   22E5                      0.0225  7                
+ 90Y 2 G KC=0.0190    6$LC=0.00292   9$MC=0.000507 15$NC=6.50E-5  19            
+ 90Y 3 G OC=3.38E-6  10                                                         
+                                                                                
+ 90ZR    90Y B- DECAY (3.19 H)                                                  
+ 90ZR  H TYP=FUL$AUT=V.CHISTE$CUT=09-NOV-2005$                                  
+ 90ZR T  Auger electrons and X ray energies and emission intensities:           
+ 90ZR T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 90ZR T                                                                         
+ 90ZR T        15.6906            1.81E-7 19     XKA2                           
+ 90ZR T        15.7749            3.5E-7   4     XKA1                           
+ 90ZR T                                                                         
+ 90ZR T        17.6541        |]                 XKB3                           
+ 90ZR T        17.6674        |]  8.8E-8   9     XKB1                           
+ 90ZR T        17.8152        |]                 XKB5II                         
+ 90ZR T        17.818         |]                 XKB5I                          
+ 90ZR T                                                                         
+ 90ZR T        17.9691        |]                 XKB2                           
+ 90ZR T        18.0001        |]  1.29E-8 14     XKB4                           
+ 90ZR T                                                                         
+ 90ZR T        1.7932-2.5044      3.15E-8 19     XL (total)                     
+ 90ZR T        1.7932             75E-11   6     XLL                            
+ 90ZR T        2.0403-2.0431      1.99E-8 15     XLA                            
+ 90ZR T        1.8774             292E-12 29     XLC                            
+ 90ZR T        2.1246-2.2252      1.03E-8  9     XLB                            
+ 90ZR T        2.2579-2.5044      320E-12 17     XLG                            
+ 90ZR T                                                                         
+ 90ZR T        12.843-13.455  |]                 KLL AUGER                      
+ 90ZR T        15-15.772      |]  2.28E-7 23     KLX AUGER                      
+ 90ZR T        17.137-17.992  |]                 KXY AUGER                      
+ 90ZR T        1.4-2.1            9.76E-7 27     L AUGER                        
+ 90Y   P 682.04    6 7+                3.19 H    6              2279.8    17    
+ 90ZR  N 5.263E4     5.263E4   0.000019  5.263E4                                
+ 90ZR  L 0           0+                 STABLE                                  
+ 90ZR  L 2318.99   2 5-                809.2 MS  20                             
+ 90ZR  B 642.9     170.0019   2          9.6                                 1U 
+ 90ZRS B EAV=231.9 7                                                            
+ 90ZR  G 2318.958  200.0019   2E5                      4.63E-414                
+ 90ZR2 G KC=0.000408 12$LC=4.63E-5  14$MC=8.04E-6  24$NC=1.140E-6 34            
+ 90ZR3 G OC=7.96E-8  24                                                         
+                                                                                

@@ -1,65 +1,67 @@
-108AG    108AG IT DECAY (438 Y)
-108AG C  References: 2004Sc04
-108AG T  Auger electrons and X ray energies and emission intensities:
-108AG T       {U Energy (keV)}   {U Intensity}  {U Line}
-108AG T
-108AG T        21.9906            0.49     4     XKA2
-108AG T        22.16317           0.93     7     XKA1
-108AG T   
-108AG T        24.9118        |]                 XKB3
-108AG T        24.9427        |]  0.256   19     XKB1
-108AG T        25.146         |]                 XKB5II
-108AG T   
-108AG T        25.4567        |]                 XKB2
-108AG T        25.512         |]  0.045    4     XKB4
-108AG T   
-108AG T   
-108AG T        17.79-18.69    |]                 KLL AUGER
-108AG T        20.945-22.16   |]  0.349   27     KLX AUGER
-108AG T        24.079-25.507  |]                 KXY AUGER
-108AG T        1.9-3.8            8.60     7     L AUGER
-108AG  P 109.440   7 6+                438 Y     9
-108AG  N 1.099E1     1.099E1   9.100001  1.099E1
-108AG  L 0           1+                2.382 M   11
-108AG  L 79.131    3 2-                1 NS       
-108AG  G 79.131    3 6.9      5E1                      0.310   9
-108AG2 G KC=0.269    8$LC=0.0336  10$MC=0.00633 19
-108AG  L 109.440   7 6+                438 Y     8
-108AG  G 30.309    8 2.15E-5 18M4                      4.25E5 13
-108AG2 G KC=9.77E3  29$LC=3.2E5    1$MC=8.20E4  25
- 
-108PD    108AG EC DECAY (438 Y)
-108PD C  References: 2004Sc04
-108PD T  Auger electrons and X ray energies and emission intensities:
-108PD T       {U Energy (keV)}   {U Intensity}  {U Line}
-108PD T
-108PD T        21.0203            18.38   18     XKA2
-108PD T        21.1774            34.72   30     XKA1
-108PD T   
-108PD T        23.7914        |]                 XKB3
-108PD T        23.819         |]  9.53    12     XKB1
-108PD T        24.013         |]                 XKB5II
-108PD T   
-108PD T        24.2994        |]                 XKB2
-108PD T        24.344         |]  1.62     6     XKB4
-108PD T   
-108PD T   
-108PD T        17.032-17.884  |]                 KLL AUGER
-108PD T        20.032-21.176  |]  14.1     4     KLX AUGER
-108PD T        23.011-24.347  |]                 KXY AUGER
-108PD T        1.7-3.6            83.1     4     L AUGER
-108AG  P 109.440   7 6+                438 Y     9              1922      6
-108PD  N 1.10E0      1.10E0    0.909     1.10E0
-108PD  L 0           0+                           
-108PD  L 433.938   5 2+                           
-108PD  G 433.938   5 90.1     6[E2]                    0.0090927
-108PD2 G KC=0.00784 24$LC=1021E-6 31$MC=1.92E-4  6
-108PD  L 1048.25   5 4+                           
-108PD  G 614.276   4 90.5    16E2                      0.0033510
-108PD2 G KC=0.00291  9$LC=3.60E-4 11$MC=6.77E-5 20
-108PD  L 1771.162  116+                           
-108PD  E                       90.9     69.24                                  
-108PD2 E CK=0.8457 15$CL=0.1238 12$CM=0.0256 5$CN=0.0050 3$CO=0 0
-108PD  G 722.907   1090.8    16E2                      0.00219 7
-108PD2 G KC=0.00191  6$LC=2.31E-4  7$MC=4.34E-5 13
- 
+108AG    108AG IT DECAY (438 Y)                                                 
+108AG C  References:2004Sc04                                                    
+108AG T  Auger electrons and X ray energies and emission intensities:           
+108AG T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+108AG T                                                                         
+108AG T        21.9906            0.49     4     XKA2                           
+108AG T        22.16317           0.93     7     XKA1                           
+108AG T                                                                         
+108AG T        24.9118        |]                 XKB3                           
+108AG T        24.9427        |]  0.256   19     XKB1                           
+108AG T        25.146         |]                 XKB5II                         
+108AG T                                                                         
+108AG T        25.4567        |]                 XKB2                           
+108AG T        25.512         |]  0.045    4     XKB4                           
+108AG T                                                                         
+108AG T                                                                         
+108AG T        17.79-18.69    |]                 KLL AUGER                      
+108AG T        20.945-22.16   |]  0.349   27     KLX AUGER                      
+108AG T        24.079-25.507  |]                 KXY AUGER                      
+108AG T        1.9-3.8            8.60     7     L AUGER                        
+108AG  P 109.440   7 6+                438 Y     9                              
+108AG  N 1.099E1     1.099E1   91000E-6                                         
+108AG  L 0           1+                2.382 M   11                             
+108AG  L 79.131    3 2-                1 NS                                     
+108AG  G 79.131    3 6.9      5E1                      0.310   9                
+108AG2 G KC=0.269     8$LC=0.0336   10$MC=0.00633  19$NC=0.001069 32            
+108AG3 G OC=4.14E-5  12                                                         
+108AG  L 109.440   7 6+                438 Y     8                              
+108AG  G 30.309    8 2.15E-5 18M4                      4.25E5 13                
+108AG2 G KC=9.77E3   29$LC=3.2E5     1$MC=8.20E4   25$NC=1.316E4  39            
+108AG3 G OC=121.7    37                                                         
+                                                                                
+108PD    108AG EC DECAY (438 Y)                                                 
+108PD C  References:2004Sc04                                                    
+108PD T  Auger electrons and X ray energies and emission intensities:           
+108PD T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+108PD T                                                                         
+108PD T        21.0203            18.38   18     XKA2                           
+108PD T        21.1774            34.72   30     XKA1                           
+108PD T                                                                         
+108PD T        23.7914        |]                 XKB3                           
+108PD T        23.819         |]  9.53    12     XKB1                           
+108PD T        24.013         |]                 XKB5II                         
+108PD T                                                                         
+108PD T        24.2994        |]                 XKB2                           
+108PD T        24.344         |]  1.62     6     XKB4                           
+108PD T                                                                         
+108PD T                                                                         
+108PD T        17.032-17.884  |]                 KLL AUGER                      
+108PD T        20.032-21.176  |]  14.1     4     KLX AUGER                      
+108PD T        23.011-24.347  |]                 KXY AUGER                      
+108PD T        1.7-3.6            83.1     4     L AUGER                        
+108AG  P 109.440   7 6+                438 Y     9              1922      6     
+108PD  N 1.10E0      1.10E0    0.909     1.10E0                                 
+108PD  L 0           0+                                                         
+108PD  L 433.938   5 2+                                                         
+108PD  G 433.938   5 90.1     6[E2]                    0.0090927                
+108PD2 G KC=0.00784  24$LC=0.001021 31$MC=0.000192  6$NC=3.19E-5  10            
+108PD  L 1048.25   5 4+                                                         
+108PD  G 614.276   4 90.5    16E2                      0.0033510                
+108PD2 G KC=0.00291   9$LC=0.000360 11$MC=6.77E-5  20$NC=1.130E-5 34            
+108PD  L 1771.162  116+                                                         
+108PD  E                       90.9     69.24                                   
+108PD2 E CK=0.8457   15$CL=0.1238   12$CM=0.0256    5$CN=0.0050    3            
+108PD  G 722.907   1090.8    16E2                      0.00219 7                
+108PD2 G KC=0.00191   6$LC=0.000231  7$MC=4.34E-5  13$NC=7.27E-6  22            
+                                                                                

@@ -1,49 +1,50 @@
-234TH    238U  A DECAY (4.468E9 Y)
-234TH  H TYP=Full$AUT=V. Chisté$CUT=01-APR-2006$
-234TH C  Evaluation history: Type=Full;Author=V. Chisté;Cutoff date=01-APR-2006
-234TH C  References: 1949Ki26, 1952Se67, 1955Ko13, 1957Le21, 1957Cl16, 1959St45, 
-234TH2C  1959Ko58, 1959Ku81, 1961Ko11, 1964Fl07, 1967Sp12, 1968Ro15, 1970Ga27, 
-234TH3C  1971Le11, 1971Th17, 1971Kl14, 1971Ja07, 1973Kh10, 1974Iv01, 1975Wa37, 
-234TH4C  1975Em03, 1976Th12, 1978Ri07, 1978Ka40, 1980Sp10, 1980Po09, 1981Ba70, 
-234TH5C  1982De22, 1983El11, 1983Be66, 1984Va35, 1984Va34, 1984Ro21, 1985Iv01, 
-234TH6C  1987Al28, 1990Ko40, 1991Ry01, 1994Ak05, 1994Du15, 1996Sc06, 1996Ru11, 
-234TH7C  1998Ad08, 2000Ho27, 2000Ga05, 2002Ba85, 2002Ch52, 2003Au03, 2003Ha06, 
-234TH8C  2004Sc03
-234TH T  Auger electrons and X ray energies and emission intensities:
-234TH T       {U Energy (keV)}   {U Intensity}  {U Line}
-234TH T
-234TH T        89.954             0.00109 30     XKA2
-234TH T        93.351             0.0018   5     XKA1
-234TH T   
-234TH T        104.819        |]                 XKB3
-234TH T        105.604        |]  0.00063 17     XKB1
-234TH T        106.239        |]                 XKB5II
-234TH T   
-234TH T        108.509        |]                 XKB2
-234TH T        108.955        |]  0.00021  6     XKB4
-234TH T        109.442        |]                 XKO23
-234TH T   
-234TH T        11.118-19.504      7.94    28     XL (total)
-234TH T        11.118             0.164    8     XLL
-234TH T        12.8085-12.967     2.74    12     XLA
-234TH T        14.509             0.092    5     XLC
-234TH T        14.972-17.1383     4.01    18     XLB
-234TH T        18.3633-19.504     0.94     4     XLG
-234TH T   
-234TH T        68.406-76.745  |]                 KLL AUGER
-234TH T        83.857-93.345  |]  0.00012  4     KLX AUGER
-234TH T        99.29-109.64   |]                 KXY AUGER
-234TH T        5.8-20.3           8.43    25     L AUGER
-238U   P 0.0         0+                4.468E9 Y 5              4269.7    29
-234TH  N 1.0         1.0       1         1.0
-234TH  L 0         0 0+                24.10 D   3
-234TH  A 4198      3 77.5    5 1
-234TH  L 49.55     6 2+                0.37 NS   3
-234TH  A 4151      5 22.3    5 1.33
-234TH  G 49.55     6 0.0697  26E2                      321    10
-234TH2 G LC=235      7$MC=64.4    19
-234TH  L 163.0     1 4+                           
-234TH  A 4038      5 0.13    3 24
-234TH  G 113.5     1 0.0174  47[E2]                    6.47   19
-234TH2 G KC=0.219    7$LC=4.57    14$MC=1.257   38
- 
+234TH    238U A DECAY (4.468E9 Y)                                               
+234TH  H TYP=FUL$AUT=V.CHISTE$CUT=01-APR-2006$                                  
+234TH C  References:1949Ki26, 1950Wh**, 1952Se67, 1955Ko13, 1956Ku**, 1957Le21, 
+234TH2C  1957Cl16, 1957Ku**, 1958Pa**, 1959St45, 1959Ko58, 1959Ku81, 1961Ko11,  
+234TH3C  1964Fl07, 1967Sp12, 1968Ro15, 1970Ga27, 1971Le11, 1971Th17, 1971Kl14,  
+234TH4C  1971Ja07, 1973Kh10, 1974Iv01, 1975Wa37, 1975Em03, 1976Th12, 1978Ri07,  
+234TH5C  1978Ka40, 1980Sp10, 1980Po09, 1981Ba70, 1982De22, 1983El11, 1983Be66,  
+234TH6C  1984Va35, 1984Va34, 1984Ro21, 1985Iv01, 1987Al28, 1990Ko40, 1991Ry01,  
+234TH7C  1994Ak05, 1994Du15, 1996Sc06, 1996Ru11, 1998Ad08, 2000Ho27, 2000Ga05,  
+234TH8C  2002Ba85, 2002Ch52, 2003Au03, 2003Ha06, 2004Sc03                       
+234TH T  Auger electrons and X ray energies and emission intensities:           
+234TH T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+234TH T                                                                         
+234TH T        89.954             0.00109 30     XKA2                           
+234TH T        93.351             0.0018   5     XKA1                           
+234TH T                                                                         
+234TH T        104.819        |]                 XKB3                           
+234TH T        105.604        |]  0.00063 17     XKB1                           
+234TH T        106.239        |]                 XKB5II                         
+234TH T                                                                         
+234TH T        108.509        |]                 XKB2                           
+234TH T        108.955        |]  0.00021  6     XKB4                           
+234TH T        109.442        |]                 XKO23                          
+234TH T                                                                         
+234TH T        11.118-19.504      7.94    28     XL (total)                     
+234TH T        11.118             0.164    8     XLL                            
+234TH T        12.8085-12.967     2.74    12     XLA                            
+234TH T        14.509             0.092    5     XLC                            
+234TH T        14.972-17.1383     4.01    18     XLB                            
+234TH T        18.3633-19.504     0.94     4     XLG                            
+234TH T                                                                         
+234TH T        68.406-76.745  |]                 KLL AUGER                      
+234TH T        83.857-93.345  |]  0.00012  4     KLX AUGER                      
+234TH T        99.29-109.64   |]                 KXY AUGER                      
+234TH T        5.8-20.3           8.43    25     L AUGER                        
+238U   P 0.0         0+                4.468E9 Y 5              4269.7    29    
+234TH  N 1.0         1.0       1                                                
+234TH  L 0           0+                24.10 D   3                              
+234TH  A 4198      3 77.5     51                                                
+234TH  L 49.55     6 2+                0.37 NS   3                              
+234TH  A 4151      5 22.3     51.33                                             
+234TH  G 49.55     6 0.0697  26E2                      321    10                
+234TH2 G LC=235       7$MC=64.4     19$NC=17.2      5                           
+234TH3 G OC=3.83     11                                                         
+234TH  L 163.0     1 4+                                                         
+234TH  A 4038      5 0.13     324                                               
+234TH  G 113.5     1 0.0174  47[E2]                    6.47   19                
+234TH2 G KC=0.219     7$LC=4.57     14$MC=1.257    38$NC=0.337    10            
+234TH3 G OC=0.0752   23                                                         
+                                                                                

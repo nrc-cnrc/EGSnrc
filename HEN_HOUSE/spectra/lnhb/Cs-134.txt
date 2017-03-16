@@ -1,103 +1,112 @@
-134XE    134CS EC DECAY (2.0644 Y)
-134XE  H TYP=Full$AUT=M.M. Bé$CUT=01-MAY-2012$
-134XE C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=01-MAY-2012
-134XE C  References: 1967Le18, 1968Ab01, 1972La14, 1973Di11, 1975Va12, 1987Wa28, 
-134XE2C  1988Ch44, 1997Ma75, 2002Un02, 2002Mi06, 2004So32, 2008Ki07, 2012Au06
-134XE T  Auger electrons and X ray energies and emission intensities:
-134XE T       {U Energy (keV)}   {U Intensity}  {U Line}
-134XE T
-134XE T        29.459                            XKA2
-134XE T        29.779                            XKA1
-134XE T   
-134XE T        33.562         |]                 XKB3
-134XE T        33.625         |]                 XKB1
-134XE T        33.881         |]                 XKB5II
-134XE T   
-134XE T        34.415         |]                 XKB2
-134XE T        34.496         |]                 XKB4
-134XE T        34.552         |]                 XKO23
-134XE T   
-134XE T   
-134XE T        23.512-24.842  |]                 KLL AUGER
-134XE T        27.897-29.77   |]                 KLX AUGER
-134XE T        32.27-34.54    |]                 KXY AUGER
-134XE T        2.4848-5.3158                     L AUGER
-134CS  P 0.0         4+                2.0644 Y  14             1233.3    8
-134XE  N 3.333E5     3.333E5   0.0000031 3.333E5
-134XE  L 0           0+                  STABLE   
-134XE  L 847.041   232+                           
-134XE  E                       0.0003   113                                  2
-134XE2 E CK=0.8361 16$CL=0.1289 11$CM=0.0283 6$CN=0.0066 4
-134XE  G 847.000   200.0003   1E2                      
- 
-134BA    134CS B- DECAY (2.0644 Y)
-134BA  H TYP=Full$AUT=M.M. Bé$CUT=01-MAY-2012$
-134BA C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=01-MAY-2012
-134BA C  References: 1967Le18, 1968Ab01, 1972La14, 1973Di11, 1975Va12, 1987Wa28, 
-134BA2C  1988Ch44, 1997Ma75, 2002Un02, 2002Mi06, 2004So32, 2008Ki07, 2012Au06
-134BA T  Auger electrons and X ray energies and emission intensities:
-134BA T       {U Energy (keV)}   {U Intensity}  {U Line}
-134BA T
-134BA T        31.8174            0.2378  26     XKA2
-134BA T        32.1939            0.438    5     XKA1
-134BA T   
-134BA T        36.3045        |]                 XKB3
-134BA T        36.3786        |]  0.1289  19     XKB1
-134BA T        36.654         |]                 XKB5II
-134BA T   
-134BA T        37.258         |]                 XKB2
-134BA T        37.312         |]  0.0325   8     XKB4
-134BA T        37.425         |]                 XKO23
-134BA T   
-134BA T        3.9544-5.8104      0.1058  17     XL (total)
-134BA T        3.9544             0.00204  5     XLL
-134BA T        4.4515-4.4666      0.0528  12     XLA
-134BA T        4.3307             0.00077620     XLC
-134BA T        4.8278-5.207       0.0435   8     XLB
-134BA T        5.3715-5.8104      0.00675 14     XLG
-134BA T   
-134BA T        25.314-26.786  |]                 KLL AUGER
-134BA T        30.095-32.179  |]  0.093    4     KLX AUGER
-134BA T        34.86-37.41    |]                 KXY AUGER
-134BA T        2.66-5.81          0.850    5     L AUGER
-134CS  P 0.0         4+                2.0644 Y  14             2058.98   33
-134BA  N 1.00E0      1.00E0    0.9999971 1.00E0
-134BA  L 0           0+                  STABLE   
-134BA  L 604.7223  192+                           
-134BA  B 1454.26   330.06     6          13.1                                2
-134BAS B EAV=535 1
-134BA  G 604.7200  3097.63    8E2                      0.00593 9
-134BA2 G KC=0.00503  7$LC=7.21E-4 10$MC=1495E-7 21
-134BA  L 1167.968  3 2+                           
-134BA  B 891.01    33                    13                                  2
-134BAS B EAV=300 1
-134BA  G 563.2460  308.342   15E2                      0.0071410
-134BA2 G KC=0.00603  9$LC=8.81E-4 13$MC=1.83E-4  3
-134BA  G 1167.967  4 1.791    5E2                      1307E-619
-134BA2 G KC=1122E-6 16$LC=1444E-7 21$MC=2.97E-5  5
-134BA  L 1400.590  4 4+                           
-134BA  B 658.39    3370.19    8          8.89                                  
-134BAS B EAV=210.3 4
-134BA  G 795.860   1085.47    9E2                      0.00302 5
-134BA2 G KC=0.00258  4$LC=3.51E-4  5$MC=7.24E-5 11
-134BA  L 1643.336  4 3+                           
-134BA  B 415.64    332.498    8          9.65                                  
-134BAS B EAV=123.6 4
-134BA  G 242.76    5 0.0241  31(M1+E2)                 0.087   3
-134BA2 G KC=0.0722  12$LC=0.0120  25$MC=0.0025   6
-134BA  G 475.365   2 1.479    7M1+()E2   6.0     35    0.0114  5
-134BA2 G KC=0.0096   4$LC=0.00146  3$MC=3.04E-4  6
-134BA  G 1038.605  8 0.9909  33M1+()E2   0.71    14    0.00208 7
-134BA2 G KC=0.00179  6$LC=2.28E-4  7$MC=4.67E-5 13
-134BA  L 1969.921  4 4+                           
-134BA  B 89.06     3327.27    3          6.49                                  
-134BAS B EAV=23.2 4
-134BA  G 326.585   140.0171  11(M1+E2)                 0.0367 22
-134BA2 G KC=0.031    3$LC=0.0047   3$MC=0.00097  8
-134BA  G 569.330   2 15.368  21M1+()E2   0.28    2     0.0093614
-134BA2 G KC=0.00805 12$LC=1039E-6 15$MC=2.14E-4  3
-134BA  G 801.950   6 8.694   16E2                      0.00297 5
-134BA2 G KC=0.00254  4$LC=3.44E-4  5$MC=7.1E-5   1
-134BA  G 1365.1940 403.019    8E2                      9.87E-414
-134BA2 G KC=8.20E-4 12$LC=1039E-7 15$MC=2.13E-5  3
- 
+134XE    134CS EC DECAY (2.0644 Y)                                              
+134XE  H TYP=FUL$AUT=M.-M.BE$CUT=01-MAY-2012$                                   
+134XE C  References:1967Le18, 1968Ab01, 1972La14, 1973Di11, 1975Va12, 1987Wa28, 
+134XE2C  1988Ch44, 1997Ma75, 2002Un02, 2002Mi06, 2004So32, 2008Ki07, 2012Au06   
+134XE T  Auger electrons and X ray energies and emission intensities:           
+134XE T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+134XE T                                                                         
+134XE T        29.459                            XKA2                           
+134XE T        29.779                            XKA1                           
+134XE T                                                                         
+134XE T        33.562         |]                 XKB3                           
+134XE T        33.625         |]                 XKB1                           
+134XE T        33.881         |]                 XKB5II                         
+134XE T                                                                         
+134XE T        34.415         |]                 XKB2                           
+134XE T        34.496         |]                 XKB4                           
+134XE T        34.552         |]                 XKO23                          
+134XE T                                                                         
+134XE T                                                                         
+134XE T        23.512-24.842  |]                 KLL AUGER                      
+134XE T        27.897-29.77   |]                 KLX AUGER                      
+134XE T        32.27-34.54    |]                 KXY AUGER                      
+134XE T        2.4848-5.3158                     L AUGER                        
+134CS  P 0.0         4+                2.0644 Y  14             1233.3    8     
+134XE  N 3.333E5     3.333E5   0.000003 13.333E5                                
+134XE  L 0           0+                 STABLE                                  
+134XE  L 847.041   232+                                                         
+134XE  E                       0.0003   113                                  2  
+134XE2 E CK=0.8361   16$CL=0.1289   11$CM=0.0283    6$CN=0.0066    4            
+134XE  G 847.000   200.0003   1E2                                               
+                                                                                
+134BA    134CS B- DECAY (2.0644 Y)                                              
+134BA  H TYP=FUL$AUT=M.-M.BE$CUT=01-MAY-2012$                                   
+134BA C  References:1967Le18, 1968Ab01, 1972La14, 1973Di11, 1975Va12, 1987Wa28, 
+134BA2C  1988Ch44, 1997Ma75, 2002Un02, 2002Mi06, 2004So32, 2008Ki07, 2012Au06   
+134BA T  Auger electrons and X ray energies and emission intensities:           
+134BA T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+134BA T                                                                         
+134BA T        31.8174            0.2378  26     XKA2                           
+134BA T        32.1939            0.438    5     XKA1                           
+134BA T                                                                         
+134BA T        36.3045        |]                 XKB3                           
+134BA T        36.3786        |]  0.1289  19     XKB1                           
+134BA T        36.654         |]                 XKB5II                         
+134BA T                                                                         
+134BA T        37.258         |]                 XKB2                           
+134BA T        37.312         |]  0.0325   8     XKB4                           
+134BA T        37.425         |]                 XKO23                          
+134BA T                                                                         
+134BA T        3.9544-5.8104      0.1058  17     XL (total)                     
+134BA T        3.9544             0.00204  5     XLL                            
+134BA T        4.4515-4.4666      0.0528  12     XLA                            
+134BA T        4.3307             0.00077620     XLC                            
+134BA T        4.8278-5.207       0.0435   8     XLB                            
+134BA T        5.3715-5.8104      0.00675 14     XLG                            
+134BA T                                                                         
+134BA T        25.314-26.786  |]                 KLL AUGER                      
+134BA T        30.095-32.179  |]  0.093    4     KLX AUGER                      
+134BA T        34.86-37.41    |]                 KXY AUGER                      
+134BA T        2.66-5.81          0.850    5     L AUGER                        
+134CS  P 0.0         4+                2.0644 Y  14             2058.98   33    
+134BA  N 1.00E0      1.00E0    0.999997 11.00E0                                 
+134BA  L 0           0+                 STABLE                                  
+134BA  L 604.7223  192+                                                         
+134BA  B 1454.26   330.06     6          13.1                                2  
+134BAS B EAV=535 1                                                              
+134BA  G 604.7200  3097.63    8E2                      0.00593 9                
+134BA2 G KC=0.00503   7$LC=0.000721 10$MC=1.495E-4 21$NC=3.20E-5   5            
+134BA3 G OC=4.79E-6   7                                                         
+134BA  L 1167.968  3 2+                                                         
+134BA  B 891.01    33                    13                                  2  
+134BAS B EAV=300 1                                                              
+134BA  G 563.2460  308.342   15E2                      0.0071410                
+134BA2 G KC=0.00603   9$LC=0.000881 13$MC=0.000183  3$NC=3.91E-5   6            
+134BA3 G OC=5.83E-6   9                                                         
+134BA  G 1167.967  4 1.791    5E2                      1307E-619                
+134BA2 G KC=0.001122 16$LC=1.444E-4 21$MC=2.97E-5   5$NC=6.39E-6   9            
+134BA3 G OC=9.74E-7  14                                                         
+134BA  L 1400.590  4 4+                                                         
+134BA  B 658.39    3370.19    8          8.89                                   
+134BAS B EAV=210.3 4                                                            
+134BA  G 795.860   1085.47    9E2                      0.00302 5                
+134BA2 G KC=0.00258   4$LC=0.000351  5$MC=7.24E-5  11$NC=1.554E-5 22            
+134BA3 G OC=2.35E-6   4                                                         
+134BA  L 1643.336  4 3+                                                         
+134BA  B 415.64    332.498    8          9.65                                   
+134BAS B EAV=123.6 4                                                            
+134BA  G 242.76    5 0.0241  31(M1+E2)                 0.087   3                
+134BA2 G KC=0.0722   12$LC=0.0120   25$MC=0.0025    6$NC=0.00054  12            
+134BA3 G OC=0.000079 14                                                         
+134BA  G 475.365   2 1.479    7M1+E2     6.0     35    0.0114  5                
+134BA2 G KC=0.0096    4$LC=0.00146   3$MC=0.000304  6$NC=6.49E-5  14            
+134BA3 G OC=9.61E-6  24                                                         
+134BA  G 1038.605  8 0.9909  33M1+E2     0.71    14    0.00208 7                
+134BA2 G KC=0.00179   6$LC=0.000228  7$MC=4.67E-5  13$NC=1.01E-5   3            
+134BA3 G OC=1.55E-6   5                                                         
+134BA  L 1969.921  4 4+                                                         
+134BA  B 89.06     3327.27    3          6.49                                   
+134BAS B EAV=23.2 4                                                             
+134BA  G 326.585   140.0171  11(M1+E2)                 0.0367 22                
+134BA2 G KC=0.031     3$LC=0.0047    3$MC=0.00097   8$NC=0.000207 14            
+134BA3 G OC=3.08E-5  13                                                         
+134BA  G 569.330   2 15.368  21M1+E2     0.28    2     0.0093614                
+134BA2 G KC=0.00805  12$LC=0.001039 15$MC=0.000214  3$NC=4.61E-5   7            
+134BA3 G OC=7.07E-6  10                                                         
+134BA  G 801.950   6 8.694   16E2                      0.00297 5                
+134BA2 G KC=0.00254   4$LC=0.000344  5$MC=0.000071  1$NC=1.525E-5 22            
+134BA3 G OC=2.30E-6   4                                                         
+134BA  G 1365.1940 403.019    8E2                      9.87E-414                
+134BA2 G KC=0.000820 12$LC=1.039E-4 15$MC=2.13E-5   3$NC=4.59E-6   7            
+134BA3 G OC=7.02E-7  10                                                         
+                                                                                

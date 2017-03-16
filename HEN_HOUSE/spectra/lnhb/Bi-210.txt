@@ -1,88 +1,88 @@
-206TL    210BI A DECAY (5.011 D)
-206TL  H TYP=UPD$AUT=M.A.Kellett$CUT=01-OCT-2014$
-206TL2 H TYP=FUL$AUT=V. Chiste. M.-M.Be$CUT=31-JAN-2008$
-206TL C  Evaluation history: Type=UPD;Author=M.A.Kellett;Cutoff date=01-OCT-2014
-206TL2C  Type=FUL;Author=V. Chiste. M.-M.Be;Cutoff date=31-JAN-2008
-206TL C  References: 1935Po01, 1935Po01, 1939Fl02, 1939Fl02, 1940Ne04, 1940Ne04, 
-206TL2C  1944Hole, 1947Br36, 1947Br36, 1952Be22, 1952Be22, 1953Lo09, 1953Lo09, 
-206TL3C  1954Pl30, 1954Pl30, 1956Fi09, 1956Ro18, 1956Ro18, 1956Fi09, 1959Ro51, 
-206TL4C  1959Wa05, 1959Wa05, 1959Ro51, 1960Wa14, 1960Wa14, 1961Ru02, 1961Ru02, 
-206TL5C  1961Nu01, 1961Nu01, 1962Da03, 1962Ka27, 1962Ka27, 1962Da03, 1967Hs01, 
-206TL6C  1967Hs01, 1969Fl02, 1969Fl02, 1969La18, 1969La18, 1991Ry01, 1991Ry01, 
-206TL7C  1996Sc06, 1996Sc06, 1999Br39, 2002Ba85, 2002Ba85, 2003Br13, 2003Au03, 
-206TL8C  2003Br13, 2005Gr41, 2008BeZV, 2008Ki07, 2008Ko21, 2010MoZU, 2012Wa38
-206TL T  Auger electrons and X ray energies and emission intensities:
-206TL T       {U Energy (keV)}   {U Intensity}  {U Line}
-206TL T
-206TL T        70.8325            6.4E-6   7     XKA2
-206TL T        72.8725            1.08E-5 11     XKA1
-206TL T   
-206TL T        82.118         |]                 XKB3
-206TL T        82.577         |]  3.7E-6   4     XKB1
-206TL T        83.115         |]                 XKB5II
-206TL T   
-206TL T        84.838         |]                 XKB2
-206TL T        85.134         |]  1.10E-6 11     XKB4
-206TL T        85.444         |]                 XKO23
-206TL T   
-206TL T        8.9531-14.7362     9.0E-6   5     XL (total)
-206TL T        8.9531             2.13E-7 16     XLL
-206TL T        10.1718-10.2679    4.09E-6 28     XLA
-206TL T        10.9942            7.2E-8   6     XLC
-206TL T        11.8117-12.9566    3.86E-6 23     XLB
-206TL T        13.8528-14.7362    7.3E-7   5     XLG
-206TL T   
-206TL T        54.587-59.954  |]                 KLL AUGER
-206TL T        66.37-72.86    |]  8.5E-7  13     KLX AUGER
-206TL T        78.12-85.5     |]                 KXY AUGER
-206TL T        5.2493-15.3183     1.55E-5  6     L AUGER
-210BI  P 0.0         1-                5.011 D   5              5036.5    8
-206TL  N 7.143E5     7.143E5   0.0000012 7.143E5
-206TL  L 0           0-                4.202 M   11
-206TL  L 265.832   5 2-                2.29 NS   14
-206TL  A 4687      4 40.0    4358
-206TL  G 265.832   5 0.000048 5E2                      0.1603 23
-206TL2 G KC=0.0855  12$LC=0.0561   8$MC=0.01440 21
-206TL  L 304.896   6 1-                4.2 PS    14
-206TL  A 4650      4 60      6 49
-206TL  G 304.896   6 0.000061 7M1                      0.375   6
-206TL2 G KC=0.308    5$LC=0.0519   8$MC=0.01211 17
- 
-210PO    210BI B- DECAY (5.011 D)
-210PO  H TYP=UPD$AUT=M.A.Kellett$CUT=01-OCT-2014$
-210PO2 H TYP=FUL$AUT=V. Chiste. M.-M.Be$CUT=31-JAN-2008$
-210PO C  Evaluation history: Type=UPD;Author=M.A.Kellett;Cutoff date=01-OCT-2014
-210PO2C  Type=FUL;Author=V. Chiste. M.-M.Be;Cutoff date=31-JAN-2008
-210PO C  References: 1935Po01, 1935Po01, 1939Fl02, 1939Fl02, 1940Ne04, 1940Ne04, 
-210PO2C  1944Hole, 1947Br36, 1947Br36, 1952Be22, 1952Be22, 1953Lo09, 1953Lo09, 
-210PO3C  1954Pl30, 1954Pl30, 1956Fi09, 1956Ro18, 1956Ro18, 1956Fi09, 1959Ro51, 
-210PO4C  1959Wa05, 1959Wa05, 1959Ro51, 1960Wa14, 1960Wa14, 1961Ru02, 1961Ru02, 
-210PO5C  1961Nu01, 1961Nu01, 1962Da03, 1962Ka27, 1962Ka27, 1962Da03, 1967Hs01, 
-210PO6C  1967Hs01, 1969Fl02, 1969Fl02, 1969La18, 1969La18, 1991Ry01, 1991Ry01, 
-210PO7C  1996Sc06, 1996Sc06, 1999Br39, 2002Ba85, 2002Ba85, 2003Br13, 2003Au03, 
-210PO8C  2003Br13, 2005Gr41, 2008BeZV, 2008Ki07, 2008Ko21, 2010MoZU, 2012Wa38
-210PO T  Auger electrons and X ray energies and emission intensities:
-210PO T       {U Energy (keV)}   {U Intensity}  {U Line}
-210PO T
-210PO T        76.864                            XKA2
-210PO T        79.293                            XKA1
-210PO T   
-210PO T        89.256         |]                 XKB3
-210PO T        89.807         |]                 XKB1
-210PO T        90.363         |]                 XKB5II
-210PO T   
-210PO T        92.263         |]                 XKB2
-210PO T        92.618         |]                 XKB4
-210PO T        92.983         |]                 XKO23
-210PO T   
-210PO T   
-210PO T        58.978-65.205  |]                 KLL AUGER
-210PO T        71.902-79.289  |]                 KLX AUGER
-210PO T        84.8-93.1      |]                 KXY AUGER
-210PO T        5.506-16.864                      L AUGER
-210BI  P 0.0         1-                5.011 D   5              1161.2    8
-210PO  N 1.00E0      1.00E0    0.9999982 1.00E0
-210PO  L 0           0+                138.3763 D17
-210PO  B 1161.2    8 99.99986 2          8                                   1
-210POS B EAV=317 3
- 
+206TL    210BI A DECAY (5.011 D)                                                
+206TL  H TYP=UPD$AUT=M.A.KELLETT$CUT=01-OCT-2014$                               
+206TL2 H TYP=FUL$AUT=V.CHISTE, M.-M.BE$CUT=31-JAN-2008$                         
+206TL C  References:1926Mc**, 1927Cu**, 1935Po01, 1935Po01, 1939Fl02, 1939Fl02, 
+206TL2C  1940Ne04, 1940Ne04, 1944Ho**, 1944Ho**, 1947Br36, 1947Br36, 1952Be22,  
+206TL3C  1952Be22, 1953Lo09, 1953Lo09, 1954Pl30, 1954Pl30, 1956Fi09, 1956Ro18,  
+206TL4C  1956Ro18, 1956Fi09, 1959Ro51, 1959Wa05, 1959Wa05, 1959Ro51, 1960Wa14,  
+206TL5C  1960Wa14, 1961Ru02, 1961Ru02, 1961Nu01, 1961Nu01, 1962Da03, 1962Ka27,  
+206TL6C  1962Ka27, 1962Da03, 1967Hs01, 1967Hs01, 1969Fl02, 1969Fl02, 1969La18,  
+206TL7C  1969La18, 1991Ry01, 1991Ry01, 1996Sc06, 1996Sc06, 1999Br39, 2002Ba85,  
+206TL8C  2002Ba85, 2003Br13, 2003Au03, 2003Br13, 2005Gr41, 2008BeZV, 2008Ki07,  
+206TL9C  2008Ko21, 2010MoZU, 2012Wa38                                           
+206TL T  Auger electrons and X ray energies and emission intensities:           
+206TL T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+206TL T                                                                         
+206TL T        70.8325            6.4E-6   7     XKA2                           
+206TL T        72.8725            1.08E-5 11     XKA1                           
+206TL T                                                                         
+206TL T        82.118         |]                 XKB3                           
+206TL T        82.577         |]  3.7E-6   4     XKB1                           
+206TL T        83.115         |]                 XKB5II                         
+206TL T                                                                         
+206TL T        84.838         |]                 XKB2                           
+206TL T        85.134         |]  1.10E-6 11     XKB4                           
+206TL T        85.444         |]                 XKO23                          
+206TL T                                                                         
+206TL T        8.9531-14.7362     9.0E-6   5     XL (total)                     
+206TL T        8.9531             2.13E-7 16     XLL                            
+206TL T        10.1718-10.2679    4.09E-6 28     XLA                            
+206TL T        10.9942            7.2E-8   6     XLC                            
+206TL T        11.8117-12.9566    3.86E-6 23     XLB                            
+206TL T        13.8528-14.7362    7.3E-7   5     XLG                            
+206TL T                                                                         
+206TL T        54.587-59.954  |]                 KLL AUGER                      
+206TL T        66.37-72.86    |]  8.5E-7  13     KLX AUGER                      
+206TL T        78.12-85.5     |]                 KXY AUGER                      
+206TL T        5.2493-15.3183     1.55E-5  6     L AUGER                        
+210BI  P 0.0         1-                5.011 D   5              5036.5    8     
+206TL  N 7.143E5     7.143E5   1.4E-6   2                                       
+206TL  L 0           0-                4.202 M   11                             
+206TL  L 265.832   5 2-                2.29 NS   14                             
+206TL  A 4687      4 40.0    4358                                               
+206TL  G 265.832   5 0.000048 5E2                      0.1603 23                
+206TL2 G KC=0.0855   12$LC=0.0561    8$MC=0.01440  21$NC=0.00361   5            
+206TL3 G OC=0.000639  9                                                         
+206TL  L 304.896   6 1-                4.2 PS    14                             
+206TL  A 4650      4 60       649                                               
+206TL  G 304.896   6 0.000061 7M1                      0.375   6                
+206TL2 G KC=0.308     5$LC=0.0519    8$MC=0.01211  17$NC=0.00306   5            
+206TL3 G OC=0.000594  9                                                         
+                                                                                
+210PO    210BI B- DECAY (5.011 D)                                               
+210PO  H TYP=UPD$AUT=M.A.KELLETT$CUT=01-OCT-2014$                               
+210PO2 H TYP=FUL$AUT=V.CHISTE, M.-M.BE$CUT=31-JAN-2008$                         
+210PO C  References:1926Mc**, 1927Cu**, 1935Po01, 1935Po01, 1939Fl02, 1939Fl02, 
+210PO2C  1940Ne04, 1940Ne04, 1944Ho**, 1944Ho**, 1947Br36, 1947Br36, 1952Be22,  
+210PO3C  1952Be22, 1953Lo09, 1953Lo09, 1954Pl30, 1954Pl30, 1956Fi09, 1956Ro18,  
+210PO4C  1956Ro18, 1956Fi09, 1959Ro51, 1959Wa05, 1959Wa05, 1959Ro51, 1960Wa14,  
+210PO5C  1960Wa14, 1961Ru02, 1961Ru02, 1961Nu01, 1961Nu01, 1962Da03, 1962Ka27,  
+210PO6C  1962Ka27, 1962Da03, 1967Hs01, 1967Hs01, 1969Fl02, 1969Fl02, 1969La18,  
+210PO7C  1969La18, 1991Ry01, 1991Ry01, 1996Sc06, 1996Sc06, 1999Br39, 2002Ba85,  
+210PO8C  2002Ba85, 2003Br13, 2003Au03, 2003Br13, 2005Gr41, 2008BeZV, 2008Ki07,  
+210PO9C  2008Ko21, 2010MoZU, 2012Wa38                                           
+210PO T  Auger electrons and X ray energies and emission intensities:           
+210PO T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+210PO T                                                                         
+210PO T        76.864                            XKA2                           
+210PO T        79.293                            XKA1                           
+210PO T                                                                         
+210PO T        89.256         |]                 XKB3                           
+210PO T        89.807         |]                 XKB1                           
+210PO T        90.363         |]                 XKB5II                         
+210PO T                                                                         
+210PO T        92.263         |]                 XKB2                           
+210PO T        92.618         |]                 XKB4                           
+210PO T        92.983         |]                 XKO23                          
+210PO T                                                                         
+210PO T                                                                         
+210PO T        58.978-65.205  |]                 KLL AUGER                      
+210PO T        71.902-79.289  |]                 KLX AUGER                      
+210PO T        84.8-93.1      |]                 KXY AUGER                      
+210PO T        5.506-16.864                      L AUGER                        
+210BI  P 0.0         1-                5.011 D   5              1161.2    8     
+210PO  N 1.00E0      1.00E0    0.999999011.00E0                                 
+210PO  L 0           0+                138.3763 D17                             
+210PO  B 1161.2    8 99.99986 2          8                                   1  
+210POS B EAV=317 3                                                              
+                                                                                

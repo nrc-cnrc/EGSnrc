@@ -1,58 +1,56 @@
-213BI    217AT A DECAY (32.3 MS)
-213BI  H TYP=Full$AUT=X.Huang$CUT=31-DEC-2007$
-213BI C  Evaluation history: Type=Full;Author=X.Huang;Cutoff date=31-DEC-2007
-213BI T  Auger electrons and X ray energies and emission intensities:
-213BI T       {U Energy (keV)}   {U Intensity}  {U Line}
-213BI T
-213BI T        74.8157            0.00351 20     XKA2
-213BI T        77.1088            0.0059   4     XKA1
-213BI T   
-213BI T        86.835         |]                 XKB3
-213BI T        87.344         |]  0.00201 11     XKB1
-213BI T        87.862         |]                 XKB5II
-213BI T   
-213BI T        89.732         |]                 XKB2
-213BI T        90.074         |]  0.00062  4     XKB4
-213BI T        90.421         |]                 XKO23
-213BI T   
-213BI T        9.421-15.708       0.00497 23     XL (total)
-213BI T        9.421                             XLL
-213BI T         -15.708                          XLG
-213BI T   
-213BI T        57.491-63.419  |]                 KLL AUGER
-213BI T        70.025-77.105  |]  0.00044  3     KLX AUGER
-213BI T        82.53-90.52    |]                 KXY AUGER
-213BI T        5.3-16.4           0.0077   4     L AUGER
-217AT  P 0.0         9/2-              32.3 MS   4              7201.3    12
-213BI  N 1.00E0      1.00E0    0.999933241.00E0
-213BI  L 0           9/2-              45.59 M   6
-213BI  A 7066.9    1699.9387 301.16
-213BI  L 257.87    117/2-                         
-213BI  A 6813.8    160.0384  15379
-213BI  G 257.88    4 0.0287   7M1+E2     0.64    8     0.555  26
-213BI2 G KC=0.434   17$LC=0.0918  16$MC=0.02212 37
-213BI  L 593.18    13(5/2,7/2,9/2)-               
-213BI  A 6484.7    160.0167  8 49
-213BI  G 335.33    100.0062   3                        
-213BI  G 593.1     1 0.0115   5                        
-213BI  L 758.9     1 (5/2,13/2)-                  
-213BI  A 6322.0    160.0049  4 36
-213BI  G 758.9     1 0.0049   4                        
-213BI  L 1050         -                           
-213BI  A 6037      3 20001E-7  5.2
-213BI  G 455         0.002                             
- 
-217RN    217AT B- DECAY (32.3 MS)
-217RN  H TYP=Full$AUT=X.Huang$CUT=31-DEC-2007$
-217RN C  Evaluation history: Type=Full;Author=X.Huang;Cutoff date=31-DEC-2007
-217RN T  Auger electrons and X ray energies and emission intensities:
-217RN T       {U Energy (keV)}   {U Intensity}  {U Line}
-217RN T
-217RN T   
-217RN T   
-217RN T   
-217RN T   
-217AT  P 0.0         9/2-              32.3 MS   4              737       6
-217RN  N 1.493E4     1.493E4   0.000067  1.493E4
-217RN  L 0            -                0.54 MS   5
- 
+213BI    217AT A DECAY (32.3 MS)                                                
+213BI  H TYP=FUL$AUT=X.HUANG$CUT=31-DEC-2007$                                   
+213BI T  Auger electrons and X ray energies and emission intensities:           
+213BI T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+213BI T                                                                         
+213BI T        74.8157            0.00351 20     XKA2                           
+213BI T        77.1088            0.0059   4     XKA1                           
+213BI T                                                                         
+213BI T        86.835         |]                 XKB3                           
+213BI T        87.344         |]  0.00201 11     XKB1                           
+213BI T        87.862         |]                 XKB5II                         
+213BI T                                                                         
+213BI T        89.732         |]                 XKB2                           
+213BI T        90.074         |]  0.00062  4     XKB4                           
+213BI T        90.421         |]                 XKO23                          
+213BI T                                                                         
+213BI T        9.421-15.708       0.00497 23     XL (total)                     
+213BI T        9.421                             XLL                            
+213BI T         -15.708                          XLG                            
+213BI T                                                                         
+213BI T        57.491-63.419  |]                 KLL AUGER                      
+213BI T        70.025-77.105  |]  0.00044  3     KLX AUGER                      
+213BI T        82.53-90.52    |]                 KXY AUGER                      
+213BI T        5.3-16.4           0.0077   4     L AUGER                        
+217AT  P 0.0         9/2-              32.3 MS   4              7201.3    12    
+213BI  N 1.00E0      1.00E0    0.99993324                                       
+213BI  L 0           9/2-              45.59 M   6                              
+213BI  A 7066.9    1699.9387 301.16                                             
+213BI  L 257.87    117/2-                                                       
+213BI  A 6813.8    160.0384  15379                                              
+213BI  G 257.88    4 0.0287   7M1+E2     0.64    8     0.555  26                
+213BI2 G KC=0.434    17$LC=0.0918   16$MC=0.02212  37$NC=0.00565   6            
+213BI  L 593.18    13(5/2,7/2,9/2)-                                             
+213BI  A 6484.7    160.0167   849                                               
+213BI  G 335.33    100.0062   3                                                 
+213BI  G 593.1     1 0.0115   5                                                 
+213BI  L 758.9     1 (5/2,13/2)-                                                
+213BI  A 6322.0    160.0049   436                                               
+213BI  G 758.9     1 0.0049   4                                                 
+213BI  L 1050                                                                   
+213BI  A 6037      3 20001E-7  5.2                                              
+213BI  G 455         0.002                                                      
+                                                                                
+217RN    217AT B- DECAY (32.3 MS)                                               
+217RN  H TYP=FUL$AUT=X.HUANG$CUT=31-DEC-2007$                                   
+217RN T  Auger electrons and X ray energies and emission intensities:           
+217RN T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+217RN T                                                                         
+217RN T                                                                         
+217RN T                                                                         
+217RN T                                                                         
+217RN T                                                                         
+217AT  P 0.0         9/2-              32.3 MS   4              737       6     
+217RN  N 1.493E4     1.493E4   0.000067  1.493E4                                
+217RN  L 0                             0.54 MS   5                              
+                                                                                

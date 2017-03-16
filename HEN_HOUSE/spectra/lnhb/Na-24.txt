@@ -1,55 +1,57 @@
- 24MG     24NA B- DECAY (14.958 H)
- 24MG  H TYP=UPDATE$AUT=V.Chechev and N.K.Kuzmenko$CUT=31-MAR-2014$
- 24MG2 H TYP=ERR$AUT=M.-M.Be$CUT=12-FEB-2004$
- 24MG3 H TYP=FULL$AUT=R.G.Helmer and E.Schonfeld$CUT=31-MAR-2000$
- 24MG C  Evaluation history: Type=UPDATE;Author=V.Chechev and N.K.Kuzmenko;Cutoff date=31-MAR-2014
- 24MG2C  Type=ERR;Author=M.-M.Be;Cutoff date=12-FEB-2004
- 24MG3C  Type=FULL;Author=R.G.Helmer and E.Schonfeld;Cutoff date=31-MAR-2000
- 24MG C  References: 1950Gr01, 1951Tu12, 1952Sl52, 1955To07, 1958Ca20, 1958Da10, 
- 24MG2C  1960Ar10, 1961De23, 1961Wy01, 1961De25, 1963Pa20, 1964Le09, 1965Be24, 
- 24MG3C  1968Va06, 1969Bo48, 1972Gi17, 1973Br16, 1976Ge06, 1977La19, 1980RuZY, 
- 24MG4C  1982HoZJ, 1982RuZV, 1983Wa26, 1990En08, 1990En02, 1992Un01, 1998Si17, 
- 24MG5C  2000He14, 2002Ba85, 2002Un02, 2003Ep02, 2004Un01, 2004BeZR, 2005Li66, 
- 24MG6C  2007Fi14, 2008Ki07, 2012Wa38, 2012Fi12, 2014Un01
- 24MG T  Auger electrons and X ray energies and emission intensities:
- 24MG T       {U Energy (keV)}   {U Intensity}  {U Line}
- 24MG T
- 24MG T        1.25361            1.13E-5  4     XKA2
- 24MG T        1.25361            2.25E-5  8     XKA1
- 24MG T   
- 24MG T        1.3022         |]  5.8E-7  14     XKB1
- 24MG T   
- 24MG T   
- 24MG T   
- 24MG T        1.102-1.182    |]                 KLL AUGER
- 24MG T        1.214-1.252    |]  0.00114814     KLX AUGER
- 24MG T        1.301-1.301    |]                 KXY AUGER
- 24NA  P 0.0         4+                14.958 H  2              5515.61   4
- 24MG  N 1.0         1.0       1         1.0
- 24MG  G 511         0.144    2                        
- 24MG  L 0         0 0+                  STABLE   
- 24MG  L 1368.672  5 2+                1.33 PS   6
- 24MG  B 4146.94   4 0.003    2          12.7                                2
- 24MGS B EAV=1866.70 2
- 24MG  G 1368.630  5 99.9934  5E2                      9.91E-613
- 24MG2 G KC=9.29E-6 13$LC=5.97E-7  9$MC=2.21E-8  3
- 24MG  L 4122.889  124+                22 FS     2
- 24MG  B 1392.72   4 99.930   3          6.12                                  
- 24MGS B EAV=555.05 2
- 24MG  G 2754.049  1399.862   3E2                      2.71E-6 4
- 24MG2 G KC=2.54E-6  4$LC=163E-9   2$MC=6.05E-9  9
- 24MG  L 4238.24   3 2+                41 FS     4
- 24MG  B 1277.37   5 0.001    1          12.3                                2
- 24MGS B EAV=503  
- 24MG  G 2869.38   3 0.00025  3M1+E2     23      9     2.54E-6 6
- 24MG2 G KC=2.38E-6  4$LC=153E-9   2$MC=5.67E-9  8
- 24MG  G 4237.84   3 0.00084 10E2                      1.42E-6 2
- 24MG2 G KC=1330E-9 19$LC=8.53E-8 12$MC=3.16E-9  5
- 24MG  L 5235.12   4 3+                61 FS     7
- 24MG  B 280.49    6 0.066    3          6.69                                  
- 24MGS B EAV=90.00 2
- 24MG  G 996.86    5 0.00145 25M1+E2     5.1     12    2.05E-5 4
- 24MG2 G KC=1.92E-5  4$LC=1233E-9 20$MC=4.56E-8  8
- 24MG  G 3866.12   4 0.066    2M1+E2     17      4     1.62E-6 2
- 24MG2 G KC=1516E-9 22$LC=9.73E-8 14$MC=3.61E-9  5
- 
+ 24MG    24NA B- DECAY (14.958 H)                                               
+ 24MG  H TYP=UPD$AUT=V.P.CHECHEV, N.K.KUZMENKO$CUT=31-MAR-2014$                 
+ 24MG2 H TYP=ERR$AUT=M.-M.BE$DAT=12-FEB-2004$COM=See DDEP website$              
+ 24MG3 H TYP=FUL$AUT=R.G.HELMER, E.SCHONFELD$CUT=31-MAR-2000$                   
+ 24MG C  References:1950Gr01, 1951Tu12, 1952Sl52, 1955To07, 1958Da10, 1958Ca20, 
+ 24MG2C  1960Ar10, 1961De23, 1961De25, 1961Wy01, 1963Pa20, 1964Le09, 1965Be24,  
+ 24MG3C  1968Va06, 1969Bo48, 1972Gi17, 1973Br16, 1976Ge06, 1977La19, 1980RuZY,  
+ 24MG4C  1982RuZV, 1982HoZJ, 1983Wa26, 1990En08, 1990En02, 1992Un01, 1998Si17,  
+ 24MG5C  2000He14, 2002Un02, 2002Ba85, 2003Ep02, 2004BeZR, 2004Un01, 2005Li66,  
+ 24MG6C  2007Fi14, 2008Ki07, 2012Wa38, 2012Fi12, 2014Un01                       
+ 24MG T  Auger electrons and X ray energies and emission intensities:           
+ 24MG T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 24MG T                                                                         
+ 24MG T        1.25361            1.13E-5  4     XKA2                           
+ 24MG T        1.25361            2.25E-5  8     XKA1                           
+ 24MG T                                                                         
+ 24MG T        1.3022         |]  5.8E-7  14     XKB1                           
+ 24MG T                                                                         
+ 24MG T                                                                         
+ 24MG T                                                                         
+ 24MG T        1.102-1.182    |]                 KLL AUGER                      
+ 24MG T        1.214-1.252    |]  0.00114814     KLX AUGER                      
+ 24MG T        1.301-1.301    |]                 KXY AUGER                      
+ 24NA  P 0.0         4+                14.958 H  2              5515.61   4     
+ 24MG  N 1.0         1.0       1         1.0                                    
+ 24MG  G 511         0.144    2                                                 
+ 24MG  L 0           0+                 STABLE                                  
+ 24MG  L 1368.672  5 2+                1.33 PS   6                              
+ 24MG  B 4146.94   4 0.003    2          12.7                                2  
+ 24MGS B EAV=1866.70 2                                                          
+ 24MG  G 1368.630  5 99.9934  5E2                      9.91E-613                
+ 24MG2 G KC=9.29E-6  13$LC=5.97E-7   9$MC=2.21E-8   3                           
+ 24MG3 G IPC=4.63E-5   7                                                        
+ 24MG  L 4122.889  124+                22 FS     2                              
+ 24MG  B 1392.72   4 99.930   3          6.12                                   
+ 24MGS B EAV=555.05 2                                                           
+ 24MG  G 2754.049  1399.862   3E2                      2.71E-6 4                
+ 24MG2 G KC=2.54E-6   4$LC=1.632E-7 23$MC=6.05E-9   9                           
+ 24MG3 G IPC=0.000675 10                                                        
+ 24MG  L 4238.24   3 2+                41 FS     4                              
+ 24MG  B 1277.37   5 0.001    1          12.3                                2  
+ 24MGS B EAV=503                                                                
+ 24MG  G 2869.38   3 0.00025  3M1+E2     23      9     2.54E-6 6                
+ 24MG2 G KC=2.38E-6   4$LC=1.528E-7 22$MC=5.67E-9   8                           
+ 24MG3 G IPC=0.000727 11                                                        
+ 24MG  G 4237.84   3 0.00084 10E2                      1.42E-6 2                
+ 24MG2 G KC=1.330E-6 19$LC=8.53E-8  12$MC=3.16E-9   5                           
+ 24MG3 G IPC=0.001253 18                                                        
+ 24MG  L 5235.12   4 3+                61 FS     7                              
+ 24MG  B 280.49    6 0.066    3          6.69                                   
+ 24MGS B EAV=90.00 2                                                            
+ 24MG  G 996.86    5 0.00145 25M1+E2     5.1     12    2.05E-5 4                
+ 24MG2 G KC=1.92E-5   4$LC=1.233E-6 20$MC=4.56E-8   8                           
+ 24MG  G 3866.12   4 0.066    2M1+E2     17      4     1.62E-6 2                
+ 24MG2 G KC=1.516E-6 22$LC=9.73E-8  14$MC=3.61E-9   5                           
+ 24MG3 G IPC=0.001122 16                                                        
+                                                                                

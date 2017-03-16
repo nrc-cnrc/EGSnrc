@@ -1,88 +1,87 @@
-135XE    135XE IT DECAY (15.30 M)
-135XE  H TYP=Full$AUT=M. Galan$CUT=30-MAY-2008$
-135XE C  Evaluation history: Type=Full;Author=M. Galan;Cutoff date=30-MAY-2008
-135XE C  References: 1960AL12, 1960KO02, 1968HA52, 1968AL16, 1968TO20, 1971GO40, 
-135XE2C  1971HA13, 1972AC02, 1974FOZY, 1974MEZV, 1975FU12, 1976FE04, 1979BO26, 
-135XE3C  1982WA21, 1989RA17, 1996SC06, 2002BA85, 2003AU03, 2008SI01
-135XE T  Auger electrons and X ray energies and emission intensities:
-135XE T       {U Energy (keV)}   {U Intensity}  {U Line}
-135XE T
-135XE T        29.459             3.90     7     XKA2
-135XE T        29.779             7.22    12     XKA1
-135XE T   
-135XE T        33.562         |]                 XKB3
-135XE T        33.625         |]  2.09     4     XKB1
-135XE T        33.881         |]                 XKB5II
-135XE T   
-135XE T        34.415         |]                 XKB2
-135XE T        34.496         |]  0.494   14     XKB4
-135XE T        34.552         |]                 XKO23
-135XE T   
-135XE T        3.638-5.296        1.637   30     XL (total)
-135XE T        3.638              0.0313   9     XLL
-135XE T        4.0977-4.1103      0.822   21     XLA
-135XE T        3.9576             0.0120   4     XLC
-135XE T        4.4176-4.7758      0.672   14     XLB
-135XE T        4.895-5.296        0.0999  21     XLG
-135XE T   
-135XE T        23.512-24.842  |]                 KLL AUGER
-135XE T        27.897-29.77   |]  1.73     8     KLX AUGER
-135XE T        32.27-34.54    |]                 KXY AUGER
-135XE T        2.5-5.3            15.21    9     L AUGER
-135XE  P 526.570   5 11/2-             15.30 M   3
-135XE  N 1.00E0      1.00E0    0.99996   1.00E0
-135XE  L 0           3/2+              9.14 H    2
-135XE  L 526.570   5 11/2-             15.30 M   3
-135XE  G 526.570   5 80.84   20M4                      0.237   3
-135XE2 G KC=0.1908  27$LC=0.0364   5$MC=0.0077   1
- 
-135CS    135XE B- DECAY (15.30 M)
-135CS  H TYP=Full$AUT=M. Galan$CUT=30-MAY-2008$
-135CS C  Evaluation history: Type=Full;Author=M. Galan;Cutoff date=30-MAY-2008
-135CS C  References: 1960AL12, 1960KO02, 1968HA52, 1968AL16, 1968TO20, 1971GO40, 
-135CS2C  1971HA13, 1972AC02, 1974FOZY, 1974MEZV, 1975FU12, 1976FE04, 1979BO26, 
-135CS3C  1982WA21, 1989RA17, 1996SC06, 2002BA85, 2003AU03, 2008SI01
-135CS T  Auger electrons and X ray energies and emission intensities:
-135CS T       {U Energy (keV)}   {U Intensity}  {U Line}
-135CS T
-135CS T        30.6254                           XKA2
-135CS T        30.9731                           XKA1
-135CS T   
-135CS T        34.9197        |]                 XKB3
-135CS T        34.9873        |]                 XKB1
-135CS T        35.252         |]                 XKB5II
-135CS T   
-135CS T        35.822         |]                 XKB2
-135CS T        35.907         |]                 XKB4
-135CS T        35.972         |]                 XKO23
-135CS T   
-135CS T        3.7946                            XLL
-135CS T        4.2729-4.2866                     XLA
-135CS T        4.1418                            XLC
-135CS T        4.62-4.9881                       XLB
-135CS T        5.1308-5.5525                     XLG
-135CS T   
-135CS T        24.411-25.804  |]                 KLL AUGER
-135CS T        28.991-30.961  |]                 KLX AUGER
-135CS T        33.55-35.96    |]                 KXY AUGER
-135CS T        2.5-5.6                           L AUGER
-135XE  P 526.570   5 11/2-             15.30 M   3              1165.4    40
-135CS  N 2.50E4      2.50E4    0.00004   2.50E4
-135CS  L 0           7/2+              2.3E6 Y   3
-135CS  L 786.9       11/2+                        
-135CS  B 905.1     400.0036  18          8.7                                   
-135CSS B EAV=306 17
-135CS  G 786.89      0.0036  18E2                      
-135CS  L 1133        (9/2)+                       
-135CS  B 559       4 0.00024             9.2                                 1
-135CSS B EAV=173.9 15
-135CS  G 1133        0.00024                           
-135CS  L 1192        (11/2)-                      
-135CS  B 500       4 0.000032            9.9                                   
-135CSS B EAV=152.8 15
-135CS  G 1192        0.000032                          
-135CS  L 1358         +                           
-135CS  B 334       4 0.00016             8.7                                   
-135CSS B EAV=96.4 13
-135CS  G 1358        0.00016   E1                      
- 
+135XE    135XE IT DECAY (15.30 M)                                               
+135XE  H TYP=FUL$AUT=M.GALAN$CUT=30-MAY-2008$                                   
+135XE C  References:1960AL12, 1960KO02, 1968HA52, 1968AL16, 1968TO20, 1971GO40, 
+135XE2C  1971HA13, 1972AC02, 1974FOZY, 1974MEZV, 1975FU12, 1976FE04, 1979BO26,  
+135XE3C  1982WA21, 1989RA17, 1996SC06, 2002Ba85, 2003Au03, 2008SI01             
+135XE T  Auger electrons and X ray energies and emission intensities:           
+135XE T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+135XE T                                                                         
+135XE T        29.459             3.90     7     XKA2                           
+135XE T        29.779             7.22    12     XKA1                           
+135XE T                                                                         
+135XE T        33.562         |]                 XKB3                           
+135XE T        33.625         |]  2.09     4     XKB1                           
+135XE T        33.881         |]                 XKB5II                         
+135XE T                                                                         
+135XE T        34.415         |]                 XKB2                           
+135XE T        34.496         |]  0.494   14     XKB4                           
+135XE T        34.552         |]                 XKO23                          
+135XE T                                                                         
+135XE T        3.638-5.296        1.637   30     XL (total)                     
+135XE T        3.638              0.0313   9     XLL                            
+135XE T        4.0977-4.1103      0.822   21     XLA                            
+135XE T        3.9576             0.0120   4     XLC                            
+135XE T        4.4176-4.7758      0.672   14     XLB                            
+135XE T        4.895-5.296        0.0999  21     XLG                            
+135XE T                                                                         
+135XE T        23.512-24.842  |]                 KLL AUGER                      
+135XE T        27.897-29.77   |]  1.73     8     KLX AUGER                      
+135XE T        32.27-34.54    |]                 KXY AUGER                      
+135XE T        2.5-5.3            15.21    9     L AUGER                        
+135XE  P 526.570   5 11/2-             15.30 M   3                              
+135XE  N 1.00E0      1.00E0    0.99996                                          
+135XE  L 0           3/2+              9.14 H    2                              
+135XE  L 526.570   5 11/2-             15.30 M   3                              
+135XE  G 526.570   5 80.84   20M4                      0.237   3                
+135XE2 G KC=0.1908   27$LC=0.0364    5$MC=0.0077    1$NC=0.001587 22            
+135XE3 G OC=1.896E-4 27                                                         
+                                                                                
+135CS    135XE B- DECAY (15.30 M)                                               
+135CS  H TYP=FUL$AUT=M.GALAN$CUT=30-MAY-2008$                                   
+135CS C  References:1960AL12, 1960KO02, 1968HA52, 1968AL16, 1968TO20, 1971GO40, 
+135CS2C  1971HA13, 1972AC02, 1974FOZY, 1974MEZV, 1975FU12, 1976FE04, 1979BO26,  
+135CS3C  1982WA21, 1989RA17, 1996SC06, 2002Ba85, 2003Au03, 2008SI01             
+135CS T  Auger electrons and X ray energies and emission intensities:           
+135CS T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+135CS T                                                                         
+135CS T        30.6254                           XKA2                           
+135CS T        30.9731                           XKA1                           
+135CS T                                                                         
+135CS T        34.9197        |]                 XKB3                           
+135CS T        34.9873        |]                 XKB1                           
+135CS T        35.252         |]                 XKB5II                         
+135CS T                                                                         
+135CS T        35.822         |]                 XKB2                           
+135CS T        35.907         |]                 XKB4                           
+135CS T        35.972         |]                 XKO23                          
+135CS T                                                                         
+135CS T        3.7946                            XLL                            
+135CS T        4.2729-4.2866                     XLA                            
+135CS T        4.1418                            XLC                            
+135CS T        4.62-4.9881                       XLB                            
+135CS T        5.1308-5.5525                     XLG                            
+135CS T                                                                         
+135CS T        24.411-25.804  |]                 KLL AUGER                      
+135CS T        28.991-30.961  |]                 KLX AUGER                      
+135CS T        33.55-35.96    |]                 KXY AUGER                      
+135CS T        2.5-5.6                           L AUGER                        
+135XE  P 526.570   5 11/2-             15.30 M   3              1165.4    40    
+135CS  N 2.50E4      2.50E4    0.00004   2.50E4                                 
+135CS  L 0           7/2+              2.3E6 Y   3                              
+135CS  L 786.9       11/2+                                                      
+135CS  B 905.1     400.0036  18          8.7                                    
+135CSS B EAV=306 17                                                             
+135CS  G 786.89      0.0036  18E2                                               
+135CS  L 1133        (9/2)+                                                     
+135CS  B 559       4 0.00024             9.2                                 1  
+135CSS B EAV=173.9 15                                                           
+135CS  G 1133        0.00024                                                    
+135CS  L 1192        (11/2)-                                                    
+135CS  B 500       4 0.000032            9.9                                    
+135CSS B EAV=152.8 15                                                           
+135CS  G 1192        0.000032                                                   
+135CS  L 1358                                                                   
+135CS  B 334       4 0.00016             8.7                                    
+135CSS B EAV=96.4 13                                                            
+135CS  G 1358        0.00016   E1                                               
+                                                                                

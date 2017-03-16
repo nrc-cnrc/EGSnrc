@@ -1,61 +1,62 @@
-198HG    198AU B- DECAY (2.6943 D)
-198HG  H TYP=UPDate$AUT=V.P.  Chechev. N.Kuzmenko$CUT=14-JAN-2014$
-198HG2 H TYP=FULL$AUT=E. Schönfeld. R. Dersch$CUT=01-SEP-1998$
-198HG C  Evaluation history: Type=UPDate;Author=V.P.  Chechev. N.Kuzmenko;Cutoff date=14-JAN-2014
-198HG2C  Type=FULL;Author=E. Schönfeld. R. Dersch;Cutoff date=01-SEP-1998
-198HG C  References: 1935Am01, 1937Po04, 1937Mc04, 1941Sh08, 1946Di**, 1947Se33, 
-198HG2C  1948Sa36, 1949Sa18, 1949St17, 1951Si91, 1951Ca06, 1951Si25, 1951Br52, 
-198HG3C  1951Hu18, 1953Sc19, 1953Sc23, 1953Lo09, 1954Be61, 1954El04, 1954Ma19, 
-198HG4C  1955DZ41, 1955To07, 1955El11, 1956Jo24, 1956Sa75, 1956Vo20, 1958Ke26, 
-198HG5C  1960Ro22, 1963Le11, 1963St20, 1964Be33, 1964Sa11, 1965An07, 1965Pa08, 
-198HG6C  1965Pe05, 1965Ke04, 1965Be07, 1966Uh01, 1967Ko13, 1967BoZZ, 1968Go22, 
-198HG7C  1968La10, 1968Re04, 1969Ca23, 1969Vu04, 1969BeZR, 1970Co14, 1971Pa06, 
-198HG8C  1971GoYM, 1971De**, 1971Be09, 1972Ve03, 1972Na22, 1973El10, 1974Ka18, 
-198HG9C  1976Re**, 1980Iw03, 1982RuZV, 1982HoZJ, 1989Ch45, 1990Ab02, 1992Un01, 
-198HG10C 1992Ha02, 1994Mi03, 2002Un02, 2002Ba85, 2004Un01, 2004BeZQ, 2005Li66, 
-198HG11C 2006No10, 2007Go39, 2007Sp01, 2008Ki07, 2008Ru05, 2008Ku09, 2009Hu11, 
-198HG12C 2010Mo06, 2010Li48, 2010Go25, 2010Fo13, 2011Li52, 2011Ch22, 2012Fi12, 
-198HG13C 2012Ha23, 2012Wa38, 2014Un**
-198HG T  Auger electrons and X ray energies and emission intensities:
-198HG T       {U Energy (keV)}   {U Intensity}  {U Line}
-198HG T
-198HG T        68.895             0.807   15     XKA2
-198HG T        70.82              1.369   24     XKA1
-198HG T   
-198HG T        79.823         |]                 XKB3
-198HG T        80.254         |]  0.465   11     XKB1
-198HG T        80.762         |]                 XKB5II
-198HG T   
-198HG T        82.435         |]                 XKB2
-198HG T        82.776         |]  0.136    4     XKB4
-198HG T        83.028         |]                 XKO23
-198HG T   
-198HG T        8.7226-14.2672     1.203   22     XL (total)
-198HG T        8.7226             0.0270   8     XLL
-198HG T        9.8981-9.9886      0.527   14     XLA
-198HG T        10.6473            0.01054 29     XLC
-198HG T        11.4835-12.5471    0.536   12     XLB
-198HG T        13.4081-14.2672    0.1024  23     XLG
-198HG T   
-198HG T        53.178-58.277  |]                 KLL AUGER
-198HG T        64.594-70.811  |]  0.110   12     KLX AUGER
-198HG T        75.98-83.09    |]                 KXY AUGER
-198HG T        5.161-14.822       2.156   24     L AUGER
-198AU  P 0.0         2-                2.6943 D  3              1372.8    5
-198HG  N 1.0         1.0       1         1.0
-198HG  L 0           0+                  STABLE   
-198HG  B 1372.8    5 0.025    5          12.4                                1U
-198HGS B EAV=467.3 2
-198HG  L 411.80250 172+                23.16 PS  12
-198HG  B 961.0     5 98.99    6          7.37                                  
-198HGS B EAV=314.7 2
-198HG  G 411.80205 1795.62    6E2                      0.0439  7
-198HG2 G KC=0.0300   5$LC=0.01055 15$MC=0.00263  4
-198HG  L 1087.6874 5 2+                2.5 PS    20
-198HG  B 285.1     5 0.985    5          7.6                                   
-198HGS B EAV=79.5 2
-198HG  G 675.8836  7 0.804    5M1+E2     1.07    14    0.0267 20
-198HG2 G KC=0.0216  17$LC=0.00389 24$MC=0.00091  6
-198HG  G 1087.6842 7 0.1591  21E2                      0.00512 8
-198HG2 G KC=0.00414  6$LC=7.51E-4 11$MC=1766E-7 25
- 
+198HG    198AU B- DECAY (2.6943 D)                                              
+198HG  H TYP=UPD$AUT=V.P.CHECHEV, N.K.KUZMENKO$CUT=14-JAN-2014$                 
+198HG2 H TYP=FUL$AUT=E.SCHONFELD, R.DERSCH$CUT=01-SEP-1998$                     
+198HG C  References:1935Am01, 1937Po04, 1937Mc04, 1941Sh08, 1946Di**, 1947Se33, 
+198HG2C  1948Sa36, 1949Sa18, 1949St17, 1951Si91, 1951Ca06, 1951Si25, 1951Br52,  
+198HG3C  1951Hu18, 1953Sc19, 1953Sc23, 1953Lo09, 1954Be61, 1954El04, 1954Ma19,  
+198HG4C  1955DZ41, 1955To07, 1955El11, 1956Jo24, 1956Sa75, 1956Vo20, 1958Ke26,  
+198HG5C  1960Ro22, 1963Le11, 1963St20, 1964Be33, 1964Sa11, 1965An07, 1965Pa08,  
+198HG6C  1965Pe05, 1965Ke04, 1965Be07, 1966Uh01, 1967Ko13, 1967BoZZ, 1968Go22,  
+198HG7C  1968La10, 1968Re04, 1969Ca23, 1969Vu04, 1969BeZR, 1970Co14, 1971Pa06,  
+198HG8C  1971GoYM, 1971De**, 1971Be09, 1972Ve03, 1972Na22, 1973El10, 1974Ka18,  
+198HG9C  1976Re**, 1980Iw03, 1982RuZV, 1982HoZJ, 1989Ch45, 1990Ab02, 1992Un01,  
+198HGAC  1992Ha02, 1994Mi03, 2002Un02, 2002Ba85, 2004Un01, 2004BeZQ, 2005Li66,  
+198HGBC  2006No10, 2007Go39, 2007Sp01, 2008Ki07, 2008Ru05, 2008Ku09, 2009Hu11,  
+198HGCC  2010Mo06, 2010Li48, 2010Go25, 2010Fo13, 2011Li52, 2011Ch22, 2012Fi12,  
+198HGDC  2012Ha23, 2012Wa38, 2014Un**                                           
+198HG T  Auger electrons and X ray energies and emission intensities:           
+198HG T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+198HG T                                                                         
+198HG T        68.895             0.807   15     XKA2                           
+198HG T        70.82              1.369   24     XKA1                           
+198HG T                                                                         
+198HG T        79.823         |]                 XKB3                           
+198HG T        80.254         |]  0.465   11     XKB1                           
+198HG T        80.762         |]                 XKB5II                         
+198HG T                                                                         
+198HG T        82.435         |]                 XKB2                           
+198HG T        82.776         |]  0.136    4     XKB4                           
+198HG T        83.028         |]                 XKO23                          
+198HG T                                                                         
+198HG T        8.7226-14.2672     1.203   22     XL (total)                     
+198HG T        8.7226             0.0270   8     XLL                            
+198HG T        9.8981-9.9886      0.527   14     XLA                            
+198HG T        10.6473            0.01054 29     XLC                            
+198HG T        11.4835-12.5471    0.536   12     XLB                            
+198HG T        13.4081-14.2672    0.1024  23     XLG                            
+198HG T                                                                         
+198HG T        53.178-58.277  |]                 KLL AUGER                      
+198HG T        64.594-70.811  |]  0.110   12     KLX AUGER                      
+198HG T        75.98-83.09    |]                 KXY AUGER                      
+198HG T        5.161-14.822       2.156   24     L AUGER                        
+198AU  P 0.0         2-                2.6943 D  3              1372.8    5     
+198HG  N 1.0         1.0       1         1.0                                    
+198HG  L 0           0+                 STABLE                                  
+198HG  B 1372.8    5 0.025    5          12.4                                1U 
+198HGS B EAV=467.3 2                                                            
+198HG  L 411.80250 172+                23.16 PS  12                             
+198HG  B 961.0     5 98.99    6          7.37                                   
+198HGS B EAV=314.7 2                                                            
+198HG  G 411.80205 1795.62    6E2                      0.0439  7                
+198HG2 G KC=0.0300    5$LC=0.01055  15$MC=0.00263   4$NC=0.000655 10            
+198HG3 G OC=1.152E-4 17                                                         
+198HG  L 1087.6874 5 2+                2.5 PS    20                             
+198HG  B 285.1     5 0.985    5          7.6                                    
+198HGS B EAV=79.5 2                                                             
+198HG  G 675.8836  7 0.804    5M1+E2     1.07    14    0.0267 20                
+198HG2 G KC=0.0216   17$LC=0.00389  24$MC=0.00091   6$NC=0.000228 14            
+198HG3 G OC=0.000043  3                                                         
+198HG  G 1087.6842 7 0.1591  21E2                      0.00512 8                
+198HG2 G KC=0.00414   6$LC=0.000751 11$MC=1.766E-4 25$NC=4.42E-5   7            
+198HG3 G OC=8.20E-6  12                                                         
+                                                                                

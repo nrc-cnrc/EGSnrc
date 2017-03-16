@@ -1,39 +1,39 @@
- 44CA     44SC EC DECAY (3.97 H)
- 44CA T  Auger electrons and X ray energies and emission intensities:
- 44CA T       {U Energy (keV)}   {U Intensity}  {U Line}
- 44CA T
- 44CA T        3.68813            0.255    7     XKA2
- 44CA T        3.69172            0.504   13     XKA1
- 44CA T   
- 44CA T        4.0128         |]  0.098    3     XKB1
- 44CA T        4.0325         |]                 XKB5II
- 44CA T   
- 44CA T   
- 44CA T        0.35-0.412         0.019    4     XL (total)
- 44CA T        0.35                              XLL
- 44CA T         -0.412                           XLG
- 44CA T   
- 44CA T        3.123-3.307    |]                 KLL AUGER
- 44CA T        3.543-3.666    |]  4.21     3     KLX AUGER
- 44CA T        3.951-3.987    |]                 KXY AUGER
- 44CA T        0.044-0.387        8.71     5     L AUGER
- 44SC  P 0.0         2+                3.97 H    4              3653.3    19
- 44CA  N 1.0         1.0       1         1.0
- 44CA  L 0           0+                  STABLE   
- 44CA  L 1157.039  152+                2.61 PS   14
- 44CA  E             94.27    54.70     55.3                                   
- 44CA2 E EAV=632.0 9$CK=0.8970 19$CL=0.0897 16$CM=0.0133 7
- 44CA  G 1157.020  1599.875   3E2                      6.48E-519
- 44CA2 G KC=5.90E-5 18$LC=4.99E-6 15$MC=8.1E-7   2
- 44CA  L 2656.530  242+                30 FS     3
- 44CA  E                       1.02     25.2                                   
- 44CA2 E CK=0.8966 19$CL=0.0900 16$CM=0.0134 7
- 44CA  G 1499.460  200.908   15M1+E2     0.137   17    3.19E-510
- 44CA2 G KC=2.9E-5   1$LC=2.43E-6  7$MC=4.7E-7   2
- 44CA  G 2656.48   7 0.112    3[E2]                    
- 44CA  L 3301.46   6 2+                35 FS     18
- 44CA  E                       0.00440 116.6                                   
- 44CA2 E CK=0.8954 20$CL=0.0911 16$CM=0.0135 7
- 44CA  G 2144.33   100.0036   7[M1+E2+]                
- 44CA  G 3301.35   6 0.0017   2[E2]                    
- 
+ 44CA    44SC EC DECAY (3.97 H)                                                 
+ 44CA T  Auger electrons and X ray energies and emission intensities:           
+ 44CA T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 44CA T                                                                         
+ 44CA T        3.68813            0.255    7     XKA2                           
+ 44CA T        3.69172            0.504   13     XKA1                           
+ 44CA T                                                                         
+ 44CA T        4.0128         |]  0.098    3     XKB1                           
+ 44CA T        4.0325         |]                 XKB5II                         
+ 44CA T                                                                         
+ 44CA T                                                                         
+ 44CA T        0.35-0.412         0.019    4     XL (total)                     
+ 44CA T        0.35                              XLL                            
+ 44CA T         -0.412                           XLG                            
+ 44CA T                                                                         
+ 44CA T        3.123-3.307    |]                 KLL AUGER                      
+ 44CA T        3.543-3.666    |]  4.21     3     KLX AUGER                      
+ 44CA T        3.951-3.987    |]                 KXY AUGER                      
+ 44CA T        0.044-0.387        8.71     5     L AUGER                        
+ 44SC  P 0.0         2+                3.97 H    4              3653.3    19    
+ 44CA  N 1.0         1.0       1         1.0                                    
+ 44CA  L 0           0+                 STABLE                                  
+ 44CA  L 1157.039  152+                2.61 PS   14                             
+ 44CA  E             94.27    54.70     55.3                                    
+ 44CA2 E EAV=632.0     9$CK=0.04260   9$CL=0.00426   8$CM=0.000632 33           
+ 44CA  G 1157.020  1599.875   3E2                      6.48E-519                
+ 44CA2 G KC=5.90E-5  18$LC=4.99E-6  15$MC=8.1E-7    2                           
+ 44CA  L 2656.530  242+                30 FS     3                              
+ 44CA  E                       1.02     25.2                                    
+ 44CA2 E CK=0.8966   19$CL=0.0900   16$CM=0.0134    7                           
+ 44CA  G 1499.460  200.908   15M1+E2     0.137   17    3.19E-510                
+ 44CA2 G KC=0.000029  1$LC=2.43E-6   7$MC=4.7E-7    2                           
+ 44CA  G 2656.48   7 0.112    3[E2]                                             
+ 44CA  L 3301.46   6 2+                35 FS     18                             
+ 44CA  E                       0.00440 116.6                                    
+ 44CA2 E CK=0.8954   20$CL=0.0911   16$CM=0.0135    7                           
+ 44CA  G 2144.33   100.0036   7[M1+E2+E0]                                       
+ 44CA  G 3301.35   6 0.0017   2[E2]                                             
+                                                                                

@@ -1,32 +1,30 @@
-209BI    209PB B- DECAY (3.277 H)
-209BI  H TYP=Full$AUT=F. Kondev$CUT=31-DEC-2010$
-209BI2 H TYP=full$AUT=mmbe$CUT= -- $
-209BI C  Evaluation history: Type=Full;Author=F. Kondev;Cutoff date=31-DEC-2010
-209BI2C  Type=full;Author=mmbe;Cutoff date= -- 
-209BI C  References: 1940Kr08, 1941Fa04, 1942Ma03, 1959Po64, 1971Go40, 1971Pe03, 
-209BI2C  1972Be44, 1991Ma16, 2003Au03
-209BI T  Auger electrons and X ray energies and emission intensities:
-209BI T       {U Energy (keV)}   {U Intensity}  {U Line}
-209BI T
-209BI T        74.8157                           XKA2
-209BI T        77.1088                           XKA1
-209BI T   
-209BI T        86.835         |]                 XKB3
-209BI T        87.344         |]                 XKB1
-209BI T        87.862         |]                 XKB5II
-209BI T   
-209BI T        89.732         |]                 XKB2
-209BI T        90.074         |]                 XKB4
-209BI T        90.421         |]                 XKO23
-209BI T   
-209BI T   
-209BI T        57.491-63.419  |]                 KLL AUGER
-209BI T        70.025-77.105  |]                 KLX AUGER
-209BI T        82.53-90.52    |]                 KXY AUGER
-209BI T        5.4204-16.3366                    L AUGER
-209PB  P 0.0         9/2+              3.277 H   15             644.0     12
-209BI  N 1.0         1.0       1         1.0
-209BI  L 0           9/2-                STABLE   
-209BI  B 644.0     12100                 5.54                                  
-209BIS B EAV=197.35 42
- 
+209BI    209PB B- DECAY (3.277 H)                                               
+209BI  H TYP=FUL$AUT=F.G.KONDEV$CUT=31-DEC-2010$                                
+209BI2 H TYP=FUL$AUT=M.-M.BE$CUT=28-FEB-2007$                                   
+209BI C  References:1940Kr08, 1941Fa04, 1942Ma03, 1959Po64, 1971Go40, 1971Pe03, 
+209BI2C  1972Be44, 1991Ma16, 2003Au03                                           
+209BI T  Auger electrons and X ray energies and emission intensities:           
+209BI T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+209BI T                                                                         
+209BI T        74.8157                           XKA2                           
+209BI T        77.1088                           XKA1                           
+209BI T                                                                         
+209BI T        86.835         |]                 XKB3                           
+209BI T        87.344         |]                 XKB1                           
+209BI T        87.862         |]                 XKB5II                         
+209BI T                                                                         
+209BI T        89.732         |]                 XKB2                           
+209BI T        90.074         |]                 XKB4                           
+209BI T        90.421         |]                 XKO23                          
+209BI T                                                                         
+209BI T                                                                         
+209BI T        57.491-63.419  |]                 KLL AUGER                      
+209BI T        70.025-77.105  |]                 KLX AUGER                      
+209BI T        82.53-90.52    |]                 KXY AUGER                      
+209BI T        5.4204-16.3366                    L AUGER                        
+209PB  P 0.0         9/2+              3.277 H   15             644.0     12    
+209BI  N 1.0         1.0       1         1.0                                    
+209BI  L 0           9/2-               STABLE                                  
+209BI  B 644.0     12100                 5.54                                   
+209BIS B EAV=197.35 42                                                          
+                                                                                

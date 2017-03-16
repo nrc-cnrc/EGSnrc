@@ -1,52 +1,50 @@
-111CD    111IN EC DECAY (2.8049 D)
-111CD  H TYP=Update$AUT=V. Chechev$CUT=01-MAR-2006$
-111CD2 H TYP=Full$AUT=V. Chechev$CUT=01-JUN-1998$
-111CD C  Evaluation history: Type=Update;Author=V. Chechev;Cutoff date=01-MAR-2006
-111CD2C  Type=Full;Author=V. Chechev;Cutoff date=01-JUN-1998
-111CD C  References: 1945Wi11, 1948Ho37, 1949He06, 1951Mc11, 1956St64, 1957Ma26, 
-111CD2C  1966Sp04, 1967Be65, 1968Bo28, 1968Li08, 1968Sm08, 1972Gu19, 1972MeZD, 
-111CD3C  1972Em01, 1973Budz, 1973Path, 1974Kr03, 1974HeYW, 1975Sh29, 1977La19, 
-111CD4C  1978La21, 1980Ho17, 1982HoZY, 1983Wa26, 1985Ka29, 1986Ru09, 1987Ne01, 
-111CD5C  1992Un01, 1994Ka08, 1996Sc06, 1997We17, 1998Si17, 2003Bl10, 2003Au03, 
-111CD6C  2004Sc04, 2005Ya03, 2006Ra03
-111CD T  Auger electrons and X ray energies and emission intensities:
-111CD T       {U Energy (keV)}   {U Intensity}  {U Line}
-111CD T
-111CD T        22.9843            23.65   18     XKA2
-111CD T        23.1738            44.47   26     XKA1
-111CD T   
-111CD T        26.0615        |]                 XKB3
-111CD T        26.0958        |]  12.40   14     XKB1
-111CD T        26.304         |]                 XKB5II
-111CD T   
-111CD T        26.644         |]                 XKB2
-111CD T        26.7106        |]  2.26     7     XKB4
-111CD T   
-111CD T        2.77-3.95          6.78    14     XL (total)
-111CD T        2.77               0.147    6     XLL
-111CD T        3.127-3.134        3.95    13     XLA
-111CD T        2.957              0.0504  12     XLC
-111CD T        3.316-3.528        2.39     5     XLB
-111CD T        3.718-3.95         0.247    5     XLG
-111CD T   
-111CD T        18.675-19.636  |]                 KLL AUGER
-111CD T        21.923-23.172  |]  15.5     4     KLX AUGER
-111CD T        25.171-26.028  |]                 KXY AUGER
-111CD T        3.404-3.804        100.5    8     L AUGER
-111IN  P 0.0         9/2+              2.8049 D  4              861.8     46
-111CD  N 1.0         1.0       1         1.0
-111CD  L 0           1/2+                STABLE   
-111CD  L 245.4       5/2+                         
-111CD  G 245.35    4 94.12    6E2                      0.0625  7
-111CD2 G KC=0.0524  10$LC=0.00818 16$MC=0.00159  3
-111CD  L 396.15      11/2-             48.50 M   9
-111CD  E                       0.005    59                                   1
-111CD2 E CK=0.8524 2$CL=0.1179 2$CM=0.02975 4
-111CD  G 150.81    3 0.0015  15E3                      2.28    5
-111CD2 G KC=1.45     3$LC=0.673   14$MC=0.137    3
-111CD  L 416.6       7/2+                         
-111CD  E                       99.995   55                                     
-111CD2 E CK=0.8518 2$CL=0.11835 13$CM=0.02989 4
-111CD  G 171.28    3 90.61   20M1+E2                   0.1036 24
-111CD2 G KC=0.0897  22$LC=0.0113   3$MC=0.00217  5
- 
+111CD    111IN EC DECAY (2.8049 D)                                              
+111CD  H TYP=UPD$AUT=V.P.CHECHEV$CUT=01-MAR-2006$                               
+111CD2 H TYP=FUL$AUT=V.P.CHECHEV$CUT=01-JUN-1998$                               
+111CD C  References:1945Wi11, 1948Ho37, 1949He06, 1951Mc11, 1956St64, 1957Ma26, 
+111CD2C  1966Sp04, 1967Be65, 1968Bo28, 1968Li08, 1968Sm08, 1972Gu19, 1972MeZD,  
+111CD3C  1972Em01, 1973Budz, 1973Path, 1974Kr03, 1974HeYW, 1975Sh29, 1977La19,  
+111CD4C  1978La21, 1980Ho17, 1982HoZY, 1983Wa26, 1985Ka29, 1986Ru09, 1987Ne01,  
+111CD5C  1992Un01, 1994Ka08, 1996Sc06, 1997We17, 1998Si17, 1999Be**, 2003Bl10,  
+111CD6C  2003Au03, 2004Sc04, 2005Ya03, 2006Ra03                                 
+111CD T  Auger electrons and X ray energies and emission intensities:           
+111CD T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+111CD T                                                                         
+111CD T        22.9843            23.65   18     XKA2                           
+111CD T        23.1738            44.47   26     XKA1                           
+111CD T                                                                         
+111CD T        26.0615        |]                 XKB3                           
+111CD T        26.0958        |]  12.40   14     XKB1                           
+111CD T        26.304         |]                 XKB5II                         
+111CD T                                                                         
+111CD T        26.644         |]                 XKB2                           
+111CD T        26.7106        |]  2.26     7     XKB4                           
+111CD T                                                                         
+111CD T        2.77-3.95          6.78    14     XL (total)                     
+111CD T        2.77               0.147    6     XLL                            
+111CD T        3.127-3.134        3.95    13     XLA                            
+111CD T        2.957              0.0504  12     XLC                            
+111CD T        3.316-3.528        2.39     5     XLB                            
+111CD T        3.718-3.95         0.247    5     XLG                            
+111CD T                                                                         
+111CD T        18.675-19.636  |]                 KLL AUGER                      
+111CD T        21.923-23.172  |]  15.5     4     KLX AUGER                      
+111CD T        25.171-26.028  |]                 KXY AUGER                      
+111CD T        3.404-3.804        100.5    8     L AUGER                        
+111IN  P 0.0         9/2+              2.8049 D  4              861.8     46    
+111CD  N 1.0         1.0       1         1.0                                    
+111CD  L 0           1/2+               STABLE                                  
+111CD  L 245.4       5/2+                                                       
+111CD  G 245.35    4 94.12    6E2                      0.0625  7                
+111CD2 G KC=0.0524   10$LC=0.00818  16$MC=0.00159   3                           
+111CD  L 396.15      11/2-             48.50 M   9                              
+111CD  E                       0.005    59                                   1  
+111CD2 E CK=0.8524    2$CL=0.1179    2$CM=0.02975   4                           
+111CD  G 150.81    3 0.0015  15E3                      2.28    5                
+111CD2 G KC=1.45      3$LC=0.673    14$MC=0.137     3                           
+111CD  L 416.6       7/2+                                                       
+111CD  E                       99.995   55                                      
+111CD2 E CK=0.8518    2$CL=0.11835  13$CM=0.02989   4                           
+111CD  G 171.28    3 90.61   20M1+E2                   0.1036 24                
+111CD2 G KC=0.0897   22$LC=0.0113    3$MC=0.00217   5                           
+                                                                                

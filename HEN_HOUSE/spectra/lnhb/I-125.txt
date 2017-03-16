@@ -1,46 +1,44 @@
-125TE    125I  EC DECAY (59.388 D)
-125TE  H TYP=Full$AUT=V. Chisté$CUT=30-AUG-2010$
-125TE2 H TYP=Update$AUT=M.M. Bé$CUT= -- $
-125TE3 H TYP=Full$AUT=E.Schönfeld$CUT= -- $
-125TE C  Evaluation history: Type=Full;Author=V. Chisté;Cutoff date=30-AUG-2010
-125TE2C  Type=Update;Author=M.M. Bé;Cutoff date= -- 
-125TE3C  Type=Full;Author=E.Schönfeld;Cutoff date= -- 
-125TE C  References: 1946Re**, 1951Fr21, 1958Ku82, 1960Ma36, 1963Ge**, 1964Le05, 
-125TE2C  1965An07, 1966Ri14, 1968La10, 1969Ka08, 1972Em01, 1977Kr13, 1979Ku**, 
-125TE3C  1980Ho17, 1979CoZG, 1982HoZJ, 1983De11, 1983Ku**, 1987Sc20, 1989Si19, 
-125TE4C  1990Wo03, 1990Iw04, 1990De09, 1991Al05, 1992ScZZ, 1995Ra32, 1996Sc06, 
-125TE5C  1999Ka26, 2002Un02, 2003Au03, 2006Da20, 2008Ki07
-125TE T  Auger electrons and X ray energies and emission intensities:
-125TE T       {U Energy (keV)}   {U Intensity}  {U Line}
-125TE T
-125TE T        27.202             39.3     5     XKA2
-125TE T        27.4726            73.2     8     XKA1
-125TE T   
-125TE T        30.9446        |]                 XKB3
-125TE T        30.996         |]  20.9     3     XKB1
-125TE T        31.236         |]                 XKB5II
-125TE T   
-125TE T        31.7008        |]                 XKB2
-125TE T        31.774         |]  4.54    13     XKB4
-125TE T        31.812         |]                 XKO23
-125TE T   
-125TE T        3.3348-4.8228      14.70   28     XL (total)
-125TE T        3.3348             0.281    9     XLL
-125TE T        3.7595-3.7697      7.45    20     XLA
-125TE T        3.6052             0.108    4     XLC
-125TE T        4.0299-4.3661      6.02    13     XLB
-125TE T        4.4448-4.8228      0.844   19     XLG
-125TE T   
-125TE T        21.804-22.989  |]                 KLL AUGER
-125TE T        25.814-27.47   |]  19.7     7     KLX AUGER
-125TE T        29.8-31.81     |]                 KXY AUGER
-125TE T        2.3-4.8            158.2    8     L AUGER
-125I   P 0.0         5/2+              59.388 D  28             185.77    6
-125TE  N 1.0         1.0       1         1.0
-125TE  L 0           1/2+                STABLE   
-125TE  L 35.4922   5 3/2+              1.48 NS    
-125TE  E                       100       5.4                                   
-125TE2 E CK=0.8011 17$CL=0.1561 13$CM=0.0349 7$CN=0.0079 4$CO=0 0
-125TE  G 35.4922   5 6.63     6M1+E2     0.085   6     14.08  22
-125TE2 G KC=11.70   17$LC=1.91     8$MC=0.386   16
- 
+125TE    125I EC DECAY (59.388 D)                                               
+125TE  H TYP=FUL$AUT=V.CHISTE$CUT=30-AUG-2010$                                  
+125TE2 H TYP=UPD$AUT=M.-M.BE$CUT=24-JUL-2002$                                   
+125TE3 H TYP=FUL$AUT=E.SCHONFELD$CUT=02-JAN-1998$                               
+125TE C  References:1946Re**, 1951Fr21, 1958Ku82, 1960Ma36, 1963Ge**, 1964Le05, 
+125TE2C  1965An07, 1966Ri14, 1968La10, 1969Ka08, 1972Em01, 1977Kr13, 1979Ku**,  
+125TE3C  1980Ho17, 1979CoZG, 1982HoZJ, 1983De11, 1983Ku**, 1987Sc20, 1989Si19,  
+125TE4C  1990Wo03, 1990Iw04, 1990De09, 1991Al05, 1992ScZZ, 1995Ra32, 1996Sc06,  
+125TE5C  1999Ka26, 2002Un02, 2003Au03, 2006Da20, 2008Ki07                       
+125TE T  Auger electrons and X ray energies and emission intensities:           
+125TE T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+125TE T                                                                         
+125TE T        27.202             39.3     5     XKA2                           
+125TE T        27.4726            73.2     8     XKA1                           
+125TE T                                                                         
+125TE T        30.9446        |]                 XKB3                           
+125TE T        30.996         |]  20.9     3     XKB1                           
+125TE T        31.236         |]                 XKB5II                         
+125TE T                                                                         
+125TE T        31.7008        |]                 XKB2                           
+125TE T        31.774         |]  4.54    13     XKB4                           
+125TE T        31.812         |]                 XKO23                          
+125TE T                                                                         
+125TE T        3.3348-4.8228      14.70   28     XL (total)                     
+125TE T        3.3348             0.281    9     XLL                            
+125TE T        3.7595-3.7697      7.45    20     XLA                            
+125TE T        3.6052             0.108    4     XLC                            
+125TE T        4.0299-4.3661      6.02    13     XLB                            
+125TE T        4.4448-4.8228      0.844   19     XLG                            
+125TE T                                                                         
+125TE T        21.804-22.989  |]                 KLL AUGER                      
+125TE T        25.814-27.47   |]  19.7     7     KLX AUGER                      
+125TE T        29.8-31.81     |]                 KXY AUGER                      
+125TE T        2.3-4.8            158.2    8     L AUGER                        
+125I   P 0.0         5/2+              59.388 D  28             185.77    6     
+125TE  N 1.0         1.0       1         1.0                                    
+125TE  L 0           1/2+               STABLE                                  
+125TE  L 35.4922   5 3/2+              1.48 NS                                  
+125TE  E                       100       5.4                                    
+125TE2 E CK=0.8011   17$CL=0.1561   13$CM=0.0349    7$CN=0.0079    4            
+125TE  G 35.4922   5 6.63     6M1+E2     0.085   6     14.08  22                
+125TE2 G KC=11.70    17$LC=1.91      8$MC=0.386    16$NC=0.075     3            
+125TE3 G OC=0.00766  23                                                         
+                                                                                

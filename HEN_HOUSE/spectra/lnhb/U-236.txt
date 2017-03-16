@@ -1,48 +1,50 @@
-232TH    236U  A DECAY (23.43E6 Y)
-232TH  H TYP=Full$AUT=A.Luca$CUT=28-FEB-2008$
-232TH C  Evaluation history: Type=Full;Author=A.Luca;Cutoff date=28-FEB-2008
-232TH C  References: 1951JA09, 1952FL20, 1960KO04, 1971CO35, 1972FL03, 1972Sc01, 
-232TH2C  1981VO02, 1983BE66, 1988WoZO, 1989Ho24, 1992IT01, 1994Tr12, 2002GE02, 
-232TH3C  2003AU03, 2006BR19
-232TH T  Auger electrons and X ray energies and emission intensities:
-232TH T       {U Energy (keV)}   {U Intensity}  {U Line}
-232TH T
-232TH T        89.954             0.00128 22     XKA2
-232TH T        93.351             0.0021   4     XKA1
-232TH T   
-232TH T        104.819        |]                 XKB3
-232TH T        105.604        |]  0.00074 13     XKB1
-232TH T        106.239        |]                 XKB5II
-232TH T   
-232TH T        108.509        |]                 XKB2
-232TH T        108.955        |]  0.00025  5     XKB4
-232TH T        109.442        |]                 XKO23
-232TH T   
-232TH T        11.118-19.599      9.4     10     XL (total)
-232TH T        11.118             0.194   26     XLL
-232TH T        12.809-12.968      3.2      4     XLA
-232TH T        14.511             0.108   17     XLC
-232TH T        14.97-16.426       4.7      6     XLB
-232TH T        18.98-19.599       1.11    14     XLG
-232TH T   
-232TH T        68.406-76.745  |]                 KLL AUGER
-232TH T        83.857-93.345  |]  0.00013930     KLX AUGER
-232TH T        99.29-109.64   |]                 KXY AUGER
-232TH T        5.8-20.3           10.1    12     L AUGER
-236U   P 0.0         0+                23.43E6 Y 6              4573.1    9
-232TH  N 1.0         1.0       1         1.0
-232TH  L 0           0+                14.02E9 Y 6
-232TH  A 4494      3 73.8    401
-232TH  L 49.46     102+                345 PS    15
-232TH  A 4445      5 26.1    401.2
-232TH  G 49.46     100.081   12E2                      324    10
-232TH2 G LC=237      7$MC=65.0    19
-232TH  L 162.25    154+                164 PS    13
-232TH  A 4332      8 0.149   2227.3
-232TH  G 112.79    100.0195  31E2                      6.67   20
-232TH2 G KC=0.229    7$LC=4.71    14$MC=1.295   39
-232TH  L 333.40    256+                62 PS     4
-232TH  A 4168        0.00014 5 1160
-232TH  G 171.15    200.00006522E2                      1.186  36
-232TH2 G KC=0.204    6$LC=0.719   22$MC=0.197    6
- 
+232TH    236U A DECAY (23.43E6 Y)                                               
+232TH  H TYP=FUL$AUT=A.LUCA$CUT=28-FEB-2008$                                    
+232TH C  References:1951JA09, 1952FL20, 1960KO04, 1971CO35, 1972FL03, 1972Sc01, 
+232TH2C  1981VO02, 1983BE66, 1988WoZO, 1989Ho24, 1992IT01, 1994Tr12, 2002GE02,  
+232TH3C  2003Au03, 2006BR19                                                     
+232TH T  Auger electrons and X ray energies and emission intensities:           
+232TH T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+232TH T                                                                         
+232TH T        89.954             0.00128 22     XKA2                           
+232TH T        93.351             0.0021   4     XKA1                           
+232TH T                                                                         
+232TH T        104.819        |]                 XKB3                           
+232TH T        105.604        |]  0.00074 13     XKB1                           
+232TH T        106.239        |]                 XKB5II                         
+232TH T                                                                         
+232TH T        108.509        |]                 XKB2                           
+232TH T        108.955        |]  0.00025  5     XKB4                           
+232TH T        109.442        |]                 XKO23                          
+232TH T                                                                         
+232TH T        11.118-19.599      9.4     10     XL (total)                     
+232TH T        11.118             0.194   26     XLL                            
+232TH T        12.809-12.968      3.2      4     XLA                            
+232TH T        14.511             0.108   17     XLC                            
+232TH T        14.97-16.426       4.7      6     XLB                            
+232TH T        18.98-19.599       1.11    14     XLG                            
+232TH T                                                                         
+232TH T        68.406-76.745  |]                 KLL AUGER                      
+232TH T        83.857-93.345  |]  0.00013930     KLX AUGER                      
+232TH T        99.29-109.64   |]                 KXY AUGER                      
+232TH T        5.8-20.3           10.1    12     L AUGER                        
+236U   P 0.0         0+                23.43E6 Y 6              4573.1    9     
+232TH  N 1.0         1.0       1                                                
+232TH  L 0           0+                14.02E9 Y 6                              
+232TH  A 4494      3 73.8    401                                                
+232TH  L 49.46     102+                345 PS    15                             
+232TH  A 4445      5 26.1    401.2                                              
+232TH  G 49.46     100.081   12E2                      324    10                
+232TH2 G LC=237       7$MC=65.0     19$NC=17.4      5                           
+232TH3 G OC=3.87     12                                                         
+232TH  L 162.25    154+                164 PS    13                             
+232TH  A 4332      8 0.149   2227.3                                             
+232TH  G 112.79    100.0195  31E2                      6.67   20                
+232TH2 G KC=0.229     7$LC=4.71     14$MC=1.295    39$NC=0.347    10            
+232TH3 G OC=0.0774   23                                                         
+232TH  L 333.40    256+                62 PS     4                              
+232TH  A 4168        0.00014  51160                                             
+232TH  G 171.15    200.00006522E2                      1.186  36                
+232TH2 G KC=0.204     6$LC=0.719    22$MC=0.197     6$NC=0.0527   16            
+232TH3 G OC=0.01180  35                                                         
+                                                                                

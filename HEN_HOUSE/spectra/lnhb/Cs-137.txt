@@ -1,45 +1,43 @@
-137BA    137CS B- DECAY (30.05 Y)
-137BA  H TYP=Update$AUT=M.M. Bé$CUT=11-DEC-2007$
-137BA2 H TYP=Update$AUT=V.Chechev$CUT=01-MAR-2006$
-137BA3 H TYP=Full$AUT=R.G.Helmer$CUT=01-JUN-1998$
-137BA C  Evaluation history: Type=Update;Author=M.M. Bé;Cutoff date=11-DEC-2007
-137BA2C  Type=Update;Author=V.Chechev;Cutoff date=01-MAR-2006
-137BA3C  Type=Full;Author=R.G.Helmer;Cutoff date=01-JUN-1998
-137BA T  Auger electrons and X ray energies and emission intensities:
-137BA T       {U Energy (keV)}   {U Intensity}  {U Line}
-137BA T
-137BA T        31.8174            1.95     4     XKA2
-137BA T        32.1939            3.59     7     XKA1
-137BA T   
-137BA T        36.3045        |]                 XKB3
-137BA T        36.3786        |]  1.055   22     XKB1
-137BA T        36.654         |]                 XKB5II
-137BA T   
-137BA T        37.258         |]                 XKB2
-137BA T        37.312         |]  0.266    8     XKB4
-137BA T        37.425         |]                 XKO23
-137BA T   
-137BA T        3.954-5.809        0.90     5     XL (total)
-137BA T        3.954                             XLL
-137BA T         -5.809                           XLG
-137BA T   
-137BA T        25.314-26.786  |]                 KLL AUGER
-137BA T        30.095-32.179  |]  0.76     4     KLX AUGER
-137BA T        34.86-37.41    |]                 KXY AUGER
-137BA T        2.6-5.8            7.28    12     L AUGER
-137CS  P 0.0         7/2+              30.05 Y   8              1175.63   17
-137BA  N 1.0         1.0       1         1.0
-137BA  L 0           3/2+                STABLE   
-137BA  B 1175.63   175.64    28          12.06                               2
-137BAS B EAV=416.26 8
-137BA  L 283.5     1 1/2+                         
-137BA  B 892.13    200.00061  8          15.64                               2U
-137BAS B EAV=300.57 8
-137BA  G 283.5     1 0.00058  8[M1E2]                  0.0557 13
-137BA2 G KC=0.046    3$LC=0.0073  10$MC=0.0015   2
-137BA  L 661.659   3 11/2-             2.552 M   1
-137BA  B 513.97    1794.36   28          9.63                                1U
-137BAS B EAV=174.32 6
-137BA  G 661.657   3 84.99   20M4                      0.1102 19
-137BA2 G KC=0.0896  15$LC=0.0165   5$MC=0.00352  7
- 
+137BA    137CS B- DECAY (30.05 Y)                                               
+137BA  H TYP=UPD$AUT=M.-M.BE$CUT=11-DEC-2007$                                   
+137BA2 H TYP=UPD$AUT=V.P.CHECHEV$CUT=01-MAR-2006$                               
+137BA3 H TYP=FUL$AUT=R.G.HELMER$CUT=01-JUN-1998$                                
+137BA C  References:1999BeZQ                                                    
+137BA T  Auger electrons and X ray energies and emission intensities:           
+137BA T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+137BA T                                                                         
+137BA T        31.8174            1.95     4     XKA2                           
+137BA T        32.1939            3.59     7     XKA1                           
+137BA T                                                                         
+137BA T        36.3045        |]                 XKB3                           
+137BA T        36.3786        |]  1.055   22     XKB1                           
+137BA T        36.654         |]                 XKB5II                         
+137BA T                                                                         
+137BA T        37.258         |]                 XKB2                           
+137BA T        37.312         |]  0.266    8     XKB4                           
+137BA T        37.425         |]                 XKO23                          
+137BA T                                                                         
+137BA T        3.954-5.809        0.90     5     XL (total)                     
+137BA T        3.954                             XLL                            
+137BA T         -5.809                           XLG                            
+137BA T                                                                         
+137BA T        25.314-26.786  |]                 KLL AUGER                      
+137BA T        30.095-32.179  |]  0.76     4     KLX AUGER                      
+137BA T        34.86-37.41    |]                 KXY AUGER                      
+137BA T        2.6-5.8            7.28    12     L AUGER                        
+137CS  P 0.0         7/2+              30.05 Y   8              1175.63   17    
+137BA  N 1.0         1.0       1         1.0                                    
+137BA  L 0           3/2+               STABLE                                  
+137BA  B 1175.63   175.64    28          12.06                               2  
+137BAS B EAV=416.26 8                                                           
+137BA  L 283.5     1 1/2+                                                       
+137BA  B 892.13    200.00061  8          15.64                               2U 
+137BAS B EAV=300.57 8                                                           
+137BA  G 283.5     1 0.00058  8[M1,E2]                 0.0557 13                
+137BA2 G KC=0.046     3$LC=0.0073   10$MC=0.0015    2                           
+137BA  L 661.659   3 11/2-             2.552 M   1                              
+137BA  B 513.97    1794.36   28          9.63                                1U 
+137BAS B EAV=174.32 6                                                           
+137BA  G 661.657   3 84.99   20M4                      0.1102 19                
+137BA2 G KC=0.0896   15$LC=0.0165    5$MC=0.00352   7                           
+                                                                                

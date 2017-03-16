@@ -1,20 +1,20 @@
-  7LI      7BE EC DECAY (53.22 D)
-  7LI C  References: 2000Hu20, 2000Li21
-  7LI T  Auger electrons and X ray energies and emission intensities:
-  7LI T       {U Energy (keV)}   {U Intensity}  {U Line}
-  7LI T
-  7LI T        0.0543                            XKA2
-  7LI T        0.0543                            XKA1
-  7LI T   
-  7LI T   
-  7LI T   
-  7BE  P 0.0         3/2-              53.22 D   6              861.815   18
-  7LI  N 1.0         1.0       1         1.0
-  7LI  L 0           3/2-                STABLE   
-  7LI  E                       89.56    43.32                                  
-  7LI2 E CK=0.908 12$CL=0.092 12
-  7LI  L 477.621   2 1/2-              105 FS     
-  7LI  E                       10.44    43.56                                  
-  7LI2 E CK=0.908 12$CL=0.092 12
-  7LI  G 477.6035  2010.44    4M1+E2                   7.3E-7 11
- 
+  7LI    7BE EC DECAY (53.22 D)                                                 
+  7LI C  References:2000Hu20, 2000Li21                                          
+  7LI T  Auger electrons and X ray energies and emission intensities:           
+  7LI T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+  7LI T                                                                         
+  7LI T        0.0543                            XKA2                           
+  7LI T        0.0543                            XKA1                           
+  7LI T                                                                         
+  7LI T                                                                         
+  7LI T                                                                         
+  7BE  P 0.0         3/2-              53.22 D   6              861.815   18    
+  7LI  N 1.0         1.0       1         1.0                                    
+  7LI  L 0           3/2-               STABLE                                  
+  7LI  E                       89.56    43.32                                   
+  7LI2 E CK=0.908    12$CL=0.092    12                                          
+  7LI  L 477.621   2 1/2-              105 FS                                   
+  7LI  E                       10.44    43.56                                   
+  7LI2 E CK=0.908    12$CL=0.092    12                                          
+  7LI  G 477.6035  2010.44    4M1+E2                   7.3E-7 11                
+                                                                                

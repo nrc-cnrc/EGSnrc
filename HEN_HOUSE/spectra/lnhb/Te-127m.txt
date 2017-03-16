@@ -1,104 +1,108 @@
-127TE    127TE IT DECAY (106.1 D)
-127TE  H TYP=Full$AUT=A.L. Nichols$CUT=31-MAY-2012$
-127TE C  Evaluation history: Type=Full;Author=A.L. Nichols;Cutoff date=31-MAY-2012
-127TE C  References: 1940Se01, 1951Co34, 1956Kn20, 1965Au01, 1965An05, 1966Ne02, 
-127TE2C  1967Ge10, 1970Ap02, 1972Ka31, 1972Ka61, 1977So06, 1977Kr13, 1977La19, 
-127TE3C  1980Kr22, 1996Sc06, 1998ScZM, 1999ScZX, 2002Ba25, 2002Ra45, 2003Au03, 
-127TE4C  2003De44, 2008Ea01, 2008Ki07, 2011Ha31, 2012Au06
-127TE T  Auger electrons and X ray energies and emission intensities:
-127TE T       {U Energy (keV)}   {U Intensity}  {U Line}
-127TE T
-127TE T        27.202             10.3     3     XKA2
-127TE T        27.4726            19.3     5     XKA1
-127TE T   
-127TE T        30.9446        |]                 XKB3
-127TE T        30.996         |]  5.51    15     XKB1
-127TE T        31.232         |]                 XKB5II
-127TE T        31.242         |]                 XKB5I
-127TE T   
-127TE T        31.7008        |]                 XKB2
-127TE T        31.774         |]  1.20     5     XKB4
-127TE T        31.182         |]                 XKO23
-127TE T   
-127TE T        3.335-4.829        7.0      3     XL (total)
-127TE T        3.335              0.146    5     XLL
-127TE T        3.759-3.77         3.86    11     XLA
-127TE T        3.605              0.0369  13     XLC
-127TE T        4.03-4.302         2.45     5     XLB
-127TE T        4.572-4.829        0.333    8     XLG
-127TE T   
-127TE T        21.804-22.989  |]                 KLL AUGER
-127TE T        25.814-27.47   |]  5.19    21     KLX AUGER
-127TE T        29.8-31.81     |]                 KXY AUGER
-127TE T        2.29-3.72          74.3    10     L AUGER
-127TE  P 88.23     7 11/2-             106.1 D   7
-127TE  N 1.028E0     1.028E0   0.972699  1.028E0
-127TE  L 0           3/2+              9.35 H    10
-127TE  L 61.161    191/2+                         
-127TE  L 88.23     7 11/2-             106.1 D   7
-127TE  G 88.23     7 0.0854  16M4                      1138   17
-127TE2 G KC=486      7$LC=506      8$MC=120.4   18
- 
-127I     127TE B- DECAY (106.1 D)
-127I   H TYP=Full$AUT=A.L. Nichols$CUT=31-MAY-2012$
-127I  C  Evaluation history: Type=Full;Author=A.L. Nichols;Cutoff date=31-MAY-2012
-127I  C  References: 1940Se01, 1951Co34, 1956Kn20, 1965Au01, 1965An05, 1966Ne02, 
-127I 2C  1967Ge10, 1970Ap02, 1972Ka31, 1972Ka61, 1977So06, 1977Kr13, 1977La19, 
-127I 3C  1980Kr22, 1996Sc06, 1998ScZM, 1999ScZX, 2002Ba25, 2002Ra45, 2003Au03, 
-127I 4C  2003De44, 2008Ea01, 2008Ki07, 2011Ha31, 2012Au06
-127I  T  Auger electrons and X ray energies and emission intensities:
-127I  T       {U Energy (keV)}   {U Intensity}  {U Line}
-127I  T
-127I  T        28.3175            0.459   12     XKA2
-127I  T        28.6123            0.852   21     XKA1
-127I  T   
-127I  T        32.2397        |]                 XKB3
-127I  T        32.2951        |]  0.245    7     XKB1
-127I  T        32.539         |]                 XKB5II
-127I  T        32.55          |]                 XKB5I
-127I  T   
-127I  T        33.042         |]                 XKB2
-127I  T        33.12          |]  0.0555  19     XKB4
-127I  T        33.166         |]                 XKO23
-127I  T   
-127I  T        3.485-5.06         0.177    9     XL (total)
-127I  T        3.485              0.00336 11     XLL
-127I  T        3.927-3.938        0.089    3     XLA
-127I  T        3.779              0.00130  5     XLC
-127I  T        4.221-4.508        0.0707  17     XLB
-127I  T        4.801-5.06         0.0101   3     XLG
-127I  T   
-127I  T        22.659-23.909  |]                 KLL AUGER
-127I  T        26.853-28.609  |]  0.216    9     KLX AUGER
-127I  T        31.02-33.16    |]                 KXY AUGER
-127I  T        2.37-3.88          1.74     3     L AUGER
-127TE  P 88.23     7 11/2-             106.1 D   7              701.8     40
-127I   N 3.663E1     3.663E1   0.0273    3.663E1
-127I   L 0           5/2+                STABLE   
-127I   L 57.608    117/2+                         
-127I   B 732       4 2.71     7          9.873                               1U
-127I S B EAV=255.9 15
-127I   G 57.608    110.578   10M1+E2     -0.083  5     3.72    6
-127I 2 G KC=3.16     5$LC=0.449    8$MC=0.0910  16
-127I   L 202.860   8 3/2+                         
-127I   L 374.992   9 1/2+                         
-127I   L 417.99    6 5/2+                         
-127I   L 618.31    133/2+                         
-127I   L 628.69    167/2+                         
-127I   B 161       4 0.00009  2          11.3                                1U
-127I S B EAV=52.9 14
-127I   G 628.69    160.00009  2M1+E2     1.0     5     0.0052  4
-127I 2 G KC=0.0045   4$LC=0.00058  3$MC=1.17E-4  6
-127I   L 650.92    8 9/2+                         
-127I   B 139       4 0.0027   2          10.18                               1
-127I S B EAV=37.2 12
-127I   G 593.31    8 0.0024   2M1+E2     -0.23   3     0.0066810
-127I 2 G KC=0.00578  9$LC=7.22E-4 11$MC=1448E-7 21
-127I   G 650.92    8 0.0003   2E2                      0.00423 6
-127I 2 G KC=0.00362  5$LC=4.88E-4  7$MC=9.85E-5 14
-127I   L 716.50    6 11/2+                        
-127I   B 74        4 0.0141   6          8.61                                  
-127I S B EAV=19.1 11
-127I   G 658.89    6 0.0140   6E2                      0.00410 6
-127I 2 G KC=0.00351  5$LC=4.72E-4  7$MC=9.53E-5 14
- 
+127TE    127TE IT DECAY (106.1 D)                                               
+127TE  H TYP=FUL$AUT=A.L.NICHOLS$CUT=31-MAY-2012$                               
+127TE C  References:1940Se01, 1951Co34, 1956Kn20, 1965Au01, 1965An05, 1966Ne02, 
+127TE2C  1967Ge10, 1970Ap02, 1972Ka31, 1972Ka61, 1977So06, 1977Kr13, 1977La19,  
+127TE3C  1980Kr22, 1996Sc06, 1998ScZM, 1999ScZX, 2002Ba25, 2002Ra45, 2003Au03,  
+127TE4C  2003De44, 2008Ea01, 2008Ki07, 2011Ha31, 2012Au06                       
+127TE T  Auger electrons and X ray energies and emission intensities:           
+127TE T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+127TE T                                                                         
+127TE T        27.202             10.3     3     XKA2                           
+127TE T        27.4726            19.3     5     XKA1                           
+127TE T                                                                         
+127TE T        30.9446        |]                 XKB3                           
+127TE T        30.996         |]  5.51    15     XKB1                           
+127TE T        31.232         |]                 XKB5II                         
+127TE T        31.242         |]                 XKB5I                          
+127TE T                                                                         
+127TE T        31.7008        |]                 XKB2                           
+127TE T        31.774         |]  1.20     5     XKB4                           
+127TE T        31.182         |]                 XKO23                          
+127TE T                                                                         
+127TE T        3.335-4.829        7.0      3     XL (total)                     
+127TE T        3.335              0.146    5     XLL                            
+127TE T        3.759-3.77         3.86    11     XLA                            
+127TE T        3.605              0.0369  13     XLC                            
+127TE T        4.03-4.302         2.45     5     XLB                            
+127TE T        4.572-4.829        0.333    8     XLG                            
+127TE T                                                                         
+127TE T        21.804-22.989  |]                 KLL AUGER                      
+127TE T        25.814-27.47   |]  5.19    21     KLX AUGER                      
+127TE T        29.8-31.81     |]                 KXY AUGER                      
+127TE T        2.29-3.72          74.3    10     L AUGER                        
+127TE  P 88.23     7 11/2-             106.1 D   7                              
+127TE  N 1.028E0     1.028E0   0.972700                                         
+127TE  L 0           3/2+              9.35 H    10                             
+127TE  L 61.161    191/2+                                                       
+127TE  L 88.23     7 11/2-             106.1 D   7                              
+127TE  G 88.23     7 0.0854  16M4                      1138   17                
+127TE2 G KC=486       7$LC=506       8$MC=120.4    18$NC=23.2      4            
+127TE3 G OC=2.00      3                                                         
+                                                                                
+127I     127TE B- DECAY (106.1 D)                                               
+127I   H TYP=FUL$AUT=A.L.NICHOLS$CUT=31-MAY-2012$                               
+127I  C  References:1940Se01, 1951Co34, 1956Kn20, 1965Au01, 1965An05, 1966Ne02, 
+127I 2C  1967Ge10, 1970Ap02, 1972Ka31, 1972Ka61, 1977So06, 1977Kr13, 1977La19,  
+127I 3C  1980Kr22, 1996Sc06, 1998ScZM, 1999ScZX, 2002Ba25, 2002Ra45, 2003Au03,  
+127I 4C  2003De44, 2008Ea01, 2008Ki07, 2011Ha31, 2012Au06                       
+127I  T  Auger electrons and X ray energies and emission intensities:           
+127I  T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+127I  T                                                                         
+127I  T        28.3175            0.459   12     XKA2                           
+127I  T        28.6123            0.852   21     XKA1                           
+127I  T                                                                         
+127I  T        32.2397        |]                 XKB3                           
+127I  T        32.2951        |]  0.245    7     XKB1                           
+127I  T        32.539         |]                 XKB5II                         
+127I  T        32.55          |]                 XKB5I                          
+127I  T                                                                         
+127I  T        33.042         |]                 XKB2                           
+127I  T        33.12          |]  0.0555  19     XKB4                           
+127I  T        33.166         |]                 XKO23                          
+127I  T                                                                         
+127I  T        3.485-5.06         0.177    9     XL (total)                     
+127I  T        3.485              0.00336 11     XLL                            
+127I  T        3.927-3.938        0.089    3     XLA                            
+127I  T        3.779              0.00130  5     XLC                            
+127I  T        4.221-4.508        0.0707  17     XLB                            
+127I  T        4.801-5.06         0.0101   3     XLG                            
+127I  T                                                                         
+127I  T        22.659-23.909  |]                 KLL AUGER                      
+127I  T        26.853-28.609  |]  0.216    9     KLX AUGER                      
+127I  T        31.02-33.16    |]                 KXY AUGER                      
+127I  T        2.37-3.88          1.74     3     L AUGER                        
+127TE  P 88.23     7 11/2-             106.1 D   7              701.8     40    
+127I   N 3.663E1     3.663E1   0.0273    3.663E1                                
+127I   L 0           5/2+               STABLE                                  
+127I   L 57.608    117/2+                                                       
+127I   B 732       4 2.71     7          9.873                               1U 
+127I S B EAV=255.9 15                                                           
+127I   G 57.608    110.578   10M1+E2     -0.083  5     3.72    6                
+127I 2 G KC=3.16      5$LC=0.449     8$MC=0.0910   16$NC=0.0183    4            
+127I 3 G OC=0.00209   4                                                         
+127I   L 202.860   8 3/2+                                                       
+127I   L 374.992   9 1/2+                                                       
+127I   L 417.99    6 5/2+                                                       
+127I   L 618.31    133/2+                                                       
+127I   L 628.69    167/2+                                                       
+127I   B 161       4 0.00009  2          11.3                                1U 
+127I S B EAV=52.9 14                                                            
+127I   G 628.69    160.00009  2M1+E2     1.0     5     0.0052  4                
+127I 2 G KC=0.0045    4$LC=0.00058   3$MC=0.000117  6$NC=2.37E-5  13            
+127I 3 G OC=2.75E-6  17                                                         
+127I   L 650.92    8 9/2+                                                       
+127I   B 139       4 0.0027   2          10.18                               1  
+127I S B EAV=37.2 12                                                            
+127I   G 593.31    8 0.0024   2M1+E2     -0.23   3     0.0066810                
+127I 2 G KC=0.00578   9$LC=0.000722 11$MC=1.448E-4 21$NC=2.93E-5   5            
+127I 3 G OC=3.46E-6   5                                                         
+127I   G 650.92    8 0.0003   2E2                      0.00423 6                
+127I 2 G KC=0.00362   5$LC=0.000488  7$MC=9.85E-5  14$NC=1.98E-5   3            
+127I 3 G OC=2.26E-6   4                                                         
+127I   L 716.50    6 11/2+                                                      
+127I   B 74        4 0.0141   6          8.61                                   
+127I S B EAV=19.1 11                                                            
+127I   G 658.89    6 0.0140   6E2                      0.00410 6                
+127I 2 G KC=0.00351   5$LC=0.000472  7$MC=9.53E-5  14$NC=1.92E-5   3            
+127I 3 G OC=2.19E-6   3                                                         
+                                                                                

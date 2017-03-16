@@ -1,19 +1,17 @@
- 45SC     45CA B- DECAY (162.64 D)
- 45SC  H TYP=Full$AUT=M.M.Bé$CUT=15-FEB-2012$
- 45SC2 H TYP=Full$AUT=F.Lagoutine$CUT= -- $
- 45SC C  Evaluation history: Type=Full;Author=M.M.Bé;Cutoff date=15-FEB-2012
- 45SC2C  Type=Full;Author=F.Lagoutine;Cutoff date= -- 
- 45SC C  References: 1950Ma03, 1950Ke60, 1952Ca10, 1952De01, 1957Th11, 1959Ca12, 
- 45SC2C  1961Wy01, 1965An07, 1965Fr12, 1967Ha39, 1970Si24, 1994Lo04, 2003Au03, 
- 45SC3C  2008Ki07, 2012Mo**, 2012Au06
- 45CA  P 0.0         7/2-              162.64 D  11             258.0     7
- 45SC  N 1.0         1.0       1         1.0
- 45SC  L 0           7/2-                STABLE   
- 45SC  B 258.0     7 99.9980  7          6                                     
- 45SCS B EAV=76.8 7
- 45SC  L 12.40     5 3/2+              318 MS    7
- 45SC  B 245.6     7 0.0020   7          10.3                                1U
- 45SCS B EAV=91.7 7
- 45SC  G 12.40     5           M2                      423     9
- 45SC2 G KC=362      8$LC=53.4    12$MC=6.63    15
- 
+ 45SC    45CA B- DECAY (162.64 D)                                               
+ 45SC  H TYP=FUL$AUT=M.-M.BE$CUT=15-FEB-2012$                                   
+ 45SC2 H TYP=FUL$AUT=F.LAGOUTINE$CUT=30-JAN-1984$                               
+ 45SC C  References:1950Ma03, 1950Ke60, 1952Ca10, 1952De01, 1957Th11, 1959Ca12, 
+ 45SC2C  1961Wy01, 1965An07, 1965Fr12, 1967Ha39, 1970Si24, 1994Lo04, 2003Au03,  
+ 45SC3C  2008Ki07, 2012Mo**, 2012Au06                                           
+ 45CA  P 0.0         7/2-              162.64 D  11             258.0     7     
+ 45SC  N 1.0         1.0       1         1.0                                    
+ 45SC  L 0           7/2-               STABLE                                  
+ 45SC  B 258.0     7 99.9980  7          6                                      
+ 45SCS B EAV=76.8 7                                                             
+ 45SC  L 12.40     5 3/2+              318 MS    7                              
+ 45SC  B 245.6     7 0.0020   7          10.3                                1U 
+ 45SCS B EAV=91.7 7                                                             
+ 45SC  G 12.40     5           M2                      423     9                
+ 45SC2 G KC=362       8$LC=53.4     12$MC=6.63     15$NC=0.3       1            
+                                                                                

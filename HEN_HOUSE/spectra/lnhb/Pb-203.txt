@@ -1,53 +1,54 @@
-203TL    203PB EC DECAY (51.929 H)
-203TL  H TYP=Full$AUT=V.Chisté$CUT=01-JUL-2006$
-203TL C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date=01-JUL-2006
-203TL C  References: 1941Fa04, 1952He18, 1954Pr04, 1954Th17, 1954Wa12, 1955Az33, 
-203TL2C  1955Do12, 1955Ma40, 1956No26, 1956Wo09, 1956OF03, 1956Wa30, 1957Be57, 
-203TL3C  1958Bart, 1958Ni28, 1960Pe16, 1960St21, 1960Ra04, 1960Pe22, 1960Jo15, 
-203TL4C  1960Go15, 1960Ba16, 1960De04, 1961Ge01, 1961Hu15, 1961Pe12, 1961Sc04, 
-203TL5C  1961Su10, 1962Ta06, 1962De14, 1963Bu09, 1963Cr14, 1964He19, 1964Ro19, 
-203TL6C  1965Ka02, 1965Ra12, 1965Wa13, 1967Pa09, 1968Ra26, 1968Sa22, 1969Cl11, 
-203TL7C  1971Ch54, 1971WaKF, 1974Ha29, 1978He21, 1980Ho17, 1982HoZJ, 1985HaZA, 
-203TL8C  1989Ne05, 1996Sc06, 2000He14, 2000Sc05, 2001Li17, 2002Un02, 2003Au03, 
-203TL9C  2005Ko20, 2006Ra03
-203TL T  Auger electrons and X ray energies and emission intensities:
-203TL T       {U Energy (keV)}   {U Intensity}  {U Line}
-203TL T
-203TL T        70.8325            25.61   19     XKA2
-203TL T        72.8725            43.24   25     XKA1
-203TL T   
-203TL T        82.118         |]                 XKB3
-203TL T        82.577         |]  14.70   24     XKB1
-203TL T        83.115         |]                 XKB5II
-203TL T   
-203TL T        84.838         |]                 XKB2
-203TL T        85.134         |]  4.37    11     XKB4
-203TL T        85.444         |]                 XKO23
-203TL T   
-203TL T        8.9531-14.7362     33.2     6     XL (total)
-203TL T        8.9531             0.819   21     XLL
-203TL T        10.1718-10.2679    15.8     4     XLA
-203TL T        10.9942            0.243    6     XLC
-203TL T        11.8117-12.9566    13.79   25     XLB
-203TL T        13.8528-14.7362    2.58     5     XLG
-203TL T   
-203TL T        54.587-59.954  |]                 KLL AUGER
-203TL T        66.37-72.86    |]  3.4      4     KLX AUGER
-203TL T        78.12-85.5     |]                 KXY AUGER
-203TL T        5.18-15.31         57.9     6     L AUGER
-203PB  P 0.0         5/2-              51.929 H  10             975       6
-203TL  N 1.0         1.0       1         1.0
-203TL  L 0           1/2+                STABLE   
-203TL  L 279.1958  123/2+              282.3 PS  37
-203TL  E                       95.20   126.404                               1
-203TL2 E CK=0.7786 4$CL=0.1661 3$CM=0.0552 1$CO=0 0
-203TL  G 279.1952  1080.94    5M1+E2     1.17    6     0.2261  8
-203TL2 G KC=0.164    1$LC=0.04837 48
-203TL  L 680.5164  225/2+              0.88 PS   8
-203TL  E                       4.80     86.812                                 
-203TL2 E CK=0.7076 32$CL=0.2168 22$CM=0.0756 9$CO=0 0
-203TL  G 401.320   3 3.43     6M1+E2     0.030   3     0.1784 25
-203TL2 G KC=0.1464  21$LC=0.0245   4$MC=0.00572  8
-203TL  G 680.515   3 0.754   18E2                      0.0139320
-203TL2 G KC=0.01065 15$LC=0.00250  4$MC=6.05E-4  9
- 
+203TL    203PB EC DECAY (51.929 H)                                              
+203TL  H TYP=FUL$AUT=V.CHISTE$CUT=01-JUL-2006$                                  
+203TL C  References:1941Fa04, 1952He18, 1954Pr04, 1954Th17, 1954Wa12, 1955Az33, 
+203TL2C  1955Do12, 1955Ma40, 1956No26, 1956Wo09, 1956OF03, 1956Wa30, 1957Be57,  
+203TL3C  1958Bart, 1958Ni28, 1960Pe16, 1960St21, 1960Ra04, 1960Pe22, 1960Jo15,  
+203TL4C  1960Go15, 1960Ba16, 1960De04, 1961Ge01, 1961Hu15, 1961Pe12, 1961Sc04,  
+203TL5C  1961Su10, 1962Ta06, 1962De14, 1963Bu09, 1963Cr14, 1964He19, 1964Ro19,  
+203TL6C  1965Ka02, 1965Ra12, 1965Wa13, 1967Bo47, 1967Pa09, 1968Ra26, 1968Sa22,  
+203TL7C  1969Cl11, 1971Ch54, 1971WaKF, 1974Ha29, 1978He21, 1980Ho17, 1982HoZJ,  
+203TL8C  1985HaZA, 1989Ne05, 1996Sc06, 2000He14, 2000Sc05, 2001Li17, 2002Un02,  
+203TL9C  2003Au03, 2005Ko20, 2006Ra03                                           
+203TL T  Auger electrons and X ray energies and emission intensities:           
+203TL T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+203TL T                                                                         
+203TL T        70.8325            25.61   19     XKA2                           
+203TL T        72.8725            43.24   25     XKA1                           
+203TL T                                                                         
+203TL T        82.118         |]                 XKB3                           
+203TL T        82.577         |]  14.70   24     XKB1                           
+203TL T        83.115         |]                 XKB5II                         
+203TL T                                                                         
+203TL T        84.838         |]                 XKB2                           
+203TL T        85.134         |]  4.37    11     XKB4                           
+203TL T        85.444         |]                 XKO23                          
+203TL T                                                                         
+203TL T        8.9531-14.7362     33.2     6     XL (total)                     
+203TL T        8.9531             0.819   21     XLL                            
+203TL T        10.1718-10.2679    15.8     4     XLA                            
+203TL T        10.9942            0.243    6     XLC                            
+203TL T        11.8117-12.9566    13.79   25     XLB                            
+203TL T        13.8528-14.7362    2.58     5     XLG                            
+203TL T                                                                         
+203TL T        54.587-59.954  |]                 KLL AUGER                      
+203TL T        66.37-72.86    |]  3.4      4     KLX AUGER                      
+203TL T        78.12-85.5     |]                 KXY AUGER                      
+203TL T        5.18-15.31         57.9     6     L AUGER                        
+203PB  P 0.0         5/2-              51.929 H  10             975       6     
+203TL  N 1.0         1.0       1         1.0                                    
+203TL  L 0           1/2+               STABLE                                  
+203TL  L 279.1958  123/2+              282.3 PS  37                             
+203TL  E                       95.20   126.404                               1  
+203TL2 E CK=0.7786    4$CL=0.1661    3$CM=0.0552    1                           
+203TL  G 279.1952  1080.94    5M1+E2     1.17    6     0.2261  8                
+203TL2 G KC=0.164     1$LC=0.04837  48                                          
+203TL  L 680.5164  225/2+              0.88 PS   8                              
+203TL  E                       4.80     86.812                                  
+203TL2 E CK=0.7076   32$CL=0.2168   22$CM=0.0756    9                           
+203TL  G 401.320   3 3.43     6M1+E2     0.030   3     0.1784 25                
+203TL2 G KC=0.1464   21$LC=0.0245    4$MC=0.00572   8$NC=0.001444 21            
+203TL3 G OC=0.000281  4                                                         
+203TL  G 680.515   3 0.754   18E2                      0.0139320                
+203TL2 G KC=0.01065  15$LC=0.00250   4$MC=0.000605  9$NC=1.521E-4 22            
+203TL3 G OC=2.84E-5   4                                                         
+                                                                                

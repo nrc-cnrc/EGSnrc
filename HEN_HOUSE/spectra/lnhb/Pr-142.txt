@@ -1,0 +1,96 @@
+142CE    142PR EC DECAY (19.14 H)                                               
+142CE C  References:1942De07, 1948Co23, 1949Ma16, 1950Je56, 1952Je13, 1952Mo29, 
+142CE2C  1954Po26, 1955St51, 1957Ri43, 1959Fr52, 1959Se49, 1961Ma05, 1961La15,  
+142CE3C  1963Me15, 1966Ot03, 1966Cr02, 1966Be12, 1967Ke05, 1968Ke08, 1968Hi07,  
+142CE4C  1968La17, 1968Ra04, 1975Ra09, 1975Sc17, 1977La19, 1989Sp07, 1989Ab05,  
+142CE5C  1993Ni17, 1993Be03, 1995Be41, 1995ScZY, 1996Sc06, 1998Sc28, 1998ScZM,  
+142CE6C  1999ScZX, 2000Sc47, 2001Ra27, 2002Ra45, 2002Ba85, 2008Ki07, 2011Jo05,  
+142CE7C  2012Wa38                                                               
+142CE T  Auger electrons and X ray energies and emission intensities:           
+142CE T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+142CE T                                                                         
+142CE T        34.2793            0.0035   3     XKA2                           
+142CE T        34.72              0.0064   6     XKA1                           
+142CE T                                                                         
+142CE T        39.1705        |]                 XKB3                           
+142CE T        39.2578        |]  0.00192 16     XKB1                           
+142CE T        39.549         |]                 XKB5II                         
+142CE T                                                                         
+142CE T        40.233         |]                 XKB2                           
+142CE T        40.337         |]  0.00049  4     XKB4                           
+142CE T        40.423         |]                 XKO23                          
+142CE T                                                                         
+142CE T        4.289-6.342        0.00179  9     XL (total)                     
+142CE T        4.289              3.41E-5 25     XLL                            
+142CE T        4.822-4.84         0.00087  6     XLA                            
+142CE T        4.73               1.28E-5 10     XLC                            
+142CE T        5.263-5.613        0.00075  4     XLB                            
+142CE T        6.054-6.342        0.000122 7     XLG                            
+142CE T                                                                         
+142CE T        27.19-28.828   |]                 KLL AUGER                      
+142CE T        32.392-34.7    |]  0.00121 12     KLX AUGER                      
+142CE T        37.57-40.4     |]                 KXY AUGER                      
+142CE T        2.81-4.72          0.0123   7     L AUGER                        
+142PR  P 0.0         2-                19.14 H   4              744.5     24    
+142CE  N 6.098E3     6.098E3   0.000164 86.098E3                                
+142CE  L 0           0+                 STABLE                                  
+142CE  E                       0.0142  119.4                                 1U 
+142CE2 E CK=0.8398   15$CL=0.1255   11$CM=0.0280    5$CN=0.0068    4            
+142CE  L 641.282   9 2+                5.40 PS   7                              
+142CE  E                       0.0022   87.9                                    
+142CE2 E CK=0.704     6$CL=0.2270   46$CM=0.0554   15$CN=0.0137    8            
+142CE  G 641.280   9 0.0022   8E2                      0.00563 8                
+142CE2 G KC=0.00475   7$LC=0.000695 10$MC=1.463E-4 21$NC=3.22E-5   5            
+142CE3 G OC=5.11E-6   8                                                         
+                                                                                
+142ND    142PR B- DECAY (19.14 H)                                               
+142ND C  References:1942De07, 1948Co23, 1949Ma16, 1950Je56, 1952Je13, 1952Mo29, 
+142ND2C  1954Po26, 1955St51, 1957Ri43, 1959Fr52, 1959Se49, 1961Ma05, 1961La15,  
+142ND3C  1963Me15, 1966Ot03, 1966Cr02, 1966Be12, 1967Ke05, 1968Ke08, 1968Hi07,  
+142ND4C  1968La17, 1968Ra04, 1975Ra09, 1975Sc17, 1977La19, 1989Sp07, 1989Ab05,  
+142ND5C  1993Ni17, 1993Be03, 1995Be41, 1995ScZY, 1996Sc06, 1998Sc28, 1998ScZM,  
+142ND6C  1999ScZX, 2000Sc47, 2001Ra27, 2002Ra45, 2002Ba85, 2008Ki07, 2011Jo05,  
+142ND7C  2012Wa38                                                               
+142ND T  Auger electrons and X ray energies and emission intensities:           
+142ND T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+142ND T                                                                         
+142ND T        36.8478            0.00076  9     XKA2                           
+142ND T        37.3614            0.00139 15     XKA1                           
+142ND T                                                                         
+142ND T        42.167         |]                 XKB3                           
+142ND T        42.2717        |]  0.00043  5     XKB1                           
+142ND T        42.58          |]                 XKB5II                         
+142ND T                                                                         
+142ND T        43.335         |]                 XKB2                           
+142ND T        43.451         |]  0.00011012     XKB4                           
+142ND T        43.548         |]                 XKO23                          
+142ND T                                                                         
+142ND T        4.633-6.901        0.00042  3     XL (total)                     
+142ND T        4.633              8.2E-6   8     XLL                            
+142ND T        5.208-5.23         0.00020617     XLA                            
+142ND T        5.146              3.1E-6   3     XLC                            
+142ND T        5.722-6.09         0.00017412     XLB                            
+142ND T        6.604-6.901        2.79E-5 20     XLG                            
+142ND T                                                                         
+142ND T        29.154-30.978  |]                 KLL AUGER                      
+142ND T        34.798-37.34   |]  0.00024  3     KLX AUGER                      
+142ND T        40.42-43.53    |]                 KXY AUGER                      
+142ND T        3.01-5.1           0.00251 17     L AUGER                        
+142PR  P 0.0         2-                19.14 H   4              2161.6    15    
+142ND  N 1.00E0      1.00E0    0.999836 81.00E0                                 
+142ND  L 0           0+                 STABLE                                  
+142ND  B 2161.6    1596.3     4          8.90                                1U 
+142NDS B EAV=833.9 7                                                            
+142ND  L 1575.78   1 2+                0.110 PS  2                              
+142ND  B 585.8     153.7      4          7.1                                    
+142NDS B EAV=182.5 6                                                            
+142ND  G 1575.771  103.7      4E2                      1003E-614                
+142ND2 G KC=0.000772 11$LC=1.005E-4 14$MC=2.12E-5   3$NC=4.74E-6   7            
+142ND3 G OC=7.19E-7  10$IPC=1.037E-4 15                                         
+142ND  L 2083.94   2 3-                0.44 PS                                  
+142ND  B 77.7      150.024    3          6.5                                    
+142NDS B EAV=20.1 4                                                             
+142ND  G 508.159   220.024    3E1                      0.00380 6                
+142ND2 G KC=0.00326   5$LC=0.000424  6$MC=8.92E-5  13$NC=1.99E-5   3            
+142ND3 G OC=3.00E-6   5                                                         
+                                                                                

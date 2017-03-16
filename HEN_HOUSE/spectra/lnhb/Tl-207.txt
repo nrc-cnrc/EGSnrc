@@ -1,51 +1,53 @@
-207PB    207TL B- DECAY (4.774 M)
-207PB  H TYP=Full$AUT=F.Kondev$CUT=12-DEC-2010$
-207PB C  Evaluation history: Type=Full;Author=F.Kondev;Cutoff date=12-DEC-2010
-207PB C  References: 1931Cu01, 1940Fa04, 1950Ev03, 1953Sa11, 1961Cu05, 1963Ch09, 
-207PB2C  1967Da10, 1967Tr01, 1968Br17, 1970Kl03, 1971Go40, 1972Ha59, 1973Ba38, 
-207PB3C  1974Ha34, 1976Av01, 1977La19, 1988Hi14, 1991Ar04, 1996Sc06, 1998ScZM, 
-207PB4C  1999ScZX, 2000Sc47, 2000He14, 2003De44, 2003Au03, 2008Ki07, 2008DuZX, 
-207PB5C  2011Ko04
-207PB T  Auger electrons and X ray energies and emission intensities:
-207PB T       {U Energy (keV)}   {U Intensity}  {U Line}
-207PB T
-207PB T        72.8049            0.00154  6     XKA2
-207PB T        74.97              0.00258 10     XKA1
-207PB T   
-207PB T        84.451         |]                 XKB3
-207PB T        84.937         |]  0.00088  4     XKB1
-207PB T        85.47          |]                 XKB5II
-207PB T   
-207PB T        87.238         |]                 XKB2
-207PB T        87.58          |]  0.00026612     XKB4
-207PB T        87.911         |]                 XKO23
-207PB T   
-207PB T        9.186-15.2169      0.00201  6     XL (total)
-207PB T        9.186              5.00E-5 19     XLL
-207PB T        10.4495-10.5512    0.00095  4     XLA
-207PB T        11.3495            1.50E-5  7     XLC
-207PB T        12.1443-13.3763    0.00084124     XLB
-207PB T        14.3078-15.2169    0.000159 5     XLG
-207PB T   
-207PB T        56.028-61.669  |]                 KLL AUGER
-207PB T        68.181-74.969  |]  0.00020223     KLX AUGER
-207PB T        80.3-88        |]                 KXY AUGER
-207PB T        5.33-15.82         0.00333  6     L AUGER
-207TL  P 0.0         1/2+              4.774 M   12             1418      5
-207PB  N 1.0         1.0       1         1.0
-207PB  L 0         0 1/2-                STABLE   
-207PB  B 1418      5 99.729  10          5.11                                  
-207PBS B EAV=492.5 21
-207PB  L 569.6982  205/2-                         
-207PB  B 848       5 0.00008             10.8                                1U
-207PBS B EAV=273.2 18
-207PB  G 569.698   2 0.00185 19E2                      0.0216  3
-207PB2 G KC=0.01584 23$LC=0.00439  7$MC=1081E-6 16
-207PB  L 897.698   173/2-                         
-207PB  B 520       5 0.271   10          6.15                                1
-207PBS B EAV=155.0 17
-207PB  G 328.10    120.00142 14[M1]                    0.334   5
-207PB2 G KC=0.273    4$LC=0.0466   7$MC=0.01090 16
-207PB  G 897.77    120.263    9M1+E2     0.091   9000  0.0233  4
-207PB2 G KC=0.0192   3$LC=0.00318  5$MC=7.41E-4 11
- 
+207PB    207TL B- DECAY (4.774 M)                                               
+207PB  H TYP=FUL$AUT=F.G.KONDEV$CUT=12-DEC-2010$                                
+207PB C  References:1931Cu01, 1940Fa04, 1950Ev03, 1953Sa11, 1961Cu05, 1963Ch09, 
+207PB2C  1967Da10, 1967Tr01, 1968Br17, 1970Kl03, 1971Go40, 1972Ha59, 1973Ba38,  
+207PB3C  1974Ha34, 1976Av01, 1977La19, 1988Hi14, 1991Ar04, 1996Sc06, 1998ScZM,  
+207PB4C  1999ScZX, 2000Sc47, 2000He14, 2003De44, 2003Au03, 2008Ki07, 2008DuZX,  
+207PB5C  2011Ko04                                                               
+207PB T  Auger electrons and X ray energies and emission intensities:           
+207PB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+207PB T                                                                         
+207PB T        72.8049            0.00154  6     XKA2                           
+207PB T        74.97              0.00258 10     XKA1                           
+207PB T                                                                         
+207PB T        84.451         |]                 XKB3                           
+207PB T        84.937         |]  0.00088  4     XKB1                           
+207PB T        85.47          |]                 XKB5II                         
+207PB T                                                                         
+207PB T        87.238         |]                 XKB2                           
+207PB T        87.58          |]  0.00026612     XKB4                           
+207PB T        87.911         |]                 XKO23                          
+207PB T                                                                         
+207PB T        9.186-15.2169      0.00201  6     XL (total)                     
+207PB T        9.186              5.00E-5 19     XLL                            
+207PB T        10.4495-10.5512    0.00095  4     XLA                            
+207PB T        11.3495            1.50E-5  7     XLC                            
+207PB T        12.1443-13.3763    0.00084124     XLB                            
+207PB T        14.3078-15.2169    0.000159 5     XLG                            
+207PB T                                                                         
+207PB T        56.028-61.669  |]                 KLL AUGER                      
+207PB T        68.181-74.969  |]  0.00020223     KLX AUGER                      
+207PB T        80.3-88        |]                 KXY AUGER                      
+207PB T        5.33-15.82         0.00333  6     L AUGER                        
+207TL  P 0.0         1/2+              4.774 M   12             1418      5     
+207PB  N 1.0         1.0       1         1.0                                    
+207PB  L 0           1/2-               STABLE                                  
+207PB  B 1418      5 99.729  10          5.11                                   
+207PBS B EAV=492.5 21                                                           
+207PB  L 569.6982  205/2-                                                       
+207PB  B 848       5 0.00008             10.8                                1U 
+207PBS B EAV=273.2 18                                                           
+207PB  G 569.698   2 0.00185 19E2                      0.0216  3                
+207PB2 G KC=0.01584  23$LC=0.00439   7$MC=0.001081 16$NC=0.000274  4            
+207PB3 G OC=5.21E-5   8                                                         
+207PB  L 897.698   173/2-                                                       
+207PB  B 520       5 0.271   10          6.15                                1  
+207PBS B EAV=155.0 17                                                           
+207PB  G 328.10    120.00142 14[M1]                    0.334   5                
+207PB2 G KC=0.273     4$LC=0.0466    7$MC=0.01090  16$NC=0.00277   4            
+207PB3 G OC=0.000552  8                                                         
+207PB  G 897.77    120.263    9M1+E2     0.091   9000  0.0233  4                
+207PB2 G KC=0.0192    3$LC=0.00318   5$MC=0.000741 11$NC=0.000188  3            
+207PB3 G OC=3.76E-5   4                                                         
+                                                                                

@@ -1,60 +1,64 @@
-133CS    133XE B- DECAY (5.2474 D)
-133CS  H TYP=Update$AUT=M.Galan$CUT= -- $
-133CS2 H TYP=Full$AUT=M.Galan$CUT=01-AUG-2007$
-133CS C  Evaluation history: Type=Update;Author=M.Galan;Cutoff date= -- 
-133CS2C  Type=Full;Author=M.Galan;Cutoff date=01-AUG-2007
-133CS C  References: 1940WU05, 1941CL02, 1945WU05, 1950MA01, 1952BE55, 1953GR07, 
-133CS2C  1954BE36, 1955LE18, 1958AL98, 1959BO56, 1961ER04, 1962TH12, 1963GO17, 
-133CS3C  1965GE04, 1966TH09, 1968AL16, 1972EM01, 1974CA27, 1974FOZY, 1975HO18, 
-133CS4C  1975WO10, 1977KR13, 1989RA17, 1992UN01, 1992MA05, 1995RA12, 1996SC06, 
-133CS5C  2000HE14, 2002BA85, 2002UN02, 2003AU03
-133CS T  Auger electrons and X ray energies and emission intensities:
-133CS T       {U Energy (keV)}   {U Intensity}  {U Line}
-133CS T
-133CS T        30.6254            13.54   24     XKA2
-133CS T        30.9731            25.0     5     XKA1
-133CS T   
-133CS T        34.9197        |]                 XKB3
-133CS T        34.9873        |]  7.31    15     XKB1
-133CS T        35.252         |]                 XKB5II
-133CS T   
-133CS T        35.822         |]                 XKB2
-133CS T        35.907         |]  1.78     6     XKB4
-133CS T        35.972         |]                 XKO23
-133CS T   
-133CS T        3.795-5.553        5.79    11     XL (total)
-133CS T        3.795              0.111    3     XLL
-133CS T        4.273-4.287        2.91     8     XLA
-133CS T        4.142              0.0429  13     XLC
-133CS T        4.62-4.988         2.37     5     XLB
-133CS T        5.131-5.553        0.359    8     XLG
-133CS T   
-133CS T        24.411-25.804  |]                 KLL AUGER
-133CS T        28.991-30.961  |]  5.65    24     KLX AUGER
-133CS T        33.55-35.96    |]                 KXY AUGER
-133CS T        2.5-5.6            49.9     3     L AUGER
-133XE  P 0.0         3/2+              5.2474 D  5              427.4     24
-133CS  N 1.0         1.0       1         1.0
-133CS  L 0         0 7/2+                STABLE   
-133CS  L 80.9979   115/2+              6.31 NS   6
-133CS  B 346.4     2499.12    8          5.62                                  
-133CSS B EAV=100.6 8
-133CS  G 80.9979   1137.0     3M1+E2     -0.151  2     1.698  24
-133CS2 G KC=1.429   20$LC=0.214    3$MC=0.0442   6
-133CS  L 160.6120  165/2+                         
-133CS  B 266.8     240.87     8          7.31                                  
-133CSS B EAV=75.2 8
-133CS  G 79.6142   120.28     3M1+E2     0.124   15    1.768  26
-133CS2 G KC=1.495   21$LC=0.217    6$MC=0.0447  12
-133CS  G 160.6120  160.068    8M1+E2     0.96    5     0.294   5
-133CS2 G KC=0.234    4$LC=0.0471  13$MC=0.0099   3
-133CS  L 383.8485  123/2+                         
-133CS  B 43.6      240.0092   9          6.84                                  
-133CSS B EAV=11.1 7
-133CS  G 223.2368  130.00017  6M1+E2     -0.114  14    0.0975 14
-133CS2 G KC=0.0836  12$LC=0.01103 16$MC=0.00226  3
-133CS  G 302.8508  5 0.0058   8M1+E2     0.022   20    0.0434  6
-133CS2 G KC=0.0373   5$LC=0.00484  7$MC=9.88E-4 14
-133CS  G 383.8485  120.0028   4E2                      0.0202  3
-133CS2 G KC=0.01684 24$LC=0.00269  4$MC=5.59E-4  8
- 
+133CS    133XE B- DECAY (5.2474 D)                                              
+133CS  H TYP=UPD$AUT=M.GALAN$CUT=19-FEB-2008$                                   
+133CS2 H TYP=FUL$AUT=M.GALAN$CUT=01-AUG-2007$                                   
+133CS C  References:1940WU05, 1941CL02, 1945WU05, 1950MA01, 1952BE55, 1953GR07, 
+133CS2C  1954BE36, 1955LE18, 1958AL98, 1959BO56, 1961ER04, 1962TH12, 1963GO17,  
+133CS3C  1965GE04, 1966TH09, 1968AL16, 1972EM01, 1974CA27, 1974FOZY, 1975HO18,  
+133CS4C  1975WO10, 1977KR13, 1989RA17, 1992UN01, 1992MA05, 1995RA12, 1996SC06,  
+133CS5C  2000HE14, 2002Ba85, 2002Un02, 2003Au03                                 
+133CS T  Auger electrons and X ray energies and emission intensities:           
+133CS T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+133CS T                                                                         
+133CS T        30.6254            13.54   24     XKA2                           
+133CS T        30.9731            25.0     5     XKA1                           
+133CS T                                                                         
+133CS T        34.9197        |]                 XKB3                           
+133CS T        34.9873        |]  7.31    15     XKB1                           
+133CS T        35.252         |]                 XKB5II                         
+133CS T                                                                         
+133CS T        35.822         |]                 XKB2                           
+133CS T        35.907         |]  1.78     6     XKB4                           
+133CS T        35.972         |]                 XKO23                          
+133CS T                                                                         
+133CS T        3.795-5.553        5.79    11     XL (total)                     
+133CS T        3.795              0.111    3     XLL                            
+133CS T        4.273-4.287        2.91     8     XLA                            
+133CS T        4.142              0.0429  13     XLC                            
+133CS T        4.62-4.988         2.37     5     XLB                            
+133CS T        5.131-5.553        0.359    8     XLG                            
+133CS T                                                                         
+133CS T        24.411-25.804  |]                 KLL AUGER                      
+133CS T        28.991-30.961  |]  5.65    24     KLX AUGER                      
+133CS T        33.55-35.96    |]                 KXY AUGER                      
+133CS T        2.5-5.6            49.9     3     L AUGER                        
+133XE  P 0.0         3/2+              5.2474 D  5              427.4     24    
+133CS  N 1.0         1.0       1         1.0                                    
+133CS  L 0           7/2+               STABLE                                  
+133CS  L 80.9979   115/2+              6.31 NS   6                              
+133CS  B 346.4     2499.12    8          5.62                                   
+133CSS B EAV=100.6 8                                                            
+133CS  G 80.9979   1137.0     3M1+E2     -0.151  2     1.698  24                
+133CS2 G KC=1.429    20$LC=0.214     3$MC=0.0442    6$NC=0.0093    1            
+133CS3 G OC=0.00126  18                                                         
+133CS  L 160.6120  165/2+                                                       
+133CS  B 266.8     240.87     8          7.31                                   
+133CSS B EAV=75.2 8                                                             
+133CS  G 79.6142   120.28     3M1+E2     0.124   15    1.768  26                
+133CS2 G KC=1.495    21$LC=0.217     6$MC=0.0447   12$NC=0.0094   24            
+133CS3 G OC=0.00128   3                                                         
+133CS  G 160.6120  160.068    8M1+E2     0.96    5     0.294   5                
+133CS2 G KC=0.234     4$LC=0.0471   13$MC=0.0099    3$NC=0.00205   6            
+133CS3 G OC=0.000261  7                                                         
+133CS  L 383.8485  123/2+                                                       
+133CS  B 43.6      240.0092   9          6.84                                   
+133CSS B EAV=11.1 7                                                             
+133CS  G 223.2368  130.00017  6M1+E2     -0.114  14    0.0975 14                
+133CS2 G KC=0.0836   12$LC=0.01103  16$MC=0.00226   3$NC=0.000477  7            
+133CS3 G OC=6.64E-5   9                                                         
+133CS  G 302.8508  5 0.0058   8M1+E2     0.022   20    0.0434  6                
+133CS2 G KC=0.0373    5$LC=0.00484   7$MC=0.000988 14$NC=2.090E-4 29            
+133CS3 G OC=2.92E-5   4                                                         
+133CS  G 383.8485  120.0028   4E2                      0.0202  3                
+133CS2 G KC=0.01684  24$LC=0.00269   4$MC=0.000559  8$NC=0.000117  2            
+133CS3 G OC=1.54E-5   2                                                         
+                                                                                

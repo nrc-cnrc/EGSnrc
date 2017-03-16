@@ -1189,6 +1189,11 @@ double Record::parseHalfLife(int startPos, int endPos) {
         egsWarning("Record::parseHalfLife: Error: Record is empty\n");
         return -5;
     }
+    if (lines.front().length() < startPos) {
+        egsWarning("Record::parseHalfLife: Warning: Record too short to "
+                    "contain desired quantity\n");
+        return -5;
+    }
 
     string halfLifeStr = egsTrimString(lines.front().substr(startPos-1,
                                        endPos-startPos+1));

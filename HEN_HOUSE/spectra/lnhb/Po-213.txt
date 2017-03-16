@@ -1,19 +1,19 @@
-209PB    213PO A DECAY (3.70 US)
-209PB  H TYP=Full$AUT=Huang Xiaolong$CUT=31-DEC-2007$
-209PB C  Evaluation history: Type=Full;Author=Huang Xiaolong;Cutoff date=31-DEC-2007
-209PB T  Auger electrons and X ray energies and emission intensities:
-209PB T       {U Energy (keV)}   {U Intensity}  {U Line}
-209PB T
-209PB T   
-209PB T   
-209PB T   
-209PB T   
-213PO  P 0.0         9/2+              3.70 US   5              8536.1    26
-209PB  N 1.0         1.0       1         1.0
-209PB  L 0           9/2+              3.277 H   15
-209PB  A 8375.9    2599.9950 5 1.238
-209PB  L 778.8     3 11/2+                        
-209PB  A 7614      100.0050  5 185
-209PB  G 778.8     3 0.0048   5M1                      0.0339  5
-209PB2 G KC=0.0278   4$LC=0.00462  7$MC=1079E-6 16
- 
+209PB    213PO A DECAY (3.70 US)                                                
+209PB  H TYP=FUL$AUT=X.HUANG$CUT=31-DEC-2007$                                   
+209PB T  Auger electrons and X ray energies and emission intensities:           
+209PB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+209PB T                                                                         
+209PB T                                                                         
+209PB T                                                                         
+209PB T                                                                         
+209PB T                                                                         
+213PO  P 0.0         9/2+              3.70 US   5              8536.1    26    
+209PB  N 1.0         1.0       1                                                
+209PB  L 0           9/2+              3.277 H   15                             
+209PB  A 8375.9    2599.9950  51.238                                            
+209PB  L 778.8     3 11/2+                                                      
+209PB  A 7614      100.0050   5185                                              
+209PB  G 778.8     3 0.0048   5M1                      0.0339  5                
+209PB2 G KC=0.0278    4$LC=0.00462   7$MC=0.001079 16$NC=0.000274  4            
+209PB3 G OC=5.47E-5   8                                                         
+                                                                                

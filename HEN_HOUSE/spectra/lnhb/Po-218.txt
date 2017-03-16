@@ -1,63 +1,59 @@
-214PB    218PO A DECAY (3.071 M)
-214PB  H TYP=Update$AUT=V.Chisté$CUT= -- $
-214PB2 H TYP=Full$AUT=V.Chisté$CUT= -- $
-214PB C  Evaluation history: Type=Update;Author=V.Chisté;Cutoff date= -- 
-214PB2C  Type=Full;Author=V.Chisté;Cutoff date= -- 
-214PB C  References: 1924Bl02, 1931Cu01, 1949Wa05, 1952Hi60, 1958Wa16, 1963Ba62, 
-214PB2C  1971Gr17, 1979Ry03, 1982Va09, 1986Po17, 1987El07, 1991Ry01, 1992Ba61, 
-214PB3C  1995El07, 1995El08, 1998Ak04, 2002Ba85, 2003Au03, 2006Ja03
-214PB T  Auger electrons and X ray energies and emission intensities:
-214PB T       {U Energy (keV)}   {U Intensity}  {U Line}
-214PB T
-214PB T        72.8049                           XKA2
-214PB T        74.97                             XKA1
-214PB T   
-214PB T        84.451         |]                 XKB3
-214PB T        84.937         |]                 XKB1
-214PB T        85.47          |]                 XKB5II
-214PB T   
-214PB T        87.238         |]                 XKB2
-214PB T        87.58          |]                 XKB4
-214PB T        87.911         |]                 XKO23
-214PB T   
-218PO  P 0.0         0+                3.071 M   22             6114.68   9
-214PB  N 1.00E0      1.00E0    0.999779  1.00E0
-214PB  L 0           0+                26.916 M  44
-214PB  A 6002.35   9 99.9989 321
-214PB  L 837         (2)+                         
-214PB  A 5181      2 0.0011  117.5
-214PB  G 836       2 0.0011  11(E2)                    
- 
-218AT    218PO B- DECAY (3.071 M)
-218AT  H TYP=Update$AUT=V.Chisté$CUT= -- $
-218AT2 H TYP=Full$AUT=V.Chisté$CUT= -- $
-218AT C  Evaluation history: Type=Update;Author=V.Chisté;Cutoff date= -- 
-218AT2C  Type=Full;Author=V.Chisté;Cutoff date= -- 
-218AT C  References: 1924Bl02, 1931Cu01, 1949Wa05, 1952Hi60, 1958Wa16, 1963Ba62, 
-218AT2C  1971Gr17, 1979Ry03, 1982Va09, 1986Po17, 1987El07, 1991Ry01, 1992Ba61, 
-218AT3C  1995El07, 1995El08, 1998Ak04, 2002Ba85, 2003Au03, 2006Ja03
-218AT T  Auger electrons and X ray energies and emission intensities:
-218AT T       {U Energy (keV)}   {U Intensity}  {U Line}
-218AT T
-218AT T        78.94                             XKA2
-218AT T        81.51                             XKA1
-218AT T   
-218AT T        91.73          |]                 XKB3
-218AT T        92.315         |]                 XKB1
-218AT T        92.883         |]                 XKB5II
-218AT T   
-218AT T        94.846         |]                 XKB2
-218AT T        95.211         |]                 XKB4
-218AT T        95.595         |]                 XKO23
-218AT T   
-218AT T        9.8964                            XLL
-218AT T        11.3052-11.426                    XLA
-218AT T        12.4653                           XLC
-218AT T        13.1704-14.6997                   XLB
-218AT T        15.7394-16.7291                   XLG
-218PO  P 0.0         0+                3.071 M   22             260       12
-218AT  N 4.545E3     4.545E3   0.00022   4.545E3
-218AT  L 0           (2)-              1.4 S     2
-218AT  B 260       120.022    3                                              1U
-218ATS B EAV=73 4
- 
+214PB    218PO A DECAY (3.071 M)                                                
+214PB  H TYP=UPD$AUT=V.CHISTE$CUT=01-DEC-2010$                                  
+214PB2 H TYP=FUL$AUT=V.CHISTE$CUT=31-JAN-2007$                                  
+214PB C  References:1924Bl02, 1931Cu01, 1949Wa05, 1952Hi60, 1958Wa16, 1963Ba62, 
+214PB2C  1971Gr17, 1979Ry03, 1982Va09, 1986Po17, 1987El07, 1991Ry01, 1992Ba61,  
+214PB3C  1995El07, 1995El08, 1998Ak04, 2002Ba85, 2003Au03, 2006Ja03             
+214PB T  Auger electrons and X ray energies and emission intensities:           
+214PB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+214PB T                                                                         
+214PB T        72.8049                           XKA2                           
+214PB T        74.97                             XKA1                           
+214PB T                                                                         
+214PB T        84.451         |]                 XKB3                           
+214PB T        84.937         |]                 XKB1                           
+214PB T        85.47          |]                 XKB5II                         
+214PB T                                                                         
+214PB T        87.238         |]                 XKB2                           
+214PB T        87.58          |]                 XKB4                           
+214PB T        87.911         |]                 XKO23                          
+214PB T                                                                         
+218PO  P 0.0         0+                3.071 M   22             6114.68   9     
+214PB  N 1.00E0      1.00E0    0.999780                                         
+214PB  L 0           0+                26.916 M  44                             
+214PB  A 6002.35   9 99.9989 321                                                
+214PB  L 837         (2)+                                                       
+214PB  A 5181      2 0.0011  117.5                                              
+214PB  G 836       2 0.0011  11(E2)                                             
+                                                                                
+218AT    218PO B- DECAY (3.071 M)                                               
+218AT  H TYP=UPD$AUT=V.CHISTE$CUT=01-DEC-2010$                                  
+218AT2 H TYP=FUL$AUT=V.CHISTE$CUT=31-JAN-2007$                                  
+218AT C  References:1924Bl02, 1931Cu01, 1949Wa05, 1952Hi60, 1958Wa16, 1963Ba62, 
+218AT2C  1971Gr17, 1979Ry03, 1982Va09, 1986Po17, 1987El07, 1991Ry01, 1992Ba61,  
+218AT3C  1995El07, 1995El08, 1998Ak04, 2002Ba85, 2003Au03, 2006Ja03             
+218AT T  Auger electrons and X ray energies and emission intensities:           
+218AT T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+218AT T                                                                         
+218AT T        78.94                             XKA2                           
+218AT T        81.51                             XKA1                           
+218AT T                                                                         
+218AT T        91.73          |]                 XKB3                           
+218AT T        92.315         |]                 XKB1                           
+218AT T        92.883         |]                 XKB5II                         
+218AT T                                                                         
+218AT T        94.846         |]                 XKB2                           
+218AT T        95.211         |]                 XKB4                           
+218AT T        95.595         |]                 XKO23                          
+218AT T                                                                         
+218AT T        9.8964                            XLL                            
+218AT T        11.3052-11.426                    XLA                            
+218AT T        12.4653                           XLC                            
+218AT T        13.1704-14.6997                   XLB                            
+218AT T        15.7394-16.7291                   XLG                            
+218PO  P 0.0         0+                3.071 M   22             260       12    
+218AT  N 4.545E3     4.545E3   0.00022   4.545E3                                
+218AT  L 0           (2)-              1.4 S     2                              
+218AT  B 260       120.022    3                                              1U 
+218ATS B EAV=73 4                                                               
+                                                                                

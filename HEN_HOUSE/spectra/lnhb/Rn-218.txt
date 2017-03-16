@@ -1,35 +1,34 @@
-214PO    218RN A DECAY (36.0 MS)
-214PO  H TYP=Full$AUT=V.Chisté$CUT= -- $
-214PO C  Evaluation history: Type=Full;Author=V.Chisté;Cutoff date= -- 
-214PO C  References: 1956As38, 1958To25, 1961Ru06, 1963Di05, 1969Pe17, 1971Er02, 
-214PO2C  1976Ku08, 1979Ry03, 1982Bo04, 1987El12, 1991Ry01, 1995El07, 1996Sc06, 
-214PO3C  1998Ak04, 2002Ba85, 2003Au03
-214PO T  Auger electrons and X ray energies and emission intensities:
-214PO T       {U Energy (keV)}   {U Intensity}  {U Line}
-214PO T
-214PO T        76.864             0.00052  4     XKA2
-214PO T        79.293             0.00086  6     XKA1
-214PO T   
-214PO T        89.256         |]                 XKB3
-214PO T        89.807         |]  0.00029621     XKB1
-214PO T        90.363         |]                 XKB5II
-214PO T   
-214PO T        92.263         |]                 XKB2
-214PO T        92.618         |]  0.000092 7     XKB4
-214PO T        92.983         |]                 XKO23
-214PO T   
-214PO T        9.66-16.21         0.00080  3     XL (total)
-214PO T        9.66               1.90E-5 11     XLL
-214PO T        11.0161-11.1303    0.00034918     XLA
-214PO T        12.0847            6.7E-6   4     XLC
-214PO T        12.8239-13.6358    0.00035615     XLB
-214PO T        15.251-16.21       0.000072 3     XLG
-218RN  P 0.0         0+                36.0 MS   19             7262.5    19
-214PO  N 1.0         1.0       1         1.0
-214PO  L 0           0+                162.3 US  12
-214PO  A 7129.2    1999.873  7 1
-214PO  L 609.31    6 2+                           
-214PO  A 6531.1    190.127   7 4.8
-214PO  G 609.31    6 0.124    7E2                      0.0204  3
-214PO2 G KC=0.01487 21$LC=0.00416  6$MC=1030E-6 15
- 
+214PO    218RN A DECAY (36.0 MS)                                                
+214PO  H TYP=FUL$AUT=V.CHISTE$CUT=31-JAN-2007$                                  
+214PO C  References:1956As38, 1958To25, 1961Ru06, 1963Di05, 1969Pe17, 1971Er02, 
+214PO2C  1976Ku08, 1979Ry03, 1982Bo04, 1987El12, 1991Ry01, 1995El07, 1996Sc06,  
+214PO3C  1998Ak04, 2002Ba85, 2003Au03                                           
+214PO T  Auger electrons and X ray energies and emission intensities:           
+214PO T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+214PO T                                                                         
+214PO T        76.864             0.00052  4     XKA2                           
+214PO T        79.293             0.00086  6     XKA1                           
+214PO T                                                                         
+214PO T        89.256         |]                 XKB3                           
+214PO T        89.807         |]  0.00029621     XKB1                           
+214PO T        90.363         |]                 XKB5II                         
+214PO T                                                                         
+214PO T        92.263         |]                 XKB2                           
+214PO T        92.618         |]  0.000092 7     XKB4                           
+214PO T        92.983         |]                 XKO23                          
+214PO T                                                                         
+214PO T        9.66-16.21         0.00080  3     XL (total)                     
+214PO T        9.66               1.90E-5 11     XLL                            
+214PO T        11.0161-11.1303    0.00034918     XLA                            
+214PO T        12.0847            6.7E-6   4     XLC                            
+214PO T        12.8239-13.6358    0.00035615     XLB                            
+214PO T        15.251-16.21       0.000072 3     XLG                            
+218RN  P 0.0         0+                36.0 MS   19             7262.5    19    
+214PO  N 1.0         1.0       1                                                
+214PO  L 0           0+                162.3 US  12                             
+214PO  A 7129.2    1999.873   71                                                
+214PO  L 609.31    6 2+                                                         
+214PO  A 6531.1    190.127    74.8                                              
+214PO  G 609.31    6 0.124    7E2                      0.0204  3                
+214PO2 G KC=0.01487  21$LC=0.00416   6$MC=0.001030 15$NC=0.000264  4            
+                                                                                

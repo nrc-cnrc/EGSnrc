@@ -1,60 +1,64 @@
-212BI    212PB B- DECAY (10.64 H)
-212BI  H TYP=Update$AUT=A.L. Nichols$CUT=30-MAY-2010$
-212BI2 H TYP=Full$AUT=A.L. Nichols$CUT=01-JAN-2004$
-212BI C  Evaluation history: Type=Update;Author=A.L. Nichols;Cutoff date=30-MAY-2010
-212BI2C  Type=Full;Author=A.L. Nichols;Cutoff date=01-JAN-2004
-212BI C  References: 1948Ma30, 1952Bu72, 1953Ma26, 1955To11, 1957Kr49, 1957Ni11, 
-212BI2C  1959Se59, 1960Ro16, 1961Gi02, 1963Da11, 1969Kr06, 1972DaZA, 1973Da38, 
-212BI3C  1977La19, 1978Av01, 1982Sa36, 1983Va22, 1983Sc13, 1984Ge07, 1992Li05, 
-212BI4C  1996Sc06, 1999ScZM, 1999ScZX, 2002Ra45, 2002Ba85, 2003Au03, 2005Br03, 
-212BI5C  2008Ki07
-212BI T  Auger electrons and X ray energies and emission intensities:
-212BI T       {U Energy (keV)}   {U Intensity}  {U Line}
-212BI T
-212BI T        74.8157            10.07   18     XKA2
-212BI T        77.1088            16.9     3     XKA1
-212BI T   
-212BI T        86.835         |]                 XKB3
-212BI T        87.344         |]  5.77    13     XKB1
-212BI T        87.862         |]                 XKB5II
-212BI T   
-212BI T        89.732         |]                 XKB2
-212BI T        90.074         |]  1.77     5     XKB4
-212BI T        90.421         |]                 XKO23
-212BI T   
-212BI T        9.42-15.709        13.8     6     XL (total)
-212BI T        9.42               0.340    9     XLL
-212BI T        10.731-10.839      6.36    16     XLA
-212BI T        11.712             0.103    3     XLC
-212BI T        12.48-13.393       5.76    12     XLB
-212BI T        15.248-15.709      1.111   23     XLG
-212BI T   
-212BI T        57.49-63.42    |]                 KLL AUGER
-212BI T        70.03-77.11    |]  1.29    15     KLX AUGER
-212BI T        82.53-90.52    |]                 KXY AUGER
-212BI T        5.35-10.66         21.4     7     L AUGER
-212PB  P 0.0         0+                10.64 H   1              569.9     19
-212BI  N 1.0         1.0       1         1.0
-212BI  L 0           1-                60.54 M   6
-212BI  B 569.9     1913.3    11          6.74                                1
-212BIS B EAV=171.7 7
-212BI  L 115.183   5 2-                           
-212BI  G 115.183   5 0.624   23[M1]                    6.8     1
-212BI2 G KC=5.53     8$LC=0.972   14$MC=0.229    4
-212BI  L 238.632   2 0-                           
-212BI  B 331.3     1981.7    11          5.18                                  
-212BIS B EAV=93.5 6
-212BI  G 123.449   5 0.052    5[E2]                    2.80    4
-212BI2 G KC=0.421    6$LC=1.766   25$MC=0.468    7
-212BI  G 238.632   2 43.6     5[M1]                    0.872  13
-212BI2 G KC=0.71     1$LC=0.1232  18$MC=0.0290   4
-212BI  L 415.272   111-                           
-212BI  B 154.6     194.99    21          5.35                                1
-212BIS B EAV=41.1 5
-212BI  G 176.640   110.052    5[M1]                    2.02    3
-212BI2 G KC=1.646   23$LC=0.287    4$MC=0.0675  10
-212BI  G 300.089   123.18    14[M1]                    0.464   7
-212BI2 G KC=0.378    6$LC=0.0653  10$MC=0.01534 22
-212BI  G 415.272   110.144   22[M1]                    0.192   3
-212BI2 G KC=0.1571  22$LC=0.0269   4$MC=0.00632  9
- 
+212BI    212PB B- DECAY (10.64 H)                                               
+212BI  H TYP=UPD$AUT=A.L.NICHOLS$CUT=30-MAY-2010$                               
+212BI2 H TYP=FUL$AUT=A.L.NICHOLS$CUT=01-JAN-2004$                               
+212BI C  References:1948Ma30, 1952Bu72, 1953Ma26, 1955To11, 1957Kr49, 1957Ni11, 
+212BI2C  1959Se59, 1960Ro16, 1961Gi02, 1963Da11, 1969Kr06, 1972DaZA, 1973Da38,  
+212BI3C  1977La19, 1978Av01, 1982Sa36, 1983Va22, 1983Sc13, 1984Ge07, 1992Li05,  
+212BI4C  1996Sc06, 1999ScZM, 1999ScZX, 2002Ra45, 2002Ba85, 2003Au03, 2005Br03,  
+212BI5C  2008Ki07                                                               
+212BI T  Auger electrons and X ray energies and emission intensities:           
+212BI T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+212BI T                                                                         
+212BI T        74.8157            10.07   18     XKA2                           
+212BI T        77.1088            16.9     3     XKA1                           
+212BI T                                                                         
+212BI T        86.835         |]                 XKB3                           
+212BI T        87.344         |]  5.77    13     XKB1                           
+212BI T        87.862         |]                 XKB5II                         
+212BI T                                                                         
+212BI T        89.732         |]                 XKB2                           
+212BI T        90.074         |]  1.77     5     XKB4                           
+212BI T        90.421         |]                 XKO23                          
+212BI T                                                                         
+212BI T        9.42-15.709        13.8     6     XL (total)                     
+212BI T        9.42               0.340    9     XLL                            
+212BI T        10.731-10.839      6.36    16     XLA                            
+212BI T        11.712             0.103    3     XLC                            
+212BI T        12.48-13.393       5.76    12     XLB                            
+212BI T        15.248-15.709      1.111   23     XLG                            
+212BI T                                                                         
+212BI T        57.49-63.42    |]                 KLL AUGER                      
+212BI T        70.03-77.11    |]  1.29    15     KLX AUGER                      
+212BI T        82.53-90.52    |]                 KXY AUGER                      
+212BI T        5.35-10.66         21.4     7     L AUGER                        
+212PB  P 0.0         0+                10.64 H   1              569.9     19    
+212BI  N 1.0         1.0       1         1.0                                    
+212BI  L 0           1-                60.54 M   6                              
+212BI  B 569.9     1913.3    11          6.74                                1  
+212BIS B EAV=171.7 7                                                            
+212BI  L 115.183   5 2-                                                         
+212BI  G 115.183   5 0.624   23[M1]                    6.8     1                
+212BI2 G KC=5.53      8$LC=0.972    14$MC=0.229     4$NC=0.0585    9            
+212BI3 G OC=0.01196  17                                                         
+212BI  L 238.632   2 0-                                                         
+212BI  B 331.3     1981.7    11          5.18                                   
+212BIS B EAV=93.5 6                                                             
+212BI  G 123.449   5 0.052    5[E2]                    2.80    4                
+212BI2 G KC=0.421     6$LC=1.766    25$MC=0.468     7$NC=0.1191   17            
+212BI3 G OC=0.0220    3                                                         
+212BI  G 238.632   2 43.6     5[M1]                    0.872  13                
+212BI2 G KC=0.71      1$LC=0.1232   18$MC=0.0290    4$NC=0.00741  11            
+212BI3 G OC=0.001514 22                                                         
+212BI  L 415.272   111-                                                         
+212BI  B 154.6     194.99    21          5.35                                1  
+212BIS B EAV=41.1 5                                                             
+212BI  G 176.640   110.052    5[M1]                    2.02    3                
+212BI2 G KC=1.646    23$LC=0.287     4$MC=0.0675   10$NC=0.01726  25            
+212BI3 G OC=0.00353   5                                                         
+212BI  G 300.089   123.18    14[M1]                    0.464   7                
+212BI2 G KC=0.378     6$LC=0.0653   10$MC=0.01534  22$NC=0.00392   6            
+212BI3 G OC=0.000802 12                                                         
+212BI  G 415.272   110.144   22[M1]                    0.192   3                
+212BI2 G KC=0.1571   22$LC=0.0269    4$MC=0.00632   9$NC=0.001616 23            
+212BI3 G OC=0.000330  5                                                         
+                                                                                

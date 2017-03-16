@@ -1,43 +1,43 @@
-151EU    151SM B- DECAY (94.7 Y)
-151EU  H TYP=Full$AUT=M.M. Bé$CUT=30-NOV-2014$
-151EU C  Evaluation history: Type=Full;Author=M.M. Bé;Cutoff date=30-NOV-2014
-151EU C  References: 1950In01, 1952Ru10, 1952Ka26, 1955Me52, 1959Ac28, 1965Fl02, 
-151EU2C  1966Av05, 1968Re04, 1968Gr25, 1970Fo02, 1970An17, 1971Ca44, 1975La20, 
-151EU3C  1975Fr01, 1977Ve01, 1980La02, 1981Ar17, 1981Un02, 2008Ki07, 2009He22, 
-151EU4C  2012Wa38, 2015Bé**
-151EU T  Auger electrons and X ray energies and emission intensities:
-151EU T       {U Energy (keV)}   {U Intensity}  {U Line}
-151EU T
-151EU T        40.9024                           XKA2
-151EU T        41.5427                           XKA1
-151EU T   
-151EU T        46.904         |]                 XKB3
-151EU T        47.0384        |]                 XKB1
-151EU T        47.373         |]                 XKB5II
-151EU T   
-151EU T        48.257         |]                 XKB2
-151EU T        48.386         |]                 XKB4
-151EU T        48.497         |]                 XKO23
-151EU T   
-151EU T        5.175-7.791        0.121    4     XL (total)
-151EU T        5.175              0.00140  7     XLL
-151EU T        5.815-5.846        0.0343  15     XLA
-151EU T        5.815              0.00074  4     XLC
-151EU T        6.436-6.839        0.0695  19     XLB
-151EU T        7.254-7.791        0.0154   4     XLG
-151EU T   
-151EU T        32.241-34.378  |]                 KLL AUGER
-151EU T        38.592-41.52   |]                 KLX AUGER
-151EU T        44.92-48.48    |]                 KXY AUGER
-151EU T        3.377-7.786        0.581   19     L AUGER
-151SM  P 0.0         5/2-              94.7 Y    6              76.4      5
-151EU  N 1.0         1.0       1         1.0
-151EU  L 0           5/2+                STABLE   
-151EU  B 76.4      5 99.07    4          9                                     
-151EUS B EAV=19.7 2
-151EU  L 21.541    3 7/2+              9.6 NS    3
-151EU  B 54.9      5 0.93     4          7.5                                 1
-151EUS B EAV=14.0 2
-151EU  G 21.541    3 0.0324  13M1+()E2   0.029   2     27.6    5
-151EU2 G LC=21.7     4$MC=4.71     8
- 
+151EU    151SM B- DECAY (94.7 Y)                                                
+151EU  H TYP=FUL$AUT=M.-M.BE$CUT=30-NOV-2014$                                   
+151EU C  References:1950In01, 1952Ru10, 1952Ka26, 1955Me52, 1959Ac28, 1965Fl02, 
+151EU2C  1966Av05, 1968Re04, 1968Gr25, 1970Fo02, 1970An17, 1971Ca44, 1975La20,  
+151EU3C  1975Fr01, 1977Ve01, 1980La02, 1981Ar17, 1981Un02, 2008Ki07, 2009He22,  
+151EU4C  2012Wa38, 2015Be**                                                     
+151EU T  Auger electrons and X ray energies and emission intensities:           
+151EU T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+151EU T                                                                         
+151EU T        40.9024                           XKA2                           
+151EU T        41.5427                           XKA1                           
+151EU T                                                                         
+151EU T        46.904         |]                 XKB3                           
+151EU T        47.0384        |]                 XKB1                           
+151EU T        47.373         |]                 XKB5II                         
+151EU T                                                                         
+151EU T        48.257         |]                 XKB2                           
+151EU T        48.386         |]                 XKB4                           
+151EU T        48.497         |]                 XKO23                          
+151EU T                                                                         
+151EU T        5.175-7.791        0.121    4     XL (total)                     
+151EU T        5.175              0.00140  7     XLL                            
+151EU T        5.815-5.846        0.0343  15     XLA                            
+151EU T        5.815              0.00074  4     XLC                            
+151EU T        6.436-6.839        0.0695  19     XLB                            
+151EU T        7.254-7.791        0.0154   4     XLG                            
+151EU T                                                                         
+151EU T        32.241-34.378  |]                 KLL AUGER                      
+151EU T        38.592-41.52   |]                 KLX AUGER                      
+151EU T        44.92-48.48    |]                 KXY AUGER                      
+151EU T        3.377-7.786        0.581   19     L AUGER                        
+151SM  P 0.0         5/2-              94.7 Y    6              76.4      5     
+151EU  N 1.0         1.0       1         1.0                                    
+151EU  L 0           5/2+               STABLE                                  
+151EU  B 76.4      5 99.07    4          9                                      
+151EUS B EAV=19.7 2                                                             
+151EU  L 21.541    3 7/2+              9.6 NS    3                              
+151EU  B 54.9      5 0.93     4          7.5                                 1  
+151EUS B EAV=14.0 2                                                             
+151EU  G 21.541    3 0.0324  13M1+E2     0.029   2     27.6    5                
+151EU2 G LC=21.7      4$MC=4.71      8$NC=1.074    18                           
+151EU3 G OC=0.168     3                                                         
+                                                                                

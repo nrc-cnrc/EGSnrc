@@ -1,35 +1,34 @@
- 82RB     82SR EC DECAY (25.347 D)
- 82RB  H TYP=FuLL$AUT=M.M. Bé$CUT=01-DEC-2014$
- 82RB C  Evaluation history: Type=FuLL;Author=M.M. Bé;Cutoff date=01-DEC-2014
- 82RB C  References: 1953Li27, 1953Kr10, 1958Sa20, 1978Gr17, 1987Ju02, 1987Ho06, 
- 82RB2C  1996Sc06, 1998Sc28, 2000Sc47, 2009Pi02, 2012Wa38
- 82RB T  Auger electrons and X ray energies and emission intensities:
- 82RB T       {U Energy (keV)}   {U Intensity}  {U Line}
- 82RB T
- 82RB T        13.3359            16.79   14     XKA2
- 82RB T        13.3955            32.32   22     XKA1
- 82RB T   
- 82RB T        14.9519        |]                 XKB3
- 82RB T        14.9614        |]  7.87     9     XKB1
- 82RB T        15.085         |]                 XKB5II
- 82RB T   
- 82RB T        15.1856        |]                 XKB2
- 82RB T        15.205         |]  0.91     4     XKB4
- 82RB T   
- 82RB T        1.484-2.051        2.52     5     XL (total)
- 82RB T        1.484              0.0619  17     XLL
- 82RB T        1.693-1.695        1.56     4     XLA
- 82RB T        1.543              0.0272   8     XLC
- 82RB T        1.752-1.954        0.855   21     XLB
- 82RB T        1.831-2.051        0.01242 27     XLG
- 82RB T   
- 82RB T        10.987-11.503  |]                 KLL AUGER
- 82RB T        12.782-13.381  |]  28.0     4     KLX AUGER
- 82RB T        14.556-15.172  |]                 KXY AUGER
- 82RB T        1.16-2.05          105.7    5     L AUGER
- 82SR  P 0.0         0+                25.347 D  17             178       7
- 82RB  N 1.0         1.0       1         1.0
- 82RB  L 0           1+                  STABLE   
- 82RB  E                       100       4.7                                   
- 82RB2 E CK=0.859 2$CL=0.116 2$CM=0.022 1$CN=0.0031 2
- 
+ 82RB    82SR EC DECAY (25.347 D)                                               
+ 82RB  H TYP=FUL$AUT=M.-M.BE$CUT=01-DEC-2014$                                   
+ 82RB C  References:1953Li27, 1953Kr10, 1958Sa20, 1978Gr17, 1987Ju02, 1987Ho06, 
+ 82RB2C  1996Sc06, 1998Sc28, 2000Sc47, 2009Pi02, 2012Wa38                       
+ 82RB T  Auger electrons and X ray energies and emission intensities:           
+ 82RB T       {U Energy (keV)}   {U Intensity}  {U Line}                        
+ 82RB T                                                                         
+ 82RB T        13.3359            16.79   14     XKA2                           
+ 82RB T        13.3955            32.32   22     XKA1                           
+ 82RB T                                                                         
+ 82RB T        14.9519        |]                 XKB3                           
+ 82RB T        14.9614        |]  7.87     9     XKB1                           
+ 82RB T        15.085         |]                 XKB5II                         
+ 82RB T                                                                         
+ 82RB T        15.1856        |]                 XKB2                           
+ 82RB T        15.205         |]  0.91     4     XKB4                           
+ 82RB T                                                                         
+ 82RB T        1.484-2.051        2.52     5     XL (total)                     
+ 82RB T        1.484              0.0619  17     XLL                            
+ 82RB T        1.693-1.695        1.56     4     XLA                            
+ 82RB T        1.543              0.0272   8     XLC                            
+ 82RB T        1.752-1.954        0.855   21     XLB                            
+ 82RB T        1.831-2.051        0.01242 27     XLG                            
+ 82RB T                                                                         
+ 82RB T        10.987-11.503  |]                 KLL AUGER                      
+ 82RB T        12.782-13.381  |]  28.0     4     KLX AUGER                      
+ 82RB T        14.556-15.172  |]                 KXY AUGER                      
+ 82RB T        1.16-2.05          105.7    5     L AUGER                        
+ 82SR  P 0.0         0+                25.347 D  17             178       7     
+ 82RB  N 1.0         1.0       1         1.0                                    
+ 82RB  L 0           1+                 STABLE                                  
+ 82RB  E                       100       4.7                                    
+ 82RB2 E CK=0.859     2$CL=0.116     2$CM=0.022     1$CN=0.0031    2            
+                                                                                
