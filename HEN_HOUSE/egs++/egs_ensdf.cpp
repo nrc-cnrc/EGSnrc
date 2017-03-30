@@ -37,6 +37,162 @@
 
 #include "egs_ensdf.h"
 
+map<string, unsigned short int> getElementMap() {
+    map<string, unsigned short int> elementTable;
+    elementTable["H"] = 1;
+    elementTable["HE"] = 2;
+    elementTable["LI"] = 3;
+    elementTable["BE"] = 4;
+    elementTable["B"] = 5;
+    elementTable["C"] = 6;
+    elementTable["N"] = 7;
+    elementTable["O"] = 8;
+    elementTable["F"] = 9;
+    elementTable["NE"] = 10;
+    elementTable["NA"] = 11;
+    elementTable["MG"] = 12;
+    elementTable["AL"] = 13;
+    elementTable["SI"] = 14;
+    elementTable["P"] = 15;
+    elementTable["S"] = 16;
+    elementTable["CL"] = 17;
+    elementTable["AR"] = 18;
+    elementTable["K"] = 19;
+    elementTable["CA"] = 20;
+    elementTable["SC"] = 21;
+    elementTable["TI"] = 22;
+    elementTable["V"] = 23;
+    elementTable["CR"] = 24;
+    elementTable["MN"] = 25;
+    elementTable["FE"] = 26;
+    elementTable["CO"] = 27;
+    elementTable["NI"] = 28;
+    elementTable["CU"] = 29;
+    elementTable["ZN"] = 30;
+    elementTable["GA"] = 31;
+    elementTable["GE"] = 32;
+    elementTable["AS"] = 33;
+    elementTable["SE"] = 34;
+    elementTable["BR"] = 35;
+    elementTable["KR"] = 36;
+    elementTable["RB"] = 37;
+    elementTable["SR"] = 38;
+    elementTable["Y"] = 39;
+    elementTable["ZR"] = 40;
+    elementTable["NB"] = 41;
+    elementTable["MO"] = 42;
+    elementTable["TC"] = 43;
+    elementTable["RU"] = 44;
+    elementTable["RH"] = 45;
+    elementTable["PD"] = 46;
+    elementTable["AG"] = 47;
+    elementTable["CD"] = 48;
+    elementTable["IN"] = 49;
+    elementTable["SN"] = 50;
+    elementTable["SB"] = 51;
+    elementTable["TE"] = 52;
+    elementTable["I"] = 53;
+    elementTable["XE"] = 54;
+    elementTable["CS"] = 55;
+    elementTable["BA"] = 56;
+    elementTable["LA"] = 57;
+    elementTable["CE"] = 58;
+    elementTable["PR"] = 59;
+    elementTable["ND"] = 60;
+    elementTable["PM"] = 61;
+    elementTable["SM"] = 62;
+    elementTable["EU"] = 63;
+    elementTable["GD"] = 64;
+    elementTable["TB"] = 65;
+    elementTable["DY"] = 66;
+    elementTable["HO"] = 67;
+    elementTable["ER"] = 68;
+    elementTable["TM"] = 69;
+    elementTable["YB"] = 70;
+    elementTable["LU"] = 71;
+    elementTable["HF"] = 72;
+    elementTable["TA"] = 73;
+    elementTable["W"] = 74;
+    elementTable["RE"] = 75;
+    elementTable["OS"] = 76;
+    elementTable["IR"] = 77;
+    elementTable["PT"] = 78;
+    elementTable["AU"] = 79;
+    elementTable["HG"] = 80;
+    elementTable["TL"] = 81;
+    elementTable["PB"] = 82;
+    elementTable["BI"] = 83;
+    elementTable["PO"] = 84;
+    elementTable["AT"] = 85;
+    elementTable["RN"] = 86;
+    elementTable["FR"] = 87;
+    elementTable["RA"] = 88;
+    elementTable["AC"] = 89;
+    elementTable["TH"] = 90;
+    elementTable["PA"] = 91;
+    elementTable["U"] = 92;
+    elementTable["NP"] = 93;
+    elementTable["PU"] = 94;
+    elementTable["AM"] = 95;
+    elementTable["CM"] = 96;
+    elementTable["BK"] = 97;
+    elementTable["CF"] = 98;
+    elementTable["ES"] = 99;
+    elementTable["FM"] = 100;
+    elementTable["MD"] = 101;
+    elementTable["NO"] = 102;
+    elementTable["LR"] = 103;
+    elementTable["RF"] = 104;
+    elementTable["DB"] = 105;
+    elementTable["SG"] = 106;
+    elementTable["BH"] = 107;
+    elementTable["HS"] = 108;
+    elementTable["MT"] = 109;
+    elementTable["DS"] = 110;
+    elementTable["RG"] = 111;
+    elementTable["CN"] = 112;
+    elementTable["UUT"] = 113;
+    elementTable["UUQ"] = 114;
+    elementTable["UUP"] = 115;
+    elementTable["UUH"] = 116;
+    elementTable["UUS"] = 117;
+    elementTable["UUO"] = 118;
+
+    return elementTable;
+}
+
+unsigned short int findZ(string element) {
+
+    transform(element.begin(), element.end(), element.begin(), ::toupper);
+
+    map<string, unsigned short int> elementMap = getElementMap();
+
+    if (elementMap.find(element) != elementMap.end()) {
+        return elementMap[element];
+    }
+    else {
+        return 0;
+    }
+}
+
+unsigned short int setZ(string id) {
+
+    string element;
+    for (unsigned int i=0; i < id.length(); ++i) {
+        if (!isdigit(id[i])) {
+            element.push_back(id[i]);
+        }
+    }
+
+    unsigned short int Z = findZ(element);
+    if (Z == 0) {
+        egsWarning("setZ: Warning: Element does not exist "
+                   "in our data (%s)\n", element.c_str());
+    }
+
+    return Z;
+}
+
 EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
                      const string useFluor, int verbosity) {
 
@@ -50,7 +206,8 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
     radionuclide = isotope.substr(0, isotope.find_last_of("."));
 
     // The parent element
-    //string element = radionuclide.substr(0, radionuclide.find("-"));
+    string element = radionuclide.substr(0, radionuclide.find("-"));
+    Z = setZ(element);
 
     egsInformation("EGS_Ensdf::EGS_Ensdf: Isotope: "
                    "%s\n",isotope.c_str());
@@ -300,61 +457,6 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         myBetaRecords.push_back(*it);
     }
 
-    // For each parent record, search through all disintegration types
-    // (betas, alphas) to see if any exist
-    // If no disintegrations exist for the parent, but we do have internal
-    // transition (IT) gammas, then we must have a metastable radionuclide
-    // In this case, add the gammas to the myMetastableGammaRecords vector
-    if (verbose) {
-        egsInformation("EGS_Ensdf::parseEnsdf: Checking for metastable radionuclides...\n");
-    }
-    for (vector<ParentRecord * >::iterator parent = myParentRecords.begin();
-            parent!=myParentRecords.end(); parent++) {
-
-        bool gotDisint = false;
-        for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
-                beta != myBetaRecords.end(); beta++) {
-
-            if ((*beta)->getParentRecord() == *parent) {
-                gotDisint = true;
-                break;
-            }
-        }
-        if (!gotDisint) {
-            for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
-                    alpha != myAlphaRecords.end(); alpha++) {
-
-                if ((*alpha)->getParentRecord() == *parent) {
-                    gotDisint = true;
-                    break;
-                }
-            }
-        }
-
-        if (!gotDisint) {
-            for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                    gamma < myGammaRecords.end();) {
-
-                if ((*gamma)->getParentRecord() == *parent) {
-                    myMetastableGammaRecords.push_back(*gamma);
-                    myGammaRecords.erase(gamma);
-                }
-                else {
-                    gamma++;
-                }
-            }
-
-            if (verbose && myMetastableGammaRecords.size() > 0) {
-                egsInformation("EGS_Ensdf::parseEnsdf: Metastable isotope "
-                               "detected.\n");
-            }
-        }
-    }
-    if (verbose && myMetastableGammaRecords.size() < 1) {
-        egsInformation("EGS_Ensdf::parseEnsdf: No metastable isotopes "
-                       "detected.\n");
-    }
-
     // Get X-ray and auger emissions from comments
     if (useFluorescence == "yes") {
         if (verbose) {
@@ -369,7 +471,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     // Get rid of very low emission probability particles
-    double minimumIntensity = 1e-6;
+    double minimumIntensity = 1e-10;
     for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
             beta != myBetaRecords.end();) {
         if ((*beta)->getBetaIntensity() <= minimumIntensity) {
@@ -431,6 +533,152 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
     }
 
+    // Get the total gamma transition intensity of each level
+    unsigned int j = 0;
+    vector<double> totalLevelIntensity;
+    totalLevelIntensity.resize(myLevelRecords.size());
+    for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
+            it!=myLevelRecords.end(); ++it) {
+
+        totalLevelIntensity[j] = 0;
+        for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                gamma != myGammaRecords.end(); gamma++) {
+
+            if ((*gamma)->getLevelRecord() == (*it)) {
+                totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
+            }
+        }
+        ++j;
+    }
+
+    // Determine the final level that the gammas decay towards
+    // We have to use the gamma decay energy to guess at the resulting
+    // energy state of the radionuclide
+    for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+            gamma != myGammaRecords.end(); gamma++) {
+
+        double energy = (*gamma)->getDecayEnergy();
+        double guessedLevelEnergy =
+            ((*gamma)->getLevelRecord()->getEnergy() - energy);
+
+        if (verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: Gamma "
+                           "(LevelE,E,GuessedE): "
+                           "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
+                           energy, guessedLevelEnergy);
+        }
+
+        double bestMatch = 1E10;
+        LevelRecord *level;
+        for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
+                it!=myLevelRecords.end(); it++) {
+
+            double testMatch = fabs((*it)->getEnergy()-guessedLevelEnergy);
+
+            if (testMatch < bestMatch &&
+                    (testMatch < guessedLevelEnergy*0.3 || testMatch < 20)) {
+
+                bestMatch = testMatch;
+                level = (*it);
+            }
+        }
+        if (bestMatch == 1E10) {
+            egsWarning("EGS_Ensdf::parseEnsdf: Warning: Could "
+                       "not find a level with energy matching decay "
+                       "of gamma with energy E=%f; "
+                       "assuming final level is ground state\n",energy);
+            (*gamma)->setFinalLevel(myLevelRecords.front());
+        }
+        else {
+            (*gamma)->setFinalLevel(level);
+        }
+
+        if (verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: Gamma (final level E, I, Igamma): "
+                           "%f %f %f\n",level->getEnergy(), (*gamma)->getTransitionIntensity(), (*gamma)->getGammaIntensity());
+        }
+
+        (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
+    }
+
+    // For each parent record, search through all disintegration types
+    // (betas, alphas) to see if any exist
+    // If no disintegrations exist for the parent, but we do have internal
+    // transition (IT) gammas, then we must have a metastable radionuclide
+    // In this case, add the gammas to the myMetastableGammaRecords vector
+    if (verbose) {
+        egsInformation("EGS_Ensdf::parseEnsdf: Checking for metastable radionuclides...\n");
+    }
+    for (vector<ParentRecord * >::iterator parent = myParentRecords.begin();
+            parent!=myParentRecords.end(); parent++) {
+
+        bool gotDisint = false;
+        for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
+                beta != myBetaRecords.end(); beta++) {
+
+            if ((*beta)->getParentRecord() == *parent) {
+                gotDisint = true;
+                break;
+            }
+        }
+        if (!gotDisint) {
+            for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
+                    alpha != myAlphaRecords.end(); alpha++) {
+
+                if ((*alpha)->getParentRecord() == *parent) {
+                    gotDisint = true;
+                    break;
+                }
+            }
+        }
+
+        // No disintegrations, so this must be metastable
+        if (!gotDisint) {
+            // We're going to need to "fake" disintegrations toward each level
+            j=0;
+            for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
+                    it!=myLevelRecords.end(); ++it) {
+
+                double disintIntensity = (*it)->getDisintegrationIntensity();
+                if (disintIntensity < epsilon) {
+                    bool gotDecayToLevel = false;
+                    for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                            gamma < myGammaRecords.end(); ++gamma) {
+
+                        // For each gamma matching the current level and parent
+                        if ((*gamma)->getParentRecord() == *parent && (*gamma)->getLevelRecord() == (*it)) {
+
+                            // Once per level, we create a zero energy disintegration
+                            // with intensity equal to the gamma transition intensity
+                            // leaving the level
+                            if (!gotDecayToLevel) {
+                                gotDecayToLevel = true;
+
+                                // Push a copy of the gamma record
+                                myMetastableGammaRecords.push_back(new GammaRecord(*gamma));
+
+                                // Set the transition intensity to be the disintegration
+                                // intensity leading towards this level
+                                myMetastableGammaRecords.back()->setTransitionIntensity(totalLevelIntensity[j]);
+                            }
+                        }
+                    }
+
+                    if (verbose && myMetastableGammaRecords.size() > 0) {
+                        egsInformation("EGS_Ensdf::parseEnsdf: Metastable isotope "
+                                       "detected.\n");
+                    }
+                }
+
+                ++j;
+            }
+        }
+    }
+    if (verbose && myMetastableGammaRecords.size() < 1) {
+        egsInformation("EGS_Ensdf::parseEnsdf: No metastable isotopes "
+                       "detected.\n");
+    }
+
     // Check for instances where the intensity of disintegrations that
     // lead towards a particular excited daughter level is less than
     // the intensities of gamma transitions from it.
@@ -441,45 +689,41 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     if (verbose) {
         egsInformation("EGS_Ensdf::parseEnsdf: Comparing the cumulative disintegration intensity of each level with the gamma transition intensities... \n");
     }
-    unsigned int j = 0;
-    vector<double> totalLevelIntensity;
-    totalLevelIntensity.resize(myLevelRecords.size());
-    for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
-            it!=myLevelRecords.end(); it++) {
+    j = myLevelRecords.size()-1;
+    // Iterate in reverse through the levels (highest level first)
+    // This ensures we modify the intensities feeding the lower levels first
+    for (vector<LevelRecord * >::reverse_iterator it = myLevelRecords.rbegin();
+            it!=myLevelRecords.rend(); ++it) {
 
         double disintIntensity = (*it)->getDisintegrationIntensity();
 
-        totalLevelIntensity[j] = 0;
-        for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                gamma != myGammaRecords.end(); gamma++) {
+        egsInformation("EGS_Ensdf::parseEnsdf: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
 
-            if ((*gamma)->getLevelRecord() == (*it)) {
-                totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-            }
-        }
-
-        if (totalLevelIntensity[j] > disintIntensity) {
+        // Notice that we don't do this if disintIntensity==0
+        if (disintIntensity > epsilon && totalLevelIntensity[j] > disintIntensity + epsilon) {
             for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
                     gamma != myGammaRecords.end(); gamma++) {
 
                 if ((*gamma)->getLevelRecord() == (*it)) {
-                    // Add a faction of these gammas to the X-Rays since
-                    // they are uncorrelated with disintegrations
-                    xrayEnergies.push_back((*gamma)->getDecayEnergy());
-                    xrayIntensities.push_back(
-                        (*gamma)->getTransitionIntensity() * (1. - disintIntensity/totalLevelIntensity[j])
-                    );
+                    double multipleTransitionProb = (1.-disintIntensity/totalLevelIntensity[j]);
+
+                    (*gamma)->setMultiTransitionProb(multipleTransitionProb);
+
+                    egsInformation("EGS_Ensdf::parseEnsdf: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
 
                     // Reduce the transition intensities
                     // Now they will add to 1
                     (*gamma)->setTransitionIntensity(
                         (*gamma)->getTransitionIntensity() * disintIntensity/totalLevelIntensity[j]
                     );
+                    (*gamma)->setGammaIntensity(
+                        (*gamma)->getGammaIntensity() * disintIntensity/totalLevelIntensity[j]
+                    );
                 }
             }
         }
 
-        ++j;
+        --j;
     }
 
     for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
@@ -609,33 +853,15 @@ void EGS_Ensdf::normalizeIntensities() {
 
         totalDecayIntensity += (*alpha)->getAlphaIntensity();
     }
-    double totalMetastableGammaIntensity = 0;
     for (vector<GammaRecord *>::iterator gamma = myMetastableGammaRecords.begin();
             gamma != myMetastableGammaRecords.end(); gamma++) {
 
         if (verbose > 1) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                           (*gamma)->getDecayEnergy(),
+            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (I): %f\n",
                            (*gamma)->getTransitionIntensity());
         }
 
-        totalMetastableGammaIntensity += (*gamma)->getTransitionIntensity();
         totalDecayIntensity += (*gamma)->getTransitionIntensity();
-    }
-    if (totalMetastableGammaIntensity > 0 && totalMetastableGammaIntensity < 100. - epsilon) {
-        double metastableFailIntensity = 100. - totalMetastableGammaIntensity;
-        totalDecayIntensity += metastableFailIntensity;
-
-        if (verbose) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma adds to less than 100%%. Fail chance (per 100 disintegrations): %f\n", metastableFailIntensity);
-        }
-
-        // Push a copy of the last metastable gamma onto the vector
-        myMetastableGammaRecords.push_back(new GammaRecord(myMetastableGammaRecords.back()));
-
-        // Edit that copy so that it has zero energy and the right
-        // intensity corresponding to the chance of no internal transition
-        myMetastableGammaRecords.back()->setTransitionIntensity(metastableFailIntensity);
     }
     for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
         if (verbose > 1) {
@@ -656,7 +882,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
     if (verbose) {
         egsInformation("EGS_Ensdf::normalizeIntensities: totalDecayIntensity: "
-                       "%f\n",totalDecayIntensity);
+                       "%f\n\n",totalDecayIntensity);
         egsInformation("EGS_Ensdf::normalizeIntensities: "
                        "Calculating renormalized intensities...\n");
     }
@@ -723,8 +949,8 @@ void EGS_Ensdf::normalizeIntensities() {
         lastIntensity = (*gamma)->getTransitionIntensity();
 
         if (verbose) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (E,I): %f %f\n",
-                           (*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+            egsInformation("EGS_Ensdf::normalizeIntensities: MetastableGamma (I): %f\n",
+                           (*gamma)->getTransitionIntensity());
         }
     }
 
@@ -766,56 +992,6 @@ void EGS_Ensdf::normalizeIntensities() {
         }
     }
 
-    // Determine the final level that the gammas decay towards
-    // We have to use the gamma decay energy to guess at the resulting
-    // energy state of the radionuclide
-    for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-            gamma != myGammaRecords.end(); gamma++) {
-
-        double energy = (*gamma)->getDecayEnergy();
-        double guessedLevelEnergy =
-            ((*gamma)->getLevelRecord()->getEnergy() - energy);
-
-        if (verbose) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma "
-                           "(LevelE,E,GuessedE): "
-                           "%f %f %f\n",(*gamma)->getLevelRecord()->getEnergy(),
-                           energy, guessedLevelEnergy);
-        }
-
-        double bestMatch = 1E10;
-        LevelRecord *level;
-        for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
-                it!=myLevelRecords.end(); it++) {
-
-            double testMatch = fabs((*it)->getEnergy()-guessedLevelEnergy);
-
-            if (testMatch < bestMatch &&
-                    (testMatch < guessedLevelEnergy*0.3 || testMatch < 20)) {
-
-                bestMatch = testMatch;
-                level = (*it);
-            }
-        }
-        if (bestMatch == 1E10) {
-            egsWarning("EGS_Ensdf::normalizeIntensities: Warning: Could "
-                       "not find a level with energy matching decay "
-                       "of gamma with energy E=%f; "
-                       "assuming final level is ground state\n",energy);
-            (*gamma)->setFinalLevel(myLevelRecords.front());
-        }
-        else {
-            (*gamma)->setFinalLevel(level);
-        }
-
-        if (verbose) {
-            egsInformation("EGS_Ensdf::normalizeIntensities: Gamma (final level E, I): "
-                           "%f %f\n",level->getEnergy(), (*gamma)->getTransitionIntensity());
-        }
-
-        (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
-    }
-
     // Get the gamma transition intensities
     // and the total intensity for each level
     unsigned int j = 0;
@@ -835,12 +1011,13 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
 
+        if (verbose > 1) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: "
+                           "totalLevelIntensity: %f\n", totalLevelIntensity[j]);
+        }
+
         if (disintIntensity > epsilon && totalLevelIntensity[j] < disintIntensity + epsilon) {
             totalLevelIntensity[j] = disintIntensity;
-            if (verbose > 1) {
-                egsInformation("EGS_Ensdf::normalizeIntensities: "
-                               "disintegrationIntensity: %f\n", totalLevelIntensity[j]);
-            }
         }
         ++j;
     }
@@ -858,6 +1035,10 @@ void EGS_Ensdf::normalizeIntensities() {
             if ((*gamma)->getLevelRecord() == (*it)) {
                 levelCanDecay = true;
 
+                (*gamma)->setGammaIntensity(
+                    (*gamma)->getGammaIntensity() /
+                    (*gamma)->getTransitionIntensity());
+
                 if (totalLevelIntensity[j] > epsilon) {
                     (*gamma)->setTransitionIntensity(
                         (*gamma)->getTransitionIntensity() /
@@ -873,9 +1054,10 @@ void EGS_Ensdf::normalizeIntensities() {
 
                 if (verbose > 1) {
                     egsInformation("EGS_Ensdf::normalizeIntensities: "
-                                   "Gamma (level,E,I): "
-                                   "%d %f %f\n",
-                                   j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity());
+                                   "Gamma (level,E,I,Igamma): "
+                                   "%d %f %f %f\n",
+                                   j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity(),
+                                   (*gamma)->getGammaIntensity());
                 }
             }
         }
@@ -1181,6 +1363,42 @@ double Record::recordToDouble(int startPos, int endPos) {
     }
 }
 
+string Record::recordToString(int startPos, int endPos) {
+    if (!lines.empty()) {
+        if (lines.front().length() < startPos) {
+            egsWarning("Record::recordToString: Warning: Record too short to "
+                       "contain desired quantity\n");
+            return "";
+        }
+
+        return lines.front().substr(startPos-1, endPos-startPos+1);
+    }
+    else {
+        egsWarning("Record::recordToString: Error: Record is empty\n");
+        return "";
+    }
+}
+
+double Record::getTag(string searchString) {
+    if (lines.size() > 1) {
+
+        for (int i=1; i<lines.size(); ++i) {
+
+            int tagPos = lines[i].find(searchString);
+
+            if (tagPos != std::string::npos) {
+                tagPos += searchString.length();
+
+                string record = lines[i].substr(tagPos,
+                                                lines[i].find(" ",tagPos)-tagPos);
+
+                return atof(record.c_str());
+            }
+        }
+    }
+    return 0;
+}
+
 // Parse a halflife from a record
 // Converts the units to seconds
 // Returns the halflife, or a negative number upon failure
@@ -1191,7 +1409,7 @@ double Record::parseHalfLife(int startPos, int endPos) {
     }
     if (lines.front().length() < startPos) {
         egsWarning("Record::parseHalfLife: Warning: Record too short to "
-                    "contain desired quantity\n");
+                   "contain desired quantity\n");
         return -5;
     }
 
@@ -1289,162 +1507,6 @@ double Record::parseHalfLife(int startPos, int endPos) {
     return hl;
 }
 
-unsigned short int Record::setZ(string id) {
-
-    string element;
-    for (unsigned int i=0; i < id.length(); ++i) {
-        if (!isdigit(id[i])) {
-            element.push_back(id[i]);
-        }
-    }
-
-    unsigned short int Z = findZ(element);
-    if (Z == 0) {
-        egsWarning("EGS_Ensdf::createIsotope: Warning: Element does not exist "
-                   "in our data (%s)\n", element.c_str());
-    }
-
-    return Z;
-}
-
-map<string, unsigned short int> Record::getElementMap() {
-    map<string, unsigned short int> elementTable;
-    elementTable["H"] = 1;
-    elementTable["HE"] = 2;
-    elementTable["LI"] = 3;
-    elementTable["BE"] = 4;
-    elementTable["B"] = 5;
-    elementTable["C"] = 6;
-    elementTable["N"] = 7;
-    elementTable["O"] = 8;
-    elementTable["F"] = 9;
-    elementTable["NE"] = 10;
-    elementTable["NA"] = 11;
-    elementTable["MG"] = 12;
-    elementTable["AL"] = 13;
-    elementTable["SI"] = 14;
-    elementTable["P"] = 15;
-    elementTable["S"] = 16;
-    elementTable["CL"] = 17;
-    elementTable["AR"] = 18;
-    elementTable["K"] = 19;
-    elementTable["CA"] = 20;
-    elementTable["SC"] = 21;
-    elementTable["TI"] = 22;
-    elementTable["V"] = 23;
-    elementTable["CR"] = 24;
-    elementTable["MN"] = 25;
-    elementTable["FE"] = 26;
-    elementTable["CO"] = 27;
-    elementTable["NI"] = 28;
-    elementTable["CU"] = 29;
-    elementTable["ZN"] = 30;
-    elementTable["GA"] = 31;
-    elementTable["GE"] = 32;
-    elementTable["AS"] = 33;
-    elementTable["SE"] = 34;
-    elementTable["BR"] = 35;
-    elementTable["KR"] = 36;
-    elementTable["RB"] = 37;
-    elementTable["SR"] = 38;
-    elementTable["Y"] = 39;
-    elementTable["ZR"] = 40;
-    elementTable["NB"] = 41;
-    elementTable["MO"] = 42;
-    elementTable["TC"] = 43;
-    elementTable["RU"] = 44;
-    elementTable["RH"] = 45;
-    elementTable["PD"] = 46;
-    elementTable["AG"] = 47;
-    elementTable["CD"] = 48;
-    elementTable["IN"] = 49;
-    elementTable["SN"] = 50;
-    elementTable["SB"] = 51;
-    elementTable["TE"] = 52;
-    elementTable["I"] = 53;
-    elementTable["XE"] = 54;
-    elementTable["CS"] = 55;
-    elementTable["BA"] = 56;
-    elementTable["LA"] = 57;
-    elementTable["CE"] = 58;
-    elementTable["PR"] = 59;
-    elementTable["ND"] = 60;
-    elementTable["PM"] = 61;
-    elementTable["SM"] = 62;
-    elementTable["EU"] = 63;
-    elementTable["GD"] = 64;
-    elementTable["TB"] = 65;
-    elementTable["DY"] = 66;
-    elementTable["HO"] = 67;
-    elementTable["ER"] = 68;
-    elementTable["TM"] = 69;
-    elementTable["YB"] = 70;
-    elementTable["LU"] = 71;
-    elementTable["HF"] = 72;
-    elementTable["TA"] = 73;
-    elementTable["W"] = 74;
-    elementTable["RE"] = 75;
-    elementTable["OS"] = 76;
-    elementTable["IR"] = 77;
-    elementTable["PT"] = 78;
-    elementTable["AU"] = 79;
-    elementTable["HG"] = 80;
-    elementTable["TL"] = 81;
-    elementTable["PB"] = 82;
-    elementTable["BI"] = 83;
-    elementTable["PO"] = 84;
-    elementTable["AT"] = 85;
-    elementTable["RN"] = 86;
-    elementTable["FR"] = 87;
-    elementTable["RA"] = 88;
-    elementTable["AC"] = 89;
-    elementTable["TH"] = 90;
-    elementTable["PA"] = 91;
-    elementTable["U"] = 92;
-    elementTable["NP"] = 93;
-    elementTable["PU"] = 94;
-    elementTable["AM"] = 95;
-    elementTable["CM"] = 96;
-    elementTable["BK"] = 97;
-    elementTable["CF"] = 98;
-    elementTable["ES"] = 99;
-    elementTable["FM"] = 100;
-    elementTable["MD"] = 101;
-    elementTable["NO"] = 102;
-    elementTable["LR"] = 103;
-    elementTable["RF"] = 104;
-    elementTable["DB"] = 105;
-    elementTable["SG"] = 106;
-    elementTable["BH"] = 107;
-    elementTable["HS"] = 108;
-    elementTable["MT"] = 109;
-    elementTable["DS"] = 110;
-    elementTable["RG"] = 111;
-    elementTable["CN"] = 112;
-    elementTable["UUT"] = 113;
-    elementTable["UUQ"] = 114;
-    elementTable["UUP"] = 115;
-    elementTable["UUH"] = 116;
-    elementTable["UUS"] = 117;
-    elementTable["UUO"] = 118;
-
-    return elementTable;
-}
-
-unsigned short int Record::findZ(string element) {
-
-    transform(element.begin(), element.end(), element.begin(), ::toupper);
-
-    map<string, unsigned short int> elementMap = getElementMap();
-
-    if (elementMap.find(element) != elementMap.end()) {
-        return elementMap[element];
-    }
-    else {
-        return 0;
-    }
-}
-
 // Comment Record
 CommentRecord::CommentRecord(vector<string> ensdf):Record(ensdf) {
     processEnsdf();
@@ -1511,6 +1573,40 @@ void NormalizationRecord::processEnsdf() {
     normalizeTransition = recordToDouble(22, 29);
     normalizeBranch = recordToDouble(32, 39);
     normalizeBeta = recordToDouble(42, 49);
+
+    // Get the daughter element
+    string element = egsTrimString(recordToString(4, 5));
+
+    // Get the Z
+    Z = setZ(element);
+
+    // Load atomic relaxations
+    relaxations = new EGS_AtomicRelaxations();
+    relaxations->loadData(Z);
+
+    // Get the number of shells
+    nshell = relaxations->getNShell(Z);
+
+    egsInformation("NormalizationRecord::processEnsdf(): Z, nshell: %d %d\n",Z,nshell);
+}
+
+EGS_AtomicRelaxations *NormalizationRecord::getRelaxations() const {
+    return relaxations;
+}
+
+int NormalizationRecord::getNShell() const {
+    return nshell;
+}
+
+double NormalizationRecord::getBindingEnergy(int shell) const {
+    return relaxations->getBindingEnergy(Z,shell);
+}
+
+void NormalizationRecord::relax(int shell,
+                                EGS_Float ecut, EGS_Float pcut,
+                                EGS_RandomGenerator *rndm, double &edep,
+                                EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+    relaxations->relax(Z,shell,ecut,pcut,rndm,edep,particles);
 }
 
 // Multiplier for converting relative photon intensity to photons per 100
@@ -1713,6 +1809,9 @@ void BetaPlusRecord::processEnsdf() {
     finalEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     positronIntensity = recordToDouble(22, 29);
     ecIntensity = recordToDouble(32, 39);
+
+    egsInformation("BetaPlusRecord::processEnsdf: (E,Ipos,Iec): %f %f %f\n",finalEnergy,positronIntensity,ecIntensity);
+
     if (getNormalizationRecord()) {
         positronIntensity *= getNormalizationRecord()->getBetaMultiplier() *
                              getNormalizationRecord()->getBranchMultiplier();
@@ -1741,6 +1840,77 @@ void BetaPlusRecord::processEnsdf() {
             finalEnergy = 0.;
         }
     }
+
+    if (ecIntensity > 0) {
+        // Get the number of shells
+        int nshell = getNormalizationRecord()->getNShell();
+
+        double icK = getTag("CK=");
+        double icL = getTag("CL=");
+        double icM = getTag("CM=");
+        double icN = getTag("CN=");
+        double icO = getTag("CO=");
+
+        // The K shell
+        ecShellIntensity.push_back(icK);
+
+        // The L1, L2, L3 shells
+        // TODO: Equal probability is assigned to subshells!
+        //       This assumption is an approximation
+        int numShellsToInclude = min(4,nshell);
+        for (unsigned int i=1; i<numShellsToInclude; ++i) {
+            ecShellIntensity.push_back(ecShellIntensity.back() + icL/(numShellsToInclude-1));
+        }
+        // Count number of shells as we go
+        // Once we hit the number of shells for this element, return
+        if (numShellsToInclude < 4) {
+            for (int i=0; i<ecShellIntensity.size(); ++i) {
+                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+            }
+            return;
+        }
+
+        // The M1-M5 shells
+        numShellsToInclude = min(9,nshell);
+        for (unsigned int i=4; i<numShellsToInclude; ++i) {
+            ecShellIntensity.push_back(ecShellIntensity.back() + icM/(numShellsToInclude-4));
+        }
+        if (numShellsToInclude < 9) {
+            for (int i=0; i<ecShellIntensity.size(); ++i) {
+                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+            }
+            return;
+        }
+
+        // The N1-7 shells
+        numShellsToInclude = min(16,nshell);
+        for (unsigned int i=9; i<numShellsToInclude; ++i) {
+            ecShellIntensity.push_back(ecShellIntensity.back() + icN/(numShellsToInclude-9));
+        }
+        if (numShellsToInclude < 16) {
+            for (int i=0; i<ecShellIntensity.size(); ++i) {
+                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+            }
+            return;
+        }
+
+        // The O1-5 shells
+        numShellsToInclude = min(21,nshell);
+        for (unsigned int i=16; i<numShellsToInclude; ++i) {
+            ecShellIntensity.push_back(ecShellIntensity.back() + icO/(numShellsToInclude-16));
+        }
+
+        for (int i=0; i<ecShellIntensity.size(); ++i) {
+            egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+        }
+    }
+}
+
+void BetaPlusRecord::relax(int shell,
+                           EGS_Float ecut, EGS_Float pcut,
+                           EGS_RandomGenerator *rndm, double &edep,
+                           EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+    getNormalizationRecord()->relax(shell,ecut,pcut,rndm,edep,particles);
 }
 
 double BetaPlusRecord::getFinalEnergy() const {
@@ -1778,7 +1948,9 @@ GammaRecord::GammaRecord(vector<string> ensdf,
     LevelRecordLeaf(myLevel) {
     processEnsdf();
     q = 0;
-    numSampled = 0;
+    numGammaSampled = 0;
+    numICSampled = 0;
+    multipleTransitionProb = 0;
 }
 
 GammaRecord::GammaRecord(GammaRecord *gamma):
@@ -1790,42 +1962,148 @@ GammaRecord::GammaRecord(GammaRecord *gamma):
     q = gamma->q;
     decayEnergy = 0;
     transitionIntensity = 0;
-    numSampled = 0;
+    numGammaSampled = 0;
+    numICSampled = 0;
+    multipleTransitionProb = 0;
 }
 
 void GammaRecord::processEnsdf() {
     decayEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
-    transitionIntensity = recordToDouble(22, 29);
+    gammaIntensity = recordToDouble(22, 29);
+
+    egsInformation("GammaRecord::processEnsdf: (E,I): %f %f\n",decayEnergy,gammaIntensity);
 
     if (getNormalizationRecord()) {
-        transitionIntensity *=
+        gammaIntensity *=
             getNormalizationRecord()->getRelativeMultiplier() *
             getNormalizationRecord()->getBranchMultiplier();
     }
+
+    icTotal = recordToDouble(56, 62);
+    transitionIntensity = gammaIntensity * (1+icTotal);
+
+    if (icTotal > 0) {
+        // Get the number of shells
+        int nshell = getNormalizationRecord()->getNShell();
+
+        double icK = getTag("KC=");
+        double icL = getTag("LC=");
+        double icM = getTag("MC=");
+        double icN = getTag("NC=");
+        double icO = getTag("OC=");
+
+        // The K shell
+        icIntensity.push_back(icK / icTotal);
+
+        // The L1, L2, L3 shells
+        // TODO: Equal probability is assigned to subshells!
+        //       This assumption is an approximation
+        int numShellsToInclude = min(4,nshell);
+        for (unsigned int i=1; i<numShellsToInclude; ++i) {
+            icIntensity.push_back(icIntensity.back() + (icL / icTotal)/(numShellsToInclude-1));
+        }
+        // Count number of shells as we go
+        // Once we hit the number of shells for this element, return
+        if (numShellsToInclude < 4) {
+            for (int i=0; i<icIntensity.size(); ++i) {
+                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+            }
+            return;
+        }
+
+        // The M1-M5 shells
+        numShellsToInclude = min(9,nshell);
+        for (unsigned int i=4; i<numShellsToInclude; ++i) {
+            icIntensity.push_back(icIntensity.back() + (icM / icTotal)/(numShellsToInclude-4));
+        }
+        if (numShellsToInclude < 9) {
+            for (int i=0; i<icIntensity.size(); ++i) {
+                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+            }
+            return;
+        }
+
+        // The N1-7 shells
+        numShellsToInclude = min(16,nshell);
+        for (unsigned int i=9; i<numShellsToInclude; ++i) {
+            icIntensity.push_back(icIntensity.back() + (icN / icTotal)/(numShellsToInclude-9));
+        }
+        if (numShellsToInclude < 16) {
+            for (int i=0; i<icIntensity.size(); ++i) {
+                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+            }
+            return;
+        }
+
+        // The O1-5 shells
+        numShellsToInclude = min(21,nshell);
+        for (unsigned int i=16; i<numShellsToInclude; ++i) {
+            icIntensity.push_back(icIntensity.back() + (icO / icTotal)/(numShellsToInclude-16));
+        }
+
+        for (int i=0; i<icIntensity.size(); ++i) {
+            egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+        }
+    }
+}
+
+double GammaRecord::getBindingEnergy(int shell) const {
+    return getNormalizationRecord()->getBindingEnergy(shell);
+}
+
+void GammaRecord::relax(int shell,
+                        EGS_Float ecut, EGS_Float pcut,
+                        EGS_RandomGenerator *rndm, double &edep,
+                        EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {
+    getNormalizationRecord()->relax(shell,ecut,pcut,rndm,edep,particles);
 }
 
 double GammaRecord::getDecayEnergy() const {
     return decayEnergy;
 }
 
+double GammaRecord::getMultiTransitionProb() const {
+    return multipleTransitionProb;
+}
+
+void GammaRecord::setMultiTransitionProb(double newIntensity) {
+    multipleTransitionProb = newIntensity;
+}
+
 double GammaRecord::getTransitionIntensity() const {
     return transitionIntensity;
+}
+
+double GammaRecord::getGammaIntensity() const {
+    return gammaIntensity;
 }
 
 void GammaRecord::setTransitionIntensity(double newIntensity) {
     transitionIntensity = newIntensity;
 }
 
+void GammaRecord::setGammaIntensity(double newIntensity) {
+    gammaIntensity = newIntensity;
+}
+
 int GammaRecord::getCharge() const {
     return q;
 }
 
-void GammaRecord::incrNumSampled() {
-    numSampled++;
+void GammaRecord::incrGammaSampled() {
+    numGammaSampled++;
 }
 
-EGS_I64 GammaRecord::getNumSampled() const {
-    return numSampled;
+void GammaRecord::incrICSampled() {
+    numICSampled++;
+}
+
+EGS_I64 GammaRecord::getGammaSampled() const {
+    return numGammaSampled;
+}
+
+EGS_I64 GammaRecord::getICSampled() const {
+    return numICSampled;
 }
 
 LevelRecord *GammaRecord::getFinalLevel() const {

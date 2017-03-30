@@ -86,8 +86,10 @@ beta, positron and alpha decays. Internal transition gamma emissions are
 modeled and assigned a shower index <b> \c ishower </b> and <b> \c time </b>
 to allow for coincidence counting.
 Auger and fluorescence radiations are also modeled as a part of the
-source, if the corresponding data is provided in the ENSDF format spectrum
-files for the radionuclide. Metastable isotopes are supported. For more
+source, using the EADL relaxation scheme by default. Alternatively, the user can
+request to use Auger and X-ray fluorescence from the ensdf file comments by
+setting the spectrum input parameter "ensdf auger and fluorescence" to "yes".
+Metastable isotopes are supported. For more
 information, see \ref EGS_RadionuclideSpectrum.
 
 A radionuclide source is defined using the following input. Notice that the
@@ -130,7 +132,8 @@ the delay that occurs after disintegration, according to the transition
 
 <code>time += -halflife * log(1-u) / ln(2);</code>
 
-It is possible for an X-Ray or Auger to be emitted before a
+If you are using "ensdf auger and fluorescence = yes" in the spectrum, then
+it is possible for an X-Ray or Auger electron to be emitted before a
 disintegration has taken place. They are assigned
 <b><code>currentTime = 0</code></b> and
 <b><code>ishower = -1</code></b>.

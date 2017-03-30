@@ -42,6 +42,7 @@
 #include "egs_functions.h"
 #include "egs_math.h"
 #include "egs_alias_table.h"
+#include "egs_atomic_relaxations.h"
 
 #include <iostream>
 #include <fstream>
@@ -161,10 +162,9 @@ public:
 
 protected:
     double recordToDouble(int startPos, int endPos);
+    string recordToString(int startPos, int endPos);
+    double getTag(string searchString);
     double parseHalfLife(int startPos, int endPos);
-    unsigned short int setZ(string id);
-    map<string, unsigned short int> getElementMap();
-    unsigned short int findZ(string element);
 
     // All the lines corresponding to this record type
     vector<string> lines;
@@ -211,6 +211,13 @@ public:
     double getTransitionMultiplier() const;
     double getBranchMultiplier() const;
     double getBetaMultiplier() const;
+    EGS_AtomicRelaxations *getRelaxations() const;
+    double getBindingEnergy(int shell) const;
+    int getNShell() const;
+    void relax(int shell,
+               EGS_Float ecut, EGS_Float pcut,
+               EGS_RandomGenerator *rndm, double &edep,
+               EGS_SimpleContainer<EGS_RelaxationParticle> &particles);
 
 protected:
     double normalizeRelative;
@@ -220,6 +227,8 @@ protected:
 
 private:
     void processEnsdf();
+    EGS_AtomicRelaxations *relaxations;
+    int nshell, Z;
 };
 
 class NormalizationRecordLeaf : public Leaf<NormalizationRecord> {
@@ -267,6 +276,10 @@ public:
     virtual double getBetaIntensity() const = 0;
     virtual double getPositronIntensity() const {};
     virtual double getECIntensity() const {};
+    virtual void relax(int shell,
+                       EGS_Float ecut, EGS_Float pcut,
+                       EGS_RandomGenerator *rndm, double &edep,
+                       EGS_SimpleContainer<EGS_RelaxationParticle> &particles) {};
     virtual void setBetaIntensity(double newIntensity)  = 0;
     int getCharge() const;
     void incrNumSampled();
@@ -276,6 +289,7 @@ public:
     unsigned short int getForbidden() const;
     void setSpectrum(EGS_AliasTable *bspec);
     EGS_AliasTable *getSpectrum() const;
+    vector<double> ecShellIntensity;
 
 protected:
     EGS_I64 numSampled;
@@ -314,6 +328,10 @@ public:
     double getECIntensity() const;
     void setBetaIntensity(double newIntensity);
     void setECIntensity(double newIntensity);
+    void relax(int shell,
+               EGS_Float ecut, EGS_Float pcut,
+               EGS_RandomGenerator *rndm, double &edep,
+               EGS_SimpleContainer<EGS_RelaxationParticle> &particles);
 
 protected:
     double  ecIntensity,
@@ -334,17 +352,30 @@ public:
 
     double getDecayEnergy() const;
     double getTransitionIntensity() const;
+    double getGammaIntensity() const;
     void setTransitionIntensity(double newIntensity);
+    void setGammaIntensity(double newIntensity);
+    double getMultiTransitionProb() const;
+    void setMultiTransitionProb(double newIntensity);
     int getCharge() const;
     LevelRecord *getFinalLevel() const;
     void setFinalLevel(LevelRecord *newLevel);
-    void incrNumSampled();
-    EGS_I64 getNumSampled() const;
+    void incrGammaSampled();
+    void incrICSampled();
+    EGS_I64 getGammaSampled() const;
+    EGS_I64 getICSampled() const;
+    vector<double> icIntensity;
+    double getBindingEnergy(int shell) const;
+    void relax(int shell,
+               EGS_Float ecut, EGS_Float pcut,
+               EGS_RandomGenerator *rndm, double &edep,
+               EGS_SimpleContainer<EGS_RelaxationParticle> &particles);
 
 protected:
-    EGS_I64 numSampled;
+    EGS_I64 numGammaSampled, numICSampled;
     double decayEnergy;
-    double transitionIntensity;
+    double transitionIntensity, gammaIntensity, multipleTransitionProb;
+    double icTotal;
     int q;
     LevelRecord *finalLevel;
 
@@ -390,7 +421,9 @@ emissions are taken as is. Very low probability emissions are discarded.
 When processing an ensdf file, only the following records are considered:
 Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.
 
-X-Ray fluorescence and Auger emissions are obtained from Comment records.
+When the spectrum input parameter "ensdf fluorescence and auger" is set to
+"yes", the
+X-Ray fluorescence and Auger emissions are obtained from ensdf Comment records.
 If a single intensity is present for a combination of lines (but a single
 energy is not provided), then the average energy of the lines is used.
 For example, in the
@@ -417,7 +450,8 @@ The ensdf class has been tested on radionuclide data from
 http://www.nucleide.org/DDEP_WG/DDEPdata.htm
 
 ENSDF files from other sources may contain x-ray and Auger emissions formatted
-differently. In this case, the x-ray and Auger lines will not be modeled.
+differently. In this case, "ensdf fluorescence and auger" should be set to "no"
+ (this is the default).
 
 */
 
@@ -449,13 +483,13 @@ public:
     string radionuclide;
     int verbose;
     string useFluorescence;
+    unsigned short int Z;
 
     void normalizeIntensities();
 
 protected:
 
     bool createIsotope(vector<string> ensdf);
-    map<string, unsigned short int> getElementMap();
     unsigned short int findAtomicWeight(string element);
     void parseEnsdf(vector<string> ensdf);
     void buildRecords();

@@ -389,14 +389,6 @@ public:
      */
     virtual double getTime() const {};
 
-    /*! \brief Set the maximum time of emission
-     *
-     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
-     * sets the maximum time, or the length of the experiment for
-     * simulations using the time variable.
-     */
-    virtual void setMaximumTime(double maxTime) {};
-
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It

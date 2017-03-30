@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2008
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -105,6 +105,9 @@ public:
 
     /*! Returns the binding energy of shell \a shell in element \a Z */
     EGS_Float getBindingEnergy(int Z, int shell);
+
+    /*! Returns the number of shells in element \a Z */
+    int      getNShell(int Z);
 
     /*! Set the binding energy of shell \a shell in element \a Z to
         \a new_be. This method can be used to overwrite the default
