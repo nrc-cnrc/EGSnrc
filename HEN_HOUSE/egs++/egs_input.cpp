@@ -902,7 +902,6 @@ int EGS_InputPrivate::addContent(istream &in) {
     removeComment("//","\n",input,true);
     removeComment("/*","*/",input,false);
     removeEmptyLines(input);
-    int res = 0;
     vector<string> start_keys, stop_keys;
     int p = 0;
     int ep = input.size();

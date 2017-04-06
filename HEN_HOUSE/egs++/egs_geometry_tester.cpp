@@ -46,7 +46,7 @@
 #include <string>
 using namespace std;
 
-static int __geometry_error = 0;
+//static int __geometry_error = 0;
 
 #ifndef SKIP_DOXYGEN
 /*! \brief This class implements the functionality of the EGS_GeometryTester

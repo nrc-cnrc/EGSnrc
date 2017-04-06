@@ -206,7 +206,6 @@ public:
           up=a*u,
           rcp=a*rc;
           */
-        EGS_Float urc=u*rc;
         EGS_Float up=a*u;
         EGS_Float rcp=a*rc;
         EGS_Vector rcp_vec=a*rcp;

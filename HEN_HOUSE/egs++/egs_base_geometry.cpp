@@ -543,10 +543,10 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
         EGS_Float rot_angle, rot_angle_o;
         int err1 = inp->getInput("type",typ);
         int err2 = inp->getInput("number of copies",ncopy);
-        int err3 = inp->getInput("translation delta",trans);
+        inp->getInput("translation delta",trans);
         int err3a = inp->getInput("first translation",trans_o);
         int err4 = inp->getInput("rotation axis",rot_axis);
-        int err5 = inp->getInput("rotation delta",rot_angle);
+        inp->getInput("rotation delta",rot_angle);
         int err5a = inp->getInput("first rotation",rot_angle_o);
         bool do_it = true;
         int ttype;

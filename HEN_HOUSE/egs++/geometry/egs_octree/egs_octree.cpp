@@ -188,8 +188,8 @@ string EGS_Octree::type("EGS_Octree");
 
 static char EGS_OCTREE_LOCAL eoctree_message1[]  = "createGeometry(octree): %s\n";
 static char EGS_OCTREE_LOCAL eoctree_message2[]  = "null input?";
-static char EGS_OCTREE_LOCAL eoctree_message3[]  = "wrong/missing 'octree size' input?";
-static char EGS_OCTREE_LOCAL eoctree_message4[]  = "expecting 1 or 3 float inputs for 'octree size'";
+//static char EGS_OCTREE_LOCAL eoctree_message3[]  = "wrong/missing 'octree size' input?";
+//static char EGS_OCTREE_LOCAL eoctree_message4[]  = "expecting 1 or 3 float inputs for 'octree size'";
 static char EGS_OCTREE_LOCAL eoctree_message5[]  = "wrong/missing 'min' or input?";
 static char EGS_OCTREE_LOCAL eoctree_message6[]  = "expecting 3 float inputs for 'box min' input";
 static char EGS_OCTREE_LOCAL eoctree_message7[]  = "wrong/missing 'max' or input?";

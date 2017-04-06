@@ -135,7 +135,7 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
 
     //now get some info from the header
     EGS_I64 n, n_photon, pinc;
-    float emax, zposn;
+    float emax;
     int iaea_type=-1; //for getting no. of particles
     iaea_get_max_particles(&iaea_fileid,&iaea_type,&n);
     if (n<0) {

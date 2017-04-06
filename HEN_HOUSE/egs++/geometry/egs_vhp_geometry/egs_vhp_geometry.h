@@ -329,7 +329,6 @@ public:
         int ifirst = 0;
         EGS_Float t, ttot = 0;
         EGS_Vector x(X);
-        int imed;
         if (ireg < 0) {
             t = veryFar;
             ireg = howfar(ireg,x,u,t);
@@ -349,7 +348,7 @@ public:
         int iy = ir/nx;
         int ix = ir - iy*nx;
         EGS_Float uxi, uyi, uzi, nextx, nexty, nextz, sx, sy, sz;
-        int dirx, icx, diry, icy, dirz, icz;
+        int dirx, diry, dirz;
         if (u.x > 0)      {
             uxi = 1/u.x;
             dirx =  1;
@@ -484,7 +483,7 @@ public:
 
     int howfarIn(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                  EGS_Float &t, EGS_Vector *normal=0) {
-        int ixs = ix, iys = iy, izs = iz;
+        int ixs = ix, iys = iy;
         int inew = ireg;
         if (u.x > 0) {
             EGS_Float d = (dx*(ix+1)-x.x)/u.x;
@@ -588,7 +587,6 @@ public:
     int howfarOut(const EGS_Vector &x, const EGS_Vector &u,
                   EGS_Float &t, EGS_Vector *normal=0) {
         EGS_Float tlong = 2*t, d;
-        int inew = -1;
         if (x.x <= xmin && u.x > 0) {
             ix = 0;
             d = (xmin-x.x)/u.x;
@@ -1569,7 +1567,6 @@ public:
         int imic, ix, iy, iz;
         EGS_MicroMatrixCluster *micro = micros[mict];
         micro->getIndeces(iloc,imic,ix,iy,iz);
-        int ilocal = iloc - imic*micro->nreg;
         // now we have to figure out the macro voxel indeces
         // in principle one could simply use vg->isWhere(x), but
         // this is bound to get us in trouble with roundoff errors.

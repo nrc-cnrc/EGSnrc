@@ -653,7 +653,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         int nr = Nx*Ny*Nz;
-        int med;
+        //int med;
         //for(j=0; j<nr; ++j) data >> med;
         data.getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
