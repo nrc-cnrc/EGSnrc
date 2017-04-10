@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 #
@@ -430,8 +431,8 @@ bool   EGS_MicroMatrixCluster::bm_boxes_initialized = false;
 
 EGS_MicroMatrixCluster::EGS_MicroMatrixCluster(
     EGS_Float Dx, EGS_Float Dy, EGS_Float Dz, EGS_Float bsc_thickness,
-    int tb_med, int bm_med, const char *micro_file) : micros(0), vg(0),
-    med_tb(tb_med), med_bm(bm_med) {
+    int tb_med, int bm_med, const char *micro_file) : med_tb(tb_med), med_bm(bm_med),
+    micros(0), vg(0){
     //
     // *** open micro-matrix file
     //

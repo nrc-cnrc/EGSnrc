@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -386,8 +387,8 @@ extern "C" void __list_geometries() {
 */
 
 EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
-    med(-1), region_media(0), nref(0), debug(false), is_convex(true),
-    boundaryTolerance(epsilon), has_rho_scaling(false), rhor(0), bproperty(0), bp_array(0) {
+    region_media(0), med(-1), has_rho_scaling(false), rhor(0), nref(0), debug(false),
+    is_convex(true), bproperty(0), bp_array(0), boundaryTolerance(epsilon){
     if (!egs_geometries.size()) {
         egs_geometries.addList(new EGS_GeometryPrivate);
     }
@@ -543,10 +544,10 @@ void EGS_BaseGeometry::setName(EGS_Input *i) {
         EGS_Float rot_angle, rot_angle_o;
         int err1 = inp->getInput("type",typ);
         int err2 = inp->getInput("number of copies",ncopy);
-        int err3 = inp->getInput("translation delta",trans);
+        inp->getInput("translation delta",trans);
         int err3a = inp->getInput("first translation",trans_o);
         int err4 = inp->getInput("rotation axis",rot_axis);
-        int err5 = inp->getInput("rotation delta",rot_angle);
+        inp->getInput("rotation delta",rot_angle);
         int err5a = inp->getInput("first rotation",rot_angle_o);
         bool do_it = true;
         int ttype;

@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -193,7 +194,6 @@ extern "C" {
 
         // label defined in the sub-geometries
         vector<int> gregs;
-        int shift=0;
         for (int i=0; i<ng; i++) {
 
             // add regions from set geometries

@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -44,7 +45,7 @@
 static unsigned int object_count = 0;
 
 EGS_Object::EGS_Object(const string &Name, EGS_ObjectFactory *f) :
-    nref(0), otype("EGS_Object"), name(Name), factory(f) {
+    name(Name), otype("EGS_Object"), nref(0), factory(f) {
     object_count++;
     if (!name.size()) {
         name = getUniqueName(this);
@@ -53,7 +54,7 @@ EGS_Object::EGS_Object(const string &Name, EGS_ObjectFactory *f) :
 }
 
 EGS_Object::EGS_Object(EGS_Input *input, EGS_ObjectFactory *f) :
-    nref(0), otype("EGS_Object"), name(""), factory(f) {
+    name(""), otype("EGS_Object"), nref(0), factory(f) {
     object_count++;
     setName(input);
     //if( factory ) factory->addObject(this);

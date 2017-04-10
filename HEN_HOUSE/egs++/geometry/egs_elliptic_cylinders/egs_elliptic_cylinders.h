@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2006
 #
 #  Contributors:    Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 #
@@ -221,7 +222,7 @@ public:
                            const vector<EGS_Float> &y_rad,
                            const EGS_Vector &position, const string &Name,
                            const Tx &A_x, const Ty &A_y) : EGS_BaseGeometry(Name),
-        Ax(A_x), Ay(A_y), xo(position), nwarn(0) {
+        xo(position), Ax(A_x), Ay(A_y), nwarn(0) {
         int nc = x_rad.size();
         if (nc>0) {
             ax = new EGS_Float [nc];

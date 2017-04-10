@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -57,7 +58,6 @@ void EGS_TransformedGeometry::setRelativeRho(EGS_Input *) {
 extern "C" {
 
     EGS_GTRANSFORMED_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
-        int error = 0;
         EGS_BaseGeometry *g = 0;
         EGS_Input *ij = input->takeInputItem("geometry",false);
         if (ij) {
