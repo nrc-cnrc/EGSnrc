@@ -24,6 +24,7 @@
 #  Author:          Manuel Stoeckl, 2016
 #
 #  Contributors:    Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 #
