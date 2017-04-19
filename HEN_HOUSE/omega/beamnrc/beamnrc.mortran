@@ -4396,7 +4396,7 @@ return; end;
 subroutine beam_shower(icase);
 /**************************************************************************/
 implicit none;
-$INTEGER icase;
+$LONG_INT icase;
 
 ;COMIN/SCORE,SOURCE,EPCONT,RANDOM,CMs,USER,IO_INFO,TIMING-INFO,USEFUL,EGS-IO,
 RWPHSP/;
