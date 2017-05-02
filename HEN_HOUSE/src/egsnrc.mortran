@@ -778,10 +778,15 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = 0;
-        call relax(Uj,shn_array(j),iz_array(j));
-          "relax will put all particles with energies above ecut,pcut on the "
-          "stack, the remaining energy will be scored in edep and deposited  "
-          "locally (via the call to ausgab below)                            "
+        IF ($EADL_RELAX) ["actual shell number"
+           call relax(Uj,j,iz_array(j));
+        ]
+        ELSE["shn_array = 1(K),2(L1),3(L2),4(L3),5<M>,6<N>,7(else)"
+           call relax(Uj,shn_array(j),iz_array(j));
+        ]
+        "relax will put all particles with energies above ecut,pcut on the "
+        "stack, the remaining energy will be scored in edep and deposited  "
+        "locally (via the call to ausgab below)                            "
     ]
     ELSE [ edep = Uj; ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]
@@ -5084,6 +5089,8 @@ IF( iq(np) = -1 ) [
     $SELECT-PHOTOELECTRON-DIRECTION; "Samples photo-electron direction"
 ]
 
+"Currently k = 1(K), 2(L1), 3(L2), 4(L3), 5<M>"
+"If $EADL_RELAX k=5 creates vacancy for M1 rahter than <M>"
 IF( do_relax ) [ call relax(e_vac,k,iZ); ]
 
 IF( EDEP > 0 ) [ $AUSCALL($PHOTXAUS); ]    "generates IARG = 4 call"
@@ -7293,7 +7300,7 @@ IF( pese2 > ae(medium) ) [
     edep_local = edep;
     $AUSCALL($SAUGERTRA);
 ]
-
+"ish ranges from 1 to 4 for K,L1,L2,L3 shells"
 call relax(Uj,ish,iZ);
 
 IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]
