@@ -187,7 +187,11 @@ int EGS_AliasTable::initialize(EGS_Float xmin, EGS_Float xmax, EGS_Float accu,
     fi[1] = f(xi[1],data);
     EGS_Float *xtemp, *ftemp;
     int error = 0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_AliasTable::initialize: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return 1;
+        }
         int nnn = (n-1)*AT_NCHECK + n;
         xtemp = new EGS_Float[nnn];
         ftemp = new EGS_Float[nnn];

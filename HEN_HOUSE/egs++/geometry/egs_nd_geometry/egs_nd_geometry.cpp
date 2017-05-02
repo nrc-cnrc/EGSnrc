@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -323,7 +324,12 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_def.push_back(rdef);
         }
     }
-    else while (1) {
+    else {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             // other format of data
             string medname;
             EGS_Float rmin,rmax,rdef;
@@ -338,6 +344,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax);
             rho_def.push_back(rdef);
         }
+    }
     if (med_names.size() < 1) {
         egsWarning("%s: no media defined in the CT ramp "
                    "file %s!\n",func,ramp_file);
@@ -464,7 +471,11 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         string data_file("");
         int data_type = -1;
         float scale_x=0.0, scale_y=0.0, scale_z=0.0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             string line, key, value;
             size_t pos;
             getline(h_file, line);

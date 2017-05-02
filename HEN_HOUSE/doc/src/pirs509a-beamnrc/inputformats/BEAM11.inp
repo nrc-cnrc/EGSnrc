@@ -1,11 +1,11 @@
 \begin{verbatim}
-   ISOURC = 10   PARALLEL CIRCULAR BEAM INCIDENT FROM THE SIDE 
+   ISOURC = 10   PARALLEL CIRCULAR BEAM INCIDENT FROM THE SIDE
    ***********
                  (NOTE: beam facing X-AXIS, I.E., UINC should be < 0.0   )
                  (this source should only be used together with CM XTUBE )
                  (for simulating the target of an X-ray tube.            )
                  (XTUBE should always be the first CM in the geometry.   )
-   
+
       IQIN,ISOURC,RBEAM,UINC,VINC,WINC
               IQIN    charge of the incident beam (defaults to 0)
               ISOURC  =  10

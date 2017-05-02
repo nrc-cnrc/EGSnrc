@@ -1393,7 +1393,47 @@ DO i=l,1,-1 [
 ]
 return; end;
 
+"==============================================================================
+subroutine replace_env(fname);
+"==============================================================================
+"subroutine to replace environment variables (beginning with $) with their"
+"full names or ~ with the full name of $HOME"
+"Assumes environment variable or ~ appears only at the beginning of the"
+"file name"
+character*(*) fname;
+character*256 dirname;
+integer indsep,ind1,ind2;
 
+indsep = index(fname,$file_sep);
+IF(indsep <= 0) return;
+"hope that the user has just supplied the file name"
+"and it is in the current directory"
+
+ind1=index(fname,'$');
+ind2=index(fname,'~');
+
+"examine first character of name"
+IF(ind1=1)[
+    "get the environment variable"
+    call getenv(fname(2:indsep-1),dirname);
+    IF(dirname=' ')[
+      $egs_fatal('(a,a/,a)',' Error in file name: ',$cstring(fname),
+  ' First element in name does not specify a defined environment variable.');
+   ]
+   fname=$cstring(dirname)//fname(indsep:);
+   $egs_info('(//a,a/)',' Retrieving file: ',$cstring(fname));
+]
+ELSEIF(ind2=1)[
+    call getenv('HOME',dirname);
+    IF(dirname=' ')[
+      $egs_fatal('(a,a/,a)',' Error in file name: ',$cstring(fname),
+  ' HOME is undefined.');
+   ]
+   fname=$cstring(dirname)//fname(indsep:);
+   $egs_info('(//a,a/)',' Retrieving file: ',$cstring(fname));
+]
+return;
+end;
 
 "=============================================================================
 subroutine egs_get_usercode(ucode);

@@ -23,7 +23,7 @@
 %
 %  Author:          Blake Walters, 2013
 %
-%  Contributors:    
+%  Contributors:
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -89,7 +89,7 @@ where:
 \begin{description}
 \item {\tt AE,UE,AP,UP } are the kinetic energy limits for calculating photon ({\tt AP,UP}) and electron ({\tt AE,UE}) cross sections in
 \index{pegsless mode!AE}\index{pegsless mode!UE}\index{pegsless mode!AP}\index{pegsless mode!UP}
-MeV.  These energy limits are also mentioned in the context of the EGSnrc system in Section~\ref{common_blocks}. 
+MeV.  These energy limits are also mentioned in the context of the EGSnrc system in Section~\ref{common_blocks}.
 If {\tt AE} is
 not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section~\ref{step_2}) specified
 in the simulation.  If
@@ -118,7 +118,7 @@ in square brackets are the analogous PEGS4 variables described in the PEGS4 Manu
 commas.  Case is unimportant.
 \index{pegsless mode!no. of atoms}
 \index{pegsless mode!mass fractions}
-\item {\tt number of atoms} $[${\tt PZ}$]$ or {\tt mass fractions} $[${\tt RHOZ}$]$.  For each of the {\tt elements}, specify either the number of atoms in a molecule of the medium ({\it i.e.} stoichiometric coefficients), if the 
+\item {\tt number of atoms} $[${\tt PZ}$]$ or {\tt mass fractions} $[${\tt RHOZ}$]$.  For each of the {\tt elements}, specify either the number of atoms in a molecule of the medium ({\it i.e.} stoichiometric coefficients), if the
 medium is a compound, or the mass fractions of the elements in the medium,
 if the medium is a mixture.
 Values are separated by commas and are input in the same order as their corresponding elements.  In the example above,
@@ -131,7 +131,7 @@ is omitted if the medium is an element.
 \index{pegsless mode!stopping power type}
 \index{pegsless mode!bremsstrahlung correction}
 \index{pegsless mode!IAPRIM}
-\item {\tt bremsstrahlung correction} $[${\tt IAPRIM}$]$ specifies the 
+\item {\tt bremsstrahlung correction} $[${\tt IAPRIM}$]$ specifies the
 correction to apply to calculated bremsstrahlung cross-sections.
 Options are:
 \begin{itemize}
@@ -156,8 +156,8 @@ exists in, in order of search priority:
 \end{enumerate}
 Note that the density correction files for many elements, compounds
 and mixtures are supplied with
-the distribution.  Density correction files have a header portion from which the composition and bulk density of the medium are read.  These values override 
-any user inputs for {\tt elements=}, {\tt number of atoms=} or {\tt mass fractions=}, and {\tt rho=}.  Thus, as in the case of 
+the distribution.  Density correction files have a header portion from which the composition and bulk density of the medium are read.  These values override
+any user inputs for {\tt elements=}, {\tt number of atoms=} or {\tt mass fractions=}, and {\tt rho=}.  Thus, as in the case of
 {\tt PMMA521ICRU} in the example above, it is possible to specify the composition
 of a medium simply by specifying a density correction file.
 \index{pegsless mode!gas pressure}
@@ -166,7 +166,7 @@ of a medium simply by specifying a density correction file.
 if the medium is a gas.  This input is only relevant (and necessary
 for a gas) if
 a density correction file is not used, in which case {\tt gas pressure} is used to modify the calculated density effect parameters.
-{\tt gas pressure} defaults to 0 ({\em i.e.} the medium is not a gas). 
+{\tt gas pressure} defaults to 0 ({\em i.e.} the medium is not a gas).
 \end{description}
 \end{description}
 
@@ -247,27 +247,27 @@ output, and the handling of density correction files.  Subroutines that appear d
 coding block (see above) are:
 \begin{itemize}
 \index{MIX}
-\item {\tt MIX}: This subroutine calculates multiple scattering parameters used to calculate electron cross sections. 
+\item {\tt MIX}: This subroutine calculates multiple scattering parameters used to calculate electron cross sections.
 \index{SPINIT}
 \item {\tt SPINIT}: This subroutine determines the density correction to apply to electron stopping powers.  It takes as
 an argument the name of the density correction file for the medium (if specified).  It then determines the appropriate
 density corrections as outlined in Subsection~\ref{pegslessinputsect} above.
 \index{PWLF1}
 \item {\tt PWLF1}: This subroutine performs a piece-wise linear fit of functions describing bremsstrahlung, Moeller, Bhaba
-and positron annihilation cross sections over the electron kinetic energy interval defined by $[${\tt AE, UE}$]$.  The subroutine 
+and positron annihilation cross sections over the electron kinetic energy interval defined by $[${\tt AE, UE}$]$.  The subroutine
 determines the number of sub-intervals required for the fits and returns a discrete point for each interaction type for
 each sub-interval.
 \end{itemize}
-\index{get\_media\_inputs.mortran} 
-\item {\tt get\_media\_inputs.mortran}: 
-\begin{itemize} 
+\index{get\_media\_inputs.mortran}
+\item {\tt get\_media\_inputs.mortran}:
+\begin{itemize}
 \index{get\_media\_inputs}
-\item Contains the {\tt get\_media\_inputs(ounit)} subroutine, which interprets 
+\item Contains the {\tt get\_media\_inputs(ounit)} subroutine, which interprets
 the pegsless inputs between the delimiters, {\tt :start media definition:} and {\tt :stop media definition:}
 in the {\tt .egsinp} file.  The subroutine is also responsible for assigning default values for input parameters
 that are out of range, omitted, or left blank.  Input values are then passed to the appropriate common block
-variables for use in calculating/modifying electron cross sections for the media in the simulation. The parameter, 
-{\tt ounit}, specifies the unit number to which media specifications, once read, will 
+variables for use in calculating/modifying electron cross sections for the media in the simulation. The parameter,
+{\tt ounit}, specifies the unit number to which media specifications, once read, will
 be echoed.  Usually this is unit number 6 (standard output).  If {\tt ounit}$\leq$0, then the media specs are not
 echoed.  The subroutine also has an entry point, {\tt show\_media\_parameters(ounit)}, which can be called from
 the user code to echo the media specifications to any unit at any point after they have been read in.  Finally,
@@ -283,7 +283,7 @@ file.
 \end{description}
 
 \index{pegless mode!single precision}
-Apart from ease of bookkeeping, the main reason for separating the PEGS4 common block variables used to 
+Apart from ease of bookkeeping, the main reason for separating the PEGS4 common block variables used to
 calculate cross sections from their EGSnrc common block analogs is to allow calculation of cross sections
 with the same precision ({\tt REAL*4}) as {\tt pegs4.mortran}.  This conveniently allows comparisons between
 results in pegsless mode and those using PEGS4 data files (created with identical media specifications and over
@@ -332,4 +332,4 @@ is executed if {\tt is\_pegsless=.true.}
 \index{egs\_init1}
 \item Subroutine {\tt egs\_init1} now only opens the PEGS4 data file if {\tt is\_pegsless=.false.}
 \end{itemize}
-\end{description} 
+\end{description}

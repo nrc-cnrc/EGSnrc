@@ -1875,7 +1875,7 @@ a source. See Section~\ref{phspoutsect} for a description of DOSXYZnrc phase spa
 \indexm{NRCYCL}
 Set to 1 to skip the calibration run through a BEAM shared library geometry between the source plane and
 the phantom. The number of times to recycle each source particle before proceeding to the next one,
-{\tt NRCYCL}, will then not take into account the ratio of the number of particles emerging from the  
+{\tt NRCYCL}, will then not take into account the ratio of the number of particles emerging from the
 library geometry to the number of incident particles (survival ratio).  The default is to do the calibration run if a BEAM shared library geometry is present.
 \end{description}
 
@@ -2084,7 +2084,7 @@ the DOSXYZnrc phantom per particle incident from the phase space source.  Thus, 
 {\tt NRCYCL} is incorrect.  To overcome this when a BEAM shared library is used, an initial calibration comprising
 1x10$^6$ particles run through the BEAM geometry only is used to determine the ratio of the number of particles
 emerging from the the bottom of the BEAM library geometry to the number of incident particles (survival ratio).
-{\tt NRCYCL} is then recalculated by multiplying the original estimate by 1/(survival ratio).  
+{\tt NRCYCL} is then recalculated by multiplying the original estimate by 1/(survival ratio).
 
 \indexm{calflag}
 Depending on the shared library geometry, the calibration run can consume

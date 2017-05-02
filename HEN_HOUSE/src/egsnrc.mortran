@@ -778,10 +778,15 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = 0;
-        call relax(Uj,shn_array(j),iz_array(j));
-          "relax will put all particles with energies above ecut,pcut on the "
-          "stack, the remaining energy will be scored in edep and deposited  "
-          "locally (via the call to ausgab below)                            "
+        IF ($EADL_RELAX) ["actual shell number"
+           call relax(Uj,j,iz_array(j));
+        ]
+        ELSE["shn_array = 1(K),2(L1),3(L2),4(L3),5<M>,6<N>,7(else)"
+           call relax(Uj,shn_array(j),iz_array(j));
+        ]
+        "relax will put all particles with energies above ecut,pcut on the "
+        "stack, the remaining energy will be scored in edep and deposited  "
+        "locally (via the call to ausgab below)                            "
     ]
     ELSE [ edep = Uj; ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]
@@ -1559,7 +1564,7 @@ $start_new_particle;
             "below subtracts only energy deposited"
             peie  = peie - edep;
             "below subtracts energy deposited + work due to E field"
-            "peie = peie - de;" 
+            "peie = peie - de;"
             eie   = peie;
             e(np) = peie;
 
@@ -5083,6 +5088,8 @@ IF( iq(np) = -1 ) [
     $SELECT-PHOTOELECTRON-DIRECTION; "Samples photo-electron direction"
 ]
 
+"Currently k = 1(K), 2(L1), 3(L2), 4(L3), 5<M>"
+"If $EADL_RELAX k=5 creates vacancy for M1 rahter than <M>"
 IF( do_relax ) [ call relax(e_vac,k,iZ); ]
 
 IF( EDEP > 0 ) [ $AUSCALL($PHOTXAUS); ]    "generates IARG = 4 call"
@@ -5205,7 +5212,7 @@ IF( energy <= e_cut ) [
     edep = edep + energy;  "We assume that edep is zeroed "
                            "(or set to the appropriate value in the routine "
                            "calling RELAX "
-                           
+
     edep_local = energy;
     $AUSCALL($SAUGERTRA);
     return;
@@ -5220,10 +5227,10 @@ e_check = 0; e_array(n_vac) = energy;
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
     IF( Ei <= e_cut ) [  " Below cut-off -> local absorption "
         edep = edep + Ei;
-        
+
         edep_local = Ei;
         $AUSCALL($SAUGERTRA);
-        
+
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
     ]
@@ -5247,7 +5254,7 @@ e_check = 0; e_array(n_vac) = energy;
         ]
         ELSE             [
             edep = edep + Ei;
-            
+
             edep_local = Ei;
             $AUSCALL($SAUGERTRA);
         ]
@@ -5289,7 +5296,7 @@ e_check = 0; e_array(n_vac) = energy;
     ]
     IF( Ex <= elcut ) [ "Below cut-off"
         edep = edep + Ex;
-        
+
         IF( finala <  10 ) [
             edep_local = Ex;
             $AUSCALL($SFLUORTRA);
@@ -5470,15 +5477,9 @@ DO medio = 1,nmed [
         curr_rec  = curr_rec+1;
         read(relax_unit, rec=curr_rec) be_r; shell_be(ish) = be_r;
 
-        /*
-           IF (iZ=74)[
-           write(*,*) 'Shell# ', ish ,' of type ', shell_type(ish);
-           write(*,*) ' -> be = ', shell_be(ish) ,' MeV ';
-           write(*,*) 'has ', ntran ,' transitions ';
-       ] */
         shell_Z(ish) = iZ;
         shell_num(ish) = ish - shell_ntot;
-        IF (shell_num(ish)<=7) shell_eadl(iZ,shell_num(ish)) = ish;
+        shell_eadl(iZ,shell_num(ish)) = ish;
         DO k=1,ntran[
             curr_rec  = curr_rec+1;
             read(relax_unit,rec=curr_rec) itmp(k);
@@ -5489,10 +5490,6 @@ DO medio = 1,nmed [
               radiative and by 65 for non-radiative transitions*/
             IF (itmp(k)<64) [itmp(k) +=1;]
             ELSE            [itmp(k) += 65;]
-          /*
-             IF (iZ=74)[
-             write(*,*) ' transition ',k,': type=',itmp(k),' prob=',wtmp(k);
-          ]*/
         ]
         IF( shell_be(ish) < min_be ) [
             relax_first(ish) = -1;
@@ -5522,26 +5519,6 @@ DO medio = 1,nmed [
             relax_ntot = relax_ntot + ntran;
         ]
       ]
-      shell_eadl(iZ,6) = shell_ntot + 10; "reseting to type 10 (N1)"
-      shell_eadl(iZ,7) = shell_ntot + 17; "reseting to type 27 (O1)"
-      /*
-      IF (iZ=74)[
-       $egs_info('(a,i4)','For Z = 74: ish_ini = ',shell_ntot+1);
-          sh_eadl = shell_eadl(iZ,1);
-          $egs_info('(4(a,i3))','shell_egs = ',1,
-                  ' shell_eadl = ',sh_eadl,
-                  ' shell type = ',shell_type(sh_eadl),
-                  ' # of transitions = ', relax_ntran(shell_ntot+1));
-          ntran = relax_ntran(shell_ntot+1);
-          IF (sh_eadl>0)[
-            DO m=0,ntran-1[
-              $egs_info(*,' transition ', m+1,': ',
-                     relax_state(relax_first(shell_ntot+1) + m),',',
-                     relax_prob( relax_first(shell_ntot+1)+ m));
-            ]
-          ]
-       $egs_info('(a,i4)','ish_final = ',shell_ntot+nshell);
-      ]*/
 
       shell_ntot = shell_ntot + nshell;
 
@@ -5603,16 +5580,10 @@ Nvac_max = -1;
 shell = shell_eadl(iZ,shell_egs);
 IF( shell < 1 | shell > $MAXSHELL ) [ return; ] "unknown vacancy"
 
-"$egs_info('(3(a,i3))','Z = ',iZ,"
-"        ' shell_egs = ',shell_egs,' shell_eadl = ', shell);"
-
 irl = ir(np);
 Ec = ecut(irl) - rm; Pc = pcut(irl);
 min_E = min(Ec,Pc); min_E = max($RELAX-CUTOFF,min_E);
 Evac = shell_be(shell);
-"IF( Evac < min_E | relax_ntran(shell) < 1 ) ["
-"    edep += Evac; return;"
-"]"
 rfu_Z = shell_Z(shell); rfu_j0 = shell;
 rfu_n0 = shell_num(shell); rfu_t0 = shell_type(shell);
 rfu_E0 = Evac;
@@ -5637,27 +5608,15 @@ LOOP [
         new_state = relax_state(relax_first(vac)+new_state-1);
      IF( new_state <= 64 ) [ "It was a radiative transition"
         iqf = 0; new_state += vac - shell_num(vac); Ef = shell_be(new_state);
-        "IF( Ef > min_E & relax_ntran(new_state) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new_state;
-            "IF (Nvac>Nvac_max) Nvac_max = Nvac;"
-        "]"
-        "ELSE [ edep += Ef; NEXT;]"
         Ecc = Pc;
-"IF (Ef>Evac)[$egs_info('(2(a,i4))',"
-"'vac_type=',shell_type(vac),' trans_type=',shell_type(new_state));]"
      ]
      ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
         iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
         new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
         Ef1 = shell_be(new1); Ef2 = shell_be(new2);
-        "IF( Ef1 > min_E & relax_ntran(new1) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new1;
-            "IF (Nvac>Nvac_max) Nvac_max = Nvac;"
-        "] ELSE [ edep += Ef1;]"
-        "IF( Ef2 > min_E & relax_ntran(new2) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new2;
-            "F (Nvac>Nvac_max) Nvac_max = Nvac; "
-        "] ELSE [ edep += Ef2; NEXT;]"
         Ef = Ef1 + Ef2; Ecc = Ec;
      ]
     ]
@@ -5665,7 +5624,6 @@ LOOP [
     edep_local = 0;
     IF( Ex > Ecc ) [
         np += 1; $CHECK-RELAX-STACK(np,'new_relax');
-        "$egs_info('(a,i9,a,f7.3)','-> np=',np,' iq=',iqf);"
         iq(np) = iqf;
         $TRANSFER PROPERTIES TO (np) FROM (np_save);
         $RANDOMSET rnno; cost = 2*rnno-1; sint = 1-cost*cost;
@@ -5682,10 +5640,9 @@ LOOP [
         ELSE [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
         ]
-        "$egs_info('(a,i2,a,f7.3,a)','-> iq=',iqf,' E=',Ex*1000.,' keV');"
     ] ELSE [
         edep += Ex;
-        
+
         IF( iqf = 0 ) [
             edep_local = Ex;
             $AUSCALL($SFLUORTRA);
@@ -5698,7 +5655,6 @@ LOOP [
     IF( Nvac = 0 ) EXIT;
     vac = vacs(Nvac); Evac = shell_be(vac); Nvac -= 1;
 ]
-"IF (Nvac_max>1) $egs_info('(a,i2,a)','-> ',Nvac_max,' vacancies');"
 return;
 end;
 ;
@@ -7343,7 +7299,7 @@ IF( pese2 > ae(medium) ) [
     edep_local = edep;
     $AUSCALL($SAUGERTRA);
 ]
-
+"ish ranges from 1 to 4 for K,L1,L2,L3 shells"
 call relax(Uj,ish,iZ);
 
 IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]

@@ -490,7 +490,7 @@
 "I>
 "I>  If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 "I>
-"I>  14b  mlc_file (A80)
+"I>  14b  mlc_file (A256)
 "I>
 "I>         mlc_file:  The full name of the file containing leaf opening
 "I>                    data.  The format of the file contents is as follows:
@@ -1116,9 +1116,8 @@ INTEGER I,J,K,L,        "T>DO loop indices
        MAX_INDEX,   "T>index of leaf with max. opening coordinate
        mlc_unit,    "T>unit no. to assign mlc_file
        egs_get_unit; "T>egs function used to assign unit to mlc_file
-CHARACTER*80 mlc_file, "T>name of file containing opening data for dynamic and
-                       "  step-and-shoot sequences
-             MLC_TITLE; "T> title line in mlc_file
+character*256 mlc_file;
+CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
 " **************************************************************** "
@@ -2410,8 +2409,9 @@ DO I=1, TOT_LEAF_$SYNCHDMLC
 ]
 IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A80)')mlc_file;
-  OUTPUT mlc_file;(A80/);
+  READ(i_input,'(A256)')mlc_file;
+  OUTPUT mlc_file;(A/);
+  call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
   IF(mlc_unit<1)[
     $egs_fatal(*,
@@ -2421,6 +2421,14 @@ IF(MODE_$SYNCHDMLC=1|MODE_$SYNCHDMLC=2)["dynamic or step-and-shoot leaf inputs"
   read(mlc_unit,'(A80)') MLC_TITLE;
   read(mlc_unit,'(I10)') NFIELDS_$SYNCHDMLC;
   OUTPUT NFIELDS_$SYNCHDMLC; (I10);
+
+  IF(NFIELDS_$SYNCHDMLC>$MAXFIELD_$SYNCHDMLC) [
+   OUTPUT $MAXFIELD_$SYNCHDMLC;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCHDMLC: ',I10, /
+        ' Increase $MAXFIELD_$SYNCHDMLC in SYNCHDMLC_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCHDMLC[
   "read in non-default leaf positions for each field"
      read(mlc_unit,'(F15.0)')INDEX_$SYNCHDMLC(I);

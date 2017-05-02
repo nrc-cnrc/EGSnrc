@@ -301,7 +301,7 @@ public:
         EGS_Vector x(X);
         int imed;
         if (ireg < 0) {
-            t = 1e30;
+            t = veryFar;
             ireg = howfar(ireg,x,u,t,&imed);
             if (ireg < 0) {
                 return 0;
@@ -321,7 +321,11 @@ public:
 
         int j = ifirst;
         int ij = -1, ig;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_EnvelopeGeometry::computeIntersections: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             if (ireg >= nbase) {
                 if (new_indexing) {
                     ig = reg_to_inscr[ireg-nbase];
@@ -336,7 +340,7 @@ public:
             isections[j].ireg = ireg;
             isections[j].rhof = getRelativeRho(ireg);
             if (ireg < nbase) { // in one of the regions of the base geometry
-                t = 1e30;
+                t = veryFar;
                 int ibase = g->howfar(ireg,x,u,t,&imed);
                 ij = -1, ig;
                 for (int i=0; i<n_in; i++) {
@@ -688,7 +692,7 @@ public:
         //egsInformation("computeIntersections: ireg=%d x=(%g,%g,%g) "
         //     "u=(%g,%g,%g)\n",ireg,x.x,x.y,x.z,u.x,u.y,u.z);
         if (ireg < 0) {
-            t = 1e30;
+            t = veryFar;
             ireg = howfar(ireg,x,u,t,&imed);
             if (ireg < 0) {
                 return 0;
@@ -710,7 +714,11 @@ public:
 
         int j = ifirst;
         int ij = -1, ig;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_FastEnvelope::computeIntersections: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             //egsInformation("in loop: j=%d ireg=%d imed=%d x=(%g,%g,%g)\n",
             //        j,ireg,imed,x.x,x.y,x.z);
             if (ireg >= nbase) {
@@ -721,7 +729,7 @@ public:
             isections[j].ireg = ireg;
             isections[j].rhof = getRelativeRho(ireg);
             if (ireg < nbase) { // in one of the regions of the base geometry
-                t = 1e30;
+                t = veryFar;
                 int ibase = g->howfar(ireg,x,u,t,&imed);
                 //egsInformation("In base geometry: t=%g inew=%d\n",t,ibase);
                 ij = -1, ig;

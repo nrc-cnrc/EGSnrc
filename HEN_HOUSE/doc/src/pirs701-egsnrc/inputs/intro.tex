@@ -78,7 +78,7 @@ of the details of the new physics, especially as related to ion chamber
 calculations (which are perhaps the toughest test of any electron-photon
 Monte Carlo transport code).  These papers provide analytic models which
 explain many of the shortcomings of the EGS4/PRESTA system in this very
-difficult problem.  The cover of this report shows a 
+difficult problem.  The cover of this report shows a
 comparison of the two codes run in their standard default modes.
 \index{ion chamber calculations}
 
@@ -89,7 +89,7 @@ The history has already been outlined in the Preface. For a detailed
 history up to
 1994, the reader is referred to a report titled  ``History, overview and
 recent improvements of EGS4'' by Bielajew et al. That
-report draws heavily on the history sections of the 
+report draws heavily on the history sections of the
 SLAC-210\cite{FN78} and SLAC-265\cite{Ne85} reports with an update to
 1994.
 
@@ -111,9 +111,9 @@ The following is a summary of the main features of the EGSnrc
 Code System, including statements about the physics that
 has been put into it and what can be realistically simulated.
 
-\begin{itemize} 
+\begin{itemize}
 \item The radiation transport of electrons ($+$ or $-$) or photons
-can be simulated in any element, compound, or mixture.  
+can be simulated in any element, compound, or mixture.
 The data preparation package, PEGS4, creates data to be used by
 EGSnrc, using cross section tables for elements 1 through 100. In addition
 there are other data files which must be read in to implement many of the
@@ -139,7 +139,7 @@ by the EGSnrc Code System:
 
 \index{physics processes in EGSnrc}
 \index{EGSnrc!physics processes}
-\begin{itemize} 
+\begin{itemize}
   \item Bremsstrahlung production using either Bethe-Heitler cross sections
 or the NIST cross sections.
 
@@ -148,7 +148,7 @@ or the NIST cross sections.
 
   \item Multiple scattering of charged particles by coulomb scattering from
 nuclei is handled using a new
-multiple scattering theory which overcomes the shortcomings of Moli\`ere 
+multiple scattering theory which overcomes the shortcomings of Moli\`ere
 multiple scattering theory. It allows for steps of any size and
 moves seamlessly from a single scattering
 model for short steps to an  accurate multiple scattering model
@@ -161,93 +161,93 @@ effects.
 
   \item Continuous energy loss applied to charged particle
   tracks between discrete interactions.
-    \begin{itemize} 
-    \item Total restricted charged particle stopping power consists of 
+    \begin{itemize}
+    \item Total restricted charged particle stopping power consists of
     soft bremsstrahlung and collision loss terms.
-     
+
     \item Collision loss determined by the restricted
     Bethe-Bloch stopping power with Sternheimer treatment of
     the density effect in the general case but with provision of using
     an arbitrary density effect correction and data supplied to use the
     density effect recommended by the ICRU in Report 37.
-    \end{itemize} 
+    \end{itemize}
 
   \item Pair production.
-   
+
   \item Compton scattering, either Klein-Nishina or bound Compton.
-   
+
   \item Coherent (Rayleigh) scattering can be included
   by means of an option.
-   
+
   \item Photoelectric effect.
-    
+
   \item Relaxation of excited atoms after vacancies are created (eg after
-      photoelectric or Compton scattering events) to create fluorescent photons 
+      photoelectric or Compton scattering events) to create fluorescent photons
      (K, L, M shells) and Auger and Coster-Kronig
      electrons may be produced and tracked if requested.
 
   \item Electron impact ionization can be modeled using arbitrary theories
-        for generating cross-sections. Five such cross-section compilations 
-        are provided in the EGSnrc distribution (Kawrakow, Casnati, 
+        for generating cross-sections. Five such cross-section compilations
+        are provided in the EGSnrc distribution (Kawrakow, Casnati,
         Kolbenstvedt, Gryzinski, and Bote and Salvat).
 
-\end{itemize} 
- 
+\end{itemize}
+
 \item PEGS4 is a stand-alone data preprocessing code consisting of
 12 subroutines and 85 functions.  The output is in a
 form for direct use by EGS4.
-\begin{itemize} 
-   
+\begin{itemize}
+
   \item PEGS4 constructs piecewise-linear fits over a large
   number of energy intervals of the cross section and branching
   ratio data.
-   
+
   \item In general, the user need only use PEGS4 {\it once} to
   obtain the media data files required by EGSnrc.
-   
+
   \item PEGS4 control input uses the NAMELIST read facility of
   the FORTRAN language (in Mortran3 form).
-   
+
   \item In addition to the options needed to produce data for
   EGSnrc, PEGS4 contains options to plot any of the physical
   quantities used by EGSnrc.
- 
+
   \item In addition to the material specific data files produced by PEGS4,
    EGSnrc uses a variety of other data files as input for the calculations.
-\end{itemize} 
- 
+\end{itemize}
+
 \item EGSnrc is a package of subroutines plus block data with
 a flexible user interface.
-   
-  \begin{itemize} 
+
+  \begin{itemize}
   \item This allows for greater flexibility without requiring
   one to be overly familiar with the internal details of the code.
-   
+
   \item Together with the macro facility capabilities of the
   Mortran3 language, this reduces the likelihood that user edits
   will introduce bugs into the code.
-   
+
   \item EGSnrc uses material cross section and branching ratio
   data created and fit by the companion code, PEGS4. However,
   photon cross-section data are re-calculated on-the-fly
   using a logarithmic energy grid with an user-specific number
   of interpolation points. This behaviour can now be reverted
   if the user so desires.
- 
+
 \index{EGSnrc!geometry}
 \item The geometry for any given problem is specified by a
 {\it user-written} subroutine called HOWFAR which, in turn,
 can make use of auxiliary subprograms.
-   
+
   \item Auxiliary geometry routines for planes, cylinders,
   cones, spheres, etc., are provided with the EGSnrc Code System
   for those who do not wish to write their own.
-   
+
   \item Macro versions of these routines are also provided in the
   set of defining macros (\ie, in the {\tt egsnrc.macros} file) which,
   if used, generally result in a faster running simulation.
-   
-   
+
+
 \index{magnetic field transport}
 \index{electric field transport}
   \item Transport can take place in a magnetic field by writing
@@ -258,12 +258,12 @@ can make use of auxiliary subprograms.
   contains Bielajew's macros to implement this.
    \index{emf\_macros.mortran}
    \index{Bielajew, Alex}
-  \end{itemize} 
- 
+  \end{itemize}
+
 \item The user scores and outputs information in the
 {\it user-written} subroutine called AUSGAB.
-   
-  \begin{itemize} 
+
+  \begin{itemize}
 
   \item By setting various {\tt AUSFLG} flags, the user can arrange to have
 access to the simulation parameters under many different situations to
@@ -273,39 +273,39 @@ code itself.
   \item Auxiliary subprogram WATCH is provided in order to allow
   an event-by-event or step-by-step tracking of the simulation, either to
 the terminal or for 3-D graphics display using the program EGS\_Windows.
- \end{itemize} 
- 
+ \end{itemize}
+
 \item EGSnrc allows for the implementation of {\it importance
 sampling} and other variance reduction techniques (\eg, leading
 particle biasing, splitting, path length biasing, Russian
-roulette, etc.). 
-  \begin{itemize} 
-  \item EGSnrc introduces options to allow for efficient bremsstrahlung 
-    splitting and Russian Roulette of secondary charged-particles, but only 
+roulette, etc.).
+  \begin{itemize}
+  \item EGSnrc introduces options to allow for efficient bremsstrahlung
+    splitting and Russian Roulette of secondary charged-particles, but only
     if ``turned on'' by the user.
   \item EGSnrc calculates the range and distance of the particle to the
    nearest boundary on every step as part of the electron transport algorithm
    and there is an option to do range rejection on any particle that cannot get out of
    the current region.
- 
-\end{itemize} 
+
+\end{itemize}
 
 \item Initiation of the radiation transport:
-   
-\begin{itemize} 
+
+\begin{itemize}
   \item An option exists for initiating a shower with two
   photons from pi-zero decay (\ie, use $IQI=2$ in the
-  {\tt CALL SHOWER} statement). 
-   
+  {\tt CALL SHOWER} statement).
+
   \item The user has the choice of initiating the transport
   by means of a monoenergetic particle, or by sampling from
   a known distribution (\eg, a synchrotron radiation spectrum).
-   
+
   \item Transport can also be initiated from sources that have
   spatial and/or angular distributions.
 
-  \end{itemize} 
-\end{itemize} 
+  \end{itemize}
+\end{itemize}
 
 
 \newpage
@@ -319,7 +319,7 @@ section~\ref{section_2} and in section~\ref{changes}.
 
 \subsubsection{Physics changes}
 
-\begin{itemize} 
+\begin{itemize}
 \item A completely new electron transport algorithm is used which removes
 all known shortcomings of the EGS4/PRESTA algorithm.  If the geometry
 permits, the new algorithm can take much larger steps with better accuracy
@@ -367,7 +367,7 @@ which affected simulations for which AP was not small relative to the electron
 energy.  Doing this led to a complete rewrite of the sampling routine which
 also increased its efficiency.
 
-\item A second bremsstrahlung photon energy sampling option was added which 
+\item A second bremsstrahlung photon energy sampling option was added which
 uses the more accurate NIST differential cross sections.
 
 \item PEGS4 has been modified to pick up the data files which scale the
@@ -376,7 +376,7 @@ powers.
 
 \item A variety of variance reduction techniques which were commonly used
 with EGS4 have been ``built in'' with EGSnrc to improve the efficiency
-   \begin{itemize} 
+   \begin{itemize}
    \item bremsstrahlung splitting is done within the routine BREMS, thereby
          avoiding repeatedly calculating several constants
    \item Russian Roulette of secondary charged particles is done in a
@@ -402,19 +402,19 @@ improved.
 noticeable amount of time in a real calculation (2\% in one example).
 
 \item Various changes have been made in the COMIN blocks to accommodate the
-above changes. Also LATCH and LATCHI are  now a default part of STACK. 
+above changes. Also LATCH and LATCHI are  now a default part of STACK.
 
 \item Several more AUSGAB calls are available to score Auger
 and Coster-Kronig electrons and fluorescent x-rays.
 
-\end{itemize} 
+\end{itemize}
 
 
 
 \subsubsection[System changes]{System changes pre-EGSnrcMP(see
 ref\cite{Ka03} for the MP changes)}
 \index{EGSnrc!system changes}
-\begin{itemize} 
+\begin{itemize}
 
 \item The various source files have been rationalized and various add-on
 features to EGS4 have been made part of EGSnrc.
@@ -446,12 +446,12 @@ constructs which allow conversion to running double precision by redefining
 \item Subroutine WATCH has been modified to accommodate the changes in the
 physics.
 
-\end{itemize} 
+\end{itemize}
 
 \subsubsection{User code changes}
 \index{User codes}
 
-\begin{itemize} 
+\begin{itemize}
 \item The tutor codes have been rewritten to work with EGSnrc and a new
 version of tutor6 has been written to demonstrate control of all variables
 available to EGSnrc users.
@@ -477,11 +477,11 @@ the ability to change to double precision at will.
 \item a bug in the energy sampling routine which caused problems in some
 cases has been removed. An entirely new code which is faster and more
 accurate is used now.
-\end{itemize} 
+\end{itemize}
 
 \subsection{Summary of changes since 2005 edition of this report}
 
-\subsubsection{Physics changes since 2005} 
+\subsubsection{Physics changes since 2005}
 
 \begin{itemize}
 
@@ -492,24 +492,24 @@ accurate is used now.
   \item The user has the option of supplying custom molecular form factors
         when including Rayleigh scattering in a simulation.
 
-  \item New {\tt alias sampling} algorithm used to select the 
+  \item New {\tt alias sampling} algorithm used to select the
         photon angle after a Rayleigh scattering.
 
-  \item New options added for Compton scattering called {\tt simple} and 
+  \item New options added for Compton scattering called {\tt simple} and
         {\tt norej}.
 
   \item The user has the option to include radiative corrections for Compton
         scattering.
 
-  \item The user has the option to use exact PWA cross sections for pair 
+  \item The user has the option to use exact PWA cross sections for pair
         production
 
   \item The user has the option to explicitely simulate triplet production
 
-  \item A new bremsstrahlung data base has been added that incorporates a much 
+  \item A new bremsstrahlung data base has been added that incorporates a much
         improved evaluation of electron-electron bremsstrahlung
 
-  \item The ability to use total photon cross sections from EPDL-97, XCOM, 
+  \item The ability to use total photon cross sections from EPDL-97, XCOM,
         or any other user-supplied tabulation has been added
 
 
@@ -517,10 +517,10 @@ accurate is used now.
 
 \subsubsection{ EGSnrc snapshots }
 
-Since 2008 development snapshots of the EGSnrc system have been made 
-available on the EGSnrc web page. These snapshots are updated much more 
-regularly (typically every 2--8 weeks) but for now they can only be installed 
-via a significantly simplified script on Linux systems with the GNU compilers. 
+Since 2008 development snapshots of the EGSnrc system have been made
+available on the EGSnrc web page. These snapshots are updated much more
+regularly (typically every 2--8 weeks) but for now they can only be installed
+via a significantly simplified script on Linux systems with the GNU compilers.
 
 \subsubsection{User code changes since 2005}
 
@@ -534,54 +534,54 @@ C++ equivalents to {\tt tutor2} and {\tt tutor7}.
 also been added: 1) {\tt egs\_cbct} for simulating cone beam CT scans,
 2) {\tt egs\_chamber} for efficient chamber simulations, 3) {\tt egs\_fac}
 for simulating transport in a free-air chamber, and 4) {\tt egs\_pet} for
-simulating PET scans, in addition to {\tt cavity}, the first major C++ code 
-for EGSnrc released in 2005. Note that {\tt egs\_cbct} and {\tt egs\_pet} 
+simulating PET scans, in addition to {\tt cavity}, the first major C++ code
+for EGSnrc released in 2005. Note that {\tt egs\_cbct} and {\tt egs\_pet}
 are not included in this public release.
 
-\end{itemize} 
+\end{itemize}
 
 \subsection{Summary of changes since 2009 edition of this report}
 
-There have been several additions to the physics 
-and to the user codes available since the 
+There have been several additions to the physics
+and to the user codes available since the
 2009 edition of PIRS-701.  These are outlined in this section.
 
-\subsubsection{Physics changes since 2009} 
+\subsubsection{Physics changes since 2009}
 
 \begin{itemize}
 
-  \item A new electron impact ionization (EII) cross-section data base, 
+  \item A new electron impact ionization (EII) cross-section data base,
         based on the DWBA/PWBA model by Bote and Salvat has been added
         to the distribution.
 
   \item The ability to use different EII cross section compilations
-        has been generalized to allow the use of any user-supplied 
+        has been generalized to allow the use of any user-supplied
         tabulation.
 
-  \item The user has the option of forcing the use of photon 
+  \item The user has the option of forcing the use of photon
         cross-sections from the PEGS4 data file.
 
 \end{itemize}
 
 \subsubsection{ EGSnrc snapshots }
 
-Since 2010 no snapshots of the EGSnrc system have been made 
+Since 2010 no snapshots of the EGSnrc system have been made
 available on the EGSnrc web page. The number of users making use
-of this option is so small that it doesn't justify the effort put 
+of this option is so small that it doesn't justify the effort put
 into creating them.
 
 \subsubsection{User code changes since 2009}
 
 The C++ user-code {\tt egs\_fac} has been finally included in the
-distribution. This user-code simulates the transport in a 
+distribution. This user-code simulates the transport in a
 free-air chamber and the calculations of correction factors
-in a self-consistent manner. The user-codes {\tt egs\_cbct} 
+in a self-consistent manner. The user-codes {\tt egs\_cbct}
 and {\tt egs\_pet} are not included since they are in a very
 experimental stage and not ready for public release.
 
 \subsection{Outline of report}
 
-In the remainder of this report there are 7 sections.  
+In the remainder of this report there are 7 sections.
 
 Section 2 (page~\pageref{section_2}) presents a detailed description
 of the physics in EGSnrc. While this section provides very important

@@ -444,7 +444,11 @@ static char spec_msg1[] = "EGS_BaseSpectrum::createSpectrum:";
 //
 istream &skipsep(istream &in) {
     char c;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("skipsep: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return in;
+        }
         in.get(c);
         if (in.eof() || in.fail() || !in.good()) {
             break;

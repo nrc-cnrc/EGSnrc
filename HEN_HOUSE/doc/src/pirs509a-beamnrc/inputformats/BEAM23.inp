@@ -1,14 +1,14 @@
 \begin{verbatim}
-   ISOURC = 19   PARALLEL ELLIPTICAL BEAM FROM FRONT GAUSSIAN IN X AND Y 
-   ***********  
-   
+   ISOURC = 19   PARALLEL ELLIPTICAL BEAM FROM FRONT GAUSSIAN IN X AND Y
+   ***********
+
       IQIN,ISOURC,RBEAM,UINC,VINC,WINC,sigma_src19,RBEAMY
               IQIN    charge of the incident beam (defaults to 0)
-              ISOURC  = 19 
-              RBEAM   sigma of the 2-D gaussian distribution (RBEAM > 0) 
+              ISOURC  = 19
+              RBEAM   sigma of the 2-D gaussian distribution (RBEAM > 0)
                       in the X-direction in cm
                         or
-                      -FWHM of 2-D gaussian distribution (RBEAM < 0) in 
+                      -FWHM of 2-D gaussian distribution (RBEAM < 0) in
                       the X-direction in cm
                       Note: sigma of gaussian distribution is limited to
                             <RMAX_CM(1) for circular CM 1 and

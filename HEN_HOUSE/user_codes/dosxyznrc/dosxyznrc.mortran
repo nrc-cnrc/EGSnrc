@@ -625,7 +625,7 @@
 "                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "                        a change to the user codes Makefile to include
 "                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"                        SOURCES (just before 
+"                        SOURCES (just before
 "                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "                        [ radc_flag ]
 "       Pair angular sampling= Off, Simple or KM
@@ -1454,6 +1454,8 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
      ' : ',$);
     read(5,'(A256)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
+
+    call replace_env(PhantFileName);
 
     Open($CTUnitNumber,file=PhantFileName,status='old',access='sequential',
           iostat=ios);
@@ -4677,4 +4679,3 @@ DO medium = 1,nmed [
 ]
 
 return; end;
-

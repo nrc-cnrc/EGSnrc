@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Manuel Stoeckl
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -905,7 +906,7 @@ int GeometryViewControl::setGeometry(
 #endif
     }
 
-    EGS_Vector pmin(1e10,1e10,1e10), pmax(-1e10,-1e10,-1e10);
+    EGS_Vector pmin(veryFar,veryFar,veryFar), pmax(-veryFar,-veryFar,-veryFar);
     //egsWarning("xo = (%g,%g,%g)\n",xo.x,xo.y,xo.z);
     for (int isize=0; isize<6; isize++) {
         progress.setValue(100+5*isize);
@@ -942,7 +943,7 @@ int GeometryViewControl::setGeometry(
                 int ir = ireg;
                 int nstep = 0;
                 do {
-                    EGS_Float t = 1e30;
+                    EGS_Float t = veryFar;
                     int inew = g->howfar(ir,x,u,t);
                     if (inew == ir) {
                         break;

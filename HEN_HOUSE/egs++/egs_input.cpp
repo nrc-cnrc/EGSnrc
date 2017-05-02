@@ -306,7 +306,11 @@ get_input(const EGS_InputPrivate *p, const string &key, vector<T> &values) {
     values.erase(values.begin(),values.end());
     S_STREAM in(p1->value.c_str());
     int error = 0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::findStart: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return 2;
+        }
         T tmp;
         in >> tmp;
         if (!in.fail()) {
@@ -869,7 +873,11 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
 int EGS_InputPrivate::addContent(istream &in) {
     string input;
     bool last_was_space = false;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::addContent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return -1;
+        }
         char c;
         in.get(c);
         if (in.eof() || !in.good()) {
@@ -929,7 +937,7 @@ int EGS_InputPrivate::addContent(istream &in) {
             }
         }
         else {
-            egsWarning("No matching stop delimeter for %s\n",what.c_str());
+            egsWarning("No matching stop delimiter for %s\n",what.c_str());
             return -1;
         }
     }
@@ -1033,7 +1041,11 @@ int EGS_InputPrivate::findStart(int start, int stop, const string &start_key,
                                 string &what, int &end) {
     string::size_type pos = start;
     unsigned int ns=0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::findStart: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return -2;
+        }
         if (pos >= stop) {
             return -1;
         }

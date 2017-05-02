@@ -3787,7 +3787,7 @@ ELSEIF(IFULL = 3)["score scattered dose separately"
 IF (IKERMA = 1) ["want to score KERMA"
    "we score kerma for scattered component too if ifull=3"
    "the kerma is part of scattered kerma if latch of initial photon is not zero"
-   
+
     "Here we keep track of whether we are currently inside a PE/Compton"
     "event, or EII. This lets us use edep_local to account for kerma"
     "contributions below threshold energies depending on the interaction type."
@@ -3806,7 +3806,7 @@ IF (IKERMA = 1) ["want to score KERMA"
         before_eii = 0;
         return;
     ]
-   
+
    IF (IARG = 4 & ~BTEST(LATCH(NP),8) & before_eii = 0 & before_photo = 0)[
       "local energy deposition"
       "include deposited energy as kerma"
@@ -3817,7 +3817,7 @@ IF (IKERMA = 1) ["want to score KERMA"
          $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*EDEP);
       ]
    ]
-   
+
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
     IF( iarg = 34 ) [
@@ -3831,7 +3831,7 @@ IF (IKERMA = 1) ["want to score KERMA"
             return;
         ]
     ]
-   
+
    IF (IARG = 16)["pair event just occured"
       IF(NP>NPold | i_survived_rr > 0)[
          "i_survived_rr, 0=> all particles survive RR,"

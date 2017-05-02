@@ -761,8 +761,8 @@ void inputRZImpl::GetDFfile()
                errStr += "\nPlease select another file and try again!";
         QMessageBox::information( this, " Warning",errStr, QMessageBox::Ok );
    }
-      
-   //set strings to output to .egsinp file 
+
+   //set strings to output to .egsinp file
    int ind=inpmediumComboBox->currentIndex();
    Ppgls->inpmedind=ind;
    Ppgls->dffile[Ppgls->inpmedind] = f;

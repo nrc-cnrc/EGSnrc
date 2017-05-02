@@ -1,4 +1,4 @@
-@g0 type xy 
+@g0 type xy
 @    title "Dose Simulation Using BEAMnrc"
 @    subtitle "EXslabs: pencil beam of 20  MeV electrons thru 100 cm air ph"
 @    legend on

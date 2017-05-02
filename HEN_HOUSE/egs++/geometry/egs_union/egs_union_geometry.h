@@ -266,7 +266,7 @@ public:
             return tmin;
         }
         // if here, we are outside of all geomtries in the union.
-        EGS_Float tmin = 1e30;
+        EGS_Float tmin = veryFar;
         for (int j=ng-1; j>=0; j--) {
             EGS_Float t = g[j]->hownear(-1,x);
             if (t < tmin) {

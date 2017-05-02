@@ -69,7 +69,7 @@
 "-------------------------------------------------------------------------------
 REPLACE {$MAX_N_$SYNCJAWS} WITH {12}
 
-REPLACE {$MAXFIELD_$SYNCJAWS} WITH {100}
+REPLACE {$MAXFIELD_$SYNCJAWS} WITH {1024}
 
 REPLACE {$MAXFS_$SYNCJAWS} WITH {{COMPUTE $MAX_N_$SYNCJAWS*$MAXFIELD_$SYNCJAWS}}
 

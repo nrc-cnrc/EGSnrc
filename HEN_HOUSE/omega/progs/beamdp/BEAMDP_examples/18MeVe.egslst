@@ -1,6 +1,6 @@
 
 
-18mev EGSnrc input file, Nov 2005                                              
+18mev EGSnrc input file, Nov 2005
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu (g77)                                    14:33:23 Nov  8 2005
@@ -26,7 +26,7 @@
                    ---------------------           ----
                                        1             9
                    Phase space files will be output at EVERY scoring plane
-                   Range rejection switch                  ON 
+                   Range rejection switch                  ON
                    Range rejection in 117 regions
                              Fixed ECUT used
  Range rejection based on medium of region particle is traversing
@@ -52,7 +52,7 @@
             LATCH_OPTION = 3: Latch values inherited, origin of
                               secondary particles recorded.  For
                               photons, region no. are recorded
-                              where they interact, not where 
+                              where they interact, not where
                               they just pass through.
 
 ================================================================================
@@ -63,24 +63,24 @@
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Pair cross sections                                         BH 
+ Pair cross sections                                         BH
  Triplet production                                          Off
- Bound Compton scattering                                    OFF           
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          OFF           
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    OFF
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          OFF
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
- Maxium electron step in cm (SMAX)                                5.000    
+ Maxium electron step in cm (SMAX)                                5.000
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      43.87    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      43.87
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -304,7 +304,7 @@
   Component module  1 is one or more planar slabs  (SLABS Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: CM #1 SLABS: Two Slab Target and Copper Base                
+    Title: CM #1 SLABS: Two Slab Target and Copper Base
 
  WINDOW geometry parameters:
  -----------------------------
@@ -312,8 +312,8 @@
  Half-width of outer boundary of CM =         5.00000 cm
 
  slab #    Z front    thickness
-            face               
-            (cm)        (cm)   
+            face
+            (cm)        (cm)
  airgap     0.000      1.087
     1       1.087      0.013
 
@@ -332,7 +332,7 @@
   Component module  2 is stacked set of truncated cones (CONESTAK:Rev 1.8)
  -------------------------------------------------------------------------------
 
- Title: CM #2 primary scattering foil,  using position 3            
+ Title: CM #2 primary scattering foil,  using position 3
 
  SCTFOIL1 geometry parameters:
  -----------------------------
@@ -362,7 +362,7 @@
  Component module  3 is FLATFILT (Rev 1.6)
   --------------------------------------
 
-    Title: CM #2 FLATFILT: primary collimator                          
+    Title: CM #2 FLATFILT: primary collimator
 
  PRIMCOIL geometry parameters:
  -----------------------------
@@ -380,11 +380,11 @@
  region                     cutoff   cutoff  level   maximum   zone  set
                             (MeV)     (MeV)  (MeV)    (MeV)
    1      1     1     cone   0.700    0.010  0.700     2.000   23  23  AIR700ICR
-   2      1    NA  between   0.700    0.010  0.700     2.000    4   4  WNICU700 
+   2      1    NA  between   0.700    0.010  0.700     2.000    4   4  WNICU700
                      outer
                   cone and
                    RMAX_CM
-                          
+
    3     NA    NA   airgap   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                     at top
 
@@ -393,7 +393,7 @@
  Component module  4 is FLATFILT (Rev 1.6)
   --------------------------------------
 
-    Title: CM #3 SCTFOIL2:  secondary scattering foil                  
+    Title: CM #3 SCTFOIL2:  secondary scattering foil
 
  SCTFOIL2 geometry parameters:
  -----------------------------
@@ -445,21 +445,21 @@
                      outer
                   cone and
                    RMAX_CM
-                          
+
    4      2     1     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
    5      2     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
    6      2    NA  between   0.700    0.010  0.700     2.000    0   5  MILDSTEEL
                      outer
                   cone and
                    RMAX_CM
-                          
+
    7      3     1     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
    8      3     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
    9      3    NA  between   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   10      4     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   11      4     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   12      4     3     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
@@ -468,7 +468,7 @@
                      outer
                   cone and
                    RMAX_CM
-                          
+
   15      5     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   16      5     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   17      5     3     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
@@ -477,7 +477,7 @@
                      outer
                   cone and
                    RMAX_CM
-                          
+
   20      6     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   21      6     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   22      6     3     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
@@ -486,7 +486,7 @@
                      outer
                   cone and
                    RMAX_CM
-                          
+
   25      7     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   26      7     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   27      7     3     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
@@ -495,35 +495,35 @@
                      outer
                   cone and
                    RMAX_CM
-                          
+
   30      8     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   31      8     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   32      8    NA  between   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   33      9     1     cone   0.700    0.010  0.700     2.000    0  23  AIR700ICR
   34      9     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   35      9    NA  between   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   36     10     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   37     10     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   38     10    NA  between   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   39     11     1     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   40     11     2     cone   0.700    0.010  0.700     2.000    0   5  AL700ICRU
   41     11    NA  between   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                      outer
                   cone and
                    RMAX_CM
-                          
+
   42     NA    NA   airgap   0.700    0.010  0.700     2.000    0  23  AIR700ICR
                     at top
 
@@ -609,10 +609,10 @@
 
 
  -------------------------------------------------------------------------------
-  Component module  6 is a flat inclined mirror MIRROR (Rev 1.5) 
+  Component module  6 is a flat inclined mirror MIRROR (Rev 1.5)
  -------------------------------------------------------------------------------
 
- Title: CM #6 MIRROR: mylar mirror                                  
+ Title: CM #6 MIRROR: mylar mirror
 
  MIRROR geometry parameters:
  -----------------------------
@@ -648,7 +648,7 @@
   Component module  7 is JAWS (Rev 1.8)
  -------------------------------------------------------------------------------
 
-    Title: CM #7: jaws set for a 10x10cm field at SSD=100 cm           
+    Title: CM #7: jaws set for a 10x10cm field at SSD=100 cm
 
  MLCJAWS geometry parameters:
  -----------------------------
@@ -675,27 +675,27 @@
    1      1     airgap     0.700    0.010   0.700    2.000    21   21  AIR700ICR
                above &
                 centre
-   2      1    +ve jaw     0.700    0.010   0.700    2.000    13   13  WNICU700 
-   3      1    -ve jaw     0.700    0.010   0.700    2.000    13   13  WNICU700 
-                      
+   2      1    +ve jaw     0.700    0.010   0.700    2.000    13   13  WNICU700
+   3      1    -ve jaw     0.700    0.010   0.700    2.000    13   13  WNICU700
+
    4      2     airgap     0.700    0.010   0.700    2.000    21   21  AIR700ICR
                above &
                 centre
    5      2    +ve jaw     0.700    0.010   0.700    2.000    13   13  PBSBICU70
    6      2    -ve jaw     0.700    0.010   0.700    2.000    13   13  PBSBICU70
-                      
+
    7      3     airgap     0.700    0.010   0.700    2.000    21   21  AIR700ICR
                above &
                 centre
-   8      3    +ve jaw     0.700    0.010   0.700    2.000    14   14  WNICU700 
-   9      3    -ve jaw     0.700    0.010   0.700    2.000    14   14  WNICU700 
-                      
+   8      3    +ve jaw     0.700    0.010   0.700    2.000    14   14  WNICU700
+   9      3    -ve jaw     0.700    0.010   0.700    2.000    14   14  WNICU700
+
   10      4     airgap     0.700    0.010   0.700    2.000    21   21  AIR700ICR
                above &
                 centre
   11      4    +ve jaw     0.700    0.010   0.700    2.000    14   14  PBSBICU70
   12      4    -ve jaw     0.700    0.010   0.700    2.000    14   14  PBSBICU70
-                      
+
 
 
 
@@ -703,7 +703,7 @@
   Component module  8 is one or more planar slabs  (SLABS Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: CM #8 SLABS: mylar screen                                   
+    Title: CM #8 SLABS: mylar screen
 
  AIRSLAB geometry parameters:
  -----------------------------
@@ -711,8 +711,8 @@
  Half-width of outer boundary of CM =        50.00000 cm
 
  slab #    Z front    thickness
-            face               
-            (cm)        (cm)   
+            face
+            (cm)        (cm)
  airgap    49.911      2.989
     1      52.900      0.018
 
@@ -728,10 +728,10 @@
 
 
  -------------------------------------------------------------------------------
-  Component module  9 is a set of square scrapers (APPLICAT: Rev 1.6) 
+  Component module  9 is a set of square scrapers (APPLICAT: Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: CM #9: applicator for 10x10 cm field                        
+    Title: CM #9: applicator for 10x10 cm field
 
  APPLICAT geometry parameters:
  --------------------------
@@ -741,7 +741,7 @@
 
     scraper   Z of     bar/gap  x half-width  y half-width  x bar   y bar
     number  front face  thick     opening       opening     width   width
-             (cm)       (cm)       (cm)         (cm)        (cm)     (cm) 
+             (cm)       (cm)       (cm)         (cm)        (cm)     (cm)
     airgap    52.9175     1.1825         NA         NA         NA         NA
          1    54.1000     0.6350     7.1000     7.1000     1.9000     2.0000
     airgap    54.7350    16.7650         NA         NA         NA         NA
@@ -787,7 +787,7 @@
   Component module 10 is an ion chamber or phantom (CHAMBER Rev 1.8)
  -------------------------------------------------------------------------------
 
-    Title: depth-dose phantom                                          
+    Title: depth-dose phantom
 
  PHANTOM region & geometry parameters:
  -------------------------------------
@@ -869,7 +869,7 @@
 
 
 
-18mev EGSnrc input file, Nov 2005                                              
+18mev EGSnrc input file, Nov 2005
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu (g77)                                    14:33:23 Nov  8 2005
@@ -883,10 +883,10 @@
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   58  91
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =   60070.0    4013.6s (=   1.11HR)  14.97
  CPUTIME per history =   0.00080 sec. Number of histories per hour =    4484785.
-   On i686-pc-1-gnu (g77) 
+   On i686-pc-1-gnu (g77)
 
 
 ***WARNING IN SCORING PLANE    1
@@ -982,7 +982,7 @@ Zone    5 has zero area
 
               TOTAL DOSE PER INCIDENT PARTICLE
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    1.113E+01   2.224E-12+/- 0.0%   2.475E-14+/- 0.0%

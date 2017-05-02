@@ -101,7 +101,7 @@
 "*******************************************************************************
 
 "We need the $REAL, $INTEGER and $LOGICAL macros "
-REPLACE {$REAL} WITH {real*4}
+REPLACE {$REAL} WITH {real*8}
 REPLACE {$INTEGER} WITH {integer*4}
 REPLACE {$LOGICAL} WITH {logical}
 
@@ -188,7 +188,7 @@ COMMON/REALS/
   RMIN_MIN,RMIN_MAX,RMAX_MIN,RMAX_MAX,DOMEGA,
   SUM_TMP,SUM_TMP2,Z_SCORE,mumin,mumax;
 
-REAL
+$REAL
   XMIN2,XMAX2,    "|temp. variables"
   XPLOT($NB),HXMIN,  "|VARIABLES FOR XVGR PLOTTING"
   YPLOT($NB),YPLOTT,
@@ -286,6 +286,9 @@ REAL*8
 
 REPLACE {COMIN/INTEGERS;} WITH {
 COMMON/INTEGERS/
+  PARANOT,PARANOT1,PARANOT2,PARANOP,PARANOP1,
+  PARANOP2,IPARANOT,IPARANOT1,IPARANOT2,
+  LPARANINC,LPARANINC1,LPARANINC2,NHSTRY,NHSTRY_LAST,
   I,II,III,IIII,IIIII,ITYPE, J,JJ,NUMBERP,NUMBERST,NBIT1,NBIT2,
   NFIELDi,NFIELDo,NFIELDe,
   NWRONG,LATCHJ,CHOICE,CHOICE1, K1,K2,K3,K4,IA,
@@ -294,11 +297,16 @@ COMMON/INTEGERS/
   ISMFPS,IQSMFP,MSTART,MSMFXY,NSMFEE,NPASS_ph_sp,
   N_ph_sp_e, N_ph_sp_g, N_ph_sp_p, FLUTYPE,ANGTYPE,IZLAST1,
   IZLAST2,IMUIDX1,IMUIDX2,IZSCORE1,IZSCORE2,JUSTONE,
-  MAXSCATTER,NUMSCATTER,NHSTRY,NHSTRY_LAST,ESTYPE,i_iaea_in,i_iaea_out,i_log,
-  i_unit_in,i_unit_out,
-  PARANOT,PARANOT1,PARANOT2,PARANOP,PARANOP1,
-  PARANOP2,IPARANOT,IPARANOT1,IPARANOT2,
-  LPARANINC,LPARANINC1,LPARANINC2;
+  MAXSCATTER,NUMSCATTER,ESTYPE,i_iaea_in,i_iaea_out,i_log,
+  i_unit_in,i_unit_out;
+
+$LONG_INT PARANOT,PARANOT1,PARANOT2,
+  PARANOP,PARANOP1, "these need to be made long because IAEA format handles"
+  PARANOP2,IPARANOT,IPARANOT1,IPARANOT2, "> 2^31-1 particles"
+  LPARANINC,LPARANINC1,LPARANINC2, "long int storage for no. of original "
+                                   "histories for use in IAEA headers, where"
+                                   "this is an integer*8 variable"
+  NHSTRY,NHSTRY_LAST($NB);
 
 INTEGER
   I,II,III,IIII,IIIII,ITYPE,
@@ -346,13 +354,6 @@ INTEGER
   JUSTONE($NB),   "keeps track of actual number of particles in bin"
   MAXSCATTER,     "max. number of particles to output to scatter plot"
   NUMSCATTER,     "keeps track of number of particles written to scatter plot"
-  NHSTRY,         "keeps track of no. of primary (non-phsp source) histories"
-                  "represented in phsp file.  Mostly only a placeholder in"
-                  "phsp macro calls for now, but may be used"
-                  "in stats analysis in the future.  It is also necessary"
-                  "to ensure that -E, marking first particle scored for a new"
-                  "primary history, is preserved when adding phsp files"
-  NHSTRY_LAST($NB), "last primary history to score in a bin"
   ESTYPE          , "energy spectrum type"
   i_iaea_in,      "set to 1 to analyze IAEA-format phase space file"
   i_iaea_out,     "set to 1 if file 2, the file being appended to when two"
@@ -362,12 +363,6 @@ INTEGER
   i_unit_in,i_unit_out; "input and output units; must use variables for"
                       "IAEA routines rather than just specifying the unit no."
                         "directly"
-  $LONG_INT PARANOT,PARANOT1,PARANOT2,
-  PARANOP,PARANOP1, "these need to be made long because IAEA format handles"
-  PARANOP2,IPARANOT,IPARANOT1,IPARANOT2, "> 2^31-1 particles"
-  LPARANINC,LPARANINC1,LPARANINC2; "long int storage for no. of original "
-                                   "histories for use in IAEA headers, where"
-                                   "this is an integer*8 variable"
 }
 ;
 REPLACE {COMIN/LOGICALS;} WITH {
@@ -1201,7 +1196,7 @@ IF(CHOICE1=11)[
     :LB3:
     IF (NUMBERST<1)[
         NUMBERST=1;
-        OUTPUT;(/' First particle no. defaults to 1!'); 
+        OUTPUT;(/' First particle no. defaults to 1!');
         ]
     IF (NUMBERP<1)[
         NUMBERP=100;

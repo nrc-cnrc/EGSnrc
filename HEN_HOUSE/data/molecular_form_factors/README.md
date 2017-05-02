@@ -5,7 +5,7 @@ Measured molecular form factors for coherent scattering are taken from
 When using any of these data files please refer to the following paper:
 
 D. E. Peplow and K. Verghese, *Measured Molecular Coherent Scattering Form
-Factors of Animal Tissues, Plastics and Human Breast Tissue* 
+Factors of Animal Tissues, Plastics and Human Breast Tissue*
 [**Phys. Med. Biol. 43,** 9, 2431-2452 (1998)]
 (http://dx.doi.org/10.1088/0031-9155/43/9/001)
 

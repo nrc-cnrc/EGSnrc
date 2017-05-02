@@ -256,7 +256,7 @@ public:
         }
         EGS_Float up=a*u;
         if (fabs(up)>=1) {
-            return 1e30;    // parallel to axis
+            return veryFar;    // parallel to axis
         }
         EGS_Float A=1-up*up;
         EGS_Vector rc(x-xo);
@@ -274,7 +274,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
 
-        EGS_Float d=1e30;  // large distance to any boundry
+        EGS_Float d=veryFar;  // large distance to any boundry
 
         // projections
         double up=a*u;

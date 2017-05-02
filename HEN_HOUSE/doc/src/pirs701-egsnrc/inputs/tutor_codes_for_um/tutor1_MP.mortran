@@ -2,7 +2,7 @@
 \caption{Commented version of {\tt tutor1.mortran} \vspace*{3mm} }
 \begin{boxedverbatim}
 %L
-%E 
+%E
 " $Id  tutor1.mortran,v 1.2 2003/11/03 18:51:53 course Exp $ "
 !INDENT M 4;    "indent each mortran nesting level by 4"
 !INDENT F 2;    "indent each fortran nesting level by 2"
@@ -86,7 +86,7 @@ PCUT(2)=0.1;"   terminate   photon histories at 0.1 MeV in the plate"
 "---------------------------------------------------------------------"
 "STEP 3   HATCH-CALL                                                  "
 "---------------------------------------------------------------------"
- 
+
 ;OUTPUT;('\f  Start tutor1'//' CALL HATCH to get cross-section data'/);
 CALL HATCH;"    pick up cross section data for TA"
 "               data file must be assigned to unit 12"
@@ -183,7 +183,7 @@ COMIN/STACK/;
 IF(IARG = 3)[
 ANGLE=ACOS(W(NP))*180./3.14159;"angle w.r.t. Z axis in degrees"
 
-IF(IQ(NP) = 0)[EKINE=E(NP);] 
+IF(IQ(NP) = 0)[EKINE=E(NP);]
 ELSE          [EKINE=E(NP)-0.511;]"get kinetic energy"
 OUTPUT EKINE,IQ(NP),ANGLE;(T21,F10.3,T33,I10,T49,F10.1);]
 RETURN;END;"END OF AUSGAB"
@@ -239,7 +239,7 @@ ELSEIF(IR(NP) = 2)["We are in the Ta plate - check the geometry"
       IF(TVAL > USTEP)[RETURN;"can take currently requested step"]
       ELSE[USTEP = TVAL; IRNEW=3; RETURN;]
    ]"END OF W(NP)>0 CASE"
-   
+
    ELSEIF(W(NP) < 0.0)["going back towards origin"
       TVAL = -Z(NP)/W(NP); "distance to plane at origin"
       IF(TVAL > USTEP)[RETURN;"can take currently requested step"]
@@ -252,7 +252,7 @@ ELSEIF(IR(NP) = 1)["in region with source"
    IF(W(NP) >  0.0)["this must be a source particle on z=0 boundary"
       USTEP = 0.0;IRNEW = 2;RETURN;
    ]
-   ELSE[ "it must be a reflected particle-discard it" 
+   ELSE[ "it must be a reflected particle-discard it"
       IDISC=1;RETURN;
    ]
 ]"end region 1 case"

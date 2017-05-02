@@ -6542,7 +6542,7 @@ composition and density as specified in the density correction file are used.</s
                    <item>
                     <widget class="QComboBox" name="DFSearchComboBox">
                      <property name="toolTip">
-                      <string>Select in which directory to begin browsing for the density correction file.  
+                      <string>Select in which directory to begin browsing for the density correction file.
 Will start in /pegs4/density_corrections/ subdirectory off the directory selected here.</string>
                      </property>
                      <item>

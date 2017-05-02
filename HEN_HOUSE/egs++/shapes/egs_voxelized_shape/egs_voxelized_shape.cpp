@@ -205,7 +205,11 @@ EGS_VoxelizedShape::EGS_VoxelizedShape(int file_format, const char *fname,
     int data_type = -1;
     int Nx, Ny, Nz;
     float scale_x=0.0, scale_y=0.0, scale_z=0.0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_VoxelizedShape::EGS_VoxelizedShape: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return;
+        }
         string line, key, value;
         size_t pos;
         getline(h_file, line);

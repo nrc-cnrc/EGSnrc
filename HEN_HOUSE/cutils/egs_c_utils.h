@@ -7,27 +7,27 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2004
-#  
-#  Contributors:   
+#
+#  Contributors:
 #
 ###############################################################################
 #
-#  Various C functions needed for the implementation of parallel processing 
+#  Various C functions needed for the implementation of parallel processing
 #  in EGSnrc.
 #
 ###############################################################################
@@ -43,19 +43,19 @@
 extern "C" {
 #endif
 
-/* The following set of functions are declared as void instead of returning 
- * an integer status because it appears that there are problems in correctly 
- * interpreting a return value from a C function in Fortran on 64 bit 
- * systems. In all cases, the status of the operation is returned in the 
- * integer pointed to by status (and so, for read/write operations 
- * is the number of bytes read/written, for open/close,lock, etc. 
+/* The following set of functions are declared as void instead of returning
+ * an integer status because it appears that there are problems in correctly
+ * interpreting a return value from a C function in Fortran on 64 bit
+ * systems. In all cases, the status of the operation is returned in the
+ * integer pointed to by status (and so, for read/write operations
+ * is the number of bytes read/written, for open/close,lock, etc.
  * it is 0 on success and errno of something goes wrong.
  */
 
-/*! Create, open and lock the job control file. 
+/*! Create, open and lock the job control file.
     This function is to be called from job number 1.
-    fname is a pointer to a null-terminated string with the control file 
-    name. 
+    fname is a pointer to a null-terminated string with the control file
+    name.
  */
 #define egsCreateControlFile F77_OBJ_(egs_create_control_file,EGS_CREATE_CONTROL_FILE)
 void egsCreateControlFile(const char *fname, int *status, int len);
@@ -72,20 +72,20 @@ void egsOpenControlFile(const char *fname, int *status, int len);
 void egsCloseControlFile(int *status);
 
 /*! Lock the control file.
-    This function is to be called before performing I/O 
+    This function is to be called before performing I/O
     operations on the job control file.
  */
 #define egsLockControlFile F77_OBJ_(egs_lock_control_file,EGS_LOCK_CONTROL_FILE)
 void egsLockControlFile(int *status);
 
 /*! Unlock the control file.
-    This function is to be called after I/O operations 
+    This function is to be called after I/O operations
     on the job control file are done.
  */
 #define egsUnlockControlFile F77_OBJ_(egs_unlock_control_file,EGS_UNLOCK_CONTROL_FILE)
 void egsUnlockControlFile(int *status);
 
-/*! Rewind the job control file 
+/*! Rewind the job control file
     If the file is not locked, lock it first
  */
 #define egsRewindControlFile F77_OBJ_(egs_rewind_control_file,EGS_REWIND_CONTROL_FILE)
@@ -97,7 +97,7 @@ void egsRewindControlFile(int *status);
     with the length of the buffer.
  */
 #define egsWriteControlFile F77_OBJ_(egs_write_control_file,EGS_WRITE_CONTROL_FILE)
-void egsWriteControlFile(const char *buf, const int *n, 
+void egsWriteControlFile(const char *buf, const int *n,
                                             int *status, int len);
 /*! Read from the job control file *n bytes into buf.
  */

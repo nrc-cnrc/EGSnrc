@@ -146,7 +146,7 @@ $REAL    "ensrcd(0:$NENSRC),"
          enmin,enmax,sume1,sume,
          Ek_max,Emono;
 $LOGICAL is_mono;
-character*80 filnam,spec_title;
+character*256 filnam,spec_title;
 integer*4 lnblnk1; "use our own in-house lnblnk routine because some"
                    "compilers do not have lnblnk"
 
@@ -246,6 +246,7 @@ ELSE[
     READ (CHAR_VALUE(NUM_SPFIL,1),FMT='(A)') filnam;
 
     OUTPUT filnam;(/'   READ INPUT ENERGY SPECTRUM FROM: ',A);
+    call replace_env(filnam);
     OPEN(9,file=filnam,STATUS='OLD');
     READ(9,'(A)') spec_title;
     READ(9,*) nensrc,ensrcd(0),mode;

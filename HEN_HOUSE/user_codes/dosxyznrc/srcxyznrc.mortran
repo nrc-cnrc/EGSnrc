@@ -1808,10 +1808,11 @@ IF(enflag = 0)[ "monoenergetic source"
 ELSEIF(enflag = 1)["input an energy spectrum"
 "----------------------------------------------------------------"
     OUTPUT;(' Energy spectrum:');
-    OUTPUT;(' Input name of file with spectrum data (A80): ',$);
+    OUTPUT;(' Input name of file with spectrum data (A256): ',$);
     READ(5,101,ERR=:ERR_SOURCE1:) FILNAM;
     101 FORMAT(A256);
-    OUTPUT61 FILNAM;(/'   Read input energy spectrum from: ',/A80);
+    OUTPUT61 FILNAM;(/'   Read input energy spectrum from: ',/A);
+    call replace_env(FILNAM);
     OPEN(UNIT=99,STATUS='OLD',file=FILNAM);
     READ(99,101) SPEC_TITLE;
     READ(99,'(I10,F15.0,I5)')NENSRC,ENMIN,IMODE;
@@ -1911,9 +1912,11 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
 "----------------------------------------------------------------"
   IF(isource=2 | isource=8)[
     OLDSRC=0;"flag for old phase space files"
-    OUTPUT;(' Input name of phase space file (A80)'/'  : ',$);
+    OUTPUT;(' Input name of phase space file (A256)'/'  : ',$);
     READ(5,101,ERR=:ERR_SOURCE2:) FILNAM;
-    OUTPUT61 FILNAM;(/' Particles will be read from file: ',/A80);
+    OUTPUT61 FILNAM;(/' Particles will be read from file: ',/A);
+
+    call replace_env(FILNAM);
 
     i_iaea_in=0; "assume not in IAEA format"
     ilen=lnblnk1(FILNAM);
@@ -2093,7 +2096,9 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     OUTPUT $cstring(the_phsp_file);
     (/'phase space file: ',A/);
 
-    OUTPUT61 the_phsp_file;(/' Particles will be read from file: ',/A80);
+    OUTPUT61 the_phsp_file;(/' Particles will be read from file: ',/A);
+
+    call replace_env(the_phsp_file);
 
     i_iaea_in=0; "assume not in IAEA format"
     dosxyz2beam_izscore=0; "assume not scoring Z for each particle"

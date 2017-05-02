@@ -15,7 +15,7 @@ typedef EGS_I64   IAEA_I64;
 #define IAEA_EXTERN_C extern
 #endif
 
-#ifdef WIN32 
+#ifdef WIN32
 
 #ifdef BUILD_IAEA_DLL
 #define IAEA_EXPORT __declspec(dllexport)

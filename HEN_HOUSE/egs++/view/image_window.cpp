@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Manuel Stoeckl
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -382,7 +383,11 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         }
         QString mxstring = QString::number(mxval);
 
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("ImageWindow::paintEvent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return;
+            }
             int wmax = p.fontMetrics().width(mxstring);
             if (wmax < 41) {
                 break;

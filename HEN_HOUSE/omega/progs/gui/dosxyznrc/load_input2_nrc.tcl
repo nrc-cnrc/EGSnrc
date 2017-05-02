@@ -128,7 +128,7 @@ proc get_val { data varname i} {
     set indx [string first , $data]
     if { $indx<0 } {
 	# There was no comma found.  Trim whitespace off the ends of the line.
-        
+
 	# Now see if there's a space anywhere in the remaining string.
 	if [string first " " $data]>0 {
 	    # A space was found.  Set indx to that position.
@@ -530,7 +530,7 @@ proc read_input {} {
       #get calflag
       set data [get_val $data arr 0]
       set calflag $arr(0)
-      if {$calflag>1 || $calflag<0} { set calflag 0 }    
+      if {$calflag>1 || $calflag<0} { set calflag 0 }
 
       for {set i 1} {$i<=$numsets} {incr i} {
 	  gets $fileid data
@@ -587,7 +587,7 @@ proc read_input {} {
       for {set i 0} {$i<4} {incr i} {
         set data [get_val $data srcopts $i]
       }
-      #now get other inputs 
+      #now get other inputs
       for {set i 0} {$i<3} {incr i} {
         set data [get_val $data arr $i]
       }
@@ -617,7 +617,7 @@ proc read_input {} {
         set cang($i) $arr(2)
         set parc($i) $arr(3)
         set ifile($i) $arr(4)
-      } 
+      }
     }
 
     # read enflag, mode(values(20)), medsur,dsurround, dflag

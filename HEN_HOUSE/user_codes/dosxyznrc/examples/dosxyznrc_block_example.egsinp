@@ -19,7 +19,7 @@ $EGS_HOME/BEAM_block/block_eg.egsphsp1
 100, 1, 500.0, 97, 33, 100.0, 0, 0, 0, 1, 5.0, 0, 0, 0, 0, 0, 0
  #########################
  :Start MC Transport Parameter:
- 
+
  Global ECUT= 0.521
  Global PCUT= 0.01
  Global SMAX= 5
@@ -41,6 +41,6 @@ $EGS_HOME/BEAM_block/block_eg.egsphsp1
  Electron impact ionization= Off
  Photon cross sections= xcom
  Photon cross-sections output= Off
- 
+
  :Stop MC Transport Parameter:
  #########################

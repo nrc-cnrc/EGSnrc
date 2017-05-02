@@ -107,7 +107,7 @@ ZBOUND=0.5;"     plate is 5 mm thick"
 \end{figure}
 \begin{figure}
 \begin{center}
-\caption{Portions of {\tt tutor5.mortran} - continued.  
+\caption{Portions of {\tt tutor5.mortran} - continued.
 }
 \begin{boxedverbatim}
 "---------------------------------------------------------------------"
@@ -167,7 +167,7 @@ STOP;END;"end of tutor5 main routine"
 \index{AUSGAB!example}
 \index{LATCH!example}
 \begin{center}
-\caption{Portions of {\tt tutor5.mortran} - continued.  
+\caption{Portions of {\tt tutor5.mortran} - continued.
 }
 \begin{boxedverbatim}
 "**********************************************************************"
@@ -217,7 +217,7 @@ ELSEIF(IARG=23)[ "a rayleigh scatter is about to occur" $SET-FLAG2;]
 \addtocounter{figure}{-1}
 \begin{figure}
 \begin{center}
-\caption{Portions of {\tt tutor5.mortran} - continued.  
+\caption{Portions of {\tt tutor5.mortran} - continued.
 }
 \begin{boxedverbatim}
 
@@ -230,9 +230,9 @@ ELSEIF(IARG = 3 ) [ "particle has left slab"
       ELSEIF($FLAG2 ~= 0)[ "at least one rayleigh scatter"   JJ=2;]
       ELSEIF($FLAG1 ~= 0)[">=1 compton scatter, no Rayleigh" JJ=3;]
       ELSE ["debug";OUTPUT JJ,LATCH(NP); (' JJ,LATCH(NP)=',2I10);]
-      
+
       IF(JJ ~= 0) [
-         COUNT(JJ)=COUNT(JJ) + 1.;  
+         COUNT(JJ)=COUNT(JJ) + 1.;
          ENTOT(JJ) = ENTOT(JJ) + E(NP);
       ]
    ]"end region 3 or 1 block"

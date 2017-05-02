@@ -322,7 +322,7 @@ public:
                 EGS_Float xx = Ax*xp*axi[ireg], xy = Ay*xp*ayi[ireg];
                 EGS_Float xu = xx*ux + xy*uy;
                 EGS_Float r2 = xx*xx + xy*xy - 1;
-                EGS_Float d = 1e30;
+                EGS_Float d = veryFar;
                 if (r2 >= 0) {
                     // we think we are inside but the math shows we are
                     // outside. Hopefully a truncation problem.
@@ -371,7 +371,7 @@ public:
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
         EGS_Float xx = fabs(Ax*x), xy = fabs(Ay*x);
-        EGS_Float tperp = ireg >= 0 ? hownear(ireg,xx,xy) : 1e30;
+        EGS_Float tperp = ireg >= 0 ? hownear(ireg,xx,xy) : veryFar;
         if (ireg && tperp > 0) {
             int n = ireg < 0 ? nreg-1 : ireg-1;
             EGS_Float t1 = hownear(n,xx,xy);
@@ -415,7 +415,11 @@ private:
                     uo*(uo*uo-4*(vo*vo+3))/(16*(1+vo*vo)) :
                     1 - 0.5*vo*vo/(vo*vo+(uo+1)*(uo+1));
         int ntry=0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_EllipticCylindersT::hownear: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             if (++ntry > 50) {
                 if (++nwarn < 20) egsWarning("EGS_EllipticCylindersT::"
                                                  "hownear: failed to find solution\n");

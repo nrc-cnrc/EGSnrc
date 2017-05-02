@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Ernesto Mainegra-Hing
 #                   Blake Walters
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -829,7 +830,7 @@ int EGS_Application::simulateSingleShower() {
             source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,p.x,p.u);
         ireg = geometry->isWhere(p.x);
         if (ireg < 0) {
-            EGS_Float t = 1e30;
+            EGS_Float t = veryFar;
             ireg = geometry->howfar(ireg,p.x,p.u,t);
             if (ireg >= 0) {
                 p.x += p.u*t;

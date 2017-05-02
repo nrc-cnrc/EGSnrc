@@ -79,7 +79,7 @@ REPLACE {$MAXIMUM_N_$SYNCMLCE} WITH {3}
 REPLACE {$MAXLEAF} WITH {170}
 
 " The max no. of different fields--dynamic and step-and-shoot only"
-REPLACE {$MAXFIELD_$SYNCMLCE} WITH {256}
+REPLACE {$MAXFIELD_$SYNCMLCE} WITH {1024}
 
 "used for arrays that store data for each leaf for each field"
 REPLACE {$MAXFIELDLEAF} WITH {{COMPUTE $MAXLEAF*$MAXFIELD_$SYNCMLCE}}

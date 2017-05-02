@@ -867,7 +867,7 @@ IF(error_flags(ival_ue)=0)[
    ue_tmp=value(ival_ue,1);
 ]
 ELSE[
-   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use 
+   $WRITE_MEDERR(' Warning: UE for media not supplied.  Will use
      50.5109989461 MeV');
    ue_tmp=50 + prm;
 ]
@@ -1650,14 +1650,14 @@ DO i=1,nmed[
      DO k=1,16[
        EKE=ETAB(k)*10.**(j-4);
        IF(EKE <= AE(1)-PRM) [
-           IF(IFLAG1 = 0) [ 
-             IFLAG1=1; EKE=AE(1)-PRM; 
+           IF(IFLAG1 = 0) [
+             IFLAG1=1; EKE=AE(1)-PRM;
            ] ELSE [ EKE=0.0; ]
        ]
 
        IF(EKE > UE(1)-PRM) [
-           IF(IFLAG2 = 0) [ 
-             IFLAG2=1; EKE=UE(1)-PRM; 
+           IF(IFLAG2 = 0) [
+             IFLAG2=1; EKE=UE(1)-PRM;
            ] ELSE [ EKE=1.E30; ]
        ]
        EIE=EKE+PRM;       TMXSO=0.0;        DEDXE=0.0;

@@ -1,0 +1,26 @@
+language: bash
+
+addons:
+  apt:
+    packages:
+      - gfortran
+      - gcc
+      - g++
+      - expect
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y grace
+  - sudo apt-get install -y libmotif-dev
+
+install:
+  - HEN_HOUSE/scripts/configure.expect linux.conf | tee configure.log
+
+script:
+  - pwd
+  - for f in HEN_HOUSE/log/*.log configure.log; do echo $f; cat $f; done
+  - (! grep -i fail configure.log)
+  - export EGS_HOME=/home/travis/build/nrc-cnrc/EGSnrc/egs_home
+  - export EGS_CONFIG=/home/travis/build/nrc-cnrc/EGSnrc/HEN_HOUSE/specs/linux.conf
+  - source /home/travis/build/nrc-cnrc/EGSnrc/HEN_HOUSE/scripts/egsnrc_bashrc_additions
+  - date
