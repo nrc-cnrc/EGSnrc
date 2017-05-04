@@ -76,7 +76,12 @@ EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
             gc = (GeometryConfinement) input->getInput("region selection",reg_options,0);
             if (gc == IncludeSelected || gc == ExcludeSelected) {
                 vector<int> regs;
-                err = input->getInput("selected regions",regs);
+                string regString;
+                err = input->getInput("selected regions",regString);
+
+                geom->getNumberRegions(regString, regs);
+                geom->getLabelRegions(regString, regs);
+
                 if (err || regs.size() < 1) {
                     egsWarning("EGS_IsotropicSource: region selection %d used "
                                "but no 'selected regions' input found\n",gc);
