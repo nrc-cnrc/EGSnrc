@@ -778,12 +778,17 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = pzero;
+        relax_initiator_q = 0; "particle initiating relaxations is photon"
         call relax(Uj,shn_array(j),iz_array(j));
         "relax will put all particles with energies above ecut,pcut on the "
         "stack, the remaining energy will be scored in edep and deposited  "
         "locally (via the call to ausgab below)                            "
     ]
-    ELSE [ edep = Uj; ]
+    ELSE [
+        edep = Uj;
+        edep_local = edep;
+        $AUSCALL($SPHOTONA);
+    ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]
 
 ]
@@ -952,6 +957,7 @@ IF( ibcmp(irl) = 1 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = 0;
+
         call relax(Uj,shn_array(j),iz_array(j));
           "relax will put all particles with energies above ecut,pcut on the "
           "stack, the remaining energy will be scored in edep and deposited  "
@@ -5132,7 +5138,10 @@ IF( iq(np) = -1 ) [
 "IF ($EADL_RELAX & k > 4)[
 "   edep = e_vac; do_relax = .false.;
 "]
-IF ( do_relax ) [ call relax(e_vac,k,iZ); ]
+IF( do_relax ) [
+    relax_initiator_q = 0; "a photon is initiating relaxations"
+    call relax(e_vac,k,iZ);
+]
 
 IF( EDEP > 0 ) [ $AUSCALL($PHOTXAUS); ]    "generates IARG = 4 call"
 
@@ -5203,7 +5212,7 @@ $REAL    e_array($MXVAC),   "array with vacancy energies           "
          Ex,                "kinetic energy of emitted particle    "
          eta,               "a random number                       "
          e_check,           "energy conservation check             "
-         e_cut,ekcut,pkcut,elcut; "cut-off energies                "
+         e_cut,ekcut,pkcut,elcut,max_Ec,max_Pc; "cut-off energies  "
 
 $REAL    xphi,yphi,xphi2,yphi2,rhophi2,
          cphi,sphi;         "for azimuthal angle selection"
@@ -5217,7 +5226,7 @@ $COMIN-RELAX;
 
 data first_transition/1,20,27,33,38/;
 data last_transition/19,26,32,37,39/;
-data final_state/
+data final_state/ "See the final_state definition above"
          4,3,5,6,                           " K-shell fluorescence    "
          202,302,402,404,403,303,           " K-shell Auger           "
          502,503,504,602,603,604,           " K-shell Auger           "
@@ -5247,17 +5256,31 @@ IF( n < 1 | n > $MXSHELL ) [ return; ] "unknown vacancy"
 iz_relax = iZ;
 irl = ir(np);
 ekcut = ecut(irl)-rm; pkcut = pcut(irl);
+max_Ec = Max($RELAX-CUTOFF,ekcut);
+max_Pc = Max($RELAX-CUTOFF,pkcut);
 e_cut = Min(ekcut,pkcut);
 e_cut = Max($RELAX-CUTOFF,e_cut);
 
-IF( energy <= e_cut ) [
-    edep = edep + energy;  "We assume that edep is zeroed "
-                           "(or set to the appropriate value in the routine "
-                           "calling RELAX "
+IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
+    IF( energy <= max_Pc ) [
+        edep = edep + energy;  "We assume that edep is zeroed "
+                            "(or set to the appropriate value in the routine "
+                            "calling RELAX "
 
-    edep_local = energy;
-    $AUSCALL($SAUGERTRA);
-    return;
+        edep_local = energy;
+        $AUSCALL($SPHOTONA);
+        return;
+    ]
+] ELSE [ "particle initiating relaxations was electron"
+    IF( energy <= max_Ec ) [
+        edep = edep + energy;  "We assume that edep is zeroed "
+                            "(or set to the appropriate value in the routine "
+                            "calling RELAX "
+
+        edep_local = energy;
+        $AUSCALL($SELECTRONA);
+        return;
+    ]
 ]
 
 " Set-up the array of vacancies for the relaxation cascade "
@@ -5267,15 +5290,29 @@ e_check = 0; e_array(n_vac) = energy;
 :START: LOOP[     "Until no  >N-shell vacancies"
 
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
-    IF( Ei <= e_cut ) [  " Below cut-off -> local absorption "
-        edep = edep + Ei;
 
-        edep_local = Ei;
-        $AUSCALL($SAUGERTRA);
+    IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
+        IF( Ei <= max_Pc ) [  " Below cut-off -> local absorption "
+            edep = edep + Ei;
 
-        IF( n_vac > 0 ) goto :START: ;
-        EXIT;
+            edep_local = Ei;
+            $AUSCALL($SPHOTONA);
+
+            IF( n_vac > 0 ) goto :START: ;
+            EXIT;
+        ]
+    ] ELSE [ "particle initiating relaxations was electron"
+        IF( Ei <= max_Ec ) [  " Below cut-off -> local absorption "
+            edep = edep + Ei;
+
+            edep_local = Ei;
+            $AUSCALL($SELECTRONA);
+
+            IF( n_vac > 0 ) goto :START: ;
+            EXIT;
+        ]
     ]
+
     "Set the relax_user common block variables, IK March 22 2004"
     ish_relax = shell; u_relax = Ei;
     IF( shell = $MXSHELL ) [ "This is N-shell vacancy -> just produce Auger"
@@ -5298,7 +5335,7 @@ e_check = 0; e_array(n_vac) = energy;
             edep = edep + Ei;
 
             edep_local = Ei;
-            $AUSCALL($SAUGERTRA);
+            $AUSCALL($SELECTRONA);
         ]
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
@@ -5341,11 +5378,11 @@ e_check = 0; e_array(n_vac) = energy;
 
         IF( finala <  10 ) [
             edep_local = Ex;
-            $AUSCALL($SFLUORTRA);
+            $AUSCALL($SPHOTONA);
         ]
         ELSE [
             edep_local = Ex;
-            $AUSCALL($SAUGERTRA);
+            $AUSCALL($SELECTRONA);
         ]
     ]
     ELSE [
@@ -5602,16 +5639,30 @@ REPLACE {$CHECK-RELAX-STACK(#,#);} WITH {;
 "***********************************************************************"
   subroutine egs_eadl_relax(iZ, shell_egs);
 "************************************************************************"
-"    Relaxation subroutine using EADL data. There is an inconsistency    "
-"    in the binding energies (BE) as COMPT uses different BE (incoh.data)"
-""
-"  Explain need to reduce new_state by 1 below as alias sampling provides"
-"  bin number from 1...nbin and not 0...nbin-1"
-""
-"                              Originally coded by IK in a standalone code"
-"                          Modified for use with EGSnrc by EMH, June 2011 "
-"                          Corrected bugs and commented by EMH, April 2012"
-"*************************************************************************"
+" Subroutine, called from subroutine relax, to fill a vacancy in         "
+" shell shell_egs in element iZ by emitting fluorescent X-rays, Auger    "
+" and Coster-Kronig electrons.  Uses EADL data.                          "
+" Results passed via variables in comins.                                "
+"   edep                                                                 "
+"   edep_local                                                           "
+"   e(np)                                                                "
+"                                                                        "
+" There are calls to ausgab with IARG values                             "
+"   24  A fluorescent transition just occurred                           "
+"   26  An Auger transition just occurred                                "
+"   32  Sub-threshold fluorescent transition just occurred               "
+"   33  Sub-threshold Auger transition just occurred                     "
+"                                                                        "
+" There is an inconsistency in the binding energies (BE) as COMPT uses   "
+" different BE (incoh.data)                                              "
+"                                                                        "
+" Explain need to reduce new_state by 1 below as alias sampling provides "
+" bin number from 1...nbin and not 0...nbin-1                            "
+"                                                                        "
+"                             Originally coded by IK in a standalone code"
+"                         Modified for use with EGSnrc by EMH, June 2011 "
+"                         Corrected bugs and commented by EMH, April 2012"
+"************************************************************************"
 
 $IMPLICIT-NONE;
 
@@ -5619,57 +5670,124 @@ $declare_max_medium;
 $COMIN-RELAX-EADL;
 ;COMIN/RELAX-USER/;
 
-$REAL    min_E,Ec,Pc,rnno,Evac,Ef,Ef1,Ef2,Ex,Ecc,cost,sint,cphi,sphi;
-$INTEGER  shell, shell_egs, iZ, iarg, Nvac_max, medirl,i;
-$INTEGER irl,vacs($MAXVAC),nvac,vac,new_state,iqf,np_save,new1,new2;
+$REAL    Ec,Pc,max_Ec,max_Pc,min_E,rnno,Evac,Ef,Ef1,Ef2,Ex,Ecc,
+         cost,sint,cphi,sphi;
+"Ec      ecut as k.e. for current region"
+"Pc      pcut for current region"
+"max_Ec  maximum of Ec and $RELAX-CUTOFF"
+"max_Pc  maximum of Pc and $RELAX-CUTOFF"
+"rnno    a random number"
+"Evac    binding energy of current vacancy"
+"Ef      the sum of the binding energies of the new vacancies"
+"Ef1     the first new binding energy of for non-radiative transitions"
+"Ef2     the second new binding energy of for non-radiative transitions"
+"Ex      the change in total binding energy"
+"Ecc     the cutoff energy (Ec or Pc)"
+"cost,sint,cphi,sphi variables for calculating particle direction"
+
+$INTEGER  shell, shell_egs, iZ, iarg;
+"shell       number in master eadl list"
+"shell_egs   shell number in current element"
+"iZ          atomic number of element"
+
+$INTEGER  irl,vacs($MAXVAC),nvac,vac,new_state,iqf,np_save,new1,new2;
+"irl           current region"
+"vacs($MAXVAC) array of vacancy shell numbers"
+"nvac          current number of vacancies in vacs"
+"vac           shell number of current vacancy"
+"new_state     the state number that represents the new vacancy"
+"iqf           the charge of the emitted relaxation particle"
+"np_save       the stack index of the particle inducing in relaxations"
+"new1          the first new vacancy for non-radiative transitions"
+"new2          the second new vacancy for non-radiative transitions"
+
 $INTEGER sample_alias_histogram;
 $DEFINE-VARIABLES-FOR-SELECT-AZIMUTHAL-ANGLE;
 
-Nvac_max = -1;
 shell = shell_eadl(iZ,shell_egs);
 IF( shell < 1 | shell > $MAXSHELL ) [ return; ] "unknown vacancy"
 
 irl = ir(np);
-Ec = ecut(irl) - rm; Pc = pcut(irl);
+Ec = ecut(irl) - rm;
+Pc = pcut(irl);
+max_Ec = max($RELAX-CUTOFF,Ec);
+max_Pc = max($RELAX-CUTOFF,Pc);
 min_E = min(Ec,Pc); min_E = max($RELAX-CUTOFF,min_E);
-Evac = shell_be(shell);
-rfu_Z = shell_Z(shell); rfu_j0 = shell;
-rfu_n0 = shell_num(shell); rfu_t0 = shell_type(shell);
-rfu_E0 = Evac;
+Evac = shell_be(shell); "provides relevant binding energy for this vacancy"
+"store some information in comin RELAX-FOR-USER.  This just duplicates"
+"various pieces of info so the user can access them."
+rfu_Z  = shell_Z(shell); "Z of element the relaxing shell belongs to"
+rfu_j0 = shell;         "shell # of vacancy that initiated cascade in long list"
+rfu_n0 = shell_num(shell); "same but number is shell number in element iZ"
+rfu_t0 = shell_type(shell); "the shell type (encodes the type of relaxation)"
+rfu_E0 = Evac;          "B.E. of vacancy that initiated cascade"
 
 "Local energy deposition for vacancies below L3 shell."
 "Added here for consistency in algorithm for as long as"
 "<M> and <N> shells considered instead of proper shells."
 "AUSGAB call should be updated when charge of particle"
 "creating vacancy becomes available."
-IF (shell_egs > 4)[
-   edep = Evac;
-   return; "invokes $AUSCALL($PHOTXAUS) in COMPT;
+IF (shell_egs > 4) [
+    edep = Evac;        "add energy of vacancy to edep"
+    edep_local = Evac;  "set value of edep_local to energy of vacancy"
+
+    IF( relax_initiator_q = 0 ) [
+        "particle initiating relaxations was photon"
+        $AUSCALL($SPHOTONA);  "call ausgab with iarg=33"
+    ] ELSE [
+        "particle initiating relaxations was electron"
+        $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
+    ]
+
+    return; "invokes $AUSCALL($PHOTXAUS) in COMPT;"
 ]
 
 vac = shell; Nvac = 0; np_save = np;
-LOOP [
-    IF( Evac < min_E | relax_ntran(vac) < 1 ) [
-        edep += Evac;
-        edep_local = Evac;
-        $AUSCALL($SAUGERTRA);
-        go to :VACANCY:;
+LOOP [ "from here to end of routine over all vacancies created"
+
+    "check if energy of vacancy < cutoffs OR no transitions from this shell"
+    IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
+        IF( Evac < max_Pc | relax_ntran(vac) < 1 ) [
+            edep += Evac;         "add energy of vacancy to edep"
+            edep_local = Evac;    "set value of edep_local to energy of vacancy"
+            $AUSCALL($SPHOTONA);  "call ausgab with iarg=33"
+            go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
+        ]
+    ] ELSE [ "particle initiating relaxations was electron"
+        IF( Evac < max_Ec | relax_ntran(vac) < 1 ) [
+            edep += Evac;         "add energy of vacancy to edep"
+            edep_local = Evac;    "set value of edep_local to energy of vacancy"
+            $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
+            go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
+        ]
     ]
+
+    "prepare_alias_histogram is called from subroutine egs_init_relax and"
+    "sample_alias_histogram uses the array of bin probabilities and bin"
+    "numbers relax_prob(relax_first(vac) and relax_atbin(relax_first(vac))"
+    "to return the bin which has been sampled, i.e. new_state"
+    "relax_ntran(vac) tells how many transitions are available"
     new_state = sample_alias_histogram(relax_ntran(vac),
                   relax_prob(relax_first(vac)),
                   relax_atbin(relax_first(vac)));
     IF( new_state < 0 ) [ "this may happen if the sum of probabilities from"
                           "EADL was < 1. In this case the entire energy is"
                           "given to an electron and no new vacancy is created"
-        Ef = 0; iqf = -1; Ecc = Ec;
+        Ef = 0;
+        iqf = -1;
+        Ecc = Ec;
     ]
     ELSE[
         new_state = relax_state(relax_first(vac)+new_state-1);
-     IF( new_state <= 64 ) [ "It was a radiative transition"
-        iqf = 0; new_state += vac - shell_num(vac); Ef = shell_be(new_state);
-        Nvac += 1; vacs(Nvac) = new_state;
+     IF( new_state <= 64 ) [ "It was a radiative transition, i.e. fluorescence"
+        iqf = 0;
+        new_state += vac - shell_num(vac);
+        Ef = shell_be(new_state);
+        Nvac += 1;
+        vacs(Nvac) = new_state;
         Ecc = Pc;
-     ]
+     ] "end of fluorescence block"
+
      ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
         iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
         new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
@@ -5677,7 +5795,7 @@ LOOP [
         Nvac += 1; vacs(Nvac) = new1;
         Nvac += 1; vacs(Nvac) = new2;
         Ef = Ef1 + Ef2; Ecc = Ec;
-     ]
+     ] "end Auger or Coster-Kronig block"
     ]
     Ex = Evac - Ef;
     edep_local = 0;
@@ -5699,21 +5817,22 @@ LOOP [
         ELSE [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
         ]
-    ] ELSE [
+    ] ELSE [ "Ex <= Ecc"
         edep += Ex;
 
         IF( iqf = 0 ) [
             edep_local = Ex;
-            $AUSCALL($SFLUORTRA);
+            $AUSCALL($SPHOTONA);
         ] ELSE [
             edep_local = Ex;
-            $AUSCALL($SAUGERTRA);
+            $AUSCALL($SELECTRONA);
         ]
-    ]
+    ] "end Ex <= Ecc block"
     :VACANCY:;
     IF( Nvac = 0 ) EXIT;
+    "get next vacancy to process"
     vac = vacs(Nvac); Evac = shell_be(vac); Nvac -= 1;
-]
+] "end of main loop"
 return;
 end;
 ;
@@ -7368,9 +7487,10 @@ IF( pese2 > ae(medium) ) [
 ] ELSE [
     edep = wx - Uj;
     edep_local = edep;
-    $AUSCALL($SAUGERTRA);
+    $AUSCALL($SELECTRONA);
 ]
 "ish ranges from 1 to 4 for K,L1,L2,L3 shells"
+relax_initiator_q = -1; "particle initiating relaxations is electron"
 call relax(Uj,ish,iZ);
 
 IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]
