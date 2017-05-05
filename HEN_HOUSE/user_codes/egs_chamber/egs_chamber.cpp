@@ -659,6 +659,7 @@ private:
 
     EGS_Float        fsplit;    // photon splitting number
     EGS_Float        fspliti;   // inverse photon splitting number
+    int              csplit;    // radiative splitting number
 
     /*! Range rejection flag
       If set to 0, no range rejection is used
@@ -939,8 +940,8 @@ int EGS_ChamberApplication::initScoring() {
         //
         // ******** radiative event splitting
         //
-         int csplit=1;
-         if( !vr->getInput("radiative splitting", csplit) && csplit > 1) {
+        csplit=1;
+        if( !vr->getInput("radiative splitting", csplit) && csplit > 1) {
             egsInformation("\n => initScoring: splitting radiative events %d times ...\n", csplit);
            the_egsvr->nbr_split = csplit;
         }
@@ -2201,6 +2202,7 @@ int EGS_ChamberApplication::simulateSingleShower() {
 
     last_case = current_case;
     EGS_Vector x,u;
+    the_egsvr->nbr_split = csplit;
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
     //egsInformation("Got particle: q=%d E=%g wt=%g latch=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",p.q,p.E,p.wt,p.latch,x.x,x.y,x.z,u.x,u.y,u.z);
     int err = startNewShower(); if( err ) return err;
