@@ -420,6 +420,13 @@ public:
      */
     virtual void printSampledEmissions() {};
 
+    /*! \brief Get energy that should be deposited locally from relaxations/alphas.
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * gets the energy deposited locally during spectrum generation.
+     */
+    virtual EGS_Float getEdep() const {};
+
     /*! \brief Get the maximum energy of this spectrum.
      *
      * This pure virtual method must be reimplemented by derived classes

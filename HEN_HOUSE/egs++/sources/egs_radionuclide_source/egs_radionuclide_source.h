@@ -43,6 +43,7 @@
 #include "egs_shapes.h"
 #include "egs_base_geometry.h"
 #include "egs_math.h"
+#include "egs_application.h"
 
 #include <algorithm>
 
@@ -343,6 +344,9 @@ protected:
     EGS_Float           activity, //!< The activity of the source
                         time; //!< The time of emission of the most recently generated particle
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
+
+private:
+    EGS_Application *app;
 };
 
 #endif

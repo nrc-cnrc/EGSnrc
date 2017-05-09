@@ -42,6 +42,7 @@
 #include "egs_math.h"
 #include "egs_ensdf.h"
 #include "egs_application.h"
+#include "egs_advanced_application.h"
 
 #include <cstdio>
 #include "egs_math.h"
@@ -1034,12 +1035,8 @@ public:
             egsInformation("EGS_RadionuclideSpectrum: Relative activity: %f\n",relativeActivity);
         }
 
-        // TODO: Hard-coded ecut and pcut! This is only used for the
-        // relaxations currently
-        // Getting the correct ecut and pcut is not possible currently
-        // because sources are initialized before the transport parameters
-        ecut = 0.521;
-        pcut = 0.01;
+        // Set the application
+        app = EGS_Application::activeApplication();
     };
 
     /*! \brief Destructor. */
@@ -1060,6 +1057,11 @@ public:
     /*! \brief Get the shower index of the most recent emission. */
     EGS_I64 getShowerIndex() const {
         return ishower;
+    }
+
+    /*! \brief Get energy that should be deposited locally from relaxations/alphas. */
+    EGS_Float getEdep() const {
+        return edep;
     }
 
     /*! \brief Get the relative weight assigned to this spectrum. */
@@ -1163,6 +1165,7 @@ protected:
 
         // The energy of the sampled particle
         EGS_Float E;
+        edep = 0;
 
         // Check for relaxation particles due to shell vacancies in the daughter
         // These are created from internal transitions or electron capture
@@ -1248,11 +1251,11 @@ protected:
 
                                         // Add relaxation particles to the source stack
                                         if (ensdfFluorescence != "yes") {
-                                            EGS_Float edep;
-                                            (*gamma)->relax(i,ecut,pcut,rndm,edep,relaxParticles);
-                                        }
 
-                                        // TODO: Sub-threshold depositions (edep) from relaxations are discarded! This is an approximation.
+                                            // Generate relaxation particles for a
+                                            // shell vacancy i
+                                            (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
+                                        }
 
                                         // Return the conversion electron
                                         return E;
@@ -1315,10 +1318,9 @@ protected:
                             for (unsigned int i=0; i<(*beta)->ecShellIntensity.size(); ++i) {
                                 if (u3 < (*beta)->ecShellIntensity[i]) {
 
-                                    // Add relaxation particles to the source stack
-                                    // TODO: edep is neglected
-                                    EGS_Float edep;
-                                    (*beta)->relax(i,ecut,pcut,rndm,edep,relaxParticles);
+                                    // Generate relaxation particles for a
+                                    // shell vacancy i
+                                    (*beta)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
 
                                     return 0;
                                 }
@@ -1354,8 +1356,13 @@ protected:
                 // Set the energy level of the daughter
                 currentLevel = (*alpha)->getLevelRecord();
 
+                // Score alpha energy depositions locally,
+                // because alpha transport is not modeled in EGSnrc.
+                // This is an approximation!
+                edep += (*alpha)->getFinalEnergy();
+
                 // For alphas we simulate a disintegration but the
-                // transport will not be performed
+                // transport will not be performed so return 0
                 return 0;
             }
         }
@@ -1442,11 +1449,12 @@ private:
                                 Emax,
                                 spectrumWeight,
                                 totalGammaEnergy,
-                                ecut, pcut;
+                                edep;
     EGS_I64                     ishower;
     string                      ensdfFluorescence;
 
     EGS_RadionuclideBetaSpectrum *betaSpectra;
+    EGS_Application             *app;
 };
 
 //

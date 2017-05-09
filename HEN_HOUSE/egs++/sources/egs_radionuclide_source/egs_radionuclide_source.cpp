@@ -130,7 +130,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
 
     // Calculate the duration of the experiment
     // Based on ncase and activity
-    EGS_Application *app = EGS_Application::activeApplication();
+    app = EGS_Application::activeApplication();
     EGS_Input *inp = app->getInput();
     EGS_Input *irc = 0;
     double ncase_double = 0;
@@ -293,6 +293,16 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
 
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
+
+    // Now that we have the position of the particle, we can
+    // find the region and deposit any sub-threshold contributions locally
+    // This includes edep from relaxations, and alpha particle energy
+    EGS_Float edep = decays[i]->getEdep();
+    if (edep > 0) {
+        app->setEdep(edep);
+        int ireg = geom->isWhere(x);
+        app->userScoring(3, ireg);
+    }
 
     return ++count;
 }
