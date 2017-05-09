@@ -26,6 +26,7 @@
 "                                                                             "
 "  Contributors:    Blake Walters                                             "
 "                   Iwan Kawrakow                                             "
+"                   Reid Townson                                              "
 "                                                                             "
 "#############################################################################"
 
@@ -222,7 +223,7 @@ PARAMETER CUTOFF=0.3; "changes SFIG if 10% of uncertainties are less"
                       "than 0.2%"
 $REAL RESULTS($MAXZREG,$MAXRADII,$MAXCMPTS),
      UNCRT($MAXZREG,$MAXRADII,$MAXCMPTS),
-     RADIAL_BINS($MAXRZ),DEPTH_BINS($MAXRZ),
+     RADIAL_BINS($MAXRADII),DEPTH_BINS($MAXRZ),
      TMP2,TMP3;
 CHARACTER*60 EXPLANATIONS($MAXCMPTS);
 CHARACTER*4 LABELS($MAXCMPTS);
