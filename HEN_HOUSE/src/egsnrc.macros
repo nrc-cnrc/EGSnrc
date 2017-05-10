@@ -484,6 +484,7 @@ REPLACE {;COMIN/COMPTON-DATA/;} WITH
 "             is interacting with.
 "------------------------------------------------------------------ "
 REPLACE {$MXELEMENT} WITH {100}  " Number of elements               "
+REPLACE {$MXSHXSEC}  WITH {30}   " Number of shells available       "
 REPLACE {$MXSHELL}   WITH {6}    " Number of shells treated         "
 REPLACE {$MXINTER}   WITH {5}    " $MXSHELL-1                       "
 REPLACE {$MXTRANS}   WITH {39}   " Number of possible transitions   "
@@ -493,7 +494,7 @@ REPLACE {$PHOCSUNIT} WITH {i_photo_cs}   " unit number for photo_cs.data    "
 
 REPLACE {;COMIN/EDGE/;} WITH
 {;
-   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+   COMMON/EDGE/binding_energies($MXSHXSEC,$MXELEMENT),
                interaction_prob($MXSHELL,$MXELEMENT),
                relaxation_prob($MXTRANS,$MXELEMENT),
                edge_energies($MXEDGE,$MXELEMENT),
@@ -669,7 +670,7 @@ REPLACE {;COMIN/RELAX-USER/;} WITH {;
 
 REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
 REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
-REPLACE {$MAXRELAX} WITH {5000}"max. number of relaxations channels"
+REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
 "============================================================"
 " If you are interested in a more accurate simulation of the"
@@ -3547,7 +3548,7 @@ REPLACE {$set_egs_home;} WITH {;
 
 
 " Initialization of various variables on a region-by-region basis "
-" This is made a macro so that it cen bereplaced with a different "
+" This is made a macro so that it can be replaced with a different "
 " version for the C/C++ interface                                 "
 REPLACE {$set-region-by-region-defaults;} WITH {;
 DO i=1,$MXREG [

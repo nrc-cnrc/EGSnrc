@@ -921,7 +921,7 @@ DO i=1,$MXMED [
       " set all thresholds to zero "
     /ae(i),ap(i),ue(i),up(i),te(i),thmoll(i)/=0;
 ]
-DO i=1,$MXSHELL [
+DO i=1,$MXSHXSEC [
   DO j=1,$MXELEMENT [ binding_energies(i,j) = 0; ]
 ]
 ibrdst = $IBRDST-DEFAULT;      " brems angular sampling"
