@@ -673,13 +673,23 @@ REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
 REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
 "============================================================"
-" If you are interested in a more accurate simulation of the"
-" atomic relaxation process set the macro replacement below "
-" to .true. to enable a more complete algorithm with all    "
-" transitions available in the EADL compilation. Although   "
-" it has been tested in the production of tungsten K-shell  "
-" and L-shell characteristic x-rays, it needs more testing  "
-" before it can be made the default in EGSnrc.              "
+" Set the macro below to .false. to recover the previous approach
+" which allows photoelectric interactions with <M> and <N> shells.
+" See below for more details on the shells considered by different
+" interactions depending on the value of $EADL_RELAX:
+"
+"      Interaction        .false.             .true.
+"      -----------------------------------------
+"      Compton                all available shells
+"      EII                K,L1..L3            K,L1..L3
+"      Photoeffect        K,L1..L3,<M>,<N>    K,L1..L3
+"      Relaxation
+"        initial vacancy  K,L1..L3,<M>        K,L1..L3
+"        final vacancy    L1..L3,<M>,<N>      L1..L3,M1..M5,N1..N7...
+"
+" The current limitation of the initial vacancies will be removed
+" when a detailed implementation of photoelectric and EII interactions
+" becomes available.
 "============================================================"
 REPLACE {$EADL_RELAX} WITH {.true.}
 "============================================================"
