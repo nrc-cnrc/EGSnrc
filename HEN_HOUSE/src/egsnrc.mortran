@@ -2230,11 +2230,20 @@ ELSE["re-calculates photon xsections using available or user data"
 
 call mscati;       "Initialize new MS, step-sizes, etc, IK Oct 97"
 
-call EDGSET(1,1);  "Initialize relaxations and photo-absorption data,"
-                   "if requested
+"Calling order of the subroutines below is important when using"
+"detailed atomic relaxation in order to use the binding energies"
+"corresponding to the requested photon cross section library"
+IF ($EADL_RELAX & photon_xsections = 'xcom' )[
+   call init_compton; "Initialize bound Compton scattering"
+   call EDGSET(1,1);  "Initialize relaxations and photo-absorption data"
+]
+ELSE[
+   call EDGSET(1,1);  "Initialize relaxations and photo-absorption data,"
+                      "if requested
+   call init_compton; "Initialize bound compton scattering, IK, Jan 99"
+                      "if requested
+]
 
-call init_compton; "Initialize bound compton scattering, IK, Jan 99"
-                   "if requested
 
 call fix_brems;    "Re-calculate dl1,... for the different technique"
                    "employed in BREMS. Note that the old EGS sampling"
@@ -2459,6 +2468,7 @@ DO j=1,$MXTOTSH [
          be_array(j) = binding_energies(shn_array(j),iz_array(j))/PRM;
        ]
        ELSE IF(photon_xsections = 'xcom') [
+         "Use binding energies from incoh.data below 1 keV"
          binding_energies(shn_array(j),iz_array(j)) = be_array(j)*PRM;
        ]
     ]
@@ -5512,15 +5522,11 @@ DO medio = 1,nmed [
         shell_Z(ish) = iZ;
         shell_num(ish) = ish - shell_ntot;
         shell_eadl(iZ,shell_num(ish)) = ish;
-        "For consistent use of binding energies"
-        "reset array binding energies (XCOM)"
-        "IF (shell_num(ish) <= 4)[
-        "   binding_energies(shell_num(ish),iZ) = be_r;
-        "]
         IF (binding_energies(shell_num(ish),iZ) > 0)[
            shell_be(ish) = binding_energies(shell_num(ish),iZ);
         ]
         ELSE IF( photon_xsections = 'epdl' )[
+          "Use binding energies from relax.data below 1 keV"
            binding_energies(shell_num(ish),iZ) = shell_be(ish);
         ]
         DO k=1,ntran[
@@ -5841,7 +5847,6 @@ $IMPLICIT-NONE;
 integer  NREGLO,NREGHI;
 
 $INTEGER i,j,k,jj,iz;
-$REAL tot_prob;
 logical  do_relax;
 logical  got_data;
 save     got_data;
@@ -5879,7 +5884,7 @@ rewind($PHOTOUNIT);
 DO i=1,$MXELEMENT
 [
     IF ($EADL_RELAX)[
-       "Skip, binding_energies from photo-electric xsections file
+       "Skip, using binding_energies from *_photo.data file
        read($PHOTOUNIT,*);
     ]
     ELSE[
