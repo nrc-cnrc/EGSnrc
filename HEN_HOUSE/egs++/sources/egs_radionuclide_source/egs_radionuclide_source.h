@@ -344,6 +344,7 @@ protected:
     EGS_Float           activity, //!< The activity of the source
                         time; //!< The time of emission of the most recently generated particle
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
+    EGS_Vector          xOfDisintegration; //!< The position of the last disintegration
 
 private:
     EGS_Application *app;

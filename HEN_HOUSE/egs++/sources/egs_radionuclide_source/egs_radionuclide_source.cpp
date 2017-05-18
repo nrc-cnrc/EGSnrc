@@ -288,11 +288,19 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     }
     else {
         disintegrationOccurred = false;
+
         time += decays[i]->getTime();
     }
 
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
+
+    if (disintegrationOccurred) {
+        xOfDisintegration = x;
+    }
+    else {
+        x = xOfDisintegration;
+    }
 
     // Now that we have the position of the particle, we can
     // find the region and deposit any sub-threshold contributions locally
