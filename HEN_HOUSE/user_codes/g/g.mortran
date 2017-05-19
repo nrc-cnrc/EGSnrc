@@ -524,10 +524,10 @@ IF( e_muen > 0 ) [
 OUTPUT e_tot,e_tot2, 100*e_tot2/e_tot;
   (' Ave energy released per particle:  ',1PE12.4, ' MeV +/-', 1PE10.3,
   ' =', 0PF7.3,' %');
-OUTPUT e_brem,e_brem2, 100*e_brem2/e_tot;
+OUTPUT e_brem,e_brem2, 100*e_brem2/e_brem;
   (' Ave energy lost to bremsstrahlung: ',1PE12.4, ' MeV +/-', 1PE10.3,
   ' =', 0PF7.3,' %');
-OUTPUT e_rad,e_rad2, 100*e_rad2/e_tot;
+OUTPUT e_rad,e_rad2, 100*e_rad2/e_rad;
   (' Ave energy lost to all radiation:  ',1PE12.4, ' MeV +/-', 1PE10.3,
   ' =', 0PF7.3,' %');
 

@@ -5212,7 +5212,7 @@ $REAL    e_array($MXVAC),   "array with vacancy energies           "
          Ex,                "kinetic energy of emitted particle    "
          eta,               "a random number                       "
          e_check,           "energy conservation check             "
-         e_cut,ekcut,pkcut,elcut,max_Ec,max_Pc; "cut-off energies  "
+         min_E,ekcut,pkcut,elcut; "cut-off energies  "
 
 $REAL    xphi,yphi,xphi2,yphi2,rhophi2,
          cphi,sphi;         "for azimuthal angle selection"
@@ -5256,31 +5256,22 @@ IF( n < 1 | n > $MXSHELL ) [ return; ] "unknown vacancy"
 iz_relax = iZ;
 irl = ir(np);
 ekcut = ecut(irl)-rm; pkcut = pcut(irl);
-max_Ec = Max($RELAX-CUTOFF,ekcut);
-max_Pc = Max($RELAX-CUTOFF,pkcut);
-e_cut = Min(ekcut,pkcut);
-e_cut = Max($RELAX-CUTOFF,e_cut);
+min_E = $RELAX-CUTOFF;
 
-IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
-    IF( energy <= max_Pc ) [
-        edep = edep + energy;  "We assume that edep is zeroed "
-                            "(or set to the appropriate value in the routine "
-                            "calling RELAX "
+IF( energy <= min_E ) [
+    edep = edep + energy;  "We assume that edep is zeroed "
+                        "(or set to the appropriate value) in the routine "
+                        "calling RELAX "
+    edep_local = energy;
 
-        edep_local = energy;
+    "particle initiating relaxations was photon"
+    IF( relax_initiator_q = 0 ) [
         $AUSCALL($SPHOTONA);
-        return;
-    ]
-] ELSE [ "particle initiating relaxations was electron"
-    IF( energy <= max_Ec ) [
-        edep = edep + energy;  "We assume that edep is zeroed "
-                            "(or set to the appropriate value in the routine "
-                            "calling RELAX "
-
-        edep_local = energy;
+    ] ELSE [ "particle initiating relaxations was electron"
         $AUSCALL($SELECTRONA);
-        return;
     ]
+
+    return;
 ]
 
 " Set-up the array of vacancies for the relaxation cascade "
@@ -5291,26 +5282,20 @@ e_check = 0; e_array(n_vac) = energy;
 
     shell = vac_array(n_vac); Ei = e_array(n_vac); n_vac = n_vac - 1;
 
-    IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
-        IF( Ei <= max_Pc ) [  " Below cut-off -> local absorption "
-            edep = edep + Ei;
+    IF( Ei <= min_E ) [  " Below cut-off -> local absorption "
+        edep = edep + Ei;
 
-            edep_local = Ei;
+        edep_local = Ei;
+
+        "particle initiating relaxations was photon"
+        IF( relax_initiator_q = 0 ) [
             $AUSCALL($SPHOTONA);
-
-            IF( n_vac > 0 ) goto :START: ;
-            EXIT;
-        ]
-    ] ELSE [ "particle initiating relaxations was electron"
-        IF( Ei <= max_Ec ) [  " Below cut-off -> local absorption "
-            edep = edep + Ei;
-
-            edep_local = Ei;
+        ] ELSE [ "particle initiating relaxations was electron"
             $AUSCALL($SELECTRONA);
-
-            IF( n_vac > 0 ) goto :START: ;
-            EXIT;
         ]
+
+        IF( n_vac > 0 ) goto :START: ;
+        EXIT;
     ]
 
     "Set the relax_user common block variables, IK March 22 2004"
@@ -5670,12 +5655,11 @@ $declare_max_medium;
 $COMIN-RELAX-EADL;
 ;COMIN/RELAX-USER/;
 
-$REAL    Ec,Pc,max_Ec,max_Pc,min_E,rnno,Evac,Ef,Ef1,Ef2,Ex,Ecc,
+$REAL    Ec,Pc,min_E,rnno,Evac,Ef,Ef1,Ef2,Ex,Ecc,
          cost,sint,cphi,sphi;
 "Ec      ecut as k.e. for current region"
 "Pc      pcut for current region"
-"max_Ec  maximum of Ec and $RELAX-CUTOFF"
-"max_Pc  maximum of Pc and $RELAX-CUTOFF"
+"min_E   the minimum energy for transitions to continue"
 "rnno    a random number"
 "Evac    binding energy of current vacancy"
 "Ef      the sum of the binding energies of the new vacancies"
@@ -5710,9 +5694,8 @@ IF( shell < 1 | shell > $MAXSHELL ) [ return; ] "unknown vacancy"
 irl = ir(np);
 Ec = ecut(irl) - rm;
 Pc = pcut(irl);
-max_Ec = max($RELAX-CUTOFF,Ec);
-max_Pc = max($RELAX-CUTOFF,Pc);
-min_E = min(Ec,Pc); min_E = max($RELAX-CUTOFF,min_E);
+min_E = $RELAX-CUTOFF;
+
 Evac = shell_be(shell); "provides relevant binding energy for this vacancy"
 "store some information in comin RELAX-FOR-USER.  This just duplicates"
 "various pieces of info so the user can access them."
@@ -5745,21 +5728,20 @@ IF (shell_egs > 4) [
 vac = shell; Nvac = 0; np_save = np;
 LOOP [ "from here to end of routine over all vacancies created"
 
-    "check if energy of vacancy < cutoffs OR no transitions from this shell"
-    IF( relax_initiator_q = 0 ) [ "particle initiating relaxations was photon"
-        IF( Evac < max_Pc | relax_ntran(vac) < 1 ) [
-            edep += Evac;         "add energy of vacancy to edep"
-            edep_local = Evac;    "set value of edep_local to energy of vacancy"
+    "check if energy of vacancy < cutoff OR no transitions from this shell"
+    IF( Evac < min_E | relax_ntran(vac) < 1 ) [
+        edep += Evac;         "add energy of vacancy to edep"
+        edep_local = Evac;    "set value of edep_local to energy of vacancy"
+
+        IF( relax_initiator_q = 0 ) [
+            "particle initiating relaxations was photon"
             $AUSCALL($SPHOTONA);  "call ausgab with iarg=33"
-            go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
-        ]
-    ] ELSE [ "particle initiating relaxations was electron"
-        IF( Evac < max_Ec | relax_ntran(vac) < 1 ) [
-            edep += Evac;         "add energy of vacancy to edep"
-            edep_local = Evac;    "set value of edep_local to energy of vacancy"
+        ] ELSE [
+            "particle initiating relaxations was electron"
             $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
-            go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
         ]
+
+        go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
     ]
 
     "prepare_alias_histogram is called from subroutine egs_init_relax and"
