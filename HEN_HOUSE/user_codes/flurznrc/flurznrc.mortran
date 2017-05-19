@@ -1630,7 +1630,7 @@ IF((IREJCT > 0) & (MED(IRL) > 0) & (IQ(NP) ~= 0))[
     ELSEIF(IGEOM = 60)[CDIST=SQRT((RL-RMAXR)**2+(ZL-ZMAXR)**2);]
     ELSEIF(IGEOM = 70)[CDIST=SQRT((RL-RMINR)**2+(ZMINR-ZL)**2);]
     ELSEIF(IGEOM = 80)[CDIST=SQRT((RL-RMINR)**2+(ZL-ZMAXR)**2);]
-    IF(CDIST >=RANGE) IDISC=1;
+    IF(CDIST >=RANGE) [IDISC=1;go to :USER-ELECTRON-DISCARD:;]
 ]
 }
 
@@ -3200,15 +3200,20 @@ IF(IARG = 0)["transport step about to happen"
            "have BINTOP < cutoff kinetic energy"
            "in first and last cases, we must correct BINFR            "
 
-           IF((BINFR(IB) >= 1.0-FRSUM) |
-              (BINBOT<=ECUT(IRL)-PRM & IBDOWN>1))[
-                 "final energy is in this bin"
-                BINFR(IB) = 1.0 - FRSUM; ]
-
+           "final energy or transport cut-off is in this bin"
+           IF( (BINFR(IB) >= 1.0-FRSUM) |
+               (BINBOT    <= ECUT(IRL)-PRM ) )[
+                BINBOT = max(ECUT(IRL)-PRM,EKIN-EDEP);
+                IF (IB>1)[
+                   BINFR(IB) =(BINTOP(IBDOWN) - BINBOT)/EDEP;
+                ]
+                ELSE [
+                   BINFR(IB) =(EKIN - BINBOT)/EDEP;
+                ]
+           ]
            NBIN = IB;
            GO TO :FINISHED_FINDING_BIN_FRACTIONS:;
         ]
-
         ELSE ["not finished yet" FRSUM = FRSUM + BINFR(IB);]
 
      ]"end of IB loop"
