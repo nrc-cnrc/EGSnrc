@@ -309,7 +309,7 @@ public:
         aperture_scores(0),aperture_hits(0),reject(0),
         ideal_dose(0), fsplit(1), fspliti(1), rr_flag(0), Esave(0), rho_rr(1),
         cgeom(0), nsmall_step(0), ncg(0), score_q(0),
-        flug(0),flugT(0),flum(0), flup(0) {};
+        flug(0),flugT(0),flum(0), flup(0), flu_s(0), flu_stpwr(1), Rho(0) {};
 
     /*! Destructor.  */
     ~Cavity_Application() {
@@ -324,6 +324,7 @@ public:
                 }
                 delete [] flup; delete [] flum;
             }
+            if ( Rho ) delete [] Rho;
             if( flug ) {
                 for(int j=0; j<ngeom; j++) {delete flug[j];}
                 delete [] flug;
@@ -442,17 +443,31 @@ public:
                      }
                     }
                 }
-                //
-                // ********** fluence scoring
-                //
-                //if( flum && iarg == BeforeTransport && the_stack->iq[np] ) {
-                if( flum && iarg != ExtraEnergy && the_stack->iq[np] ) {
-                    EGS_Float xb, xe, e = the_stack->E[np] - the_useful->rm;
+                //******************************************
+                // *** Charged particle fluence scoring ****
+                //******************************************
+                /* As the particle slows down from the initial energy
+                 * xb to the final energy xe =  xb - edep, one must
+                 * determine the portion of the particle step corresponding
+                 * to a given energy interval and estimate the contribution
+                 * to the fluence in that energy interval. This can be done
+                 * using different approaches.
+                 *
+                 */
+                 if( flum &&
+                    ( iarg == BeforeTransport || iarg == UserDiscard ) &&
+                     the_epcont->edep && the_stack->iq[np] ){
+                    /***** Initialization *****/
+                    EGS_Float xb = the_stack->E[np] - the_useful->prm,
+                              xe = xb-the_epcont->edep,
+                              weight = the_stack->wt[np];
+                    /*********************************/
                     if( flu_s ) {
-                        xb = log(e); xe = e - the_epcont->edep;
-                        if( xe > 0 ) xe = log(xe); else xe = -15;
+                        xb = log(xb);
+                        if( xe > 0 )
+                            xe = log(xe);
+                        else xe = -15;
                     }
-                    else { xb = e; xe = e - the_epcont->edep; }
                     EGS_Float ab, ae; int jb, je;
                     if( xb > flu_xmin && xe < flu_xmax ) {
                         if( xb < flu_xmax ) {
@@ -465,12 +480,68 @@ public:
                         else { ae = 0; je = 0; }
                         EGS_ScoringArray *aux = the_stack->iq[np] == -1 ?
                                 flum[ig] : flup[ig];
-                        if( jb == je ) aux->score(jb,the_stack->wt[np]*(ab-ae));
-                        else {
-                            aux->score(jb,the_stack->wt[np]*ab);
-                            aux->score(je,the_stack->wt[np]*(1-ae));
-                            for(int j=je+1; j<jb; j++)
-                                aux->score(j,the_stack->wt[np]);
+                        /************************************************
+                         * CSDA:
+                         * Path length from energy deposited and stopping
+                         * power at each energy interval i.
+                         * First order approximation based on
+                         * eq. 4.11.7 of PIRS-701:
+                         *
+                         * Ds_i = DE_i*f_i/L_i
+                         *
+                         * where
+                         *
+                         * E_i  => Lower edge energy of bin i
+                         * L_i  => restricted stopping power at E_i
+                         * DE_i => i-th bin width
+                         * f_i  => fraction of edep in i-th bin
+                         * Ds_i => fraction of the step in i-th bin
+                         *
+                         * BEWARE: For this approach to work, no range rejection
+                         * ------  nor Russian Roulette should be used.
+                         *
+                         ************************************************/
+                        if (flu_stpwr){
+                           int imed = geometry->medium(ir);
+                           EGS_Float flu_a_i = 1/flu_a;
+                           EGS_Float logE = flu_s? xe:log(xe);
+                           //EGS_Float logE = flu_xmin+je*flu_a_i;
+                           //          logE = flu_s? logE:log(logE);
+                           EGS_Float ededx = i_ededx[imed].interpolate(logE);
+                           if( jb == je ){
+                               aux->score(jb,weight*(ab-ae)/ededx);
+                           }
+                           else {
+                               aux->score(je,weight*(1-ae)/ededx);
+                               logE = flu_xmin+jb*flu_a_i;
+                               logE = flu_s? logE:log(logE);
+                               ededx = i_ededx[imed].interpolate(logE);
+                               aux->score(jb,weight*ab/ededx);
+                               for(int j=je+1; j<jb; j++){
+                                   logE = flu_xmin+j*flu_a_i;
+                                   logE = flu_s ? logE:log(logE);
+                                   ededx = i_ededx[imed].interpolate(logE);
+                                   aux->score(j,weight/ededx);
+                               }
+                           }
+                        }
+                        /*-------------------
+                         * FLURZnrc approach:
+                         * ------------------
+                         * Path length at each energy interval from energy
+                         * deposited edep and total particle step tvstep
+                         */
+                        else{
+                           EGS_Float wtstep = weight*the_epcont->tvstep/the_epcont->edep;
+                           if( jb == je ){
+                             aux->score(jb,wtstep*(ab-ae));
+                           }
+                           else {
+                               aux->score(jb,wtstep*ab);
+                               aux->score(je,wtstep*(1-ae));
+                               for(int j=je+1; j<jb; j++)
+                                   aux->score(j,wtstep);
+                           }
                         }
                     }
                 }
@@ -1025,8 +1096,7 @@ public:
             //        current_case,source->getFluence(),norm);
             if( type == HVL ) norm /= (M_PI*hvl_R*hvl_R);
             else norm /= mass[j];
-            egsInformation("%-25s %10.4le +/- %-7.3lf%c ",
-                    //geoms[j]->getName().c_str(),
+            egsInformation("%-25s %12.6le +/- %-9.5lf%c ",
                     calc_names[j].c_str(),
                     r*norm,dr,c);
             if( type == Awall || type == FAC ) {
@@ -1172,8 +1242,6 @@ public:
                     egsInformation("%-20s %-20s     %-8.5lf +/- %-7.5lf\n",
                                    calc_names[gind1[j]].c_str(),
                                    calc_names[gind2[j]].c_str(),r,r*dr);
-                                   //geoms[gind1[j]]->getName().c_str(),
-                                   //geoms[gind2[j]]->getName().c_str(),r,r*dr);
                     ratio.push_back(r); dratio.push_back(r*dr);
                 }
                 else egsInformation("zero dose\n");
@@ -1201,8 +1269,6 @@ public:
                     egsInformation("%-20s %-20s     %-8.5lf +/- %-7.5lf\n",
                                    calc_names[gind1[j]].c_str(),
                                    calc_names[gind2[j]].c_str(),r,r*dr);
-                                   //geoms[gind1[j]]->getName().c_str(),
-                                   //geoms[gind2[j]]->getName().c_str(),r,r*dr);
                     ratio.push_back(r); dratio.push_back(r*dr);
                   }
                   else egsInformation("zero dose\n");
@@ -1238,7 +1304,13 @@ public:
             egsInformation("\n\nElectron and positron fluence\n"
                                "=============================\n");
             for(int j=0; j<ngeom; j++) {
-                double norm = current_case/(source->getFluence()*mass[j]);
+                /********************************************************
+                 * To get volume-averaged path length one needs to know
+                 * the volume of the cavity since (dE/dx) rather than
+                 * (dE/rho/dx) is used. Rho taken from density of the first
+                 * cavity region.
+                 ********************************************************/
+                double norm = current_case/(source->getFluence()*mass[j])*Rho[j];
                 egsInformation("\nGeometry %s\n",geoms[j]->getName().c_str());
                 for(int i=0; i<flu_nbin; i++) {
                     double fe,dfe,fp,dfp;
@@ -1275,7 +1347,7 @@ public:
             spe_output << "@    subtitle font 4\n";
             spe_output << "@    subtitle size 1.000000\n";
 
-            egsInformation("\n\nPhoton fluence\n"
+            egsInformation("\n\nPhoton fluence [cm-2*MeV-1]\n"
                                "=============================\n");
             for(int j=0; j<ngeom; j++) {
                 double norm = current_case/source->getFluence();//per particle
@@ -1302,6 +1374,7 @@ public:
                             e,fe*norm,dfe*norm);
                 }
                 spe_output << "&\n";
+egsInformation("=> norm = %g \n",current_case/source->getFluence());
             }
         }
 
@@ -1998,11 +2071,18 @@ private:
 
     EGS_ScoringArray **flum;    // electron fluence
     EGS_ScoringArray **flup;    // positron fluence
+    /********************************************************
+     * To get volume-averaged path length one needs to know
+     * the volume of the cavity since (dE/dx) rather than
+     * (dE/rho/dx) is used. Rho is the density of the first
+     * cavity region.
+     ********************************************************/
+    EGS_Float        *Rho;      // material density in the cavity.
     EGS_Float       flu_a,
                     flu_b,
                     flu_xmin,
                     flu_xmax;
-    int             flu_s,
+    int             flu_s, flu_stpwr,
                     flu_nbin;
     double           *corr;     // correlation between the above two
     EGS_Float        *mass;     // mass of the material in the cavity.
@@ -2431,20 +2511,35 @@ int Cavity_Application::initScoring() {
                 scale.push_back("linear"); scale.push_back("logarithmic");
                 flu_s = aux->getInput("scale",scale,0);
                 if( !er1 && !er2 && !er3 ) {
+                    /* charged particle fluence */
                     if (type == Dose){
-                     flum = new EGS_ScoringArray * [ngeom];
-                     flup = new EGS_ScoringArray * [ngeom];
-                     for(int j=0; j<ngeom; j++) {
-                        flum[j] = new EGS_ScoringArray(flu_nbin);
-                        flup[j] = new EGS_ScoringArray(flu_nbin);
-                     }
+                      flum = new EGS_ScoringArray * [ngeom];
+                      flup = new EGS_ScoringArray * [ngeom];
+                      Rho  = new EGS_Float [ngeom];
+                      for(int j=0; j<ngeom; j++) {
+                         flum[j] = new EGS_ScoringArray(flu_nbin);
+                         flup[j] = new EGS_ScoringArray(flu_nbin);
+                      }
+                      vector<string> method;
+                      method.push_back("edep"); method.push_back("stpwr");
+                      flu_stpwr = aux->getInput("method",method,1);
+                      EGS_Float bw = flu_s ?
+                                    (log(flu_Emax)- log(flu_Emin))/flu_nbin :
+                                        (flu_Emax -     flu_Emin) /flu_nbin;
+                      /* Do not score below ECUT - PRM */
+                      if (flu_Emin < the_bounds->ecut-the_useful->prm){
+                         flu_Emin = the_bounds->ecut - the_useful->prm;
+                         /* Decrease number of bins, preserve bin width */
+                         flu_nbin = ceil((flu_Emax - flu_Emin)/bw);
+                      }
+                      flu_a = 1.0/bw;
                     }
-                    else{
-                     flug  = new EGS_ScoringArray * [ngeom];
-                     flugT = new EGS_ScoringArray(ngeom);
-                     for(int j=0; j<ngeom; j++) {
-                        flug[j] = new EGS_ScoringArray(flu_nbin);
-                     }
+                    else{/* photon fluence */
+                      flug  = new EGS_ScoringArray * [ngeom];
+                      flugT = new EGS_ScoringArray(ngeom);
+                      for(int j=0; j<ngeom; j++) {
+                         flug[j] = new EGS_ScoringArray(flu_nbin);
+                      }
                     }
                     if( flu_s == 0 ) {
                         flu_xmin = flu_Emin; flu_xmax = flu_Emax;
@@ -2452,7 +2547,9 @@ int Cavity_Application::initScoring() {
                     else {
                         flu_xmin = log(flu_Emin); flu_xmax = log(flu_Emax);
                     }
-                    flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+                    if (flug){
+                       flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+                    }
                     flu_b = -flu_xmin*flu_a;
                 }
                 else {
@@ -2748,24 +2845,64 @@ void Cavity_Application::describeSimulation() {
                            "    Russian Roulette used on a region by region basis!\n");
         //egsInformation("    rejection medium is \n");
     }
-    egsInformation("\n\nCalculation type = ");
+    egsInformation("\n=============================================\n");
+    egsInformation("         Calculation details\n");
+    egsInformation("=============================================\n");
+    egsInformation("Type = ");
     if( type == Fano ) egsInformation("Fano");
     else if( type == Awall ) egsInformation("Awall");
     else if( type == HVL ) egsInformation("HVL");
     else if( type == FAC ) egsInformation("FAC (Awall included)");
-    else egsInformation("Dose");
+    else {
+      egsInformation("Dose");
+      if (flum){
+        egsInformation("\n-> Charged particle fluence requested\n");
+        egsInformation("   between %g MeV <= E <= %g MeV with %d bins of %g MeV width \n",
+                        flu_xmin,flu_xmax,flu_nbin,1/flu_a);
+        if (flu_s)
+          egsInformation("   and logarithmic scale.\n");
+        if (flu_stpwr)
+          egsInformation("   Fluence calculated using EDEP and stopping powers\n");
+        else
+          egsInformation("   Fluence calculated using EDEP and TVSTEP.\n");
+        if ( rr_flag > 0 ){
+           if (flu_stpwr){
+              egsWarning("\n***** Warning ****** \n"
+                       " Using range rejection. Charged particle fluence\n"
+                       " will be affected by the selection of ESAVE!\n"
+                       " Make sure it reproduces a calculation without\n"
+                       " range rejection within desired accuracy!\n"
+                       "************************************************\n");
+           }
+           else{
+              egsFatal("***** ERROR ****** \n"
+                       "The selected method for charged particle fluence\n"
+                       "calculation relies on the particle's step! Hence,\n"
+                       "range rejection will produce wrong results\n"
+                       "This is a fatal error. Aborted.\n"
+                       "*************************************************\n");
+           }
+        }
+      }
+    }
     egsInformation("\n");
     if( type != HVL ) {
         for(int j=0; j<ngeom; j++) {
             egsInformation("Calculation geometry: %s\n",
                     geoms[j]->getName().c_str());
             geoms[j]->printInfo();
+            int cavity_medium = -1;
             for(int i=0; i<geoms[j]->regions(); i++) {
                 if( is_cavity[j][i] ) {
                     egsInformation("  cavity region %d, medium = %d\n",
                             i,geoms[j]->medium(i));
+                    if ( Rho && cavity_medium < 0 ){
+                       cavity_medium = geoms[j]->medium(i);
+                       Rho[j] = the_media->rho[cavity_medium];
+                    }
                 }
             }
+            egsInformation("  density of cavity medium = %g g/cm3\n",Rho[j]);
         }
     }
     egsInformation("=============================================\n");
