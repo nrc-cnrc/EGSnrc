@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -61,6 +62,18 @@ void EGS_CDGeometry::setRelativeRho(int start, int end, EGS_Float rho) {
 void EGS_CDGeometry::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_CDGeometry::setRelativeRho(): don't use this method\n"
                "  Use the setRelativeRho() methods of the geometry objects that make"
+               " up this geometry\n");
+}
+
+void EGS_CDGeometry::setBScaling(int start, int end, EGS_Float bf) {
+    egsWarning("EGS_CDGeometry::setBScaling(): don't use this method\n"
+               "  Use the setBScaling() methods of the geometry objects that make"
+               " up this geometry\n");
+}
+
+void EGS_CDGeometry::setBScaling(EGS_Input *) {
+    egsWarning("EGS_CDGeometry::setBScaling(): don't use this method\n"
+               "  Use the setBScaling() methods of the geometry objects that make"
                " up this geometry\n");
 }
 

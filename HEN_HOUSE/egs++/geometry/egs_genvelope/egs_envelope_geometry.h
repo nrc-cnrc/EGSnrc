@@ -573,8 +573,20 @@ public:
         return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    void setBScaling(int start, int end, EGS_Float bf);
+    void setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        if (ireg < nbase) {
+            return g->getBScaling(ireg);
+        }
+        int jg = (ireg - nbase)/nmax;
+        return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
+    };
 
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
 
@@ -963,8 +975,20 @@ public:
         return geometries[jg]->getRelativeRho(ireg - nbase - jg*nmax);
     };
 
-    virtual void getLabelRegions(const string &str, vector<int> &regs);
+    void setBScaling(int start, int end, EGS_Float bf);
+    void setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        if (ireg < nbase) {
+            return g->getBScaling(ireg);
+        }
+        int jg = (ireg - nbase)/nmax;
+        return geometries[jg]->getBScaling(ireg - nbase - jg*nmax);
+    };
 
+    virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
 

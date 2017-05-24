@@ -1026,6 +1026,7 @@ irold = ir(np);    "Initialize previous region
                    " stack the current particle is.)
 irl    = irold;    "region number in local variable
 
+
 $start_new_particle;
 " Default replacement for the above is medium = med(irl); "
 " This is made a macro so that it can be replaced with a call to a "

@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -54,6 +55,16 @@ void EGS_UnionGeometry::setRelativeRho(int start, int end, EGS_Float rho) {
 void EGS_UnionGeometry::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_UnionGeometry::setRelativeRho(): don't use this method. "
                "Use the\n setRelativeRho() methods of the geometry objects that make "
+               "up this geometry\n");
+}
+
+void EGS_UnionGeometry::setBScaling(int start, int end, EGS_Float bf) {
+    setBScaling(0);
+}
+
+void EGS_UnionGeometry::setBScaling(EGS_Input *) {
+    egsWarning("EGS_UnionGeometry::setBScaling(): don't use this method. "
+               "Use the\n setBScaling() methods of the geometry objects that make "
                "up this geometry\n");
 }
 
@@ -113,6 +124,21 @@ EGS_UnionGeometry::EGS_UnionGeometry(const vector<EGS_BaseGeometry *> &geoms,
         }
         if (!has_rho_scaling) {
             has_rho_scaling = g[i]->hasRhoScaling();
+        }
+    }
+    has_B_scaling = false;
+    // now put the geometries into the array of geometries in
+    // decreasing priority order.
+    for (j=0; j<ng; j++) {
+        int i = order[j];
+        g[i] = geoms[j];
+        g[i]->ref();
+        int n = g[i]->regions();
+        if (n > nmax) {
+            nmax = n;
+        }
+        if (!has_B_scaling) {
+            has_B_scaling = g[i]->hasBScaling();
         }
     }
     delete [] order;

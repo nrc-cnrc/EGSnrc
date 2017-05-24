@@ -424,7 +424,7 @@ REPLACE {$GET-EM-FIELD(#,#,#,#,#);} WITH {;
 fbtemp=  1.0/(RM*10**6);
 {P1}X0=ExIN*fbtemp;{P1}Y0=EyIN*fbtemp;{P1}Z0=EzIN*fbtemp;
 fbtemp=3.0/RM;
-{P2}X0=BxIN*fbtemp;{P2}Y0=ByIN*fbtemp;{P2}Z0=BzIN*fbtemp;
+{P2}X0=Bx*fbtemp;{P2}Y0=By*fbtemp;{P2}Z0=Bz*fbtemp;
 }
 ;
 "REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;}"

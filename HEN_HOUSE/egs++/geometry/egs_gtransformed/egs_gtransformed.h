@@ -25,6 +25,7 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -148,6 +149,7 @@ public:
         nreg = g->regions();
         is_convex = g->isConvex();
         has_rho_scaling = g->hasRhoScaling();
+        has_B_scaling = g->hasBScaling();
     };
 
     ~EGS_TransformedGeometry() {
@@ -251,6 +253,13 @@ public:
     void setRelativeRho(int start, int end, EGS_Float rho);
 
     void setRelativeRho(EGS_Input *);
+
+    EGS_Float getBScaling(int ireg) const {
+        return g->getBScaling(ireg);
+    }
+    void setBScaling(int start, int end, EGS_Float bf);
+
+    void setBScaling(EGS_Input *);
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 

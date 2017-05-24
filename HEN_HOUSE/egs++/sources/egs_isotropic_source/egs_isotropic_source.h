@@ -25,6 +25,8 @@
 #
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hugo Bouchard
 #
 ###############################################################################
 */
@@ -89,8 +91,18 @@ It is defined most simply using the following input:
     charge = -1 or 0 or 1 for electrons or photons or positrons
     min theta = 80  [degree] (optional)
     max theta = 100 [degree] (optional)
-    min phi = 80  [degree] (optional)
-    max phi = 100 [degree] (optional)
+    min phi   = 80  [degree] (optional)
+    max phi   = 100 [degree] (optional)
+    geometry = some_name          # Optional, only particles inside the geometry
+                                  # or inside some of its regions are generated.
+    region selection = IncludeAll # Optional, only for a valid geometry defined as above.
+                                  # Also possible: ExcludeAll, IncludeSelected, ExcludeSelected.
+                                  # Defaults to IncludeAll.
+    selected regions = ir1,...    # If IncludeSelected or ExcludeSelected above, then user must
+                                  # enter the desired regions to be excluded or included. If
+                                  # no region provided, region selection switches to:
+                                  #        IncludeAll if IncludeSelected
+                                  #        ExcludeAll if ExcludeSelected
 :stop source:
 \endverbatim
 
@@ -288,7 +300,6 @@ public:
 
         u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
 
-        //u.z = 2*rndm->getUniform()-1;
         EGS_Float sinz = 1-u.z*u.z;
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
@@ -326,7 +337,7 @@ public:
 
 protected:
 
-    EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
+    EGS_BaseShape    *shape;  //!< The shape from which particles are emitted.
     EGS_BaseGeometry *geom;
     int              *regions;
 
@@ -335,6 +346,7 @@ protected:
     EGS_Float min_theta, max_theta;
     EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
+
     int                 nrs;
     GeometryConfinement gc;
 };

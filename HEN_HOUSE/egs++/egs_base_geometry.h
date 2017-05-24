@@ -27,6 +27,8 @@
 #                   Blake Walters
 #                   Marc Chamberland
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hugo Bouchard
 #
 ###############################################################################
 */
@@ -44,10 +46,12 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 using std::string;
 using std::vector;
 
+class EGS_Application; // forward declaration
 class EGS_Input;
 struct EGS_GeometryIntersections;
 
@@ -422,6 +426,67 @@ public:
      */
     virtual void setRelativeRho(EGS_Input *);
 
+    EGS_Float getMediumRho(int ind) const;
+
+    void setApplication(EGS_Application *app);
+
+    /*! \brief Does this geometry object have a B field scaling feature?
+     */
+    inline bool hasBScaling() const {
+        return (has_B_scaling || has_Ref_rho);
+    };
+
+    /*! \brief Get the B field scaling factor in region \a ireg
+     */
+    virtual EGS_Float getBScaling(int ireg) const {
+        if (has_Ref_rho && has_B_scaling) {
+            if (bfactor && ireg >= 0 && ireg < nreg) {
+                return getMediumRho(medium(ireg))/rhoRef*bfactor[ireg];
+            }
+            else {
+                return 1.0;
+            }
+        }
+        else if (has_Ref_rho && !has_B_scaling) {
+            if (ireg >= 0 && ireg < nreg) {
+                return  getMediumRho(medium(ireg))/rhoRef;
+            }
+            else {
+                return 1.0;
+            }
+        }
+        else if (!has_Ref_rho && has_B_scaling) {
+            if (bfactor && ireg >= 0 && ireg < nreg) {
+                return bfactor[ireg];
+
+            }
+            else {
+                return 1.0;
+            }
+        }
+        else {
+            return 1.0;
+        }
+    }
+
+    /*! \brief Set the B field scaling factor in regions.
+
+     Sets the B field scaling factor to \a bf in all regions between
+     start and end (inclusive).
+     */
+    virtual void setBScaling(int start, int end, EGS_Float bf);
+
+    /*! \brief Set the B field scaling factor from an user input.
+
+     Looks for input
+     \verbatim
+     set B scaling = start end bfact
+     \endverbatim
+     and sets the B field scaling factor to bfact in all regions between
+     start and end (inclusive).
+     */
+    virtual void setBScaling(EGS_Input *);
+
     /*! \brief Get the name of this geometry
 
       Every geometry must have a name and this method can be used to retrieve
@@ -702,6 +767,21 @@ protected:
 
      */
     EGS_Float *rhor;
+
+    /*! \brief Does this geometry has B field scaling factor?
+
+     */
+    bool has_B_scaling, has_Ref_rho;
+
+    /*! \brief Array with B field scaling factors.
+
+     */
+    EGS_Float *bfactor;
+
+    /*! \brief Reference density for B field scaling.
+
+     */
+    EGS_Float rhoRef;
 
     /*! \brief Number of references to this geometry.
 

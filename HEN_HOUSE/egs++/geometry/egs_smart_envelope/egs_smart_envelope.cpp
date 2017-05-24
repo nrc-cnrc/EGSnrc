@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -76,6 +77,16 @@ void EGS_SmartEnvelope::setRelativeRho(int start, int end, EGS_Float rho) {
 void EGS_SmartEnvelope::setRelativeRho(EGS_Input *) {
     egsWarning("EGS_SmartEnvelope::setRelativeRho(): don't use this method."
                " Use the\n setRelativeRho methods of the geometry objects that make up"
+               " this geometry\n");
+}
+
+void EGS_SmartEnvelope::setBScaling(int start, int end, EGS_Float bf) {
+    setBScaling(0);
+}
+
+void EGS_SmartEnvelope::setBScaling(EGS_Input *) {
+    egsWarning("EGS_SmartEnvelope::setsetBScaling(): don't use this method."
+               " Use the\n setsetBScaling methods of the geometry objects that make up"
                " this geometry\n");
 }
 
@@ -163,6 +174,15 @@ EGS_SmartEnvelope::EGS_SmartEnvelope(EGS_BaseGeometry *G,
         for (int j=0; j<n_in; j++) {
             if (geometries[j]->hasRhoScaling()) {
                 has_rho_scaling = true;
+                break;
+            }
+        }
+    }
+    has_B_scaling = g->hasBScaling();
+    if (!has_B_scaling) {
+        for (int j=0; j<n_in; j++) {
+            if (geometries[j]->hasBScaling()) {
+                has_B_scaling = true;
                 break;
             }
         }

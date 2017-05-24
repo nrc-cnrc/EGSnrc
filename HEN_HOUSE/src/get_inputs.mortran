@@ -1596,10 +1596,15 @@ IF( error_flags(num_efield) = 0 ) [
        EMLMTIN=value(num_emlmt,1);
     ]
 ]
+" Initially set to input values, could change with regions"
+" by converting it to an array over all regions. This is  "
+" currently implemented only for the C++ applications     "
 IF( error_flags(num_bfield) = 0 ) [
     BxIN = value(num_bfield,1);
     ByIN = value(num_bfield,2);
     BzIN = value(num_bfield,3);
+    Bx=BxIN;By=ByIN;Bz=BzIN;
+    Bx_new=BxIN;By_new=ByIN;Bz_new=BzIN;
     IF( error_flags(num_emlmt) = 0 )[
        EMLMTIN=value(num_emlmt,1);
     ]
@@ -1785,12 +1790,12 @@ IF( ExIN~=0 | EyIN~=0 | EzIN~=0 )[
   write(ounit,'(a,38x,3f10.2)') ' Electric Field [V/cm]',
                   ExIN,EyIN,EzIN;
 ]
-IF( BxIN~=0 | ByIN~=0 | BzIN~=0 )[
+IF( Bx~=0 | By~=0 | Bz~=0 )[
   write(ounit,'(a,41x,3f10.2)') ' Magnetic Field [T]',
-                  BxIN,ByIN,BzIN;
+                  Bx,By,Bz;
 ]
 IF( ExIN~=0 | EyIN~=0 | EzIN~=0 |
-    BxIN~=0 | ByIN~=0 | BzIN~=0 )[
+    Bx~=0 | By~=0 | Bz~=0 )[
   write(ounit,'(a,50x,f10.2)') ' EM ESTEPE',EMLMTIN;
 ]
 write(ounit,*);

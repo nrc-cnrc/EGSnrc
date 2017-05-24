@@ -599,6 +599,7 @@ int EGS_Application::initGeometry() {
         return 1;
     }
     geometry->ref();
+    geometry->setApplication(this);
     return 0;
 }
 
@@ -700,6 +701,7 @@ int EGS_Application::initSimulation() {
     }
     initAusgabObjects();
     //describeSimulation();
+
     return 0;
 }
 
