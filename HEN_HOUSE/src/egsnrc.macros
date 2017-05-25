@@ -484,6 +484,7 @@ REPLACE {;COMIN/COMPTON-DATA/;} WITH
 "             is interacting with.
 "------------------------------------------------------------------ "
 REPLACE {$MXELEMENT} WITH {100}  " Number of elements               "
+REPLACE {$MXSHXSEC}  WITH {30}   " Number of shells available       "
 REPLACE {$MXSHELL}   WITH {6}    " Number of shells treated         "
 REPLACE {$MXINTER}   WITH {5}    " $MXSHELL-1                       "
 REPLACE {$MXTRANS}   WITH {39}   " Number of possible transitions   "
@@ -493,7 +494,7 @@ REPLACE {$PHOCSUNIT} WITH {i_photo_cs}   " unit number for photo_cs.data    "
 
 REPLACE {;COMIN/EDGE/;} WITH
 {;
-   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+   COMMON/EDGE/binding_energies($MXSHXSEC,$MXELEMENT),
                interaction_prob($MXSHELL,$MXELEMENT),
                relaxation_prob($MXTRANS,$MXELEMENT),
                edge_energies($MXEDGE,$MXELEMENT),
@@ -669,16 +670,26 @@ REPLACE {;COMIN/RELAX-USER/;} WITH {;
 
 REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
 REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
-REPLACE {$MAXRELAX} WITH {5000}"max. number of relaxations channels"
+REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
 "============================================================"
-" If you are interested in a more accurate simulation of the"
-" atomic relaxation process set the macro replacement below "
-" to .true. to enable a more complete algorithm with all    "
-" transitions available in the EADL compilation. Although   "
-" it has been tested in the production of tungsten K-shell  "
-" and L-shell characteristic x-rays, it needs more testing  "
-" before it can be made the default in EGSnrc.              "
+" Set the macro below to .false. to recover the previous approach
+" which allows photoelectric interactions with <M> and <N> shells.
+" See below for more details on the shells considered by different
+" interactions depending on the value of $EADL_RELAX:
+"
+"      Interaction        .false.             .true.
+"      -----------------------------------------
+"      Compton                all available shells
+"      EII                K,L1..L3            K,L1..L3
+"      Photoeffect        K,L1..L3,<M>,<N>    K,L1..L3
+"      Relaxation
+"        initial vacancy  K,L1..L3,<M>        K,L1..L3
+"        final vacancy    L1..L3,<M>,<N>      L1..L3,M1..M5,N1..N7...
+"
+" The current limitation of the initial vacancies will be removed
+" when a detailed implementation of photoelectric and EII interactions
+" becomes available.
 "============================================================"
 REPLACE {$EADL_RELAX} WITH {.true.}
 "============================================================"
@@ -3547,7 +3558,7 @@ REPLACE {$set_egs_home;} WITH {;
 
 
 " Initialization of various variables on a region-by-region basis "
-" This is made a macro so that it cen bereplaced with a different "
+" This is made a macro so that it can be replaced with a different "
 " version for the C/C++ interface                                 "
 REPLACE {$set-region-by-region-defaults;} WITH {;
 DO i=1,$MXREG [

@@ -777,11 +777,11 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
 
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
-        edep = 0;
+        edep = pzero;
         call relax(Uj,shn_array(j),iz_array(j));
-          "relax will put all particles with energies above ecut,pcut on the "
-          "stack, the remaining energy will be scored in edep and deposited  "
-          "locally (via the call to ausgab below)                            "
+        "relax will put all particles with energies above ecut,pcut on the "
+        "stack, the remaining energy will be scored in edep and deposited  "
+        "locally (via the call to ausgab below)                            "
     ]
     ELSE [ edep = Uj; ]
     IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); "generates IARG = 4 call" ]
@@ -2230,11 +2230,20 @@ ELSE["re-calculates photon xsections using available or user data"
 
 call mscati;       "Initialize new MS, step-sizes, etc, IK Oct 97"
 
-call EDGSET(1,1);  "Initialize relaxations and photo-absorption data,"
-                   "if requested
+"Calling order of the subroutines below is important when using"
+"detailed atomic relaxation in order to use the binding energies"
+"corresponding to the requested photon cross section library"
+IF ($EADL_RELAX & photon_xsections = 'xcom' )[
+   call init_compton; "Initialize bound Compton scattering"
+   call EDGSET(1,1);  "Initialize relaxations and photo-absorption data"
+]
+ELSE[
+   call EDGSET(1,1);  "Initialize relaxations and photo-absorption data,"
+                      "if requested
+   call init_compton; "Initialize bound compton scattering, IK, Jan 99"
+                      "if requested
+]
 
-call init_compton; "Initialize bound compton scattering, IK, Jan 99"
-                   "if requested
 
 call fix_brems;    "Re-calculate dl1,... for the different technique"
                    "employed in BREMS. Note that the old EGS sampling"
@@ -2423,6 +2432,11 @@ $RADC_HATCH;
 
 $need_bound_compton_data(getd);
 IF( ~getd ) [
+    IF($EADL_RELAX)[
+        $egs_fatal('(a,/a)',
+                   'You must turn ON Compton binding corrections when using a',
+                   'detailed atomic relaxation ($EADL_RELAX=true)!');
+    ]
     $egs_info('(a/)',' Bound Compton scattering not requested! ');
     return;
 ]
@@ -2430,6 +2444,7 @@ IF( ~getd ) [
 $egs_info('(a$)',' Bound Compton scattering requested, reading data ......');
 rewind($INCOHUNIT);
 DO j=1,18 [ read($INCOHUNIT,*); ]  "skip 1st 18 lines of comments"
+iz = 0;
 DO j=1,$MXTOTSH [
     read($INCOHUNIT,*) iz_array(j),shn_array(j),ne_array(j),
                        Jo_array(j),be_array(j);
@@ -2438,6 +2453,26 @@ DO j=1,$MXTOTSH [
     aux_erf = 0.70710678119*(1+0.3*Jo_array(j));
     erfJo_array(j) = 0.82436063535*(erf1(aux_erf)-1);
                     "0.82436063535 is exp(0.5)/2"
+
+    "For detailed atomic relaxations set shell type
+    "to actual shell number and update binding energies
+    "with values from the photo-electric cross sections
+    IF ($EADL_RELAX)[
+       IF (iz_array(j) ~= iz)[
+          shn_array(j) = 1; iz = iz_array(j);
+       ]
+       ELSE[
+          shn_array(j) = shn_array(j-1)+1;
+       ]
+       IF(binding_energies(shn_array(j),iz_array(j)) > 0)[
+         be_array(j) = binding_energies(shn_array(j),iz_array(j))/PRM;
+       ]
+       ELSE IF(photon_xsections = 'xcom') [
+         "Use binding energies from incoh.data below 1 keV"
+         binding_energies(shn_array(j),iz_array(j)) = be_array(j)*PRM;
+       ]
+    ]
+
 ]
 $egs_info(*,' Done');
 $egs_info('(/a)',' Initializing Bound Compton scattering ......');
@@ -2468,7 +2503,7 @@ DO medium = 1,nmed [
     DO i=1,nsh [
         j = shell_array(i,medium);
         eno_array(i,medium) = eno_array(i,medium)/pztot;
-        $egs_info('(i3,i4,i3,f9.5,e10.3,f10.3)',
+        $egs_info('(i4,i5,i4,f9.5,e10.3,f10.3)',
                   i,j,shn_array(j),eno_array(i,medium),
                   Jo_array(j),be_array(j)*PRM*1000.);
         eno_array(i,medium) = -eno_array(i,medium);
@@ -5053,7 +5088,7 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
     IF( peig <= binding_energies($MXSHELL,iZ) )
     [      "Below  N-shell -> local energy deposition "
         edep = peig;
-        e(np) = pzero; wt(np) = 0;
+        e(np) = pzero; "wt(np) = 0;"
     ]
     ELSE ["Above  N-shell -> sample the shell the photon is interacting with"
         $RANDOMSET br; /* ftot = 1;  */
@@ -5061,19 +5096,25 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
             IF( peig > binding_energies(k,iZ) ) [
                 IF( br < interaction_prob(k,iZ) ) EXIT;
                 br = (br - interaction_prob(k,iZ))/(1-interaction_prob(k,iZ));
-                /*
-                iprob = interaction_prob(k,iZ);
-                IF( br < iprob ) EXIT;
-                br = br - iprob*ftot;
-                ftot = ftot*(1-iprob);
-                */
             ]
         ]
-        e_vac = binding_energies(k,iZ);
-        e(np) = peig - e_vac + prm; do_relax = .true.;
-        "IF( e_vac > 1e-3 ) [ e(np) = peig - e_vac + prm; do_relax = .true.; ]
-        "ELSE               [ e(np) = peig + prm; e_vac = 0; ]
-        iq(np) = -1;
+        "Interaction possible with any shell from k=1 to $MXSHELL"
+        "Defaults to $MXSHELL interaction if DO loop completes"
+        "****************"
+        "EADL APPROACH 1: Do not allow interaction below L3. Deviates"
+        "**************** from previous EGSnrc approach as it doesn't"
+        "                 generate e- nor x-rays from <M> and <N> shells."
+        IF ($EADL_RELAX & k > 4)[
+             "No interaction below L3 with EADL"
+           edep = peig;
+           e(np) = pzero;
+        ]
+        ELSE["EADL:    Interacts with K,L1..L3 shells"
+             "default: Interacts with K,L1..L3,<M>, and <N> shells"
+           e_vac = binding_energies(k,iZ);
+           e(np) = peig - e_vac + prm; do_relax = .true.;
+           iq(np) = -1;
+        ]
     ]
 ]
 ELSE [
@@ -5084,7 +5125,14 @@ IF( iq(np) = -1 ) [
     $SELECT-PHOTOELECTRON-DIRECTION; "Samples photo-electron direction"
 ]
 
-IF( do_relax ) [ call relax(e_vac,k,iZ); ]
+"****************"
+"EADL APPROACH 2: PE interactions with K, L1...L3,<M> and <N> shells,"
+"**************** but vacancies below L3 deposit energy locally. It wont"
+"                 produce x-rays from <M> and <N> shells."
+"IF ($EADL_RELAX & k > 4)[
+"   edep = e_vac; do_relax = .false.;
+"]
+IF ( do_relax ) [ call relax(e_vac,k,iZ); ]
 
 IF( EDEP > 0 ) [ $AUSCALL($PHOTXAUS); ]    "generates IARG = 4 call"
 
@@ -5471,15 +5519,16 @@ DO medio = 1,nmed [
         curr_rec  = curr_rec+1;
         read(relax_unit, rec=curr_rec) be_r; shell_be(ish) = be_r;
 
-        /*
-           IF (iZ=74)[
-           write(*,*) 'Shell# ', ish ,' of type ', shell_type(ish);
-           write(*,*) ' -> be = ', shell_be(ish) ,' MeV ';
-           write(*,*) 'has ', ntran ,' transitions ';
-       ] */
         shell_Z(ish) = iZ;
         shell_num(ish) = ish - shell_ntot;
-        IF (shell_num(ish)<=7) shell_eadl(iZ,shell_num(ish)) = ish;
+        shell_eadl(iZ,shell_num(ish)) = ish;
+        IF (binding_energies(shell_num(ish),iZ) > 0)[
+           shell_be(ish) = binding_energies(shell_num(ish),iZ);
+        ]
+        ELSE IF( photon_xsections = 'epdl' )[
+          "Use binding energies from relax.data below 1 keV"
+           binding_energies(shell_num(ish),iZ) = shell_be(ish);
+        ]
         DO k=1,ntran[
             curr_rec  = curr_rec+1;
             read(relax_unit,rec=curr_rec) itmp(k);
@@ -5490,10 +5539,6 @@ DO medio = 1,nmed [
               radiative and by 65 for non-radiative transitions*/
             IF (itmp(k)<64) [itmp(k) +=1;]
             ELSE            [itmp(k) += 65;]
-          /*
-             IF (iZ=74)[
-             write(*,*) ' transition ',k,': type=',itmp(k),' prob=',wtmp(k);
-          ]*/
         ]
         IF( shell_be(ish) < min_be ) [
             relax_first(ish) = -1;
@@ -5523,26 +5568,6 @@ DO medio = 1,nmed [
             relax_ntot = relax_ntot + ntran;
         ]
       ]
-      shell_eadl(iZ,6) = shell_ntot + 10; "reseting to type 10 (N1)"
-      shell_eadl(iZ,7) = shell_ntot + 17; "reseting to type 27 (O1)"
-      /*
-      IF (iZ=74)[
-       $egs_info('(a,i4)','For Z = 74: ish_ini = ',shell_ntot+1);
-          sh_eadl = shell_eadl(iZ,1);
-          $egs_info('(4(a,i3))','shell_egs = ',1,
-                  ' shell_eadl = ',sh_eadl,
-                  ' shell type = ',shell_type(sh_eadl),
-                  ' # of transitions = ', relax_ntran(shell_ntot+1));
-          ntran = relax_ntran(shell_ntot+1);
-          IF (sh_eadl>0)[
-            DO m=0,ntran-1[
-              $egs_info(*,' transition ', m+1,': ',
-                     relax_state(relax_first(shell_ntot+1) + m),',',
-                     relax_prob( relax_first(shell_ntot+1)+ m));
-            ]
-          ]
-       $egs_info('(a,i4)','ish_final = ',shell_ntot+nshell);
-      ]*/
 
       shell_ntot = shell_ntot + nshell;
 
@@ -5604,19 +5629,23 @@ Nvac_max = -1;
 shell = shell_eadl(iZ,shell_egs);
 IF( shell < 1 | shell > $MAXSHELL ) [ return; ] "unknown vacancy"
 
-"$egs_info('(3(a,i3))','Z = ',iZ,"
-"        ' shell_egs = ',shell_egs,' shell_eadl = ', shell);"
-
 irl = ir(np);
 Ec = ecut(irl) - rm; Pc = pcut(irl);
 min_E = min(Ec,Pc); min_E = max($RELAX-CUTOFF,min_E);
 Evac = shell_be(shell);
-"IF( Evac < min_E | relax_ntran(shell) < 1 ) ["
-"    edep += Evac; return;"
-"]"
 rfu_Z = shell_Z(shell); rfu_j0 = shell;
 rfu_n0 = shell_num(shell); rfu_t0 = shell_type(shell);
 rfu_E0 = Evac;
+
+"Local energy deposition for vacancies below L3 shell."
+"Added here for consistency in algorithm for as long as"
+"<M> and <N> shells considered instead of proper shells."
+"AUSGAB call should be updated when charge of particle"
+"creating vacancy becomes available."
+IF (shell_egs > 4)[
+   edep = Evac;
+   return; "invokes $AUSCALL($PHOTXAUS) in COMPT;
+]
 
 vac = shell; Nvac = 0; np_save = np;
 LOOP [
@@ -5638,27 +5667,15 @@ LOOP [
         new_state = relax_state(relax_first(vac)+new_state-1);
      IF( new_state <= 64 ) [ "It was a radiative transition"
         iqf = 0; new_state += vac - shell_num(vac); Ef = shell_be(new_state);
-        "IF( Ef > min_E & relax_ntran(new_state) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new_state;
-            "IF (Nvac>Nvac_max) Nvac_max = Nvac;"
-        "]"
-        "ELSE [ edep += Ef; NEXT;]"
         Ecc = Pc;
-"IF (Ef>Evac)[$egs_info('(2(a,i4))',"
-"'vac_type=',shell_type(vac),' trans_type=',shell_type(new_state));]"
      ]
      ELSE [ "It was a non-radiative transition (Auger or Coster-Kronig)"
         iqf = -1; new1 = new_state/64; new2 = new_state - 64*new1;
         new1 += vac - shell_num(vac); new2 += vac - shell_num(vac);
         Ef1 = shell_be(new1); Ef2 = shell_be(new2);
-        "IF( Ef1 > min_E & relax_ntran(new1) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new1;
-            "IF (Nvac>Nvac_max) Nvac_max = Nvac;"
-        "] ELSE [ edep += Ef1;]"
-        "IF( Ef2 > min_E & relax_ntran(new2) > 0 ) [ "
         Nvac += 1; vacs(Nvac) = new2;
-            "F (Nvac>Nvac_max) Nvac_max = Nvac; "
-        "] ELSE [ edep += Ef2; NEXT;]"
         Ef = Ef1 + Ef2; Ecc = Ec;
      ]
     ]
@@ -5666,7 +5683,6 @@ LOOP [
     edep_local = 0;
     IF( Ex > Ecc ) [
         np += 1; $CHECK-RELAX-STACK(np,'new_relax');
-        "$egs_info('(a,i9,a,f7.3)','-> np=',np,' iq=',iqf);"
         iq(np) = iqf;
         $TRANSFER PROPERTIES TO (np) FROM (np_save);
         $RANDOMSET rnno; cost = 2*rnno-1; sint = 1-cost*cost;
@@ -5683,7 +5699,6 @@ LOOP [
         ELSE [
             e(np) = Ex + rm; $AUSCALL($AUGERTRA);
         ]
-        "$egs_info('(a,i2,a,f7.3,a)','-> iq=',iqf,' E=',Ex*1000.,' keV');"
     ] ELSE [
         edep += Ex;
 
@@ -5699,7 +5714,6 @@ LOOP [
     IF( Nvac = 0 ) EXIT;
     vac = vacs(Nvac); Evac = shell_be(vac); Nvac -= 1;
 ]
-"IF (Nvac_max>1) $egs_info('(a,i2,a)','-> ',Nvac_max,' vacancies');"
 return;
 end;
 ;
@@ -5850,6 +5864,12 @@ $egs_info('(a/,a)',
 
 $need_relaxation_data(do_relax);
 IF( ~do_relax ) [
+
+    IF($EADL_RELAX)[
+        $egs_fatal('(a,/a)',
+                   'You must turn ON atomic relaxations when requesting',
+                   'detailed atomic relaxation ($EADL_RELAX=true)!');
+    ]
     $egs_info('(a/)',' Atomic relaxations not requested! ');
     return;
 ]
@@ -5863,9 +5883,15 @@ rewind($PHOTOUNIT);
 
 DO i=1,$MXELEMENT
 [
-    read($PHOTOUNIT,*) j,(binding_energies(k,i),k=1,$MXSHELL);
-    DO k=1,$MXSHELL [
-        binding_energies(k,i) = binding_energies(k,i)*1e-6; "Convert to MeV"
+    IF ($EADL_RELAX)[
+       "Skip, using binding_energies from *_photo.data file
+       read($PHOTOUNIT,*);
+    ]
+    ELSE[
+       read($PHOTOUNIT,*) j,(binding_energies(k,i),k=1,$MXSHELL);
+       DO k=1,$MXSHELL [
+          binding_energies(k,i) = binding_energies(k,i)*1e-6; "Convert to MeV"
+       ]
     ]
 ]
 read($PHOTOUNIT,*);
@@ -7344,7 +7370,7 @@ IF( pese2 > ae(medium) ) [
     edep_local = edep;
     $AUSCALL($SAUGERTRA);
 ]
-
+"ish ranges from 1 to 4 for K,L1,L2,L3 shells"
 call relax(Uj,ish,iZ);
 
 IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]
@@ -7627,8 +7653,15 @@ DO iz=1,100 [
     DO j=ndat,2,-1 [
         IF( etmp(j)-etmp(j-1) < 1e-5 ) [
             k = k+1;
-            binding_energies(k,iz) = exp(etmp(j));
-            IF( k >= 4 ) EXIT;
+            IF ( k <= $MXSHXSEC )[
+               binding_energies(k,iz) = exp(etmp(j));
+            ]
+            ELSE[
+              $egs_fatal('(i3,a,i3,//a)',
+                         k,' binding energies read exceeding array size of',
+                         $MXSHXSEC,'Increase $MXSHXSEC in egsnrc.macros!');
+            ]
+            IF( ~$EADL_RELAX & k >= 4 ) EXIT;
         ]
     ]
 ]

@@ -127,7 +127,7 @@ REPLACE {;COMIN/COMPTON-DATA/;} WITH {
 " Remove iedgfl and iphter, to go into the cross section options common "
 REPLACE {;COMIN/EDGE/;} WITH
 {;
-   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+   COMMON/EDGE/binding_energies($MXSHXSEC,$MXELEMENT),
                interaction_prob($MXSHELL,$MXELEMENT),
                relaxation_prob($MXTRANS,$MXELEMENT),
                edge_energies($MXEDGE,$MXELEMENT),
