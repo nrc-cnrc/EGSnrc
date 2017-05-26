@@ -553,6 +553,37 @@ public:
     /*! Destructor.  */
     ~EGS_ChamberApplication() {
         if( dose )  delete dose;
+		
+		if (*multiFlag_mrScore) // Added mrScore suffix to all multiregion variables just in case
+		{
+			if (doses_mrScore)
+			{
+				for (int i = 0; i < doses_mrScore->size(); i++)
+					if((*doses_mrScore)[i])
+						delete (*doses_mrScore)[i];
+				
+				doses_mrScore->clear();
+				delete doses_mrScore;
+			}
+			
+			if (masses_mrScore)
+			{
+				for (int i = 0; i < masses_mrScore->size(); i++)
+					if ((*masses_mrScore)[i])
+						delete (*masses_mrScore)[i];
+				
+				doses_mrScore->clear();
+				delete masses_mrScorev;
+			}
+		}
+		
+		for (int i = 0; i < cavity_regions.size(); i++)
+			if(cavity_regions[i])
+				delete[] cavity_regions[i];
+		
+		if (multiFlag_mrScore)
+			delete multiFlag_mrScore;
+		
         if( ngeom > 0 ) {
             delete [] geoms; delete [] mass; int j;
             for(j=0; j<ngeom; j++) if( transforms[j] ) delete transforms[j];
@@ -659,6 +690,21 @@ private:
 
     EGS_Float        fsplit;    // photon splitting number
     EGS_Float        fspliti;   // inverse photon splitting number
+	
+	// variables required for multiregion scoring
+	// we need to score dose per region, so we need an array of scorring arrays
+    vector <EGS_ScoringArray*> *doses_mrScore;
+	
+	// and we now need to store as many masses as there are regions for each geom
+	vector <vector <EGS_Float>* > *masses_mrScore;
+	
+	// formely temporary variables used when parsing the cavity regions section of
+	// scoring options, now they are used as an accompanying index to
+	// doses_mrScore
+	vector<int>  n_cavity_regions; // stores the size of cavity_regions int[]
+    vector<int*>  cavity_regions; // stores as many regions as doses_mrScore
+	                              // stores dose
+	bool *multiFlag_mrScore;
 
     /*! Range rejection flag
       If set to 0, no range rejection is used
@@ -1033,6 +1079,20 @@ int EGS_ChamberApplication::initScoring() {
 
         options->getInput("silent",silent);
 
+		// section picking up the option for multiregion scoring, ie,
+		//
+		// :start scoring options:
+		//     multiregion scoring = 1
+		//     etc...
+		
+        int tmp_multiFlag_mrScore=0;
+        options->getInput("multiregion scoring",tmp_multiFlag_mrScore);
+		multiFlag_mrScore = new bool(tmp_multiFlag_mrScore?true:false);
+		
+		if (multiFlag_mrScore)
+			// declare an array to hold a mass for each region
+			masses_mrScore = new vector <vector <EGS_Float>* >();		
+		
         //
         // *********** photon cross section scaling
         //
@@ -1096,8 +1156,12 @@ int EGS_ChamberApplication::initScoring() {
         // *********** calculation geometries
         //
         vector<EGS_BaseGeometry *> geometries;
-        vector<int *>  cavity_regions;
-        vector<int>  n_cavity_regions;
+		
+        // old code commented out as these are defined on class scope earlier on, and are
+		// used for multiregion scoring
+        /*vector<int *>  cavity_regions;
+        vector<int>  n_cavity_regions;*/
+		
         vector<int *>  enhance_regions;
         vector<int>  n_enhance_regions;
         vector<int *>  enhance_fac;
@@ -1147,15 +1211,53 @@ int EGS_ChamberApplication::initScoring() {
             else{ err11 = 1; err12 = 1; }
 
             EGS_Float cmass;
-            int err2 = aux->getInput("cavity mass",cmass);
+            
+			// commentoud out for multiregion scoring, redefined later
+			//int err2 = aux->getInput("cavity mass",cmass);
+			
+			// here we kinda change up the cmass input for multiregion scoring
+			int err2;
+			if (!*multiFlag_mrScore) // if we don't have multiregion scoring
+			{ // then proceed as we did before
+				err2 = aux->getInput("cavity mass",cmass);
+				if( err2 )
+				{
+					egsWarning("initScoring: missing/wrong 'cavity mass' "
+							   "input\n"); cmass = -1;
+				}
+			}
+			else // if we do have multiregion scoring, then we need as many masses as
+			{    // scoring regions
+				
+				// add an array for each geom to hold the masses
+				masses_mrScore->push_back(new vector <EGS_Float>);
+				// add the masses to said array
+				err2 = aux->getInput("cavity mass",*(*masses_mrScore)[masses_mrScore->size()-1]);
+				if( err2 ) // if there was an error
+				{
+					egsWarning("initScoring: missing/wrong 'cavity mass' "
+							   "input when multiregion scoring\n");
+				}
+				
+				// now we compute cmass by iterating through all the individual region
+				// masses and adding them up together
+				cmass = 0;
+				int j = masses_mrScore->size()-1;
+				int temp_iMax = (*masses_mrScore)[j]->size();
+				for (int i = 0; i < temp_iMax ; i++)
+					cmass += (*(*masses_mrScore)[j])[i];
+			}
+			
             if( err ) egsWarning("initScoring: missing/wrong 'geometry name' "
                     "input\n");
             if( err1 ) egsWarning("initScoring: missing/wrong 'cavity regions' "
                     "input\n");
-            if( err2 ) {
+					
+			// Commented out because it was incorporated above
+            /*if( err2 ) {
                 egsWarning("initScoring: missing/wrong 'cavity mass' "
                         "input\n"); cmass = -1;
-            }
+            }*/
             if( err11 ) egsWarning("initScoring: missing/wrong 'enhance regions' "
                     "input\n");
             if( err12 ) egsWarning("initScoring: missing/wrong 'enhancement' "
@@ -1222,7 +1324,8 @@ int EGS_ChamberApplication::initScoring() {
                         egsWarning("initScoring: no cavity regions "
                                 "specified for geometry %s --> input ignored\n",
                                 gname.c_str());
-                        delete [] regs;
+						// commented out line below because we require the region list later
+                        /*delete [] regs;*/
                     }
                     else {
                         geometries.push_back(g);
@@ -1376,6 +1479,31 @@ int EGS_ChamberApplication::initScoring() {
         cs_enhance = new int* [ngeom];
         mass = new EGS_Float [ngeom];
         dose = new EGS_ScoringArray(ngeom);
+		
+		if (*multiFlag_mrScore)
+		{
+			// declare as many scoring arrays as there are scoring geometries
+			doses_mrScore = new vector <EGS_ScoringArray*>();
+			
+			// add a scoring array as big as the number of regions specified for the
+			// cavity for each scoring geom
+			for (int i = 0; i < n_cavity_regions.size(); i++)
+				doses_mrScore->push_back(new EGS_ScoringArray(n_cavity_regions[i]));
+			
+			// check to see is we have as many masses as we have regions for each geom
+			bool tempFlag_mrScore = false;
+			if (*multiFlag_mrScore)
+				for (int i = 0; i < n_cavity_regions.size(); i++)
+					if ((*doses_mrScore)[i]->regions() != (*masses_mrScore)[i]->size())
+						tempFlag_mrScore++;
+					
+			// if we have any discrepencies, spit out error
+			if (tempFlag_mrScore)
+				egsFatal("initScoring: Number of regions and masses "
+			             "for cavity region/mass do not match, which"
+						 " is required for multiregion scoring.\n");
+		}
+		
         transforms = new EGS_AffineTransform* [ngeom];
         do_cse = false;
         has_sub = new bool [ngeom];
@@ -1448,7 +1576,9 @@ int EGS_ChamberApplication::initScoring() {
 			    rECUT[j] = ecut_val[j];
             }
 
-            delete [] cavity_regions[j];
+            // commented out the line below because we can't delete cavity)regions, it
+			// points to our stored region numbers, which are still required
+			/*delete [] cavity_regions[j];*/
             delete [] enhance_regions[j];
         }
 
@@ -1891,6 +2021,21 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                 EGS_Float aux = (the_stack->E[np]-the_useful->rm)*the_stack->wt[np];
                 if(aux > 0){
                     dose->score(ig,aux);
+					
+					if (*multiFlag_mrScore)
+					{
+						// get the cavity_regions index corresponding to ir so we know which index
+						// of doses_mrScore to score in
+						int temp_mrScore;
+						for (temp_mrScore = 0; temp_mrScore < n_cavity_regions[ig]; temp_mrScore++)
+							if(ir == cavity_regions[ig][temp_mrScore])
+								break; // basically break when temp_mrScore is at the cavity index
+							           // corresponding to ir
+						
+						// score to the proper region
+						(*doses_mrScore)[ig]->score(temp_mrScore,aux);
+					}
+					
                     if(check_for_subreg && nsubgeoms[ig] != 0){
                         save_dose += aux;	//get the current dose deposition
                     }
@@ -2048,6 +2193,21 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                     }
                     */
                     dose->score(ig,aux);
+					
+					if (*multiFlag_mrScore)
+					{
+						// get the cavity_regions index corresponding to ir so we know which index
+						// of doses_mrScore to score in
+						int temp_mrScore;
+						for (temp_mrScore = 0; temp_mrScore < n_cavity_regions[ig]; temp_mrScore++)
+							if(ir == cavity_regions[ig][temp_mrScore])
+								break; // basically break when temp_mrScore is at the cavity index
+							           // corresponding to ir
+						
+						// score to the proper region
+						(*doses_mrScore)[ig]->score(temp_mrScore,aux);
+					}
+					
                     if(check_for_subreg && nsubgeoms[ig] != 0){
                         save_dose += aux;	//get the current dose deposition
                     }
@@ -2065,6 +2225,20 @@ int EGS_ChamberApplication::ausgab(int iarg) {
                         EGS_Float aux = the_epcont->edep*the_stack->wt[np];
                         if( aux > 0 ) {
                             dose->score(i,aux);
+							
+							if (*multiFlag_mrScore)
+							{
+								// get the cavity_regions index corresponding to ir so we know which index
+								// of doses_mrScore to score in
+								int temp_mrScore;
+								for (temp_mrScore = 0; temp_mrScore < n_cavity_regions[ig]; temp_mrScore++)
+									if(ir == cavity_regions[ig][temp_mrScore])
+										break; // basically break when temp_mrScore is at the cavity index
+											   // corresponding to ir
+								
+								// score to the proper region
+								(*doses_mrScore)[ig]->score(temp_mrScore,aux);
+							}
                         }
                     }
                 }
@@ -2410,6 +2584,22 @@ int EGS_ChamberApplication::simulateSingleShower() {
                                         // dose may have been deposited by now
                                         if ( (ig != save_ig) && (save_dose > 0) )
                                             dose->score(ig,save_dose);
+										
+										if ( (ig != save_ig) && (save_dose > 0) && *multiFlag_mrScore)
+										{
+											// get the cavity_regions index corresponding to ir so we know which index
+											// of doses_mrScore to score in
+											int temp_mrScore;
+											int ir_mrScore = geoms[ig]->isWhere(x);
+											for (temp_mrScore = 0; temp_mrScore < n_cavity_regions[ig]; temp_mrScore++)
+												if(ir_mrScore == cavity_regions[ig][temp_mrScore])
+													break; // basically break when temp_mrScore is at the cavity index
+														   // corresponding to ir
+											
+											// score to the proper region
+											(*doses_mrScore)[ig]->score(temp_mrScore,save_dose);
+										}
+										
                                         geometry = geoms[ig];
                                         while(container2->size() > 0){
                                             nsmall_step = 0;
@@ -2443,6 +2633,14 @@ int EGS_ChamberApplication::outputData() {
     int err = EGS_AdvancedApplication::outputData();
     if( err ) return err;
     if( !dose->storeState(*data_out) ) return 101;
+	
+	if (*multiFlag_mrScore)
+	{
+		// we need to save all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			if (!(*doses_mrScore)[i]->storeState(*data_out)) return 101;
+	}
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) {
             double aux = dose->thisHistoryScore(gind1[j])*
@@ -2489,6 +2687,14 @@ int EGS_ChamberApplication::readData() {
     int err = EGS_AdvancedApplication::readData();
     if( err ) return err;
     if( !dose->setState(*data_in) ) return 101;
+	
+	if (*multiFlag_mrScore)
+	{
+		// we need to load all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			if (!(*doses_mrScore)[i]->setState(*data_in)) return 101;
+	}
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) (*data_in) >> scg[j];
         if( !data_in->good() ) return 104;
@@ -2519,6 +2725,14 @@ int EGS_ChamberApplication::readData() {
 void EGS_ChamberApplication::resetCounter() {
     EGS_AdvancedApplication::resetCounter();
     dose->reset();
+	
+	if (*multiFlag_mrScore)
+	{
+		// we need to reset all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+			(*doses_mrScore)[i]->reset();
+	}
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) scg[j] = 0;
     }
@@ -2545,6 +2759,18 @@ int EGS_ChamberApplication::addState(istream &data) {
     EGS_ScoringArray tmp(ngeom);
     if( !tmp.setState(data) ) return 101;
     (*dose) += tmp;
+	
+	if (*multiFlag_mrScore)
+	{
+		// we need to combine all of our doses
+		for (int i = 0; i < n_cavity_regions.size(); i++)
+		{
+			EGS_ScoringArray tmp_mrScore(n_cavity_regions[i]); // temp for error check
+			if( !tmp_mrScore.setState(data) ) return 101; // if we fail, throw 101
+			*((*doses_mrScore)[i]) += tmp_mrScore; // otherwise add temp
+		}
+	}
+	
     if( ncg > 0 ) {
         for(int j=0; j<ncg; j++) {
             double tmp; data >> tmp;
@@ -2687,8 +2913,46 @@ void EGS_ChamberApplication::outputResults() {
             }
             else egsInformation("zero dose\n");
         }
-
     }
+	
+	if (*multiFlag_mrScore)
+	{
+		// banners are wonderful
+		egsInformation("-----------------------------------------------\n");
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		egsInformation("          Multiregion Scoring Results          \n");
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+		
+		// iterate through each geom
+		for(int i = 0; i < n_cavity_regions.size(); i++)
+		{
+			// output geom name
+			egsInformation("\nFor %-25s\n", geoms[i]->getName().c_str());
+			
+			// iterate through every cavity region in geom
+			for (int j = 0; j < n_cavity_regions[i]; j++)
+			{
+				// grab dose and uncertainty for current geom and index
+				double r_mrScore, dr_mrScore; (*doses_mrScore)[i]->currentResult(j,r_mrScore,dr_mrScore);
+				
+				// if we have non-zero error, get a percentage
+				if (r_mrScore > 0) dr_mrScore = 100*dr_mrScore/r_mrScore;
+				else dr_mrScore = 100; // else give 100% error
+				
+				// normalize to Joule per history
+				EGS_Float norm_mrScore = 1.602e-10*current_case/source->getFluence();
+				
+				// normalize to Gy per history
+				norm_mrScore /= (*(*masses_mrScore)[i])[j];
+				
+				// output region number with dose and uncertainty, using the same
+				// precision as above
+				egsInformation("\tRegion %4d     %10.4le +/- %-7.3lf%c\n",cavity_regions[i][j],r_mrScore*norm_mrScore,dr_mrScore,c);
+			}
+		}
+		// banners are wonderful
+		egsInformation("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+	}
 };
 
 /*! Get the current simulation result.  */
@@ -2991,6 +3255,14 @@ int EGS_ChamberApplication::startNewShower() {
                 bool instrct = pu_estimator_corr[j]->shiftManager(current_case);
             }
       }
+	  
+	  if (*multiFlag_mrScore)
+	  {
+			// update our scoring arrays
+			for (int i = 0; i < n_cavity_regions.size(); i++)
+				(*doses_mrScore)[i]->setHistory(current_case);
+	  }
+	
       //*HB_end**************************
       dose->setHistory(current_case);
       last_case = current_case;
