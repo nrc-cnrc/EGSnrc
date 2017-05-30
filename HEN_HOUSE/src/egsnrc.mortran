@@ -5092,9 +5092,16 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
     " is interacting with. "
     " left for now as before, to be changed!!! "
     IF( peig <= binding_energies($MXSHELL,iZ) )
-    [      "Below  N-shell -> local energy deposition "
-        edep = peig;
-        e(np) = pzero; "wt(np) = 0;"
+    [   "Outer shells, no atomic relaxation"
+        IF ($EADL_RELAX)[
+           "EADL relax: Below  M2-shell -> just emit e- "
+           iq(np) = -1;
+           e(np) = peig + prm;
+        ]
+        ELSE["Default: Below  N-shell -> local energy deposition "
+           edep = peig;
+           e(np) = pzero; "wt(np) = 0;"
+        ]
     ]
     ELSE ["Above  N-shell -> sample the shell the photon is interacting with"
         $RANDOMSET br; /* ftot = 1;  */
@@ -5111,9 +5118,9 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
         "**************** from previous EGSnrc approach as it doesn't"
         "                 generate e- nor x-rays from <M> and <N> shells."
         IF ($EADL_RELAX & k > 4)[
-             "No interaction below L3 with EADL"
-           edep = peig;
-           e(np) = pzero;
+           "No initial vacancy below L3 for now, just emit e-"
+           iq(np) = -1;
+           e(np) = peig + prm;
         ]
         ELSE["EADL:    Interacts with K,L1..L3 shells"
              "default: Interacts with K,L1..L3,<M>, and <N> shells"
