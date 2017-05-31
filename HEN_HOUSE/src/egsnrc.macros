@@ -245,8 +245,8 @@ PARAMETER $PHOTONUCAUSB=29; "BEFORE PHOTONUCLEAR EVENT"
 PARAMETER $PHOTONUCAUSA=30; "AFTER PHOTONUCLEAR EVENT"
 PARAMETER $EIIB=31;   "Before EII"
 PARAMETER $EIIA=32;   "After EII"
-PARAMETER $SFLUORTRA=33;   "Sub-threshold fluorescent transition just occurred"
-PARAMETER $SAUGERTRA=34;   "Sub-threshold Auger transition just occurred"
+PARAMETER $SPHOTONA=33;   "After sub-threshold photon energy deposition"
+PARAMETER $SELECTRONA=34;   "After sub-threshold electron energy deposition"
 
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
@@ -622,7 +622,7 @@ REPLACE {;COMIN/EII-DATA/;} WITH {;
 
 REPLACE {$COMIN-EII-SAMPLE;} WITH {
     ;COMIN/EPCONT,EII-DATA,EGS-VARIANCE-REDUCTION,RANDOM,STACK,THRESH,
-           UPHIOT,USEFUL,EGS-IO/;
+           UPHIOT,USEFUL,EGS-IO,RELAX-DATA/;
 };
 REPLACE {$COMIN-EII-INIT;} WITH {
     ;COMIN/BREMPR,EDGE,EGS-IO,EII-DATA,ELECIN,MEDIA,THRESH,USEFUL/;
@@ -717,9 +717,11 @@ REPLACE {;COMIN/RELAX-DATA/;} WITH {;
     relax_state($MAXRELAX),    "final state of the transition"
     relax_prob($MAXRELAX),     "probability"
     relax_atbin($MAXRELAX),    "used for alias sampling"
-    relax_ntot;                "total number of transitions in the list"
+    relax_ntot,                "total number of transitions in the list"
+    relax_initiator_q;         "the charge of the particle initiating relax"
   $REAL     relax_prob;
-  $INTEGER  relax_first, relax_ntran, relax_state, relax_atbin, relax_ntot;
+  $INTEGER  relax_first, relax_ntran, relax_state, relax_atbin, relax_ntot,
+            relax_initiator_q;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
@@ -1112,7 +1114,7 @@ REPLACE {$COMIN-BREMS;} WITH {
            EGS-VARIANCE-REDUCTION,EGS-IO/;}
 REPLACE {$COMIN-COMPT;} WITH {
    ;COMIN/COMPTON-DATA,DEBUG,EPCONT,STACK,THRESH,UPHIOT,USEFUL,RANDOM,
-          EGS-VARIANCE-REDUCTION,EGS-IO/;}
+          EGS-VARIANCE-REDUCTION,EGS-IO,RELAX-DATA/;}
 REPLACE {$COMIN-ELECTR;} WITH {
 ;COMIN/DEBUG,BOUNDS,ELECIN,EPCONT,MEDIA,MISC,STACK,THRESH,
 UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,CH-Steps,EGS-IO,
@@ -1130,7 +1132,7 @@ REPLACE {$COMIN-PAIR;} WITH {
 REPLACE {$COMIN-PHOTO;} WITH {
    ;COMIN/BOUNDS,BREMPR,DEBUG,EDGE,EPCONT,MEDIA,PHOTIN,RANDOM,
           STACK,UPHIOT,USEFUL,EGS-IO,
-          EGS-VARIANCE-REDUCTION/;}
+          EGS-VARIANCE-REDUCTION,RELAX-DATA/;}
 REPLACE {$COMIN-PHOTON;} WITH {
 ;COMIN/DEBUG,BOUNDS,MEDIA,MISC,EPCONT,PHOTIN,STACK,THRESH,UPHIOT,
 USEFUL,USER,RANDOM,EGS-VARIANCE-REDUCTION,EGS-IO/;}
@@ -1143,7 +1145,7 @@ REPLACE {$COMIN-BLOCK;} WITH {
   EPCONT,CH-Steps,ET-Control,MEDIA,MISC,PHOTIN,RANDOM,STACK,
   THRESH, UPHIIN,UPHIOT,USEFUL,EGS-VARIANCE-REDUCTION/;}
 REPLACE {$COMIN-RELAX;} WITH {
-  ;COMIN/EPCONT,STACK,BOUNDS,USEFUL,RANDOM,EDGE,EGS-IO/;}
+  ;COMIN/EPCONT,STACK,BOUNDS,USEFUL,RANDOM,EDGE,EGS-IO,RELAX-DATA/;}
 REPLACE {$COMIN-SET-DEFAULTS;} WITH {
   ;COMIN/BOUNDS,BREMPR,COMPTON-DATA,EDGE,ELECIN,EPCONT,CH-Steps,ET-Control,
        MEDIA,MISC,PHOTIN,RANDOM,STACK,THRESH, UPHIIN,UPHIOT,USEFUL,
