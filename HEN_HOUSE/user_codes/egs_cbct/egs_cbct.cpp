@@ -1464,12 +1464,13 @@ void EGS_CBCT::initOutput() {
             EGS_BaseFile *bs = new EGS_BaseFile(blank_scan.c_str());
             if (bs->fileExist()){
               if(bs->fileSize()!=Nx*Ny*sizeof(float)){
+                int fileSize = bs->fileSize();
                 delete bs;
                 egsFatal(
                 "\n\n***  Wrong blank scan file size = %d bytes\n"
                 "     It should be %d bytes"
                 "     This is a fatal error.\n\n",
-                bs->fileSize(),Nx*Ny*sizeof(float));
+                fileSize,Nx*Ny*sizeof(float));
               }
               else{
                 egsInformation(
