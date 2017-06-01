@@ -24,6 +24,7 @@
 "  Author:          Blake Walters, 2007                                       "
 "                                                                             "
 "  Contributors:    Frederic Tessier                                          "
+"                   Blake Walters
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -95,7 +96,7 @@ REPLACE {$MAXFS_$DYNJAWS} WITH {{COMPUTE $MAX_N_$DYNJAWS*$MAXFIELD_$DYNJAWS}}
 ;
 REPLACE {;COMIN/CM_$DYNJAWS/;} WITH {
    ;COMMON/CM_$DYNJAWS/ ZBACK_$DYNJAWS, ZFRONT_$DYNJAWS,
-      XY_$DYNJAWS,UV_$DYNJAWS,ICM_$DYNJAWS,
+      XY_$DYNJAWS,UV_$DYNJAWS,
       IRSTART_$DYNJAWS,  IREND_$DYNJAWS,  N_$DYNJAWS,
       IR_$DYNJAWS,IXY_CHOICE_$DYNJAWS,ISCM_$DYNJAWS,
       TITLE_$DYNJAWS;
@@ -103,7 +104,7 @@ REPLACE {;COMIN/CM_$DYNJAWS/;} WITH {
       ZBACK_$DYNJAWS, ZFRONT_$DYNJAWS,
       XY_$DYNJAWS,UV_$DYNJAWS;
    INTEGER
-      ICM_$DYNJAWS,IRSTART_$DYNJAWS,IREND_$DYNJAWS,
+      IRSTART_$DYNJAWS,IREND_$DYNJAWS,
       N_$DYNJAWS,IR_$DYNJAWS,
       IXY_CHOICE_$DYNJAWS($MAX_N_$DYNJAWS), ISCM_$DYNJAWS;
    CHARACTER*1 TITLE_$DYNJAWS(60);
@@ -150,6 +151,8 @@ REPLACE {;COMIN/CM_$DYNJAWS/;} WITH {
 "V>                                  dynamic simulations
 "V>RNDM1_$DYNJAWS = random no. (0,1) selected before each history and compared
 "V>                 to INDEX_$DYNJAWS(K) to determin what field to used
+"V>ICM_$DYNJAWS = CM no. for $DYNJAWS.  Put here because we need access
+"V>               to it in BEAMnrc main
 
 
 REPLACE {;COMIN/USER-DYNJAWS/;} WITH {;
@@ -163,7 +166,7 @@ COMMON/USERDYNJAWS/ZMIN_$DYNJAWS, ZMAX_$DYNJAWS,
        XBPT_$DYNJAWS,XBNT_$DYNJAWS,BPOT_$DYNJAWS,BNET_$DYNJAWS,
        RNDM1_$DYNJAWS,INDEX_$DYNJAWS,INDEX1_$DYNJAWS,
        INDEX2_$DYNJAWS,ISCM_MAX_$DYNJAWS,MODE_$DYNJAWS,NFIELDS_$DYNJAWS,
-       I_$DYNJAWS,J_$DYNJAWS;
+       I_$DYNJAWS,J_$DYNJAWS,ICM_$DYNJAWS;
 $REAL ZMIN_$DYNJAWS($MAX_N_$DYNJAWS),  ZMAX_$DYNJAWS($MAX_N_$DYNJAWS),
       XFP_$DYNJAWS($MAX_N_$DYNJAWS),XFN_$DYNJAWS($MAX_N_$DYNJAWS),
       XBP_$DYNJAWS($MAX_N_$DYNJAWS), XBN_$DYNJAWS($MAX_N_$DYNJAWS),
@@ -179,7 +182,7 @@ $REAL ZMIN_$DYNJAWS($MAX_N_$DYNJAWS),  ZMAX_$DYNJAWS($MAX_N_$DYNJAWS),
       RNDM1_$DYNJAWS,INDEX_$DYNJAWS($MAXFIELD_$DYNJAWS),INDEX1_$DYNJAWS,
        INDEX2_$DYNJAWS;
 $INTEGER ISCM_MAX_$DYNJAWS,MODE_$DYNJAWS,NFIELDS_$DYNJAWS,
-        I_$DYNJAWS,J_$DYNJAWS;
+        I_$DYNJAWS,J_$DYNJAWS,ICM_$DYNJAWS;
 $INTEGER BIMIN_$DYNJAWS, BIMAX_$DYNJAWS, BIMID_$DYNJAWS;
 }
 
@@ -305,6 +308,7 @@ IF(MODE_$DYNJAWS=1 | MODE_$DYNJAWS=2)[
         BNET_$DYNJAWS(J_$DYNJAWS,1) =  BNE_$DYNJAWS(J_$DYNJAWS) - $BDY_TOL;
         BNET_$DYNJAWS(J_$DYNJAWS,2) =  BNE_$DYNJAWS(J_$DYNJAWS) + $BDY_TOL;
         ]
+        Z_min_CM(ICM_$DYNJAWS+1)=ZMAX_$DYNJAWS(ISCM_MAX_$DYNJAWS);
     ]
 ]
 ;
