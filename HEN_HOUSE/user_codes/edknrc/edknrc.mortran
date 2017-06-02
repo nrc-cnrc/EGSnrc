@@ -853,7 +853,16 @@ IQ(1)=IQIN; E(1)=EI; U(1)=UIN; V(1)=VIN; W(1)=WIN;
 $TRANSFER PROPERTIES TO (1) FROM IN;
 Mgle=LOG(ei);
 MEDIUM= MED(irin);"uses medium from region irin, set to 2 in INPUTS"
+IF(EI<=PCUT(irin))[
+   IF(medium>0)[
+    IF(EI>AP(medium))[ IDR=$EGSCUTAUS;]ELSE[IDR=$PEGSCUTAUS;]
+   ] ELSE [IDR=$EGSCUTAUS; ]
+   EDEP=EI;
+   $AUSCALL(IDR);
+]
+ELSE[
 $SET INTERVAL Mgle,GE;
+$EVALUATE GMFPR0 USING GMFP(Mgle);
 
 Mcohfac = 1.0;
 IF (IRAYLR(irin).EQ.1)[
@@ -902,7 +911,7 @@ WHILE (np > 0) [
     IF( iq(np) = 0 ) [ call photon(ircode); ]
     ELSE             [ call electr(ircode); ]
 ]
-
+]
 ;
 }
 ;
@@ -1328,7 +1337,7 @@ $INTEGER nbatch,        "$INTEGER and $REAL are defined in egsnrc.macros"
          ibatch,        "the user code) e.g. to switch to double precision"
          i,j,ic,ix,
          irl,mednum,
-         ircode;
+         ircode,idr;
 
 $REAL    ei,            "total energy"
          volume,        "volume subtended by concentric spheres and cones"
@@ -3675,7 +3684,7 @@ C************************************************************
       integer function sini( string )
 C************************************************************
       implicit none
-      character*256 string
+      character*10 string
       integer i
       sini = 1
       do i = 1, len(string)
@@ -3696,7 +3705,7 @@ C************************************************************
       integer function sfin( string, length )
 C************************************************************
       implicit none
-      character*256 string
+      character*10 string
       integer i, length
       sfin = length
       do i = length, 1, -1
@@ -3803,6 +3812,7 @@ COMIN/GEOM,IODAT1,IODAT2,PLOTC,SCORE,USER/;
 character *24 time_and_date;
 character*10  ch_var;
 CHARACTER*60  SERIESTITLE, XTITLE, YTITLE, SUBTITLE;
+CHARACTER*80  TEMPTITLE;
 INTEGER       sini, sfin, ini, fin;
 INTEGER       I,J,IX,IC,irl;
 INTEGER       ICOL1,ICOL2,NPTS,PLTYPE,IAXISTYPE,UNITNUM,CURVENUM,int,CHECK;
@@ -3814,6 +3824,7 @@ IPLTUNX = 23;
 IPLTUNC = 24;
 call egs_get_fdate(time_and_date);
 IF (IOPLOT > 0)["plotting requested"
+    DO I=1,80[TEMPTITLE(I:I)=TITLE(I);]
     CURVENUM=0;  "counter for the curve # of the graph"
     IF(NPLOTR.NE.0) [
         "DEPTH-DOSE PLOTS ON PLOTTER"
@@ -3860,7 +3871,7 @@ IF (IOPLOT > 0)["plotting requested"
                 "plot graph"
                 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
                                NPTS, CURVENUM, SERIESTITLE,
-                               XTITLE, YTITLE, TITLE, SUBTITLE,
+                               XTITLE, YTITLE, TEMPTITLE, SUBTITLE,
                                UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
                 CURVENUM=CURVENUM+1;
@@ -3914,7 +3925,7 @@ IF (IOPLOT > 0)["plotting requested"
    	 "plot graph"
    	 CALL XVGRPLOT (XCOORD, YCOORD, UNCERT,
    			NPTS, CURVENUM, SERIESTITLE,
-   			XTITLE, YTITLE, TITLE, SUBTITLE,
+   			XTITLE, YTITLE, TEMPTITLE, SUBTITLE,
    			UNITNUM, PLTYPE, HISTXMIN, IAXISTYPE);
 
    	 CURVENUM=CURVENUM+1;
