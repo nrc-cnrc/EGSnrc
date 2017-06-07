@@ -875,7 +875,7 @@ private:
 Generates spectra for radionuclide emissions. This spectrum type is used by
 \ref EGS_RadionuclideSource.
 Currently spectrum data is obtained from ENSDF format data files using
-\ref EGS_Ensdf. These files can be found in $HEN_HOUSE/spectra/lnhb/.
+\ref EGS_Ensdf. These files can be found in $HEN_HOUSE/spectra/lnhb/ensdf/.
 For more information about the ENSDF format and how it is processed,
 see \ref EGS_Ensdf.
 
@@ -884,7 +884,7 @@ It is defined using the following input
 :start spectrum:
     type            = radionuclide
     isotope         = name of the isotope (e.g. Sr-90), used to look up the
-                        ensdf file as $HEN_HOUSE/spectra/lnhb/{isotope}.ensdf
+                        ensdf file as $HEN_HOUSE/spectra/lnhb/ensdf/{isotope}.ensdf
                         if ensdf file not provided below
     ensdf file      = [optional] path to a spectrum file in ensdf format,
                         including extension
@@ -1865,13 +1865,14 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         err = inp->getInput("ensdf file",ensdf_file);
 
         // If not passed as input, find the ensdf file in the
-        // directory $HEN_HOUSE/spectra/lnhb
+        // directory $HEN_HOUSE/spectra/lnhb/ensdf/
         if (err) {
 
             EGS_Application *app = EGS_Application::activeApplication();
             if (app) {
                 ensdf_file = egsJoinPath(app->getHenHouse(),"spectra");
                 ensdf_file = egsJoinPath(ensdf_file.c_str(),"lnhb");
+                ensdf_file = egsJoinPath(ensdf_file.c_str(),"ensdf");
             }
             else {
                 char *hen_house = getenv("HEN_HOUSE");
@@ -1885,6 +1886,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                 else {
                     ensdf_file = egsJoinPath(hen_house,"spectra");
                     ensdf_file = egsJoinPath(ensdf_file.c_str(),"lnhb");
+                    ensdf_file = egsJoinPath(ensdf_file.c_str(),"ensdf");
                 }
             }
             ensdf_file = egsJoinPath(ensdf_file.c_str(),isotope.append(".txt"));
