@@ -676,7 +676,7 @@ public:
       registered with the application and then proceeds to call ausgab().
 
     */
-    int userScoring(int iarg);
+    int userScoring(int iarg, int ir=-1);
 
     /*! \brief User scoring function.
 
@@ -1099,6 +1099,13 @@ public:
         return -1.0;
     };
     virtual EGS_Float getEdep() {
+        return 0.0;
+    };
+    virtual void setEdep(EGS_Float edep) {};
+    virtual EGS_Float getEcut() {
+        return 0.0;
+    };
+    virtual EGS_Float getPcut() {
         return 0.0;
     };
     virtual EGS_Float getRM() {

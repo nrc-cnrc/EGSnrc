@@ -1114,7 +1114,18 @@ EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
 EGS_Float EGS_AdvancedApplication::getEdep() {
     return the_epcont->edep;
 }
-//************************************************************
+// Sets edep
+void EGS_AdvancedApplication::setEdep(EGS_Float edep) {
+    the_epcont->edep = edep;
+}
+// Get the ecut
+EGS_Float EGS_AdvancedApplication::getEcut() {
+    return the_bounds->ecut;
+}
+// Get the pcut
+EGS_Float EGS_AdvancedApplication::getPcut() {
+    return the_bounds->pcut;
+}
 // Returns rest mass
 EGS_Float EGS_AdvancedApplication::getRM() {
     return the_useful->rm;

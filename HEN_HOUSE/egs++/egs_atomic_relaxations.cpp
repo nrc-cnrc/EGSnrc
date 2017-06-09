@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2008
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -231,7 +231,7 @@ class EGS_LOCAL EGS_RelaxImplementation {
 public:
 
     EGS_RelaxImplementation(const char *data_path) : elements(0), nz(0) {
-        data_file = egsJoinPath(data_path,"relax.data");
+        data_file = egsJoinPath(data_path,"relax_onebyte.data");
     };
 
     ~EGS_RelaxImplementation() {
@@ -276,6 +276,10 @@ public:
     EGS_Float bindingEnergy(int Z, int shell) {
         checkData(Z,shell);
         return elements[Z-1]->shells[shell].be;
+    };
+
+    int getNShell(int Z) {
+        return elements[Z-1]->nshell;
     };
 
     void setBindingEnergy(int Z, int shell, EGS_Float new_be) {
@@ -524,6 +528,10 @@ void EGS_AtomicRelaxations::relax(int Z, int sh, EGS_Float ecut, EGS_Float pcut,
 
 EGS_Float EGS_AtomicRelaxations::getBindingEnergy(int Z, int shell) {
     return p->bindingEnergy(Z,shell);
+}
+
+int EGS_AtomicRelaxations::getNShell(int Z) {
+    return p->getNShell(Z);
 }
 
 void EGS_AtomicRelaxations::setBindingEnergy(int Z, int shell,

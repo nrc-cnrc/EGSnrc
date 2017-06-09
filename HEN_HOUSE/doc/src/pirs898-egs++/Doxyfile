@@ -223,6 +223,7 @@ ALIASES                = "internwarning=\par Warning:\n This class is not part o
                          "FT=\author Frederic Tessier, NRC" \
                          "EM=\author Ernesto Mainegra-Hing, NRC" \
                          "BW=\author Blake Walters, NRC" \
+                         "RT=\author Reid Townson, NRC" \
                          "GG=\author Georgi Gerganov"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).

@@ -195,6 +195,34 @@ public:
         return 0;
     };
 
+    int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+
+        if (ir == -1) {
+            ir = app->top_p.ir;
+        }
+
+        int imed = ir>=0 ? app->getMedium(ir):-1;
+        EGS_Float edep = app->getEdep();
+
+        /**** energy deposition in a medium ***/
+        if (iarg <= 4 && imed >= 0 && edep > 0 && doseM) {
+            doseM->score(imed, edep*app->top_p.wt);
+        }
+
+        /*** Check if scoring in current region ***/
+        if (dose) {
+            if (d_reg_index[ir]<0) {
+                return 0;
+            }
+        }
+
+        /**** energy deposition in current region ***/
+        if (iarg <= 4 && ir >= 0 && edep > 0 && dose) {
+            dose->score(d_reg_index[ir], edep*app->top_p.wt);
+        }
+        return 0;
+    };
+
     bool needsCall(EGS_Application::AusgabCall iarg) const {
         if (iarg <= 4) {
             return true;

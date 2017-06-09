@@ -208,6 +208,9 @@ public:
     //************************************************************
     EGS_Float getMediumRho(int ind);
     EGS_Float getEdep();
+    void setEdep(EGS_Float edep);
+    EGS_Float getEcut();
+    EGS_Float getPcut();
     /* Needed by some sources */
     EGS_Float getRM();
 

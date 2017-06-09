@@ -104,11 +104,17 @@ EGS_EXPORT void EGS_Application::setActiveApplication(EGS_Application *a) {
     active_egs_application = a;
 };
 
-int EGS_Application::userScoring(int iarg) {
+int EGS_Application::userScoring(int iarg, int ir) {
     if (a_objects) {
         int early_return = 0;
         for (int j=0; j<a_objects[iarg].size(); ++j) {
-            int res = a_objects[iarg][j]->processEvent((AusgabCall)iarg);
+            int res;
+            if (ir > -1) {
+                res = a_objects[iarg][j]->processEvent((AusgabCall)iarg, ir);
+            }
+            else {
+                res = a_objects[iarg][j]->processEvent((AusgabCall)iarg);
+            }
             if (res < 0) {
                 return res;
             }
@@ -120,7 +126,12 @@ int EGS_Application::userScoring(int iarg) {
             return early_return;
         }
     }
-    return ausgab(iarg);
+    if (ir > -1) {
+        return 0;
+    }
+    else {
+        return ausgab(iarg);
+    }
 }
 
 void EGS_Application::checkEnvironmentVar(int &argc, char **argv,
