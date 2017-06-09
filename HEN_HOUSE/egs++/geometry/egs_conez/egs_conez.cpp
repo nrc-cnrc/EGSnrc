@@ -68,7 +68,6 @@ extern "C" {
         // opening angles
         vector<EGS_Float> angles;
         err = input->getInput("opening angles",angles);
-        bool is_radian = false;
         if (err) {
             angles.clear();
             err = input->getInput("opening angles in radian",angles);
@@ -77,7 +76,6 @@ extern "C" {
                            "'opening angles in radian' input\n");
                 return 0;
             }
-            is_radian = true;
         }
 
         // check valid angles

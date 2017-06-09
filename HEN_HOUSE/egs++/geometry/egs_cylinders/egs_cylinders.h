@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -172,7 +173,7 @@ public:
     */
     EGS_CylindersT(int nc, const EGS_Float *radius,
                    const EGS_Vector &position, const string &Name,
-                   const T &A) : EGS_BaseGeometry(Name), a(A), xo(position) {
+                   const T &A) : EGS_BaseGeometry(Name), xo(position), a(A) {
         if (nc>0) {
             R=new EGS_Float [nc];
             R2=new EGS_Float [nc];
@@ -289,7 +290,7 @@ public:
         double rcp=a*rc, urc=u*rc;
         double B=urc-up*rcp;  // d^1 coefficient
 
-        EGS_Float rad;
+        EGS_Float rad=0;
 
         // in any region?
         if (ireg>=0) {
@@ -431,12 +432,14 @@ public:
         // correct t-step
         if (d<t) {
             t=d;
-            if (newmed) if (dir >= 0) {
+            if (newmed) {
+                if (dir >= 0) {
                     *newmed = medium(dir);
                 }
                 else {
                     *newmed=-1;
                 }
+            }
             if (normal) {
                 EGS_Vector n(rc + u*t - a*(rcp+up*t));
                 *normal = n*(1/rad);

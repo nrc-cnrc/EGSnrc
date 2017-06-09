@@ -765,6 +765,8 @@ do_checks:
             ibase = ibase_new;
             first_time = false;
         }
+
+        return ireg;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {

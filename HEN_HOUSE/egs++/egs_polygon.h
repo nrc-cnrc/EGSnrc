@@ -192,7 +192,7 @@ public:
         bool res = false;
         int nn = open ? np-2 : np-1;
         if (in) {
-            int jhit;
+            int jhit=0;
             for (int j=0; j<nn; j++)  {
                 if ((up = u*a[j]) < 0 && (xp = x*a[j])+epsilon > d[j]) {
                     EGS_Float tt = d[j] - xp;
@@ -219,7 +219,7 @@ public:
             }
         }
         else {
-            int jhit;
+            int jhit=0;
             if (open) {
                 if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]+epsilon) {
                     EGS_Float tt = (d[0] - xp)/up;
@@ -443,7 +443,7 @@ public:
     inline bool howfar(bool in, const EGS_Vector &x, const EGS_Vector &u,
                        EGS_Float &t) const {
         EGS_Float up = a*u;
-        if (in && up >= 0  || !in && up <= 0) {
+        if ((in && up >= 0)  || (!in && up <= 0)) {
             return false;
         }
         EGS_Float tt = -a.distance(x)/up;

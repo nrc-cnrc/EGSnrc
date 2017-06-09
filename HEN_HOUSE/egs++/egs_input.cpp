@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -74,7 +75,7 @@ public:
     EGS_InputPrivate(const string &Key, const string &Val = "") : key(Key),
         value(Val), children(), nref(0) { };
     EGS_InputPrivate(const EGS_InputPrivate &p, bool deep=false) :
-        key(p.key), value(p.value), nref(0), children() {
+        key(p.key), value(p.value), children(), nref(0) {
         for (unsigned int j=0; j<p.children.size(); j++) {
             if (deep) {
                 children.push_back(new EGS_InputPrivate(*p.children[j],deep));
@@ -668,7 +669,7 @@ public:
     string vname,//!< Loop variable name.
            vr;   //!< Loop variable replacement string.
     char buf[128];
-    EGS_InputLoopVariable(const string &var) : vname(var), is_list(false) {
+    EGS_InputLoopVariable(const string &var) : is_list(false), vname(var) {
         vr = "$(";
         vr += vname;
         vr += ")";
@@ -747,7 +748,7 @@ EGS_InputLoopVariable *EGS_InputLoopVariable::getInputLoopVariable(
                  "Only integer [0], float [1] and list [2] are valid types!\n",
                  input);
     }
-    EGS_InputLoopVariable *result;
+    EGS_InputLoopVariable *result=0;
     if (type == 0) {
         int vmin, vdelta;
         in >> vmin >> vdelta;
@@ -902,7 +903,6 @@ int EGS_InputPrivate::addContent(istream &in) {
     removeComment("//","\n",input,true);
     removeComment("/*","*/",input,false);
     removeEmptyLines(input);
-    int res = 0;
     vector<string> start_keys, stop_keys;
     int p = 0;
     int ep = input.size();

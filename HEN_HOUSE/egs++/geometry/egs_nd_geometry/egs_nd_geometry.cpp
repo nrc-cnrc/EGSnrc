@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -654,7 +655,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         int nr = Nx*Ny*Nz;
-        int med;
+        //int med;
         //for(j=0; j<nr; ++j) data >> med;
         data.getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
@@ -1165,7 +1166,7 @@ extern "C" {
             int ix1 = input->getInput("x-slabs",xslab);
             int iy1 = input->getInput("y-slabs",yslab);
             int iz1 = input->getInput("z-slabs",zslab);
-            int nx, ny, nz;
+            int nx=0, ny=0, nz=0;
             if (!ix1) {
                 if (xslab.size() != 3) {
                     egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
@@ -1372,7 +1373,7 @@ extern "C" {
     }
 
 
-    int EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
+    void EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
 
         // skip looping over selected dimension
         if (dim == dimk) {

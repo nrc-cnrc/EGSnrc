@@ -24,6 +24,7 @@
 #  Author:          Frederic Tessier, 2008
 #
 #  Contributors:    Iwan Kawrakow
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -756,9 +757,6 @@ public:
                 int ix = node->ix << shift;
                 int iy = node->iy << shift;
                 int iz = node->iz << shift;
-                float xx = xmin+(ix+0.5)*dx;
-                float yy = ymin+(iy+0.5)*dy;
-                float zz = zmin+(iz+0.5)*dz;
                 int ireg = geom->isWhere(EGS_Vector(xmin+(ix+0.5)*dx, ymin+(iy+0.5)*dy, zmin+(iz+0.5)*dz));
                 if (ireg>=0) {
                     node->medium = geom->medium(ireg);
@@ -1160,8 +1158,8 @@ public:
     // howfarOut
     int howfarOut(const EGS_Vector &r, const EGS_Vector &u, EGS_Float &t, EGS_Vector *normal=0) {
 
-        int inew = -1, tmp;
-        int ix, iy, iz;
+        int tmp;
+        int ix=0, iy=0, iz=0;
         EGS_Float d, tlong = 2*t;
         EGS_Octree_node *node = NULL;
 

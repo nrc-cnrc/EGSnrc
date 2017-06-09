@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -337,8 +338,8 @@ public:
         double xp = a*x, up = a*u;
         if (ireg >= 0) {
             int dir = 0;
-            bool warn=false;
-            EGS_Float dist;
+//             bool warn=false;
+//             EGS_Float dist;
             if (up > 0 && ireg < n_plane) {
                 d = (p[ireg+1]-xp)/up;
                 //if( xp <= p[ireg+1] ) d = (p[ireg+1]-xp)/up;
@@ -416,12 +417,14 @@ public:
             if (newmed) {
                 *newmed = medium(res);
             }
-            if (normal) if (up > 0) {
+            if (normal) {
+                if (up > 0) {
                     *normal = a.normal()*(-1.);
                 }
                 else {
                     *normal = a.normal();
                 }
+            }
         }
         else {
             res = -1;
