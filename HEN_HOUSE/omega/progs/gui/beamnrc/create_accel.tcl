@@ -188,7 +188,7 @@ proc create_accel {} {
     # add listbox, scrollbar, insert all availabel CM names
     listbox $top.l.list -height 10 -yscrollcommand "$top.l.scrl set" \
 	    -bg white
-    for {set i 1} {$i <= 24} {incr i} {
+    for {set i 1} {$i <= [array size cm_names]} {incr i} {
 	$top.l.list insert end $cm_names($i)
     }
     scrollbar $top.l.scrl -command "$top.l.list yview"
@@ -282,7 +282,7 @@ proc add_cm {} {
 	return
     }
 
-    for {set i 1} {$i<=24} {incr i} {
+    for {set i 1} {$i <= [array size cm_names]} {incr i} {
 	if [string compare $new_cm_name $cm_names($i)]==0 {
 	    set index [incr i -1]
 	    break
