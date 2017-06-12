@@ -569,7 +569,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
 
         double bestMatch = 1E10;
-        LevelRecord *level;
+        LevelRecord *level = 0;
         for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
                 it!=myLevelRecords.end(); it++) {
 
@@ -1083,7 +1083,7 @@ void EGS_Ensdf::getEmissionsFromComments() {
     bool gotTotal = false;
     vector<double>  multilineEnergies,
            multilineIntensities;
-    double lineTotalIntensity;
+    double lineTotalIntensity = 0;
     unsigned int countNumAfterTotal = 0;
     int lineTotalType;
 
@@ -1701,10 +1701,10 @@ BetaRecordLeaf::BetaRecordLeaf(vector<string> ensdf,
                                ParentRecord *myParent,
                                NormalizationRecord *myNormalization,
                                LevelRecord *myLevel):
+    Record(ensdf),
     ParentRecordLeaf(myParent),
     NormalizationRecordLeaf(myNormalization),
-    LevelRecordLeaf(myLevel),
-    Record(ensdf) {
+    LevelRecordLeaf(myLevel) {
 
     numSampled = 0;
 

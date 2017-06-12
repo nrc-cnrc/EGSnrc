@@ -174,14 +174,18 @@ public:
      * This method is only reimplemented by EGS_RadionuclideSource. It
      * returns the emission time of the particle that was most recently sampled.
      */
-    virtual double getTime() const {};
+    virtual double getTime() const {
+        return 0;
+    };
 
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSource. It
      * gets the index of the most recent shower.
      */
-    virtual EGS_I64 getShowerIndex() const {};
+    virtual EGS_I64 getShowerIndex() const {
+        return 0;
+    };
 
     /*! \brief Prints out the sampled emissions for radionuclide spectra
      *
@@ -379,7 +383,9 @@ public:
      * returns the charge of the particle that was most recently sampled
      * using sampleEnergy().
      */
-    virtual int getCharge() const {};
+    virtual int getCharge() const {
+        return 0;
+    };
 
     /*! \brief Get the time of emission for the most recently sampled particle
      *
@@ -387,14 +393,18 @@ public:
      * returns the emission time of the particle that was most recently sampled
      * using sampleEnergy().
      */
-    virtual double getTime() const {};
+    virtual double getTime() const {
+        return 0;
+    };
 
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
      * gets the index of the most recent shower produced using sampleEnergy().
      */
-    virtual EGS_I64 getShowerIndex() const {};
+    virtual EGS_I64 getShowerIndex() const {
+        return 0;
+    };
 
     /*! \brief Get the spectrum weight for radionuclide spectra
      *
@@ -402,7 +412,9 @@ public:
      * gets the weight of the spectrum to balance emissions from multiple
      * spectra.
      */
-    virtual EGS_Float getSpectrumWeight() const {};
+    virtual EGS_Float getSpectrumWeight() const {
+        return 0;
+    };
 
     /*! \brief Set the spectrum weight for radionuclide spectra
      *
@@ -425,7 +437,9 @@ public:
      * This method is only reimplemented by EGS_RadionuclideSpectrum. It
      * gets the energy deposited locally during spectrum generation.
      */
-    virtual EGS_Float getEdep() const {};
+    virtual EGS_Float getEdep() const {
+        return 0;
+    };
 
     /*! \brief Get the maximum energy of this spectrum.
      *

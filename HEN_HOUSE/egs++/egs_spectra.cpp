@@ -482,10 +482,8 @@ public:
             EGS_Float *e = new EGS_Float [nbin];
             EGS_Float *spec = new EGS_Float [nbin];
             EGS_Float *spec_y = new EGS_Float [nbin];
-            EGS_Float *spec_sr = new EGS_Float [nbin];
 
-            double de, s_y, s_sr, factor, e1, e2, se_y, se_sr;
-            int isrc;
+            double de, s_y, factor, se_y;
 
             ncomps=1; // if we increase this, then we must fill the remainder
             area[0]=1.0;
@@ -511,7 +509,6 @@ public:
             // endpoint E0 up to nearest 100 keV, and dividing by NBIN to get
             // binwidth.
 
-            e1=0.001;         // may be too low for some spectra (e.g. Tl-204)
             de=((int)(etop[0]*10.0+1)/10.)/nbin; // round up to nearest 100kev;
             // /=     NBIN
             //cout << "Binwidth " << de << endl;
@@ -679,14 +676,13 @@ protected:
 
         double ff[4];
         double dfac[4]= {1.0, 3.0, 15.0, 105.0};
-        double pi,c137,az,g1,w,rad,pr,y,x1,gk,bb,cc,dd,x2;
+        double pi,c137,az,w,rad,pr,y,x1,gk,bb,cc,dd,x2;
 
         complex<double> aa;
 
         pi  = acos(-1.0);
         c137= 137.036; // 1/ fine structure constant
         az  = z/c137;
-        g1  = sqrt(1.0-az*az);
         w   = sqrt(p*p+1.0);
         rad = radf/386.159;
         pr  = p*rad;
