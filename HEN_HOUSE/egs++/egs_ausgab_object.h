@@ -88,7 +88,9 @@ public:
      *
      */
     virtual int processEvent(EGS_Application::AusgabCall iarg) = 0;
-    virtual int processEvent(EGS_Application::AusgabCall iarg, int ir) {};
+    virtual int processEvent(EGS_Application::AusgabCall iarg, int ir) {
+        return 0;
+    };
 
     /*! \brief Is the ausgab call \a iarg relevant for this object?
      *

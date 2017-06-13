@@ -274,8 +274,12 @@ public:
 
     virtual double getFinalEnergy() const = 0;
     virtual double getBetaIntensity() const = 0;
-    virtual double getPositronIntensity() const {};
-    virtual double getECIntensity() const {};
+    virtual double getPositronIntensity() const {
+        return 0;
+    };
+    virtual double getECIntensity() const {
+        return 0;
+    };
     virtual void relax(int shell,
                        EGS_Float ecut, EGS_Float pcut,
                        EGS_RandomGenerator *rndm, double &edep,
