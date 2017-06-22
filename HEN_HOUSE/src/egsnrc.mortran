@@ -778,7 +778,7 @@ IF( ibcmpl = 1 | ibcmpl = 3 ) [
     " Shell vacancy "
     IF( Uj > 1e-3 ) [
         edep = pzero;
-        relax_initiator_q = 0; "particle initiating relaxations is photon"
+
         call relax(Uj,shn_array(j),iz_array(j));
         "relax will put all particles with energies above ecut,pcut on the "
         "stack, the remaining energy will be scored in edep and deposited  "
@@ -5146,7 +5146,6 @@ IF( iq(np) = -1 ) [
 "   edep = e_vac; do_relax = .false.;
 "]
 IF( do_relax ) [
-    relax_initiator_q = 0; "a photon is initiating relaxations"
     call relax(e_vac,k,iZ);
 ]
 
@@ -5271,12 +5270,11 @@ IF( energy <= min_E ) [
                         "calling RELAX "
     edep_local = energy;
 
-    "particle initiating relaxations was photon"
-    IF( relax_initiator_q = 0 ) [
-        $AUSCALL($SPHOTONA);
-    ] ELSE [ "particle initiating relaxations was electron"
-        $AUSCALL($SELECTRONA);
-    ]
+    "Assign this energy deposition to an electron."
+    "Note that this should NOT be treated as though it came from a photon,"
+    "even if a photon initiated the relaxations. Rather, energy remaining"
+    "in vacancies should be given to an electron or absorbed locally."
+    $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
 
     return;
 ]
@@ -5294,12 +5292,11 @@ e_check = 0; e_array(n_vac) = energy;
 
         edep_local = Ei;
 
-        "particle initiating relaxations was photon"
-        IF( relax_initiator_q = 0 ) [
-            $AUSCALL($SPHOTONA);
-        ] ELSE [ "particle initiating relaxations was electron"
-            $AUSCALL($SELECTRONA);
-        ]
+        "Assign this energy deposition to an electron."
+        "Note that this should NOT be treated as though it came from a photon,"
+        "even if a photon initiated the relaxations. Rather, energy remaining"
+        "in vacancies should be given to an electron or absorbed locally."
+        $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
 
         IF( n_vac > 0 ) goto :START: ;
         EXIT;
@@ -5721,13 +5718,11 @@ IF (shell_egs > 4) [
     edep = Evac;        "add energy of vacancy to edep"
     edep_local = Evac;  "set value of edep_local to energy of vacancy"
 
-    IF( relax_initiator_q = 0 ) [
-        "particle initiating relaxations was photon"
-        $AUSCALL($SPHOTONA);  "call ausgab with iarg=33"
-    ] ELSE [
-        "particle initiating relaxations was electron"
-        $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
-    ]
+    "Assign this energy deposition to an electron."
+    "Note that this should NOT be treated as though it came from a photon,"
+    "even if a photon initiated the relaxations. Rather, energy remaining"
+    "in vacancies should be given to an electron or absorbed locally."
+    $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
 
     return; "invokes $AUSCALL($PHOTXAUS) in COMPT;"
 ]
@@ -5740,13 +5735,11 @@ LOOP [ "from here to end of routine over all vacancies created"
         edep += Evac;         "add energy of vacancy to edep"
         edep_local = Evac;    "set value of edep_local to energy of vacancy"
 
-        IF( relax_initiator_q = 0 ) [
-            "particle initiating relaxations was photon"
-            $AUSCALL($SPHOTONA);  "call ausgab with iarg=33"
-        ] ELSE [
-            "particle initiating relaxations was electron"
-            $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
-        ]
+        "Assign this energy deposition to an electron."
+        "Note that this should NOT be treated as though it came from a photon,"
+        "even if a photon initiated the relaxations. Rather, energy remaining"
+        "in vacancies should be given to an electron or absorbed locally."
+        $AUSCALL($SELECTRONA); "call ausgab with iarg=34"
 
         go to :VACANCY:;      "exit loop and if Nvac still 0, exit routine"
     ]
@@ -7479,7 +7472,6 @@ IF( pese2 > ae(medium) ) [
     $AUSCALL($SELECTRONA);
 ]
 "ish ranges from 1 to 4 for K,L1,L2,L3 shells"
-relax_initiator_q = -1; "particle initiating relaxations is electron"
 call relax(Uj,ish,iZ);
 
 IF( edep > 0 ) [ $AUSCALL($PHOTXAUS); ]

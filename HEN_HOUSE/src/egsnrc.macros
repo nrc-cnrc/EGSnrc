@@ -717,11 +717,9 @@ REPLACE {;COMIN/RELAX-DATA/;} WITH {;
     relax_state($MAXRELAX),    "final state of the transition"
     relax_prob($MAXRELAX),     "probability"
     relax_atbin($MAXRELAX),    "used for alias sampling"
-    relax_ntot,                "total number of transitions in the list"
-    relax_initiator_q;         "the charge of the particle initiating relax"
+    relax_ntot;                "total number of transitions in the list"
   $REAL     relax_prob;
-  $INTEGER  relax_first, relax_ntran, relax_state, relax_atbin, relax_ntot,
-            relax_initiator_q;
+  $INTEGER  relax_first, relax_ntran, relax_state, relax_atbin, relax_ntot;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
