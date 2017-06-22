@@ -178,6 +178,15 @@ public:
         return 0;
     };
 
+    /* A virtual function which can be implemented in derived classes
+    * to return a fractional monitor unit associated with each source
+    * particle.  Currently only makes sense for IAEA_PhspSource and
+    * EGS_BeamSource.
+    */
+    virtual EGS_Float getMu() {
+        return -1;
+    };
+
     /*! \brief Get the shower index for radionuclide emissions
      *
      * This method is only reimplemented by EGS_RadionuclideSource. It
