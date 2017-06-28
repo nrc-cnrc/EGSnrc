@@ -560,6 +560,47 @@ echo "    FOPT    = $FOPT" >&2
 echo "    FLIBS   = $FLIBS" >&2
 echo >&2;
 
+# Check if the compiler works with the selected compilation flags
+test_ext=f
+cat >&5 <<EOF
+********************* compilation flags test *******************
+EOF
+cat >conftest.$test_ext <<_ACEOF
+      program main
+
+      end
+_ACEOF
+printf $format "Testing if compilation flags work ... " >&2
+test_compile='$F77 -c $FFLAGS $FDEBUG $FOPT $LDFLAGS conftest.$test_ext $FLIBS >&5'
+rm -f conftest.o conftest.obj
+test_objext=''
+if { (eval $test_compile) 2>&5; test_status=$?; (exit $test_status); }; then
+    for test_file in $(ls conftest.* 2>/dev/null); do
+        case $test_file in
+            *.$test_ext | *.xcoff | *.tds | *.d | *.pdb ) ;;
+            *) test_objext=$(expr "$test_file" : '.*\.\(.*\)')
+               break;;
+        esac
+    done
+    echo "yes" >&2
+else
+    echo "no" >&2
+    cat >&2 << _ACEOF
+
+Error: your FORTRAN compiler failed to compile a simple test program
+with the selected compiler flags:
+
+$F77 -c $FFLAGS $FDEBUG $FOPT $LDFLAGS $FLIBS
+
+Run this script again to select different compiler flags.
+
+_ACEOF
+    rm -f conftest.$test_ext conftest.o conftest.obj
+    exit 1
+fi
+rm -f conftest.$test_objext
+echo >&2;
+
 echo "Checking for the availability of various system dependent functions:" >&2
 
 test_compile='$F77 $FFLAGS $LDFLAGS -o conftest$test_exeext conftest.$test_ext $FLIBS >&5'
