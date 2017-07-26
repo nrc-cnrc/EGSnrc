@@ -26,6 +26,7 @@
 #  Contributors:    Frederic Tessier
 #                   Reid Townson
 #                   Hubert Ho
+#                   Blake Walters
 #
 ###############################################################################
 #
@@ -89,6 +90,7 @@
 
 #include <fstream>
 #include <string>
+#include <cstdlib>
 
 #include "egs_dose_scoring.h"
 #include "egs_input.h"
@@ -96,9 +98,9 @@
 
 EGS_DoseScoring::EGS_DoseScoring(const string &Name,
                                  EGS_ObjectFactory *f) :
-    EGS_AusgabObject(Name,f), dose(0), doseM(0),
+    EGS_AusgabObject(Name,f), dose(0), doseM(0), doseF(0),
     norm_u(1.0), nreg(0), nmedia(0), max_dreg(-1), max_medl(0),
-    m_lastCase(-1),score_medium_dose(false), score_region_dose(false) {
+    m_lastCase(-1),score_medium_dose(false), score_region_dose(false), output_dose_file(false) {
     otype = "EGS_DoseScoring";
 }
 
@@ -108,6 +110,9 @@ EGS_DoseScoring::~EGS_DoseScoring() {
     }
     if (doseM) {
         delete doseM;
+    }
+    if (doseF) {
+        delete doseF;
     }
 }
 
@@ -204,6 +209,39 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
         }
     }
 
+    if (output_dose_file) {
+        //set df_reg to default (non-scoring) values
+        for (int i=0; i<nreg; i++) {
+            df_reg.push_back(-1);
+        }
+        //determine the region no. in the EGS_XYZGeometry and corresponding
+        //global reg. no.
+        EGS_Vector tp;
+        int nx=dose_geom->getNRegDir(0);
+        int ny=dose_geom->getNRegDir(1);
+        int nz=dose_geom->getNRegDir(2);
+        EGS_Float minx,maxx,miny,maxy,minz,maxz;
+        for (int k=0; k<nz; k++) {
+            for (int j=0; j<ny; j++) {
+                for (int i=0; i<nx; i++) {
+                    minx=dose_geom->getBound(0,i);
+                    maxx=dose_geom->getBound(0,i+1);
+                    miny=dose_geom->getBound(1,j);
+                    maxy=dose_geom->getBound(1,j+1);
+                    minz=dose_geom->getBound(2,k);
+                    maxz=dose_geom->getBound(2,k+1);
+                    tp.x=(minx+maxx)/2.;
+                    tp.y=(miny+maxy)/2.;
+                    tp.z=(minz+maxz)/2.;
+                    int g_reg = app->isWhere(tp);
+                    df_reg[g_reg]=i+j*nx+k*nx*ny;
+                }
+            }
+        }
+        //create an egs_scoring_array of the appropriate size
+        doseF =  new EGS_ScoringArray(nx*ny*nz);
+    }
+
     description = "\n*******************************************\n";
     description +=  "Dose Scoring Object (";
     description += name;
@@ -239,6 +277,21 @@ void EGS_DoseScoring::setApplication(EGS_Application *App) {
     vol_list.clear();
     if (d_region.size()) {
         d_region.clear();
+    }
+    if (doseF) {
+        description += "\n Will output dose to file:\n";
+        description += " EGS_XYZGeometry: " + dose_geom->getName();
+        description += "\n file format: ";
+        if (file_type==0) {
+            //only type supported so far
+            description += " 3ddose";
+        }
+        description += "\n file name: ";
+        if (file_type==0) {
+            df_name=getObjectName() + ".3ddose";
+            df_name=egsJoinPath(app->getAppDir(),df_name);
+        }
+        description += df_name;
     }
 }
 
@@ -339,7 +392,80 @@ void EGS_DoseScoring::reportResults() {
         }
         egsInformation("%s\n",line.c_str());
     }
+    if (doseF) {
+        if (app->getIparallel()>0) {
+            egsInformation("\n EGS_DoseScoring:  This is one of a number of parallel jobs.  Will only output dose file on combining results.\n");
+        }
+        else {
+            outputDoseFile(normD);
+        }
+    }
     egsInformation("\n======================================================\n");
+}
+
+void EGS_DoseScoring::outputDoseFile(const EGS_Float &normD) {
+    double r,dr;
+    ofstream df_out;
+    egsInformation("\n EGS_DoseScoring: Writing dose data for EGS_XYZGeometry %s... \n",dose_geom->getName().c_str());
+    egsInformation(" Output file name: %s\n",df_name.c_str());
+    //idea is to add new file_types as they become available
+    if (file_type==0) {
+        //open file
+        df_out.open(df_name.c_str());
+        if (!df_out) {
+            egsFatal("\n EGS_DoseScoring: Error: Failed to open file %s\n",df_name.c_str());
+            exit(1);
+        }
+        //output data
+        int nx=dose_geom->getNRegDir(0);
+        int ny=dose_geom->getNRegDir(1);
+        int nz=dose_geom->getNRegDir(2);
+        //output no. of voxels in x,y,z
+        df_out << nx << " " << ny << " " << nz << endl;
+        //use single precision real for output
+        float bound, dose, doseun;
+        //output voxel boundaries
+        for (int i=0; i<=nx; i++) {
+            bound=dose_geom->getBound(0,i);
+            df_out << bound << " ";
+        }
+        df_out << endl;
+        for (int j=0; j<=ny; j++) {
+            bound=dose_geom->getBound(1,j);
+            df_out << bound << " ";
+        }
+        df_out << endl;
+        for (int k=0; k<=nz; k++) {
+            bound=dose_geom->getBound(2,k);
+            df_out << bound << " ";
+        }
+        df_out << endl;
+        //divide dose by mass and output
+        for (int i=0; i<nx*ny*nz; i++) {
+            doseF->currentResult(i,r,dr);
+            EGS_Float mass = dose_geom->getMass(i); //local reg.
+            dose=r*normD/mass;
+            df_out << dose << " ";
+        }
+        df_out << endl;
+        //output uncertainties
+        for (int i=0; i<nx*ny*nz; i++) {
+            doseF->currentResult(i,r,dr);
+            if (r > 0) {
+                dr = dr/r;
+            }
+            else {
+                dr=1;
+            }
+            doseun=dr;
+            df_out << doseun << " ";
+        }
+        df_out << endl;
+        df_out.close();
+    }
+    else {
+        egsFatal("\n EGS_DoseScoring: Warning: Dose output file type not recognized.\n");
+    }
 }
 
 bool EGS_DoseScoring::storeState(ostream &data) const {
@@ -354,6 +480,9 @@ bool EGS_DoseScoring::storeState(ostream &data) const {
     if (doseM && !doseM->storeState(data)) {
         return false;
     }
+    if (doseF && !doseF->storeState(data)) {
+        return false;
+    }
     return true;
 }
 
@@ -365,6 +494,9 @@ bool  EGS_DoseScoring::setState(istream &data) {
         return false;
     }
     if (doseM && !doseM->setState(data)) {
+        return false;
+    }
+    if (doseF && !doseF->setState(data)) {
         return false;
     }
     return true;
@@ -398,6 +530,16 @@ int  EGS_DoseScoring::addTheStates(istream &data) {
         }
         (*doseM) += tmpM;
     }
+    if (doseF) {
+        int nx=dose_geom->getNRegDir(0);
+        int ny=dose_geom->getNRegDir(1);
+        int nz=dose_geom->getNRegDir(2);
+        EGS_ScoringArray tmpF(nx*ny*nz);
+        if (!tmpF.setState(data)) {
+            return 4404;
+        }
+        (*doseF) += tmpF;
+    }
     return 0;
 }
 
@@ -408,6 +550,9 @@ void EGS_DoseScoring::resetCounter() {
     }
     if (doseM) {
         doseM->reset();
+    }
+    if (doseF) {
+        doseF->reset();
     }
 }
 
@@ -501,6 +646,46 @@ extern "C" {
         else { // all other possibilities handled here
             volin = v_in;
         }
+
+        //see if the user wants to output the dose to a file for an EGS_XYZGeometry
+        bool outputdosefile=false;
+        EGS_Input *fileinp = input->takeInputItem("output dose file");
+        EGS_BaseGeometry *dgeom;
+        int ftype;
+        if (fileinp) {
+            //get geometry name and filename and do some checks
+            string gname;
+            int err05 = fileinp->getInput("geometry name",gname);
+            if (err05) {
+                egsFatal("EGS_DoseScoring: Output dose file: missing/incorrect input for name of geometry.\n");
+            }
+            else {
+                dgeom = EGS_BaseGeometry::getGeometry(gname);
+                if (!dgeom) {
+                    egsFatal("EGS_DoseScoring: Output dose file: %s does not name an existing geometry\n",gname.c_str());
+                }
+                else if (dgeom->getType()!="EGS_XYZGeometry") {
+                    egsFatal("EGS_DoseScoring: Output dose file: %s is not an EGS_XYZGeometry.\n",gname.c_str());
+                }
+                else {
+                    string str;
+                    if (fileinp->getInput("file type", str) < 0) {
+                        ftype = 0;
+                    }
+                    else {
+                        vector<string> allowed_ftype;
+                        allowed_ftype.push_back("3ddose");
+                        ftype = fileinp->getInput("file type", allowed_ftype, -1);
+                        if (ftype < 0) {
+                            egsFatal("EGS_DoseScoring: Output dose file: Invalid file type.  Currently only 3ddose is supported.\n");
+                        }
+                    }
+                    outputdosefile=true;
+                }
+            }
+        }
+
+
         //=================================================
 
         /* Setup dose scoring object with input parameters */
@@ -528,11 +713,13 @@ extern "C" {
         if (d_in_region) {
             result->setRegionScoring(true);
         }
+        if (outputdosefile) {
+            result->setOutputFile(true,dgeom,ftype);
+        }
         result->setName(input);
         if (!err04) {
             result->setUserNorm(norma);
         }
         return result;
     }
-
 }
