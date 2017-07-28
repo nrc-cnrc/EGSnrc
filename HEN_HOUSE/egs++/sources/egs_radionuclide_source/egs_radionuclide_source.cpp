@@ -128,34 +128,8 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     egsInformation("EGS_RadionuclideSource: Activity [disintegrations/s]: %e\n",
                    activity);
 
-    // Calculate the duration of the experiment
-    // Based on ncase and activity
+    // Get the active application
     app = EGS_Application::activeApplication();
-    EGS_Input *inp = app->getInput();
-    EGS_Input *irc = 0;
-    double ncase_double = 0;
-    if (inp) {
-        irc = inp->getInputItem("run control");
-
-        EGS_Input *icontrol = irc->getInputItem("run control");
-        if (!icontrol) {
-            egsWarning("EGS_RadionuclideSource: no 'run control' "
-                       "input to determine 'ncase'\n");
-        }
-
-        err = icontrol->getInput("number of histories", ncase_double);
-        if (err) {
-            err = icontrol->getInput("ncase", ncase_double);
-            if (err) {
-                egsWarning("EGS_RadionuclideSource: missing/wrong 'ncase' or "
-                           "'number of histories' input\n");
-            }
-        }
-    }
-    else {
-        egsWarning("EGS_RadionuclideSource: no 'run control' "
-                   "input to determine 'ncase'\n");
-    }
 
     // Create the shape for source emissions
     vector<EGS_Float> pos;
@@ -308,7 +282,7 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     EGS_Float edep = decays[i]->getEdep();
     if (edep > 0) {
         app->setEdep(edep);
-        int ireg = geom->isWhere(x);
+        int ireg = app->isWhere(x);
         app->userScoring(3, ireg);
     }
 

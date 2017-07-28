@@ -443,8 +443,7 @@ protected:
 };
 
 
-/*! \brief Beta spectrum generation for \link EGS_RadionuclideSpectrum
- * radionuclide spectra \endlink
+/*! \brief Beta spectrum generation for \ref EGS_RadionuclideSpectrum
  *
  * \ingroup egspp_main
  *
@@ -461,6 +460,9 @@ public:
      */
     EGS_RadionuclideBetaSpectrum(EGS_Ensdf *decays, const string outputBetaSpectra) {
 
+        EGS_Application *app = EGS_Application::activeApplication();
+        rm = app->getRM();
+
         vector<BetaRecordLeaf *> myBetas = decays->getBetaRecords();
 
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
@@ -472,9 +474,11 @@ public:
                 continue;
             }
 
+            unsigned short int daughterZ = (*beta)->getZ();
+
             egsInformation("EGS_RadionuclideBetaSpectrum: "
                            "Energy, Z, A, forbidden: %f %d %d %d\n",
-                           (*beta)->getFinalEnergy(), (*beta)->getZ(),
+                           (*beta)->getFinalEnergy(), daughterZ,
                            (*beta)->getAtomicWeight(), (*beta)->getForbidden()
                           );
 
@@ -490,9 +494,40 @@ public:
             rel[0]=1.0;
 
             emax = (*beta)->getFinalEnergy();
-            zzz[0] = (double)(*beta)->getZ();
+            zzz[0] = (double)daughterZ;
             rmass = (*beta)->getAtomicWeight();
-            lamda[0] = (*beta)->getForbidden();
+
+            // These are some special cases where fudge factors are used!
+            // Specify lamda[0]=4 for special shape factors
+
+            // For Cl-36 (ref: nuc. phys. 99a,  625,(67))
+            // Only the beta- spectrum
+            if (daughterZ == 18 && (*beta)->getCharge() == -1) {
+                lamda[0] = 4;
+            }
+            // For I-129 (ref: phys. rev. 95, 458, 54))
+            // The beta- spectrum with 151 keV endpoint
+            else if (daughterZ == 54 && emax < 0.154 && emax > 0.150) {
+                lamda[0] = 4;
+            }
+            // For Cs-137 (ref: nuc. phys. 112a, 156, (68))
+            // The beta- spectrum with 1175 keV endpoint
+            else if (daughterZ == 56 && emax > 1.173 && emax < 1.177) {
+                lamda[0] = 4;
+            }
+            // For Tl-204 (ref: can. j. phys., 45, 2621, (67))
+            // There is only 1 beta- spectrum
+            else if (daughterZ == 82) {
+                lamda[0] = 4;
+            }
+            // For Bi-210 (ref: nuc. phys., 31, 293, (62))
+            // There is only 1 beta- spectrum
+            else if (daughterZ == 84) {
+                lamda[0] = 4;
+            }
+            else {
+                lamda[0] = (*beta)->getForbidden();
+            }
 
             // For positrons from zzz negative (just how the spectrum code
             // was designed)
@@ -733,7 +768,7 @@ protected:
         //     emax       maximum beta energy in mev.
         //     w and tsq   in mc**2 units
         //     e and emax  in mev   units.
-        //     v is the screening correction for atomi// electrons
+        //     v is the screening correction for atomic electrons
         //     for the thomas-fermi model of the atom
         //     v = 1.13 * (alpha)**2  * z**(4/3)
         //
@@ -758,7 +793,7 @@ protected:
         v   = copysign(v,zz);
         z   = zab/c137;
         x   = sqrt(1.0-z*z);        // s parameter
-        w   = 1.0+(e/0.51097)-v;    // Total energy of b particle
+        w   = 1.0+(e/rm)-v;    // Total energy of b particle
         if (w<1.0000001) {
             bspec = 0.;
             return;
@@ -808,8 +843,6 @@ protected:
         }
         else { // lam==4
 
-            //TODO: Currently no isotopes will get here
-
             // Fudge factors for nuclides whose experimental spectra don't
             // seem to fit theory.
 
@@ -858,6 +891,7 @@ protected:
     }
 
 private:
+    EGS_Float rm;
     double zz,emax,rmass;
     double zzz[9],etop[9],rel[9],area[9],lamda[9];
     int lam, ncomps;
@@ -871,7 +905,8 @@ private:
 Generates spectra for radionuclide emissions. This spectrum type is used by
 \ref EGS_RadionuclideSource.
 Currently spectrum data is obtained from ENSDF format data files using
-\ref EGS_Ensdf. These files can be found in $HEN_HOUSE/spectra/lnhb/ensdf/.
+\ref EGS_Ensdf. These files can be found in
+<code>$HEN_HOUSE/spectra/lnhb/ensdf/</code>.
 For more information about the ENSDF format and how it is processed,
 see \ref EGS_Ensdf.
 
@@ -879,32 +914,34 @@ It is defined using the following input
 \verbatim
 :start spectrum:
     type            = radionuclide
-    isotope         = name of the isotope (e.g. Sr-90), used to look up the
-                        ensdf file as $HEN_HOUSE/spectra/lnhb/ensdf/{isotope}.ensdf
+    nuclide         = name of the nuclide (e.g. Sr-90), used to look up the
+                        ensdf file as $HEN_HOUSE/spectra/lnhb/ensdf/{nuclide}.ensdf
                         if ensdf file not provided below
     ensdf file      = [optional] path to a spectrum file in ensdf format,
                         including extension
     relative activity = [optional] the relative activity (sampling
-                        probability) for this isotope in a mixture
-    ensdf fluorescence and auger = [optional, default=no] yes or no
-                                 whether or not to model the x-ray and Auger
-                                 emissions using data provided in the comments
-                                 of the ensdf file. If no, then relaxations
-                                 will be modelled using EADL data.
+                        probability) for this nuclide in a mixture
+    atomic relaxations = [optional, default=eadl] eadl or ensdf
+                                 By default, 'eadl' relaxations use the EGSnrc
+                                 algorithm for emission correlated with
+                                 disintegration events. Alternatively, 'ensdf'
+                                 relaxations statistically sample fluorescent
+                                 photons and Auger emission using comments
+                                 in the ensdf file.
     output beta spectra = [optional, default=no] yes or no
                             whether or not to output beta spectra to files.
-                            Files will be named based on the isotope and
+                            Files will be named based on the nuclide and
                             maximum energy of the beta decay:
-                            {isotope}_{energy}.spec
+                            {nuclide}_{energy}.spec
 :stop spectrum:
 :start spectrum:
     type                = radionuclide
-    isotope             = name of next isotope in mixture (e.g. Y-90)
+    nuclide             = name of next nuclide in mixture (e.g. Y-90)
     relative activity   = ...
 :stop spectrum:
 \endverbatim
 
-The spectrum source determines which emission type occurs,
+The source spectrum determines which emission type occurs,
 and proceeds to sample the emission parameters. In some cases, no particle
 is emitted - this state is signaled by returning zero. The spectrum either
 models a disintegration, an internal transition or the emission of
@@ -915,29 +952,44 @@ respectively. The energies of beta particles are sampled from spectra
 generated by \ref EGS_RadionuclideBetaSpectrum. Electron capture events
 are also sampled and result in shell vacancies / relaxations, but neutrinos are not modeled. In this case,
 \ref EGS_RadionuclideSpectrum returns zero. Disintegrations may set
-the energy level of the daughter isotope to an excited state, leading to the
-emission of transition photons, conversion electrons and relaxation emissions.
+the energy level of the daughter nuclide to an excited state, leading to the
+emission of transition photons, conversion electrons and relaxation emissions
+on subsequent calls to <b>\c sample()</b>.
 
 - Alpha disintegrations may also set the energy level of the daughter to an
 excited state. Alpha particles themselves are not modeled, so a zero energy
 particle is returned.
 
-- Relaxations that result in X-Ray fluorescence and Auger events emit a photon
-or electron from a sampled
-energy line. Note that X-Ray and Auger emissions are not disintegrations so are
-not counted in the fluence (or the <b>\c ishower </b> parameter). These particles will
-be assigned the same shower index as the most recent
-disintegration and the same time of emission as the most recent internal
-transition.
-
-- Internal transition gammas are sampled and emitted following a disintegration if
-the daughter isotope is created in an excited state. The energy level of the
-daughter is then set according to the internal transition that took place.
+- Internal transition gammas are sampled and emitted following a disintegration
+if the daughter nuclide is in an excited state. The energy level of the
+daughter is then reset according to the internal transition that took place.
 Note that there are cases where a transition photon is not guaranteed.
-In such a case, the daughter level is set to zero and a zero energy
-particle is returned. There are also cases where multiple transitions occur after
-a single disintegration. Internal transitions may also result in conversion electrons
-and relaxation emissions.
+In such a case, the daughter level is set to zero and zero energy is returned
+from <b>\c sample()</b>. There are also cases where multiple transitions occur after
+a single disintegration. Finally, internal transitions may result in
+conversion electrons and relaxation emissions.
+
+- Relaxations that result in X-Ray fluorescence and Auger emissions return photons
+or electrons until the cascade is complete. Note that X-Ray and Auger emissions
+are not disintegrations so are
+not counted in the fluence (or the <b>\c ishower </b> parameter). These particles are
+assigned the same shower index as the most recent
+disintegration and the same time of emission as the most recent disintegration
+or internal transition, whichever was last. Relaxations may result in local
+energy depositions - this can be obtained using <b> \c getEdep() </b>.
+
+The <b>\c printSampledEmissions()</b> function is provided for evaluating
+how the decay emissions actually end up sampled by the source.
+The function prints the signature energy and emission intensity of each
+emission type for the radionuclide. The intensity is the ratio of the number
+of emissions of that type sampled and the total fluence, multiplied by 100. This
+provides units comparable to intensities in ensdf files
+(intensity per 100 disintegrations).
+To add this
+output following the simulation, it will be necessary to edit
+<b>\c runSimulation()</b> in the application (e.g. in egs_chamber.cpp). At the
+end of <b>\c runSimulation()</b>, add a line such as
+<code>source->printSampledEmissions();</code>.
 
  */
 class EGS_EXPORT EGS_RadionuclideSpectrum : public EGS_BaseSpectrum {
@@ -946,7 +998,7 @@ public:
 
     /*! \brief Construct a radionuclide spectrum.
      */
-    EGS_RadionuclideSpectrum(const string isotope, const string ensdf_file,
+    EGS_RadionuclideSpectrum(const string nuclide, const string ensdf_file,
                              const EGS_Float relativeActivity, const string useFluorescence, const string outputBetaSpectra) :
         EGS_BaseSpectrum() {
 
@@ -956,9 +1008,9 @@ public:
         // 2 - verbose output
         int verbose = 2;
 
-        // Read in the data file for the isotope
+        // Read in the data file for the nuclide
         // and build the decay structure
-        decays = new EGS_Ensdf(isotope, ensdf_file, useFluorescence, verbose);
+        decays = new EGS_Ensdf(nuclide, ensdf_file, useFluorescence, verbose);
 
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
@@ -1196,9 +1248,9 @@ protected:
                             u2 = rndm->getUniform();
                         }
 
-                        // Update the current time by sampling how long
+                        // Sample how long
                         // it took for this transition to occur
-                        // time += halflife / ln(2) * log(u)
+                        // time = -halflife / ln(2) * log(1-u)
                         double hl = currentLevel->getHalfLife();
                         if (hl > 0) {
                             currentTime = -hl * log(1.-rndm->getUniform()) /
@@ -1812,10 +1864,10 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         }
     }
     else if (inp->compare(stype,"radionuclide")) {
-        string isotope;
-        err = inp->getInput("isotope",isotope);
+        string nuclide;
+        err = inp->getInput("nuclide",nuclide);
         if (err) {
-            egsWarning("%s wrong/missing 'isotope' input\n",spec_msg1);
+            egsWarning("%s wrong/missing 'nuclide' input\n",spec_msg1);
             return 0;
         }
 
@@ -1828,7 +1880,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         // Determine whether to sample X-Rays and Auger electrons
         // using the ensdf data (options: yes or no)
         string tmp_useFl, useFluorescence;
-        err = inp->getInput("ensdf fluorescence and auger", tmp_useFl);
+        err = inp->getInput("atomic relaxations", tmp_useFl);
         if (!err) {
             useFluorescence = tmp_useFl;
         }
@@ -1885,7 +1937,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
                     ensdf_file = egsJoinPath(ensdf_file.c_str(),"ensdf");
                 }
             }
-            ensdf_file = egsJoinPath(ensdf_file.c_str(),isotope.append(".txt"));
+            ensdf_file = egsJoinPath(ensdf_file.c_str(),nuclide.append(".txt"));
         }
 
         // Check that the ensdf file exists
@@ -1899,7 +1951,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(isotope, ensdf_file, relativeActivity, useFluorescence, outputBetaSpectra);
+        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, useFluorescence, outputBetaSpectra);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
