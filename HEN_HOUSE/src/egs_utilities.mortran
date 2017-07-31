@@ -362,10 +362,11 @@ IF( lnblnk1(input_file) > 0 ) [
     IF( l + l1 + l2 > 1024 ) [
         $egs_fatal(*,'input file name (including path) is too long ',l+l1+l2);
     ]
+    ex = egs_strip_extension(input_file,'.egsinp');
     tmp_string = $cstring(ucode_dir) // $cstring(input_file) // '.egsinp';
     inquire(file=tmp_string,exist=ex);
     IF( ~ex ) [
-      $egs_fatal(*,'input file ',$cstring(tmp_string),' does not exist ');
+        $egs_fatal(*,'Input file ',$cstring(tmp_string),' does not exist.');
     ]
     $AVAILABLE_UNIT(i_input,tmp_string);
     open(i_input,file=tmp_string,status='old',err=:open_input_error:);
