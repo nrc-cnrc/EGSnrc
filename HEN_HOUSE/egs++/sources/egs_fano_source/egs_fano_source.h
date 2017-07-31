@@ -31,7 +31,7 @@
 
 /*! \file egs_fano_source.h
  *  \brief A Fano source
- *  \EMH
+ *  \EM
  */
 
 #ifndef EGS_FANO_SOURCE_
