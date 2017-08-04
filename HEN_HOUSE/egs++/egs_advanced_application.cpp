@@ -596,19 +596,18 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
                           string(the_media->pxsec).substr(0,pxsec.size()) ) )
         {
            the_xoptions->mcdf_pe_xsections = 1;
-           strcpy(the_media->pxsec,string("xcom            ").c_str());
+           string("xcom            ").copy(the_media->pxsec,16,0);
         }
         else if ( egsEquivStr( string("mcdf-epdl       "),
                                string(the_media->pxsec).substr(0,pxsec.size()) ) )
         {
            the_xoptions->mcdf_pe_xsections = 1;
-           strcpy(the_media->pxsec,string("epdl            ").c_str());
+           string("epdl            ").copy(the_media->pxsec,16,0);
         }
         else{
-          egsInformation("\n\n**** Using %s photon cross sections ****\n\n",
-                         string(the_media->pxsec).substr(0,pxsec.size()).c_str());
            the_xoptions->mcdf_pe_xsections = 0;
         }
+
         // iedgfl == 3 implies eadl_relax == 0
         if (the_xoptions->iedgfl            == 3 &&
             the_xoptions->mcdf_pe_xsections == 1){
@@ -717,14 +716,15 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
          egsEquivStr( string("xcom            "),
                       string(the_media->pxsec).substr(0,pxsec.size()) ) )
     {
-       strcpy(the_media->pxsec,string("mcdf-xcom       ").c_str());
+       string("mcdf-xcom       ").copy(the_media->pxsec,16,0);
     }
     else if (  the_xoptions->mcdf_pe_xsections &&
                egsEquivStr( string("epdl            "),
                            string(the_media->pxsec).substr(0,pxsec.size()) ) )
     {
-       strcpy(the_media->pxsec,string("mcdf-epdl       ").c_str());
+       string("mcdf-epdl       ").copy(the_media->pxsec,16,0);
     }
+
     if (!isspace(the_media->pxsec[0])) {
         pxsec.info(nc);
     }
@@ -832,7 +832,7 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
         the_xoptions->eii_flag = 0;
     }
     else if (str_eii == on) {
-        strcpy(the_media->eiixsec,ik.c_str());
+       ik.copy(the_media->eiixsec,16,0);
     }
 }
 
