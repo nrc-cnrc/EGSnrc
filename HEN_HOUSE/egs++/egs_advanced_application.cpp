@@ -277,6 +277,9 @@ public:
         options.push_back(opt);
         type = 2;
     };
+    void setOption(const int & index, const char *opt) {
+        options[index] = opt;
+    };
     void getInput(EGS_Input *input) {
         if (type == 1) {
             EGS_Float aux;
@@ -496,9 +499,11 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     rayl.addOption("custom");
     EGS_TransportProperty ff_med("ff media names",24,MXMED,&ff_media);
     EGS_TransportProperty ff_files("ff file names",128,MXMED, &ff_names);
+
     EGS_TransportProperty relax("Atomic relaxations",&the_xoptions->iedgfl);
-    relax.addOption("Off");
-    relax.addOption("On");
+    relax.addOption("Off"); relax.addOption("On");
+    relax.addOption("eadl");relax.addOption("simple");
+
     EGS_TransportProperty iphter("Photoelectron angular sampling",
                                  &the_xoptions->iphter);
     iphter.addOption("Off");
@@ -562,6 +567,16 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             setRayleighData(ff_media,ff_names);
         }
         relax.getInput(transportp);
+        if (the_xoptions->iedgfl == 0 || the_xoptions->iedgfl == 3){
+           the_xoptions->eadl_relax = 0;
+        }
+        else{
+           the_xoptions->eadl_relax = 1;
+           // Now, 'On' means EADL relaxation
+           if (the_xoptions->iedgfl == 1){
+             relax.setOption(1,"eadl");
+           }
+        }
         iphter.getInput(transportp);
         spin.getInput(transportp);
         trip.getInput(transportp);
@@ -576,6 +591,33 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             the_etcontrol->transport_algorithm = 0;
         }
         bca.getInput(transportp);
+
+        if ( egsEquivStr( string("mcdf-xcom       "),
+                          string(the_media->pxsec).substr(0,pxsec.size()) ) )
+        {
+           the_xoptions->mcdf_pe_xsections = 1;
+           strcpy(the_media->pxsec,string("xcom            ").c_str());
+        }
+        else if ( egsEquivStr( string("mcdf-epdl       "),
+                               string(the_media->pxsec).substr(0,pxsec.size()) ) )
+        {
+           the_xoptions->mcdf_pe_xsections = 1;
+           strcpy(the_media->pxsec,string("epdl            ").c_str());
+        }
+        else{
+          egsInformation("\n\n**** Using %s photon cross sections ****\n\n",
+                         string(the_media->pxsec).substr(0,pxsec.size()).c_str());
+           the_xoptions->mcdf_pe_xsections = 0;
+        }
+        // iedgfl == 3 implies eadl_relax == 0
+        if (the_xoptions->iedgfl            == 3 &&
+            the_xoptions->mcdf_pe_xsections == 1){
+          egsWarning("\n\n**** Simplified atomic relaxation not allowed"
+                       "\n     with shellwise PE cross sections. Resetting"
+                       "\n     to detailed EADL atomic relaxation!!!\n");
+          the_xoptions->eadl_relax = 1; the_xoptions->iedgfl = 2;
+          relax.setOption(1,"eadl");
+        }
     }
 
     if (do_hatch) {
@@ -668,6 +710,20 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     egsInformation("\n\nTransport parameter and cross section options:\n"
                    "==============================================\n");
     int nc = 50;
+    // Recover initial input string to reflect what's actually being used
+    // the_media->pxsec was already used in egsHatch() to read photon data
+    if ( the_xoptions->mcdf_pe_xsections &&
+         egsEquivStr( string("xcom            "),
+                      string(the_media->pxsec).substr(0,pxsec.size()) ) )
+    {
+       strcpy(the_media->pxsec,string("mcdf-xcom       ").c_str());
+    }
+    else if (  the_xoptions->mcdf_pe_xsections &&
+               egsEquivStr( string("epdl            "),
+                           string(the_media->pxsec).substr(0,pxsec.size()) ) )
+    {
+       strcpy(the_media->pxsec,string("mcdf-epdl       ").c_str());
+    }
     if (!isspace(the_media->pxsec[0])) {
         pxsec.info(nc);
     }
@@ -715,7 +771,6 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     if (efield.size()==3 || bfield.size()==3) {
         estepem.info(nc);
     }
-
     egsInformation("==============================================\n\n");
 
     delete [] ind;

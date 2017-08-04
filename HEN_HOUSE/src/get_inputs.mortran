@@ -1286,6 +1286,8 @@ allowed_inputs(ival,0) = 'Off';
 allowed_inputs(ival,1) = 'On';
 allowed_inputs(ival,2) = $ON_IN_REGIONS;
 allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+allowed_inputs(ival,4) = 'eadl';
+allowed_inputs(ival,5) = 'simple';
 
 " Photoelectron angular sampling "
 ival                = ival + 1;
@@ -1574,10 +1576,19 @@ IF( error_flags(num_eii) = 0 ) [
                  $cstring(eii_xfile));
    ]
 ]
-/**********************************************************/
+/******************************************************
+   Use Sabbatucci and Salvat shellwise photoelectric
+   cross sections together with XCOM or EPDL cross sections
+   for pair production.
+ ******************************************************/
 IF( error_flags(num_pxsec) = 0 ) [
     photon_xsections = char_value(num_pxsec,1);
+    IF (toUpper($cstring(photon_xsections))='MCDF-XCOM' |
+        toUpper($cstring(photon_xsections))='MCDF-EPDL')[
+        mcdf_pe_xsections = .true.;
+    ]
 ]
+/**********************************************************/
 IF( error_flags(num_pxsec_out) = 0 ) [
     xsec_out = value(num_pxsec_out,1);
 ]
@@ -1649,6 +1660,28 @@ IF( error_flags(num_coh) = 0 ) [
   ]
   write(*,'(/)');
 ]
+"Check if EADL relaxation requested. Note that original relaxation"
+"algorithm using <M> and <N> is only turned ON for all regions."
+IF( error_flags(num_relax) = 0 ) [
+  IF(value(num_relax,1) > 0 & value(num_relax,1) < 5)[
+    eadl_relax = .true.;
+    "Default relaxation is EADL"
+    IF (value(num_relax,1) = 1)[value(num_relax,1)=4;]
+  ]
+  ELSE [
+    IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
+       eadl_relax = .true.; value(num_relax,1)=4;
+       $egs_warning('(a,a,a)',
+                            '*** Simplified atomic relaxation not allowed',
+                            '    with shellwise PE cross sections. Resetting',
+                            '    to detailed EADL atomic relaxation!!!');
+    ]
+    ELSE [
+       eadl_relax = .false.;
+    ]
+  ]
+]
+
 /***************************************************************/
 
 
@@ -1729,6 +1762,13 @@ write(ounit,'(a,/)') line;
 
 /* initialized in egs_set_defaults */
 write(ounit,'(a,38x,a)') ' Photon cross sections', $cstring(photon_xsections);
+IF (toUpper($cstring(photon_xsections))='MCDF-XCOM')[
+   photon_xsections = 'xcom';
+]
+ELSEIF (toUpper($cstring(photon_xsections))='MCDF-EPDL')[
+   photon_xsections = 'epdl';
+]
+
 write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
 
 write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
