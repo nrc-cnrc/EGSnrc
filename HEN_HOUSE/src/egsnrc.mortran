@@ -2546,15 +2546,26 @@ $egs_info('(a/)',' ...... Done.');
 
 $need_relaxation_data(getd);
 IF( getd ) return;
+$egs_fatal('(/a,/a,/a,/a)',
+' In subroutine init_compton: ',
+'   Scattering off bound electrons creates atomic vacancies,',
+'   potentially starting an atomic relaxation cascade. ',
+'   Please turn ON atomic relaxations.');
+/*
+Turning ON relaxations to setup relaxations for bound Compton
+and then turning it back OFF seems inconsistent. One should have
+relaxations for all interactions with atomic electrons.
+
 $egs_info('(a/,a/,a/,a//)',
 ' In subroutine init_compton: ',
 '   fluorescence not set but relaxation data are required for ',
 '   bound Compton scattering. ',
 '   calling EDGSET. ');
 iedgfl(1) = 1;              "This was (2) originally  DR"
+eadl_relax = .true.;
 call edgset(1,1);
 iedgfl(1) = 0;              "This was (2) originally  DR"
-
+*/
 return;
 end;
 
@@ -7448,23 +7459,14 @@ DO j=1,$MXELEMENT [ eii_nshells(j) = 0; ]
 DO j=1,$MXMED [ eii_nsh(j) = 0; ]
 IF( eii_flag = 0 ) [ return; ]
 
-/*****************************************************************
-    Get relaxation data if using PEGS4 data set and eii_flag>0,
-    so that the binding energies are available in eii_init.
-*****************************************************************/
-   if (toUpper($cstring(photon_xsections)) = 'PEGS4')[
-      $need_relaxation_data(getd);
-      IF( ~getd )[
-        $egs_info('(a/,a/,a/,a//)',
-        ' In subroutine eii_init: ',
-        '   Fluorescence not set, but binding energies required for ',
-        '   EII when using PEGS4 data. ',
-        '   Verifying if binding energies available by calling EDGSET. ');
-        itmp = iedgfl(1);iedgfl(1) = 1;
-        call edgset(1,1); iedgfl(1) = itmp;
-      ]
-   ]
-/*****************************************************************/
+$need_relaxation_data(getd);
+IF( ~getd )[
+  $egs_fatal('(/a,/a,/a,/a)',
+          ' In subroutine eii_init: ',
+          '   Scattering off bound electrons creates atomic vacancies,',
+          '   potentially starting an atomic relaxation cascade. ',
+          '   Please turn ON atomic relaxations.');
+]
 
 /*
   find minimum of all threshold energies
@@ -7514,15 +7516,6 @@ $egs_info(*,'eii_init: number of shells to simulate EII: ',nsh);
 nsh_tot = nsh;
 tmp_array(1) = 0;
 DO j=2,$MXELEMENT [ tmp_array(j) = tmp_array(j-1) + eii_nshells(j-1); ]
-
-/*
-   Get relaxation data if necessary so that the binding energies
-   are available
- */
-itmp = iedgfl(1);
-iedgfl(1) = 1;
-call edgset(1,1);
-iedgfl(1) = itmp;
 
 /* set EII active shells per medium and for each element */
 DO imed=1,nmed [

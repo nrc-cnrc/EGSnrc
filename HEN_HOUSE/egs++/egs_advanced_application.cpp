@@ -612,9 +612,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         // iedgfl == 3 implies eadl_relax == 0
         if (the_xoptions->iedgfl            == 3 &&
             the_xoptions->mcdf_pe_xsections == 1){
-          egsWarning("\n\n**** Simplified atomic relaxation not allowed"
-                       "\n     with shellwise PE cross sections. Resetting"
-                       "\n     to detailed EADL atomic relaxation!!!\n");
+          egsWarning("\n**** Warning:"
+                     "\n     Simplified atomic relaxation not allowed"
+                     "\n     with shellwise PE cross sections. Resetting"
+                     "\n     to detailed EADL atomic relaxation!!!\n\n");
           the_xoptions->eadl_relax = 1; the_xoptions->iedgfl = 2;
           relax.setOption(1,"eadl");
         }
