@@ -8397,7 +8397,7 @@ ELSE[
      "To avoid log(0) = -INF, x=1E-4 corresponds ~ 0.014 deg for 10 keV"
      "and much less for higher energies"
      IF( xgrid(1,medium) < 1e-6 ) xgrid(1,medium) = 1e-4;
-     write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+     $egs_info('(/a,i4,a)','  -> ', nff, ' atomic ff values computed!');
 ]
 close(ff_unit);
 /* call routine for preparing sampling data */
@@ -8495,7 +8495,8 @@ nff = $MXRAYFF;
 "To avoid log(0) = -INF, x=1E-4 corresponds ~ 0.014 deg for 10 keV"
 "and much less for higher energies"
 IF( xgrid(1,medium) < 1e-6 ) xgrid(1,medium) = 1e-4;
-write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+"write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+$egs_info('(/a,i4,a)','  -> ', nff, ' atomic ff values computed!');
 
 close(ff_unit);
 /* call routine for preparing sampling data */

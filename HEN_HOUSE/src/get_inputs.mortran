@@ -1182,7 +1182,8 @@ $LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
           pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
 
 character*15 output_strings(14);"Ali:photonuc, increased by 1"
-save         output_strings,line;
+character*16 p_xsections;
+save         output_strings,line, p_xsections;
 save         ecut_inregions,pcut_inregions,smax_inregions,
              incoh_inregions,coh_inregions,relax_inregions,
              pe_inregions,aux_inregions,photonuc_inregions,
@@ -1582,10 +1583,15 @@ IF( error_flags(num_eii) = 0 ) [
    for pair production.
  ******************************************************/
 IF( error_flags(num_pxsec) = 0 ) [
-    photon_xsections = char_value(num_pxsec,1);
-    IF (toUpper($cstring(photon_xsections))='MCDF-XCOM' |
-        toUpper($cstring(photon_xsections))='MCDF-EPDL')[
-        mcdf_pe_xsections = .true.;
+    p_xsections = char_value(num_pxsec,1);
+    IF ( toUpper( $cstring(p_xsections) ) = 'MCDF-XCOM' )[
+        mcdf_pe_xsections = .true.; photon_xsections = 'xcom';
+    ]
+    ELSEIF ( toUpper( $cstring(p_xsections) ) = 'MCDF-EPDL' )[
+        mcdf_pe_xsections = .true.; photon_xsections = 'epdl';
+    ]
+    ELSE[
+        mcdf_pe_xsections = .false.;
     ]
 ]
 /**********************************************************/
@@ -1672,9 +1678,9 @@ IF( error_flags(num_relax) = 0 ) [
     IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
        eadl_relax = .true.; value(num_relax,1)=4;
        $egs_warning('(a,a,a)',
-                            '*** Simplified atomic relaxation not allowed',
-                            '    with shellwise PE cross sections. Resetting',
-                            '    to detailed EADL atomic relaxation!!!');
+                    '*** Simplified atomic relaxation not allowed',
+                    '    with shellwise PE cross sections. Resetting',
+                    '    to detailed EADL atomic relaxation!!!');
     ]
     ELSE [
        eadl_relax = .false.;
@@ -1761,14 +1767,8 @@ write(ounit,'(a,/)')
 write(ounit,'(a,/)') line;
 
 /* initialized in egs_set_defaults */
-write(ounit,'(a,38x,a)') ' Photon cross sections', $cstring(photon_xsections);
-IF (toUpper($cstring(photon_xsections))='MCDF-XCOM')[
-   photon_xsections = 'xcom';
-]
-ELSEIF (toUpper($cstring(photon_xsections))='MCDF-EPDL')[
-   photon_xsections = 'epdl';
-]
-
+write(ounit,'(a,38x,a)') ' Photon cross sections',
+      $cstring(p_xsections);
 write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
 
 write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
@@ -1804,7 +1804,6 @@ write(ounit,'(a,30x,a4)') ' Bremsstrahlung cross sections',output_strings(9);
 write(ounit,'(a,29x,a3)') ' Bremsstrahlung angular sampling',output_strings(6);
 IF( spin_effects ) [ write(ounit,'(a,48x,a)') ' Spin effects','On'; ]
 ELSE [ write(ounit,'(a,48x,a)') ' Spin effects','Off'; ]
-"write(ounit,'(a,34x,a)') ' Electron Impact Ionization',output_strings(13);"
 write(ounit,'(a,34x,a)') ' Electron Impact Ionization',$cstring(eii_xfile);
 IF (eii_L_factor ~= 1.0) [
    write(ounit,'(a,25x,f6.4)')
@@ -1872,6 +1871,7 @@ $declare_max_medium;
 $INTEGER imed,ival,lnblnk1,nchanged;
 character*24 medname;
 
+ounit = i_log;
 ounit = i_log;
 delimeter = $THE_DELIMETER;
 call get_input_set_error_level(0);

@@ -916,7 +916,7 @@ Bx=BxIN;    By=ByIN;    Bz=BzIN;
 Bx_new=Bx;  By_new=By;  Bz_new=Bz;
 
 DO i=1,$MXMED [
-    iraylm(i) = 0;   "Rayleigh data available?"
+    iraylm(i) = 0; "Rayleigh data available?"
     DO j=1,len(iray_ff_file(i)) [ iray_ff_file(i)(j:j) = ' ';]
     DO j=1,len(iray_ff_media(i)) [ iray_ff_media(i)(j:j) = ' ';]
       " set all thresholds to zero "
