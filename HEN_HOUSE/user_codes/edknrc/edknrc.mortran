@@ -3742,33 +3742,6 @@ C************************************************************
 
 C*******************************************************************************
 C*                                                                             *
-C*                        Function ibsearch(a, nsh, b)                         *
-C*                                                                             *
-C*              binary search for an element l of array b such that            *
-C*          b[l] =< a < b[l+1], note-dimension nsh of b must be a power of 2   *
-C*                                                                             *
-C*******************************************************************************
-      integer function ibsearch(a, nsh, b)
-      real*8 a, b(*)
-      integer min,max,help,nsh
-      real*8 x
-c     array b represents array of energy or of angle distribution
-      min = 1
-      max = nsh
-      x = a
-      do while ( min.lt.max-1 )
-         help = (max+min) / 2  !bitweise ganzzahlige Division durch 2
-         if ( b(help).le.x) then
-            min = help
-         else
-           max = help
-         endif
-      enddo
-      ibsearch = min
-      end !ibsearch
-
-C*******************************************************************************
-C*                                                                             *
 C*                        Function ibsearchrev(a, nsh, b)                      *
 C*                                                                             *
 C*              binary search for an element l of array b such that            *
