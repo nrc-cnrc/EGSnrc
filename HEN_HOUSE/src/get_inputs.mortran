@@ -1677,8 +1677,8 @@ IF( error_flags(num_relax) = 0 ) [
   ELSE [
     IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
        eadl_relax = .true.; value(num_relax,1)=4;
-       $egs_warning('(a,a,a)',
-                    '*** Simplified atomic relaxation not allowed',
+       $egs_warning('(a/,a/,a/)',
+                    '    Simplified atomic relaxation not allowed',
                     '    with shellwise PE cross sections. Resetting',
                     '    to detailed EADL atomic relaxation!!!');
     ]
