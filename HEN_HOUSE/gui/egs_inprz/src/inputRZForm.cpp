@@ -3815,6 +3815,9 @@ for(QStringList::Iterator it = ini.begin(); it != ini.end(); ++it ) {
        prefix += (*it);
     }
 }
+/* Insert prefixes requesting use of either xcom or epdl library
+ * with renormalized photoelectric xsections */
+prefix +="mcdf-xcom"; prefix +="mcdf-epdl";
 /* Insert prefix "pegs4" which requests use of the pegs4 data */
 prefix +="PEGS4";
 

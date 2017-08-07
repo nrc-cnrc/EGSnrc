@@ -263,6 +263,10 @@ global numopts options
      }
      # Place PEGS4 option to end of the list
      set options(photon_xsections,0) $xsect
+     set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "mcdf-xcom"
+     set numopts(photon_xsections) [expr $numopts(photon_xsections)+1]
+     set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "mcdf-epdl"
+     set numopts(photon_xsections) [expr $numopts(photon_xsections)+1]
      set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "PEGS4"
    } else {
      # If for some reason no photon data available, one can still use the

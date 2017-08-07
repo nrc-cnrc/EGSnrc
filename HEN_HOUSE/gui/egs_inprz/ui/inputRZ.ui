@@ -371,7 +371,7 @@
       <enum>QTabWidget::Rounded</enum>
      </property>
      <property name="currentIndex">
-      <number>5</number>
+      <number>7</number>
      </property>
      <property name="iconSize">
       <size>
@@ -8226,6 +8226,16 @@ Will start in /pegs4/density_corrections/ subdirectory off the directory selecte
                   <item>
                    <property name="text">
                     <string>Off in Regions</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>eadl</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>simple</string>
                    </property>
                   </item>
                  </widget>
