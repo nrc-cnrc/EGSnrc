@@ -169,7 +169,7 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
         return;
     }
     //determine if Zlast is stored in the file and, if so, its array index, i_zlast
-    int extrafloat_types[n_extra_floats], extralong_types[n_extra_longs];
+    int extrafloat_types[MAXEXTRAS], extralong_types[MAXEXTRAS];
     iaea_get_type_extra_variables(&iaea_fileid,&iaea_iostat,extralong_types,extrafloat_types);
     if (iaea_iostat==-1) {
         egsWarning("IAEA_PhspSource::openFile: failed to get Mode of data %s.IAEAheader\n",phsp_file.c_str());
@@ -288,8 +288,8 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         do { readParticle(); } while ( rejectParticle() );
     }
     */
-    int nstat,extrainttemp[n_extra_longs];
-    float extrafloattemp[n_extra_floats];
+    int nstat,extrainttemp[MAXEXTRAS];
+    float extrafloattemp[MAXEXTRAS];
     if (Nuse >= Nreuse) {  //get a new particle
         if ((++Npos) > Nlast) {
             egsWarning("IAEA_PhspSource::getNextParticle(): reached the end of the "
@@ -306,9 +306,12 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         }
         iaea_get_particle(&iaea_fileid,&nstat,&p.q,&p.E,&p.wt,&p.x,&p.y,&p.z,&p.u,&p.v,&p.w,extrafloattemp,extrainttemp);
         ++Nread;
+        p.latch=0; //important if we are using latch to do vr
+        /*
         if (latch_stored) {
             p.latch = extrainttemp[i_latch];
         }
+        */
         if (mode2) {
             p.zlast = extrafloattemp[i_zlast];
         }
@@ -342,9 +345,6 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         }
         else {
             egsFatal("IAEA_PhspSource::getNextParticle: unknown charge on particle\n");
-        }
-        if (!latch_stored) {
-            p.latch = 0;    //need some non-nonsense value in case there is a LATCH filter
         }
         //note: we don't have to convert to p.E to K.E. because that's what IAEA format stores
         if (first || nstat>0) {
