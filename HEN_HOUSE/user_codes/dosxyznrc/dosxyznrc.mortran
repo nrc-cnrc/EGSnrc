@@ -1017,6 +1017,10 @@ REPLACE {$AUSCALL(#);} WITH
 REPLACE {$IBRDST-DEFAULT} WITH {0}
 ;
 
+"Rayleigh scattering= Off"
+REPLACE {$IRAYLR-DEFAULT} WITH {0}
+;
+
 "Bound Compton scattering= Off"
 REPLACE {$IBCMP-DEFAULT} WITH {0}
 ;
