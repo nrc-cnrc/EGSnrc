@@ -132,8 +132,15 @@ IF( error_flags({P1}) = 0 ) [
         DO j=1,$MXREG [ {P4}(j) = itmp; ]
     ]
 ]
-ELSE [
-  value({P1},1) = {P4}(1);
+ELSE ["Use default value"
+  "Check if default is other than ON or Off"
+  "and shift as no input by regions requested"
+  IF({P4}(1) = 2 | {P4}(1) = 3)[
+    value({P1},1) = {P4}(1)+2;
+  ]
+  ELSE[
+    value({P1},1) = {P4}(1);
+  ]
 ]
 
 };
