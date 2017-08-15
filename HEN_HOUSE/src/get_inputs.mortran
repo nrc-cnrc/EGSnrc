@@ -1666,31 +1666,15 @@ IF( error_flags(num_coh) = 0 ) [
   ]
   write(*,'(/)');
 ]
-"Check if EADL relaxation requested. Note that original relaxation"
-"algorithm using <M> and <N> is only turned ON for all regions."
-IF( error_flags(num_relax) = 0 ) [
-  IF(value(num_relax,1) > 0 & value(num_relax,1) < 5)[
-    eadl_relax = .true.;
-    "Default relaxation is EADL"
-    IF (value(num_relax,1) = 1)[value(num_relax,1)=4;]
-  ]
-  ELSE [
-    IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
-       eadl_relax = .true.; value(num_relax,1)=4;
-       $egs_warning('(a/,a/,a/)',
-                    '    Simplified atomic relaxation not allowed',
-                    '    with shellwise PE cross sections. Resetting',
-                    '    to detailed EADL atomic relaxation!!!');
-    ]
-    ELSE [
-       eadl_relax = .false.;
-    ]
-  ]
-]
-
 /***************************************************************/
-
-
+/*
+ Inputs allowing setting by region are checked with the macro
+ $TURN-ON/OFF-IN-REGIONS. For this type of input, the second
+ and third entries correspond to turning ON or OFF the interaction
+ in specific regions. If no input is found, the default value is
+ used.
+ */
+/***************************************************************/
 $TURN-ON/OFF-IN-REGIONS(num_incoh,
                     'Bound Compton start region',
                     'Bound Compton stop region',
@@ -1728,6 +1712,28 @@ write(i_errors,*);
 write(i_errors,*)
 ' ******************** end input transport parameter *********************** ';
 write(i_errors,*);
+
+"Check if EADL relaxation requested. Note that original relaxation"
+"algorithm using <M> and <N> is only turned ON for all regions."
+"Moved passed the $TURN-ON/OFF-IN-REGIONS statement to catch the"
+"default case."
+IF(value(num_relax,1) > 0 & value(num_relax,1) < 5)[
+   eadl_relax = .true.;
+   "Default relaxation is EADL"
+   IF (value(num_relax,1) = 1)[value(num_relax,1)=4;]
+]
+ELSE [
+    IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
+       eadl_relax = .true.; value(num_relax,1)=4;
+       $egs_warning('(a/,a/,a/)',
+                    '    Simplified atomic relaxation not allowed',
+                    '    with shellwise PE cross sections. Resetting',
+                    '    to detailed EADL atomic relaxation!!!');
+    ]
+    ELSE [
+       eadl_relax = .false.;
+    ]
+]
 
 " we put the information stored in allowed_inputs into "
 " output_strings just in case the user over-rides it "
