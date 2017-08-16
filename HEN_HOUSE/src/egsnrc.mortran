@@ -2442,16 +2442,17 @@ $RADC_HATCH;
 
 $need_bound_compton_data(getd);
 IF( ~getd ) [
-    IF( eadl_relax )[
-        $egs_fatal('(a,/a)',
-                   'You must turn ON Compton binding corrections when using a',
-                   'detailed atomic relaxation (eadl_relax=true)!');
+    IF( eadl_relax & photon_xsections = 'xcom' )[
+        $egs_fatal('(a,/a,/a)',
+                   'You must turn ON Compton binding corrections when using',
+                   'a detailed atomic relaxation (eadl_relax=true) since ',
+                   'binding energies taken from incoh.data below 1 keV!');
     ]
     $egs_info('(a/)',' Bound Compton scattering not requested! ');
     return;
 ]
 
-$egs_info('(a$)','Bound Compton scattering requested, reading data ......');
+$egs_info('(/a$)','Bound Compton scattering requested, reading data ......');
 rewind($INCOHUNIT);
 DO j=1,18 [ read($INCOHUNIT,*); ]  "skip 1st 18 lines of comments"
 iz = 0;
