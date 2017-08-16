@@ -1635,7 +1635,7 @@ return; end;
    of the current simlation. This is due to the fact that energies
    below 1 keV are taken from the relaxation database only for
    elements requested in the input when EPDL is used. This is not
-   and issue when using XCOM.
+   an issue when using XCOM.
  */
 subroutine egs_print_binding_energies;
 implicit none;

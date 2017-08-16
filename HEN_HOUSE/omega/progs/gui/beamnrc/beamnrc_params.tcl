@@ -1667,7 +1667,7 @@ The default is EADL (On). The effect of using On is twofold:\
   applications.\
 
 Selecting On or EADl is equivalent. A full atomic relaxation cascade\
-is simmulated using EADL transition probabilities.
+is simulated using EADL transition probabilities.
 
 The option to use the original algorithm only accounting for M and\
 N shells in an average way is left for comparison and can be invoked\

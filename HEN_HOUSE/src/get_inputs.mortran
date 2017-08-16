@@ -1715,7 +1715,7 @@ write(i_errors,*);
 
 "Check if EADL relaxation requested. Note that original relaxation"
 "algorithm using <M> and <N> is only turned ON for all regions."
-"Moved passed the $TURN-ON/OFF-IN-REGIONS statement to catch the"
+"Moved past the $TURN-ON/OFF-IN-REGIONS statement to catch the"
 "default case."
 IF(value(num_relax,1) > 0 & value(num_relax,1) < 5)[
    eadl_relax = .true.;
