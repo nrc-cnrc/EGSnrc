@@ -31,7 +31,7 @@
 
 /*! \file egs_fano_source.cpp
  *  \brief An Fano source
- *  \IK
+ *  \EM
  *  The Fano option allows have uniform particles per unit mass
  */
 
