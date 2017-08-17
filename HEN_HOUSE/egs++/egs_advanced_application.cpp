@@ -277,7 +277,7 @@ public:
         options.push_back(opt);
         type = 2;
     };
-    void setOption(const int & index, const char *opt) {
+    void setOption(const int &index, const char *opt) {
         options[index] = opt;
     };
     void getInput(EGS_Input *input) {
@@ -501,8 +501,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     EGS_TransportProperty ff_files("ff file names",128,MXMED, &ff_names);
 
     EGS_TransportProperty relax("Atomic relaxations",&the_xoptions->iedgfl);
-    relax.addOption("Off"); relax.addOption("On");
-    relax.addOption("eadl");relax.addOption("simple");
+    relax.addOption("Off");
+    relax.addOption("On");
+    relax.addOption("eadl");
+    relax.addOption("simple");
 
     EGS_TransportProperty iphter("Photoelectron angular sampling",
                                  &the_xoptions->iphter);
@@ -567,15 +569,15 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             setRayleighData(ff_media,ff_names);
         }
         relax.getInput(transportp);
-        if (the_xoptions->iedgfl == 0 || the_xoptions->iedgfl == 3){
-           the_xoptions->eadl_relax = 0;
+        if (the_xoptions->iedgfl == 0 || the_xoptions->iedgfl == 3) {
+            the_xoptions->eadl_relax = 0;
         }
-        else{
-           the_xoptions->eadl_relax = 1;
-           // Now, 'On' means EADL relaxation
-           if (the_xoptions->iedgfl == 1){
-             relax.setOption(1,"eadl");
-           }
+        else {
+            the_xoptions->eadl_relax = 1;
+            // Now, 'On' means EADL relaxation
+            if (the_xoptions->iedgfl == 1) {
+                relax.setOption(1,"eadl");
+            }
         }
         iphter.getInput(transportp);
         spin.getInput(transportp);
@@ -592,31 +594,30 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         }
         bca.getInput(transportp);
 
-        if ( egsEquivStr( string("mcdf-xcom       "),
-                          string(the_media->pxsec).substr(0,pxsec.size()) ) )
-        {
-           the_xoptions->mcdf_pe_xsections = 1;
-           string("xcom            ").copy(the_media->pxsec,16,0);
+        if (egsEquivStr(string("mcdf-xcom       "),
+                        string(the_media->pxsec).substr(0,pxsec.size()))) {
+            the_xoptions->mcdf_pe_xsections = 1;
+            string("xcom            ").copy(the_media->pxsec,16,0);
         }
-        else if ( egsEquivStr( string("mcdf-epdl       "),
-                               string(the_media->pxsec).substr(0,pxsec.size()) ) )
-        {
-           the_xoptions->mcdf_pe_xsections = 1;
-           string("epdl            ").copy(the_media->pxsec,16,0);
+        else if (egsEquivStr(string("mcdf-epdl       "),
+                             string(the_media->pxsec).substr(0,pxsec.size()))) {
+            the_xoptions->mcdf_pe_xsections = 1;
+            string("epdl            ").copy(the_media->pxsec,16,0);
         }
-        else{
-           the_xoptions->mcdf_pe_xsections = 0;
+        else {
+            the_xoptions->mcdf_pe_xsections = 0;
         }
 
         // iedgfl == 3 implies eadl_relax == 0
         if (the_xoptions->iedgfl            == 3 &&
-            the_xoptions->mcdf_pe_xsections == 1){
-          egsWarning("\n**** Warning:"
-                     "\n     Simplified atomic relaxation not allowed"
-                     "\n     with shellwise PE cross sections. Resetting"
-                     "\n     to detailed EADL atomic relaxation!!!\n\n");
-          the_xoptions->eadl_relax = 1; the_xoptions->iedgfl = 2;
-          relax.setOption(1,"eadl");
+                the_xoptions->mcdf_pe_xsections == 1) {
+            egsWarning("\n**** Warning:"
+                       "\n     Simplified atomic relaxation not allowed"
+                       "\n     with shellwise PE cross sections. Resetting"
+                       "\n     to detailed EADL atomic relaxation!!!\n\n");
+            the_xoptions->eadl_relax = 1;
+            the_xoptions->iedgfl = 2;
+            relax.setOption(1,"eadl");
         }
     }
 
@@ -712,17 +713,15 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     int nc = 50;
     // Recover initial input string to reflect what's actually being used
     // the_media->pxsec was already used in egsHatch() to read photon data
-    if ( the_xoptions->mcdf_pe_xsections &&
-         egsEquivStr( string("xcom            "),
-                      string(the_media->pxsec).substr(0,pxsec.size()) ) )
-    {
-       string("mcdf-xcom       ").copy(the_media->pxsec,16,0);
+    if (the_xoptions->mcdf_pe_xsections &&
+            egsEquivStr(string("xcom            "),
+                        string(the_media->pxsec).substr(0,pxsec.size()))) {
+        string("mcdf-xcom       ").copy(the_media->pxsec,16,0);
     }
-    else if (  the_xoptions->mcdf_pe_xsections &&
-               egsEquivStr( string("epdl            "),
-                           string(the_media->pxsec).substr(0,pxsec.size()) ) )
-    {
-       string("mcdf-epdl       ").copy(the_media->pxsec,16,0);
+    else if (the_xoptions->mcdf_pe_xsections &&
+             egsEquivStr(string("epdl            "),
+                         string(the_media->pxsec).substr(0,pxsec.size()))) {
+        string("mcdf-epdl       ").copy(the_media->pxsec,16,0);
     }
 
     if (!isspace(the_media->pxsec[0])) {
@@ -832,7 +831,7 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
         the_xoptions->eii_flag = 0;
     }
     else if (str_eii == on) {
-       ik.copy(the_media->eiixsec,16,0);
+        ik.copy(the_media->eiixsec,16,0);
     }
 }
 

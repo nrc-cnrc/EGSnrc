@@ -225,6 +225,6 @@ int EGS_EXPORT egsGetEndian();
  */
 bool EGS_EXPORT egsIsAbsolutePath(const string &path);
 
-bool EGS_EXPORT egsEquivStr(const string& a, const string& b);
+bool EGS_EXPORT egsEquivStr(const string &a, const string &b);
 
 #endif
