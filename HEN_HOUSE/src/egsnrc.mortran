@@ -5277,7 +5277,6 @@ IF( iq(np) = -1 ) [
 ]
 
 IF( do_relax ) [
-    relax_initiator_q = 0; "a photon is initiating relaxations"
     call egs_eadl_relax(iZ,k);
 ]
 
