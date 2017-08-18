@@ -442,21 +442,25 @@ static const char* sources[] = {
 #define BREMS_ANG_SAMPLING "If KM: complete modified Koch-Motz 2BS used." \
                            "\nIf Simple: only leading term used."
 
-#define BOUND_COMPTON "If On, Compton scattering treated in the Impuls Approximation," \
+#define BOUND_COMPTON "If On, Compton scattering treated with the RIA model," \
                       "\nelse treated with Klein-Nishina. Make sure to turn it on for" \
                       "\nlow energy applications. Default is On."
 #define PE_ANG_SAMPLING "If Off, photo-electrons get direction of `mother' photon," \
                         "\nelse Sauter's formula used (which is, striktly speaking," \
                         "\nvalid only for  K-shell photo-absorption)."
 
-#define RAYLEIGH_SCAT "Turns on/off coherent (Rayleigh) scattering." \
-                      "\nDefault is Off. Should be turned on for low energy" \
-                      "\napplications but needs PEGS4 data set with data."
+#define RAYLEIGH_SCAT   "Turns on/off coherent (Rayleigh) scattering." \
+                      "\nShould be turned on for low energy applications." \
+                      "\nDefault is On."
 
 #define RELAXATION_TIP "If On, shell vacancies relaxed via emission of fluorescent X-Rays," \
                        "\nAuger and Koster-Cronig electrons (element and shell sampled from"  \
                        "\nappropriate cross sections). Make sure to turn this option on for" \
-                       "\nlow energy applications. Default is On."
+                       "\nlow energy applications. Default is EADL (On)."\
+                       "\n       On: Full EADL atomic relaxation"\
+                       "\n      Off: No atomic relaxation"\
+                       "\n     EADL: Full EADL atomic relaxation"\
+                       "\n   simple: Atomic relaxations for K, L1-L3,<M>, and <N> shells"
 
 #define ESTEPE_ALGORITHM "Algorithm used to take into account lateral and longitudinal" \
                          "\ncorrelations in a condensed history step."
@@ -466,9 +470,11 @@ static const char* sources[] = {
                        "\nICRU radiative stopping powers)."
 
 #define PHOTON_XSECTION "Select photon cross section compilation." \
-                        "\n   si: Default photon cross section (Storm&Israel)" \
-                        "\n xcom: Data taken directly from the XCOM library" \
+                        "\n   si: Data taken from the compilation by Storm&Israel" \
+                        "\n xcom: Data taken directly from the XCOM library (default)" \
                         "\n epdl: Data taken directly from the EPDL97 library" \
+                        "\n mcdf-xcom: Renormalized photoelectric xsections, XCOM for the rest" \
+                        "\n mcdf-epdl: Renormalized photoelectric xsections, EPDL for the rest" \
                         "\nPEGS4: Data taken directly from the PEGS4 file" \
                         "\n\nThe prefix for any other photon cross setion compilation" \
                         "\nplaced in $HEN_HOUSE/data/ in the form prefix_*.data" \

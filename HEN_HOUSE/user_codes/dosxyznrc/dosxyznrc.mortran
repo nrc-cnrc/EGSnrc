@@ -1017,6 +1017,10 @@ REPLACE {$AUSCALL(#);} WITH
 REPLACE {$IBRDST-DEFAULT} WITH {0}
 ;
 
+"Rayleigh scattering= Off"
+REPLACE {$IRAYLR-DEFAULT} WITH {0}
+;
+
 "Bound Compton scattering= Off"
 REPLACE {$IBCMP-DEFAULT} WITH {0}
 ;
@@ -3416,7 +3420,7 @@ $REAL XSI; "used to perform russian roulette on higher-order photons when"
 
 "variables for howfarless option"
 $INTEGER irx,iry,irz,irold_loc,irnew_loc,outside,min_plane,iri,i,ii,jj,kk,
-         ibsearch,hwfl_rr,dirx,diry,dirz;
+         ibsearch4,hwfl_rr,dirx,diry,dirz;
 $REAL dist_loc, dist_tot, edep_loc, tv,t(2),xi,yi,zi,ui(2),vi(2),wi(2),
       dist_tmp,x_tmp,y_tmp,z_tmp,edep_save,x_loc,y_loc,z_loc,
       xpln,ypln,zpln,dnear_loc,t_tot,t_rnd,dist_max,uii,vii,wii,
@@ -3468,9 +3472,9 @@ IF(howfarless & (iarg=15 | iarg=17 | iarg=19 | iarg=23) & ir(np)<irmax+1)[
        ]
     ]
     ELSE[
-        irx=ibsearch(x(np),imax+1,xbound);
-        iry=ibsearch(y(np),jmax+1,ybound);
-        irz=ibsearch(z(np),kmax+1,zbound);
+        irx=ibsearch4(x(np),imax+1,xbound);
+        iry=ibsearch4(y(np),jmax+1,ybound);
+        irz=ibsearch4(z(np),kmax+1,zbound);
         ir(np)=$IR(irx,iry,irz);
     ]
     irold=ir(np);
@@ -4598,10 +4602,9 @@ end;
 ;
 
 /*
-
 C**************************************************************************
 C*                                                                        *
-C*                   Function ibsearch(a, nsh, b)                         *
+C*                   Function ibsearch4(a, nsh, b)                         *
 C*                                                                        *
 C*          binary search for an element l of array b such that           *
 C*          b[l] =< a < b[l+1]                                            *
@@ -4610,7 +4613,7 @@ C*  Note: array must be increasingly monotone                             *
 C*                                                  Ernesto Mainegra-Hing *
 C**************************************************************************
 */
-integer function ibsearch(a, nsh, b);
+integer function ibsearch4(a, nsh, b);
 real*4 b(*);
 $REAL a;
 integer min,max,help,nsh;
@@ -4627,7 +4630,7 @@ WHILE( min < max-1 )[
            max = help;
          ]
 ]
-ibsearch = min;
+ibsearch4 = min;
 return;
 end;
 

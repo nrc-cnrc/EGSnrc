@@ -2239,7 +2239,7 @@ call mscati;       "Initialize new MS, step-sizes, etc, IK Oct 97"
 "Calling order of the subroutines below is important when using"
 "detailed atomic relaxation in order to use the binding energies"
 "corresponding to the requested photon cross section library"
-IF ($EADL_RELAX & photon_xsections = 'xcom' )[
+IF ( eadl_relax & photon_xsections = 'xcom' )[
    call init_compton; "Initialize bound Compton scattering"
    call EDGSET(1,1);  "Initialize relaxations and photo-absorption data"
 ]
@@ -2250,6 +2250,10 @@ ELSE[
                       "if requested
 ]
 
+
+IF( xsec_out = 1 ) [
+  call egs_print_binding_energies;
+]
 
 call fix_brems;    "Re-calculate dl1,... for the different technique"
                    "employed in BREMS. Note that the old EGS sampling"
@@ -2271,11 +2275,11 @@ call init_triplet;
 
 "   SETUP IS NOW COMPLETE"
 IF (NMED.EQ.1)[
-   $egs_info(*,' EGSnrc SUCCESSFULLY ''HATCHED'' FOR ONE MEDIUM.');
+   $egs_info(*,'EGSnrc SUCCESSFULLY ''HATCHED'' FOR ONE MEDIUM.');
 ]
 ELSE[
    $egs_info('(a,i5,a)',
-             ' EGSnrc SUCCESSFULLY ''HATCHED'' FOR ',NMED,' MEDIA.');
+             'EGSnrc SUCCESSFULLY ''HATCHED'' FOR ',NMED,' MEDIA.');
 ]
 
 RETURN;
@@ -2438,16 +2442,17 @@ $RADC_HATCH;
 
 $need_bound_compton_data(getd);
 IF( ~getd ) [
-    IF($EADL_RELAX)[
-        $egs_fatal('(a,/a)',
-                   'You must turn ON Compton binding corrections when using a',
-                   'detailed atomic relaxation ($EADL_RELAX=true)!');
+    IF( eadl_relax & photon_xsections = 'xcom' )[
+        $egs_fatal('(a,/a,/a)',
+                   'You must turn ON Compton binding corrections when using',
+                   'a detailed atomic relaxation (eadl_relax=true) since ',
+                   'binding energies taken from incoh.data below 1 keV!');
     ]
     $egs_info('(a/)',' Bound Compton scattering not requested! ');
     return;
 ]
 
-$egs_info('(a$)',' Bound Compton scattering requested, reading data ......');
+$egs_info('(/a$)','Bound Compton scattering requested, reading data ......');
 rewind($INCOHUNIT);
 DO j=1,18 [ read($INCOHUNIT,*); ]  "skip 1st 18 lines of comments"
 iz = 0;
@@ -2463,7 +2468,7 @@ DO j=1,$MXTOTSH [
     "For detailed atomic relaxations set shell type
     "to actual shell number and update binding energies
     "with values from the photo-electric cross sections
-    IF ($EADL_RELAX)[
+    IF (eadl_relax)[
        IF (iz_array(j) ~= iz)[
           shn_array(j) = 1; iz = iz_array(j);
        ]
@@ -2538,19 +2543,30 @@ DO medium = 1,nmed [
     ]
 ]
 
-$egs_info('(a/)','...... Done.');
+$egs_info('(a/)',' ...... Done.');
 
 $need_relaxation_data(getd);
 IF( getd ) return;
+$egs_fatal('(/a,/a,/a,/a)',
+' In subroutine init_compton: ',
+'   Scattering off bound electrons creates atomic vacancies,',
+'   potentially starting an atomic relaxation cascade. ',
+'   Please turn ON atomic relaxations.');
+/*
+Turning ON relaxations to setup relaxations for bound Compton
+and then turning it back OFF seems inconsistent. One should have
+relaxations for all interactions with atomic electrons.
+
 $egs_info('(a/,a/,a/,a//)',
 ' In subroutine init_compton: ',
 '   fluorescence not set but relaxation data are required for ',
 '   bound Compton scattering. ',
 '   calling EDGSET. ');
 iedgfl(1) = 1;              "This was (2) originally  DR"
+eadl_relax = .true.;
 call edgset(1,1);
 iedgfl(1) = 0;              "This was (2) originally  DR"
-
+*/
 return;
 end;
 
@@ -3241,7 +3257,7 @@ $declare_write_buffer;
 
 integer*4 i,j,k;
 
-$egs_info('(a,$)','  Reading screened Rutherford MS data ............... ');
+$egs_info('(/a,$)','Reading screened Rutherford MS data ............... ');
 rewind($MSCAT-DATAFILE);
 DO i=0,$MAXL_MS [
     DO j=0,$MAXQ_MS [
@@ -5025,6 +5041,8 @@ $DEFINE-LOCAL-VARIABLES-PHOTO;
 /* $REAL ftot,iprob; */
 data n_warning/0/;
 
+IF ( mcdf_pe_xsections )[call egs_shellwise_photo();return;]
+
 NPold = NP;      "Set the old stack counter"
 PEIG=E(NP); irl = ir(np);
 IF( peig < edge_energies(2,1) ) [
@@ -5093,15 +5111,9 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
     " left for now as before, to be changed!!! "
     IF( peig <= binding_energies($MXSHELL,iZ) )
     [   "Outer shells, no atomic relaxation"
-        IF ($EADL_RELAX)[
            "EADL relax: Below  M2-shell -> just emit e- "
            iq(np) = -1;
            e(np) = peig + prm;
-        ]
-        ELSE["Default: Below  N-shell -> local energy deposition "
-           edep = peig;
-           e(np) = pzero; "wt(np) = 0;"
-        ]
     ]
     ELSE ["Above  N-shell -> sample the shell the photon is interacting with"
         $RANDOMSET br; /* ftot = 1;  */
@@ -5117,7 +5129,7 @@ IF( iedgfl(irl) ~= 0 ) [   " User requested atomic relaxations "
         "EADL APPROACH 1: Do not allow interaction below L3. Deviates"
         "**************** from previous EGSnrc approach as it doesn't"
         "                 generate e- nor x-rays from <M> and <N> shells."
-        IF ($EADL_RELAX & k > 4)[
+        IF (eadl_relax & k > 4)[
            "No initial vacancy below L3 for now, just emit e-"
            iq(np) = -1;
            e(np) = peig + prm;
@@ -5157,6 +5169,365 @@ $PLAY RUSSIAN ROULETTE WITH ELECTRONS FROM NPold; " TO NP;"
 return;
 end;
 
+%E
+"******************************************************************"
+subroutine egs_shellwise_photo;
+"******************************************************************"
+" Derived from PHOTO by I. Kawrakow and A.F. Bielajew              "
+" Shellwise implementation and      "
+"                                sampling optimizations            "
+"******************************************************************"
+
+$IMPLICIT-NONE;
+
+$COMIN-PHOTO; "default replacement is:
+              "COMIN/BOUNDS,DEBUG,EDGE,EGS-VARIANCE-REDUCTION,EPCONT,"
+                  "MEDIA,PHOTIN,RANDOM,STACK,UPHIOT,USEFUL/"
+;COMIN/PE-SHELL-DATA/;
+
+$DEFINE-VARIABLES-FOR-SELECT-PHOTOELECTRON-DIRECTION;
+$DEFINE-LOCAL-VARIABLES-PHOTO;
+$REAL slope, logE, int_prob;
+$INTEGER zpos, ibsearch;
+data n_warning/0/;
+
+NPold = NP;      "Set the old stack counter"
+PEIG=E(NP); irl = ir(np);
+do_relax = .false.;
+IF( peig < $RELAX-CUTOFF ) [
+    IF( n_warning < 100 ) [
+        n_warning = n_warning + 1;
+        $egs_info(*,' Subroutine egs_shellwise_photo called with E = ',
+                    peig,' which is below the current min. energy of ',
+                   $RELAX-CUTOFF,' keV! ');
+        $egs_info(*,' Converting now this photon to an electron, ');
+        $egs_info(*,' but you should check your code! ');
+    ]
+    iq(np) = -1;
+    e(np) = peig + prm;
+    return;
+]
+
+edep = pzero;
+
+IF( iedgfl(irl) ~= 0 ) [" User requested atomic relaxations "
+                        " sample element and atomic shell for"
+   j = -1;              " the interaction."
+   IF( nne(medium) = 1 ) [
+    iZ = int( zelem(medium,1) + 0.5 ); zpos = pe_zpos(iZ);
+    IF( pe_nshell(zpos) > 0) [
+      logE = log(peig);
+      j = ibsearch(logE,pe_nge(zpos),pe_energy(1,zpos));
+    ]
+   ]
+   ELSE [
+      $RANDOMSET br; logE = log(peig);
+      "DO k=1,nne(medium) ["
+      DO k=nne(medium),1,-1 [
+          iZ = int( zelem(medium,k) + 0.5 );zpos = pe_zpos(iZ);
+          IF( iZ < 1 | iZ > $MXELEMENT ) [
+              $egs_info(*,' Error in egs_shellwise_photo: ');
+              $egs_fatal(*,'   Atomic number of element ',k,
+                 ' in medium ',medium,' is not between 1 and ',$MXELEMENT);
+          ]
+          j = ibsearch(logE,pe_nge(zpos),pe_energy(1,zpos));
+          slope    = pe_elem_prob(j+1,k,medium) - pe_elem_prob(j,k,medium);
+          slope    = slope/(pe_energy(j+1,zpos)-pe_energy(j,zpos));
+          int_prob = pe_elem_prob(j,k,medium)+slope*(logE-pe_energy(j,zpos));
+          br -= exp(int_prob);
+          IF ( br <= 0 ) EXIT;
+      ]
+   ]
+   " Now we know the atomic number (iZ) and the energy interval the "
+   " photon energy is in (j). It is time to sample the shell the photon "
+   " is interacting with. "
+   IF( peig < pe_be(zpos,pe_nshell(zpos)) | pe_nshell(zpos) = 0 )
+   [   "no atomic relaxation, create photo-electron"
+         iq(np) = -1;
+         e(np) = peig + prm;
+   ]
+   ELSE ["sample the shell the photon is interacting with"
+      $RANDOMSET br; sigtot = 0;
+      DO k=1,pe_nshell(zpos) [
+          IF( peig > pe_be(zpos,k) ) [
+            slope = pe_xsection(j+1,zpos,k) - pe_xsection(j,zpos,k);
+            slope = slope/(pe_energy(j+1,zpos)-pe_energy(j,zpos));
+            int_prob=pe_xsection(j,zpos,k)+slope*(logE-pe_energy(j,zpos));
+            br -= exp(int_prob); sigtot += exp(int_prob);
+            IF ( br <= 0 ) EXIT;
+          ]
+      ]
+      IF (k > pe_nshell(zpos))["outer shell, create photo-electron"
+         iq(np) = -1;
+         e(np) = peig + prm;
+      ]
+      ELSE[
+         e_vac = pe_be(zpos,k);
+         e(np) = peig - e_vac + prm; do_relax = .true.;
+         iq(np) = -1;
+      ]
+   ]
+]
+ELSE ["No atomic relaxations, just create photo-electron"
+    e(np) = peig + prm; iq(np) = -1;
+]
+
+IF( iq(np) = -1 ) [
+    $SELECT-PHOTOELECTRON-DIRECTION; "Samples photo-electron direction"
+]
+
+IF( do_relax ) [
+    call egs_eadl_relax(iZ,k);
+]
+
+IF( EDEP > 0 ) [ $AUSCALL($PHOTXAUS); ]    "generates IARG = 4 call"
+
+;
+$PLAY RUSSIAN ROULETTE WITH ELECTRONS FROM NPold; " TO NP;"
+
+return;
+end;
+
+"*************************************************************************"
+subroutine egs_read_shellwise_pe;
+"*************************************************************************"
+
+$IMPLICIT-NONE;
+
+$declare_max_medium;
+$COMIN-SHELLWISE-PE-INIT;
+
+$INTEGER   lnblnk1,egs_get_unit,pe_sw_unit,ounit,egs_open_file;
+$INTEGER   sorted($MXELEMENT),i,j,k,l,m;
+$REAL      z_sorted($MXELEMENT),pz_sorted($MXELEMENT);
+$REAL      rest_xs($MXNE,$MXELEMENT);
+$REAL      tmp_e($MXNE,$MXPESHELL), tmp_xs($MXNE,$MXPESHELL);
+$REAL      new_e($MXNE),deltaEb,slope;
+$INTEGER   zread($MXELEMENT),ib($MXPESHELL),ibsearch;
+character  data_dir*128,pe_sw_file*144;
+
+$INTEGER  medio,iZ,iZpos,egs_read_int,pos,curr_rec;
+real*4    egs_read_real,e_r, e_old,sigma_r;
+integer*2 nz, egs_read_short,ish, i_nshell,i_nge;
+$LOGICAL  is_open, is_there, shift_required;
+
+character*3 labels(16);
+data labels/'  K',' L1',' L2',' L3',
+            ' M1',' M2',' M3',' M4',' M5',
+            ' N1',' N2',' N3',' N4',' N5',' N6',' N7'/;
+
+/*********************************************
+   Open PE shellwise data file photo_shellwise.data
+ **********************************************/
+$egs_info('(/a$)',
+' Reading renormalized photoelectric cross sections ......');
+data_dir = $cstring(hen_house) // 'data' // $file_sep;
+pe_sw_file = $cstring(data_dir) // 'photo_shellwise.data';
+
+/* Open a fortran unit for reading data */
+pe_sw_unit = egs_get_unit(0);
+IF( pe_sw_unit < 1 ) [
+  $egs_fatal(*,'egs_init_shellwise_pe: failed to get a free Fortran I/O unit');
+]
+open(pe_sw_unit,file=pe_sw_file,status='old',
+     form='UNFORMATTED',ACCESS='direct',recl=1,
+     err=:no-pe-sw-file:);
+GOTO :read-pe-sw:;
+:no-pe-sw-file:
+$egs_fatal('(2a)','egs_init_shellwise_pe: failed to open ',
+           pe_sw_file);
+:read-pe-sw:
+is_open = .true.;
+/******************************
+   Array initialization
+ ******************************/
+DO medio = 1,nmed [
+   DO i=1,nne(medio) [
+      pe_nshell(i*medio) = 0;
+      pe_nge(i*medio) = 0;
+      pe_zsorted(i,medio) = 0;
+   ]
+]
+DO l = 1,$MXELEMENT [
+   pe_zpos(l) = -1;
+   DO k = 1,$MXNE [
+      pe_energy(k,l) = 0.0;
+      DO m = 1,$MXPESHELL [
+         pe_xsection(k,l,m) = 0.0;
+      ]
+   ]
+   DO k = 1,$MXPESHELL [
+      pe_be(l,k) = -99;
+   ]
+]
+
+/******************************
+   Get shellwise PE xsections
+ ******************************/
+curr_rec = 1; iZpos = 0;
+nz = egs_read_short(pe_sw_unit,curr_rec);
+"$egs_info('(a,i2,a)','PE shellwise data available for ',nz,' elements....');"
+DO medio = 1,nmed [
+   DO i=1,nne(medio) [z_sorted(i) = zelem(medio,i);]
+   call egs_heap_sort(nne(medio),z_sorted,sorted);
+   DO i=1,nne(medio) [pe_zsorted(i,medio) = z_sorted(i);]
+   DO i=1,nne(medio) [
+      iZ = z_sorted(i);
+      "Now check whether we have already loaded the data for"
+      "this atomic number"
+      is_there = .false.;
+      DO j = 1,medio-1 [
+         DO k = 1, nne(j)[
+           IF( iZ = pe_zsorted(k,j) ) [
+               is_there = .true.; EXIT;
+           ]
+         ]
+      ]
+      IF (is_there) NEXT;
+      "Read data for this element"
+      iZpos += 1; zread(iZpos) = iZ;
+      pe_zpos(iZ) = iZpos;
+      pos         = 3 + (iZ-1)*4;
+      curr_rec    = egs_read_int(pe_sw_unit,pos) + 1;
+      i_nge       = egs_read_short(pe_sw_unit,curr_rec);
+      i_nshell    = egs_read_short(pe_sw_unit,curr_rec);
+      "$egs_info('(a,i2,a,i3,a,i2,a)','Element ',iZ,' has ',i_nge,
+      "  ' energy points and ',i_nshell,' shells');
+      pe_nge(iZpos) = i_nge; pe_nshell(iZpos) = i_nshell;
+      e_old = -1.0; ish = 0;
+      DO j = 1,i_nge[
+         e_r = egs_read_real(pe_sw_unit,curr_rec);
+         sigma_r = egs_read_real(pe_sw_unit,curr_rec);
+         pe_energy(j,iZpos) = e_r;
+         pe_xsection(j,iZpos,0) = sigma_r;
+         rest_xs(j,iZpos) = sigma_r;
+         DO k = 1, i_nshell[
+            sigma_r =  egs_read_real(pe_sw_unit,curr_rec);
+            pe_xsection(j,iZpos,k) = sigma_r;
+            rest_xs(j,iZpos) = rest_xs(j,iZpos) - sigma_r;
+
+         ]
+         "Extract binding energies from the data base"
+         IF (e_r - e_old < 1e-15)[
+            pe_be(iZpos,i_nshell-ish) = e_r;
+            ish += 1;
+         ]
+         e_old = e_r;
+
+      ]
+      "DO k = 1, i_nshell[
+      "   $egs_info('(a2,a3,a2,1pe12.4,a4)',
+      "             'E(',labels(k),')=',pe_be(iZpos,k),' MeV');
+      "]
+
+   ]
+]
+pe_ne = iZpos;
+"$egs_info('(a,i2,a/)','Finished processing ',iZpos,' elements!');
+
+/*********************************************
+ Adjust xsections to current binding energies
+ Shift energy scale for each subshell when
+ required.
+ *********************************************/
+"$egs_info(*,' Adjusting cross sections to new binding energies ...');
+DO i=1,pe_ne[
+   iZ = zread(i);
+   IF (pe_nshell(i) = 0)[
+      DO j=1,pe_nge(i)[
+         pe_energy(j,i) =  log(pe_energy(j,i));
+      ]
+      NEXT;
+   ]
+   "Shift energy scale for different binding energy sets"
+   DO l=1,pe_nshell(i)[
+      IF ( pe_be(i,l) ~= binding_energies(l,iZ))[
+           shift_required = .true.;
+           deltaEb = binding_energies(l,iZ)-pe_be(i,l);
+           "$egs_info('(2(a,a,a,1pe12.4),a,1pe12.4,a,e12.4)',
+           "           'Eb_p_',labels(l),' = ',pe_be(i,l),
+           "          ' Eb_e_',labels(l),' = ',binding_energies(l,iZ),
+           "          ' diff = ',pe_be(i,l)-binding_energies(l,iZ),
+           "          ' -> ', 100*(1.0 - binding_energies(l,iZ) / pe_be(i,l))
+           "          );
+      ]
+      ELSE[shift_required =.false.;]
+      is_there = .false.;
+      DO j=1,pe_nge(i)[
+         tmp_e(j,l)  = pe_energy(j,i);
+         tmp_xs(j,l) = pe_xsection(j,i,l);
+         IF ( shift_required &
+              pe_energy(j,i) => pe_be(i,l) )[
+            tmp_e(j,l) += deltaEb;
+            "$egs_info(*,'Shifting ',pe_energy(j,i),' to ',tmp_e(j,l));
+            "Determine edge position in energy array"
+            IF (pe_energy(j,i) = pe_be(i,l) & ~is_there)[
+               ib(l) = j; is_there = .true.;
+            ]
+            "Update new energy grid"
+            IF (l = 1)[
+               new_e(j) = tmp_e(j,l);
+            ]
+            "ELSE IF(tmp_e(j,l) < binding_energies(l-1,iZ))[
+            ELSE IF(j < ib(l-1))[
+               new_e(j) = tmp_e(j,l);
+            ]
+         ]
+      ]
+      pe_be(i,l) = binding_energies(l,iZ);
+   ]
+   "Re-compute sub-shell xsections for new energy grid new_e"
+   "Not needed for K shell"
+   DO l=2,pe_nshell(i)[
+      DO j=1,pe_nge(i)[
+         IF ( new_e(j) >= pe_be(i,l-1) )[
+            m = ibsearch(new_e(j),pe_nge(i),tmp_e(1,l));
+            slope = log(tmp_xs(m+1,l)/tmp_xs(m,l));
+            slope = slope/log(tmp_e(m+1,l)/tmp_e(m,l));
+            pe_xsection(j,i,l) = log(tmp_xs(m,l));
+            pe_xsection(j,i,l) += slope*log(new_e(j)/tmp_e(m,l));
+            pe_xsection(j,i,l) = exp(pe_xsection(j,i,l));
+         ]
+      ]
+   ]
+   "Re-compute total xsections for new energy grid new_e"
+   "$egs_info(*,'-> Z = ',iZ);"
+   DO j=1,pe_nge(i)[
+      IF ( j < ib(pe_nshell(i)))[
+         new_e(j) = pe_energy(j,i);
+      ]
+      m = ibsearch(new_e(j),pe_nge(i),pe_energy(1,i));
+      slope = log(rest_xs(m+1,i)/rest_xs(m,i));
+      slope = slope/log(pe_energy(m+1,i)/pe_energy(m,i));
+      pe_xsection(j,i,0)  = log(rest_xs(m,i));
+      pe_xsection(j,i,0) += slope*log(new_e(j)/pe_energy(m,i));
+      pe_xsection(j,i,0) = exp(pe_xsection(j,i,0));
+      "$egs_info('(1pe12.4,1x,1pe12.4,1x,1pe12.4,1x,1pe12.4)',
+      "         new_e(j),pe_xsection(j,i,0),pe_energy(j,i),rest_xs(j,i));
+      DO l=1,pe_nshell(i)[
+         pe_xsection(j,i,0) += pe_xsection(j,i,l);
+      ]
+      "$egs_info('(1pe12.4,1x,1pe12.4,1x,1pe12.4)',
+      "         new_e(j),pe_xsection(j,i,0));
+   ]
+   "Normalize shell cross sections to total for sampling"
+   "and update energy grid of ith element."
+   " Prepare for log/log interpolation."
+   DO j=1,pe_nge(i)[
+      pe_energy(j,i) =  log(new_e(j));
+      DO l=1,pe_nshell(i)[
+         pe_xsection(j,i,l) = log(pe_xsection(j,i,l)/pe_xsection(j,i,0));
+      ]
+   ]
+]
+
+$egs_info('(a/)',' done');
+
+IF( is_open ) close(pe_sw_unit);
+return;
+end;
+
+
 "******************************************************************"
 SUBROUTINE RELAX(energy,n,iZ);
 "******************************************************************"
@@ -5172,9 +5543,6 @@ SUBROUTINE RELAX(energy,n,iZ);
 "                                                                  "
 " Version 1:  I. Kawrakow, December 1998                           "
 "******************************************************************"
-
-REPLACE {$RELAX-CUTOFF} WITH {0.001}
-
 implicit none;
 
 " Input variables "
@@ -5223,8 +5591,6 @@ $REAL    e_array($MXVAC),   "array with vacancy energies           "
 $REAL    xphi,yphi,xphi2,yphi2,rhophi2,
          cphi,sphi;         "for azimuthal angle selection"
 
-$LOGICAL eadl_relax;
-
 " Global EGS4 variables "
 "======================="
 $COMIN-RELAX;
@@ -5251,7 +5617,6 @@ data final_state/ "See the final_state definition above"
 save first_transition,last_transition,final_state; "to avoid problems with "
                                                    "non-static compiler options"
 
-eadl_relax=$EADL_RELAX;
 IF (eadl_relax)[
    call egs_eadl_relax(iZ,n);
    return;
@@ -5476,13 +5841,14 @@ DO iZ=1,$MXELEMENT[
 /*********************************************
    Determine minimum energy
  **********************************************/
-Pc = 1e30; Ec = 1e30;
+/*Pc = 1e30; Ec = 1e30;
 DO medio = 1,nmed [
     tmp = AE(medio) - rm; Ec = min(Ec,tmp); Pc = min(Pc,ap(medio));
 ]
 min_be = min(Ec,Pc);  "This is the minimum binding energy for which we need"
                       "relaxation data"
-
+*/
+min_be = $RELAX-CUTOFF;
 $egs_debug('(a)',' ************ relax_init **************** ');
 $egs_debug('(a,f10.7)',
         ' Minimum binding energy requiring relaxation data: ',min_be);
@@ -5490,7 +5856,7 @@ $egs_debug('(a,f10.7)',
 /*********************************************
    Open EADL relaxation data file relax.data
  **********************************************/
-$egs_info('(/a)','Reading EADL relaxation data ......');
+$egs_info('(/a)',' Reading EADL relaxation data ......');
 data_dir = $cstring(hen_house) // 'data' // $file_sep;
 relax_file = $cstring(data_dir) // 'relax.data';
 
@@ -5536,7 +5902,7 @@ DO medio = 1,nmed [
                 ' Increase the parameter $MAXSHELL and retry ');
       ]
       $egs_info('(a,i3,a,i2,a)',
-      '-> Element Z = ',iZ,' has ',nshell,' shells');
+      '  Z = ',iZ,' has ',nshell,' shells');
       DO ish=shell_ntot+1,shell_ntot+nshell[
         curr_rec  = curr_rec+1;
         read(relax_unit, rec=curr_rec) shell_type(ish);
@@ -5560,7 +5926,7 @@ DO medio = 1,nmed [
             read(relax_unit,rec=curr_rec) itmp(k);
             curr_rec  = curr_rec+1;
             read(relax_unit,rec=curr_rec) prob_r;wtmp(k)=prob_r;
-           /* Relaxation data uses C-style array indexing.
+            /*Relaxation data uses C-style array indexing.
               Hence final relaxation state increased by 1  for
               radiative and by 65 for non-radiative transitions*/
             IF (itmp(k)<64) [itmp(k) +=1;]
@@ -5602,7 +5968,7 @@ DO medio = 1,nmed [
 ]
 $egs_debug('(a,i4,a)',' There are ',
         shell_ntot,' shells in the list of shells ');
-$egs_info('(a/)','...... Done.');
+$egs_info('(a/)',' ...... Done.');
 /***********************************************/
 
 IF( is_open ) close(relax_unit);
@@ -5708,13 +6074,13 @@ rfu_j0 = shell;         "shell # of vacancy that initiated cascade in long list"
 rfu_n0 = shell_num(shell); "same but number is shell number in element iZ"
 rfu_t0 = shell_type(shell); "the shell type (encodes the type of relaxation)"
 rfu_E0 = Evac;          "B.E. of vacancy that initiated cascade"
-
+"
 "Local energy deposition for vacancies below L3 shell."
 "Added here for consistency in algorithm for as long as"
 "<M> and <N> shells considered instead of proper shells."
 "AUSGAB call should be updated when charge of particle"
 "creating vacancy becomes available."
-IF (shell_egs > 4) [
+IF (shell_egs > 4 & ~mcdf_pe_xsections) [
     edep = Evac;        "add energy of vacancy to edep"
     edep_local = Evac;  "set value of edep_local to energy of vacancy"
 
@@ -5960,16 +6326,16 @@ IF( got_data ) return;
    "statement.
 
 $egs_info('(a/,a)',
-          ' Output from subroutine EDGSET:',
-         ' ==============================');
+          'Output from subroutine EDGSET:',
+          '==============================');
 
 $need_relaxation_data(do_relax);
 IF( ~do_relax ) [
 
-    IF($EADL_RELAX)[
+    IF(eadl_relax)[
         $egs_fatal('(a,/a)',
                    'You must turn ON atomic relaxations when requesting',
-                   'detailed atomic relaxation ($EADL_RELAX=true)!');
+                   'detailed atomic relaxation (eadl_relax=true)!');
     ]
     $egs_info('(a/)',' Atomic relaxations not requested! ');
     return;
@@ -5977,14 +6343,14 @@ IF( ~do_relax ) [
 
 $egs_info('(a/)',' Atomic relaxations requested! ');
 
-$egs_info('(/a$)',' Reading photo-absorption data .....');
+$egs_info('(a$)',' Reading simplified photo-absorption data .....');
 
 got_data = .true.;
 rewind($PHOTOUNIT);
 
 DO i=1,$MXELEMENT
 [
-    IF ($EADL_RELAX)[
+    IF (eadl_relax)[
        "Skip, using binding_energies from *_photo.data file
        read($PHOTOUNIT,*);
     ]
@@ -6003,7 +6369,7 @@ DO i=1,$MXELEMENT
 ]
 $egs_info('(a)',' Done');
 
-$egs_info('(/a$)',' Reading relaxation data .....');
+$egs_info('(/a$)',' Reading simplified relaxation data .....');
 read($PHOTOUNIT,*);
 DO i=1,$MXELEMENT [
         read($PHOTOUNIT,*) j,(relaxation_prob(k,i),k=1,19);   "K-shell"
@@ -6025,7 +6391,7 @@ DO i=1,$MXELEMENT [
         read($PHOTOUNIT,*) j,relaxation_prob(38,i);   "M-shell"
 ]
 $egs_info('(a)',' Done');
-$egs_info('(/a$)',' Reading photo cross section data .....');
+$egs_info('(/a$)',' Reading parametrized XCOM photo cross section data .....');
 rewind($PHOCSUNIT);
 DO i=1,$MXELEMENT [
     read($PHOCSUNIT,*) j,edge_number(i);
@@ -6034,9 +6400,9 @@ DO i=1,$MXELEMENT [
                            edge_d(j,i),edge_energies(j,i);
     ]
 ]
-$egs_info('(a/)',' Done');
+$egs_info('(a)',' Done');
 
-IF ($EADL_RELAX)[
+IF (eadl_relax)[
  call egs_init_relax;
 ]
 
@@ -6610,10 +6976,10 @@ call gauss_legendre(0d0,1d0,x_gauss,w_gauss,ngauss);
 
 $egs_info(*,' ');
 IF (ibr_nist = 1) [
-$egs_info(*,' Using NIST brems cross sections! ');
+$egs_info(*,'Using NIST brems cross sections! ');
 ]
 ELSE IF (ibr_nist = 2) [
-    $egs_info(*,' Using NRC brems cross sections! ');
+    $egs_info(*,'Using NRC brems cross sections! ');
 ]
 $egs_info(*,' ');
 DO medium=1,nmed [
@@ -7093,23 +7459,14 @@ DO j=1,$MXELEMENT [ eii_nshells(j) = 0; ]
 DO j=1,$MXMED [ eii_nsh(j) = 0; ]
 IF( eii_flag = 0 ) [ return; ]
 
-/*****************************************************************
-    Get relaxation data if using PEGS4 data set and eii_flag>0,
-    so that the binding energies are available in eii_init.
-*****************************************************************/
-   if (toUpper($cstring(photon_xsections)) = 'PEGS4')[
-      $need_relaxation_data(getd);
-      IF( ~getd )[
-        $egs_info('(a/,a/,a/,a//)',
-        ' In subroutine eii_init: ',
-        '   Fluorescence not set, but binding energies required for ',
-        '   EII when using PEGS4 data. ',
-        '   Verifying if binding energies available by calling EDGSET. ');
-        itmp = iedgfl(1);iedgfl(1) = 1;
-        call edgset(1,1); iedgfl(1) = itmp;
-      ]
-   ]
-/*****************************************************************/
+$need_relaxation_data(getd);
+IF( ~getd )[
+  $egs_fatal('(/a,/a,/a,/a)',
+          ' In subroutine eii_init: ',
+          '   Scattering off bound electrons creates atomic vacancies,',
+          '   potentially starting an atomic relaxation cascade. ',
+          '   Please turn ON atomic relaxations.');
+]
 
 /*
   find minimum of all threshold energies
@@ -7159,15 +7516,6 @@ $egs_info(*,'eii_init: number of shells to simulate EII: ',nsh);
 nsh_tot = nsh;
 tmp_array(1) = 0;
 DO j=2,$MXELEMENT [ tmp_array(j) = tmp_array(j-1) + eii_nshells(j-1); ]
-
-/*
-   Get relaxation data if necessary so that the binding energies
-   are available
- */
-itmp = iedgfl(1);
-iedgfl(1) = 1;
-call edgset(1,1);
-iedgfl(1) = itmp;
 
 /* set EII active shells per medium and for each element */
 DO imed=1,nmed [
@@ -7657,16 +8005,15 @@ character  data_dir*128,photo_file*140,pair_file*140,rayleigh_file*144,
 "Ali:photonuc, 1 line"
            photonuc_file*144;
 
-$egs_info('(/a)','(Re)-initializing photon cross section data');
-$egs_info('(a,a/)','Using data files from the series ',
+$egs_info('(/a$)','(Re)-initializing photon cross sections');
+$egs_info('(a,a/)',' with files from the series: ',
       prefix(:lnblnk1(prefix)));
 
-$egs_info('(a,a,a,a)','Photon cross sections: ',$cstring(prefix),
-        ' Compton cross sections: ',$cstring(comp_prefix));
+$egs_info('(a,a)',' Compton cross sections: ',$cstring(comp_prefix));
 
 "Ali:photonuc, 1 block"
 IF(iphotonuc = 1) [
- $egs_info('(a,a)','Photonuclear cross sections: ',
+ $egs_info('(a,a)',' Photonuclear cross sections: ',
  $cstring(photonuc_prefix));
  input_photonuc_data = .false.;
  IF(lnblnk1(photonuc_prefix) > 0 & photonuc_prefix(1:7) ~= 'default') [
@@ -7692,7 +8039,7 @@ ELSE [
 ]
 "Ali: I moved this info line from inside the IF statement
 " because it's useful to print the cross section file either way
-$egs_info('(a,a)','Using Compton cross sections from ',
+$egs_info('(a,a)',' Using Compton cross sections from ',
           $cstring(compton_file));
 
 "Ali:photonuc, 1 block"
@@ -7704,7 +8051,7 @@ IF(iphotonuc = 1) [
  ELSE [
     photonuc_file = $cstring(data_dir) // 'iaea_photonuc.data';
  ]
- $egs_info('(a,a)','Using photonuclear cross sections from ',
+ $egs_info('(a,a)',' Using photonuclear cross sections from ',
   $cstring(photonuc_file));
 ]
 
@@ -7762,10 +8109,12 @@ DO iz=1,100 [
                          k,' binding energies read exceeding array size of',
                          $MXSHXSEC,'Increase $MXSHXSEC in egsnrc.macros!');
             ]
-            IF( ~$EADL_RELAX & k >= 4 ) EXIT;
+            IF( ~eadl_relax & k >= 4 ) EXIT;
         ]
     ]
 ]
+
+IF (mcdf_pe_xsections)[call egs_read_shellwise_pe();]
 
 DO medium = 1,nmed [
 
@@ -7773,7 +8122,7 @@ DO medium = 1,nmed [
     ge1(medium) = nge-1; ge1(medium) = ge1(medium)/log(up(medium)/ap(medium));
     ge0(medium) = 1 - ge1(medium)*log(ap(medium));
 
-    $egs_info('(a,i3,a,$)','Working on medium ',medium,' ... ');
+    $egs_info('(a,i3,a,$)',' Working on medium ',medium,' ... ');
     IF( out = 1 ) [
         write(ounit,'(/,2x,a,i3,a,24a1/)') 'Medium ',medium,': ',
           (media(k,medium),k=1,24);
@@ -7789,8 +8138,14 @@ DO medium = 1,nmed [
     call egs_heap_sort(nne(medium),z_sorted,sorted);
     DO i=1,nne(medium) [ pz_sorted(i) = pz(medium,sorted(i)); ]
 
-    call egsi_get_data(0,photo_unit,nge,nne(medium),z_sorted,pz_sorted,
+    IF (mcdf_pe_xsections)[
+       call egsi_get_shell_data(medium,nge,nne(medium),z_sorted,pz_sorted,
+                                ge1(medium),ge0(medium),sig_photo);
+    ]
+    ELSE[
+       call egsi_get_data(0,photo_unit,nge,nne(medium),z_sorted,pz_sorted,
                        ge1(medium),ge0(medium),sig_photo);
+    ]
     call egsi_get_data(0,rayleigh_unit,nge,nne(medium),z_sorted,pz_sorted,
                        ge1(medium),ge0(medium),sig_rayleigh);
     call egsi_get_data(1,pair_unit,nge,nne(medium),z_sorted,pz_sorted,
@@ -8042,7 +8397,7 @@ ELSE[
      "To avoid log(0) = -INF, x=1E-4 corresponds ~ 0.014 deg for 10 keV"
      "and much less for higher energies"
      IF( xgrid(1,medium) < 1e-6 ) xgrid(1,medium) = 1e-4;
-     write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+     $egs_info('(/a,i4,a)','  -> ', nff, ' atomic ff values computed!');
 ]
 close(ff_unit);
 /* call routine for preparing sampling data */
@@ -8140,7 +8495,8 @@ nff = $MXRAYFF;
 "To avoid log(0) = -INF, x=1E-4 corresponds ~ 0.014 deg for 10 keV"
 "and much less for higher energies"
 IF( xgrid(1,medium) < 1e-6 ) xgrid(1,medium) = 1e-4;
-write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+"write(*,*) '\n  -> ', nff, ' atomic ff values computed!';
+$egs_info('(/a,i4,a)','  -> ', nff, ' atomic ff values computed!');
 
 close(ff_unit);
 /* call routine for preparing sampling data */
@@ -8483,59 +8839,6 @@ DO i=1,ne [
     ]
 ]
 
-/* Ali:photonuc. The whole routine below is commented out and
-re-written above to accommodate reading photonuclear cross sections.
-
-rewind(iunit);
-iz_old = 0;
-DO k=1,n [ data(k) = 0; ]
-DO i=1,ne [
-    iiz = int(zsorted(i)+0.5);
-    DO iz=iz_old+1,iiz [
-        read(iunit,*,err=:user-data-failure:) ndat;
-        IF( ndat > $MXINPUT ) [
-            $egs_fatal(*,'Too many input data points. Max. is ',$MXINPUT);
-        ]
-        IF( flag = 0 ) [
-            read(iunit,*,err=:user-data-failure:) (etmp(k),ftmp(k),k=1,ndat);
-        ]
-        ELSE [
-            read(iunit,*,err=:user-data-failure:) (etmp(k+1),ftmp(k+1),
-                k=1,ndat);
-            IF( flag = 1 ) [ eth = 2*rm; ] ELSE [ eth = 4*rm; ]
-            ndat = ndat + 1;
-            DO k=2,ndat [
-                ftmp(k) = ftmp(k) - 3*log(1-eth/exp(etmp(k)));
-            ]
-            ftmp(1) = ftmp(2); etmp(1) = log(eth);
-        ]
-    ]
-    iz_old = iiz;
-    DO k=1,n [
-        gle = (k - ge0)/ge1; e = exp(gle);
-        IF( gle < etmp(1) | gle >= etmp(ndat) ) [
-            IF( flag = 0 ) [
-                $egs_fatal(*,'Energy ',exp(gle),
-                   ' is outside the available data range of ',
-                   exp(etmp(1)),exp(etmp(ndat)));
-            ]
-            ELSE [
-                IF( gle < etmp(1) ) [ sig = 0; ]
-                ELSE [ sig = exp(ftmp(ndat)); ]
-            ]
-        ] ELSE [
-            DO kk=1,ndat-1 [
-                IF( gle >= etmp(kk) & gle < etmp(kk+1) ) EXIT;
-            ]
-            p = (gle - etmp(kk))/(etmp(kk+1) - etmp(kk));
-            sig = exp(p*ftmp(kk+1) + (1-p)*ftmp(kk));
-        ]
-        IF( flag ~= 0 & e > eth ) sig = sig*(1-eth/e)**3;
-        data(k) = data(k) + pz_sorted(i)*sig;
-    ]
-]
-Ali:photonuclear. End of the commented-out routine */
-
 return;
 
 :user-data-failure:;
@@ -8544,6 +8847,100 @@ $egs_fatal(*,'Error while reading user photon cross sections from unit ',
 
 return; end;
 
+/*****************************************************************
+   Prepare photoelectric cross section data base for medium imed
+   on same energy grid as for the other photon interactions.
+   Normalize elemental PE cross sections to medium cross section
+   to use for selecting element the photon interacts with.
+ *****************************************************************/
+"============================================================================="
+subroutine egsi_get_shell_data(imed,n,ne,zsorted,pz_sorted,ge1,ge0,data);
+"=========================================================================="
+implicit none;
+$declare_max_medium;
+;COMIN/EGS-IO,BREMPR,USEFUL,MEDIA,PE-SHELL-DATA/;
+$INTEGER n,   "number of data points requested"
+         ne,  "number of elements in medium"
+         ndat;"number of data points from original grid"
+$REAL    ge1,ge0,zsorted(*),pz_sorted(*),data(*);
+$REAL    sigma($MXNE),sigmaMedium;
+"$INTEGER sorted(*);
+real*4    etmp($MXINPUT),ftmp($MXINPUT);
+real*4    gle,sig,p;
+$INTEGER i,j,k,kk,iz,zpos,imed;
+
+DO k=1,n  [ data(k)  = 0;]
+DO k=1,ne [ sigma(k) = 0;]
+DO i=1,ne [
+    iz = int(zsorted(i)+0.5);
+    zpos = pe_zpos(iz); ndat = pe_nge(zpos);
+    "Total cross sections for a given element"
+    "on initial energy grid"
+    DO k=1,ndat[
+       pe_elem_prob(k,i,imed) = pz_sorted(i)*pe_xsection(k,zpos,0);
+       "etmp(k) = log(pe_energy(k,zpos)); Done in egs_read_shellwise_pe
+       etmp(k) = pe_energy(k,zpos);
+       ftmp(k) = log(pe_xsection(k,zpos,0));
+    ]
+    "Total cross sections for a given element"
+    "on requested energy grid"
+    DO k=1,n [
+        gle = (k - ge0)/ge1;
+        IF( gle < etmp(1) | gle >= etmp(ndat) ) [
+            $egs_fatal(*,'egsi_get_shell_data: Energy ',exp(gle),
+                         ' is outside the available data range of ',
+                         exp(etmp(1)),exp(etmp(ndat)));
+        ] ELSE [
+            "Find energy interval gle falls in"
+            DO kk=1,ndat-1 [
+                IF( gle >= etmp(kk) & gle < etmp(kk+1) ) EXIT;
+            ]
+            "log/log interpolation"
+            p = (gle - etmp(kk))/(etmp(kk+1) - etmp(kk));
+            sig = exp(p*ftmp(kk+1) + (1-p)*ftmp(kk));
+        ]
+        data(k) = data(k) + pz_sorted(i)*sig;
+        "data(k) = data(k) + pz(imed,sorted(i))*sig;
+    ]
+]
+"Normalize elemental cross section to medium cross section"
+"Prepare for log/log interpolation"
+DO i=1,ne [
+   iz = int(zsorted(i)+0.5);
+   zpos = pe_zpos(iz); ndat = pe_nge(zpos);
+   DO k=1,ndat[
+      sig = sigmaMedium(imed,pe_energy(k,zpos));
+      pe_elem_prob(k,i,imed) = log(pe_elem_prob(k,i,imed)/sig);
+   ]
+]
+
+return; end;
+
+/***************************************************************
+   Calculate photoelectric cross section for medium imed using
+   log/log linear interpolation and binary search to find energy
+   interval
+ ***************************************************************/
+$REAL function sigmaMedium(imed, logE);
+
+implicit none;
+$declare_max_medium;
+;COMIN/BREMPR,PE-SHELL-DATA/;
+$REAL logE, slope, sigma;
+$INTEGER k,imed,Z,zpos,m,ibsearch;
+
+sigmaMedium = 0;
+DO k=1,nne(imed) [
+   Z = int( zelem(imed,k) + 0.5 );zpos = pe_zpos(Z);
+   m = ibsearch(logE,pe_nge(zpos),pe_energy(1,zpos));
+   slope = log(pe_xsection(m+1,zpos,0)/pe_xsection(m,zpos,0));
+   slope = slope/(pe_energy(m+1,zpos)-pe_energy(m,zpos));
+   sigma = log(pe_xsection(m,zpos,0));
+   sigma += slope*(logE - pe_energy(m,zpos));
+   sigma = exp(sigma);
+   sigmaMedium += pz(imed,k)*sigma;
+]
+return; end;
 
 "============================================================================="
 subroutine egs_heap_sort(n,rarray,jarray);

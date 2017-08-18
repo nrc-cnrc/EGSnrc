@@ -248,11 +248,13 @@ REPLACE {;COMIN/USEFUL/;} WITH {
 REPLACE {;COMIN/X-OPTIONS/;} WITH {
  ;common/xsection_options/ ibrdst, iprdst, ibr_nist, spin_effects,
                            ibcmp,iraylr,iedgfl,iphter,pair_nrc,itriplet,
-                           radc_flag,eii_flag,iphotonuc;
+                           radc_flag,eii_flag,iphotonuc,
+                           eadl_relax, mcdf_pe_xsections;
   $INTEGER                 ibrdst, iprdst, ibr_nist,eii_flag,iphotonuc,
                            ibcmp,iraylr,iedgfl,iphter,pair_nrc,
                            radc_flag,itriplet;
   $LOGICAL                 spin_effects;
+  $LOGICAL  eadl_relax, mcdf_pe_xsections;
 };
 
 " Again, to remove geometry dependence make e_max_rr and i_do_rr sclars"
@@ -293,7 +295,8 @@ REPLACE {$set-region-by-region-defaults;} WITH {;
   ecut = 0; pcut = 0; smaxir = $MAX-SMAX;
   ecut_new = 0; pcut_new = 0; smax_new = $MAX-SMAX;
   rhor = 1; rhor_new = 1;
-  ibcmp = $IBCMP-DEFAULT; iraylr = 0; iphotonuc=$IPHOTONUCR-DEFAULT;
+  ibcmp = $IBCMP-DEFAULT;
+  iraylr = $IRAYLR-DEFAULT; iphotonuc=$IPHOTONUCR-DEFAULT;
   iedgfl = $IEDGFL-DEFAULT; iphter = $IPHTER-DEFAULT;
   i_do_rr = 0; e_max_rr = 0; e_max_rr_new = 0;
 };
@@ -512,7 +515,7 @@ APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTO;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTON;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-EII-INIT;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-TRIPLET;};
-APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-GET-TRANSPORTP;};
+"APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-GET-TRANSPORTP;}; already there"
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-MOLLER;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-RADC-INIT;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-NIST-BREMS;};

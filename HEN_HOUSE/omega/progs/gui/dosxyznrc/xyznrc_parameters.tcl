@@ -951,7 +951,7 @@ set names(photon_xsections) "Photon cross-sections"
 set help_text(photon_xsections) {
 Photon cross-sections (photon_xsections):
 
-si , epdl, xcom (default), PEGS4, etc.  \
+si, epdl, xcom (default), mcdf-xcom, mcdf-epdl, PEGS4, etc.  \
 Determines which photon cross-sections are used.
 
 By default EGSnrc uses the NIST XCOM cross-sections (xcom_*.data files)\
@@ -959,6 +959,10 @@ By default EGSnrc uses the NIST XCOM cross-sections (xcom_*.data files)\
 EPDL (epdl_*.data files) and Strom & Israel (si_*.data files) photon cross section\
 compilations. For more details about these options, see \
 the EGSnrc Manual (PIRS-701).
+
+Selecting either mcdf-xcom or mcdf-epdl allows the use of renormalized\
+photoelectric cross sections by Sabbatucci and Salvat with either XCOM\
+or EDPL cross sections for the rest of the photon interactions.
 
 Selecting PEGS4 forces the use of the photon cross section data in the\
 PEGS4 file. This recently added option allows the use of PEGS4 files\
@@ -1067,7 +1071,7 @@ uses actual bound Compton cross sections and does not\
 reject any Compton interactions at run time.  If the Norej\
 option is selected, then the user has the option\
 of specifying their own Compton cross sections.\
-Default is Off\
+Default is Norej\
 Make sure to use bound Compton for low energy applications.\
 Not necessary above, say, 1 MeV.\
 
@@ -1088,7 +1092,7 @@ set options(ibcmp,1) "On"
 set options(ibcmp,2) "On in regions"
 set options(ibcmp,3) "Off in regions"
 set options(ibcmp,4) "Norej"
-set values(ibcmp) $options(ibcmp,0)
+set values(ibcmp) $options(ibcmp,4)
 set level(ibcmp) 0
 
 set comp_xsections {}
@@ -1193,7 +1197,7 @@ Rayleigh scattering (IRAYLR):
 
 Off, On, On in regions, Off in regions, custom\
 If On, turn on coherent (Rayleigh) scattering.\
-Default is Off. Should be turned on for low energy\
+Default is On. Should be turned on for low energy\
 applications. Not set to On by default because\
 On requires a sperial PEGS4 data set.\
 
@@ -1212,23 +1216,34 @@ set options(iraylr,1) "On"
 set options(iraylr,2) "On in regions"
 set options(iraylr,3) "Off in regions"
 set options(iraylr,4) "custom"
+set values(iraylr) $options(iraylr,1)
 
 set iedgfl {}
 set names(iedgfl) "Atomic relaxations"
 set help_text(iedgfl) {
 Atomic relaxations (IEDGFL):
 
-Off, On, On in regions, Off in regions\
-The default is Off. The effect of using On is twofold:\
-- In photo-electric absorption events, the element\
-  (if material is mixture) and the shell the photon\
+Off, On, On in regions, Off in regions, EADL, simple.
+
+The default is EADL (On). The effect of using On is twofold:
+
+- In photo-electric absorption, incoherent scattering with\
+  bound electrons, and electron impact ionization events, \
+  the element (if material is mixture) and the shell the particle\
   is interacting with are sampled from the appropriate\
-  cross seections\
-- Shell vacancies created in photo-absorption events\
+  cross sections
+- Shell vacancies created in these events\
   are relaxed via emission of fluorescent X-Rays,\
   Auger and Koster-Cronig electrons.\
   Make sure to turn this option on for low energy\
-  applications.\
+  applications.
+
+Selecting On or EADl is equivalent. A full atomic relaxation cascade\
+is simulated using EADL transition probabilities.
+
+The option to use the original algorithm only accounting for M and\
+N shells in an average way is left for comparison and can be invoked\
+by selecting the option simple.
 
 If you use "On in regions", you will be prompted to enter\
 pairs of region numbers.  Each pair defines a range of regions\
@@ -1239,11 +1254,14 @@ If you use "Off in regions", you will be prompted to enter\
 ranges of regions where Atomic relaxation is to be turned Off.\
 Everywhere else it will be turned on.
 }
-set numopts(iedgfl) 4
+set numopts(iedgfl) 6
 set options(iedgfl,0) "Off"
 set options(iedgfl,1) "On"
 set options(iedgfl,2) "On in regions"
 set options(iedgfl,3) "Off in regions"
+set options(iedgfl,4) "EADL"
+set options(iedgfl,5) "simple"
+set values(iedgfl) $options(iedgfl,4)
 
 #################end of options for EGSnrc parameters####################
 

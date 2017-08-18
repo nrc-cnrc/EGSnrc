@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -225,5 +225,6 @@ int EGS_EXPORT egsGetEndian();
  */
 bool EGS_EXPORT egsIsAbsolutePath(const string &path);
 
+bool EGS_EXPORT egsEquivStr(const string &a, const string &b);
 
 #endif

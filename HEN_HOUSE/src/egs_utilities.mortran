@@ -896,12 +896,14 @@ $set-region-by-region-defaults;
 eii_flag = 0; "No EII by default. "
 eii_xfile = 'Off';
 eii_L_factor = 1.0; "No L-shell EII xsection scaling by default"
-
-xsec_out = $XSEC-DEFAULT; "see egsnrc.macros for default"
-
-"DO i=1,len(photon_xsections) [ photon_xsections(i:i) = ' '; ]"
-photon_xsections = $XDATA-DEFAULT;"default photon xsection, see egsnrc.macros"
+"========================================="
+"See egsnrc.macros for defaults used below"
+"========================================="
+xsec_out = $XSEC-DEFAULT;
+photon_xsections = $XDATA-DEFAULT;"default photon xsection"
 comp_xsections = $COMP-XDATA-DEFAULT;
+eadl_relax = $EADL-RELAX-DEFAULT;
+mcdf_pe_xsections = $MCDF-PE-DEFAULT;
 "Ali:photonuc, 2 lines"
 photonuc_xsections = $PHOTONUC-XDATA-DEFAULT;
 "EMH:emf"
@@ -913,9 +915,8 @@ BxIN=$BxDEF;ByIN=$ByDEF;BzIN=$BzDEF; EMLMTIN=$EMLMTDEF;
 Bx=BxIN;    By=ByIN;    Bz=BzIN;
 Bx_new=Bx;  By_new=By;  Bz_new=Bz;
 
-"DO i=1,len(eii_xfile) [ eii_xfile(i:i) = ' '; ]"
 DO i=1,$MXMED [
-    iraylm(i) = 0;   "Rayleigh data available?"
+    iraylm(i) = 0; "Rayleigh data available?"
     DO j=1,len(iray_ff_file(i)) [ iray_ff_file(i)(j:j) = ' ';]
     DO j=1,len(iray_ff_media(i)) [ iray_ff_media(i)(j:j) = ' ';]
       " set all thresholds to zero "
@@ -1629,6 +1630,39 @@ IF( which = 1 ) [
 ]
 return; end;
 
+/* Print binding energies: In the case of the EPDL library
+   only energies above 1 keV are output for elements not part
+   of the current simlation. This is due to the fact that energies
+   below 1 keV are taken from the relaxation database only for
+   elements requested in the input when EPDL is used. This is not
+   an issue when using XCOM.
+ */
+subroutine egs_print_binding_energies;
+implicit none;
+$declare_max_medium;
+;COMIN/EDGE,MEDIA,EGS-IO/;
+$INTEGER    i,j;
+integer*4   lnblnk1;
+character*3 labels(16);
+data labels/'  K',' L1',' L2',' L3',
+            ' M1',' M2',' M3',' M4',' M5',
+            ' N1',' N2',' N3',' N4',' N5',' N6',' N7'/;
+
+$egs_info('(a,a,a)',
+        'Binding energies from ',$cstring(photon_xsections),
+        ' photon cross section library');
+DO j = 1,$MXELEMENT [
+   DO i = 1,$MXPESHELL [
+      IF ( binding_energies(i,j) > 0 ) [
+         $egs_info('(a,i3,a,a,a,1pe12.4,a)',
+         ' Eb(',j,',',labels(i),') = ',binding_energies(i,j),' MeV');
+      ]
+   ]
+]
+
+return;end;
+
+
 "============================================================================="
 "  scale elastic scattering strength by a given factor                        "
 "============================================================================="
@@ -2226,4 +2260,26 @@ return; end;
  ]
  jrec = jrec + 4; egs_read_real = r_4;
  return; end;
+
+"****************************************************************
+"*                                                              *
+"*                 Function ibsearch(a, nsh, b)                 *
+"*                                                              *
+"*       binary search for an element l of array b such that    *
+"*   b[l] =< a < b[l+1], array must be monotonically increasing *
+"*                                                              *
+"****************************************************************
+$INTEGER function ibsearch(a, nsh, b);
+ implicit none;
+ $REAL a, b(*);
+ $INTEGER min,max,help,nsh;
+ $REAL x;
+ min = 1; max = nsh; x = a;
+ WHILE ( min < max-1 )[
+       help = (max+min)/2;
+       IF ( b(help).le.x)[min = help;]
+       ELSE[max = help;]
+ ]
+ ibsearch = min;
+ return;end;
 

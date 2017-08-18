@@ -1182,7 +1182,8 @@ $LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
           pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
 
 character*15 output_strings(14);"Ali:photonuc, increased by 1"
-save         output_strings,line;
+character*16 p_xsections;
+save         output_strings,line, p_xsections;
 save         ecut_inregions,pcut_inregions,smax_inregions,
              incoh_inregions,coh_inregions,relax_inregions,
              pe_inregions,aux_inregions,photonuc_inregions,
@@ -1286,6 +1287,8 @@ allowed_inputs(ival,0) = 'Off';
 allowed_inputs(ival,1) = 'On';
 allowed_inputs(ival,2) = $ON_IN_REGIONS;
 allowed_inputs(ival,3) = $OFF_IN_REGIONS;
+allowed_inputs(ival,4) = 'eadl';
+allowed_inputs(ival,5) = 'simple';
 
 " Photoelectron angular sampling "
 ival                = ival + 1;
@@ -1574,10 +1577,24 @@ IF( error_flags(num_eii) = 0 ) [
                  $cstring(eii_xfile));
    ]
 ]
-/**********************************************************/
+/******************************************************
+   Use Sabbatucci and Salvat shellwise photoelectric
+   cross sections together with XCOM or EPDL cross sections
+   for pair production.
+ ******************************************************/
 IF( error_flags(num_pxsec) = 0 ) [
-    photon_xsections = char_value(num_pxsec,1);
+    p_xsections = char_value(num_pxsec,1);
+    IF ( toUpper( $cstring(p_xsections) ) = 'MCDF-XCOM' )[
+        mcdf_pe_xsections = .true.; photon_xsections = 'xcom';
+    ]
+    ELSEIF ( toUpper( $cstring(p_xsections) ) = 'MCDF-EPDL' )[
+        mcdf_pe_xsections = .true.; photon_xsections = 'epdl';
+    ]
+    ELSE[
+        mcdf_pe_xsections = .false.;
+    ]
 ]
+/**********************************************************/
 IF( error_flags(num_pxsec_out) = 0 ) [
     xsec_out = value(num_pxsec_out,1);
 ]
@@ -1650,8 +1667,14 @@ IF( error_flags(num_coh) = 0 ) [
   write(*,'(/)');
 ]
 /***************************************************************/
-
-
+/*
+ Inputs allowing setting by region are checked with the macro
+ $TURN-ON/OFF-IN-REGIONS. For this type of input, the second
+ and third entries correspond to turning ON or OFF the interaction
+ in specific regions. If no input is found, the default value is
+ used.
+ */
+/***************************************************************/
 $TURN-ON/OFF-IN-REGIONS(num_incoh,
                     'Bound Compton start region',
                     'Bound Compton stop region',
@@ -1689,6 +1712,28 @@ write(i_errors,*);
 write(i_errors,*)
 ' ******************** end input transport parameter *********************** ';
 write(i_errors,*);
+
+"Check if EADL relaxation requested. Note that original relaxation"
+"algorithm using <M> and <N> is only turned ON for all regions."
+"Moved past the $TURN-ON/OFF-IN-REGIONS statement to catch the"
+"default case."
+IF(value(num_relax,1) > 0 & value(num_relax,1) < 5)[
+   eadl_relax = .true.;
+   "Default relaxation is EADL"
+   IF (value(num_relax,1) = 1)[value(num_relax,1)=4;]
+]
+ELSE [
+    IF (mcdf_pe_xsections & value(num_relax,1) = 5)[
+       eadl_relax = .true.; value(num_relax,1)=4;
+       $egs_warning('(a/,a/,a/)',
+                    '    Simplified atomic relaxation not allowed',
+                    '    with shellwise PE cross sections. Resetting',
+                    '    to detailed EADL atomic relaxation!!!');
+    ]
+    ELSE [
+       eadl_relax = .false.;
+    ]
+]
 
 " we put the information stored in allowed_inputs into "
 " output_strings just in case the user over-rides it "
@@ -1728,7 +1773,8 @@ write(ounit,'(a,/)')
 write(ounit,'(a,/)') line;
 
 /* initialized in egs_set_defaults */
-write(ounit,'(a,38x,a)') ' Photon cross sections', $cstring(photon_xsections);
+write(ounit,'(a,38x,a)') ' Photon cross sections',
+      $cstring(p_xsections);
 write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
 
 write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
@@ -1764,7 +1810,6 @@ write(ounit,'(a,30x,a4)') ' Bremsstrahlung cross sections',output_strings(9);
 write(ounit,'(a,29x,a3)') ' Bremsstrahlung angular sampling',output_strings(6);
 IF( spin_effects ) [ write(ounit,'(a,48x,a)') ' Spin effects','On'; ]
 ELSE [ write(ounit,'(a,48x,a)') ' Spin effects','Off'; ]
-"write(ounit,'(a,34x,a)') ' Electron Impact Ionization',output_strings(13);"
 write(ounit,'(a,34x,a)') ' Electron Impact Ionization',$cstring(eii_xfile);
 IF (eii_L_factor ~= 1.0) [
    write(ounit,'(a,25x,f6.4)')
@@ -1832,6 +1877,7 @@ $declare_max_medium;
 $INTEGER imed,ival,lnblnk1,nchanged;
 character*24 medname;
 
+ounit = i_log;
 ounit = i_log;
 delimeter = $THE_DELIMETER;
 call get_input_set_error_level(0);
