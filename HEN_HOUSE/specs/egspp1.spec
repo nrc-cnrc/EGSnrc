@@ -126,4 +126,5 @@ dep_user_code = $(USER_CODE).cpp array_sizes.h $(common_h_files1) \
         $(ABS_EGSPP)$(EGS_BASE_APPLICATION).h \
         $(common_h_files2) $(other_dep_user_code)
 
-dep_egs_interface = $(EGS_INTERFACE)egs_interface2.c $(common_h_files1)
+dep_egs_interface = $(EGS_INTERFACE)egs_interface2.c $(common_h_files1) \
+	array_sizes.h 
