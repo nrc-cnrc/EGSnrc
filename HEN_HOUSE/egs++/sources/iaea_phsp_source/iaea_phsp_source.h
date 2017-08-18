@@ -37,6 +37,8 @@
 #ifndef IAEA_PHSP_SOURCE_
 #define IAEA_PHSP_SOURCE_
 
+#define MAXEXTRAS 10
+
 #include "egs_vector.h"
 #include "egs_base_source.h"
 #include "egs_rndm.h"
