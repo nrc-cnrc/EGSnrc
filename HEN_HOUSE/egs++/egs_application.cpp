@@ -269,6 +269,13 @@ EGS_Application::EGS_Application(int argc, char **argv) : input(0), geometry(0),
     sprintf(buf,"egsrun_%d_",egsGetPid());
     run_dir = buf;
     if (input_file.size() > 0) {
+
+        // Remove the .egsinp extension if it was included
+        size_t ext = input_file.rfind(".egsinp");
+        if (ext != std::string::npos) {
+            input_file = input_file.substr(0,ext);
+        }
+
         run_dir += input_file;
         run_dir += '_';
     }
