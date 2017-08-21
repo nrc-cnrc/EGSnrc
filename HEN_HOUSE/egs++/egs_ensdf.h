@@ -415,23 +415,33 @@ private:
 
 \ingroup egspp_main
 
-Reads in a decay spectrum file in ensdf format, and builds the decays into an
-object oriented tree structure. This decay structure is useful for
+Parses decay spectrum file in ensdf format, and builds the decay scheme into an
+object oriented tree-like structure. This decay structure is useful for
 \ref EGS_RadionuclideSpectrum used by \ref EGS_RadionuclideSource.
 
-Uncertainties on values are ignored! The energies and intensities for various
-emissions are taken as is. Very low probability emissions are discarded.
+Note: Uncertainties on values are ignored. The energies and intensities for various
+emissions are taken as is. Very low probability emissions (<1e-10) are discarded.
 
 When processing an ensdf file, only the following records are considered:
 Comment, Parent, Normalization, Level, Beta-, EC / Beta+, Alpha, Gamma.
 
-When the spectrum input parameter "ensdf fluorescence and auger" is set to
-"yes", the
+When the input '<code>atomic relaxations = ensdf</code>' in
+\ref EGS_RadionuclideSpectrum, the
 X-Ray fluorescence and Auger emissions are obtained from ensdf Comment records.
-If a single intensity is present for a combination of lines (but a single
-energy is not provided), then the average energy of the lines is used.
+This assumes a particular format for the data currently used by the LNHB,
+which may or may not be forward compatible. When using this option,
+be aware that fluorescent photons and Auger emissions are modeled statistically.
+In other
+words, the relaxation emissions are not correlated with specific disintegration
+events. If you are coincidence counting, use
+'<code>atomic relaxations = eadl</code>'.
+
+There are a few nuances to the data interpretation.
+If a single emission intensity value is present for a combination of lines (where
+multiple energies are provided), then the average energy of the lines is used.
 For example, in the
-case below a single line of energy 97.4527 keV would be used.
+case below a single line of energy 97.4527 keV would be used with an emission
+intensity of 0.57 per 100 disintegrations.
 \verbatim
 221FR T        96.815         |]                 XKB3
 221FR T        97.474         |]  0.57     5     XKB1
@@ -451,11 +461,7 @@ would be used.
 \endverbatim
 
 The ensdf class has been tested on radionuclide data from
-http://www.nucleide.org/DDEP_WG/DDEPdata.htm
-
-ENSDF files from other sources may contain x-ray and Auger emissions formatted
-differently. In this case, "ensdf fluorescence and auger" should be set to "no"
- (this is the default).
+<a href="http://www.nucleide.org/DDEP_WG/DDEPdata.htm">LNHB DDEP</a>.
 
 */
 
@@ -466,7 +472,7 @@ public:
     /*! \brief Construct an ensdf object.
      *
      */
-    EGS_Ensdf(const string isotope, const string ensdf_filename="",
+    EGS_Ensdf(const string nuclide, const string ensdf_filename="",
               const string useFluor="yes", int verbosity=1);
 
     /*! \brief Destructor. */
@@ -493,7 +499,6 @@ public:
 
 protected:
 
-    bool createIsotope(vector<string> ensdf);
     unsigned short int findAtomicWeight(string element);
     void parseEnsdf(vector<string> ensdf);
     void buildRecords();

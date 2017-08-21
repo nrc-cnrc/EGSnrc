@@ -81,17 +81,50 @@ directions uniformly distributed in \f$4 \pi\f$ emitted from
 
 Note that \ref EGS_RadionuclideSource is an experimental source and only a
 subset of the available radionuclides have been tested against measurement.
+Please be aware of the known caveats and how they may affect your results.
+Report any discrepancies on the
+<a href="https://github.com/nrc-cnrc/EGSnrc/issues">EGSnrc github issues page</a>.
 
-Emissions are based on decays from the radionuclide isotope and can be a mix of
-beta, positron and alpha decays. Internal transition gamma emissions are
-modeled and assigned a shower index <b> \c ishower </b> and <b> \c time </b>
-to allow for coincidence counting.
-Auger and fluorescence radiations are also modeled as a part of the
+<em>Known Caveats:</em>
+
+- Beta+- spectra have only been checked for a subset of radionuclides. Use
+'<code>output beta spectra = yes</code>' in \ref EGS_RadionuclideSpectrum
+and perform a quick
+simulation to obtain beta spectrum files for the nuclide of interest.
+- Gamma-gamma angular correlations are currently not modeled; all emissions
+are considered isotropic.
+- Due to limitations in the current LNHB ensdf format, electron shell vacancy
+creation due to disintegrations is sampled per-shell rather than
+considering sub-shell probabilities. I.e. probabilities for vacancy creation
+in the K,L,M,N,O shells are considered, but not L1, L2, etc. The actual
+sub-shell in which the vacancy created is sampled uniformly for the given
+shell. This is an approximation, but only relevant when
+'<code>atomic relaxations = ensdf</code>' in
+\ref EGS_RadionuclideSpectrum.
+- Alpha particles are absorbed immediately in the source region, and
+not transported.
+- Atomic motion & recoil from emissions is not modeled.
+
+Emissions are based on decays from the chosen radionuclide and can be a mix of
+beta+-, electron capture and alpha decays. Metastable radionuclides are supported.
+Internal transition gamma emissions are
+modeled event-by-event. The \ref EGS_RadionuclideSpectrum tracks
+the energy level of excited daughter nuclides so that subsequent transitions and
+electron shell cascades are correlated with specific disintegration events.
+
+Each emission is assigned a shower index <b> \c ishower </b> and <b> \c time </b>
+to allow for coincidence counting. These properties can be accessed for the
+most recent emission from the source using something like:
+
+<code>source->getShowerIndex();</code>
+
+<code>source->getTime();</code>
+
+Auger and fluorescent photon radiations are also modeled as a part of the
 source, using the EADL relaxation scheme by default. Alternatively, the user can
-request to use Auger and X-ray fluorescence from the ensdf file comments by
-setting the spectrum input parameter "ensdf auger and fluorescence" to "yes".
-Metastable isotopes are supported. For more
-information, see \ref EGS_RadionuclideSpectrum.
+request to use Auger and fluorescent photons from the ensdf file comments by
+setting the spectrum input parameter '<code>atomic relaxations = ensdf</code>'.
+For more information, see \ref EGS_RadionuclideSpectrum.
 
 A radionuclide source is defined using the following input. Notice that the
 format is similar to \ref EGS_IsotropicSource.
@@ -101,7 +134,11 @@ format is similar to \ref EGS_IsotropicSource.
     library             = egs_radionuclide_source
     activity            = total activity of mixture, assumed constant
     charge              = [optional] list including at least one of -1, 0, 1, 2
-                          to include electrons, photons, positrons and alphas
+                          to include electrons, photons, positrons and alphas.
+                          Filtering is applied to ALL emissions (including
+                          relaxation particles).
+                          Omit this option to include all charges - this is
+                          recommended.
     geometry            = [optional] my_geometry # see egs_isotropic_source
     region selection    = [optional] geometry confinement option
                           one of IncludeAll, ExcludeAll,
@@ -123,7 +160,8 @@ The emission spectrum generation is described in \ref EGS_RadionuclideSpectrum.
 
 The <b> \c time </b> of disintegration is sampled based on the
 total activity of the <b> \c mixture </b> in \ref EGS_RadionuclideSource.
-For uniform random number <b><code>u</code></b>,
+For uniform random number <b><code>u</code></b>, we sample the time to the
+next disintegration, and increment the wall clock as follows:
 
 <code>time += -log(1-u) / activity;</code>
 
@@ -133,14 +171,16 @@ the delay that occurs after disintegration, according to the transition
 
 <code>time += -halflife * log(1-u) / ln(2);</code>
 
-If you are using "ensdf auger and fluorescence = yes" in the spectrum, then
-it is possible for an X-Ray or Auger electron to be emitted before a
-disintegration has taken place. They are assigned
-<b><code>currentTime = 0</code></b> and
-<b><code>ishower = -1</code></b>.
+If you are using '<code>atomic relaxations = ensdf</code>' in the spectrum, then
+the relaxation emissions are not correlated with disintegration events. This
+means that getShowerIndex() and getTime() will not produce correct
+results for non-disintegration emissions.
 
 <em>A simple example:</em>
 \verbatim
+:start run control:
+    ncase = 1e6
+:stop run control:
 :start geometry definition:
     :start geometry:
         name        = my_box
@@ -193,13 +233,13 @@ disintegration has taken place. They are assigned
         :stop shape:
         :start spectrum:
             type        = radionuclide
-            isotope     = Ir-192
+            nuclide     = Ir-192
         :stop spectrum:
     :stop source:
     simulation source = my_source
 :stop source definition:
 \endverbatim
-\image html egs_radionuclide_source.png "An (unrealistic) example of two spheres emitting Ir-192 radiations"
+\image html egs_radionuclide_source.png "A simple example of two spheres emitting Ir-192 radiations"
 */
 
 class EGS_RADIONUCLIDE_SOURCE_EXPORT EGS_RadionuclideSource :

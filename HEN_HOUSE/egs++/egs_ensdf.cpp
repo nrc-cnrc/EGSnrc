@@ -193,7 +193,7 @@ unsigned short int setZ(string id) {
     return Z;
 }
 
-EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
+EGS_Ensdf::EGS_Ensdf(const string nuclide, const string ensdf_filename,
                      const string useFluor, int verbosity) {
 
     verbose = verbosity;
@@ -203,14 +203,14 @@ EGS_Ensdf::EGS_Ensdf(const string isotope, const string ensdf_filename,
         ensdf_file.close();
     }
 
-    radionuclide = isotope.substr(0, isotope.find_last_of("."));
+    radionuclide = nuclide.substr(0, nuclide.find_last_of("."));
 
     // The parent element
     string element = radionuclide.substr(0, radionuclide.find("-"));
     Z = setZ(element);
 
     egsInformation("EGS_Ensdf::EGS_Ensdf: Isotope: "
-                   "%s\n",isotope.c_str());
+                   "%s\n",nuclide.c_str());
     egsInformation("EGS_Ensdf::EGS_Ensdf: Now loading ensdf file: "
                    "\"%s\"\n",ensdf_filename.c_str());
 
@@ -665,7 +665,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
                     }
 
                     if (verbose && myMetastableGammaRecords.size() > 0) {
-                        egsInformation("EGS_Ensdf::parseEnsdf: Metastable isotope "
+                        egsInformation("EGS_Ensdf::parseEnsdf: Metastable nuclide "
                                        "detected.\n");
                     }
                 }
@@ -675,7 +675,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
     }
     if (verbose && myMetastableGammaRecords.size() < 1) {
-        egsInformation("EGS_Ensdf::parseEnsdf: No metastable isotopes "
+        egsInformation("EGS_Ensdf::parseEnsdf: No metastable nuclides "
                        "detected.\n");
     }
 
