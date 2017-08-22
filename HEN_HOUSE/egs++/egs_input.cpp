@@ -962,14 +962,17 @@ int EGS_InputPrivate::addContent(istream &in) {
             what.assign(input,p,p2-p);
             string value;
             value.assign(input,p2+1,p1-p2-1);
-            for (int j=0; j<value.size(); j++)
+            for (int j=0; j<value.size(); j++) {
                 if (value[j] == ',') {
                     value[j] = ' ';
                 }
+            }
             if (compareKeys(what,"includefile")) {
                 int res = addContentFromFile(value.c_str());
-                if (res) egsWarning("EGS_Input: failed to add content from "
-                                        "include file %s\n",value.c_str());
+                if (res) {
+                    egsFatal("EGS_Input: failed to add content from "
+                             "include file %s\n",value.c_str());
+                }
             }
             else {
                 EGS_InputPrivate *ip = new EGS_InputPrivate(what,value);
