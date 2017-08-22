@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -715,6 +715,14 @@ public:
      */
     virtual EGS_Float getEmax() const {
         return s->maxEnergy();
+    };
+
+    /*! \brief Get the charge of the source.
+     *
+     * Simply returns the value of the (protected) attribute q.
+     */
+    virtual int getCharge() const {
+        return q;
     };
 
     /*! \brief Store the fluence state of this source to the data stream
