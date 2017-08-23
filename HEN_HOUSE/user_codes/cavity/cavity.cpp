@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -2271,14 +2272,17 @@ int Cavity_Application::initScoring() {
             int err = aux->getInput("geometry name",gname);
             int errx = aux->getInput("calculation name",cname);
             if( errx ) cname = gname;
+            string cavString;
             vector<int> cav;
-            int err1 = aux->getInput("cavity regions",cav);
+            int err1 = aux->getInput("cavity regions",cavString);
+            string apertString;
             vector<int> apert;
-            int err4 = aux->getInput("aperture regions",apert);
+            int err4 = aux->getInput("aperture regions",apertString);
             EGS_Float cmass;
             int err2 = aux->getInput("cavity mass",cmass);
+            string chargeString;
             vector<int> charge;
-            int err3 = aux->getInput("charge regions",charge);
+            int err3 = aux->getInput("charge regions",chargeString);
             if( err ) egsWarning("initScoring: missing/wrong 'geometry name' "
                     "input\n");
             if( err1 ) egsWarning("initScoring: missing/wrong 'cavity regions' "
@@ -2300,6 +2304,14 @@ int Cavity_Application::initScoring() {
                 if( !g ) egsWarning("initScoring: no geometry named %s -->"
                         " input ignored\n",gname.c_str());
                 else {
+
+                    g->getNumberRegions(cavString, cav);
+                    g->getLabelRegions(cavString, cav);
+                    g->getNumberRegions(apertString, apert);
+                    g->getLabelRegions(apertString, apert);
+                    g->getNumberRegions(chargeString, charge);
+                    g->getLabelRegions(chargeString, charge);
+
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
                     int ncav = 0;
