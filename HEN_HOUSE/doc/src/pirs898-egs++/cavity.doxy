@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -589,6 +590,13 @@ in [<em>Mainegra-Hing and Kawrakow, Medical Physics, 33 (8), 2006, 2683-2690</em
 a 13 times efficiency increase was observed for a 200 kVp X-ray beam when
 combining this technique with the <em>correlated scoring</em> technique
 provided by \c cavity.
+
+\section cavity_labels Region labels
+
+It is possible to use region labels in cavity, as described in
+\ref egs_chamber_labels. Once defined in a geometry, labels can be used
+anywhere you would otherwise type a list of global region numbers in a
+<b>\c cavity </b> input file.
 
 \section cavity_usage Usage
 
