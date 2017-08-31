@@ -156,8 +156,6 @@
    istat = egs_system('cat '//$cstring(pegs_file)//' | grep MED');
  }
 
- REPLACE {$XSEC-DEFAULT} WITH {1}   "ie create .xsection file
-                                    "default is 0"
  REPLACE {$XDATA-DEFAULT} WITH {'xcom'}   " default is si"
 
  program  examin;
@@ -191,7 +189,8 @@
  $DECLARE_TIMING_VARIABLES;
 
  COMIN/EPCONT,MEDIA,THRESH,BOUNDS,MISC,ELECIN,PHOTIN,
-       RANDOM,STACK,USEFUL,USER,COMPTON-DATA,EDGE,ET-Control,EGS-IO/;
+       RANDOM,STACK,USEFUL,USER,COMPTON-DATA,EDGE,ET-Control,EGS-IO,
+       X-OPTIONS/;
 
  $REAL ETAB(16),PLOTE($MAXPOINTS),PLOTEM($MAXPOINTS),
       PLOTEEN($MAXPOINTS), PLOTG($MAXPOINTS),PLOTGEN($MAXPOINTS),
@@ -222,10 +221,12 @@
   SCRIPT(2)='#This is xmgr_script used with examin';
   "script(3) is used to define which file to print out"
  ]
-
- ibcmp(1) =0; "turn off bound compton in region 2."
- iedgfl(1) = 0; "relaxations off"
- spin_effects = .false.;
+ /* Resetting some defaults */
+ ibcmp(1) =0;                        "turn off bound Compton"
+ iedgfl(1) = 0; eadl_relax = .false.;"turn off relaxations"
+ spin_effects = .false.;             "not needed"
+ mcdf_pe_xsections = .false.;        "changed via input"
+ xsec_out = 0;                       "turned on for photons"
 
  DO I=1,$MAXPOINTS[DY(I) = 0.0;]"no errors on cross sections"
 
@@ -245,11 +246,22 @@
  IF(IOPT=0 | IOPT = 2)[
    write(*,'(a)')  ' Select photon cross section data base! ';
    write(*,'(a,a)')' ENTER defaults to: ',$cstring(photon_xsections);
-   write(*,'(a$)') ' Photon xsections [si, xcom, epdl, pegs4, user-defined]:';
+   write(*,'(a$)')
+   ' Photon xsections [si,xcom,mcdf-xcom,epdl,mcdf-epdl,pegs4,user-defined]:';
    read(*,'(a)') examin_pxsections;
    IF ($cstring(examin_pxsections).ne.char(32)) [
       photon_xsections = $cstring(examin_pxsections);
    ]
+
+   IF( toUpper( $cstring(examin_pxsections) ) = 'MCDF-XCOM' )[
+       mcdf_pe_xsections = .true.; photon_xsections = 'xcom';
+   ]
+   ELSEIF( toUpper( $cstring(examin_pxsections) ) = 'MCDF-EPDL' )[
+       mcdf_pe_xsections = .true.; photon_xsections = 'epdl';
+   ]
+   ELSE[mcdf_pe_xsections = .false.;]
+
+   xsec_out = 1;
 
    OUTPUT;(' Include Rayleigh(coherent)scattering(1) or not(0): ',$);
    INPUT IRAYLR(1);(I10);
@@ -268,6 +280,12 @@
       INPUT IBCMP(1);(I10);
       IF(IBCMP(1)=1)[IBCMP(1)=3;]
    ]
+
+   IF(IBCMP(1) > 0)[
+      iedgfl(1) = 1;
+      OUTPUT;(' init_compton: turning relaxations on');
+   ]
+
    OUTPUT;(' Include radiative Compton corrections(1) or not(0): ',$);
    INPUT RADC_FLAG;(I10);
    OUTPUT;(' Print out absolute(0) or relative(1) components: ',$);
@@ -276,7 +294,6 @@
  ELSE [ IRAYLR(1) = 0;  "USED IN HATCH"
         IBCMP(1) = 0;
         RADC_FLAG = 0;
-
  ]
 
 
@@ -330,6 +347,10 @@
      :LABL4b: FORMAT( ' Photon data set: ', A,$);
      IF (p_comp = 0)[write(nunit,'(a)') ' (absolute components)';]
      ELSE           [write(nunit,'(a)') ' (relative components)';]
+     IF (mcdf_pe_xsections)[
+        write(nunit,'(a)')
+        ' Renormalized photoelectric cross sections by Sabbatucci and Salvat';
+     ]
      "Output name of Compton xsection file"
      IF ( $cstring(comp_xsections) ~= 'default')[
         write(NUNIT,'(2a)') ' Incoherent scatter data: ',
@@ -337,13 +358,13 @@
      ]
      ELSE["Default EGSnrc approach: KN +/- binding corrections"
        write(NUNIT,'(a$)')
-       ' Using default EGSnrc incoherent scatter approach: ';
+       ' Using EGSnrc incoherent scatter approach: ';
        IF(IBCMP(1)>1)[
         write(NUNIT,*) 'Klein-Nishina with binding effects included';
        ]
        ELSE [write(NUNIT,*) 'Klein-Nishina without binding corrections';]
      ]
-     IF ($XSEC-DEFAULT = 1 ) [
+     IF (xsec_out = 1 ) [
        WRITE(NUNIT,:LABL4c:);
        :LABL4c: FORMAT( ' Will print .xsections file');
      ]
