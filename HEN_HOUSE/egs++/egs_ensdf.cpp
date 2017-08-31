@@ -194,10 +194,10 @@ unsigned short int setZ(string id) {
 }
 
 EGS_Ensdf::EGS_Ensdf(const string nuclide, const string ensdf_filename,
-                     const string useFluor, int verbosity) {
+                     const string relaxType, int verbosity) {
 
     verbose = verbosity;
-    useFluorescence = useFluor;
+    relaxationType = relaxType;
 
     if (ensdf_file.is_open()) {
         ensdf_file.close();
@@ -458,7 +458,7 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
     }
 
     // Get X-ray and auger emissions from comments
-    if (useFluorescence == "yes") {
+    if (relaxationType == "ensdf") {
         if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: Checking for x-rays and Auger...\n");
         }
@@ -697,7 +697,9 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         double disintIntensity = (*it)->getDisintegrationIntensity();
 
-        egsInformation("EGS_Ensdf::parseEnsdf: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
+        if (verbose) {
+            egsInformation("EGS_Ensdf::parseEnsdf: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
+        }
 
         // Notice that we don't do this if disintIntensity==0
         if (disintIntensity > epsilon && totalLevelIntensity[j] > disintIntensity + epsilon) {
@@ -709,7 +711,9 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
                     (*gamma)->setMultiTransitionProb(multipleTransitionProb);
 
-                    egsInformation("EGS_Ensdf::parseEnsdf: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
+                    if (verbose) {
+                        egsInformation("EGS_Ensdf::parseEnsdf: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
+                    }
 
                     // Reduce the transition intensities
                     // Now they will add to 1
@@ -1810,7 +1814,7 @@ void BetaPlusRecord::processEnsdf() {
     positronIntensity = recordToDouble(22, 29);
     ecIntensity = recordToDouble(32, 39);
 
-    egsInformation("BetaPlusRecord::processEnsdf: (E,Ipos,Iec): %f %f %f\n",finalEnergy,positronIntensity,ecIntensity);
+//     egsInformation("BetaPlusRecord::processEnsdf: (E,Ipos,Iec): %f %f %f\n",finalEnergy,positronIntensity,ecIntensity);
 
     if (getNormalizationRecord()) {
         positronIntensity *= getNormalizationRecord()->getBetaMultiplier() *
@@ -1864,9 +1868,9 @@ void BetaPlusRecord::processEnsdf() {
         // Count number of shells as we go
         // Once we hit the number of shells for this element, return
         if (numShellsToInclude < 4) {
-            for (int i=0; i<ecShellIntensity.size(); ++i) {
-                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
-            }
+//             for (int i=0; i<ecShellIntensity.size(); ++i) {
+//                 egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+//             }
             return;
         }
 
@@ -1876,9 +1880,9 @@ void BetaPlusRecord::processEnsdf() {
             ecShellIntensity.push_back(ecShellIntensity.back() + icM/(numShellsToInclude-4));
         }
         if (numShellsToInclude < 9) {
-            for (int i=0; i<ecShellIntensity.size(); ++i) {
-                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
-            }
+//             for (int i=0; i<ecShellIntensity.size(); ++i) {
+//                 egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+//             }
             return;
         }
 
@@ -1888,9 +1892,9 @@ void BetaPlusRecord::processEnsdf() {
             ecShellIntensity.push_back(ecShellIntensity.back() + icN/(numShellsToInclude-9));
         }
         if (numShellsToInclude < 16) {
-            for (int i=0; i<ecShellIntensity.size(); ++i) {
-                egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
-            }
+//             for (int i=0; i<ecShellIntensity.size(); ++i) {
+//                 egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+//             }
             return;
         }
 
@@ -1900,9 +1904,9 @@ void BetaPlusRecord::processEnsdf() {
             ecShellIntensity.push_back(ecShellIntensity.back() + icO/(numShellsToInclude-16));
         }
 
-        for (int i=0; i<ecShellIntensity.size(); ++i) {
-            egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
-        }
+//         for (int i=0; i<ecShellIntensity.size(); ++i) {
+//             egsInformation("BetaPlusRecord::processEnsdf: Shell %d: P=%f\n",i,ecShellIntensity[i]);
+//         }
     }
 }
 
@@ -1971,7 +1975,7 @@ void GammaRecord::processEnsdf() {
     decayEnergy = recordToDouble(10, 19) / 1000.; // Convert keV to MeV
     gammaIntensity = recordToDouble(22, 29);
 
-    egsInformation("GammaRecord::processEnsdf: (E,I): %f %f\n",decayEnergy,gammaIntensity);
+//     egsInformation("GammaRecord::processEnsdf: (E,I): %f %f\n",decayEnergy,gammaIntensity);
 
     if (getNormalizationRecord()) {
         gammaIntensity *=
@@ -2005,9 +2009,9 @@ void GammaRecord::processEnsdf() {
         // Count number of shells as we go
         // Once we hit the number of shells for this element, return
         if (numShellsToInclude < 4) {
-            for (int i=0; i<icIntensity.size(); ++i) {
-                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
-            }
+//             for (int i=0; i<icIntensity.size(); ++i) {
+//                 egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+//             }
             return;
         }
 
@@ -2017,9 +2021,9 @@ void GammaRecord::processEnsdf() {
             icIntensity.push_back(icIntensity.back() + (icM / icTotal)/(numShellsToInclude-4));
         }
         if (numShellsToInclude < 9) {
-            for (int i=0; i<icIntensity.size(); ++i) {
-                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
-            }
+//             for (int i=0; i<icIntensity.size(); ++i) {
+//                 egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+//             }
             return;
         }
 
@@ -2029,9 +2033,9 @@ void GammaRecord::processEnsdf() {
             icIntensity.push_back(icIntensity.back() + (icN / icTotal)/(numShellsToInclude-9));
         }
         if (numShellsToInclude < 16) {
-            for (int i=0; i<icIntensity.size(); ++i) {
-                egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
-            }
+//             for (int i=0; i<icIntensity.size(); ++i) {
+//                 egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+//             }
             return;
         }
 
@@ -2041,9 +2045,9 @@ void GammaRecord::processEnsdf() {
             icIntensity.push_back(icIntensity.back() + (icO / icTotal)/(numShellsToInclude-16));
         }
 
-        for (int i=0; i<icIntensity.size(); ++i) {
-            egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
-        }
+//         for (int i=0; i<icIntensity.size(); ++i) {
+//             egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
+//         }
     }
 }
 

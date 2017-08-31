@@ -473,7 +473,7 @@ public:
      *
      */
     EGS_Ensdf(const string nuclide, const string ensdf_filename="",
-              const string useFluor="yes", int verbosity=1);
+              const string relaxType="yes", int verbosity=1);
 
     /*! \brief Destructor. */
     ~EGS_Ensdf();
@@ -492,7 +492,7 @@ public:
 
     string radionuclide;
     int verbose;
-    string useFluorescence;
+    string relaxationType;
     unsigned short int Z;
 
     void normalizeIntensities();
