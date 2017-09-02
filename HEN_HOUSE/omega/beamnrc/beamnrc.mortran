@@ -4480,9 +4480,9 @@ CALL SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT);
 "for ISOURC=21 EIN and IQIN are passed via comin score"
 ICMNEW = ICM; "set equal to suppress full phase-space output until
               "particle crosses a scoring plane
-IF( ISOURC ~= 21 & ISOURC ~=23 & ISOURC~=24) [
+IF( ISOURC ~= 21 & ISOURC ~=23 & ISOURC~=24 & dosxyz2beam_index >= 0) [
     IF( MONOEN = 1 ) CALL EN_SAMPLE(EIN);
-    IF(IQIN =  0)[EI=EIN;]ELSE[EI=EIN+RM;]
+    IF(IQIN =  0)[EI=EIN;]ELSE[EI=EIN+PRM;]
 ] ELSE [ EI = EIN; ]
 
 "set initial energy for beam models";
