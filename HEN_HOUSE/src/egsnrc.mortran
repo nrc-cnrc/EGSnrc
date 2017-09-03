@@ -2250,8 +2250,7 @@ ELSE[
                       "if requested
 ]
 
-
-IF( xsec_out = 1 ) [
+IF( xsec_out = 1 & eadl_relax) [
   call egs_print_binding_energies;
 ]
 
