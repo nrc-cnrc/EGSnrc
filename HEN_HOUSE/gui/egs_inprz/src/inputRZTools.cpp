@@ -310,7 +310,7 @@ void inputRZImpl::SetInitialDir()
  if ( EGSdir.isEmpty() )
       EGSdir   = ironIt( GetCurrentDir( usercodename, EGS_HOME, HEN_HOUSE ) );
 
- SPECdir = ironIt( HEN_HOUSE +  SEP + "spectra");
+ SPECdir = ironIt( HEN_HOUSE +  SEP + "spectra" + SEP + "egsnrc");
  RDISTdir= ironIt( GetCurrentDir( usercodename   , EGS_HOME, HEN_HOUSE ) );
  PHSPdir = ironIt( GetCurrentDir( ""             , EGS_HOME, HEN_HOUSE ) );
  CONFdir = ironIt( HEN_HOUSE + SEP + "specs" +SEP );
@@ -451,6 +451,23 @@ v_int inputRZImpl::assign_medium_number(v_string med_list, v_string med_entry)
     return num;
 
 }
+
+/* Expands first environment variable in a directory or file name */
+QString  inputRZImpl::expandEnvVar( const QString& dirStr ){
+    QString expDir = dirStr;
+    if (dirStr.contains("$")){
+        int s = expDir.indexOf("$")+1, e = expDir.indexOf(QDir::separator(),s);
+        QString envVar = ironIt( getenv( expDir.mid(s,e-s).toLatin1().data()));
+        QString left  = expDir.left(s-1),
+                right = expDir.right(expDir.length() - e);
+        expDir = QDir::cleanPath(left + envVar + right);
+    }
+    else{
+        expDir = dirStr;
+    }
+    return expDir;
+}
+
 //**********************************************
 // *********        TABLE STUFF      ***********
 //**********************************************
