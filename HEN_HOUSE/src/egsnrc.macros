@@ -29,6 +29,9 @@
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  Parts of the EGS code that originate from SLAC are distributed by NRC      "
@@ -58,6 +61,48 @@
 %C80        "Allow 80 columns of source/line (default is 72)
 %L          "Turn on listing
 
+"*******************************************************************************
+" #OMP_EGS - MACROS and definitions needed for OpenMP parallel implementation.
+"*******************************************************************************
+
+" MACRO TO CREATE OPENMP COMMENTS"
+REPLACE {$OMP{#,#};} WITH{;
+!INDENT F 0;
+!COMMENTS;
+"$OMP{P1}{P2}"
+!NOCOMMENTS;
+!INDENT F 2;
+}
+;
+
+" MACROS TO ADD PREPROCESSOR CONDITIONAL DIRECTIVES"
+" mortran3 gets confused by the # char => we need to pass it as an "
+" argument to the macro. "
+REPLACE {$IFDEF(#,#);} WITH {{EMIT;{P1}ifdef {P2};};}
+;
+REPLACE {$IFNDEF(#,#);} WITH {{EMIT;{P1}ifndef {P2};};}
+;
+REPLACE {$ELSEIF(#,#);} WITH {{EMIT;{P1}elif {P2};};}
+;
+REPLACE {$ELSE(#);} WITH {{EMIT;{P1}else;};}
+;
+REPLACE {$ENDIF(#);} WITH {{EMIT;{P1}endif;};}
+;
+
+"------------------------------------------------------------------"
+"*** OMP-EGS -- OPENMP ENVIRONMENT RELATED VARIABLES               "
+"------------------------------------------------------------------"
+REPLACE {;COMIN/OMP-EGS/;} WITH
+{
+    ;COMMON/OMP_EGS/omp_iam, omp_size;
+    $OMP{0,THREADPRIVATE(/OMP_EGS/)};
+        INTEGER       omp_iam,   "OpenMP thread index"
+                      omp_size;  "Number of threads in the simulation"
+}
+
+"*******************************************************************************
+" #OMP_EGS - End of MACROS and definitions for OpenMP.
+"*******************************************************************************
 
 "=================================================================="
 " Macros to implement implicit data types                          "
@@ -522,6 +567,10 @@ REPLACE {;COMIN/EDGE/;} WITH
 "        MODIFIED 1989/12/19 TO INCLUDE IUNRST,EPSTFL AND IAPRIM   "
 "        NRC DWOR                                                  "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /ELECIN/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/ELECIN/;} WITH
 {;
    COMMON/ELECIN/
@@ -537,6 +586,7 @@ REPLACE {;COMIN/ELECIN/;} WITH
    expeke1($MXMED),
    IUNRST($MXMED),EPSTFL($MXMED),IAPRIM($MXMED),
    sig_ismonotone(0:1,$MXMED);
+   $OMP{0,THREADPRIVATE(/ELECIN/)};
    $REAL    esig_e,        "maximum electron cross section per energy loss"
                            "for each medium"
             psig_e,        "maximum positron cross section per energy loss"
@@ -646,9 +696,13 @@ REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
 " he/she knows which shell was being relaxed when the call to ausgab"
 " occured                                                           "
 " Added by Iwan Kawrakow, March 22 2004.                            "
-
+"*******************************************************************************
+" #OMP_EGS - Global data inside /user_relax/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/RELAX-USER/;} WITH {;
    common/user_relax/ u_relax,ish_relax,iZ_relax;
+   $OMP{0,THREADPRIVATE(/user_relax/)};
    $REAL              u_relax;
    $INTEGER           ish_relax, iZ_relax;
 };
@@ -721,6 +775,10 @@ REPLACE {;COMIN/RELAX-DATA/;} WITH {;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside /RELAX-FOR-USER/ COMMON block are made 
+"            private to each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/RELAX-FOR-USER/;} WITH {;
     common/relax_for_user/
      rfu_E0, "binding energy of vacancy that initiated cascade"
@@ -732,6 +790,7 @@ REPLACE {;COMIN/RELAX-FOR-USER/;} WITH {;
      rfu_j,  "shell number of current vacancy"
      rfu_n,  "same but number is shell number in the element"
      rfu_t;  "same but number is shell type according to EADL notation"
+    $OMP{0, THREADPRIVATE(/relax_for_user/)};
     $INTEGER rfu_Z,rfu_j0,rfu_n0,rfu_t0,rfu_j,rfu_n,rfu_t;
     $REAL    rfu_E0,rfu_E;
 };
@@ -887,9 +946,14 @@ REPLACE {COMIN/Spin-Data/;} WITH {
 }
 ;
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside /CH_steps/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {COMIN/CH-Steps/;} WITH
 {
   common/CH_steps/ count_pII_steps,count_all_steps,is_ch_step;
+  $OMP{0,THREADPRIVATE(/CH_steps/)};
   real*8           count_pII_steps,count_all_steps;
   $LOGICAL         is_ch_step;
 }
@@ -897,6 +961,10 @@ REPLACE {COMIN/CH-Steps/;} WITH
 "------------------------------------------------------------------"
 "*** EPCONT--ELECTRON-PHOTON CONTROL VARIABLES                     "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /EPCONT/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/EPCONT/;} WITH
 {;
   COMMON/EPCONT/EDEP,EDEP_LOCAL,TSTEP,TUSTEP,USTEP,TVSTEP,VSTEP,
@@ -904,6 +972,7 @@ REPLACE {;COMIN/EPCONT/;} WITH
                 x_final,y_final,z_final,
                 u_final,v_final,w_final,
                 IDISC,IROLD,IRNEW,IAUSFL($MXAUS);
+    $OMP{0,THREADPRIVATE(/EPCONT/)};
     $ENERGY PRECISION EDEP,   "energy deposition in MeV"
                       EDEP_LOCAL; "local energy deposition in MeV"
     $REAL             TSTEP,  "distance to a discrete interaction"
@@ -1007,6 +1076,10 @@ REPLACE {;COMIN/MISC/;} WITH
 "------------------------------------------------------------------"
 "*** PHOTIN--PHOTON TRANSPORT DATA                                 "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /PHOTIN/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/PHOTIN/;} WITH
 {;
     COMMON/PHOTIN/
@@ -1021,6 +1094,7 @@ REPLACE {;COMIN/PHOTIN/;} WITH
        DPMFP,
        MPGEM($MXSGE,$MXMED),
        NGR($MXMED);
+    $OMP{0,THREADPRIVATE(/PHOTIN/)};
     $REAL
        EBINDA,      "energy of the K-edge for a given medium"
        GE0,GE1,     "used for indexing in logarithmic interpolations"
@@ -1054,11 +1128,16 @@ REPLACE {;COMIN/PHOTIN/;} WITH
 "------------------------------------------------------------------"
 "*** STACK--INFORMATION KEPT ABOUT CURRENT PARTICLES               "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /STACK/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/STACK/;} WITH
 {;
    COMMON/STACK/
        $LGN(E,X,Y,Z,U,V,W,DNEAR,WT,IQ,IR,LATCH($MXSTACK)),
        LATCHI,NP,NPold;
+   $OMP{0,THREADPRIVATE(/STACK/)};
    $ENERGY PRECISION
        E;     "total particle energy"
    $REAL
@@ -1104,10 +1183,15 @@ REPLACE {;COMIN/UPHIIN/;} WITH
 "------------------------------------------------------------------"
 "*** UPHIOT--UPHI'S INPUT/OUTPUT WITH ITS USERS                    "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /UPHIOT/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/UPHIOT/;} WITH
 {;
    COMMON/UPHIOT/THETA,SINTHE,COSTHE,SINPHI,
                  COSPHI,PI,TWOPI,PI5D2;
+   $OMP{0,THREADPRIVATE(/UPHIOT/)};
    $REAL         THETA,  "polar scattering angle"
                  SINTHE, "sin(THETA)"
                  COSTHE, "cos(THETA)"
@@ -1119,9 +1203,14 @@ REPLACE {;COMIN/UPHIOT/;} WITH
 "------------------------------------------------------------------"
 "*** USEFUL--HEAVILY USED VARIABLES                                "
 "------------------------------------------------------------------"
+"*******************************************************************************
+" #OMP_EGS - Global data inside /USEFUL/ COMMON block are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/USEFUL/;} WITH
 {;
    COMMON/USEFUL/PZERO,PRM,PRMT2,RM,MEDIUM,MEDOLD;
+   $OMP{0,THREADPRIVATE(/USEFUL/)};
    $ENERGY PRECISION PZERO,   "precise zero"
                      PRM,     "precise electron mass in MeV"
                      PRMT2;   "2*PRM"
@@ -3432,6 +3521,10 @@ REPLACE{$PLTDIM} WITH {300};"Unique array dimension for XVGRPLOT and PLOTSN"
 "                                                                           "
 "***************************************************************************"
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside /egs_vr/ COMMON block are made 
+"            private to each thread through the THREADPRIVATE directive
+"*******************************************************************************
 REPLACE {;COMIN/EGS-VARIANCE-REDUCTION/;} WITH {;
 
   common/egs_vr/
@@ -3443,6 +3536,7 @@ REPLACE {;COMIN/EGS-VARIANCE-REDUCTION/;} WITH {;
                       "eliminated by RR in this interaction"
     n_RR_warning,     "a counter for user errors"
     i_do_rr($MXREG);  "0=>no RR, region by region, 1=>there is RR"
+  $OMP{0,THREADPRIVATE(/egs_vr/)};
   $REAL          e_max_rr,prob_RR;
   $INTEGER       nbr_split,i_play_RR,i_survived_RR,n_RR_warning;
   $SHORT_INT     i_do_rr;

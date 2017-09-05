@@ -26,13 +26,19 @@
 #  Contributors:    Blake Walters
 #                   Frederic Tessier
 #
+#  OpenMP support:  Edgardo Doerner
+#                   Paola Caprile
+#
 ###############################################################################
 
 
 include $(EGS_CONFIG)
 include $(SPEC_DIR)beamnrc.spec
 
-SOURCES = $(MACHINE_MACROS) $(EGS_UTILS)phsp_macros.mortran $(IAEA_PHSP_MACROS)\
+# OMP_EGS: phsp_macros.mortran contains OpenMP constructs, defined at 
+# egsnrc.macros. Therefore it is added to SOURCES.
+SOURCES = $(MACHINE_MACROS) $(EGS_SOURCEDIR)egsnrc.macros \
+	$(EGS_UTILS)phsp_macros.mortran $(IAEA_PHSP_MACROS) \
           beamdp.mortran \
           $(EGS_UTILS)xvgrplot.mortran $(EGS_SOURCEDIR)lnblnk1.mortran
 

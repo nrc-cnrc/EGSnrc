@@ -32,6 +32,9 @@
 "                   Frederic Tessier                                          "
 "                   Marc-Andre Renaud                                         "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  The contributors named above are only those who could be identified from   "
@@ -96,6 +99,12 @@
 "
 "******************************************************************************
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside /source/ COMMON block are made private to 
+"            each thread through the THREADPRIVATE directive. The variable 
+"            theta for polar angle was renamed as thet in order to 
+"            declare /source/ in dosxyznrc main routine.
+"*******************************************************************************
 REPLACE {;COMIN/SOURCE/;} WITH {
     "Common used for passing information specific to sources                   "
     ;
@@ -136,7 +145,7 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     yiso,    "y-coordinate of the isocenter        (isource=1,2,7,8,20,21) "
     ziso,    "z-coordinate of the isocenter        (isource=1,2,7,8,20,21) "
     phicol,  "(collimator|source plane) rotation angle(isource=1,2,7,8,20,21) "
-    theta($MXANG), "Polar angle of source center       (isource=1,2,7,8,20,21) "
+    thet($MXANG), "Polar angle of source center       (isource=1,2,7,8,20,21) "
     phi($MXANG), "Azimuthal angle of source center     (isource=1,2,7,8,20,21) "
     pang($MXANG), "Prob of particle being incident at theta-phi  (isource=7,8) "
     angfixed($MXANG), "fixed theta or phi for group i           (isource=7,8) "
@@ -233,13 +242,15 @@ REPLACE {;COMIN/SOURCE/;} WITH {
     the_vcu_code,    "name of vcu code (particleDmlc)	      (isource=21)"
     the_phsp_file;  "name of phase space file (above MLC)         (isource=20)"
     "Explicit declarations for compatibility with implicit none"
+
+    $OMP{0,THREADPRIVATE(/source/)};
     real*8    esrc,muIndex;
     $LONG_INT nhist, nnread,nshist,nphist,nnphsp;
     $REAL einsrc, xsrcold, ysrcold,usrcold,vsrcold,wsrcold,weightold,
     frMU_indx,zsrcold,mu_phspold;
     real*4    zinc, xinl, xinu, yinl, yinu, zinl, zinu, thetax, thetay, thetaz,
     uinc, vinc, winc, beamarea, xcol,ycol,xiso, yiso, ziso, phicol,
-    theta, phi, xtemp, ytemp, ztemp, phicoltemp,thetatemp, phitemp,
+    thet, phi, xtemp, ytemp, ztemp, phicoltemp,thetatemp, phitemp,
     pang,angfixed,angmin,angmax,pgang,r_11, r_12, r_13, r_21,
     r_22, r_23, r_31, r_32, r_33,dsource,dsourcetemp,
     ein, eksrcm, esrc_sp, SSD, NINCSRC,

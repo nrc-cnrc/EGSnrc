@@ -27,6 +27,9 @@
 "  Contributors:    Blake Walters                                             "
 "                   Reid Townson                                              "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  Parts of the EGS code that originate from SLAC are distributed by NRC      "
@@ -128,7 +131,13 @@ $INTEGER ku,kr,ka;
 ;COMIN/BOUNDS, STACK,EPCONT,EGS-VARIANCE-REDUCTION,USEFUL,EGS-IO/;
 
 DATA ICOUNT/0/,JHSTRY/1/ graph_unit/-1/;
+
+"*******************************************************************************
+" #OMP_EGS - Global variables ICOUNT, JHSTRY and graph_unit are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 save     ICOUNT,JHSTRY,graph_unit;
+$OMP{0,THREADPRIVATE(ICOUNT,JHSTRY,graph_unit)};
 
 ku = 13; kr = 0; ka = 1;
 IF(IARG = -99) [ "Initialize flags so we will get calls thru AUSGAB"
