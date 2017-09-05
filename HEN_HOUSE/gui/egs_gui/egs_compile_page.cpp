@@ -181,7 +181,14 @@ void EGS_CompilePage::startCompilation() {
 #ifdef IK_DEBUG
   qDebug("selected button: %s",bname.toLatin1().data());
 #endif
-  if( bname != "opt" ) args << bname;//c_process->addArgument(bname);
+  if( bname != "opt" ){
+    if( bname == "noopt" )
+        args << "FOPT= " << "opt= ";
+    else if ( bname == "debug" )
+        args << "FOPT=-g" << "opt=-g";
+    else
+      args << bname;
+  }
   QString conf = "EGS_CONFIG="; conf += egsConfiguration();
   args <<conf; //c_process->addArgument(conf);
   QString ehome = "EGS_HOME="; ehome += egsHome();
