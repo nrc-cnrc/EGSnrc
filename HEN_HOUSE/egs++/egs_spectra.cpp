@@ -921,13 +921,15 @@ It is defined using the following input
                         including extension
     relative activity = [optional] the relative activity (sampling
                         probability) for this nuclide in a mixture
-    atomic relaxations = [optional, default=eadl] eadl or ensdf
+    atomic relaxations = [optional, default=eadl] eadl, ensdf or off
                                  By default, 'eadl' relaxations use the EGSnrc
                                  algorithm for emission correlated with
                                  disintegration events. Alternatively, 'ensdf'
                                  relaxations statistically sample fluorescent
                                  photons and Auger emission using comments
-                                 in the ensdf file.
+                                 in the ensdf file. Turning this option off
+                                 disables all relaxations resulting from
+                                 radionuclide disintegration events.
     output beta spectra = [optional, default=no] yes or no
                             whether or not to output beta spectra to files.
                             Files will be named based on the nuclide and
@@ -999,18 +1001,18 @@ public:
     /*! \brief Construct a radionuclide spectrum.
      */
     EGS_RadionuclideSpectrum(const string nuclide, const string ensdf_file,
-                             const EGS_Float relativeActivity, const string useFluorescence, const string outputBetaSpectra) :
+                             const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra) :
         EGS_BaseSpectrum() {
 
         // For now, hard-code verbose mode
         // 0 - minimal output
         // 1 - some output of ensdf data and normalized intensities
         // 2 - verbose output
-        int verbose = 2;
+        int verbose = 0;
 
         // Read in the data file for the nuclide
         // and build the decay structure
-        decays = new EGS_Ensdf(nuclide, ensdf_file, useFluorescence, verbose);
+        decays = new EGS_Ensdf(nuclide, ensdf_file, relaxType, verbose);
 
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
@@ -1035,7 +1037,7 @@ public:
         currentTime = 0;
         ishower = -1; // Start with ishower -1 so first shower has index 0
         totalGammaEnergy = 0;
-        ensdfFluorescence = useFluorescence;
+        relaxationType = relaxType;
 
         // Get the maximum energy for emissions
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
@@ -1298,7 +1300,7 @@ protected:
                                         //                                     egsInformation("test %d %f %f %f\n",i,(*gamma)->getDecayEnergy(),decays->getRelaxations()->getBindingEnergy(decays->Z,i),E);
 
                                         // Add relaxation particles to the source stack
-                                        if (ensdfFluorescence != "yes") {
+                                        if (relaxationType == "eadl") {
 
                                             // Generate relaxation particles for a
                                             // shell vacancy i
@@ -1358,7 +1360,7 @@ protected:
                     }
                     else {
 
-                        if (ensdfFluorescence != "yes" && (*beta)->ecShellIntensity.size()) {
+                        if (relaxationType == "eadl" && (*beta)->ecShellIntensity.size()) {
                             // Determine which shell the electron capture
                             // occurs in. This will create a shell vacancy
                             EGS_Float u3 = rndm->getUniform();
@@ -1499,7 +1501,7 @@ private:
                                 totalGammaEnergy,
                                 edep;
     EGS_I64                     ishower;
-    string                      ensdfFluorescence;
+    string                      relaxationType;
 
     EGS_RadionuclideBetaSpectrum *betaSpectra;
     EGS_Application             *app;
@@ -1864,6 +1866,8 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         }
     }
     else if (inp->compare(stype,"radionuclide")) {
+        egsInformation("EGS_BaseSpectrum::createSpectrum: Initializing radionuclide spectrum...\n");
+
         string nuclide;
         err = inp->getInput("nuclide",nuclide);
         if (err) {
@@ -1879,19 +1883,28 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
 
         // Determine whether to sample X-Rays and Auger electrons
         // using the ensdf data (options: yes or no)
-        string tmp_useFl, useFluorescence;
-        err = inp->getInput("atomic relaxations", tmp_useFl);
+        string tmp_relaxType, relaxType;
+        err = inp->getInput("atomic relaxations", tmp_relaxType);
         if (!err) {
-            useFluorescence = tmp_useFl;
+            relaxType = tmp_relaxType;
         }
         else {
-            useFluorescence = "no";
+            relaxType = "eadl";
         }
-        if (useFluorescence == "yes") {
+        if (inp->compare(relaxType,"ensdf")) {
+            relaxType = "ensdf";
             egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be used.\n");
         }
+        else if (inp->compare(relaxType,"eadl")) {
+            relaxType = "eadl";
+            egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored. EADL relaxations will be used.\n");
+        }
+        else if (inp->compare(relaxType,"none") || inp->compare(relaxType,"off") || inp->compare(relaxType,"no")) {
+            relaxType = "off";
+            egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored. No relaxations following radionuclide disintegrations will be modelled.\n");
+        }
         else {
-            egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored.\n");
+            egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'atomic relaxations'. Use 'eadl' (default) or 'ensdf'.\n");
         }
 
         // Determine whether to output beta energy spectra to files
@@ -1904,7 +1917,8 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         else {
             outputBetaSpectra = "no";
         }
-        if (outputBetaSpectra == "yes") {
+        if (inp->compare(outputBetaSpectra,"yes")) {
+            outputBetaSpectra = "yes";
             egsInformation("EGS_BaseSpectrum::createSpectrum: Beta energy spectra will be output to files.\n");
         }
 
@@ -1951,7 +1965,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, useFluorescence, outputBetaSpectra);
+        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, relaxType, outputBetaSpectra);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
