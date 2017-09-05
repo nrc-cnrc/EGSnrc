@@ -1084,7 +1084,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = spe_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      SPECdir = spe_file;
-	      SPECdir = SPECdir.remove(dirPos+1,spe_file.length() - dirPos+1 );
+              SPECdir = expandEnvVar(SPECdir.remove(dirPos+1,spe_file.length() - dirPos+1 ));
 	      spe_file = spe_file.remove(0, dirPos+1);
 	    }
    	    specfnameComboBox->setEditText ( spe_file );
@@ -1103,7 +1103,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = dist_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      RDISTdir = dist_file;
-	      RDISTdir = RDISTdir.remove(dirPos+1,RDISTdir.length() - dirPos+1 );
+	      RDISTdir = expandEnvVar(RDISTdir.remove(dirPos+1,RDISTdir.length() - dirPos+1 ));
 	      dist_file = dist_file.remove(0, dirPos+1);
 	    }
    	    raddistfnameComboBox->setEditText ( dist_file );
@@ -1124,7 +1124,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = phsp_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      PHSPdir = phsp_file;
-	      PHSPdir = PHSPdir.remove(dirPos+1,PHSPdir.length() - dirPos+1 );
+	      PHSPdir = expandEnvVar(PHSPdir.remove(dirPos+1,PHSPdir.length() - dirPos+1 ));
 	      phsp_file = phsp_file.remove(0, dirPos+1);
 	    }
 	    phasespaceComboBox->setEditText( phsp_file );
@@ -2966,7 +2966,7 @@ void inputRZImpl::update_files( const QString & rDirName, QComboBox* cb, const Q
     }
 
 
-    d.setNameFilters( QStringList(rFilter) );
+    d.setNameFilters( rFilter.split(" ") );
     d.setSorting( QDir::Name | QDir::IgnoreCase );
 
     const QFileInfoList list = d.entryInfoList();
