@@ -52,7 +52,7 @@ egs_view: egspp
 	@echo "Building egs_view statically ..."
 	@cd ../../egs++/view && export QTDIR=$(qt4)  && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make static
 
-egspp:
+egspp: iaea_phsp
 	@echo "Building egspp ..."
 	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make
 
@@ -61,6 +61,10 @@ viewclean:
 
 egs_configure:
 	cd ../../gui/egs_configure && export QTDIR=$(qt4) && export QMAKESPEC=$(qmake4) && export EGS_CONFIG=$(egs_config) && make
+
+iaea_phsp:
+	@echo "Building iaea_phsp ..."
+	cd ../../iaea_phsp && export EGS_CONFIG=$(egs_config) && make
 
 clean: viewclean
 	cd ../../egs++ && export EGS_CONFIG=$(egs_config) && make clean
