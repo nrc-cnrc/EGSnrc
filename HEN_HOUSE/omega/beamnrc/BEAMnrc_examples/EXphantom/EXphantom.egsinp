@@ -3,7 +3,7 @@ AIR700ICRU
 0, 0, 0, 1, 0, 0, 0,  IWATCH,ISTORE,IRESTART,etc
 70000.0, 0, 0, 0.99, 0, 0, 0, 0,  NCASE, etc
 9, 21, 1, 0.0, 0.0, 0.0, 0.0, 0.0,0.0,0.0,  Phase space source incident on CM 1
-$HOME/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1
+$EGS_HOME/BEAM_EX10MeVe/EX10MeVe.egsphsp1
 0.0, 0.0, 0.521, 0.010, 0, 2, 3.0, 0, ESTEPE, ECUT, PCUT, etc.
 0, 0, 0, 0, 0,  IFORCE,NFMIN,etc
 1, 1,           Scoring plane at the back of the phantom
