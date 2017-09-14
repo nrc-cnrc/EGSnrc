@@ -21,10 +21,10 @@
 #
 ###############################################################################
 #
-#  Author:          Joerg Wulff, 2007
+#  Authors:         Iwan Kawrakow, 2007
+#                   Joerg Wulff, 2007
 #
-#  Contributors:    Iwan Kawrakow
-#                   Ernesto Mainegra-Hing
+#  Contributors:    Ernesto Mainegra-Hing
 #                   Hugo Bouchard
 #                   Frederic Tessier
 #                   Reid Townson
