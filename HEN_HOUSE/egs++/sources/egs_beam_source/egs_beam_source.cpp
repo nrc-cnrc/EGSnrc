@@ -206,7 +206,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
             te -= EGS_Application::activeApplication()->getRM();
         }
         ok = true;
-        if (te > Emax) {
+        if (te > Emax + epsilon) {
             ok = false;
         } //egsInformation("Emax rejection\n"); }
         if (particle_type < 2 && tq != particle_type) {
