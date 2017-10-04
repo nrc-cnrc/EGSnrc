@@ -164,10 +164,11 @@ public:
         if (!g) {
             return -1;
         }
-        for (int j=0; j<nnow; j++)
+        for (int j=0; j<nnow; j++) {
             if (geoms[j]->getName() == g->getName()) {
                 return -1;
             }
+        }
         if (nnow >= ntot) {
             grow(10);
         }
@@ -536,6 +537,20 @@ EGS_BaseGeometry *EGS_BaseGeometry::createGeometry(EGS_Input *input) {
             error = true;
         }
         delete ij;
+    }
+    // Check to make sure that geometries have unique names
+    for (int j=0; j<egs_geometries[active_glist].nnow; j++) {
+        string gname = egs_geometries[active_glist].geoms[j]->getName();
+        for (int k=0; k<egs_geometries[active_glist].nnow; k++) {
+            if (k == j) {
+                continue;
+            }
+            if (gname == egs_geometries[active_glist].geoms[k]->getName()) {
+                egsFatal("\ncreateGeometry: Error: multiple geometries with"
+                         " the same name exist: %s\n\n", gname.c_str());
+                return 0;
+            }
+        }
     }
     if (error) {
         egsFatal("EGS_BaseGeometry::createGeometry: errors during geometry"
