@@ -61,15 +61,15 @@ void IAEA_PhspSource::init() {
     description = "Invalid IAEA phase space source";
     Nread = 0;
     count = 0;
-    Nrecycle = 0;
+    Nrestart = 0;
     Npos = 0;
     Nlast = 0;
     wmin = -veryFar;
     wmax = veryFar;
-    Nreuse_g = 1;
-    Nreuse_e = 1;
-    Nreuse = 1;
-    Nuse = 2;
+    Nrecycle_g = 0;
+    Nrecycle_e = 0;
+    Nrecycle = 0;
+    Nuse = -1;
     first = true;
 }
 
@@ -271,11 +271,23 @@ IAEA_PhspSource::IAEA_PhspSource(EGS_Input *input, EGS_ObjectFactory *f) :
     int ntmp;
     err = input->getInput("reuse photons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_g = ntmp;
+        Nrecycle_g = ntmp;
+    }
+    else {
+        err = input->getInput("recycle photons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_g = ntmp;
+        }
     }
     err = input->getInput("reuse electrons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_e = ntmp;
+        Nrecycle_e = ntmp;
+    }
+    else {
+        err = input->getInput("recycle electrons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_e = ntmp;
+        }
     }
     description = "IAEA phase space source from ";
     description += the_file_name;
@@ -284,13 +296,13 @@ IAEA_PhspSource::IAEA_PhspSource(EGS_Input *input, EGS_ObjectFactory *f) :
 EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector &u) {
     /*
-    if( Nuse >= Nreuse ) {
+    if( Nuse >= Nrecycle ) {
         do { readParticle(); } while ( rejectParticle() );
     }
     */
     int nstat,extrainttemp[MAXEXTRAS];
     float extrafloattemp[MAXEXTRAS];
-    if (Nuse >= Nreuse) {  //get a new particle
+    if (Nuse > Nrecycle || Nuse < 0) {  //get a new particle
         if ((++Npos) > Nlast) {
             egsWarning("IAEA_PhspSource::getNextParticle(): reached the end of the "
                        "phase space file chunk (%lld)\n  will start from the beginning "
@@ -301,7 +313,7 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
             if (iaea_iostat<0) {
                 egsFatal("IAEA_PhspSource::getNextParticle(): error restarting phase space chunk\n");
             }
-            Nrecycle++;
+            Nrestart++;
             Npos = Nfirst;
         }
         iaea_get_particle(&iaea_fileid,&nstat,&p.q,&p.E,&p.wt,&p.x,&p.y,&p.z,&p.u,&p.v,&p.w,extrafloattemp,extrainttemp);
@@ -351,16 +363,16 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
             count++;    //increment primary history counter
         }
         first= false;
-        //store Nreuse
+        //store Nrecycle
         if (p.q) {
-            Nreuse = Nreuse_e;
+            Nrecycle = Nrecycle_e;
         }
         else {
-            Nreuse = Nreuse_g;
+            Nrecycle = Nrecycle_g;
         }
         //reset Nuse
         Nuse = 0;
-        p.wt /= Nreuse;
+        p.wt /= (Nrecycle+1);
     }
 
     //energy, wt, position and direction cosines
