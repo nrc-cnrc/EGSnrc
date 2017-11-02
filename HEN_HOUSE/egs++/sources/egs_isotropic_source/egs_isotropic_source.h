@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Frederic Tessier
+#  Contributors:    Long Zhang
+#                   Frederic Tessier
 #                   Reid Townson
 #                   Ernesto Mainegra-Hing
 #                   Hugo Bouchard
@@ -298,15 +299,11 @@ public:
             }
         }
         while (!ok);
-
-        u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
-
+        u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
         EGS_Float sinz = 1-u.z*u.z;
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
-            //rndm->getAzimuth(cphi,sphi);
-            // sample phi, slower than rndm->getAzimuth
             EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
             cphi = cos(phi);
             sphi = sin(phi);
@@ -351,10 +348,5 @@ protected:
     int                 nrs;
     GeometryConfinement gc;
 };
-
-// change log:
-// Long, Jan 15 2008 add polar angle limitation and macro support
-//                  a word on the polar angle sampling:
-//                        cos(theta) follows a uniform distribution
 
 #endif

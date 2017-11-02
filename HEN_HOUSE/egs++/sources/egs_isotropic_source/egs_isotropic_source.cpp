@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Hubert Ho
+#  Contributors:    Long Zhang
+#                   Hubert Ho
 #
 ###############################################################################
 */

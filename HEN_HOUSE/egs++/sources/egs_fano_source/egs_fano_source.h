@@ -21,9 +21,10 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra-Hing, 2016
+#  Authors:         Ernesto Mainegra-Hing, 2016
+#                   Hugo Bouchard, 2016
 #
-#  Contributors:    Hugo Bouchard
+#  Contributors:
 #
 ###############################################################################
 */
@@ -138,6 +139,12 @@ public:
                 x = shape->getRandomPoint(rndm);
                 ok = geom->isInside(x);
                 if (ok) {
+                    /*******************************************************************************
+                     * Rejection technique generates particles proportional to the region's mass m.
+                     * The joint probability of selecting the emission point is the product of the
+                     * probability of the point being in volume V times the probability of surviving
+                     * the rejection, which is proportional to the density in that volume.
+                     *******************************************************************************/
                     if (rndm->getUniform()*max_mass_density > geom->getMediumRho(geom->medium(geom->isWhere(x)))) {
                         okfano = false;
                     }
@@ -145,7 +152,11 @@ public:
                         okfano = true;
                     }
 
-                    /* Rather than rejecting, accept always and reduce weight accordingly */
+                    /*********************************************************************
+                     * Rather than rejecting, accept always and adjust weight accordingly
+                     * A quick check didn't show improved efficiency as one would have expected!
+                     * Perhaps the extra calculations? One should have used the values above!
+                     *********************************************************************/
                     //wt = wt * geom->getMediumRho(geom->medium(geom->isWhere(x)))/max_mass_density;
                     //real_count += wt;
                     //okfano = true;
@@ -154,10 +165,9 @@ public:
             while (!ok);
         }
         while (!okfano);
-        u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
-        //u.z = 2*rndm->getUniform()-1;
+        u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
         EGS_Float sinz = 1-u.z*u.z;
-        if (sinz > 1e-15) {
+        if ( sinz > epsilon ) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
             EGS_Float phi = min_phi + (max_phi - min_phi)*rndm->getUniform();
@@ -175,6 +185,11 @@ public:
     EGS_Float getFluence() const {
         return count;
     };
+
+    /**************************************************
+     * Related to the implementation without rejection
+     * To be further tested !!!
+     **************************************************/
     //EGS_Float getFluence() const { return Fano_source ? real_count : count; };
     /*
         bool storeFluenceState(ostream & data) const {
@@ -198,6 +213,8 @@ public:
 
         void resetFluenceCounter() {real_count = 0.0; };
     */
+    /*****************************************************/
+
     bool isValid() const {
         return (s != 0 && shape != 0);
     };
@@ -213,7 +230,7 @@ protected:
     EGS_Float min_theta, max_theta;
     EGS_Float buf_1, buf_2;//! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
-    //EGS_Float max_mass_density, real_count;
+    //real_count;
     EGS_Float max_mass_density;
     int                 nrs;
 };
