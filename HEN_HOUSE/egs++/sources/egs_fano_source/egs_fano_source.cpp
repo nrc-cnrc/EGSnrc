@@ -21,9 +21,10 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra-Hing, 2016
+#  Authors:         Ernesto Mainegra-Hing, 2016
+#                   Hugo Bouchard, 2016
 #
-#  Contributors:    Hugo Bouchard
+#  Contributors:
 #
 ###############################################################################
 */
