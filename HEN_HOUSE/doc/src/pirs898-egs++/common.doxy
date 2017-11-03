@@ -24,6 +24,7 @@
 #  Author:          Ernesto Mainegra-Hing, 2009
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -37,37 +38,225 @@
 
 <ul>
 <li> \ref common_intro </li>
-<li> \ref common_geom_source_rco </li>
+<li> \ref common_geom </li>
+<li> \ref common_media </li>
+<li> \ref common_source </li>
+<li> \ref common_rco </li>
 <li> \ref common_mc </li>
 </ul>
 
 \section common_intro Introduction
 All C++ applications distributed with EGSnrc use the same syntax
-for inputing information regarding geometry, source, run control
+for inputting information regarding geometry, source, run control
 and Monte Carlo transport parameters. Only the input blocks for scoring
 and variance reduction techniques vary between applications.
 
-\section common_geom_source_rco Geometry, particle source and run control
+<em>Tip: Comments are done with '#' hashtags! You can comment out an entire input block by just putting a '#' in front of the \c :start tag.</em>
 
-Geometry and particle source are specified in an input file as
-explained in the \link Geometry geometry module \endlink and the
-\link Sources particle sources module\endlink.
-Run control is specified in a section of the input file delimited by
+<em>Tip 2: All distances are in units of cm, and energies in MeV.</em>
+
+\section common_geom Geometry
+For full description of the geometry input, see the \link Geometry geometry module \endlink.
+
+Most users spend the bulk of their effort defining geometries in input files. The physical parameters of a given experiment can be reproduced in a way that the simulation can model. A wide range of geometry libraries are available, from basic shapes to composite geometries, voxelized phantoms and repeating structures.
+
+In an input file, the user must define a single <code>geometry definition</code> input block. Within this block, many geometries may be defined, between <code>:start geometry:</code> and <code>:stop geometry:</code> tags. To determine what should go inside a geometry definition to create a particular shape, refer to the online documentation, where there is a list of the available geometry libraries. Finally, at the end of the geometry definition, the user must specify the geometry in which the simulation will take place (yes, you can define geometries which are not used!). This is done using the input parameter <code>simulation geometry</code>, as show in the example below. The simulation geometry refers to the name of one geometry that has been defined, but that may be a composite of many other geometries (of particular interest may be \ref EGS_CDGeometry and \ref EGS_EnvelopeGeometry).
+
+\verbatim
+:start geometry definition:
+    :start geometry:
+       definition of a geometry
+    :stop geometry:
+    :start geometry:
+       definition of another geometry
+    :stop geometry:
+    :start geometry:
+       perhaps combine the above geometries into one
+       name = my_geometry
+    :stop geometry:
+
+    simulation geometry = my_geometry
+
+:stop geometry definition:
+\endverbatim
+
+Here is an example, which was created using the \ref EGS_Box documentation. Notice that the box was defined as pure water using a \link geometry_media media input \endlink block. The actual material definition will be done for this example using <b>pegsless</b> mode, described in the next section. All distances are in units of cm.
+
+\verbatim
+:start geometry definition:
+    :start geometry:
+        name        = my_box
+        library     = egs_box
+        box size    = 1 2 3
+        :start media input:
+            media = water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_box
+
+:stop geometry definition:
+\endverbatim
+
+Remember to view your geometry using the <b>egs_view</b> GUI! This viewer is essential for many situations where you need to know the region numbers within your geometry. For more description, see the \link Geometry geometry module \endlink.
+
+\section common_media Media definitions
+There are two ways to define media in EGSnrc, either with or without PEGS4 data files. If you are not dependent on old PEGS4 data, we recommend going with <b>pegsless</b> mode for improved versatility (you can now change AE in the input file!).
+
+\subsection common_media_pegsless Pegsless mode
+For pegsless mode, the user needs to define media within the input file! However, this can be done very simply by indicating the density correction file to use. This is done in the <code>media definition</code> input block. All of the density correction files distributed with EGSnrc can be found in <b>$HEN_HOUSE/pegs4/density_corrections</b>. Pegsless mode is described in more detail in PIRS-702.
+
+\verbatim
+:start media definition:
+
+    ae  = lowest  energy for electron production (kinetic+0.511)
+    ap  = lowest  energy for photon production   (kinetic)
+    ue  = maximum energy for electrons (kinetic+0.511)
+    up  = maximum energy for photons   (kinetic)
+
+    :start myMedia:
+        density correction file    = nameOfDensityCorrectionFile
+    :stop myMedia:
+
+:stop media definition:
+\endverbatim
+
+For example, we can define a material named \c water by referencing the density correction file \c water_liquid. Note that you could change the name \c water to be any name you like, as long as it is referenced by the same name elsewhere in the input file (e.g. in the geometry).
+
+\verbatim
+:start media definition:
+
+    # Threshold energies
+    ae  = 0.521
+    ap  = 0.01
+    ue  = 50.511
+    up  = 50
+
+    :start water:
+        density correction file    = water_liquid
+    :stop water:
+
+:stop media definition:
+\endverbatim
+
+When using pegsless mode, an EGSnrc application can be launched without the \c -p input argument. For example:
+\verbatim
+myApp -i myInput
+\endverbatim
+
+\subsection common_media_pegs4 PEGS4 file mode
+Historically, material data was specified within a PEG4 data file. Several of these are distributed with EGSnrc and contain a variety of materials, found in <b>$HEN_HOUSE/pegs4/data</b>. To use a PEGS4 data file, specify the name of the file as an argument after \c -p when launching the application:
+
+\verbatim
+myApp -i myInput -p myPegsFile
+\endverbatim
+
+For example, if we use H2O521ICRU as a medium in the input file, then we must use the <b>521icru.pegs4dat</b> data file. Note that the media in your input file must referenced by the same name as what is found in the PEGS4 data file.
+
+\verbatim
+myApp -i myInput -p 521icru
+\endverbatim
+
+\section common_source Particle source
+For full description of the source input, see the \link Sources particle sources module \endlink.
+
+The source of particles is an essential component of any Monte Carlo simulation. Similar to geometries, many sources may be defined within the single <code>source definition</code> input block. The source to use in the simulation must be specified using the <code>simulation source</code> input parameter.
+
+\verbatim
+:start source definition:
+    :start source:
+        definition of a source
+        name = my_source
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+
+Here is an example, which was created using the \ref EGS_CollimatedSource documentation. Notice that shapes are used by the source, which are defined using a \link EGS_BaseShape shape input \endlink block. Similarly, the spectrum is defined using a \link EGS_BaseSpectrum spectrum input \endlink block. All energies are in units of MeV.
+
+\verbatim
+:start source definition:
+    :start source:
+        library = egs_collimated_source
+        name = my_source
+        :start source shape:
+            type = point
+            position = 0 0 5
+        :stop source shape:
+        :start target shape:
+            library   = egs_rectangle
+            rectangle = -1 -1 1 1
+        :stop target shape:
+        distance = 5
+        charge = -1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20
+        :stop spectrum:
+    :stop source:
+
+    simulation source = my_source
+
+:stop source definition:
+\endverbatim
+
+\section common_ausgab Ausgab (output) definitions
+Optionally, ausgab definitions allow for additional output from the simulation. These correspond to \ref EGS_AusgabObject objects, and include dose output by region or medium, and particle tracks.
+
+\verbatim
+:start ausgab object definition:
+    :start ausgab object:
+        definition of an ausgab object
+    :stop ausgab object:
+    :start ausgab object:
+        definition of another ausgab object
+    :stop ausgab object:
+:stop ausgab object definition:
+\endverbatim
+
+To learn about possible inputs, see \ref EGS_DoseScoring and \ref EGS_TrackScoring. Here is an example for dose output by region and track scoring of 1000 tracks.
+
+\verbatim
+:start ausgab object definition:
+    :start ausgab object:
+        name    = my_tracks
+        library = egs_track_scoring
+        stop scoring = 1024
+    :stop ausgab object:
+    :start ausgab object:
+        name         = my_dose
+        library      = egs_dose_scoring
+        medium dose  = no
+        region dose  = yes
+        volume       = 6 # in cm**3 (for the geometry above = 1*2*3)
+        dose regions = 1 # list of individual region numbers (we just have 1)
+    :stop ausgab object:
+:stop ausgab object definition:
+\endverbatim
+
+\section common_rco Run control
+The run control input block specifies generic parameters about the simulation. Importantly, this is where the user selects the number of histories to simulate (usually corresponding to the number of source particles to use). A \link EGS_RunControl simple \endlink run control object (RCO) is used to control a single run. A simple RCO understands the following inputs:
+
 \verbatim
 :start run control:
+    ncase                       = number of histories to run
+    nbatch                      = [optional] number of batches to use (default is 10)
+    statistical accuracy sought = [optional] required uncertainty in %
+    max cpu hours allowed       = [optional] max. CPU time allowed
+    calculation                 = [optional] first or restart or combine or analyze
+    geometry error limit        = [optional] number of geometry errors allowed before crashing
 :stop run control:
 \endverbatim
 
-A \link EGS_RunControl simple \endlink run control object (RCO) is
-used to control a single run. A simple RCO understands the following
-inputs
+For example, to simulate 1 million histories:
 \verbatim
-ncase                       = number of histories to run
-nbatch                      = number of batches to use (default is 10)
-statistical accuracy sought = required uncertainty in %
-max cpu hours allowed       = max. CPU time allowed
-calculation                 = first or restart or combine or analyze
+:start run control:
+    ncase = 1e5
+:stop run control:
 \endverbatim
+
 The only required input is the number of histories. The \b nbatch input
 determines how many times the simulation will report its progress
 (and not, as one might expect, the number of statistical batches as
@@ -90,10 +279,10 @@ one determines the type of simulation:
    <b>\c .egsdat</b> file and output the results to the standard output.
 
 A \link EGS_JCFControl "job-control-file" (JCF) \endlink RCO is used by default
-for parallel runs. A JCF RCO understands in addition to the above
+for parallel runs. A JCF RCO understands, in addition to the above,
 the optional input
 \verbatim
-nchunk = number of simulation chunks (default is 10)
+nchunk = [optional] number of simulation chunks (default is 10)
 \endverbatim
 In parallel runs the simulation is split into <b><code> nchunk*n_parallel</code></b>
 portions and each parallel job simulates one portion at a time until
@@ -104,10 +293,8 @@ RCO by specifying <b><code>-s</code></b> on the command line. In this case,
 all parallel jobs will execute the same number of histories as specified
 in the input file.
 
-\section  common_mc Monte Carlo transport parameter control
-
-Monte Carlo transport parameters are common to all EGSnrc applications.
-The input block to enter/modify transport parameters is shown below:
+\section  common_mc Monte Carlo transport parameters
+The Monte Carlo transport parameters have important and significant influence on both the accuracy of the simulation, and the efficiency. If you are unsure, <b>neglect this input block entirely to use the defaults</b>. If you are publishing an article using EGSnrc, make sure to disclose the transport parameters in use, as well as the release version.
 
 \verbatim
 #  Modify here parameters that should be different from their defaults.
@@ -126,7 +313,7 @@ The input block to enter/modify transport parameters is shown below:
     Pair angular sampling          = Simple         # Off, Simple (default),KM
     Triplet production             = Off            # On or Off (default)
     Electron Impact Ionization     = Off            # On, Off (default), casnati, kolbenstvedt, gryzinski
-    Bound Compton scattering       = norej          # On, Off, norej (default)
+    Bound Compton scattering       = norej          # On, Off, Simple, norej (default)
     Radiative Compton corrections  = Off            # On,  Off (default)
     Rayleigh scattering            = Off            # On ,Off (default), custom
     Photoelectron angular sampling = On             # On (default),Off
@@ -134,18 +321,100 @@ The input block to enter/modify transport parameters is shown below:
     Photon cross sections          = xcom           # si, epdl, xcom (default) or user-supplied
     Photon cross-sections output   = Off            # Off (default) or On
     Compton cross sections         = comp_xsections # user-supplied
+    Photonuclear attenuation       = Off            # Off (default) or On
+    Photonuclear cross sections    = default        # default (default) or user-supplied
 :stop MC transport parameter:
 \endverbatim
 
 Default values used in EGSnrc are set to provide an accurate simulation
 of the electron-photon transport, except for the exclusion of coherent
 (Rayleigh) scattering in low-energy photon problems. The reason for this is
-that until very recently users needed to especifically request the
+that until very recently users needed to specifically request the
 inclusion of Rayleigh cross sections in the PEGS4 data sets. Currently,
 Rayleigh cross sections are generated on the fly (see Rayleigh in PIRS-701).
 Default values may often only add time to your calculation. One can speed
 things up by turning them off. The user is referred to section 2.6
 of the PIRS-702 manual for a detailed description
 of these parameters.
+
+\section common_example A simple example
+Putting together the examples suggested above, we have a complete input file. Note that we are using default transport parameters. This input file will work with any egs++ application that doesn't require additional inputs. For example, it will work with \c tutor7pp.
+
+\verbatim
+:start geometry definition: # Only one geometry definition block allowed
+    :start geometry: # There may be many geometry blocks
+        name        = my_box # A name of your choosing
+        library     = egs_box # As shown in the egs_box documentation
+        box size    = 1 2 3 # Side-length along x,y,z in cm
+        :start media input:
+            media = water # The whole box is water
+        :stop media input:
+    :stop geometry:
+
+    simulation geometry = my_box # The geometry to actually run the simulation in
+
+:stop geometry definition:
+
+:start media definition:
+
+    # Threshold energies
+    ae  = 0.521
+    ap  = 0.01
+    ue  = 50.511
+    up  = 50
+
+    # Give materials any name and refer to it in the geometry
+    :start water:
+        # This file must exist in $HEN_HOUSE/pegs4/density_corrections
+        density correction file    = water_liquid
+    :stop water:
+
+:stop media definition:
+
+:start source definition:
+    :start source:
+        library = egs_collimated_source # See the collimated source documentation
+        name = my_source # A name of your choosing
+        :start source shape: # Origin is a point
+            type = point
+            position = 0 0 5 # Distances in cm
+        :stop source shape:
+        :start target shape: # Target shape for collimated source
+            library   = egs_rectangle
+            rectangle = -1 -1 1 1
+        :stop target shape:
+        distance = 5
+        charge = -1 # Electrons
+        :start spectrum:
+            type = monoenergetic
+            energy = 20 # A beam of 20 MeV electrons
+        :stop spectrum:
+    :stop source:
+
+    simulation source = my_source # Refer to your source by name
+
+:stop source definition:
+
+:start ausgab object definition: # Output options
+    :start ausgab object: # Track scoring (view in egs_view)
+        name    = my_tracks
+        library = egs_track_scoring
+        stop scoring = 1024
+    :stop ausgab object:
+    :start ausgab object: # Dose scoring
+        name         = my_dose
+        library      = egs_dose_scoring
+        medium dose  = no
+        region dose  = yes
+        volume       = 6 # in cm**3 (for the geometry above = 1*2*3)
+        dose regions = 1 # list of individual region numbers (we just have 1)
+    :stop ausgab object:
+:stop ausgab object definition:
+
+:start run control:
+    ncase = 1e5 # Number of histories to run
+:stop run control:
+
+\endverbatim
 
 */

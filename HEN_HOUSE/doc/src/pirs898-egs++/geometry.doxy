@@ -197,24 +197,29 @@ if the geometry is defined in an input file, the file must contain a section
 :start geometry definition:
     :start geometry:
        definition of a geometry
+       name = myGeometry
     :stop geometry:
+
+    simulation geometry = myGeometry
 :stop geometry definition:
 \endverbatim
 (see the \link EGS_Input EGS_Input documentation \endlink for
 details of the input file syntax. Note also that in what follows
 the input file syntax will be used to describe an EGS_Input property).
+The geometry in which to perform the simulation is specified using the
+<code>simulation geometry</code> input parameter.
 If more than one geometry is to be constructed, there can be several
 \c geometry properties (\em i.e. several <code>:start geometry: :stop geometry:
-</code> sections). Each geometry definition must have a \c name property
+</code> sections). Each geometry must have a \c name property
 with a unique name value because names are used to refer to other geometries
-in \em e.g. the construction of composite geometries. Each geometry definition
+in \em e.g. the construction of composite geometries. Each geometry
 must also contain a \c library property, which be used to dynamically load
 the library that provides the geometry class being defined by the input.
 Library names
 must be given without their platform specific prefixes and suffixes
 (\em e.g. \c egs_planes stands for \c libegs_planes.so on Linux
 and \c egs_planes.dll on Windows). Some geometry libraries provide
-implementations for more than one geometry class. Fot such libraries
+implementations for more than one geometry class. For such libraries
 a \c type property is required in the geometry definition to specify
 the type of the object being constructed. For instance,
 \verbatim
@@ -312,7 +317,7 @@ developing new geometries and has helped to find numerous bugs
 in the initial implementations of the various geometry classes
 provided with \c egspp.
 
-\section geometry_view The geometry viewer
+\section geometry_view The geometry viewer: egs_view
 
 The geometry package comes with a viewer that can be used
 to look at a geometry defined in an input file in 3D.
