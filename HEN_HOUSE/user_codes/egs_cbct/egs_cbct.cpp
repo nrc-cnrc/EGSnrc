@@ -21,9 +21,10 @@
 #
 ###############################################################################
 #
-#  Author:          Ernesto Mainegra-Hing, 2007
+#  Authors:         Iwan Kawrakow, 2007
+#                   Ernesto Mainegra-Hing, 2007
 #
-#  Contributors:    Iwan Kawrakow
+#  Contributors:
 #
 ###############################################################################
 #
