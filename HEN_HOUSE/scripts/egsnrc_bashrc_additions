@@ -89,7 +89,7 @@ alias pprocess='$HEN_HOUSE/scripts/pprocess'
 # hard-coded run-time search path (no -rpath)
 #
 if test -d $HEN_HOUSE/egs++/dso/linux-static; then
-   alias egs_view='(LD_LIBRARY_PATH=${HEN_HOUSE}egs++/dso/linux-static/ ${HEN_HOUSE}pieces/linux/egs_view_64)'
+   alias egs_view='LD_LIBRARY_PATH=${HEN_HOUSE}egs++/dso/linux-static/ ${HEN_HOUSE}pieces/linux/egs_view_64'
 fi
 # OS X specific settings
 canonical_system=$( cat $EGS_CONFIG | grep "canonical_system =" | sed 's/canonical_system = //' )
