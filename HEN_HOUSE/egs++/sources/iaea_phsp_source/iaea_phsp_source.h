@@ -89,8 +89,8 @@ An IAEA phase-space file source is defined as follows:
     particle type = one of photons, electrons, positrons, all, or charged
     cutout = x1 x2 y1 y2  (optional)
     weight window = wmin wmax, the min and max particle weights to use. If the particle weight is not in this range, it is rejected. (optional)
-    reuse photons = number of times to reuse each photon (optional)
-    reuse electrons = number of times to reuse each electron (optional)
+    recycle photons = number of times to recycle each photon (optional)
+    recycle electrons = number of times to recycle each electron (optional)
 :stop source:
 \endverbatim
 The optional \c cutout key permits to set a rectangular cutout
@@ -118,8 +118,8 @@ A simple example:
         iaea phase space file = your phase space file (no extension)
         particle type = all
         cutout      = -1 1 -2 2
-        reuse photons = 10
-        reuse electrons = 10
+        recycle photons = 10
+        recycle electrons = 10
     :stop source:
 
     simulation source = my_source
@@ -255,10 +255,10 @@ protected:
                 Nlast,     //!< Last record this source can use
                 count;     /*!< Particles delivered so far (may be less than
                            Nread because some particles were rejected */
-    int         Nrecycle;  //!< Number of times the file was recycled.
-    int         Nreuse_g;  //!< Number of times to reuse a photon
-    int         Nreuse_e;  //!< Number of times to reuse a charged particle
-    int         Nreuse;    //!< Number of times to reuse current particle
+    int         Nrestart;  //!< Number of times the file was restarted
+    int         Nrecycle_g;  //!< Number of times to recycle a photon
+    int         Nrecycle_e;  //!< Number of times to recycle a charged particle
+    int         Nrecycle;    //!< Number of times to recycle current particle
     int         Nuse;      //!< Number of times current particle was used so far
     int         iaea_iostat; //!< iostat on read/write of iaea phsp file
     int         iaea_fileid; //!< phsp file unit no.
