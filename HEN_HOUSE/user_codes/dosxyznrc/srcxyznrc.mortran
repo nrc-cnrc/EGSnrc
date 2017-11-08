@@ -2063,22 +2063,6 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     "strip trailing blanks"
     the_shared_lib=the_shared_lib(:lnblnk1(the_shared_lib));
 
-    IF(the_shared_lib='0')[
-	"no shared library
-	SHLflag = 0;
-    ]
-    ELSEIF(the_shared_lib='particleDmlc') [
-	"particles must go through MLC code compiled as a shared library
-	MLCflag =1;
-	SHLflag = 1;
-    ]
-    ELSE[
-	"particles must go through BEAM shared library
-	SHLflag =1;
-	MLCflag=0;
-	OUTPUT61 the_shared_lib;(/' BEAM library: ',/A80);
-    ]
-
     the_phsp_file=FILNAM(:INDEX(FILNAM,',')-1);
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
@@ -2182,8 +2166,27 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     "strip trailing blanks"
     the_input_file=the_input_file(:lnblnk1(the_input_file));
 
-    OUTPUT61 $cstring(the_input_file);
-    (/'input file: ',A/);
+    IF(the_shared_lib='0')[
+        "no shared library
+        SHLflag = 0;
+    ]
+    ELSEIF(the_shared_lib='particleDmlc') [
+        "particles must go through MLC code compiled as a shared library
+        MLCflag =1;
+        SHLflag = 1;
+        OUTPUT61; (/' Will use VCU simulation compiled as shared library:'/);
+        OUTPUT61 the_input_file;(/' VCU input file: ',/A80);
+    ]
+    ELSE[
+        "particles must go through BEAM shared library
+        SHLflag =1;
+        MLCflag=0;
+        IF(is_pegsless) [ the_pegs_file='pegsless';]
+        ELSE [ the_pegs_file= pegs_file; ]
+        OUTPUT61 the_shared_lib;(/' BEAM library: ',/A80);
+        OUTPUT61 the_input_file;(' BEAM input file: ',/A80);
+        OUTPUT61 the_pegs_file;(' BEAM pegs data: ',/A80);
+    ]
   ]
   ELSEIF(isource=21)["Full BEAM sim.incident from multiple settings"
 			      "and through an MLC"
@@ -2702,7 +2705,7 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
        OUTPUT 'About to initialise BEAM code..';(//a);
        call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_shared_lib,
-                         pegs_file,the_input_file);
+                         the_pegs_file,the_input_file);
      ]
 
      IF(calflag = 0)[
