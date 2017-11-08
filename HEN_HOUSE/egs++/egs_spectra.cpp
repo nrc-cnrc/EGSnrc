@@ -935,6 +935,13 @@ It is defined using the following input
                             Files will be named based on the nuclide and
                             maximum energy of the beta decay:
                             {nuclide}_{energy}.spec
+    alpha scoring       = [optional, default=none] none or local
+                            Whether or not to deposit alpha particles locally.
+                            Since alpha particles are not transported in EGSnrc,
+                            there are only two options. Either discard the alpha
+                            particles and their energy completely, or deposit
+                            the energy immediately after creation in the
+                            local region.
 :stop spectrum:
 :start spectrum:
     type                = radionuclide
@@ -960,7 +967,9 @@ on subsequent calls to <b>\c sample()</b>.
 
 - Alpha disintegrations may also set the energy level of the daughter to an
 excited state. Alpha particles themselves are not modeled, so a zero energy
-particle is returned.
+particle is returned. Use the 'alpha scoring = local' option to force alpha particles
+to deposit energy in the same region as their creation. By default, no energy
+is deposited and the alpha particles are discarded immediately.
 
 - Internal transition gammas are sampled and emitted following a disintegration
 if the daughter nuclide is in an excited state. The energy level of the
@@ -1001,7 +1010,8 @@ public:
     /*! \brief Construct a radionuclide spectrum.
      */
     EGS_RadionuclideSpectrum(const string nuclide, const string ensdf_file,
-                             const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra) :
+                             const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra,
+                             const bool scoreAlphasLocally) :
         EGS_BaseSpectrum() {
 
         // For now, hard-code verbose mode
@@ -1038,6 +1048,7 @@ public:
         ishower = -1; // Start with ishower -1 so first shower has index 0
         totalGammaEnergy = 0;
         relaxationType = relaxType;
+        scoreAlphasLocal = scoreAlphasLocally;
 
         // Get the maximum energy for emissions
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
@@ -1409,7 +1420,9 @@ protected:
                 // Score alpha energy depositions locally,
                 // because alpha transport is not modeled in EGSnrc.
                 // This is an approximation!
-                edep += (*alpha)->getFinalEnergy();
+                if (scoreAlphasLocal) {
+                    edep += (*alpha)->getFinalEnergy();
+                }
 
                 // For alphas we simulate a disintegration but the
                 // transport will not be performed so return 0
@@ -1502,6 +1515,7 @@ private:
                                 edep;
     EGS_I64                     ishower;
     string                      relaxationType;
+    bool                        scoreAlphasLocal;
 
     EGS_RadionuclideBetaSpectrum *betaSpectra;
     EGS_Application             *app;
@@ -1871,8 +1885,14 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         string nuclide;
         err = inp->getInput("nuclide",nuclide);
         if (err) {
-            egsWarning("%s wrong/missing 'nuclide' input\n",spec_msg1);
-            return 0;
+            err = inp->getInput("isotope",nuclide);
+            if (err) {
+                err = inp->getInput("radionuclide",nuclide);
+                if (err) {
+                    egsWarning("%s wrong/missing 'nuclide' input\n",spec_msg1);
+                    return 0;
+                }
+            }
         }
 
         EGS_Float relativeActivity;
@@ -1882,7 +1902,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         }
 
         // Determine whether to sample X-Rays and Auger electrons
-        // using the ensdf data (options: yes or no)
+        // using the ensdf data (options: eadl, ensdf or none)
         string tmp_relaxType, relaxType;
         err = inp->getInput("atomic relaxations", tmp_relaxType);
         if (!err) {
@@ -1920,6 +1940,18 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         if (inp->compare(outputBetaSpectra,"yes")) {
             outputBetaSpectra = "yes";
             egsInformation("EGS_BaseSpectrum::createSpectrum: Beta energy spectra will be output to files.\n");
+        }
+
+        // Determine whether to score alpha energy locally or discard it
+        // By default, the energy is discarded
+        string tmp_alphaScoring;
+        bool scoreAlphasLocally = false;
+        err = inp->getInput("alpha scoring", tmp_alphaScoring);
+        if (!err) {
+            if (inp->compare(tmp_alphaScoring,"local")) {
+                scoreAlphasLocally = true;
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Alpha particles will deposit energy locally, in the same region as creation.\n");
+            }
         }
 
         // For ensdf input, first check for the input argument
@@ -1965,7 +1997,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, relaxType, outputBetaSpectra);
+        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, relaxType, outputBetaSpectra, scoreAlphasLocally);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());
