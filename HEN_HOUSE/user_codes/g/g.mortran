@@ -143,7 +143,8 @@ REPLACE {;COMIN/SCORE/;} WITH {;
   real*8        e_tot,e_tot2,e_brem,e_brem2,e_rad,e_rad2,
                 etot_tmp,ebrem_tmp,erad_tmp,e_radc,e_bremc;
   $REAL         my_gle,accu;
-  $INTEGER      ncase,calc_type,during_pe_compt,during_eii;
+  $INTEGER      calc_type,during_pe_compt,during_eii;
+  $LONG_INT     ncase;
 };
 
 REPLACE {$MXENE} WITH {200};  "maximum number of energies to be looped over"
@@ -205,10 +206,10 @@ real*8       e_mutr, e_mutr2, e_muen, e_muen2, mutr, mutr2, muen, muen2;
 real*8       ert, ert2, ett, ett2;
 
 "For interacting with the source routine and shower"
-$INTEGER       iqin,irin,icase,ip;
+$INTEGER       iqin,irin,ip;
 $REAL          ein,uin,vin,win,wtin,xin,yin,zin,ecut_ask,pcut_ask;
 $REAL          gbr1,gbr2,rnno,err_frac;
-$LONG_INT      nmutr,nmuen;
+$LONG_INT      nmutr,nmuen,icase;
 
 "---------------------------------------------------------------------"
 " Steps 2 (pre-hatch initializations),                                "
@@ -336,7 +337,11 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
             IF( iq(ip) ~= 0 ) edep = edep + e(ip)-prm;
         ]
         nmutr = nmutr + 1;
-        aux = edep/gmfp/rho(1);
+        IF(gmfp > 0) [
+            aux = edep/gmfp/rho(1);
+        ] ELSE [
+            aux = 0;
+        ]
         e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
         IF( mod(icase,10000) = 0 & accu > 0 ) [
             xtest = e_mutr; xtest2 = e_mutr2;
@@ -364,7 +369,11 @@ IF( calc_type = 1 ) [  "will seek a given accuracy -- default does not do this"
         call shower(iqin,ein,xin,yin,zin,uin,vin,win,irin,wtin);
         $SET INTERVAL my_gle,ge;
         $EVALUATE gmfp USING gmfp(my_gle);
-        aux = etot_tmp/gmfp/rho(1);
+        IF(gmfp > 0) [
+            aux = etot_tmp/gmfp/rho(1);
+        ] ELSE [
+            aux = 0;
+        ]
         e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
         nmutr = nmutr+1; nmuen = nmuen + 1;
         e_tot = e_tot + etot_tmp;
@@ -415,7 +424,6 @@ $FLUSH_UNIT(6);
 "############################################################################
 
 DO icase=1,ncase [
-
   call source_sample(iqin,irin,ein,xin,yin,zin,uin,vin,win,wtin);
   IF( $DEBUGIT ) [
     write(18,*) ' ******* new shower, e = ',ein,' iq = ',iqin;
@@ -441,10 +449,19 @@ DO icase=1,ncase [
       $EVALUATE gmfp USING gmfp(my_gle);  "mfp in cm"
       "when doing bound compton, the above is not the correct cross-section"
       "but we also throw out the uncollided photons, so it works out"
-      aux = (etot_tmp/gmfp)/rho(1);  "energy per g/cm^2"
+
+      IF(gmfp > 0) [
+          aux = (etot_tmp/gmfp)/rho(1);  "energy per g/cm^2"
+      ] ELSE [
+          aux = 0;
+      ]
       e_mutr = e_mutr + aux; e_mutr2 = e_mutr2 + aux*aux;
       "mutr = mutr + aux/ein; mutr2   = mutr2 +aux*aux/(ein**2);
-      aux = ((etot_tmp - erad_tmp)/gmfp)/rho(1);
+      IF(gmfp > 0) [
+          aux = ((etot_tmp - erad_tmp)/gmfp)/rho(1);
+      ] ELSE [
+          aux = 0;
+      ]
       e_muen = e_muen + aux; e_muen2 = e_muen2 + aux*aux;
       "muen = muen + aux/ein; muen2   = muen2 +aux*aux/(ein**2);
   ] "end of photon only block"
@@ -1343,7 +1360,11 @@ DO icase=1,ncase [
     sume = sume + ee; sume2 = sume2 + ee*ee;
     ee = ee*(gbr2-gbr1) + (1-gbr2)*ein;
     IF( ein > 2*prm & gbr1 > 0 ) [ ee = ee + gbr1*(ein-2*prm); ]
-    ee = ee/gmfp/rho(medium);
+    IF(gmfp > 0) [
+        ee = ee/gmfp/rho(medium);
+    ] ELSE [
+        ee = 0;
+    ]
     sumtr = sumtr + ee; sumtr2 = sumtr2 + ee*ee;
   ]
   ELSE [ sumr = sumr + 1; sumr2 = sumr2 + 1; ]
