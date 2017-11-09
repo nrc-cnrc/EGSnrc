@@ -1079,11 +1079,12 @@ IF(Z_min_CM(ICM_$DYNVMLC)>ZMIN_$DYNVMLC) [
        (//' ***WARNING IN CM ',I4,' ($DYNVMLC):'/
            ' Z_min_CM(1)  > distance to front of MLC '/
            ' Z_min_CM(1) reset to ',F8.5,' cm'//);
-      WRITE(IOUTLIST,
-         ' (//'' ***WARNING IN CM '',I4,'' ($DYNVMLC):''/
-          '' Z_min_CM(1)  > distance to front of collimator''/
-          '' Z_min_CM(1) reset to '',F8.5,'' cm''//)')
-          ICM_$DYNVMLC, Z_min_CM(ICM_$DYNVMLC);
+ WRITE(IOUTLIST,
+ '(//'' ***WARNING IN CM '',I4,
+      '' ($DYNVMLC):''/
+  '' Z_min_CM(1)  > distance to front of collimator''/
+  '' Z_min_CM(1) reset to '',F8.5,'' cm''//)')
+    ICM_$DYNVMLC, Z_min_CM(ICM_$DYNVMLC);
      ]
     ELSE[
       OUTPUT ICM_$DYNVMLC;
@@ -1092,7 +1093,7 @@ IF(Z_min_CM(ICM_$DYNVMLC)>ZMIN_$DYNVMLC) [
           ' Overlaps with previous CM'/
           ' Error will be propagated'//);
       WRITE(IOUTLIST,
-         ' (//'' ***WARNING IN CM '',I4,'' ($DYNVMLC):''/
+         '(//'' ***WARNING IN CM '',I4,'' ($DYNVMLC):''/
           '' Overlaps with previous CM''//)')
           ICM_$DYNVMLC;
       IERR_GEOM(ICM_$DYNVMLC)=IERR_GEOM(ICM_$DYNVMLC)+1;

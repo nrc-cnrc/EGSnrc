@@ -1684,7 +1684,56 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
         GOTO :HOWNEAR_DONE:;
 :HOWNEAR_{P1}:  {P1}_CM_HOWNEAR({P3});
 }
-;
+
+" expand $SYNCCMS_SET_COMP to coding to set opening dimensions of all"
+" SYNC type CMs in the accelerator"
+" if there are no more SYNC CMs we encounter END_SYNC_CMS in the list"
+" and, because there is only one parameter, it becomes a null (;) replacement"
+
+REPLACE {$SYNCCMS_SET_COMP;} WITH {$SYNC_CM_LIST$SET_COMP;}
+
+;REPLACE {SYNCCMLIST(#)$SET_COMP;} WITH {;}
+
+;REPLACE {SYNCCMLIST(#,#)$SET_COMP;} WITH {
+   {P1}_SET_COMP;
+   SYNCCMLIST({P2})$SET_COMP;
+}
+
+"now expand $SYNCCMS_APPEND_USER to coding that will append the common"
+"block for each SYNC type CM to USER"
+"At the end of the list, we encounter a single parameter,END_SYNC_CMS, and the"
+"replacement is null"
+
+REPLACE {$SYNCCMS_APPEND_USER;} WITH {$SYNC_CM_LIST$APPEND_USER;}
+
+;REPLACE {SYNCCMLIST(#)$APPEND_USER;} WITH {;}
+
+;REPLACE {SYNCCMLIST(#,#)$APPEND_USER;} WITH {
+    APPEND {;COMIN/USER-{P1}/;} TO {;COMIN/USER/;}
+    SYNCCMLIST({P2})$APPEND_USER;
+}
+
+"same as above but for DYN type CMs"
+
+REPLACE {$DYNCMS_SET_COMP;} WITH {$DYN_CM_LIST$SET_COMP;}
+
+;REPLACE {DYNCMLIST(#)$SET_COMP;} WITH {;}
+
+;REPLACE {DYNCMLIST(#,#)$SET_COMP;} WITH {
+   {P1}_SET_COMP;
+   DYNCMLIST({P2})$SET_COMP;
+}
+
+REPLACE {$DYNCMS_APPEND_USER;} WITH {$DYN_CM_LIST$APPEND_USER;}
+
+;REPLACE {DYNCMLIST(#)$APPEND_USER;} WITH {;}
+
+;REPLACE {DYNCMLIST(#,#)$APPEND_USER;} WITH {
+    APPEND {;COMIN/USER-{P1}/;} TO {;COMIN/USER/;}
+    DYNCMLIST({P2})$APPEND_USER;
+}
+
+
 " *********************************
 " Revised LATCH and NPASS features:
 " *********************************
@@ -2833,8 +2882,7 @@ REPLACE {;COMIN/USER/;} WITH {
 ;COMIN/USER-PHOTON-FORCING,USER-RANGE-REJECTION,USER-SPLITTING,
        USER-STACK,
        USER-DIRECTIONAL-BREM-SPLITTING,USER-CS-ENHANCEMENT,
-       USER-CUSTOM-VARIABLES,USER-DYNVMLC,USER-DIRECTIONAL-SOURCE-BIASING,
-       USER-DYNJAWS,USER-SYNCJAWS,USER-SYNCMLCE,USER-SYNCVMLC,USER-SYNCHDMLC,
+       USER-CUSTOM-VARIABLES,USER-DIRECTIONAL-SOURCE-BIASING,
        USER-BCSE/;
 }
 
@@ -3103,6 +3151,11 @@ $REAL ZLAST($MXSTACK),XLAST($MXSTACK),YLAST($MXSTACK),FDUMMY,ZLASTOLD;
 INTEGER LATCH_OPTION,LNOB29,NPASSI,IPHATI,
        NPASS($MXSTACK,$MAX_SC_PLANES),IDUMMY,LATCHIN,LATCHOUT,LATCHOLD;
 }
+
+"now append the USER variables of any SYNC CM to USER"
+$SYNCCMS_APPEND_USER;
+"same for DYN type CMs"
+$DYNCMS_APPEND_USER;
 
 APPEND {;COMIN/CMs,CM_LIST,SCORE/;} TO {$COMIN-ELECTR;}
 
@@ -4451,18 +4504,12 @@ IF(dosxyz2beam_index<0)[" for particles given by dosxyznrc"
 
 ]
 
-$SET_DYN_COMP; "set leaf positions for dynamic or step-and-shoot"
-               "simulations with DYNVMLC if needed"
-$SET_DYNJAWS_COMP; "set dynamic jaw positions if needed"
-
-
 "Tony Popescu and Julio Lobo: Note: with multiple"
 "synchronized modules, only one sets the BEAM_MU_INDEX"
 "the rest use the same one"
-$SET_SYNCJAWS_COMP; "set synchronized jaws positions"
-$SET_SYNCVMLC_COMP; "set synchronized vmlc positions"
-$SET_SYNCMLCE_COMP; "set synchronized mlce positions"
-$SET_SYNCHDMLC_COMP;"set synchronized hdmlc positions if needed"
+$SYNCCMS_SET_COMP; "coding for synchronized settings of all SYNC"
+                   "type CMs in the accelerator"
+$DYNCMS_SET_COMP; "same for DYN CMs"
 
 "the following was added by Tony Popescu and Julio Lobo to allow"
 "communication between several moving beam modules"
