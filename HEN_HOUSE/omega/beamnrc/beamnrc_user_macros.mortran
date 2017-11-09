@@ -225,48 +225,6 @@ REPLACE {$USER-READ-DAT(#);} WITH {;}
 "allow definition of custom user variables to add to USER common blocks"
 REPLACE {;COMIN/USER-CUSTOM-VARIABLES/;} WITH {;}
 
-"replaced with variables if DYNVMLC is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of leaf openings"
-"during simulation"
-REPLACE {;COMIN/USER-DYNVMLC/;} WITH {;}
-
-REPLACE {$SET_DYN_COMP} WITH {;}
-
-"replaced with variables if DYNJAWS is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of jaw settings"
-"during simulation--intended to allow simulation of dynamic wedge"
-REPLACE {;COMIN/USER-DYNJAWS/;} WITH {;}
-
-REPLACE {$SET_DYNJAWS_COMP} WITH {;}
-
-"replaced with variables if SYNCJAWS is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of jaw settings"
-"during simulation"
-REPLACE {;COMIN/USER-SYNCJAWS/;} WITH {;}
-
-REPLACE {$SET_SYNCJAWS_COMP} WITH {;}
-
-"replaced with variables if SYNCMLCE is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of mlce settings"
-"during simulation"
-REPLACE {;COMIN/USER-SYNCMLCE/;} WITH {;}
-
-REPLACE {$SET_SYNCMLCE_COMP} WITH {;}
-
-"replaced with variables if SYNCVMLC is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of leaf settings"
-"during simulation"
-REPLACE {;COMIN/USER-SYNCVMLC/;} WITH {;}
-
-REPLACE {$SET_SYNCVMLC_COMP} WITH {;}
-
-"replaced with variables if SYNCHDMLC is included in the accelerator"
-"allows dynamic and step-and-shoot adjustment of SYNCDHMLC settings"
-"during simulation--intended to allow simulation of dynamic HDMLC"
-REPLACE {;COMIN/USER-SYNCHDMLC/;} WITH {;}
-
-REPLACE {$SET_SYNCHDMLC_COMP} WITH {;}
-
 "macro in subroutine combine_results which will allow user to recombine"
 "their own data after a parallel run"
 REPLACE {$USER-COMBINE-RESULTS;} WITH {;}

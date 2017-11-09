@@ -414,6 +414,48 @@ DO i=1,num_cms[
 text='   )}';
 write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
 
+"Now output a macro that lists the synchronized (SYNC) CM"
+"names and types in this accelerator"
+
+text='REPLACE{$SYNC_CM_LIST} WITH {SYNCCMLIST(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   IF(cmtype(i)='SYNCJAWS' | cmtype(i)='SYNCVMLC' | cmtype(i)='SYNCMLCE' |
+      cmtype(i)='SYNCHDMLC') [
+      text='      '//$cstring(cmid(i))//',';
+      write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+   ]
+]
+"always terminate the list with a termination string"
+text='      END_SYNC_CMS';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+text='REPLACE{$DYN_CM_LIST} WITH {DYNCMLIST(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   IF(cmtype(i)='DYNJAWS' | cmtype(i)='DYNVMLC') [
+      text='      '//$cstring(cmid(i))//',';
+      write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+   ]
+]
+"always terminate the list with a termination string"
+text='      END_DYN_CMS';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+text='REPLACE{$CM_TYPE} WITH {CMTYPE(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   text='      '//$cstring(cmtype(i));
+   IF(i<num_cms) text=$cstring(text)//',';
+   write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+]
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
 "now open the $CM_cm.mortran and $CM_macros.mortran files in cm_home"
 "read them line-by-line and output lines (with $CM replaced by $ID)"
 "in the appropriate files"
