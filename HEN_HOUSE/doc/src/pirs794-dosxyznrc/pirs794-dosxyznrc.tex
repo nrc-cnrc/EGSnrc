@@ -831,7 +831,7 @@ and contains a great deal of on-line help\cite{TR99}.
 \begin{small}
 \input{inputs/dosxyznrc.inp}
 \end{small}
-%\clearpage
+\clearpage
 \section{Source Routines}
 \subsection{Source Types in DOSXYZnrc}
 \indexm{source routines!summary}
@@ -874,6 +874,7 @@ to the Z-axis from the front of the phantom. The input parameters are:
 \begin{description}
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0: photon, 1: positron)
 \indexm{iqin}
+\item [~~~~{\tt isource}] = 0 
 \item [~~~~{\tt xinl,xinu}] Lower and upper x-bounds on the phantom surface
 \indexm{xinl,xinu}
 \item [~~~~{\tt yinl,yinu}] Lower and upper y-bounds on the phantom surface
@@ -917,6 +918,7 @@ This uniform parallel rectangular beam may be incident from any direction. The i
 \begin{description}
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0: photon, 1: positron)
 \indexm{iqin}
+\item [~~~~{\tt isource}] = 1
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter.  The
 isocenter is normally inside the phantom.
 \indexm{xiso,yiso,ziso}
@@ -1011,6 +1013,7 @@ Input parameters for a phase-space source are:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
             photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 2
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter
 \indexm{xiso,yiso,ziso}
                  (normally located within the phantom)
@@ -1203,6 +1206,7 @@ The input parameters for the point source are:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
                   photon, 1: positron)
+\item [~~~~{\tt isource}] = 3
 \item [~~~~{\tt xinl,xinu}] Lower and upper x-bounds of the field on the
 \indexm{xinl,xinu}
           phantom surface
@@ -1250,7 +1254,7 @@ For more details about beam characterization models see the
 BEAMnrc User's Manual and associated paper\cite{Ma95c,Ma97}.
 \indexm{BEAMDP}
 
-Input parameters for source 4 are the same as for source 2:
+Apart from {\tt isource}, which must be set to 4, input parameters for source 4 are the same as for source 2:
 
 \indexm{enflag}
 Note this source requires {\tt enflag} = 4 and to input the beam model
@@ -1284,6 +1288,7 @@ The input parameters for the uniform isotropically radiating parallelepiped:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
                   photon, 1: positron)
+\item [~~~~{\tt isource}] = 6
 \item [~~~~{\tt xinl,xinu}] Lower and upper x-bounds of the active volume (cm)
 \indexm{xinl,xinu}
 \item [~~~~{\tt yinl,yinu}] Lower and upper y-bounds of the active volume (cm)
@@ -1321,6 +1326,7 @@ directions (theta-phi pairs). The input parameters are:
 \begin{description}
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0: photon, 1: positron)
 \indexm{iqin}
+\item [~~~~{\tt isource}] = 7
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter.  The
 isocenter is normally inside the phantom.
 \indexm{xiso,yiso,ziso}
@@ -1403,6 +1409,7 @@ Input parameters for source 8 are:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
             photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 8
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter
 \indexm{xiso,yiso,ziso}
                  (normally located within the phantom)
@@ -1560,6 +1567,7 @@ Input parameters for source 9 are:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
             photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 9
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter
 \indexm{xiso,yiso,ziso}
                  (normally located within the phantom)
@@ -1756,6 +1764,7 @@ Inputs for source 10 are:
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0:
 \indexm{iqin}
             photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 10
 \item [~~~~{\tt xiso/yiso/ziso}] x-, y-, z-coordinates of the isocenter
 \indexm{xiso,yiso,ziso}
                  (normally located within the phantom)
@@ -1835,6 +1844,7 @@ Input parameters for source 20 are:
 \item [~~~~{\tt iqin}]
 \indexm{iqin}
 Charge of the incident beam (-1: electron, 0: photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 20
 \item [~~~~{\tt nset}]
 \indexm{nset}
 \indexm{\$MXANG}
@@ -2240,6 +2250,7 @@ The input parameters for source 21 are:
 \item [~~~~{\tt iqin}]
 \indexm{iqin}
 Charge of the incident beam (-1: electron, 0: photon, 1: positron, 2: all particle types)
+\item [~~~~{\tt isource}] = 21
 \item [~~~~{\tt nset}]
 \indexm{nset}
 \indexm{\$MXANG}
@@ -3313,7 +3324,7 @@ Photon splitting has the potential to increase the efficiency of a dose
 calculation more than photon interaction forcing.  A good rule of thumb for
 the setting of {\tt n\_split} is:
 \begin{equation}
-{\tt n\_split}>=\frac{N}{1-e^\lambda}
+{\tt n\_split}>=\frac{N}{1-e^{-\lambda}}
 \end{equation}
 where $\lambda$ is approximately equal to the number of photon mean free paths
 in the geometry of interest and {\tt N} $\geq$ 5.  This will increase the

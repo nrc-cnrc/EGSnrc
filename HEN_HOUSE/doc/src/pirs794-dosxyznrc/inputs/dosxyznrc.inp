@@ -3,8 +3,7 @@
 
             *********************************************
             *                                           *
-            * dosxyznrc.mortran (Revision: 1.53 )       *
-            * (last edited Date: 2013/05/08 18:58:44 )  *
+            * dosxyznrc.mortran                         *
             *                                           *
             *********************************************
 
@@ -181,7 +180,6 @@
 
                 Input source parameters read by srcxyznrc.mortran
                 ==============================================
-              (Revision: 1.35  last edited Date: 2013/05/14 19:09:27 )
               (see section 4 of DOSXYZnrc User's Manual for details)
 
 *******************************************************************************
@@ -557,7 +555,7 @@ Record SC1-20 Synchronized phase space source simulating continuous motion of
   your EGS_HOME/bin/config directory.
 
 
-       iqin,isource,nset,i_dbs,r_dbs,ssd_dbs,z_dbs,e_split,i_muidx_out
+       iqin,isource,nset,i_dbs,r_dbs,ssd_dbs,z_dbs,e_split,i_muidx_out, calflag
 
                iqin(iqinc) = 0 only photons from BEAM simulation will be used
                            = 1 only positrons will be used
@@ -565,7 +563,7 @@ Record SC1-20 Synchronized phase space source simulating continuous motion of
                            = 2 all the particles will be used
                            internally renamed as iqinc
                isource     = 20
-               nset        number of settings (control points)
+               nset        number of settings (control points) (>=2)
                i_dbs       set to 1 if you are using directional bremsstrahlung
                            splitting (DBS) in the BEAM simulation
                            AND you wish to reject fat photons not aimed into
@@ -588,6 +586,11 @@ Record SC1-20 Synchronized phase space source simulating continuous motion of
             i_muidx_out    Set to 1 to include frMU_indx (the fractional
                            monitor unit index) in phase space output if
                            i_phsp_out=1 or 2.
+               calflag     set to 1 to skip the calibration run performed to
+                           refine the estimate of NRCYCL needed to avoid
+                           rewinding the phsp. Only do this if certain that
+                           your phsp has enough particles compared to the no.
+                           of histories you are running.
 
 -------------------------------------------------------------------------------
 
@@ -612,7 +615,7 @@ Record SC1-21 Synchronized BEAM treatment head simulation used as source
                            = 2 all the particles will be used
                            internally renamed as iqinc
                isource     = 21
-               nset        number of settings (control points)
+               nset        number of settings (control points) (>=2)
                i_dbs       set to 1 if you are using directional bremsstrahlung
                            splitting (DBS) in the BEAM simulation
                            AND you wish to reject fat photons not aimed into
@@ -702,7 +705,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                           if dflag=1, the thickness of the region surrounding
                           the phantom in the x direction (default=0cm)
              dflag    = 0 dsurround(1) applies to all sides of phantom
-                      = 1 dsurround(1) applies to x direction must input
+                      = 1 dsurround(1) applies to x direction; must input
                           dsurround(2) for y direction, dsurround(3) for +z
                           direction (down), dsurround(4) for -z direction (up)
           dsurround(2):   (only required if dflag=1) thickness of region
@@ -922,10 +925,8 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
           IPARALLEL   set >1 if you are distributing the job among IPARALLEL
                       machines.  This will generate
                       a binary .pardose file for each job which will contain
-                      the doses in all voxels WITHOUT UNCERTAINTIES.  The
-                      stand-alone code, combinedose, will average the .pardose
-                      files and calculate the uncertainty and output the
-                      result in .3ddose format.  IPARALLEL defaults to 0.
+                      the doses in all voxels WITHOUT UNCERTAINTIES.  IPARALLEL
+                      defaults to 0.
             PARNUM    Only needs to be set if IPARALLEL>1 and you are using
                       a single phase space source.  The partition of the phase
                       space source that will be used for this one of the
@@ -1204,7 +1205,7 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                         used (which is, striktly speaking, valid only for
                         K-shell photo-absorption).
                         If the user has a better approach, replace the macro
-                            $SELECT-PHOTOELECTRON-DIRECTION
+                            $SELECT-PHOTOELECTRON-DIRECTION;
                         The only application that
                         I encountered until now where this option made a
                         small difference was a big ion chamber (cavity size
@@ -1299,5 +1300,4 @@ Record SC1-20a and SC1-21a (required for sources 20 and 21)
                          start region > stop region.
 
 
-*******************************************************************************
 \end{verbatim}
