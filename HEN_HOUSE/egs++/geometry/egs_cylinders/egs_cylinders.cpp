@@ -37,13 +37,6 @@
 #include "egs_cylinders.h"
 #include "egs_input.h"
 
-#ifndef SKIP_DOXYGEN
-    string XProjector::type = "EGS_Xcylinders";
-    string YProjector::type = "EGS_Ycylinders";
-    string ZProjector::type = "EGS_Zcylinders";
-    string Projector::type = "EGS_cylinders";
-#endif
-
 extern "C" {
 
     EGS_CYLINDERS_EXPORT EGS_BaseGeometry *createGeometry(EGS_Input *input) {
@@ -82,13 +75,13 @@ extern "C" {
         // select geometry
         EGS_BaseGeometry *g;
         if (type == "EGS_XCylinders") {
-            g = new EGS_CylindersX(radii.size(),r,xo,"",XProjector());
+            g = new EGS_CylindersX(radii.size(),r,xo,"",EGS_XProjector(""));
         }
         else if (type == "EGS_YCylinders") {
-            g = new EGS_CylindersY(radii.size(),r,xo,"",YProjector());
+            g = new EGS_CylindersY(radii.size(),r,xo,"",EGS_YProjector(""));
         }
         else if (type == "EGS_ZCylinders") {
-            g = new EGS_CylindersZ(radii.size(),r,xo,"",ZProjector());
+            g = new EGS_CylindersZ(radii.size(),r,xo,"",EGS_ZProjector(""));
         }
         else {
             vector<EGS_Float> a;
@@ -99,7 +92,7 @@ extern "C" {
             }
             egsWarning("got axis (%g,%g,%g)\n",a[0],a[1],a[2]);
             g = new EGS_Cylinders(radii.size(),r,xo,"",
-                                  Projector(EGS_Vector(a[0],a[1],a[2])));
+                                  EGS_Projector(EGS_Vector(a[0],a[1],a[2]),""));
         }
         g->setName(input);
         g->setBoundaryTolerance(input);

@@ -40,6 +40,7 @@
 #define EGS_CYLINDERS_
 
 #include "egs_base_geometry.h"
+#include "egs_projectors.h"
 #include "egs_math.h"
 #include "egs_functions.h"
 
@@ -130,9 +131,6 @@ A simple example:
 :stop geometry definition:
 \endverbatim
 \image html egs_cylinders.png "A simple example with clipping plane 1,0,0,0"
-
-\todo Get rid off the local projector classes, use the egspp classes
-instead.
 
 */
 
@@ -496,99 +494,9 @@ public:
     };
 };
 
-#ifndef SKIP_DOXYGEN
-class EGS_CYLINDERS_LOCAL XProjector {
-public:
-    XProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.x;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(t,0,0);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL YProjector {
-public:
-    YProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.y;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(0,t,0);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL ZProjector {
-public:
-    ZProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.z;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(0,0,t);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL Projector {
-public:
-    Projector(const EGS_Vector &A) : a(A) {
-        norm = a.length();
-        a.normalize();
-    };
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return a*x;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return a*t;
-    };
-    EGS_Float length() const {
-        return norm;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {
-        egsInformation(" axis = (%g,%g,%g)\n",a.x,a.y,a.z);
-    };
-
-private:
-    EGS_Vector a;
-    EGS_Float  norm;
-    static string type;
-};
-#endif
-
-typedef EGS_CylindersT<XProjector> EGS_CylindersX;
-typedef EGS_CylindersT<YProjector> EGS_CylindersY;
-typedef EGS_CylindersT<ZProjector> EGS_CylindersZ;
-typedef EGS_CylindersT<Projector> EGS_Cylinders;
+typedef EGS_CylindersT<EGS_XProjector> EGS_CylindersX;
+typedef EGS_CylindersT<EGS_YProjector> EGS_CylindersY;
+typedef EGS_CylindersT<EGS_ZProjector> EGS_CylindersZ;
+typedef EGS_CylindersT<EGS_Projector> EGS_Cylinders;
 
 #endif
