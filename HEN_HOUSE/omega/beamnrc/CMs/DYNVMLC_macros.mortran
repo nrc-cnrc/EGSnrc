@@ -1011,4 +1011,4 @@ REPLACE {$DYNVMLC_CM_HOWNEAR(#);} WITH {
 CALL HOWNEAR_$DYNVMLC({P1});
 }
 ;
-"End of DYNVMLC_macros.mortran (Rev 1.3)"
+"End of DYNVMLC_macros.mortran"

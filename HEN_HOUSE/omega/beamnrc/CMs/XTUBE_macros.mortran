@@ -145,4 +145,4 @@ REPLACE {COMIN/CM_$XTUBE/;} WITH {
 REPLACE {$XTUBE_CM_HOWNEAR(#);} WITH {
 CALL HOWNEAR_$XTUBE({P1});
 }
-"end of XTUBE_macros.mortran (Rev 1.2)"
+"end of XTUBE_macros.mortran"

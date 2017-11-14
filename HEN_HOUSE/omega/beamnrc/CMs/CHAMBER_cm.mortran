@@ -438,7 +438,7 @@
 "
 "*******************************************************************************
 
-%E     "start of subroutine HOWFAR_$CHAMBER (Rev 1.8)"
+%E     "start of subroutine HOWFAR_$CHAMBER"
 "******************************************************************************
 "************************** Component Module CHAMBER***************************
 "******************************************************************************
@@ -1445,7 +1445,7 @@ ELSE ["something is wrong"
 "
 END; "End of subroutine HOWFAR_$CHAMBER"
 
-%E "Start of miscellaneous functions and subroutines (Rev 1.8)"
+%E "Start of miscellaneous functions and subroutines"
 
 ;$REAL FUNCTION SHIFT_COUNT_$CHAMBER(IDUMP);
 "This function is used in finding the correct region. If a particle is
@@ -1550,7 +1550,7 @@ ELSE[
 RETURN;
 END; "End of miscellaneous subroutines and functions"
 
-%E    "Start of subroutine WHERE_AM_I_$CHAMBER (Rev 1.8)"
+%E    "Start of subroutine WHERE_AM_I_$CHAMBER"
 "******************************************************************************
 
 "******************************************************************************
@@ -1640,7 +1640,7 @@ RETURN;
 
 END; "End of subroutine WHERE_AM_I_$CHAMBER"
 
-%E   "Start of subroutine INPUT_$CHAMBER (Rev 1.8)"
+%E   "Start of subroutine INPUT_$CHAMBER"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$CHAMBER
@@ -1707,7 +1707,7 @@ DO I=1,NDOSE_ZONE[ZPLOTCHM(I)=-1000.;"set default values"]
 "  get the title line
 "  ==================
 "
-OUTPUT;(/' $CHAMBER  (CHAMBER Rev 1.8)');
+OUTPUT;(/' $CHAMBER  (CHAMBER)');
 OUTPUT RMAX_CM(ICM);
      (/' This component is an ion chamber or for scoring dose components'/
        '       Outer boundary is a cylinder of radius',F10.4,' cm'
@@ -2965,7 +2965,7 @@ STOP;
 "
 END;  "End of INPUT_$CHAMBER"
 
-%E    "Start of subroutine ISUMRY_$CHAMBER (Rev 1.8)"
+%E    "Start of subroutine ISUMRY_$CHAMBER"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$CHAMBER
@@ -3364,7 +3364,7 @@ DO I=1,N_$CHAMBER[IF(VOL_$CHAMBER(I)<=0.0 )[WRITE(IOUTLIST,141)I;]]
 
 110 FORMAT(///1x,79('-')/
             '  Component module',I3,' is an ion chamber or phantom ',
-            '(CHAMBER Rev 1.8)'/ 1x,79('-')//T5,'Title: ',68A1);
+            '(CHAMBER)'/ 1x,79('-')//T5,'Title: ',68A1);
 111 FORMAT(/T2,'$CHAMBER region & geometry parameters:',
            /T2,'-------------------------------------',
            /T2,'Distance of front of CM from reference plane = ',
@@ -3470,7 +3470,7 @@ IF(IWATCH = 4 | IZLAST = 2)
 "
 RETURN;
 END; "End of subroutine ISUMRY_$CHAMBER"
-%E "Start of subroutine HOWNEAR_$CHAMBER (Rev 1.8)
+%E "Start of subroutine HOWNEAR_$CHAMBER
 "*******************************************************************************
 "
 SUBROUTINE HOWNEAR_$CHAMBER(DIST);
@@ -3542,4 +3542,4 @@ ELSEIF( IR(NP)=IREND_$CHAMBER & N_GAP_$CHAMBER=1)[
 ]
 RETURN;
 END; "End of subroutine HOWNEAR_$CHAMBER"
-"End of CHAMBER_cm.mortran (Rev 1.8)"
+"End of CHAMBER_cm.mortran"

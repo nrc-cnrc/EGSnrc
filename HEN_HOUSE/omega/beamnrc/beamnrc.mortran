@@ -77,7 +77,7 @@
 !INDENT M4;
 ;
 REPLACE {$BEAM_VERSION}
-WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
+WITH {,' ',}
 ;
 "*****************************************************************************
 "*****************************************************************************
@@ -8444,8 +8444,7 @@ ELSEIF(NSC_PLANES>0)[
                    T78,'**'/
 ' **',T15,'OMEGA collaboration with the University of Wisconsin.',T78,'**'/
 ' **',T78,'**'/
-' **',' This is version V1 of BEAMnrc ',
-'(Rev 1.78 last edited 2004-01-12 11:44:06-05)'
+' **',' This is version V1 of BEAMnrc '
    ,T78,'**'/ ' **',T78,'**'/ ' ',78('*')//);
 211  FORMAT(' Max # of histories: to run',I12,T50,'To analyze',T65,I12);
 204  FORMAT(' ',T20,'Incident charge',T63,I2);

@@ -253,7 +253,7 @@
 "   1)  Overlapping component modules
 "
 
-%E "Start of HOWFAR_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+%E "Start of HOWFAR_$SIDETUBE"
 "*******************************************************************************
 "
 "                          Subroutine HOWFAR_SIDETUBE
@@ -470,7 +470,7 @@ ELSE ["something is wrong"
 RETURN;
 END; "End of subroutine HOWFAR_$SIDETUBE"
 
-%E "Start of WHERE_AM_I_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+%E "Start of WHERE_AM_I_$SIDETUBE"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_SIDETUBE
@@ -544,7 +544,7 @@ ELSEIF (IDIR = 2)["have a source 3"
 RETURN;
 END; "End of subroutine WHERE_AM_I_$SIDETUBE"
 
-%E "Start of INPUT_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+%E "Start of INPUT_$SIDETUBE"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_SIDETUBE
@@ -600,7 +600,7 @@ AIRGAPMIN_$SIDETUBE = 0.1; "set a minimum 0.1 cm air gap at front of CM
 "
 OUTPUT;
 (/' Next component is a set of concentric cylinders || to the X axis');
-OUTPUT;(/' $SIDETUBE (SIDETUBE Rev 1.5)');
+OUTPUT;(/' $SIDETUBE (SIDETUBE)');
 IF(ICM_$SIDETUBE = 1)[
    OUTPUT Z_min_CM(1);
    (' This is the first component and starts at Z=',F11.4,' cm');
@@ -897,7 +897,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$SIDETUBE"
 
-%E "Start of ISUMRY_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+%E "Start of ISUMRY_$SIDETUBE"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_SIDETUBE
@@ -1012,7 +1012,7 @@ IF(N_GAP_$SIDETUBE ~= 0 )[
 ]
 
 
-110 FORMAT(///' Component module',I3,' is SIDETUBE (Rev 1.5)'
+110 FORMAT(///' Component module',I3,' is SIDETUBE'
            /'  --------------------------------------'
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$SIDETUBE geometry parameters:',
@@ -1059,7 +1059,7 @@ IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
 ;RETURN;
 END; "End of subroutine ISUMRY_$SIDETUBE"
 
-%E "Start of HOWNEAR_$SIDETUBE (Rev 1.5 last edited  2003-08-14 09:49:05-04)"
+%E "Start of HOWNEAR_$SIDETUBE"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_SIDETUBE
@@ -1126,6 +1126,6 @@ ELSE[
    DIST=0.;
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$SIDETUBE(Rev 1.5)"
+END; "End of subroutine HOWNEAR_$SIDETUBE"
 "*******************************************************************************
-"End of SIDETUBE_cm.mortran (Rev 1.5)"
+"End of SIDETUBE_cm.mortran"

@@ -393,4 +393,4 @@ IF(IXY_CHOICE_$DYNJAWS({P1}) = 1)[
    UV_$DYNJAWS = V(NP);
 ]
 }
-"End of JAWS_macros.mortran (Rev 1.5)"
+"End of JAWS_macros.mortran"

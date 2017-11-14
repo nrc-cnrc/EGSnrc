@@ -797,7 +797,7 @@ int EGS_FACApplication::startNewShower() {
     return 0;
 }
 
-string EGS_FACApplication::revision = "$Revision: 1.8 $";
+string EGS_FACApplication::revision = " ";
 
 int EGS_FACApplication::initScoring() {
     EGS_Input *options = input->takeInputItem("scoring options");

@@ -91,7 +91,7 @@
 "
 %E   "$CONS3R_cm   start of geometry description (CONS3R)
 "I>
-"I> Geometry of $CONS3R: (CONS3R: Rev 1.10) ""toc:
+"I> Geometry of $CONS3R: (CONS3R)
 "I> *********************************
 "I>                                        |
 "I>                            |           |  beam direction
@@ -188,7 +188,7 @@
 "                    ************************************        ""toc:
 "
 "I>
-"I>  CARDS CM_$CONS3R (CONS3R: Rev 1.10)
+"I>  CARDS CM_$CONS3R (CONS3R)
 "I>  **************
 "I>
 "I>   -1 Dummy line to indicate start of CM
@@ -273,7 +273,7 @@
 "
 "*******************************************************************************
 
-%E   "CONS3R_cm - start of subroutine HOWFAR_$CONS3R (Rev 1.10)
+%E   "CONS3R_cm - start of subroutine HOWFAR_$CONS3R
 "*******************************************************************************
 "*********************** Component Module CONS3R *****************************
 "*******************************************************************************
@@ -758,7 +758,7 @@ ELSE
 ] "end of IF statement"
 RETURN;
 END; "End of subroutine HOWFAR_$CONS3R"
-%E   "CONS3R_cm - start of subroutine WHERE_AM_I_$CONS3R (Rev 1.10)"
+%E   "CONS3R_cm - start of subroutine WHERE_AM_I_$CONS3R"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_CONS3R
@@ -816,7 +816,7 @@ ELSE
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$CONS3R"
-%E   "CONS3R_cm - start of subroutine INPUT_$CONS3R (Rev 1.10)"
+%E   "CONS3R_cm - start of subroutine INPUT_$CONS3R"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_CONS3R
@@ -868,7 +868,7 @@ COUNT1_$CONS3R=0; "start of error counter at 0"
 "  get the title line
 "  ==================
 "
-OUTPUT;(/' $CONS3R (CONS3R: Rev 1.10)');
+OUTPUT;(/' $CONS3R (CONS3R)');
 OUTPUT;(/' This component is a set of stacked cones with 3 regions ')
 OUTPUT RMAX_CM(ICM);('    Outer boundary is a cylinder of radius',F12.3,' cm');
 IF(ICM = 1)["first CM"
@@ -1168,7 +1168,7 @@ STOP;
 STOP;
 
 END;  "End of subroutine INPUT_$CONS3R"
-%E   "CONS3R_cm - start of subroutine ISUMRY_$CONS3R (Rev 1.10)"
+%E   "CONS3R_cm - start of subroutine ISUMRY_$CONS3R"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_CONS3R
@@ -1289,7 +1289,7 @@ IF(N_GAP_$CONS3R ~=0)[
 ]
 
 110 FORMAT(///1X,79('-')/'  Component module',I3,' - stacked truncated',
-           ' cones (3 regions CONS3R Rev 1.10)'
+           ' cones (3 regions CONS3R)'
            /1X,79('-')
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$CONS3R geometry parameters:',
@@ -1343,7 +1343,7 @@ IF(IWATCH = 4 | IZLAST = 2)
 "
 ;RETURN;
 END; "end of subroutine ISUMRY_$CONS3R"
-%E   "CONS3R_cm - start of subroutine HOWNEAR_$CONS3R (Rev 1.10)"
+%E   "CONS3R_cm - start of subroutine HOWNEAR_$CONS3R"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$CONS3R
@@ -1391,6 +1391,6 @@ ELSE [
         DIST=0.0;
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$CONS3R(Rev 1.10)"
+END; "End of subroutine HOWNEAR_$CONS3R"
 "*******************************************************************************
-"End of CONS3R_cm.mortran (Rev 1.10)"
+"End of CONS3R_cm.mortran"

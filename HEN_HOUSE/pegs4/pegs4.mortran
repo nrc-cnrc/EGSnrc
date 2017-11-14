@@ -739,10 +739,9 @@ write(6,*) 'Returned from call open_units';
 "OPEN(UNIT=22,file='fort.22',STATUS='UNKNOWN');" "ICRU37 brem corr"
 
 
-OUTPUT;('1',20X,'PEGS4 LISTING FILE'/
+OUTPUT;('1',20X,'PEGS4 LISTING FILE',/
 20X,'(WITH NRCC MODIFICATIONS, Jan 13,1988)');
-OUTPUT;
-(/ ' This is Rev 1.1 last edited 2001-04-25 16:11:54-04');
+OUTPUT;(/);
 CALL PMDCON;   "COMPUTE PHYSICAL AND MATHEMATICAL CONSTANTS"
 
 "**************************************************************"

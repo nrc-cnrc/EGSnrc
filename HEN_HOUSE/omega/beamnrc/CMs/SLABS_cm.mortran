@@ -178,7 +178,7 @@
 "                               *****************             ""toc:
 "
 "I>
-"I>  CARDS CM_$SLABS  (SLABS: Rev 1.6)
+"I>  CARDS CM_$SLABS  (SLABS)
 "I>  **************
 "I>
 "I>  -1  dummy line (filled with ****)  read in main
@@ -235,7 +235,7 @@
 "I>  W521ICRU
 "
 "
-%E   "Start of subroutine INPUT_$SLABS (Rev 1.6)"
+%E   "Start of subroutine INPUT_$SLABS"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_SLABS
@@ -288,7 +288,7 @@ IERR_GEOM(ICM_$SLABS) = 0;          "Geometry-checking flag, 0 if no errors
 "establish CM boundary as a square (was cylinder prior to April 13,1994)
 RMAX_CM_FLAG(ICM_$SLABS) = 2;       "put a square boundary about CM
 "
-OUTPUT;(/' $SLABS (SLABS: Rev 1.6)');
+OUTPUT;(/' $SLABS (SLABS)');
 OUTPUT RMAX_CM(ICM); (' This component is a set of planar slabs'/
   '      Outer boundary is a square with |x| & |y| <',F10.2,' cm');
 IF(ICM_$SLABS = 1)[
@@ -540,7 +540,7 @@ STOP;
 STOP; END;
 "End of INPUT_$SLABS"
 
-%E   "start of subroutine ISUMRY_$SLABS (Rev 1.6)"
+%E   "start of subroutine ISUMRY_$SLABS"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_SLABS
@@ -640,7 +640,7 @@ DO IR_$SLABS=1,N_$SLABS + N_GAP_$SLABS [
 
 110 FORMAT(///1x,79('-')/
  '  Component module',I3,' is one or more planar slabs  ',
- '(SLABS Rev 1.6)'
+ '(SLABS)'
            /1x,79('-')
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$SLABS geometry parameters:',
@@ -689,7 +689,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 ;RETURN;END;
 "SLABS_cm.mortran end of ISUMRY_$SLABS"
 
-%E   "start of subroutine HOWFAR_$SLABS (Rev 1.6)"
+%E   "start of subroutine HOWFAR_$SLABS"
 "*******************************************************************************
 "************************** Component Module SLABS *****************************
 "*******************************************************************************
@@ -847,7 +847,7 @@ ELSE ["something is wrong"
 ] "end of IF statement"
 RETURN; END; "End of subroutine HOWFAR_SLABS"
 
-%E   "start of subroutine WHERE_AM_I_$SLABS (Rev 1.6)"
+%E   "start of subroutine WHERE_AM_I_$SLABS"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_SLABS
@@ -914,7 +914,7 @@ ELSE ["particle entering this CM through back face (downstream)
 RETURN;
 END; "End of subroutine WHERE_AM_I_SLABS"
 
-%E  "start of subroutine HOWNEAR_$SLABS (Rev 1.6)"
+%E  "start of subroutine HOWNEAR_$SLABS"
 "*****************************************************************************
 "
 "                        Subroutine HOWNEAR_$SLABS
@@ -942,6 +942,6 @@ ELSE["particle is in one of the layers"
        ZBACK_$SLABS(IR_$SLABS)-Z(NP));
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$SLABS (Rev 1.6)"
+END; "End of subroutine HOWNEAR_$SLABS"
 "******************************************************************************
-"End of SLABS_cm.mortran (Rev 1.6)"
+"End of SLABS_cm.mortran"

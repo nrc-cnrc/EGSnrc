@@ -80,7 +80,7 @@
 %Q1
 
 REPLACE {$VERSION} WITH {
-,'(Rev 1.49 last edit 2003-03-12 11:58:44-05)',}
+,' ',}
 "******************************************************************************
 "
 "
@@ -4286,7 +4286,6 @@ write(iout,'(" *"/1X,79("*"))');
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
@@ -4310,7 +4309,6 @@ write(iout,'(" *"/1X,79("*"))');
 " ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 " ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                      T80,'*'/
-" ' *            This is version '$VERSION' ',T80,'*'/
 " ' *             running on '$MACHINE' ',T80,'*'/
 " ' *',T80, '*'/
 " ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -4934,6 +4932,6 @@ WRITE(6,*) 'Error opening file', $cstring(file_name);
 return; end;
 
 ;
-"end of sprrznrc.mortran (Rev 1.49)"
+"end of sprrznrc.mortran"
 ;
 

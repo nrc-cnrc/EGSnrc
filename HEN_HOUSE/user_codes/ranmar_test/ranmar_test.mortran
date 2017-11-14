@@ -41,7 +41,7 @@
 
 
 %L TURN ON LISTING IN CASE IT WAS OFF FOR EGS
-"   ranmar_test.mortran (SID 1.1 last edited 00/04/19)"
+"   ranmar_test.mortran "
 !INDENT M2;
 !INDENT F2;
 %C80
@@ -98,7 +98,7 @@ $REAL RNG(1000000), tarray(2), tarray2(2);
 REAL*8 SUM;
 INTEGER DELTAN;
 
-OUTPUT; (//'          ranmar_test ($Revision: 1.2 $)'//);
+OUTPUT; (//'          ranmar_test '//);
 ixx = 0;
 jxx=0;
 "ixx = 2; jxx = 3;"

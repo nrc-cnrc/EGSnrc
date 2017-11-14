@@ -471,8 +471,8 @@ save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM,IBNSOK,MODEIN,
 "*******************************************************************************
 ;
 "*******************************************************************************
-"                            SOURCE INPUT (Rev 1.14)
-"                            **********************
+"                            SOURCE INPUT
+"                            ************
 "*******************************************************************************
 " SOURCE DELIMETERS:    :start source inputs:
 "                       :stop source inputs:
@@ -1004,7 +1004,7 @@ save TEMP1,TEMP2,TEMP3,TEMP4,TEMP5,TEMP6,TEMP7,TEMP8,TEMP9,FNORM,IBNSOK,MODEIN,
 "*******************************************************************************
 ;
 ENFLAG = 0;
-OUTPUT;(/' *** Source inputs read by srcrz (Rev 1.28) ***'/);
+OUTPUT;(/' *** Source inputs read by srcrz ***'/);
 OUTPUT;(
 ' charge of the incident beam (-1,0,1 [& 2 with source 21]),'/
 ' source configuration'/

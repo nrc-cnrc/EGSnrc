@@ -1155,4 +1155,4 @@ REPLACE {$SYNCHDMLC_CM_HOWNEAR(#);} WITH {
 CALL HOWNEAR_$SYNCHDMLC({P1});
 }
 ;
-"End of SYNCHDMLC_macros.mortran (Rev 1.3)"
+"End of SYNCHDMLC_macros.mortran"

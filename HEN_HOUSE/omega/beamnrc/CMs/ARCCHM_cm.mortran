@@ -284,7 +284,7 @@
 "   1)  Overlapping component modules
 "
 
-%E "Start of sub. HOWFAR_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+%E "Start of sub. HOWFAR_$ARCCHM"
 "******************************************************************************
 "
 "                          Subroutine HOWFAR_ARCCHM
@@ -1367,7 +1367,7 @@ RETURN;
 END; "End of subroutine HOWFAR_$ARCCHM"
 
 
-%E "Start of WHERE_AM_I_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+%E "Start of WHERE_AM_I_$ARCCHM"
 "******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_ARCCHM
@@ -1515,7 +1515,7 @@ RETURN;
 END; "End of subroutine WHERE_AM_I_$ARCCHM"
 
 
-%E "Start of sub. INPUT_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+%E "Start of sub. INPUT_$ARCCHM"
 "******************************************************************************
 "
 "                           Subroutine INPUT_ARCCHM
@@ -1600,7 +1600,7 @@ AIRGAPMIN_$ARCCHM = 0.1; "set a minimum 0.1 cm air gap at front of CM
 "
 OUTPUT;
 (/' Next component is an arc-shaped ion chamber || to the X axis');
-OUTPUT;(/' $ARCCHM (ARCCHM Rev 1.7)');
+OUTPUT;(/' $ARCCHM (ARCCHM)');
 IF(ICM_$ARCCHM = 1)
 [
    OUTPUT Z_min_CM(1);
@@ -2306,7 +2306,7 @@ STOP;
 END;  "End of INPUT_$ARCCHM"
 
 
-%E "Start of sub. ISUMRY_$ARCCHM (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+%E "Start of sub. ISUMRY_$ARCCHM"
 "******************************************************************************
 "
 "                          Subroutine ISUMRY_ARCCHM
@@ -2670,7 +2670,7 @@ IF(N_GAP_$ARCCHM ~= 0 )
 ]
 
 110 FORMAT(///
-' Component module',I3,' is ARCCHM (Rev 1.7)'
+' Component module',I3,' is ARCCHM'
 /'  --------------------------------------'
 //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$ARCCHM geometry parameters:',
@@ -2732,7 +2732,7 @@ RETURN;
 END; "End of subroutine ISUMRY_$ARCCHM"
 
 
-%E "Start of sub. HOWNEAR_$ARCCHM (Rev 1.7)
+%E "Start of sub. HOWNEAR_$ARCCHM
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_ARCCHM
@@ -2917,4 +2917,4 @@ ELSE
 RETURN;
 END;
 "******************************************************************************
-"End of ARCCHM_cm.mortran (Rev 1.7 last edited  2003-08-13 16:16:22-04)"
+"End of ARCCHM_cm.mortran"

@@ -642,7 +642,7 @@
 ;
 "******************************************************************************
 ;
-REPLACE {$VERSION} WITH {,'V3.0 2004/06/18',};
+REPLACE {$VERSION} WITH {,' ',};
 REPLACE {$ONE-EPS} WITH {0.9999} "USED TO KEEP THE BEAM INSIDE THE TARGET"
 REPLACE {$NSWTCH} WITH     {8}   "# OF NRC SWITCHES FOR CONTROLLING SCATTERING"
 REPLACE {$MXMED} WITH      {3}    "MAX # OF MEDIA"
@@ -2265,7 +2265,7 @@ ERROR_FLAG=0;   "Initialization of bad input flag"
 DO J=1, $NMAX [NVALUE(J)=0;]  "Initialization of Nvalue Array"
 
 OUTPUT61 $MAXRADII,$MAXCDOSE;
-(//' EDKnrc VERSION '$VERSION' ON '$MACHINE' WITH EGSnrcMP.'/
+(//' EDKnrc '$VERSION' ON '$MACHINE' WITH EGSnrcMP.'/
 T20,'MAXIMUM NUMBER OF RADIAL AND DEPTH ZONES=',2I4);
 
 "*********************************************************"
@@ -2834,7 +2834,6 @@ call egs_fdate(ounit);
   ' *    It uses the EGSnrc Monte Carlo System developed at NRC ',T80,'*'/
   ' *    (based on the EGS4 Code System developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T53,' ',$);

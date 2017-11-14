@@ -2150,7 +2150,7 @@ private:
 
 };
 
-string Cavity_Application::revision = "$Revision: 1.45 $";
+string Cavity_Application::revision = " ";
 
 struct EGS_ExtraStack {
     EGS_Float expmfp[MXSTACK];

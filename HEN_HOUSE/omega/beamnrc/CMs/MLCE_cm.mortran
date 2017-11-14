@@ -1788,7 +1788,7 @@ IF(N_GAP_$MLCE ~=0)[
 ;RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$MLCE (Rev 1.4)"
+%E "Start of subroutine HOWNEAR_$MLCE"
 "***********************************************************************
 "
 "                          Subroutine HOWNEAR_$MLCE

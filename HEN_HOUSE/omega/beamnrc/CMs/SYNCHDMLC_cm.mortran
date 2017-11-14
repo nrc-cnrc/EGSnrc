@@ -648,7 +648,7 @@
 "
 "***********************************************************************
 ;
-%E "Start of subroutine HOWFAR_$SYNCHDMLC (Rev 1.4)"
+%E "Start of subroutine HOWFAR_$SYNCHDMLC"
 "************************************************************************
 "********************Component Module SYNCHDMLC *****************************
 "************************************************************************
@@ -995,7 +995,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
 "
 RETURN;
 END; "End of subroutine HOWFAR_$SYNCHDMLC"
-%E "Start of WHERE_AM_I_$SYNCHDMLC (Rev 1.4)"
+%E "Start of WHERE_AM_I_$SYNCHDMLC"
 "************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$SYNCHDMLC
@@ -1067,7 +1067,7 @@ ELSE [ "particle entering CM through back face (downstream)"
 RETURN;
 ;
 END; "End of subroutine WHERE_AM_I_$SYNCHDMLC"
-%E "Start of subroutine INPUT_$SYNCHDMLC (Rev 1.4)"
+%E "Start of subroutine INPUT_$SYNCHDMLC"
 
 "*************************************************************************
 
@@ -2847,7 +2847,7 @@ STOP;
 END;  "End of INPUT_$SYNCHDMLC"
 
 
-%E "Start of subroutine ISUMRY_$SYNCHDMLC (Rev 1.4)"
+%E "Start of subroutine ISUMRY_$SYNCHDMLC"
 "***********************************************************************
 "
 "                          Subroutine ISUMRY_$SYNCHDMLC
@@ -3187,7 +3187,7 @@ IF(IGNOREGAPS_$SYNCHDMLC=1 & IREJCT_GLOBAL>0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-           /' (3 regions Rev 1.4)',
+           /' (3 regions)',
            /'  -------------------------------------------------',
            /'------------------',
            //T5,'Title: ',68A1);
@@ -3255,7 +3255,7 @@ IF (IWATCH=4|IZLAST=2) [   "Graphics file requested"
 RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$SYNCHDMLC (Rev 1.4)"
+%E "Start of subroutine HOWNEAR_$SYNCHDMLC"
 "***********************************************************************"
 "                                                                       "
 "                          Subroutine HOWNEAR_$SYNCHDMLC               "
@@ -3896,8 +3896,8 @@ ELSE[ "beyond outer edges of leaf bank"
  ];
  DIST_sngl=SNGL(DIST);
 RETURN;
-END; "End of subroutine HOWNEAR_$SYNCHDMLC(Rev 1.4)"
+END; "End of subroutine HOWNEAR_$SYNCHDMLC"
 "************************************************************************"
-"End of SYNCHDMLC_cm.mortran (Rev 1.4)"
+"End of SYNCHDMLC_cm.mortran"
 
 

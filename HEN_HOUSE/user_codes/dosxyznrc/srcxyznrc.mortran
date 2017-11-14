@@ -79,11 +79,11 @@
 "*******************************************************************************
 
 "
-"                         ***************************        ""toc:
-"                         *                         *        ""toc:
-"                         * srcxyznrc.mortran $Revision: 1.39 $  *  ""toc:
-"                         *                         *        ""toc:
-"                         ***************************        ""toc:
+"                         ***************************
+"                         *                         *
+"                         * srcxyznrc.mortran       *
+"                         *                         *
+"                         ***************************
 "
 "    Routines to be used with dosxyz to input various sources including
 "    phase space files, and beam characterization.
@@ -99,9 +99,8 @@
 %E    "srcxyznrc.mortran start of input description
 "*******************************************************************************
 "
-"                Input source parameters read by srcxyznrc.mortran       ""toc:
+"                Input source parameters read by srcxyznrc.mortran
 "                ==============================================
-"              ($Revision: 1.39 $ last edited $Date: 2014/10/08 15:10:11 $)
 "              (see section 4 of DOSXYZnrc User's Manual for details)
 "
 "*******************************************************************************
@@ -760,7 +759,7 @@
 ;
 "  end of inputs read by srcxyznrc.mortran
 "------------------------------------------------------------------------------
-%E "srcxyznrc.mortran start of subroutine srcinput ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcinput "
 "**************************************************************************"
 "
 subroutine srcinput(ieof);
@@ -2404,7 +2403,7 @@ return;  "normal return
 
 
 end; "End of subroutine srcinput
-%E "srcxyznrc.mortran start of subroutine srcinit ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcinit "
 "**************************************************************************"
 "
 subroutine srcinit(weight);
@@ -2903,7 +2902,7 @@ OUTPUT 'Calibration complete.';(//a);
 return;
 end; "End of subroutine beam_calibration_run
 
-%E "srcxyznrc.mortran start of subroutine srcout ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcout "
 "**************************************************************************"
 "
 subroutine srcout;
@@ -2921,7 +2920,7 @@ IOUTLIST = 6;
 
 OUTPUT61;
 ( /' ',79('*')//t10,
-'Summary of source parameters (srcxyznrc $Revision: 1.39 $)' /
+'Summary of source parameters (srcxyznrc)' /
    ' ',79('*')/);
 
 IF(isource = 0)[
@@ -3342,7 +3341,7 @@ IF(isource = 4)[ ;$BEAMMODEL-SOURCE4-OUTPUT; ]
 
 return;
 end; "End of subroutine srcout"
-%E "srcxyznrc.mortran start of subroutine srchst ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srchst "
 "*******************************************************************************
 "
 subroutine srchst(xin,yin,zin,uin,vin,win,irin,weight,latchi);
@@ -4428,7 +4427,7 @@ ELSE["isource = 2,4,8,9,10,20,21"
 ]"end of isource = 2,4,8,9,10,20,21 case"
 ;
 end; "End of subroutine srchst"
-%E "srcxyznrc.mortran start of subroutine SHIFT_XYUV ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine SHIFT_XYUV "
 "**************************************************************************"
 "
 SUBROUTINE SHIFT_XYUV(NofREPEAT,xsrc,ysrc,usrc,vsrc);
@@ -4505,4 +4504,4 @@ subroutine finish_vcusource;
 return; end;
 
 #endif;
-" end of srcxyznrc.mortran ($Revision: 1.39 $)"
+" end of srcxyznrc.mortran "

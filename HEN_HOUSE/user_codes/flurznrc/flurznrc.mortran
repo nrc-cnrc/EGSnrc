@@ -92,7 +92,7 @@
 %Q1
 ;
 REPLACE {$VERSION} WITH {
-,'V1(Rev 1.31 2003-03-12 12:01:06-05)',}
+,' ',}
 "23456789|123456789|123456789|123456789|123456789|123456789|123456789|123456789|
 "******************************************************************************
 "
@@ -3685,7 +3685,7 @@ ERROR_FLAG=0;   "Initialization of bad input flag"
 DO J=1, $NMAX [NVALUE(J)=0;]  "Initialization of Nvalue Array"
 
 OUTPUT $MAXRADII,$MAXZPLANE;
-(//' FLURZnrc VERSION '$VERSION' ON '$MACHINE' '/
+(//' FLURZnrc '$VERSION' ON '$MACHINE' '/
 T20,'Maximum number of radial and depth zones=',2I4);
 
 "*********************************************************"
@@ -4341,7 +4341,6 @@ WRITE (IOUT, *) '\f'; "page break"
 "  ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 "  ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                       T80,'*'/
-"  ' *            This is version '$VERSION' ',T80,'*'/
 "  ' *             running on '$MACHINE' ',T80,'*'/
 "  ' *',T80, '*'/
 "  ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -4364,7 +4363,6 @@ write(iout,'(T80,"*"/1X,79("*"))');
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T56,$);

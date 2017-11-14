@@ -69,7 +69,7 @@
 %Q1
 %E     "cavsphnrc.mortran"
 ;
-REPLACE {$VERSION} WITH {,'V6.00 2003/10/16',};
+REPLACE {$VERSION} WITH {,' ',};
 
 REPLACE {$MXMDSH} WITH {200};
 
@@ -1785,7 +1785,7 @@ VCHAR='V';
 $SET_ELAPSED_CPUTIME(CPUT0); "OBTAIN THE INITIAL STARTING TIME"
 
 OUTPUT $MAXRADII,$MAXCDOSE;
-(//' CAVSPHnrc(EGSnrc) version '$VERSION' on '$MACHINE'.'//
+(//' CAVSPHnrc(EGSnrc) '$VERSION' on '$MACHINE'.'//
 T20,'Maximum number of radial and conical zones=',2I4);
 
 "******************************************************************************
@@ -5165,7 +5165,6 @@ call egs_fdate(iout);
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T53,' ',$);
