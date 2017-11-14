@@ -155,7 +155,7 @@
 "                               *****************             ""toc:
 "
 "I>
-"I>  CARDS CM_$CONESTAK (CONESTAK Rev 1.8)
+"I>  CARDS CM_$CONESTAK (CONESTAK)
 "I>  ********************************
 "I>
 "I>   -1  dummy line to indicate start of CM
@@ -267,7 +267,7 @@
 "
 "*******************************************************************************
 
-%E   "start of subroutine HOWFAR_$CONESTAK (Rev 1.8)"
+%E   "start of subroutine HOWFAR_$CONESTAK"
 "*******************************************************************************
 "************************** Component Module CONESTAK **************************
 "*******************************************************************************
@@ -740,7 +740,7 @@ ELSE ["something is wrong"
 ;
 RETURN;
 END; "End of subroutine HOWFAR_$CONESTAK"
-%E "start of subroutine WHERE_AM_I_$CONESTAK (Rev 1.8)"
+%E "start of subroutine WHERE_AM_I_$CONESTAK"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$CONESTAK
@@ -835,7 +835,7 @@ ELSEIF (IDIR=2) ["particle originating within the CM (source 3)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$CONESTAK"
-%E   "start of subroutine INPUT_$CONESTAK (Rev 1.8)"
+%E   "start of subroutine INPUT_$CONESTAK"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$CONESTAK
@@ -891,7 +891,7 @@ AIRGAPMIN_$CONESTAK = 0.1; "set a minimum 0.1 cm air gap at front of CM
 "  ==================
 "
 OUTPUT;(/' Next component is a stacked set of truncated cones ');
-OUTPUT;(/' $CONESTAK (CONESTAK Rev 1.8)');
+OUTPUT;(/' $CONESTAK (CONESTAK)');
 IF(ICM_$CONESTAK = 1)[
    OUTPUT Z_min_CM(1);
    (' This is the first component and starts at Z=',F11.4,' cm');
@@ -1250,7 +1250,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of subroutine INPUT_$CONESTAK"
-%E   "start of subroutine ISUMRY_$CONESTAK (Rev 1.8)"
+%E   "start of subroutine ISUMRY_$CONESTAK"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$CONESTAK
@@ -1383,7 +1383,7 @@ IF(N_GAP_$CONESTAK ~= 0 )[
 ]
 
 110 FORMAT(///1x,79('-')/ '  Component module',I3,
-           ' is stacked set of truncated cones (CONESTAK:Rev 1.8)'
+           ' is stacked set of truncated cones (CONESTAK)'
            /1x,79('-')
            //T2,'Title: ',68A1);
 120 FORMAT(/T2,'$CONESTAK geometry parameters:',
@@ -1426,7 +1426,7 @@ IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
 ]"End of graphics output"
 RETURN;
 END;  "end of subroutine ISUMRY_$CONESTAK"
-%E   "start of subroutine HOWNEAR_$CONESTAK (Rev 1.8)"
+%E   "start of subroutine HOWNEAR_$CONESTAK"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$CONESTAK
@@ -1479,6 +1479,6 @@ ELSE[
    DIST=0.0;
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$CONESTAK (Rev 1.8)"
+END; "End of subroutine HOWNEAR_$CONESTAK"
 "*******************************************************************************
-"End of CONESTAK_cm.mortran (Rev 1.8)"
+"End of CONESTAK_cm.mortran"

@@ -943,7 +943,7 @@ DATA NDIST1_FLAG/$NDIST1_MAX*0/;
 DATA TOTALNORM/$NDIST1_MAX*1.0/;
 MAX_CURVE = 0;
 OUTPUT ; (/'*****************************************');
-OUTPUT ; ('        STATDOSE.MORTRAN(Rev 1.3)');
+OUTPUT ; ('        STATDOSE.MORTRAN');
 OUTPUT $MAXVOXX,$MAXVOXY,$MAXVOXZ; ('        Max array dimensions:',3I4)
 OUTPUT $NDIST1_MAX ; ('        Max # data sets:',I3);
 OUTPUT ; ('*****************************************');

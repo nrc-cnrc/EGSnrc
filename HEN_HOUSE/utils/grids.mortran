@@ -659,4 +659,4 @@ DO HSET=1,RADNUM,3 [$MKGRID;] "Feed in horiz. sets of three"
 
 RETURN;
 END;
-"    end of grids.mortran (Rev 1.2 last edited  2002-05-06 10:09:54-04)"
+"    end of grids.mortran"

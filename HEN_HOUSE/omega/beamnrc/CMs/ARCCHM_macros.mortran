@@ -549,4 +549,4 @@ IF(VAR1<= ZRAD4_$ARCCHM & Z(NP)+W(NP)*{P2} > ZMIN_$ARCCHM)
 ]
 }
 ;
-"End of ARCCHM_macros.mortran (Rev 1.5)"
+"End of ARCCHM_macros.mortran"

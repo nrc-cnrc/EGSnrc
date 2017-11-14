@@ -756,4 +756,4 @@ REPLACE {$VARMLC_CM_HOWNEAR(#);} WITH {
 CALL HOWNEAR_$VARMLC({P1});
 }
 ;
-"End of VARMLC_macros.mortran (Rev $Revision: 1.6 $)"
+"End of VARMLC_macros.mortran"

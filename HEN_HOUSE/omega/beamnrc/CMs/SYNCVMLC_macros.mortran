@@ -989,4 +989,4 @@ REPLACE {$SYNCVMLC_CM_HOWNEAR(#);} WITH {
 CALL HOWNEAR_$SYNCVMLC({P1});
 }
 ;
-"End of SYNCVMLC_macros.mortran (Rev 1.3)"
+"End of SYNCVMLC_macros.mortran"

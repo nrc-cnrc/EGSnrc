@@ -361,9 +361,11 @@ protected:
     We now provide implementations of the above functions. First
     we have to declare the static data member \c %revision:
     \until ::revision
-    Note that the revision string is automatically updated by CVS,
-    which we use for version control at the NRC, each time we commit
-    a new version of the tutor7pp application. The \c %describeUserCode()
+    Note that the revision string was automatically updated when the code
+    was under CVS revision control.  Since the system has been moved to
+    GitHub, however, the revision number is now blank, pending
+    the implementation of a sensible/automatic numbering scheme.
+    The \c %describeUserCode()
     function simply outputs the name of our application and the revision
     numbers of the base application class and our application class using
     egsInformation:

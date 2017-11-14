@@ -91,7 +91,7 @@ ISEED = 1;
 Luxury_level = 1;
 
 OUTPUT ISEED,Luxury_level;
-(//'                ranlux_test ($Revision: 1.1 $)'//
+(//'                ranlux_test'//
 ' ISEED =',I16,'  Luxury_level=',I2/);
 
 $INITIALIZE RNG USING Luxury_level AND ISEED;

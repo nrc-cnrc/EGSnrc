@@ -110,12 +110,11 @@
 ;
 "*******************************************************************************
 "
-"            *********************************************      ""toc:
-"            *                                           *      ""toc:
-"            * dosxyznrc.mortran ($Revision: 1.56 $)     *      ""toc:
-"            * (last edited $Date: 2014/10/08 15:12:01 $)*      ""toc:
-"            *                                           *      ""toc:
-"            *********************************************      ""toc:
+"            *********************************************
+"            *                                           *
+"            * dosxyznrc.mortran                         *
+"            *                                           *
+"            *********************************************
 "
 "   A general purpose EGSnrc user code to do cartesian coordinate dose
 "   deposition studies. Every voxel (volume element) can have different
@@ -1410,8 +1409,7 @@ i_phsp_out=0; "default is to not output phsp"
 
 CALL DATETIME(1);
 OUTPUT61 TIMEN, DATEN; (' ',79('*')/
-' NRCC/UW EGSnrc user-code DOSXYZnrc',
-' ($Revision: 1.56 $ last edited $Date: 2014/10/08 15:12:01 $)'/
+' NRCC/UW EGSnrc user-code DOSXYZnrc'/
     ' ON '$MACHINE' ',T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT / ' ',79('*')/
     ' **',T79,'**'/
     ' **',T38,'DOSXYZnrc',T79,'**'/
@@ -1421,7 +1419,6 @@ OUTPUT61 TIMEN, DATEN; (' ',79('*')/
     ' **',T15,'University of Wisconsin as part of the OMEGA project',
           T79,'**'/ ' **',T79,'**'/
     ' **',T15,
-    'This is $Revision: 1.56 $ last edited $Date: 2014/10/08 15:12:01 $',
           T79,'**'/         ' **',T79,'**'/     1X ,79('*'));
 OUTPUT61
 $MXMED,$MXSTACK,$IMAX,$JMAX,$KMAX,$MAXDOSE,$DOSEZERO;
@@ -3060,7 +3057,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
     OUTPUT1 title;
     (//,'1',80a1 //
     t10,
-    'DOSXYZnrc ($Revision: 1.56 $) Dose outputs (dose/F, Gy.cm**2)');
+    'DOSXYZnrc Dose outputs (dose/F, Gy.cm**2)');
   ]
   ELSE[
     IF(((isource.EQ.0).OR.( isource.EQ.1).OR.( isource.EQ.3).OR.
@@ -3079,7 +3076,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Average planar fluence (number/beam area), F =',
         1pe11.3,'(1/cm**2)'//
         t10,
-        'DOSXYZnrc ($Revision: 1.56 $) Dose outputs (dose/F, Gy.cm**2)');
+        'DOSXYZnrc Dose outputs (dose/F, Gy.cm**2)');
     ]
      ELSEIF(isource.EQ.2.OR.isource.EQ.8)[
          OUTPUT1 title,planarefe,planarefp,planarfe,planarfp,
@@ -3096,13 +3093,13 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'No. of particles incident from phase space file =',1i13/);
         IF(OLDSRC.EQ.1)[
           OUTPUT1;
-          (t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+          (t10,'           DOSXYZnrc Dose outputs '/
            t10,'(Dose/incident particle from phase space file, Gy)');
         ]
         ELSE[
           OUTPUT1 ainflu;
        (t5,'No. of particles incident from original source  =',1f13.1//
-          t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+          t10,'           DOSXYZnrc Dose outputs '/
           t10,'(Dose/incident particle from original source, Gy)');
         ]
      ]
@@ -3120,14 +3117,14 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Photon planar fluence scored in a 1cm**2 circle '/
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'Total number of incident particles =',1pe11.3//
-        t10,'DOSXYZnrc ($Revision: 1.56 $)',
+        t10,'DOSXYZnrc',
             ' Dose outputs (Dose/incident particle, Gy)');
     ]
     ELSEIF(isource.EQ.6)[
         OUTPUT1 title,ainflu;
         ( '1',80a1 /
         t5,'Total number of incident particles =',1pe11.3//
-        t10,'DOSXYZnrc ($Revision: 1.56 $)',
+        t10,'DOSXYZnrc',
             ' Dose outputs (Dose/incident particle, Gy)');
     ]
     ELSEIF((isource.EQ.9).OR.(isource.EQ.21))[
@@ -3144,7 +3141,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'         No. of particles incident on DOSXYZ phantom =',1i13//
         t5,'No. of primary particles incident in BEAM simulation =',1i13//
-       t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+       t10,'           DOSXYZnrc Dose outputs '/
        t10,'(Dose/incident particle from original source, Gy)');
     ]
     ELSEIF(isource.EQ.20)[
@@ -3161,7 +3158,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'         No. of particles incident on DOSXYZ phantom =',1i13//
         t5,'No. of primary particles incident in VCU/BEAM simulation =',1i13//
-       t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+       t10,'           DOSXYZnrc Dose outputs '/
        t10,'(Dose/incident particle from original source, Gy)');
     ]
     ELSE["currently we do not have any other sources"
@@ -3176,7 +3173,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Photon planar fluence scored in a 1cm**2 circle '/
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'on the phantom surface =',1pe11.3,'(1/cm**2)'//
-        t10,'DOSXYZnrc ($Revision: 1.56 $) Dose outputs',
+        t10,'DOSXYZnrc Dose outputs',
         '   Gy.cm**2 (or Gy/incident particle)');
     ]
   ]

@@ -119,7 +119,7 @@ character*10 cmtype($MAX_CMs),cmid($MAX_CMs);
 character*30 the_file;
  "$MAX_CMs is defined in beamnrc_user_macros.mortran"
 character*20 vname; "the variable name in the spec_module.module file"
-character*256 text; "used to store each line of the input file"
+character*300 text; "used to store each line of the input file"
 character*1 blank;
 $INTEGER iindex,length,num_cms,num_ids,i,istat,egs_system,line,j;
 $INTEGER lnblnk1;
@@ -161,6 +161,8 @@ text=text(iindex:); "strip off CM names text "
 iindex=index(text,':');
 text=text(iindex+1:); "strip off colon"
 
+write(*,*)' text: ',text;
+
 "now, loop through text and strip out all of the CM types"
 "assume types are already in upper case and no more than 8 characters long"
 num_cms=0;
@@ -180,6 +182,8 @@ iindex=iindex+lnblnk1(vname)+1;
 text=text(iindex:); "strip off CM names text "
 iindex=index(text,':');
 text=text(iindex+1:); "strip off colon"
+
+write(*,*)' text: ',text;
 
 "now, loop through text and strip out all of the CM ids"
 "assume ids are no more than 8 characters long"

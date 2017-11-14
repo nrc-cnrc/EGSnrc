@@ -69,7 +69,7 @@ using namespace std;
     EGS_Application *a = EGS_Application::activeApplication();
 #endif
 
-string EGS_AdvancedApplication::base_revision = "$Revision: 1.39 $";
+string EGS_AdvancedApplication::base_revision = " ";
 
 /*
 extern __extc__ struct EGS_Stack F77_OBJ(stack,STACK);

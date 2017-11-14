@@ -1898,7 +1898,7 @@ IF(N_GAP_$SYNCMLCE ~=0)[
 ;RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$SYNCMLCE (Rev 1.4)"
+%E "Start of subroutine HOWNEAR_$SYNCMLCE"
 "***********************************************************************
 "
 "                          Subroutine HOWNEAR_$SYNCMLCE

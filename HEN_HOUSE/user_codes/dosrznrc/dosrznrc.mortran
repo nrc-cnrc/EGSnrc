@@ -106,7 +106,7 @@
 !INDENT F2;
 ;
 REPLACE {$VERSION} WITH {
-,'(Rev 1.55 2003-03-12 11:52:05-05)', }
+,' ', }
 ;
 "23456789|123456789|123456789|123456789|123456789|123456789|123456789|123456789|
 "******************************************************************************
@@ -5477,7 +5477,6 @@ write(iout,100) title;
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                       T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
@@ -5504,7 +5503,6 @@ write(iout,'(" *",/1X,79("*"))');
 "   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 "   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                       T80,'*'/
-"   ' *            This is version '$VERSION' ',T80,'*'/
 "   ' *             running on '$MACHINE' ',T80,'*'/
 "   ' *',T80, '*'/
 "   ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -7062,13 +7060,13 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
 RETURN;
 %I0
 100   FORMAT(' ',80A1/
-        /' NRC CALCULATION USING DOSRZnrc VERSION '$VERSION' ',40X, $);
+        /' NRC CALCULATION USING DOSRZnrc '$VERSION' ',40X, $);
 106   FORMAT(///' ',T60,'SCALED TO A MAX OF',1PE11.4,' Gy.cm**2');
 
 " ********** IK: using wrapper for date and time routines.
 " Was:
 " 100   FORMAT(' ',80A1/
-"              /' NRC CALCULATION USING DOSRZnrc VERSION '$VERSION' ',40X,
+"              /' NRC CALCULATION USING DOSRZnrc '$VERSION' ',40X,
 "                  $TIMEN_FORMAT,1X,$DATEN_FORMAT/
 "              /' ',T60,'SCALED TO A MAX OF',1PE11.4,' Gy.cm**2');
 

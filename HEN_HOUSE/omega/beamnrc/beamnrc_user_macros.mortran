@@ -72,11 +72,11 @@
 !INDENT M4;
 ;
 REPLACE {$USER_MACROS_VERSION}
-WITH {',(USER_MACROS Rev 1.5)'}
+WITH {' '}
 " **********************
 " Array size definition:
 " **********************
-REPLACE {$MAX_CMs} WITH {24}       "maximum number of CMs allowed"
+REPLACE {$MAX_CMs} WITH {25}       "maximum number of CMs allowed"
 REPLACE {$MAX_CMsP1} WITH {{COMPUTE $MAX_CMs+1}}  "MAX_CMs+1"
 REPLACE {$NCASEMIN} WITH {100}     "min no. of cases in 1 run
 REPLACE {$NBATCH} WITH {10}        "no. of batches run is divided up into

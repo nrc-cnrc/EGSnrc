@@ -152,7 +152,7 @@
 "                   Description of user input for PYRAMIDS           ""toc:
 "                   **************************************
 "I>
-"I>  CARDS CM_PYRAMIDS(Rev 1.5)
+"I>  CARDS CM_PYRAMIDS
 "I>  *****************
 "I>
 "I>  -1  dummy line filled with ***  read in main
@@ -288,7 +288,7 @@
 "
 "*******************************************************************************
 
-%E    "Start of subroutine HOWFAR_$PYRAMIDS (Rev 1.5)"
+%E    "Start of subroutine HOWFAR_$PYRAMIDS"
 "*******************************************************************************
 "************************** Component Module PYRAMIDS **************************
 "*******************************************************************************
@@ -662,7 +662,7 @@ ELSE [
 ] "end of IF statement"
 RETURN;
 END; "End of subroutine HOWFAR_PYRAMIDS"
-%E    "Start of subroutine WHERE_AM_I_$PYRAMIDS (Rev 1.5)"
+%E    "Start of subroutine WHERE_AM_I_$PYRAMIDS"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_PYRAMIDS
@@ -720,7 +720,7 @@ ELSE ["particle entering this CM through back face (downstream)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_PYRAMIDS"
-%E    "Start of subroutine INPUT_$PYRAMIDS (Rev 1.5)"
+%E    "Start of subroutine INPUT_$PYRAMIDS"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_PYRAMIDS
@@ -1287,7 +1287,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for pyramid CM',I3);
 STOP;
 END;  "End of INPUT_PYRAMIDS"
-%E    "Start of subroutine ISUMRY_$PYRAMIDS (Rev 1.5)"
+%E    "Start of subroutine ISUMRY_$PYRAMIDS"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_PYRAMIDS
@@ -1377,7 +1377,7 @@ IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
 "
 WRITE(IOUTLIST,110) ICM_$PYRAMIDS,TITLE_$PYRAMIDS;
 110 FORMAT(///1X,79('-')/'  Component module',I3,
-    ' is one or more truncated pyramids (PYRAMIDS Rev 1.5)' /
+    ' is one or more truncated pyramids (PYRAMIDS)' /
     1X,79('-')//T5,'Title: ',68A1);
 WRITE(IOUTLIST,120) Z_min_CM(ICM_$PYRAMIDS),RMAX_CM(ICM_$PYRAMIDS);
 WRITE(IOUTLIST,122);
@@ -1563,7 +1563,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 RETURN;
 END; "End of subroutine ISUMRY_$PYRAMIDS"
 
-%E    "Start of subroutine HOWNEAR_$PYRAMIDS (Rev 1.5)"
+%E    "Start of subroutine HOWNEAR_$PYRAMIDS"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_PYRAMIDS
@@ -1668,10 +1668,10 @@ ELSEIF(IR_$PYRAMIDS = 3*ISCM_$PYRAMIDS-2)[
    ]
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$PYRAMIDS(Rev 1.5)"
+END; "End of subroutine HOWNEAR_$PYRAMIDS"
 
 "*******************************************************************************
-"End of PYRAMIDS_cm.mortran (Rev 1.5)
+"End of PYRAMIDS_cm.mortran
 
 
 

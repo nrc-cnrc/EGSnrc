@@ -255,7 +255,7 @@
 "   1)  Overlapping component modules
 "
 "*******************************************************************************
-%E   "start of subroutine HOWFAR_$MIRROR (Rev 1.5)"
+%E   "start of subroutine HOWFAR_$MIRROR"
 "*******************************************************************************
 "
 "                          Subroutine HOWFAR_$MIRROR
@@ -574,7 +574,7 @@ ELSE ["something is wrong"
 RETURN;
 END; "End of subroutine HOWFAR_$MIRROR"
 
-%E   "start of subroutine INPUT_$MIRROR (Rev 1.5)"
+%E   "start of subroutine INPUT_$MIRROR"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$MIRROR
@@ -621,7 +621,7 @@ IERR_GEOM(ICM_$MIRROR) = 0; "Geometry-checking flag, 0 if no error detected
 "
 "  get the title line
 "  ==================
-OUTPUT;(/' $MIRROR (MIRROR Rev 1.5)');
+OUTPUT;(/' $MIRROR (MIRROR)');
 OUTPUT RMAX_CM(ICM);(/' Next component is a flat inclined mirror'/
   '      Outer boundary is a square with |x| & |y| <',F10.2,' cm');
 IF(ICM_$MIRROR = 1)[OUTPUT Z_min_CM(1);
@@ -942,7 +942,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of INPUT_$MIRROR"
-%E   "start of subroutine ISUMRY_$MIRROR (Rev 1.5)"
+%E   "start of subroutine ISUMRY_$MIRROR"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_MIRROR
@@ -1184,7 +1184,7 @@ DO IR_$MIRROR=1,N_$MIRROR+2+N_GAP_$MIRROR[
 ]
 
 110 FORMAT(///1X,79('-')/'  Component module',I3,' is a flat inclined',
-           ' mirror MIRROR (Rev 1.5) '
+           ' mirror MIRROR '
            /1X,79('-')
            //T2,'Title: ',68A1);
 120 FORMAT(/T2,'$MIRROR geometry parameters:',
@@ -1244,7 +1244,7 @@ IF(IWATCH = 4 | IZLAST = 2) [   "Creat a graphics file "
 "
 RETURN;
 END; "end of subroutine ISUMRY_$MIRROR"
-%E   "start of subroutine WHERE_AM_I_$MIRROR (Rev 1.5)"
+%E   "start of subroutine WHERE_AM_I_$MIRROR"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$MIRR
@@ -1325,7 +1325,7 @@ ELSE["particle entering this CM through back face (downstream)
 RETURN;
 END; "End of subroutine WHERE_AM_I_$MIRROR"
 
-%E   "start of subroutine HOWNEAR_$MIRROR (Rev 1.5)"
+%E   "start of subroutine HOWNEAR_$MIRROR"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_MIRROR
@@ -1389,6 +1389,6 @@ ELSEIF((N_GAP_$MIRROR.EQ.1)&(IR_$MIRROR=N_$MIRROR+3))["in the air gap"
    );
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$MIRROR(Rev 1.5)"
+END; "End of subroutine HOWNEAR_$MIRROR"
 "*******************************************************************************
-"End of MIRROR_cm.mortran (Rev 1.5)"
+"End of MIRROR_cm.mortran"

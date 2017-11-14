@@ -313,4 +313,4 @@ REPLACE {$CIRCAPP_CM_HOWNEAR(#)} WITH {   "{P1} is DNEAR"
 CALL HOWNEAR_$CIRCAPP({P1});
 }
 ;
-"end of CIRCAPP_macros.mortran (Rev 1.2)"
+"end of CIRCAPP_macros.mortran"

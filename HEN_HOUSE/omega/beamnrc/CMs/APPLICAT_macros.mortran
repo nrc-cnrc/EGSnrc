@@ -191,4 +191,4 @@ REPLACE {$APPLICAT_CM_HOWNEAR(#)} WITH {   "{P1} is DNEAR"
 CALL HOWNEAR_$APPLICAT({P1});
 }
 ;
-"end of APPLICAT_macros.mortran (Rev 1.4)"
+"end of APPLICAT_macros.mortran"

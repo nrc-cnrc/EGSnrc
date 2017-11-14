@@ -306,7 +306,7 @@ EGS_CBCT::~EGS_CBCT() {
    //if(hist) delete hist;
 }
 
-string EGS_CBCT::revision = "$Revision: 1.39 $";
+string EGS_CBCT::revision = " ";
 
 inline int EGS_CBCT::computeIntersections(int ireg, const EGS_Vector &x,
         const EGS_Vector &u) {

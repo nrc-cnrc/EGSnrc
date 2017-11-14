@@ -457,7 +457,7 @@
 "
 "***********************************************************************
 
-%E "Start of subroutine HOWFAR_$VARMLC (Rev 1.11)"
+%E "Start of subroutine HOWFAR_$VARMLC"
 "************************************************************************
 "********************Component Module VARMLC *****************************
 "************************************************************************
@@ -794,7 +794,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0.0) ) [
 "
 RETURN;
 END; "End of subroutine HOWFAR_$VARMLC"
-%E "Start of WHERE_AM_I_$VARMLC (Rev 1.11)"
+%E "Start of WHERE_AM_I_$VARMLC"
 "************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$VARMLC
@@ -871,7 +871,7 @@ ELSE
 RETURN;
 
 END; "End of subroutine WHERE_AM_I_$VARMLC"
-%E "Start of subroutine INPUT_$VARMLC (Rev 1.11)"
+%E "Start of subroutine INPUT_$VARMLC"
 
 "*************************************************************************
 
@@ -1766,7 +1766,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$VARMLC"
 
-%E "Start of subroutine ISUMRY_$VARMLC (Rev 1.11)"
+%E "Start of subroutine ISUMRY_$VARMLC"
 "***********************************************************************
 "
 "                          Subroutine ISUMRY_$VARMLC
@@ -2074,7 +2074,7 @@ IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-            ' (3 regions Rev 1.11)',
+            ' (3 regions)',
            /'  -------------------------------------------------',
             '------------------',
            //T5,'Title: ',68A1);
@@ -2154,7 +2154,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 ;RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$VARMLC (Rev 1.11)"
+%E "Start of subroutine HOWNEAR_$VARMLC"
 "***********************************************************************
 "
 "                          Subroutine HOWNEAR_$VARMLC
@@ -2395,6 +2395,6 @@ ELSE [
  ]"end of not ignoring air gaps for range rejection"
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$VARMLC(Rev 1.11)"
+END; "End of subroutine HOWNEAR_$VARMLC"
 "************************************************************************
-"End of VARMLC_cm.mortran (Rev 1.11)"
+"End of VARMLC_cm.mortran"

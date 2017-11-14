@@ -156,4 +156,4 @@ REPLACE {$Corr_Dump} WITH {;};
 
 ;
 "*******************************************************************"
-"end of dosxyz_user_macros.mortran (Rev 1.4)"
+"end of dosxyz_user_macros.mortran"

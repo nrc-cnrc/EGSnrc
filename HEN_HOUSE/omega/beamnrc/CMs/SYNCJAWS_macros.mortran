@@ -403,4 +403,4 @@ IF(IXY_CHOICE_$SYNCJAWS({P1}) = 1)[
    UV_$SYNCJAWS = V(NP);
 ]
 }
-"End of SYNCJAWS_macros.mortran (Rev 1.5)"
+"End of SYNCJAWS_macros.mortran"

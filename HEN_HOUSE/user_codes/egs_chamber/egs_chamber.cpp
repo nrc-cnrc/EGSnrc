@@ -740,7 +740,7 @@ private:
 
 const static char __egs_app_msg_my3[] = "EGS_ChamberApplication::runSimulation():";
 
-string EGS_ChamberApplication::revision = "$Revision: 1.21 $";
+string EGS_ChamberApplication::revision = " ";
 
 extern __extc__  void
 F77_OBJ_(select_photon_mfp,SELECT_PHOTON_MFP)(EGS_Float *dpmfp) {

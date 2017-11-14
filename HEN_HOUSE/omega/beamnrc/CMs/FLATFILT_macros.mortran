@@ -433,4 +433,4 @@ IF(DIST < -$BDY_TOL)[
          ('x,y,z,u,v,w, r= ',8F12.4);
 ]
 }
-"End of FLATFILT_macros.mortran (Rev 1.2)"
+"End of FLATFILT_macros.mortran"

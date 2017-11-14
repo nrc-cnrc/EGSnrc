@@ -611,4 +611,4 @@ REPLACE{$EGSW_OUTPUT_$BLOCK;} WITH {;
 ;
 "REPLACE{$TEST_SOMETHING;} WITH {;"
 ;
-"End of BLOCK_macros.mortran (Rev 1.2)"
+"End of BLOCK_macros.mortran"

@@ -300,7 +300,7 @@
 "
 "*******************************************************************************
 
-%E "start of subroutine HOWFAR_$APPLICAT (Rev 1.6)"
+%E "start of subroutine HOWFAR_$APPLICAT"
 "*******************************************************************************
 "************************** Component Module APPLICAT **************************
 "*******************************************************************************
@@ -809,7 +809,7 @@ ELSE ["something is wrong"
 "
 RETURN;
 END; "End of subroutine HOWFAR_$APPLICAT"
-%E "start of subroutine WHERE_AM_I_$APPLICAT (Rev 1.6)"
+%E "start of subroutine WHERE_AM_I_$APPLICAT"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_APPLICAT
@@ -851,7 +851,7 @@ INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
 IRNEW = IREND_$APPLICAT; "particle always enters air region around scrapers"
 RETURN;
 END; "End of subroutine WHERE_AM_I_$APPLICAT"
-%E  "start of subroutine INPUT_$APPLICAT (Rev 1.6)"
+%E  "start of subroutine INPUT_$APPLICAT"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_APPLICAT
@@ -907,7 +907,7 @@ AIRGAPMIN_$APPLICAT = $GAP_F_B_AIR_MIN; "Minimum air gap at front and back of CM
 "  ==================
 "
 OUTPUT;(/' Next component is a set of square or rectangular scrapers '//
-       '$APPLICAT   (APPLICAT: Rev 1.6)'//' TITLE: ',$);
+       '$APPLICAT   (APPLICAT:'//' TITLE: ',$);
 ;MINPUT ($APPLICAT) TITLE_$APPLICAT;(60A1);
                   ";MINPUT is a replacement macro with EOF and
                                 "ERR branching to :EOF_{P1}: and :ERR_{P1}:
@@ -1329,7 +1329,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of INPUT_$APPLICAT"
-%E "start of subroutine ISUMRY_$APPLICAT (Rev 1.6)"
+%E "start of subroutine ISUMRY_$APPLICAT"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_APPLICAT
@@ -1488,7 +1488,7 @@ DO IR_$APPLICAT=1,N_$APPLICAT+1 [
    ]
 ]
 110 FORMAT(///1x,79('-')/'  Component module',I3,
-          ' is a set of square scrapers (APPLICAT: Rev 1.6) '/
+          ' is a set of square scrapers (APPLICAT) '/
           1x,79('-') //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$APPLICAT geometry parameters:',
            /T2,'--------------------------',
@@ -1546,7 +1546,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 ;RETURN;END;
 "APPLICAT_cm.mortran end of ISUMRY_$APPLICAT"
 
-%E "start of subroutine HOWNEAR_$APPLICAT (Rev 1.6)"
+%E "start of subroutine HOWNEAR_$APPLICAT"
 "*******************************************************************************
 "
 "                          Subroutine HOWNEAR_$APPLICAT
@@ -1580,6 +1580,6 @@ ELSE ["in scraper IR_$APPLICAT"
    ]
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$APPLICAT (Rev 1.6)"
+END; "End of subroutine HOWNEAR_$APPLICAT"
 "*****************************************************************************
-"End of APPLICAT_cm.mortran (Rev 1.6)"
+"End of APPLICAT_cm.mortran"

@@ -132,4 +132,4 @@ REPLACE {COMIN/CM_$CHAMBER/;} WITH {
 ;
 REPLACE {$CHAMBER_CM_HOWNEAR(#);} WITH  { CALL HOWNEAR_$CHAMBER({P1}); }
 ;
-"End of CHAMBER_macros.mortran (Rev 1.2)"
+"End of CHAMBER_macros.mortran"

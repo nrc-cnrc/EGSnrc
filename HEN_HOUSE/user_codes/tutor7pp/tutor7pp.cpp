@@ -281,7 +281,7 @@ protected:
 
 };
 
-string Tutor7_Application::revision = "$Revision: 1.13 $";
+string Tutor7_Application::revision = " ";
 
 extern "C" void F77_OBJ_(egs_scale_xcc,EGS_SCALE_XCC)(const int *,const EGS_Float *);
 extern "C" void F77_OBJ_(egs_scale_bc,EGS_SCALE_BC)(const int *,const EGS_Float *);

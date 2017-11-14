@@ -104,4 +104,4 @@ REPLACE {;COMIN/CM_$SLABS/;} WITH {
 REPLACE {$SLABS_CM_HOWNEAR(#)} WITH  {  "{P1} is DNEAR"
 CALL HOWNEAR_$SLABS({P1});
 }
-"end of SLABS_macros.mortran (Rev 1.3)"
+"end of SLABS_macros.mortran"

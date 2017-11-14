@@ -281,7 +281,7 @@
 "
 "*******************************************************************************
 
-%E   "start of subroutine HOWFAR_$XTUBE (Rev 1.5)"
+%E   "start of subroutine HOWFAR_$XTUBE"
 "*******************************************************************************
 "************************** Component Module XTUBE *****************************
 "*******************************************************************************
@@ -853,7 +853,7 @@ ELSE ["something is wrong"
 ;
 RETURN;
 END; "End of subroutine HOWFAR_$XTUBE"
-%E   "start of subroutine WHERE_AM_I_$XTUBE (Rev 1.5)"
+%E   "start of subroutine WHERE_AM_I_$XTUBE"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$XTUBE
@@ -945,7 +945,7 @@ ELSE["particle entering this CM through back face (downstream)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$XTUBE"
-%E   "start of subroutine INPUT_$XTUBE (Rev 1.5)"
+%E   "start of subroutine INPUT_$XTUBE"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$XTUBE
@@ -1322,7 +1322,7 @@ OUTPUT ICM;
 (//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of INPUT_$XTUBE"
-%E   "start of subroutine ISUMRY_$XTUBE (Rev 1.5)"
+%E   "start of subroutine ISUMRY_$XTUBE"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$XTUBE
@@ -1712,7 +1712,7 @@ IF(I_XTRA_$XTUBE=1)[
 ]
 
 
-110 FORMAT(///'  Component module',I3,' is $XTUBE (Rev 1.5) '
+110 FORMAT(///'  Component module',I3,' is $XTUBE '
            /'  ------------------------------------'
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$XTUBE geometry parameters:',
@@ -1772,7 +1772,7 @@ IF(IWATCH = 4 | IZLAST = 2) [   "Creat a graphics file "
 ;RETURN;
 END; "end of subroutine ISUMRY_$XTUBE"
 
-%E   "start of subroutine HOWNEAR_$XTUBE (Rev 1.5)"
+%E   "start of subroutine HOWNEAR_$XTUBE"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$XTUBE
@@ -1840,7 +1840,7 @@ ELSEIF(IR_$XTUBE=N_$XTUBE+2)["the target holder"
      );
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$XTUBE(Rev 1.5)"
+END; "End of subroutine HOWNEAR_$XTUBE"
 
 "*******************************************************************************
-"End of XTUBE_cm.mortran (Rev 1.5)"
+"End of XTUBE_cm.mortran"

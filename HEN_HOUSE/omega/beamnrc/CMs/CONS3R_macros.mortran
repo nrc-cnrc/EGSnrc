@@ -334,4 +334,4 @@ REPLACE {$CONS3R_MACRO_1_OUT(#,#,#);} WITH {
     ]
     STEP_UNITOLD=STEP_UNIT;
 ;}
-"End of CONS3R_macros.mortran (Rev 1.3)"
+"End of CONS3R_macros.mortran"

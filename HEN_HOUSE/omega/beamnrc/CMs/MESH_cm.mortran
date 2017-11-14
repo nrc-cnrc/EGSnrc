@@ -158,7 +158,7 @@
 "
 ;
 "I>
-"I>  CARDS CM_$MESH  (MESH: Rev 1.4)
+"I>  CARDS CM_$MESH  (MESH)
 "I>  **************
 "I>
 "I>  -1  dummy line (filled with ****)  read in main
@@ -312,7 +312,7 @@ RMAX_CM_FLAG(ICM_$MESH) = 2;       "put a square boundary about CM
 "                                   Will initialize RMAX_IR_FLAG below when know
 "                                   number of regions
 "
-OUTPUT;(/' $MESH (MESH: Rev 1.4)'/);
+OUTPUT;(/' $MESH (MESH)'/);
 OUTPUT RMAX_CM(ICM); (' This component is a wire mesh '/
   '      Outer boundary is a square with |x| & |y| <',F10.2,' cm'/);
 
@@ -810,7 +810,7 @@ DO IR_$MESH=1,4 + N_GAP_$MESH [
 
 
 110 FORMAT(/1x,79('-')/ '  Component module',I3,
-' is a wire mesh  (MESH Rev 1.4)' /1x,79('-') //' Title: ',68A1);
+' is a wire mesh  (MESH)' /1x,79('-') //' Title: ',68A1);
 120 FORMAT(/T2,'$MESH geometry parameters:',
            /T2,'-----------------------------',
            /T2,'Distance of front of CM from reference plane = ',
@@ -1430,7 +1430,7 @@ IF(DIST < -0.00001) [OUTPUT DIST,X(NP),Y(NP),Z(NP),IR_$MESH;
 ]
 
 RETURN;
-END; "End of subroutine HOWNEAR_$MESH(Rev 1.4)"
+END; "End of subroutine HOWNEAR_$MESH"
 
 "*******************************************************************************
 
@@ -1461,4 +1461,4 @@ errors''///)');
      ]
   USTEP=0.0;
 }
-"End of MESH_cm.mortran (Rev 1.4)"
+"End of MESH_cm.mortran"
