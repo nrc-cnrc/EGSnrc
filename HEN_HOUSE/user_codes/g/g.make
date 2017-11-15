@@ -65,10 +65,13 @@ SOURCES = \
        $(MACHINE_MACROS) \
        $(RANDOM).macros\
        $(EGS_SOURCEDIR)transportp.macros\
+       $(EGS_SOURCEDIR)pegs4_macros.mortran \
        $(USER_CODE).mortran \
        $(RANDOM).mortran \
        $(EGS_SOURCEDIR)get_inputs.mortran\
+       $(EGS_SOURCEDIR)get_media_inputs.mortran\
        $(EGS_UTILS)nrcaux.mortran \
        $(MACHINE_MORTRAN) \
        $(EGS_SOURCEDIR)egs_utilities.mortran \
+       $(EGS_SOURCEDIR)pegs4_routines.mortran \
        $(EGS_SOURCEDIR)egsnrc.mortran
