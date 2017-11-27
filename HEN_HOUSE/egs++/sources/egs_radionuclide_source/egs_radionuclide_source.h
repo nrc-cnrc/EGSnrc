@@ -101,8 +101,7 @@ sub-shell in which the vacancy created is sampled uniformly for the given
 shell. This is an approximation, but only relevant when
 '<code>atomic relaxations = ensdf</code>' in
 \ref EGS_RadionuclideSpectrum.
-- Alpha particles are absorbed immediately in the source region, and
-not transported.
+- Alpha particles are not transported.
 - Atomic motion & recoil from emissions is not modeled.
 
 Emissions are based on decays from the chosen radionuclide and can be a mix of
@@ -127,18 +126,28 @@ setting the spectrum input parameter '<code>atomic relaxations = ensdf</code>'.
 For more information, see \ref EGS_RadionuclideSpectrum.
 
 A radionuclide source is defined using the following input. Notice that the
-format is similar to \ref EGS_IsotropicSource.
+format is similar to \ref EGS_IsotropicSource or \ref EGS_CollimatedSource.
+Be <b>careful using a collimated source</b> - it may neglect effects from the physical
+source on the spectrum, and neglect potential contributions from surrounding
+structures. Additionally, the collimated source determines the fluence with
+\f$N/d^2\f$, where \c N is the number of disintegrations sampled and \c d is
+the user-defined minimum distance between the source and target shapes.
 \verbatim
 :start source:
     name                = my_mixture
     library             = egs_radionuclide_source
-    activity            = total activity of mixture, assumed constant
+    activity            = [optional, default=1] total activity of mixture,
+                          assumed constant. The activity only affects the
+                          emission times assigned to particles.
     charge              = [optional] list including at least one of -1, 0, 1, 2
                           to include electrons, photons, positrons and alphas.
                           Filtering is applied to ALL emissions (including
                           relaxation particles).
                           Omit this option to include all charges - this is
                           recommended.
+    source type         = [optional, default=isotropic] isotropic or collimated
+
+    # If source type = isotropic
     geometry            = [optional] my_geometry # see egs_isotropic_source
     region selection    = [optional] geometry confinement option
                           one of IncludeAll, ExcludeAll,
@@ -146,8 +155,18 @@ format is similar to \ref EGS_IsotropicSource.
     selected regions    = [required for IncludeSelected, ExcludeSelected]
                           regions to apply geometry confinement
     :start shape:
-        definition of the shape
+        definition of the isotropic source shape
     :stop shape:
+
+    # If source type = collimated
+    :start source shape:
+        definition of the source shape
+    :stop source shape:
+    :start target shape:
+        definition of the target shape
+    :stop target shape:
+    distance = source-target shape min. distance
+
     :start spectrum:
         definition of an EGS_RadionuclideSpectrum (see link below)
     :stop spectrum:
@@ -257,27 +276,13 @@ public:
 
     /*! \brief Constructor
 
-    Construct a radionuclide source with charge array \a Q, spectra array
-    \a Decays and emitting particles from the shape \a Shape
-    */
-    EGS_RadionuclideSource(vector<int> Q_allowed, vector<EGS_BaseSpectrum *>
-                           Decays, EGS_Float Activity, EGS_BaseShape *Shape, EGS_BaseGeometry
-                           *geometry, const string &Name="", EGS_ObjectFactory *f=0) :
-        EGS_BaseSource(Name,f), shape(Shape),
-        min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
-        buf_1(1), buf_2(-1),
-        geom(geometry), regions(0), nrs(0), gc(IncludeAll),
-        q_allowed(Q_allowed), decays(Decays), activity(Activity) {
-        setUp();
-    };
-
-    /*! \brief Constructor
-
     Construct a radionuclide source from the information pointed to by \a inp.
     */
     EGS_RadionuclideSource(EGS_Input *, EGS_ObjectFactory *f=0);
     ~EGS_RadionuclideSource() {
-        EGS_Object::deleteObject(shape);
+        if (shape) {
+            EGS_Object::deleteObject(shape);
+        }
         if (geom) {
             if (!geom->deref()) {
                 delete geom;
@@ -285,6 +290,12 @@ public:
         }
         if (nrs > 0 && regions) {
             delete [] regions;
+        }
+        if (source_shape) {
+            EGS_Object::deleteObject(source_shape);
+        }
+        if (target_shape) {
+            EGS_Object::deleteObject(target_shape);
         }
     };
 
@@ -300,6 +311,14 @@ public:
 
     /*! \brief Returns the current fluence (number of disintegrations) */
     EGS_Float getFluence() const {
+        if (sourceType == "isotropic") {
+            return ishower+1;
+        }
+        else if (sourceType == "collimated") {
+            double res = ctry + ishower+1;
+            return res/(dist*dist);
+        }
+
         return ishower+1;
     };
 
@@ -326,7 +345,16 @@ public:
 
     /*! \brief Checks the validity of the source */
     bool isValid() const {
-        return (decays.size() != 0 && shape != 0);
+        if (sourceType == "isotropic") {
+            return (decays.size() != 0 && shape != 0);
+        }
+        else if (sourceType == "collimated") {
+            return (decays.size() != 0 && source_shape != 0 &&
+                    target_shape != 0 &&
+                    target_shape->supportsDirectionMethod());
+        }
+
+        return false;
     };
 
     /*! \brief Store the source state to the data stream \a data_out.
@@ -362,27 +390,36 @@ public:
 
 protected:
 
-    EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
-    EGS_BaseGeometry    *geom;
-    int                 *regions;
-
     EGS_I64             count;
     EGS_Float           Emax;
 
     void setUp();
 
-    EGS_Float min_theta, max_theta;
-    EGS_Float buf_1, buf_2;
-    EGS_Float min_phi, max_phi;
+    string sourceType;
+
+    // Isotropic source inputs
+    EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
+    EGS_BaseGeometry    *geom;
+    int                 *regions;
     int       nrs;
+    EGS_Float min_theta, max_theta;
+    EGS_Float min_phi, max_phi;
+    EGS_Float buf_1, buf_2;
     GeometryConfinement gc;
 
-    vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
+    // Collimated source inputs
+    EGS_BaseShape *source_shape,  //!< the source shape
+                  *target_shape;  //!< the target shape
+    EGS_I64       ctry;           //!< number of attempts to sample a particle
+    EGS_Float     dist;           //!< source-target shape min. distance
+
     vector<int>         q_allowed; //!< A list of allowed charges
+    vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
+    EGS_Float           activity; //!< The activity of the source
+
     bool                q_allowAll; //!< Whether or not to allow all charges
     bool                disintegrationOccurred; //!< Whether or not a disintegration occurred while generating the most recent source particle
-    EGS_Float           activity, //!< The activity of the source
-                        time; //!< The time of emission of the most recently generated particle
+    EGS_Float           time; //!< The time of emission of the most recently generated particle
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
     EGS_Vector          xOfDisintegration; //!< The position of the last disintegration
 
