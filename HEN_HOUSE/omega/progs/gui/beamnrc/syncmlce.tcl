@@ -279,23 +279,24 @@ proc edit_SYNCMLCE { id zmax } {
     add_rmax_square $top.rmax $id,0
     add_title $top.title $id,1
 
-    # leaf direction radiobuttons
-    frame $top.orient -bd 2
-    frame $top.orient.left
-    radiobutton $top.orient.left.r1 -text "Leaves parallel to y"\
-            -variable cmval($id,2,0) -value 0
-    radiobutton $top.orient.left.r2 -text "Leaves parallel to x"\
-            -variable cmval($id,2,0) -value 1
-    pack $top.orient.left.r1 $top.orient.left.r2 -side top
-    pack $top.orient.left -side left -expand true -fill x
-    pack $top.orient -side top -expand true -fill x
-
     frame $top.leaves -bd 4
+
     frame $top.leaves.nleaf
     label $top.leaves.nleaf.label -text {Number of leaves}
     entry $top.leaves.nleaf.inp -textvariable cmval($id,3) -width 10
     pack $top.leaves.nleaf.label -anchor w -side left
     pack $top.leaves.nleaf.inp -anchor e -side right -fill x -expand true
+
+    # leaf direction radiobuttons
+    frame $top.leaves.orient
+    radiobutton $top.leaves.orient.r1 -text "Leaves parallel to y"\
+            -variable cmval($id,2,0) -value 0
+    radiobutton $top.leaves.orient.r2 -text "Leaves parallel to x"\
+            -variable cmval($id,2,0) -value 1
+    pack $top.leaves.orient.r1 $top.leaves.orient.r2 -side top
+
+    pack $top.leaves.nleaf $top.leaves.orient -side left -padx 5 -fill x -expand true
+    pack $top.leaves -side top -anchor w
 
     frame $top.openings -bd 4
     label $top.openings.label -text {Select field type:}
@@ -352,14 +353,6 @@ proc edit_SYNCMLCE { id zmax } {
          $top.openings.inps.dyn -side left -padx 10
     pack $top.openings.label $top.openings.inps -side top
     pack $top.openings -side top -fill x
-
-
-#    button $top.leaves.def.open -text "Define leaf openings >>" -command \
-#            "define_syncmlce_leaves $id"
-#    pack $top.leaves.def.open -anchor w -side left -fill x -expand true
-#    pack $top.leaves.nleaf -side left -fill x
-#    pack $top.leaves.def -side left -padx 5 -fill x
-#    pack $top.leaves -side top -fill x
 
     frame $top.inpzmin -bd 4
     label $top.inpzmin.label -text {min. Z of leaves (cm)}
