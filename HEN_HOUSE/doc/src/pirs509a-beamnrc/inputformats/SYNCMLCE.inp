@@ -119,7 +119,7 @@
        NFIELDS_$SYNCMLCE:  Total number of fields
     MUINDEX_$SYNCMLCE(I):  Fractional monitor unit index up to and including
                            field I. 0 <= MUINDEX_$SYNCMLCE(I) <= 1 and
-                           MUINDEX_$SYNCMLCE(I) > MUINDEX_$SYNCMLCE(I-1).
+                           MUINDEX_$SYNCMLCE(I) >= MUINDEX_$SYNCMLCE(I-1).
                            This number is compared to a random number on
                            [0,1] at the start of each history; if the random
                            number is <= MUINDEX_$SYNCMLCE(I), then field I is

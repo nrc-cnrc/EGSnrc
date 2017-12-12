@@ -286,7 +286,7 @@
               MLC_TITLE:  A title line
        NFIELDS_$SYNCHDMLC:  Total number of fields
       INDEX_$SYNCHDMLC(I):  Index of field I. 0 <=INDEX_$SYNCHDMLC(I) <= 1 and
-                          INDEX_$SYNCHDMLC(I) > INDEX_$SYNCHDMLC(I-1).  This
+                          INDEX_$SYNCHDMLC(I) >= INDEX_$SYNCHDMLC(I-1).  This
                           number is compared to a random number on (0,1) at
                           the start of each history; if the random number is
                           <= INDEX_$SYNCHDMLC(I), then field I is used.
