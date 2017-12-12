@@ -415,14 +415,23 @@ int Tutor7_Application::ausgab(int iarg) {
     if( iarg <= 4 ) {
         int np = the_stack->np - 1; int ir = the_stack->ir[np]-1;
         if( ir == 0 && the_stack->w[np] > 0 ) ir = nreg+1;
-        score->score(ir,the_epcont->edep*the_stack->wt[np]);
+
+        EGS_Float aux = the_epcont->edep*the_stack->wt[np];
+        if(aux > 0) {
+            score->score(ir,aux);
+        }
+
         // if( the_stack->iq[np] ) score->score(ir,the_epcont->edep*the_stack->wt[np]);
         if( ir == nreg+1 ) {
             EGS_ScoringArray *flu = the_stack->iq[np] ? eflu : gflu;
             EGS_Float r2 = the_stack->x[np]*the_stack->x[np] + the_stack->y[np]*the_stack->y[np];
             if( r2 < 400 ) {
                 int bin = (int) (sqrt(r2)*10.);
-                flu->score(bin,the_stack->wt[np]/the_stack->w[np]);
+
+                aux = the_stack->wt[np]/the_stack->w[np];
+                if(aux > 0) {
+                    flu->score(bin,aux);
+                }
             }
         }
         return 0;
