@@ -116,7 +116,7 @@
 "STEP 1:  USER-OVERRIDE-OF-EGSnrc-MACROS                              "
 "---------------------------------------------------------------------"
 REPLACE {$MXMED} WITH {1}    "we need just one medium                 "
-REPLACE {$MXREG} WITH {1}    "and just one geo0metrical region         "
+REPLACE {$MXREG} WITH {1}    "and just one geometrical region         "
 REPLACE {$MXSTACK} WITH {50} "this should be enough for any purposes  "
 
 REPLACE {$DEBUGIT} WITH {.false.} "that can be used for debugging purposes"
@@ -613,7 +613,6 @@ $IMPLICIT-NONE;
        GetInput,     "for interaction with the get_input routine"
        MEDIA,        "to get access to nmed and media"
        MISC,         "to get access to the array med"
-       UPHIOT,       "to get PI (for the incident angle conversion)"
        USEFUL,       "to get electron rest energy RM"
        RANDOM,       "to be able to set the initial rng seeds"
        BREMPR,       "to be able to turn off brems angle selection"
@@ -916,11 +915,11 @@ $INTEGER ival;
 REPLACE {$NENSRC} WITH {250};
 
 $INTEGER mono;
-$INTEGER nensrc,mode,iqi,source_type;
+$INTEGER nensrc,mode,iqi;
 $REAL    ensrcd(0:$NENSRC),srcpdf($NENSRC),srcpdf_at($NENSRC);
 $INTEGER srcbin_at($NENSRC);
 $INTEGER i;
-$REAL    ei,eave,sum,ui,vi,wi,angle,rbeam,distance;
+$REAL    ei,eave,sum,ui,vi,wi;
 real*8   esum,esum2,ecount,aux,aux2;
 
 $INTEGER ounit;
@@ -938,8 +937,7 @@ $REAL    e_min, e_max;
 $INTEGER itimes;
 
 save     mono,nensrc,mode,ensrcd,srcpdf,srcpdf_at,srcbin_at,eave,sum,
-         esum,esum2,ecount,ei,iqi,ui,vi,wi,angle,rbeam,distance,
-         source_type,eik;
+         esum,esum2,ecount,ei,iqi,ui,vi,wi,eik;
 
 character*80 spec_file;
 
@@ -1096,58 +1094,6 @@ ELSE [
 
 ]
 
-ival                   = ival + 1;
-values_sought(ival)    = 'SOURCE TYPE';
-type(ival)             = 0;
-nvalue(ival)           = 1;
-value_min(ival)        = 0;
-value_max(ival)        = 1;
-default(ival)          = 0;
-$GET_INPUT(ival);
-source_type = value(ival,1);
-
-IF( source_type = 0 ) [
-
-    ival                   = ival + 1;
-    values_sought(ival)    = 'INCIDENT ANGLE';
-    type(ival)             = 0;
-    nvalue(ival)           = 1;
-    value_min(ival)        = 0;
-    value_max(ival)        = 90;
-    default(ival)          = 0;
-    $GET_INPUT(ival);
-    angle = value(ival,1);
-    wi = angle/180*PI; wi = cos(wi);
-    ui = sqrt((1-wi)*(1+wi)); vi = 0;
-    write(6,*) ' ui vi wi = ',ui,vi,wi;
-
-]
-ELSE IF( source_type = 1 ) [
-
-    ival                   = ival + 1;
-    values_sought(ival)    = 'SOURCE RBEAM';
-    type(ival)             = 0;
-    value_min(ival)        = 0;
-    value_max(ival)        = 1e8;
-    default(ival)          = 1;
-    $GET_INPUT(ival);
-    rbeam = value(ival,1);
-
-    ival                   = ival + 1;
-    values_sought(ival)    = 'SOURCE DISTANCE';
-    type(ival)             = 0;
-    value_min(ival)        = 0;
-    value_max(ival)        = 1e8;
-    default(ival)          = 100;
-    $GET_INPUT(ival);
-    distance = value(ival,1);
-
-]
-ELSE [
-    write(6,*) ' Unknown source type!';
-    stop;
-]
-
 return;
 
 entry source_sumry(ounit);
@@ -1178,18 +1124,7 @@ write(ounit,'(a,f10.5)')
 write(ounit,'(a,f10.5)')
  ' Maximum spectrum energy       : ',ensrcd(nensrc);
 ] "end of spectrum block"
-write(ounit,'(a,i2)')
- ' Source type                  : ',source_type;
-IF( source_type = 0 ) [
-write(ounit,'(a,f7.4)')
-  ' Incident angle               : ',angle;
-]
-ELSE [
-write(ounit,'(a,f7.4)')
-  ' Beam size on front face      : ',rbeam;
-write(ounit,'(a,f7.4)')
-  ' Source-face distance         : ',distance;
-]
+
 write(ounit,'(//)');
 
 return;
@@ -1248,18 +1183,9 @@ ecount = ecount + 1;
 esum = esum + eik;
 esum2 = esum2 + eik*eik;
 
-IF( source_type = 0 ) [
-    xin = 0; uin = 0; zin = 0;
-    uin = ui; vin = vi; win = wi;
-]
-ELSE [
-    $RANDOMSET r; r = rbeam*sqrt(r);
-    $RANDOMSET phi; phi = 2*phi*PI;
-    xin = r*cos(phi); yin = r*sin(phi);
-    aux = 1/sqrt(xin*xin + yin*yin + distance*distance);
-    uin = xin*aux; vin = yin*aux; win = distance*aux;
-    zin = 0;
-]
+"The position and direction doesn't matter in an infinite space"
+xin = 0; uin = 0; zin = 0;
+uin = 0; vin = 0; win = 1;
 
 return;
 
