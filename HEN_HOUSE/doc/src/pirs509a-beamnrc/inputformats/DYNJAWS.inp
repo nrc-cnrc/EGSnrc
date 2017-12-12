@@ -57,7 +57,7 @@
 
        NFIELDS_$DYNJAWS:  Total number of jaw settings.
        INDEX_$DYNJAWS(J):  Index of setting J. 0 <= INDEX_$DYNVMLC(J) <= 1
-                          and INDEX_$DYNVMLC(J) > INDEX_$DYNVMLC(J-1).  This
+                          and INDEX_$DYNVMLC(J) >= INDEX_$DYNVMLC(J-1).  This
                           number is compared to a random number on [0,1] at
                           the start of each history; if the random number is
                           <= INDEX_$DYNVMLC(J), then, if MODE_$DYNJAWS=2,

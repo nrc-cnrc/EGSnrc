@@ -229,7 +229,7 @@
               MLC_TITLE:  A title line
        NFIELDS_$DYNVMLC:  Total number of fields
       INDEX_$DYNVMLC(I):  Index of field I. 0 <= INDEX_$DYNVMLC(I) <= 1 and
-                          INDEX_$DYNVMLC(I) > INDEX_$DYNVMLC(I-1).  This
+                          INDEX_$DYNVMLC(I) >= INDEX_$DYNVMLC(I-1).  This
                           number is compared to a random number on (0,1) at
                           the start of each history; if the random number is
                           <= INDEX_$DYNVMLC(I), then field I is used.
