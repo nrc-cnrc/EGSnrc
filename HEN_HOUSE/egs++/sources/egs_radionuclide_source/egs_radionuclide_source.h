@@ -419,7 +419,9 @@ protected:
 
     bool                q_allowAll; //!< Whether or not to allow all charges
     bool                disintegrationOccurred; //!< Whether or not a disintegration occurred while generating the most recent source particle
-    EGS_Float           time; //!< The time of emission of the most recently generated particle
+    EGS_Float           time, //!< The time of emission of the most recently generated particle
+                        experimentTime,
+                        lastDisintTime; //!< The time of emission of the last disintegration
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
     EGS_Vector          xOfDisintegration; //!< The position of the last disintegration
 

@@ -1226,7 +1226,10 @@ protected:
 
         // The energy of the sampled particle
         EGS_Float E;
+        // Local energy depositions
         edep = 0;
+        // Time delay of this particle
+        currentTime = 0;
 
         // Check for relaxation particles due to shell vacancies in the daughter
         // These are created from internal transitions or electron capture
