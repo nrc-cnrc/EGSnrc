@@ -8,6 +8,12 @@ if {$argc > 0} {
     set confname [lindex $argv 0]
 }
 
+# compilation option for applications: default to 1 (all)
+set compile 1
+if {$argc > 1} {
+    set compile [lindex $argv 1]
+}
+
 # clear environment variables
 set env(HEN_HOUSE)  ""
 set env(EGS_CONFIG) ""
@@ -46,5 +52,5 @@ expect "Do you want to finalize"                        { send "yes\n" }
 expect "Press enter to continue."                       { send "\n" }
 
 expect "Choose a directory for your user codes:"        { send "\n" }
-expect "Choose 1 (all), 2 (some) or 3 (none):"          { send "1\n" }
+expect "Choose 1 (all), 2 (some) or 3 (none):"          { send "$compile\n" }
 expect "EOF"
