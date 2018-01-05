@@ -230,6 +230,15 @@ public:
     EGS_Float getXmax() const {
         return xmax;
     };
+    /*! \brief Get i-th interval interpolation parameter a[i]. */
+    inline EGS_Float get_a(int i) const {
+        return a[i];
+    };
+    /*! \brief Get i-th interval interpolation parameter b[i]. */
+    inline EGS_Float get_b(int i) const {
+        return b[i];
+    };
+
 
 private:
 
