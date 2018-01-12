@@ -2473,8 +2473,6 @@ DO IBATCH=1,$NBATCH[IBTCH=IBATCH;
           "PRINT MESSAGE AND EXIT SIMULATION LOOP"
           WRITE(IOUT,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
           WRITE(6,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
-          AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET);
-          "ADJUST THE INCIDENT FLUENCE"
           GO TO :END-SIM:;
     ]
   ]
@@ -2736,8 +2734,10 @@ ELSEIF(ISOURC=23)[
    AINFLU=dble(IHSTRY);
    SCORE_NORM_NUM=AINFLU;
 ]
-ELSE[ "do not modify AINFLU"
+ELSE[
    SCORE_NORM_NUM=dble(IHSTRY);
+   "adjust AINFLU according to actual no. of histories run"
+   AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET);
 ]
 
 "for ISOURC=4 we need the data for circles, not rings, so add it up"
