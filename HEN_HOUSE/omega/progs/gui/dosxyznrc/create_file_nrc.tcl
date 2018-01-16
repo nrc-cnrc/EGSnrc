@@ -27,6 +27,7 @@
 #                   Iwan Kawrakow
 #                   Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -68,7 +69,7 @@ proc create_file { file } {
     global grouping nrow izrow enflag numsrcopts izopts ncpu dflag parnum
     global numthphi angfixed ang1 ang2 nang pang ivary thphidef
     global numsets iso1 iso2 iso3 ang1 ang2 ang3 dsource muI
-    global iphant iphspout imuphspout calflag
+    global iphant iphspout imuphspout calflag ibindos
     global level ibcmp_min ibcmp_max iphter_min iphter_max
     global iraylr_min iraylr_max iedgfl_min iedgfl_max
     global i_dbs r_dbs ssd_dbs z_dbs the_beam_code the_input_file the_pegs_file
@@ -446,7 +447,13 @@ set str "$ivary($i), $angfixed($i), $ang1($i), $ang2($i), $nang($i), $pang($i)"
     } else {
       set val 0
     }
-    set str "$str$val, $iphspout"
+    set str "$str$val, $iphspout, "
+    if { [string compare $values(ibindos) $options(ibindos,1)]==0 } {
+      set val 1
+    } else {
+      set val 0
+    }
+    set str "$str$val"
 
     puts $file $str
 
@@ -700,5 +707,3 @@ proc error_flag { text } {
     tk_dialog .edit "Bad inputs" "You haven't defined $text.  Please\
 	    fill in all options required before saving." warning 0 OK
 }
-
-
