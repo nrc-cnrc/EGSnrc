@@ -25,6 +25,7 @@
 #
 #  Contributors:    Dave Rogers
 #                   Frederic Tessier
+#                   Marc-Andre Renaud
 #
 ###############################################################################
 #
@@ -423,6 +424,12 @@ elif test "x$test_shell" = xbash; then
   echo "export EGS_HOME=$EGS_HOME" >&2
   echo "export EGS_CONFIG=$EGS_CONFIG" >&2
   echo "source ${HEN_HOUSE}scripts/egsnrc_bashrc_additions" >&2
+elif test "x$test_shell" = xfish; then
+  echo "Add the following statements to your .config/fish/config file: " >&2
+  echo >&2
+  echo "set -x EGS_HOME $EGS_HOME" >&2
+  echo "set -x EGS_CONFIG $EGS_CONFIG" >&2
+  echo "source ${HEN_HOUSE}scripts/egsnrc_fishrc_additions" >&2
 else
   cat >&2 <<EOF
 Could not determine your default shell type. To make use of the EGSnrc
