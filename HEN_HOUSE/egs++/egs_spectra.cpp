@@ -175,8 +175,6 @@ public:
         return Emax;
     };
 
-protected:
-
     EGS_Float sample(EGS_RandomGenerator *rndm) {
         EGS_Float E;
         do {
@@ -185,6 +183,8 @@ protected:
         while (E <= 0 || E > Emax);
         return E;
     };
+
+protected:
 
     EGS_Float  Eo;    //!< The mean energy
     EGS_Float  sigma; //!< The Gaussian width
@@ -1105,6 +1105,17 @@ public:
         delete decays;
     };
 
+    /*! \brief Returns the maximum energy that may be emitted.
+     *
+     * Returns the maximum energy expected from the radionuclide. If correlated
+     * relaxations are turned on (e.g. eadl relaxations), note that they are not
+     * considered in this. Relaxation emissions from the ENSDF file are
+     * considered.
+     */
+    EGS_Float maxEnergy() const {
+        return Emax;
+    };
+
     /*! \brief Get the charge of the most recent emission. */
     int getCharge() const {
         return currentQ;
@@ -1133,6 +1144,24 @@ public:
     /*! \brief Set the relative weight assigned to this spectrum. */
     void setSpectrumWeight(EGS_Float newWeight) {
         spectrumWeight = newWeight;
+    }
+
+    /*! \brief Get the emission type of the most recent source particle.
+     *
+     * 0: No event occurred
+     * 1: Atomic relaxation particle (correlated with decay)
+     * 2: Internal transition gamma
+     * 3: Conversion electron
+     * 4: Electron capture
+     * 5: Beta+ decay
+     * 6: Beta- decay
+     * 7: Alpha decay
+     * 8: Metastable decay
+     * 9: X-Ray (uncorrelated, from ENSDF)
+     * 10: Auger electron (uncorrelated, from ENSDF)
+     */
+    unsigned int getEmissionType() const {
+        return emissionType;
     }
 
     /*! \brief Print the sampled emission intensities.
@@ -1230,6 +1259,8 @@ protected:
         edep = 0;
         // Time delay of this particle
         currentTime = 0;
+        // The type of emission particle
+        emissionType = 0;
 
         // Check for relaxation particles due to shell vacancies in the daughter
         // These are created from internal transitions or electron capture
@@ -1239,6 +1270,8 @@ protected:
             EGS_RelaxationParticle p = relaxParticles.pop();
             E = p.E;
             currentQ = p.q;
+
+            emissionType = 1;
 
             return E;
         }
@@ -1292,6 +1325,8 @@ protected:
 
                             totalGammaEnergy += E;
 
+                            emissionType = 2;
+
                             return E;
 
                         }
@@ -1320,6 +1355,8 @@ protected:
                                             // shell vacancy i
                                             (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
                                         }
+
+                                        emissionType = 3;
 
                                         // Return the conversion electron
                                         return E;
@@ -1386,6 +1423,8 @@ protected:
                                     // shell vacancy i
                                     (*beta)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
 
+                                    emissionType = 4;
+
                                     return 0;
                                 }
                             }
@@ -1394,8 +1433,13 @@ protected:
                         // For electron capture, there is no emitted particle
                         // (only a neutrino)
                         // so we return a 0 energy particle
+                        emissionType = 4;
                         return 0;
                     }
+                    emissionType = 5;
+                }
+                else {
+                    emissionType = 6;
                 }
 
                 // Sample the energy from the spectrum alias table
@@ -1427,6 +1471,8 @@ protected:
                     edep += (*alpha)->getFinalEnergy();
                 }
 
+                emissionType = 7;
+
                 // For alphas we simulate a disintegration but the
                 // transport will not be performed so return 0
                 return 0;
@@ -1445,6 +1491,8 @@ protected:
                 // disintegration just occurred
                 currentLevel = (*gamma)->getLevelRecord();
 
+                emissionType = 8;
+
                 // No particle returned
                 return 0;
             }
@@ -1459,6 +1507,8 @@ protected:
 
                 E = xrayEnergies[i];
 
+                emissionType = 9;
+
                 return E;
             }
         }
@@ -1472,6 +1522,8 @@ protected:
 
                 E = augerEnergies[i];
 
+                emissionType = 10;
+
                 return E;
             }
         }
@@ -1479,12 +1531,6 @@ protected:
         // Shouldn't get here if intensities are normalized correctly
         egsWarning("EGS_RadionuclideSpectrum::sample: Warning: Radionuclide normalization may be incorrect - you should not get here!");
         return 0;
-    };
-
-    /*! \brief Returns the maximum energy that may be emitted.
-     */
-    EGS_Float maxEnergy() const {
-        return Emax;
     };
 
     /*! \brief Not implemented - returns 0.
@@ -1511,6 +1557,7 @@ private:
     EGS_SimpleContainer<EGS_RelaxationParticle> relaxParticles;
     const LevelRecord           *currentLevel;
     int                         currentQ;
+    unsigned int                emissionType;
     EGS_Float                   currentTime,
                                 Emax,
                                 spectrumWeight,

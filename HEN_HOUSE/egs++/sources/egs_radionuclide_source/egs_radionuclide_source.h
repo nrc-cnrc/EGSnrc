@@ -44,30 +44,29 @@
 #include "egs_base_geometry.h"
 #include "egs_math.h"
 #include "egs_application.h"
+#include "egs_spectra.cpp"
 
 #include <algorithm>
 
 
 #ifdef WIN32
 
-#ifdef BUILD_RADIONUCLIDE_SOURCE_DLL
-    #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllexport)
-#else
-    #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllimport)
-#endif
-#define EGS_RADIONUCLIDE_SOURCE_LOCAL
+    #ifdef BUILD_RADIONUCLIDE_SOURCE_DLL
+        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllexport)
+    #else
+        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __declspec(dllimport)
+    #endif
+    #define EGS_RADIONUCLIDE_SOURCE_LOCAL
 
 #else
 
-#ifdef HAVE_VISIBILITY
-#define EGS_RADIONUCLIDE_SOURCE_EXPORT __attribute__ ((visibility
-("default")))
-#define EGS_RADIONUCLIDE_SOURCE_LOCAL  __attribute__ ((visibility
-("hidden")))
-#else
-#define EGS_RADIONUCLIDE_SOURCE_EXPORT
-#define EGS_RADIONUCLIDE_SOURCE_LOCAL
-#endif
+    #ifdef HAVE_VISIBILITY
+        #define EGS_RADIONUCLIDE_SOURCE_EXPORT __attribute__ ((visibility ("default")))
+        #define EGS_RADIONUCLIDE_SOURCE_LOCAL  __attribute__ ((visibility ("hidden")))
+    #else
+        #define EGS_RADIONUCLIDE_SOURCE_EXPORT
+        #define EGS_RADIONUCLIDE_SOURCE_LOCAL
+    #endif
 
 #endif
 
@@ -129,9 +128,12 @@ A radionuclide source is defined using the following input. Notice that the
 format is similar to \ref EGS_IsotropicSource or \ref EGS_CollimatedSource.
 Be <b>careful using a collimated source</b> - it may neglect effects from the physical
 source on the spectrum, and neglect potential contributions from surrounding
-structures. Additionally, the collimated source determines the fluence with
-\f$N/d^2\f$, where \c N is the number of disintegrations sampled and \c d is
-the user-defined minimum distance between the source and target shapes.
+structures. Restricting the emission angles by collimation generally constitutes
+a physical approximation of your geometry and is an approximate efficiency
+enhancement technique. It is also important to note that the collimated source
+determines the fluence with \f$N/d^2\f$, where \c N is the number of
+disintegrations sampled and \c d is the user-defined minimum distance between the
+source and target shapes.
 \verbatim
 :start source:
     name                = my_mixture
@@ -146,6 +148,9 @@ the user-defined minimum distance between the source and target shapes.
                           Omit this option to include all charges - this is
                           recommended.
     source type         = [optional, default=isotropic] isotropic or collimated
+    experiment time     = [optional, default=0] time length of the experiment,
+                          set to 0 for no time limit. Source particles generated
+                          after the experiment time are not transported.
 
     # If source type = isotropic
     geometry            = [optional] my_geometry # see egs_isotropic_source
@@ -158,7 +163,7 @@ the user-defined minimum distance between the source and target shapes.
         definition of the isotropic source shape
     :stop shape:
 
-    # If source type = collimated
+    # If source type = collimated (beware of its limitations)
     :start source shape:
         definition of the source shape
     :stop source shape:
@@ -274,11 +279,10 @@ public:
         ExcludeSelected = 3
     };
 
-    /*! \brief Constructor
-
-    Construct a radionuclide source from the information pointed to by \a inp.
-    */
+    /*! \brief Constructor from input file */
     EGS_RadionuclideSource(EGS_Input *, EGS_ObjectFactory *f=0);
+
+    /*! \brief Destructor */
     ~EGS_RadionuclideSource() {
         if (shape) {
             EGS_Object::deleteObject(shape);
@@ -327,17 +331,31 @@ public:
         return time;
     };
 
+    /*! \brief Get the total possible length of the experiment that is being modelled
+     *
+     * This method returns the total experiment time specified by the user.
+     * This is used to exclude time-delayed source emissions that would occur
+     * after the modelled experiment.
+     */
+    double getExperimentTime() const {
+        return experimentTime;
+    };
+
     /*! \brief Returns the shower index of the most recent particle */
     EGS_I64 getShowerIndex() const {
         return ishower;
     };
+
+    unsigned int getEmissionType() const {
+        return emissionType;
+    }
 
     /*! \brief Outputs the emission stats of the spectra */
     void printSampledEmissions() {
         for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->printSampledEmissions();
         }
-    }
+    };
 
     /*! \brief Calculates the position and direction of a new source particle */
     void getPositionDirection(EGS_RandomGenerator *rndm,
@@ -388,10 +406,11 @@ public:
      */
     bool setState(istream &data);
 
-protected:
+private:
+    EGS_Application *app;
 
-    EGS_I64             count;
-    EGS_Float           Emax;
+    EGS_I64             count; //!< Number of times the spectrum was sampled
+    EGS_Float           Emax; //!< Maximum energy the spectrum may return
 
     void setUp();
 
@@ -399,34 +418,33 @@ protected:
 
     // Isotropic source inputs
     EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
-    EGS_BaseGeometry    *geom;
-    int                 *regions;
-    int       nrs;
-    EGS_Float min_theta, max_theta;
-    EGS_Float min_phi, max_phi;
+    EGS_BaseGeometry    *geom; //!< A reference geometry for the source shape
+    int                 *regions; //!< Regions to include/exclude from the reference geometry
+    int       nrs; //!< Number of reference regions
+    EGS_Float min_theta, max_theta; //!< Minimum and maximum theta angle of emission
+    EGS_Float min_phi, max_phi; //!< Minimum and maximum phi angle of emission
     EGS_Float buf_1, buf_2;
-    GeometryConfinement gc;
+    GeometryConfinement gc; //!< The geometry confinement mode
 
     // Collimated source inputs
-    EGS_BaseShape *source_shape,  //!< the source shape
-                  *target_shape;  //!< the target shape
-    EGS_I64       ctry;           //!< number of attempts to sample a particle
-    EGS_Float     dist;           //!< source-target shape min. distance
+    EGS_BaseShape *source_shape,  //!< The source shape
+                  *target_shape;  //!< The target shape
+    EGS_I64       ctry;           //!< Number of attempts to sample a particle
+    EGS_Float     dist;           //!< Source-target shape min. distance
 
     vector<int>         q_allowed; //!< A list of allowed charges
-    vector<EGS_BaseSpectrum *> decays; //!< The radionuclide decay structure
+    vector<EGS_RadionuclideSpectrum *> decays; //!< The radionuclide decay structure
     EGS_Float           activity; //!< The activity of the source
 
     bool                q_allowAll; //!< Whether or not to allow all charges
     bool                disintegrationOccurred; //!< Whether or not a disintegration occurred while generating the most recent source particle
     EGS_Float           time, //!< The time of emission of the most recently generated particle
-                        experimentTime,
+                        experimentTime, //!< The time length of the experiment that is being modelled
                         lastDisintTime; //!< The time of emission of the last disintegration
     EGS_I64             ishower; //!< The shower index (disintegration number) of the most recently generated particle
     EGS_Vector          xOfDisintegration; //!< The position of the last disintegration
 
-private:
-    EGS_Application *app;
+    unsigned int emissionType;
 };
 
 #endif

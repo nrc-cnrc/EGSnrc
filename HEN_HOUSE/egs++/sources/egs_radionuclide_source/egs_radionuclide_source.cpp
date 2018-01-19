@@ -84,10 +84,12 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
 
         egsInformation("**********************************************\n");
 
-        decays.push_back(EGS_BaseSpectrum::createSpectrum(input));
+        decays.push_back(static_cast<EGS_RadionuclideSpectrum *>(EGS_BaseSpectrum::createSpectrum(input)));
 
         // If spectrum creation failed skip to the next spectrum block
-        if (!decays[i]) {
+        // We check the getShowerIndex function to ensure this cast to a
+        // radionuclide spectrum succeeded. Other spectra will fail!
+        if (!decays[i] || decays[i]->getShowerIndex() != -1) {
             decays.pop_back();
             continue;
         }
@@ -102,7 +104,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
         ++i;
     }
     if (decays.size() < 1) {
-        egsWarning("EGS_RadionuclideSource: Error: No spectrum was defined\n");
+        egsWarning("\nEGS_RadionuclideSource: Error: No spectrum of type EGS_RadionuclideSpectrum was defined.\n\n");
         return;
     }
 
@@ -136,7 +138,7 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
     // limit are discarded
     err = input->getInput("experiment time", experimentTime);
     if (err) {
-        experimentTime = 0;
+        experimentTime = 0.;
     }
 
     if (experimentTime > 0.) {
@@ -300,6 +302,9 @@ EGS_RadionuclideSource::EGS_RadionuclideSource(EGS_Input *input,
                  " does not exist\n",sourceType.c_str());
     }
 
+    // Initialize emission type to signify nothing has happened yet
+    emissionType = 99;
+
     // Finish
     setUp();
 }
@@ -321,59 +326,41 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         }
     }
 
+    // Check if the emission time is within the experiment time limit
+    if (experimentTime <= 0. || time < experimentTime) {
+        // Keep this particle
+    }
+    else {
+        // If the particle was emitted outside the
+        // experiment time window, just set the energy to zero to discard
+        E = 0;
+        return ++count;
+    }
+
     EGS_I64 ishowerOld = decays[i]->getShowerIndex();
 
-    for (EGS_I64 j=0; j<=1e6; ++j) {
+    E = decays[i]->sampleEnergy(rndm);
 
-        E = decays[i]->sampleEnergy(rndm);
+    EGS_I64 ishowerNew = decays[i]->getShowerIndex();
+    if (ishowerNew > ishowerOld) {
+        disintegrationOccurred = true;
+        time = lastDisintTime + -log(1.-rndm->getUniform()) / activity * (ishowerNew - ishowerOld);
 
-        // Skip zero energy particles
-        if (E < epsilon) {
-            continue;
-        }
-
-        q = decays[i]->getCharge();
-
-        // Check if the charge is allowed
-        // If so, break out of the loop and keep the particle
-        // Otherwise the loop will continue generating particles until
-        // one matches the q_allowed criteria
-        if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
-
-            EGS_I64 ishowerNew = decays[i]->getShowerIndex();
-            if (ishowerNew > ishowerOld) {
-                disintegrationOccurred = true;
-                time = lastDisintTime + -log(1.-rndm->getUniform()) / activity * (ishowerNew - ishowerOld);
-
-                lastDisintTime = time;
-                ishower += (ishowerNew - ishowerOld);
-            }
-            else {
-                disintegrationOccurred = false;
-                time += decays[i]->getTime();
-            }
-
-            // Check if the emission time is within the experiment time limit
-            if ((experimentTime > 0. && time < experimentTime) || experimentTime <= 0.) {
-
-                // Break out to keep this particle
-                break;
-            }
-            else {
-                if (disintegrationOccurred) {
-                    egsFatal("EGS_RadionuclideSource::getNextParticle: Error: Tried to generate a disintegration particle after the experiment time limit. Since all disintegrations are consecutive in time, there is nothing left to do. Unfortunately I haven't coded a graceful exit for this - adjust the ncase, activity or experiment time to avoid this crash.\n");
-                }
-
-                // If it was not a disintegration event but occurred outside the
-                // experiment time window, just sample again
-            }
-        }
-
-        if (j == 1e6) {
-            egsWarning("EGS_RadionuclideSource::getNextParticle: Error: Could not generate a particle after 1e6 tries. Spectrum will be wrong.\n");
-            E = 0;
-        }
+        lastDisintTime = time;
+        ishower += (ishowerNew - ishowerOld);
+        ishowerOld = ishowerNew;
     }
+    else {
+        disintegrationOccurred = false;
+        // The time returned from the spectrum is just the time
+        // since the last disintegration event, so this is only
+        // non-zero for internal transitions. This is why the
+        // times are added here - each transition occurs only after
+        // the delay of the previous.
+        time += decays[i]->getTime();
+    }
+
+    q = decays[i]->getCharge();
 
     getPositionDirection(rndm,x,u,wt);
     latch = 0;
@@ -393,6 +380,15 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
         app->setEdep(edep);
         int ireg = app->isWhere(x);
         app->userScoring(3, ireg);
+    }
+
+    // Check if the charge is allowed
+    if (q_allowAll || std::find(q_allowed.begin(), q_allowed.end(), q) != q_allowed.end()) {
+        // Keep the particle
+    }
+    else {
+        // Don't transport the particle
+        E = 0;
     }
 
     return ++count;
