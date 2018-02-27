@@ -3947,7 +3947,7 @@ splitting must be used if you are interested in charged particle contamination. 
 of contaminant electrons in a Co-60 beam, for optimum electron
 fluence efficiency, electron splitting should take place at the bottom of the last field-defining
 CM in the treatment head model.  For example, in the Co-60 treatment head simulation used to implement
-and test DSB \cite{KW14}, {\tt ICM\_DBS} is the CM number corresponding to the PYRAMIDS CM used to model an
+and test DSB \cite{Wa15}, {\tt ICM\_DBS} is the CM number corresponding to the PYRAMIDS CM used to model an
 adjustable collimator.
 Set {\tt ICM\_DBS}=0 (default) for no electron splitting.
 \index{directional source biasing!ZPLANE\_DBS}
@@ -4120,7 +4120,7 @@ $\sim$2.5 hrs.
 Since DSB potentially generates many incident primary photons per decay event (primary history), incident photon data is
 stored in an array. A new decay event is simulated only when all of the data in the array has been used.
 
-For more detailed information about DSB, see the directional source biasing paper\cite{KW14}.
+For more detailed information about DSB, see the directional source biasing paper\cite{Wa15}.
 
 \subsection[BCSE]{Bremsstrahlung Cross Section Enhancement (BCSE)}
 \label{BCSE}
@@ -8964,11 +8964,11 @@ where:
 \begin{description}
 \item {\tt AE,UE,AP,UP } are the kinetic energy limits for calculating photon ({\tt AP,UP}) and electron ({\tt AE,UE}) cross sections in
 \index{pegsless mode!AE}\index{pegsless mode!UE}\index{pegsless mode!AP}\index{pegsless mode!UP}
-MeV.  These energy limits are also mentioned in the context of the EGSnrc system in Section~\ref{common_blocks}.
+MeV.  These energy limits are also mentioned in the context of the EGSnrc system in the section {\tt The COMMON Blocks}.
 If {\tt AE} is
-not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section~\ref{step_2}) specified
+not specified it defaults to the highest value of {\tt ECUT} (electron transport cutoff energy--see Section {\tt Pre-HATCH Call Initialisation (Step 2)} in PIRS701) specified
 in the simulation.  If
-{\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section~\ref{step_2})
+{\tt AP} is unspecified, then it defaults to the highest value of {\tt PCUT} (photon transport cutoff energy--see Section {\tt Pre-HATCH Call Initialisation (Step 2)} in PIRS701)
 specified.  {\tt UE} and {\tt UP} default to 50.511 MeV and 50.0 MeV, respectively.
 
 \index{pegsless mode!material data file}
@@ -8986,7 +8986,7 @@ user to see the composition and density of the media.
 if you wish to override some or all of the specifications for {\tt MEDNAME} in the material data file.
 If no material data file is input, then all media in the simulation
 must be specified in this way.  The inputs between these delimiters are described below.  Variables
-in square brackets are the analogous PEGS4 variables described in the PEGS4 Manual (Section~\ref{pegs4}) above.
+in square brackets are the analogous PEGS4 variables described in the PEGS4 Manual (Section {\tt PEGS4 User Manual} in PIRS701) above.
 \begin{description}
 \index{pegsless mode!elements}
 \item {\tt elements} specifies the elements comprising the medium.  Elements are specified using chemical symbols separated by
@@ -9099,13 +9099,17 @@ log file, {\tt inputfile.egslog}, for batch runs.
 % EGSnrcMP will be given here, but for more detail you are
 % urged to refer to the EGSnrcMP Users Manual\cite{Ka03}.
 
+For up-to-date installation instructions, see the online documentation
+available on the github page:
+\htmladdnormallink{{\tt https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}}{https://github.com/nrc-cnrc/EGSnrc/wiki/Installation-overview}
+
 In order to install and run EGSnrcMP and OMEGA/BEAM, your system must have:
 \index{system requirements}
 \begin{enumerate}
 \index{Fortran compiler}
 \item A working Fortran compiler.  If you do not have one on
 your system, GNU provides a suite of compilers that can be downloaded
-for free at {\tt http://www.gnu.org}
+for free at \htmladdnormallink{{\tt http://www.gnu.org}}{http://www.gnu.org}
 \index{make utility}
 \item A working {\tt make} utility.  Most systems have this built in, although
 there is one available at the GNU site as well.
@@ -9130,12 +9134,12 @@ more information.  Note that most Linux distributions already include
 Tcl/Tk.
 \index{Qt}
 \index{Qt!how to get it}
-\item A Qt library version 3 (revision 3.1 or newer). This is necessary for
-compiling and running the GUIs for the EGSnrcMP user codes and is, thus,
-not strictly necessary for the OMEGA/BEAM codes.  You can download
-the Qt library for free from\\
- \htmladdnormallink{{\tt ftp://ftp.qt.nokia.com/qt/source/qt-x11-free-3.3.8b.tar.gz}}
-{ftp://ftp.qt.nokia.com/qt/source/qt-x11-free-3.3.8b.tar.gz}.  Note that many current Linux distributions
+\item The Qt4 development tools. This is necessary for
+compiling the GUIs for the EGSnrcMP user codes and is, thus,
+not strictly necessary for the OMEGA/BEAM codes or if you can use the
+pre-compiled versions provided online. Pre-compiled versions of
+the Qt GUIs are available on the EGSnrc release page.
+Note that many current Linux distributions
 include Qt, since the popular Desktop Environment KDE is based on Qt.
 
 \index{xmgrace}
