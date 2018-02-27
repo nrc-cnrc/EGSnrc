@@ -5452,9 +5452,9 @@ ELSEIF(NMESSAGE=7)[
   ' '/
   ' The maximum number of bins allowed is ',I4/
   ' and the energy range given below should be consistent with the'/
-  ' phase-space data. For example, Emin should be the same as ECUT'/
+  ' phase-space data. For example, Emin should be =< (ECUT-0.511)'/
   ' used in the simulation with BEAM, and Emax should be greater '/
-  ' than the maximum energy of the particles in the ph-sp data.'/
+  ' than the maximum kinetic energy of the particles in the ph-sp data.'/
   ' '/
   ' ----------------------------------------------------------------'/);
 ]
@@ -5598,9 +5598,9 @@ ELSEIF(NMESSAGE=15)[
   ' ------------------------------------------------     '/
   '                                                             '/
   ' The energy range given below should be consistent with the'/
-  ' phase-space data. For example, Emin should be the same as ECUT'/
+  ' phase-space data. For example, Emin should be =< (ECUT-0.511)'/
   ' used in the simulation with BEAM, and Emax should be greater '/
-  ' than the maximum energy of the particles in the ph-sp data.'/
+  ' than the maximum kinetic energy of the particles in the ph-sp data.'/
   ' '/
   ' -------------------------------------------------------------'/);
 ]
@@ -5937,10 +5937,11 @@ ELSEIF(NMESSAGE=42)[
   ' and the energy range given below should be consistent with the'/
   ' phase-space data. For example, Emin should be =< (ECUT-0.511)'/
   ' used in the simulation with BEAM, and Emax should be greater '/
-  ' than the maximum energy of the particles in the ph-sp data.'/
+  ' than the maximum kinetic energy of the particles in the ph-sp data.'/
   ' '/
   ' Note: the min., max. energy and bin number will be the same '/
   ' for all the sub-sources.'/
+  ' '/
   ' -------------------------------------------------------------'/);
 ]
 ELSEIF(NMESSAGE=43)[
@@ -6095,9 +6096,10 @@ ELSEIF(NMESSAGE=52)[
   ' '/
   ' If you are interested in the angular distribution of all    '/
   ' particles, then the energy range given below should be consistent'/
-  ' with the phase-space data. For example, Emin should be the same'/
-  ' as ECUT used in the simulation with BEAM, and Emax should be'/
-  ' greater than the maximum energy of the particles in the ph-sp data.'/
+  ' with the phase-space data. For example, Emin should be =< (ECUT-0.511)'/
+  ' used in the simulation with BEAM, and Emax should be greater '/
+  ' than the maximum kinetic energy of the particles in the ph-sp data.'/
+  ' '/
   ' -------------------------------------------------------------------'/);
 ]
 ELSEIF(NMESSAGE=53)[
