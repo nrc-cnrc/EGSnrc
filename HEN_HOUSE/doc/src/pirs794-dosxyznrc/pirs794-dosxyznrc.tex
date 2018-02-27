@@ -874,7 +874,7 @@ to the Z-axis from the front of the phantom. The input parameters are:
 \begin{description}
 \item [~~~~{\tt iqin}] Charge of the incident beam (-1: electron, 0: photon, 1: positron)
 \indexm{iqin}
-\item [~~~~{\tt isource}] = 0 
+\item [~~~~{\tt isource}] = 0
 \item [~~~~{\tt xinl,xinu}] Lower and upper x-bounds on the phantom surface
 \indexm{xinl,xinu}
 \item [~~~~{\tt yinl,yinu}] Lower and upper y-bounds on the phantom surface
@@ -1481,12 +1481,12 @@ An example may help illustrate this input.  The following input:
 \typeout{}
 \begin{verbatim}
 0, 8, 0.0, 0.0, 0.0, -1.0, 80.0, 90.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0
-0, 90.0, 0.0, 356.40, 100, 1.0
+1, 90.0, 0.0, 356.40, 100, 1.0
 \end{verbatim}
 is for source 8. The phase space file rotates about the isocenter at
 (0,0,0). The centre of the phase-space is 80 cm from the isocenter and the
 collimator angle is 90 degrees.
-The -1.0 indicates there is only one group of angles. The 0 at the start of
+The -1.0 indicates there is only one group of angles. The 1 at the start of
 the second line tells us that phi is fixed (at 90 degrees)
 and that theta is varying, in
 this case in 100 discrete steps between 0 and 356.4 degrees with equal
