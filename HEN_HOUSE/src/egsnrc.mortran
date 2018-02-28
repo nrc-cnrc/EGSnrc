@@ -1111,6 +1111,10 @@ $start_new_particle;
                     "          direction of motion at the start of the step
                     " Note that tustep and ustep are modified below.
                     " The above provide defaults.)
+
+                    " EM field step size restriction in vacuum
+                    $SET-TUSTEP-EM-FIELD;
+                    ustep = tustep;
             ]
             ELSE
             [
@@ -1383,7 +1387,7 @@ $start_new_particle;
                          "(allows for EM field deflection
                 ] "end of vacuum step
 
-                $electron_region_change;
+                IF(irnew ~= irold) [ $electron_region_change; ];
 
                 IF(ustep ~= 0) [$AUSCALL($TRANAUSA);]
                 IF(eie <= ecut(irl)) [go to :ECUT-DISCARD:;]
