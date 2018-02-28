@@ -58,6 +58,9 @@
 #include <cstdlib>
 #include <cstring>
 
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
+
 using namespace std;
 
 #ifdef DEBUG_APPLICATION
@@ -207,6 +210,15 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     }
     */
     io_flag = 1;
+
+    // Output version and compilation information
+    string gitHash = STR(GIT_HASH);
+    string gitBranch = STR(GIT_BRANCH);
+    string compileTime = STR(COMPILE_TIME);
+    egsInformation("\nGit hash: %s\n",gitHash.c_str());
+    egsInformation("Git branch: %s\n",gitBranch.c_str());
+    egsInformation("Compile time: %s\n",compileTime.c_str());
+
     return 0;
 }
 
