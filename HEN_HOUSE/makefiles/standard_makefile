@@ -83,7 +83,7 @@ failed_message = "______Operation failed______"
 # something like
 #   g77 -O3 -o /usr/people/iwan/egsnrc/bin/Linux/dosrznrc dosrznrc_Linux.F
 #
-$(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR)
+$(EXECUTABLE): $(FORTRAN_FILE).$(FEXT) $(EGS_EXTRA_OBJECTS) $(EXE_DIR) compare
 	@echo $(empty)
 	@echo $(empty)
 	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(EGS_EXTRA_FLAGS) $(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(EGS_EXTRA_OBJECTS) $(EGS_EXTRA_LIBS)'"
@@ -146,6 +146,15 @@ $(USER_CODE).mortran: $(depend)
 
 check:
 	@$(CHECK_USER_CODE)
+
+compare:
+	@if ! cmp -s $(USER_CODE).mortran $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran ; then \
+		echo $(empty); \
+		echo "============================================="; \
+		echo "Warning: local $(USER_CODE).mortran differs from HEN_HOUSE source"; \
+		echo "============================================="; \
+		echo $(empty); \
+	fi
 
 # Build a optimized user code
 opt:

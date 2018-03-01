@@ -38,13 +38,22 @@
 include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp1.spec
 
-all: $(target) $(lib_target)
+all: $(target) $(lib_target) compare
 
 $(target): $(user_objects) $(egs_objects)
 	$(CXX) $(opt) $(EOUT)$@ $^ $(lib_link1) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
 
 $(lib_target): $(user_lib_objects) $(egs_lib_objects)
 	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
+
+compare:
+	@if ! cmp -s $(USER_CODE).cpp $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).cpp ; then \
+		echo $(empty); \
+		echo "============================================="; \
+		echo "Warning: local $(USER_CODE).cpp differs from HEN_HOUSE source"; \
+		echo "============================================="; \
+		echo $(empty); \
+	fi
 
 egs_simple_application_$(my_machine).$(obje): $(dep_simple_application)
 	$(object_rule)

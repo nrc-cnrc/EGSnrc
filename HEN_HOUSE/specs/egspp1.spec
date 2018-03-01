@@ -93,9 +93,11 @@ target = $(USER_BINDIR)$(USER_CODE)$(EXE)
 # The other target (the application DSO or DLL)
 lib_target = $(USER_BINDIR)$(libpre)$(USER_CODE)$(libext)
 
+COMPILE_TIME = -DCOMPILE_TIME="$(shell date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
 # A standard rule for compiling C++ files
-object_rule = $(CXX) $(INCL) $(DEF1) $(DEF_USER) $(opt) -c $(COUT)$@ $<
-object_lib_rule = $(CXX) $(INCL) $(DEF1) $(DEF_USER) -DBUILD_APP_LIB $(opt) -c $(COUT)$@ $<
+object_rule = $(CXX) $(INCL) $(DEF1) $(COMPILE_TIME) $(DEF_USER) $(opt) -c $(COUT)$@ $<
+object_lib_rule = $(CXX) $(INCL) $(DEF1) $(COMPILE_TIME) $(DEF_USER) -DBUILD_APP_LIB $(opt) -c $(COUT)$@ $<
 
 # Files that a lot of stuff depends upon
 common_h_files1 = $(EGS_INTERFACE)egs_interface2.h $(HEN_HOUSE)lib$(DSEP)$(my_machine)$(DSEP)egs_config1.h $(ABS_EGSPP)egs_libconfig.h

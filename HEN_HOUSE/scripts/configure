@@ -2061,6 +2061,14 @@ str_header=$(printf "$str_header" | while read line; do
     printf "\"\n"
 done)
 
+GIT_HASH=" "
+GIT_BRANCH=" "
+CONFIG_TIME=`date -u +'%Y-%m-%d %H:%M:%S UTC'`
+if type "git" > /dev/null 2>&1; then
+    GIT_HASH=`git rev-parse --short=7 HEAD`
+    GIT_BRANCH=`git branch | grep "^\*" | sed 's/^..//'`
+fi
+
 cat >$machine_macros <<_ACEOF
 %E
 %I4
@@ -2079,6 +2087,13 @@ REPLACE {\$CONFIGURATION_NAME} WITH
   {'$conf_name'};
 REPLACE {\$EGS_CONFIG} WITH
   {'$HEN_HOUSE/specs/$conf_file'};
+
+REPLACE {\$GIT_HASH} WITH
+  {'$GIT_HASH'};
+REPLACE {\$GIT_BRANCH} WITH
+  {'$GIT_BRANCH'};
+REPLACE {\$CONFIG_TIME} WITH
+  {'$CONFIG_TIME'};
 
 " System dependent stuff "
 "========================================"

@@ -211,13 +211,11 @@ int EGS_AdvancedApplication::initEGSnrcBackEnd() {
     */
     io_flag = 1;
 
-    // Output version and compilation information
-    string gitHash = STR(GIT_HASH);
-    string gitBranch = STR(GIT_BRANCH);
+    // Output compilation information
+#ifdef COMPILE_TIME
     string compileTime = STR(COMPILE_TIME);
-    egsInformation("\nGit hash: %s\n",gitHash.c_str());
-    egsInformation("Git branch: %s\n",gitBranch.c_str());
-    egsInformation("Compile time: %s\n",compileTime.c_str());
+    egsInformation("\nApplication compile time: %s\n",compileTime.c_str());
+#endif
 
     return 0;
 }
