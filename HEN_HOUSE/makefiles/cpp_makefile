@@ -46,7 +46,9 @@ $(target): $(user_objects) $(egs_objects)
 $(lib_target): $(user_lib_objects) $(egs_lib_objects)
 	$(CXX) $(opt) $(shared) $(lib_link1) $^ $(extra) $(link2_prefix)egspp$(link2_suffix) $(fortran_libs) $(user_libs)
 
+CMP := $(shell cmp --version 2> /dev/null)
 compare:
+ifdef CMP
 	@if ! cmp -s $(USER_CODE).cpp $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).cpp ; then \
 		echo $(empty); \
 		echo "============================================="; \
@@ -54,6 +56,7 @@ compare:
 		echo "============================================="; \
 		echo $(empty); \
 	fi
+endif
 
 egs_simple_application_$(my_machine).$(obje): $(dep_simple_application)
 	$(object_rule)

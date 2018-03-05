@@ -147,7 +147,9 @@ $(USER_CODE).mortran: $(depend)
 check:
 	@$(CHECK_USER_CODE)
 
+CMP := $(shell cmp --version 2> /dev/null)
 compare:
+ifdef CMP
 	@if ! cmp -s $(USER_CODE).mortran $(HEN_HOUSE)$(DSEP)user_codes$(DSEP)$(USER_CODE)$(DSEP)$(USER_CODE).mortran ; then \
 		echo $(empty); \
 		echo "============================================="; \
@@ -155,6 +157,7 @@ compare:
 		echo "============================================="; \
 		echo $(empty); \
 	fi
+endif
 
 # Build a optimized user code
 opt:
