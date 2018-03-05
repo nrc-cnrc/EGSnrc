@@ -88,7 +88,7 @@ APPEND {;
             ufx,ufy,ufz,
             bdotub,bsqrd,
             ufxpar,ufypar,ufzpar,
-            ufxprp,ufyprp,ufzprp,ustepold;
+            ufxprp,ufyprp,ufzprp;
 } TO {$DEFINE-LOCAL-VARIABLES-ELECTR;};
 
 
@@ -291,14 +291,6 @@ IF(MEDIUM.EQ.0)[
 "$SET-TVSTEP-EM-FIELD;--this is for higher order corrections"
 "do first order corrections for now--BW"
 IF(ExIN~=0.0 | EyIN~=0.0 | EzIN~=0.0 | BxIN~=0.0 | ByIN~=0.0 | BzIN~=0)[
-USTEPOLD=USTEP;
-IF(USTEP>smaxir(irl)) USTEP=smaxir(irl);
-TUSTEP=USTEP;
-$SET-TUSTEP-EM-FIELD;
-TVSTEP=TUSTEP;
-VSTEP=TVSTEP;
-USTEP=VSTEP;
-IF(USTEP<USTEPOLD) irnew=irl;
 DE=0.0;
 $ADD-WORK-EM-FIELD;
 PEIE=PEIE-DE;EIE=PEIE;E(NP)=PEIE;
