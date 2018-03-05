@@ -191,9 +191,9 @@ proc help_gif { w text iconfile } {
     frame $w.f1 -bd 0 -relief sunken -bg white
     # Create the image from a gif file:
     if {$iconfile != ""} {
-	image create photo graphic -file \
+	image create photo $w.graphic -file \
 		[file join $GUI_DIR graphics $iconfile.gif]
-	label $w.f1.lbl -image graphic -bg white
+	label $w.f1.lbl -image $w.graphic -bg white
         message $w.f1.m -width 5i -text $text -font $helvfont -bg white
     } else {
 	label $w.f1.lbl -text "No graphic for this source"
