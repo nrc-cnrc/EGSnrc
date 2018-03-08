@@ -484,6 +484,8 @@ void QInstallPage::createSystemFiles(){
   specFile = henHouse() + tr("specs") + QDir::separator() + confFile();
   QDate date = QDate::currentDate();
   QString today = date.toString ( Qt::TextDate );
+  QDateTime dateTime = QDateTime::currentDateTimeUtc();
+  QString config_time = dateTime.toString ( Qt::TextDate ) + " UTC";
   QString OS; QString stdfile;
 #ifdef  WIN32
   OS = "Windows";
@@ -739,6 +741,9 @@ void QInstallPage::createSystemFiles(){
   machinemacros.replace(QString("$spec_file"), configfile.replace("\\","/") );
   machinemacros.replace(QString("$canonical_system"),  canonical() );
   machinemacros.replace(QString("$conf_name"),  my_machine() );
+  machinemacros.replace(QString("$git_hash"),  git_hash() );
+  machinemacros.replace(QString("$git_branch"),  git_branch() );
+  machinemacros.replace(QString("$config_time"),  config_time );
   machinemacros.replace(QString("$sep"),  sep );
   machinemacros.replace(QString("$copyf"),  copy );
   machinemacros.replace(QString("$movef"),  move );

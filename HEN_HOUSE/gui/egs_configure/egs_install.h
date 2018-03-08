@@ -215,6 +215,90 @@ private:
   void printProgress( const QString& message, bool new_line = true );
 
 
+// Return the git hash
+QString git_hash(){
+    QProcess proc;
+    QString answer = " ";
+
+#ifndef WIN32
+    proc.start("git rev-parse --is-inside-work-tree");
+    if (!proc.waitForStarted()) return answer;
+    proc.closeWriteChannel();
+    if (!proc.waitForFinished()) return answer;
+    QString inGitRep = QString(proc.readAll());
+    if (inGitRep.endsWith("\n")) inGitRep.chop(1);
+
+    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
+        proc.start("git rev-parse --short=7 HEAD");
+        if (!proc.waitForStarted()) return answer;
+        proc.closeWriteChannel();
+        if (!proc.waitForFinished()) return answer;
+        answer = QString(proc.readAll());
+        if (answer.endsWith("\n")) answer.chop(1);
+    }
+#else
+    proc.start("git rev-parse --is-inside-work-tree");
+    if (!proc.waitForStarted()) return answer;
+    proc.closeWriteChannel();
+    if (!proc.waitForFinished()) return answer;
+    QString inGitRep = QString(proc.readAll());
+    if (inGitRep.endsWith("\r\n")) inGitRep.chop(2);
+
+    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
+        proc.start("git rev-parse --short=7 HEAD");
+        if (!proc.waitForStarted()) return answer;
+        proc.closeWriteChannel();
+        if (!proc.waitForFinished()) return answer;
+        answer = QString(proc.readAll());
+        if (answer.endsWith("\r\n")) answer.chop(2);
+    }
+#endif
+
+    return answer;
+}
+
+// Return the git branch
+QString git_branch(){
+    QProcess proc;
+    QString answer = " ";
+
+#ifndef WIN32
+    proc.start("git rev-parse --is-inside-work-tree");
+    if (!proc.waitForStarted()) return answer;
+    proc.closeWriteChannel();
+    if (!proc.waitForFinished()) return answer;
+    QString inGitRep = QString(proc.readAll());
+    if (inGitRep.endsWith("\n")) inGitRep.chop(1);
+
+    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
+        proc.start("git rev-parse --abbrev-ref HEAD");
+        if (!proc.waitForStarted()) return answer;
+        proc.closeWriteChannel();
+        if (!proc.waitForFinished()) return answer;
+        answer = QString(proc.readAll());
+        if (answer.endsWith("\n")) answer.chop(1);
+    }
+#else
+    proc.start("git rev-parse --is-inside-work-tree");
+    if (!proc.waitForStarted()) return answer;
+    proc.closeWriteChannel();
+    if (!proc.waitForFinished()) return answer;
+    QString inGitRep = QString(proc.readAll());
+    if (inGitRep.endsWith("\r\n")) inGitRep.chop(2);
+
+    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
+        proc.start("git rev-parse --abbrev-ref HEAD");
+        if (!proc.waitForStarted()) return answer;
+        proc.closeWriteChannel();
+        if (!proc.waitForFinished()) return answer;
+        answer = QString(proc.readAll());
+        if (answer.endsWith("\r\n")) answer.chop(2);
+    }
+#endif
+
+    return answer;
+}
+
 //************************************************************************
 
 /* Creates a log file to store useful information about
@@ -653,6 +737,13 @@ static const char machine_macros[]={
 "  {'$conf_name'};\n"\
 "REPLACE {$EGS_CONFIG} WITH \n"\
 "  {'$spec_file'};\n"\
+"\n"\
+"REPLACE {$GIT_HASH} WITH \n"\
+"  {'$git_hash'}; \n"\
+"REPLACE {$GIT_BRANCH} WITH \n"\
+"  {'$git_branch'}; \n"\
+"REPLACE {$CONFIG_TIME} WITH \n"\
+"  {'$config_time'}; \n"\
 "\n"\
 "\" System dependent stuff \"\n"\
 "\"========================================\"\n"\
