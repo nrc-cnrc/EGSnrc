@@ -93,7 +93,12 @@ target = $(USER_BINDIR)$(USER_CODE)$(EXE)
 # The other target (the application DSO or DLL)
 lib_target = $(USER_BINDIR)$(libpre)$(USER_CODE)$(libext)
 
-COMPILE_TIME = -DCOMPILE_TIME="$(shell date -u +'%Y-%m-%d %H:%M:%S UTC')"
+COMPILE_TIME =
+ifeq ($(OS),Windows_NT)
+    COMPILE_TIME := -DCOMPILE_TIME="$(shell cmd /C date /T)$(shell cmd /C time /T) $(shell cmd /C tzutil /g)"
+else
+    COMPILE_TIME = -DCOMPILE_TIME="$(shell date -u +'%Y-%m-%d %H:%M:%S UTC')"
+endif
 
 # A standard rule for compiling C++ files
 object_rule = $(CXX) $(INCL) $(DEF1) $(COMPILE_TIME) $(DEF_USER) $(opt) -c $(COUT)$@ $<

@@ -220,7 +220,6 @@ QString git_hash(){
     QProcess proc;
     QString answer = " ";
 
-#ifndef WIN32
     proc.start("git rev-parse --is-inside-work-tree");
     if (!proc.waitForStarted()) return answer;
     proc.closeWriteChannel();
@@ -236,23 +235,6 @@ QString git_hash(){
         answer = QString(proc.readAll());
         if (answer.endsWith("\n")) answer.chop(1);
     }
-#else
-    proc.start("git rev-parse --is-inside-work-tree");
-    if (!proc.waitForStarted()) return answer;
-    proc.closeWriteChannel();
-    if (!proc.waitForFinished()) return answer;
-    QString inGitRep = QString(proc.readAll());
-    if (inGitRep.endsWith("\r\n")) inGitRep.chop(2);
-
-    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
-        proc.start("git rev-parse --short=7 HEAD");
-        if (!proc.waitForStarted()) return answer;
-        proc.closeWriteChannel();
-        if (!proc.waitForFinished()) return answer;
-        answer = QString(proc.readAll());
-        if (answer.endsWith("\r\n")) answer.chop(2);
-    }
-#endif
 
     return answer;
 }
@@ -262,7 +244,6 @@ QString git_branch(){
     QProcess proc;
     QString answer = " ";
 
-#ifndef WIN32
     proc.start("git rev-parse --is-inside-work-tree");
     if (!proc.waitForStarted()) return answer;
     proc.closeWriteChannel();
@@ -278,23 +259,6 @@ QString git_branch(){
         answer = QString(proc.readAll());
         if (answer.endsWith("\n")) answer.chop(1);
     }
-#else
-    proc.start("git rev-parse --is-inside-work-tree");
-    if (!proc.waitForStarted()) return answer;
-    proc.closeWriteChannel();
-    if (!proc.waitForFinished()) return answer;
-    QString inGitRep = QString(proc.readAll());
-    if (inGitRep.endsWith("\r\n")) inGitRep.chop(2);
-
-    if (inGitRep.compare("true",Qt::CaseInsensitive) == 0) {
-        proc.start("git rev-parse --abbrev-ref HEAD");
-        if (!proc.waitForStarted()) return answer;
-        proc.closeWriteChannel();
-        if (!proc.waitForFinished()) return answer;
-        answer = QString(proc.readAll());
-        if (answer.endsWith("\r\n")) answer.chop(2);
-    }
-#endif
 
     return answer;
 }
