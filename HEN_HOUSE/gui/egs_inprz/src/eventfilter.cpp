@@ -249,7 +249,7 @@ bool TableEvents::eventFilter( QObject *o, QEvent *e)
              }
          }
     }
-    return to->eventFilter( o, e ) ;
+    return false;
 }
 
 ComboEvents::ComboEvents( QWidget *parent, const char *name )

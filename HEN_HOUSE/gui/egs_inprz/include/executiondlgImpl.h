@@ -53,7 +53,7 @@ class ExecutiondlgImpl : public QDialog, public Ui::MExecutionDialog
 
 public:
 
-ExecutiondlgImpl( QWidget* parent, const char* name,  bool modal, Qt::WFlags f );
+ExecutiondlgImpl( QWidget* parent, const char* name,  bool modal, Qt::WindowFlags f );
 
 ~ExecutiondlgImpl();
 

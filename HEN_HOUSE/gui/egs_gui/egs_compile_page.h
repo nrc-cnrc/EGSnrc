@@ -53,9 +53,9 @@ class EGS_CompilePage : public EGS_GUI_Widget {
 
 public:
 
-  EGS_CompilePage(QWidget *parent = 0, const char * name = 0, Qt::WFlags f = 0);
+  EGS_CompilePage(QWidget *parent = 0, const char * name = 0, Qt::WindowFlags f = 0);
   EGS_CompilePage(EGS_ConfigReader *,
-          QWidget *parent = 0, const char * name = 0, Qt::WFlags f = 0);
+          QWidget *parent = 0, const char * name = 0, Qt::WindowFlags f = 0);
   ~EGS_CompilePage(){}
 
   void sendSignals();

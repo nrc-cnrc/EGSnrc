@@ -32,7 +32,7 @@
 #ifndef EGS_WIZARD_H
 #define EGS_WIZARD_H
 
-#include <QWidget>
+#include <QtWidgets>
 #include <QString>
 #include <QPixmap>
 #include <QWizard>
@@ -56,7 +56,7 @@ public:
   enum { Page_Intro, Page_Location, Page_Compiler,
          Page_Licence, Page_Install, Page_Conclusion };
 
-  EGS_Wizard(QWidget * parent = 0, Qt::WFlags f = 0);
+  EGS_Wizard(QWidget * parent = 0, Qt::WindowFlags f = 0);
   ~EGS_Wizard(){}
 
 public slots:

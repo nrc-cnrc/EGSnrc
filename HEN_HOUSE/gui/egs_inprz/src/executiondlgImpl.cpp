@@ -41,7 +41,7 @@
 //qt3to4 -- BW
 #include <qdir.h>
 
-ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool modal, Qt::WFlags f )
+ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool modal, Qt::WindowFlags f )
 //qt3to4 -- BW
 //           : MExecutionDialog( parent, name, modal, f )
              : QDialog(parent)
