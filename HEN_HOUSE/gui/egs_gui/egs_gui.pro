@@ -48,7 +48,7 @@ HEADERS += main_widget.h \
         egs_configuration_page.h \
         egs_config_reader.h
 
-QT	+= widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 MOC_DIR =       .moc/$$my_machine
 OBJECTS_DIR =   .obj/$$my_machine

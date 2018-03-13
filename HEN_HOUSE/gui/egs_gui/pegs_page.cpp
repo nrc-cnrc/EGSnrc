@@ -37,7 +37,12 @@
 #include <QItemSelectionModel>
 #include <QMessageBox>
 #include <QTextStream>
-#include <QtWidgets>
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets>
+#else
+    #include <QWidget>
+#endif
 
 #include <qstringlist.h>
 #include <qfiledialog.h>

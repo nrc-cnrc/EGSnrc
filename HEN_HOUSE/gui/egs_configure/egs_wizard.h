@@ -32,7 +32,12 @@
 #ifndef EGS_WIZARD_H
 #define EGS_WIZARD_H
 
-#include <QtWidgets>
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets>
+#else
+    #include <QWidget>
+#endif
 #include <QString>
 #include <QPixmap>
 #include <QWizard>

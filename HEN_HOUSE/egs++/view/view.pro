@@ -32,7 +32,7 @@ LANGUAGE	= C++
 
 INCLUDEPATH	+= . .. ../../lib/$$my_machine
 
-QT	+= widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 HEADERS	+= egs_visualizer.h image_window.h egs_light.h \
                  clippingplanes.h viewcontrol.h geometryview.ui.h \

@@ -277,9 +277,9 @@ void QInstallPage::createEGSFolders(){
           else desc = "EGSnrc GUI for egs++ geometries";
           lnk       = DESKTOP + *it + (QString)".lnk";
           if( *it != "egs_view" )
-            target =  QDir::convertSeparators( egsBinDir  + s + *it + ".exe" );
+            target =  QDir::toNativeSeparators( egsBinDir  + s + *it + ".exe" );
           else{
-            target =  QDir::convertSeparators( henHouse() + "egs++" + s + "dso" + s + "win-static" + s + *it + ".exe");
+            target =  QDir::toNativeSeparators( henHouse() + "egs++" + s + "dso" + s + "win-static" + s + *it + ".exe");
             icon   = henHouse() + "egs++" + s + "view" + s + *it + ".ico";
           }
           if ( ! fileExists( target ) ) {

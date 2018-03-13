@@ -87,8 +87,7 @@ HEADERS	+= include/cavinputs.h \
 	include/tools.h \
         ../egs_gui/egs_config_reader.h
 
-QT	+= widgets \
-	printsupport
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
 
 ######################################################################

@@ -28,6 +28,7 @@
 ###############################################################################
 */
 
+#include <QtGlobal>
 #include "clippingplanes.h"
 
 #include "egs_libconfig.h"
@@ -43,7 +44,11 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     : QWidget(parent) {
     setObjectName(name);
     setupUi(this);
+#if QT_VERSION >= 0x050000
     planeTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+#else
+    planeTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+#endif
 }
 
 ClippingPlanesWidget::~ClippingPlanesWidget() {

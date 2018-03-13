@@ -60,6 +60,7 @@ win32 {
     QMAKE_CXXFLAGS += -fpermissive
     ####################################################
     CONFIG  += qt thread warn_off release windows
+    greaterThan(QT_MAJOR_VERSION, 4): LIBS += -lz -lole32 -luuid
     DESTDIR = ../../pieces/windows
     RC_FILE = egs_beam_install.rc
 }
@@ -91,4 +92,5 @@ RESOURCES = egs_beam_install.qrc # resource collection file to store images in t
 TEMPLATE  = app
 LANGUAGE  = C++
 QT += xml
-QT += widgets
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+

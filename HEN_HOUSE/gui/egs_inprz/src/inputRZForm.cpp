@@ -30,7 +30,7 @@
 ###############################################################################
 */
 
-
+#include <QtGlobal>
 #include "tooltips.h"
 #include "inputRZImpl.h"
 #include "errordlg.h"
@@ -3690,7 +3690,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QStringList& s)
     t->setHorizontalHeaderLabels(s);
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
     t->installEventFilter(this);}
 
 //qt3to4 -- BW
@@ -3731,7 +3735,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0, const QSt
     t->setHorizontalHeaderItem(1,new QTableWidgetItem(s1));
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     t->installEventFilter(this);
 }
@@ -3749,7 +3757,11 @@ void inputRZImpl::InitializeTable( QTableWidget* t, const QString& s0,
     t->setHorizontalHeaderItem(2, new QTableWidgetItem(s2) );
     t->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        t->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        t->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     t->installEventFilter(this);
 }
@@ -3765,7 +3777,11 @@ void inputRZImpl::InitializeTwoColumnTable( QTableWidget* table)
     table->setHorizontalHeaderItem(1, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     table->installEventFilter(this);
 }
@@ -3781,7 +3797,11 @@ void inputRZImpl::InitializeThreeColumnTable( QTableWidget* table, const QString
     table->setHorizontalHeaderItem(2, new QTableWidgetItem("stop"));
     table->horizontalHeader()->setUpdatesEnabled( true );
     //Proper way to resize table columns to fit the table -- EMH July 2015
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #if QT_VERSION >= 0x050000
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    #else
+        table->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    #endif
 
     table->installEventFilter(this);
 }
