@@ -78,15 +78,6 @@ inputRZImpl::inputRZImpl( QWidget* parent, const char* name,
 
 inputRZImpl::~inputRZImpl()
 {
-  zapM( srcTip );
-  zapM( ifullTip );
-  zapM( iwatchTip );
-  zapM( irestartTip );
-  zapM( etransportTip );
-  zapM( outputTip );
-  zapM( mediaTip );
-  zapM( imodeTip );
-  zapM( iprimaryTip );
   zap( mediaTable );
 }
 
@@ -1037,7 +1028,7 @@ void inputRZImpl::GetSPECfile()
     //Q3FileDialog* fd = new Q3FileDialog(SPECdir, QString::null, this);
     QFileDialog* fd = new QFileDialog(this,"",SPECdir, QString());
     QStringList filters;
-    filters << "*.spectrum" << "*.ensrc"; 
+    filters << "*.spectrum" << "*.ensrc";
     fd->setNameFilters( filters );
     QString f;
     QStringList flst;

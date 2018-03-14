@@ -103,5 +103,5 @@ endif
 # This is only relevant at NRC. For now we are using the
 # nmake-msvc qt configuration => gui_make must be set to nmake.
 #
-gui_make = nmake /NOLOGO
-#gui_make = nmake
+gui_make = mingw32-make
+

@@ -288,23 +288,7 @@ geoErrors    =  "";
  sloteFluTable->setWhatsThis(TOP_BIN_FLU );
  sloteFluTable->setToolTip(TOP_BIN_FLU );
 
-outputTip = new ComboBoxToolTip( outoptComboBox, 0, out_dos,
-                                 sizeof out_dos / sizeof(char *) );
-
-iprimaryTip = new ComboBoxToolTip( IPRIMARYComboBox, 0, spectrum_type,
-                                 sizeof spectrum_type / sizeof(char *) );
-etransportTip = new ComboBoxToolTip( etransportComboBox, 0, electron_transport,
-                                 sizeof electron_transport / sizeof(char *) );
-irestartTip = new ComboBoxToolTip( irestartComboBox, 0, irestart,
-                                 sizeof irestart / sizeof(char *) );
-iwatchTip = new ComboBoxToolTip( iwatchComboBox, 0, iwatch,
-                                 sizeof iwatch / sizeof(char *) );
-
-
 // Tool tips for MC input Tab
-
-ifullTip = new ComboBoxToolTip( ifullComboBox, 0, ifull_dos,
-                                sizeof ifull_dos / sizeof(char *) );
 maxCPUEdit->setWhatsThis(CPU_TIME  );
  maxCPULabel->setWhatsThis(CPU_TIME  );
 
@@ -360,23 +344,14 @@ cavityRadioButton->setToolTip(CAVITY  );
 
 CavityInfoLabel->hide();
 
-mediaTip = new ComboBoxToolTip( mediaComboBox, 0,
-        media_regions, sizeof media_regions / sizeof(char *) );
-
 // Tool tips for source input Tab
 
   //tool tip for source number combo box
   sourceComboBox->setToolTip("select source number"  );
 
-srcTip = new ComboBoxToolTip( sourceComboBox, 0,
-         sources, sizeof sources / sizeof(char *) );
-
 imodeComboBox->addItem( tr( "No ZLAST" ) );
 imodeComboBox->addItem( tr( "With ZLAST" ) );
 imodeComboBox->hide();
-
-imodeTip = new ComboBoxToolTip( imodeComboBox, 0,
-           imode, sizeof imode / sizeof(char *) );
 
 localRadioButton->setWhatsThis( RAD_DIS_LOCAL);
 externalRadioButton->setWhatsThis(RAD_DIS_EXTERNAL);
@@ -2570,14 +2545,9 @@ void inputRZImpl::update_usercode()
        ifullComboBox->addItem( tr( "Ap" ) );
        ifullComboBox->addItem( tr( "Afl and <s>g/w" ) );
 
-       ifullTip->setTips(ifull_cav, sizeof ifull_cav / sizeof(char *));
-
        outoptComboBox->clear();
        outoptComboBox->addItem( tr( "short" ) );
        outoptComboBox->addItem( tr( "cavity details" ) );
-
-       outputTip->setTips( out_cav, sizeof out_cav / sizeof(char *));
-
 
 
        TabWidgetRZ->setTabEnabled(TabWidgetRZ->indexOf(CItab), true );
@@ -2630,16 +2600,12 @@ void inputRZImpl::update_usercode()
        ifullComboBox->addItem( tr( "pulse height distribution" ) );
        ifullComboBox->addItem( tr( "scatter fraction" ) );
 
-       ifullTip->setTips(ifull_dos, sizeof ifull_dos / sizeof(char *));
-
        outoptComboBox->clear();
        outoptComboBox->addItem( tr( "short" ) );
        outoptComboBox->addItem( tr( "dose summary" ) );
        outoptComboBox->addItem( tr( "material summary" ) );
        outoptComboBox->addItem( tr( "material and dose summary" ) );
        outoptComboBox->addItem( tr( "long" ) );
-
-       outputTip->setTips( out_dos, sizeof out_dos / sizeof(char *));
 
        //Q3WhatsThis::add( CSEnhancementGroupBox, CS_ENHANCEMENT_DOSRZNRC  );
        CSEnhancementGroupBox->setWhatsThis(CS_ENHANCEMENT_DOSRZNRC  );

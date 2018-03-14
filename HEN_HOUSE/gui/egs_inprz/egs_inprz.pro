@@ -30,7 +30,6 @@
 
 
 SOURCES	+= src/cavinputs.cpp \
-	src/comboboxtooltip.cpp \
 	src/commandManager.cpp \
 	src/de_parser.cpp \
 	src/errordlg.cpp \
@@ -59,7 +58,6 @@ SOURCES	+= src/cavinputs.cpp \
 	src/tools.cpp \
         src/egs_config_reader.cpp
 HEADERS	+= include/cavinputs.h \
-	include/comboboxtooltip.h \
 	include/commandManager.h \
 	include/datainp.h \
 	include/de_parser.h \
