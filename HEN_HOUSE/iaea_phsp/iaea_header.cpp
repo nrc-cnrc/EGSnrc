@@ -687,11 +687,11 @@ int iaea_header_type::check_byte_order()
   // printf("\n \t %x %x %x %x", pf[0],pf[1],pf[2],pf[3]);
   if(pf[0] == 0 && pf[3] != 0)
   {
-    printf("\nByte order: INTEL / ALPHA,LINUX -> LITLE_ENDIAN \n");
+    //printf("\nByte order: INTEL / ALPHA,LINUX -> LITLE_ENDIAN \n");
     return(LITTLE_ENDIAN);
   }else if(pf[0] != 0 && pf[3] == 0)
   {
-    printf("\nByte order: OTHER (SGI,SUN-SOLARIS) -> BIG_ENDIAN \n ");
+    //printf("\nByte order: OTHER (SGI,SUN-SOLARIS) -> BIG_ENDIAN \n ");
     return(BIG_ENDIAN);
   }
   else
