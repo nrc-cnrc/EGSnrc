@@ -80,7 +80,7 @@ public:
     ~EGS_PhspScoring();
 
     int processEvent(EGS_Application::AusgabCall iarg) {
-
+      if (ocharge==0 || 1+abs(app->top_p.q)==ocharge) {
         EGS_Vector x = app->top_p.x;
 
         if (iarg == 0) phsp_before = phsp_geom->isInside(x);
@@ -91,11 +91,13 @@ public:
                 storeParticle(current_case);
             }
         }
-        return 0;
+      }
+      return 0;
     };
 
     int processEvent(EGS_Application::AusgabCall iarg, int ir) {
         //same as above, we don't need the region no.
+      if (ocharge==0 || 1+abs(app->top_p.q)==ocharge) {
         EGS_Vector x = app->top_p.x;
 
         if (iarg == 0) phsp_before = phsp_geom->isInside(x);
@@ -107,7 +109,8 @@ public:
                 storeParticle(current_case);
             }
         }
-        return 0;
+      }
+      return 0;
     };
 
     bool needsCall(EGS_Application::AusgabCall iarg) const {
@@ -133,6 +136,14 @@ public:
         oformat = phspouttype;
     }
 
+    void setOutDir(const string outdir) {
+        phspoutdir =  outdir;
+    }
+
+    void setParticleType (const int ptype) {
+        ocharge = ptype;
+    }
+
     //method below pertains only to IAEA format
     //set array element 0/1/2 of xyz_is_constant equal to true
     //if scoring at a constant X/Y/Z value and store the
@@ -143,6 +154,8 @@ public:
          xyzscore[i]=xyzconst[i];
        }
     }
+
+    //set output directory
 
     void storeParticle(EGS_I64 ncase);
 
@@ -229,7 +242,11 @@ protected:
     EGS_BaseGeometry *phsp_geom; //geometry on entrance to/exit from which phase space data is scored
     int oformat;           //0 for EGSnrc format, 1 for IAEA format
 
+    int ocharge;           //particle type for output: 0--all; 1--photons; 2--charged particles;
+
     string phsp_fname; //name of phase space file
+
+    string phspoutdir; //output directory
 
     const EGS_Float prm = 0.5109989461; //precise rest mass
                                   //may eventually want to get this from
