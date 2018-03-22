@@ -88,7 +88,9 @@ public:
         if (iarg == 5) {
             phsp_after = phsp_geom->isInside(x);
             if (phsp_after != phsp_before) {
-                storeParticle(current_case);
+              if (scoredir == 0 || (scoredir == 1 && phsp_after) ||
+                  (scoredir == 2 && phsp_before))
+                      storeParticle(current_case);
             }
         }
       }
@@ -106,7 +108,9 @@ public:
             phsp_after = phsp_geom->isInside(x);
             if (phsp_after != phsp_before) {
                 //store the particle
-                storeParticle(current_case);
+             if (scoredir == 0 || (scoredir == 1 && phsp_after) ||
+                  (scoredir == 2 && phsp_before))
+                   storeParticle(current_case);
             }
         }
       }
@@ -142,6 +146,10 @@ public:
 
     void setParticleType (const int ptype) {
         ocharge = ptype;
+    }
+
+    void setScoreDir (const int sdir) {
+        scoredir = sdir;
     }
 
     //method below pertains only to IAEA format
@@ -242,7 +250,9 @@ protected:
     EGS_BaseGeometry *phsp_geom; //geometry on entrance to/exit from which phase space data is scored
     int oformat;           //0 for EGSnrc format, 1 for IAEA format
 
-    int ocharge;           //particle type for output: 0--all; 1--photons; 2--charged particles;
+    int ocharge;           //particle type for output: 0--all; 1--photons; 2--charged particles
+
+    int scoredir;           //scoring direction: 0--on entry and exit; 1--on entry; 2--on exit
 
     string phsp_fname; //name of phase space file
 

@@ -52,6 +52,7 @@
 #          constant Y               = Y value (cm) at which all particles are scored (IAEA format only)
 #          constant Z               = Z value (cm) at which all particles are scored (IAEA format only)
 #          particle type            = all, photons, or charged
+#          score particles on       = entry, exit, entry and exit [default]
 #          output directory         = name of output directory
 #      :stop ausgab object:
 #  :stop ausgab object definition:
@@ -67,6 +68,9 @@
 #
 #  Particles of the type indicated by the "particle type" input are scored.  If this input
 #  is omitted, then all particles are scored
+#
+#  Particles can be scored on entering the phase space geometry, exiting the geometry, or both (the default)
+#  Be aware of how the "inside" and "outside" of the geometry are defined when using this option.
 #
 #  A note on parallel runs:
 #  If a phase space file is being written during a parallel run, then each job, i, outputs its phase
@@ -88,7 +92,7 @@
 #        name = scoreplane
 #     :stop geometry:
 #
-#  The, the user must define the scoring plane ausgab object:
+#  Then, the user must define the scoring plane ausgab object:
 #
 #    :start ausgab object definition:
 #        :start ausgab object:
@@ -101,7 +105,7 @@
 #        :stop ausgab object:
 #    :stop ausgab object definition:
 #
-#  This will output phase space data for all particles entering/exiting "scoreplane" to
+#  This will output phase space data for all particles entering and exiting "scoreplane" to
 #  file example.egsphsp1[.1.IAEAheader/phsp].  In the IAEA example above, the constant Z
 #  position of the scoring plane is specified.  If this is not specified, then
 #  the Z position of each particle will be stored in example.1.IAEAphsp.
@@ -214,6 +218,10 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
     if (ocharge == 0) description += "all";
     else if (ocharge == 1) description += "photons";
     else if (ocharge == 2) description += "charged";
+    description += "\n Particles scored on: ";
+    if (scoredir == 0 ) description += "entering and exiting phase space geometry";
+    else if (scoredir == 1) description += "entering phase space geometry";
+    else if (scoredir == 2) description += "exiting phase space geometry";
 }
 
 //final buffer flush and then close file
@@ -241,6 +249,7 @@ void EGS_PhspScoring::reportResults() {
       egsInformation("\n EGSnrc format phase space output:\n");
       egsInformation(" Data file: %s\n",phsp_fname.c_str());
     }
+    egsInformation("Summary of scored data:\n");
     egsInformation("=> total no. of particles = %lld \n", count);
     egsInformation("=> no. of photons = %lld \n", countg);
     egsInformation("=> max. k.e. of all particles = %g MeV\n",emax);
@@ -478,6 +487,7 @@ extern "C" {
         EGS_BaseGeometry *phspgeom;
         int phspouttype;
         int ptype;
+        int sdir;
         float xyzconst[3];
         bool xyzisconst[3] = {false, false, false};
         //get geometry name and filename and do some checks
@@ -532,6 +542,22 @@ extern "C" {
                             egsFatal("\nEGS_PhspScoring: Invalid particle type.\n");
                         }
                     }
+                    if (input->getInput("score particles on", str) < 0) {
+                        egsInformation("EGS_PhspScoring: No input for scoring direction.\n");
+                        egsInformation("Will score on entry and exit from phase space geometry.\n");
+                        sdir = 0;
+                    }
+                    else {
+                        //get scoring direction
+                        vector<string> allowed_sdir;
+                        allowed_sdir.push_back("entry and exit");
+                        allowed_sdir.push_back("entry");
+                        allowed_sdir.push_back("exit");
+                        sdir = input->getInput("score particles on",allowed_sdir,-1);
+                        if (sdir < 0) {
+                            egsFatal("\nEGS_PhspScoring: Invalid scoring direction.\n");
+                        }
+                    }
             }
         }
 
@@ -545,6 +571,7 @@ extern "C" {
         result->setXYZconst(xyzisconst,xyzconst);
         result->setOutDir(outdir);
         result->setParticleType(ptype);
+        result->setScoreDir(sdir);
         return result;
    }
 }
