@@ -176,6 +176,7 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
         return;
     }
     mode2=false;
+    i_zlast = -1;
     for (int i=0; i< n_extra_floats; i++) {
         if (extrafloat_types[i]==3) {
             mode2=true;

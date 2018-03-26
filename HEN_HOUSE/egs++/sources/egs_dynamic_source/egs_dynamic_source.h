@@ -229,22 +229,21 @@ public:
                             EGS_Vector &x, EGS_Vector &u) {
         int err = 1;
         EGS_ControlPoint ipt;  //the actual rotation coords
-        EGS_Float rand;
         EGS_I64 c;
         while (err) {
             c = source->getNextParticle(rndm,q,latch,E,wt,x,u);
             if (sync) {
-                rand = source->getMu();
-                if (rand<0) {
+                pmu = source->getMu();
+                if (pmu<0) {
                     egsWarning("EGS_DynamicSource: You have selected synchronization of dynamic source with %s\n",source->getObjectName().c_str());
                     egsWarning("However, this source does not return mu values for each particle.  Will turn off synchronization.\n");
                     sync = false;
                 }
             }
             if (!sync) {
-                rand = rndm->getUniform();
+                pmu = rndm->getUniform();
             }
-            err = getCoord(rand,ipt);
+            err = getCoord(pmu,ipt);
         }
 
         //translate source in Z
@@ -267,6 +266,9 @@ public:
     };
     EGS_Float getFluence() const {
         return source->getFluence();
+    };
+    EGS_Float getMu() {
+        return pmu;
     };
     bool storeState(ostream &data) const {
         return source->storeState(data);
@@ -298,7 +300,10 @@ protected:
     bool sync; //set to true if source motion synched with mu read from
     //iaea phsp or beam simulation source
 
-    int getCoord(EGS_Float rand, EGS_ControlPoint &ipt);
+    int getCoord(const EGS_Float rand, EGS_ControlPoint &ipt);
+
+    EGS_Float pmu; //monitor unit index corresponding to particle
+    //could just be a random number.
 
     void setUp();
 
