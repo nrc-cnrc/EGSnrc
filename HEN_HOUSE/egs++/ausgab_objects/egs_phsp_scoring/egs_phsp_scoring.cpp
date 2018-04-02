@@ -33,11 +33,12 @@
 #  Phase space data can be scored in one of 2 possible formats:
 #
 #   EGSnrc format: E,x,y,u,v,wt,latch
-#     IAEA format: iq,E,[x],[y],[z],u,v,wt,latch
+#     IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[mu]
 #
 #  Note that in IAEA format, the user has the option of specifying a fixed x, y, and/or z coordinate
 #  of the scoring plane/line/point, in which case the fixed coordinates shall not be scored for each
-#  particle but will be specified in the header (.IAEAheader) file.
+#  particle but will be specified in the header (.IAEAheader) file.  Also, in this format, the
+#  user has the option of scoring the synchronization parameter, mu, passed from the source.
 #
 #  Can be used in any C++ user code by entering the proper input block in
 #  the ausgab object definition block.
@@ -51,6 +52,7 @@
 #          constant X               = X value (cm) at which all particles are scored (IAEA format only)
 #          constant Y               = Y value (cm) at which all particles are scored (IAEA format only)
 #          constant Z               = Z value (cm) at which all particles are scored (IAEA format only)
+#          score mu                 = yes or no [default] (IAEA format only)
 #          particle type            = all, photons, or charged
 #          score particles on       = entry, exit, entry and exit [default]
 #          output directory         = name of output directory
@@ -71,6 +73,13 @@
 #
 #  Particles can be scored on entering the phase space geometry, exiting the geometry, or both (the default)
 #  Be aware of how the "inside" and "outside" of the geometry are defined when using this option.
+#
+#  In IAEA-format phase space files, the user can opt to score the synchronization parameter, mu.
+#  This option will automatically be turned off if the parameter is not available from the
+#  source.  Currently, this parameter can only be passed from egs_beam_source (only if the accelerator
+#  includes synchronized CMs), iaea_phsp_source (if scored using a BEAMnrc simulation with
+#  synchronized CMs or scored using this ausgab object with mu scoring turned on) and
+#  egs_dynamic_source (always available).
 #
 #  A note on parallel runs:
 #  If a phase space file is being written during a parallel run, then each job, i, outputs its phase
@@ -117,8 +126,6 @@
 #  scored.
 #
 #  TODO:
-#
-#  Enable scoring of muindex for synchronized sources
 #
 ###############################################################################
 */
@@ -200,8 +207,15 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         //set up extra float and extra long array indices
         latch_ind = 2;//type of latch as defined by iaea
         iaea_n_extra_long=1; //only store latch
-        iaea_n_extra_float=0; //no extra floats for now
         iaea_i_latch=0; // position of latch in array
+        if (score_mu) {
+           iaea_n_extra_float=1;
+           mu_ind = 0; //set type to generic float
+           iaea_i_mu=0; //position of mu in array
+        }
+        else {
+           iaea_n_extra_float=0; //no extra floats
+        }
 
         description += "\n Phase space file names:\n";
         description += "  Header file: " + phsp_fname + ".IAEAheader\n";
@@ -222,6 +236,7 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
     if (scoredir == 0 ) description += "entering and exiting phase space geometry";
     else if (scoredir == 1) description += "entering phase space geometry";
     else if (scoredir == 2) description += "exiting phase space geometry";
+    if (oformat ==1 && score_mu) description += "\n mu will be scored (if available)";
 }
 
 //final buffer flush and then close file
@@ -249,11 +264,14 @@ void EGS_PhspScoring::reportResults() {
       egsInformation("\n EGSnrc format phase space output:\n");
       egsInformation(" Data file: %s\n",phsp_fname.c_str());
     }
+    float emintmp;
+    if (count == countg) emintmp = 0.0;
+    else emintmp = emin;
     egsInformation("Summary of scored data:\n");
     egsInformation("=> total no. of particles = %lld \n", count);
     egsInformation("=> no. of photons = %lld \n", countg);
     egsInformation("=> max. k.e. of all particles = %g MeV\n",emax);
-    egsInformation("=> min. k.e. of charged particles = %g MeV\n",emin);
+    egsInformation("=> min. k.e. of charged particles = %g MeV\n",emintmp);
     egsInformation("=> no. of primary histories represented = %lld\n",last_case);
     egsInformation("\n======================================================\n");
 }
@@ -263,6 +281,13 @@ void EGS_PhspScoring::reportResults() {
 //the header info
 //also, keep track of phase space file counters, min., max. energy
 void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
+
+    //if user requested mu scoring, check if mu is available
+    if (score_mu && app->getMU() < 0 ) {
+       egsWarning("\nEGS_PhspScoring: User requested mu scoring, but mu is inavailable with this source.\n");
+       egsWarning("Turning off mu scoring.\n");
+       score_mu=false;
+    }
 
     //counters, min. and max. k.e.
     count++;
@@ -286,6 +311,7 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     p_stack[phsp_index].v = app->top_p.u.y;
     p_stack[phsp_index].w = app->top_p.u.z;
     p_stack[phsp_index].q = app->top_p.q;
+    if (score_mu) p_stack[phsp_index].mu = app->getMU();
     p_stack[phsp_index++].latch = app->top_p.latch;
 
     if (phsp_index > store_max - 1) {
@@ -363,15 +389,17 @@ void EGS_PhspScoring::openPhspFile() const {
           }
      }
      //set up extra floats and int indices and types
-     //only store latch for now
      //need to store below in _tmp variables because this is a const function
      int latch_ind_tmp = latch_ind;
      int iaea_n_extra_long_tmp=iaea_n_extra_long;
-     int iaea_n_extra_float_tmp=iaea_n_extra_float;
      int iaea_i_latch_tmp=iaea_i_latch;
+     int mu_ind_tmp = mu_ind;
+     int iaea_i_mu_tmp = iaea_i_mu;
+     int iaea_n_extra_float_tmp=iaea_n_extra_float;
 
      iaea_set_extra_numbers(&iaea_id,&iaea_n_extra_float_tmp,&iaea_n_extra_long_tmp);
      iaea_set_type_extralong_variable(&iaea_id,&iaea_i_latch_tmp,&latch_ind_tmp);
+     if (score_mu) iaea_set_type_extrafloat_variable(&iaea_id,&iaea_i_mu_tmp,&mu_ind_tmp);
    }
 }
 
@@ -396,8 +424,8 @@ int EGS_PhspScoring::flushBuffer() const {
       //store latch in iaea_extra_long
       EGS_I32 *iaea_extra_long = new EGS_I32[iaea_n_extra_long];
       iaea_extra_long[iaea_i_latch]=p_stack[j].latch;
-      //nothing stored in iaea_extra_float for now
       float *iaea_extra_float = new float[iaea_n_extra_float];
+      if (score_mu) iaea_extra_float[iaea_i_mu] = p_stack[j].mu;
 
       //now store double precision values in single precision reals
       float wt = p_stack[j].wt; float x = p_stack[j].x;
@@ -430,10 +458,13 @@ int EGS_PhspScoring::flushBuffer() const {
     //update header
     phsp_file.seekp(5,ios::beg);
     unsigned int count4 = count, countg4 = countg; float pinc = last_case;
+    float emintmp;
+    if (countg4==count4) emintmp = 0.0;
+    else emintmp = emin;
     phsp_file.write((char *) &count4, sizeof(unsigned int));
     phsp_file.write((char *) &countg4, sizeof(unsigned int));
     phsp_file.write((char *) &emax, sizeof(float));
-    phsp_file.write((char *) &emin, sizeof(float));
+    phsp_file.write((char *) &emintmp, sizeof(float));
     phsp_file.write((char *) &pinc, sizeof(float));
     phsp_file.seekp(pos,ios::beg);
   }
@@ -488,6 +519,7 @@ extern "C" {
         int phspouttype;
         int ptype;
         int sdir;
+        int imuscore = 0;
         float xyzconst[3];
         bool xyzisconst[3] = {false, false, false};
         //get geometry name and filename and do some checks
@@ -524,6 +556,18 @@ extern "C" {
                             if (!err02) xyzisconst[0] = true;
                             if (!err03) xyzisconst[1] = true;
                             if (!err04) xyzisconst[2] = true;
+                            //see if user wants to score mu (if available)
+                            //default is not to score
+                            if (!input->getInput("score mu", str)) {
+                              vector<string> allowed_muscore;
+                              allowed_muscore.push_back("no");
+                              allowed_muscore.push_back("yes");
+                              imuscore = input->getInput("score mu",allowed_muscore,-1);
+                              if (imuscore < 0) {
+                                 egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
+                                 imuscore = 0;
+                              }
+                            }
                         }
                     }
                     if (input->getInput("output directory",outdir) < 0) outdir="";
@@ -572,6 +616,7 @@ extern "C" {
         result->setOutDir(outdir);
         result->setParticleType(ptype);
         result->setScoreDir(sdir);
+        result->setMuScore(imuscore);
         return result;
    }
 }

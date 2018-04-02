@@ -152,6 +152,11 @@ public:
         scoredir = sdir;
     }
 
+    void setMuScore (const int imuscore) {
+        if (imuscore == 1) score_mu = true;
+        else score_mu = false;
+    }
+
     //method below pertains only to IAEA format
     //set array element 0/1/2 of xyz_is_constant equal to true
     //if scoring at a constant X/Y/Z value and store the
@@ -183,7 +188,7 @@ protected:
 
     struct Particle {
         int  q, latch;
-        EGS_Float E, x, y, z, u, v, w, wt;
+        EGS_Float E, x, y, z, u, v, w, wt, mu;
     };
 
     //functions, struct and variables used to write EGSnrc format phsp files
@@ -221,14 +226,17 @@ protected:
     mutable int iaea_id; //file id--mutable so we can write to it during storeState
 
     int latch_ind; //IAEA id for latch variable (set to 2)
+    int mu_ind; //IAEA id for mu--no ID for now so set to generic float (0)
     int iaea_n_extra_float, iaea_n_extra_long; //no. of extra floats, ints
-    int iaea_i_latch, iaea_i_muindex; //indices of indicated variables in arrays...may not need these
+    int iaea_i_latch, iaea_i_mu; //indices of indicated variables in arrays
     int iaea_q_type[3]; //easy conversion from q to iaea type
     bool xyz_is_const[3]; //set to true if scoring at constant X/Y/Z
     float xyzscore[3]; //constant X/Y/Z scoring values
     const string xyzname[3] = {"X", "Y", "Z"};
     int len; //length of name
     char *phsp_fname_char; //need file name in char format
+    bool score_mu; //set to true if scoring mu
+    float pmu; //mu value associated with particle
 
     //back to variables common to EGSnrc and IAEA formats
 
