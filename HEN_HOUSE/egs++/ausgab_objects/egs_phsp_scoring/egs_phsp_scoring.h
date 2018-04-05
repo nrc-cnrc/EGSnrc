@@ -265,10 +265,6 @@ protected:
     string phsp_fname; //name of phase space file
 
     string phspoutdir; //output directory
-
-    const EGS_Float prm = 0.5109989461; //precise rest mass
-                                  //may eventually want to get this from
-                                  //the_useful somehow
 };
 
 #endif

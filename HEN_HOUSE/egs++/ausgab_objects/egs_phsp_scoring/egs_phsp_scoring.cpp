@@ -28,7 +28,8 @@
 #  A phase space scoring class.
 #
 #  Scores phase space data for particles crossing all surfaces of a user-specified
-#  predefined geometry
+#  predefined geometry.  The phase space geometry must be a component of the simulation
+#  geometry or coincident with a surface of the simulation geometry.
 #
 #  Phase space data can be scored in one of 2 possible formats:
 #
@@ -89,17 +90,31 @@
 #  program their own concatenation routine.
 #
 #  Example:
-#  The following example input defines a phase space scoring plane perpendicular to the Z axis at Z=0.
+#  The following example input defines a phase space scoring plane perpendicular to the Z-axis
+#  positioned at the bottom of a volume of water.
 #
-#  First, the user must define the plane geometry (this could have already been defined as part
-#  of the simulation geometry):
+#  :start geometry definition:
+#      :start geometry:
+#          library = egs_planes
+#          type = EGS_Zplanes
+#          positions = 21.0
+#          name = scoreplane
+#      :stop geometry:
 #
 #      :start geometry:
-#        library = egs_planes
-#        type = EGS_Zplanes
-#        positions = 0.0
-#        name = scoreplane
-#     :stop geometry:
+#          library = egs_ndgeometry
+#          type = EGS_XYZGeometry
+#          name = water_box
+#          x-planes = -15.0  15.0
+#          y-planes = -15.0 15.0
+#          z-planes = 0.0 21.0
+#          :start media input:
+#             media = H2O521ICRU
+#          :stop media input:
+#      :stop geometry:
+#
+#      simulation geometry = water_box
+#  :stop geometry definition:
 #
 #  Then, the user must define the scoring plane ausgab object:
 #
@@ -109,7 +124,7 @@
 #          name = example
 #          phase space geometry = scoreplane
 #          output format = EGSnrc [IAEA]
-#          [constant Z = 0.0]
+#          [constant Z = 21.0]
 #          particle type = all
 #        :stop ausgab object:
 #    :stop ausgab object definition:
@@ -120,13 +135,12 @@
 #  the Z position of each particle will be stored in example.1.IAEAphsp.
 #
 #  Recall that a single plane geometry defines a single region on +ve normal side of the plane
-#  Thus, in the above example, a particle is considered "outside" scoreplane if particle Z < 0.0
-#  and "inside" if Z > 0.0.  Particles are scored when they enter a geometry and when they exit
+#  Thus, in the above example, a particle is considered "outside" scoreplane if particle Z < 21.0
+#  and "inside" if Z > 21.0.  Particles are scored when they enter a geometry and when they exit
 #  a geometry, so, in this example, particles crossing scoreplane in both directions will be
 #  scored.
 #
-#  TODO:
-#
+#  Note that scoreplane is coincident with the bottom surface of the volume of water.
 ###############################################################################
 */
 
@@ -290,6 +304,7 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     }
 
     //counters, min. and max. k.e.
+    EGS_Float prm = app->getRM();
     count++;
     if (app->top_p.q==0) countg++;
     if (app->top_p.E-abs(app->top_p.q)*prm > emax) emax = app->top_p.E-abs(app->top_p.q)*prm;
