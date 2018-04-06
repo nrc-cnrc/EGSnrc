@@ -319,6 +319,7 @@ extern "C" {
             g->setName(input);
             g->setBoundaryTolerance(input);
             g->setLabels(input);
+            g->setBScaling(input);  // Perhaps add density scaling as well?
             return g;
         }
 

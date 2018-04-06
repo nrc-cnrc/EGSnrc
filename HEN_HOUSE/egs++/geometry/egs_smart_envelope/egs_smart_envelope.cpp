@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Frederic Tessier
+#                   Ernesto Mainegra-Hing
 #
 ###############################################################################
 #
@@ -79,6 +80,16 @@ void EGS_SmartEnvelope::setRelativeRho(EGS_Input *) {
                " this geometry\n");
 }
 
+void EGS_SmartEnvelope::setBScaling(int start, int end, EGS_Float bf) {
+    setBScaling(0);
+}
+
+void EGS_SmartEnvelope::setBScaling(EGS_Input *) {
+    egsWarning("EGS_SmartEnvelope::setsetBScaling(): don't use this method."
+               " Use the\n setsetBScaling methods of the geometry objects that make up"
+               " this geometry\n");
+}
+
 struct EGS_SMART_ENVELOPE_LOCAL SmartEnvelopeAux {
     EGS_BaseGeometry *g;
     int              ireg;
@@ -117,7 +128,6 @@ EGS_SmartEnvelope::EGS_SmartEnvelope(EGS_BaseGeometry *G,
     for (j=0; j<fgeoms.size(); j++) {
         itype[j] = 0;
     }
-    int nlist = 0;
     int nreg_inscribed = 0;
     bool ok = true;
     for (j=0; j<fgeoms.size(); j++) {
@@ -163,6 +173,15 @@ EGS_SmartEnvelope::EGS_SmartEnvelope(EGS_BaseGeometry *G,
         for (int j=0; j<n_in; j++) {
             if (geometries[j]->hasRhoScaling()) {
                 has_rho_scaling = true;
+                break;
+            }
+        }
+    }
+    has_B_scaling = g->hasBScaling();
+    if (!has_B_scaling) {
+        for (int j=0; j<n_in; j++) {
+            if (geometries[j]->hasBScaling()) {
+                has_B_scaling = true;
                 break;
             }
         }
@@ -224,14 +243,14 @@ static char EGS_SMART_ENVELOPE_LOCAL eeg_message5[] =
     "missing/incorrect 'base geometry' input";
 static char EGS_SMART_ENVELOPE_LOCAL eeg_message6[] =
     "createGeometry(smart envelope): no geometry with name %s defined\n";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_message7[] =
-    "no inscirebed geometries defined?. I hope you know what you are doing";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_message8[] =
-    "an error occured while constructing inscibed geometries";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_message7[] =
+//"no inscirebed geometries defined?. I hope you know what you are doing";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_message8[] =
+//"an error occured while constructing inscibed geometries";
 
 static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword1[] = "base geometry";
 static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword2[] = "geometry";
-static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword3[] = "inscribed geometries";
+//static char EGS_SMART_ENVELOPE_LOCAL eeg_keyword3[] = "inscribed geometries";
 
 extern "C" {
 
@@ -323,7 +342,6 @@ extern "C" {
 
         // label defined in the inscribed geometries
         vector<int> gregs;
-        int shift=0;
         for (int i=0; i<n_in; i++) {
 
             // add regions from set geometries

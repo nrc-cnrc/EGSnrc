@@ -171,10 +171,10 @@
 "             such simple geometries.
 "*******************************************************************************
 "
-"                   Description of user input for BLOCK           ""toc:
+"                   Description of user input for BLOCK
 "                   **************************************
 "I>
-"I>  CARDS CM_BLOCK(Rev 1.4)
+"I>  CARDS CM_BLOCK
 "I>  *****************
 "I>
 "I>  -1  dummy line filled with ***  read in main
@@ -320,7 +320,7 @@
 "
 "*******************************************************************************
 
-%E    "Start of subroutine HOWFAR_$BLOCK (Rev 1.4)"
+%E    "Start of subroutine HOWFAR_$BLOCK"
 "*******************************************************************************
 "************************** Component Module BLOCK **************************
 "*******************************************************************************
@@ -362,7 +362,7 @@
 "T>**********************************
 "T>
 INTEGER
-   I,J,K,II,JJ,  "T>DO loop indeces
+   I,J,K,II,JJ,  "T>DO loop indices
    IHIT,         "T>index 1 hit; 0 not hit
    ICHECK,       "T>index of whether particle inside opening or not
    IPLANE,       "T>index of block face with minimum intersection distance
@@ -524,7 +524,7 @@ ELSEIF(IR_$BLOCK = 2)["particle in center air and outside air region"
 "the line equation is (x-x(np))/u=(y-y(np))/v=(z-z(np))/w."
                ;$BLOCK_IN_HIT;
             ]
-            IF( IPLANE>0 & DIST<TEMPDIST & ISHARE_PLANE_$BLOCK(IPLANE,J)>0 ) [
+            IF( IPLANE>0 & ISHARE_PLANE_$BLOCK(IPLANE,J)>0 ) [
                "found closer intersection and plane is shared"
                DIST = TEMPDIST; "reset DIST for next subregion"
                ISUBR_$BLOCK = ISHARE_PLANE_$BLOCK(IPLANE,J);
@@ -657,7 +657,7 @@ ELSE [
 ] "end of IF statement"
 RETURN;
 END; "End of subroutine HOWFAR_$BLOCK"
-%E    "Start of subroutine WHERE_AM_I_$BLOCK (Rev 1.4)"
+%E    "Start of subroutine WHERE_AM_I_$BLOCK"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_BLOCK
@@ -730,7 +730,7 @@ ELSE ["particle entering this CM through back face (downstream)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$BLOCK"
-%E    "Start of subroutine INPUT_$BLOCK (Rev 1.4)"
+%E    "Start of subroutine INPUT_$BLOCK"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_BLOCK
@@ -1005,11 +1005,11 @@ IF (ISUB_MAX_$BLOCK > 1) [ "need to check for shared edges"
                      ]
                   ]
                   ELSE [
-                  K=NSUB_$BLOCK(JJ);
+                     K=NSUB_$BLOCK(JJ);
                      IF(XHI_POINT_$BLOCK(1,J)=XHI_POINT_$BLOCK(K,JJ) &
                         YHI_POINT_$BLOCK(1,J)=YHI_POINT_$BLOCK(K,JJ) ) [
                         ISHARE_PLANE_$BLOCK(I,J) = JJ;
-                        ISHARE_PLANE_$BLOCK(II,JJ) = J;
+                        ISHARE_PLANE_$BLOCK(K,JJ) = J;
                      ]
                   ]
                ]
@@ -1316,7 +1316,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for block CM',I3);
 STOP;
 END;  "End of INPUT_$BLOCK"
-%E    "Start of subroutine ISUMRY_$BLOCK (Rev 1.4)"
+%E    "Start of subroutine ISUMRY_$BLOCK"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_BLOCK
@@ -1431,7 +1431,7 @@ IF(DOSE_ZONE(IRA)~=0) ["this is a dose zone"
 "
 WRITE(IOUTLIST,110) ICM_$BLOCK,TITLE_$BLOCK;
 110 FORMAT(///1X,79('-')/'  Component module',I3,
-    ' is a BLOCK $BLOCK (BLOCK Rev 1.4)' /
+    ' is a BLOCK $BLOCK (BLOCK)' /
     1X,79('-')//T5,'Title: ',68A1);
 WRITE(IOUTLIST,120) Z_min_CM(ICM_$BLOCK),RMAX_CM(ICM_$BLOCK);
 120 FORMAT(/T2,'$BLOCK geometry parameters:',
@@ -1550,7 +1550,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 RETURN;
 END; "End of subroutine ISUMRY_$BLOCK"
 "
-%E    "Start of subroutine HOWNEAR_$BLOCK (Rev 1.4)"
+%E    "Start of subroutine HOWNEAR_$BLOCK"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_BLOCK
@@ -1864,7 +1864,7 @@ ELSE [ "particle in air"
    DIST = MAX(0.0, MIN(Z(NP)-ZMIN_$BLOCK,ZFRONT_$BLOCK-Z(NP)));
 ]
 RETURN;
-END; "end of HOWNEAR_$BLOCK (Rev 1.4);
+END; "end of HOWNEAR_$BLOCK;
 
 "*******************************************************************************
-"End of BLOCK_cm.mortran (Rev 1.4)
+"End of BLOCK_cm.mortran

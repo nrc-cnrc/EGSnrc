@@ -21,10 +21,10 @@
 #
 ###############################################################################
 #
-#  Author:          Joerg Wulff, 2007
+#  Authors:         Iwan Kawrakow, 2007
+#                   Joerg Wulff, 2007
 #
-#  Contributors:    Iwan Kawrakow
-#                   Ernesto Mainegra-Hing
+#  Contributors:    Ernesto Mainegra-Hing
 #                   Hugo Bouchard
 #                   Frederic Tessier
 #                   Reid Townson
@@ -548,7 +548,7 @@ public:
 	cgeoms(0), nsubgeoms(0), check_for_subreg(0), is_subgeomreg(0), subgeoms(0),
 	container(0), container2(0), container3(0), save_dose(0), silent(0) ,
         iso_pu_flag(0), cav_pu_flag(0), iso_pu_do_shift(0), cav_pu_do_shift(0),pu_flag(0),
-        McasePerPos(0), NposPerSample(0), onegeom(0) {  };
+        McasePerPos(0), NposPerSample(0), onegeom(0), csplit(1) {  };
 
     /*! Destructor.  */
     ~EGS_ChamberApplication() {
@@ -659,6 +659,7 @@ private:
 
     EGS_Float        fsplit;    // photon splitting number
     EGS_Float        fspliti;   // inverse photon splitting number
+    int              csplit;    // radiative splitting number
 
     /*! Range rejection flag
       If set to 0, no range rejection is used
@@ -739,7 +740,7 @@ private:
 
 const static char __egs_app_msg_my3[] = "EGS_ChamberApplication::runSimulation():";
 
-string EGS_ChamberApplication::revision = "$Revision: 1.21 $";
+string EGS_ChamberApplication::revision = " ";
 
 extern __extc__  void
 F77_OBJ_(select_photon_mfp,SELECT_PHOTON_MFP)(EGS_Float *dpmfp) {
@@ -939,8 +940,7 @@ int EGS_ChamberApplication::initScoring() {
         //
         // ******** radiative event splitting
         //
-         int csplit=1;
-         if( !vr->getInput("radiative splitting", csplit) && csplit > 1) {
+        if( !vr->getInput("radiative splitting", csplit) && csplit > 1) {
             egsInformation("\n => initScoring: splitting radiative events %d times ...\n", csplit);
            the_egsvr->nbr_split = csplit;
         }
@@ -1118,11 +1118,11 @@ int EGS_ChamberApplication::initScoring() {
         while( (aux = options->takeInputItem("calculation geometry")) ) {
             string gname;
             int err = aux->getInput("geometry name",gname);
-            
+
             string cavString;
             vector<int> cav;
             int err1 = aux->getInput("cavity regions",cavString);
-            
+
             string ecut_rString;
             vector<int> ecut_r;
             EGS_Float ecut_v;
@@ -1161,7 +1161,7 @@ int EGS_ChamberApplication::initScoring() {
             if( err12 ) egsWarning("initScoring: missing/wrong 'enhancement' "
                     "input\n");
             int err13 = 0;
-            
+
             if( err || err1 ) egsWarning("  --> input ignored\n");
             else {
                 EGS_BaseGeometry::setActiveGeometryList(app_index);
@@ -1172,7 +1172,7 @@ int EGS_ChamberApplication::initScoring() {
                             " input ignored\n",cav_gname.c_str());
                     cg = 0;
                 }
-                
+
                 EGS_BaseGeometry *g = EGS_BaseGeometry::getGeometry(gname);
                 if( !g ) {
                     egsWarning("initScoring: no geometry named %s -->"
@@ -1185,7 +1185,7 @@ int EGS_ChamberApplication::initScoring() {
                     g->getNumberRegions(ecut_rString, ecut_r);
                     g->getLabelRegions(ecut_rString, ecut_r);
                 }
-                
+
                 if (do_cse && cs_reg[0]<0 && cs_reg[1]<0 && cs_reg.size()==2) {
                     int start = -cs_reg[0];
                     int end   = -cs_reg[1];
@@ -1207,7 +1207,7 @@ int EGS_ChamberApplication::initScoring() {
                 }
 
                 if( g ) {
-                    
+
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
                     int ncav = 0;
@@ -2201,6 +2201,7 @@ int EGS_ChamberApplication::simulateSingleShower() {
 
     last_case = current_case;
     EGS_Vector x,u;
+    the_egsvr->nbr_split = csplit;
     current_case = source->getNextParticle(rndm,p.q,p.latch,p.E,p.wt,x,u);
     //egsInformation("Got particle: q=%d E=%g wt=%g latch=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",p.q,p.E,p.wt,p.latch,x.x,x.y,x.z,u.x,u.y,u.z);
     int err = startNewShower(); if( err ) return err;

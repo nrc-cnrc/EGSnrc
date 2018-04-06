@@ -7,27 +7,27 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2004
-#  
-#  Contributors:   
+#
+#  Contributors:
 #
 ###############################################################################
 #
-#  Various C functions needed for the implementation of parallel processing 
+#  Various C functions needed for the implementation of parallel processing
 #  in EGSnrc.
 #
 ###############################################################################
@@ -61,8 +61,8 @@ static int __is_locked = 0;
 void  egsCreateControlFile(const char *fname, int *status, int len) {
   if( __my_fd > 0 ) { _close(__my_fd); __my_fd = -1; }
   __my_fd = _open(fname,_O_CREAT | _O_EXCL | _O_RDWR, _S_IREAD | _S_IWRITE);
-  if( __my_fd < 0 ) { 
-    *status = __my_fd; 
+  if( __my_fd < 0 ) {
+    *status = __my_fd;
     perror("egs_create_control_file: _open failed ");
   } else *status = 0;
 }
@@ -75,14 +75,14 @@ void  egsOpenControlFile(const char *fname, int *status, int len) {
     if( __my_fd > 0 ) break;
     _sleep(1000);
   }
-  if( __my_fd < 0 ) { 
-    *status = __my_fd; 
+  if( __my_fd < 0 ) {
+    *status = __my_fd;
     perror("egs_open_control_file: _open failed ");
   } else *status = 0;
 }
 
 void  egsCloseControlFile(int *status) {
-  if( __my_fd > 0 ) *status = _close(__my_fd); else *status = 0; 
+  if( __my_fd > 0 ) *status = _close(__my_fd); else *status = 0;
 }
 
 void  egsLockControlFile(int *status) {
@@ -118,7 +118,7 @@ void  egsUnlockControlFile(int *status) {
   else {
     fprintf(stderr,"egs_unlock: _locking returned %d\n",*status);
     perror("perror: ");
-  } 
+  }
 }
 
 void egsRewindControlFile(int *status) {
@@ -188,12 +188,12 @@ void egsCreateControlFile(const char *fname, int *status, int len) {
   *status = 0;
   if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
   __my_fd = open(fname,O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-  if( __my_fd < 0 ) { 
+  if( __my_fd < 0 ) {
 #ifdef DEBUG
     fprintf( stderr,"create_control_file: failed to open file %d\n",errno);
     perror("error is");
 #endif
-    *status = errno; return; 
+    *status = errno; return;
   }
   egsLockControlFile(status);
 }
@@ -203,8 +203,8 @@ void egsOpenControlFile(const char *fname, int *status, int len) {
   if( !__is_initialized ) __init_locking();
   if( __my_fd > 0 ) { close(__my_fd); __my_fd = -1; }
   /* This function is called from jobs > 1. Job 1 creates the control file.
-     But if for some reasons it took job 1 longer than subsequent job, 
-     the control file may not be there yet => we try several times and 
+     But if for some reasons it took job 1 longer than subsequent job,
+     the control file may not be there yet => we try several times and
      sleep in between.
   */
   for(t=0; t<15; t++) {
@@ -234,7 +234,7 @@ void egsLockControlFile(int *status) {
       }
       printf("egsLockControlFile: failed to lock file for 12 seconds...\n");
   }
-  /* 
+  /*
    *status = fcntl(__my_fd,F_SETLKW,&fl_write);
   if( *status == 0 ) __is_locked = 1;
   */
@@ -284,7 +284,7 @@ void egsFtoString(const int *size, int *n, char *str,void *a, int len) {
     float *tmp = (float *) a;
     /* Well, it seems snprintf is not supported by all Unixes (e.g. DEC).
        I'm too lazy to make yet another test during the installation =>
-       just use sprintf instead. 
+       just use sprintf instead.
     if( x > 0 ) *n = snprintf(str,x,"%g",*tmp);
     else *n = sprintf(str,"%g",*tmp); */
     *n = sprintf(str,"%g",*tmp);

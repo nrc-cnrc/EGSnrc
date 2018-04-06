@@ -24,6 +24,8 @@
 #  Author:          Iwan Kawrakow, 2008
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 #
@@ -326,11 +328,10 @@ public:
             nv = n;
         }
         int ifirst = 0;
-        EGS_Float t, ttot = 0;
+        EGS_Float t;
         EGS_Vector x(X);
-        int imed;
         if (ireg < 0) {
-            t = 1e30;
+            t = veryFar;
             ireg = howfar(ireg,x,u,t);
             if (ireg < 0) {
                 return 0;
@@ -339,7 +340,6 @@ public:
             isections[0].rhof = 1;
             isections[0].ireg = -1;
             isections[0].imed = -1;
-            ttot = t;
             ++ifirst;
             x += u*t;
         }
@@ -348,7 +348,7 @@ public:
         int iy = ir/nx;
         int ix = ir - iy*nx;
         EGS_Float uxi, uyi, uzi, nextx, nexty, nextz, sx, sy, sz;
-        int dirx, icx, diry, icy, dirz, icz;
+        int dirx, diry, dirz;
         if (u.x > 0)      {
             uxi = 1/u.x;
             dirx =  1;
@@ -363,8 +363,8 @@ public:
         }
         else {
             dirx =  1;
-            nextx = 1e33;
-            sx = 1e33;
+            nextx = veryFar*1e3;
+            sx = veryFar*1e3;
         }
         if (u.y > 0)      {
             uyi = 1/u.y;
@@ -380,8 +380,8 @@ public:
         }
         else {
             diry =  1;
-            nexty = 1e33;
-            sy = 1e33;
+            nexty = veryFar*1e3;
+            sy = veryFar*1e3;
         }
         if (u.z > 0)      {
             uzi = 1/u.z;
@@ -397,8 +397,8 @@ public:
         }
         else  {
             dirz =  1;
-            nextz = 1e33;
-            sz = 1e33;
+            nextz = veryFar*1e3;
+            sz = veryFar*1e3;
         }
         for (int j=ifirst; j<n; j++) {
             isections[j].ireg = ireg;
@@ -453,11 +453,11 @@ public:
             return 0;
         }
         EGS_Float tx = u.x > 0 ? (xmax-x.x)/u.x :
-                       u.x < 0 ? (xmin-x.x)/u.x : 1e35;
+                       u.x < 0 ? (xmin-x.x)/u.x : veryFar*1e5;
         EGS_Float ty = u.y > 0 ? (ymax-x.y)/u.y :
-                       u.y < 0 ? (ymin-x.y)/u.y : 1e35;
+                       u.y < 0 ? (ymin-x.y)/u.y : veryFar*1e5;
         EGS_Float tz = u.z > 0 ? (zmax-x.z)/u.z :
-                       u.z < 0 ? (zmin-x.z)/u.z : 1e35;
+                       u.z < 0 ? (zmin-x.z)/u.z : veryFar*1e5;
         return tx < ty && tx < tz ? tx : ty < tz ? ty : tz;
     };
 
@@ -483,7 +483,7 @@ public:
 
     int howfarIn(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                  EGS_Float &t, EGS_Vector *normal=0) {
-        int ixs = ix, iys = iy, izs = iz;
+        int ixs = ix, iys = iy;
         int inew = ireg;
         if (u.x > 0) {
             EGS_Float d = (dx*(ix+1)-x.x)/u.x;
@@ -587,7 +587,6 @@ public:
     int howfarOut(const EGS_Vector &x, const EGS_Vector &u,
                   EGS_Float &t, EGS_Vector *normal=0) {
         EGS_Float tlong = 2*t, d;
-        int inew = -1;
         if (x.x <= xmin && u.x > 0) {
             ix = 0;
             d = (xmin-x.x)/u.x;
@@ -801,7 +800,7 @@ struct VHPBox {
         return false;
     };
     EGS_Float howfarToOut(const EGS_Vector &x, const EGS_Vector &u) {
-        EGS_Float t = 1e35, t1;
+        EGS_Float t = veryFar*1e5, t1;
         if (u.x > 0) {
             t1 = (xmax-x.x)/u.x;
             if (t1 < t) {
@@ -1568,7 +1567,6 @@ public:
         int imic, ix, iy, iz;
         EGS_MicroMatrixCluster *micro = micros[mict];
         micro->getIndeces(iloc,imic,ix,iy,iz);
-        int ilocal = iloc - imic*micro->nreg;
         // now we have to figure out the macro voxel indeces
         // in principle one could simply use vg->isWhere(x), but
         // this is bound to get us in trouble with roundoff errors.

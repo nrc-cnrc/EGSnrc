@@ -49,6 +49,7 @@
 #include "egs_input.h"
 #include "egs_interpolator.h"
 #include "egs_rndm.h"
+#include "egs_math.h"
 #include "egs_ausgab_object.h"
 
 #include <string>
@@ -68,7 +69,7 @@ using namespace std;
     EGS_Application *a = EGS_Application::activeApplication();
 #endif
 
-string EGS_AdvancedApplication::base_revision = "$Revision: 1.39 $";
+string EGS_AdvancedApplication::base_revision = " ";
 
 /*
 extern __extc__ struct EGS_Stack F77_OBJ(stack,STACK);
@@ -275,6 +276,9 @@ public:
     void addOption(const char *opt) {
         options.push_back(opt);
         type = 2;
+    };
+    void setOption(const int &index, const char *opt) {
+        options[index] = opt;
     };
     void getInput(EGS_Input *input) {
         if (type == 1) {
@@ -495,9 +499,13 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     rayl.addOption("custom");
     EGS_TransportProperty ff_med("ff media names",24,MXMED,&ff_media);
     EGS_TransportProperty ff_files("ff file names",128,MXMED, &ff_names);
+
     EGS_TransportProperty relax("Atomic relaxations",&the_xoptions->iedgfl);
     relax.addOption("Off");
     relax.addOption("On");
+    relax.addOption("eadl");
+    relax.addOption("simple");
+
     EGS_TransportProperty iphter("Photoelectron angular sampling",
                                  &the_xoptions->iphter);
     iphter.addOption("Off");
@@ -561,6 +569,16 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             setRayleighData(ff_media,ff_names);
         }
         relax.getInput(transportp);
+        if (the_xoptions->iedgfl == 0 || the_xoptions->iedgfl == 3) {
+            the_xoptions->eadl_relax = 0;
+        }
+        else {
+            the_xoptions->eadl_relax = 1;
+            // Now, 'On' means EADL relaxation
+            if (the_xoptions->iedgfl == 1) {
+                relax.setOption(1,"eadl");
+            }
+        }
         iphter.getInput(transportp);
         spin.getInput(transportp);
         trip.getInput(transportp);
@@ -575,6 +593,32 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
             the_etcontrol->transport_algorithm = 0;
         }
         bca.getInput(transportp);
+
+        if (egsEquivStr(string("mcdf-xcom       "),
+                        string(the_media->pxsec).substr(0,pxsec.size()))) {
+            the_xoptions->mcdf_pe_xsections = 1;
+            string("xcom            ").copy(the_media->pxsec,16,0);
+        }
+        else if (egsEquivStr(string("mcdf-epdl       "),
+                             string(the_media->pxsec).substr(0,pxsec.size()))) {
+            the_xoptions->mcdf_pe_xsections = 1;
+            string("epdl            ").copy(the_media->pxsec,16,0);
+        }
+        else {
+            the_xoptions->mcdf_pe_xsections = 0;
+        }
+
+        // iedgfl == 3 implies eadl_relax == 0
+        if (the_xoptions->iedgfl            == 3 &&
+                the_xoptions->mcdf_pe_xsections == 1) {
+            egsWarning("\n**** Warning:"
+                       "\n     Simplified atomic relaxation not allowed"
+                       "\n     with shellwise PE cross sections. Resetting"
+                       "\n     to detailed EADL atomic relaxation!!!\n\n");
+            the_xoptions->eadl_relax = 1;
+            the_xoptions->iedgfl = 2;
+            relax.setOption(1,"eadl");
+        }
     }
 
     if (do_hatch) {
@@ -667,6 +711,19 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     egsInformation("\n\nTransport parameter and cross section options:\n"
                    "==============================================\n");
     int nc = 50;
+    // Recover initial input string to reflect what's actually being used
+    // the_media->pxsec was already used in egsHatch() to read photon data
+    if (the_xoptions->mcdf_pe_xsections &&
+            egsEquivStr(string("xcom            "),
+                        string(the_media->pxsec).substr(0,pxsec.size()))) {
+        string("mcdf-xcom       ").copy(the_media->pxsec,16,0);
+    }
+    else if (the_xoptions->mcdf_pe_xsections &&
+             egsEquivStr(string("epdl            "),
+                         string(the_media->pxsec).substr(0,pxsec.size()))) {
+        string("mcdf-epdl       ").copy(the_media->pxsec,16,0);
+    }
+
     if (!isspace(the_media->pxsec[0])) {
         pxsec.info(nc);
     }
@@ -707,11 +764,13 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         the_emf->BxIN=bfield_v[0];
         the_emf->ByIN=bfield_v[1];
         the_emf->BzIN=bfield_v[2];
+        the_emf->Bx=bfield_v[0];
+        the_emf->By=bfield_v[1];
+        the_emf->Bz=bfield_v[2];
     }
     if (efield.size()==3 || bfield.size()==3) {
         estepem.info(nc);
     }
-
     egsInformation("==============================================\n\n");
 
     delete [] ind;
@@ -772,7 +831,7 @@ void EGS_AdvancedApplication::setEIIData(EGS_I32 len) {
         the_xoptions->eii_flag = 0;
     }
     else if (str_eii == on) {
-        strcpy(the_media->eiixsec,ik.c_str());
+        ik.copy(the_media->eiixsec,16,0);
     }
 }
 
@@ -834,6 +893,7 @@ int EGS_AdvancedApplication::finishSimulation() {
     // output_file name and re-open units.
     output_file = final_output_file;
     the_egsio->i_parallel = 0;
+    i_parallel=0;
     int flag = 0;
     egsOpenUnits(&flag);
     // The following is necessary because finishRun() was called from
@@ -1028,6 +1088,24 @@ void EGS_AdvancedApplication::startNewParticle() {
         the_useful->rhor = 1;
         the_useful->rhor_new = 1;
     }
+    if (geometry->hasBScaling()) {
+        int ireg = the_stack->ir[the_stack->np-1] - 2;
+        EGS_Float bf = geometry->getBScaling(ireg);
+        the_emf->Bx = bf*the_emf->BxIN;
+        the_emf->By = bf*the_emf->ByIN;
+        the_emf->Bz = bf*the_emf->BzIN;
+        the_emf->Bx_new = the_emf->Bx;
+        the_emf->By_new = the_emf->By;
+        the_emf->Bz_new = the_emf->Bz;
+    }
+    else {
+        the_emf->Bx = the_emf->BxIN;
+        the_emf->By = the_emf->ByIN;
+        the_emf->Bz = the_emf->BzIN;
+        the_emf->Bx_new = the_emf->Bx;
+        the_emf->By_new = the_emf->By;
+        the_emf->Bz_new = the_emf->Bz;
+    }
 }
 
 void EGS_AdvancedApplication::enterNewRegion() {
@@ -1040,6 +1118,20 @@ void EGS_AdvancedApplication::enterNewRegion() {
     }
     else {
         the_useful->rhor_new = 1;
+    }
+    if (geometry->hasBScaling()) {
+        int ireg = the_epcont->irnew-2;
+        if (ireg >= 0) {
+            EGS_Float bf = geometry->getBScaling(ireg);
+            the_emf->Bx_new = bf*the_emf->BxIN;
+            the_emf->By_new = bf*the_emf->ByIN;
+            the_emf->Bz_new = bf*the_emf->BzIN;
+        }
+    }
+    else {
+        the_emf->Bx_new = the_emf->BxIN;
+        the_emf->By_new = the_emf->ByIN;
+        the_emf->Bz_new = the_emf->BzIN;
     }
 }
 
@@ -1068,7 +1160,7 @@ void EGS_AdvancedApplication::resetRNGState() {
 }
 
 //************************************************************
-// Utility functions for use with ausgab dose scoring objects
+// Utility functions for use with ausgab dose scoring object
 //************************************************************
 // Returns density for medium ind
 EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
@@ -1078,7 +1170,18 @@ EGS_Float EGS_AdvancedApplication::getMediumRho(int ind) {
 EGS_Float EGS_AdvancedApplication::getEdep() {
     return the_epcont->edep;
 }
-//************************************************************
+// Sets edep
+void EGS_AdvancedApplication::setEdep(EGS_Float edep) {
+    the_epcont->edep = edep;
+}
+// Get the ecut
+EGS_Float EGS_AdvancedApplication::getEcut() {
+    return the_bounds->ecut;
+}
+// Get the pcut
+EGS_Float EGS_AdvancedApplication::getPcut() {
+    return the_bounds->pcut;
+}
 // Returns rest mass
 EGS_Float EGS_AdvancedApplication::getRM() {
     return the_useful->rm;

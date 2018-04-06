@@ -119,7 +119,7 @@ character*10 cmtype($MAX_CMs),cmid($MAX_CMs);
 character*30 the_file;
  "$MAX_CMs is defined in beamnrc_user_macros.mortran"
 character*20 vname; "the variable name in the spec_module.module file"
-character*256 text; "used to store each line of the input file"
+character*300 text; "used to store each line of the input file"
 character*1 blank;
 $INTEGER iindex,length,num_cms,num_ids,i,istat,egs_system,line,j;
 $INTEGER lnblnk1;
@@ -161,6 +161,8 @@ text=text(iindex:); "strip off CM names text "
 iindex=index(text,':');
 text=text(iindex+1:); "strip off colon"
 
+write(*,*)' text: ',text;
+
 "now, loop through text and strip out all of the CM types"
 "assume types are already in upper case and no more than 8 characters long"
 num_cms=0;
@@ -180,6 +182,8 @@ iindex=iindex+lnblnk1(vname)+1;
 text=text(iindex:); "strip off CM names text "
 iindex=index(text,':');
 text=text(iindex+1:); "strip off colon"
+
+write(*,*)' text: ',text;
 
 "now, loop through text and strip out all of the CM ids"
 "assume ids are no more than 8 characters long"
@@ -401,6 +405,48 @@ DO i=1,num_cms[
    IF(i<num_cms) text=$cstring(text)//',';
    write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
 ]
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+text='REPLACE{$CM_TYPE} WITH {CMTYPE(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   text='      '//$cstring(cmtype(i));
+   IF(i<num_cms) text=$cstring(text)//',';
+   write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+]
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+"Now output a macro that lists the synchronized (SYNC) CM"
+"names and types in this accelerator"
+
+text='REPLACE{$SYNC_CM_LIST} WITH {SYNCCMLIST(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   IF(cmtype(i)='SYNCJAWS' | cmtype(i)='SYNCVMLC' | cmtype(i)='SYNCMLCE' |
+      cmtype(i)='SYNCHDMLC') [
+      text='      '//$cstring(cmid(i))//',';
+      write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+   ]
+]
+"always terminate the list with a termination string"
+text='      END_SYNC_CMS';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+text='   )}';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+
+text='REPLACE{$DYN_CM_LIST} WITH {DYNCMLIST(';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+DO i=1,num_cms[
+   IF(cmtype(i)='DYNJAWS' | cmtype(i)='DYNVMLC') [
+      text='      '//$cstring(cmid(i))//',';
+      write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
+   ]
+]
+"always terminate the list with a termination string"
+text='      END_DYN_CMS';
+write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
 text='   )}';
 write(10,err=:text_write_err:,fmt='(A)') $cstring(text);
 

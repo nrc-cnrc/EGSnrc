@@ -23,7 +23,8 @@
 #
 #  Author:          Blake Walters, 2013
 #
-#  Contributors:
+#  Contributors:    Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -47,10 +48,10 @@ IAEA_PhspSource::IAEA_PhspSource(const string &phsp_file,
 
 void IAEA_PhspSource::init() {
     otype = "IAEA_PhspSource";
-    Xmin = -1e30;
-    Xmax = 1e30;
-    Ymin = -1e30;
-    Ymax = 1e30;
+    Xmin = -veryFar;
+    Xmax = veryFar;
+    Ymin = -veryFar;
+    Ymax = veryFar;
     is_valid = false;
     mode2 = false;
     swap_bytes = false;
@@ -60,15 +61,15 @@ void IAEA_PhspSource::init() {
     description = "Invalid IAEA phase space source";
     Nread = 0;
     count = 0;
-    Nrecycle = 0;
+    Nrestart = 0;
     Npos = 0;
     Nlast = 0;
-    wmin = -1e30;
-    wmax = 1e30;
-    Nreuse_g = 1;
-    Nreuse_e = 1;
-    Nreuse = 1;
-    Nuse = 2;
+    wmin = -veryFar;
+    wmax = veryFar;
+    Nrecycle_g = 0;
+    Nrecycle_e = 0;
+    Nrecycle = 0;
+    Nuse = -1;
     first = true;
 }
 
@@ -135,7 +136,7 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
 
     //now get some info from the header
     EGS_I64 n, n_photon, pinc;
-    float emax, zposn;
+    float emax;
     int iaea_type=-1; //for getting no. of particles
     iaea_get_max_particles(&iaea_fileid,&iaea_type,&n);
     if (n<0) {
@@ -168,7 +169,7 @@ void IAEA_PhspSource::openFile(const string &phsp_file) {
         return;
     }
     //determine if Zlast is stored in the file and, if so, its array index, i_zlast
-    int extrafloat_types[n_extra_floats], extralong_types[n_extra_longs];
+    int extrafloat_types[MAXEXTRAS], extralong_types[MAXEXTRAS];
     iaea_get_type_extra_variables(&iaea_fileid,&iaea_iostat,extralong_types,extrafloat_types);
     if (iaea_iostat==-1) {
         egsWarning("IAEA_PhspSource::openFile: failed to get Mode of data %s.IAEAheader\n",phsp_file.c_str());
@@ -270,11 +271,23 @@ IAEA_PhspSource::IAEA_PhspSource(EGS_Input *input, EGS_ObjectFactory *f) :
     int ntmp;
     err = input->getInput("reuse photons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_g = ntmp;
+        Nrecycle_g = ntmp;
+    }
+    else {
+        err = input->getInput("recycle photons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_g = ntmp;
+        }
     }
     err = input->getInput("reuse electrons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_e = ntmp;
+        Nrecycle_e = ntmp;
+    }
+    else {
+        err = input->getInput("recycle electrons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_e = ntmp;
+        }
     }
     description = "IAEA phase space source from ";
     description += the_file_name;
@@ -283,13 +296,13 @@ IAEA_PhspSource::IAEA_PhspSource(EGS_Input *input, EGS_ObjectFactory *f) :
 EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         int &latch, EGS_Float &E, EGS_Float &wt, EGS_Vector &x, EGS_Vector &u) {
     /*
-    if( Nuse >= Nreuse ) {
+    if( Nuse >= Nrecycle ) {
         do { readParticle(); } while ( rejectParticle() );
     }
     */
-    int nstat,extrainttemp[n_extra_longs];
-    float extrafloattemp[n_extra_floats];
-    if (Nuse >= Nreuse) {  //get a new particle
+    int nstat,extrainttemp[MAXEXTRAS];
+    float extrafloattemp[MAXEXTRAS];
+    if (Nuse > Nrecycle || Nuse < 0) {  //get a new particle
         if ((++Npos) > Nlast) {
             egsWarning("IAEA_PhspSource::getNextParticle(): reached the end of the "
                        "phase space file chunk (%lld)\n  will start from the beginning "
@@ -300,14 +313,17 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
             if (iaea_iostat<0) {
                 egsFatal("IAEA_PhspSource::getNextParticle(): error restarting phase space chunk\n");
             }
-            Nrecycle++;
+            Nrestart++;
             Npos = Nfirst;
         }
         iaea_get_particle(&iaea_fileid,&nstat,&p.q,&p.E,&p.wt,&p.x,&p.y,&p.z,&p.u,&p.v,&p.w,extrafloattemp,extrainttemp);
         ++Nread;
+        p.latch=0; //important if we are using latch to do vr
+        /*
         if (latch_stored) {
             p.latch = extrainttemp[i_latch];
         }
+        */
         if (mode2) {
             p.zlast = extrafloattemp[i_zlast];
         }
@@ -342,24 +358,21 @@ EGS_I64 IAEA_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
         else {
             egsFatal("IAEA_PhspSource::getNextParticle: unknown charge on particle\n");
         }
-        if (!latch_stored) {
-            p.latch = 0;    //need some non-nonsense value in case there is a LATCH filter
-        }
         //note: we don't have to convert to p.E to K.E. because that's what IAEA format stores
         if (first || nstat>0) {
             count++;    //increment primary history counter
         }
         first= false;
-        //store Nreuse
+        //store Nrecycle
         if (p.q) {
-            Nreuse = Nreuse_e;
+            Nrecycle = Nrecycle_e;
         }
         else {
-            Nreuse = Nreuse_g;
+            Nrecycle = Nrecycle_g;
         }
         //reset Nuse
         Nuse = 0;
-        p.wt /= Nreuse;
+        p.wt /= (Nrecycle+1);
     }
 
     //energy, wt, position and direction cosines

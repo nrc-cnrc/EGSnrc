@@ -23,11 +23,11 @@ output file(s)..............................................ex
    All of above can be adjusted in beamnrc_user_macros.mortran
 
 
- TITLE: EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space           
+ TITLE: EXslabs: pencil beam of 20  MeV electrons thru 100 cm air phase space
 
- 
+
  Reading in EGSnrc transport parameters:
- -------------------------------------- 
+ --------------------------------------
  Bound Compton start region
   Setting all to  0
  Rayleigh start region
@@ -41,10 +41,10 @@ output file(s)..............................................ex
  Finished reading EGSnrc transport parameters.
 
 
- MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR700ICRU              
+ MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR700ICRU
 
 
- IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3), 
+ IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3),
  IDAT(0-1), LATCH_OPTION (1-3), IZLAST(0-2) :            0           0         0         0         0           2           0
 
  Do not track(0) or track(>0) every interaction or track Nth
@@ -55,10 +55,10 @@ output file(s)..............................................ex
  Store data(0) or not(1):                                             0
  LATCH OPTION,do not inherit(1),inherit+record origin(2,3):           2
  Do not score ZLAST(0), score ZLAST(1), output file for graphics(2):  0
- 
+
  #HISTORIES, RN SEED #1, RN SEED #2, TIMMAX,  IBRSPL(0,1,2,29),
          NBRSPL, IRRLTT(0,1,2), ICM_SPLIT
- : 
+ :
           1000.            0            0      0.9900     0     0     0     0
  First RN seed outside allowed range and default value set
  Second RN seed outside allowed range and default value set
@@ -73,7 +73,7 @@ output file(s)..............................................ex
  each brem split into:                                                0
  Russian roulette off(0),on(1),on+annihilation split(2):              0
 
- 
+
  CHARGE OF THE INCIDENT BEAM(-1,0,1),
  SOURCE CONFIGURATION
       (0) Parallel beam incident from the front:(0),radius(cm),
@@ -101,9 +101,9 @@ output file(s)..............................................ex
                     centred at (Xo,Yo), half-widths: Xh, Yh (cm)
                     (0, 6, Xo, Yo, Xh, Yh)
 
-  or  (7) Scanning beam, scanning field size to 100 cm 
+  or  (7) Scanning beam, scanning field size to 100 cm
                     ratio of the frequencies in Y/X directions
-                    spot size at the initial point. 
+                    spot size at the initial point.
 
   or  (8) Scanning point source for MM50--uniform field coverage:
                     (8), SSD (defaults to 100 cm), radius of
@@ -113,7 +113,7 @@ output file(s)..............................................ex
                     source is at Z=0
 
   or  (9) Scanning point source for MM50--discrete field coverage:
-                    (9), SSD (defaults to 100 cm), # of 
+                    (9), SSD (defaults to 100 cm), # of
                     discrete points at SSD.
                     Note that this option assumes the point
                     source is at Z=0
@@ -137,7 +137,7 @@ output file(s)..............................................ex
                     incident direction cosines (U,V,W)
 
   or (21) Full phase-space of each particle read from unit 42
-                    component module # 
+                    component module #
                       (particles incident on the front of this CM),
                     no. of times to recycle each particle
                       (calculated automatically if set to 0),
@@ -182,9 +182,9 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
 
 
  Photon forcing: next five numbers on one line
- Force photon interactions in the target?(0)=>no,(1)=>yes, 
+ Force photon interactions in the target?(0)=>no,(1)=>yes,
  min/max photon interaction #/history to do forcing for,
- min/max CM # in which to do forcing  
+ min/max CM # in which to do forcing
  :    0   0   0   0   0
 
  No photon interaction forcing in effect
@@ -203,7 +203,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
 
  Number of scoring zones( 5) & zone type (0-annular;1-square):     0    0
  Five equal area annular zones to be used for scoring
- 
+
  Total dose only(0) or total dose & dose components(1):    0
 
  Z dist from ref plane(Z=0) to CM front (include any air gap):     0.00000
@@ -220,7 +220,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  This component is a set of planar slabs
       Outer boundary is a square with |x| & |y| <     10.00 cm
  This is first component -- starts at      0.0000 cm from reference plane
- TITLE:  air slab  100 cm thick                                      
+ TITLE:  air slab  100 cm thick
  NUMBER OF SLABS (MINIMUM 1, MAXIMUM 30):     1
  DISTANCE FROM FRONT OF SLABS (excluding air gap) TO REF PLANE (z=0):    0.00100
 
@@ -228,7 +228,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  Inputs for slab #     1
  SLAB THICKNESS(cm), ECUT, PCUT, DOSE ZONE(0=>DONT SCORE), IREGION_TO_BIT,ESAVE
  :  100.00000    1.00000    0.01000        1                   1    0.00000
- SLAB  MEDIUM (left justify):  AIR700ICRU              
+ SLAB  MEDIUM (left justify):  AIR700ICRU
   Input blank line to signify end of component module
 
  Back in main of beamnrc.mortran after inputs from CMs
@@ -237,18 +237,18 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  For scoring plane 1, zone radii  are:  4.4721  6.3246  7.7460  8.9443 10.0000
 
  There are  1 different media:
-           Medium(  1) is: AIR700ICRU              
+           Medium(  1) is: AIR700ICRU
 
  CALL TO HATCH AT  10:10:40
-  old PRESTA calculates default min. step-size for BCA: 
+  old PRESTA calculates default min. step-size for BCA:
       minimum ECUT found:   1.
       default BLCMIN is:   6.81432438
-      this corresponds to   910.800964 elastic MFPs 
-  Reading screened Rutherford MS data ...............  done 
+      this corresponds to   910.800964 elastic MFPs
+  Reading screened Rutherford MS data ...............  done
 
 
 Reading spin data base from /usr/people/bwalters/HEN_HOUSE/data/spinms.data
-EGSnrc spin data, version 2.0   
+EGSnrc spin data, version 2.0
 Data generated on a machine with 1234 endianess
 The endianess of this CPU is 1234
 Ranges:      1.00   100.00  0.30054  1.00000
@@ -261,9 +261,9 @@ Ranges:      1.00   100.00  0.30054  1.00000
 
  Output from subroutine EDGSET:
  ==============================
- Atomic relaxations not requested! 
+ Atomic relaxations not requested!
 
- Bound Compton scattering not requested! 
+ Bound Compton scattering not requested!
 
  EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
 
@@ -277,22 +277,22 @@ Ranges:      1.00   100.00  0.30054  1.00000
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Bound Compton scattering                                    OFF           
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          OFF           
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    OFF
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          OFF
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
- Maxium electron step in cm (SMAX)                                5.000    
+ Maxium electron step in cm (SMAX)                                5.000
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      910.8    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      910.8
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -309,44 +309,44 @@ Ranges:      1.00   100.00  0.30054  1.00000
 
  BATCH #  TIME-ELAPSED  TOTAL CPUTIME  RATIO  TIME OF DAY  RNG pointers
 
-     1          0.0            0.0      0.00    10:10:41   ixx jxx =   97  33 
+     1          0.0            0.0      0.00    10:10:41   ixx jxx =   97  33
      # of histories run:       100      # of particles in ph-sp file:       101
 
-     2          0.0            0.0      0.52    10:10:41   ixx jxx =   87  23 
+     2          0.0            0.0      0.52    10:10:41   ixx jxx =   87  23
      # of histories run:       200      # of particles in ph-sp file:       204
 
-     3          0.0            0.0      0.74    10:10:41   ixx jxx =   73   9 
+     3          0.0            0.0      0.74    10:10:41   ixx jxx =   73   9
      # of histories run:       300      # of particles in ph-sp file:       309
 
-     4          0.0            0.0      1.01    10:10:41   ixx jxx =    1  34 
+     4          0.0            0.0      1.01    10:10:41   ixx jxx =    1  34
      # of histories run:       400      # of particles in ph-sp file:       413
 
-     5          0.0            0.0      1.07    10:10:41   ixx jxx =   57  90 
+     5          0.0            0.0      1.07    10:10:41   ixx jxx =   57  90
      # of histories run:       500      # of particles in ph-sp file:       515
 
-     6          0.0            0.0      1.10    10:10:41   ixx jxx =   78  14 
+     6          0.0            0.0      1.10    10:10:41   ixx jxx =   78  14
      # of histories run:       600      # of particles in ph-sp file:       618
 
-     7          0.1            0.0      1.22    10:10:41   ixx jxx =   95  31 
+     7          0.1            0.0      1.22    10:10:41   ixx jxx =   95  31
      # of histories run:       700      # of particles in ph-sp file:       720
 
-     8          0.1            0.1      1.30    10:10:41   ixx jxx =   50  83 
+     8          0.1            0.1      1.30    10:10:41   ixx jxx =   50  83
      # of histories run:       800      # of particles in ph-sp file:       826
 
-     9          0.1            0.1      1.35    10:10:41   ixx jxx =    9  42 
+     9          0.1            0.1      1.35    10:10:41   ixx jxx =    9  42
      # of histories run:       900      # of particles in ph-sp file:       928
 
-    10          0.1            0.1      1.38    10:10:41   ixx jxx =   96  32 
+    10          0.1            0.1      1.38    10:10:41   ixx jxx =   96  32
      # of histories run:      1000      # of particles in ph-sp file:      1030
 
 
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   55  88
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =       0.1       0.1s (=   0.00HR)   1.69
  CPUTIME per history =   0.00006 sec. Number of histories per hour =   60000012.
-   On i686-pc-1-gnu using gcc 3.3     
+   On i686-pc-1-gnu using gcc 3.3
 
 
  MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000

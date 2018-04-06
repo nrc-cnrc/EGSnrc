@@ -224,4 +224,4 @@ REPLACE {$MLCQ_REGION_RESET_WARNNING_MACRO(#);} WITH {
     RETURN;
 }
 ;
-"End of MLC_macros.mortran (Rev 1.2)"
+"End of MLC_macros.mortran"

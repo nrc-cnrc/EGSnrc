@@ -12,19 +12,19 @@ space). \label{fig_tutor4_output}}
  Start tutor4
  CALL HATCH to get cross-section data
  RAYLEIGH DATA AVAILABLE FOR MEDIUM  1 BUT OPTION NOT REQUESTED.
-  Reading screened Rutherford MS data ...............  done 
+  Reading screened Rutherford MS data ...............  done
   Initializing spin data for medium    1 .....................  done
   Medium  1 sige =   1.79464114  1.78708148
   Initializing tmxs for estepe =   0.25 and ximax =   0.5
  Output from subroutine EDGSET:
  ==============================
-  Atomic relaxations requested! 
+  Atomic relaxations requested!
  Reading photo-absorption data ..... Done
  Reading relaxation data ....  Done
  Reading photo cross section data ....  Done
  Bound Compton scattering requested, reading data ...... Done
  Initializing Bound Compton scattering ......
- Medium   1 has  21 shells: 
+ Medium   1 has  21 shells:
   1 861  1  0.02740 0.141E+01    67.413
   2 862  2  0.02740 0.503E+01    11.680
                    |
@@ -33,8 +33,8 @@ space). \label{fig_tutor4_output}}
  EGSnrc SUCCESSFULLY 'HATCHED' FOR ONE MEDIUM.
  knock-on electrons can be created and any electron followed down to
                                           0.189 MeV kinetic energy
- brem photons can be created and any photon followed down to      
-                                          0.010 MeV 
+ brem photons can be created and any photon followed down to
+                                          0.010 MeV
 
                                NP ENERGY  Q REGION X      Y      Z     U      V      W  LATCH  WEIGHT
 

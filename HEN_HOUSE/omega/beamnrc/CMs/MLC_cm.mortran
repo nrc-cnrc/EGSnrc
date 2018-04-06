@@ -355,7 +355,7 @@
 "
 "*******************************************************************************
 
-%E "start of subroutine HOWFAR_$MLC (Rev 1.4)"
+%E "start of subroutine HOWFAR_$MLC"
 "*******************************************************************************
 "************************** Component Module MLC *****************************
 "*******************************************************************************
@@ -669,7 +669,7 @@ ELSE ["something is wrong"
 "
 RETURN;
 END; "End of subroutine HOWFAR_$MLC"
-%E "start of subroutine WHERE_AM_I_$MLC (Rev 1.4)"
+%E "start of subroutine WHERE_AM_I_$MLC"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$MLC
@@ -738,7 +738,7 @@ ELSE
 RETURN;
 
 END; "End of subroutine WHERE_AM_I_$MLC"
-%E "start of subroutine INPUT_$MLC (Rev 1.4)"
+%E "start of subroutine INPUT_$MLC"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$MLC
@@ -1265,7 +1265,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$MLC"
 
-%E "start of subroutine ISUMRY_$MLC (Rev 1.4)"
+%E "start of subroutine ISUMRY_$MLC"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$MLC
@@ -1529,7 +1529,7 @@ IF(N_GAP_$MLC ~=0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-            ' (3 regions Rev 1.4)',
+            ' (3 regions)',
            /'  -------------------------------------------------',
             '------------------',
            //T5,'Title: ',68A1);
@@ -1701,7 +1701,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 END;
 
 
-%E "start of subroutine HOWNEAR_$MLC (Rev 1.4)"
+%E "start of subroutine HOWNEAR_$MLC"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$MLC
@@ -1776,7 +1776,7 @@ ELSE [
    ]
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$MLC(Rev 1.4)"
+END; "End of subroutine HOWNEAR_$MLC"
 
 "*******************************************************************************
-"End of MLC_cm.mortran (Rev 1.4)"
+"End of MLC_cm.mortran"

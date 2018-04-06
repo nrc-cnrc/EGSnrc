@@ -217,4 +217,4 @@ IF(IXY_CHOICE_$JAWS({P1}) = 1)[
    UV_$JAWS = V(NP);
 ]
 }
-"End of JAWS_macros.mortran (Rev 1.5)"
+"End of JAWS_macros.mortran"

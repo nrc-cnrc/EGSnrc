@@ -77,7 +77,7 @@
 !INDENT M4;
 ;
 REPLACE {$BEAM_VERSION}
-WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
+WITH {,' ',}
 ;
 "*****************************************************************************
 "*****************************************************************************
@@ -669,7 +669,7 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>  ***********
 "I>      SPCNAM       FILENAME (with EXT) containing description of the radial
 "I>                   intensity distribution of the incident particles
-"I>                                               (maximum 80 characters)
+"I>                                               (maximum 256 characters)
 "I>             _______________________________________________________
 "I>             FILE FORMAT for SPCNAM:
 "I>               NRDIST
@@ -786,7 +786,7 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>  Next record (If ISOURC=21)
 "I>  ***********
 "I>     SPCNAM        FILENAME (with EXT) contains phase space information
-"I>                   (maximum of 80 characters)
+"I>                   (maximum of 256 characters)
 "I>------------------------------------------------------------------------
 ;
 "%A32
@@ -880,7 +880,7 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>  Next record (If ISOURC=31)
 "I>  ***********
 "I>     SPCNAM        FILENAME (with EXT) contains information on beam model
-"I>                   (maximum of 80 characters)
+"I>                   (maximum of 256 characters)
 "I>  --------------------------------------------------------------------------
 ;
 "%A14
@@ -901,7 +901,7 @@ WITH {,'Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05)',}
 "I>
 "I>   Next Record (IF MONOEN = 1)
 "I>   ***********
-"I>     FILNAM(80A1)  FILENAME(WITH EXT) contains spectrum information
+"I>     FILNAM(256A1)  FILENAME(WITH EXT) contains spectrum information
 "I>                   which must be in  NRC's ensrcV format.
 "I>             _______________________________________________________
 "I>             FILE FORMAT:
@@ -1684,7 +1684,56 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
         GOTO :HOWNEAR_DONE:;
 :HOWNEAR_{P1}:  {P1}_CM_HOWNEAR({P3});
 }
-;
+
+" expand $SYNCCMS_SET_COMP to coding to set opening dimensions of all"
+" SYNC type CMs in the accelerator"
+" if there are no more SYNC CMs we encounter END_SYNC_CMS in the list"
+" and, because there is only one parameter, it becomes a null (;) replacement"
+
+REPLACE {$SYNCCMS_SET_COMP;} WITH {$SYNC_CM_LIST$SET_COMP;}
+
+;REPLACE {SYNCCMLIST(#)$SET_COMP;} WITH {;}
+
+;REPLACE {SYNCCMLIST(#,#)$SET_COMP;} WITH {
+   {P1}_SET_COMP;
+   SYNCCMLIST({P2})$SET_COMP;
+}
+
+"now expand $SYNCCMS_APPEND_USER to coding that will append the common"
+"block for each SYNC type CM to USER"
+"At the end of the list, we encounter a single parameter,END_SYNC_CMS, and the"
+"replacement is null"
+
+REPLACE {$SYNCCMS_APPEND_USER;} WITH {$SYNC_CM_LIST$APPEND_USER;}
+
+;REPLACE {SYNCCMLIST(#)$APPEND_USER;} WITH {;}
+
+;REPLACE {SYNCCMLIST(#,#)$APPEND_USER;} WITH {
+    APPEND {;COMIN/USER-{P1}/;} TO {;COMIN/USER/;}
+    SYNCCMLIST({P2})$APPEND_USER;
+}
+
+"same as above but for DYN type CMs"
+
+REPLACE {$DYNCMS_SET_COMP;} WITH {$DYN_CM_LIST$SET_COMP;}
+
+;REPLACE {DYNCMLIST(#)$SET_COMP;} WITH {;}
+
+;REPLACE {DYNCMLIST(#,#)$SET_COMP;} WITH {
+   {P1}_SET_COMP;
+   DYNCMLIST({P2})$SET_COMP;
+}
+
+REPLACE {$DYNCMS_APPEND_USER;} WITH {$DYN_CM_LIST$APPEND_USER;}
+
+;REPLACE {DYNCMLIST(#)$APPEND_USER;} WITH {;}
+
+;REPLACE {DYNCMLIST(#,#)$APPEND_USER;} WITH {
+    APPEND {;COMIN/USER-{P1}/;} TO {;COMIN/USER/;}
+    DYNCMLIST({P2})$APPEND_USER;
+}
+
+
 " *********************************
 " Revised LATCH and NPASS features:
 " *********************************
@@ -2298,11 +2347,13 @@ REPLACE {;$MED_INPUT(#);} WITH {
 
 REPLACE {;COMIN/CMs/;} WITH {
 ;COMMON/CMs/
-   E_min_out,MAX_CMs,MED_IN,ICM,ICMNEW,ICM_to_SCORE,IERR_GEOM,IR_start_CM,
-   IR_to_CM,RMAX_CM,RMAX_CM2,RMAX_CM_FLAG,Z_min_CM,Z_gap_THICK,
-   Z_min_thick,MED_min_thick,
-   ITDOSE_ON,ICM_CONTAM,IQ_CONTAM,XTUBE_EXISTS,ANGLE,CMTYPE,CMLIST,AIR_INDEX,
-   IDIRG,BEAM_MU_INDEX,BEAM_MU_INDEX_OLD;
+   Z_min_CM,Z_gap_THICK,E_min_out,RMAX_CM,RMAX_CM2,Z_min_thick,ANGLE,
+   BEAM_MU_INDEX,BEAM_MU_INDEX_OLD,
+   ICM,ICMNEW,ICM_to_SCORE,IERR_GEOM,
+   IR_start_CM,MAX_CMs,IR_to_CM,RMAX_CM_FLAG,
+   MED_min_thick,
+   ITDOSE_ON,ICM_CONTAM, IQ_CONTAM,XTUBE_EXISTS,AIR_INDEX,IDIRG,
+   MED_IN, CMTYPE, CMLIST;
 $REAL Z_min_CM($MAX_CMsP1),$LGN(Z_gap_THICK,
    E_min_out,RMAX_CM,RMAX_CM2($MAX_CMs)),Z_min_thick($MAX_CMs,5),ANGLE,
    BEAM_MU_INDEX,BEAM_MU_INDEX_OLD;
@@ -2659,7 +2710,7 @@ $SHORT_INT NHSTRY_LAST,SCSTP_LAST,SCDSTP_LAST,
 "V>EINSRC = highest possible particle energy from phase-space (ISOURC=21).
 "V>NSHIST = number of particles in source file (ISOURC=21).
 "V>NSLEFT = number of particles remaining in source file (ISOURC=21).
-"V>SPCNAM = 80-character file name of source data file (ISOURC=21 AND 31).
+"V>SPCNAM = 256-character file name of source data file (ISOURC=21 AND 31).
 "V>Z_SOURCE = distance from source to reference plane.
 "V>INIT_ICM = init ICM # for isourc=21 case, input from temp2 on source line
 "V>N_ph_sp_e(g,p) = # of elec, gamma, positrons started from phase space file
@@ -2681,7 +2732,7 @@ $SHORT_INT NHSTRY_LAST,SCSTP_LAST,SCDSTP_LAST,
 "V>OLDSRC = 1 if the phsp file was generated by an older version of BEAM
 "           and does not contain EKMAXSRC in record 1 and/or does not
 "           contain NINCSRC in record 1
-"V>FILNAM = 80-character file name for energy spectrum file
+"V>FILNAM = 256-character file name for energy spectrum file
 "V>NPTS_SRC9 = number of discrete points for source 9
 "V>X_SRC9,Y_SRC9 = X,Y at SSD of discrete points for source 9
 "V>PROB_SRC9 = probability for each discrete point of source 9
@@ -2755,7 +2806,7 @@ REPLACE {;COMIN/ENERGYSRC/;} WITH {
 $REAL ENSRCD($NENSRC),SRCPDF($NENSRC),SRCCDF($NENSRC),ENMIN,
      CDFINV($INVDIM,2),DELTAK;
 INTEGER IMODE,NENSRC,IB;
-CHARACTER*80 FILNAM;}
+CHARACTER*256 FILNAM;}
 ;
 " IK: reordered common block to start with largest members first "
 "     (that's what one should always do) "
@@ -2817,8 +2868,8 @@ INTEGER NRDIST,NSRCRG,NSHIST,NSLEFT,N_ph_sp_e,N_ph_sp_g,N_ph_sp_p,
       RLAST, IB20, K20,IRDIST,CHOSEN_SRC18,ISOURC,OUTCNT,IFPB,MONOEN,
       NRCYCL,CYCLNUM,IPARALLEL,PARNUM,ISRC_DBS,i_iaea_in,INSIDE_FLAG,
       INIT_ICMOLD,I_MUPHSP_IN;
-CHARACTER*80 SPCNAM,the_beam_code,the_input_file,the_pegs_file;
-CHARACTER*80 SPEC_TITLE;
+CHARACTER*256 SPCNAM;
+CHARACTER*80 the_beam_code,the_input_file,the_pegs_file,SPEC_TITLE;
 $LOGICAL phsp_open;
 
 }
@@ -2831,8 +2882,7 @@ REPLACE {;COMIN/USER/;} WITH {
 ;COMIN/USER-PHOTON-FORCING,USER-RANGE-REJECTION,USER-SPLITTING,
        USER-STACK,
        USER-DIRECTIONAL-BREM-SPLITTING,USER-CS-ENHANCEMENT,
-       USER-CUSTOM-VARIABLES,USER-DYNVMLC,USER-DIRECTIONAL-SOURCE-BIASING,
-       USER-DYNJAWS,USER-SYNCJAWS,USER-SYNCMLCE,USER-SYNCVMLC,USER-SYNCHDMLC,
+       USER-CUSTOM-VARIABLES,USER-DIRECTIONAL-SOURCE-BIASING,
        USER-BCSE/;
 }
 
@@ -3101,6 +3151,11 @@ $REAL ZLAST($MXSTACK),XLAST($MXSTACK),YLAST($MXSTACK),FDUMMY,ZLASTOLD;
 INTEGER LATCH_OPTION,LNOB29,NPASSI,IPHATI,
        NPASS($MXSTACK,$MAX_SC_PLANES),IDUMMY,LATCHIN,LATCHOUT,LATCHOLD;
 }
+
+"now append the USER variables of any SYNC CM to USER"
+$SYNCCMS_APPEND_USER;
+"same for DYN type CMs"
+$DYNCMS_APPEND_USER;
 
 APPEND {;COMIN/CMs,CM_LIST,SCORE/;} TO {$COMIN-ELECTR;}
 
@@ -4394,7 +4449,7 @@ return; end;
 subroutine beam_shower(icase);
 /**************************************************************************/
 implicit none;
-$INTEGER icase;
+$LONG_INT icase;
 
 ;COMIN/SCORE,SOURCE,EPCONT,RANDOM,CMs,USER,IO_INFO,TIMING-INFO,USEFUL,EGS-IO,
 RWPHSP/;
@@ -4449,18 +4504,12 @@ IF(dosxyz2beam_index<0)[" for particles given by dosxyznrc"
 
 ]
 
-$SET_DYN_COMP; "set leaf positions for dynamic or step-and-shoot"
-               "simulations with DYNVMLC if needed"
-$SET_DYNJAWS_COMP; "set dynamic jaw positions if needed"
-
-
 "Tony Popescu and Julio Lobo: Note: with multiple"
 "synchronized modules, only one sets the BEAM_MU_INDEX"
 "the rest use the same one"
-$SET_SYNCJAWS_COMP; "set synchronized jaws positions"
-$SET_SYNCVMLC_COMP; "set synchronized vmlc positions"
-$SET_SYNCMLCE_COMP; "set synchronized mlce positions"
-$SET_SYNCHDMLC_COMP;"set synchronized hdmlc positions if needed"
+$SYNCCMS_SET_COMP; "coding for synchronized settings of all SYNC"
+                   "type CMs in the accelerator"
+$DYNCMS_SET_COMP; "same for DYN CMs"
 
 "the following was added by Tony Popescu and Julio Lobo to allow"
 "communication between several moving beam modules"
@@ -4478,9 +4527,9 @@ CALL SRCHST(XIN,YIN,ZIN,UIN,VIN,WIN,IRIN,WEIGHT);
 "for ISOURC=21 EIN and IQIN are passed via comin score"
 ICMNEW = ICM; "set equal to suppress full phase-space output until
               "particle crosses a scoring plane
-IF( ISOURC ~= 21 & ISOURC ~=23 & ISOURC~=24) [
+IF( ISOURC ~= 21 & ISOURC ~=23 & ISOURC~=24 & dosxyz2beam_index >= 0) [
     IF( MONOEN = 1 ) CALL EN_SAMPLE(EIN);
-    IF(IQIN =  0)[EI=EIN;]ELSE[EI=EIN+RM;]
+    IF(IQIN =  0)[EI=EIN;]ELSE[EI=EIN+PRM;]
 ] ELSE [ EI = EIN; ]
 
 "set initial energy for beam models";
@@ -4595,7 +4644,6 @@ implicit none;
 INTEGER
    I,I1,I2,I3,I4,IT, "T>DO loop indices
    TOT_BATCH,    "T>Total number of batches processed
-   ICASE,        "T>
    IRIN,         "T>
    ITMAX,        "T>Number of dose components
    RESETWATCH,   "T>used to reset IWATCH to 0 when IWATCH<0
@@ -4604,6 +4652,7 @@ INTEGER
    lnblnk1;      "T> built-in lnblnk function
 
 $LONG_INT
+   ICASE,
    NHSTRY_OLD;   "T>used to store previous version of NHSTRY before call
                  "  to SRCHST"
 $DECLARE_TIMING_VARIABLES;   "timing_variables CPUT0/1/2 TZERO ETIME UTIME_"
@@ -6111,7 +6160,7 @@ IF(IBRSPL=1 & IRRLTT=0)["uniform bremsstrahlung splitting without Russ. Roul."
 
 ELSEIF(IBRSPL=2) ["directional bremsstrahlung splitting"
 
-   IF( iarg > 5 & z(np) > ssd ) [ nbr_split = 1; return; ]
+   IF( iarg > 5 & z(np) > ssd ) [ nbr_split = 1; GOTO :ZLAST_AND_LATCH:; ]
 
 
    IF(i_dsb=1 & z(np)<Z_min_CM(splitcm_dsb) & dsb_nbin>1)[do_dsb=1;]
@@ -6450,7 +6499,7 @@ IF(IARG=6) NUM_BREM=NUM_BREM+nbr_split;
 
 "macro below sets prob_RR, the probability that a charged particle will"
 "survive Russian Roulette, when seletive bremsstrahlung is on"
-
+:ZLAST_AND_LATCH:;
 "******************************************************************************
 "
 "         LAST INTERACTION SITE SCORING (FOR PHOTONS AND ELECTRONS) ""toc:
@@ -8395,8 +8444,7 @@ ELSEIF(NSC_PLANES>0)[
                    T78,'**'/
 ' **',T15,'OMEGA collaboration with the University of Wisconsin.',T78,'**'/
 ' **',T78,'**'/
-' **',' This is version V1 of BEAMnrc ',
-'(Rev 1.78 last edited 2004-01-12 11:44:06-05)'
+' **',' This is version V1 of BEAMnrc '
    ,T78,'**'/ ' **',T78,'**'/ ' ',78('*')//);
 211  FORMAT(' Max # of histories: to run',I12,T50,'To analyze',T65,I12);
 204  FORMAT(' ',T20,'Incident charge',T63,I2);
@@ -8404,7 +8452,7 @@ ELSEIF(NSC_PLANES>0)[
 202  FORMAT(' ',T20,'Maximum incident kinetic energy',T57,F9.3,' MeV');
 203  FORMAT (' ',T4,'*** WARNING *** too few histories - statistical analysis',
               ' incorrect');
-205  FORMAT(' ',T20,'Read incident kinetic energy spectrum from file:'/A80,/
+205  FORMAT(' ',T20,'Read incident kinetic energy spectrum from file:'/A,/
             ' ',T20,'  Minimum kinetic energy in spectrum',T56,F9.3,' MeV',/
             ' ',T20,'  Maximum kinetic energy in spectrum',T56,F9.3,' MeV',/
             ' ',T20,'               # of bins in spectrum',T56,I9);
@@ -9875,8 +9923,9 @@ ELSEIF(ISOURC = 15)["Radial intensity distribution"
         OUTPUT;
 (' INPUT NAME OF FILE WITH RADIAL INTENSITY DISTRIBUTION (up to 80 CHAR '/
  ' WITH .EXT): '/);
-        READ(i_input,'(A80)',END=:EOF_ISOURCE:) SPCNAM;
-        OUTPUT SPCNAM;(/' READ INPUT RADIAL INTENSITY DISTRIBUTION FROM: '/A80);
+        READ(i_input,'(A256)',END=:EOF_ISOURCE:) SPCNAM;
+      OUTPUT SPCNAM;(/' READ INPUT RADIAL INTENSITY DISTRIBUTION FROM: '/A256);
+        call replace_env(SPCNAM);
         i_spcnam=9;
         i_spcnam=egs_get_unit(i_spcnam);
         IF(i_spcnam<0)[
@@ -10069,10 +10118,12 @@ ELSEIF(ISOURC = 21 | ISOURC=24)[
     "External file input"
     OUTPUT;
     (' FULL PHASE-SPACE TO BE READ FROM UNIT 42...'/
-    ' INPUT NAME OF FILE WITH PHASE SPACE DATA(1 TO 80 CHARS,',
+    ' INPUT NAME OF FILE WITH PHASE SPACE DATA(1 TO 256 CHARS,',
     'WITH .EXT)'/' : ',$);
-    READ(i_input,'(A80)',END=:EOF_ISOURCE:)SPCNAM;
-    OUTPUT SPCNAM;(/' READ PHASE SPACE INFORMATION FROM: '/A80);
+    READ(i_input,'(A256)',END=:EOF_ISOURCE:)SPCNAM;
+    OUTPUT SPCNAM;(/' READ PHASE SPACE INFORMATION FROM: '/A256);
+
+    call replace_env(SPCNAM);
 
     i_iaea_in=0; "assume not in IAEA format"
 
@@ -10440,9 +10491,10 @@ IF (ISOURC < 21 | ISOURC=22) [
 
    ELSEIF(MONOEN = 1)[
       OUTPUT;(' Energy distribution source');
-      OUTPUT;(' INPUT NAME OF FILE WITH SPECTRUM DATA(<80 CHARS)'/' : ',$);
-      READ(i_input,'(A80)',END=:EOF_ISOURCE:) FILNAM;
-      OUTPUT FILNAM;(/'   Will now read input energy spectrum from: ',/A80);
+      OUTPUT;(' INPUT NAME OF FILE WITH SPECTRUM DATA(<=256 CHARS)'/' : ',$);
+      READ(i_input,'(A256)',END=:EOF_ISOURCE:) FILNAM;
+      OUTPUT FILNAM;(/'   Will now read input energy spectrum from: ',/A256);
+      call replace_env(FILNAM);
       i_spect=99;
       i_spect=egs_get_unit(i_spect);
       IF(i_spect<0)[
@@ -11197,7 +11249,7 @@ ELSEIF(ISOURC = 15)[ WRITE(IOUTLIST,540) GAMMA,ZFOCUS,THETAIN,RTHETAIN,SPCNAM;
   T5,'                            Z OF APEX OF CONE = ',F10.4,' cm'/
   T5,'                        BEAM DIVERGENCE ANGLE = ',F10.4,' degrees'/
   T5,'RADIUS AT WHICH BEAM DIVERGENCE ANGLE DEFINED = ',F10.4,' cm'//
-             T5,'FILE CONTAINING RADIAL INTENSITY DISTRIBUTION:'/A80//
+             T5,'FILE CONTAINING RADIAL INTENSITY DISTRIBUTION:'/A//
              T5,'RADIAL INTENSITY DISTRIBTION...'//
              T5,'     bin     upper radius            '/
              T5,'      #          (cm)         prob.  '/);
@@ -11226,7 +11278,7 @@ ELSEIF(ISOURC = 21 | ISOURC=24)[
                                          NPHOTSRC,EKMAXSRC,
                                          EKMINSRCE,NINCSRC,NRCYCL;
    640 FORMAT(T20,'FULL PHASE SPACE INPUT FOR EACH INCIDENT PARTICLE. '/
-   T5,' SOURCE DATA FILE: ',A80/
+   T5,' SOURCE DATA FILE: ',A/
    T5,'             SOURCE INCIDENT ON FRONT FACE, Z =',F13.2,' cm'/
    T5,'                SOURCE INCIDENT ON MODULE ICM =',I13, /
    T5,'             Total # of particles in the file =',I13,/

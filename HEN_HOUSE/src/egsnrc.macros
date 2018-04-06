@@ -245,8 +245,8 @@ PARAMETER $PHOTONUCAUSB=29; "BEFORE PHOTONUCLEAR EVENT"
 PARAMETER $PHOTONUCAUSA=30; "AFTER PHOTONUCLEAR EVENT"
 PARAMETER $EIIB=31;   "Before EII"
 PARAMETER $EIIA=32;   "After EII"
-PARAMETER $SFLUORTRA=33;   "Sub-threshold fluorescent transition just occurred"
-PARAMETER $SAUGERTRA=34;   "Sub-threshold Auger transition just occurred"
+PARAMETER $SPHOTONA=33;   "After sub-threshold photon energy deposition"
+PARAMETER $SELECTRONA=34;   "After sub-threshold electron energy deposition"
 
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
@@ -484,6 +484,7 @@ REPLACE {;COMIN/COMPTON-DATA/;} WITH
 "             is interacting with.
 "------------------------------------------------------------------ "
 REPLACE {$MXELEMENT} WITH {100}  " Number of elements               "
+REPLACE {$MXSHXSEC}  WITH {30}   " Number of shells available       "
 REPLACE {$MXSHELL}   WITH {6}    " Number of shells treated         "
 REPLACE {$MXINTER}   WITH {5}    " $MXSHELL-1                       "
 REPLACE {$MXTRANS}   WITH {39}   " Number of possible transitions   "
@@ -493,7 +494,7 @@ REPLACE {$PHOCSUNIT} WITH {i_photo_cs}   " unit number for photo_cs.data    "
 
 REPLACE {;COMIN/EDGE/;} WITH
 {;
-   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+   COMMON/EDGE/binding_energies($MXSHXSEC,$MXELEMENT),
                interaction_prob($MXSHELL,$MXELEMENT),
                relaxation_prob($MXTRANS,$MXELEMENT),
                edge_energies($MXEDGE,$MXELEMENT),
@@ -621,7 +622,7 @@ REPLACE {;COMIN/EII-DATA/;} WITH {;
 
 REPLACE {$COMIN-EII-SAMPLE;} WITH {
     ;COMIN/EPCONT,EII-DATA,EGS-VARIANCE-REDUCTION,RANDOM,STACK,THRESH,
-           UPHIOT,USEFUL,EGS-IO/;
+           UPHIOT,USEFUL,EGS-IO,RELAX-DATA/;
 };
 REPLACE {$COMIN-EII-INIT;} WITH {
     ;COMIN/BREMPR,EDGE,EGS-IO,EII-DATA,ELECIN,MEDIA,THRESH,USEFUL/;
@@ -629,11 +630,16 @@ REPLACE {$COMIN-EII-INIT;} WITH {
 
 REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
     common/emf_inputs/ExIN,EyIN,EzIN, "E field"
-                     BxIN,ByIN,BzIN,  "B field"
-                     EMLMTIN;         "Ekin, u, E fractional maximum change"
+                     EMLMTIN,         "Ekin, u, E fractional maximum change"
+                     BxIN, ByIN, BzIN,       "B field: initial region"
+                     Bx, By, Bz,             "B field: current region"
+                     Bx_new, By_new, Bz_new; "B field: in new region"
+
    $REAL    ExIN,EyIN,EzIN,
+            EMLMTIN,
             BxIN,ByIN,BzIN,
-            EMLMTIN;
+            Bx,By,Bz,
+            Bx_new,By_new,Bz_new;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 " The following common block is made available to the user so that  "
@@ -664,18 +670,26 @@ REPLACE {;COMIN/RELAX-USER/;} WITH {;
 
 REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
 REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
-REPLACE {$MAXRELAX} WITH {5000}"max. number of relaxations channels"
+REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
 "============================================================"
-" If you are interested in a more accurate simulation of the"
-" atomic relaxation process set the macro replacement below "
-" to .true. to enable a more complete algorithm with all    "
-" transitions available in the EADL compilation. Although   "
-" it has been tested in the production of tungsten K-shell  "
-" and L-shell characteristic x-rays, it needs more testing  "
-" before it can be made the default in EGSnrc.              "
-"============================================================"
-REPLACE {$EADL_RELAX} WITH {.true.}
+" Set input key 'Atomic relaxations' to 'simple' to recover original
+" implementation which allows photoelectric interactions with <M> and
+" <N> shells. See below for details on the shells considered by different
+" interactions depending on the value of eadl_relax:
+"
+"      Interaction        .false.             .true.
+"      -----------------------------------------
+"      Compton                all available shells
+"      EII                K,L1..L3            K,L1..L3
+"      Photoeffect        K,L1..L3,<M>,<N>    K,L1..L3
+"      Shellwise
+"      Photoeffect             N/A      All shells > $RELAX-CUTOFF
+"      Relaxation
+"        initial vacancy  K,L1..L3,<M>        K,L1..L3
+"        (for new photoeffect)                K, L1..L3, M1..M5, N1..N4
+"        final vacancy    L1..L3,<M>,<N>      L1..L3,M1..M5,N1..N7...
+"
 "============================================================"
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
@@ -731,10 +745,57 @@ RELAX-DATA,SHELL-DATA/;
 
 REPLACE {$COMIN-RELAX-EADL;} WITH {
 ;COMIN/RELAX-DATA,RELAX-FOR-USER,SHELL-DATA,
-STACK,THRESH,EPCONT,USEFUL,UPHIOT,RANDOM,BOUNDS,EGS-IO,MISC,MEDIA/;
+STACK,THRESH,EPCONT,USEFUL,UPHIOT,RANDOM,BOUNDS,EGS-IO,MISC,MEDIA,
+X-OPTIONS/;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
+"***************************************************************************"
+"                                                                           "
+" -------------- shell-wise photoelectric cross section data ------------   "
+"
+" Cross sections taken from Sabbatucci and Salvat,                          "
+" Theory and calculation of the atomic photoeffect                          "
+" Radiat. Phys. and Chem., Volume 121, April 2016, Pages 122-140            "
+"                                                                           "
+"***************************************************************************"
+" Shell-wise photoelectric cross sections from 50 eV up to 1 GeV for elements
+" from Z=1 up to Z=99. All K, L, M, and N shells are included. One can define
+" a threshold energy separating inner from outer shells. By default this
+" energy is set to 1 keV, but for accurate calculation of quantities that  "
+" require knowledge of which particle deposited the energy, one might need to
+" use the a lower threshold.
+"***************************************************************************"
+"============================================================"
+REPLACE {$RELAX-CUTOFF} WITH {0.001"threshold energy for outer shells"}
+REPLACE {$MXPESHELL} WITH {16} "K,L1..L3,M1..M5,N1..N7 + outer shell"
+REPLACE {$MXNE} WITH {500}     "number of energy points per shell "
+"============================================================"
+REPLACE {;COMIN/PE-SHELL-DATA/;} WITH {;
+
+  common/pe_shell_data/
+    pe_xsection($MXNE,$MXELEMENT,0:$MXPESHELL),  "shellwise cross sections"
+    pe_elem_prob($MXNE,$MXELEMENT,$MXMED), "prob. of interaction with an"
+                                           "element of a medium"
+    pe_energy($MXNE,$MXELEMENT),    "energy grid"
+    pe_zsorted($MXELEMENT,$MXMED),"sorted array of Z for each medium"
+    pe_be($MXELEMENT,$MXPESHELL),      "binding energies"
+    pe_nshell($MXELEMENT),       "number of shells for each element"
+    pe_zpos($MXELEMENT),       "position of each Z element"
+    pe_nge($MXELEMENT),       "number of energy points for each element"
+    pe_ne;                    "number of elements in the simulation"
+  $REAL    pe_be, pe_energy, pe_xsection, pe_elem_prob;
+  $INTEGER pe_zsorted, pe_nshell, pe_zpos, pe_nge, pe_ne;
+};
+;  "---------- BUFFER FLUSH SEMICOLON ----------"
+
+REPLACE {$COMIN-SHELLWISE-PE-INIT;} WITH {
+;COMIN/BREMPR,EDGE,EGS-IO,MEDIA,PHOTIN,THRESH,X-OPTIONS,USEFUL,
+    PE-SHELL-DATA/;
+};
+
+
+;  "---------- BUFFER FLUSH SEMICOLON ----------"
 " Some macros for C-style syntax in mortran "
 " Unfortunately, /= doesn't work because of /v1,v2,...,vn/=value;"
 
@@ -1079,7 +1140,12 @@ REPLACE {;COMIN/USER/;} WITH {
          ;}  "DEFAULT IS NULL"
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
-REPLACE {;COMIN/X-OPTIONS/;} WITH {;};
+REPLACE {;COMIN/X-OPTIONS/;} WITH {
+    ;
+  common/x_options/eadl_relax,       "Use EADL relaxation"
+                   mcdf_pe_xsections;"Use Sabbatucci and Salvat PE xsections"
+  $LOGICAL  eadl_relax, mcdf_pe_xsections;
+};
 
 "------------------------------------------------------------------"
 "*** MACROS TO DEFINE THE COMMONS USED IN EACH SUBPROGRAM.         "
@@ -1096,14 +1162,14 @@ REPLACE {$COMIN-BREMS;} WITH {
            EGS-VARIANCE-REDUCTION,EGS-IO/;}
 REPLACE {$COMIN-COMPT;} WITH {
    ;COMIN/COMPTON-DATA,DEBUG,EPCONT,STACK,THRESH,UPHIOT,USEFUL,RANDOM,
-          EGS-VARIANCE-REDUCTION,EGS-IO/;}
+          EGS-VARIANCE-REDUCTION,EGS-IO,RELAX-DATA/;}
 REPLACE {$COMIN-ELECTR;} WITH {
 ;COMIN/DEBUG,BOUNDS,ELECIN,EPCONT,MEDIA,MISC,STACK,THRESH,
 UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,CH-Steps,EGS-IO,
           EGS-VARIANCE-REDUCTION,EMF-INPUTS/;}
 REPLACE {$COMIN-HATCH;} WITH {
 ;COMIN/DEBUG,BOUNDS,BREMPR,ELECIN,MEDIA,MISC,PHOTIN,STACK,THRESH,
-UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,EGS-IO,
+UPHIIN,UPHIOT,USEFUL,USER,RANDOM,ET-Control,EGS-IO,X-OPTIONS,
           EGS-VARIANCE-REDUCTION/;}
 REPLACE {$COMIN-MOLLER;} WITH {
    ;COMIN/DEBUG,STACK,THRESH,UPHIOT,USEFUL,RANDOM,EGS-IO,
@@ -1113,8 +1179,8 @@ REPLACE {$COMIN-PAIR;} WITH {
           EPCONT,TRIPLET-DATA,EGS-VARIANCE-REDUCTION,EGS-IO/;}
 REPLACE {$COMIN-PHOTO;} WITH {
    ;COMIN/BOUNDS,BREMPR,DEBUG,EDGE,EPCONT,MEDIA,PHOTIN,RANDOM,
-          STACK,UPHIOT,USEFUL,EGS-IO,
-          EGS-VARIANCE-REDUCTION/;}
+          STACK,UPHIOT,USEFUL,EGS-IO,X-OPTIONS,
+          EGS-VARIANCE-REDUCTION,RELAX-DATA/;}
 REPLACE {$COMIN-PHOTON;} WITH {
 ;COMIN/DEBUG,BOUNDS,MEDIA,MISC,EPCONT,PHOTIN,STACK,THRESH,UPHIOT,
 USEFUL,USER,RANDOM,EGS-VARIANCE-REDUCTION,EGS-IO/;}
@@ -1127,21 +1193,21 @@ REPLACE {$COMIN-BLOCK;} WITH {
   EPCONT,CH-Steps,ET-Control,MEDIA,MISC,PHOTIN,RANDOM,STACK,
   THRESH, UPHIIN,UPHIOT,USEFUL,EGS-VARIANCE-REDUCTION/;}
 REPLACE {$COMIN-RELAX;} WITH {
-  ;COMIN/EPCONT,STACK,BOUNDS,USEFUL,RANDOM,EDGE,EGS-IO/;}
+  ;COMIN/EPCONT,STACK,BOUNDS,USEFUL,RANDOM,EDGE,EGS-IO,RELAX-DATA,X-OPTIONS/;}
 REPLACE {$COMIN-SET-DEFAULTS;} WITH {
   ;COMIN/BOUNDS,BREMPR,COMPTON-DATA,EDGE,ELECIN,EPCONT,CH-Steps,ET-Control,
        MEDIA,MISC,PHOTIN,RANDOM,STACK,THRESH, UPHIIN,UPHIOT,USEFUL,
        EGS-VARIANCE-REDUCTION,EGS-IO,Spin-Data,EII-DATA,rayleigh_inputs,
-       EMF-INPUTS/;};
+       EMF-INPUTS,X-OPTIONS/;};
 REPLACE {$COMIN-INIT-COMPT;} WITH {
-  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,USEFUL,EGS-IO/;};
+  ;COMIN/COMPTON-DATA,BREMPR,EDGE,MEDIA,MISC,USEFUL,EGS-IO,X-OPTIONS/;};
 REPLACE {$COMIN-MSCATI;} WITH {
   ;COMIN/BOUNDS,ELECIN,MEDIA,MISC,RANDOM,ET-Control,USEFUL,EGS-IO/;};
 REPLACE {$COMIN-INIT-TRIPLET;} WITH {
   ;COMIN/BREMPR,EGS-IO,MEDIA,TRIPLET-DATA,USEFUL/;};
 REPLACE {$COMIN-GET-TRANSPORTP;} WITH {
   ;COMIN/GetInput,BOUNDS,ET-Control,EDGE,COMPTON-DATA,MEDIA,MISC,
-         BREMPR,EII-DATA,EGS-IO,rayleigh_inputs,EMF-INPUTS/;};
+         BREMPR,EII-DATA,EGS-IO,rayleigh_inputs,EMF-INPUTS,X-OPTIONS/;};
 "Ali:photonuc, 1 block"
 REPLACE {$COMIN-PHOTONUC;} WITH {;COMIN/STACK,EPCONT,USEFUL/;};
 
@@ -2220,7 +2286,7 @@ REPLACE {$EXACT-BCA-DEFAULT} WITH {.true.}
 ;
 REPLACE {$SPIN-EFFECTS-DEFAULT} WITH {.true.}
 ;
-REPLACE {$IRAYLR-DEFAULT} WITH {0}
+REPLACE {$IRAYLR-DEFAULT} WITH {1}
 ;
 REPLACE {$AP-DEFAULT} WITH {-1}
 ;
@@ -2231,6 +2297,12 @@ REPLACE {$XSEC-DEFAULT} WITH {0}
 REPLACE {$XDATA-DEFAULT} WITH {'xcom'}
 ;
 REPLACE {$COMP-XDATA-DEFAULT} WITH {'default'}
+;
+"EADL relaxation is now the default"
+REPLACE {$EADL-RELAX-DEFAULT} WITH {.true.}
+;
+"Sabbatucci and Salvat PE xsections not the default yet"
+REPLACE {$MCDF-PE-DEFAULT} WITH {.false.}
 ;
 "Ali:photonuc, 2 lines"
 REPLACE {$IPHOTONUCR-DEFAULT} WITH {0}
@@ -3542,7 +3614,7 @@ REPLACE {$set_egs_home;} WITH {;
 
 
 " Initialization of various variables on a region-by-region basis "
-" This is made a macro so that it cen bereplaced with a different "
+" This is made a macro so that it can be replaced with a different "
 " version for the C/C++ interface                                 "
 REPLACE {$set-region-by-region-defaults;} WITH {;
 DO i=1,$MXREG [

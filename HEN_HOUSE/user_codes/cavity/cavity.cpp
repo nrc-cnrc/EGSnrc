@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 #
@@ -223,7 +224,6 @@ extern EGS_Float steps_ustepi[MAX_STEP], steps_ustepf[MAX_STEP];
 extern int steps_n;
 #endif
 
-
 /**********************************************************************
 EGS_HVL:
 This class is inteded for calculating the HVL on the fly. Currently
@@ -301,6 +301,7 @@ public:
 
     /*! Calculation type */
     enum Type { Dose=0, Awall=1, Fano=2, HVL=3, FAC=4 };
+    enum eFluType { flurz=0, stpwr=1, stpwrO5=2 };
 
     /*! Constructor */
     Cavity_Application(int argc, char **argv) :
@@ -308,8 +309,9 @@ public:
         dose1(0),dose2(0),dose3(0),dose4(0), dose5(0),
         aperture_scores(0),aperture_hits(0),reject(0),
         ideal_dose(0), fsplit(1), fspliti(1), rr_flag(0), Esave(0), rho_rr(1),
-        cgeom(0), nsmall_step(0), ncg(0), score_q(0),
-        flug(0),flugT(0),flum(0), flup(0) {};
+        cgeom(0), nsmall_step(0), ncg(0), score_q(0), cavity_medium(0),
+        flug(0),flugT(0),flum(0), flumT(0), flup(0), flupT(0),flu_s(0),
+        flu_stpwr(stpwr), Rho(0) {};
 
     /*! Destructor.  */
     ~Cavity_Application() {
@@ -323,7 +325,10 @@ public:
                    delete flup[j]; delete flum[j];
                 }
                 delete [] flup; delete [] flum;
+                if( flumT ) delete flumT;
+                if( flupT ) delete flupT;
             }
+            if ( Rho ) delete [] Rho;
             if( flug ) {
                 for(int j=0; j<ngeom; j++) {delete flug[j];}
                 delete [] flug;
@@ -407,14 +412,6 @@ public:
                 }
             }
             else nsmall_step = 0;
-            /*
-            if( ir >= 0 && (iarg == EgsCut || iarg == PegsCut ||
-                        iarg == UserDiscard) )
-                egsInformation("Discarding: %d %d %g (%g,%g,%g) %d %lld\n",iarg,
-                        the_stack->iq[np],the_stack->E[np],
-                        the_stack->x[np],the_stack->y[np],the_stack->z[np],
-                        np,current_case);
-            */
             if( ir >= 0 && is_cavity[ig][ir] ) {
                 EGS_Float aux = the_epcont->edep*the_stack->wt[np];
                 if( aux > 0 ) {
@@ -442,35 +439,193 @@ public:
                      }
                     }
                 }
-                //
-                // ********** fluence scoring
-                //
-                //if( flum && iarg == BeforeTransport && the_stack->iq[np] ) {
-                if( flum && iarg != ExtraEnergy && the_stack->iq[np] ) {
-                    EGS_Float xb, xe, e = the_stack->E[np] - the_useful->rm;
+                //**************************************************
+                // ***     Charged particle fluence scoring     ****
+                //**************************************************
+                /* Based on energy loss during a CH step where a particle
+                 * slows down from initial energy Eb to final energy Ee,
+                 * one can determine the corresponding path length segment
+                 * at each energy bin between Eb and Ee. First and last
+                 * energy bins might not be fully covered, hence the
+                 * fraction of energy lost corresponding to these bins
+                 * must be determined.
+                 * Two different approaches are used: Approach A accounts
+                 * for stopping power variation along the particle's step
+                 * while approach B assumes no change in the stopping
+                 * power (used in FLURZnrc) and is about 8% faster than
+                 * approach A for a 5 MeV e- source and ESTEPE = 0.25.
+                 * However approach B overestimates the fluence at low
+                 * energies where the stopping powers increase significantly
+                 * with decreasing energy. This artifacts can be eliminated
+                 * by reducing ESTEPE to 0.01 which increases CPU time by
+                 * almost a factor of 10.
+                 *
+                 * - Differential fluence computed per energy bin-width.
+                 * - Total fluence also scored
+                 *
+                 *****************************************************/
+                 if( flum &&
+                    ( iarg == BeforeTransport || iarg == UserDiscard ) &&
+                     the_epcont->edep && the_stack->iq[np] ){
+                    /***** Initialization *****/
+                    EGS_Float Eb = the_stack->E[np] - the_useful->prm,
+                              Ee = Eb-the_epcont->edep,
+                              weight = the_stack->wt[np];
+                    EGS_Float xb, xe;
+                    /*********************************/
                     if( flu_s ) {
-                        xb = log(e); xe = e - the_epcont->edep;
-                        if( xe > 0 ) xe = log(xe); else xe = -15;
+                        xb = log(Eb);
+                        if( Ee > 0 )
+                            xe = log(Ee);
+                        else xe = -15;
                     }
-                    else { xb = e; xe = e - the_epcont->edep; }
+                    else{
+                      xb = Eb; xe = Ee;
+                    }
                     EGS_Float ab, ae; int jb, je;
                     if( xb > flu_xmin && xe < flu_xmax ) {
+                        /* Fraction of the initial bin covered */
                         if( xb < flu_xmax ) {
-                            ab = flu_a*xb + flu_b; jb = (int) ab; ab -= jb;
+                            ab = flu_a*xb + flu_b; jb = (int) ab;
+                            /* Variable bin-width for log scale*/
+                            if (flu_s){
+                               ab = (Eb*a_const[jb]-1)*r_const;
+                            }
+                            else{ ab -= jb;}// particle's energy above Emax
                         }
                         else { ab = 1; jb = flu_nbin - 1; }
+                        /* Fraction of the final bin covered */
                         if( xe > flu_xmin ) {
-                            ae = flu_a*xe + flu_b; je = (int) ae; ae -= je;
+                            ae = flu_a*xe + flu_b; je = (int) ae;
+                            /* Variable bin-width for log scale*/
+                            if (flu_s){
+                               ae = (Ee*a_const[je]-1)*r_const;
+                            }
+                            else{ ae -= je; }
                         }
-                        else { ae = 0; je = 0; }
+                        else { ae = 0; je = 0; }// extends below Emin
                         EGS_ScoringArray *aux = the_stack->iq[np] == -1 ?
-                                flum[ig] : flup[ig];
-                        if( jb == je ) aux->score(jb,the_stack->wt[np]*(ab-ae));
-                        else {
-                            aux->score(jb,the_stack->wt[np]*ab);
-                            aux->score(je,the_stack->wt[np]*(1-ae));
-                            for(int j=je+1; j<jb; j++)
-                                aux->score(j,the_stack->wt[np]);
+                                                flum[ig] : flup[ig];
+                        EGS_ScoringArray *auxT = the_stack->iq[np] == -1 ?
+                                                flumT : flupT;
+                        /************************************************
+                         * Approach A:
+                         * -----------
+                         * Uses either an O(3) or O(5) series expansion of the
+                         * integral of the inverse of the stopping power with
+                         * respect to energy. The stopping power is represented
+                         * as a linear interpolation over a log energy grid. It
+                         * accounts for stopping power variation along the particle's
+                         * step within the resolution of the scoring array. This
+                         * is more accurate than the method used in FLURZnrc albeit
+                         * about 10% slower in electron beam cases.
+                         *
+                         * BEWARE: For this approach to work, no range rejection
+                         * ------  nor Russian Roulette should be used.
+                         *
+                         ************************************************/
+                        if (flu_stpwr){
+                           int imed = geometry->medium(ir);
+                           // Initial and final energies in same bin
+                           EGS_Float step;
+                           if( jb == je ){
+                               step = weight*(ab-ae)*getStepPerFraction(imed,xb,xe);
+                               aux->score(jb,step);
+                               if (flu_s)
+                                  auxT->score(ig,step*DE[jb]);
+                               else
+                                  auxT->score(ig,step);
+                           }
+                           else {
+                               EGS_Float flu_a_i = 1/flu_a;
+                               // First bin
+                               Ee = flu_xmin+jb*flu_a_i; Eb=xb;
+                               step = weight*ab*getStepPerFraction(imed,Eb,Ee);
+                               aux->score(jb,step);
+                               if (flu_s)
+                                  auxT->score(ig,step*DE[jb]);
+                               else
+                                  auxT->score(ig,step);
+                               // Last bin
+                               Ee = xe; Eb = flu_xmin+(je+1)*flu_a_i;
+                               step = weight*(1-ae)*getStepPerFraction(imed,Eb,Ee);
+                               aux->score(je,step);
+                               if (flu_s)
+                                  auxT->score(ig,step*DE[je]);
+                               else
+                                  auxT->score(ig,step);
+                               // intermediate bins
+                               for(int j=je+1; j<jb; j++){
+                                  if (flu_stpwr == stpwrO5){
+                                    Ee = Eb; Eb = flu_xmin+(j+1)*flu_a_i;
+                                   /* O(eps^5) would require more pre-computed values
+                                    * than just 1/Lmid. One requires lnEmid[i] to get
+                                    * the b parameter and eps[i]=1-E[i]/E[i+1]. Not
+                                    * impossible, but seems unnecessary considering
+                                    * the excellent agreement with O(eps^3), which
+                                    * should be always used.
+                                    */
+                                    step = weight*getStepPerFraction(imed,Eb,Ee);
+                                  }
+                                  else{// use pre-computed values of 1/Lmid
+                                   step = weight*Lmid_i[j+ig*flu_nbin];
+                                  }
+                                  aux->score(j,step);
+                                  if (flu_s)
+                                    auxT->score(ig,step*DE[j]);
+                                  else
+                                    auxT->score(ig,step);
+                               }
+                           }
+                        }
+                        /***************************************************
+                         * -----------------------
+                         * Approach B (FLURZnrc):
+                         * ----------------------
+                         * Path length at each energy interval from energy
+                         * deposited edep and total particle step tvstep. It
+                         * assumes stopping power constancy along the particle's
+                         * step. It might introduce artifacts if ESTEPE or the
+                         * scoring bin width are too large.
+                         *
+                         * BEWARE: For this approach to work, no range rejection
+                         * ------  nor Russian Roulette should be used.
+                         **************************************************/
+                        else{
+                           EGS_Float step, wtstep = weight*the_epcont->tvstep/the_epcont->edep;
+                           // Initial and final energies in same bin
+                           if( jb == je ){
+                             step = wtstep*(ab-ae);
+                             aux->score(jb,step);
+                             if (flu_s)
+                               auxT->score(ig,step*DE[jb]);
+                             else
+                               auxT->score(ig,step);
+                           }
+                           else {
+                               // First bin
+                               step = wtstep*ab;
+                               aux->score(jb,step);
+                               if (flu_s)
+                                 auxT->score(ig,step*DE[jb]);
+                               else
+                                 auxT->score(ig,step);
+                               // Last bin
+                               step = wtstep*(1-ae);
+                               aux->score(je,step);
+                               if (flu_s)
+                                 auxT->score(ig,step*DE[je]);
+                               else
+                                 auxT->score(ig,step);
+                               // intermediate bins
+                               for(int j=je+1; j<jb; j++){
+                                   aux->score(j,wtstep);
+                                   if (flu_s)
+                                     auxT->score(ig,wtstep*DE[j]);
+                                   else
+                                     auxT->score(ig,wtstep);
+                               }
+                           }
                         }
                     }
                 }
@@ -568,6 +723,44 @@ public:
         }
         return 0;
     };
+    /*! Computes path per energy bin-width traveled by a charged particle when
+     *  slowing down from Eb to Ee.
+     *
+     * Computes the path-length traveled while slowing down from energy Eb to energy
+     * Ee, both energies falling in the same energy bin assuming full coverage.
+     * The returned value should be multiplied by the actual fraction of the
+     * energy bin covered by Eb-Ee.
+     * If using a logarithmic energy interpolation, Eb and Ee are actually the
+     * logarithms of the initial and final energies. The expression is based on
+     * linear interpolation in a logarithmic energy grid as used in EGSnrc
+     * (i.e. dedx = a + b*log(E) ) and a power series expansion of the ExpIntegralEi
+     * function that is the result of the integration of the inverse of the stopping
+     * power with respect to energy.
+     */
+    inline EGS_Float getStepPerFraction( const int & imed,
+                                      const EGS_Float & Eb,
+                                      const EGS_Float & Ee){
+        EGS_Float stpFrac, eps, lnEmid;
+        if (flu_s){//Using log(E)
+          eps     = 1 - exp(Ee-Eb);
+          /* 4th order series expansion of log([Eb+Ee]/2) */
+          lnEmid  = 0.5*(Eb+Ee+0.25*eps*eps*(1+eps*(1+0.875*eps)));
+        }
+        else{//Using E
+          if (flu_stpwr == stpwrO5)
+             eps  = 1 - Ee/Eb;
+          lnEmid  = log(0.5*(Eb+Ee));
+        }
+        EGS_Float dedxmid_i = 1/i_ededx[imed].interpolate(lnEmid);
+        /* O(eps^3) approach */
+        if (flu_stpwr == stpwr) return dedxmid_i;
+        /* O(eps^5) approach */
+        EGS_Float b = i_ededx[imed].get_b(i_ededx[imed].getIndexFast(lnEmid));
+        EGS_Float aux = b*dedxmid_i;
+        aux = aux*(1+2*aux)*pow(eps/(2-eps),2)/6;
+        stpFrac = dedxmid_i*(1+aux);
+        return stpFrac;
+    }
 
     /*! Simulate a single shower.
         We need to do special things and therefore reimplement this method.
@@ -682,12 +875,6 @@ public:
                     crossed_plane = true; Lambda += (t - ttot)*sigma;
                     exp_Lambda = Lambda < 80 ? exp(-Lambda) : 0;
                     dose5->score(ig,p.wt/aup*exp_Lambda*emuen_rho);
-                    //egsInformation("distance to scoring plane: %g\n",t);
-                    //egsInformation("xp = %g t = %g\n",xp, t);
-                    //egsInformation("distance traveled : %g\n",ttot+tstep);
-                    //egsInformation("ttot = %g tstep = %g\n",ttot,tstep);
-                    //egsInformation("wt = %g exp_lambda/up= %g emuen = %g \n",
-                    //    p.wt,exp_Lambda/aup,emuen_rho);
                     //--------------------------------------------
                     // score photon fluence at POM if requested
                     //--------------------------------------------
@@ -710,7 +897,7 @@ public:
                 t_cav   += tstep;
                 rho_cav = the_media->rho[imed];
             }
-            if( inew < 0 ) break; // outside geomtry, stop and score
+            if( inew < 0 ) break; // outside geometry, stop and score
                                   // track-length estimation of kerma
 
             ireg = inew; x += u*tstep; ttot += tstep;
@@ -778,6 +965,8 @@ public:
                 if( !flum[j]->storeState(*data_out) ) return 106+2*j;
                 if( !flup[j]->storeState(*data_out) ) return 107+2*j;
             }
+            if( !flumT->storeState(*data_out) )   return 110+2*ngeom;
+            if( !flupT->storeState(*data_out) )   return 111+2*ngeom;
         }
         if( flug ) {
             for(int j=0; j<ngeom; j++) {
@@ -832,6 +1021,8 @@ public:
                 if( !flum[j]->setState(*data_in) ) return 106+2*j;
                 if( !flup[j]->setState(*data_in) ) return 107+2*j;
             }
+            if( !flumT->setState(*data_in) ) return 110+2*ngeom;
+            if( !flupT->setState(*data_in) ) return 111+2*ngeom;
         }
         if( flug ) {
             for(int j=0; j<ngeom; j++) {
@@ -872,6 +1063,8 @@ public:
             for(int j=0; j<ngeom; j++) {
                 flum[j]->reset(); flup[j]->reset();
             }
+            flumT->reset();
+            flupT->reset();
         }
         if( flug ) {
             for(int j=0; j<ngeom; j++) {
@@ -976,6 +1169,12 @@ public:
                 if( !t.setState(data) ) return 107+2*j;
                 (*flup[j]) += t;
             }
+            EGS_ScoringArray tmT(ngeom);
+            if( !tmT.setState(data) ) return 110+2*ngeom;
+            (*flumT) += tmT;
+            EGS_ScoringArray tpT(ngeom);
+            if( !tpT.setState(data) ) return 111+2*ngeom;
+            (*flupT) += tpT;
         }
         if( flug ) {
             EGS_ScoringArray tg(flu_nbin);
@@ -995,38 +1194,41 @@ public:
         egsInformation("\n\n last case = %lld fluence = %g\n\n",
                 current_case,source->getFluence());
         if( type == Fano ) egsInformation(
-"****** This is a Fano calculation, i.e. scattered/secondary photons were\n"
-"****** thrown away and primary photons were regenerated after each\n"
-"****** interaction\n\n");
+          "****** This is a Fano calculation, i.e. scattered/secondary photons were\n"
+          "****** thrown away and primary photons were regenerated after each\n"
+          "****** interaction\n\n");
         if( type == HVL ) {
             egsInformation("\n***** This is a HVL calculation.\n");
             if( !hvl_scatter ) egsInformation("      scatter is NOT included!\n");
             egsInformation(
-        "      KERMA is scored in a circle with radius %g\n"
-        "      with midpoint (%g,%g,%g) in a plane with normal (%g,%g,%g)\n\n",
-               hvl_R,hvl_midpoint.x,hvl_midpoint.y,hvl_midpoint.z,
-               hvl_normal.x,hvl_normal.y,hvl_normal.z);
+            "      KERMA is scored in a circle with radius %g\n"
+            "      with midpoint (%g,%g,%g) in a plane with normal (%g,%g,%g)\n\n",
+            hvl_R,hvl_midpoint.x,hvl_midpoint.y,hvl_midpoint.z,
+            hvl_normal.x,hvl_normal.y,hvl_normal.z);
             egsInformation("%-25s          KERMA         ","Geometry");
         }
         else
             egsInformation("%-25s       Cavity dose      ","Geometry");
         if( type == Awall ) egsInformation("      Awall\n"
-"-------------------------------------------------------------------\n");
+        "-------------------------------------------------------------------\n");
         else if( type == FAC ) egsInformation("   Awall=Dtot/Dideal\n"
-"-------------------------------------------------------------------\n");
+        "-------------------------------------------------------------------\n");
         else egsInformation("\n"
-"-----------------------------------------------\n");
+        "-----------------------------------------------\n");
         char c = '%';
         for(int j=0; j<ngeom; j++) {
             double r,dr; dose->currentResult(j,r,dr);
             if( r > 0 ) dr = 100*dr/r; else dr = 100;
+            // Line below commented out to get energy rather than dose deposited
+            // Needed for calculations to check consistency of the EADL relaxation
+            // implementation
             EGS_Float norm = 1.602e-10*current_case/source->getFluence();
+            //EGS_Float norm = current_case/source->getFluence();
             //egsInformation("current_case=%lld fluence=%lg norm=%g\n",
             //        current_case,source->getFluence(),norm);
             if( type == HVL ) norm /= (M_PI*hvl_R*hvl_R);
             else norm /= mass[j];
-            egsInformation("%-25s %10.4le +/- %-7.3lf%c ",
-                    //geoms[j]->getName().c_str(),
+            egsInformation("%-25s %12.6le +/- %-9.5lf%c ",
                     calc_names[j].c_str(),
                     r*norm,dr,c);
             if( type == Awall || type == FAC ) {
@@ -1172,8 +1374,6 @@ public:
                     egsInformation("%-20s %-20s     %-8.5lf +/- %-7.5lf\n",
                                    calc_names[gind1[j]].c_str(),
                                    calc_names[gind2[j]].c_str(),r,r*dr);
-                                   //geoms[gind1[j]]->getName().c_str(),
-                                   //geoms[gind2[j]]->getName().c_str(),r,r*dr);
                     ratio.push_back(r); dratio.push_back(r*dr);
                 }
                 else egsInformation("zero dose\n");
@@ -1201,8 +1401,6 @@ public:
                     egsInformation("%-20s %-20s     %-8.5lf +/- %-7.5lf\n",
                                    calc_names[gind1[j]].c_str(),
                                    calc_names[gind2[j]].c_str(),r,r*dr);
-                                   //geoms[gind1[j]]->getName().c_str(),
-                                   //geoms[gind2[j]]->getName().c_str(),r,r*dr);
                     ratio.push_back(r); dratio.push_back(r*dr);
                   }
                   else egsInformation("zero dose\n");
@@ -1238,17 +1436,62 @@ public:
             egsInformation("\n\nElectron and positron fluence\n"
                                "=============================\n");
             for(int j=0; j<ngeom; j++) {
-                double norm = current_case/(source->getFluence()*mass[j]);
-                egsInformation("\nGeometry %s\n",geoms[j]->getName().c_str());
+                /********************************************************
+                 * To get volume-averaged path length one needs to know
+                 * the volume of the cavity since (dE/dx) rather than
+                 * (dE/rho/dx) is used. Rho taken from density of the first
+                 * cavity region.
+                 ********************************************************/
+                double norm = current_case/(source->getFluence()*mass[j])*Rho[j];
+                egsInformation("\nGeometry: %s\n\n",geoms[j]->getName().c_str());
+
+                double fe,dfe,fp,dfp,totFe=0,totFeErr=0,totFp=0,totFpErr=0;
+                EGS_Float flu_a_i = 1/flu_a,
+                          the_bw  = flu_s? 1.0 : flu_a_i;
+                /**********************************************************
+                 * Total e-/+ fluence, uncertainty includes correlations
+                 ************************************************************/
+                egsInformation("\n Total e-/+ fluence scored (includes correlations)\n");
+                egsInformation(" -------------------------------------------------\n");
+                /* electrons */
+                flumT->currentResult(j,fe,dfe);
+                if( fe > 0 ) dfe = 100*dfe/fe; else dfe = 100;
+                egsInformation(" F_e- = %10.4le +/- %-7.3lf\% ",
+                               fe*norm*the_bw,dfe);
+                /* positrons */
+                flupT->currentResult(j,fp,dfp);
+                if( fp > 0 ) dfp = 100*dfp/fp; else dfp = 100;
+                egsInformation("F_e+ = %10.4le +/- %-7.3lf\%\n\n",
+                               fp*norm*the_bw,dfp);
+                /***********************************************
+                 *     Differential e-/+ fluence
+                 **********************************************/
                 for(int i=0; i<flu_nbin; i++) {
-                    double fe,dfe,fp,dfp;
                     flum[j]->currentResult(i,fe,dfe);
                     flup[j]->currentResult(i,fp,dfp);
-                    EGS_Float e = (i+0.5-flu_b)/flu_a;
+                    EGS_Float e = ( i + 0.5 - flu_b )*flu_a_i;
                     if( flu_s ) e = exp(e);
                     egsInformation("%11.6f  %14.6e  %14.6e  %14.6e  %14.6e\n",
                             e,fe*norm,dfe*norm,fp*norm,dfp*norm);
+                    the_bw = flu_s ? DE[i] : flu_a_i;
+                    totFe += fe*the_bw; totFeErr += dfe*dfe*the_bw*the_bw;
+                    totFp += fp*the_bw; totFpErr += dfp*dfp*the_bw*the_bw;
                 }
+                /*****************************************************************
+                 * Integrated fluence with uncertainty ignoring correlations
+                 *
+                 * Since one particle can contribute to several bins, this approach
+                 * ignores this correlation by assuming the values in each bin to
+                 * be independent.
+                 ******************************************************************/
+                if ( totFe > 0 ) totFeErr = 100*sqrt(totFeErr)/totFe; else totFeErr = 100;
+                if ( totFp > 0 ) totFpErr = 100*sqrt(totFpErr)/totFp; else totFpErr = 100;
+                egsInformation("\n Integrated fluence (correlations neglected)\n");
+                egsInformation(" -------------------------------------------\n");
+                egsInformation(
+                  "\n F_e- = %10.4le +/- %-7.3lf\% ", totFe*norm,totFeErr);
+                egsInformation(
+                     "F_e+ = %10.4le +/- %-7.3lf\%\n\n",totFp*norm,totFpErr);
             }
         }
         if( flug ) {
@@ -1275,7 +1518,7 @@ public:
             spe_output << "@    subtitle font 4\n";
             spe_output << "@    subtitle size 1.000000\n";
 
-            egsInformation("\n\nPhoton fluence\n"
+            egsInformation("\n\nPhoton fluence [cm-2*MeV-1]\n"
                                "=============================\n");
             for(int j=0; j<ngeom; j++) {
                 double norm = current_case/source->getFluence();//per particle
@@ -1302,6 +1545,7 @@ public:
                             e,fe*norm,dfe*norm);
                 }
                 spe_output << "&\n";
+egsInformation("=> norm = %g \n",current_case/source->getFluence());
             }
         }
 
@@ -1868,9 +2112,6 @@ public:
             the_stack->wt[np] *= rr_flag; the_stack->latch[np] += signo*rr_flag;
             return 0;
         }
-        //egsInformation("Killing particle: E=%g x=(%g,%g,%g) tperp=%g"
-        //      " g=%s\n",the_stack->E[np],the_stack->x[np],the_stack->y[np],
-        //      the_stack->z[np],tperp,geometry->getName().c_str());
         return -1; // i.e. particle is killed and must be discarded immediately.
     };
 
@@ -1928,6 +2169,8 @@ protected:
                     flup[j]->setHistory(current_case);
                     flum[j]->setHistory(current_case);
                 }
+                flumT->setHistory(current_case);
+                flupT->setHistory(current_case);
             }
             if( flug ) {
                 for(int j=0; j<ngeom; j++) {
@@ -1998,12 +2241,34 @@ private:
 
     EGS_ScoringArray **flum;    // electron fluence
     EGS_ScoringArray **flup;    // positron fluence
-    EGS_Float       flu_a,
-                    flu_b,
-                    flu_xmin,
-                    flu_xmax;
-    int             flu_s,
-                    flu_nbin;
+    EGS_ScoringArray * flumT;   // total electron fluence
+    EGS_ScoringArray * flupT;   // total positron fluence
+    /********************************************************
+     * To get volume-averaged path length one needs to know
+     * the volume of the cavity since (dE/dx) rather than
+     * (dE/rho/dx) is used. Rho is the density of the first
+     * cavity region.
+     ********************************************************/
+    int       *cavity_medium; // cavity medium, usually air
+    EGS_Float      *Rho;      // material density in the cavity.
+    EGS_Float      *Lmid_i;   // pre-computed inverse of bin midpoint stpwr
+    EGS_Float       flu_a,    // interpolation parameter : 1/bw
+                    flu_b,    // interpolation parameter : -Emin/bw
+                    flu_xmin, // minimum energy Emin or log of Emin
+                    flu_xmax; // maximum energy Emax or log of Emax
+    int             flu_s,    // flag to turn on log scale scoring
+                    flu_nbin; // number of energy bins
+    eFluType        flu_stpwr;// flurz   => ave. stpwr = edep/tvstep,
+                              // stpwr   => 3rd order in edep/Eb,
+                              // stpwrO5 => 5th order in edep/Eb
+   /**************************************************************
+    * Parameters required for fluence calculations on a log-scale
+    * The main issue here is that the bin width is not constant
+    *************************************************************/
+    EGS_Float       r_const;    // inverse of (Emax/Emin)**1/flu_nbin - 1 = exp(binwidth)-1
+    EGS_Float      *a_const;    // constant needed to determine bin fractions on log scale
+    EGS_Float      *DE;         // bin width of logarithmic scale
+    /*****************************************************************/
     double           *corr;     // correlation between the above two
     EGS_Float        *mass;     // mass of the material in the cavity.
     EGS_Float        *expmfp;   // attenuation unweighting
@@ -2069,7 +2334,7 @@ private:
 
 };
 
-string Cavity_Application::revision = "$Revision: 1.45 $";
+string Cavity_Application::revision = " ";
 
 struct EGS_ExtraStack {
     EGS_Float expmfp[MXSTACK];
@@ -2191,14 +2456,17 @@ int Cavity_Application::initScoring() {
             int err = aux->getInput("geometry name",gname);
             int errx = aux->getInput("calculation name",cname);
             if( errx ) cname = gname;
+            string cavString;
             vector<int> cav;
-            int err1 = aux->getInput("cavity regions",cav);
+            int err1 = aux->getInput("cavity regions",cavString);
+            string apertString;
             vector<int> apert;
-            int err4 = aux->getInput("aperture regions",apert);
+            int err4 = aux->getInput("aperture regions",apertString);
             EGS_Float cmass;
             int err2 = aux->getInput("cavity mass",cmass);
+            string chargeString;
             vector<int> charge;
-            int err3 = aux->getInput("charge regions",charge);
+            int err3 = aux->getInput("charge regions",chargeString);
             if( err ) egsWarning("initScoring: missing/wrong 'geometry name' "
                     "input\n");
             if( err1 ) egsWarning("initScoring: missing/wrong 'cavity regions' "
@@ -2220,6 +2488,14 @@ int Cavity_Application::initScoring() {
                 if( !g ) egsWarning("initScoring: no geometry named %s -->"
                         " input ignored\n",gname.c_str());
                 else {
+
+                    g->getNumberRegions(cavString, cav);
+                    g->getLabelRegions(cavString, cav);
+                    g->getNumberRegions(apertString, apert);
+                    g->getLabelRegions(apertString, apert);
+                    g->getNumberRegions(chargeString, charge);
+                    g->getLabelRegions(chargeString, charge);
+
                     int nreg = g->regions();
                     int *regs = new int [cav.size()];
                     int ncav = 0;
@@ -2338,8 +2614,6 @@ int Cavity_Application::initScoring() {
                scd3[j] = 0;scd4[j] = 0;
                scd5[j] = 0;scd0[j] = 0;scd13[j]=0;
             }
-            //kexpmfp = new EGS_Float [MXSTACK];
-            //latchr  = new int [MXSTACK];
             aperture_scores = 0;
             aperture_hits   = 0;
             reject          = 0;
@@ -2431,20 +2705,76 @@ int Cavity_Application::initScoring() {
                 scale.push_back("linear"); scale.push_back("logarithmic");
                 flu_s = aux->getInput("scale",scale,0);
                 if( !er1 && !er2 && !er3 ) {
+                    /* charged particle fluence */
                     if (type == Dose){
-                     flum = new EGS_ScoringArray * [ngeom];
-                     flup = new EGS_ScoringArray * [ngeom];
-                     for(int j=0; j<ngeom; j++) {
-                        flum[j] = new EGS_ScoringArray(flu_nbin);
-                        flup[j] = new EGS_ScoringArray(flu_nbin);
-                     }
+                      flum = new EGS_ScoringArray * [ngeom];
+                      flup = new EGS_ScoringArray * [ngeom];
+                      flumT = new EGS_ScoringArray(ngeom);
+                      flupT = new EGS_ScoringArray(ngeom);
+                      Rho  = new EGS_Float [ngeom];
+                      cavity_medium = new int [ngeom];
+                      for(int j=0; j<ngeom; j++) {
+                         flum[j] = new EGS_ScoringArray(flu_nbin);
+                         flup[j] = new EGS_ScoringArray(flu_nbin);
+                         /* Get cavity medium's density */
+                         cavity_medium[j] = -1;
+                         for(int i=0; i<geoms[j]->regions(); i++) {
+                             if( is_cavity[j][i] ) {
+                                 if ( Rho && cavity_medium[j] < 0 ){
+                                    cavity_medium[j] = geoms[j]->medium(i);
+                                    Rho[j] = the_media->rho[cavity_medium[j]];
+                                 }
+                                 else break;
+                             }
+                         }
+                      }
+                      vector<string> method;
+                      method.push_back("flurz"); method.push_back("stpwr");   // 3rd order
+                                                 method.push_back("stpwrO5"); // 5th order
+                      flu_stpwr = eFluType(aux->getInput("method",method,1));
+                      EGS_Float bw = flu_s ?
+                                    (log(flu_Emax / flu_Emin))/flu_nbin :
+                                        (flu_Emax - flu_Emin) /flu_nbin;
+                      EGS_Float expbw;
+                      /* Pre-calculated values for faster evaluation on log scale */
+                      if (flu_s){
+                         expbw   = exp(bw); // => (Emax/Emin)^(1/nbin)
+                         r_const = 1/(expbw-1);
+                         DE      = new EGS_Float [flu_nbin];
+                         a_const = new EGS_Float [flu_nbin];
+                         for ( int i = 0; i < flu_nbin; i++ ){
+                           DE[i]      = flu_Emin*pow(expbw,i)*(expbw-1);
+                           a_const[i] = 1/flu_Emin*pow(1/expbw,i);
+                         }
+                      }
+                      /* Do not score below ECUT - PRM */
+                      if (flu_Emin < the_bounds->ecut-the_useful->prm){
+                         flu_Emin = the_bounds->ecut - the_useful->prm;
+                         /* Decrease number of bins, preserve bin width */
+                         flu_nbin = flu_s ?
+                                    ceil((log(flu_Emax / flu_Emin))/bw) :
+                                    ceil(    (flu_Emax - flu_Emin) /bw);
+                      }
+                      flu_a = 1.0/bw;
+                      /* Pre-calculated values for faster 1/stpwr evaluation */
+                      if (flu_stpwr){
+                         EGS_Float lnEmin  = flu_s ? log(0.5*flu_Emin*(expbw+1)):0,
+                                   lnEmid;
+                         Lmid_i  = new EGS_Float [flu_nbin*ngeom];
+                         for ( int i = 0; i < flu_nbin; i++ ){
+                           lnEmid     = flu_s ? lnEmin + i*bw : log(flu_Emin+bw*(i+0.5));
+                           for(int j=0; j<ngeom; j++) {
+                              Lmid_i[i+j*flu_nbin] = 1/i_ededx[cavity_medium[j]].interpolate(lnEmid);
+                           }
+                         }
+                      }
                     }
-                    else{
-                     flug  = new EGS_ScoringArray * [ngeom];
-                     flugT = new EGS_ScoringArray(ngeom);
-                     for(int j=0; j<ngeom; j++) {
-                        flug[j] = new EGS_ScoringArray(flu_nbin);
-                     }
+                    else{/* photon fluence */
+                      flug  = new EGS_ScoringArray * [ngeom];
+                      flugT = new EGS_ScoringArray(ngeom);
+                      for(int j=0; j<ngeom; j++) {
+                         flug[j] = new EGS_ScoringArray(flu_nbin);
+                      }
                     }
                     if( flu_s == 0 ) {
                         flu_xmin = flu_Emin; flu_xmax = flu_Emax;
@@ -2452,7 +2782,9 @@ int Cavity_Application::initScoring() {
                     else {
                         flu_xmin = log(flu_Emin); flu_xmax = log(flu_Emax);
                     }
-                    flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+                    if (flug){
+                       flu_a = flu_nbin; flu_a /= (flu_xmax - flu_xmin);
+                    }
                     flu_b = -flu_xmin*flu_a;
                 }
                 else {
@@ -2494,7 +2826,7 @@ int Cavity_Application::initScoring() {
                 if( !muen_data ){
                     egsFatal(
                   "\n\n***  Failed to open muen file %s\n"
-                      "     This is a fatal error\n");
+                      "     This is a fatal error\n",muen_file.c_str());
                 }
                 int ndat; muen_data >> ndat;
                 if( ndat < 2 || muen_data.fail() ) egsFatal(
@@ -2748,12 +3080,58 @@ void Cavity_Application::describeSimulation() {
                            "    Russian Roulette used on a region by region basis!\n");
         //egsInformation("    rejection medium is \n");
     }
-    egsInformation("\n\nCalculation type = ");
+    egsInformation("\n=============================================\n");
+    egsInformation("         Calculation details\n");
+    egsInformation("=============================================\n");
+    egsInformation("Type = ");
     if( type == Fano ) egsInformation("Fano");
     else if( type == Awall ) egsInformation("Awall");
     else if( type == HVL ) egsInformation("HVL");
     else if( type == FAC ) egsInformation("FAC (Awall included)");
-    else egsInformation("Dose");
+    else {
+      egsInformation("Dose");
+      if (flum){
+        egsInformation("\n-> Charged particle fluence requested\n");
+        if (flu_s){
+           egsInformation("   between %g MeV <= E <= %g MeV with %d bins \n",
+                        exp(flu_xmin),exp(flu_xmax),flu_nbin);
+           egsInformation("   linearly interpolated on a log-scale of %g bin-width.\n",
+                          1/flu_a);
+        }
+        else{
+           egsInformation("   between %g MeV <= E <= %g MeV with %d bins of %g MeV width \n",
+                        flu_xmin,flu_xmax,flu_nbin,1/flu_a);
+        }
+        if (flu_stpwr){
+          if (flu_stpwr == stpwr)
+             egsInformation("   O(eps^3) approach: accounts for change in stpwr\n"
+                            "   along the step with eps=edep/Eb\n");
+          else if (flu_stpwr == stpwrO5)
+             egsInformation("   O(eps^5) approach: accounts for change in stpwr\n"
+                            "   along the step with eps=edep/Eb\n");
+        }
+        else
+          egsInformation("   Fluence calculated a-la-FLURZ using Lave=EDEP/TVSTEP.\n");
+        if ( rr_flag > 0 ){
+           if (flu_stpwr){
+              egsWarning("\n***** Warning ****** \n"
+                       " Using range rejection. Charged particle fluence\n"
+                       " will be affected by the selection of ESAVE!\n"
+                       " Make sure it reproduces a calculation without\n"
+                       " range rejection within desired accuracy!\n"
+                       "************************************************\n");
+           }
+           else{
+              egsFatal("***** ERROR ****** \n"
+                       "The selected method for charged particle fluence\n"
+                       "calculation relies on the particle's step! Hence,\n"
+                       "range rejection will produce wrong results\n"
+                       "This is a fatal error. Aborted.\n"
+                       "*************************************************\n");
+           }
+        }
+      }
+    }
     egsInformation("\n");
     if( type != HVL ) {
         for(int j=0; j<ngeom; j++) {
@@ -2765,6 +3143,9 @@ void Cavity_Application::describeSimulation() {
                     egsInformation("  cavity region %d, medium = %d\n",
                             i,geoms[j]->medium(i));
                 }
+            }
+            if(Rho) {
+                egsInformation("  density of cavity medium = %g g/cm3\n",Rho[j]);
             }
         }
     }

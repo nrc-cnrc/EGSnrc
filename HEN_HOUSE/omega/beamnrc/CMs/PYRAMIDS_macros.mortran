@@ -840,4 +840,4 @@ IF(((AXP_$PYRAMIDS(ISCM_$PYRAMIDS)*Z(NP)+
    RETURN;
 ]
 }
-"End of PYRAMIDS_macros.mortran (Rev 1.3)"
+"End of PYRAMIDS_macros.mortran"

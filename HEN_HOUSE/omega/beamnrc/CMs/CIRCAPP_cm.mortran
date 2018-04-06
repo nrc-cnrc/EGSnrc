@@ -277,7 +277,7 @@
 "
 "*******************************************************************************
 
-%E   "start of subroutine HOWFAR_$CIRCAPP (Rev 1.4)"
+%E   "start of subroutine HOWFAR_$CIRCAPP"
 "*******************************************************************************
 "************************** Component Module CIRCAPP **************************
 "*******************************************************************************
@@ -850,7 +850,7 @@ ELSE ["something is wrong"
 "
 RETURN;
 END; "End of subroutine HOWFAR_$CIRCAPP"
-%E "start of subroutine WHERE_AM_I_$CIRCAPP (Rev 1.4)"
+%E "start of subroutine WHERE_AM_I_$CIRCAPP"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_CIRCAPP
@@ -892,7 +892,7 @@ INTEGER IDIR;       "T>direction of particle, +1=forward, -1=backward
 IRNEW = IREND_$CIRCAPP; "particle always enters air region surrounding scrapers"
 RETURN;
 END; "End of subroutine WHERE_AM_I_$CIRCAPP"
-%E "start of subroutine INPUT_$CIRCAPP (Rev 1.4)"
+%E "start of subroutine INPUT_$CIRCAPP"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_CIRCAPP
@@ -947,7 +947,7 @@ AIRGAPMIN_$CIRCAPP = $GAP_F_B_AIR_MIN; "Minimum air gap at front and back of CM
 "  ==================
 "
 OUTPUT;(/' Next component is a set of square or rectangular scrapers '//
-       '$CIRCAPP   (CIRCAPP: Rev 1.4)'//' TITLE: ',$);
+       '$CIRCAPP   (CIRCAPP)'//' TITLE: ',$);
 ;MINPUT ($CIRCAPP) TITLE_$CIRCAPP;(60A1);
                   ";MINPUT is a replacement macro with EOF and
                                 "ERR branching to :EOF_{P1}: and :ERR_{P1}:
@@ -1307,7 +1307,7 @@ STOP;
 ;OUTPUT ICM;(//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of INPUT_$CIRCAPP"
-%E    "start of subroutine ISUMRY_$CIRCAPP (Rev 1.4)"
+%E    "start of subroutine ISUMRY_$CIRCAPP"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_CIRCAPP
@@ -1399,7 +1399,7 @@ WRITE(IOUTLIST,110) ICM_$CIRCAPP,TITLE_$CIRCAPP;
 WRITE(IOUTLIST,120) Z_min_CM(ICM_$CIRCAPP),RMAX_CM(ICM_$CIRCAPP),
                     Z_min_CM(ICM_$CIRCAPP+1);
 110 FORMAT(///1x,79('-')/'  Component module',I3,
-          ' is a set of square scrapers (CIRCAPP: Rev 1.4) '/
+          ' is a set of square scrapers (CIRCAPP) '/
           1x,79('-') //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$CIRCAPP geometry parameters:',
            /T2,'--------------------------',
@@ -1541,7 +1541,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 200 FORMAT(' ',I1,A4,12(F7.2,','));
 ;RETURN;END;
 "CIRCAPP_cm.mortran end of ISUMRY_$CIRCAPP"
-%E    "start of subroutine HOWNEAR_$CIRCAPP (Rev 1.4)"
+%E    "start of subroutine HOWNEAR_$CIRCAPP"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_CIRCAPP
@@ -1578,5 +1578,5 @@ ELSE ["in scraper IR_$CIRCAPP"
                  RPARTI-ROPEN_$CIRCAPP(IR_$CIRCAPP));
 ]
 RETURN;
-END; "end of HOWNEAR_$CIRCAPP (Rev 1.4)"
-"End of CIRCAPP_cm.mortran (Rev 1.4)"
+END; "end of HOWNEAR_$CIRCAPP"
+"End of CIRCAPP_cm.mortran"

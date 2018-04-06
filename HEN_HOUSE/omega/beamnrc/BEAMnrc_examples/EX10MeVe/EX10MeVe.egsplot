@@ -1,4 +1,4 @@
-@g0 type xy 
+@g0 type xy
 @    title "Dose Simulation Using BEAMnrc"
 @    subtitle "EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm"
 @    legend on

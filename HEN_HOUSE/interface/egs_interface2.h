@@ -411,7 +411,7 @@ struct EGS_XOptions {
 
     Can be set in the input file using
     \verbatim
-    Pair angular samplin= Off or Simple or KM
+    Pair angular sampling= Off or Simple or KM
     \endverbatim
   */
   EGS_I32   iprdst;
@@ -466,7 +466,7 @@ struct EGS_XOptions {
 
   /*! Atomic relaxations flag. If set to 1 (the default), vacancies
    created in shells with binding energies above 1 keV will be relaxed
-   by fluorscent, Auger and Coster-Kronig transitions. Vacancies
+   by fluorescent, Auger and Coster-Kronig transitions. Vacancies
    can be currently created after photo-absorption, bound Compton scattering
    and electron inelastic scattering (if eii_flag is not 0).
    If set to 0, the binding energy will be given to the photo-electron
@@ -545,6 +545,10 @@ struct EGS_XOptions {
     \endverbatim
   */
   EGS_I32 iphotonuc;
+
+  EGS_I32 eadl_relax;
+
+  EGS_I32 mcdf_pe_xsections;
 
 };
 
@@ -631,7 +635,8 @@ struct EGS_IO {
  */
 struct EGS_emfInputs {
     /*! Input values for static electric and magnetic fields */
-    EGS_Float ExIN, EyIN, EzIN, BxIN, ByIN, BzIN, EMLMTIN;
+    EGS_Float ExIN, EyIN, EzIN, EMLMTIN,
+    BxIN, ByIN, BzIN, Bx, By, Bz, Bx_new, By_new, Bz_new;
 };
 
 /*! \brief The address of the mortran \c STACK common block as a

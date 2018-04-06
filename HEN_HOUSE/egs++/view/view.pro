@@ -41,7 +41,7 @@ SOURCES	+= main.cpp egs_visualizer.cpp egs_track_view.cpp \
                  saveimage.cpp clippingplanes.cpp viewcontrol.cpp \
                  renderworker.cpp image_window.cpp
 
-FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui 
+FORMS           = saveimage.ui clippingplanes.ui viewcontrol.ui
 
 win32 {
     CONFIG	+= qt warn_off release windows exceptions_off thread

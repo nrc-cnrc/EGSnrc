@@ -50,10 +50,10 @@ EGS_PhspSource::EGS_PhspSource(const string &phsp_file,
 void EGS_PhspSource::init() {
     otype = "EGS_PhspSource";
     recl = 0;
-    Xmin = -1e30;
-    Xmax = 1e30;
-    Ymin = -1e30;
-    Ymax = 1e30;
+    Xmin = -veryFar;
+    Xmax = veryFar;
+    Ymin = -veryFar;
+    Ymax = veryFar;
     is_valid = false;
     record = 0;
     mode2 = false;
@@ -64,15 +64,15 @@ void EGS_PhspSource::init() {
     description = "Invalid phase space source";
     Nread = 0;
     count = 0;
-    Nrecycle = 0;
+    Nrestart = 0;
     Npos = 0;
     Nlast = 0;
-    wmin = -1e30;
-    wmax = 1e30;
-    Nreuse_g = 1;
-    Nreuse_e = 1;
-    Nreuse = 1;
-    Nuse = 2;
+    wmin = -veryFar;
+    wmax = veryFar;
+    Nrecycle_g = 0;
+    Nrecycle_e = 0;
+    Nrecycle = 0;
+    Nuse = -1;
     first = true;
 }
 
@@ -260,11 +260,23 @@ EGS_PhspSource::EGS_PhspSource(EGS_Input *input, EGS_ObjectFactory *f) :
     int ntmp;
     err = input->getInput("reuse photons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_g = ntmp;
+        Nrecycle_g = ntmp;
+    }
+    else {
+        err = input->getInput("recycle photons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_g = ntmp;
+        }
     }
     err = input->getInput("reuse electrons",ntmp);
     if (!err && ntmp > 0) {
-        Nreuse_e = ntmp;
+        Nrecycle_e = ntmp;
+    }
+    else {
+        err = input->getInput("recycle electrons",ntmp);
+        if (!err && ntmp > 0) {
+            Nrecycle_e = ntmp;
+        }
     }
     description = "Phase space source from ";
     description += the_file_name;
@@ -275,11 +287,11 @@ EGS_I64 EGS_PhspSource::getNextParticle(EGS_RandomGenerator *, int &q,
     if (!recl) egsFatal("EGS_PhspSource::readParticle(): the file is not "
                             "open yet\n");
     /*
-    if( Nuse >= Nreuse ) {
+    if( Nuse >= Nrecycle ) {
         do { readParticle(); } while ( rejectParticle() );
     }
     */
-    if (Nuse >= Nreuse) {
+    if (Nuse > Nrecycle || Nuse < 0) {
         readParticle();
     }
     x.x = p.x;
@@ -348,7 +360,7 @@ void EGS_PhspSource::readParticle() {
                    "implies that uncertainty estimates will be inaccurate\n",
                    Nlast,Nfirst);
         the_file.seekg(recl,ios::beg);
-        Nrecycle++;
+        Nrestart++;
         Npos = Nfirst;
     }
     the_file.read(record,recl*sizeof(char));
@@ -399,13 +411,13 @@ void EGS_PhspSource::readParticle() {
     first = false;
     if (p.q) {
         p.E -= EGS_Application::activeApplication()->getRM();
-        Nreuse = Nreuse_e;
+        Nrecycle = Nrecycle_e;
     }
     else {
-        Nreuse = Nreuse_g;
+        Nrecycle = Nrecycle_g;
     }
     Nuse = 0;
-    p.wt /= Nreuse;
+    p.wt /= (Nrecycle+1);
 }
 
 bool EGS_PhspSource::rejectParticle() const {

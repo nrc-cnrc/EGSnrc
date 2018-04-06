@@ -266,7 +266,7 @@ public:
             return tmin;
         }
         // if here, we are outside of all geomtries in the union.
-        EGS_Float tmin = 1e30;
+        EGS_Float tmin = veryFar;
         for (int j=ng-1; j>=0; j--) {
             EGS_Float t = g[j]->hownear(-1,x);
             if (t < tmin) {
@@ -302,6 +302,16 @@ public:
     };
     void setRelativeRho(int start, int end, EGS_Float rho);
     void setRelativeRho(EGS_Input *);
+
+    void  setBScaling(int start, int end, EGS_Float rho);
+    void  setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nreg) {
+            return 1;
+        }
+        int jg = ireg/nmax;
+        return g[jg]->getBScaling(ireg-jg*nmax);
+    };
 
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 

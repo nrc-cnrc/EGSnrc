@@ -36,6 +36,11 @@ $extrastylesheet
     'egs_roundrect_cylinders.png',
     'egs_source_collection.png',
     'egs_xyzrepeater.png',
+    'cones.png',
+    'egs_prism.png',
+    'egs_pyramid.png',
+    'I6702.png',
+    'egs_xyzgeometry.png',
     'linac1.png'
     );
 
@@ -48,12 +53,12 @@ $extrastylesheet
     preloadArr[i].src = imgArr[i];
     }
 
-    var currImg = 1;
-    var intID = setInterval(changeImg, 6000);
+    changeImg();
+    var intID = setInterval(changeImg, 5000);
 
     /* image rotator */
     function changeImg(){
-    $('#egsImageScroller').css('background','#000000 url(' + preloadArr[currImg++%preloadArr.length].src +') top center no-repeat');
+    $('#egsImageScroller').css('background','#000000 url(' + preloadArr[Math.floor(Math.random() * imgArr.length)].src +') center/contain no-repeat');
     }
 
     });
@@ -70,6 +75,7 @@ $extrastylesheet
   <!--BEGIN PROJECT_LOGO-->
   <td id="projectlogo"><img alt="Logo" src="$relpath^$projectlogo"/></td>
   <!--END PROJECT_LOGO-->
+  <td id="egsImageScroller"></td>
   <!--BEGIN PROJECT_NAME-->
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">$projectname

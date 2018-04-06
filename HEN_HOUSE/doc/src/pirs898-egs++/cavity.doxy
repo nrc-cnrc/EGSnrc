@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Ernesto Mainegra-Hing
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -43,7 +44,10 @@
   <li> \ref cavity_fac </li>
   <li> \ref cavity_hvl </li>
   <li> \ref cavity_fluence </li>
-   </ul>
+      <ul>
+           <li> \ref charged_fluence </li>
+      </ul>
+  </ul>
 <li> \ref cavity_vr </li>
 <li> \ref common_mc </li>
 <li> \ref cavity_usage </li>
@@ -368,10 +372,8 @@ HVL measurements.
 
 \section cavity_fluence Fluence scoring
 
-If one is interested in estimating the charged particle (\f$\displaystyle e^-/e^+\f$)
-CSDA fluence spectrum inside the cavity, the input block
-<b><code>fluence scoring</code></b> can be used in conjunction with
-a calculation of type \c Dose.
+A fluence calculation for either photons or charged particles can be requested
+using the following input block:
 
 \verbatim
 :start scoring options:
@@ -385,28 +387,99 @@ a calculation of type \c Dose.
 :stop scoring options:
 \endverbatim
 
-Since scoring the path of charged
-particles would be very  time consuming, no direct computation of
-the fluence is done. Instead, \f$\displaystyle N(T)\f$,the number of charged
-particles per unit mass in the cavity with energy above T, is scored
-differential in energy accounting for their slowing-down from
-\f$\displaystyle T_{initial}\f$ to \f$\displaystyle T_{initial} - EDEP\f$.
-In the CSDA approximation, where charged particles
-lose their energy continuously, and assuming charged particle equilibrium
-and negligible bremsstrahlung, one can use the relationship
+Differential fluence \f$ \phi_j \f$ is calculated by scoring the volume-averaged
+track length for particles with energies E between \f$E_j\f$ and \f$E_{j+1}\f$
+using Chilton's fluence concept for any sampling volume V:
+
 \f[
-\frac{d\phi}{dT}=\frac{N(T)}{\left(\frac{L}{\rho}\right)_{col}}
+\phi_j=\frac{\sum_{i=1}^{N_j} l_i}{V}
 \f]
-to compute the fluence if one knows the value
-of the restricted collision mass-stopping power
-\f${\displaystyle \left(\frac{L}{\rho}\right)_{col}}\f$.
+
+where \f$\displaystyle l_i\f$ is the length of the \f$\displaystyle i^{th} \f$
+particle track. The width of the energy bins is defined by \f$ E_{min} \f$,
+\f$ E_{max} \f$ and the number of bins N. Total fluence \f$ \Phi \f$
+is calculated as the sum over all contributions to the fluence
+
+\f[
+\Phi=\sum_{j=0}^{N-1} \phi_j
+\f]
 
 Combined with a calculation of type \c HVL or \c FAC,
 the <b><code>fluence scoring</code></b> input block can be used
 to request the photon fluence spectrum
-across a circular surface of radius \f$R\f$ centered around the point of
+across a circular field of radius \f$R\f$ centered around the point of
 measurement (POM) defined at the center of an user-supplied scoring plane
 (see sections \ref cavity_fac and \ref cavity_hvl).
+
+\subsection charged_fluence Charged particle fluence
+
+Charged particle (\f$\displaystyle e^-/e^+\f$) fluence calculation
+inside the cavity regions can be requested by combining the input block <b><code>fluence scoring</code></b> with a calculation of type \c Dose.
+To determine the step legth \f$\displaystyle l_i\f$ for a charged particle with initial
+energy \f$\displaystyle E_b \f$ slowing down to a final energy
+\f$\displaystyle E_e = E_b - EDEP \f$ one can use the expression
+
+\f[
+l_i = \int_{E_e}^{E_b} \frac{dE}{L(E)}
+\f]
+
+where \f$L(E)\f$ is the restricted stopping power. The integral above can be
+broken up into discrete energy intervals (bins) to determine the contribution
+of the particle step to the differential fluence \f$ \phi_j \f$
+for the bins spanned by the energy interval between \f$ E_e \f$ and
+\f$ E_b \f$
+
+\f[
+l_i = \int_{E_e}^{E_{j_e+1}} \frac{dE}{L(E)} + \sum_{j=j_e+1}^{j_b}\int_{E_{j-1}}^{E_j} \frac{dE}{L(E)} + \int_{E_{j_b}}^{E_b} \frac{dE}{L(E)}
+\f]
+
+with \f$ \displaystyle j_b \f$ the index of the bin where the initial energy
+\f$ \displaystyle E_b \f$ falls and \f$ \displaystyle j_e \f$ the bin index where
+the final energy \f$ \displaystyle E_b \f$ falls. The terms in the sum
+contribute to the corresponding differential fluence \f$ \phi_j \f$.
+Since L(E) is calculated in EGSnrc using logarithmic interpolation
+
+\f[
+L(E) = a_j + b_j \cdot ln E \qquad \textrm{for} \qquad E_j < E < E_{j+1}
+\f]
+
+one can approximate the above integrals with the expression
+
+\f[
+\int_{E_j}^{E} \frac{dE'}{a_j + b_j \cdot ln E'} \approx \frac{E - E_j}{L_j}
+\f]
+
+by ignoring a term which is in general close to unity using the arguments from PIRS-701 section 2.4.11.i and \f$ l_i \f$ becomes
+
+\f[
+l_i = \frac{E_{j_e+1} - E_e}{L(E_e)} + \sum_{j=j_e+1}^{j_b}\frac{E_j - E_{j-1}}{L(E_{j-1})}
++ \frac{E_b - E_{j_b}}{L(E_{j_b})}
+\f]
+
+the terms in the sum determine the contribution to the differential fluence for
+bins from \f$ j_e \f$ to \f$ j_b \f$.
+
+This is the default algorithm for scoring charged particle fluence. Users can also
+request a FLURZnrc-like fluence calculation by adding the input key
+<b><code>method</code></b> to
+the <b><code>fluence scoring</code></b> input block
+
+\verbatim
+:start scoring options:
+    ...
+    :start fluence scoring:
+        ...
+        method = flurz # stpwr (default), flurz
+        ...
+    :stop fluence scoring:
+:stop scoring options:
+\endverbatim
+
+Note that the algorithm implemented in FLURZnrc assumes the stopping power \f$ L(E) \f$
+to be constant along the charged particle step and hence is less accurate than
+cavity's default algorithm. This option is available for comparisons with FLURZnrc
+calculations. For more details about charged particle fluence calculation with FLURZnrc
+see PIRS-702, the user manual for the RZ applications.
 
 \section cavity_vr Variance reduction techniques
 
@@ -517,6 +590,13 @@ in [<em>Mainegra-Hing and Kawrakow, Medical Physics, 33 (8), 2006, 2683-2690</em
 a 13 times efficiency increase was observed for a 200 kVp X-ray beam when
 combining this technique with the <em>correlated scoring</em> technique
 provided by \c cavity.
+
+\section cavity_labels Region labels
+
+It is possible to use region labels in cavity, as described in
+\ref egs_chamber_labels. Once defined in a geometry, labels can be used
+anywhere you would otherwise type a list of global region numbers in a
+<b>\c cavity </b> input file.
 
 \section cavity_usage Usage
 

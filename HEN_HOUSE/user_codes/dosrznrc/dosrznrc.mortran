@@ -106,7 +106,7 @@
 !INDENT F2;
 ;
 REPLACE {$VERSION} WITH {
-,'(Rev 1.55 2003-03-12 11:52:05-05)', }
+,' ', }
 ;
 "23456789|123456789|123456789|123456789|123456789|123456789|123456789|123456789|
 "******************************************************************************
@@ -3787,7 +3787,7 @@ ELSEIF(IFULL = 3)["score scattered dose separately"
 IF (IKERMA = 1) ["want to score KERMA"
    "we score kerma for scattered component too if ifull=3"
    "the kerma is part of scattered kerma if latch of initial photon is not zero"
-   
+
     "Here we keep track of whether we are currently inside a PE/Compton"
     "event, or EII. This lets us use edep_local to account for kerma"
     "contributions below threshold energies depending on the interaction type."
@@ -3806,7 +3806,7 @@ IF (IKERMA = 1) ["want to score KERMA"
         before_eii = 0;
         return;
     ]
-   
+
    IF (IARG = 4 & ~BTEST(LATCH(NP),8) & before_eii = 0 & before_photo = 0)[
       "local energy deposition"
       "include deposited energy as kerma"
@@ -3817,7 +3817,7 @@ IF (IKERMA = 1) ["want to score KERMA"
          $SCOREDK(SCKERMA,(IZD,IXD,2):WT(NP)*EDEP);
       ]
    ]
-   
+
     "depositing sub-threshold energy for PE & Compton"
     "Auger only"
     IF( iarg = 34 ) [
@@ -3831,7 +3831,7 @@ IF (IKERMA = 1) ["want to score KERMA"
             return;
         ]
     ]
-   
+
    IF (IARG = 16)["pair event just occured"
       IF(NP>NPold | i_survived_rr > 0)[
          "i_survived_rr, 0=> all particles survive RR,"
@@ -5477,7 +5477,6 @@ write(iout,100) title;
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                       T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
@@ -5504,7 +5503,6 @@ write(iout,'(" *",/1X,79("*"))');
 "   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 "   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                       T80,'*'/
-"   ' *            This is version '$VERSION' ',T80,'*'/
 "   ' *             running on '$MACHINE' ',T80,'*'/
 "   ' *',T80, '*'/
 "   ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -7062,13 +7060,13 @@ IF(IPLTPL.EQ.1) [ "plots for external plotter (0 if none)"
 RETURN;
 %I0
 100   FORMAT(' ',80A1/
-        /' NRC CALCULATION USING DOSRZnrc VERSION '$VERSION' ',40X, $);
+        /' NRC CALCULATION USING DOSRZnrc '$VERSION' ',40X, $);
 106   FORMAT(///' ',T60,'SCALED TO A MAX OF',1PE11.4,' Gy.cm**2');
 
 " ********** IK: using wrapper for date and time routines.
 " Was:
 " 100   FORMAT(' ',80A1/
-"              /' NRC CALCULATION USING DOSRZnrc VERSION '$VERSION' ',40X,
+"              /' NRC CALCULATION USING DOSRZnrc '$VERSION' ',40X,
 "                  $TIMEN_FORMAT,1X,$DATEN_FORMAT/
 "              /' ',T60,'SCALED TO A MAX OF',1PE11.4,' Gy.cm**2');
 

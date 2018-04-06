@@ -264,6 +264,7 @@ class EGS_CDGEOMETRY_EXPORT EGS_CDGeometry : public EGS_BaseGeometry {
 
 public:
 
+
     EGS_CDGeometry(EGS_BaseGeometry *G1, EGS_BaseGeometry **G,
                    const string &Name = "", int indexing=0) : EGS_BaseGeometry(Name) {
         nmax = 0;
@@ -292,6 +293,7 @@ public:
             setUpIndexing();
         }
         setHasRhoScaling();
+        setHasBScaling();
     };
 
     EGS_CDGeometry(EGS_BaseGeometry *G1, const vector<EGS_BaseGeometry *> &G,
@@ -327,6 +329,7 @@ public:
             setUpIndexing();
         }
         setHasRhoScaling();
+        setHasBScaling();
     };
 
 
@@ -546,7 +549,7 @@ public:
                 // Call to CD geometry howfar with updated region ixold. If it is aimed away from
                 // geometry, it will return ixnew = -1 and assumption a) was correct. If it is
                 // aimed into geometry, it will return ixnew >=0 and assumption b) was correct.
-                tb = 1e30;
+                tb = veryFar;
                 int ixnew = howfar(ixold,x,u,tb,0,pn);
                 // Enters geometry and at a boundary or very close to one.
                 //if( ixnew_pos >= 0 && ixnew_neg < 0 && tb_neg <= boundaryTolerance && tb_pos <= boundaryTolerance) {
@@ -569,7 +572,7 @@ public:
                 }
                 // If a particle approaching the geometry sits on a boundary, we look back to see
                 // if we just entered the geometry (the previous checks fail to catch this case).
-                EGS_Float tb_neg = 1e30;
+                EGS_Float tb_neg = veryFar;
                 int ixnew_neg = howfar(ixold,x,u*(-1),tb_neg,0,pn);
                 if (ixnew_neg < 0 && tb_neg <= epsilon) {                             // (b) is true
                     t = 0;
@@ -586,7 +589,7 @@ public:
 
                 // 1. Check if we exit the base geometry after a sufficiently small
                 // distance.
-                EGS_Float t1=1e30, t2 = 1e30;
+                EGS_Float t1=veryFar, t2 = veryFar;
                 int ibase_n, ic_n=0;
                 ibase_n = bg->howfar(ibase,x,u,t1);
                 if (ibase_n < 0 && t1 < boundaryTolerance) {
@@ -681,7 +684,11 @@ public:
 do_checks:
         EGS_Vector tmp(x + u*tb);  // position at which we are inside
         // the base geometry
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_CDGeometry::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             if (!g[ibase]) { // no inscribed geometry in this base geometry region
                 t = ttot;
                 if (newmed) {
@@ -758,6 +765,8 @@ do_checks:
             ibase = ibase_new;
             first_time = false;
         }
+
+        return ireg;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
@@ -843,6 +852,17 @@ do_checks:
                bg->getRelativeRho(ibase);
     };
 
+    void  setBScaling(int start, int end, EGS_Float bf);
+    void  setBScaling(EGS_Input *);
+    EGS_Float getBScaling(int ireg) const {
+        if (ireg < 0 || ireg >= nbase*nmax) {
+            return 1;
+        }
+        int ibase = ireg/nmax;
+        return g[ibase] ? g[ibase]->getBScaling(ireg-ibase*nmax) :
+               bg->getBScaling(ibase);
+    };
+
     virtual void getLabelRegions(const string &str, vector<int> &regs);
 
 protected:
@@ -892,6 +912,22 @@ private:
             if (g[j]) {
                 if (g[j]->hasRhoScaling()) {
                     has_rho_scaling = true;
+                    return;
+                }
+            }
+        }
+    };
+
+    void setHasBScaling() {
+        has_B_scaling = false;
+        if (bg->hasBScaling()) {
+            has_B_scaling = true;
+            return;
+        }
+        for (int j=0; j<nbase; j++) {
+            if (g[j]) {
+                if (g[j]->hasBScaling()) {
+                    has_B_scaling = true;
                     return;
                 }
             }

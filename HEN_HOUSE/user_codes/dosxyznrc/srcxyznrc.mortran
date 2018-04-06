@@ -79,11 +79,11 @@
 "*******************************************************************************
 
 "
-"                         ***************************        ""toc:
-"                         *                         *        ""toc:
-"                         * srcxyznrc.mortran $Revision: 1.39 $  *  ""toc:
-"                         *                         *        ""toc:
-"                         ***************************        ""toc:
+"                         ***************************
+"                         *                         *
+"                         * srcxyznrc.mortran       *
+"                         *                         *
+"                         ***************************
 "
 "    Routines to be used with dosxyz to input various sources including
 "    phase space files, and beam characterization.
@@ -99,9 +99,8 @@
 %E    "srcxyznrc.mortran start of input description
 "*******************************************************************************
 "
-"                Input source parameters read by srcxyznrc.mortran       ""toc:
+"                Input source parameters read by srcxyznrc.mortran
 "                ==============================================
-"              ($Revision: 1.39 $ last edited $Date: 2014/10/08 15:10:11 $)
 "              (see section 4 of DOSXYZnrc User's Manual for details)
 "
 "*******************************************************************************
@@ -760,7 +759,7 @@
 ;
 "  end of inputs read by srcxyznrc.mortran
 "------------------------------------------------------------------------------
-%E "srcxyznrc.mortran start of subroutine srcinput ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcinput "
 "**************************************************************************"
 "
 subroutine srcinput(ieof);
@@ -1808,10 +1807,11 @@ IF(enflag = 0)[ "monoenergetic source"
 ELSEIF(enflag = 1)["input an energy spectrum"
 "----------------------------------------------------------------"
     OUTPUT;(' Energy spectrum:');
-    OUTPUT;(' Input name of file with spectrum data (A80): ',$);
+    OUTPUT;(' Input name of file with spectrum data (A256): ',$);
     READ(5,101,ERR=:ERR_SOURCE1:) FILNAM;
     101 FORMAT(A256);
-    OUTPUT61 FILNAM;(/'   Read input energy spectrum from: ',/A80);
+    OUTPUT61 FILNAM;(/'   Read input energy spectrum from: ',/A);
+    call replace_env(FILNAM);
     OPEN(UNIT=99,STATUS='OLD',file=FILNAM);
     READ(99,101) SPEC_TITLE;
     READ(99,'(I10,F15.0,I5)')NENSRC,ENMIN,IMODE;
@@ -1911,9 +1911,11 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
 "----------------------------------------------------------------"
   IF(isource=2 | isource=8)[
     OLDSRC=0;"flag for old phase space files"
-    OUTPUT;(' Input name of phase space file (A80)'/'  : ',$);
+    OUTPUT;(' Input name of phase space file (A256)'/'  : ',$);
     READ(5,101,ERR=:ERR_SOURCE2:) FILNAM;
-    OUTPUT61 FILNAM;(/' Particles will be read from file: ',/A80);
+    OUTPUT61 FILNAM;(/' Particles will be read from file: ',/A);
+
+    call replace_env(FILNAM);
 
     i_iaea_in=0; "assume not in IAEA format"
     ilen=lnblnk1(FILNAM);
@@ -2060,22 +2062,6 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     "strip trailing blanks"
     the_shared_lib=the_shared_lib(:lnblnk1(the_shared_lib));
 
-    IF(the_shared_lib='0')[
-	"no shared library
-	SHLflag = 0;
-    ]
-    ELSEIF(the_shared_lib='particleDmlc') [
-	"particles must go through MLC code compiled as a shared library
-	MLCflag =1;
-	SHLflag = 1;
-    ]
-    ELSE[
-	"particles must go through BEAM shared library
-	SHLflag =1;
-	MLCflag=0;
-	OUTPUT61 the_shared_lib;(/' BEAM library: ',/A80);
-    ]
-
     the_phsp_file=FILNAM(:INDEX(FILNAM,',')-1);
     FILNAM=FILNAM(INDEX(FILNAM,',')+1:);
     "strip leading blanks"
@@ -2093,7 +2079,9 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     OUTPUT $cstring(the_phsp_file);
     (/'phase space file: ',A/);
 
-    OUTPUT61 the_phsp_file;(/' Particles will be read from file: ',/A80);
+    OUTPUT61 the_phsp_file;(/' Particles will be read from file: ',/A);
+
+    call replace_env(the_phsp_file);
 
     i_iaea_in=0; "assume not in IAEA format"
     dosxyz2beam_izscore=0; "assume not scoring Z for each particle"
@@ -2177,8 +2165,27 @@ ELSEIF( (enflag = 2) | (enflag = 3) )["phase space input or full BEAM sim."
     "strip trailing blanks"
     the_input_file=the_input_file(:lnblnk1(the_input_file));
 
-    OUTPUT61 $cstring(the_input_file);
-    (/'input file: ',A/);
+    IF(the_shared_lib='0')[
+        "no shared library
+        SHLflag = 0;
+    ]
+    ELSEIF(the_shared_lib='particleDmlc') [
+        "particles must go through MLC code compiled as a shared library
+        MLCflag =1;
+        SHLflag = 1;
+        OUTPUT61; (/' Will use VCU simulation compiled as shared library:'/);
+        OUTPUT61 the_input_file;(/' VCU input file: ',/A80);
+    ]
+    ELSE[
+        "particles must go through BEAM shared library
+        SHLflag =1;
+        MLCflag=0;
+        IF(is_pegsless) [ the_pegs_file='pegsless';]
+        ELSE [ the_pegs_file= pegs_file; ]
+        OUTPUT61 the_shared_lib;(/' BEAM library: ',/A80);
+        OUTPUT61 the_input_file;(' BEAM input file: ',/A80);
+        OUTPUT61 the_pegs_file;(' BEAM pegs data: ',/A80);
+    ]
   ]
   ELSEIF(isource=21)["Full BEAM sim.incident from multiple settings"
 			      "and through an MLC"
@@ -2396,7 +2403,7 @@ return;  "normal return
 
 
 end; "End of subroutine srcinput
-%E "srcxyznrc.mortran start of subroutine srcinit ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcinit "
 "**************************************************************************"
 "
 subroutine srcinit(weight);
@@ -2697,7 +2704,7 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
        OUTPUT 'About to initialise BEAM code..';(//a);
        call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_shared_lib,
-                         pegs_file,the_input_file);
+                         the_pegs_file,the_input_file);
      ]
 
      IF(calflag = 0)[
@@ -2895,7 +2902,7 @@ OUTPUT 'Calibration complete.';(//a);
 return;
 end; "End of subroutine beam_calibration_run
 
-%E "srcxyznrc.mortran start of subroutine srcout ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srcout "
 "**************************************************************************"
 "
 subroutine srcout;
@@ -2913,7 +2920,7 @@ IOUTLIST = 6;
 
 OUTPUT61;
 ( /' ',79('*')//t10,
-'Summary of source parameters (srcxyznrc $Revision: 1.39 $)' /
+'Summary of source parameters (srcxyznrc)' /
    ' ',79('*')/);
 
 IF(isource = 0)[
@@ -3334,7 +3341,7 @@ IF(isource = 4)[ ;$BEAMMODEL-SOURCE4-OUTPUT; ]
 
 return;
 end; "End of subroutine srcout"
-%E "srcxyznrc.mortran start of subroutine srchst ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine srchst "
 "*******************************************************************************
 "
 subroutine srchst(xin,yin,zin,uin,vin,win,irin,weight,latchi);
@@ -4420,7 +4427,7 @@ ELSE["isource = 2,4,8,9,10,20,21"
 ]"end of isource = 2,4,8,9,10,20,21 case"
 ;
 end; "End of subroutine srchst"
-%E "srcxyznrc.mortran start of subroutine SHIFT_XYUV ($Revision: 1.39 $)"
+%E "srcxyznrc.mortran start of subroutine SHIFT_XYUV "
 "**************************************************************************"
 "
 SUBROUTINE SHIFT_XYUV(NofREPEAT,xsrc,ysrc,usrc,vsrc);
@@ -4497,4 +4504,4 @@ subroutine finish_vcusource;
 return; end;
 
 #endif;
-" end of srcxyznrc.mortran ($Revision: 1.39 $)"
+" end of srcxyznrc.mortran "

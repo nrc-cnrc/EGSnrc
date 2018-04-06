@@ -415,7 +415,11 @@ public:
         EGS_Float ttot = 0;
         //EGS_Vector tmp_n;
         //EGS_Vector *norm = normal ? &tmp_n : 0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_RadialRepeater::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
             EGS_Float this_t = t_left;
             //EGS_Vector xp = xtmp*R[ir], up = u*R[ir];
             EGS_Vector xp = (xtmp-xo)*R[ir], up = u*R[ir];
@@ -440,6 +444,8 @@ public:
             xtmp += u*this_t;
             ir = next_ir;
         }
+
+        return ireg;
     };
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {

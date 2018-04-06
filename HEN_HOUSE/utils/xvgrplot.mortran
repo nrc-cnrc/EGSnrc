@@ -162,7 +162,7 @@ SUBROUTINE XVGRPLOT (X, Y, ERRY, NPTS, CURVENUM, SERIESTITLE,
                              "by the (smallest number in the gaph)*(FUDGE)"
   IDEBUG = 0;  "set to 1 to get debug stmts active"
   IF (IDEBUG = 1) [
-        write(6,'(//'' Entering xvgrplot Rev 1.1 ''/)');
+        write(6,'(//'' Entering xvgrplot ''/)');
         write(6,'('' Curve'',I3,'' to go to unit'',I3)')CURVENUM,UNITNUM;
         write(6,'(''SERIESTITLE: '',a60)') SERIESTITLE;
         write(6,'(''XTITLE:      '',a60)') XTITLE;

@@ -187,7 +187,7 @@
 "                   **************************************
 "
 "I>
-"I>  CARDS CM_$DYNJAWS(JAWS: Rev 1.8)
+"I>  CARDS CM_$DYNJAWS(JAWS)
 "I>  **************
 "I>
 "I>  -1  dummy line read in main used to separate input for CMs
@@ -229,7 +229,7 @@
 "I>
 "I>   Next input is only required if MODE_$DYNJAWS=1 or 2
 "I>
-"I>   4a jaws_file (A80)
+"I>   4a jaws_file (A256)
 "I>
 "I>        jaws_file: The full name of a file containing jaw opening data
 "I>                   in the following format:
@@ -316,7 +316,7 @@
 "
 "*******************************************************************************
 
-%E   "Start of subroutine HOWFAR_$DYNJAWS (Rev 1.8)"
+%E   "Start of subroutine HOWFAR_$DYNJAWS"
 "*******************************************************************************
 "************************** Component Module JAWS ******************************
 "*******************************************************************************
@@ -722,7 +722,7 @@ ELSE ["something is wrong"
 ] "end of IF statement"
 RETURN;
 END; "End of subroutine HOWFAR_$DYNJAWS"
-%E   "Start of subroutine WHERE_AM_I_$DYNJAWS (Rev 1.8)"
+%E   "Start of subroutine WHERE_AM_I_$DYNJAWS"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_JAWS
@@ -780,7 +780,7 @@ ELSE ["particle entering this CM through back face (downstream)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$DYNJAWS"
-%E   "Start of subroutine INPUT_$DYNJAWS (Rev 1.8)"
+%E   "Start of subroutine INPUT_$DYNJAWS"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_JAWS
@@ -822,8 +822,8 @@ $REAL AIRGAPMIN_$DYNJAWS,  "T>minimum air gap in front and back of CM
       BDYTOL,          "T>stores $BDY_TOL
       TZMAX;           "T>stores max value of ZMAX (for MODE=1,2)
 CHARACTER*1 XY_CHOICE(1);
-CHARACTER*80 jaws_file, "T>name of file containing dynamic jaw settings
-             JAWS_TITLE; "T> title line in file
+CHARACTER*256 jaws_file;
+CHARACTER*80 JAWS_TITLE; "T> title line in file
 "
 "  initialize parameters
 "  =====================
@@ -1032,8 +1032,9 @@ DO I = 1,ISCM_MAX_$DYNJAWS ["loop to get each bar location"
 ] "end of loop over paired bars/jaws"
 IF(MODE_$DYNJAWS=1 | MODE_$DYNJAWS=2)[
   OUTPUT;(/' Input full name of file containing jaw data:'/);
-  READ(i_input,'(A80)')jaws_file;
-  OUTPUT jaws_file;(A80/);
+  READ(i_input,'(A256)')jaws_file;
+  OUTPUT jaws_file;(A/);
+  call replace_env(jaws_file);
   jaws_unit=70;
   jaws_unit=egs_get_unit(jaws_unit);
   IF(jaws_unit<1)[
@@ -1344,7 +1345,7 @@ STOP;
 ;OUTPUT;(//' *** ERROR: DYNJAWS position data file could not be opened');
 STOP;
 END;  "End of INPUT_$DYNJAWS"
-%E   "Start of subroutine ISUMRY_$DYNJAWS (Rev 1.8)"
+%E   "Start of subroutine ISUMRY_$DYNJAWS"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_JAWS
@@ -1478,7 +1479,7 @@ DO I = 1, ISCM_MAX_$DYNJAWS [
    WRITE(IOUTLIST,141)' ';
 ]
 110 FORMAT(///1X,79('-')/
-'  Component module',I3,' is JAWS (Rev 1.8)'
+'  Component module',I3,' is JAWS'
            /1X,79('-')
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$DYNJAWS geometry parameters:',
@@ -1543,7 +1544,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 RETURN;
 END;  "End of subroutine ISUMRY_$DYNJAWS"
 
-%E   "Start of subroutine HOWNEAR_$DYNJAWS (Rev 1.8)"
+%E   "Start of subroutine HOWNEAR_$DYNJAWS"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_JAWS
@@ -1590,6 +1591,6 @@ ELSE[ "particle in air"
    DIST = 0.0;
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$DYNJAWS (Rev 1.8)"
+END; "End of subroutine HOWNEAR_$DYNJAWS"
 "*******************************************************************************
-"End of JAWS_cm.mortran (Rev 1.8)"
+"End of JAWS_cm.mortran"

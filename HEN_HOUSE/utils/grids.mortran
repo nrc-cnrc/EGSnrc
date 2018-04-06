@@ -222,7 +222,7 @@ PARAMETER CUTOFF=0.3; "changes SFIG if 10% of uncertainties are less"
                       "than 0.2%"
 $REAL RESULTS($MAXZREG,$MAXRADII,$MAXCMPTS),
      UNCRT($MAXZREG,$MAXRADII,$MAXCMPTS),
-     RADIAL_BINS($MAXRZ),DEPTH_BINS($MAXRZ),
+     RADIAL_BINS($MAXRADII),DEPTH_BINS($MAXZPLANE),
      TMP2,TMP3;
 CHARACTER*60 EXPLANATIONS($MAXCMPTS);
 CHARACTER*4 LABELS($MAXCMPTS);
@@ -659,4 +659,4 @@ DO HSET=1,RADNUM,3 [$MKGRID;] "Feed in horiz. sets of three"
 
 RETURN;
 END;
-"    end of grids.mortran (Rev 1.2 last edited  2002-05-06 10:09:54-04)"
+"    end of grids.mortran"

@@ -3,7 +3,7 @@
 This User Code produces the following output on unit 6 (the
 terminal by default).
 \caption{Output of {\tt tutor1.mortran} using the EGSnrcMP
-environment\cite{Ka03} on Linux. } 
+environment\cite{Ka03} on Linux. }
 \vspace*{5mm}
 
 \begin{boxedverbatim}

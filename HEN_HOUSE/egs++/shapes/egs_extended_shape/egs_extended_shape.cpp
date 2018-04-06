@@ -54,7 +54,7 @@ extern "C" {
             return 0;
         }
         EGS_Input *ishape = input->takeInputItem("shape",false);
-        EGS_BaseShape *shape;
+        EGS_BaseShape *shape=0;;
         if (ishape) {
             shape = EGS_BaseShape::createShape(ishape);
             delete ishape;

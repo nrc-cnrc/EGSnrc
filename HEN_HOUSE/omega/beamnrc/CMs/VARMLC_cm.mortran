@@ -457,7 +457,7 @@
 "
 "***********************************************************************
 
-%E "Start of subroutine HOWFAR_$VARMLC (Rev 1.11)"
+%E "Start of subroutine HOWFAR_$VARMLC"
 "************************************************************************
 "********************Component Module VARMLC *****************************
 "************************************************************************
@@ -794,7 +794,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0.0) ) [
 "
 RETURN;
 END; "End of subroutine HOWFAR_$VARMLC"
-%E "Start of WHERE_AM_I_$VARMLC (Rev 1.11)"
+%E "Start of WHERE_AM_I_$VARMLC"
 "************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$VARMLC
@@ -871,7 +871,7 @@ ELSE
 RETURN;
 
 END; "End of subroutine WHERE_AM_I_$VARMLC"
-%E "Start of subroutine INPUT_$VARMLC (Rev 1.11)"
+%E "Start of subroutine INPUT_$VARMLC"
 
 "*************************************************************************
 
@@ -1766,7 +1766,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$VARMLC"
 
-%E "Start of subroutine ISUMRY_$VARMLC (Rev 1.11)"
+%E "Start of subroutine ISUMRY_$VARMLC"
 "***********************************************************************
 "
 "                          Subroutine ISUMRY_$VARMLC
@@ -2074,7 +2074,7 @@ IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-            ' (3 regions Rev 1.11)',
+            ' (3 regions)',
            /'  -------------------------------------------------',
             '------------------',
            //T5,'Title: ',68A1);
@@ -2089,7 +2089,7 @@ IF(IGNOREGAPS_$VARMLC=1 & IREJCT_GLOBAL>0)[
            /T2,'Width of leaves in the ',A1,' direction:',
            /T2,'  Group    No. of leaves    width (cm)',
            /T2,'  -----    -------------    ----------',
-           $MAXLEAF(/T2,I5,I16,F15.5,$));
+           $MAXLEAF(/T2,I5,I16,F15.5));
 123 FORMAT( T2,'Type of Leaf end (0-Rounded and 1-Focused) = ',T51,I5,
            /T2,'Z focus of leaf side surfaces = ',T51,F15.5,' cm',
            /T2,'Parameter for leaf end surfaces = ',T51,F15.5,' cm',
@@ -2154,7 +2154,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 ;RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$VARMLC (Rev 1.11)"
+%E "Start of subroutine HOWNEAR_$VARMLC"
 "***********************************************************************
 "
 "                          Subroutine HOWNEAR_$VARMLC
@@ -2235,7 +2235,8 @@ ELSE [
   ]
   ELSE[
     DO I = 1,7 [
-      IF( (ZREG_$VARMLC(I)<=Z(NP)) & (Z(NP)<=ZREG_$VARMLC(I+1)) ) [NZ=I; EXIT;]
+      IF( (ZREG_$VARMLC(I)<=Z(NP)) & (Z(NP)<=ZREG_$VARMLC(I+1)) ) [
+              NZ=I; EXIT;]
     ];
   ]
   LEAFIS=0;
@@ -2394,6 +2395,6 @@ ELSE [
  ]"end of not ignoring air gaps for range rejection"
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$VARMLC(Rev 1.11)"
+END; "End of subroutine HOWNEAR_$VARMLC"
 "************************************************************************
-"End of VARMLC_cm.mortran (Rev 1.11)"
+"End of VARMLC_cm.mortran"

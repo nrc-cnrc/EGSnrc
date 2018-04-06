@@ -247,7 +247,7 @@ public:
 
     // TODO: optimize. this implementation is waaaay too slow.
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tperp = 1e30;
+        EGS_Float tperp = veryFar;
         for (int j=0; j<n; j++) {
             EGS_Float t = s[j]->hownear(true,x);
             if (t < tperp) {

@@ -1084,7 +1084,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = spe_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      SPECdir = spe_file;
-	      SPECdir = SPECdir.remove(dirPos+1,spe_file.length() - dirPos+1 );
+              SPECdir = expandEnvVar(SPECdir.remove(dirPos+1,spe_file.length() - dirPos+1 ));
 	      spe_file = spe_file.remove(0, dirPos+1);
 	    }
    	    specfnameComboBox->setEditText ( spe_file );
@@ -1103,7 +1103,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = dist_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      RDISTdir = dist_file;
-	      RDISTdir = RDISTdir.remove(dirPos+1,RDISTdir.length() - dirPos+1 );
+	      RDISTdir = expandEnvVar(RDISTdir.remove(dirPos+1,RDISTdir.length() - dirPos+1 ));
 	      dist_file = dist_file.remove(0, dirPos+1);
 	    }
    	    raddistfnameComboBox->setEditText ( dist_file );
@@ -1124,7 +1124,7 @@ void inputRZImpl::update_SRCInputs( const MSRCInputs* EGSsrc )
 	    dirPos = phsp_file.lastIndexOf( '/' );
 	    if ( dirPos >= 0 ){
 	      PHSPdir = phsp_file;
-	      PHSPdir = PHSPdir.remove(dirPos+1,PHSPdir.length() - dirPos+1 );
+	      PHSPdir = expandEnvVar(PHSPdir.remove(dirPos+1,PHSPdir.length() - dirPos+1 ));
 	      phsp_file = phsp_file.remove(0, dirPos+1);
 	    }
 	    phasespaceComboBox->setEditText( phsp_file );
@@ -1178,7 +1178,7 @@ void inputRZImpl::update_PEGSLESSParam( const PEGSLESSInputs* EGSpgls)
    Ppgls->gasp[i]=EGSpgls->gasp[i];
    Ppgls->isgas[i]=EGSpgls->isgas[i];
    Ppgls->dffile[i]=EGSpgls->dffile[i];
-   Ppgls->use_dcfile[i]=EGSpgls->use_dcfile[i]; 
+   Ppgls->use_dcfile[i]=EGSpgls->use_dcfile[i];
    Ppgls->sterncid[i]=EGSpgls->sterncid[i];
  }
 
@@ -1304,7 +1304,7 @@ bool inputRZImpl::GetMedFromDCfile(QString f)
       //if the file separator character is in the name, assume
       //full path specified along with .density extension
       if(!QFile(fname).exists()) {
-        //start looking following same priority as in 
+        //start looking following same priority as in
         //get_media_inputs
         //assume .density ext not included
         fname=ironIt(EGS_HOME + s + "pegs4" + s + "density_corrections" + s + f + ".density");
@@ -1506,7 +1506,7 @@ void inputRZImpl::pz_or_rhozTable_clicked(int row, int col) {
      pz_or_rhozTable->setCellWidget(row,col,e);
    }
 }
-     
+
 void inputRZImpl::pz_or_rhozTable_singleclicked( int row, int col) {
    if(col == 0) {
      QWidget *editor = pz_or_rhozTable->cellWidget( row, col );
@@ -1566,7 +1566,7 @@ void inputRZImpl::medTypeChanged( const QString &s) {
     }
   }
 }
-     
+
 //end of PEGSLESS routines
 
 void inputRZImpl::update_MCTParam( const MMCPInputs*  EGSmcp )
@@ -2966,7 +2966,7 @@ void inputRZImpl::update_files( const QString & rDirName, QComboBox* cb, const Q
     }
 
 
-    d.setNameFilters( QStringList(rFilter) );
+    d.setNameFilters( rFilter.split(" ") );
     d.setSorting( QDir::Name | QDir::IgnoreCase );
 
     const QFileInfoList list = d.entryInfoList();
@@ -3815,6 +3815,9 @@ for(QStringList::Iterator it = ini.begin(); it != ini.end(); ++it ) {
        prefix += (*it);
     }
 }
+/* Insert prefixes requesting use of either xcom or epdl library
+ * with renormalized photoelectric xsections */
+prefix +="mcdf-xcom"; prefix +="mcdf-epdl";
 /* Insert prefix "pegs4" which requests use of the pegs4 data */
 prefix +="PEGS4";
 

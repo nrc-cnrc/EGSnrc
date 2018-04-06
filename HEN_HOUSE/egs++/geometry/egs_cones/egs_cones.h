@@ -430,7 +430,7 @@ public:
         EGS_Float A   = 1 - b*b*g12;                // 1 - cos^2(t)/cos^2(t_cone)
         EGS_Float B   = c - aa*b*g12;
         EGS_Float C   = r2 - aa*aa*g12;
-        EGS_Float tt  = 1e30;
+        EGS_Float tt  = veryFar;
         EGS_Float lam = -1;
 
         if (fabs(A) < boundaryTolerance) {
@@ -650,6 +650,7 @@ public:
 };
 
 
+/*
 // A set of cones having the same axis and opening angle and
 // apexes along the cone axis:
 //
@@ -664,7 +665,7 @@ public:
 //
 // That sort of geometry is useful for modelling e.g. the tip of
 // many ionization chambers.
-//
+*/
 
 /*! \brief A set of "parallel cones" (\em i.e. cones with the same axis and
 opening angles but different apexes)
@@ -853,11 +854,11 @@ public:
             EGS_Float A  = 1 - b*b*g12;
             EGS_Float B  = c - aa*b*g12;
             EGS_Float C  = r2 - aa*aa*g12;
-            EGS_Float tt = 1e30;
+            EGS_Float tt = veryFar;
             EGS_Float lam = -1;
 
             // moving parallel to cone surface
-            if (fabs(A) < boundaryTolerance) {                   // guarding against /0 in general solution
+            if (fabs(A) < boundaryTolerance) {      // guarding against /0 in general solution
                 EGS_Float ttt = -C/(2*B);           // distance to hit
                 lam = aa+b*ttt;                     // axial position of hit
                 if (ttt >= 0 && lam >= 0) {
@@ -899,7 +900,7 @@ public:
         EGS_Vector xp(x-xo[ireg]);
         EGS_Float aa = xp*a, b = u*a, r2 = xp.length2(), c = u*xp;
         EGS_Float A = 1 - b*b*g12, B = c - aa*b*g12, C = r2 - aa*aa*g12;
-        EGS_Float to = 1e30, lamo = -1;
+        EGS_Float to = veryFar, lamo = -1;
         if (fabs(A) < boundaryTolerance) {  // moving parallel to the cone surface.
             // for the outer cone we only have a solution if a*u < 0.
             // i.e. if we are moving towards the apex.
@@ -939,7 +940,7 @@ public:
 
     // hownear
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc = 1E30;
+        EGS_Float tc = veryFar;
         if (ireg < 0 || ireg < nc-1) {
             EGS_Vector xp;
             if (ireg < 0) {
@@ -1302,7 +1303,7 @@ public:
     }
 
     EGS_Float hownear(int ireg, const EGS_Vector &x) {
-        EGS_Float tc = 1E30;
+        EGS_Float tc = veryFar;
         EGS_Vector xp(x-xo);
         EGS_Float aa = xp*a, r2 = xp.length2(), ag;
         //egsWarning("hownear: ireg = %d x = (%g,%g,%g) aa = %g r2 = %g\n",
@@ -1545,7 +1546,7 @@ public:
             }
             else {                                  // u is perpendicular to a (u*a = 0)
                 dir = 0;                            // null direction
-                tp = 1e30;                          // init to large distance
+                tp = veryFar;                       // init to large distance
             }
             bool hitp = false;                      // assume we don't hit the plane
             if (tp <= t) {                          // check against maximum distance t
@@ -1658,7 +1659,7 @@ public:
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
                 // check if a subsequent call to howfar(ir,tmp,...) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
-                EGS_Float tb = 1e30;
+                EGS_Float tb = veryFar;
                 int inew_g = howfar(ir,tmp,u,tb,0,normal);
                 if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
@@ -1701,7 +1702,7 @@ public:
                 // BUT indeed we may be glancing on a "corner" of the ConeStack, so we should still
                 // check if a subsequent call to howfar(il*nmax+ir) takes us outside within boundaryTolerance.
                 // It that case we are not really entering the geometry.
-                EGS_Float tb = 1e30;
+                EGS_Float tb = veryFar;
                 int inew_g = howfar(il*nmax+ir,tmp,u,tb,0,normal);
                 if (inew_g < 0 && tb <= boundaryTolerance) {
                     return ireg;    // exits geometry
@@ -1752,7 +1753,7 @@ public:
 
                 // fp inconsistency: irnow >= 0 (inside) but called with ireg = -1 (outside)
                 if (irnow >= 0) {
-                    EGS_Float tb = 1e30;
+                    EGS_Float tb = veryFar;
                     int inew_g = howfar(irnow,x,u,tb,0,&tmp_normal);
                     if (inew_g < 0 && tb <= boundaryTolerance) {
                         return ireg;    // exits geometry
@@ -1793,7 +1794,7 @@ public:
                 // IK, March 7 2008: same problem as in CD geometry.
                 // we think we are outside but we just found we are inside.
                 // Hopefully a roundoff problem.
-                EGS_Float tp = 1e30;
+                EGS_Float tp = veryFar;
 
                 if (up > 0) {
                     dir = 1;
@@ -1818,7 +1819,7 @@ public:
                 }
 
                 if (isc) {
-                    EGS_Float tc = 1e30;
+                    EGS_Float tc = veryFar;
                     int isc_new = cones[il][nr[il]-1]->howfar(0,x,u,tc);
                     if (!(isc_new < 0 && tc < boundaryTolerance)) {
                         egsWarning("EGS_ConeStack::howfar: called from the outside"
@@ -1833,7 +1834,11 @@ public:
         }
 
         // traverse layers until we hit a cone, or else move beyond conestack boundary planes
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_ConeStack::howfar: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return -1;
+            }
 
             // calculate distance to next plane boundary
             if (up > 0) {                           // moving along conestack axis a
@@ -1846,7 +1851,7 @@ public:
             }
             else {                                  // moving perpendicular to axis (u*a = 0)
                 dir = 0;                            // null direction
-                tp  = 1e30;                         // init to large distance
+                tp  = veryFar;                      // init to large distance
             }
 
             // distance to outer cone in layer 'il'

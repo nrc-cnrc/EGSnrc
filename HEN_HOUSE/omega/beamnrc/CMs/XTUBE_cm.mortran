@@ -281,7 +281,7 @@
 "
 "*******************************************************************************
 
-%E   "start of subroutine HOWFAR_$XTUBE (Rev 1.5)"
+%E   "start of subroutine HOWFAR_$XTUBE"
 "*******************************************************************************
 "************************** Component Module XTUBE *****************************
 "*******************************************************************************
@@ -380,7 +380,8 @@ IF(IR_$XTUBE = N_$XTUBE+3 & I_XTRA_$XTUBE=1)[
 "in extra central region"
    IF(W(NP) > 0.0)[
       IF(HXTRA_$XTUBE+BDYTOL<ZTHICK_$XTUBE)[
-        DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.+BDYTOL-Z(NP))/W(NP);
+        DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE+HXTRA_$XTUBE)/2.
+               +BDYTOL-Z(NP))/W(NP);
         IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
         XTRA_INDEX=1;
       ]
@@ -414,7 +415,8 @@ IF(IR_$XTUBE = N_$XTUBE+3 & I_XTRA_$XTUBE=1)[
    ]
    ELSEIF(W(NP) < 0.0)[
       IF(HXTRA_$XTUBE+BDYTOL<ZTHICK_$XTUBE)[
-         DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.-BDYTOL-Z(NP))/W(NP);
+         DIST=(ZMIN_$XTUBE+(ZTHICK_$XTUBE-HXTRA_$XTUBE)/2.
+          -BDYTOL-Z(NP))/W(NP);
          IRNEW_$XTUBE=IRSTART_$XTUBE + N_$XTUBE -1;
          XTRA_INDEX=1;
       ]
@@ -796,7 +798,8 @@ ELSEIF(IR_$XTUBE = N_$XTUBE + 2)[ "local region N_$XTUBE + 2
       ]
    ]
 ]
-ELSEIF(IR_$XTUBE = N_$XTUBE + 3 + I_XTRA_$XTUBE)[ "local region N_$XTUBE + 3
+ELSEIF(IR_$XTUBE = N_$XTUBE + 3 + I_XTRA_$XTUBE)[
+    "local region N_$XTUBE + 3"
    IF(W(NP) > 0.0)[
       DIST = (ZMIN_$XTUBE - Z(NP))/W(NP);
       IF(DIST < 0.0)[DIST = 0.0;]
@@ -850,7 +853,7 @@ ELSE ["something is wrong"
 ;
 RETURN;
 END; "End of subroutine HOWFAR_$XTUBE"
-%E   "start of subroutine WHERE_AM_I_$XTUBE (Rev 1.5)"
+%E   "start of subroutine WHERE_AM_I_$XTUBE"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$XTUBE
@@ -912,9 +915,10 @@ ELSEIF(IDIR=1) ["particle entering this CM through front face (upstream)
       DO I = 1, N_$XTUBE[
          IF(XF_$XTUBE < XFMAX_$XTUBE(I))[
             IRNEW = IRSTART_$XTUBE + I - 1;
-            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<= WXTRA_$XTUBE/2. &
-               HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
-               IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2; "in extra central region"
+            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<=
+               WXTRA_$XTUBE/2. & HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
+               IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2;
+                   "in extra central region"
             RETURN;
          ]
       ]
@@ -929,9 +933,10 @@ ELSE["particle entering this CM through back face (downstream)
       DO I = 1, N_$XTUBE[
          IF(XF_$XTUBE < XBMAX_$XTUBE(I))[
             IRNEW = IRSTART_$XTUBE + I - 1;"in the target"
-            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<= WXTRA_$XTUBE/2. &
-                  HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
-                IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2; "in extra central region"
+            IF(I_XTRA_$XTUBE=1 & I=N_$XTUBE & ABS(YF_$XTUBE)<=
+               WXTRA_$XTUBE/2. & HXTRA_$XTUBE+$BDY_TOL > ZTHICK_$XTUBE)
+                IRNEW = IRSTART_$XTUBE + N_$XTUBE + 2;
+                     "in extra central region"
             RETURN;
          ]
       ]
@@ -940,7 +945,7 @@ ELSE["particle entering this CM through back face (downstream)
 ]
 RETURN;
 END; "End of subroutine WHERE_AM_I_$XTUBE"
-%E   "start of subroutine INPUT_$XTUBE (Rev 1.5)"
+%E   "start of subroutine INPUT_$XTUBE"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$XTUBE
@@ -1067,7 +1072,8 @@ DO IR_$XTUBE = N_$XTUBE,1,-1["loop through each slab"
       OUTPUT N_$XTUBE-IR_$XTUBE+1;
  (/' Thickness for slab ',I3,', I_XTRA (1 if there is an  extra'/
    ' central region in this slab, 0 otherwise):');
-      ;MINPUT ($XTUBE) DTHICK_$XTUBE(IR_$XTUBE),I_XTRA_$XTUBE;(F15.0,I5);
+      ;MINPUT ($XTUBE) DTHICK_$XTUBE(IR_$XTUBE),I_XTRA_$XTUBE;
+            (F15.0,I5);
       ;OUTPUT DTHICK_$XTUBE(IR_$XTUBE),I_XTRA_$XTUBE;(F15.5,I5);
    ]
    ELSE[
@@ -1121,7 +1127,8 @@ IF(N_$XTUBE > 1)[
 "get dimensions, ECUT, PCUT, material etc for the extra central region in the
 "outermost target layer, if any
 IF(I_XTRA_$XTUBE=1)[
-   OUTPUT N_$XTUBE;(/' Now input for the the extra central region in the last'/
+   OUTPUT N_$XTUBE;
+      (/' Now input for the the extra central region in the last'/
             ' (outermost) target layer (layer no. ',I4,'):');
    IRA = IRSTART_$XTUBE+N_$XTUBE+2;
    OUTPUT;(/' width, height of central region (cm):');
@@ -1219,8 +1226,10 @@ DO I = 1, N_$XTUBE[
 IF(I_XTRA_$XTUBE=1)[
    XFMAX_XTRA_$XTUBE=HXTRA_$XTUBE*TAN(ANGLE)/2.;
    XBMAX_XTRA_$XTUBE=-HXTRA_$XTUBE*TAN(ANGLE)/2.;
-   XFMIN_XTRA_$XTUBE=XFMAX_XTRA_$XTUBE-DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
-   XBMIN_XTRA_$XTUBE= XBMAX_XTRA_$XTUBE - DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
+   XFMIN_XTRA_$XTUBE=XFMAX_XTRA_$XTUBE-
+                     DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
+   XBMIN_XTRA_$XTUBE= XBMAX_XTRA_$XTUBE -
+                      DTHICK_$XTUBE(N_$XTUBE)/COS(ANGLE);
    XFMAXT_XTRA_$XTUBE(1)=(HXTRA_$XTUBE/2.+BDYTOL)*TAN(ANGLE) + BDYTOL;
    XFMAXT_XTRA_$XTUBE(2)=XFMAX_XTRA_$XTUBE + BDYTOL;
    XFMINT_XTRA_$XTUBE(1)=(HXTRA_$XTUBE/2.+BDYTOL)*TAN(ANGLE)-
@@ -1256,7 +1265,8 @@ N_GP_$XTUBE = 0; "no air gap for this CM
 "  set up region numbers
 "  This CM has N_$XTUBE + 2 + N_GP_$XTUBE regions
 "  Index of last region
-IREND_$XTUBE = IRSTART_$XTUBE + N_$XTUBE + N_GP_$XTUBE + 1 + I_XTRA_$XTUBE;
+IREND_$XTUBE = IRSTART_$XTUBE + N_$XTUBE +
+               N_GP_$XTUBE + 1 + I_XTRA_$XTUBE;
 NREG = NREG + N_$XTUBE + N_GP_$XTUBE + 2+ I_XTRA_$XTUBE;
                                            "Total number of regions up
                                            "to and including this CM
@@ -1312,7 +1322,7 @@ OUTPUT ICM;
 (//' *** ERROR *** format error on input for CM',I3);
 STOP;
 END;  "End of INPUT_$XTUBE"
-%E   "start of subroutine ISUMRY_$XTUBE (Rev 1.5)"
+%E   "start of subroutine ISUMRY_$XTUBE"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$XTUBE
@@ -1507,7 +1517,8 @@ IF(I_XTRA_$XTUBE=1)["extra central layer"
    IF(XBMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE) &
        XBMAX_XTRA_$XTUBE>=-RMAX_CM(ICM_$XTUBE))[
          IF(XFMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
-           VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMIN_XTRA_$XTUBE-
+           VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                         (XFMIN_XTRA_$XTUBE-
                          XBMIN_XTRA_$XTUBE)*HXTRA_$XTUBE*
                          WXTRA_$XTUBE/2.-(-RMAX_CM(ICM_$XTUBE)-
                          XFMIN_XTRA_$XTUBE)*HXTRA_$XTUBE*
@@ -1524,7 +1535,8 @@ IF(I_XTRA_$XTUBE=1)["extra central layer"
    ELSEIF(XBMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE) &
        XBMAX_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
           IF(XFMIN_XTRA_$XTUBE<-RMAX_CM(ICM_$XTUBE))[
-            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XBMAX_XTRA_$XTUBE-
+            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                        (XBMAX_XTRA_$XTUBE-
                          XBMIN_XTRA_$XTUBE)*(ABS(XBMAX_XTRA_$XTUBE)-
                          RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
                          (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
@@ -1536,7 +1548,8 @@ IF(I_XTRA_$XTUBE=1)["extra central layer"
                          WXTRA_$XTUBE/2.;
           ]
           ELSE[
-            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XBMAX_XTRA_$XTUBE-
+            VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                        (XBMAX_XTRA_$XTUBE-
                          XBMIN_XTRA_$XTUBE)*(ABS(XBMAX_XTRA_$XTUBE)-
                          RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
                          (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
@@ -1567,7 +1580,8 @@ IF(I_XTRA_$XTUBE=1)["extra central layer"
    ELSEIF(XFMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE) &
      XFMIN_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE))[
         IF(XBMAX_XTRA_$XTUBE>RMAX_CM(ICM_$XTUBE))[
-          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMAX_XTRA_$XTUBE-
+          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                        (XFMAX_XTRA_$XTUBE-
                          XFMIN_XTRA_$XTUBE)*(XFMIN_XTRA_$XTUBE-
                          RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
                          (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
@@ -1580,7 +1594,8 @@ IF(I_XTRA_$XTUBE=1)["extra central layer"
                          WXTRA_$XTUBE/2.;
         ]
         ELSE[
-          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-(XFMAX_XTRA_$XTUBE-
+          VOL_$XTUBE(N_$XTUBE+3)=VOL_$XTUBE(N_$XTUBE+3)-
+                         (XFMAX_XTRA_$XTUBE-
                          XFMIN_XTRA_$XTUBE)*(ABS(XFMIN_XTRA_$XTUBE)-
                          RMAX_CM(ICM_$XTUBE))*HXTRA_$XTUBE/
                          (XFMIN_XTRA_$XTUBE-XBMIN_XTRA_$XTUBE)*
@@ -1697,7 +1712,7 @@ IF(I_XTRA_$XTUBE=1)[
 ]
 
 
-110 FORMAT(///'  Component module',I3,' is $XTUBE (Rev 1.5) '
+110 FORMAT(///'  Component module',I3,' is $XTUBE '
            /'  ------------------------------------'
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$XTUBE geometry parameters:',
@@ -1757,7 +1772,7 @@ IF(IWATCH = 4 | IZLAST = 2) [   "Creat a graphics file "
 ;RETURN;
 END; "end of subroutine ISUMRY_$XTUBE"
 
-%E   "start of subroutine HOWNEAR_$XTUBE (Rev 1.5)"
+%E   "start of subroutine HOWNEAR_$XTUBE"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$XTUBE
@@ -1825,7 +1840,7 @@ ELSEIF(IR_$XTUBE=N_$XTUBE+2)["the target holder"
      );
 ]
 RETURN;
-END; "End of subroutine HOWNEAR_$XTUBE(Rev 1.5)"
+END; "End of subroutine HOWNEAR_$XTUBE"
 
 "*******************************************************************************
-"End of XTUBE_cm.mortran (Rev 1.5)"
+"End of XTUBE_cm.mortran"

@@ -422,7 +422,7 @@
 "I>
 "I>  If MODE_$SYNCVMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 "I>
-"I>  14b  mlc_file (A80)
+"I>  14b  mlc_file (A256)
 "I>
 "I>         mlc_file:  The full name of the file containing leaf opening
 "I>                    data.  The format of the file contents is as follows:
@@ -579,7 +579,7 @@
 "
 "***********************************************************************
 ;
-%E "Start of subroutine HOWFAR_$SYNCVMLC (Rev 1.4)"
+%E "Start of subroutine HOWFAR_$SYNCVMLC"
 "************************************************************************
 "********************Component Module SYNCVMLC *****************************
 "************************************************************************
@@ -895,7 +895,7 @@ ELSEIF( (STEP_UNIT>DIST1) & (DIST1>=0)) [
 "
 RETURN;
 END; "End of subroutine HOWFAR_$SYNCVMLC"
-%E "Start of WHERE_AM_I_$SYNCVMLC (Rev 1.4)"
+%E "Start of WHERE_AM_I_$SYNCVMLC"
 "************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$SYNCVMLC
@@ -967,7 +967,7 @@ ELSE [ "particle entering CM through back face (downstream)"
 RETURN;
 ;
 END; "End of subroutine WHERE_AM_I_$SYNCVMLC"
-%E "Start of subroutine INPUT_$SYNCVMLC (Rev 1.4)"
+%E "Start of subroutine INPUT_$SYNCVMLC"
 
 "*************************************************************************
 
@@ -1015,9 +1015,8 @@ INTEGER I,J,K,L,        "T>DO loop indices
        MAX_INDEX,   "T>index of leaf with max. opening coordinate
        mlc_unit,    "T>unit no. to assign mlc_file
        egs_get_unit; "T>egs function used to assign unit to mlc_file
-CHARACTER*80 mlc_file, "T>name of file containing opening data for dynamic and
-                       "  step-and-shoot sequences
-             MLC_TITLE; "T> title line in mlc_file
+character*256 mlc_file;
+CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 $REAL INDEXTMP; "T>temporary input variable for field indices in dynamic and
                 "  step-and-shoot simulations
 " **************************************************************** "
@@ -1913,8 +1912,9 @@ DO I=1, TOT_LEAF_$SYNCVMLC
 ]
 IF(MODE_$SYNCVMLC=1|MODE_$SYNCVMLC=2)["dynamic or step-and-shoot leaf inputs"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A80)')mlc_file;
-  OUTPUT mlc_file;(A80/);
+  READ(i_input,'(A256)')mlc_file;
+  OUTPUT mlc_file;(A/);
+  call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
   IF(mlc_unit<1)[
     $egs_fatal(*,
@@ -1924,6 +1924,14 @@ IF(MODE_$SYNCVMLC=1|MODE_$SYNCVMLC=2)["dynamic or step-and-shoot leaf inputs"
   read(mlc_unit,'(A80)') MLC_TITLE;
   read(mlc_unit,'(I10)') NFIELDS_$SYNCVMLC;
   OUTPUT NFIELDS_$SYNCVMLC; (I10);
+
+  IF(NFIELDS_$SYNCVMLC>$MAXFIELD_$SYNCVMLC) [
+   OUTPUT $MAXFIELD_$SYNCVMLC;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCVMLC: ',I10, /
+        ' Increase $MAXFIELD_$SYNCVMLC in SYNCVMLC_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCVMLC[
   "read in non-default leaf positions for each field"
      read(mlc_unit,'(F15.0)')INDEX_$SYNCVMLC(I);
@@ -2320,7 +2328,7 @@ STOP;
 
 END;  "End of INPUT_$SYNCVMLC"
 
-%E "Start of subroutine ISUMRY_$SYNCVMLC (Rev 1.4)"
+%E "Start of subroutine ISUMRY_$SYNCVMLC"
 "***********************************************************************
 "
 "                          Subroutine ISUMRY_$SYNCVMLC
@@ -2646,7 +2654,7 @@ IF(IGNOREGAPS_$SYNCVMLC=1 & IREJCT_GLOBAL>0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-           /' (3 regions Rev 1.4)',
+           /' (3 regions)',
            /'  -------------------------------------------------',
            /'------------------',
            //T5,'Title: ',68A1);
@@ -2714,7 +2722,7 @@ IF (IWATCH=4|IZLAST=2) [   "Graphics file requested"
 RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$SYNCVMLC (Rev 1.4)"
+%E "Start of subroutine HOWNEAR_$SYNCVMLC"
 "***********************************************************************"
 "                                                                       "
 "                          Subroutine HOWNEAR_$SYNCVMLC               "
@@ -3277,8 +3285,8 @@ ELSE[ "beyond outer edges of leaf bank"
  ];
  DIST_sngl=SNGL(DIST);
 RETURN;
-END; "End of subroutine HOWNEAR_$SYNCVMLC(Rev 1.4)"
+END; "End of subroutine HOWNEAR_$SYNCVMLC"
 "************************************************************************"
-"End of SYNCVMLC_cm.mortran (Rev 1.4)"
+"End of SYNCVMLC_cm.mortran"
 
 

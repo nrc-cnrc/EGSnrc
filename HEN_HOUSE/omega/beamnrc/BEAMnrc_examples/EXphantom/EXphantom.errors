@@ -1,6 +1,6 @@
-  If you are not trying to reset transport parameters, 
-  ignore all the output until the message 
-  ******************** end input transport parameter *********************** 
+  If you are not trying to reset transport parameters,
+  ignore all the output until the message
+  ******************** end input transport parameter ***********************
 
  ***************ERROR***************
  >>Electron Impact Ionization<< NOT FOUND
@@ -33,5 +33,5 @@
  >>Set SMAX stop region<< NOT FOUND
  END OF DELIMETER: MC TRANSPORT PARAMETER
 
-  ******************** end input transport parameter *********************** 
+  ******************** end input transport parameter ***********************
 

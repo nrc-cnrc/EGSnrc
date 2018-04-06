@@ -526,7 +526,7 @@ PEGSLESSInputs* inputRZImpl::GetPEGSLESS()
              }
              else Ppgls->use_dcfile[ind]=true;
           }
-                 
+
           Ppgls->spec_by_pz[ind]=false;
           if(medTypeComboBox->currentText()=="Compound") Ppgls->spec_by_pz[ind]=true;
           //see if any elements are present in the table

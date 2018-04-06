@@ -181,7 +181,7 @@ INTEGER NUM_MEDIA,
         NUM_NREGHI;
 "---------------------------------------------------------------------------"
 INTEGER ERR;  "$inputfile.errors file"
-INTEGER LNBLNK;
+INTEGER LNBLNK,SLENGHT;
 INTEGER I,J,K,PLN,COUNT;
 INTEGER IX, IZ, REGNUM;
 REAL    ADDING;

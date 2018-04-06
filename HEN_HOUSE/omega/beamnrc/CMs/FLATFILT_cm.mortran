@@ -259,7 +259,7 @@
 "   1)  Overlapping component modules
 "
 
-%E "Start of HOWFAR_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+%E "Start of HOWFAR_$FLATFILT"
 "*******************************************************************************
 "
 "                          Subroutine HOWFAR_FLATFILT
@@ -522,7 +522,7 @@ ELSE[
 RETURN;
 END; "End of subroutine HOWFAR_$FLATFILT"
 
-%E "Start of WHERE_AM_I_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+%E "Start of WHERE_AM_I_$FLATFILT"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_FLATFILT
@@ -654,7 +654,7 @@ ELSEIF(IDIR=2)["particle originating within the CM (source 3)
 RETURN;
 END; "End of subroutine WHERE_AM_I_$FLATFILT"
 
-%E "Start of INPUT_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+%E "Start of INPUT_$FLATFILT"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_FLATFILT
@@ -1097,7 +1097,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$FLATFILT"
 
-%E "Start of ISUMRY_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+%E "Start of ISUMRY_$FLATFILT"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_FLATFILT
@@ -1240,7 +1240,7 @@ IF(N_GAP_$FLATFILT ~= 0 )[
 ]
 
 
-110 FORMAT(///' Component module',I3,' is FLATFILT (Rev 1.6)'
+110 FORMAT(///' Component module',I3,' is FLATFILT'
            /'  --------------------------------------'
            //T5,'Title: ',68A1);
 120 FORMAT(/T2,'$FLATFILT geometry parameters:',
@@ -1288,7 +1288,7 @@ IF(IWATCH = 4 | IZLAST = 2) [  "Creat a graphics file "
 ;RETURN;
 END; "End of subroutine ISUMRY_$FLATFILT"
 
-%E "Start of HOWNEAR_$FLATFILT (Rev 1.6 last edited 2003-08-13 14:27:55-04)"
+%E "Start of HOWNEAR_$FLATFILT"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$FLATFILT
@@ -1371,7 +1371,7 @@ ELSEIF(IR_$FLATFILT=N_$FLATFILT+1)[
   DIST=MIN(Z(NP)-ZFRONT_$FLATFILT,ZMIN_$FLATFILT(1)-Z(NP));
 ]
 RETURN;
-END;"End of subroutine HOWNEAR_$FLATFILT(Rev 1.6)
+END;"End of subroutine HOWNEAR_$FLATFILT
 
 "*******************************************************************************
-"End of FLATFILT_cm.mortran (Rev 1.6)"
+"End of FLATFILT_cm.mortran"

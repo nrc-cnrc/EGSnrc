@@ -360,4 +360,4 @@ REPLACE {$CONESTAK_GET_SQXY(#,#);} WITH
  YF_$CONESTAK = Y(NP)+{P1}*V(NP);
  {P2} = XF_$CONESTAK*XF_$CONESTAK + YF_$CONESTAK*YF_$CONESTAK;
 }
-"End of CONESTAK_macros.mortran (Rev 1.3)"
+"End of CONESTAK_macros.mortran"

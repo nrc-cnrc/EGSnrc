@@ -23,11 +23,11 @@ output file(s)..............................................ex
    All of above can be adjusted in beamnrc_user_macros.mortran
 
 
- TITLE: EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field               
+ TITLE: EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
- 
+
  Reading in EGSnrc transport parameters:
- -------------------------------------- 
+ --------------------------------------
  Bound Compton start region
   Setting all to  1
  Rayleigh start region
@@ -41,10 +41,10 @@ output file(s)..............................................ex
  Finished reading EGSnrc transport parameters.
 
 
- MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR521ICRU              
+ MEDIUM of nominal AIR (exactly as in pegs4dat) (left justify):  AIR521ICRU
 
 
- IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3), 
+ IWATCH(-N-4), ISTOR(0,+-1), IRESTART(0-3), IO_OPT(0-3),
  IDAT(0-1), LATCH_OPTION (1-3), IZLAST(0-2) :            0           0         0         0         0           2           0
 
  Do not track(0) or track(>0) every interaction or track Nth
@@ -55,10 +55,10 @@ output file(s)..............................................ex
  Store data(0) or not(1):                                             0
  LATCH OPTION,do not inherit(1),inherit+record origin(2,3):           2
  Do not score ZLAST(0), score ZLAST(1), output file for graphics(2):  0
- 
+
  #HISTORIES, RN SEED #1, RN SEED #2, TIMMAX,  IBRSPL(0,1,2,29),
          NBRSPL, IRRLTT(0,1,2), ICM_SPLIT
- : 
+ :
          50000.           97           33    500.0000     0     0     0     0
 
  # of histories:                                                  50000
@@ -71,7 +71,7 @@ output file(s)..............................................ex
  each brem split into:                                                0
  Russian roulette off(0),on(1),on+annihilation split(2):              0
 
- 
+
  CHARGE OF THE INCIDENT BEAM(-1,0,1),
  SOURCE CONFIGURATION
       (0) Parallel beam incident from the front:(0),radius(cm),
@@ -99,9 +99,9 @@ output file(s)..............................................ex
                     centred at (Xo,Yo), half-widths: Xh, Yh (cm)
                     (0, 6, Xo, Yo, Xh, Yh)
 
-  or  (7) Scanning beam, scanning field size to 100 cm 
+  or  (7) Scanning beam, scanning field size to 100 cm
                     ratio of the frequencies in Y/X directions
-                    spot size at the initial point. 
+                    spot size at the initial point.
 
   or  (8) Scanning point source for MM50--uniform field coverage:
                     (8), SSD (defaults to 100 cm), radius of
@@ -111,7 +111,7 @@ output file(s)..............................................ex
                     source is at Z=0
 
   or  (9) Scanning point source for MM50--discrete field coverage:
-                    (9), SSD (defaults to 100 cm), # of 
+                    (9), SSD (defaults to 100 cm), # of
                     discrete points at SSD.
                     Note that this option assumes the point
                     source is at Z=0
@@ -135,7 +135,7 @@ output file(s)..............................................ex
                     incident direction cosines (U,V,W)
 
   or (21) Full phase-space of each particle read from unit 42
-                    component module # 
+                    component module #
                       (particles incident on the front of this CM),
                     no. of times to recycle each particle
                       (calculated automatically if set to 0),
@@ -183,9 +183,9 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
 
 
  Photon forcing: next five numbers on one line
- Force photon interactions in the target?(0)=>no,(1)=>yes, 
+ Force photon interactions in the target?(0)=>no,(1)=>yes,
  min/max photon interaction #/history to do forcing for,
- min/max CM # in which to do forcing  
+ min/max CM # in which to do forcing
  :    0   0   0   0   0
 
  No photon interaction forcing in effect
@@ -204,7 +204,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  Number of scoring zones( 5) & zone type (0-annular;1-square):     5    1
  Half-width of scoring zones, in increasing order(10/line)
  :    0.70700   1.00000   1.22500   5.00000   7.07100
- 
+
  Total dose only(0) or total dose & dose components(1):    1
 
  CM # at which contaminant particles are identified on entry at front,
@@ -220,50 +220,50 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  # of dose components which exclude particles from specified regions:     1
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   1
- WILL NOT SCORE THE DOSE WHEN THESE BITS ARE SET: 
-   12   14   15   16   17   18   19   20 
+ WILL NOT SCORE THE DOSE WHEN THESE BITS ARE SET:
+   12   14   15   16   17   18   19   20
 
  # of dose components including particles from specified regions:     8
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   2
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   12 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   12
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   3
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   14 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   14
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   4
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   15 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   15
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   5
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   16 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   16
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   6
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   17 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   17
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   7
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   18 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   18
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   8
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   19 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   19
 
  INPUT THE BIT #S IN LATCH FOR DOSE COMPONENT   9
- INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY): 
- WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET: 
-   20 
+ INPUT BIT #S TO INCLUDE, 0, BIT #S TO EXCLUDE (IF ANY):
+ WILL SCORE THE DOSE IF ANY OF THESE BITS ARE SET:
+   20
 
  Z dist from ref plane(Z=0) to CM front (include any air gap):     0.00000
 
@@ -279,7 +279,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  This component is a set of planar slabs
       Outer boundary is a square with |x| & |y| <      5.00 cm
  This is first component -- starts at      0.0000 cm from reference plane
- TITLE:  0.1cm of vacuum, Ni exit window from accelerator vacuum.    
+ TITLE:  0.1cm of vacuum, Ni exit window from accelerator vacuum.
  NUMBER OF SLABS (MINIMUM 1, MAXIMUM 30):     3
  DISTANCE FROM FRONT OF SLABS (excluding air gap) TO REF PLANE (z=0):    0.00000
 
@@ -287,19 +287,19 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  Inputs for slab #     1
  SLAB THICKNESS(cm), ECUT, PCUT, DOSE ZONE(0=>DONT SCORE), IREGION_TO_BIT,ESAVE
  :    0.10000    0.70000    0.01000        0                   0    2.00000
- SLAB  MEDIUM (left justify):  VACUUM                  
+ SLAB  MEDIUM (left justify):  VACUUM
 
 
  Inputs for slab #     2
  SLAB THICKNESS(cm), ECUT, PCUT, DOSE ZONE(0=>DONT SCORE), IREGION_TO_BIT,ESAVE
  :    0.00600    0.70000    0.01000        1                   1    2.00000
- SLAB  MEDIUM (left justify):  NI521ICRU               
+ SLAB  MEDIUM (left justify):  NI521ICRU
 
 
  Inputs for slab #     3
  SLAB THICKNESS(cm), ECUT, PCUT, DOSE ZONE(0=>DONT SCORE), IREGION_TO_BIT,ESAVE
  :    0.27400    0.70000    0.01000        0                   0    2.00000
- SLAB  MEDIUM (left justify):  AIR521ICRU              
+ SLAB  MEDIUM (left justify):  AIR521ICRU
 
  ===============================================================================
   Input blank line to signify start of component module
@@ -308,14 +308,14 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
 
  COLLIMAT (CONS3R: Rev 1.10)
 
- This component is a set of stacked cones with 3 regions 
+ This component is a set of stacked cones with 3 regions
     Outer boundary is a cylinder of radius      10.000 cm
  This CM starts at back of previous CM at     0.38000 cm
- TITLE:  primary collimator: cone of air shielded by W-Ni-Cu         
+ TITLE:  primary collimator: cone of air shielded by W-Ni-Cu
  Air gap/front of this  CM starts at:    0.3800 cm
  Distance from front of cones(not air gap) to z = 0.0 plane:         1.50000
  CONS3R total thickness (in cm, excluding front air):        12.00000
- INPUT THE # OF NODES (VERTICES) DEFINING THE CONES 
+ INPUT THE # OF NODES (VERTICES) DEFINING THE CONES
  (1 < # NODES <   16):   14
  INPUT THE  COORDINATES PAIRS (Z, R) FOR    14 NODES, ONE PAIR/LINE
  RECALL THAT Z(i+1) >= Z(i)
@@ -338,23 +338,23 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  For region  1
  ECUT, PCUT(MeV), DOSE ZONE (0=> NO DOSE), IREGION_TO_BIT, IREJCT(0=> 1 -1=>0)
  :         0.70000        0.01000         0         0         0
- material of region   1  MEDIUM (left justify):  AIR521ICRU              
+ material of region   1  MEDIUM (left justify):  AIR521ICRU
  For region  2
  ECUT, PCUT(MeV), DOSE ZONE (0=> NO DOSE), IREGION_TO_BIT, IREJCT(0=> 1 -1=>0)
  :         0.70000        0.01000         2         2         0
- material of region   2  MEDIUM (left justify):  WNICU521                
+ material of region   2  MEDIUM (left justify):  WNICU521
 
  ===============================================================================
   Input blank line to signify start of component module
  ===============================================================================
  Outer boundary of CM  3:   10.00000
 
- Next component is a stacked set of truncated cones 
+ Next component is a stacked set of truncated cones
 
  SCATFOIL (CONESTAK Rev 1.8)
  Previous CM ends at:    13.50000 cm
 
- TITLE:  Pb and Cu scattering foil shielded by mild steel            
+ TITLE:  Pb and Cu scattering foil shielded by mild steel
  Distance front 1st cone to ref plane(z=0), inner radius outer wall(0=>none)
  :                  15.16190                  2.45000
  NUMBER OF layers (MINIMUM 1, MAXIMUM 15):     3
@@ -374,37 +374,37 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  For outer wall:
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           4                   4
- Material of outer wall  MEDIUM (left justify):  MILDSTEEL521            
+ Material of outer wall  MEDIUM (left justify):  MILDSTEEL521
 
  For layer  1
  Local region   1 (inside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           5                   5
- Material of region   1  MEDIUM (left justify):  PB521ICRU               
+ Material of region   1  MEDIUM (left justify):  PB521ICRU
  Local region   2 (outside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           0                   0
- Material of region   2  MEDIUM (left justify):  AIR521ICRU              
+ Material of region   2  MEDIUM (left justify):  AIR521ICRU
 
  For layer  2
  Local region   4 (inside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           5                   5
- Material of region   4  MEDIUM (left justify):  PB521ICRU               
+ Material of region   4  MEDIUM (left justify):  PB521ICRU
  Local region   5 (outside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           0                   0
- Material of region   5  MEDIUM (left justify):  AIR521ICRU              
+ Material of region   5  MEDIUM (left justify):  AIR521ICRU
 
  For layer  3
  Local region   7 (inside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           6                   6
- Material of region   7  MEDIUM (left justify):  CU521ICRU               
+ Material of region   7  MEDIUM (left justify):  CU521ICRU
  Local region   8 (outside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           0                   0
- Material of region   8  MEDIUM (left justify):  AIR521ICRU              
+ Material of region   8  MEDIUM (left justify):  AIR521ICRU
 
  ===============================================================================
   Input blank line to signify start of component module
@@ -416,17 +416,17 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  This component is an ion chamber or for scoring dose components
        Outer boundary is a cylinder of radius   10.0000 cm
 
- TITLE:  Ag plated mica ion chamber with Al frame                    
+ TITLE:  Ag plated mica ion chamber with Al frame
  This CM, including air gap, starts at end of previous CM at  15.20000 cm
 
  Distance from front of IONCHAM(not air gap) to ref plane(z=0):   15.60000
 
  This module consists of 3 partS:
-   1 --- top part, 
-   2 --- main part: the chamber/phantom central part, 
+   1 --- top part,
+   2 --- main part: the chamber/phantom central part,
    3 --- bottom part.
 
- Input the number of layers for each part: 
+ Input the number of layers for each part:
  N-TOP (>=0), N-CHAM (>0 to input chamber layers individually or <0 to
  input -N-CHAM groups of layers), N-BOT (>=0) (N-TOP + total number of
  chamber layers + N-BOT <=  199) on one line
@@ -444,7 +444,7 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  The outer radius of the container is defined by RMAX_CM.
 
  INPUT THICKNESS FOR EACH LAYER WITHIN THE CHAMBER
- FOR LAYERS OF EQUAL THICKNESS (ZTHICK) AND MEDIUM, 
+ FOR LAYERS OF EQUAL THICKNESS (ZTHICK) AND MEDIUM,
  INPUT ZTHICK,N-CHAM (in one line)
  OTHERWISE, INPUT ZTHICK FOR EACH LAYER STARTING FROM 1ST LAYER
  :         0.05000    0
@@ -457,124 +457,124 @@ IREJCT_GLOBAL(0-2),ESAVE_GLOBAL,(IFLUOR--DUMMY INPUT)
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
  :    0.7000    0.0100    8              8
  For this layer :
- MEDIUM (left justify):  AL521ICRU               
+ MEDIUM (left justify):  AL521ICRU
 
  FOR LAYER   2 IN THE CHAMBER:
 
  ZTHICK:         0.20000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    7              7
- For this layer : MEDIUM (left justify):  AIR521ICRU              
+ For this layer : MEDIUM (left justify):  AIR521ICRU
 
  FOR LAYER   3 IN THE CHAMBER:
 
  ZTHICK:         0.00025
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    9              9
- For this layer : MEDIUM (left justify):  AG521ICRU               
+ For this layer : MEDIUM (left justify):  AG521ICRU
 
  FOR LAYER   4 IN THE CHAMBER:
 
  ZTHICK:         0.02540
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100   10             10
- For this layer : MEDIUM (left justify):  MICA521                 
+ For this layer : MEDIUM (left justify):  MICA521
 
  FOR LAYER   5 IN THE CHAMBER:
 
  ZTHICK:         0.00025
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    9              9
- For this layer : MEDIUM (left justify):  AG521ICRU               
+ For this layer : MEDIUM (left justify):  AG521ICRU
 
  FOR LAYER   6 IN THE CHAMBER:
 
  ZTHICK:         0.20000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    7              7
- For this layer : MEDIUM (left justify):  AIR521ICRU              
+ For this layer : MEDIUM (left justify):  AIR521ICRU
 
  FOR LAYER   7 IN THE CHAMBER:
 
  ZTHICK:         0.02540
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    8              8
- For this layer : MEDIUM (left justify):  AL521ICRU               
+ For this layer : MEDIUM (left justify):  AL521ICRU
 
  FOR LAYER   8 IN THE CHAMBER:
 
  ZTHICK:         0.20000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    7              7
- For this layer : MEDIUM (left justify):  AIR521ICRU              
+ For this layer : MEDIUM (left justify):  AIR521ICRU
 
  FOR LAYER   9 IN THE CHAMBER:
 
  ZTHICK:         0.00025
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    9              9
- For this layer : MEDIUM (left justify):  AG521ICRU               
+ For this layer : MEDIUM (left justify):  AG521ICRU
 
  FOR LAYER  10 IN THE CHAMBER:
 
  ZTHICK:         0.02540
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100   10             10
- For this layer : MEDIUM (left justify):  MICA521                 
+ For this layer : MEDIUM (left justify):  MICA521
 
  FOR LAYER  11 IN THE CHAMBER:
 
  ZTHICK:         0.00025
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    9              9
- For this layer : MEDIUM (left justify):  AG521ICRU               
+ For this layer : MEDIUM (left justify):  AG521ICRU
 
  FOR LAYER  12 IN THE CHAMBER:
 
  ZTHICK:         0.20000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    7              7
- For this layer : MEDIUM (left justify):  AIR521ICRU              
+ For this layer : MEDIUM (left justify):  AIR521ICRU
 
  FOR LAYER  13 IN THE CHAMBER:
 
  ZTHICK:         0.02540
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    8              8
- For this layer : MEDIUM (left justify):  AL521ICRU               
+ For this layer : MEDIUM (left justify):  AL521ICRU
 
  FOR LAYER  14 IN THE CHAMBER:
 
  ZTHICK:         0.20000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    7              7
- For this layer : MEDIUM (left justify):  AIR521ICRU              
+ For this layer : MEDIUM (left justify):  AIR521ICRU
 
  FOR LAYER  15 IN THE CHAMBER:
 
  ZTHICK:         0.05000
  ECUT,PCUT,DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
 :    0.7000    0.0100    8              8
- For this layer : MEDIUM (left justify):  AL521ICRU               
+ For this layer : MEDIUM (left justify):  AL521ICRU
 
  FOR THE CHAMBER WALL:
 
  ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
  :     0.7000    0.0100   11             11
- For this region:  MEDIUM (left justify):  AL521ICRU               
+ For this region:  MEDIUM (left justify):  AL521ICRU
 
  FOR THE GAP BETWEEN THE CHAMBER WALL AND THE
 CONTAINER WALL:
 
  ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
  :     0.7000    0.0100    0              0
- For this region:  MEDIUM (left justify):  AIR521ICRU              
+ For this region:  MEDIUM (left justify):  AIR521ICRU
 
  FOR THE CONTAINER WALL:
 
  ECUT,PCUT, DOSE ZONE(0=>do not score dose),IREGION_TO_BIT
  :     0.7000    0.0100   11             11
- For this region:  MEDIUM (left justify):  AL521ICRU               
+ For this region:  MEDIUM (left justify):  AL521ICRU
 
  THERE WILL BE AN AIR GAP SET UP BETWEEN Z= 15.2000 AND Z= 15.6000
 
@@ -582,9 +582,9 @@ CONTAINER WALL:
  MRNGE: ENTER 1 to estimate thickness of IONCHAM for ECUTRR
  calculations in automated range rejection; otherwise, do
  not calculate ECUTRR    1
- 
 
-          Z_min_thick ,     MED_min_thick  
+
+          Z_min_thick ,     MED_min_thick
             0.1508              7
             0.0010              8
             0.0508              9
@@ -595,7 +595,7 @@ CONTAINER WALL:
  ===============================================================================
  Outer boundary of CM  5:   12.00000
 
- Next component is a stacked set of truncated cones 
+ Next component is a stacked set of truncated cones
 
  RING (CONESTAK Rev 1.8)
  Previous CM ends at:    16.80260 cm
@@ -614,11 +614,11 @@ CONTAINER WALL:
  Local region   1 (inside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010           0                   0
- Material of region   1  MEDIUM (left justify):  AIR521ICRU              
+ Material of region   1  MEDIUM (left justify):  AIR521ICRU
  Local region   2 (outside of cone)
  ECUT, PCUT (MeV), DOSE ZONE (0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :    0.70000     0.010          12                  12
- Material of region   2  MEDIUM (left justify):  MILDSTEEL521            
+ Material of region   2  MEDIUM (left justify):  MILDSTEEL521
 
  ===============================================================================
   Input blank line to signify start of component module
@@ -630,8 +630,8 @@ CONTAINER WALL:
  Next component is a flat inclined mirror
       Outer boundary is a square with |x| & |y| <     12.00 cm
  Previous CM ends at:    18.80000 cm
- TITLE:  mica and Al mirror at 45 degrees to z-axis                  
- Z position at which mirror (excluding air gap) starts 
+ TITLE:  mica and Al mirror at 45 degrees to z-axis
+ Z position at which mirror (excluding air gap) starts
 and thickness of mirror in Z direction (on one line)
  :        19.60000        7.00000
  XFMIN (X position that front face crosses front of CM) and
@@ -644,22 +644,22 @@ and thickness of mirror in Z direction (on one line)
  For layer  1 of mirror:
  ECUT, PCUT(MeV), DOSE ZONE(0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :   0.000    0.000             13                 13
- Material of layer   1  MEDIUM (left justify):  MICA521                 
+ Material of layer   1  MEDIUM (left justify):  MICA521
 
  For layer  2 of mirror:
  ECUT, PCUT(MeV), DOSE ZONE(0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :   0.000    0.000             13                 13
- Material of layer   2  MEDIUM (left justify):  AL521ICRU               
+ Material of layer   2  MEDIUM (left justify):  AL521ICRU
 
  For region behind mirror:
  ECUT, PCUT(MeV), DOSE ZONE(0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :   0.000    0.000              0                  0
- Material of region behind mirror  MEDIUM (left justify):  AIR521ICRU              
+ Material of region behind mirror  MEDIUM (left justify):  AIR521ICRU
 
  For region in front of mirror:
  ECUT, PCUT(MeV), DOSE ZONE(0=DO NOT SCORE DOSE), IREGION_TO_BIT
  :   0.000    0.000              0                  0
- Material of region in front of mirror  MEDIUM (left justify):  AIR521ICRU              
+ Material of region in front of mirror  MEDIUM (left justify):  AIR521ICRU
 
 
  ************************************************************
@@ -676,7 +676,7 @@ and thickness of mirror in Z direction (on one line)
  Outer boundary of CM  7:   10.00000
  This component is sets of paired bars or jaws
       Outer boundary is a square with |x| & |y| <     10.00 cm
- TITLE:  JAWS set for 10x10 cm field at 100 cm SSD                   
+ TITLE:  JAWS set for 10x10 cm field at 100 cm SSD
  Previous CM ends at:    26.60000 cm
  NUMBER OF paired bars/jaws (minimum 1, maximum 12):     2
 
@@ -699,36 +699,36 @@ and thickness of mirror in Z direction (on one line)
   Now input data re ECUT and PCUT for each region
 
  For central region which is assumed to be air
- ECUT,       PCUT,   DOSE ZONE OF AIR,   REGION TO BIT 
+ ECUT,       PCUT,   DOSE ZONE OF AIR,   REGION TO BIT
  :     0.00000    0.00000    0    0
 
  Paired bars/jaws no:  1
- ECUT,        PCUT,       DOSE ZONE,    IREGION_TO_BIT 
+ ECUT,        PCUT,       DOSE ZONE,    IREGION_TO_BIT
  :    0.00000    0.00000   14   14
- Medium in this region MEDIUM (left justify):  PB521ICRU               
+ Medium in this region MEDIUM (left justify):  PB521ICRU
 
  Paired bars/jaws no:  2
- ECUT,        PCUT,       DOSE ZONE,    IREGION_TO_BIT 
+ ECUT,        PCUT,       DOSE ZONE,    IREGION_TO_BIT
  :    0.00000    0.00000   15   15
- Medium in this region MEDIUM (left justify):  PB521ICRU               
+ Medium in this region MEDIUM (left justify):  PB521ICRU
 
  ===============================================================================
   Input blank line to signify start of component module
  ===============================================================================
  Outer boundary of CM  8:   17.00000
 
- Next component is a set of square or rectangular scrapers 
+ Next component is a set of square or rectangular scrapers
 
 APPLICAT   (APPLICAT: Rev 1.6)
 
- TITLE:  applicator with 2 steel and 3 Al scrapers                   
+ TITLE:  applicator with 2 steel and 3 Al scrapers
 
  Input ZBACK_APPLICAT, the Z coordinate of the back face of this CM
  [Note: Leave at least min. airgap (= 0.01000 cm) between
  the back of the last scraper and ZBACK]:      100.00000
 
- Number of scrapers in the CM (minimum 1, maximum10): 
- and the index for scrapers shape: 0 (default) for square, 
+ Number of scrapers in the CM (minimum 1, maximum10):
+ and the index for scrapers shape: 0 (default) for square,
                                     1 for rectangualr     5    0
 
  scrapers to be square, use square scraper input format.
@@ -763,45 +763,45 @@ APPLICAT   (APPLICAT: Rev 1.6)
  :    96.05    0.25    5.10    4.00          20          20
 
  ECUT, PCUT of scrapers & air
- & DOSE ZONE, IREGION_TO_BIT of air (all in one line): 
+ & DOSE ZONE, IREGION_TO_BIT of air (all in one line):
         0.00000        0.00000    0    0
 
- SCRAPER    1 MEDIUM (left justify):  AL521ICRU               
+ SCRAPER    1 MEDIUM (left justify):  AL521ICRU
 
- SCRAPER    2 MEDIUM (left justify):  AL521ICRU               
+ SCRAPER    2 MEDIUM (left justify):  AL521ICRU
 
- SCRAPER    3 MEDIUM (left justify):  FE521ICRU               
+ SCRAPER    3 MEDIUM (left justify):  FE521ICRU
 
- SCRAPER    4 MEDIUM (left justify):  FE521ICRU               
+ SCRAPER    4 MEDIUM (left justify):  FE521ICRU
 
- SCRAPER    5 MEDIUM (left justify):  AL521ICRU               
+ SCRAPER    5 MEDIUM (left justify):  AL521ICRU
   Input blank line to signify end of component module
 
  Back in main of beamnrc.mortran after inputs from CMs
 
 
  There are 10 different media:
-           Medium(  1) is: AIR521ICRU              
-           Medium(  2) is: NI521ICRU               
-           Medium(  3) is: WNICU521                
-           Medium(  4) is: MILDSTEEL521            
-           Medium(  5) is: PB521ICRU               
-           Medium(  6) is: CU521ICRU               
-           Medium(  7) is: AL521ICRU               
-           Medium(  8) is: AG521ICRU               
-           Medium(  9) is: MICA521                 
-           Medium( 10) is: FE521ICRU               
+           Medium(  1) is: AIR521ICRU
+           Medium(  2) is: NI521ICRU
+           Medium(  3) is: WNICU521
+           Medium(  4) is: MILDSTEEL521
+           Medium(  5) is: PB521ICRU
+           Medium(  6) is: CU521ICRU
+           Medium(  7) is: AL521ICRU
+           Medium(  8) is: AG521ICRU
+           Medium(  9) is: MICA521
+           Medium( 10) is: FE521ICRU
 
  CALL TO HATCH AT  09:53:59
-  old PRESTA calculates default min. step-size for BCA: 
+  old PRESTA calculates default min. step-size for BCA:
       minimum ECUT found:   0.699999988
       default BLCMIN is:   3.76526785
-      this corresponds to   43.1752701 elastic MFPs 
-  Reading screened Rutherford MS data ...............  done 
+      this corresponds to   43.1752701 elastic MFPs
+  Reading screened Rutherford MS data ...............  done
 
 
 Reading spin data base from /usr/people/bwalters/HEN_HOUSE/data/spinms.data
-EGSnrc spin data, version 2.0   
+EGSnrc spin data, version 2.0
 Data generated on a machine with 1234 endianess
 The endianess of this CPU is 1234
 Ranges:      1.00   100.00  0.30054  1.00000
@@ -833,7 +833,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  Output from subroutine EDGSET:
  ==============================
 
-  Atomic relaxations requested! 
+  Atomic relaxations requested!
 
  Reading photo-absorption data ..... Done
  Reading relaxation data ....  Done
@@ -841,7 +841,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  Bound Compton scattering requested, reading data ...... Done
 
  Initializing Bound Compton scattering ......
- Medium   1 has  18 shells: 
+ Medium   1 has  18 shells:
   1  10  1  0.00004 0.210E+02     0.285
   2  11  2  0.00004 0.110E+03     0.011
   3  12  3  0.00004 0.669E+02     0.011
@@ -860,7 +860,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  16  76  5  0.00129 0.889E+02     0.029
  17  77  5  0.00129 0.606E+02     0.016
  18  78  5  0.00257 0.606E+02     0.016
- Medium   2 has   9 shells: 
+ Medium   2 has   9 shells:
   1 156  1  0.07143 0.426E+01     8.332
   2 157  2  0.07143 0.160E+02     1.010
   3 158  3  0.07143 0.815E+01     0.871
@@ -870,7 +870,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
   7 162  5  0.14286 0.277E+02     0.067
   8 163  5  0.14286 0.599E+02     0.008
   9 164  5  0.21429 0.599E+02     0.008
- Medium   3 has  40 shells: 
+ Medium   3 has  40 shells:
   1 882  1  0.01436 0.138E+01    69.523
   2 883  2  0.01436 0.495E+01    12.099
   3 884  3  0.01436 0.242E+01    11.542
@@ -911,7 +911,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  38 172  5  0.01564 0.253E+02     0.008
  39 173  5  0.02345 0.253E+02     0.008
  40 174  6  0.00391 0.225E+03     0.008
- Medium   4 has  27 shells: 
+ Medium   4 has  27 shells:
   1 138  1  0.07618 0.460E+01     7.111
   2 139  2  0.07618 0.174E+02     0.848
   3 140  3  0.07618 0.890E+01     0.721
@@ -939,7 +939,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  25  48  4  0.00092 0.204E+02     0.099
  26  49  5  0.00046 0.142E+03     0.008
  27  50  5  0.00046 0.102E+03     0.008
- Medium   5 has  23 shells: 
+ Medium   5 has  23 shells:
   11054  1  0.02439 0.121E+01    88.005
   21055  2  0.02439 0.430E+01    15.861
   31056  3  0.02439 0.210E+01    15.200
@@ -963,7 +963,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  211074  7  0.07317 0.311E+02     0.018
  221075  7  0.02439 0.142E+03     0.007
  231076  7  0.02439 0.111E+03     0.007
- Medium   6 has  10 shells: 
+ Medium   6 has  10 shells:
   1 165  1  0.06897 0.412E+01     8.980
   2 166  2  0.06897 0.153E+02     1.099
   3 167  3  0.06897 0.782E+01     0.953
@@ -974,14 +974,14 @@ Ranges:      1.00   100.00  0.30054  1.00000
   8 172  5  0.13793 0.253E+02     0.008
   9 173  5  0.20690 0.253E+02     0.008
  10 174  6  0.03448 0.225E+03     0.008
- Medium   7 has   6 shells: 
+ Medium   7 has   6 shells:
   1  39  1  0.15385 0.940E+01     1.558
   2  40  2  0.15385 0.418E+02     0.118
   3  41  3  0.15385 0.230E+02     0.073
   4  42  4  0.30769 0.230E+02     0.073
   5  43  5  0.15385 0.170E+03     0.006
   6  44  5  0.07692 0.126E+03     0.006
- Medium   8 has  15 shells: 
+ Medium   8 has  15 shells:
   1 391  1  0.04255 0.240E+01    25.514
   2 392  2  0.04255 0.864E+01     3.806
   3 393  3  0.04255 0.432E+01     3.524
@@ -997,7 +997,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  13 403  6  0.08511 0.338E+02     0.008
  14 404  6  0.12766 0.344E+02     0.008
  15 405  7  0.02128 0.225E+03     0.008
- Medium   9 has  25 shells: 
+ Medium   9 has  25 shells:
   1  79  1  0.01010 0.636E+01     3.608
   2  80  2  0.01010 0.253E+02     0.379
   3  81  3  0.01010 0.132E+02     0.297
@@ -1023,7 +1023,7 @@ Ranges:      1.00   100.00  0.30054  1.00000
  23  49  5  0.03030 0.142E+03     0.008
  24  50  5  0.03030 0.102E+03     0.008
  25   1  1  0.01010 0.116E+03     0.014
- Medium  10 has   9 shells: 
+ Medium  10 has   9 shells:
   1 138  1  0.07692 0.460E+01     7.111
   2 139  2  0.07692 0.174E+02     0.848
   3 140  3  0.07692 0.890E+01     0.721
@@ -1047,22 +1047,22 @@ Ranges:      1.00   100.00  0.30054  1.00000
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Bound Compton scattering                                    ON            
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          ON            
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    ON
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          ON
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
  Maxium electron step in cm (SMAX)                               0.1000E+11
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      43.18    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      43.18
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -1082,44 +1082,44 @@ Ranges:      1.00   100.00  0.30054  1.00000
 
  BATCH #  TIME-ELAPSED  TOTAL CPUTIME  RATIO  TIME OF DAY  RNG pointers
 
-     1          0.0            0.0      0.00    09:54:01   ixx jxx =   97  33 
+     1          0.0            0.0      0.00    09:54:01   ixx jxx =   97  33
      # of histories run:      5000      # of particles in ph-sp file:       825
 
-     2          3.2            2.7      1.17    09:54:04   ixx jxx =   92  28 
+     2          3.2            2.7      1.17    09:54:04   ixx jxx =   92  28
      # of histories run:     10000      # of particles in ph-sp file:      1585
 
-     3          6.4            5.5      1.17    09:54:07   ixx jxx =    1  34 
+     3          6.4            5.5      1.17    09:54:07   ixx jxx =    1  34
      # of histories run:     15000      # of particles in ph-sp file:      2406
 
-     4          9.6            8.2      1.17    09:54:11   ixx jxx =   19  52 
+     4          9.6            8.2      1.17    09:54:11   ixx jxx =   19  52
      # of histories run:     20000      # of particles in ph-sp file:      3265
 
-     5         12.8           10.9      1.17    09:54:14   ixx jxx =   56  89 
+     5         12.8           10.9      1.17    09:54:14   ixx jxx =   56  89
      # of histories run:     25000      # of particles in ph-sp file:      4019
 
-     6         16.0           13.7      1.17    09:54:17   ixx jxx =   65   1 
+     6         16.0           13.7      1.17    09:54:17   ixx jxx =   65   1
      # of histories run:     30000      # of particles in ph-sp file:      4803
 
-     7         19.3           16.4      1.18    09:54:20   ixx jxx =   78  14 
+     7         19.3           16.4      1.18    09:54:20   ixx jxx =   78  14
      # of histories run:     35000      # of particles in ph-sp file:      5601
 
-     8         22.5           19.2      1.18    09:54:23   ixx jxx =   60  93 
+     8         22.5           19.2      1.18    09:54:23   ixx jxx =   60  93
      # of histories run:     40000      # of particles in ph-sp file:      6424
 
-     9         25.7           21.9      1.17    09:54:27   ixx jxx =   83  19 
+     9         25.7           21.9      1.17    09:54:27   ixx jxx =   83  19
      # of histories run:     45000      # of particles in ph-sp file:      7249
 
-    10         28.9           24.6      1.17    09:54:30   ixx jxx =   32  65 
+    10         28.9           24.6      1.17    09:54:30   ixx jxx =   32  65
      # of histories run:     50000      # of particles in ph-sp file:      8085
 
 
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   63  96
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =      32.1      27.4s (=   0.01HR)   1.17
  CPUTIME per history =   0.00055 sec. Number of histories per hour =    6581353.
-   On i686-pc-1-gnu using gcc 3.3     
+   On i686-pc-1-gnu using gcc 3.3
 
 
  MIN PARTICLE WEIGHT FOR ALL SCORING ZONES =    1.0000000

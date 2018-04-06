@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Long Zhang
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -40,8 +41,8 @@
 
 EGS_IsotropicSource::EGS_IsotropicSource(EGS_Input *input,
         EGS_ObjectFactory *f) : EGS_BaseSimpleSource(input,f), shape(0), geom(0),
-    regions(0), nrs(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
-    gc(IncludeAll) {
+    regions(0), min_theta(0), max_theta(M_PI), min_phi(0), max_phi(2*M_PI),
+    nrs(0), gc(IncludeAll) {
     vector<EGS_Float> pos;
     EGS_Input *ishape = input->takeInputItem("shape");
     if (ishape) {

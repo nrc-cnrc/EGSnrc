@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -107,7 +107,8 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     d = new EGS_Float [np-1];
     uj = new EGS_2DVector [np-1];
     pc = new bool [np-1];
-    xmin = 1e30, xmax = -1e30, ymin = 1e30, ymax = -1e30;
+    xmin = veryFar, xmax = -veryFar;
+    ymin = veryFar, ymax = -veryFar;
     for (j=0; j<np-1; j++) {
         pc[j] = true;
         if (p[j].x < xmin) {
@@ -163,7 +164,6 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     }
 
     // find a point that is part of the convex hull of this polygon
-    int jstart;
     for (j=0; j<np-1; j++) {
         bool is_ok = true;
         for (int i=0; i<np; i++) {
@@ -173,7 +173,6 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
                 }
         }
         if (is_ok) {  // found the point
-            jstart = j;
             pp = new EGS_2DVector [np];
             int jj=0;
             int i;
@@ -195,7 +194,11 @@ EGS_2DPolygon::EGS_2DPolygon(vector<EGS_2DVector> &points, bool Open) {
     int nc=2;
     j=2;
     bool doing_chull=true;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_2DPolygon::EGS_2DPolygon: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return;
+        }
         EGS_2DVector s(pp[j]-chull[nc-1]);
         EGS_2DVector sperp(-s.y,s.x);
         if (!ccw) {

@@ -23,8 +23,12 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:    Frederic Tessier
+#  Contributors:    Long Zhang
+#                   Frederic Tessier
 #                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hugo Bouchard
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -89,8 +93,18 @@ It is defined most simply using the following input:
     charge = -1 or 0 or 1 for electrons or photons or positrons
     min theta = 80  [degree] (optional)
     max theta = 100 [degree] (optional)
-    min phi = 80  [degree] (optional)
-    max phi = 100 [degree] (optional)
+    min phi   = 80  [degree] (optional)
+    max phi   = 100 [degree] (optional)
+    geometry = some_name          # Optional, only particles inside the geometry
+                                  # or inside some of its regions are generated.
+    region selection = IncludeAll # Optional, only for a valid geometry defined as above.
+                                  # Also possible: ExcludeAll, IncludeSelected, ExcludeSelected.
+                                  # Defaults to IncludeAll.
+    selected regions = ir1,...    # If IncludeSelected or ExcludeSelected above, then user must
+                                  # enter the desired regions to be excluded or included. If
+                                  # no region provided, region selection switches to:
+                                  #        IncludeAll if IncludeSelected
+                                  #        ExcludeAll if ExcludeSelected
 :stop source:
 \endverbatim
 
@@ -227,9 +241,9 @@ public:
                         EGS_BaseGeometry *geometry,
                         const string &Name="", EGS_ObjectFactory *f=0) :
         EGS_BaseSimpleSource(Q,Spec,Name,f), shape(Shape),
-        min_theta(85.), max_theta(95.), min_phi(0), max_phi(2*M_PI),
-        buf_1(1), buf_2(-1),
-        geom(geometry), regions(0), nrs(0), gc(IncludeAll) {
+        geom(geometry), regions(0), min_theta(85.), max_theta(95.),
+        buf_1(1), buf_2(-1), min_phi(0), max_phi(2*M_PI),
+        nrs(0), gc(IncludeAll) {
         setUp();
     };
 
@@ -285,16 +299,11 @@ public:
             }
         }
         while (!ok);
-
-        u.z = rndm->getUniform()*(buf_1 - buf_2) - buf_1;
-
-        //u.z = 2*rndm->getUniform()-1;
+        u.z = buf_1 - rndm->getUniform()*(buf_1 - buf_2);
         EGS_Float sinz = 1-u.z*u.z;
         if (sinz > epsilon) {
             sinz = sqrt(sinz);
             EGS_Float cphi, sphi;
-            //rndm->getAzimuth(cphi,sphi);
-            // sample phi, slower than rndm->getAzimuth
             EGS_Float phi = min_phi +(max_phi - min_phi)*rndm->getUniform();
             cphi = cos(phi);
             sphi = sin(phi);
@@ -326,7 +335,7 @@ public:
 
 protected:
 
-    EGS_BaseShape *shape;  //!< The shape from which particles are emitted.
+    EGS_BaseShape    *shape;  //!< The shape from which particles are emitted.
     EGS_BaseGeometry *geom;
     int              *regions;
 
@@ -335,13 +344,9 @@ protected:
     EGS_Float min_theta, max_theta;
     EGS_Float buf_1, buf_2; //! avoid multi-calculating cos(min_theta) and cos(max_theta)
     EGS_Float min_phi, max_phi;
+
     int                 nrs;
     GeometryConfinement gc;
 };
-
-// change log:
-// Long, Jan 15 2008 add polar angle limitation and macro support
-//                  a word on the polar angle sampling:
-//                        cos(theta) follows a uniform distribution
 
 #endif

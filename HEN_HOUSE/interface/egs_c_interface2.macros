@@ -127,7 +127,7 @@ REPLACE {;COMIN/COMPTON-DATA/;} WITH {
 " Remove iedgfl and iphter, to go into the cross section options common "
 REPLACE {;COMIN/EDGE/;} WITH
 {;
-   COMMON/EDGE/binding_energies($MXSHELL,$MXELEMENT),
+   COMMON/EDGE/binding_energies($MXSHXSEC,$MXELEMENT),
                interaction_prob($MXSHELL,$MXELEMENT),
                relaxation_prob($MXTRANS,$MXELEMENT),
                edge_energies($MXEDGE,$MXELEMENT),
@@ -248,11 +248,13 @@ REPLACE {;COMIN/USEFUL/;} WITH {
 REPLACE {;COMIN/X-OPTIONS/;} WITH {
  ;common/xsection_options/ ibrdst, iprdst, ibr_nist, spin_effects,
                            ibcmp,iraylr,iedgfl,iphter,pair_nrc,itriplet,
-                           radc_flag,eii_flag,iphotonuc;
+                           radc_flag,eii_flag,iphotonuc,
+                           eadl_relax, mcdf_pe_xsections;
   $INTEGER                 ibrdst, iprdst, ibr_nist,eii_flag,iphotonuc,
                            ibcmp,iraylr,iedgfl,iphter,pair_nrc,
                            radc_flag,itriplet;
   $LOGICAL                 spin_effects;
+  $LOGICAL  eadl_relax, mcdf_pe_xsections;
 };
 
 " Again, to remove geometry dependence make e_max_rr and i_do_rr sclars"
@@ -293,7 +295,8 @@ REPLACE {$set-region-by-region-defaults;} WITH {;
   ecut = 0; pcut = 0; smaxir = $MAX-SMAX;
   ecut_new = 0; pcut_new = 0; smax_new = $MAX-SMAX;
   rhor = 1; rhor_new = 1;
-  ibcmp = $IBCMP-DEFAULT; iraylr = 0; iphotonuc=$IPHOTONUCR-DEFAULT;
+  ibcmp = $IBCMP-DEFAULT;
+  iraylr = $IRAYLR-DEFAULT; iphotonuc=$IPHOTONUCR-DEFAULT;
   iedgfl = $IEDGFL-DEFAULT; iphter = $IPHTER-DEFAULT;
   i_do_rr = 0; e_max_rr = 0; e_max_rr_new = 0;
 };
@@ -384,6 +387,7 @@ REPLACE {$start_new_particle;} WITH {
 REPLACE {$electron_region_change;} WITH {
   ir(np) = irnew; irl = irnew; rhor = rhor_new;
   medium = medium_new; ecut = ecut_new; smaxir = smax_new;
+  Bx=Bx_new;By=By_new;Bz=Bz_new;
 };
 
 REPLACE {$photon_region_change;} WITH {
@@ -430,7 +434,7 @@ REPLACE {$COMIN-PAIR;} WITH {;
 REPLACE {$COMIN-PHOTO;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
   ;COMIN/BOUNDS,BREMPR,DEBUG,EDGE,EPCONT,MEDIA,PHOTIN,RANDOM,
-         STACK,UPHIOT,USEFUL,EGS-VARIANCE-REDUCTION,EGS-IO/;
+         STACK,UPHIOT,USEFUL,EGS-VARIANCE-REDUCTION,EGS-IO,RELAX-DATA/;
 };
 REPLACE {$COMIN-PHOTON;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
@@ -451,7 +455,7 @@ REPLACE {$COMIN-INIT-COMPT;} WITH {;
 REPLACE {$COMIN-COMPT;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
   ;COMIN/COMPTON-DATA,DEBUG,EPCONT,STACK,THRESH,UPHIOT,USEFUL,RANDOM,
-         EGS-VARIANCE-REDUCTION,EGS-IO/;
+         EGS-VARIANCE-REDUCTION,EGS-IO,RELAX-DATA/;
 };
 REPLACE {$COMIN-ELECTR;} WITH {;
   ;integer max_med; parameter (max_med = MXMED);
@@ -481,7 +485,7 @@ REPLACE {$COMIN-EII-INIT;} WITH {;
 REPLACE {$COMIN-EII-SAMPLE;} WITH {
   ;integer max_med; parameter (max_med = MXMED);
   ;COMIN/EPCONT,EII-DATA,EGS-VARIANCE-REDUCTION,RANDOM,STACK,THRESH,
-         UPHIOT,USEFUL,EGS-IO/;
+         UPHIOT,USEFUL,EGS-IO,RELAX-DATA/;
 };
 
 REPLACE {$declare_max_medium;} WITH {
@@ -511,7 +515,7 @@ APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTO;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-PHOTON;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-EII-INIT;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-TRIPLET;};
-APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-GET-TRANSPORTP;};
+"APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-GET-TRANSPORTP;}; already there"
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-MOLLER;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-RADC-INIT;};
 APPEND {;COMIN/X-OPTIONS/;} TO {$COMIN-INIT-NIST-BREMS;};

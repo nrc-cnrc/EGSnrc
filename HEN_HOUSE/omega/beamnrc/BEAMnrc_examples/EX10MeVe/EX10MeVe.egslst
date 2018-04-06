@@ -6,7 +6,7 @@
 
 
 
-EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field              
+EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            09:54:01 Sep 13 2004
@@ -32,7 +32,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
                    ---------------------           ----
                                        1             8
                    Phase space files will be output at EVERY scoring plane
-                   Range rejection switch                  ON 
+                   Range rejection switch                  ON
                    Range rejection in  56 regions
                    Automatic ECUTRR used starting from          0.700 MeV
  Range rejection based on medium of region particle is traversing
@@ -72,22 +72,22 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Bound Compton scattering                                    ON            
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          ON            
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    ON
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          ON
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
  Maxium electron step in cm (SMAX)                               0.1000E+11
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      43.18    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      43.18
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -205,7 +205,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   Component module  1 is one or more planar slabs  (SLABS Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: 0.1cm of vacuum, Ni exit window from accelerator vacuum.    
+    Title: 0.1cm of vacuum, Ni exit window from accelerator vacuum.
 
  XITWIN geometry parameters:
  -----------------------------
@@ -213,8 +213,8 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
  Half-width of outer boundary of CM =         5.00000 cm
 
  slab #    Z front    thickness
-            face               
-            (cm)        (cm)   
+            face
+            (cm)        (cm)
     1       0.000      0.100
     2       0.100      0.006
     3       0.106      0.274
@@ -234,7 +234,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   Component module  2 - stacked truncated cones (3 regions CONS3R Rev 1.10)
  -------------------------------------------------------------------------------
 
-    Title: primary collimator: cone of air shielded by W-Ni-Cu         
+    Title: primary collimator: cone of air shielded by W-Ni-Cu
 
  COLLIMAT geometry parameters:
  --------------------------
@@ -264,7 +264,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
  region            cutoff   cutoff   level     max    zone  set
                     (MeV)    (MeV)   (MeV)    (MeV)
    1     inside     0.700    0.010   1.516    2.000     0   23   AIR521ICR
-   2    outside     0.700    0.010   1.516    2.000     2    2   WNICU521 
+   2    outside     0.700    0.010   1.516    2.000     2    2   WNICU521
    3     airgap     0.700    0.010   1.516    2.000     0   23   AIR521ICR
          at top
 
@@ -274,7 +274,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   Component module  3 is stacked set of truncated cones (CONESTAK:Rev 1.8)
  -------------------------------------------------------------------------------
 
- Title: Pb and Cu scattering foil shielded by mild steel            
+ Title: Pb and Cu scattering foil shielded by mild steel
 
  SCATFOIL geometry parameters:
  -----------------------------
@@ -313,7 +313,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   Component module  4 is an ion chamber or phantom (CHAMBER Rev 1.8)
  -------------------------------------------------------------------------------
 
-    Title: Ag plated mica ion chamber with Al frame                    
+    Title: Ag plated mica ion chamber with Al frame
 
  IONCHAM region & geometry parameters:
  -------------------------------------
@@ -336,13 +336,13 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   1    1  layer  15.600  0.0500  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
   2    2  layer  15.650  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
   3    3  layer  15.850  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
-  4    4  layer  15.850  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521  
+  4    4  layer  15.850  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521
   5    5  layer  15.876  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
   6    6  layer  15.876  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
   7    7  layer  16.076  0.0254  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
   8    8  layer  16.101  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
   9    9  layer  16.301  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
- 10   10  layer  16.302  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521  
+ 10   10  layer  16.302  0.0254  5.000  0.700  0.010  0.871  2.000 10  MICA521
  11   11  layer  16.327  0.0002  5.000  0.700  0.010  0.871  2.000  9  AG521ICRU
  12   12  layer  16.327  0.2000  5.000  0.700  0.010  0.871  2.000  7  AIR521ICR
  13   13  layer  16.527  0.0254  5.000  0.700  0.010  0.871  2.000  8  AL521ICRU
@@ -409,10 +409,10 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
 
  -------------------------------------------------------------------------------
-  Component module  6 is a flat inclined mirror MIRROR (Rev 1.5) 
+  Component module  6 is a flat inclined mirror MIRROR (Rev 1.5)
  -------------------------------------------------------------------------------
 
- Title: mica and Al mirror at 45 degrees to z-axis                  
+ Title: mica and Al mirror at 45 degrees to z-axis
 
  MIRROR geometry parameters:
  -----------------------------
@@ -435,7 +435,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
  local layer  location   electron   photon  range-rejection   dose  bit  medium
  region                   cutoff    cutoff   level     max    zone  set
                           (MeV)      (MeV)   (MeV)    (MeV)
-   1      1     layer      0.700    0.010    0.821    2.000   13   13  MICA521  
+   1      1     layer      0.700    0.010    0.821    2.000   13   13  MICA521
    2      2     layer      0.700    0.010    0.821    2.000   13   13  AL521ICRU
    3     NA    region      0.700    0.010    0.821    2.000    0   23  AIR521ICR
                behind
@@ -450,7 +450,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   Component module  7 is JAWS (Rev 1.8)
  -------------------------------------------------------------------------------
 
-    Title: JAWS set for 10x10 cm field at 100 cm SSD                   
+    Title: JAWS set for 10x10 cm field at 100 cm SSD
 
  MAINJAWS geometry parameters:
  -----------------------------
@@ -475,21 +475,21 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
                 centre
    2      1    +ve jaw     0.700    0.010   0.783    2.000    14   14  PB521ICRU
    3      1    -ve jaw     0.700    0.010   0.783    2.000    14   14  PB521ICRU
-                      
+
    4      2     airgap     0.700    0.010   0.783    2.000     0   23  AIR521ICR
                above &
                 centre
    5      2    +ve jaw     0.700    0.010   0.783    2.000    15   15  PB521ICRU
    6      2    -ve jaw     0.700    0.010   0.783    2.000    15   15  PB521ICRU
-                      
+
 
 
 
  -------------------------------------------------------------------------------
-  Component module  8 is a set of square scrapers (APPLICAT: Rev 1.6) 
+  Component module  8 is a set of square scrapers (APPLICAT: Rev 1.6)
  -------------------------------------------------------------------------------
 
-    Title: applicator with 2 steel and 3 Al scrapers                   
+    Title: applicator with 2 steel and 3 Al scrapers
 
  APPLICAT geometry parameters:
  --------------------------
@@ -499,7 +499,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
     scraper   Z of     bar/gap  x half-width  y half-width  x bar   y bar
     number  front face  thick     opening       opening     width   width
-             (cm)       (cm)       (cm)         (cm)        (cm)     (cm) 
+             (cm)       (cm)       (cm)         (cm)        (cm)     (cm)
     airgap    49.5000    12.0500         NA         NA         NA         NA
          1    61.5500     0.1500     7.0000     7.0000     2.8000     2.8000
     airgap    61.7000     6.9000         NA         NA         NA         NA
@@ -534,7 +534,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
 
 
-EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field              
+EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            09:54:01 Sep 13 2004
@@ -548,10 +548,10 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   63  96
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =      32.1      27.4s (=   0.01HR)   1.17
  CPUTIME per history =   0.00055 sec. Number of histories per hour =    6581353.
-   On i686-pc-1-gnu using gcc 3.3     
+   On i686-pc-1-gnu using gcc 3.3
 
                    TOTAL # CHARGED PARTICLE STEPS        8.145E+06 +/- 0.1%
          # CHARGED PARTICLE STEPS/INITIAL HISTORY        1.629E+02 +/- 0.1%
@@ -646,7 +646,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
               TOTAL DOSE PER INCIDENT PARTICLE
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    5.341E+00   2.249E-12+/- 0.4%   1.201E-14+/- 0.4%
@@ -672,7 +672,7 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
 
          CONTAMINANT DOSE/INCIDENT PARTICLE FOR CM  4
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    5.341E+00   0.000E+00+/-99.9%   0.000E+00+/-99.9%
@@ -706,18 +706,18 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
  COMPONENT  FILTER                      BIT
     #        TYPE                        #s
 
-    1       EXCLUDE   12   14   15   16   17   18   19   20 
-    2       INCLUDE   12 
-    3       INCLUDE   14 
-    4       INCLUDE   15 
-    5       INCLUDE   16 
-    6       INCLUDE   17 
-    7       INCLUDE   18 
-    8       INCLUDE   19 
-    9       INCLUDE   20 
+    1       EXCLUDE   12   14   15   16   17   18   19   20
+    2       INCLUDE   12
+    3       INCLUDE   14
+    4       INCLUDE   15
+    5       INCLUDE   16
+    6       INCLUDE   17
+    7       INCLUDE   18
+    8       INCLUDE   19
+    9       INCLUDE   20
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3
 
    1  2.249E-12+/- 0.4%  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
    2  1.796E-15+/- 1.6%  1.687E-15+/- 1.7%  6.133E-17+/- 3.7%  9.055E-17+/- 3.6%
@@ -741,8 +741,8 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   20  3.565E-15+/- 9.8%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  5.060E-16+/-23.6%
 
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5         COMPONENT: 6  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5         COMPONENT: 6
 
    1  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
    2  1.796E-15+/- 1.6%  7.524E-18+/-14.0%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
@@ -766,8 +766,8 @@ EX10MeVe: example electron beam, 10 MeV, SSD=100cm, 10x10cm field
   20  3.565E-15+/- 9.8%  3.154E-16+/-42.4%  2.456E-17+/-99.9%  7.582E-16+/-20.1%
 
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 7         COMPONENT: 8         COMPONENT: 9  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 7         COMPONENT: 8         COMPONENT: 9
 
    1  2.249E-12+/- 0.4%  0.000E+00+/-99.9%  0.000E+00+/-99.9%  0.000E+00+/-99.9%
    2  1.796E-15+/- 1.6%  0.000E+00+/-99.9%  9.127E-21+/-99.9%  0.000E+00+/-99.9%

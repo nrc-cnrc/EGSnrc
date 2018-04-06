@@ -23,7 +23,8 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -82,7 +83,7 @@ public:
 
     EGS_ConezT(int nc, const EGS_Float *angle,
                const EGS_Vector &position, const string &Name,
-               const T &A) : EGS_BaseGeometry(Name), a(A), xo(position) {
+               const T &A) : EGS_BaseGeometry(Name), xo(position), a(A) {
         if (nc>0) {
             theta=new EGS_Float [nc];
             cos_t=new EGS_Float [nc];
@@ -206,11 +207,10 @@ public:
           up=a*u,
           rcp=a*rc;
           */
-        EGS_Float urc=u*rc;
         EGS_Float up=a*u;
         EGS_Float rcp=a*rc;
         EGS_Vector rcp_vec=a*rcp;
-        EGS_Float d=1e30;
+        EGS_Float d=veryFar;
         int new_region=-1;
 
         egsInformation("howfar: %2d %12.9f %12.9f\n",

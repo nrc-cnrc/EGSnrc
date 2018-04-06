@@ -288,7 +288,7 @@ and the electron loses no energy.\\
            %& BETA2 & Beta squared for present particle.
                   %          (Note: BETA is not included).\\
 
-           & IAUSFL & Array(29) of flags for turning on
+           & IAUSFL & Array(35) of flags for turning on
                    various calls to {\tt AUSGAB}. See table~\ref{tab_iausflg_other}\\
            & EKE   & Electron kinetic energy in MeV.\\
            & ELKE  & Natural logarithm of EKE (this is not available for
@@ -2006,7 +2006,7 @@ the next boundary in only one step in this case.
 \subsubsection{An example of HOWFAR}
 \index{HOWFAR!example}
 
-\begin{figure}[hrbt]
+\begin{figure}[htp]
    \begin{center}
    \leavevmode
    \mbox{}\hspace{-1mm}
@@ -2120,9 +2120,9 @@ The subroutine {\tt AUSGAB} is called by EGS with the statement:
       CALL AUSGAB(IARG);
 \end{verbatim}
 The argument {\tt IARG} indicates the situation under which {\tt AUSGAB}
-is being called.  {\tt IARG} can take on 29 values starting from zero
-(i.e., {\tt IARG}=0 through {\tt IARG}=28), although only the first
-five are called by default in EGSnrc.  The remaining 24 {\tt IARG}
+is being called.  {\tt IARG} can take on 35 values starting from zero
+(i.e., {\tt IARG}=0 through {\tt IARG}=34), although only the first
+five are called by default in EGSnrc.  The remaining 30 {\tt IARG}
 values must be ``switched-on" by means of the array {\tt IAUSFL}.
 The value for {\tt IARG} and the corresponding situations are given in
 Table~\ref{tab_iausfl_low}.
@@ -2140,12 +2140,12 @@ conservation, {\tt EDEP} can be summed in {\tt AUSGAB} for all {\tt IARG}
 values less than 5.  The extended {\tt IARG} range allows the user to
 extract additional information without making changes to the EGS coding.
 To do this we have created the integer flag array, {\tt IAUSFL(J)},
-for J=1 through 29.  It takes on values of 1 or 0 depending on whether
+for J=1 through 35.  It takes on values of 1 or 0 depending on whether
 {\tt AUSGAB} is called or not, respectively.  For J=1 through 5, which
 corresponds to {\tt IARG}=0 through 4, {\tt IAUSFL(J)=1} (default).
 In other words, {\tt AUSGAB} is always called for the situations
 listed in Table~\ref{tab_iausfl_low}.  For the remaining values of J,
-corresponding to {\tt IARG}=5 through 28, {\tt IAUSFL(J)=0} (default).
+corresponding to {\tt IARG}=5 through 34, {\tt IAUSFL(J)=0} (default).
 The value for {\tt IARG} and the corresponding situations for this upper
 set of {\tt IARG} values are shown in Table~\ref{tab_iausflg_other}.
 \index{IAUSFL}
@@ -2245,6 +2245,32 @@ subroutines.\\
 27 &28& An Auger electron has just been created in RELAX.\\
 &&\\
 28 &29& A positron is about to annihilate at rest.\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+% Split the table onto the next page
+\begin{table}[htbp]
+    \begin{center}
+    \caption{Values of {\tt IARG} which are off by default (continued).}
+     \vspace*{2mm}
+    \begin{tabular}{ c c   p{125mm}l }
+    \hline
+    {\tt IARG} & {\tt IAUSFL} & ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Situation \\
+    \hline
+29 &30& A photonuclear event is about to occur and a call
+            to PHOTONUC is about to be made in PHOTON.\\
+30 &31& Returned to PHOTON after a call to PHOTONUC was made.\\
+&&\\
+31 &32& Electron impact ionization is about to occur and a call
+            to eii\_sample is about to be made in MOLLER.\\
+32 &33& Returned to MOLLER after a call to eii\_sample was made.\\
+&&\\
+33 &34& A fluorescent photon from relaxations was just discarded below
+            PCUT and the energy stored in edep\_local.\\
+34 &35& An electron from relaxations was just discarded below
+            ECUT and the energy stored in edep\_local.\\
 \hline
 \end{tabular}
 \end{center}

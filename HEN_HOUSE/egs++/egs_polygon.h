@@ -99,7 +99,7 @@ public:
     */
     EGS_Float hownear(bool in, const EGS_2DVector &x) const {
         if (!open) {
-            EGS_Float tperp = 1e30;
+            EGS_Float tperp = veryFar;
             bool do_it = true;
             for (int j=0; j<np-1; j++) {
                 EGS_2DVector v(x - p[j]);
@@ -133,7 +133,7 @@ public:
         }
         else {
             do_it = true;
-            tperp = 1e30;
+            tperp = veryFar;
         }
         v = x - p[1];
         lam = uj[1]*v;
@@ -192,7 +192,7 @@ public:
         bool res = false;
         int nn = open ? np-2 : np-1;
         if (in) {
-            int jhit;
+            int jhit=0;
             for (int j=0; j<nn; j++)  {
                 if ((up = u*a[j]) < 0 && (xp = x*a[j])+epsilon > d[j]) {
                     EGS_Float tt = d[j] - xp;
@@ -219,7 +219,7 @@ public:
             }
         }
         else {
-            int jhit;
+            int jhit=0;
             if (open) {
                 if ((up = u*a[0]) > 0 && (xp = x*a[0]) < d[0]+epsilon) {
                     EGS_Float tt = (d[0] - xp)/up;
@@ -443,7 +443,7 @@ public:
     inline bool howfar(bool in, const EGS_Vector &x, const EGS_Vector &u,
                        EGS_Float &t) const {
         EGS_Float up = a*u;
-        if (in && up >= 0  || !in && up <= 0) {
+        if ((in && up >= 0)  || (!in && up <= 0)) {
             return false;
         }
         EGS_Float tt = -a.distance(x)/up;

@@ -92,7 +92,7 @@
 %Q1
 ;
 REPLACE {$VERSION} WITH {
-,'V1(Rev 1.31 2003-03-12 12:01:06-05)',}
+,' ',}
 "23456789|123456789|123456789|123456789|123456789|123456789|123456789|123456789|
 "******************************************************************************
 "
@@ -1630,7 +1630,7 @@ IF((IREJCT > 0) & (MED(IRL) > 0) & (IQ(NP) ~= 0))[
     ELSEIF(IGEOM = 60)[CDIST=SQRT((RL-RMAXR)**2+(ZL-ZMAXR)**2);]
     ELSEIF(IGEOM = 70)[CDIST=SQRT((RL-RMINR)**2+(ZMINR-ZL)**2);]
     ELSEIF(IGEOM = 80)[CDIST=SQRT((RL-RMINR)**2+(ZL-ZMAXR)**2);]
-    IF(CDIST >=RANGE) IDISC=1;
+    IF(CDIST >=RANGE) [IDISC=1;go to :USER-ELECTRON-DISCARD:;]
 ]
 }
 
@@ -2473,8 +2473,6 @@ DO IBATCH=1,$NBATCH[IBTCH=IBATCH;
           "PRINT MESSAGE AND EXIT SIMULATION LOOP"
           WRITE(IOUT,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
           WRITE(6,210) TIMMAX,IBATCH-1,IHSTRY-NCASEO,IHSTRY;
-          AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET);
-          "ADJUST THE INCIDENT FLUENCE"
           GO TO :END-SIM:;
     ]
   ]
@@ -2736,8 +2734,10 @@ ELSEIF(ISOURC=23)[
    AINFLU=dble(IHSTRY);
    SCORE_NORM_NUM=AINFLU;
 ]
-ELSE[ "do not modify AINFLU"
+ELSE[
    SCORE_NORM_NUM=dble(IHSTRY);
+   "adjust AINFLU according to actual no. of histories run"
+   AINFLU=AINFLU*dble(IHSTRY)/dble(NCASET);
 ]
 
 "for ISOURC=4 we need the data for circles, not rings, so add it up"
@@ -3200,15 +3200,20 @@ IF(IARG = 0)["transport step about to happen"
            "have BINTOP < cutoff kinetic energy"
            "in first and last cases, we must correct BINFR            "
 
-           IF((BINFR(IB) >= 1.0-FRSUM) |
-              (BINBOT<=ECUT(IRL)-PRM & IBDOWN>1))[
-                 "final energy is in this bin"
-                BINFR(IB) = 1.0 - FRSUM; ]
-
+           "final energy or transport cut-off is in this bin"
+           IF( (BINFR(IB) >= 1.0-FRSUM) |
+               (BINBOT    <= ECUT(IRL)-PRM ) )[
+                BINBOT = max(ECUT(IRL)-PRM,EKIN-EDEP);
+                IF (IB>1)[
+                   BINFR(IB) =(BINTOP(IBDOWN) - BINBOT)/EDEP;
+                ]
+                ELSE [
+                   BINFR(IB) =(EKIN - BINBOT)/EDEP;
+                ]
+           ]
            NBIN = IB;
            GO TO :FINISHED_FINDING_BIN_FRACTIONS:;
         ]
-
         ELSE ["not finished yet" FRSUM = FRSUM + BINFR(IB);]
 
      ]"end of IB loop"
@@ -3680,7 +3685,7 @@ ERROR_FLAG=0;   "Initialization of bad input flag"
 DO J=1, $NMAX [NVALUE(J)=0;]  "Initialization of Nvalue Array"
 
 OUTPUT $MAXRADII,$MAXZPLANE;
-(//' FLURZnrc VERSION '$VERSION' ON '$MACHINE' '/
+(//' FLURZnrc '$VERSION' ON '$MACHINE' '/
 T20,'Maximum number of radial and depth zones=',2I4);
 
 "*********************************************************"
@@ -4336,7 +4341,6 @@ WRITE (IOUT, *) '\f'; "page break"
 "  ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 "  ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                       T80,'*'/
-"  ' *            This is version '$VERSION' ',T80,'*'/
 "  ' *             running on '$MACHINE' ',T80,'*'/
 "  ' *',T80, '*'/
 "  ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -4359,7 +4363,6 @@ write(iout,'(T80,"*"/1X,79("*"))');
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T56,$);

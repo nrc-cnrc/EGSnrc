@@ -49,16 +49,16 @@
 \setlength{\parindent}{1.5em}
 \setlength{\topsep}{0ex}
 \setlength{\itemsep}{0ex}
-                       
-\newcommand{\lpage}[1]{(page~\pageref{#1})} 
+
+\newcommand{\lpage}[1]{(page~\pageref{#1})}
 \newcommand{\Mol}{Moli\`ere}
 
 \newcommand{\Co}{$^{60}$Co}
 \newcommand{\parsp}{~\hspace*{1.5em}}
 \setlength{\parskip}{0.1in}
 \setlength{\baselineskip}{1.0cm}
-\newcommand{\head}[1]{\begin{center}\begin{Large}{\bf #1} 
-                                              \end{Large}\end{center}} 
+\newcommand{\head}[1]{\begin{center}\begin{Large}{\bf #1}
+                                              \end{Large}\end{center}}
 \newcommand{\cen}[1]{\begin{center} #1 \end{center} }
 \newcommand{\etal}{{\em et.al.}}
 \newcommand{\ie}{{\em i.e.}}
@@ -66,7 +66,7 @@
 \newcommand{\viz}{{\em viz.}}
 \newcommand{\eg}{{\em eg.}}
 \newcommand{\sprt}[2]{\left(\frac{\overline{L}}{\rho}\right)^{\rm #1}_{\rm #2}}
-\newcommand{\eqn}[1]{\begin{equation} #1 \end{equation} } 
+\newcommand{\eqn}[1]{\begin{equation} #1 \end{equation} }
 \newcommand{\rsp}[1]{\left( \frac{L(\Delta)}{\rho} \right)_{#1}}
 \newcommand{\PhiT}{\Phi_{\rm T}}
 \newcommand{\rspt}[1]{\left( \frac{S(\Delta)}{\rho} \right)_{#1}}
@@ -155,7 +155,7 @@ Use the Up button to get back to this page from within the document.
 \begin{rawhtml}
 <BR> <HR> <P>
 \end{rawhtml}
-\copyright 
+\copyright
 Copyright 2002,  National Research Council of Canada
 Ottawa
 \begin{rawhtml}
@@ -167,7 +167,7 @@ Ottawa
 
 \title{NRC User Codes for EGSnrc}
 
-\begin{center} 
+\begin{center}
 {\sffamily \bfseries {\Huge NRC User Codes for EGSnrc}
 \vspace{5mm}\\}
 \begin{Large}
@@ -268,7 +268,7 @@ cylindrical RZ and spherical geometries. These are:
 \item[FLURZnrc] which scores particle fluence in the same geometry.
 
 \item[CAVRZnrc] which is similar to DOSRZnrc but also scores a variety of
-quantities which are of specific interest to dosimetry 
+quantities which are of specific interest to dosimetry
 calculations for an ion chamber.
 
 \item[SPRRZnrc] which calculates Spencer-Attix spectrum averaged
@@ -306,7 +306,7 @@ parts of CAVRZ but adds various more general purpose facilities such as
 calculating response functions for detectors. Dave Rogers took these
 codes and developed a general purpose fluence scoring code FLURZ and
 finally SPRRZ was developed.  Along the way various summer students worked
-under Dave Rogers and Alex Bielajew to add features. 
+under Dave Rogers and Alex Bielajew to add features.
 
 One problem was that
 all the codes had grown on their own with various bits and pieces being
@@ -336,7 +336,7 @@ from one user code to another. This was extended for source routines and
 transport routines so that the input files start to look similar for all
 the user codes.  More importantly they are much easier to read and know
 exactly what the simulation is about without having the description of
-the inputs open on your desk.   
+the inputs open on your desk.
 
 In 1999, the codes were upgraded to use the then-new EGSnrc code system.
 This was done by Iwan Kawrakow with Jan Seuntjens and Dave Rogers.
@@ -366,10 +366,10 @@ while he was at NRC.
 \subsection{Subroutines in the RZ codes}
 
 \index{subroutines}
-As pointed out before, all NRC RZ-codes work within the same RZ 
-geometry, and their \verb+HOWFAR+ and \verb+HOWNEAR+ routines are 
+As pointed out before, all NRC RZ-codes work within the same RZ
+geometry, and their \verb+HOWFAR+ and \verb+HOWNEAR+ routines are
 exactly the same. Most of the other common subroutines and macros
-have been split off as much as possible (but not completely) 
+have been split off as much as possible (but not completely)
 from the user code file. They include:
 
 \begin{itemize}
@@ -378,7 +378,7 @@ from the user code file. They include:
 \verb+ranlux.macros+, \verb+ranlux.mortran+)}
 \index{random number generators}
 
-\item{machine specific macros / routines 
+\item{machine specific macros / routines
 (\verb+machine.mortran+)}
 \index{machine.mortran}
 
@@ -411,9 +411,9 @@ from the user code file. They include:
 
 \item{Routines for initializing data I/O, opening output files, etc
 ({\tt egs\_utilities.mortran})}
-\index{egs\_utilities.mortran} 
+\index{egs\_utilities.mortran}
 
-\item{Routines for built-in parallel processing functionality 
+\item{Routines for built-in parallel processing functionality
 ({\tt egs\_parallel.mortran})}
 \index{egs\_parallel.mortran}
 
@@ -433,12 +433,12 @@ The numbering of the regions, planar zones and cylindrical
 ring zones in the RZ codes is shown in figure~\ref{fig_geom} in which
 the Z-axis is the axis of rotation shown by the dotted line running
 across the page. \verb+NR+ represents the number of cylinders  or rings, and
-\verb+NZ+ the number of planar regions or slabs, 
+\verb+NZ+ the number of planar regions or slabs,
 which are defined by {\tt NZ + 1}
 planes.
 (\verb+IX+,\verb+IZ+) denote the (r,z) indices of a subregion in the
 RZ space.
-The input specification of the geometry and materials is summarised 
+The input specification of the geometry and materials is summarised
 in the next section.
 
 \begin{figure}[htb]
@@ -505,15 +505,15 @@ numbers are reflected in the axis of rotation.
 
 The input for the RZ codes is handled by each code's
 INPUTS subroutine. It in turn makes multiple use of a common routine called
-\verb+GET_INPUT+. 
+\verb+GET_INPUT+.
 The function is located in the file \verb+get_inputs.mortran+
-and for the RZ codes it is, along with other files, concatenated before 
+and for the RZ codes it is, along with other files, concatenated before
 being compiled.
 We briefly describe the use of the function \verb+GET_INPUT+
 for implementation in user codes.
 
-\verb+GET_INPUT+ will extract the requested 
-\verb+values_sought+ from the input file and return it to the 
+\verb+GET_INPUT+ will extract the requested
+\verb+values_sought+ from the input file and return it to the
 caller. Inputs are all in the format:\\
  \verb+name of value_sought= value+\\
 where \verb+name of value_sought+ must match that expected by the
@@ -525,8 +525,8 @@ program.  Example of typical inputs handled by \verb+GET_INPUT+ are:
 \end{verbatim}
 \index{GET\_INPUT!rules of use}
 The rules governing the use of the {\tt GET\_INPUT} routine are:
-\begin{itemize} 
-\item The \verb+value_sought+ must be the first thing on a line but 
+\begin{itemize}
+\item The \verb+value_sought+ must be the first thing on a line but
 blanks are allowed before it.
 
 \index{value\_sought}
@@ -537,7 +537,7 @@ the \verb+value_sought+ and at least one blank before the value input.
 \item Various inputs are only sought between certain delimiter strings
 which are defined below ({\em e.g.},
 \verb+ :start I/O control: :stop I/O control:+)
-If the delimiter string is not specified, the whole file is searched for 
+If the delimiter string is not specified, the whole file is searched for
 a requested \verb+value_sought+.
 
 \index{delimiter strings}
@@ -553,7 +553,7 @@ a requested \verb+value_sought+.
 not mandatory.  This means that semi-colons cannot be used in titles.
 \index{; in input files}
 
-\item A \verb+#+ sign indicates that everything else on the line is a 
+\item A \verb+#+ sign indicates that everything else on the line is a
 comment (do not use in titles).
 \index{\verb+#+ in input files}
 
@@ -578,7 +578,7 @@ there are more values on the next line.
 \item Inputs are not case sensitive.
 \index{case in input files}
 
-\end{itemize} 
+\end{itemize}
 
 \subsubsection{Using {\tt GET\_INPUT}}
 
@@ -595,19 +595,19 @@ To implement \verb+GET_INPUT+ one must first establish a set of requested
 inputs and then make a call to {\tt get\_input} for one or more inputs
 (which are specified by a counter).
 
-The following summaries the implementation of \verb+GET_INPUT+ for 
+The following summaries the implementation of \verb+GET_INPUT+ for
 different types of input.
 \begin{verbatim}
               REALS AND INTEGERS (TYPE 0 AND 1)
-  I=I+1;                              <--index counter                     
-  NUM_DRMIN=I;                        <--named pointer to the index num.   
-  VALUES_SOUGHT(I)='DOSE RBOUND MIN'; <--name of variable                  
+  I=I+1;                              <--index counter
+  NUM_DRMIN=I;                        <--named pointer to the index num.
+  VALUES_SOUGHT(I)='DOSE RBOUND MIN'; <--name of variable
   NVALUE(I)=1;                        <--# of inputs(left out if not known)
-  TYPE(I)=0;                          <--Type (0-3)                        
-  VALUE_MIN(I)=0;                     <--Minimum value                     
-  VALUE_MAX(I)=$MAXRADII-1;           <--Maximum value                     
-  DEFAULT(I)=0;                       <--Default value                     
-                                                                           
+  TYPE(I)=0;                          <--Type (0-3)
+  VALUE_MIN(I)=0;                     <--Minimum value
+  VALUE_MAX(I)=$MAXRADII-1;           <--Maximum value
+  DEFAULT(I)=0;                       <--Default value
+
               CHARACTER INPUTS (TYPE 2)
   I=I+1;
   NUM_TITLE=I;
@@ -626,9 +626,9 @@ different types of input.
   ALLOWED_INPUTS(I,2)='STEPS';
   ALLOWED_INPUTS(I,3)='DEPOSITED';
   ALLOWED_INPUTS(I,4)='GRAPH';
-                      **** STATE THE DELIMITER ****                        
-            DELIMITER='TRANSPORT CONTROL'                                  
-     OR     DELIMITER='NONE';                                              
+                      **** STATE THE DELIMITER ****
+            DELIMITER='TRANSPORT CONTROL'
+     OR     DELIMITER='NONE';
 \end{verbatim}
 For REAL and INTEGER input types, the user may specify minimum and
 maximum acceptable values, and if the iput is outside this range,
@@ -638,8 +638,8 @@ an error message produced and eventually the program in terminated,
 i.e. the default value is not a true default.
 
 \index{GET\_INPUT}
-After these parameters have been specified, call the subroutine 
-\verb+GET_INPUT+ with the appropriate index number of the 
+After these parameters have been specified, call the subroutine
+\verb+GET_INPUT+ with the appropriate index number of the
 \verb+values_sought+ (use \verb+NMIN+ and \verb+NMAX+).
 An example is shown below.
 \begin{verbatim}
@@ -665,7 +665,7 @@ An example is shown below.
     NMIN = 1; NMAX = IVAL;            --> specify the range of inputs
     CALL GET_INPUT;                   --> call GET_INPUT
 
-    estepe=VALUE(NUM_ESTEPE,1);       --> assign the variable using 
+    estepe=VALUE(NUM_ESTEPE,1);       --> assign the variable using
                                           the previously stored index
     ximax=VALUE(NUM_XIMAX,1);
 \end{verbatim}
@@ -678,7 +678,7 @@ explicit.  To allow the user to know what the internal variable is called
 which is specified by a particular text input, we frequently specify the
 name of the associated variable in square brackets after the description of
 the text based inputs (eg {\tt [ ECUT ]} and when appropriate, the
-internal values corresponding to the different options are shown. 
+internal values corresponding to the different options are shown.
 \index{notation}
 \index{internal variable names}
 \index{variable names}
@@ -693,7 +693,7 @@ At NRC we make extensive use of the freeware, called {\tt xmgr} or more
 recently {\tt grace} for making 2-D plots of data.  Most of these user
 codes now create files which can be immediately plotted by this software.
 Since we find this software so user friendly and flexible, we encourage
-others to download the package and install it.  
+others to download the package and install it.
 
 The {\tt xmgr} code is frozen and no longer being developed. It is
 available at\\ \htmladdnormallink{{\sf
@@ -702,7 +702,7 @@ and works very well for our purposes.
 
 There is an active group developing the off-spring of {\tt xmgr} which is
 called {\tt Grace}. It has some new features which are helpful but not
-essential. It is available at\\ \htmladdnormallink{{\sf 
+essential. It is available at\\ \htmladdnormallink{{\sf
 http://plasma-gate.weizmann.ac.il/Grace}}{http://plasma-gate.weizmann.ac.il/Grace}.
 
 The NRC user codes all interface to the plotting package via a single
@@ -728,7 +728,7 @@ The geometry inputs are delimited by the strings:
 There are in two distinct ways to input geometry information into the RZ
 user codes. The choice is specified by the assigning to \verb+METHOD OF INPUT+
 either \verb+Groups+ or \verb+Individual+. If \verb+Groups+
-is selected, sets of slabs of equal thickness can be input. 
+is selected, sets of slabs of equal thickness can be input.
 Based on the choice made, the code expects following additional input
 with all dimensions entered in cm:
 \index{geometrical inputs}
@@ -769,10 +769,10 @@ following inputs:\\
 mean that there are 2 slabs of 1 cm thickness, 5 of 2 cm and then 3 of 1
 cm.
 
-Radial boundaries (the radii of the cylinders defining the geometry) 
+Radial boundaries (the radii of the cylinders defining the geometry)
 are entered as reals separated by commas for a {\tt value\_sought} called
 {\tt RADII}..
-\index{RADII} 
+\index{RADII}
 
 \subsubsection{The Material Inputs}
 \index{Media inputs}
@@ -781,7 +781,7 @@ are entered as reals separated by commas for a {\tt value\_sought} called
 
 Each geometrical region needs a material to be associated with it.
 The names of the materials must be entered through the ``\verb+MEDIA+''
-input. The material name must match that in the PEGS4 dataset EXACTLY, 
+input. The material name must match that in the PEGS4 dataset EXACTLY,
 including case. 24 characters are maximum allowed per medium and
 are ended by , or ;
 
@@ -793,7 +793,7 @@ specifies the region numbers that are to
 be filled with the corresponding medium.  If
 {\tt DESCRIPTION BY= Planes} then the user specifies the
 plane ({\tt IZ}) and cylinder ({\tt IX}) numbers that are
-to be filled with the corresponding medium.  
+to be filled with the corresponding medium.
 
 There are two additional input options, {\tt DESCRIPTION BY= Regions + Density}
 and\\
@@ -802,7 +802,7 @@ and\\
 only now, in addition to the medium to be used in a range of region numbers
 or plane/cylinder numbers, the user also specifies the
 density of the material in that region ({\tt RHOR}).
-These latter two options are only useful if 
+These latter two options are only useful if
 you want the medium in some geometrical regions to have a density different
 than its default density.  Note that when using this option, the
 cross-sections are properly scaled to account for the variation in density
@@ -811,7 +811,7 @@ electron stopping powers stays fixed at the values appropriate to the
 default density (this is a minor approximation in most cases).
 \index{density scaling}
 \index{RHOR}
- 
+
 In all cases the entire geometry is filled with medium 1 (with default
 density) by
  default.  Careful selection of what is medium 1 can significantly reduce
@@ -858,7 +858,7 @@ names are shown in brackets \verb+[ ]+.
                       MEDNUM, (RHOR,) START and STOP REGIONs which are used
                       to specify the medium numbers for all regions where
                       the medium is not the default (medium 1).
-                                                                    
+
  If DESCRIPTION BY=  Planes
 
   MEDNUM              (M)   the material number (integers)
@@ -875,20 +875,20 @@ names are shown in brackets \verb+[ ]+.
                       These inputs shpuld be thought of as quintuples
                       (sextuples if RHOR is specified) of numbers
                       which specify the medium numbers and density by
-                      planar - radial regions 
+                      planar - radial regions
 \end{verbatim}
 A choice between {\tt DESCRIPTION BY= Planes} (or
 {\tt DESCRIPTION BY= Planes + Density}) or {\tt DESCRIPTION BY= Regions}
-(or {\tt DESCRIPTION BY= Regions + Density}) should be made based on which 
+(or {\tt DESCRIPTION BY= Regions + Density}) should be made based on which
 is the more convenient way.
 
 An example of the geometry input for a Germanium detector is given below.
 In this example the advantage of having the \verb+DESCRIPTION BY=  Planes+
 becomes obvious, since the region numbering in the RZ codes is such that
-neighbouring radial regions have quite different region numbers, and 
+neighbouring radial regions have quite different region numbers, and
 entering the materials using \verb+DESCRIPTION BY= Regions+ becomes
 very lengthy. Note also that between minimum and maximum plane and between
-mimimum and maximum cylinder, the medium is initially 
+mimimum and maximum cylinder, the medium is initially
 set to the background material
 (in this case air), followed by the assignment of the other materials to
 specific regions.  A graphical representation of the example is shown on
@@ -951,7 +951,7 @@ script that parses the geometry and material input from your inputfile and
 draws a 2D graph with lines delimiting the regions of the RZ geometry
 specified in a given input file.
 The drawing is to scale. Regions are then filled with materials with
-colors assigned to each material. 
+colors assigned to each material.
 
 Note that the location of the \verb+wish+ software (given in the first line
 of the script) needs to apply
@@ -979,7 +979,7 @@ Once you have installed {\tt Tcl/Tk} you must ensure that the directory
 \index{egsnrc\_cshrc\_additons}
 \index{egsnrc\_bashrc\_additons}
 \verb+previewRZ+ can be invoked as follows (requires an alias defined in
-\verb+egsnrc_cshrc_additions+ for C-shells or 
+\verb+egsnrc_cshrc_additions+ for C-shells or
 \verb+egsnrc_bashrc_additions+ for Bourne shells if you are running
 on Unix/Linux):
 \begin{verbatim}
@@ -994,8 +994,8 @@ section is shown on the cover of this manual.
 
 \noindent
 The button \verb+Plot Properties+ allows one to adjust the
-limits of the viewing window. It  is useful if, for example, 
-the maximum limits of the geometry are much further away than 
+limits of the viewing window. It  is useful if, for example,
+the maximum limits of the geometry are much further away than
 the spacing between all other planes and cylinders.
 The button \verb+Print+ allows printing the geometry or saving it in a
 postscript file format. Settings
@@ -1014,7 +1014,7 @@ which also reads the input files for the RZ codes but in this case prepares
 an {\tt .egsgeom} file for input to EGS\_Windows. This allows a 3-D display
 of the geometry in combination with the tracks of the histories which can
 be obtained with any of these user codes using the {\tt IWATCH} input for
-{\tt SUBROUTINE WATCH} (see section~\ref{watch}). 
+{\tt SUBROUTINE WATCH} (see section~\ref{watch}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1028,11 +1028,11 @@ be obtained with any of these user codes using the {\tt IWATCH} input for
 
 All EGSnrc user codes, including the NRC RZ codes, require
 the setting of the Monte Carlo transport parameters. Since this
-is common to all codes, the inputs for the Monte Carlo transport 
+is common to all codes, the inputs for the Monte Carlo transport
 parameter controls are gathered in the routine
 \verb+get_transport_parameter(ounit)+ where \verb+ounit+ represents
-the output unit (usually 6). The routine is located in the 
-file \verb+$HEN_HOUSE/get_inputs.mortran+ and can be used by any user code. 
+the output unit (usually 6). The routine is located in the
+file \verb+$HEN_HOUSE/get_inputs.mortran+ and can be used by any user code.
 \index{GET\_INPUT}
 
 The routine \verb+get_transport_parameter(ounit)+ will set all
@@ -1058,12 +1058,12 @@ in electron or high-energy photon beams) or bound Compton interactions
 vs Klein-Nishina scattering.
 
 
-  Currently, the following options are available (case does not matter 
-except for the different cross-section compilations inputs and 
-the internal variables are shown in [ ] brackets). 
-Note that the default mentioned is the default  for EGSnrc. These are 
+  Currently, the following options are available (case does not matter
+except for the different cross-section compilations inputs and
+the internal variables are shown in [ ] brackets).
+Note that the default mentioned is the default  for EGSnrc. These are
 NOT always the defaults
-used in the example/template input files)  
+used in the example/template input files)
 
 \input{inputs/transport_parameters.tex}
 
@@ -1078,21 +1078,21 @@ used in the example/template input files)
 \index{energy distribution inputs}
 
 The RZ codes systematically make use of the same source routines.
-These routines are located in the files \verb+srzrc.mortran+ 
-and \verb+ensrc.mortran+ which are concatenated with the RZ code 
-in the process of producing the overall source code file as specified in 
+These routines are located in the files \verb+srzrc.mortran+
+and \verb+ensrc.mortran+ which are concatenated with the RZ code
+in the process of producing the overall source code file as specified in
 the \verb+user_code.make+ file (see section~\ref{makefilesect}).
-Input of the type of source and the source parameters are defined 
+Input of the type of source and the source parameters are defined
 within the delimiters \verb+:start source inputs:+ and
 \verb+:stop source inputs:+.
 
-For all source types discussed below the parameters 
-\verb+INCIDENT PARTICLE+ and\\ \verb+SOURCE NUMBER+ need to be 
+For all source types discussed below the parameters
+\verb+INCIDENT PARTICLE+ and\\ \verb+SOURCE NUMBER+ need to be
 assigned to set the charge of the incident beam and the
 source number respectively.
 
 \begin{verbatim}
-                                      
+
   INCIDENT PARTICLE=  electron   (-1)  electrons
                       photon     (0)   photons
                       positron   (1)   positrons
@@ -1112,24 +1112,24 @@ zeros.  Some sources have inputs in addition to those on the
 %\note{source 15, 16 need angle definition sorted out, also make some
 %comment about source 16 reducing to source 15, also warn against using
 %source 15 close to geometry}
-Note that point and extended sources off axis (source 12, 15, 16) use 
-sampling algorithms that make the calculation inefficient because 
-of strongly varying weights if the source is close to the geometry 
-(``close'' or ``far'' is to be understood as a comparison between 
-source to geometry distance and geometry size, {\em i.e.} a point source 
-that is 3 cm away from a geometry 0.5 cm across is ``far'' and a point 
-source 100 cm away from a 200 cm geometry is ``close''). Note also 
-that source 16 (extended source off axis) can be made equivalent 
-to source 12 and 15, which are two different implementations of a point source 
-off axis. 
+Note that point and extended sources off axis (source 12, 15, 16) use
+sampling algorithms that make the calculation inefficient because
+of strongly varying weights if the source is close to the geometry
+(``close'' or ``far'' is to be understood as a comparison between
+source to geometry distance and geometry size, {\em i.e.} a point source
+that is 3 cm away from a geometry 0.5 cm across is ``far'' and a point
+source 100 cm away from a 200 cm geometry is ``close''). Note also
+that source 16 (extended source off axis) can be made equivalent
+to source 12 and 15, which are two different implementations of a point source
+off axis.
 
 \input{inputs/pirs702_table_sources.tex}
 
-Particles can be sampled from energy distributions, but this is 
+Particles can be sampled from energy distributions, but this is
 independent of the geometric source routines. For SOURCE=21,22,23
 each individual particle is taken from a phase space file or BEAM
 simulation, and
-sampling from an energy distribution is not required. 
+sampling from an energy distribution is not required.
 To sample from an energy distribution specify the following variables
 within the delimiters \verb+:start source inputs:+
 and \verb+:stop source inputs:+:
@@ -1139,7 +1139,7 @@ and \verb+:stop source inputs:+:
                      spectrum            if energy spectrum to be used
            ---------------------------------------
   If INCIDENT ENERGY= Monoenergetic:
-     INCIDENT KINETIC ENERGY(MEV)=   kinetic energy of the incident 
+     INCIDENT KINETIC ENERGY(MEV)=   kinetic energy of the incident
                                      beam in MeV (defaults to 1.25)
            ---------------------------------------
   If INCIDENT ENERGY= Spectrum:
@@ -1164,7 +1164,7 @@ and \verb+:stop source inputs:+:
 \subsection{Common Variance Reduction Inputs}
 \label{varredsect}
 
-Three variance reduction techniques have been incorporated in 
+Three variance reduction techniques have been incorporated in
 EGSnrc rather than left to the user codes, {\em i.e.},
 \begin{itemize}
 \item{Electron range rejection}
@@ -1179,13 +1179,13 @@ In the RZ user codes, two additional techniques are implemented:
 \item{Photon Forcing}
 \end{itemize}
 We will also deal with these techniques in this section.
-The delimiters for these inputs are 
+The delimiters for these inputs are
 \verb+:start variance reduction:+  and \verb+:stop variance reduction:+.
 
-Additional variance reduction techniques are 
-available in DOSRZnrc (photon cross section enhancement) and 
-CAVRZnrc (photon cross section enhancement and photon splitting). 
-These will be discussed in the portions of the manual related to 
+Additional variance reduction techniques are
+available in DOSRZnrc (photon cross section enhancement) and
+CAVRZnrc (photon cross section enhancement and photon splitting).
+These will be discussed in the portions of the manual related to
 these codes.
 
 \subsubsection{Electron Range Rejection}
@@ -1194,16 +1194,16 @@ these codes.
 
 Range rejection has been discussed in the EGSnrc Manual
 \cite{KR00} in section 3.9.1
-and is a valuable tool to save cpu time. 
+and is a valuable tool to save cpu time.
 Briefly it allows the user to terminate the history of an electron when
-it's residual CSDA range is such that it cannot possibly reach another 
+it's residual CSDA range is such that it cannot possibly reach another
 region and deposit energy in that region. However, by terminating the
 history, the possibility of a bremsstrahlung photon being created and
 escaping from the region is eliminated. To control this approximation
-an energy threshold is defined, \verb+ESAVEIN+, (formerly 
+an energy threshold is defined, \verb+ESAVEIN+, (formerly
 \verb+ESAVE+), above which no range rejection is done. An intelligent
-choice of this energy must depend on Z and is essentially 
-made based on knowing the approximate fraction lost to bremsstrahlung in a 
+choice of this energy must depend on Z and is essentially
+made based on knowing the approximate fraction lost to bremsstrahlung in a
 specific material. The inputs for range rejection are as follows.
 \index{range rejection}
 
@@ -1224,9 +1224,9 @@ specific material. The inputs for range rejection are as follows.
                            to the nearest boundary.
                            This ignores bremsstrahlung losses below ESAVEIN.
                            This parameter must be input even if not used.
-                           ESAVEIN is a total energy.                 
+                           ESAVEIN is a total energy.
 \end{verbatim}
-\noindent \verb+ESAVEIN+ gets assigned to \verb+e_max_rr(irl)+ for all 
+\noindent \verb+ESAVEIN+ gets assigned to \verb+e_max_rr(irl)+ for all
 regions present in the simulation.
 
 In the previous versions of DOSRZ and CAVRZ there was another range
@@ -1246,7 +1246,7 @@ rejection to the cylinder of interest.  In many, but not all cases, this
 form of range rejection can be very efficient.
 \index{range rejection}
 
-\subsubsection[Brem splitting and Russian Roulette]{Bremsstrahlung 
+\subsubsection[Brem splitting and Russian Roulette]{Bremsstrahlung
 splitting and Russian Roulette}
 \index{bremsstrahlung splitting}
 \index{Russian Roulette}
@@ -1268,47 +1268,47 @@ save a factor of 4 in computing time.
          = Off        (0)  No Russian Roulette with charged particles
          = On         (1)  Play Russian Roulette with charged particles with
                            probability of survival=PROB_RR=1/nbr_split.
-                           [I_PLAY_RR]  
+                           [I_PLAY_RR]
 \end{verbatim}
 The above form of Russian Roulette is meant to complement the use of
 bremsstrahlung splitting for those cases where only the photons are of
 significant interest. It is designed to ensure that charged particles carry
 their natural weight. It is implemented using the internal EGSnrc option.
 
-Most user codes (CAVRZnrc, DOSRZnrc, SPRRZnrc, CAVSPHnrc) 
+Most user codes (CAVRZnrc, DOSRZnrc, SPRRZnrc, CAVSPHnrc)
 also have a photon Russian Roulette option which is
 set using the inputs:
 
 \begin{verbatim}
   RUSSIAN ROULETTE DEPTH      (R)
-                        for Russian roulette - as any photon 
+                        for Russian roulette - as any photon
                         crosses the Z='RUSSIAN ROULETTE DEPTH'
                         plane,  Russian roulette is played.
                         [RRZ]
 
   RUSSIAN ROULETTE FRACTION   (R)
-                        Each time Russian roulette is played, RRF 
+                        Each time Russian roulette is played, RRF
                         is the probability of survival.
                         weight increases by 1/RRF,  if it survives
                         [RRCUT]
 
-                 ****** IF BOTH ZERO, NO RUSSIAN ROULETTE IS PLAYED ****** 
+                 ****** IF BOTH ZERO, NO RUSSIAN ROULETTE IS PLAYED ******
 \end{verbatim}
 
 As indicated above, every time a photon is about to cross an imaginary
-plane 
+plane
 at Z given by {\tt RUSSIAN ROULETTE DEPTH}, Russian Roulette is
 played on that particle, and it survives with a probability given
 by {\tt RUSSIAN ROULETTE FRACTION}.  If the photon does survive, then
-its weight is increased by 1/{\tt RUSSIAN ROULETTE FRACTION}. 
+its weight is increased by 1/{\tt RUSSIAN ROULETTE FRACTION}.
 
 \subsubsection{Photon pathlength biasing (DOSRZnrc only)}
 \index{photon pathlength biasing}
 \index{pathlength biasing}
 
-Pathlength biasing is a technique to decrease or increase 
-the path length of a photon in order to improve statistics in 
-a specific region of interest. The technique of pathlength 
+Pathlength biasing is a technique to decrease or increase
+the path length of a photon in order to improve statistics in
+a specific region of interest. The technique of pathlength
 biasing by using an exponential transformation of photon path
 lengths is discussed in Ref \cite{RB90}. Briefly, the distance to
 the next photon interaction is calculated from:
@@ -1319,9 +1319,9 @@ where $C$ is a user-defined variable, $R$ a random number, and $\theta$
 the angle between the direction of the photon and the direction of
 interest, ({\em e.g.}, the depth axis for a depth-dose curve).
 For $C < 0$ pathlengths are compressed, for $0 < C < 1$ pathlengths
-are stretched in the forward direction which may be suitable for 
+are stretched in the forward direction which may be suitable for
 specific applications. The scored quantities are weighed by
-multiplying each contribution with 
+multiplying each contribution with
 $\frac{e^{\eta C cos \theta}}{1 - C cos \theta}$
 The method can be
 activated in DOSRZnrc
@@ -1330,7 +1330,7 @@ by defining the $C$ parameter in the input as follows:
 \begin{verbatim}
 
   EXPONENTIAL TRANSFORM C=
-                    Parameter for pathlength biasing 
+                    Parameter for pathlength biasing
                     If < 0       ==> shortening of forward pathlengths
                     If 0 < C < 1 ==> stretching of forward pathlength
                     If 0.0       ==> no biasing done
@@ -1346,7 +1346,7 @@ of the dose buildup region in photon beams\cite{Ro84,RB86} (with {\tt C $<$
 \index{photon forcing}
 
 Photon forcing is a technique to force an interaction within the geometry
-between the current point and the point where the photon exits the 
+between the current point and the point where the photon exits the
 geometry. This method is described in detail in Ref. \cite{RB90}.
 Briefly, the number of mean free paths (\#MFP)
 to the next interaction is selected using:
@@ -1367,7 +1367,7 @@ is studying the contribution of scattered photons in an ion chamber (as
 done in CAVRZnrc).
 
 This method can be activated in the input file by specifying the following
-parameters. 
+parameters.
 
 \begin{verbatim}
 
@@ -1385,7 +1385,7 @@ parameters.
                              to stop forcing photon interactions
                              [NFMAX]
                              STOP FORCING AFTER must be >= START FORCING
-                             This input is required even if forcing off 
+                             This input is required even if forcing off
 
 \end{verbatim}
 
@@ -1396,7 +1396,7 @@ I/O control inputs must be input between the delimiters
 {\tt :start I/O control:} and {\tt :stop I/O control:}.  This section
 will describe those I/O controls that are common to all user codes.
 I/O controls specific to each user code are described in the separate
-user code sections below. 
+user code sections below.
 
 \subsubsection[WATCH \& EGS\_Windows]{The WATCH outputs, including EGS\_Windows}
 \label{watch}
@@ -1404,10 +1404,10 @@ user code sections below.
 \index{EGS\_Windows}
 
 The NRC subroutine WATCH (located in the file \verb+nrcaux.mortran+)
-allows the user to follow the physics of the 
+allows the user to follow the physics of the
 simulation, and is very useful for debugging purposes. WATCH
 has already been discussed in relation to \verb+tutor4.mortran+
-(see section 4.4 of the EGSnrc user manual\cite{KR00}). 
+(see section 4.4 of the EGSnrc user manual\cite{KR00}).
 
 The following WATCH inputs are possible in the RZ user codes.
 \begin{center}
@@ -1433,13 +1433,13 @@ very large}}.
 \label{rnssect}
 \index{storing initial random numbers}
 All user codes give the user the option of storing random
-numbers at the beginning of each history using 
+numbers at the beginning of each history using
 the {\tt STORE INITIAL RANDOM NUMBERS} input.  Random numbers are stored
 in a {\tt .egsrns} file.  You can restart the simulation
 using these random numbers using one of the {\tt IRESTART} options,
-described in section~\ref{restartsect}\lpage{restartsect}.  
+described in section~\ref{restartsect}\lpage{restartsect}.
 
-The options for {\tt STORE INITIAL RANDOM NUMBERS} are: 
+The options for {\tt STORE INITIAL RANDOM NUMBERS} are:
 
 \begin{verbatim}
   STORE INITIAL RANDOM NUMBERS
@@ -1450,23 +1450,23 @@ The options for {\tt STORE INITIAL RANDOM NUMBERS} are:
 
 If you set {\tt STORE INITIAL RANDOM NUMBERS= last}, then, at the start
 of each history, the {\tt .egsrns} will be overwritten with the random
-numbers for that history.  Thus, at the end of the run, {\tt .egsrns} 
+numbers for that history.  Thus, at the end of the run, {\tt .egsrns}
 will store the random numbers for the last history.
 
-If you set {\tt STORE INITIAL RANDOM NUMBERS= all}, then, instead of 
+If you set {\tt STORE INITIAL RANDOM NUMBERS= all}, then, instead of
 overwriting the previous random numbers in {\tt .egsrns} at the start of
 each history, the random numbers for the current history will be appended
 to the random number data already in {\tt .egsrns}.  Thus {\tt .egsrns} will
-contain a record of random numbers for all histories from the first to 
+contain a record of random numbers for all histories from the first to
 the last.
 
-CAVRZnrc has an additional option, 
+CAVRZnrc has an additional option,
 {\tt STORE INITIAL RANDOM NUMBERS= all deposited},
 which is not available for the other codes.  See
 section~\ref{cavrziosect}\lpage{cavrziosect} for more details.
 
 Note that the {\tt STORE INITIAL RANDOM NUMBERS} option is mostly used for
-debugging purposes. 
+debugging purposes.
 
 \subsubsection{IRESTART - restarting runs}
 \label{restartsect}
@@ -1483,7 +1483,7 @@ All user codes offer several restart options.  These are:
         = analyze     (3)  just read in the raw data and do the statistical
                            analysis
         = start-RNS   (4)  read starting random numbers from a file
-        = parallel    (5)  Combine results from previous parallel runs 
+        = parallel    (5)  Combine results from previous parallel runs
 \end{verbatim}
 
 Set {\tt IRESTART= first} if this is the first run of this simulation.
@@ -1501,7 +1501,7 @@ the previous run as well.
 Use {\tt IRESTART= analyze} if you have data from a previous run in
 a {\tt .egsdat} file (you must have run it with {\tt STORE DATA ARRAYS= yes}--
 see section~\ref{dataarrsect}\lpage{dataarrsect}) and you want to reanalyze it and output
-the results to the {\tt .egslst} file.  This is very useful if 
+the results to the {\tt .egslst} file.  This is very useful if
 you want to change the quantity that you are outputting from the data after
 you have already run the simulation.
 
@@ -1513,20 +1513,20 @@ will run all histories with the same random numbers used by the last
 history in the previous run.  In other words, all histories will be identical
 to this last history as long as nothing else has changed.
 
-%% If you ran the previous simulation with 
+%% If you ran the previous simulation with
 %% {\tt STORE INITIAL RANDOM NUMBERS= all}, then the first history of
 %% the current simulation will use the random numbers from the first history
 %% of the previous simulation, the second history of the current simulation will
 %% use the random numbers from the second history of the previous simulation,
-%% and so on.  
+%% and so on.
 \typeout{****Stmts about STORE INITIAL RANDOM NUMBERS= all looks wrong
 compared to code which appears to just reread first value every time}
 
 \index{parallel processing}
 {\tt IRESTART= parallel} is used to read the {\tt .egsdat} files from
-separate parallel jobs, combine them, analyze them, and output the 
+separate parallel jobs, combine them, analyze them, and output the
 combined results to the {\tt .egslst} file.  See
-section~\ref{parallelsect}\lpage{parallelsect} 
+section~\ref{parallelsect}\lpage{parallelsect}
 for more information on parallel runs.  Note that this option assumes
 that the naming scheme for the {\tt .egsdat} files from the parallel runs
 is:\\
@@ -1547,7 +1547,7 @@ The {\tt STORE DATA ARRAYS} options are:
         = no              (1) don't store them
 \end{verbatim}
 
-If you select {\tt STORE DATA ARRAYS= yes} then, at the end of each output 
+If you select {\tt STORE DATA ARRAYS= yes} then, at the end of each output
 batch, the {\tt .egsdat} file will be overwritten with:
 
 \begin{enumerate}
@@ -1555,7 +1555,7 @@ batch, the {\tt .egsdat} file will be overwritten with:
 \item the total number of histories so far (including restarts)
 \item total fluence so far (including restarts) (not for all codes)
 \item the total CPU time so far (including restarts)
-\item the total number of particles read from a phase space source 
+\item the total number of particles read from a phase space source
         (including restarts)
 \item the total number of charged particle steps taken (including restarts)
 \item the total number of times multiple scattering has been switched off
@@ -1611,7 +1611,7 @@ In this case, the limit on the number of histories is 1,073,741,824
 (2$^{30}$).
 
 For {\tt IWATCH} zero, the minimum number of histories is {\tt \$NBATCH},
-the number of output batches. 
+the number of output batches.
 The default is 20,000 histories.
 If {\tt IWATCH} is non-zero, there are no minimum number of histories,
 but the program will not complete properly if the number of histories
@@ -1643,9 +1643,9 @@ INITIAL RANDOM NO. SEEDS=  INTGER1, INTEGER2
      RANMAR
            INTEGER1 is a seed between 1 and 31328 (0 =>default 1802)
            INTEGER2 is a seed between 1 and 30081 (0 =>default 9937)
-                    Selection of unique INTEGER2 values guarantees 
+                    Selection of unique INTEGER2 values guarantees
                     independent sequences.
-     Note: 
+     Note:
            After the seeds are first input and used for initialization,
            the variables IXXIN and JXXIN are just pointers used by the RNG
 \end{verbatim}
@@ -1659,7 +1659,7 @@ this section using the {\tt MAX CPU HOURS ALLOWED} input.
 The default is {\tt MAX CPU HOURS ALLOWED= 999.}, and the
 current maximum is 1000 hrs.  This is the total CPU time for the run,
 including restarts.  For parallel runs using EGSnrcMP's built-in
-parallel processing functionality 
+parallel processing functionality
 (see section~\ref{parallelsect}\lpage{parallelsect}), it is the maximum
 CPU time for each parallel job.  At the end of each output batch, the amount
 of time required/batch is calculated and added to the total CPU time
@@ -1677,7 +1677,7 @@ a large value or use the default of 999. h.
 \index{statistics in the RZ codes}
 \index{statistics! batch method}
 Prior to the 2002 release, the RZ user-codes used the batch method
-to estimate uncertainty on a scored quantity.  At the end 
+to estimate uncertainty on a scored quantity.  At the end
 of the simulation, the average of each scored quantity, X (eg fluence in
 a voxel), was calculated over all batches, and the uncertainty on this
 average was given by:
@@ -1692,16 +1692,16 @@ There are limitations to the batch method of estimating uncertainty.  The
 small sample size, N, in Equation~\ref{batcheq} means that there are large
 fluctuations in the uncertainty estimate.   Also, the batch method ignores
 correlations between incident particles when a phase space or full
-BEAM simulation source 
+BEAM simulation source
 is used ({\tt ISOURC}=21, 22 or 23).
-Finally, the batch method, as implemented in these codes, used an extra 
+Finally, the batch method, as implemented in these codes, used an extra
 dimension (storing
 batch number) to each scoring array.  This may become a limitation if you
 are scoring in a huge number of voxels and/or using a large number of batches.
 
 The batch method for estimating uncertainty has been phased out
 in favour of a history by history method which was first implemented in the
-BEAMnrc and DOSXYZnrc codes\cite{Wa02a}.  
+BEAMnrc and DOSXYZnrc codes\cite{Wa02a}.
 
 \index{statistics!history by history}
 In the history by history method, we return to Equation~\ref{batcheq}, but
@@ -1714,11 +1714,11 @@ s_{\overline{X}} = \sqrt{\frac{1}{N-1}\left(\frac{\sum_{i=1}^{N}X_i^2}{N}-\left(
 \end{equation}
 If we keep track of $\sum_{i=1}^{N}X_i^2$ and $\sum_{i=1}^{N}X_i$ on the fly,
 then we can calculate the uncertainty at the end of the simulation without
-the need to store the scored quantity in batches.  Unfortunately, 
+the need to store the scored quantity in batches.  Unfortunately,
 it can be
 very computationally inefficient to evaluate $\sum_{i=1}^{N}X_i^2$
 at the end of each history.  To overcome this
-problem, we use the following algorithm proposed by 
+problem, we use the following algorithm proposed by
 Sempau {\it et al.}~\cite{Se01} for quantity X:
 \begin{verbatim}
                     IF(nhist=X_last) THEN
@@ -1746,9 +1746,9 @@ greatly reduced.   Also, by grouping scored quantities according to primary
 (non-phase space) history, correlations between incident particles from
 a phase space source are taken into account because their contributions are
 included in the same primary history.  Finally, we eliminate the extra dimension
-in scoring arrays required to store batch number in favour of 
+in scoring arrays required to store batch number in favour of
 a {\tt REAL*8} array, {\tt X2}, a {\tt REAL*4} array,
-{\tt X\_tmp}, and a {\tt INTEGER*8} array, {\tt X\_last}, for an overall 
+{\tt X\_tmp}, and a {\tt INTEGER*8} array, {\tt X\_last}, for an overall
 decrease in memory requirement.
 
 \index{uncertainty on ratios}
@@ -1756,13 +1756,13 @@ decrease in memory requirement.
 The RZ user-codes also output ratios of two scored quantities
 which are correlated (eg $A_{wall}$=total dose/primary dose in CAVRZnrc,
 dose/KERMA in DOSRZnrc).  In order to determine the uncertainties on these
-ratios, we use the following expression for the uncertainty on a 
+ratios, we use the following expression for the uncertainty on a
 ratio, C=X/Y:
 \begin{equation}
 \frac{s_{\overline{C}}}{\overline{C}} =
 \sqrt{\left({\frac{s_{\overline{X}}}{\overline{X}}}\right)^2 +
 \left({\frac{s_{\overline{Y}}}{\overline{Y}}}\right)^2 - \frac{2{\rm cov}(X,Y)}
-{\left(N-1\right)\left(\overline{X}~\overline{Y}\right)}} 
+{\left(N-1\right)\left(\overline{X}~\overline{Y}\right)}}
 \end{equation}
 where s$_{\overline{X}}$ and s$_{\overline{Y}}$ are the uncertainties on
 $\overline{X}$ and $\overline{Y}$ as calculated using the history by
@@ -1771,7 +1771,7 @@ history method outlined above, and cov(X,Y) is the covariance of X and Y, given 
 {\rm cov}(X,Y)=\frac{\sum_{i=1}^{N}X_iY_i}{N}-\frac{\sum_{i=1}^{N}X_i\sum_{i=1}^{N}Y_i}{N^2}
 \label{coveq}
 \end{equation}
-Keeping track of $\sum_{i=1}^{N}X_iY_i$ in the  on the fly 
+Keeping track of $\sum_{i=1}^{N}X_iY_i$ in the  on the fly
 requires an additional {\tt REAL*8} array for each ratio scored.
 
 \index{recycling}
@@ -1799,16 +1799,16 @@ in use in BEAMnrc and DOSXYZnrc.
 \index{covariance}
 
 For more information about history by history statistics and particle recycling,
-see Reference~\cite{Wa02a}. 
+see Reference~\cite{Wa02a}.
 
 \subsection{Internally used scoring arrays}
 \index{scoring variables}
 \index{AUSGAB}
-The names of some of the variables used in the 
-RZ codes to score quantities of interest are shown in Table 
-\ref{tab:pirs702_scoring_variables}.  
-\index{SCDOSE} \index{IT} \index{SCKERMA} 
-\index{SCDOSEtoKERMA2} \index{cav.dose} \index{SCFLU} \index{SCEAVE} 
+The names of some of the variables used in the
+RZ codes to score quantities of interest are shown in Table
+\ref{tab:pirs702_scoring_variables}.
+\index{SCDOSE} \index{IT} \index{SCKERMA}
+\index{SCDOSEtoKERMA2} \index{cav.dose} \index{SCFLU} \index{SCEAVE}
 \index{SCEDPN} \index{EDPN}
 \begin{longtable}{lll}
 \caption[Variables used in AUSGAB to score quantities of
@@ -1858,7 +1858,7 @@ DOSRZnrc  & {\tt SCDOSE(Z,R,IT)}:  & 1: Total dose  \\
           & {\tt SCKERMA2(Z,R,IT)}: & same as above\\
           & stores (energy of electrons &\\
           & created in voxel (R,Z))$^2$ &\\
-          & summed over all primary histories--&\\ 
+          & summed over all primary histories--&\\
           & after analysis, stores uncertainty&\\
           & on kerma in voxel &\\
           &                   &\\
@@ -1899,7 +1899,7 @@ DOSRZnrc  & {\tt SCDOSE(Z,R,IT)}:  & 1: Total dose  \\
           & contains fraction of primary histories&\\
           & depositing energy in peak IPK and &\\
           & {\tt SCDFEP2} stores uncertainty on&\\
-          & {\tt SCDFEP}&\\  
+          & {\tt SCDFEP}&\\
           &&\\
           & {\tt SCDFBK(IPK)} and & IPK same as above\\
           & {\tt SCDFBK2(IPK)}: store sum of&\\
@@ -1928,7 +1928,7 @@ DOSRZnrc  & {\tt SCDOSE(Z,R,IT)}:  & 1: Total dose  \\
           & in the pulse heigh regions.  This allows&\\
           & {\tt SCDFEP} to be expressed as a&\\
           & fraction of this total and the uncertainty,&\\
-          & {\tt SCDFEP2}, to be estimated properly.&\\   
+          & {\tt SCDFEP2}, to be estimated properly.&\\
           &                                  &\\
 CAVRZnrc  & \multicolumn{2}{l}{{\tt cav\_dose}: stores energy deposited in cavity summed over all primary}\\
           & \multicolumn{2}{l}{histories--after analysis, stores total dose in cavity}\\
@@ -1984,7 +1984,7 @@ FLURZnrc & {\tt SCFLU(E,Z,R,IQ,IT)} and & 1: all particles\\
          & particles of charge IQ in voxel (R,Z) &\\
          & and {\tt SCTFLU2} stores the uncertainty on&\\
          & {\tt SCTFLU}&\\
-         &&\\  
+         &&\\
          & {\tt SCEAVE(Z,R,IQ,IT)} and & 1: all particles\\
          & {\tt SCEAVE2(Z,R,IQ,IT)}: & 2: primary  or scattered particles \\
          & store energy and (energy)$^2$ &\\
@@ -2025,7 +2025,7 @@ FLURZnrc & {\tt SCFLU(E,Z,R,IQ,IT)} and & 1: all particles\\
          & store fluence and (fluence)$^2$ &\\
          & of charged particles in  energy &\\
          & bin E in voxel (R,Z) summed over &\\
-         & all primary histories--after analysis &\\ 
+         & all primary histories--after analysis &\\
          & {\tt SCFLEP} stores fluence of charged&\\
          & particles in energy bin E in voxel (R,Z) &\\
          & and {\tt SCFLEP2} stores the uncertainty &\\
@@ -2040,7 +2040,7 @@ FLURZnrc & {\tt SCFLU(E,Z,R,IQ,IT)} and & 1: all particles\\
          & uncertainty in final value of &\\
          & {\tt SCEAVE(Z,R,IQ,IT)} (see above)&\\
          &&\\
-         & {\tt SCELEP\_COV(Z,R,IT)}: & same as above\\ 
+         & {\tt SCELEP\_COV(Z,R,IT)}: & same as above\\
          & stores (energy of charged particles &\\
          & crossing (R,Z))*(total fluence of &\\
          & charged particles crossing (R,Z)) &\\
@@ -2048,7 +2048,7 @@ FLURZnrc & {\tt SCFLU(E,Z,R,IQ,IT)} and & 1: all particles\\
          & Used to calculate covariance term for&\\
          & uncertainty in final value of &\\
          & {\tt SCELEP2(Z,R,IT)} (see above)&\\
-         &&\\  
+         &&\\
 SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
          & {\tt SCEDPN2(Z,R,IT)}: &  excluding brem created \\
          & store energy deposited and &  below PCUT, atomic relaxations \\
@@ -2058,7 +2058,7 @@ SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
          & {\tt SCEDPN2(Z,R,1)} stores & 2: in second material (MED2) with\\
          & stopping power ratio (local &  transport in local material  \\
          & medium/MED2) including stoppers.& 3: same as 1 but without stoppers\\
-        & {\tt SCEDPN2(Z,R,3)} stores the & 4: same as 2 but without stoppers\\ 
+        & {\tt SCEDPN2(Z,R,3)} stores the & 4: same as 2 but without stoppers\\
          & stopping power ratio excluding &\\
          & stoppers.  {\tt SCEDPN2(Z,R,1)} &\\
          & stores uncertainty in {\tt SCEDPN(Z,R,1)}&\\
@@ -2081,7 +2081,7 @@ SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
          & {\tt SCSPR\_COV(Z,R,IT)}: & 1: including stoppers\\
          & stores (energy deposited in local & 2: excluding stoppers\\
          & medium)*(energy deposited in MED2) &\\
-         & in voxel (R,Z) summed across all &\\ 
+         & in voxel (R,Z) summed across all &\\
          & primary histories.  Used to &\\
          & calculate covariance for &\\
          & uncertainties in final value of &\\
@@ -2096,12 +2096,12 @@ SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
          & covariance for uncertainties in &\\
          & final values of {\tt SCDOSE(Z,R,IT)}&\\
          & for IT=1,2 (recall that these are&\\
-         & expressed as fractions of total dose&\\ 
+         & expressed as fractions of total dose&\\
          &&\\
 \label{tab:pirs702_scoring_variables}
 \end{longtable}
-\index{SCDOSE} \index{IT} \index{SCKERMA} 
-\index{SCDOSEtoKERMA2} \index{cav.dose} \index{SCFLU} \index{SCEAVE} 
+\index{SCDOSE} \index{IT} \index{SCKERMA}
+\index{SCDOSEtoKERMA2} \index{cav.dose} \index{SCFLU} \index{SCEAVE}
 \index{SCEDPN} \index{SCDOSE\_COV} \index{IPK}\index{SCSPR\_COV}
 \index{SCELEP\_COV}\index{SCEAVE\_COV}\index{SCTFLU}\index{SCFLEP}
 \index{SCTLEP}\index{SCELEP}\index{SCEAVE}\index{SCPDST}
@@ -2114,25 +2114,25 @@ SPRRZnrc & {\tt SCEDPN(Z,R,IT)} and & 1: in local material \\
 
 %% \index{SIGMA}
 %% \index{statistical analysis}
-%% For the batch method used in SPRRZnrc and FLURZnrc, statistical analysis is 
+%% For the batch method used in SPRRZnrc and FLURZnrc, statistical analysis is
 %% performed by post-processing the storage arrays.
 %% To this end, use is made of the subroutine \verb+SIGMA+, located in the
 %% file \verb+nrcaux.mortran+. \verb+SIGMA+ calculates average and
 %% standard deviation of an array. It is invoked through a set of macros
 %% with the generic name \verb+ANALYZE+. For reference, there are five
-%% \verb+ANALYZE+ macros which operate under three modes. Mode 0, 
+%% \verb+ANALYZE+ macros which operate under three modes. Mode 0,
 %% calculates average values, ignoring zeros; Mode 1, calculates
 %% average values including zero values; Mode 2, analyse for total
 %% value, not the average value per batch. The routines use three
 %% associated arrays with the names: \verb+ARRAYIS+, array of
-%% values in statistical batches (input to SIGMA); 
-%% \verb+ARRAY+, array of average (Mode 0,1) or total value (Mode 2) 
+%% values in statistical batches (input to SIGMA);
+%% \verb+ARRAY+, array of average (Mode 0,1) or total value (Mode 2)
 %% (output); \verb+ARRAYUN+, array of uncertainties (output). Uncertainties
-%% are in \% and are capped at 99.9\%. If specific scoring regions 
-%% contain zeros, the code will complete the calculation, but 
-%% one or more error messages will be printed indicating the 
+%% are in \% and are capped at 99.9\%. If specific scoring regions
+%% contain zeros, the code will complete the calculation, but
+%% one or more error messages will be printed indicating the
 %% zero element and its R and Z index.
-%% 
+%%
 \index{.egsdat}
 After the completion of a batch, the \verb+.egsdat+ file will be
 updated and will contain the complete scoring arrays, random generator
@@ -2164,7 +2164,7 @@ a code, copy the files:\\
 \begin{verbatim}
 Makefile
 user_code.mortran
-user_code.make 
+user_code.make
 user_code.io
 \end{verbatim}
 \index{Makefile}
@@ -2176,7 +2176,7 @@ directory (creating this latter directory if it does not exist).
 Note that the file {\tt user\_code.io} is not used during compilation, but
 will be used when you run the code.
 
-Once you have successfully copied these files, go into 
+Once you have successfully copied these files, go into
 directory {\tt \$EGS\_HOME/user\_code} and type:
 \index{make}
 \begin{verbatim}
@@ -2252,9 +2252,9 @@ command:
 ex user_code inputfile pegsdata
 \end{verbatim}
 {\tt ex} is provided to preserve compatibility with old usage.
- 
-If you are running on a Linux/Unix system, then you can run 
-the RZ codes in batch mode.  Batch mode is required for 
+
+If you are running on a Linux/Unix system, then you can run
+the RZ codes in batch mode.  Batch mode is required for
 parallel runs (see section~\ref{parallelsect} below for more information
 on this).
 Batch submission uses the {\tt exb} command, which is aliased to
@@ -2279,7 +2279,7 @@ by setting the environment variable {\tt \$EGS\_BATCH\_SYSTEM}.
 \index{\$EGS\_BATCH\_SYSTEM}
 
 \index{temporary working directory}
-Once an interactive or batch run is started, a temporary working 
+Once an interactive or batch run is started, a temporary working
 directory is created as
 a subdirectory of {\tt \$EGS\_HOME/user\_code}.  This temporary working directory
 has the name\\
@@ -2295,9 +2295,9 @@ EGSnrcMP Users Manual\cite{Ka03}.
 \index{parallel processing}
 \label{parallelsect}
 
-Previously, parallel processing with the RZ codes used the 
+Previously, parallel processing with the RZ codes used the
 \index{pprocess}
-Unix {\tt pprocess} script, which created  
+Unix {\tt pprocess} script, which created
 separate input files for
 each job, with the same number of histories
 (total histories/no. of jobs) in each job.  These input files were
@@ -2324,9 +2324,9 @@ exb user_code inputfile pegsdata [short|medium|long] batch=batch_sys [p=N] \
     [start=i_start-1] [stop=i_stop]
 \end{verbatim}
 {\tt p} specifies the number of parallel jobs (defaults to
-{\tt i\_stop}-{\tt i\_start}+1), {\tt start} is an input 
+{\tt i\_stop}-{\tt i\_start}+1), {\tt start} is an input
 to set the index number of the
-first parallel job (defaults to 1), and {\tt stop} sets the index of the 
+first parallel job (defaults to 1), and {\tt stop} sets the index of the
 last parallel
 job (defaults to {\tt i\_start+N-1}).  Note that if {\tt stop} is not set,
 then {\tt p} must be set and {\tt stop} takes on its default value.  If
@@ -2340,8 +2340,8 @@ Other input parameters are the same as described in section~\ref{execsect}.
 Recall that the default value of {\tt batch\_sys} is {\tt at} (the
 standard Unix batch command), however parallel jobs will not run with
 {\tt at}.  Thus, you must either explicitly input {\tt batch\_sys} above
-or else set the environment variable {\tt \$EGS\_BATCH\_SYSTEM}, 
-to something other than {\tt at}.  
+or else set the environment variable {\tt \$EGS\_BATCH\_SYSTEM},
+to something other than {\tt at}.
 
 Parallel jobs
 are controlled by a job control file,
@@ -2350,18 +2350,18 @@ are controlled by a job control file,
 updated by all parallel jobs and contains the total number of histories
 remaining to be run and the number of jobs running, among other information.
 Jobs run until there are no histories remaining in the job control file.
-Rather than each job running a fixed ({\tt NUMBER OF HISTORIES})/{\tt N} 
+Rather than each job running a fixed ({\tt NUMBER OF HISTORIES})/{\tt N}
 histories
 (as in the old {\tt pprocess} scheme), a job is only allowed to run
 a fraction, or ``chunk'' of this number at a time.  Thus each run
-consists of ({\tt NUMBER OF HISTORIES})/({\tt N}*{\tt \$N\_CHUNK}) 
+consists of ({\tt NUMBER OF HISTORIES})/({\tt N}*{\tt \$N\_CHUNK})
 histories, where
 \index{\$N\_CHUNK}
 {\tt \$N\_CHUNK} is defined in {\tt \$HEN\_HOUSE/src/egsnrc.macros}
 and is set by default to 10.  Breaking the simulation into smaller chunks allows
 jobs using faster CPU's to run more histories than those running
 on slower CPU's, increasing the efficiency of this new parallel processing
-scheme.  
+scheme.
 
 \index{parallel jobs!output naming scheme}
 Each parallel job outputs the same files that the simulation would
@@ -2375,7 +2375,7 @@ where {\tt i\_parallel} is the index number of the job
 If a parallel job finds there are no histories left to run in
 {\tt inputfile.lock}, then it analyzes the results for its own runs
 and outputs the results to its {\tt inputfile\_w[i\_parallel].egslst},
-{\tt inputfile\_w[i\_parallel].plotdat}, etc, files. 
+{\tt inputfile\_w[i\_parallel].plotdat}, etc, files.
 
 \subsubsection{Random number seeds for parallel jobs}
 \index{parallel jobs!random number seeds}
@@ -2389,13 +2389,13 @@ for each parallel job submitted using:
 \mbox{\tt JXXIN = JXXIN}_{input} \mbox{ - 1 + i\_parallel}
 \end{equation}
 where {\tt JXXIN$_{input}$} is the value of {\tt JXXIN} in {\tt inputfile.egsinp}
-and {\tt i\_parallel} is the parallel job number 
+and {\tt i\_parallel} is the parallel job number
 ({\tt i\_start},{\tt i\_start+1},...,{\tt i\_start+N-1}).
 
 \subsubsection{Phase space sources and parallel jobs}
 \index{parallel jobs!with phase space sources}
 If you are using a phase space file
-as a source (source 21 or 22 -- see section~\ref{source_inputs}), 
+as a source (source 21 or 22 -- see section~\ref{source_inputs}),
 then this source is partitioned so that it is sampled
 evenly over all jobs.  Each chunk of the run uses a different partition
 of the phase space file, where the number of particles in each
@@ -2418,12 +2418,12 @@ which reads and sums the data stored in the
 {\tt inputfile\_w[i\_parallel].egsdat} files from the parallel jobs.
 These combined results are then analyzed and output
 \index{.egsdat files}
-to the {\tt inputfile.egslst} file along with any other output files 
+to the {\tt inputfile.egslst} file along with any other output files
 you may have selected (e.g. {\tt inputfile.plotdat}).  Note that this
 means that to combine parallel runs, you must always have
 \index{STORE DATA ARRAYS}
 {\tt STORE DATA ARRAYS= YES} (see section~\ref{dataarrsect}) so that
-the {\tt .egsdat} files are output.  
+the {\tt .egsdat} files are output.
 
 The {\tt inputfile\_w[i\_parallel].egsdat} can also be manually combined
 by rerunning your code with the input parameter
@@ -2431,7 +2431,7 @@ by rerunning your code with the input parameter
 \verb+IRESTART= PARALLEL+.  This may be useful if you want to combine
 results from several different groups of parallel runs.
 
-This system of combining results works very well unless you have 
+This system of combining results works very well unless you have
 huge {\tt .egsdat}
 files (can happen with FLURZnrc), in which case you can quickly run out of
 disk space and or bring your network to its knees.
@@ -2443,7 +2443,7 @@ Parallel jobs can be restarted the same way as a single run, by
 rerunning with {\tt IRESTART= restart} (see section~\ref{restartsect})
 in {\tt inputfile.egsinp}.
 Note that all of the {\tt .egsdat} files from the previous parallel
-jobs must be available and you must submit the same number of parallel 
+jobs must be available and you must submit the same number of parallel
 jobs beginning with the same value of {\tt i\_start} (see section~\ref{subparsect} above).
 If you are using a
 phase space source, however, restarting presents a problem in that a
@@ -2455,7 +2455,7 @@ will result in the uncertainties being underestimated.  We recommend that
 you do not restart a parallel run if you are using a phase space source.
 
 If you are restarting a parallel run that uses a full BEAMnrc simulation
-source (source 23--See Section~\ref{source_inputs}).  Then you must go 
+source (source 23--See Section~\ref{source_inputs}).  Then you must go
 into the input file for the simulation source and set the input variable
 {\tt IRESTART} to 1.  Otherwise, the simulation source in the restarted run
 will use identical random numbers as in the original run.
@@ -2641,7 +2641,7 @@ log file, {\tt inputfile.egslog}, for batch runs.
 \subsection{Standard I/O Units}
 \label{iounits}
 The following files are associated with a normal type of run with an NRC
-user code, although the {\tt user\_code.io} file can add whatever files 
+user code, although the {\tt user\_code.io} file can add whatever files
 the user
 may want and the files below are not mandatory.  See section~\ref{iofilesect}
 below for more details.  For
@@ -2672,7 +2672,7 @@ kept in this file if requested. It can be useful for debugging.
 \index{.plotdat}
 \index{.spectra}
 \index{.plotphd}
-\item [input.plotdat, input.spectra, input.plotphd:] Plotting files for 
+\item [input.plotdat, input.spectra, input.plotphd:] Plotting files for
 various routines readable by \verb+xmgrace+.  {\tt input.plotdat} generally
 holds dose, fluence or stopping-power ratio plots. {\tt input.spectra}
 holds fluence spectra plots (FLURZnrc only).  {\tt input.plotphd} holds
@@ -2698,7 +2698,7 @@ GET\_INPUT routine. This file is also in the {\tt .egslog} file at the end.
 \index{.eo}
 \item[input.eo:] file contains output from the batch queuing system
 (e.g. PBS or NQS).  This file is only output if the job has been run
-in batch mode. 
+in batch mode.
 \end{description}
 
 If you want to modify the user codes and need more files, these can be
@@ -2711,16 +2711,16 @@ below).
 \index{user\_code.io}
 
 Output files are associated with standard Fortran units (i.e. {\tt fort.*})
-using the {\tt user\_code.io} file located in 
+using the {\tt user\_code.io} file located in
 {\tt \$EGS\_HOME/user\_code}.  An typical {\tt .io} file
 ({\tt dosrznrc.io}) contains:
 \begin{verbatim}
 1  .egslst
 15 .errors
 \end{verbatim}
-The left column is the Fortran unit number and the right column is the 
+The left column is the Fortran unit number and the right column is the
 file extension (added to {\tt inputfile}).  For example, in this case
-{\tt fort.1} is the file {\tt inputfile.egslst}.  
+{\tt fort.1} is the file {\tt inputfile.egslst}.
 
 Files associated with Fortran units in {\tt user\_code.io} are opened
 in subroutine {\tt egs\_init}, called at the
@@ -2728,8 +2728,8 @@ in subroutine {\tt egs\_init}, called at the
 \index{egs\_finish}
 beginning of the RZ code, and are closed in subroutine
 {\tt egs\_finish}, called at the end of the code.  Both of these subroutines
-are in the file {\tt \$HEN\_HOUSE/src/egs\_utilities.mortran}.  Files 
-in {\tt user\_code.io} are opened unconditionally.  
+are in the file {\tt \$HEN\_HOUSE/src/egs\_utilities.mortran}.  Files
+in {\tt user\_code.io} are opened unconditionally.
 Output files that are only created if certain input parameters are set must
 be opened and closed explicitly in the user code.
 
@@ -2740,10 +2740,10 @@ be opened and closed explicitly in the user code.
 
 Before compiling an RZ code using the {\tt make}
 command, you must have copied both
-{\tt Makefile} and {\tt user\_code.make} from 
+{\tt Makefile} and {\tt user\_code.make} from
 {\tt \$HEN\_HOUSE/user\_code} into your {\tt \$EGS\_HOME/user\_code}
 directory.  {\tt Makefile} can be seen as the ``master" file directing
-the compilation.  In the case of the RZ codes, {\tt Makefile} directs 
+the compilation.  In the case of the RZ codes, {\tt Makefile} directs
 the compilation to include the files {\tt \$HEN\_HOUSE/specs/config.conf}
 (defines the compiler name and default compiler options for the system,
 {\tt config}, that you are running on), {\tt user\_code.make} (more about
@@ -2767,7 +2767,7 @@ have a working C/C++ compiler.  In particular, the C files are necessary
 to make use of the built-in parallel processing functionality
 (see section~\ref{parallelsect}) and to use a BEAM simulation
 as a source (source 23, see section~\ref{source_inputs}).
-\item [{\tt RANDOM}] Defines the random number generator to be used.  This 
+\item [{\tt RANDOM}] Defines the random number generator to be used.  This
 \index{RANDOM}
 can be set to either\\ {\tt \$(EGS\_SOURCEDIR)ranmar} (default) or
 {\tt \$(EGS\_SOURCEDIR)ranlux} to use the RANMAR or RANLUX random number
@@ -2777,8 +2777,8 @@ generator respectively (see section~\ref{rngsect} for more on the RNGs).
 are concatenated together (and the order in which they are concatenated)
 \index{mortjob.mortran}
 to create the {\tt mortjob.mortran} file that is ultimately compiled.
-You can make changes to {\tt SOURCES} to include additional files or 
-change the directory where a source file is pulled from. 
+You can make changes to {\tt SOURCES} to include additional files or
+change the directory where a source file is pulled from.
 Note that the order of the macro files is important since a macro
 must be defined before it is used in a code and, in the case of multiple
 definitions of a macro, the last definition is the one used.
@@ -2847,7 +2847,7 @@ No. &&\\
 \hline
 11 & Point source incident from side & fluence at  central (Z) axis\\
 \hline
-12 & Point source off axis & fluence at centre of geometry\\ 
+12 & Point source off axis & fluence at centre of geometry\\
 \hline
 13 & Parallel beam from any angle & fluence on cylinder\\
 \hline
@@ -2856,7 +2856,7 @@ No. &&\\
 \hline
 15 & Point source from any angle & fluence at centre of geometry\\
 \hline
-16 & Circular or rectangular & fluence at centre of geometry\\ 
+16 & Circular or rectangular & fluence at centre of geometry\\
    & isotropically-radiating source & \\
    & from any angle  &\\
 \hline
@@ -2867,7 +2867,7 @@ No. &&\\
    &                               & original, non-phase-space source\\
 \hline
 22 & Phase space source from   & incident particles from\\
-   & any angle  & original, non-phase-space source\\ 
+   & any angle  & original, non-phase-space source\\
 \hline
 23 & Full BEAM simulation from   & incident particles from\\
    & any angle  & primary BEAM source\\
@@ -2880,7 +2880,7 @@ No. &&\\
 %%NB, be sure to make any changes in this table in both versions!!!
 %%NB, be sure to make any changes in this table in both versions!!!
 %%NB, be sure to make any changes in this table in both versions!!!
-%%NB, be sure to make any changes in this table in both versions!!! 
+%%NB, be sure to make any changes in this table in both versions!!!
 \begin{htmlonly}
 \begin{table}[htb]
 \begin{tabular}{|lcc|}
@@ -2906,7 +2906,7 @@ No.  & & \\
 \hline
 11 & Point source incident from side & fluence at  central (Z) axis\\
 \hline
-12 & Point source off axis & fluence at centre of geometry\\ 
+12 & Point source off axis & fluence at centre of geometry\\
 \hline
 13 & Parallel beam from any angle & fluence on cylinder\\
 \hline
@@ -2915,7 +2915,7 @@ No.  & & \\
 \hline
 15 & Point source from any angle & fluence at centre of geometry\\
 \hline
-16 & Circular or rectangular & fluence at centre of geometry\\ 
+16 & Circular or rectangular & fluence at centre of geometry\\
    & isotropically-radiating source & \\
    & from any angle  &\\
 \hline
@@ -2926,7 +2926,7 @@ No.  & & \\
    &                               & original, non-phase-space source\\
 \hline
 22 & Phase space source from   & incident particles from\\
-   & any angle  & original, non-phase-space source\\ 
+   & any angle  & original, non-phase-space source\\
 \hline
 23 & Full BEAM simulation from   & incident particles from\\
    & any angle  & primary BEAM source\\
@@ -2945,7 +2945,7 @@ and does not take into account the angle of incidence on the geometry
 (except source 13).
 
 Point source routines are more complex.  For a point source on the Z-axis,
-the incident fluence is defined on the central axis 
+the incident fluence is defined on the central axis
 at the outer planar face of the cylinder
 with the lowest Z-value.  If the point source is very close to the
 cylinder, this number is not immediately obvious.
@@ -2955,7 +2955,7 @@ midpoint of the cylinder''.  Thus two runs using source 1 and source 12
 with the points very close to each other, could still be normalized quite
 differently if the cylinder were very long.
 
-For the isotropically radiating internal source and the phase space sources 
+For the isotropically radiating internal source and the phase space sources
 the final
 normalization is given in terms of the number of initial particles and is
 no longer directly related to fluence.
@@ -2989,13 +2989,13 @@ This code and its ancestors, (DOSRZ, JACKET, INHOM),
 have been used in many publications and verified in many
 situations\cite{Ro82,Ro84a,RB85,SH86,RB86,RB90,KR93}.  One must be aware
 that there are small but real differences between EGSnrc results and EGS4
-results with this code (see ref~\cite{Wa00}).  
+results with this code (see ref~\cite{Wa00}).
 
 
 \subsection{User Controls}
 \index{user controls in DOSRZnrc}
 
-The user has controls over the geometry, materials and 
+The user has controls over the geometry, materials and
 simulation by:
 
 \begin{enumerate}
@@ -3035,7 +3035,7 @@ particle energy cutoffs, range rejection parameters.}
 \subsection{Output}
 \index{region numbering in DOSRZnrc}
 
-The first section of the output (in the {\tt .egslst} file) 
+The first section of the output (in the {\tt .egslst} file)
 echos the user input.
 The second section is messages and information printed
 during the simulation as a means of monitoring the simulation.
@@ -3072,16 +3072,16 @@ OUTPUT OPTIONS
                          [IOOPTN]
 
 ELECTRON TRANSPORT
-      = normal          (0) normal electron transport 
+      = normal          (0) normal electron transport
       = no interactions (1) no discrete interactions (used for CDSA
                             calculations but note that special data
                             sets are also needed to do a proper CSDA
-                            calculation. All turning off interactions 
-                            does is just that. See use of IUNRST=2,3,4 
+                            calculation. All turning off interactions
+                            does is just that. See use of IUNRST=2,3,4
                             PEGS4 data sets for real CSDA.)
                          [ ICSDA]
 \end{verbatim}
-For complex geometries you may want just to output the doses in 
+For complex geometries you may want just to output the doses in
 a few regions.  These are defined using dose bounds. Note that
 proper transport is done everywhere and this is
 NOT related to range rejection, it is just an output option.  Values which
@@ -3117,10 +3117,10 @@ loss straggling for the sub-threshold events.
 
 
 \subsection{Monte Carlo control}
-\index{DOSRZnrc!Monte Carlo control} 
+\index{DOSRZnrc!Monte Carlo control}
 \index{Monte Carlo inputs!DOSRZnrc}
 
-Monte Carlo control input is delimited between 
+Monte Carlo control input is delimited between
 \verb+:start Monte Carlo inputs:+ and \\
 \verb+:stop Monte Carlo inputs:+.  In addition to the Monte Carlo control
 inputs common to all codes (see section~\ref{MC_inputs}, DOSRZnrc has the
@@ -3177,12 +3177,12 @@ being transported much in that region.
 \index{dose components!dose entrance regions}
 \index{dose entrance regions!DOSRZnrc}
 \noindent {\tt IFULL= entrance regions}\\     DOSRZnrc will output the total dose
-in each region along with the fractions of the total dose due to  
+in each region along with the fractions of the total dose due to
 electrons entering from the front, back, inside and outside
-walls of the region.  Any fraction of the dose not accounted for 
+walls of the region.  Any fraction of the dose not accounted for
 by these four
-entrance walls is assumed to come from electrons that originated in the 
-region. 
+entrance walls is assumed to come from electrons that originated in the
+region.
 
 \index{DOSRZnrc!pulse height distributions}
 \index{pulse height distribution!DOSRZnrc}
@@ -3192,7 +3192,7 @@ The response function for a given set of regions will be scored (see
 reference\cite{Ro82} for a discussion of response functions).
 Specification of the input for the scoring of such distribution
 is delimited between \verb+:start pulse height distribution input:+ and\\
-\verb+:stop pulse height distribution input:+. 
+\verb+:stop pulse height distribution input:+.
 It contains the following parameters:
 \index{DELTAE}
 \index{SLOTE}
@@ -3211,7 +3211,7 @@ It contains the following parameters:
                 of width deltae above and below the peak. default
                 value is 0.005 MeV (no meaning for electrons, positrons)
 
-   IF SLOTE < 0.0 Input tops of individual energy bins for pulse height 
+   IF SLOTE < 0.0 Input tops of individual energy bins for pulse height
                   distribution using:
       TOPS OF ENERGY BINS        lowest energy first, tops of bins.
                  [BINTOP]
@@ -3220,28 +3220,28 @@ It contains the following parameters:
 \index{response functions}
 \index{pulse height distribution}
 \index{detector response function}
-Using {\tt SLOTE}, described above, incident particles are binned according to 
+Using {\tt SLOTE}, described above, incident particles are binned according to
 the total
-energy that they have deposited in the sensitive volume. 
+energy that they have deposited in the sensitive volume.
 The pulse height distribution is output to the {\tt .egslst} file.  Here,
-it is normalized so that counts/bin add up to 1.  
+it is normalized so that counts/bin add up to 1.
 The distribution is also output, in tabular form, to the {\tt .egseff} file,
 with the number of counts in each bin having been divided by the bin
-width (in MeV) to give counts/MeV.  Finally, the pulse height distribution is 
+width (in MeV) to give counts/MeV.  Finally, the pulse height distribution is
 also output (in counts/MeV) to the {\tt .plotphd} form for plotting using
 {\tt xmgrace} or a similar plotting package.  In both {\tt .egslst} and
-{\tt .egseff} files, the pulse height distribution is accompanied by 
+{\tt .egseff} files, the pulse height distribution is accompanied by
 calculated peak efficiencies.  This is calculated for four peaks:
 the full (incident) energy peak, the single escape peak (incident energy - 0.511 MeV), the double escape peak (incident energy - 1.022 MeV) and the
 0.511 MeV peak.  Essentially, the efficiency of a peak is the number of
-counts in the peak (counts falling in the range 
+counts in the peak (counts falling in the range
 {\tt peak energy - DELTAE $\le$ E $\leq$ peak energy + DELTAE}) minus the background
 near the peak (counts falling in the range
 {\tt peak energy - 2*DELTAE $\le$ E $<$ peak energy - DELTAE} or
 {\tt peak energy + DELTAE $<$ E $\leq$ peak energy + 2*DELTAE }) expressed as a
 fraction of the total energy in the pulse height distribution.  Note that
-this analysis of peak efficiencies only makes sense for a monoenergetic 
-incident beam. 
+this analysis of peak efficiencies only makes sense for a monoenergetic
+incident beam.
 \index{.plotphd}
 \index{DOSRZnrc!scatter fraction}
 \label{scatsec}
@@ -3261,9 +3261,9 @@ routines will be incorrect.
 
 \noindent {\tt IFULL= scatter fraction}\\     DOSRZnrc will output
 the total dose and the scatter dose.  Scatter dose is defined as dose
-that can be traced back to photons that have been scattered in 
+that can be traced back to photons that have been scattered in
 compton events and to photons that were created through relaxation processes
-after compton and photoelectric events.  Note that this definition of 
+after compton and photoelectric events.  Note that this definition of
 scatter dose may not suit your particular problem, however it can be modified
 in the {\tt AUSGAB} routine of DOSRZnrc.
 
@@ -3280,21 +3280,21 @@ section~\ref{histsect}\lpage{histsect}) or {\tt MAX CPU HOURS ALLOWED}
 \subsubsection{{\tt SCORE KERMA} option}
 \index{DOSRZnrc!scoring kerma}
 
-By setting {\tt SCORE KERMA= yes} the user can output the kerma in 
-a simulation.  Kerma in a region is the total energy of charged particles 
+By setting {\tt SCORE KERMA= yes} the user can output the kerma in
+a simulation.  Kerma in a region is the total energy of charged particles
 set in motion by pair, compton or photoelectric events in that region.  It
 also includes energy deposited in that region by electrons that
-aren't traceable back to pair, compton or photoelectric events (ie 
+aren't traceable back to pair, compton or photoelectric events (ie
 primary electrons).  If the user chooses to score kerma and also has
 set {\tt IFULL= scatter fraction}, then DOSRZnrc will also output the
 scatter kerma, which is the kerma due to scattered photons as defined in
-subsection~\ref{scatsec}\lpage{scatsec}. 
+subsection~\ref{scatsec}\lpage{scatsec}.
 
 \subsection{Photon cross section enhancement (DOSRZnrc)}
 \label{dosrz_cse}
 \index{cross section enhancement!DOSRZnrc}
 \index{DOSRZnrc!cross section enhancement}
- 
+
 %\note{Documentation in this section on photon enhancement
 %is incomplete/inaccurate.}
 Cross section enhancement allows a user to increase the photon cross
@@ -3336,17 +3336,17 @@ fluctuations. Therefore, in order to use this method efficiently,
 it is a good idea to make the cross section enhancement region
 slightly larger than the region of interest so that no
 ``fat'' electrons can get into the volume of interest.
- 
+
 The inputs related to cross section enhancement are summarised
 below. The start and stop region can contain multiple numbers
-so as to define a specific region in an RZ geometry. The 
-input is to be placed within the 
-{\tt :start variance reduction:} and 
-{\tt :stop variance reduction:} delimeters common for all 
+so as to define a specific region in an RZ geometry. The
+input is to be placed within the
+{\tt :start variance reduction:} and
+{\tt :stop variance reduction:} delimeters common for all
 RZ codes.
- 
+
 \begin{verbatim}
- 
+
   CS ENHANCEMENT FACTOR=       can scale the photon cross section
                 by this factor in a specified set of regions.
                 From 1 to 10,000. With a default of 200 if it is on at all.
@@ -3355,13 +3355,13 @@ RZ codes.
                 Photon cross section scaled in these defined sets of regions.
                 From 2 to NREG. Defaults to region 1 which means no
                 enhancement since this is outside the geometry.
- 
-\end{verbatim} 
 
-Note that in the DOSRZnrc implementation the above input does not define 
-$C_e$ directly. Instead, the input sets the desired number of interactions 
-per g/cm$^2$, a definition that was found more convenient for our purposes. 
-If we denote this number by $C$ and the photon attenuation coefficient 
+\end{verbatim}
+
+Note that in the DOSRZnrc implementation the above input does not define
+$C_e$ directly. Instead, the input sets the desired number of interactions
+per g/cm$^2$, a definition that was found more convenient for our purposes.
+If we denote this number by $C$ and the photon attenuation coefficient
 by $\mu$, the resulting cross section enhancement factor will be
 \begin{equation}
 C_e = {C \rho \over \mu}
@@ -3406,18 +3406,18 @@ inputs are:
                                (= 0 for no plots)
 
    PLOT PLANAR REGION IZ  (M)  planar slab numbers to plot vs radius
-                               (= 0 for no plots)   
+                               (= 0 for no plots)
 \end{verbatim}
 You must have {\tt PLOTTING= On} if you want to get any plots at all.
 
 \index{plotting dose}
 If you are plotting dose, then you must select the cylinders and/or slabs
-in your geometry for which you want to plot the dose.  Cylinders are selected 
+in your geometry for which you want to plot the dose.  Cylinders are selected
 using the {\tt PLOT RADIAL REGION IX} input and are numbered from
 the inside out.  For example, if you just want to plot dose on the
 central axis you would input {\tt PLOT RADIAL REGION IX= 1}, if you want
 to plot dose on the central axis and also the next cylinder out you would
-input {\tt PLOT RADIAL REGION IX= 1,2}, and so on.  Doses in cylinders are 
+input {\tt PLOT RADIAL REGION IX= 1,2}, and so on.  Doses in cylinders are
 plotted as dose vs. depth and are all written to the file
 {\tt inputfile\_dd.plotdat}.   Slabs are selected using the
 {\tt PLOT PLANAR REGION IZ} input and are numbered from the top (min. Z)
@@ -3456,22 +3456,22 @@ fluence was less than 0.5\% when using 20 keV energy bins.
 
 There are a variety of outputs such as total fluence as a function of
 position, spectra in each region and spectra of primaries vs secondaries of
-various types.  The geometry and source inputs are identical to DOSRZnrc 
+various types.  The geometry and source inputs are identical to DOSRZnrc
 (described above).
 
 This code (or its ancestor FLURZ) has been used frequently in the
-literature, often in conjunction with DOSRZ (see, eg \cite{Ma91}).  
+literature, often in conjunction with DOSRZ (see, eg \cite{Ma91}).
 
 \subsection{Input/output control}
 \index{FLURZnrc!I/O control}
- 
+
 I/O control input is delimited between \verb+:start I/O control:+\\
 and \verb+:stop I/O control:+.  In addition to the common
 I/O inputs described in section~\ref{common_I_O_control} FLURZnrc has the
 following I/O inputs which are discussed in more detail below:
-\begin{verbatim} 
+\begin{verbatim}
   PRINT FLUENCE SPECTRA
-        = all         (0)  print all fluence spectra 
+        = all         (0)  print all fluence spectra
         = specified   (2)  print spectra only for those regions
                            specified by 'LIST FLUENCE START REGION'
                            and 'LIST FLUENCE STOP REGION'.
@@ -3483,14 +3483,14 @@ following I/O inputs which are discussed in more detail below:
 
   LIST FLUENCE STOP REGION    (only if  PRINT FLUENCE SPECTRA= specified)
                       (M)  Higher (final) numbers defining the regions for
-                           which spectra are to be printed in listing file.   
+                           which spectra are to be printed in listing file.
   IPRIMARY
          = total fluence             (0) score total fluence spectra  only
 
          = electron primaries        (1) score electron primaries
                                          separately. Include brem
                                          generated photons as primaries
-         = include brem secondaries  (2) score electron primaries 
+         = include brem secondaries  (2) score electron primaries
                                          but include those generated by brem
                                          as secondaries
          = photon primaries          (3) primaries are all first generation
@@ -3539,7 +3539,7 @@ The user can specify that fluence spectra be output only for
 selected regions using {\tt PRINT FLUENCE SPECTRA= specified} and then
 {\tt LIST FLUENCE START REGION} and {\tt LIST FLUENCE STOP REGION} to
 specify the regions for which the spectra are to be output.  Alternatively,
-if the user is only going to look at the fluence spectra graphically (using a 
+if the user is only going to look at the fluence spectra graphically (using a
 plotting program such as {\tt xmgrace} together with the output to the .plotdat
 file) then the user can set {\tt PRINT FLUENCE SPECTRA= none} to prevent
 an unnecessarily large {\tt .egslst} file.
@@ -3564,7 +3564,7 @@ ref\cite{Ma91}).
 \index{FLURZnrc!IPRIMARY}
 \label{flurziprimsect}
 
-Using the {\tt IPRIMARY} input, the user can choose to output primary/secondary photon spectra based on a number of different criteria.  
+Using the {\tt IPRIMARY} input, the user can choose to output primary/secondary photon spectra based on a number of different criteria.
 
 The following two options are designed for use with incident beams of
 charged particles.
@@ -3601,7 +3601,7 @@ If the user selects {\tt IPRIMARY= electron secondaries}, then FLURZnrc outputs
 secondary fluence spectra for all particles that include knock-on electrons
 from Moller events and any secondary particles that these electrons may set
 in motion.  Note that in this definition of electron secondaries, electrons
-created by bremsstrahlung photons are considered primaries. 
+created by bremsstrahlung photons are considered primaries.
 
 \subsection{Monte Carlo inputs}
 \index{FLURZnrc!Monte Carlo control}
@@ -3611,7 +3611,7 @@ for all user codes.  These common Monte Carlo inputs are described
 in section~\ref{MC_inputs}\lpage{MC_inputs}.
 
 \subsection{Plotting control}
-\index{FLURZnrc!plot control} 
+\index{FLURZnrc!plot control}
 \index{plot control!FLURZnrc}
 
 FLURZnrc has two distinct types of plotting outputs. One class of plots
@@ -3619,7 +3619,7 @@ gives integral fluence vs position plots in various ways (vs depth, vs
 radius).  The code also outputs fluence spectra in specified regions.
 
 The user controls the plotting using the
-following input parameters that must appear between the 
+following input parameters that must appear between the
 {\tt :start plot control:} and {\tt :stop plot control:} delimiters:
 
 \begin{verbatim}
@@ -3634,7 +3634,7 @@ following input parameters that must appear between the
   EXTERNAL PLOT TYPE
           = Point       (1)   point plot on external plotter
           = Histogram   (2)   histogram on external plotter
-          = Both        (3)   both point plot and histogram 
+          = Both        (3)   both point plot and histogram
 
 
   DRAW FLUENCE PLOTS
@@ -3667,16 +3667,16 @@ following input parameters that must appear between the
 
   STOP SPECTRAL PLOT IN REGION
                       (M)  higher (final) numbers defining the regions for
-                           which spectra are to be printed in .spectra file.  
+                           which spectra are to be printed in .spectra file.
 
-   PLOT RADIAL REGION IX  (M)  radial plane numbers to plot integral 
+   PLOT RADIAL REGION IX  (M)  radial plane numbers to plot integral
                                fluence (= 0 for no plots)
 
    PLOT PLANAR REGION IZ  (M)  planar slab numbers to plot integral fluence
-                               (= 0 for no plots)                             
+                               (= 0 for no plots)
 \end{verbatim}
 
-The user must select {\tt PLOTTING= On} to obtain any plots at all. 
+The user must select {\tt PLOTTING= On} to obtain any plots at all.
 
 \subsubsection{Plotting fluence ({\tt .plotdat})}
 \index{.plotdat!FLURZnrc}
@@ -3702,15 +3702,15 @@ Fluence data can be plotted for photons ({\tt PLOTS FOR PHOTONS= on}),
 electrons ({\tt PLOTS FOR ELECTRONS= on}) and positrons
 ({\tt PLOTS FOR POSITRONS= on}).  The input for charged particles,
 {\tt PLOTS FOR E- AND E+}, is only valid for for fluence spectra plots
-(see section~\ref{flurzspectsect}). 
+(see section~\ref{flurzspectsect}).
 
 Finally, the user can choose to plot fluence histograms, point plots, or
 both on the same plot using the {\tt EXTERNAL PLOT TYPE} input.
 
 If you are using {\tt xmgrace} to examine the plots, each curve will be labelled
-with its cylinder/slab number (``radial zone"/``planar zone"), the 
+with its cylinder/slab number (``radial zone"/``planar zone"), the
 particle charge (``IQ"), and whether this is
-the total fluence (``IP=1") or primary/secondary fluence (``IP=2").  
+the total fluence (``IP=1") or primary/secondary fluence (``IP=2").
 
 Note that all fluence data gets put into the same {\tt .plotdat} file, which
 may lead to confusion if you are plotting both fluence vs depth (in
@@ -3727,19 +3727,19 @@ If you have selected {\tt PLOTTING= On}, then you can also obtain
 fluence spectra plots.  Fluence vs energy data are output to a {\tt .spectra}
 file which is in a format that can be viewed using {\tt xmgrace} or
 similar plotting package.  The energy resolution of these plots is
-determined by the {\tt SLOTE} input explained in 
+determined by the {\tt SLOTE} input explained in
 section~\ref{flurzprintsect}\lpage{flurzprintsect}.
 
-Use the {\tt START SPECTRAL PLOT IN REGION} and 
-{\tt STOP SPECTRAL PLOT IN REGION} inputs to define a range (or ranges) of 
+Use the {\tt START SPECTRAL PLOT IN REGION} and
+{\tt STOP SPECTRAL PLOT IN REGION} inputs to define a range (or ranges) of
 regions
 for which you want fluence spectra.  For each region in the range, fluence
-vs. energy data will be output.  Thus, if you input 
+vs. energy data will be output.  Thus, if you input
 \begin{verbatim}
 START SPECTRAL PLOT IN REGION= 2, 43
 TOP SPECTRAL PLOT IN REGION= 3, 45
 \end{verbatim}
-you will get fluence spectra for regions 2, 3, 43, 44, 45.  
+you will get fluence spectra for regions 2, 3, 43, 44, 45.
 
 Note that {\tt PLOT RADIAL REGION IX} and {\tt PLOT PLANAR REGION IZ}
 are for fluence vs depth or radius plots only (see
@@ -3757,7 +3757,7 @@ You can also select which particles you want to output fluence spectra
 for using the {\tt PLOTS FOR PHOTONS}, {\tt PLOTS FOR ELECTRONS},
 {\tt PLOTS FOR POSITRONS} and {\tt PLOTS FOR E- AND E+} inputs.
 Note that all of these inputs, except for {\tt PLOTS FOR E- AND E+} are
-also available for fluence vs depth/radius plots. 
+also available for fluence vs depth/radius plots.
 
 Finally, similar to fluence vs. depth/radius you can plot histograms,
 points or both using the {\tt EXTERNAL PLOT TYPE} input.
@@ -3767,7 +3767,7 @@ are not mutually exclusive.  If you do choose to output both at the same
 time, then you must make sure that the settings of
 {\tt DRAW FLUENCE PLOTS}, {\tt PLOTS FOR PHOTONS}, {\tt PLOTS FOR ELECTRONS}, {\tt PLOTS FOR POSITRONS} and {\tt EXTERNAL PLOT TYPE}, which
 affect both spectra and fluence vs depth/radius plots, include all the
-information you want from both sets of plots. 
+information you want from both sets of plots.
 \index{.plotdat!FLURZnrc}
 
 %\renewcommand{\rightmark}{{SPRRZnrc}}
@@ -3777,7 +3777,7 @@ information you want from both sets of plots.
 
 \subsection{Introduction}
 
-This code calculates Spencer-Attix mass restricted collision stopping-power 
+This code calculates Spencer-Attix mass restricted collision stopping-power
 ratios in each region in an RZ geometry.  It uses an on-the-fly technique
 for scoring which has been described briefly in ref\cite{KR93} and shown to get the
 same answers as the more traditional methods of calculating the fluence
@@ -3847,7 +3847,7 @@ AE or AP.}
 
 The dose delivered by the $\alpha$ events in figure~\ref{fig_spr_logic}
 is simple to analyze. In the numerator we just sum the actual energy
-deposition. In the denominator we sum the energy deposition times 
+deposition. In the denominator we sum the energy deposition times
 the ratio of restricted stopping powers at the mid-point energy of the
 step, i.e.
 \eqn{EDEP \frac{\rspE{Emid}{g}}{\rspE{Emid}{m}}}
@@ -3908,10 +3908,10 @@ $\beta$ component (stoppers created below $\Delta$)[IT=1]; dose from
 $\alpha$ plus $\gamma$ only [IT=3].
 The IT=2 and IT=4 components
 correspond to the IT=1 and IT=3 components but scored in the $g$ material
-as outlined above. The code then outputs: the total dose; the 
+as outlined above. The code then outputs: the total dose; the
 fraction of the total dose due to included stoppers (IT=1~$-$~IT=3)/total;
-and the fraction of the total dose due to excluded stoppers 
-(total$-$~IT=1)/total. 
+and the fraction of the total dose due to excluded stoppers
+(total$-$~IT=1)/total.
 
 The IT=2 dose component is the same as the IT=1 dose component except as
 modified to represent the dose in the detector medium as described above.
@@ -3921,7 +3921,7 @@ dose less the actual stoppers but including the crossers.
 The stopping-power ratios are calculated as the IT=1 dose component divided
 by the IT=2 dose component (strictly the scored energy depositions divided
 by the respective densities are used).  The stopping-power ratio less the
-stoppers is calculated by taking IT=3 divided by IT=4. 
+stoppers is calculated by taking IT=3 divided by IT=4.
 
 The code outputs he two different stopping-power ratios to demonstrate that
 the inclusion of the stoppers has only a small effect on the overall
@@ -3956,10 +3956,10 @@ the {\tt SPR OUTPUT} control is unique to SPRRZnrc and you input it
 as follows:
 \begin{verbatim}
   SPR OUTPUT
-        = regions         (0)  Specify stopping power ratio output by 
+        = regions         (0)  Specify stopping power ratio output by
                                regions (no .plotdat file will be generated)
         = slabs/cylinders (1)  Specify stopping power ratio output by slabs
-                               & cylinders (.plotdat file is generated) 
+                               & cylinders (.plotdat file is generated)
 ***************************************************************************
 
   IF SPR OUTPUT= regions
@@ -3980,7 +3980,7 @@ as follows:
   SPR IN SLAB IZ      (M)  planar slab numbers for which to output
                            stopping power ratios (= 0 for no output)
 
-**************************************************************************  
+**************************************************************************
 \end{verbatim}
 \index{.plotdat!SPRRZnrc}
 
@@ -3991,11 +3991,11 @@ as follows:
 {\tt SPR OUTPUT} is used to determine how stopping power ratios are
 output.  If electron range rejection is off, then stopping power ratios
 in all regions are output to the {\tt .egslst} file.  If electron
-range rejection is on, then stopping power ratios are zeroed in the 
+range rejection is on, then stopping power ratios are zeroed in the
 {\tt .egslst} file except in regions specified using
 {\tt SPR START REGION} and {\tt SPR STOP REGION} (if
 {\tt SPR OUTPUT= regions}) or in slabs/cylinders specified using
-{\tt SPR IN CYLINDER IX} and {\tt SPR IN SLAB IZ} (if 
+{\tt SPR IN CYLINDER IX} and {\tt SPR IN SLAB IZ} (if
 {\tt SPR OUTPUT= slabs/cylinders}).  In addition, electron range rejection
 is automatically turned off in the regions/slabs/cylinders you have selected
 for output so that the stopping power ratios will be meaningful.  If you
@@ -4004,13 +4004,13 @@ get a {\tt inputfile\_dd.plotdat} file which contains the stopping power ratios 
 doses) in the selected slabs and a {\tt inputfile\_rad.plotdat} file
 containing stopping power ratios (and doses) in the selected cylinders.
 This files are in a format that can be plotted
-with {\tt xmgrace} or other plotting program. 
+with {\tt xmgrace} or other plotting program.
 \index{.plotdat!SPRRZnrc}
 
 \subsection{Monte Carlo control}
 \index{SPRRZnrc!Monte Carlo control}
 
-Monte Carlo control input is delimited between 
+Monte Carlo control input is delimited between
 \verb+:start Monte Carlo inputs:+\\
 and \verb+:stop Monte Carlo inputs:+. In addition to the Monte Carlo inputs
 common to all user codes (see section~\ref{MC_inputs}\lpage{MC_inputs}),
@@ -4025,7 +4025,7 @@ SPRRZnrc has the following Monte Carlo input:
 \index{photon regeneration!SPRRZnrc}
 
 \subsubsection{{\tt PHOTON REGENERATION} option}
-\index{SPRRZnrc!photon regeneration}                                      
+\index{SPRRZnrc!photon regeneration}
 \label{photregsect}
 
 The photon regeneration option is used to calculate the stopping power ratios
@@ -4033,13 +4033,13 @@ for electrons resulting from an unattenuated and unscattered photon beam.
 If {\tt PHOTON REGENERATION= yes}, then, prior to a pair production,
 compton, photoelectric or Rayleigh event, the properties of the photon about
 to interact are saved.  After the interaction, any scattered photons or
-photons resulting from relaxation process are discarded and (once all 
+photons resulting from relaxation process are discarded and (once all
 secondary electrons have been transported) transport reverts to the duplicate
 photon that was saved just before the interaction.  In addition, photons
 resulting from bremsstrahlung events and positron annihilation events are
-eliminated on the spot. 
+eliminated on the spot.
 %, and positrons resulting from pair events are
-%converted to electrons. 
+%converted to electrons.
 %\note{Why are positrons made into electrons in photon regeneration?}
 %\note{Same occurs in general? WHY?????}
 
@@ -4051,7 +4051,7 @@ discussed in detail by Borg et al\cite{Bo99a}.  This option should not be
 used when calculating stopping-power ratios in a phantom since in that case
 you want the effects of scatter and attenuation to be taken into effect.
 
- 
+
 %\renewcommand{\rightmark}{{CAVRZnrc}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{CAVRZnrc}
@@ -4062,7 +4062,7 @@ you want the effects of scatter and attenuation to be taken into effect.
 \subsection{Introduction}
 
 CAVRZnrc calculates various factors of interest when using cavity ion
-chambers such as $A_{att}$ and $A_{scat}$ and $A_{wall}$.  
+chambers such as $A_{att}$ and $A_{scat}$ and $A_{wall}$.
 It has been described in detail in various
 publications\cite{Bi85,Ro85a,RB90a,Bi90a} and shown to produce results in
 good agreement with standard theory\cite{Bo99a}.
@@ -4074,9 +4074,9 @@ CAVRZnrc requires an extra set of
 inputs defining the cavity region.  These inputs must appear between the
 delimiters {\tt :start cavity inputs:} and {\tt :stop cavity inputs:}.
 
-If the user has input the radial geometry using 
-{\tt METHOD OF INPUT= individual} or {\tt METHOD OF INPUT= groups} 
-(see section~\ref{geomsect}\lpage{geomsect}), then the following inputs must 
+If the user has input the radial geometry using
+{\tt METHOD OF INPUT= individual} or {\tt METHOD OF INPUT= groups}
+(see section~\ref{geomsect}\lpage{geomsect}), then the following inputs must
 appear between the cavity input delimiters:
 \begin{verbatim}
    NUMBER OF CAVITY REGIONS (I)   number of geometrical zoneS
@@ -4087,7 +4087,7 @@ appear between the cavity input delimiters:
                                   (the cavity region numbers)
 \end{verbatim}
 Thus, the user defines the cavity in terms of region numbers within the
-geometry.  
+geometry.
 
 Alternatively, CAVRZnrc offers another method for entering the geometry
 in which the geometry is
@@ -4097,7 +4097,7 @@ entered between the {\tt :start geometrical inputs:} and
 {\tt :stop geometrical inputs:} delimiters.  Then, between the
 cavity input delimiters, the following inputs must be supplied:
 
-\begin{verbatim} 
+\begin{verbatim}
 
    WALL THICKNESS      (R)   thickness of the chamber walls (cms)
                              (defaults to 0.273)
@@ -4108,11 +4108,11 @@ cavity input delimiters, the following inputs must be supplied:
 
    ELECTRODE RADIUS    (R)   radius of the electrode (defaults to 0.)
 
-   WALL MATERIAL       (C)   wall material 
+   WALL MATERIAL       (C)   wall material
 
    only if   ELECTRODE RADIUS > 0.0
    ELECTRODE MATERIAL  (C)   electrode material
-\end{verbatim}   
+\end{verbatim}
 CAVRZnrc creates a simple 3-cylinder
 ({\tt RCYL(1)=ELECTRODE RADIUS, RCYL(2)=\\CAVITY RADIUS, RCYL(3)=
 CAVITY RADIUS + WALL THICKNESS}), 3-slab ({\tt ZPLANE(1)=0,\\
@@ -4152,22 +4152,22 @@ section~\ref{rnssect}\lpage{rnssect}).
 With this option, the initial random numbers from only those histories that
 end up depositing energy in the cavity region are stored in the
 {\tt .egsrns} file.  Then, if the run is restarted with
-{\tt IRESTART= start-RNS} (see section~\ref{restartsect}\lpage{restartsect}), 
-all histories will end up depositing energy in the cavity region. 
+{\tt IRESTART= start-RNS} (see section~\ref{restartsect}\lpage{restartsect}),
+all histories will end up depositing energy in the cavity region.
 
 \index{CAVRZnrc!output options}
 If the user chooses {\tt OUTPUT OPTIONS= short}, then dose and correction
-factors will only be output for the cavity as a whole.  If 
+factors will only be output for the cavity as a whole.  If
 {\tt OUTPUT OPTIONS= cavity details}, then dose and correction factors
 will be output for the cavity as a whole and for each region that makes up
-the cavity. 
+the cavity.
 
 \subsection{Monte Carlo control}
 \index{CAVRZnrc!Monte Carlo control}
- 
+
 Monte Carlo control input is delimited between
 \verb+:start Monte Carlo inputs:+\\
-and \verb+:stop Monte Carlo inputs:+.  In addition to Monte Carlo inputs that 
+and \verb+:stop Monte Carlo inputs:+.  In addition to Monte Carlo inputs that
 are common to all user codes (see
 section~\ref{MC_inputs}\lpage{MC_inputs}), CAVRZnrc had the following
 Monte Carlo inputs:
@@ -4175,25 +4175,25 @@ Monte Carlo inputs:
   IFULL
          = dose and stoppers     (0) just calculate total dose
          = Aatt and Ascat        (1) Above plus Aatt, Ascat
-         = Ap                    (2) Above plus Ap as well (option 
+         = Ap                    (2) Above plus Ap as well (option
                                      currently disabled)
          = Afl and <s>g/w        (3) Above plus Afl and <s>g,w as well
                                      (option currently disabled)
 
   STATISTICAL ACCURACY SOUGHT    (R) % statistical accuracy of the total
-                                     dose in the peak region that is 
+                                     dose in the peak region that is
                                      sought The program executes until this
                                      accuracy is obtained or the CPU time
-                                     runs out.           
+                                     runs out.
   PHOTON REGENERATION
          = yes (1) the calculation is performed with regeneration
-                           of the parent photon after they have 
-                           interacted. A typical setting when FANO 
+                           of the parent photon after they have
+                           interacted. A typical setting when FANO
                            conditions are examined.
          = no (0)  a normal calculation.
          = no electrons from wall (ifano = 2) secondary electrons from
                            interactions in the cavity wall are immediately
-                           eliminated.  Photons are not regenerated.            
+                           eliminated.  Photons are not regenerated.
                            [IFANO]
 \end{verbatim}
 \index{photon regeneration!CAVRZnrc}
@@ -4242,9 +4242,9 @@ A_{scat}=1+\frac{ECAV_{sec}}{ECAV_{prim}}
 \index{CAVRZnrc!statistical accuracy sought}
 
 If you input a value for {\tt STATISTICAL ACCURACY SOUGHT}
-other than zero, then CAVRZnrc will stop when the percent uncertainty on the 
-total dose in the cavity volume (all cavity regions combined) is equal 
-to {\tt STATISTICAL ACCURACY SOUGHT} provided that 
+other than zero, then CAVRZnrc will stop when the percent uncertainty on the
+total dose in the cavity volume (all cavity regions combined) is equal
+to {\tt STATISTICAL ACCURACY SOUGHT} provided that
 {\tt NUMBER OF HISTORIES} (see section~\ref{histsect}\lpage{histsect})
 or {\tt MAX CPU HOURS ALLOWED} (see section~\ref{cpusect} \lpage{cpusect}) have
 not been reached first.
@@ -4254,25 +4254,25 @@ not been reached first.
 
 CAVRZnrc offers two photon regeneration options.  If the user selects
 {\tt PHOTON REGENERATION= yes}, then photon regeneration is similar to
-that in SPRRZnrc (see section~\ref{photregsect}\lpage{photregsect}). 
-Unlike SPRRZnrc, where it is required for proper 
-stopping power ratio calculations as used in primary 
-air-kerma standards, the purpose of this option in CAVRZnrc is 
-mainly for theoretical benchmark calculations ({\em e.g} testing 
-for artefacts under Fano conditions). An additional use 
-could be for an independent verification of $A_{wall}$: one 
+that in SPRRZnrc (see section~\ref{photregsect}\lpage{photregsect}).
+Unlike SPRRZnrc, where it is required for proper
+stopping power ratio calculations as used in primary
+air-kerma standards, the purpose of this option in CAVRZnrc is
+mainly for theoretical benchmark calculations ({\em e.g} testing
+for artefacts under Fano conditions). An additional use
+could be for an independent verification of $A_{wall}$: one
 runs simulations with {\tt PHOTON REGENERATION= ON} and {\tt PHOTON
-REGENERATION= OFF}, the 
-ratio of the two doses is per definition $A_{wall}$. This is 
-however not very efficient and a better way to accomplish 
-this task is to use the cross section enhancement or 
-photon splitting options described below. 
- 
+REGENERATION= OFF}, the
+ratio of the two doses is per definition $A_{wall}$. This is
+however not very efficient and a better way to accomplish
+this task is to use the cross section enhancement or
+photon splitting options described below.
+
 The second regeneration option in CAVRZnrc is {\tt PHOTON REGENERATION= no
 electrons from wall}.  With this option, charged particles resulting from
 pair production, compton and photoelectric events are eliminated provided
-that the interaction did not take place inside the cavity. 
-This is a hack that has been used to study 
+that the interaction did not take place inside the cavity.
+This is a hack that has been used to study
 the dose fraction from photon interactions in the cavity.
 
 \subsection{CAVRZnrc variance reduction techniques}
@@ -4281,18 +4281,18 @@ the dose fraction from photon interactions in the cavity.
 \label{cavrz_cse}
 \index{cross section enhancement!CAVRZnrc}
 \index{CAVRZnrc!cross section enhancement}
- 
+
 The cross section enhancement technique in CAVRZnrc is
-similar to the one implemented in DOSRZnrc 
+similar to the one implemented in DOSRZnrc
 (see section \ref{dosrz_cse} page~\pageref{dosrz_cse}) but
 in CAVRZnrc it is applied globally in the entire geometry and the value of
 $C_e$ is input directly (as opposed to C as input in the DOSRZnrc case).
 Cross section enhancement in CAVRZnrc can be turned on by
 including the following line in the input file:
 \begin{verbatim}
- 
+
   CS ENHANCEMENT FACTOR=  some real number [cs_enhance]
- 
+
 \end{verbatim}
 If the input is missing or less than unity, there will be
 no effect.  But if the enhancement factor is set to greater than unity, the
@@ -4301,44 +4301,44 @@ splitting, exponential transform, etc., is ignored. In addition,
 the calculation result \underline{always} corresponds
 to the {\tt IFULL= Aatt and Ascat} option, no matter what the
 user requested (but only $A_{wall}$ is calculated,
-not the individual $A_{scat}$ and $A_{att}$, see 
-section \ref{cavrzifullsect2}). In addition, all scoring 
-is done using proper history-by-history statistics using 
-the common block {\tt score1}.  The drawback is that dose 
-and $A_{wall}$ are calculated for the whole cavity and 
-not on a region-by-region basis as under normal 
-CAVRZnrc operation. 
+not the individual $A_{scat}$ and $A_{att}$, see
+section \ref{cavrzifullsect2}). In addition, all scoring
+is done using proper history-by-history statistics using
+the common block {\tt score1}.  The drawback is that dose
+and $A_{wall}$ are calculated for the whole cavity and
+not on a region-by-region basis as under normal
+CAVRZnrc operation.
 
-The following text gives a brief description of the differences 
-to the DOSRZnrc implementation: The motivation behind the 
-implementation of cross section enhancement in CAVRZnrc was the desire to 
-have an independent calculation technique for $A_{wall}$ that is 
-not too inefficient compared to the unweighting technique. Indeed, 
-$A_{wall}$ can be calculated by running two separate CAVRZnrc 
-simulations, one with normal transport  and one with attenuation 
-and scatter removed via the {\tt photon regeneration= on} option. The ratio of the 
-cavity dose from the former to the dose from the latter calculation is by 
-definition $A_{wall}$. Because both calculations 
-are uncorrelated, their uncertainties add in quadrature and so, the uncertainty 
-on $A_{wall}$ is larger than the individual dose uncertainties. 
-The purpose of the cross section enhancement implementation in 
-CAVRZnrc is to make the two necessary dose calculations at once 
-and thus reduce the uncertainty of $A_{wall}$ because of the strong 
-correlation between the ``normal'' dose and the dose with 
-attenuation and scatter removed. To accomplish this task, 
-scattered photons are killed as in DOSRZnrc with probability   
-$1/C_e$. If they survive, they are marked as scattered by setting 
-their {\tt latch} variable to 3. Unlike in DOSRZnrc, the unscattered 
-portion of primary photons is always kept on the stack and transported. 
-However, these non-scattered fractions of primary photons are marked 
-as attenuated primary photons ({\tt latch=2}) with probability 
-$1-1/C_e$ and therefore their descendents only contribute to the 
-dose with attenuation and scatter removed. In addition, scatter, 
+The following text gives a brief description of the differences
+to the DOSRZnrc implementation: The motivation behind the
+implementation of cross section enhancement in CAVRZnrc was the desire to
+have an independent calculation technique for $A_{wall}$ that is
+not too inefficient compared to the unweighting technique. Indeed,
+$A_{wall}$ can be calculated by running two separate CAVRZnrc
+simulations, one with normal transport  and one with attenuation
+and scatter removed via the {\tt photon regeneration= on} option. The ratio of the
+cavity dose from the former to the dose from the latter calculation is by
+definition $A_{wall}$. Because both calculations
+are uncorrelated, their uncertainties add in quadrature and so, the uncertainty
+on $A_{wall}$ is larger than the individual dose uncertainties.
+The purpose of the cross section enhancement implementation in
+CAVRZnrc is to make the two necessary dose calculations at once
+and thus reduce the uncertainty of $A_{wall}$ because of the strong
+correlation between the ``normal'' dose and the dose with
+attenuation and scatter removed. To accomplish this task,
+scattered photons are killed as in DOSRZnrc with probability
+$1/C_e$. If they survive, they are marked as scattered by setting
+their {\tt latch} variable to 3. Unlike in DOSRZnrc, the unscattered
+portion of primary photons is always kept on the stack and transported.
+However, these non-scattered fractions of primary photons are marked
+as attenuated primary photons ({\tt latch=2}) with probability
+$1-1/C_e$ and therefore their descendents only contribute to the
+dose with attenuation and scatter removed. In addition, scatter,
 bremsstrahlung and annihilation from {\tt latch=2} particles are
-immediately removed from the stack. It is then clear that 
-{\tt latch=0,2} electrons contribute to the dose with 
-attenuation and scatter removed, {\tt latch=0,3} electrons to 
-the normal dose. 
+immediately removed from the stack. It is then clear that
+{\tt latch=0,2} electrons contribute to the dose with
+attenuation and scatter removed, {\tt latch=0,3} electrons to
+the normal dose.
 
 \subsubsection{Photon splitting}
 \index{photon splitting!CAVRZnrc}
@@ -4346,11 +4346,11 @@ the normal dose.
 \label{cavrzsplitsect}
 
 An additional variance reduction scheme offered in CAVRZnrc
-is the photon splitting technique.  
-Input that turns on photon splitting must appear 
+is the photon splitting technique.
+Input that turns on photon splitting must appear
 between the {\tt :start variance reduction:}
 and {\tt :stop variance reduction:} delimiters and is:
- 
+
 \begin{verbatim}
 
  PHOTON SPLITTING=    (I)    Number of times to split a photon
@@ -4363,47 +4363,47 @@ and {\tt :stop variance reduction:} delimiters and is:
 
 \end{verbatim}
 
-This technique is borrowed from Ref. \cite{KF99} where it was shown 
-to increase the efficiency of external photon beam calculations for 
-radiotherapy by up to a factor of 5. The increase in CAVRZnrc is 
-not so dramatic, nevertheless an increase in the efficiency 
+This technique is borrowed from Ref. \cite{KF99} where it was shown
+to increase the efficiency of external photon beam calculations for
+radiotherapy by up to a factor of 5. The increase in CAVRZnrc is
+not so dramatic, nevertheless an increase in the efficiency
 of cavity dose calculations of up to a factor of 3 compared to using photon
-forcing has been observed. 
+forcing has been observed.
 
-This option is only available with {\tt IFULL= dose and stoppers or =Aatt and Ascat}. 
-It is also possible to use the {\tt ifano} option (only 
-if {\tt IFULL=0}). Note that with photon splitting 
+This option is only available with {\tt IFULL= dose and stoppers or =Aatt and Ascat}.
+It is also possible to use the {\tt ifano} option (only
+if {\tt IFULL=0}). Note that with photon splitting
 on, all scoring
 is done using proper history-by-history statistics using
 the common block {\tt score1}.  The drawback is that dose
 (and $A_{wall}$ if requested) are calculated for the whole scoring cavity and
 not on a region-by-region basis as under normal CAVRZnrc operation.
 
-The algorithm works as follows: 
-each photon that is to be transported is split into 
-{\tt n\_split} photons with weights $w_0/${\tt n\_split} 
-($w_0$ is the original photon weight). The number of 
-mean-free-paths $\lambda_i$ to the next interaction of the $i$'th 
-such photon is sampled from 
+The algorithm works as follows:
+each photon that is to be transported is split into
+{\tt n\_split} photons with weights $w_0/${\tt n\_split}
+($w_0$ is the original photon weight). The number of
+mean-free-paths $\lambda_i$ to the next interaction of the $i$'th
+such photon is sampled from
 \begin{equation}
 \lambda_i = -\ln \left[1 - {\xi + i - 1 \over {\tt n\_split} } \right]
 \end{equation}
-where $i$ runs from 1 to {\tt n\_split} and where $\xi$ is a random 
-number. This forces a uniform distribution of interaction sites. 
-In addition we have $\lambda_{i+1} > \lambda_i$ and therefore 
-only transport from $\lambda_i$ to $\lambda_{i+1}$ is needed to 
-get to the interaction site of the $i+1$'st photon from the 
-interaction site of the $i$'th photon. When one of the split-photons 
-interacts, all resulting scattered photons are killed with probability 
-1/{\tt n\_split} and marked as scattered if they survive 
+where $i$ runs from 1 to {\tt n\_split} and where $\xi$ is a random
+number. This forces a uniform distribution of interaction sites.
+In addition we have $\lambda_{i+1} > \lambda_i$ and therefore
+only transport from $\lambda_i$ to $\lambda_{i+1}$ is needed to
+get to the interaction site of the $i+1$'st photon from the
+interaction site of the $i$'th photon. When one of the split-photons
+interacts, all resulting scattered photons are killed with probability
+1/{\tt n\_split} and marked as scattered if they survive
 ({\tt latch=3}). If {\tt IFULL= Aatt and Ascat} or {\tt photon
-regeneration= on}, the original photon is 
-re-created at each interaction site with probability  
-1/{\tt n\_split} and marked as a regenerated photon ({\tt latch=2}). 
-As for the cross section enhancement technique, {\tt latch=0,3} particles 
-contribute to the normal dose, {\tt latch=0,2} particles to the dose 
-with attenuation and scatter removed. The ratio of the two is 
-$A_{wall}$ and so, photon splitting is a third independent 
+regeneration= on}, the original photon is
+re-created at each interaction site with probability
+1/{\tt n\_split} and marked as a regenerated photon ({\tt latch=2}).
+As for the cross section enhancement technique, {\tt latch=0,3} particles
+contribute to the normal dose, {\tt latch=0,2} particles to the dose
+with attenuation and scatter removed. The ratio of the two is
+$A_{wall}$ and so, photon splitting is a third independent
 technique for calculating this quantity.
 
 A rule of thumb for good efficiency is to use
@@ -4418,13 +4418,13 @@ geometry of interest and $N_o \ge 5$. For $^{60}$Co, $\lambda$ is about
 
 \subsection{Introduction}
 
-Since 2003, the EGSnrc distribution includes a pair of spherical 
-geometry user codes. 
+Since 2003, the EGSnrc distribution includes a pair of spherical
+geometry user codes.
 CAVSPHnrc is the spherical analogue of CAVRZnrc, designed for ion chamber
 calculations, and has been used extensively for this purpose (see, \eg,
 references\cite{Bi90b,RT99}). The other code, EDKnrc, was derived from
 SCASPH, an EGS4 user code for the calculation of mono-energetic energy
-deposition kernels\cite{Ma88}. EDKnrc has been extended to allow the use 
+deposition kernels\cite{Ma88}. EDKnrc has been extended to allow the use
 of both monoenergetic and polyenergetic sources.
 
 Both user codes share most of the common features of the RZ user codes
@@ -4471,9 +4471,9 @@ assumed that individual entries will be made (after all,
 these are user-codes for spherical problems).
 
 \begin{verbatim}
- NUMBER OF CONES= [NANG(1)[,NANG(2),...,NANG(K)]] 
+ NUMBER OF CONES= [NANG(1)[,NANG(2),...,NANG(K)]]
                   # If omitted or ZERO, pure spherical geometry assumed
- NUMBER OF SPHERES= [NRAD(1)[,NRAD(2),...NRAD(J)]] 
+ NUMBER OF SPHERES= [NRAD(1)[,NRAD(2),...NRAD(J)]]
                   # no needed for individual input
 \end{verbatim}
 
@@ -4482,7 +4482,7 @@ actual values for the radii and angles must be entered, using the keywords
 outlined below:
 
 \begin{verbatim}
-RADII= RAD(1), RAD(2), ...RAD(j)  
+RADII= RAD(1), RAD(2), ...RAD(j)
                   #radii of spheres defining the geometry
                   #For group input there must be as many entries
                   #as for the NUMBER OF SPHERES, i.e. :
@@ -4511,13 +4511,13 @@ CAVITY ZONES= [REG1[, REG2...,REGn]] #geometrical zones defined as the
 These codes have a simple structure for entering the material input. First
 the user must provide a list of media in the problem where the first
 medium is taken as default, \ie, every region is considered to have this
-medium. Then, medium numbers for all regions where the medium is not 
+medium. Then, medium numbers for all regions where the medium is not
 medium 1 must be specified.
 
 
 \begin{verbatim}
  MEDIA= MEDIUM1, MEDIUM2,..., MEDIUMn
-        
+
  MEDNUM=        MEDIUM2, MEDIUM2, MEDIUM3,..., MEDIUMn
  START REGION=  START1,  START2,  START3,...,  STARTn
  STOP REGION=   STOP1 ,  STOP2,   STOP3, ...,  STOPn
@@ -4528,7 +4528,7 @@ medium 1 must be specified.
 The NRC user code CAVSPHnrc (spherical geometry) like CAVRZnrc
 (cylindrical geometry) calculates various factors of interest when using
 ion chambers such as $K_{att}$, $K_{scat}$, $K_{wall}$ and the dose to the
-cavity region per unit incident fluence. 
+cavity region per unit incident fluence.
 
 The input file for this user code is very similar to the one for
 CAVRZnrc. Only two input blocks are different, the geometry input block
@@ -4537,7 +4537,7 @@ previously and the input for the sources differ from CAVRZnrc, in that
 only four source types are available: a parallel beam from any angle
 (source 0), a point source from any angle (source 1), a parallel beam
 from any angle with radial distribution (source 10), a point source from
-any angle with radial distribution (source 11). 
+any angle with radial distribution (source 11).
 and a point source from any angle. The source input block is defined by
 the delimeters {\tt :start source inputs:} and {\tt :stop source inputs:}
 and the same inputs are needed as in CAVRZnrc (see
@@ -4611,17 +4611,17 @@ particular, one must define:
 \subsection{EDKnrc}
 
 The NRC user code EDKnrc can be used to calculate Energy Deposition Kernels
-for photons or electrons (monoenergetic or polyenergtic) forced to interact 
+for photons or electrons (monoenergetic or polyenergtic) forced to interact
 at the centre of a spherical
-geometry\cite{Ma05}.  The code can output energy deposition kernels (EDK), 
-dose distributions in the phantom or the dose to regions defined as the 
+geometry\cite{Ma05}.  The code can output energy deposition kernels (EDK),
+dose distributions in the phantom or the dose to regions defined as the
 cavity of a spherical ion chamber.  Voxels are defined by the intersection
 of a spherical shell with two cones. See figure \ref{fig_spherical}
 for more details.
 
 Although the geometry inputs for this user code are similar to CAVSPHnrc,
-there are some major differences in other inputs. The input block for I/O 
-control, defined by the delimeters {\tt :start I/O control:} and 
+there are some major differences in other inputs. The input block for I/O
+control, defined by the delimeters {\tt :start I/O control:} and
 {\tt:stop I/O control:}, is severely abbreviated.  It includes an entry,
 {\tt PRINT OUT EDK FILE} that defines whether energy deposition
 kernels will be output in the same format as the ones calculated by
@@ -4646,7 +4646,7 @@ is shown below:
 \end{verbatim}
 
 
-The input block defining Monte Carlo parameters (delimited by 
+The input block defining Monte Carlo parameters (delimited by
 {\tt start}/{\tt stop Monte Carlo inputs:}) is also abbreviated.  Here
 one specifies only the number of histories, the initial random number
 seeds, and a variable {\tt IFULL}, which specifies the type of calculation,
@@ -4660,29 +4660,29 @@ IFULL= cavity calculation        #(0) calculate dose in cavity regions
      = dose calculation          #(2) calculate and output dose
      = dose and edk              #(3) calculate and output EDK's and dose
 
-DOPPLER BROADENING= On                 
+DOPPLER BROADENING= On
                   = Off
 
 \end{verbatim}
 
 EDKnrc allows for only three possible sources: 1) a photon source algorithm
-that forces photons moving along the Z-axis to interact at the origin 
-(source 0) 2) 
+that forces photons moving along the Z-axis to interact at the origin
+(source 0) 2)
 an isotropic point source at the origin for any type of
 particle (source 1) 3) same as source 0 but with interaction point shifted
-to a user-specified position on the Z-axis (source 2).  Source 2 
+to a user-specified position on the Z-axis (source 2).  Source 2
 was left for comparison with older EDK calculations, but the user
 is strongly discouraged from using it, since it has been shown to produce
 numerical artifacts when computing EDK's. For accurate EDK calculations
-source 0 should be used.   The inputs specifying the source type, which is 
-included within the {\tt start}/{\tt stop Source Inputs:} delimiters, 
-are shown below: 
+source 0 should be used.   The inputs specifying the source type, which is
+included within the {\tt start}/{\tt stop Source Inputs:} delimiters,
+are shown below:
 
 \begin{verbatim}
 SOURCE NUMBER= 0 | 1 | 2
 #     0 ==>  Photon moving along Z axis forced to interact at origin
 #     1 ==>  Point source at origin, isotropically radiating into 4 Pi
-#     2 ==>  Same as 0 but interaction point as in old code 
+#     2 ==>  Same as 0 but interaction point as in old code
 
 # if SOURCE NUMBER= 2
     ZIN      #-> source offset on Z-axis
@@ -4702,20 +4702,20 @@ and primary components are written. ONLY if the user selects the option
 for creating old format EDK files, all components are stored to a file
 following the convention:
 \begin{itemize}
-\item {\tt edk[EIN].keV}, for monoenergetic sources, 
+\item {\tt edk[EIN].keV}, for monoenergetic sources,
 where EIN is the initial energy in keV.
-\item {\tt file\_name.keV}, for polyenergetic sources (spectrum), 
+\item {\tt file\_name.keV}, for polyenergetic sources (spectrum),
 where {\tt file\_name} is the standard output file name
 
 \end{itemize}
 
-The user also has the choice to 
-create xmgrace plot files for the {\bf total dose} by using the input block for plot control delimited by 
-{\tt :start plot control:} and {\tt:stop plot control:}. A description of this input block is 
+The user also has the choice to
+create xmgrace plot files for the {\bf total dose} by using the input block for plot control delimited by
+{\tt :start plot control:} and {\tt:stop plot control:}. A description of this input block is
 given below:
 
 \begin{verbatim}
-   :start plot control: 
+   :start plot control:
 
    PLOTTING
           = Off         (0)   no plots or plot files to be prepared
@@ -4741,7 +4741,7 @@ to the file {\tt inputfile.radplot}.
 The output capabilities of this user code are very limited but can be
 easily extended to print out all components of the energy deposition
 kernels.
- 
+
 \typeout{}
 \typeout{***Start of Cited References****}
 \typeout{}

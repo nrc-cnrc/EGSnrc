@@ -213,6 +213,7 @@ UserCodeType GetUserCode();
 
 QString  getExecutable();
 QString  readVarFromConf( const QString& var );
+QString  expandEnvVar( const QString& dirStr );
 QString  find_usercode_name( const QString& dir );
 QString  get_initial_usercode_area( QString* name );
 QString  GetCurrentDir( const QString& rCodeName, const QString& rHome, const QString& rHenHouse );

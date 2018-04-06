@@ -122,4 +122,4 @@ REPLACE {;COMIN/CM_$MIRROR/;} WITH {
 REPLACE {$MIRROR_CM_HOWNEAR(#);} WITH  {
 CALL HOWNEAR_$MIRROR({P1});
 }
-"end of MIRROR_macros.mortran (Rev 1.2)"
+"end of MIRROR_macros.mortran"

@@ -25,6 +25,7 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -39,6 +40,7 @@
 #define EGS_CYLINDERS_
 
 #include "egs_base_geometry.h"
+#include "egs_projectors.h"
 #include "egs_math.h"
 #include "egs_functions.h"
 
@@ -130,9 +132,6 @@ A simple example:
 \endverbatim
 \image html egs_cylinders.png "A simple example with clipping plane 1,0,0,0"
 
-\todo Get rid off the local projector classes, use the egspp classes
-instead.
-
 */
 
 template <class T>
@@ -172,7 +171,7 @@ public:
     */
     EGS_CylindersT(int nc, const EGS_Float *radius,
                    const EGS_Vector &position, const string &Name,
-                   const T &A) : EGS_BaseGeometry(Name), a(A), xo(position) {
+                   const T &A) : EGS_BaseGeometry(Name), xo(position), a(A) {
         if (nc>0) {
             R=new EGS_Float [nc];
             R2=new EGS_Float [nc];
@@ -256,7 +255,7 @@ public:
         }
         EGS_Float up=a*u;
         if (fabs(up)>=1) {
-            return 1e30;    // parallel to axis
+            return veryFar;    // parallel to axis
         }
         EGS_Float A=1-up*up;
         EGS_Vector rc(x-xo);
@@ -274,7 +273,7 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed = 0, EGS_Vector *normal = 0) {
 
-        EGS_Float d=1e30;  // large distance to any boundry
+        EGS_Float d=veryFar;  // large distance to any boundry
 
         // projections
         double up=a*u;
@@ -289,7 +288,7 @@ public:
         double rcp=a*rc, urc=u*rc;
         double B=urc-up*rcp;  // d^1 coefficient
 
-        EGS_Float rad;
+        EGS_Float rad=0;
 
         // in any region?
         if (ireg>=0) {
@@ -431,12 +430,14 @@ public:
         // correct t-step
         if (d<t) {
             t=d;
-            if (newmed) if (dir >= 0) {
+            if (newmed) {
+                if (dir >= 0) {
                     *newmed = medium(dir);
                 }
                 else {
                     *newmed=-1;
                 }
+            }
             if (normal) {
                 EGS_Vector n(rc + u*t - a*(rcp+up*t));
                 *normal = n*(1/rad);
@@ -493,99 +494,9 @@ public:
     };
 };
 
-#ifndef SKIP_DOXYGEN
-class EGS_CYLINDERS_LOCAL XProjector {
-public:
-    XProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.x;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(t,0,0);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL YProjector {
-public:
-    YProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.y;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(0,t,0);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL ZProjector {
-public:
-    ZProjector() {};
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return x.z;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return EGS_Vector(0,0,t);
-    };
-    EGS_Float length() const {
-        return 1;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {};
-private:
-    static string type;
-};
-
-class EGS_CYLINDERS_LOCAL Projector {
-public:
-    Projector(const EGS_Vector &A) : a(A) {
-        norm = a.length();
-        a.normalize();
-    };
-    EGS_Float operator*(const EGS_Vector &x) const {
-        return a*x;
-    };
-    EGS_Vector operator*(EGS_Float t) const {
-        return a*t;
-    };
-    EGS_Float length() const {
-        return norm;
-    };
-    string &getType() const {
-        return type;
-    };
-    void printInfo() const {
-        egsInformation(" axis = (%g,%g,%g)\n",a.x,a.y,a.z);
-    };
-
-private:
-    EGS_Vector a;
-    EGS_Float  norm;
-    static string type;
-};
-#endif
-
-typedef EGS_CylindersT<XProjector> EGS_CylindersX;
-typedef EGS_CylindersT<YProjector> EGS_CylindersY;
-typedef EGS_CylindersT<ZProjector> EGS_CylindersZ;
-typedef EGS_CylindersT<Projector> EGS_Cylinders;
+typedef EGS_CylindersT<EGS_XProjector> EGS_CylindersX;
+typedef EGS_CylindersT<EGS_YProjector> EGS_CylindersY;
+typedef EGS_CylindersT<EGS_ZProjector> EGS_CylindersZ;
+typedef EGS_CylindersT<EGS_Projector> EGS_Cylinders;
 
 #endif

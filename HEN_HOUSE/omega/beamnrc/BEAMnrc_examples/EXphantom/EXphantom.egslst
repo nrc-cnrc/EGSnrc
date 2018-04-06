@@ -1,6 +1,6 @@
 
 
-EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam    
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            10:33:55 Sep 13 2004
@@ -22,7 +22,7 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
                                         # of photons        5953
                      Maximum particle kinetic energy      11.930 MeV
                      Minimum electron kinetic energy       0.192 MeV
-                     # of particles incident from   
+                     # of particles incident from
                                      original source         50000.0
                       Source entering at top of CM #           1
                      # of times to recycle particles           8
@@ -33,7 +33,7 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
                    ---------------------           ----
                                        1             1
                    No phase space files will be output
-                   Range rejection switch                  ON 
+                   Range rejection switch                  ON
                    Range rejection in  23 regions
                              Fixed ECUT used
  Range rejection based on medium of region particle is traversing
@@ -66,22 +66,22 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
  Photon transport cutoff(MeV)                                AP(medium)
  Pair angular sampling                                       SIM
- Bound Compton scattering                                    OFF           
- Rayleigh scattering                                         OFF           
- Atomic relaxations                                          OFF           
- Photoelectron angular sampling                              OFF           
+ Bound Compton scattering                                    OFF
+ Rayleigh scattering                                         OFF
+ Atomic relaxations                                          OFF
+ Photoelectron angular sampling                              OFF
 
  Electron transport cutoff(MeV)                              AE(medium)
- Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung cross sections                              BH
  Bremsstrahlung angular sampling                             SIM
  Spin effects                                                On
  Electron Impact Ionization                                    0
- Maxium electron step in cm (SMAX)                                5.000    
+ Maxium electron step in cm (SMAX)                                5.000
  Maximum fractional energy loss/step (ESTEPE)                0.2500
  Maximum 1st elastic moment/step (XIMAX)                     0.5000
- Boundary crossing algorithm                                 PRESTA-I  
- Skin-depth for boundary crossing (MFP)                      324.3    
- Electron-step algorithm                                     PRESTA-II 
+ Boundary crossing algorithm                                 PRESTA-I
+ Skin-depth for boundary crossing (MFP)                      324.3
+ Electron-step algorithm                                     PRESTA-II
 
 ================================================================================
 
@@ -94,8 +94,8 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
  *******************************************************************************
                              SOURCE PARAMETERS
 
-                   FULL PHASE SPACE INPUT FOR EACH INCIDENT PARTICLE. 
-     SOURCE DATA FILE: /usr/people/bwalters/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1                     
+                   FULL PHASE SPACE INPUT FOR EACH INCIDENT PARTICLE.
+     SOURCE DATA FILE: /usr/people/bwalters/egsnrc/BEAM_EX10MeVe/EX10MeVe.egsphsp1
                  SOURCE INCIDENT ON FRONT FACE, Z =         0.00 cm
                     SOURCE INCIDENT ON MODULE ICM =            1
                  Total # of particles in the file =         8233
@@ -221,7 +221,7 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
 
 
-EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam    
+EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
  NRCC CALN: BEAMnrc(EGSnrc) Vnrc(Rev 1.78 of 2004-01-12 11:44:06-05),(USER_MACROS Rev 1.5)
  ON i686-pc-1-gnu using gcc 3.3                            10:33:55 Sep 13 2004
@@ -235,10 +235,10 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
  *** FINAL RANDOM NUMBER POINTERS:  ixx jxx =   38  71
 
  FOR THIS RUN:
- ------------ 
+ ------------
  ELAPSED& CPU TIMEs, RATIO =       1.3       1.1s (=   0.00HR)   1.19
  CPUTIME per history =   0.00002 sec. Number of histories per hour =  223404272.
-   On i686-pc-1-gnu using gcc 3.3     
+   On i686-pc-1-gnu using gcc 3.3
 
                    TOTAL # CHARGED PARTICLE STEPS        3.532E+05 +/- 2.8%
          # CHARGED PARTICLE STEPS/INITIAL HISTORY        8.308E-01 +/- 2.8%
@@ -332,7 +332,7 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
               TOTAL DOSE PER INCIDENT PARTICLE
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    6.283E+00   1.017E-13+/- 7.0%   6.390E-16+/- 7.0%
@@ -358,7 +358,7 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
 
          CONTAMINANT DOSE/INCIDENT PARTICLE FOR CM  1
 
-    DOSE     MASS           DOSE          ENERGY DEPOSITED 
+    DOSE     MASS           DOSE          ENERGY DEPOSITED
     ZONE      (g)           (Gy)                 (J)
     ---- -----------  ------------------  ------------------
       1    6.283E+00   1.480E-15+/-14.8%   9.302E-18+/-14.8%
@@ -392,14 +392,14 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
  COMPONENT  FILTER                      BIT
     #        TYPE                        #s
 
-    1       INCLUDE   16 
-    2       INCLUDE   17 
-    3       INCLUDE   18 
-    4       INCLUDE   19 
-    5       INCLUDE   20 
+    1       INCLUDE   16
+    2       INCLUDE   17
+    3       INCLUDE   18
+    4       INCLUDE   19
+    5       INCLUDE   20
 
- DOSE      DOSE              DOSE                DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3  
+ DOSE      DOSE              DOSE                DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 1         COMPONENT: 2         COMPONENT: 3
 
    1  1.017E-13+/- 7.0%  0.000E+00+/-99.9%  1.023E-14+/-23.1%  1.418E-15+/-67.5%
    2  1.097E-13+/- 6.8%  0.000E+00+/-99.9%  1.068E-14+/-21.7%  1.093E-15+/-71.3%
@@ -423,8 +423,8 @@ EXphantom: example depth-dose calc using a phsp source from a 10MeV e- beam
   20  2.931E-15+/-15.4%  0.000E+00+/-99.9%  2.241E-16+/-65.6%  3.395E-17+/-63.8%
 
 
- DOSE      DOSE              DOSE                DOSE     
- ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5  
+ DOSE      DOSE              DOSE                DOSE
+ ZONE      TOTAL          COMPONENT: 4         COMPONENT: 5
 
    1  1.017E-13+/- 7.0%  2.103E-15+/-50.4%  2.652E-17+/-44.8%
    2  1.097E-13+/- 6.8%  1.829E-15+/-46.7%  6.073E-17+/-60.7%

@@ -207,4 +207,4 @@ IF(SQRT((Y(NP)+V(NP)*{P2})**2 +
 ;
 
 
-"End of SIDETUBE_macros.mortran (Rev 1.2)"
+"End of SIDETUBE_macros.mortran"

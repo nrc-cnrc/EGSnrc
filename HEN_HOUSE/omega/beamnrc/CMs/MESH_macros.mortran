@@ -140,4 +140,4 @@ IF({P1} < 0.0) [IX_$MESH = -IX_$MESH;"only truncates properly for +ve"]
 IY_$MESH = INT((ABS({P2}) - Y_CELLBY2_$MESH)/Y_CELL_$MESH +0.99999);
 IF({P2} < 0.0) [IY_$MESH = -IY_$MESH;"only truncates properly for +ve"]
 }
-"End of MESH_macros.mortran (Rev 1.2)"
+"End of MESH_macros.mortran"

@@ -1,4 +1,4 @@
-@g0 type xy 
+@g0 type xy
 @    title "Dose Simulation Using BEAMnrc"
 @    subtitle "EXphantom: example depth-dose calc using a phsp source from"
 @    legend on

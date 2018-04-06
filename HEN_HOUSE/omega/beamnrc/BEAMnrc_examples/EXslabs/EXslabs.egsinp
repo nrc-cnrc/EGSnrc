@@ -21,7 +21,7 @@ AIR700ICRU
 *********************end of all CMs*****************************
  #########################
  :Start MC Transport Parameter:
- 
+
  Global ECUT= 1.0
  Global PCUT= 0.01
  Global SMAX= 5
@@ -38,6 +38,6 @@ AIR700ICRU
  Photoelectron angular sampling= Off
  Rayleigh scattering= Off
  Atomic relaxations= Off
- 
+
  :Stop MC Transport Parameter:
  #########################

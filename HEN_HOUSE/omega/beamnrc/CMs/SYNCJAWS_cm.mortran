@@ -232,7 +232,7 @@
 "I>
 "I>   Next input is only required if MODE_$SYNCJAWS=1 or 2
 "I>
-"I>   4a jaws_file (A80)
+"I>   4a jaws_file (A256)
 "I>
 "I>        jaws_file: The full name of a file containing jaw opening data
 "I>                   in the following format:
@@ -832,8 +832,8 @@ $REAL AIRGAPMIN_$SYNCJAWS,  "T>minimum air gap in front and back of CM
       BDYTOL,          "T>stores $BDY_TOL
       TZMAX;           "T>stores max value of ZMAX (for MODE=1,2)
 CHARACTER*1 XY_CHOICE(1);
-CHARACTER*80 jaws_file, "T>name of file containing dynamic jaw settings
-             JAWS_TITLE; "T> title line in file
+character*256 jaws_file;
+CHARACTER*80 JAWS_TITLE; "T> title line in file
 "
 "  initialize parameters
 "  =====================
@@ -1042,8 +1042,9 @@ DO I = 1,ISCM_MAX_$SYNCJAWS ["loop to get each bar location"
 ] "end of loop over paired bars/jaws"
 IF(MODE_$SYNCJAWS=1 | MODE_$SYNCJAWS=2)[
   OUTPUT;(/' Input full name of file containing jaw data:'/);
-  READ(i_input,'(A80)')jaws_file;
-  OUTPUT jaws_file;(A80/);
+  READ(i_input,'(A256)')jaws_file;
+  OUTPUT jaws_file;(A/);
+  call replace_env(jaws_file);
   jaws_unit=70;
   jaws_unit=egs_get_unit(jaws_unit);
   IF(jaws_unit<1)[
@@ -1053,6 +1054,14 @@ IF(MODE_$SYNCJAWS=1 | MODE_$SYNCJAWS=2)[
   open(jaws_unit,file=jaws_file,status='old',err=:no-jaws-data-file:);
   read(jaws_unit,'(A80)') JAWS_TITLE;
   read(jaws_unit,'(I10)') NFIELDS_$SYNCJAWS;
+
+  IF(NFIELDS_$SYNCJAWS>$MAXFIELD_$SYNCJAWS) [
+   OUTPUT $MAXFIELD_$SYNCJAWS;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCJAWS: ',I10, /
+        ' Increase $MAXFIELD_$SYNCJAWS in SYNCJAWS_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCJAWS[
   "read in jaw positions for each field"
      read(jaws_unit,'(F15.0)')INDEX_$SYNCJAWS(I);

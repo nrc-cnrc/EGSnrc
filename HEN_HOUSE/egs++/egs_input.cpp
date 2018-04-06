@@ -25,6 +25,8 @@
 #
 #  Contributors:    Ernesto Mainegra-Hing
 #                   Frederic Tessier
+#                   Hubert Ho
+#                   Reid Townson
 #
 ###############################################################################
 */
@@ -74,7 +76,7 @@ public:
     EGS_InputPrivate(const string &Key, const string &Val = "") : key(Key),
         value(Val), children(), nref(0) { };
     EGS_InputPrivate(const EGS_InputPrivate &p, bool deep=false) :
-        key(p.key), value(p.value), nref(0), children() {
+        key(p.key), value(p.value), children(), nref(0) {
         for (unsigned int j=0; j<p.children.size(); j++) {
             if (deep) {
                 children.push_back(new EGS_InputPrivate(*p.children[j],deep));
@@ -306,7 +308,11 @@ get_input(const EGS_InputPrivate *p, const string &key, vector<T> &values) {
     values.erase(values.begin(),values.end());
     S_STREAM in(p1->value.c_str());
     int error = 0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::findStart: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return 2;
+        }
         T tmp;
         in >> tmp;
         if (!in.fail()) {
@@ -664,7 +670,7 @@ public:
     string vname,//!< Loop variable name.
            vr;   //!< Loop variable replacement string.
     char buf[128];
-    EGS_InputLoopVariable(const string &var) : vname(var), is_list(false) {
+    EGS_InputLoopVariable(const string &var) : is_list(false), vname(var) {
         vr = "$(";
         vr += vname;
         vr += ")";
@@ -743,7 +749,7 @@ EGS_InputLoopVariable *EGS_InputLoopVariable::getInputLoopVariable(
                  "Only integer [0], float [1] and list [2] are valid types!\n",
                  input);
     }
-    EGS_InputLoopVariable *result;
+    EGS_InputLoopVariable *result=0;
     if (type == 0) {
         int vmin, vdelta;
         in >> vmin >> vdelta;
@@ -869,7 +875,11 @@ void EGS_InputPrivate::processInputLoop(EGS_InputPrivate *p) {
 int EGS_InputPrivate::addContent(istream &in) {
     string input;
     bool last_was_space = false;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::addContent: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return -1;
+        }
         char c;
         in.get(c);
         if (in.eof() || !in.good()) {
@@ -894,7 +904,6 @@ int EGS_InputPrivate::addContent(istream &in) {
     removeComment("//","\n",input,true);
     removeComment("/*","*/",input,false);
     removeEmptyLines(input);
-    int res = 0;
     vector<string> start_keys, stop_keys;
     int p = 0;
     int ep = input.size();
@@ -929,7 +938,7 @@ int EGS_InputPrivate::addContent(istream &in) {
             }
         }
         else {
-            egsWarning("No matching stop delimeter for %s\n",what.c_str());
+            egsWarning("No matching stop delimiter for %s\n",what.c_str());
             return -1;
         }
     }
@@ -954,14 +963,17 @@ int EGS_InputPrivate::addContent(istream &in) {
             what.assign(input,p,p2-p);
             string value;
             value.assign(input,p2+1,p1-p2-1);
-            for (int j=0; j<value.size(); j++)
+            for (int j=0; j<value.size(); j++) {
                 if (value[j] == ',') {
                     value[j] = ' ';
                 }
+            }
             if (compareKeys(what,"includefile")) {
                 int res = addContentFromFile(value.c_str());
-                if (res) egsWarning("EGS_Input: failed to add content from "
-                                        "include file %s\n",value.c_str());
+                if (res) {
+                    egsFatal("EGS_Input: failed to add content from "
+                             "include file %s\n",value.c_str());
+                }
             }
             else {
                 EGS_InputPrivate *ip = new EGS_InputPrivate(what,value);
@@ -1033,7 +1045,11 @@ int EGS_InputPrivate::findStart(int start, int stop, const string &start_key,
                                 string &what, int &end) {
     string::size_type pos = start;
     unsigned int ns=0;
-    while (1) {
+    for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+        if (loopCount == loopMax) {
+            egsFatal("EGS_InputPrivate::findStart: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+            return -2;
+        }
         if (pos >= stop) {
             return -1;
         }

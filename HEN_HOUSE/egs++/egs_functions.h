@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Ernesto Mainegra-Hing
 #
 ###############################################################################
 */
@@ -52,6 +52,24 @@ using namespace std;
  * in value.
  */
 const EGS_Float epsilon = 1e-10;
+
+/*! \brief The maximum number of iterations for near-infinite loops
+ *
+ * \ingroup egspp_main
+ *
+ * The loopMax constant can be used to replace while(1){} loops
+ * so that the code returns after some large number of iterations.
+ */
+const EGS_I64 loopMax = 1e10;
+
+/*! \brief A very large float
+ *
+ * \ingroup egspp_main
+ *
+ * The veryFar constant is simply a very large float used as a large ditance
+ * It is often used as an initial large value for geometry bounds.
+ */
+const EGS_Float veryFar = 1e30;
 
 /*! \brief Writes the 64 bit integer \a n to the output stream data
  * and returns \c true on success, \c false on failure.
@@ -207,5 +225,6 @@ int EGS_EXPORT egsGetEndian();
  */
 bool EGS_EXPORT egsIsAbsolutePath(const string &path);
 
+bool EGS_EXPORT egsEquivStr(const string &a, const string &b);
 
 #endif

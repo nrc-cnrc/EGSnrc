@@ -72,7 +72,7 @@
 %E     "cavrznrc.mortran"
 ;
 REPLACE {$VERSION} WITH {
-,'V1(Rev 1.60 last edit  2003-03-12 11:46:57-05)', }
+,' ', }
 
 
 REPLACE {$MXMDSH} WITH {200}
@@ -2326,7 +2326,7 @@ VCHAR='V';
 $SET_ELAPSED_CPUTIME(CPUT0); "OBTAIN THE INITIAL STARTING TIME"
 
 OUTPUT $MAXZREG,$MAXRADII;
-(//' CAVRZnrc(EGSnrc) Version '$VERSION' on '$MACHINE' with'/
+(//' CAVRZnrc(EGSnrc) '$VERSION' on '$MACHINE' with'/
 T20,I3,' depth regions and',I3,' radial regions'//);
 
 "******************************************************************************

@@ -24,6 +24,7 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Reid Townson
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -222,7 +223,7 @@ public:
             }
             else {
                 nreg = 1;
-                p_last = 1e15;
+                p_last = veryFar*1e-15;
                 n_plane = 0;
             }
         }
@@ -252,7 +253,7 @@ public:
             }
             else {
                 nreg = 1;
-                p_last = 1e15;
+                p_last = veryFar*1e-15;
                 n_plane = 0;
             }
         }
@@ -318,7 +319,7 @@ public:
             return 0;
         }
         double xp = a*x, up = a*u;
-        EGS_Float t = 1e30;
+        EGS_Float t = veryFar;
         if (up > 0) {
             t = (p_last-xp)/up;
         }
@@ -330,15 +331,15 @@ public:
 
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u,
                EGS_Float &t, int *newmed=0, EGS_Vector *normal=0) {
-        //EGS_Float d = 1e30; int res=ireg;
+        //EGS_Float d = veryFar; int res=ireg;
         //EGS_Float xp = a*x, up = a*u;
-        double d = 1e35;
+        double d = veryFar*1e5;
         int res=ireg;
         double xp = a*x, up = a*u;
         if (ireg >= 0) {
             int dir = 0;
-            bool warn=false;
-            EGS_Float dist;
+//             bool warn=false;
+//             EGS_Float dist;
             if (up > 0 && ireg < n_plane) {
                 d = (p[ireg+1]-xp)/up;
                 //if( xp <= p[ireg+1] ) d = (p[ireg+1]-xp)/up;
@@ -416,12 +417,14 @@ public:
             if (newmed) {
                 *newmed = medium(res);
             }
-            if (normal) if (up > 0) {
+            if (normal) {
+                if (up > 0) {
                     *normal = a.normal()*(-1.);
                 }
                 else {
                     *normal = a.normal();
                 }
+            }
         }
         else {
             res = -1;

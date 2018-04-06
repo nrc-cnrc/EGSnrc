@@ -59,12 +59,12 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
     i_reuse_electron = 0;
     is_valid = false;
     lib = 0;
-    Xmin = -1e30;
-    Xmax = 1e30;
-    Ymin = -1e30;
-    Ymax = 1e30;
-    wmin = -1e30;
-    wmax = 1e30;
+    Xmin = -veryFar;
+    Xmax = veryFar;
+    Ymin = -veryFar;
+    Ymax = veryFar;
+    wmin = -veryFar;
+    wmax = veryFar;
     string beam_code;
     int err1 = input->getInput("beam code",beam_code);
     string pegs_file;
@@ -206,7 +206,7 @@ EGS_I64 EGS_BeamSource::getNextParticle(EGS_RandomGenerator *, int &q,
             te -= EGS_Application::activeApplication()->getRM();
         }
         ok = true;
-        if (te > Emax) {
+        if (te > Emax + epsilon) {
             ok = false;
         } //egsInformation("Emax rejection\n"); }
         if (particle_type < 2 && tq != particle_type) {

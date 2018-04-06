@@ -300,6 +300,10 @@ global numopts options
      }
      # Place PEGS4 option to end of the list
      set options(photon_xsections,0) $xsect
+     set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "mcdf-xcom"
+     set numopts(photon_xsections) [expr $numopts(photon_xsections)+1]
+     set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "mcdf-epdl"
+     set numopts(photon_xsections) [expr $numopts(photon_xsections)+1]
      set options(photon_xsections,[expr $numopts(photon_xsections)-1]) "PEGS4"
    } else {
      # If for some reason no photon data available, one can still use the
@@ -455,8 +459,8 @@ font create myDefaultFont -family Helvetica -size 11 -weight bold
 
 #define a main menubar
 
-frame .mbar -relief raised -bd 1 
-menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont 
+frame .mbar -relief raised -bd 1
+menubutton .mbar.file -text "File" -menu .mbar.file.menu -font myDefaultFont
 menu .mbar.file.menu -font myDefaultFont
 .mbar.file.menu add command -label "Load a previous accelerator" \
 	-command "load_old_module"

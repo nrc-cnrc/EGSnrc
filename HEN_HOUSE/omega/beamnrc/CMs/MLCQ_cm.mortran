@@ -362,7 +362,7 @@
 "
 "*******************************************************************************
 
-%E "start of subroutine HOWFAR_$MLCQ (Rev 1.5)"
+%E "start of subroutine HOWFAR_$MLCQ"
 "*******************************************************************************
 "************************** Component Module MLC *****************************
 "*******************************************************************************
@@ -1285,7 +1285,7 @@ ELSE ["something is wrong"
 "
 RETURN;
 END; "End of subroutine HOWFAR_$MLCQ"
-%E "start of subroutine WHERE_AM_I_$MLCQ (Rev 1.5)"
+%E "start of subroutine WHERE_AM_I_$MLCQ"
 "*******************************************************************************
 "
 "                          Subroutine WHERE_AM_I_$MLCQ
@@ -1354,7 +1354,7 @@ ELSE
 RETURN;
 
 END; "End of subroutine WHERE_AM_I_$MLCQ"
-%E "start of subroutine INPUT_$MLCQ (Rev 1.5)"
+%E "start of subroutine INPUT_$MLCQ"
 "*******************************************************************************
 "
 "                           Subroutine INPUT_$MLCQ
@@ -1856,7 +1856,7 @@ STOP;
 STOP;
 END;  "End of INPUT_$MLCQ"
 
-%E "start of subroutine ISUMRY_$MLCQ (Rev 1.5)"
+%E "start of subroutine ISUMRY_$MLCQ"
 "*******************************************************************************
 "
 "                          Subroutine ISUMRY_$MLCQ
@@ -2127,7 +2127,7 @@ IF(N_GAP_$MLCQ ~=0)[
 ]
 
 110 FORMAT(/'  Component module',I3,' is a multi-leaf collimator',
-            ' (3 regions Rev 1.5)',
+            ' (3 regions)',
            /'  -------------------------------------------------',
             '------------------',
            //T5,'Title: ',68A1);
@@ -2173,7 +2173,7 @@ IF (IWATCH = 4 | IZLAST = 2) ["Graphics file requested"
 ;RETURN;
 END;
 
-%E "start of subroutine HOWNEAR_$MLCQ (Rev 1.5)"
+%E "start of subroutine HOWNEAR_$MLCQ"
 "******************************************************************************
 "
 "                          Subroutine HOWNEAR_$MLCQ
@@ -2284,7 +2284,7 @@ TEMP2=R0LEAF_$MLCQ-
    ]
 ]
 RETURN;
-END;"End of subroutine HOWNEAR_$MLCQ (Rev 1.5)"
+END;"End of subroutine HOWNEAR_$MLCQ"
 
 "*******************************************************************************
-"End of MLC_cm.mortran (Rev 1.5)"
+"End of MLC_cm.mortran"

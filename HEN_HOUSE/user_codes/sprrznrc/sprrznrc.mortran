@@ -80,7 +80,7 @@
 %Q1
 
 REPLACE {$VERSION} WITH {
-,'(Rev 1.49 last edit 2003-03-12 11:58:44-05)',}
+,' ',}
 "******************************************************************************
 "
 "
@@ -1601,7 +1601,7 @@ ISPRREG,DATCOUNT;
 "              = 1 TO OUTPUT SPR's BY CYLINDER AND/OR SLAB
 "ISPRREG(J)    = 1 IF THE USER IS OUTPUTTING SPR IN REGION J OR CYLINDER J OR
 "                SLAB J-NR
-"DATCOUNT      = no. of files used for analysis of parallel run (IRESTART=5) 
+"DATCOUNT      = no. of files used for analysis of parallel run (IRESTART=5)
 ;
 
 REPLACE {;COMIN/USER/;} WITH {;COMIN/USER-VARIANCE-REDUCTION/;}
@@ -4286,7 +4286,6 @@ write(iout,'(" *"/1X,79("*"))');
   ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
   ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
                                                                        T80,'*'/
-  ' *            This is version '$VERSION' ',T80,'*'/
   ' *             running on '$MACHINE' ',T80,'*'/
   ' *',T80, '*'/
   ' *',  T54,' ',$);
@@ -4310,7 +4309,6 @@ write(iout,'(" *"/1X,79("*"))');
 " ' *     It uses the EGSnrc Code System developed at NRC ',T80,'*'/
 " ' *     (based on the EGS4 Code System Carlo developed by SLAC and NRC)',
 "                                                                      T80,'*'/
-" ' *            This is version '$VERSION' ',T80,'*'/
 " ' *             running on '$MACHINE' ',T80,'*'/
 " ' *',T80, '*'/
 " ' *',  T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT,T80,'*'/1X,79('*'));
@@ -4833,7 +4831,7 @@ character*(*) file_name;
 real*8 TSCEDPN($MAXZREG,$MAXRADII,$MAXIT),TSCEDPN2($MAXZREG,$MAXRADII,$MAXIT),
        TSCDOSE($MAXZREG,$MAXRADII,$MAXDOS),TSCDOSE2($MAXZREG,$MAXRADII,$MAXDOS),
        TSCDOSE_COV($MAXZREG,$MAXRADII,2),TSCSPR_COV($MAXZREG,$MAXRADII,2),
-       TMPPIISTP,TSCSTP,TSCSTP2; 
+       TMPPIISTP,TSCSTP,TSCSTP2;
 $REAL TMPTMCPU;
 $LONG_INT TMPNCASE,TMPNNREAD;
 $INTEGER TMPICROSS,TMPITRACKE,iorstrt;
@@ -4934,6 +4932,6 @@ WRITE(6,*) 'Error opening file', $cstring(file_name);
 return; end;
 
 ;
-"end of sprrznrc.mortran (Rev 1.49)"
+"end of sprrznrc.mortran"
 ;
 

@@ -7,22 +7,22 @@
 #  This file is part of EGSnrc.
 #
 #  EGSnrc is free software: you can redistribute it and/or modify it under
-#  the terms of the GNU Affero General Public License as published by the 
+#  the terms of the GNU Affero General Public License as published by the
 #  Free Software Foundation, either version 3 of the License, or (at your
 #  option) any later version.
-# 
+#
 #  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
-#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for 
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
 #  more details.
-#  
+#
 #  You should have received a copy of the GNU Affero General Public License
 #  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
 #
 #  Author:          Iwan Kawrakow, 2004
-#  
+#
 #  Contributors:    Blake Walters
 #                   Ernesto Mainegra-Hing
 #
@@ -42,14 +42,14 @@
 #
 include $(EGS_HOME)BEAM_$(accelerator)$(DSEP)modules.make
 
-# Include the sources file. This file is normally empty, but if someone 
-# wants to overwrite the standard set of sources used to build a BEAMnrc 
+# Include the sources file. This file is normally empty, but if someone
+# wants to overwrite the standard set of sources used to build a BEAMnrc
 # user code, the desired set of sources must be put in that file.
 #
 include $(EGS_HOME)BEAM_$(accelerator)$(DSEP)sources.make
 
-# The spec module file. The variable accelerator is defined in the 
-# BEAMnrc user code Makefile and is equal to the name of the spec module 
+# The spec module file. The variable accelerator is defined in the
+# BEAMnrc user code Makefile and is equal to the name of the spec module
 # file that specifies the accelerator.
 #
 spec_module = $(SPEC_HOME)$(accelerator).module
@@ -62,18 +62,18 @@ BEAM_CODE = BEAM_$(accelerator)
 #
 BEAM_LIB = $(LIB_PRE)$(BEAM_CODE)$(LIB_SUF)
 
-# We will be building 3 different targets, depending on whether the user 
+# We will be building 3 different targets, depending on whether the user
 # said 'make', 'make noopt' or 'make debug'.
-# The variable WHAT below gets set to '' (empty), 'noopt' or 'debug', 
-# respectively. The executable name is constructed from the user code 
+# The variable WHAT below gets set to '' (empty), 'noopt' or 'debug',
+# respectively. The executable name is constructed from the user code
 # name with $(WHAT) appended to it.
 #
 WHAT =
 OPTLEVEL_F = $(FOPT)
 OPTLEVEL_C = $(COPT)
 
-# The name of the executable. USER_BINDIR and EXE are defined in the 
-# EGSnrc config file. 
+# The name of the executable. USER_BINDIR and EXE are defined in the
+# EGSnrc config file.
 #
 EXE_FILE = $(USER_BINDIR)$(BEAM_CODE)$(WHAT)$(EXE)
 
@@ -94,10 +94,10 @@ $(EXE_FILE): $(FORTRAN_FILE).$(FEXT) $(EXE_DIR)
 	@echo $(empty)
 	@echo $(empty)
 	@echo "Fortran compiling $(FORTRAN_FILE).$(FEXT) using flags '$(FCFLAGS) $(OPTLEVEL_F)' and extra objects/libs '$(BEAM_EXTRA_OBJECTS) $(FLIBS)'"
-	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS) 
+	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) $(FOUT)$@ $(FORTRAN_FILE).$(FEXT) $(BEAM_EXTRA_OBJECTS) $(FLIBS)
 
 #$(LIB_FILE): $(LIB_FORTRAN_FILE).$(FEXT)
-#	@$(F77) $(FCFLAGS) $(OPTLEVEL_F) 
+#	@$(F77) $(FCFLAGS) $(OPTLEVEL_F)
 
 # Make sure the executable directory exists.
 #
@@ -127,7 +127,7 @@ $(LIB_FORTRAN_FILE).$(FEXT): $(LIB_SOURCES) sources.make
 	@$(MORTRAN_EXE) -d $(MORTRAN_DATA) -f $(LIB_SOURCES) -o7 $@ \
 	       -o8 $(LIB_FORTRAN_FILE).mortlst
 
-# The following rule is there just for convinience so that you can say 
+# The following rule is there just for convinience so that you can say
 # make fortran
 # to perform the mortran step only (corresponds to m user_code)
 #
@@ -154,7 +154,7 @@ noopt:
 debug:
 	@$(MAKE) WHAT=_debug OPTLEVEL_F="$(FDEBUG)" OPTLEVEL_C="$(CDEBUG)"
 
-clean: 
+clean:
 	@echo "$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst"
 	@$(REMOVE) mortjob.mortran $(FORTRAN_FILE).$(FEXT) $(FORTRAN_FILE).mortlst
 	@$(MAKE) -s WHAT=_debug execlean

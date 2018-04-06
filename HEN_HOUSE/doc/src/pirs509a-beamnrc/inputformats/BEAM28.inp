@@ -1,5 +1,5 @@
 \begin{verbatim}
-        Pair angular sampling= Off, Simple or KM (Default is Simple) 
+        Pair angular sampling= Off, Simple or KM (Default is Simple)
                          If off, pairs are set in motion at an angle m/E
                          relative to the photon direction (m is electron rest
                          energy, E the photon energy). Simple turns on
@@ -25,7 +25,7 @@
                          If the user has a better approach, replace the macro
                              $SELECT-PHOTOELECTRON-DIRECTION;
                          The only application that
-                         Only situation encountered where this made a     
+                         Only situation encountered where this made a
                          small difference was a big ion chamber (cavity size
                          comparable with electron range) with high-Z walls
                          in a low energy photon beam.

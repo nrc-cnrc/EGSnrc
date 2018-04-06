@@ -23,7 +23,7 @@
 #
 #  Author:          Iwan Kawrakow, 2005
 #
-#  Contributors:
+#  Contributors:    Reid Townson
 #
 ###############################################################################
 */
@@ -169,6 +169,32 @@ public:
      */
     virtual EGS_Float getFluence() const = 0;
 
+    /*! \brief Get the time of emission for the most recently sampled particle
+     *
+     * This method is only reimplemented by EGS_RadionuclideSource. It
+     * returns the emission time of the particle that was most recently sampled.
+     */
+    virtual double getTime() const {
+        return 0;
+    };
+
+    /*! \brief Get the shower index for radionuclide emissions
+     *
+     * This method is only reimplemented by EGS_RadionuclideSource. It
+     * gets the index of the most recent shower.
+     */
+    virtual EGS_I64 getShowerIndex() const {
+        return 0;
+    };
+
+    /*! \brief Prints out the sampled emissions for radionuclide spectra
+     *
+     * This method is only reimplemented by EGS_RadionuclideSource. It
+     * prints the actual sampled intensity of each type of emission from
+     * the radionuclide spectra.
+     */
+    virtual void printSampledEmissions() {};
+
     /*!  \brief Store the source state into the stream \a data_out.
      *
      * Every source should reimplement this method to store
@@ -309,6 +335,7 @@ protected:
  *  \link EGS_DoubleGaussianSpectrum a double-Gaussian spectrum\endlink,
  *  \link EGS_UniformSpectrum a uniform spectrum\endlink and
  *  \link EGS_TabulatedSpectrum a tabulated spectrum\endlink.
+ *  \link EGS_RadionuclideSpectrum a radionuclide spectrum\endlink.
  *
  */
 class EGS_EXPORT EGS_BaseSpectrum {
@@ -348,6 +375,70 @@ public:
         sum_E += e;
         sum_E2 += e*e;
         return e;
+    };
+
+    /*! \brief Get the charge for the most recently sampled particle
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * returns the charge of the particle that was most recently sampled
+     * using sampleEnergy().
+     */
+    virtual int getCharge() const {
+        return 0;
+    };
+
+    /*! \brief Get the time of emission for the most recently sampled particle
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * returns the emission time of the particle that was most recently sampled
+     * using sampleEnergy().
+     */
+    virtual double getTime() const {
+        return 0;
+    };
+
+    /*! \brief Get the shower index for radionuclide emissions
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * gets the index of the most recent shower produced using sampleEnergy().
+     */
+    virtual EGS_I64 getShowerIndex() const {
+        return 0;
+    };
+
+    /*! \brief Get the spectrum weight for radionuclide spectra
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * gets the weight of the spectrum to balance emissions from multiple
+     * spectra.
+     */
+    virtual EGS_Float getSpectrumWeight() const {
+        return 0;
+    };
+
+    /*! \brief Set the spectrum weight for radionuclide spectra
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * sets the weight of the spectrum to balance emissions from multiple
+     * spectra. This allows a source to normalize the spectrum weights.
+     */
+    virtual void setSpectrumWeight(EGS_Float newWeight) {};
+
+    /*! \brief Prints out the sampled emissions for radionuclide spectra
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * prints the actual sampled intensity of each type of emission from
+     * the radionuclide spectra.
+     */
+    virtual void printSampledEmissions() {};
+
+    /*! \brief Get energy that should be deposited locally from relaxations/alphas.
+     *
+     * This method is only reimplemented by EGS_RadionuclideSpectrum. It
+     * gets the energy deposited locally during spectrum generation.
+     */
+    virtual EGS_Float getEdep() const {
+        return 0;
     };
 
     /*! \brief Get the maximum energy of this spectrum.
@@ -624,6 +715,14 @@ public:
      */
     virtual EGS_Float getEmax() const {
         return s->maxEnergy();
+    };
+
+    /*! \brief Get the charge of the source.
+     *
+     * Simply returns the value of the (protected) attribute q.
+     */
+    virtual int getCharge() const {
+        return q;
     };
 
     /*! \brief Store the fluence state of this source to the data stream

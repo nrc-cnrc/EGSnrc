@@ -110,12 +110,11 @@
 ;
 "*******************************************************************************
 "
-"            *********************************************      ""toc:
-"            *                                           *      ""toc:
-"            * dosxyznrc.mortran ($Revision: 1.56 $)     *      ""toc:
-"            * (last edited $Date: 2014/10/08 15:12:01 $)*      ""toc:
-"            *                                           *      ""toc:
-"            *********************************************      ""toc:
+"            *********************************************
+"            *                                           *
+"            * dosxyznrc.mortran                         *
+"            *                                           *
+"            *********************************************
 "
 "   A general purpose EGSnrc user code to do cartesian coordinate dose
 "   deposition studies. Every voxel (volume element) can have different
@@ -625,7 +624,7 @@
 "                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "                        a change to the user codes Makefile to include
 "                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"                        SOURCES (just before 
+"                        SOURCES (just before
 "                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "                        [ radc_flag ]
 "       Pair angular sampling= Off, Simple or KM
@@ -1017,6 +1016,10 @@ REPLACE {$AUSCALL(#);} WITH
 REPLACE {$IBRDST-DEFAULT} WITH {0}
 ;
 
+"Rayleigh scattering= Off"
+REPLACE {$IRAYLR-DEFAULT} WITH {0}
+;
+
 "Bound Compton scattering= Off"
 REPLACE {$IBCMP-DEFAULT} WITH {0}
 ;
@@ -1406,8 +1409,7 @@ i_phsp_out=0; "default is to not output phsp"
 
 CALL DATETIME(1);
 OUTPUT61 TIMEN, DATEN; (' ',79('*')/
-' NRCC/UW EGSnrc user-code DOSXYZnrc',
-' ($Revision: 1.56 $ last edited $Date: 2014/10/08 15:12:01 $)'/
+' NRCC/UW EGSnrc user-code DOSXYZnrc'/
     ' ON '$MACHINE' ',T60,$TIMEN_FORMAT,1X,$DATEN_FORMAT / ' ',79('*')/
     ' **',T79,'**'/
     ' **',T38,'DOSXYZnrc',T79,'**'/
@@ -1417,7 +1419,6 @@ OUTPUT61 TIMEN, DATEN; (' ',79('*')/
     ' **',T15,'University of Wisconsin as part of the OMEGA project',
           T79,'**'/ ' **',T79,'**'/
     ' **',T15,
-    'This is $Revision: 1.56 $ last edited $Date: 2014/10/08 15:12:01 $',
           T79,'**'/         ' **',T79,'**'/     1X ,79('*'));
 OUTPUT61
 $MXMED,$MXSTACK,$IMAX,$JMAX,$KMAX,$MAXDOSE,$DOSEZERO;
@@ -1454,6 +1455,8 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
      ' : ',$);
     read(5,'(A256)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
+
+    call replace_env(PhantFileName);
 
     Open($CTUnitNumber,file=PhantFileName,status='old',access='sequential',
           iostat=ios);
@@ -3054,7 +3057,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
     OUTPUT1 title;
     (//,'1',80a1 //
     t10,
-    'DOSXYZnrc ($Revision: 1.56 $) Dose outputs (dose/F, Gy.cm**2)');
+    'DOSXYZnrc Dose outputs (dose/F, Gy.cm**2)');
   ]
   ELSE[
     IF(((isource.EQ.0).OR.( isource.EQ.1).OR.( isource.EQ.3).OR.
@@ -3073,7 +3076,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Average planar fluence (number/beam area), F =',
         1pe11.3,'(1/cm**2)'//
         t10,
-        'DOSXYZnrc ($Revision: 1.56 $) Dose outputs (dose/F, Gy.cm**2)');
+        'DOSXYZnrc Dose outputs (dose/F, Gy.cm**2)');
     ]
      ELSEIF(isource.EQ.2.OR.isource.EQ.8)[
          OUTPUT1 title,planarefe,planarefp,planarfe,planarfp,
@@ -3090,13 +3093,13 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'No. of particles incident from phase space file =',1i13/);
         IF(OLDSRC.EQ.1)[
           OUTPUT1;
-          (t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+          (t10,'           DOSXYZnrc Dose outputs '/
            t10,'(Dose/incident particle from phase space file, Gy)');
         ]
         ELSE[
           OUTPUT1 ainflu;
        (t5,'No. of particles incident from original source  =',1f13.1//
-          t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+          t10,'           DOSXYZnrc Dose outputs '/
           t10,'(Dose/incident particle from original source, Gy)');
         ]
      ]
@@ -3114,14 +3117,14 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Photon planar fluence scored in a 1cm**2 circle '/
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'Total number of incident particles =',1pe11.3//
-        t10,'DOSXYZnrc ($Revision: 1.56 $)',
+        t10,'DOSXYZnrc',
             ' Dose outputs (Dose/incident particle, Gy)');
     ]
     ELSEIF(isource.EQ.6)[
         OUTPUT1 title,ainflu;
         ( '1',80a1 /
         t5,'Total number of incident particles =',1pe11.3//
-        t10,'DOSXYZnrc ($Revision: 1.56 $)',
+        t10,'DOSXYZnrc',
             ' Dose outputs (Dose/incident particle, Gy)');
     ]
     ELSEIF((isource.EQ.9).OR.(isource.EQ.21))[
@@ -3138,7 +3141,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'         No. of particles incident on DOSXYZ phantom =',1i13//
         t5,'No. of primary particles incident in BEAM simulation =',1i13//
-       t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+       t10,'           DOSXYZnrc Dose outputs '/
        t10,'(Dose/incident particle from original source, Gy)');
     ]
     ELSEIF(isource.EQ.20)[
@@ -3155,7 +3158,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'         No. of particles incident on DOSXYZ phantom =',1i13//
         t5,'No. of primary particles incident in VCU/BEAM simulation =',1i13//
-       t10,'           DOSXYZnrc ($Revision: 1.56 $) Dose outputs '/
+       t10,'           DOSXYZnrc Dose outputs '/
        t10,'(Dose/incident particle from original source, Gy)');
     ]
     ELSE["currently we do not have any other sources"
@@ -3170,7 +3173,7 @@ REPLACE {$PRINT-HEADER;} WITH {;
         t5,'Photon planar fluence scored in a 1cm**2 circle '/
         t5,'centered at z-axis on the phantom surface =',1pe11.3,'(1/cm**2)'//
         t5,'on the phantom surface =',1pe11.3,'(1/cm**2)'//
-        t10,'DOSXYZnrc ($Revision: 1.56 $) Dose outputs',
+        t10,'DOSXYZnrc Dose outputs',
         '   Gy.cm**2 (or Gy/incident particle)');
     ]
   ]
@@ -3414,7 +3417,7 @@ $REAL XSI; "used to perform russian roulette on higher-order photons when"
 
 "variables for howfarless option"
 $INTEGER irx,iry,irz,irold_loc,irnew_loc,outside,min_plane,iri,i,ii,jj,kk,
-         ibsearch,hwfl_rr,dirx,diry,dirz;
+         ibsearch4,hwfl_rr,dirx,diry,dirz;
 $REAL dist_loc, dist_tot, edep_loc, tv,t(2),xi,yi,zi,ui(2),vi(2),wi(2),
       dist_tmp,x_tmp,y_tmp,z_tmp,edep_save,x_loc,y_loc,z_loc,
       xpln,ypln,zpln,dnear_loc,t_tot,t_rnd,dist_max,uii,vii,wii,
@@ -3466,9 +3469,9 @@ IF(howfarless & (iarg=15 | iarg=17 | iarg=19 | iarg=23) & ir(np)<irmax+1)[
        ]
     ]
     ELSE[
-        irx=ibsearch(x(np),imax+1,xbound);
-        iry=ibsearch(y(np),jmax+1,ybound);
-        irz=ibsearch(z(np),kmax+1,zbound);
+        irx=ibsearch4(x(np),imax+1,xbound);
+        iry=ibsearch4(y(np),jmax+1,ybound);
+        irz=ibsearch4(z(np),kmax+1,zbound);
         ir(np)=$IR(irx,iry,irz);
     ]
     irold=ir(np);
@@ -4596,10 +4599,9 @@ end;
 ;
 
 /*
-
 C**************************************************************************
 C*                                                                        *
-C*                   Function ibsearch(a, nsh, b)                         *
+C*                   Function ibsearch4(a, nsh, b)                         *
 C*                                                                        *
 C*          binary search for an element l of array b such that           *
 C*          b[l] =< a < b[l+1]                                            *
@@ -4608,7 +4610,7 @@ C*  Note: array must be increasingly monotone                             *
 C*                                                  Ernesto Mainegra-Hing *
 C**************************************************************************
 */
-integer function ibsearch(a, nsh, b);
+integer function ibsearch4(a, nsh, b);
 real*4 b(*);
 $REAL a;
 integer min,max,help,nsh;
@@ -4625,7 +4627,7 @@ WHILE( min < max-1 )[
            max = help;
          ]
 ]
-ibsearch = min;
+ibsearch4 = min;
 return;
 end;
 
@@ -4677,4 +4679,3 @@ DO medium = 1,nmed [
 ]
 
 return; end;
-

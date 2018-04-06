@@ -13,13 +13,13 @@ H2O700ICRU
 0, 0, 0, 0, 0, 0, 0, 0
 19, 20, 1, 1, 1, 40, 1, 1
 0, 0, 0, 0, 0, 0, 0, 1
-2, 2, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.0, 0, , , , 
+2, 2, 0.0, 0.0, 0.0, 180.0, 0.0, 0.0, 0.0, 0, , , ,
 2, 2, 1, 0, 1, 19.5, 0, 0
 $HOME/egsnrc/dosxyznrc/18MeVe.egsphsp1
 1000000, 0, 100, 33, 43, 100, 0, 0, 1, 1, 3, 0, 0, 0, 1
  #########################
  :Start MC Transport Parameter:
- 
+
  Global ECUT= 0.7
  Global PCUT= 0.01
  Global SMAX= 5
@@ -36,6 +36,6 @@ $HOME/egsnrc/dosxyznrc/18MeVe.egsphsp1
  Photoelectron angular sampling= Off
  Rayleigh scattering= Off
  Atomic relaxations= Off
- 
+
  :Stop MC Transport Parameter:
  #########################

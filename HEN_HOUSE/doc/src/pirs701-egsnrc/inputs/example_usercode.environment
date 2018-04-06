@@ -38,7 +38,7 @@
 #  The egs_run script executes this piece of code immediately
 #  before and after executing the user code.  The environment file
 #  gives the user the ability to link specific file names to the
-#  standard names used by fortran and/or any other files they 
+#  standard names used by fortran and/or any other files they
 #  want to use.
 #
 #  environment files are used extensively by the NRC user codes
@@ -52,7 +52,7 @@
 #  if the user is using one.
 #
 #  The script egs_run does those assignments needed by all user
-#  codes, namely unit 12, pegs4 input, unit 76,77,78,79 other 
+#  codes, namely unit 12, pegs4 input, unit 76,77,78,79 other
 #  cross-section data.  The user code should not use these units.
 
 if ($user_operation == "setenv") then
@@ -72,7 +72,7 @@ if ($user_operation == "setenv") then
 else if ($user_operation == "unsetenv") then
     # Postprocessing operations go here
 
-    # Note that any symbolic links created above are removed 
+    # Note that any symbolic links created above are removed
     # automatically by the scipt egs_run.
 
 else

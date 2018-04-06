@@ -24,6 +24,9 @@
 #  Author:          Iwan Kawrakow, 2005
 #
 #  Contributors:    Frederic Tessier
+#                   Reid Townson
+#                   Ernesto Mainegra-Hing
+#                   Hubert Ho
 #
 ###############################################################################
 */
@@ -323,7 +326,12 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_def.push_back(rdef);
         }
     }
-    else while (1) {
+    else {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             // other format of data
             string medname;
             EGS_Float rmin,rmax,rdef;
@@ -338,6 +346,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             rho_max.push_back(rmax);
             rho_def.push_back(rdef);
         }
+    }
     if (med_names.size() < 1) {
         egsWarning("%s: no media defined in the CT ramp "
                    "file %s!\n",func,ramp_file);
@@ -464,7 +473,11 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
         string data_file("");
         int data_type = -1;
         float scale_x=0.0, scale_y=0.0, scale_z=0.0;
-        while (1) {
+        for (EGS_I64 loopCount=0; loopCount<=loopMax; ++loopCount) {
+            if (loopCount == loopMax) {
+                egsFatal("EGS_XYZGeometry::constructGeometry: Too many iterations were required! Input may be invalid, or consider increasing loopMax.");
+                return 0;
+            }
             string line, key, value;
             size_t pos;
             getline(h_file, line);
@@ -642,7 +655,7 @@ EGS_XYZGeometry *EGS_XYZGeometry::constructGeometry(const char *dens_file,
             return 0;
         }
         int nr = Nx*Ny*Nz;
-        int med;
+        //int med;
         //for(j=0; j<nr; ++j) data >> med;
         data.getline(buf,1023);
         for (int iz=0; iz<Nz; ++iz) {
@@ -947,7 +960,12 @@ void EGS_XYZGeometry::voxelizeGeometry(EGS_Input *input) {
         delete [] rhor;
         rhor = 0;
     }
+    if (bfactor) {
+        delete [] bfactor;
+        bfactor = 0;
+    }
     region_media = new short [nreg];
+
     bool hrs = geometry->hasRhoScaling();
     if (hrs) {
         has_rho_scaling = true;
@@ -956,6 +974,16 @@ void EGS_XYZGeometry::voxelizeGeometry(EGS_Input *input) {
     else {
         has_rho_scaling = false;
     }
+
+    bool hbs = geometry->hasBScaling();
+    if (hbs) {
+        has_B_scaling = true;
+        bfactor = new EGS_Float [nreg];
+    }
+    else {
+        has_B_scaling = false;
+    }
+
     EGS_Vector v1(xp->position(0),yp->position(0),zp->position(0));
     EGS_Vector v2(xp->position(nx),yp->position(ny),zp->position(nz));
     egsInformation("  top/left/front corner   : (%g,%g,%g)\n",v1.x,v1.y,v1.z);
@@ -981,11 +1009,17 @@ void EGS_XYZGeometry::voxelizeGeometry(EGS_Input *input) {
                     if (hrs) {
                         rhor[ir] = geometry->getRelativeRho(ir);
                     }
+                    if (hbs) {
+                        bfactor[ir] = geometry->getBScaling(ir);
+                    }
                 }
                 else {
                     region_media[ir] = -1;
                     if (hrs) {
                         rhor[ir] = 1;
+                    }
+                    if (hbs) {
+                        bfactor[ir] = 1;
                     }
                 }
             }
@@ -1122,6 +1156,7 @@ extern "C" {
                     EGS_XYZGeometry::constructGeometry(dens_file.c_str(),ramp_file.c_str(),dens_or_egsphant_or_interfile);
                 result->setName(input);
                 result->setBoundaryTolerance(input);
+                result->setBScaling(input);
                 return result;
             }
             vector<EGS_Float> xpos, ypos, zpos, xslab, yslab, zslab;
@@ -1131,7 +1166,7 @@ extern "C" {
             int ix1 = input->getInput("x-slabs",xslab);
             int iy1 = input->getInput("y-slabs",yslab);
             int iz1 = input->getInput("z-slabs",zslab);
-            int nx, ny, nz;
+            int nx=0, ny=0, nz=0;
             if (!ix1) {
                 if (xslab.size() != 3) {
                     egsWarning("createGeometry(XYZ): exactly 3 inputs are required"
@@ -1338,7 +1373,7 @@ extern "C" {
     }
 
 
-    int EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
+    void EGS_NDGeometry::ndRegions(int r, int dim, int dimk, int k, vector<int> &regs) {
 
         // skip looping over selected dimension
         if (dim == dimk) {

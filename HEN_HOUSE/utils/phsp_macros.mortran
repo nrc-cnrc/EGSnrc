@@ -1342,4 +1342,4 @@ REPLACE {$DOSXYZ_SET_OUT_PHSP_HEADER;} WITH {;
 " version of BEAM "
 REPLACE {$DECLARE-PARTICLE-CONTAINER;} WITH {;};
 
-"End of phsp_macros.mortran (Rev 1.7)"
+"End of phsp_macros.mortran"

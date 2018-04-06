@@ -20,7 +20,7 @@ $EGS_HOME/BEAM_EX16MVp/EX16MVp.egsphsp1
 1000000, 0, 500.0, 97, 33, 100.0, 1, 0, 0, 1, 3.0, 0, 0, 0, 40, 1, 0
  #########################
  :Start MC Transport Parameter:
- 
+
  Global ECUT= 0.7
  Global PCUT= 0.01
  Global SMAX= 5
@@ -42,6 +42,6 @@ $EGS_HOME/BEAM_EX16MVp/EX16MVp.egsphsp1
  Electron impact ionization= Off
  Photon cross sections= xcom
  Photon cross-sections output= Off
- 
+
  :Stop MC Transport Parameter:
  #########################

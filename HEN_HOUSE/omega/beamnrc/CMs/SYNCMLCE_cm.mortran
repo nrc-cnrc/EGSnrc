@@ -305,7 +305,7 @@
 "I>
 "I>   If MODE_$SYNCMLCE=1 (dynamic delivery) or 2 (step-and-shoot delivery)
 "I>
-"I>  12b  mlc_file (A80): The full name of the file containing leaf opening
+"I>  12b  mlc_file (A256): The full name of the file containing leaf opening
 "I>                       data.  The format of the file contents is as follows:
 "I>
 "I>      MLC_TITLE (A80)
@@ -461,7 +461,7 @@
 "V>$GEO_SHIFT_1_(#)
 "V>=============
 "V>{p1} the value to compare with ustep
-"V> if {p1}+1.0e-5 < ustep shift it by 1.0e-5, otherwise use USTEP 
+"V> if {p1}+1.0e-5 < ustep shift it by 1.0e-5, otherwise use USTEP
 ;
 REPLACE {$GEO_SHIFT_1_(#)} WITH {
   ;{P1}=MIN(USTEP,{P1}+1.0e-5);
@@ -879,9 +879,8 @@ INTEGER I,J,K,N,IJ,        "T>DO loop indices
 	egs_get_unit, "T>egs function used to assign unit to mlc_file
 	mlc_unit,    "T>unit no. to assign mlc_file
         NUM_$SYNCMLCE; "T>number of adjacent leaves same opening coordinates
-CHARACTER*80 mlc_file, "T>name of file containing opening data for dynamic and
-                       "  step-and-shoot sequences
-             MLC_TITLE; "T> title line in mlc_file
+character*256 mlc_file;
+CHARACTER*80 MLC_TITLE; "T> title line in mlc_file
 CHARACTER*1 BEAM_NR(60);
 
 " **************************************************************** "
@@ -1332,8 +1331,9 @@ DO I=1, NUM_LEAF_$SYNCMLCE
 IF(MODE_$SYNCMLCE=1|MODE_$SYNCMLCE=2)["dynamic or step-and-shoot leaf inputs"
  "Added by Julio Lobo and Tony Popescu taken from code from SYNCVMLC"
   OUTPUT;(/' Input full name of file containing leaf opening data:'/);
-  READ(i_input,'(A80)')mlc_file;
-  OUTPUT mlc_file;(A80/);
+  READ(i_input,'(A256)')mlc_file;
+  OUTPUT mlc_file;(A/);
+  call replace_env(mlc_file);
   mlc_unit=egs_get_unit(mlc_unit);
   IF(mlc_unit<1)[
     $egs_fatal(*,
@@ -1343,6 +1343,14 @@ IF(MODE_$SYNCMLCE=1|MODE_$SYNCMLCE=2)["dynamic or step-and-shoot leaf inputs"
   read(mlc_unit,'(A80)') MLC_TITLE;
   read(mlc_unit,'(I10)') NFIELDS_$SYNCMLCE;
   OUTPUT NFIELDS_$SYNCMLCE; (I10);
+
+  IF(NFIELDS_$SYNCMLCE>$MAXFIELD_$SYNCMLCE) [
+   OUTPUT $MAXFIELD_$SYNCMLCE;
+        (/' The number of fields is greater than $MAXFIELD_$SYNCMLCE: ',I10, /
+        ' Increase $MAXFIELD_$SYNCMLCE in SYNCMLCE_macros.mortran'/);
+   STOP;
+  ];
+
   DO I=1,NFIELDS_$SYNCMLCE[
   "read in non-default leaf positions for each field"
      read(mlc_unit,'(F15.0)')INDEX_$SYNCMLCE(I);
@@ -1890,7 +1898,7 @@ IF(N_GAP_$SYNCMLCE ~=0)[
 ;RETURN;
 END;
 
-%E "Start of subroutine HOWNEAR_$SYNCMLCE (Rev 1.4)"
+%E "Start of subroutine HOWNEAR_$SYNCMLCE"
 "***********************************************************************
 "
 "                          Subroutine HOWNEAR_$SYNCMLCE
