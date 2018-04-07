@@ -187,6 +187,9 @@ void EGS_ParticleTrackContainer::addVertex(EGS_ParticleTrack::Vertex *x) {
 }
 
 void EGS_ParticleTrackContainer::addVertex(int stackIndex, EGS_ParticleTrack::Vertex *x) {
+    if (m_stackMap[stackIndex] < 0) {
+        return;
+    }
     if (!m_isScoring[m_stackMap[stackIndex]]) {
         return;
     }
