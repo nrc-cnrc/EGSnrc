@@ -271,6 +271,9 @@ public:
 
     /*! \brief Are we still scoring the particle mapped by the stack? */
     bool isScoringParticle(int stackIndex) {
+        if (m_stackMap[stackIndex] < 0) {
+            return false;
+        }
         return m_isScoring[m_stackMap[stackIndex]];
     }
 
@@ -281,7 +284,9 @@ public:
 
     /*! \brief Stop scoring the particle mapped by the stack. */
     void stopScoringParticle(int stackIndex) {
-        m_isScoring[m_stackMap[stackIndex]] = false;
+        if (m_stackMap[stackIndex] >= 0) {
+            m_isScoring[m_stackMap[stackIndex]] = false;
+        }
         m_stackMap[stackIndex] = -1;
     }
 
@@ -302,7 +307,9 @@ public:
 
     /*! \brief Set the type of mapped particle to \a p .*/
     void setParticleInfo(int stackIndex, EGS_ParticleTrack::ParticleInfo *p) {
-        m_buffer[m_stackMap[stackIndex]]->setParticleInfo(p);
+        if (m_stackMap[stackIndex] >= 0) {
+            m_buffer[m_stackMap[stackIndex]]->setParticleInfo(p);
+        }
     }
 
     /*! \brief Set the type of the currently tracked particle to \a p .*/
