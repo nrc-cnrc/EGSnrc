@@ -41,7 +41,7 @@
 //qt3to4 -- BW
 #include <qdir.h>
 
-ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool modal, Qt::WFlags f )
+ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool modal, Qt::WindowFlags f )
 //qt3to4 -- BW
 //           : MExecutionDialog( parent, name, modal, f )
              : QDialog(parent)
@@ -78,15 +78,11 @@ ExecutiondlgImpl::ExecutiondlgImpl( QWidget* parent, const char* name, bool moda
 // For specific settings of the BATCH SUBMISSION SYSTEM
    getQueueingSystemOptions();
 
- // tool tip for ListBoxItems inside combo boxes
-// created from scratch since ListBoxItems ain't widgets
-  ctt = new ComboBoxToolTip( QueueComboBox, 0, queues, sizeof queues / sizeof(char *) );
-
 }
 
 ExecutiondlgImpl::~ExecutiondlgImpl()
 {
- zap(ctt);
+
 }
 
 //qt3to4 -- BW

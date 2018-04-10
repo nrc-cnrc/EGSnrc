@@ -45,7 +45,7 @@
 
 using namespace std;
 
-EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WFlags f)
+EGS_Wizard::EGS_Wizard(QWidget *parent, Qt::WindowFlags f)
                                           : QWizard(parent,f),
                                           the_year("0000?"),version("0?"),
                                           custom(false)

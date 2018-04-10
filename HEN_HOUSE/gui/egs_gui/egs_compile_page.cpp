@@ -53,10 +53,10 @@ const QSizePolicy preferred(QSizePolicy::Preferred,QSizePolicy::Preferred);
 using namespace Qt;
 
 EGS_CompilePage::EGS_CompilePage(QWidget *parent, const char *name,
-    WFlags f) : EGS_GUI_Widget(parent,name,f) { make(); }
+    WindowFlags f) : EGS_GUI_Widget(parent,name,f) { make(); }
 
 EGS_CompilePage::EGS_CompilePage(EGS_ConfigReader *cr, QWidget *parent,
-    const char *name, WFlags f) : EGS_GUI_Widget(cr,parent,name,f) { make(); }
+    const char *name, WindowFlags f) : EGS_GUI_Widget(cr,parent,name,f) { make(); }
 
 void EGS_CompilePage::make() {
 

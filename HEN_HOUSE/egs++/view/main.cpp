@@ -29,7 +29,13 @@
 */
 
 
-#include <qapplication.h>
+#include <QApplication>
+#include <QtGlobal>
+#if QT_VERSION >= 0x050000
+    #include <QtWidgets>
+#else
+    #include <QWidget>
+#endif
 #include <qfile.h>
 #include <qstring.h>
 #include <qfiledialog.h>

@@ -38,7 +38,6 @@
 //qt3to4 -- BW
 #include "commandManager.h"
 
-#include "comboboxtooltip.h"
 //qt3to4 -- BW
 //#include <q3listbox.h>
 #include <qlabel.h>
@@ -53,14 +52,12 @@ class ExecutiondlgImpl : public QDialog, public Ui::MExecutionDialog
 
 public:
 
-ExecutiondlgImpl( QWidget* parent, const char* name,  bool modal, Qt::WFlags f );
+ExecutiondlgImpl( QWidget* parent, const char* name,  bool modal, Qt::WindowFlags f );
 
 ~ExecutiondlgImpl();
 
 //QLabel* tipLabel;
 //MEventFilter* eFilter;
-
-ComboBoxToolTip* ctt;
 
 //qt3to4 -- BW
 QString the_hen_house;
