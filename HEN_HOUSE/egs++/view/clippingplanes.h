@@ -46,10 +46,6 @@ public:
     virtual int numPlanes();
     virtual bool getPlane(int j, EGS_Vector &a, EGS_Float &d);
 
-public slots:
-
-    virtual void helpClicked();
-
 signals:
 
     void clippingPlanesChanged();
@@ -59,7 +55,7 @@ protected slots:
     virtual void languageChange() {
         retranslateUi(this);
     }
-    virtual void applyClicked();
+    virtual void applyClipping();
 
 };
 

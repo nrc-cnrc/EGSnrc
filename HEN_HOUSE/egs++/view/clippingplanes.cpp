@@ -44,25 +44,21 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     : QWidget(parent) {
     setObjectName(name);
     setupUi(this);
-#if QT_VERSION >= 0x050000
-    planeTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-#else
-    planeTable->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-#endif
+
+    // Hide the row headers
+    planeTable->verticalHeader()->setVisible(false);
+    planeTable->setColumnWidth(0,72);
+    planeTable->setColumnWidth(1,72);
+    planeTable->setColumnWidth(2,72);
+    planeTable->setColumnWidth(3,71);
+    planeTable->setColumnWidth(4,22);
 }
 
 ClippingPlanesWidget::~ClippingPlanesWidget() {
 }
 
-void ClippingPlanesWidget::applyClicked() {
+void ClippingPlanesWidget::applyClipping() {
     emit clippingPlanesChanged();
-}
-
-
-void ClippingPlanesWidget::helpClicked() {
-#ifdef VIEW_DEBUG
-    egsWarning("In ClippingPlanesWidget::helpClicked()\n");
-#endif
 }
 
 
@@ -74,14 +70,19 @@ int ClippingPlanesWidget::numPlanes() {
 bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     // check if all row items exist and are selected.
     QTableWidgetItem *itemAx = planeTable->item(j,0),
-                      *itemAy = planeTable->item(j,1),
-                       *itemAz = planeTable->item(j,2),
-                        *itemD = planeTable->item(j,3);
-    if (!itemAx || !itemAy || !itemAz  || !itemD) {
+                     *itemAy = planeTable->item(j,1),
+                     *itemAz = planeTable->item(j,2),
+                     *itemD = planeTable->item(j,3),
+                     *itemApplied = planeTable->item(j,4);
+
+    // Make sure all parameters for a plane exist
+    if (!itemAx || !itemAy || !itemAz  || !itemD || !itemApplied) {
         return false;
     }
-    if (!itemAx->isSelected() || !itemAy->isSelected() ||
-            !itemAz->isSelected() || !itemD->isSelected()) {
+
+    // See if the checkbox in the 4th column is checked
+    // Only use the plane if it is checked
+    if (itemApplied->checkState() == Qt::Unchecked) {
         return false;
     }
 
