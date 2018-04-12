@@ -73,6 +73,7 @@ public:
 public slots:
 
     virtual void reloadInput();
+    virtual void selectInput();
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
     virtual void checkboxShowRegions(bool toggle);

@@ -102,6 +102,9 @@ ImageWindow::~ImageWindow() {
 }
 
 void ImageWindow::render(EGS_BaseGeometry *geo, bool transform) {
+    if(!geo) {
+        return;
+    }
     if (transform) {
         startTransformation();
     }
@@ -109,7 +112,7 @@ void ImageWindow::render(EGS_BaseGeometry *geo, bool transform) {
 }
 
 void ImageWindow::rerender(EGS_BaseGeometry *geo) {
-    if (!thread) {
+    if (!thread || !geo) {
         // Don't bother if the thread has been disabled.
         return;
     }

@@ -287,6 +287,17 @@
          </property>
         </spacer>
        </item>
+       <item>
+        <layout class="QHBoxLayout">
+         <item>
+          <widget class="QPushButton" name="loadButton">
+           <property name="text">
+            <string>Load input</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </item>
      <item>
@@ -951,6 +962,22 @@
    </hints>
   </connection>
   <connection>
+   <sender>loadButton</sender>
+   <signal>clicked()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>selectInput()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
    <sender>showPhotonsCheckbox</sender>
    <signal>toggled(bool)</signal>
    <receiver>GeometryViewControl</receiver>
@@ -1015,7 +1042,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>transparancy</sender>
+   <sender>transparency</sender>
    <signal>sliderReleased()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>endTransformation()</slot>

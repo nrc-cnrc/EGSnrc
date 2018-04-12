@@ -190,7 +190,26 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 GeometryViewControl::~GeometryViewControl() {
 }
 
+void GeometryViewControl::selectInput() {
+    QString input_file = QFileDialog::getOpenFileName(NULL,"Select geometry definition file");
+
+    this->show();
+    this->setFilename(input_file);
+
+    if (!this->loadInput(false)) {
+        egsWarning("GeometryViewControl::selectInput: Error: The input file could not be loaded: %s\n", input_file.toLatin1().data());
+    }
+
+    // Reset the transparency bar since it won't apply for the new media
+    changeTransparency(255);
+    transparency->setValue(255);
+}
+
 bool GeometryViewControl::loadInput(bool reloading) {
+    #ifdef VIEW_DEBUG
+        egsWarning("In loadInput(), reloading is %d\n",reloading);
+    #endif
+
     // check that the file (still) exists
     QFile file(filename);
     if (!file.exists()) {
@@ -198,7 +217,7 @@ bool GeometryViewControl::loadInput(bool reloading) {
         return false;
     }
 
-    // read the input file again
+    // Read the input file
     EGS_Input input;
     input.setContentFromFile(filename.toUtf8().constData());
 
@@ -207,6 +226,7 @@ bool GeometryViewControl::loadInput(bool reloading) {
     // Don't accept any more reload requests during this reload
     reloadButton->blockSignals(true);
     qApp->processEvents();
+
     // delete geometry
     if (g) {
         delete g;
@@ -214,10 +234,17 @@ bool GeometryViewControl::loadInput(bool reloading) {
     }
     EGS_BaseGeometry::clearGeometries();
 
-    // restart from scratch (copied from main.cpp)
+    // Load the new geometry
     EGS_BaseGeometry *newGeom = EGS_BaseGeometry::createGeometry(&input);
-    if (!newGeom) egsFatal("\nThe input file %s seems to not define a valid"
-                               " geometry\n\n",filename.toUtf8().constData());
+    if (!newGeom) {
+        QMessageBox::critical(this,"Geometry error",
+                "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
+
+        reloadButton->blockSignals(false);
+        return false;
+    }
+
+    // restart from scratch (copied from main.cpp)
     EGS_Float xmin = -50, xmax = 50;
     EGS_Float ymin = -50, ymax = 50;
     EGS_Float zmin = -50, zmax = 50;
@@ -277,7 +304,9 @@ bool GeometryViewControl::loadInput(bool reloading) {
 }
 
 void GeometryViewControl::reloadInput() {
-    loadInput(true);
+    if(!loadInput(true)) {
+        egsWarning("GeometryViewControl::reloadInput: Error: The geometry is not correctly defined\n");
+    }
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -561,7 +590,7 @@ void GeometryViewControl::changeTransparency(int t) {
     QRgb c = m_colors[med];
     m_colors[med] = qRgba(qRed(c), qGreen(c), qBlue(c), t);
 #ifdef VIEW_DEBUG
-    egsWarning("In changeTransperancy(%d): set color to %d\n",t,m_colors[med]);
+    egsWarning("In changeTransparency(%d): set color to %d\n",t,m_colors[med]);
 #endif
     setMaterialColor(med);
     updateView(true);
@@ -666,6 +695,7 @@ void GeometryViewControl::loadTracksDialog() {
         return;
     }
     gview->loadTracks(filename_tracks);
+    updateView();
 }
 
 void GeometryViewControl::viewAllMaterials() {
@@ -1071,10 +1101,10 @@ void GeometryViewControl::updateView(bool transform) {
     rp.material_colors = vector<EGS_MaterialColor>();
     for (int j=0; j<nmed; j++) {
         EGS_Float r = ((EGS_Float) qRed(m_colors[j]))/255.;
-        EGS_Float g = ((EGS_Float) qGreen(m_colors[j]))/255.;
+        EGS_Float gr = ((EGS_Float) qGreen(m_colors[j]))/255.;
         EGS_Float b = ((EGS_Float) qBlue(m_colors[j]))/255.;
         EGS_Float alpha = ((EGS_Float) qAlpha(m_colors[j]))/255.;
-        rp.material_colors.push_back(EGS_MaterialColor(EGS_Vector(r,g,b),alpha));
+        rp.material_colors.push_back(EGS_MaterialColor(EGS_Vector(r,gr,b),alpha));
     }
 
     rp.clipping_planes = vector<EGS_ClippingPlane>();
