@@ -1549,6 +1549,7 @@ $start_new_particle;
             ]
             ELSE
             [
+				IF ~($EM_MACROS_ACTIVE) [;
                 x_final = x(np) + u(np)*vstep;
                 y_final = y(np) + v(np)*vstep;
                 z_final = z(np) + w(np)*vstep;
