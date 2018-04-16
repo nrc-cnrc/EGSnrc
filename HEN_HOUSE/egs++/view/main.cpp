@@ -86,7 +86,6 @@ int main(int argc, char **argv) {
     QApplication a(argc, argv);
     QString input_file = argc >= 2 ? QString(argv[1]) :
                          QFileDialog::getOpenFileName(NULL,"Select geometry definition file");
-    QString tracks_file = argc >= 3 ? argv[2] : "";
 
 #ifdef VDEBUG
     debug_output << "Using " << input_file.toLatin1().data() << "\n";
@@ -98,10 +97,31 @@ int main(int argc, char **argv) {
     GeometryViewControl w;
     w.show();
     w.setFilename(input_file);
+
+    QString tracks_file = QString("");
+    QString config_file = QString("");
+    if(argc >= 3) {
+        QString argv2 = argv[2];
+        if(argv2.endsWith("ptracks")) {
+            tracks_file = argv2;
+        } else {
+            config_file = argv2;
+        }
+    }
+    if(argc >= 4) {
+        QString argv3 = argv[3];
+        if(argv3.endsWith("ptracks")) {
+            tracks_file = argv3;
+        } else {
+            config_file = argv3;
+        }
+    }
+
     w.setTracksFilename(tracks_file);
     if (!w.loadInput(false)) {
         return 1;
     }
+    w.loadConfig(config_file);
 
     a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
 

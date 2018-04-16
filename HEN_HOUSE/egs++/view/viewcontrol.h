@@ -69,11 +69,14 @@ public:
     virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
     virtual bool loadInput(bool first_time);
+    virtual void loadConfig(QString configFilename);
 
 public slots:
 
     virtual void reloadInput();
     virtual void selectInput();
+    virtual void loadConfig();
+    virtual void saveConfig();
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
     virtual void checkboxShowRegions(bool toggle);
@@ -106,7 +109,6 @@ public slots:
     virtual void changeColor();
     virtual void saveImage();
     virtual void reenableSave();
-    virtual void showHideOptions();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
     virtual void showElectronsCheckbox_toggled(bool toggle);

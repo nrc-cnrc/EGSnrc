@@ -45,8 +45,6 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     setObjectName(name);
     setupUi(this);
 
-    // Hide the row headers
-    planeTable->verticalHeader()->setVisible(false);
     planeTable->setColumnWidth(0,72);
     planeTable->setColumnWidth(1,72);
     planeTable->setColumnWidth(2,72);
@@ -64,6 +62,11 @@ void ClippingPlanesWidget::applyClipping() {
 
 int ClippingPlanesWidget::numPlanes() {
     return planeTable->rowCount();
+}
+
+QTableWidgetItem* ClippingPlanesWidget::getItem(int i, int j) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+    return item;
 }
 
 
@@ -113,3 +116,32 @@ bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     return true;
 }
 
+void ClippingPlanesWidget::setCell(int i, int j, EGS_Float val) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if(!item) {
+        item = new QTableWidgetItem();
+        planeTable->setItem(i,j,item);
+    }
+
+    item->setText(QString::number(val));
+}
+
+void ClippingPlanesWidget::setCell(int i, int j, Qt::CheckState checked) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if(!item) {
+        item = new QTableWidgetItem();
+        planeTable->setItem(i,j,item);
+    }
+
+    item->setCheckState(checked);
+}
+
+void ClippingPlanesWidget::clearCell(int i, int j) {
+    QTableWidgetItem *item = planeTable->item(i,j);
+
+    if(item) {
+        delete item;
+    }
+}

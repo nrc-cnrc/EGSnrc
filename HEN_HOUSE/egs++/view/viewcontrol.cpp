@@ -53,6 +53,7 @@
 #include <qfile.h>
 #include <qfiledialog.h>
 #include <qprogressdialog.h>
+#include <QTextStream>
 
 #include <cmath>
 #include <cstdlib>
@@ -177,9 +178,11 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     save_image = new SaveImage(this,"save image");
 
     cplanes = new ClippingPlanesWidget;
-    setExtension(cplanes);
     connect(cplanes,SIGNAL(clippingPlanesChanged()),
             this,SLOT(setClippingPlanes()));
+
+    clipLayout->addWidget(cplanes);
+    clipLayout->addSpacing(86);
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
@@ -216,6 +219,12 @@ bool GeometryViewControl::loadInput(bool reloading) {
         egsWarning("\nFile %s does not exist anymore!\n\n",filename.toUtf8().constData());
         return false;
     }
+
+    QFileInfo fileInfo = QFileInfo(file);
+
+    // Set the title of the viewer
+    this->setProperty("windowTitle", "View Controls ("+fileInfo.baseName()+")");
+    gview->setProperty("windowTitle", "egs_view ("+fileInfo.baseName()+")");
 
     // Read the input file
     EGS_Input input;
@@ -307,6 +316,456 @@ void GeometryViewControl::reloadInput() {
     if(!loadInput(true)) {
         egsWarning("GeometryViewControl::reloadInput: Error: The geometry is not correctly defined\n");
     }
+}
+
+void GeometryViewControl::saveConfig() {
+#ifdef VIEW_DEBUG
+    egsWarning("In saveConfig()\n");
+#endif
+
+    // Set a default config file name
+    // These configs will have the .egsview extension
+    QFileInfo inputFileInfo = QFileInfo(filename);
+    QString defaultFilename = inputFileInfo.canonicalPath() + "/" + inputFileInfo.completeBaseName() + ".egsview";
+
+    // Prompt the user for a filename and open the file for writing
+    QString configFilename = QFileDialog::getSaveFileName(this, "Save config file as...", defaultFilename, "*.egsview");
+    QFile configFile(configFilename);
+    if(!configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        QMessageBox::critical(this,"Config file write error",
+                "Failed to open the config file for writing.",QMessageBox::Ok,0,0);
+        return;
+    }
+    QTextStream out(&configFile);
+
+    // Get the rendering parameters that we want to save
+    RenderParameters &rp = gview->pars;
+
+    // Write out the render parameters
+    // // Desired image size
+//     int nx;
+//     int ny;
+//     int nxr;
+//     int nyr;
+//     // Clipping planes
+//     vector<EGS_ClippingPlane> clipping_planes;
+//     // material colors
+//     vector<EGS_MaterialColor> material_colors;
+//     // lights
+//     vector<EGS_Light> lights;
+//     EGS_Vector global_ambient_light;
+//     // track rendering
+//     bool draw_tracks;
+//     bool show_photons;
+//     bool show_electrons;
+//     bool show_positrons;
+//     bool show_other;
+//     // viewport
+//     EGS_Vector camera;
+//     EGS_Vector camera_v1;
+//     EGS_Vector camera_v2;
+//     EGS_Vector screen_xo;
+//     EGS_Vector screen_v1;
+//     EGS_Vector screen_v2;
+//     EGS_Float projection_m;
+//     // drawing axes (labels are offthread)
+//     bool draw_axes;
+//     bool draw_axeslabels;
+//     EGS_Vector axesmax;
+//     EGS_Float size;
+//     // Purpose of request
+//     RenderRequestType requestType;
+
+    out << ":start image size:" << endl;
+    out << "    nx = " << rp.nx << endl;
+    out << "    ny = " << rp.ny << endl;
+    out << ":stop image size:" << endl;
+
+    out << ":start camera view:" << endl;
+    out << "    camera position = " << lookX->text() << " "
+            << lookY->text() << " "
+            << lookZ->text() << endl;
+    out << "    camera = " << camera.x << " "
+            << camera.y << " "
+            << camera.z << endl;
+    out << "    camera v1 = " << camera_v1.x << " "
+            << camera_v1.y << " "
+            << camera_v1.z << endl;
+    out << "    camera v2 = " << camera_v2.x << " "
+            << camera_v2.y << " "
+            << camera_v2.z << endl;
+    out << "    zoom = " << zoomlevel << endl;
+    out << ":stop camera view:" << endl;
+
+    out << ":start home view:" << endl;
+    out << "    home position = " << look_at_home.x << " "
+            << look_at_home.y << " "
+            << look_at_home.z << endl;
+    out << "    home = " << camera_home.x << " "
+            << camera_home.y << " "
+            << camera_home.z << endl;
+    out << "    home v1 = " << camera_home_v1.x << " "
+            << camera_home_v1.y << " "
+            << camera_home_v1.z << endl;
+    out << "    home v2 = " << camera_home_v2.x << " "
+            << camera_home_v2.y << " "
+            << camera_home_v2.z << endl;
+    out << "    zoom = " << zoomlevel_home << endl;
+    out << ":stop home view:" << endl;
+
+    out << ":start tracks:" << endl;
+    out << "    show tracks = " << showTracks << endl;
+    out << "    photons = " << showPhotonTracks << endl;
+    out << "    electrons = " << showElectronTracks << endl;
+    out << "    positrons = " << showPositronTracks << endl;
+    out << "    other = " << showOtherTracks << endl;
+    out << ":stop tracks:" << endl;
+
+    out << ":start overlay:" << endl;
+    out << "    show axis = " << showAxes << endl;
+    out << "    show axis labels = " << showAxesLabels << endl;
+    out << "    show regions = " << showRegionsCheckbox->isChecked() << endl;
+    out << ":stop overlay:" << endl;
+
+    if(rp.material_colors.size() > 0) {
+        out << ":start material colors:" << endl;
+        for (size_t i=0; i<rp.material_colors.size(); ++i) {
+            out << "    :start material:" << endl;
+            out << "        material = " << g->getMediumName(i) << endl;
+            out << "        rgb = " << qRed(m_colors[i]) << " "
+                            << qGreen(m_colors[i]) << " "
+                            << qBlue(m_colors[i]) << endl;
+            out << "        alpha = " << qAlpha(m_colors[i]) << endl;
+            out << "    :stop material:" << endl;
+        }
+        out << ":stop material colors:" << endl;
+    }
+
+    out << ":start clipping planes:" << endl;
+    for (int i=0; i<cplanes->numPlanes(); i++) {
+        QTableWidgetItem *itemAx = cplanes->getItem(i,0),
+                     *itemAy = cplanes->getItem(i,1),
+                     *itemAz = cplanes->getItem(i,2),
+                     *itemD = cplanes->getItem(i,3),
+                     *itemApplied = cplanes->getItem(i,4);
+
+        out << "    :start plane:" << endl;
+        if(itemAx) {
+            out << "        ax = " << itemAx->text() << endl;
+        }
+        if(itemAy) {
+            out << "        ay = " << itemAy->text() << endl;
+        }
+        if(itemAz) {
+            out << "        az = " << itemAz->text() << endl;
+        }
+        if(itemD) {
+            out << "        d = " << itemD->text() << endl;
+        }
+        if(itemApplied) {
+            out << "        applied = " << itemApplied->checkState() << endl;
+        }
+        out << "    :stop plane:" << endl;
+    }
+    out << ":stop clipping planes:" << endl;
+}
+
+void GeometryViewControl::loadConfig() {
+    // Prompt the user to select a previous config file
+    QFileInfo inputFileInfo = QFileInfo(filename);
+    QString configFilename = QFileDialog::getOpenFileName(this, "Select egs_view config file", inputFileInfo.canonicalPath(), "*.egsview");
+
+    loadConfig(configFilename);
+}
+
+void GeometryViewControl::loadConfig(QString configFilename) {
+    // Get the rendering parameters that we want to overwrite
+    RenderParameters &rp = gview->pars;
+
+    EGS_Input *input = new EGS_Input;
+    if (configFilename.size() > 0) {
+        if (input->setContentFromFile(configFilename.toLatin1().data())) {
+            QMessageBox::critical(this,"Config file read error",
+                "Failed to open the config file for reading.",QMessageBox::Ok,0,0);
+            return;
+        }
+    }
+
+    int err; // A variable to track errors
+
+    // Load the image size
+    EGS_Input *iImageSize = input->takeInputItem("image size");
+    if(iImageSize) {
+        err = iImageSize->getInput("nx",rp.nx);
+        err = iImageSize->getInput("ny",rp.ny);
+
+        gview->resize(rp.nx,rp.ny);
+
+        delete iImageSize;
+    }
+
+    // Load the particle track options
+    EGS_Input *iTracks = input->takeInputItem("tracks");
+    if(iTracks) {
+        int show;
+        err = iTracks->getInput("show tracks",show);
+        if(!err) {
+            if(show) {
+                showTracksCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showTracksCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iTracks->getInput("photons",show);
+        if(!err) {
+            if(show) {
+                showPhotonsCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showPhotonsCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iTracks->getInput("electrons",show);
+        if(!err) {
+            if(show) {
+                showElectronsCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showElectronsCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iTracks->getInput("positrons",show);
+        if(!err) {
+            if(show) {
+                showPositronsCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showPositronsCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iTracks->getInput("other",show);
+        if(!err) {
+            if(show) {
+                showOthersCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showOthersCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        delete iTracks;
+    }
+
+    // Load the overlay options
+    EGS_Input *iOverlay = input->takeInputItem("overlay");
+    if(iOverlay) {
+        int show;
+        err = iOverlay->getInput("show axis",show);
+        if(!err) {
+            if(show) {
+                showAxesCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showAxesCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iOverlay->getInput("show axis labels",show);
+        if(!err) {
+            if(show) {
+                showAxesLabelsCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showAxesLabelsCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        err = iOverlay->getInput("show regions",show);
+        if(!err) {
+            if(show) {
+                showRegionsCheckbox->setCheckState(Qt::Checked);
+            } else {
+                showRegionsCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+    }
+
+    // Load camera view
+    EGS_Input *iView = input->takeInputItem("camera view");
+    if(iView) {
+        // Get the camera position
+        vector<EGS_Float> look;
+        err = iView->getInput("camera position",look);
+        if(!err) {
+            look_at.x = look[0];
+            look_at.y = look[1];
+            look_at.z = look[2];
+
+            setLookAtLineEdit();
+            updateLookAtLineEdit();
+            setLookAt();
+        }
+
+        // Get the camera orientation
+        vector<EGS_Float> cam, camv1, camv2;
+        err = iView->getInput("camera",cam);
+        if(!err) {
+            err = iView->getInput("camera v1",camv1);
+            if(!err) {
+                err = iView->getInput("camera v2",camv2);
+                if(!err) {
+                    camera = EGS_Vector(cam[0],cam[1],cam[2]);
+                    camera_v1 = EGS_Vector(camv1[0],camv1[1],camv1[2]);
+                    camera_v2 = EGS_Vector(camv2[0],camv2[1],camv2[2]);
+                }
+            }
+        }
+
+        err = iView->getInput("zoom",zoomlevel);
+        setCameraPosition();
+    }
+
+    // Load home view
+    EGS_Input *iHome = input->takeInputItem("home view");
+    if(iHome) {
+        // Get the home position
+        vector<EGS_Float> look;
+        err = iHome->getInput("home position",look);
+        if(!err) {
+            look_at_home.x = look[0];
+            look_at_home.y = look[1];
+            look_at_home.z = look[2];
+        }
+
+        // Get the home orientation
+        vector<EGS_Float> cam, camv1, camv2;
+        err = iHome->getInput("home",cam);
+        if(!err) {
+            err = iHome->getInput("home v1",camv1);
+            if(!err) {
+                err = iHome->getInput("home v2",camv2);
+                if(!err) {
+                    camera_home = EGS_Vector(cam[0],cam[1],cam[2]);
+                    camera_home_v1 = EGS_Vector(camv1[0],camv1[1],camv1[2]);
+                    camera_home_v2 = EGS_Vector(camv2[0],camv2[1],camv2[2]);
+                }
+            }
+        }
+
+        err = iHome->getInput("zoom",zoomlevel_home);
+    }
+
+    // Load the media colors
+    EGS_Input *iMatColors = input->takeInputItem("material colors");
+    if(iMatColors) {
+        while(iMatColors->getInputItem("material")) {
+            EGS_Input *iMat = iMatColors->takeInputItem("material");
+            if(!iMat) {
+                break;
+            }
+
+            string material;
+            vector<int> rgb;
+            int alpha;
+
+            err = iMat->getInput("material",material);
+            if(err) {
+                continue;
+            }
+
+            // Find the index of the material by the same name
+            int imed;
+            for(imed = 0; imed<nmed; ++imed) {
+                if(g->getMediumName(imed) == material) {
+                    break;
+                }
+            }
+
+            err = iMat->getInput("rgb",rgb);
+            if(err) {
+                continue;
+            }
+            err = iMat->getInput("alpha",alpha);
+            if(err) {
+                continue;
+            }
+
+            m_colors[imed] = qRgba(rgb[0], rgb[1], rgb[2], alpha);
+
+            // Update the transparency bar
+            if(imed == 0) {
+                transparency->setValue(alpha);
+            }
+        }
+        delete iMatColors;
+
+        // Update swatches in the combo box
+        QPixmap pixmap(10,10);
+        for (int j=0; j<nmed; j++) {
+            pixmap.fill(m_colors[j]);
+            materialCB->setItemIcon(j,pixmap);
+        }
+    }
+
+    // Load the clipping planes
+    EGS_Input *iClip = input->takeInputItem("clipping planes");
+    if(iClip) {
+        for (int i=0; i<cplanes->numPlanes(); i++) {
+            EGS_Input *iPlane = iClip->takeInputItem("plane");
+            if(!iPlane) {
+                break;
+            }
+
+            EGS_Float ax, ay, az, d;
+            int check;
+
+            err = iPlane->getInput("ax",ax);
+            if(!err) {
+                cplanes->setCell(i,0,ax);
+            } else {
+                cplanes->clearCell(i,0);
+            }
+
+            err = iPlane->getInput("ay",ay);
+            if(!err) {
+                cplanes->setCell(i,1,ay);
+            } else {
+                cplanes->clearCell(i,1);
+            }
+
+            err = iPlane->getInput("az",az);
+            if(!err) {
+                cplanes->setCell(i,2,az);
+            } else {
+                cplanes->clearCell(i,2);
+            }
+
+            err = iPlane->getInput("d",d);
+            if(!err) {
+                cplanes->setCell(i,3,d);
+            } else {
+                cplanes->clearCell(i,3);
+            }
+
+            err = iPlane->getInput("applied",check);
+            if(!err) {
+                Qt::CheckState isChecked;
+                if(check == Qt::Checked) {
+                    isChecked = Qt::Checked;
+                } else {
+                    isChecked = Qt::Unchecked;
+                }
+
+                cplanes->setCell(i,4,isChecked);
+            } else {
+                cplanes->setCell(i,4,Qt::Checked);
+            }
+
+            delete iPlane;
+        }
+
+        delete iClip;
+    }
+
+    updateView(true);
 }
 
 void GeometryViewControl::setFilename(QString str) {
@@ -1177,20 +1636,6 @@ void GeometryViewControl::saveImage() {
 
 void GeometryViewControl::reenableSave() {
     this->pushButton5->setEnabled(true);
-}
-
-void GeometryViewControl::showHideOptions() {
-#ifdef VIEW_DEBUG
-    egsWarning("In showHideOptions(): shown = %d\n",
-               cplanes->isVisible());
-#endif
-    showExtension(moreButton->isChecked());
-//     if( !cplanes->isVisible() ) {
-//         showExtension(true); //moreButton->setText("Hide");
-//     }
-//     else {
-//         showExtension(false); //moreButton->setText("More...");
-//     }
 }
 
 void GeometryViewControl::setClippingPlanes() {

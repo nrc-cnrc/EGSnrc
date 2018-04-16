@@ -35,8 +35,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>475</width>
-    <height>325</height>
+    <width>388</width>
+    <height>377</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -64,6 +64,15 @@
         <property name="columnCount">
          <number>5</number>
         </property>
+        <attribute name="horizontalHeaderDefaultSectionSize">
+         <number>80</number>
+        </attribute>
+        <attribute name="horizontalHeaderMinimumSectionSize">
+         <number>12</number>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
         <row/>
         <row/>
         <row/>
@@ -96,7 +105,7 @@
         </column>
         <column>
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </column>
         <item row="0" column="4">
@@ -300,26 +309,6 @@
          </property>
         </item>
        </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout">
-        <item>
-         <spacer name="spacer1">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType">
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>211</width>
-            <height>108</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
       </item>
      </layout>
     </widget>
