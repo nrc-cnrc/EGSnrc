@@ -1342,7 +1342,8 @@ $start_new_particle;
 
             $SET-USTEP-EM-FIELD;  "additional ustep restriction in em field
                                   "default for $SET-USTEP-EM-FIELD; is ;(null)
-            irnew  = ir(np); "default new region is old region
+            irold  = ir(np); "save current region
+            irnew  = ir(np); "default new region is current region
             idisc  = 0; "default is no discard (this flag is initialized here)
             ustep0 = ustep; "Save the intended ustep."
 
@@ -1381,7 +1382,6 @@ $start_new_particle;
                         "(dnear is distance to the nearest boundary
                         " that goes along with particle stack and
                         " which the user's howfar can supply (option)
-                    irold = ir(np); "save previous region
                     $SET-ANGLES-EM-FIELD;
                         "default for $SET-ANGLES-EM-FIELD; is ; (null)
                          "(allows for EM field deflection
