@@ -165,9 +165,9 @@ if test $create_config=yes; then
 
 case $CXX in
 
-    *g++*) opt="-O3 -ffast-math";;# mingw32-g++ and g++4 also taken into account
-    icpc)  opt="-O3 -no-prec-div -fp-model fast=2";;
-    icc)   opt="-O3 -no-prec-div -fp-model fast=2";;
+    *g++*) opt="-O2 -mtune=native";;# mingw32-g++ and g++4 also taken into account
+    icpc)  opt="-O2 -no-prec-div -fp-model fast=2";;
+    icc)   opt="-O2 -no-prec-div -fp-model fast=2";;
     cl)    opt="-Ox -Ob2 -MD -GX -GR -nologo";;
     *)     opt="-O2";;
 
