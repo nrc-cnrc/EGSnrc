@@ -340,13 +340,23 @@ for test_arg in -v; do
     echo $f_test_output >&5
     if test -s conftest.$test_objext; then
         if test "x$f_test_output" != x; then
+            junk=$(echo $f_test_output | grep "GNU Fortran")
+            if test "x$junk" != x; then
+                f_version=$(echo $junk | grep -o -m1 'GNU Fortran [^\s]* version [0-9.]*'| head -1)
+                f_oflags="-O2 -mtune=native"
+                f_dflags="-g"
+                if test ! x$is_x86_64 = x; then
+                    f_fflags="-fPIC"
+                fi
+                break
+            fi
             junk=$(echo $f_test_output | grep "GNU F77 version")
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F77 version//g' | awk '{print $1}')
                 f_version="GNU F77 version $junk"
                 #f_fflags="-fno-automatic -finit-local-zero"
                 # don't need this with new EGSnrc
-                f_oflags="-O2"
+                f_oflags="-O2 -mtune=native"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -357,7 +367,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*GNU F95 version//g' | awk '{print $1}')
                 f_version="GNU F95 version $junk"
-                f_oflags="-O2"
+                f_oflags="-O2 -mtune=native"
                 f_dflags="-g"
                 if test ! x$is_x86_64 = x; then
                     f_fflags="-fPIC"
@@ -377,7 +387,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 f_version="SGI Fortran compiler"
                 #f_fflags="-static"
-                f_oflags="-O3"
+                f_oflags="-O2"
                 f_dflags="-g -C"
                 break
             fi
@@ -385,7 +395,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 f_version="IBM XL Fortran compiler"
                 #f_fflags="-qsave"
-                f_oflags="-O3"
+                f_oflags="-O2"
                 f_dflags="-g -C"
                 break
             fi
@@ -416,7 +426,7 @@ for test_arg in -v; do
             if test "x$junk" != x; then
                 junk=$(echo $junk | sed 's/.*D__INTEL_COMPILER=//g' | awk '{print $1}')
                 f_version="Intel(R) Fortran Compiler Version $junk"
-                f_oflags="-O3"
+                f_oflags="-O2"
                 f_dflags="-g -CB"
                 need_fool_optimizer=yes
                 break
@@ -507,7 +517,6 @@ done
 
 while true; do
 printf $format "Input flags for debugging: " >&2
-printf "[-g] " >&2
 if test ! "x$f_dflags" = x; then
     printf "[$f_dflags] " >&2
 fi
