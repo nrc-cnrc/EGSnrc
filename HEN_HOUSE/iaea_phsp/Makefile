@@ -54,3 +54,6 @@ $(DSO2)iaea_phsp.$(obje): iaea_record.h iaea_header.h $(my_common_deps)
 $(DSO2)iaea_record.$(obje): $(my_common_deps)
 
 $(DSO2)iaea_header.$(obje): iaea_record.h $(my_common_deps)
+
+clean:
+	$(REMOVE) $(DSO2)iaea_phsp.$(obje) $(DSO2)$(libpre)iaea_phsp$(libext) $(DSO2)$(libpre)iaea_phsp$(libext_bundle)
