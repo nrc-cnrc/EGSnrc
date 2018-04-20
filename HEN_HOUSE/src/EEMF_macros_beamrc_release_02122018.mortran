@@ -134,7 +134,7 @@ REPLACE {$CALL-HOWNEAR_EM(#,#);} WITH {
 " *****			COMMON block for EM field			 *****"
 REPLACE{;COMIN/EM/;}WITH{;COMMON/EM/
 	" Variables for the definition of the magnetic field: "
-	B_amp, Bx, By, Bz,
+	B_amp, "Bx, By, Bz,"
 	E_amp, Ex, Ey, Ez,
 	beta_em,	" Relativistic beta "
 	beta_em2,	" square of beta "
@@ -188,7 +188,7 @@ REPLACE{;COMIN/EM/;}WITH{;COMMON/EM/
 	howfarCheck, hownearCheck;
 	
 	
-	$REAL B_amp, Bx, By, Bz,
+	$REAL B_amp, "Bx, By, Bz,"
 	E_amp, Ex, Ey, Ez,
 	beta_em,	" Relativistic beta "
 	beta_em2,	" square of beta "

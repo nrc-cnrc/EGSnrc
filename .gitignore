@@ -54,3 +54,7 @@ html
 .Trashes
 ehthumbs.db
 Thumbs.db
+HEN_HOUSE/specs/win6432.conf
+HEN_HOUSE/specs/dosxyznrc_win6432.spec
+HEN_HOUSE/omega/progs/ctcreate/ReadCT_DICOM.obj
+HEN_HOUSE/specs/egspp_win6432.conf
