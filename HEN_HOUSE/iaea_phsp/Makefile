@@ -57,3 +57,5 @@ $(DSO2)iaea_header.$(obje): iaea_record.h $(my_common_deps)
 
 clean:
 	$(REMOVE) $(DSO2)iaea_phsp.$(obje) $(DSO2)iaea_header.$(obje) $(DSO2)iaea_record.$(obje)
+
+.PHONY: clean
