@@ -1484,7 +1484,7 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
     (/' Dummy values of (ESTEPM(i),i=1,NMED)'/
       ' : ',10f10.3);
     "IMAX,JMAX,KMAX"
-    read($CTUnitNumber,'(3i5)') IMAX,JMAX,KMAX;
+    read($CTUnitNumber,*) IMAX,JMAX,KMAX;
     OUTPUT61 IMAX,JMAX,KMAX;
     (/' IMAX, JMAX, KMAX : ',3i4);
     IF (IMAX > $IMAX | JMAX > $JMAX | KMAX > $KMAX)[
