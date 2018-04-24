@@ -65,11 +65,12 @@ public:
     virtual void setLightLineEdit();
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
-    virtual void setMaterialColor(int j);
     virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
     virtual bool loadInput(bool first_time);
     virtual void loadConfig(QString configFilename);
+    virtual void updateRegionTable();
+    virtual void updateRegionTable(int imed);
 
 public slots:
 
@@ -116,6 +117,9 @@ public slots:
     virtual void showOthersCheckbox_toggled(bool toggle);
     virtual void startTransformation();
     virtual void endTransformation();
+    virtual void toggleRegion(int i, int j);
+    virtual void showAllRegions();
+    virtual void hideAllRegions();
 
 private:
 
@@ -160,6 +164,8 @@ private:
     bool showElectronTracks;
     bool showPositronTracks;
     bool showOtherTracks;
+    vector<bool> show_regions;
+    bool allowRegionSelection;
 
 protected slots:
 

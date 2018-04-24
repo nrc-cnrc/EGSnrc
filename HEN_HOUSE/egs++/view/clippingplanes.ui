@@ -39,38 +39,86 @@
     <height>377</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
    <string>Form1</string>
   </property>
   <layout class="QVBoxLayout">
    <item>
     <widget class="QGroupBox" name="groupBox1">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="title">
       <string>Clipping planes</string>
      </property>
      <layout class="QVBoxLayout">
       <item>
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Input the normal vector and distance from origin</string>
+         <string>Normal vector and distance from origin</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QTableWidget" name="planeTable">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>270</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
         <property name="rowCount">
          <number>10</number>
         </property>
         <property name="columnCount">
          <number>5</number>
         </property>
+        <attribute name="horizontalHeaderCascadingSectionResizes">
+         <bool>true</bool>
+        </attribute>
         <attribute name="horizontalHeaderDefaultSectionSize">
-         <number>80</number>
+         <number>71</number>
         </attribute>
         <attribute name="horizontalHeaderMinimumSectionSize">
          <number>12</number>
         </attribute>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>false</bool>
+        </attribute>
         <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderCascadingSectionResizes">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderHighlightSections">
          <bool>false</bool>
         </attribute>
         <row/>

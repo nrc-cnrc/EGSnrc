@@ -64,23 +64,6 @@ using namespace std;
     #define M_PI 3.14159265358979323846
 #endif
 
-/*
-static unsigned char standard_red[] = {
-   255, 0,     0,    0,    255,     255,    128,     0,         0,
-// red, green, blue, cyan, magenta, yellow, darkred, darkgreen, darkblue,
-     0,      128,         128,        192,        128};
-// darkcyan, darkmagenta, darkyellow, lightgray,  darkgray
-static unsigned char standard_green[] = {
-     0, 255,   0,   255,      0,     255,    0,       128,       128,
-   128,   0, 128,   192,    128};
-static unsigned char standard_blue[] = {
-     0,   0, 255,   255,    255,      0,      0,     0,       128,
-   128, 128,   0,   192,    128};
-static char* standard_colors[] = {
- "red","green","blue","cyan","magenta","yellow","darkred","darkgreen",
- "darkblue","darkcyan","darkmagenta","darkyellow","lightgray","darkgray"};
-*/
-
 static unsigned char standard_red[] = {
     255,   0,   0,   0, 255, 255, 128,   0,   0,   0, 128, 128, 191, 80,
     0,  0,   0,  0,  85, 255, 192, 128
@@ -93,15 +76,6 @@ static unsigned char standard_blue[] = {
     0,   0, 255, 255, 255,   0,   0,   0, 128, 128, 128,   0,   0,  0,
     0,  0, 191, 80, 127, 127, 192, 128
 };
-//
-// EMH commented out since NOT in use anywhere !!!
-//
-// const static char* standard_colors[] = {
-//      "red","green","blue","cyan","magenta","yellow","darkred","darkgreen",
-//       "darkblue","darkcyan","darkmagenta","darkyellow","medium red",
-//       "very dark red","medium green","very dark green","medium blue",
-//       "very dark blue","nameless1","nameless2","lightgray","darkgray"};
-
 
 GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     : QDialog(parent) {
@@ -181,12 +155,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(cplanes,SIGNAL(clippingPlanesChanged()),
             this,SLOT(setClippingPlanes()));
 
+    // Add the clipping planes widget to the designated layout
     clipLayout->addWidget(cplanes);
     clipLayout->addSpacing(86);
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
-
 }
 
 
@@ -241,6 +215,9 @@ bool GeometryViewControl::loadInput(bool reloading) {
         delete g;
         g = 0;
     }
+
+    // Have to clear geometries twice to get all the inactive ones
+    EGS_BaseGeometry::clearGeometries();
     EGS_BaseGeometry::clearGeometries();
 
     // Load the new geometry
@@ -304,11 +281,30 @@ bool GeometryViewControl::loadInput(bool reloading) {
         }
         delete vc;
     }
-    // Start loading process
+
+    // Only allow region selection for up to 1k regions
+    int nreg = newGeom->regions();
+    if(nreg < 1001) {
+        allowRegionSelection = true;
+        show_regions.resize(nreg,true);
+    } else {
+        allowRegionSelection = false;
+        egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
+    }
+    tabWidget->setTabEnabled(2,allowRegionSelection);
+
+    // Get the rendering parameters
+    RenderParameters &rp = gview->pars;
+    rp.allowRegionSelection = allowRegionSelection;
+
     gview->restartWorker();
     setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
+
+    if(allowRegionSelection) {
+        updateRegionTable();
+    }
+
     reloadButton->blockSignals(false);
-    // check that the file (still) exists
     return true;
 }
 
@@ -338,43 +334,8 @@ void GeometryViewControl::saveConfig() {
     }
     QTextStream out(&configFile);
 
-    // Get the rendering parameters that we want to save
+    // Get the rendering parameters
     RenderParameters &rp = gview->pars;
-
-    // Write out the render parameters
-    // // Desired image size
-//     int nx;
-//     int ny;
-//     int nxr;
-//     int nyr;
-//     // Clipping planes
-//     vector<EGS_ClippingPlane> clipping_planes;
-//     // material colors
-//     vector<EGS_MaterialColor> material_colors;
-//     // lights
-//     vector<EGS_Light> lights;
-//     EGS_Vector global_ambient_light;
-//     // track rendering
-//     bool draw_tracks;
-//     bool show_photons;
-//     bool show_electrons;
-//     bool show_positrons;
-//     bool show_other;
-//     // viewport
-//     EGS_Vector camera;
-//     EGS_Vector camera_v1;
-//     EGS_Vector camera_v2;
-//     EGS_Vector screen_xo;
-//     EGS_Vector screen_v1;
-//     EGS_Vector screen_v2;
-//     EGS_Float projection_m;
-//     // drawing axes (labels are offthread)
-//     bool draw_axes;
-//     bool draw_axeslabels;
-//     EGS_Vector axesmax;
-//     EGS_Float size;
-//     // Purpose of request
-//     RenderRequestType requestType;
 
     out << ":start image size:" << endl;
     out << "    nx = " << rp.nx << endl;
@@ -468,6 +429,20 @@ void GeometryViewControl::saveConfig() {
         out << "    :stop plane:" << endl;
     }
     out << ":stop clipping planes:" << endl;
+
+    out << ":start hidden regions:" << endl;
+    out << "    region list =";
+    for(size_t i = 0; i < show_regions.size(); ++i) {
+        // List all the unchecked regions
+        if(!show_regions[i]) {
+            QTableWidgetItem *itemRegion = regionTable->item(i,0);
+            if(itemRegion) {
+                out << " " << itemRegion->text();
+            }
+        }
+    }
+    out << endl;
+    out << ":stop hidden regions:" << endl;
 }
 
 void GeometryViewControl::loadConfig() {
@@ -479,7 +454,7 @@ void GeometryViewControl::loadConfig() {
 }
 
 void GeometryViewControl::loadConfig(QString configFilename) {
-    // Get the rendering parameters that we want to overwrite
+    // Get the rendering parameters
     RenderParameters &rp = gview->pars;
 
     EGS_Input *input = new EGS_Input;
@@ -763,6 +738,41 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         }
 
         delete iClip;
+    }
+
+    if(allowRegionSelection) {
+        updateRegionTable();
+    }
+
+    // Load the hidden regions
+    EGS_Input *iReg = input->takeInputItem("hidden regions");
+    if(iReg) {
+        vector<int> regionList;
+        err = iReg->getInput("region list",regionList);
+        // For every region in the table, check to see if it
+        // is listed in the hidden regions list.
+        // If so, hide it; if not, show it
+        for(size_t i = 0; i < show_regions.size(); ++i) {
+            QTableWidgetItem *itemRegion = regionTable->item(i,0);
+            if(!itemRegion) {
+                continue;
+            }
+
+            int ireg = itemRegion->text().toInt();
+
+            // Hide the listed regions, otherwise show them
+            QTableWidgetItem *itemShow = regionTable->item(i,3);
+            if(!itemShow) {
+                continue;
+            }
+            if(std::find(regionList.begin(), regionList.end(), ireg) != regionList.end()) {
+                itemShow->setCheckState(Qt::Unchecked);
+                show_regions[i] = false;
+            } else {
+                itemShow->setCheckState(Qt::Checked);
+                show_regions[i] = true;
+            }
+        }
     }
 
     updateView(true);
@@ -1051,7 +1061,6 @@ void GeometryViewControl::changeTransparency(int t) {
 #ifdef VIEW_DEBUG
     egsWarning("In changeTransparency(%d): set color to %d\n",t,m_colors[med]);
 #endif
-    setMaterialColor(med);
     updateView(true);
 }
 
@@ -1206,14 +1215,6 @@ void GeometryViewControl::updateLookAtLineEdit() {
     lookZ->repaint();
 }
 
-void GeometryViewControl::setMaterialColor(int /*j*/) {
-//    EGS_Float r = ((EGS_Float) qRed(m_colors[j]))/255.;
-//    EGS_Float g = ((EGS_Float) qGreen(m_colors[j]))/255.;
-//    EGS_Float b = ((EGS_Float) qBlue(m_colors[j]))/255.;
-//    EGS_Float alpha = ((EGS_Float) qAlpha(m_colors[j]))/255.;
-//    vis->setMaterialColor(j,EGS_Vector(r,g,b),alpha);
-}
-
 int GeometryViewControl::setGeometry(
     EGS_BaseGeometry *geom,
     const std::vector<EGS_UserColor> &ucolors,
@@ -1329,13 +1330,6 @@ int GeometryViewControl::setGeometry(
     // clean up saved settings
     delete [] saveColors;
     delete [] saveName;
-
-    //showColor->setPaletteBackgroundColor(QColor(m_colors[materialCB->currentItem()]));
-    {
-        for (int j=0; j<nmed; j++) {
-            setMaterialColor(j);
-        }
-    }
 
     QProgressDialog progress("Analyzing geometry...","&Cancel",0,130,this);
     progress.setObjectName("progress");
@@ -1584,6 +1578,7 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_photons = showPhotonTracks;
     rp.show_positrons = showPositronTracks;
     rp.size = size;
+    rp.show_regions = show_regions;
 
     gview->render(g, transform);
 }
@@ -1608,7 +1603,9 @@ void GeometryViewControl::changeColor() {
         pixmap.fill(m_colors[med]);
         materialCB->setItemIcon(med, pixmap);
         transparency->setValue(qAlpha(newc));
-        setMaterialColor(med);
+        if(allowRegionSelection) {
+            updateRegionTable(med);
+        }
         updateView();
     }
 }
@@ -1684,3 +1681,192 @@ void GeometryViewControl::startTransformation() {
 void GeometryViewControl::endTransformation() {
     gview->endTransformation();
 }
+
+void GeometryViewControl::updateRegionTable() {
+    if (!g) {
+        return;
+    }
+
+    // Adjust the table sizing
+    regionTable->setColumnWidth(0,60);
+    regionTable->setColumnWidth(1,28);
+    regionTable->setColumnWidth(2,200);
+    regionTable->setColumnWidth(3,28);
+
+    int nreg = g->regions();
+    show_regions.resize(nreg,true);
+
+    // Count the number of real regions
+    int nReal = 0;
+    for(int ireg = 0; ireg < nreg; ++ireg) {
+        if(g->isRealRegion(ireg)) {
+            nReal++;
+        }
+    }
+
+    // Set the number of rows to match the number of real regions
+    regionTable->setRowCount(nReal);
+
+    // Get the default checkbox background color
+    QBrush checkboxColor = regionTable->item(0,3)->background();
+
+    // Populate the table
+    int i = 0;
+    for(int ireg = 0; ireg < nreg; ++ireg) {
+        if(g->isRealRegion(ireg)) {
+            int imed = g->medium(ireg);
+
+            // Set the region number
+            QTableWidgetItem *regItem = regionTable->item(i,0);
+            if(!regItem) {
+                regItem = new QTableWidgetItem();
+                regionTable->setItem(i,0,regItem);
+            }
+            regItem->setText(QString::number(ireg));
+
+            // Set the material color
+            QTableWidgetItem *colorItem = regionTable->item(i,1);
+            if(!colorItem) {
+                colorItem = new QTableWidgetItem();
+                regionTable->setItem(i,1,colorItem);
+            }
+            colorItem->setBackground(QBrush(QColor(m_colors[imed])));
+            colorItem->setFlags(colorItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
+
+            // Set the material name
+            QTableWidgetItem *matItem = regionTable->item(i,2);
+            if(!matItem) {
+                matItem = new QTableWidgetItem();
+                regionTable->setItem(i,2,matItem);
+            }
+            matItem->setText(QString(g->getMediumName(imed)));
+            matItem->setFlags(matItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
+
+            // Set the show/hide checkbox
+            QTableWidgetItem *showItem = regionTable->item(i,3);
+            if(!showItem) {
+                showItem = new QTableWidgetItem();
+                regionTable->setItem(i,3,showItem);
+            }
+            showItem->setCheckState(Qt::Checked);
+            showItem->setBackground(checkboxColor);
+            showItem->setFlags(showItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
+
+            ++i;
+        }
+    }
+}
+
+// This is for just updating when a single material color is changed
+void GeometryViewControl::updateRegionTable(int imedToChange) {
+    if (!g) {
+        return;
+    }
+
+    // Update the material color
+    int i = 0;
+    int nreg = g->regions();
+    for(int ireg = 0; ireg < nreg; ++ireg) {
+        if(g->isRealRegion(ireg)) {
+            int imed = g->medium(ireg);
+
+            if(imed != imedToChange) {
+                ++i;
+                continue;
+            }
+
+            // Set the material color
+            QTableWidgetItem *colorItem = regionTable->item(i,1);
+            if(!colorItem) {
+                colorItem = new QTableWidgetItem();
+                regionTable->setItem(i,1,colorItem);
+            }
+            colorItem->setBackground(QBrush(QColor(m_colors[imed])));
+
+            ++i;
+        }
+    }
+}
+
+void GeometryViewControl::toggleRegion(int i, int j) {
+    if(!g) {
+        return;
+    }
+
+    int ireg = -1;
+    Qt::CheckState checked = Qt::Checked;
+
+    QTableWidgetItem *item = regionTable->item(i,0);
+    if(item) {
+        ireg = item->text().toInt();
+    }
+
+    item = regionTable->item(i,3);
+    if(item) {
+        checked = item->checkState();
+    }
+
+    if(checked == Qt::Checked) {
+        show_regions[ireg] = true;
+    } else {
+        show_regions[ireg] = false;
+    }
+
+    // If the region number was changed, update the color swatch and material
+    if(j == 0) {
+        int imed = g->medium(ireg);
+
+        // Set the material color
+        QTableWidgetItem *colorItem = regionTable->item(i,1);
+        if(!colorItem) {
+            colorItem = new QTableWidgetItem();
+            regionTable->setItem(i,1,colorItem);
+        }
+        colorItem->setBackground(QBrush(QColor(m_colors[imed])));
+
+        // Set the material name
+        QTableWidgetItem *matItem = regionTable->item(i,2);
+        if(!matItem) {
+            matItem = new QTableWidgetItem();
+            regionTable->setItem(i,2,matItem);
+        }
+        matItem->setText(QString(g->getMediumName(imed)));
+    }
+
+    updateView();
+}
+
+void GeometryViewControl::showAllRegions() {
+    if (!g) {
+        return;
+    }
+
+    for(size_t i = 0; i < show_regions.size(); ++i) {
+
+        // Set the show/hide checkbox
+        QTableWidgetItem *showItem = regionTable->item(i,3);
+        if(!showItem) {
+            showItem = new QTableWidgetItem();
+            regionTable->setItem(i,3,showItem);
+        }
+        showItem->setCheckState(Qt::Checked);
+    }
+}
+
+void GeometryViewControl::hideAllRegions() {
+    if (!g) {
+        return;
+    }
+
+    for(size_t i = 0; i < show_regions.size(); ++i) {
+
+        // Set the show/hide checkbox
+        QTableWidgetItem *showItem = regionTable->item(i,3);
+        if(!showItem) {
+            showItem = new QTableWidgetItem();
+            regionTable->setItem(i,3,showItem);
+        }
+        showItem->setCheckState(Qt::Unchecked);
+    }
+}
+

@@ -208,6 +208,8 @@ void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters 
         vis->setMaterialColor(i,p.material_colors[i]);
     }
     vis->setGlobalAmbientLight(p.global_ambient_light);
+    vis->setShowRegions(p.show_regions);
+    vis->setAllowRegionSelection(p.allowRegionSelection);
 }
 
 void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {

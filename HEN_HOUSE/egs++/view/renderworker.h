@@ -52,8 +52,12 @@ struct RenderParameters {
     int nyr;
     // Clipping planes
     vector<EGS_ClippingPlane> clipping_planes;
-    // material colors
+    // Material colors
     vector<EGS_MaterialColor> material_colors;
+    // Regions to show/hide
+    vector<bool> show_regions;
+    // Whether or not to allow show_regions to be used
+    bool allowRegionSelection;
     // lights
     vector<EGS_Light> lights;
     EGS_Vector global_ambient_light;

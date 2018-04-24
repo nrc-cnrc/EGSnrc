@@ -168,6 +168,8 @@ public:
     int          nclip, nclip_t;      // and their number
 
     EGS_TrackView   *m_tracks;
+    vector<bool>    showReg;
+    bool            allowRegionSelection;
 };
 
 EGS_GeometryVisualizer::EGS_GeometryVisualizer() {
@@ -226,6 +228,14 @@ void EGS_GeometryVisualizer::setMaterialColor(int imed,
 void EGS_GeometryVisualizer::setMaterialColor(int imed,
         const EGS_Vector &d_color, EGS_Float Alpha) {
     p->setMaterialColor(imed,d_color,Alpha);
+}
+
+void EGS_GeometryVisualizer::setShowRegions(vector<bool> show_regions) {
+    p->showReg = show_regions;
+}
+
+void EGS_GeometryVisualizer::setAllowRegionSelection(bool allow) {
+    p->allowRegionSelection = allow;
 }
 
 void EGS_GeometryVisualizer::addClippingPlane(EGS_ClippingPlane *plane) {
@@ -449,7 +459,11 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
                     if (imed >= 0) {
-                        a1 = mat[imed].alpha;;
+                        if(!allowRegionSelection || showReg[ireg]) {
+                            a1 = mat[imed].alpha;
+                        } else {
+                            a1 = 0.;
+                        }
                         c1 = global_ambient_light.getScaled(mat[imed].d);
                         EGS_Vector n = clip[j_clip]->getNormal();
                         for (int j=0; j<nlight; j++) {
@@ -490,7 +504,11 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         if (inew >= 0) {
             xs += u*t;
             if (imed >= 0) {
-                a1 = mat[imed].alpha;;
+                if(!allowRegionSelection || showReg[inew]) {
+                    a1 = mat[imed].alpha;
+                } else {
+                    a1 = 0.;
+                }
                 c1 = global_ambient_light.getScaled(mat[imed].d);
                 for (int j=0; j<nlight; j++) {
                     c1 += lights[j]->getColor(xs,n,mat[imed].d);
@@ -538,8 +556,12 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         xs += u*t;
 
         // new region is not outside, new material is not vacuum, and there is a change in material
-        if (inew >= 0 && imed_new >= 0 && imed_new != imed) {
-            a1 = mat[imed_new].alpha;
+        if (inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]))) {
+            if(!allowRegionSelection || showReg[inew]) {
+                a1 = mat[imed_new].alpha;
+            } else {
+                a1 = 0.;
+            }
             c1 = global_ambient_light.getScaled(mat[imed_new].d);
             for (int j=0; j<nlight; j++) {
                 c1 += lights[j]->getColor(xs,n,mat[imed_new].d);

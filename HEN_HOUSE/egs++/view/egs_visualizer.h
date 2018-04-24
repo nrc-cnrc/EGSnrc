@@ -35,6 +35,7 @@
 #include "egs_vector.h"
 #include "egs_math.h"
 #include "stddef.h"
+#include <vector>
 
 class EGS_Light;
 class EGS_MaterialColor;
@@ -108,6 +109,8 @@ public:
     void setMaterialColor(int imed, const EGS_MaterialColor &Mat);
     void setMaterialColor(int imed, const EGS_Vector &d_color,
                           EGS_Float Alpha=1);
+    void setShowRegions(vector<bool> show_regions);
+    void setAllowRegionSelection(bool allow);
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
     bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
