@@ -105,10 +105,14 @@ public:
                        EGS_Vector pv2_screen, EGS_Float psx, EGS_Float psy);
 
     void setParticleVisibility(int p, bool vis) {
-        if (p < 1 || p > 4) {
+        if (p < 1 || p > 3) {
             return;
         }
         m_vis_particle[p-1] = vis;
+    }
+
+    void setEnergyScaling(bool scaling) {
+        energyScaling = scaling;
     }
 
     EGS_Float getMaxE() {
@@ -130,11 +134,11 @@ protected:
 
     EGS_Float   m_maxE;     // the maximum energy of all the particles
 
-    bool        m_vis_particle[4];  // Extra make indices 1-4 incl.
+    bool        m_vis_particle[3];  // Extra make indices 1-3 incl.
 
-    EGS_ParticleTrack::Vertex  *m_points[4]; // Data from file
-    int        *m_index[4];       // Pointers to the starts of each track set
-    int         m_tracks[4];      // Number of tracks in each index
+    EGS_ParticleTrack::Vertex  *m_points[3]; // Data from file
+    int        *m_index[3];       // Pointers to the starts of each track set
+    int         m_tracks[3];      // Number of tracks in each index
 
     EGS_ClippingPlane m_planes[14]; // Clipping planes. 0-3 are for the viewport
     int         nplanes;          // number of planes used
@@ -142,7 +146,8 @@ protected:
     EGS_Float   m_xmin,m_ymin,m_zmin, // Bounding box for particles
                 m_xmax,m_ymax,m_zmax;
 
-    bool        m_failed;   // Load error
+    bool        m_failed,
+                energyScaling;   // Load error
 };
 
 #endif

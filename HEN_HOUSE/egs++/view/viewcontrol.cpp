@@ -118,7 +118,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
     showPositronTracks = this->showPositronsCheckbox->isChecked();
-    showOtherTracks = this->showOthersCheckbox->isChecked();
 
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
@@ -132,6 +131,16 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     m_colors = 0;
     nmed = 0;
+
+    // Set default colors
+    backgroundColor = QColor(0,0,0);
+    textColor = QColor(255,255,255);
+    axisColor = QColor(255,255,255);
+    photonColor = QColor(255,255,0);
+    electronColor = QColor(255,0,0);
+    positronColor = QColor(0,0,255);
+    energyScaling = this->energyScalingCheckbox->isChecked();
+    initColorSwatches();
 
     gview = new ImageWindow(this,"gview");
     gview->resize(512,512);
@@ -168,7 +177,12 @@ GeometryViewControl::~GeometryViewControl() {
 }
 
 void GeometryViewControl::selectInput() {
-    QString input_file = QFileDialog::getOpenFileName(NULL,"Select geometry definition file");
+    QFileInfo inputFileInfo = QFileInfo(filename);
+    QString input_file = QFileDialog::getOpenFileName(this, "Select geometry definition file", inputFileInfo.canonicalPath());
+
+    if (input_file.isEmpty()) {
+        return;
+    }
 
     this->show();
     this->setFilename(input_file);
@@ -379,7 +393,6 @@ void GeometryViewControl::saveConfig() {
     out << "    photons = " << showPhotonTracks << endl;
     out << "    electrons = " << showElectronTracks << endl;
     out << "    positrons = " << showPositronTracks << endl;
-    out << "    other = " << showOtherTracks << endl;
     out << ":stop tracks:" << endl;
 
     out << ":start overlay:" << endl;
@@ -443,12 +456,38 @@ void GeometryViewControl::saveConfig() {
     }
     out << endl;
     out << ":stop hidden regions:" << endl;
+
+    out << ":start colors:" << endl;
+    out << "    background = " << backgroundColor.red() << " " <<
+            backgroundColor.green() << " " <<
+            backgroundColor.blue() << endl;
+    out << "    text = " << textColor.red() << " " <<
+            textColor.green() << " " <<
+            textColor.blue() << endl;
+    out << "    axis = " << axisColor.red() << " " <<
+            axisColor.green() << " " <<
+            axisColor.blue() << endl;
+    out << "    photons = " << photonColor.red() << " " <<
+            photonColor.green() << " " <<
+            photonColor.blue() << endl;
+    out << "    electrons = " << electronColor.red() << " " <<
+            electronColor.green() << " " <<
+            electronColor.blue() << endl;
+    out << "    positrons = " << positronColor.red() << " " <<
+            positronColor.green() << " " <<
+            positronColor.blue() << endl;
+    out << "    energy scaling = " << energyScaling << endl;
+    out << ":stop colors:" << endl;
 }
 
 void GeometryViewControl::loadConfig() {
     // Prompt the user to select a previous config file
     QFileInfo inputFileInfo = QFileInfo(filename);
     QString configFilename = QFileDialog::getOpenFileName(this, "Select egs_view config file", inputFileInfo.canonicalPath(), "*.egsview");
+
+    if (configFilename.isEmpty()) {
+        return;
+    }
 
     loadConfig(configFilename);
 }
@@ -516,15 +555,6 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showPositronsCheckbox->setCheckState(Qt::Checked);
             } else {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
-            }
-        }
-
-        err = iTracks->getInput("other",show);
-        if(!err) {
-            if(show) {
-                showOthersCheckbox->setCheckState(Qt::Checked);
-            } else {
-                showOthersCheckbox->setCheckState(Qt::Unchecked);
             }
         }
 
@@ -655,7 +685,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             }
 
             err = iMat->getInput("rgb",rgb);
-            if(err) {
+            if(err || rgb.size() < 3) {
                 continue;
             }
             err = iMat->getInput("alpha",alpha);
@@ -773,6 +803,56 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 show_regions[i] = true;
             }
         }
+    }
+
+    EGS_Input *iColors = input->takeInputItem("colors");
+    if(iColors) {
+        vector<int> rgb;
+
+        err = iColors->getInput("background",rgb);
+        if(!err && rgb.size() >= 3) {
+            backgroundColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        err = iColors->getInput("text",rgb);
+        if(!err && rgb.size() >= 3) {
+            textColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        err = iColors->getInput("axis",rgb);
+        if(!err && rgb.size() >= 3) {
+            axisColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        err = iColors->getInput("photons",rgb);
+        if(!err && rgb.size() >= 3) {
+            photonColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        err = iColors->getInput("electrons",rgb);
+        if(!err && rgb.size() >= 3) {
+            electronColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        err = iColors->getInput("positrons",rgb);
+        if(!err && rgb.size() >= 3) {
+            positronColor = QColor(rgb[0], rgb[1], rgb[2]);
+        }
+
+        int useScaling;
+        err = iColors->getInput("energy scaling",useScaling);
+        if(!err) {
+            energyScaling = useScaling;
+            if(energyScaling) {
+                energyScalingCheckbox->setCheckState(Qt::Checked);
+            } else {
+                energyScalingCheckbox->setCheckState(Qt::Unchecked);
+            }
+        }
+
+        initColorSwatches();
+
+        delete iColors;
     }
 
     updateView(true);
@@ -1157,11 +1237,14 @@ void GeometryViewControl::loadTracksDialog() {
 #ifdef VIEW_DEBUG
     egsWarning("In loadTracksDialog()\n");
 #endif
-    filename_tracks = QFileDialog::getOpenFileName(this,
-                      "Select geometry definition file");
+
+    QFileInfo inputFileInfo = QFileInfo(filename);
+    filename_tracks = QFileDialog::getOpenFileName(this, "Select particle tracks file", inputFileInfo.canonicalPath(), "*.ptracks");
+
     if (filename_tracks.isEmpty()) {
         return;
     }
+
     gview->loadTracks(filename_tracks);
     updateView();
 }
@@ -1569,12 +1652,21 @@ void GeometryViewControl::updateView(bool transform) {
         }
     }
 
+    rp.displayColors = vector<EGS_Vector>(6);
+    rp.displayColors[0] = EGS_Vector(backgroundColor.red()/255., backgroundColor.green()/255., backgroundColor.blue()/255.);
+    rp.displayColors[1] = EGS_Vector(textColor.red()/255., textColor.green()/255., textColor.blue()/255.);
+    rp.displayColors[2] = EGS_Vector(axisColor.red()/255., axisColor.green()/255., axisColor.blue()/255.);
+    rp.displayColors[3] = EGS_Vector(photonColor.red()/255., photonColor.green()/255., photonColor.blue()/255.);
+    rp.displayColors[4] = EGS_Vector(electronColor.red()/255., electronColor.green()/255., electronColor.blue()/255.);
+    rp.displayColors[5] = EGS_Vector(positronColor.red()/255., positronColor.green()/255., positronColor.blue()/255.);
+
+    rp.energyScaling = energyScaling;
+
     rp.projection_m = size * pow(0.5, zoomlevel / 48.);
     rp.screen_v1 = screen_v1;
     rp.screen_v2 = screen_v2;
     rp.screen_xo = screen_xo;
     rp.show_electrons = showElectronTracks;
-    rp.show_other = showOtherTracks;
     rp.show_photons = showPhotonTracks;
     rp.show_positrons = showPositronTracks;
     rp.size = size;
@@ -1584,7 +1676,6 @@ void GeometryViewControl::updateView(bool transform) {
 }
 
 void GeometryViewControl::updateColorLabel(int med) {
-    // showColor->setPaletteBackgroundColor(QColor(m_colors[med]));
     transparency->setValue(qAlpha(m_colors[med]));
 }
 
@@ -1598,7 +1689,6 @@ void GeometryViewControl::changeColor() {
     QRgb newc = QColorDialog::getRgba(m_colors[med],&ok,this);
     if (ok) {
         m_colors[med] = newc;
-        // showColor->setPaletteBackgroundColor(QColor(newc));
         QPixmap pixmap(10,10);
         pixmap.fill(m_colors[med]);
         materialCB->setItemIcon(med, pixmap);
@@ -1608,6 +1698,117 @@ void GeometryViewControl::changeColor() {
         }
         updateView();
     }
+}
+
+void GeometryViewControl::initColorSwatches() {
+    QPixmap pixmap(10,10);
+
+    pixmap.fill(backgroundColor);
+    cBackgroundButton->setIcon(pixmap);
+
+    pixmap.fill(textColor);
+    cTextButton->setIcon(pixmap);
+
+    pixmap.fill(axisColor);
+    cAxisButton->setIcon(pixmap);
+
+    pixmap.fill(photonColor);
+    cPhotonsButton->setIcon(pixmap);
+
+    pixmap.fill(electronColor);
+    cElectronsButton->setIcon(pixmap);
+
+    pixmap.fill(positronColor);
+    cPositronsButton->setIcon(pixmap);
+}
+
+void GeometryViewControl::setBackgroundColor() {
+    QColor newc = QColorDialog::getColor(backgroundColor,this);
+    if (newc.isValid()) {
+        backgroundColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(backgroundColor);
+        cBackgroundButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setTextColor() {
+    QColor newc = QColorDialog::getColor(textColor,this);
+    if (newc.isValid()) {
+        textColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(textColor);
+        cTextButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setAxisColor() {
+    QColor newc = QColorDialog::getColor(axisColor,this);
+    if (newc.isValid()) {
+        axisColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(axisColor);
+        cAxisButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setPhotonColor() {
+    QColor newc = QColorDialog::getColor(photonColor,this);
+    if (newc.isValid()) {
+        photonColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(photonColor);
+        cPhotonsButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setElectronColor() {
+    QColor newc = QColorDialog::getColor(electronColor,this);
+    if (newc.isValid()) {
+        electronColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(electronColor);
+        cElectronsButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setPositronColor() {
+    QColor newc = QColorDialog::getColor(positronColor,this);
+    if (newc.isValid()) {
+        positronColor = newc;
+
+        // Set the color swatch in the button
+        QPixmap pixmap(10,10);
+        pixmap.fill(positronColor);
+        cPositronsButton->setIcon(pixmap);
+
+        updateView();
+    }
+}
+
+void GeometryViewControl::setEnergyScaling(bool toggle) {
+    energyScaling = toggle;
+    updateView();
 }
 
 void GeometryViewControl::saveImage() {
@@ -1665,12 +1866,6 @@ void GeometryViewControl::showElectronsCheckbox_toggled(bool toggle) {
 
 void GeometryViewControl::showPositronsCheckbox_toggled(bool toggle) {
     showPositronTracks = toggle;
-    updateView();
-}
-
-
-void GeometryViewControl::showOthersCheckbox_toggled(bool toggle) {
-    showOtherTracks = toggle;
     updateView();
 }
 

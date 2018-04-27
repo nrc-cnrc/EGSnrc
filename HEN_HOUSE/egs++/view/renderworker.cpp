@@ -210,6 +210,8 @@ void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters 
     vis->setGlobalAmbientLight(p.global_ambient_light);
     vis->setShowRegions(p.show_regions);
     vis->setAllowRegionSelection(p.allowRegionSelection);
+    vis->setDisplayColors(p.displayColors);
+    vis->setEnergyScaling(p.energyScaling);
 }
 
 void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {
@@ -257,7 +259,6 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
         vis->setParticleVisibility(1,p.show_photons);
         vis->setParticleVisibility(2,p.show_electrons);
         vis->setParticleVisibility(3,p.show_positrons);
-        vis->setParticleVisibility(4,p.show_other);
         if (!vis->renderTracks(g,p.nx,p.ny,image,&abort_location)) {
             // Undo track drawing and rezero image
             memset(image, 0, sizeof(EGS_Vector));
@@ -320,7 +321,7 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
     {
         QPainter q(&img);
         if (p.draw_axeslabels) {
-            q.setPen(QColor(255,255,255));
+            q.setPen(QColor((int)(255*p.displayColors[1].x), (int)(255*p.displayColors[1].y), (int)(255*p.displayColors[1].z)));
             q.drawText((int)(p.nxr*axeslabelsX.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsX.y-3),"x");
             q.drawText((int)(p.nxr*axeslabelsY.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsY.y-3),"y");
             q.drawText((int)(p.nxr*axeslabelsZ.x-3),p.nyr*p.ny-(int)(p.nyr*axeslabelsZ.y-3),"z");

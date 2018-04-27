@@ -66,7 +66,6 @@ struct RenderParameters {
     bool show_photons;
     bool show_electrons;
     bool show_positrons;
-    bool show_other;
     // viewport
     EGS_Vector camera;
     EGS_Vector camera_v1;
@@ -82,6 +81,16 @@ struct RenderParameters {
     EGS_Float size;
     // Purpose of request
     RenderRequestType requestType;
+
+    // Various display colors
+    // 0 - background
+    // 1 - text
+    // 2 - axis
+    // 3 - photons
+    // 4 - electrons
+    // 5 - positrons
+    vector<EGS_Vector> displayColors;
+    bool energyScaling;
 };
 
 struct RenderResults {

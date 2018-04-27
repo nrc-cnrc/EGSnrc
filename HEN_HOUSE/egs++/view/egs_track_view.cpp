@@ -73,7 +73,7 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
     typedef EGS_ParticleTrack::ParticleInfo PInfo;
 
     // zero pointers
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         m_index[i] = NULL;
         m_points[i] = NULL;
     }
@@ -116,8 +116,8 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
 
     char **tmp_index = new char *[tot_tracks];
 
-    int count_num[4] = {0,0,0,0};
-    int count_vert[4] = {0,0,0,0};
+    int count_num[3] = {0,0,0};
+    int count_vert[3] = {0,0,0};
     m_maxE = 0;
     // Or just -inf, if available.
     m_xmax = -10000000000000;
@@ -163,15 +163,15 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
     // Copying data into a more efficient and compact representation.
     // This doubles the initial memory use but is more efficient afterwards.
 
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         // In theory we could calculate above exactly how much track
         // compression saves, so overcopies aren't necessary.
         m_points[i] = new EGS_ParticleTrack::Vertex[count_vert[i]];
         m_index[i] = new int[count_num[i]+1];
     }
 
-    int mem_rcnt[4] = {0,0,0,0};
-    int ind_rcnt[4] = {0,0,0,0};
+    int mem_rcnt[3] = {0,0,0};
+    int ind_rcnt[3] = {0,0,0};
 
     // Compression routine!
     for (int i=0; i<tot_tracks; i++) {
@@ -213,7 +213,7 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
         }
     }
     // Sentinel at the end; get lengths
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         m_index[i][ind_rcnt[i]] = mem_rcnt[i];
         m_tracks[i] = ind_rcnt[i];
     }
@@ -222,24 +222,24 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
     delete[] tmp_buffer;
     // Resize everything to fit -- a second copy :-(.
     // But it decreases runtime memory, sometimes significantly
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         m_index[i] = shrink(m_index[i], count_num[i]+1, ind_rcnt[i]+1);
         m_points[i] = shrink(m_points[i], count_vert[i], mem_rcnt[i]);
     }
 
-    int csze = ind_rcnt[0] + ind_rcnt[1] + ind_rcnt[2] + ind_rcnt[3];
-    int msze = mem_rcnt[0] + mem_rcnt[1] + mem_rcnt[2] + mem_rcnt[3];
+    int csze = ind_rcnt[0] + ind_rcnt[1] + ind_rcnt[2];
+    int msze = mem_rcnt[0] + mem_rcnt[1] + mem_rcnt[2];
 
     egsInformation("%s: Compressed size : %d\n", func_name,
                    sizeof(Vert)*msze + sizeof(void *)*csze);
-    egsInformation("%s: Tracks loaded   : %d (%d %d %d %d)\n", func_name,
-                   tot_tracks, count_num[0], count_num[1], count_num[2], count_num[3]);
+    egsInformation("%s: Tracks loaded   : %d (%d %d %d)\n", func_name,
+                   tot_tracks, count_num[0], count_num[1], count_num[2]);
     m_failed = false;
 }
 
 EGS_TrackView::~EGS_TrackView() {
     // cleanup allocations to avoid memory leaks
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<3; i++) {
         if (m_index[i]) {
             delete[] m_index[i];
         }
@@ -303,13 +303,12 @@ bool EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image,
         abort_location = (int *)&zero;
     }
 
-    for (int k=0; k<4; k++) {
+    for (int k=0; k<3; k++) {
         if (m_vis_particle[k]) {
             /* set the color of this particle
                  1.0 = photon = yellow
                  2.0 = electron = red
                  3.0 = positron = blue
-                 4.0 = unknown = white
             */
             EGS_Float color = (k+1);
 
@@ -389,7 +388,9 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             xxx1 = r1.x;
             yyy1 = r1.y;
             dst1 = (f1 - xo).length();
-            e1 = v1.e / m_maxE;
+            if(energyScaling) {
+                e1 = v1.e / m_maxE;
+            }
         }
         else {
             // The first point is in the legal zone; only need the values
@@ -411,14 +412,18 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             xxx1 = xxx2;
             yyy1 = yyy2;
             dst1 = dst2;
-            e1 = e2;
+            if(energyScaling) {
+                e1 = e2;
+            }
         }
         EGS_Vector f2 = v2.x - t2 * (v2.x - v1.x);
         screenpt r2 = projectToScreen(f2,nx,ny,fromWorld,xo);
         xxx2 = r2.x;
         yyy2 = r2.y;
         dst2 = (f2 - xo).length();
-        e2 = v2.e / m_maxE;
+        if(energyScaling) {
+            e2 = v2.e / m_maxE;
+        }
 
         if (xxx1 == xxx2 && yyy1 == yyy2) {
             continue;
@@ -446,9 +451,13 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
         double ddx = (xxx2 - xxx1);
         double ddy = (yyy2 - yyy1);
         double dd = (dst2 - dst1);
-        double de = (e2 - e1);
         double gd = dst1;
-        double ge = e1;
+        double de, ge;
+
+        if(energyScaling) {
+            de = (e2 - e1);
+            ge = e1;
+        }
 
         // iterate along the longer side
         if (abs(xxx2 - xxx1) > abs(yyy2 - yyy1)) {
@@ -457,31 +466,39 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             ddy = ddy / abs(ddx);
             int di = (xxx1 > xxx2) ? -1 : 1;
             dd = dd / abs(ddx);
-            de = de / abs(ddx);
+            if(energyScaling) {
+                de = de / abs(ddx);
+            }
 
             // for each x calculate the corresponding y
             for (int cx = xxx1; cx != xxx2; cx += di) {
                 // grab what's already in the image buffer at this location
                 EGS_Vector tmpv3 = image[cx + ((int)(cy))*nx];
-                if (tmpv3.z < 0) {                                      // there is already a track there
+                if (tmpv3.z < 0) { // there is already a track there
                     if (-gd > tmpv3.z) {
-                        tmpv3.z = -gd;    // current track is closer
+                        tmpv3.z = -gd; // current track is closer
                     }
                     if (color > tmpv3.x) {
-                        tmpv3.x = color;    // put "important" particles in front [warning: may teleport particles through a sheet of lesser particles]
+                        tmpv3.x = color; // put "important" particles in front [warning: may teleport particles through a sheet of lesser particles]
                     }
-                    tmpv3.y += (1-tmpv3.y)*e2;                          // compound transparency values
+                    if(energyScaling) {
+                        tmpv3.y += (1-tmpv3.y)*e2; // compound transparency values
+                    }
                 }
                 else {
                     tmpv3.x = color;
-                    tmpv3.y=e2;
-                    tmpv3.z=-gd;         // just update with current track info
+                    if(energyScaling) {
+                        tmpv3.y=e2;
+                    }
+                    tmpv3.z=-gd; // just update with current track info
                 }
                 // write new values to image buffer
                 image[cx + ((int)(cy))*nx] = tmpv3;
                 cy += ddy;
                 gd += dd;
-                ge += de;
+                if(energyScaling) {
+                    ge += de;
+                }
             }
         }
         else {
@@ -490,32 +507,40 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             cx = xxx1;
             ddx = ddx / abs(ddy);
             dd = dd / abs(ddy);
-            de = de / abs(ddy);
+            if(energyScaling) {
+                de = de / abs(ddy);
+            }
 
             // for each y calculate the corresponding x
             for (int cy = yyy1; cy != yyy2; cy += di) {
                 // grab what's already in the image buffer at this location
                 EGS_Vector tmpv3 = image[(int)(cx) + cy*nx];
-                if (tmpv3.z < 0) {                                      // there is already a track there
+                if (tmpv3.z < 0) { // there is already a track there
                     if (-gd > tmpv3.z) {
-                        tmpv3.z = -gd;    // current track is closer
+                        tmpv3.z = -gd; // current track is closer
                     }
                     if (color > tmpv3.x) {
-                        tmpv3.x = color;    // put "important" particles in front
+                        tmpv3.x = color; // put "important" particles in front
                     }
-                    tmpv3.y += (1-tmpv3.y)*e2;                          // compound transparency values
+                    if(energyScaling) {
+                        tmpv3.y += (1-tmpv3.y)*e2; // compound transparency values
+                    }
                 }
                 else {
                     tmpv3.x = color;
-                    tmpv3.y=e2;
-                    tmpv3.z=-gd;         // just update with current track info
+                    if(energyScaling) {
+                        tmpv3.y=e2;
+                    }
+                    tmpv3.z=-gd; // just update with current track info
                 }
                 // write new values to image buffer
                 image[(int)(cx) + cy*nx] = tmpv3;
 
                 cx += ddx;
                 gd += dd;
-                ge += de;
+                if(energyScaling) {
+                    ge += de;
+                }
             }
         }
     }

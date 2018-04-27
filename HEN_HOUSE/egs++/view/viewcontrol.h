@@ -71,6 +71,7 @@ public:
     virtual void loadConfig(QString configFilename);
     virtual void updateRegionTable();
     virtual void updateRegionTable(int imed);
+    virtual void initColorSwatches();
 
 public slots:
 
@@ -108,13 +109,19 @@ public slots:
     virtual void quitApplication();
     virtual void updateColorLabel(int med);
     virtual void changeColor();
+    virtual void setBackgroundColor();
+    virtual void setTextColor();
+    virtual void setAxisColor();
+    virtual void setPhotonColor();
+    virtual void setElectronColor();
+    virtual void setPositronColor();
+    virtual void setEnergyScaling(bool toggle);
     virtual void saveImage();
     virtual void reenableSave();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
     virtual void showElectronsCheckbox_toggled(bool toggle);
     virtual void showPositronsCheckbox_toggled(bool toggle);
-    virtual void showOthersCheckbox_toggled(bool toggle);
     virtual void startTransformation();
     virtual void endTransformation();
     virtual void toggleRegion(int i, int j);
@@ -131,6 +138,12 @@ private:
     QString filename_tracks;
     int nmed;
     QRgb *m_colors;
+    QColor  backgroundColor,
+            textColor,
+            axisColor,
+            photonColor,
+            electronColor,
+            positronColor;
     int zoomlevel_home;
     int zoomlevel;
     EGS_Float a_light;
@@ -163,9 +176,9 @@ private:
     bool showPhotonTracks;
     bool showElectronTracks;
     bool showPositronTracks;
-    bool showOtherTracks;
     vector<bool> show_regions;
-    bool allowRegionSelection;
+    bool    allowRegionSelection,
+            energyScaling;
 
 protected slots:
 

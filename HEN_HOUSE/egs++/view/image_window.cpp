@@ -352,8 +352,11 @@ void ImageWindow::paintEvent(QPaintEvent *) {
 
         // The below code is very CPU-inefficient. Please optimize!
         if (regions[0]>=0) {
-            p.fillRect(coveredRegion,QColor(0,0,0));
-            p.setPen(QColor(255,255,255));
+            // Background for the region list
+            p.fillRect(coveredRegion,QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            // Text color for the region list
+            p.setPen(QColor((int)(255*q.displayColors[1].x), (int)(255*q.displayColors[1].y), (int)(255*q.displayColors[1].z)));
+
             p.drawText(x0-1,y0,"Regions");
             y0+=10;
             regionsDisplayed=true;
@@ -411,7 +414,7 @@ void ImageWindow::paintEvent(QPaintEvent *) {
             p.fillRect(x0, y0+reg*dy, s, s,
                        QColor((int)(255*colors[reg].x), (int)(255*colors[reg].y),
                               (int)(255*colors[reg].z)));
-            p.setPen(QColor(255,255,255));
+            p.setPen(QColor((int)(255*q.displayColors[1].x), (int)(255*q.displayColors[1].y), (int)(255*q.displayColors[1].z)));
             p.drawRect(x0, y0+reg*dy, s, s);
             p.drawText(x0+s+3,y0+reg*dy+s,QString::number(regions[reg]));
             if (reg+1 == maxreg) {

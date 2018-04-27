@@ -36,6 +36,7 @@
 #include "egs_math.h"
 #include "stddef.h"
 #include <vector>
+#include <QColor>
 
 class EGS_Light;
 class EGS_MaterialColor;
@@ -118,6 +119,8 @@ public:
     EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha, const bool track_clip);
     void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
 
+    void setDisplayColors(const vector<EGS_Vector> &displayColors);
+    void setEnergyScaling(const bool &scaling);
 
 
     // region picking

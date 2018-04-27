@@ -150,6 +150,18 @@ public:
         }
     }
 
+    void setDisplayColors(const vector<EGS_Vector> &dColors) {
+        displayColors = dColors;
+    }
+
+    void setEnergyScaling(bool scaling) {
+        energyScaling = scaling;
+
+        if (m_tracks) {
+            m_tracks->setEnergyScaling(scaling);
+        }
+    }
+
     EGS_Vector  xo;         // camera position
     EGS_Vector  x_screen;   // center of projected image
     EGS_Vector  v1_screen,  // 2 perpendicular vectors on the screen
@@ -169,7 +181,10 @@ public:
 
     EGS_TrackView   *m_tracks;
     vector<bool>    showReg;
-    bool            allowRegionSelection;
+    bool            allowRegionSelection,
+                    energyScaling;
+
+    vector<EGS_Vector> displayColors;
 };
 
 EGS_GeometryVisualizer::EGS_GeometryVisualizer() {
@@ -200,6 +215,14 @@ void EGS_GeometryVisualizer::setProjection(const EGS_Vector &camera_pos,
 
 void EGS_GeometryVisualizer::setGlobalAmbientLight(const EGS_Vector &light) {
     p->setGlobalAmbientLight(light);
+}
+
+void EGS_GeometryVisualizer::setDisplayColors(const vector<EGS_Vector> &dColors) {
+    p->setDisplayColors(dColors);
+}
+
+void EGS_GeometryVisualizer::setEnergyScaling(const bool &scaling) {
+    p->setEnergyScaling(scaling);
 }
 
 void EGS_GeometryVisualizer::addLight(const EGS_Vector &pos,
@@ -349,7 +372,7 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
 
     // save all regions
     do {
-        c = EGS_Vector(0,0,0);
+        c = displayColors[0]; // Background color
         t = tleft;
         int inew = g->howfar(ireg,xs,u,t,&imed,0);
         if (inew == ireg) {
@@ -402,6 +425,8 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
     EGS_Float   a=1, a1;                        // alphas
     EGS_Vector  cTrack = track_color*track_alpha;      // track color
 
+    bool hitSomething = false;
+    c = EGS_Vector(0,0,0);
 
     if (debug) egsWarning("getColor(xo=(%g,%g,%g),u=(%g,%g,%g),axis_distance=%g\n",
                               xo.x,xo.y,xo.z,u.x,u.y,u.z,track_distance);
@@ -412,25 +437,27 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         // loop over clipping planes
         for (int j=0; j<nclip; j++) {
 
-            if (clip[j]->isInside(xo)) {                                        // we are inside the clipping plane
+            if (clip[j]->isInside(xo)) { // we are inside the clipping plane
                 EGS_Float tt = t;
-                if (clip[j]->howfar(xo,u,tt)) {                                 // calculate distance to clipping plane
-                    if (tt > tclip) {                                           // if this clipping plane is further away:
-                        tclip = tt;                                             // save distance to furthest clipping plane
-                        j_clip = j;                                             // save index of furthest clipping plane
+                if (clip[j]->howfar(xo,u,tt)) { // calculate distance to clipping plane
+                    if (tt > tclip) { // if this clipping plane is further away:
+                        tclip = tt; // save distance to furthest clipping plane
+                        j_clip = j; // save index of furthest clipping plane
                     }
                 }
                 else {
                     if (ttrack>0) {
-                        return cTrack;    // don't forget the axis!
+                        return cTrack; // don't forget the axis!
                     }
+
+                    c = displayColors[0];
                     return c;
                 }
             }
 
-            else {                                                              // we are outside clipping plane
+            else { // we are outside clipping plane
                 if (clip[j]->howfar(xo,u,t)) {
-                    tleft = t;    // remaining distance is that of the clipping plane
+                    tleft = t; // remaining distance is that of the clipping plane
                 }
             }
         }
@@ -442,6 +469,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
             if (ttrack>0 && ttrack<=tclip) {
                 c = track_color*track_alpha*a;
                 a = a*(1-track_alpha);
+                hitSomething = true;
             }
 
             if (tclip <= tleft) {
@@ -471,6 +499,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                         }
                         c += c1*a1*a;
                         a = a*(1-a1);
+                        hitSomething = true;
                         if (a < 0.001) {
                             return c;
                         }
@@ -478,6 +507,12 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 }
             }
             else {
+
+                if(!hitSomething) {
+                    c = displayColors[0];
+                } else {
+                    c += displayColors[0]*a;
+                }
                 return c;
             }
         }
@@ -515,6 +550,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 }
                 c += c1*a1*a;
                 a = a*(1-a1);
+                hitSomething = true;
                 if (a < 0.001) {
                     return c;
                 }
@@ -527,6 +563,11 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         }
     }
     if (ireg < 0) {
+        if(!hitSomething) {
+            c = displayColors[0];
+        } else {
+            c += displayColors[0]*a;
+        }
         return c;
     }
 
@@ -545,6 +586,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         if (ttrack>0 && t>=ttrack) {
             c += track_color*track_alpha*a;
             a = a*(1-track_alpha);
+            hitSomething = true;
         }
 
         // avoid getting stuck
@@ -568,6 +610,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
             }
             c += c1*a*a1;
             a = a*(1-a1);
+            hitSomething = true;
             if (a < 0.001) {
                 break;
             }
@@ -585,6 +628,13 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
     if (ttrack>0) {
         return c+(cTrack)*a;    // draw the axis if not hit before
     }
+
+    if(!hitSomething) {
+        c = displayColors[0];
+    } else {
+        c += displayColors[0]*a;
+    }
+
     return c;
 }
 
@@ -610,7 +660,9 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
         for (int i=0; i<nx; i++) {
             EGS_Float xx = -sx/2 + dx*(i+0.5);
             EGS_Vector xp(xy + v1_screen*xx);
-            EGS_Vector bCol(1,1,1);
+
+            // Set the axis color
+            EGS_Vector bCol(displayColors[2].x,displayColors[2].y,displayColors[2].z);
 
             ttrack = -1;
             if (image) {
@@ -620,31 +672,23 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
                 if (image[idx].z<0) {
                     ttrack = -image[idx].z;
                     if (((image[idx].x > 0) || (image[idx].y > 0)) && m_tracks) {
-                        track_alpha = 0.2+0.8*image[idx].y;
+
+                        // Set the transparency based on the energy of the particle
+                        if(energyScaling) {
+                            track_alpha = 0.2+0.8*image[idx].y;
+                        }
+
+                        // Photons
                         if (image[idx].x == 1.0) {
-                            bCol.x=1;
-                            bCol.y=1;
-                            bCol.z=0.0;
+                            bCol = displayColors[3];
                         }
+                        // Electrons
                         if (image[idx].x == 2.0) {
-                            bCol.x=1.0;
-                            bCol.y=0.0;
-                            bCol.z=0;
+                            bCol = displayColors[4];
                         }
+                        // Positrons
                         if (image[idx].x == 3.0) {
-                            bCol.x=0;
-                            bCol.y=0.0;
-                            bCol.z=1.0;
-                        }
-                        if (image[idx].x == 4.0) {
-                            bCol.x=1;
-                            bCol.y=1;
-                            bCol.z=1;
-                        }
-                        if (image[idx].x == 100.0) {
-                            bCol.x=1;
-                            bCol.y=1;
-                            bCol.z=1;
+                            bCol = displayColors[5];
                         }
                     }
                     image[idx] = EGS_Vector(0,0,0);
