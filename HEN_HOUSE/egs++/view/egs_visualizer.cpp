@@ -352,8 +352,15 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
                 t -= tclip;
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
+                    if(imed < 0) {
+                        imed = g->nMedia();
+                    }
                     if (imed >= 0) {
-                        c = mat[imed].d*mat[imed].alpha;
+                        if(!allowRegionSelection || showReg[ireg]) {
+                            c = mat[imed].d*mat[imed].alpha;
+                        } else {
+                            c = displayColors[0];
+                        }
                     }
                     // save region
                     regions[regcount]=ireg;
@@ -383,8 +390,13 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
         if (ireg >= 0) {
             tleft -= t;
             xs += u*t;
+            if(imed < 0) {
+                imed = g->nMedia();
+            }
             if (imed >= 0) {
-                c = mat[imed].d*mat[imed].alpha;
+                if(!allowRegionSelection || showReg[ireg]) {
+                    c = mat[imed].d*mat[imed].alpha;
+                }
             }
             regions[regcount]=ireg;
             colors[regcount]=c;
@@ -486,6 +498,9 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 // ray hits a region
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
+                    if(imed < 0) {
+                        imed = g->nMedia();
+                    }
                     if (imed >= 0) {
                         if(!allowRegionSelection || showReg[ireg]) {
                             a1 = mat[imed].alpha;
@@ -538,6 +553,9 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         // hitting a surface
         if (inew >= 0) {
             xs += u*t;
+            if(imed < 0) {
+                imed = g->nMedia();
+            }
             if (imed >= 0) {
                 if(!allowRegionSelection || showReg[inew]) {
                     a1 = mat[imed].alpha;
@@ -596,6 +614,10 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
 
         EGS_Vector c1;
         xs += u*t;
+
+        if(imed_new < 0) {
+            imed_new = g->nMedia();
+        }
 
         // new region is not outside, new material is not vacuum, and there is a change in material
         if (inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]))) {
@@ -661,8 +683,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
             EGS_Float xx = -sx/2 + dx*(i+0.5);
             EGS_Vector xp(xy + v1_screen*xx);
 
-            // Set the axis color
-            EGS_Vector bCol(displayColors[2].x,displayColors[2].y,displayColors[2].z);
+            EGS_Vector bCol(0,0,0);
 
             ttrack = -1;
             if (image) {
@@ -689,6 +710,10 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
                         // Positrons
                         if (image[idx].x == 3.0) {
                             bCol = displayColors[5];
+                        }
+                        // Axis
+                        if (image[idx].x == 100.0) {
+                            bCol = displayColors[2];
                         }
                     }
                     image[idx] = EGS_Vector(0,0,0);

@@ -405,7 +405,11 @@ void GeometryViewControl::saveConfig() {
         out << ":start material colors:" << endl;
         for (size_t i=0; i<rp.material_colors.size(); ++i) {
             out << "    :start material:" << endl;
-            out << "        material = " << g->getMediumName(i) << endl;
+            if(i==nmed) {
+                out << "        material = vacuum" << endl;
+            } else {
+                out << "        material = " << g->getMediumName(i) << endl;
+            }
             out << "        rgb = " << qRed(m_colors[i]) << " "
                             << qGreen(m_colors[i]) << " "
                             << qBlue(m_colors[i]) << endl;
@@ -678,9 +682,13 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
             // Find the index of the material by the same name
             int imed;
-            for(imed = 0; imed<nmed; ++imed) {
-                if(g->getMediumName(imed) == material) {
-                    break;
+            if(material == "vacuum") {
+                imed = nmed;
+            } else {
+                for(imed = 0; imed<nmed; ++imed) {
+                    if(g->getMediumName(imed) == material) {
+                        break;
+                    }
                 }
             }
 
@@ -704,7 +712,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
         // Update swatches in the combo box
         QPixmap pixmap(10,10);
-        for (int j=0; j<nmed; j++) {
+        for (int j=0; j<=nmed; j++) {
             pixmap.fill(m_colors[j]);
             materialCB->setItemIcon(j,pixmap);
         }
@@ -1348,27 +1356,41 @@ int GeometryViewControl::setGeometry(
 
     // set up material combo box items
     materialCB->clear();
-    m_colors = new QRgb [nmed];
+    m_colors = new QRgb [nmed+1]; // nmed+1 for vacuum
     for (int j=0; j<nmed; j++) {
         materialCB->insertItem(j,g->getMediumName(j));
     }
+
+    // Always insert vacuum since it is not in the medium list
+    // The only way to check if it was in geometry would be to loop through
+    // every region and check if g->medium(ireg)==-1
+    materialCB->insertItem(nmed,"vacuum");
+
     int nstandard = sizeof(standard_red)/sizeof(unsigned char);
     int js = 0;
-    {
-        for (int j=0; j<nmed; j++) {
-            string med_name = g->getMediumName(j);
-            unsigned int i;
-            for (i=0; i<ucolors.size(); ++i) if (med_name == ucolors[i].medname) {
-                    break;
-                }
-            if (i < ucolors.size()) {
-                m_colors[j] = qRgba(ucolors[i].red,ucolors[i].green,ucolors[i].blue,ucolors[i].alpha);
+    for (int j=0; j<=nmed; j++) {
+        string med_name;
+        if(j == nmed) {
+            med_name = "vacuum";
+        } else {
+            med_name = g->getMediumName(j);
+        }
+        unsigned int i;
+        for (i=0; i<ucolors.size(); ++i) if (med_name == ucolors[i].medname) {
+                break;
             }
-            else {
+        if (i < ucolors.size()) {
+            m_colors[j] = qRgba(ucolors[i].red,ucolors[i].green,ucolors[i].blue,ucolors[i].alpha);
+        }
+        else {
+            if(j == nmed) {
+                // Vacuum defaults to black, transparent
+                m_colors[j] = qRgba(0,0,0,0);
+            } else {
                 m_colors[j] = qRgba(standard_red[js], standard_green[js], standard_blue[js], 255);
-                if ((++js) >= nstandard) {
-                    js = 0;
-                }
+            }
+            if ((++js) >= nstandard) {
+                js = 0;
             }
         }
     }
@@ -1389,8 +1411,7 @@ int GeometryViewControl::setGeometry(
     // copy user's saved setting (for media names that were defined before the reload)
     materialCB->setCurrentIndex(0);
     if (justReloading) {
-        for (int j=0; j<nmed; j++) {
-            QString medName = g->getMediumName(j);
+        for (int j=0; j<=nmed; j++) {
             for (int k=0; k<nSave; k++) {
                 if (materialCB->itemText(j) == saveName[k]) {
                     m_colors[j] = saveColors[k];
@@ -1404,7 +1425,7 @@ int GeometryViewControl::setGeometry(
     // add swatches in the combo box
     QPixmap pixmap(10,10);
     {
-        for (int j=0; j<nmed; j++) {
+        for (int j=0; j<=nmed; j++) {
             pixmap.fill(m_colors[j]);
             materialCB->setItemIcon(j,pixmap);
         }
@@ -1635,7 +1656,7 @@ void GeometryViewControl::updateView(bool transform) {
     rp.lights.push_back(EGS_Light(p_light, EGS_Vector(1,1,1)));
 
     rp.material_colors = vector<EGS_MaterialColor>();
-    for (int j=0; j<nmed; j++) {
+    for (int j=0; j<=nmed; j++) {
         EGS_Float r = ((EGS_Float) qRed(m_colors[j]))/255.;
         EGS_Float gr = ((EGS_Float) qGreen(m_colors[j]))/255.;
         EGS_Float b = ((EGS_Float) qBlue(m_colors[j]))/255.;
@@ -1925,7 +1946,11 @@ void GeometryViewControl::updateRegionTable() {
                 colorItem = new QTableWidgetItem();
                 regionTable->setItem(i,1,colorItem);
             }
-            colorItem->setBackground(QBrush(QColor(m_colors[imed])));
+            if(imed < 0) {
+                colorItem->setBackground(QBrush(QColor(m_colors[nmed])));
+            } else {
+                colorItem->setBackground(QBrush(QColor(m_colors[imed])));
+            }
             colorItem->setFlags(colorItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
 
             // Set the material name
@@ -1934,7 +1959,11 @@ void GeometryViewControl::updateRegionTable() {
                 matItem = new QTableWidgetItem();
                 regionTable->setItem(i,2,matItem);
             }
-            matItem->setText(QString(g->getMediumName(imed)));
+            if(imed < 0) {
+                matItem->setText(QString("vacuum"));
+            } else {
+                matItem->setText(QString(g->getMediumName(imed)));
+            }
             matItem->setFlags(matItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
 
             // Set the show/hide checkbox
@@ -1965,6 +1994,9 @@ void GeometryViewControl::updateRegionTable(int imedToChange) {
         if(g->isRealRegion(ireg)) {
             int imed = g->medium(ireg);
 
+            if(imed < 0) {
+                imed = nmed;
+            }
             if(imed != imedToChange) {
                 ++i;
                 continue;
@@ -2010,6 +2042,10 @@ void GeometryViewControl::toggleRegion(int i, int j) {
     // If the region number was changed, update the color swatch and material
     if(j == 0) {
         int imed = g->medium(ireg);
+
+        if(imed < 0) {
+            imed = nmed;
+        }
 
         // Set the material color
         QTableWidgetItem *colorItem = regionTable->item(i,1);
