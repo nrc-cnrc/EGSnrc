@@ -92,6 +92,10 @@ void inputRZImpl::compile_userCode()
     QString egs_compiler = readVarFromConf("make_prog");
     if ( egs_compiler.isEmpty() ) egs_compiler = "make";// default is GNU make
 
+    // If the make command contains an argument already (e.g. -j12) we need to
+    // separate the actual make command in the QStringList
+    QStringList args = egs_compiler.split(" ");
+
    QString code_generation = "opt"; // default
    if ( DebugradioButton->isChecked() )
         code_generation = "debug";
@@ -105,8 +109,6 @@ void inputRZImpl::compile_userCode()
 
    QDir::setCurrent( ironIt( EGS_HOME + QDir::separator() + usercodename) );
 
-   QStringList args;
-   args.push_back(egs_compiler);
    args += code_generation;
 //   if ( code_generation.toLower() != "clean"){
    QString dummy =  (QString)"EGS_CONFIG=" +

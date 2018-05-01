@@ -84,6 +84,7 @@ void inputRZImpl::Initialize()
 
  the_year = (QDate::currentDate()).toString("yyyy");
 
+ this->setStyleSheet("QToolTip { color: black; background-color: #feffcd }");
 
 //  usercode     = cavrznrc;
   usercode     = dosrznrc;
