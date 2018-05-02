@@ -343,7 +343,7 @@ static screenpt projectToScreen(const EGS_Vector &v, double nx, double ny,
 void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EGS_Float color, int nx, int ny, EGS_Vector *image) {
     bool prev_clipped = true;
     int xxx2, yyy2;
-    double dst2, e2;
+    double dst2, e2 = 0;
     for (int k=0; k<len-1; k++) {
         int xxx1, yyy1;
         double dst1, e1;

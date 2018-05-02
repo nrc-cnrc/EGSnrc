@@ -336,7 +336,8 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         int maxreg=N_REG_MAX;
         int regions[N_REG_MAX];
         EGS_Vector colors[N_REG_MAX];
-        vis->getRegions(xp, lastRequestGeo, regions, colors, maxreg);
+        EGS_Vector hitCoord(0,0,0);
+        vis->getRegions(xp, lastRequestGeo, regions, colors, maxreg, hitCoord);
         if (!wasRerenderRequested && memcmp(regions, lastRegions, sizeof(lastRegions)) == 0) {
             return;
         }
@@ -347,19 +348,39 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         int s  = 10;
         int dy = 15;
         QPainter p(this);
-        QRect coveredRegion(0,0,64,h);
-        p.setClipRect(coveredRegion);
 
         // The below code is very CPU-inefficient. Please optimize!
         if (regions[0]>=0) {
             // Background for the region list
-            p.fillRect(coveredRegion,QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            p.fillRect(QRect(0,0,64,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
             // Text color for the region list
             p.setPen(QColor((int)(255*q.displayColors[1].x), (int)(255*q.displayColors[1].y), (int)(255*q.displayColors[1].z)));
 
-            p.drawText(x0-1,y0,"Regions");
+            p.drawText(9,y0,"Regions");
             y0+=10;
             regionsDisplayed=true;
+
+            // Get the hit coordinates
+            QString hitx = QString::number(hitCoord.x);
+            QString hity = QString::number(hitCoord.y);
+            QString hitz = QString::number(hitCoord.z);
+
+            // Determine the max number of digits to calculate the background fill
+            int nChar = hitx.length();
+            if(hity.length() > nChar) {
+                nChar = hity.length();
+            } else if(hitz.length() > nChar) {
+                nChar = hitz.length();
+            }
+            if(nChar > 4) {
+                nChar -= 5;
+            }
+
+            p.fillRect(QRect(64,h-60,nChar*10,60),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            p.drawText(9,h-60,"Hit at: ");
+            p.drawText(9,h-45,hitx);
+            p.drawText(9,h-30,hity);
+            p.drawText(9,h-15,hitz);
         }
         else {
             if (regionsDisplayed) {
@@ -422,6 +443,39 @@ void ImageWindow::paintEvent(QPaintEvent *) {
             }
         }
         p.end();
+    }
+}
+
+void ImageWindow::mouseDoubleClickEvent(QMouseEvent *event) {
+#ifdef VIEW_DEBUG
+    egsWarning("In mouseDoubleClickEvent(): mouse location = (%d, %d)\n", event->x(), event->y());
+    egsWarning("  Mouse buttons: %0x\n", event->button());
+#endif
+    // 500 msec before returning to full resolution (after button released)
+    if (navigating) {
+        navigationTimer->start(500);
+        navigating=false;
+    }
+    else if (event->button() == Qt::LeftButton) {
+        egsWarning("double click event at %d %d\n",event->x(),event->y());
+
+        const RenderParameters &q = lastRequest;
+        int w = (q.nx*q.nxr);
+        int h = (q.ny*q.nyr);
+        EGS_Float xscreen, yscreen;
+        EGS_Float xscale = w > h ? q.projection_m * w / h : q.projection_m;
+        EGS_Float yscale = h > w ? q.projection_m * h / w : q.projection_m;
+        xscreen = (xyMouse.x()-w/2)*xscale/w;
+        yscreen = -(xyMouse.y()-h/2)*yscale/h;
+
+        // Get the coordinate on the surface
+        EGS_Vector hitCoord;
+        EGS_Vector xp(q.screen_xo + q.screen_v2*yscreen + q.screen_v1*xscreen);
+        vis->getFirstHit(xp, lastRequestGeo, hitCoord);
+
+        emit leftDoubleClick(hitCoord);
+
+        egsWarning("double click hit (x,y,z) = %f %f %f\n",hitCoord.x, hitCoord.y, hitCoord.z);
     }
 }
 

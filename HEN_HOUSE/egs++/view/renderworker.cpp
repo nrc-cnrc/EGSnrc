@@ -259,7 +259,7 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
         vis->setParticleVisibility(1,p.show_photons);
         vis->setParticleVisibility(2,p.show_electrons);
         vis->setParticleVisibility(3,p.show_positrons);
-        if (!vis->renderTracks(g,p.nx,p.ny,image,&abort_location)) {
+        if (!vis->renderTracks(p.nx,p.ny,image,&abort_location)) {
             // Undo track drawing and rezero image
             memset(image, 0, sizeof(EGS_Vector));
             return r;

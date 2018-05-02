@@ -131,15 +131,16 @@ public:
 
     // get the color for the screen point x.
     EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g,
-                        const EGS_Float track_distance, const EGS_Float track_alpha, const bool track_clip, bool debug=false,
-                        EGS_Vector bCol=EGS_Vector(1,1,1));
-    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
+                        const EGS_Float track_distance, const EGS_Float track_alpha, bool debug=false, EGS_Vector bCol=EGS_Vector(1,1,1));
+    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord);
+
+    void getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord);
 
     // render the entire image
     bool renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
 
     // render the particle tracks
-    bool renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
+    bool renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
 
     // pick region
     void regionPick(int x, int y);
@@ -274,17 +275,21 @@ bool EGS_GeometryVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny,
     return p->renderImage(g,nx,ny,image,abort_location);
 }
 
-bool EGS_GeometryVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny,
+bool EGS_GeometryVisualizer::renderTracks(int nx, int ny,
         EGS_Vector *image, int *abort_location) {
-    return p->renderTracks(g,nx,ny,image,abort_location);
+    return p->renderTracks(nx,ny,image,abort_location);
 }
 
-EGS_Vector EGS_GeometryVisualizer::getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float track_distance, const EGS_Float track_alpha, const bool track_clip) {
-    return p->getColor(x,g,track_distance, track_alpha, track_clip);
+EGS_Vector EGS_GeometryVisualizer::getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float track_distance, const EGS_Float track_alpha) {
+    return p->getColor(x,g,track_distance, track_alpha);
 }
 
-void EGS_GeometryVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg) {
-    p->getRegions(x,g, regions, colors, maxreg);
+void EGS_GeometryVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord) {
+    p->getRegions(x,g, regions, colors, maxreg, hitCoord);
+}
+
+void EGS_GeometryVisualizer::getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord) {
+    p->getFirstHit(x, g, hitCoord);
 }
 
 void EGS_GeometryVisualizer::regionPick(int x, int y) {
@@ -296,7 +301,7 @@ void EGS_GeometryVisualizer::clearClippingPlanes() {
 }
 
 
-void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg) {
+void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord) {
 
     // returns a list of regions and colors (up to maxreg) encountered in the path from the camera position
     // to the screen point given by x.
@@ -311,6 +316,7 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
     int         ireg=-1, imed;
     int         regcount=0;
     EGS_Vector  c;
+    bool gotHit = false;
 
     // assume we are not hitting any regions
     regions[0]=-1;
@@ -358,6 +364,10 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
                     if (imed >= 0) {
                         if(!allowRegionSelection || showReg[ireg]) {
                             c = mat[imed].d*mat[imed].alpha;
+                            if(!gotHit && mat[imed].alpha > 0) {
+                                hitCoord = xs;
+                                gotHit = true;
+                            }
                         } else {
                             c = displayColors[0];
                         }
@@ -396,6 +406,10 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
             if (imed >= 0) {
                 if(!allowRegionSelection || showReg[ireg]) {
                     c = mat[imed].d*mat[imed].alpha;
+                    if(!gotHit && mat[imed].alpha > 0) {
+                        hitCoord = xs;
+                        gotHit = true;
+                    }
                 }
             }
             regions[regcount]=ireg;
@@ -413,6 +427,106 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
     while (ireg >= 0);
 }
 
+void EGS_PrivateVisualizer::getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord) {
+
+    // returns a list of regions and colors (up to maxreg) encountered in the path from the camera position
+    // to the screen point given by x.
+
+    EGS_Vector  u(x-xo);
+    EGS_Float   t = u.length();
+    u *= (1./t);
+    EGS_Vector  xs(xo);
+    EGS_Float   tleft = t;
+    EGS_Float   tclip = 0;
+    int         jclip = -1;
+    int         ireg=-1, imed;
+
+    // clipping planes
+    if (nclip > 0) {
+
+        // loop over clipping planes
+        for (int j=0; j<nclip; j++) {
+
+            // camera is "inside" clipping plane (get longest clipping distance)
+            if (clip[j]->isInside(xo)) {
+                EGS_Float tt = t;
+                if (clip[j]->howfar(xo,u,tt)) {
+                    if (tt > tclip) {
+                        tclip = tt;
+                        jclip = j;
+                    }
+                }
+            }
+
+            // camera is "outside" clipping plane (get shortest clipping distance)
+            else {
+                EGS_Float tt = t;
+                if (clip[j]->howfar(xo,u,tt)) {
+                    if (tt<tleft) {
+                        tleft = tt;
+                    }
+                }
+            }
+        }
+
+        // camera inside a clipping plane, get first region hit
+        if (jclip >= 0) {
+            if (tclip <= tleft) {
+                xs += u*tclip;
+                ireg = g->isWhere(xs);
+                tleft -= tclip;
+                t -= tclip;
+                if (ireg >= 0) {
+                    imed = g->medium(ireg);
+                    if(imed < 0) {
+                        imed = g->nMedia();
+                    }
+                    if (imed >= 0) {
+                        if(!allowRegionSelection || showReg[ireg]) {
+                            if(mat[imed].alpha > 0) {
+                                hitCoord = xs;
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                return;
+            }
+        }
+    }
+
+    // save all regions
+    do {
+        t = tleft;
+        int inew = g->howfar(ireg,xs,u,t,&imed,0);
+        if (inew == ireg) {
+            return;
+        }
+        ireg = inew;
+        if (ireg >= 0) {
+            tleft -= t;
+            xs += u*t;
+            if(imed < 0) {
+                imed = g->nMedia();
+            }
+            if (imed >= 0) {
+                if(!allowRegionSelection || showReg[ireg]) {
+                    if(mat[imed].alpha > 0) {
+                        hitCoord = xs;
+                        return;
+                    }
+                }
+            }
+        }
+        else {
+            return;
+        }
+    }
+    while (ireg >= 0);
+}
+
 //=============================================================================
 // EGS_PrivateVisualizer::getColor
 //=============================================================================
@@ -420,7 +534,6 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         EGS_BaseGeometry *g,
         const EGS_Float track_distance,
         const EGS_Float track_alpha,
-        const bool track_clip,
         const bool debug,
         const EGS_Vector track_color) {
 
@@ -720,7 +833,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
                 }
             }
 
-            EGS_Vector v = getColor(xp,g,ttrack,track_alpha,0,debug,bCol);
+            EGS_Vector v = getColor(xp,g,ttrack,track_alpha,debug,bCol);
             if (debug) {
                 egsWarning("ix=%d iy=%d v=(%g,%g,%g)\n",i,j,v.x,v.y,v.z);
             }
@@ -751,7 +864,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
     return true;
 }
 
-bool EGS_PrivateVisualizer::renderTracks(EGS_BaseGeometry *g, int nx, int ny, EGS_Vector *image, int *abort_location) {
+bool EGS_PrivateVisualizer::renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location) {
     if (m_tracks) {
         return m_tracks->renderTracks(nx, ny, image, clip, nclip, abort_location);
     }
@@ -878,7 +991,7 @@ bool EGS_GeometryVisualizer::makePngImage(EGS_BaseGeometry *g,
 
     // render the image
     EGS_Vector *image = new EGS_Vector [xsize*ysize];
-    if (!p->renderTracks(g,xsize,ysize,image)) {
+    if (!p->renderTracks(xsize,ysize,image)) {
         egsWarning("Error while rendering particle tracks\n");
         return false;
     }

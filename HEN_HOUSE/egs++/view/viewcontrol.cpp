@@ -155,6 +155,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(cameraRolling(int)), this, SLOT(cameraRoll(int)));
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
+    connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
     // Connect signal to enable saveImage button after image saved
     connect(gview, SIGNAL(saveComplete()), this, SLOT(reenableSave()));
 
@@ -405,7 +406,7 @@ void GeometryViewControl::saveConfig() {
         out << ":start material colors:" << endl;
         for (size_t i=0; i<rp.material_colors.size(); ++i) {
             out << "    :start material:" << endl;
-            if(i==nmed) {
+            if(i==size_t(nmed)) {
                 out << "        material = vacuum" << endl;
             } else {
                 out << "        material = " << g->getMediumName(i) << endl;
@@ -1015,9 +1016,18 @@ void GeometryViewControl::cameraTranslate(int dx, int dy) {
     // distance from camera to aim point
     EGS_Float r = (camera-look_at).length();
 
+    // Set a scaling factor for the camera translation so that
+    // it goes slower at higher zoom levels
+    EGS_Float scale;
+    if(zoomlevel > -10) {
+        scale = pow(1./(zoomlevel+110),1.5);
+    } else {
+        scale = 0.001;
+    }
+
     // compute displacement (in world units)
-    EGS_Float tx = -r*dx*0.001;
-    EGS_Float ty = r*dy*0.001;
+    EGS_Float tx = -r*dx*scale;
+    EGS_Float ty = r*dy*scale;
 
     // translation
     camera  = camera  + camera_v2*ty + camera_v1*tx;
@@ -1043,8 +1053,18 @@ void GeometryViewControl::cameraRotate(int dx, int dy) {
     EGS_Vector v0 = camera - look_at;
     EGS_Float r = v0.length();
 
+    // Set a scaling factor for the camera rotation so that
+    // it goes slower at higher zoom levels
+    // Note: the minimum zoomlevel is -400 and does become positive
+    EGS_Float scale;
+    if(zoomlevel > -97) {
+        scale = pow(1./(zoomlevel+110),1.2);
+    } else {
+        scale = 0.05;
+    }
+
     // new position of camera
-    v0 = v0 + (camera_v2*dy + camera_v1*-dx)*0.05*r;
+    v0 = v0 + (camera_v2*dy + camera_v1*-dx)*scale*r;
     v0.normalize();
     camera = look_at + v0*r;
 
@@ -1278,6 +1298,13 @@ void GeometryViewControl::reportViewSettings(int x,int y) {
     EGS_Vector u(xp-camera);
     u.normalize();
     egsWarning(" camera=(%15.10f,%15.10f,%15.10f), u=(%14.10f,%14.10f,%14.10f)\n",camera.x,camera.y,camera.z,u.x,u.y,u.z);
+}
+
+void GeometryViewControl::setRotationPoint(EGS_Vector hitCoord) {
+    look_at = hitCoord;
+    setLookAtLineEdit();
+    updateLookAtLineEdit();
+    setLookAt();
 }
 
 void GeometryViewControl::quitApplication() {

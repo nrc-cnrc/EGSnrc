@@ -115,9 +115,10 @@ public:
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
     bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
-    bool renderTracks(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
-    EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha, const bool track_clip);
-    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg);
+    bool renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
+    EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha);
+    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord);
+    void getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord);
 
     void setDisplayColors(const vector<EGS_Vector> &displayColors);
     void setEnergyScaling(const bool &scaling);

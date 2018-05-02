@@ -106,6 +106,7 @@ public slots:
     virtual void loadTracksDialog();
     virtual void viewAllMaterials();
     virtual void reportViewSettings(int x, int y);
+    virtual void setRotationPoint(EGS_Vector hitCoord);
     virtual void quitApplication();
     virtual void updateColorLabel(int med);
     virtual void changeColor();
