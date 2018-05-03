@@ -45,10 +45,10 @@ ClippingPlanesWidget::ClippingPlanesWidget(QWidget *parent, const char *name)
     setObjectName(name);
     setupUi(this);
 
-    planeTable->setColumnWidth(0,62);
-    planeTable->setColumnWidth(1,62);
-    planeTable->setColumnWidth(2,62);
-    planeTable->setColumnWidth(3,62);
+    planeTable->setColumnWidth(0,60);
+    planeTable->setColumnWidth(1,60);
+    planeTable->setColumnWidth(2,60);
+    planeTable->setColumnWidth(3,60);
     planeTable->setColumnWidth(4,28);
 }
 

@@ -796,7 +796,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
             EGS_Float xx = -sx/2 + dx*(i+0.5);
             EGS_Vector xp(xy + v1_screen*xx);
 
-            EGS_Vector bCol(0,0,0);
+            EGS_Vector bCol = displayColors[2];
 
             ttrack = -1;
             if (image) {
