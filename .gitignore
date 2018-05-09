@@ -8,7 +8,6 @@ mortjob.mortran
 HEN_HOUSE/bin/
 HEN_HOUSE/lib/
 HEN_HOUSE/log/
-HEN_HOUSE/distribution/
 HEN_HOUSE/egs++/dso/
 HEN_HOUSE/mortran3/mortran3_*.f
 HEN_HOUSE/omega/beamnrc/tools/beam_build_*.f
