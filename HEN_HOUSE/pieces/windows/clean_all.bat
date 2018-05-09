@@ -27,17 +27,18 @@ rem #  Contributors:
 rem #
 rem ###############################################################################
 
-
-echo Checking if GUIs need to be cleaned
+echo Checking if GUIs and libraries need to be cleaned
 echo .
-cd ..\..\egs++\view
+
+cd ..\..\egs++
+mingw32-make realclean
+
+cd view
 echo Working in egs++\view...
      if exist Makefile_win-static (
-         echo Running make clean
-         mingw32-make -f Makefile_win-static clean
+          echo Running make clean
+          mingw32-make realclean
      )
-     echo Deleting Makefile_win-static
-     del Makefile_win-static*
 
 cd ..\..\gui\egs_configure
 echo Working in egs_configure...
