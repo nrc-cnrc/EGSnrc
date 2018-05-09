@@ -1,0 +1,175 @@
+
+###############################################################################
+#
+#  EGSnrc list of files to be included in a distribution package
+#  Copyright (C) 2018 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:       Iwan Kwrakow
+#
+#  Contributors: Ernesto Mainegra-Hing
+#
+###############################################################################
+#
+#  This file is processed by the make_distribution utility
+#  to produce unix tar-files (uncompressed, compressed and gziped)
+#  as well as the distribution format used by the graphical installer.
+#
+#  Syntax:
+#  - Lines starting with # are comments and are therefore ignored
+#  - Blank lines are ignored as well
+#  - Lines in the form
+#      tarfile: some_tar_file_name
+#    start a new distribution file named (version)some_tar_file_name.tar
+#      where version is defined in the first line.
+#  - The list must end with a line beginning with
+#    end list
+#  - All other lines are considered to describe files to be included in
+#    the currently active archive. All files must include their path relative
+#    to the EGSnrc root directory
+#      * A single file name on a line makes the file to be included in the
+#        currently active archive
+#      * A single directory on a line makes all files in that directory
+#        (including under-directories) to get included in the
+#        currently active archive
+#      * Two file or directory names on a line makes the file/directory
+#        given by the first name to be included in the archive under the
+#        name given by the second name
+#      * Lines beginning with
+#          win:
+#          unix:
+#        mean that the subsequent file/directory will only get included,
+#        if we are preparing a distribution for Windows or Unix.
+#        (this is determined via a command line argument of the
+#        make_distribution utility). Lines starting with win: or unix:
+#        behave otherwise as described above, i.e. there may be one or
+#        two file/directory names on the line.
+#
+###############################################################################
+
+
+#*****************************************************************************
+#
+# The main EGSnrc file
+#
+#*****************************************************************************
+
+# First define the version that we are preparing.
+#
+version: EGSnrc-
+
+#
+# GUIs
+#
+
+tarfile: guis-linux
+
+# Executables for the static Qt GUI's
+# on Linux/Unix
+#
+unix:pieces/linux/egs_gui_64
+unix:pieces/linux/egs_inprz_64
+unix:pieces/linux/egs_view_64
+
+# egs++ library for egs_view
+
+unix:egs++/dso/linux-static/libegs_box.so
+unix:egs++/dso/linux-static/libegs_cdgeometry.so
+unix:egs++/dso/linux-static/libegs_circle.so
+unix:egs++/dso/linux-static/libegs_cones.so
+unix:egs++/dso/linux-static/libegs_conez.so
+unix:egs++/dso/linux-static/libegs_cylinders.so
+unix:egs++/dso/linux-static/libegs_ellipse.so
+unix:egs++/dso/linux-static/libegs_elliptic_cylinders.so
+unix:egs++/dso/linux-static/libegs_extended_shape.so
+unix:egs++/dso/linux-static/libegs_gaussian_shape.so
+unix:egs++/dso/linux-static/libegs_genvelope.so
+unix:egs++/dso/linux-static/libegs_gstack.so
+unix:egs++/dso/linux-static/libegs_gtransformed.so
+unix:egs++/dso/linux-static/libegs_gunion.so
+unix:egs++/dso/linux-static/libegs_iplanes.so
+unix:egs++/dso/linux-static/libegs_line_shape.so
+unix:egs++/dso/linux-static/libegs_ndgeometry.so
+unix:egs++/dso/linux-static/libegs_octree.so
+unix:egs++/dso/linux-static/libegs_planes.so
+unix:egs++/dso/linux-static/libegs_polygon_shape.so
+unix:egs++/dso/linux-static/libegspp.so
+unix:egs++/dso/linux-static/libegs_prism.so
+unix:egs++/dso/linux-static/libegs_pyramid.so
+unix:egs++/dso/linux-static/libegs_rectangle.so
+unix:egs++/dso/linux-static/libegs_roundrect_cylinders.so
+unix:egs++/dso/linux-static/libegs_shape_collection.so
+unix:egs++/dso/linux-static/libegs_smart_envelope.so
+unix:egs++/dso/linux-static/libegs_space.so
+unix:egs++/dso/linux-static/libegs_spheres.so
+unix:egs++/dso/linux-static/libegs_track_scoring.so
+unix:egs++/dso/linux-static/libegs_vhp_geometry.so
+unix:egs++/dso/linux-static/libegs_voxelized_shape.so
+
+tarfile: guis-windows
+
+# Windows executables for the Qt GUI's
+
+win:pieces/windows/egs_gui.exe
+win:pieces/windows/egs_inprz.exe
+#win:pieces/windows/egs_view.exe
+
+# egs++ library for egs_view
+
+win:egs++/dso/win-static/egs_box.dll
+win:egs++/dso/win-static/egs_cdgeometry.dll
+win:egs++/dso/win-static/egs_circle.dll
+win:egs++/dso/win-static/egs_cones.dll
+win:egs++/dso/win-static/egs_conez.dll
+win:egs++/dso/win-static/egs_cylinders.dll
+win:egs++/dso/win-static/egs_ellipse.dll
+win:egs++/dso/win-static/egs_elliptic_cylinders.dll
+win:egs++/dso/win-static/egs_extended_shape.dll
+win:egs++/dso/win-static/egs_gaussian_shape.dll
+win:egs++/dso/win-static/egs_genvelope.dll
+win:egs++/dso/win-static/egs_gstack.dll
+win:egs++/dso/win-static/egs_gtransformed.dll
+win:egs++/dso/win-static/egs_gunion.dll
+win:egs++/dso/win-static/egs_iplanes.dll
+win:egs++/dso/win-static/egs_line_shape.dll
+win:egs++/dso/win-static/egs_ndgeometry.dll
+win:egs++/dso/win-static/egs_octree.dll
+win:egs++/dso/win-static/egs_planes.dll
+win:egs++/dso/win-static/egs_polygon_shape.dll
+win:egs++/dso/win-static/egs_prism.dll
+win:egs++/dso/win-static/egs_pyramid.dll
+win:egs++/dso/win-static/egs_rectangle.dll
+win:egs++/dso/win-static/egs_shape_collection.dll
+win:egs++/dso/win-static/egs_smart_envelope.dll
+win:egs++/dso/win-static/egs_space.dll
+win:egs++/dso/win-static/egs_spheres.dll
+win:egs++/dso/win-static/egs_track_scoring.dll
+win:egs++/dso/win-static/egs_vhp_geometry.dll
+win:egs++/dso/win-static/egs_voxelized_shape.dll
+win:egs++/dso/win-static/egspp.dll
+win:egs++/dso/win-static/egs_view.exe
+
+####
+# Needed when deploying on Windows with different GNU compiler
+####
+win:egs++/dso/win-static/libgcc_s_dw2-1.dll
+win:egs++/dso/win-static/libstdc++-6.dll
+win:egs++/dso/win-static/libwinpthread-1.dll
+
+end list
