@@ -28,13 +28,15 @@
 #
 ###############################################################################
 
+the_config=win-static
+
 all:   first \
 	egs_gui.exe egs_inprz.exe
 
-egs_gui.exe: ..\..\bin\win-static\egs_gui.exe
+egs_gui.exe: ..\..\bin\$(the_config)\egs_gui.exe
 	copy $< $@
 
-egs_inprz.exe: ..\..\bin\win-static\egs_inprz.exe
+egs_inprz.exe: ..\..\bin\$(the_config)\egs_inprz.exe
 	copy $< $@
 
 first:
