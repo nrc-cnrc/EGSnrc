@@ -123,6 +123,11 @@ int main(int argc, char **argv) {
     }
     w.loadConfig(config_file);
 
+    // Request a monospace font from the OS
+    QFont new_font = a.font();
+    new_font.setStyleHint(QFont::Monospace);
+    a.setFont( new_font );
+
     a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
 
     return a.exec();

@@ -78,7 +78,7 @@ static unsigned char standard_blue[] = {
 };
 
 GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
-    : QDialog(parent) {
+    : QMainWindow(parent) {
     setObjectName(name);
     setupUi(this);
 
@@ -156,8 +156,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
     connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
-    // Connect signal to enable saveImage button after image saved
-    connect(gview, SIGNAL(saveComplete()), this, SLOT(reenableSave()));
 
     save_image = new SaveImage(this,"save image");
 
@@ -172,7 +170,6 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
 }
-
 
 GeometryViewControl::~GeometryViewControl() {
 }
@@ -221,8 +218,6 @@ bool GeometryViewControl::loadInput(bool reloading) {
 
     // clear the current geometry
     gview->stopWorker();
-    // Don't accept any more reload requests during this reload
-    reloadButton->blockSignals(true);
     qApp->processEvents();
 
     // delete geometry
@@ -241,7 +236,6 @@ bool GeometryViewControl::loadInput(bool reloading) {
         QMessageBox::critical(this,"Geometry error",
                 "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
 
-        reloadButton->blockSignals(false);
         return false;
     }
 
@@ -319,7 +313,6 @@ bool GeometryViewControl::loadInput(bool reloading) {
         updateRegionTable();
     }
 
-    reloadButton->blockSignals(false);
     return true;
 }
 
@@ -343,8 +336,6 @@ void GeometryViewControl::saveConfig() {
     QString configFilename = QFileDialog::getSaveFileName(this, "Save config file as...", defaultFilename, "*.egsview");
     QFile configFile(configFilename);
     if(!configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QMessageBox::critical(this,"Config file write error",
-                "Failed to open the config file for writing.",QMessageBox::Ok,0,0);
         return;
     }
     QTextStream out(&configFile);
@@ -488,7 +479,7 @@ void GeometryViewControl::saveConfig() {
 void GeometryViewControl::loadConfig() {
     // Prompt the user to select a previous config file
     QFileInfo inputFileInfo = QFileInfo(filename);
-    QString configFilename = QFileDialog::getOpenFileName(this, "Select egs_view config file", inputFileInfo.canonicalPath(), "*.egsview");
+    QString configFilename = QFileDialog::getOpenFileName(this, "Select an egs_view settings file", inputFileInfo.canonicalPath(), "*.egsview");
 
     if (configFilename.isEmpty()) {
         return;
@@ -1876,12 +1867,7 @@ void GeometryViewControl::saveImage() {
                nx,ny,fname.toUtf8().constData(),format.toUtf8().constData());
 #endif
     // Disable save button until image save complete
-    this->pushButton5->setEnabled(false);
     gview->saveView(g,nx,ny,fname,format);
-}
-
-void GeometryViewControl::reenableSave() {
-    this->pushButton5->setEnabled(true);
 }
 
 void GeometryViewControl::setClippingPlanes() {
@@ -2128,3 +2114,28 @@ void GeometryViewControl::hideAllRegions() {
     }
 }
 
+void GeometryViewControl::enlargeFont() {
+    QFont new_font = this->font();
+    new_font.setPointSize(new_font.pointSize() + 1);
+    QApplication::setFont(new_font);
+
+    QFont controlsFont = controlsText->font();
+    QTextCursor cursor = controlsText->textCursor();
+    controlsText->selectAll();
+    controlsText->setFontPointSize(controlsFont.pointSize() + 1);
+    controlsText->setTextCursor(cursor);
+}
+
+void GeometryViewControl::shrinkFont() {
+    QFont new_font = this->font();
+    if(new_font.pointSize() > 1) {
+        new_font.setPointSize(new_font.pointSize() - 1);
+        QApplication::setFont(new_font);
+    }
+
+    QFont controlsFont = controlsText->font();
+    QTextCursor cursor = controlsText->textCursor();
+    controlsText->selectAll();
+    controlsText->setFontPointSize(controlsFont.pointSize() - 1);
+    controlsText->setTextCursor(cursor);
+}

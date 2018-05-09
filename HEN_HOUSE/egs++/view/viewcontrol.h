@@ -39,7 +39,7 @@
 #include "egs_user_color.h"
 #include "egs_vector.h"
 
-#include <qdialog.h>
+#include <QMainWindow>
 
 class EGS_BaseGeometry;
 class EGS_GeometryVisualizer;
@@ -50,7 +50,7 @@ class SaveImage;
 class ClippingPlanesWidget;
 
 
-class GeometryViewControl : public QDialog, public Ui::GeometryViewControl {
+class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
     Q_OBJECT
 
 public:
@@ -118,7 +118,6 @@ public slots:
     virtual void setPositronColor();
     virtual void setEnergyScaling(bool toggle);
     virtual void saveImage();
-    virtual void reenableSave();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
     virtual void showElectronsCheckbox_toggled(bool toggle);
@@ -128,6 +127,8 @@ public slots:
     virtual void toggleRegion(int i, int j);
     virtual void showAllRegions();
     virtual void hideAllRegions();
+    virtual void enlargeFont();
+    virtual void shrinkFont();
 
 private:
 
