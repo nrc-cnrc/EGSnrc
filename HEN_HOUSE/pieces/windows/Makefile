@@ -28,14 +28,8 @@
 #
 ###############################################################################
 
-
-cleanup=
-
 all:   first \
 	egs_gui.exe egs_inprz.exe
-
-test:
-	@echo $(cleanup)
 
 egs_gui.exe: ..\..\bin\win-static\egs_gui.exe
 	copy $< $@
@@ -44,9 +38,9 @@ egs_inprz.exe: ..\..\bin\win-static\egs_inprz.exe
 	copy $< $@
 
 first:
-	@build_guis $(cleanup)
+	@build_guis
 
 clean:
 	@clean_all
 
-.PHONY: first
+.PHONY: first clean
