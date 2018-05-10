@@ -329,14 +329,14 @@ typedef struct {
     int y;
 } screenpt;
 
-static screenpt projectToScreen(const EGS_Vector &v, double nx, double ny,
-                                const EGS_Matrix &fromWorld, const EGS_Vector &xo) {
+static screenpt projectToScreen(const EGS_Vector &v, double nx_half, double ny_half,
+                                const EGS_Matrix &fromWorld) {
     // This projection function consumes the majority of the time not spent
     // clipping points. One `could` in theory, pre-subtract xo from every point.
-    EGS_Vector tmpv2 = fromWorld * (v - xo);
+    EGS_Vector tmpv2 = fromWorld * v;
     screenpt p;
-    p.x = tmpv2.x / tmpv2.z + nx / 2;
-    p.y = tmpv2.y / tmpv2.z + ny / 2;
+    p.x = tmpv2.x / tmpv2.z + nx_half;
+    p.y = tmpv2.y / tmpv2.z + ny_half;
     return p;
 }
 
@@ -344,6 +344,8 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
     bool prev_clipped = true;
     int xxx2, yyy2;
     double dst2, e2 = 0;
+    double nx_half = nx / 2.;
+    double ny_half = ny / 2.;
     for (int k=0; k<len-1; k++) {
         int xxx1, yyy1;
         double dst1, e1;
@@ -383,11 +385,11 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
                 prev_clipped = true;
                 continue;
             }
-            EGS_Vector f1 = v1.x + t1 * (v2.x - v1.x);
-            screenpt r1 = projectToScreen(f1,nx,ny,fromWorld,xo);
+            EGS_Vector f1 = (v1.x + t1 * (v2.x - v1.x)) - xo;
+            screenpt r1 = projectToScreen(f1,nx_half,ny_half,fromWorld);
             xxx1 = r1.x;
             yyy1 = r1.y;
-            dst1 = (f1 - xo).length();
+            dst1 = f1.length();
             if(energyScaling) {
                 e1 = v1.e / m_maxE;
             }
@@ -416,11 +418,11 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
                 e1 = e2;
             }
         }
-        EGS_Vector f2 = v2.x - t2 * (v2.x - v1.x);
-        screenpt r2 = projectToScreen(f2,nx,ny,fromWorld,xo);
+        EGS_Vector f2 = (v2.x - t2 * (v2.x - v1.x)) - xo;
+        screenpt r2 = projectToScreen(f2,nx_half,ny_half,fromWorld);
         xxx2 = r2.x;
         yyy2 = r2.y;
-        dst2 = (f2 - xo).length();
+        dst2 = f2.length();
         if(energyScaling) {
             e2 = v2.e / m_maxE;
         }
@@ -461,8 +463,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
 
         // iterate along the longer side
         if (abs(xxx2 - xxx1) > abs(yyy2 - yyy1)) {
-            double cy;
-            cy = yyy1;
+            double cy = yyy1;
             ddy = ddy / abs(ddx);
             int di = (xxx1 > xxx2) ? -1 : 1;
             dd = dd / abs(ddx);
