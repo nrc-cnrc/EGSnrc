@@ -47,7 +47,7 @@ COMIN/GetInput,EGS-IO/;
 CHARACTER*$STRING256 TEXT;      "Used to read in each line of the input file   "
 CHARACTER*$STRING256 KEEPTEXT;  "Used to keep an old line of TEXT              "
 CHARACTER*$STRING256 ORIGTEXT;  "The text without conversion to upper case     "
-CHARACTER*$STRING80  TEXTPIECE; "Used to read a piece of TEXT                  "
+CHARACTER*$STRING256 TEXTPIECE; "Used to read a piece of TEXT                  "
 CHARACTER*$STRING40  DELIM_START;"Start of the delimeter                       "
 CHARACTER*$STRING40  DELIM_END;  "End of the delimeter                         "
 CHARACTER*$STRING40  ENDSTRING;  "string at which to terminate search          "
@@ -260,7 +260,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
    [
         IF (vname(:ivname)='TITLE')
         [
-           READ (UNITNUM,FMT='(A80)') TEXTPIECE;
+           READ (UNITNUM,FMT='(A256)') TEXTPIECE;
            IF (lnblnk1(TEXTPIECE)~=0) [
               TEXT=TEXTPIECE(:lnblnk1(TEXTPIECE));
               $SKIP LEADING BLANKS IN text;
@@ -462,7 +462,7 @@ DO I = NMIN, NMAX  [ "for each value_sought"
                       "for e.g. media names                          "
            :READ-IT:
            CONTINUE;
-           READ(TEXTPIECE,ERR=:GI1008:,FMT='(A80)') CHAR_VALUE(I,IVAL);
+           READ(TEXTPIECE,ERR=:GI1008:,FMT='(A256)') CHAR_VALUE(I,IVAL);
            $SKIP LEADING BLANKS IN CHAR_VALUE(I,IVAL);
            IF( idebug ) [
              write(i_log,*) ' Read the following char string: ';
@@ -1332,6 +1332,7 @@ DO i=1,NMED[
    IF(densityfile_specified)[
      "if a file separator is specified in the name, assume the full path + name"
      "of the file is specified"
+    write(*,*)' density_file ',density_file;
     IF(index(density_file,$file_sep)>0) [
        tmp_string=$cstring(density_file);
        inquire(file=tmp_string,exist=ex);
@@ -1958,4 +1959,3 @@ RETURN;
 END;
 ;
 "---End of subroutine.---"
-
