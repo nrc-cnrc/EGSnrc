@@ -4007,7 +4007,7 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
        "particleDmlc and so will be -dsource from the beginning of srchst"
             zsrc = zsrcold;
        ]
-	        call sample_vcusource(einsrc,xsrc,ysrc,zsrc,usrc,
+	        call sample_vcusource(einsrc,xsrc,ysrc,zsrcdum,usrc,
 			  vsrc,wsrc,weight,iqin,latchi,n_hist_dum,
 			  more_in_cont,frMU_indx);
  ] ELSEIF(SHLflag=1 & MLCflag=0) [" if there is a BEAM shared library"
