@@ -1182,8 +1182,7 @@ $LOGICAL  ecut_inregions,pcut_inregions,smax_inregions,
           pe_inregions,aux_inregions,photonuc_inregions;"Ali:photonuc"
 
 character*15 output_strings(14);"Ali:photonuc, increased by 1"
-character*16 p_xsections;
-save         output_strings,line, p_xsections;
+save         output_strings,line;
 save         ecut_inregions,pcut_inregions,smax_inregions,
              incoh_inregions,coh_inregions,relax_inregions,
              pe_inregions,aux_inregions,photonuc_inregions,
@@ -1583,11 +1582,11 @@ IF( error_flags(num_eii) = 0 ) [
    for pair production.
  ******************************************************/
 IF( error_flags(num_pxsec) = 0 ) [
-    p_xsections = char_value(num_pxsec,1);
-    IF ( toUpper( $cstring(p_xsections) ) = 'MCDF-XCOM' )[
+    photon_xsections = char_value(num_pxsec,1);
+    IF ( toUpper( $cstring(photon_xsections) ) = 'MCDF-XCOM' )[
         mcdf_pe_xsections = .true.; photon_xsections = 'xcom';
     ]
-    ELSEIF ( toUpper( $cstring(p_xsections) ) = 'MCDF-EPDL' )[
+    ELSEIF ( toUpper( $cstring(photon_xsections) ) = 'MCDF-EPDL' )[
         mcdf_pe_xsections = .true.; photon_xsections = 'epdl';
     ]
     ELSE[
@@ -1774,7 +1773,7 @@ write(ounit,'(a,/)') line;
 
 /* initialized in egs_set_defaults */
 write(ounit,'(a,38x,a)') ' Photon cross sections',
-      $cstring(p_xsections);
+      $cstring(photon_xsections);
 write(ounit,'(a,37x,a)') ' Compton cross sections', $cstring(comp_xsections);
 
 write(ounit,'(a,$)') ' Photon transport cutoff(MeV)';
