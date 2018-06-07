@@ -169,7 +169,47 @@ With charged particle splitting, DBS can result in dose efficiencies up to\
         6 times greater than with SBS, 23 times greater than with with UBS,\
         and 160 times greater than with no splitting.
       }
-    }
+    } elseif {$iopt==3} {
+      set text {
+Directional Source Biasing (DSB):
+
+Directional source biasing can be used to increase the efficiency of isotropically \
+radiating photon sources modelled using ISOURC=3.
+
+The user selects a splitting field radius (FS), defined at an source-to-surface distance \
+(SSD) encompassing the treatment field.  Primary photons directed into this field are \
+split a user-selected number of times (NBRSPL).  If there is radial symmetry at the top \
+of the treatment head, then further CPU time can be saved by splitting and radially redistributing \
+primary photons upon entering the CM where radial symmetry ends (splitcm_dsb), thus reducing \
+the number of primary photons that must be tracked above this CM.  The number of times that photons \
+are split on entering splitcm_dsb is determined by the minimum linear distance between these split, radially
+redistributed photons (dsb_delta). \
+This input is used to divide the splitting field into radial bins, where each bin has an associated splitting \
+number for primary photons directed into it.
+
+If you are interested in electron contamination, then you must use electron (e-/e+) splitting.  Electron \
+splitting uses the same algorithm as in directional bremsstrahlung splitting (DBS).  Inputs for electron splitting \
+are similar to directional bremsstrahlung splitting in a MV photon beam with the exceptions that: 1) in general, secondary electron \
+energies for isotropically radiating sources (e.g. Co-60) are lower than for MV photon beams, so the \
+e-/e+ splitting plane and Russian Roulette plane may be closer to the SSD; 2) electron splitting may occur \
+in a region of the treatment head that does not have radial symmetry, in which case you should not radially \
+redistribute split e-/e+.
+
+Note that directional bremsstrahlung splitting must be turned on to use DSB.  All DSB input parameters are \
+shared with directional bremsstrahlung splitting with the exception of the additional \
+inputs, splitcm_dsb and dsb_delta.  Thus, if you are \
+selecting the parameters for DSB and open the window for inputting directional bremsstrahlung splitting \
+you will see that the parameters there match their equivalent values in the DSB input window.
+
+DSB has been shown to increase the efficiency of Co-60 dose calculations by a factor of up to ~400. \
+Efficiency is maximized for a photon splitting number = ~20,000 and does not vary significantly for splitting \
+numbers higher than this.  Also, efficiency shows little variation with the min. linear distance between \
+split, radially-redistributed photons, and a value of 1.5 cm is recommended should you opt to split/radially \
+redistribute photons.
+
+For more information about DSB, see the BEAMnrc Manual.
+  }
+  }
     help_dialog $w.help "Help" $text info 0 OK
 }
 
