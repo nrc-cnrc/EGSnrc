@@ -306,6 +306,10 @@ int Tutor7_Application::initScoring() {
     score = new EGS_ScoringArray(nreg+2);
      //i.e. we always score energy fractions
     eflu = new EGS_ScoringArray(200); gflu = new EGS_ScoringArray(200);
+
+    // Initialize with no russian roulette
+    the_egsvr->i_do_rr = 1;
+
     EGS_Input *options = input->takeInputItem("scoring options");
     if( options ) {
 

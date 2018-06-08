@@ -95,7 +95,7 @@
 /*! Number of possible calls to the
     egsAusgab() or \link EGS_Application::ausgab() ausgab() \endlink
     functions */
-#define MXAUS 29  /* there are 29 different calls to ausgab */
+#define MXAUS 35  /* there are 35 different calls to ausgab */
 
 /*! \brief A structure corresponding to the the EGSnrc particle stack
   common block \c STACK.
