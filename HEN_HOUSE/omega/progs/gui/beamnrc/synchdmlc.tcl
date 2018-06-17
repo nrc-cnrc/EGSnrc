@@ -1055,7 +1055,6 @@ proc check_dimensions_synchdmlc { id } {
     #check FULL leaf dimensions
 
     set dimtext "For FULL leaf:
-Define only if necessary!!
 ---------------"
 
     set wlgprob 0
@@ -1180,9 +1179,9 @@ For HALF TARGET leaf:
     }
     if {"$cmval($id,6,5)"!="" && "$cmval($id,6,2)"!="" &&\
         "$cmval($id,6,3)"!=""} {
-        if {$cmval($id,6,5)<[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
+        if {$cmval($id,6,5)>[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,6,5) cm) must be >= groove + tip width\
+- width of bottom support rail ($cmval($id,6,5) cm) must be <= groove + tip width\
 ([expr $cmval($id,6,2)+$cmval($id,6,3)] cm)"
           incr totprob
         }
@@ -1298,7 +1297,6 @@ For HALF ISOCENTER leaf:
     set dimtext "$dimtext
 
 For QUARTER TARGET leaf:
-Define only if necessary
 ---------------"
 
     set totprob 0
@@ -1333,9 +1331,9 @@ Define only if necessary
     }
     if {"$cmval($id,30,5)"!="" && "$cmval($id,30,2)"!="" &&\
         "$cmval($id,30,3)"!=""} {
-        if {$cmval($id,30,5)<[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
+        if {$cmval($id,30,5)>[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm)must be >= groove + tip width\
+- width of bottom support rail ($cmval($id,30,5) cm)must be <= groove + tip width\
 ([expr $cmval($id,30,2)+$cmval($id,30,3)] cm)"
           incr totprob
         }
@@ -1371,7 +1369,6 @@ Define only if necessary
     set dimtext "$dimtext
 
 For QUARTER ISOCENTER leaf:
-Define only if necessary
 ---------------"
 
     set totprob 0
