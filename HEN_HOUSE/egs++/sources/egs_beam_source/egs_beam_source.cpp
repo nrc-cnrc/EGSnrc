@@ -122,13 +122,14 @@ EGS_BeamSource::EGS_BeamSource(EGS_Input *input, EGS_ObjectFactory *f) :
         return;
     }
 
-    int ipar=0, ilog=6;
+    int ipar=0, ilog=6; int npar=0;
     EGS_Application *app = EGS_Application::activeApplication();
     if (app) {
         ipar = app->getIparallel();
+        npar = app->getNparallel();
     }
 
-    init(&ipar,&ilog,hen_house,egs_home,beam_code.c_str(),
+    init(&ipar,&npar,&ilog,hen_house,egs_home,beam_code.c_str(),
          pegs_file.c_str(),input_file.c_str(),
          strlen(hen_house), strlen(egs_home),
          beam_code.size(),pegs_file.size(),input_file.size());

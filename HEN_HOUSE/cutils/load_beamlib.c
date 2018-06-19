@@ -153,7 +153,7 @@ char *beamlib_maxenergy_name = beamlib_maxenergy_name1;
 
 DLL_HANDLE handle = 0;
 
-typedef void (*InitFunction)(const int *, const int *,
+typedef void (*InitFunction)(const int *, const int *, const int *,
                          const char *, const char *, const char *,
                          const char *, const char *, int,int,int,int,int);
 typedef void (*FinishFunction)();
@@ -363,7 +363,8 @@ void C_CONVENTION FINISH_BEAMSOURCE__() { finish_beamsource(); }
 #endif
 
 int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
-        const int *i_par, const int *i_logunit, const char *config_name,
+        const int *i_par, const int *n_par, const int *i_logunit,
+        const char *config_name,
         const char *hhouse, const char *ehome, const char *beam_code,
         const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -487,14 +488,14 @@ int MYF77OBJ_(init_beamsource,INIT_BEAMSOURCE)(
         printf("Failed to resolve the finish function\n");
         return 4;
     }
-    libinit(i_par,i_logunit,hhouse,ehome,beam_code,pfile,ifile,nhh,neh,nbc,npf,nif);
+    libinit(i_par,n_par,i_logunit,hhouse,ehome,beam_code,pfile,ifile,nhh,neh,nbc,npf,nif);
 
     free(libname);
 
     return 0;
 }
 #ifdef MAKE_WIN_DISTRIBUTION
-int C_CONVENTION init_beamsource_(const int *i_par, const int *i_logunit,
+int C_CONVENTION init_beamsource_(const int *i_par, const int *n_par, const int *i_logunit,
         const char *config_name, const char *hhouse, const char *ehome,
         const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -504,10 +505,10 @@ int C_CONVENTION init_beamsource_(const int *i_par, const int *i_logunit,
   beamlib_motionsample_name = beamlib_motionsample_name2;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name2;
   beamlib_maxenergy_name = beamlib_maxenergy_name2;
-  return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
+  return init_beamsource(i_par,n_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
-int C_CONVENTION init_beamsource__(const int *i_par, const int *i_logunit,
+int C_CONVENTION init_beamsource__(const int *i_par, const int *n_par, const int *i_logunit,
         const char *config_name, const char *hhouse, const char *ehome,
         const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -517,10 +518,10 @@ int C_CONVENTION init_beamsource__(const int *i_par, const int *i_logunit,
   beamlib_motionsample_name = beamlib_motionsample_name3;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name3;
   beamlib_maxenergy_name = beamlib_maxenergy_name3;
-  return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
+  return init_beamsource(i_par,n_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
-int C_CONVENTION INIT_BEAMSOURCE(const int *i_par, const int *i_logunit,
+int C_CONVENTION INIT_BEAMSOURCE(const int *i_par, const int *n_par, const int *i_logunit,
         const char *config_name, const char *hhouse, const char *ehome,
         const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -530,10 +531,10 @@ int C_CONVENTION INIT_BEAMSOURCE(const int *i_par, const int *i_logunit,
   beamlib_motionsample_name = beamlib_motionsample_name4;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name4;
   beamlib_maxenergy_name = beamlib_maxenergy_name4;
-  return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
+  return init_beamsource(i_par,n_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
-int C_CONVENTION INIT_BEAMSOURCE_(const int *i_par, const int *i_logunit,
+int C_CONVENTION INIT_BEAMSOURCE_(const int *i_par, const int *n_par, const int *i_logunit,
         const char *config_name, const char *hhouse, const char *ehome,
         const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -543,10 +544,10 @@ int C_CONVENTION INIT_BEAMSOURCE_(const int *i_par, const int *i_logunit,
   beamlib_motionsample_name = beamlib_motionsample_name5;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name5;
   beamlib_maxenergy_name = beamlib_maxenergy_name5;
-  return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
+  return init_beamsource(i_par,n_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
-int C_CONVENTION INIT_BEAMSOURCE__(const int *i_par, const int *i_logunit,
+int C_CONVENTION INIT_BEAMSOURCE__(const int *i_par, const int *n_par, const int *i_logunit,
         const char *config_name, const char *hhouse, const char *ehome,
         const char *beam_code, const char *pfile, const char *ifile,
         int ncn, int nhh, int neh, int nbc, int npf, int nif) {
@@ -556,7 +557,7 @@ int C_CONVENTION INIT_BEAMSOURCE__(const int *i_par, const int *i_logunit,
   beamlib_motionsample_name = beamlib_motionsample_name6;
   beamlib_phspmotionsample_name = beamlib_phspmotionsample_name6;
   beamlib_maxenergy_name = beamlib_maxenergy_name6;
-  return init_beamsource(i_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
+  return init_beamsource(i_par,n_par,i_logunit,config_name,hhouse,ehome,beam_code,pfile,ifile,
           ncn,nhh,neh,nbc,npf,nif);
 }
 #endif
