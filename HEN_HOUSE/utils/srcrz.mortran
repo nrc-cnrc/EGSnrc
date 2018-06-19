@@ -1643,7 +1643,7 @@ ELSEIF( ISOURC = 23 ) [ "A full treatment head simulation source using BEAM"
       '    X offset of phsp plane (before rotation)      : ',f10.4,' cm'/
       '    Y offset of phsp plane (before rotation)      : ',f10.4,' cm');
      write(6,'(//a)') 'About to call init_beamsource';
-     call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+     call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
      call maxenergy_beamsource(EKSRCM);
@@ -3249,10 +3249,10 @@ $HAVE_LOAD_DSO(#);
 
 #ifndef HAVE_LOAD_DSO;
 
-subroutine init_beamsource(i_parallel,i_log,conf_name,
+subroutine init_beamsource(i_parallel,n_parallel,i_log,conf_name,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
-$INTEGER i_parallel;
+$INTEGER i_parallel,n_parallel;
 character*(*) conf_name;
 character*(*) hen_house,egs_home,the_beam_code,the_pegs_file,the_input_file;
 write(6,*) 'You need a working C compiler to use source 23!';

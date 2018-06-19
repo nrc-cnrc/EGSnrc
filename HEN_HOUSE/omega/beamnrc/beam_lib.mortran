@@ -58,6 +58,24 @@ REPLACE {$BEAM_WRITE_PHSP;} WITH {;
     bpc_nhist(bpc_np) = NHSTRY; bpc_iphat(bpc_np)=IPHAT(NP);
 };
 
+"If the beam source uses a phase space source and this is a parallel"
+"run, then simple-mindedly divide the phase space source up into"
+"n_parallel equal portions.  Each job is restricted to its portion of"
+"the phase space file, regardless of what chunk of the parallel run"
+"this is."
+REPLACE {$SET_INPHSP_BEAM_SOURCE_PARALLEL;} WITH {;
+    IF((ISOURC = 21 | ISOURC = 24) & n_parallel > 1) [
+      long_tmp = NNPHSP/n_parallel;
+      INPHSP_MIN = (i_parallel - 1)*long_tmp + 1;
+      IF(i_parallel = n_parallel) [INPHSP_MAX = NNPHSP;]
+      ELSE [INPHSP_MAX =  INPHSP_MIN + long_tmp -1;]
+      INPHSP = INPHSP_MIN-1;
+      IF(i_iaea_in=1) [
+        $IAEA_SET_PHSP_RECORD(IINSRC,INPHSP_MIN);
+      ]
+    ]
+};
+
 REPLACE {$BEAM_OPEN_PHSP_FOR_READ;} WITH {;};
 
 REPLACE {$BEAM_OPEN_PHSP_FOR_WRITE;} WITH {;};
@@ -84,9 +102,10 @@ REPLACE {;COMIN/my_times/;} WITH {;
       real             egs_tot_time,egs_etime;
 };
 
-subroutine beamlib_init(i_par,i_logunit,hhouse, ehome, beam_code, pfile, ifile);
+subroutine beamlib_init(i_par,n_par,i_logunit,hhouse, ehome, beam_code,
+                        pfile, ifile);
 implicit none;
-$INTEGER i_par, i_logunit;
+$INTEGER i_par, n_par,i_logunit;
 character*(*) hhouse, ehome, beam_code, pfile, ifile;
 
 ;COMIN/EGS-IO,my_times/;
@@ -98,6 +117,7 @@ $INTEGER i, lnblnk1, ircode;
 i_log = i_logunit;
 write(i_log,*) 'In beamlib_init!';
 write(i_log,*) 'i_par = ',i_par;
+write(i_log,*) 'n_par = ',n_par;
 write(i_log,'(a,a)') 'hen_house = ',$cstring(hhouse);
 write(i_log,'(a,a)') 'egs_home  = ',$cstring(ehome);
 write(i_log,'(a,a)') 'beam_code = ',$cstring(beam_code);
@@ -114,7 +134,7 @@ $set_string(user_code,' '); user_code = $cstring(beam_code);
 $set_string(pegs_file,' '); pegs_file = $cstring(pfile);
 $set_string(input_file,' '); input_file = $cstring(ifile);
 $set_string(output_file,' '); output_file = $cstring(ifile);
-is_batch = .true.; i_parallel = i_par; n_parallel = i_par;
+is_batch = .true.; i_parallel = i_par; n_parallel = n_par;
 IF($cstring(pegs_file)='pegsless')is_pegsless=.true.;
 
 call egs_init1;

@@ -4284,6 +4284,9 @@ IF((ISOURC=21 | ISOURC=24) & ~phsp_open)[
 ]
 "set the counter for the particle number being read from ph-sp file"
 
+"special case if this is a beam library source using a phase space file"
+$SET_INPHSP_BEAM_SOURCE_PARALLEL;
+
 JHSTRY = 0; "Reset counter for EGS_WINDOWS for ZLAST"
 
 IF(ISOURC < 21 | ISOURC=22) ["non-phase space input"
@@ -11117,7 +11120,7 @@ ELSEIF(ISOURC = 19) ["Gaussian parallel beam source"
 "***********
 ELSEIF(ISOURC = 23)[ "beam simulation source"
    OUTPUT 'About to call init_beamsource';(//a);
-   call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+   call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                         hen_house,egs_home,the_beam_code,
                         the_pegs_file,the_input_file);
    call maxenergy_beamsource(EKMAXSRC);
@@ -13907,10 +13910,10 @@ $HAVE_LOAD_DSO(#);
 
 #ifndef HAVE_LOAD_DSO;
 
-subroutine init_beamsource(i_parallel,i_log,conf_name,
+subroutine init_beamsource(i_parallel,n_parallel,i_log,conf_name,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
-$INTEGER i_parallel;
+$INTEGER i_parallel,n_parallel;
 character*(*) conf_name;
 character*(*) hen_house,egs_home,the_beam_code,the_pegs_file,the_input_file;
 write(6,*) 'You need a working C compiler to use source 9!';

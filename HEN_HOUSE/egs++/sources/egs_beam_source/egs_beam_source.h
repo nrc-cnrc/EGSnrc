@@ -69,7 +69,7 @@ using namespace std;
 #endif
 
 class EGS_Library;
-typedef void (*InitFunction)(const int *, const int *,
+typedef void (*InitFunction)(const int *, const int *, const int *,
                              const char *, const char *, const char *,
                              const char *, const char *, int,int,int,int,int);
 typedef void (*FinishFunction)();

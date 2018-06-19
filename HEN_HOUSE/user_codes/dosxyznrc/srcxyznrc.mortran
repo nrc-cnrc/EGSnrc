@@ -2697,7 +2697,7 @@ ELSEIF(isource = 9 | isource=10)["Full BEAM treatment head simulation"
 "------------------------------------------------------------------------"
    dsource = -dsource;
    OUTPUT 'About to call init_beamsource';(//a);
-   call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+   call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
 ]
@@ -2717,7 +2717,7 @@ ELSEIF(isource = 20)["Phase Space Incident from multiple settings and "
      ]
      ELSE[
        OUTPUT 'About to initialise BEAM code..';(//a);
-       call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+       call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_shared_lib,
                          the_pegs_file,the_input_file);
      ]
@@ -2748,7 +2748,7 @@ ELSEIF(isource = 21)["Full BEAM sim. incident from multiple settings and "
 "------------------------------------------------------------------------"
    dsource = -dsource;
    OUTPUT 'About to call init_beamsource';(//a);
-   call init_beamsource(i_parallel,i_log,$CONFIGURATION_NAME,
+   call init_beamsource(i_parallel,n_parallel,i_log,$CONFIGURATION_NAME,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
    OUTPUT 'Done initialization';(//a);
@@ -4476,10 +4476,10 @@ $HAVE_LOAD_DSO(#);
 
 #ifndef HAVE_LOAD_DSO;
 
-subroutine init_beamsource(i_parallel,i_log,conf_name,
+subroutine init_beamsource(i_parallel,n_parallel,i_log,conf_name,
                          hen_house,egs_home,the_beam_code,
                          the_pegs_file,the_input_file);
-$INTEGER i_parallel,i_log;
+$INTEGER i_parallel,n_parallel,i_log;
 character*(*) conf_name;
 character*(*) hen_house,egs_home,the_beam_code,the_pegs_file,the_input_file;
 write(6,*) 'You need a working C compiler to use source 9!';
