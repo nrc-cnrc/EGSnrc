@@ -382,7 +382,7 @@ int Tutor7_Application::initScoring() {
                     int nb = nbins.size() == 1 ? nbins[0] : nbins[j];
                     if( nb < 1 )
                         egsWarning("zero bins for region %d?\n",regions[j]);
-                    if( regions[j] < 0 || regions[j] > nreg+1 )
+                    if( regions[j] < -1 || regions[j] > nreg )
                         egsWarning("invalid region index %d\n",regions[j]);
                     if( nb > 0 && regions[j] >= 0 && regions[j] < nreg+2 ){
                         int ij = regions[j];
@@ -417,7 +417,16 @@ int Tutor7_Application::initScoring() {
 
 int Tutor7_Application::ausgab(int iarg) {
     if( iarg <= 4 ) {
-        int np = the_stack->np - 1; int ir = the_stack->ir[np]-1;
+        int np = the_stack->np - 1;
+
+        // Note: ir is the region number+1
+        int ir = the_stack->ir[np]-1;
+
+        // If the particle is outside the geometry and headed in the positive
+        // z-direction, change the region to count it as "transmitted"
+        // Note: This is only valid for certain source/geometry conditions!
+        // If those conditions are not met, the reflected and transmitted
+        // energy fractions will be wrong
         if( ir == 0 && the_stack->w[np] > 0 ) ir = nreg+1;
 
         EGS_Float aux = the_epcont->edep*the_stack->wt[np];
@@ -574,17 +583,26 @@ void Tutor7_Application::outputResults() {
     egsInformation("\n\n last case = %d Etot = %g\n",
             (int)current_case,Etot);
     double norm = ((double)current_case)/Etot;
+
+    egsInformation("\n\n======================================================\n");
+    egsInformation(" Energy fractions\n");
+    egsInformation("======================================================\n");
+    egsInformation("The first and last items in the following list of energy fractions are the reflected and transmitted energy, respectively. These two values are only meaningful if the source is directed in the positive z-direction. The remaining values are the deposited energy fractions in the regions of the geometry, but notice that the identifying index is the region number offset by 1 (ir+1).");
     score->reportResults(norm,
-            "Reflected/deposited/transmitted energy fraction",false,
+            "ir+1 | Reflected, deposited, or transmitted energy fraction",false,
             "  %d  %12.6e +/- %12.6e %c\n");
     if( nph > 0 ) {
-        if( nph > 1 ) egsInformation("\n\n Pulse height distributions\n"
-                "==========================\n\n");
-        else egsInformation("\n\n Pulse height distribution in region %d\n"
-                "==========================================\n\n",
+        if( nph > 1 ) {
+            egsInformation("\n\n======================================================\n");
+            egsInformation(" Pulse height distributions\n"
+                "======================================================\n\n");
+        } else {
+            egsInformation("\n\n Pulse height distribution in region %d\n"
+                "======================================================\n\n",
                 ph_regions[0]);
+        }
         for(int j=0; j<nph; j++) {
-            if( nph > 1 ) egsInformation("Region %d\n"
+            if( nph > 1 ) egsInformation("\nRegion %d\n"
                     "----------------\n\n",ph_regions[j]);
             double f,df;
             for(int i=0; i<pheight[j]->bins(); i++) {
@@ -625,7 +643,11 @@ int Tutor7_Application::startNewShower() {
             for(int j=0; j<nph; j++) {
                 pheight[j]->setHistory(current_case);
                 int ireg = ph_regions[j];
-                EGS_Float edep = score->currentScore(ireg);
+
+                // In ausgab the scoring array is offset by 1 to include
+                // the reflected and transmitted as the first and last regions
+                EGS_Float edep = score->currentScore(ireg+1);
+
                 if( edep > 0 ) {
                     int ibin = min( (int)(edep/(current_weight*ph_de[j])), pheight[j]->bins()-1 );
                     if( ibin >= 0 && ibin < pheight[j]->bins() )
