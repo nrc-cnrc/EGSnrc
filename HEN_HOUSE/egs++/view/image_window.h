@@ -47,7 +47,7 @@ class QThread;
 class QProgressDialog;
 
 // Maximum number of regions displayed
-#define N_REG_MAX 26
+#define N_REG_MAX 100
 
 class ImageWindow : public QWidget {
 

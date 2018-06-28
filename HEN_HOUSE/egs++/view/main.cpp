@@ -124,9 +124,11 @@ int main(int argc, char **argv) {
     w.loadConfig(config_file);
 
     // Request a monospace font from the OS
+#if QT_VERSION >= 0x040700
     QFont new_font = a.font();
     new_font.setStyleHint(QFont::Monospace);
     a.setFont( new_font );
+#endif
 
     a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
 

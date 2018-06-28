@@ -65,6 +65,8 @@ public:
     virtual void setLightLineEdit();
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
+    virtual void setCameraLineEdit();
+    virtual void updateCameraLineEdit();
     virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
     virtual bool loadInput(bool first_time);
@@ -103,6 +105,7 @@ public slots:
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
+    virtual void setLookPosition();
     virtual void loadTracksDialog();
     virtual void viewAllMaterials();
     virtual void reportViewSettings(int x, int y);

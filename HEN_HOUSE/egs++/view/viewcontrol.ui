@@ -912,7 +912,7 @@
                 <item>
                  <widget class="QGroupBox" name="groupBox">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -1157,8 +1157,77 @@
                 </item>
                 <item>
                  <widget class="QGroupBox" name="groupBox9">
+                  <property name="toolTip">
+                   <string>This also translates the rotation point</string>
+                  </property>
+                  <property name="toolTipDuration">
+                   <number>4000</number>
+                  </property>
                   <property name="title">
                    <string>Camera position [cm]</string>
+                  </property>
+                  <layout class="QHBoxLayout">
+                   <item>
+                    <widget class="QLineEdit" name="cameraX"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="cameraY"/>
+                   </item>
+                   <item>
+                    <widget class="QLineEdit" name="cameraZ"/>
+                   </item>
+                   <item>
+                    <spacer name="spacer4">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                     <property name="sizeType">
+                      <enum>QSizePolicy::Expanding</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>16</width>
+                       <height>21</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="applyPosition">
+                     <property name="text">
+                      <string>Apply</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="verticalSpacer">
+                  <property name="orientation">
+                   <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Fixed</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>20</width>
+                    <height>10</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBox9">
+                  <property name="toolTip">
+                   <string>Must be inside the geometry</string>
+                  </property>
+                  <property name="toolTipDuration">
+                   <number>4000</number>
+                  </property>
+                  <property name="title">
+                   <string>Rotation point [cm]</string>
                   </property>
                   <layout class="QHBoxLayout">
                    <item>
@@ -1197,66 +1266,22 @@
                  </widget>
                 </item>
                 <item>
-                 <spacer name="verticalSpacer">
+                 <spacer name="verticalSpacer_14">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
-                  </property>
-                  <property name="sizeType">
-                   <enum>QSizePolicy::Fixed</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
                     <width>20</width>
-                    <height>10</height>
+                    <height>40</height>
                    </size>
                   </property>
                  </spacer>
                 </item>
-                <item>
-                 <widget class="QGroupBox" name="groupBox_4">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimumSize">
-                   <size>
-                    <width>0</width>
-                    <height>220</height>
-                   </size>
-                  </property>
-                  <property name="title">
-                   <string>Controls</string>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_12">
-                   <item>
-                    <widget class="QTextBrowser" name="controlsText">
-                     <property name="html">
-                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Rotate: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;hold left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Zoom:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; scroll or hold middle MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Pan: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Ctrl + left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Roll:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Shift + left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set rotation point:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; double left MB&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Home&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Alt + Home&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Look at X: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;x&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Look at Y:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; y&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Look at Z:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; z&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
                </layout>
               </item>
               <item>
-               <layout class="QVBoxLayout" name="verticalLayout_13" stretch="0,0,0">
+               <layout class="QVBoxLayout" name="verticalLayout_13" stretch="0,0,0,0">
                 <property name="leftMargin">
                  <number>0</number>
                 </property>
@@ -1287,7 +1312,7 @@ p, li { white-space: pre-wrap; }
                   <property name="minimumSize">
                    <size>
                     <width>329</width>
-                    <height>291</height>
+                    <height>230</height>
                    </size>
                   </property>
                   <property name="title">
@@ -1324,23 +1349,50 @@ p, li { white-space: pre-wrap; }
                         <bool>false</bool>
                        </property>
                        <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                          <horstretch>0</horstretch>
                          <verstretch>0</verstretch>
                         </sizepolicy>
+                       </property>
+                       <property name="minimumSize">
+                        <size>
+                         <width>0</width>
+                         <height>70</height>
+                        </size>
                        </property>
                        <property name="title">
                         <string>Light position</string>
                        </property>
                        <layout class="QHBoxLayout">
                         <item>
-                         <widget class="QLineEdit" name="lightX"/>
+                         <widget class="QLineEdit" name="lightX">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>24</height>
+                           </size>
+                          </property>
+                         </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="lightY"/>
+                         <widget class="QLineEdit" name="lightY">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>24</height>
+                           </size>
+                          </property>
+                         </widget>
                         </item>
                         <item>
-                         <widget class="QLineEdit" name="lightZ"/>
+                         <widget class="QLineEdit" name="lightZ">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>24</height>
+                           </size>
+                          </property>
+                         </widget>
                         </item>
                         <item>
                          <spacer name="spacer6">
@@ -1360,6 +1412,12 @@ p, li { white-space: pre-wrap; }
                         </item>
                         <item>
                          <widget class="QPushButton" name="applyLight">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>24</height>
+                           </size>
+                          </property>
                           <property name="text">
                            <string>Apply</string>
                           </property>
@@ -1371,7 +1429,7 @@ p, li { white-space: pre-wrap; }
                      <item>
                       <widget class="QGroupBox" name="groupBox17">
                        <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                          <horstretch>0</horstretch>
                          <verstretch>0</verstretch>
                         </sizepolicy>
@@ -1379,7 +1437,7 @@ p, li { white-space: pre-wrap; }
                        <property name="minimumSize">
                         <size>
                          <width>301</width>
-                         <height>0</height>
+                         <height>60</height>
                         </size>
                        </property>
                        <property name="title">
@@ -1388,6 +1446,12 @@ p, li { white-space: pre-wrap; }
                        <layout class="QHBoxLayout">
                         <item>
                          <widget class="QSlider" name="ambientLight">
+                          <property name="minimumSize">
+                           <size>
+                            <width>0</width>
+                            <height>22</height>
+                           </size>
+                          </property>
                           <property name="maximum">
                            <number>100</number>
                           </property>
@@ -1411,17 +1475,59 @@ p, li { white-space: pre-wrap; }
                  </widget>
                 </item>
                 <item>
-                 <spacer name="verticalSpacer_2">
+                 <spacer name="verticalSpacer_13">
                   <property name="orientation">
                    <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeType">
+                   <enum>QSizePolicy::Minimum</enum>
                   </property>
                   <property name="sizeHint" stdset="0">
                    <size>
                     <width>20</width>
-                    <height>40</height>
+                    <height>10</height>
                    </size>
                   </property>
                  </spacer>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBox_4">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>230</height>
+                   </size>
+                  </property>
+                  <property name="title">
+                   <string>Controls</string>
+                  </property>
+                  <layout class="QHBoxLayout" name="horizontalLayout_12">
+                   <item>
+                    <widget class="QTextBrowser" name="controlsText">
+                     <property name="html">
+                      <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'Cantarell'; font-size:11pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Rotate: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;hold left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Zoom:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; scroll or hold middle MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Pan: &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Ctrl + left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Roll:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Shift + left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set rotation point:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; double left MB&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Home&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Set home:&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt; Alt + Home&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt; font-weight:600;&quot;&gt;Look along X (Y or Z): &lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;x (y or z)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                </layout>
               </item>
@@ -1548,6 +1654,22 @@ p, li { white-space: pre-wrap; }
    <signal>clicked()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>setLookAt()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>applyPosition</sender>
+   <signal>clicked()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>setLookPosition()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>

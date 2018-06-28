@@ -225,9 +225,6 @@ bool GeometryViewControl::loadInput(bool reloading) {
         delete g;
         g = 0;
     }
-
-    // Have to clear geometries twice to get all the inactive ones
-    EGS_BaseGeometry::clearGeometries();
     EGS_BaseGeometry::clearGeometries();
 
     // Load the new geometry
@@ -349,7 +346,7 @@ void GeometryViewControl::saveConfig() {
     out << ":stop image size:" << endl;
 
     out << ":start camera view:" << endl;
-    out << "    camera position = " << lookX->text() << " "
+    out << "    rotation point = " << lookX->text() << " "
             << lookY->text() << " "
             << lookZ->text() << endl;
     out << "    camera = " << camera.x << " "
@@ -592,9 +589,9 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     // Load camera view
     EGS_Input *iView = input->takeInputItem("camera view");
     if(iView) {
-        // Get the camera position
+        // Get the rotation point
         vector<EGS_Float> look;
-        err = iView->getInput("camera position",look);
+        err = iView->getInput("rotation point",look);
         if(!err) {
             look_at.x = look[0];
             look_at.y = look[1];
@@ -616,6 +613,10 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                     camera = EGS_Vector(cam[0],cam[1],cam[2]);
                     camera_v1 = EGS_Vector(camv1[0],camv1[1],camv1[2]);
                     camera_v2 = EGS_Vector(camv2[0],camv2[1],camv2[2]);
+
+                    setCameraLineEdit();
+                    updateCameraLineEdit();
+                    setLookPosition();
                 }
             }
         }
@@ -898,6 +899,8 @@ void GeometryViewControl::cameraHome() {
     camera = camera_home;
     camera_v1 = camera_home_v1;
     camera_v2 = camera_home_v2;
+    setCameraLineEdit();
+    updateCameraLineEdit();
 
     // reset look_at
     look_at = look_at_home;
@@ -963,6 +966,7 @@ void GeometryViewControl::cameraOnAxis(char axis) {
 #endif
 
     // render
+    setLookAtLineEdit();
     setCameraPosition();
 }
 
@@ -1030,6 +1034,8 @@ void GeometryViewControl::cameraTranslate(int dx, int dy) {
 #endif
 
     // adjust look_at lineEdit
+    setCameraLineEdit();
+    updateCameraLineEdit();
     setLookAtLineEdit();
     updateLookAtLineEdit();
 
@@ -1127,11 +1133,14 @@ void GeometryViewControl::phiRotation(int Phi) {
 
 void GeometryViewControl::setCameraPosition() {
 
+    setCameraLineEdit();
+
     screen_xo = look_at - (camera-look_at)*(1/3.);
 //  camera    = look_at + EGS_Vector(s_theta*s_phi,s_theta*c_phi,c_theta)*3*distance;
 //  screen_xo = look_at - EGS_Vector(s_theta*s_phi,s_theta*c_phi,c_theta)*distance;
 
 #ifdef VIEW_DEBUG
+    egsWarning("look at: (%g,%g,%g)\n",look_at.x,look_at.y,look_at.z);
     egsWarning("camera: (%g,%g,%g) screen: (%g,%g,%g)\n",camera.x,camera.y,camera.z,screen_xo.x,screen_xo.y,screen_xo.z);
 #endif
 
@@ -1217,6 +1226,8 @@ void GeometryViewControl::setLookAt() {
     EGS_Float xx = lookX->text().toDouble(&ok_x),
               yy = lookY->text().toDouble(&ok_y),
               zz = lookZ->text().toDouble(&ok_z);
+
+    EGS_Vector look_at_orig = look_at;
     if (ok_x) {
         look_at.x = xx;
     }
@@ -1237,6 +1248,12 @@ void GeometryViewControl::setLookAt() {
     }
     if (ok_x || ok_y || ok_z) {
 
+        if(g->isWhere(look_at) < 0) {
+            look_at = look_at_orig;
+            setLookAtLineEdit();
+            return;
+        }
+
         // camera pointing vector
         EGS_Vector v0 = look_at-camera;
         v0.normalize();
@@ -1246,6 +1263,71 @@ void GeometryViewControl::setLookAt() {
         camera_v1.normalize();
         camera_v2 = camera_v1.times(v0);
         camera_v2.normalize();
+
+        // update camera position
+        setCameraPosition();
+    }
+}
+
+void GeometryViewControl::setLookPosition() {
+#ifdef VIEW_DEBUG
+    egsWarning("In setLookPosition()\n");
+#endif
+    bool ok_x, ok_y, ok_z;
+    EGS_Float dx = 0,
+              dy = 0,
+              dz = 0;
+    EGS_Float xx = cameraX->text().toDouble(&ok_x),
+              yy = cameraY->text().toDouble(&ok_y),
+              zz = cameraZ->text().toDouble(&ok_z);
+    if (ok_x) {
+        dx = xx - camera.x;
+    }
+    else {
+        cameraX->setText(QString("%1").arg((double)camera.x,0,'g',4));
+    }
+    if (ok_y) {
+        dy = yy - camera.y;
+    }
+    else {
+        cameraY->setText(QString("%1").arg((double)camera.y,0,'g',4));
+    }
+    if (ok_z) {
+        dz = zz - camera.z;
+    }
+    else {
+        cameraZ->setText(QString("%1").arg((double)camera.z,0,'g',4));
+    }
+    if (ok_x || ok_y || ok_z) {
+        EGS_Vector look_at_orig = look_at;
+        look_at.x += dx;
+        look_at.y += dy;
+        look_at.z += dz;
+
+        // The new rotation point must be inside the geometry
+        if(g->isWhere(look_at) < 0) {
+            look_at = look_at_orig;
+            setCameraLineEdit();
+            return;
+        }
+
+        camera.x += dx;
+        camera.y += dy;
+        camera.z += dz;
+
+        // camera pointing vector
+        EGS_Vector v0 = look_at-camera;
+        v0.normalize();
+
+        // new up and side vectors, v1 and v2
+        camera_v1 = v0.times(camera_v2);
+        camera_v1.normalize();
+        camera_v2 = camera_v1.times(v0);
+        camera_v2.normalize();
+
+        // adjust look_at lineEdit
+        setLookAtLineEdit();
+        updateLookAtLineEdit();
 
         // update camera position
         setCameraPosition();
@@ -1322,6 +1404,18 @@ void GeometryViewControl::updateLookAtLineEdit() {
     lookX->repaint();
     lookY->repaint();
     lookZ->repaint();
+}
+
+void GeometryViewControl::setCameraLineEdit() {
+    cameraX->setText(QString("%1").arg((double)camera.x,0,'g',4));
+    cameraY->setText(QString("%1").arg((double)camera.y,0,'g',4));
+    cameraZ->setText(QString("%1").arg((double)camera.z,0,'g',4));
+}
+
+void GeometryViewControl::updateCameraLineEdit() {
+    cameraX->repaint();
+    cameraY->repaint();
+    cameraZ->repaint();
 }
 
 int GeometryViewControl::setGeometry(
@@ -1493,6 +1587,53 @@ int GeometryViewControl::setGeometry(
                 break;
             }
         }
+
+        // Hunt some more for a point inside
+        // by adjusting the window boundaries
+        if (!found) {
+            xmin -= 100;
+            xmax += 100;
+            ymin -= 100;
+            ymax += 100;
+            zmin -= 100;
+            zmax += 100;
+            dx = (xmax-xmin)/200, dy = (ymax-ymin)/200, dz = (zmax-zmin)/200;
+            for (int k=0; k<200; k++) {
+                if (progress.wasCanceled()) {
+                    return 2;
+                }
+                xo.z = zmin + dz*(k+0.5);
+                for (int i=0; i<200; i++) {
+                    xo.x = xmin + dx*(i+0.5);
+                    for (int j=0; j<200; j++) {
+                        xo.y = ymin + dy*(j+0.5);
+                        ireg = g->isWhere(xo);
+                        if (ireg >= 0) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+
+            if (found) {
+                // Now that we found a point, adjust the window boundaries
+                // to enclose the object
+                xmin = xo.x - 50;
+                xmax = xo.x + 50;
+                ymin = xo.y - 50;
+                ymax = xo.y + 50;
+                zmin = xo.z - 50;
+                zmax = xo.z + 50;
+            }
+        }
+
         if (!found) {
             progress.setValue(132);
             qApp->processEvents();
@@ -1607,9 +1748,9 @@ int GeometryViewControl::setGeometry(
     egsWarning(" xmin: (%g,%g,%g)\n",pmin.x,pmin.y,pmin.z);
     egsWarning(" xmax: (%g,%g,%g)\n",pmax.x,pmax.y,pmax.z);
 #endif
-    EGS_Float xsize = (pmax.x - pmin.x)/2;
-    EGS_Float ysize = (pmax.y - pmin.y)/2;
-    EGS_Float zsize = (pmax.z - pmin.z)/2;
+    EGS_Float xsize = abs(pmax.x - pmin.x)/2;
+    EGS_Float ysize = abs(pmax.y - pmin.y)/2;
+    EGS_Float zsize = abs(pmax.z - pmin.z)/2;
     size = xsize;
     if (ysize > size) {
         size = ysize;
@@ -1617,6 +1758,17 @@ int GeometryViewControl::setGeometry(
     if (zsize > size) {
         size = zsize;
     }
+
+    if(pmax.x < 0) {
+        pmax.x = 0;
+    }
+    if(pmax.y < 0) {
+        pmax.y = 0;
+    }
+    if(pmax.z < 0) {
+        pmax.z = 0;
+    }
+
     axesmax  = pmax + EGS_Vector(size, size, size)*0.3;
 
     if (!justReloading) {
@@ -1649,6 +1801,8 @@ int GeometryViewControl::setGeometry(
         camera_home_v1 = camera_v1;
         camera_home_v2 = camera_v2;
         zoomlevel_home = zoomlevel;
+
+        setCameraLineEdit();
     }
 
     updateView();

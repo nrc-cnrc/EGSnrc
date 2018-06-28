@@ -141,9 +141,19 @@ public:
             if (j >= nnow && nnow) {
                 j = 0;
                 ++iloop;
-                if (iloop > 20) egsWarning("~EGS_GeometryPrivate(): failed "
-                                               "to delete all geometries after 20 loops!\n");
-                break;
+
+                for(int i=0; i<nnow; ++i) {
+                    if(!geoms[i]->deref()) {
+                        delete geoms[i];
+                    }
+                }
+
+                if (iloop > 20) {
+                    egsWarning("~EGS_GeometryPrivate(): failed "
+                               "to delete all geometries after 20 loops!\n");
+
+                    break;
+                }
             }
         }
     };
@@ -422,7 +432,7 @@ EGS_BaseGeometry::EGS_BaseGeometry(const string &Name) : nreg(0), name(Name),
     }
     if (egs_geometries[active_glist].addGeometry(this) < 0)
         egsFatal("EGS_BaseGeometry::EGS_BaseGeometry:\n"
-                 "  a geometry with name %s alread exists\n",name.c_str());
+                 "  a geometry with name %s already exists\n",name.c_str());
 }
 
 EGS_BaseGeometry::~EGS_BaseGeometry() {
