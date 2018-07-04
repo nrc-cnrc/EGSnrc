@@ -62,7 +62,7 @@ shape_libs = egs_circle egs_ellipse egs_extended_shape egs_gaussian_shape \
              egs_line_shape egs_polygon_shape egs_rectangle egs_shape_collection \
              egs_voxelized_shape
 
-aobject_libs = egs_track_scoring egs_dose_scoring
+aobject_libs = egs_track_scoring egs_dose_scoring egs_radiative_splitting
 
 all_libs = $(geometry_libs) $(source_libs) $(shape_libs) $(aobject_libs)
 

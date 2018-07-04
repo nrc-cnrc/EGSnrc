@@ -213,6 +213,8 @@ public:
     EGS_Float getPcut();
     /* Needed by some sources */
     EGS_Float getRM();
+    /* Turn ON/OFF radiative splitting */
+    void setRadiativeSplitting(const EGS_Float &nsplit);
 
 protected:
 

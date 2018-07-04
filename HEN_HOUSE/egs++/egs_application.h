@@ -1111,6 +1111,7 @@ public:
     virtual EGS_Float getRM() {
         return -1.0;
     };
+    virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
 };
 
 #define APP_MAIN(app_name) \

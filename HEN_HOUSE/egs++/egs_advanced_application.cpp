@@ -1186,6 +1186,10 @@ EGS_Float EGS_AdvancedApplication::getPcut() {
 EGS_Float EGS_AdvancedApplication::getRM() {
     return the_useful->rm;
 }
+// Turns ON/OFF radiative splitting
+void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
+    the_egsvr->nbr_split = nsplit;
+}
 
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
