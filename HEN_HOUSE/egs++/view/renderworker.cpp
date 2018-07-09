@@ -212,6 +212,8 @@ void applyParameters(EGS_GeometryVisualizer *vis, const struct RenderParameters 
     vis->setAllowRegionSelection(p.allowRegionSelection);
     vis->setDisplayColors(p.displayColors);
     vis->setEnergyScaling(p.energyScaling);
+    vis->setScoreColors(p.scoreColor);
+    vis->setDoseTransparency(p.doseTransparency);
 }
 
 void RenderWorker::render(EGS_BaseGeometry *g, struct RenderParameters p) {

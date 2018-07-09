@@ -37,6 +37,7 @@
 #include "stddef.h"
 #include <vector>
 #include <QColor>
+#include <unordered_map>
 
 class EGS_Light;
 class EGS_MaterialColor;
@@ -110,14 +111,16 @@ public:
     void setMaterialColor(int imed, const EGS_MaterialColor &Mat);
     void setMaterialColor(int imed, const EGS_Vector &d_color,
                           EGS_Float Alpha=1);
-    void setShowRegions(vector<bool> show_regions);
+    void setShowRegions(const vector<bool> &show_regions);
     void setAllowRegionSelection(bool allow);
+    void setScoreColors(const unordered_map<size_t, EGS_Vector> &scoreColor);
+    void setDoseTransparency(EGS_Float doseTransparency);
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
     bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
     bool renderTracks(int nx, int ny, EGS_Vector *image, int *abort_location=NULL);
     EGS_Vector getColor(const EGS_Vector &x, EGS_BaseGeometry *g, const EGS_Float axis_distance, const EGS_Float track_alpha);
-    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord);
+    void getRegions(const EGS_Vector &x, EGS_BaseGeometry *g, int *regions, EGS_Vector *colors, int maxreg, EGS_Vector &hitCoord, const unordered_map<size_t, EGS_Float> &score, EGS_Float &hitScore);
     void getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g, EGS_Vector &hitCoord);
 
     void setDisplayColors(const vector<EGS_Vector> &displayColors);

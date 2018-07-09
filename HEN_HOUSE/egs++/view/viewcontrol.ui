@@ -158,10 +158,16 @@
                   <item>
                    <widget class="QGroupBox" name="groupBox10">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>120</height>
+                     </size>
                     </property>
                     <property name="maximumSize">
                      <size>
@@ -226,7 +232,7 @@
                   <item>
                    <widget class="QGroupBox" name="groupBox15">
                     <property name="sizePolicy">
-                     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                     <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
@@ -234,7 +240,7 @@
                     <property name="minimumSize">
                      <size>
                       <width>0</width>
-                      <height>0</height>
+                      <height>120</height>
                      </size>
                     </property>
                     <property name="maximumSize">
@@ -254,58 +260,146 @@
                     </property>
                     <layout class="QHBoxLayout">
                      <item>
-                      <layout class="QVBoxLayout">
+                      <layout class="QVBoxLayout" name="vlayout_overlay">
                        <item>
-                        <layout class="QVBoxLayout">
-                         <item>
-                          <widget class="QCheckBox" name="showAxesCheckbox">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Show axes</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="showAxesLabelsCheckbox">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Show axes labels</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                         <item>
-                          <widget class="QCheckBox" name="showRegionsCheckbox">
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                           <property name="text">
-                            <string>Show regions</string>
-                           </property>
-                           <property name="checked">
-                            <bool>true</bool>
-                           </property>
-                          </widget>
-                         </item>
-                        </layout>
+                        <widget class="QCheckBox" name="showAxesCheckbox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>Show axes</string>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="showAxesLabelsCheckbox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>Show axis labels</string>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QCheckBox" name="showRegionsCheckbox">
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="text">
+                          <string>Show regions and surface info</string>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_dose">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>140</height>
+                     </size>
+                    </property>
+                    <property name="toolTip">
+                     <string>Use egs_dose_scoring to output a dose file</string>
+                    </property>
+                    <property name="title">
+                     <string>Dose</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayout_9">
+                     <property name="leftMargin">
+                      <number>6</number>
+                     </property>
+                     <property name="topMargin">
+                      <number>6</number>
+                     </property>
+                     <property name="rightMargin">
+                      <number>6</number>
+                     </property>
+                     <property name="bottomMargin">
+                      <number>6</number>
+                     </property>
+                     <item>
+                      <widget class="QSlider" name="slider_dose">
+                       <property name="maximum">
+                        <number>100</number>
+                       </property>
+                       <property name="value">
+                        <number>50</number>
+                       </property>
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <layout class="QVBoxLayout" name="outerLayout_dose">
+                       <item>
+                        <widget class="QScrollArea" name="scrollArea_2">
+                         <property name="frameShape">
+                          <enum>QFrame::Box</enum>
+                         </property>
+                         <property name="widgetResizable">
+                          <bool>true</bool>
+                         </property>
+                         <widget class="QWidget" name="scrollAreaWidgetContents">
+                          <property name="geometry">
+                           <rect>
+                            <x>0</x>
+                            <y>0</y>
+                            <width>294</width>
+                            <height>103</height>
+                           </rect>
+                          </property>
+                          <layout class="QVBoxLayout" name="verticalLayout_16">
+                           <item>
+                            <layout class="QVBoxLayout" name="verticalLayout_dose">
+                             <property name="spacing">
+                              <number>5</number>
+                             </property>
+                             <item>
+                              <widget class="QLabel" name="label_dose">
+                               <property name="text">
+                                <string>No ausgab objects found</string>
+                               </property>
+                               <property name="alignment">
+                                <set>Qt::AlignCenter</set>
+                               </property>
+                              </widget>
+                             </item>
+                            </layout>
+                           </item>
+                          </layout>
+                         </widget>
+                        </widget>
                        </item>
                       </layout>
                      </item>
@@ -323,7 +417,7 @@
                     <property name="sizeHint" stdset="0">
                      <size>
                       <width>20</width>
-                      <height>160</height>
+                      <height>10</height>
                      </size>
                     </property>
                    </spacer>
@@ -1156,12 +1250,9 @@
                  </spacer>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBox9">
+                 <widget class="QGroupBox" name="groupBox_cam">
                   <property name="toolTip">
                    <string>This also translates the rotation point</string>
-                  </property>
-                  <property name="toolTipDuration">
-                   <number>4000</number>
                   </property>
                   <property name="title">
                    <string>Camera position [cm]</string>
@@ -1177,7 +1268,7 @@
                     <widget class="QLineEdit" name="cameraZ"/>
                    </item>
                    <item>
-                    <spacer name="spacer4">
+                    <spacer name="spacer_cam">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
@@ -1222,9 +1313,6 @@
                  <widget class="QGroupBox" name="groupBox9">
                   <property name="toolTip">
                    <string>Must be inside the geometry</string>
-                  </property>
-                  <property name="toolTipDuration">
-                   <number>4000</number>
                   </property>
                   <property name="title">
                    <string>Rotation point [cm]</string>
@@ -2118,6 +2206,22 @@ p, li { white-space: pre-wrap; }
    <signal>valueChanged(int)</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>changeTransparency(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>slider_dose</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeDoseTransparency(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>

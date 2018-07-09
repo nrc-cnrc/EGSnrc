@@ -58,6 +58,14 @@ struct RenderParameters {
     vector<bool> show_regions;
     // Whether or not to allow show_regions to be used
     bool allowRegionSelection;
+    // Transparency of dose
+    EGS_Float doseTransparency;
+
+    // Unordered map is much more efficient when there is not
+    // dose in every region
+    unordered_map<size_t, EGS_Float> score;
+    unordered_map<size_t, EGS_Vector> scoreColor;
+
     // lights
     vector<EGS_Light> lights;
     EGS_Vector global_ambient_light;

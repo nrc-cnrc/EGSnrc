@@ -71,8 +71,10 @@ public:
     virtual void updateView(bool transform = false);
     virtual bool loadInput(bool first_time);
     virtual void loadConfig(QString configFilename);
+    virtual EGS_Vector getHeatMapColor(EGS_Float value);
     virtual void updateRegionTable();
     virtual void updateRegionTable(int imed);
+    virtual void updateAusgabObjects();
     virtual void initColorSwatches();
 
 public slots:
@@ -132,6 +134,9 @@ public slots:
     virtual void hideAllRegions();
     virtual void enlargeFont();
     virtual void shrinkFont();
+    virtual void setFontSize(int size);
+    virtual void doseCheckbox_toggled();
+    virtual void changeDoseTransparency(int t);
 
 private:
 
@@ -160,6 +165,7 @@ private:
     EGS_Float theta;
     EGS_Float distance;
     EGS_Float size;
+    EGS_Float doseTransparency;
     EGS_Vector axesmax;
     EGS_Vector center;
     EGS_Vector camera_home_v2;
@@ -184,6 +190,7 @@ private:
     vector<bool> show_regions;
     bool    allowRegionSelection,
             energyScaling;
+    vector<vector<EGS_Float>> scoreArrays;
 
 protected slots:
 

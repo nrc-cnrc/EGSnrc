@@ -42,6 +42,8 @@
 #include "egs_visualizer.h"
 #include "egs_timer.h"
 #include "egs_input.h"
+#include "egs_ausgab_object.h"
+#include "ausgab_objects/egs_dose_scoring/egs_dose_scoring.h"
 
 #include <qmessagebox.h>
 #include <qapplication.h>
@@ -58,6 +60,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
+#include <unordered_map>
 using namespace std;
 
 #ifndef M_PI
@@ -139,6 +143,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     photonColor = QColor(255,255,0);
     electronColor = QColor(255,0,0);
     positronColor = QColor(0,0,255);
+    doseTransparency = EGS_Float(this->slider_dose->value()/100.);
     energyScaling = this->energyScalingCheckbox->isChecked();
     initColorSwatches();
 
@@ -212,20 +217,28 @@ bool GeometryViewControl::loadInput(bool reloading) {
     this->setProperty("windowTitle", "View Controls ("+fileInfo.baseName()+")");
     gview->setProperty("windowTitle", "egs_view ("+fileInfo.baseName()+")");
 
-    // Read the input file
-    EGS_Input input;
-    input.setContentFromFile(filename.toUtf8().constData());
-
-    // clear the current geometry
+    // Clear the current geometry
     gview->stopWorker();
     qApp->processEvents();
 
-    // delete geometry
-    if (g) {
+    // Delete any previous geometry
+    if(g) {
         delete g;
         g = 0;
     }
     EGS_BaseGeometry::clearGeometries();
+
+    // Delete any previous ausgab objects
+    int nobj = EGS_AusgabObject::nObjects();
+    for(int j=0; j<3; ++j) {
+        for (int i=0; i<nobj; ++i) {
+            delete EGS_AusgabObject::getObject(i);
+        }
+    }
+
+    // Read the input file
+    EGS_Input input;
+    input.setContentFromFile(filename.toUtf8().constData());
 
     // Load the new geometry
     EGS_BaseGeometry *newGeom = EGS_BaseGeometry::createGeometry(&input);
@@ -295,6 +308,7 @@ bool GeometryViewControl::loadInput(bool reloading) {
         show_regions.resize(nreg,true);
     } else {
         allowRegionSelection = false;
+        show_regions.resize(0);
         egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
     }
     tabWidget->setTabEnabled(2,allowRegionSelection);
@@ -310,7 +324,41 @@ bool GeometryViewControl::loadInput(bool reloading) {
         updateRegionTable();
     }
 
+    // Load ausgab objects from the input file
+    EGS_AusgabObject::createAusgabObjects(&input);
+    updateAusgabObjects();
+    doseCheckbox_toggled();
+
     return true;
+}
+
+EGS_Vector GeometryViewControl::getHeatMapColor(EGS_Float value) {
+
+    // The colors: (blue, cyan, green, yellow, red)
+    const unsigned int NUM_COLORS = 5;
+    static EGS_Float color[NUM_COLORS][3] = { {0,0,1}, {0,1,1}, {0,1,0}, {1,1,0}, {1,0,0} };
+
+    unsigned int idx1;
+    unsigned int idx2;
+    EGS_Float fractBetween = 0;
+
+    if(value <= 0) {
+        idx1 = idx2 = 0;
+    } else if(value >= 1) {
+        idx1 = idx2 = NUM_COLORS-1;
+    } else {
+        value = value * (NUM_COLORS-1);
+        idx1  = floor(value);
+        idx2  = idx1+1;
+        fractBetween = value - EGS_Float(idx1);
+    }
+
+    EGS_Vector finalColor;
+    finalColor.x = (color[idx2][0] - color[idx1][0])*fractBetween + color[idx1][0];
+    finalColor.y = (color[idx2][1] - color[idx1][1])*fractBetween + color[idx1][1];
+    finalColor.z = (color[idx2][2] - color[idx1][2])*fractBetween + color[idx1][2];
+
+    return finalColor;
 }
 
 void GeometryViewControl::reloadInput() {
@@ -340,10 +388,14 @@ void GeometryViewControl::saveConfig() {
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
 
-    out << ":start image size:" << endl;
-    out << "    nx = " << rp.nx << endl;
-    out << "    ny = " << rp.ny << endl;
-    out << ":stop image size:" << endl;
+    // General window settings
+    out << ":start general:" << endl;
+    out << "    font size = " << this->font().pointSize() << endl;
+    out << "    controls position = " << this->x() << " " << this->y() << endl;
+    out << "    controls size = " << this->width() << " " << this->height() << endl;
+    out << "    view position = " << gview->x() << " " << gview->y() << endl;
+    out << "    view size = " << gview->width() << " " << gview->height() << endl;
+    out << ":stop general:" << endl;
 
     out << ":start camera view:" << endl;
     out << "    rotation point = " << lookX->text() << " "
@@ -389,6 +441,10 @@ void GeometryViewControl::saveConfig() {
     out << "    show axis labels = " << showAxesLabels << endl;
     out << "    show regions = " << showRegionsCheckbox->isChecked() << endl;
     out << ":stop overlay:" << endl;
+
+    out << ":start dose:" << endl;
+    out << "    alpha = " << slider_dose->value() << endl;
+    out << ":stop dose:" << endl;
 
     if(rp.material_colors.size() > 0) {
         out << ":start material colors:" << endl;
@@ -499,6 +555,39 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     int err; // A variable to track errors
+
+    EGS_Input *iGeneral = input->takeInputItem("general");
+    if(iGeneral) {
+        int fontSize;
+        err = iGeneral->getInput("font size",fontSize);
+        if(!err) {
+            setFontSize(fontSize);
+        }
+
+        vector<int> position;
+        err = iGeneral->getInput("controls position",position);
+        if(!err && position.size() == 2) {
+            this->move(position[0], position[1]);
+        }
+
+        vector<int> windowSize;
+        err = iGeneral->getInput("controls size",windowSize);
+        if(!err && windowSize.size() == 2) {
+            this->resize(windowSize[0], windowSize[1]);
+        }
+
+        err = iGeneral->getInput("view position",position);
+        if(!err && position.size() == 2) {
+            gview->move(position[0], position[1]);
+        }
+
+        err = iGeneral->getInput("view size",windowSize);
+        if(!err && windowSize.size() == 2) {
+            gview->resize(windowSize[0], windowSize[1]);
+        }
+
+        delete iGeneral;
+    }
 
     // Load the image size
     EGS_Input *iImageSize = input->takeInputItem("image size");
@@ -856,6 +945,14 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         delete iColors;
     }
 
+    EGS_Input *iDose = input->takeInputItem("dose");
+    if(iDose) {
+        int alpha;
+        err = iDose->getInput("alpha",alpha);
+        slider_dose->setValue(alpha);
+        doseTransparency = EGS_Float(alpha/100.);
+    }
+
     updateView(true);
 }
 
@@ -865,6 +962,177 @@ void GeometryViewControl::setFilename(QString str) {
 
 void GeometryViewControl::setTracksFilename(QString str) {
     filename_tracks = str;
+}
+
+void GeometryViewControl::updateAusgabObjects() {
+
+    if(scoreArrays.size() > 0) {
+        scoreArrays.assign(scoreArrays.size(),vector<EGS_Float>());
+    }
+    size_t doseIndex = 0;
+
+    // Clear anything already in the layout for checkboxes
+    // This is just for reloading an input file
+    QList<QCheckBox *> list = groupBox_dose->findChildren<QCheckBox *>();
+    foreach(QCheckBox *cb, list) {
+        delete cb;
+    }
+
+    for (int q=0; q<EGS_AusgabObject::nObjects(); ++q) {
+        if(EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
+            EGS_DoseScoring *o = static_cast<EGS_DoseScoring *>(EGS_AusgabObject::getObject(q));
+            EGS_BaseGeometry *dgeom;
+            int file_type;
+            if(o->getOutputFile(dgeom, file_type)) {
+
+                int nx=dgeom->getNRegDir(0);
+                int ny=dgeom->getNRegDir(1);
+                int nz=dgeom->getNRegDir(2);
+
+                // Hide the label saying there are no ausgab objects
+                if(doseIndex == 0) {
+                    label_dose->hide();
+                }
+
+                // If the file type is 3ddose
+                if(file_type == 0) {
+
+                    QFileInfo inputFileInfo = QFileInfo(filename);
+                    QString doseFilename = inputFileInfo.canonicalPath() + "/" + o->getObjectName().c_str() + ".3ddose";
+                    QFile doseFile(doseFilename);
+
+                    QCheckBox *doseCheckbox = new QCheckBox(QString(dgeom->getName().c_str()) + ": " + QString(o->getObjectName().c_str()) + ".3ddose", this);
+                    verticalLayout_dose->addWidget(doseCheckbox);
+
+                    if(doseIndex+1 > scoreArrays.size()) {
+                        scoreArrays.push_back(vector<EGS_Float>());
+                    }
+
+                    connect(doseCheckbox, SIGNAL(toggled(bool)), this, SLOT(doseCheckbox_toggled()));
+
+                    if(doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
+                        egsInformation("Reading dose file: %s\n", doseFilename.toLatin1().data());
+
+                        QTextStream in(&doseFile);
+
+                        // Sanity check the number of voxels
+                        int nx_tmp, ny_tmp, nz_tmp;
+                        in >> nx_tmp >> ny_tmp >> nz_tmp;
+                        if(nx == nx_tmp && ny == ny_tmp && nz == nz_tmp && g->regions() >= nx_tmp*ny_tmp*nz_tmp) {
+
+                            scoreArrays[doseIndex].assign(g->regions(),0);
+
+                            // Read in and skip the boundaries
+                            EGS_Float tmp;
+                            for (int i=0; i<nx+ny+nz+3; ++i) {
+                                in >> tmp;
+                            }
+
+                            for (int k=0; k<nz; ++k) {
+                                for (int j=0; j<ny; ++j) {
+                                    for (int i=0; i<nx; ++i) {
+                                        // Determine the region no. in the EGS_XYZGeometry and corresponding global reg. no.
+                                        EGS_Float minx=dgeom->getBound(0,i);
+                                        EGS_Float maxx=dgeom->getBound(0,i+1);
+                                        EGS_Float miny=dgeom->getBound(1,j);
+                                        EGS_Float maxy=dgeom->getBound(1,j+1);
+                                        EGS_Float minz=dgeom->getBound(2,k);
+                                        EGS_Float maxz=dgeom->getBound(2,k+1);
+                                        EGS_Vector tp((minx+maxx)/2., (miny+maxy)/2., (minz+maxz)/2.);
+
+                                        int g_reg = g->isWhere(tp);
+
+                                        // Read in the dose values
+                                        in >> scoreArrays[doseIndex][g_reg];
+                                    }
+                                }
+                            }
+                        }
+
+                        doseFile.close();
+                    } else {
+                        doseCheckbox->setEnabled(false);
+                    }
+                    doseIndex++;
+                }
+            }
+        }
+    }
+
+    // If there were no dose ausgab objects, set the area blank
+    if(doseIndex == 0) {
+        label_dose->show();
+        slider_dose->hide();
+    }
+}
+
+void GeometryViewControl::doseCheckbox_toggled() {
+    vector<bool> useArray;
+    QList<QCheckBox *> list = groupBox_dose->findChildren<QCheckBox *>();
+    foreach(QCheckBox *cb, list) {
+        useArray.push_back(cb->isChecked());
+    }
+
+    // Get the rendering parameters
+    RenderParameters &rp = gview->pars;
+
+    bool somethingChecked = false;
+    for(size_t i=0; i<useArray.size(); ++i) {
+        if(useArray[i]) {
+            somethingChecked = true;
+            break;
+        }
+    }
+
+    // If nothing is checked, clear the scoring arrays and return
+    if(!somethingChecked) {
+        rp.score.clear();
+        rp.scoreColor.clear();
+        updateView();
+        return;
+    }
+
+    // Every time a dose checkbox is toggled, we recalculate the total dose
+    if(scoreArrays.size() >= useArray.size()) {
+        for(size_t i=0; i<useArray.size(); ++i) {
+            if(useArray[i] && scoreArrays[i].size() > 0) {
+                for (int j=0; j<g->regions(); ++j) {
+                    if(scoreArrays[i][j] > 0) {
+                        if(rp.score.count(j)) {
+                            rp.score[j] += scoreArrays[i][j];
+                        } else {
+                            rp.score[j] = scoreArrays[i][j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Determine the total dose minimum and maximum
+    EGS_Float dmin=1e10, dmax=0.;
+    for (int j=0; j<g->regions(); ++j) {
+        if(rp.score.count(j)) {
+            if(rp.score[j] < dmin) {
+                dmin = rp.score[j];
+            } else if(rp.score[j] > dmax) {
+                dmax = rp.score[j];
+            }
+        }
+    }
+
+    // Calculate the colors
+    if(dmax > 0.) {
+        for (int i=0; i<g->regions(); ++i) {
+            if(rp.score.count(i)) {
+                EGS_Float scoreNorm = (rp.score[i] - dmin) / (dmax - dmin);
+                rp.scoreColor[i] = getHeatMapColor(scoreNorm);
+            }
+        }
+    }
+
+    updateView();
 }
 
 void GeometryViewControl::checkboxAxes(bool toggle) {
@@ -1172,6 +1440,13 @@ void GeometryViewControl::changeTransparency(int t) {
     updateView(true);
 }
 
+void GeometryViewControl::changeDoseTransparency(int t) {
+#ifdef VIEW_DEBUG
+    egsWarning("In changeDoseTransparency(%d)\n",t);
+#endif
+    doseTransparency = EGS_Float(t/100.);
+    updateView(true);
+}
 
 void GeometryViewControl::moveLightChanged(int toggle) {
 #ifdef VIEW_DEBUG
@@ -1864,6 +2139,7 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_positrons = showPositronTracks;
     rp.size = size;
     rp.show_regions = show_regions;
+    rp.doseTransparency = doseTransparency;
 
     gview->render(g, transform);
 }
@@ -2293,3 +2569,18 @@ void GeometryViewControl::shrinkFont() {
     controlsText->setFontPointSize(controlsFont.pointSize() - 1);
     controlsText->setTextCursor(cursor);
 }
+
+void GeometryViewControl::setFontSize(int size) {
+    int changeInSize = this->font().pointSize() - size;
+
+    QFont new_font = this->font();
+    new_font.setPointSize(size);
+    QApplication::setFont(new_font);
+
+    QFont controlsFont = controlsText->font();
+    QTextCursor cursor = controlsText->textCursor();
+    controlsText->selectAll();
+    controlsText->setFontPointSize(controlsFont.pointSize() + changeInSize);
+    controlsText->setTextCursor(cursor);
+}
+

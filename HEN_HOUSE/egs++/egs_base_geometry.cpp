@@ -149,8 +149,8 @@ public:
                 }
 
                 if (iloop > 20) {
-                    egsWarning("~EGS_GeometryPrivate(): failed "
-                               "to delete all geometries after 20 loops!\n");
+//                     egsWarning("~EGS_GeometryPrivate(): failed "
+//                                "to delete all geometries after 20 loops!\n");
 
                     break;
                 }
@@ -188,12 +188,19 @@ public:
     };
 
     void removeGeometry(EGS_BaseGeometry *g) {
+        ntot--;
+        EGS_BaseGeometry **tmp = new EGS_BaseGeometry* [ntot];
+        int i=0;
         for (int j=0; j<nnow; j++) {
-            if (geoms[j] == g) {
-                geoms[j] = geoms[--nnow];
-                break;
+            if (geoms[j] != g) {
+                tmp[i++] = geoms[j];
             }
         }
+        if (geoms) {
+            delete [] geoms;
+        }
+        nnow--;
+        geoms = tmp;
     };
 
     EGS_BaseGeometry *getGeometry(const string &name) {

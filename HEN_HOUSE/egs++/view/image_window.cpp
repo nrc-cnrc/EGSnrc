@@ -333,11 +333,12 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         yscreen = -(xyMouse.y()-h/2)*yscale/h;
         EGS_Vector xp(q.screen_xo + q.screen_v2*yscreen + q.screen_v1*xscreen);
 
-        int maxreg=min(int((h-130)/15),N_REG_MAX);
+        int maxreg=min(int((h-145)/15),N_REG_MAX);
         int regions[maxreg];
-        EGS_Vector colors[maxreg];
+        EGS_Vector colors[N_REG_MAX];
         EGS_Vector hitCoord(0,0,0);
-        vis->getRegions(xp, lastRequestGeo, regions, colors, maxreg, hitCoord);
+        EGS_Float hitScore = 0;
+        vis->getRegions(xp, lastRequestGeo, regions, colors, maxreg, hitCoord, q.score, hitScore);
         if (!wasRerenderRequested && memcmp(regions, lastRegions, sizeof(lastRegions)) == 0) {
             return;
         }
@@ -391,7 +392,11 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         // The below code is very CPU-inefficient. Please optimize!
         if (regions[0]>=0) {
             // Background for the region list
-            p.fillRect(QRect(0,0,64,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            if(hitScore > 0.) {
+                p.fillRect(QRect(0,0,79,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            } else {
+                p.fillRect(QRect(0,0,64,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+            }
             // Text color for the region list
             p.setPen(QColor((int)(255*q.displayColors[1].x), (int)(255*q.displayColors[1].y), (int)(255*q.displayColors[1].z)));
 
@@ -399,10 +404,14 @@ void ImageWindow::paintEvent(QPaintEvent *) {
             y0+=10;
             regionsDisplayed=true;
 
-            // Get the hit coordinates
+            // Get the hit coordinates and score
             QString hitx = QString::number(hitCoord.x);
             QString hity = QString::number(hitCoord.y);
             QString hitz = QString::number(hitCoord.z);
+            QString score;
+            if(hitScore > 0.) {
+                score = QString::number(hitScore);
+            }
 
             // Determine the max number of digits to calculate the background fill
             int nChar = hitx.length();
@@ -410,16 +419,33 @@ void ImageWindow::paintEvent(QPaintEvent *) {
                 nChar = hity.length();
             } else if(hitz.length() > nChar) {
                 nChar = hitz.length();
+            } else if(hitScore > 0. && score.length() > nChar) {
+                nChar = score.length();
             }
             if(nChar > 4) {
                 nChar -= 5;
             }
 
-            p.fillRect(QRect(64,h-64,nChar*10,64),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
-            p.drawText(9,h-64,"Surface");
-            p.drawText(9,h-45,hitx);
-            p.drawText(9,h-30,hity);
-            p.drawText(9,h-15,hitz);
+            if(hitScore > 0.) {
+                p.fillRect(QRect(79,h-79,nChar*10,79),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+                p.drawText(9,h-79,"Surface");
+                p.drawText(9,h-60,hitx);
+                p.drawText(9,h-45,hity);
+                p.drawText(9,h-30,hitz);
+
+                if(q.scoreColor.count(regions[0])) {
+                    EGS_Vector sc = q.scoreColor.at(regions[0]);
+                    p.fillRect(x0, h-15-s, s, s, QColor((int)(255*sc.x),(int)(255*sc.y),(int)(255*sc.z)));
+                }
+                p.drawRect(x0, h-15-s, s, s);
+                p.drawText(x0+s+3,h-15,score);
+            } else {
+                p.fillRect(QRect(64,h-64,nChar*10,64),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
+                p.drawText(9,h-64,"Surface");
+                p.drawText(9,h-45,hitx);
+                p.drawText(9,h-30,hity);
+                p.drawText(9,h-15,hitz);
+            }
         }
         else {
             if (regionsDisplayed) {
