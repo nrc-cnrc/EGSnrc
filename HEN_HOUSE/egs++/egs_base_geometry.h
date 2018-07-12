@@ -604,6 +604,7 @@ public:
      */
     void    setBoundaryTolerance(EGS_Float tol) {
         boundaryTolerance = tol;
+        halfBoundaryTolerance = tol/2.;
     }
 
     /*! \brief Is the boolean property \a prop set for region \a ireg ?
@@ -833,7 +834,7 @@ protected:
     EGS_BPType   *bp_array;
 
     /*! \brief Boundary tolerance for geometries that need it */
-    EGS_Float boundaryTolerance;
+    EGS_Float boundaryTolerance, halfBoundaryTolerance;
 
     /*! \brief Set to non-zero status if a geometry problem is encountered */
     static int       error_flag;
