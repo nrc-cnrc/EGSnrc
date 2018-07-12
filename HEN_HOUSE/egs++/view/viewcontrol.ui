@@ -135,7 +135,36 @@
                  <enum>QLayout::SetDefaultConstraint</enum>
                 </property>
                 <item>
-                 <layout class="QVBoxLayout" name="clipLayout"/>
+                 <layout class="QVBoxLayout" name="clipLayout">
+                  <item>
+                   <spacer name="verticalSpacer_2">
+                    <property name="orientation">
+                     <enum>Qt::Vertical</enum>
+                    </property>
+                    <property name="sizeType">
+                     <enum>QSizePolicy::Fixed</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>20</width>
+                      <height>11</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBox_5">
+                    <property name="title">
+                     <string>Simulation geometry</string>
+                    </property>
+                    <layout class="QHBoxLayout" name="horizontalLayout_14">
+                     <item>
+                      <widget class="QComboBox" name="comboBox_simGeom"/>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -179,37 +208,17 @@
                      <string>Particle tracks</string>
                     </property>
                     <layout class="QGridLayout">
-                     <item row="0" column="0">
-                      <widget class="QCheckBox" name="showTracksCheckbox">
-                       <property name="text">
-                        <string>Show tracks</string>
+                     <item row="0" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxp">
+                       <property name="minimum">
+                        <number>1</number>
                        </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="0">
-                      <widget class="QCheckBox" name="showPhotonsCheckbox">
-                       <property name="text">
-                        <string>Photons</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
+                       <property name="value">
+                        <number>1</number>
                        </property>
                       </widget>
                      </item>
-                     <item row="1" column="1">
-                      <widget class="QCheckBox" name="showElectronsCheckbox">
-                       <property name="text">
-                        <string>Electrons</string>
-                       </property>
-                       <property name="checked">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="2">
+                     <item row="2" column="0">
                       <widget class="QCheckBox" name="showPositronsCheckbox">
                        <property name="text">
                         <string>Positrons</string>
@@ -219,10 +228,73 @@
                        </property>
                       </widget>
                      </item>
-                     <item row="0" column="2">
-                      <widget class="QPushButton" name="loadTracks">
+                     <item row="0" column="0">
+                      <widget class="QCheckBox" name="showPhotonsCheckbox">
                        <property name="text">
-                        <string>Load tracks</string>
+                        <string>Photons</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="0">
+                      <widget class="QCheckBox" name="showElectronsCheckbox">
+                       <property name="text">
+                        <string>Electrons</string>
+                       </property>
+                       <property name="checked">
+                        <bool>true</bool>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="0" column="1">
+                      <widget class="QSpinBox" name="spin_tminp">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="1">
+                      <widget class="QSpinBox" name="spin_tmine">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="1" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxe">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="1">
+                      <widget class="QSpinBox" name="spin_tminpo">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
+                       </property>
+                      </widget>
+                     </item>
+                     <item row="2" column="2">
+                      <widget class="QSpinBox" name="spin_tmaxpo">
+                       <property name="minimum">
+                        <number>1</number>
+                       </property>
+                       <property name="value">
+                        <number>1</number>
                        </property>
                       </widget>
                      </item>
@@ -243,12 +315,6 @@
                       <height>120</height>
                      </size>
                     </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>16777215</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
                     <property name="baseSize">
                      <size>
                       <width>331</width>
@@ -264,7 +330,7 @@
                        <item>
                         <widget class="QCheckBox" name="showAxesCheckbox">
                          <property name="sizePolicy">
-                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                            <horstretch>0</horstretch>
                            <verstretch>0</verstretch>
                           </sizepolicy>
@@ -280,7 +346,7 @@
                        <item>
                         <widget class="QCheckBox" name="showAxesLabelsCheckbox">
                          <property name="sizePolicy">
-                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                            <horstretch>0</horstretch>
                            <verstretch>0</verstretch>
                           </sizepolicy>
@@ -296,7 +362,7 @@
                        <item>
                         <widget class="QCheckBox" name="showRegionsCheckbox">
                          <property name="sizePolicy">
-                          <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                            <horstretch>0</horstretch>
                            <verstretch>0</verstretch>
                           </sizepolicy>
@@ -321,12 +387,6 @@
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>140</height>
-                     </size>
                     </property>
                     <property name="toolTip">
                      <string>Use egs_dose_scoring to output a dose file</string>
@@ -371,14 +431,6 @@
                           <bool>true</bool>
                          </property>
                          <widget class="QWidget" name="scrollAreaWidgetContents">
-                          <property name="geometry">
-                           <rect>
-                            <x>0</x>
-                            <y>0</y>
-                            <width>294</width>
-                            <height>103</height>
-                           </rect>
-                          </property>
                           <layout class="QVBoxLayout" name="verticalLayout_16">
                            <item>
                             <layout class="QVBoxLayout" name="verticalLayout_dose">
@@ -405,22 +457,6 @@
                      </item>
                     </layout>
                    </widget>
-                  </item>
-                  <item>
-                   <spacer name="spacer4_2">
-                    <property name="orientation">
-                     <enum>Qt::Vertical</enum>
-                    </property>
-                    <property name="sizeType">
-                     <enum>QSizePolicy::Fixed</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>10</height>
-                     </size>
-                    </property>
-                   </spacer>
                   </item>
                  </layout>
                 </item>
@@ -1645,6 +1681,8 @@ p, li { white-space: pre-wrap; }
      <string>&amp;File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpen_tracks"/>
+    <addaction name="actionOpen_dose"/>
     <addaction name="actionOpen_settings"/>
     <addaction name="separator"/>
     <addaction name="actionSave_image"/>
@@ -1728,6 +1766,22 @@ p, li { white-space: pre-wrap; }
     <string>Ctrl+-</string>
    </property>
   </action>
+  <action name="actionOpen_dose">
+   <property name="text">
+    <string>Open &amp;dose...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionOpen_tracks">
+   <property name="text">
+    <string>Open trac&amp;ks...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+K</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <includes>
@@ -1806,22 +1860,6 @@ p, li { white-space: pre-wrap; }
    <signal>clicked()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>showAllRegions()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>loadTracks</sender>
-   <signal>clicked()</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>loadTracksDialog()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
@@ -2042,22 +2080,6 @@ p, li { white-space: pre-wrap; }
    </hints>
   </connection>
   <connection>
-   <sender>showTracksCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>GeometryViewControl</receiver>
-   <slot>checkboxShowTracks(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>actionReload</sender>
    <signal>triggered()</signal>
    <receiver>GeometryViewControl</receiver>
@@ -2078,6 +2100,38 @@ p, li { white-space: pre-wrap; }
    <signal>triggered()</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>selectInput()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen_tracks</sender>
+   <signal>triggered()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>loadTracksDialog()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionOpen_dose</sender>
+   <signal>triggered()</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>loadDose()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>-1</x>
@@ -2222,6 +2276,118 @@ p, li { white-space: pre-wrap; }
    <signal>valueChanged(int)</signal>
    <receiver>GeometryViewControl</receiver>
    <slot>changeDoseTransparency(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tminp</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMin()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tmine</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMin()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tminpo</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMin()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tmaxp</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMaxP(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tmaxe</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMaxE(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spin_tmaxpo</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>changeTrackMaxPo(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>20</x>
+     <y>20</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>comboBox_simGeom</sender>
+   <signal>activated(int)</signal>
+   <receiver>GeometryViewControl</receiver>
+   <slot>updateSimulationGeometry(int)</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>

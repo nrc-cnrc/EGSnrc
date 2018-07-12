@@ -90,6 +90,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     egsWarning("In init()\n");
 #endif
     g = 0;
+    origSimGeom = 0;
     theta = 0;
     c_theta = cos(theta);
     s_theta = sin(theta);
@@ -118,10 +119,12 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     // various state variables
     showAxes = this->showAxesCheckbox->isChecked();
     showAxesLabels = this->showAxesLabelsCheckbox->isChecked();
-    showTracks = this->showTracksCheckbox->isChecked();
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
     showPositronTracks = this->showPositronsCheckbox->isChecked();
+    if(showPhotonTracks || showElectronTracks || showPositronTracks) {
+        showTracks = true;
+    }
 
     // camera orientation vectors (same as the screen vectors)
     camera_v1 = screen_v1;
@@ -161,6 +164,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     connect(gview, SIGNAL(putCameraOnAxis(char)), this, SLOT(cameraOnAxis(char)));
     connect(gview, SIGNAL(leftMouseClick(int,int)), this, SLOT(reportViewSettings(int,int)));
     connect(gview, SIGNAL(leftDoubleClick(EGS_Vector)), this, SLOT(setRotationPoint(EGS_Vector)));
+    connect(gview, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(updateTracks(vector<size_t>)));
 
     save_image = new SaveImage(this,"save image");
 
@@ -170,13 +174,27 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
 
     // Add the clipping planes widget to the designated layout
     clipLayout->addWidget(cplanes);
-    clipLayout->addSpacing(86);
 
     // set the widget to show near the left-upper corner of the screen
     move(QPoint(25,25));
 }
 
 GeometryViewControl::~GeometryViewControl() {
+    if (m_colors) {
+        delete [] m_colors;
+    }
+    g = origSimGeom;
+    if(g) {
+        delete g;
+        g = 0;
+    }
+    EGS_BaseGeometry::clearGeometries();
+    int nobj = EGS_AusgabObject::nObjects();
+    for(int j=0; j<3; ++j) {
+        for (int i=0; i<nobj; ++i) {
+            delete EGS_AusgabObject::getObject(i);
+        }
+    }
 }
 
 void GeometryViewControl::selectInput() {
@@ -199,7 +217,7 @@ void GeometryViewControl::selectInput() {
     transparency->setValue(255);
 }
 
-bool GeometryViewControl::loadInput(bool reloading) {
+bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     #ifdef VIEW_DEBUG
         egsWarning("In loadInput(), reloading is %d\n",reloading);
     #endif
@@ -222,31 +240,50 @@ bool GeometryViewControl::loadInput(bool reloading) {
     qApp->processEvents();
 
     // Delete any previous geometry
-    if(g) {
-        delete g;
-        g = 0;
-    }
-    EGS_BaseGeometry::clearGeometries();
+    if(!simGeom) {
+#ifdef VIEW_DEBUG
+        egsInformation("GeometryViewControl::loadInput: Clearing previous geometries...\n");
+#endif
+        if(g) {
+            delete g;
+            g = 0;
+        }
+        EGS_BaseGeometry::clearGeometries();
 
-    // Delete any previous ausgab objects
-    int nobj = EGS_AusgabObject::nObjects();
-    for(int j=0; j<3; ++j) {
-        for (int i=0; i<nobj; ++i) {
-            delete EGS_AusgabObject::getObject(i);
+        // Delete any previous ausgab objects
+#ifdef VIEW_DEBUG
+        egsInformation("GeometryViewControl::loadInput: Clearing previous ausgab objects...\n");
+#endif
+        int nobj = EGS_AusgabObject::nObjects();
+        for(int j=0; j<3; ++j) {
+            for (int i=0; i<nobj; ++i) {
+                delete EGS_AusgabObject::getObject(i);
+            }
         }
     }
 
     // Read the input file
+#ifdef VIEW_DEBUG
+    egsInformation("GeometryViewControl::loadInput: Reading input file...\n");
+#endif
     EGS_Input input;
     input.setContentFromFile(filename.toUtf8().constData());
 
     // Load the new geometry
-    EGS_BaseGeometry *newGeom = EGS_BaseGeometry::createGeometry(&input);
-    if (!newGeom) {
-        QMessageBox::critical(this,"Geometry error",
-                "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
+#ifdef VIEW_DEBUG
+    egsInformation("GeometryViewControl::loadInput: Creating the geometry...\n");
+#endif
+    EGS_BaseGeometry *newGeom;
+    if(!simGeom) {
+        newGeom = EGS_BaseGeometry::createGeometry(&input);
+        if (!newGeom) {
+            QMessageBox::critical(this,"Geometry error",
+                    "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
 
-        return false;
+            return false;
+        }
+    } else {
+        newGeom = simGeom;
     }
 
     // restart from scratch (copied from main.cpp)
@@ -316,17 +353,38 @@ bool GeometryViewControl::loadInput(bool reloading) {
     // Get the rendering parameters
     RenderParameters &rp = gview->pars;
     rp.allowRegionSelection = allowRegionSelection;
+    rp.trackIndices.assign(6,1);
 
     gview->restartWorker();
     setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
+
+    if(!simGeom) {
+       origSimGeom = g;
+    }
 
     if(allowRegionSelection) {
         updateRegionTable();
     }
 
+    // Set the simulation geometry combobox
+    comboBox_simGeom->clear();
+    EGS_BaseGeometry **geoms = g->getGeometries();
+    int ngeom = g->getNGeometries();
+    for(int i=0; i<ngeom; ++i) {
+        comboBox_simGeom->addItem((geoms[i]->getName() + " (" + geoms[i]->getType() + ")").c_str(), geoms[i]->getName().c_str());
+    }
+    comboBox_simGeom->setCurrentIndex(comboBox_simGeom->findData(g->getName().c_str()));
+
     // Load ausgab objects from the input file
-    EGS_AusgabObject::createAusgabObjects(&input);
+    if(!simGeom) {
+#ifdef VIEW_DEBUG
+        egsInformation("GeometryViewControl::loadInput: Processing ausgab objects...\n");
+#endif
+        EGS_AusgabObject::createAusgabObjects(&input);
+    }
+    // Add the ausgab objects to the list of dose files
     updateAusgabObjects();
+    // See if any of the dose checkboxes are checked
     doseCheckbox_toggled();
 
     return true;
@@ -362,6 +420,7 @@ EGS_Vector GeometryViewControl::getHeatMapColor(EGS_Float value) {
 }
 
 void GeometryViewControl::reloadInput() {
+    g = origSimGeom;
     if(!loadInput(true)) {
         egsWarning("GeometryViewControl::reloadInput: Error: The geometry is not correctly defined\n");
     }
@@ -550,6 +609,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         if (input->setContentFromFile(configFilename.toLatin1().data())) {
             QMessageBox::critical(this,"Config file read error",
                 "Failed to open the config file for reading.",QMessageBox::Ok,0,0);
+            delete input;
             return;
         }
     }
@@ -606,11 +666,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         int show;
         err = iTracks->getInput("show tracks",show);
         if(!err) {
-            if(show) {
-                showTracksCheckbox->setCheckState(Qt::Checked);
-            } else {
-                showTracksCheckbox->setCheckState(Qt::Unchecked);
-            }
+            showTracks = show;
         }
 
         err = iTracks->getInput("photons",show);
@@ -673,6 +729,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 showRegionsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
+        delete iOverlay;
     }
 
     // Load camera view
@@ -712,6 +769,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
         err = iView->getInput("zoom",zoomlevel);
         setCameraPosition();
+        delete iView;
     }
 
     // Load home view
@@ -742,12 +800,18 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         }
 
         err = iHome->getInput("zoom",zoomlevel_home);
+        delete iHome;
     }
 
     // Load the media colors
     EGS_Input *iMatColors = input->takeInputItem("material colors");
     if(iMatColors) {
-        while(iMatColors->getInputItem("material")) {
+        while(1) {
+            EGS_Input *iMatList = iMatColors->getInputItem("material");
+            if(!iMatList) {
+                break;
+            }
+
             EGS_Input *iMat = iMatColors->takeInputItem("material");
             if(!iMat) {
                 break;
@@ -759,6 +823,8 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
             err = iMat->getInput("material",material);
             if(err) {
+                delete iMat;
+                delete iMatList;
                 continue;
             }
 
@@ -776,10 +842,14 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
             err = iMat->getInput("rgb",rgb);
             if(err || rgb.size() < 3) {
+                delete iMat;
+                delete iMatList;
                 continue;
             }
             err = iMat->getInput("alpha",alpha);
             if(err) {
+                delete iMat;
+                delete iMatList;
                 continue;
             }
 
@@ -789,6 +859,8 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             if(imed == 0) {
                 transparency->setValue(alpha);
             }
+            delete iMat;
+            delete iMatList;
         }
         delete iMatColors;
 
@@ -893,6 +965,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
                 show_regions[i] = true;
             }
         }
+        delete iReg;
     }
 
     EGS_Input *iColors = input->takeInputItem("colors");
@@ -951,7 +1024,10 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         err = iDose->getInput("alpha",alpha);
         slider_dose->setValue(alpha);
         doseTransparency = EGS_Float(alpha/100.);
+        delete iDose;
     }
+
+    delete input;
 
     updateView(true);
 }
@@ -964,7 +1040,20 @@ void GeometryViewControl::setTracksFilename(QString str) {
     filename_tracks = str;
 }
 
-void GeometryViewControl::updateAusgabObjects() {
+void GeometryViewControl::loadDose() {
+    // Prompt the user to select a previous config file
+    QFileInfo inputFileInfo = QFileInfo(filename);
+    QString doseFilename = QFileDialog::getOpenFileName(this, "Select a 3ddose file", inputFileInfo.canonicalPath(), "*.3ddose");
+
+    if (doseFilename.isEmpty()) {
+        return;
+    }
+
+    userDoseFile = doseFilename;
+    updateAusgabObjects(true);
+}
+
+void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
 
     if(scoreArrays.size() > 0) {
         scoreArrays.assign(scoreArrays.size(),vector<EGS_Float>());
@@ -978,6 +1067,107 @@ void GeometryViewControl::updateAusgabObjects() {
         delete cb;
     }
 
+    // Load the dose a user selected from the file menu
+    if(userDoseFile.length()) {
+        label_dose->hide();
+
+        // 3ddose files
+        if(userDoseFile.endsWith(".3ddose")) {
+
+            QFile doseFile(userDoseFile);
+
+            // Add a checkbox
+            QCheckBox *doseCheckbox = new QCheckBox(QFileInfo(doseFile).fileName(),this);
+            // If the user just selected this file, check the checkbox
+            if(loadUserDose) {
+                doseCheckbox->setCheckState(Qt::Checked);
+            }
+            verticalLayout_dose->addWidget(doseCheckbox);
+
+            if(doseIndex+1 > scoreArrays.size()) {
+                scoreArrays.push_back(vector<EGS_Float>());
+            }
+
+            connect(doseCheckbox, SIGNAL(toggled(bool)), this, SLOT(doseCheckbox_toggled()));
+
+            if(doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+
+#ifdef VIEW_DEBUG
+                egsInformation("Reading dose file: %s\n", userDoseFile.toLatin1().data());
+#endif
+
+                QTextStream in(&doseFile);
+
+                // Sanity check the number of voxels
+                int nx, ny, nz;
+                in >> nx >> ny >> nz;
+                if(g->regions() >= nx*ny*nz) {
+
+                    scoreArrays[doseIndex].assign(g->regions(),0);
+
+                    // Read in the boundaries
+                    vector<EGS_Float> xbounds(nx+1);
+                    for (int i=0; i<=nx; ++i) {
+                        in >> xbounds[i];
+                    }
+                    vector<EGS_Float> ybounds(ny+1);
+                    for (int i=0; i<=ny; ++i) {
+                        in >> ybounds[i];
+                    }
+                    vector<EGS_Float> zbounds(nz+1);
+                    for (int i=0; i<=nz; ++i) {
+                        in >> zbounds[i];
+                    }
+
+                    bool err = false;
+                    for (int k=0; k<nz; ++k) {
+                        EGS_Float minz = zbounds[k];
+                        EGS_Float maxz = zbounds[k+1];
+                        for (int j=0; j<ny; ++j) {
+                            EGS_Float miny = ybounds[j];
+                            EGS_Float maxy = ybounds[j+1];
+                            for (int i=0; i<nx; ++i) {
+                                // Determine the region no. in the EGS_XYZGeometry and corresponding global reg. no.
+                                EGS_Float minx = xbounds[i];
+                                EGS_Float maxx = xbounds[i+1];
+                                EGS_Vector tp((minx+maxx)/2., (miny+maxy)/2., (minz+maxz)/2.);
+
+                                int g_reg = g->isWhere(tp);
+
+                                // Read in the dose values
+                                if(g_reg >= 0) {
+                                    in >> scoreArrays[doseIndex][g_reg];
+                                } else {
+#ifdef VIEW_DEBUG
+                                    egsWarning("Warning: Dose region out of bounds, skipping this file...\n");
+#endif
+                                    scoreArrays[doseIndex].assign(g->regions(),0);
+                                    doseCheckbox->setEnabled(false);
+                                    err = true;
+                                    break;
+                                }
+                            }
+                            if(err) {
+                                break;
+                            }
+                        }
+                        if(err) {
+                            break;
+                        }
+                    }
+                } else {
+                    doseCheckbox->setEnabled(false);
+                }
+
+                doseFile.close();
+            } else {
+                doseCheckbox->setEnabled(false);
+            }
+            doseIndex++;
+        }
+    }
+
+    // Look through ausgab objects in the input file for EGS_DoseScoring
     for (int q=0; q<EGS_AusgabObject::nObjects(); ++q) {
         if(EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
             EGS_DoseScoring *o = static_cast<EGS_DoseScoring *>(EGS_AusgabObject::getObject(q));
@@ -1012,7 +1202,9 @@ void GeometryViewControl::updateAusgabObjects() {
 
                     if(doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
+#ifdef VIEW_DEBUG
                         egsInformation("Reading dose file: %s\n", doseFilename.toLatin1().data());
+#endif
 
                         QTextStream in(&doseFile);
 
@@ -1029,25 +1221,44 @@ void GeometryViewControl::updateAusgabObjects() {
                                 in >> tmp;
                             }
 
+                            bool err = false;
                             for (int k=0; k<nz; ++k) {
+                                EGS_Float minz=dgeom->getBound(2,k);
+                                EGS_Float maxz=dgeom->getBound(2,k+1);
                                 for (int j=0; j<ny; ++j) {
+                                    EGS_Float miny=dgeom->getBound(1,j);
+                                    EGS_Float maxy=dgeom->getBound(1,j+1);
                                     for (int i=0; i<nx; ++i) {
                                         // Determine the region no. in the EGS_XYZGeometry and corresponding global reg. no.
                                         EGS_Float minx=dgeom->getBound(0,i);
                                         EGS_Float maxx=dgeom->getBound(0,i+1);
-                                        EGS_Float miny=dgeom->getBound(1,j);
-                                        EGS_Float maxy=dgeom->getBound(1,j+1);
-                                        EGS_Float minz=dgeom->getBound(2,k);
-                                        EGS_Float maxz=dgeom->getBound(2,k+1);
                                         EGS_Vector tp((minx+maxx)/2., (miny+maxy)/2., (minz+maxz)/2.);
 
                                         int g_reg = g->isWhere(tp);
 
                                         // Read in the dose values
-                                        in >> scoreArrays[doseIndex][g_reg];
+                                        if(g_reg >= 0) {
+                                            in >> scoreArrays[doseIndex][g_reg];
+                                        } else {
+#ifdef VIEW_DEBUG
+                                            egsWarning("Warning: Dose region out of bounds, skipping this file...\n");
+#endif
+                                            scoreArrays[doseIndex].assign(g->regions(),0);
+                                            doseCheckbox->setEnabled(false);
+                                            err = true;
+                                            break;
+                                        }
+                                    }
+                                    if(err) {
+                                        break;
                                     }
                                 }
+                                if(err) {
+                                    break;
+                                }
                             }
+                        } else {
+                            doseCheckbox->setEnabled(false);
                         }
 
                         doseFile.close();
@@ -1064,6 +1275,8 @@ void GeometryViewControl::updateAusgabObjects() {
     if(doseIndex == 0) {
         label_dose->show();
         slider_dose->hide();
+    } else if(loadUserDose) {
+        doseCheckbox_toggled();
     }
 }
 
@@ -1086,9 +1299,9 @@ void GeometryViewControl::doseCheckbox_toggled() {
     }
 
     // If nothing is checked, clear the scoring arrays and return
+    rp.score.clear();
+    rp.scoreColor.clear();
     if(!somethingChecked) {
-        rp.score.clear();
-        rp.scoreColor.clear();
         updateView();
         return;
     }
@@ -1135,6 +1348,21 @@ void GeometryViewControl::doseCheckbox_toggled() {
     updateView();
 }
 
+void GeometryViewControl::updateSimulationGeometry(int ind) {
+    QString geomName = comboBox_simGeom->itemData(ind).toString();
+
+    EGS_BaseGeometry **geoms = g->getGeometries();
+    int ngeom = g->getNGeometries();
+    for(int i=0; i<ngeom; ++i) {
+        if(geomName == geoms[i]->getName().c_str()) {
+            g = geoms[i];
+            break;
+        }
+    }
+
+    loadInput(true, g);
+}
+
 void GeometryViewControl::checkboxAxes(bool toggle) {
     this->showAxesLabelsCheckbox->setEnabled(toggle);
     showAxes = toggle;
@@ -1154,11 +1382,6 @@ void GeometryViewControl::checkboxAxesLabels(bool toggle) {
 
 void GeometryViewControl::checkboxShowRegions(bool toggle) {
     gview->showRegions(toggle);
-}
-
-void GeometryViewControl::checkboxShowTracks(bool toggle) {
-    showTracks = toggle;
-    updateView();
 }
 
 void GeometryViewControl::cameraHome() {
@@ -1622,6 +1845,35 @@ void GeometryViewControl::loadTracksDialog() {
     }
 
     gview->loadTracks(filename_tracks);
+}
+
+void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
+    if(ntracks.size() != 3) {
+        return;
+    }
+
+#ifdef VIEW_DEBUG
+    egsWarning("In updateTracks(%d %d %d)\n",ntracks[0], ntracks[1], ntracks[2]);
+#endif
+
+    // Update maximum values for the track selection
+    spin_tminp->setMaximum(ntracks[0]);
+    spin_tmine->setMaximum(ntracks[1]);
+    spin_tminpo->setMaximum(ntracks[2]);
+    spin_tmaxp->setMaximum(ntracks[0]);
+    spin_tmaxe->setMaximum(ntracks[1]);
+    spin_tmaxpo->setMaximum(ntracks[2]);
+
+    // Set the value of the upper bounds to the maximum
+    spin_tmaxp->setValue(ntracks[0]);
+    spin_tmaxe->setValue(ntracks[1]);
+    spin_tmaxpo->setValue(ntracks[2]);
+
+    // Set the value of the lower bounds to 1
+    spin_tminp->setValue(1);
+    spin_tmine->setValue(1);
+    spin_tminpo->setValue(1);
+
     updateView();
 }
 
@@ -1738,6 +1990,8 @@ int GeometryViewControl::setGeometry(
     if (nmed < 1) {
         QMessageBox::critical(this,"Geometry error",
                               "The geometry defines no media",QMessageBox::Ok,0,0);
+        delete [] saveColors;
+        delete [] saveName;
         return 1;
     }
 
@@ -2141,6 +2395,13 @@ void GeometryViewControl::updateView(bool transform) {
     rp.show_regions = show_regions;
     rp.doseTransparency = doseTransparency;
 
+    rp.trackIndices[0] = spin_tminp->value()-1;
+    rp.trackIndices[1] = spin_tmaxp->value()-1;
+    rp.trackIndices[2] = spin_tmine->value()-1;
+    rp.trackIndices[3] = spin_tmaxe->value()-1;
+    rp.trackIndices[4] = spin_tminpo->value()-1;
+    rp.trackIndices[5] = spin_tmaxpo->value()-1;
+
     gview->render(g, transform);
 }
 
@@ -2318,18 +2579,48 @@ void GeometryViewControl::setClippingPlanes() {
 }
 
 void GeometryViewControl::showPhotonsCheckbox_toggled(bool toggle) {
+    if(toggle) {
+        showTracks = toggle;
+    }
     showPhotonTracks = toggle;
     updateView();
 }
 
 void GeometryViewControl::showElectronsCheckbox_toggled(bool toggle) {
+    if(toggle) {
+        showTracks = toggle;
+    }
     showElectronTracks = toggle;
     updateView();
 }
 
-
 void GeometryViewControl::showPositronsCheckbox_toggled(bool toggle) {
+    if(toggle) {
+        showTracks = toggle;
+    }
     showPositronTracks = toggle;
+    updateView();
+}
+
+void GeometryViewControl::changeTrackMin() {
+    updateView();
+}
+
+void GeometryViewControl::changeTrackMaxP(int val) {
+    spin_tminp->setMaximum(val);
+
+    updateView();
+}
+
+void GeometryViewControl::changeTrackMaxE(int val) {
+    spin_tmine->setMaximum(val);
+
+    updateView();
+}
+
+void GeometryViewControl::changeTrackMaxPo(int val) {
+    spin_tminpo->setMaximum(val);
+
     updateView();
 }
 

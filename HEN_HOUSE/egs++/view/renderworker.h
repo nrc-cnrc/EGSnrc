@@ -74,6 +74,7 @@ struct RenderParameters {
     bool show_photons;
     bool show_electrons;
     bool show_positrons;
+    vector<size_t> trackIndices;
     // viewport
     EGS_Vector camera;
     EGS_Vector camera_v1;
@@ -134,6 +135,7 @@ signals:
 
     void aborted();
     void rendered(struct RenderResults, struct RenderParameters params);
+    void tracksLoaded(vector<size_t> ntracks);
 
 private:
     void drawAxes(const struct RenderParameters &);

@@ -90,6 +90,7 @@ protected:
 protected slots:
 
     void drawResults(RenderResults,RenderParameters);
+    void trackResults(vector<size_t>);
     void handleAbort();
 
 signals:
@@ -105,6 +106,7 @@ signals:
     void leftMouseClick(int x, int y);
     void leftDoubleClick(EGS_Vector hitCoord);
     void saveComplete();
+    void tracksLoaded(vector<size_t>);
 
     // for render thread
     void requestRender(EGS_BaseGeometry *,RenderParameters);

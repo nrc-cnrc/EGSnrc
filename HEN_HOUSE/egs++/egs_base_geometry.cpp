@@ -133,7 +133,7 @@ public:
         int j = 0, iloop = 0;
         while (nnow > 0) {
             if (geoms[j]->deref() == -1) {
-                delete geoms[j];
+                removeGeometry(geoms[j]);
             }
             else {
                 geoms[j++]->ref();
@@ -144,7 +144,7 @@ public:
 
                 for(int i=0; i<nnow; ++i) {
                     if(!geoms[i]->deref()) {
-                        delete geoms[i];
+                        removeGeometry(geoms[i]);
                     }
                 }
 
@@ -465,6 +465,14 @@ void EGS_BaseGeometry::clearGeometries() {
 
 EGS_BaseGeometry *EGS_BaseGeometry::getGeometry(const string &Name) {
     return egs_geometries[active_glist].getGeometry(Name);
+}
+
+EGS_BaseGeometry **EGS_BaseGeometry::getGeometries() {
+    return egs_geometries[active_glist].geoms;
+}
+
+int EGS_BaseGeometry::getNGeometries() {
+    return egs_geometries[active_glist].nnow;
 }
 
 void EGS_BaseGeometry::setMedium(const string &Name) {

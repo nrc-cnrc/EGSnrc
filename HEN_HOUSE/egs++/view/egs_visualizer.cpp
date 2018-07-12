@@ -42,11 +42,13 @@ public:
         nlight(0), ntot(0), nmat(0), nclip(0), nclip_t(0),
         m_tracks(NULL) {};
     ~EGS_PrivateVisualizer();
-    void loadTracksData(const char *fname) {
+    vector<size_t> loadTracksData(const char *fname) {
         if (m_tracks) {
             delete m_tracks;
         }
-        m_tracks = new EGS_TrackView(fname);
+        vector<size_t> ntracks;
+        m_tracks = new EGS_TrackView(fname, ntracks);
+        return ntracks;
     }
     void setProjection(const EGS_Vector &camera_pos,
                        const EGS_Vector &camera_look_at, EGS_Float distance,
@@ -163,6 +165,12 @@ public:
         }
     }
 
+    void setTrackIndices(const vector<size_t> &trackIndices) {
+        if(m_tracks) {
+            m_tracks->setTrackIndices(trackIndices);
+        }
+    }
+
     EGS_Vector  xo;         // camera position
     EGS_Vector  x_screen;   // center of projected image
     EGS_Vector  v1_screen,  // 2 perpendicular vectors on the screen
@@ -198,10 +206,12 @@ EGS_GeometryVisualizer::~EGS_GeometryVisualizer() {
     delete p;
 }
 
-void EGS_GeometryVisualizer::loadTracksData(const char *fname) {
+vector<size_t> EGS_GeometryVisualizer::loadTracksData(const char *fname) {
+    vector<size_t> ntracks;
     if (p) {
-        p->loadTracksData(fname);
+        ntracks = p->loadTracksData(fname);
     }
+    return ntracks;
 }
 
 void EGS_GeometryVisualizer::setProjection(const EGS_Vector &camera_pos,
@@ -270,6 +280,10 @@ void EGS_GeometryVisualizer::setScoreColors(const unordered_map<size_t, EGS_Vect
 
 void EGS_GeometryVisualizer::setDoseTransparency(EGS_Float doseTransparency) {
     p->doseTransparency = doseTransparency;
+}
+
+void EGS_GeometryVisualizer::setTrackIndices(const vector<size_t> &trackIndices) {
+    p->setTrackIndices(trackIndices);
 }
 
 void EGS_GeometryVisualizer::addClippingPlane(EGS_ClippingPlane *plane) {

@@ -568,6 +568,10 @@ public:
      */
     static EGS_BaseGeometry *getGeometry(const string &Name);
 
+    static EGS_BaseGeometry **getGeometries();
+
+    static int getNGeometries();
+
     /*! \brief Get a unique geometry name
 
       This function is used to create a unique name for a nameless

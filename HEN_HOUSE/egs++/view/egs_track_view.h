@@ -93,7 +93,7 @@ class EGS_TrackView {
 
 public:
 
-    EGS_TrackView(const char *filename);
+    EGS_TrackView(const char *filename, vector<size_t> &ntracks);
 
     ~EGS_TrackView();
 
@@ -119,6 +119,10 @@ public:
         return m_maxE;
     }
 
+    void setTrackIndices(const vector<size_t> &trackInd) {
+        trackIndices = trackInd;
+    }
+
 protected:
     void renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EGS_Float color, int nx, int ny, EGS_Vector *image);
 
@@ -138,7 +142,9 @@ protected:
 
     EGS_ParticleTrack::Vertex  *m_points[3]; // Data from file
     int        *m_index[3];       // Pointers to the starts of each track set
-    int         m_tracks[3];      // Number of tracks in each index
+    size_t      m_tracks[3];      // Number of tracks in each index
+
+    vector<size_t> trackIndices;
 
     EGS_ClippingPlane m_planes[14]; // Clipping planes. 0-3 are for the viewport
     int         nplanes;          // number of planes used

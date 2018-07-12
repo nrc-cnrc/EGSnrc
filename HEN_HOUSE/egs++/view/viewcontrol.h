@@ -69,24 +69,25 @@ public:
     virtual void updateCameraLineEdit();
     virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
-    virtual bool loadInput(bool first_time);
+    virtual bool loadInput(bool first_time, EGS_BaseGeometry *simGeom = 0);
     virtual void loadConfig(QString configFilename);
     virtual EGS_Vector getHeatMapColor(EGS_Float value);
     virtual void updateRegionTable();
     virtual void updateRegionTable(int imed);
-    virtual void updateAusgabObjects();
+    virtual void updateAusgabObjects(bool loadUserDose=false);
     virtual void initColorSwatches();
 
 public slots:
 
     virtual void reloadInput();
     virtual void selectInput();
+    virtual void loadDose();
     virtual void loadConfig();
     virtual void saveConfig();
+    virtual void updateSimulationGeometry(int ind);
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
     virtual void checkboxShowRegions(bool toggle);
-    virtual void checkboxShowTracks(bool toggle);
     virtual void cameraHome();
     virtual void cameraOnAxis(char axis);
     virtual void camera_x();
@@ -137,6 +138,11 @@ public slots:
     virtual void setFontSize(int size);
     virtual void doseCheckbox_toggled();
     virtual void changeDoseTransparency(int t);
+    virtual void changeTrackMin();
+    virtual void changeTrackMaxP(int t);
+    virtual void changeTrackMaxE(int t);
+    virtual void changeTrackMaxPo(int t);
+    virtual void updateTracks(vector<size_t> ntracks);
 
 private:
 
@@ -146,6 +152,7 @@ private:
 
     QString filename;
     QString filename_tracks;
+    QString userDoseFile;
     int nmed;
     QRgb *m_colors;
     QColor  backgroundColor,
@@ -191,6 +198,7 @@ private:
     bool    allowRegionSelection,
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
+    EGS_BaseGeometry *origSimGeom;
 
 protected slots:
 

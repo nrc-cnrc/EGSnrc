@@ -86,6 +86,7 @@ ImageWindow::ImageWindow(QWidget *parent, const char *name) :
     // register types so they can be transfered accross thread
     qRegisterMetaType<RenderParameters>("RenderParameters");
     qRegisterMetaType<RenderResults>("RenderResults");
+    qRegisterMetaType<vector<size_t>>("vector<size_t>");
 
     // Initialize render worker and put it in a thread
     restartWorker();
@@ -249,6 +250,7 @@ void ImageWindow::restartWorker() {
             worker, SLOT(render(EGS_BaseGeometry *,RenderParameters)));
     connect(this, SIGNAL(requestLoadTracks(QString)), worker, SLOT(loadTracks(QString)));
     connect(worker, SIGNAL(rendered(RenderResults,RenderParameters)), this, SLOT(drawResults(RenderResults,RenderParameters)));
+    connect(worker, SIGNAL(tracksLoaded(vector<size_t>)), this, SLOT(trackResults(vector<size_t>)));
     connect(worker, SIGNAL(aborted()), this, SLOT(handleAbort()));
     thread->start();
     renderState = WorkerIdle;
@@ -639,6 +641,10 @@ void ImageWindow::drawResults(RenderResults r, RenderParameters q) {
     applyParameters(vis, lastRequest);
 
     repaint();
+}
+
+void ImageWindow::trackResults(vector<size_t> ntracks) {
+    emit tracksLoaded(ntracks);
 }
 
 void ImageWindow::handleAbort() {

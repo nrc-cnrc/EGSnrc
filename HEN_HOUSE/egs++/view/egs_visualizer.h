@@ -88,7 +88,7 @@ public:
     EGS_GeometryVisualizer();
     ~EGS_GeometryVisualizer();
 
-    void loadTracksData(const char *fname);
+    vector<size_t> loadTracksData(const char *fname);
 
     void setProjection(const EGS_Vector &camera_pos,
                        const EGS_Vector &camera_look_at, EGS_Float distance,
@@ -115,6 +115,7 @@ public:
     void setAllowRegionSelection(bool allow);
     void setScoreColors(const unordered_map<size_t, EGS_Vector> &scoreColor);
     void setDoseTransparency(EGS_Float doseTransparency);
+    void setTrackIndices(const vector<size_t> &trackIndices);
 
     //EGS_Vector *renderImage(EGS_BaseGeometry *, int xsize, int ysize);
     bool renderImage(EGS_BaseGeometry *, int nx, int ny, EGS_Vector *image, int *abort_location=NULL);

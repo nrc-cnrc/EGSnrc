@@ -67,7 +67,7 @@ static T *shrink(T *original, size_t old_len, size_t new_len) {
 
 const int zero = 0;
 
-EGS_TrackView::EGS_TrackView(const char *filename) {
+EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     // typedefs to keep things short
     typedef EGS_ParticleTrack::Vertex Vert;
     typedef EGS_ParticleTrack::ParticleInfo PInfo;
@@ -215,7 +215,8 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
     // Sentinel at the end; get lengths
     for (int i=0; i<3; i++) {
         m_index[i][ind_rcnt[i]] = mem_rcnt[i];
-        m_tracks[i] = ind_rcnt[i];
+        m_tracks[i] = size_t(ind_rcnt[i]);
+        ntracks.push_back(m_tracks[i]);
     }
     // Cleanup temporaries
     delete[] tmp_index;
@@ -230,10 +231,13 @@ EGS_TrackView::EGS_TrackView(const char *filename) {
     int csze = ind_rcnt[0] + ind_rcnt[1] + ind_rcnt[2];
     int msze = mem_rcnt[0] + mem_rcnt[1] + mem_rcnt[2];
 
-    egsInformation("%s: Compressed size : %d\n", func_name,
+    egsInformation("%s: Compressed size  : %d\n", func_name,
                    sizeof(Vert)*msze + sizeof(void *)*csze);
-    egsInformation("%s: Tracks loaded   : %d (%d %d %d)\n", func_name,
+    egsInformation("%s: Tracks loaded    : %d (%d %d %d)\n", func_name,
                    tot_tracks, count_num[0], count_num[1], count_num[2]);
+    egsInformation("%s: Tracks compressed: %d (%d %d %d)\n", func_name,
+                   ind_rcnt[0]+ind_rcnt[1]+ind_rcnt[2],
+                   ind_rcnt[0], ind_rcnt[1], ind_rcnt[2]);
     m_failed = false;
 }
 
@@ -312,7 +316,16 @@ bool EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image,
             */
             EGS_Float color = (k+1);
 
-            for (int i=0; i<m_tracks[k]; i++) {
+            int min, max;
+            if(trackIndices.size()) {
+                min = trackIndices[2*k];
+                // Avoid out of bounds error, max out at m_tracks
+                max = trackIndices[2*k+1] > m_tracks[k] ? m_tracks[k] : trackIndices[2*k+1];
+            } else {
+                min = 0;
+                max = m_tracks[k];
+            }
+            for (int i=min; i<max; i++) {
                 if (*abort_location) {
                     return false;
                 }

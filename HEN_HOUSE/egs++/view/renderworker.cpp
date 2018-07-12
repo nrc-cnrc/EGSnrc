@@ -52,7 +52,8 @@ RenderWorker::~RenderWorker() {
 }
 
 void RenderWorker::loadTracks(QString fileName) {
-    vis->loadTracksData(fileName.toUtf8().constData());
+    vector<size_t> ntracks = vis->loadTracksData(fileName.toUtf8().constData());
+    emit tracksLoaded(ntracks);
 }
 
 void RenderWorker::drawAxes(const RenderParameters &p) {
@@ -258,6 +259,7 @@ struct RenderResults RenderWorker::renderSync(EGS_BaseGeometry *g, struct Render
 
     // render tracks
     if (p.draw_tracks) {
+        vis->setTrackIndices(p.trackIndices);
         vis->setParticleVisibility(1,p.show_photons);
         vis->setParticleVisibility(2,p.show_electrons);
         vis->setParticleVisibility(3,p.show_positrons);
