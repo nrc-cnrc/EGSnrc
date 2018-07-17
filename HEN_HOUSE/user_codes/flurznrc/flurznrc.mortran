@@ -2215,7 +2215,7 @@ IF(IREJCT = 1)[
 ELSE[DO IZ=1,NZ[DO IX=1,NR[$GET-IRL(IZ,IX);NTRACK(IRL)=0;]]]
 
 "SET UP AUSGAB CALLS"
-IAUSFL(1)=1;DO J=2,21[IAUSFL(J)=0;] "NORMAL EXECUTION -only call prior"
+IAUSFL(1)=1;DO J=2,$MXAUS[IAUSFL(J)=0;] "NORMAL EXECUTION -only call prior"
 "                                    to transport step"
 
 "  IPRIMARY

@@ -2382,12 +2382,7 @@ IHSTRY=NCASEO; "reset the number of histories counter"
 IF (ISOURC = 2)[ NR=1;RCYL(1)=1000.;NREG=NZ+1;CYRAD2(1)=RCYL(1)**2;]
 
 "set up ausgab calls"
-"JAN CHANGE: 21 is not the final IAUSFL argument; 25 is."
-"            An inproper initialization of elements 22,23,24 and 25"
-"            gave problems"
-"was: "
-"DO J=1,5[IAUSFL(J)=1;]DO J=6,21[IAUSFL(J)=0;] NORMAL EXECUTION"
-DO J=1,5[IAUSFL(J)=1;]DO J=6,25[IAUSFL(J)=0;] "NORMAL EXECUTION"
+DO J=1,5[IAUSFL(J)=1;]DO J=6,$MXAUS[IAUSFL(J)=0;] "NORMAL EXECUTION"
 "END OF JAN CHANGE"
 
 IF(IFULL=1)[

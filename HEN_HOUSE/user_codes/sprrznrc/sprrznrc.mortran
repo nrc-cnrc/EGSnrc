@@ -1911,7 +1911,7 @@ IF(NCASE/$NBATCH=0)[NCASE=$NBATCH;]
 JCASE=NCASE/$NBATCH; NCASE=JCASE*$NBATCH;"NUMBER OF HISTORIES PER BATCH
 
 "SET UP AUSGAB CALLS"
-DO J=1,5[IAUSFL(J)=1;]   DO J=6,25[IAUSFL(J)=0;] "NORMAL EXECUTION"
+DO J=1,5[IAUSFL(J)=1;]   DO J=6,$MXAUS[IAUSFL(J)=0;] "NORMAL EXECUTION"
 "now set up to call AUSGAB under various circumstances so the flags"
 "can be set                                                         "
            " IAUSFL(8)=1; "       "after brem created"

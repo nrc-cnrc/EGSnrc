@@ -2553,7 +2553,7 @@ DO IZ=1,NZ[
 
 ;
 "SET UP AUSGAB CALLS"
-DO J=1,5[IAUSFL(J)=1;]DO J=6,33[IAUSFL(J)=0;] "NORMAL EXECUTION"
+DO J=1,5[IAUSFL(J)=1;]DO J=6,$MXAUS[IAUSFL(J)=0;] "NORMAL EXECUTION"
 
 IF(IFULL = 1 | IFULL = 3 | IKERMA = 1) [
    "need to call ausgab to set flag after photon interactions"
