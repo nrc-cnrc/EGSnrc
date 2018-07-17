@@ -4143,7 +4143,7 @@ ELSE[ "doing range rejection
 " Set up AUSGAB calls for normal execution (not necessary, as fed through BLOCK
 " DATA, but do it anyway).
 DO J=1,5[ IAUSFL(J)=1; ]
-DO J=6,29[ IAUSFL(J)=0; ]
+DO J=6,$MXAUS[ IAUSFL(J)=0; ]
 "NB IAUSFL(6) is set =1 to flag when leaving a CM and then set=0 in AUSGAB"
 "This means it must not be used in any other manner."
 
