@@ -60,6 +60,10 @@
               ZLEAF_$SYNCHDMLC(1)>=ZTIP_$SYNCHDMLC(1), etc.  See the BEAM
               manual or GUI help for restrictions on widths.
 
+        Note: If there are no FULL leaves in your model, you can input
+              blanks, zeroes, or arbitrary floating-point numbers for these
+              cross section dimensions.
+
 
     6  LEAFWIDTH_$SYNCHDMLC(2), WTONGUE_$SYNCHDMLC(2), WGROOVE_$SYNCHDMLC(2),
        WTIP_$SYNCHDMLC(2), WRAILTOP_$SYNCHDMLC(2), WRAILBOT_$SYNCHDMLC(2),
@@ -131,6 +135,9 @@
                   leaf on +X [ORIENT=0] or +Y [ORIENT=1] side of ISOCENTER
                   leaf only) ZTONGUE_$SYNCHDMLC(1)<=ZGROOVE_$SYNCHDMLC(3)
 
+        Note: If there are no HALF leaf pairs in your model, you can input
+              blanks, zeroes, or arbitrary floating-point numbers for these
+              cross section dimensions.
 
     8  LEAFWIDTH_$SYNCHDMLC(4), WTONGUE_$SYNCHDMLC(4), WGROOVE_$SYNCHDMLC(4),
        WTIP_$SYNCHDMLC(4), WRAILTOP_$SYNCHDMLC(4), WRAILBOT_$SYNCHDMLC(4),
@@ -187,6 +194,10 @@
              HOLEPOS_QISO_$SYNCHDMLC: Distance of hole from leaf tip
              ZRAILTOP_$SYNCHDMLC(5): Z of top of support rail
              ZRAILBOT_$SYNCHDMLC(5): Z of bottom of support rail
+
+       Note: If there are no QUARTER leaves in your model, you can input
+             blanks, zeroes, or arbitrary floating-point numbers for these
+             cross section dimensions.
 
     Repeat 10 NGROUP_$SYNCHDMLC times
 
@@ -263,7 +274,7 @@
 
    If MODE_$SYNCHDMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 
-   14b  mlc_file (A80)
+   14b  mlc_file (A256)
 
           mlc_file:  The full name of the file containing leaf opening
                      data.  The format of the file contents is as follows:
@@ -286,17 +297,17 @@
               MLC_TITLE:  A title line
        NFIELDS_$SYNCHDMLC:  Total number of fields
       INDEX_$SYNCHDMLC(I):  Index of field I. 0 <=INDEX_$SYNCHDMLC(I) <= 1 and
-                          INDEX_$SYNCHDMLC(I) >= INDEX_$SYNCHDMLC(I-1).  This
+                          INDEX_$SYNCHDMLC(I) > INDEX_$SYNCHDMLC(I-1).  This
                           number is compared to a random number on (0,1) at
                           the start of each history; if the random number is
                           <= INDEX_$SYNCHDMLC(I), then field I is used.
            NEG_$SYNCHDMLC:  Min. Y (ORIENT_$SYNCHDMLC=0) or
- 			      X (ORIENT_$SYNCHDMLC=1)
+                          X (ORIENT_$SYNCHDMLC=1)
                           of front opening in leaf (ie the opening at
                           ZMIN_$SYNCHDMLC) if ENDTYPE=1, or of rounded end
                           of leaf if ENDTYPE=0 for leaf J in field I.
            POS_$SYNCHDMLC:  Max. Y (ORIENT_$SYNCHDMLC=0) or
-  			      X (ORIENT_$SYNCHDMLC=1)
+                          X (ORIENT_$SYNCHDMLC=1)
                           of front opening in leaf if ENDTYPE=1, or of
                           rounded end of leaf if ENDTYPE=0 for leaf J in
                           field I.
@@ -359,7 +370,8 @@
     *******
 
     The following example defines a multi-leaf tungsten collimator design
-    based loosely on the TrueBeam high-definition mlc (HD120).
+    based loosely on the TrueBeam high-definition mlc (HD120) but using
+    all leaf types.
     Actual parameters are DIFFERENT - this serves just as a template.
     Do not attempt to use these parameters for a simulation of the real
     machine.
