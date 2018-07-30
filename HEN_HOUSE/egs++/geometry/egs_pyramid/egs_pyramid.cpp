@@ -125,7 +125,7 @@ extern "C" {
         if (!err && is_closed == 1) {
             o = false;
         }
-        egsWarning("%s: open = %d\n",type.c_str(),o);
+        //egsWarning("%s: open = %d\n",type.c_str(),o);
         if (input->compare(type,__pyrX) || input->compare(type,__pyrY) ||
                 input->compare(type,__pyrZ)) {
             int np = p.size()/2;

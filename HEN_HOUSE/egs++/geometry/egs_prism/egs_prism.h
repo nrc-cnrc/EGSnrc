@@ -143,6 +143,7 @@ public:
     EGS_PrismT(T *P, const string &Name="") :
         EGS_BaseGeometry(Name), p(P), a(p->getNormal()), open(true) {
         is_convex = p->isConvex();
+        nreg = 1;
     };
 
     /*! \brief Construct a closed prism using \a P as the base polygon
@@ -159,6 +160,7 @@ public:
             d2 = D1;
         }
         is_convex = p->isConvex();
+        nreg = 1;
     };
 
     /*! \brief Desctructor, deletes the base polygon */

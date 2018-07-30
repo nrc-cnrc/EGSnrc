@@ -64,7 +64,7 @@ EGS_PlaneCollection::EGS_PlaneCollection(int Np, const EGS_Float *pos,
 }
 
 EGS_PlaneCollection::~EGS_PlaneCollection() {
-    egsWarning("Deleting ~EGS_PlaneCollection at 0x%x\n",this);
+    //egsWarning("Deleting ~EGS_PlaneCollection at 0x%x\n",this);
     for (int j=0; j<np; j++) if (!planes[j]->deref()) {
             delete planes[j];
         }
