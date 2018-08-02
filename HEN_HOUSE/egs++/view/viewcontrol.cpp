@@ -122,7 +122,7 @@ GeometryViewControl::GeometryViewControl(QWidget *parent, const char *name)
     showPhotonTracks = this->showPhotonsCheckbox->isChecked();
     showElectronTracks = this->showElectronsCheckbox->isChecked();
     showPositronTracks = this->showPositronsCheckbox->isChecked();
-    if(showPhotonTracks || showElectronTracks || showPositronTracks) {
+    if (showPhotonTracks || showElectronTracks || showPositronTracks) {
         showTracks = true;
     }
 
@@ -184,13 +184,13 @@ GeometryViewControl::~GeometryViewControl() {
         delete [] m_colors;
     }
     g = origSimGeom;
-    if(g) {
+    if (g) {
         delete g;
         g = 0;
     }
     EGS_BaseGeometry::clearGeometries();
     int nobj = EGS_AusgabObject::nObjects();
-    for(int j=0; j<3; ++j) {
+    for (int j=0; j<3; ++j) {
         for (int i=0; i<nobj; ++i) {
             delete EGS_AusgabObject::getObject(i);
         }
@@ -218,9 +218,9 @@ void GeometryViewControl::selectInput() {
 }
 
 bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
-    #ifdef VIEW_DEBUG
-        egsWarning("In loadInput(), reloading is %d\n",reloading);
-    #endif
+#ifdef VIEW_DEBUG
+    egsWarning("In loadInput(), reloading is %d\n",reloading);
+#endif
 
     // check that the file (still) exists
     QFile file(filename);
@@ -240,11 +240,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     qApp->processEvents();
 
     // Delete any previous geometry
-    if(!simGeom) {
+    if (!simGeom) {
 #ifdef VIEW_DEBUG
         egsInformation("GeometryViewControl::loadInput: Clearing previous geometries...\n");
 #endif
-        if(g) {
+        if (g) {
             delete g;
             g = 0;
         }
@@ -255,7 +255,7 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
         egsInformation("GeometryViewControl::loadInput: Clearing previous ausgab objects...\n");
 #endif
         int nobj = EGS_AusgabObject::nObjects();
-        for(int j=0; j<3; ++j) {
+        for (int j=0; j<3; ++j) {
             for (int i=0; i<nobj; ++i) {
                 delete EGS_AusgabObject::getObject(i);
             }
@@ -274,15 +274,16 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     egsInformation("GeometryViewControl::loadInput: Creating the geometry...\n");
 #endif
     EGS_BaseGeometry *newGeom;
-    if(!simGeom) {
+    if (!simGeom) {
         newGeom = EGS_BaseGeometry::createGeometry(&input);
         if (!newGeom) {
             QMessageBox::critical(this,"Geometry error",
-                    "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
+                                  "The geometry is not correctly defined. Edit the input file and reload.",QMessageBox::Ok,0,0);
 
             return false;
         }
-    } else {
+    }
+    else {
         newGeom = simGeom;
     }
 
@@ -340,10 +341,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 
     // Only allow region selection for up to 1k regions
     int nreg = newGeom->regions();
-    if(nreg < 1001) {
+    if (nreg < 1001) {
         allowRegionSelection = true;
         show_regions.resize(nreg,true);
-    } else {
+    }
+    else {
         allowRegionSelection = false;
         show_regions.resize(0);
         egsInformation("Region selection tab has been disabled due to >1000 regions (for performance reasons)\n");
@@ -358,11 +360,11 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     gview->restartWorker();
     setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
 
-    if(!simGeom) {
-       origSimGeom = g;
+    if (!simGeom) {
+        origSimGeom = g;
     }
 
-    if(allowRegionSelection) {
+    if (allowRegionSelection) {
         updateRegionTable();
     }
 
@@ -370,13 +372,13 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     comboBox_simGeom->clear();
     EGS_BaseGeometry **geoms = g->getGeometries();
     int ngeom = g->getNGeometries();
-    for(int i=0; i<ngeom; ++i) {
+    for (int i=0; i<ngeom; ++i) {
         comboBox_simGeom->addItem((geoms[i]->getName() + " (" + geoms[i]->getType() + ")").c_str(), geoms[i]->getName().c_str());
     }
     comboBox_simGeom->setCurrentIndex(comboBox_simGeom->findData(g->getName().c_str()));
 
     // Load ausgab objects from the input file
-    if(!simGeom) {
+    if (!simGeom) {
 #ifdef VIEW_DEBUG
         egsInformation("GeometryViewControl::loadInput: Processing ausgab objects...\n");
 #endif
@@ -400,11 +402,13 @@ EGS_Vector GeometryViewControl::getHeatMapColor(EGS_Float value) {
     unsigned int idx2;
     EGS_Float fractBetween = 0;
 
-    if(value <= 0) {
+    if (value <= 0) {
         idx1 = idx2 = 0;
-    } else if(value >= 1) {
+    }
+    else if (value >= 1) {
         idx1 = idx2 = NUM_COLORS-1;
-    } else {
+    }
+    else {
         value = value * (NUM_COLORS-1);
         idx1  = floor(value);
         idx2  = idx1+1;
@@ -421,7 +425,7 @@ EGS_Vector GeometryViewControl::getHeatMapColor(EGS_Float value) {
 
 void GeometryViewControl::reloadInput() {
     g = origSimGeom;
-    if(!loadInput(true)) {
+    if (!loadInput(true)) {
         egsWarning("GeometryViewControl::reloadInput: Error: The geometry is not correctly defined\n");
     }
 }
@@ -439,7 +443,7 @@ void GeometryViewControl::saveConfig() {
     // Prompt the user for a filename and open the file for writing
     QString configFilename = QFileDialog::getSaveFileName(this, "Save config file as...", defaultFilename, "*.egsview");
     QFile configFile(configFilename);
-    if(!configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+    if (!configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
         return;
     }
     QTextStream out(&configFile);
@@ -458,33 +462,33 @@ void GeometryViewControl::saveConfig() {
 
     out << ":start camera view:" << endl;
     out << "    rotation point = " << lookX->text() << " "
-            << lookY->text() << " "
-            << lookZ->text() << endl;
+        << lookY->text() << " "
+        << lookZ->text() << endl;
     out << "    camera = " << camera.x << " "
-            << camera.y << " "
-            << camera.z << endl;
+        << camera.y << " "
+        << camera.z << endl;
     out << "    camera v1 = " << camera_v1.x << " "
-            << camera_v1.y << " "
-            << camera_v1.z << endl;
+        << camera_v1.y << " "
+        << camera_v1.z << endl;
     out << "    camera v2 = " << camera_v2.x << " "
-            << camera_v2.y << " "
-            << camera_v2.z << endl;
+        << camera_v2.y << " "
+        << camera_v2.z << endl;
     out << "    zoom = " << zoomlevel << endl;
     out << ":stop camera view:" << endl;
 
     out << ":start home view:" << endl;
     out << "    home position = " << look_at_home.x << " "
-            << look_at_home.y << " "
-            << look_at_home.z << endl;
+        << look_at_home.y << " "
+        << look_at_home.z << endl;
     out << "    home = " << camera_home.x << " "
-            << camera_home.y << " "
-            << camera_home.z << endl;
+        << camera_home.y << " "
+        << camera_home.z << endl;
     out << "    home v1 = " << camera_home_v1.x << " "
-            << camera_home_v1.y << " "
-            << camera_home_v1.z << endl;
+        << camera_home_v1.y << " "
+        << camera_home_v1.z << endl;
     out << "    home v2 = " << camera_home_v2.x << " "
-            << camera_home_v2.y << " "
-            << camera_home_v2.z << endl;
+        << camera_home_v2.y << " "
+        << camera_home_v2.z << endl;
     out << "    zoom = " << zoomlevel_home << endl;
     out << ":stop home view:" << endl;
 
@@ -505,18 +509,19 @@ void GeometryViewControl::saveConfig() {
     out << "    alpha = " << slider_dose->value() << endl;
     out << ":stop dose:" << endl;
 
-    if(rp.material_colors.size() > 0) {
+    if (rp.material_colors.size() > 0) {
         out << ":start material colors:" << endl;
         for (size_t i=0; i<rp.material_colors.size(); ++i) {
             out << "    :start material:" << endl;
-            if(i==size_t(nmed)) {
+            if (i==size_t(nmed)) {
                 out << "        material = vacuum" << endl;
-            } else {
+            }
+            else {
                 out << "        material = " << g->getMediumName(i) << endl;
             }
             out << "        rgb = " << qRed(m_colors[i]) << " "
-                            << qGreen(m_colors[i]) << " "
-                            << qBlue(m_colors[i]) << endl;
+                << qGreen(m_colors[i]) << " "
+                << qBlue(m_colors[i]) << endl;
             out << "        alpha = " << qAlpha(m_colors[i]) << endl;
             out << "    :stop material:" << endl;
         }
@@ -526,25 +531,25 @@ void GeometryViewControl::saveConfig() {
     out << ":start clipping planes:" << endl;
     for (int i=0; i<cplanes->numPlanes(); i++) {
         QTableWidgetItem *itemAx = cplanes->getItem(i,0),
-                     *itemAy = cplanes->getItem(i,1),
-                     *itemAz = cplanes->getItem(i,2),
-                     *itemD = cplanes->getItem(i,3),
-                     *itemApplied = cplanes->getItem(i,4);
+                          *itemAy = cplanes->getItem(i,1),
+                           *itemAz = cplanes->getItem(i,2),
+                            *itemD = cplanes->getItem(i,3),
+                             *itemApplied = cplanes->getItem(i,4);
 
         out << "    :start plane:" << endl;
-        if(itemAx) {
+        if (itemAx) {
             out << "        ax = " << itemAx->text() << endl;
         }
-        if(itemAy) {
+        if (itemAy) {
             out << "        ay = " << itemAy->text() << endl;
         }
-        if(itemAz) {
+        if (itemAz) {
             out << "        az = " << itemAz->text() << endl;
         }
-        if(itemD) {
+        if (itemD) {
             out << "        d = " << itemD->text() << endl;
         }
-        if(itemApplied) {
+        if (itemApplied) {
             out << "        applied = " << itemApplied->checkState() << endl;
         }
         out << "    :stop plane:" << endl;
@@ -553,11 +558,11 @@ void GeometryViewControl::saveConfig() {
 
     out << ":start hidden regions:" << endl;
     out << "    region list =";
-    for(size_t i = 0; i < show_regions.size(); ++i) {
+    for (size_t i = 0; i < show_regions.size(); ++i) {
         // List all the unchecked regions
-        if(!show_regions[i]) {
+        if (!show_regions[i]) {
             QTableWidgetItem *itemRegion = regionTable->item(i,0);
-            if(itemRegion) {
+            if (itemRegion) {
                 out << " " << itemRegion->text();
             }
         }
@@ -567,23 +572,23 @@ void GeometryViewControl::saveConfig() {
 
     out << ":start colors:" << endl;
     out << "    background = " << backgroundColor.red() << " " <<
-            backgroundColor.green() << " " <<
-            backgroundColor.blue() << endl;
+        backgroundColor.green() << " " <<
+        backgroundColor.blue() << endl;
     out << "    text = " << textColor.red() << " " <<
-            textColor.green() << " " <<
-            textColor.blue() << endl;
+        textColor.green() << " " <<
+        textColor.blue() << endl;
     out << "    axis = " << axisColor.red() << " " <<
-            axisColor.green() << " " <<
-            axisColor.blue() << endl;
+        axisColor.green() << " " <<
+        axisColor.blue() << endl;
     out << "    photons = " << photonColor.red() << " " <<
-            photonColor.green() << " " <<
-            photonColor.blue() << endl;
+        photonColor.green() << " " <<
+        photonColor.blue() << endl;
     out << "    electrons = " << electronColor.red() << " " <<
-            electronColor.green() << " " <<
-            electronColor.blue() << endl;
+        electronColor.green() << " " <<
+        electronColor.blue() << endl;
     out << "    positrons = " << positronColor.red() << " " <<
-            positronColor.green() << " " <<
-            positronColor.blue() << endl;
+        positronColor.green() << " " <<
+        positronColor.blue() << endl;
     out << "    energy scaling = " << energyScaling << endl;
     out << ":stop colors:" << endl;
 }
@@ -608,7 +613,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     if (configFilename.size() > 0) {
         if (input->setContentFromFile(configFilename.toLatin1().data())) {
             QMessageBox::critical(this,"Config file read error",
-                "Failed to open the config file for reading.",QMessageBox::Ok,0,0);
+                                  "Failed to open the config file for reading.",QMessageBox::Ok,0,0);
             delete input;
             return;
         }
@@ -617,32 +622,32 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     int err; // A variable to track errors
 
     EGS_Input *iGeneral = input->takeInputItem("general");
-    if(iGeneral) {
+    if (iGeneral) {
         int fontSize;
         err = iGeneral->getInput("font size",fontSize);
-        if(!err) {
+        if (!err) {
             setFontSize(fontSize);
         }
 
         vector<int> position;
         err = iGeneral->getInput("controls position",position);
-        if(!err && position.size() == 2) {
+        if (!err && position.size() == 2) {
             this->move(position[0], position[1]);
         }
 
         vector<int> windowSize;
         err = iGeneral->getInput("controls size",windowSize);
-        if(!err && windowSize.size() == 2) {
+        if (!err && windowSize.size() == 2) {
             this->resize(windowSize[0], windowSize[1]);
         }
 
         err = iGeneral->getInput("view position",position);
-        if(!err && position.size() == 2) {
+        if (!err && position.size() == 2) {
             gview->move(position[0], position[1]);
         }
 
         err = iGeneral->getInput("view size",windowSize);
-        if(!err && windowSize.size() == 2) {
+        if (!err && windowSize.size() == 2) {
             gview->resize(windowSize[0], windowSize[1]);
         }
 
@@ -651,7 +656,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the image size
     EGS_Input *iImageSize = input->takeInputItem("image size");
-    if(iImageSize) {
+    if (iImageSize) {
         err = iImageSize->getInput("nx",rp.nx);
         err = iImageSize->getInput("ny",rp.ny);
 
@@ -662,36 +667,39 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the particle track options
     EGS_Input *iTracks = input->takeInputItem("tracks");
-    if(iTracks) {
+    if (iTracks) {
         int show;
         err = iTracks->getInput("show tracks",show);
-        if(!err) {
+        if (!err) {
             showTracks = show;
         }
 
         err = iTracks->getInput("photons",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showPhotonsCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showPhotonsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
 
         err = iTracks->getInput("electrons",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showElectronsCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showElectronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
 
         err = iTracks->getInput("positrons",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showPositronsCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showPositronsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
@@ -701,31 +709,34 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the overlay options
     EGS_Input *iOverlay = input->takeInputItem("overlay");
-    if(iOverlay) {
+    if (iOverlay) {
         int show;
         err = iOverlay->getInput("show axis",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showAxesCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showAxesCheckbox->setCheckState(Qt::Unchecked);
             }
         }
 
         err = iOverlay->getInput("show axis labels",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showAxesLabelsCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showAxesLabelsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
 
         err = iOverlay->getInput("show regions",show);
-        if(!err) {
-            if(show) {
+        if (!err) {
+            if (show) {
                 showRegionsCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 showRegionsCheckbox->setCheckState(Qt::Unchecked);
             }
         }
@@ -734,11 +745,11 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load camera view
     EGS_Input *iView = input->takeInputItem("camera view");
-    if(iView) {
+    if (iView) {
         // Get the rotation point
         vector<EGS_Float> look;
         err = iView->getInput("rotation point",look);
-        if(!err) {
+        if (!err) {
             look_at.x = look[0];
             look_at.y = look[1];
             look_at.z = look[2];
@@ -751,11 +762,11 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         // Get the camera orientation
         vector<EGS_Float> cam, camv1, camv2;
         err = iView->getInput("camera",cam);
-        if(!err) {
+        if (!err) {
             err = iView->getInput("camera v1",camv1);
-            if(!err) {
+            if (!err) {
                 err = iView->getInput("camera v2",camv2);
-                if(!err) {
+                if (!err) {
                     camera = EGS_Vector(cam[0],cam[1],cam[2]);
                     camera_v1 = EGS_Vector(camv1[0],camv1[1],camv1[2]);
                     camera_v2 = EGS_Vector(camv2[0],camv2[1],camv2[2]);
@@ -774,11 +785,11 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load home view
     EGS_Input *iHome = input->takeInputItem("home view");
-    if(iHome) {
+    if (iHome) {
         // Get the home position
         vector<EGS_Float> look;
         err = iHome->getInput("home position",look);
-        if(!err) {
+        if (!err) {
             look_at_home.x = look[0];
             look_at_home.y = look[1];
             look_at_home.z = look[2];
@@ -787,11 +798,11 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         // Get the home orientation
         vector<EGS_Float> cam, camv1, camv2;
         err = iHome->getInput("home",cam);
-        if(!err) {
+        if (!err) {
             err = iHome->getInput("home v1",camv1);
-            if(!err) {
+            if (!err) {
                 err = iHome->getInput("home v2",camv2);
-                if(!err) {
+                if (!err) {
                     camera_home = EGS_Vector(cam[0],cam[1],cam[2]);
                     camera_home_v1 = EGS_Vector(camv1[0],camv1[1],camv1[2]);
                     camera_home_v2 = EGS_Vector(camv2[0],camv2[1],camv2[2]);
@@ -805,15 +816,15 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the media colors
     EGS_Input *iMatColors = input->takeInputItem("material colors");
-    if(iMatColors) {
-        while(1) {
+    if (iMatColors) {
+        while (1) {
             EGS_Input *iMatList = iMatColors->getInputItem("material");
-            if(!iMatList) {
+            if (!iMatList) {
                 break;
             }
 
             EGS_Input *iMat = iMatColors->takeInputItem("material");
-            if(!iMat) {
+            if (!iMat) {
                 break;
             }
 
@@ -822,7 +833,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             int alpha;
 
             err = iMat->getInput("material",material);
-            if(err) {
+            if (err) {
                 delete iMat;
                 delete iMatList;
                 continue;
@@ -830,24 +841,25 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
             // Find the index of the material by the same name
             int imed;
-            if(material == "vacuum") {
+            if (material == "vacuum") {
                 imed = nmed;
-            } else {
-                for(imed = 0; imed<nmed; ++imed) {
-                    if(g->getMediumName(imed) == material) {
+            }
+            else {
+                for (imed = 0; imed<nmed; ++imed) {
+                    if (g->getMediumName(imed) == material) {
                         break;
                     }
                 }
             }
 
             err = iMat->getInput("rgb",rgb);
-            if(err || rgb.size() < 3) {
+            if (err || rgb.size() < 3) {
                 delete iMat;
                 delete iMatList;
                 continue;
             }
             err = iMat->getInput("alpha",alpha);
-            if(err) {
+            if (err) {
                 delete iMat;
                 delete iMatList;
                 continue;
@@ -856,7 +868,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             m_colors[imed] = qRgba(rgb[0], rgb[1], rgb[2], alpha);
 
             // Update the transparency bar
-            if(imed == 0) {
+            if (imed == 0) {
                 transparency->setValue(alpha);
             }
             delete iMat;
@@ -874,10 +886,10 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
     // Load the clipping planes
     EGS_Input *iClip = input->takeInputItem("clipping planes");
-    if(iClip) {
+    if (iClip) {
         for (int i=0; i<cplanes->numPlanes(); i++) {
             EGS_Input *iPlane = iClip->takeInputItem("plane");
-            if(!iPlane) {
+            if (!iPlane) {
                 break;
             }
 
@@ -885,44 +897,50 @@ void GeometryViewControl::loadConfig(QString configFilename) {
             int check;
 
             err = iPlane->getInput("ax",ax);
-            if(!err) {
+            if (!err) {
                 cplanes->setCell(i,0,ax);
-            } else {
+            }
+            else {
                 cplanes->clearCell(i,0);
             }
 
             err = iPlane->getInput("ay",ay);
-            if(!err) {
+            if (!err) {
                 cplanes->setCell(i,1,ay);
-            } else {
+            }
+            else {
                 cplanes->clearCell(i,1);
             }
 
             err = iPlane->getInput("az",az);
-            if(!err) {
+            if (!err) {
                 cplanes->setCell(i,2,az);
-            } else {
+            }
+            else {
                 cplanes->clearCell(i,2);
             }
 
             err = iPlane->getInput("d",d);
-            if(!err) {
+            if (!err) {
                 cplanes->setCell(i,3,d);
-            } else {
+            }
+            else {
                 cplanes->clearCell(i,3);
             }
 
             err = iPlane->getInput("applied",check);
-            if(!err) {
+            if (!err) {
                 Qt::CheckState isChecked;
-                if(check == Qt::Checked) {
+                if (check == Qt::Checked) {
                     isChecked = Qt::Checked;
-                } else {
+                }
+                else {
                     isChecked = Qt::Unchecked;
                 }
 
                 cplanes->setCell(i,4,isChecked);
-            } else {
+            }
+            else {
                 cplanes->setCell(i,4,Qt::Checked);
             }
 
@@ -932,21 +950,21 @@ void GeometryViewControl::loadConfig(QString configFilename) {
         delete iClip;
     }
 
-    if(allowRegionSelection) {
+    if (allowRegionSelection) {
         updateRegionTable();
     }
 
     // Load the hidden regions
     EGS_Input *iReg = input->takeInputItem("hidden regions");
-    if(iReg) {
+    if (iReg) {
         vector<int> regionList;
         err = iReg->getInput("region list",regionList);
         // For every region in the table, check to see if it
         // is listed in the hidden regions list.
         // If so, hide it; if not, show it
-        for(size_t i = 0; i < show_regions.size(); ++i) {
+        for (size_t i = 0; i < show_regions.size(); ++i) {
             QTableWidgetItem *itemRegion = regionTable->item(i,0);
-            if(!itemRegion) {
+            if (!itemRegion) {
                 continue;
             }
 
@@ -954,13 +972,14 @@ void GeometryViewControl::loadConfig(QString configFilename) {
 
             // Hide the listed regions, otherwise show them
             QTableWidgetItem *itemShow = regionTable->item(i,3);
-            if(!itemShow) {
+            if (!itemShow) {
                 continue;
             }
-            if(std::find(regionList.begin(), regionList.end(), ireg) != regionList.end()) {
+            if (std::find(regionList.begin(), regionList.end(), ireg) != regionList.end()) {
                 itemShow->setCheckState(Qt::Unchecked);
                 show_regions[i] = false;
-            } else {
+            }
+            else {
                 itemShow->setCheckState(Qt::Checked);
                 show_regions[i] = true;
             }
@@ -969,46 +988,47 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     EGS_Input *iColors = input->takeInputItem("colors");
-    if(iColors) {
+    if (iColors) {
         vector<int> rgb;
 
         err = iColors->getInput("background",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             backgroundColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         err = iColors->getInput("text",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             textColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         err = iColors->getInput("axis",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             axisColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         err = iColors->getInput("photons",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             photonColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         err = iColors->getInput("electrons",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             electronColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         err = iColors->getInput("positrons",rgb);
-        if(!err && rgb.size() >= 3) {
+        if (!err && rgb.size() >= 3) {
             positronColor = QColor(rgb[0], rgb[1], rgb[2]);
         }
 
         int useScaling;
         err = iColors->getInput("energy scaling",useScaling);
-        if(!err) {
+        if (!err) {
             energyScaling = useScaling;
-            if(energyScaling) {
+            if (energyScaling) {
                 energyScalingCheckbox->setCheckState(Qt::Checked);
-            } else {
+            }
+            else {
                 energyScalingCheckbox->setCheckState(Qt::Unchecked);
             }
         }
@@ -1019,7 +1039,7 @@ void GeometryViewControl::loadConfig(QString configFilename) {
     }
 
     EGS_Input *iDose = input->takeInputItem("dose");
-    if(iDose) {
+    if (iDose) {
         int alpha;
         err = iDose->getInput("alpha",alpha);
         slider_dose->setValue(alpha);
@@ -1055,7 +1075,7 @@ void GeometryViewControl::loadDose() {
 
 void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
 
-    if(scoreArrays.size() > 0) {
+    if (scoreArrays.size() > 0) {
         scoreArrays.assign(scoreArrays.size(),vector<EGS_Float>());
     }
     size_t doseIndex = 0;
@@ -1063,34 +1083,34 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
     // Clear anything already in the layout for checkboxes
     // This is just for reloading an input file
     QList<QCheckBox *> list = groupBox_dose->findChildren<QCheckBox *>();
-    foreach(QCheckBox *cb, list) {
+    foreach (QCheckBox *cb, list) {
         delete cb;
     }
 
     // Load the dose a user selected from the file menu
-    if(userDoseFile.length()) {
+    if (userDoseFile.length()) {
         label_dose->hide();
 
         // 3ddose files
-        if(userDoseFile.endsWith(".3ddose")) {
+        if (userDoseFile.endsWith(".3ddose")) {
 
             QFile doseFile(userDoseFile);
 
             // Add a checkbox
             QCheckBox *doseCheckbox = new QCheckBox(QFileInfo(doseFile).fileName(),this);
             // If the user just selected this file, check the checkbox
-            if(loadUserDose) {
+            if (loadUserDose) {
                 doseCheckbox->setCheckState(Qt::Checked);
             }
             verticalLayout_dose->addWidget(doseCheckbox);
 
-            if(doseIndex+1 > scoreArrays.size()) {
+            if (doseIndex+1 > scoreArrays.size()) {
                 scoreArrays.push_back(vector<EGS_Float>());
             }
 
             connect(doseCheckbox, SIGNAL(toggled(bool)), this, SLOT(doseCheckbox_toggled()));
 
-            if(doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            if (doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 #ifdef VIEW_DEBUG
                 egsInformation("Reading dose file: %s\n", userDoseFile.toLatin1().data());
@@ -1101,7 +1121,7 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                 // Sanity check the number of voxels
                 int nx, ny, nz;
                 in >> nx >> ny >> nz;
-                if(g->regions() >= nx*ny*nz) {
+                if (g->regions() >= nx*ny*nz) {
 
                     scoreArrays[doseIndex].assign(g->regions(),0);
 
@@ -1135,9 +1155,10 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                                 int g_reg = g->isWhere(tp);
 
                                 // Read in the dose values
-                                if(g_reg >= 0) {
+                                if (g_reg >= 0) {
                                     in >> scoreArrays[doseIndex][g_reg];
-                                } else {
+                                }
+                                else {
 #ifdef VIEW_DEBUG
                                     egsWarning("Warning: Dose region out of bounds, skipping this file...\n");
 #endif
@@ -1147,20 +1168,22 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                                     break;
                                 }
                             }
-                            if(err) {
+                            if (err) {
                                 break;
                             }
                         }
-                        if(err) {
+                        if (err) {
                             break;
                         }
                     }
-                } else {
+                }
+                else {
                     doseCheckbox->setEnabled(false);
                 }
 
                 doseFile.close();
-            } else {
+            }
+            else {
                 doseCheckbox->setEnabled(false);
             }
             doseIndex++;
@@ -1169,23 +1192,23 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
 
     // Look through ausgab objects in the input file for EGS_DoseScoring
     for (int q=0; q<EGS_AusgabObject::nObjects(); ++q) {
-        if(EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
+        if (EGS_AusgabObject::getObject(q)->getObjectType() == "EGS_DoseScoring") {
             EGS_DoseScoring *o = static_cast<EGS_DoseScoring *>(EGS_AusgabObject::getObject(q));
             EGS_BaseGeometry *dgeom;
             int file_type;
-            if(o->getOutputFile(dgeom, file_type)) {
+            if (o->getOutputFile(dgeom, file_type)) {
 
                 int nx=dgeom->getNRegDir(0);
                 int ny=dgeom->getNRegDir(1);
                 int nz=dgeom->getNRegDir(2);
 
                 // Hide the label saying there are no ausgab objects
-                if(doseIndex == 0) {
+                if (doseIndex == 0) {
                     label_dose->hide();
                 }
 
                 // If the file type is 3ddose
-                if(file_type == 0) {
+                if (file_type == 0) {
 
                     QFileInfo inputFileInfo = QFileInfo(filename);
                     QString doseFilename = inputFileInfo.canonicalPath() + "/" + o->getObjectName().c_str() + ".3ddose";
@@ -1194,13 +1217,13 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                     QCheckBox *doseCheckbox = new QCheckBox(QString(dgeom->getName().c_str()) + ": " + QString(o->getObjectName().c_str()) + ".3ddose", this);
                     verticalLayout_dose->addWidget(doseCheckbox);
 
-                    if(doseIndex+1 > scoreArrays.size()) {
+                    if (doseIndex+1 > scoreArrays.size()) {
                         scoreArrays.push_back(vector<EGS_Float>());
                     }
 
                     connect(doseCheckbox, SIGNAL(toggled(bool)), this, SLOT(doseCheckbox_toggled()));
 
-                    if(doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                    if (doseFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
 
 #ifdef VIEW_DEBUG
                         egsInformation("Reading dose file: %s\n", doseFilename.toLatin1().data());
@@ -1211,7 +1234,7 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                         // Sanity check the number of voxels
                         int nx_tmp, ny_tmp, nz_tmp;
                         in >> nx_tmp >> ny_tmp >> nz_tmp;
-                        if(nx == nx_tmp && ny == ny_tmp && nz == nz_tmp && g->regions() >= nx_tmp*ny_tmp*nz_tmp) {
+                        if (nx == nx_tmp && ny == ny_tmp && nz == nz_tmp && g->regions() >= nx_tmp*ny_tmp*nz_tmp) {
 
                             scoreArrays[doseIndex].assign(g->regions(),0);
 
@@ -1237,9 +1260,10 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                                         int g_reg = g->isWhere(tp);
 
                                         // Read in the dose values
-                                        if(g_reg >= 0) {
+                                        if (g_reg >= 0) {
                                             in >> scoreArrays[doseIndex][g_reg];
-                                        } else {
+                                        }
+                                        else {
 #ifdef VIEW_DEBUG
                                             egsWarning("Warning: Dose region out of bounds, skipping this file...\n");
 #endif
@@ -1249,20 +1273,22 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
                                             break;
                                         }
                                     }
-                                    if(err) {
+                                    if (err) {
                                         break;
                                     }
                                 }
-                                if(err) {
+                                if (err) {
                                     break;
                                 }
                             }
-                        } else {
+                        }
+                        else {
                             doseCheckbox->setEnabled(false);
                         }
 
                         doseFile.close();
-                    } else {
+                    }
+                    else {
                         doseCheckbox->setEnabled(false);
                     }
                     doseIndex++;
@@ -1272,10 +1298,11 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
     }
 
     // If there were no dose ausgab objects, set the area blank
-    if(doseIndex == 0) {
+    if (doseIndex == 0) {
         label_dose->show();
         slider_dose->hide();
-    } else if(loadUserDose) {
+    }
+    else if (loadUserDose) {
         doseCheckbox_toggled();
     }
 }
@@ -1283,7 +1310,7 @@ void GeometryViewControl::updateAusgabObjects(bool loadUserDose) {
 void GeometryViewControl::doseCheckbox_toggled() {
     vector<bool> useArray;
     QList<QCheckBox *> list = groupBox_dose->findChildren<QCheckBox *>();
-    foreach(QCheckBox *cb, list) {
+    foreach (QCheckBox *cb, list) {
         useArray.push_back(cb->isChecked());
     }
 
@@ -1291,8 +1318,8 @@ void GeometryViewControl::doseCheckbox_toggled() {
     RenderParameters &rp = gview->pars;
 
     bool somethingChecked = false;
-    for(size_t i=0; i<useArray.size(); ++i) {
-        if(useArray[i]) {
+    for (size_t i=0; i<useArray.size(); ++i) {
+        if (useArray[i]) {
             somethingChecked = true;
             break;
         }
@@ -1301,20 +1328,21 @@ void GeometryViewControl::doseCheckbox_toggled() {
     // If nothing is checked, clear the scoring arrays and return
     rp.score.clear();
     rp.scoreColor.clear();
-    if(!somethingChecked) {
+    if (!somethingChecked) {
         updateView();
         return;
     }
 
     // Every time a dose checkbox is toggled, we recalculate the total dose
-    if(scoreArrays.size() >= useArray.size()) {
-        for(size_t i=0; i<useArray.size(); ++i) {
-            if(useArray[i] && scoreArrays[i].size() > 0) {
+    if (scoreArrays.size() >= useArray.size()) {
+        for (size_t i=0; i<useArray.size(); ++i) {
+            if (useArray[i] && scoreArrays[i].size() > 0) {
                 for (int j=0; j<g->regions(); ++j) {
-                    if(scoreArrays[i][j] > 0) {
-                        if(rp.score.count(j)) {
+                    if (scoreArrays[i][j] > 0) {
+                        if (rp.score.count(j)) {
                             rp.score[j] += scoreArrays[i][j];
-                        } else {
+                        }
+                        else {
                             rp.score[j] = scoreArrays[i][j];
                         }
                     }
@@ -1326,19 +1354,20 @@ void GeometryViewControl::doseCheckbox_toggled() {
     // Determine the total dose minimum and maximum
     EGS_Float dmin=1e10, dmax=0.;
     for (int j=0; j<g->regions(); ++j) {
-        if(rp.score.count(j)) {
-            if(rp.score[j] < dmin) {
+        if (rp.score.count(j)) {
+            if (rp.score[j] < dmin) {
                 dmin = rp.score[j];
-            } else if(rp.score[j] > dmax) {
+            }
+            else if (rp.score[j] > dmax) {
                 dmax = rp.score[j];
             }
         }
     }
 
     // Calculate the colors
-    if(dmax > 0.) {
+    if (dmax > 0.) {
         for (int i=0; i<g->regions(); ++i) {
-            if(rp.score.count(i)) {
+            if (rp.score.count(i)) {
                 EGS_Float scoreNorm = (rp.score[i] - dmin) / (dmax - dmin);
                 rp.scoreColor[i] = getHeatMapColor(scoreNorm);
             }
@@ -1353,8 +1382,8 @@ void GeometryViewControl::updateSimulationGeometry(int ind) {
 
     EGS_BaseGeometry **geoms = g->getGeometries();
     int ngeom = g->getNGeometries();
-    for(int i=0; i<ngeom; ++i) {
-        if(geomName == geoms[i]->getName().c_str()) {
+    for (int i=0; i<ngeom; ++i) {
+        if (geomName == geoms[i]->getName().c_str()) {
             g = geoms[i];
             break;
         }
@@ -1505,9 +1534,10 @@ void GeometryViewControl::cameraTranslate(int dx, int dy) {
     // Set a scaling factor for the camera translation so that
     // it goes slower at higher zoom levels
     EGS_Float scale;
-    if(zoomlevel > -10) {
+    if (zoomlevel > -10) {
         scale = pow(1./(zoomlevel+110),1.5);
-    } else {
+    }
+    else {
         scale = 0.001;
     }
 
@@ -1545,9 +1575,10 @@ void GeometryViewControl::cameraRotate(int dx, int dy) {
     // it goes slower at higher zoom levels
     // Note: the minimum zoomlevel is -400 and does become positive
     EGS_Float scale;
-    if(zoomlevel > -97) {
+    if (zoomlevel > -97) {
         scale = pow(1./(zoomlevel+110),1.2);
-    } else {
+    }
+    else {
         scale = 0.05;
     }
 
@@ -1746,7 +1777,7 @@ void GeometryViewControl::setLookAt() {
     }
     if (ok_x || ok_y || ok_z) {
 
-        if(g->isWhere(look_at) < 0) {
+        if (g->isWhere(look_at) < 0) {
             look_at = look_at_orig;
             setLookAtLineEdit();
             return;
@@ -1803,7 +1834,7 @@ void GeometryViewControl::setLookPosition() {
         look_at.z += dz;
 
         // The new rotation point must be inside the geometry
-        if(g->isWhere(look_at) < 0) {
+        if (g->isWhere(look_at) < 0) {
             look_at = look_at_orig;
             setCameraLineEdit();
             return;
@@ -1848,7 +1879,7 @@ void GeometryViewControl::loadTracksDialog() {
 }
 
 void GeometryViewControl::updateTracks(vector<size_t> ntracks) {
-    if(ntracks.size() != 3) {
+    if (ntracks.size() != 3) {
         return;
     }
 
@@ -2011,9 +2042,10 @@ int GeometryViewControl::setGeometry(
     int js = 0;
     for (int j=0; j<=nmed; j++) {
         string med_name;
-        if(j == nmed) {
+        if (j == nmed) {
             med_name = "vacuum";
-        } else {
+        }
+        else {
             med_name = g->getMediumName(j);
         }
         unsigned int i;
@@ -2024,10 +2056,11 @@ int GeometryViewControl::setGeometry(
             m_colors[j] = qRgba(ucolors[i].red,ucolors[i].green,ucolors[i].blue,ucolors[i].alpha);
         }
         else {
-            if(j == nmed) {
+            if (j == nmed) {
                 // Vacuum defaults to black, transparent
                 m_colors[j] = qRgba(0,0,0,0);
-            } else {
+            }
+            else {
                 m_colors[j] = qRgba(standard_red[js], standard_green[js], standard_blue[js], 255);
             }
             if ((++js) >= nstandard) {
@@ -2288,13 +2321,13 @@ int GeometryViewControl::setGeometry(
         size = zsize;
     }
 
-    if(pmax.x < 0) {
+    if (pmax.x < 0) {
         pmax.x = 0;
     }
-    if(pmax.y < 0) {
+    if (pmax.y < 0) {
         pmax.y = 0;
     }
-    if(pmax.z < 0) {
+    if (pmax.z < 0) {
         pmax.z = 0;
     }
 
@@ -2423,7 +2456,7 @@ void GeometryViewControl::changeColor() {
         pixmap.fill(m_colors[med]);
         materialCB->setItemIcon(med, pixmap);
         transparency->setValue(qAlpha(newc));
-        if(allowRegionSelection) {
+        if (allowRegionSelection) {
             updateRegionTable(med);
         }
         updateView();
@@ -2579,7 +2612,7 @@ void GeometryViewControl::setClippingPlanes() {
 }
 
 void GeometryViewControl::showPhotonsCheckbox_toggled(bool toggle) {
-    if(toggle) {
+    if (toggle) {
         showTracks = toggle;
     }
     showPhotonTracks = toggle;
@@ -2587,7 +2620,7 @@ void GeometryViewControl::showPhotonsCheckbox_toggled(bool toggle) {
 }
 
 void GeometryViewControl::showElectronsCheckbox_toggled(bool toggle) {
-    if(toggle) {
+    if (toggle) {
         showTracks = toggle;
     }
     showElectronTracks = toggle;
@@ -2595,7 +2628,7 @@ void GeometryViewControl::showElectronsCheckbox_toggled(bool toggle) {
 }
 
 void GeometryViewControl::showPositronsCheckbox_toggled(bool toggle) {
-    if(toggle) {
+    if (toggle) {
         showTracks = toggle;
     }
     showPositronTracks = toggle;
@@ -2648,8 +2681,8 @@ void GeometryViewControl::updateRegionTable() {
 
     // Count the number of real regions
     int nReal = 0;
-    for(int ireg = 0; ireg < nreg; ++ireg) {
-        if(g->isRealRegion(ireg)) {
+    for (int ireg = 0; ireg < nreg; ++ireg) {
+        if (g->isRealRegion(ireg)) {
             nReal++;
         }
     }
@@ -2662,13 +2695,13 @@ void GeometryViewControl::updateRegionTable() {
 
     // Populate the table
     int i = 0;
-    for(int ireg = 0; ireg < nreg; ++ireg) {
-        if(g->isRealRegion(ireg)) {
+    for (int ireg = 0; ireg < nreg; ++ireg) {
+        if (g->isRealRegion(ireg)) {
             int imed = g->medium(ireg);
 
             // Set the region number
             QTableWidgetItem *regItem = regionTable->item(i,0);
-            if(!regItem) {
+            if (!regItem) {
                 regItem = new QTableWidgetItem();
                 regionTable->setItem(i,0,regItem);
             }
@@ -2676,33 +2709,35 @@ void GeometryViewControl::updateRegionTable() {
 
             // Set the material color
             QTableWidgetItem *colorItem = regionTable->item(i,1);
-            if(!colorItem) {
+            if (!colorItem) {
                 colorItem = new QTableWidgetItem();
                 regionTable->setItem(i,1,colorItem);
             }
-            if(imed < 0) {
+            if (imed < 0) {
                 colorItem->setBackground(QBrush(QColor(m_colors[nmed])));
-            } else {
+            }
+            else {
                 colorItem->setBackground(QBrush(QColor(m_colors[imed])));
             }
             colorItem->setFlags(colorItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
 
             // Set the material name
             QTableWidgetItem *matItem = regionTable->item(i,2);
-            if(!matItem) {
+            if (!matItem) {
                 matItem = new QTableWidgetItem();
                 regionTable->setItem(i,2,matItem);
             }
-            if(imed < 0) {
+            if (imed < 0) {
                 matItem->setText(QString("vacuum"));
-            } else {
+            }
+            else {
                 matItem->setText(QString(g->getMediumName(imed)));
             }
             matItem->setFlags(matItem->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
 
             // Set the show/hide checkbox
             QTableWidgetItem *showItem = regionTable->item(i,3);
-            if(!showItem) {
+            if (!showItem) {
                 showItem = new QTableWidgetItem();
                 regionTable->setItem(i,3,showItem);
             }
@@ -2724,21 +2759,21 @@ void GeometryViewControl::updateRegionTable(int imedToChange) {
     // Update the material color
     int i = 0;
     int nreg = g->regions();
-    for(int ireg = 0; ireg < nreg; ++ireg) {
-        if(g->isRealRegion(ireg)) {
+    for (int ireg = 0; ireg < nreg; ++ireg) {
+        if (g->isRealRegion(ireg)) {
             int imed = g->medium(ireg);
 
-            if(imed < 0) {
+            if (imed < 0) {
                 imed = nmed;
             }
-            if(imed != imedToChange) {
+            if (imed != imedToChange) {
                 ++i;
                 continue;
             }
 
             // Set the material color
             QTableWidgetItem *colorItem = regionTable->item(i,1);
-            if(!colorItem) {
+            if (!colorItem) {
                 colorItem = new QTableWidgetItem();
                 regionTable->setItem(i,1,colorItem);
             }
@@ -2750,7 +2785,7 @@ void GeometryViewControl::updateRegionTable(int imedToChange) {
 }
 
 void GeometryViewControl::toggleRegion(int i, int j) {
-    if(!g) {
+    if (!g) {
         return;
     }
 
@@ -2758,32 +2793,33 @@ void GeometryViewControl::toggleRegion(int i, int j) {
     Qt::CheckState checked = Qt::Checked;
 
     QTableWidgetItem *item = regionTable->item(i,0);
-    if(item) {
+    if (item) {
         ireg = item->text().toInt();
     }
 
     item = regionTable->item(i,3);
-    if(item) {
+    if (item) {
         checked = item->checkState();
     }
 
-    if(checked == Qt::Checked) {
+    if (checked == Qt::Checked) {
         show_regions[ireg] = true;
-    } else {
+    }
+    else {
         show_regions[ireg] = false;
     }
 
     // If the region number was changed, update the color swatch and material
-    if(j == 0) {
+    if (j == 0) {
         int imed = g->medium(ireg);
 
-        if(imed < 0) {
+        if (imed < 0) {
             imed = nmed;
         }
 
         // Set the material color
         QTableWidgetItem *colorItem = regionTable->item(i,1);
-        if(!colorItem) {
+        if (!colorItem) {
             colorItem = new QTableWidgetItem();
             regionTable->setItem(i,1,colorItem);
         }
@@ -2791,7 +2827,7 @@ void GeometryViewControl::toggleRegion(int i, int j) {
 
         // Set the material name
         QTableWidgetItem *matItem = regionTable->item(i,2);
-        if(!matItem) {
+        if (!matItem) {
             matItem = new QTableWidgetItem();
             regionTable->setItem(i,2,matItem);
         }
@@ -2806,11 +2842,11 @@ void GeometryViewControl::showAllRegions() {
         return;
     }
 
-    for(size_t i = 0; i < show_regions.size(); ++i) {
+    for (size_t i = 0; i < show_regions.size(); ++i) {
 
         // Set the show/hide checkbox
         QTableWidgetItem *showItem = regionTable->item(i,3);
-        if(!showItem) {
+        if (!showItem) {
             showItem = new QTableWidgetItem();
             regionTable->setItem(i,3,showItem);
         }
@@ -2823,11 +2859,11 @@ void GeometryViewControl::hideAllRegions() {
         return;
     }
 
-    for(size_t i = 0; i < show_regions.size(); ++i) {
+    for (size_t i = 0; i < show_regions.size(); ++i) {
 
         // Set the show/hide checkbox
         QTableWidgetItem *showItem = regionTable->item(i,3);
-        if(!showItem) {
+        if (!showItem) {
             showItem = new QTableWidgetItem();
             regionTable->setItem(i,3,showItem);
         }
@@ -2849,7 +2885,7 @@ void GeometryViewControl::enlargeFont() {
 
 void GeometryViewControl::shrinkFont() {
     QFont new_font = this->font();
-    if(new_font.pointSize() > 1) {
+    if (new_font.pointSize() > 1) {
         new_font.setPointSize(new_font.pointSize() - 1);
         QApplication::setFont(new_font);
     }

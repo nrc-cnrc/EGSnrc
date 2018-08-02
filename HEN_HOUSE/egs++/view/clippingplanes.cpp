@@ -64,7 +64,7 @@ int ClippingPlanesWidget::numPlanes() {
     return planeTable->rowCount();
 }
 
-QTableWidgetItem* ClippingPlanesWidget::getItem(int i, int j) {
+QTableWidgetItem *ClippingPlanesWidget::getItem(int i, int j) {
     QTableWidgetItem *item = planeTable->item(i,j);
     return item;
 }
@@ -73,10 +73,10 @@ QTableWidgetItem* ClippingPlanesWidget::getItem(int i, int j) {
 bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
     // check if all row items exist and are selected.
     QTableWidgetItem *itemAx = planeTable->item(j,0),
-                     *itemAy = planeTable->item(j,1),
-                     *itemAz = planeTable->item(j,2),
-                     *itemD = planeTable->item(j,3),
-                     *itemApplied = planeTable->item(j,4);
+                      *itemAy = planeTable->item(j,1),
+                       *itemAz = planeTable->item(j,2),
+                        *itemD = planeTable->item(j,3),
+                         *itemApplied = planeTable->item(j,4);
 
     // Make sure all parameters for a plane exist
     if (!itemAx || !itemAy || !itemAz  || !itemD || !itemApplied) {
@@ -119,7 +119,7 @@ bool ClippingPlanesWidget::getPlane(int j, EGS_Vector &a, EGS_Float &d) {
 void ClippingPlanesWidget::setCell(int i, int j, EGS_Float val) {
     QTableWidgetItem *item = planeTable->item(i,j);
 
-    if(!item) {
+    if (!item) {
         item = new QTableWidgetItem();
         planeTable->setItem(i,j,item);
     }
@@ -130,7 +130,7 @@ void ClippingPlanesWidget::setCell(int i, int j, EGS_Float val) {
 void ClippingPlanesWidget::setCell(int i, int j, Qt::CheckState checked) {
     QTableWidgetItem *item = planeTable->item(i,j);
 
-    if(!item) {
+    if (!item) {
         item = new QTableWidgetItem();
         planeTable->setItem(i,j,item);
     }
@@ -141,7 +141,7 @@ void ClippingPlanesWidget::setCell(int i, int j, Qt::CheckState checked) {
 void ClippingPlanesWidget::clearCell(int i, int j) {
     QTableWidgetItem *item = planeTable->item(i,j);
 
-    if(item) {
+    if (item) {
         delete item;
     }
 }

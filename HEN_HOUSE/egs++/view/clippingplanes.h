@@ -48,7 +48,7 @@ public:
     virtual void setCell(int i, int j, EGS_Float val);
     virtual void setCell(int i, int j, Qt::CheckState checked);
     virtual void clearCell(int i, int j);
-    virtual QTableWidgetItem* getItem(int i, int j);
+    virtual QTableWidgetItem *getItem(int i, int j);
 
 signals:
 

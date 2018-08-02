@@ -142,8 +142,8 @@ public:
                 j = 0;
                 ++iloop;
 
-                for(int i=0; i<nnow; ++i) {
-                    if(!geoms[i]->deref()) {
+                for (int i=0; i<nnow; ++i) {
+                    if (!geoms[i]->deref()) {
                         removeGeometry(geoms[i]);
                     }
                 }

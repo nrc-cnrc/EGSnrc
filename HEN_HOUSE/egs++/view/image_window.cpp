@@ -103,7 +103,7 @@ ImageWindow::~ImageWindow() {
 }
 
 void ImageWindow::render(EGS_BaseGeometry *geo, bool transform) {
-    if(!geo) {
+    if (!geo) {
         return;
     }
     if (transform) {
@@ -394,9 +394,10 @@ void ImageWindow::paintEvent(QPaintEvent *) {
         // The below code is very CPU-inefficient. Please optimize!
         if (regions[0]>=0) {
             // Background for the region list
-            if(hitScore > 0.) {
+            if (hitScore > 0.) {
                 p.fillRect(QRect(0,0,79,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
-            } else {
+            }
+            else {
                 p.fillRect(QRect(0,0,64,h),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
             }
             // Text color for the region list
@@ -411,37 +412,40 @@ void ImageWindow::paintEvent(QPaintEvent *) {
             QString hity = QString::number(hitCoord.y);
             QString hitz = QString::number(hitCoord.z);
             QString score;
-            if(hitScore > 0.) {
+            if (hitScore > 0.) {
                 score = QString::number(hitScore);
             }
 
             // Determine the max number of digits to calculate the background fill
             int nChar = hitx.length();
-            if(hity.length() > nChar) {
+            if (hity.length() > nChar) {
                 nChar = hity.length();
-            } else if(hitz.length() > nChar) {
+            }
+            else if (hitz.length() > nChar) {
                 nChar = hitz.length();
-            } else if(hitScore > 0. && score.length() > nChar) {
+            }
+            else if (hitScore > 0. && score.length() > nChar) {
                 nChar = score.length();
             }
-            if(nChar > 4) {
+            if (nChar > 4) {
                 nChar -= 5;
             }
 
-            if(hitScore > 0.) {
+            if (hitScore > 0.) {
                 p.fillRect(QRect(79,h-79,nChar*10,79),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
                 p.drawText(9,h-79,"Surface");
                 p.drawText(9,h-60,hitx);
                 p.drawText(9,h-45,hity);
                 p.drawText(9,h-30,hitz);
 
-                if(q.scoreColor.count(regions[0])) {
+                if (q.scoreColor.count(regions[0])) {
                     EGS_Vector sc = q.scoreColor.at(regions[0]);
                     p.fillRect(x0, h-15-s, s, s, QColor((int)(255*sc.x),(int)(255*sc.y),(int)(255*sc.z)));
                 }
                 p.drawRect(x0, h-15-s, s, s);
                 p.drawText(x0+s+3,h-15,score);
-            } else {
+            }
+            else {
                 p.fillRect(QRect(64,h-64,nChar*10,64),QColor((int)(255*q.displayColors[0].x), (int)(255*q.displayColors[0].y), (int)(255*q.displayColors[0].z)));
                 p.drawText(9,h-64,"Surface");
                 p.drawText(9,h-45,hitx);

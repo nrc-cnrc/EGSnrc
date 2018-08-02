@@ -166,7 +166,7 @@ public:
     }
 
     void setTrackIndices(const vector<size_t> &trackIndices) {
-        if(m_tracks) {
+        if (m_tracks) {
             m_tracks->setTrackIndices(trackIndices);
         }
     }
@@ -382,22 +382,23 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
                 t -= tclip;
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
-                    if(imed < 0) {
+                    if (imed < 0) {
                         imed = g->nMedia();
                     }
                     if (imed >= 0) {
-                        if(!allowRegionSelection || showReg[ireg]) {
+                        if (!allowRegionSelection || showReg[ireg]) {
                             c = mat[imed].d*mat[imed].alpha;
-                            if(!gotHit) {
-                                if(score.count(ireg)) {
+                            if (!gotHit) {
+                                if (score.count(ireg)) {
                                     hitScore = score.at(ireg);
                                 }
-                                if(mat[imed].alpha > 0) {
+                                if (mat[imed].alpha > 0) {
                                     hitCoord = xs;
                                     gotHit = true;
                                 }
                             }
-                        } else {
+                        }
+                        else {
                             c = displayColors[0];
                         }
                     }
@@ -429,17 +430,17 @@ void EGS_PrivateVisualizer::getRegions(const EGS_Vector &x, EGS_BaseGeometry *g,
         if (ireg >= 0) {
             tleft -= t;
             xs += u*t;
-            if(imed < 0) {
+            if (imed < 0) {
                 imed = g->nMedia();
             }
             if (imed >= 0) {
-                if(!allowRegionSelection || showReg[ireg]) {
+                if (!allowRegionSelection || showReg[ireg]) {
                     c = mat[imed].d*mat[imed].alpha;
-                    if(!gotHit) {
-                        if(score.count(ireg)) {
+                    if (!gotHit) {
+                        if (score.count(ireg)) {
                             hitScore = score.at(ireg);
                         }
-                        if(mat[imed].alpha > 0) {
+                        if (mat[imed].alpha > 0) {
                             hitCoord = xs;
                             gotHit = true;
                         }
@@ -512,12 +513,12 @@ void EGS_PrivateVisualizer::getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g
                 t -= tclip;
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
-                    if(imed < 0) {
+                    if (imed < 0) {
                         imed = g->nMedia();
                     }
                     if (imed >= 0) {
-                        if(!allowRegionSelection || showReg[ireg]) {
-                            if(mat[imed].alpha > 0) {
+                        if (!allowRegionSelection || showReg[ireg]) {
+                            if (mat[imed].alpha > 0) {
                                 hitCoord = xs;
                                 return;
                             }
@@ -542,12 +543,12 @@ void EGS_PrivateVisualizer::getFirstHit(const EGS_Vector &x, EGS_BaseGeometry *g
         if (ireg >= 0) {
             tleft -= t;
             xs += u*t;
-            if(imed < 0) {
+            if (imed < 0) {
                 imed = g->nMedia();
             }
             if (imed >= 0) {
-                if(!allowRegionSelection || showReg[ireg]) {
-                    if(mat[imed].alpha > 0) {
+                if (!allowRegionSelection || showReg[ireg]) {
+                    if (mat[imed].alpha > 0) {
                         hitCoord = xs;
                         return;
                     }
@@ -645,13 +646,14 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 // ray hits a region
                 if (ireg >= 0) {
                     imed = g->medium(ireg);
-                    if(imed < 0) {
+                    if (imed < 0) {
                         imed = g->nMedia();
                     }
                     if (imed >= 0) {
-                        if(!allowRegionSelection || showReg[ireg]) {
+                        if (!allowRegionSelection || showReg[ireg]) {
                             a1 = mat[imed].alpha;
-                        } else {
+                        }
+                        else {
                             a1 = 0.;
                         }
                         c1 = global_ambient_light.getScaled(mat[imed].d);
@@ -662,7 +664,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                         c += c1*a1*a;
                         a = a*(1-a1);
 
-                        if(scoreColor.count(ireg) && doseTransparency) {
+                        if (scoreColor.count(ireg) && doseTransparency) {
                             c1 = global_ambient_light.getScaled(scoreColor[ireg]);
                             for (int j=0; j<nlight; j++) {
                                 c1 += lights[j]->getColor(xs,n,scoreColor[ireg]);
@@ -681,9 +683,10 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
             }
             else {
 
-                if(!hitSomething) {
+                if (!hitSomething) {
                     c = displayColors[0];
-                } else {
+                }
+                else {
                     c += displayColors[0]*a;
                 }
                 return c;
@@ -711,13 +714,14 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         // hitting a surface
         if (inew >= 0) {
             xs += u*t;
-            if(imed < 0) {
+            if (imed < 0) {
                 imed = g->nMedia();
             }
             if (imed >= 0) {
-                if(!allowRegionSelection || showReg[inew]) {
+                if (!allowRegionSelection || showReg[inew]) {
                     a1 = mat[imed].alpha;
-                } else {
+                }
+                else {
                     a1 = 0.;
                 }
                 c1 = global_ambient_light.getScaled(mat[imed].d);
@@ -727,7 +731,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
                 c += c1*a1*a;
                 a = a*(1-a1);
 
-                if(scoreColor.count(inew) && doseTransparency) {
+                if (scoreColor.count(inew) && doseTransparency) {
                     c1 = global_ambient_light.getScaled(scoreColor[inew]);
                     for (int j=0; j<nlight; j++) {
                         c1 += lights[j]->getColor(xs,n,scoreColor[inew]);
@@ -750,9 +754,10 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         }
     }
     if (ireg < 0) {
-        if(!hitSomething) {
+        if (!hitSomething) {
             c = displayColors[0];
-        } else {
+        }
+        else {
             c += displayColors[0]*a;
         }
         return c;
@@ -784,16 +789,17 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         EGS_Vector c1;
         xs += u*t;
 
-        if(imed_new < 0) {
+        if (imed_new < 0) {
             imed_new = g->nMedia();
         }
 
         // new region is not outside, new material is not vacuum, and either:
         // (1) there is a change in material, or (2) the region is hidden, or (3) there is a scored value in the region
-        if(inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]) || (scoreColor.count(inew) && doseTransparency && (scoreColor[inew].x > 0 || scoreColor[inew].y > 0 || scoreColor[inew].z > 0)))) {
-            if(!allowRegionSelection || showReg[inew]) {
+        if (inew >= 0 && imed_new >= 0 && (imed_new != imed || (allowRegionSelection && !showReg[ireg]) || (scoreColor.count(inew) && doseTransparency && (scoreColor[inew].x > 0 || scoreColor[inew].y > 0 || scoreColor[inew].z > 0)))) {
+            if (!allowRegionSelection || showReg[inew]) {
                 a1 = mat[imed_new].alpha;
-            } else {
+            }
+            else {
                 a1 = 0.;
             }
             c1 = global_ambient_light.getScaled(mat[imed_new].d);
@@ -803,7 +809,7 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
             c += c1*a*a1;
             a = a*(1-a1);
 
-            if(scoreColor.count(inew) && doseTransparency) {
+            if (scoreColor.count(inew) && doseTransparency) {
                 c1 = global_ambient_light.getScaled(scoreColor[inew]);
                 for (int j=0; j<nlight; j++) {
                     c1 += lights[j]->getColor(xs,n,scoreColor[inew]);
@@ -832,9 +838,10 @@ EGS_Vector EGS_PrivateVisualizer::getColor(const EGS_Vector &x,
         return c+(cTrack)*a;    // draw the axis if not hit before
     }
 
-    if(!hitSomething) {
+    if (!hitSomething) {
         c = displayColors[0];
-    } else {
+    }
+    else {
         c += displayColors[0]*a;
     }
 
@@ -876,7 +883,7 @@ bool EGS_PrivateVisualizer::renderImage(EGS_BaseGeometry *g, int nx, int ny, EGS
                     if (((image[idx].x > 0) || (image[idx].y > 0)) && m_tracks) {
 
                         // Set the transparency based on the energy of the particle
-                        if(energyScaling) {
+                        if (energyScaling) {
                             track_alpha = 0.2+0.8*image[idx].y;
                         }
 

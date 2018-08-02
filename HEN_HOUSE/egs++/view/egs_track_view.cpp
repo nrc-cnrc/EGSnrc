@@ -317,11 +317,12 @@ bool EGS_TrackView::renderTracks(int nx, int ny, EGS_Vector *image,
             EGS_Float color = (k+1);
 
             int min, max;
-            if(trackIndices.size()) {
+            if (trackIndices.size()) {
                 min = trackIndices[2*k];
                 // Avoid out of bounds error, max out at m_tracks
                 max = trackIndices[2*k+1] > m_tracks[k] ? m_tracks[k] : trackIndices[2*k+1];
-            } else {
+            }
+            else {
                 min = 0;
                 max = m_tracks[k];
             }
@@ -403,7 +404,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             xxx1 = r1.x;
             yyy1 = r1.y;
             dst1 = f1.length();
-            if(energyScaling) {
+            if (energyScaling) {
                 e1 = v1.e / m_maxE;
             }
         }
@@ -427,7 +428,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             xxx1 = xxx2;
             yyy1 = yyy2;
             dst1 = dst2;
-            if(energyScaling) {
+            if (energyScaling) {
                 e1 = e2;
             }
         }
@@ -436,7 +437,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
         xxx2 = r2.x;
         yyy2 = r2.y;
         dst2 = f2.length();
-        if(energyScaling) {
+        if (energyScaling) {
             e2 = v2.e / m_maxE;
         }
 
@@ -469,7 +470,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
         double gd = dst1;
         double de, ge;
 
-        if(energyScaling) {
+        if (energyScaling) {
             de = (e2 - e1);
             ge = e1;
         }
@@ -480,7 +481,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             ddy = ddy / abs(ddx);
             int di = (xxx1 > xxx2) ? -1 : 1;
             dd = dd / abs(ddx);
-            if(energyScaling) {
+            if (energyScaling) {
                 de = de / abs(ddx);
             }
 
@@ -495,13 +496,13 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
                     if (color > tmpv3.x) {
                         tmpv3.x = color; // put "important" particles in front [warning: may teleport particles through a sheet of lesser particles]
                     }
-                    if(energyScaling) {
+                    if (energyScaling) {
                         tmpv3.y += (1-tmpv3.y)*e2; // compound transparency values
                     }
                 }
                 else {
                     tmpv3.x = color;
-                    if(energyScaling) {
+                    if (energyScaling) {
                         tmpv3.y=e2;
                     }
                     tmpv3.z=-gd; // just update with current track info
@@ -510,7 +511,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
                 image[cx + ((int)(cy))*nx] = tmpv3;
                 cy += ddy;
                 gd += dd;
-                if(energyScaling) {
+                if (energyScaling) {
                     ge += de;
                 }
             }
@@ -521,7 +522,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
             cx = xxx1;
             ddx = ddx / abs(ddy);
             dd = dd / abs(ddy);
-            if(energyScaling) {
+            if (energyScaling) {
                 de = de / abs(ddy);
             }
 
@@ -536,13 +537,13 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
                     if (color > tmpv3.x) {
                         tmpv3.x = color; // put "important" particles in front
                     }
-                    if(energyScaling) {
+                    if (energyScaling) {
                         tmpv3.y += (1-tmpv3.y)*e2; // compound transparency values
                     }
                 }
                 else {
                     tmpv3.x = color;
-                    if(energyScaling) {
+                    if (energyScaling) {
                         tmpv3.y=e2;
                     }
                     tmpv3.z=-gd; // just update with current track info
@@ -552,7 +553,7 @@ void EGS_TrackView::renderTrack(EGS_ParticleTrack::Vertex *const vs, int len, EG
 
                 cx += ddx;
                 gd += dd;
-                if(energyScaling) {
+                if (energyScaling) {
                     ge += de;
                 }
             }

@@ -100,19 +100,21 @@ int main(int argc, char **argv) {
 
     QString tracks_file = QString("");
     QString config_file = QString("");
-    if(argc >= 3) {
+    if (argc >= 3) {
         QString argv2 = argv[2];
-        if(argv2.endsWith("ptracks")) {
+        if (argv2.endsWith("ptracks")) {
             tracks_file = argv2;
-        } else {
+        }
+        else {
             config_file = argv2;
         }
     }
-    if(argc >= 4) {
+    if (argc >= 4) {
         QString argv3 = argv[3];
-        if(argv3.endsWith("ptracks")) {
+        if (argv3.endsWith("ptracks")) {
             tracks_file = argv3;
-        } else {
+        }
+        else {
             config_file = argv3;
         }
     }
@@ -127,7 +129,7 @@ int main(int argc, char **argv) {
 #if QT_VERSION >= 0x040700
     QFont new_font = a.font();
     new_font.setStyleHint(QFont::Monospace);
-    a.setFont( new_font );
+    a.setFont(new_font);
 #endif
 
     a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
