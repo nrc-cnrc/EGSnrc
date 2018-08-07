@@ -1,7 +1,7 @@
 /*
 ###############################################################################
 #
-#  EGSnrc egs++ phsp scoring object
+#  EGSnrc egs++ phase space scoring object
 #  Copyright (C) 2015 National Research Council Canada
 #
 #  This file is part of EGSnrc.
@@ -23,131 +23,15 @@
 #
 #  Author:          Blake Walters, 2018
 #
-###############################################################################
+#  Contributors:
 #
-#  A phase space scoring class.
-#
-#  Scores phase space data for particles crossing all surfaces of a user-specified
-#  predefined geometry.  The phase space geometry must be a component of the simulation
-#  geometry or coincident with a surface of the simulation geometry.
-#
-#  Phase space data can be scored in one of 2 possible formats:
-#
-#   EGSnrc format: E,x,y,u,v,wt,latch
-#     IAEA format: iq,E,[x],[y],[z],u,v,wt,latch,[mu]
-#
-#  Note that in IAEA format, the user has the option of specifying a fixed x, y, and/or z coordinate
-#  of the scoring plane/line/point, in which case the fixed coordinates shall not be scored for each
-#  particle but will be specified in the header (.IAEAheader) file.  Also, in this format, the
-#  user has the option of scoring the synchronization parameter, mu, passed from the source.
-#
-#  Can be used in any C++ user code by entering the proper input block in
-#  the ausgab object definition block.
-#
-#  :start ausgab object definition:
-#      :start ausgab object:
-#          library                  = egs_phsp_scoring
-#          name                     = some_name
-#          phase space geometry     = name of previously defined geometry
-#          output format            = EGSnrc or IAEA
-#          constant X               = X value (cm) at which all particles are scored (IAEA format only)
-#          constant Y               = Y value (cm) at which all particles are scored (IAEA format only)
-#          constant Z               = Z value (cm) at which all particles are scored (IAEA format only)
-#          score mu                 = yes or no [default] (IAEA format only)
-#          particle type            = all, photons, or charged
-#          score particles on       = entry, exit, entry and exit [default]
-#          output directory         = name of output directory
-#      :stop ausgab object:
-#  :stop ausgab object definition:
-#
-#  Phase space data is output to the file some_name.egsphsp1 (EGSnrc format)
-#  or some_name.1.IAEAphsp and some_name.1.IAEAheader (IAEA format)
-#  Note that if the user specifies constant X/Y/Z, then particles are all assumed to be scored at the
-#  same X/Y/Z with this(ese) values output to .IAEAheader instead of being output for each particle
-#  to the .IAEAphsp file.
-#
-#  If "output directory" is omitted or left blank then the output directory defaults to the
-#  application directory (i.e. $EGS_HOME/appname).
-#
-#  Particles of the type indicated by the "particle type" input are scored.  If this input
-#  is omitted, then all particles are scored
-#
-#  Particles can be scored on entering the phase space geometry, exiting the geometry, or both (the default)
-#  Be aware of how the "inside" and "outside" of the geometry are defined when using this option.
-#
-#  In IAEA-format phase space files, the user can opt to score the synchronization parameter, mu.
-#  This option will automatically be turned off if the parameter is not available from the
-#  source.  Currently, this parameter can only be passed from egs_beam_source (only if the accelerator
-#  includes synchronized CMs), iaea_phsp_source (if scored using a BEAMnrc simulation with
-#  synchronized CMs or scored using this ausgab object with mu scoring turned on) and
-#  egs_dynamic_source (always available).
-#
-#  A note on parallel runs:
-#  If a phase space file is being written during a parallel run, then each job, i, outputs its phase
-#  space data to some_name_wi.[egsphsp1][.1.IAEAheader/phsp]. Thus, the naming scheme is the same as
-#  that for other output files from a parallel run.  These phase space files are not added automatically
-#  when the results of a parallel run are combined.  The user must either use the addphsp tool or
-#  program their own concatenation routine.
-#
-#  Example:
-#  The following example input defines a phase space scoring plane perpendicular to the Z-axis
-#  positioned at the bottom of a volume of water.
-#
-#  :start geometry definition:
-#      :start geometry:
-#          library = egs_planes
-#          type = EGS_Zplanes
-#          positions = 21.0
-#          name = scoreplane
-#      :stop geometry:
-#
-#      :start geometry:
-#          library = egs_ndgeometry
-#          type = EGS_XYZGeometry
-#          name = water_box
-#          x-planes = -15.0  15.0
-#          y-planes = -15.0 15.0
-#          z-planes = 0.0 21.0
-#          :start media input:
-#             media = H2O521ICRU
-#          :stop media input:
-#      :stop geometry:
-#
-#      simulation geometry = water_box
-#  :stop geometry definition:
-#
-#  Then, the user must define the scoring plane ausgab object:
-#
-#    :start ausgab object definition:
-#        :start ausgab object:
-#          library = egs_phsp_scoring
-#          name = example
-#          phase space geometry = scoreplane
-#          output format = EGSnrc [IAEA]
-#          [constant Z = 21.0]
-#          particle type = all
-#        :stop ausgab object:
-#    :stop ausgab object definition:
-#
-#  This will output phase space data for all particles entering and exiting "scoreplane" to
-#  file example.egsphsp1[.1.IAEAheader/phsp].  In the IAEA example above, the constant Z
-#  position of the scoring plane is specified.  If this is not specified, then
-#  the Z position of each particle will be stored in example.1.IAEAphsp.
-#
-#  Recall that a single plane geometry defines a single region on +ve normal side of the plane
-#  Thus, in the above example, a particle is considered "outside" scoreplane if particle Z < 21.0
-#  and "inside" if Z > 21.0.  Particles are scored when they enter a geometry and when they exit
-#  a geometry, so, in this example, particles crossing scoreplane in both directions will be
-#  scored.
-#
-#  Note that scoreplane is coincident with the bottom surface of the volume of water.
 ###############################################################################
 */
 
 
 /*! \file egs_phsp_scoring.cpp
  *  \brief A phase space scoring ausgab object: implementation
- *  \EM
+ *  \BW
  */
 
 #include <sstream>
@@ -176,6 +60,7 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         return;
     }
 
+    char buf[512];//useful character buffer
     //set up the stack of particles to output to the phase space file
     //1000 particles at a time
     p_stack = new Particle[store_max];
@@ -185,24 +70,70 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
     description += name;
     description += ")\n";
     description += "*******************************************\n";
-    description += "\n Will output phase space for particles crossing surfaces of geometry:\n";
-    description += phsp_geom->getName();
+    if (score_type==0) {
+        description += "\n Will output phase space for particles crossing surfaces of geometry:\n";
+        description += phsp_geom->getName();
+        description += "\n Particles scored on: ";
+        if (scoredir == 0) {
+            description += "entering and exiting phase space geometry";
+        }
+        else if (scoredir == 1) {
+            description += "entering phase space geometry";
+        }
+        else if (scoredir == 2) {
+            description += "exiting phase space geometry";
+        }
+    }
+    else if (score_type==1) {
+        description += "\n Will output phase space for the following exit/entry region pairs:\n";
+        description += " Exit regions:\n";
+        for (int i=0; i<fromreg.size(); i++) {
+            sprintf(buf,"%d ",fromreg[i]);
+            description += buf;
+        }
+        description += "\n Entry regions:\n";
+        for (int i=0; i<fromreg.size(); i++) {
+            sprintf(buf,"%d ",toreg[i]);
+            description += buf;
+        }
+        description += "\n";
+        //now, for every region, set up a (possibly empty) array of entry regions
+        int nreg = app->getnRegions();
+        for (int ir=0; ir<nreg; ir++) {
+            vector<int> tolist;
+            for (int i=0; i<fromreg.size(); i++) {
+                if (fromreg[i]==ir) {
+                    tolist.push_back(toreg[i]);
+                }
+            }
+            from_to.push_back(tolist);
+        }
+    }
 
     //construct name of phase space file -- opening to occur later
-    char buf[512];
-    if (phspoutdir == "") phspoutdir = app->getAppDir();
+    if (phspoutdir == "") {
+        phspoutdir = app->getAppDir();
+    }
     if (oformat==0) {
         description += "\n Data will be output in EGSnrc format.\n";
-        if(app->getNparallel()>0) sprintf(buf,"%s_w%d.egsphsp1",getObjectName().c_str(),app->getIparallel());
-        else sprintf(buf,"%s.egsphsp1",getObjectName().c_str());
+        if (app->getNparallel()>0) {
+            sprintf(buf,"%s_w%d.egsphsp1",getObjectName().c_str(),app->getIparallel());
+        }
+        else {
+            sprintf(buf,"%s.egsphsp1",getObjectName().c_str());
+        }
         phsp_fname=egsJoinPath(phspoutdir,buf);
         description += "\n Phase space file name:\n";
         description += phsp_fname;
     }
     else if (oformat==1) {
         description += "\n Data will be output in IAEA format.\n";
-        if(app->getNparallel()>0) sprintf(buf,"%s_w%d.1",getObjectName().c_str(),app->getIparallel());
-        else sprintf(buf,"%s.1",getObjectName().c_str());
+        if (app->getNparallel()>0) {
+            sprintf(buf,"%s_w%d.1",getObjectName().c_str(),app->getIparallel());
+        }
+        else {
+            sprintf(buf,"%s.1",getObjectName().c_str());
+        }
         phsp_fname=egsJoinPath(phspoutdir,buf);
 
         //need to add a null terminator
@@ -223,34 +154,42 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
         iaea_n_extra_long=1; //only store latch
         iaea_i_latch=0; // position of latch in array
         if (score_mu) {
-           iaea_n_extra_float=1;
-           mu_ind = 0; //set type to generic float
-           iaea_i_mu=0; //position of mu in array
+            iaea_n_extra_float=1;
+            mu_ind = 0; //set type to generic float
+            iaea_i_mu=0; //position of mu in array
         }
         else {
-           iaea_n_extra_float=0; //no extra floats
+            iaea_n_extra_float=0; //no extra floats
         }
 
         description += "\n Phase space file names:\n";
         description += "  Header file: " + phsp_fname + ".IAEAheader\n";
         description += "  Data file: " + phsp_fname + ".IAEAphsp";
-        for (int i=0; i<3; i++ ) {
-          if (xyz_is_const[i]) {
-             ostringstream xyz;
-             xyz << xyzscore[i];
-             description += "\n Data scored at constant " + xyzname[i] + " = " + xyz.str() + " cm";
-          }
+        string xyzname[3] = {"X", "Y", "Z"};
+        for (int i=0; i<3; i++) {
+            if (xyz_is_const[i]) {
+                ostringstream xyz;
+                xyz << xyzscore[i];
+                description += "\n Data scored at constant " + xyzname[i] + " = " + xyz.str() + " cm";
+            }
         }
     }
     description += "\n Particles scored: ";
-    if (ocharge == 0) description += "all";
-    else if (ocharge == 1) description += "photons";
-    else if (ocharge == 2) description += "charged";
-    description += "\n Particles scored on: ";
-    if (scoredir == 0 ) description += "entering and exiting phase space geometry";
-    else if (scoredir == 1) description += "entering phase space geometry";
-    else if (scoredir == 2) description += "exiting phase space geometry";
-    if (oformat ==1 && score_mu) description += "\n mu will be scored (if available)";
+    if (ocharge == 0) {
+        description += "all";
+    }
+    else if (ocharge == 1) {
+        description += "photons";
+    }
+    else if (ocharge == 2) {
+        description += "charged";
+    }
+    if (oformat ==1 && score_mu) {
+        description += "\n mu will be scored (if available)";
+    }
+    if (oformat ==0 && score_mc) {
+        description += "\n will score multiple crossers (and descendents)";
+    }
 }
 
 //final buffer flush and then close file
@@ -259,28 +198,34 @@ void EGS_PhspScoring::setApplication(EGS_Application *App) {
 void EGS_PhspScoring::reportResults() {
     flushBuffer();
     if (oformat == 1) { //iaea
-      int iaea_iostat;
-      iaea_destroy_source(&iaea_id,&iaea_iostat);
-      if(iaea_iostat<0) egsFatal("\n EGS_PhspScoring: Error closing phase space file.\n");
+        int iaea_iostat;
+        iaea_destroy_source(&iaea_id,&iaea_iostat);
+        if (iaea_iostat<0) {
+            egsFatal("\n EGS_PhspScoring: Error closing phase space file.\n");
+        }
     }
     else if (oformat == 0) {
-      phsp_file.close();
+        phsp_file.close();
     }
     egsInformation("\n======================================================\n");
     egsInformation("Phase Space Scoring Object(%s)\n",name.c_str());
     egsInformation("======================================================\n");
     if (oformat==1) {
-      egsInformation("\n IAEA format phase space output:\n");
-      egsInformation(" Header file: %s.IAEAheader\n",phsp_fname.c_str());
-      egsInformation(" Data file: %s.IAEAphsp\n",phsp_fname.c_str());
+        egsInformation("\n IAEA format phase space output:\n");
+        egsInformation(" Header file: %s.IAEAheader\n",phsp_fname.c_str());
+        egsInformation(" Data file: %s.IAEAphsp\n",phsp_fname.c_str());
     }
     else if (oformat == 0) {
-      egsInformation("\n EGSnrc format phase space output:\n");
-      egsInformation(" Data file: %s\n",phsp_fname.c_str());
+        egsInformation("\n EGSnrc format phase space output:\n");
+        egsInformation(" Data file: %s\n",phsp_fname.c_str());
     }
     float emintmp;
-    if (count == countg) emintmp = 0.0;
-    else emintmp = emin;
+    if (count == countg) {
+        emintmp = 0.0;
+    }
+    else {
+        emintmp = emin;
+    }
     egsInformation("Summary of scored data:\n");
     egsInformation("=> total no. of particles = %lld \n", count);
     egsInformation("=> no. of photons = %lld \n", countg);
@@ -297,25 +242,31 @@ void EGS_PhspScoring::reportResults() {
 void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
 
     //if user requested mu scoring, check if mu is available
-    if (score_mu && app->getMU() < 0 ) {
-       egsWarning("\nEGS_PhspScoring: User requested mu scoring, but mu is inavailable with this source.\n");
-       egsWarning("Turning off mu scoring.\n");
-       score_mu=false;
+    if (score_mu && app->getMU() < 0) {
+        egsWarning("\nEGS_PhspScoring: User requested mu scoring, but mu is inavailable with this source.\n");
+        egsWarning("Turning off mu scoring.\n");
+        score_mu=false;
     }
 
     //counters, min. and max. k.e.
     EGS_Float prm = app->getRM();
     count++;
-    if (app->top_p.q==0) countg++;
-    if (app->top_p.E-abs(app->top_p.q)*prm > emax) emax = app->top_p.E-abs(app->top_p.q)*prm;
-    if (app->top_p.q != 0 && app->top_p.E - prm < emin) emin = app->top_p.E - prm;
+    if (app->top_p.q==0) {
+        countg++;
+    }
+    if (app->top_p.E-abs(app->top_p.q)*prm > emax) {
+        emax = app->top_p.E-abs(app->top_p.q)*prm;
+    }
+    if (app->top_p.q != 0 && app->top_p.E - prm < emin) {
+        emin = app->top_p.E - prm;
+    }
 
     //store particle data in p_stack
     //set -ve energy marker if this is a new primary hist.
     double E = app->top_p.E;
-    if( ncase != last_case ) {
-       E = -E;
-       last_case = ncase;
+    if (ncase != last_case) {
+        E = -E;
+        last_case = ncase;
     }
     p_stack[phsp_index].E = E;
     p_stack[phsp_index].wt = app->top_p.wt;
@@ -326,180 +277,215 @@ void EGS_PhspScoring::storeParticle(EGS_I64 ncase) {
     p_stack[phsp_index].v = app->top_p.u.y;
     p_stack[phsp_index].w = app->top_p.u.z;
     p_stack[phsp_index].q = app->top_p.q;
-    if (score_mu) p_stack[phsp_index].mu = app->getMU();
+    if (score_mu) {
+        p_stack[phsp_index].mu = app->getMU();
+    }
     p_stack[phsp_index++].latch = app->top_p.latch;
 
     if (phsp_index > store_max - 1) {
-     //write store_max particles to the file and reset phsp_index counter
-     flushBuffer();
+        //write store_max particles to the file and reset phsp_index counter
+        flushBuffer();
     }
 }
 
 //open the phase space file for writing/appending data
 void EGS_PhspScoring::openPhspFile() const {
 //the file has already been named at this point
-   if (oformat==0) { //EGSnrc format
-      if (is_restart) {
-       phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out|ios::in);
-       if( !(phsp_file) )
-               egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for appending.\n",
-                    phsp_fname.c_str());
-       //check that total no. of particles in header = total no. read from .egsdat file
-       unsigned int count4;
-       phsp_file.seekg(5,ios::beg);
-       phsp_file.read((char *) &count4, sizeof(unsigned int));
-       if (count4 != countprev)
-        egsFatal("\nEGS_PhspScoring: Particle no. mismatch between %s and .egsdat file.\n",phsp_fname.c_str());
-       //go to the end of the file
-       phsp_file.seekp(0,ios::end);
-       if (phsp_file.tellp() != 28 + countprev*sizeof(egs_phsp_write_struct))
-        egsFatal("\nEGS_PhspScoring: File size mismatch in %s and .egsdat file.\n",phsp_fname.c_str());
-      }
-      else {
-        phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out);
-        if( !(phsp_file) )
-               egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for writing.\n",
-                    phsp_fname.c_str());
-        //always MODE0 files--i.e. no ZLAST
-        phsp_file.write("MODE0",5);
-        //leave space for/skip over the rest of the header
-        phsp_file.seekp(28,ios::beg);
-     }
-   }
-   else if (oformat == 1 ) { //IAEA format
-     int rwmode;
-     int iaea_iostat;
-     iaea_id = 1; //numerical index indicating this is the 1st file associated with this object scored
-                     //hard coded to 1
-     if (is_restart) {
-       int rwmode = 3;
-       iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
-       if(iaea_iostat < 0)
+    if (oformat==0) { //EGSnrc format
+        if (is_restart) {
+            phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out|ios::in);
+            if (!(phsp_file))
+                egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for appending.\n",
+                         phsp_fname.c_str());
+            //check that total no. of particles in header = total no. read from .egsdat file
+            unsigned int count4;
+            phsp_file.seekg(5,ios::beg);
+            phsp_file.read((char *) &count4, sizeof(unsigned int));
+            if (count4 != countprev) {
+                egsFatal("\nEGS_PhspScoring: Particle no. mismatch between %s and .egsdat file.\n",phsp_fname.c_str());
+            }
+            //go to the end of the file
+            phsp_file.seekp(0,ios::end);
+            if (phsp_file.tellp() != 28 + countprev*sizeof(egs_phsp_write_struct)) {
+                egsFatal("\nEGS_PhspScoring: File size mismatch in %s and .egsdat file.\n",phsp_fname.c_str());
+            }
+        }
+        else {
+            phsp_file.open(phsp_fname.c_str(),ios::binary|ios::out);
+            if (!(phsp_file))
+                egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s for writing.\n",
+                         phsp_fname.c_str());
+            //always MODE0 files--i.e. no ZLAST
+            phsp_file.write("MODE0",5);
+            //leave space for/skip over the rest of the header
+            phsp_file.seekp(28,ios::beg);
+        }
+    }
+    else if (oformat == 1) {  //IAEA format
+        int rwmode;
+        int iaea_iostat;
+        iaea_id = 1; //numerical index indicating this is the 1st file associated with this object scored
+        //hard coded to 1
+        if (is_restart) {
+            int rwmode = 3;
+            iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
+            if (iaea_iostat < 0) {
                 egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s.IAEAphsp for appending.\n",phsp_fname.c_str());
-       //check for consistency with total no. of scored particles as read from .egsdat file
-       EGS_I64 nparticle;
-       int type = -1;
-       int iaea_iostat;
-       iaea_get_max_particles(&iaea_id,&type,&nparticle);
-       if (nparticle != countprev)
-            egsFatal("\nEGS_PhspScoring: Particle no. mismatch between %s.IAEAphsp and .egsdat file.\n",phsp_fname.c_str());
-       iaea_check_file_size_byte_order(&iaea_id,&iaea_iostat);
-       if (iaea_iostat != 0)
-            egsFatal("\nEGS_PhspScoring: Byte order/file size mismatch in %s.IAEAphsp.\n",phsp_fname.c_str());
-     }
-     else {
-       int rwmode = 2;
-       iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
-       if(iaea_iostat < 0)
+            }
+            //check for consistency with total no. of scored particles as read from .egsdat file
+            EGS_I64 nparticle;
+            int type = -1;
+            int iaea_iostat;
+            iaea_get_max_particles(&iaea_id,&type,&nparticle);
+            if (nparticle != countprev) {
+                egsFatal("\nEGS_PhspScoring: Particle no. mismatch between %s.IAEAphsp and .egsdat file.\n",phsp_fname.c_str());
+            }
+            iaea_check_file_size_byte_order(&iaea_id,&iaea_iostat);
+            if (iaea_iostat != 0) {
+                egsFatal("\nEGS_PhspScoring: Byte order/file size mismatch in %s.IAEAphsp.\n",phsp_fname.c_str());
+            }
+        }
+        else {
+            int rwmode = 2;
+            iaea_new_source(&iaea_id,phsp_fname_char,&rwmode,&iaea_iostat,len);
+            if (iaea_iostat < 0) {
                 egsFatal("\nEGS_PhspScoring: Failed to open phase space file %s.IAEAphsp for writing.\n",phsp_fname.c_str());
-     }
+            }
+        }
 
 
-     //set up constant variables
-     for (int i=0; i<3; i++) {
-          if (xyz_is_const[i]) {
-             int index = i;
-             float constval = xyzscore[i];
-             iaea_set_constant_variable(&iaea_id,&index,&constval);
-          }
-     }
-     //set up extra floats and int indices and types
-     //need to store below in _tmp variables because this is a const function
-     int latch_ind_tmp = latch_ind;
-     int iaea_n_extra_long_tmp=iaea_n_extra_long;
-     int iaea_i_latch_tmp=iaea_i_latch;
-     int mu_ind_tmp = mu_ind;
-     int iaea_i_mu_tmp = iaea_i_mu;
-     int iaea_n_extra_float_tmp=iaea_n_extra_float;
+        //set up constant variables
+        for (int i=0; i<3; i++) {
+            if (xyz_is_const[i]) {
+                int index = i;
+                float constval = xyzscore[i];
+                iaea_set_constant_variable(&iaea_id,&index,&constval);
+            }
+        }
+        //set up extra floats and int indices and types
+        //need to store below in _tmp variables because this is a const function
+        int latch_ind_tmp = latch_ind;
+        int iaea_n_extra_long_tmp=iaea_n_extra_long;
+        int iaea_i_latch_tmp=iaea_i_latch;
+        int mu_ind_tmp = mu_ind;
+        int iaea_i_mu_tmp = iaea_i_mu;
+        int iaea_n_extra_float_tmp=iaea_n_extra_float;
 
-     iaea_set_extra_numbers(&iaea_id,&iaea_n_extra_float_tmp,&iaea_n_extra_long_tmp);
-     iaea_set_type_extralong_variable(&iaea_id,&iaea_i_latch_tmp,&latch_ind_tmp);
-     if (score_mu) iaea_set_type_extrafloat_variable(&iaea_id,&iaea_i_mu_tmp,&mu_ind_tmp);
-   }
+        iaea_set_extra_numbers(&iaea_id,&iaea_n_extra_float_tmp,&iaea_n_extra_long_tmp);
+        iaea_set_type_extralong_variable(&iaea_id,&iaea_i_latch_tmp,&latch_ind_tmp);
+        if (score_mu) {
+            iaea_set_type_extrafloat_variable(&iaea_id,&iaea_i_mu_tmp,&mu_ind_tmp);
+        }
+    }
 }
 
 //write phsp_index particles to phase space file
 //update header and reset phsp_index
 int EGS_PhspScoring::flushBuffer() const {
 
-  if (first_flush) openPhspFile(); //here's where we open the phase space file
-                                   //awkward logic because we do not know if this is a restart
-                                   //until after initialization
-  first_flush = false;
-
-  if (oformat == 1) { //iaea format
-    for(int j=0; j<phsp_index; j++) {
-      //fairly transparent, could probably put a lot of this in a separate method
-      //undo -ve energy marker and use n_stat to indicate new primary hist.
-      int n_stat = p_stack[j].E < 0 ? 1 : 0;
-      float E = abs(p_stack[j].E);
-      //convert charge to iaea type
-      int type = iaea_q_type[p_stack[j].q+1];
-
-      //store latch in iaea_extra_long
-      EGS_I32 *iaea_extra_long = new EGS_I32[iaea_n_extra_long];
-      iaea_extra_long[iaea_i_latch]=p_stack[j].latch;
-      float *iaea_extra_float = new float[iaea_n_extra_float];
-      if (score_mu) iaea_extra_float[iaea_i_mu] = p_stack[j].mu;
-
-      //now store double precision values in single precision reals
-      float wt = p_stack[j].wt; float x = p_stack[j].x;
-      float y = p_stack[j].y; float z = p_stack[j].z; float u = p_stack[j].u;
-      float v = p_stack[j].v; float w = p_stack[j].w;
-      //now actually write data
-
-      iaea_write_particle(&iaea_id,&n_stat,&type,&E,&wt,&x,&y,&z,&u,&v,&w,iaea_extra_float,iaea_extra_long);
-      if (n_stat < 0)
-         egsFatal("\nEGS_PhspScoring: Failed to write particle data to phase space file.");
+    if (first_flush) {
+        openPhspFile();    //here's where we open the phase space file
     }
-    //update header with no. of primary histories
-    EGS_I64 last_case_tmp = last_case;
-    iaea_set_total_original_particles(&iaea_id,&last_case_tmp);
-    //update header file
-    int iaea_iostat;
-    iaea_update_header(&iaea_id,&iaea_iostat);
-    if(iaea_iostat<0) egsFatal("\nEGS_PhspScoring: Failed to update phase space header file.");
-  }
-  else if (oformat == 0 ) { //EGSnrc format
-    if(!phsp_file)
-      egsFatal("\nEGS_PhspScoring: phase space file is not open for writing.");
-    //don't forget that phsp_index is incremented after every particle written to p_stack
-    for(int j=0; j<phsp_index; j++) {
-       egs_phsp_write_struct ws(p_stack[j]);
-       phsp_file.write((char *) &ws, sizeof(ws));
+    //awkward logic because we do not know if this is a restart
+    //until after initialization
+    first_flush = false;
+
+    if (oformat == 1) { //iaea format
+        for (int j=0; j<phsp_index; j++) {
+            //fairly transparent, could probably put a lot of this in a separate method
+            //undo -ve energy marker and use n_stat to indicate new primary hist.
+            int n_stat = p_stack[j].E < 0 ? 1 : 0;
+            float E = abs(p_stack[j].E);
+            //convert charge to iaea type
+            int type = iaea_q_type[p_stack[j].q+1];
+
+            //store latch in iaea_extra_long
+            EGS_I32 *iaea_extra_long = new EGS_I32[iaea_n_extra_long];
+            iaea_extra_long[iaea_i_latch]=p_stack[j].latch;
+            float *iaea_extra_float = new float[iaea_n_extra_float];
+            if (score_mu) {
+                iaea_extra_float[iaea_i_mu] = p_stack[j].mu;
+            }
+
+            //now store double precision values in single precision reals
+            float wt = p_stack[j].wt;
+            float x = p_stack[j].x;
+            float y = p_stack[j].y;
+            float z = p_stack[j].z;
+            float u = p_stack[j].u;
+            float v = p_stack[j].v;
+            float w = p_stack[j].w;
+            //now actually write data
+
+            iaea_write_particle(&iaea_id,&n_stat,&type,&E,&wt,&x,&y,&z,&u,&v,&w,iaea_extra_float,iaea_extra_long);
+            if (n_stat < 0) {
+                egsFatal("\nEGS_PhspScoring: Failed to write particle data to phase space file.");
+            }
+        }
+        //update header with no. of primary histories
+        EGS_I64 last_case_tmp = last_case;
+        iaea_set_total_original_particles(&iaea_id,&last_case_tmp);
+        //update header file
+        int iaea_iostat;
+        iaea_update_header(&iaea_id,&iaea_iostat);
+        if (iaea_iostat<0) {
+            egsFatal("\nEGS_PhspScoring: Failed to update phase space header file.");
+        }
     }
-    //store position of end of file
-    iostream::off_type pos = (count+1)*sizeof(egs_phsp_write_struct);
-    //update header
-    phsp_file.seekp(5,ios::beg);
-    unsigned int count4 = count, countg4 = countg; float pinc = last_case;
-    float emintmp;
-    if (countg4==count4) emintmp = 0.0;
-    else emintmp = emin;
-    phsp_file.write((char *) &count4, sizeof(unsigned int));
-    phsp_file.write((char *) &countg4, sizeof(unsigned int));
-    phsp_file.write((char *) &emax, sizeof(float));
-    phsp_file.write((char *) &emintmp, sizeof(float));
-    phsp_file.write((char *) &pinc, sizeof(float));
-    phsp_file.seekp(pos,ios::beg);
-  }
+    else if (oformat == 0) {  //EGSnrc format
+        if (!phsp_file) {
+            egsFatal("\nEGS_PhspScoring: phase space file is not open for writing.");
+        }
+        //don't forget that phsp_index is incremented after every particle written to p_stack
+        for (int j=0; j<phsp_index; j++) {
+            egs_phsp_write_struct ws(p_stack[j]);
+            phsp_file.write((char *) &ws, sizeof(ws));
+        }
+        //store position of end of file
+        iostream::off_type pos = (count+1)*sizeof(egs_phsp_write_struct);
+        //update header
+        phsp_file.seekp(5,ios::beg);
+        unsigned int count4 = count, countg4 = countg;
+        float pinc = last_case;
+        float emintmp;
+        if (countg4==count4) {
+            emintmp = 0.0;
+        }
+        else {
+            emintmp = emin;
+        }
+        phsp_file.write((char *) &count4, sizeof(unsigned int));
+        phsp_file.write((char *) &countg4, sizeof(unsigned int));
+        phsp_file.write((char *) &emax, sizeof(float));
+        phsp_file.write((char *) &emintmp, sizeof(float));
+        phsp_file.write((char *) &pinc, sizeof(float));
+        phsp_file.seekp(pos,ios::beg);
+    }
 
-  phsp_index=0;
+    phsp_index=0;
 
-  return 0;
+    return 0;
 };
 
 bool EGS_PhspScoring::storeState(ostream &data) const {
-    if (!egsStoreI64(data,count)) return false;
-    if (!egsStoreI64(data,countg)) return false;
+    if (!egsStoreI64(data,count)) {
+        return false;
+    }
+    if (!egsStoreI64(data,countg)) {
+        return false;
+    }
     //update phase space file at the end of each batch
     flushBuffer();
     return true;
 }
 
 bool  EGS_PhspScoring::setState(istream &data) {
-    if (!egsGetI64(data,count)) return false;
-    if (!egsGetI64(data,countg)) return false;
+    if (!egsGetI64(data,count)) {
+        return false;
+    }
+    if (!egsGetI64(data,countg)) {
+        return false;
+    }
     countprev = count;
     is_restart = true;
     return true;
@@ -507,12 +493,14 @@ bool  EGS_PhspScoring::setState(istream &data) {
 
 bool  EGS_PhspScoring::addState(istream &data) {
     EGS_I64 tmp;
-    if( !egsGetI64(data,tmp) ) { //return false;
-        egsWarning("error while reading count\n"); return false;
+    if (!egsGetI64(data,tmp)) {  //return false;
+        egsWarning("error while reading count\n");
+        return false;
     }
     count += tmp;
-    if( !egsGetI64(data,tmp) ) { //return false;
-        egsWarning("error while reading countg\n"); return false;
+    if (!egsGetI64(data,tmp)) {  //return false;
+        egsWarning("error while reading countg\n");
+        return false;
     }
     countg += tmp;
     return true;
@@ -530,93 +518,162 @@ extern "C" {
             egsWarning("%s: null input?\n",func);
             return 0;
         }
+        string str;
         EGS_BaseGeometry *phspgeom;
+        int iscoremc = 0; //default to not score multiple crossers
+        vector <int> from_reg, to_reg;
+        int stype = 0; //default is to use scoring geom
         int phspouttype;
         int ptype;
         int sdir;
         int imuscore = 0;
         float xyzconst[3];
         bool xyzisconst[3] = {false, false, false};
-        //get geometry name and filename and do some checks
         string gname;
         string outdir;
         int err01 = input->getInput("phase space geometry",gname);
         if (err01) {
-             egsFatal("\nEGS_PhspScoring: missing/incorrect input for name of phase space geometry.\n");
+            stype = 1;
         }
         else {
-             phspgeom = EGS_BaseGeometry::getGeometry(gname);
-             if (!phspgeom) {
-                    egsFatal("\nEGS_PhspScoring: %s does not name an existing geometry\n",gname.c_str());
-             }
-             else {
-                    string str;
-                    if (input->getInput("output format", str) < 0) {
-                        egsInformation("EGS_PhspScoring: No input for output format type.  Will default to EGSnrc.\n");
-                        phspouttype = 0;
+            phspgeom = EGS_BaseGeometry::getGeometry(gname);
+            if (!phspgeom) {
+                egsWarning("\nEGS_PhspScoring: %s does not name an existing geometry.\n"
+                           "Will assume you want to use exit/entry region pairs.\n",gname.c_str());
+                stype = 1;
+            }
+            else {
+                if (input->getInput("score particles on", str) < 0) {
+                    egsInformation("EGS_PhspScoring: No input for scoring direction.\n");
+                    egsInformation("Will score on entry and exit from phase space geometry.\n");
+                    sdir = 0;
+                }
+                else {
+                    //get scoring direction
+                    vector<string> allowed_sdir;
+                    allowed_sdir.push_back("entry and exit");
+                    allowed_sdir.push_back("entry");
+                    allowed_sdir.push_back("exit");
+                    sdir = input->getInput("score particles on",allowed_sdir,-1);
+                    if (sdir < 0) {
+                        egsFatal("\nEGS_PhspScoring: Invalid scoring direction.\n");
+                    }
+                }
+            }
+        }
+        if (stype==1) {
+            // user wants to use exit/entry region pairs
+            int err05 = input->getInput("from regions",from_reg);
+            int err06 = input->getInput("to regions",to_reg);
+            if (err05 || err06) {
+                egsFatal("\nEGS_PhspScoring: Missing/incorrect input for scoring method\n"
+                         "(scoring geometry or pairs of exit/entry regions)\n");
+            }
+            else {
+                //run some checks on exit/entry region pairs
+                vector<int>::iterator p,p1;
+                if (from_reg.size() > to_reg.size()) {
+                    p = from_reg.begin();
+                    egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
+                               "Will only score for matched pairs.\n");
+                    p += to_reg.size();
+                    from_reg.erase(p,p+from_reg.size()-to_reg.size());
+                }
+                else if (to_reg.size() > from_reg.size()) {
+                    p = to_reg.begin();
+                    egsWarning("\nEGS_PhspScoring: Mismatch in no. of exit/entry regions.\n"
+                               "Will only score for matched pairs.\n");
+                    p += from_reg.size();
+                    to_reg.erase(p,p+to_reg.size()-from_reg.size());
+                }
+                //now go through and look for exit region = entry region
+                int i=0;
+                while (i<from_reg.size()) {
+                    if (from_reg[i]==to_reg[i]) {
+                        egsInformation("\nEGS_PhspScoring: Cannot have entry region = exit region (reg no. %d)\n",from_reg[i]);
+                        egsInformation("Will delete this pair\n");
+                        p=from_reg.begin()+i;
+                        p1 =to_reg.begin()+i;
+                        from_reg.erase(p);
+                        to_reg.erase(p1);
                     }
                     else {
-                        vector<string> allowed_oformat;
-                        allowed_oformat.push_back("EGSnrc");
-                        allowed_oformat.push_back("IAEA");
-                        phspouttype = input->getInput("output format", allowed_oformat, -1);
-                        if (phspouttype < 0) {
-                            egsFatal("\nEGS_PhspScoring: Invalid output format.\n");
-                        }
-                        //see if the user wants to specify constant X/Y/Z for IAEA format
-                        if (phspouttype == 1) {
-                            int err02 = input->getInput("constant X",xyzconst[0]);
-                            int err03 = input->getInput("constant Y",xyzconst[1]);
-                            int err04 = input->getInput("constant Z",xyzconst[2]);
-                            if (!err02) xyzisconst[0] = true;
-                            if (!err03) xyzisconst[1] = true;
-                            if (!err04) xyzisconst[2] = true;
-                            //see if user wants to score mu (if available)
-                            //default is not to score
-                            if (!input->getInput("score mu", str)) {
-                              vector<string> allowed_muscore;
-                              allowed_muscore.push_back("no");
-                              allowed_muscore.push_back("yes");
-                              imuscore = input->getInput("score mu",allowed_muscore,-1);
-                              if (imuscore < 0) {
-                                 egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
-                                 imuscore = 0;
-                              }
-                            }
-                        }
+                        //advance counter
+                        i++;
                     }
-                    if (input->getInput("output directory",outdir) < 0) outdir="";
-                    if (input->getInput("particle type", str) < 0) {
-                        egsInformation("EGS_PhspScoring: No input for particle type.  Will score all.\n");
-                        ptype = 0;
+                }
+            }
+        }
+        //now get common inputs for both scoring methods
+        if (input->getInput("output format", str) < 0) {
+            egsInformation("EGS_PhspScoring: No input for output format type.  Will default to EGSnrc.\n");
+            phspouttype = 0;
+        }
+        else {
+            vector<string> allowed_oformat;
+            allowed_oformat.push_back("EGSnrc");
+            allowed_oformat.push_back("IAEA");
+            phspouttype = input->getInput("output format", allowed_oformat, -1);
+            if (phspouttype < 0) {
+                egsFatal("\nEGS_PhspScoring: Invalid output format.\n");
+            }
+            //see if the user wants to specify constant X/Y/Z for IAEA format
+            if (phspouttype == 1) {
+                int err02 = input->getInput("constant X",xyzconst[0]);
+                int err03 = input->getInput("constant Y",xyzconst[1]);
+                int err04 = input->getInput("constant Z",xyzconst[2]);
+                if (!err02) {
+                    xyzisconst[0] = true;
+                }
+                if (!err03) {
+                    xyzisconst[1] = true;
+                }
+                if (!err04) {
+                    xyzisconst[2] = true;
+                }
+                //see if user wants to score mu (if available)
+                //default is not to score
+                if (!input->getInput("score mu", str)) {
+                    vector<string> allowed_muscore;
+                    allowed_muscore.push_back("no");
+                    allowed_muscore.push_back("yes");
+                    imuscore = input->getInput("score mu",allowed_muscore,-1);
+                    if (imuscore < 0) {
+                        egsWarning("\nEGS_PhspScoring: Invalid input for mu scoring.  Will not score mu.\n");
+                        imuscore = 0;
                     }
-                    else {
-                        //get particle type
-                        vector<string> allowed_ptype;
-                        allowed_ptype.push_back("all");
-                        allowed_ptype.push_back("photons");
-                        allowed_ptype.push_back("charged");
-                        ptype = input->getInput("particle type",allowed_ptype,-1);
-                        if (ptype < 0) {
-                            egsFatal("\nEGS_PhspScoring: Invalid particle type.\n");
-                        }
-                    }
-                    if (input->getInput("score particles on", str) < 0) {
-                        egsInformation("EGS_PhspScoring: No input for scoring direction.\n");
-                        egsInformation("Will score on entry and exit from phase space geometry.\n");
-                        sdir = 0;
-                    }
-                    else {
-                        //get scoring direction
-                        vector<string> allowed_sdir;
-                        allowed_sdir.push_back("entry and exit");
-                        allowed_sdir.push_back("entry");
-                        allowed_sdir.push_back("exit");
-                        sdir = input->getInput("score particles on",allowed_sdir,-1);
-                        if (sdir < 0) {
-                            egsFatal("\nEGS_PhspScoring: Invalid scoring direction.\n");
-                        }
-                    }
+                }
+            }
+        }
+        if (phspouttype == 0) {
+            //see if user wants to score multiple crossers
+            if (!input->getInput("score multiple crossers", str)) {
+                vector<string> allowed_scoremc;
+                allowed_scoremc.push_back("no");
+                allowed_scoremc.push_back("yes");
+                iscoremc = input->getInput("score multiple crossers",allowed_scoremc,-1);
+                if (iscoremc < 0) {
+                    egsWarning("\nEGS_PhspScoring: Invalid input for score multiple crossers.  Will not score.\n");
+                    iscoremc = 0;
+                }
+            }
+        }
+        if (input->getInput("output directory",outdir) < 0) {
+            outdir="";
+        }
+        if (input->getInput("particle type", str) < 0) {
+            egsInformation("EGS_PhspScoring: No input for particle type.  Will score all.\n");
+            ptype = 0;
+        }
+        else {
+            //get particle type
+            vector<string> allowed_ptype;
+            allowed_ptype.push_back("all");
+            allowed_ptype.push_back("photons");
+            allowed_ptype.push_back("charged");
+            ptype = input->getInput("particle type",allowed_ptype,-1);
+            if (ptype < 0) {
+                egsFatal("\nEGS_PhspScoring: Invalid particle type.\n");
             }
         }
 
@@ -625,13 +682,19 @@ extern "C" {
         /* Setup phsp scoring object with input parameters */
         EGS_PhspScoring *result = new EGS_PhspScoring("",f);
         result->setName(input);
-        result->setGeom(phspgeom);
+        if (stype==0) {
+            result->setGeom(phspgeom);
+        }
+        else if (stype==1) {
+            result->setEntryExitReg(from_reg,to_reg);
+        }
         result->setOType(phspouttype);
         result->setXYZconst(xyzisconst,xyzconst);
         result->setOutDir(outdir);
         result->setParticleType(ptype);
         result->setScoreDir(sdir);
         result->setMuScore(imuscore);
+        result->setScoreMC(iscoremc);
         return result;
-   }
+    }
 }

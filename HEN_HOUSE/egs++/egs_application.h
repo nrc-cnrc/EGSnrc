@@ -1128,6 +1128,12 @@ public:
         return -1.0;
     };
     virtual void setRadiativeSplitting(const EGS_Float &nsplit) {};
+
+    //************************************************************
+    // Utility function for ausgab phase space scoring objects
+    //************************************************************
+    virtual void setLatch(int latch) {};
+
 };
 
 #define APP_MAIN(app_name) \
