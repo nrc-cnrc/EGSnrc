@@ -3937,6 +3937,27 @@ call show_transport_parameter(6);
 "see if the user wants to scale elastic scattering cross sections"
 call set_elastic_parameter;
 
+"Revisit ECUTIN/PCUTIN"
+"If all global ECUT/PCUT values were left blank, then"
+"ECUTIN/PCUTIN at this point = 0.  Set ECUTIN/PCUTIN to AE/AP of default"
+"medium unless this is a vacuum, in which case set them equal to the highest"
+"AE/AP of all media.  Will only have implications for IREJCT_GLOBAL=1"
+IF(ECUTIN=0.0)[
+  IF(AIR_INDEX=1) [
+    ECUTIN=AE(1);
+  ]
+  ELSE [
+    DO I=1,NMED[ ECUTIN=MAX(ECUTIN,AE(I));]
+  ]
+]
+IF(PCUTIN=0.0)[
+  IF(AIR_INDEX=1) [
+    PCUTIN=AP(1);
+  ]
+  ELSE [
+    DO I=1,NMED[ PCUTIN=MAX(PCUTIN,AP(I));]
+  ]
+]
 "Note: default region densities (RHOR=0) set to those of PEGS files in HATCH
 ;
 "*******************************************************************************

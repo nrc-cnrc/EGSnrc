@@ -1970,28 +1970,6 @@ skindepth_for_bca=0;
 
 call get_transport_parameter(-1);
 
-"now check to see if ECUTIN>ECUT or PCUTIN>PCUT"
-IF(ECUTIN>ECUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT ECUT;
-    (/' ****WARNING****'/
-      ' ECUTIN > ECUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' ECUT defaults to ECUTIN.'/);
-   ECUT=ECUTIN;
-]
-ELSE[
-   ECUTIN=ECUT;
-]
-IF(PCUTIN>PCUT)[ "reset ecut in all regions to ecutin"
-   OUTPUT PCUT;
-    (/' ****WARNING****'/
-      ' PCUTIN > PCUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
-      ' PCUT defaults to PCUTIN.'/);
-   PCUT=PCUTIN;
-]
-ELSE[
-   ECUTIN=ECUT;
-]
-
 IF((~exact_bca | transport_algorithm=$PRESTA--I) & SMAXIR=1e10)[
 "if we get to here with the default value of SMAX (1e10), then"
 "assume that this is because the SMAX input does not exist, the user"
@@ -2015,6 +1993,30 @@ call show_transport_parameter(iout); " print the transport parameter settings"
 "=========================================================================="
 "End of block added by Ernesto Mainegra-Hing Dec 2011"
 "=========================================================================="
+
+"now check to see if ECUTIN>ECUT or PCUTIN>PCUT"
+"or, in the case where GUI inputs for ECUT/PCUT were left blank and"
+"ECUT/PCUT defaulted to AE/AP in hatch, ECUT>ECUTIN or PCUT>PCUTIN"
+IF(ECUTIN>ECUT)[ "reset ecut in all regions to ecutin"
+   OUTPUT ECUT;
+    (/' ****WARNING****'/
+      ' ECUTIN > ECUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
+      ' ECUT defaults to ECUTIN.'/);
+   ECUT=ECUTIN;
+]
+ELSE[
+   ECUTIN=ECUT;
+]
+IF(PCUTIN>PCUT)[ "reset ecut in all regions to ecutin"
+   OUTPUT PCUT;
+    (/' ****WARNING****'/
+      ' PCUTIN > PCUT input in EGSnrc parameters ( ',F10.4,' MeV).'/
+      ' PCUT defaults to PCUTIN.'/);
+   PCUT=PCUTIN;
+]
+ELSE[
+   ECUTIN=ECUT;
+]
 
 "call this here so that BEAM simulation source can get i_parallel if"
 "pprocess is used"
