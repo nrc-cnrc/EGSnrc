@@ -454,8 +454,19 @@ set str "$ivary($i), $angfixed($i), $ang1($i), $ang2($i), $nang($i), $pang($i)"
     puts $file " #########################"
     puts $file " :Start MC Transport Parameter:"
     puts $file " "
-    puts $file " Global ECUT= $values(ecut)"
-    puts $file " Global PCUT= $values(pcut)"
+    # ECUT and PCUT cannot be blank
+    set values(ecut) [string trim $values(ecut)]
+    if {$values(ecut) == {}} {
+       puts $file " Global ECUT= 0"
+    } else {
+       puts $file " Global ECUT= $values(ecut)"
+    }
+    set values(pcut) [string trim $values(pcut)]
+    if {$values(pcut) == {}} {
+       puts $file " Global PCUT= 0"
+    } else {
+       puts $file " Global PCUT= $values(pcut)"
+    }
     puts $file " Global SMAX= $values(smaxir)"
     puts $file " ESTEPE= $values(estepe)"
     puts $file " XIMAX= $values(ximax)"
