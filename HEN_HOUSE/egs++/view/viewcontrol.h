@@ -39,7 +39,7 @@
 #include "egs_user_color.h"
 #include "egs_vector.h"
 
-#include <qdialog.h>
+#include <QMainWindow>
 
 class EGS_BaseGeometry;
 class EGS_GeometryVisualizer;
@@ -50,7 +50,7 @@ class SaveImage;
 class ClippingPlanesWidget;
 
 
-class GeometryViewControl : public QDialog, public Ui::GeometryViewControl {
+class GeometryViewControl : public QMainWindow, public Ui::GeometryViewControl {
     Q_OBJECT
 
 public:
@@ -65,18 +65,29 @@ public:
     virtual void setLightLineEdit();
     virtual void setLookAtLineEdit();
     virtual void updateLookAtLineEdit();
-    virtual void setMaterialColor(int j);
+    virtual void setCameraLineEdit();
+    virtual void updateCameraLineEdit();
     virtual int setGeometry(EGS_BaseGeometry *geom, const std::vector<EGS_UserColor> &ucolors, EGS_Float xmin, EGS_Float xmax, EGS_Float ymin, EGS_Float ymax, EGS_Float zmin, EGS_Float zmax, bool justReloading);
     virtual void updateView(bool transform = false);
-    virtual bool loadInput(bool first_time);
+    virtual bool loadInput(bool first_time, EGS_BaseGeometry *simGeom = 0);
+    virtual void loadConfig(QString configFilename);
+    virtual EGS_Vector getHeatMapColor(EGS_Float value);
+    virtual void updateRegionTable();
+    virtual void updateRegionTable(int imed);
+    virtual void updateAusgabObjects(bool loadUserDose=false);
+    virtual void initColorSwatches();
 
 public slots:
 
     virtual void reloadInput();
+    virtual void selectInput();
+    virtual void loadDose();
+    virtual void loadConfig();
+    virtual void saveConfig();
+    virtual void updateSimulationGeometry(int ind);
     virtual void checkboxAxes(bool toggle);
     virtual void checkboxAxesLabels(bool toggle);
     virtual void checkboxShowRegions(bool toggle);
-    virtual void checkboxShowTracks(bool toggle);
     virtual void cameraHome();
     virtual void cameraOnAxis(char axis);
     virtual void camera_x();
@@ -97,22 +108,41 @@ public slots:
     virtual void moveLightChanged(int toggle);
     virtual void setLightPosition();
     virtual void setLookAt();
+    virtual void setLookPosition();
     virtual void loadTracksDialog();
     virtual void viewAllMaterials();
     virtual void reportViewSettings(int x, int y);
+    virtual void setRotationPoint(EGS_Vector hitCoord);
     virtual void quitApplication();
     virtual void updateColorLabel(int med);
     virtual void changeColor();
+    virtual void setBackgroundColor();
+    virtual void setTextColor();
+    virtual void setAxisColor();
+    virtual void setPhotonColor();
+    virtual void setElectronColor();
+    virtual void setPositronColor();
+    virtual void setEnergyScaling(bool toggle);
     virtual void saveImage();
-    virtual void reenableSave();
-    virtual void showHideOptions();
     virtual void setClippingPlanes();
     virtual void showPhotonsCheckbox_toggled(bool toggle);
     virtual void showElectronsCheckbox_toggled(bool toggle);
     virtual void showPositronsCheckbox_toggled(bool toggle);
-    virtual void showOthersCheckbox_toggled(bool toggle);
     virtual void startTransformation();
     virtual void endTransformation();
+    virtual void toggleRegion(int i, int j);
+    virtual void showAllRegions();
+    virtual void hideAllRegions();
+    virtual void enlargeFont();
+    virtual void shrinkFont();
+    virtual void setFontSize(int size);
+    virtual void doseCheckbox_toggled();
+    virtual void changeDoseTransparency(int t);
+    virtual void changeTrackMin();
+    virtual void changeTrackMaxP(int t);
+    virtual void changeTrackMaxE(int t);
+    virtual void changeTrackMaxPo(int t);
+    virtual void updateTracks(vector<size_t> ntracks);
 
 private:
 
@@ -122,8 +152,15 @@ private:
 
     QString filename;
     QString filename_tracks;
+    QString userDoseFile;
     int nmed;
     QRgb *m_colors;
+    QColor  backgroundColor,
+            textColor,
+            axisColor,
+            photonColor,
+            electronColor,
+            positronColor;
     int zoomlevel_home;
     int zoomlevel;
     EGS_Float a_light;
@@ -135,6 +172,7 @@ private:
     EGS_Float theta;
     EGS_Float distance;
     EGS_Float size;
+    EGS_Float doseTransparency;
     EGS_Vector axesmax;
     EGS_Vector center;
     EGS_Vector camera_home_v2;
@@ -156,7 +194,11 @@ private:
     bool showPhotonTracks;
     bool showElectronTracks;
     bool showPositronTracks;
-    bool showOtherTracks;
+    vector<bool> show_regions;
+    bool    allowRegionSelection,
+            energyScaling;
+    vector<vector<EGS_Float>> scoreArrays;
+    EGS_BaseGeometry *origSimGeom;
 
 protected slots:
 

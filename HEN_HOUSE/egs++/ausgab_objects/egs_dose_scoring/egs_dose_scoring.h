@@ -322,6 +322,11 @@ public:
         dose_geom= dgeom;
         file_type = ftype;
     };
+    bool getOutputFile(EGS_BaseGeometry *&dgeom, int &ftype) {
+        dgeom = dose_geom;
+        ftype = file_type;
+        return output_dose_file;
+    };
     void setUserNorm(const EGS_Float &normi) {
         norm_u=normi;
     };
