@@ -287,6 +287,10 @@ public:
         return (valid && source != 0);
     };
 
+    void setSimulationChunk(EGS_I64 nstart, EGS_I64 nrun) {
+        source->setSimulationChunk(nstart, nrun);
+    };
+
 protected:
 
     EGS_BaseSource *source; //!< The source being rotated
