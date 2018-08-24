@@ -1,0 +1,129 @@
+TITLE= Lab-03-cavrz-psplit
+
+##########################
+:start I/O control:
+
+IWATCH= off
+STORE INITIAL RANDOM NUMBERS= no
+IRESTART= first
+STORE DATA ARRAYS= yes
+OUTPUT OPTIONS= short
+
+:stop I/O control:
+#########################
+
+##########################
+:start Monte Carlo inputs:
+
+NUMBER OF HISTORIES= 500000
+INITIAL RANDOM NO. SEEDS= 1, 4
+MAX CPU HOURS ALLOWED= 90.000
+IFULL= Aatt and Ascat
+STATISTICAL ACCURACY SOUGHT= 0.0000
+PHOTON REGENERATION= no
+
+:stop Monte Carlo inputs:
+#########################
+
+##########################
+:start geometrical inputs:
+
+METHOD OF INPUT= individual
+Z OF FRONT FACE= -1.26275
+DEPTH BOUNDARIES= -0.80675, -0.39345, 0.80675, 1.26275
+RADII= 0.3352, 0.7919, 1.175
+MEDIA= 170C521ICRU,
+ AIR521ICRU;
+
+DESCRIPTION BY= planes
+MEDNUM= 1, 2, 2
+START ZSLAB= 1, 2, 3
+STOP ZSLAB= 4, 2, 3
+START RING= 1, 1, 2
+STOP RING= 3, 2, 2
+
+:stop geometrical inputs:
+#########################
+
+##########################
+:start cavity inputs:
+
+NUMBER OF CAVITY REGIONS= 3
+REGION NUMBERS OF THE CAVITY= 3, 7, 8
+
+:stop cavity inputs:
+#########################
+
+##########################
+:start source inputs:
+
+INCIDENT PARTICLE= photon
+SOURCE NUMBER= 10
+SOURCE OPTIONS= 1.175, 1.2628, 0, 1
+INCIDENT ENERGY= spectrum
+SPEC FILENAME= $HEN_HOUSE/spectra/egsnrc/co60.spectrum
+SPEC IOUTSP= include
+
+:stop source inputs:
+#########################
+
+##########################
+:start MC transport parameter:
+
+Global ECUT= 0.521
+Global PCUT= 0.01
+Global SMAX= 1e10
+ESTEPE= 0.25
+XImax= 0.5
+Skin depth for BCA= 3
+Boundary crossing algorithm= EXACT
+Electron-step algorithm= PRESTA-II
+Spin effects= on
+Brems angular sampling= KM
+Brems cross sections= BH
+Photon cross sections= xcom
+Electron Impact Ionization= Off
+Photon cross-sections output= off
+Bound Compton scattering= norej
+Pair angular sampling= Simple
+Photoelectron angular sampling= On
+Rayleigh scattering= On
+Atomic relaxations= On
+Set PCUT= 0
+Set PCUT start region= 1
+Set PCUT stop region= 1
+Set ECUT= 0
+Set ECUT start region= 1
+Set ECUT stop region= 1
+Set SMAX= 0
+Set SMAX start region= 1
+Set SMAX stop region= 1
+
+:stop MC transport parameter:
+#########################
+
+##########################
+:start media definition:
+
+
+
+:stop media definition:
+#########################
+
+##########################
+:start variance reduction:
+
+ELECTRON RANGE REJECTION= On
+ESAVEIN= 1.0
+RUSSIAN ROULETTE DEPTH= 0.0000
+RUSSIAN ROULETTE FRACTION= 0.0000
+EXPONENTIAL TRANSFORM C= 0.0000
+PHOTON FORCING= on
+START FORCING= 1
+STOP FORCING AFTER= 1
+CS ENHANCEMENT FACTOR= 1
+PHOTON SPLITTING= 20
+
+:stop variance reduction:
+#########################
+

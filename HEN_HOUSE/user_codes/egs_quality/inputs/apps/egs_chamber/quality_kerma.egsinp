@@ -1,0 +1,193 @@
+##############################################################################
+#
+# Total kerma in air sphere
+#
+##############################################################################
+
+
+##############################################################################
+### RUN CONTROL
+##############################################################################
+
+:start run control:
+    ncase                       = 1e7
+    statistical accuracy sought = 0.01000
+    geometry error limit        = 100
+    nbatch                      = 10
+    nchunk                      = 1
+:stop run control:
+
+
+##############################################################################
+### RANDOM NUMBER GENERATOR
+##############################################################################
+:start rng definition:
+    initial seeds = 20521 27711
+:stop rng definition:
+
+
+##############################################################################
+### GEOMETRY
+##############################################################################
+:start geometry definition:
+
+    ### large vacuum box
+    :start geometry:
+        name     = vacuum_box
+        library  = egs_ndgeometry
+        type     = EGS_XYZGeometry
+        x-planes = -2 2
+        y-planes = -2 2
+        z-planes = -2 150
+        :start media input:
+            media = vacuum
+        :stop media input:
+    :stop geometry:
+
+    ### scoring sphere
+    :start geometry:
+        name     = sphere
+        library  = egs_spheres
+        radii    = 1
+        :start media input:
+            media = air
+        :stop media input:
+    :stop geometry:
+
+    ### sphere in vacuum box
+    :start geometry:
+        name    = sphere_in_vacuum
+        library = egs_genvelope
+        base geometry = vacuum_box
+        inscribed geometries = sphere
+    :stop geometry:
+
+    ### simulation geometry
+    simulation geometry = sphere
+
+:stop geometry definition:
+
+
+##############################################################################
+### SCORING
+##############################################################################
+:start scoring options:
+
+    ##########################################################################
+    ### chamber
+    ##########################################################################
+    :start calculation geometry:
+        geometry name   = sphere
+        cavity regions  = 0
+        cavity mass     = 0.00504665443872665
+        cavity geometry = sphere
+        enhance regions = 0
+        enhancement     = 8192
+    :stop calculation geometry:
+
+:stop scoring options:
+
+
+##############################################################################
+### VARIANCE REDUCTION
+##############################################################################
+:start variance reduction:
+
+    # cross-section enhancement
+    cs enhancement = 1
+
+:stop variance reduction:
+
+
+##############################################################################
+### SOURCE
+##############################################################################
+:start source definition:
+
+    ### photon collimated source
+    :start source:
+        name                = collimated_source
+        library             = egs_collimated_source
+        :start source shape:
+            type            = point
+            position        = 0 0 100
+        :stop source shape:
+        :start target shape:
+            library         = egs_circle
+            radius          = 1
+        :stop target shape:
+        :start spectrum:
+            type = monoenergetic
+            energy = 1.173228
+        :stop spectrum:
+        charge              = 0
+        distance            = 0.282094791773878         # 1/sqrt(4*pi)
+    :stop source:
+
+    ### simulation source
+    simulation source = collimated_source
+
+:stop source definition:
+
+
+##############################################################################
+### MC TRANSPORT PARAMETERS
+##############################################################################
+:start MC transport parameter:
+
+    Global Ecut                     = 10
+    Global Pcut                     = 0.001
+    Spin effects                    = On      # [On], Off
+    Brems cross sections            = NRC     # [BH], NIST, NRC
+    Bound Compton scattering        = On      # [On], Off, norej
+    Rayleigh scattering             = On      # On, [Off], custom
+    Atomic relaxations              = On      # [On], Off
+    Brems angular sampling          = KM      # Simple, [KM]
+    Pair angular sampling           = KM      # Off, [Simple], KM
+    Photoelectron angular sampling  = On      # [On], Off
+    Electron Impact Ionization      = On      # On, [Off], ...
+    Photon cross sections           = xcom    # [xcom], epdl, si
+    Radiative Compton corrections   = Off
+
+:stop MC transport parameter:
+
+
+##############################################################################
+### MEDIA
+##############################################################################
+:start media definition:
+
+    ### cutoff energies
+    ae  = 0.521
+    ap  = 0.010
+    ue  = 2.511
+    up  = 2
+
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+:stop media definition:
+
+
+##############################################################################
+### COLOR DEFINITIONS (for egs_view)
+##############################################################################
+:start view control:
+    set color = air  0 255 100 100
+:stop view control:
+
+
+
+##############################################################################
+### PARTICLE TRACKS
+##############################################################################
+:start ausgab object definition:
+
+    # score particle tracks
+#     :start ausgab object:
+#         name    = mytracks
+#         library = egs_track_scoring
+#     :stop ausgab object:
+
+:stop ausgab object definition:

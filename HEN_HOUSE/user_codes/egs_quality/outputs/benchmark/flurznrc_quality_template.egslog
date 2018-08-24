@@ -1,0 +1,317 @@
+================================================================================
+EGSnrc version 4 for x86_64-unknown-linux-gnu          Thu Aug  2 17:15:39 2018
+================================================================================
+configuration...................................................test
+user code.......................................................flurznrc
+pegs file.......................................................
+using host......................................................irs25
+input file......................................................quality_template
+output file(s)..................................................quality_template
+================================================================================
+
+ FLURZnrc, $MAXRZ=500 $MAXZPLANE=501 $MAXRADII=  4 $EBIN=1000  $MXMED=  6
+
+
+
+
+ FLURZnrc   ON linux (test) 
+                   Maximumnumber of radial and depth zones=   4 501
+
+
+ *** INPUT CARD I01 ***
+TITLE: flurznrc_template                                                              
+
+ *** INPUT CARD IO2 ***
+
+ DO NOT TRACK(0) OR TRACK(>0) EVERY INTERACTION:                      0
+ DO NOT STORE(0) OR STORE(1,2) INITIAL RANDOM #s:                     0
+ FIRST RUN(0),RESTARTED(1),ANALYZE(3),READ RNS(4),
+   PARALLEL(5):                                                       0
+ LIST ALL(0), SHORT PHOT(1),SPECIFIED REGIONS(2), NONE(>2):           2
+ STORE DATA(0) OR NOT(1):                                             0
+ OUTPUT TOTAL(0),PRIMARIES(1(brem),2(no brem),3(unscattered)),SEC(4): 0
+
+
+ *** INPUT CARD MC1 ***
+
+ # of histories:                                                  10000
+ 1st initial random number seed:                                      1
+ 2nd initial random number seed:                                      3
+ maximum cpu time allowed:                                      90.00HRS
+
+ *** INPUT CARD CGM1 ***
+ TERSE(0), RAPID(1) OR DETAILED(2) INPUT:                             0
+
+ *** CARD CGM2A *** (Input groups of slabs) 
+ Number of planar slabs:                                             15
+ Geometrical Z-plane coordinates:
+    0.0000    0.5000    1.0000    1.5000    2.0000    2.5000
+    3.0000    3.5000    4.0000    4.5000    5.0000    6.0000
+    7.0000    8.0000    9.0000   10.0000
+ 
+ *** INPUT CARD CG3 ***
+ Number of concentric rings:                                          4
+ Ring radius # 1:                                              3.0000 cm
+ Ring radius # 2:                                              5.0000 cm
+ Ring radius # 3:                                             10.0000 cm
+ Ring radius # 4:                                            100.0000 cm
+
+ *** INPUT CARD M1 ***
+ Number of media(<=  6):                                              2
+
+ *** INPUT CARD M2 ***
+ MEDIUM #1:                                           H2O700ICRU              
+ MEDIUM #2:                                           AIR700ICRU              
+
+ *** INPUT CARD M3 ***
+
+ # of geometrical zones =                                            61
+ REGION(  1) = MATERIAL( 0) (VACUUM)
+ ZPLANE(  1),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  1),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  1),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  1),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  2),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  2),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  2),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  2),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  3),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  3),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  3),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  3),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  4),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  4),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  4),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  4),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  5),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  5),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  5),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  5),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  6),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  6),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  6),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  6),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  7),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  7),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  7),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  7),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  8),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  8),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  8),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  8),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE(  9),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE(  9),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE(  9),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE(  9),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 10),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 10),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 10),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 10),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 11),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 11),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 11),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 11),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 12),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 12),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 12),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 12),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 13),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 13),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 13),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 13),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 14),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 14),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 14),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 14),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 15),RADIUS(  1) = MATERIAL( 1)
+ ZPLANE( 15),RADIUS(  2) = MATERIAL( 1)
+ ZPLANE( 15),RADIUS(  3) = MATERIAL( 1)
+ ZPLANE( 15),RADIUS(  4) = MATERIAL( 1)
+ ZPLANE( 11),RADIUS(  1) = MATERIAL( 2)
+ 
+
+***** SPECTRUM OUTPUT IN LISTING FILE *****
+ Print spectrum in region 12
+ Print spectrum in region 61
+ Print spectrum in region 61
+ Print spectrum in region 61
+ Print spectrum in region 61
+
+ *** Source inputs read by srcrz ***
+
+ charge of the incident beam (-1,0,1 [& 2 with source 21]),
+ source configuration
+      (0) parallel beam incident from the front:(0),radius(cm)
+                      incident direction cosines (U,V,W)
+   or (1) point source on axis incident from the front(1)
+                      source to front face distance,radius(cm)
+   or (2) broad parallel beam incident from the front(2)
+                      no configuration input necessary,unit area beam
+   or (3) uniform isotropically radiating disk(3)
+                      min,max radius, min,max Z
+   or (4) axial fluence for various beam radii
+                      radius of central axis region
+   or (10) parallel beam incident from the side(10)
+                   half-width,half-height of beam at center(cm)
+   or (11) point source incident from the side(11)
+           source to center distance(cm)
+half-width,half-height of beam at center(cm)
+   or (12) point source incident from off axis(12)
+                       perpendicular distance off central axis(cm)
+                       perpendicular distance from front face(cm)
+   or (13) broad parallel beam incident from any angle:(13)
+                      incident direction cosines (U,V,W)
+   or (14) point source on axisfrom front but restricted:(14),
+                      source to front face dist, outer,inner radius(cm)
+   or (20) parallel beam incident from the front with radial distribution
+   or (21)full phase-space on front: each particle read from unit 42
+                  file MODE (0. = default, 2. with ZLAST as well),
+                      NRCYCL, IPARALLEL, PARNUM
+   or (22)full phase-space from any angle: each particle read from unit 42
+                      file MODE (0. = default, 2. with ZLAST aswell),
+                      distance from centre of source plane to point of
+                      rotation, angle of rotation about Z axis, Z offset
+                      of point of rotation, NRCYCL, IPARALLEL, PARNUM,
+                      X offset of source, Y offset of source.
+   or (23) BEAM treatment headsimulation from any angle: name of BEAM
+                      simulation (eg BEAM_accelname), name of BEAM input
+         file (no .egsinp extension), name of BEAM pegs data
+                    (no .pegs4dat extension), min. and max. weights of
+                      particles to use (defaults to -1e30- 1e30),
+                      distance from centre of BEAM scoring plane to point of
+                      rotation, angle of rotation about Z axis, Z offset
+                      of point of rotation, X offset of source, Y offset
+  of source.
+
+
+  IQIN            0
+         SRCRZ read:    0    0     5.00000     0.00000     0.00000     1.00000
+
+ Electric charge of the source:                                       0
+ Parallel beam incident from the front(+ve Z-axis)
+ Radius of beam at the front face of the target:               5.0000 cm
+ X-axis direction cosine:                                      0.0000
+ Y-axis direction cosine:                                      0.0000
+ Z-axis direction cosine:                                      1.0000
+
+ *** INPUT CARD TC1 ***
+ MONOENERGETIC BEAM:
+
+ KINETIC ENERGY OF THE INCIDENT BEAM:                          1.2500
+ 
+
+
+ Bound Compton start region
+  Setting all to            1
+ Rayleigh start region
+  Setting all to            0
+ Relaxations start region
+  Setting all to            1
+ PE sampling start region
+  Setting all to            1
+
+================================================================================
+
+                   Electron/Photon transport parameter
+
+================================================================================
+
+ Photon cross sections                                      si
+ Compton cross sections                                     default
+ Photon transport cutoff(MeV)                                Set in regions
+ Pair angular sampling                                       SIM
+ Pair cross sections                                         BH 
+ Triplet production                                          Off
+ Bound Compton scattering                                    ON            
+ Radiative Compton corrections                               Off           
+ Rayleigh scattering                                         OFF           
+ Atomic relaxations                                          EADL          
+ Photoelectron angular sampling                              ON            
+
+ Electron transport cutoff(MeV)                              Set in regions
+ Bremsstrahlung cross sections                              BH  
+ Bremsstrahlung angular sampling                             KM 
+ Spin effects                                                On
+ Electron Impact Ionization                                  Off
+ Maxium electron step in cm (SMAX)                           Set in regions
+ Maximum fractional energy loss/step (ESTEPE)                0.2500
+ Maximum 1st elastic moment/step (XIMAX)                     0.5000
+ Boundary crossing algorithm                                 EXACT     
+ Skin-depth for boundary crossing (MFP)                      3.000    
+ Electron-step algorithm                                     PRESTA-II 
+
+================================================================================
+
+  13 energy bins of width 1.000E-01 MeV granted for spectral outputs
+
+ 
+
+ Bremsstrahlung splitting OFF(0) or ON(1):                            0
+Each bremsstrahlung split into:                                       1
+
+ Charged particle Russian Roulette OFF(0) or ON(1):                   0
+ Probability of survival:                                      1.0000
+
+ Without(0) or with(1) range rejection:                               0
+ ESAVE cutoff value for range rejection with dnear:            0.0000 MeV
+
+ *** INPUT CARD TC3 ***
+
+ FORCED PHOTON INTERACTIONS IN EFFECT FROM  1 TO  1 # INTERACTIONS
+
+ 
+ *** INPUT CARD PL1 ***
+ Plotting files will be created
+
+ *** INPUT CARD PL2 no longer used ***
+
+ *** INPUT CARD PL3 ***
+ FILES WILL BE PREPARED FOR EXTERNAL PLOTTER
+ 
+
+ *** INPUT CARD PL4 ***
+ Point plot(1)/Histogram(2)/Both(3) will be prepared: 2
+ 
+ *** INPUT CARD PL5 ***
+Will plot only total since that is all scored
+
+
+ *** INPUT CARD PL6 ***
+     PLOT FOR ELECTRONS
+     PLOT FOR PHOTONS
+     NO PLOTS FOR POSITRONS
+     NO PLOTS FOR ELECTRONS AND POSITRONS
+ 
+ *** INPUT CARD PL7 ***
+ Will plot spectrum in region #  2
+ Will plot spectrum in region # 10
+
+ *** INPUT CARD PL8 ***
+ No plot of fluence vs depth for radial zones
+
+ *** INPUT CARD PL9 ***
+Will plot fluence vs radius in planar slab   1
+Will plot fluence vs radius in planar slab   6
+
+ ********* SUCCESSFUL INPUT ACCOMPLISHED *********
+ 
+ 
+ 
+ 
+ 
+
+************************ IAUSFL values ************************** 
+  1
+***************************************************************** 
+
+
+
+ CALL TO HATCH AT  17:15:39
+ ===> Photonuclear flag:   0
+  PEGSLESS INPUT.  CALCULATING ELECTRON CROSS-SECTIONS.
+  Error: Material not defined: H2O700ICRU              
+
+***************** Error: 
+ Material used in the geometry was not defined in the material data.
+
+***************** Quiting now.

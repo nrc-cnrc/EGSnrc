@@ -1,0 +1,56 @@
+###############################################################################
+#
+#  EGSnrc egs_quality input
+#  Copyright (C) 2017 National Research Council Canada
+#
+#  This file is part of EGSnrc.
+#
+#  EGSnrc is free software: you can redistribute it and/or modify it under
+#  the terms of the GNU Affero General Public License as published by the
+#  Free Software Foundation, either version 3 of the License, or (at your
+#  option) any later version.
+#
+#  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY
+#  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+#  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+#
+#  Author:          Reid Townson, 2017
+#
+#  Contributors:
+#
+###############################################################################
+#
+#
+#
+#
+###############################################################################
+
+:start source definition:
+    :start source:
+        library = egs_collimated_source
+        name = quality_source
+        :start source shape:
+            type = point
+            position = 0 0 5
+        :stop source shape:
+        :start target shape:
+            library   = egs_rectangle
+            rectangle = -1 -1 1 1
+        :stop target shape:
+        distance = 5
+        charge = -1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20
+        :stop spectrum:
+    :stop source:
+
+    simulation source = quality_source
+
+:stop source definition:
