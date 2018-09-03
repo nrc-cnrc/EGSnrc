@@ -29,6 +29,9 @@
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  Parts of the EGS code that originate from SLAC are distributed by NRC      "
@@ -1013,7 +1016,12 @@ $REAL     the_range;
 
 data ierust/0/;         "To count negative ustep's"
 
+"*******************************************************************************
+" #OMP_EGS - Global variable ierust is made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 save ierust;
+$OMP{0,THREADPRIVATE(ierust)};
 
 $CALL-USER-ELECTRON;
 
@@ -2988,7 +2996,12 @@ $REAL    sprob,explambda,wsum,wprob,xi,rejf,spin_rejection,
          cosz,sinz,phi,omega2,llmbda,ai,aj,ak,a,u,du,x1,rnno;
 $INTEGER icount,i,j,k;
 
+"*******************************************************************************
+" #OMP_EGS - Global variables i,j,omega2 are made private to
+"            each thread through the THREADPRIVATE directive.
+"*******************************************************************************
 save     i,j,omega2;
+$OMP{0,THREADPRIVATE(i,j,omega2)};
 
 $TURN_OFF_SCATTERING;
 " default of above is ';' See definition in egsnrc.macros for example"
@@ -3167,7 +3180,12 @@ COMIN/Spin-Data,RANDOM/;
 $REAL      rnno,ai,qq1,aj,xi,ak;
 $INTEGER   i,j,k;
 
+"*******************************************************************************
+" #OMP_EGS - Global variables i,j are made private to
+"            each thread through the THREADPRIVATE directive.
+"*******************************************************************************
 save       i,j;
+$OMP{0,THREADPRIVATE(i,j)};
 
 IF( spin_index ) [  "Determine the energy and q1 index
     spin_index = .false.;
@@ -6755,7 +6773,14 @@ $INTEGER
               "indeces for sine table"
 
 $DEFINE-VARIABLES-FOR-SELECT-AZIMUTHAL-ANGLE;
+
+"*******************************************************************************
+" #OMP_EGS - Global variables are made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 save CTHET,PHI,CPHI,A,B,C,SINPS2,SINPSI,US,VS,SINDEL,COSDEL;
+$OMP{0,THREADPRIVATE(CTHET,PHI,CPHI,A,B,C,SINPS2,SINPSI,US,VS,SINDEL)};
+$OMP{0,THREADPRIVATE(COSDEL)};
 
 $AUSCALL($UPHIAUSB);
 GO TO (:UPHI:,:UPHI2:,:NRK:),IENTRY;

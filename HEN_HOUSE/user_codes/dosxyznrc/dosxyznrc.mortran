@@ -36,6 +36,9 @@
 "                   Ernesto Mainegra-Hing                                     "
 "                   Reid Townson                                              "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  The contributors named above are only those who could be identified from   "
@@ -624,7 +627,7 @@
 "                        equations (Phys. Rev. 85, p 231--1952).  Requires
 "                        a change to the user codes Makefile to include
 "                        $(EGS_SOURCEDIR)rad_compton1.mortran in the
-"                        SOURCES (just before
+"                        SOURCES (just before 
 "                        $(EGS_SOURCEDIR)get_inputs.mortran).
 "                        [ radc_flag ]
 "       Pair angular sampling= Off, Simple or KM
@@ -1016,10 +1019,6 @@ REPLACE {$AUSCALL(#);} WITH
 REPLACE {$IBRDST-DEFAULT} WITH {0}
 ;
 
-"Rayleigh scattering= Off"
-REPLACE {$IRAYLR-DEFAULT} WITH {0}
-;
-
 "Bound Compton scattering= Off"
 REPLACE {$IBCMP-DEFAULT} WITH {0}
 ;
@@ -1114,7 +1113,7 @@ REPLACE {;COMIN/TIMEINFO/;} WITH {
 REPLACE {$CTUnitNumber} WITH {45} "assign a unit number for the CT data"
 
 REPLACE {$MXDATA}       WITH {1}  "To get over nrccaux(p).mortran definition
-REPLACE {$NBATCH}       WITH {10} "Use 10 batches for restart features, etc.
+REPLACE {$NBATCH}       WITH {1} "Use 10 batches for restart features, etc.
 REPLACE {$MXDOS}        WITH {7}  "Max number of groups of regions to analyse
 
 "Some macros for facilitating access to boundaries and regions
@@ -1153,6 +1152,10 @@ REPLACE {$CALL-HOWNEAR(#);} WITH {
     CALL HOWNEAR({P1},X(NP),Y(NP),Z(NP),IR(NP));
 }
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside /score/ COMMON block are made private to 
+"            each thread through the THREADPRIVATE directive. 
+"*******************************************************************************
 REPLACE {;COMIN/SCORE/;} WITH {
     ;common/score/endep($MAXDOSE), endep2($MAXDOSE), temp2, planarefe,
     planarefp,planarfe,planarfp,
@@ -1160,6 +1163,7 @@ REPLACE {;COMIN/SCORE/;} WITH {
     endep_tmp($MAXDOSE),
     i_phsp_out,i_muidx_out,i_unit_out,IWATCH,mxnp,
     endep_last($MAXDOSE);
+    $OMP{0,THREADPRIVATE(/score/)};
     REAL*8 endep, endep2, temp2,planarefe, planarefp, planarfe, planarfp;
     $LONG_INT nestep;
     real endep_tmp;
@@ -1246,7 +1250,26 @@ $LONG_INT nnphsp_max, nnphsp_min; } TO
 
 "  start of coding                 ""toc:
 
+"*******************************************************************************
+" #OMP_EGS - At this point the main program begins. PROGRAM statement added to 
+"            clearly define the start of the program.
+"*******************************************************************************
+PROGRAM dosxyznrc;
+
+"*******************************************************************************
+" #OMP_EGS - Include the OMP_LIB module to access OpenMP runtime functions. It 
+"            is used only if the user code is compiled with OpenMP translation.
+"*******************************************************************************
+$IFDEF(#,_OPENMP);
+  USE OMP_LIB;
+$ENDIF(#);
+
 $IMPLICIT-NONE;
+
+"*******************************************************************************
+" #OMP_EGS - Variables needed for OpenMP execution.
+"*******************************************************************************
+;COMIN/OMP-EGS,EGS-VARIANCE-REDUCTION,PHOTIN,RELAX-FOR-USER,UPHIOT,RELAX-USER/;
 
 ;COMIN/ BOUNDS,BREMPR,ELECIN,GEOM,MEDIA,MISC,PHSPFILE,SCORE,SOURCE,
 STACK,THRESH,USEFUL,RANDOM,TIMEINFO,ET-Control,CH-Steps,USER,EPCONT,EGS-IO,
@@ -1455,8 +1478,6 @@ IF(NMED = 0)[ "Input data from CT data file as processed by the code ctcreate"
      ' : ',$);
     read(5,'(A256)') PhantFileName;
     OUTPUT61 PhantFileName(:lnblnk1(PhantFileName));(A);
-
-    call replace_env(PhantFileName);
 
     Open($CTUnitNumber,file=PhantFileName,status='old',access='sequential',
           iostat=ios);
@@ -1949,7 +1970,10 @@ ELSEIF(i_phsp_out~=0)[
 IF(i_phsp_out=1 | i_phsp_out=2) iausfl(6)=1;
 "call ausgab after particle transport to score particles"
 
-$INITIALIZE RNG USING IXXIN AND JXXIN;
+"*******************************************************************************
+" #OMP_EGS - Initialization of RNG is moved to the first parallel region.
+"*******************************************************************************
+"$INITIALIZE RNG USING IXXIN AND JXXIN;
 
 
 "=========================================================================="
@@ -2507,6 +2531,46 @@ IF(IDAT=0 | IDAT=2)[
 
 IF(IWATCH ~= 0)[call watch(-99,IWATCH);] "Set up for watch routine if needed
 
+"*******************************************************************************
+" #OMP_EGS - One-time initializations needed for OpenMP parallel processing. On 
+"            this step the values on COMMON blocks with the THREADPRIVATE 
+"            directive are initialized through the COPYIN clause.
+"*******************************************************************************
+$OMP{0,PARALLEL DEFAULT(SHARED) FIRSTPRIVATE(IXXIN,JXXIN)};
+$OMP{*,COPYIN(/CH_steps/,/egs_vr/,/ELECIN/,/EPCONT/,/PHOTIN/)};
+$OMP{*,COPYIN(/relax_for_user/,/RWPHSP/,/score/,/source/)};
+$OMP{*,COPYIN(/UPHIOT/,/USEFUL/,/user_relax/)};
+    " First obtain the runtime thread number and number of threads.
+    $IFDEF(#,_OPENMP);
+        omp_iam = omp_get_thread_num();
+        omp_size = omp_get_num_threads();
+    $ELSE(#);
+        omp_iam = 0;
+        omp_size = 1;
+    $ENDIF(#);
+    
+    " Initialize RNG for each thread.
+    IXXIN = IXXIN;
+    JXXIN = JXXIN + omp_iam;
+    $INITIALIZE RNG USING IXXIN AND JXXIN;
+
+    " Initializations needed for phsp processing
+    IF(enflag = 2)[
+        nnphsp = INT(omp_iam*nshist/omp_size)+1;
+    ]
+
+    " Finally print to console some information about OpenMP configuration.
+    $IFDEF(#,_OPENMP);
+	  	$OMP{0,SINGLE};  			
+	  		OUTPUT61;(//' **************************************************');
+	  		OUTPUT61 omp_size;
+	  		(/'  Number of threads in OpenMP parallel execution: ',I4);
+	  		OUTPUT61;(/' *************************************************');
+	  	$OMP{0,END SINGLE};
+  	$ENDIF(#);
+
+$OMP{0,END PARALLEL};
+
 $SET_ELAPSED_TOTAL_TIME(TIMEB);
 OUTPUT61 TIMEB;('   Elapsed wall clock time to this point=',f12.3,' s'/);
 $INITIALIZE_ELAPSED_TOTAL_TIME; "reset to get elapsed time during run only"
@@ -2625,12 +2689,23 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
         "analysis data for beam characterization models"
     ]
 
+"*******************************************************************************
+" #OMP_EGS - The shower loop is divided among the team of threads through the 
+"            PARALLEL DO directive. 
+"*******************************************************************************
+$OMP{0,PARALLEL DO SCHEDULE(runtime) DEFAULT(SHARED)};
+$OMP{*,FIRSTPRIVATE(xin,yin,zin,uin,vin,win,irin,etotin,weight)};
+$OMP{*,FIRSTPRIVATE(nhist_old)};
+$OMP{*,PRIVATE(irl,i_repeat)};
     DO ihist = 1,jcase[
-
+       
         nhist_old=nhist;
 
-        IHSTRY=IHSTRY+1;
-
+"*******************************************************************************
+" #OMP_EGS - IHSTRY is only accumulated for the MASTER thread.  
+"*******************************************************************************
+        IF(omp_iam = 0)[IHSTRY=IHSTRY+1;]
+        
         IF(isource=21 & more_in_cont=0)[
             frMU_indx = -1.0; "initialize frMU_indx to -1.0. It will either be"
                          " changed in BEAM or in dosxyznrc after srchst"
@@ -2644,37 +2719,37 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
         "       space file, it returns nhist, the total no. of primary"
         "       histories used that scored particles in the phsp file."
 
-	 "IF(((isource=20)|(isource=21 ))& weight=0)["
-	 "This check has been removed and the blocked particles are now counted"
-	 "as nsblocked in srcxyznrc.mortran (JL)"
-	            "this happens if a particle "
-			   "is blocked by shared library modules (only source 20 or 21)"
-	 "	IHSTRY=IHSTRY-1;""do not count this particle as one"
-				    "that contributed"
-	 "]"
-	 "ELSE["
-        "increment esrc, the kinetic+Q energy incident on the phantom"
-        "-----------------------------------------------------------------"
-        IF(enflag = 1)["Particle energy sampled from a spectrum"
-        "-----------------------------------------------------------------"
-           "esrc_sp is the kinetic energy"
-           esrc = esrc + weight*esrc_sp;"we only count the kinetic E for the "
-                      "electrons and photons in the total incident E"
-           IF(iqin =1)[ esrc = esrc +  weight*1.0220068;
-            "we include 2 0.511 MeV photons from e+ - e- annihilation"]
-           IF(iqin ~= 0)[ etotin = esrc_sp + prm;"particle total E"]
-           ELSE[etotin = esrc_sp;]
-        ]
-        "-----------------------------------------------------------------"
-        ELSEIF(enflag = 2 | enflag = 3)["phase-space input or BEAM sim."
-        "-----------------------------------------------------------------"
-           etotin = einsrc;   "einsrc is the total energy of the particle"
-           IF(iqin = -1)   [esrc = esrc + weight*(etotin - prm);
-                            "remove e- rest mass"]
-           ELSEIF(iqin = 0)[esrc = esrc + weight*etotin; ]
-           ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + prm);
-                      "add 0.511 for the positron but was - till June 97"
-           ]
+        "IF(((isource=20)|(isource=21 ))& weight=0)["
+        "This check has been removed and the blocked particles are now counted"
+        "as nsblocked in srcxyznrc.mortran (JL)"
+                    "this happens if a particle "
+                "is blocked by shared library modules (only source 20 or 21)"
+        "	IHSTRY=IHSTRY-1;""do not count this particle as one"
+                        "that contributed"
+        "]"
+        "ELSE["
+            "increment esrc, the kinetic+Q energy incident on the phantom"
+            "-----------------------------------------------------------------"
+            IF(enflag = 1)["Particle energy sampled from a spectrum"
+            "-----------------------------------------------------------------"
+            "esrc_sp is the kinetic energy"
+            esrc = esrc + weight*esrc_sp;"we only count the kinetic E for the "
+                        "electrons and photons in the total incident E"
+            IF(iqin =1)[ esrc = esrc +  weight*1.0220068;
+                "we include 2 0.511 MeV photons from e+ - e- annihilation"]
+            IF(iqin ~= 0)[ etotin = esrc_sp + prm;"particle total E"]
+            ELSE[etotin = esrc_sp;]
+            ]
+            "-----------------------------------------------------------------"
+            ELSEIF(enflag = 2 | enflag = 3)["phase-space input or BEAM sim."
+            "-----------------------------------------------------------------"
+            etotin = einsrc;   "einsrc is the total energy of the particle"
+            IF(iqin = -1)   [esrc = esrc + weight*(etotin - prm);
+                                "remove e- rest mass"]
+            ELSEIF(iqin = 0)[esrc = esrc + weight*etotin; ]
+            ELSEIF(iqin = 1)[esrc = esrc + weight*(etotin + prm);
+                        "add 0.511 for the positron but was - till June 97"
+            ]
         ]
         "-----------------------------------------------------------------"
         ELSEIF(enflag = 4)[ ;$BEAMMODEL-SOURCE4-ENERGY; ]
@@ -2751,6 +2826,9 @@ DO ibatch = 1,$NBATCH["Break into $NBATCH batches"
     $DOSXYZ_SET_OUT_PHSP_HEADER;
   ]
 
+  " The data stored in the following section comes from the MASTER thread only.
+  " Further analysis and combination of results are carried out below in the 
+  " program.
   IF(IDAT = 0 | (IDAT = 2 & ibatch = $NBATCH) ) ["store data"
      rewind(iorstrt); "overwrite previous data"
      DO irl=1,irmax[
@@ -2806,7 +2884,10 @@ ELSEIF (IRESTART = 3)["just data analysis"
        F12.0,' hist/hr'/T3,' On  '$MACHINE' ');
 ]
 
-
+"*******************************************************************************
+" #OMP_EGS - The following output information is only relevant for the MASTER 
+"            thread. 
+"*******************************************************************************
 IF(isource = 2 | isource = 8 )[ "Full phase-space source"
 OUTPUT61 nnread,nhist,nsrjct,nsoutside,ndbsrjct,nsmiss,
      float((NRCYCL+1)*(nnread-nsrjct-nsoutside-ndbsrjct)-nsmiss)/float(nnread),
@@ -2890,123 +2971,157 @@ ELSEIF(isource =4 )[ ;$BEAMMODEL-SOURCE4-SUMMARY; ]
 "Step 9 Analyse and output results                        ""toc:
 "=================================
 
-etot=0.;
+"*******************************************************************************
+" #OMP_EGS - Each thread carries out analysis of its own results. Any output to 
+"            console/list file will be done only for MASTER thread.
+"*******************************************************************************
+$OMP{0,PARALLEL DEFAULT(SHARED) PRIVATE(amass,etot,temp,irl,i,j,k)};
+$OMP{*,PRIVATE(parname)};
+    etot=0.;
 
-"Correlated sampling no longer supported with history by history statistics"
-"$Corr_Dump;mah 09/05/95 To store DOSEIS to file. ";
+    "Correlated sampling no longer supported with history by history statistics"
+    "$Corr_Dump;mah 09/05/95 To store DOSEIS to file. ";
 
-"sum energy deposition in phantom"
-"Note that dose is still really just an energy deposition"
-DO irl=1,irmax-1[etot=etot+endep(irl);]
+    "sum energy deposition in phantom"
+    "Note that dose is still really just an energy deposition"
+    DO irl=1,irmax-1[etot=etot+endep(irl);]
 
-IF (enflag = 0)[
-   "Known Bug - this doesn't handle positrons correctly yet"
-   OUTPUT61 etot/(dble(IHSTRY+ncaseold)*ein);
-   (/' Fraction of incident energy deposited in the phantom =',f12.4/);
-]
-ELSEIF((enflag=1)|(enflag=2)|(enflag=3)|(enflag=4))[ ;OUTPUT61 etot/esrc;
-   (/' Fraction of incident energy deposited in the phantom =',f12.4/);
-   IF ((enflag > 1))[ OUTPUT61 endep(irl)/esrc;
-   (/' Fraction of incident energy deposited in the region surrounding'/
-     ' the phantom when incident particles go through it   =',f12.4/);
-   ]
-]
-
-"Calculate incident fluence
-IF(isource = 0 | isource = 1 | isource = 3 | isource = 7)[
-   temp2=dble(IHSTRY+ncaseold+nsmiss+nmissm);
-   IF(beamarea = 0)[ ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm);]
-   ELSE[             ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm)/beamarea;]
-]
-ELSEIF(isource = 2 | isource = 8 )[
-   ainflu=dble(IHSTRY+ncaseold+nsmiss+
+    " Output of results at this point is only done for MASTER thread. Therefore,
+    " the following information is valid only for this thread.
+    $OMP{0,MASTER};
+        IF (enflag = 0)[
+            "Known Bug - this doesn't handle positrons correctly yet"
+            OUTPUT61 etot/(dble(IHSTRY+ncaseold)*ein);
+            (/' Fraction of incident energy deposited in the phantom =',f12.4/);
+        ]
+        ELSEIF((enflag=1)|(enflag=2)|(enflag=3)|(enflag=4))[;OUTPUT61 etot/esrc;
+            (/' Fraction of incident energy deposited in the phantom =',f12.4/);
+            IF ((enflag > 1))[ OUTPUT61 endep(irl)/esrc;
+                (/' Fraction of incident energy deposited in the region'/
+                ' surrounding the phantom when incident particles go'/
+                ' through it   =',f12.4/);
+            ]
+        ]
+    $OMP{0,END MASTER};
+    
+    "Calculate incident fluence
+    IF(isource = 0 | isource = 1 | isource = 3 | isource = 7)[
+        temp2=dble(IHSTRY+ncaseold+nsmiss+nmissm);
+        IF(beamarea = 0)[
+            ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm);
+        ]
+        ELSE[
+            ainflu=dble(IHSTRY+ncaseold+nsmiss+nmissm)/beamarea;
+        ]
+    ]
+    ELSEIF(isource = 2 | isource = 8 )[
+        ainflu=dble(IHSTRY+ncaseold+nsmiss+
                 (NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct))/float(nshist)*NINCSRC;
-   "IHSTRY+ncaseold is the number of particles"
-   "actually simulated from the phase space source"
-   "We then add nsmiss+(NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct), an estimate of"
-   "the total number of particles rejected based on charge, LATCH, W,"
-   "being a multiple passer, being outside BEAM_SIZE, falling beyond the"
-   "directional bremsstrahlung splitting (DBS) radius, or missing the geometry"
-   "The result is an estimate of the total number of particles read from the"
-   "phase space source.  This number is then divided by nshist, the total"
-   "number of particles in the phase space source, to give the number"
-   "of times that the phase space source has been used (this could be <1)"
-   "Finally, we multiply this by NINCSRC, the number of particles"
-   "incident from the original (non-phase space) source that were used to"
-   "obtain the phase space source.  The result is an estimate of the number"
-   "of particles incident from the original (non-phase space) source for"
-   "this simulation."
-   temp2=ainflu;
-]
-ELSEIF(isource=4)[
-    ainflu=dble(IHSTRY+ncaseold-nsmiss);
+        "IHSTRY+ncaseold is the number of particles"
+        "actually simulated from the phase space source"
+        "We then add nsmiss+(NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct), an estimate 
+        "of"
+        "the total number of particles rejected based on charge, LATCH, W,"
+        "being a multiple passer, being outside BEAM_SIZE, falling beyond the"
+        "directional bremsstrahlung splitting (DBS) radius, or missing the 
+        "geometry"
+        "The result is an estimate of the total number of particles read from 
+        "the"
+        "phase space source.  This number is then divided by nshist, the total"
+        "number of particles in the phase space source, to give the number"
+        "of times that the phase space source has been used (this could be <1)"
+        "Finally, we multiply this by NINCSRC, the number of particles"
+        "incident from the original (non-phase space) source that were used to"
+        "obtain the phase space source.  The result is an estimate of the 
+        "number"
+        "of particles incident from the original (non-phase space) source for"
+        "this simulation."
+        temp2=ainflu;
+    ]
+    ELSEIF(isource=4)[
+        ainflu=dble(IHSTRY+ncaseold-nsmiss);
+        temp2=ainflu;
+    ]
+    ELSEIF(isource=6)[
+        ainflu=dble(IHSTRY+ncaseold);
+        temp2=ainflu;
+    ]
+    ELSEIF(isource=9|isource=10|isource=21)[
+                    "full BEAM simulation, here we can just read nhist"
+                    "the no. of primary histories"
+        ainflu=dble(nhist);
+        temp2=ainflu;
+    ]
+    ELSEIF(isource=20)["full VCU simulation"
+
+    "ainflu=dble(IHSTRY+ncaseold+nsmiss+nsblocked+"
+                "(NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct))/float(nshist)*NINCSRC;"
+
+    ainflu = dble((NRCYCL+1)*(nnread))/dble(nshist)*NINCSRC;
+
     temp2=ainflu;
-]
-ELSEIF(isource=6)[
-    ainflu=dble(IHSTRY+ncaseold);
-    temp2=ainflu;
-]
-ELSEIF(isource=9|isource=10|isource=21)[
-                  "full BEAM simulation, here we can just read nhist"
-                  "the no. of primary histories"
-    ainflu=dble(nhist);
-    temp2=ainflu;
-]
-ELSEIF(isource=20)["full VCU simulation"
+    ]
 
-   "ainflu=dble(IHSTRY+ncaseold+nsmiss+nsblocked+"
-            "(NRCYCL+1)*(nsrjct+nsoutside+ndbsrjct))/float(nshist)*NINCSRC;"
+    $OMP{0,MASTER};
+        OUTPUT61 nestep,dble(nestep)/ainflu,count_pII_steps/dble(nestep);
+        (/' Number of charged particle steps simulated,   N_step       =',I15/
+        ' Number of charged particle steps/incident fluence          =',1PE15.5/
+    ' No. of PRESTA-II steps/total no. of charged particle steps =',0PF15.5/);
 
-   ainflu = dble((NRCYCL+1)*(nnread))/dble(nshist)*NINCSRC;
+        "Now calculate dose uncertainties"
+        IF(dose_stat=1)[
+        OUTPUT61;(//' ***WARNING***'/
+            ' Could not read no. of primary (non-phsp) histories from ph-sp'/
+            ' file. Dose analyzed assuming each particle read from the ph-sp'/
+            ' file is an independent history.  May result in an underestimate'/
+            ' of the uncertainty.'//);
+        ]
+        ELSEIF(OUTCNT>0)[
+        OUTPUT61;(//' ***WARNING***'/
+            ' The ph-sp source was restarted at least once.  This may lead'/
+            ' to an underestimate of uncertainty, especially if restarted'/
+            ' many times.  If restarted many times, try re-running with'/
+            ' NRCYCL recalculated as described at top of dosxyznrc.mortran'//);
+        ]
+    $OMP{0,END MASTER};
 
-   temp2=ainflu;
-]
-OUTPUT61 nestep,dble(nestep)/ainflu,count_pII_steps/dble(nestep);
- (/' Number of charged particle steps simulated,   N_step       =',I15/
-   ' Number of charged particle steps/incident fluence          =',1PE15.5/
-   ' No. of PRESTA-II steps/total no. of charged particle steps =',0PF15.5/);
-
-"Now calculate dose uncertainties"
-IF(dose_stat=1)[
-   OUTPUT61;(//' ***WARNING***'/
-       ' Could not read no. of primary (non-phsp) histories from ph-sp file.'/
-       ' Dose analyzed assuming each particle read from the ph-sp'/
-       ' file is an independent history.  May result in an underestimate'/
-       ' of the uncertainty.'//);
-]
-ELSEIF(OUTCNT>0)[
-   OUTPUT61;(//' ***WARNING***'/
-       ' The ph-sp source was restarted at least once.  This may lead'/
-       ' to an underestimate of uncertainty, especially if restarted'/
-       ' many times.  If restarted many times, try re-running with'/
-       ' NRCYCL recalculated as described at top of dosxyznrc.mortran'//);
-]
-DO irl = 1,irmax-1 [
-   IF(IDAT=1)[
-     "add unscored portion of endep_tmp(irl) first"
-     endep(irl)=endep(irl)+endep_tmp(irl);
-     endep2(irl)=endep2(irl)+endep_tmp(irl)*endep_tmp(irl);
-   ]
-   "divide by rhor so that we do not have to store rhor in the .pardose"
-   "file during parallel runs."
-   endep(irl)=endep(irl)/rhor(irl+1);
-   endep2(irl)=endep2(irl)/(rhor(irl+1)*rhor(irl+1));
-]
+    DO irl = 1,irmax-1 [
+        IF(IDAT=1)[
+            "add unscored portion of endep_tmp(irl) first"
+            endep(irl)=endep(irl)+endep_tmp(irl);
+            endep2(irl)=endep2(irl)+endep_tmp(irl)*endep_tmp(irl);
+        ]
+        "divide by rhor so that we do not have to store rhor in the .pardose"
+        "file during parallel runs."
+        endep(irl)=endep(irl)/rhor(irl+1);
+        endep2(irl)=endep2(irl)/(rhor(irl+1)*rhor(irl+1));
+    ]
 
 #ifdef HAVE_C_COMPILER;
 
+"*******************************************************************************
+" #OMP_EGS - We use the existing handling of parallel runs in order to combine
+"            the obtained results. The condition omp_size>1 added indicates a 
+"            parallel execution using OpenMP.
+"*******************************************************************************
 "store endep and endep2 before analysis for a parallel run"
-IF(IPARALLEL>1 | n_parallel>0)[
+IF(IPARALLEL>1 | n_parallel>0 | omp_size>1)[
 
    "now determine the full file name with the proper _w addition"
    "this file is written directly into the user code directory"
    parname=$cstring(egs_home) // $cstring(user_code) // $file_sep //
              $cstring(work_dir) // $cstring(output_file);
-   IF(n_parallel>0)[
+
+   IF(n_parallel>0 | omp_size>1)[
       "have to add _w[iparallel] if not controlled by script"
       parname=$cstring(parname)//'_w';
-      call egs_itostring(parname,i_parallel,.false.);
+    $IFDEF(#,_OPENMP);
+        call egs_itostring(parname,omp_iam+1,.false.);
+    $ELSE(#);
+        call egs_itostring(parname,i_parallel,.false.);
+    $ENDIF(#);      
    ]
+
    parname=$cstring(parname)//'.pardose';
    "name must be null terminated"
    parname(lnblnk1(parname)+1:lnblnk1(parname)+1)=char(0);
@@ -3016,45 +3131,61 @@ IF(IPARALLEL>1 | n_parallel>0)[
 
 #endif;
 
+" Print RNG state for each thread"
+"$IFDEF(#,_OPENMP);
+"$OMP{0,CRITICAL};
+"OUTPUT61 omp_iam;(/' RNG state for thread ',I3,':');
+"    $SHOW-RNG-STATE(6);
+"    $SHOW-RNG-STATE(1);
+"$OMP{0,END CRITICAL};
+"$ELSE(#);
+"OUTPUT61; (/' Final RNG state :');
+"    $SHOW-RNG-STATE(6);
+"    $SHOW-RNG-STATE(1);
+"$ENDIF(#);
+
+$OMP{0,END PARALLEL};
+
 :ANALYZE-PARALLEL:;
 
-"Now analyze uncertainty and convert
-"to dose per unit incident fluence gray-cm**2
-DO i=1,IMAX [
-        DO j=1,JMAX [
-            DO k=1,KMAX [
+    "Now analyze uncertainty and convert
+    "to dose per unit incident fluence gray-cm**2
+    DO i=1,IMAX [
+            DO j=1,JMAX [
+                DO k=1,KMAX [
 
-               "first, estimate uncertainty"
-               irl= $IRD(i,j,k);
-               temp=endep(irl)/temp2;
-               endep2(irl)=endep2(irl)/temp2;
-               endep2(irl)=(endep2(irl)-temp*temp)/(temp2-1);
-               IF(endep2(irl)>0) endep2(irl)=sqrt(endep2(irl));
-               IF(endep(irl)~=0) endep2(irl)=endep2(irl)/(endep(irl)/temp2);
+                "first, estimate uncertainty"
+                irl= $IRD(i,j,k);
+                temp=endep(irl)/temp2;
+                endep2(irl)=endep2(irl)/temp2;
+                endep2(irl)=(endep2(irl)-temp*temp)/(temp2-1);
+                IF(endep2(irl)>0) endep2(irl)=sqrt(endep2(irl));
+                IF(endep(irl)~=0) endep2(irl)=endep2(irl)/(endep(irl)/temp2);
 
-               "amass used to store mass but now just stores volume"
-                amass=
-                    (xbound(i+1)-xbound(i))*
-                    (ybound(j+1)-ybound(j))*
-                    (zbound(k+1)-zbound(k));
-                IF (amass~=0.0) [
-                    endep(irl) = endep(irl)*1.602e-10/(amass*ainflu);
+                "amass used to store mass but now just stores volume"
+                    amass=
+                        (xbound(i+1)-xbound(i))*
+                        (ybound(j+1)-ybound(j))*
+                        (zbound(k+1)-zbound(k));
+                    IF (amass~=0.0) [
+                        endep(irl) = endep(irl)*1.602e-10/(amass*ainflu);
+                    ]
+                    ELSE[
+                        endep(irl) = 0.0;
+                        OUTPUT61 i,j,k;
+                    ('AMASS is zero in  I= ',I4,'J= ',I4,' K= ',I4);
+                    OUTPUT61;('So the dose has been set to zero.');
+                    ];
+                    IF(endep(irl)=0.) endep2(irl)=0.9999999;
                 ]
-                ELSE[
-                    endep(irl) = 0.0;
-                    OUTPUT61 i,j,k;
-                   ('AMASS is zero in  I= ',I4,'J= ',I4,' K= ',I4);
-                   OUTPUT61;('So the dose has been set to zero.');
-                ];
-                IF(endep(irl)=0.) endep2(irl)=0.9999999;
             ]
-        ]
-]
+    ]
+
 "       Output results
 "       ==============
 
 REPLACE {$PRINT-HEADER;} WITH {;
-  IF((n_parallel>0 & is_finished)|IRESTART=4 )[
+  IF(((n_parallel>0 | omp_size>1) & is_finished)|IRESTART=4 )[
                        "fluence meaningless in final analysis"
     OUTPUT1 title;
     (//,'1',80a1 //
@@ -3306,9 +3437,10 @@ ELSE[
 ]
 
 "if IPHANT is set to 1, write out a .egsphant file"
-IF(IPHANT=1 & (n_parallel=0|(n_parallel>0 & is_finished)))[
-   call write_phantom(ioutphant,nmed,media,estepm,IMAX,JMAX,KMAX,xbound,ybound,
-                        zbound,rhor,med);
+IF(IPHANT=1 & ((n_parallel=0 & omp_size=1)
+    | ((n_parallel>0|omp_size>1) & is_finished)))[
+    call write_phantom(ioutphant,nmed,media,estepm,IMAX,JMAX,KMAX,xbound,
+        ybound,zbound,rhor,med);
 ]
 
 "zero doses in air in the .3ddose file if requested"
@@ -3349,11 +3481,12 @@ IF(zerodose=1 & zerocount >0)[
 
 "subroutine call replaces a portion of code to write to .3ddose file"
 "do not call if we are doing a parallel run"
-IF((IPARALLEL <= 1 & n_parallel = 0) | (n_parallel > 0 & is_finished))[
-   call write_dose(IMAX,JMAX,KMAX,xbound,ybound,zbound,endep,endep2,idd,MAX20);
+IF((IPARALLEL <= 1 & (n_parallel = 0 & omp_size = 1)) 
+    | ((n_parallel > 0 | omp_size > 1) & is_finished) )[
+    call write_dose(IMAX,JMAX,KMAX,xbound,ybound,zbound,endep,endep2,
+        idd,MAX20);
 ]
 ELSE [OUTPUT61;(//' No dose outputs since this is a parallel run '//);]
-
 
 $SET_ELAPSED_CPUTIME(cput2);
 timcpu=$CONVERSION_TO_SECONDS*(cput2-cput0);
@@ -3362,7 +3495,7 @@ OUTPUT61 timcpu,timcpu/3600.;
 IF(IRESTART=4)[
     OUTPUT61;(/' CPU time is for combining .pardose files only.');
 ]
-ELSEIF(n_parallel>0 & is_finished)[
+ELSEIF((n_parallel>0 | omp_size>1) & is_finished)[
     OUTPUT61;(/' CPU time is for last run to finish only.');
 ]
 CALL DATETIME(1);
@@ -3374,7 +3507,22 @@ call egs_finish;     " Finish the simulation "
 
 #ifdef HAVE_C_COMPILER;
 ;
-IF( n_parallel > 0 & ~is_finished ) [
+IF( (n_parallel > 0 | omp_size > 1) & ~is_finished) [
+$IFDEF(#,_OPENMP);
+    " First we need to open again the list file. The append option was added" 
+    " in order to not erase the current information in the file."
+    call egs_open_units(.false.);
+    is_finished = .true.;
+    
+    " Now combine the results of all the threads saved on .pardose files."
+    call egs_combine_runs(combine_results,'.pardose');
+    ainflu=temp2; "need to define this because it is used to normalize dose"
+    IF((isource = 0 | isource = 1 | isource = 3 | isource = 7) &
+        beamarea>0.) ainflu=ainflu/beamarea;
+    
+    " Finally, process the combined data."
+    goto :ANALYZE-PARALLEL:;
+$ELSE(#);
     call egs_pjob_finish(n_job);
     IF( n_job = 0 ) [
         is_finished = .true.;
@@ -3384,6 +3532,7 @@ IF( n_parallel > 0 & ~is_finished ) [
            beamarea>0.) ainflu=ainflu/beamarea;
         goto :ANALYZE-PARALLEL:;
     ]
+$ENDIF(#);
 ]
 #endif;
 
@@ -3395,8 +3544,13 @@ IF((isource=20 | isource = 21) & MLCflag=1) [call finish_vcusource;]
 $CALL_EXIT(0);
 
 stop 'Normal completion in main routine';
-end;
+
+"*******************************************************************************
+" #OMP_EGS - At this point the main routine ends. 
+"*******************************************************************************
+END PROGRAM dosxyznrc;
 "  end of main routine in dosxyznrc.mortran"
+
 %E    "dosxyznrc.mortran - start of subroutine ausgab"
 "*******************************************************************************
 "
@@ -4601,6 +4755,7 @@ end;
 ;
 
 /*
+
 C**************************************************************************
 C*                                                                        *
 C*                   Function ibsearch4(a, nsh, b)                         *
@@ -4681,3 +4836,4 @@ DO medium = 1,nmed [
 ]
 
 return; end;
+

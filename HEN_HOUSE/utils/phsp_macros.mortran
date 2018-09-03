@@ -25,6 +25,9 @@
 "                                                                             "
 "  Contributors:    Iwan Kawrakow                                             "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  The contributors named above are only those who could be identified from   "
@@ -77,6 +80,10 @@
 "#############################################################################"
 
 
+"*******************************************************************************
+" #OMP_EGS - Global data inside the /RWPHSP/ COMMON block is made private to 
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 ;
 REPLACE {;COMIN/RWPHSP/;} WITH {
 "RWPHSP must be included in the common block of main in any code that uses"
@@ -153,6 +160,7 @@ REPLACE {;COMIN/RWPHSP/;} WITH {
    dosxyz2beam_izscore, "set to 1 if Z scored for each particle (IAEA only)"
    MODE_RW;   "mode of phsp file (0 with ZLAST, 2 without), writing only"
 
+$OMP{0,THREADPRIVATE(/RWPHSP/)};
 CHARACTER*32000 STRING_TEMP_ZLAST_OUT($MAX_SC_PLANES);
 CHARACTER*28000 STRING_TEMP_OUT($MAX_SC_PLANES);
 $LONG_INT IHSTRY_PHSP($MAX_SC_PLANES),iaea_dummy_long,NHSTRY_DOS;

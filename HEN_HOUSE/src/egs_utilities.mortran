@@ -29,6 +29,9 @@
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 " Iwan Kawrakow, 2004:                                                        "
@@ -740,7 +743,11 @@ IF( ex ) [
             ]
             file_extensions(n_files) = $cstring(arg);
             tmp1_string = $cstring(tmp_string) // $cstring(arg);
-            open(u,file=tmp1_string,status='unknown');
+"*******************************************************************************
+" #OMP_EGS - Set access attribute to append in order to avoid erasing previous
+"            information on .egslst file.
+"*******************************************************************************
+            open(u,file=tmp1_string,status='unknown',access='append');
             $egs_debug('(a,a,a,i3)','connected ',$cstring(tmp1_string),
               ' to unit ',u);
         ]

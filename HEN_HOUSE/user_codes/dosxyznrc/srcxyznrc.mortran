@@ -33,6 +33,9 @@
 "                   Frederic Tessier                                          "
 "                   Marc-Andre Renaud                                         "
 "                                                                             "
+"  OpenMP support:  Edgardo Doerner                                           "
+"                   Paola Caprile                                             "
+"                                                                             "
 "#############################################################################"
 "                                                                             "
 "  The contributors named above are only those who could be identified from   "
@@ -124,12 +127,12 @@
 "Record SC1-1  Parallel beam incident from any direction with rectangular
 "            collimation
 "
-"       iqin,isource,xiso,yiso,ziso,theta,phi,xcol,ycol,phicol
+"       iqin,isource,xiso,yiso,ziso,thet,phi,xcol,ycol,phicol
 "
 "               iqin        Charge of the incident beam (defaults to 0)
 "               isource     = 1
 "               x|y|z|iso   x|y|z|-coordinates of the isocenter
-"               theta       angle between the +z direction and a line joining
+"               thet       angle between the +z direction and a line joining
 "                           the center of the beam to the isocenter
 "               phi         angle  between the +x direction and the
 "                           projection of the line joining the center of the
@@ -147,7 +150,7 @@
 "
 "Record SC1-2  Full phase-space source file, particles incident on front face
 "
-"       iqin,isource,xiso,yiso,ziso,theta,phi,dsource,phicol,i_dbs,r_dbs,
+"       iqin,isource,xiso,yiso,ziso,thet,phi,dsource,phicol,i_dbs,r_dbs,
 "                                         ssd_dbs,z_dbs,e_split
 "
 "               iqin(iqphsp)= 0 only photons from ph-sp file will be used
@@ -157,7 +160,7 @@
 "                           internally renamed as iqphsp
 "               isource     =  2
 "               x|y|z|iso   x|y|z|-coordinates of the isocenter
-"               theta       angle between the +z direction and a line joining
+"               thet       angle between the +z direction and a line joining
 "                           the origin in the phase space plane to the
 "                           isocenter.  theta=180 degrees for a beam down
 "                           from the top.
@@ -233,7 +236,7 @@
 "                           = 2 all the particles will be simulated
 "               isource     =  4
 "               x|y|z|iso   x|y|z|-coordinates of the isocenter
-"               theta       angle between the +z direction and a line joining
+"               thet       angle between the +z direction and a line joining
 "                           the origin in the phase space plane to the isocenter
 "               phi         angle  between the +x direction and the
 "                           projection of the line joining the origin in the
@@ -375,7 +378,7 @@
 "  your EGS_HOME/bin/config directory.  See the DOSXYZnrc Manual for more
 "  details.
 "
-"       iqin,isource,xiso,yiso,ziso,theta,phi,dsource,phicol,i_dbs,e_split
+"       iqin,isource,xiso,yiso,ziso,thet,phi,dsource,phicol,i_dbs,e_split
 "
 "               iqin(iqinc)= 0 only photons from BEAM simulation will be used
 "                           = 1 only positrons will be used
@@ -384,7 +387,7 @@
 "                           internally renamed as iqinc
 "               isource     = 9
 "               x|y|z|iso   x|y|z|-coordinates of the isocenter.
-"               theta       angle between the +z direction and a vector
+"               thet       angle between the +z direction and a vector
 "                           joining the isocentre to the origin of the source
 "                           plane (the plane where the particles are sampled
 "                           from the BEAM simulation--which is the
@@ -556,9 +559,9 @@
 "------------------------------------------------------------------------------
 "Record SC1-7a, SC1-8a and SC1-10a (required for sources 7, 8 and 10 only)
 "        if nang>0:
-"         (theta(i),phi(i),pang(i),i=1,nang)
+"         (thet(i),phi(i),pang(i),i=1,nang)
 "
-"               theta(i)    incident theta i
+"               thet(i)    incident theta i
 "               phi(i)      incident phi i.
 "               pang(i)     probability of a particle being incident at
 "                           theta(i)-phi(i) (probabilities are automatically
@@ -583,10 +586,10 @@
 "-------------------------------------------------------------------------------
 "Record SC1-20a and SC1-21a (required for sources 20 and 21)
 "
-"  (|x|y|ziso(i),theta(i),phi(i),phicol(i),dsource(i),muIndex(i),i=1,nset)
+"  (|x|y|ziso(i),thet(i),phi(i),phicol(i),dsource(i),muIndex(i),i=1,nset)
 "
 "           |x|y|ziso(i)    x,y,z of isocentre for control point i
-"               theta(i)    incident theta for control point i
+"               thet(i)    incident theta for control point i
 "               phi(i)      incident phi for control point i
 "               phicol(i)   incident phicol for control point i
 "               dsource(i)  distance from isocentre to origin of BEAM
@@ -1041,9 +1044,9 @@ IF(isource = 0) [ "Frontal parallel beam directed along z-axis"
 ELSEIF(isource = 1) [ "Parallel beam directed in any direction"
 "------------------------------------------------------------------------"
     xiso   = temp(1);     yiso   = temp(2);     ziso   = temp(3);
-    theta(1)  = temp(4);     phi(1)  = temp(5);     xcol   = temp(6);
+    thet(1)  = temp(4);     phi(1)  = temp(5);     xcol   = temp(6);
     ycol   = temp(7);     phicol = temp(8);
-    OUTPUT iqin,xiso,yiso,ziso,theta(1),phi(1),xcol,ycol,phicol;
+    OUTPUT iqin,xiso,yiso,ziso,thet(1),phi(1),xcol,ycol,phicol;
     ( / ' Parallel beam incident from an arbitrary direction'/
         ' Electric charge of the source:'       ,t40,i12     /
         ' x-coordinate of the isocenter:'       ,t40,f10.4   /
@@ -1059,11 +1062,11 @@ ELSEIF(isource = 1) [ "Parallel beam directed in any direction"
 ELSEIF(isource = 2)[ "Full phase space for each particle"
 "------------------------------------------------------------------------"
     xiso    = temp(1);     yiso    = temp(2);     ziso    = temp(3);
-    theta(1)   = temp(4);     phi(1)     = temp(5);     dsource = temp(6);
+    thet(1)   = temp(4);     phi(1)     = temp(5);     dsource = temp(6);
     phicol  = temp(7);     iqphsp=iqin;
     i_dbs=temp(8); r_dbs=temp(9); ssd_dbs=temp(10); z_dbs=temp(11);
     e_split=temp(12);
-    OUTPUT xiso,yiso,ziso,theta(1),phi(1),dsource,phicol,e_split;
+    OUTPUT xiso,yiso,ziso,thet(1),phi(1),dsource,phicol,e_split;
     ( / ' Full phase space from an arbitrary direction'/
         ' x-coordinate of the isocenter:'    ,t55,f10.4/
         ' y-coordinate of the isocenter:'    ,t55,f10.4/
@@ -1167,8 +1170,8 @@ ELSEIF(isource = 7) [ "Parallel at multiple, user-selected angles"
       DO I=1,nang["get each theta-phi and prob."
           OUTPUT I;(' Incident theta-phi pair ',I4,':'/
                     '    theta (deg.), phi (deg.), probability:',$);
-          INPUT theta(I),phi(I),pang(I); (3F15.0);
-          OUTPUT theta(I),phi(I),pang(I); (3F10.4);
+          INPUT thet(I),phi(I),pang(I); (3F15.0);
+          OUTPUT thet(I),phi(I),pang(I); (3F10.4);
           temp(1)=temp(1)+pang(I);
       ]
       DO I=1,nang["normalize probabilities + create cumulative prob distn"
@@ -1227,10 +1230,10 @@ ELSEIF(isource = 7) [ "Parallel at multiple, user-selected angles"
            ]
            IF(ivary(I)=1)["fixed phi"
              phi(K)=angfixed(I);
-             theta(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
+             thet(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            ELSE["fixed theta"
-             theta(K)=angfixed(I);
+             thet(K)=angfixed(I);
              phi(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            pang(K)=pgang(I)/ngang(I);
@@ -1295,8 +1298,8 @@ ELSEIF(isource = 8)[ "Full phase space incident from multiple angles"
       DO I=1,nang["get each theta-phi and prob."
           OUTPUT I;(' Incident theta-phi pair ',I4,':'/
                     '    theta (deg.), phi (deg.), probability:',$);
-          INPUT theta(I),phi(I),pang(I); (3F15.0);
-          OUTPUT theta(I),phi(I),pang(I); (3F10.4);
+          INPUT thet(I),phi(I),pang(I); (3F15.0);
+          OUTPUT thet(I),phi(I),pang(I); (3F10.4);
           temp(1)=temp(1)+pang(I);
       ]
       DO I=1,nang["normalize probabilities + create cumulative prob distn"
@@ -1375,10 +1378,10 @@ ELSEIF(isource = 8)[ "Full phase space incident from multiple angles"
            ]
            IF(ivary(I)=1)["fixed phi"
              phi(K)=angfixed(I);
-             theta(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
+             thet(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            ELSE["fixed theta"
-             theta(K)=angfixed(I);
+             thet(K)=angfixed(I);
              phi(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            pang(K)=pgang(I)/ngang(I);
@@ -1395,10 +1398,10 @@ ELSEIF(isource = 8)[ "Full phase space incident from multiple angles"
 ELSEIF(isource = 9)[ "BEAM simulation of treatment head"
 "------------------------------------------------------------------------"
     xiso    = temp(1);     yiso    = temp(2);     ziso    = temp(3);
-    theta(1)   = temp(4);     phi(1)     = temp(5);     dsource = temp(6);
+    thet(1)   = temp(4);     phi(1)     = temp(5);     dsource = temp(6);
     phicol  = temp(7);     iqinc=iqin;
     i_dbs=temp(8); e_split=temp(9);
-    OUTPUT xiso,yiso,ziso,theta(1),phi(1),dsource,phicol,e_split;
+    OUTPUT xiso,yiso,ziso,thet(1),phi(1),dsource,phicol,e_split;
     ( / ' BEAM simulation of treatment head incident from any direction'/
         ' x-coordinate of the isocenter:'    ,t55,f10.4/
         ' y-coordinate of the isocenter:'    ,t55,f10.4/
@@ -1476,8 +1479,8 @@ ELSEIF(isource = 10)[ "BEAM simulation source from multiple angles"
       DO I=1,nang["get each theta-phi and prob."
           OUTPUT I;(' Incident theta-phi pair ',I4,':'/
                     '    theta (deg.), phi (deg.), probability:',$);
-          INPUT theta(I),phi(I),pang(I); (3F15.0);
-          OUTPUT theta(I),phi(I),pang(I); (3F10.4);
+          INPUT thet(I),phi(I),pang(I); (3F15.0);
+          OUTPUT thet(I),phi(I),pang(I); (3F10.4);
           temp(1)=temp(1)+pang(I);
       ]
       DO I=1,nang["normalize probabilities + create cumulative prob distn"
@@ -1526,10 +1529,10 @@ ELSEIF(isource = 10)[ "BEAM simulation source from multiple angles"
            ]
            IF(ivary(I)=1)["fixed phi"
              phi(K)=angfixed(I);
-             theta(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
+             thet(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            ELSE["fixed theta"
-             theta(K)=angfixed(I);
+             thet(K)=angfixed(I);
              phi(K)=angmin(I)+(J-1)*(angmax(I)-angmin(I))/(ngang(I)-1);
            ]
            pang(K)=pgang(I)/ngang(I);
@@ -2757,7 +2760,7 @@ IF(isource >3 & isource <7)[   dsource=-dsource; ]
 IF(isource ~= 20 & isource ~= 21)["four 20 and 21 the matrices are calculated"
 "on the fly -per particle"
 "Collimator/source rotation sine's and cosine's needed locally
-costheta = cos(theta(1)*3.141593/180.); sintheta = sin(theta(1)*3.141593/180.);
+costheta = cos(thet(1)*3.141593/180.); sintheta = sin(thet(1)*3.141593/180.);
 coscol   = cos(phicol*3.141593/180.); sincol   = sin(phicol*3.141593/180.);
 cosphi   = cos(phi(1)*3.141593/180.); sinphi   = sin(phi(1)*3.141593/180.);
 
@@ -2775,8 +2778,8 @@ r_33(1) = -costheta                              ;
 IF(isource=7 | isource=8 | isource=10)[
         "calculate the rest of the rotation matrices"
   DO I=2,numang[
-    costheta = cos(theta(I)*3.141593/180.);
-    sintheta = sin(theta(I)*3.141593/180.);
+    costheta = cos(thet(I)*3.141593/180.);
+    sintheta = sin(thet(I)*3.141593/180.);
     cosphi = cos(phi(I)*3.141593/180.);
     sinphi= sin(phi(I)*3.141593/180.);
     r_11(I) =  costheta*cosphi*coscol + sinphi*sincol;
@@ -2935,7 +2938,7 @@ IF(isource = 0)[
        T25,' Angle relative to -z:',t57,f10.4,' degrees'        /);
 ]
 ELSEIF(isource = 1)[
-    OUTPUT61 iqin,xiso,yiso,ziso,theta(1),phi(1),xcol,ycol,phicol;
+    OUTPUT61 iqin,xiso,yiso,ziso,thet(1),phi(1),xcol,ycol,phicol;
     ( t15,' Parallel beam incident from an arbitrary direction'   / /
         t20,' Electric charge of the source:'  ,t62,i12             /
         t20,' x-coordinate of the isocenter,'  ,t62,f10.4,' cm'     /
@@ -2948,7 +2951,7 @@ ELSEIF(isource = 1)[
         t20,' Collimator rotation angle,'      ,t62,f10.4,' degrees'/);
 ]
 ELSEIF(isource = 2)[
-   OUTPUT61 xiso,yiso,ziso,theta(1),phi(1),dsource,phicol,nshist;
+   OUTPUT61 xiso,yiso,ziso,thet(1),phi(1),dsource,phicol,nshist;
    ( t15,' Full phase space input for each incident particle'      //
        t10,' x-coordinate of the isocenter,'    ,t62,f10.4,' cm'     /
        t10,' y-coordinate of the isocenter,'    ,t62,f10.4,' cm'     /
@@ -3027,10 +3030,10 @@ ELSEIF(isource = 7)[
         t20,'    pair        (deg.)       (deg.)      probability');
     DO I=1,nang[
       IF(I=1)[
-         OUTPUT61 I,theta(I),phi(I),pang(I); (t20,i7,f16.4,f13.4,f15.4);
+         OUTPUT61 I,thet(I),phi(I),pang(I); (t20,i7,f16.4,f13.4,f15.4);
       ]
       ELSE[
-         OUTPUT61 I,theta(I),phi(I),pang(I)-pang(I-1);
+         OUTPUT61 I,thet(I),phi(I),pang(I)-pang(I-1);
                   (t20,i7,f16.4,f13.4,f15.4);
       ]
     ]
@@ -3079,10 +3082,10 @@ ELSEIF(isource = 8)[
         t10,'    pair        (deg.)       (deg.)      probability');
     DO I=1,nang[
       IF(I=1)[
-         OUTPUT61 I,theta(I),phi(I),pang(I); (t10,i7,f16.4,f13.4,f15.4);
+         OUTPUT61 I,thet(I),phi(I),pang(I); (t10,i7,f16.4,f13.4,f15.4);
       ]
       ELSE[
-         OUTPUT61 I,theta(I),phi(I),pang(I)-pang(I-1);
+         OUTPUT61 I,thet(I),phi(I),pang(I)-pang(I-1);
                   (t10,i7,f16.4,f13.4,f15.4);
       ]
     ]
@@ -3147,7 +3150,7 @@ ELSEIF(isource = 8)[
   ]
 ]
 ELSEIF(isource=9)[
-   OUTPUT61 xiso,yiso,ziso,theta(1),phi(1),dsource,phicol,
+   OUTPUT61 xiso,yiso,ziso,thet(1),phi(1),dsource,phicol,
      $cstring(the_beam_code),$cstring(the_input_file),
      $cstring(the_pegs_file);
    ( t15,' BEAM treatment head simulation used as source:'      //
@@ -3198,10 +3201,10 @@ ELSEIF(isource=10)[
         t10,'    pair        (deg.)       (deg.)      probability');
      DO I=1,nang[
       IF(I=1)[
-         OUTPUT61 I,theta(I),phi(I),pang(I); (t10,i7,f16.4,f13.4,f15.4);
+         OUTPUT61 I,thet(I),phi(I),pang(I); (t10,i7,f16.4,f13.4,f15.4);
       ]
       ELSE[
-         OUTPUT61 I,theta(I),phi(I),pang(I)-pang(I-1);
+         OUTPUT61 I,thet(I),phi(I),pang(I)-pang(I-1);
                   (t10,i7,f16.4,f13.4,f15.4);
       ]
      ]
@@ -3361,6 +3364,12 @@ implicit none;
 ;COMIN/ENERGYSRC,SOURCE,GEOM,RANDOM,SSMDIS,BMODEL,PHSPFILE,RWPHSP,EGS-IO,
        SCORE/;
 
+"*******************************************************************************
+" #OMP_EGS - The thread id and number of threads are needed to correctly 
+"            partition the phase space file under OpenMP execution.
+"*******************************************************************************
+;COMIN/OMP-EGS/;
+
 $REAL xsrc,ysrc,zsrc, "X,Y,Z position of incident particle (isource=2,8,9)"
       xsrcp,ysrcp,zsrcp, "transformed X,Y,Z position of incident particle"
       usrc,vsrc,wsrc, "U,V,W of incident particle (isource=2,8,9)"
@@ -3390,7 +3399,12 @@ $INTEGER ix,jy,kz,i,j,k,
          ibit;
 $LONG_INT n_hist_dum;
 
+"*******************************************************************************
+" #OMP_EGS - Global variable wsrc is made private to
+"            each thread through the THREADPRIVATE directive
+"*******************************************************************************
 save wsrc; "in case of phsp particle recycling"
+$OMP{0,THREADPRIVATE(wsrc)};
 
 zsrc = dsource;
 
@@ -3586,7 +3600,11 @@ ELSEIF(isource = 2 | isource=8)[ "Full phase space for each particle"
            ]
 
        ]
-       ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL))[
+"*******************************************************************************
+" #OMP_EGS - Now the ELSEIF condition considers the execution under OpenMP.
+"*******************************************************************************
+       ELSEIF((IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL)) | 
+          (nnphsp > INT((omp_iam+1)*nshist/omp_size)))[
            NofREPEAT = NofREPEAT + 1;
            OUTCNT=OUTCNT+1;
            OUTPUT61;
@@ -3831,7 +3849,11 @@ ELSEIF( isource = 20 ) [ "Phase Space Incident from multiple settings"
                 $IAEA_SET_PHSP_RECORD(i_unit_in,nnphsp);
            ]
       ]
-      ELSEIF(IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL))[
+"*******************************************************************************
+" #OMP_EGS - Now the ELSEIF condition considers the execution under OpenMP.
+"*******************************************************************************
+    ELSEIF((IPARALLEL>1 & PARNUM>0 & nnphsp > INT(PARNUM*nshist/IPARALLEL)) | 
+      (nnphsp > INT((omp_iam+1)*nshist/omp_size)))[
            NofREPEAT = NofREPEAT + 1;
            OUTCNT=OUTCNT+1;
            OUTPUT61;
@@ -4174,8 +4196,8 @@ ELSEIF(isource=20 | isource=21)[
    ]
 
    "calculate rotation matrix"
-   " get theta, phi, phicol x|y|ziso"
-   theta(1)=thetatemp(K-1)+(thetatemp(K)-thetatemp(K-1))*
+   " get thet, phi, phicol x|y|ziso"
+   thet(1)=thetatemp(K-1)+(thetatemp(K)-thetatemp(K-1))*
 		(frMU_indx-muIndex(K-1))/(muIndex(K)-muIndex(K-1));
    phi(1)=phitemp(K-1)+(phitemp(K)-phitemp(K-1))*
 		(frMU_indx-muIndex(K-1))/(muIndex(K)-muIndex(K-1));
@@ -4189,7 +4211,7 @@ ELSEIF(isource=20 | isource=21)[
 		(frMU_indx-muIndex(K-1))/(muIndex(K)-muIndex(K-1));
 
 "Collimator/source rotation sine's and cosine's needed locally
-costheta = cos(theta(1)*3.141593/180.); sintheta = sin(theta(1)*3.141593/180.);
+costheta = cos(thet(1)*3.141593/180.); sintheta = sin(thet(1)*3.141593/180.);
 coscol   = cos(phicol*3.141593/180.); sincol = sin(phicol*3.141593/180.);
 cosphi   = cos(phi(1)*3.141593/180.); sinphi   = sin(phi(1)*3.141593/180.);
 
