@@ -275,6 +275,25 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 #endif
     EGS_BaseGeometry *newGeom;
     if (!simGeom) {
+        // Get a list of the geometries that are directly named in the input file
+        // This is needed for the simulation geometry dropbox so that
+        // only real geometries are displayed as options (not automatically created
+        // sub-geometries)
+        EGS_Input *ij, *gDef;
+        EGS_Input gInput;
+        gInput.setContentFromFile(filename.toUtf8().constData());
+        gDef = gInput.getInputItem("geometry definition");
+        while ((ij = gDef->takeInputItem("geometry")) != 0) {
+            string gname;
+            int err = ij->getInput("name",gname);
+            if(!err) {
+                geometryNames.push_back(gname);
+            }
+        }
+        delete gDef;
+        delete ij;
+
+        // Build the geometry
         newGeom = EGS_BaseGeometry::createGeometry(&input);
         if (!newGeom) {
             QMessageBox::critical(this,"Geometry error",
@@ -358,10 +377,14 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
     rp.trackIndices.assign(6,1);
 
     gview->restartWorker();
-    setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
 
     if (!simGeom) {
+        setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,reloading);
         origSimGeom = g;
+    } else {
+        // If we have selected a different simulation geometry set the
+        // reloading flag to false so that it resets the camera properly
+        setGeometry(newGeom,user_colors,xmin,xmax,ymin,ymax,zmin,zmax,false);
     }
 
     if (allowRegionSelection) {
@@ -370,10 +393,8 @@ bool GeometryViewControl::loadInput(bool reloading, EGS_BaseGeometry *simGeom) {
 
     // Set the simulation geometry combobox
     comboBox_simGeom->clear();
-    EGS_BaseGeometry **geoms = g->getGeometries();
-    int ngeom = g->getNGeometries();
-    for (int i=0; i<ngeom; ++i) {
-        comboBox_simGeom->addItem((geoms[i]->getName() + " (" + geoms[i]->getType() + ")").c_str(), geoms[i]->getName().c_str());
+    for (unsigned int i=0; i<geometryNames.size(); ++i) {
+        comboBox_simGeom->addItem((geometryNames[i] + " (" + g->getGeometry(geometryNames[i])->getType() + ")").c_str(), geometryNames[i].c_str());
     }
     comboBox_simGeom->setCurrentIndex(comboBox_simGeom->findData(g->getName().c_str()));
 
