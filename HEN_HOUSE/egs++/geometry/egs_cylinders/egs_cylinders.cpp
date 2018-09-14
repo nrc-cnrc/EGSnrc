@@ -75,13 +75,13 @@ extern "C" {
         // select geometry
         EGS_BaseGeometry *g;
         if (type == "EGS_XCylinders") {
-            g = new EGS_CylindersX(radii.size(),r,xo,"",EGS_XProjector(""));
+            g = new EGS_CylindersX(radii.size(),r,xo,"",EGS_XProjector("EGS_XCylinders"));
         }
         else if (type == "EGS_YCylinders") {
-            g = new EGS_CylindersY(radii.size(),r,xo,"",EGS_YProjector(""));
+            g = new EGS_CylindersY(radii.size(),r,xo,"",EGS_YProjector("EGS_YCylinders"));
         }
         else if (type == "EGS_ZCylinders") {
-            g = new EGS_CylindersZ(radii.size(),r,xo,"",EGS_ZProjector(""));
+            g = new EGS_CylindersZ(radii.size(),r,xo,"",EGS_ZProjector("EGS_ZCylinders"));
         }
         else {
             vector<EGS_Float> a;

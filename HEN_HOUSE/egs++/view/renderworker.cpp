@@ -141,13 +141,13 @@ void RenderWorker::drawAxes(const RenderParameters &p) {
                 int sign = j1 > j0 ? 1 : -1;
                 deltax = sign*(float)(di) / (float)(dj);
                 deltay = sign;
-                n = abs(dj) > ny ? ny : abs(dj);
+                n = abs(dj);
             }
             else {
                 int sign = i1 > i0 ? 1 : -1;
                 deltax = sign;
                 deltay = sign*(float)(dj) / (float)(di);
-                n = abs(di) > nx ? nx : abs(di);
+                n = abs(di);
             }
             for (int t=0; t<=n; t++) {
                 i1 = (int)(i0+t*deltax);

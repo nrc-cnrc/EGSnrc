@@ -198,6 +198,7 @@ private:
     bool    allowRegionSelection,
             energyScaling;
     vector<vector<EGS_Float>> scoreArrays;
+    vector<string> geometryNames;
     EGS_BaseGeometry *origSimGeom;
 
 protected slots:
