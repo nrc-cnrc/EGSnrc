@@ -369,6 +369,7 @@ public:
     EGS_I64 getGammaSampled() const;
     EGS_I64 getICSampled() const;
     vector<double> icIntensity;
+    double icTotal, gammaIntensity;
     double getBindingEnergy(int shell) const;
     void relax(int shell,
                EGS_Float ecut, EGS_Float pcut,
@@ -378,8 +379,7 @@ public:
 protected:
     EGS_I64 numGammaSampled, numICSampled;
     double decayEnergy;
-    double transitionIntensity, gammaIntensity, multipleTransitionProb;
-    double icTotal;
+    double transitionIntensity, multipleTransitionProb;
     int q;
     LevelRecord *finalLevel;
 

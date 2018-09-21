@@ -533,6 +533,44 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
     }
 
+    // Print out a summary of the decays
+    egsInformation("EGS_Ensdf::parseEnsdf: Summary of %s emissions:\n", radionuclide.c_str());
+    egsInformation("========================\n");
+    egsInformation("Energy | Intensity per 100 emissions\n");
+    if(myBetaRecords.size()) {
+        egsInformation("Beta records:\n");
+        for (vector<BetaRecordLeaf *>::iterator beta = myBetaRecords.begin();
+                    beta != myBetaRecords.end(); beta++) {
+            egsInformation("%f %f\n", (*beta)->getFinalEnergy(), (*beta)->getBetaIntensity());
+        }
+    }
+    if(myAlphaRecords.size()) {
+        egsInformation("Alpha records:\n");
+        for (vector<AlphaRecord *>::iterator alpha = myAlphaRecords.begin();
+                    alpha != myAlphaRecords.end(); alpha++) {
+            egsInformation("%f %f\n", (*alpha)->getFinalEnergy(), (*alpha)->getAlphaIntensity());
+        }
+    }
+    if(myGammaRecords.size()) {
+        egsInformation("Gamma records (E,Igamma,Iec):\n");
+        for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                    gamma != myGammaRecords.end(); gamma++) {
+            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(), (*gamma)->gammaIntensity, (*gamma)->getTransitionIntensity() - (*gamma)->gammaIntensity);
+        }
+    }
+    if (xrayEnergies.size() > 0) {
+        egsInformation("X-Ray records:\n");
+        for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
+            egsInformation("%f %f\n", xrayEnergies[i], xrayIntensities[i]);
+        }
+    }
+    if (augerEnergies.size() > 0) {
+        egsInformation("Auger records:\n");
+        for (unsigned int i=0; i < augerEnergies.size(); ++i) {
+            egsInformation("%f %f\n", augerEnergies[i], augerIntensities[i]);
+        }
+    }
+
     // Get the total gamma transition intensity of each level
     unsigned int j = 0;
     vector<double> totalLevelIntensity;
