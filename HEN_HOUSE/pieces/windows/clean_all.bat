@@ -27,44 +27,46 @@ rem #  Contributors:
 rem #
 rem ###############################################################################
 
-
-echo Checking if GUIs need to be cleaned
+set the_config=win-static
+echo Checking if GUIs and libraries need to be cleaned
 echo .
-cd ..\..\egs++\view
+
+cd ..\..\egs++
+mingw32-make realclean
+
+cd view
 echo Working in egs++\view...
-     if exist Makefile_win-static (
-         echo Running make clean
-         mingw32-make -f Makefile_win-static clean
+     if exist Makefile_%the_config% (
+          echo Running make clean
+          mingw32-make realclean
      )
-     echo Deleting Makefile_win-static
-     del Makefile_win-static*
 
 cd ..\..\gui\egs_configure
 echo Working in egs_configure...
-    if exist Makefile_win-static (
+    if exist Makefile_%the_config% (
         echo Running mingw32-make clean
-        mingw32-make -f Makefile_win-static clean
+        mingw32-make -f Makefile_%the_config% clean
     )
-    echo Deleting Makefile_win-static
-    del Makefile_win-static*
+    echo Deleting Makefile_%the_config%
+    del Makefile_%the_config%*
 
 cd ..\egs_gui
 echo Working in egs_gui...
-    if exist Makefile_win-static (
+    if exist Makefile_%the_config% (
         echo Running mingw32-make clean
-        mingw32-make -f Makefile_win-static clean
+        mingw32-make -f Makefile_%the_config% clean
     )
-    echo Deleting Makefile_win-static
-    del Makefile_win-static*
+    echo Deleting Makefile_%the_config%
+    del Makefile_%the_config%*
 
 cd ..\egs_inprz
 echo Working in egs_inprz...
-    if exist Makefile_win-static (
+    if exist Makefile_%the_config% (
         echo Running mingw32-make clean
-        mingw32-make -f Makefile_win-static clean
+        mingw32-make -f Makefile_%the_config% clean
     )
-    echo Deleting Makefile_win-static
-    del Makefile_win-static*
+    echo Deleting Makefile_%the_config%
+    del Makefile_%the_config%*
 
 cd ..\..\pieces\windows
 del *.exe
