@@ -522,7 +522,7 @@ public:
         PegsCut = 2,             //!< energy below AE or AP
         UserDiscard = 3,         //!< user requested discard
         ExtraEnergy = 4,         /*!< initiated when part of the energy is not
-                               transfered to particles (e.g. binding energy)*/
+                               transferred to particles (e.g. binding energy)*/
         AfterTransport = 5,      //!< after the step
         BeforeBrems = 6,         //!< before a bremsstrahlung interaction
         AfterBrems = 7,          //!< after a bremsstrahlung interaction
@@ -548,9 +548,13 @@ public:
         FluorescentEvent = 25,   //!< a fluorescent transition just occured
         CosterKronigEvent = 26,  //!< a Coster-Kronig transition just occured
         AugerEvent = 27,         //!< an Auger transition just occured
-        BeforePhotoNuc = 29,      //!< before a photonuclear event
-        AfterPhotoNuc = 30,       //!< after a photonuclear event
-        UnknownCall = 31         //!< last element in the enumeration
+        BeforePhotoNuc = 29,     //!< before a photonuclear event
+        AfterPhotoNuc = 30,      //!< after a photonuclear event
+        BeforeEII = 31,          //!< before electron impact ionization
+        AfterEII = 32,           //!< after electron impact ionization
+        AfterSubPhoton = 33,     //!< after sub-threshold photon energy deposition
+        AfterSubElectron = 34,   //!< after sub-threshold electron energy deposition
+        UnknownCall = 35         //!< last element in the enumeration
     };
 
     /*! \brief Turns on or off a call to the user scoring function ausgab.
