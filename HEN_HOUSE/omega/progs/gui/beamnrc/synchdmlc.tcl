@@ -60,7 +60,7 @@
 
 
 proc init_SYNCHDMLC { id } {
-    global cmval ngroups nleaf sync_file
+    global cmval ngroups nleaf sync_file nfull nhlf nqtr
 
     set cmval($id,0) {}
     set cmval($id,1) {}
@@ -107,11 +107,17 @@ proc init_SYNCHDMLC { id } {
     set cmval($id,20) {}
     set ngroups($id) 1
     set nleaf($id) {}
+    # no. of groups of FULL leaves
+    set nfull 0
+    # no. of groups of HALF leaf pairs
+    set nhlf 0
+    # no. of groups of QUARTER leaf pairs
+    set nqtr 0
     set sync_file($id) {}
 }
 
 proc read_SYNCHDMLC { fileid id } {
-    global cmval GUI_DIR ngroups cm_ident nleaf sync_file
+    global cmval GUI_DIR ngroups cm_ident nleaf sync_file nfull nhlf nqtr
 
     # read a trash line
     gets $fileid data
@@ -188,12 +194,22 @@ proc read_SYNCHDMLC { fileid id } {
 
     # read numleaf, leaf type for each group--8
     set nleaf($id) 0
+    set nfull 0
+    set nhlf 0
+    set nqtr 0
     for {set i 1} {$i<=$cmval($id,2,1)} {incr i} {
       gets $fileid data
       for {set j 0} {$j<2} {incr j} {
 	set data [get_val $data cmval $id,8,$j,$i]
       }
       incr nleaf($id) $cmval($id,8,0,$i)
+      if {$cmval($id,8,1,$i)==1} {
+         incr nfull
+      } elseif {$cmval($id,8,1,$i)==2} {
+         incr nhlf
+      } elseif {$cmval($id,8,1,$i)==3} {
+         incr nqtr
+      }
     }
 
     # read start 9
@@ -726,6 +742,7 @@ proc define_synchdmlc_leaves { id } {
                FULL, HALF TARGET, HALF ISOCENTER leaves.
             For the HD MLC introduce values for: \
               HALF TARGET , HALF ISOCENTER, QUARTER TARGET and QUARTER ISOCENTER leaves.
+            Option to leave dimensions for unused leaf types blank.
             For help, click on the \"?\"\
             button for the appropriate leaf type." -width 800 -font $helvfont
     pack $w.message -side top -anchor n -fill x -expand true
@@ -1055,7 +1072,6 @@ proc check_dimensions_synchdmlc { id } {
     #check FULL leaf dimensions
 
     set dimtext "For FULL leaf:
-Define only if necessary!!
 ---------------"
 
     set wlgprob 0
@@ -1180,9 +1196,9 @@ For HALF TARGET leaf:
     }
     if {"$cmval($id,6,5)"!="" && "$cmval($id,6,2)"!="" &&\
         "$cmval($id,6,3)"!=""} {
-        if {$cmval($id,6,5)<[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
+        if {$cmval($id,6,5)>[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,6,5) cm) must be >= groove + tip width\
+- width of bottom support rail ($cmval($id,6,5) cm) must be <= groove + tip width\
 ([expr $cmval($id,6,2)+$cmval($id,6,3)] cm)"
           incr totprob
         }
@@ -1298,7 +1314,6 @@ For HALF ISOCENTER leaf:
     set dimtext "$dimtext
 
 For QUARTER TARGET leaf:
-Define only if necessary
 ---------------"
 
     set totprob 0
@@ -1333,9 +1348,9 @@ Define only if necessary
     }
     if {"$cmval($id,30,5)"!="" && "$cmval($id,30,2)"!="" &&\
         "$cmval($id,30,3)"!=""} {
-        if {$cmval($id,30,5)<[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
+        if {$cmval($id,30,5)>[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm)must be >= groove + tip width\
+- width of bottom support rail ($cmval($id,30,5) cm)must be <= groove + tip width\
 ([expr $cmval($id,30,2)+$cmval($id,30,3)] cm)"
           incr totprob
         }
@@ -1371,7 +1386,6 @@ Define only if necessary
     set dimtext "$dimtext
 
 For QUARTER ISOCENTER leaf:
-Define only if necessary
 ---------------"
 
     set totprob 0
@@ -1993,7 +2007,7 @@ proc save_synchdmlc { id } {
 }
 
 proc save_synchdmlc_type { id } {
-    global cmval fromw tow nleaf
+    global cmval fromw tow nleaf nhlf nfull nqtr
 
     if {$tow($cmval($id,2,1))>$nleaf($id)} {
        tk_dialog .toomanytypegroups "Too many leaves" "You have specified too many\
@@ -2005,6 +2019,9 @@ proc save_synchdmlc_type { id } {
        return
     }
 
+    set nhlf 0
+    set nqtr 0
+    set nfull 0
     for {set j 1} {$j<=$cmval($id,2,1)} {incr j} {
         if {[catch {set cmval($id,8,0,$j) [expr $tow($j)-$fromw($j)+1]}]==1} {
            tk_dialog .nope "No no no" "The leaf types for group $j\
@@ -2026,6 +2043,14 @@ proc save_synchdmlc_type { id } {
           have an even number of leaves." warning 0 OK
         return
 	}
+
+        if {$cmval($id,8,1,$j)==1} {
+            incr nfull
+        } elseif {$cmval($id,8,1,$j)==2} {
+            incr nhlf
+        } elseif {$cmval($id,8,1,$j)==3} {
+            incr nqtr
+        }
     }
 
     destroy .synchdmlc$id.childt
@@ -2116,7 +2141,7 @@ proc del_synchdmlc_row_type { id } {
 }
 
 proc write_SYNCHDMLC {fileid id} {
-    global cmval cm_names cm_ident cm_type ngroups sync_file
+    global cmval cm_names cm_ident cm_type ngroups sync_file nfull nhlf nqtr
 
     puts $fileid "$cmval($id,0), RMAX"
     puts $fileid $cmval($id,1)
@@ -2129,9 +2154,10 @@ proc write_SYNCHDMLC {fileid id} {
     for {set i 0} {$i<15} {incr i} {
         set str "$str$cmval($id,5,$i), "
     }
-    if {$str!=", , , , , , , , , , , , , , , "} {
+    if {$nfull == 0 | $str!=", , , , , , , , , , , , , , , "} {
        puts $fileid $str
     } else {
+# output a guess based on leaves clearing each other
 	puts $fileid "0.4, 0.04, 0.04 0.1, 0.3, 0.1, [expr $cmval($id,3)],\
 [expr $cmval($id,3)+0.5], [expr $cmval($id,3)+2.5], [expr $cmval($id,3)+3.7],\
 [expr $cmval($id,3)+3.9], [expr $cmval($id,3)+4.3], 1.7, [expr $cmval($id,3)+5.5],\
@@ -2139,6 +2165,7 @@ proc write_SYNCHDMLC {fileid id} {
     }
 
     #TARGET HALF leaf dimensions
+    #no guess for half leaf dimensions
     set str {}
     for {set i 0} {$i<15} {incr i} {
         set str "$str$cmval($id,6,$i), "
@@ -2157,9 +2184,10 @@ proc write_SYNCHDMLC {fileid id} {
     for {set i 0} {$i<15} {incr i} {
         set str "$str$cmval($id,30,$i), "
     }
-    if {$str!=", , , , , , , , , , , , , , , "} {
+    if {$nqtr==0 | $str!=", , , , , , , , , , , , , , , "} {
        puts $fileid $str
     } else {
+#put in a guess based on leaves clearing each other
        puts $fileid "0.11, 0.037, 0.037, 0.04, 0.07, 0.08, [expr $cmval($id,3)+0.1],\
 [expr $cmval($id,3)+0.3], [expr $cmval($id,3)+0.9], [expr $cmval($id,3)+1.2],\
 1.7, [expr $cmval($id,3)+3.3], [expr $cmval($id,3)+3.5], [expr $cmval($id,3)+6],\
@@ -2171,9 +2199,10 @@ proc write_SYNCHDMLC {fileid id} {
     for {set i 0} {$i<15} {incr i} {
         set str "$str$cmval($id,31,$i), "
     }
-    if {$str!=", , , , , , , , , , , , , , , "} {
+    if {$nqtr==0 | $str!=", , , , , , , , , , , , , , , "} {
        puts $fileid $str
     } else {
+#a guess based on leaf clearance
        puts $fileid "0.11, 0.036, 0.0365, 0.032, 0.08, 0.07, [expr $cmval($id,3)+0.2],\
 [expr $cmval($id,3)+0.3], [expr $cmval($id,3)+3.7], [expr $cmval($id,3)+3.6],\
 [expr $cmval($id,3)+5], [expr $cmval($id,3)+6], 1.7, [expr $cmval($id,3)+6.5],\
@@ -2453,7 +2482,7 @@ NOTE: This is a dynamic or step-and-shoot delivery, with leaf opening\
 }
 
 proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
-    global cmval colorlist medium nmed nleaf colornum sync_file
+    global cmval colorlist medium nmed nleaf colornum sync_file nfull nhlf nqtr
 
     # assign numbers to the media, in and out
     set med(in) $colornum
@@ -2541,6 +2570,7 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
 
     #set up arrays of widths that can be seen from the top view
     #FULL leaf
+  if {$nfull > 0} {
     set w(1,1) $cmval($id,5,3)
     set w(1,2) [expr $cmval($id,5,0)+$cmval($id,5,1)-$cmval($id,5,3) \
                      -$cmval($id,5,2)]
@@ -2550,6 +2580,8 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
     set wt(1) $cmval($id,5,1)
     set wg(1) $cmval($id,5,2)
     set wtot(1) [expr $cmval($id,5,0)+$cmval($id,5,1)]
+  }
+  if {$nhlf > 0} {
     #TARGET HALF leaf
     set w(2,1) [expr $cmval($id,6,0)+$cmval($id,6,1)-$cmval($id,6,5) \
                      +$cmval($id,6,4)]
@@ -2567,6 +2599,8 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
     set wt(3) $cmval($id,7,1)
     set wg(3) $cmval($id,7,2)
     set wtot(3) [expr $cmval($id,7,0)+$cmval($id,7,1)]
+  }
+  if {$nqtr > 0} {
     #TARGET QUARTER leaf
     set w(4,1) [expr $cmval($id,30,0)+$cmval($id,30,1)-$cmval($id,30,5) \
                      +$cmval($id,30,4)]
@@ -2584,7 +2618,7 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
     set wt(5) $cmval($id,31,1)
     set wg(5) $cmval($id,31,2)
     set wtot(5) [expr $cmval($id,31,0)+$cmval($id,31,1)]
-
+  }
     if {$cmval($id,2,0)==1} {
 	# leaves parallel to x
 	set lstart $cmval($id,9)
@@ -2654,7 +2688,7 @@ proc add_SYNCHDMLC_xy {id xscale yscale xmin ymin l m parent_w} {
 }
 
 proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
-    global cmval colorlist medium nmed meds_used nleaf colornum sync_file
+    global cmval colorlist medium nmed meds_used nleaf colornum sync_file nfull nqtr nhlf
 
     # assign numbers to the media, in and out
     set med(in) $colornum
@@ -2745,6 +2779,7 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
 
     #set up an array of widths and Z positions for the leaf types
     #FULL leaf
+  if {$nfull > 0 } {
     set wtot(1) [expr $cmval($id,5,0)+$cmval($id,5,1)]
     set wt(1) $cmval($id,5,1)
     set numzf(1) 5
@@ -2759,6 +2794,8 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
     set holetop(1) $cmval($id,5,10)
     set holebot(1) $cmval($id,5,11)
     set holepos(1) $cmval($id,5,12)
+  }
+  if {$nhlf > 0} {
     #TARGET HALF leaf
     set wtot(2) [expr $cmval($id,6,0)+$cmval($id,6,1)]
     set wt(2) $cmval($id,6,1)
@@ -2789,6 +2826,8 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
     set holetop(3) $cmval($id,7,10)
     set holebot(3) $cmval($id,7,11)
     set holepos(3) $cmval($id,7,12)
+ }
+ if {$nqtr > 0} {
     #TARGET QUARTER leaf
     set wtot(4) [expr $cmval($id,30,0)+$cmval($id,30,1)]
     set wt(4) $cmval($id,30,1)
@@ -2819,7 +2858,7 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
     set holetop(5) $cmval($id,31,10)
     set holebot(5) $cmval($id,31,11)
     set holepos(5) $cmval($id,31,12)
-
+  }
     #now find out which leaves are intersected by Y=0 (if leaves || to Y)
     #or X=0 (if leaves || to X)
     #if only part of a leaf intersects 0, show the entire leaf
@@ -3051,7 +3090,7 @@ proc add_SYNCHDMLC_ends {id xscale zscale xmin zmin zmax l m parent_w} {
 
 proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
     global cmval colorlist medium nmed meds_used y z rmin rmax zf ztop nleaf
-    global colornum sync_file
+    global colornum sync_file nfull nhlf nqtr
     # assign numbers to the media, in and out
     set med(in) $colornum
     for {set j 0} {$j<=$nmed} {incr j} {
@@ -3172,6 +3211,7 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
     #tongue (at zmin)
 
     #FULL leaf
+  if {$nfull > 0 } {
     set wtot(1) [expr $cmval($id,5,1)+$cmval($id,5,0)]
     set wtongue(1) $cmval($id,5,1)
     #upper left corner of tip
@@ -3228,7 +3268,8 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
     #upper right of screw hole
     set hz(1,4) $cmval($id,5,10)
     set hy(1,4) [expr $cmval($id,5,0)+$cmval($id,5,1)]
-
+  }
+  if {$nhlf > 0} {
     #TARGET HALF leaf
     set wtot(2) [expr $cmval($id,6,1)+$cmval($id,6,0)]
     set wtongue(2) $cmval($id,6,1)
@@ -3345,7 +3386,8 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
     #upper right of screw hole
     set hz(3,4) $cmval($id,7,10)
     set hy(3,4) [expr $cmval($id,7,0)+$cmval($id,7,1)]
-
+ }
+ if {$nqtr > 0} {
     #TARGET QUARTER leaf
     set wtot(4) [expr $cmval($id,30,1)+$cmval($id,30,0)]
     set wtongue(4) $cmval($id,30,1)
@@ -3462,7 +3504,7 @@ proc add_SYNCHDMLC_sides {id yscale zscale ymin zmin zmax l m parent_w} {
     #upper right of screw hole
     set hz(5,4) $cmval($id,31,10)
     set hy(5,4) [expr $cmval($id,31,0)+$cmval($id,31,1)]
-
+  }
     set rmin -$cmval($id,0)
     set rmax $cmval($id,0)
 

@@ -194,12 +194,20 @@ proc help_gif { w text iconfile } {
 	image create photo $w.graphic -file \
 		[file join $GUI_DIR graphics $iconfile.gif]
 	label $w.f1.lbl -image $w.graphic -bg white
-        message $w.f1.m -width 5i -text $text -font $helvfont -bg white
+        text $w.f1.m -font $helvfont -width 80 -wrap word\
+        -bd 5 -yscrollcommand "$w.f1.v_scroll set" -bg white
+        $w.f1.m insert 1.0 $text
+        $w.f1.m configure -state disabled
+        scrollbar $w.f1.v_scroll -command "$w.f1.m yview"
     } else {
 	label $w.f1.lbl -text "No graphic for this source"
-        message $w.f1.m -width 7i -text $text -font $helvfont -bg white
+        text $w.f1.m -font $helvfont -width 80 -wrap word\
+        -bd 5 -yscrollcommand "$w.f1.v_scroll set" -bg white
+        $w.f1.m insert 1.0 $text
+        $w.f1.m configure -state disabled
+        scrollbar $w.f1.v_scroll -command "$w.f1.m yview"
     }
-    pack $w.f1.lbl $w.f1.m -side left -padx 10 -pady 5 -fill both
+    pack $w.f1.lbl $w.f1.m $w.f1.v_scroll -side left -padx 10 -pady 5 -fill both
     pack $w.f1
     frame $w.sep -bd 4 -width 100 -height 2 -relief groove
     pack $w.sep -pady 10 -fill x

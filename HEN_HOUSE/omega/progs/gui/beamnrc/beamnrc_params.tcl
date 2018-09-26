@@ -2461,22 +2461,23 @@ See the BEAMnrc and DOSXYZnrc Users Manuals for more info.\
 
 set help_synchdmlc_text {
 SYNCHDMLC is optimized for simulating\
-the high-definition micro MLC (HD120) available on TrueBeam and Novalis\
+the high-definition micro MLC (HD120) as well as the Millenium MLC (120 MLC) available on TrueBeam and Novalis\
 linacs.  The original code was contributed by Borges et al, while the current\
 version is from Lobo & Popescu.  SYNCHDMLC is based on SYNCVMLC.
 
-The user must specify cross-sections for five leaf types:\
-FULL, HALF TARGET, HALF ISOCENTER, QUARTER TARGET, QUARTER ISOCENTER.  In general QUARTER TARGET/ISOCENTER\
-leaves are thinner in the X-dimension\
- (ORIENT=0) or Y-dimension (ORIENT=1). HALF TARGET/ISOCENTER leaves \
+The user has the option to specify cross-sections for five leaf types:\
+FULL, HALF TARGET, HALF ISOCENTER, QUARTER TARGET, QUARTER ISOCENTER.  The geometry of each type\
+has been defined so that the HD120 MLC can be simulated using QUARTER TARGET\ISOCENTER\
+and HALF TARGET/ISOCENTER leaves and the 120 MLC can be simulated with\
+HALF TARGET/ISOCENTER and FULL leaves.  The cross-sections dimensions of unused leaf\
+types can be left as blanks, zeroes or nonsense real numbers (although the input line\
+must exist in the .egsinp file).  Note that HALF TARGET/ISOCENTER leaves \
 and QUARTER TARGET/ISOCENTER leaves must be specified in pairs.
 
-The figure at left shows a SYNCHDMLC with 12 leaves opening in the Y-direction (ORIENT=0).\
+The figure at left shows a SYNCHDMLC with 12 leaves opening in the Y-direction (ORIENT=0) using\
+all leaf types.\
 Leaves 1,2,11,12 are FULL; leaves 3,4,9,10 are HALF TARGET/ISOCENTER pairs; leaves 5-9 are\
-QUARTER TARGET/ISOCENTER pairs.  Note that, in general, the narrower QUARTER TARGET/ISOCENTER\
-pairs occur closer to the centre of the MLC to allow more high-resolution field definition.\
-Although cross-sections must be specified for all leaf types, not all types need be used in\
-an MLC.
+QUARTER TARGET/ISOCENTER pairs.
 
 SYNCHDMLC has the option to specify cylindrical (ENDTYPE=0) or straight, focused (ENDTYPE=1)\
 leaf ends.  The origins of the cylinders defining leaf ends are at Z=ZMIN+ZTHICK/2\

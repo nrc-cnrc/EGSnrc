@@ -6705,7 +6705,8 @@ DOSXYZnrc\cite{Wa05}.
 \index{SYNCHDMLC}
 \subsubsubsection{SYNCHDMLC}
 SYNCHDMLC is a version of SYNCVMLC optimized for modeling the High-definition Multileaf
-Collimator (HDMLC 120) available on TrueBeam and Novalis linacs.  SYNCHDMLC features five
+Collimator (HDMLC 120) and the Millenium MLC (120 MLC) available on TrueBeam and Novalis linacs.
+SYNCHDMLC features five
 possible leaf cross sections: FULL, HALF TARGET/HALF ISOCENTER pairs, and QUARTER TARGET/QUARTER ISOCENTER
 pairs.  FULL leaves are similar to FULL leaves in DYNVMLC/SYNCVMLC.  HALF TARGET/HALF ISOCENTER leaves are
 equivalent to the TARGET/ISOCENTER leaves in DYNVMLC/SYNCVMLC. QUARTER TARGET/QUARTER ISOCENTER have the
@@ -8331,12 +8332,15 @@ is included with the distribution.  This file is {\tt \$OMEGA\_HOME/beamnrc/CMs/
 \index{SYNCHDMLC}
 
 SYNCHDMLC is a CM coded by Lobo \& Popescu and based on an earlier code by Borges et al\cite{Bo12} for
-modeling the high-definition micro mlc (HD120) available on TrueBeam and Novalis linacs.  In overall
+modeling the high-definition micro mlc (HD120) and the Millenium MLC (MLC 120) available on TrueBeam and Novalis linacs.  In overall
 design it is similar to DYNVMLC/SYNCVMLC but features two different types of TARGET/ISOCENTER leaf pairs:
 HALF TARGET/HALF ISOCENTER and QUARTER TARGET/QUARTER ISOCENTER.  In terms of leaf cross-section
 (perpendicular to the opening direction), these are
 similar to the TARGET/ISOCENTER leaves in DYNVMLC, with HALF TARGET/HALF ISOCENTER leaves being
-wider than the QUARTER TARGET/QUARTER ISOCENTER leaves.
+wider than the QUARTER TARGET/QUARTER ISOCENTER leaves.  The five available leaf types are intended to facilitate
+modeling of either the HD120 MLC (HALF TARGET/ISOCENTER and QUARTER TARGET/ISOCENTER leaves) or the MLC 120
+(FULL and HALF TARGET/ISOCENTER leaves).  However, the user is free to use any combination of leaf types to model
+their MLC, provided that TARGET/ISOCENTER leaves are always used in pairs.
 
 \begin{figure}[htpb]
 \begin{center}
@@ -8353,7 +8357,7 @@ wider than the QUARTER TARGET/QUARTER ISOCENTER leaves.
 \end{center}
 \vspace*{-1.0cm}
 \caption[SYNCHDMLC CM geometry]
-{Example SYNCHDMLC with 12 leaves opening in the Y
+{Example SYNCHDMLC using all leaf types with 12 leaves opening in the Y
 direction ({\tt ORIENT}=0). The X cross-sections of the five
 leaf types show the dimensions that the
 user must input (see Table~\ref{dynvmlc_tab} for label key).
@@ -8396,10 +8400,9 @@ As in DYNVMLC, rather than specifying the type of each leaf, the user is able to
 of adjacent leaves all having the same type.  Since HALF TARGET/HALF ISOCENTER leaves and
 QUARTER TARGET/QUARTER ISOCENTER leaves must always occur in pairs, there are really
 only three types to choose from.  This also means there must be an even number of
-HALF or QUARTER TARGET/ISOCENTER leaves.  Also note that, even though the user
-must specify cross-sections for all leaf types, they need not use all types
-in a given MLC simulation.  Thus, there may be no FULL leaves, HALF TARGET/ISOCENTER pairs,
-or QUARTER TARGET/ISOCENTER pairs in the simulation.
+HALF or QUARTER TARGET/ISOCENTER leaves.  Also note that, even though an input line must
+exist for all cross-sections, the values on this line can be blanks, zeroes, or nonsense real
+numbers for leaves not being used in the MLC model.
 
 Similar to DYNVMLC and SYNCVMLC, leaf ends can be straight, focused ({\tt ENDTYPE}=1) or cylindrical
 ({\tt ENDTYPE}=0).  For straight, focused ends, the user must specify the Z-position of the
