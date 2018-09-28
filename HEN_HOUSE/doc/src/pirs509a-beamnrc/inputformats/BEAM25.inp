@@ -1,12 +1,12 @@
 \begin{verbatim}
         Global ECUT=     Global (in all regions) electron transport cut
-                         off energy (in MeV). If this imput is missing,
+                         off energy (in MeV). If this input is missing,
                          or is < ECUTIN from the main BEAMnrc inputs
                          (See above) then ECUTIN is used for Global ECUT.
                          Global ECUT defaults to AE(medium).
                          [ ECUT ]
         Global PCUT=     Global (in all regions) photon transport cut
-                         off energy (in MeV). If this imput is missing,
+                         off energy (in MeV). If this input is missing,
                          or is < PCUTIN from the main BEAMnrc inputs
                          (See above) then PCUTIN is used for Global PCUT.
                          Global PCUT defaults to AP(medium).

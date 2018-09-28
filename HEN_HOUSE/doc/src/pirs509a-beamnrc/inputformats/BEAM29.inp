@@ -1,34 +1,59 @@
 \begin{verbatim}
-        Electron impact ionization= Off, On, Casnati, Kolbenstvedt, Gryzinski
-                                    (Default is Off)
-                          Determines which, if any, theory is used to model
-                          electron impact ionization. If set to 'On' then the
-                          theory of Kawrakow is used.  Other settings use the
-                          theory associated with the name given.  See future
-                          editions of the EGSnrc Manual (PIRS-701) for more
-                          details.  This is only of interest in keV X-Ray
-                          simulations.  Otherwise, leave it Off.
-                          [ eii_flag ]
-        Photon cross sections= epdl,xcom,custom (Default is Storm-Israel
-                          cross-sections from PEGS4)
-                          The name of the cross-section data for photon
-                          interactions.  This input line must be left out
-                          to access the default Storm-Israel cross-sections
-                          from PEGS4.  'edpl' uses cross-sections from the
-                          evaluated photon data library (EPDL) from Lawrence
-                          Livermore.  'xcom' will use the XCOM cross-sections
-                          from Burger and Hubbell.  The user also has the
-                          option of using their own customized cross-section
-                          data.  See the BEAMnrc manual for more details.
-                          [ photon_xsections ]
+        Electron Impact Ionization= Off (default), On, casnati, kolbenstvedt,
+                         gryzinski, penelope.  If set to On or ik, then use
+                         Kawrakow's theory to derive EII cross-sections.
+                         If set to casnati, then
+                         use the cross-sections of Casnati (contained in the
+                         file ($HEN_HOUSE/data/eii_casnati.data).  Similar for
+                         kolbenstvedt, gryzinski and penelope. This is only of
+                         interest in kV X-ray calculations.
+                         Case-sensitive except for Off, On or ik options.
+                         [ eii_flag ]
+        Photon cross sections= Photon cross-section data.  Current options are
+                         si (Storm-Israel), epdl (Evaluated Photon Data
+                         Library), xcom (the default), pegs4, mcdf-xcom and
+                         mcdf-epdl:
+                         Allows the use of photon cross-sections other than
+                         from the PEGS4 file (unless the pegs4 option is
+                         specified).  Options mcdf-xcom and mcdf-epdl use
+                         Sabbatucci and Salvat's renormalized photoelectric
+                         cross sections with either xcom or epdl for all other
+                         cross sections.  These are more accurate but can
+                         increase CPU time by up to 6 %.
+                         Note that the user can supply their own cross-section
+                         data as well. The requirement is that the files
+                         photon_xsections_photo.data,
+                         photon_xsections_pair.data,
+                         photon_xsections_triplet.data, and
+                         photon_xsections_rayleigh.data exist in the
+                         $HEN_HOUSE/data directory, where photon_xsections
+                         is the name specified.
+                         Hence this entry is case-sensitive.
+                         [ photon_xsections ]
         Photon cross-sections output= Off (default) or On.  If On, then
                          a file $EGS_HOME/user_code/inputfile.xsections is
                          output containing photon cross-section data used.
                          [ xsec_out ]
+        Photonuclear attenuation= Off (default) or On
+                         If On, models the photonuclear effect. Current
+                         implementation is crude. Available on a
+                         region-by-region basis (see below)
+                         [ IPHOTONUCR ]
+        Photonuclear cross sections= Total photonuclear cross sections. User-
+                         supplied total photonuclear cross-sections in
+                         $HEN_HOUSE/data/photonuc_xsections_photonuc.data,
+                         where photonuc_xsections is the name supplied for
+                         this input (case sensitive). In the absence of
+                         any user-supplied data, or if photonuc_xsections
+                         is set to 'default', the default file is
+                         iaea_photonuc.data.
+                         [ photonuc_xsections ]
 
         Atomic relaxations, Rayleigh scattering, Photoelectron angular
-        sampling and Bound Compton scattering can also be turned On/Off
-        on a region-by-region basis. To do so, put e.g.
+        sampling, Bound Compton scattering and Photonuclear attenuation
+        can also be turned On/Off on a region-by-region basis.
+        To do so, put e.g.
+
         Atomic relaxations= On in Regions   or
         Atomic relaxations= Off in regions
                           in your input file. Then use the relevant one of:
@@ -43,6 +68,9 @@
                  or
         PE sampling start region=
         PE sampling stop region=
+                 or
+        Photonuclear start region=
+        Photonuclear stop region=
 
               each followed by a list of one or more
               start and stop regions separated by commas.

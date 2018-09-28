@@ -39,7 +39,7 @@
                energy dependent BCSE is modest (~20%).
 
    Note that if BCSE is used in conjunction with uniform bremsstrahlung
-   splitting (UBS) or selective bremsstrahlung splitting (SBS), then
+   splitting (UBS) then
    Russian Roulette is automatically turned on (IRRLTT=2--see above).
 
    BCSE is most efficient when used in conjunction with DBS or UBS

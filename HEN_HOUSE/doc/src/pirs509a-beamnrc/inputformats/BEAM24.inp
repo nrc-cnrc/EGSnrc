@@ -11,13 +11,13 @@
    All input associated with selection of EGSnrc transport parameters
    is not crucial for the execution as there are default values set.
    Therefore, if some of the input options in this section are
-   missing/misspelled, this will be ignored and defualt parameter assumed
+   missing/misspelled, this will be ignored and default parameters assumed.
    As the transport parameter input routine uses get_inputs, a lot
    of error/warning messages may be produced on UNIT 15, though.
    If you don't have the intention of changing default settings,
    simply ignore the error messages.
 
-   The delimeters are
+   The delimiters are
                 :start mc transport parameter:
                 :stop mc transport parameter:
 
