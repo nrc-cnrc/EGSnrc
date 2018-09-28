@@ -16,7 +16,7 @@
 
     Next Record (IF MONOEN = 1)
     ***********
-      FILNAM(80A1)  FILENAME(WITH EXT) contains spectrum information
+      FILNAM(256A1)  FILENAME(WITH EXT) contains spectrum information
                     which must be in  NRC's ensrcV format.
               _______________________________________________________
               FILE FORMAT:

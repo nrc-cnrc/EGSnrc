@@ -12,7 +12,7 @@
    ***********
                 In many CMs, the region about the central-axis or at the
                 front or back of the CM, is assumed to be this medium.
-                It is thought of and refered to as air, but can be anything.
+                It is thought of and referred to as air, but can be anything.
                 Default is VACUUM. MEDIUM must exactly match name in pegs4dat
  -----------------------------------------------------------------------------
 \end{verbatim}

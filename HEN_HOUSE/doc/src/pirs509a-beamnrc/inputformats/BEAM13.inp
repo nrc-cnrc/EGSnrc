@@ -76,6 +76,6 @@
    Next record (If ISOURC=21)
    ***********
       SPCNAM        FILENAME (with EXT) contains phase space information
-                    (maximum of 80 characters)
+                    (maximum of 256 characters)
  ------------------------------------------------------------------------
 \end{verbatim}

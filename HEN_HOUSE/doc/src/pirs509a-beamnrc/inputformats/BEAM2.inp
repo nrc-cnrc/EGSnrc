@@ -16,10 +16,8 @@
               IBRSPL = 0 no brem splitting
                      = 1 with uniform brem splitting
                      = 2 with directional bremsstrahlung splitting (DBS)
-                     = 29 with selective bremsstrahlung splitting
-              NBRSPL = (if IBRSPL = 1 or 2) brem splitting number AND
+              NBRSPL = brem splitting number AND
                        annihilation splitting number (if IRRLTT=2)
-                     = (if IBRSPL = 29) max. brem splitting number
               IRRLTT = 0 no Russian Roulette (the default).  Also, no
                          annihilation or higher-order splitting.
                      = 1 no longer used.  This defaults to IRRLTT=2
@@ -29,8 +27,7 @@
                          If the surviving particle undergoes another (higher-
                          order) bremsstrahlung event or an annihilation,
                          resulting photons are split again by NBRSPL for
-                         IBRSPL=1. (ie uniform splitting) and by NMIN
-                         for IBRSPL=29 (i.e. selective brem splitting)
+                         IBRSPL=1. (ie uniform splitting)
 
               Note: The input IRRLTT is automatically set to 0 if IBRSPL=2
                     This is because Directional Bremsstrahlung Splitting
@@ -42,24 +39,14 @@
                          of times as soon as they cross the arbitrary
                          splitting plane at the top of this CM #.
 
-   Next record (if IBRSPL=2 or 29)
+   Next record (if IBRSPL=2)
    ***********
 
-      FS,SSD,(NMIN),(ICM_DBS,ZPLANE_DBS,IRAD_DBS,ZRR_DBS)  (3F12.0 or 6F12.0)
+      FS,SSD,ICM_DBS,ZPLANE_DBS,IRAD_DBS,ZRR_DBS  (6F12.0)
                   FS = radius of field (cm) into which bremsstrahlung photons
-                       must be directed if they are to be split (IBRSPL=2)
-                       or length of side of square field (cm) in which
-                       selective bremsstrahlung splitting probabilities are
-                       calculated for IBRSPL=29.
+                       must be directed if they are to be split.
                  SSD = distance from bremsstrahlung target where FS
-                       is defined.  FS and SSD only define an angle which is
-                       used (IBRSPL=29).
-                NMIN = background bremsstrahlung splitting number (ie even
-                       outside the field, bremsstrahlung events will be
-                       split into NMIN photons). Also equal to the
-                       higher generation brem splitting number
-                       and annihilation photon splitting number if IRRLTT=2.
-                       NMIN is only required for IBRSPL=29.
+                       is defined.
          ICM_DBS and   These are only required to define the splitting
                        plane if IBRSPL=2.  As soon as
           ZPLANE_DBS   a fat electron reaches ZPLANE_DBS within CM number

@@ -42,7 +42,7 @@ fi
 OMEGA_HOME="$HEN_HOUSE/omega"
 BEAM_DIR="$OMEGA_HOME/beamnrc"
 CMs="$OMEGA_HOME/beamnrc/CMs"
-OUTDIR="$HEN_HOUSE/doc/pirs509a-beamnrc/inputformats"
+OUTDIR="$HEN_HOUSE/doc/src/pirs509a-beamnrc/inputformats"
 
 $ECHO "Update APPLICAT input description? [n] \c"
 read response
@@ -273,5 +273,11 @@ egrep '"I>|"%A30|"%A31' $BEAM_DIR/beamnrc.mortran | sed -e '/"%A30/,/"%A31/!d' |
 egrep '"I>|"%A31' $BEAM_DIR/beamnrc.mortran | sed -e '/"%A31/,$!d' | sed -e '1,$s/"I>/ /' | sed -e '/"%A31/d' | sed -f $OUTDIR/add > BEAM32.inp
     $ECHO "Done updating BEAMnrc input description."
 fi
+
+# remove eol white space from *.inp files
+for f in $(grep -El '\s+$' *.inp); do
+    echo "Removing end-of-line whitespace in $f";
+    sed -i 's/[[:space:]]*$//' $f;
+done
 
 # chmod g+w *.inp
