@@ -1,0 +1,122 @@
+##############################################################################
+#
+# Simple egs++ plate simulation
+#
+##############################################################################
+
+
+##############################################################################
+### Run control
+##############################################################################
+:start run control:
+    ncase = 1e5
+:stop run control:
+
+
+##############################################################################
+### Geometry
+##############################################################################
+:start geometry definition:
+
+    ### a simple slab geometry
+    :start geometry:
+        name     = plate
+        library  = egs_ndgeometry
+        type     = EGS_XYZGeometry
+        x-planes = -5, 5                        # cm
+        y-planes = -5, 5                        # cm
+        z-planes = -10, 0, 1, 10                # cm
+        :start media input:
+            media = air water
+            set medium = 1 1
+        :stop media input:
+    :stop geometry:
+
+    ### Simulation geometry
+    simulation geometry = plate
+
+:stop geometry definition:
+
+
+##############################################################################
+### Media
+##############################################################################
+:start media definition:
+
+    ### particle production thresholds
+    ae = 0.521                                  # MeV
+    ap = 0.010                                  # MeV
+    ue = 50.511                                 # MeV
+    up = 50                                     # MeV
+
+    ### air
+    :start air:
+        density correction file = air_dry_nearsealevel
+    :stop air:
+
+    ### water
+    :start water:
+        density correction file = water_liquid
+    :stop water:
+
+    ### See $HEN_HOUSE/pegs4/density_corrections/ for more materials, or create
+    ### you own: https://github.com/nrc-cnrc/EGSnrc/wiki/Generating-density-correction-files
+
+:stop media definition:
+
+
+##############################################################################
+### Source
+##############################################################################
+:start source definition:
+
+    ### pencil beam
+    :start source:
+        name      = pencil_beam
+        library   = egs_parallel_beam
+        charge    = -1
+        direction = 0 0 1
+        :start spectrum:
+            type = monoenergetic
+            energy = 20                         # MeV
+        :stop spectrum:
+        :start shape:
+            type     = point
+            position = 0 0 -8                   # cm
+        :stop shape:
+    :stop source:
+
+    ### use this source for the simulation
+    simulation source = pencil_beam
+
+:stop source definition:
+
+
+##############################################################################
+### Ausgab objects
+##############################################################################
+:start ausgab object definition:
+
+    ### generate particle tracks
+    :start ausgab object:
+        name    = tracks
+        library = egs_track_scoring
+    :stop ausgab object:
+
+    ### report dose in all regions
+    :start ausgab object:
+        name    = dose
+        library = egs_dose_scoring
+        volume  = 1000, 100, 900
+    :stop ausgab object:
+
+:stop ausgab object definition:
+
+
+##############################################################################
+### Viewer control
+##############################################################################
+:start view control:
+    set color = air    0 200  50  50               # r g b alpha
+    set color = water  0 220 255 200
+:stop view control:
