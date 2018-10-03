@@ -1176,7 +1176,7 @@ public:
             return;
         }
 
-        egsInformation("Energy | Intensity per 100 emissions\n");
+        egsInformation("Energy | Intensity per 100 decays (adjusted by %f)\n", decays->decayNormalization);
         if (myBetas.size() > 0) {
             egsInformation("Beta records:\n");
         }
@@ -1184,7 +1184,7 @@ public:
                 beta != myBetas.end(); beta++) {
 
             egsInformation("%f %f\n", (*beta)->getFinalEnergy(),
-                           ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100);
+                           ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100*decays->decayNormalization);
         }
         if (myAlphas.size() > 0) {
             egsInformation("Alpha records:\n");
@@ -1193,10 +1193,10 @@ public:
                 alpha != myAlphas.end(); alpha++) {
 
             egsInformation("%f %f\n", (*alpha)->getFinalEnergy(),
-                           ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100);
+                           ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100*decays->decayNormalization);
         }
         if (myGammas.size() > 0) {
-            egsInformation("Gamma records (E,Igamma,Iec):\n");
+            egsInformation("Gamma records (E,Igamma,Ice):\n");
         }
         EGS_I64 totalNumSampled = 0;
         for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
@@ -1204,8 +1204,8 @@ public:
 
             totalNumSampled += (*gamma)->getGammaSampled();
             egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(),
-                           ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
-                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100
+                           ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100*decays->decayNormalization,
+                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100*decays->decayNormalization
                           );
         }
         if (myGammas.size() > 0) {
@@ -1222,14 +1222,14 @@ public:
         }
         for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
             egsInformation("%f %f\n", xrayEnergies[i],
-                           ((EGS_Float)numSampledXRay[i]/(ishower+1))*100);
+                           ((EGS_Float)numSampledXRay[i]/(ishower+1))*100*decays->decayNormalization);
         }
         if (augerEnergies.size() > 0) {
             egsInformation("Auger records:\n");
         }
         for (unsigned int i=0; i < augerEnergies.size(); ++i) {
             egsInformation("%f %f\n", augerEnergies[i],
-                           ((EGS_Float)numSampledAuger[i]/(ishower+1))*100);
+                           ((EGS_Float)numSampledAuger[i]/(ishower+1))*100*decays->decayNormalization);
         }
         egsInformation("\n");
     }
@@ -1528,8 +1528,9 @@ protected:
             }
         }
 
-        // Shouldn't get here if intensities are normalized correctly
-        egsWarning("EGS_RadionuclideSpectrum::sample: Warning: Radionuclide normalization may be incorrect - you should not get here!");
+        // If we get here, fission occurs
+        // Count it as a disintegration and return 0
+        ishower++;
         return 0;
     };
 

@@ -352,9 +352,13 @@ public:
 
     /*! \brief Outputs the emission stats of the spectra */
     void printSampledEmissions() {
+        egsInformation("\n======================================================\n");
+        egsInformation("Start of source emissions statistics:\n");
         for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->printSampledEmissions();
         }
+        egsInformation("End of source emissions statistics\n");
+        egsInformation("======================================================\n\n");
     };
 
     /*! \brief Calculates the position and direction of a new source particle */

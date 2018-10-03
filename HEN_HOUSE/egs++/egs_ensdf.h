@@ -494,6 +494,7 @@ public:
     int verbose;
     string relaxationType;
     unsigned short int Z;
+    double decayNormalization;
 
     void normalizeIntensities();
 
