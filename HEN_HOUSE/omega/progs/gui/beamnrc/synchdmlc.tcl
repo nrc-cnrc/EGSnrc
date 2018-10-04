@@ -1793,7 +1793,7 @@ proc check_z_posn { id leafind } {
            incr totprob
         }
       }
-     if {"$cmval($id,31,8)"!="" && "$cmval($id,31,9)"!=""} {
+     if {$leafind==31 && "$cmval($id,31,8)"!="" && "$cmval($id,31,9)"!=""} {
       if {$cmval($id,31,8)<$cmval($id,31,9)} {
          set dimtext "$dimtext
 - NEEDS ATTENTION: Z of top of tongue ($cmval($id,31,9) cm) must be \
@@ -1836,7 +1836,7 @@ proc check_z_posn { id leafind } {
        if {$cmval($id,$leafind,13)<$cmval($id,$leafind,11)} {
           if {$leafind!=6 && $leafind!=30} {
            set dimtext "$dimtext
-- NEEDS ATTENTION: Z of support rail ($cmval($id,$leafind,13) cm) must be \
+- NEEDS ATTENTION: Z of top of support rail ($cmval($id,$leafind,13) cm) must be \
 > Z of bottom of driving screw hole ($cmval($id,$leafind,11) cm)"
            }
            incr totprob
@@ -1844,7 +1844,7 @@ proc check_z_posn { id leafind } {
       }
       if {"$cmval($id,$leafind,9)"!="" && "$cmval($id,$leafind,11)"!=""} {
        if {$cmval($id,$leafind,11)<$cmval($id,$leafind,9)} {
-          if{$leafind!=5 && $leafind!=7 && $leafind!=31}{
+          if {$leafind!=5 && $leafind!=7 && $leafind!=31} {
            set dimtext "$dimtext
 - NEEDS ATTENTION: Z of bottom of tongue($cmval($id,$leafind,11) cm) must be \
 >= Z of bottom of driving screw hole ($cmval($id,$leafind,9) cm)"
@@ -1854,7 +1854,7 @@ proc check_z_posn { id leafind } {
       }
       if {"$cmval($id,$leafind,12)"!="" && "$cmval($id,$leafind,13)"!=""} {
        if {$cmval($id,$leafind,13)<$cmval($id,$leafind,12)} {
-          if {$leafind!=6 && $leafind!=30}{
+          if {$leafind!=6 && $leafind!=30} {
            set dimtext "$dimtext
 -NEEDS ATTENTION: Y distance of driving screw hole from leaf tip is expected \
 be much smaller than ($cmval($id,$leafind,12) cm)"
