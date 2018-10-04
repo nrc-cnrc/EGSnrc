@@ -33,12 +33,12 @@ expect "Input flags for debugging:"                     { send "\n" }
 expect "Input libraries that your compiler may need:"   { send "\n" }
 
 # C compiler
-expect "Input the one you would like to use:"           { send "\n" }
+expect "Input C compiler:"                              { send "\n" }
 expect "Input C compiler flags to use:"                 { send "\n" }
 
 # Configuration
 expect "Input path to EGSnrc HEN_HOUSE directory:"      { send "\n" }
-expect "Choose a configuration file name:"              { send "$confname\n" }
+expect "Choose a configuration name:"                   { send "$confname\n" }
 set timeout 1
 expect "Do you want to overwrite ?"                     { puts "no\n"; exit }
 set timeout -1

@@ -76,6 +76,9 @@ typedef void (*FinishFunction)();
 typedef void (*SampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
                                EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
                                EGS_I32 *, EGS_I32 *, EGS_I64 *, EGS_I32 *);
+typedef void (*MotionSampleFunction)(EGS_Float *, EGS_Float *, EGS_Float *,
+                                     EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *, EGS_Float *,
+                                     EGS_I32 *, EGS_I32 *, EGS_I64 *, EGS_I32 *, EGS_Float *);
 typedef void (*MaxEnergyFunction)(EGS_Float *);
 
 /*! \brief A BEAM simulation source
@@ -148,6 +151,14 @@ public:
     EGS_Float getFluence() const {
         return count;
     };
+    EGS_Float getMu() {
+        if (mu_stored) {
+            return mu;
+        }
+        else {
+            return -1.0;
+        }
+    };
     bool storeState(ostream &data) const {
         return egsStoreI64(data,count);
     };
@@ -182,11 +193,15 @@ protected:
     FinishFunction finish;  /*!< The function to be called at the end of the
                                  simulation */
     SampleFunction sample;  //!< The function that returns the next particle
+    MotionSampleFunction motionsample; //< Use this instead because we may want
+    //< to synchronize dynamic source with this
 
     bool        is_valid;
+    bool        mu_stored;  //!< true if mu index stored
     string      the_file_name;
     ifstream    the_file;
     EGS_Float   Emax;
+    EGS_Float   mu;
     EGS_I64     count;
 
     // filters
@@ -196,12 +211,21 @@ protected:
 
     // temporary particle storage
     int         q_save, latch_save;
-    EGS_Float   E_save, wt_save;
+    EGS_Float   E_save, wt_save, mu_save;
     EGS_Vector  x_save, u_save;
 
     // reusing particles
     int         n_reuse_photon, n_reuse_electron;
     int         i_reuse_photon, i_reuse_electron;
+
+    // stored info for first particle read in
+    // need this because we now query the data to see
+    // if mu index is passed by the source
+    EGS_Float tei,txi,tyi,tzi,tui,tvi,twi,twti,tmui;
+    int tqi,tlatchi,tiphati;
+    EGS_I64     counti;
+    bool  use_iparticle; // true if we want to use the above data instead
+    // of calling motionsample
 
 };
 

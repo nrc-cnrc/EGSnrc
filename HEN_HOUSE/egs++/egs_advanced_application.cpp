@@ -758,6 +758,10 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
         the_emf->ExIN=efield_v[0];
         the_emf->EyIN=efield_v[1];
         the_emf->EzIN=efield_v[2];
+        if (efield_v[0]*efield_v[0]+efield_v[1]*efield_v[1]+efield_v[2]*efield_v[2] > 0) {
+            the_emf->emfield_on = true;
+        }
+
     }
     if (bfield.size()==3) {
         bfield.info(nc);
@@ -770,6 +774,9 @@ int EGS_AdvancedApplication::helpInit(EGS_Input *transportp, bool do_hatch) {
     }
     if (efield.size()==3 || bfield.size()==3) {
         estepem.info(nc);
+        if (bfield_v[0]*bfield_v[0]+bfield_v[1]*bfield_v[1]+bfield_v[2]*bfield_v[2] > 0) {
+            the_emf->emfield_on = true;
+        }
     }
     egsInformation("==============================================\n\n");
 
@@ -1191,6 +1198,14 @@ void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
     the_egsvr->nbr_split = nsplit;
 }
 
+//************************************************************
+// Utility function for ausgab phase space scoring objects
+//************************************************************
+void EGS_AdvancedApplication::setLatch(int latch) {
+    int np = the_stack->np-1;
+    the_stack->latch[np] = latch;
+}
+
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
     int np = the_stack->np-1;
@@ -1283,5 +1298,3 @@ extern __extc__ void egsStartParticle() {
     //egsInformation("start particle: ir=%d medium=%d\n",ir,the_useful->medium);
     app->startNewParticle();
 }
-
-
