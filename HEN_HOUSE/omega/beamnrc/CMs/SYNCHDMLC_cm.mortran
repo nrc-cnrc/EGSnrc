@@ -2004,7 +2004,7 @@ IF(NUM_HLF>0 & NUM_QTR>0) [
 " ============================="
 ;
 OUTPUT ZMIN_$SYNCHDMLC; (/' Input the starting X (ORIENT_$SYNCHDMLC=0) or '/
-         ' Y (ORIENT_$SYNCHDMLC=1) position at z = ',F15.0, ' cm : ', $);
+         ' Y (ORIENT_$SYNCHDMLC=1) position at z = ',F12.5, ' cm : ', $);
 MINPUT ($SYNCHDMLC) START_$SYNCHDMLC; (F15.0);
 OUTPUT START_$SYNCHDMLC; (F12.5);
 
