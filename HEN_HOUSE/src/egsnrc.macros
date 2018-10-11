@@ -674,6 +674,7 @@ REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
 REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
 REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
+REPLACE {$MAXTRANS} WITH {300}  "max. number of transitions per element"
 "============================================================"
 " Set input key 'Atomic relaxations' to 'simple' to recover original
 " implementation which allows photoelectric interactions with <M> and

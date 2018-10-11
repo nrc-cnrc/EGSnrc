@@ -3,7 +3,7 @@
    **********        Circular: Vertical ring centred on Z-axis
                         or     horizontal cylinder centred parallel to X-axis
 
-      IQIN,ISOURC,RMINBM,RBEAM,ZSMIN,ZSMAX
+      IQIN,ISOURC,RMINBM,RBEAM,ZSMIN,ZSMAX,i_dsb,splitcm_dsb,dsb_delta
               IQIN    charge of particles from source (defaults to 0)
               ISOURC  =  3
               RMINBM  inner radius of vertical ring (RBEAM >= 0) (cm)
@@ -19,13 +19,35 @@
               ZSMAX   Z of bottom of vertical ring (RBEAM >= 0) (cm)
                       or:
                       max. X of horizontal cylinder (RBEAM < 0) (cm)
+              i_dsb   Set to 1 to use directional source biasing.  Note that
+                      directional bremsstrahlung splitting (IBRSPL=2) must
+                      also be used.  Splitting number (NBRSPL), splitting
+                      field radius (FS), source to surface distance
+                      (SSD) and electron splitting parameters (if e-
+                      contamination is desired) are read from the DBS
+                      inputs.
+        splitcm_dsb   The CM no. at which primary photons are split and
+                      radially redistributed about the Z-axis.  Photons
+                      are split/redistributed immediately upon entering
+                      CM no. splitcm_dsb.  Note that this should be the
+                      the no. of the first CM in the treatment head without
+                      radial symmetry.  The number of times a photon is
+                      split depends upon the radial bin into which it
+                      is directed.  Bin radii are determined by the input
+                      dsb_delta below.  Set splitcm_dsb=0 for no splitting/
+                      redistribution.
+          dsb_delta   The min. linear distance, in cm, between split/
+                      redistributed photons, projected to the SSD of the
+                      splitting field. dsb_delta is used to divide the
+                      splitting field into radial bins, where photons
+                      directed into bin i are split i times.
 
           NOTE: The sign of RBEAM determines if the source will be a
                        vertical ring a horizontal cylinder.
                 The Z-span of the source must be in the range
                        Z_min_CM(1)-Z_min_CM(MAX_CMs+1).
                 Currently, this source is limited to being placed within
-                       CONESTAK, FLATFILT or SIDETUBE.
+                       CONESTAK, FLATFILT or SIDETUBE
  ------------------------------------------------------------------------
    ISOURC = 3a  A cylindrical, isotropically radiating Co60 source within CMs
    **********  using directional source biasing (DSB).

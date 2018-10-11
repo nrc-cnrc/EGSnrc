@@ -1435,7 +1435,7 @@ makes 2BS almost the same as 2BN at low energies).
 set numopts(ibrdst) 2
 set options(ibrdst,0) "Simple"
 set options(ibrdst,1) "KM"
-set values(ibrdst) $options(ibrdst,0)
+set values(ibrdst) $options(ibrdst,1)
 
 set ibr_nist {}
 set names(ibr_nist) "Brems cross sections"
@@ -1611,7 +1611,7 @@ set options(iphter,0) "Off"
 set options(iphter,1) "On"
 set options(iphter,2) "On in regions"
 set options(iphter,3) "Off in regions"
-set values(iphter) $options(iphter,0)
+set values(iphter) $options(iphter,1)
 set level(iphter) 0
 
 set iraylr {}
