@@ -1618,12 +1618,16 @@ IF( error_flags(num_cxsec) = 0 ) [
 IF( error_flags(num_photonuc_xsec) = 0 ) [
     photonuc_xsections = char_value(num_photonuc_xsec,1);
 ]
+
 IF( error_flags(num_efield) = 0 ) [
     ExIN = value(num_efield,1);
     EyIN = value(num_efield,2);
     EzIN = value(num_efield,3);
     IF( error_flags(num_emlmt) = 0 )[
        EMLMTIN=value(num_emlmt,1);
+    ]
+    IF( ExIN**2+EyIN**2+EzIN**2 > 0 ) [
+        emfield_on=.true.
     ]
 ]
 " Initially set to input values, could change with regions"
@@ -1638,7 +1642,12 @@ IF( error_flags(num_bfield) = 0 ) [
     IF( error_flags(num_emlmt) = 0 )[
        EMLMTIN=value(num_emlmt,1);
     ]
+    IF( BxIN**2+ByIN**2+BzIN**2 > 0 ) [
+        emfield_on=.true.
+    ]
 ]
+
+
 /***************************************************************/
 /* Get media for which to read custom ff and the ff file names */
 /***************************************************************/

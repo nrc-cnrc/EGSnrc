@@ -1370,7 +1370,7 @@ $start_new_particle;
                     "( vstep is ustep truncated (possibly) by howfar
                     " tvstep is the total curved path associated with vstep)
                     edep = pzero; "no energy loss in vacuum
-                    $VACUUM-TRANSPORT-EM-FIELD;
+                    $VACUUM-ADD-WORK-EM-FIELD;
                         "additional vacuum transport in em field
                     e_range = vacdst;
                     $AUSCALL($TRANAUSB);
@@ -5825,9 +5825,8 @@ character  data_dir*128,relax_file*144;
 $INTEGER  ish,medio,iZ,ntran;
 $REAL     Ec, Pc, tmp, min_be, sumw,Ex;
 $LOGICAL  is_open, is_there;
-REPLACE {$MAXTMP} WITH {250}
-$REAL     wtmp($MAXTMP);
-$INTEGER  itmp($MAXTMP);
+$REAL     wtmp($MAXTRANS);
+$INTEGER  itmp($MAXTRANS);
 
 integer*4 pos, curr_rec, sh_eadl;
 integer*4 nz, nshell, tr_type;

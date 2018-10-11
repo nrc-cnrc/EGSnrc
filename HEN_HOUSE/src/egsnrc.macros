@@ -633,13 +633,15 @@ REPLACE {;COMIN/EMF-INPUTS/;} WITH {;
                      EMLMTIN,         "Ekin, u, E fractional maximum change"
                      BxIN, ByIN, BzIN,       "B field: initial region"
                      Bx, By, Bz,             "B field: current region"
-                     Bx_new, By_new, Bz_new; "B field: in new region"
+                     Bx_new, By_new, Bz_new, "B field: in new region"
+                     emfield_on;             "true if EM fields not null"
 
    $REAL    ExIN,EyIN,EzIN,
             EMLMTIN,
             BxIN,ByIN,BzIN,
             Bx,By,Bz,
             Bx_new,By_new,Bz_new;
+   $LOGICAL emfield_on;
 };
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 " The following common block is made available to the user so that  "
@@ -672,6 +674,7 @@ REPLACE {$MXESHLL} WITH {30}  "max. number of shells for an element"
 REPLACE {$MAXSHELL} WITH {3000}"max. number of shells"
 REPLACE {$MAXRELAX} WITH {10000}"max. number of relaxations channels"
 REPLACE {$MAXVAC} WITH {100}   "max. number of vacancies"
+REPLACE {$MAXTRANS} WITH {300}  "max. number of transitions per element"
 "============================================================"
 " Set input key 'Atomic relaxations' to 'simple' to recover original
 " implementation which allows photoelectric interactions with <M> and
@@ -1633,7 +1636,7 @@ REPLACE {$SET-RHOF;} WITH {RHOF=RHOR(IRL)/RHO(MEDIUM);}  "DEFAULT"
 "TEMPLATES FOR PERFORMING CHARGED PARTICLE TRANSPORT IN EM FIELD"
 REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;}
 REPLACE {$SET-USTEP-EM-FIELD;} WITH {;}
-REPLACE {$VACUUM-TRANSPORT-EM-FIELD;} WITH {;}
+REPLACE {$VACUUM-ADD-WORK-EM-FIELD;} WITH {;}
 REPLACE {$SET-ANGLES-EM-FIELD;} WITH {;}
 REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 REPLACE {$ADD-WORK-EM-FIELD;} WITH {;}
