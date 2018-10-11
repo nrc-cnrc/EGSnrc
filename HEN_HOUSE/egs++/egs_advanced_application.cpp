@@ -1198,6 +1198,14 @@ void EGS_AdvancedApplication::setRadiativeSplitting(const EGS_Float &nsplit) {
     the_egsvr->nbr_split = nsplit;
 }
 
+//************************************************************
+// Utility function for ausgab phase space scoring objects
+//************************************************************
+void EGS_AdvancedApplication::setLatch(int latch) {
+    int np = the_stack->np-1;
+    the_stack->latch[np] = latch;
+}
+
 extern __extc__ void egsHowfar() {
     CHECK_GET_APPLICATION(app,"egsHowfar()");
     int np = the_stack->np-1;

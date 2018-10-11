@@ -211,6 +211,12 @@ public:
     void setEdep(EGS_Float edep);
     EGS_Float getEcut();
     EGS_Float getPcut();
+
+    //************************************************************
+    // Utility function for ausgab phase space scoring objects
+    //************************************************************
+    void setLatch(int latch);
+
     /* Needed by some sources */
     EGS_Float getRM();
     /* Turn ON/OFF radiative splitting */
