@@ -223,7 +223,8 @@ public:
             if (tt <= t) {
                 if (tt > 0) {
                     t = tt+boundaryTolerance;
-                } else {
+                }
+                else {
                     t = tt;
                 }
                 inew = -1;

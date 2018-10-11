@@ -82,7 +82,7 @@ EGS_TrackView::EGS_TrackView(const char *filename, vector<size_t> &ntracks) {
     // Slurp file
     char *tmp_buffer = 0;
     const char *func_name = "EGS_TrackView()";
-    
+
     ifstream data(filename, ios::binary | ios::ate);
     if (data.fail() || !data.good()) {
         egsWarning("%s: Unable to open track space file '%s'! No tracks loaded\n",

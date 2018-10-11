@@ -221,14 +221,14 @@ public:
 
         // compare with unit matrix components
         if (fabs(rxy)   < epsilon &&
-            fabs(rxz)   < epsilon &&
-            fabs(ryx)   < epsilon &&
-            fabs(ryz)   < epsilon &&
-            fabs(rzx)   < epsilon &&
-            fabs(rzy)   < epsilon &&
-            fabs(rxx-1) < epsilon &&
-            fabs(ryy-1) < epsilon &&
-            fabs(rzz-1) < epsilon ) {
+                fabs(rxz)   < epsilon &&
+                fabs(ryx)   < epsilon &&
+                fabs(ryz)   < epsilon &&
+                fabs(rzx)   < epsilon &&
+                fabs(rzy)   < epsilon &&
+                fabs(rxx-1) < epsilon &&
+                fabs(ryy-1) < epsilon &&
+                fabs(rzz-1) < epsilon) {
             return true;
         }
         return false;

@@ -48,6 +48,7 @@ html
 ### ignore OS generated files
 *~
 ._*
+.vscode
 .DS_Store
 .DS_Store?
 .Spotlight-V100
