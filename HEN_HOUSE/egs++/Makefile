@@ -42,7 +42,7 @@ egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
              egs_ausgab_object egs_particle_track egs_fortran_geometry \
-             egs_ensdf
+             egs_ensdf egs_hexagonal_lattice egs_cubic_lattice
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
