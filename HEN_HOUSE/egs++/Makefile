@@ -42,7 +42,7 @@ egspp_files = egs_input egs_base_geometry egs_library egs_transformations \
              egs_base_source egs_functions egs_application egs_run_control \
              egs_scoring egs_interpolator egs_atomic_relaxations \
              egs_ausgab_object egs_particle_track egs_fortran_geometry \
-             egs_ensdf egs_hexagonal_lattice egs_cubic_lattice
+             egs_ensdf
 
 egspp_objects = $(addprefix $(DSO1), $(addsuffix .$(obje), $(egspp_files)))
 config1h = $(IEGS1)$(DSEP)egs_config1.h egs_libconfig.h egs_functions.h
@@ -51,7 +51,8 @@ geometry_libs = egs_planes egs_cd_geometry egs_gtransformed egs_nd_geometry \
                egs_box egs_genvelope egs_spheres egs_cylinders egs_iplanes \
                egs_cones egs_gstack egs_prism egs_union egs_pyramid egs_conez\
                egs_space egs_elliptic_cylinders egs_smart_envelope \
-               egs_vhp_geometry egs_octree egs_roundrect_cylinders
+               egs_vhp_geometry egs_octree egs_roundrect_cylinders \
+			   egs_hexagonal_lattice egs_cubic_lattice
 
 source_libs = egs_collimated_source egs_isotropic_source egs_parallel_beam \
               egs_point_source egs_source_collection egs_transformed_source \
