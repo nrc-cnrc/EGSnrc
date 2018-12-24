@@ -59,6 +59,38 @@
 %C80        "Allow 80 columns of source/line (default is 72)
 %L          "Turn on listing
 
+"*******************************************************************************
+" #HYBRID_EGS - MACROS and definitions needed for MPI/OpenMP parallel 
+"            implementation.
+"*******************************************************************************
+
+" MACRO TO USE MPI CALLS. THE USER MUST DEFINE _MPI MACRO DURING COMPILATION"
+REPLACE {$MPI{#,#};} WITH{;
+$IFDEF({P1},_MPI);
+{P2};
+$ENDIF({P1});
+}
+;
+
+" MACROS TO ADD PREPROCESSOR CONDITIONAL DIRECTIVES"
+" mortran3 gets confused by the # char => we need to pass it as an "
+" argument to the macro. "
+REPLACE {$IFDEF(#,#);} WITH {{EMIT;{P1}ifdef {P2};};}
+;
+REPLACE {$IFNDEF(#,#);} WITH {{EMIT;{P1}ifndef {P2};};}
+;
+REPLACE {$ELSEIF(#,#);} WITH {{EMIT;{P1}elif {P2};};}
+;
+REPLACE {$ELSE(#);} WITH {{EMIT;{P1}else;};}
+;
+REPLACE {$IF(#,#);} WITH {{EMIT;{P1}if {P2};};}
+;
+REPLACE {$ENDIF(#);} WITH {{EMIT;{P1}endif;};}
+;
+
+"*******************************************************************************
+" #OMP_EGS - End of MACROS and definitions for MPI/OpenMP implementation.
+"*******************************************************************************
 
 "=================================================================="
 " Macros to implement implicit data types                          "

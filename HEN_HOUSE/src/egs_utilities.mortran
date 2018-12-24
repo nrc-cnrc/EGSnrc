@@ -482,6 +482,16 @@ return; end;
 "*****************************************************************************
 subroutine egs_check_arguments;
 "*****************************************************************************
+
+"*******************************************************************************
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It 
+"                   is used only if the user specifies the _MPI macro during 
+"                   compilation.
+"*******************************************************************************
+$IFDEF(#,_MPI);
+    USE MPI;
+$ENDIF(#);
+
 implicit none;
 
 ;COMIN/EGS-IO/;
@@ -491,6 +501,11 @@ $LOGICAL  have_arg,egs_isdir,egs_strip_extension,ex,
           on_egs_home;
 integer   narg, iargc, i, lnblnk1, l, l2,i_help,egs_get_unit;
 $declare_write_buffer;
+
+"*******************************************************************************
+" #PARALLEL_EGS - Error code returned by MPI subroutines
+"*******************************************************************************
+$INTEGER ierr;
 
 narg = iargc();
 IF( narg < 1 ) return;
@@ -542,6 +557,27 @@ IF( have_arg ) [
   $egs_fatal(*,'Did not find the help_message file!');
 ]
 
+"*******************************************************************************
+" #PARALLEL_EGS -   Here MPI is integrated in EGSnrc into parallelization logic.
+"                   If MPI is enabled the number of processes and process id is
+"                   extracted using MPI routines.
+"*******************************************************************************
+$IF(#,_MPI);
+
+" Set batch option "
+is_batch = .true.;
+
+" Now get number of MPI processes "
+$MPI{#, call MPI_COMM_SIZE(MPI_COMM_WORLD, n_parallel, ierr)};
+
+" And MPI process rank "
+$MPI{#, call MPI_COMM_RANK(MPI_COMM_WORLD, i_parallel, ierr)};
+
+" Increment i_parallel by one to match EGSnrc parallel standard "
+i_parallel = i_parallel + 1;
+
+$ELSE(#);
+
 " Check for batch option "
 $check_argument('-b','--batch',arg);
 IF( have_arg ) is_batch = .true.;
@@ -580,6 +616,7 @@ IF( have_arg ) [
     first_parallel = 1;
     :ok_first_job_arg:;
 ]
+$ENDIF(#);
 
 IF( n_parallel > 0 | i_parallel > 0 ) [
     IF( n_parallel*i_parallel = 0 ) [
