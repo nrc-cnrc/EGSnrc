@@ -34,12 +34,31 @@
 "                                                                             "
 "#############################################################################"
 
+"*******************************************************************************
+" #PARALLEL_EGS -   start of the program.
+"*******************************************************************************
+PROGRAM beam_main;
 
-program beam_main;
+"*******************************************************************************
+" #PARALLEL_EGS -   Include the MPI module to access MPI runtime subroutines. It 
+"                   is used only if the user specifies the _MPI macro during 
+"                   compilation.
+"*******************************************************************************
+$IFDEF(#,_MPI);
+  USE MPI;
+$ENDIF(#);
 
-implicit none;
+$IMPLICIT-NONE;
 
 $INTEGER ircode;
+
+"*******************************************************************************
+" #PARALLEL_EGS -   Establish the MPI environment. It must be initialized here 
+"                   in order to create one *.egslst file per MPI process.
+"*******************************************************************************
+$INTEGER ierr;  "error code returned by MPI subroutines"
+
+$MPI{#, call MPI_INIT(ierr)};
 
 call egs_init;
 call beam_init(ircode);
@@ -54,6 +73,12 @@ IF( ircode < 0 ) [ $CALL_EXIT(1); ]
 IF( ircode = 0 ) call beam_shower_loop;
 IF( ircode = 2 ) [ call beam_finish(1); ]
 ELSE             [ call beam_finish(0); ]
+
+"*******************************************************************************
+" #PARALLEL_EGS - Terminate the MPI environment.
+"*******************************************************************************
+$MPI{#, call MPI_FINALIZE(ierr)};
+
 $CALL_EXIT(0);
 end;
 
