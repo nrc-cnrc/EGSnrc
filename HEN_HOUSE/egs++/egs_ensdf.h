@@ -163,8 +163,9 @@ public:
 protected:
     double recordToDouble(int startPos, int endPos);
     string recordToString(int startPos, int endPos);
-    double getTag(string searchString);
+    double getTag(string searchString, string notAfter);
     double parseHalfLife(int startPos, int endPos);
+    double parseStdUncertainty(string value, string stdUncertainty);
 
     // All the lines corresponding to this record type
     vector<string> lines;
@@ -242,6 +243,7 @@ class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
     LevelRecord();
     LevelRecord(vector<string> ensdf);
+    void resetDisintegrationIntensity();
     void cumulDisintegrationIntensity(double disintIntensity);
     double getDisintegrationIntensity() const;
     void setLevelCanDecay(bool canDecay);
@@ -314,10 +316,12 @@ public:
 
     double getFinalEnergy() const;
     double getBetaIntensity() const;
+    double getBetaIntensityUnc() const;
     void setBetaIntensity(double newIntensity);
 
 private:
     void processEnsdf();
+    double betaIntensityUnc;
 };
 
 // Beta+ Record (and Electron Capture)
@@ -329,9 +333,10 @@ public:
     double getFinalEnergy() const;
     double getBetaIntensity() const;
     double getPositronIntensity() const;
-    double getECIntensity() const;
+    double getPositronIntensityUnc() const;
+    double getECIntensityUnc() const;
     void setBetaIntensity(double newIntensity);
-    void setECIntensity(double newIntensity);
+    void setPositronIntensity(double newIntensity);
     void relax(int shell,
                EGS_Float ecut, EGS_Float pcut,
                EGS_RandomGenerator *rndm, double &edep,
@@ -339,7 +344,9 @@ public:
 
 protected:
     double  ecIntensity,
-            positronIntensity;
+            positronIntensity,
+            ecIntensityUnc,
+            positronIntensityUnc;
 
 private:
     void processEnsdf();
@@ -357,6 +364,8 @@ public:
     double getDecayEnergy() const;
     double getTransitionIntensity() const;
     double getGammaIntensity() const;
+    double getGammaIntensityUnc() const;
+    double getICIntensityUnc() const;
     void setTransitionIntensity(double newIntensity);
     void setGammaIntensity(double newIntensity);
     double getMultiTransitionProb() const;
@@ -378,8 +387,11 @@ public:
 
 protected:
     EGS_I64 numGammaSampled, numICSampled;
-    double decayEnergy;
-    double transitionIntensity, multipleTransitionProb;
+    double  decayEnergy;
+    double  transitionIntensity,
+            multipleTransitionProb,
+            gammaIntensityUnc,
+            icIntensityUnc;
     int q;
     LevelRecord *finalLevel;
 
@@ -396,6 +408,7 @@ public:
 
     double getFinalEnergy() const;
     double getAlphaIntensity() const;
+    double getAlphaIntensityUnc() const;
     int getCharge() const;
     void setAlphaIntensity(double newIntensity);
     void incrNumSampled();
@@ -403,8 +416,9 @@ public:
 
 protected:
     EGS_I64 numSampled;
-    double finalEnergy;
-    double alphaIntensity;
+    double  finalEnergy,
+            alphaIntensity,
+            alphaIntensityUnc;
     int q;
 
 private:
@@ -473,7 +487,7 @@ public:
      *
      */
     EGS_Ensdf(const string nuclide, const string ensdf_filename="",
-              const string relaxType="yes", int verbosity=1);
+              const string relaxType="eadl", const bool allowMultiTrans=false, int verbosity=1);
 
     /*! \brief Destructor. */
     ~EGS_Ensdf();
@@ -485,6 +499,7 @@ public:
     vector<AlphaRecord * > getAlphaRecords() const;
     vector<GammaRecord * > getGammaRecords() const;
     vector<GammaRecord * > getMetastableGammaRecords() const;
+    vector<GammaRecord * > getUncorrelatedGammaRecords() const;
     vector<double > getXRayIntensities() const;
     vector<double > getXRayEnergies() const;
     vector<double > getAugerIntensities() const;
@@ -494,7 +509,8 @@ public:
     int verbose;
     string relaxationType;
     unsigned short int Z;
-    double decayNormalization;
+    double decayDiscrepancy;
+    bool allowMultiTransition;
 
     void normalizeIntensities();
 
@@ -520,6 +536,7 @@ protected:
     vector<AlphaRecord * > myAlphaRecords;
     vector<GammaRecord * > myGammaRecords;
     vector<GammaRecord * > myMetastableGammaRecords;
+    vector<GammaRecord * > myUncorrelatedGammaRecords;
 
 private:
 

@@ -1010,19 +1010,18 @@ public:
     /*! \brief Construct a radionuclide spectrum.
      */
     EGS_RadionuclideSpectrum(const string nuclide, const string ensdf_file,
-                             const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra,
-                             const bool scoreAlphasLocally) :
+                             const EGS_Float relativeActivity, const string relaxType, const string outputBetaSpectra, const bool scoreAlphasLocally, const bool allowMultiTransition) :
         EGS_BaseSpectrum() {
 
         // For now, hard-code verbose mode
         // 0 - minimal output
         // 1 - some output of ensdf data and normalized intensities
         // 2 - verbose output
-        int verbose = 0;
+        int verbose = 2;
 
         // Read in the data file for the nuclide
         // and build the decay structure
-        decays = new EGS_Ensdf(nuclide, ensdf_file, relaxType, verbose);
+        decays = new EGS_Ensdf(nuclide, ensdf_file, relaxType, allowMultiTransition, verbose);
 
         // Normalize the emission and transition intensities
         decays->normalizeIntensities();
@@ -1035,6 +1034,7 @@ public:
         myAlphas = decays->getAlphaRecords();
         myGammas = decays->getGammaRecords();
         myMetastableGammas = decays->getMetastableGammaRecords();
+        myUncorrelatedGammas = decays->getUncorrelatedGammaRecords();
         myLevels = decays->getLevelRecords();
         xrayIntensities = decays->getXRayIntensities();
         xrayEnergies = decays->getXRayEnergies();
@@ -1075,6 +1075,14 @@ public:
                 Emax = energy;
             }
         }
+        for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammas.begin();
+                gamma != myUncorrelatedGammas.end(); gamma++) {
+
+            double energy = (*gamma)->getDecayEnergy();
+            if (Emax < energy) {
+                Emax = energy;
+            }
+        }
         for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
             numSampledXRay.push_back(0);
             if (Emax < xrayEnergies[i]) {
@@ -1102,7 +1110,12 @@ public:
 
     /*! \brief Destructor. */
     ~EGS_RadionuclideSpectrum() {
-        delete decays;
+        if (decays) {
+            delete decays;
+        }
+        if (betaSpectra) {
+            delete betaSpectra;
+        }
     };
 
     /*! \brief Returns the maximum energy that may be emitted.
@@ -1159,6 +1172,8 @@ public:
      * 8: Metastable decay
      * 9: X-Ray (uncorrelated, from ENSDF)
      * 10: Auger electron (uncorrelated, from ENSDF)
+     * 11: Uncorrelated internal transition gamma
+     * 12: Uncorrelated conversion electron
      */
     unsigned int getEmissionType() const {
         return emissionType;
@@ -1176,7 +1191,7 @@ public:
             return;
         }
 
-        egsInformation("Energy | Intensity per 100 decays (adjusted by %f)\n", decays->decayNormalization);
+        egsInformation("Energy | Intensity per 100 decays (adjusted by %f)\n", decays->decayDiscrepancy);
         if (myBetas.size() > 0) {
             egsInformation("Beta records:\n");
         }
@@ -1184,7 +1199,7 @@ public:
                 beta != myBetas.end(); beta++) {
 
             egsInformation("%f %f\n", (*beta)->getFinalEnergy(),
-                           ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100*decays->decayNormalization);
+                           ((EGS_Float)(*beta)->getNumSampled()/(ishower+1))*100);
         }
         if (myAlphas.size() > 0) {
             egsInformation("Alpha records:\n");
@@ -1193,7 +1208,7 @@ public:
                 alpha != myAlphas.end(); alpha++) {
 
             egsInformation("%f %f\n", (*alpha)->getFinalEnergy(),
-                           ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100*decays->decayNormalization);
+                           ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100);
         }
         if (myGammas.size() > 0) {
             egsInformation("Gamma records (E,Igamma,Ice):\n");
@@ -1204,8 +1219,8 @@ public:
 
             totalNumSampled += (*gamma)->getGammaSampled();
             egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(),
-                           ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100*decays->decayNormalization,
-                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100*decays->decayNormalization
+                           ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
+                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100
                           );
         }
         if (myGammas.size() > 0) {
@@ -1217,19 +1232,30 @@ public:
                 egsInformation("Zero gamma transitions occurred.\n");
             }
         }
+        if (myUncorrelatedGammas.size() > 0) {
+            egsInformation("Uncorrelated gamma records (E,Igamma,Ice):\n");
+        }
+        for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammas.begin();
+                gamma != myUncorrelatedGammas.end(); gamma++) {
+
+            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(),
+                           ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
+                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100
+                          );
+        }
         if (xrayEnergies.size() > 0) {
             egsInformation("X-Ray records:\n");
         }
         for (unsigned int i=0; i < xrayEnergies.size(); ++i) {
             egsInformation("%f %f\n", xrayEnergies[i],
-                           ((EGS_Float)numSampledXRay[i]/(ishower+1))*100*decays->decayNormalization);
+                           ((EGS_Float)numSampledXRay[i]/(ishower+1))*100);
         }
         if (augerEnergies.size() > 0) {
             egsInformation("Auger records:\n");
         }
         for (unsigned int i=0; i < augerEnergies.size(); ++i) {
             egsInformation("%f %f\n", augerEnergies[i],
-                           ((EGS_Float)numSampledAuger[i]/(ishower+1))*100*decays->decayNormalization);
+                           ((EGS_Float)numSampledAuger[i]/(ishower+1))*100);
         }
         egsInformation("\n");
     }
@@ -1331,6 +1357,10 @@ protected:
 
                         }
                         else {
+                            (*gamma)->incrICSampled();
+                            currentQ = -1;
+                            emissionType = 3;
+
                             if ((*gamma)->icIntensity.size()) {
 
                                 // Determine which shell the conversion electron
@@ -1339,10 +1369,6 @@ protected:
 
                                 for (unsigned int i=0; i<(*gamma)->icIntensity.size(); ++i) {
                                     if (u3 < (*gamma)->icIntensity[i]) {
-
-                                        (*gamma)->incrICSampled();
-
-                                        currentQ = -1;
 
                                         E = (*gamma)->getDecayEnergy() - (*gamma)->getBindingEnergy(i);
 
@@ -1355,8 +1381,6 @@ protected:
                                             // shell vacancy i
                                             (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
                                         }
-
-                                        emissionType = 3;
 
                                         // Return the conversion electron
                                         return E;
@@ -1498,6 +1522,68 @@ protected:
             }
         }
 
+        // Uncorrelated internal transitions
+        for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammas.begin();
+                gamma != myUncorrelatedGammas.end(); gamma++) {
+            if (u < (*gamma)->getTransitionIntensity()) {
+
+                // A gamma transition may either be a gamma emission
+                // or an internal conversion electron
+                EGS_Float u2 = 0;
+                if ((*gamma)->getGammaIntensity() < 1) {
+                    u2 = rndm->getUniform();
+                }
+
+                // If a gamma emission occurs
+                if (u2 < (*gamma)->getGammaIntensity()) {
+
+                    (*gamma)->incrGammaSampled();
+
+                    currentQ = (*gamma)->getCharge();
+
+                    E = (*gamma)->getDecayEnergy();
+
+                    totalGammaEnergy += E;
+
+                    emissionType = 11;
+
+                    return E;
+
+                }
+                else {
+                    (*gamma)->incrICSampled();
+                    currentQ = -1;
+                    emissionType = 12;
+
+                    if ((*gamma)->icIntensity.size()) {
+
+                        // Determine which shell the conversion electron
+                        // comes from. This will create a shell vacancy
+                        EGS_Float u3 = rndm->getUniform();
+
+                        for (unsigned int i=0; i<(*gamma)->icIntensity.size(); ++i) {
+                            if (u3 < (*gamma)->icIntensity[i]) {
+
+                                E = (*gamma)->getDecayEnergy() - (*gamma)->getBindingEnergy(i);
+
+                                // Add relaxation particles to the source stack
+                                if (relaxationType == "eadl") {
+
+                                    // Generate relaxation particles for a
+                                    // shell vacancy i
+                                    (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
+                                }
+
+                                // Return the conversion electron
+                                return E;
+                            }
+                        }
+                    }
+                    return 0;
+                }
+            }
+        }
+
         // XRays from the ensdf
         for (unsigned int i=0; i < xrayIntensities.size(); ++i) {
             if (u < xrayIntensities[i]) {
@@ -1545,8 +1631,9 @@ private:
     EGS_Ensdf                   *decays;
     vector<BetaRecordLeaf *>    myBetas;
     vector<AlphaRecord *>       myAlphas;
-    vector<GammaRecord *>       myGammas;
-    vector<GammaRecord *>       myMetastableGammas;
+    vector<GammaRecord *>       myGammas,
+           myMetastableGammas,
+           myUncorrelatedGammas;
     vector<LevelRecord *>       myLevels;
     vector<double>              xrayIntensities,
            xrayEnergies,
@@ -1975,7 +2062,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             egsInformation("EGS_BaseSpectrum::createSpectrum: Fluorescence and auger from the ensdf file will be ignored. No relaxations following radionuclide disintegrations will be modelled.\n");
         }
         else {
-            egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'atomic relaxations'. Use 'eadl' (default) or 'ensdf'.\n");
+            egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'atomic relaxations'. Use 'eadl' (default), 'ensdf' or 'off'.\n");
         }
 
         // Determine whether to output beta energy spectra to files
@@ -1984,13 +2071,19 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         err = inp->getInput("output beta spectra", tmp_outputBetaSpectra);
         if (!err) {
             outputBetaSpectra = tmp_outputBetaSpectra;
+
+            if (inp->compare(outputBetaSpectra,"yes")) {
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Beta energy spectra will be output to files.\n");
+            }
+            else if (inp->compare(outputBetaSpectra,"no")) {
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Beta energy spectra will not be output to files.\n");
+            }
+            else {
+                egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'output beta spectra'. Use 'no' (default) or 'yes'.\n");
+            }
         }
         else {
             outputBetaSpectra = "no";
-        }
-        if (inp->compare(outputBetaSpectra,"yes")) {
-            outputBetaSpectra = "yes";
-            egsInformation("EGS_BaseSpectrum::createSpectrum: Beta energy spectra will be output to files.\n");
         }
 
         // Determine whether to score alpha energy locally or discard it
@@ -2002,6 +2095,32 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
             if (inp->compare(tmp_alphaScoring,"local")) {
                 scoreAlphasLocally = true;
                 egsInformation("EGS_BaseSpectrum::createSpectrum: Alpha particles will deposit energy locally, in the same region as creation.\n");
+            }
+            else if (inp->compare(tmp_alphaScoring,"discard")) {
+                scoreAlphasLocally = false;
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Alpha particles will be discarded (no transport or energy deposition).\n");
+            }
+            else {
+                egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'alpha scoring'. Use 'discard' (default) or 'local'.\n");
+            }
+        }
+
+        // Determine whether to score alpha energy locally or discard it
+        // By default, the energy is discarded
+        string tmp_allowMultiTransition;
+        bool allowMultiTransition = false;
+        err = inp->getInput("extra transition approximation", tmp_allowMultiTransition);
+        if (!err) {
+            if (inp->compare(tmp_allowMultiTransition,"on")) {
+                allowMultiTransition = true;
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Extra transition approximation is on. If the intensity away from a level in a radionuclide daughter is larger than the intensity feeding the level (e.g. decays to that level), then additional transitions away from that level will be sampled. They will not be correlated with decays, but the spectrum will produce emission rates to match both the decay intensities and the internal transition intensities from the ensdf file.\n");
+            }
+            else if (inp->compare(tmp_allowMultiTransition,"off")) {
+                allowMultiTransition = false;
+                egsInformation("EGS_BaseSpectrum::createSpectrum: Extra transition approximation is off.\n");
+            }
+            else {
+                egsFatal("EGS_BaseSpectrum::createSpectrum: Error: Invalid selection for 'extra transition approximation'. Use 'off' (default) or 'on'.\n");
             }
         }
 
@@ -2048,7 +2167,7 @@ EGS_BaseSpectrum *EGS_BaseSpectrum::createSpectrum(EGS_Input *input) {
         ensdf_fh.close();
 
         // Create the spectrum
-        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, relaxType, outputBetaSpectra, scoreAlphasLocally);
+        spec = new EGS_RadionuclideSpectrum(nuclide, ensdf_file, relativeActivity, relaxType, outputBetaSpectra, scoreAlphasLocally, allowMultiTransition);
     }
     else {
         egsWarning("%s unknown spectrum type %s\n",spec_msg1,stype.c_str());

@@ -301,6 +301,14 @@ public:
         if (target_shape) {
             EGS_Object::deleteObject(target_shape);
         }
+
+        for (vector<EGS_RadionuclideSpectrum * >::iterator it =
+                    decays.begin();
+                it!=decays.end(); it++) {
+            delete *it;
+            *it=0;
+        }
+        decays.clear();
     };
 
     /*! \brief Gets the next particle from the radionuclide spectra */
