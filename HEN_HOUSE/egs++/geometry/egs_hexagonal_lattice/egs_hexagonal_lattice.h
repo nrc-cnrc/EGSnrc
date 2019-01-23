@@ -45,7 +45,6 @@ class EGS_DummyGeometry :
 protected:
 
     EGS_BaseGeometry    *g;   //!< The geometry being transformed
-    EGS_AffineTransform T;    //!< The affine transformation
     string              type; //!< The geometry type
 
 public:
@@ -53,6 +52,7 @@ public:
     /*! \brief Construct a geometry that is a copy of the geometry \a G 
     transformed by \a t
     */
+    EGS_AffineTransform T;    //!< The affine transformation, no longer protected for quick debug
     EGS_DummyGeometry(EGS_BaseGeometry *G, const EGS_AffineTransform &t, 
             const string &Name = "") : EGS_BaseGeometry(Name), g(G), T(t) {
         type = g->getType(); type += "T"; nreg = g->regions();
@@ -294,9 +294,8 @@ public:
     int howfar(int ireg, const EGS_Vector &x, const EGS_Vector &u, EGS_Float &t, int *newmed=0, EGS_Vector *normal=0)
 	{
 		//egsWarning("%s howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",getName().c_str(),ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
-		//egsWarning("\t where r = %e\n",sqrt((x.x*x.x)+(x.y*x.y)+(x.z*x.z)));
 		
-		// Catch t=0 exception, which causes issues when making a lattice of lattices
+		// Catch t=0 exception, which sometimes causes issues when making a lattice of lattices
 		if (t < epsilon)
 		{
 			t = 0.0;
@@ -310,47 +309,54 @@ public:
 		
 			// Do the howfar call
 			EGS_Float tempT = t;
-			//egsWarning("%s sub->howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",getName().c_str(),ireg-base->regions(), x.x, x.y, x.z, u.x, u.y, u.z, tempT);
+			//{EGS_Vector xt(x); sub->T.inverseTransform(xt);egsWarning("%s sub->howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",getName().c_str(),ireg-base->regions(), xt.x, xt.y, xt.z, u.x, u.y, u.z, tempT);}
 			int tempReg = sub->howfar(ireg-base->regions(),x,u,tempT,newmed,normal);
 			
 			// If we do leave the subgeom, we want to return the index
 			// of the region of the base geometry we would be entering,
-			// which is not necessarily ind if subgeom is at the
-			// boundary
+			// which is not necessarily ind if subgeom is at a boundary
 			EGS_Vector newX = u; newX.normalize(); newX = x + (newX * tempT);
 			
-			//egsWarning("\tradius of new x %e\n",sqrt((newX.x*newX.x)+(newX.y*newX.y)+(newX.z*newX.z)));
-			if (!(tempReg+1) || base->isWhere(newX) != ind)
+			if (base->isWhere(newX) != ind) // If we leave ind region of base
 			{
 				t = tempT;				
 				
-				//egsWarning("\tbase howfar(%6d, [%e,%e,%e], [%e,%e,%e], %e)\n",ind, x.x, x.y, x.z, u.x, u.y, u.z, t);
-				tempReg = base->howfar(base->isWhere(x),x,u,t,0,normal);
+				//egsWarning("\tbase->howfar(%6d, [%e,%e,%e], [%e,%e,%e], %e)\n",ind, x.x, x.y, x.z, u.x, u.y, u.z, t);
+				tempReg = base->howfar(ind,x,u,t,0,normal);
 				if (newmed && tempReg >= 0)
 					*newmed = base->medium(tempReg);
 				//egsWarning("\treturn %d (%e)\n",tempReg,t);
-				//egsWarning("new x should be[%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+				//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
 				
 				if (t<0)
 				{
-					egsWarning("Returning negative t from subgeom\n");
+					egsWarning("Returning negative t from subgeom of %s\n",getName().c_str());
 					egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
+					//egsFatal("Break 1!\n");
 				}
 				return tempReg;
 			}
 			
-			t = tempT;
-			if (newmed && tempReg >= 0)
-				*newmed = sub->medium(tempReg);
-			//egsWarning("\treturn %d (%e)\n",tempReg+base->regions(),t);
-			//egsWarning("new x should be[%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+			if (!(tempReg+1)) // If we leave sub geom entirely
+			{
+				//egsWarning("\treturn %d (%e)\n",tempReg+base->regions(),t);
+				//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+				if (newmed)
+					*newmed = base->medium(ind);
+				t = tempT;
+				return ind;
+			}
 			
+			// else we stay in sub geom
+			t = tempT;
+			//egsWarning("\treturn %d (%e)\n",tempReg,t);
+			//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);			
 			if (t<0)
 			{
-				egsWarning("Returning negative t from subgeom\n");
+				egsWarning("Returning negative t from subgeom of %s\n",getName().c_str());
 				egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
+				//egsFatal("Break 2!\n");
 			}
-			//egsWarning("\treturn %d (%e)\n",tempReg,t);
 			return tempReg+base->regions();
 		}
 		else if (ireg == ind) // If we are in the region that could contain subgeoms
@@ -444,10 +450,10 @@ public:
 					if (newmed && tempReg >= 0)
 						*newmed = sub->medium(tempReg);
 					//egsWarning("\treturn %d (%f)\n",tempReg+base->regions(),t);
-					//egsWarning("new x should be[%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+					//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
 					if (t<0)
 					{
-						egsWarning("Returning negative t from region %d in base geom t\n", ind);
+						egsWarning("Returning negative t from region %d in base geom of %s\n", ind, getName().c_str());
 						egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
 						//egsFatal("Break 1!\n");
 					}
@@ -459,14 +465,15 @@ public:
 			int tempReg = base->howfar(ireg,x,u,t,newmed,normal);
 			if (t<0)
 			{
-				egsWarning("Returning negative t from region %d in base geom\n", ind);
+				egsWarning("Returning negative t from region %d in base geom of %s\n", ind, getName().c_str());
 				egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
 				//egsFatal("Break 2!\n");
 			}
 			if (newmed && tempReg >= 0)
 				*newmed = base->medium(tempReg);
-			//egsWarning("new x should be[%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+			
 			//egsWarning("\treturn %d (%f)\n",tempReg,t);
+			//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
 			return tempReg;
 		}
 		else // Not in region containing subgeoms, then it is quite easy
@@ -487,11 +494,11 @@ public:
 					if (newmed && newReg >= 0)   // media and region
 						*newmed = sub->medium(newReg);
 					//egsWarning("\treturn %d (%f)\n",newReg+base->regions(),t);
-					//egsWarning("new x should be[%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+					//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
 					if (t<0)
 					{
-						egsWarning("Returning negative t from region not %d in base geom\n", ind);
-						egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
+						egsWarning("Returning negative t from region not %d in base geom of %s\n", ind, getName().c_str());
+						egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e])\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
 						//egsFatal("Break 1!\n");
 					}
 					return newReg + base->regions();
@@ -501,10 +508,10 @@ public:
 			if (newmed && tempReg >= 0)
 				*newmed = base->medium(tempReg);
 			//egsWarning("\treturn %d (%e)\n",tempReg,t);
-			//egsWarning("new x should be[%e,%e,%e] %e\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
+			//egsWarning("\tnew x should be [%e,%e,%e]\n",x.x+t*u.x,x.y+t*u.y,x.z+t*u.z);
 			if (t<0)
 			{
-				egsWarning("Returning negative t from region not %d in base geom\n", ind);
+				egsWarning("Returning negative t from region not %d in base geom of %s\n", ind, getName().c_str());
 				egsWarning("howfar(%7d,[%e,%e,%e],[%e,%e,%e],%e)\n",ireg, x.x, x.y, x.z, u.x, u.y, u.z, t);
 				//egsFatal("Break 2!\n");
 			}
@@ -515,13 +522,13 @@ public:
     EGS_Float hownear(int ireg, const EGS_Vector &x)
 	{
 		//egsWarning("%s hownear(%6d,[%e,%e,%e])\n", getName().c_str(), ireg, x.x, x.y, x.z);
-		//egsWarning("\twhere r = %e\n",sqrt((x.x*x.x)+(x.y*x.y)+(x.z*x.z)));
-		EGS_Float temp, dist = base->hownear(ind,x);
+		
+		EGS_Float temp, dist = base->hownear(ireg>=base->regions()?ind:ireg,x);
 		if (ireg >= base->regions())
 		{
 			sub->setTransformation(closestPoint(x));
 			temp = sub->hownear(ireg-base->regions(),x);
-			//egsWarning("\treturn %e\n",sub->hownear(ireg-base->regions(),x));
+			//{EGS_Vector xt(x); sub->T.inverseTransform(xt);egsWarning("\t%s sub->hownear(%6d,[%e,%e,%e])\n",getName().c_str(), ireg-base->regions(), xt.x, xt.y, xt.z);}
 			return (temp<dist)?temp:dist;
 		}
 		else if (ireg == ind)
