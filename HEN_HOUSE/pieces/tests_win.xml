@@ -173,7 +173,7 @@ void EGS_EXIT__(int *status){my_exit(status);}
  <opt> </opt>
  <map>
   <key>OUTSTRING</key>
-  <body>echo hallo</body>
+  <body>echo off</body>           <!-- parse only test output using silent cmd -->
   <body>blah__blah</body>
  </map>
  <arg>0</arg>
@@ -190,7 +190,7 @@ void EGS_EXIT__(int *status){my_exit(status);}
       do i=1,len(command)
         command(i:i) = ' '
       end do
-      command = 'echo hallo'
+      command = 'echo off'          <!-- parse only test output using silent cmd -->
       command(11:11) = char(0)
       istat = 222222
       call system(command,istat)
