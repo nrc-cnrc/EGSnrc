@@ -1744,6 +1744,15 @@ void MTest::execute(){
     if ( exeTimes < args.count() ){
         QStringList the_arg; the_arg << QString( args[exeTimes] );
         QString command = QString("./") + t[currentTask].exeName();
+
+        QString criterion = t[currentTask].checkMode();
+        if ( criterion.toLower() == "exitstatus"){
+            exeProc->setProcessChannelMode(QProcess::MergedChannels);
+        }
+        else if (  criterion.toLower() == "output"){
+            exeProc->setProcessChannelMode(QProcess::SeparateChannels);
+		}
+
         exeProc->start(command,the_arg);
         if(exeProc->error()==QProcess::FailedToStart){
 	//if ( ! exeProc->start() ) {
