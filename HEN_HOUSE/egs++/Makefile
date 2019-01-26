@@ -119,10 +119,13 @@ $(DSO1)egs_object_factory.$(obje): egs_object_factory.cpp egs_object_factory.h \
 
 $(DSO1)egs_spectra.$(obje): egs_spectra.cpp egs_base_source.h $(config1h) \
     egs_rndm.h egs_object_factory.h egs_alias_table.h egs_vector.h \
-    egs_input.h egs_math.h
+    egs_input.h egs_math.h egs_ensdf.h
 
 $(DSO1)egs_base_source.$(obje): egs_base_source.cpp egs_base_source.h \
     egs_vector.h $(config1h) egs_object_factory.h egs_input.h
+
+$(DSO1)egs_ensdf.$(obje): egs_ensdf.cpp egs_ensdf.h \
+    $(config1h) egs_functions.h egs_math.h egs_alias_table.h egs_atomic_relaxations.h
 
 $(DSO1)egs_geometry_tester.$(obje): egs_geometry_tester.cpp \
     egs_geometry_tester.h egs_input.h egs_vector.h egs_base_geometry.h \

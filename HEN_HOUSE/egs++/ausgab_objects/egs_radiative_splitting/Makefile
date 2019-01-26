@@ -32,7 +32,7 @@ include $(EGS_CONFIG)
 include $(SPEC_DIR)egspp.spec
 include $(SPEC_DIR)egspp_$(my_machine).conf
 
-DEFS = $(DEF1) -DBUILD_DOSE_SCORING_DLL
+DEFS = $(DEF1) -DBUILD_RADIATIVE_SPLITTING_DLL
 
 library = egs_radiative_splitting
 lib_files = egs_radiative_splitting
