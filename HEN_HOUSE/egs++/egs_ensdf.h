@@ -238,7 +238,7 @@ public:
 };
 
 // Level Record
-class LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
+class EGS_EXPORT LevelRecord : public Record, public Branch<Leaf<LevelRecord> > {
 public:
     LevelRecord();
     LevelRecord(vector<string> ensdf);
@@ -266,7 +266,7 @@ public:
 };
 
 // Generic beta record
-class BetaRecordLeaf : public Record, public ParentRecordLeaf, public
+class EGS_EXPORT BetaRecordLeaf : public Record, public ParentRecordLeaf, public
     NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     BetaRecordLeaf(vector<string> ensdf, ParentRecord *myParent,
@@ -307,7 +307,7 @@ protected:
 };
 
 // Beta- record
-class BetaMinusRecord : public BetaRecordLeaf {
+class EGS_EXPORT BetaMinusRecord : public BetaRecordLeaf {
 public:
     BetaMinusRecord(vector<string> ensdf, ParentRecord *myParent,
                     NormalizationRecord *myNormalization, LevelRecord *myLevel);
@@ -321,7 +321,7 @@ private:
 };
 
 // Beta+ Record (and Electron Capture)
-class BetaPlusRecord : public BetaRecordLeaf {
+class EGS_EXPORT BetaPlusRecord : public BetaRecordLeaf {
 public:
     BetaPlusRecord(vector<string> ensdf, ParentRecord *myParent,
                    NormalizationRecord *myNormalization, LevelRecord *myLevel);
@@ -346,7 +346,7 @@ private:
 };
 
 // Gamma record
-class GammaRecord : public Record, public ParentRecordLeaf,
+class EGS_EXPORT GammaRecord : public Record, public ParentRecordLeaf,
     public NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     GammaRecord(vector<string> ensdf, ParentRecord *myParent,
@@ -388,7 +388,7 @@ private:
 };
 
 // Alpha record
-class AlphaRecord : public Record, public ParentRecordLeaf, public
+class EGS_EXPORT AlphaRecord : public Record, public ParentRecordLeaf, public
     NormalizationRecordLeaf, public LevelRecordLeaf {
 public:
     AlphaRecord(vector<string> ensdf, ParentRecord *myParent,
