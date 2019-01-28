@@ -3387,7 +3387,7 @@ REPLACE {COMIN/GetInput/;} WITH
         ERROR_FLAG,                "0 for no errors, 1 for errors      "
         DELIMETER;                 "Name of the delimeter              "
    character ALLOWED_INPUTS*$STRING32,VALUES_SOUGHT*$STRING32,
-             CHAR_VALUE*$STRING80,DELIMETER*$STRING32;
+             CHAR_VALUE*$STRING256,DELIMETER*$STRING32;
    $REAL     VALUE,DEFAULT,VALUE_MIN,VALUE_MAX;
    $INTEGER  NVALUE,TYPE,NMIN,NMAX,ERROR_FLAG,ERROR_FLAGS,i_errors;
 }
