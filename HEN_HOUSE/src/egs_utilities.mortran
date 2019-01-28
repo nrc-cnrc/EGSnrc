@@ -1549,6 +1549,12 @@ IF( arg(l-5:l) = '_debug' ) [
 IF( arg(l-5:l) = '_noopt' ) [
     arg(l-5:l) = ' '; l = l-5;
 ]
+"*******************************************************************************
+" #PARALLEL_EGS -   Added IF sentence when user code is compiled with MPI.
+"*******************************************************************************
+IF( arg(l-3:l) = '_mpi' ) [
+    arg(l-3:l) = ' '; l = l - 4;
+]
 l1 = len(ucode);
 IF( l > l1 ) [
     $egs_fatal(*,' user code name is too long (',l,' chars)');
