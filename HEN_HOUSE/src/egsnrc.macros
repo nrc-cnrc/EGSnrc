@@ -60,8 +60,7 @@
 %L          "Turn on listing
 
 "*******************************************************************************
-" #HYBRID_EGS - MACROS and definitions needed for MPI/OpenMP parallel 
-"            implementation.
+" #PARALLEL_EGS - MACROS and definitions needed for MPI parallel implementation.
 "*******************************************************************************
 
 " MACRO TO USE MPI CALLS. THE USER MUST DEFINE _MPI MACRO DURING COMPILATION"
@@ -89,7 +88,7 @@ REPLACE {$ENDIF(#);} WITH {{EMIT;{P1}endif;};}
 ;
 
 "*******************************************************************************
-" #OMP_EGS - End of MACROS and definitions for MPI/OpenMP implementation.
+" #PARALLEL_EGS - End of MACROS and definitions for MPI implementation.
 "*******************************************************************************
 
 "=================================================================="

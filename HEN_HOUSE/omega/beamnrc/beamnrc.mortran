@@ -5558,7 +5558,7 @@ $IF(#,_NOPJOB);
            AMASS(ID)=0.; "zero these since they get summed again in ISUMRY"
         ]
         CALL ISUMRY;
-        "call egs_combine_runs(combine_results,'.egsdat');"
+        call egs_combine_runs(combine_results,'.egsdat');
         NCASET=NCASEO;  IHSTRY=NCASET; NCASE=0;
         CALL SRCOTO(WEIGHT);
         goto :TIME-PLUS-ANAL:;
