@@ -127,7 +127,7 @@ EGS_COMPILE = $(EGS_BINDIR)egs_compile$(EXE)
 
 # The fortran file extension
 #
-FEXT = f
+FEXT = F
 
 # The git hash and branch
 GIT_HASH =
