@@ -468,7 +468,7 @@ public:
         for (vector<BetaRecordLeaf *>::iterator beta = myBetas.begin();
                 beta != myBetas.end(); beta++) {
 
-            // Skip electron capture records since they don't emit a particle
+            // Skip electron capture records
             if ((*beta)->getCharge() == 1 &&
                     (*beta)->getPositronIntensity() == 0) {
                 continue;
@@ -942,6 +942,16 @@ It is defined using the following input
                             particles and their energy completely, or deposit
                             the energy immediately after creation in the
                             local region.
+    extra transition approximation = [optional, default=off] off or on
+                            If the intensity away from a level in a radionuclide
+                            daughter is larger than the intensity feeding the
+                            level (e.g. decays to that level), then additional
+                            transitions away from that level will be sampled if
+                            this approximation is on.
+                            They will not be correlated with decays, but the
+                            spectrum will produce emission rates to match both
+                            the decay intensities and the internal transition
+                            intensities from the ensdf file.
 :stop spectrum:
 :start spectrum:
     type                = radionuclide
@@ -971,14 +981,16 @@ particle is returned. Use the 'alpha scoring = local' option to force alpha part
 to deposit energy in the same region as their creation. By default, no energy
 is deposited and the alpha particles are discarded immediately.
 
-- Internal transition gammas are sampled and emitted following a disintegration
+- Internal transitions are sampled following a disintegration
 if the daughter nuclide is in an excited state. The energy level of the
 daughter is then reset according to the internal transition that took place.
-Note that there are cases where a transition photon is not guaranteed.
+Note that there are cases where a transition is not guaranteed.
 In such a case, the daughter level is set to zero and zero energy is returned
 from <b>\c sample()</b>. There are also cases where multiple transitions occur after
-a single disintegration. Finally, internal transitions may result in
-conversion electrons and relaxation emissions.
+a single disintegration, if the 'extra transition approximation' option is set
+to 'on'. Internal transitions may also result in
+conversion electrons and relaxation emissions. Internal pair production is currently
+modelled in the sampling routine, but no particles are produced.
 
 - Relaxations that result in X-Ray fluorescence and Auger emissions return photons
 or electrons until the cascade is complete. Note that X-Ray and Auger emissions
@@ -1017,7 +1029,7 @@ public:
         // 0 - minimal output
         // 1 - some output of ensdf data and normalized intensities
         // 2 - verbose output
-        int verbose = 2;
+        int verbose = 0;
 
         // Read in the data file for the nuclide
         // and build the decay structure
@@ -1174,6 +1186,8 @@ public:
      * 10: Auger electron (uncorrelated, from ENSDF)
      * 11: Uncorrelated internal transition gamma
      * 12: Uncorrelated conversion electron
+     * 13: Internal pair production
+     * 14: Uncorrelated internal pair production
      */
     unsigned int getEmissionType() const {
         return emissionType;
@@ -1211,16 +1225,17 @@ public:
                            ((EGS_Float)(*alpha)->getNumSampled()/(ishower+1))*100);
         }
         if (myGammas.size() > 0) {
-            egsInformation("Gamma records (E,Igamma,Ice):\n");
+            egsInformation("Gamma records (E,Igamma,Ice,Ipp):\n");
         }
         EGS_I64 totalNumSampled = 0;
         for (vector<GammaRecord *>::iterator gamma = myGammas.begin();
                 gamma != myGammas.end(); gamma++) {
 
             totalNumSampled += (*gamma)->getGammaSampled();
-            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(),
+            egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(),
                            ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
-                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100
+                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
+                           ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
                           );
         }
         if (myGammas.size() > 0) {
@@ -1233,14 +1248,15 @@ public:
             }
         }
         if (myUncorrelatedGammas.size() > 0) {
-            egsInformation("Uncorrelated gamma records (E,Igamma,Ice):\n");
+            egsInformation("Uncorrelated gamma records (E,Igamma,Ice,Ipp):\n");
         }
         for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammas.begin();
                 gamma != myUncorrelatedGammas.end(); gamma++) {
 
-            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(),
+            egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(),
                            ((EGS_Float)(*gamma)->getGammaSampled()/(ishower+1))*100,
-                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100
+                           ((EGS_Float)(*gamma)->getICSampled()/(ishower+1))*100,
+                           ((EGS_Float)(*gamma)->getIPSampled()/(ishower+1))*100
                           );
         }
         if (xrayEnergies.size() > 0) {
@@ -1356,7 +1372,7 @@ protected:
                             return E;
 
                         }
-                        else {
+                        else if (u2 < (*gamma)->getICIntensity()) {
                             (*gamma)->incrICSampled();
                             currentQ = -1;
                             emissionType = 3;
@@ -1387,6 +1403,22 @@ protected:
                                     }
                                 }
                             }
+                            return 0;
+                        }
+                        else {
+                            (*gamma)->incrIPSampled();
+                            emissionType = 13;
+
+                            // Internal pair production results in a positron
+                            // and electron pair
+
+                            //TODO: This is left for future work, we need to
+                            // determine the energies of the electron/positron
+                            // pair (sample uniformly?) and then determine the
+                            // corresponding directions. It might be best to do
+                            // this in the source instead of the spectrum.
+
+                            currentQ = 1;
                             return 0;
                         }
                     }
@@ -1550,7 +1582,7 @@ protected:
                     return E;
 
                 }
-                else {
+                else if (u2 < (*gamma)->getICIntensity()) {
                     (*gamma)->incrICSampled();
                     currentQ = -1;
                     emissionType = 12;
@@ -1579,6 +1611,22 @@ protected:
                             }
                         }
                     }
+                    return 0;
+                }
+                else {
+                    (*gamma)->incrIPSampled();
+                    emissionType = 14;
+
+                    // Internal pair production results in a positron
+                    // and electron pair
+
+                    //TODO: This is left for future work, we need to
+                    // determine the energies of the electron/positron
+                    // pair (sample uniformly?) and then determine the
+                    // corresponding directions. It might be best to do
+                    // this in the source instead of the spectrum.
+
+                    currentQ = 1;
                     return 0;
                 }
             }

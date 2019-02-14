@@ -580,17 +580,33 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
     }
     if (myGammaRecords.size()) {
-        egsInformation("Gamma records (E,Igamma,Ice):\n");
+        egsInformation("Gamma records (E,Igamma,Ice,Ipp):\n");
         for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
                 gamma != myGammaRecords.end(); gamma++) {
-            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(), (*gamma)->gammaIntensity, (*gamma)->getTransitionIntensity() - (*gamma)->gammaIntensity);
+            double icI = 0;
+            double ipI = 0;
+            if ((*gamma)->getICIntensity() > 0) {
+                icI = (*gamma)->getGammaIntensity()*(1+(*gamma)->getICIntensity()) - (*gamma)->getGammaIntensity();
+            }
+            if ((*gamma)->getIPIntensity() > 0) {
+                ipI = (*gamma)->getTransitionIntensity() - (*gamma)->getGammaIntensity() - icI;
+            }
+            egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(), (*gamma)->getGammaIntensity(), icI, ipI);
         }
     }
     if (myUncorrelatedGammaRecords.size()) {
-        egsInformation("Uncorrelated gamma records (E,Igamma,Ice):\n");
+        egsInformation("Uncorrelated gamma records (E,Igamma,Ice,Ipp):\n");
         for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammaRecords.begin();
                 gamma != myUncorrelatedGammaRecords.end(); gamma++) {
-            egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(), (*gamma)->gammaIntensity, (*gamma)->getTransitionIntensity() - (*gamma)->gammaIntensity);
+            double icI = 0;
+            double ipI = 0;
+            if ((*gamma)->getICIntensity() > 0) {
+                icI = (*gamma)->getGammaIntensity()*(1+(*gamma)->getICIntensity()) - (*gamma)->getGammaIntensity();
+            }
+            if ((*gamma)->getIPIntensity() > 0) {
+                ipI = (*gamma)->getTransitionIntensity() - (*gamma)->getGammaIntensity() - icI;
+            }
+            egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(), (*gamma)->getGammaIntensity(), icI, ipI);
         }
     }
     if (xrayEnergies.size() > 0) {
@@ -752,59 +768,6 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         egsInformation("EGS_Ensdf::parseEnsdf: No metastable nuclides "
                        "detected.\n");
     }
-
-    // Check for instances where the intensity of disintegrations that
-    // lead towards a particular excited daughter level is less than
-    // the intensities of gamma transitions from it.
-    // In these cases, there are some gamma transitions that are
-    // uncorrelated with the disintegrations.
-    // To account for this, we convert a fraction of those gamma transitions
-    // into X-Rays.
-    if (allowMultiTransition) {
-        if (verbose) {
-            egsInformation("EGS_Ensdf::parseEnsdf: Comparing the cumulative disintegration intensity of each level with the gamma transition intensities... \n");
-        }
-        j = myLevelRecords.size()-1;
-        // Iterate in reverse through the levels (highest level first)
-        // This ensures we modify the intensities feeding the lower levels first
-        for (vector<LevelRecord * >::reverse_iterator it = myLevelRecords.rbegin();
-                it!=myLevelRecords.rend(); ++it) {
-
-            double disintIntensity = (*it)->getDisintegrationIntensity();
-
-            if (verbose) {
-                egsInformation("EGS_Ensdf::parseEnsdf: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
-            }
-
-            // Notice that we don't do this if disintIntensity==0
-            if (disintIntensity > epsilon && totalLevelIntensity[j] > disintIntensity + epsilon) {
-                for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                        gamma != myGammaRecords.end(); gamma++) {
-
-                    if ((*gamma)->getLevelRecord() == (*it)) {
-                        double multipleTransitionProb = (1.-disintIntensity/totalLevelIntensity[j]);
-
-                        (*gamma)->setMultiTransitionProb(multipleTransitionProb);
-
-                        if (verbose) {
-                            egsInformation("EGS_Ensdf::parseEnsdf: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
-                        }
-
-                        // Reduce the transition intensities
-                        // Now they will add to 1
-                        (*gamma)->setTransitionIntensity(
-                            (*gamma)->getTransitionIntensity() * disintIntensity/totalLevelIntensity[j]
-                        );
-                        (*gamma)->setGammaIntensity(
-                            (*gamma)->getGammaIntensity() * disintIntensity/totalLevelIntensity[j]
-                        );
-                    }
-                }
-            }
-
-            --j;
-        }
-    }
 }
 
 // Create record objects from the arrays
@@ -943,7 +906,7 @@ void EGS_Ensdf::normalizeIntensities() {
         }
 
         totalDecayIntensity += (*gamma)->getTransitionIntensity();
-        totalDecayIntensityUnc += (*gamma)->getGammaIntensityUnc() + (*gamma)->getICIntensityUnc();
+        totalDecayIntensityUnc += (*gamma)->getGammaIntensityUnc() + (*gamma)->getICIntensityUnc() + (*gamma)->getIPIntensityUnc();
     }
 
     // Check that the branch probabilities add up to one
@@ -967,7 +930,7 @@ void EGS_Ensdf::normalizeIntensities() {
 
     // At this stage, totalDecayIntensity would ideally be 100, to represent
     // that all the decay probabilities added to 100%. However, this is not usually
-    // achieved, due to uncertainties in the values. This we must adjust the numbers
+    // achieved, due to uncertainties in the values. Thus we must adjust the numbers
     // somehow in order to model decays.
     // Option 1: Do nothing special, and the decays will get normalized to to force
     // them to add to 100%. This evenly spreads the discrepancy over all decays,
@@ -1037,19 +1000,25 @@ void EGS_Ensdf::normalizeIntensities() {
         for (vector<GammaRecord *>::iterator it = myMetastableGammaRecords.begin();
                 it != myMetastableGammaRecords.end(); it++) {
 
-            // The gamma intensity is already normalized with the IC
-            // intensity so they add to 1. So we multiply by the transition
-            // intensity to get the correct units on each, and calculate
-            // the new values
-            double newGammaIntensity = (*it)->getTransitionIntensity() * (*it)->getGammaIntensity() + (*it)->getGammaIntensityUnc() / totalDecayIntensityUnc * decayDiscrepancy;
-            double newICIntensity = (*it)->getTransitionIntensity() * (1-(*it)->getGammaIntensity()) + (*it)->getICIntensityUnc() / totalDecayIntensityUnc * decayDiscrepancy;
+            double icI = 0;
+            double ipI = 0;
+            if ((*it)->getICIntensity() > 0) {
+                icI = (*it)->getGammaIntensity()*(1+(*it)->getICIntensity()) - (*it)->getGammaIntensity();
+            }
+            if ((*it)->getIPIntensity() > 0) {
+                ipI = (*it)->getTransitionIntensity() - (*it)->getGammaIntensity() - ((*it)->getGammaIntensity()*(1+(*it)->getICIntensity()) - (*it)->getGammaIntensity());
+            }
 
-            // Set the total intensity for this decay based on the new values
-            (*it)->setTransitionIntensity(newGammaIntensity + newICIntensity);
+            // We need to calculate the original intensities, adjust
+            // based on the uncertainty scaling, and normalize again
+            double newGammaIntensity = (*it)->getGammaIntensity() + (*it)->getGammaIntensityUnc() / totalDecayIntensityUnc * decayDiscrepancy;
+            double newICIntensity = icI + (*it)->getICIntensityUnc() / totalDecayIntensityUnc * decayDiscrepancy;
+            double newIPIntensity = ipI + (*it)->getIPIntensityUnc() / totalDecayIntensityUnc * decayDiscrepancy;
 
-            // Normalize the gamma intensity for sampling (either gamma
-            // transition or IC occurs, so they add to 1)
-            (*it)->setGammaIntensity(newGammaIntensity / (*it)->getTransitionIntensity());
+            // Set the intensities for this decay based on the new values
+            (*it)->setTransitionIntensity(newGammaIntensity + newICIntensity + newIPIntensity);
+            (*it)->setGammaIntensity(newGammaIntensity);
+            (*it)->setICIntensity((newICIntensity+(*it)->getGammaIntensity()) / (*it)->getGammaIntensity() - 1);
 
             // Add to the intensity toward this level
             (*it)->getLevelRecord()->cumulDisintegrationIntensity((*it)->getTransitionIntensity());
@@ -1062,76 +1031,6 @@ void EGS_Ensdf::normalizeIntensities() {
             // Add the contribution of this transition *toward* a different level
             (*gamma)->getFinalLevel()->cumulDisintegrationIntensity((*gamma)->getTransitionIntensity());
         }
-
-        // Get the total transition intensity *away* from each level
-        unsigned int j = 0;
-        vector<double> totalLevelIntensity;
-        totalLevelIntensity.resize(myLevelRecords.size());
-        for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
-                it!=myLevelRecords.end(); ++it) {
-
-            totalLevelIntensity[j] = 0;
-            for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                    gamma != myGammaRecords.end(); gamma++) {
-
-                if ((*gamma)->getLevelRecord() == (*it)) {
-                    totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
-                }
-            }
-            ++j;
-        }
-
-        // Check for instances where the intensity of disintegrations that
-        // lead towards a particular excited daughter level is less than
-        // the intensities of gamma transitions from it.
-        if (allowMultiTransition) {
-            if (verbose) {
-                egsInformation("EGS_Ensdf::normalizeIntensities: Comparing the cumulative disintegration intensity of each level with the gamma transition intensities... \n");
-            }
-            j = myLevelRecords.size()-1;
-            // Iterate in reverse through the levels (highest level first)
-            // This ensures we modify the intensities feeding the lower levels first
-            for (vector<LevelRecord * >::reverse_iterator it = myLevelRecords.rbegin();
-                    it!=myLevelRecords.rend(); ++it) {
-
-                double disintIntensity = (*it)->getDisintegrationIntensity();
-
-                if (verbose) {
-                    egsInformation("EGS_Ensdf::normalizeIntensities: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
-                }
-
-                // Notice that we don't do this if disintIntensity==0
-                if (disintIntensity > epsilon && totalLevelIntensity[j] > disintIntensity + epsilon) {
-                    for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
-                            gamma != myGammaRecords.end(); gamma++) {
-
-                        if ((*gamma)->getLevelRecord() == (*it)) {
-                            double multipleTransitionProb = (1.-disintIntensity/totalLevelIntensity[j]);
-
-                            (*gamma)->setMultiTransitionProb(multipleTransitionProb);
-
-                            if (verbose) {
-                                egsInformation("EGS_Ensdf::normalizeIntensities: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
-                            }
-
-                            // Reduce the transition intensities
-                            // Now they will add to 1
-                            (*gamma)->setTransitionIntensity(
-                                (*gamma)->getTransitionIntensity() * disintIntensity/totalLevelIntensity[j]
-                            );
-                            (*gamma)->setGammaIntensity(
-                                (*gamma)->getGammaIntensity() * disintIntensity/totalLevelIntensity[j]
-                            );
-                        }
-                    }
-                }
-
-                --j;
-            }
-        }
-
-        // Now we have guaranteed that the decay probabilities add to 100%
-        totalDecayIntensity = 100;
 
         // Print out a summary of the decays
         egsInformation("\nEGS_Ensdf::normalizeIntensities: Summary of %s decays (adjusted by %f):\n", radionuclide.c_str(), decayDiscrepancy);
@@ -1152,17 +1051,33 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
         if (myGammaRecords.size()) {
-            egsInformation("Gamma records (E,Igamma,Ice):\n");
+            egsInformation("Gamma records (E,Igamma,Ice,Ipp):\n");
             for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
                     gamma != myGammaRecords.end(); gamma++) {
-                egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(), (*gamma)->gammaIntensity, (*gamma)->getTransitionIntensity() - (*gamma)->gammaIntensity);
+                double icI = 0;
+                double ipI = 0;
+                if ((*gamma)->getICIntensity() > 0) {
+                    icI = (*gamma)->getGammaIntensity()*(1+(*gamma)->getICIntensity()) - (*gamma)->getGammaIntensity();
+                }
+                if ((*gamma)->getIPIntensity() > 0) {
+                    ipI = (*gamma)->getTransitionIntensity() - (*gamma)->getGammaIntensity() - icI;
+                }
+                egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(), (*gamma)->getGammaIntensity(), icI, ipI);
             }
         }
         if (myUncorrelatedGammaRecords.size()) {
-            egsInformation("Uncorrelated gamma records (E,Igamma,Ice):\n");
+            egsInformation("Uncorrelated gamma records (E,Igamma,Ice,Ipp):\n");
             for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammaRecords.begin();
                     gamma != myUncorrelatedGammaRecords.end(); gamma++) {
-                egsInformation("%f %f %f\n", (*gamma)->getDecayEnergy(), (*gamma)->gammaIntensity, (*gamma)->getTransitionIntensity() - (*gamma)->gammaIntensity);
+                double icI = 0;
+                double ipI = 0;
+                if ((*gamma)->getICIntensity() > 0) {
+                    icI = (*gamma)->getGammaIntensity()*(1+(*gamma)->getICIntensity()) - (*gamma)->getGammaIntensity();
+                }
+                if ((*gamma)->getIPIntensity() > 0) {
+                    ipI = (*gamma)->getTransitionIntensity() - (*gamma)->getGammaIntensity() - icI;
+                }
+                egsInformation("%f %f %.4e %.4e\n", (*gamma)->getDecayEnergy(), (*gamma)->getGammaIntensity(), icI, ipI);
             }
         }
         if (xrayEnergies.size() > 0) {
@@ -1178,6 +1093,76 @@ void EGS_Ensdf::normalizeIntensities() {
             }
         }
         egsInformation("=== End of summary ===\n");
+
+        // Now we have guaranteed that the decay probabilities add to 100%
+        totalDecayIntensity = 100;
+    }
+
+    // Check for instances where the intensity of disintegrations that
+    // lead towards a particular excited daughter level is less than
+    // the intensities of gamma transitions from it.
+    if (allowMultiTransition) {
+        if (verbose) {
+            egsInformation("EGS_Ensdf::normalizeIntensities: Comparing the cumulative disintegration intensity of each level with the gamma transition intensities... \n");
+        }
+
+        // Get the total transition intensity *away* from each level
+        unsigned int j = 0;
+        vector<double> totalLevelIntensity;
+        totalLevelIntensity.resize(myLevelRecords.size());
+        for (vector<LevelRecord * >::iterator it = myLevelRecords.begin();
+                it!=myLevelRecords.end(); ++it) {
+
+            totalLevelIntensity[j] = 0;
+            for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                    gamma != myGammaRecords.end(); gamma++) {
+
+                if ((*gamma)->getLevelRecord() == (*it)) {
+                    totalLevelIntensity[j] += (*gamma)->getTransitionIntensity();
+                }
+            }
+            ++j;
+        }
+
+        // Iterate in reverse through the levels (highest level first)
+        // This ensures we modify the intensities feeding the lower levels first
+        j = myLevelRecords.size()-1;
+        for (vector<LevelRecord * >::reverse_iterator it = myLevelRecords.rbegin();
+                it!=myLevelRecords.rend(); ++it) {
+
+            double disintIntensity = (*it)->getDisintegrationIntensity();
+
+            if (verbose) {
+                egsInformation("EGS_Ensdf::normalizeIntensities: (Level, ItoLevel, IfromLevel): %d %f %f\n", j, disintIntensity, totalLevelIntensity[j]);
+            }
+
+            // Notice that we don't do this if disintIntensity==0
+            if (disintIntensity > epsilon && totalLevelIntensity[j] > disintIntensity + epsilon) {
+                for (vector<GammaRecord *>::iterator gamma = myGammaRecords.begin();
+                        gamma != myGammaRecords.end(); gamma++) {
+
+                    if ((*gamma)->getLevelRecord() == (*it)) {
+                        double multipleTransitionProb = (1.-disintIntensity/totalLevelIntensity[j]);
+
+                        (*gamma)->setMultiTransitionProb(multipleTransitionProb);
+
+                        if (verbose) {
+                            egsInformation("EGS_Ensdf::normalizeIntensities: Multiple gamma transition probability (E,I): %f %f\n",(*gamma)->getDecayEnergy(), multipleTransitionProb);
+                        }
+
+                        // Reduce the transition intensities
+                        (*gamma)->setTransitionIntensity(
+                            (*gamma)->getTransitionIntensity() * disintIntensity/totalLevelIntensity[j]
+                        );
+                        (*gamma)->setGammaIntensity(
+                            (*gamma)->getGammaIntensity() * disintIntensity/totalLevelIntensity[j]
+                        );
+                    }
+                }
+            }
+
+            --j;
+        }
     }
 
     for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammaRecords.begin();
@@ -1280,6 +1265,7 @@ void EGS_Ensdf::normalizeIntensities() {
         }
     }
 
+    // Normalize uncorrelated internal transitions
     for (vector<GammaRecord *>::iterator gamma = myUncorrelatedGammaRecords.begin();
             gamma != myUncorrelatedGammaRecords.end(); gamma++) {
         (*gamma)->setTransitionIntensity(
@@ -1387,6 +1373,9 @@ void EGS_Ensdf::normalizeIntensities() {
                     (*gamma)->getGammaIntensity() /
                     (*gamma)->getTransitionIntensity());
 
+                (*gamma)->setICIntensity(
+                    (*gamma)->getGammaIntensity() * (1+(*gamma)->getICIntensity()));
+
                 if (totalLevelIntensity[j] > epsilon) {
                     (*gamma)->setTransitionIntensity(
                         (*gamma)->getTransitionIntensity() /
@@ -1402,10 +1391,10 @@ void EGS_Ensdf::normalizeIntensities() {
 
                 if (verbose > 1) {
                     egsInformation("EGS_Ensdf::normalizeIntensities: "
-                                   "Gamma (level,E,I,Igamma): "
-                                   "%d %f %f %f\n",
+                                   "Gamma (level,E,I,Igamma,Ice): "
+                                   "%d %f %f %f %f\n",
                                    j,(*gamma)->getDecayEnergy(), (*gamma)->getTransitionIntensity(),
-                                   (*gamma)->getGammaIntensity());
+                                   (*gamma)->getGammaIntensity(), (*gamma)->getICIntensity());
                 }
             }
         }
@@ -1847,6 +1836,26 @@ double Record::parseStdUncertainty(string value, string stdUncertainty) {
     }
 
     return atof(value.c_str());
+}
+
+string Record::getStringAfter(string searchString, size_t len) {
+    if (lines.size() > 1) {
+
+        for (int i=1; i<lines.size(); ++i) {
+
+            int tagPos = lines[i].find(searchString);
+
+            if (tagPos != std::string::npos) {
+
+                tagPos += searchString.length();
+
+                string record = lines[i].substr(tagPos, len);
+
+                return record;
+            }
+        }
+    }
+    return "";
 }
 
 // Parse a halflife from a record
@@ -2482,6 +2491,7 @@ GammaRecord::GammaRecord(vector<string> ensdf,
     q = 0;
     numGammaSampled = 0;
     numICSampled = 0;
+    numIPSampled = 0;
     multipleTransitionProb = 0;
 }
 
@@ -2493,11 +2503,16 @@ GammaRecord::GammaRecord(GammaRecord *gamma):
 
     numGammaSampled = gamma->numGammaSampled;
     numICSampled = gamma->numICSampled;
+    numIPSampled = gamma->numIPSampled;
     decayEnergy = gamma->decayEnergy;
     transitionIntensity = gamma->transitionIntensity;
     multipleTransitionProb = gamma->multipleTransitionProb;
+    gammaIntensity = gamma->gammaIntensity;
     gammaIntensityUnc = gamma->gammaIntensityUnc;
-    icIntensityUnc = gamma->icIntensityUnc;
+    icCoeff = gamma->icCoeff;
+    icCoeffUnc = gamma->icCoeffUnc;
+    ipCoeff = gamma->ipCoeff;
+    ipCoeffUnc = gamma->ipCoeffUnc;
     q = gamma->q;
     finalLevel = gamma->finalLevel;
 }
@@ -2511,9 +2526,9 @@ void GammaRecord::processEnsdf() {
     // Get the internal conversion coefficient
     // Note: This might not equal the sum of the individual shell intensities,
     // because some of the shell intensities might not be known
-    icTotal = recordToDouble(56, 62);
-    string icIntensityStr = recordToString(56, 62);
-    string icIntensityUncStr = recordToString(63, 64);
+    icCoeff = recordToDouble(56, 62);
+    string icCoeffStr = recordToString(56, 62);
+    string icCoeffUncStr = recordToString(63, 64);
 
     gammaIntensityUnc = parseStdUncertainty(gammaIntensityStr, gammaIntensityUncStr);
     // If the uncertainty is 0 (i.e. not specified), set it to 100%
@@ -2521,10 +2536,28 @@ void GammaRecord::processEnsdf() {
         gammaIntensityUnc = gammaIntensity;
     }
 
-    icIntensityUnc = parseStdUncertainty(icIntensityStr, icIntensityUncStr);
+    icCoeffUnc = parseStdUncertainty(icCoeffStr, icCoeffUncStr);
     // If the uncertainty is 0 (i.e. not specified), set it to 100%
-    if (icIntensityUnc == 0) {
-        icIntensityUnc = icTotal;
+    if (icCoeffUnc == 0) {
+        icCoeffUnc = icCoeff;
+    }
+
+    // Check for internal pair production
+    // The value and uncertainty are stored in 11 characters after IPC=
+    string ipCoeffStr_tmp = getStringAfter("IPC=", 11);
+    if (ipCoeffStr_tmp.length() > 0) {
+        string ipCoeffStr = ipCoeffStr_tmp.substr(0, 9);
+        string ipCoeffUncStr = ipCoeffStr_tmp.substr(9, 2);
+        ipCoeff = atof(ipCoeffStr.c_str());
+        ipCoeffUnc = atof(ipCoeffUncStr.c_str());
+
+        if (ipCoeffUnc == 0) {
+            ipCoeffUnc = ipCoeff;
+        }
+    }
+    else {
+        ipCoeff = 0;
+        ipCoeffUnc = 0;
     }
 
     if (getNormalizationRecord()) {
@@ -2532,15 +2565,17 @@ void GammaRecord::processEnsdf() {
                         getNormalizationRecord()->getBranchMultiplier();
 
         gammaIntensity *= factor;
-        icTotal *= factor;
         gammaIntensityUnc *= factor;
-        icIntensityUnc *= factor;
+        icCoeff *= factor;
+        icCoeffUnc *= factor;
+        ipCoeff *= factor;
+        ipCoeffUnc *= factor;
     }
 
     // Calculate the total transition intensity
-    transitionIntensity = gammaIntensity * (1+icTotal);
+    transitionIntensity = gammaIntensity * (1+icCoeff) * (1+ipCoeff);
 
-    if (icTotal > 0) {
+    if (icCoeff > 0) {
         // Get the number of shells
         int nshell = getNormalizationRecord()->getNShell();
 
@@ -2553,14 +2588,14 @@ void GammaRecord::processEnsdf() {
         double icQ = getTag("QC=");
 
         // The K shell
-        icIntensity.push_back(icK / icTotal);
+        icIntensity.push_back(icK / icCoeff);
 
         // The L1, L2, L3 shells
         // TODO: Equal probability is assigned to subshells!
         //       This assumption is an approximation
         int numShellsToInclude = min(4,nshell);
         for (unsigned int i=1; i<numShellsToInclude; ++i) {
-            icIntensity.push_back(icIntensity.back() + (icL / icTotal)/(numShellsToInclude-1));
+            icIntensity.push_back(icIntensity.back() + (icL / icCoeff)/(numShellsToInclude-1));
         }
         // Count number of shells as we go
         // Once we hit the number of shells for this element, return
@@ -2574,7 +2609,7 @@ void GammaRecord::processEnsdf() {
         // The M1-M5 shells
         numShellsToInclude = min(9,nshell);
         for (unsigned int i=4; i<numShellsToInclude; ++i) {
-            icIntensity.push_back(icIntensity.back() + (icM / icTotal)/(numShellsToInclude-4));
+            icIntensity.push_back(icIntensity.back() + (icM / icCoeff)/(numShellsToInclude-4));
         }
         if (numShellsToInclude < 9) {
 //             for (int i=0; i<icIntensity.size(); ++i) {
@@ -2586,7 +2621,7 @@ void GammaRecord::processEnsdf() {
         // The N1-7 shells
         numShellsToInclude = min(16,nshell);
         for (unsigned int i=9; i<numShellsToInclude; ++i) {
-            icIntensity.push_back(icIntensity.back() + (icN / icTotal)/(numShellsToInclude-9));
+            icIntensity.push_back(icIntensity.back() + (icN / icCoeff)/(numShellsToInclude-9));
         }
         if (numShellsToInclude < 16) {
 //             for (int i=0; i<icIntensity.size(); ++i) {
@@ -2598,7 +2633,7 @@ void GammaRecord::processEnsdf() {
         // The O1-7 shells
         numShellsToInclude = min(23,nshell);
         for (unsigned int i=16; i<numShellsToInclude; ++i) {
-            icIntensity.push_back(icIntensity.back() + (icO / icTotal)/(numShellsToInclude-16));
+            icIntensity.push_back(icIntensity.back() + (icO / icCoeff)/(numShellsToInclude-16));
         }
 
         if (numShellsToInclude < 23) {
@@ -2611,7 +2646,7 @@ void GammaRecord::processEnsdf() {
         // The P1-3 shells
         numShellsToInclude = min(26,nshell);
         for (unsigned int i=23; i<numShellsToInclude; ++i) {
-            icIntensity.push_back(icIntensity.back() + (icP / icTotal)/(numShellsToInclude-23));
+            icIntensity.push_back(icIntensity.back() + (icP / icCoeff)/(numShellsToInclude-23));
         }
 
         if (numShellsToInclude < 26) {
@@ -2623,7 +2658,7 @@ void GammaRecord::processEnsdf() {
 
         // The Q1 shell
         numShellsToInclude = 27;
-        icIntensity.push_back(icIntensity.back() + (icQ / icTotal)/(numShellsToInclude-26));
+        icIntensity.push_back(icIntensity.back() + (icQ / icCoeff)/(numShellsToInclude-26));
 
 //         for (int i=0; i<icIntensity.size(); ++i) {
 //             egsInformation("GammaRecord::processEnsdf: Shell %d: P=%f\n",i,icIntensity[i]);
@@ -2668,8 +2703,20 @@ double GammaRecord::getGammaIntensityUnc() const {
     return gammaIntensityUnc;
 }
 
+double GammaRecord::getICIntensity() const {
+    return icCoeff;
+}
+
 double GammaRecord::getICIntensityUnc() const {
-    return icIntensityUnc;
+    return icCoeffUnc;
+}
+
+double GammaRecord::getIPIntensity() const {
+    return ipCoeff;
+}
+
+double GammaRecord::getIPIntensityUnc() const {
+    return ipCoeffUnc;
 }
 
 void GammaRecord::setTransitionIntensity(double newIntensity) {
@@ -2678,6 +2725,10 @@ void GammaRecord::setTransitionIntensity(double newIntensity) {
 
 void GammaRecord::setGammaIntensity(double newIntensity) {
     gammaIntensity = newIntensity;
+}
+
+void GammaRecord::setICIntensity(double newIntensity) {
+    icCoeff = newIntensity;
 }
 
 int GammaRecord::getCharge() const {
@@ -2692,12 +2743,20 @@ void GammaRecord::incrICSampled() {
     numICSampled++;
 }
 
+void GammaRecord::incrIPSampled() {
+    numIPSampled++;
+}
+
 EGS_I64 GammaRecord::getGammaSampled() const {
     return numGammaSampled;
 }
 
 EGS_I64 GammaRecord::getICSampled() const {
     return numICSampled;
+}
+
+EGS_I64 GammaRecord::getIPSampled() const {
+    return numIPSampled;
 }
 
 LevelRecord *GammaRecord::getFinalLevel() const {

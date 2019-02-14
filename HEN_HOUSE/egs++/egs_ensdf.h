@@ -166,6 +166,7 @@ protected:
     double getTag(string searchString, string notAfter);
     double parseHalfLife(int startPos, int endPos);
     double parseStdUncertainty(string value, string stdUncertainty);
+    string getStringAfter(string searchString, size_t len);
 
     // All the lines corresponding to this record type
     vector<string> lines;
@@ -365,9 +366,13 @@ public:
     double getTransitionIntensity() const;
     double getGammaIntensity() const;
     double getGammaIntensityUnc() const;
+    double getICIntensity() const;
     double getICIntensityUnc() const;
+    double getIPIntensity() const;
+    double getIPIntensityUnc() const;
     void setTransitionIntensity(double newIntensity);
     void setGammaIntensity(double newIntensity);
+    void setICIntensity(double newIntensity);
     double getMultiTransitionProb() const;
     void setMultiTransitionProb(double newIntensity);
     int getCharge() const;
@@ -375,10 +380,11 @@ public:
     void setFinalLevel(LevelRecord *newLevel);
     void incrGammaSampled();
     void incrICSampled();
+    void incrIPSampled();
     EGS_I64 getGammaSampled() const;
     EGS_I64 getICSampled() const;
+    EGS_I64 getIPSampled() const;
     vector<double> icIntensity;
-    double icTotal, gammaIntensity;
     double getBindingEnergy(int shell) const;
     void relax(int shell,
                EGS_Float ecut, EGS_Float pcut,
@@ -386,12 +392,16 @@ public:
                EGS_SimpleContainer<EGS_RelaxationParticle> &particles);
 
 protected:
-    EGS_I64 numGammaSampled, numICSampled;
+    EGS_I64 numGammaSampled, numICSampled, numIPSampled;
     double  decayEnergy;
     double  transitionIntensity,
             multipleTransitionProb,
+            gammaIntensity,
             gammaIntensityUnc,
-            icIntensityUnc;
+            icCoeff,
+            icCoeffUnc,
+            ipCoeff,
+            ipCoeffUnc;
     int q;
     LevelRecord *finalLevel;
 
@@ -450,7 +460,7 @@ words, the relaxation emissions are not correlated with specific disintegration
 events. If you are coincidence counting, use
 '<code>atomic relaxations = eadl</code>'.
 
-There are a few nuances to the data interpretation.
+There are a few nuances to the data interpretation with '<code>atomic relaxations = ensdf</code>'.
 If a single emission intensity value is present for a combination of lines (where
 multiple energies are provided), then the average energy of the lines is used.
 For example, in the
