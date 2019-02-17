@@ -2465,19 +2465,27 @@ the high-definition micro MLC (HD120) as well as the Millenium MLC (120 MLC) ava
 linacs.  The original code was contributed by Borges et al, while the current\
 version is from Lobo & Popescu.  SYNCHDMLC is based on SYNCVMLC.
 
-The user has the option to specify cross-sections for five leaf types:\
+The user has the option to specify five leaf types:\
 FULL, HALF TARGET, HALF ISOCENTER, QUARTER TARGET, QUARTER ISOCENTER.  The geometry of each type\
 has been defined so that the HD120 MLC can be simulated using QUARTER TARGET\ISOCENTER\
 and HALF TARGET/ISOCENTER leaves and the 120 MLC can be simulated with\
-HALF TARGET/ISOCENTER and FULL leaves.  The cross-sections dimensions of unused leaf\
+HALF TARGET/ISOCENTER and FULL leaves.  The cross-section dimensions of unused leaf\
 types can be left as blanks, zeroes or nonsense real numbers (although the input line\
-must exist in the .egsinp file).  Note that HALF TARGET/ISOCENTER leaves \
-and QUARTER TARGET/ISOCENTER leaves must be specified in pairs.
+must exist in the .egsinp file).  Unlike DYNVMLC and SYNCVMLC, the number of leaves\
+in a TARGET/ISOCENTER group need not be even.  Thus, although these leaves are automatically placed so that\
+TARGET and ISOCENTER leaves alternate, the last TARGET or ISOCENTER leaf in the\
+group need not have a matching ISOCENTER or TARGET (respectively) counterpart.\
+If the next group of leaves is also TARGET/ISOCENTER, then the first leaf in the group\
+will be chosen to match the last leaf of the previous group: HALF or QUARTER TARGET to match\
+a HALF or QUARTER ISOCENTER in the previous group, or vice versa.\
+Note that the overall leaf bank cannot be defined so that\
+a TARGET leaf is immediately adjacent on the -X (ORIENT=0) or -Y (ORIENT=1) side of a FULL\
+leaf.
 
 The figure at left shows a SYNCHDMLC with 12 leaves opening in the Y-direction (ORIENT=0) using\
 all leaf types.\
-Leaves 1,2,11,12 are FULL; leaves 3,4,9,10 are HALF TARGET/ISOCENTER pairs; leaves 5-9 are\
-QUARTER TARGET/ISOCENTER pairs.
+Leaves 1,2,11,12 are FULL; leaves 3,4,9,10 are HALF TARGET/ISOCENTER leaves; leaves 5-9 are\
+QUARTER TARGET/ISOCENTER leaves.
 
 SYNCHDMLC has the option to specify cylindrical (ENDTYPE=0) or straight, focused (ENDTYPE=1)\
 leaf ends.  The origins of the cylinders defining leaf ends are at Z=ZMIN+ZTHICK/2\
