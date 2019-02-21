@@ -668,15 +668,15 @@ This command can actually be executed on the terminal from any directory! The my
 
 Load the \,\Verb|slab.egsinp|\, input file and \,\Verb|slab.ptracks|\, in
 \,\Verb|egs_view|\, utility to understand the geometry of the simulation.
-Click the \textbf{Show tracks} checkbox, rotate around the scene (left
-mouse button in the image window), and zoom in and out (scroll wheel). Pan
-the view by holding Ctrl and dragging with the left mouse button.
+Click on the scene and drag with the left mouse button to rotate the view.
+Zoom in and out with the mouse scroll wheel. Pan
+the view by holding Ctrl and dragging with the left mouse button. For more controls, see the \textbf{Controls} section on the \textbf{Camera} tab in the \,\Verb|View Controls| window.
 
 \begin{lstlisting}
 $ egs_view slab.egsinp slab.ptracks
 \end{lstlisting}
 
-After turning on particle tracks, \,\Verb|egs_view|\, should display something
+\,\Verb|egs_view|\, should display something
 like the following image. In the figure, a pencil beam of electrons is impinging
 from the left (negative z), towards the right (positive z).
 Notice that by hovering your mouse over the plate, you
@@ -1433,9 +1433,7 @@ track file \Verb+myinput.ptracks+. To visualize it launch \Verb+egs_view+ with t
 $ egs_view myinput.egsinp myinput.ptracks
 \end{lstlisting}
 
-In the GUI check the box \,\Verb+Show tracks+\, in the Particle Tracks
-section to display the tracks. You can also load the track files afterwards as
-well with the \textbf{Load tracks} button. To see tracks, make the air box transparent or define a clipping plane. The effect of the collimated source becomes more apparent as one zooms into the picture.
+In the GUI, you can also load the track files afterwards with \Verb+File->Open tracks...+. To get a better view of the tracks and geometry, make the air box transparent (on the \Verb+Colors+ tab) or define a clipping plane. Zoom in for a closer view using the mouse scroll wheel.
 
 \clearpage
 \section{Modelling an ionization chamber}
@@ -1522,15 +1520,12 @@ and out with the middle mouse button or the mouse wheel. Note that these
 manipulations do \textit{not} affect your input: \Verb|egs_view| \textit{never
 writes to the input file.}
 
-Spend a few minutes exploring the \textbf{Material colors}, \textbf{View} and
-\textbf{Look at} inputs to understand what they control. At any time you can
-export the current view as an image with the \textbf{Save image} button, while
-the \textbf{Close} button quits the application altogether.
+Spend a few minutes exploring the tabs to get a feel for what controls are available.
+At any time you can
+export the current view as an image with \Verb+File->Save image+.
 
-The \textbf{Reload} button reads the input file again, which is useful to update
-the view upon modifying the input file, without having to launch the viewer
-again. \textit{Be warned however that reloading is not robust: some changes in
-the input file may cause the viewer to quit abruptly!}
+Using \Verb+File->Reload+ the input file will be read again, which is useful to update
+the view after making changes. Just keep in mind that if there is a typo in your updated input file, \Verb|egs_view| might crash!
 
 \subsubsection{Question}
 
@@ -1593,19 +1588,17 @@ Change the \,\Verb|simulation geometry|\, to \,\Verb|my_spheres| (or the name
 you
 chose) and reload the input in the viewer. You can play with transparency to
 reveal the internal structure of the geometry, but clipping planes provide a
-more direct route. Click on the \textbf{Clipping planes...} button to access the
-planes entry table. Apply a clipping plane oriented along the positive z-axis
+more direct route. On the \textbf{Display} tab in \Verb|egs_view|, see the
+clipping planes table. Apply a clipping plane oriented along the positive z-axis
 and passing through the origin. Make the \Verb|default| medium partially
 transparent and rotate the geometry around. Apply a clipping plane to get a view
 similar to the one shown in figure~\ref{fig:box}b.
 
 For clipping planes, \Verb|ax|, \Verb|ay| and \Verb|az| define the unit normal
 to a planar surface. The surface can then be offset from the origin by setting
-\Verb|d|. \textbf{After typing in the clipping plane, click the ``1''
-to select the row}. Then click \textbf{Apply} to update the viewer.
-It is possible to use many clipping planes at once! It's a very common
-mistake to forget to \textbf{select the clipping plane row} before clicking
-\textbf{Apply}.
+the distance \Verb|d| [cm]. After typing in the 4 parameters, hit \textbf{Enter}
+to apply the clipping plane, or click away. Use the checkbox to the right of each clipping
+plane to toggle them on and off.
 
 \subsubsection{Questions}
 

@@ -336,10 +336,8 @@ After reading the geometry information, the geometry viewer
 attempts to automatically determine an optimum
 viewing position and zoom factor. This is done by first searching
 for a point that is inside the geometry and then sending out rays in
-all directions to check for the size of the geometry being viewed.
-The search for a point inside the geometry is done by default within
-a box of 100x100x100 about the origin using a step size of 1. If your
-geometry is outside of this box or if it is too small to be resolved
+all directions to check for the size of the geometry being viewed. If your
+geometry is very distant from the origin or if it is too small to be resolved
 by the search grid, the viewer will fail to find a point inside the
 geometry and will display an error message. If this problem
 occurs, one has to include the following section in the geometry definition
@@ -354,9 +352,9 @@ file outside of the geometry definition section:
     zmax = some input
 :stop view control:
 \endverbatim
-to help the viewer find a point inside the geometry. Here,
-<code> xmin, xmax, ...</code> define the box in which it is searched
-for an inside point.
+to help the viewer find a point inside the geometry. Type in the coordinates
+in cm for a bounding box around your geometry, to help the viewer know where
+to search.
 
 The rendering of the 3D scene is done using the same geometry methods
 that are used in a particle simulation
@@ -370,30 +368,95 @@ of the geometry definition. If the scene rendered by the viewer looks
 OK and corresponds to what the user expects, the user can be fairly
 confident that the geometry definition has no mistakes.
 
-\image html view_controls.png "Geometry viewer controls"
-Most of the controls of the viewer should be intuitive except
-for the definition of clipping planes. By using one or more clipping planes one
-can remove portions of the geometry (everything between the plane
-and the viewing position is ignored), which may be helpful for viewing
-the inside regions of a geometry, viewing only portions of a geometry using
-a larger zoom factor, etc.  To define a clipping plane,
-click on the \c More... button. This will show an additional dialog
-containing a table.
-\image html clipping.png "Defining clipping planes"
-The four columns of the table define the x-, y- and
-z-components of the clipping plane normal and the clipping plane position
-\f$d\f$ (so that all points on the plane satisfy the equation
- \f$a_x x + a_y y + a_z z = d\f$). Up to 10 clipping planes can be defined
-simultaneously. To also activate a clipping plane, you must select the
-left-most column containing the clipping plane number by clicking on it
-and then clicking on the \c Apply button below the table. To activate
-several clipping planes at once, hold down the shift key while selecting
-a plane row from the table.
-
 The 3D image just shown in the viewing window can be saved
 in a file in any format supported by the Qt library
-(typically jpeg, png, bmp, and various others) by clicking on
-the \c Save \c image button.
+(typically jpeg, png, bmp, and various others) using \c File-\>Save \c image.
+
+Save your view settings, including material colors, clipping planes and more
+using \c File-\>Save \c settings. Load the settings again from the \c File menu,
+or from the command line using
+
+\verbatim
+egs_view yourInput.egsinp yourInput.egsview
+\endverbatim
+
+\subsection egs_view_display The egs_view display tab
+The geometry currently being viewed is selected in the \c Simulation \c geometry
+section. This defaults to the simulation geometry specified in the input file.
+\c Clipping \c planes allow the user to view the internal structure of a geometry.
+For clipping planes, \c ax, \c ay and \c az define the unit normal
+to a planar surface. The surface can then be offset from the origin by setting
+the distance \c d [cm]. After typing in the 4 parameters, hit `Enter`
+to apply the clipping plane, or click away.
+Use the checkbox to the right of each clipping plane to toggle them on and off.
+
+Particle tracks can be loaded in the viewer, if the simulation was configured
+to produce a ptracks file (using \ref EGS_TrackScoring). One way to load the
+tracks is to launch egs_view with the ptracks file as an additional input.
+For example,
+
+\verbatim
+egs_view yourInput.egsinp yourInput.ptracks
+\endverbatim
+
+Alternatively, load the ptracks file using \c File-\>Open \c tracks.... The range
+of tracks to view can be limited using the two input boxes next to each particle
+type. Note that you can also load previously saved settings from the command line
+by also listing the .egsview file, before or after the .ptracks file.
+
+The dose, if scored to a 3ddose file, can be loaded using \c File-\>Open \c dose....
+If a dose scoring ausgab object (\ref EGS_DoseScoring) that is configured to
+produce a 3ddose file exists in the input file, then the 3ddose file will
+be automatically loaded and populate the list in the \c Dose section. The
+transparency of the dose is adjusted with the slider. If a 3ddose file is listed
+but disabled (or "grayed out"), this means that the 3ddose file dimensions
+did not match an \ref EGS_XYZGeometry in the input file.
+
+\image html egs_view1.png "The egs_view display tab"
+
+\subsection egs_view_colors The egs_view colors tab
+Various colors in the viewer can be controlled on this tab. Most importantly,
+material transparencies can be adjusted. Select the material of interest,
+set its color with the \c Color button, and set its transparency with the slider.
+
+Setting the other view colors should be intuitive. The particle tracks also
+have a checkbox to toggle energy-dependent transparency. Enabled by default,
+this option allows the transparency of track lines to be adjusted depending on
+the energy of the particle. Particles with the highest energy will not be
+transparent at all, and the lowest energy particles will be the most transparent.
+
+\image html egs_view2.png "The egs_view colors tab"
+
+\subsection egs_view_regions The egs_view regions tab
+The \c Regions tab allows the user to enable or disable the display of specific
+regions in the geometry. It does not actually remove the region from the geometry,
+so it can still be found by hovering the mouse. Rather, it sets the transparency
+of the region to 0. It also lists the material and color of every region.
+Of course, for complex geometries this list would be prohibitively long
+and affect the performance of the application, so
+the tab is disabled if greater than 1000 regions are in the geometry.
+
+\image html egs_view3.png "The egs_view regions tab"
+
+\subsection egs_view_camera The egs_view camera tab
+The \c Camera tab allows the user to control the camera position. A few camera
+presets are provided to look along each axis. To set a default view, position
+the camera as you like and click the \c Set \c Home button.
+
+An alternative way to control the view is through directly setting the
+\c Camera \c position. This sets where you are looking from, in the coordinates
+of the geometry. However, the egs_view has a limitation that the \c Rotation \c point
+must reside within the geometry volume, and a constant distance between the
+camera position and the rotation point is automatically maintained when you change either parameter.
+If the new (automatic) rotation point falls outside the geometry, then the change fails to be applied and the camera position is reset to its last setting. Similarly,
+the user cannot directly set the rotation point itself outside the geometry.
+
+To easily set the rotation point, double click on any surface in the geometry. The
+new rotation point will be set at that position.
+
+Take note of the controls listed in the \c Controls section!
+
+\image html egs_view4.png "The egs_view camera tab"
 
 \section geometry_examples Example geometries
 
