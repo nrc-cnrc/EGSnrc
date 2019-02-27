@@ -1787,7 +1787,6 @@ p, li { white-space: pre-wrap; }
  <includes>
   <include location="local">egs_vector.h</include>
   <include location="local">egs_user_color.h</include>
-  <include location="global">vector</include>
  </includes>
  <resources/>
  <connections>
