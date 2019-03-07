@@ -92,21 +92,27 @@ and perform a quick
 simulation to obtain beta spectrum files for the nuclide of interest.
 - Gamma-gamma angular correlations are currently not modeled; all emissions
 are considered isotropic.
+- Internal pair production is sampled but the electron positron pair is not
+produced.
 - Due to limitations in the current LNHB ensdf format, electron shell vacancy
 creation due to disintegrations is sampled per-shell rather than
 considering sub-shell probabilities. I.e. probabilities for vacancy creation
 in the K,L,M,N,O shells are considered, but not L1, L2, etc. The actual
 sub-shell in which the vacancy created is sampled uniformly for the given
 shell. This is an approximation, but only relevant when
-'<code>atomic relaxations = ensdf</code>' in
+'<code>atomic relaxations = eadl</code>' in
 \ref EGS_RadionuclideSpectrum.
 - Alpha particles are not transported.
 - Atomic motion & recoil from emissions is not modeled.
+- For some radionuclides the decay intensities do not add to exactly 100%, due to
+uncertainties on the intensity values. To normalize the decay intensities and
+allow for modeling, the discrepancy from 100% is divided over all decays,
+scaled by the uncertainty of each decay.
 
 Emissions are based on decays from the chosen radionuclide and can be a mix of
 beta+-, electron capture and alpha decays. Metastable radionuclides are supported.
-Internal transition gamma emissions are
-modeled event-by-event. The \ref EGS_RadionuclideSpectrum tracks
+Internal transitions are
+modeled event-by-event. The \ref EGS_RadionuclideSpectrum keeps track of
 the energy level of excited daughter nuclides so that subsequent transitions and
 electron shell cascades are correlated with specific disintegration events.
 
@@ -123,6 +129,13 @@ source, using the EADL relaxation scheme by default. Alternatively, the user can
 request to use Auger and fluorescent photons from the ensdf file comments by
 setting the spectrum input parameter '<code>atomic relaxations = ensdf</code>'.
 For more information, see \ref EGS_RadionuclideSpectrum.
+
+Note that results are usually normalized by the source fluence, which is
+returned by the \ref getFluence() function. The calculation of the fluence
+depends on the selected 'source type', but the <b> \c N </b> used depends
+on the number of disintegration events (tracked by <b> \c ishower </b>). This
+is distinct from the <b> \c ncase </b> input parameter, which is the
+number of particles returned by the source (includes relaxations etc.).
 
 A radionuclide source is defined using the following input. Notice that the
 format is similar to \ref EGS_IsotropicSource or \ref EGS_CollimatedSource.
@@ -301,6 +314,14 @@ public:
         if (target_shape) {
             EGS_Object::deleteObject(target_shape);
         }
+
+        for (vector<EGS_RadionuclideSpectrum * >::iterator it =
+                    decays.begin();
+                it!=decays.end(); it++) {
+            delete *it;
+            *it=0;
+        }
+        decays.clear();
     };
 
     /*! \brief Gets the next particle from the radionuclide spectra */
@@ -352,9 +373,13 @@ public:
 
     /*! \brief Outputs the emission stats of the spectra */
     void printSampledEmissions() {
+        egsInformation("\n======================================================\n");
+        egsInformation("Start of source emissions statistics:\n");
         for (unsigned int i=0; i<decays.size(); ++i) {
             decays[i]->printSampledEmissions();
         }
+        egsInformation("End of source emissions statistics\n");
+        egsInformation("======================================================\n\n");
     };
 
     /*! \brief Calculates the position and direction of a new source particle */

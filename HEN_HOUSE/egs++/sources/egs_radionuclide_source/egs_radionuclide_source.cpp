@@ -348,7 +348,6 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
 
         lastDisintTime = time;
         ishower += (ishowerNew - ishowerOld);
-        ishowerOld = ishowerNew;
     }
     else {
         disintegrationOccurred = false;
@@ -389,6 +388,13 @@ EGS_I64 EGS_RadionuclideSource::getNextParticle(EGS_RandomGenerator *rndm, int
     else {
         // Don't transport the particle
         E = 0;
+    }
+
+    // If the energy is zero, also set the weight to zero
+    // If you don't do this, electrons will still be given their rest
+    // mass energy in shower()
+    if (E < epsilon) {
+        wt = 0;
     }
 
     return ++count;
