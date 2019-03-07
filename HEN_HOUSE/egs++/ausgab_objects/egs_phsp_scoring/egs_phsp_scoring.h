@@ -484,11 +484,7 @@ protected:
             wt = p.w >= 0 ? p.wt : -p.wt;
         };
     };
-    mutable fstream phsp_file; //output file -- mutable so we can write to it during storeState
-    EGS_I64 count; //total no. of particles in file
-    EGS_I64 countg; //no. of photons in file
-    float emax; //max. k.e. of particles in phsp file
-    float emin; //min. k.e. of charged particles in file
+
     bool score_mc; //set to true to score multiple crossers and their descendents
 
     //variables specific to IAEA format
@@ -514,8 +510,13 @@ protected:
         return (1 << 31);
     }
 
-    int store_max; //max. no. of particles to store in p_stack
     mutable int phsp_index; //index in p_stack array -- mutable so we can change it in storeState
+    int store_max; //max. no. of particles to store in p_stack
+    mutable fstream phsp_file; //output file -- mutable so we can write to it during storeState
+    EGS_I64 count; //total no. of particles in file
+    EGS_I64 countg; //no. of photons in file
+    float emin; //min. k.e. of charged particles in file
+    float emax; //max. k.e. of particles in phsp file
     mutable bool first_flush; //first time writing to file in this run -- mutable so we can change it in storeState
 
     bool is_restart; //true if this is a restart
