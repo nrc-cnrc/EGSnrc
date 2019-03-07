@@ -75,6 +75,7 @@ unix {
         contains( CONFIG, static ){
             message( "Static build ..." )
             DESTDIR = ../../pieces/linux
+            QTPLUGIN.imageformats = -
             #LIBS += -L../dso/$$my_machine -Wl,-rpath,$$hhouse/egs++/dso/$$my_machine -legspp # Fixes path to library
             LIBS += -L$$hhouse/egs++/dso/$$my_machine -legspp                                 # Relies on LD_LIBRARY_PATH
             UNAME = $$system(getconf LONG_BIT)

@@ -119,6 +119,7 @@ unix {
     CONFIG += qt thread warn_off release stl $$my_build
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){
+        QTPLUGIN.imageformats = -
         message( "Static build ..." )
         DESTDIR = ../../pieces/linux
         UNAME = $$system(getconf LONG_BIT)

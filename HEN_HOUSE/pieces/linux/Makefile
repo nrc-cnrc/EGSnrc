@@ -51,7 +51,7 @@ egs_config=$(HEN_HOUSE)/specs/$(machine).conf
 ######################################################################
 # qt4 environment needed for egs_gui, egs_inprz and egs_beam_install #
 ######################################################################
-qt4=$(HOME)/qt-4.8.6-static
+qt4=$(QTDIR)
 qmake4=$(qt4)/mkspecs/linux-g++
 
 all: egs_gui egs_inprz egs_view egs_configure

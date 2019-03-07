@@ -70,6 +70,7 @@ win32 {
 unix {
     CONFIG  += qt thread warn_on debug_and_release $$my_build
     LIBS    += -lz  #Needed if not using Qt own zlib, in QT5 using Qtzlibh is not recommended according to documentation
+    QTPLUGIN.imageformats = -
     #message("CONFIG = $$CONFIG")
     contains( CONFIG, shared ):message( "Dynamic build..." )
     contains( CONFIG, static ){

@@ -37,7 +37,7 @@
 #ifndef EGS_ARCHIVE_
 #define EGS_ARCHIVE_
 
-#include <qtextedit.h>
+#include <QTextEdit>
 
 class PrivateArchive;
 
