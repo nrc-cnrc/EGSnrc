@@ -565,11 +565,15 @@ public:
                 }
                 // Skip for concave geometries: particles can reenter the CD geometry after leaving.
                 // Check 2. below will catch these cases.
-                else if ((ixnew < 0 && tb <= boundaryTolerance) && (bg->isConvex()  &&
-                         (g[ibase] && g[ibase]->isConvex()))) {
-                    // (a) is true
-                    return ixnew;
-                }
+                // This follow has been commented out because it fails in cases
+                // where the inscribe geometries are themselves convex but
+                // form a concave shape. Instead, just continue to do more checks.
+//                 else if ((ixnew < 0 && tb <= boundaryTolerance) && (bg->isConvex()  &&
+//                          (g[ibase] && g[ibase]->isConvex()))) {
+//                     // (a) is true
+//                     return ixnew;
+//                 }
+
                 // If a particle approaching the geometry sits on a boundary, we look back to see
                 // if we just entered the geometry (the previous checks fail to catch this case).
                 EGS_Float tb_neg = veryFar;

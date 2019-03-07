@@ -333,7 +333,7 @@ public:
                         egsWarning("t=%g d=%g\n",last_t,last_d);
 #endif
                     }
-                    d = boundaryTolerance;
+                    d = halfBoundaryTolerance;
                 }
             }
 
@@ -377,7 +377,7 @@ public:
                         if (C < -boundaryTolerance) egsWarning("EGS_CylindersT::howfar(): "
                                                                    "the particle may not be in the region we think it "
                                                                    "is as Cin = %g\n",C);
-                        d = boundaryTolerance;
+                        d = halfBoundaryTolerance;
                     }
                 }
             }
@@ -401,7 +401,7 @@ public:
                             egsWarning("  ireg=%d x=(%g,%g,%g) u=(%g,%g,%g)\n",
                                        ireg,x.x,x.y,x.z,u.x,u.y,u.z);
                         }
-                        d = boundaryTolerance;
+                        d = halfBoundaryTolerance;
                     }
                 }
             }

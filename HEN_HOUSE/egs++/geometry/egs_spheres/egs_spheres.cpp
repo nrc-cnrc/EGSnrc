@@ -173,7 +173,7 @@ int EGS_cSpheres::howfar(int ireg, const EGS_Vector &x,
              */
             R2b2 = R2[ireg] - bb2;
             if (R2b2 <= 0 && aa > 0) {
-                d = boundaryTolerance;    // hopefully a truncation problem
+                d = halfBoundaryTolerance;    // hopefully a truncation problem
             }
             else {
                 tmp = aa2 + R2b2;

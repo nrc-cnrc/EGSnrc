@@ -901,7 +901,13 @@ public:
             if (u.x > 0) {
                 EGS_Float d = (xpos[ix+1]-x.x)/u.x;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        // t=0 works on most cases but can result in
+                        // getting stuck on an edge, so use boundaryTolerance
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((++ix) < nx) {
                         inew = ireg + 1;
                     }
@@ -916,7 +922,11 @@ public:
             else if (u.x < 0) {
                 EGS_Float d = (xpos[ix]-x.x)/u.x;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((--ix) >= 0) {
                         inew = ireg - 1;
                     }
@@ -931,7 +941,11 @@ public:
             if (u.y > 0) {
                 EGS_Float d = (ypos[iy+1]-x.y)/u.y;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((++iy) < ny) {
                         inew = ireg + nx;
                     }
@@ -946,7 +960,11 @@ public:
             else if (u.y < 0) {
                 EGS_Float d = (ypos[iy]-x.y)/u.y;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((--iy) >= 0) {
                         inew = ireg - nx;
                     }
@@ -961,7 +979,11 @@ public:
             if (u.z > 0) {
                 EGS_Float d = (zpos[iz+1]-x.z)/u.z;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((++iz) < nz) {
                         inew = ireg+nxy;
                     }
@@ -976,7 +998,11 @@ public:
             else if (u.z < 0) {
                 EGS_Float d = (zpos[iz]-x.z)/u.z;
                 if (d <= t) {
-                    t = d;
+                    if(d <= boundaryTolerance) {
+                        t = boundaryTolerance;
+                    } else {
+                        t = d;
+                    }
                     if ((--iz) >= 0) {
                         inew = ireg-nxy;
                     }
