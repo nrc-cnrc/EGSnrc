@@ -68,6 +68,7 @@ unix {
     contains( CONFIG, static ){
         message( "Static build ..." )
         DEFINES += STATICGUI
+        QTPLUGIN.imageformats = -
         #INCLUDEPATH += ../egs_install/include
         DESTDIR = ../../pieces/linux
         UNAME = $$system(getconf LONG_BIT)

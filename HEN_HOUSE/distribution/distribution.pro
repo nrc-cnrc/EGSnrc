@@ -32,6 +32,9 @@
 ###################################################################
 
 CONFIG += release thread
+QT += widgets
+LIBS += -lz
+QTPLUGIN.imageformats = -
 
 TARGET = make_distribution
 
