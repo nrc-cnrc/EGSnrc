@@ -1177,20 +1177,20 @@ For HALF TARGET leaf:
           incr totprob
         }
     }
-    if {"$cmval($id,6,1)"!="" && "$cmval($id,6,3)"!="" &&\
-         "$cmval($id,6,0)"!=""} {
-        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,1)]} {
+    if {"$cmval($id,6,3)"!="" &&\
+         "$cmval($id,6,0)"!="" && "$cmval($id,6,2)"!=""} {
+        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,2)]} {
           set dimtext "$dimtext
-- tip width ($cmval($id,6,3) cm) must be <= leaf - tongue width \
-([expr $cmval($id,6,0)-$cmval($id,6,1)] cm)"
+- tip width ($cmval($id,6,3) cm) must be <= leaf - groove width \
+([expr $cmval($id,6,0)-$cmval($id,6,2)] cm)"
           incr totprob
         }
     }
-    if {"$cmval($id,6,0)"!="" && "$cmval($id,6,5)"!=""} {
-        if {$cmval($id,6,5)>$cmval($id,6,0)} {
+    if {"$cmval($id,6,5)"!="" && "$cmval($id,6,2)"!=""} {
+        if {$cmval($id,6,5)<$cmval($id,6,2)} {
           set dimtext "$dimtext
 - width of bottom support rail ($cmval($id,6,5) cm) must be \
-<= leaf width ($cmval($id,6,0) cm)"
+>= groove width ($cmval($id,6,2) cm)"
           incr totprob
         }
     }
@@ -1330,19 +1330,19 @@ For QUARTER TARGET leaf:
           incr totprob
         }
     }
-    if {"$cmval($id,30,1)"!="" && "$cmval($id,30,3)"!="" &&\
-         "$cmval($id,30,0)"!=""} {
-        if {$cmval($id,30,3)>[expr $cmval($id,30,0)-$cmval($id,30,1)]} {
+    if {"$cmval($id,30,3)"!="" &&\
+         "$cmval($id,30,0)"!="" && "$cmval($id,30,2)"!=""} {
+        if {$cmval($id,30,3)>[expr $cmval($id,30,0)-$cmval($id,30,2)]} {
           set dimtext "$dimtext
-- tip width ($cmval($id,30,3) cm) must be <= leaf - tongue width \
-([expr $cmval($id,30,0)-$cmval($id,30,1)] cm)"
+- tip width ($cmval($id,30,3) cm) must be <= leaf - groove width \
+([expr $cmval($id,30,0)-$cmval($id,30,2)] cm)"
           incr totprob
         }
     }
-    if {"$cmval($id,30,0)"!="" && "$cmval($id,30,5)"!=""} {
-        if {$cmval($id,30,5)>$cmval($id,30,0)} {
+    if {"$cmval($id,30,2)"!="" && "$cmval($id,30,5)"!=""} {
+        if {$cmval($id,30,5)<$cmval($id,30,2)} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm) must be <= leaf width ($cmval($id,30,0) cm)"
+- width of bottom support rail ($cmval($id,30,5) cm) must be >= groove width ($cmval($id,30,2) cm)"
           incr totprob
         }
     }
@@ -1350,7 +1350,7 @@ For QUARTER TARGET leaf:
         "$cmval($id,30,3)"!=""} {
         if {$cmval($id,30,5)>[expr $cmval($id,30,2)+$cmval($id,30,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail ($cmval($id,30,5) cm)must be <= groove + tip width\
+- width of bottom support rail ($cmval($id,30,5) cm) must be <= groove + tip width\
 ([expr $cmval($id,30,2)+$cmval($id,30,3)] cm)"
           incr totprob
         }

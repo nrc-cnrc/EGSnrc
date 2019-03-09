@@ -206,7 +206,7 @@
 
    If MODE_$DYNVMLC=1 or 2 (dynamic delivery or step-and-shoot delivery):
 
-   14b  mlc_file (A80)
+   14b  mlc_file (A256)
 
           mlc_file:  The full name of the file containing leaf opening
                      data.  The format of the file contents is as follows:
@@ -229,7 +229,7 @@
               MLC_TITLE:  A title line
        NFIELDS_$DYNVMLC:  Total number of fields
       INDEX_$DYNVMLC(I):  Index of field I. 0 <= INDEX_$DYNVMLC(I) <= 1 and
-                          INDEX_$DYNVMLC(I) >= INDEX_$DYNVMLC(I-1).  This
+                          INDEX_$DYNVMLC(I) > INDEX_$DYNVMLC(I-1).  This
                           number is compared to a random number on (0,1) at
                           the start of each history; if the random number is
                           <= INDEX_$DYNVMLC(I), then field I is used.
@@ -325,7 +325,7 @@
   6.7, ZTHICK
   0.5, 0.04, 0.04, 0.1354, 0.3252, 0.1227, 48.25, 48.533, 51.524, 51.732,
     52.98, 53.28, 2, 54.5474, 54.812, FULL leaf
-  0.25, 0.04, 0.04, 0.0929, 0.1371, 0.1371, 48.345, 48.6096, 49.5277,
+  0.25, 0.04, 0.04, 0.0929, 0.132, 0.132, 48.345, 48.6096, 49.5277,
     49.8277, 2, 51.625, 51.627, 54.7, 54.746, TARGET leaf
   0.25, 0.04, 0.04, 0.0354, 0.1285, 0.1235, 48.412, 48.531, 51.631, 51.732,
     53.3293, 53.6293, 2, 54.5474, 54.812, ISOCENTER leaf

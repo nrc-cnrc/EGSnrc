@@ -954,27 +954,27 @@ For TARGET leaf:
           incr totprob
         }
     }
-    if {"$cmval($id,6,1)"!="" && "$cmval($id,6,3)"!="" &&\
+    if {"$cmval($id,6,2)"!="" && "$cmval($id,6,3)"!="" &&\
          "$cmval($id,6,0)"!=""} {
-        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,1)]} {
+        if {$cmval($id,6,3)>[expr $cmval($id,6,0)-$cmval($id,6,2)]} {
           set dimtext "$dimtext
-- tip width must be <= leaf - tongue width \
-([expr $cmval($id,6,0)-$cmval($id,6,1)] cm)"
+- tip width must be <= leaf - groove width \
+([expr $cmval($id,6,0)-$cmval($id,6,2)] cm)"
           incr totprob
         }
     }
-    if {"$cmval($id,6,0)"!="" && "$cmval($id,6,5)"!=""} {
-        if {$cmval($id,6,5)>$cmval($id,6,0)} {
+    if {"$cmval($id,6,2)"!="" && "$cmval($id,6,5)"!=""} {
+        if {$cmval($id,6,5)<$cmval($id,6,2)} {
           set dimtext "$dimtext
-- width of bottom support rail must be <= leaf width ($cmval($id,6,0) cm)"
+- width of bottom support rail must be >= groove width ($cmval($id,6,2) cm)"
           incr totprob
         }
     }
     if {"$cmval($id,6,5)"!="" && "$cmval($id,6,2)"!="" &&\
         "$cmval($id,6,3)"!=""} {
-        if {$cmval($id,6,5)<[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
+        if {$cmval($id,6,5)>[expr $cmval($id,6,2)+$cmval($id,6,3)]} {
           set dimtext "$dimtext
-- width of bottom support rail must be >= groove + tip width\
+- width of bottom support rail must be <= groove + tip width\
 ([expr $cmval($id,6,2)+$cmval($id,6,3)] cm)"
           incr totprob
         }
