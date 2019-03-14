@@ -1395,7 +1395,7 @@ protected:
 
                                             // Generate relaxation particles for a
                                             // shell vacancy i
-                                            (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
+                                            (*gamma)->relax(i,app->getEcut()-app->getRM(),app->getPcut(),rndm,edep,relaxParticles);
                                         }
 
                                         // Return the conversion electron
@@ -1477,7 +1477,7 @@ protected:
 
                                     // Generate relaxation particles for a
                                     // shell vacancy i
-                                    (*beta)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
+                                    (*beta)->relax(i,app->getEcut()-app->getRM(),app->getPcut(),rndm,edep,relaxParticles);
 
                                     emissionType = 4;
 
@@ -1603,7 +1603,7 @@ protected:
 
                                     // Generate relaxation particles for a
                                     // shell vacancy i
-                                    (*gamma)->relax(i,app->getEcut(),app->getPcut(),rndm,edep,relaxParticles);
+                                    (*gamma)->relax(i,app->getEcut()-app->getRM(),app->getPcut(),rndm,edep,relaxParticles);
                                 }
 
                                 // Return the conversion electron
