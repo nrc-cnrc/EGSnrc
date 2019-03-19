@@ -354,10 +354,6 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
 
         string line = *it;
 
-        if (line.length() < 79) {
-            continue;
-        }
-
         if (verbose) {
             egsInformation("EGS_Ensdf::parseEnsdf: %s\n", line.c_str());
         }
@@ -380,11 +376,15 @@ void EGS_Ensdf::parseEnsdf(vector<string> ensdf) {
         }
         else if ((line[6]=='C' || line[6]=='D' || line[6]=='T' ||
                   line[6]=='c' || line[6]=='d' || line[6]=='t')) {
-            // Comment
-            if (line[5]==' ') {
-                buildRecords();
+
+            if (line[7]=='G') {
+                // If this is related to a gamma record, keep it
+                recordStack[12].push_back(line);
             }
-            recordStack[4].push_back(line);
+            else {
+                // General comment
+                recordStack[4].push_back(line);
+            }
 
         }
         else if (line[6]==' ' && line[7]=='P') {
@@ -1702,7 +1702,7 @@ double Record::recordToDouble(int startPos, int endPos) {
         if (lines.front().length() < startPos) {
             egsWarning("Record::recordToDouble: Warning: Record too short to "
                        "contain desired quantity\n");
-            return -1;
+            return 0;
         }
         string record = lines.front().substr(startPos-1,
                                              endPos-startPos+1);
@@ -1710,7 +1710,7 @@ double Record::recordToDouble(int startPos, int endPos) {
     }
     else {
         egsWarning("Record::recordToDouble: Error: Record is empty\n");
-        return -1;
+        return 0;
     }
 }
 
@@ -2202,9 +2202,14 @@ BetaRecordLeaf::BetaRecordLeaf(vector<string> ensdf,
     A = atoi(atomicWeight.c_str());
 
     // Get the forbiddenness
-    string lambda;
-    lambda.push_back(lines.front().at(77));
-    forbidden = atoi(lambda.c_str());
+    if (lines.front().length() > 77) {
+        string lambda;
+        lambda.push_back(lines.front().at(77));
+        forbidden = atoi(lambda.c_str());
+    }
+    else {
+        forbidden = 0;
+    }
 }
 int BetaRecordLeaf::getCharge() const {
     return q;
@@ -2530,10 +2535,9 @@ void GammaRecord::processEnsdf() {
     string icCoeffStr = recordToString(56, 62);
     string icCoeffUncStr = recordToString(63, 64);
 
-    gammaIntensityUnc = parseStdUncertainty(gammaIntensityStr, gammaIntensityUncStr);
-    // If the uncertainty is 0 (i.e. not specified), set it to 100%
-    if (gammaIntensityUnc == 0) {
-        gammaIntensityUnc = gammaIntensity;
+    // If we don't find the gamma intensity, check for the first RI=
+    if (gammaIntensity < epsilon) {
+        gammaIntensity = getTag("RI=");
     }
 
     icCoeffUnc = parseStdUncertainty(icCoeffStr, icCoeffUncStr);
@@ -2560,16 +2564,26 @@ void GammaRecord::processEnsdf() {
         ipCoeffUnc = 0;
     }
 
+    // Get the transition intensity instead if gamma still zero
+    if (gammaIntensity < epsilon) {
+        double ti = getTag("TI        ");
+        // Calculate the gamma intensity from it
+        gammaIntensity = ti / ((1+icCoeff) * (1+ipCoeff));
+    }
+
+    // Set the uncertainty on the gamma intensity
+    gammaIntensityUnc = parseStdUncertainty(gammaIntensityStr, gammaIntensityUncStr);
+    // If the uncertainty is 0 (i.e. not specified), set it to 100%
+    if (gammaIntensityUnc == 0) {
+        gammaIntensityUnc = gammaIntensity;
+    }
+
     if (getNormalizationRecord()) {
         double factor = getNormalizationRecord()->getRelativeMultiplier() *
                         getNormalizationRecord()->getBranchMultiplier();
 
         gammaIntensity *= factor;
         gammaIntensityUnc *= factor;
-        icCoeff *= factor;
-        icCoeffUnc *= factor;
-        ipCoeff *= factor;
-        ipCoeffUnc *= factor;
     }
 
     // Calculate the total transition intensity
