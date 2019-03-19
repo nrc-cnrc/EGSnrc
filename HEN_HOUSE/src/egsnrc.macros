@@ -28,6 +28,7 @@
 "                   Ernesto Mainegra-Hing                                     "
 "                   Frederic Tessier                                          "
 "                   Reid Townson                                              "
+"                   Victor Malkov                                             "
 "                                                                             "
 "#############################################################################"
 "                                                                             "
@@ -1640,7 +1641,14 @@ REPLACE {$VACUUM-ADD-WORK-EM-FIELD;} WITH {;}
 REPLACE {$SET-ANGLES-EM-FIELD;} WITH {;}
 REPLACE {$SET-TVSTEP-EM-FIELD;} WITH {;}
 REPLACE {$ADD-WORK-EM-FIELD;} WITH {;}
-
+REPLACE {$EMFIELD_INITIATE_SET_TUSTEP;} WITH {;}
+REPLACE {;COMIN/EM/;} WITH {;}
+REPLACE {$EMFIELD_PII;} WITH {;}
+REPLACE{$EMFIELD_PI;}WITH{;}
+REPLACE{$EM_FIELD_SS;}WITH{;}
+REPLACE{$ADD_WORK_EM_FIELD;}WITH{;}
+REPLACE{$EMFieldInVacuum;}WITH{;}
+REPLACE{$EM_MACROS_ACTIVE}WITH{.false.}
 ;  "---------- BUFFER FLUSH SEMICOLON ----------"
 
 "------------------------------------------------------------------"
