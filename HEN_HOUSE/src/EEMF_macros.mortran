@@ -1,0 +1,2395 @@
+%C80
+"#############################################################################"
+"                                                                             "
+"  EGSnrc enhanced electromagnetic field transport macros                     "
+"  Copyright (C) 2016 National Research Council Canada                        "
+"                                                                             "
+"  This file is part of EGSnrc.                                               "
+"                                                                             "
+"  EGSnrc is free software: you can redistribute it and/or modify it under    "
+"  the terms of the GNU Affero General Public License as published by the     "
+"  Free Software Foundation, either version 3 of the License, or (at your     "
+"  option) any later version.                                                 "
+"                                                                             "
+"  EGSnrc is distributed in the hope that it will be useful, but WITHOUT ANY  "
+"  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS  "
+"  FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for   "
+"  more details.                                                              "
+"                                                                             "
+"  You should have received a copy of the GNU Affero General Public License   "
+"  along with EGSnrc. If not, see <http://www.gnu.org/licenses/>.             "
+"                                                                             "
+"#############################################################################"
+"                                                                             "
+"  Author:          Victor Malkov, 2016                                       "
+"                                                                             "
+"  Contributors:                                                              "
+"                                                                             "
+"#############################################################################"
+
+
+"******************************************************************************"
+"**************************     EM Field Macros     ***************************"
+"******************************************************************************"
+" This code implements charged particle in constant electric/magnetic fields.  "
+" In the current implementation, the magnetic field has been tested and        "
+" validated (Malkov, V.N. and Rogers, D.W.O., 2016. Charged particle transport "
+" in magnetic fields in EGSnrc. Medical Physics, 43(7), pp.4447-4458.)"
+"******************************************************************************"
+"******************************************************************************"
+
+"******************************************************************************"
+"************************** Algorithm parameters ******************************"
+"******************************************************************************"
+"Step size control for upper bound on 1PI for magnetic field simulations"
+"Below the stepsize associated with this delta_u value 1PI is used"
+" Above this, 3PI is applied"
+REPLACE{$MINS_ANG}WITH{0.05};
+
+"Default delta_u value if input file definitions are missing"
+REPLACE{$deltaUDefault}WITH{0.02};
+
+"Maximum energy loss due to electric field (step-size restriction)"
+REPLACE{$MAXS_eLoss}WITH{0.1};
+
+" ******** algorithm options  ******** "
+"Integration order selection for PRESTA"
+"	Value can be 1, 2 or 3"
+REPLACE{$IntegrationAlg}WITH{3};
+"Single scattering algorithm selection"
+" Value can either be 1 or 2:"
+" 1: A 1 point integration of the effect of the EM field"
+" 2: Analytical solution to propogration of particle in magnetic field."
+"    (defaults back to 1 point integration for electric fields "
+REPLACE{$ssFieldAlg}WITH{2};
+
+"******** BCA variables ******** "
+" If using BCA set these parameter "
+REPLACE{$BCA_lin_buffer}WITH{min(1e-6,skindepth)};
+REPLACE{$BCA_lin_dist}WITH{min(1e-5,skindepth)};
+
+
+" ****************** BOOLEANS *****************"
+REPLACE{$orderBoundary}WITH{.true.}; "selecting 1PI v 3PI so no boundary errors"
+REPLACE{$orderAdaptive}WITH{.true.}; "Selecting 1PI v 3PI for B for efficiency"
+REPLACE{$duAdaptive}WITH{.true.}; "for B, scaling the step size to a 1.5 T"
+REPLACE{$energyLossViaPotential}WITH{.false.};"Boolean for using potential"
+											  "for energy loss.	"
+" Determine if output at the begining of the simulation is needed: "
+REPLACE{$EMInternalOutput}WITH{.false.};
+
+
+"******************************** CONSTANTS ***********************************"
+REPLACE{$EM_MACROS_ACTIVE}WITH{.true.};
+REPLACE{$SL}WITH{299792458.0}; "speed of light"
+REPLACE{$ERM}WITH{0.510998910}; "electron rest energy in MeV"
+REPLACE{$PI_em}WITH{3.14159265}; "Pi"
+REPLACE{$ERM_kg}WITH{9.10938356E-31}; "electron mass in kg"
+REPLACE{$EC_em}WITH{1.60217662E-19}; "electron charge"
+"parameter for rounding errors"
+REPLACE{$epsilon_em}WITH{1e-14};
+"**************************** changing fields *********************************"
+" Changing magnetic and electric fields during a step has not been implemented "
+" yet. These variables are for some of the initial set up of the algorithm."
+REPLACE{$changingEMStepDist}WITH{1e-3};
+REPLACE{$changingEMField}WITH{.false.};
+" The following allows turning off single scatter everywhere except near       "
+" boundaries. This requires an adjustment to the egsnrc.mortran code to work   "
+" and should be left as .true. unless properly implementing this option        "
+" This is left in for ease of use for testing. "
+REPLACE{$ss_em}WITH{.true.};
+"******************************************************************************"
+"******************************************************************************"
+
+"*****************************************************************************"
+"*****************************************************************************"
+" *****			COMMON block for EM field			 *****"
+REPLACE{;COMIN/EM/;}WITH{;COMMON/EM/
+	" Variables for the definition of the magnetic field: "
+	B_amp, "Bx, By, Bz,"
+	E_amp, Ex, Ey, Ez,
+	beta_em,	" Relativistic beta "
+	beta_em2,	" square of beta "
+	beta2_em2,
+	Bvi,		" B_amp*particle speed "
+	Bvi2,
+	E_total,	" Total particle energy "
+	EM_const,	" Constant for EM calculations "
+	EM_const2,
+	v_i, tmax_CH,tmax_SS," Speed of the particle "
+	v_f, eloss_corr, " Correction for energy loss during step"
+ 	UdotE1,	UdotE2,	eloss_corr0,
+	UXBx1, UXBy1, UXBz1,
+	UXBx2, UXBy2, UXBz2,
+	UdotB,		" The dot product of the dir and B field vec's "
+	r0_em, delta_u,		" A normalization consntnat for integration"
+	r02_em,
+	step_rist,	" The step size restriction value"
+	u_em," x component of em interaction "
+	v_em," y component of em interaction "
+	w_em," z component of em interaction "
+	de_EM,		" change of energy due to the extra step length "
+	s_em, tperp_max_EM, EM_const0, beta_em0,
+	u_perp, v_perp, w_perp, dxEM, dyEM, dzEM,
+	u_perp2, v_perp2, w_perp2, SSc, sign_omega,
+	omegax, omegay, omegaz, sMinP3, duAdaptivEMFactor,
+	u_prll, v_prll, w_prll, us_em, vs_em, ws_em, uem, vem, wem,
+	u0_em, v0_em, w0_em,  x0_em, y0_em, z0_em,
+	omega_em, alpha_em, sin_a, cos_a, step_diff, VEF_initial, VEF_final,
+	u_tmp_em, v_tmp_em, w_tmp_em, x_tmp, y_tmp, z_tmp,
+	x0_tmp, y0_tmp, z0_tmp, s_max_pii,tperp_em, vstep0_mag,E_total_old,
+	"E-field specific variables:"
+	vPrllT, vPerpT, vTotE, omegaE, u0_prime, deltaT, timeIntSum, sSteps,
+	timeForInt, counterE, Vprll, Vperp, approxTime, EF_IntError, EF_s1, EF_s2,
+	EF_fourthDer, EF_totalIntDistance, EF_tUpper, EF_tLower, deltaT_Eold,
+	xPerpT, xPrllT, EF_gamma, xPerp0, xPrll0, uEMF, vEMF, wEMF, xEMF, yEMF,zEMF,
+	xs_em, ys_em, zs_em, vstep_EF, transDist_EMF, nSteps, velocity_EF, deltaT0,
+	prllIntSum, perpIntSum, xPrllInt, xPerpInt, momTot_EF, momPerp_EF,
+	momPrll_EF, tperp0_em, StuckLoopCounter, xSave,
+	"PRESTA-II variables:"
+	uem1,vem1,wem1,rem1,uem2,vem2,wem2,rem2,uemf1,vemf1,wemf1,uem3,vem3,wem3,
+	uem4,vem4,wem4,
+
+	irnew_em, palg, show_B,
+	vstep_changed, thirdOrder, deltaTCalculated, EMtransportActive,EMVacuumDone,
+	EFieldTransport, BFieldTransport;
+
+
+	$REAL B_amp, "Bx, By, Bz,"
+	E_amp, Ex, Ey, Ez,
+	beta_em,	" Relativistic beta "
+	beta_em2,	" square of beta "
+	beta2_em2,
+	Bvi,		" B_amp*particle speed "
+	Bvi2,
+	E_total,	" Total particle energy "
+	EM_const,	" Constant for EM calculations "
+	EM_const2,
+	v_i, tmax_CH, tmax_SS,	" Speed of the particle "
+	v_f, eloss_corr, " Correction for energy loss during step"
+ 	UdotE1,	UdotE2,	eloss_corr0,
+	UXBx1, UXBy1, UXBz1,
+	UXBx2, UXBy2, UXBz2,
+	UdotB,		" The dot product of the dir and B field vec's "
+	r0_em, delta_u,		" A normalization constant for integration"
+	r02_em,
+	step_rist,	" The step size restriction value"
+	u_em," x component of em interaction "
+	v_em," y component of em interaction "
+	w_em," z component of em interaction "
+	de_EM,		" change of energy due to the extra step length "
+	s_em, tperp_max_EM, EM_const0, beta_em0,
+	u_perp, v_perp, w_perp, dxEM, dyEM, dzEM,
+	u_perp2, v_perp2, w_perp2, SSc, sign_omega,
+	omegax, omegay, omegaz, sMinP3, duAdaptivEMFactor,
+	u_prll, v_prll, w_prll, us_em, vs_em, ws_em, uem, vem, wem,
+	u0_em, v0_em, w0_em, x0_em, y0_em, z0_em,
+	omega_em, alpha_em, sin_a, cos_a, step_diff,
+	u_tmp_em, v_tmp_em, w_tmp_em, x_tmp, y_tmp, z_tmp,
+	x0_tmp, y0_tmp, z0_tmp, s_max_pii,tperp_em, vstep0_mag,E_total_old,
+	"E-field specific variables:"
+	vPrllT, vPerpT, omegaE, vTotE, u0_prime, deltaT, timeIntSum, sSteps,
+	timeForInt, counterE, Vprll, Vperp, approxTime, EF_IntError, EF_s1, EF_s2,
+	EF_fourthDer, EF_totalIntDistance, EF_tUpper, EF_tLower, deltaT_Eold,xPerpT,
+	xPrllT, EF_gamma, xPerp0, xPrll0, uEMF, vEMF, wEMF, xEMF, yEMF, zEMF,
+	xs_em, ys_em, zs_em, vstep_EF, transDist_EMF, nSteps, velocity_EF,deltaT0,
+	prllIntSum, perpIntSum, xPrllInt, xPerpInt, momTot_EF, momPerp_EF,
+	momPrll_EF, tperp0_em, VEF_initial, VEF_final, StuckLoopCounter, xSave,
+	uem1,vem1,wem1,rem1,uem2,vem2,wem2,rem2,uemf1,vemf1,wemf1,uem3,vem3,wem3,
+	uem4,vem4,wem4;
+
+	$INTEGER irnew_em, palg, show_B;
+
+	$LOGICAL  vstep_changed, thirdOrder, deltaTCalculated, EMtransportActive,
+	EMVacuumDone, EFieldTransport, BFieldTransport;
+
+;};
+
+
+"*****************************************************************************"
+"*****************************************************************************"
+
+
+"*****************************************************************************"
+" ********     	Electric and magnetic field definitions 	************* "
+"*****************************************************************************"
+"!!!NOTE!!! -- needs to be defined by the user if input file defn is missing"
+REPLACE{$GET_EM_FIELD(#, #, #);}WITH{;
+"Call to get the value of the B and E field at the x,y,z position"
+"This macro definition uses the EGSnrc EM field inputs from the input file"
+"If this is missing the user's installation, the BxIN etc. variables should be"
+"replaced or a new field should be defined"
+
+  "Magnetic field:"
+  Bx = BxIN;By = ByIN;Bz = BzIN;
+  "Electric field:"
+  Ex = ExIN;Ey = EyIN;Ez = EzIN;
+
+  "delta_u definition from the user"
+  delta_u = EMLMTIN;
+}
+
+REPLACE{$setEFPotential(#, #, #, #);}WITH{
+" EXAMPLE Electric field potential definition"
+" The potential here is a sample potential, and should be defined by the user"
+	r0_em =sqrt({P2}*{P2} + ({P3} + 1.5)**2);
+IF(r0_em>0.35)[;
+	"calculate cos_theta:"
+	By = ({P3} + 1.5)/r0_em;
+"calculate the potential at this point (the 1000 is a conversion to Volts)"
+"E0=1100kV/cm"
+"Final units of {P4} should be volts"
+	{P4} = -1000*1100.*.35*log(r0_em/.35)*(1-.2272727*By-.4090909*By**2);
+	By=0.;
+]ELSE[
+	"potential is zero at the surface!"
+	{P4} = 0.;
+]
+}
+"******************************************************************************"
+"******************************************************************************"
+
+
+"******************************************************************************"
+	    "*************** STEP SIZE RESTRICTION ***************"
+"******************************************************************************"
+"This MACROS allows the control of the accuracy of the calculations via step  "
+"size shortening restrictions. These restrictions are based on an approximate "
+"first order EM field influence, and attempt to control for the angular devia-"
+"-tion, the energy change, and the change in the magnitude of the fields      "
+
+REPLACE{$EMFIELD_INITIATE_SET_TUSTEP;}WITH{;
+  "Set the magnetic and electric field values to a default of 0:"
+  "Magnetic field:"
+  Bx = 0.;By = 0.;Bz = 0.;
+  B_amp = 0.;
+
+  "set the default delta_u"
+  delta_u = $deltaUDefault;
+
+  "Initialize the electric field to zero by default"
+  Ex = 0.;Ey = 0.;Ez = 0.;
+  E_amp = 0.;
+
+  " Get the EM field for the current position: "
+  $GET_EM_FIELD(x(np), y(np), z(np));
+
+  "Normalize the fields"
+  $NORMALIZE(Bx, By, Bz, r0_em);
+  B_amp = r0_em;
+  $NORMALIZE(Ex, Ey, Ez, r0_em);
+  E_amp = r0_em;
+
+  "Adjust the electric field to be in V/m instead of the V/cm"
+  Ex = Ex*100.;Ey = Ey*100.;Ez = Ez*100.;
+  E_amp = E_amp*100.;
+
+  "activate the transport for the rest of the calculation"
+  EMtransportActive = .true.;
+  BFieldTransport = .true.;
+  EFieldTransport = .true.;
+
+  IF ((B_amp < 1e-16) & (E_amp< 1e-16))[;
+    EMtransportActive = .false.;
+  ];
+
+  IF (B_amp < 1e-16)[;BFieldTransport = .false.;];
+  IF (E_amp < 1e-16)[;EFieldTransport = .false.;];
+
+" Set the particle property variables; These will remain unchanged for the "
+" rest of the step calculation, and any changes will have to be done on other"
+" variables. "
+  E_total = eke + $ERM;
+  beta_em = sqrt(1-($ERM/E_total)**2);
+  v_i  = $SL*beta_em;
+  beta_em2 = beta_em**2;
+  Bvi = v_i*B_amp;
+
+  "Save the initial direction and position"
+  u0_em = u(np); v0_em = v(np); w0_em = w(np);
+  x0_em = x(np); y0_em = y(np); z0_em = z(np);
+
+  "Interaction of the particle with B field:"
+  "EM_const=1.0 since we need to determine step size restrictions"
+  EM_const=1.0;
+  $INTERACT_EM(u0_em, v0_em, w0_em);
+
+  " Dot product of direction with B:"
+  UdotB = u0_em*Bx + v0_em*By + w0_em*Bz;
+
+"~~~ tmax_ch calculation ~~~"
+" This works for a magnetic and electric field "
+
+  "velocity lower bound and eloss corr calculation for the time"
+  v_f=$SL*sqrt(1-($ERM/(E_total-ESTEPE*eke))**2);
+  IF(v_f>0.)[;
+   eloss_corr=0.5*(1+v_i/v_f);
+  ]ELSE[
+    eloss_corr=1.;
+  ]
+
+  tperp0_em = tperp;
+  tperp_max_EM = (1E-8)/((eke+$ERM)*beta_em2);
+  tperp_max_EM = (eloss_corr**2)*tperp_max_EM;
+  r0_em =sqrt(u_em*u_em + v_em*v_em + w_em*w_em);
+  tperp_max_EM = 0.5*tperp_max_EM*r0_em;
+
+  " Calculate the first quadratic solution "
+  IF(abs(tperp_max_EM)>0.)[
+	s_max_pii = (-1.0+sqrt(1+4*tperp_max_EM*.99*tperp))/(2.0*tperp_max_EM);
+  ]ELSE[
+	s_max_pii = 1e30;
+  ]
+"~~~~~~~~~~~~~~~"
+
+"~~~~~~~~~~~~~~~ Output field parameters :"
+ IF((show_B ~= 1000))[;
+	show_B=1000;
+	deltaTCalculated = .false.;
+	IF ($EMInternalOutput)[;
+	OUTPUT;(' ');
+	OUTPUT;('          ~~~                     ~~~         ');
+	OUTPUT;('          ~~~  EM Field transport ~~~         ');
+	OUTPUT;('Magnetic field present with Bamp = ');
+	OUTPUT B_amp, Bx, By, Bz; (4(1PE13.2));
+	IF(BFieldTransport)[;OUTPUT;('Magnetic field transport ON');
+	]ELSE[;OUTPUT;('Magnetic field transport OFF');]
+	OUTPUT;('Electric field present with Eamp = ');
+	OUTPUT E_amp, Ex, Ey, Ez; (4(1PE13.2));
+	IF(EFieldTransport)[;OUTPUT;('Electric field transport ON');
+	]ELSE[;OUTPUT;('Electric field transport OFF');]
+	OUTPUT delta_u;('du = ', 1(1PE13.0));
+	OUTPUT $IntegrationAlg; ('IntegrationAlg = ', 1i2);
+	OUTPUT $ssFieldAlg;('Single Scatter algorithm:', 1i2);
+	IF($orderAdaptive)[; OUTPUT;('Adaptive order: on');	];
+	];
+	"Output if the scaling for the step size is turned on for the B field"
+	IF($duAdaptive)[;
+	    IF ($EMInternalOutput) [;OUTPUT;('Scaling du by 5th root: on');]
+		IF(BFieldTransport)[;duAdaptivEMFactor = (1.5/B_amp)**(1./5.);]
+	];
+	IF ($EMInternalOutput) [;
+	 OUTPUT;('          ~~~                      ~~~         ');
+	 OUTPUT;('          ~~~                      ~~~         ');
+	];
+];
+"~~~~~~~~~~~~~~~"
+
+"Step size restrictions in a E or B field for CH mode"
+ IF(BFieldTransport)[;
+   $TUSTEP_RIST_B;
+ ]ELSEIF(EFieldTransport)[;
+   $TUSTEP_RIST_E;
+ ];
+
+ "Final restrictions on the step size"
+IF (EMtransportActive) [;
+
+	"note: $BCA_lin_buffer is always <= skindepth"
+
+    IF (~$ss_em & (tperp > $BCA_lin_buffer))[;
+		" Single scattering is turned off except for the edges"
+		"Restrict the step to tperp"
+       	tustep=min(tustep, tperp);
+    ];
+
+    IF(tperp <= $BCA_lin_buffer)[;
+        "very close to the boundary"
+		"limit the step size to a small value"
+        tustep = min(tustep, $BCA_lin_dist);
+	]ELSEIF ((~$ss_em &(tustep <= tperp))|
+	($ss_em & (tustep <= tperp) & ((~exact_bca)| (tustep > skindepth))))[;
+	  " The above conditions match the CH step conditions in EGSnrc"
+ 	  " Restriction on the angular deviation: "
+ 	 tustep =  min(tustep, tmax_CH);
+
+	  "If we made tustep shorter than the skindepth then just send the "
+	  "particles into SS mode with a tustep of skindepth "
+	  IF($ss_em & ($ssFieldAlg = 2))[;
+		"$ssFieldAlg = 2 selects the analytical solution transport"
+	    tustep = max(tustep, skindepth);
+	  ];
+    ];
+
+	" restriction required for one point integration, and for E-field"
+	" calculations since these are only numerical integration"
+	IF((($ssFieldAlg = 1)&(tperp > $BCA_lin_buffer))|
+	  (($ssFieldAlg = 2)&(tperp > $BCA_lin_buffer)&(EFieldTransport)))[;
+		tustep =  min(tustep, tmax_CH);
+	 ];
+
+
+    ];
+};
+
+"REPLACE {$SET-TUSTEP-EM-FIELD;} WITH {;}"
+
+"******************************************************************************"
+"*************** Magnetic field step size restrictions ***************"
+"******************************************************************************"
+REPLACE{$TUSTEP_RIST_B;}WITH{;
+  EM_const = sqrt(u_em**2 + v_em**2 + w_em**2);
+
+  IF(EM_const > 0.0)[;
+  "possible if no interaction"
+
+"This is the step size restriction for a 1 MeV in a 1.5T field"
+
+	IF($duAdaptive)[;
+r0_em=delta_u*E_total*beta_em2*B_amp/((1e-8)*EM_const*1.5);
+
+step_rist = r0_em*duAdaptivEMFactor;
+
+  ]ELSE[
+  step_rist = delta_u*E_total*beta_em2/((1e-8)*EM_const);
+  ];
+	sMinP3 = $MINS_ANG*E_total*beta_em2/((1e-8)*EM_const);
+	tmax_CH=min(step_rist,s_max_pii);
+  ];
+};
+
+REPLACE{$TUSTEP_RIST_E;}WITH{;
+"~~ Angular deflection restriction ~~"
+  EM_const = sqrt(u_em**2 + v_em**2 + w_em**2);
+
+  IF(EM_const > 0.0)[;
+  "possible if no interaction"
+    step_rist = delta_u*E_total*beta_em2/((1e-8)*EM_const);
+
+	tmax_CH=min(step_rist,s_max_pii);
+  ]ELSE[;
+	tmax_CH=s_max_pii;
+  ];
+
+};
+
+REPLACE{$TUSTEP_ERIST;}WITH{;
+" This is the restriction that limits that energy loss over the step"
+" uses the dedx values to figure this out"
+" should try to get the E field effect in here as well"
+  EM_const = sqrt(u_em**2 + v_em**2 + w_em**2);
+
+  IF(EM_const > 0.0)[;"possible if no interaction"
+    step_rist = 2.*$MAXS_eLoss*(eke*2)*beta_em2/((1e-8)*EM_const);
+	step_rist=step_rist/dedx;
+	step_rist=sqrt(step_rist);
+  ];
+};
+
+"*****************************************************************************"
+"*************** PII EM DIRECTION CALCULATION  ***************"
+"*****************************************************************************"
+REPLACE{$EMFIELD_PII;}WITH{;
+
+IF(EMtransportActive)[;
+   "Calculate the final velocity and the eloss correction for the time"
+   v_f=$SL*sqrt(1-($ERM/(E_total-eloss))**2);
+
+   "v_f could be zero (or below if something when wrong):"
+   IF(v_f>0.)[;
+	eloss_corr0=0.5*(1+v_i/v_f);
+   ]
+
+   EM_const0=((qel*2. -1.)*tustep*1E-8)/(E_total*beta_em2);
+
+  IF($IntegrationAlg=0)[;
+    " First order integration to get the influence of the magnetic field"
+    " With the old normalization technique "
+
+	"The first interaction is at the intial energy"
+	EM_const = ((qel*2. -1.)*tustep*1E-8)/(E_total*beta_em2);
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0, v0, w0);
+
+    s_em = tustep*0.5*sqrt(u_em*u_em + v_em*v_em + w_em*w_em);
+
+    " Adjust the position vector"
+    ut = ut + 0.5*u_em;
+    vt = vt + 0.5*v_em;
+    wt = wt + 0.5*w_em;
+
+    " Adjust the direction vector"
+    us = us + u_em;
+    vs = vs + v_em;
+    ws = ws + w_em;
+
+    $NORMALIZE(us, vs, ws, r0_em);
+
+  ;]ELSEIF(($IntegrationAlg=1)|(($IntegrationAlg=3)&(tustep<=sMinP3)&
+			($orderAdaptive)&(BFieldTransport)))[;
+   " First order integration to get the influence of the magnetic field"
+   " Uses the correct normalization technique."
+
+    EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total*beta_em2);
+
+
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0, v0, w0);
+
+    " Adjust the position vector"
+    ut = ut + 0.5*eloss_corr0*u_em;
+    vt = vt + 0.5*eloss_corr0*v_em;
+    wt = wt + 0.5*eloss_corr0*w_em;
+
+	"Adjust the direction vector"
+	IF(BFieldTransport)[; "normalization for a B-field"
+	$NORM_VEC_B(us, vs, ws);
+	]ELSE[;
+	"In case we have an electric field"
+	"The normalization should be just a regular normalization"
+	us = us + u_em;
+    vs = vs + v_em;
+    ws = ws + w_em;
+
+    $NORMALIZE(us, vs, ws, r0_em);
+	]
+
+]ELSEIF($IntegrationAlg=3)[;
+
+   "the initial constant has the initial energy in it"
+	beta_em0=beta_em;
+
+   EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total*beta_em2);
+  "Interact the initial angle:"
+  $INTERACT_EM(u0, v0, w0);
+  "Save the direction vector"
+
+   u0_em=u0;
+   v0_em=v0;
+   w0_em=w0;
+
+"Save the 1st order effect "
+  u_tmp_em = u_em;
+  v_tmp_em = v_em;
+  w_tmp_em = w_em;
+
+" The contribution from the initial angle : "
+  uem = u_em;
+  vem = v_em;
+  wem = w_em;
+
+  dxEM = u_em;
+  dyEM = v_em;
+  dzEM = w_em;
+
+ "Account for the half step:"
+  u_em = 0.5*u_em/EM_const;
+  v_em = 0.5*v_em/EM_const;
+  w_em = 0.5*w_em/EM_const;
+
+  v_f=$SL*sqrt(1-($ERM/(E_total-0.5*eloss))**2);
+   IF(v_f>0.)[;
+	eloss_corr=0.5*(1+v_i/v_f);
+   ]ELSE[
+	eloss_corr=1.;
+   ]
+  "evaluate at a quarter energy loss"
+EM_const2=((qel*2. -1.)*tustep*eloss_corr*1E-8)/((E_total)*beta_em2);
+  u_em = u_em*EM_const2;
+  v_em = v_em*EM_const2;
+  w_em = w_em*EM_const2;
+
+ "Apply the effect of the magnetic field to u0"
+	IF(abs(B_amp) > 1e-16)[;
+	$NORM_VEC_B(u0, v0, w0);
+	]ELSE[;
+	"In case we have an electric field"
+	"The normalization should be just a regular normalization"
+	u0 = u0 + u_em;
+    v0 = v0 + v_em;
+    w0 = w0 + w_em;
+
+    $NORMALIZE(u0, v0, w0, r0_em);
+	];
+
+
+ "Rotate using the first scattering angle and the "
+ " initial direction with the magnetic field"
+  sint02 = u0**2 + v0**2;
+  uem1 = sint1*cphi1;
+  vem1 = sint1*sphi1;
+  wem1 = w1;
+  IF (sint02 > 1e-20)[
+    sint0 = sqrt(sint02);
+    sint0i = 1/sint0;
+    cphi0 = sint0i*u0;
+    sphi0 = sint0i*v0;
+
+"Scattering angles"
+    u2p = w0*uem1 + sint0*wem1;
+    wem1 = w0*wem1 - sint0*uem1;
+    uem1 = u2p*cphi0 - vem1*sphi0;
+    vem1 = u2p*sphi0 + vem1*cphi0;
+  ]ELSE[
+    wem1 = w0*wem1;
+  ]
+
+  "Interact the scattered direction"
+	"Adjust the velocity to account for energy loss"
+  v_i=$SL*sqrt(1-($ERM/(E_total-0.5*eloss))**2);
+  IF(v_i>0.0)[
+  Bvi = v_i*B_amp;
+  beta_em2=(v_i/$SL)**2;
+  beta_em = sqrt(beta_em2);
+  "The second point is sitting at half the energy"
+EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total-.5*eloss);
+EM_const=EM_const/(beta_em2);
+  $INTERACT_EM(uem1, vem1, wem1);
+ ]ELSE[
+ u_em=0.;
+ v_em=0.;
+ w_em=0.;
+ ]
+ " Add the interaction to the total for the integral sum: "
+  uem = uem + 4.0*u_em;
+  vem = vem + 4.0*v_em;
+  wem = wem + 4.0*w_em;
+
+
+  dxEM = dxEM + 4.*u_em*beta_em/beta_em0;
+  dyEM = dyEM + 4.*v_em*beta_em/beta_em0;
+  dzEM = dzEM + 4.*w_em*beta_em/beta_em0;
+
+  "Apply the effect of the magnetic field on the first scattered"
+  " direction - account for the half step first! "
+  u_em = u_em/EM_const;
+  v_em = v_em/EM_const;
+  w_em = w_em/EM_const;
+
+  "Save the previous EM_const:"
+  "Calculate the new EM_const:"
+  v_f=$SL*sqrt(1-($ERM/(E_total-eloss))**2);
+  v_i=$SL*sqrt(1-($ERM/(E_total-0.5*eloss))**2);
+
+   IF(v_f>0.)[;
+	eloss_corr=0.5*(1+v_i/v_f);
+   ]ELSE[
+	eloss_corr=1.;
+   ]
+
+  beta_em2=(v_i/$SL)**2;
+  "Evaluate at a 3/4 energy loss"
+EM_const2=((qel*2.-1.)*.5*tustep*eloss_corr*1E-8);
+EM_const2=EM_const/((E_total-.5*eloss)*beta_em2);
+
+  u_em = u_em*EM_const2;
+  v_em = v_em*EM_const2;
+  w_em = w_em*EM_const2;
+
+   "Apply the effect of the magnetic field to uem1"
+	IF(BFieldTransport)[;
+	$NORM_VEC_B(uem1, vem1, wem1);
+	]ELSE[;
+	"In case we have an electric field"
+	"The normalization should be just a regular normalization"
+	uem1 = uem1 + u_em;
+    vem1 = vem1 + v_em;
+    wem1 = wem1 + w_em;
+
+    $NORMALIZE(uem1, vem1, wem1, r0_em);
+	];
+
+
+  "Rotate using the second scattering direction"
+  sint02 = uem1**2 + vem1**2;
+  uem2 = sint2*cphi2;
+  vem2 = sint2*sphi2;
+  wem2 = w2;
+  IF (sint02 > 1e-20)[
+    sint0  = sqrt(sint02);
+    sint0i = 1/sint0;
+    cphi0  = sint0i*uem1;
+    sphi0  = sint0i*vem1;
+
+    "Scattering angles"
+    u2p    = wem1*uem2 + sint0*wem2;
+    wem2     = wem1*wem2 - sint0*uem2;
+    uem2     = u2p*cphi0 - vem2*sphi0;
+    vem2     = u2p*sphi0 + vem2*cphi0;
+  ]ELSE[
+    wem2 = wem1*wem2;
+  ]
+
+  "Interact this direction of motion with the magnetic field"
+	"Account for the energy loss:"
+  v_i=$SL*sqrt(1-($ERM/(E_total-eloss))**2);
+    IF(v_i>0.0)[
+
+  beta_em2=(v_i/$SL)**2;
+  Bvi = v_i*B_amp;
+  beta_em = sqrt(beta_em2);
+EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total-eloss);
+EM_const=EM_const/(beta_em2);
+  $INTERACT_EM(uem2, vem2, wem2);
+ ]ELSE[
+ u_em=0.;
+ v_em=0.;
+ w_em=0.;
+ ]
+
+
+" Add the interaction to the total for the integral sum: "
+  uem = uem + u_em;
+  vem = vem + v_em;
+  wem = wem + w_em;
+
+  dxEM= dxEM + u_em*beta_em/beta_em0;
+  dyEM= dyEM + v_em*beta_em/beta_em0;
+  dzEM= dzEM + w_em*beta_em/beta_em0;
+
+  dxEM = dxEM/6.;
+  dyEM = dyEM/6.;
+  dzEM = dzEM/6.;
+
+" Divide the total \vec{uem} by 6 for Simpson's rule: "
+  uem = uem/6.0;
+  vem = vem/6.0;
+  wem = wem/6.0;
+
+"the position adjustment will be done outside PII"
+
+  " Adjust the direction vector and normalize: "
+  u_em = uem;
+  v_em = vem;
+  w_em = wem;
+
+  "Adjust the direction of motion based on the magnetic field:"
+  IF(BFieldTransport)[;
+  $NORM_VEC_B(us, vs, ws);
+  ]ELSE[;
+  "In case we have an electric field"
+  "The normalization should be just a regular normalization"
+  us = us + u_em;
+  vs = vs + v_em;
+  ws = ws + w_em;
+
+  $NORMALIZE(us, vs, ws, r0_em);
+  ];
+
+"Before applying the change to the position, determine if a step over"
+"a boundary occurs, if yes, then use the first order approximation for"
+"the distance calculation:"
+  thirdOrder = .true.;
+  IF($orderBoundary)[;
+  	"Determine the distance between the starting and final points:"
+  	"Calculate the displacement vector using the 3PI"
+
+  	x_tmp = x0 + tustep*ut + tustep*0.5*eloss_corr0*dxEM-x0;
+  	y_tmp = y0 + tustep*vt + tustep*0.5*eloss_corr0*dyEM-y0;
+  	z_tmp = z0 + tustep*wt + tustep*0.5*eloss_corr0*dzEM-z0;
+
+  	"Calculate the distance between these two values"
+  	$SET_MAGNITUDE(x_tmp, y_tmp, z_tmp, r0_em);
+  	"compare this value to tperp"
+
+  	IF((r0_em-tperp0_em) > -1.0*$epsilon_em)[;
+  	  thirdOrder = .false.;
+  	]
+
+  IF(thirdOrder)[;
+  "the eloss_corr is here because the time variable appears again!"
+  	ut = ut + 0.5*eloss_corr0*dxEM;
+  	vt = vt + 0.5*eloss_corr0*dyEM;
+  	wt = wt + 0.5*eloss_corr0*dzEM;
+  ]ELSE[;
+  	"We use the first order for the position calc."
+    ut=ut+0.5*eloss_corr0*u_tmp_em*EM_const0/EM_const;
+    vt=vt+0.5*eloss_corr0*v_tmp_em*EM_const0/EM_const;
+    wt=wt+0.5*eloss_corr0*w_tmp_em*EM_const0/EM_const;
+  	];
+   ];
+
+   ];
+]
+};
+"*****************************************************************************"
+"*****************************************************************************"
+
+
+REPLACE{$NORM_VEC_B(#, #, #);}WITH{;
+"*****************************************************************************"
+" Conputes the addition of the change in direction due to the magnetic field"
+" The momentum in the parallel direction to the magnetic field is conserved"
+"*****************************************************************************"
+  udotB = {P1}*Bx + {P2}*By + {P3}*Bz;
+
+  " Get the parallel component of the given vector and the B field "
+  u_prll = udotB*Bx;
+  v_prll = udotB*By;
+  w_prll = udotB*Bz;
+
+  " Get the perpendicular component "
+
+  u_perp = {P1} - u_prll;
+  v_perp = {P2} - v_prll;
+  w_perp = {P3} - w_prll;
+
+  " Get the magnitude of the parallel vector "
+
+  $SET_MAGNITUDE(u_perp, v_perp, w_perp, r0_em);
+
+  " Calculate the parallel component with the B field added "
+  u_perp = u_perp + u_em;
+  v_perp = v_perp + v_em;
+  w_perp = w_perp + w_em;
+
+  " Calculate the magnitude of the new vector "
+  $SET_MAGNITUDE(u_perp, v_perp, w_perp, r02_em);
+
+  IF(r02_em > 0.0)[;
+  " Adjust the given vector to account for the B field "
+    {P1} = u_perp*r0_em/r02_em + u_prll;
+    {P2} = v_perp*r0_em/r02_em + v_prll;
+    {P3} = w_perp*r0_em/r02_em + w_prll;
+
+  " Normalize the vector (should be of mag 1 already, but to make sure);"
+    $NORMALIZE({P1}, {P2}, {P3}, r0_em);
+
+	];
+}
+
+REPLACE{$INTERACT_EM(#, #, #);}WITH{;
+"Given the input directions in conventional order, the interaction of the"
+"EM field with the particle at the given position is computed."
+
+" dot product between the electric field and the direction of motion"
+  UdotE1 = {P1}*Ex + {P2}*Ey + {P3}*Ez;
+
+" Cross product between the magnetic field and the direction of motion"
+  UXBx1 = {P2}*Bz - {P3}*By;
+  UXBy1 = {P3}*Bx - {P1}*Bz;
+  UXBz1 = {P1}*By - {P2}*Bx;
+
+" Influence of the em field via the relativistic Lorentz equation"
+  u_em =  EM_const*(E_amp*(Ex-{P1}*UdotE1)+Bvi*UXBx1);
+  v_em =  EM_const*(E_amp*(Ey-{P2}*UdotE1)+Bvi*UXBy1);
+  w_em =  EM_const*(E_amp*(Ez-{P3}*UdotE1)+Bvi*UXBz1);
+};
+
+
+REPLACE{$EMFIELD_PI;}WITH{;
+IF(EMtransportActive)[;
+   "Calculate the final velocity and the eloss correction for the time"
+   v_f=$SL*sqrt(1-($ERM/(E_total-eloss))**2);
+
+   "v_f could be zero (or below if something when wrong):"
+   IF(v_f>0.)[;
+	eloss_corr0=0.5*(1+v_i/v_f);
+   ]
+
+   EM_const0=((qel*2. -1.)*tustep*1E-8)/(E_total*beta_em2);
+
+  IF($IntegrationAlg=0)[;
+    " First order integration to get the influence of the magnetic field"
+    " With the old normalization technique "
+
+	"The first interaction is at the intial energy"
+	EM_const = ((qel*2. -1.)*tustep*1E-8)/(E_total*beta_em2);
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0, v0, w0);
+
+    s_em = tustep*0.5*sqrt(u_em*u_em + v_em*v_em + w_em*w_em);
+
+    " Adjust the position vector"
+    ut = ut + 0.5*u_em;
+    vt = vt + 0.5*v_em;
+    wt = wt + 0.5*w_em;
+
+    " Adjust the direction vector"
+    us = us + u_em;
+    vs = vs + v_em;
+    ws = ws + w_em;
+
+    $NORMALIZE(us, vs, ws, r0_em);
+
+  ;]ELSEIF($IntegrationAlg=1)[;
+   " First order integration to get the influence of the magnetic field"
+   " Uses the correct normalization technique."
+
+    EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total*beta_em2);
+
+
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0, v0, w0);
+
+    " Adjust the position vector"
+    ut = ut + 0.5*eloss_corr0*u_em;
+    vt = vt + 0.5*eloss_corr0*v_em;
+    wt = wt + 0.5*eloss_corr0*w_em;
+
+	"Adjust the direction vector"
+	IF(BFieldTransport)[; "normalization for a B-field"
+	$NORM_VEC_B(us, vs, ws);
+	]ELSE[;
+	"In case we have an electric field"
+	"The normalization should be just a regular normalization"
+	us = us + u_em;
+    vs = vs + v_em;
+    ws = ws + w_em;
+
+    $NORMALIZE(us, vs, ws, r0_em);
+	]
+
+]ELSEIF($IntegrationAlg=2)[;
+  "2-point integration for PRESTA-I"
+
+  "the initial constant has the initial energy in it"
+  beta_em0=beta_em;
+
+  EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/(E_total*beta_em2);
+  "Interact the initial angle:"
+  $INTERACT_EM(u0, v0, w0);
+  "Save the direction vector"
+
+   u0_em=u0;
+   v0_em=v0;
+   w0_em=w0;
+
+"Save the 1st order effect "
+  u_tmp_em = u_em;
+  v_tmp_em = v_em;
+  w_tmp_em = w_em;
+
+" The contribution from the initial angle : "
+  uem = u_em;
+  vem = v_em;
+  wem = w_em;
+
+  dxEM = u_em;
+  dyEM = v_em;
+  dzEM = w_em;
+
+ "Apply the effect of the magnetic field to u0"
+  IF(BFieldTransport)[;
+    $NORM_VEC_B(u0, v0, w0);
+  ]ELSE[;
+    "In case we have an electric field"
+    "The normalization should be just a regular normalization"
+    u0 = u0 + u_em;
+    v0 = v0 + v_em;
+    w0 = w0 + w_em;
+
+    $NORMALIZE(u0, v0, w0, r0_em);
+  ];
+
+
+ "Rotate using the first scattering angle and the "
+ " initial direction with the magnetic field"
+  sint02 = u0**2 + v0**2;
+  uem1 = sint*cphi;
+  vem1 = sint*sphi;
+  wem1 = ws;
+  IF (sint02 > 1e-20)[
+    sint0 = sqrt(sint02);
+    sint0i = 1/sint0;
+    cphi0 = sint0i*u0;
+    sphi0 = sint0i*v0;
+
+"Scattering angles"
+    u2p = w0*uem1 + sint0*wem1;
+    wem1 = w0*wem1 - sint0*uem1;
+    uem1 = u2p*cphi0 - vem1*sphi0;
+    vem1 = u2p*sphi0 + vem1*cphi0;
+  ]ELSE[
+    wem1 = w0*wem1;
+  ]
+
+  "Interact the scattered direction"
+  "Adjust the velocity to account for energy loss"
+  v_i=$SL*sqrt(1-($ERM/(E_total-eloss))**2);
+  IF(v_i>0.0)[
+    Bvi = v_i*B_amp;
+    beta_em2=(v_i/$SL)**2;
+    beta_em = sqrt(beta_em2);
+    "The second point is sitting at full energy loss"
+    EM_const=((qel*2. -1.)*tustep*eloss_corr0*1E-8)/((E_total-eloss)*beta_em2);
+    $INTERACT_EM(uem1, vem1, wem1);
+  ]ELSE[
+   u_em=0.;
+   v_em=0.;
+   w_em=0.;
+  ]
+
+ "Add the contribution of the second angle:"
+  uem = 0.5*(uem+u_em);
+  vem = 0.5*(vem+v_em);
+  wem = 0.5*(wem+w_em);
+
+ "Add the contribution to the position change vector"
+  dxEM = 0.5*(dxEM + u_em*beta_em/beta_em0);
+  dyEM = 0.5*(dyEM + v_em*beta_em/beta_em0);
+  dzEM = 0.5*(dzEM + w_em*beta_em/beta_em0);
+
+ "Set the final effect on the angle:"
+ u_em = uem;
+ v_em = vem;
+ w_em = wem;
+
+  "Adjust the direction of motion based on the magnetic field:"
+  IF(BFieldTransport)[;
+  $NORM_VEC_B(us, vs, ws);
+  ]ELSE[;
+  "In case we have an electric field"
+  "The normalization should be just a regular normalization"
+  us = us + u_em;
+  vs = vs + v_em;
+  ws = ws + w_em;
+
+  $NORMALIZE(us, vs, ws, r0_em);
+  ];
+
+"Before applying the change to the position, determine if a step over"
+"a boundary occurs, if yes, then use the first order approximation for"
+"the distance calculation:"
+  thirdOrder = .true.;
+  IF($orderBoundary)[;
+  	"Determine the distance between the starting and final points:"
+  	"Calculate the displacement vector using the 2PI"
+
+  	x_tmp = x0 + tustep*ut + tustep*0.5*eloss_corr0*dxEM-x0;
+  	y_tmp = y0 + tustep*vt + tustep*0.5*eloss_corr0*dyEM-y0;
+  	z_tmp = z0 + tustep*wt + tustep*0.5*eloss_corr0*dzEM-z0;
+
+  	"Calculate the distance between these two values"
+  	$SET_MAGNITUDE(x_tmp, y_tmp, z_tmp, r0_em);
+  	"compare this value to tperp"
+
+  	IF((r0_em-tperp0_em) > -1.0*$epsilon_em)[;
+  	  thirdOrder = .false.;
+  	]
+
+  IF(thirdOrder)[;
+  "the eloss_corr is here because the time variable appears again!"
+  	ut = ut + 0.5*eloss_corr0*dxEM;
+  	vt = vt + 0.5*eloss_corr0*dyEM;
+  	wt = wt + 0.5*eloss_corr0*dzEM;
+  ]ELSE[;
+  	"We use the first order for the position calc."
+    ut=ut+0.5*eloss_corr0*u_tmp_em*EM_const0/EM_const;
+    vt=vt+0.5*eloss_corr0*v_tmp_em*EM_const0/EM_const;
+    wt=wt+0.5*eloss_corr0*w_tmp_em*EM_const0/EM_const;
+  	];
+   ];
+
+   ];
+]
+};
+
+REPLACE{$EM_FIELD_SS;}WITH{;
+
+"******************************************************************************"
+"Single scatter transport in an Electric or Magnetic field"
+"******************************************************************************"
+IF(~callmsdist)[;
+"Called only is the another multiple scattering algorithm has not been called"
+IF(EFieldTransport)[;
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~ E field SS transport ~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+	IF((((vstep <= $BCA_lin_dist)&(tperp <= $BCA_lin_buffer)))|
+	((vstep <= $BCA_lin_dist) & (irl ~= ir(np))))[;
+	"ssEfieldAlg"
+
+"Linear transport near the boundary"
+      x_final = x0_em + u0_em*vstep;
+      y_final = y0_em + v0_em*vstep;
+      z_final = z0_em + w0_em*vstep;
+
+"No change to the direction vector"
+    ]ELSEIF($ssFieldAlg>0)[;"ssEfieldAlg"
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	"First order integration over the step:"
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	EM_const=(lelec*vstep*1E-8)/(E_total*beta_em2);
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0_em, v0_em, w0_em);
+
+	"Adjust the direction vector"
+	u(np)= u0_em + u_em;
+    v(np)= v0_em + v_em;
+    w(np)= w0_em + w_em;
+
+    $NORMALIZE(u(np), v(np), w(np), r0_em);
+
+	"Adjust the position"
+	x_final = x0_em + (u0_em + 0.5*u_em)*vstep;
+    y_final = y0_em + (v0_em + 0.5*v_em)*vstep;
+    z_final = z0_em + (w0_em + 0.5*w_em)*vstep;
+
+	"set the total linear distance travelled - if needed for other"
+	r0_em = sqrt(u_em*u_em +v_em*v_em+ w_em*w_em);
+  ]"ssEfieldAlg"
+
+]ELSEIF(BFieldTransport)["E or B"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~ B field SS transport ~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
+IF((vstep <= $BCA_lin_dist) & (tperp <= $BCA_lin_buffer))[;
+
+" Linear transport near the boundary"
+" Introducing a deflection from the analytical solution was tested here, and "
+" works fairly well, but proper functionality with all geometry packages is not"
+" guaranteed, and there were many boundary crossing errors with egs_chamber"
+      x_final = x0_em + u0_em*vstep;
+      y_final = y0_em + v0_em*vstep;
+      z_final = z0_em + w0_em*vstep;
+
+    ]ELSEIF($ssFieldAlg=1)[;"ssEfieldAlg"
+	"First order integration for the effect of B-field:"
+	EM_const=(lelec*vstep*1E-8)/(E_total*beta_em2);
+
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(u0_em, v0_em, w0_em);
+
+	us_em =u(np);
+	vs_em =v(np);
+	ws_em =w(np);
+
+	"Adjust the direction (proper normalization technique):"
+    $NORM_VEC_B(us_em, vs_em, ws_em);
+
+	"Set the direction:"
+	u(np) = us_em;
+	v(np) = vs_em;
+	w(np) = ws_em;
+
+	"Adjust the position"
+	x_final = x0_em + (u0_em + 0.5*u_em)*vstep;
+    y_final = y0_em + (v0_em + 0.5*v_em)*vstep;
+    z_final = z0_em + (w0_em + 0.5*w_em)*vstep;
+
+	]ELSEIF($ssFieldAlg=2)[;"ssEfieldAlg"
+	"Save the initial step parameters"
+	EM_const0 = vstep;
+	r02_em = tustep;
+
+	"Limit the step size if howfar is called"
+	  IF(callhowfar)[;
+		vstep = tperp;
+	  ] ;
+
+	  "set the direction for the calculations"
+	  uEMF = u(np);
+	  vEMF = v(np);
+	  wEMF = w(np);
+
+	 "set the position for the calculations"
+	  xEMF = x(np);
+	  yEMF = y(np);
+	  zEMF = z(np);
+
+	  transDist_EMF = vstep;
+	  "Transport for the particle by the distance - includes changing fields:"
+
+	  $SS_MF_Transport(transDist_EMF, vstep, 1.);
+
+	  "set the final position"
+	  x_final = xs_em;
+	  y_final = ys_em;
+	  z_final = zs_em;
+
+	  "set the direction after the B-field transport:"
+	  u(np)=us_em;
+	  v(np)=vs_em;
+	  w(np)=ws_em;
+
+"Step is over, unless howfar needs to be called:"
+ IF(callhowfar)[;
+
+irl = ir(np);
+irnew = irl;
+	"Determine the distance to the boundary at the given location"
+
+	:BCA4_tperpCheck:;
+
+	x(np) = xs_em;
+	y(np) = ys_em;
+	z(np) = zs_em;
+
+	$CALL-HOWNEAR(tperp_em);
+
+	"The following are the options:"
+	"1. A step length of tuss can be taken by adding the current tperp"
+	" a comparison to tuss is made since it is the true scattering distance"
+	" tustep is a cut off that is set to make sure a boundary is not crossed"
+	"by accident!"
+
+	"2. Adding the current tperp will result in a step smaller than needed"
+	"     >> Loop again for the tperp "
+	"3. tperp_em is very small and in the buffer region "
+	"     >> Add BCA_dist "
+	"     >> Check with HF to see if boundary is crossed "
+
+	IF((vstep+tperp_em)>= tustep)[;
+	  " tustep is reached and we cannot go further!"
+	  "No boundary is crossed!"
+	  dosingle = .true.;
+	  "VM tested with max of tuss, and this introduced a ~ -.3%"
+	  "error in the fano test with a corresponding decrease in the "
+	  "ion chamber study"
+	  IF(tustep<tuss)[;
+		dosingle=.false.;
+	  ]
+
+	  "Distance to transport in field:"
+	  transDist_EMF = tustep - vstep;
+	  "set vstep:"
+	  vstep = tustep;
+
+	$SS_MF_Transport(transDist_EMF, vstep, 0.);
+	  "set the final position"
+	  x_final = xs_em;
+	  y_final = ys_em;
+	  z_final = zs_em;
+
+	  "set the direction after the B-field transport:"
+	  u(np)=us_em;
+	  v(np)=vs_em;
+	  w(np)=ws_em;
+	"END TRANSPORT in B field!"
+	]ELSEIF(tperp_em <= $BCA_lin_buffer)[;
+	  "Do a small jump to the boundary"
+	   dosingle = .false.;
+    	 "Inside the linear buffer"
+    	 " determine distance to the boundary:"
+          ustep = tustep-vstep;
+
+          x(np) = xs_em;
+          y(np) = ys_em;
+          z(np) = zs_em;
+
+           $CALL-HOWFAR-IN-ELECTR;
+		  "re set the position:"
+          x(np) = x0_em;
+          y(np) = y0_em;
+          z(np) = z0_em;
+
+		  IF(((vstep+ustep)<=tustep)&(ustep<=$BCA_lin_dist))[;
+		  "***"
+
+			"Apply a linear transport"
+			x_final = x_final + u(np)*ustep;
+			y_final = y_final + v(np)*ustep;
+			z_final = z_final + w(np)*ustep;
+
+			vstep = vstep + ustep; "set vstep"
+
+			"END B-field transport!"
+			"Regional change here"
+		  ]ELSEIF(.true.)[;
+		  	irl = ir(np); "regional change: off"
+			irnew = irl;
+		  ]ELSEIF((vstep+ustep)<=tustep)[; "***"
+			"We know that ustep is not smaller than $BCA_lin_dist"
+
+		    "We know that a step of ustep would not end the"
+			"transport, but a linear ustep would hit the boundary"
+			"so take a small linear step of $BCA_lin_dist"
+			"Which would move you closer to the boundary if very close"
+			"or it would move you away from the boundary if going away"
+			"from one but closer to another"
+
+		    "Transport linearly by BCA_lin_dist"
+			x_final = x_final + u(np)*$BCA_lin_dist;
+			y_final = y_final + v(np)*$BCA_lin_dist;
+			z_final = z_final + w(np)*$BCA_lin_dist;
+
+
+			vstep = vstep + $BCA_lin_dist; "set vstep"
+
+			"determine the influence of the B field on the segment"
+			uEMF = u(np);
+			vEMF = v(np);
+			wEMF = w(np);
+
+			$CALC_analyticDeflection($BCA_lin_dist);
+
+			$SET_MAGNITUDE(u_tmp, v_tmp, w_tmp, s_em);
+
+			x(np) = x_final;
+			y(np) = y_final;
+			z(np) = z_final;
+
+			$CALL-HOWNEAR(tperp_em);
+
+			x(np) = x0_em;
+			y(np) = y0_em;
+			z(np) = z0_em;
+
+			IF((s_em< tperp_em)&(tperp_em>$epsilon_em))[;
+				x_final = x_final + u_tmp;
+				y_final = y_final + v_tmp;
+				z_final = z_final + w_tmp;
+			]
+
+			u(np)=u(np)+u_em;
+			v(np)=v(np)+v_em;
+			w(np)=w(np)+w_em;
+
+			"No regional change yet"
+			irl = ir(np); "regional change: off"
+			irnew = irl;
+
+			"Go back to the calculation:"
+			go to :BCA4_tperpCheck:;
+
+		  ]ELSEIF(ustep<=$BCA_lin_dist)[;"***"
+			"Here ustep is small, but it will be biggen than tustep overall"
+			"then it means that ustep will be shortened to match tustep"
+			"Set the scattering to on and end the transport here"
+
+			dosingle=.true.;
+
+		 	IF(tustep<tuss)[;
+		    	dosingle=.false.;
+		    ]
+
+			ustep = tustep - vstep;
+
+			x_final = x_final + u(np)*ustep;
+			y_final = y_final + v(np)*ustep;
+			z_final = z_final + w(np)*ustep;
+
+			vstep = vstep + ustep; "set vstep"
+
+			"No regional change yet"
+			irl = ir(np); "regional change: off"
+			irnew = irl;
+			"B-field transport ends"
+		  ]ELSE[;"***"
+		  "In this case ustep is bigger than $BCA_lin_dist and"
+		  "a step ustep would go past tustep"
+		  "Then just do a linear step of $BCA_lin_dist and"
+		  "check if $BCA_lin_dist will go over tustep"
+
+		  "No regional change yet"
+		  irl = ir(np); "regional change: off"
+		  irnew = irl;
+
+		  ustep = min($BCA_lin_dist, tustep-vstep);
+
+		  "Transport linearly by ustep"
+			x_final = x_final + u(np)*ustep;
+			y_final = y_final + v(np)*ustep;
+			z_final = z_final + w(np)*ustep;
+
+			vstep = vstep + ustep; "set vstep"
+
+IF((ustep .eq. $BCA_lin_dist) & ((tustep-vstep)>0.0))[;
+" we took a step of $BCA_lin_dist and transport is not over yet "
+		go to :BCA4_tperpCheck:;
+]
+
+"otherwise B-field transport is over"
+
+		  ]"***"
+
+	]ELSE[
+	  transDist_EMF = tperp_em;
+	  vstep = tperp_em + vstep;
+
+	  $SS_MF_Transport(transDist_EMF, vstep, 0.);
+
+	  "set the final position"
+	  x_final = xs_em;
+	  y_final = ys_em;
+	  z_final = zs_em;
+
+	  "set the direction after the B-field transport:"
+	  u(np)=us_em;
+	  v(np)=vs_em;
+	  w(np)=ws_em;
+
+	  go to :BCA4_tperpCheck:;
+	 ]
+
+	callhowfar = .false.; "turn off the HF tag"
+
+	ustep = vstep;
+	tustep = vstep;
+
+	"Return the original position location"
+	x(np) = x0_em;
+	y(np) = y0_em;
+	z(np) = z0_em;
+
+	];
+  ];
+
+]ELSE[
+	  x_final = x0_em + u0_em*vstep;
+      y_final = y0_em + v0_em*vstep;
+      z_final = z0_em + w0_em*vstep;
+];
+];
+};
+
+REPLACE{$SS_MF_Transport(#, #, #);}WITH{;
+"Analytical transport in B-field"
+"{P1} the step length that should be transport in this segment"
+"{P2} the total step length over this entire step"
+"{P3} is an indicator of if a calculation of the constants and direction"
+"		vectors is needed (1. - yes, anything else for no!)"
+	  IF($changingEMField)[;
+		"Distance to transport in field:"
+
+		WHILE ({P1} >0.)[;
+	    "The particle is transported by the preset distance:"
+		"The distnace is $changingEMStepDist"
+		$SS_MF_directionsConstants;
+
+		IF ({P1} > $changingEMStepDist)[
+	    $CALC_SS_MAG($changingEMStepDist);
+
+		"adjust the remaining transport distnace:"
+		{P1} = {P1} - $changingEMStepDist ;
+		]ELSE[
+		 "transport by the remaining distnace:"
+		 $CALC_SS_MAG({P1});
+		 {P1} = 0.;
+		]
+
+	   "set the direction after the calculation"
+	    uEMF = us_em;
+	    vEMF = vs_em;
+	    wEMF = ws_em;
+
+	   "set the position for the calculations"
+	    xEMF = xs_em;
+	    yEMF = ys_em;
+	    zEMF = zs_em;
+
+		"Set the magnetic field at this point:"
+		$GET_EM_FIELD(xs_em, ys_em, zs_em);
+		]
+	  ]ELSEIF(abs(B_amp)>0.)[
+		IF({P3} =1.)[
+			"Set the direction vectors and constants for this step"
+			"This is needed for constant fields:"
+			$SS_MF_directionsConstants;
+		]
+	    "This is step size dependent:"
+	    $CALC_SS_MAG({P2});
+	  ]ELSE[
+		$EMF_linearTransport({P2});
+	  ]
+};
+
+REPLACE{$EMF_linearTransport(#);}WITH{;
+ us_em=uEMF;
+ vs_em=vEMF;
+ ws_em=wEMF;
+
+ xs_em=uEMF*{P1} + xs_em;
+ ys_em=vEMF*{P1} + ys_em;
+ zs_em=wEMF*{P1} + zs_em;
+}
+
+REPLACE{$SS_EF_Transport(#);}WITH{;
+"Transports the particle by a distance of {P1}"
+"xs_em and us_em is set at the end of this transport"
+"The direction u_EMF must be set before calling this function"
+	IF($changingEMField)[;
+	"Distance to transport in field:"
+
+	WHILE ({P1} >0.)[;
+	IF ({P1} > $changingEMStepDist)[
+		IF(abs(E_amp) > 0.)[
+			$EF_Transport($changingEMStepDist);
+		]ELSE[
+			$EMF_linearTransport($changingEMStepDist);
+		]
+		"adjust the remaining transport distnace:"
+		{P1} = {P1} - $changingEMStepDist;
+	]ELSE[
+	 "transport by the remaining distnace:"
+	IF(abs(E_amp) > 0.)[
+	 $EF_Transport({P1});
+	]ELSE[
+	 $EMF_linearTransport({P1});
+	]
+	 {P1} = 0.;
+	]
+
+   "set the direction after the calculation"
+    uEMF = us_em;
+    vEMF = vs_em;
+    wEMF = ws_em;
+
+   "set the position for the calculations"
+    xEMF = xs_em;
+    yEMF = ys_em;
+    zEMF = zs_em;
+
+	"Set the electric field at this point:"
+	$GET_EM_FIELD(xs_em, ys_em, zs_em);
+	$calculateDeltaT;
+	]
+  ]ELSEIF(abs(E_amp)>0.)[
+	$EF_Transport({P1});
+	"The us_em and xs_em variables are set at the end"
+  ]ELSE[
+	"Linear transport for the given distance since no field"
+    $EMF_linearTransport({P1});
+  ]
+}
+
+
+REPLACE{$SS_MF_directionsConstants;}WITH{
+"Sets the directions and constants for an analytical calculation"
+"For a magnetic field "
+
+"u_EMF must be set before calling this function"
+  " Calculate the required constant for the equation "
+sign_omega = -1.*lelec*B_amp/abs(B_amp);
+omega_em = abs(B_amp*$SL*$SL*1E-6/(E_total));
+beta_em = sqrt(1-($ERM/(E_total))**2);
+v_i = $SL*beta_em;
+
+  " parallel component first: "
+      UdotB = uEMF*Bx + vEMF*By + wEMF*Bz;
+
+	  "u dot \hat(B)"
+      u_prll = UdotB*Bx;
+      v_prll = UdotB*By;
+      w_prll = UdotB*Bz;
+
+  " perpendicular component one: "
+
+      u_perp = uEMF - u_prll;
+      v_perp = vEMF - v_prll;
+      w_perp = wEMF - w_prll;
+
+	  $NORMALIZE(u_perp, v_perp, w_perp, SSc);
+  " perpendiuclar component two: "
+  " This is the cross product between \vec(u)_perp and the B field "
+
+  "This is the cross produce with the first perp comp"
+  "A negative for the correct cross product"
+
+      u_perp2 = -1.*sign_omega*(v_perp*Bz - w_perp*By);
+      v_perp2 = -1.*sign_omega*(w_perp*Bx - u_perp*Bz);
+      w_perp2 = -1.*sign_omega*(u_perp*By - v_perp*Bx);
+
+}
+
+REPLACE{$CALC_SS_MAG(#);}WITH{;
+
+"Using the average energy for the calculation"
+      alpha_em = omega_em*{P1}/(100.0*v_i);
+      sin_a = sin(alpha_em);
+      cos_a = cos(alpha_em);
+
+  " Calculate the final direction, and position for the step "
+
+xs_em=100.*SSc*v_i*(u_perp*sin_a+u_perp2*(1-cos_a))/omega_em;
+ys_em=100.*SSc*v_i*(v_perp*sin_a+v_perp2*(1-cos_a))/omega_em;
+zs_em=100.*SSc*v_i*(w_perp*sin_a+w_perp2*(1-cos_a))/omega_em;
+
+xs_em=xEMF+vstep*u_prll+xs_em;
+ys_em=yEMF+vstep*v_prll+ys_em;
+zs_em=zEMF+vstep*w_prll+zs_em;
+
+      us_em = u_prll + SSc*(u_perp2*sin_a + u_perp*cos_a);
+      vs_em = v_prll + SSc*(v_perp2*sin_a + v_perp*cos_a);
+      ws_em = w_prll + SSc*(w_perp2*sin_a + w_perp*cos_a);
+};
+
+
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  vacuum trasport  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+REPLACE{$EMFieldInVacuum;}WITH{;
+IF(EMtransportActive)[;
+"~~~ E and B field vacuum transport ~~~"
+	IF(((ustep <= $BCA_lin_dist)&(tperp <= $BCA_lin_buffer))&
+	(irl~=ir(np)))[;"*"
+"This is a short step near the boundary that will transition the particle"
+"into the next region (ie, just do a jump into the next region)"
+      x(np) = x(np) + u0_em*ustep;
+      y(np) = y(np) + v0_em*ustep;
+      z(np) = z(np) + w0_em*ustep;
+	"OUTPUT;('6')"
+	  vstep = ustep;
+"No change to the direction vector"
+    ]ELSE[;"*"
+	"Start the transport and indicate that the vacuum EM transport"
+	"is not complete yet!"
+	EMVacuumDone = .false.;
+	"Set the total step length travelled to zero!"
+	vstep = 0.;
+
+	"***************************"
+	"***************************"
+	"  Vacuum linear transport "
+	"***************************"
+	"***************************"
+
+	IF(tperp<=$BCA_lin_buffer)[;"**"
+	"OUTPUT tperp, ustep;('5', 2(1pe13.4));"
+	ir(np)=irl;
+	" We are close to the boundary, so take a short linear step"
+	vstep = min(ustep, $BCA_lin_dist);
+	x_final = x(np)+ u(np)*vstep;
+	y_final = y(np)+ v(np)*vstep;
+	z_final = z(np)+ w(np)*vstep;
+
+	"distance travelled so far:"
+
+	:EMFieldVacuumHFCheck_linear:;
+	"Check to see if we have exited the linear buffer region:"
+
+	$CALL-HOWNEAR(tperp_em);
+"OUTPUT tperp, tperp_em, vstep, x_final, y_final, z_final;('7', 6(1pe13.4));"
+	IF(tperp_em<=$BCA_lin_buffer)[;"***"
+		IF(vstep = $BCA_lin_dist)[;"****"
+		"We are still in the linear buffer"
+		"make a large howfar check:"
+		ustep = 1e20;
+
+		$CALL-HOWFAR-IN-ELECTR;
+		"This check is done only once!"
+		"This will set the total maximum linear distance that can be taken"
+		]"****"
+	IF(ustep > $BCA_lin_dist)[;"*****"
+	"reduce the permitted linear distance:"
+	ustep = ustep - $BCA_lin_dist;
+	"adjust the total step length travelled:"
+	vstep = vstep + $BCA_lin_dist;
+
+	"Another linear step of BCA_lin_dist is allowed"
+	x_final = x_final + u(np)*$BCA_lin_dist;
+	y_final = y_final + v(np)*$BCA_lin_dist;
+	z_final = z_final + w(np)*$BCA_lin_dist;
+
+	"Go back and do a check "
+	go to :EMFieldVacuumHFCheck_linear:;
+
+	]ELSE[;"*****"
+	"ustep has been reduced to be very small - so take a linear ustep step"
+	"adjust the total step length travelled:"
+	vstep = vstep + ustep;
+	" A step smaller than BCA_lin_dist should be taken a boundary transition "
+	" occurs:"
+	x_final = x_final + u(np)*ustep;
+	y_final = y_final + v(np)*ustep;
+	z_final = z_final + w(np)*ustep;
+
+	"transport in vacuum is finished (we reached a boundary):"
+	EMVacuumDone = .true.;
+
+	];"*****"
+
+	IF(~EMVacuumDone)[;
+	irl=ir(np);
+	"the transition is not caused by the linear transport"
+	"We need to do transport in E or B field"
+	]
+
+	]"***"
+	IF(abs(E_amp) > 0.)[;
+	"Adjust the particle energy in the E field after the linear transport:"
+	"The following call calculates the de_EM variable"
+$calculate_EchangeInEF(x0_em, y0_em, z0_em, x_final, y_final, z_final);
+
+	eie = eie - de_EM;
+	eke = eie - $ERM;
+	peie = eie;
+	e(np) = eie;
+
+	E_total = eke + $ERM - de_EM;
+	beta_em = sqrt(1-($ERM/E_total)**2);
+	v_i  = $SL*beta_em;
+	beta_em2 = beta_em**2;
+	];
+
+	"Set the position after the linear transport:"
+	xs_em= x_final;
+	ys_em= y_final;
+	zs_em= z_final;
+
+	x(np)= x_final;
+	y(np)= y_final;
+	z(np)= z_final;
+
+    us_em = u(np);
+    vs_em = v(np);
+    ws_em = w(np);
+
+  ]"**"
+
+ "Now, continue with E or B-field transport only if a boundary was not reached!"
+  IF(~EMVacuumDone)[;
+    vstep0_mag = vstep;
+  "set the velocity for the electric field calculation"
+	velocity_EF = v_i;
+  "Set the position and direction for the EM field calculations"
+    xs_em = x(np);
+	ys_em = y(np);
+	zs_em = z(np);
+
+	us_em = u(np);
+    vs_em = v(np);
+    ws_em = w(np);
+
+   " save the original position:"
+   	x_tmp = xs_em;
+   	y_tmp = ys_em;
+   	z_tmp = zs_em;
+
+   " Initialize the B-field transport:"
+
+   IF(BFieldTransport)[
+
+   	  uEMF = us_em;
+	  vEMF = vs_em;
+	  wEMF = ws_em;
+
+	  xEMF = xs_em;
+	  yEMF = ys_em;
+	  zEMF = zs_em;
+
+	  $SS_MF_directionsConstants;
+	]
+
+   	:EMFieldVacuumHFCheck:;
+	"Check to see if we are outside the linear buffer region"
+	x(np) = xs_em;
+	y(np) = ys_em;
+	z(np) = zs_em;
+
+	$CALL-HOWNEAR(tperp_em);
+	"OUTPUT;('1')"
+	IF(tperp_em <= $BCA_lin_buffer)[;"***"
+	"The particle is within the linear buffer!"
+	" determine distance to the boundary:"
+        ustep = 1e20;
+
+        x(np) = xs_em;
+        y(np) = ys_em;
+        z(np) = zs_em;
+
+		u(np) = us_em;
+        v(np) = vs_em;
+        w(np) = ws_em;
+
+         $CALL-HOWFAR-IN-ELECTR;
+	"OUTPUT;('2')"
+		IF(ustep <= $BCA_lin_dist)[;
+		xs_em=xs_em+ustep*us_em;
+		ys_em=ys_em+ustep*vs_em;
+		zs_em=zs_em+ustep*ws_em;
+
+		"asjust the position"
+		vstep = vstep + ustep;
+
+		"transport ends here!"
+		]ELSE[
+		"do a step of BCA_lin_buffer"
+		xs_em=xs_em+$BCA_lin_dist*us_em;
+		ys_em=ys_em+$BCA_lin_dist*vs_em;
+		zs_em=zs_em+$BCA_lin_dist*ws_em;
+
+		"asjust the position"
+		vstep = vstep + $BCA_lin_dist;
+
+		IF(BFieldTransport)[
+
+   	     uEMF = us_em;
+	     vEMF = vs_em;
+	     wEMF = ws_em;
+
+	     xEMF = xs_em;
+	     yEMF = ys_em;
+	     zEMF = zs_em;
+
+	     $SS_MF_directionsConstants;
+		 vstep0_mag = vstep;
+	    ]
+		"no transition from this step"
+		irl = ir(np);
+		go to :EMFieldVacuumHFCheck:;
+
+		]
+    ]ELSEIF(BFieldTransport)[
+	"***************************"
+	"***************************"
+	"  Vacuum B-field transport "
+	"***************************"
+	"***************************"
+"OUTPUT;('3')"
+	  "adjust the total vstep travelled:"
+	  vstep = vstep + tperp_em - vstep0_mag;
+
+	  $SS_MF_Transport(tperp, vstep, 2.);
+	  vstep = vstep + vstep0_mag;
+	  "Go back and do another tperp check!"
+	  go to :EMFieldVacuumHFCheck:;
+	]ELSE[
+  	"***************************"
+	"***************************"
+	"  Vacuum E-field transport "
+	"***************************"
+	"***************************"
+	"Transport by a total of tperp_em, but do it in small segments!"
+	:EFieldVacuumHFCheck:;
+	"Calculate the allowed distance as per integration restrictions:"
+	"***********************************"
+	"***********************************"
+    "Calculate the integration constant:"
+	EM_const=1.;
+    " Interact the particle with the initial direction of motion:"
+    $INTERACT_EM(us_em, vs_em, ws_em);
+	"calculate the maxium step distance permitted that would not step over."
+    tperp0_em = tperp_em;
+    tperp_max_EM = (1E-8)/((eke+$ERM)*beta_em2);
+    tperp_max_EM = (eloss_corr**2)*tperp_max_EM;
+    r0_em =sqrt(u_em*u_em + v_em*v_em + w_em*w_em);
+    tperp_max_EM = 0.5*tperp_max_EM*r0_em;
+
+    " Calculate the first quadratic solution "
+    IF(abs(tperp_max_EM)>0.)[
+	  s_max_pii = (-1.0+sqrt(1+4*tperp_max_EM*.99*tperp))/(2.0*tperp_max_EM);
+    ]ELSE[
+	  s_max_pii = 1e30;
+    ]
+
+	"Returns tmax_CH as the maximum allowed step size:"
+	$TUSTEP_RIST_E;
+	"transport by this distance!"
+
+	vstep = vstep + tmax_CH;
+
+	"***********************************"
+	"***********************************"
+	EM_const=(lelec*tmax_CH*1E-8)/(E_total*beta_em2);
+
+	"Adjust the numerical integration vector:"
+	u_em=u_em*EM_const;
+	v_em=v_em*EM_const;
+	w_em=w_em*EM_const;
+
+	"Adjust the position"
+	x_final = xs_em + (us_em + 0.5*u_em)*tmax_CH;
+    y_final = ys_em + (vs_em + 0.5*v_em)*tmax_CH;
+    z_final = zs_em + (ws_em + 0.5*w_em)*tmax_CH;
+
+	"Adjust the direction vector"
+	us_em= us_em + u_em;
+    vs_em= vs_em + v_em;
+    ws_em= ws_em + w_em;
+
+    $NORMALIZE(us_em, vs_em, ws_em, r0_em);
+	"set the total linear distance travelled - if needed for other"
+	r0_em = sqrt(u_em*u_em +v_em*v_em+ w_em*w_em);
+
+	"Adjust the energy:"
+	$calculate_EchangeInEF(xs_em, ys_em, zs_em, x_final, y_final, z_final);
+
+	xs_em = x_final;
+	ys_em = y_final;
+    zs_em = z_final;
+
+	eie = eie - de_EM;
+	eke = eie - $ERM;
+	peie = eie;
+	e(np) = eie;
+	"Re calculate constants:"
+	E_total = eke + $ERM;
+    beta_em = sqrt(1-($ERM/E_total)**2);
+    v_i  = $SL*beta_em;
+    beta_em2 = beta_em**2;
+
+
+	"Check to see if another Etransport loop or hownear check:"
+	tperp_em = tperp_em - r0_em;
+
+	IF(tperp_em > $BCA_lin_buffer)[go to :EFieldVacuumHFCheck:;]
+
+	go to :EMFieldVacuumHFCheck:;
+
+	]
+
+	"set the position and the direction after the transport:"
+	x(np)=xs_em;
+	y(np)=ys_em;
+	z(np)=zs_em;
+
+	u(np)=us_em;
+    v(np)=vs_em;
+    w(np)=ws_em;
+
+  ]"**"
+
+ ]"*"
+
+ ustep = vstep;
+ tvstep = vstep;
+ e_range = vacdst;
+ dnear(np) = dnear(np) - vstep;
+ irold = ir(np); "save previous region"
+]ELSE[
+   "Step in vacuum w/o an EMF"
+   vstep  = ustep;
+   tvstep = vstep;
+
+   e_range = vacdst;
+   $AUSCALL($TRANAUSB);
+   "Transport the particle:"
+   x(np) = x(np) + u(np)*vstep;
+   y(np) = y(np) + v(np)*vstep;
+   z(np) = z(np) + w(np)*vstep;
+   dnear(np) = dnear(np) - vstep;
+       "(dnear is distance to the nearest boundary"
+       " that goes along with particle stack and"
+       " which the user's howfar can supply (option)"
+   irold = ir(np); "save previous region"
+
+]
+
+};
+
+REPLACE{$MF_Transport(#, #);}WITH{;
+"Before calling this Macro, the particle should be transported linearly"
+" in the direction given by uEMF and with a distance of {P1}"
+
+	"{P2} = 0 position is unchanged"
+	"{P2} = 1 will adjust the position without checking"
+	"{P2} = 2 will adjust the position after a check"
+
+	  $CALC_analyticDeflection({P1});
+
+	  IF({P2} = 2)[;
+	  "positional change if requested"
+	  "At a boundary crossing this would be a useless calc"
+		$SET_MAGNITUDE(u_tmp, v_tmp, w_tmp, s_em);
+
+		"Check if you really crossed a boundary"
+		xs_em = x(np);
+		ys_em = y(np);
+		zs_em = z(np);
+
+		x(np) = xEMF;
+		y(np) = yEMF;
+		z(np) = zEMF;
+
+		$CALL-HOWNEAR(tperp_em);
+
+		x(np) = xs_em;
+		y(np) = ys_em;
+		z(np) = zs_em;
+
+		IF((s_em< tperp_em)&(tperp_em>$epsilon_em))[;
+		"adjust the position vector"
+	  xs_em = xEMF + u_tmp;
+      ys_em = yEMF + v_tmp;
+      zs_em = zEMF + w_tmp;
+
+		]ELSE[
+		"otherwise set the position back to what it was"
+	  xs_em = xEMF;
+      ys_em = yEMF;
+      zs_em = zEMF;
+
+		]
+	 ]ELSEIF({P2} =1)[;
+	 		"adjust the position vector"
+	  xs_em = xEMF + u_tmp;
+      ys_em = yEMF + v_tmp;
+      zs_em = zEMF + w_tmp;
+
+	 ]
+	"adjust the direction vector"
+	"normalization is not needed"
+	us_em=uEMF+u_em;
+	vs_em=vEMF+v_em;
+    ws_em=wEMF+w_em;
+
+};
+
+REPLACE{$EF_Transport(#);}WITH{;
+"Before calling this function the following should be set:"
+"uEMF, vEMF, wEMF, xEMF, yEMF, zEMF, velocity_EF, deltaT is already set"
+
+"This function will set:"
+"us_em, vs_em, ws_em, xs_em, ys_em, zs_em"
+
+"r0_em at the end of the calculation will hold the final velocity"
+
+"P1 - step size "
+
+	"Calculate the total momentum of the particle"
+	momTot_EF = $ERM_kg*velocity_EF/sqrt(1-(velocity_EF/$SL)**2);
+
+	UdotE1 = Ex*uEMF + Ey*vEMF + Ez*wEMF;
+	"Caluclate the velocity compoents"
+	Vprll = UdotE1*velocity_EF;
+	Vperp = (1-abs(UdotE1))*velocity_EF;
+
+	"Calcuate the momentum compoents"
+	momPrll_EF = UdotE1*momTot_EF;
+	momPerp_EF = (1-abs(UdotE1))*momTot_EF;
+
+	"To get the perpendicular component of the velocity to E"
+	"just subtract the parallel component"
+	u_perp = uEMF - Ex*UdotE1;
+	v_perp = vEMF - Ey*UdotE1;
+	w_perp = wEMF - Ez*UdotE1;
+
+	"Normalize to get the unit vector of the perp component"
+	$NORMALIZE(u_perp, v_perp, w_perp, r0_em);
+
+	momPerp_EF = (r0_em)*momTot_EF;
+
+	EF_totalIntDistance = 0.0;
+	xPrllInt = 0.0;
+	xPerpInt =0.;
+
+	EF_tUpper = 0.0;
+	EF_tLower = 0.;
+
+	"Calculate the time to complete the step by adding distance until the "
+	" required distance is reached!"
+
+"Do the time determination only if low energy or before turning point:"
+IF(((E_total-$ERM) < 0.9) | ((UdotE1*lelec) < 0.))[
+	UNTIL(0.01>(1. - EF_totalIntDistance/{P1}))[;
+
+	"Set the lower bound for the integration"
+	EF_tLower = EF_tUpper;
+	"Calculate the approximate time to complete the step:"
+	approxTime = ({P1}-EF_totalIntDistance)/($SL*100.);
+
+	"Add the approxTime to the previous upper bound on the time"
+	EF_tUpper=EF_tUpper+approxTime;
+
+	"what happens if approxTime is below the deltaT?"
+	IF(approxTime<=deltaT0)[;
+	"Evaluate with half approxTime"
+$EF_timeIntegral(EF_tLower, EF_tUpper, approxTime/2., momPrll_EF, momPerp_EF);
+"$EF_timeIntegral(EF_tLower, EF_tUpper, approxTime/2., Vprll, Vperp);"
+	]ELSE[;
+$EF_timeIntegral(EF_tLower, EF_tUpper, deltaT0, momPrll_EF, momPerp_EF);
+"$EF_timeIntegral(EF_tLower, EF_tUpper, deltaT0, Vprll, Vperp);"
+	]
+
+	"Add the result of the integral to the total distance"
+	EF_totalIntDistance = EF_totalIntDistance +timeIntSum;
+	xPrllInt = xPrllInt + prllIntSum;
+	xPerpInt = xPerpInt + perpIntSum;
+
+	]
+
+	"Set the approximate total time"
+	approxTime = EF_tUpper;
+
+	"Use this time variable in all subsequent calculations"
+	"Calculate the final velocities:"
+	$EF_setVelocities(approxTime, momPrll_EF, momPerp_EF);
+	"$EF_setVelocities(approxTime, Vprll, Vperp);"
+
+	"Using the velocities, determine the final total velocity vector:"
+	"We need the perpendicular component to E that is part of u,v,w (np)"
+	us_em = Ex*vPrllT + u_perp*vPerpT;
+	vs_em = Ey*vPrllT + v_perp*vPerpT;
+	ws_em = Ez*vPrllT + w_perp*vPerpT;
+
+	"Normalize to get the direction vector of the resulting velocity"
+	$NORMALIZE(us_em, vs_em, ws_em, r0_em);
+
+	"Calculate the final position of the particle after the travel:"
+	"Determine the original positions of the particles:"
+	"xPrll0 = Ex*xEMF + Ey*yEMF + Ez*zEMF;"
+	"xPerp0 = u_perp*xEMF + v_perp*yEMF + w_perp*zEMF;"
+
+	"Call on the setPositions function to get the Prll and Perp components"
+	"$EF_setPositions(approxTime, Vprll, Vperp, xPrll0, xPerp0);"
+
+	"Using the positions, set the final position in the regular coordinates:"
+	xs_em = xEMF + Ex*xPrllInt + u_perp*xPerpInt;
+	ys_em = yEMF + Ey*xPrllInt + v_perp*xPerpInt;
+	zs_em = zEMF + Ez*xPrllInt + w_perp*xPerpInt;
+
+]ELSE[
+" High energy and the particle is past the E-field turning point"
+"The time can be approximated using the current V and the speed of light:"
+approxTime = {P1}*(2./($SL + velocity_EF))/100.;
+
+$EF_setVelocities(approxTime, momPrll_EF, momPerp_EF);
+$EF_setPositions(approxTime, momPrll_EF, momPerp_EF);
+
+us_em = Ex*vPrllT + u_perp*vPerpT;
+vs_em = Ey*vPrllT + v_perp*vPerpT;
+ws_em = Ez*vPrllT + w_perp*vPerpT;
+
+	"Normalize to get the direction vector of the resulting velocity"
+	$NORMALIZE(us_em, vs_em, ws_em, r0_em);
+
+xs_em = xEMF + Ex*xPrllT + u_perp*xPerpT;
+ys_em = yEMF + Ey*xPrllT + v_perp*xPerpT;
+zs_em = zEMF + Ez*xPrllT + w_perp*xPerpT;
+
+]
+
+	"Set the variables for subsequent calculations:"
+	velocity_EF = vTotE;
+
+}
+
+
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+" Numerical integration function for a particle in an E-field "
+REPLACE{$EF_timeIntegral(#, #, #, #, #);}WITH{
+"P1 - t1 "
+"P2 - t2 "
+"P3 - dt "
+"P4 - v_prll or the monetum"
+"P5 - v_perp or the momentum"
+
+"$EF_setVelocities will set the total velocity vTotE variable"
+
+"Set deltaT here - always smaller or equal to the one requested"
+nSteps=CEILING(({P2}-{P1})/{P3});
+
+"make sure that nSteps is even"
+IF(abs(MOD(nSteps,2.)) > 0.)[;
+"If check is true then nSteps is odd, so add 1."
+nSteps = nSteps + 1.;
+]
+
+deltaT = ({P2}-{P1})/nSteps;
+
+"First point"
+$EF_setVelocities({P1}, {P4}, {P5});
+timeIntSum = vTotE;
+prllIntSum = vPrllT;
+perpIntSum = vPerpT;
+"Last point"
+$EF_setVelocities({P2}, {P4}, {P5});
+timeIntSum = timeIntSum + vTotE;
+prllIntSum = prllIntSum + vPrllT;
+perpIntSum = perpIntSum + vPerpT;
+
+
+counterE = 1.;
+timeForInt = {P1};
+"integration loop"
+WHILE (counterE<=nSteps)[;
+
+timeForInt = {P1} + counterE*deltaT;
+
+$EF_setVelocities(timeForInt, {P4}, {P5});
+timeIntSum = timeIntSum + 4.*vTotE;
+prllIntSum = prllIntSum + 4.*vPrllT;
+perpIntSum = perpIntSum + 4.*vPerpT;
+counterE = counterE +2.;
+]
+
+counterE =2.;
+"integration loop"
+WHILE(counterE<=(nSteps-1.))[;
+
+timeForInt = {P1} + counterE*deltaT;
+
+$EF_setVelocities(timeForInt, {P4}, {P5});
+timeIntSum = timeIntSum + 2.*vTotE;
+prllIntSum = prllIntSum + 2.*vPrllT;
+perpIntSum = perpIntSum + 2.*vPerpT;
+
+counterE = counterE +2.;
+
+]
+
+"This is the returned variable"
+timeIntSum = deltaT*timeIntSum/3.;
+prllIntSum = deltaT*prllIntSum/3.;
+perpIntSum = deltaT*perpIntSum/3.;
+"multiply by 100 to get cm"
+timeIntSum = timeIntSum*100.;
+prllIntSum = prllIntSum*100.;
+perpIntSum = perpIntSum*100.;
+
+}
+
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+" Function to calculate perpendicular and parallel velocities in an E-field "
+REPLACE{$EF_setVelocities(#, #, #);}WITH{
+"P1 - t"
+"P2 - v_prll or momentum"
+"P3 - v_perp or momentum"
+
+" calculate the total energy"
+omegaE = ($ERM_kg*$SL*$SL)**2 + ($SL*{P3})**2 ;
+omegaE = omegaE + ($SL*(lelec*$EC_em*E_amp*{P1} + {P2}))**2 ;
+omegaE = sqrt(omegaE);
+"square of the speed of light"
+r0_em = $SL*$SL;
+
+"Calculate the parallel velocity after time t:"
+vPrllT=r0_em*({P2} + lelec*$EC_em*E_amp*{P1})/omegaE;
+
+"Calculate the perp velocity after time t:"
+vPerpT = r0_em*{P3}/omegaE;
+
+"Also report the total velocity"
+vTotE = sqrt(vPerpT*vPerpT + vPrllT*vPrllT);
+
+}
+
+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+" Function to calculate perpendicular and parallel velocities in an E-field "
+REPLACE{$EF_setPositions(#, #, #);}WITH{;
+"P1 - t"
+"P2 - momPrll"
+"P3 - momPerp"
+
+" Constants: "
+u0_prime = lelec*$SL*E_amp*$EC_em*{P1} + {P2}*$SL;
+omegaE = ($ERM_kg*$SL*$SL)**2 + ($SL*{P3})**2 ;
+r0_em = 1./($EC_em*lelec*E_amp);
+"Total energy:"
+r02_em = sqrt(omegaE + ($SL*{P2})**2);
+
+"Calculate the parallel position after time t:"
+xPrllT = r0_em*(sqrt(omegaE + u0_prime*u0_prime) - r02_em);
+"Multiply by 100 to get the cm and add the initial position:"
+xPrllT = xPrllT*100.;
+
+"Calculate the perp position after time t:"
+omegaE = sqrt(omegaE) ;
+u0_prime = u0_prime/omegaE;
+r02_em = {P2}*$SL/omegaE;
+xPerpT= $SL*100.*r0_em*{P3}*(ASINH(u0_prime) - ASINH(r02_em));
+
+}
+
+"******************************************************************************"
+"*********** INCLUDE ENERGY LOSS DUE TO EM FIELD PATH LENGTH  **************"
+"******************************************************************************"
+REPLACE{$COMPUTE_PL_EM_LOSS(#, #);}WITH{;
+"scale the s_em to match the vstep"
+"tvstep = tvstep + s_em;"
+"vstep =vstep +s_em;"
+" Calculates the energy loss due to the addition to the path length in the EMF"
+" This de_EM is tacked on to de in ELECTR "
+IF((abs({P1}) > 0.0) & $extra_E_loss_em)[;
+{P1}=tustep+{P1};
+   $COMPUTE-ELOSS-G({P1},eke,elke,lelke,de_EM);
+   {P2} = de_EM;
+   ]
+}
+
+
+"******************************************************************************"
+		"*********** WORK DUE TO E FIELD  **************"
+"******************************************************************************"
+REPLACE{$ADD_WORK_EM_FIELD;}WITH{;
+"Calculate the change in energy over the step:"
+$calculate_EchangeInEF(x0_em, y0_em, z0_em, x_final, y_final, z_final);
+de = de + de_EM;
+}
+
+REPLACE{$calculate_EchangeInEF(#, #, #, #, #, #);}WITH{;
+de_EM =0.;
+
+IF($energyLossViaPotential)[;
+$setEFPotential({P1}, {P2}, {P3}, VEF_initial);
+$setEFPotential({P4}, {P5}, {P6}, VEF_final);
+"Calculate the change in energy, the negative will be introduced"
+"as during the eie calculation."
+de_EM = lelec*(VEF_final - VEF_initial)*1e-6;
+]ELSE[
+de_EM=(Ex*({P1}-{P4})+Ey*({P2}-{P5})+Ez*({P3}-{P6}));
+de_EM = lelec*E_amp*1e-8*de_EM;
+]
+
+}
+
+"******************************************************************************"
+" ****				NORMALIZATION				***** "
+"******************************************************************************"
+
+" This macro is responsible for the normalization of a 3-vector "
+" The inputs are the 3 components to the vectors, followed by a normalization"
+"constant that will be set during the calcuation "
+REPLACE{$NORMALIZE(#, #, #, #)}WITH{
+  {P4} = sqrt( {P1}*{P1} + {P2}*{P2} + {P3}*{P3});
+  IF(abs({P4}) > 0.0)[
+    {P1} = {P1}/{P4};
+    {P2} = {P2}/{P4};
+    {P3} = {P3}/{P4};
+  ];
+};
+
+
+"******************************************************************************"
+"************************** MAGNITUDE OF A VECTOR  ****************************"
+"******************************************************************************"
+REPLACE{$SET_MAGNITUDE(#, #, #, #);}WITH{;
+{P4} = sqrt( {P1}*{P1} + {P2}*{P2} + {P3}*{P3});
+};
+
+REPLACE{$CALC_analyticDeflection(#);}WITH{;
+
+ " Calculate the required constant for the equation "
+	  sign_omega = -1.*lelec*B_amp/abs(B_amp);
+
+  " parallel component first: "
+      UdotB = uEMF*Bx + vEMF*By + wEMF*Bz;
+
+	  "u dot \hat(B)"
+      u_prll = UdotB*Bx;
+      v_prll = UdotB*By;
+      w_prll = UdotB*Bz;
+
+  " perpendicular component one: "
+
+      u_perp = uEMF - u_prll;
+      v_perp = vEMF - v_prll;
+      w_perp = wEMF - w_prll;
+
+	  $NORMALIZE(u_perp, v_perp, w_perp, SSc);
+  " perpendiuclar component two: "
+  " This is the cross product between \vec(u)_perp and the B field "
+
+  "This is the cross produce with the first perp comp"
+  "A negative for the correct cross product"
+
+      u_perp2 = -1.*sign_omega*(v_perp*Bz - w_perp*By);
+      v_perp2 = -1.*sign_omega*(w_perp*Bx - u_perp*Bz);
+      w_perp2 = -1.*sign_omega*(u_perp*By - v_perp*Bx);
+
+
+	omega_em = abs(B_amp*$SL*$SL*1E-6/(E_total));
+	beta_em = sqrt(1-($ERM/(E_total))**2);
+	v_i  = $SL*beta_em;
+    alpha_em = omega_em*{P1}/(100.0*v_i);
+    sin_a = sin(alpha_em);
+    cos_a = cos(alpha_em);
+	SSc = SSc*100.;
+	"the magnitude of the perp component adjusted for cm:"
+
+  " Calculate the final direction, and position for the step "
+
+    u_tmp=SSc*v_i*(u_perp*sin_a+u_perp2*(1.-cos_a))/omega_em;
+    v_tmp=SSc*v_i*(v_perp*sin_a+v_perp2*(1.-cos_a))/omega_em;
+    w_tmp=SSc*v_i*(w_perp*sin_a+w_perp2*(1.-cos_a))/omega_em;
+
+    u_tmp=-{P1}*u_perp*SSc/100.+u_tmp;
+    v_tmp=-{P1}*v_perp*SSc/100.+v_tmp;
+    w_tmp=-{P1}*w_perp*SSc/100.+w_tmp;
+
+      SSc=SSc/100.;
+	  u_em =SSc*(u_perp2*sin_a + u_perp*(cos_a-1.));
+      v_em =SSc*(v_perp2*sin_a + v_perp*(cos_a-1.));
+      w_em =SSc*(w_perp2*sin_a + w_perp*(cos_a-1.));
+
+};
