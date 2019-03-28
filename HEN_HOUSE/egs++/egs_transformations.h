@@ -215,11 +215,23 @@ public:
              (rzx == m.rxz) && (rzy == m.rzy) && (rzz == m.rzz)) ? true : false;
     };
 
-    /*! \brief Returns \c true, if this object is a unity matrix, \a false
+    /*! \brief Returns \c true, if this object is approximately the unit matrix, \a false
       otherwise */
     bool isI() const {
-        return (rxx == 1 && rxy == 0 && rxz == 0 && ryx == 0 && ryy == 1 &&
-                ryz == 0 && rzx == 0 && rzy == 0 && rzz == 1);
+
+        // compare with unit matrix components
+        if (fabs(rxy)   < epsilon &&
+            fabs(rxz)   < epsilon &&
+            fabs(ryx)   < epsilon &&
+            fabs(ryz)   < epsilon &&
+            fabs(rzx)   < epsilon &&
+            fabs(rzy)   < epsilon &&
+            fabs(rxx-1) < epsilon &&
+            fabs(ryy-1) < epsilon &&
+            fabs(rzz-1) < epsilon ) {
+            return true;
+        }
+        return false;
     };
 
     /*! \brief Returns the rotated a vector \f$ R \cdot \vec{v}\f$ */
