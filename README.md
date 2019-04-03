@@ -41,12 +41,12 @@ for details on how to download and properly configure EGSnrc on your operating s
 ## Issues
 
 For technical support and questions, consider the
-[EGSnrc Google+ community](https://plus.google.com/communities/106437507294474212197), or
+[EGSnrc reddit community](https://www.reddit.com/r/EGSnrc), or
 [contact NRC](http://www.nrc-cnrc.gc.ca/eng/solutions/advisory/egsnrc_index.html). To report
 genuine bugs, defects or even small typos in the EGSnrc project please
 [submit an issue](https://github.com/nrc-cnrc/EGSnrc/issues). The issue tracker lets you
 browse and search all documented issues, comment on open issues, and track their
-progress. Note that the issue tracker is **not meant for technical support.**
+progress. Note that the github issue tracker is **not meant for technical support.**
 
 
 ## Contributing
