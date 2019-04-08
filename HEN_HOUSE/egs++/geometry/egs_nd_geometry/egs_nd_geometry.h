@@ -904,7 +904,7 @@ public:
                     if(d <= boundaryTolerance) {
                         // t=0 works on most cases but can result in
                         // getting stuck on an edge, so use boundaryTolerance
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }
@@ -923,7 +923,7 @@ public:
                 EGS_Float d = (xpos[ix]-x.x)/u.x;
                 if (d <= t) {
                     if(d <= boundaryTolerance) {
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }
@@ -942,7 +942,7 @@ public:
                 EGS_Float d = (ypos[iy+1]-x.y)/u.y;
                 if (d <= t) {
                     if(d <= boundaryTolerance) {
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }
@@ -961,7 +961,7 @@ public:
                 EGS_Float d = (ypos[iy]-x.y)/u.y;
                 if (d <= t) {
                     if(d <= boundaryTolerance) {
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }
@@ -980,7 +980,7 @@ public:
                 EGS_Float d = (zpos[iz+1]-x.z)/u.z;
                 if (d <= t) {
                     if(d <= boundaryTolerance) {
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }
@@ -999,7 +999,7 @@ public:
                 EGS_Float d = (zpos[iz]-x.z)/u.z;
                 if (d <= t) {
                     if(d <= boundaryTolerance) {
-                        t = boundaryTolerance;
+                        t = halfBoundaryTolerance;
                     } else {
                         t = d;
                     }

@@ -221,7 +221,11 @@ public:
                 tt = 0;
             }
             if (tt <= t) {
-                t = tt;
+                if (tt > 0) {
+                    t = tt+boundaryTolerance;
+                } else {
+                    t = tt;
+                }
                 inew = -1;
                 if (normal) {
                     *normal = up>0 ? a*(-1) : a;
